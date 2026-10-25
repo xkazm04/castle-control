@@ -2,11 +2,13 @@
 
 Snapshot of the Claude Doc tab "Part 3 — Implementation plan", 2026-10-25.
 
+Revised 2026-10-25: Codex-only builders and an OpenAI engine stack (the TwitchCon x Codex hackathon); the Claude Doc snapshot predates this.
+
 ## Summary
 
-Castle Control is built in a new repo by Codex and Claude, working in pairs.
+Castle Control is built in a new repo by OpenAI Codex. Every builder is Codex; one Director reviews and merges.
 
-- **Seven milestones, 30 work packages.** Each work package is one builder session with a named reviewer from the other vendor. One director session owns the plan, the reviews and the merges.
+- **Seven milestones, 30 work packages.** Each work package is one Codex build thread, reviewed by the Director. The Director is an Opus App Master (Personas' headless /appmaster loop). It owns the plan, the briefs, the reviews and the merges, and never writes product code.
 - **Order.**
   - M0 lays the foundations and **proves the Twitch connection on a real channel first**, because none of Shadowrunr's Twitch code has met the real service.
   - The Gatehouse comes next: every other module reads chat only after its verdict.
@@ -20,6 +22,37 @@ Castle Control is built in a new repo by Codex and Claude, working in pairs.
   - the safety defaults in Part 1 are enforced in code, not only described.
 
 The plan names files, identifiers and acceptance criteria tightly enough that two builders working in parallel cannot drift apart. Where it decided an open question for the owner, the decision is listed next, with how to reverse it.
+
+## The hackathon (TwitchCon x OpenAI Codex)
+
+Castle Control is the project's entry. Re-read the Devpost rules before submitting; they were read through search extracts on 2026-10-25.
+
+- **Deadline.** Mon 2026-11-02, 14:00 PT (23:00 Prague).
+- **Judging.** 2026-11-05 to 2026-11-15.
+- **Submission:**
+  - a public GitHub repo, or one shared with the organizers;
+  - a public YouTube video of at most 3 minutes, showing the app working on Twitch and how Codex built it;
+  - a description of how Codex was used;
+  - the Codex session ID: the id of the project's main Codex thread (see "Sessions and threads").
+- **Criteria.** Innovation, impact for streamers, technical implementation (including how well Codex is used), and design.
+
+**Schedule.** Every milestone is targeted by the deadline, in plan order, with up to 5 Codex threads in parallel. The Director reorders packages inside a day as reviews land.
+
+| Day | Milestone | Work packages |
+| --- | --- | --- |
+| Mon 10-26 | M0 | WP 0.1 and WP 0.6 (started on the day the master is armed), then WP 0.2, WP 0.3, WP 0.4 |
+| Tue 10-27 | M0 exit, M1 start | WP 0.5; WP 0.7 live spike with the owner; after it passes, WP 1.1 and WP 1.4 |
+| Wed 10-28 | M1 | WP 1.2, WP 1.3, WP 1.5, WP 1.6, WP 1.7 |
+| Thu 10-29 | M1 exit, M2 | The two-hour shadow test stream; WP 2.1, WP 2.2, WP 2.3 |
+| Fri 10-30 | M2 exit, M3 | A draw on the test channel; the floor demo video is recorded; WP 3.1, WP 3.2, WP 5.1 |
+| Sat 10-31 | M3, M4, M5 | WP 3.3, WP 3.4, WP 4.1 to WP 4.3 (if Twitch has answered WP 4.0), WP 5.2 |
+| Sun 11-01 | M6 | WP 6.1, WP 6.2; the final video, the README |
+| Mon 11-02 | Submit | The landing, the Devpost form and the submission, before 14:00 PT |
+
+- **Submission floor.** If later milestones slip, the submission ships the highest finished cut. M0 to M2 (the first usable cut) plus a demo video are the floor, and must exist by Fri 2026-10-30.
+- **Nov 1 and 2 are reserved** for the video, the README, the landing and the submission. Build work that is not done by then waits.
+- **M4 depends on Twitch's policy answer (WP 4.0)**, so it may slip regardless of pace. The Director reorders around it.
+- **The submission is not the public release.** WP 6.3 items that need the owner, a lawyer or Twitch may still be open on 11-02.
 
 ## Decisions taken
 
@@ -83,33 +116,40 @@ castle-control/
 | --- | --- | --- | --- |
 | `crates/shadowrunr-daemon/src/platform/twitch/` (auth, eventsub, helix, store, mod) | about 1,550 lines plus 890 lines of tests | `cc-twitch` | Widen scopes and subscriptions per module. Make the keyring cross-platform. Resubscribe after a drop and mark the gap. Honour Ratelimit-\* headers |
 | `crates/shadowrunr-daemon/src/moderator/` (rules, mod, lane, store) | about 1,370 lines plus 830 lines of tests | `cc-gatehouse` | Keep the rule model, shadow and armed, strikes, the fenced batched classifier and the ledger. Leave `voice.rs` behind, because it is show-specific |
-| `crates/shadowrunr-engine/src/` (admission, api, claude\_cli, alt\_cli, ladder, ledger, limits, model, stream, health) | the whole crate | `cc-engine` | Reorder backends so the live lane is HTTP or a local model, and the CLI is the slow lane only |
+| `crates/shadowrunr-engine/src/` (admission, api, claude\_cli, alt\_cli, ladder, ledger, limits, model, stream, health) | the whole crate | `cc-engine` | Reorder backends so the live lane is the OpenAI API or a local model, and the CLI is the slow lane only. `claude_cli` is rewritten as `codex_cli`: the JSONL event parser, the spawn door, and a probe for installed, version and signed in (`codex login status` style checks; the exact probe command is to verify in WP 1.4) |
 | The daemon's `/rpc` and `/events` server, with resume by sequence (`crates/shadowrunr-daemon/src/server.rs`) | — | `cc-core` | Same protocol; methods come from the module registry |
 | `packages/contract/scripts/` (codegen, check, generate) | — | `packages/contract` | Unchanged pipeline: Rust types to JSON Schema to TS types and ajv validators |
 | `packages/stage-kit/src/` (pure reducer, timed slots, playback) | chosen by the work package 0.4 inventory | `packages/renderer` | Only the pure parts; no show-specific scenes |
 
 The pinned stack is the same as Shadowrunr's: Tauri 2.12, React 19.3, Vite 8, TypeScript 6, axum 0.8, tokio, rusqlite 0.38, schemars 1.2, ajv 8, vitest 5.
 
-## How Codex and Claude execute
+## How Codex executes and the Director reviews
 
 **Roles.**
 
-- **Director.** One Claude session, facing the owner. It owns this plan, writes each builder brief, reviews every diff, runs the gates and merges. It never delegates a judgement.
-- **Builder.** One session per work package, either Codex or Claude. The default split puts Codex on protocol-heavy Rust (the bridge, the draw engine, the Extension service) and Claude on the UI port, the engine wrapper, the Steward and the consensus work. The director may swap any package.
-- **Reviewer.** A session from the *other* vendor reads the diff against the package's acceptance criteria before the director does, so no package is reviewed only by the model family that wrote it.
+- **Director.** An Opus App Master (Personas' headless /appmaster loop), facing the owner. It owns this plan, writes each builder brief, reviews every diff, runs the gates and merges. It never writes product code, and it never delegates a judgement.
+- **Builder.** One OpenAI Codex thread per work package. Every builder runs the Codex CLI with model `gpt-6.1-sol` at reasoning effort `high`, fixed for every package (the owner's "handicap"). Up to 5 build threads run in parallel.
+- **Reviewer.** The Director reads the diff against the package's acceptance criteria, so no package is reviewed only by the model family that wrote it. A `codex exec review` pass on the branch may run first as a cheap pre-check, but the verdict is the Director's.
 
 **Flow for each work package:**
 
 1. **Brief.** The director writes it from this tab: files in scope, acceptance criteria, gates, the doc surface it owns, and the contract identifiers it touches, copied verbatim.
-2. **Build.** The builder works on a branch `wp/<id>-<slug>` and opens a PR. If something is unclear, it returns a question instead of guessing.
-3. **Review.** The reviewer posts a verdict: pass, or a list of defects, each with a file and line.
+2. **Build.** The builder works in its own git worktree on the branch the App Master's loop cuts for it (`autopilot/<charter>-<run>`), with the work package id at the start of every commit subject (`WP 0.1: ...`). There are no PRs: the Director fast-forward merges after the gates. If something is unclear, it returns a question instead of guessing.
+3. **Review.** The Director posts a verdict: pass, or a list of defects, each with a file and line. A bounce goes back to the same build thread.
 4. **Merge.** The director re-runs the gates, reads the diff, and merges or sends it back.
+
+**Sessions and threads.** The hackathon asks for a Codex session ID, so threads are kept on purpose.
+
+- **The main thread.** The project owns one main Codex thread, started read-only in the repo root and primed with this plan. Its id is the Codex session ID submitted to Devpost.
+- **A thread per work package.** Each package runs in its own Codex thread, forked from the main thread (`codex exec fork <main-id>`), in its own worktree.
+- **A bounce resumes.** A review bounce resumes that same thread (`codex exec resume <thread-id>`), never a fresh one.
+- **The journal.** The Director's journal records each thread id beside its work package.
 
 **Repo law** (pasted into every brief):
 
 - Commit only files you touched: never `git add -A`, never stash, never `--no-verify`.
 - No credentials in code, config, logs, fixtures or test output. Twitch tokens and API keys live in the OS keychain and are referenced by label only.
-- A spawned LLM CLI runs with an explicit tool allowlist and the user's own sign-in. Never use `--dangerously-skip-permissions`. Never read, copy or inject credentials.
+- A spawned Codex CLI runs in an explicit sandbox (`-s read-only` for design work) with the user's own sign-in. Never use `--dangerously-bypass-approvals-and-sandbox`. Never read, copy or inject credentials, and never read `~/.codex/auth.json`.
 - Real chat never becomes a fixture. Test data is generated and labelled simulated.
 - Every value that crosses a boundary is parsed by its schema in one place.
 
@@ -146,15 +186,15 @@ Seven work packages. Work package 0.6 can start on day one in parallel with 0.1,
 
 ### WP 0.1 — Repo, licence and gates
 
-*Builder Codex · reviewer Claude · size S*
+*Builder Codex · reviewer Director · size S*
 
 - **Scope:**
   - the Cargo workspace and the pnpm workspace;
   - `LICENSE` (Apache-2.0) and `NOTICE` (credits Shadowrunr OS);
-  - `AGENTS.md` and `CLAUDE.md`, carrying the repo law from "How Codex and Claude execute";
+  - `AGENTS.md` (read by the Codex builders) and `CLAUDE.md` (read by the Director), carrying the repo law from "How Codex executes and the Director reviews";
   - `docs/PLAN.md`, which points at this doc;
   - `.github/workflows/ci.yml`;
-  - `prototype/`, a copy of the winning prototype.
+  - `prototype/`, the winning prototype, moved from `docs/plan/prototype/`.
 - **Gates, all blocking from the first commit:**
   - `cargo fmt --check`, `cargo clippy -D warnings` and `cargo test`;
   - `pnpm typecheck`, `pnpm lint` and `pnpm test`;
@@ -171,7 +211,7 @@ Seven work packages. Work package 0.6 can start on day one in parallel with 0.1,
 
 ### WP 0.2 — Contract and core service
 
-*Builder Claude · reviewer Codex · size M*
+*Builder Codex · reviewer Director · size M*
 
 - **Scope:**
   - `cc-types`: the method table, `StreamEvent`, branded ids and the error envelope;
@@ -187,7 +227,7 @@ Seven work packages. Work package 0.6 can start on day one in parallel with 0.1,
 
 ### WP 0.3 — Store, ledgers and retention
 
-*Builder Codex · reviewer Claude · size S*
+*Builder Codex · reviewer Director · size S*
 
 - **Scope:** `cc-store`. It holds SQLite migrations, append-only JSONL ledgers (`decisions`, `draws`, `engine`), the retention cap, `forget_user(login)` and `purge_all()`.
 - **Acceptance:**
@@ -198,7 +238,7 @@ Seven work packages. Work package 0.6 can start on day one in parallel with 0.1,
 
 ### WP 0.4 — UI inventory, tokens and the component kit
 
-*Builder Claude · reviewer Codex · size M*
+*Builder Codex · reviewer Director · size M*
 
 - **Scope:**
   - a read-only inventory of `prototype/`, steps Q0 and Q1 of the port contract: every visual component and its duplicates, token reality, state machines, keymaps and URL contracts;
@@ -213,7 +253,7 @@ Seven work packages. Work package 0.6 can start on day one in parallel with 0.1,
 
 ### WP 0.5 — Desktop shell
 
-*Builder Claude · reviewer Codex · size M*
+*Builder Codex · reviewer Director · size M*
 
 - **Scope:** `apps/desktop`. It covers:
   - the Tauri 2 shell;
@@ -228,7 +268,7 @@ Seven work packages. Work package 0.6 can start on day one in parallel with 0.1,
 
 ### WP 0.6 — Twitch bridge port
 
-*Builder Codex · reviewer Claude · size M*
+*Builder Codex · reviewer Director · size M*
 
 - **Scope:** `cc-twitch`, copied and adapted from `platform/twitch/`. It covers:
   - device-code login;
@@ -246,7 +286,7 @@ Seven work packages. Work package 0.6 can start on day one in parallel with 0.1,
 
 ### WP 0.7 — Live spike
 
-*Builder Codex · reviewer Claude · size S · the owner joins live*
+*Builder Codex · reviewer Director · size S · the owner joins live*
 
 - **Scope:**
   - a `spike` command in `cc-core`;
@@ -273,7 +313,7 @@ Every other module reads chat only after the Gatehouse's verdict, so this milest
 
 ### WP 1.1 — Verdict pipeline and the action gate
 
-*Builder Claude · reviewer Codex · size L*
+*Builder Codex · reviewer Director · size L*
 
 - **Scope.** `cc-gatehouse`, starting from the copied rule model. It covers:
   - **Order.** Ingest, then the disclosure detector, then the rules pre-filter, then the fenced classifier, then the action gate, then the verdict.
@@ -294,7 +334,7 @@ Every other module reads chat only after the Gatehouse's verdict, so this milest
 
 ### WP 1.2 — Gate: delay, held queue and Shield Mode
 
-*Builder Codex · reviewer Claude · size M*
+*Builder Codex · reviewer Director · size M*
 
 - **Scope:**
   - the chat delay (`gatehouse.delay.set`);
@@ -309,7 +349,7 @@ Every other module reads chat only after the Gatehouse's verdict, so this milest
 
 ### WP 1.3 — Governor
 
-*Builder Codex · reviewer Claude · size S*
+*Builder Codex · reviewer Director · size S*
 
 - **Scope:**
   - room tiers S to XL from chatters in the last 10 minutes;
@@ -323,30 +363,31 @@ Every other module reads chat only after the Gatehouse's verdict, so this milest
 
 ### WP 1.4 — Engine and the classifier lanes
 
-*Builder Claude · reviewer Codex · size M*
+*Builder Codex · reviewer Director · size M*
 
 - **Scope.** `cc-engine`, ported from `shadowrunr-engine`. It covers:
   - **A role-class table.** Call sites name a class, never a model. The classes are live, near-live, batch and offline.
-  - **Default (D2).** A local model on an OpenAI-compatible endpoint (Ollama or LM Studio). A cloud key is opt-in, with a plain notice.
+  - **Default (D2).** A local model on an OpenAI-compatible endpoint (Ollama or LM Studio). The OpenAI API (Responses API) on the user's own key is opt-in, with a plain notice.
   - **Admission.** A model is admitted to a class on its tail latency and longest silence.
   - **A capability floor** measured for structured verdicts on small local models.
   - **A labelled fallback ladder:** model, then rules only, then an honest refusal. A rule verdict never looks like a model verdict.
-  - **One spawn door** for the CLI slow lane:
-    - an allowlisted environment;
+  - **One spawn door** for the Codex CLI slow lane (`codex exec --json`):
+    - an allowlisted environment; an API key from the OS keychain goes in as `CODEX_API_KEY` to that child only, and is never logged;
     - the prompt over stdin;
     - a neutral working directory;
-    - `probe()` for installed, version and signed in;
+    - a JSONL event parser: `thread.started` carries the thread id; `turn.completed`, `turn.failed`, `item.*` and `error` are mapped to engine outcomes;
+    - `probe()` for installed, version and signed in (`codex login status` style checks; the exact probe command is to verify here);
     - a termination ladder with a Windows Job Object;
     - an orphan sweep at start.
 - **Acceptance:**
   - the CLI never runs on the live lane;
-  - a planted sentinel secret is not visible to the child;
+  - a planted sentinel secret is not visible to the child, and the app never reads `~/.codex/auth.json`;
   - the engine ledger records the class, the model selected, the model served and the cost for every call;
   - with no model available, live moderation continues on rules alone, labelled as rules-only.
 
 ### WP 1.5 — The Herald's chart
 
-*Builder Claude · reviewer Codex · size M*
+*Builder Codex · reviewer Director · size M*
 
 - **Scope:**
   - opinion directions from messages that passed the gate, built from keyword seeds the streamer sets, an emote lexicon tagged by meaning, and local embeddings;
@@ -360,7 +401,7 @@ Every other module reads chat only after the Gatehouse's verdict, so this milest
 
 ### WP 1.6 — Recorder and the drill
 
-*Builder Codex · reviewer Claude · size M*
+*Builder Codex · reviewer Director · size M*
 
 - **Scope:**
   - **The recorder.** It records the streamer's own channel from install day on, under retention.
@@ -378,7 +419,7 @@ Every other module reads chat only after the Gatehouse's verdict, so this milest
 
 ### WP 1.7 — Gatehouse page
 
-*Builder Claude · reviewer Codex · size M*
+*Builder Codex · reviewer Director · size M*
 
 - **Scope.** The chamber page from Part 2:
   - the room hero;
@@ -404,7 +445,7 @@ Every other module reads chat only after the Gatehouse's verdict, so this milest
 
 ### WP 2.1 — Draw engine and guardrails
 
-*Builder Codex · reviewer Claude · size M*
+*Builder Codex · reviewer Director · size M*
 
 - **Scope.** `cc-lots`, covering:
   - pools: chatters, followers, subscribers, redeemers and keyword typists, read only from post-verdict events;
@@ -423,7 +464,7 @@ Every other module reads chat only after the Gatehouse's verdict, so this milest
 
 ### WP 2.2 — Seal, beacon, cast and writ
 
-*Builder Codex · reviewer Claude · size M*
+*Builder Codex · reviewer Director · size M*
 
 - **Scope:**
   - **Seal.** Freezing the roll writes the canonical entry list and its SHA-256, which is the seal.
@@ -440,7 +481,7 @@ Every other module reads chat only after the Gatehouse's verdict, so this milest
 
 ### WP 2.3 — Lot Chamber page and the draw on stream
 
-*Builder Claude · reviewer Codex · size M*
+*Builder Codex · reviewer Director · size M*
 
 - **Scope:**
   - the chamber page from Part 2: the roll hero and panels 1.1 to 1.5;
@@ -458,7 +499,7 @@ Every other module reads chat only after the Gatehouse's verdict, so this milest
 
 ### WP 3.1 — Event intake and intensity
 
-*Builder Codex · reviewer Claude · size M*
+*Builder Codex · reviewer Director · size M*
 
 - **Scope:**
   - **Subscriptions:** `channel.cheer` and `channel.bits.use` (deduped), subscribe, gift and resub, Hype Train v2, channel points v2, charity, goals and Custom Power-ups.
@@ -471,7 +512,7 @@ Every other module reads chat only after the Gatehouse's verdict, so this milest
 
 ### WP 3.2 — Design packages, renderer and OBS delivery
 
-*Builder Claude · reviewer Codex · size M*
+*Builder Codex · reviewer Director · size M*
 
 - **Scope:**
   - a design-package schema of layers (image, shape, text, particle preset) whose properties bind to intensity;
@@ -486,7 +527,7 @@ Every other module reads chat only after the Gatehouse's verdict, so this milest
 
 ### WP 3.3 — Beacons page and asset designer
 
-*Builder Claude · reviewer Codex · size M*
+*Builder Codex · reviewer Director · size M*
 
 - **Scope:** the chamber page from Part 2, made of:
   - the beacon cards;
@@ -501,7 +542,7 @@ Every other module reads chat only after the Gatehouse's verdict, so this milest
 
 ### WP 3.4 — Leonardo client
 
-*Builder Claude · reviewer Codex · size S*
+*Builder Codex · reviewer Director · size S*
 
 - **Scope:** an image client behind a provider trait. It covers:
   - a bring-your-own key in the OS keychain;
@@ -528,7 +569,7 @@ Every other module reads chat only after the Gatehouse's verdict, so this milest
 
 ### WP 4.1 — Extension shell
 
-*Builder Claude · reviewer Codex · size L*
+*Builder Codex · reviewer Director · size L*
 
 - **Scope:** `apps/extension`. Everything is bundled: no eval and no remote scripts. It covers:
   - the shared renderer;
@@ -550,7 +591,7 @@ Every other module reads chat only after the Gatehouse's verdict, so this milest
 
 ### WP 4.2 — The hosted Extension service
 
-*Builder Codex · reviewer Claude · size M*
+*Builder Codex · reviewer Director · size M*
 
 - **Scope:** `cc-ebs`, a stateless Rust service. It:
   - holds the Extension secret;
@@ -566,7 +607,7 @@ Every other module reads chat only after the Gatehouse's verdict, so this milest
 
 ### WP 4.3 — Map Room page and the test ladder
 
-*Builder Claude · reviewer Codex · size M*
+*Builder Codex · reviewer Director · size M*
 
 - **Scope:** the chamber page from Part 2: the map table, pieces, orders, templates, the spyglass and test status. It also covers:
   - the test ladder (sand table, then muster, then proclaimed);
@@ -581,22 +622,22 @@ Every other module reads chat only after the Gatehouse's verdict, so this milest
 
 ### WP 5.1 — Writ protocol and the slow lane
 
-*Builder Claude · reviewer Codex · size M*
+*Builder Codex · reviewer Director · size M*
 
 - **Scope:**
   - `steward.ask` returns a writ: a typed configuration change for one chamber, shown as a diff;
   - `steward.writ.seal` applies it, and `steward.writ.tear` discards it;
-  - the engine's slow lane runs the user's own Claude Code CLI headless, with an explicit tool allowlist, and falls back to an API key or a local model.
+  - the engine's slow lane runs the user's own Codex CLI headless (`codex exec --json`, prompt on stdin, `-s read-only`, `-o` for the last message, `--output-schema` for the writ where useful, `codex exec resume <id>` for follow-ups), and falls back to the OpenAI API or a local model.
 - **Acceptance:**
   - nothing changes without a seal;
   - a writ that fails its chamber's schema is shown as an error and never applied;
-  - the app never reads, stores or passes credentials, and a test asserts that the CLI's environment and arguments carry none; the child runs read-only with a scoped tool allowlist, plus a denylist that wins, and its stance is verified from the child, so a silent downgrade fails the call; what each CLI version supports is kept as dated data;
+  - the app never reads, stores or passes credentials beyond the keychain key handed to the child as `CODEX_API_KEY`, and a test asserts that the CLI's logged environment and arguments carry none and that a planted sentinel is invisible to the child; the child runs in the read-only sandbox, never with `--dangerously-bypass-approvals-and-sandbox`, and its stance is verified from the child, so a silent downgrade fails the call; what each CLI version supports is kept as dated data;
   - every call's cost lands in the `engine` ledger;
-  - the product name and UI never say "Claude Code", while "Powered by Claude" is allowed.
+  - the product name and UI do not imply OpenAI endorsement; "Built with Codex" or "Powered by OpenAI" attribution follows OpenAI's brand guidelines (verify current guidelines).
 
 ### WP 5.2 — The Steward in every chamber
 
-*Builder Claude · reviewer Codex · size M*
+*Builder Codex · reviewer Director · size M*
 
 - **Scope:** one writ schema per chamber. Examples:
   - "Run a draw for subscribers' questions, 3 winners" (the Lot Chamber);
@@ -611,7 +652,7 @@ Every other module reads chat only after the Gatehouse's verdict, so this milest
 
 ### WP 6.1 — Packaging and updates
 
-*Builder Codex · reviewer Claude · size M*
+*Builder Codex · reviewer Director · size M*
 
 - **Scope:**
   - Tauri bundles for Windows, macOS and Linux;
@@ -624,7 +665,7 @@ Every other module reads chat only after the Gatehouse's verdict, so this milest
 
 ### WP 6.2 — The landing site
 
-*Builder Claude · reviewer Codex · size M*
+*Builder Codex · reviewer Director · size M*
 
 - **Scope:** `apps/site`, ported from `prototype/index.html` onto the shared tokens. It fixes the wordmark defect and links to the downloads, docs and source.
 - **Acceptance:**
@@ -707,7 +748,7 @@ The error envelope is `{code, message, retry_after_ms?, detail?}`. A consumer br
 | --- | --- | --- |
 | Moderation and safety | live-chat-moderation-and-anti-bait, live-safety-rails, hitl-approval | The fixed layer order with a deterministic last-door gate. Disclosure detection before batching. Durable ban queue. Auto-ban only under an expiring grant with a ceiling |
 | Replay and testing | simulated-audience-testing, time-travel-replay | Named result states, instrument hashes, near-miss bank, blind judge, simulated labels |
-| Engines | model-routing, live-response-latency-budgeting, agent-cli-transport, subprocess-lifecycle | Role classes instead of model names, tail-latency admission, the CLI kept to the slow lane with an allowlisted environment and a verified read-only stance |
+| Engines | model-routing, live-response-latency-budgeting, agent-cli-transport, subprocess-lifecycle | Role classes instead of model names, tail-latency admission, the Codex CLI kept to the slow lane with an allowlisted environment and a verified read-only sandbox |
 | Contract and events | ipc-contract, realtime-events, codegen | A session token on loopback, parity gates, ids as strings, events as invalidation |
 | Secrets and data | credential-vault, audit-logging, data-retention | Brokered calls, single-flight refresh, ledgers by id, refused retention below the floor, dry-run purges |
 | Viewer influence | audience-steering-economies | Code decides every winner, concave weights published, red lines outside any economy |
@@ -733,7 +774,6 @@ The error envelope is `{code, message, retry_after_ms?, detail?}`. A consumer br
 
 For the owner. Credentials are never pasted into chat or into the repo: each goes straight into the app or the OS keychain.
 
-- [ ] Create the empty repo `castle-control`.
 - [ ] Set up a Twitch test channel and two test viewer accounts for armed actions.
 - [ ] Register a Twitch application for the desktop app (device-code flow).
 - [ ] Enable obs-websocket v5 in OBS.
@@ -742,6 +782,7 @@ For the owner. Credentials are never pasted into chat or into the repo: each goe
 
 For the director:
 
-- [ ] Write the briefs for WP 0.1 and WP 0.6 and start them in parallel.
-- [ ] Copy the winning prototype into `prototype/`.
+- [ ] Start the main Codex thread, read-only in the repo root and primed with this plan, and record its id as the Codex session ID.
+- [ ] Write the briefs for WP 0.1 and WP 0.6 and start them in parallel, each in a thread forked from the main thread.
+- [ ] The winning prototype is already under `docs/plan/prototype/`; WP 0.1 moves it to `prototype/`.
 - [ ] Book the live spike, WP 0.7, with the owner as soon as WP 0.6 merges.

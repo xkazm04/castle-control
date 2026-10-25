@@ -1,4 +1,4 @@
-# Castle Control — live-audience toolkit (concept, not started)
+# Castle Control — live-audience toolkit (in development)
 
 A free, open-source desktop app that gives any Twitch streamer four live-audience tools:
 
@@ -11,18 +11,19 @@ Overlord is its first showcase. The urn and the war table become data templates 
 
 **Status, 2026-10-25:**
 - Analysis, UI and implementation plan are done and owner-approved.
-- No code and no repo exist yet. The build happens in a **new repo**, `castle-control`, which a later session creates once the owner says development starts. Nothing here is built inside Overlord.
+- The repo now exists at `C:\Users\kazda\Spooky\CastleControl` (GitHub `xkazm04/castle-control`), in the Personas workspace "Spooky". Nothing here is built inside Overlord.
+- Development starts 2026-10-25 under the CastleControl App Master. Builders are Codex only, and the Director reviews (D10, D11).
 
 ## Read in this order
 
 | File | What it holds |
 | --- | --- |
-| [01-analysis.md](01-analysis.md) | Market, Twitch platform limits, the four module designs, architecture, safety and legal rules, risks |
-| [02-ui.md](02-ui.md) | The brand, the castle vocabulary beside the plain terms, tokens and type, the app shell, each chamber page, the landing, and the port contract |
-| [03-implementation-plan.md](03-implementation-plan.md) | Decisions, repo shape, how Codex and Claude execute, 7 milestones and 30 work packages, contract identifiers, standards, risks, first steps |
-| [prototype/](prototype/) | The winning UI prototype. Open `prototype/index.html` from disk. Its data is illustrative, and its code is reference, not a base to copy |
+| [docs/plan/01-analysis.md](01-analysis.md) | Market, Twitch platform limits, the four module designs, architecture, safety and legal rules, risks |
+| [docs/plan/02-ui.md](02-ui.md) | The brand, the castle vocabulary beside the plain terms, tokens and type, the app shell, each chamber page, the landing, and the port contract |
+| [docs/plan/03-implementation-plan.md](03-implementation-plan.md) | Decisions, the hackathon schedule, repo shape, how Codex executes and the Director reviews, 7 milestones and 30 work packages, contract identifiers, standards, risks, first steps |
+| [docs/plan/prototype/](prototype/) | The winning UI prototype. Open `docs/plan/prototype/index.html` from disk. WP 0.1 moves it to `/prototype`. Its data is illustrative, and its code is reference, not a base to copy |
 
-The same three parts live in the Claude Doc [Castle Control — Analysis and Implementation Plan](https://claude.ai/artifact/8oSKf6Qtan1d9fQ2rFAkHt), which may get newer edits. If the two differ, ask the owner which is current. When a doc edit lands, refresh these files from it.
+The same three parts live in the Claude Doc [Castle Control — Analysis and Implementation Plan](https://claude.ai/artifact/8oSKf6Qtan1d9fQ2rFAkHt), which may get newer edits. If the two differ, ask the owner which is current. When a doc edit lands, refresh these files from it. The Claude Doc predates the 2026-10-25 Codex revision (D10, D11), so on engines and builders these files win.
 
 ## Pending on the owner
 
@@ -37,16 +38,17 @@ The plan proceeds on these defaults, set by the director on 2026-10-25 because t
 | D3 | Overlord's urn and hex map | Data templates in the new repo; Overlord adopts the toolkit later | M2 |
 | D4 | Licence | Apache-2.0, the same as Shadowrunr OS | M0 (WP 0.1) |
 | D5 | Platforms | Twitch only for v1 | After v1 |
-| D6 | Sequencing against the Kiroween Shadowrunr v2 rebuild ([../kiroween-shadowrunr-v2.md](../kiroween-shadowrunr-v2.md)) | An independent repo. Code is copied with provenance; there is no cross-repo dependency | M0 |
+| D6 | Sequencing against the Kiroween Shadowrunr v2 rebuild (`docs/concepts/kiroween-shadowrunr-v2.md` in the Overlord repo, `C:/Users/kazda/kiro/overlord`) | An independent repo. Code is copied with provenance; there is no cross-repo dependency | M0 |
 | D7 | Ban autonomy (left as a comment in the Claude Doc, Part 1) | A ban needs a human click by default. Auto-ban is allowed only on an armed, pattern-based rule, under an expiring grant with a cap on bans per hour and a circuit breaker. A classifier-only rule can never ban alone | M1 (WP 1.1) |
 | D8 | Desktop platforms | Windows first; macOS and Linux in M6 | M6 |
 | D9 | Name | "Castle Control" is a working name. Run a trademark search before release | M6 |
+| D10 | Engine stack | OpenAI only: the Codex CLI is the slow lane; the OpenAI API or a local model is the fast lane. Decided by the owner 2026-10-25 | Owner only |
+| D11 | Builders | Codex `gpt-6.1-sol` at reasoning effort `high` only; an Opus Director reviews every diff and merges. Decided by the owner 2026-10-25 | Owner only |
 
 ### Owner tasks before development starts
 
 Credentials go straight into the app or the OS keychain. Never paste them into chat or commit them to the repo.
 
-- [ ] Say when development starts. The next session then creates the `castle-control` repo and begins M0.
 - [ ] Set up a Twitch test channel, plus two test viewer accounts that armed actions may target.
 - [ ] Register a Twitch application for the desktop app (device-code flow).
 - [ ] Enable obs-websocket v5 in OBS.
@@ -64,9 +66,11 @@ These are WP 6.3 in the plan.
 
 ## Open tasks for the next session
 
-1. When the owner gives the word, create the `castle-control` repo and copy `prototype/` into it read-only.
-2. Copy this plan in as `docs/PLAN.md` plus the three parts.
-3. Write the briefs for WP 0.1 (repo and gates) and WP 0.6 (Twitch bridge port) and run them in parallel. Book the live spike, WP 0.7, with the owner.
+These are the CastleControl App Master's first steps.
+
+1. Start the main Codex thread: read-only in the repo root, primed with this plan. Record its id in the journal; it is the Codex session ID for Devpost.
+2. Write the briefs for WP 0.1 (repo and gates) and WP 0.6 (Twitch bridge port) and run them in parallel, each in a thread forked from the main thread, in its own worktree.
+3. Book the live spike, WP 0.7, with the owner.
 4. Re-read the governing registry subjects listed in the plan's "Standards" section before each work package. The registry moves.
 5. Contest housekeeping in Overlord: run `contest wrap` for `twitch-live`, `toolkit-landing` and `toolkit-landing-r2`. The arenas and the vault under `.contest/` are git-ignored, so this folder is the durable copy.
 6. Optionally contribute a "verifiable randomness" technique (seal, beacon, cast, writ) back to the knowledge registry. No subject covers it today.

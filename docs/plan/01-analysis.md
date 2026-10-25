@@ -2,6 +2,8 @@
 
 Snapshot of the Claude Doc tab "Part 1 — Analysis", 2026-10-25.
 
+Revised 2026-10-25: Codex-only builders and an OpenAI engine stack (the TwitchCon x Codex hackathon); the Claude Doc snapshot predates this.
+
 ## Summary
 
 We build a free, open-source desktop app that gives any Twitch streamer four live-audience tools; Overlord becomes its first showcase, not its subject. "Live Audience Toolkit" is a working title only: the name, brand and UI come from the next landing contest.
@@ -11,7 +13,7 @@ We build a free, open-source desktop app that gives any Twitch streamer four liv
 - **Descoped.** Sealed Decrees is out for now: it is built around AI streamers, and this hackathon is human-first.
 - **Brand by contest.** Six landing prototypes: Opus develops "Castle Control", Sonnet develops "Shepherd", and the other four are wildcards. Each covers a landing page plus the main page of every module.
 - **Look.** The app itself is professional and practical: dense content layout, a deliberate type scale, efficient spacing. The landing page stays bold and creative, because Twitch is full of visually talented people.
-- **Stack.** The same stack as Shadowrunr OS: a Rust backend with a Tauri 2 shell and a React front end, under an OSS licence. It adds a universal LLM engine wrapper with the Claude Code CLI as the default, and Leonardo for image generation.
+- **Stack.** The same stack as Shadowrunr OS: a Rust backend with a Tauri 2 shell and a React front end, under an OSS licence. It adds a universal LLM engine wrapper on an OpenAI stack, with the user's own Codex CLI as the slow lane, and Leonardo for image generation.
 - **Order of work.** Research and technical design run first and in parallel. This document is Part 1; Part 2 adds the UI from the contest, then comes the implementation plan for the new repo.
 
 ## From six variants to four modules
@@ -177,10 +179,10 @@ Chat enters once through the Twitch bridge and passes one verdict before any mod
 
 **Engine wrapper.** It has two paths.
 
-- **Fast path.** Live moderation has a budget of roughly 0.3 to 2 seconds. It uses a direct HTTP backend (Anthropic, any OpenAI-compatible endpoint) or a preloaded local model (Ollama, LM Studio), with a short timeout and a stated fail-open or fail-closed rule per rule.
-- **Slow path.** The co-pilot's design work defaults to the user's own Claude Code CLI ([headless mode](https://code.claude.com/docs/en/headless)).
+- **Fast path.** Live moderation has a budget of roughly 0.3 to 2 seconds. It uses the OpenAI API (Responses API) or any OpenAI-compatible local endpoint, with a preloaded local model (Ollama, LM Studio), a short timeout and a stated fail-open or fail-closed rule per rule.
+- **Slow path.** The co-pilot's design work defaults to the user's own Codex CLI run headless ([non-interactive mode](https://learn.chatgpt.com/docs/non-interactive-mode)): `codex exec --json`, prompt on stdin, the `-s read-only` sandbox, `-o` for the last message, `--output-schema` for writs where useful, and `codex exec resume <id>` for follow-ups. The JSONL events are parsed: `thread.started` carries the thread id; `turn.completed`, `turn.failed`, `item.*` and `error` carry the rest.
 
-The app detects the CLI, asks the user to sign in themselves, and never reads, copies or injects credentials. That is the line Anthropic's [terms](https://code.claude.com/docs/en/legal-and-compliance) draw. The product name and logo may not use "Claude Code"; "Powered by Claude" is allowed.
+The app detects the CLI and asks the user to sign in to Codex themselves (ChatGPT sign-in), or to bring an OpenAI API key, kept in the OS keychain and passed as `CODEX_API_KEY` only to that child, never logged. The app never reads `~/.codex/auth.json`, and never uses `--dangerously-bypass-approvals-and-sandbox`. The product name and UI do not imply OpenAI endorsement; any "Built with Codex" or "Powered by OpenAI" attribution follows OpenAI's brand guidelines (verify current guidelines).
 
 **Images.** Leonardo runs on the streamer's own key, kept in the OS keychain. Every request is private (`public:false`). Transparent assets come from generating on a flat background, then `remove-bg`. Each response's cost goes into the engine ledger ([Leonardo docs](https://docs.leonardo.ai/docs/getting-started)).
 
@@ -211,7 +213,7 @@ The product's defaults carry its safety: shadow before armed, a human before a b
 | Giveaways | Paid entry or paid weight on a prize draw is blocked by default. A free path gets equal odds. The rules template, the Twitch disclaimer, and age and region settings are built in. Totals over $5,000 need confirmed registration | Prize plus chance plus consideration makes an illegal lottery ([Odin Law](https://odinlaw.com/are-giveaways-on-twitch-legal/), [UK Gambling Commission](https://www.gamblingcommission.gov.uk/public-and-players/guide/page/free-draws-and-prize-competitions)) |
 | Bits in the Extension | Bits never buy an entry, a ticket or a random outcome | Extension policies 6.2.4 to 6.2.6 ([guidelines](https://dev.twitch.tv/docs/extensions/guidelines-and-policies/)) |
 | Viewer content in the Extension | Twitch ID required, streamer approves or rejects, username shown, removal possible | Extension policy section 7 |
-| AI engines | The user signs in to their own CLI or brings their own key. The app never reads, stores or injects credentials, and the product name avoids "Claude Code" | Anthropic's [Claude Code terms](https://code.claude.com/docs/en/legal-and-compliance) |
+| AI engines | The user signs in to their own Codex CLI or brings their own OpenAI key. The app never reads, stores or injects credentials, and the product name and UI do not imply OpenAI endorsement | OpenAI's terms of use and the [Codex docs](https://learn.chatgpt.com/docs/cli/reference) |
 | Generated art | Leonardo runs private (`public:false`) on the user's key, and generated art is labelled as such | Leonardo's API terms on ownership could not be read (the page returned 403); confirm them before AI art ships in a public Extension |
 
 ## Risks and open questions
@@ -225,7 +227,7 @@ The largest risk is the Extension studio. It depends on a policy reading Twitch 
 | Shadowrunr's Twitch code has never met the real service | Login, refresh, reconnect and armed actions may fail on day one | First work package is a live spike on a real channel |
 | LLM false positives or latency on the fast path | Wrong timeouts; held chat that feels laggy | Shadow by default, a human before bans, measured latency budgets, rules first |
 | Replay only covers streams from install day on | A weaker first demo | Seed the demo with simulated chat, which Shadowrunr's simulator already generates, labelled as simulated |
-| Subscription use of the Claude Code CLI inside other apps is policy-fragile | The default engine could break for users | API-key and local paths are first-class from day one |
+| Driving the Codex CLI under a user's ChatGPT plan, rather than an API key, from inside another app may be policy-fragile or plan-limited | The default slow lane could break or throttle for users | The OpenAI API key and local paths are first-class from day one |
 | Twitch ships the same features | AutoMod already learns from moderator actions and has a testing tool | Compete on the combination, local-first and auditable, not on any single feature |
 | PubSub limit: the docs say 100 a minute in one place and 1 a second in another | Throttled Extension updates | Coalesced snapshots, at most one a second; measure in Hosted Test |
 | Brand name not cleared | A rename after launch | Run a name search before the brand is final |
@@ -244,7 +246,7 @@ The largest risk is the Extension studio. It depends on a policy reading Twitch 
 **Update, 2026-10-25:** the landing contest is decided, and **Castle Control** won. The UI is in [Part 2 — UI](02-ui.md) and the plan is in [Part 3 — Implementation plan](03-implementation-plan.md). The note below is as written before the contest ran: the landing contest was running then. Opus (xhigh) develops "Castle Control" plus two wildcards, and Sonnet (max) develops "Shepherd" plus two wildcards. Each variant is a brand: a landing page plus the main page of all four modules, built on illustrative Overlord-sandbox data.
 
 1. **Part 2: UI.** The owner reviews the six brands blind and picks or fuses one. Its module pages become the UI layer of this document.
-2. **Implementation plan.** Work packages for the new repo, sized for Codex and Claude. It starts with a live spike on a real channel, because none of Shadowrunr's Twitch code has met the real service: device login, EventSub, one armed timeout, one OBS browser source.
+2. **Implementation plan.** Work packages for the new repo, sized for Codex builders and a reviewing Director. It starts with a live spike on a real channel, because none of Shadowrunr's Twitch code has met the real service: device login, EventSub, one armed timeout, one OBS browser source.
 3. **Before public release.** Clear the brand name, check the Extension policy questions with Twitch (see Risks), and have a lawyer review the official-rules template.
 
 ## Sources
@@ -254,6 +256,6 @@ Research was done on 2026-10-25 by five research agents and one code scout, usin
 - Twitch: [API reference](https://dev.twitch.tv/docs/api/reference/), [EventSub types](https://dev.twitch.tv/docs/eventsub/eventsub-subscription-types/), [chat moderation](https://dev.twitch.tv/docs/chat/moderation/), [Extensions](https://dev.twitch.tv/docs/extensions/), [Extension guidelines](https://dev.twitch.tv/docs/extensions/guidelines-and-policies/), [Extension life cycle](https://dev.twitch.tv/docs/extensions/life-cycle/), [Developer Agreement](https://legal.twitch.com/en/legal/developer-agreement/), [Terms of Service](https://legal.twitch.com/en/legal/terms-of-service/), [TwitchCon Rotterdam 2026 recap](https://blog.twitch.tv/en/2026/05/30/everything-we-announced-at-twitchcon-rotterdam-2026/)
 - OBS: [browser source](https://obsproject.com/kb/browser-source), [obs-websocket protocol](https://github.com/obsproject/obs-websocket)
 - Giveaways and fairness: [Odin Law](https://odinlaw.com/are-giveaways-on-twitch-legal/), [Legal Moves](https://legalmoveslawfirm.com/twitch-giveaway-rules/), [UK Gambling Commission](https://www.gamblingcommission.gov.uk/public-and-players/guide/page/free-draws-and-prize-competitions), [drand](https://docs.drand.love/developer/), [NIST beacon](https://csrc.nist.gov/projects/interoperable-randomness-beacons)
-- Engines and images: [Claude Code headless](https://code.claude.com/docs/en/headless), [Claude Code legal](https://code.claude.com/docs/en/legal-and-compliance), [Leonardo API](https://docs.leonardo.ai/docs/getting-started), [Ollama OpenAI compatibility](https://docs.ollama.com/api/openai-compatibility)
+- Engines and images: [Codex non-interactive mode](https://learn.chatgpt.com/docs/non-interactive-mode), [Codex CLI reference](https://learn.chatgpt.com/docs/cli/reference), [Codex SDK](https://learn.chatgpt.com/docs/codex-sdk), [Leonardo API](https://docs.leonardo.ai/docs/getting-started), [Ollama OpenAI compatibility](https://docs.ollama.com/api/openai-compatibility)
 - Consensus prior art: [Emote-Controlled](https://github.com/konstantinkobs/emote-controlled), [FeelsGoodMan](https://arxiv.org/abs/2108.08411), [Polis opinion groups](https://compdemocracy.org/opinion-groups)
 - Market: the vendor pages linked in the Market table
