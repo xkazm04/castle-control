@@ -1,16 +1,24 @@
 //! The single authority for Castle Control's wire vocabulary and schemas.
 mod core;
+mod decision;
+mod engine;
 mod enums;
 mod events;
+mod gatehouse;
 mod ids;
 mod methods;
+mod rule;
 mod value;
 
 pub use core::*;
+pub use decision::*;
+pub use engine::*;
 pub use enums::*;
 pub use events::*;
+pub use gatehouse::*;
 pub use ids::*;
 pub use methods::*;
+pub use rule::*;
 pub use value::*;
 
 /// Present optional keys must contain a value, never JSON null.

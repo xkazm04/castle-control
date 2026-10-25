@@ -13,6 +13,9 @@ macro_rules! wire_enum {
 
 wire_enum!(Verdict { Pass => "pass", Hold => "hold", Bar => "bar" });
 wire_enum!(RuleMode { Shadow => "shadow", Armed => "armed" });
+wire_enum!(RuleClass { Rail => "rail", Pattern => "pattern", Classifier => "classifier" });
+wire_enum!(PetitionOutcome { Upheld => "upheld", Overturned => "overturned" });
+wire_enum!(CliProvider { ClaudeCli => "claude_cli", CodexCli => "codex_cli" });
 wire_enum!(BridgeState {
     Disconnected => "disconnected", Connecting => "connecting", Connected => "connected", Error => "error"
 });

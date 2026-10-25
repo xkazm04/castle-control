@@ -8,6 +8,9 @@ fn main() {
     add!(
         Verdict,
         RuleMode,
+        RuleClass,
+        PetitionOutcome,
+        CliProvider,
         Action,
         DecisionKind,
         Tier,

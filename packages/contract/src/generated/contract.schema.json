@@ -629,111 +629,1216 @@
       "owner": "WP 1.1",
       "params": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Deliberately unusable until its owning WP supplies request/result shapes.",
-        "not": {},
-        "title": "Pending"
+        "additionalProperties": false,
+        "title": "Empty",
+        "type": "object"
       },
       "result": {
+        "$defs": {
+          "Action": {
+            "enum": [
+              "warn",
+              "delete",
+              "timeout",
+              "ban",
+              "hold"
+            ],
+            "type": "string"
+          },
+          "AutoBanGrant": {
+            "additionalProperties": false,
+            "properties": {
+              "breaker_tripped": {
+                "type": "boolean"
+              },
+              "expires_at": {
+                "$ref": "#/$defs/Timestamp"
+              },
+              "max_bans_per_hour": {
+                "format": "uint32",
+                "minimum": 1,
+                "type": "integer"
+              }
+            },
+            "required": [
+              "expires_at",
+              "max_bans_per_hour",
+              "breaker_tripped"
+            ],
+            "type": "object"
+          },
+          "Rule": {
+            "additionalProperties": false,
+            "allOf": [
+              {
+                "if": {
+                  "properties": {
+                    "rule_class": {
+                      "const": "rail"
+                    }
+                  }
+                },
+                "then": {
+                  "properties": {
+                    "mode": {
+                      "const": "armed"
+                    }
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "rule_class": {
+                      "enum": [
+                        "rail",
+                        "classifier"
+                      ]
+                    }
+                  }
+                },
+                "then": {
+                  "properties": {
+                    "auto_ban_grant": false
+                  }
+                }
+              }
+            ],
+            "description": "Rail modes are fixed. Delivery is a nonblank routing label, not executable code.",
+            "properties": {
+              "action": {
+                "$ref": "#/$defs/Action"
+              },
+              "auto_ban_grant": {
+                "$ref": "#/$defs/AutoBanGrant"
+              },
+              "delivery": {
+                "pattern": "\\S",
+                "type": "string"
+              },
+              "mode": {
+                "$ref": "#/$defs/RuleMode"
+              },
+              "name": {
+                "pattern": "\\S",
+                "type": "string"
+              },
+              "rule_class": {
+                "$ref": "#/$defs/RuleClass"
+              },
+              "rule_id": {
+                "$ref": "#/$defs/RuleId"
+              }
+            },
+            "required": [
+              "rule_id",
+              "name",
+              "rule_class",
+              "mode",
+              "action",
+              "delivery"
+            ],
+            "type": "object"
+          },
+          "RuleClass": {
+            "enum": [
+              "rail",
+              "pattern",
+              "classifier"
+            ],
+            "type": "string"
+          },
+          "RuleId": {
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$(?![\\s\\S])",
+            "type": "string"
+          },
+          "RuleMode": {
+            "enum": [
+              "shadow",
+              "armed"
+            ],
+            "type": "string"
+          },
+          "Timestamp": {
+            "format": "date-time",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?Z$(?![\\s\\S])",
+            "type": "string"
+          }
+        },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Deliberately unusable until its owning WP supplies request/result shapes.",
-        "not": {},
-        "title": "Pending"
+        "additionalProperties": false,
+        "properties": {
+          "rules": {
+            "items": {
+              "$ref": "#/$defs/Rule"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "rules"
+        ],
+        "title": "RulesListResult",
+        "type": "object"
       }
     },
     {
       "name": "gatehouse.rules.upsert",
       "owner": "WP 1.1",
       "params": {
+        "$defs": {
+          "Action": {
+            "enum": [
+              "warn",
+              "delete",
+              "timeout",
+              "ban",
+              "hold"
+            ],
+            "type": "string"
+          },
+          "AutoBanGrant": {
+            "additionalProperties": false,
+            "properties": {
+              "breaker_tripped": {
+                "type": "boolean"
+              },
+              "expires_at": {
+                "$ref": "#/$defs/Timestamp"
+              },
+              "max_bans_per_hour": {
+                "format": "uint32",
+                "minimum": 1,
+                "type": "integer"
+              }
+            },
+            "required": [
+              "expires_at",
+              "max_bans_per_hour",
+              "breaker_tripped"
+            ],
+            "type": "object"
+          },
+          "Rule": {
+            "additionalProperties": false,
+            "allOf": [
+              {
+                "if": {
+                  "properties": {
+                    "rule_class": {
+                      "const": "rail"
+                    }
+                  }
+                },
+                "then": {
+                  "properties": {
+                    "mode": {
+                      "const": "armed"
+                    }
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "rule_class": {
+                      "enum": [
+                        "rail",
+                        "classifier"
+                      ]
+                    }
+                  }
+                },
+                "then": {
+                  "properties": {
+                    "auto_ban_grant": false
+                  }
+                }
+              }
+            ],
+            "description": "Rail modes are fixed. Delivery is a nonblank routing label, not executable code.",
+            "properties": {
+              "action": {
+                "$ref": "#/$defs/Action"
+              },
+              "auto_ban_grant": {
+                "$ref": "#/$defs/AutoBanGrant"
+              },
+              "delivery": {
+                "pattern": "\\S",
+                "type": "string"
+              },
+              "mode": {
+                "$ref": "#/$defs/RuleMode"
+              },
+              "name": {
+                "pattern": "\\S",
+                "type": "string"
+              },
+              "rule_class": {
+                "$ref": "#/$defs/RuleClass"
+              },
+              "rule_id": {
+                "$ref": "#/$defs/RuleId"
+              }
+            },
+            "required": [
+              "rule_id",
+              "name",
+              "rule_class",
+              "mode",
+              "action",
+              "delivery"
+            ],
+            "type": "object"
+          },
+          "RuleClass": {
+            "enum": [
+              "rail",
+              "pattern",
+              "classifier"
+            ],
+            "type": "string"
+          },
+          "RuleId": {
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$(?![\\s\\S])",
+            "type": "string"
+          },
+          "RuleMode": {
+            "enum": [
+              "shadow",
+              "armed"
+            ],
+            "type": "string"
+          },
+          "Timestamp": {
+            "format": "date-time",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?Z$(?![\\s\\S])",
+            "type": "string"
+          }
+        },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Deliberately unusable until its owning WP supplies request/result shapes.",
-        "not": {},
-        "title": "Pending"
+        "additionalProperties": false,
+        "properties": {
+          "rule": {
+            "$ref": "#/$defs/Rule"
+          }
+        },
+        "required": [
+          "rule"
+        ],
+        "title": "RulesUpsertParams",
+        "type": "object"
       },
       "result": {
+        "$defs": {
+          "Action": {
+            "enum": [
+              "warn",
+              "delete",
+              "timeout",
+              "ban",
+              "hold"
+            ],
+            "type": "string"
+          },
+          "AutoBanGrant": {
+            "additionalProperties": false,
+            "properties": {
+              "breaker_tripped": {
+                "type": "boolean"
+              },
+              "expires_at": {
+                "$ref": "#/$defs/Timestamp"
+              },
+              "max_bans_per_hour": {
+                "format": "uint32",
+                "minimum": 1,
+                "type": "integer"
+              }
+            },
+            "required": [
+              "expires_at",
+              "max_bans_per_hour",
+              "breaker_tripped"
+            ],
+            "type": "object"
+          },
+          "RuleClass": {
+            "enum": [
+              "rail",
+              "pattern",
+              "classifier"
+            ],
+            "type": "string"
+          },
+          "RuleId": {
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$(?![\\s\\S])",
+            "type": "string"
+          },
+          "RuleMode": {
+            "enum": [
+              "shadow",
+              "armed"
+            ],
+            "type": "string"
+          },
+          "Timestamp": {
+            "format": "date-time",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?Z$(?![\\s\\S])",
+            "type": "string"
+          }
+        },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Deliberately unusable until its owning WP supplies request/result shapes.",
-        "not": {},
-        "title": "Pending"
+        "additionalProperties": false,
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "rule_class": {
+                  "const": "rail"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "mode": {
+                  "const": "armed"
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "rule_class": {
+                  "enum": [
+                    "rail",
+                    "classifier"
+                  ]
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "auto_ban_grant": false
+              }
+            }
+          }
+        ],
+        "description": "Rail modes are fixed. Delivery is a nonblank routing label, not executable code.",
+        "properties": {
+          "action": {
+            "$ref": "#/$defs/Action"
+          },
+          "auto_ban_grant": {
+            "$ref": "#/$defs/AutoBanGrant"
+          },
+          "delivery": {
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "mode": {
+            "$ref": "#/$defs/RuleMode"
+          },
+          "name": {
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "rule_class": {
+            "$ref": "#/$defs/RuleClass"
+          },
+          "rule_id": {
+            "$ref": "#/$defs/RuleId"
+          }
+        },
+        "required": [
+          "rule_id",
+          "name",
+          "rule_class",
+          "mode",
+          "action",
+          "delivery"
+        ],
+        "title": "Rule",
+        "type": "object"
       }
     },
     {
       "name": "gatehouse.rules.setMode",
       "owner": "WP 1.1",
       "params": {
+        "$defs": {
+          "ModeAcknowledgement": {
+            "additionalProperties": false,
+            "properties": {
+              "at": {
+                "$ref": "#/$defs/Timestamp"
+              },
+              "reason": {
+                "pattern": "\\S",
+                "type": "string"
+              }
+            },
+            "required": [
+              "at",
+              "reason"
+            ],
+            "type": "object"
+          },
+          "RuleId": {
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$(?![\\s\\S])",
+            "type": "string"
+          },
+          "RuleMode": {
+            "enum": [
+              "shadow",
+              "armed"
+            ],
+            "type": "string"
+          },
+          "Timestamp": {
+            "format": "date-time",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?Z$(?![\\s\\S])",
+            "type": "string"
+          }
+        },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Deliberately unusable until its owning WP supplies request/result shapes.",
-        "not": {},
-        "title": "Pending"
+        "additionalProperties": false,
+        "description": "Arming consent is part of the mutation and must be persisted with its decision.",
+        "if": {
+          "properties": {
+            "mode": {
+              "const": "armed"
+            }
+          }
+        },
+        "properties": {
+          "acknowledgement": {
+            "$ref": "#/$defs/ModeAcknowledgement"
+          },
+          "mode": {
+            "$ref": "#/$defs/RuleMode"
+          },
+          "rule_id": {
+            "$ref": "#/$defs/RuleId"
+          }
+        },
+        "required": [
+          "rule_id",
+          "mode"
+        ],
+        "then": {
+          "properties": {
+            "acknowledgement": true
+          },
+          "required": [
+            "acknowledgement"
+          ]
+        },
+        "title": "RulesSetModeParams",
+        "type": "object"
       },
       "result": {
+        "$defs": {
+          "DecisionId": {
+            "pattern": "^[0-7][0-9A-HJKMNP-TV-Z]{25}$(?![\\s\\S])",
+            "type": "string"
+          },
+          "DecisionKind": {
+            "enum": [
+              "held",
+              "released",
+              "removed",
+              "warned",
+              "timed_out",
+              "banned",
+              "ban_pending",
+              "mode_changed",
+              "undone",
+              "would_act"
+            ],
+            "type": "string"
+          },
+          "MessageId": {
+            "pattern": "^[A-Za-z0-9_-]+$(?![\\s\\S])",
+            "type": "string"
+          },
+          "Operator": {
+            "enum": [
+              "human",
+              "ai",
+              "ai_proposes"
+            ],
+            "type": "string"
+          },
+          "RuleId": {
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$(?![\\s\\S])",
+            "type": "string"
+          },
+          "Timestamp": {
+            "format": "date-time",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?Z$(?![\\s\\S])",
+            "type": "string"
+          },
+          "Verdict": {
+            "enum": [
+              "pass",
+              "hold",
+              "bar"
+            ],
+            "type": "string"
+          }
+        },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Deliberately unusable until its owning WP supplies request/result shapes.",
-        "not": {},
-        "title": "Pending"
+        "additionalProperties": false,
+        "description": "Review payload, not the append-only ledger record. Pending bans contain original text.",
+        "if": {
+          "properties": {
+            "kind": {
+              "const": "ban_pending"
+            }
+          }
+        },
+        "properties": {
+          "at": {
+            "$ref": "#/$defs/Timestamp"
+          },
+          "decision_id": {
+            "$ref": "#/$defs/DecisionId"
+          },
+          "kind": {
+            "$ref": "#/$defs/DecisionKind"
+          },
+          "message_id": {
+            "$ref": "#/$defs/MessageId"
+          },
+          "message_text": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "operator": {
+            "$ref": "#/$defs/Operator"
+          },
+          "reason_codes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "rule_id": {
+            "$ref": "#/$defs/RuleId"
+          },
+          "simulated": {
+            "type": "boolean"
+          },
+          "verdict": {
+            "$ref": "#/$defs/Verdict"
+          }
+        },
+        "required": [
+          "decision_id",
+          "message_id",
+          "kind",
+          "verdict",
+          "operator",
+          "at",
+          "simulated",
+          "reason_codes"
+        ],
+        "then": {
+          "properties": {
+            "message_text": true
+          },
+          "required": [
+            "message_text"
+          ]
+        },
+        "title": "Decision",
+        "type": "object"
       }
     },
     {
       "name": "gatehouse.ban.confirm",
       "owner": "WP 1.1",
       "params": {
+        "$defs": {
+          "DecisionId": {
+            "pattern": "^[0-7][0-9A-HJKMNP-TV-Z]{25}$(?![\\s\\S])",
+            "type": "string"
+          }
+        },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Deliberately unusable until its owning WP supplies request/result shapes.",
-        "not": {},
-        "title": "Pending"
+        "additionalProperties": false,
+        "description": "References the durable decision being confirmed, dismissed or undone.",
+        "properties": {
+          "decision_id": {
+            "$ref": "#/$defs/DecisionId"
+          }
+        },
+        "required": [
+          "decision_id"
+        ],
+        "title": "DecisionParams",
+        "type": "object"
       },
       "result": {
+        "$defs": {
+          "DecisionId": {
+            "pattern": "^[0-7][0-9A-HJKMNP-TV-Z]{25}$(?![\\s\\S])",
+            "type": "string"
+          },
+          "DecisionKind": {
+            "enum": [
+              "held",
+              "released",
+              "removed",
+              "warned",
+              "timed_out",
+              "banned",
+              "ban_pending",
+              "mode_changed",
+              "undone",
+              "would_act"
+            ],
+            "type": "string"
+          },
+          "MessageId": {
+            "pattern": "^[A-Za-z0-9_-]+$(?![\\s\\S])",
+            "type": "string"
+          },
+          "Operator": {
+            "enum": [
+              "human",
+              "ai",
+              "ai_proposes"
+            ],
+            "type": "string"
+          },
+          "RuleId": {
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$(?![\\s\\S])",
+            "type": "string"
+          },
+          "Timestamp": {
+            "format": "date-time",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?Z$(?![\\s\\S])",
+            "type": "string"
+          },
+          "Verdict": {
+            "enum": [
+              "pass",
+              "hold",
+              "bar"
+            ],
+            "type": "string"
+          }
+        },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Deliberately unusable until its owning WP supplies request/result shapes.",
-        "not": {},
-        "title": "Pending"
+        "additionalProperties": false,
+        "description": "Review payload, not the append-only ledger record. Pending bans contain original text.",
+        "if": {
+          "properties": {
+            "kind": {
+              "const": "ban_pending"
+            }
+          }
+        },
+        "properties": {
+          "at": {
+            "$ref": "#/$defs/Timestamp"
+          },
+          "decision_id": {
+            "$ref": "#/$defs/DecisionId"
+          },
+          "kind": {
+            "$ref": "#/$defs/DecisionKind"
+          },
+          "message_id": {
+            "$ref": "#/$defs/MessageId"
+          },
+          "message_text": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "operator": {
+            "$ref": "#/$defs/Operator"
+          },
+          "reason_codes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "rule_id": {
+            "$ref": "#/$defs/RuleId"
+          },
+          "simulated": {
+            "type": "boolean"
+          },
+          "verdict": {
+            "$ref": "#/$defs/Verdict"
+          }
+        },
+        "required": [
+          "decision_id",
+          "message_id",
+          "kind",
+          "verdict",
+          "operator",
+          "at",
+          "simulated",
+          "reason_codes"
+        ],
+        "then": {
+          "properties": {
+            "message_text": true
+          },
+          "required": [
+            "message_text"
+          ]
+        },
+        "title": "Decision",
+        "type": "object"
       }
     },
     {
       "name": "gatehouse.ban.dismiss",
       "owner": "WP 1.1",
       "params": {
+        "$defs": {
+          "DecisionId": {
+            "pattern": "^[0-7][0-9A-HJKMNP-TV-Z]{25}$(?![\\s\\S])",
+            "type": "string"
+          }
+        },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Deliberately unusable until its owning WP supplies request/result shapes.",
-        "not": {},
-        "title": "Pending"
+        "additionalProperties": false,
+        "description": "References the durable decision being confirmed, dismissed or undone.",
+        "properties": {
+          "decision_id": {
+            "$ref": "#/$defs/DecisionId"
+          }
+        },
+        "required": [
+          "decision_id"
+        ],
+        "title": "DecisionParams",
+        "type": "object"
       },
       "result": {
+        "$defs": {
+          "DecisionId": {
+            "pattern": "^[0-7][0-9A-HJKMNP-TV-Z]{25}$(?![\\s\\S])",
+            "type": "string"
+          },
+          "DecisionKind": {
+            "enum": [
+              "held",
+              "released",
+              "removed",
+              "warned",
+              "timed_out",
+              "banned",
+              "ban_pending",
+              "mode_changed",
+              "undone",
+              "would_act"
+            ],
+            "type": "string"
+          },
+          "MessageId": {
+            "pattern": "^[A-Za-z0-9_-]+$(?![\\s\\S])",
+            "type": "string"
+          },
+          "Operator": {
+            "enum": [
+              "human",
+              "ai",
+              "ai_proposes"
+            ],
+            "type": "string"
+          },
+          "RuleId": {
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$(?![\\s\\S])",
+            "type": "string"
+          },
+          "Timestamp": {
+            "format": "date-time",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?Z$(?![\\s\\S])",
+            "type": "string"
+          },
+          "Verdict": {
+            "enum": [
+              "pass",
+              "hold",
+              "bar"
+            ],
+            "type": "string"
+          }
+        },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Deliberately unusable until its owning WP supplies request/result shapes.",
-        "not": {},
-        "title": "Pending"
+        "additionalProperties": false,
+        "description": "Review payload, not the append-only ledger record. Pending bans contain original text.",
+        "if": {
+          "properties": {
+            "kind": {
+              "const": "ban_pending"
+            }
+          }
+        },
+        "properties": {
+          "at": {
+            "$ref": "#/$defs/Timestamp"
+          },
+          "decision_id": {
+            "$ref": "#/$defs/DecisionId"
+          },
+          "kind": {
+            "$ref": "#/$defs/DecisionKind"
+          },
+          "message_id": {
+            "$ref": "#/$defs/MessageId"
+          },
+          "message_text": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "operator": {
+            "$ref": "#/$defs/Operator"
+          },
+          "reason_codes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "rule_id": {
+            "$ref": "#/$defs/RuleId"
+          },
+          "simulated": {
+            "type": "boolean"
+          },
+          "verdict": {
+            "$ref": "#/$defs/Verdict"
+          }
+        },
+        "required": [
+          "decision_id",
+          "message_id",
+          "kind",
+          "verdict",
+          "operator",
+          "at",
+          "simulated",
+          "reason_codes"
+        ],
+        "then": {
+          "properties": {
+            "message_text": true
+          },
+          "required": [
+            "message_text"
+          ]
+        },
+        "title": "Decision",
+        "type": "object"
       }
     },
     {
       "name": "gatehouse.decision.undo",
       "owner": "WP 1.1",
       "params": {
+        "$defs": {
+          "DecisionId": {
+            "pattern": "^[0-7][0-9A-HJKMNP-TV-Z]{25}$(?![\\s\\S])",
+            "type": "string"
+          }
+        },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Deliberately unusable until its owning WP supplies request/result shapes.",
-        "not": {},
-        "title": "Pending"
+        "additionalProperties": false,
+        "description": "References the durable decision being confirmed, dismissed or undone.",
+        "properties": {
+          "decision_id": {
+            "$ref": "#/$defs/DecisionId"
+          }
+        },
+        "required": [
+          "decision_id"
+        ],
+        "title": "DecisionParams",
+        "type": "object"
       },
       "result": {
+        "$defs": {
+          "DecisionId": {
+            "pattern": "^[0-7][0-9A-HJKMNP-TV-Z]{25}$(?![\\s\\S])",
+            "type": "string"
+          },
+          "DecisionKind": {
+            "enum": [
+              "held",
+              "released",
+              "removed",
+              "warned",
+              "timed_out",
+              "banned",
+              "ban_pending",
+              "mode_changed",
+              "undone",
+              "would_act"
+            ],
+            "type": "string"
+          },
+          "MessageId": {
+            "pattern": "^[A-Za-z0-9_-]+$(?![\\s\\S])",
+            "type": "string"
+          },
+          "Operator": {
+            "enum": [
+              "human",
+              "ai",
+              "ai_proposes"
+            ],
+            "type": "string"
+          },
+          "RuleId": {
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$(?![\\s\\S])",
+            "type": "string"
+          },
+          "Timestamp": {
+            "format": "date-time",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?Z$(?![\\s\\S])",
+            "type": "string"
+          },
+          "Verdict": {
+            "enum": [
+              "pass",
+              "hold",
+              "bar"
+            ],
+            "type": "string"
+          }
+        },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Deliberately unusable until its owning WP supplies request/result shapes.",
-        "not": {},
-        "title": "Pending"
+        "additionalProperties": false,
+        "description": "Review payload, not the append-only ledger record. Pending bans contain original text.",
+        "if": {
+          "properties": {
+            "kind": {
+              "const": "ban_pending"
+            }
+          }
+        },
+        "properties": {
+          "at": {
+            "$ref": "#/$defs/Timestamp"
+          },
+          "decision_id": {
+            "$ref": "#/$defs/DecisionId"
+          },
+          "kind": {
+            "$ref": "#/$defs/DecisionKind"
+          },
+          "message_id": {
+            "$ref": "#/$defs/MessageId"
+          },
+          "message_text": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "operator": {
+            "$ref": "#/$defs/Operator"
+          },
+          "reason_codes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "rule_id": {
+            "$ref": "#/$defs/RuleId"
+          },
+          "simulated": {
+            "type": "boolean"
+          },
+          "verdict": {
+            "$ref": "#/$defs/Verdict"
+          }
+        },
+        "required": [
+          "decision_id",
+          "message_id",
+          "kind",
+          "verdict",
+          "operator",
+          "at",
+          "simulated",
+          "reason_codes"
+        ],
+        "then": {
+          "properties": {
+            "message_text": true
+          },
+          "required": [
+            "message_text"
+          ]
+        },
+        "title": "Decision",
+        "type": "object"
       }
     },
     {
       "name": "gatehouse.petition.resolve",
       "owner": "WP 1.1",
       "params": {
+        "$defs": {
+          "DecisionId": {
+            "pattern": "^[0-7][0-9A-HJKMNP-TV-Z]{25}$(?![\\s\\S])",
+            "type": "string"
+          },
+          "PetitionOutcome": {
+            "enum": [
+              "upheld",
+              "overturned"
+            ],
+            "type": "string"
+          }
+        },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Deliberately unusable until its owning WP supplies request/result shapes.",
-        "not": {},
-        "title": "Pending"
+        "additionalProperties": false,
+        "description": "An appeal addresses an existing decision; it does not introduce a second ID space.",
+        "properties": {
+          "decision_id": {
+            "$ref": "#/$defs/DecisionId"
+          },
+          "outcome": {
+            "$ref": "#/$defs/PetitionOutcome"
+          }
+        },
+        "required": [
+          "decision_id",
+          "outcome"
+        ],
+        "title": "PetitionResolveParams",
+        "type": "object"
       },
       "result": {
+        "$defs": {
+          "DecisionId": {
+            "pattern": "^[0-7][0-9A-HJKMNP-TV-Z]{25}$(?![\\s\\S])",
+            "type": "string"
+          },
+          "DecisionKind": {
+            "enum": [
+              "held",
+              "released",
+              "removed",
+              "warned",
+              "timed_out",
+              "banned",
+              "ban_pending",
+              "mode_changed",
+              "undone",
+              "would_act"
+            ],
+            "type": "string"
+          },
+          "MessageId": {
+            "pattern": "^[A-Za-z0-9_-]+$(?![\\s\\S])",
+            "type": "string"
+          },
+          "Operator": {
+            "enum": [
+              "human",
+              "ai",
+              "ai_proposes"
+            ],
+            "type": "string"
+          },
+          "RuleId": {
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$(?![\\s\\S])",
+            "type": "string"
+          },
+          "Timestamp": {
+            "format": "date-time",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?Z$(?![\\s\\S])",
+            "type": "string"
+          },
+          "Verdict": {
+            "enum": [
+              "pass",
+              "hold",
+              "bar"
+            ],
+            "type": "string"
+          }
+        },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Deliberately unusable until its owning WP supplies request/result shapes.",
-        "not": {},
-        "title": "Pending"
+        "additionalProperties": false,
+        "description": "Review payload, not the append-only ledger record. Pending bans contain original text.",
+        "if": {
+          "properties": {
+            "kind": {
+              "const": "ban_pending"
+            }
+          }
+        },
+        "properties": {
+          "at": {
+            "$ref": "#/$defs/Timestamp"
+          },
+          "decision_id": {
+            "$ref": "#/$defs/DecisionId"
+          },
+          "kind": {
+            "$ref": "#/$defs/DecisionKind"
+          },
+          "message_id": {
+            "$ref": "#/$defs/MessageId"
+          },
+          "message_text": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "operator": {
+            "$ref": "#/$defs/Operator"
+          },
+          "reason_codes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "rule_id": {
+            "$ref": "#/$defs/RuleId"
+          },
+          "simulated": {
+            "type": "boolean"
+          },
+          "verdict": {
+            "$ref": "#/$defs/Verdict"
+          }
+        },
+        "required": [
+          "decision_id",
+          "message_id",
+          "kind",
+          "verdict",
+          "operator",
+          "at",
+          "simulated",
+          "reason_codes"
+        ],
+        "then": {
+          "properties": {
+            "message_text": true
+          },
+          "required": [
+            "message_text"
+          ]
+        },
+        "title": "Decision",
+        "type": "object"
       }
     },
     {
@@ -1207,6 +2312,15 @@
       "title": "CheckResult",
       "type": "string"
     },
+    "CliProvider": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "enum": [
+        "claude_cli",
+        "codex_cli"
+      ],
+      "title": "CliProvider",
+      "type": "string"
+    },
     "DecisionId": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "pattern": "^[0-7][0-9A-HJKMNP-TV-Z]{25}$(?![\\s\\S])",
@@ -1380,6 +2494,15 @@
       "title": "Operator",
       "type": "string"
     },
+    "PetitionOutcome": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "enum": [
+        "upheld",
+        "overturned"
+      ],
+      "title": "PetitionOutcome",
+      "type": "string"
+    },
     "RandomnessSource": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "enum": [
@@ -1402,6 +2525,38 @@
     },
     "RpcRequest": {
       "$defs": {
+        "Action": {
+          "enum": [
+            "warn",
+            "delete",
+            "timeout",
+            "ban",
+            "hold"
+          ],
+          "type": "string"
+        },
+        "AutoBanGrant": {
+          "additionalProperties": false,
+          "properties": {
+            "breaker_tripped": {
+              "type": "boolean"
+            },
+            "expires_at": {
+              "$ref": "#/$defs/Timestamp"
+            },
+            "max_bans_per_hour": {
+              "format": "uint32",
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          "required": [
+            "expires_at",
+            "max_bans_per_hour",
+            "breaker_tripped"
+          ],
+          "type": "object"
+        },
         "DataValue": {
           "anyOf": [
             {
@@ -1428,6 +2583,23 @@
           ],
           "description": "JSON data excluding null, recursively. Unknown/absent values are omitted."
         },
+        "DecisionId": {
+          "pattern": "^[0-7][0-9A-HJKMNP-TV-Z]{25}$(?![\\s\\S])",
+          "type": "string"
+        },
+        "DecisionParams": {
+          "additionalProperties": false,
+          "description": "References the durable decision being confirmed, dismissed or undone.",
+          "properties": {
+            "decision_id": {
+              "$ref": "#/$defs/DecisionId"
+            }
+          },
+          "required": [
+            "decision_id"
+          ],
+          "type": "object"
+        },
         "Empty": {
           "additionalProperties": false,
           "type": "object"
@@ -1445,6 +2617,23 @@
           "required": [
             "login",
             "dry_run"
+          ],
+          "type": "object"
+        },
+        "ModeAcknowledgement": {
+          "additionalProperties": false,
+          "properties": {
+            "at": {
+              "$ref": "#/$defs/Timestamp"
+            },
+            "reason": {
+              "pattern": "\\S",
+              "type": "string"
+            }
+          },
+          "required": [
+            "at",
+            "reason"
           ],
           "type": "object"
         },
@@ -1484,6 +2673,30 @@
           "description": "Deliberately unusable until its owning WP supplies request/result shapes.",
           "not": {}
         },
+        "PetitionOutcome": {
+          "enum": [
+            "upheld",
+            "overturned"
+          ],
+          "type": "string"
+        },
+        "PetitionResolveParams": {
+          "additionalProperties": false,
+          "description": "An appeal addresses an existing decision; it does not introduce a second ID space.",
+          "properties": {
+            "decision_id": {
+              "$ref": "#/$defs/DecisionId"
+            },
+            "outcome": {
+              "$ref": "#/$defs/PetitionOutcome"
+            }
+          },
+          "required": [
+            "decision_id",
+            "outcome"
+          ],
+          "type": "object"
+        },
         "PurgeAllParams": {
           "additionalProperties": false,
           "properties": {
@@ -1493,6 +2706,145 @@
           },
           "required": [
             "dry_run"
+          ],
+          "type": "object"
+        },
+        "Rule": {
+          "additionalProperties": false,
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "rule_class": {
+                    "const": "rail"
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "mode": {
+                    "const": "armed"
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "rule_class": {
+                    "enum": [
+                      "rail",
+                      "classifier"
+                    ]
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "auto_ban_grant": false
+                }
+              }
+            }
+          ],
+          "description": "Rail modes are fixed. Delivery is a nonblank routing label, not executable code.",
+          "properties": {
+            "action": {
+              "$ref": "#/$defs/Action"
+            },
+            "auto_ban_grant": {
+              "$ref": "#/$defs/AutoBanGrant"
+            },
+            "delivery": {
+              "pattern": "\\S",
+              "type": "string"
+            },
+            "mode": {
+              "$ref": "#/$defs/RuleMode"
+            },
+            "name": {
+              "pattern": "\\S",
+              "type": "string"
+            },
+            "rule_class": {
+              "$ref": "#/$defs/RuleClass"
+            },
+            "rule_id": {
+              "$ref": "#/$defs/RuleId"
+            }
+          },
+          "required": [
+            "rule_id",
+            "name",
+            "rule_class",
+            "mode",
+            "action",
+            "delivery"
+          ],
+          "type": "object"
+        },
+        "RuleClass": {
+          "enum": [
+            "rail",
+            "pattern",
+            "classifier"
+          ],
+          "type": "string"
+        },
+        "RuleId": {
+          "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$(?![\\s\\S])",
+          "type": "string"
+        },
+        "RuleMode": {
+          "enum": [
+            "shadow",
+            "armed"
+          ],
+          "type": "string"
+        },
+        "RulesSetModeParams": {
+          "additionalProperties": false,
+          "description": "Arming consent is part of the mutation and must be persisted with its decision.",
+          "if": {
+            "properties": {
+              "mode": {
+                "const": "armed"
+              }
+            }
+          },
+          "properties": {
+            "acknowledgement": {
+              "$ref": "#/$defs/ModeAcknowledgement"
+            },
+            "mode": {
+              "$ref": "#/$defs/RuleMode"
+            },
+            "rule_id": {
+              "$ref": "#/$defs/RuleId"
+            }
+          },
+          "required": [
+            "rule_id",
+            "mode"
+          ],
+          "then": {
+            "properties": {
+              "acknowledgement": true
+            },
+            "required": [
+              "acknowledgement"
+            ]
+          },
+          "type": "object"
+        },
+        "RulesUpsertParams": {
+          "additionalProperties": false,
+          "properties": {
+            "rule": {
+              "$ref": "#/$defs/Rule"
+            }
+          },
+          "required": [
+            "rule"
           ],
           "type": "object"
         },
@@ -1510,6 +2862,11 @@
             "values"
           ],
           "type": "object"
+        },
+        "Timestamp": {
+          "format": "date-time",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?Z$(?![\\s\\S])",
+          "type": "string"
         }
       },
       "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -1709,7 +3066,7 @@
               "type": "string"
             },
             "params": {
-              "$ref": "#/$defs/Pending"
+              "$ref": "#/$defs/Empty"
             }
           },
           "required": [
@@ -1726,7 +3083,7 @@
               "type": "string"
             },
             "params": {
-              "$ref": "#/$defs/Pending"
+              "$ref": "#/$defs/RulesUpsertParams"
             }
           },
           "required": [
@@ -1743,7 +3100,7 @@
               "type": "string"
             },
             "params": {
-              "$ref": "#/$defs/Pending"
+              "$ref": "#/$defs/RulesSetModeParams"
             }
           },
           "required": [
@@ -1760,7 +3117,7 @@
               "type": "string"
             },
             "params": {
-              "$ref": "#/$defs/Pending"
+              "$ref": "#/$defs/DecisionParams"
             }
           },
           "required": [
@@ -1777,7 +3134,7 @@
               "type": "string"
             },
             "params": {
-              "$ref": "#/$defs/Pending"
+              "$ref": "#/$defs/DecisionParams"
             }
           },
           "required": [
@@ -1794,7 +3151,7 @@
               "type": "string"
             },
             "params": {
-              "$ref": "#/$defs/Pending"
+              "$ref": "#/$defs/DecisionParams"
             }
           },
           "required": [
@@ -1811,7 +3168,7 @@
               "type": "string"
             },
             "params": {
-              "$ref": "#/$defs/Pending"
+              "$ref": "#/$defs/PetitionResolveParams"
             }
           },
           "required": [
@@ -2281,6 +3638,16 @@
         }
       ],
       "title": "RpcRequest"
+    },
+    "RuleClass": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "enum": [
+        "rail",
+        "pattern",
+        "classifier"
+      ],
+      "title": "RuleClass",
+      "type": "string"
     },
     "RuleId": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",

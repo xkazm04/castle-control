@@ -57,6 +57,9 @@ fn every_enum_and_the_ten_error_codes_match_the_plan() {
     check!(
         Verdict,
         RuleMode,
+        RuleClass,
+        PetitionOutcome,
+        CliProvider,
         BridgeState,
         Action,
         DecisionKind,

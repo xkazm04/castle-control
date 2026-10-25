@@ -71,6 +71,14 @@ Part 1 left six questions and one comment open. The plan proceeds on the default
 | D8 | Desktop platforms | Windows first, the owner's machine with OBS. macOS and Linux builds join CI in M6 | M6 |
 | D9 | Name | "castle-control" is the working repo and product name. A trademark search runs before public release | M6 |
 
+**Operator standup, 2026-10-25 (overrides the earlier sequencing and policy gates).**
+Offline M1 and M2 prep (WP 1.1, WP 1.4, WP 2.1 and WP 2.2) may start before
+the WP 0.7 live spike. Nothing is wired to the live bridge and nothing is armed
+until the spike passes on Tue 10-27. WP 4.0 is dropped: no email to Twitch.
+M4 builds for local test and Hosted Test with allowlisted accounts only, with no
+review submission. The historical schedule and milestone references to a policy
+answer do not gate this test-only scope.
+
 ## Repo shape
 
 The repo is one Rust workspace plus one pnpm workspace, the same layout as Shadowrunr OS. Each module is a crate that plugs into the core in four ways:
@@ -469,6 +477,13 @@ Every other module reads chat only after the Gatehouse's verdict, so this milest
 
 *Builder Codex · reviewer Director · size M*
 
+**Proof-core ownership (operator standup, 2026-10-25).** The seal hash, beacon
+verification, cast and writ format live in the `crates/cc-verify` library,
+which `cc-lots` calls. The `lots.*` wire payloads land in a separate lots
+contract delivery before any lots RPC wiring; they remain Pending in this
+Gatehouse contract delivery. Offline prep is allowed under the standup exception
+above; it grants no live bridge wiring or armed actions before the spike.
+
 - **Scope:**
   - **Seal.** Freezing the roll writes the canonical entry list and its SHA-256, which is the seal.
   - **Beacon.** A drand quicknet client picks the first round after the seal plus a margin, then fetches that round and verifies its signature.
@@ -564,11 +579,10 @@ Every other module reads chat only after the Gatehouse's verdict, so this milest
 
 ### WP 4.0 — Ask Twitch first
 
-*Owner action · the director drafts it · size S*
-
-- **The question to Twitch Extensions support.** One reviewed shell would render streamer-authored design data: layout, components and art, with no executable code. Does that pass, and does per-streamer branding fit policy 4.9?
-- **Decision.** If the answer is no, the fallback ships: generic art in the streamer's colours only.
-- **Gate.** WP 4.1 starts only after the answer, so a rejection cannot revoke the client ID.
+**Dropped by the operator's 2026-10-25 standup.** No email is sent to Twitch.
+M4 builds for local test and Hosted Test with allowlisted accounts only; there
+is no review submission. This supersedes the historical policy-answer dependency
+elsewhere in the snapshot. It does not authorize public release or submission.
 
 ### WP 4.1 — Extension shell
 
@@ -694,6 +708,60 @@ These names are the wire contract. A package that needs a new one adds it to `cc
 
 `status.get` carries optional `stream` and `gatehouse` summaries, invalidated by `bridge.status` and `gatehouse.room` respectively; absent summaries mean unknown, never off.
 
+**WP 1.1 typed payloads (offline contract delivery, 2026-10-25).**
+
+| Type | Fields and constraints |
+| --- | --- |
+| `Rule` | `rule_id: RuleId`, nonblank `name`, `rule_class: RuleClass`, `mode: RuleMode`, `action: Action`, nonblank `delivery` routing label, optional `auto_ban_grant: AutoBanGrant` |
+| `AutoBanGrant` | `expires_at: Timestamp`, positive uint32 `max_bans_per_hour`, `breaker_tripped: bool`; scoped to the containing pattern rule only |
+| `ModeAcknowledgement` | `at: Timestamp`, nonblank `reason`; logged with the mode-change decision before arming |
+| `RulesListResult` | `rules: Rule[]` |
+| `RulesUpsertParams` | `rule: Rule` |
+| `RulesSetModeParams` | `rule_id: RuleId`, `mode: RuleMode`, optional `acknowledgement: ModeAcknowledgement`; acknowledgement required when mode is armed |
+| `DecisionParams` | `decision_id: DecisionId`; identifies the queued or original decision for confirm, dismiss or undo |
+| `PetitionResolveParams` | `decision_id: DecisionId`, `outcome: PetitionOutcome`; the outcome upholds or overturns the original decision |
+| `Decision` | `decision_id: DecisionId`, `message_id: MessageId`, `kind: DecisionKind`, `verdict: Verdict`, optional `rule_id: RuleId`, `operator: Operator`, `at: Timestamp`, `simulated: bool`, `reason_codes: string[]`, optional nonempty `message_text: string` |
+
+The seven method payload pairs are: rules.list takes Empty and returns
+RulesListResult; rules.upsert takes RulesUpsertParams and returns Rule;
+rules.setMode takes RulesSetModeParams and returns Decision; ban.confirm,
+ban.dismiss and decision.undo take DecisionParams and return Decision;
+petition.resolve takes PetitionResolveParams and returns Decision. These names
+are under the existing gatehouse method prefix. Later Gatehouse and all lots
+methods remain Pending.
+
+All records deny unknown fields. Present optional keys reject null. Unknown enum
+values, including verdicts, fail parsing; they are never coerced to pass.
+Rail rules must remain armed and cannot carry a grant. Only delivery can be
+configured for an existing rail: the owning action gate must compare stored
+rules on upsert and mode changes, and cannot treat an upsert as arming consent.
+Classifier rules cannot carry an auto-ban grant, enforced by Rust and schema
+parsers. A grant is configuration, never authority by itself: the action gate
+still checks armed mode, logged consent, expiry, the hourly ceiling and the
+breaker, and returns to human click when tripped. Delivery labels and reason
+codes are plain data, not executable instructions or new enum vocabularies.
+A ban_pending Decision requires the original message_text, never a summary.
+This is a review payload; the append-only ledger continues to store IDs rather
+than message text. The contract cannot prove that supplied text is original;
+the owning service must fetch it from its durable queue.
+
+**WP 1.4 engine settings (D10).** The existing Settings.values map uses these
+exact dotted keys; `parse_engine_settings` in cc-types is their sole typed parser:
+
+| Settings key | Type | Default |
+| --- | --- | --- |
+| `engine.cli_provider` | `CliProvider` | `claude_cli` (development default) |
+| `engine.live_endpoint` | HTTP(S) URL string | `http://127.0.0.1:11434/v1` (loopback OpenAI-compatible local model) |
+| `engine.cloud_opt_in` | bool | false |
+
+`EngineSettings` is the Rust-only typed view with `cli_provider`, `live_endpoint`
+and `cloud_opt_in`; it adds no second settings wire format. Missing keys take
+defaults. Invalid types, unknown providers and malformed endpoints return an
+`invalid` ErrorEnvelope without echoing the input. Endpoint URLs accept DNS/IP
+hosts, optional ports and paths/queries; credentials, fragments, whitespace,
+non-ASCII input and malformed escapes are refused. Endpoint authorization and
+cloud opt-in enforcement remain the engine's job. The CLI remains slow-lane only.
+
 **Conventions:**
 
 - **Method names** are `<module>.<noun>.<verb>`, in lower camel case.
@@ -730,6 +798,9 @@ These names are the wire contract. A package that needs a new one adds it to `cc
 | --- | --- |
 | `Verdict` | `pass`, `hold`, `bar` |
 | `RuleMode` | `shadow`, `armed` |
+| `RuleClass` | `rail`, `pattern`, `classifier` |
+| `PetitionOutcome` | `upheld`, `overturned` |
+| `CliProvider` | `claude_cli`, `codex_cli` |
 | `BridgeState` | `disconnected`, `connecting`, `connected`, `error` |
 | `Action` | `warn`, `delete`, `timeout`, `ban`, `hold` |
 | `DecisionKind` | `held`, `released`, `removed`, `warned`, `timed_out`, `banned`, `ban_pending`, `mode_changed`, `undone`, `would_act` |
