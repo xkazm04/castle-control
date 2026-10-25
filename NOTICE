@@ -5,3 +5,7 @@ Castle Control credits Shadowrunr OS, licensed under Apache-2.0.
 Reference source: C:/Users/kazda/kiro/overlord @ 7e4b6f8.
 Copied files carry a header naming their source path and commit.
 The WP 0.1 skeleton and gate tooling introduce no copied product code.
+
+WP 0.2 adapts the contract generator (packages/contract/scripts/) and
+the local server/event transport (crates/shadowrunr-daemon/src/server.rs,
+crates/shadowrunr-daemon/src/events.rs) from that pinned Shadowrunr OS source.

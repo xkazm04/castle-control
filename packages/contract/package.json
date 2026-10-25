@@ -3,11 +3,15 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "exports": "./src/index.ts",
   "scripts": {
+    "generate": "node scripts/generate.mjs",
+    "check": "node scripts/check.mjs",
     "typecheck": "node ../../scripts/package-gate.mjs typecheck",
     "lint": "node ../../scripts/package-gate.mjs lint",
-    "test": "node ../../scripts/package-gate.mjs test"
+    "test": "node ../../scripts/package-gate.mjs test && node scripts/test-codegen.mjs"
   },
+  "dependencies": { "ajv": "catalog:" },
   "devDependencies": {
     "@types/node": "24.10.0",
     "typescript": "catalog:",
