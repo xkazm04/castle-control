@@ -1,7 +1,8 @@
 #![allow(dead_code)]
 
 use cc_store::{
-    DataStore, DecisionAction, LedgerEvent, Store, StoredItem, Timestamp, TwitchUserId,
+    DataStore, DecisionAction, EngineClass, EngineProvider, LedgerEvent, ModelName, Store,
+    StoredItem, Timestamp, TwitchUserId,
 };
 use chrono::{TimeZone, Utc};
 use std::path::Path;
@@ -63,6 +64,10 @@ pub fn populated(path: &Path) -> Store {
             LedgerEvent::Engine {
                 call_id: Ulid::from(3u128),
                 cost_microusd: 5,
+                class: EngineClass::Batch,
+                provider: EngineProvider::LocalEndpoint,
+                model_selected: ModelName::parse("simulated-model").unwrap(),
+                model_served: None,
             },
         )
         .unwrap();

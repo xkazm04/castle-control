@@ -61,11 +61,36 @@ The public append API accepts a `LedgerEvent`, never arbitrary JSON or free text
 
 - `decision`: ULID decision ID, optional Twitch user ID, typed decision action;
 - `draw`: ULID draw-run ID and winner Twitch IDs;
-- `engine`: ULID call ID and integer cost in micro-US dollars.
+- `draw_risk_acknowledged`: configured draw slug and typed blocked setting;
+- `engine`: ULID call ID, integer cost in micro-US dollars, role class, provider,
+  selected model and optional served model.
+
+These are store-internal audit events, not wire contract identifiers. The schema
+remains version 1: ledgers have only been written by tests at this stage.
+`LedgerEvent::DrawRiskAcknowledged { draw_id: DrawSlug, setting: DrawRiskSetting }`
+goes to `draws.jsonl`; the enclosing `event_at` records acknowledgement time.
+It refers to the configured draw before any run exists, not a draw-run ULID.
+`DrawSlug::parse(&str)` (also `TryFrom<String>`) copies `cc_types::DrawId`'s
+nonempty lowercase ASCII letter/digit segments separated by single hyphens,
+without a length cap. `DrawRiskSetting` is `PaidEntry` (`paid_entry`), `PaidWeight`
+(`paid_weight`) or `PrizeValueOverCap` (`prize_value_over_cap`). No reason text is
+accepted. These cover the blocked rows in Part 1's giveaway table.
+
+`LedgerEvent::Engine` keeps `call_id: Ulid` and `cost_microusd: u64`, and adds
+`class: EngineClass`, `provider: EngineProvider`, `model_selected: ModelName` and
+`model_served: Option<ModelName>`. It goes to `engine.jsonl`.
+`EngineClass` is `Live`, `NearLive`, `Batch` or `Offline` (serialized as `live`,
+`near_live`, `batch`, `offline`). `EngineProvider` is `LocalEndpoint`, `OpenaiApi`,
+`ClaudeCli` or `CodexCli` (`local_endpoint`, `openai_api`, `claude_cli`, `codex_cli`).
+`ModelName::parse(&str)` (also `TryFrom<String>`) accepts 1–128 ASCII characters
+from `[A-Za-z0-9._:/@+-]`; construction and deserialization reject other text.
+Both newtypes provide `as_str()` and conversion into `String`. A rules-only
+fallback or refusal has no `model_served` key; explicit null is rejected.
+No new store, inventory entry or purge policy is introduced.
 
 Every line contains `schema_version: 1`, `event`, `event_at`, `recorded_at`, and
 `digest`. Both times are RFC 3339 UTC, normalized to nine fractional digits and
-`Z`. Keys and enum values are snake_case. Absent `user_id` is omitted; explicit
+`Z`. Keys and enum values are snake_case. Absent `user_id`/`model_served` are omitted; explicit
 nulls, unknown fields and invalid IDs/times are rejected by the typed boundary.
 
 Canonical serialization sorts object keys recursively in ascending ASCII order,
@@ -130,3 +155,12 @@ cargo test
 If network access is unavailable and dependencies are cached, use Cargo's
 `--offline` flag. The crate-local lockfile and target directory are ignored;
 the root workspace and its lockfile belong to WP 0.1.
+
+`tests/audit_events.rs` checks every engine class/provider, answered and unanswered
+calls, and all risk settings through append/read and reopening. Exact expected
+canonical bytes and independent SHA-256 digests prove the two file routes and
+schema version. It also rejects altered digests, noncanonical bytes, unknown
+fields/enums, explicit nulls and invalid model names; it copies DrawId's accept
+and reject cases from `cc-types/tests/contract.rs:108-114`. The final test verifies
+forget preserves both new events byte for byte and full purge erases them using
+the unchanged inventory. Existing append-only, retention and erasure tests remain.

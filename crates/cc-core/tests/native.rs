@@ -3,7 +3,10 @@ use cc_core::{
     AppState, EventHub, NativeConfig, NativeServices, Registry, bind, bridge_status,
     forward_bridge_event,
 };
-use cc_store::{DataStore, LedgerEvent, LedgerKind, Store, StoredItem, Timestamp as StoreTime};
+use cc_store::{
+    DataStore, EngineClass, EngineProvider, LedgerEvent, LedgerKind, ModelName, Store, StoredItem,
+    Timestamp as StoreTime,
+};
 use cc_twitch::{BridgeEvent, BridgeState, BridgeStatus, ConnectionGap, TwitchConfig};
 use cc_types::{ErrorCode, EventKind, StreamEvent, parse_request};
 use futures::StreamExt;
@@ -95,6 +98,10 @@ async fn native_registry_serves_reads_and_revoke_purges_the_real_store() {
             LedgerEvent::Engine {
                 call_id: ulid::Ulid::new(),
                 cost_microusd: 0,
+                class: EngineClass::Batch,
+                provider: EngineProvider::LocalEndpoint,
+                model_selected: ModelName::parse("simulated-model").unwrap(),
+                model_served: None,
             },
         )
         .unwrap();

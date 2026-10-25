@@ -1,4 +1,7 @@
-use crate::{Error, Result, Store, Timestamp, TwitchUserId};
+use crate::{
+    DrawRiskSetting, DrawSlug, EngineClass, EngineProvider, Error, ModelName, Result, Store,
+    Timestamp, TwitchUserId,
+};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::{
@@ -60,9 +63,26 @@ pub enum LedgerEvent {
         draw_run_id: Ulid,
         winner_user_ids: Vec<TwitchUserId>,
     },
+    /// Store-internal acknowledgement for a configured draw, before a run exists.
+    /// The enclosing line's event_at is the acknowledgement time; no reason text.
+    DrawRiskAcknowledged {
+        draw_id: DrawSlug,
+        setting: DrawRiskSetting,
+    },
+    /// Store-internal engine audit metadata; model_served is absent without an answer.
+    /// Schema version stays 1: no ledger has been written outside tests yet.
     Engine {
         call_id: Ulid,
         cost_microusd: u64,
+        class: EngineClass,
+        provider: EngineProvider,
+        model_selected: ModelName,
+        #[serde(
+            default,
+            skip_serializing_if = "Option::is_none",
+            deserialize_with = "optional_model_name"
+        )]
+        model_served: Option<ModelName>,
     },
 }
 
@@ -73,11 +93,18 @@ fn optional_user_id<'de, D: serde::Deserializer<'de>>(
     TwitchUserId::deserialize(deserializer).map(Some)
 }
 
+// As with optional_user_id, omit an absent value and reject an explicit null.
+fn optional_model_name<'de, D: serde::Deserializer<'de>>(
+    deserializer: D,
+) -> std::result::Result<Option<ModelName>, D::Error> {
+    ModelName::deserialize(deserializer).map(Some)
+}
+
 impl LedgerEvent {
     pub const fn ledger_kind(&self) -> LedgerKind {
         match self {
             Self::Decision { .. } => LedgerKind::Decisions,
-            Self::Draw { .. } => LedgerKind::Draws,
+            Self::Draw { .. } | Self::DrawRiskAcknowledged { .. } => LedgerKind::Draws,
             Self::Engine { .. } => LedgerKind::Engine,
         }
     }
