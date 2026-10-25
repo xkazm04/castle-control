@@ -1,0 +1,5 @@
+# Personas keeps .personas/project.json TRACKED on purpose: it is what
+# lets a moved checkout heal and what refuses a clone collision.
+.DS_Store
+.env
+.env.local
