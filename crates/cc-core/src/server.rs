@@ -18,16 +18,22 @@ use tokio::sync::watch;
 
 pub struct AppState {
     pub registry: Registry,
-    pub events: EventHub,
+    pub events: Arc<EventHub>,
     token: SessionToken,
     shutdown: watch::Sender<bool>,
 }
 
 impl AppState {
     pub fn new(registry: Registry, event_capacity: usize) -> Result<Arc<Self>, ErrorEnvelope> {
+        Self::with_events(registry, Arc::new(EventHub::new(event_capacity)?))
+    }
+    pub fn with_events(
+        registry: Registry,
+        events: Arc<EventHub>,
+    ) -> Result<Arc<Self>, ErrorEnvelope> {
         Ok(Arc::new(Self {
             registry,
-            events: EventHub::new(event_capacity)?,
+            events,
             token: SessionToken::mint(),
             shutdown: watch::Sender::new(false),
         }))

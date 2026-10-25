@@ -1,3 +1,4 @@
+use crate::NativeServices;
 use cc_types::{ErrorCode, ErrorEnvelope, RpcRequest, StatusResult, Timestamp};
 use futures::future::BoxFuture;
 use serde_json::Value;
@@ -50,10 +51,17 @@ impl Registry {
     }
 
     pub fn with_status() -> Self {
+        Self::native(None)
+    }
+    pub fn with_native(services: Arc<NativeServices>) -> Self {
+        Self::native(Some(services))
+    }
+    fn native(services: Option<Arc<NativeServices>>) -> Self {
         let mut registry = Self::default();
         registry
             .register(Arc::new(StatusModule {
                 started: Instant::now(),
+                services,
             }))
             .expect("built-in method is declared and unique");
         registry
@@ -62,13 +70,17 @@ impl Registry {
 
 pub struct StatusModule {
     started: Instant,
+    services: Option<Arc<NativeServices>>,
 }
 impl Module for StatusModule {
     fn methods(&self) -> &'static [&'static str] {
-        &["status.get"]
+        NativeServices::METHODS
     }
     fn call<'a>(&'a self, request: &'a RpcRequest) -> BoxFuture<'a, Result<Value, ErrorEnvelope>> {
         Box::pin(async move {
+            if let Some(services) = &self.services {
+                return services.call(request).await;
+            }
             match request {
                 RpcRequest::StatusGet(_) => serde_json::to_value(StatusResult {
                     at: Timestamp::now(),
@@ -90,8 +102,8 @@ impl Module for StatusModule {
                     ErrorEnvelope::new(ErrorCode::Internal, "status serialization failed")
                 }),
                 _ => Err(ErrorEnvelope::new(
-                    ErrorCode::NotFound,
-                    "method not handled by status module",
+                    ErrorCode::Unavailable,
+                    "native adapters have not been configured",
                 )),
             }
         })

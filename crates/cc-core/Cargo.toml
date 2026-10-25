@@ -5,9 +5,22 @@ edition.workspace = true
 license.workspace = true
 rust-version.workspace = true
 
+[features]
+spike = ["cc-twitch/fault-injection"]
+
+[[bin]]
+name = "spike"
+path = "src/bin/spike.rs"
+required-features = ["spike"]
+
 [dependencies]
 axum = { workspace = true, features = ["ws"] }
 cc-types = { path = "../cc-types" }
+cc-twitch = { path = "../cc-twitch" }
+cc-store = { path = "../cc-store" }
+cc-obs = { path = "../cc-obs" }
+async-trait = "0.1.89"
+ulid = "1.2.1"
 futures = "0.3.32"
 rand = "0.9.2"
 serde = { version = "1.0.228", features = ["derive"] }
@@ -17,3 +30,4 @@ tokio.workspace = true
 [dev-dependencies]
 reqwest = { version = "0.12.28", default-features = false, features = ["json"] }
 tokio-tungstenite = "0.28.0"
+tempfile = "3.22"

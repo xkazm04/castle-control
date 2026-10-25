@@ -296,15 +296,40 @@ dependencies = [
 name = "cc-core"
 version = "0.1.0"
 dependencies = [
+ "async-trait",
  "axum",
+ "cc-obs",
+ "cc-store",
+ "cc-twitch",
  "cc-types",
  "futures",
  "rand 0.9.5",
  "reqwest",
  "serde",
  "serde_json",
+ "tempfile",
  "tokio",
  "tokio-tungstenite 0.28.0",
+ "ulid",
+]
+
+[[package]]
+name = "cc-obs"
+version = "0.1.0"
+dependencies = [
+ "axum",
+ "base64 0.22.1",
+ "futures",
+ "keyring",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "sha2",
+ "tokio",
+ "tokio-tungstenite 0.28.0",
+ "tracing",
+ "tracing-subscriber",
+ "zeroize",
 ]
 
 [[package]]
