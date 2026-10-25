@@ -1,0 +1,17 @@
+.cc-page-header { display: flex; flex-direction: column; gap: var(--space-6); padding: var(--space-14) 0 var(--space-12); }
+.cc-breadcrumb { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-8); font: 600 var(--text-label)/1.2 var(--font-ui); color: var(--muted); letter-spacing: var(--track-label); text-transform: uppercase; }
+.cc-breadcrumb a { text-decoration: none; }
+.cc-breadcrumb a:hover { text-decoration: underline; }
+.cc-breadcrumb b { color: var(--plate-text); }
+.cc-title-row { display: flex; align-items: flex-end; gap: var(--space-20); }
+.cc-title-row h1 { position: relative; isolation: isolate; flex: none; font: 800 var(--text-title)/.9 var(--font-display); font-stretch: 75%; letter-spacing: var(--track-title); text-transform: uppercase; }
+.cc-title-row h1::after { content: attr(data-text); position: absolute; top: var(--title-ghost); left: var(--title-ghost); white-space: nowrap; color: var(--plate); mix-blend-mode: var(--blend); pointer-events: none; }
+[data-module="studio"] .cc-title-row h1::after { color: var(--azure); }
+.cc-title-row p { max-width: var(--text-width); padding-bottom: var(--space-3); font: italic var(--text-aside)/1.35 var(--font-serif); color: var(--ink-2); }
+.cc-page-actions { margin-left: auto; display: flex; gap: var(--space-8); align-items: center; justify-content: flex-end; flex-wrap: wrap; }
+.cc-panel { border-top: var(--rule-strong) solid var(--rule); padding-top: var(--space-8); min-width: 0; }
+.cc-panel-heading { display: flex; align-items: baseline; gap: var(--space-10); min-height: var(--space-20); margin-bottom: var(--space-8); }
+.cc-panel-heading h2 { font: 800 var(--text-section)/1.1 var(--font-display); font-stretch: 75%; text-transform: uppercase; letter-spacing: var(--track-heading); }
+.cc-panel-number { font: 700 var(--text-label)/1 var(--font-num); color: var(--plate-text); border: var(--rule-medium) solid var(--plate-text); border-radius: var(--space-2); padding: var(--space-2) var(--space-4); }
+.cc-panel-gloss { color: var(--muted); font: italic var(--text-small)/1 var(--font-serif); }
+.cc-panel-meta { margin-left: auto; color: var(--muted); font: 600 var(--text-label)/1.2 var(--font-ui); }

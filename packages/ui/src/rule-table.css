@@ -1,0 +1,12 @@
+.cc-rule-scroll { max-height: var(--table-window); overflow: auto; position: relative; }
+.cc-rule-table { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: var(--text-small); }
+.cc-rule-table thead { position: sticky; top: 0; z-index: 2; background: var(--card); }
+.cc-rule-table th { text-align: left; }
+.cc-rule-table .cc-rule-hits { text-align: right; font-family: var(--font-num); font-variant-numeric: tabular-nums; }
+.cc-rule-table thead th { color: var(--muted); font: 700 var(--text-label)/1.2 var(--font-ui); text-transform: uppercase; letter-spacing: var(--track-wide); padding: var(--space-6) var(--space-8); border-bottom: var(--rule-medium) solid var(--ink); }
+.cc-rule-table tbody tr { height: var(--row-h); }
+.cc-rule-table tbody th, .cc-rule-table td { padding: 0 var(--space-8); border-bottom: var(--rule-thin) solid var(--hair-2); vertical-align: middle; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cc-rule-table tbody tr:hover { background: var(--tint); }
+.cc-rule-table .cc-table-spacer { height: auto; }
+.cc-rule-table .cc-table-spacer td { border: 0; padding: 0; }
+.cc-no-rules { padding: var(--space-12); color: var(--muted); }

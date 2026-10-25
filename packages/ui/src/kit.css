@@ -1,0 +1,9 @@
+body { margin: 0; }
+.cc-kit-sheet { width: var(--kit-w); min-height: var(--kit-h); }
+.cc-kit-sheet .cc-shell { min-height: var(--kit-h); }
+.cc-kit-sheet .cc-chambers { height: calc(var(--kit-h) - var(--mh)); }
+.cc-kit-stack { display: flex; flex-direction: column; gap: var(--space-20); }
+.cc-kit-row { display: flex; gap: var(--space-8); flex-wrap: wrap; align-items: center; }
+.cc-kit-row + .cc-kit-row { margin-top: var(--space-8); }
+.cc-kit-note { color: var(--muted); font-size: var(--text-small); padding-top: var(--space-8); }
+.cc-kit-columns { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-24); }

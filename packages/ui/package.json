@@ -1,0 +1,32 @@
+{
+  "name": "@castle-control/ui",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "scripts": {
+    "dev": "vite kit --host 127.0.0.1",
+    "build": "vite build kit --outDir ../dist && node src/check-build.ts",
+    "typecheck": "node ../../scripts/package-gate.mjs typecheck",
+    "lint": "node ../../scripts/package-gate.mjs lint",
+    "test": "node ../../scripts/package-gate.mjs test"
+  },
+  "dependencies": {
+    "@castle-control/tokens": "workspace:*",
+    "react": "catalog:",
+    "react-dom": "catalog:"
+  },
+  "devDependencies": {
+    "@types/node": "24.10.0",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:",
+    "vitest": "catalog:"
+  }
+}
