@@ -35,6 +35,7 @@ fn main() {
         ErrorEnvelope,
         StreamEvent,
         LotsEventPayload,
+        ConsensusEventPayload,
         RpcRequest
     );
     let doc: Value = json!({"methods": method_schemas(), "types": types,

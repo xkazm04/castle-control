@@ -729,8 +729,8 @@ RulesListResult; rules.upsert takes RulesUpsertParams and returns Rule;
 rules.setMode takes RulesSetModeParams and returns Decision; ban.confirm,
 ban.dismiss and decision.undo take DecisionParams and return Decision;
 petition.resolve takes PetitionResolveParams and returns Decision. These names
-are under the existing gatehouse method prefix. Later Gatehouse methods remain
-Pending; lots methods are typed by the delivery below.
+are under the existing gatehouse method prefix. WP 1.2/1.3 methods remain
+Pending; WP 1.5/1.6 and lots methods are typed by the deliveries below.
 
 Pattern rules require pattern and forbid text; classifier rules require text and
 forbid pattern. Rails forbid pattern, text and strikes: detectors are owned by
@@ -756,6 +756,44 @@ A ban_pending Decision requires the original message_text, never a summary.
 This is a review payload; the append-only ledger continues to store IDs rather
 than message text. The contract cannot prove that supplied text is original;
 the owning service must fetch it from its durable queue.
+
+**WP 1.5/1.6 typed payloads (contract delivery, 2026-10-25).**
+
+| Method or type | Params, result and invariants |
+| --- | --- |
+| `gatehouse.consensus.get` (WP 1.5) | `ConsensusGetParams { window_s: positive uint32, filter: ConsensusFilter }` -> `ConsensusGetResult { at: Timestamp, window_s: positive uint32, filter, directions: OpinionDirection[], shed_count: uint32 }`; sliding window ends at `at`, and shed_count reports messages shed in that window/filter even when directions is empty |
+| `ConsensusFilter` | Closed record union tagged by `kind`: `all`, `emotes`, `text`, or `emote` with required nonempty `emote`; other variants forbid an emote field |
+| `OpinionDirection` | Nonempty `key` and `label`, `share: ConsensusShare`, optional `delta_3m: ConsensusDelta`, `messages: uint32`, `series: ConsensusPoint[]`; a point is `{ at: Timestamp, share: ConsensusShare }` |
+| Consensus scalars | `ConsensusShare`: finite number 0..1; `ConsensusDelta`: finite number -1..1, share now minus share 180 seconds earlier (fraction units). Missing history omits delta_3m rather than inventing a zero |
+| `ConsensusEventPayload` | Existing `gatehouse.consensus` event only: `{ kind: "gatehouse.consensus", payload: ConsensusGetResult }`; no new event names or event transport changes |
+| `gatehouse.drill.run` (WP 1.6) | `DrillRunParams { recording: GatehouseText, configuration: DrillConfiguration }` -> `DrillRunResult` |
+| `gatehouse.drill.diff` (WP 1.6) | `DrillDiffParams { recording: GatehouseText, baseline: DrillConfiguration, candidate: DrillConfiguration }` -> `DrillDiffResult { label: "simulated", baseline: DrillRunResult, candidate: DrillRunResult, changes: DrillChange[] }`; sides retain separate instruments and summaries, never a pooled score |
+| `DrillConfiguration` | `rules: Rule[]`, nonempty `bank` and `judge` configuration labels, `prompts: GatehouseText[]`; the service resolves immutable bank/judge contents, not executable code or a model selected at a call site |
+| `DrillRunResult` | `label: "simulated"`, nonempty `source`, `instrument_hash: InstrumentHash`, `instrument: DrillInstrument`, `outcomes: DrillOutcome[]`, `summary: DrillSummary`, `gaps: BridgeGap[]` |
+| `DrillInstrument` | `rules_hash`, `bank_hash`, `judge_hash`, `prompts_hash`, each an `InstrumentHash`; the run's instrument_hash identifies the canonical instrument covering all four inputs |
+| `InstrumentHash` | Exactly 64 lowercase ASCII hexadecimal characters (SHA-256), without a prefix, whitespace or trailing newline; Rust TryFrom and JSON Schema reject the same malformed hashes |
+| `DrillState` | Exactly `acted`, `not_provoked`, `not_evaluable`, `judge_pending`, `judge_void`, `engine_failed`; these are evaluation states, not new moderation verdicts |
+| `DrillOutcome` | `message_id: MessageId`, nonempty `source`, `at: Timestamp`, `state: DrillState`; optional existing `verdict: Verdict`, `action: Action`, `rule_id: RuleId`, and direct observation `passed: bool`; omit unavailable observations |
+| `DrillSummary` | `passes: uint32` counted directly from observed passes, `states: DrillStateCounts` with one uint32 counter per named state, `over_moderation: OverModeration { evaluated: uint32, false_positives: uint32 }`; over-moderation has its own explicit denominator |
+| `DrillChange` | `message_id: MessageId`, `before: DrillState`, `after: DrillState`; full per-side outcomes retain action/verdict details even when the state is unchanged |
+| `gatehouse.recording.import` (WP 1.6) | `RecordingImportParams { source: GatehouseText, messages: RecordedMessage[], gaps: BridgeGap[] }` -> `RecordingImportResult { recording: GatehouseText, source: GatehouseText, message_count: uint32, gaps: BridgeGap[] }` |
+| `RecordedMessage` | Existing `message_id: MessageId`, `user_id: TwitchUserId` (string), `at: Timestamp`, `text: string`; imported content is inert replay data, never moderation authority |
+| Recording references and source | `GatehouseText` is a nonempty string. `recording` is an opaque service-owned reference, never a caller-supplied file path. `source` is a provenance label, never a location to fetch. Import results, both replay/diff sides and every outcome retain source. `BridgeGap { from: Timestamp, to: Timestamp }` preserves missing intervals |
+
+All records deny unknown fields. Present optional keys reject null; absent keys
+are omitted. Rust parsers/TryFrom and generated JSON Schema enforce the same
+scalar, tagged-union and shape invariants above. Replay results and diff wrappers
+can only carry the `simulated` label. Rule, Action, Verdict and existing IDs retain
+their current constraints; no separate replay verdict/identity vocabulary is added.
+
+This delivery supplies no handler, recorder, replay engine, classifier, publisher
+or hash implementation. WP 1.5 must enforce post-verdict intake, window/series
+semantics and shedding counts. WP 1.6 must resolve recording references under the
+owner's retention policy, preserve source and gaps, compute and verify instrument
+hashes from canonical rules/bank/judge/prompts, count actual observations, validate
+summary arithmetic and diff alignment, and refuse aggregation across different
+instrument hashes. It must keep replay writes out of the live ledger. Hash shape
+validation alone does not prove the supplied digest or summary is correct.
 
 **Lots typed payloads (contract delivery, 2026-10-25).**
 

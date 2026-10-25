@@ -2341,64 +2341,1682 @@
       "name": "gatehouse.consensus.get",
       "owner": "WP 1.5",
       "params": {
+        "$defs": {
+          "ConsensusFilter": {
+            "oneOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "kind": {
+                    "const": "all",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "kind": {
+                    "const": "emotes",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "kind": {
+                    "const": "text",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "emote": {
+                    "$ref": "#/$defs/GatehouseText"
+                  },
+                  "kind": {
+                    "const": "emote",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "emote"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "GatehouseText": {
+            "description": "Nonempty opaque text. Recording references are service-owned handles, not paths.",
+            "minLength": 1,
+            "type": "string"
+          }
+        },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Deliberately unusable until its owning WP supplies request/result shapes.",
-        "not": {},
-        "title": "Pending"
+        "additionalProperties": false,
+        "properties": {
+          "filter": {
+            "$ref": "#/$defs/ConsensusFilter"
+          },
+          "window_s": {
+            "format": "uint32",
+            "minimum": 1,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "window_s",
+          "filter"
+        ],
+        "title": "ConsensusGetParams",
+        "type": "object"
       },
       "result": {
+        "$defs": {
+          "ConsensusDelta": {
+            "format": "double",
+            "maximum": 1,
+            "minimum": -1,
+            "type": "number"
+          },
+          "ConsensusFilter": {
+            "oneOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "kind": {
+                    "const": "all",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "kind": {
+                    "const": "emotes",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "kind": {
+                    "const": "text",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "emote": {
+                    "$ref": "#/$defs/GatehouseText"
+                  },
+                  "kind": {
+                    "const": "emote",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "emote"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "ConsensusPoint": {
+            "additionalProperties": false,
+            "properties": {
+              "at": {
+                "$ref": "#/$defs/Timestamp"
+              },
+              "share": {
+                "$ref": "#/$defs/ConsensusShare"
+              }
+            },
+            "required": [
+              "at",
+              "share"
+            ],
+            "type": "object"
+          },
+          "ConsensusShare": {
+            "format": "double",
+            "maximum": 1,
+            "minimum": 0,
+            "type": "number"
+          },
+          "GatehouseText": {
+            "description": "Nonempty opaque text. Recording references are service-owned handles, not paths.",
+            "minLength": 1,
+            "type": "string"
+          },
+          "OpinionDirection": {
+            "additionalProperties": false,
+            "properties": {
+              "delta_3m": {
+                "$ref": "#/$defs/ConsensusDelta",
+                "description": "Share now minus share 180 seconds ago, in fraction units, not percent.\nAbsent until enough history exists; never invent a zero delta."
+              },
+              "key": {
+                "$ref": "#/$defs/GatehouseText",
+                "description": "Plain data key scoped to this chart, not a new branded ID namespace."
+              },
+              "label": {
+                "$ref": "#/$defs/GatehouseText"
+              },
+              "messages": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "series": {
+                "items": {
+                  "$ref": "#/$defs/ConsensusPoint"
+                },
+                "type": "array"
+              },
+              "share": {
+                "$ref": "#/$defs/ConsensusShare"
+              }
+            },
+            "required": [
+              "key",
+              "label",
+              "share",
+              "messages",
+              "series"
+            ],
+            "type": "object"
+          },
+          "Timestamp": {
+            "format": "date-time",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?Z$(?![\\s\\S])",
+            "type": "string"
+          }
+        },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Deliberately unusable until its owning WP supplies request/result shapes.",
-        "not": {},
-        "title": "Pending"
+        "additionalProperties": false,
+        "properties": {
+          "at": {
+            "$ref": "#/$defs/Timestamp",
+            "description": "End of the sliding window. The window starts window_s seconds before at."
+          },
+          "directions": {
+            "items": {
+              "$ref": "#/$defs/OpinionDirection"
+            },
+            "type": "array"
+          },
+          "filter": {
+            "$ref": "#/$defs/ConsensusFilter"
+          },
+          "shed_count": {
+            "description": "Messages shed within this window/filter, reported even when no direction remains.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "window_s": {
+            "format": "uint32",
+            "minimum": 1,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "at",
+          "window_s",
+          "filter",
+          "directions",
+          "shed_count"
+        ],
+        "title": "ConsensusGetResult",
+        "type": "object"
       }
     },
     {
       "name": "gatehouse.drill.run",
       "owner": "WP 1.6",
       "params": {
+        "$defs": {
+          "Action": {
+            "enum": [
+              "warn",
+              "delete",
+              "timeout",
+              "ban",
+              "hold"
+            ],
+            "type": "string"
+          },
+          "AutoBanGrant": {
+            "additionalProperties": false,
+            "properties": {
+              "breaker_tripped": {
+                "type": "boolean"
+              },
+              "expires_at": {
+                "$ref": "#/$defs/Timestamp"
+              },
+              "max_bans_per_hour": {
+                "format": "uint32",
+                "minimum": 1,
+                "type": "integer"
+              }
+            },
+            "required": [
+              "expires_at",
+              "max_bans_per_hour",
+              "breaker_tripped"
+            ],
+            "type": "object"
+          },
+          "DrillConfiguration": {
+            "additionalProperties": false,
+            "description": "Bank and judge are service-resolved configuration labels, not model names or code.\nWP 1.6 resolves their immutable contents and hashes all four inputs before running.",
+            "properties": {
+              "bank": {
+                "$ref": "#/$defs/GatehouseText"
+              },
+              "judge": {
+                "$ref": "#/$defs/GatehouseText"
+              },
+              "prompts": {
+                "items": {
+                  "$ref": "#/$defs/GatehouseText"
+                },
+                "type": "array"
+              },
+              "rules": {
+                "items": {
+                  "$ref": "#/$defs/Rule"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "rules",
+              "bank",
+              "judge",
+              "prompts"
+            ],
+            "type": "object"
+          },
+          "GatehouseText": {
+            "description": "Nonempty opaque text. Recording references are service-owned handles, not paths.",
+            "minLength": 1,
+            "type": "string"
+          },
+          "Rule": {
+            "additionalProperties": false,
+            "allOf": [
+              {
+                "if": {
+                  "properties": {
+                    "rule_class": {
+                      "const": "rail"
+                    }
+                  }
+                },
+                "then": {
+                  "properties": {
+                    "mode": {
+                      "const": "armed"
+                    },
+                    "pattern": false,
+                    "strikes": false,
+                    "text": false
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "rule_class": {
+                      "const": "pattern"
+                    }
+                  }
+                },
+                "then": {
+                  "properties": {
+                    "pattern": true,
+                    "text": false
+                  },
+                  "required": [
+                    "pattern"
+                  ]
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "rule_class": {
+                      "const": "classifier"
+                    }
+                  }
+                },
+                "then": {
+                  "properties": {
+                    "pattern": false,
+                    "strikes": {
+                      "properties": {
+                        "then": {
+                          "not": {
+                            "const": "ban"
+                          }
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "text": true
+                  },
+                  "required": [
+                    "text"
+                  ]
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "rule_class": {
+                      "enum": [
+                        "rail",
+                        "classifier"
+                      ]
+                    }
+                  }
+                },
+                "then": {
+                  "properties": {
+                    "auto_ban_grant": false
+                  }
+                }
+              },
+              {
+                "else": {
+                  "properties": {
+                    "timeout_s": false
+                  }
+                },
+                "if": {
+                  "properties": {
+                    "action": {
+                      "const": "timeout"
+                    }
+                  }
+                },
+                "then": {
+                  "properties": {
+                    "timeout_s": true
+                  },
+                  "required": [
+                    "timeout_s"
+                  ]
+                }
+              }
+            ],
+            "description": "Rail modes are fixed. Delivery is a nonblank routing label, not executable code.\nPatterns are nonblank data here; cc-gatehouse compiles regexes and refuses bad\npatterns on upsert. This contract does not validate regex compilation.",
+            "properties": {
+              "action": {
+                "$ref": "#/$defs/Action"
+              },
+              "auto_ban_grant": {
+                "$ref": "#/$defs/AutoBanGrant"
+              },
+              "delivery": {
+                "pattern": "\\S",
+                "type": "string"
+              },
+              "mode": {
+                "$ref": "#/$defs/RuleMode"
+              },
+              "name": {
+                "pattern": "\\S",
+                "type": "string"
+              },
+              "pattern": {
+                "pattern": "\\S",
+                "type": "string"
+              },
+              "rule_class": {
+                "$ref": "#/$defs/RuleClass"
+              },
+              "rule_id": {
+                "$ref": "#/$defs/RuleId"
+              },
+              "strikes": {
+                "$ref": "#/$defs/StrikePolicy"
+              },
+              "text": {
+                "maxLength": 500,
+                "pattern": "\\S",
+                "type": "string"
+              },
+              "timeout_s": {
+                "format": "uint32",
+                "maximum": 1209600,
+                "minimum": 1,
+                "type": "integer"
+              }
+            },
+            "required": [
+              "rule_id",
+              "name",
+              "rule_class",
+              "mode",
+              "action",
+              "delivery"
+            ],
+            "type": "object"
+          },
+          "RuleClass": {
+            "enum": [
+              "rail",
+              "pattern",
+              "classifier"
+            ],
+            "type": "string"
+          },
+          "RuleId": {
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$(?![\\s\\S])",
+            "type": "string"
+          },
+          "RuleMode": {
+            "enum": [
+              "shadow",
+              "armed"
+            ],
+            "type": "string"
+          },
+          "StrikePolicy": {
+            "additionalProperties": false,
+            "allOf": [
+              {
+                "else": {
+                  "properties": {
+                    "then_timeout_s": false
+                  }
+                },
+                "if": {
+                  "properties": {
+                    "then": {
+                      "const": "timeout"
+                    }
+                  }
+                },
+                "then": {
+                  "properties": {
+                    "then_timeout_s": true
+                  },
+                  "required": [
+                    "then_timeout_s"
+                  ]
+                }
+              }
+            ],
+            "description": "Escalate after `count` hits of the same rule by the same viewer within `window_s`.",
+            "properties": {
+              "count": {
+                "format": "uint32",
+                "minimum": 1,
+                "type": "integer"
+              },
+              "then": {
+                "$ref": "#/$defs/Action"
+              },
+              "then_timeout_s": {
+                "format": "uint32",
+                "maximum": 1209600,
+                "minimum": 1,
+                "type": "integer"
+              },
+              "window_s": {
+                "format": "uint32",
+                "minimum": 1,
+                "type": "integer"
+              }
+            },
+            "required": [
+              "count",
+              "window_s",
+              "then"
+            ],
+            "type": "object"
+          },
+          "Timestamp": {
+            "format": "date-time",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?Z$(?![\\s\\S])",
+            "type": "string"
+          }
+        },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Deliberately unusable until its owning WP supplies request/result shapes.",
-        "not": {},
-        "title": "Pending"
+        "additionalProperties": false,
+        "properties": {
+          "configuration": {
+            "$ref": "#/$defs/DrillConfiguration"
+          },
+          "recording": {
+            "$ref": "#/$defs/GatehouseText"
+          }
+        },
+        "required": [
+          "recording",
+          "configuration"
+        ],
+        "title": "DrillRunParams",
+        "type": "object"
       },
       "result": {
+        "$defs": {
+          "Action": {
+            "enum": [
+              "warn",
+              "delete",
+              "timeout",
+              "ban",
+              "hold"
+            ],
+            "type": "string"
+          },
+          "BridgeGap": {
+            "additionalProperties": false,
+            "properties": {
+              "from": {
+                "$ref": "#/$defs/Timestamp"
+              },
+              "to": {
+                "$ref": "#/$defs/Timestamp"
+              }
+            },
+            "required": [
+              "from",
+              "to"
+            ],
+            "type": "object"
+          },
+          "DrillInstrument": {
+            "additionalProperties": false,
+            "properties": {
+              "bank_hash": {
+                "$ref": "#/$defs/InstrumentHash"
+              },
+              "judge_hash": {
+                "$ref": "#/$defs/InstrumentHash"
+              },
+              "prompts_hash": {
+                "$ref": "#/$defs/InstrumentHash"
+              },
+              "rules_hash": {
+                "$ref": "#/$defs/InstrumentHash"
+              }
+            },
+            "required": [
+              "rules_hash",
+              "bank_hash",
+              "judge_hash",
+              "prompts_hash"
+            ],
+            "type": "object"
+          },
+          "DrillOutcome": {
+            "additionalProperties": false,
+            "description": "Source accompanies every result row, so detached/exported rows keep provenance.",
+            "properties": {
+              "action": {
+                "$ref": "#/$defs/Action"
+              },
+              "at": {
+                "$ref": "#/$defs/Timestamp"
+              },
+              "message_id": {
+                "$ref": "#/$defs/MessageId"
+              },
+              "passed": {
+                "description": "A direct evaluation observation. Omit when the judge has no valid answer.",
+                "type": "boolean"
+              },
+              "rule_id": {
+                "$ref": "#/$defs/RuleId"
+              },
+              "source": {
+                "$ref": "#/$defs/GatehouseText"
+              },
+              "state": {
+                "$ref": "#/$defs/DrillState"
+              },
+              "verdict": {
+                "$ref": "#/$defs/Verdict"
+              }
+            },
+            "required": [
+              "message_id",
+              "source",
+              "at",
+              "state"
+            ],
+            "type": "object"
+          },
+          "DrillState": {
+            "enum": [
+              "acted",
+              "not_provoked",
+              "not_evaluable",
+              "judge_pending",
+              "judge_void",
+              "engine_failed"
+            ],
+            "type": "string"
+          },
+          "DrillStateCounts": {
+            "additionalProperties": false,
+            "properties": {
+              "acted": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "engine_failed": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "judge_pending": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "judge_void": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "not_evaluable": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "not_provoked": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              }
+            },
+            "required": [
+              "acted",
+              "not_provoked",
+              "not_evaluable",
+              "judge_pending",
+              "judge_void",
+              "engine_failed"
+            ],
+            "type": "object"
+          },
+          "DrillSummary": {
+            "additionalProperties": false,
+            "properties": {
+              "over_moderation": {
+                "$ref": "#/$defs/OverModeration"
+              },
+              "passes": {
+                "description": "Count observed passes directly; never total minus failures or pending cases.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "states": {
+                "$ref": "#/$defs/DrillStateCounts"
+              }
+            },
+            "required": [
+              "passes",
+              "states",
+              "over_moderation"
+            ],
+            "type": "object"
+          },
+          "GatehouseText": {
+            "description": "Nonempty opaque text. Recording references are service-owned handles, not paths.",
+            "minLength": 1,
+            "type": "string"
+          },
+          "InstrumentHash": {
+            "description": "Canonical SHA-256 digest. Checking its contents against inputs belongs to WP 1.6.",
+            "pattern": "^[0-9a-f]{64}$(?![\\s\\S])",
+            "type": "string"
+          },
+          "MessageId": {
+            "pattern": "^[A-Za-z0-9_-]+$(?![\\s\\S])",
+            "type": "string"
+          },
+          "OverModeration": {
+            "additionalProperties": false,
+            "description": "Its denominator is explicit: this axis is never inferred from the pass count.",
+            "properties": {
+              "evaluated": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "false_positives": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              }
+            },
+            "required": [
+              "evaluated",
+              "false_positives"
+            ],
+            "type": "object"
+          },
+          "RuleId": {
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$(?![\\s\\S])",
+            "type": "string"
+          },
+          "SimulationLabel": {
+            "enum": [
+              "simulated"
+            ],
+            "type": "string"
+          },
+          "Timestamp": {
+            "format": "date-time",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?Z$(?![\\s\\S])",
+            "type": "string"
+          },
+          "Verdict": {
+            "enum": [
+              "pass",
+              "hold",
+              "bar"
+            ],
+            "type": "string"
+          }
+        },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Deliberately unusable until its owning WP supplies request/result shapes.",
-        "not": {},
-        "title": "Pending"
+        "additionalProperties": false,
+        "properties": {
+          "gaps": {
+            "description": "Missing recording intervals stay explicit, never fabricated as successful replay.",
+            "items": {
+              "$ref": "#/$defs/BridgeGap"
+            },
+            "type": "array"
+          },
+          "instrument": {
+            "$ref": "#/$defs/DrillInstrument"
+          },
+          "instrument_hash": {
+            "$ref": "#/$defs/InstrumentHash",
+            "description": "Hash of the canonical instrument (rules, bank, judge and prompts)."
+          },
+          "label": {
+            "$ref": "#/$defs/SimulationLabel"
+          },
+          "outcomes": {
+            "items": {
+              "$ref": "#/$defs/DrillOutcome"
+            },
+            "type": "array"
+          },
+          "source": {
+            "$ref": "#/$defs/GatehouseText"
+          },
+          "summary": {
+            "$ref": "#/$defs/DrillSummary"
+          }
+        },
+        "required": [
+          "label",
+          "source",
+          "instrument_hash",
+          "instrument",
+          "outcomes",
+          "summary",
+          "gaps"
+        ],
+        "title": "DrillRunResult",
+        "type": "object"
       }
     },
     {
       "name": "gatehouse.drill.diff",
       "owner": "WP 1.6",
       "params": {
+        "$defs": {
+          "Action": {
+            "enum": [
+              "warn",
+              "delete",
+              "timeout",
+              "ban",
+              "hold"
+            ],
+            "type": "string"
+          },
+          "AutoBanGrant": {
+            "additionalProperties": false,
+            "properties": {
+              "breaker_tripped": {
+                "type": "boolean"
+              },
+              "expires_at": {
+                "$ref": "#/$defs/Timestamp"
+              },
+              "max_bans_per_hour": {
+                "format": "uint32",
+                "minimum": 1,
+                "type": "integer"
+              }
+            },
+            "required": [
+              "expires_at",
+              "max_bans_per_hour",
+              "breaker_tripped"
+            ],
+            "type": "object"
+          },
+          "DrillConfiguration": {
+            "additionalProperties": false,
+            "description": "Bank and judge are service-resolved configuration labels, not model names or code.\nWP 1.6 resolves their immutable contents and hashes all four inputs before running.",
+            "properties": {
+              "bank": {
+                "$ref": "#/$defs/GatehouseText"
+              },
+              "judge": {
+                "$ref": "#/$defs/GatehouseText"
+              },
+              "prompts": {
+                "items": {
+                  "$ref": "#/$defs/GatehouseText"
+                },
+                "type": "array"
+              },
+              "rules": {
+                "items": {
+                  "$ref": "#/$defs/Rule"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "rules",
+              "bank",
+              "judge",
+              "prompts"
+            ],
+            "type": "object"
+          },
+          "GatehouseText": {
+            "description": "Nonempty opaque text. Recording references are service-owned handles, not paths.",
+            "minLength": 1,
+            "type": "string"
+          },
+          "Rule": {
+            "additionalProperties": false,
+            "allOf": [
+              {
+                "if": {
+                  "properties": {
+                    "rule_class": {
+                      "const": "rail"
+                    }
+                  }
+                },
+                "then": {
+                  "properties": {
+                    "mode": {
+                      "const": "armed"
+                    },
+                    "pattern": false,
+                    "strikes": false,
+                    "text": false
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "rule_class": {
+                      "const": "pattern"
+                    }
+                  }
+                },
+                "then": {
+                  "properties": {
+                    "pattern": true,
+                    "text": false
+                  },
+                  "required": [
+                    "pattern"
+                  ]
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "rule_class": {
+                      "const": "classifier"
+                    }
+                  }
+                },
+                "then": {
+                  "properties": {
+                    "pattern": false,
+                    "strikes": {
+                      "properties": {
+                        "then": {
+                          "not": {
+                            "const": "ban"
+                          }
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "text": true
+                  },
+                  "required": [
+                    "text"
+                  ]
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "rule_class": {
+                      "enum": [
+                        "rail",
+                        "classifier"
+                      ]
+                    }
+                  }
+                },
+                "then": {
+                  "properties": {
+                    "auto_ban_grant": false
+                  }
+                }
+              },
+              {
+                "else": {
+                  "properties": {
+                    "timeout_s": false
+                  }
+                },
+                "if": {
+                  "properties": {
+                    "action": {
+                      "const": "timeout"
+                    }
+                  }
+                },
+                "then": {
+                  "properties": {
+                    "timeout_s": true
+                  },
+                  "required": [
+                    "timeout_s"
+                  ]
+                }
+              }
+            ],
+            "description": "Rail modes are fixed. Delivery is a nonblank routing label, not executable code.\nPatterns are nonblank data here; cc-gatehouse compiles regexes and refuses bad\npatterns on upsert. This contract does not validate regex compilation.",
+            "properties": {
+              "action": {
+                "$ref": "#/$defs/Action"
+              },
+              "auto_ban_grant": {
+                "$ref": "#/$defs/AutoBanGrant"
+              },
+              "delivery": {
+                "pattern": "\\S",
+                "type": "string"
+              },
+              "mode": {
+                "$ref": "#/$defs/RuleMode"
+              },
+              "name": {
+                "pattern": "\\S",
+                "type": "string"
+              },
+              "pattern": {
+                "pattern": "\\S",
+                "type": "string"
+              },
+              "rule_class": {
+                "$ref": "#/$defs/RuleClass"
+              },
+              "rule_id": {
+                "$ref": "#/$defs/RuleId"
+              },
+              "strikes": {
+                "$ref": "#/$defs/StrikePolicy"
+              },
+              "text": {
+                "maxLength": 500,
+                "pattern": "\\S",
+                "type": "string"
+              },
+              "timeout_s": {
+                "format": "uint32",
+                "maximum": 1209600,
+                "minimum": 1,
+                "type": "integer"
+              }
+            },
+            "required": [
+              "rule_id",
+              "name",
+              "rule_class",
+              "mode",
+              "action",
+              "delivery"
+            ],
+            "type": "object"
+          },
+          "RuleClass": {
+            "enum": [
+              "rail",
+              "pattern",
+              "classifier"
+            ],
+            "type": "string"
+          },
+          "RuleId": {
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$(?![\\s\\S])",
+            "type": "string"
+          },
+          "RuleMode": {
+            "enum": [
+              "shadow",
+              "armed"
+            ],
+            "type": "string"
+          },
+          "StrikePolicy": {
+            "additionalProperties": false,
+            "allOf": [
+              {
+                "else": {
+                  "properties": {
+                    "then_timeout_s": false
+                  }
+                },
+                "if": {
+                  "properties": {
+                    "then": {
+                      "const": "timeout"
+                    }
+                  }
+                },
+                "then": {
+                  "properties": {
+                    "then_timeout_s": true
+                  },
+                  "required": [
+                    "then_timeout_s"
+                  ]
+                }
+              }
+            ],
+            "description": "Escalate after `count` hits of the same rule by the same viewer within `window_s`.",
+            "properties": {
+              "count": {
+                "format": "uint32",
+                "minimum": 1,
+                "type": "integer"
+              },
+              "then": {
+                "$ref": "#/$defs/Action"
+              },
+              "then_timeout_s": {
+                "format": "uint32",
+                "maximum": 1209600,
+                "minimum": 1,
+                "type": "integer"
+              },
+              "window_s": {
+                "format": "uint32",
+                "minimum": 1,
+                "type": "integer"
+              }
+            },
+            "required": [
+              "count",
+              "window_s",
+              "then"
+            ],
+            "type": "object"
+          },
+          "Timestamp": {
+            "format": "date-time",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?Z$(?![\\s\\S])",
+            "type": "string"
+          }
+        },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Deliberately unusable until its owning WP supplies request/result shapes.",
-        "not": {},
-        "title": "Pending"
+        "additionalProperties": false,
+        "properties": {
+          "baseline": {
+            "$ref": "#/$defs/DrillConfiguration"
+          },
+          "candidate": {
+            "$ref": "#/$defs/DrillConfiguration"
+          },
+          "recording": {
+            "$ref": "#/$defs/GatehouseText"
+          }
+        },
+        "required": [
+          "recording",
+          "baseline",
+          "candidate"
+        ],
+        "title": "DrillDiffParams",
+        "type": "object"
       },
       "result": {
+        "$defs": {
+          "Action": {
+            "enum": [
+              "warn",
+              "delete",
+              "timeout",
+              "ban",
+              "hold"
+            ],
+            "type": "string"
+          },
+          "BridgeGap": {
+            "additionalProperties": false,
+            "properties": {
+              "from": {
+                "$ref": "#/$defs/Timestamp"
+              },
+              "to": {
+                "$ref": "#/$defs/Timestamp"
+              }
+            },
+            "required": [
+              "from",
+              "to"
+            ],
+            "type": "object"
+          },
+          "DrillChange": {
+            "additionalProperties": false,
+            "properties": {
+              "after": {
+                "$ref": "#/$defs/DrillState"
+              },
+              "before": {
+                "$ref": "#/$defs/DrillState"
+              },
+              "message_id": {
+                "$ref": "#/$defs/MessageId"
+              }
+            },
+            "required": [
+              "message_id",
+              "before",
+              "after"
+            ],
+            "type": "object"
+          },
+          "DrillInstrument": {
+            "additionalProperties": false,
+            "properties": {
+              "bank_hash": {
+                "$ref": "#/$defs/InstrumentHash"
+              },
+              "judge_hash": {
+                "$ref": "#/$defs/InstrumentHash"
+              },
+              "prompts_hash": {
+                "$ref": "#/$defs/InstrumentHash"
+              },
+              "rules_hash": {
+                "$ref": "#/$defs/InstrumentHash"
+              }
+            },
+            "required": [
+              "rules_hash",
+              "bank_hash",
+              "judge_hash",
+              "prompts_hash"
+            ],
+            "type": "object"
+          },
+          "DrillOutcome": {
+            "additionalProperties": false,
+            "description": "Source accompanies every result row, so detached/exported rows keep provenance.",
+            "properties": {
+              "action": {
+                "$ref": "#/$defs/Action"
+              },
+              "at": {
+                "$ref": "#/$defs/Timestamp"
+              },
+              "message_id": {
+                "$ref": "#/$defs/MessageId"
+              },
+              "passed": {
+                "description": "A direct evaluation observation. Omit when the judge has no valid answer.",
+                "type": "boolean"
+              },
+              "rule_id": {
+                "$ref": "#/$defs/RuleId"
+              },
+              "source": {
+                "$ref": "#/$defs/GatehouseText"
+              },
+              "state": {
+                "$ref": "#/$defs/DrillState"
+              },
+              "verdict": {
+                "$ref": "#/$defs/Verdict"
+              }
+            },
+            "required": [
+              "message_id",
+              "source",
+              "at",
+              "state"
+            ],
+            "type": "object"
+          },
+          "DrillRunResult": {
+            "additionalProperties": false,
+            "properties": {
+              "gaps": {
+                "description": "Missing recording intervals stay explicit, never fabricated as successful replay.",
+                "items": {
+                  "$ref": "#/$defs/BridgeGap"
+                },
+                "type": "array"
+              },
+              "instrument": {
+                "$ref": "#/$defs/DrillInstrument"
+              },
+              "instrument_hash": {
+                "$ref": "#/$defs/InstrumentHash",
+                "description": "Hash of the canonical instrument (rules, bank, judge and prompts)."
+              },
+              "label": {
+                "$ref": "#/$defs/SimulationLabel"
+              },
+              "outcomes": {
+                "items": {
+                  "$ref": "#/$defs/DrillOutcome"
+                },
+                "type": "array"
+              },
+              "source": {
+                "$ref": "#/$defs/GatehouseText"
+              },
+              "summary": {
+                "$ref": "#/$defs/DrillSummary"
+              }
+            },
+            "required": [
+              "label",
+              "source",
+              "instrument_hash",
+              "instrument",
+              "outcomes",
+              "summary",
+              "gaps"
+            ],
+            "type": "object"
+          },
+          "DrillState": {
+            "enum": [
+              "acted",
+              "not_provoked",
+              "not_evaluable",
+              "judge_pending",
+              "judge_void",
+              "engine_failed"
+            ],
+            "type": "string"
+          },
+          "DrillStateCounts": {
+            "additionalProperties": false,
+            "properties": {
+              "acted": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "engine_failed": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "judge_pending": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "judge_void": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "not_evaluable": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "not_provoked": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              }
+            },
+            "required": [
+              "acted",
+              "not_provoked",
+              "not_evaluable",
+              "judge_pending",
+              "judge_void",
+              "engine_failed"
+            ],
+            "type": "object"
+          },
+          "DrillSummary": {
+            "additionalProperties": false,
+            "properties": {
+              "over_moderation": {
+                "$ref": "#/$defs/OverModeration"
+              },
+              "passes": {
+                "description": "Count observed passes directly; never total minus failures or pending cases.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "states": {
+                "$ref": "#/$defs/DrillStateCounts"
+              }
+            },
+            "required": [
+              "passes",
+              "states",
+              "over_moderation"
+            ],
+            "type": "object"
+          },
+          "GatehouseText": {
+            "description": "Nonempty opaque text. Recording references are service-owned handles, not paths.",
+            "minLength": 1,
+            "type": "string"
+          },
+          "InstrumentHash": {
+            "description": "Canonical SHA-256 digest. Checking its contents against inputs belongs to WP 1.6.",
+            "pattern": "^[0-9a-f]{64}$(?![\\s\\S])",
+            "type": "string"
+          },
+          "MessageId": {
+            "pattern": "^[A-Za-z0-9_-]+$(?![\\s\\S])",
+            "type": "string"
+          },
+          "OverModeration": {
+            "additionalProperties": false,
+            "description": "Its denominator is explicit: this axis is never inferred from the pass count.",
+            "properties": {
+              "evaluated": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "false_positives": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              }
+            },
+            "required": [
+              "evaluated",
+              "false_positives"
+            ],
+            "type": "object"
+          },
+          "RuleId": {
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$(?![\\s\\S])",
+            "type": "string"
+          },
+          "SimulationLabel": {
+            "enum": [
+              "simulated"
+            ],
+            "type": "string"
+          },
+          "Timestamp": {
+            "format": "date-time",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?Z$(?![\\s\\S])",
+            "type": "string"
+          },
+          "Verdict": {
+            "enum": [
+              "pass",
+              "hold",
+              "bar"
+            ],
+            "type": "string"
+          }
+        },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Deliberately unusable until its owning WP supplies request/result shapes.",
-        "not": {},
-        "title": "Pending"
+        "additionalProperties": false,
+        "description": "Each side keeps its own instrument, source, gaps and summary. No merged score.",
+        "properties": {
+          "baseline": {
+            "$ref": "#/$defs/DrillRunResult"
+          },
+          "candidate": {
+            "$ref": "#/$defs/DrillRunResult"
+          },
+          "changes": {
+            "items": {
+              "$ref": "#/$defs/DrillChange"
+            },
+            "type": "array"
+          },
+          "label": {
+            "$ref": "#/$defs/SimulationLabel"
+          }
+        },
+        "required": [
+          "label",
+          "baseline",
+          "candidate",
+          "changes"
+        ],
+        "title": "DrillDiffResult",
+        "type": "object"
       }
     },
     {
       "name": "gatehouse.recording.import",
       "owner": "WP 1.6",
       "params": {
+        "$defs": {
+          "BridgeGap": {
+            "additionalProperties": false,
+            "properties": {
+              "from": {
+                "$ref": "#/$defs/Timestamp"
+              },
+              "to": {
+                "$ref": "#/$defs/Timestamp"
+              }
+            },
+            "required": [
+              "from",
+              "to"
+            ],
+            "type": "object"
+          },
+          "GatehouseText": {
+            "description": "Nonempty opaque text. Recording references are service-owned handles, not paths.",
+            "minLength": 1,
+            "type": "string"
+          },
+          "MessageId": {
+            "pattern": "^[A-Za-z0-9_-]+$(?![\\s\\S])",
+            "type": "string"
+          },
+          "RecordedMessage": {
+            "additionalProperties": false,
+            "properties": {
+              "at": {
+                "$ref": "#/$defs/Timestamp"
+              },
+              "message_id": {
+                "$ref": "#/$defs/MessageId"
+              },
+              "text": {
+                "type": "string"
+              },
+              "user_id": {
+                "$ref": "#/$defs/TwitchUserId"
+              }
+            },
+            "required": [
+              "message_id",
+              "user_id",
+              "at",
+              "text"
+            ],
+            "type": "object"
+          },
+          "Timestamp": {
+            "format": "date-time",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?Z$(?![\\s\\S])",
+            "type": "string"
+          },
+          "TwitchUserId": {
+            "pattern": "^[1-9][0-9]{0,31}$(?![\\s\\S])",
+            "type": "string"
+          }
+        },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Deliberately unusable until its owning WP supplies request/result shapes.",
-        "not": {},
-        "title": "Pending"
+        "additionalProperties": false,
+        "description": "Inert data only; source is a provenance label, never a URL to fetch or file to open.",
+        "properties": {
+          "gaps": {
+            "items": {
+              "$ref": "#/$defs/BridgeGap"
+            },
+            "type": "array"
+          },
+          "messages": {
+            "items": {
+              "$ref": "#/$defs/RecordedMessage"
+            },
+            "type": "array"
+          },
+          "source": {
+            "$ref": "#/$defs/GatehouseText"
+          }
+        },
+        "required": [
+          "source",
+          "messages",
+          "gaps"
+        ],
+        "title": "RecordingImportParams",
+        "type": "object"
       },
       "result": {
+        "$defs": {
+          "BridgeGap": {
+            "additionalProperties": false,
+            "properties": {
+              "from": {
+                "$ref": "#/$defs/Timestamp"
+              },
+              "to": {
+                "$ref": "#/$defs/Timestamp"
+              }
+            },
+            "required": [
+              "from",
+              "to"
+            ],
+            "type": "object"
+          },
+          "GatehouseText": {
+            "description": "Nonempty opaque text. Recording references are service-owned handles, not paths.",
+            "minLength": 1,
+            "type": "string"
+          },
+          "Timestamp": {
+            "format": "date-time",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?Z$(?![\\s\\S])",
+            "type": "string"
+          }
+        },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Deliberately unusable until its owning WP supplies request/result shapes.",
-        "not": {},
-        "title": "Pending"
+        "additionalProperties": false,
+        "properties": {
+          "gaps": {
+            "items": {
+              "$ref": "#/$defs/BridgeGap"
+            },
+            "type": "array"
+          },
+          "message_count": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "recording": {
+            "$ref": "#/$defs/GatehouseText"
+          },
+          "source": {
+            "$ref": "#/$defs/GatehouseText"
+          }
+        },
+        "required": [
+          "recording",
+          "source",
+          "message_count",
+          "gaps"
+        ],
+        "title": "RecordingImportResult",
+        "type": "object"
       }
     },
     {
@@ -4328,6 +5946,205 @@
       "title": "CliProvider",
       "type": "string"
     },
+    "ConsensusEventPayload": {
+      "$defs": {
+        "ConsensusDelta": {
+          "format": "double",
+          "maximum": 1,
+          "minimum": -1,
+          "type": "number"
+        },
+        "ConsensusFilter": {
+          "oneOf": [
+            {
+              "additionalProperties": false,
+              "properties": {
+                "kind": {
+                  "const": "all",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "kind"
+              ],
+              "type": "object"
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "kind": {
+                  "const": "emotes",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "kind"
+              ],
+              "type": "object"
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "kind": {
+                  "const": "text",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "kind"
+              ],
+              "type": "object"
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "emote": {
+                  "$ref": "#/$defs/GatehouseText"
+                },
+                "kind": {
+                  "const": "emote",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "kind",
+                "emote"
+              ],
+              "type": "object"
+            }
+          ]
+        },
+        "ConsensusGetResult": {
+          "additionalProperties": false,
+          "properties": {
+            "at": {
+              "$ref": "#/$defs/Timestamp",
+              "description": "End of the sliding window. The window starts window_s seconds before at."
+            },
+            "directions": {
+              "items": {
+                "$ref": "#/$defs/OpinionDirection"
+              },
+              "type": "array"
+            },
+            "filter": {
+              "$ref": "#/$defs/ConsensusFilter"
+            },
+            "shed_count": {
+              "description": "Messages shed within this window/filter, reported even when no direction remains.",
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "window_s": {
+              "format": "uint32",
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          "required": [
+            "at",
+            "window_s",
+            "filter",
+            "directions",
+            "shed_count"
+          ],
+          "type": "object"
+        },
+        "ConsensusPoint": {
+          "additionalProperties": false,
+          "properties": {
+            "at": {
+              "$ref": "#/$defs/Timestamp"
+            },
+            "share": {
+              "$ref": "#/$defs/ConsensusShare"
+            }
+          },
+          "required": [
+            "at",
+            "share"
+          ],
+          "type": "object"
+        },
+        "ConsensusShare": {
+          "format": "double",
+          "maximum": 1,
+          "minimum": 0,
+          "type": "number"
+        },
+        "GatehouseText": {
+          "description": "Nonempty opaque text. Recording references are service-owned handles, not paths.",
+          "minLength": 1,
+          "type": "string"
+        },
+        "OpinionDirection": {
+          "additionalProperties": false,
+          "properties": {
+            "delta_3m": {
+              "$ref": "#/$defs/ConsensusDelta",
+              "description": "Share now minus share 180 seconds ago, in fraction units, not percent.\nAbsent until enough history exists; never invent a zero delta."
+            },
+            "key": {
+              "$ref": "#/$defs/GatehouseText",
+              "description": "Plain data key scoped to this chart, not a new branded ID namespace."
+            },
+            "label": {
+              "$ref": "#/$defs/GatehouseText"
+            },
+            "messages": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "series": {
+              "items": {
+                "$ref": "#/$defs/ConsensusPoint"
+              },
+              "type": "array"
+            },
+            "share": {
+              "$ref": "#/$defs/ConsensusShare"
+            }
+          },
+          "required": [
+            "key",
+            "label",
+            "share",
+            "messages",
+            "series"
+          ],
+          "type": "object"
+        },
+        "Timestamp": {
+          "format": "date-time",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?Z$(?![\\s\\S])",
+          "type": "string"
+        }
+      },
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "description": "Only the event already named by the plan. StreamEvent remains invalidation-only.",
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "gatehouse.consensus",
+              "type": "string"
+            },
+            "payload": {
+              "$ref": "#/$defs/ConsensusGetResult"
+            }
+          },
+          "required": [
+            "kind",
+            "payload"
+          ],
+          "type": "object"
+        }
+      ],
+      "title": "ConsensusEventPayload"
+    },
     "DecisionId": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "pattern": "^[0-7][0-9A-HJKMNP-TV-Z]{25}$(?![\\s\\S])",
@@ -4921,6 +6738,22 @@
           ],
           "type": "object"
         },
+        "BridgeGap": {
+          "additionalProperties": false,
+          "properties": {
+            "from": {
+              "$ref": "#/$defs/Timestamp"
+            },
+            "to": {
+              "$ref": "#/$defs/Timestamp"
+            }
+          },
+          "required": [
+            "from",
+            "to"
+          ],
+          "type": "object"
+        },
         "CastParams": {
           "additionalProperties": false,
           "properties": {
@@ -4930,6 +6763,84 @@
           },
           "required": [
             "draw_run_id"
+          ],
+          "type": "object"
+        },
+        "ConsensusFilter": {
+          "oneOf": [
+            {
+              "additionalProperties": false,
+              "properties": {
+                "kind": {
+                  "const": "all",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "kind"
+              ],
+              "type": "object"
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "kind": {
+                  "const": "emotes",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "kind"
+              ],
+              "type": "object"
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "kind": {
+                  "const": "text",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "kind"
+              ],
+              "type": "object"
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "emote": {
+                  "$ref": "#/$defs/GatehouseText"
+                },
+                "kind": {
+                  "const": "emote",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "kind",
+                "emote"
+              ],
+              "type": "object"
+            }
+          ]
+        },
+        "ConsensusGetParams": {
+          "additionalProperties": false,
+          "properties": {
+            "filter": {
+              "$ref": "#/$defs/ConsensusFilter"
+            },
+            "window_s": {
+              "format": "uint32",
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          "required": [
+            "window_s",
+            "filter"
           ],
           "type": "object"
         },
@@ -5017,6 +6928,73 @@
           ],
           "type": "object"
         },
+        "DrillConfiguration": {
+          "additionalProperties": false,
+          "description": "Bank and judge are service-resolved configuration labels, not model names or code.\nWP 1.6 resolves their immutable contents and hashes all four inputs before running.",
+          "properties": {
+            "bank": {
+              "$ref": "#/$defs/GatehouseText"
+            },
+            "judge": {
+              "$ref": "#/$defs/GatehouseText"
+            },
+            "prompts": {
+              "items": {
+                "$ref": "#/$defs/GatehouseText"
+              },
+              "type": "array"
+            },
+            "rules": {
+              "items": {
+                "$ref": "#/$defs/Rule"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "rules",
+            "bank",
+            "judge",
+            "prompts"
+          ],
+          "type": "object"
+        },
+        "DrillDiffParams": {
+          "additionalProperties": false,
+          "properties": {
+            "baseline": {
+              "$ref": "#/$defs/DrillConfiguration"
+            },
+            "candidate": {
+              "$ref": "#/$defs/DrillConfiguration"
+            },
+            "recording": {
+              "$ref": "#/$defs/GatehouseText"
+            }
+          },
+          "required": [
+            "recording",
+            "baseline",
+            "candidate"
+          ],
+          "type": "object"
+        },
+        "DrillRunParams": {
+          "additionalProperties": false,
+          "properties": {
+            "configuration": {
+              "$ref": "#/$defs/DrillConfiguration"
+            },
+            "recording": {
+              "$ref": "#/$defs/GatehouseText"
+            }
+          },
+          "required": [
+            "recording",
+            "configuration"
+          ],
+          "type": "object"
+        },
         "Empty": {
           "additionalProperties": false,
           "type": "object"
@@ -5036,6 +7014,11 @@
             "dry_run"
           ],
           "type": "object"
+        },
+        "GatehouseText": {
+          "description": "Nonempty opaque text. Recording references are service-owned handles, not paths.",
+          "minLength": 1,
+          "type": "string"
         },
         "LotsCohortCap": {
           "additionalProperties": false,
@@ -5311,6 +7294,10 @@
             }
           ]
         },
+        "MessageId": {
+          "pattern": "^[A-Za-z0-9_-]+$(?![\\s\\S])",
+          "type": "string"
+        },
         "ModeAcknowledgement": {
           "additionalProperties": false,
           "properties": {
@@ -5406,6 +7393,57 @@
             "streamer_commit"
           ],
           "type": "string"
+        },
+        "RecordedMessage": {
+          "additionalProperties": false,
+          "properties": {
+            "at": {
+              "$ref": "#/$defs/Timestamp"
+            },
+            "message_id": {
+              "$ref": "#/$defs/MessageId"
+            },
+            "text": {
+              "type": "string"
+            },
+            "user_id": {
+              "$ref": "#/$defs/TwitchUserId"
+            }
+          },
+          "required": [
+            "message_id",
+            "user_id",
+            "at",
+            "text"
+          ],
+          "type": "object"
+        },
+        "RecordingImportParams": {
+          "additionalProperties": false,
+          "description": "Inert data only; source is a provenance label, never a URL to fetch or file to open.",
+          "properties": {
+            "gaps": {
+              "items": {
+                "$ref": "#/$defs/BridgeGap"
+              },
+              "type": "array"
+            },
+            "messages": {
+              "items": {
+                "$ref": "#/$defs/RecordedMessage"
+              },
+              "type": "array"
+            },
+            "source": {
+              "$ref": "#/$defs/GatehouseText"
+            }
+          },
+          "required": [
+            "source",
+            "messages",
+            "gaps"
+          ],
+          "type": "object"
         },
         "RollLookupParams": {
           "additionalProperties": false,
@@ -6153,7 +8191,7 @@
               "type": "string"
             },
             "params": {
-              "$ref": "#/$defs/Pending"
+              "$ref": "#/$defs/ConsensusGetParams"
             }
           },
           "required": [
@@ -6170,7 +8208,7 @@
               "type": "string"
             },
             "params": {
-              "$ref": "#/$defs/Pending"
+              "$ref": "#/$defs/DrillRunParams"
             }
           },
           "required": [
@@ -6187,7 +8225,7 @@
               "type": "string"
             },
             "params": {
-              "$ref": "#/$defs/Pending"
+              "$ref": "#/$defs/DrillDiffParams"
             }
           },
           "required": [
@@ -6204,7 +8242,7 @@
               "type": "string"
             },
             "params": {
-              "$ref": "#/$defs/Pending"
+              "$ref": "#/$defs/RecordingImportParams"
             }
           },
           "required": [

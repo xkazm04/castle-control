@@ -362,10 +362,11 @@ fn later_gatehouse_payloads_remain_pending() {
         .iter()
         .filter(|method| {
             let name = method["name"].as_str().unwrap();
-            name.starts_with("gatehouse.") && method["owner"] != "WP 1.1"
+            name.starts_with("gatehouse.")
+                && matches!(method["owner"].as_str(), Some("WP 1.2" | "WP 1.3"))
         })
         .collect();
-    assert_eq!(pending.len(), 8);
+    assert_eq!(pending.len(), 4);
     for method in pending {
         assert_eq!(method["params"]["not"], json!({}));
         assert_eq!(method["result"]["not"], json!({}));
