@@ -9,3 +9,8 @@ The WP 0.1 skeleton and gate tooling introduce no copied product code.
 WP 0.2 adapts the contract generator (packages/contract/scripts/) and
 the local server/event transport (crates/shadowrunr-daemon/src/server.rs,
 crates/shadowrunr-daemon/src/events.rs) from that pinned Shadowrunr OS source.
+
+WP 1.1 adapts the moderation rule model, fenced classifier, lane and persistence
+patterns from crates/shadowrunr-daemon/src/moderator/ for cc-gatehouse.
+WP 1.4 ports crates/shadowrunr-engine/src/ for cc-engine in parallel.
+Both adaptations use Shadowrunr OS @ 7e4b6f8, under Apache-2.0.
