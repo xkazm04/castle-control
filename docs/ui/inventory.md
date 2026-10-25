@@ -1215,3 +1215,5 @@ chamber/brand CSS. Generated markup references those same visual definitions.
 | .layers li | visuals.html:52 | NumberedPanel content slot; module-owned composition recorded in chamber inventory above |
 | .layers li .no | visuals.html:53 | NumberedPanel content slot; module-owned composition recorded in chamber inventory above |
 | .flick | visuals.html:54, visuals.html:56 | NumberedPanel content slot; module-owned composition recorded in chamber inventory above |
+
+WP 0.5a: apps/desktop composes the unchanged kit primitives and layout classes for unknown-aware stream/Gatehouse summaries, four empty chamber routes, search and an isolated simulated-source banner; visual review at 1440x900 remains owed (Chrome computer-use approval was rejected), with source-level differences and inherited kit deviations recorded in apps/desktop/README.md.

@@ -1,0 +1,28 @@
+{
+  "name": "@castle-control/desktop",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "vite build && node src/check-build.ts",
+    "typecheck": "node ../../scripts/package-gate.mjs typecheck",
+    "lint": "node ../../scripts/package-gate.mjs lint",
+    "test": "node ../../scripts/package-gate.mjs test"
+  },
+  "dependencies": {
+    "@castle-control/contract": "workspace:*",
+    "@castle-control/tokens": "workspace:*",
+    "@castle-control/ui": "workspace:*",
+    "react": "catalog:",
+    "react-dom": "catalog:"
+  },
+  "devDependencies": {
+    "@types/node": "24.10.0",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:",
+    "vitest": "catalog:"
+  }
+}
