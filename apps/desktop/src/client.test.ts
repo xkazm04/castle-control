@@ -1,5 +1,5 @@
 import { invoke } from '@castle-control/contract';
-import type { StatusResult } from '@castle-control/contract';
+import type { ErrorCode, StatusResult } from '@castle-control/contract';
 import { afterEach, expect, test, vi } from 'vitest';
 import { createDesktopClient } from './client.js';
 import { createReadModel } from './model.js';
@@ -25,17 +25,56 @@ class TestSocket {
 
 function harness() {
   let status: StatusResult = { ...simulatedRead(1).status, simulated: false };
+  const errors = new Map<string, ErrorCode>();
   const sockets: TestSocket[] = [];
   const socket = vi.fn(() => { const next = new TestSocket(); sockets.push(next); return next; });
   const fetch = vi.fn(async (_url: string | URL | Request, init?: RequestInit) => {
-    const data = String(init?.body).includes('"status.get"') ? status : { state: 'connected' };
-    return new Response(JSON.stringify(data), { status: 200 });
+    const method = String(init?.body).includes('"status.get"') ? 'status.get' : 'bridge.status.get';
+    const code = errors.get(method);
+    const data = code ? { code, message: 'unavailable' } : method === 'status.get' ? status : { state: 'connected' };
+    return new Response(JSON.stringify(data), { status: code ? 400 : 200 });
   });
   vi.stubGlobal('fetch', fetch);
   const config = { mode: 'core', endpoint: 'http://127.0.0.1:3210/', session_token: 'a'.repeat(64) };
   const client = createDesktopClient(config, { socket, rpc: invoke });
-  return { client, sockets, socket, fetch, config, setStatus: (next: StatusResult) => { status = next; } };
+  return { client, sockets, socket, fetch, config,
+    fail: (method: 'status.get' | 'bridge.status.get', code: ErrorCode) => { errors.set(method, code); },
+    setStatus: (next: StatusResult) => { status = next; } };
 }
+
+test('an unavailable bridge leaves the authoritative core status ready and bridge unknown', async () => {
+  const h = harness();
+  h.fail('bridge.status.get', 'unavailable');
+  cleanup.push(h.client.start());
+  await vi.waitFor(() => { expect(h.client.getSnapshot().phase).toBe('ready'); });
+  expect(h.client.getSnapshot().status).toEqual({ ...simulatedRead(1).status, simulated: false });
+  expect(h.client.getSnapshot().bridge).toBeUndefined();
+  expect(h.client.getSnapshot()).not.toHaveProperty('bridge');
+  expect(h.client.getSnapshot()).not.toHaveProperty('message');
+});
+
+test.each([
+  ['bridge.status.get', 'upstream'], ['bridge.status.get', 'unauthorized'],
+  ['status.get', 'unavailable'], ['status.get', 'upstream'],
+] as const)('%s failure %s still gives the generic core error', async (method, code) => {
+  const h = harness();
+  h.fail(method, code);
+  cleanup.push(h.client.start());
+  await vi.waitFor(() => { expect(h.client.getSnapshot().phase).toBe('error'); });
+  expect(h.client.getSnapshot()).toEqual({ mode: 'core', phase: 'error',
+    message: 'Core status unavailable. Retrying on connection or event.' });
+});
+
+test.each(['before', 'after'] as const)('initial socket open %s the load finishes does not duplicate RPC reads', async timing => {
+  const h = harness();
+  cleanup.push(h.client.start());
+  if (timing === 'after') await vi.waitFor(() => { expect(h.client.getSnapshot().phase).toBe('ready'); });
+  h.sockets[0]?.onopen?.(new Event('open'));
+  await vi.waitFor(() => { expect(h.client.getSnapshot().phase).toBe('ready'); });
+  expect(h.fetch.mock.calls.map(([, options]) => options?.body)).toEqual([
+    '{"method":"status.get","params":{}}', '{"method":"bridge.status.get","params":{}}',
+  ]);
+});
 
 test('RPC and WebSocket use the injected capability without putting it in URLs', async () => {
   const h = harness();
@@ -82,8 +121,12 @@ test('disconnect clears stale state, reconnect resumes since_seq, stop cancels r
   expect(h.client.getSnapshot().status).toBeUndefined();
   await vi.advanceTimersByTimeAsync(1000);
   expect(h.socket).toHaveBeenLastCalledWith('ws://127.0.0.1:3210/events?since_seq=17', expect.arrayContaining(['cc-events']));
+  expect(h.fetch).toHaveBeenCalledTimes(4);
+  h.setStatus({ ...simulatedRead(0).status, simulated: false });
   h.sockets[1]?.onopen?.(new Event('open'));
   await vi.waitFor(() => { expect(h.client.getSnapshot().phase).toBe('ready'); });
+  expect(h.fetch).toHaveBeenCalledTimes(6);
+  expect(h.client.getSnapshot().status?.stream?.live).toBe(false);
   stop();
   await vi.advanceTimersByTimeAsync(5000);
   expect(h.socket).toHaveBeenCalledTimes(2);

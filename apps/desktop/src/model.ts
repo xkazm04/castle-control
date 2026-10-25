@@ -1,7 +1,7 @@
 import type { BridgeStatus, StatusResult } from '@castle-control/contract';
 
 export type Mode = 'fixture' | 'core';
-export type ReadResult = { status: StatusResult; bridge: BridgeStatus };
+export type ReadResult = { status: StatusResult; bridge?: BridgeStatus };
 export type Snapshot = {
   mode: Mode; phase: 'connecting' | 'ready' | 'error';
   status?: StatusResult; bridge?: BridgeStatus; message?: string;

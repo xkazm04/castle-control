@@ -10,7 +10,7 @@ WP 0.5b supplies the Tauri 2 shell in `src-tauri/`.
 Before loading `src/main.tsx`, the shell injects an in-memory object at
 `window.__CASTLE_CONTROL_LAUNCH__` with `mode: 'core'`, `endpoint` (an HTTP
 127.0.0.1 root URL), and `session_token` (the core's per-launch 64-hex capability).
-The entry point consumes and deletes that property. Do not put it into URLs,
+The launch object is read once, then deleted from the webview. Do not put it into URLs,
 storage, environment files, logs or source. An invalid injection fails visibly
 and never falls back to a simulated/live hybrid. The alternative preview object
 is exactly `{ mode: 'fixture' }` and accepts no additional properties.
@@ -28,6 +28,8 @@ Stream live/viewers/uptime come only from `status.stream`; absent values read
 unknown. Core process uptime never substitutes for stream uptime. Moderation
 counts and Shield Mode come only from `status.gatehouse`, with absent summaries
 unknown. Twitch comes from `bridge.status.get`, OBS from `status.obs_connected`.
+In core mode, `bridge.status.get` answers `unavailable` until Twitch is configured;
+the shell shows the bridge as UNKNOWN rather than an error.
 Unknown-aware rampart composition reuses the kit's layout classes and individual
 primitives because its boolean-only `Rampart` API cannot express absence. Shared
 kit code, CSS and tokens remain unchanged.

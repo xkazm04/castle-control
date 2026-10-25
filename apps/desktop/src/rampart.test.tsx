@@ -12,8 +12,8 @@ function render(snapshot: Snapshot, current: ModuleId = 'lottery') {
 
 test.each(['lottery', 'moderator', 'visuals', 'studio'] as const)('%s renders authoritative stream, bridge, OBS and moderation summaries', current => {
   const data = simulatedRead(1);
-  const html = render({ mode: 'core', phase: 'ready', status: { ...data.status, simulated: false,
-    twitch_connected: false, uptime_ms: 999, gatehouse: { armed_rules: 2, shadow_rules: 3, shield: true } }, bridge: data.bridge }, current);
+  const html = render({ ...data, mode: 'core', phase: 'ready', status: { ...data.status, simulated: false,
+    twitch_connected: false, uptime_ms: 999, gatehouse: { armed_rules: 2, shadow_rules: 3, shield: true } } }, current);
   for (const text of ['On air', 'Twitch: connected', 'OBS: connected', 'Bridge up', '2 rules armed', '3 watching', '01:00:00', '214']) expect(html).toContain(text);
   expect(html).not.toContain('Simulated');
 });
@@ -35,6 +35,19 @@ test('initial and disconnected display do not invent OBS, Twitch or moderation s
   const html = render({ mode: 'core', phase: 'connecting' });
   for (const label of ['ON AIR unknown', 'Twitch unknown', 'OBS unknown', 'Gatehouse unknown']) expect(html).toContain(label);
   expect(html).not.toContain('disconnected');
+});
+
+test.each(['lottery', 'moderator', 'visuals', 'studio'] as const)('%s keeps an absent bridge UNKNOWN with a ready core', current => {
+  const status = { ...simulatedRead(1).status, simulated: false, twitch_connected: false };
+  const html = render({ mode: 'core', phase: 'ready', status }, current);
+  // The shared status chip styles uppercase this label on every chamber.
+  expect(html).toContain('Twitch unknown');
+  expect(html).not.toContain('Twitch: down');
+  expect(html).not.toContain('Twitch: connected');
+  expect(html).not.toContain('Core status unavailable');
+  expect(html).not.toContain('Connecting to the core');
+  expect(html).toContain('On air');
+  expect(html).toContain('OBS: connected');
 });
 
 test('explicit offline and zero rules remain distinct from unknown', () => {

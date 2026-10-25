@@ -27,15 +27,24 @@ export function createCoreSource(launch: CoreLaunch, transport: Network = networ
     async read() {
       const [status, bridge] = await Promise.all([
         transport.rpc(base.href, launch.session_token, 'status.get', {}),
-        transport.rpc(base.href, launch.session_token, 'bridge.status.get', {}),
+        transport.rpc(base.href, launch.session_token, 'bridge.status.get', {}).catch((error: unknown) => {
+          // invoke throws the contract's validated ErrorEnvelope on an RPC error.
+          if (typeof error === 'object' && error !== null && 'code' in error && error.code === 'unavailable') return undefined;
+          throw error;
+        }),
       ]);
-      return { status, bridge };
+      return bridge ? { status, bridge } : { status };
     },
     listen(invalidate, unavailable) {
       let stopped = false;
+      let interrupted = false;
       let since_seq = 0;
       let socket: Socket | undefined;
       let retry: ReturnType<typeof setTimeout> | undefined;
+      function interrupt() {
+        interrupted = true;
+        unavailable();
+      }
       function connect() {
         if (stopped) return;
         const url = new URL('/events', base);
@@ -44,12 +53,17 @@ export function createCoreSource(launch: CoreLaunch, transport: Network = networ
         try {
           socket = transport.socket(url.href, ['cc-events', `cc-session.${launch.session_token}`]);
         } catch {
-          unavailable();
+          interrupt();
           retry = setTimeout(connect, 1000);
           return;
         }
         const current = socket;
-        current.onopen = () => { if (!stopped && current === socket) invalidate(); };
+        current.onopen = () => {
+          if (stopped || current !== socket) return;
+          // The read model owns the initial load; only a reopened connection
+          // needs another read. Event invalidations still drain independently.
+          if (interrupted) { interrupted = false; invalidate(); }
+        };
         current.onmessage = message => {
           if (stopped || current !== socket) return;
           try {
@@ -59,13 +73,13 @@ export function createCoreSource(launch: CoreLaunch, transport: Network = networ
             since_seq = event.seq;
             invalidate();
           } catch {
-            unavailable();
+            interrupt();
             current.close();
           }
         };
-        current.onerror = () => { if (!stopped && current === socket) { unavailable(); current.close(); } };
+        current.onerror = () => { if (!stopped && current === socket) { interrupt(); current.close(); } };
         current.onclose = () => {
-          if (!stopped && current === socket) { unavailable(); retry = setTimeout(connect, 1000); }
+          if (!stopped && current === socket) { interrupt(); retry = setTimeout(connect, 1000); }
         };
       }
       connect();
