@@ -53,6 +53,15 @@ pub struct BridgeStatus {
     pub channel: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub detail: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub last_gap: Option<ConnectionGap>,
+}
+
+/// Crate-local continuity window; cc-core maps it to the generated wire contract.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ConnectionGap {
+    pub from: String,
+    pub to: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

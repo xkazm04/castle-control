@@ -3,6 +3,8 @@
 //! Local-first Twitch bridge. Credentials stay inside the private request broker.
 mod actions;
 mod eventsub;
+#[cfg(any(test, feature = "fault-injection"))]
+mod fault;
 mod handover;
 pub mod scopes;
 mod store;
@@ -21,8 +23,8 @@ use tokio::task::JoinHandle;
 use scopes::{Topic, module_plan, pack};
 use store::{CredentialStore, KeyringStore};
 pub use types::{
-    BridgeError, BridgeEvent, BridgeState, BridgeStatus, ChatMessage, DeviceLogin, Notification,
-    RevocationHandler, TwitchConfig, Viewer,
+    BridgeError, BridgeEvent, BridgeState, BridgeStatus, ChatMessage, ConnectionGap, DeviceLogin,
+    Notification, RevocationHandler, TwitchConfig, Viewer,
 };
 use types::{Endpoints, now};
 pub use vault::RateLimit;
@@ -43,6 +45,29 @@ struct Live {
     connections: Vec<ConnectionStatus>,
 }
 
+/// Fault injection is absent from the default public API.
+#[cfg_attr(
+    not(feature = "fault-injection"),
+    doc = r#"
+```compile_fail,E0599
+use cc_twitch::TwitchBridge;
+fn default_build(bridge: &TwitchBridge) {
+    bridge.force_socket_drop();
+}
+```
+"#
+)]
+#[cfg_attr(
+    feature = "fault-injection",
+    doc = r#"
+```no_run
+use cc_twitch::TwitchBridge;
+fn spike_build(bridge: &TwitchBridge) {
+    bridge.force_socket_drop();
+}
+```
+"#
+)]
 pub struct TwitchBridge {
     cfg: TwitchConfig,
     ep: Endpoints,
@@ -53,6 +78,8 @@ pub struct TwitchBridge {
     seen: Mutex<VecDeque<String>>,
     session: Mutex<Option<JoinHandle<()>>>,
     login: Mutex<Option<JoinHandle<()>>>,
+    #[cfg(any(test, feature = "fault-injection"))]
+    socket_drop: tokio::sync::watch::Sender<()>,
 }
 
 impl std::fmt::Debug for TwitchBridge {
@@ -97,6 +124,8 @@ impl TwitchBridge {
             seen: Mutex::new(VecDeque::new()),
             session: Mutex::new(None),
             login: Mutex::new(None),
+            #[cfg(any(test, feature = "fault-injection"))]
+            socket_drop: tokio::sync::watch::channel(()).0,
         }))
     }
 
@@ -217,9 +246,20 @@ impl TwitchBridge {
             .expect("bridge inbox")
             .clone()
             .ok_or(BridgeError::Unavailable("bridge event consumer missing"))?;
-        tx.send(event)
+        let permit = tx
+            .reserve()
             .await
-            .map_err(|_| BridgeError::Unavailable("bridge event consumer closed"))
+            .map_err(|_| BridgeError::Unavailable("bridge event consumer closed"))?;
+        // Serialize gap recording with delivery, even when several workers recover.
+        let mut live = self.live.lock().expect("bridge state");
+        if let BridgeEvent::Gap { from, to } = &event {
+            live.status.last_gap = Some(ConnectionGap {
+                from: from.clone(),
+                to: to.clone(),
+            });
+        }
+        permit.send(event);
+        Ok(())
     }
 
     async fn prepare(&self) -> Result<bool, BridgeError> {

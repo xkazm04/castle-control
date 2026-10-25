@@ -22,6 +22,8 @@ impl TwitchBridge {
             }
             self.connection_state(index, BridgeState::Connecting);
             let attempt = self.serve(index, topics, &mut from, &mut backoff);
+            #[cfg(any(test, feature = "fault-injection"))]
+            let attempt = self.interrupt_socket(attempt);
             let result = tokio::select! {
                 result = attempt => result,
                 _ = revoked.changed() => return Err(BridgeError::Unauthorized),

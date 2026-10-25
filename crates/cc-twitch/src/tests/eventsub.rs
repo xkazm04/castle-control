@@ -178,6 +178,9 @@ async fn a_dropped_socket_reconnects_and_resubscribes() {
     let BridgeEvent::Gap { ref from, ref to } = gap else {
         panic!("expected continuity gap");
     };
+    let recorded = p.status().last_gap.expect("recorded network-drop gap");
+    assert_eq!(&recorded.from, from);
+    assert_eq!(&recorded.to, to);
     let from = chrono::DateTime::parse_from_rfc3339(from).expect("gap from");
     let to = chrono::DateTime::parse_from_rfc3339(to).expect("gap to");
     assert!(from <= to);
