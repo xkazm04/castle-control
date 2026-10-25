@@ -1,0 +1,21 @@
+[package]
+name = "cc-lots"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+cc-types = { path = "../cc-types" }
+cc-store = { path = "../cc-store" }
+cc-verify = { path = "../cc-verify" }
+chrono.workspace = true
+hex.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+sha2.workspace = true
+thiserror.workspace = true
+ulid.workspace = true
+
+[dev-dependencies]
+proptest.workspace = true

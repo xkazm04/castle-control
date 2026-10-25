@@ -14,3 +14,19 @@ axum = "0.8"
 tokio = { version = "1", features = ["full"] }
 rusqlite = { version = "0.38", features = ["bundled"] }
 schemars = "1.2"
+async-trait = "0.1.89"
+chrono = { version = "0.4.45", features = ["serde"] }
+hex = "0.4.3"
+regex = "1.12.2"
+reqwest = { version = "0.12.28", default-features = false, features = ["json", "rustls-tls"] }
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.149"
+sha2 = "0.10.9"
+tempfile = "3.22"
+thiserror = "2.0.17"
+ulid = { version = "1.2.1", features = ["serde"] }
+windows-sys = { version = "0.61.2", features = ["Win32_System_JobObjects", "Win32_System_Threading", "Win32_Foundation", "Win32_Security"] }
+# Exact versions keep the new scaffold dependencies on established releases.
+bls12_381 = { version = "=0.8.0", features = ["experimental"] }
+sha2_09 = { package = "sha2", version = "=0.9.9" }
+proptest = "=1.9.0"

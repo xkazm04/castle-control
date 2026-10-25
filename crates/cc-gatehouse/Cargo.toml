@@ -1,0 +1,22 @@
+[package]
+name = "cc-gatehouse"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+cc-types = { path = "../cc-types" }
+cc-store = { path = "../cc-store" }
+cc-engine = { path = "../cc-engine" }
+async-trait.workspace = true
+chrono.workspace = true
+regex.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+tokio.workspace = true
+ulid.workspace = true
+
+[dev-dependencies]
+tempfile.workspace = true
