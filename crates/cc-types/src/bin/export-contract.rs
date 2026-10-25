@@ -36,6 +36,7 @@ fn main() {
         StreamEvent,
         LotsEventPayload,
         ConsensusEventPayload,
+        BeaconsEventPayload,
         RpcRequest
     );
     let doc: Value = json!({"methods": method_schemas(), "types": types,

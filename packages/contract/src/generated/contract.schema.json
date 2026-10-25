@@ -5711,79 +5711,782 @@
       "owner": "WP 3.1",
       "params": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Deliberately unusable until its owning WP supplies request/result shapes.",
-        "not": {},
-        "title": "Pending"
+        "additionalProperties": false,
+        "title": "Empty",
+        "type": "object"
       },
       "result": {
+        "$defs": {
+          "DesignId": {
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$(?![\\s\\S])",
+            "type": "string"
+          },
+          "Intensity": {
+            "description": "Finite fraction, not a percentage. Both schema and Rust reject nonfinite values.",
+            "format": "double",
+            "maximum": 1,
+            "minimum": 0,
+            "type": "number"
+          },
+          "IntensityCurve": {
+            "additionalProperties": false,
+            "properties": {
+              "decay": {
+                "$ref": "#/$defs/IntensityDecay"
+              },
+              "ranges": {
+                "items": {
+                  "$ref": "#/$defs/IntensityRange"
+                },
+                "minItems": 1,
+                "type": "array"
+              }
+            },
+            "required": [
+              "ranges",
+              "decay"
+            ],
+            "type": "object"
+          },
+          "IntensityDecay": {
+            "oneOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "kind": {
+                    "const": "none",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "half_life_s": {
+                    "format": "uint32",
+                    "minimum": 1,
+                    "type": "integer"
+                  },
+                  "kind": {
+                    "const": "exponential",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "half_life_s"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "IntensityRange": {
+            "additionalProperties": false,
+            "description": "Control points mapping contribution totals to intensity, interpolated by WP 3.1.",
+            "properties": {
+              "intensity": {
+                "$ref": "#/$defs/Intensity"
+              },
+              "total": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              }
+            },
+            "required": [
+              "total",
+              "intensity"
+            ],
+            "type": "object"
+          },
+          "Visual": {
+            "additionalProperties": false,
+            "properties": {
+              "curve": {
+                "$ref": "#/$defs/IntensityCurve"
+              },
+              "design_id": {
+                "$ref": "#/$defs/DesignId"
+              },
+              "name": {
+                "pattern": "\\S",
+                "type": "string"
+              },
+              "visual_id": {
+                "$ref": "#/$defs/VisualId"
+              }
+            },
+            "required": [
+              "visual_id",
+              "name",
+              "curve"
+            ],
+            "type": "object"
+          },
+          "VisualId": {
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$(?![\\s\\S])",
+            "type": "string"
+          }
+        },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Deliberately unusable until its owning WP supplies request/result shapes.",
-        "not": {},
-        "title": "Pending"
+        "additionalProperties": false,
+        "properties": {
+          "visuals": {
+            "items": {
+              "$ref": "#/$defs/Visual"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "visuals"
+        ],
+        "title": "VisualListResult",
+        "type": "object"
       }
     },
     {
       "name": "beacons.visual.upsert",
       "owner": "WP 3.1",
       "params": {
+        "$defs": {
+          "DesignId": {
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$(?![\\s\\S])",
+            "type": "string"
+          },
+          "Intensity": {
+            "description": "Finite fraction, not a percentage. Both schema and Rust reject nonfinite values.",
+            "format": "double",
+            "maximum": 1,
+            "minimum": 0,
+            "type": "number"
+          },
+          "IntensityCurve": {
+            "additionalProperties": false,
+            "properties": {
+              "decay": {
+                "$ref": "#/$defs/IntensityDecay"
+              },
+              "ranges": {
+                "items": {
+                  "$ref": "#/$defs/IntensityRange"
+                },
+                "minItems": 1,
+                "type": "array"
+              }
+            },
+            "required": [
+              "ranges",
+              "decay"
+            ],
+            "type": "object"
+          },
+          "IntensityDecay": {
+            "oneOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "kind": {
+                    "const": "none",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "half_life_s": {
+                    "format": "uint32",
+                    "minimum": 1,
+                    "type": "integer"
+                  },
+                  "kind": {
+                    "const": "exponential",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "half_life_s"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "IntensityRange": {
+            "additionalProperties": false,
+            "description": "Control points mapping contribution totals to intensity, interpolated by WP 3.1.",
+            "properties": {
+              "intensity": {
+                "$ref": "#/$defs/Intensity"
+              },
+              "total": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              }
+            },
+            "required": [
+              "total",
+              "intensity"
+            ],
+            "type": "object"
+          },
+          "Visual": {
+            "additionalProperties": false,
+            "properties": {
+              "curve": {
+                "$ref": "#/$defs/IntensityCurve"
+              },
+              "design_id": {
+                "$ref": "#/$defs/DesignId"
+              },
+              "name": {
+                "pattern": "\\S",
+                "type": "string"
+              },
+              "visual_id": {
+                "$ref": "#/$defs/VisualId"
+              }
+            },
+            "required": [
+              "visual_id",
+              "name",
+              "curve"
+            ],
+            "type": "object"
+          },
+          "VisualId": {
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$(?![\\s\\S])",
+            "type": "string"
+          }
+        },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Deliberately unusable until its owning WP supplies request/result shapes.",
-        "not": {},
-        "title": "Pending"
+        "additionalProperties": false,
+        "properties": {
+          "visual": {
+            "$ref": "#/$defs/Visual"
+          }
+        },
+        "required": [
+          "visual"
+        ],
+        "title": "VisualUpsertParams",
+        "type": "object"
       },
       "result": {
+        "$defs": {
+          "DesignId": {
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$(?![\\s\\S])",
+            "type": "string"
+          },
+          "Intensity": {
+            "description": "Finite fraction, not a percentage. Both schema and Rust reject nonfinite values.",
+            "format": "double",
+            "maximum": 1,
+            "minimum": 0,
+            "type": "number"
+          },
+          "IntensityCurve": {
+            "additionalProperties": false,
+            "properties": {
+              "decay": {
+                "$ref": "#/$defs/IntensityDecay"
+              },
+              "ranges": {
+                "items": {
+                  "$ref": "#/$defs/IntensityRange"
+                },
+                "minItems": 1,
+                "type": "array"
+              }
+            },
+            "required": [
+              "ranges",
+              "decay"
+            ],
+            "type": "object"
+          },
+          "IntensityDecay": {
+            "oneOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "kind": {
+                    "const": "none",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "half_life_s": {
+                    "format": "uint32",
+                    "minimum": 1,
+                    "type": "integer"
+                  },
+                  "kind": {
+                    "const": "exponential",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "half_life_s"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "IntensityRange": {
+            "additionalProperties": false,
+            "description": "Control points mapping contribution totals to intensity, interpolated by WP 3.1.",
+            "properties": {
+              "intensity": {
+                "$ref": "#/$defs/Intensity"
+              },
+              "total": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              }
+            },
+            "required": [
+              "total",
+              "intensity"
+            ],
+            "type": "object"
+          },
+          "VisualId": {
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$(?![\\s\\S])",
+            "type": "string"
+          }
+        },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Deliberately unusable until its owning WP supplies request/result shapes.",
-        "not": {},
-        "title": "Pending"
+        "additionalProperties": false,
+        "properties": {
+          "curve": {
+            "$ref": "#/$defs/IntensityCurve"
+          },
+          "design_id": {
+            "$ref": "#/$defs/DesignId"
+          },
+          "name": {
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "visual_id": {
+            "$ref": "#/$defs/VisualId"
+          }
+        },
+        "required": [
+          "visual_id",
+          "name",
+          "curve"
+        ],
+        "title": "Visual",
+        "type": "object"
       }
     },
     {
       "name": "beacons.curve.set",
       "owner": "WP 3.1",
       "params": {
+        "$defs": {
+          "Intensity": {
+            "description": "Finite fraction, not a percentage. Both schema and Rust reject nonfinite values.",
+            "format": "double",
+            "maximum": 1,
+            "minimum": 0,
+            "type": "number"
+          },
+          "IntensityCurve": {
+            "additionalProperties": false,
+            "properties": {
+              "decay": {
+                "$ref": "#/$defs/IntensityDecay"
+              },
+              "ranges": {
+                "items": {
+                  "$ref": "#/$defs/IntensityRange"
+                },
+                "minItems": 1,
+                "type": "array"
+              }
+            },
+            "required": [
+              "ranges",
+              "decay"
+            ],
+            "type": "object"
+          },
+          "IntensityDecay": {
+            "oneOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "kind": {
+                    "const": "none",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "half_life_s": {
+                    "format": "uint32",
+                    "minimum": 1,
+                    "type": "integer"
+                  },
+                  "kind": {
+                    "const": "exponential",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "half_life_s"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "IntensityRange": {
+            "additionalProperties": false,
+            "description": "Control points mapping contribution totals to intensity, interpolated by WP 3.1.",
+            "properties": {
+              "intensity": {
+                "$ref": "#/$defs/Intensity"
+              },
+              "total": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              }
+            },
+            "required": [
+              "total",
+              "intensity"
+            ],
+            "type": "object"
+          },
+          "VisualId": {
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$(?![\\s\\S])",
+            "type": "string"
+          }
+        },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Deliberately unusable until its owning WP supplies request/result shapes.",
-        "not": {},
-        "title": "Pending"
+        "additionalProperties": false,
+        "properties": {
+          "curve": {
+            "$ref": "#/$defs/IntensityCurve"
+          },
+          "visual_id": {
+            "$ref": "#/$defs/VisualId"
+          }
+        },
+        "required": [
+          "visual_id",
+          "curve"
+        ],
+        "title": "CurveSetParams",
+        "type": "object"
       },
       "result": {
+        "$defs": {
+          "DesignId": {
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$(?![\\s\\S])",
+            "type": "string"
+          },
+          "Intensity": {
+            "description": "Finite fraction, not a percentage. Both schema and Rust reject nonfinite values.",
+            "format": "double",
+            "maximum": 1,
+            "minimum": 0,
+            "type": "number"
+          },
+          "IntensityCurve": {
+            "additionalProperties": false,
+            "properties": {
+              "decay": {
+                "$ref": "#/$defs/IntensityDecay"
+              },
+              "ranges": {
+                "items": {
+                  "$ref": "#/$defs/IntensityRange"
+                },
+                "minItems": 1,
+                "type": "array"
+              }
+            },
+            "required": [
+              "ranges",
+              "decay"
+            ],
+            "type": "object"
+          },
+          "IntensityDecay": {
+            "oneOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "kind": {
+                    "const": "none",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "half_life_s": {
+                    "format": "uint32",
+                    "minimum": 1,
+                    "type": "integer"
+                  },
+                  "kind": {
+                    "const": "exponential",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "half_life_s"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "IntensityRange": {
+            "additionalProperties": false,
+            "description": "Control points mapping contribution totals to intensity, interpolated by WP 3.1.",
+            "properties": {
+              "intensity": {
+                "$ref": "#/$defs/Intensity"
+              },
+              "total": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              }
+            },
+            "required": [
+              "total",
+              "intensity"
+            ],
+            "type": "object"
+          },
+          "VisualId": {
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$(?![\\s\\S])",
+            "type": "string"
+          }
+        },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Deliberately unusable until its owning WP supplies request/result shapes.",
-        "not": {},
-        "title": "Pending"
+        "additionalProperties": false,
+        "properties": {
+          "curve": {
+            "$ref": "#/$defs/IntensityCurve"
+          },
+          "design_id": {
+            "$ref": "#/$defs/DesignId"
+          },
+          "name": {
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "visual_id": {
+            "$ref": "#/$defs/VisualId"
+          }
+        },
+        "required": [
+          "visual_id",
+          "name",
+          "curve"
+        ],
+        "title": "Visual",
+        "type": "object"
       }
     },
     {
       "name": "beacons.simulate",
       "owner": "WP 3.1",
       "params": {
+        "$defs": {
+          "ContributionSource": {
+            "enum": [
+              "cheer",
+              "bits_use",
+              "subscribe",
+              "gift",
+              "resub",
+              "hype_train",
+              "channel_points",
+              "charity",
+              "goal",
+              "power_up"
+            ],
+            "type": "string"
+          },
+          "SimulatedBurst": {
+            "additionalProperties": false,
+            "description": "Synthetic input, never client-provided Twitch identities or live ledger events.",
+            "properties": {
+              "amount": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "source": {
+                "$ref": "#/$defs/ContributionSource"
+              }
+            },
+            "required": [
+              "source",
+              "amount"
+            ],
+            "type": "object"
+          },
+          "VisualId": {
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$(?![\\s\\S])",
+            "type": "string"
+          }
+        },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Deliberately unusable until its owning WP supplies request/result shapes.",
-        "not": {},
-        "title": "Pending"
+        "additionalProperties": false,
+        "properties": {
+          "burst": {
+            "$ref": "#/$defs/SimulatedBurst"
+          },
+          "visual_id": {
+            "$ref": "#/$defs/VisualId"
+          }
+        },
+        "required": [
+          "visual_id",
+          "burst"
+        ],
+        "title": "BeaconsSimulateParams",
+        "type": "object"
       },
       "result": {
+        "$defs": {
+          "BeaconsIntensity": {
+            "additionalProperties": false,
+            "properties": {
+              "intensity": {
+                "$ref": "#/$defs/Intensity"
+              },
+              "visual_id": {
+                "$ref": "#/$defs/VisualId"
+              }
+            },
+            "required": [
+              "visual_id",
+              "intensity"
+            ],
+            "type": "object"
+          },
+          "Intensity": {
+            "description": "Finite fraction, not a percentage. Both schema and Rust reject nonfinite values.",
+            "format": "double",
+            "maximum": 1,
+            "minimum": 0,
+            "type": "number"
+          },
+          "SimulationLabel": {
+            "enum": [
+              "simulated"
+            ],
+            "type": "string"
+          },
+          "VisualId": {
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$(?![\\s\\S])",
+            "type": "string"
+          }
+        },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Deliberately unusable until its owning WP supplies request/result shapes.",
-        "not": {},
-        "title": "Pending"
+        "additionalProperties": false,
+        "properties": {
+          "intensity": {
+            "$ref": "#/$defs/BeaconsIntensity"
+          },
+          "label": {
+            "$ref": "#/$defs/SimulationLabel"
+          }
+        },
+        "required": [
+          "label",
+          "intensity"
+        ],
+        "title": "BeaconsSimulateResult",
+        "type": "object"
       }
     },
     {
       "name": "beacons.source.url",
       "owner": "WP 3.2",
       "params": {
+        "$defs": {
+          "VisualId": {
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$(?![\\s\\S])",
+            "type": "string"
+          }
+        },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Deliberately unusable until its owning WP supplies request/result shapes.",
-        "not": {},
-        "title": "Pending"
+        "additionalProperties": false,
+        "properties": {
+          "visual_id": {
+            "$ref": "#/$defs/VisualId"
+          }
+        },
+        "required": [
+          "visual_id"
+        ],
+        "title": "SourceUrlParams",
+        "type": "object"
       },
       "result": {
+        "$defs": {
+          "LoopbackSourceUrl": {
+            "description": "Canonical HTTP overlay URL: exact loopback host, explicit port, ASCII path/query.\nWP 3.2 supplies this from its isolated read-only origin, never the RPC origin.",
+            "pattern": "^http://(?:localhost|127\\.0\\.0\\.1|\\[::1\\]):(?:[1-9][0-9]{0,3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])/(?:[A-Za-z0-9_~./?&=+-]|%[0-9A-Fa-f]{2})*$(?![\\s\\S])",
+            "type": "string"
+          }
+        },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Deliberately unusable until its owning WP supplies request/result shapes.",
-        "not": {},
-        "title": "Pending"
+        "additionalProperties": false,
+        "properties": {
+          "url": {
+            "$ref": "#/$defs/LoopbackSourceUrl"
+          }
+        },
+        "required": [
+          "url"
+        ],
+        "title": "SourceUrlResult",
+        "type": "object"
       }
     },
     {
@@ -5911,6 +6614,135 @@
       ],
       "title": "Action",
       "type": "string"
+    },
+    "BeaconsEventPayload": {
+      "$defs": {
+        "BeaconsIntensity": {
+          "additionalProperties": false,
+          "properties": {
+            "intensity": {
+              "$ref": "#/$defs/Intensity"
+            },
+            "visual_id": {
+              "$ref": "#/$defs/VisualId"
+            }
+          },
+          "required": [
+            "visual_id",
+            "intensity"
+          ],
+          "type": "object"
+        },
+        "Contribution": {
+          "additionalProperties": false,
+          "description": "Units: Bits for cheer/bits_use; counts for subs/gifts/resubs/power-ups;\nlevel for hype_train; points for channel_points; minor currency units for\ncharity/goal. WP 3.1 must configure compatible inputs before aggregating totals.",
+          "properties": {
+            "amount": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "broadcaster_id": {
+              "$ref": "#/$defs/TwitchUserId"
+            },
+            "dedupe_key": {
+              "description": "Canonical underlying contribution identity, scoped by broadcaster, NOT\nthe transport event ID or source. Overlapping cheer/bits_use use one key.",
+              "pattern": "\\S",
+              "type": "string"
+            },
+            "event_id": {
+              "$ref": "#/$defs/MessageId"
+            },
+            "source": {
+              "$ref": "#/$defs/ContributionSource"
+            },
+            "user_id": {
+              "$ref": "#/$defs/TwitchUserId"
+            }
+          },
+          "required": [
+            "source",
+            "broadcaster_id",
+            "event_id",
+            "amount",
+            "dedupe_key"
+          ],
+          "type": "object"
+        },
+        "ContributionSource": {
+          "enum": [
+            "cheer",
+            "bits_use",
+            "subscribe",
+            "gift",
+            "resub",
+            "hype_train",
+            "channel_points",
+            "charity",
+            "goal",
+            "power_up"
+          ],
+          "type": "string"
+        },
+        "Intensity": {
+          "description": "Finite fraction, not a percentage. Both schema and Rust reject nonfinite values.",
+          "format": "double",
+          "maximum": 1,
+          "minimum": 0,
+          "type": "number"
+        },
+        "MessageId": {
+          "pattern": "^[A-Za-z0-9_-]+$(?![\\s\\S])",
+          "type": "string"
+        },
+        "TwitchUserId": {
+          "pattern": "^[1-9][0-9]{0,31}$(?![\\s\\S])",
+          "type": "string"
+        },
+        "VisualId": {
+          "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$(?![\\s\\S])",
+          "type": "string"
+        }
+      },
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "description": "Module payload binding; the shared StreamEvent remains invalidation-only.",
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "beacons.contribution",
+              "type": "string"
+            },
+            "payload": {
+              "$ref": "#/$defs/Contribution"
+            }
+          },
+          "required": [
+            "kind",
+            "payload"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "beacons.intensity",
+              "type": "string"
+            },
+            "payload": {
+              "$ref": "#/$defs/BeaconsIntensity"
+            }
+          },
+          "required": [
+            "kind",
+            "payload"
+          ],
+          "type": "object"
+        }
+      ],
+      "title": "BeaconsEventPayload"
     },
     "ChatDelay": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -6738,6 +7570,22 @@
           ],
           "type": "object"
         },
+        "BeaconsSimulateParams": {
+          "additionalProperties": false,
+          "properties": {
+            "burst": {
+              "$ref": "#/$defs/SimulatedBurst"
+            },
+            "visual_id": {
+              "$ref": "#/$defs/VisualId"
+            }
+          },
+          "required": [
+            "visual_id",
+            "burst"
+          ],
+          "type": "object"
+        },
         "BridgeGap": {
           "additionalProperties": false,
           "properties": {
@@ -6844,6 +7692,37 @@
           ],
           "type": "object"
         },
+        "ContributionSource": {
+          "enum": [
+            "cheer",
+            "bits_use",
+            "subscribe",
+            "gift",
+            "resub",
+            "hype_train",
+            "channel_points",
+            "charity",
+            "goal",
+            "power_up"
+          ],
+          "type": "string"
+        },
+        "CurveSetParams": {
+          "additionalProperties": false,
+          "properties": {
+            "curve": {
+              "$ref": "#/$defs/IntensityCurve"
+            },
+            "visual_id": {
+              "$ref": "#/$defs/VisualId"
+            }
+          },
+          "required": [
+            "visual_id",
+            "curve"
+          ],
+          "type": "object"
+        },
         "DataValue": {
           "anyOf": [
             {
@@ -6886,6 +7765,10 @@
             "decision_id"
           ],
           "type": "object"
+        },
+        "DesignId": {
+          "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$(?![\\s\\S])",
+          "type": "string"
         },
         "DrawCheckParams": {
           "additionalProperties": false,
@@ -7019,6 +7902,88 @@
           "description": "Nonempty opaque text. Recording references are service-owned handles, not paths.",
           "minLength": 1,
           "type": "string"
+        },
+        "Intensity": {
+          "description": "Finite fraction, not a percentage. Both schema and Rust reject nonfinite values.",
+          "format": "double",
+          "maximum": 1,
+          "minimum": 0,
+          "type": "number"
+        },
+        "IntensityCurve": {
+          "additionalProperties": false,
+          "properties": {
+            "decay": {
+              "$ref": "#/$defs/IntensityDecay"
+            },
+            "ranges": {
+              "items": {
+                "$ref": "#/$defs/IntensityRange"
+              },
+              "minItems": 1,
+              "type": "array"
+            }
+          },
+          "required": [
+            "ranges",
+            "decay"
+          ],
+          "type": "object"
+        },
+        "IntensityDecay": {
+          "oneOf": [
+            {
+              "additionalProperties": false,
+              "properties": {
+                "kind": {
+                  "const": "none",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "kind"
+              ],
+              "type": "object"
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "half_life_s": {
+                  "format": "uint32",
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                "kind": {
+                  "const": "exponential",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "kind",
+                "half_life_s"
+              ],
+              "type": "object"
+            }
+          ]
+        },
+        "IntensityRange": {
+          "additionalProperties": false,
+          "description": "Control points mapping contribution totals to intensity, interpolated by WP 3.1.",
+          "properties": {
+            "intensity": {
+              "$ref": "#/$defs/Intensity"
+            },
+            "total": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          "required": [
+            "total",
+            "intensity"
+          ],
+          "type": "object"
         },
         "LotsCohortCap": {
           "additionalProperties": false,
@@ -7726,6 +8691,37 @@
           ],
           "type": "object"
         },
+        "SimulatedBurst": {
+          "additionalProperties": false,
+          "description": "Synthetic input, never client-provided Twitch identities or live ledger events.",
+          "properties": {
+            "amount": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "source": {
+              "$ref": "#/$defs/ContributionSource"
+            }
+          },
+          "required": [
+            "source",
+            "amount"
+          ],
+          "type": "object"
+        },
+        "SourceUrlParams": {
+          "additionalProperties": false,
+          "properties": {
+            "visual_id": {
+              "$ref": "#/$defs/VisualId"
+            }
+          },
+          "required": [
+            "visual_id"
+          ],
+          "type": "object"
+        },
         "StrikePolicy": {
           "additionalProperties": false,
           "allOf": [
@@ -7789,6 +8785,46 @@
         "TwitchUserId": {
           "pattern": "^[1-9][0-9]{0,31}$(?![\\s\\S])",
           "type": "string"
+        },
+        "Visual": {
+          "additionalProperties": false,
+          "properties": {
+            "curve": {
+              "$ref": "#/$defs/IntensityCurve"
+            },
+            "design_id": {
+              "$ref": "#/$defs/DesignId"
+            },
+            "name": {
+              "pattern": "\\S",
+              "type": "string"
+            },
+            "visual_id": {
+              "$ref": "#/$defs/VisualId"
+            }
+          },
+          "required": [
+            "visual_id",
+            "name",
+            "curve"
+          ],
+          "type": "object"
+        },
+        "VisualId": {
+          "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$(?![\\s\\S])",
+          "type": "string"
+        },
+        "VisualUpsertParams": {
+          "additionalProperties": false,
+          "properties": {
+            "visual": {
+              "$ref": "#/$defs/Visual"
+            }
+          },
+          "required": [
+            "visual"
+          ],
+          "type": "object"
         },
         "WritGetParams": {
           "additionalProperties": false,
@@ -8378,7 +9414,7 @@
               "type": "string"
             },
             "params": {
-              "$ref": "#/$defs/Pending"
+              "$ref": "#/$defs/Empty"
             }
           },
           "required": [
@@ -8395,7 +9431,7 @@
               "type": "string"
             },
             "params": {
-              "$ref": "#/$defs/Pending"
+              "$ref": "#/$defs/VisualUpsertParams"
             }
           },
           "required": [
@@ -8412,7 +9448,7 @@
               "type": "string"
             },
             "params": {
-              "$ref": "#/$defs/Pending"
+              "$ref": "#/$defs/CurveSetParams"
             }
           },
           "required": [
@@ -8429,7 +9465,7 @@
               "type": "string"
             },
             "params": {
-              "$ref": "#/$defs/Pending"
+              "$ref": "#/$defs/BeaconsSimulateParams"
             }
           },
           "required": [
@@ -8446,7 +9482,7 @@
               "type": "string"
             },
             "params": {
-              "$ref": "#/$defs/Pending"
+              "$ref": "#/$defs/SourceUrlParams"
             }
           },
           "required": [

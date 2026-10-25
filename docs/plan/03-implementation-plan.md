@@ -850,6 +850,44 @@ exported separately from the existing seq/at/kind-only StreamEvent invalidation
 envelope; this delivery changes no core publisher or handler. Adding payload
 delivery to /events remains part of later RPC wiring, preserving existing callers.
 
+**Beacons typed payloads (contract delivery, 2026-10-26).**
+
+| Method or type | Params, result or fields |
+| --- | --- |
+| `beacons.visual.list` (WP 3.1) | `Empty` -> `VisualListResult { visuals: Visual[] }` |
+| `beacons.visual.upsert` (WP 3.1) | `VisualUpsertParams { visual: Visual }` -> `Visual` |
+| `beacons.curve.set` (WP 3.1) | `CurveSetParams { visual_id: VisualId, curve: IntensityCurve }` -> `Visual` |
+| `beacons.simulate` (WP 3.1) | `BeaconsSimulateParams { visual_id: VisualId, burst: SimulatedBurst }` -> `BeaconsSimulateResult { label: simulated, intensity: BeaconsIntensity }`; `{ source: gift, amount: 50 }` models a 50-sub gift bomb |
+| `beacons.source.url` (WP 3.2) | `SourceUrlParams { visual_id: VisualId }` -> `SourceUrlResult { url: LoopbackSourceUrl }` |
+| `Visual` | `visual_id: VisualId`, nonblank `name`, optional `design_id: DesignId`, `curve: IntensityCurve`; existing slug ID doors are reused |
+| `IntensityCurve` | Nonempty `ranges: IntensityRange[]`, `decay: IntensityDecay`; each range is a control point `{ total: uint32, intensity: Intensity }` |
+| `IntensityDecay` | Tagged by `kind`: `none`, or `exponential` with positive uint32 `half_life_s` |
+| `ContributionSource` | `cheer`, `bits_use`, `subscribe`, `gift`, `resub`, `hype_train`, `channel_points`, `charity`, `goal`, `power_up` |
+| `Contribution` | `source: ContributionSource`, `broadcaster_id: TwitchUserId`, `event_id: MessageId`, optional `user_id: TwitchUserId`, `amount: uint32`, nonblank `dedupe_key`; anonymous/system sources omit user identity |
+| Contribution units | Bits for cheer/bits_use; counts for subscribe/gift/resub/power_up; level for hype_train; points for channel_points; minor currency units for charity/goal. WP 3.1 normalizes compatible inputs before aggregation |
+| `SimulatedBurst` | `source: ContributionSource`, `amount: uint32`; no supplied Twitch identities or live contribution records |
+| `BeaconsIntensity` | `visual_id: VisualId`, `intensity: Intensity`; finite fraction in 0..1, including endpoints |
+| `LoopbackSourceUrl` | Canonical `http://localhost:port/`, `http://127.0.0.1:port/` or `http://[::1]:port/` plus ASCII path/query and valid percent escapes; port 1..65535 without leading zero; no credentials, fragment, whitespace or remote host |
+| `BeaconsEventPayload` | Existing event registry bindings `{ kind, payload }`: `beacons.contribution` -> `Contribution`; `beacons.intensity` -> `BeaconsIntensity` |
+
+All records deny unknown fields, enums reject unknown values, and present optional
+keys reject null. Absent keys are omitted. Rust parsers and generated JSON Schema
+enforce the same scalar and shape constraints. Amounts and control-point totals
+are exact uint32 integers; Twitch identities remain strings. No contribution
+field is added to lots or Gatehouse contracts. The existing seq/at/kind-only
+StreamEvent remains an invalidation envelope; payload transport wiring is deferred.
+
+This delivery supplies contracts only. **Design-package layer schemas remain
+WP 3.2's job.** WP 3.1 must validate ordered distinct range totals, interpolation,
+source selection/weighting and compatible units, evaluate decay under its clock,
+and keep simulation labelled and separate from live contribution accounting.
+It must derive a canonical underlying contribution identity scoped by broadcaster:
+the same cheer received through channel.cheer and channel.bits.use shares one
+dedupe_key even when their source and transport event_id differ. A nonblank key
+alone does not perform deduplication. WP 3.2 must return URLs from its isolated
+read-only overlay origin with no RPC route; loopback syntax alone proves no origin
+isolation. No handler, dedupe engine, publisher, renderer or OBS call is added here.
+
 **WP 1.4 engine settings (D10).** The existing Settings.values map uses these
 exact dotted keys; `parse_engine_settings` in cc-types is their sole typed parser:
 

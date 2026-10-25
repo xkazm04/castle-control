@@ -98,7 +98,7 @@ function validators(schema) {
       : `{ type: 'number', validate: ${format.validate.toString()} }`}`).join(',');
   const exports = {};
   const declarations = [banner, "import type { ValidateFunction } from 'ajv';",
-    "import type { RpcMethods, StreamEvent, LotsEventPayload, ConsensusEventPayload, ErrorEnvelope } from './types.js';"];
+    "import type { RpcMethods, StreamEvent, LotsEventPayload, ConsensusEventPayload, BeaconsEventPayload, ErrorEnvelope } from './types.js';"];
   function entry(name, shape, type) {
     const ref = `cc:${name}`;
     ajv.addSchema(shape, ref);
@@ -112,6 +112,7 @@ function validators(schema) {
   entry('event', schema.types.StreamEvent, 'StreamEvent');
   entry('lotsEvent', schema.types.LotsEventPayload, 'LotsEventPayload');
   entry('consensusEvent', schema.types.ConsensusEventPayload, 'ConsensusEventPayload');
+  entry('beaconsEvent', schema.types.BeaconsEventPayload, 'BeaconsEventPayload');
   entry('error', schema.types.ErrorEnvelope, 'ErrorEnvelope');
   const map = (prefix) => schema.methods.map((m, i) => `[${JSON.stringify(m.name)}, compiled.${prefix}${i}]`).join(',');
   // Ajv's length keyword emits a CommonJS runtime reference even with esm:true.

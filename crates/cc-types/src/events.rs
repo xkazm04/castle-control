@@ -26,3 +26,13 @@ pub struct StreamEvent {
     pub at: Timestamp,
     pub kind: EventKind,
 }
+
+/// Module payload binding; the shared StreamEvent remains invalidation-only.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(tag = "kind", content = "payload", deny_unknown_fields)]
+pub enum BeaconsEventPayload {
+    #[serde(rename = "beacons.contribution")]
+    Contribution(crate::Contribution),
+    #[serde(rename = "beacons.intensity")]
+    Intensity(crate::BeaconsIntensity),
+}

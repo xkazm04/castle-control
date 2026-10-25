@@ -1,4 +1,5 @@
 //! The single authority for Castle Control's wire vocabulary and schemas.
+mod beacons;
 mod core;
 mod decision;
 mod drill;
@@ -18,6 +19,7 @@ mod rule;
 mod strike;
 mod value;
 
+pub use beacons::*;
 pub use core::*;
 pub use decision::*;
 pub use drill::*;
