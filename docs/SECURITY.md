@@ -1,5 +1,14 @@
 # Security
 
+The loopback `/rpc` service allows CORS only for the exact origins
+`tauri://localhost` and `http://tauri.localhost`, echoing the allowed origin and
+varying responses by Origin, including error responses. OPTIONS preflights carry
+no session token and are origin-checked; only POST and the `content-type` and
+`authorization` request headers are allowed, with a 600-second preflight cache.
+No wildcard or browser credential permission is granted. POST still requires
+the per-launch session token and its existing origin check; `/events` keeps its
+authentication and origin checks and receives no CORS headers.
+
 ## Twitch bridge
 
 `cc-twitch` is adapted from Shadowrunr OS, commit `7e4b6f8`,

@@ -4,7 +4,7 @@ use crate::auth::{SessionToken, origin_allowed};
 use crate::{EventHub, Registry};
 use axum::body::Bytes;
 use axum::extract::{Query, State, WebSocketUpgrade};
-use axum::http::{HeaderMap, StatusCode, header};
+use axum::http::{HeaderMap, Method, StatusCode, header};
 use axum::middleware::{self, Next};
 use axum::response::{IntoResponse, Response};
 use axum::routing::{get, post};
@@ -77,14 +77,82 @@ async fn authenticate(
 }
 
 pub fn router(state: Arc<AppState>) -> Router {
+    let authentication = middleware::from_fn_with_state(Arc::clone(&state), authenticate);
     Router::new()
-        .route("/rpc", post(rpc_handler))
-        .route("/events", get(events_handler))
-        .route_layer(middleware::from_fn_with_state(
-            Arc::clone(&state),
-            authenticate,
-        ))
+        .route(
+            "/rpc",
+            post(rpc_handler)
+                .route_layer(authentication.clone())
+                .options(rpc_preflight)
+                .layer(middleware::from_fn(rpc_cors)),
+        )
+        .route("/events", get(events_handler).route_layer(authentication))
         .with_state(state)
+}
+
+async fn rpc_preflight(headers: HeaderMap) -> Response {
+    let origin = headers
+        .get(header::ORIGIN)
+        .filter(|_| origin_allowed(&headers));
+    let method_allowed = headers
+        .get(header::ACCESS_CONTROL_REQUEST_METHOD)
+        .is_some_and(|method| method == "POST");
+    let headers_allowed = headers
+        .get_all(header::ACCESS_CONTROL_REQUEST_HEADERS)
+        .iter()
+        .all(|value| {
+            value.to_str().is_ok_and(|value| {
+                value.split(',').all(|name| {
+                    let name = name.trim();
+                    name.eq_ignore_ascii_case("content-type")
+                        || name.eq_ignore_ascii_case("authorization")
+                })
+            })
+        });
+    let Some(origin) = origin.filter(|_| method_allowed && headers_allowed) else {
+        return error(
+            StatusCode::FORBIDDEN,
+            ErrorCode::Unauthorized,
+            "preflight refused",
+        );
+    };
+    (
+        StatusCode::NO_CONTENT,
+        [
+            (header::ACCESS_CONTROL_ALLOW_ORIGIN, origin.clone()),
+            (
+                header::ACCESS_CONTROL_ALLOW_METHODS,
+                "POST".parse().unwrap(),
+            ),
+            (
+                header::ACCESS_CONTROL_ALLOW_HEADERS,
+                "content-type, authorization".parse().unwrap(),
+            ),
+            (header::ACCESS_CONTROL_MAX_AGE, "600".parse().unwrap()),
+            (header::VARY, "Origin".parse().unwrap()),
+        ],
+    )
+        .into_response()
+}
+
+// Wrap authentication and extractors so their errors remain readable by the
+// trusted webview. OPTIONS owns its headers, including on a refused preflight.
+async fn rpc_cors(request: axum::extract::Request, next: Next) -> Response {
+    let origin = request
+        .headers()
+        .get(header::ORIGIN)
+        .filter(|_| request.method() != Method::OPTIONS && origin_allowed(request.headers()))
+        .cloned();
+    let mut response = next.run(request).await;
+    if let Some(origin) = origin {
+        response
+            .headers_mut()
+            .insert(header::ACCESS_CONTROL_ALLOW_ORIGIN, origin);
+        response
+            .headers_mut()
+            .append(header::VARY, "Origin".parse().unwrap());
+    }
+    response
 }
 
 async fn rpc_handler(
