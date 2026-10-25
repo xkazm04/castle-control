@@ -95,8 +95,8 @@ pub enum Intake {
     Cooldown,
 }
 
-/// Eligibility only: never chooses a winner. Future proof-core integration must
-/// separately authorize the draw with GuardedDraw before deriving any result.
+/// Open eligibility pool. `seal_roll` consumes it after checking GuardedDraw;
+/// the resulting SealedDraw exposes no entry or configuration mutators.
 pub struct Roll {
     rules: RollRules,
     entries: BTreeMap<String, Entry>,
@@ -193,8 +193,12 @@ impl Roll {
         WeightTable::new(rows, self.curve())
     }
 
-    /// Check an externally derived complete result. There is no sampling,
-    /// randomness, seal, beacon or writ implementation in this crate.
+    pub(crate) fn winner_count(&self) -> u16 {
+        self.rules.winner_count
+    }
+
+    /// Check a complete result derived by the proof core. Sampling and proof
+    /// algorithms remain exclusively in cc-verify.
     pub fn validate_winners(&self, winners: &[TwitchUserId], at: DateTime<Utc>) -> Result<()> {
         if winners.len() != usize::from(self.rules.winner_count) {
             return Err(Error::Winners("wrong winner count"));
