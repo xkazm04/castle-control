@@ -1,1 +1,1 @@
-import '../src/kit.js';
+import '../src/kit.jsx';
