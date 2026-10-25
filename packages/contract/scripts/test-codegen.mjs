@@ -14,6 +14,7 @@ delete schema.$comment;
 const files = artifacts(schema);
 assert.deepEqual(files, artifacts(schema), 'generation must be byte deterministic');
 assert.equal(Object.keys(files).length, 7);
+assert(!/\brequire\s*\(/.test(files['validators.mjs']), 'standalone validators must run as browser ESM');
 assert.deepEqual(differences(files), []);
 assert.throws(() => artifacts({ methods: [], event_kinds: [], error_codes: [] }), /empty/);
 assert.throws(() => artifacts({ ...schema, error_codes: [...schema.error_codes, 'extra'] }), /ten/);

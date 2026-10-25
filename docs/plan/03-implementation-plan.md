@@ -712,7 +712,8 @@ These names are the wire contract. A package that needs a new one adds it to `cc
 
 | Type | Fields and constraints |
 | --- | --- |
-| `Rule` | `rule_id: RuleId`, nonblank `name`, `rule_class: RuleClass`, `mode: RuleMode`, `action: Action`, nonblank `delivery` routing label, optional `auto_ban_grant: AutoBanGrant` |
+| `Rule` | `rule_id: RuleId`, nonblank `name`, `rule_class: RuleClass`, `mode: RuleMode`, `action: Action`, nonblank `delivery` routing label, optional nonblank `pattern: string`, optional nonblank `text: string` (at most 500 characters), optional `timeout_s: uint32` (1..=1209600), optional `strikes: StrikePolicy`, optional `auto_ban_grant: AutoBanGrant` |
+| `StrikePolicy` | Positive uint32 `count` and `window_s`, `then: Action`, optional `then_timeout_s: uint32` (1..=1209600); escalation after count hits of the same rule by the same viewer within window_s |
 | `AutoBanGrant` | `expires_at: Timestamp`, positive uint32 `max_bans_per_hour`, `breaker_tripped: bool`; scoped to the containing pattern rule only |
 | `ModeAcknowledgement` | `at: Timestamp`, nonblank `reason`; logged with the mode-change decision before arming |
 | `RulesListResult` | `rules: Rule[]` |
@@ -729,6 +730,16 @@ ban.dismiss and decision.undo take DecisionParams and return Decision;
 petition.resolve takes PetitionResolveParams and returns Decision. These names
 are under the existing gatehouse method prefix. Later Gatehouse and all lots
 methods remain Pending.
+
+Pattern rules require pattern and forbid text; classifier rules require text and
+forbid pattern. Rails forbid pattern, text and strikes: detectors are owned by
+code and only delivery is configurable. timeout_s is required exactly when action
+is timeout; then_timeout_s is required exactly when strikes.then is timeout.
+Classifier rules cannot escalate to ban through strikes (D7). Rust TryFrom and
+JSON Schema enforce these conditions and the bounds above identically. StrikePolicy
+denies unknown fields; present optional keys reject null through the same contract
+door. Regex compilation is not validated here: cc-gatehouse compiles and refuses
+bad patterns on upsert.
 
 All records deny unknown fields. Present optional keys reject null. Unknown enum
 values, including verdicts, fail parsing; they are never coerced to pass.

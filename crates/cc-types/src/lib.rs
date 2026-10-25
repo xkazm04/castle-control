@@ -8,6 +8,7 @@ mod gatehouse;
 mod ids;
 mod methods;
 mod rule;
+mod strike;
 mod value;
 
 pub use core::*;
@@ -19,6 +20,7 @@ pub use gatehouse::*;
 pub use ids::*;
 pub use methods::*;
 pub use rule::*;
+pub use strike::*;
 pub use value::*;
 
 /// Present optional keys must contain a value, never JSON null.

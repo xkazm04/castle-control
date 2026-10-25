@@ -12,6 +12,7 @@ fn main() {
         PetitionOutcome,
         CliProvider,
         Action,
+        StrikePolicy,
         DecisionKind,
         Tier,
         RoomMode,

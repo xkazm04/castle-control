@@ -111,8 +111,15 @@ function validators(schema) {
   entry('event', schema.types.StreamEvent, 'StreamEvent');
   entry('error', schema.types.ErrorEnvelope, 'ErrorEnvelope');
   const map = (prefix) => schema.methods.map((m, i) => `[${JSON.stringify(m.name)}, compiled.${prefix}${i}]`).join(',');
+  // Ajv's length keyword emits a CommonJS runtime reference even with esm:true.
+  // Count Unicode code points inline so the generated browser module stays ESM.
+  const source = standaloneCode(ajv, exports)
+    .replaceAll('require("ajv/dist/runtime/ucs2length").default', 'unicodeLength');
+  if (/\brequire\s*\(/.test(source)) throw new Error('Unsupported CommonJS helper in ESM validators');
+  const unicodeLength = source.includes('unicodeLength')
+    ? 'function unicodeLength(value) { return Array.from(value).length; }\n' : '';
   return {
-    'validators.mjs': `${banner}/* eslint-disable */\n// Ajv standalone output; all authored code and generated types remain linted.\nconst formats = {${formatSource}};\n${standaloneCode(ajv, exports)}\n`,
+    'validators.mjs': `${banner}/* eslint-disable */\n// Ajv standalone output; all authored code and generated types remain linted.\nconst formats = {${formatSource}};\n${unicodeLength}${source}\n`,
     'validators.d.mts': `${declarations.join('\n')}\n`,
     'validation.ts': `${banner}import type { ValidateFunction } from 'ajv';\nimport * as compiled from './validators.mjs';\n`
       + `export const params = new Map<string, ValidateFunction>([${map('p')}]);\n`

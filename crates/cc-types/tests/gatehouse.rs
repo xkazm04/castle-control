@@ -6,7 +6,20 @@ const ID: &str = "01ARZ3NDEKTSV4RRFFQ69G5FAV";
 
 fn rule() -> Value {
     json!({"rule_id":"simulated-links", "name":"Simulated links", "rule_class":"pattern",
-        "mode":"shadow", "action":"ban", "delivery":"streamer"})
+        "mode":"shadow", "action":"ban", "delivery":"streamer", "pattern":"simulated"})
+}
+
+fn rule_for(class: &str) -> Value {
+    let mut value = rule();
+    value["rule_class"] = json!(class);
+    value["mode"] = json!("armed");
+    if class != "pattern" {
+        value.as_object_mut().unwrap().remove("pattern");
+    }
+    if class == "classifier" {
+        value["text"] = json!("Simulated classifier rule");
+    }
+    value
 }
 
 fn decision() -> Value {
@@ -63,6 +76,148 @@ fn grant() -> Value {
         "breaker_tripped":false})
 }
 
+fn strikes() -> Value {
+    json!({"count":3,"window_s":60,"then":"timeout","then_timeout_s":30})
+}
+
+#[test]
+fn evaluation_settings_are_required_nonblank_and_exclusive_by_class() {
+    for (class, key, other) in [
+        ("pattern", "pattern", "text"),
+        ("classifier", "text", "pattern"),
+    ] {
+        round_trip::<Rule>(rule_for(class));
+        let mut missing = rule_for(class);
+        missing.as_object_mut().unwrap().remove(key);
+        assert!(serde_json::from_value::<Rule>(missing).is_err());
+        for invalid in [json!(""), json!(" \t\n"), json!(false), json!(7)] {
+            let mut value = rule_for(class);
+            value[key] = invalid;
+            assert!(serde_json::from_value::<Rule>(value).is_err());
+        }
+        let mut value = rule_for(class);
+        value[other] = json!("Simulated extra setting");
+        assert!(serde_json::from_value::<Rule>(value).is_err());
+    }
+    for (text, valid) in [
+        ("x".repeat(500), true),
+        ("😀".repeat(500), true),
+        ("x".repeat(501), false),
+    ] {
+        let mut value = rule_for("classifier");
+        value["text"] = json!(text);
+        assert_eq!(serde_json::from_value::<Rule>(value).is_ok(), valid);
+    }
+    let mut pattern = rule();
+    pattern["pattern"] = json!("["); // Compilation is deliberately the upsert service's job.
+    round_trip::<Rule>(pattern);
+}
+
+#[test]
+fn rail_detectors_forbid_evaluation_settings_and_strikes() {
+    round_trip::<Rule>(rule_for("rail"));
+    for (key, setting) in [
+        ("pattern", json!("simulated")),
+        ("text", json!("Simulated")),
+        ("strikes", strikes()),
+    ] {
+        let mut value = rule_for("rail");
+        value[key] = setting;
+        assert!(serde_json::from_value::<Rule>(value).is_err());
+    }
+}
+
+#[test]
+fn timeout_durations_are_bounded_and_required_only_for_timeout_actions() {
+    for action in Action::VALUES {
+        for duration in [
+            None,
+            Some(json!(1)),
+            Some(json!(1209600)),
+            Some(json!(0)),
+            Some(json!(1209601)),
+            Some(json!(-1)),
+            Some(json!(1.5)),
+            Some(json!(4294967296_u64)),
+        ] {
+            let valid = if *action == "timeout" {
+                duration == Some(json!(1)) || duration == Some(json!(1209600))
+            } else {
+                duration.is_none()
+            };
+            let mut value = rule();
+            value["action"] = json!(action);
+            let mut policy = strikes();
+            policy["then"] = json!(action);
+            policy.as_object_mut().unwrap().remove("then_timeout_s");
+            if let Some(seconds) = duration {
+                value["timeout_s"] = seconds.clone();
+                policy["then_timeout_s"] = seconds;
+            }
+            assert_eq!(
+                serde_json::from_value::<Rule>(value.clone()).is_ok(),
+                valid,
+                "{value}"
+            );
+            assert_eq!(
+                serde_json::from_value::<StrikePolicy>(policy.clone()).is_ok(),
+                valid,
+                "{policy}"
+            );
+            value["strikes"] = policy;
+            assert_eq!(serde_json::from_value::<Rule>(value).is_ok(), valid);
+        }
+    }
+}
+
+#[test]
+fn strike_counts_and_windows_are_positive_u32_and_classifier_cannot_escalate_to_ban() {
+    for key in ["count", "window_s", "then"] {
+        let mut missing = strikes();
+        missing.as_object_mut().unwrap().remove(key);
+        assert!(serde_json::from_value::<StrikePolicy>(missing).is_err());
+    }
+    for key in ["count", "window_s"] {
+        for (number, valid) in [
+            (json!(1), true),
+            (json!(4294967295_u64), true),
+            (json!(0), false),
+            (json!(-1), false),
+            (json!(1.5), false),
+            (json!(4294967296_u64), false),
+        ] {
+            let mut policy = strikes();
+            policy[key] = number;
+            assert_eq!(
+                serde_json::from_value::<StrikePolicy>(policy.clone()).is_ok(),
+                valid
+            );
+            let mut value = rule();
+            value["strikes"] = policy;
+            assert_eq!(serde_json::from_value::<Rule>(value).is_ok(), valid);
+        }
+    }
+    for class in ["pattern", "classifier"] {
+        for action in Action::VALUES {
+            let mut policy = strikes();
+            policy["then"] = json!(action);
+            if *action != "timeout" {
+                policy.as_object_mut().unwrap().remove("then_timeout_s");
+            }
+            let mut value = rule_for(class);
+            value["strikes"] = policy;
+            let valid = class != "classifier" || *action != "ban";
+            assert_eq!(serde_json::from_value::<Rule>(value.clone()).is_ok(), valid);
+            if valid {
+                round_trip::<Rule>(value);
+            }
+        }
+    }
+    let mut unknown = strikes();
+    unknown["then"] = json!("unknown");
+    assert!(serde_json::from_value::<StrikePolicy>(unknown).is_err());
+}
+
 fn round_trip<T: serde::de::DeserializeOwned + serde::Serialize>(value: Value) {
     let parsed: T = serde_json::from_value(value.clone()).unwrap();
     assert_eq!(serde_json::to_value(parsed).unwrap(), value);
@@ -85,19 +240,14 @@ fn rules_grants_and_decisions_round_trip_with_absent_keys_omitted() {
     round_trip::<RulesSetModeParams>(json!({"rule_id":"simulated-links","mode":"shadow"}));
     round_trip::<PetitionResolveParams>(json!({"decision_id":ID,"outcome":"overturned"}));
     for class in ["rail", "classifier"] {
-        let mut value = rule();
-        value["rule_class"] = json!(class);
-        value["mode"] = json!("armed");
-        round_trip::<Rule>(value);
+        round_trip::<Rule>(rule_for(class));
     }
 }
 
 #[test]
 fn grants_are_pattern_only_bounded_and_strictly_parsed() {
     for class in ["rail", "classifier", "unknown"] {
-        let mut value = rule();
-        value["mode"] = json!("armed");
-        value["rule_class"] = json!(class);
+        let mut value = rule_for(class);
         value["auto_ban_grant"] = grant();
         assert!(serde_json::from_value::<Rule>(value).is_err());
     }
@@ -117,8 +267,8 @@ fn grants_are_pattern_only_bounded_and_strictly_parsed() {
 
 #[test]
 fn rails_cannot_be_shadowed_and_arming_needs_nonblank_timestamped_consent() {
-    let mut rail = rule();
-    rail["rule_class"] = json!("rail");
+    let mut rail = rule_for("rail");
+    rail["mode"] = json!("shadow");
     assert!(serde_json::from_value::<Rule>(rail).is_err());
     let base = json!({"rule_id":"simulated-links","mode":"armed"});
     assert!(serde_json::from_value::<RulesSetModeParams>(base.clone()).is_err());
@@ -177,7 +327,12 @@ fn rejects_null_and_unknown<T: serde::de::DeserializeOwned>(base: Value, optiona
 
 #[test]
 fn every_record_rejects_null_and_unknown_fields_including_optional_keys() {
-    rejects_null_and_unknown::<Rule>(rule(), &["auto_ban_grant"]);
+    rejects_null_and_unknown::<Rule>(rule(), &["auto_ban_grant", "text", "timeout_s", "strikes"]);
+    rejects_null_and_unknown::<StrikePolicy>(strikes(), &["then_timeout_s"]);
+    rejects_null_and_unknown::<Rule>(
+        rule_for("rail"),
+        &["pattern", "text", "timeout_s", "strikes", "auto_ban_grant"],
+    );
     rejects_null_and_unknown::<AutoBanGrant>(grant(), &[]);
     rejects_null_and_unknown::<Decision>(decision(), &["rule_id"]);
     rejects_null_and_unknown::<ModeAcknowledgement>(

@@ -682,8 +682,57 @@
                   "properties": {
                     "mode": {
                       "const": "armed"
+                    },
+                    "pattern": false,
+                    "strikes": false,
+                    "text": false
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "rule_class": {
+                      "const": "pattern"
                     }
                   }
+                },
+                "then": {
+                  "properties": {
+                    "pattern": true,
+                    "text": false
+                  },
+                  "required": [
+                    "pattern"
+                  ]
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "rule_class": {
+                      "const": "classifier"
+                    }
+                  }
+                },
+                "then": {
+                  "properties": {
+                    "pattern": false,
+                    "strikes": {
+                      "properties": {
+                        "then": {
+                          "not": {
+                            "const": "ban"
+                          }
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "text": true
+                  },
+                  "required": [
+                    "text"
+                  ]
                 }
               },
               {
@@ -702,9 +751,31 @@
                     "auto_ban_grant": false
                   }
                 }
+              },
+              {
+                "else": {
+                  "properties": {
+                    "timeout_s": false
+                  }
+                },
+                "if": {
+                  "properties": {
+                    "action": {
+                      "const": "timeout"
+                    }
+                  }
+                },
+                "then": {
+                  "properties": {
+                    "timeout_s": true
+                  },
+                  "required": [
+                    "timeout_s"
+                  ]
+                }
               }
             ],
-            "description": "Rail modes are fixed. Delivery is a nonblank routing label, not executable code.",
+            "description": "Rail modes are fixed. Delivery is a nonblank routing label, not executable code.\nPatterns are nonblank data here; cc-gatehouse compiles regexes and refuses bad\npatterns on upsert. This contract does not validate regex compilation.",
             "properties": {
               "action": {
                 "$ref": "#/$defs/Action"
@@ -723,11 +794,29 @@
                 "pattern": "\\S",
                 "type": "string"
               },
+              "pattern": {
+                "pattern": "\\S",
+                "type": "string"
+              },
               "rule_class": {
                 "$ref": "#/$defs/RuleClass"
               },
               "rule_id": {
                 "$ref": "#/$defs/RuleId"
+              },
+              "strikes": {
+                "$ref": "#/$defs/StrikePolicy"
+              },
+              "text": {
+                "maxLength": 500,
+                "pattern": "\\S",
+                "type": "string"
+              },
+              "timeout_s": {
+                "format": "uint32",
+                "maximum": 1209600,
+                "minimum": 1,
+                "type": "integer"
               }
             },
             "required": [
@@ -758,6 +847,61 @@
               "armed"
             ],
             "type": "string"
+          },
+          "StrikePolicy": {
+            "additionalProperties": false,
+            "allOf": [
+              {
+                "else": {
+                  "properties": {
+                    "then_timeout_s": false
+                  }
+                },
+                "if": {
+                  "properties": {
+                    "then": {
+                      "const": "timeout"
+                    }
+                  }
+                },
+                "then": {
+                  "properties": {
+                    "then_timeout_s": true
+                  },
+                  "required": [
+                    "then_timeout_s"
+                  ]
+                }
+              }
+            ],
+            "description": "Escalate after `count` hits of the same rule by the same viewer within `window_s`.",
+            "properties": {
+              "count": {
+                "format": "uint32",
+                "minimum": 1,
+                "type": "integer"
+              },
+              "then": {
+                "$ref": "#/$defs/Action"
+              },
+              "then_timeout_s": {
+                "format": "uint32",
+                "maximum": 1209600,
+                "minimum": 1,
+                "type": "integer"
+              },
+              "window_s": {
+                "format": "uint32",
+                "minimum": 1,
+                "type": "integer"
+              }
+            },
+            "required": [
+              "count",
+              "window_s",
+              "then"
+            ],
+            "type": "object"
           },
           "Timestamp": {
             "format": "date-time",
@@ -834,8 +978,57 @@
                   "properties": {
                     "mode": {
                       "const": "armed"
+                    },
+                    "pattern": false,
+                    "strikes": false,
+                    "text": false
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "rule_class": {
+                      "const": "pattern"
                     }
                   }
+                },
+                "then": {
+                  "properties": {
+                    "pattern": true,
+                    "text": false
+                  },
+                  "required": [
+                    "pattern"
+                  ]
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "rule_class": {
+                      "const": "classifier"
+                    }
+                  }
+                },
+                "then": {
+                  "properties": {
+                    "pattern": false,
+                    "strikes": {
+                      "properties": {
+                        "then": {
+                          "not": {
+                            "const": "ban"
+                          }
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "text": true
+                  },
+                  "required": [
+                    "text"
+                  ]
                 }
               },
               {
@@ -854,9 +1047,31 @@
                     "auto_ban_grant": false
                   }
                 }
+              },
+              {
+                "else": {
+                  "properties": {
+                    "timeout_s": false
+                  }
+                },
+                "if": {
+                  "properties": {
+                    "action": {
+                      "const": "timeout"
+                    }
+                  }
+                },
+                "then": {
+                  "properties": {
+                    "timeout_s": true
+                  },
+                  "required": [
+                    "timeout_s"
+                  ]
+                }
               }
             ],
-            "description": "Rail modes are fixed. Delivery is a nonblank routing label, not executable code.",
+            "description": "Rail modes are fixed. Delivery is a nonblank routing label, not executable code.\nPatterns are nonblank data here; cc-gatehouse compiles regexes and refuses bad\npatterns on upsert. This contract does not validate regex compilation.",
             "properties": {
               "action": {
                 "$ref": "#/$defs/Action"
@@ -875,11 +1090,29 @@
                 "pattern": "\\S",
                 "type": "string"
               },
+              "pattern": {
+                "pattern": "\\S",
+                "type": "string"
+              },
               "rule_class": {
                 "$ref": "#/$defs/RuleClass"
               },
               "rule_id": {
                 "$ref": "#/$defs/RuleId"
+              },
+              "strikes": {
+                "$ref": "#/$defs/StrikePolicy"
+              },
+              "text": {
+                "maxLength": 500,
+                "pattern": "\\S",
+                "type": "string"
+              },
+              "timeout_s": {
+                "format": "uint32",
+                "maximum": 1209600,
+                "minimum": 1,
+                "type": "integer"
               }
             },
             "required": [
@@ -910,6 +1143,61 @@
               "armed"
             ],
             "type": "string"
+          },
+          "StrikePolicy": {
+            "additionalProperties": false,
+            "allOf": [
+              {
+                "else": {
+                  "properties": {
+                    "then_timeout_s": false
+                  }
+                },
+                "if": {
+                  "properties": {
+                    "then": {
+                      "const": "timeout"
+                    }
+                  }
+                },
+                "then": {
+                  "properties": {
+                    "then_timeout_s": true
+                  },
+                  "required": [
+                    "then_timeout_s"
+                  ]
+                }
+              }
+            ],
+            "description": "Escalate after `count` hits of the same rule by the same viewer within `window_s`.",
+            "properties": {
+              "count": {
+                "format": "uint32",
+                "minimum": 1,
+                "type": "integer"
+              },
+              "then": {
+                "$ref": "#/$defs/Action"
+              },
+              "then_timeout_s": {
+                "format": "uint32",
+                "maximum": 1209600,
+                "minimum": 1,
+                "type": "integer"
+              },
+              "window_s": {
+                "format": "uint32",
+                "minimum": 1,
+                "type": "integer"
+              }
+            },
+            "required": [
+              "count",
+              "window_s",
+              "then"
+            ],
+            "type": "object"
           },
           "Timestamp": {
             "format": "date-time",
@@ -983,6 +1271,61 @@
             ],
             "type": "string"
           },
+          "StrikePolicy": {
+            "additionalProperties": false,
+            "allOf": [
+              {
+                "else": {
+                  "properties": {
+                    "then_timeout_s": false
+                  }
+                },
+                "if": {
+                  "properties": {
+                    "then": {
+                      "const": "timeout"
+                    }
+                  }
+                },
+                "then": {
+                  "properties": {
+                    "then_timeout_s": true
+                  },
+                  "required": [
+                    "then_timeout_s"
+                  ]
+                }
+              }
+            ],
+            "description": "Escalate after `count` hits of the same rule by the same viewer within `window_s`.",
+            "properties": {
+              "count": {
+                "format": "uint32",
+                "minimum": 1,
+                "type": "integer"
+              },
+              "then": {
+                "$ref": "#/$defs/Action"
+              },
+              "then_timeout_s": {
+                "format": "uint32",
+                "maximum": 1209600,
+                "minimum": 1,
+                "type": "integer"
+              },
+              "window_s": {
+                "format": "uint32",
+                "minimum": 1,
+                "type": "integer"
+              }
+            },
+            "required": [
+              "count",
+              "window_s",
+              "then"
+            ],
+            "type": "object"
+          },
           "Timestamp": {
             "format": "date-time",
             "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?Z$(?![\\s\\S])",
@@ -1004,8 +1347,57 @@
               "properties": {
                 "mode": {
                   "const": "armed"
+                },
+                "pattern": false,
+                "strikes": false,
+                "text": false
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "rule_class": {
+                  "const": "pattern"
                 }
               }
+            },
+            "then": {
+              "properties": {
+                "pattern": true,
+                "text": false
+              },
+              "required": [
+                "pattern"
+              ]
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "rule_class": {
+                  "const": "classifier"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "pattern": false,
+                "strikes": {
+                  "properties": {
+                    "then": {
+                      "not": {
+                        "const": "ban"
+                      }
+                    }
+                  },
+                  "type": "object"
+                },
+                "text": true
+              },
+              "required": [
+                "text"
+              ]
             }
           },
           {
@@ -1024,9 +1416,31 @@
                 "auto_ban_grant": false
               }
             }
+          },
+          {
+            "else": {
+              "properties": {
+                "timeout_s": false
+              }
+            },
+            "if": {
+              "properties": {
+                "action": {
+                  "const": "timeout"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "timeout_s": true
+              },
+              "required": [
+                "timeout_s"
+              ]
+            }
           }
         ],
-        "description": "Rail modes are fixed. Delivery is a nonblank routing label, not executable code.",
+        "description": "Rail modes are fixed. Delivery is a nonblank routing label, not executable code.\nPatterns are nonblank data here; cc-gatehouse compiles regexes and refuses bad\npatterns on upsert. This contract does not validate regex compilation.",
         "properties": {
           "action": {
             "$ref": "#/$defs/Action"
@@ -1045,11 +1459,29 @@
             "pattern": "\\S",
             "type": "string"
           },
+          "pattern": {
+            "pattern": "\\S",
+            "type": "string"
+          },
           "rule_class": {
             "$ref": "#/$defs/RuleClass"
           },
           "rule_id": {
             "$ref": "#/$defs/RuleId"
+          },
+          "strikes": {
+            "$ref": "#/$defs/StrikePolicy"
+          },
+          "text": {
+            "maxLength": 500,
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "timeout_s": {
+            "format": "uint32",
+            "maximum": 1209600,
+            "minimum": 1,
+            "type": "integer"
           }
         },
         "required": [
@@ -2724,8 +3156,57 @@
                 "properties": {
                   "mode": {
                     "const": "armed"
+                  },
+                  "pattern": false,
+                  "strikes": false,
+                  "text": false
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "rule_class": {
+                    "const": "pattern"
                   }
                 }
+              },
+              "then": {
+                "properties": {
+                  "pattern": true,
+                  "text": false
+                },
+                "required": [
+                  "pattern"
+                ]
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "rule_class": {
+                    "const": "classifier"
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "pattern": false,
+                  "strikes": {
+                    "properties": {
+                      "then": {
+                        "not": {
+                          "const": "ban"
+                        }
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "text": true
+                },
+                "required": [
+                  "text"
+                ]
               }
             },
             {
@@ -2744,9 +3225,31 @@
                   "auto_ban_grant": false
                 }
               }
+            },
+            {
+              "else": {
+                "properties": {
+                  "timeout_s": false
+                }
+              },
+              "if": {
+                "properties": {
+                  "action": {
+                    "const": "timeout"
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "timeout_s": true
+                },
+                "required": [
+                  "timeout_s"
+                ]
+              }
             }
           ],
-          "description": "Rail modes are fixed. Delivery is a nonblank routing label, not executable code.",
+          "description": "Rail modes are fixed. Delivery is a nonblank routing label, not executable code.\nPatterns are nonblank data here; cc-gatehouse compiles regexes and refuses bad\npatterns on upsert. This contract does not validate regex compilation.",
           "properties": {
             "action": {
               "$ref": "#/$defs/Action"
@@ -2765,11 +3268,29 @@
               "pattern": "\\S",
               "type": "string"
             },
+            "pattern": {
+              "pattern": "\\S",
+              "type": "string"
+            },
             "rule_class": {
               "$ref": "#/$defs/RuleClass"
             },
             "rule_id": {
               "$ref": "#/$defs/RuleId"
+            },
+            "strikes": {
+              "$ref": "#/$defs/StrikePolicy"
+            },
+            "text": {
+              "maxLength": 500,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            "timeout_s": {
+              "format": "uint32",
+              "maximum": 1209600,
+              "minimum": 1,
+              "type": "integer"
             }
           },
           "required": [
@@ -2860,6 +3381,61 @@
           },
           "required": [
             "values"
+          ],
+          "type": "object"
+        },
+        "StrikePolicy": {
+          "additionalProperties": false,
+          "allOf": [
+            {
+              "else": {
+                "properties": {
+                  "then_timeout_s": false
+                }
+              },
+              "if": {
+                "properties": {
+                  "then": {
+                    "const": "timeout"
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "then_timeout_s": true
+                },
+                "required": [
+                  "then_timeout_s"
+                ]
+              }
+            }
+          ],
+          "description": "Escalate after `count` hits of the same rule by the same viewer within `window_s`.",
+          "properties": {
+            "count": {
+              "format": "uint32",
+              "minimum": 1,
+              "type": "integer"
+            },
+            "then": {
+              "$ref": "#/$defs/Action"
+            },
+            "then_timeout_s": {
+              "format": "uint32",
+              "maximum": 1209600,
+              "minimum": 1,
+              "type": "integer"
+            },
+            "window_s": {
+              "format": "uint32",
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          "required": [
+            "count",
+            "window_s",
+            "then"
           ],
           "type": "object"
         },
@@ -3715,6 +4291,75 @@
         "kind"
       ],
       "title": "StreamEvent",
+      "type": "object"
+    },
+    "StrikePolicy": {
+      "$defs": {
+        "Action": {
+          "enum": [
+            "warn",
+            "delete",
+            "timeout",
+            "ban",
+            "hold"
+          ],
+          "type": "string"
+        }
+      },
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "else": {
+            "properties": {
+              "then_timeout_s": false
+            }
+          },
+          "if": {
+            "properties": {
+              "then": {
+                "const": "timeout"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "then_timeout_s": true
+            },
+            "required": [
+              "then_timeout_s"
+            ]
+          }
+        }
+      ],
+      "description": "Escalate after `count` hits of the same rule by the same viewer within `window_s`.",
+      "properties": {
+        "count": {
+          "format": "uint32",
+          "minimum": 1,
+          "type": "integer"
+        },
+        "then": {
+          "$ref": "#/$defs/Action"
+        },
+        "then_timeout_s": {
+          "format": "uint32",
+          "maximum": 1209600,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "window_s": {
+          "format": "uint32",
+          "minimum": 1,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "count",
+        "window_s",
+        "then"
+      ],
+      "title": "StrikePolicy",
       "type": "object"
     },
     "Tier": {
