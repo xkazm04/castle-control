@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; connect-src 'none'; base-uri 'none'; form-action 'none'">
+<title>Castle Control · Draw proof verifier</title>
+<h1>Draw proof verifier</h1>
+<p>Offline preparation · simulated examples only</p>
+<p>Compare the seal against the announcement made before the round or reveal.</p>
+<p><strong>UNVERIFIED:</strong> Beacon authentication requires a separately trusted quicknet key and the pending browser BLS dependency.</p>
+<p>File import unavailable: the public contract JSON parsing door has not been exported. This file demonstrates the seal/cast core using embedded, labelled-simulated writs.</p>
+<button id="fallback" type="button">Verify simulated streamer-controlled writ</button>
+<button id="beacon" type="button">Recompute simulated beacon writ</button>
+<p><output aria-live="polite">Choose a simulated writ</output></p><pre></pre>
+<script type="module">
+const simulatedSamples = [{"proof":{"randomness":"b298123ecb5990eb7446eaff091968cb541780ef6fed396d29373839c80531dd","signature":"85e5ca28024c9f26cd2cf67444002dd1972ed3d553da3f6b1cb711bd443219a806f5a8bb3d6f258436ee78bca6b5b6b8","source":"drand_quicknet"},"roll":{"entries":[{"handle":"simulated_00","weight":4294967295},{"handle":"simulated_01","weight":4294967294}],"margin_s":6,"randomness":{"chain_hash":"818a3dcb4cd43a33d1b78de80805a0a677b0579be02d540310fb1f91a094cdc2","round":"14404","source":"drand_quicknet"},"sealed_at":"2026-10-25T12:00:00Z","version":1,"winner_count":1},"seal":"5c3e5b538560fe00fc7e707e00ac0bc77790302b8f28cd768a1614fac8509b0f","winners":["simulated_01"]},{"proof":{"seed":"b40711a88c7039756fb8a73827eabe2c0fe5a0346ca7e0a104adc0fc764f528d","source":"streamer_commit"},"roll":{"entries":[{"handle":"simulated_00","weight":14},{"handle":"simulated_01","weight":21},{"handle":"simulated_02","weight":28}],"margin_s":6,"randomness":{"commitment":"22cc2224d3f9a977adcbd805a4fab1f6e128ca215b63eb49d3354a959fa90d32","source":"streamer_commit"},"sealed_at":"2026-10-25T12:00:00Z","version":1,"winner_count":2},"seal":"7a3df29d6035aa8ede203967174adfeaad804e9421fc46e2d5cd5f9c40ae403a","winners":["simulated_01","simulated_00"]}];
+/** Offline proof schema mirror, not a lots RPC contract. JSON decoding awaits the public contract door. */
+                                                                 
+                                                                                            
+                                                                
+                                                                                                 
+                                                          
+                             
+                                                                                                                          
+   
+                                                                                                    
+                                                                                                                           
+
+function record(value         )                          {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) throw new Error('Expected object');
+  return value                           ;
+}
+function keys(value                         , expected          )       {
+  if (Object.keys(value).length !== expected.length || expected.some((key) => !Object.hasOwn(value, key))) {
+    throw new Error('Missing or unknown field');
+  }
+}
+function text(value         )         {
+  if (typeof value !== 'string') throw new Error('Expected string');
+  return value;
+}
+function integer(value         , min        , max        )         {
+  if (typeof value !== 'number' || !Number.isInteger(value) || value < min || value > max) throw new Error('Integer range');
+  return value;
+}
+function array(value         )            {
+  if (!Array.isArray(value)) throw new Error('Expected array');
+  return value;
+}
+function hex(value         , bytes        )         {
+  const result = text(value);
+  if (result.length !== bytes * 2 || !/^[0-9a-f]+$/.test(result)) throw new Error('Noncanonical hex');
+  return result;
+}
+function roundNumber(value         )         {
+  const round = text(value);
+  if (!/^[1-9][0-9]*$/.test(round) || round.length > 20 || BigInt(round) > 0xffffffffffffffffn) throw new Error('Round string');
+  return BigInt(round);
+}
+function timestamp(value         )         {
+  const input = text(value);
+  if (!/^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$/.test(input)) throw new Error('Canonical UTC timestamp');
+  const time = Date.parse(input);
+  if (!Number.isFinite(time) || time < 0 || new Date(time).toISOString() !== input.slice(0, -1) + '.000Z') throw new Error('Timestamp range');
+  return time / 1000;
+}
+
+/** This anchor must come from an independent source, never from a writ. */
+function checkChain(value         )        {
+  const c = record(value);
+  keys(c, ['hash', 'public_key', 'genesis_time', 'period_s', 'scheme']);
+  const genesis_time = text(c.genesis_time);
+  timestamp(genesis_time);
+  if (c.scheme !== 'bls-unchained-g1-rfc9380') throw new Error('Quicknet scheme');
+  return Object.freeze({ hash: hex(c.hash, 32), public_key: hex(c.public_key, 96), genesis_time,
+    period_s: integer(c.period_s, 3, 3), scheme: c.scheme });
+}
+
+function plan(value         )       {
+  const p = record(value);
+  if (p.source === 'drand_quicknet') {
+    keys(p, ['source', 'chain_hash', 'round']);
+    const round = text(p.round);
+    roundNumber(round);
+    return Object.freeze({ source: p.source, chain_hash: hex(p.chain_hash, 32), round });
+  }
+  if (p.source === 'streamer_commit') {
+    keys(p, ['source', 'commitment']);
+    return Object.freeze({ source: p.source, commitment: hex(p.commitment, 32) });
+  }
+  throw new Error('Randomness source');
+}
+function proof(value         )        {
+  const p = record(value);
+  if (p.source === 'drand_quicknet') {
+    keys(p, ['source', 'signature', 'randomness']);
+    return Object.freeze({ source: p.source, signature: hex(p.signature, 48), randomness: hex(p.randomness, 32) });
+  }
+  if (p.source === 'streamer_commit') {
+    keys(p, ['source', 'seed']);
+    return Object.freeze({ source: p.source, seed: hex(p.seed, 32) });
+  }
+  throw new Error('Proof source');
+}
+/** One schema-validation door for decoded boundary objects; returns an owned frozen snapshot. */
+function checkWrit(value         )       {
+  const w = record(value);
+  keys(w, ['roll', 'seal', 'proof', 'winners']);
+  const r = record(w.roll);
+  keys(r, ['version', 'entries', 'winner_count', 'sealed_at', 'margin_s', 'randomness']);
+  const rawEntries = array(r.entries);
+  if (rawEntries.length < 1 || rawEntries.length > 10000) throw new Error('Entry count');
+  let previous = '';
+  const entries = rawEntries.map((raw)        => {
+    const e = record(raw);
+    keys(e, ['handle', 'weight']);
+    const handle = text(e.handle);
+    if (!/^[a-z0-9_]{1,25}$/.test(handle) || handle <= previous) throw new Error('Entry handle/order');
+    previous = handle;
+    return Object.freeze({ handle, weight: integer(e.weight, 1, 0xffffffff) });
+  });
+  const sealed_at = text(r.sealed_at);
+  timestamp(sealed_at);
+  const roll       = Object.freeze({
+    version: integer(r.version, 1, 1), entries: Object.freeze(entries),
+    winner_count: integer(r.winner_count, 1, entries.length), sealed_at,
+    margin_s: integer(r.margin_s, 1, 0xffffffff), randomness: plan(r.randomness),
+  });
+  const winners = array(w.winners);
+  if (winners.length !== roll.winner_count) throw new Error('Winner count');
+  const claimed = winners.map(text);
+  if (claimed.some((handle) => !entries.some((e) => e.handle === handle)) || new Set(claimed).size !== claimed.length) {
+    throw new Error('Claimed winners');
+  }
+  return Object.freeze({ roll, seal: hex(w.seal, 32), proof: proof(w.proof), winners: Object.freeze(claimed) });
+}
+
+
+const encoder = new TextEncoder();
+const concat = (...parts              )                          => {
+  const output = new Uint8Array(parts.reduce((n, part) => n + part.length, 0));
+  let offset = 0;
+  for (const part of parts) { output.set(part, offset); offset += part.length; }
+  return output;
+};
+const bytes = (value        )                          => Uint8Array.from(value.match(/../g) ?? [], (pair) => Number.parseInt(pair, 16));
+const encoded = (value            )         => Array.from(value, (b) => b.toString(16).padStart(2, '0')).join('');
+const be = (value        , width        )                          => {
+  const output = new Uint8Array(width);
+  for (let i = width - 1; i >= 0; i--) { output[i] = Number(value & 255n); value >>= 8n; }
+  return output;
+};
+const u32 = (value        )                          => be(BigInt(value), 4);
+const digest = async (value                         )                                   =>
+  new Uint8Array(await globalThis.crypto.subtle.digest('SHA-256', value));
+
+function entryBytes(entries                  )                          {
+  return concat(...entries.map((entry) => concat(u32(entry.handle.length), encoder.encode(entry.handle), u32(entry.weight))));
+}
+function canonical(writ      )                          {
+  const r = writ.roll;
+  const source = r.randomness.source === 'drand_quicknet'
+    ? concat(new Uint8Array([0]), bytes(r.randomness.chain_hash), be(BigInt(r.randomness.round), 8))
+    : concat(new Uint8Array([1]), bytes(r.randomness.commitment));
+  return concat(encoder.encode('castle-control/seal/v1\0'), u32(r.entries.length), entryBytes(r.entries),
+    u32(r.winner_count), encoder.encode(r.sealed_at), u32(r.margin_s), source);
+}
+function sample(candidate        , total        )                     {
+  const limit = ((1n << 64n) / total) * total;
+  return candidate < limit ? candidate % total : undefined;
+}
+async function cast(writ      , randomness                         )                             {
+  const seed = await digest(concat(encoder.encode('castle-control/cast/v1\0'), randomness, bytes(writ.seal), entryBytes(writ.roll.entries)));
+  const pool = [...writ.roll.entries];
+  const winners           = [];
+  let counter = 0n;
+  while (winners.length < writ.roll.winner_count) {
+    if (counter > 0xffffffffffffffffn) throw new Error('Cast exhausted');
+    const block = await digest(concat(seed, be(counter++, 8)));
+    const candidate = new DataView(block.buffer).getBigUint64(0, false);
+    const total = pool.reduce((n, entry) => n + BigInt(entry.weight), 0n);
+    let target = sample(candidate, total);
+    if (target === undefined) continue;
+    let index = 0;
+    for (const entry of pool) {
+      if (target < BigInt(entry.weight)) break;
+      target -= BigInt(entry.weight); index++;
+    }
+    const winner = pool.splice(index, 1)[0];
+    if (!winner) throw new Error('Cast total');
+    winners.push(winner.handle);
+  }
+  return Object.freeze(winners);
+}
+                                     
+                                                                 
+                                                      
+   
+const verifiedResults = new WeakSet              ();
+
+/** Seal/cast recomputation succeeds separately from beacon authentication. */
+async function verifyDecodedWrit(value         , trustedChain          )                        {
+  const writ = checkWrit(value);
+  if (encoded(await digest(canonical(writ))) !== writ.seal) throw new Error('Seal mismatch');
+  const p = writ.proof;
+  let randomness                         ;
+  let verified = false;
+  let label        ;
+  let reason        ;
+  if (p.source === 'streamer_commit' && writ.roll.randomness.source === p.source) {
+    randomness = bytes(p.seed);
+    if (encoded(await digest(concat(encoder.encode('castle-control/commit/v1\0'), randomness))) !== writ.roll.randomness.commitment) {
+      throw new Error('Offline commitment mismatch');
+    }
+    verified = true;
+    label = 'streamer-controlled';
+    reason = 'Seal and cast verified. The streamer chose this seed; compare the previously published seal.';
+  } else if (p.source === 'drand_quicknet' && writ.roll.randomness.source === p.source) {
+    randomness = await digest(bytes(p.signature));
+    if (encoded(randomness) !== p.randomness) throw new Error('Round randomness mismatch');
+    if (trustedChain !== undefined) {
+      const chain = checkChain(trustedChain);
+      const genesis = BigInt(timestamp(chain.genesis_time));
+      const after = BigInt(timestamp(writ.roll.sealed_at)) + BigInt(writ.roll.margin_s);
+      const selected = after < genesis ? 1n : (after - genesis) / BigInt(chain.period_s) + 2n;
+      if (chain.hash !== writ.roll.randomness.chain_hash || selected !== roundNumber(writ.roll.randomness.round)) {
+        throw new Error('Round schedule/chain mismatch');
+      }
+    }
+    label = 'drand-quicknet';
+    reason = trustedChain === undefined
+      ? 'UNVERIFIED: BLS signature dependency and a separately trusted chain are required.'
+      : 'UNVERIFIED: BLS signature verification awaits the installed browser dependency and conformance fixtures.';
+  } else { throw new Error('Source/proof mismatch'); }
+  const computed_winners = await cast(writ, randomness);
+  if (computed_winners.some((handle, index) => handle !== writ.winners[index])) throw new Error('Cast mismatch');
+  const result               = Object.freeze({ status: verified ? 'verified' : 'unverified', seal: writ.seal, label, computed_winners, reason });
+  if (verified) verifiedResults.add(result);
+  return result;
+}
+
+/** No unverified or caller-constructed value can feed an animation. */
+function animationCast(result              )                    {
+  if (!verifiedResults.has(result)) throw new Error('Unverified result cannot feed an animation');
+  return result.computed_winners;
+}
+
+
+                                                   
+
+const output = document.querySelector('output');
+const details = document.querySelector('pre');
+const fallback = document.querySelector('#fallback');
+const beacon = document.querySelector('#beacon');
+if (!output || !details || !fallback || !beacon) throw new Error('Missing verifier controls');
+
+async function show(value         )                {
+  if (!output || !details) throw new Error('Missing verifier output');
+  output.textContent = 'Checking seal and cast…';
+  details.textContent = '';
+  try {
+    const result = await verifyDecodedWrit(value);
+    output.textContent = `${result.status.toUpperCase()} · ${result.label}`;
+    details.textContent = `${result.reason}\n\nSeal: ${result.seal}\nRecomputed winners: ${result.computed_winners.join(', ')}`;
+  } catch (error) {
+    output.textContent = 'REJECTED';
+    details.textContent = error instanceof Error ? error.message : 'Verification failed';
+  }
+}
+fallback.addEventListener('click', () => { void show(simulatedSamples[1]); });
+beacon.addEventListener('click', () => { void show(simulatedSamples[0]); });
+
+</script></html>
