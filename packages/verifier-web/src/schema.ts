@@ -1,4 +1,4 @@
-/** Offline proof schema mirror, not a lots RPC contract. JSON decoding awaits the public contract door. */
+/** Offline proof schema mirror, not a lots RPC contract. Shared JSON decoding precedes this validation door. */
 export type Entry = Readonly<{ handle: string; weight: number }>;
 export type Plan = Readonly<{ source: 'drand_quicknet'; chain_hash: string; round: string }>
   | Readonly<{ source: 'streamer_commit'; commitment: string }>;

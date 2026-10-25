@@ -1,10 +1,10 @@
 import { expect, test } from 'vitest';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import fixture from './simulated-writs.json' with { type: 'json' };
 import { animationCast, sample, verifyDecodedWrit } from './index.ts';
 import { checkWrit, roundNumber, timestamp } from './schema.ts';
 import { checkGeneratedWrits } from './parity-check.ts';
-import { checkHtml } from './html-check.ts';
+import { checkFileImports, checkHtml } from './html-check.ts';
 import { sourceFingerprint } from './artifact.ts';
 
 test('same_winners_as_rust_across_1000_generated_simulated_writs', async () => {
@@ -76,13 +76,26 @@ test('single_html_matches_source_fingerprint_and_has_no_remote_resources', () =>
   const before = readFileSync(htmlPath, 'utf8');
   expect(before).toContain(`<!-- source-sha256:${sourceFingerprint()} -->`);
   expect(before).not.toMatch(/<script[^>]*\bsrc=/i);
-  expect(before).not.toContain('JSON.parse');
-  expect(before).toContain('File import unavailable');
+  expect(before.match(/JSON\.parse\(/g)).toHaveLength(1);
+  const sharedDoor = readFileSync(new URL('../../contract/src/door.mjs', import.meta.url), 'utf8');
+  expect(sharedDoor.match(/JSON\.parse\(/g)).toHaveLength(1);
+  expect(before).toContain('Invalid JSON input');
+  expect(before).toContain('JSON input exceeds byte limit');
+  expect(readFileSync(new URL('./page.ts', import.meta.url), 'utf8')).toContain("from '@castle-control/contract/door'");
+  for (const file of readdirSync(new URL('.', import.meta.url)).filter((file) => file.endsWith('.ts'))) {
+    expect(readFileSync(new URL(file, import.meta.url), 'utf8')).not.toMatch(/JSON\.parse\(/);
+  }
+  expect(before).not.toContain('File import unavailable');
   expect(before).toContain('UNVERIFIED');
-  expect(before).not.toMatch(/type=["']file["']/);
+  expect(before).toMatch(/type=["']file["']/);
+  expect(before).toContain("connect-src 'none'");
   expect(before).toContain('The MIT License (MIT)');
 });
 
 test('self_contained_html_verifies_all_bundled_writs_and_rejects_bad_bls', async () => {
   await checkHtml(readFileSync(new URL('../index.html', import.meta.url), 'utf8'));
+});
+
+test('offline_file_control_validates_imports_and_never_passes_bad_or_stale_files', async () => {
+  await checkFileImports(readFileSync(new URL('../index.html', import.meta.url), 'utf8'));
 });

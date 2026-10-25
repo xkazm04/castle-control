@@ -7,10 +7,14 @@ draws using official quicknet rounds **1, 2 and 1000**. The UI labels the entry
 pools as simulated and distinguishes the public signatures from the test key.
 Compare every seal against the announcement made before the round or reveal.
 
-Arbitrary writ **file import stays disabled by Director decision**. The verifier
-accepts bundled fixtures/generated writs only. No second JSON.parse door or
-private contract import was introduced; the App Master owns that future work.
-This is an offline proof-format mirror, not a new lots RPC contract.
+The file control imports a writ JSON file of at most **2 MiB**, entirely offline.
+It rejects oversized files before `File.text()`, then applies a UTF-8 byte cap in
+the shared `@castle-control/contract/door` decoder before the existing `schema.ts`
+validation and seal/cast checks. Invalid JSON, schema violations, tampering and
+read failures show **REJECTED**; older pending imports cannot overwrite the
+latest result. Official quicknet imports use the independent bundled official
+anchor, never one supplied by the file. This is an offline proof-format mirror,
+not a new lots RPC contract.
 
 `verifyDecodedWrit(unknown, trustedChain?)` validates and freezes owned snapshots,
 rejects unknown fields, recomputes the seal and weighted rejection-sampling cast,
@@ -38,7 +42,9 @@ independent bundled anchor is not taken from any writ.
 Generate with `node src/generate.ts` from this package (Node 24.14+). The build
 resolves the existing Vitest toolchain's Vite peer and uses its public build API
 to produce one minified IIFE in memory, then embeds it and the fixtures into the
-HTML. It refuses external/dynamic imports or additional output files. Both
+HTML. It refuses external/dynamic imports or additional output files. The
+public decoder subpath and its declarations are exported by contract; the
+build rejects any other contract module or ajv in the single-file bundle. Both
 `@noble/curves` and its `@noble/hashes@1.8.0` dependency retain their full MIT
 notices in the HTML. A normalized source fingerprint detects a stale artifact.
 The Director installed the pinned packages and updated the lockfile; this build
@@ -61,6 +67,9 @@ no child-process permission or experimental VM flag is required. Evidence:
 - `self_contained_html_verifies_all_bundled_writs_and_rejects_bad_bls` executes
   the actual embedded bundle with dynamic code generation disabled. It verifies
   all five controls, then substitutes another real signature and checks rejection.
+- `offline_file_control_validates_imports_and_never_passes_bad_or_stale_files`
+  imports simulated and official-beacon writs through the built page, rejects
+  malformed, tampered, oversized and unreadable files, and checks stale reads.
 
 The same parity and HTML checks can run directly from the repo root with
 `node packages/verifier-web/src/offline-check.ts` and

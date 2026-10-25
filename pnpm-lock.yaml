@@ -149,6 +149,9 @@ importers:
 
   packages/verifier-web:
     dependencies:
+      '@castle-control/contract':
+        specifier: workspace:*
+        version: link:../contract
       '@noble/curves':
         specifier: 1.9.7
         version: 1.9.7

@@ -3,7 +3,13 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "exports": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./door": {
+      "types": "./src/door.d.mts",
+      "import": "./src/door.mjs"
+    }
+  },
   "scripts": {
     "generate": "node scripts/generate.mjs",
     "check": "node scripts/check.mjs",

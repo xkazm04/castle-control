@@ -24,6 +24,12 @@ const chunk = chunks[0];
 if (chunks.length !== 1 || !chunk || chunk.type !== 'chunk' || chunk.imports.length || chunk.dynamicImports.length) {
   throw new Error('Expected exactly one self-contained verifier bundle');
 }
+const modules = Object.keys(chunk.modules).map((id) => id.replaceAll('\\', '/'));
+const contractModules = modules.filter((id) => id.includes('/packages/contract/'));
+if (contractModules.length !== 1 || !contractModules[0]?.endsWith('/src/door.mjs')
+    || modules.some((id) => /\/ajv(?:@|\/)/.test(id))) {
+  throw new Error('Expected only the shared JSON door from contract, without ajv');
+}
 const nobleDirectory = dirname(createRequire(import.meta.url).resolve('@noble/curves/bls12-381'));
 const hashesDirectory = dirname(createRequire(join(nobleDirectory, 'package.json')).resolve('@noble/hashes/sha2.js'));
 const licenses = [nobleDirectory, hashesDirectory].map((directory) => readFileSync(join(directory, 'LICENSE'), 'utf8')).join('\n');
@@ -42,13 +48,14 @@ const html = `<!doctype html>
 <p>Offline proof checks · entry pools are simulated; the three official quicknet beacons are real public signatures.</p>
 <p>Compare the seal against the announcement made before the round or reveal.</p>
 <p>Beacon authentication uses a separately bundled trust anchor and local BLS verification. Without an anchor the result stays UNVERIFIED.</p>
-<p>File import unavailable by Director decision. This file verifies bundled fixtures and generated writs only; no second JSON decoding door is included.</p>
+<p>Import a writ JSON file (up to 2 MiB). It stays on this device. Official quicknet proofs use the independently bundled trust anchor.</p>
+<label>Writ file <input id="writ-file" type="file" accept=".json,application/json"></label>
 <button id="fallback" type="button">Verify simulated streamer-controlled writ</button>
 <button id="beacon" type="button">Verify simulated beacon writ</button>
 <button id="round-1" type="button">Verify official quicknet round 1</button>
 <button id="round-2" type="button">Verify official quicknet round 2</button>
 <button id="round-1000" type="button">Verify official quicknet round 1000</button>
-<p><output aria-live="polite">Choose a bundled writ</output></p><pre></pre>
+<p><output aria-live="polite">Choose a writ file or bundled writ</output></p><pre></pre>
 <!-- Bundled @noble/curves 1.9.7 and @noble/hashes 1.8.0 notices:
 ${licenses} -->
 <script type="module">
