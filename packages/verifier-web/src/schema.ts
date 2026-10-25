@@ -9,6 +9,7 @@ export type Roll = Readonly<{
 }>;
 export type Writ = Readonly<{ roll: Roll; seal: string; proof: Proof; winners: readonly string[] }>;
 export type Chain = Readonly<{ hash: string; public_key: string; genesis_time: string; period_s: number; scheme: string }>;
+export type Round = Readonly<{ round: string; signature: string; randomness: string }>;
 
 function record(value: unknown): Record<string, unknown> {
   if (!value || typeof value !== 'object' || Array.isArray(value)) throw new Error('Expected object');
@@ -58,6 +59,14 @@ export function checkChain(value: unknown): Chain {
   if (c.scheme !== 'bls-unchained-g1-rfc9380') throw new Error('Quicknet scheme');
   return Object.freeze({ hash: hex(c.hash, 32), public_key: hex(c.public_key, 96), genesis_time,
     period_s: integer(c.period_s, 3, 3), scheme: c.scheme });
+}
+
+export function checkRound(value: unknown): Round {
+  const r = record(value);
+  keys(r, ['round', 'signature', 'randomness']);
+  const round = text(r.round);
+  roundNumber(round);
+  return Object.freeze({ round, signature: hex(r.signature, 48), randomness: hex(r.randomness, 32) });
 }
 
 function plan(value: unknown): Plan {

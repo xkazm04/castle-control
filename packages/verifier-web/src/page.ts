@@ -1,25 +1,29 @@
 import { verifyDecodedWrit } from './index.ts';
 
-declare const simulatedSamples: readonly unknown[];
+type Sample = Readonly<{ writ: unknown; chain: unknown; label: string }>;
+declare const bundledSamples: readonly Sample[];
 
 const output = document.querySelector('output');
 const details = document.querySelector('pre');
-const fallback = document.querySelector('#fallback');
-const beacon = document.querySelector('#beacon');
-if (!output || !details || !fallback || !beacon) throw new Error('Missing verifier controls');
+if (!output || !details) throw new Error('Missing verifier controls');
 
-async function show(value: unknown): Promise<void> {
+async function show(sample: Sample | undefined): Promise<void> {
   if (!output || !details) throw new Error('Missing verifier output');
   output.textContent = 'Checking seal and cast…';
   details.textContent = '';
   try {
-    const result = await verifyDecodedWrit(value);
+    if (!sample) throw new Error('Missing bundled writ');
+    const result = await verifyDecodedWrit(sample.writ, sample.chain);
     output.textContent = `${result.status.toUpperCase()} · ${result.label}`;
-    details.textContent = `${result.reason}\n\nSeal: ${result.seal}\nRecomputed winners: ${result.computed_winners.join(', ')}`;
+    details.textContent = `${sample.label}\n${result.reason}\n\nSeal: ${result.seal}\nRecomputed winners: ${result.computed_winners.join(', ')}`;
   } catch (error) {
     output.textContent = 'REJECTED';
     details.textContent = error instanceof Error ? error.message : 'Verification failed';
   }
 }
-fallback.addEventListener('click', () => { void show(simulatedSamples[1]); });
-beacon.addEventListener('click', () => { void show(simulatedSamples[0]); });
+const controls = [['#fallback', 1], ['#beacon', 0], ['#round-1', 2], ['#round-2', 3], ['#round-1000', 4]] as const;
+for (const [selector, index] of controls) {
+  const button = document.querySelector(selector);
+  if (!button) throw new Error('Missing verifier control');
+  button.addEventListener('click', () => { void show(bundledSamples[index]); });
+}

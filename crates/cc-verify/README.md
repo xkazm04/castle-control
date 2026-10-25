@@ -13,8 +13,9 @@ Publish `SealedRoll::to_json()` (including the canonical entries and seal) befor
 that round. `QuicknetClient::fetch` requests the exact selected round over HTTPS,
 with no redirects, a ten-second timeout and a 16 KiB response cap. It verifies
 the round using the operator-supplied public key. No HTTP request is made by the
-tests or by the CLI. Real quicknet conformance is still pending Director-supplied
-chain info and public round fixtures; simulated signatures alone cannot prove it.
+tests or by the CLI. Official quicknet chain info and rounds 1, 2 and 1000 are
+retained byte-for-byte in `tests/fixtures/drand-quicknet/`, with source and fetch
+date documented there. Their signatures verify in Rust and in the web verifier.
 
 `finish_quicknet` authenticates the round and constructs a writ whose winners
 are derived, never provided by the caller. For offline fallback, publish the
@@ -55,6 +56,8 @@ Evidence:
 - `verified_cast_is_the_animation_output`
 - `cli_accepts_offline_writ_and_rejects_tampering`
 - `thousand_generated_simulated_writs_verify_in_rust`
+- `official_quicknet_rounds_1_2_1000_verify_in_rust`
+- `official_beacon_writs_match_the_rust_generated_web_fixture`
 
 `cargo test --offline --locked -p cc-verify` runs the checks. Regenerate the shared
 labelled-simulated fixture explicitly with
@@ -63,3 +66,12 @@ The deterministic public test keypair signs 100 beacon cases; 900 additional
 cases use commit/reveal. Pools, counts and integer weights vary, including u32
 maximum weights. The generated fixture is owned by this delivery at
 `packages/verifier-web/src/simulated-writs.json`; the web parity test reads it.
+
+Regenerate the additional simulated draws using official beacon signatures with
+`cargo test --offline --locked -p cc-verify generate_public_writs -- --ignored`.
+This writes `packages/verifier-web/src/public-writs.json`; the ordinary test
+rebuilds it in memory and checks equality without changing the file. These draws
+use simulated handles and real public beacons, never Twitch viewer chat. Rebuild
+the single HTML after regenerating either fixture. The browser's arbitrary writ
+file import remains disabled by Director decision; this does not restrict CLI
+file input through this crate's existing JSON validation door.

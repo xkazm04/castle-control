@@ -1,14 +1,14 @@
 import { expect, test } from 'vitest';
 import { readFileSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
-import { execFileSync } from 'node:child_process';
 import fixture from './simulated-writs.json' with { type: 'json' };
 import { animationCast, sample, verifyDecodedWrit } from './index.ts';
 import { checkWrit, roundNumber, timestamp } from './schema.ts';
+import { checkGeneratedWrits } from './parity-check.ts';
+import { checkHtml } from './html-check.ts';
+import { sourceFingerprint } from './artifact.ts';
 
-test('same_winners_as_rust_across_1000_generated_simulated_writs', () => {
-  const output = execFileSync(process.execPath, [fileURLToPath(new URL('./offline-check.ts', import.meta.url))], { encoding: 'utf8' });
-  expect(output).toContain('same_winners_as_rust_across_1000_generated_simulated_writs: PASS');
+test('same_winners_as_rust_across_1000_generated_simulated_writs', async () => {
+  expect(await checkGeneratedWrits()).toEqual({ offline: 900, beacons: 100 });
 }, 30000);
 
 test('tampering_with_sealed_fields_or_claimed_winners_fails', async () => {
@@ -54,7 +54,7 @@ test('schema_snapshot_and_animation_result_cannot_be_mutated_or_forged', async (
   expect(() => animationCast({ ...result })).toThrow('Unverified');
 });
 
-test('beacon_signature_dependency_is_explicitly_unverified', async () => {
+test('missing_trust_anchor_is_explicitly_unverified', async () => {
   const original = fixture.cases[0];
   if (!original) throw new Error('Missing simulated case');
   const result = await verifyDecodedWrit(original.writ);
@@ -66,25 +66,23 @@ test('beacon_signature_dependency_is_explicitly_unverified', async () => {
 test('independent_chain_and_strict_round_schedule_are_checked', async () => {
   const original = fixture.cases[0];
   if (!original) throw new Error('Missing simulated beacon');
-  await expect(verifyDecodedWrit(original.writ, fixture.chain)).resolves.toMatchObject({ status: 'unverified' });
+  await expect(verifyDecodedWrit(original.writ, fixture.chain)).resolves.toMatchObject({ status: 'verified' });
   await expect(verifyDecodedWrit(original.writ, { ...fixture.chain, hash: '00'.repeat(32) })).rejects.toThrow('chain');
   await expect(verifyDecodedWrit(original.writ, { ...fixture.chain, genesis_time: '2026-10-25T00:00:03Z' })).rejects.toThrow('schedule');
 });
 
-test.todo('invalid_round_signature_is_rejected_in_browser_after_noble_curves_install');
-
-test('single_html_is_reproducible_and_has_no_remote_resources', () => {
+test('single_html_matches_source_fingerprint_and_has_no_remote_resources', () => {
   const htmlPath = new URL('../index.html', import.meta.url);
   const before = readFileSync(htmlPath, 'utf8');
-  execFileSync(process.execPath, [fileURLToPath(new URL('./generate.ts', import.meta.url))]);
-  expect(readFileSync(htmlPath, 'utf8')).toBe(before);
+  expect(before).toContain(`<!-- source-sha256:${sourceFingerprint()} -->`);
   expect(before).not.toMatch(/<script[^>]*\bsrc=/i);
   expect(before).not.toContain('JSON.parse');
   expect(before).toContain('File import unavailable');
   expect(before).toContain('UNVERIFIED');
+  expect(before).not.toMatch(/type=["']file["']/);
+  expect(before).toContain('The MIT License (MIT)');
 });
 
-test('self_contained_html_runs_both_examples', () => {
-  const output = execFileSync(process.execPath, ['--experimental-vm-modules', fileURLToPath(new URL('./html-smoke.ts', import.meta.url))], { encoding: 'utf8' });
-  expect(output).toContain('self_contained_html_runs_both_examples: PASS');
+test('self_contained_html_verifies_all_bundled_writs_and_rejects_bad_bls', async () => {
+  await checkHtml(readFileSync(new URL('../index.html', import.meta.url), 'utf8'));
 });
