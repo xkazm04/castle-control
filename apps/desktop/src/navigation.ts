@@ -27,5 +27,6 @@ export function dispatchShortcut(event: Shortcut, editable: boolean, navigate: (
 }
 
 export function routeFromHash(hash: string): ModuleId {
+  if (hash === '#/moderator/drill') return 'moderator';
   return chambers.find(chamber => hash === `#/${chamber.id}`)?.id ?? 'lottery';
 }

@@ -9,12 +9,12 @@ test('duplicate bindings throw before a handler can use them', () => {
   expect(() => createKeymap([{ key: '1', action: 'lottery' }, { key: '1', action: 'studio' }])).toThrow('Duplicate');
 });
 
-test('keyboard alone opens every chamber with its empty state and simulated rampart', () => {
+test('keyboard alone opens every chamber with its current content and simulated rampart', () => {
   let current: ModuleId = 'lottery';
   let focused = false;
   const snapshot = { mode: 'fixture', phase: 'ready', ...simulatedRead(1) } as const;
   for (const [key, title, empty] of [
-    ['1', 'Lot Chamber', 'No lots in the urn yet'], ['2', 'Gatehouse', 'The portcullis is clear'],
+    ['1', 'Lot Chamber', 'No lots in the urn yet'], ['2', 'Gatehouse', 'The live room'],
     ['3', 'Beacons', 'No beacon is lit'], ['4', 'Map Room', 'The map table is bare'],
   ]) {
     let prevented = false;

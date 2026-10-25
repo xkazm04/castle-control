@@ -5,6 +5,7 @@ import type { Ref } from 'react';
 import type { Snapshot } from './model.js';
 import { DesktopRampart } from './rampart.jsx';
 import { simulatedSourceLabel } from './simulated.js';
+import { ModerationPage } from './moderation-page.jsx';
 import './view.css';
 
 const emptyStates = {
@@ -15,7 +16,7 @@ const emptyStates = {
 } as const;
 
 export type ViewProps = {
-  current: ModuleId; snapshot: Snapshot; theme: Theme;
+  current: ModuleId; snapshot: Snapshot; theme: Theme; replay?: boolean;
   on_navigate: (id: ModuleId) => void; on_theme_change: (theme: Theme) => void;
   search: string; on_search: (text: string) => void; search_ref?: Ref<HTMLInputElement>;
 };
@@ -24,11 +25,13 @@ export function DesktopView(props: ViewProps) {
   const current = chambers.find(chamber => chamber.id === props.current) ?? chambers[0];
   const empty = emptyStates[current.id];
   const simulated = props.snapshot.mode === 'fixture' || props.snapshot.status?.simulated === true;
+  const moderation = current.id === 'moderator' && props.snapshot.mode === 'fixture';
   const matches = props.search.trim() ? chambers.filter(chamber => `${chamber.name} ${chamber.description}`.toLowerCase().includes(props.search.trim().toLowerCase())) : [];
   return <ThemeFrame theme={props.theme} module={current.id}>
     <KitShell rampart={<DesktopRampart snapshot={props.snapshot} theme={props.theme} on_theme_change={props.on_theme_change} />}
       navigation={<ChambersColumn current={current.id} on_navigate={props.on_navigate}
-        links={chambers.map(chamber => ({ id: chamber.id, href: `#/${chamber.id}`, figure: 'Not configured' }))}
+        links={chambers.map(chamber => ({ id: chamber.id, href: `#/${chamber.id}`,
+          figure: chamber.id === 'moderator' && props.snapshot.mode === 'fixture' ? 'Simulated moderation' : 'Not configured' }))}
         home_href="#/lottery" brand_href="#shell-info" summary={simulated ? 'Simulated room · no live actions' : 'Room details not yet available'} />}>
       {simulated && <div className="desktop-simulated" role="status">{props.snapshot.mode === 'fixture'
         ? simulatedSourceLabel : 'SIMULATED SOURCE · core reports simulated data'}</div>}
@@ -39,12 +42,12 @@ export function DesktopView(props: ViewProps) {
         {props.search.trim() && <div aria-label="Matching chambers">{matches.length ? matches.map(chamber =>
           <a key={chamber.id} href={`#/${chamber.id}`} onClick={event => { event.preventDefault(); props.on_navigate(chamber.id); }}>{chamber.name}</a>) : <p>No matching chamber.</p>}</div>}
       </div>
-      <PageHeader number={Number(current.number)} title={current.name} description={current.description}
-        actions={<StatusChip variant="dash">Not configured</StatusChip>} />
-      {props.snapshot.phase !== 'ready' && <p className="desktop-notice" role="status">{props.snapshot.message ?? 'Connecting to the core; status is unknown.'}</p>}
-      <NumberedPanel number={`${current.number}.1`} title={current.description} gloss="Not configured">
+      {!moderation && <PageHeader number={Number(current.number)} title={current.name} description={current.description}
+        actions={<StatusChip variant="dash">Not configured</StatusChip>} />}
+      {props.snapshot.phase !== 'ready' && <p className="desktop-notice" role="status">{props.snapshot.mode === 'fixture' ? 'Loading simulated snapshot.' : props.snapshot.message ?? 'Connecting to the core; status is unknown.'}</p>}
+      {moderation ? <ModerationPage replay={props.replay ?? false} /> : <NumberedPanel number={`${current.number}.1`} title={current.description} gloss="Not configured">
         <EmptyState title={empty.title} description={empty.description} />
-      </NumberedPanel>
+      </NumberedPanel>}
       <p id="shell-info" className="desktop-note">Castle Control · working name · not affiliated with Twitch. Shared paper and dark-stock design. Keys 1–4 open chambers; / focuses search.</p>
     </KitShell>
   </ThemeFrame>;
