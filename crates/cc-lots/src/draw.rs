@@ -1,6 +1,8 @@
 //! Owned, one-way draw lifecycle. No wire payloads or network transport.
 use crate::{Error, GuardedDraw, Result, Roll};
-use cc_store::{LedgerEvent, Store, Timestamp, TwitchUserId};
+use cc_store::{
+    DrawSlug, LedgerEvent, LedgerKind, LedgerLine, SealDigest, Store, Timestamp, TwitchUserId,
+};
 use cc_types::CheckResult;
 use cc_verify::{BeaconRound, QuicknetChain, SealedRoll, VerifiedCast, Writ, verify_writ_json};
 use chrono::{DateTime, SecondsFormat, Utc};
@@ -20,10 +22,11 @@ pub enum SealSource<'a> {
 /// The original Roll cannot be edited after sealing (ownership is transferred):
 /// ```compile_fail,E0382
 /// use cc_lots::{Roll, GuardedDraw, SealSource, seal_roll};
+/// use cc_store::{Store, Timestamp};
 /// use chrono::{DateTime, Utc};
-/// fn edit(mut roll: Roll, draw: &GuardedDraw, at: DateTime<Utc>) {
+/// fn edit(mut roll: Roll, draw: &GuardedDraw, at: DateTime<Utc>, store: &mut Store, recorded: Timestamp) {
 ///     let source = SealSource::StreamerCommit(cc_verify::SealedRoll::commitment(&[0; 32]));
-///     let _sealed = seal_roll(roll, draw, at, 1, source).unwrap();
+///     let _sealed = seal_roll(roll, draw, at, 1, source, store, recorded).unwrap();
 ///     roll.clear_entries(); // refused: use of moved roll
 /// }
 /// ```
@@ -45,6 +48,7 @@ pub struct SealedDraw {
     proof: SealedRoll,
     sealed_at: DateTime<Utc>,
     draw_run_id: Ulid,
+    seal_audit: LedgerLine,
     label: &'static str,
 }
 
@@ -73,14 +77,16 @@ impl SealedDraw {
 /// bounds (including the 25-byte identifier limit); IDs are never truncated.
 /// No unfreeze API exists. A failed seal/cast also consumes the attempt.
 /// The caller must publish this seal before supplying a round or revealing a seed.
-/// Seal auditing needs a cc-store event that can hold the seal/snapshot; its
-/// existing Draw event can record only the later cast's winners.
+/// The seal is durably audited before the sealed value can escape. A failed
+/// append yields no castable value. The cast must use a store retaining this line.
 pub fn seal_roll(
     roll: Roll,
     draw: &GuardedDraw,
     at: DateTime<Utc>,
     margin_s: u32,
     source: SealSource<'_>,
+    store: &mut Store,
+    recorded_at: Timestamp,
 ) -> Result<SealedDraw> {
     if draw.check().result == CheckResult::Blocked {
         return Err(Error::Invalid("draw policy is blocked"));
@@ -100,6 +106,8 @@ pub fn seal_roll(
             })
         })
         .collect::<Result<Vec<_>>>()?;
+    let entry_count =
+        u32::try_from(entries.len()).map_err(|_| Error::Invalid("entry count exceeds u32"))?;
     let count = u32::from(roll.winner_count());
     let timestamp = at.to_rfc3339_opts(SecondsFormat::Secs, true);
     let (proof, label) = match source {
@@ -112,11 +120,24 @@ pub fn seal_roll(
             "streamer-controlled",
         ),
     };
+    let draw_run_id = Ulid::new();
+    let seal_audit = store.append_ledger(
+        Timestamp::parse(&at.to_rfc3339())?,
+        recorded_at,
+        LedgerEvent::DrawSealed {
+            draw_run_id,
+            draw_id: DrawSlug::parse(draw.draw_id().as_str())?,
+            seal_digest: SealDigest::parse(proof.seal())?,
+            entry_count,
+            winner_count: count,
+        },
+    )?;
     Ok(SealedDraw {
         roll,
         proof,
         sealed_at: at,
-        draw_run_id: Ulid::new(),
+        draw_run_id,
+        seal_audit,
         label,
     })
 }
@@ -212,6 +233,13 @@ fn finish(
         .map(|id| TwitchUserId::parse(id))
         .collect::<cc_store::Result<Vec<_>>>()?;
     sealed.roll.validate_winners(&winners, at)?;
+    // A different store or a full purge cannot create an unaudited cast.
+    if !store
+        .read_ledger(LedgerKind::Draws)?
+        .contains(&sealed.seal_audit)
+    {
+        return Err(Error::Invalid("seal audit is missing from draw store"));
+    }
     // No result escapes if validation or append fails. All state is owned by
     // this single attempt, so failure also cannot leave an editable sealed roll.
     sealed.roll.record_winners(&winners, at)?;

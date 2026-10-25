@@ -10,7 +10,7 @@ mod retention;
 mod store;
 mod types;
 
-pub use audit::{DrawRiskSetting, DrawSlug, EngineClass, EngineProvider, ModelName};
+pub use audit::{DrawRiskSetting, DrawSlug, EngineClass, EngineProvider, ModelName, SealDigest};
 pub use error::{Error, Result};
 pub use inventory::{DataStore, ForgetPolicy, PurgePolicy, STORE_INVENTORY, Storage, StoreSpec};
 pub use ledger::{DecisionAction, LedgerEvent, LedgerKind, LedgerLine};

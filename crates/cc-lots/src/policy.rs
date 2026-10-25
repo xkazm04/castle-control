@@ -129,6 +129,10 @@ pub struct GuardedDraw {
 }
 
 impl GuardedDraw {
+    pub(crate) fn draw_id(&self) -> &DrawId {
+        &self.draw_id
+    }
+
     pub fn new(draw_id: DrawId, policy: DrawPolicy) -> Self {
         Self {
             draw_id,

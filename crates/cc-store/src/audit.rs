@@ -107,3 +107,38 @@ impl From<DrawSlug> for String {
         value.0
     }
 }
+
+/// SHA-256 seal supplied by the proof core: exactly 64 lowercase hex characters.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(try_from = "String", into = "String")]
+pub struct SealDigest(String);
+
+impl SealDigest {
+    pub fn parse(value: &str) -> Result<Self> {
+        if value.len() != 64
+            || !value
+                .bytes()
+                .all(|b| b.is_ascii_digit() || matches!(b, b'a'..=b'f'))
+        {
+            return Err(Error::Invalid("seal digest"));
+        }
+        Ok(Self(value.to_owned()))
+    }
+
+    pub fn as_str(&self) -> &str {
+        &self.0
+    }
+}
+
+impl TryFrom<String> for SealDigest {
+    type Error = Error;
+    fn try_from(value: String) -> Result<Self> {
+        Self::parse(&value)
+    }
+}
+
+impl From<SealDigest> for String {
+    fn from(value: SealDigest) -> Self {
+        value.0
+    }
+}

@@ -30,7 +30,7 @@ fn winners_match_independent_writ_verification_across_1000_generated_rolls() {
                 facts.activity_units = activity_units;
                 add(&mut roll, facts);
             }
-            let sealed = seal(roll, seed);
+            let sealed = seal(roll, seed, &mut store.borrow_mut());
             let seal_hash = sealed.seal().to_owned();
             let result =
                 cast_streamer(sealed, seed, at(2), &mut store.borrow_mut(), timestamp(2)).unwrap();
@@ -45,6 +45,6 @@ fn winners_match_independent_writ_verification_across_1000_generated_rolls() {
         .unwrap();
     assert_eq!(
         store.borrow().read_ledger(LedgerKind::Draws).unwrap().len(),
-        1_000
+        2_000
     );
 }

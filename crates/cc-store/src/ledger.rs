@@ -1,6 +1,6 @@
 use crate::{
-    DrawRiskSetting, DrawSlug, EngineClass, EngineProvider, Error, ModelName, Result, Store,
-    Timestamp, TwitchUserId,
+    DrawRiskSetting, DrawSlug, EngineClass, EngineProvider, Error, ModelName, Result, SealDigest,
+    Store, Timestamp, TwitchUserId,
 };
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
@@ -63,6 +63,14 @@ pub enum LedgerEvent {
         draw_run_id: Ulid,
         winner_user_ids: Vec<TwitchUserId>,
     },
+    /// Proof-core seal metadata, durably written before a cast is possible.
+    DrawSealed {
+        draw_run_id: Ulid,
+        draw_id: DrawSlug,
+        seal_digest: SealDigest,
+        entry_count: u32,
+        winner_count: u32,
+    },
     /// Store-internal acknowledgement for a configured draw, before a run exists.
     /// The enclosing line's event_at is the acknowledgement time; no reason text.
     DrawRiskAcknowledged {
@@ -104,7 +112,9 @@ impl LedgerEvent {
     pub const fn ledger_kind(&self) -> LedgerKind {
         match self {
             Self::Decision { .. } => LedgerKind::Decisions,
-            Self::Draw { .. } | Self::DrawRiskAcknowledged { .. } => LedgerKind::Draws,
+            Self::Draw { .. } | Self::DrawSealed { .. } | Self::DrawRiskAcknowledged { .. } => {
+                LedgerKind::Draws
+            }
             Self::Engine { .. } => LedgerKind::Engine,
         }
     }

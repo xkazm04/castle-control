@@ -27,7 +27,7 @@ fn round() -> BeaconRound {
     }
 }
 
-fn quicknet_roll(chain: &QuicknetChain) -> SealedDraw {
+fn quicknet_roll(chain: &QuicknetChain, store: &mut Store) -> SealedDraw {
     let mut config = rules();
     config.winner_count = 2;
     let mut roll = Roll::new(config).unwrap();
@@ -37,7 +37,16 @@ fn quicknet_roll(chain: &QuicknetChain) -> SealedDraw {
         facts.at = seal_time;
         add(&mut roll, facts);
     }
-    seal_roll(roll, &guard(), seal_time, 1, SealSource::Quicknet(chain)).unwrap()
+    seal_roll(
+        roll,
+        &guard(),
+        seal_time,
+        1,
+        SealSource::Quicknet(chain),
+        store,
+        timestamp(0),
+    )
+    .unwrap()
 }
 
 #[test]
@@ -45,7 +54,7 @@ fn official_round_cast_matches_verifier_and_keeps_the_seal() {
     let dir = SimulatedDir::new();
     let mut store = Store::open(&dir.0).unwrap();
     let chain = chain();
-    let sealed = quicknet_roll(&chain);
+    let sealed = quicknet_roll(&chain, &mut store);
     let seal_hash = sealed.seal().to_owned();
     assert_eq!(sealed.label(), "drand-quicknet");
     let result = cast_quicknet(sealed, &chain, &round(), at(0), &mut store, timestamp(1)).unwrap();
@@ -54,15 +63,21 @@ fn official_round_cast_matches_verifier_and_keeps_the_seal() {
     assert_eq!(result.verified().seal(), seal_hash);
     assert_eq!(result.verified().label(), "drand-quicknet");
     assert_eq!(result.winners().len(), 2);
-    assert_eq!(store.read_ledger(LedgerKind::Draws).unwrap().len(), 1);
+    let lines = store.read_ledger(LedgerKind::Draws).unwrap();
+    assert_eq!(lines.len(), 2);
+    assert!(matches!(&lines[0].event,
+        LedgerEvent::DrawSealed { draw_run_id, seal_digest, entry_count: 3, winner_count: 2, .. }
+        if *draw_run_id == result.draw_run_id() && seal_digest.as_str() == seal_hash));
+    assert!(matches!(&lines[1].event,
+        LedgerEvent::Draw { draw_run_id, .. } if *draw_run_id == result.draw_run_id()));
 }
 
 #[test]
-fn wrong_round_or_signature_never_produces_a_cast_or_ledger_line() {
+fn wrong_round_or_signature_preserves_only_the_seal_audit() {
     let dir = SimulatedDir::new();
     let mut store = Store::open(&dir.0).unwrap();
     let chain = chain();
-    for bad_signature in [false, true] {
+    for (i, bad_signature) in [false, true].into_iter().enumerate() {
         let mut round = round();
         if bad_signature {
             round.signature = "00".repeat(48);
@@ -70,7 +85,7 @@ fn wrong_round_or_signature_never_produces_a_cast_or_ledger_line() {
             round.round = "1".into();
         }
         let result = cast_quicknet(
-            quicknet_roll(&chain),
+            quicknet_roll(&chain, &mut store),
             &chain,
             &round,
             at(0),
@@ -78,6 +93,6 @@ fn wrong_round_or_signature_never_produces_a_cast_or_ledger_line() {
             timestamp(1),
         );
         assert!(matches!(result, Err(Error::Proof(_))));
-        assert!(store.read_ledger(LedgerKind::Draws).unwrap().is_empty());
+        assert_only_seals(&store, i + 1);
     }
 }

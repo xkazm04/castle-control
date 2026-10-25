@@ -61,12 +61,23 @@ The public append API accepts a `LedgerEvent`, never arbitrary JSON or free text
 
 - `decision`: ULID decision ID, optional Twitch user ID, typed decision action;
 - `draw`: ULID draw-run ID and winner Twitch IDs;
+- `draw_sealed`: ULID draw-run ID, configured draw slug, typed SHA-256 seal,
+  integer entry count and winner count;
 - `draw_risk_acknowledged`: configured draw slug and typed blocked setting;
 - `engine`: ULID call ID, integer cost in micro-US dollars, role class, provider,
   selected model and optional served model.
 
 These are store-internal audit events, not wire contract identifiers. The schema
 remains version 1: ledgers have only been written by tests at this stage.
+`LedgerEvent::DrawSealed` goes to `draws.jsonl`. Its `seal_digest: SealDigest`
+accepts exactly 64 lowercase hexadecimal characters at construction and serde
+deserialization; `draw_id` uses `DrawSlug` and both counts are `u32`. All fields
+are required, with no viewer handles or free-form text. Unknown fields, missing
+fields and explicit nulls are rejected. The event records the digest computed
+by `cc-verify`, without implementing a second hash or changing the writ format.
+`tests/seal_audit.rs` covers append/read/reopen round-trips, routing, schema
+rejection and digest validation. This adds no store or purge policy.
+
 `LedgerEvent::DrawRiskAcknowledged { draw_id: DrawSlug, setting: DrawRiskSetting }`
 goes to `draws.jsonl`; the enclosing `event_at` records acknowledgement time.
 It refers to the configured draw before any run exists, not a draw-run ULID.

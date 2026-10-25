@@ -1,9 +1,37 @@
-# Offline draw eligibility (WP 2.1)
+# Offline draw eligibility and lifecycle (WP 2.1 / WP 2.2)
 
 This crate contains Rust domain types only. It adds no schema, wire payload,
 method, event kind, live subscription or RPC handler. The `lots.*` contract
-remains Pending. It does not call `cc-verify` or implement seal, beacon, cast or
-writ; those belong to WP 2.2. No code is copied from another project.
+is defined separately by `cc-types`. The lifecycle calls `cc-verify` for the
+seal, offline beacon verification, cast and writ format. No code is copied
+from another project and no network request is made here.
+
+## Seal audit (WP 2.2)
+
+`seal_roll(roll, draw, at, margin_s, source, store, recorded_at)` consumes the
+eligible roll and appends a typed `DrawSealed` through `Store::append_ledger`
+before returning a castable `SealedDraw`. The event contains the new draw-run
+ULID, configured draw slug, proof-core SHA-256 seal, and integer entry/winner
+counts. The entry count covers only the frozen eligible snapshot. Seal time
+is `event_at`; `recorded_at` records the append time independently. A failed
+append returns an error with no castable value. Invalid policy/proof inputs
+write nothing.
+
+Cast retains the existing proof, validation and `Draw` winner event. It also
+checks that its original seal audit line remains in the destination store,
+so a different store or a full purge cannot leave an orphan cast. This check
+reads and validates the draws ledger, so its cost grows with audit history.
+Reopening the original store is supported. A failed reveal, signature or winner check
+leaves the already-written seal intact and writes no `Draw`. Schema version
+remains 1 under cc-store's existing test-only ledger policy. The proof hash,
+cast and writ format in `cc-verify` and its identifier bounds are unchanged.
+
+`seal_is_durable_before_cast` and
+`snapshot_is_exactly_the_proof_core_seal_and_cast_is_audited_once` check the
+seal's metadata, timestamps and ordering before `Draw`. The offline quicknet
+fixture checks the same order. `draw_tests/audit.rs` checks failed seal audit,
+different-store and post-purge casts, plus reopen and byte preservation.
+The 1,000-roll verifier comparison now records 1,000 seal/cast pairs.
 
 ## Policy and consent
 

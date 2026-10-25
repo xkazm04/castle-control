@@ -5,6 +5,7 @@ use cc_verify::{SealedRoll, verify_writ_json};
 use chrono::{DateTime, TimeZone, Utc};
 use std::path::PathBuf;
 
+mod audit;
 mod properties;
 mod quicknet;
 
@@ -57,13 +58,15 @@ fn guard() -> GuardedDraw {
     )
 }
 
-fn seal(roll: Roll, seed: [u8; 32]) -> SealedDraw {
+fn seal(roll: Roll, seed: [u8; 32], store: &mut Store) -> SealedDraw {
     seal_roll(
         roll,
         &guard(),
         at(1),
         1,
         SealSource::StreamerCommit(SealedRoll::commitment(&seed)),
+        store,
+        timestamp(2),
     )
     .unwrap()
 }
@@ -88,6 +91,21 @@ impl Drop for SimulatedDir {
 }
 
 #[test]
+fn seal_is_durable_before_cast() {
+    let dir = SimulatedDir::new();
+    let mut store = Store::open(&dir.0).unwrap();
+    let mut roll = Roll::new(rules()).unwrap();
+    add(&mut roll, message(1, 0));
+    let sealed = seal(roll, [1; 32], &mut store);
+    let lines = store.read_ledger(LedgerKind::Draws).unwrap();
+    assert_eq!(lines.len(), 1);
+    let event = serde_json::to_value(&lines[0].event).unwrap();
+    assert_eq!(event["kind"], "draw_sealed");
+    assert_eq!(event["draw_run_id"], sealed.draw_run_id().to_string());
+    assert_eq!(event["seal_digest"], sealed.seal());
+}
+
+#[test]
 fn snapshot_is_exactly_the_proof_core_seal_and_cast_is_audited_once() {
     let dir = SimulatedDir::new();
     let mut store = Store::open(&dir.0).unwrap();
@@ -107,7 +125,7 @@ fn snapshot_is_exactly_the_proof_core_seal_and_cast_is_audited_once() {
         ));
     }
     let seed = [7; 32];
-    let sealed = seal(roll, seed);
+    let sealed = seal(roll, seed, &mut store);
     // Editing the caller's configuration cannot change the owned snapshot.
     config.winner_count = 1;
     config.weight_curve = WeightCurve::Equal;
@@ -137,11 +155,23 @@ fn snapshot_is_exactly_the_proof_core_seal_and_cast_is_audited_once() {
     assert!(!result.winners().contains(&user(4)));
     assert_eq!(result.draw_run_id(), run_id);
     let ledger = store.read_ledger(LedgerKind::Draws).unwrap();
-    assert_eq!(ledger.len(), 1);
-    assert_eq!(ledger[0].event_at, timestamp(2));
-    assert_eq!(ledger[0].recorded_at, timestamp(3));
+    assert_eq!(ledger.len(), 2);
+    assert_eq!(ledger[0].event_at, timestamp(1));
+    assert_eq!(ledger[0].recorded_at, timestamp(2));
     assert_eq!(
         ledger[0].event,
+        LedgerEvent::DrawSealed {
+            draw_run_id: run_id,
+            draw_id: cc_store::DrawSlug::parse("simulated-draw").unwrap(),
+            seal_digest: cc_store::SealDigest::parse(expected.seal()).unwrap(),
+            entry_count: 3,
+            winner_count: 2,
+        }
+    );
+    assert_eq!(ledger[1].event_at, timestamp(2));
+    assert_eq!(ledger[1].recorded_at, timestamp(3));
+    assert_eq!(
+        ledger[1].event,
         LedgerEvent::Draw {
             draw_run_id: run_id,
             winner_user_ids: result.winners().to_vec(),
@@ -160,14 +190,14 @@ fn cap_disagreement_fails_loudly_without_recording_or_rerolling() {
     facts.cohorts.insert("simulated-raiders".into());
     add(&mut roll, facts);
     let result = cast_streamer(
-        seal(roll, [1; 32]),
+        seal(roll, [1; 32], &mut store),
         [1; 32],
         at(2),
         &mut store,
         timestamp(2),
     );
     assert!(matches!(result, Err(Error::Winners("cohort cap exceeded"))));
-    assert!(store.read_ledger(LedgerKind::Draws).unwrap().is_empty());
+    assert_only_seals(&store, 1);
 }
 
 #[test]
@@ -183,7 +213,7 @@ fn cast_satisfying_a_restrictive_cohort_cap_succeeds() {
     add(&mut roll, raider);
     add(&mut roll, message(2, 0));
     let result = cast_streamer(
-        seal(roll, [1; 32]),
+        seal(roll, [1; 32], &mut store),
         [1; 32],
         at(2),
         &mut store,
@@ -204,7 +234,12 @@ fn eligible_snapshot_and_next_roll_preserve_cooldowns() {
     add(&mut roll, message(2, 0));
     add(&mut roll, message(3, 100)); // cannot enter the earlier seal
     roll.record_winners(&[user(1)], at(0)).unwrap();
-    let sealed = seal(roll, [4; 32]);
+    let sealed = seal(roll, [4; 32], &mut store);
+    let ledger = store.read_ledger(LedgerKind::Draws).unwrap();
+    assert!(matches!(
+        ledger[0].event,
+        LedgerEvent::DrawSealed { entry_count: 1, .. }
+    ));
     // A cooldown expiring while waiting cannot expand the frozen entry list.
     let result = cast_streamer(sealed, [4; 32], at(61), &mut store, timestamp(61)).unwrap();
     assert_eq!(result.winners(), &[user(2)]);
@@ -222,12 +257,18 @@ fn eligible_snapshot_and_next_roll_preserve_cooldowns() {
 fn bad_reveal_and_backwards_cast_time_never_publish_a_result() {
     let dir = SimulatedDir::new();
     let mut store = Store::open(&dir.0).unwrap();
-    for (seed, time) in [([2; 32], at(2)), ([1; 32], at(0))] {
+    for (i, (seed, time)) in [([2; 32], at(2)), ([1; 32], at(0))].into_iter().enumerate() {
         let mut roll = Roll::new(rules()).unwrap();
         add(&mut roll, message(1, 0));
-        let result = cast_streamer(seal(roll, [1; 32]), seed, time, &mut store, timestamp(2));
+        let result = cast_streamer(
+            seal(roll, [1; 32], &mut store),
+            seed,
+            time,
+            &mut store,
+            timestamp(2),
+        );
         assert!(result.is_err());
-        assert!(store.read_ledger(LedgerKind::Draws).unwrap().is_empty());
+        assert_only_seals(&store, i + 1);
     }
 }
 
@@ -237,19 +278,16 @@ fn audit_failure_withholds_the_cast_result() {
     let mut store = Store::open(&dir.0).unwrap();
     let mut roll = Roll::new(rules()).unwrap();
     add(&mut roll, message(1, 0));
+    let sealed = seal(roll, [1; 32], &mut store);
     std::fs::remove_file(dir.0.join("draws.jsonl")).unwrap();
-    let result = cast_streamer(
-        seal(roll, [1; 32]),
-        [1; 32],
-        at(2),
-        &mut store,
-        timestamp(2),
-    );
+    let result = cast_streamer(sealed, [1; 32], at(2), &mut store, timestamp(2));
     assert!(matches!(result, Err(Error::Store(_))));
 }
 
 #[test]
 fn blocked_policy_and_invalid_proof_inputs_cannot_seal() {
+    let dir = SimulatedDir::new();
+    let mut store = Store::open(&dir.0).unwrap();
     let blocked = GuardedDraw::new(
         DrawId::try_from("simulated-prize".to_owned()).unwrap(),
         DrawPolicy {
@@ -262,7 +300,7 @@ fn blocked_policy_and_invalid_proof_inputs_cannot_seal() {
     let mut roll = Roll::new(rules()).unwrap();
     add(&mut roll, message(1, 0));
     assert!(matches!(
-        seal_roll(roll, &blocked, at(1), 1, source()),
+        seal_roll(roll, &blocked, at(1), 1, source(), &mut store, timestamp(2)),
         Err(Error::Invalid("draw policy is blocked"))
     ));
     for (size, winners, margin, nanos) in [(0, 1, 1, 0), (1, 2, 1, 0), (1, 1, 0, 0), (1, 1, 1, 1)] {
@@ -273,14 +311,36 @@ fn blocked_policy_and_invalid_proof_inputs_cannot_seal() {
             add(&mut roll, message(n, 0));
         }
         let time = at(1) + chrono::Duration::nanoseconds(nanos);
-        assert!(seal_roll(roll, &guard(), time, margin, source()).is_err());
+        assert!(
+            seal_roll(
+                roll,
+                &guard(),
+                time,
+                margin,
+                source(),
+                &mut store,
+                timestamp(2)
+            )
+            .is_err()
+        );
     }
     let mut roll = Roll::new(rules()).unwrap();
     let mut facts = message(1, 0);
     facts.user_id = TwitchUserId::parse("12345678901234567890123456").unwrap();
     add(&mut roll, facts);
     assert!(matches!(
-        seal_roll(roll, &guard(), at(1), 1, source()),
+        seal_roll(roll, &guard(), at(1), 1, source(), &mut store, timestamp(2)),
         Err(Error::Proof(_))
     )); // never truncate identifiers exceeding the proof-core limit
+    assert!(store.read_ledger(LedgerKind::Draws).unwrap().is_empty());
+}
+
+fn assert_only_seals(store: &Store, count: usize) {
+    let lines = store.read_ledger(LedgerKind::Draws).unwrap();
+    assert_eq!(lines.len(), count);
+    assert!(
+        lines
+            .iter()
+            .all(|line| matches!(line.event, LedgerEvent::DrawSealed { .. }))
+    );
 }
