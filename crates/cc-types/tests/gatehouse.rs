@@ -356,17 +356,16 @@ fn every_record_rejects_null_and_unknown_fields_including_optional_keys() {
 }
 
 #[test]
-fn later_gatehouse_and_all_lots_payloads_remain_pending() {
+fn later_gatehouse_payloads_remain_pending() {
     let schemas = method_schemas();
     let pending: Vec<_> = schemas
         .iter()
         .filter(|method| {
             let name = method["name"].as_str().unwrap();
-            name.starts_with("lots.")
-                || (name.starts_with("gatehouse.") && method["owner"] != "WP 1.1")
+            name.starts_with("gatehouse.") && method["owner"] != "WP 1.1"
         })
         .collect();
-    assert_eq!(pending.len(), 15);
+    assert_eq!(pending.len(), 8);
     for method in pending {
         assert_eq!(method["params"]["not"], json!({}));
         assert_eq!(method["result"]["not"], json!({}));

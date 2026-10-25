@@ -1,7 +1,7 @@
 // GENERATED from cc-types by pnpm -C packages/contract generate. Do not edit.
 
 import type { ValidateFunction } from 'ajv';
-import type { RpcMethods, StreamEvent, ErrorEnvelope } from './types.js';
+import type { RpcMethods, StreamEvent, LotsEventPayload, ErrorEnvelope } from './types.js';
 export const p0: ValidateFunction<RpcMethods["status.get"]['params']>;
 export const r0: ValidateFunction<RpcMethods["status.get"]['result']>;
 export const p1: ValidateFunction<RpcMethods["settings.get"]['params']>;
@@ -93,4 +93,5 @@ export const r43: ValidateFunction<RpcMethods["steward.writ.seal"]['result']>;
 export const p44: ValidateFunction<RpcMethods["steward.writ.tear"]['params']>;
 export const r44: ValidateFunction<RpcMethods["steward.writ.tear"]['result']>;
 export const event: ValidateFunction<StreamEvent>;
+export const lotsEvent: ValidateFunction<LotsEventPayload>;
 export const error: ValidateFunction<ErrorEnvelope>;

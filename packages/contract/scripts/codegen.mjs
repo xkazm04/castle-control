@@ -63,7 +63,7 @@ export function artifacts(schema) {
   }
   for (const shape of Object.values(schema.types)) add(shape);
   for (const method of schema.methods) { add(method.params); add(method.result); }
-  const brands = new Set(['MessageId', 'DecisionId', 'WritId', 'DrawRunId', 'RuleId', 'DrawId', 'VisualId', 'DesignId']);
+  const brands = new Set(['MessageId', 'DecisionId', 'WritId', 'DrawRunId', 'RuleId', 'DrawId', 'VisualId', 'DesignId', 'TwitchUserId']);
   const types = [...definitions].sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0).map(([name, shape]) =>
     `export type ${name} = ${tsType(shape)}${brands.has(name) ? ` & { readonly __brand: ${JSON.stringify(name)} }` : ''};`);
   const nameOf = (shape) => shape.title ?? tsType(shape);
@@ -97,7 +97,7 @@ function validators(schema) {
       : `{ type: 'number', validate: ${format.validate.toString()} }`}`).join(',');
   const exports = {};
   const declarations = [banner, "import type { ValidateFunction } from 'ajv';",
-    "import type { RpcMethods, StreamEvent, ErrorEnvelope } from './types.js';"];
+    "import type { RpcMethods, StreamEvent, LotsEventPayload, ErrorEnvelope } from './types.js';"];
   function entry(name, shape, type) {
     const ref = `cc:${name}`;
     ajv.addSchema(shape, ref);
@@ -109,6 +109,7 @@ function validators(schema) {
     entry(`r${i}`, m.result, `RpcMethods[${JSON.stringify(m.name)}]['result']`);
   });
   entry('event', schema.types.StreamEvent, 'StreamEvent');
+  entry('lotsEvent', schema.types.LotsEventPayload, 'LotsEventPayload');
   entry('error', schema.types.ErrorEnvelope, 'ErrorEnvelope');
   const map = (prefix) => schema.methods.map((m, i) => `[${JSON.stringify(m.name)}, compiled.${prefix}${i}]`).join(',');
   // Ajv's length keyword emits a CommonJS runtime reference even with esm:true.

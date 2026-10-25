@@ -479,9 +479,10 @@ Every other module reads chat only after the Gatehouse's verdict, so this milest
 
 **Proof-core ownership (operator standup, 2026-10-25).** The seal hash, beacon
 verification, cast and writ format live in the `crates/cc-verify` library,
-which `cc-lots` calls. The `lots.*` wire payloads land in a separate lots
-contract delivery before any lots RPC wiring; they remain Pending in this
-Gatehouse contract delivery. Offline prep is allowed under the standup exception
+which `cc-lots` calls. The seven `lots.*` wire payload pairs and three event
+payloads are typed by the separate lots contract delivery (2026-10-25), and
+are no longer Pending. RPC handlers and event transport wiring remain separate.
+Offline prep is allowed under the standup exception
 above; it grants no live bridge wiring or armed actions before the spike.
 
 - **Scope:**
@@ -728,8 +729,8 @@ RulesListResult; rules.upsert takes RulesUpsertParams and returns Rule;
 rules.setMode takes RulesSetModeParams and returns Decision; ban.confirm,
 ban.dismiss and decision.undo take DecisionParams and return Decision;
 petition.resolve takes PetitionResolveParams and returns Decision. These names
-are under the existing gatehouse method prefix. Later Gatehouse and all lots
-methods remain Pending.
+are under the existing gatehouse method prefix. Later Gatehouse methods remain
+Pending; lots methods are typed by the delivery below.
 
 Pattern rules require pattern and forbid text; classifier rules require text and
 forbid pattern. Rails forbid pattern, text and strikes: detectors are owned by
@@ -755,6 +756,61 @@ A ban_pending Decision requires the original message_text, never a summary.
 This is a review payload; the append-only ledger continues to store IDs rather
 than message text. The contract cannot prove that supplied text is original;
 the owning service must fetch it from its durable queue.
+
+**Lots typed payloads (contract delivery, 2026-10-25).**
+
+| Method or type | Params, result or fields |
+| --- | --- |
+| `lots.draw.list` (WP 2.1) | `Empty` -> `DrawListResult { draws: LotsDraw[] }` |
+| `lots.draw.upsert` (WP 2.1) | `DrawUpsertParams { draw: LotsDraw }` -> `LotsDraw` |
+| `lots.draw.check` (WP 2.1) | `DrawCheckParams { policy: LotsDrawPolicy }` -> `DrawCheckResult { result: CheckResult, reasons: string[] }` |
+| `lots.roll.lookup` (WP 2.1) | `RollLookupParams { draw_id: DrawId, user_id: TwitchUserId }` -> `RollLookupResult { draw_id: DrawId, entry?: LotsRollEntry }`; lookup uses service time, absent entry means not currently eligible |
+| `lots.roll.seal` (WP 2.2) | `RollSealParams { draw_id: DrawId, source: RandomnessSource, margin_s: positive uint32 }` -> `RollSealResult { draw_id: DrawId, draw_run_id: DrawRunId, sealed: LotsSealedRoll }` |
+| `lots.cast` (WP 2.2) | `CastParams { draw_run_id: DrawRunId }` -> `CastResult { draw_run_id: DrawRunId, writ_id: WritId, cast: LotsVerifiedCast }`; no client-supplied winners or replacement entries |
+| `lots.writ.get` (WP 2.2) | `WritGetParams { writ_id: WritId }` -> `LotsWrit` directly, without an RPC wrapper inside the proof |
+| `LotsDraw` | `draw_id: DrawId`, nonblank `name`, `policy: LotsDrawPolicy`, `rules: LotsRollRules` |
+| `LotsDrawPolicy` | Exact DrawPolicy fields: `content: DrawContent`; booleans `paid_entry`, `paid_weight`, `subscriber_only`, `channel_points`, `free_entry_equal_odds`, `registration_confirmed`, `official_rules`, `twitch_disclaimer`; optional `minimum_age: uint8`; `regions: string[]`; `prize_value_usd_cents: LotsUnsigned` |
+| `LotsRollRules` | `pool: LotsPool`, `winner_count: 1..65535`, `cooldown_s: uint32`, `cohort_caps: LotsCohortCap[]`, `weight_curve: LotsWeightCurve`, `free_join_equal_odds: bool` |
+| `LotsPool` | Tagged by `kind`: `chatters`, `followers`, `subscribers`, `redeemers`, or `keyword` with a nonempty single-token `keyword` |
+| `LotsCohortCap` | Nonblank `cohort`, `numerator: uint16`, `denominator: 1..65535`; the domain constructor checks numerator <= denominator |
+| `LotsWeightCurve` | Tagged by `kind`: `equal`, or `concave` with `max_units: 1..65535` |
+| `LotsRollEntry` | `user_id: TwitchUserId`, `source_message_id: MessageId`, `entered_at: Timestamp`, unique `cohorts: string[]`, positive uint32 `weight` |
+| `LotsWeightTable` | `rows: LotsWeightRow[]`, positive uint32 `newcomer_weight`, uint32 `heaviest_weight`, optional positive uint32 `newcomers_to_outweigh_heaviest`; each row contains `user_id: TwitchUserId` and positive uint32 `weight` |
+| `LotsSealedRoll` | Exact cc-verify SealedRoll JSON: `roll: LotsProofRoll`, `seal: LotsHex32` |
+| `LotsProofRoll` | `version: 1`, `entries: LotsProofEntry[1..10000]`, positive uint32 `winner_count` and `margin_s`, `sealed_at: LotsProofTime`, `randomness: LotsRandomnessPlan` |
+| `LotsProofEntry` | Lowercase ASCII `handle` matching `[a-z0-9_]{1,25}`, positive uint32 `weight`; handles remain handles in the existing proof format, not Twitch IDs |
+| `LotsRandomnessPlan` | Tagged by `source`: `drand_quicknet` with `chain_hash: LotsHex32`, `round: LotsRound`; or `streamer_commit` with `commitment: LotsHex32` |
+| `LotsWrit` | Exact cc-verify Writ JSON: `roll: LotsProofRoll`, `seal: LotsHex32`, `proof: LotsProof`, `winners: LotsHandle[1..10000]`; no draw/run/writ IDs added to the signed format |
+| `LotsProof` | Tagged by `source`: `drand_quicknet` with `signature: LotsSignature`, `randomness: LotsHex32`; or `streamer_commit` with `seed: LotsHex32` |
+| `LotsVerifiedCast` | Exact VerifiedCast JSON: `seal: LotsHex32`, `winners: LotsHandle[1..10000]`, `label: drand-quicknet or streamer-controlled` |
+| `LotsEventPayload` | Tagged `{ kind, payload }` binding: `lots.roll` -> `LotsRollPayload { draw_id, weight_table }`; `lots.sealed` -> `RollSealResult`; `lots.cast` -> `CastResult` |
+| Lots scalar boundaries | `TwitchUserId`: 1..32 decimal digits, positive without leading zero; `LotsRound`: canonical positive decimal uint64 string; `LotsHex32`: 64 lowercase hex characters; `LotsSignature`: 96 lowercase hex characters; `LotsProofTime`: valid whole-second UTC timestamp from 1970 through 9999; `LotsUnsigned`: integer 0..9007199254740991 |
+
+Lots records deny unknown fields, and present optional keys reject null. Rust
+parsers/TryFrom and JSON Schema enforce the same scalar, collection and tagged
+shape invariants above, including uint64 round overflow without float conversion.
+The safe-integer bound on cents preserves exact JS numbers; cc-lots' actual
+concave weights fit uint32. Reason codes are plain data, projecting PolicyReason
+as `paid_entry`, `paid_weight`, `prize_value_over_cap`, `subscriber_only`,
+`points_without_free_path`, `missing_age`, `missing_region`, `missing_rules`,
+and `missing_disclaimer`. A check or policy flag is never authority to bypass a
+guardrail or a durable risk acknowledgement.
+
+Schema parsing does not verify a proof: cc-verify still checks canonical sorted
+unique entries, winner count against entry count, source/proof agreement, the
+seal, beacon schedule/signature, commitment and recomputed winners. Likewise,
+cc-lots constructors still check cap fractions, duplicate cap names and weight
+table arithmetic; the RPC adapter must reconcile policy/pool/free-entry settings
+and run the guardrails before sealing. No cryptographic, policy or eligibility
+implementation is duplicated here. All 1,000 writs from cc-verify's own simulated
+fixture round-trip unchanged in Rust and TypeScript contract tests.
+
+The narrow contract assumes the service owns the configured roll, clock, beacon
+trust anchor and offline seed; the client chooses only source/margin when sealing
+and addresses the resulting run when casting. The three typed event payloads are
+exported separately from the existing seq/at/kind-only StreamEvent invalidation
+envelope; this delivery changes no core publisher or handler. Adding payload
+delivery to /events remains part of later RPC wiring, preserving existing callers.
 
 **WP 1.4 engine settings (D10).** The existing Settings.values map uses these
 exact dotted keys; `parse_engine_settings` in cc-types is their sole typed parser:

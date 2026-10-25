@@ -34,6 +34,7 @@ fn main() {
         DesignId,
         ErrorEnvelope,
         StreamEvent,
+        LotsEventPayload,
         RpcRequest
     );
     let doc: Value = json!({"methods": method_schemas(), "types": types,

@@ -2406,111 +2406,1686 @@
       "owner": "WP 2.1",
       "params": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Deliberately unusable until its owning WP supplies request/result shapes.",
-        "not": {},
-        "title": "Pending"
+        "additionalProperties": false,
+        "title": "Empty",
+        "type": "object"
       },
       "result": {
+        "$defs": {
+          "DrawContent": {
+            "enum": [
+              "prize",
+              "question",
+              "idea",
+              "seat"
+            ],
+            "type": "string"
+          },
+          "DrawId": {
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$(?![\\s\\S])",
+            "type": "string"
+          },
+          "LotsCohortCap": {
+            "additionalProperties": false,
+            "properties": {
+              "cohort": {
+                "pattern": "\\S",
+                "type": "string"
+              },
+              "denominator": {
+                "format": "uint32",
+                "maximum": 65535,
+                "minimum": 1,
+                "type": "integer"
+              },
+              "numerator": {
+                "format": "uint32",
+                "maximum": 65535,
+                "minimum": 0,
+                "type": "integer"
+              }
+            },
+            "required": [
+              "cohort",
+              "numerator",
+              "denominator"
+            ],
+            "type": "object"
+          },
+          "LotsDraw": {
+            "additionalProperties": false,
+            "properties": {
+              "draw_id": {
+                "$ref": "#/$defs/DrawId"
+              },
+              "name": {
+                "pattern": "\\S",
+                "type": "string"
+              },
+              "policy": {
+                "$ref": "#/$defs/LotsDrawPolicy"
+              },
+              "rules": {
+                "$ref": "#/$defs/LotsRollRules"
+              }
+            },
+            "required": [
+              "draw_id",
+              "name",
+              "policy",
+              "rules"
+            ],
+            "type": "object"
+          },
+          "LotsDrawPolicy": {
+            "additionalProperties": false,
+            "properties": {
+              "channel_points": {
+                "type": "boolean"
+              },
+              "content": {
+                "$ref": "#/$defs/DrawContent"
+              },
+              "free_entry_equal_odds": {
+                "type": "boolean"
+              },
+              "minimum_age": {
+                "format": "uint8",
+                "maximum": 255,
+                "minimum": 0,
+                "type": "integer"
+              },
+              "official_rules": {
+                "type": "boolean"
+              },
+              "paid_entry": {
+                "type": "boolean"
+              },
+              "paid_weight": {
+                "type": "boolean"
+              },
+              "prize_value_usd_cents": {
+                "$ref": "#/$defs/LotsUnsigned"
+              },
+              "regions": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "registration_confirmed": {
+                "type": "boolean"
+              },
+              "subscriber_only": {
+                "type": "boolean"
+              },
+              "twitch_disclaimer": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "content",
+              "paid_entry",
+              "paid_weight",
+              "subscriber_only",
+              "channel_points",
+              "free_entry_equal_odds",
+              "regions",
+              "prize_value_usd_cents",
+              "registration_confirmed",
+              "official_rules",
+              "twitch_disclaimer"
+            ],
+            "type": "object"
+          },
+          "LotsKeyword": {
+            "pattern": "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000]+$(?![\\s\\S])",
+            "type": "string"
+          },
+          "LotsPool": {
+            "oneOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "kind": {
+                    "const": "chatters",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "kind": {
+                    "const": "followers",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "kind": {
+                    "const": "subscribers",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "kind": {
+                    "const": "redeemers",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "keyword": {
+                    "$ref": "#/$defs/LotsKeyword"
+                  },
+                  "kind": {
+                    "const": "keyword",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "keyword"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "LotsRollRules": {
+            "additionalProperties": false,
+            "properties": {
+              "cohort_caps": {
+                "items": {
+                  "$ref": "#/$defs/LotsCohortCap"
+                },
+                "type": "array"
+              },
+              "cooldown_s": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "free_join_equal_odds": {
+                "type": "boolean"
+              },
+              "pool": {
+                "$ref": "#/$defs/LotsPool"
+              },
+              "weight_curve": {
+                "$ref": "#/$defs/LotsWeightCurve"
+              },
+              "winner_count": {
+                "format": "uint32",
+                "maximum": 65535,
+                "minimum": 1,
+                "type": "integer"
+              }
+            },
+            "required": [
+              "pool",
+              "winner_count",
+              "cooldown_s",
+              "cohort_caps",
+              "weight_curve",
+              "free_join_equal_odds"
+            ],
+            "type": "object"
+          },
+          "LotsUnsigned": {
+            "description": "Integer cents/counts must survive JavaScript's number representation exactly.",
+            "format": "uint64",
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "LotsWeightCurve": {
+            "oneOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "kind": {
+                    "const": "equal",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "kind": {
+                    "const": "concave",
+                    "type": "string"
+                  },
+                  "max_units": {
+                    "format": "uint32",
+                    "maximum": 65535,
+                    "minimum": 1,
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "max_units"
+                ],
+                "type": "object"
+              }
+            ]
+          }
+        },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Deliberately unusable until its owning WP supplies request/result shapes.",
-        "not": {},
-        "title": "Pending"
+        "additionalProperties": false,
+        "properties": {
+          "draws": {
+            "items": {
+              "$ref": "#/$defs/LotsDraw"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "draws"
+        ],
+        "title": "DrawListResult",
+        "type": "object"
       }
     },
     {
       "name": "lots.draw.upsert",
       "owner": "WP 2.1",
       "params": {
+        "$defs": {
+          "DrawContent": {
+            "enum": [
+              "prize",
+              "question",
+              "idea",
+              "seat"
+            ],
+            "type": "string"
+          },
+          "DrawId": {
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$(?![\\s\\S])",
+            "type": "string"
+          },
+          "LotsCohortCap": {
+            "additionalProperties": false,
+            "properties": {
+              "cohort": {
+                "pattern": "\\S",
+                "type": "string"
+              },
+              "denominator": {
+                "format": "uint32",
+                "maximum": 65535,
+                "minimum": 1,
+                "type": "integer"
+              },
+              "numerator": {
+                "format": "uint32",
+                "maximum": 65535,
+                "minimum": 0,
+                "type": "integer"
+              }
+            },
+            "required": [
+              "cohort",
+              "numerator",
+              "denominator"
+            ],
+            "type": "object"
+          },
+          "LotsDraw": {
+            "additionalProperties": false,
+            "properties": {
+              "draw_id": {
+                "$ref": "#/$defs/DrawId"
+              },
+              "name": {
+                "pattern": "\\S",
+                "type": "string"
+              },
+              "policy": {
+                "$ref": "#/$defs/LotsDrawPolicy"
+              },
+              "rules": {
+                "$ref": "#/$defs/LotsRollRules"
+              }
+            },
+            "required": [
+              "draw_id",
+              "name",
+              "policy",
+              "rules"
+            ],
+            "type": "object"
+          },
+          "LotsDrawPolicy": {
+            "additionalProperties": false,
+            "properties": {
+              "channel_points": {
+                "type": "boolean"
+              },
+              "content": {
+                "$ref": "#/$defs/DrawContent"
+              },
+              "free_entry_equal_odds": {
+                "type": "boolean"
+              },
+              "minimum_age": {
+                "format": "uint8",
+                "maximum": 255,
+                "minimum": 0,
+                "type": "integer"
+              },
+              "official_rules": {
+                "type": "boolean"
+              },
+              "paid_entry": {
+                "type": "boolean"
+              },
+              "paid_weight": {
+                "type": "boolean"
+              },
+              "prize_value_usd_cents": {
+                "$ref": "#/$defs/LotsUnsigned"
+              },
+              "regions": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "registration_confirmed": {
+                "type": "boolean"
+              },
+              "subscriber_only": {
+                "type": "boolean"
+              },
+              "twitch_disclaimer": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "content",
+              "paid_entry",
+              "paid_weight",
+              "subscriber_only",
+              "channel_points",
+              "free_entry_equal_odds",
+              "regions",
+              "prize_value_usd_cents",
+              "registration_confirmed",
+              "official_rules",
+              "twitch_disclaimer"
+            ],
+            "type": "object"
+          },
+          "LotsKeyword": {
+            "pattern": "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000]+$(?![\\s\\S])",
+            "type": "string"
+          },
+          "LotsPool": {
+            "oneOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "kind": {
+                    "const": "chatters",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "kind": {
+                    "const": "followers",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "kind": {
+                    "const": "subscribers",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "kind": {
+                    "const": "redeemers",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "keyword": {
+                    "$ref": "#/$defs/LotsKeyword"
+                  },
+                  "kind": {
+                    "const": "keyword",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "keyword"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "LotsRollRules": {
+            "additionalProperties": false,
+            "properties": {
+              "cohort_caps": {
+                "items": {
+                  "$ref": "#/$defs/LotsCohortCap"
+                },
+                "type": "array"
+              },
+              "cooldown_s": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "free_join_equal_odds": {
+                "type": "boolean"
+              },
+              "pool": {
+                "$ref": "#/$defs/LotsPool"
+              },
+              "weight_curve": {
+                "$ref": "#/$defs/LotsWeightCurve"
+              },
+              "winner_count": {
+                "format": "uint32",
+                "maximum": 65535,
+                "minimum": 1,
+                "type": "integer"
+              }
+            },
+            "required": [
+              "pool",
+              "winner_count",
+              "cooldown_s",
+              "cohort_caps",
+              "weight_curve",
+              "free_join_equal_odds"
+            ],
+            "type": "object"
+          },
+          "LotsUnsigned": {
+            "description": "Integer cents/counts must survive JavaScript's number representation exactly.",
+            "format": "uint64",
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "LotsWeightCurve": {
+            "oneOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "kind": {
+                    "const": "equal",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "kind": {
+                    "const": "concave",
+                    "type": "string"
+                  },
+                  "max_units": {
+                    "format": "uint32",
+                    "maximum": 65535,
+                    "minimum": 1,
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "max_units"
+                ],
+                "type": "object"
+              }
+            ]
+          }
+        },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Deliberately unusable until its owning WP supplies request/result shapes.",
-        "not": {},
-        "title": "Pending"
+        "additionalProperties": false,
+        "properties": {
+          "draw": {
+            "$ref": "#/$defs/LotsDraw"
+          }
+        },
+        "required": [
+          "draw"
+        ],
+        "title": "DrawUpsertParams",
+        "type": "object"
       },
       "result": {
+        "$defs": {
+          "DrawContent": {
+            "enum": [
+              "prize",
+              "question",
+              "idea",
+              "seat"
+            ],
+            "type": "string"
+          },
+          "DrawId": {
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$(?![\\s\\S])",
+            "type": "string"
+          },
+          "LotsCohortCap": {
+            "additionalProperties": false,
+            "properties": {
+              "cohort": {
+                "pattern": "\\S",
+                "type": "string"
+              },
+              "denominator": {
+                "format": "uint32",
+                "maximum": 65535,
+                "minimum": 1,
+                "type": "integer"
+              },
+              "numerator": {
+                "format": "uint32",
+                "maximum": 65535,
+                "minimum": 0,
+                "type": "integer"
+              }
+            },
+            "required": [
+              "cohort",
+              "numerator",
+              "denominator"
+            ],
+            "type": "object"
+          },
+          "LotsDrawPolicy": {
+            "additionalProperties": false,
+            "properties": {
+              "channel_points": {
+                "type": "boolean"
+              },
+              "content": {
+                "$ref": "#/$defs/DrawContent"
+              },
+              "free_entry_equal_odds": {
+                "type": "boolean"
+              },
+              "minimum_age": {
+                "format": "uint8",
+                "maximum": 255,
+                "minimum": 0,
+                "type": "integer"
+              },
+              "official_rules": {
+                "type": "boolean"
+              },
+              "paid_entry": {
+                "type": "boolean"
+              },
+              "paid_weight": {
+                "type": "boolean"
+              },
+              "prize_value_usd_cents": {
+                "$ref": "#/$defs/LotsUnsigned"
+              },
+              "regions": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "registration_confirmed": {
+                "type": "boolean"
+              },
+              "subscriber_only": {
+                "type": "boolean"
+              },
+              "twitch_disclaimer": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "content",
+              "paid_entry",
+              "paid_weight",
+              "subscriber_only",
+              "channel_points",
+              "free_entry_equal_odds",
+              "regions",
+              "prize_value_usd_cents",
+              "registration_confirmed",
+              "official_rules",
+              "twitch_disclaimer"
+            ],
+            "type": "object"
+          },
+          "LotsKeyword": {
+            "pattern": "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000]+$(?![\\s\\S])",
+            "type": "string"
+          },
+          "LotsPool": {
+            "oneOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "kind": {
+                    "const": "chatters",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "kind": {
+                    "const": "followers",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "kind": {
+                    "const": "subscribers",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "kind": {
+                    "const": "redeemers",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "keyword": {
+                    "$ref": "#/$defs/LotsKeyword"
+                  },
+                  "kind": {
+                    "const": "keyword",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "keyword"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "LotsRollRules": {
+            "additionalProperties": false,
+            "properties": {
+              "cohort_caps": {
+                "items": {
+                  "$ref": "#/$defs/LotsCohortCap"
+                },
+                "type": "array"
+              },
+              "cooldown_s": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "free_join_equal_odds": {
+                "type": "boolean"
+              },
+              "pool": {
+                "$ref": "#/$defs/LotsPool"
+              },
+              "weight_curve": {
+                "$ref": "#/$defs/LotsWeightCurve"
+              },
+              "winner_count": {
+                "format": "uint32",
+                "maximum": 65535,
+                "minimum": 1,
+                "type": "integer"
+              }
+            },
+            "required": [
+              "pool",
+              "winner_count",
+              "cooldown_s",
+              "cohort_caps",
+              "weight_curve",
+              "free_join_equal_odds"
+            ],
+            "type": "object"
+          },
+          "LotsUnsigned": {
+            "description": "Integer cents/counts must survive JavaScript's number representation exactly.",
+            "format": "uint64",
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "LotsWeightCurve": {
+            "oneOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "kind": {
+                    "const": "equal",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "kind": {
+                    "const": "concave",
+                    "type": "string"
+                  },
+                  "max_units": {
+                    "format": "uint32",
+                    "maximum": 65535,
+                    "minimum": 1,
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "max_units"
+                ],
+                "type": "object"
+              }
+            ]
+          }
+        },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Deliberately unusable until its owning WP supplies request/result shapes.",
-        "not": {},
-        "title": "Pending"
+        "additionalProperties": false,
+        "properties": {
+          "draw_id": {
+            "$ref": "#/$defs/DrawId"
+          },
+          "name": {
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "policy": {
+            "$ref": "#/$defs/LotsDrawPolicy"
+          },
+          "rules": {
+            "$ref": "#/$defs/LotsRollRules"
+          }
+        },
+        "required": [
+          "draw_id",
+          "name",
+          "policy",
+          "rules"
+        ],
+        "title": "LotsDraw",
+        "type": "object"
       }
     },
     {
       "name": "lots.draw.check",
       "owner": "WP 2.1",
       "params": {
+        "$defs": {
+          "DrawContent": {
+            "enum": [
+              "prize",
+              "question",
+              "idea",
+              "seat"
+            ],
+            "type": "string"
+          },
+          "LotsDrawPolicy": {
+            "additionalProperties": false,
+            "properties": {
+              "channel_points": {
+                "type": "boolean"
+              },
+              "content": {
+                "$ref": "#/$defs/DrawContent"
+              },
+              "free_entry_equal_odds": {
+                "type": "boolean"
+              },
+              "minimum_age": {
+                "format": "uint8",
+                "maximum": 255,
+                "minimum": 0,
+                "type": "integer"
+              },
+              "official_rules": {
+                "type": "boolean"
+              },
+              "paid_entry": {
+                "type": "boolean"
+              },
+              "paid_weight": {
+                "type": "boolean"
+              },
+              "prize_value_usd_cents": {
+                "$ref": "#/$defs/LotsUnsigned"
+              },
+              "regions": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "registration_confirmed": {
+                "type": "boolean"
+              },
+              "subscriber_only": {
+                "type": "boolean"
+              },
+              "twitch_disclaimer": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "content",
+              "paid_entry",
+              "paid_weight",
+              "subscriber_only",
+              "channel_points",
+              "free_entry_equal_odds",
+              "regions",
+              "prize_value_usd_cents",
+              "registration_confirmed",
+              "official_rules",
+              "twitch_disclaimer"
+            ],
+            "type": "object"
+          },
+          "LotsUnsigned": {
+            "description": "Integer cents/counts must survive JavaScript's number representation exactly.",
+            "format": "uint64",
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Deliberately unusable until its owning WP supplies request/result shapes.",
-        "not": {},
-        "title": "Pending"
+        "additionalProperties": false,
+        "properties": {
+          "policy": {
+            "$ref": "#/$defs/LotsDrawPolicy"
+          }
+        },
+        "required": [
+          "policy"
+        ],
+        "title": "DrawCheckParams",
+        "type": "object"
       },
       "result": {
+        "$defs": {
+          "CheckResult": {
+            "enum": [
+              "ok",
+              "warn",
+              "blocked"
+            ],
+            "type": "string"
+          }
+        },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Deliberately unusable until its owning WP supplies request/result shapes.",
-        "not": {},
-        "title": "Pending"
+        "additionalProperties": false,
+        "description": "Reason codes are plain data, matching PolicyReason's snake_case names.",
+        "properties": {
+          "reasons": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "result": {
+            "$ref": "#/$defs/CheckResult"
+          }
+        },
+        "required": [
+          "result",
+          "reasons"
+        ],
+        "title": "DrawCheckResult",
+        "type": "object"
       }
     },
     {
       "name": "lots.roll.lookup",
       "owner": "WP 2.1",
       "params": {
+        "$defs": {
+          "DrawId": {
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$(?![\\s\\S])",
+            "type": "string"
+          },
+          "TwitchUserId": {
+            "pattern": "^[1-9][0-9]{0,31}$(?![\\s\\S])",
+            "type": "string"
+          }
+        },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Deliberately unusable until its owning WP supplies request/result shapes.",
-        "not": {},
-        "title": "Pending"
+        "additionalProperties": false,
+        "properties": {
+          "draw_id": {
+            "$ref": "#/$defs/DrawId"
+          },
+          "user_id": {
+            "$ref": "#/$defs/TwitchUserId"
+          }
+        },
+        "required": [
+          "draw_id",
+          "user_id"
+        ],
+        "title": "RollLookupParams",
+        "type": "object"
       },
       "result": {
+        "$defs": {
+          "DrawId": {
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$(?![\\s\\S])",
+            "type": "string"
+          },
+          "LotsRollEntry": {
+            "additionalProperties": false,
+            "properties": {
+              "cohorts": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array",
+                "uniqueItems": true
+              },
+              "entered_at": {
+                "$ref": "#/$defs/Timestamp"
+              },
+              "source_message_id": {
+                "$ref": "#/$defs/MessageId"
+              },
+              "user_id": {
+                "$ref": "#/$defs/TwitchUserId"
+              },
+              "weight": {
+                "format": "uint32",
+                "minimum": 1,
+                "type": "integer"
+              }
+            },
+            "required": [
+              "user_id",
+              "source_message_id",
+              "entered_at",
+              "cohorts",
+              "weight"
+            ],
+            "type": "object"
+          },
+          "MessageId": {
+            "pattern": "^[A-Za-z0-9_-]+$(?![\\s\\S])",
+            "type": "string"
+          },
+          "Timestamp": {
+            "format": "date-time",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?Z$(?![\\s\\S])",
+            "type": "string"
+          },
+          "TwitchUserId": {
+            "pattern": "^[1-9][0-9]{0,31}$(?![\\s\\S])",
+            "type": "string"
+          }
+        },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Deliberately unusable until its owning WP supplies request/result shapes.",
-        "not": {},
-        "title": "Pending"
+        "additionalProperties": false,
+        "properties": {
+          "draw_id": {
+            "$ref": "#/$defs/DrawId"
+          },
+          "entry": {
+            "$ref": "#/$defs/LotsRollEntry"
+          }
+        },
+        "required": [
+          "draw_id"
+        ],
+        "title": "RollLookupResult",
+        "type": "object"
       }
     },
     {
       "name": "lots.roll.seal",
       "owner": "WP 2.2",
       "params": {
+        "$defs": {
+          "DrawId": {
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$(?![\\s\\S])",
+            "type": "string"
+          },
+          "RandomnessSource": {
+            "enum": [
+              "drand_quicknet",
+              "streamer_commit"
+            ],
+            "type": "string"
+          }
+        },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Deliberately unusable until its owning WP supplies request/result shapes.",
-        "not": {},
-        "title": "Pending"
+        "additionalProperties": false,
+        "properties": {
+          "draw_id": {
+            "$ref": "#/$defs/DrawId"
+          },
+          "margin_s": {
+            "format": "uint32",
+            "minimum": 1,
+            "type": "integer"
+          },
+          "source": {
+            "$ref": "#/$defs/RandomnessSource"
+          }
+        },
+        "required": [
+          "draw_id",
+          "source",
+          "margin_s"
+        ],
+        "title": "RollSealParams",
+        "type": "object"
       },
       "result": {
+        "$defs": {
+          "DrawId": {
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$(?![\\s\\S])",
+            "type": "string"
+          },
+          "DrawRunId": {
+            "pattern": "^[0-7][0-9A-HJKMNP-TV-Z]{25}$(?![\\s\\S])",
+            "type": "string"
+          },
+          "LotsHandle": {
+            "pattern": "^[a-z0-9_]{1,25}$(?![\\s\\S])",
+            "type": "string"
+          },
+          "LotsHex32": {
+            "pattern": "^[0-9a-f]{64}$(?![\\s\\S])",
+            "type": "string"
+          },
+          "LotsProofEntry": {
+            "additionalProperties": false,
+            "properties": {
+              "handle": {
+                "$ref": "#/$defs/LotsHandle"
+              },
+              "weight": {
+                "format": "uint32",
+                "minimum": 1,
+                "type": "integer"
+              }
+            },
+            "required": [
+              "handle",
+              "weight"
+            ],
+            "type": "object"
+          },
+          "LotsProofRoll": {
+            "additionalProperties": false,
+            "properties": {
+              "entries": {
+                "items": {
+                  "$ref": "#/$defs/LotsProofEntry"
+                },
+                "maxItems": 10000,
+                "minItems": 1,
+                "type": "array"
+              },
+              "margin_s": {
+                "format": "uint32",
+                "minimum": 1,
+                "type": "integer"
+              },
+              "randomness": {
+                "$ref": "#/$defs/LotsRandomnessPlan"
+              },
+              "sealed_at": {
+                "$ref": "#/$defs/LotsProofTime"
+              },
+              "version": {
+                "$ref": "#/$defs/LotsProofVersion"
+              },
+              "winner_count": {
+                "format": "uint32",
+                "minimum": 1,
+                "type": "integer"
+              }
+            },
+            "required": [
+              "version",
+              "entries",
+              "winner_count",
+              "sealed_at",
+              "margin_s",
+              "randomness"
+            ],
+            "type": "object"
+          },
+          "LotsProofTime": {
+            "description": "cc-verify v1 hashes exactly twenty timestamp bytes, without fractions.",
+            "format": "date-time",
+            "pattern": "^(19[7-9][0-9]|[2-9][0-9]{3})-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$(?![\\s\\S])",
+            "type": "string"
+          },
+          "LotsProofVersion": {
+            "const": 1,
+            "format": "uint8",
+            "maximum": 255,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "LotsRandomnessPlan": {
+            "oneOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "chain_hash": {
+                    "$ref": "#/$defs/LotsHex32"
+                  },
+                  "round": {
+                    "$ref": "#/$defs/LotsRound"
+                  },
+                  "source": {
+                    "const": "drand_quicknet",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "source",
+                  "chain_hash",
+                  "round"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "commitment": {
+                    "$ref": "#/$defs/LotsHex32"
+                  },
+                  "source": {
+                    "const": "streamer_commit",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "source",
+                  "commitment"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "LotsRound": {
+            "pattern": "^(?:[1-9][0-9]{0,18}|18446744073709551615|1[0-7][0-9]{18}|18[0-3][0-9]{17}|184[0-3][0-9]{16}|1844[0-5][0-9]{15}|18446[0-6][0-9]{14}|184467[0-3][0-9]{13}|1844674[0-3][0-9]{12}|184467440[0-6][0-9]{10}|1844674407[0-2][0-9]{9}|18446744073[0-6][0-9]{8}|1844674407370[0-8][0-9]{6}|18446744073709[0-4][0-9]{5}|184467440737095[0-4][0-9]{4}|1844674407370955[0-0][0-9]{3}|18446744073709551[0-5][0-9]{2}|184467440737095516[0-0][0-9]{1}|1844674407370955161[0-4][0-9]{0})$(?![\\s\\S])",
+            "type": "string"
+          },
+          "LotsSealedRoll": {
+            "additionalProperties": false,
+            "properties": {
+              "roll": {
+                "$ref": "#/$defs/LotsProofRoll"
+              },
+              "seal": {
+                "$ref": "#/$defs/LotsHex32"
+              }
+            },
+            "required": [
+              "roll",
+              "seal"
+            ],
+            "type": "object"
+          }
+        },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Deliberately unusable until its owning WP supplies request/result shapes.",
-        "not": {},
-        "title": "Pending"
+        "additionalProperties": false,
+        "properties": {
+          "draw_id": {
+            "$ref": "#/$defs/DrawId"
+          },
+          "draw_run_id": {
+            "$ref": "#/$defs/DrawRunId"
+          },
+          "sealed": {
+            "$ref": "#/$defs/LotsSealedRoll"
+          }
+        },
+        "required": [
+          "draw_id",
+          "draw_run_id",
+          "sealed"
+        ],
+        "title": "RollSealResult",
+        "type": "object"
       }
     },
     {
       "name": "lots.cast",
       "owner": "WP 2.2",
       "params": {
+        "$defs": {
+          "DrawRunId": {
+            "pattern": "^[0-7][0-9A-HJKMNP-TV-Z]{25}$(?![\\s\\S])",
+            "type": "string"
+          }
+        },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Deliberately unusable until its owning WP supplies request/result shapes.",
-        "not": {},
-        "title": "Pending"
+        "additionalProperties": false,
+        "properties": {
+          "draw_run_id": {
+            "$ref": "#/$defs/DrawRunId"
+          }
+        },
+        "required": [
+          "draw_run_id"
+        ],
+        "title": "CastParams",
+        "type": "object"
       },
       "result": {
+        "$defs": {
+          "DrawRunId": {
+            "pattern": "^[0-7][0-9A-HJKMNP-TV-Z]{25}$(?![\\s\\S])",
+            "type": "string"
+          },
+          "LotsCastLabel": {
+            "enum": [
+              "drand-quicknet",
+              "streamer-controlled"
+            ],
+            "type": "string"
+          },
+          "LotsHandle": {
+            "pattern": "^[a-z0-9_]{1,25}$(?![\\s\\S])",
+            "type": "string"
+          },
+          "LotsHex32": {
+            "pattern": "^[0-9a-f]{64}$(?![\\s\\S])",
+            "type": "string"
+          },
+          "LotsVerifiedCast": {
+            "additionalProperties": false,
+            "description": "A projection of VerifiedCast; the owning service must verify before emitting.",
+            "properties": {
+              "label": {
+                "$ref": "#/$defs/LotsCastLabel"
+              },
+              "seal": {
+                "$ref": "#/$defs/LotsHex32"
+              },
+              "winners": {
+                "items": {
+                  "$ref": "#/$defs/LotsHandle"
+                },
+                "maxItems": 10000,
+                "minItems": 1,
+                "type": "array"
+              }
+            },
+            "required": [
+              "seal",
+              "winners",
+              "label"
+            ],
+            "type": "object"
+          },
+          "WritId": {
+            "pattern": "^[0-7][0-9A-HJKMNP-TV-Z]{25}$(?![\\s\\S])",
+            "type": "string"
+          }
+        },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Deliberately unusable until its owning WP supplies request/result shapes.",
-        "not": {},
-        "title": "Pending"
+        "additionalProperties": false,
+        "properties": {
+          "cast": {
+            "$ref": "#/$defs/LotsVerifiedCast"
+          },
+          "draw_run_id": {
+            "$ref": "#/$defs/DrawRunId"
+          },
+          "writ_id": {
+            "$ref": "#/$defs/WritId"
+          }
+        },
+        "required": [
+          "draw_run_id",
+          "writ_id",
+          "cast"
+        ],
+        "title": "CastResult",
+        "type": "object"
       }
     },
     {
       "name": "lots.writ.get",
       "owner": "WP 2.2",
       "params": {
+        "$defs": {
+          "WritId": {
+            "pattern": "^[0-7][0-9A-HJKMNP-TV-Z]{25}$(?![\\s\\S])",
+            "type": "string"
+          }
+        },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Deliberately unusable until its owning WP supplies request/result shapes.",
-        "not": {},
-        "title": "Pending"
+        "additionalProperties": false,
+        "properties": {
+          "writ_id": {
+            "$ref": "#/$defs/WritId"
+          }
+        },
+        "required": [
+          "writ_id"
+        ],
+        "title": "WritGetParams",
+        "type": "object"
       },
       "result": {
+        "$defs": {
+          "LotsHandle": {
+            "pattern": "^[a-z0-9_]{1,25}$(?![\\s\\S])",
+            "type": "string"
+          },
+          "LotsHex32": {
+            "pattern": "^[0-9a-f]{64}$(?![\\s\\S])",
+            "type": "string"
+          },
+          "LotsProof": {
+            "oneOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "randomness": {
+                    "$ref": "#/$defs/LotsHex32"
+                  },
+                  "signature": {
+                    "$ref": "#/$defs/LotsSignature"
+                  },
+                  "source": {
+                    "const": "drand_quicknet",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "source",
+                  "signature",
+                  "randomness"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "seed": {
+                    "$ref": "#/$defs/LotsHex32"
+                  },
+                  "source": {
+                    "const": "streamer_commit",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "source",
+                  "seed"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "LotsProofEntry": {
+            "additionalProperties": false,
+            "properties": {
+              "handle": {
+                "$ref": "#/$defs/LotsHandle"
+              },
+              "weight": {
+                "format": "uint32",
+                "minimum": 1,
+                "type": "integer"
+              }
+            },
+            "required": [
+              "handle",
+              "weight"
+            ],
+            "type": "object"
+          },
+          "LotsProofRoll": {
+            "additionalProperties": false,
+            "properties": {
+              "entries": {
+                "items": {
+                  "$ref": "#/$defs/LotsProofEntry"
+                },
+                "maxItems": 10000,
+                "minItems": 1,
+                "type": "array"
+              },
+              "margin_s": {
+                "format": "uint32",
+                "minimum": 1,
+                "type": "integer"
+              },
+              "randomness": {
+                "$ref": "#/$defs/LotsRandomnessPlan"
+              },
+              "sealed_at": {
+                "$ref": "#/$defs/LotsProofTime"
+              },
+              "version": {
+                "$ref": "#/$defs/LotsProofVersion"
+              },
+              "winner_count": {
+                "format": "uint32",
+                "minimum": 1,
+                "type": "integer"
+              }
+            },
+            "required": [
+              "version",
+              "entries",
+              "winner_count",
+              "sealed_at",
+              "margin_s",
+              "randomness"
+            ],
+            "type": "object"
+          },
+          "LotsProofTime": {
+            "description": "cc-verify v1 hashes exactly twenty timestamp bytes, without fractions.",
+            "format": "date-time",
+            "pattern": "^(19[7-9][0-9]|[2-9][0-9]{3})-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$(?![\\s\\S])",
+            "type": "string"
+          },
+          "LotsProofVersion": {
+            "const": 1,
+            "format": "uint8",
+            "maximum": 255,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "LotsRandomnessPlan": {
+            "oneOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "chain_hash": {
+                    "$ref": "#/$defs/LotsHex32"
+                  },
+                  "round": {
+                    "$ref": "#/$defs/LotsRound"
+                  },
+                  "source": {
+                    "const": "drand_quicknet",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "source",
+                  "chain_hash",
+                  "round"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "commitment": {
+                    "$ref": "#/$defs/LotsHex32"
+                  },
+                  "source": {
+                    "const": "streamer_commit",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "source",
+                  "commitment"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "LotsRound": {
+            "pattern": "^(?:[1-9][0-9]{0,18}|18446744073709551615|1[0-7][0-9]{18}|18[0-3][0-9]{17}|184[0-3][0-9]{16}|1844[0-5][0-9]{15}|18446[0-6][0-9]{14}|184467[0-3][0-9]{13}|1844674[0-3][0-9]{12}|184467440[0-6][0-9]{10}|1844674407[0-2][0-9]{9}|18446744073[0-6][0-9]{8}|1844674407370[0-8][0-9]{6}|18446744073709[0-4][0-9]{5}|184467440737095[0-4][0-9]{4}|1844674407370955[0-0][0-9]{3}|18446744073709551[0-5][0-9]{2}|184467440737095516[0-0][0-9]{1}|1844674407370955161[0-4][0-9]{0})$(?![\\s\\S])",
+            "type": "string"
+          },
+          "LotsSignature": {
+            "pattern": "^[0-9a-f]{96}$(?![\\s\\S])",
+            "type": "string"
+          }
+        },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Deliberately unusable until its owning WP supplies request/result shapes.",
-        "not": {},
-        "title": "Pending"
+        "additionalProperties": false,
+        "description": "Exactly the JSON written and verified by cc-verify, without RPC IDs inside it.",
+        "properties": {
+          "proof": {
+            "$ref": "#/$defs/LotsProof"
+          },
+          "roll": {
+            "$ref": "#/$defs/LotsProofRoll"
+          },
+          "seal": {
+            "$ref": "#/$defs/LotsHex32"
+          },
+          "winners": {
+            "items": {
+              "$ref": "#/$defs/LotsHandle"
+            },
+            "maxItems": 10000,
+            "minItems": 1,
+            "type": "array"
+          }
+        },
+        "required": [
+          "roll",
+          "seal",
+          "proof",
+          "winners"
+        ],
+        "title": "LotsWrit",
+        "type": "object"
       }
     },
     {
@@ -2910,6 +4485,363 @@
       "title": "ErrorEnvelope",
       "type": "object"
     },
+    "LotsEventPayload": {
+      "$defs": {
+        "CastResult": {
+          "additionalProperties": false,
+          "properties": {
+            "cast": {
+              "$ref": "#/$defs/LotsVerifiedCast"
+            },
+            "draw_run_id": {
+              "$ref": "#/$defs/DrawRunId"
+            },
+            "writ_id": {
+              "$ref": "#/$defs/WritId"
+            }
+          },
+          "required": [
+            "draw_run_id",
+            "writ_id",
+            "cast"
+          ],
+          "type": "object"
+        },
+        "DrawId": {
+          "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$(?![\\s\\S])",
+          "type": "string"
+        },
+        "DrawRunId": {
+          "pattern": "^[0-7][0-9A-HJKMNP-TV-Z]{25}$(?![\\s\\S])",
+          "type": "string"
+        },
+        "LotsCastLabel": {
+          "enum": [
+            "drand-quicknet",
+            "streamer-controlled"
+          ],
+          "type": "string"
+        },
+        "LotsHandle": {
+          "pattern": "^[a-z0-9_]{1,25}$(?![\\s\\S])",
+          "type": "string"
+        },
+        "LotsHex32": {
+          "pattern": "^[0-9a-f]{64}$(?![\\s\\S])",
+          "type": "string"
+        },
+        "LotsProofEntry": {
+          "additionalProperties": false,
+          "properties": {
+            "handle": {
+              "$ref": "#/$defs/LotsHandle"
+            },
+            "weight": {
+              "format": "uint32",
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          "required": [
+            "handle",
+            "weight"
+          ],
+          "type": "object"
+        },
+        "LotsProofRoll": {
+          "additionalProperties": false,
+          "properties": {
+            "entries": {
+              "items": {
+                "$ref": "#/$defs/LotsProofEntry"
+              },
+              "maxItems": 10000,
+              "minItems": 1,
+              "type": "array"
+            },
+            "margin_s": {
+              "format": "uint32",
+              "minimum": 1,
+              "type": "integer"
+            },
+            "randomness": {
+              "$ref": "#/$defs/LotsRandomnessPlan"
+            },
+            "sealed_at": {
+              "$ref": "#/$defs/LotsProofTime"
+            },
+            "version": {
+              "$ref": "#/$defs/LotsProofVersion"
+            },
+            "winner_count": {
+              "format": "uint32",
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          "required": [
+            "version",
+            "entries",
+            "winner_count",
+            "sealed_at",
+            "margin_s",
+            "randomness"
+          ],
+          "type": "object"
+        },
+        "LotsProofTime": {
+          "description": "cc-verify v1 hashes exactly twenty timestamp bytes, without fractions.",
+          "format": "date-time",
+          "pattern": "^(19[7-9][0-9]|[2-9][0-9]{3})-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$(?![\\s\\S])",
+          "type": "string"
+        },
+        "LotsProofVersion": {
+          "const": 1,
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "LotsRandomnessPlan": {
+          "oneOf": [
+            {
+              "additionalProperties": false,
+              "properties": {
+                "chain_hash": {
+                  "$ref": "#/$defs/LotsHex32"
+                },
+                "round": {
+                  "$ref": "#/$defs/LotsRound"
+                },
+                "source": {
+                  "const": "drand_quicknet",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "source",
+                "chain_hash",
+                "round"
+              ],
+              "type": "object"
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "commitment": {
+                  "$ref": "#/$defs/LotsHex32"
+                },
+                "source": {
+                  "const": "streamer_commit",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "source",
+                "commitment"
+              ],
+              "type": "object"
+            }
+          ]
+        },
+        "LotsRollPayload": {
+          "additionalProperties": false,
+          "properties": {
+            "draw_id": {
+              "$ref": "#/$defs/DrawId"
+            },
+            "weight_table": {
+              "$ref": "#/$defs/LotsWeightTable"
+            }
+          },
+          "required": [
+            "draw_id",
+            "weight_table"
+          ],
+          "type": "object"
+        },
+        "LotsRound": {
+          "pattern": "^(?:[1-9][0-9]{0,18}|18446744073709551615|1[0-7][0-9]{18}|18[0-3][0-9]{17}|184[0-3][0-9]{16}|1844[0-5][0-9]{15}|18446[0-6][0-9]{14}|184467[0-3][0-9]{13}|1844674[0-3][0-9]{12}|184467440[0-6][0-9]{10}|1844674407[0-2][0-9]{9}|18446744073[0-6][0-9]{8}|1844674407370[0-8][0-9]{6}|18446744073709[0-4][0-9]{5}|184467440737095[0-4][0-9]{4}|1844674407370955[0-0][0-9]{3}|18446744073709551[0-5][0-9]{2}|184467440737095516[0-0][0-9]{1}|1844674407370955161[0-4][0-9]{0})$(?![\\s\\S])",
+          "type": "string"
+        },
+        "LotsSealedRoll": {
+          "additionalProperties": false,
+          "properties": {
+            "roll": {
+              "$ref": "#/$defs/LotsProofRoll"
+            },
+            "seal": {
+              "$ref": "#/$defs/LotsHex32"
+            }
+          },
+          "required": [
+            "roll",
+            "seal"
+          ],
+          "type": "object"
+        },
+        "LotsVerifiedCast": {
+          "additionalProperties": false,
+          "description": "A projection of VerifiedCast; the owning service must verify before emitting.",
+          "properties": {
+            "label": {
+              "$ref": "#/$defs/LotsCastLabel"
+            },
+            "seal": {
+              "$ref": "#/$defs/LotsHex32"
+            },
+            "winners": {
+              "items": {
+                "$ref": "#/$defs/LotsHandle"
+              },
+              "maxItems": 10000,
+              "minItems": 1,
+              "type": "array"
+            }
+          },
+          "required": [
+            "seal",
+            "winners",
+            "label"
+          ],
+          "type": "object"
+        },
+        "LotsWeightRow": {
+          "additionalProperties": false,
+          "properties": {
+            "user_id": {
+              "$ref": "#/$defs/TwitchUserId"
+            },
+            "weight": {
+              "format": "uint32",
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          "required": [
+            "user_id",
+            "weight"
+          ],
+          "type": "object"
+        },
+        "LotsWeightTable": {
+          "additionalProperties": false,
+          "properties": {
+            "heaviest_weight": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "newcomer_weight": {
+              "format": "uint32",
+              "minimum": 1,
+              "type": "integer"
+            },
+            "newcomers_to_outweigh_heaviest": {
+              "format": "uint32",
+              "minimum": 1,
+              "type": "integer"
+            },
+            "rows": {
+              "items": {
+                "$ref": "#/$defs/LotsWeightRow"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "rows",
+            "newcomer_weight",
+            "heaviest_weight"
+          ],
+          "type": "object"
+        },
+        "RollSealResult": {
+          "additionalProperties": false,
+          "properties": {
+            "draw_id": {
+              "$ref": "#/$defs/DrawId"
+            },
+            "draw_run_id": {
+              "$ref": "#/$defs/DrawRunId"
+            },
+            "sealed": {
+              "$ref": "#/$defs/LotsSealedRoll"
+            }
+          },
+          "required": [
+            "draw_id",
+            "draw_run_id",
+            "sealed"
+          ],
+          "type": "object"
+        },
+        "TwitchUserId": {
+          "pattern": "^[1-9][0-9]{0,31}$(?![\\s\\S])",
+          "type": "string"
+        },
+        "WritId": {
+          "pattern": "^[0-7][0-9A-HJKMNP-TV-Z]{25}$(?![\\s\\S])",
+          "type": "string"
+        }
+      },
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "description": "Payload binding only; /events transport integration belongs to later RPC wiring.",
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "lots.roll",
+              "type": "string"
+            },
+            "payload": {
+              "$ref": "#/$defs/LotsRollPayload"
+            }
+          },
+          "required": [
+            "kind",
+            "payload"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "lots.sealed",
+              "type": "string"
+            },
+            "payload": {
+              "$ref": "#/$defs/RollSealResult"
+            }
+          },
+          "required": [
+            "kind",
+            "payload"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "lots.cast",
+              "type": "string"
+            },
+            "payload": {
+              "$ref": "#/$defs/CastResult"
+            }
+          },
+          "required": [
+            "kind",
+            "payload"
+          ],
+          "type": "object"
+        }
+      ],
+      "title": "LotsEventPayload"
+    },
     "MessageId": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "pattern": "^[A-Za-z0-9_-]+$(?![\\s\\S])",
@@ -2989,6 +4921,18 @@
           ],
           "type": "object"
         },
+        "CastParams": {
+          "additionalProperties": false,
+          "properties": {
+            "draw_run_id": {
+              "$ref": "#/$defs/DrawRunId"
+            }
+          },
+          "required": [
+            "draw_run_id"
+          ],
+          "type": "object"
+        },
         "DataValue": {
           "anyOf": [
             {
@@ -3032,6 +4976,47 @@
           ],
           "type": "object"
         },
+        "DrawCheckParams": {
+          "additionalProperties": false,
+          "properties": {
+            "policy": {
+              "$ref": "#/$defs/LotsDrawPolicy"
+            }
+          },
+          "required": [
+            "policy"
+          ],
+          "type": "object"
+        },
+        "DrawContent": {
+          "enum": [
+            "prize",
+            "question",
+            "idea",
+            "seat"
+          ],
+          "type": "string"
+        },
+        "DrawId": {
+          "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$(?![\\s\\S])",
+          "type": "string"
+        },
+        "DrawRunId": {
+          "pattern": "^[0-7][0-9A-HJKMNP-TV-Z]{25}$(?![\\s\\S])",
+          "type": "string"
+        },
+        "DrawUpsertParams": {
+          "additionalProperties": false,
+          "properties": {
+            "draw": {
+              "$ref": "#/$defs/LotsDraw"
+            }
+          },
+          "required": [
+            "draw"
+          ],
+          "type": "object"
+        },
         "Empty": {
           "additionalProperties": false,
           "type": "object"
@@ -3051,6 +5036,280 @@
             "dry_run"
           ],
           "type": "object"
+        },
+        "LotsCohortCap": {
+          "additionalProperties": false,
+          "properties": {
+            "cohort": {
+              "pattern": "\\S",
+              "type": "string"
+            },
+            "denominator": {
+              "format": "uint32",
+              "maximum": 65535,
+              "minimum": 1,
+              "type": "integer"
+            },
+            "numerator": {
+              "format": "uint32",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          "required": [
+            "cohort",
+            "numerator",
+            "denominator"
+          ],
+          "type": "object"
+        },
+        "LotsDraw": {
+          "additionalProperties": false,
+          "properties": {
+            "draw_id": {
+              "$ref": "#/$defs/DrawId"
+            },
+            "name": {
+              "pattern": "\\S",
+              "type": "string"
+            },
+            "policy": {
+              "$ref": "#/$defs/LotsDrawPolicy"
+            },
+            "rules": {
+              "$ref": "#/$defs/LotsRollRules"
+            }
+          },
+          "required": [
+            "draw_id",
+            "name",
+            "policy",
+            "rules"
+          ],
+          "type": "object"
+        },
+        "LotsDrawPolicy": {
+          "additionalProperties": false,
+          "properties": {
+            "channel_points": {
+              "type": "boolean"
+            },
+            "content": {
+              "$ref": "#/$defs/DrawContent"
+            },
+            "free_entry_equal_odds": {
+              "type": "boolean"
+            },
+            "minimum_age": {
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "official_rules": {
+              "type": "boolean"
+            },
+            "paid_entry": {
+              "type": "boolean"
+            },
+            "paid_weight": {
+              "type": "boolean"
+            },
+            "prize_value_usd_cents": {
+              "$ref": "#/$defs/LotsUnsigned"
+            },
+            "regions": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "registration_confirmed": {
+              "type": "boolean"
+            },
+            "subscriber_only": {
+              "type": "boolean"
+            },
+            "twitch_disclaimer": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "content",
+            "paid_entry",
+            "paid_weight",
+            "subscriber_only",
+            "channel_points",
+            "free_entry_equal_odds",
+            "regions",
+            "prize_value_usd_cents",
+            "registration_confirmed",
+            "official_rules",
+            "twitch_disclaimer"
+          ],
+          "type": "object"
+        },
+        "LotsKeyword": {
+          "pattern": "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000]+$(?![\\s\\S])",
+          "type": "string"
+        },
+        "LotsPool": {
+          "oneOf": [
+            {
+              "additionalProperties": false,
+              "properties": {
+                "kind": {
+                  "const": "chatters",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "kind"
+              ],
+              "type": "object"
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "kind": {
+                  "const": "followers",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "kind"
+              ],
+              "type": "object"
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "kind": {
+                  "const": "subscribers",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "kind"
+              ],
+              "type": "object"
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "kind": {
+                  "const": "redeemers",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "kind"
+              ],
+              "type": "object"
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "keyword": {
+                  "$ref": "#/$defs/LotsKeyword"
+                },
+                "kind": {
+                  "const": "keyword",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "kind",
+                "keyword"
+              ],
+              "type": "object"
+            }
+          ]
+        },
+        "LotsRollRules": {
+          "additionalProperties": false,
+          "properties": {
+            "cohort_caps": {
+              "items": {
+                "$ref": "#/$defs/LotsCohortCap"
+              },
+              "type": "array"
+            },
+            "cooldown_s": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "free_join_equal_odds": {
+              "type": "boolean"
+            },
+            "pool": {
+              "$ref": "#/$defs/LotsPool"
+            },
+            "weight_curve": {
+              "$ref": "#/$defs/LotsWeightCurve"
+            },
+            "winner_count": {
+              "format": "uint32",
+              "maximum": 65535,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          "required": [
+            "pool",
+            "winner_count",
+            "cooldown_s",
+            "cohort_caps",
+            "weight_curve",
+            "free_join_equal_odds"
+          ],
+          "type": "object"
+        },
+        "LotsUnsigned": {
+          "description": "Integer cents/counts must survive JavaScript's number representation exactly.",
+          "format": "uint64",
+          "maximum": 9007199254740991,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "LotsWeightCurve": {
+          "oneOf": [
+            {
+              "additionalProperties": false,
+              "properties": {
+                "kind": {
+                  "const": "equal",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "kind"
+              ],
+              "type": "object"
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "kind": {
+                  "const": "concave",
+                  "type": "string"
+                },
+                "max_units": {
+                  "format": "uint32",
+                  "maximum": 65535,
+                  "minimum": 1,
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "kind",
+                "max_units"
+              ],
+              "type": "object"
+            }
+          ]
         },
         "ModeAcknowledgement": {
           "additionalProperties": false,
@@ -3138,6 +5397,51 @@
           },
           "required": [
             "dry_run"
+          ],
+          "type": "object"
+        },
+        "RandomnessSource": {
+          "enum": [
+            "drand_quicknet",
+            "streamer_commit"
+          ],
+          "type": "string"
+        },
+        "RollLookupParams": {
+          "additionalProperties": false,
+          "properties": {
+            "draw_id": {
+              "$ref": "#/$defs/DrawId"
+            },
+            "user_id": {
+              "$ref": "#/$defs/TwitchUserId"
+            }
+          },
+          "required": [
+            "draw_id",
+            "user_id"
+          ],
+          "type": "object"
+        },
+        "RollSealParams": {
+          "additionalProperties": false,
+          "properties": {
+            "draw_id": {
+              "$ref": "#/$defs/DrawId"
+            },
+            "margin_s": {
+              "format": "uint32",
+              "minimum": 1,
+              "type": "integer"
+            },
+            "source": {
+              "$ref": "#/$defs/RandomnessSource"
+            }
+          },
+          "required": [
+            "draw_id",
+            "source",
+            "margin_s"
           ],
           "type": "object"
         },
@@ -3442,6 +5746,26 @@
         "Timestamp": {
           "format": "date-time",
           "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?Z$(?![\\s\\S])",
+          "type": "string"
+        },
+        "TwitchUserId": {
+          "pattern": "^[1-9][0-9]{0,31}$(?![\\s\\S])",
+          "type": "string"
+        },
+        "WritGetParams": {
+          "additionalProperties": false,
+          "properties": {
+            "writ_id": {
+              "$ref": "#/$defs/WritId"
+            }
+          },
+          "required": [
+            "writ_id"
+          ],
+          "type": "object"
+        },
+        "WritId": {
+          "pattern": "^[0-7][0-9A-HJKMNP-TV-Z]{25}$(?![\\s\\S])",
           "type": "string"
         }
       },
@@ -3897,7 +6221,7 @@
               "type": "string"
             },
             "params": {
-              "$ref": "#/$defs/Pending"
+              "$ref": "#/$defs/Empty"
             }
           },
           "required": [
@@ -3914,7 +6238,7 @@
               "type": "string"
             },
             "params": {
-              "$ref": "#/$defs/Pending"
+              "$ref": "#/$defs/DrawUpsertParams"
             }
           },
           "required": [
@@ -3931,7 +6255,7 @@
               "type": "string"
             },
             "params": {
-              "$ref": "#/$defs/Pending"
+              "$ref": "#/$defs/DrawCheckParams"
             }
           },
           "required": [
@@ -3948,7 +6272,7 @@
               "type": "string"
             },
             "params": {
-              "$ref": "#/$defs/Pending"
+              "$ref": "#/$defs/RollLookupParams"
             }
           },
           "required": [
@@ -3965,7 +6289,7 @@
               "type": "string"
             },
             "params": {
-              "$ref": "#/$defs/Pending"
+              "$ref": "#/$defs/RollSealParams"
             }
           },
           "required": [
@@ -3982,7 +6306,7 @@
               "type": "string"
             },
             "params": {
-              "$ref": "#/$defs/Pending"
+              "$ref": "#/$defs/CastParams"
             }
           },
           "required": [
@@ -3999,7 +6323,7 @@
               "type": "string"
             },
             "params": {
-              "$ref": "#/$defs/Pending"
+              "$ref": "#/$defs/WritGetParams"
             }
           },
           "required": [
