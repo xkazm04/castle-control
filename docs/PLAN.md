@@ -32,8 +32,14 @@ fork pool's IPC pipe creation. Test isolation and assertions remain enabled.
 Each JS/TS package defines the three scripts using `scripts/package-gate.mjs`.
 The TypeScript runner checks effective inherited compiler flags before `tsc`.
 Boundary checks resolve relative static/dynamic imports and re-exports, reject
-cross-package relative imports, deep workspace imports, undeclared workspace
-dependencies and imports of apps, and detect file/package graph cycles.
+cross-package relative imports, private deep workspace imports, undeclared
+workspace dependencies and imports of apps, and detect file/package graph cycles.
+Workspace subpaths are public only when declared by an exact or wildcard key in
+the target package's exports map; conditional targets are accepted, and null
+exclusions remain private. Public subpaths still require a declared dependency
+and retain package cycle checks. The root gate runs the boundary fixture tests
+with Node's test runner in-process before the workspace checks; each fixture
+owns a temporary workspace.
 The product hygiene gate uses the TypeScript AST; ESLint also rejects unused
 variables and empty blocks. Import boundaries currently cover JS/TS; Rust crate
 dependency checks remain owned by the packages that introduce those boundaries.
@@ -58,6 +64,16 @@ code gates walked 15 files and secrets scanning walked 62 files. All 35 seeded
 failure proofs below passed their diagnostic checks. The old prototype directory
 is absent; all 18 moved files also match the original HEAD blobs after normal
 Git text normalization (in addition to the pre-delete byte-for-byte hash check).
+
+Export-subpath validation, 2026-10-26: all 14 temporary-workspace boundary tests
+passed, as did tooling ESLint and the boundaries, hygiene, file-cap and secrets
+checks. The new private workspace import proof reported exit 1 and its source
+was restored. The proof suite then stopped at the existing "Workspace scripts"
+seed: removing only the test command prefix leaves the appended codegen test
+command, so no missing-script defect is introduced. The generated foundation
+evidence below was therefore not rewritten. The root gate passed the fixture
+tests but stopped at the unchanged contract exporter (`spawnSync cargo EPERM`);
+recursive pnpm typecheck and lint also encountered subprocess `EPERM`.
 
 <!-- generated gate proofs -->
 

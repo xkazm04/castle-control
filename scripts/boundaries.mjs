@@ -3,6 +3,25 @@ import { dirname, join, relative, resolve } from 'node:path';
 import ts from 'typescript';
 import { text } from './files.mjs';
 
+function exportsSubpath(exports, subpath) {
+  if (!exports || typeof exports !== 'object' || Array.isArray(exports)) return false;
+  let key = subpath;
+  if (!Object.hasOwn(exports, key)) {
+    // Node selects the most specific pattern before considering its target,
+    // so a null exclusion cannot be bypassed by a broader public pattern.
+    key = Object.keys(exports).filter((pattern) => {
+      const star = pattern.indexOf('*');
+      return pattern.startsWith('./') && star !== -1 && star === pattern.lastIndexOf('*')
+        && subpath.startsWith(pattern.slice(0, star)) && subpath.endsWith(pattern.slice(star + 1))
+        && subpath.length >= pattern.length;
+    }).sort((a, b) => b.indexOf('*') - a.indexOf('*') || b.length - a.length)[0];
+  }
+  if (key === undefined) return false;
+  const target = exports[key];
+  // Conditional objects declare the same public door as string targets.
+  return typeof target === 'string' || (target !== null && typeof target === 'object');
+}
+
 export function boundaries(files, root) {
   const scripts = files.filter((path) => /\.[cm]?[jt]sx?$/.test(path));
   const graph = new Map();
@@ -42,7 +61,9 @@ export function boundaries(files, root) {
         for (const [directory, metadata] of packages) {
           if (name !== metadata.name && !name.startsWith(`${metadata.name}/`)) continue;
           if (directory === root) continue;
-          if (name !== metadata.name) defects.push(`${file}: workspace deep import ${name}`);
+          if (name !== metadata.name && !exportsSubpath(metadata.exports, `.${name.slice(metadata.name.length)}`)) {
+            defects.push(`${file}: workspace deep import ${name}`);
+          }
           if (relative(root, directory).startsWith('apps') && here !== directory) defects.push(`${file}: cannot import an app`);
           if (here !== directory && !{ ...packages.get(here).dependencies, ...packages.get(here).devDependencies }[metadata.name]) {
             defects.push(`${file}: undeclared workspace dependency ${name}`);

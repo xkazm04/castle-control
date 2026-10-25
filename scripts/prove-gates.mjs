@@ -23,6 +23,7 @@ const expected = {
   'Tooling ESLint': '@typescript-eslint/no-unused-vars',
   Vitest: 'expected false to be true',
   'Import boundary': 'cross-package relative import',
+  'Private workspace import': 'workspace deep import @castle-control/contract/src/generated/types',
   'Import cycle': 'import cycle:',
   'No any': 'no any',
   'No double assertion': 'no as unknown as',
@@ -104,6 +105,9 @@ try {
   }, join(root, contract));
   proof('Import boundary', 'A contract source imports root tooling by relative path.', ['scripts/check.mjs', 'boundaries'], {
     [index]: read(index) + "\nimport '../../../scripts/files.mjs';\n",
+  });
+  proof('Private workspace import', 'A contract source imports its undeclared private subpath.', ['scripts/check.mjs', 'boundaries'], {
+    [index]: read(index) + "\nimport '@castle-control/contract/src/generated/types';\n",
   });
   proof('Import cycle', 'Two contract source files import one another.', ['scripts/check.mjs', 'boundaries'], {
     [`${contract}/src/proof-a.ts`]: "import './proof-b.js';\nexport {};\n",
