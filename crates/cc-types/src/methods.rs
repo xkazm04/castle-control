@@ -36,6 +36,7 @@ methods! {
     AuthTwitchStart => ("auth.twitch.start", Empty, TwitchAuthStatus, "WP 0.6"),
     AuthTwitchStatus => ("auth.twitch.status", Empty, TwitchAuthStatus, "WP 0.6"),
     AuthTwitchRevoke => ("auth.twitch.revoke", Empty, Empty, "WP 0.6"),
+    BridgeStatusGet => ("bridge.status.get", Empty, BridgeStatus, "WP 0.7"),
     ObsStatusGet => ("obs.status.get", Empty, ObsStatus, "WP 0.7"),
     ObsSourceCreate => ("obs.source.create", ObsSourceParams, ObsSourceResult, "WP 0.7"),
     StoreForgetUser => ("store.forgetUser", ForgetUserParams, PurgeResult, "WP 0.3"),

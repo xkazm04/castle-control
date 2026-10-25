@@ -1,4 +1,4 @@
-use crate::{DataValue, Timestamp};
+use crate::{BridgeState, DataValue, Timestamp};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
@@ -16,6 +16,72 @@ pub struct StatusResult {
     pub twitch_connected: bool,
     pub obs_connected: bool,
     pub simulated: bool,
+    /// Populated by the bridge (owner WP 0.7); invalidated by bridge.status.
+    /// Absence means unknown, never off.
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        deserialize_with = "crate::present"
+    )]
+    #[schemars(with = "StreamStatus")]
+    pub stream: Option<StreamStatus>,
+    /// Populated from WP 1.1/1.2; invalidated by gatehouse.room.
+    /// Absence means unknown, never off.
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        deserialize_with = "crate::present"
+    )]
+    #[schemars(with = "GatehouseSummary")]
+    pub gatehouse: Option<GatehouseSummary>,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct StreamStatus {
+    pub live: bool,
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        deserialize_with = "crate::present"
+    )]
+    #[schemars(with = "Timestamp")]
+    pub started_at: Option<Timestamp>,
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        deserialize_with = "crate::present"
+    )]
+    #[schemars(with = "u32")]
+    pub viewer_count: Option<u32>,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct GatehouseSummary {
+    pub armed_rules: u32,
+    pub shadow_rules: u32,
+    pub shield: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct BridgeGap {
+    pub from: Timestamp,
+    pub to: Timestamp,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct BridgeStatus {
+    pub state: BridgeState,
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        deserialize_with = "crate::present"
+    )]
+    #[schemars(with = "BridgeGap")]
+    pub last_gap: Option<BridgeGap>,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]

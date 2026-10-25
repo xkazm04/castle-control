@@ -13,6 +13,9 @@ macro_rules! wire_enum {
 
 wire_enum!(Verdict { Pass => "pass", Hold => "hold", Bar => "bar" });
 wire_enum!(RuleMode { Shadow => "shadow", Armed => "armed" });
+wire_enum!(BridgeState {
+    Disconnected => "disconnected", Connecting => "connecting", Connected => "connected", Error => "error"
+});
 wire_enum!(Action {
     Warn => "warn", Delete => "delete", Timeout => "timeout", Ban => "ban", Hold => "hold"
 });

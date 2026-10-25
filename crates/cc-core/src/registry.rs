@@ -83,6 +83,8 @@ impl Module for StatusModule {
                     twitch_connected: false,
                     obs_connected: false,
                     simulated: false,
+                    stream: None,
+                    gatehouse: None,
                 })
                 .map_err(|_| {
                     ErrorEnvelope::new(ErrorCode::Internal, "status serialization failed")

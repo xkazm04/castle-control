@@ -692,6 +692,8 @@ Every other module reads chat only after the Gatehouse's verdict, so this milest
 
 These names are the wire contract. A package that needs a new one adds it to `cc-types` in its own PR before building against it. Castle words never appear in identifiers.
 
+`status.get` carries optional `stream` and `gatehouse` summaries, invalidated by `bridge.status` and `gatehouse.room` respectively; absent summaries mean unknown, never off.
+
 **Conventions:**
 
 - **Method names** are `<module>.<noun>.<verb>`, in lower camel case.
@@ -705,7 +707,7 @@ These names are the wire contract. A package that needs a new one adds it to `cc
 
 | Module | Methods |
 | --- | --- |
-| core | `status.get`, `settings.get`, `settings.set`, `auth.twitch.start`, `auth.twitch.status`, `auth.twitch.revoke`, `obs.status.get`, `obs.source.create`, `store.forgetUser`, `store.purgeAll` |
+| core | `status.get`, `settings.get`, `settings.set`, `auth.twitch.start`, `auth.twitch.status`, `auth.twitch.revoke`, `bridge.status.get`, `obs.status.get`, `obs.source.create`, `store.forgetUser`, `store.purgeAll` |
 | gatehouse | `gatehouse.rules.list`, `gatehouse.rules.upsert`, `gatehouse.rules.setMode`, `gatehouse.ban.confirm`, `gatehouse.ban.dismiss`, `gatehouse.decision.undo`, `gatehouse.petition.resolve`, `gatehouse.held.resolve`, `gatehouse.delay.set`, `gatehouse.shield.set`, `gatehouse.lease.end`, `gatehouse.consensus.get`, `gatehouse.drill.run`, `gatehouse.drill.diff`, `gatehouse.recording.import` |
 | lots | `lots.draw.list`, `lots.draw.upsert`, `lots.draw.check`, `lots.roll.lookup`, `lots.roll.seal`, `lots.cast`, `lots.writ.get` |
 | beacons | `beacons.visual.list`, `beacons.visual.upsert`, `beacons.curve.set`, `beacons.simulate`, `beacons.source.url` |
@@ -728,6 +730,7 @@ These names are the wire contract. A package that needs a new one adds it to `cc
 | --- | --- |
 | `Verdict` | `pass`, `hold`, `bar` |
 | `RuleMode` | `shadow`, `armed` |
+| `BridgeState` | `disconnected`, `connecting`, `connected`, `error` |
 | `Action` | `warn`, `delete`, `timeout`, `ban`, `hold` |
 | `DecisionKind` | `held`, `released`, `removed`, `warned`, `timed_out`, `banned`, `ban_pending`, `mode_changed`, `undone`, `would_act` |
 | `Tier` | `s`, `m`, `l`, `xl` |

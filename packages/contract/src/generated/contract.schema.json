@@ -42,6 +42,50 @@
       },
       "result": {
         "$defs": {
+          "GatehouseSummary": {
+            "additionalProperties": false,
+            "properties": {
+              "armed_rules": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "shadow_rules": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "shield": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "armed_rules",
+              "shadow_rules",
+              "shield"
+            ],
+            "type": "object"
+          },
+          "StreamStatus": {
+            "additionalProperties": false,
+            "properties": {
+              "live": {
+                "type": "boolean"
+              },
+              "started_at": {
+                "$ref": "#/$defs/Timestamp"
+              },
+              "viewer_count": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              }
+            },
+            "required": [
+              "live"
+            ],
+            "type": "object"
+          },
           "Timestamp": {
             "format": "date-time",
             "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?Z$(?![\\s\\S])",
@@ -54,11 +98,19 @@
           "at": {
             "$ref": "#/$defs/Timestamp"
           },
+          "gatehouse": {
+            "$ref": "#/$defs/GatehouseSummary",
+            "description": "Populated from WP 1.1/1.2; invalidated by gatehouse.room.\nAbsence means unknown, never off."
+          },
           "obs_connected": {
             "type": "boolean"
           },
           "simulated": {
             "type": "boolean"
+          },
+          "stream": {
+            "$ref": "#/$defs/StreamStatus",
+            "description": "Populated by the bridge (owner WP 0.7); invalidated by bridge.status.\nAbsence means unknown, never off."
           },
           "twitch_connected": {
             "type": "boolean"
@@ -326,6 +378,65 @@
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
         "title": "Empty",
+        "type": "object"
+      }
+    },
+    {
+      "name": "bridge.status.get",
+      "owner": "WP 0.7",
+      "params": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "title": "Empty",
+        "type": "object"
+      },
+      "result": {
+        "$defs": {
+          "BridgeGap": {
+            "additionalProperties": false,
+            "properties": {
+              "from": {
+                "$ref": "#/$defs/Timestamp"
+              },
+              "to": {
+                "$ref": "#/$defs/Timestamp"
+              }
+            },
+            "required": [
+              "from",
+              "to"
+            ],
+            "type": "object"
+          },
+          "BridgeState": {
+            "enum": [
+              "disconnected",
+              "connecting",
+              "connected",
+              "error"
+            ],
+            "type": "string"
+          },
+          "Timestamp": {
+            "format": "date-time",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?Z$(?![\\s\\S])",
+            "type": "string"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "last_gap": {
+            "$ref": "#/$defs/BridgeGap"
+          },
+          "state": {
+            "$ref": "#/$defs/BridgeState"
+          }
+        },
+        "required": [
+          "state"
+        ],
+        "title": "BridgeStatus",
         "type": "object"
       }
     },
@@ -1493,6 +1604,23 @@
           "properties": {
             "method": {
               "const": "auth.twitch.revoke",
+              "type": "string"
+            },
+            "params": {
+              "$ref": "#/$defs/Empty"
+            }
+          },
+          "required": [
+            "method",
+            "params"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "method": {
+              "const": "bridge.status.get",
               "type": "string"
             },
             "params": {
