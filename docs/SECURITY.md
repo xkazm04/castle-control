@@ -8,6 +8,7 @@ no session token and are origin-checked; only POST and the `content-type` and
 No wildcard or browser credential permission is granted. POST still requires
 the per-launch session token and its existing origin check; `/events` keeps its
 authentication and origin checks and receives no CORS headers.
+The desktop capability stays in native memory and a guarded main-frame initialization script, is consumed/deleted by the trusted built frontend, and must never enter URLs, storage, arguments, logs or diagnostics; code running in that webview shares its custody.
 
 ## Twitch bridge
 
