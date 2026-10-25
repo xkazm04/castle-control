@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Lot Chamber · lottery manager — Castle Control</title>
+<script>try{if(JSON.parse(localStorage.getItem('cc.state.v1')||'{}').theme==='stock')document.documentElement.setAttribute('data-theme','stock')}catch(e){}</script>
+<script src="../data/sample.js"></script><script>window.SAMPLE||document.write('<script src="sample.copy.js"><\/script>')</script>
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="app.css">
+<style>
+/* Lot Chamber — page styles */
+.h1::after{white-space:nowrap} /* two-word chamber name: keep the misregistered layer on one line (absolute layer is 2.5px narrower than the h1) */
+.hero-roll{display:grid;grid-template-columns:268px minmax(0,1fr);height:304px}
+.hr-left{padding:26px 16px 12px 20px;border-right:1px dashed var(--hair);display:flex;flex-direction:column;gap:5px;position:relative}
+.hr-left .kicker{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hr-left .big{font:800 76px/.85 var(--font-display);font-stretch:75%;letter-spacing:-.01em;position:relative;isolation:isolate;color:var(--ink)}
+.hr-left .big::after{content:attr(data-t);position:absolute;left:3px;top:3px;color:var(--gules);mix-blend-mode:var(--blend);z-index:-1}
+.hr-left .nm{font:italic 16px/1.2 var(--font-serif);color:var(--ink-2)}
+.hr-left .st{display:flex;gap:6px;flex-wrap:wrap;margin-top:2px}
+.hr-left .acts{margin-top:auto;display:flex;gap:6px;flex-wrap:wrap}
+.hr-right{position:relative;display:flex;flex-direction:column;min-width:0}
+.strip-wrap{position:relative;height:100px;margin:26px 0 0;overflow:hidden;display:flex;justify-content:flex-end;padding:0 0 0 12px;-webkit-mask-image:linear-gradient(90deg,transparent,#000 90px);mask-image:linear-gradient(90deg,transparent,#000 90px)}
+.strip{display:flex;gap:8px;align-items:center;padding:10px 14px 10px 0;will-change:transform}
+.tk{position:relative;flex:none;width:118px;height:76px;display:grid;grid-template-columns:30px 1fr;background:var(--paper);border:1.5px solid var(--ink);border-radius:5px;overflow:visible;box-shadow:3px 3px 0 var(--hair)}
+.tk::before,.tk::after{content:"";position:absolute;left:24px;width:12px;height:12px;border-radius:50%;background:var(--card);border:1.5px solid var(--ink);z-index:2}
+.tk::before{top:-7px;border-top-color:transparent;transform:rotate(45deg) translate(0,0)}
+.tk::after{bottom:-7px;border-bottom-color:transparent}
+.tk .stub{border-right:2px dashed var(--ink);display:flex;align-items:center;justify-content:center;background:color-mix(in srgb,var(--gules) 30%,var(--paper))}
+.tk .stub b{writing-mode:vertical-rl;transform:rotate(180deg);font:800 14px/1 var(--font-num);font-variant-numeric:tabular-nums;letter-spacing:.04em}
+.tk .body{padding:7px 8px 6px 9px;display:flex;flex-direction:column;justify-content:space-between;min-width:0}
+.tk .h{font:700 13.5px/1.1 var(--font-num);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tk .fl{display:flex;gap:3px}
+.tk .fl i{height:6px;flex:1;border-radius:1px}
+.tk .no{font:600 12px/1 var(--font-ui);color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
+.tk.new{animation:tk-in .55s var(--ease)}
+.tk.win{background:var(--or);box-shadow:0 0 0 3px var(--gules)}
+@keyframes tk-in{from{opacity:0;transform:translateX(60px) rotate(4deg)}to{opacity:1;transform:none}}
+.dotmap{position:relative;flex:1;min-height:0;padding:0 16px 8px 12px;display:flex;flex-direction:column;gap:4px;overflow:hidden}
+.dotmap svg{width:100%;flex:1;min-height:0;display:block}
+.legend{display:flex;gap:6px 14px;flex-wrap:wrap;font-size:13px;color:var(--ink-2);align-items:center;flex:none}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:50%;mix-blend-mode:var(--blend)}
+.cols3{display:grid;grid-template-columns:minmax(252px,300px) minmax(360px,1fr) minmax(280px,344px);gap:24px;margin-top:20px;align-items:start}
+@container pg (max-width:1130px){.cols3{grid-template-columns:minmax(240px,290px) minmax(0,1fr)}.cols3>.c3{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:24px}}
+@container pg (max-width:900px){.hero-roll{grid-template-columns:1fr;height:auto}.hr-left{border-right:0;border-bottom:1px dashed var(--hair)}.cols3{grid-template-columns:1fr}.cols3>.c3{grid-template-columns:1fr}}
+.drawlist{display:flex;flex-direction:column;border-top:1px solid var(--hair)}
+.drawrow{display:grid;grid-template-columns:30px 1fr auto;gap:10px;align-items:center;padding:10px 8px;border:0;border-bottom:1px solid var(--hair);background:transparent;text-align:left;cursor:pointer;min-height:68px;position:relative;width:100%}
+.drawrow:hover{background:var(--tint)}
+.drawrow[aria-checked="true"]{background:color-mix(in srgb,var(--gules) 14%,transparent)}
+.drawrow[aria-checked="true"]::before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;background:var(--gules)}
+.drawrow .ic{width:26px;height:26px;color:var(--ink)}
+.drawrow b{display:block;font:700 14px/1.2 var(--font-ui)}
+.drawrow small{display:block;font-size:13px;color:var(--muted);line-height:1.3}
+.drawrow .ct{font:800 20px/1 var(--font-num);font-variant-numeric:tabular-nums;text-align:right}
+.drawrow .ct small{font:600 12px/1.2 var(--font-ui);letter-spacing:.07em;text-transform:uppercase;display:block;margin-top:2px}
+.rollbox{margin-top:20px}
+.rolltbl{max-height:236px}
+.verdict{border:1.5px solid var(--ink);border-radius:var(--r-sm);padding:10px 12px;display:flex;flex-direction:column;gap:6px;background:var(--card)}
+.verdict.blocked{border-color:var(--danger);background:color-mix(in srgb,var(--gules) 10%,var(--card))}
+.verdict.warn{border-color:var(--warn);background:color-mix(in srgb,var(--or) 12%,var(--card))}
+.verdict.ready{border-color:var(--ok);background:color-mix(in srgb,var(--azure) 7%,var(--card))}
+.verdict h4{font:800 15px/1.1 var(--font-display);font-stretch:75%;letter-spacing:.07em;text-transform:uppercase;display:flex;align-items:center;gap:8px}
+.verdict ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:6px}
+.verdict li{display:flex;gap:8px;align-items:flex-start;line-height:1.35}
+.verdict li .chip{flex:none;margin-top:1px}
+.verdict li .btn{margin-left:auto;flex:none}
+.cfg{display:flex;flex-direction:column;gap:14px}
+.seg3{display:flex;border:1.5px solid var(--ink);border-radius:var(--r-sm);overflow:hidden}
+.seg3 button{flex:1;height:32px;border:0;background:transparent;border-right:1px solid var(--hair);font:700 12px/1 var(--font-ui);letter-spacing:.05em;text-transform:uppercase;cursor:pointer;padding:0 6px}
+.seg3 button:last-child{border-right:0}
+.seg3 button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+.seg3 button:hover:not([aria-pressed="true"]){background:var(--tint-2)}
+.steps{display:flex;flex-direction:column;gap:0;counter-reset:st}
+.step{position:relative;display:grid;grid-template-columns:28px 1fr;gap:10px;padding:0 0 14px 0}
+.step::before{content:"";position:absolute;left:13px;top:26px;bottom:0;border-left:2px dashed var(--hair)}
+.step:last-child::before{display:none}
+.step .n{width:28px;height:28px;border:1.5px solid var(--ink);border-radius:50%;display:grid;place-items:center;font:800 13px/1 var(--font-num);background:var(--paper);z-index:1}
+.step.done .n{background:var(--gules);color:var(--press);border-color:var(--gules)}
+.step.now .n{background:var(--ink);color:var(--paper)}
+.step b{display:block;font:700 14px/1.2 var(--font-ui)}
+.step p b{display:inline;font:700 13px/1.4 var(--font-num)}
+.step p{font-size:13px;color:var(--muted);line-height:1.4;margin:2px 0 0}
+.step .hash{display:flex;gap:6px;align-items:center;margin-top:6px;font:600 12.5px/1.2 var(--font-num);word-break:break-all;background:var(--tint);padding:5px 7px;border-radius:2px}
+.stage{position:relative;aspect-ratio:16/9;background:var(--paper-2);border:1.5px solid var(--ink);border-radius:var(--r-sm);overflow:hidden;display:grid;place-items:center}
+.stage svg.shape{width:46%;height:auto;max-height:80%}
+.stage .cam{position:absolute;inset:0;background:repeating-linear-gradient(135deg,transparent 0 9px,var(--tint) 9px 10px)}
+.stage .lbl{position:absolute;left:8px;top:6px;font:600 12px/1 var(--font-ui);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.stage .disc{position:absolute;left:8px;right:8px;bottom:6px;font:600 12px/1.2 var(--font-ui);color:var(--ink-2);text-align:center;background:var(--paper);border:1px solid var(--hair);padding:3px 6px;border-radius:2px;display:none}
+.stage.prize .disc{display:block}
+.shaperow{grid-template-columns:minmax(0,1fr)} /* four shape names need the full column width */
+.shaperow .seg3 button{flex:1 1 auto;white-space:nowrap}
+.tray{display:flex;gap:6px;position:absolute;left:8px;right:8px;top:22px;justify-content:center}
+.tray .tk{width:84px;height:48px;grid-template-columns:20px 1fr;box-shadow:2px 2px 0 var(--hair)}
+.tray .tk .h{font-size:12px}.tray .tk .stub b{font-size:12px}.tray .tk .body{padding:4px 5px}
+.spin{animation:spin var(--spin,2.2s) cubic-bezier(.2,.7,.2,1) 1}
+@keyframes spin{from{transform:rotate(0)}to{transform:rotate(var(--turns,720deg))}}
+.pastcols td .chip{margin-right:4px}
+#wr-back{flex:none;white-space:nowrap}
+.wr{display:grid;grid-template-columns:minmax(300px,420px) minmax(0,1fr);gap:28px;margin-top:20px;align-items:start}
+@container pg (max-width:1000px){.wr{grid-template-columns:1fr}}
+.wrtk{position:relative;background:var(--card);border:2px solid var(--ink);border-radius:8px;padding:16px 16px 16px 66px;box-shadow:5px 5px 0 var(--hair);overflow:hidden}
+.wrtk::before{content:"";position:absolute;left:50px;top:0;bottom:0;border-left:2px dashed var(--ink)}
+.wrtk .stubcol{position:absolute;left:0;top:0;bottom:0;width:50px;background:color-mix(in srgb,var(--gules) 32%,var(--card));display:flex;align-items:center;justify-content:center}
+.wrtk .stubcol b{writing-mode:vertical-rl;transform:rotate(180deg);font:800 22px/1 var(--font-display);font-stretch:75%;letter-spacing:.14em;text-transform:uppercase}
+.wrtk dl{margin:10px 0 0;display:grid;grid-template-columns:96px 1fr;gap:6px 10px;font-size:13.5px}
+.wrtk dt{color:var(--muted);font:700 12px/1.4 var(--font-ui);letter-spacing:.08em;text-transform:uppercase}
+.wrtk dd{margin:0;font-family:var(--font-num);font-variant-numeric:tabular-nums;word-break:break-all}
+.wrtk .ribbon{position:absolute;right:-34px;top:14px;transform:rotate(36deg);background:var(--or);color:var(--press);font:800 12px/1 var(--font-ui);letter-spacing:.1em;text-transform:uppercase;padding:4px 40px;border-block:1.5px solid var(--ink)}
+.filelist{margin:0;padding:0;list-style:none;font:13px/1.4 var(--font-num)}
+.filelist li{display:flex;gap:8px;padding:5px 0;border-bottom:1px dashed var(--hair);align-items:center}
+.filelist li span:last-child{margin-left:auto;color:var(--muted)}
+.rk td.win{background:color-mix(in srgb,var(--or) 40%,transparent);font-weight:700}
+textarea.entries{height:120px;font:12.5px/1.45 var(--font-num)}
+</style>
+</head>
+<body data-module="lottery">
+<main id="page" class="page">
+  <header class="pagehead">
+    <div class="folio"><a href="index.html">Castle Control</a><span>›</span><span>Chamber 1 of 4</span><span>·</span><b>Lot Chamber</b><span class="crumbs"></span></div>
+    <div class="titlerow">
+      <h1 class="h1" data-t="Lot Chamber">Lot Chamber</h1>
+      <p class="stand"><b>Lottery manager</b>Cast the lots fairly. Rewards for viewers, or their questions and ideas picked for the show, with a result anyone can recompute.</p>
+      <div class="actions" id="head-actions"></div>
+    </div>
+  </header>
+
+  <div class="views">
+  <!-- ============ MAIN ============ -->
+  <section class="view" data-view="main" id="v-main">
+    <div class="hero hero-roll" id="hero" data-module="lottery" aria-label="The roll: the pool of the selected draw as numbered lots">
+      <i class="crop tl"></i><i class="crop tr"></i><i class="crop bl"></i><i class="crop br"></i>
+      <div class="hr-left">
+        <div class="kicker">The roll · <span id="hr-draw">selected draw</span></div>
+        <div class="big num" id="hr-big" data-t="87">87</div>
+        <div class="nm" id="hr-pool">lots</div>
+        <div class="st" id="hr-state"></div>
+        <div class="acts"><button class="btn primary" id="btn-seal">Seal the roll</button><button class="btn ghost" id="btn-intake" aria-pressed="true">Pause intake</button></div>
+      </div>
+      <div class="hr-right">
+        <div class="hero-tag"><i>Stylised illustration of sample data</i></div>
+        <div class="strip-wrap" aria-hidden="true"><div class="strip" id="strip"></div></div>
+        <div class="dotmap"><svg id="dotmap" viewBox="0 0 800 90" preserveAspectRatio="xMinYMid meet" role="img" aria-label="Every lot in the pool as one dot, coloured by cohort"></svg><div class="legend" id="legend"></div></div>
+      </div>
+    </div>
+
+    <div class="cols3">
+      <div class="c1">
+        <div class="sec"><div class="sec-h"><span class="no">1.1</span><h2>Draws you have</h2><span class="meta">3 saved</span></div>
+          <div class="drawlist" id="drawlist" role="radiogroup" aria-label="Draws you have"></div>
+        </div>
+        <div class="sec rollbox"><div class="sec-h"><span class="no">1.2</span><h2>The roll</h2><span class="gloss">latest lot first</span></div>
+          <label class="f" style="margin-bottom:8px"><span class="sr">Find a handle in the roll</span><input type="search" id="roll-find" placeholder="Is this handle in the pool?" aria-label="Find a handle in the roll"></label>
+          <div class="scroll rolltbl"><table class="tbl" id="rolltbl"><thead><tr><th class="n">No.</th><th>Handle</th><th>Flags</th></tr></thead><tbody></tbody></table></div>
+        </div>
+      </div>
+
+      <div class="c2">
+        <div class="sec"><div class="sec-h"><span class="no">1.3</span><h2>Next draw · setup</h2><span class="gloss">pool · rules · content</span><span class="meta"><button class="btn sm ghost" id="btn-new">+ New draw</button></span></div>
+          <div class="cfg" id="cfg"></div>
+          <div id="verdict" style="margin-top:14px"></div>
+        </div>
+      </div>
+
+      <div class="c3">
+        <div class="sec"><div class="sec-h"><span class="no">1.4</span><h2>Fairness you can verify</h2></div>
+          <div class="steps" id="steps"></div>
+        </div>
+        <div class="sec" style="margin-top:20px"><div class="sec-h"><span class="no">1.5</span><h2>On stream</h2><span class="gloss">the draw's visual shape</span></div>
+          <div class="stage" id="stage"><div class="cam"></div><div class="lbl">Stylised preview · not a capture</div><div class="tray" id="tray"></div><div id="shape" style="display:grid;place-items:center;width:100%;height:100%"></div><div class="disc">Twitch does not sponsor this promotion.</div></div>
+          <div class="rowf shaperow" style="margin-top:10px"><div class="seg3" id="shapesel" role="group" aria-label="Draw shape"></div><label class="f"><span>Timing <b class="num" id="timing-v">6 s</b></span><input type="range" id="timing" min="3" max="12" value="6" aria-label="Draw timing in seconds"></label></div>
+          <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap"><button class="btn plate" id="btn-cast">Cast a trial first</button><button class="btn ghost" id="btn-writ">Writ · proof bundle</button></div>
+          <p class="hint" style="margin-top:8px">The animation only shows a result that is already decided by the sealed roll and the public round. Sound is set per draw and plays on stream only.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="sec" style="margin-top:28px"><div class="sec-h"><span class="no">1.6</span><h2>Past draws</h2><span class="gloss">each with its writ, the proof bundle</span><span class="meta">sample data · 6 draws</span></div>
+      <div class="scroll"><table class="tbl pastcols" id="pasttbl"><thead><tr><th>Draw</th><th>When</th><th>Winners</th><th>Seal · entry hash</th><th class="n">Public round</th><th>Revealed</th><th></th></tr></thead><tbody></tbody></table></div>
+    </div>
+  </section>
+
+  <!-- ============ WRIT (nested page: one past or current draw's proof bundle) ============ -->
+  <section class="view" data-view="writ" id="v-writ" hidden>
+    <div style="display:flex;gap:12px;align-items:center;margin:4px 0 0"><a class="backbtn" href="#" id="wr-back">← Back to the Lot Chamber</a><span class="hint">The writ is the proof bundle: the sealed roll, the public round and the result, kept so anyone can check the cast.</span></div>
+    <div class="wr">
+      <div>
+        <div class="wrtk" id="wrtk"></div>
+        <div class="sec" style="margin-top:20px"><div class="sec-h"><h2>In the bundle</h2></div><ul class="filelist" id="wr-files"></ul></div>
+      </div>
+      <div>
+        <div class="sec"><div class="sec-h"><span class="no">W.1</span><h2>Recompute it yourself</h2><span class="gloss">no account, no trust</span></div>
+          <p class="hint" style="margin-bottom:10px" id="wr-note"></p>
+          <div class="stack">
+            <label class="f"><span>1 · The roll (one handle per line). Edit it and watch the seal change.</span><textarea class="entries" id="wr-entries" spellcheck="false"></textarea></label>
+            <div class="rowf"><div><div class="f-l">2 · The seal, SHA-256 of the roll</div><div class="step"><div></div><div class="hash" id="wr-seal" style="margin-top:4px;grid-column:2"></div></div></div>
+              <label class="f"><span>3 · Public round number</span><input type="text" id="wr-round" inputmode="numeric"></label></div>
+            <div><div class="f-l">Round value (stands in for the public round's randomness)</div><div class="hash step" style="display:block;padding:5px 7px;background:var(--tint);font:600 12.5px/1.2 var(--font-num);word-break:break-all;margin-top:4px" id="wr-value"></div></div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn plate" id="wr-run">4 · Recompute the cast</button><button class="btn ghost" id="wr-tamper">Tamper test: drop one lot</button><button class="btn ghost" id="wr-reset">Reset</button></div>
+            <div id="wr-out"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  </div>
+</main>
+<script src="mark.js"></script>
+<script src="app.js"></script>
+<script src="app-lottery.js"></script>
+</body>
+</html>

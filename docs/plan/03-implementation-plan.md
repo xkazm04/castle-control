@@ -1,0 +1,747 @@
+# Castle Control — Part 3: Implementation plan
+
+Snapshot of the Claude Doc tab "Part 3 — Implementation plan", 2026-10-25.
+
+## Summary
+
+Castle Control is built in a new repo by Codex and Claude, working in pairs.
+
+- **Seven milestones, 30 work packages.** Each work package is one builder session with a named reviewer from the other vendor. One director session owns the plan, the reviews and the merges.
+- **Order.**
+  - M0 lays the foundations and **proves the Twitch connection on a real channel first**, because none of Shadowrunr's Twitch code has met the real service.
+  - The Gatehouse comes next: every other module reads chat only after its verdict.
+  - Then the Lot Chamber and the Beacons.
+  - The Map Room comes last, because it alone needs Twitch's review and a hosted service.
+- **The first usable cut is M0 to M2.** It gives a desktop app that protects the room in shadow mode, reads it, and runs verifiable draws on stream. That is enough for a public demo on the Overlord sandbox.
+- **Definition of done for the product:**
+  - every module passes its own exit on a real test channel;
+  - every gate is green at zero, and each was proven red once;
+  - the UI meets the fidelity contract in Part 2;
+  - the safety defaults in Part 1 are enforced in code, not only described.
+
+The plan names files, identifiers and acceptance criteria tightly enough that two builders working in parallel cannot drift apart. Where it decided an open question for the owner, the decision is listed next, with how to reverse it.
+
+## Decisions taken
+
+Part 1 left six questions and one comment open. The plan proceeds on the defaults below. Each is cheap to reverse before the milestone that first depends on it.
+
+| # | Question | Decision | Reverse before |
+| --- | --- | --- | --- |
+| D1 | Who runs the Extension service | One shared, stateless service we host, plus documented self-hosting | M4 |
+| D2 | Live moderation engine default | Rules plus a local model. A cloud key is opt-in, with a plain notice | M1, work package 1.3 |
+| D3 | Overlord's urn and hex map | Shipped in the new repo as data templates. Overlord adopts the toolkit later, as its first external user | M2 |
+| D4 | Licence | Apache-2.0, the same as Shadowrunr OS, so code can be copied with notice | M0, work package 0.1 |
+| D5 | Platforms | Twitch only for v1. The bridge is one crate behind one boundary, with no second-platform abstraction yet | After v1 |
+| D6 | Sequencing against the Shadowrunr v2 rebuild | An independent repo. Code is copied and adapted with provenance, never shared as a cross-repo dependency. Shared crates are extracted later, only if both stabilise | M0 |
+| D7 | Ban autonomy (the open comment in Part 1) | A ban needs a human click by default. A streamer may turn on auto-ban per rule, only for an armed, pattern-based rule, after a logged acknowledgement, and only under a scoped, expiring grant with a ceiling of bans per hour and a circuit breaker back to human click. A classifier-only rule can never ban alone | M1, work package 1.1 |
+| D8 | Desktop platforms | Windows first, the owner's machine with OBS. macOS and Linux builds join CI in M6 | M6 |
+| D9 | Name | "castle-control" is the working repo and product name. A trademark search runs before public release | M6 |
+
+## Repo shape
+
+The repo is one Rust workspace plus one pnpm workspace, the same layout as Shadowrunr OS. Each module is a crate that plugs into the core in four ways:
+
+- it subscribes to post-verdict events;
+- it adds methods to the one contract table;
+- it emits typed stream events;
+- it ships its templates as data.
+
+```
+castle-control/
+  crates/
+    cc-types       contract types (schemars) and the one method table
+    cc-store       SQLite, append-only JSONL ledgers, retention and purge
+    cc-twitch      the bridge: device login, keyring, EventSub WebSocket, Helix, rate limits
+    cc-obs         obs-websocket v5 client and the localhost overlay server
+    cc-engine      LLM wrapper: fast path (HTTP, local model), slow path (CLI), cost ledger
+    cc-gatehouse   moderator: verdict pipeline, gate, governor, rules, classifier, herald, drill
+    cc-lots        lottery: pools, seal, drand client, cast, writ
+    cc-beacons     event intake, intensity engine, design packages
+    cc-maproom     Extension studio: design data, templates, test stages
+    cc-core        the local service: axum on loopback, /rpc and /events, module registry
+    cc-ebs         the hosted Extension service (its own binary and deploy)
+    cc-verify      command-line writ verifier
+  apps/
+    desktop        Tauri 2 shell + React 19 UI (the four chambers)
+    overlay        OBS browser-source bundle, served by cc-core
+    extension      Twitch Extension shell bundle (reviewed once per shell version)
+    site           the landing page (static)
+  packages/
+    contract       generated TS types and validators, drift gate
+    tokens         token source -> CSS variables + typed mirror
+    ui             castle components: rampart, chambers column, panel, rule table, chips, mark
+    renderer       design-package renderer shared by overlay and extension
+    verifier-web   single-file writ verifier for viewers
+  templates/       overlord-urn, war-table, and the generic templates, as data
+  prototype/       the winning prototype, read-only reference
+  docs/            PLAN, ADRs, safety policy, CONTRIBUTING, SECURITY
+```
+
+**Copied from Shadowrunr OS** (Overlord repo, commit `7e4b6f8`). Each copied file carries a header naming its source path and commit, and the repo's NOTICE credits Shadowrunr OS.
+
+| Source | Size | Becomes | Changes |
+| --- | --- | --- | --- |
+| `crates/shadowrunr-daemon/src/platform/twitch/` (auth, eventsub, helix, store, mod) | about 1,550 lines plus 890 lines of tests | `cc-twitch` | Widen scopes and subscriptions per module. Make the keyring cross-platform. Resubscribe after a drop and mark the gap. Honour Ratelimit-\* headers |
+| `crates/shadowrunr-daemon/src/moderator/` (rules, mod, lane, store) | about 1,370 lines plus 830 lines of tests | `cc-gatehouse` | Keep the rule model, shadow and armed, strikes, the fenced batched classifier and the ledger. Leave `voice.rs` behind, because it is show-specific |
+| `crates/shadowrunr-engine/src/` (admission, api, claude\_cli, alt\_cli, ladder, ledger, limits, model, stream, health) | the whole crate | `cc-engine` | Reorder backends so the live lane is HTTP or a local model, and the CLI is the slow lane only |
+| The daemon's `/rpc` and `/events` server, with resume by sequence (`crates/shadowrunr-daemon/src/server.rs`) | — | `cc-core` | Same protocol; methods come from the module registry |
+| `packages/contract/scripts/` (codegen, check, generate) | — | `packages/contract` | Unchanged pipeline: Rust types to JSON Schema to TS types and ajv validators |
+| `packages/stage-kit/src/` (pure reducer, timed slots, playback) | chosen by the work package 0.4 inventory | `packages/renderer` | Only the pure parts; no show-specific scenes |
+
+The pinned stack is the same as Shadowrunr's: Tauri 2.12, React 19.3, Vite 8, TypeScript 6, axum 0.8, tokio, rusqlite 0.38, schemars 1.2, ajv 8, vitest 5.
+
+## How Codex and Claude execute
+
+**Roles.**
+
+- **Director.** One Claude session, facing the owner. It owns this plan, writes each builder brief, reviews every diff, runs the gates and merges. It never delegates a judgement.
+- **Builder.** One session per work package, either Codex or Claude. The default split puts Codex on protocol-heavy Rust (the bridge, the draw engine, the Extension service) and Claude on the UI port, the engine wrapper, the Steward and the consensus work. The director may swap any package.
+- **Reviewer.** A session from the *other* vendor reads the diff against the package's acceptance criteria before the director does, so no package is reviewed only by the model family that wrote it.
+
+**Flow for each work package:**
+
+1. **Brief.** The director writes it from this tab: files in scope, acceptance criteria, gates, the doc surface it owns, and the contract identifiers it touches, copied verbatim.
+2. **Build.** The builder works on a branch `wp/<id>-<slug>` and opens a PR. If something is unclear, it returns a question instead of guessing.
+3. **Review.** The reviewer posts a verdict: pass, or a list of defects, each with a file and line.
+4. **Merge.** The director re-runs the gates, reads the diff, and merges or sends it back.
+
+**Repo law** (pasted into every brief):
+
+- Commit only files you touched: never `git add -A`, never stash, never `--no-verify`.
+- No credentials in code, config, logs, fixtures or test output. Twitch tokens and API keys live in the OS keychain and are referenced by label only.
+- A spawned LLM CLI runs with an explicit tool allowlist and the user's own sign-in. Never use `--dangerously-skip-permissions`. Never read, copy or inject credentials.
+- Real chat never becomes a fixture. Test data is generated and labelled simulated.
+- Every value that crosses a boundary is parsed by its schema in one place.
+
+**Live-test rules:**
+
+- Live tests run only on the owner's test channel. Armed actions only ever target the owner's own test accounts.
+- No armed action reaches a real viewer until the M1 exit is met and the owner signs off in writing.
+- An Extension build reaches only allowlisted accounts until the owner approves submission.
+
+**Done for a work package:**
+
+- every acceptance criterion is checked off with evidence (a test name, a command and its output, or a screenshot);
+- the gates are green;
+- the reviewer's verdict is pass;
+- the doc surface the package owns is updated.
+
+## Milestones
+
+| Milestone | Delivers | Depends on | Exit |
+| --- | --- | --- | --- |
+| **M0 Foundations and live spike** | The repo, the gates, the contract, the core service, the Twitch bridge proven live, and the desktop shell in the Castle Control design | — | On a real test channel: device login, live chat in the app, one shadow verdict, one armed timeout on a test account, and one OBS browser source the app created |
+| **M1 Gatehouse** | The AI moderator: verdict pipeline, gate, governor, rules, classifier, the Herald's chart, the recorder and the drill | M0 | A two-hour test stream in shadow mode has every decision in the ledger. The drill reproduces the live decisions on the recording. Owner sign-off unlocks armed mode |
+| **M2 Lot Chamber** | Verifiable draws with the guardrails and an on-stream draw | M1 | A draw on the test channel. Its writ verifies independently in the web verifier and the command-line verifier |
+| **M3 Beacons** | Contribution events to intensity to an OBS visual, the asset designer, and art through Leonardo | M1 | A simulated 50-sub gift bomb and a real test cheer both move the live visual in OBS |
+| **M4 Map Room** | The Extension shell, the hosted service, the studio and the test ladder | M1, plus Twitch's answer on policy 4.9 | The war-table template runs in Hosted Test for allowlisted accounts. A design change needs no new review |
+| **M5 Steward** | The co-pilot across all four chambers | M1 to M4 for its tools; it can start after M2 | Each chamber accepts a Steward writ that the streamer seals or tears up. Nothing changes without a seal |
+| **M6 Release** | Signed installers for three platforms, the landing site, docs, and the pre-release checks | All | The release checklist is green (see Part 3, work package 6.3) |
+
+**First usable cut: M0, M1 and M2.** A streamer gets a protected and readable room plus fair, verifiable draws, all local and free. That is the Overlord sandbox demo.
+
+## M0 — Foundations and live spike
+
+Seven work packages. Work package 0.6 can start on day one in parallel with 0.1, because it only needs a crate and a test channel.
+
+### WP 0.1 — Repo, licence and gates
+
+*Builder Codex · reviewer Claude · size S*
+
+- **Scope:**
+  - the Cargo workspace and the pnpm workspace;
+  - `LICENSE` (Apache-2.0) and `NOTICE` (credits Shadowrunr OS);
+  - `AGENTS.md` and `CLAUDE.md`, carrying the repo law from "How Codex and Claude execute";
+  - `docs/PLAN.md`, which points at this doc;
+  - `.github/workflows/ci.yml`;
+  - `prototype/`, a copy of the winning prototype.
+- **Gates, all blocking from the first commit:**
+  - `cargo fmt --check`, `cargo clippy -D warnings` and `cargo test`;
+  - `pnpm typecheck`, `pnpm lint` and `pnpm test`;
+  - TypeScript strict, plus `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`, `verbatimModuleSyntax` and `erasableSyntaxOnly`;
+  - an import-boundary and cycle check;
+  - hygiene: no `any`, no `as unknown as`, no raw `keydown` listener, no swallowed catch;
+  - a 400-line file cap;
+  - a secrets scan.
+- **Acceptance:**
+  - every gate prints how many files it walked, and exits non-zero when it walked none;
+  - each gate is proven red once on a seeded violation, and the evidence is logged in the PR;
+  - CI runs on Windows.
+- **Doc surface:** `AGENTS.md` and `docs/PLAN.md`.
+
+### WP 0.2 — Contract and core service
+
+*Builder Claude · reviewer Codex · size M*
+
+- **Scope:**
+  - `cc-types`: the method table, `StreamEvent`, branded ids and the error envelope;
+  - `packages/contract`: the copied codegen, `check` and `generate` scripts;
+  - `cc-core`: axum on `127.0.0.1` with `POST /rpc` and `GET /events` (WebSocket), resume by `seq`, and the module registry trait.
+- **Acceptance:**
+  - one method table generates the Rust dispatch, the JSON Schema and the TS types and validators;
+  - the drift gate fails when a generated file is stale;
+  - `JSON.parse` exists only in the contract package's door;
+  - an `/events` client that reconnects with `since_seq` receives every missed event in order, or a `resync` event once the buffer has rolled over;
+  - one error envelope with at most 10 codes (see Contract identifiers);
+  - the service binds to loopback only, and a test proves a non-loopback bind is refused. Loopback is still a door, so every /rpc and /events call carries a per-launch session token that only the desktop shell holds. The OBS overlay is served from a separate, read-only origin with no route to /rpc. Method names form three sets (declared, registered, invoked) with a parity gate. Event kinds are a closed registry with its own parity gate. Events are invalidation, and the client refetches from the authoritative read. The drift gate counts what it generated and fails on zero or on orphans.
+
+### WP 0.3 — Store, ledgers and retention
+
+*Builder Codex · reviewer Claude · size S*
+
+- **Scope:** `cc-store`. It holds SQLite migrations, append-only JSONL ledgers (`decisions`, `draws`, `engine`), the retention cap, `forget_user(login)` and `purge_all()`.
+- **Acceptance:**
+  - a ledger line is never rewritten, and a test proves append-only;
+  - `forget_user` deletes a viewer's recordings and their id-to-name mapping, across an inventory of every store (recordings, rollups, caches, exports, writs). Ledgers reference viewers by Twitch user id, never by name or message text, so they stay intact. Each ledger line is canonically serialised with a per-record digest, and carries both event time and record time;
+  - `purge_all` runs when the bridge reports a revoked authorization;
+  - the retention cap is a setting, and recordings older than it are deleted by a scheduled job. A value below the floor is refused, not clamped. Every purge offers a dry-run preview: the same predicate, with counts and their as-of time.
+
+### WP 0.4 — UI inventory, tokens and the component kit
+
+*Builder Claude · reviewer Codex · size M*
+
+- **Scope:**
+  - a read-only inventory of `prototype/`, steps Q0 and Q1 of the port contract: every visual component and its duplicates, token reality, state machines, keymaps and URL contracts;
+  - `packages/tokens` (one source, generating CSS variables and a TS mirror);
+  - `packages/ui`: rampart, chambers column, page header, numbered panel, rule table, verdict and status chips, ink buttons, mark, empty states and the theme toggle;
+  - a kit page that renders the real components.
+- **Acceptance:**
+  - token values are byte-equal to `prototype/tokens.css`;
+  - each rejected token candidate is listed with its reason;
+  - every duplicate in the inventory resolves to one component;
+  - the kit page at 1440x900 matches the prototype's shell with zero deviations on paper, inks, type and rules, in both themes.
+
+### WP 0.5 — Desktop shell
+
+*Builder Claude · reviewer Codex · size M*
+
+- **Scope:** `apps/desktop`. It covers:
+  - the Tauri 2 shell;
+  - the four chamber routes with empty states;
+  - the rampart wired to `status.get` and `bridge.status`;
+  - one keymap registry (1–4 and `/`) with a conflict check;
+  - a fixture mode that loads simulated data with a visible "simulated" label.
+- **Acceptance:**
+  - ON AIR, Twitch, OBS and the Gatehouse chip render on every route from live events;
+  - fixture mode can never be mistaken for live;
+  - the app opens the four chambers by keyboard alone.
+
+### WP 0.6 — Twitch bridge port
+
+*Builder Codex · reviewer Claude · size M*
+
+- **Scope:** `cc-twitch`, copied and adapted from `platform/twitch/`. It covers:
+  - device-code login;
+  - a cross-platform keyring (Windows native, macOS keychain, Linux secret service);
+  - token refresh;
+  - EventSub WebSocket with keepalive, reconnect and resubscribe;
+  - gap events;
+  - a Helix client that reads the Ratelimit-\* headers;
+  - the scope set as a table, one row per module.
+- **Acceptance:**
+  - the tests from the source are ported and pass;
+  - a dropped socket resubscribes every subscription and emits `bridge.gap {from, to}`;
+  - tokens never appear in logs (a test greps captured logs);
+  - token refresh runs ahead of expiry with jitter, as a single flight; code asks the vault to make a call and never receives the token; SECURITY.md records the keyring's custody class (anything running as the same user can read it); EventSub topics are packed into connections that have room, each with its own state machine; a revoked token triggers `purge_all`.
+
+### WP 0.7 — Live spike
+
+*Builder Codex · reviewer Claude · size S · the owner joins live*
+
+- **Scope:**
+  - a `spike` command in `cc-core`;
+  - `cc-obs`: an obs-websocket v5 client with `CreateInput` for a browser source on `http://localhost:<port>`.
+- **Acceptance, run on the owner's test channel and recorded in `docs/spike-log.md`:**
+  - device login completes;
+  - chat typed on the channel appears in the app;
+  - one shadow verdict is logged;
+  - one armed timeout lands on the owner's test account and is undone;
+  - OBS shows a browser source the app created;
+  - a forced socket drop recovers with a gap event.
+- **Gate.** M1 does not start until this spike passes.
+
+## M1 — Gatehouse
+
+Every other module reads chat only after the Gatehouse's verdict, so this milestone carries the product's safety. Its order of layers is fixed:
+
+1. safety detection;
+2. the deterministic rules;
+3. the classifier;
+4. the action gate.
+
+**Safety does not live in the prompt.** It lives in a deterministic gate at the last door before any action.
+
+### WP 1.1 — Verdict pipeline and the action gate
+
+*Builder Claude · reviewer Codex · size L*
+
+- **Scope.** `cc-gatehouse`, starting from the copied rule model. It covers:
+  - **Order.** Ingest, then the disclosure detector, then the rules pre-filter, then the fenced classifier, then the action gate, then the verdict.
+  - **Disclosure detector.** It runs before any batching, dedupe or flood collapse, and is biased to recall.
+  - **Authority.** Moderator and broadcaster status come only from Twitch's verified metadata. Missing metadata counts as the lowest rank.
+  - **Shadow and armed.** These are grants checked by the gate, never a bypass of it.
+  - **The ban queue.** It is durable and survives a restart. A person decides on the real message, never a summary. A timeout on the decision means hold, never proceed.
+  - **Undo, petitions and the persistence penalty.** The penalty escalates on tagged attempts only.
+  - **A care state.** It is kept outside the model and fails toward care.
+  - **The decision ledger.** It is written through one chokepoint.
+- **Acceptance:**
+  - A message that discloses self-harm or crisis is never deleted, timed out or banned automatically. It reaches the streamer. A seeded bank proves this, and the result is reported with its n.
+  - Rail-class rules cannot be switched off; only their delivery is configurable.
+  - An unrecognised verdict counts as withheld.
+  - A gate that cannot run takes no action. "Gate skipped" and "gate found nothing" are separate outcomes, with per-path coverage in the ledger summary.
+  - Auto-ban (D7) works only under a scoped, expiring grant with a ceiling of bans per hour and a circuit breaker that trips back to human click. It is never available to a classifier-only rule.
+  - A chat line claiming "mod here" gains nothing.
+
+### WP 1.2 — Gate: delay, held queue and Shield Mode
+
+*Builder Codex · reviewer Claude · size M*
+
+- **Scope:**
+  - the chat delay (`gatehouse.delay.set`);
+  - `automod.message.hold` v2 and resolving held messages;
+  - Shield Mode on and off;
+  - `channel.moderate` v2, so actions taken in Twitch's own UI enter the ledger;
+  - `channel.suspicious_user.message`.
+- **Acceptance:**
+  - The hold budget is written as a decomposition (Twitch's delay, scheduling wait, admission, rules, model and gate), and the measured p95 of each stage is recorded.
+  - An action taken in Twitch's UI appears in the gate roll within 2 s.
+  - Ban, unban and warn honour Twitch's rate limits, and a limited call surfaces `rate_limited` with `retry_after_ms`.
+
+### WP 1.3 — Governor
+
+*Builder Codex · reviewer Claude · size S*
+
+- **Scope:**
+  - room tiers S to XL from chatters in the last 10 minutes;
+  - hysteresis;
+  - room modes on timed leases;
+  - yielding to a human: when a moderator changes a chat setting in Twitch, the governor stops touching that setting until its lease ends.
+- **Acceptance:**
+  - a simulated room oscillating at a tier border switches at most once per hysteresis window;
+  - every lease ends by itself;
+  - the governor never acts on a person.
+
+### WP 1.4 — Engine and the classifier lanes
+
+*Builder Claude · reviewer Codex · size M*
+
+- **Scope.** `cc-engine`, ported from `shadowrunr-engine`. It covers:
+  - **A role-class table.** Call sites name a class, never a model. The classes are live, near-live, batch and offline.
+  - **Default (D2).** A local model on an OpenAI-compatible endpoint (Ollama or LM Studio). A cloud key is opt-in, with a plain notice.
+  - **Admission.** A model is admitted to a class on its tail latency and longest silence.
+  - **A capability floor** measured for structured verdicts on small local models.
+  - **A labelled fallback ladder:** model, then rules only, then an honest refusal. A rule verdict never looks like a model verdict.
+  - **One spawn door** for the CLI slow lane:
+    - an allowlisted environment;
+    - the prompt over stdin;
+    - a neutral working directory;
+    - `probe()` for installed, version and signed in;
+    - a termination ladder with a Windows Job Object;
+    - an orphan sweep at start.
+- **Acceptance:**
+  - the CLI never runs on the live lane;
+  - a planted sentinel secret is not visible to the child;
+  - the engine ledger records the class, the model selected, the model served and the cost for every call;
+  - with no model available, live moderation continues on rules alone, labelled as rules-only.
+
+### WP 1.5 — The Herald's chart
+
+*Builder Claude · reviewer Codex · size M*
+
+- **Scope:**
+  - opinion directions from messages that passed the gate, built from keyword seeds the streamer sets, an emote lexicon tagged by meaning, and local embeddings;
+  - a sliding window with 3-minute deltas;
+  - filters (all, emotes, text, a single emote).
+- **Acceptance:**
+  - a barred message never counts;
+  - the chart has no code path to any action;
+  - load shedding counts what it shed and shows the count;
+  - the series is stable under a seeded replay.
+
+### WP 1.6 — Recorder and the drill
+
+*Builder Codex · reviewer Claude · size M*
+
+- **Scope:**
+  - **The recorder.** It records the streamer's own channel from install day on, under retention.
+  - **Imported logs.** Each one carries its source on every result.
+  - **The drill.** It replays a recording through a rule set, and diffs two rule sets.
+  - **The seeded simulated-chat generator.** It is adapted from `shadowrunr-sim` and labelled simulated.
+  - **A rule test bank** with near-misses: roasts, dark jokes and quotes.
+  - **A blind judge** for classifier evaluation, from another model tier.
+- **Acceptance:**
+  - Results use named states: acted, not provoked, not evaluable, judge pending, judge void and engine failed. Passes are counted directly.
+  - Every run carries an instrument hash over the rules, bank, judge and prompts, and runs with different hashes are never merged.
+  - Over-moderation is reported on its own axis.
+  - The drill writes nothing to the live ledger, and its output is labelled simulated.
+  - Gaps in a recording show as gaps.
+
+### WP 1.7 — Gatehouse page
+
+*Builder Claude · reviewer Codex · size M*
+
+- **Scope.** The chamber page from Part 2:
+  - the room hero;
+  - the Herald's chart;
+  - the live room with Pass, Hold and Bar;
+  - at the portcullis;
+  - the rules table with armed and watching;
+  - the gate roll with Undo and Petition;
+  - the drill as a nested page.
+- **Acceptance:**
+  - the page meets the fidelity contract;
+  - the live room stays virtualised at 4,200 lines;
+  - the ban queue shows the real message and the rule, with Ban and Dismiss.
+
+**M1 exit.** All of these must hold:
+
+- A two-hour test stream in shadow mode has every decision in the ledger.
+- The drill over its recording, under the same instrument hash, reproduces the live decisions.
+- The disclosure bank routes every case to a human, reported with its n.
+- The owner signs off in writing before any rule is armed against real viewers.
+
+## M2 — Lot Chamber
+
+### WP 2.1 — Draw engine and guardrails
+
+*Builder Codex · reviewer Claude · size M*
+
+- **Scope.** `cc-lots`, covering:
+  - pools: chatters, followers, subscribers, redeemers and keyword typists, read only from post-verdict events;
+  - entry weights, winner count, cooldowns and cohort caps;
+  - the draw content types;
+  - `check_draw`, the guardrail policy as one pure function.
+- **Acceptance:**
+  - A barred message never creates a lot, and a test proves it.
+  - `check_draw` returns `blocked`, `warn` or `ok`, with reasons, for every row of Part 1's giveaway table:
+    - paid entry or paid weight on a prize draw is `blocked`;
+    - a total prize value over $5,000 is `blocked` until registration is confirmed;
+    - subscriber-only entry, or points with no free path, is `warn`;
+    - a draw with no prize is `ok`.
+  - Unlocking a blocked setting writes a risk acknowledgement to the `draws` ledger.
+  - A cohort cap and a cooldown hold in a 10,000-run property test. Any non-equal weight follows a concave curve, and the page publishes the weight table along with how many newcomers outweigh the heaviest entrant.
+
+### WP 2.2 — Seal, beacon, cast and writ
+
+*Builder Codex · reviewer Claude · size M*
+
+- **Scope:**
+  - **Seal.** Freezing the roll writes the canonical entry list and its SHA-256, which is the seal.
+  - **Beacon.** A drand quicknet client picks the first round after the seal plus a margin, then fetches that round and verifies its signature.
+  - **Cast.** Winners come from seeded rejection sampling over the round value, the seal and each handle.
+  - **Writ.** The proof bundle is written as JSON.
+  - **Verifiers.** `cc-verify` on the command line, and `packages/verifier-web` as one HTML file.
+  - **Offline fallback.** Without a network, the draw falls back to commit-and-reveal labelled "streamer-controlled".
+- **Acceptance:**
+  - the same writ yields the same winners in Rust and in the web verifier, across 1,000 generated writs;
+  - a writ whose round signature fails is rejected;
+  - the animation is fed only the cast result;
+  - no code path lets a winner change after the seal.
+
+### WP 2.3 — Lot Chamber page and the draw on stream
+
+*Builder Claude · reviewer Codex · size M*
+
+- **Scope:**
+  - the chamber page from Part 2: the roll hero and panels 1.1 to 1.5;
+  - the writ as a nested page;
+  - the on-stream draw shapes (urn, wheel, deck, ballot box) in `packages/renderer`;
+  - the Twitch disclaimer overlay;
+  - the `overlord-urn` template, which draws 3, 7 or 15 lots by room tier.
+- **Acceptance:**
+  - the page meets the fidelity contract;
+  - the roll's dot field stays virtualised at 10,000 lots;
+  - a draw runs end to end on the test channel and its writ verifies;
+  - a prize draw cannot start without the disclaimer and the rules template.
+
+## M3 — Beacons
+
+### WP 3.1 — Event intake and intensity
+
+*Builder Codex · reviewer Claude · size M*
+
+- **Scope:**
+  - **Subscriptions:** `channel.cheer` and `channel.bits.use` (deduped), subscribe, gift and resub, Hype Train v2, channel points v2, charity, goals and Custom Power-ups.
+  - **The intensity engine:** each visual's ranges map totals onto 0 to 1, with a decay rule.
+  - **`beacons.simulate`** for test bursts.
+- **Acceptance:**
+  - one cheer that arrives as both events counts once;
+  - decay is deterministic under a fake clock;
+  - money never reaches a draw, a vote, a rank or a moderation decision (a test asserts the crate's dependency direction).
+
+### WP 3.2 — Design packages, renderer and OBS delivery
+
+*Builder Claude · reviewer Codex · size M*
+
+- **Scope:**
+  - a design-package schema of layers (image, shape, text, particle preset) whose properties bind to intensity;
+  - `packages/renderer`, CSS-first and built for OBS's embedded Chromium;
+  - `apps/overlay`, served by `cc-core` on `http://localhost` with a strict CSP;
+  - `obs.source.create`, which busts the cache with the package hash.
+- **Acceptance:**
+  - one bundle renders the same package in OBS and in the Extension test harness;
+  - the overlay loads no remote resource; design packages are data-only by default; a package with scripts runs only on the overlay's own origin, which has no route to /rpc; a package update that widens its declared privileges waits for the streamer's consent;
+  - a package change reaches OBS within 1 s without a manual refresh;
+  - the renderer does no per-frame DOM rebuild when intensity is unchanged.
+
+### WP 3.3 — Beacons page and asset designer
+
+*Builder Claude · reviewer Codex · size M*
+
+- **Scope:** the chamber page from Part 2, made of:
+  - the beacon cards;
+  - the kindling curve editor, with decay and weighting;
+  - test fire, including the 50-sub bomb;
+  - the event feed;
+  - Copy browser-source URL.
+- **Acceptance:**
+  - the page meets the fidelity contract;
+  - dragging a curve point updates the live preview and OBS;
+  - the feed stays virtualised at 600 events.
+
+### WP 3.4 — Leonardo client
+
+*Builder Claude · reviewer Codex · size S*
+
+- **Scope:** an image client behind a provider trait. It covers:
+  - a bring-your-own key in the OS keychain;
+  - `public:false` on every request;
+  - an anchor image, then image references for a matching set;
+  - remove-bg for transparent assets;
+  - each call's cost written to the `engine` ledger;
+  - generated art labelled as generated in the asset list.
+- **Acceptance:**
+  - with no key, the feature is hidden and nothing else breaks;
+  - the key never appears in logs or the ledger;
+  - a recorded fixture replaces the network in tests.
+- **Owner check:** read Leonardo's API terms on ownership before AI art ships in a public Extension.
+
+## M4 — Map Room
+
+### WP 4.0 — Ask Twitch first
+
+*Owner action · the director drafts it · size S*
+
+- **The question to Twitch Extensions support.** One reviewed shell would render streamer-authored design data: layout, components and art, with no executable code. Does that pass, and does per-streamer branding fit policy 4.9?
+- **Decision.** If the answer is no, the fallback ships: generic art in the streamer's colours only.
+- **Gate.** WP 4.1 starts only after the answer, so a rejection cannot revoke the client ID.
+
+### WP 4.1 — Extension shell
+
+*Builder Claude · reviewer Codex · size L*
+
+- **Scope:** `apps/extension`. Everything is bundled: no eval and no remote scripts. It covers:
+  - the shared renderer;
+  - viewer controls (vote, pick a tile, join a side);
+  - viewer JWT handling;
+  - reading design data from the 5 KB configuration segment or from our service;
+  - images from the one allowlisted host only.
+- **Templates as data:**
+  - the hex map (the `war-table` template);
+  - a choice board;
+  - a viewer card;
+  - the draw;
+  - a contribution meter.
+- **Acceptance:**
+  - a static check proves the bundle has no `eval`, no `new Function` and no remote script;
+  - every template renders from data alone;
+  - viewer content follows policy section 7: a Twitch ID is required, the streamer approves it, and the username is shown;
+  - Bits never buy an entry, a ticket or a random outcome.
+
+### WP 4.2 — The hosted Extension service
+
+*Builder Codex · reviewer Claude · size M*
+
+- **Scope:** `cc-ebs`, a stateless Rust service. It:
+  - holds the Extension secret;
+  - verifies viewer JWTs;
+  - signs PubSub broadcasts and coalesces state into snapshots of at most 5 KB, at most one per second per channel;
+  - serves design data;
+  - receives Extension Bits events by webhook.
+- **Also in scope:** deploy scripts for the shared service, and a self-host guide.
+- **Acceptance:**
+  - a load test at 100 updates a second per channel emits at most one broadcast per second;
+  - the secret is read from the host's secret store, never from a file in the repo;
+  - the service keeps no viewer data beyond what a request needs.
+
+### WP 4.3 — Map Room page and the test ladder
+
+*Builder Claude · reviewer Codex · size M*
+
+- **Scope:** the chamber page from Part 2: the map table, pieces, orders, templates, the spyglass and test status. It also covers:
+  - the test ladder (sand table, then muster, then proclaimed);
+  - the operator modes (human, AI streamer, or AI proposes and the human approves).
+- **Acceptance:**
+  - the page meets the fidelity contract;
+  - the war-table template runs in Hosted Test for allowlisted accounts;
+  - a design change reaches viewers with no new review;
+  - the AI operator can only propose, never act, unless the streamer sets it to drive.
+
+## M5 — Steward
+
+### WP 5.1 — Writ protocol and the slow lane
+
+*Builder Claude · reviewer Codex · size M*
+
+- **Scope:**
+  - `steward.ask` returns a writ: a typed configuration change for one chamber, shown as a diff;
+  - `steward.writ.seal` applies it, and `steward.writ.tear` discards it;
+  - the engine's slow lane runs the user's own Claude Code CLI headless, with an explicit tool allowlist, and falls back to an API key or a local model.
+- **Acceptance:**
+  - nothing changes without a seal;
+  - a writ that fails its chamber's schema is shown as an error and never applied;
+  - the app never reads, stores or passes credentials, and a test asserts that the CLI's environment and arguments carry none; the child runs read-only with a scoped tool allowlist, plus a denylist that wins, and its stance is verified from the child, so a silent downgrade fails the call; what each CLI version supports is kept as dated data;
+  - every call's cost lands in the `engine` ledger;
+  - the product name and UI never say "Claude Code", while "Powered by Claude" is allowed.
+
+### WP 5.2 — The Steward in every chamber
+
+*Builder Claude · reviewer Codex · size M*
+
+- **Scope:** one writ schema per chamber. Examples:
+  - "Run a draw for subscribers' questions, 3 winners" (the Lot Chamber);
+  - "Arm the links rule, keep caps watching" (the Gatehouse);
+  - "A gold frame that glows harder with each gift sub" (the Beacons; may call the Leonardo client);
+  - "A choice board with 3 options every 60 s" (the Map Room).
+- **Acceptance:**
+  - each example produces a valid writ against the simulated channel;
+  - a writ that would unlock a blocked guardrail is refused with the guardrail's reason.
+
+## M6 — Release
+
+### WP 6.1 — Packaging and updates
+
+*Builder Codex · reviewer Claude · size M*
+
+- **Scope:**
+  - Tauri bundles for Windows, macOS and Linux;
+  - code signing;
+  - a signed updater feed;
+  - CI release builds for all three platforms.
+- **Acceptance:**
+  - a clean machine installs, logs in and opens all four chambers;
+  - an update from the previous build keeps settings, ledgers and keychain entries. Every release candidate is rehearsed as an update from the previous release, and a failed update leaves the old version bootable. The release job lists the expected artifacts for each OS and architecture, so a skipped job cannot pass as green. The installed tree is checked against a manifest and launched. Each platform has a written line saying whether it is signed. The version has one source, with a drift gate.
+
+### WP 6.2 — The landing site
+
+*Builder Claude · reviewer Codex · size M*
+
+- **Scope:** `apps/site`, ported from `prototype/index.html` onto the shared tokens. It fixes the wordmark defect and links to the downloads, docs and source.
+- **Acceptance:**
+  - the page meets the fidelity contract at 1920x1080, 1280x800 and 390x844;
+  - the intro hands over control within 4 s and can be skipped;
+  - reduced motion gets a calm version;
+  - the honesty labels are present.
+
+### WP 6.3 — Release checklist
+
+*The director, with the owner · size S*
+
+- [ ] A trademark search on "Castle Control" is done, and the name is kept or replaced.
+- [ ] A lawyer has reviewed the official-rules template and the guardrail table.
+- [ ] Twitch's answer on Extension policy is on file, and the shell is submitted for review.
+- [ ] Leonardo's terms are confirmed for public use of AI art.
+- [ ] The privacy notice covers local chat storage, retention, forget and purge, and the cloud opt-in.
+- [ ] Docs cover install, login, each chamber, self-hosting the Extension service, and the verifier.
+
+## Contract identifiers
+
+These names are the wire contract. A package that needs a new one adds it to `cc-types` in its own PR before building against it. Castle words never appear in identifiers.
+
+**Conventions:**
+
+- **Method names** are `<module>.<noun>.<verb>`, in lower camel case.
+- **Fields** are snake\_case.
+- **Time** is an RFC 3339 UTC string. Durations are integers named `*_ms` or `*_s`. Twitch ids, drand round numbers and seeds travel as strings, because they can exceed JavaScript's safe-integer range.
+- **Absent values: omit the key.** Use `Option` with skip-if-none in Rust and an optional property in TS. Never write `null`, and never `0` or `""` for unknown. Two packages coding a missing value must not drift.
+- **Branded ids**, each minted at one door:
+  - `MessageId` (Twitch's);
+  - `DecisionId`, `WritId` and `DrawRunId` (ULIDs);
+  - `RuleId`, `DrawId`, `VisualId` and `DesignId` (slugs the streamer can read).
+
+| Module | Methods |
+| --- | --- |
+| core | `status.get`, `settings.get`, `settings.set`, `auth.twitch.start`, `auth.twitch.status`, `auth.twitch.revoke`, `obs.status.get`, `obs.source.create`, `store.forgetUser`, `store.purgeAll` |
+| gatehouse | `gatehouse.rules.list`, `gatehouse.rules.upsert`, `gatehouse.rules.setMode`, `gatehouse.ban.confirm`, `gatehouse.ban.dismiss`, `gatehouse.decision.undo`, `gatehouse.petition.resolve`, `gatehouse.held.resolve`, `gatehouse.delay.set`, `gatehouse.shield.set`, `gatehouse.lease.end`, `gatehouse.consensus.get`, `gatehouse.drill.run`, `gatehouse.drill.diff`, `gatehouse.recording.import` |
+| lots | `lots.draw.list`, `lots.draw.upsert`, `lots.draw.check`, `lots.roll.lookup`, `lots.roll.seal`, `lots.cast`, `lots.writ.get` |
+| beacons | `beacons.visual.list`, `beacons.visual.upsert`, `beacons.curve.set`, `beacons.simulate`, `beacons.source.url` |
+| maproom | `maproom.design.get`, `maproom.design.upsert`, `maproom.stage.get`, `maproom.turn.run` |
+| steward | `steward.ask`, `steward.writ.seal`, `steward.writ.tear` |
+
+**Stream events on `/events`.** Every event carries `seq`, `at` and `kind`:
+
+- **core:** `bridge.status`, `bridge.gap`, `obs.status`, `chat.message`;
+- **gatehouse:** `gatehouse.verdict`, `gatehouse.decision`, `gatehouse.room`, `gatehouse.consensus`;
+- **lots:** `lots.roll`, `lots.sealed`, `lots.cast`;
+- **beacons:** `beacons.contribution`, `beacons.intensity`;
+- **maproom:** `maproom.turn`;
+- **steward:** `steward.writ`;
+- **resync:** `resync`, sent when the client's `since_seq` is older than the buffer.
+
+**Enums:**
+
+| Enum | Values |
+| --- | --- |
+| `Verdict` | `pass`, `hold`, `bar` |
+| `RuleMode` | `shadow`, `armed` |
+| `Action` | `warn`, `delete`, `timeout`, `ban`, `hold` |
+| `DecisionKind` | `held`, `released`, `removed`, `warned`, `timed_out`, `banned`, `ban_pending`, `mode_changed`, `undone`, `would_act` |
+| `Tier` | `s`, `m`, `l`, `xl` |
+| `RoomMode` | `slow`, `follower_only`, `emote_only`, `unique_chat` |
+| `ChatDelay` | `0`, `2`, `4`, `6` (seconds) |
+| `DrawContent` | `prize`, `question`, `idea`, `seat` |
+| `CheckResult` | `ok`, `warn`, `blocked` |
+| `RandomnessSource` | `drand_quicknet`, `streamer_commit` |
+| `DesignStage` | `local_test`, `hosted_test`, `released` |
+| `Operator` | `human`, `ai`, `ai_proposes` |
+| `EngineLane` | `live`, `batch` |
+| `ErrorCode` | `invalid`, `not_found`, `conflict`, `unauthorized`, `rate_limited`, `upstream`, `unavailable`, `blocked_by_policy`, `needs_human`, `internal` |
+
+The error envelope is `{code, message, retry_after_ms?, detail?}`. A consumer branches only on `code`.
+
+## Standards, risks and first steps
+
+**Standards the plan follows.** The acceptance criteria above come from the organisation's knowledge registry, read on 2026-10-25 before the work packages were written. Each brief names its subjects so a builder reads them before coding.
+
+| Area | Registry subjects | What they changed in this plan |
+| --- | --- | --- |
+| Moderation and safety | live-chat-moderation-and-anti-bait, live-safety-rails, hitl-approval | The fixed layer order with a deterministic last-door gate. Disclosure detection before batching. Durable ban queue. Auto-ban only under an expiring grant with a ceiling |
+| Replay and testing | simulated-audience-testing, time-travel-replay | Named result states, instrument hashes, near-miss bank, blind judge, simulated labels |
+| Engines | model-routing, live-response-latency-budgeting, agent-cli-transport, subprocess-lifecycle | Role classes instead of model names, tail-latency admission, the CLI kept to the slow lane with an allowlisted environment and a verified read-only stance |
+| Contract and events | ipc-contract, realtime-events, codegen | A session token on loopback, parity gates, ids as strings, events as invalidation |
+| Secrets and data | credential-vault, audit-logging, data-retention | Brokered calls, single-flight refresh, ledgers by id, refused retention below the floor, dry-run purges |
+| Viewer influence | audience-steering-economies | Code decides every winner, concave weights published, red lines outside any economy |
+| Extensions and release | untrusted-extension-host, release-pipeline, packaging | Data-only design packages, consent on widened privileges, rehearsed updates, installed-tree checks |
+
+**Gaps in the standards, recorded rather than improvised around:**
+
+- **Verifiable randomness.** No registry subject covers freeze, hash, beacon and seeded sampling. WP 2.2 relies on drand's published scheme, and its writ format is worth contributing back as a new technique.
+- **Weak fit.** The streaming subjects are written for an AI host speaking on stream, not a moderator tool. Treat their mapping here as weak governance, and report what does not fit.
+
+**Execution risks:**
+
+| Risk | Mitigation |
+| --- | --- |
+| The live spike fails on login, refresh or reconnect | It is the first gate. M1 waits for it, and only M0 work is spent before it passes |
+| Two builders drift on the wire | Every identifier is in Contract identifiers. A new one lands in `cc-types` first, in its own PR |
+| A local model is too weak for structured verdicts | WP 1.4 measures a capability floor. Below it, rules alone run, labelled, and the cloud opt-in is offered |
+| Twitch rejects the Extension premise | WP 4.0 asks before any build. The fallback is generic art in the streamer's colours |
+| The UI port drifts from the prototype | The fidelity exit compares screenshots at fixed sizes. The prototype is in the repo as reference, not as code |
+| Scope creep from Overlord's own needs | Overlord's urn and war table are data templates (D3). Show-specific code stays in Overlord |
+
+**First steps.**
+
+For the owner. Credentials are never pasted into chat or into the repo: each goes straight into the app or the OS keychain.
+
+- [ ] Create the empty repo `castle-control`.
+- [ ] Set up a Twitch test channel and two test viewer accounts for armed actions.
+- [ ] Register a Twitch application for the desktop app (device-code flow).
+- [ ] Enable obs-websocket v5 in OBS.
+- [ ] Install a local model runtime (Ollama or LM Studio).
+- [ ] Send the WP 4.0 policy question to Twitch now. Its answer takes the longest and gates M4.
+
+For the director:
+
+- [ ] Write the briefs for WP 0.1 and WP 0.6 and start them in parallel.
+- [ ] Copy the winning prototype into `prototype/`.
+- [ ] Book the live spike, WP 0.7, with the owner as soon as WP 0.6 merges.

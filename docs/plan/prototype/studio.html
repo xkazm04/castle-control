@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Map Room · Extension studio — Castle Control</title>
+<script>try{if(JSON.parse(localStorage.getItem('cc.state.v1')||'{}').theme==='stock')document.documentElement.setAttribute('data-theme','stock')}catch(e){}</script>
+<script src="../data/sample.js"></script><script>window.SAMPLE||document.write('<script src="sample.copy.js"><\/script>')</script>
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="app.css">
+<style>
+/* Map Room — page styles */
+.pagehead .h1::after{white-space:nowrap} /* two-word chamber name: keep the offset echo on one line */
+.sgrid{display:grid;grid-template-columns:minmax(220px,250px) minmax(0,1fr) minmax(300px,344px);gap:22px;align-items:start}
+@container pg (max-width:1130px){.sgrid{grid-template-columns:minmax(210px,240px) minmax(0,1fr)}.sgrid>.s3{grid-column:1/-1}}
+@container pg (max-width:860px){.sgrid{grid-template-columns:1fr}}
+.canvas-hero{padding:0}
+.tb{display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid var(--hair);flex-wrap:wrap}
+.tb .sw{width:22px;height:22px;border-radius:50%;border:2px solid var(--ink);cursor:pointer;padding:0;position:relative}
+.tb .sw[aria-pressed="true"]{box-shadow:0 0 0 3px var(--paper),0 0 0 5px var(--ink)}
+.canvas{position:relative;padding:8px 8px 4px}
+.canvas svg{display:block;width:100%;height:auto}
+.hexg{cursor:pointer}
+.hexg:hover polygon.base{stroke-width:3}
+.hexg:focus-visible polygon.base{stroke:var(--gules);stroke-width:3.5}
+.inspect{border-top:1px solid var(--hair);padding:8px 12px;display:flex;gap:14px;align-items:center;flex-wrap:wrap;min-height:46px}
+.inspect b.t{font:800 20px/1 var(--font-display);font-stretch:75%;letter-spacing:.04em}
+.turnbar{display:flex;align-items:center;gap:12px;padding:8px 12px;border-top:1px solid var(--hair);flex-wrap:wrap}
+.turnbar .clock{font:800 28px/1 var(--font-num);font-variant-numeric:tabular-nums;letter-spacing:-.02em;min-width:76px}
+.tal{display:flex;gap:10px;flex:1;min-width:240px}
+.tal div{flex:1}
+.tal .bar{height:10px;background:var(--tint-2);position:relative;overflow:hidden}
+.tal .bar i{position:absolute;left:0;top:0;bottom:0;mix-blend-mode:var(--blend)}
+.tal .sealed{background:repeating-linear-gradient(135deg,var(--hair) 0 4px,transparent 4px 8px)}
+.tal small{display:block;font:700 12px/1.3 var(--font-ui);letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pieces{list-style:none;margin:0;padding:0;border-top:1px solid var(--hair)}
+.pieces li{display:grid;grid-template-columns:22px 1fr auto;gap:8px;align-items:center;padding:8px 4px;border-bottom:1px solid var(--hair);min-height:48px}
+.pieces li svg{width:20px;height:20px}
+.pieces li b{display:block;font:700 13.5px/1.2 var(--font-ui)}
+.pieces li small{font-size:13px;color:var(--muted);line-height:1.25}
+.sw2{position:relative;width:38px;height:22px;border:1.5px solid var(--ink);border-radius:11px;background:transparent;cursor:pointer;padding:0}
+.sw2::after{content:"";position:absolute;left:2px;top:2px;width:15px;height:15px;border-radius:50%;background:var(--ink);transition:transform .15s}
+.sw2[aria-pressed="true"]{background:var(--ink)}
+.sw2[aria-pressed="true"]::after{transform:translateX(16px);background:var(--paper)}
+.sw2[disabled]{opacity:.45;cursor:not-allowed}
+.pvbox{border:1.5px solid var(--ink);background:var(--paper-2);position:relative;overflow:hidden}
+.pvbox.desk{aspect-ratio:5/6}
+.pvbox.mob{width:200px;aspect-ratio:9/17;margin:0 auto;border-radius:20px;border-width:3px;background:var(--paper)}
+.pv-stream{position:absolute;inset:0;background:repeating-linear-gradient(135deg,transparent 0 9px,var(--tint) 9px 10px)}
+.pv-ext{position:absolute;background:var(--card);border:1.5px solid var(--ink);border-radius:3px;box-shadow:3px 3px 0 var(--hair);display:flex;flex-direction:column;overflow:hidden}
+.desk .pv-ext{right:6px;top:6px;bottom:6px;width:68%}
+.mob .pv-ext{left:0;right:0;bottom:0;top:34%;border-radius:0;border-width:2px 0 0;box-shadow:none}
+.pv-ext .hd{display:flex;justify-content:space-between;align-items:center;padding:4px 8px;border-bottom:1px solid var(--hair);font:700 12px/1.2 var(--font-ui);letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.pv-ext .bd{flex:1;padding:6px;display:flex;flex-direction:column;gap:5px;min-height:0}
+.pv-ext svg{width:100%;flex:1;min-height:0}
+.pv-menu{display:grid;gap:4px}
+.pv-menu button{height:26px;border:1.5px solid var(--ink);background:var(--paper);font:700 12px/1 var(--font-ui);letter-spacing:.04em;text-transform:uppercase;cursor:pointer;border-radius:2px;display:flex;align-items:center;justify-content:space-between;padding:0 7px}
+.mob .pv-menu button{height:32px}
+.pv-menu button[aria-pressed="true"]{background:var(--or);color:var(--press)}
+.pv-menu button:hover{background:var(--tint-2)}
+.pv-status{font:700 12px/1.2 var(--font-ui);letter-spacing:.06em;text-transform:uppercase;display:flex;justify-content:space-between}
+.pv-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;text-align:center;font:italic 13px/1.3 var(--font-serif);color:var(--muted)}
+.pv-ext .pv-empty svg{width:56px;height:56px;flex:none;color:var(--ink-2)}
+.pv-empty b{font:700 13px/1.2 var(--font-ui);font-style:normal;color:var(--ink)}
+.ladder3{display:flex;flex-direction:column}
+.rg{display:grid;grid-template-columns:34px 1fr;gap:10px;padding:0 0 14px;position:relative}
+.rg::before{content:"";position:absolute;left:16px;top:34px;bottom:0;border-left:2px dashed var(--hair)}
+.rg:last-child::before{display:none}
+.rg .n{width:34px;height:34px;border:2px solid var(--ink);border-radius:50%;display:grid;place-items:center;font:800 15px/1 var(--font-num);background:var(--paper)}
+.rg.done .n{background:var(--ink);color:var(--paper)}
+.rg.now .n{background:var(--or);color:var(--press)}
+.rg.lock .n{border-style:dashed;color:var(--muted)}
+.rg>div{min-width:0}
+.rg .n .ic{width:18px;height:18px}
+.rg .rh{display:flex;flex-wrap:wrap;align-items:baseline;gap:0 6px;min-height:34px;align-content:center}
+.rg .rh b{font:800 15px/1.1 var(--font-display);font-stretch:75%;letter-spacing:.07em;text-transform:uppercase}
+.rg .pl{font:italic 13.5px/1.2 var(--font-serif);color:var(--muted)}
+.rg p{margin:4px 0 0;font-size:13px;color:var(--ink-2);line-height:1.4}
+.checks{list-style:none;margin:8px 0 0;padding:0;display:flex;flex-direction:column;gap:5px;font-size:13px}
+.checks li{display:flex;gap:7px;align-items:flex-start}
+.checks li svg{width:16px;height:16px;flex:none;margin-top:1px;color:var(--ok)}
+.tpl{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
+@container pg (max-width:1130px){.tpl{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.tpl button{border:1.5px solid var(--ink);background:var(--card);padding:6px;cursor:pointer;display:flex;flex-direction:column;gap:5px;text-align:left;border-radius:3px;min-width:0;height:100%}
+.tpl button:hover{background:var(--tint)}
+.tpl button[aria-pressed="true"]{box-shadow:inset 0 0 0 3px var(--ink);background:color-mix(in srgb,var(--azure) 12%,var(--card))}
+.tpl svg{width:100%;height:64px;background:var(--paper-2)}
+.tpl b{font:700 13px/1.2 var(--font-ui)}
+.tpl small{font-size:12.5px;color:var(--muted);line-height:1.25}
+.acct{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px}
+.acct .chip{text-transform:none;font-family:var(--font-num);letter-spacing:0;cursor:pointer}
+.ai-card{border:1.5px dashed var(--ink);padding:10px 12px;background:var(--card);display:flex;flex-direction:column;gap:8px}
+.ai-card .redline div{padding:2px 6px}
+</style>
+</head>
+<body data-module="studio">
+<main id="page" class="page">
+  <header class="pagehead">
+    <div class="folio"><a href="index.html">Castle Control</a><span>›</span><span>Chamber 4 of 4</span><span>·</span><b>Map Room</b><span class="crumbs"></span></div>
+    <div class="titlerow">
+      <h1 class="h1" data-t="Map Room">Map Room</h1>
+      <p class="stand"><b>Extension studio</b>Draw the map viewers play on, without writing code. One reviewed shell; you change data: layout, components, controls, art.</p>
+      <div class="actions" id="head-actions"></div>
+    </div>
+  </header>
+
+  <section class="view" data-view="main" id="v-main">
+    <div class="sgrid">
+      <div class="s1">
+        <div class="sec"><div class="sec-h"><span class="no">4.1</span><h2>Pieces</h2><span class="gloss">components</span><span class="meta" id="pieces-meta"></span></div>
+          <ul class="pieces" id="pieces"></ul>
+          <p class="hint" style="margin-top:8px">Pieces are what sits on the map table: the components viewers see. Take one off and the viewer preview updates.</p>
+        </div>
+        <div class="sec" style="margin-top:20px"><div class="sec-h"><span class="no">4.2</span><h2>Orders</h2><span class="gloss">operator controls</span></div>
+          <div class="stack" id="orders"></div>
+        </div>
+      </div>
+
+      <div class="s2">
+        <div class="hero canvas-hero" id="hero" data-module="studio" aria-label="The map table: layout canvas">
+          <i class="crop tl"></i><i class="crop tr"></i><i class="crop bl"></i><i class="crop br"></i>
+          <div class="tb" id="tb"></div>
+          <div class="canvas" id="canvas"></div>
+          <div class="inspect" id="inspect"></div>
+          <div class="turnbar" id="turnbar"></div>
+        </div>
+        <div class="sec" style="margin-top:20px"><div class="sec-h"><span class="no">4.3</span><h2>Templates</h2><span class="gloss">one shell, five maps</span></div><div class="tpl" id="tpl"></div></div>
+      </div>
+
+      <div class="s3">
+        <div class="sec"><div class="sec-h"><span class="no">4.4</span><h2>Spyglass</h2><span class="gloss">viewer preview</span><span class="meta"><div class="seg2" id="pv-dev" role="group" aria-label="Device"><button data-d="desk" aria-pressed="true">Desktop</button><button data-d="mob" aria-pressed="false">Mobile</button></div></span></div>
+          <div id="pv"></div>
+          <p class="hint" style="margin-top:6px">Stylised mock-up, not a screenshot. Viewers see sealed picks, never each other's names.</p>
+        </div>
+        <div class="sec" style="margin-top:20px"><div class="sec-h"><span class="no">4.5</span><h2>Test status</h2><span class="gloss">before the realm sees it</span></div>
+          <div class="ladder3" id="ladder"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+<script src="mark.js"></script>
+<script src="app.js"></script>
+<script src="app-studio.js"></script>
+</body>
+</html>

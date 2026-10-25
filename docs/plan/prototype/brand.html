@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en" data-theme="paper">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Castle Control brand sheet: mark, inks, type, chambers, voice</title>
+<meta name="description" content="The Castle Control brand sheet: the keep-bubble mark, three heraldic spot inks and a key, type, chamber names, status words and voice. Working name, not a registered trademark.">
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="landing.css">
+<script>try{var t=JSON.parse(localStorage.getItem('cc.state.v1')||'{}').theme;if(t==='stock')document.documentElement.setAttribute('data-theme','stock')}catch(e){}</script>
+<style>
+.bs{max-width:1400px;margin:0 auto;padding:calc(var(--hdr-h) + clamp(28px,4vw,64px)) clamp(18px,4vw,64px) calc(var(--bar-h) + 56px)}
+.bs-hero{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:clamp(20px,4vw,64px);align-items:end;padding-bottom:clamp(24px,3vw,48px);border-bottom:1.5px solid var(--rule)}
+.bs-hero h1{margin:0;font:800 clamp(52px,8.6vw,140px)/.86 var(--font-display);font-stretch:75%;font-variation-settings:"wdth" 75;text-transform:uppercase;letter-spacing:-.015em;text-shadow:.035em .035em 0 var(--gules)}
+.bs-hero p{margin:0 0 6px;font:italic 400 clamp(19px,1.8vw,27px)/1.35 var(--font-serif);max-width:34rem}
+.bs-hero .wn{display:inline-block;margin-top:14px;padding:3px 10px;border:1.5px solid var(--ink);font:800 12px/18px var(--font-ui);letter-spacing:.14em;text-transform:uppercase}
+.sec{display:grid;grid-template-columns:minmax(150px,220px) minmax(0,1fr);gap:clamp(16px,3vw,48px);padding:clamp(28px,4vw,56px) 0;border-bottom:1.5px solid var(--rule)}
+.sec>aside .fo{margin:0 0 8px;font:700 12px/1.3 var(--font-ui);letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+.sec>aside h2{margin:0;font:800 clamp(30px,3vw,46px)/.95 var(--font-display);font-stretch:75%;font-variation-settings:"wdth" 75;text-transform:uppercase}
+.sec>aside p{margin:12px 0 0;font:400 14px/1.55 var(--font-ui);color:var(--ink-2)}
+.cols{display:grid;gap:clamp(16px,2vw,28px)}
+.c2{grid-template-columns:repeat(2,minmax(0,1fr))} .c3{grid-template-columns:repeat(3,minmax(0,1fr))} .c4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.tile{position:relative;border:1.5px solid var(--ink);padding:clamp(14px,2vw,26px);background:var(--card);min-width:0}
+.tile.dark{--blend:screen;background:var(--press);color:var(--cream);border-color:var(--press)}
+.tile .lab{margin:14px 0 0;font:700 12px/1.45 var(--font-ui);letter-spacing:.12em;text-transform:uppercase;opacity:.75}
+.tile .big{display:grid;place-items:center;min-height:170px}
+.tile .big .mark-slot{width:min(100%,200px);height:auto;aspect-ratio:72/64}
+.tile .big .mark-slot.s2{width:64px}.tile .big .mark-slot.s3{width:28px}
+.tile .row{display:flex;gap:28px;align-items:flex-end;justify-content:center}
+.tile p{margin:10px 0 0;font:400 14px/1.55 var(--font-ui)}
+.inkc{height:132px;display:flex;flex-direction:column;justify-content:flex-end;padding:12px 14px;color:var(--press);font:800 13px/1.3 var(--font-ui);letter-spacing:.06em;text-transform:uppercase}
+.inkc small{font:500 12.5px/1.4 var(--font-num);letter-spacing:0;text-transform:none}
+.inkc.k{color:var(--cream)}
+.ovl{display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start}
+.ov{width:150px}
+.ov .o{position:relative;height:96px;isolation:isolate}
+.ov .o i{position:absolute;top:0;width:96px;height:96px;border-radius:50%;mix-blend-mode:var(--blend)}
+.ov .o i:first-child{left:0} .ov .o i:last-child{left:54px}
+.ov b{display:block;margin-top:8px;font:800 12px/1.3 var(--font-ui);letter-spacing:.1em;text-transform:uppercase}
+.ov span{display:block;font:400 13px/1.4 var(--font-ui);color:var(--ink-2)}
+.spec{display:grid;grid-template-columns:150px minmax(0,1fr);gap:6px 18px;align-items:baseline;padding:14px 0;border-top:1px solid var(--line)}
+.spec:first-child{border-top:0;padding-top:0}
+.spec .k{font:700 12px/1.3 var(--font-ui);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.spec .v1{font:800 46px/1 var(--font-display);font-stretch:75%;font-variation-settings:"wdth" 75;text-transform:uppercase}
+.spec .v2{font:italic 400 30px/1.15 var(--font-serif)}
+.spec .v3{font:400 17px/1.5 var(--font-ui)}
+.spec .v4{font:700 24px/1.2 var(--font-num);font-variant-numeric:tabular-nums}
+.spec small{display:block;margin-top:4px;font:400 13px/1.4 var(--font-ui);color:var(--muted)}
+.chm{border-top:6px solid var(--c);padding-top:12px}
+.chm .no{font:700 12px/1 var(--font-ui);letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.chm svg.w{display:block;height:46px;width:auto;max-width:100%;margin:10px 0 6px;fill:var(--c);mix-blend-mode:var(--blend)}
+.chm .fn{font:italic 400 19px/1.25 var(--font-serif)}
+.chm p{margin:8px 0 0;font:400 14px/1.55 var(--font-ui);color:var(--ink-2)}
+.voc{width:100%;border-collapse:collapse;font:400 14.5px/1.45 var(--font-ui)}
+.voc th{text-align:left;font:700 12px/1.3 var(--font-ui);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);padding:0 12px 8px 0;border-bottom:1.5px solid var(--ink)}
+.voc td{padding:9px 12px 9px 0;border-bottom:1px solid var(--line);vertical-align:top}
+.voc td:first-child{font-weight:700;white-space:nowrap}
+.voc .sw{display:inline-block;width:11px;height:11px;border-radius:50%;margin-right:8px;background:var(--c)}
+.say{border:1.5px solid var(--ink);padding:16px 18px;background:var(--card)}
+.say h3{margin:0 0 8px;font:800 13px/1.2 var(--font-ui);letter-spacing:.16em;text-transform:uppercase}
+.say ul{margin:0;padding-left:18px;font:400 15px/1.6 var(--font-ui)}
+.say.no h3{color:var(--gules-text)}
+.say li q{font-family:var(--font-serif);font-style:italic}
+@media (max-width:900px){.bs-hero,.sec{grid-template-columns:1fr}.c3,.c4{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:560px){.c2,.c3,.c4{grid-template-columns:1fr}.spec{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header class="bar-top">
+  <a class="brand" href="index.html" aria-label="Castle Control, home"><span class="mark-slot" data-mark="mark"></span><span class="brand-text">Castle Control</span></a>
+  <div class="top-actions">
+    <span class="top-note">Brand sheet · working name</span>
+    <button class="theme-toggle" id="theme" type="button" aria-pressed="false" title="Switch between paper and dark stock"><i></i><span>Dark stock</span></button>
+    <a class="btn" href="moderator.html">Open the app <span aria-hidden="true">→</span></a>
+  </div>
+</header>
+
+<main class="bs">
+  <section class="bs-hero">
+    <h1>Castle<br>Control</h1>
+    <div>
+      <p>Your channel is your keep. Four chambers for running a live audience, printed in three heraldic inks and a key on warm paper.</p>
+      <span class="wn">Working name, not a registered trademark</span>
+    </div>
+  </section>
+
+  <section class="sec" aria-labelledby="h-mark">
+    <aside><p class="fo">01</p><h2 id="h-mark">The mark</h2><p>A chat bubble whose top edge is a battlement: the keep and the crowd in one shape. The wall prints in gules; the gate is lit in or, laid a hair out of register so the two inks meet at the jamb. One component (<code>mark.js</code>) draws it everywhere.</p></aside>
+    <div class="cols c3">
+      <div class="tile"><div class="big"><span class="mark-slot" data-mark="mark"></span></div><p class="lab">On paper</p></div>
+      <div class="tile dark"><div class="big"><span class="mark-slot" data-mark="mark"></span></div><p class="lab">On dark stock</p></div>
+      <div class="tile"><div class="big"><div class="row"><span class="mark-slot s2" data-mark="mark"></span><span class="mark-slot s3" data-mark="mark"></span></div></div><p class="lab">64 px and 28 px: the battlement still reads</p></div>
+    </div>
+  </section>
+
+  <section class="sec" aria-labelledby="h-ink">
+    <aside><p class="fo">02</p><h2 id="h-ink">Inks</h2><p>Spot-ink logic, heraldic names: azure, gules and or, plus a key. Each chamber owns one ink, and where two plates overprint a third colour appears. Tokens are declared once in <code>tokens.css</code>.</p></aside>
+    <div>
+      <div class="cols c4">
+        <div class="inkc" style="background:var(--gules)">Gules · Lot Chamber<small>#E4472E · wax seals, banners</small></div>
+        <div class="inkc" style="background:var(--azure)">Azure · Gatehouse<small>#3F86DC · watch, the moat</small></div>
+        <div class="inkc" style="background:var(--or)">Or · Beacons<small>#F2B233 · fire and gilt</small></div>
+        <div class="inkc k" style="background:var(--press)">Key · Map Room<small>#16181D · stone and line</small></div>
+      </div>
+      <div class="ovl" style="margin-top:22px">
+        <div class="ov"><div class="o"><i style="background:var(--gules)"></i><i style="background:var(--or)"></i></div><b>Gules × or</b><span>a beacon in the hall</span></div>
+        <div class="ov"><div class="o"><i style="background:var(--azure)"></i><i style="background:var(--or)"></i></div><b>Azure × or</b><span>torchlight on the moat</span></div>
+        <div class="ov"><div class="o"><i style="background:var(--azure)"></i><i style="background:var(--gules)"></i></div><b>Azure × gules</b><span>the gate at dusk</span></div>
+        <div class="ov"><div class="o"><i style="background:var(--paper);border:1.5px solid var(--ink)"></i><i style="background:var(--green)"></i></div><b>Paper · vert</b><span>#F4F0E6 stock; green means connected</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" aria-labelledby="h-type">
+    <aside><p class="fo">03</p><h2 id="h-type">Type</h2><p>System faces only, so it opens offline from disk. Unchanged from the app the owner chose: one display face, one serif voice, one UI face and tabular figures for anything live.</p></aside>
+    <div>
+      <div class="spec"><span class="k">Display</span><div><span class="v1">The Gatehouse</span><small>Bahnschrift condensed, falling back to Arial Narrow and Roboto Condensed. Chamber names and page titles; the wordmark is custom lettering drawn to match.</small></div></div>
+      <div class="spec"><span class="k">Serif</span><div><span class="v2">It watches first, and acts when you arm it.</span><small>Iowan Old Style or Palatino, italic. Glosses, the Steward's voice, plain-function lines.</small></div></div>
+      <div class="spec"><span class="k">UI</span><div><span class="v3">Hold at the portcullis: held for review. Body text never below 13 px.</span><small>Segoe UI Variable, falling back to system-ui.</small></div></div>
+      <div class="spec"><span class="k">Figures</span><div><span class="v4">214 · 02:14:37 · 51.3%</span><small>ui-monospace / Cascadia Mono with tabular numerals, so live figures never jitter.</small></div></div>
+    </div>
+  </section>
+
+  <section class="sec" aria-labelledby="h-ch">
+    <aside><p class="fo">04</p><h2 id="h-ch">Chambers</h2><p>Each module is a chamber of the keep, drawn in its ink. The plain function always stands beside the brand name; the ids stay <code>lottery</code>, <code>moderator</code>, <code>visuals</code> and <code>studio</code>.</p></aside>
+    <div class="cols c4">
+      <div class="chm" style="--c:var(--gules)"><span class="no">Chamber 1 · lottery</span><svg class="w" data-word="LOTS" viewBox="0 0 10 10" aria-hidden="true"></svg><span class="fn">The Lot Chamber · lottery manager</span><p>Seal the roll, wait for the public round, cast the lots. The writ (proof bundle) lets anyone recompute the result.</p></div>
+      <div class="chm" style="--c:var(--azure)"><span class="no">Chamber 2 · moderator</span><svg class="w" data-word="GATE" viewBox="0 0 10 10" aria-hidden="true"></svg><span class="fn">The Gatehouse · AI moderator</span><p>The moat is the chat delay, AutoMod holds wait at the portcullis, Shield Mode raises the drawbridge.</p></div>
+      <div class="chm" style="--c:var(--or)"><span class="no">Chamber 3 · visuals</span><svg class="w" data-word="BEACONS" viewBox="0 0 10 10" aria-hidden="true"></svg><span class="fn">The Beacons · contribution visuals</span><p>Gifts light beacon fires. The kindling curve maps contributions to blaze; test fire before you go live.</p></div>
+      <div class="chm" style="--c:var(--key)"><span class="no">Chamber 4 · studio</span><svg class="w" data-word="MAP ROOM" viewBox="0 0 10 10" aria-hidden="true"></svg><span class="fn">The Map Room · Extension studio</span><p>One reviewed Extension, edited as data. Sand table, then muster, then proclaimed.</p></div>
+    </div>
+  </section>
+
+  <section class="sec" aria-labelledby="h-words">
+    <aside><p class="fo">05</p><h2 id="h-words">Status words</h2><p>The words a streamer reads mid-stream. Each carries its plain function, in the app and here.</p></aside>
+    <table class="voc">
+      <thead><tr><th>Brand word</th><th>Plain function</th><th>Where</th></tr></thead>
+      <tbody>
+        <tr><td><span class="sw" style="--c:var(--azure)"></span>Watching</td><td>Shadow mode: says what it would do, changes nothing</td><td>Every page, on the rampart (masthead)</td></tr>
+        <tr><td><span class="sw" style="--c:var(--azure)"></span>Armed</td><td>The rule acts on people</td><td>Every page, on the rampart</td></tr>
+        <tr><td>Pass · Hold · Bar</td><td>Released · held for review · removed</td><td>The live room</td></tr>
+        <tr><td>Bridge up</td><td>Shield Mode is on</td><td>Every page, beside Armed / Watching</td></tr>
+        <tr><td>The moat</td><td>Chat delay for non-moderators (2, 4 or 6 s)</td><td>Gatehouse</td></tr>
+        <tr><td>Garrison orders</td><td>Room modes by room-size tier</td><td>Gatehouse</td></tr>
+        <tr><td>The drill</td><td>Replay a past stream through today's rules</td><td>Gatehouse</td></tr>
+        <tr><td><span class="sw" style="--c:var(--gules)"></span>Seal · cast · writ</td><td>Freeze entries · pick winners · proof bundle</td><td>Lot Chamber</td></tr>
+        <tr><td><span class="sw" style="--c:var(--or)"></span>Blaze · test fire</td><td>Intensity · preview with a simulated gift bomb</td><td>Beacons</td></tr>
+        <tr><td>Sand table · muster · proclaimed</td><td>Local test · hosted test · released after Twitch review</td><td>Map Room</td></tr>
+        <tr><td>The Steward</td><td>Optional AI co-pilot: drafts a writ, you seal it or tear it up</td><td>Every page, key <kbd>/</kbd></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="sec" aria-labelledby="h-voice">
+    <aside><p class="fo">06</p><h2 id="h-voice">Voice</h2><p>A steady castle steward: courteous, brief, plain. The castle is the frame, never the joke, so it works for a cosy art stream, a speedrun or a variety channel.</p></aside>
+    <div class="cols c2">
+      <div class="say"><h3>We say</h3><ul><li><q>Watching: it says what it would do, and does nothing.</q></li><li><q>Three holds at the portcullis.</q></li><li><q>Here is a writ. Nothing changes until you seal it.</q></li><li><q>The moat buys seconds, not magic.</q></li></ul></div>
+      <div class="say no"><h3>We don't</h3><ul><li>Promise what Twitch cannot do, or replay events a dropout missed.</li><li>Use a castle word without its plain function beside it.</li><li>Borrow platform identity: no Twitch logo, glitch mark or purple.</li><li>Pass stylised art off as a screenshot.</li></ul></div>
+    </div>
+  </section>
+
+  <p class="hon"><span class="tagbox">Working name</span><span>Castle Control is a working name, not a registered trademark. Not affiliated with or endorsed by Twitch. Artwork is stylised illustration. <a href="index.html">← The whole keep</a></span></p>
+</main>
+
+<nav class="bar-bottom" aria-label="Chambers">
+  <div class="colorbar">
+    <a class="sw lots" data-module="lottery" href="lottery.html"><b>1</b><span class="ln">Lot Chamber</span><span class="sn">Lots</span><small>lottery manager</small></a>
+    <a class="sw gate" data-module="moderator" href="moderator.html"><b>2</b>Gatehouse<small>AI moderator</small></a>
+    <a class="sw beacons" data-module="visuals" href="visuals.html"><b>3</b>Beacons<small>contribution visuals</small></a>
+    <a class="sw map" data-module="studio" href="studio.html"><b>4</b>Map Room<small>Extension studio</small></a>
+    <i class="mix g" aria-hidden="true"></i><i class="mix o" aria-hidden="true"></i><i class="mix n" aria-hidden="true"></i>
+    <a class="sw go" href="index.html">The whole keep</a>
+  </div>
+</nav>
+<script src="mark.js"></script>
+<script src="landing.js"></script>
+</body>
+</html>

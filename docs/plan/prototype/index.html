@@ -1,0 +1,464 @@
+<!doctype html>
+<html lang="en" data-theme="paper">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Castle Control: free, open-source live-audience tools for Twitch streamers</title>
+<meta name="description" content="Castle Control is a free, open-source desktop app for Twitch streamers: the Lot Chamber (lottery manager), the Gatehouse (AI moderator), the Beacons (contribution visuals) and the Map Room (Extension studio). Working name.">
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="landing.css">
+<script src="../data/sample.js"></script><script>window.SAMPLE||document.write('<script src="sample.copy.js"><\/script>')</script>
+<script>try{var t=JSON.parse(localStorage.getItem('cc.state.v1')||'{}').theme;if(t==='stock')document.documentElement.setAttribute('data-theme','stock')}catch(e){}</script>
+</head>
+<body data-phase="done">
+<script>if(!matchMedia('(prefers-reduced-motion: reduce)').matches){document.body.setAttribute('data-phase','pre');setTimeout(function(){if(document.body.getAttribute('data-phase')==='pre')document.body.setAttribute('data-phase','done')},5200)}</script>
+
+<!-- permanent top bar -->
+<header class="bar-top">
+  <a class="brand" href="index.html" aria-label="Castle Control, home"><span class="mark-slot" data-mark="mark"></span><span class="brand-text">Castle Control</span></a>
+  <div class="top-actions">
+    <span class="top-note">Free · open source · desktop</span>
+    <button class="theme-toggle" id="theme" type="button" aria-pressed="false" title="Switch between paper and dark stock"><i></i><span>Dark stock</span></button>
+    <a class="btn" href="moderator.html" data-open-app>Open the app <span aria-hidden="true">→</span></a>
+  </div>
+</header>
+
+<main id="top">
+<section class="sheet" id="sheet" aria-label="Castle Control: a keep in cross-section, printed in four inks">
+  <h1 class="vh">Castle Control: free, open-source live-audience tools for Twitch streamers. Your channel is your keep. Four chambers: the Lot Chamber, the Gatehouse, the Beacons and the Map Room.</h1>
+
+  <!-- ============ desktop poster: the keep, printed in register ============ -->
+  <div class="stage" id="stage" data-focus="">
+
+    <svg class="layer furniture" viewBox="0 0 1600 1000" aria-hidden="true">
+      <g stroke="var(--rule)" stroke-width="1.6" fill="none">
+        <path d="M44 100H80M88 60V94M1556 100H1520M1512 60V94M44 912H80M88 952V918M1556 912H1520M1512 952V918"/>
+        <g transform="translate(800 70)"><circle r="9"/><path d="M-19 0H19M0 -19V19"/></g>
+        <g transform="translate(34 506)"><circle r="9"/><path d="M-19 0H19M0 -19V19"/></g>
+        <g transform="translate(1566 506)"><circle r="9"/><path d="M-19 0H19M0 -19V19"/></g>
+      </g>
+      <path d="M96 106H1504M96 906H1504" stroke="var(--rule)" stroke-width="1.2"/>
+    </svg>
+
+    <!-- plate 0: STONE (key). The keep itself; built by landing.js from the CASTLE table -->
+    <svg class="layer plate p-stone" viewBox="0 0 1600 1000" data-plate="stone" aria-hidden="true">
+      <g id="g-stone" fill="var(--key)">
+        <path id="ht-stone" class="tone" d=""/>
+        <g id="stone"></g>
+        <!-- the drawbridge: raised over the gate, it drops when the plates are in register -->
+        <g class="bridge"><rect x="282" y="694" width="96" height="152" fill="var(--key)"/><g stroke="var(--ko)" stroke-width="3"><path d="M282 732H378M282 770H378M282 808H378"/></g></g>
+      </g>
+    </svg>
+
+    <!-- plate 1: BEACONS (or) -->
+    <svg class="layer plate p-beacons" viewBox="0 0 1600 1000" data-plate="beacons" aria-hidden="true">
+      <g id="g-beacons" fill="var(--or)">
+        <path id="ht-glow" class="tone" d=""/>
+        <path d="M1128 254H1222L1210 276H1140Z" transform="translate(55 100)"/><path d="M1344 478H1426L1416 496H1354Z" transform="translate(35 20)"/>
+        <path transform="translate(55 100)" d="M1175 252C1132 236 1124 196 1146 160C1150 184 1160 192 1166 186C1156 152 1170 124 1196 104C1188 136 1206 150 1214 176C1222 160 1222 148 1218 136C1240 162 1242 214 1211 248Z"/>
+        <path transform="translate(35 20)" d="M1385 476C1356 466 1352 440 1366 418C1369 432 1376 436 1380 432C1374 412 1384 394 1400 384C1395 404 1406 412 1410 428C1426 444 1420 468 1402 476Z"/>
+        <g id="lit-windows"></g>
+      </g>
+    </svg>
+
+    <!-- beacon plate, moving parts on their own compositor layer: flame tongues and rising embers -->
+    <div class="layer plate p-beacons fx" aria-hidden="true">
+      <svg class="flame" viewBox="0 0 80 110" style="left:calc(var(--du)*1191);top:calc(var(--du)*222);width:calc(var(--du)*80);height:calc(var(--du)*110);--dur:1.7s"><path d="M40 108C14 98 8 70 22 46C26 62 32 66 36 62C30 38 40 18 58 4C52 28 66 40 70 60C80 80 70 102 52 108Z" fill="var(--or)"/></svg>
+      <svg class="flame" viewBox="0 0 80 110" style="left:calc(var(--du)*1397);top:calc(var(--du)*418);width:calc(var(--du)*46);height:calc(var(--du)*64);--dur:1.3s"><path d="M40 108C14 98 8 70 22 46C26 62 32 66 36 62C30 38 40 18 58 4C52 28 66 40 70 60C80 80 70 102 52 108Z" fill="var(--or)"/></svg>
+      <i class="ember" style="left:calc(var(--du)*1215);top:calc(var(--du)*250);--rise:120;--dur:4.6s;--dl:0s"></i>
+      <i class="ember" style="left:calc(var(--du)*1251);top:calc(var(--du)*230);--rise:150;--dur:5.8s;--dl:1.4s"></i>
+      <i class="ember" style="left:calc(var(--du)*1269);top:calc(var(--du)*270);--rise:96;--dur:4.1s;--dl:2.6s"></i>
+      <i class="ember" style="left:calc(var(--du)*1423);top:calc(var(--du)*420);--rise:84;--dur:4.4s;--dl:.8s"></i>
+    </div>
+
+    <!-- plate 2: LOT CHAMBER (gules) -->
+    <svg class="layer plate p-lots" viewBox="0 0 1600 1000" data-plate="lots" aria-hidden="true">
+      <g id="g-lots" fill="var(--gules)">
+        <path id="ht-hall" class="tone" d=""/>
+        <g id="bunting"></g>
+        <circle cx="724" cy="748" r="82" fill="none" stroke="var(--gules)" stroke-width="16"/>
+        <circle cx="724" cy="748" r="62" fill="none" stroke="var(--gules)" stroke-width="3"/>
+        <circle cx="724" cy="748" r="38" fill="none" stroke="var(--gules)" stroke-width="44" stroke-dasharray="4 20"/>
+        <g id="drum-tk"></g>
+        <circle cx="724" cy="748" r="15"/><circle cx="724" cy="748" r="6" fill="var(--ko)"/>
+        <path d="M672 812L650 846M776 812L798 846M640 846H808" stroke="var(--gules)" stroke-width="9" stroke-linecap="round" fill="none"/>
+        <path d="M740 734L800 690" stroke="var(--gules)" stroke-width="9" stroke-linecap="round"/><circle cx="804" cy="686" r="11"/>
+        <g id="fan"></g>
+        <!-- the writ on the wall, sealed -->
+        <g transform="translate(902 660)">
+          <path d="M0 8a8 8 0 0 1 8-8h96a8 8 0 0 1 8 8v128H0Z" fill="none" stroke="var(--gules)" stroke-width="5"/>
+          <rect x="16" y="22" width="80" height="7" rx="3.5"/><rect x="16" y="40" width="64" height="7" rx="3.5"/><rect x="16" y="58" width="72" height="7" rx="3.5"/><rect x="16" y="76" width="50" height="7" rx="3.5"/>
+          <path d="M42 140l-8 34 14-9 10 12V140ZM70 140l8 34-14-9-10 12V140Z"/>
+          <circle cx="56" cy="132" r="25"/>
+          <path d="M45 142V126h4v4h4v-4h6v4h4v-4h4v16Z" fill="var(--ko)"/>
+        </g>
+      </g>
+    </svg>
+
+    <!-- plate 3: GATEHOUSE (azure) -->
+    <svg class="layer plate p-gate" viewBox="0 0 1600 1000" data-plate="gate" aria-hidden="true">
+      <g id="g-gate" fill="var(--azure)">
+        <path id="ht-moat" class="tone" d=""/>
+        <g fill="none" stroke="var(--azure)" stroke-width="4" stroke-linecap="round" id="waves"></g>
+        <!-- held messages wait behind the portcullis -->
+        <g id="held"></g>
+        <g fill="none" stroke="var(--azure)" stroke-width="6" stroke-linecap="square"><path d="M296 668V796M314 656V796M332 652V796M350 656V796M368 668V796"/><path d="M286 700H376M286 740H376M286 780H376" stroke-width="5"/></g>
+        <path d="M290 796l6 14 6-14ZM308 796l6 14 6-14ZM326 796l6 14 6-14ZM344 796l6 14 6-14ZM362 796l6 14 6-14Z"/>
+        <!-- gate banners -->
+        <g class="banner"><path d="M170 494H220V618L195 600L170 618Z"/><path d="M170 540L195 556L220 540V552L195 568L170 552Z" fill="var(--ko)"/></g>
+        <g class="banner b2"><path d="M440 494H490V618L465 600L440 618Z"/><path d="M440 540L465 556L490 540V552L465 568L440 552Z" fill="var(--ko)"/></g>
+      </g>
+    </svg>
+
+    <!-- plate 4: MAP ROOM (key) -->
+    <svg class="layer plate p-map" viewBox="0 0 1600 1000" data-plate="map" aria-hidden="true">
+      <g id="g-map" fill="var(--key)">
+        <g id="hexg" fill="none" stroke="var(--key)" stroke-width="2.2" stroke-linejoin="round"></g>
+        <path id="ht-hex" class="tone" d=""/>
+        <path id="hex-solid" d=""/>
+        <path d="M850 596H1012L1002 606H860ZM868 606V632M994 606V632" stroke="var(--key)" stroke-width="5" fill="var(--key)"/>
+        <g stroke="var(--key)" stroke-width="3"><path d="M884 596V566M930 596V556M972 596V572"/></g>
+        <path d="M884 566h16l-5 6 5 6h-16ZM930 556h18l-5 6 5 6h-18ZM972 572h14l-4 5 4 5h-14Z"/>
+        <path d="M900 478a26 26 0 0 1 52 0V548H900Z" fill="none" stroke="var(--key)" stroke-width="5"/>
+        <path d="M926 452V548M900 500H952" stroke="var(--key)" stroke-width="3" fill="none"/>
+        <text transform="translate(612 612) rotate(-90)" font-family="ui-monospace,Consolas,monospace" font-size="13" letter-spacing="2.2" font-weight="700">9 × 6 · HEX MAP</text>
+      </g>
+    </svg>
+
+    <!-- type: wordmark + chamber names (built by landing.js from custom lettering) -->
+    <svg class="layer type" viewBox="0 0 1600 1000" aria-hidden="true">
+      <g class="wm" id="wm"></g>
+      <g class="name n-lots" id="n-lots"></g>
+      <g class="name n-gate" id="n-gate"></g>
+      <g class="name n-beacons" id="n-beacons"></g>
+      <g class="name n-map" id="n-map"></g>
+    </svg>
+
+    <!-- microcopy -->
+    <p class="mc mc-tl">The live-audience toolkit</p>
+    <p class="mc mc-tr">Free · open source · for Twitch streamers</p>
+    <p class="mc mc-bl"><span class="sample num">Sample data</span> <span id="sample-line">fictional channel · invented numbers</span></p>
+    <p class="mc mc-br">Stylised illustration · drawn, not captured</p>
+
+    <!-- the label: idle tagline / hovered chamber -->
+    <div class="meta meta-idle" aria-live="polite">
+      <p class="eyebrow">Four chambers · free, open source, desktop</p>
+      <p class="fn">Your channel is your keep.</p>
+      <p class="hint">Pick a chamber ↓ or use the banner bar</p>
+    </div>
+    <div class="meta meta-lots" data-m="lots"><p class="eyebrow">Chamber 1 of 4 · the Lot Chamber</p><p class="fn">Lottery manager</p><p class="pr">Cast lots anyone can check: a sealed roll, a public round, a writ to recompute.</p></div>
+    <div class="meta meta-gate" data-m="gate"><p class="eyebrow">Chamber 2 of 4 · the Gatehouse</p><p class="fn">AI moderator</p><p class="pr">It watches first, and acts only when you arm it. Every hold has a reason.</p></div>
+    <div class="meta meta-beacons" data-m="beacons"><p class="eyebrow">Chamber 3 of 4 · the Beacons</p><p class="fn">Contribution visuals</p><p class="pr">Gifts light fires on your stream. They change how it looks, never what it decides.</p></div>
+    <div class="meta meta-map" data-m="map"><p class="eyebrow">Chamber 4 of 4 · the Map Room</p><p class="fn">Extension studio</p><p class="pr">Draw what viewers touch, as data. One reviewed Extension, no code to write.</p></div>
+
+    <!-- hit areas: real links; click opens the chamber -->
+    <svg class="layer hits" viewBox="0 0 1600 1000">
+      <a class="hit" data-m="map" data-module="studio" href="studio.html" aria-label="Chamber 4, the Map Room: Extension studio. Look inside."><rect class="zone" x="556" y="414" width="498" height="216" rx="14"/></a>
+      <a class="hit" data-m="lots" data-module="lottery" href="lottery.html" aria-label="Chamber 1, the Lot Chamber: lottery manager. Look inside."><rect class="zone" x="556" y="634" width="498" height="270" rx="14"/></a>
+      <a class="hit" data-m="gate" data-module="moderator" href="moderator.html" aria-label="Chamber 2, the Gatehouse: AI moderator. Look inside."><rect class="zone" x="118" y="436" width="426" height="468" rx="14"/></a>
+      <a class="hit" data-m="beacons" data-module="visuals" href="visuals.html" aria-label="Chamber 3, the Beacons: contribution visuals. Look inside."><path class="zone" d="M1058 560H1146V196H1314V470H1488V904H1058Z"/></a>
+    </svg>
+  </div>
+
+  <!-- ============ portrait / narrow: re-composed vertically ============ -->
+  <div class="m-poster" id="mposter">
+    <p class="m-micro">The live-audience toolkit<span class="xm"> · free &amp; open source</span></p>
+    <svg class="m-wm" id="m-wm" viewBox="0 0 340 236" role="img" aria-label="Castle Control"></svg>
+    <p class="m-tag">Your channel is your keep.</p>
+    <div class="m-strips">
+      <button class="strip" type="button" data-m="lots" data-module="lottery" aria-label="Chamber 1, the Lot Chamber: lottery manager. Look inside.">
+        <span class="art"><svg viewBox="570 630 470 230" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><use href="#g-stone"/><use href="#g-lots"/></svg></span>
+        <span class="nm"><span class="e">Chamber 1</span><svg viewBox="0 0 10 10" data-word="LOT CHAMBER" aria-hidden="true"></svg><span class="f">Lottery manager</span></span><span class="chev" aria-hidden="true">›</span>
+      </button>
+      <button class="strip" type="button" data-m="gate" data-module="moderator" aria-label="Chamber 2, the Gatehouse: AI moderator. Look inside.">
+        <span class="art"><svg viewBox="120 450 420 420" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><use href="#g-stone"/><use href="#g-gate"/></svg></span>
+        <span class="nm"><span class="e">Chamber 2</span><svg viewBox="0 0 10 10" data-word="GATEHOUSE" aria-hidden="true"></svg><span class="f">AI moderator</span></span><span class="chev" aria-hidden="true">›</span>
+      </button>
+      <button class="strip" type="button" data-m="beacons" data-module="visuals" aria-label="Chamber 3, the Beacons: contribution visuals. Look inside.">
+        <span class="art"><svg viewBox="1110 200 390 400" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><use href="#g-stone"/><use href="#g-beacons"/></svg></span>
+        <span class="nm"><span class="e">Chamber 3</span><svg viewBox="0 0 10 10" data-word="BEACONS" aria-hidden="true"></svg><span class="f">Contribution visuals</span></span><span class="chev" aria-hidden="true">›</span>
+      </button>
+      <button class="strip" type="button" data-m="map" data-module="studio" aria-label="Chamber 4, the Map Room: Extension studio. Look inside.">
+        <span class="art"><svg viewBox="570 420 470 220" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><use href="#g-stone"/><use href="#g-map"/></svg></span>
+        <span class="nm"><span class="e">Chamber 4</span><svg viewBox="0 0 10 10" data-word="MAP ROOM" aria-hidden="true"></svg><span class="f">Extension studio</span></span><span class="chev" aria-hidden="true">›</span>
+      </button>
+    </div>
+    <p class="m-micro">Stylised illustration, drawn not captured · sample data where marked</p>
+  </div>
+</section>
+
+<!-- ============ the facts band ============ -->
+<section class="facts" id="facts" aria-labelledby="facts-h">
+  <div class="facts-in">
+    <h2 id="facts-h">Before you open the gates.</h2>
+    <p class="lede">Castle Control is a free, open-source desktop app for Twitch streamers. It is the keep, not the show: you bring your banners, your rules and your art, whether you paint, speedrun or do a bit of everything.</p>
+    <div class="fgrid">
+      <div class="fi"><h3><i style="background:var(--azure)"></i>Drill before you go live</h3><p>Every chamber has a preview or a simulation. <b>Nothing runs for the first time on a live audience.</b></p></div>
+      <div class="fi"><h3><i style="background:var(--gules)"></i>One verdict before everything</h3><p>A message the Gatehouse barred <b>never counts</b> toward a draw, a vote, a chant or a consensus.</p></div>
+      <div class="fi"><h3><i style="background:var(--or)"></i>Lots you can check</h3><p>The Lot Chamber seals the entry list, shows its hash, and takes winners from a future public randomness round (drand). The animation only shows a result already decided. Paid-only entry and paid weight are <b>blocked by default</b> for prize draws.</p></div>
+      <div class="fi"><h3><i style="background:var(--green)"></i>Armed only when you say so</h3><p>The Gatehouse starts Watching (shadow mode): it says what it would do and does nothing. Bans can need a human click. Every action carries its reason, with an undo where Twitch allows one.</p></div>
+      <div class="fi"><h3><i style="background:var(--orange)"></i>A steward, if you want one</h3><p>Ask the Steward in plain words; it drafts a writ, and nothing changes until you seal it. It runs on your own AI CLI, a local model or an API key. <b>Every chamber works without it.</b></p></div>
+      <div class="fi"><h3><i style="background:var(--ink)"></i>Honest about Twitch</h3><p>It connects through EventSub, the Helix API, an OBS browser source and one Twitch Extension. The moat (chat delay) buys 2, 4 or 6 seconds, not magic. Events missed in a dropout are not replayed. An Extension needs Twitch’s review (8–14 days) before release.</p></div>
+    </div>
+    <p class="hon"><span class="tagbox">Sample data</span><span>Figures from the demo channel (a fictional streamer, invented numbers) are labelled as sample data. Artwork on this page is stylised illustration, drawn rather than captured. <a href="brand.html">Brand sheet →</a></span></p>
+    <div class="modrow" role="navigation" aria-label="The four chambers">
+      <a href="lottery.html" data-module="lottery" style="--c:var(--gules)"><span class="k">Chamber 1 · lottery manager</span><span class="t">Lot Chamber</span><span class="d">Cast lots anyone can check.</span></a>
+      <a href="moderator.html" data-module="moderator" style="--c:var(--azure)"><span class="k">Chamber 2 · AI moderator</span><span class="t">Gatehouse</span><span class="d">Watch first, arm when ready.</span></a>
+      <a href="visuals.html" data-module="visuals" style="--c:var(--or)"><span class="k">Chamber 3 · contribution visuals</span><span class="t">Beacons</span><span class="d">Gifts light the stream.</span></a>
+      <a href="studio.html" data-module="studio" style="--c:var(--ink)"><span class="k">Chamber 4 · Extension studio</span><span class="t">Map Room</span><span class="d">Draw what viewers touch.</span></a>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer class="foot">
+  <div class="col reg">
+    <span class="mark-slot sm" data-mark="mark"></span>
+    <span><b>Castle Control</b> is a working name, not a registered trademark. Not affiliated with or endorsed by Twitch.</span>
+  </div>
+  <div class="col">Colophon: set in system fonts, printed in three heraldic inks and a key on warm paper. <a href="brand.html">Brand sheet</a> · <a href="lottery.html">Lot Chamber</a> · <a href="moderator.html">Gatehouse</a> · <a href="visuals.html">Beacons</a> · <a href="studio.html">Map Room</a></div>
+</footer>
+
+<!-- permanent banner bar: the plain way to every chamber -->
+<nav class="bar-bottom" aria-label="Chambers">
+  <div class="colorbar">
+    <a class="sw lots" data-m="lots" data-module="lottery" href="lottery.html"><b>1</b><span class="ln">Lot Chamber</span><span class="sn">Lots</span><small>lottery manager</small></a>
+    <a class="sw gate" data-m="gate" data-module="moderator" href="moderator.html"><b>2</b>Gatehouse<small>AI moderator</small></a>
+    <a class="sw beacons" data-m="beacons" data-module="visuals" href="visuals.html"><b>3</b>Beacons<small>contribution visuals</small></a>
+    <a class="sw map" data-m="map" data-module="studio" href="studio.html"><b>4</b>Map Room<small>Extension studio</small></a>
+    <i class="mix g" aria-hidden="true"></i><i class="mix o" aria-hidden="true"></i><i class="mix n" aria-hidden="true"></i>
+    <a class="sw go" href="moderator.html" data-open-app>Open the app →</a>
+  </div>
+</nav>
+
+<!-- ============ scenes: each chamber opened, full bleed ============ -->
+<div class="scenes" id="scenes">
+
+<section class="scene" id="scene-lots" data-plate="lots" data-module="lottery" role="region" aria-label="Chamber 1: the Lot Chamber, lottery manager" inert>
+  <div class="scene-art">
+    <svg class="sa" viewBox="0 0 1000 1000" role="img" aria-label="Stylised illustration: a lot drum full of numbered tickets, a roll of lots, and a two-part writ closed with a wax seal">
+      <circle cx="560" cy="400" r="292" fill="var(--or)" style="mix-blend-mode:multiply"/>
+      <g fill="var(--press)" font-weight="800" font-size="19" letter-spacing="1.6">
+        <g transform="translate(76 78)"><circle r="20"/><text x="0" y="7" text-anchor="middle" font-size="20" fill="var(--sheet)">1</text><text x="34" y="7">SEAL THE ROLL</text></g>
+        <g transform="translate(76 126)"><circle r="20"/><text x="0" y="7" text-anchor="middle" font-size="20" fill="var(--sheet)">2</text><text x="34" y="7">WAIT FOR THE PUBLIC ROUND</text></g>
+        <g transform="translate(76 174)"><circle r="20"/><text x="0" y="7" text-anchor="middle" font-size="20" fill="var(--sheet)">3</text><text x="34" y="7">CAST THE LOTS</text></g>
+      </g>
+      <g id="sd-drum">
+        <circle cx="560" cy="400" r="240" fill="none" stroke="var(--press)" stroke-width="22"/>
+        <circle cx="560" cy="400" r="206" fill="none" stroke="var(--press)" stroke-width="4"/>
+        <circle cx="560" cy="400" r="118" fill="none" stroke="var(--press)" stroke-width="150" stroke-dasharray="6 46.4"/>
+        <g id="sd-tk"></g>
+        <circle cx="560" cy="400" r="40" fill="var(--press)"/><circle cx="560" cy="400" r="14" fill="var(--sheet)"/>
+        <path d="M802 400H890" stroke="var(--press)" stroke-width="20" stroke-linecap="round"/><circle cx="906" cy="400" r="26" fill="var(--press)"/>
+        <path id="sd-ht" fill="var(--press)" d=""/>
+      </g>
+      <!-- numbered roll of lots -->
+      <g transform="rotate(-1.4 500 740)">
+        <path d="M40 690H960V722a12 12 0 0 0 0 24V790H40V746a12 12 0 0 0 0-24Z" fill="var(--sheet)" stroke="var(--press)" stroke-width="3"/>
+        <g stroke="var(--press)" stroke-width="3" stroke-dasharray="4 7"><path d="M150 696V784M250 696V784M350 696V784M450 696V784M550 696V784M650 696V784M750 696V784M850 696V784"/></g>
+        <g class="mono" font-size="30" font-weight="700" fill="var(--press)" text-anchor="middle"><text x="95" y="750">0081</text><text x="200" y="750">0082</text><text x="300" y="750">0083</text><text x="400" y="750">0084</text><text x="500" y="750">0085</text><text x="600" y="750">0086</text><text x="700" y="750">0087</text><text x="800" y="750">0088</text><text x="905" y="750">0089</text></g>
+        <rect x="353" y="692" width="94" height="96" fill="var(--or)" style="mix-blend-mode:multiply"/>
+        <path d="M400 676l-13-20h26z" fill="var(--press)"/>
+      </g>
+      <!-- the writ: two halves, one seal -->
+      <g>
+        <path d="M60 828H474l-12 14 12 14-12 14 12 14-12 14 12 14-12 14 12 14-12 14V956H60Z" fill="var(--sheet)" stroke="var(--press)" stroke-width="3" stroke-linejoin="round"/>
+        <path d="M500 828H940V956H500l12-14-12-14 12-14-12-14 12-14-12-14 12-14-12-14Z" fill="var(--sheet)" stroke="var(--press)" stroke-width="3" stroke-linejoin="round" transform="translate(0 -2)"/>
+        <g fill="var(--press)"><text x="84" y="860" font-size="16" font-weight="800" letter-spacing="2">THE SEAL · SET FIRST</text><text class="mono" x="84" y="896" font-size="21" font-weight="700">3f8a19db8e5c4e3f…</text><text class="ser" x="84" y="934" font-size="19">entry roll sealed · 87 lots</text>
+        <text x="560" y="860" font-size="16" font-weight="800" letter-spacing="2">THE PUBLIC ROUND</text><text class="mono" x="560" y="896" font-size="21" font-weight="700">round 9123400</text><text class="ser" x="560" y="934" font-size="19">sableclerk53 · duskowl39 · lanternmage47</text></g>
+        <g transform="translate(487 892)"><path d="M-30 30l-10 44 18-12 12 16V30ZM30 30l10 44-18-12-12 16V30Z" fill="var(--gules)"/><circle r="44" fill="var(--gules)" stroke="var(--press)" stroke-width="3"/><circle r="32" fill="none" stroke="var(--press)" stroke-width="2" stroke-dasharray="3 4"/><path d="M-16 16V-6h6v6h6v-6h8v6h6v-6h6V16H5V6a5 5 0 0 0-10 0V16Z" fill="var(--press)"/></g>
+      </g>
+      <g transform="translate(848 118) rotate(8)"><rect x="-86" y="-20" width="172" height="40" rx="3" fill="none" stroke="var(--press)" stroke-width="3"/><text x="0" y="7" text-anchor="middle" font-size="18" font-weight="800" letter-spacing="2" fill="var(--press)">SAMPLE DATA</text></g>
+    </svg>
+    <p class="cap">Stylised illustration · figures marked sample data</p>
+  </div>
+  <div class="scene-copy" id="copy-lots">
+    <button class="back st" style="--n:0" type="button" data-back><span aria-hidden="true">←</span> The whole keep <kbd>Esc</kbd></button>
+    <p class="folio st" style="--n:1"><i style="background:var(--gules)"></i>Chamber 1 of 4 · the Lot Chamber · <span class="num">lottery</span></p>
+    <h2 class="st" style="--n:2" aria-label="Lot Chamber"><svg class="word" viewBox="0 0 10 10" data-word="LOT CHAMBER" data-ink="var(--gules)" aria-hidden="true"></svg></h2>
+    <p class="fnline st" style="--n:3">Lottery manager</p>
+    <p class="stand st" style="--n:4">Cast lots anyone can check. The Lot Chamber runs the giveaways, question picks and jury seats you already do in chat, and hands every viewer a writ to verify the result afterwards.</p>
+    <div class="cta-row st" style="--n:5"><a class="btn cta" href="lottery.html">Enter the Lot Chamber <span aria-hidden="true">→</span></a><button class="btn ghost more" type="button" aria-expanded="false" data-more>Full feature list</button></div>
+    <ol class="notes st" style="--n:6">
+      <li><span><b>Seal the roll.</b> The entry list is frozen and its hash shown on stream beside a future public randomness round. Winners come from that round’s value.</span></li>
+      <li><span><b>A writ anyone can recompute.</b> The proof bundle is downloadable, and the animation only ever shows a result already decided.</span></li>
+      <li><span><b>Safe by default.</b> Paid-only entry and paid extra weight are blocked for prize draws; a free path with equal odds is one click away. A prize needs a value, an official-rules template and the “Twitch does not sponsor this promotion” line on stream.</span></li>
+      <li><span><b>Your rules, your shape.</b> Pool, weights, winners, cooldowns, cohort caps, and a drum, wheel, deck or ballot box on stream. <span class="sd">sample: 87 lots on the roll</span></span></li>
+    </ol>
+    <div class="full" hidden>
+      <h3>Setting up a draw</h3><ul><li><b>Pool:</b> all chatters, followers, subscribers, channel-point redeemers, people who typed a keyword.</li><li><b>Rules:</b> entry weights, number of winners, cooldowns (“no repeat winners for 3 draws”), cohort caps (“raiders fill at most a third”).</li><li><b>Content:</b> a prize, a question, an idea, a seat on a jury.</li></ul>
+      <h3>Fairness and safety</h3><ul><li>Entry list frozen, hash shown on stream, winners from a future public randomness round (a beacon such as drand); proof bundle downloadable.</li><li>Blocked by default for prize draws: paid-only entry and paid extra weight. Warnings: subscriber-only entry, channel-point entry with no free path, no region and age setting.</li><li>Required for prizes: a value, an official-rules template, the Twitch disclaimer on stream. Draws with no prize (questions, ideas) run without friction.</li></ul>
+      <h3>Main page</h3><ul><li>The draws you have, the live entry pool as it fills, the next draw’s configuration, a preview of its on-stream visual, and past draws with their writs.</li></ul>
+    </div>
+    <nav class="scene-links st" style="--n:7" aria-label="Other chambers"><button type="button" data-go="map">← Chamber 4 · Map Room</button><span>Chamber 1 of 4</span><button type="button" data-go="gate">Chamber 2 · Gatehouse →</button></nav>
+  </div>
+</section>
+
+<section class="scene" id="scene-gate" data-plate="gate" data-module="moderator" role="region" aria-label="Chamber 2: the Gatehouse, AI moderator" inert>
+  <div class="scene-art">
+    <svg class="sa" viewBox="0 0 1000 1000" role="img" aria-label="Stylised illustration: a gate roll of chat lines marked pass, hold and bar, a portcullis holding three messages, a moat gauge for the chat delay and an overlapping three-ink area chart">
+      <g transform="rotate(-1.6 360 350)">
+        <rect x="52" y="70" width="610" height="580" fill="var(--sheet)" stroke="var(--press)" stroke-width="3"/>
+        <text x="84" y="112" font-size="16" font-weight="800" letter-spacing="2.4" fill="var(--press)">THE GATE ROLL · LIVE ROOM · SAMPLE DATA</text>
+        <path d="M84 126H630" stroke="var(--press)" stroke-width="1.5"/>
+        <g id="pf-rows" class="mono" font-size="18" fill="var(--press)"></g>
+      </g>
+      <!-- the portcullis -->
+      <g transform="translate(826 236) rotate(4) scale(.84)">
+        <path d="M-130 190V-40a130 130 0 0 1 260 0V190" fill="var(--sheet)" stroke="var(--press)" stroke-width="10"/>
+        <g id="gate-held"></g>
+        <g stroke="var(--press)" stroke-width="12" fill="none"><path d="M-96 -96V150M-48 -122V150M0 -130V150M48 -122V150M96 -96V150"/><path d="M-128 -20H128M-130 50H130M-130 120H130" stroke-width="10"/></g>
+        <path d="M-102 150l6 22 6-22ZM-54 150l6 22 6-22ZM-6 150l6 22 6-22ZM42 150l6 22 6-22ZM90 150l6 22 6-22Z" fill="var(--press)"/>
+        <text y="232" text-anchor="middle" font-size="18" font-weight="800" letter-spacing="2.4" fill="var(--press)">HELD AT THE PORTCULLIS</text>
+      </g>
+      <!-- the moat: chat delay gauge -->
+      <g transform="translate(60 690)">
+        <text x="0" y="0" font-size="16" font-weight="800" letter-spacing="2.4" fill="var(--press)">THE MOAT · CHAT DELAY</text>
+        <g fill="none" stroke="var(--press)" stroke-width="5" stroke-linecap="round"><path d="M0 44q20-14 40 0t40 0t40 0t40 0t40 0t40 0t40 0"/><path d="M0 84q20-14 40 0t40 0t40 0t40 0t40 0t40 0t40 0" opacity=".55"/><path d="M0 124q20-14 40 0t40 0t40 0t40 0t40 0t40 0t40 0" opacity=".3"/></g>
+        <g font-size="18" font-weight="800" fill="var(--press)"><text x="300" y="52">2 s</text><text x="300" y="92" opacity=".7">4 s</text><text x="300" y="132" opacity=".5">6 s</text></g>
+        <text class="ser" x="0" y="176" font-size="19" fill="var(--press-2)">buys seconds, not magic</text>
+      </g>
+      <g transform="rotate(1.2 680 740)">
+        <rect x="400" y="560" width="548" height="392" fill="var(--sheet)" stroke="var(--press)" stroke-width="3"/>
+        <text x="428" y="598" font-size="16" font-weight="800" letter-spacing="2" fill="var(--press)">THE HERALD’S CHART · LAST 15 MIN</text>
+        <text class="ser" x="428" y="624" font-size="18" fill="var(--press-2)">what the crowd is calling for · sample data</text>
+        <g id="pf-chart"></g>
+        <g id="pf-legend" font-size="15" font-weight="700" fill="var(--press)"></g>
+      </g>
+    </svg>
+    <p class="cap">Stylised illustration · chat lines and series are sample data</p>
+  </div>
+  <div class="scene-copy" id="copy-gate">
+    <button class="back st" style="--n:0" type="button" data-back><span aria-hidden="true">←</span> The whole keep <kbd>Esc</kbd></button>
+    <p class="folio st" style="--n:1"><i style="background:var(--azure)"></i>Chamber 2 of 4 · the Gatehouse · <span class="num">moderator</span></p>
+    <h2 class="st" style="--n:2" aria-label="Gatehouse"><svg class="word" viewBox="0 0 10 10" data-word="GATEHOUSE" data-ink="var(--azure)" aria-hidden="true"></svg></h2>
+    <p class="fnline st" style="--n:3">AI moderator</p>
+    <p class="stand st" style="--n:4">Nobody walks in unseen. The Gatehouse is one moderator that guards the room and reads it. It starts by watching, and only acts when you arm it.</p>
+    <div class="cta-row st" style="--n:5"><a class="btn cta" href="moderator.html">Enter the Gatehouse <span aria-hidden="true">→</span></a><button class="btn ghost more" type="button" aria-expanded="false" data-more>Full feature list</button></div>
+    <ol class="notes st" style="--n:6">
+      <li><span><b>Watching first.</b> Shadow is the default: the Gatehouse says what it would do and does nothing. Armed, it acts; a ban can need a human click.</span></li>
+      <li><span><b>Every hold has a reason.</b> One gate log of every hold, release, removal and mode change, with its reason, an undo where Twitch allows one, and a path for petitions (appeals).</span></li>
+      <li><span><b>The Herald’s chart.</b> The strongest directions of opinion in chat right now, filtered by emote or emotion, rising and falling over the last minutes.</span></li>
+      <li><span><b>Drill on last night.</b> Replay a past stream’s chat through today’s rules before you switch them on. <span class="sd">sample: 18,420 messages → 212 held, 96 barred</span></span></li>
+    </ol>
+    <div class="full" hidden>
+      <h3>The gate</h3><ul><li>A non-moderator chat delay of 2, 4 or 6 s (the moat), a queue of messages AutoMod held for review (at the portcullis), and Shield Mode as the emergency switch (raise the drawbridge).</li></ul>
+      <h3>Garrison orders (the room governor)</h3><ul><li>Slow, follower-only, emote-only and unique chat, switched by room-size tiers with hysteresis (no flapping) and timed leases (a mode ends on its own).</li></ul>
+      <h3>Rules on people</h3><ul><li>Streamer-set rules (words, links, spam, repeats, new accounts) map to warn, delete, timeout or ban. An optional LLM classifier handles what rules cannot express.</li><li>Every action has a reason, an undo where Twitch allows one, and a path for appeals. One verdict before everything: barred messages never count.</li></ul>
+      <h3>Main page</h3><ul><li>The live room, the Herald’s chart, the latest gate log, Watching or Armed state, and the entry to the drill (the replay simulator).</li></ul>
+    </div>
+    <nav class="scene-links st" style="--n:7" aria-label="Other chambers"><button type="button" data-go="lots">← Chamber 1 · Lot Chamber</button><span>Chamber 2 of 4</span><button type="button" data-go="beacons">Chamber 3 · Beacons →</button></nav>
+  </div>
+</section>
+
+<section class="scene" id="scene-beacons" data-plate="beacons" data-module="visuals" role="region" aria-label="Chamber 3: the Beacons, contribution visuals" inert>
+  <div class="scene-art">
+    <svg class="sa" viewBox="0 0 1000 1000" role="img" aria-label="Stylised illustration: a beacon brazier with a halftone glow, a kindling curve with three blaze stages, and a timeline of contributions with a dying-down blaze area">
+      <g>
+        <path id="si-ht" fill="var(--press)" d=""/>
+        <circle cx="300" cy="290" r="170" fill="var(--sheet)" stroke="var(--press)" stroke-width="3"/>
+        <circle cx="300" cy="290" r="136" fill="none" stroke="var(--press)" stroke-width="3" stroke-dasharray="2 9"/>
+        <path d="M300 372C246 360 232 316 252 276C258 300 270 308 278 300C266 258 282 222 318 194C308 232 330 250 338 280C350 260 350 246 346 232C374 264 376 330 338 368Z" fill="var(--gules)"/>
+        <path d="M300 372C276 364 270 342 280 324C284 336 290 338 294 334C290 316 298 300 312 290C310 312 322 322 324 338C330 354 318 368 306 372Z" fill="var(--or)"/>
+        <path d="M216 372H384L364 410H236Z" fill="var(--press)"/><path d="M262 410L244 448M338 410L356 448M300 410V452" stroke="var(--press)" stroke-width="10" stroke-linecap="round"/>
+      </g>
+      <g>
+        <rect x="560" y="70" width="390" height="446" fill="var(--sheet)" stroke="var(--press)" stroke-width="3"/>
+        <text x="584" y="104" font-size="16" font-weight="800" letter-spacing="2.4" fill="var(--press)">THE KINDLING CURVE</text>
+        <text class="ser" x="584" y="130" font-size="18" fill="var(--press-2)">contributions in, blaze out · sample beacon</text>
+        <g transform="translate(604 150)"><path d="M0 300V0M0 300H316" fill="none" stroke="var(--press)" stroke-width="2"/><path d="M0 300L316 0" stroke="var(--press)" stroke-width="1.5" stroke-dasharray="5 6" fill="none"/>
+          <path d="M0 300C40 296 70 286 100 250S150 160 190 110S270 30 316 20" fill="none" stroke="var(--gules)" stroke-width="7"/>
+          <g fill="var(--sheet)" stroke="var(--press)" stroke-width="4"><circle cx="100" cy="250" r="9"/><circle cx="190" cy="110" r="9"/></g>
+          <g stroke="var(--press)" stroke-width="1.5" stroke-dasharray="3 5"><path d="M100 250V300M190 110V300"/></g>
+          <g font-size="15" font-weight="800" fill="var(--press)"><text x="6" y="322">0</text><text x="100" y="322" text-anchor="middle">500</text><text x="190" y="322" text-anchor="middle">2,500</text><text x="316" y="322" text-anchor="end">10,000</text></g>
+          <g class="ser" font-size="19" fill="var(--press)"><text x="8" y="236">embers</text><text x="112" y="150">flame</text><text x="40" y="40">pillar of fire</text></g>
+        </g>
+        <text x="584" y="502" font-size="15" font-weight="800" letter-spacing="1.6" fill="var(--press)">SAMPLE DATA · BEACON RANGES</text>
+      </g>
+      <g>
+        <rect x="60" y="560" width="890" height="380" fill="var(--sheet)" stroke="var(--press)" stroke-width="3"/>
+        <text x="84" y="596" font-size="16" font-weight="800" letter-spacing="2.4" fill="var(--press)">60 CONTRIBUTIONS, 47 MINUTES OF FIRELIGHT</text>
+        <text class="ser" x="84" y="622" font-size="18" fill="var(--press-2)">each dot is a contribution; black is the blaze on stream, dying down as it goes · sample data</text>
+        <g id="si-time"></g>
+        <g id="si-legend" font-size="14" font-weight="700" fill="var(--press)"></g>
+      </g>
+    </svg>
+    <p class="cap">Stylised illustration · timeline and ranges are sample data</p>
+  </div>
+  <div class="scene-copy" id="copy-beacons">
+    <button class="back st" style="--n:0" type="button" data-back><span aria-hidden="true">←</span> The whole keep <kbd>Esc</kbd></button>
+    <p class="folio st" style="--n:1"><i style="background:var(--or)"></i>Chamber 3 of 4 · the Beacons · <span class="num">visuals</span></p>
+    <h2 class="st" style="--n:2" aria-label="Beacons"><svg class="word" viewBox="0 0 10 10" data-word="BEACONS" data-ink="var(--or)" aria-hidden="true"></svg></h2>
+    <p class="fnline st" style="--n:3">Contribution visuals</p>
+    <p class="stand st" style="--n:4">Gifts light fires on your stream. Contributions change how it looks, never what it decides. Map bits, subs, gift subs and Hype Train to a blaze, and let it die down.</p>
+    <div class="cta-row st" style="--n:5"><a class="btn cta" href="visuals.html">Climb to the Beacons <span aria-hidden="true">→</span></a><button class="btn ghost more" type="button" aria-expanded="false" data-more>Full feature list</button></div>
+    <ol class="notes st" style="--n:6">
+      <li><span><b>Kindle by the numbers.</b> Glow, size, particles, colour or sound over ranges you set, dying down over time. <span class="sd">sample: halves every 5 min</span></span></li>
+      <li><span><b>Frames, borders, objects.</b> A frame around the camera, a screen border, or an altar, bonfire, crystal or banner: HTML, CSS and JS layers you design.</span></li>
+      <li><span><b>Test fire before live.</b> A live preview with an intensity slider and a “simulate a 50-sub gift bomb” button.</span></li>
+      <li><span><b>Paste the feed into OBS.</b> Each beacon is served as an OBS browser source URL, and optionally into the Extension overlay.</span></li>
+    </ol>
+    <div class="full" hidden>
+      <h3>Inputs and outputs</h3><ul><li><b>Inputs:</b> Bits, subs, gift subs, Hype Train level, channel-point redemptions, charity donations, goals.</li><li><b>Outputs:</b> a frame around the camera, a screen border, or an on-screen object such as an altar, a bonfire, a crystal or a banner, mapped to intensity ranges (glow, size, particles, colour, sound) with decay.</li></ul>
+      <h3>Asset designer</h3><ul><li>Assets are HTML, CSS and JS layers. The Steward can generate artwork through an image-generation API with your own key. Live preview with an intensity slider.</li></ul>
+      <h3>Delivery and main page</h3><ul><li>Served as an OBS browser source (copy the URL into OBS), optionally into the Extension overlay.</li><li>Main page: the lit beacons and their blaze, the event feed driving them, the kindling curve editor and the preview.</li></ul>
+    </div>
+    <nav class="scene-links st" style="--n:7" aria-label="Other chambers"><button type="button" data-go="gate">← Chamber 2 · Gatehouse</button><span>Chamber 3 of 4</span><button type="button" data-go="map">Chamber 4 · Map Room →</button></nav>
+  </div>
+</section>
+
+<section class="scene" id="scene-map" data-plate="map" data-module="studio" role="region" aria-label="Chamber 4: the Map Room, Extension studio" inert>
+  <div class="scene-art">
+    <svg class="sa" viewBox="0 0 1000 1000" role="img" aria-label="Stylised illustration: a nine by six hex map in three inks, a phone preview with three orders, a video frame with an Extension panel, and a three-step test ladder">
+      <g id="sl-hex"></g>
+      <g transform="translate(748 70)">
+        <rect width="200" height="440" rx="28" fill="none" stroke="var(--cream)" stroke-width="4"/>
+        <rect x="76" y="12" width="48" height="6" rx="3" fill="var(--cream)"/>
+        <g id="sl-mini" transform="translate(14 60)"></g>
+        <g font-size="12" font-weight="800" text-anchor="middle" letter-spacing=".2">
+          <rect x="16" y="300" width="168" height="34" rx="6" fill="var(--azure)"/><text x="100" y="322" fill="var(--press)">MARCH ON HOLLOW FEN</text>
+          <rect x="16" y="342" width="168" height="34" rx="6" fill="var(--or)"/><text x="100" y="364" fill="var(--press)">FORTIFY CINDER GATE</text>
+          <rect x="16" y="384" width="168" height="34" rx="6" fill="var(--gules)"/><text x="100" y="406" fill="var(--press)">SCOUT THE MIRE</text>
+        </g>
+      </g>
+      <g transform="translate(60 640)">
+        <rect width="560" height="300" rx="12" fill="none" stroke="var(--cream)" stroke-width="4"/>
+        <path d="M0 220L130 140L220 190L340 100L440 170L560 120V288a12 12 0 0 1-12 12H12a12 12 0 0 1-12-12Z" fill="var(--cream)" fill-opacity=".14"/>
+        <rect x="372" y="28" width="168" height="244" rx="8" fill="var(--press)" stroke="var(--or)" stroke-width="3" stroke-dasharray="8 6"/>
+        <g id="sl-panel" transform="translate(382 52)"></g>
+        <text x="20" y="36" font-size="15" font-weight="800" letter-spacing="2" fill="var(--cream)">OVER THE STREAM</text>
+      </g>
+      <g transform="translate(660 684)" font-weight="800"><g><rect width="300" height="66" rx="4" fill="none" stroke="var(--cream)" stroke-width="3"/><text x="18" y="29" font-size="15" letter-spacing="2" fill="var(--cream)">1 · SAND TABLE</text><text x="18" y="52" font-size="15" font-weight="500" fill="var(--cream)">local test, on your machine</text></g><g transform="translate(0 80) rotate(-1.5 150 33)"><rect width="300" height="66" rx="4" fill="var(--or)"/><text x="18" y="29" font-size="15" letter-spacing="2" fill="var(--press)">2 · MUSTER</text><text x="18" y="52" font-size="15" font-weight="600" fill="var(--press)">hosted test · 12 accounts</text><path d="M-8 33l-14-12v24z" fill="var(--cream)"/></g><g transform="translate(0 160)"><rect width="300" height="66" rx="4" fill="none" stroke="var(--cream)" stroke-width="3" stroke-dasharray="7 5"/><text x="18" y="29" font-size="15" letter-spacing="2" fill="var(--cream)">3 · PROCLAIMED</text><text x="18" y="52" font-size="15" font-weight="500" fill="var(--cream)">after Twitch review, 8–14 days</text></g><text x="0" y="256" font-size="15" letter-spacing="1.6" fill="var(--cream)" opacity=".85">SAMPLE DATA</text></g>
+      <g stroke="var(--cream)" stroke-width="2" fill="none"><path d="M24 36V24H40M976 36V24H960M24 964V976H40M976 964V976H960"/></g>
+    </svg>
+    <p class="cap">Stylised illustration · hex map and test stage are sample data</p>
+  </div>
+  <div class="scene-copy" id="copy-map">
+    <button class="back st" style="--n:0" type="button" data-back><span aria-hidden="true">←</span> The whole keep <kbd>Esc</kbd></button>
+    <p class="folio st" style="--n:1"><i style="background:var(--ink)"></i>Chamber 4 of 4 · the Map Room · <span class="num">studio</span></p>
+    <h2 class="st" style="--n:2" aria-label="Map Room"><svg class="word" viewBox="0 0 10 10" data-word="MAP ROOM" data-ink="var(--key)" aria-hidden="true"></svg></h2>
+    <p class="fnline st" style="--n:3">Extension studio</p>
+    <p class="stand st" style="--n:4">Draw what viewers touch, without writing code. One reviewed Twitch Extension, dressed with your own data and art.</p>
+    <div class="cta-row st" style="--n:5"><a class="btn cta" href="studio.html">Enter the Map Room <span aria-hidden="true">→</span></a><button class="btn ghost more" type="button" aria-expanded="false" data-more>Full feature list</button></div>
+    <ol class="notes st" style="--n:6">
+      <li><span><b>One Extension, edited as data.</b> Layout, components, viewer controls and art are data. The studio never edits code, so a new design needs no new review.</span></li>
+      <li><span><b>Five templates.</b> A hex map where viewers pick moves, a choice board, a viewer card, the draw, a contribution meter.</span></li>
+      <li><span><b>Who drives, what viewers do.</b> The human streamer, an AI streamer or both; vote, pick a tile or join a side, with cadence and limits.</span></li>
+      <li><span><b>Sand table, muster, proclaimed.</b> Run it locally, then on your own channel for allowlisted test accounts; Twitch review takes 8–14 days before release. <span class="sd">sample: hosted test, 12 accounts</span></span></li>
+    </ol>
+    <div class="full" hidden>
+      <h3>One Extension</h3><ul><li>The app ships one reviewed, data-driven Twitch Extension. The studio edits layout, components, viewer controls and art.</li></ul>
+      <h3>Templates and settings</h3><ul><li>Hex map, choice board, viewer card, the lottery’s draw, a contribution meter.</li><li><b>Operation:</b> who drives it and what viewers can do, with cadence and limits. <b>Testing:</b> local test, hosted test (allowlisted accounts), released.</li></ul>
+      <h3>Main page</h3><ul><li>The layout canvas, the component list, the viewer-side preview (desktop and mobile), the operator controls and the test status.</li></ul>
+    </div>
+    <nav class="scene-links st" style="--n:7" aria-label="Other chambers"><button type="button" data-go="beacons">← Chamber 3 · Beacons</button><span>Chamber 4 of 4</span><button type="button" data-go="lots">Chamber 1 · Lot Chamber →</button></nav>
+  </div>
+</section>
+
+</div>
+
+<button class="skip" id="skip" type="button">Skip intro</button>
+<script src="mark.js"></script>
+<script src="landing.js"></script>
+</body>
+</html>

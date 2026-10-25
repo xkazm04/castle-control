@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Beacons · contribution visuals — Castle Control</title>
+<script>try{if(JSON.parse(localStorage.getItem('cc.state.v1')||'{}').theme==='stock')document.documentElement.setAttribute('data-theme','stock')}catch(e){}</script>
+<script src="../data/sample.js"></script><script>window.SAMPLE||document.write('<script src="sample.copy.js"><\/script>')</script>
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="app.css">
+<style>
+/* Beacons — page styles */
+.plates{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));min-height:330px}
+.pl{position:relative;padding:12px 14px 12px;border:0;border-right:1px dashed var(--hair);background:transparent;text-align:left;cursor:pointer;display:flex;flex-direction:column;min-width:0;color:inherit}
+.pl:last-child{border-right:0}
+.pl:hover{background:var(--tint)}
+.pl[aria-pressed="true"]{background:color-mix(in srgb,var(--or) 13%,transparent);box-shadow:inset 0 -4px 0 var(--or)}
+.pl .hd{display:flex;align-items:center;gap:8px}
+.pl .hd b{font:800 17px/1.1 var(--font-display);font-stretch:75%;letter-spacing:.05em;text-transform:uppercase}
+.pl .hd .chip{margin-left:auto}
+.pl svg.cov{display:block;width:100%;height:150px;margin:6px 0 4px}
+.pl .stg{font:800 29px/1 var(--font-display);font-stretch:75%;letter-spacing:.02em;text-transform:uppercase;position:relative;isolation:isolate;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.pl .stg::after{content:attr(data-t);position:absolute;left:2px;top:2px;color:var(--or);mix-blend-mode:var(--blend);z-index:-1;white-space:nowrap}
+.pl .val{display:flex;align-items:baseline;gap:8px;margin-top:4px}
+.pl .val b{font:700 20px/1 var(--font-num);font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.pl .val span{color:var(--muted);font-size:13px}
+.pl .rng{position:relative;height:10px;margin-top:8px;background:var(--tint-2)}
+.pl .rng i{position:absolute;top:0;bottom:0;background:var(--or);mix-blend-mode:var(--blend)}
+.pl .rng u{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--ink);text-decoration:none}
+.pl .rl{display:flex;justify-content:space-between;font:600 12px/1.2 var(--font-num);color:var(--muted);margin-top:4px}
+.pl .ft{margin-top:auto;display:flex;gap:6px;flex-wrap:wrap;align-items:center;font-size:13px;color:var(--muted)}
+.vgrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(320px,390px);gap:26px;margin-top:22px;align-items:start}
+@container pg (max-width:900px){.vgrid{grid-template-columns:1fr}}
+.feed{max-height:430px}
+.fk{display:inline-flex;align-items:center;gap:5px}
+.fk svg{width:15px;height:15px}
+.curvebox{position:relative;background:var(--card);border:1px solid var(--hair);padding:6px}
+.curvebox svg{display:block;width:100%;height:290px;touch-action:none}
+.curvebox .h{cursor:grab}
+.curvebox .h:active{cursor:grabbing}
+.cv-tools{display:flex;gap:10px;align-items:end;flex-wrap:wrap;margin-top:10px}
+.cv-tools label.f{min-width:150px}
+.preview{position:relative;aspect-ratio:16/9;border:1.5px solid var(--ink);background:var(--paper-2);overflow:hidden}
+.preview svg{position:absolute;inset:0;width:100%;height:100%}
+.preview .lbl{position:absolute;left:8px;top:6px;font:600 12px/1 var(--font-ui);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);z-index:2}
+.preview.bomb::after{content:"TEST FIRE · 50 SUBS";position:absolute;right:10px;bottom:8px;font:800 14px/1 var(--font-display);letter-spacing:.1em;background:var(--or);color:var(--press);padding:5px 8px;border:1.5px solid var(--ink);animation:toast-in .3s var(--ease)}
+.url{display:flex;gap:6px;align-items:center;background:var(--tint);padding:4px 4px 4px 9px;border-radius:2px;font:600 12.5px/1.2 var(--font-num);overflow:hidden}
+.url span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+pre.code{margin:0;padding:10px 12px;background:var(--ink);color:var(--paper);font:12.5px/1.5 var(--font-num);overflow:auto;border-radius:2px}
+pre.code .c{color:var(--faint)}
+.layers{margin:0;padding:0;list-style:none}
+.layers li{display:grid;grid-template-columns:34px 1fr auto;gap:10px;align-items:center;padding:7px 0;border-bottom:1px solid var(--hair-2)}
+.layers li .no{font:800 13px/1 var(--font-num);border:1.5px solid var(--ink);border-radius:2px;text-align:center;padding:3px 0}
+.flick{animation:flick 1.6s ease-in-out infinite;transform-origin:50% 100%;transform-box:fill-box}
+@keyframes flick{0%,100%{transform:scale(1,1)}50%{transform:scale(.96,1.07)}}
+@media (prefers-reduced-motion:reduce){.flick{animation:none}}
+</style>
+</head>
+<body data-module="visuals">
+<main id="page" class="page">
+  <header class="pagehead">
+    <div class="folio"><a href="index.html">Castle Control</a><span>›</span><span>Chamber 3 of 4</span><span>·</span><b>Beacons</b><span class="crumbs"></span></div>
+    <div class="titlerow">
+      <h1 class="h1" data-t="Beacons">Beacons</h1>
+      <p class="stand"><b>Contribution visuals</b>Contributions light beacons on the stream: a frame, a border or an object that changes how it looks, never what it decides.</p>
+      <div class="actions" id="head-actions"></div>
+    </div>
+  </header>
+
+  <section class="view" data-view="main" id="v-main">
+    <div class="hero" id="hero" data-module="visuals" aria-label="Lit beacons and their current blaze (intensity)">
+      <i class="crop tl"></i><i class="crop tr"></i><i class="crop bl"></i><i class="crop br"></i>
+      <div class="plates" id="plates" role="radiogroup" aria-label="Lit beacons (active visuals)"></div>
+    </div>
+
+    <div class="vgrid">
+      <div class="v2">
+        <div class="sec"><div class="sec-h"><span class="no">3.2</span><h2>Kindling curve</h2><span class="gloss">how much fire for how much input</span><span class="meta" id="cv-name"></span></div>
+          <div class="curvebox"><svg id="curve" viewBox="0 0 560 290" role="img" aria-label="Kindling curve (intensity): drag the handles"></svg></div>
+          <div class="cv-tools">
+            <label class="f"><span>Decay</span><select id="cv-decay"><option value="300">Halves every 5 min</option><option value="120">Halves every 2 min</option><option value="900">Halves every 15 min</option><option value="0">Resets at stream end</option></select></label>
+            <label class="f"><span>Gift subs count as <b class="num" id="cv-gw-v">1×</b></span><input type="range" id="cv-gw" min="1" max="6" step="1" value="1" aria-label="Weight of a gift sub"></label>
+            <button class="btn sm ghost" id="cv-reset">Reset curve</button>
+          </div>
+          <p class="hint" style="margin-top:8px">Drag a handle. Left and right moves a stage threshold; up and down sets how much fire that stage gives. Blaze (intensity) is what the beacons above show, live.</p>
+        </div>
+      </div>
+      <div class="v3">
+        <div class="sec"><div class="sec-h"><span class="no">3.3</span><h2>Test fire</h2><span class="gloss">before it meets an audience</span></div>
+          <div class="preview" id="preview"><div class="lbl">Stylised preview · not a capture of your stream</div><svg id="prev" viewBox="0 0 320 180" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Stylised preview of the selected visual"></svg></div>
+          <div class="rowf" style="margin-top:10px;align-items:end"><label class="f"><span>Preview intensity <b class="num" id="pv-v">62%</b> · <span id="pv-follow" class="t-or" style="color:var(--or-text)">following live</span></span><input type="range" id="pv-i" min="0" max="100" value="60" aria-label="Preview intensity"></label><button class="btn plate" id="pv-bomb">Test fire: 50-sub bomb</button></div>
+          <p class="hint" style="margin-top:6px">A test fire feeds this preview only. Nothing reaches OBS or the audience.</p>
+          <div class="f-l" style="margin:14px 0 4px">The feed · paste into an OBS browser source</div>
+          <div class="url"><span id="feed-url">http://localhost:4821/feeds/altar</span><button class="btn sm icon" id="url-copy" aria-label="Copy the feed URL" title="Copy"></button></div>
+          <label class="chk" style="margin-top:10px"><input type="checkbox" id="ext-ov"><span>Also send to the Extension overlay <span class="muted">(optional; needs the Extension in Layout)</span></span></label>
+          <p class="hint" style="margin-top:6px">The app serves this on your machine and re-broadcasts events to it. No Twitch token is ever in the URL.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="vgrid" style="margin-top:26px">
+      <div class="v1">
+        <div class="sec"><div class="sec-h"><span class="no">3.1</span><h2>What is feeding the beacons</h2><span class="meta" id="feed-meta">sample data</span></div>
+          <div class="chips" id="feed-flt" style="margin-bottom:8px" role="group" aria-label="Filter the event feed"></div>
+          <div class="scroll feed"><table class="tbl" id="feed"><thead><tr><th class="n">Stream</th><th>Kind</th><th class="n">Amount</th><th>From</th><th>Lights</th></tr></thead><tbody></tbody></table></div>
+          <div style="display:flex;gap:8px;align-items:center;margin-top:10px;flex-wrap:wrap"><button class="btn sm ghost" id="clk-pause" aria-pressed="false">Pause sample clock</button><div class="seg2" id="clk-speed" role="group" aria-label="Sample clock speed"><button data-s="1" aria-pressed="false">×1</button><button data-s="6" aria-pressed="true">×6</button><button data-s="30" aria-pressed="false">×30</button></div><span class="hint">Sample clock replays the recorded events.</span></div>
+        </div>
+      </div>
+      <div class="v4"><div class="sec"><div class="sec-h"><span class="no">3.4</span><h2>Layers of the selected beacon</h2><span class="gloss">HTML, CSS and JS layers</span><span class="meta" id="pl-name"></span></div>
+          <ul class="layers" id="layers"></ul>
+          <pre class="code" id="code" style="margin-top:10px"></pre>
+          <p class="hint" style="margin-top:8px">Assets are plain layers. The app sets <code class="mono">--blaze</code> from 0 to 1; your CSS reads it. The Steward can brief an image-generation API (your own key) for artwork, and nothing becomes a layer until you seal (approve) it.</p></div></div>
+    </div>
+  </section>
+</main>
+<script src="mark.js"></script>
+<script src="app.js"></script>
+<script src="app-visuals.js"></script>
+</body>
+</html>

@@ -1,0 +1,29 @@
+/* Castle Control: design tokens, declared once.  Every page links this file first.
+   Print logic: three heraldic spot inks (azure, gules, or) plus a key, on warm paper.
+   [data-theme="stock"] is the dark-stock theme for long streams. */
+:root{
+/* paper and key (these flip on dark stock) */
+--paper:#F4F0E6; --paper-2:#EAE4D4; --card:#FBF9F3; --ink:#16181D; --ink-2:#3A3D45; --muted:#656972; --faint:#9A9DA4; --line:#D9D2BE; --rule:#16181D; --key:#16181D;
+/* the three spot inks, by heraldic tincture */
+--azure:#3F86DC;   /* the Gatehouse: watch, water, the moat */
+--gules:#E4472E;   /* the Lot Chamber: wax seals, banners */
+--or:#F2B233;      /* the Beacons: fire and gilt */
+--azure-text:#1D5BAA; --gules-text:#B3321B; --or-text:#7A5800;
+/* overprints and signals */
+--green:#0A9A5E; --orange:#D9682A; --navy:#24467E;
+--ok:#0A9A5E; --warn:#E8A800; --danger:#CC2149; --info:#1D6FC4;
+/* invariants: printed art that never flips with the theme */
+--press:#16181D; --press-2:#3A3D45; --sheet:#F7F3E8; --cream:#F2EEE3;
+--r-sm:3px; --r-md:6px; --r-lg:12px;
+--blend:multiply;
+--font-display:"Bahnschrift","Arial Narrow","Roboto Condensed","Helvetica Neue",Impact,sans-serif;
+--font-serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+--font-ui:"Segoe UI Variable Text","Segoe UI",system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif;
+--font-num:ui-monospace,"Cascadia Mono","SF Mono",Consolas,Menlo,monospace;
+--ease:cubic-bezier(.2,.8,.2,1);
+}
+[data-theme="stock"]{
+--paper:#121317; --paper-2:#1A1C22; --card:#1D2027; --ink:#F2EEE3; --ink-2:#C9C5B8; --muted:#8E919A; --faint:#5F626B; --line:#2A2D36; --rule:#F2EEE3; --key:#F2EEE3;
+--azure-text:#86B6F0; --gules-text:#FF8B72; --or-text:#FFD36B; --blend:screen;
+--ok:#37D08E; --danger:#FF5C7E; --info:#86B6F0; --green:#2FCB86; --orange:#FF8A4C; --navy:#6F93D6;
+}
