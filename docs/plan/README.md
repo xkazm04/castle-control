@@ -42,7 +42,7 @@ The plan proceeds on these defaults, set by the director on 2026-10-25 because t
 | D7 | Ban autonomy (left as a comment in the Claude Doc, Part 1) | A ban needs a human click by default. Auto-ban is allowed only on an armed, pattern-based rule, under an expiring grant with a cap on bans per hour and a circuit breaker. A classifier-only rule can never ban alone | M1 (WP 1.1) |
 | D8 | Desktop platforms | Windows first; macOS and Linux in M6 | M6 |
 | D9 | Name | "Castle Control" is a working name. Run a trademark search before release | M6 |
-| D10 | Engine stack | OpenAI only: the Codex CLI is the slow lane; the OpenAI API or a local model is the fast lane. Decided by the owner 2026-10-25 | Owner only |
+| D10 | Engine stack | One multi-provider engine wrapper (owner, 2026-10-25, revised the same evening). Slow lane: the user's own Claude Code CLI or Codex CLI behind one provider trait. Fast lane: the OpenAI API, an Anthropic key or a local OpenAI-compatible model. During development the Claude Code CLI drives and tests the app; the OpenAI lane (Codex CLI + OpenAI API) is proven once the app is complete, before the submission | Owner only |
 | D11 | Builders | Codex `gpt-6.1-sol` at reasoning effort `high` only; an Opus Director reviews every diff and merges. Decided by the owner 2026-10-25 | Owner only |
 
 ### Owner tasks before development starts

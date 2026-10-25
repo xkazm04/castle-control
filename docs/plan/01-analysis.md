@@ -13,7 +13,7 @@ We build a free, open-source desktop app that gives any Twitch streamer four liv
 - **Descoped.** Sealed Decrees is out for now: it is built around AI streamers, and this hackathon is human-first.
 - **Brand by contest.** Six landing prototypes: Opus develops "Castle Control", Sonnet develops "Shepherd", and the other four are wildcards. Each covers a landing page plus the main page of every module.
 - **Look.** The app itself is professional and practical: dense content layout, a deliberate type scale, efficient spacing. The landing page stays bold and creative, because Twitch is full of visually talented people.
-- **Stack.** The same stack as Shadowrunr OS: a Rust backend with a Tauri 2 shell and a React front end, under an OSS licence. It adds a universal LLM engine wrapper on an OpenAI stack, with the user's own Codex CLI as the slow lane, and Leonardo for image generation.
+- **Stack.** The same stack as Shadowrunr OS: a Rust backend with a Tauri 2 shell and a React front end, under an OSS licence. It adds a universal multi-provider LLM engine wrapper (D10): the user's own Claude Code CLI drives the app during development, and the OpenAI lane (the Codex CLI and the OpenAI API) is proven once the app is complete. Leonardo generates images.
 - **Order of work.** Research and technical design run first and in parallel. This document is Part 1; Part 2 adds the UI from the contest, then comes the implementation plan for the new repo.
 
 ## From six variants to four modules
@@ -180,7 +180,7 @@ Chat enters once through the Twitch bridge and passes one verdict before any mod
 **Engine wrapper.** It has two paths.
 
 - **Fast path.** Live moderation has a budget of roughly 0.3 to 2 seconds. It uses the OpenAI API (Responses API) or any OpenAI-compatible local endpoint, with a preloaded local model (Ollama, LM Studio), a short timeout and a stated fail-open or fail-closed rule per rule.
-- **Slow path.** The co-pilot's design work defaults to the user's own Codex CLI run headless ([non-interactive mode](https://learn.chatgpt.com/docs/non-interactive-mode)): `codex exec --json`, prompt on stdin, the `-s read-only` sandbox, `-o` for the last message, `--output-schema` for writs where useful, and `codex exec resume <id>` for follow-ups. The JSONL events are parsed: `thread.started` carries the thread id; `turn.completed`, `turn.failed`, `item.*` and `error` carry the rest.
+- **Slow path.** The co-pilot's design work runs on a CLI provider chosen in settings, behind one trait: the user's own Claude Code CLI (headless `claude -p --output-format stream-json`; the development default) or the user's own Codex CLI run headless ([non-interactive mode](https://learn.chatgpt.com/docs/non-interactive-mode)): `codex exec --json`, prompt on stdin, the `-s read-only` sandbox, `-o` for the last message, `--output-schema` for writs where useful, and `codex exec resume <id>` for follow-ups. The JSONL events are parsed: `thread.started` carries the thread id; `turn.completed`, `turn.failed`, `item.*` and `error` carry the rest.
 
 The app detects the CLI and asks the user to sign in to Codex themselves (ChatGPT sign-in), or to bring an OpenAI API key, kept in the OS keychain and passed as `CODEX_API_KEY` only to that child, never logged. The app never reads `~/.codex/auth.json`, and never uses `--dangerously-bypass-approvals-and-sandbox`. The product name and UI do not imply OpenAI endorsement; any "Built with Codex" or "Powered by OpenAI" attribution follows OpenAI's brand guidelines (verify current guidelines).
 

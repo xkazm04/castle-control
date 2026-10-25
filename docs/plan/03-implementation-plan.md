@@ -49,6 +49,7 @@ Castle Control is the project's entry. Re-read the Devpost rules before submitti
 | Sun 11-01 | M6 | WP 6.1, WP 6.2; the final video, the README |
 | Mon 11-02 | Submit | The landing, the Devpost form and the submission, before 14:00 PT |
 
+- **The OpenAI lane is proven before the video** (D10): on Sun 11-01 the Steward and the classifier run end to end on the Codex CLI and the OpenAI API, with the provider switched in settings only.
 - **Submission floor.** If later milestones slip, the submission ships the highest finished cut. M0 to M2 (the first usable cut) plus a demo video are the floor, and must exist by Fri 2026-10-30.
 - **Nov 1 and 2 are reserved** for the video, the README, the landing and the submission. Build work that is not done by then waits.
 - **M4 depends on Twitch's policy answer (WP 4.0)**, so it may slip regardless of pace. The Director reorders around it.
@@ -116,7 +117,7 @@ castle-control/
 | --- | --- | --- | --- |
 | `crates/shadowrunr-daemon/src/platform/twitch/` (auth, eventsub, helix, store, mod) | about 1,550 lines plus 890 lines of tests | `cc-twitch` | Widen scopes and subscriptions per module. Make the keyring cross-platform. Resubscribe after a drop and mark the gap. Honour Ratelimit-\* headers |
 | `crates/shadowrunr-daemon/src/moderator/` (rules, mod, lane, store) | about 1,370 lines plus 830 lines of tests | `cc-gatehouse` | Keep the rule model, shadow and armed, strikes, the fenced batched classifier and the ledger. Leave `voice.rs` behind, because it is show-specific |
-| `crates/shadowrunr-engine/src/` (admission, api, claude\_cli, alt\_cli, ladder, ledger, limits, model, stream, health) | the whole crate | `cc-engine` | Reorder backends so the live lane is the OpenAI API or a local model, and the CLI is the slow lane only. `claude_cli` is rewritten as `codex_cli`: the JSONL event parser, the spawn door, and a probe for installed, version and signed in (`codex login status` style checks; the exact probe command is to verify in WP 1.4) |
+| `crates/shadowrunr-engine/src/` (admission, api, claude\_cli, alt\_cli, ladder, ledger, limits, model, stream, health) | the whole crate | `cc-engine` | Reorder backends so the live lane is the OpenAI API or a local model, and the CLI is the slow lane only. `claude_cli` is kept and adapted (the development default, D10), and `codex_cli` is added beside it behind the same provider trait: its JSONL event parser, the shared spawn door, and a probe for installed, version and signed in (`codex login status` style checks; the exact probe command is to verify in WP 1.4) |
 | The daemon's `/rpc` and `/events` server, with resume by sequence (`crates/shadowrunr-daemon/src/server.rs`) | — | `cc-core` | Same protocol; methods come from the module registry |
 | `packages/contract/scripts/` (codegen, check, generate) | — | `packages/contract` | Unchanged pipeline: Rust types to JSON Schema to TS types and ajv validators |
 | `packages/stage-kit/src/` (pure reducer, timed slots, playback) | chosen by the work package 0.4 inventory | `packages/renderer` | Only the pure parts; no show-specific scenes |
@@ -371,8 +372,9 @@ Every other module reads chat only after the Gatehouse's verdict, so this milest
   - **Admission.** A model is admitted to a class on its tail latency and longest silence.
   - **A capability floor** measured for structured verdicts on small local models.
   - **A labelled fallback ladder:** model, then rules only, then an honest refusal. A rule verdict never looks like a model verdict.
-  - **One spawn door** for the Codex CLI slow lane (`codex exec --json`):
-    - an allowlisted environment; an API key from the OS keychain goes in as `CODEX_API_KEY` to that child only, and is never logged;
+  - **A provider trait** for the CLI slow lane with two backends: `claude_cli` (headless Claude Code, `claude -p --output-format stream-json`, the development default) and `codex_cli` (`codex exec --json`). The provider is chosen in settings and recorded per call in the ledger, never hardcoded (D10).
+  - **One spawn door** shared by both CLI backends:
+    - an allowlisted environment; an API key from the OS keychain goes in as `CODEX_API_KEY` or `ANTHROPIC_API_KEY` to that child only, and is never logged; never `--dangerously-skip-permissions` or `--dangerously-bypass-approvals-and-sandbox`;
     - the prompt over stdin;
     - a neutral working directory;
     - a JSONL event parser: `thread.started` carries the thread id; `turn.completed`, `turn.failed`, `item.*` and `error` are mapped to engine outcomes;
@@ -381,6 +383,7 @@ Every other module reads chat only after the Gatehouse's verdict, so this milest
     - an orphan sweep at start.
 - **Acceptance:**
   - the CLI never runs on the live lane;
+  - both CLI backends pass the same contract tests against a fake CLI binary, and switching the provider in settings changes no call site;
   - a planted sentinel secret is not visible to the child, and the app never reads `~/.codex/auth.json`;
   - the engine ledger records the class, the model selected, the model served and the cost for every call;
   - with no model available, live moderation continues on rules alone, labelled as rules-only.
@@ -627,7 +630,7 @@ Every other module reads chat only after the Gatehouse's verdict, so this milest
 - **Scope:**
   - `steward.ask` returns a writ: a typed configuration change for one chamber, shown as a diff;
   - `steward.writ.seal` applies it, and `steward.writ.tear` discards it;
-  - the engine's slow lane runs the user's own Codex CLI headless (`codex exec --json`, prompt on stdin, `-s read-only`, `-o` for the last message, `--output-schema` for the writ where useful, `codex exec resume <id>` for follow-ups), and falls back to the OpenAI API or a local model.
+  - the engine's slow lane runs the configured CLI provider (Claude Code during development; Codex once the OpenAI lane is proven), for Codex headless (`codex exec --json`, prompt on stdin, `-s read-only`, `-o` for the last message, `--output-schema` for the writ where useful, `codex exec resume <id>` for follow-ups), and falls back to the OpenAI API or a local model.
 - **Acceptance:**
   - nothing changes without a seal;
   - a writ that fails its chamber's schema is shown as an error and never applied;
