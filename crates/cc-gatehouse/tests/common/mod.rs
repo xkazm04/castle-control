@@ -122,7 +122,7 @@ impl Classifier for Fake {
         self.calls.fetch_add(1, Ordering::SeqCst);
         self.prompts.lock().unwrap().push(prompt.to_owned());
         if self.fail {
-            Err(ClassifierError)
+            Err(ClassifierError::Unavailable)
         } else {
             Ok(self.response.clone())
         }

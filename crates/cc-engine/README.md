@@ -1,7 +1,8 @@
 # WP 1.4: engine and classifier lanes
 
-Offline preparation only. This crate is not wired to core, Gatehouse, Twitch or
+Offline preparation only. This crate is not wired to core, Twitch or
 the desktop app. No test launches a real coding CLI or calls a real model.
+Gatehouse provides an optional in-process `EngineClassifier` adapter.
 
 ## Routing and local admission
 
@@ -95,6 +96,18 @@ it is not atomic with process creation. Windows is the supported CLI platform
 for this delivery; non-Windows CLI custody refuses until M6 supplies containment.
 
 ## Outcomes and the one ledger
+
+`Engine::complete` keeps the exact single-verdict object check on live classes.
+`complete_with_shape(..., AnswerShape::Custom(&parser))` is the Rust-only seam for
+callers with another structured reply. The callback must use the caller's schema
+door; it runs before any live model result is returned. Gatehouse supplies its
+existing hit-array decoder, then checks batch/rule membership in its lane. Custom
+shapes omit local `json_object` response mode so arrays are possible; default
+calls and capability-floor measurements retain that mode. Invalid custom output
+uses the same fallback ladder, and every result still requires a successful
+engine audit append. Admission, endpoint authorization and CLI custody do not
+change. `tests/answer_shape.rs` proves default rejection of arrays, custom
+acceptance, malformed-output fallback, request modes and audit failure.
 
 The ladder labels outcomes `model`, `rules-only`, or `refused`. No engine/model
 means the caller's deterministic verdict continues, explicitly rules-only. With

@@ -5,11 +5,66 @@ at `7e4b6f8` (Apache-2.0; see the source headers and root NOTICE). Voice and
 show logic are excluded. It uses the expanded `cc-types` contract from
 `2862f6c` and the existing cc-store API, with no manifest or lockfile changes.
 
-Nothing here registers RPC methods, calls cc-engine, connects to Twitch,
+Nothing here registers RPC methods, connects to Twitch,
 or executes a moderation action. `screen_batch` returns final verdicts and
 optional **action intents**; simulated tests do not prove a real Twitch action
 occurred. Live execution/acknowledgement is a later integration package,
 after the live spike and the owner's M1 sign-off.
+
+## In-process engine classifier
+
+`EngineClassifier::new(engine, store, vault, key_label)` implements `Classifier`
+using cc-engine's completion path. Supply an already configured engine, a dedicated
+cc-store audit writer, the host's `Box<dyn Keychain>` broker and an optional key
+label. Never open another writer at that store root. No additional settings,
+wire identifiers or dependencies are introduced.
+
+The adapter always requests the `live` role class: the two-second moderation
+deadline determines the class, rather than the presence of a message batch.
+Both engine routing and the spawn door refuse CLI calls on this class. Measured
+endpoint/model admission, cloud opt-in, the fallback ladder and engine auditing
+are unchanged. The system instructions and fenced prompt are passed together;
+neither the prompt nor credentials are logged. Local endpoints receive no key.
+
+An async mutex owns the engine and audit writer. Engine's Windows completion
+future includes non-Send CLI custody types even for endpoint calls, so the adapter
+polls it locally on a Tokio blocking worker without changing those types. Lock
+waiting remains within the lane deadline. A started live attempt can finish and
+audit after caller cancellation, but its dropped result cannot authorize an
+action; the writer remains locked through that audit.
+
+Hit arrays use the existing classifier parser via `AnswerShape::Custom` instead
+of the engine's default single-verdict object check. The lane then checks batch
+membership, rule IDs and duplicate hits at the same parser door. Invalid output
+is held. `RulesOnly` and `Refused` return sanitized classifier errors, never model
+text. Decisions record `classifier_unavailable` and `rules-only` or `refused`;
+an engine audit error records `engine_audit_failed` and produces no classifier
+action. Pending classifier candidates have no deterministic verdict, so this
+adapter requests no invented fallback verdict and engine failures normally refuse.
+Coverage retains `withheld`, `gate_skipped` and `gate_found_nothing` separately.
+Care detection still precedes classification, and disclosures never enter its
+prompt.
+
+Offline integration evidence (`cargo test --offline --locked -p cc-gatehouse
+--test engine_classifier`): model hits become typed actions only through the
+gate; endpoint failure is labelled refused; malformed and unknown output is
+held; disclosures reach a human across model/failure outcomes; audit failure
+suppresses a valid hit; unmeasured models refuse without a request; both fallback
+labels are recorded; concurrent callers serialize the audit writer. Fake endpoints
+use ephemeral loopback ports and simulated data, never an external model or real
+CLI. The rules-only mapping also has a direct adapter unit test.
+
+Integration validation, 2026-10-26: all ten new tests passed (eight Gatehouse
+integration tests, its adapter unit test and the engine shape test). Temporarily
+restoring `AnswerShape::Verdict` made
+`model_batch_becomes_typed_hits_through_existing_parser_and_gate` fail with
+`Withheld` instead of `ClassifierAction`; the custom shape was restored before
+the green full run. `cargo fmt --all -- --check`,
+`cargo clippy --offline --locked --workspace --all-targets -- -D warnings` and
+`cargo test --offline --locked --workspace` all passed. File-cap and secrets
+checks also passed. Recursive pnpm typecheck and lint each failed at lifecycle
+spawn with `EPERM`; package tests were not run. The Director must rerun the full
+pnpm gate outside this restriction. No package install was attempted.
 
 ## Service and safety
 

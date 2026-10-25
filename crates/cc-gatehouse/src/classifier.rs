@@ -11,11 +11,32 @@ pub(crate) const SYSTEM: &str = "Classify livestream chat against the listed rul
 const FENCE: &str = "<<<chat-messages";
 const END: &str = "chat-messages>>>";
 
-#[derive(Debug, thiserror::Error)]
-#[error("classifier unavailable")]
-pub struct ClassifierError;
+/// Sanitized Rust-only failure labels, never model text or provider errors.
+#[derive(Debug, Clone, Copy, thiserror::Error)]
+pub enum ClassifierError {
+    #[error("classifier unavailable")]
+    Unavailable,
+    #[error("classifier unavailable: rules-only")]
+    RulesOnly,
+    #[error("classifier unavailable: refused")]
+    Refused,
+    #[error("classifier unavailable: engine audit failed")]
+    Audit,
+}
 
-/// No tools or action interface. cc-engine integration belongs to a later package.
+impl ClassifierError {
+    pub(crate) fn label(self) -> &'static str {
+        match self {
+            Self::Unavailable => "unavailable",
+            Self::RulesOnly => "rules-only",
+            Self::Refused => "refused",
+            Self::Audit => "engine_audit_failed",
+        }
+    }
+}
+
+/// No tools or action interface. Replies still pass through this module's parser
+/// and the deterministic action gate, including replies from `EngineClassifier`.
 #[async_trait]
 pub trait Classifier: Send + Sync {
     async fn classify(
@@ -55,13 +76,23 @@ struct Hit {
     verdict: Verdict,
 }
 
+fn decode(text: &str) -> Option<Vec<Hit>> {
+    serde_json::from_str(text).ok()
+}
+
+/// The engine calls the same parser door for the outer structured-answer check.
+/// Batch membership and contradictions are checked by `parse` in the lane.
+pub(crate) fn structured(text: &str) -> bool {
+    decode(text).is_some()
+}
+
 pub(crate) fn parse(
     text: &str,
     rules: &[Rule],
     count: usize,
 ) -> Option<Vec<Option<(RuleId, Verdict)>>> {
     // Unknown or contradictory model output is withheld, never clean.
-    let hits: Vec<Hit> = serde_json::from_str(text).ok()?;
+    let hits = decode(text)?;
     let mut seen = BTreeSet::new();
     let mut out = vec![None; count];
     for hit in hits {

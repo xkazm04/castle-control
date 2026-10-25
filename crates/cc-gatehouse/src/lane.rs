@@ -1,7 +1,8 @@
 // Adapted from Shadowrunr OS @ 7e4b6f8,
 // crates/shadowrunr-daemon/src/moderator/lane.rs (Apache-2.0; see NOTICE).
 use crate::{
-    Classifier, Gatehouse, IngestedMessage, Result, classifier, date, internal, rules, store,
+    Classifier, ClassifierError, Gatehouse, IngestedMessage, Result, classifier, date, internal,
+    rules, store,
 };
 use cc_store::{DecisionAction, LedgerEvent, LedgerKind};
 use cc_types::{
@@ -65,6 +66,7 @@ enum Candidate {
     Care,
     Clean,
     Withheld,
+    Unavailable(ClassifierError),
     Hit(Rule, Verdict),
 }
 
@@ -126,13 +128,15 @@ impl Gatehouse {
             )
             .await;
             let parsed = match reply {
-                Ok(Ok(text)) => classifier::parse(&text, &plain, batch.len()),
-                _ => None,
+                Ok(Ok(text)) => Ok(classifier::parse(&text, &plain, batch.len())),
+                Ok(Err(error)) => Err(error),
+                Err(_) => Err(ClassifierError::Unavailable),
             };
             for (i, (index, msg)) in chunk.iter().enumerate() {
                 let candidate = match &parsed {
-                    None => Candidate::Withheld,
-                    Some(hits) => match &hits[i] {
+                    Err(error) => Candidate::Unavailable(*error),
+                    Ok(None) => Candidate::Withheld,
+                    Ok(Some(hits)) => match &hits[i] {
                         None => Candidate::Clean,
                         Some((id, verdict)) => Candidate::Hit(
                             plain
@@ -168,6 +172,10 @@ impl Gatehouse {
             reason_codes: Vec::new(),
             message_text: None,
         };
+        if let Candidate::Unavailable(error) = &candidate {
+            decision.reason_codes.push("classifier_unavailable".into());
+            decision.reason_codes.push(error.label().into());
+        }
         let mut intent = None;
         let path = if !self.gate_available {
             decision.kind = DecisionKind::Held;
@@ -185,6 +193,11 @@ impl Gatehouse {
                 Candidate::Care => return Err(internal("care invariant")),
                 Candidate::Clean => GatePath::FoundNothing,
                 Candidate::Withheld => {
+                    decision.kind = DecisionKind::Held;
+                    decision.verdict = Verdict::Hold;
+                    GatePath::Withheld
+                }
+                Candidate::Unavailable(_) => {
                     decision.kind = DecisionKind::Held;
                     decision.verdict = Verdict::Hold;
                     GatePath::Withheld

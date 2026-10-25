@@ -1,7 +1,7 @@
 //! Class-based orchestration. Every completed attempt, including fallbacks, is audited.
 use crate::{
-    CliRuntime, Endpoint, EngineClass, Failure, Keychain, Outcome, Result, Route, RoutingTable,
-    Transport, api::Answer, cli::CliCall, ladder::fallback, ledger::Audit,
+    AnswerShape, CliRuntime, Endpoint, EngineClass, Failure, Keychain, Outcome, Result, Route,
+    RoutingTable, Transport, api::Answer, cli::CliCall, ladder::fallback, ledger::Audit,
 };
 use cc_store::{Store, Timestamp};
 use cc_types::{EngineSettings, Settings, Verdict, parse_engine_settings};
@@ -39,10 +39,25 @@ impl Engine {
         vault: &dyn Keychain,
         key_label: Option<&str>,
     ) -> Result<crate::Reply> {
+        self.complete_with_shape(call, store, vault, key_label, AnswerShape::Verdict)
+            .await
+    }
+    /// Use the caller's structured-answer parser while keeping the normal
+    /// admission, live/CLI separation, fallback ladder and audit door unchanged.
+    pub async fn complete_with_shape(
+        &self,
+        call: Call<'_>,
+        store: &mut Store,
+        vault: &dyn Keychain,
+        key_label: Option<&str>,
+        shape: AnswerShape<'_>,
+    ) -> Result<crate::Reply> {
         let route = self.routes.get(call.class, self.settings.cli_provider);
         let call_id = Ulid::new();
         let at = Timestamp::now();
-        let attempted = self.attempt(&route, call.prompt, vault, key_label).await;
+        let attempted = self
+            .attempt(&route, call.prompt, vault, key_label, shape)
+            .await;
         let mut model_served = None;
         let mut cost_microusd = 0;
         let mut thread_id = None;
@@ -61,9 +76,7 @@ impl Engine {
                     // Endpoint aliases are fine, but silently switching the actual model
                     // invalidates the measured floor. Keep the known cost in the audit.
                     fallback(Failure::NotAdmitted, call.rules_verdict)
-                } else if crate::model::live(call.class)
-                    && crate::floor::verdict(&answer.text).is_err()
-                {
+                } else if crate::model::live(call.class) && !shape.accepts(&answer.text) {
                     fallback(Failure::Parse, call.rules_verdict)
                 } else {
                     model_served = answer.model_served;
@@ -99,6 +112,7 @@ impl Engine {
         prompt: &str,
         vault: &dyn Keychain,
         key_label: Option<&str>,
+        shape: AnswerShape<'_>,
     ) -> Result<Answer> {
         match route.transport {
             Transport::Endpoint => {
@@ -121,12 +135,13 @@ impl Engine {
                 };
                 let limit = crate::admission::budget(route.class);
                 self.endpoint
-                    .complete(
+                    .complete_with_shape(
                         &route.model,
                         prompt,
                         route.prices,
                         key.as_deref(),
                         limit.total_ms.min(limit.silence_ms),
+                        shape,
                     )
                     .await
             }

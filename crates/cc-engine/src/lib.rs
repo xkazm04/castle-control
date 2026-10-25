@@ -1,5 +1,6 @@
 //! Offline-prepared engine. No connection to the live bridge or application.
 mod admission;
+mod answer;
 mod api;
 mod claude_cli;
 mod cli;
@@ -18,6 +19,7 @@ mod process_tree;
 mod stream;
 
 pub use admission::{Evidence, LatencySample};
+pub use answer::AnswerShape;
 pub use api::{CLOUD_NOTICE, Endpoint};
 pub use cc_store::{EngineClass, EngineProvider, ModelName};
 pub use cli::{CliExecutables, CliRuntime};

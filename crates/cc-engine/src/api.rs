@@ -1,6 +1,6 @@
 // Adapted from Shadowrunr OS @ 7e4b6f8,
 // crates/shadowrunr-engine/src/api.rs.
-use crate::{Failure, ModelName, Prices, Result, limits::http_failure};
+use crate::{AnswerShape, Failure, ModelName, Prices, Result, limits::http_failure};
 use cc_store::EngineProvider;
 use cc_types::EngineSettings;
 use serde::Deserialize;
@@ -92,6 +92,19 @@ impl Endpoint {
         key: Option<&str>,
         timeout_ms: u64,
     ) -> Result<Answer> {
+        self.complete_with_shape(model, prompt, prices, key, timeout_ms, AnswerShape::Verdict)
+            .await
+    }
+    #[allow(clippy::too_many_arguments)]
+    pub(crate) async fn complete_with_shape(
+        &self,
+        model: &ModelName,
+        prompt: &str,
+        prices: Prices,
+        key: Option<&str>,
+        timeout_ms: u64,
+        shape: AnswerShape<'_>,
+    ) -> Result<Answer> {
         if !self.authorized {
             return Err(Failure::CloudOptIn);
         }
@@ -99,8 +112,12 @@ impl Endpoint {
             return Err(Failure::Auth);
         }
         let body = if self.provider == EngineProvider::LocalEndpoint {
-            json!({"model":model.as_str(),"messages":[{"role":"user","content":prompt}],
-                "stream":false,"max_tokens":2048,"response_format":{"type":"json_object"}})
+            let mut body = json!({"model":model.as_str(),"messages":[{"role":"user","content":prompt}],
+                "stream":false,"max_tokens":2048});
+            if matches!(shape, AnswerShape::Verdict) {
+                body["response_format"] = json!({"type":"json_object"});
+            }
+            body
         } else {
             json!({"model":model.as_str(),"input":prompt,"store":false,"max_output_tokens":2048})
         };

@@ -1,9 +1,10 @@
 // Adapted from Shadowrunr OS @ 7e4b6f8,
 // crates/shadowrunr-daemon/src/moderator/mod.rs (Apache-2.0; see NOTICE).
-//! Offline moderation service. No Twitch executor, RPC registration, or engine calls.
+//! Offline moderation service. No Twitch executor or RPC registration.
 //! Callers consume only the final verdict; action intents are not executed here.
 
 mod classifier;
+mod engine_classifier;
 mod lane;
 mod review;
 mod rules;
@@ -11,6 +12,7 @@ mod service;
 mod store;
 
 pub use classifier::{Classifier, ClassifierError};
+pub use engine_classifier::EngineClassifier;
 pub use lane::{ActionIntent, GatePath, ScreenedMessage};
 pub use service::Gatehouse;
 
