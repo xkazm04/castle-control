@@ -1,6 +1,7 @@
 import { closeSync, existsSync, mkdirSync, openSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
+import ts from 'typescript';
 
 const root = resolve(import.meta.dirname, '..');
 const scratch = join(root, 'scripts', '.gate-proof');
@@ -39,7 +40,11 @@ function proof(name, description, args, changes = {}, cwd = root) {
   try {
     for (const [local, contents] of Object.entries(changes)) {
       const path = join(root, local);
-      backups.set(path, existsSync(path) ? readFileSync(path) : undefined);
+      const original = existsSync(path) ? readFileSync(path) : undefined;
+      if (original?.equals(Buffer.from(contents))) {
+        throw new Error(`${name}: ${local}: mutation did not change file contents`);
+      }
+      backups.set(path, original);
       mkdirSync(dirname(path), { recursive: true });
       writeFileSync(path, contents);
     }
@@ -127,8 +132,12 @@ try {
   proof('Secret scan', 'Synthetic provider-token-shaped string in the reference prototype; value is redacted.', ['scripts/check.mjs', 'secrets'], {
     'prototype/proof-secret.txt': ['sk', 'proj', 'SIMULATED'.repeat(5)].join('-'),
   });
-  proof('Workspace scripts', 'Remove the contract test script value.', ['scripts/workspaces.mjs'], {
-    [`${contract}/package.json`]: read(`${contract}/package.json`).replace('node ../../scripts/package-gate.mjs test', ''),
+  const manifest = 'packages/tokens/package.json';
+  const parsed = ts.parseConfigFileTextToJson(manifest, read(manifest));
+  if (parsed.error) throw new Error(`Invalid package manifest: ${manifest}`);
+  parsed.config.scripts.test = '';
+  proof('Workspace scripts', 'Blank the tokens test script value.', ['scripts/workspaces.mjs'], {
+    [manifest]: `${JSON.stringify(parsed.config, null, 2)}\n`,
   });
   for (const gate of ['boundaries', 'hygiene', 'file-cap', 'secrets']) {
     proof(`Empty ${gate}`, 'An empty isolated directory.', ['scripts/check.mjs', gate, empty]);
