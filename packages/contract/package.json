@@ -1,0 +1,16 @@
+{
+  "name": "@castle-control/contract",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "typecheck": "node ../../scripts/package-gate.mjs typecheck",
+    "lint": "node ../../scripts/package-gate.mjs lint",
+    "test": "node ../../scripts/package-gate.mjs test"
+  },
+  "devDependencies": {
+    "@types/node": "24.10.0",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

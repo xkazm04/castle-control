@@ -1,0 +1,22 @@
+{
+  "name": "castle-control",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@11.3.0",
+  "engines": { "node": ">=24.14.0", "pnpm": "11.3.0" },
+  "scripts": {
+    "gate": "node scripts/gate.mjs",
+    "gate:proofs": "node scripts/prove-gates.mjs",
+    "typecheck": "pnpm -r typecheck",
+    "lint": "node scripts/tooling-lint.mjs && pnpm -r lint",
+    "test": "pnpm -r test"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "eslint": "10.13.0",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.72.0",
+    "vitest": "5.0.5"
+  }
+}
