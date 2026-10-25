@@ -533,6 +533,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "cc-beacons"
+version = "0.1.0"
+dependencies = [
+ "cc-types",
+]
+
+[[package]]
 name = "cc-core"
 version = "0.1.0"
 dependencies = [
