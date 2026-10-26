@@ -1,0 +1,374 @@
+<!doctype html>
+<html lang="en" data-theme="paper">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Castle Control · Preview and Proclaim (prototype, simulated Steward)</title>
+<link rel="stylesheet" href="../data/tokens.css">
+<script src="../data/sample.js"></script>
+<script src="../data/mark.js"></script>
+<script src="core.js"></script>
+<style>
+:root{--top:56px;--right:400px;--grain:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n' x='0' y='0'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' seed='7' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .38 0 0 0 0 .32 0 0 0 0 .22 1.3 0 0 0 -.62'/%3E%3C/filter%3E%3Crect width='240' height='240' filter='url(%23n)'/%3E%3C/svg%3E")}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;background:var(--paper);color:var(--ink);font:400 15px/1.5 var(--font-ui)}
+body::after{content:"";position:fixed;inset:0;background:var(--grain);background-size:240px;mix-blend-mode:var(--blend);opacity:.5;pointer-events:none;z-index:90}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:3px solid var(--azure);outline-offset:2px}
+.num{font-family:var(--font-num);font-variant-numeric:tabular-nums}
+.rampart{position:fixed;left:0;right:0;top:0;height:var(--top);display:flex;align-items:center;gap:16px;padding:0 18px;border-bottom:1.5px solid var(--rule);background:var(--paper);z-index:40;white-space:nowrap}
+.brand{display:flex;align-items:center;gap:10px}.brand .mark{width:38px;height:34px}
+.brand b{font:800 19px/.9 var(--font-display);font-stretch:75%;font-variation-settings:"wdth" 75;text-transform:uppercase;text-shadow:.06em .05em 0 var(--or)}
+.onair{font:800 13px/1 var(--font-ui);letter-spacing:.14em;color:var(--paper);background:var(--gules);padding:6px 9px;transform:rotate(-2deg);text-transform:uppercase}
+.stat{display:flex;flex-direction:column;line-height:1.05}.stat small{font:700 11px/1.2 var(--font-ui);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}.stat span{font:600 19px/1.1 var(--font-num)}
+.reg{display:flex;align-items:center;gap:6px;font:600 13px/1 var(--font-ui);color:var(--ink-2)}
+.reg i{width:12px;height:12px;border:1.5px solid var(--ink);border-radius:50%;position:relative}.reg i::after{content:"";position:absolute;inset:2px;border-radius:50%;background:var(--ok)}
+.chip{display:inline-flex;align-items:center;gap:8px;border:1.5px solid var(--ink);padding:5px 10px;font:700 13px/1 var(--font-ui);background:var(--card)}
+.chip .a{color:var(--gules-text)}.chip .w{color:var(--azure-text)}.chip.bridge{background:var(--azure);color:var(--press);border-color:var(--azure)}
+.sp{flex:1}
+.simstamp{font:800 11px/1.25 var(--font-ui);letter-spacing:.1em;text-transform:uppercase;border:1.5px dashed var(--ink-2);padding:4px 8px;color:var(--ink-2);text-align:center}
+.tbtn{border:1.5px solid var(--ink);background:none;padding:6px 10px;font:700 13px/1 var(--font-ui)}
+.tbtn[aria-pressed=true]{background:var(--ink);color:var(--paper)}
+
+.desk{position:fixed;top:var(--top);bottom:0;left:0;right:0;display:grid;grid-template-columns:minmax(0,1fr) var(--right)}
+.bench{display:flex;flex-direction:column;min-width:0;min-height:0;padding:10px 18px 12px;gap:10px}
+.mhead{display:flex;align-items:baseline;gap:14px}
+.mhead b{font:800 30px/1 var(--font-display);font-stretch:75%;font-variation-settings:"wdth" 75;text-transform:uppercase;letter-spacing:.02em}
+.mhead span{font:italic 400 17px/1.2 var(--font-serif);color:var(--ink-2)}
+.mhead .tally{margin-left:auto;font:800 12px/1 var(--font-ui);letter-spacing:.14em;text-transform:uppercase;border:2px solid var(--or-text);color:var(--or-text);padding:6px 9px}
+.monwrap{flex:1;min-height:0;display:flex;align-items:flex-start;justify-content:center}
+.monitor{position:relative;aspect-ratio:16/9;max-width:100%;max-height:100%;height:100%;border:3px solid var(--ink);background:var(--paper-2);box-shadow:8px 8px 0 color-mix(in srgb,var(--ink) 14%,transparent)}
+.monitor svg{position:absolute;inset:0;width:100%;height:100%;display:block}
+.layer{cursor:pointer}
+.layer .hit{fill:transparent;stroke:transparent;stroke-width:3}
+.layer:hover .hit{stroke:var(--ink);stroke-dasharray:6 6}
+.layer.sel .hit{stroke:var(--ink);stroke-width:5}
+.layer.draft .dmark{display:block}
+.dmark{display:none}
+.flame{transform-box:fill-box;transform-origin:50% 100%;animation:flick 1.3s ease-in-out infinite alternate}
+@keyframes flick{0%{transform:scale(1,1)}50%{transform:scale(1.05,.96) skewX(2deg)}100%{transform:scale(.97,1.06) skewX(-2deg)}}
+.halo circle{animation:tw 2s ease-in-out infinite}
+@keyframes tw{50%{opacity:.2}}
+.hb{animation:hb 2.4s ease-in-out infinite}
+@keyframes hb{50%{opacity:.15}}
+.flyin{animation:fly .8s var(--ease) both}
+@keyframes fly{from{transform:translate(0,60px);opacity:0}to{transform:none;opacity:1}}
+.inkin{animation:inkin .8s var(--ease) both}
+@keyframes inkin{from{opacity:0;clip-path:inset(0 100% 0 0)}to{opacity:1;clip-path:inset(0 0 0 0)}}
+.hand{transition:transform .8s var(--ease),opacity .4s}
+
+.talk{display:grid;grid-template-columns:auto minmax(0,1fr);gap:12px;align-items:center;border:2px solid var(--ink);background:var(--card);padding:10px 12px}
+.talk svg.lan{width:40px;height:40px}
+.talk .line{font:italic 400 21px/1.3 var(--font-serif);min-height:27px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.ask{grid-column:1/-1;display:flex;gap:8px}
+.ask input{flex:1;min-width:0;border:2px solid var(--ink);background:var(--paper);padding:10px 12px;font:500 18px/1.2 var(--font-ui);color:var(--ink)}
+.mic{border:2px solid var(--ink);background:var(--paper);padding:0 12px;font:700 14px/1 var(--font-ui);display:flex;align-items:center;gap:8px}
+.mic.on{background:var(--gules);border-color:var(--gules);color:var(--press)}
+.mic svg{width:18px;height:18px}
+.btn{border:1.5px solid var(--ink);background:var(--card);padding:9px 14px;font:700 15px/1.1 var(--font-ui)}
+.btn.prime{background:var(--ink);color:var(--paper)}
+.btn.g{border-color:var(--gules);color:var(--gules-text)}.btn.a{border-color:var(--azure);color:var(--azure-text)}
+.chips{grid-column:1/-1;display:flex;gap:8px;flex-wrap:wrap;height:30px;overflow:hidden}
+.chips button{border:1.5px solid var(--line);background:var(--paper);padding:5px 10px;font:500 14px/1.2 var(--font-ui)}
+.chips button:hover{border-color:var(--ink)}
+
+.mixer{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.strip{position:relative;text-align:left;border:2px solid var(--ink);background:var(--card);padding:9px 12px 10px 16px;min-width:0}
+.strip::before{content:"";position:absolute;left:0;top:0;bottom:0;width:7px;background:var(--c)}
+.strip.sel{box-shadow:inset 0 0 0 2px var(--ink);background:var(--paper)}
+.strip .t{display:flex;justify-content:space-between;align-items:baseline;gap:6px}
+.strip b{font:800 21px/1 var(--font-display);font-stretch:75%;font-variation-settings:"wdth" 75;text-transform:uppercase;white-space:nowrap}
+.strip kbd{font:700 12px/1 var(--font-num);border:1px solid var(--line);padding:2px 5px}
+.strip .s{font:500 14px/1.3 var(--font-ui);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.strip .st{display:flex;gap:6px;margin-top:6px}
+.lamp{font:800 11px/1 var(--font-ui);letter-spacing:.1em;text-transform:uppercase;padding:4px 6px;border:1.5px solid var(--line);color:var(--faint)}
+.lamp.air{background:var(--gules);border-color:var(--gules);color:var(--press)}
+.lamp.draft{border-color:var(--or-text);color:var(--or-text);border-style:dashed}
+.lamp.prev{border-color:var(--ink);color:var(--ink)}
+
+.side{border-left:1.5px solid var(--rule);display:flex;flex-direction:column;min-height:0}
+.prog{padding:10px 14px 12px;border-bottom:1.5px solid var(--rule)}
+.prog .ph{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.prog .ph b{font:800 20px/1 var(--font-display);font-stretch:75%;font-variation-settings:"wdth" 75;text-transform:uppercase}
+.prog .ph b i{display:inline-block;width:11px;height:11px;border-radius:50%;background:var(--gules);margin-right:7px;animation:hb 1.6s infinite}
+.prog .ph span{font:600 12px/1.2 var(--font-ui);color:var(--muted)}
+@media (max-width:1360px){.prog .ph span{display:none}}
+.progmon{position:relative;aspect-ratio:16/9;border:3px solid var(--gules);background:var(--paper-2)}
+.progmon svg{position:absolute;inset:0;width:100%;height:100%}
+.take{display:flex;gap:8px;align-items:center;margin-top:8px}
+.takebtn{position:relative;overflow:hidden;flex:1;border:2px solid var(--gules);background:var(--gules);color:var(--press);padding:12px 12px;font:800 16px/1.1 var(--font-ui);letter-spacing:.04em;text-transform:uppercase;text-align:left}
+.takebtn small{display:block;font:600 12px/1.25 var(--font-ui);letter-spacing:0;text-transform:none;opacity:.85}
+.takebtn i{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--press);opacity:.25}
+.takebtn.going i{width:100%;transition:width .9s linear}
+.takebtn:disabled{background:none;color:var(--faint);border-color:var(--line);cursor:default}
+.tabs{display:flex;border-bottom:1.5px solid var(--rule)}
+.tabs button{flex:1;border:0;border-right:1.5px solid var(--line);background:none;padding:10px;font:800 13px/1 var(--font-ui);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.tabs button:last-child{border-right:0}
+.tabs button[aria-selected=true]{color:var(--ink);box-shadow:inset 0 -4px 0 var(--c,var(--ink))}
+.pane{flex:1;min-height:0;overflow:auto;padding:12px 14px 16px}
+.msg{font:400 15.5px/1.45 var(--font-ui);margin-bottom:10px}
+.msg.st{font:italic 400 17.5px/1.4 var(--font-serif)}
+.msg.me{background:var(--ink);color:var(--paper);padding:7px 10px;margin-left:30px}
+.msg .t{display:block;font:600 11px/1.3 var(--font-num);font-style:normal;color:var(--muted)}
+.msg.me .t{color:var(--faint)}
+.ih{font:800 26px/1 var(--font-display);font-stretch:75%;font-variation-settings:"wdth" 75;text-transform:uppercase;margin:0}
+.isub{font:italic 400 16px/1.3 var(--font-serif);color:var(--ink-2);margin:2px 0 10px}
+.sect{font:700 12px/1.3 var(--font-ui);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin:14px 0 6px}
+.kv{display:grid;grid-template-columns:118px 1fr;gap:8px;padding:6px 0;border-top:1px solid var(--line);font:500 15px/1.35 var(--font-ui);align-items:baseline}
+.kv .k{font:700 11px/1.3 var(--font-ui);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.kv s{color:var(--gules-text);text-decoration-thickness:2px;margin-right:6px}
+.kv .am{animation:inkin .8s var(--ease) both;background:linear-gradient(transparent 62%,color-mix(in srgb,var(--or) 45%,transparent) 62%)}
+.fair{margin-top:10px;border:1.5px solid var(--ink);padding:9px 11px;background:var(--card);font:500 14px/1.45 var(--font-ui)}
+.fair b{display:block;font:800 11px/1.3 var(--font-ui);letter-spacing:.14em;text-transform:uppercase}
+.fair.pulse{animation:fp 1s 2}@keyframes fp{50%{background:color-mix(in srgb,var(--gules) 25%,var(--card))}}
+.held{border:1.5px solid var(--azure);background:var(--card);padding:9px 11px;margin-bottom:8px}
+.held .w{font:700 15px/1.3 var(--font-ui)}.held .w small{font-weight:400;color:var(--muted)}
+.held .x{font:600 20px/1.25 var(--font-ui);margin:2px 0}
+.held .r{font:400 13.5px/1.35 var(--font-ui);color:var(--ink-2)}
+.held .b{display:flex;gap:6px;margin-top:6px;align-items:center;flex-wrap:wrap}
+.held .p{font:600 13px/1.2 var(--font-ui);color:var(--azure-text);border:1.5px dashed var(--azure);padding:4px 6px}
+.held.done{opacity:.5}
+.rule{display:grid;grid-template-columns:1fr auto;gap:2px 8px;padding:7px 0;border-top:1px solid var(--line);align-items:center;font:500 14px/1.3 var(--font-ui)}
+.rule small{grid-column:1;color:var(--muted);font-size:12.5px}
+.mode{grid-row:1/3;grid-column:2;border:1.5px solid;background:none;padding:4px 7px;font:800 11px/1 var(--font-ui);letter-spacing:.1em;text-transform:uppercase}
+.mode.armed{background:var(--gules);border-color:var(--gules);color:var(--press)}.mode.shadow{color:var(--azure-text);border-color:var(--azure)}
+.ranges{display:flex;gap:4px;margin-top:4px}
+.ranges>span{flex:1;border:1.5px solid var(--or);padding:3px 5px;font:500 12px/1.25 var(--font-ui)}
+.ranges>span.cur{background:var(--or);color:var(--press);font-weight:700}
+.mini svg{width:100%;height:auto;display:block}
+.legend{display:flex;gap:10px;flex-wrap:wrap;font:600 13px/1 var(--font-ui);margin:6px 0}
+.legend i{display:inline-block;width:12px;height:12px;margin-right:5px;vertical-align:-2px}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.hexprop{animation:fp 1.4s infinite}
+.toast{position:fixed;left:calc(50% - var(--right)/2);top:calc(var(--top) + 60px);transform:translateX(-50%);background:var(--gules);color:var(--press);padding:10px 16px;font:800 16px/1.3 var(--font-ui);letter-spacing:.06em;text-transform:uppercase;z-index:60;opacity:0;transition:opacity .3s;pointer-events:none}
+.toast.on{opacity:1}
+@media (max-width:1360px){:root{--right:360px}.stat.u{display:none}.strip .s{font-size:13px}}
+@media (max-height:840px){.talk .line{font-size:19px}.mhead b{font-size:24px}}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+<header class="rampart">
+  <div class="brand"><span data-mark="mark"></span><b>Castle<br>Control</b></div>
+  <span class="onair">On air</span>
+  <div class="stat"><small>Viewers</small><span class="num">214</span></div>
+  <div class="stat"><small>Uptime</small><span class="num" id="uptime">00:47:41</span></div>
+  <div class="stat u"><small>Chatters 10 min</small><span class="num">140</span></div>
+  <span class="reg"><i></i>Twitch</span><span class="reg"><i></i>OBS</span>
+  <span class="chip" id="gatechip"></span>
+  <span class="sp"></span>
+  <span class="simstamp">Simulated Steward · sample data<br>nothing here reaches a real stream</span>
+  <button class="tbtn" id="stock" aria-pressed="false">Dark stock</button>
+</header>
+
+<div class="desk">
+  <section class="bench" aria-label="Preview">
+    <div class="mhead"><b>Preview</b><span>the Steward drafts here, in front of you; viewers see nothing until you proclaim it</span><span class="tally">Preview · not on air</span></div>
+    <div class="monwrap"><div class="monitor" id="monitor" role="img" aria-label="Preview of the stream with the four chamber layers"></div></div>
+    <form class="talk" id="ask" autocomplete="off">
+      <svg class="lan" viewBox="0 0 56 56" aria-hidden="true"><path d="M20 10h16v6H20z" fill="var(--ink)"/><path d="M16 16h24l-3 30H19z" fill="none" stroke="var(--ink)" stroke-width="2.4"/><ellipse cx="28" cy="32" rx="7" ry="10" fill="var(--or)"/><path d="M14 46h28v4H14z" fill="var(--ink)"/></svg>
+      <div class="line" id="line" aria-live="polite"></div>
+      <div class="ask"><input id="q" aria-label="Talk to the Steward" placeholder="Talk to the Steward: “put a question draw on screen”, “make it 5 winners”, “test fire 50 gifts”"><button type="button" class="mic" id="mic"><svg viewBox="0 0 18 18"><rect x="6" y="1" width="6" height="10" rx="3" fill="currentColor"/><path d="M3 8a6 6 0 0 0 12 0M9 14v3" stroke="currentColor" stroke-width="1.8" fill="none"/></svg><span>Hold to speak</span></button><button class="btn prime">Tell</button></div>
+      <div class="chips" id="chips"></div>
+    </form>
+    <div class="mixer" id="mixer" aria-label="Layers, one per chamber"></div>
+  </section>
+
+  <aside class="side">
+    <div class="prog">
+      <div class="ph"><b><i></i>Program · on air</b><span>simulated: what viewers would see</span></div>
+      <div class="progmon" id="program"></div>
+      <div class="take"><button class="takebtn" id="take" disabled><i></i><span id="takelbl">Nothing to proclaim</span><small id="takesub">The Steward’s drafts wait in the preview.</small></button></div>
+    </div>
+    <div class="tabs" role="tablist"><button role="tab" id="tab-talk" aria-selected="true">Talkback</button><button role="tab" id="tab-insp" aria-selected="false">Inspector</button></div>
+    <div class="pane" id="pane"></div>
+  </aside>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+'use strict';
+var C=window.CORE,S=C.S,esc=C.esc,$=function(s,r){return (r||document).querySelector(s)};
+var CH={lot:{name:'The Lot Chamber',fn:'lottery manager',c:'var(--gules)',ct:'var(--gules-text)',k:1,layer:'Urn and writ'},gate:{name:'The Gatehouse',fn:'AI chat moderator',c:'var(--azure)',ct:'var(--azure-text)',k:2,layer:'Chat overlay and Herald'},beacon:{name:'The Beacons',fn:'contribution visuals',c:'var(--or)',ct:'var(--or-text)',k:3,layer:'Altar, frame, border'},map:{name:'The Map Room',fn:'Extension studio',c:'var(--ink)',ct:'var(--ink)',k:4,layer:'War-table panel'}};
+var ORDER=['lot','gate','beacon','map'];
+/* layer state: off | draft (preview only) | air (program) */
+var st={sel:null,tab:'talk',L:{lot:'off',gate:'air',beacon:'air',map:'draft'},writ:null,pending:null,shield:false,shieldDraft:false,moat:S.moderator.delay_s,chat:[],chatIdx:0,test:null,mapDone:{},stageRung:0,hist:[],ban:null,hand:null,ann:{}};
+function plural(n,w){return n+' '+w+(n===1?'':'s');}
+
+/* ===================== the scene (one renderer, two monitors) ===================== */
+function hexPts(cx,cy,r){var p=[];for(var i=0;i<6;i++){var a=Math.PI/180*(60*i-30);p.push((cx+r*Math.cos(a)).toFixed(1)+','+(cy+r*Math.sin(a)).toFixed(1));}return p.join(' ');}
+function own(t){return st.mapDone[t.id]!=null?st.mapDone[t.id]:t.owner;}
+function hexG(x0,y0,R,prop,labels){var w=Math.sqrt(3)*R,h=1.5*R,o='';C.tiles.forEach(function(t){var cx=x0+w/2+t.c*w+(t.r%2?w/2:0),cy=y0+R+t.r*h,ow=own(t),pp=prop&&prop.tile.id===t.id,tot=t.votes[0]+t.votes[1]+t.votes[2];
+  o+='<g'+(pp?' class="hexprop"':'')+' data-tile="'+t.id+'"><polygon points="'+hexPts(cx,cy,R-1)+'" fill="'+(ow==null?'var(--card)':C.HOUSES[ow].ink)+'" fill-opacity="'+(ow==null?1:.8)+'" stroke="var(--ink)" stroke-width="'+(pp?3.5:1.2)+'"'+(pp?' stroke-dasharray="6 4"':'')+' style="mix-blend-mode:var(--blend)"/>'+(labels?'<text x="'+cx+'" y="'+(cy+4)+'" text-anchor="middle" font-size="'+(R*.36)+'" font-family="var(--font-num)" font-weight="700" fill="var(--ink)">'+t.id+'</text>'+(ow==null&&tot?'<text x="'+cx+'" y="'+(cy+R*.58)+'" text-anchor="middle" font-size="'+(R*.27)+'" fill="var(--ink-2)" font-family="var(--font-ui)">'+tot+'</text>':''):'')+'</g>';});return o;}
+function txt(x,y,s,size,opt){opt=opt||{};return '<text x="'+x+'" y="'+y+'" font-size="'+size+'" font-family="'+(opt.f||'var(--font-ui)')+'" font-weight="'+(opt.w||600)+'" fill="'+(opt.c||'var(--ink)')+'"'+(opt.a?' text-anchor="'+opt.a+'"':'')+(opt.st?' font-style="italic"':'')+(opt.ls?' letter-spacing="'+opt.ls+'"':'')+(opt.cls?' class="'+opt.cls+'"':'')+'>'+esc(s)+'</text>';}
+function disp(x,y,s,size,c,a){return '<text x="'+x+'" y="'+y+'" font-size="'+size+'" font-family="var(--font-display)" font-stretch="75%" style="font-variation-settings:\'wdth\' 75" font-weight="800" fill="'+(c||'var(--ink)')+'"'+(a?' text-anchor="'+a+'"':'')+'>'+esc(String(s).toUpperCase())+'</text>';}
+function wrapLayer(k,mode,box,inner){var s=st.L[k],show=mode==='preview'?(s!=='off'):(s==='air');if(k==='beacon'&&mode==='preview'&&st.test)show=true;if(!show)return '';
+  var draft=mode==='preview'&&(s==='draft'||(k==='beacon'&&st.test)||(k==='gate'&&st.shieldDraft)||(k==='lot'&&st.writ&&st.writ.status!=='draft'&&st.L.lot==='air'&&st.writ.status==='cast'&&!st.ann.winners));
+  var cls='layer'+(draft?' draft':'')+(st.sel===k&&mode==='preview'?' sel':'');
+  return '<g class="'+cls+'" data-layer="'+k+'">'+inner+(mode==='preview'?'<rect class="hit" x="'+box[0]+'" y="'+box[1]+'" width="'+box[2]+'" height="'+box[3]+'"/><g class="dmark"><rect x="'+box[0]+'" y="'+box[1]+'" width="'+box[2]+'" height="'+box[3]+'" fill="none" stroke="var(--or-text)" stroke-width="4" stroke-dasharray="14 8"/><rect x="'+box[0]+'" y="'+(box[1]-30)+'" width="'+(k==='beacon'&&st.test?250:200)+'" height="30" fill="var(--or)"/>'+txt(box[0]+10,box[1]-9,k==='beacon'&&st.test?'TEST FIRE · NOT ON AIR':'DRAFT · NOT ON AIR',17,{w:800,c:'var(--press)',ls:2})+'</g>':'')+'</g>';}
+function scene(mode){
+  var o='<svg viewBox="0 0 1600 900" xmlns="http://www.w3.org/2000/svg"><defs><pattern id="dt'+mode+'" width="9" height="9" patternUnits="userSpaceOnUse"><circle cx="4.5" cy="4.5" r="1.6" fill="var(--press)" opacity=".2"/></pattern></defs>';
+  /* the game: Malakor's crypt, two doors (sample scene, stylised) */
+  o+='<rect width="1600" height="900" fill="var(--sheet)"/><path d="M0 0H1600L1180 260H420Z" fill="var(--cream)"/><path d="M0 900L420 640H1180L1600 900Z" fill="#d9cfb6"/><path d="M0 0L420 260V640L0 900Z M1600 0L1180 260V640L1600 900Z" fill="#cfc5ab"/><rect width="1600" height="900" fill="url(#dt'+mode+')"/>';
+  o+='<path d="M420 260H1180V640H420Z" fill="none" stroke="var(--press)" stroke-width="4"/>';
+  [[480,'LEFT DOOR','var(--gules)'],[900,'RIGHT DOOR','var(--press-2)']].forEach(function(d){o+='<path d="M'+d[0]+' 640V420a110 110 0 0 1 220 0V640Z" fill="var(--press)"/><path d="M'+(d[0]+20)+' 640V430a90 90 0 0 1 180 0V640Z" fill="none" stroke="'+d[2]+'" stroke-width="5"/>'+disp(d[0]+110,300,d[1],40,'var(--press)','middle');});
+  o+=txt(800,690,'MALAKOR’S CRYPT · sample game scene',18,{a:'middle',c:'var(--press-2)',w:700,ls:3});
+  /* camera box (always) */
+  o+='<rect x="40" y="560" width="400" height="300" fill="var(--press)"/><path d="M240 610c-60 0-92 50-92 110v140h184V720c0-60-32-110-92-110Z" fill="var(--press-2)"/><path d="M196 700h88l-10 44h-68Z" fill="var(--press)"/><circle cx="222" cy="718" r="9" fill="var(--or)"/><circle cx="258" cy="718" r="9" fill="var(--or)"/>'+txt(56,848,'MALAKOR · camera',18,{c:'var(--cream)',w:700,ls:2});
+  /* Beacons: frame, border, altar */
+  var tf=st.test&&mode==='preview'?st.test:null,fuel=C.altarFuel(tf?tf.fuel:0),lv=C.blaze(C.visuals[0],fuel),fc=C.frameCount(tf?tf.count:0),fl=C.look(C.visuals[1],fc),hl=C.hypeLevel(),ax=1450,fh=40+lv*190;
+  var bin='<rect x="32" y="552" width="416" height="316" fill="none" stroke="var(--or)" stroke-width="'+(fc>=20?14:fc>=5?10:6)+'"/>';
+  if(fc>=5)bin+=[0,1,2,3,4,5,6,7].map(function(i){return txt(60+i*50,575,'ᚱ',20,{c:'var(--press)',w:800});}).join('');
+  if(fc>=20)bin+='<g class="halo">'+[0,1,2,3,4,5,6,7,8,9,10,11].map(function(i){var a=i/12*Math.PI*2;return '<circle cx="'+(240+Math.cos(a)*230).toFixed(0)+'" cy="'+(710+Math.sin(a)*170).toFixed(0)+'" r="5" fill="var(--or)" style="animation-delay:'+(i*.15)+'s"/>';}).join('')+'</g>';
+  if(hl>=1)bin+='<rect class="hb" x="6" y="6" width="1588" height="888" fill="none" stroke="var(--or)" stroke-width="'+(hl>=3?18:8)+'"/>';
+  bin+='<g class="flame"><path d="M'+(ax-60-lv*20)+' 800C'+(ax-80)+' '+(800-fh*.5)+' '+(ax-14)+' '+(800-fh*.7)+' '+ax+' '+(800-fh)+'C'+(ax+14)+' '+(800-fh*.7)+' '+(ax+80)+' '+(800-fh*.5)+' '+(ax+60+lv*20)+' 800Z" fill="var(--or)" style="mix-blend-mode:var(--blend)"/><path d="M'+(ax-28)+' 800C'+(ax-36)+' '+(800-fh*.35)+' '+(ax-5)+' '+(800-fh*.5)+' '+ax+' '+(800-fh*.66)+'C'+(ax+5)+' '+(800-fh*.5)+' '+(ax+36)+' '+(800-fh*.35)+' '+(ax+28)+' 800Z" fill="var(--gules)" style="mix-blend-mode:var(--blend)"/></g><path d="M'+(ax-90)+' 800h180l-22 60H'+(ax-68)+'Z" fill="var(--press)"/>'+txt(ax,885,(tf?'TEST · ':'')+C.look(C.visuals[0],fuel).look.toUpperCase(),18,{a:'middle',w:800,ls:2,c:'var(--press)'});
+  if(st.ann.thanks&&!tf)bin+='<rect x="1300" y="470" width="290" height="70" fill="var(--or)"/>'+txt(1445,515,'THANK YOU '+C.lastGift.login.toUpperCase(),20,{a:'middle',w:800,c:'var(--press)'});
+  o+=wrapLayer('beacon',mode,[1300,540,290,350],bin);
+  /* Map Room: viewer extension panel */
+  var p=C.mapProposal(),min='<rect x="40" y="40" width="390" height="300" fill="var(--card)" stroke="var(--press)" stroke-width="3"/>'+disp(56,78,'War table · Extension',26)+'<g>'+hexG(60,92,19.5,p,false)+'</g>'+txt(56,324,p?'Malakor proposes '+C.HOUSES[p.house].short+' → '+p.tile.id:'Every tile is held',22,{w:800});
+  o+=wrapLayer('map',mode,[40,40,390,300],min);
+  /* Gatehouse: chat overlay + the Herald */
+  var l=C.lead(),m=S.consensus[S.consensus.length-1],gin='<rect x="1190" y="40" width="380" height="410" fill="var(--card)" fill-opacity=".94" stroke="var(--press)" stroke-width="3"/>'+disp(1206,76,'Chat · moat '+st.moat+' s',24,'var(--azure-text)');
+  gin+='<g id="chat-'+mode+'">'+chatLines(mode)+'</g>';
+  gin+='<rect x="520" y="40" width="560" height="96" fill="var(--card)" fill-opacity=".94" stroke="var(--press)" stroke-width="3"/>'+disp(536,76,'Chat pulls',22,'var(--press-2)')+disp(1064,80,(st.ann.door?'Going: ':'')+l.label+' '+l.pct+'%',30,'var(--gules)','end');
+  var bx=536;C.dirs.forEach(function(d){var w=528*m[d[0]]/100;gin+='<rect x="'+bx.toFixed(1)+'" y="98" width="'+w.toFixed(1)+'" height="22" fill="'+d[2]+'"/>';bx+=w;});
+  if(st.shield||(st.shieldDraft&&mode==='preview'))gin+='<rect x="520" y="146" width="560" height="50" fill="var(--azure)"/>'+txt(800,179,'SHIELD MODE · first-time chatters are held',20,{a:'middle',w:800,c:'var(--press)'});
+  o+=wrapLayer('gate',mode,[520,40,1050,410],gin);
+  /* Lot Chamber: the urn and its writ */
+  var w=st.writ;if(w){var showWin=w.status==='cast'&&(mode==='preview'||st.ann.winners),stl=w.status==='draft'?'type !ask to enter · ':w.status==='sealed'||!showWin?'entries sealed · ':'the winners · ';
+    var lin='<rect x="470" y="300" width="660" height="370" fill="var(--card)" stroke="var(--gules)" stroke-width="6"/><rect x="470" y="300" width="660" height="14" fill="var(--gules)"/>'+disp(494,362,w.name,46,'var(--press)')+txt(494,398,stl+C.eligible(w).length+' lots · '+plural(w.winners,'winner'),26,{w:700,cls:w.am==='winners'?'inkin':''});
+    if(showWin){lin+=w.result.map(function(x,i){return '<g class="inkin" style="animation-delay:'+(i*.3)+'s">'+txt(494+(i%2)*310,450+Math.floor(i/2)*42,(i+1)+'. '+x,30,{w:800,c:'var(--gules-text)'})+'</g>';}).join('');}
+    else{var N=w.entrants.length,el=C.eligible(w);w.entrants.forEach(function(e,i){var a=i*2.39996,r=96*Math.sqrt((i+.5)/N),inn=el.indexOf(e)>=0;lin+='<circle cx="'+(800+r*Math.cos(a)*2.4).toFixed(1)+'" cy="'+(510+r*Math.sin(a)*.82).toFixed(1)+'" r="'+(N>200?3.6:5.4)+'" fill="'+(inn?'var(--press)':'none')+'" stroke="var(--press)" opacity="'+(inn?1:.4)+'"/>';});}
+    lin+=txt(494,632,'Equal odds · no paid entry · sealed before public round #'+C.nextRound+' (simulated)',19,{w:700,c:'var(--press-2)'})+(w.prize?txt(494,656,'Prize: '+w.prize+'. No purchase necessary. Not affiliated with Twitch.',18,{w:700,c:'var(--gules-text)',cls:w.am==='prize'?'inkin':''}):txt(494,656,'Anyone can recompute the result from the writ.',18,{w:500,c:'var(--press-2)'}));
+    o+=wrapLayer('lot',mode,[470,300,660,370],lin);}
+  /* the Steward's hand (preview only) */
+  if(mode==='preview'&&st.hand){o+='<g class="hand" style="transform:translate('+st.hand[0]+'px,'+st.hand[1]+'px)"><circle r="26" fill="var(--or)" opacity=".35"/><path d="M-9 -16h18v6h-18z M-12 -10h24l-3 26h-18z" fill="var(--press)"/><ellipse cy="2" rx="6" ry="8" fill="var(--or)"/></g>';}
+  return o+'</svg>';}
+function chatLines(mode){var o='';st.chat.slice(-8).forEach(function(c,i){var y=116+i*42,h=c.verdict!=='released';if(h&&mode==='program')return;o+=txt(1206,y,c.login,19,{w:700,c:h?'var(--faint)':'var(--azure-text)'})+txt(1206,y+19,(h?(c.verdict==='held'?'[held, viewers do not see this] ':'[barred] '):'')+c.text.slice(0,30),18,{w:500,c:h?'var(--faint)':'var(--press)',st:h});});return o;}
+function renderMonitors(){$('#monitor').innerHTML=scene('preview');$('#program').innerHTML=scene('program');
+  $('#monitor').querySelectorAll('.layer').forEach(function(g){g.addEventListener('click',function(){select(g.dataset.layer);});});
+  $('#monitor').querySelectorAll('[data-tile]').forEach(function(g){g.addEventListener('click',function(e){e.stopPropagation();hear('tile '+g.dataset.tile);});});}
+function moveHand(k){var pos={lot:[1060,560],gate:[1380,250],beacon:[1450,640],map:[235,190]}[k];st.hand=pos;renderMonitors();clearTimeout(st.ht);st.ht=setTimeout(function(){st.hand=null;renderMonitors();},2600);}
+
+/* ===================== mixer ===================== */
+function stripState(k){var s=st.L[k];if(k==='lot'){var w=st.writ;if(!w)return 'no draw on screen';return w.name+' · '+({draft:'draft',sealed:'sealed',cast:'cast'})[w.status]+' · '+plural(w.winners,'winner');}
+  if(k==='gate'){var h=C.queue.filter(function(q){return q.state==='held';}).length;return h+' held below the line · moat '+st.moat+' s';}
+  if(k==='beacon')return 'altar: '+C.look(C.visuals[0],C.altarFuel()).look+(st.test?' · test fire':'');
+  var p=C.mapProposal();return (st.stageRung?'muster':'sand table')+(p?' · proposal '+C.HOUSES[p.house].short+' '+p.tile.id:'');}
+function renderMixer(){$('#mixer').innerHTML=ORDER.map(function(k){var s=st.L[k],c=CH[k];return '<button class="strip'+(st.sel===k?' sel':'')+'" data-k="'+k+'" style="--c:'+c.c+'"><span class="t"><b>'+c.name.replace('The ','')+'</b><kbd>'+c.k+'</kbd></span><span class="s" title="'+esc(stripState(k))+'">'+esc(stripState(k))+'</span><span class="st"><span class="lamp '+(s==='air'?'air':'')+'">On air</span><span class="lamp '+(s==='draft'||(k==='beacon'&&st.test)?'draft':s==='air'?'prev':'')+'">'+(s==='draft'||(k==='beacon'&&st.test)?'Draft':'Preview')+'</span></span></button>';}).join('');
+  $('#mixer').querySelectorAll('.strip').forEach(function(b){b.onclick=function(){select(b.dataset.k);};});
+  var armed=C.rules.filter(function(r){return r.mode==='armed';}).length,ch=$('#gatechip');ch.className='chip'+(st.shield?' bridge':'');ch.innerHTML=st.shield?'Bridge up · Shield Mode on':'<span class="a">Armed '+armed+'</span> | <span class="w">Watching '+(C.rules.length-armed)+'</span>';}
+function select(k){st.sel=k;showTab('insp');renderAll();}
+
+/* ===================== take (the seal) ===================== */
+function setPending(p){st.pending=p;renderTake();}
+function renderTake(){var b=$('#take'),p=st.pending;b.disabled=!p;$('#takelbl').textContent=p?p.label:'Nothing to proclaim';$('#takesub').textContent=p?p.sub:'The Steward’s drafts wait in the preview.';b.style.background=p&&!p.hold?'var(--ink)':'';b.style.borderColor=p&&!p.hold?'var(--ink)':'';b.style.color=p&&!p.hold?'var(--paper)':'';}
+(function(){var b=$('#take'),t;function go(){var p=st.pending;if(!p)return;st.pending=null;p.run();renderAll();flash(p.toast||'Proclaimed');}
+  function start(e){if(!st.pending)return;e.preventDefault();if(!st.pending.hold){go();return;}b.classList.add('going');t=setTimeout(function(){b.classList.remove('going');go();},900);}function stop(){clearTimeout(t);b.classList.remove('going');}
+  b.addEventListener('pointerdown',start);b.addEventListener('pointerup',stop);b.addEventListener('pointerleave',stop);b.addEventListener('keydown',function(e){if((e.key==='Enter'||e.key===' ')&&!b.classList.contains('going'))start(e);});b.addEventListener('keyup',stop);})();
+function flash(t){var el=$('#toast');el.textContent=t;el.classList.add('on');clearTimeout(flash.t);flash.t=setTimeout(function(){el.classList.remove('on');},1600);}
+
+/* ===================== inspector ===================== */
+function kv(k,v,am){return '<div class="kv"><span class="k">'+k+'</span><span'+(am?' class="am"':'')+'>'+v+'</span></div>';}
+function inspector(){var k=st.sel;if(!k)return '<p class="isub">Select a layer in the preview or a strip below it to see its settings, its data and what the Steward can do with it. Keys 1 to 4.</p>';var c=CH[k],h='<h3 class="ih" style="color:'+c.ct+'">'+c.name+'</h3><p class="isub">'+c.fn+' · layer: '+c.layer+' · '+({off:'off',draft:'draft in preview',air:'on air'})[st.L[k]]+'</p>';
+  if(k==='lot'){var w=st.writ;if(!w)return h+'<p class="isub">No draw on screen. Ask: “put a question draw on screen”.</p><div class="row">'+S.lottery.draws.map(function(d){return '<button class="btn" data-say="draft the '+(d.id==='urn-questions'?'question':d.id==='sub-thanks'?'monthly thank-you':'jury')+' draw">'+esc(d.name)+'</button>';}).join('')+'</div>'+past();
+    var a=w.amend||{},ex=C.excluded(w);function f(key,l,v){var x=a[key],now=x&&x.rev===w.rev;return kv(l,(now?'<s>'+esc(x.old)+'</s>':'')+v,now);}
+    h+=f('pool','Who may enter',esc(w.pool)+' · '+w.entrants.length+' lots')+f('winners','Winners','<b>'+w.winners+'</b>')+f('weights','Odds',esc(w.weights))+f('cap','Raiders',esc(w.cap)+' · '+C.raiders(w)+' in pool')+f('cooldown','Cooldown',esc(w.cooldown)+(ex.length?' · set aside '+ex.map(esc).join(', '):''))+f('prize','Prize',w.prize?esc(w.prize):'none')+kv('Eligible',C.eligible(w).length+' of '+w.entrants.length)+kv('Status',w.status+' · rev '+w.rev)+(w.entriesHash?kv('Seal','<span class="num" style="font-size:12px;word-break:break-all">'+w.entriesHash+'</span>'):'')+
+      '<div class="fair" id="fair"><b>Fairness, always shown</b>Equal odds. No paid entry or paid weight on a prize draw. Sealed before public round #'+C.nextRound+' (simulated); recomputable from the writ.'+(w.prize?'<br>On stream: '+esc(w.disclaimer):'')+'</div>';
+    h+='<div class="row">'+(w.status==='sealed'?'<button class="btn prime" data-say="cast the lots">Cast against the round</button>':'')+(w.status==='cast'?'<button class="btn" data-say="recompute the writ">Recompute</button><span id="verify" style="font:italic 400 15px/2 var(--font-serif)"></span>':'')+(w.status==='draft'?'<button class="btn" data-say="tear it up">Tear it up</button>':'')+'</div>'+past();return h;}
+  if(k==='gate'){h+='<p class="sect">Below the line · held for review</p>'+C.queue.map(function(q,i){var d=q.state!=='held';return '<div class="held'+(d?' done':'')+'"><div class="w">'+esc(q.line.login)+' <small>'+esc(C.viewerLine(q.line.login))+'</small></div><div class="x">“'+esc(q.line.text)+'”</div><div class="r">Held: '+esc(q.reason)+'</div><div class="b">'+(d?'<b>'+(q.state==='passed'?'Passed (released)':'Barred (removed)')+'</b>':'<span class="p">Proposal: '+(q.advice.verdict==='pass'?'Pass':'Bar')+'</span><button class="btn a" data-q="'+i+'" data-v="passed">Pass</button><button class="btn g" data-q="'+i+'" data-v="barred">Bar</button>')+'</div></div>';}).join('');
+    h+='<div class="held" style="border-color:var(--danger)"><div class="w" style="color:var(--danger)">Ban waiting for a human · '+esc(C.banPending.who)+'</div><div class="r">'+esc(C.banPending.reason)+' ('+C.banPending.t+')</div><div class="b">'+(st.ban?'<b>'+esc(st.ban)+'</b>':'<button class="btn g" id="banyes">Ban (your click)</button><button class="btn" id="banno">Dismiss</button>')+'</div></div>';
+    h+='<p class="sect">Garrison orders</p>'+C.rules.map(function(r){return '<div class="rule"><span>'+esc(r.match)+'</span><small>'+esc(r.action)+'</small><button class="mode '+r.mode+'" data-say="'+(r.mode==='armed'?'watch':'arm')+' '+(r.id==='llm-harass'?'harassment':r.id==='new-acct'?'new accounts':r.id)+'">'+(r.mode==='armed'?'Armed':'Watching')+'</button></div>';}).join('');
+    var t=C.tier(S.channel.room_tier),rp=S.moderator.replay;h+=kv('Moat',st.moat+' s chat delay')+kv('Room','tier '+t.tier+' · '+t.chatters+' · '+t.modes.join(', '))+kv('Drawbridge',st.shield?'up (Shield Mode)':'down')+kv('Verdicts','pass '+C.verdicts.released+' · hold '+C.verdicts.held+' · bar '+C.verdicts.removed)+kv('The drill',rp.messages.toLocaleString('en')+' msgs: hold '+rp.would_hold+' · remove '+rp.would_remove+' · timeout '+rp.would_timeout+' · ban '+rp.would_ban);
+    h+='<p class="sect">The Herald · 15 minutes of consensus</p><div class="mini">'+consensus(360,120)+'</div><div class="legend">'+C.dirs.map(function(d){return '<span><i style="background:'+d[2]+'"></i>'+d[1]+'</span>';}).join('')+'</div><div class="row"><button class="btn" data-say="raise the drawbridge">Draft Shield Mode</button><button class="btn" data-say="announce the left door">Announce the door</button></div>';return h;}
+  if(k==='beacon'){var tf=st.test;h+=C.visuals.map(function(v){var val=v.id==='altar'?C.altarFuel(tf?tf.fuel:0):v.id==='cam-frame'?C.frameCount(tf?tf.count:0):C.hypeLevel(),lk=C.look(v,val);return '<p class="sect">'+esc(v.name)+' · '+esc(v.kind)+'</p>'+kv('Now',esc(lk.look)+' <span class="num" style="color:var(--muted)">('+(v.id==='altar'?val.toLocaleString('en')+' fuel':v.id==='cam-frame'?val+' subs+gifts':'level '+val)+')</span>')+kv('Fed by',v.inputs.join(' + ')+(v.decay?' · '+esc(v.decay):''))+'<div class="ranges">'+v.ranges.map(function(r){return '<span class="'+(r===lk?'cur':'')+'">'+esc(r.look)+'<br>'+(r.level!=null?'L'+r.level:r.from+'–'+r.to)+'</span>';}).join('')+'</div>';}).join('');
+    h+='<p class="sect">Offerings this stream · '+C.contrib.length+'</p><div class="mini">'+offerings(360,90)+'</div>'+kv('Totals','bits '+C.totals.bits.toLocaleString('en')+' · gifts '+C.totals.gift+' · subs '+C.totals.sub+' · points '+C.totals.points.toLocaleString('en'))+kv('Weighting','1 gift = '+C.GIFT_BITS+' bits (illustrative)')+'<div class="row">'+(tf?'<button class="btn prime" data-say="end the test fire">End test fire</button>':'<button class="btn" data-say="test fire 50 gifts">Test fire 50 gifts</button><button class="btn" data-say="test fire 500 bits">Test fire 500 bits</button>')+'<button class="btn" data-say="thank rookscribe69 on the altar">Draft a thank-you</button></div>';return h;}
+  var p=C.mapProposal(),cnt=[0,0,0];C.tiles.forEach(function(t){var o=own(t);if(o!=null)cnt[o]++;});
+  h+='<div class="legend">'+C.HOUSES.map(function(x,i){return '<span><i style="background:'+x.ink+'"></i>'+x.short+' '+cnt[i]+'</span>';}).join('')+'</div><div class="mini"><svg viewBox="0 0 360 240">'+hexG(2,2,22,p,true)+'</svg></div>'+(p?kv('Proposal','Malakor (AI): <b>'+esc(C.HOUSES[p.house].name)+' takes '+p.tile.id+'</b> · '+p.votes+' of '+p.total+' calls')+'<div class="row"><button class="btn prime" data-say="what should the next turn be">Draft the move</button></div>':'')+kv('Turn',esc(C.hex.turn))+kv('Operator',esc(C.hex.operator))+kv('Ladder',['<b>Sand table</b> → Muster → Proclaimed','Sand table → <b>Muster</b> ('+esc(C.hex.test_stage)+') → Proclaimed'][st.stageRung])+(st.stageRung?kv('Allowlist',C.allowlist.map(esc).join(', ')):'<div class="row"><button class="btn" data-say="muster the hosted test">Draft the muster</button></div>')+'<p class="isub" style="margin-top:10px">The war table stays a draft on the sand table: only you see it until the muster, and the public only after Twitch review.</p>';return h;}
+function past(){return '<p class="sect">Past writs · all revealed</p>'+S.lottery.past.slice().reverse().map(function(p){return kv(p.when,p.winners.map(esc).join(', ')+' <span class="num" style="color:var(--muted)">#'+p.beacon_round+'</span>');}).join('');}
+function consensus(W,H){var base=S.consensus.map(function(){return 0;}),o='';C.dirs.forEach(function(d){var top=[],bot=[];S.consensus.forEach(function(m,i){var x=i/(S.consensus.length-1)*W,y0=H-base[i]/100*H;base[i]+=m[d[0]];var y1=H-base[i]/100*H;top.push(x.toFixed(1)+','+y1.toFixed(1));bot.unshift(x.toFixed(1)+','+y0.toFixed(1));});o+='<polygon points="'+top.concat(bot).join(' ')+'" fill="'+d[2]+'" opacity=".82" style="mix-blend-mode:var(--blend)"/>';});return '<svg viewBox="0 0 '+W+' '+H+'">'+o+'</svg>';}
+function offerings(W,H){var col={bits:'var(--or)',gift:'var(--gules)',sub:'var(--azure)',points:'var(--line)',hype_train:'var(--ink)'},o='';C.contrib.forEach(function(c){var amt=c.kind==='bits'?c.amount/100:c.kind==='gift'?c.amount:c.kind==='points'?c.amount/500:c.amount*2,r=Math.max(2.5,Math.min(14,Math.sqrt(amt)*2.6));o+='<circle cx="'+(c.t/C.nowT*W).toFixed(1)+'" cy="'+(H/2+(C.h32(c.login)%30-15))+'" r="'+r.toFixed(1)+'" fill="'+col[c.kind]+'" stroke="var(--ink)" stroke-width=".8" style="mix-blend-mode:var(--blend)"><title>'+esc(c.login)+': '+c.amount+' '+c.kind+'</title></circle>';});return '<svg viewBox="0 0 '+W+' '+H+'">'+o+'</svg>';}
+function talkback(){return st.hist.map(function(m){return '<div class="msg '+m.who+'"><span class="t">'+(m.who==='me'?'You':'Steward (simulated)')+' · '+m.t+'</span>'+esc(m.text)+'</div>';}).join('');}
+function showTab(t){st.tab=t;renderPane();}
+function renderPane(){var t=st.tab;$('#tab-talk').setAttribute('aria-selected',t==='talk');$('#tab-insp').setAttribute('aria-selected',t==='insp');$('#tab-insp').style.setProperty('--c',st.sel?CH[st.sel].c:'var(--ink)');$('#tab-insp').textContent=st.sel?'Inspector · '+CH[st.sel].name.replace('The ',''):'Inspector';
+  var pane=$('#pane');pane.innerHTML=t==='talk'?talkback():inspector();if(t==='talk')pane.scrollTop=1e9;
+  pane.querySelectorAll('[data-say]').forEach(function(b){b.onclick=function(){hear(b.dataset.say);};});
+  pane.querySelectorAll('[data-q]').forEach(function(b){b.onclick=function(){var q=C.queue[+b.dataset.q];q.state=b.dataset.v;say((q.state==='passed'?'Passed (released) ':'Barred (removed) ')+q.line.login+'’s line, at your word.');renderAll();};});
+  var by=$('#banyes',pane);if(by){by.onclick=function(){st.ban='Banned by your click (simulated)';say('Banned by your click (simulated). '+C.banPending.who+' is out.');renderAll();};$('#banno',pane).onclick=function(){st.ban='Dismissed, no ban';say('Dismissed.');renderAll();};}}
+$('#tab-talk').onclick=function(){showTab('talk');};$('#tab-insp').onclick=function(){showTab('insp');};
+function renderAll(){renderMonitors();renderMixer();renderPane();renderTake();setChips();}
+
+/* ===================== the Steward (simulated) ===================== */
+var tT;function say(t){st.hist.push({who:'st',text:t,t:C.uptime()});var el=$('#line');clearInterval(tT);el.textContent='';var i=0;tT=setInterval(function(){i+=3;el.textContent=t.slice(0,i);if(i>=t.length)clearInterval(tT);},14);if(st.tab==='talk')renderPane();}
+function hear(text){if(!text)return;st.hist.push({who:'me',text:text,t:C.uptime()});var raw=text.toLowerCase(),r=C.parse(text),i=r.intent,a=r.args,w=st.writ;
+  if(/put .*draw|draw on screen/.test(raw)){i='lot.draft';a.id=/thank|monthly/.test(raw)?'sub-thanks':/jury/.test(raw)?'jury':'urn-questions';}
+  if(/announce the (left|right)|call the door|announce the door/.test(raw))i='door';
+  if(/^thank .*(altar|stream)|draft a thank/.test(raw))i='thanks';
+  if(/end the test/.test(raw))i='endtest';
+  if(i==='help')return say('Talk plainly: “put a question draw on screen”, “make it 5 winners”, “pass all as proposed”, “raise the drawbridge”, “test fire 50 gifts”, “what should the next turn be”. The red button proclaims a draft to air.'),renderAll();
+  if(i==='brief'){say(C.brief().map(function(x){return x.text;}).join(' '));return renderAll();}
+  if(i==='confirm'){if(st.pending){if(st.pending.hold){say('This acts on people or prizes: hold the red Proclaim button yourself.');}else{var p0=st.pending;st.pending=null;p0.run();flash(p0.toast||'Proclaimed');}}else say('Nothing waits to be proclaimed.');return renderAll();}
+  if(i==='reject'){if(st.pending){var p1=st.pending;st.pending=null;if(p1.tear)p1.tear();say('Torn up. The preview is clean again.');}else if(w&&w.status==='draft'){st.writ=null;st.L.lot='off';say('Torn up. No draw on screen.');}else say('Nothing to tear up.');return renderAll();}
+  if(i==='home'){st.sel=null;showTab('talk');return renderAll();}
+  if(i==='open'){select(r.chamber);moveHand(r.chamber);return say(CH[r.chamber].name+': '+stripState(r.chamber)+'.');}
+  if(i==='door'){var l=C.lead();setPending({label:'Proclaim: '+l.label.toLowerCase(),sub:'Announces the vote result on stream.',hold:false,run:function(){st.ann.door=true;say('Proclaimed (simulated): '+l.label.toLowerCase()+' it is.');},toast:'On air: '+l.label});moveHand('gate');st.sel='gate';say('Drafted the call: '+l.label.toLowerCase()+', '+l.pct+'%. Proclaim it when you are ready.');return renderAll();}
+  if(i==='thanks'){setPending({label:'Proclaim the thank-you',sub:C.lastGift.login+'’s name on the altar for 10 s.',hold:false,run:function(){st.ann.thanks=true;say('Proclaimed (simulated): thanks to '+C.lastGift.login+' on the altar.');},toast:'On air: thank-you'});moveHand('beacon');st.sel='beacon';say('A thank-you for '+C.lastGift.login+'’s '+C.lastGift.amount+' gifts, drafted. Proclaim it?');return renderAll();}
+  if(i==='endtest'){st.test=null;say('Test fire ended.');return renderAll();}
+  /* lot */
+  if(i==='lot.draft'){st.writ=C.newWrit(a.id);st.L.lot='draft';st.sel='lot';var nw=st.writ;lotPending();moveHand('lot');showTab('insp');say('I placed '+nw.name+' in the preview: '+plural(nw.winners,'winner')+' from '+nw.entrants.length+' lots.'+(C.excluded(nw).length?' '+C.excluded(nw).length+' recent winners set aside by the cooldown.':'')+' It is a draft; holding Proclaim seals the roll and puts it on air.');return renderAll();}
+  if(['lot.winners','lot.cap','lot.cooldown','lot.prize'].indexOf(i)>=0){if(!w||w.status!=='draft'){say(w?'That writ is sealed; it cannot change.':'No draw on screen. Say “put a question draw on screen”.');return renderAll();}
+    var key={'lot.winners':'winners','lot.cap':'cap','lot.cooldown':'cooldown','lot.prize':'prize'}[i],old=w[key]==null?'none':w[key];w.rev++;w.amend=w.amend||{};w.amend[key]={old:old,rev:w.rev};w.am=key;
+    if(key==='winners')w.winners=Math.max(1,Math.min(a.n,C.eligible(w).length));if(key==='cap')w.cap=a.cap;if(key==='cooldown')w.cooldown=a.cooldown;if(key==='prize'){w.prize=a.prize;w.disclaimer=a.prize?'No purchase necessary. The free !join path has equal odds. Not affiliated with or endorsed by Twitch.':null;}
+    lotPending();moveHand('lot');st.sel='lot';showTab('insp');say('Amended '+key+': '+(w[key]==null?'none':w[key])+' (was '+old+'). See it change in the preview.'+(key==='prize'&&a.prize?' The disclaimer is now printed on the overlay.':''));return renderAll();}
+  if(i==='lot.paidweight'){st.sel='lot';showTab('insp');renderAll();var f=$('#fair');if(f)f.classList.add('pulse');return say('I will not weight subscribers: paid weight on a prize draw is blocked, and every draw stays at equal odds.');}
+  if(i==='lot.cast'){if(!w||w.status==='draft'){say('Proclaim (seal) the roll first: hold the red button.');return renderAll();}if(w.status==='cast'){say('Already cast.');return renderAll();}C.cast(w);st.ann.winners=false;moveHand('lot');setPending({label:'Proclaim the winners',sub:'Shows the '+plural(w.winners,'winner')+' on stream.',hold:false,run:function(){st.ann.winners=true;say('Proclaimed (simulated): '+w.result.join(', ')+'.');},toast:'On air: the winners'});say('Cast against round #'+w.round+' (simulated): '+w.result.join(', ')+'. They show in the preview first; proclaim to announce.');return renderAll();}
+  if(i==='lot.verify'){if(w&&w.status==='cast'){var rc=C.recompute(w);say(rc.hashOk&&rc.same?'Recomputed from the writ alone: seal matches, same winners.':'Mismatch.');renderAll();var v=$('#verify');if(v)v.textContent=rc.hashOk&&rc.same?'✓ seal matches':'✗';return;}var lp=S.lottery.past[5];say('The last writ, '+lp.when+', round #'+lp.beacon_round+', seal '+lp.entries_hash+', is recomputable by anyone.');return renderAll();}
+  if(i==='lot.past'){st.sel='lot';showTab('insp');say(S.lottery.past.length+' past draws, all revealed.');return renderAll();}
+  /* gate */
+  if(i==='gate.pass'||i==='gate.bar'){var held=C.queue.filter(function(q){return q.state==='held'&&(!a.who||q.line.login===a.who);});if(!held.length){say('Nothing is held'+(a.who?' from '+a.who:'')+'.');return renderAll();}
+    var list=a.all||/as proposed/.test(raw)?held:[held[0]];list.forEach(function(q){q.state=/as proposed/.test(raw)?(q.advice.verdict==='pass'?'passed':'barred'):(i==='gate.pass'?'passed':'barred');});st.sel='gate';showTab('insp');moveHand('gate');say(plural(list.length,'line')+' decided at your word.');return renderAll();}
+  if(i==='gate.shield'){if(st.shield){say('The drawbridge is already up.');return renderAll();}st.shieldDraft=true;st.sel='gate';moveHand('gate');setPending({label:'Hold to raise the drawbridge',sub:'Shield Mode: holds first-time chatters. Acts on the whole room.',hold:true,run:function(){st.shield=true;st.shieldDraft=false;say('Bridge up (simulated). Say “lower the drawbridge” to end it.');},tear:function(){st.shieldDraft=false;},toast:'Bridge up'});say('Shield Mode is drafted in the preview. It acts on the whole room: hold Proclaim to raise it.');return renderAll();}
+  if(i==='gate.shieldoff'){st.shield=false;say('Bridge down.');return renderAll();}
+  if(i==='gate.mode'){var rr=C.rules.filter(function(x){return x.id===a.rule;})[0];if(rr.mode===a.mode){say('Already '+(a.mode==='armed'?'Armed':'Watching')+'.');return renderAll();}st.sel='gate';showTab('insp');setPending({label:(a.mode==='armed'?'Hold to arm: ':'Set to watching: ')+rr.id,sub:a.mode==='armed'?'It would '+rr.action+' on its own.':'It will only report.',hold:a.mode==='armed',run:function(){rr.mode=a.mode;say(rr.match+' is now '+(a.mode==='armed'?'Armed':'Watching')+'.');},toast:a.mode==='armed'?'Armed':'Watching'});say((a.mode==='armed'?'Arming “'+rr.match+'” acts on people. ':'')+'Drafted; '+(a.mode==='armed'?'hold':'press')+' Proclaim to apply.');return renderAll();}
+  if(i==='gate.ban'){st.sel='gate';showTab('insp');say('A ban needs your own click in the inspector, not my word.');return renderAll();}
+  if(i==='gate.moat'){var s=[2,4,6].indexOf(a.s)>=0?a.s:4;setPending({label:'Set the moat to '+s+' s',sub:'Chat delay for non-moderators.',hold:false,run:function(){st.moat=s;say('The moat is '+s+' s.');},toast:'Moat '+s+' s'});say('Drafted: moat '+s+' s. Press Proclaim to apply.');return renderAll();}
+  if(i==='gate.drill'){var rp=S.moderator.replay;say('The drill replayed '+rp.messages.toLocaleString('en')+' messages: '+rp.would_hold+' holds, '+rp.would_remove+' removals, '+rp.would_timeout+' timeouts, '+rp.would_ban+' bans, each ban still a human click.');return renderAll();}
+  if(i==='gate.consensus'){var l2=C.lead();moveHand('gate');say('Chat pulls '+l2.label.toLowerCase()+', '+l2.pct+'%. Say “announce the left door” to call it.');return renderAll();}
+  /* beacons */
+  if(i==='beacon.test'){st.test={fuel:a.kind==='bits'?a.n:a.n*C.GIFT_BITS,count:a.kind==='gift'?a.n:0};st.sel='beacon';moveHand('beacon');say('Test fire in the preview: a simulated '+a.n+' '+(a.kind==='bits'?'bits':'gifts')+'. The altar would burn as a '+C.look(C.visuals[0],C.altarFuel(st.test.fuel)).look+'. Program is untouched.');clearTimeout(st.tt);st.tt=setTimeout(function(){st.test=null;renderAll();},14000);return renderAll();}
+  if(i==='beacon.status'||i==='beacon.dim'){st.sel='beacon';moveHand('beacon');say(C.lastGift.login+' gifted '+C.lastGift.amount+'. Altar: '+C.look(C.visuals[0],C.altarFuel()).look+' ('+C.altarFuel().toLocaleString('en')+' fuel). Frame: '+C.look(C.visuals[1],C.frameCount()).look+'.');return renderAll();}
+  /* map */
+  if(i==='map.propose'){var p=C.mapProposal();if(!p){say('Every tile is held.');return renderAll();}st.sel='map';moveHand('map');setPending({label:'Approve: '+C.HOUSES[p.house].short+' takes '+p.tile.id,sub:'Malakor proposes; the move lands when the turn ends.',hold:false,run:function(){st.mapDone[p.tile.id]=p.house;say('Approved: '+C.HOUSES[p.house].name+' takes '+p.tile.id+'.');},toast:'Approved'});say('Malakor proposes '+C.HOUSES[p.house].name+' takes '+p.tile.id+' ('+p.votes+' of '+p.total+' calls). It is marked on the war table; approve with the red button.');return renderAll();}
+  if(i==='map.tile'){var t=C.tile(a.tile);if(!t){say('No tile '+a.tile+'.');return renderAll();}var o=own(t);st.sel='map';say(t.id+': '+(o!=null?'held by '+C.HOUSES[o].name:'unclaimed')+'. Calls Quill '+t.votes[0]+', Tallow '+t.votes[1]+', Sable '+t.votes[2]+'.');return renderAll();}
+  if(i==='map.muster'){if(st.stageRung){say('The muster is already called.');return renderAll();}st.sel='map';setPending({label:'Call the muster',sub:'Hosted test for 12 allowlisted accounts.',hold:false,run:function(){st.stageRung=1;say('Muster called (simulated): 12 allowlisted accounts see the war table.');},toast:'Muster called'});say('Drafted: the muster. Press Proclaim to call it.');return renderAll();}
+  say('I did not catch that. Try “put a question draw on screen”, “pass all as proposed”, “test fire 50 gifts”. (A simulated Steward with a fixed vocabulary.)');renderAll();}
+function lotPending(){var w=st.writ;setPending({label:'Hold to seal and proclaim',sub:w.name+' · '+plural(w.winners,'winner')+' · '+C.eligible(w).length+' lots. Freezes entries.',hold:true,run:function(){C.seal(w);st.L.lot='air';say('Sealed by your hold and proclaimed (simulated). Entries are frozen; seal '+w.entriesHash.slice(0,12)+'… Say “cast” when the round is in.');},tear:function(){st.writ=null;st.L.lot='off';},toast:'Sealed · on air'});}
+function setChips(){var s=[],w=st.writ;
+  if(st.pending&&st.pending.hold)s=['tear it up'];
+  if(st.sel==='lot'||(w&&w.status==='draft'))s=s.concat(!w?['put a question draw on screen','draft the monthly thank-you draw']:w.status==='draft'?['make it 5 winners','no raiders in the draw','prize is a signed print','double weight for subs']:w.status==='sealed'?['cast the lots']:['recompute the writ']);
+  else if(st.sel==='gate')s=s.concat(['pass all as proposed','raise the drawbridge','announce the left door','arm caps','set the moat to 4']);
+  else if(st.sel==='beacon')s=s.concat(st.test?['end the test fire']:['test fire 50 gifts','draft a thank-you','who lit the altar']);
+  else if(st.sel==='map')s=s.concat(['what should the next turn be','tile E3','muster the hosted test']);
+  else s=s.concat(['put a question draw on screen','catch me up','pass all as proposed','test fire 50 gifts','what should the next turn be']);
+  $('#chips').innerHTML=s.slice(0,5).map(function(x){return '<button type="button">'+esc(x)+'</button>';}).join('');$('#chips').querySelectorAll('button').forEach(function(b){b.onclick=function(){hear(b.textContent);};});}
+
+/* ===================== loops + input ===================== */
+$('#ask').addEventListener('submit',function(e){e.preventDefault();var v=$('#q').value.trim();$('#q').value='';hear(v);});
+(function(){var m=$('#mic'),typing;function start(e){e.preventDefault();m.classList.add('on');m.lastChild.textContent='Listening (simulated)';var f=$('#chips button'),text=f?f.textContent:'catch me up',i=0;typing=setInterval(function(){i++;$('#q').value=text.slice(0,i);if(i>=text.length)clearInterval(typing);},28);}
+  function stop(){if(!m.classList.contains('on'))return;m.classList.remove('on');m.lastChild.textContent='Hold to speak';clearInterval(typing);var v=$('#q').value.trim();$('#q').value='';if(v)hear(v);}
+  m.addEventListener('pointerdown',start);m.addEventListener('pointerup',stop);m.addEventListener('pointerleave',stop);})();
+$('#stock').onclick=function(){var on=document.documentElement.getAttribute('data-theme')!=='stock';document.documentElement.setAttribute('data-theme',on?'stock':'paper');this.setAttribute('aria-pressed',on);};
+document.addEventListener('keydown',function(e){var inI=document.activeElement&&document.activeElement.tagName==='INPUT';
+  if(e.key==='/'&&!inI){e.preventDefault();$('#q').focus();return;}
+  if(e.key==='Escape'){if(inI)document.activeElement.blur();st.sel=null;showTab('talk');renderAll();return;}
+  if(inI)return;if(/^[1-4]$/.test(e.key))select(ORDER[+e.key-1]);if(e.key==='t'||e.key==='T')showTab(st.tab==='talk'?'insp':'talk');});
+function tick(){var c=S.chat[st.chatIdx%S.chat.length];st.chatIdx++;st.chat.push(c);if(st.chat.length>20)st.chat.shift();['preview','program'].forEach(function(m){var g=document.getElementById('chat-'+m);if(g)g.innerHTML=chatLines(m);});}
+for(var i=0;i<12;i++){st.chat.push(S.chat[i]);}st.chatIdx=12;
+renderAll();
+setTimeout(function(){moveHand('beacon');say('Good evening. On air now: chat, the altar (a pillar of fire after '+C.lastGift.login+'’s 50 gifts) and the camera frame. The war table waits as a draft. '+C.queue.length+' lines are held below the line. Shall I put the question draw on screen?');},600);
+setInterval(tick,1600);setInterval(function(){$('#uptime').textContent=C.uptime();},1000);
+})();
+</script>
+</body>
+</html>

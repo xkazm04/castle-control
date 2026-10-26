@@ -1,0 +1,607 @@
+<!doctype html>
+<html lang="en" data-theme="paper">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Castle Control · The Lit Keep (prototype, simulated Steward)</title>
+<link rel="stylesheet" href="../data/tokens.css">
+<script src="../data/sample.js"></script>
+<script src="../data/mark.js"></script>
+<script src="core.js"></script>
+<style>
+:root{--top:56px;--cap:172px;--grain:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n' x='0' y='0'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' seed='7' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .38 0 0 0 0 .32 0 0 0 0 .22 1.3 0 0 0 -.62'/%3E%3C/filter%3E%3Crect width='240' height='240' filter='url(%23n)'/%3E%3C/svg%3E")}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;background:var(--paper);color:var(--ink);font:400 15px/1.5 var(--font-ui)}
+body::after{content:"";position:fixed;inset:0;background:var(--grain);background-size:240px;mix-blend-mode:var(--blend);opacity:.5;pointer-events:none;z-index:90}
+button{font:inherit;color:inherit;cursor:pointer}
+.disp{font-family:var(--font-display);font-stretch:75%;font-variation-settings:"wdth" 75;text-transform:uppercase;font-weight:800;letter-spacing:.01em}
+.num{font-family:var(--font-num);font-variant-numeric:tabular-nums}
+.serif{font-family:var(--font-serif);font-style:italic}
+:focus-visible{outline:3px solid var(--azure);outline-offset:2px}
+
+/* ---------- rampart ---------- */
+.rampart{position:fixed;left:0;right:0;top:0;height:var(--top);display:flex;align-items:center;gap:16px;white-space:nowrap;padding:0 18px;border-bottom:1.5px solid var(--rule);background:var(--paper);z-index:40}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:inherit;background:none;border:0;padding:0}
+.brand .mark{width:38px;height:34px}
+.brand b{display:block;font:800 19px/.9 var(--font-display);font-stretch:75%;font-variation-settings:"wdth" 75;text-transform:uppercase;text-shadow:.06em .05em 0 var(--or)}
+.onair{font:800 13px/1 var(--font-ui);letter-spacing:.14em;color:var(--paper);background:var(--gules);padding:6px 9px;transform:rotate(-2deg);text-transform:uppercase}
+.stat{display:flex;flex-direction:column;line-height:1.05}
+.stat small{font:700 11px/1.2 var(--font-ui);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.stat span{font:600 19px/1.1 var(--font-num)}
+.reg{display:flex;align-items:center;gap:6px;font:600 13px/1 var(--font-ui);color:var(--ink-2)}
+.reg i{width:12px;height:12px;border:1.5px solid var(--ink);border-radius:50%;position:relative}
+.reg i::after{content:"";position:absolute;inset:2px;border-radius:50%;background:var(--ok)}
+.chip{display:inline-flex;align-items:center;gap:8px;border:1.5px solid var(--ink);padding:5px 10px;font:700 13px/1 var(--font-ui);background:var(--card)}
+.chip .a{color:var(--gules-text)} .chip .w{color:var(--azure-text)}
+.chip.bridge{background:var(--azure);color:var(--press);border-color:var(--azure)}
+.sp{flex:1}
+.simstamp{font:800 11px/1.25 var(--font-ui);letter-spacing:.12em;text-transform:uppercase;border:1.5px dashed var(--ink-2);padding:4px 8px;color:var(--ink-2);text-align:center}
+.tbtn{border:1.5px solid var(--ink);background:none;padding:6px 10px;font:700 13px/1 var(--font-ui)}
+.tbtn[aria-pressed=true]{background:var(--ink);color:var(--paper)}
+
+/* ---------- stage + world ---------- */
+.stage{position:fixed;left:0;right:0;top:var(--top);bottom:var(--cap);overflow:hidden}
+.world{position:absolute;left:0;top:0;width:1600px;height:860px;transform-origin:0 0;transition:transform .8s var(--ease),opacity .6s var(--ease),filter .6s}
+.stage.focus .world{opacity:.22;filter:saturate(.5) blur(2px)}
+.world svg.keep{position:absolute;inset:0;width:1600px;height:860px}
+.room{position:absolute;border:0;background:transparent;padding:0;text-align:left;border-radius:0}
+.room .glass{position:absolute;inset:0;background:var(--card);border:2px solid var(--ink);box-shadow:inset 0 0 0 6px var(--paper-2);transition:background .3s,transform .3s var(--ease)}
+.room:hover .glass,.room:focus-visible .glass{background:var(--paper)}
+.room .lbl{position:absolute;left:18px;top:14px;right:18px;display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.room .lbl b{font:800 34px/.9 var(--font-display);font-stretch:75%;font-variation-settings:"wdth" 75;text-transform:uppercase}
+.room .lbl small{font:700 15px/1 var(--font-ui);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.room .fn{position:absolute;left:18px;top:52px;font:italic 400 20px/1.2 var(--font-serif);color:var(--ink-2)}
+.room .gl{position:absolute;left:18px;right:18px;bottom:16px}
+.room .key{position:absolute;right:14px;bottom:12px;font:700 16px/1 var(--font-num);border:1.5px solid var(--ink);padding:3px 7px;background:var(--paper)}
+.room.lot .lbl b{color:var(--gules-text)} .room.gate .lbl b{color:var(--azure-text)} .room.beacon .lbl b{color:var(--or-text)} .room.map .lbl b{color:var(--ink)}
+.room.lot .glass{border-color:var(--gules)} .room.gate .glass{border-color:var(--azure)} .room.beacon .glass{border-color:var(--or)}
+.room .lamp{position:absolute;top:-16px;left:50%;width:22px;height:22px;margin-left:-11px;border-radius:50%;background:var(--or);box-shadow:0 0 0 4px var(--paper),0 0 26px 10px color-mix(in srgb,var(--or) 55%,transparent);opacity:0;transition:opacity .5s}
+.room.lit .lamp{opacity:1}
+.room.speaking .glass{animation:speak 1.6s var(--ease) infinite}
+@keyframes speak{50%{box-shadow:inset 0 0 0 6px color-mix(in srgb,var(--or) 45%,var(--paper-2))}}
+.big{font:800 64px/.85 var(--font-display);font-stretch:75%;font-variation-settings:"wdth" 75;text-transform:uppercase}
+.gline{font:600 19px/1.3 var(--font-ui)}
+.gline2{font:400 17px/1.35 var(--font-ui);color:var(--ink-2)}
+.tags{display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
+.tag{display:flex;gap:10px;align-items:baseline;border:1.5px solid var(--azure);background:var(--paper);padding:7px 10px;font:500 17px/1.25 var(--font-ui);transform-origin:top center;animation:sway 4s ease-in-out infinite}
+.tag:nth-child(2){animation-delay:-1.3s}.tag:nth-child(3){animation-delay:-2.6s}
+.tag b{font-weight:700} .tag.done{opacity:.35;text-decoration:line-through;animation:none}
+@keyframes sway{50%{transform:rotate(.6deg)}}
+.herald{position:absolute;left:1372px;top:250px;width:168px;height:470px;background:var(--card);border:2px solid var(--ink);padding:14px;display:flex;flex-direction:column;gap:6px;text-align:left}
+.herald h4{margin:0;font:800 24px/.95 var(--font-display);font-stretch:75%;font-variation-settings:"wdth" 75;text-transform:uppercase}
+.herald .serif{font-size:16px;color:var(--ink-2)}
+.hbar{display:flex;flex-direction:column;gap:2px;margin-top:6px}
+.hbar span{font:600 15px/1.2 var(--font-ui)}
+.hbar i{display:block;height:14px;background:var(--c);mix-blend-mode:var(--blend)}
+.hbar em{font:600 15px/1 var(--font-num);font-style:normal}
+.minihex{display:block}
+.flame{transform-origin:50% 100%;animation:flick 1.3s ease-in-out infinite alternate}
+@keyframes flick{0%{transform:scale(1,1)}50%{transform:scale(1.05,.96) skewX(2deg)}100%{transform:scale(.97,1.06) skewX(-2deg)}}
+.ember{animation:rise 3s linear infinite;opacity:0}
+@keyframes rise{0%{transform:translateY(0);opacity:0}15%{opacity:1}100%{transform:translateY(-120px);opacity:0}}
+.water path{animation:lap 6s linear infinite}
+@keyframes lap{to{transform:translateX(-80px)}}
+
+/* ---------- interiors ---------- */
+.interior{position:absolute;inset:16px 16px 12px 16px;background:var(--paper);border:2px solid var(--ink);display:none;flex-direction:column;overflow:hidden;transform-origin:0 0;box-shadow:10px 10px 0 color-mix(in srgb,var(--ink) 12%,transparent)}
+.interior.on{display:flex}
+.interior::before{content:"";position:absolute;inset:0;background:var(--grain);background-size:240px;opacity:.35;mix-blend-mode:var(--blend);pointer-events:none}
+.ihead{display:flex;align-items:center;gap:16px;padding:12px 18px;border-bottom:1.5px solid var(--rule);position:relative}
+.crumb{display:flex;align-items:center;gap:8px;font:600 14px/1 var(--font-ui);color:var(--muted)}
+.crumb button{background:none;border:0;padding:0;font:700 14px/1 var(--font-ui);color:var(--ink);text-decoration:underline;text-underline-offset:3px}
+.ihead h2{margin:0;font:800 40px/.9 var(--font-display);font-stretch:75%;font-variation-settings:"wdth" 75;text-transform:uppercase;text-shadow:.04em .04em 0 var(--gh,var(--or))}
+.ihead .pf{font:italic 400 19px/1.2 var(--font-serif);color:var(--ink-2)}
+.locator{display:grid;grid-template-columns:repeat(4,30px);gap:4px;margin-left:auto}
+.locator button{height:24px;border:1.5px solid var(--ink);background:var(--card);padding:0;font:700 12px/1 var(--font-num)}
+.locator button.cur{background:var(--ink);color:var(--paper)}
+.ibody{flex:1;min-height:0;display:grid;gap:0;position:relative}
+.col{min-width:0;min-height:0;overflow:auto;padding:16px 18px;border-right:1.5px solid var(--line)}
+.col:last-child{border-right:0}
+.sect{font:700 12px/1.3 var(--font-ui);letter-spacing:.16em;text-transform:uppercase;color:var(--muted);margin:0 0 8px}
+.sect.ink{color:var(--ink)}
+.btn{border:1.5px solid var(--ink);background:var(--card);padding:9px 14px;font:700 15px/1.1 var(--font-ui)}
+.btn:hover{background:var(--paper-2)}
+.btn.prime{background:var(--ink);color:var(--paper)}
+.btn.g{border-color:var(--gules);color:var(--gules-text)} .btn.a{border-color:var(--azure);color:var(--azure-text)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.empty{display:grid;place-items:center;text-align:center;height:100%;padding:24px}
+.empty p{max-width:30rem;font:italic 400 22px/1.35 var(--font-serif)}
+
+/* writ */
+.writ{position:relative;background:var(--card);border:2px solid var(--ink);padding:20px 22px 18px;max-width:640px}
+.writ.proposal{border-style:dashed;border-color:var(--gules)}
+.writ .stamp{position:absolute;right:16px;top:-15px;background:var(--card);font:800 14px/1 var(--font-ui);letter-spacing:.14em;text-transform:uppercase;border:2px solid var(--gules);color:var(--gules-text);padding:6px 9px;transform:rotate(3deg)}
+.writ h3{margin:0 0 2px;font:800 34px/.95 var(--font-display);font-stretch:75%;font-variation-settings:"wdth" 75;text-transform:uppercase;padding-right:10px}
+.writ .rev{font:600 14px/1 var(--font-num);color:var(--muted)}
+.wrow{display:grid;grid-template-columns:150px 1fr;gap:12px;padding:9px 0;border-top:1px solid var(--line);align-items:baseline}
+.wrow:first-of-type{border-top:0}
+.wrow .k{font:700 12px/1.3 var(--font-ui);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.wrow .v{font:500 18px/1.35 var(--font-ui)}
+.wrow .v s{color:var(--gules-text);text-decoration-thickness:2px;margin-right:8px;opacity:.85}
+.wrow .note{display:block;font:italic 400 15px/1.3 var(--font-serif);color:var(--gules-text)}
+.ink-in{animation:inkin .7s var(--ease) both}
+@keyframes inkin{from{opacity:0;clip-path:inset(0 100% 0 0)}to{opacity:1;clip-path:inset(0 0 0 0)}}
+.amended{background:linear-gradient(transparent 62%,color-mix(in srgb,var(--or) 45%,transparent) 62%)}
+.fair{margin-top:12px;border:1.5px solid var(--ink);padding:10px 12px;background:var(--paper);font:500 15px/1.45 var(--font-ui)}
+.fair b{font:800 12px/1.3 var(--font-ui);letter-spacing:.14em;text-transform:uppercase;display:block;margin-bottom:2px}
+.fair.pulse{animation:fp 1s 2}
+@keyframes fp{50%{background:color-mix(in srgb,var(--gules) 22%,var(--paper))}}
+.disclaim{margin-top:8px;border-left:4px solid var(--gules);padding:6px 10px;font:600 15px/1.4 var(--font-ui)}
+.warnline{margin-top:8px;font:600 14px/1.4 var(--font-ui);color:var(--gules-text)}
+.sealrow{display:flex;gap:12px;align-items:center;margin-top:16px;flex-wrap:wrap}
+.hold{position:relative;overflow:hidden;border:2px solid var(--gules);background:var(--gules);color:var(--press);padding:12px 18px;font:800 16px/1 var(--font-ui);letter-spacing:.06em;text-transform:uppercase}
+.hold i{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--press);opacity:.22}
+.hold.going i{width:100%;transition:width .9s linear}
+.wax{position:absolute;right:26px;bottom:20px;width:110px;height:110px;border-radius:50%;background:var(--gules);display:grid;place-items:center;color:var(--press);font:800 15px/1 var(--font-display);font-stretch:75%;text-transform:uppercase;text-align:center;box-shadow:inset 0 0 0 6px color-mix(in srgb,var(--press) 18%,transparent);animation:stamp .5s var(--ease) both}
+@keyframes stamp{from{transform:scale(2.4) rotate(-18deg);opacity:0}to{transform:scale(1) rotate(-8deg);opacity:1}}
+.hash{font:500 13px/1.4 var(--font-num);word-break:break-all;color:var(--ink-2)}
+.urn{position:relative}
+.urn svg{width:100%;height:auto;display:block}
+.winners{display:flex;flex-direction:column;gap:6px;margin:0 0 16px}
+.winner{display:flex;align-items:center;gap:10px;border:1.5px solid var(--gules);background:var(--card);padding:8px 12px;font:700 20px/1.1 var(--font-ui);animation:inkin .6s var(--ease) both}
+.winner em{font:600 13px/1 var(--font-num);font-style:normal;color:var(--muted);margin-left:auto}
+.pastlist{display:flex;flex-direction:column;gap:0}
+.past{display:grid;grid-template-columns:86px 1fr auto;gap:10px;padding:8px 0;border-top:1px solid var(--line);font:500 14px/1.35 var(--font-ui)}
+.past .num{font-size:13px;color:var(--muted)}
+.pick{display:grid;gap:10px}
+.pickc{border:1.5px solid var(--ink);background:var(--card);padding:12px 14px;text-align:left}
+.pickc b{display:block;font:800 22px/1 var(--font-display);font-stretch:75%;font-variation-settings:"wdth" 75;text-transform:uppercase}
+.pickc span{display:block;font:400 15px/1.4 var(--font-ui);color:var(--ink-2);margin-top:4px}
+
+/* gate */
+.portc{position:relative;padding:16px 18px 18px;border:2px solid var(--azure);background:repeating-linear-gradient(90deg,transparent 0 46px,color-mix(in srgb,var(--azure) 22%,transparent) 46px 50px),var(--card)}
+.portc h3{margin:0 0 10px;font:800 28px/1 var(--font-display);font-stretch:75%;font-variation-settings:"wdth" 75;text-transform:uppercase;color:var(--azure-text)}
+.held{position:relative;background:var(--paper);border:1.5px solid var(--ink);padding:12px 14px;margin-bottom:10px;transition:transform .5s var(--ease),opacity .5s}
+.held .who{font:700 16px/1.2 var(--font-ui)}
+.held .who small{font:400 14px/1.2 var(--font-ui);color:var(--muted);margin-left:6px}
+.held .txt{font:600 26px/1.2 var(--font-ui);margin:4px 0}
+.held .why{font:400 15px/1.4 var(--font-ui);color:var(--ink-2)}
+.held .adv{margin-top:8px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.held .adv .p{border:1.5px dashed var(--azure);padding:5px 8px;font:600 14px/1.2 var(--font-ui);color:var(--azure-text)}
+.held.passed{transform:translateY(-14px);opacity:.4}
+.held.barred{transform:translateX(30px);opacity:.3}
+.held .res{display:inline-block;margin-bottom:6px;font:800 13px/1 var(--font-ui);letter-spacing:.14em;text-transform:uppercase;padding:5px 7px;border:2px solid}
+.live{display:flex;flex-direction:column;gap:0;font:400 15px/1.35 var(--font-ui)}
+.cl{display:grid;grid-template-columns:54px 132px 1fr;gap:8px;padding:5px 0;border-top:1px solid var(--line);animation:inkin .4s var(--ease) both}
+.cl .m{font:800 11px/1.6 var(--font-ui);letter-spacing:.1em;text-transform:uppercase;text-align:center;border:1.5px solid;height:20px}
+.cl .m.released{color:var(--ok);border-color:var(--ok)} .cl .m.held{color:var(--azure-text);border-color:var(--azure)} .cl .m.removed{color:var(--danger);border-color:var(--danger)}
+.cl b{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rule{display:grid;grid-template-columns:1fr auto;gap:4px 10px;padding:9px 0;border-top:1px solid var(--line);align-items:center}
+.rule .rm{font:500 15px/1.3 var(--font-ui)} .rule .ra{grid-column:1;font:400 13px/1.3 var(--font-ui);color:var(--muted)}
+.mode{grid-row:1/3;grid-column:2;border:1.5px solid var(--ink);background:none;padding:6px 9px;font:800 12px/1 var(--font-ui);letter-spacing:.1em;text-transform:uppercase;min-width:92px}
+.mode.armed{background:var(--gules);border-color:var(--gules);color:var(--press)} .mode.shadow{color:var(--azure-text);border-color:var(--azure)}
+.mode.pending{border-style:dashed;animation:fp 1.2s infinite}
+.gauge{display:flex;gap:4px;margin:6px 0}
+.gauge i{flex:1;height:18px;border:1.5px solid var(--azure)}
+.gauge i.on{background:var(--azure)}
+.kv{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-top:1px solid var(--line);font:500 15px/1.3 var(--font-ui)}
+.kv .num{font-weight:600}
+.banbox{border:2px solid var(--danger);padding:10px 12px;margin:10px 0;background:var(--card)}
+.banbox b{color:var(--danger)}
+.chart svg{width:100%;height:auto;display:block}
+
+/* beacons */
+.altar{position:relative;display:grid;place-items:end center;min-height:340px}
+.altar svg{width:100%;max-width:520px;height:auto}
+.preview{position:absolute;inset:6px;border:3px dashed var(--or-text);pointer-events:none;display:none}
+.preview.on{display:block}
+.preview span{position:absolute;left:10px;top:10px;background:var(--or);color:var(--press);font:800 13px/1 var(--font-ui);letter-spacing:.12em;text-transform:uppercase;padding:6px 8px}
+.curve svg{width:100%;height:auto;display:block}
+.vis{border:1.5px solid var(--ink);padding:12px 14px;margin-bottom:10px;background:var(--card)}
+.vis h4{margin:0;font:800 22px/1 var(--font-display);font-stretch:75%;font-variation-settings:"wdth" 75;text-transform:uppercase}
+.vis .look{font:600 18px/1.3 var(--font-ui);margin-top:4px}
+.ranges{display:flex;gap:4px;margin-top:8px}
+.ranges>span{flex:1;border:1.5px solid var(--or);padding:4px 6px;font:500 13px/1.25 var(--font-ui)}
+.ranges>span.cur{background:var(--or);color:var(--press);font-weight:700}
+.border-pulse{position:absolute;inset:0;pointer-events:none;border:6px solid var(--or);opacity:.0;animation:bp 2.4s ease-in-out infinite}
+@keyframes bp{50%{opacity:.55}}
+.tl svg{width:100%;height:auto;display:block}
+
+/* map */
+.hexwrap{position:relative}
+.hexwrap svg{width:100%;height:auto;display:block}
+.hex{cursor:pointer;transition:opacity .2s}
+.hex:hover{opacity:.82}
+.hexprop{animation:fp 1.4s infinite}
+.ladder{display:flex;flex-direction:column;gap:6px}
+.rung{border:1.5px solid var(--ink);padding:10px 12px;background:var(--card);font:500 15px/1.35 var(--font-ui)}
+.rung b{font:800 18px/1 var(--font-display);font-stretch:75%;font-variation-settings:"wdth" 75;text-transform:uppercase;display:block}
+.rung.cur{background:var(--ink);color:var(--paper)}
+.rung.lock{opacity:.5;border-style:dashed}
+.timer{font:700 40px/1 var(--font-num)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font:600 14px/1 var(--font-ui);margin:8px 0}
+.legend i{display:inline-block;width:14px;height:14px;margin-right:6px;vertical-align:-2px}
+
+/* ---------- caption (the Steward) ---------- */
+.caption{position:fixed;left:0;right:0;bottom:0;height:var(--cap);border-top:2px solid var(--rule);background:var(--paper);display:grid;grid-template-columns:120px minmax(0,1fr) auto;gap:0 18px;padding:12px 18px 12px;z-index:40}
+.steward{grid-row:1/3;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border-right:1.5px solid var(--line);padding-right:12px}
+.steward svg{width:56px;height:56px}
+.steward b{font:800 16px/1 var(--font-display);font-stretch:75%;font-variation-settings:"wdth" 75;text-transform:uppercase}
+.steward small{font:600 10px/1.25 var(--font-ui);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);text-align:center}
+.steward.talk svg .lan{animation:speak2 .9s ease-in-out infinite}
+@keyframes speak2{50%{opacity:.55}}
+.says{font:italic 400 22px/1.28 var(--font-serif);min-height:56px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.says .you{font:600 15px/1 var(--font-ui);font-style:normal;color:var(--muted);margin-right:8px}
+.ask{display:flex;gap:10px;align-items:center;margin-top:8px}
+.ask input{flex:1;min-width:0;border:2px solid var(--ink);background:var(--card);padding:11px 14px;font:500 18px/1.2 var(--font-ui);color:var(--ink)}
+.ask input::placeholder{color:var(--muted)}
+.mic{border:2px solid var(--ink);background:var(--card);height:46px;padding:0 14px;font:700 14px/1 var(--font-ui);display:flex;align-items:center;gap:8px}
+.mic.on{background:var(--gules);border-color:var(--gules);color:var(--press)}
+.mic svg{width:18px;height:18px}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;height:30px;overflow:hidden}
+.chips button{border:1.5px solid var(--line);background:var(--card);padding:5px 10px;font:500 14px/1.2 var(--font-ui)}
+.chips button:hover{border-color:var(--ink)}
+.pending{grid-row:1/3;grid-column:3;display:flex;flex-direction:column;justify-content:center;gap:6px;min-width:260px;max-width:330px;border-left:1.5px solid var(--line);padding-left:16px}
+.pending .pt{font:800 12px/1.2 var(--font-ui);letter-spacing:.14em;text-transform:uppercase;color:var(--gules-text)}
+.pending .pd{font:600 16px/1.3 var(--font-ui)}
+.pending .row{display:flex;gap:8px}
+.pending.none .pt{color:var(--muted)}
+.ledgerbtn{position:fixed;right:16px;top:calc(var(--top) + 12px);z-index:30}
+.ledger{position:fixed;right:0;top:var(--top);bottom:var(--cap);width:400px;background:var(--paper);border-left:2px solid var(--rule);z-index:35;transform:translateX(102%);transition:transform .4s var(--ease);display:flex;flex-direction:column}
+.ledger.on{transform:none}
+.ledger header{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1.5px solid var(--rule)}
+.ledger header b{font:800 24px/1 var(--font-display);font-stretch:75%;font-variation-settings:"wdth" 75;text-transform:uppercase}
+.ledger .log{flex:1;overflow:auto;padding:12px 16px;display:flex;flex-direction:column;gap:10px}
+.msg{font:400 16px/1.45 var(--font-ui)}
+.msg.st{font:italic 400 18px/1.4 var(--font-serif)}
+.msg.me{align-self:flex-end;background:var(--ink);color:var(--paper);padding:7px 11px;max-width:85%}
+.msg .t{display:block;font:600 11px/1.3 var(--font-num);font-style:normal;color:var(--muted)}
+.intro .room .glass{animation:reg .9s var(--ease) both}
+@keyframes reg{from{transform:translate(9px,-7px);opacity:0}to{transform:none;opacity:1}}
+.toast{position:fixed;left:50%;top:calc(var(--top) + 14px);transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:9px 14px;font:600 15px/1.3 var(--font-ui);z-index:60;opacity:0;transition:opacity .3s;pointer-events:none}
+.toast.on{opacity:1}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+@media (max-width:1360px){.stat.u{display:none}.simstamp{font-size:10px;letter-spacing:.06em}}
+</style>
+</head>
+<body>
+<header class="rampart" role="banner">
+  <button class="brand" id="home" title="The whole keep (Esc)"><span data-mark="mark"></span><b>Castle<br>Control</b></button>
+  <span class="onair">On air</span>
+  <div class="stat"><small>Viewers</small><span class="num" id="viewers">214</span></div>
+  <div class="stat"><small>Uptime</small><span class="num" id="uptime">00:47:41</span></div>
+  <div class="stat u"><small>Chatters 10 min</small><span class="num">140</span></div>
+  <span class="reg"><i></i>Twitch</span><span class="reg"><i></i>OBS</span>
+  <span class="chip" id="gatechip"></span>
+  <span class="sp"></span>
+  <span class="simstamp">Simulated Steward<br>sample data · fictional channel</span>
+  <button class="tbtn" id="stock" aria-pressed="false" title="Dark stock for long streams">Dark stock</button>
+  <button class="tbtn" id="ledgerbtn" aria-pressed="false" title="The Steward's ledger (L)">Ledger</button>
+</header>
+
+<main class="stage" id="stage" aria-label="The keep">
+  <div class="world" id="world"></div>
+  <section class="interior" id="interior" aria-live="polite"></section>
+</main>
+
+<aside class="ledger" id="ledger" aria-label="Conversation with the Steward">
+  <header><b>The Steward's ledger</b><button class="tbtn" id="ledgerclose">Close</button></header>
+  <div class="log" id="log"></div>
+</aside>
+
+<footer class="caption" aria-label="Talk to the Steward">
+  <div class="steward" id="stewardfig">
+    <svg viewBox="0 0 56 56" aria-hidden="true"><path d="M20 10h16v6H20z" fill="var(--ink)"/><path d="M16 16h24l-3 30H19z" fill="none" stroke="var(--ink)" stroke-width="2.4"/><ellipse class="lan" cx="28" cy="32" rx="7" ry="10" fill="var(--or)"/><path d="M14 46h28v4H14z" fill="var(--ink)"/></svg>
+    <b>The Steward</b><small>Simulated<br>co-pilot</small>
+  </div>
+  <div>
+    <div class="says" id="says" aria-live="polite"></div>
+    <form class="ask" id="ask" autocomplete="off">
+      <input id="q" aria-label="Tell the Steward" placeholder="Tell the Steward, e.g. “draft a question draw with 5 winners”">
+      <button type="button" class="mic" id="mic" title="Hold to speak (simulated: it hears the first suggestion)"><svg viewBox="0 0 18 18"><rect x="6" y="1" width="6" height="10" rx="3" fill="currentColor"/><path d="M3 8a6 6 0 0 0 12 0M9 14v3" stroke="currentColor" stroke-width="1.8" fill="none"/></svg>Hold to speak</button>
+      <button class="btn prime" type="submit">Tell</button>
+    </form>
+    <div class="chips" id="chips"></div>
+  </div>
+  <div class="pending none" id="pending"></div>
+</footer>
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+'use strict';
+var C=window.CORE, S=C.S, esc=C.esc, $=function(s,r){return (r||document).querySelector(s)};
+var CH={lot:{name:'The Lot Chamber',fn:'lottery manager',n:1,gh:'var(--gules)'},gate:{name:'The Gatehouse',fn:'AI chat moderator',n:2,gh:'var(--azure)'},beacon:{name:'The Beacons',fn:'contribution visuals',n:3,gh:'var(--or)'},map:{name:'The Map Room',fn:'Extension studio',n:4,gh:'var(--ink-2)'}};
+var ORDER=['lot','gate','beacon','map'];
+var st={focus:null,writ:null,pending:null,shield:false,moat:S.moderator.delay_s,chatIdx:0,live:[],preview:null,mapDone:{},turnEnds:Date.now()+61000,stageRung:0,history:[],decided:{}};
+
+/* ===================== the keep (world) ===================== */
+function crenels(x,y,w,h,c){var d='M'+x+' '+(y+h);for(var i=0;i<Math.floor(w/c);i++){var xx=x+i*c;d+=(i%2?'V'+(y+h):'V'+y)+'H'+(xx+c);}return d+'V'+(y+h)+'Z';}
+function hexPts(cx,cy,r){var p=[];for(var i=0;i<6;i++){var a=Math.PI/180*(60*i-30);p.push((cx+r*Math.cos(a)).toFixed(1)+','+(cy+r*Math.sin(a)).toFixed(1));}return p.join(' ');}
+function hexSVG(R,opts){opts=opts||{};var w=Math.sqrt(3)*R,h=1.5*R,out='',W=w*9+w/2+4,Hh=h*5+2*R+4;
+  C.tiles.forEach(function(t){var cx=2+w/2+t.c*w+(t.r%2?w/2:0),cy=2+R+t.r*h,own=st.mapDone[t.id]!=null?st.mapDone[t.id]:t.owner;
+    var fill=own==null?'var(--card)':C.HOUSES[own].ink, prop=opts.prop&&opts.prop.tile.id===t.id;
+    out+='<g class="hex'+(prop?' hexprop':'')+'" data-tile="'+t.id+'"><polygon points="'+hexPts(cx,cy,R-1)+'" fill="'+fill+'" fill-opacity="'+(own==null?1:.78)+'" stroke="var(--ink)" stroke-width="'+(prop?3:1.2)+'" '+(prop?'stroke-dasharray="6 4"':'')+' style="mix-blend-mode:var(--blend)"/>';
+    if(opts.labels){var tot=t.votes[0]+t.votes[1]+t.votes[2];out+='<text x="'+cx+'" y="'+(cy-2)+'" text-anchor="middle" font-family="var(--font-num)" font-size="'+(R*.32)+'" fill="var(--ink)" font-weight="700">'+t.id+'</text>'+(own==null&&tot?'<text x="'+cx+'" y="'+(cy+R*.4)+'" text-anchor="middle" font-family="var(--font-ui)" font-size="'+(R*.27)+'" fill="var(--ink-2)">'+tot+(tot===1?' call':' calls')+'</text>':'');}
+    out+='</g>';});
+  return '<svg viewBox="0 0 '+W.toFixed(0)+' '+Hh.toFixed(0)+'" class="minihex" role="img" aria-label="Hex war-table, 9 by 6">'+out+'</svg>';}
+function flameSVG(level,w,h){ /* level 0..1 */
+  var fh=30+level*(h-60), x=w/2;
+  return '<g class="flame"><path d="M'+(x-40-level*30)+' '+h+' C'+(x-60)+' '+(h-fh*.5)+' '+(x-10)+' '+(h-fh*.7)+' '+x+' '+(h-fh)+' C'+(x+10)+' '+(h-fh*.7)+' '+(x+60)+' '+(h-fh*.5)+' '+(x+40+level*30)+' '+h+'Z" fill="var(--or)" style="mix-blend-mode:var(--blend)"/>'+
+    '<path d="M'+(x-22)+' '+h+' C'+(x-30)+' '+(h-fh*.35)+' '+(x-4)+' '+(h-fh*.5)+' '+x+' '+(h-fh*.66)+' C'+(x+6)+' '+(h-fh*.5)+' '+(x+30)+' '+(h-fh*.35)+' '+(x+22)+' '+h+'Z" fill="var(--gules)" style="mix-blend-mode:var(--blend)"/></g>'+
+    [0,1,2,3,4].map(function(i){return '<circle class="ember" style="animation-delay:'+(i*.6)+'s" cx="'+(x-30+i*15)+'" cy="'+(h-fh*.6)+'" r="3" fill="var(--or)"/>';}).join('');}
+function buildWorld(){
+  var svg='<svg class="keep" viewBox="0 0 1600 860" aria-hidden="true"><defs><pattern id="stone" width="60" height="30" patternUnits="userSpaceOnUse"><rect width="60" height="30" fill="var(--paper-2)"/><path d="M0 29.5H60M30 0V15M0 15H60M0 15V30M60 15V30" stroke="var(--line)" stroke-width="1.5"/></pattern><pattern id="dots" width="7" height="7" patternUnits="userSpaceOnUse"><circle cx="3.5" cy="3.5" r="1.3" fill="var(--ink)" opacity=".18"/></pattern></defs>';
+  /* gatehouse tower */
+  svg+='<path d="'+crenels(60,150,410,34,34)+'" fill="var(--ink)"/><rect x="60" y="184" width="410" height="606" fill="url(#stone)" stroke="var(--ink)" stroke-width="3"/><rect x="60" y="184" width="410" height="606" fill="url(#dots)"/>';
+  /* keep */
+  svg+='<path d="'+crenels(490,64,540,40,36)+'" fill="var(--ink)"/><rect x="490" y="104" width="540" height="686" fill="url(#stone)" stroke="var(--ink)" stroke-width="3"/><rect x="490" y="104" width="540" height="686" fill="url(#dots)"/>';
+  /* banners */
+  svg+='<path d="M600 64V10l46 14-46 14" fill="var(--gules)" stroke="var(--ink)" stroke-width="2"/><path d="M920 64V10l46 14-46 14" fill="var(--azure)" stroke="var(--ink)" stroke-width="2"/>';
+  /* beacon tower */
+  svg+='<path d="'+crenels(1050,40,290,30,29)+'" fill="var(--ink)"/><rect x="1050" y="70" width="290" height="720" fill="url(#stone)" stroke="var(--ink)" stroke-width="3"/><rect x="1050" y="70" width="290" height="720" fill="url(#dots)"/>';
+  /* watch tower */
+  svg+='<path d="'+crenels(1356,206,196,26,28)+'" fill="var(--ink)"/><rect x="1356" y="232" width="196" height="558" fill="url(#stone)" stroke="var(--ink)" stroke-width="3"/>';
+  /* ground, moat, drawbridge */
+  svg+='<rect x="0" y="790" width="1600" height="70" fill="var(--azure)" opacity=".85" style="mix-blend-mode:var(--blend)"/><g class="water">'+[0,1,2].map(function(i){var y=806+i*16,d='M0 '+y;for(var x=0;x<1700;x+=40)d+=' q10 -6 20 0 t20 0';return '<path d="'+d+'" fill="none" stroke="var(--paper)" stroke-width="2" opacity=".7"/>';}).join('')+'</g>';
+  svg+='<g id="bridge" style="transform-origin:180px 790px;transition:transform 1s var(--ease)"><rect x="180" y="786" width="170" height="14" fill="var(--ink-2)" stroke="var(--ink)" stroke-width="2"/></g>';
+  svg+='<text x="1460" y="848" text-anchor="end" font-family="var(--font-ui)" font-size="14" font-weight="700" letter-spacing="2" fill="var(--paper)" id="moatlbl">THE MOAT · CHAT DELAY '+st.moat+' S</text>';
+  svg+='</svg>';
+  var w=$('#world');
+  w.innerHTML=svg+
+   room('gate',90,236,350,520)+room('map',520,128,480,280)+room('lot',520,432,480,330)+room('beacon',1078,96,234,664)+
+   '<button class="herald" id="herald" title="The Herald\'s chart: chat consensus (opens the Gatehouse)"></button>';
+  ORDER.forEach(function(k){$('.room.'+k).addEventListener('click',function(){openRoom(k);});});
+  $('#herald').addEventListener('click',function(){openRoom('gate');});
+  renderGlances();fit();
+}
+function room(k,x,y,w,h){return '<button class="room '+k+'" data-ch="'+k+'" style="left:'+x+'px;top:'+y+'px;width:'+w+'px;height:'+h+'px" aria-label="Open '+CH[k].name+', '+CH[k].fn+'"><span class="glass"></span><span class="lamp"></span><span class="lbl"><b>'+CH[k].name.replace('The ','')+'</b><small>'+CH[k].n+'/4</small></span><span class="fn">'+CH[k].fn+'</span>'+deco(k)+'<span class="gl" id="gl-'+k+'"></span><span class="key">'+CH[k].n+'</span></button>';}
+function deco(k){
+  if(k==='gate'){var b='';for(var i=0;i<7;i++)b+='<rect x="'+(18+i*44)+'" y="0" width="7" height="150" fill="var(--azure)" opacity=".55"/>';for(var j=0;j<4;j++)b+='<rect x="10" y="'+(14+j*36)+'" width="310" height="6" fill="var(--azure)" opacity=".55"/>';for(var q=0;q<7;q++)b+='<path d="M'+(18+q*44)+' 150l3.5 14 3.5-14z" fill="var(--azure)"/>';return '<svg style="position:absolute;left:14px;top:92px;width:322px;height:170px" viewBox="0 0 330 170" aria-hidden="true">'+b+'</svg>';}
+  if(k==='lot')return '<svg style="position:absolute;right:26px;top:66px;width:170px;height:170px" viewBox="0 0 170 170" aria-hidden="true"><path d="M50 30h70l-8 16c34 14 44 50 30 84-8 20-24 30-57 30s-49-10-57-30C14 96 24 60 58 46z" fill="var(--paper-2)" stroke="var(--gules)" stroke-width="4"/>'+[0,1,2,3,4,5,6,7,8].map(function(i){return '<circle cx="'+(56+(i%3)*28)+'" cy="'+(86+Math.floor(i/3)*20)+'" r="6" fill="var(--ink)"/>';}).join('')+'<path d="M44 30h82" stroke="var(--ink)" stroke-width="6"/></svg>';
+  return '';}
+function renderGlances(){
+  var q=C.queue.filter(function(x){return x.state==='held';}),armed=C.rules.filter(function(r){return r.mode==='armed';}).length;
+  $('#gl-gate').innerHTML='<span class="tags">'+C.queue.map(function(x){return '<span class="tag'+(x.state!=='held'?' done':'')+'"><b>'+esc(x.line.login)+'</b> '+esc(x.line.text)+'</span>';}).join('')+'</span>'+
+   '<span class="big" style="color:var(--azure-text)">'+q.length+' held</span><br><span class="gline">at the portcullis, for your review</span><br><span class="gline2">Armed '+armed+' · Watching '+(C.rules.length-armed)+' · moat '+st.moat+' s'+(st.shield?' · <b>Bridge up</b>':'')+'</span>';
+  var w=st.writ;
+  $('#gl-lot').innerHTML=w?('<span class="big" style="color:var(--gules-text)">'+({draft:'Draft',sealed:'Sealed',cast:'Cast'})[w.status]+'</span><br><span class="gline">'+esc(w.name)+' · '+w.winners+(w.winners===1?' winner':' winners')+' · '+C.eligible(w).length+' lots</span><br><span class="gline2">'+(w.status==='draft'?'A proposal. Nothing happens until you seal it.':w.status==='sealed'?'Roll frozen. Waiting for public round #'+w.round+' (simulated).':'Winners: '+esc(w.result.join(', '))+'</span>')):
+   ('<span class="big" style="color:var(--gules-text)">No draw</span><br><span class="gline">'+S.lottery.draws.length+' writ templates ready · '+S.lottery.past.length+' past draws, all revealed</span><br><span class="gline2">Say “draft a question draw”.</span>');
+  var fuel=C.altarFuel(st.preview&&st.preview.fuel),alt=C.look(C.visuals[0],fuel),lv=C.blaze(C.visuals[0],fuel);
+  $('#gl-beacon').innerHTML='<svg viewBox="0 0 200 300" style="width:100%;height:auto;display:block;margin-bottom:6px">'+flameSVG(lv,200,250)+'<path d="M40 250h120l-14 40H54z" fill="var(--ink)"/></svg><span class="big" style="color:var(--or-text);font-size:44px">'+esc(alt.look)+'</span><br><span class="gline">Altar '+fuel.toLocaleString('en')+' fuel</span><br><span class="gline2">'+esc(C.lastGift.login)+' gifted '+C.lastGift.amount+' · frame: '+esc(C.look(C.visuals[1],C.frameCount()).look)+'</span>';
+  var p=C.mapProposal();
+  $('#gl-map').innerHTML='<span style="display:flex;gap:14px;align-items:flex-end"><span style="width:230px">'+hexSVG(13,{prop:p})+'</span><span><span class="gline">'+(p?'Malakor proposes <b>'+C.HOUSES[p.house].short+'</b> for '+p.tile.id:'Every tile is held')+'</span><br><span class="gline2">turn closes in <span class="num" id="turnmini">0:60</span></span></span></span>';
+  var l=C.lead(),m=S.consensus[S.consensus.length-1];
+  $('#herald').innerHTML='<h4>The Herald</h4><span class="serif">chat consensus, minute '+m.minute+'</span>'+C.dirs.map(function(d){return '<span class="hbar"><span>'+d[1]+'</span><i style="--c:'+d[2]+';width:'+m[d[0]]+'%"></i><em>'+m[d[0]]+'%</em></span>';}).join('')+'<span class="serif" style="margin-top:auto">Chat pulls '+l.label.toLowerCase()+'.</span>';
+  var chip=$('#gatechip');chip.className='chip'+(st.shield?' bridge':'');chip.innerHTML=st.shield?'Bridge up · Shield Mode on':'<span class="a">Armed '+armed+'</span> | <span class="w">Watching '+(C.rules.length-armed)+'</span>';
+}
+function fit(){var sg=$('#stage'),W=sg.clientWidth,H=sg.clientHeight,k=Math.min(W/1600,H/860),ox=(W-1600*k)/2,oy=(H-860*k)/2;st.k=k;st.ox=ox;st.oy=oy;
+  if(st.focus){var r=roomRect(st.focus),z=k*1.9,cx=r.x+r.w/2,cy=r.y+r.h/2;$('#world').style.transform='translate('+(W/2-cx*z)+'px,'+(H/2-cy*z)+'px) scale('+z+')';}
+  else $('#world').style.transform='translate('+ox+'px,'+oy+'px) scale('+k+')';}
+function roomRect(k){var el=$('.room.'+k);return {x:el.offsetLeft,y:el.offsetTop,w:el.offsetWidth,h:el.offsetHeight};}
+
+/* ===================== entering a chamber ===================== */
+function openRoom(k){
+  if(st.focus===k){renderInterior();return;}
+  var sg=$('#stage'),r=roomRect(k),from={x:st.ox+r.x*st.k,y:st.oy+r.y*st.k,w:r.w*st.k,h:r.h*st.k};
+  st.focus=k;sg.classList.add('focus');fit();
+  var it=$('#interior');it.classList.add('on');renderInterior();
+  var to=it.getBoundingClientRect(),sr=sg.getBoundingClientRect();
+  var sx=from.w/to.width,sy=from.h/to.height,tx=from.x-(to.left-sr.left),ty=from.y-(to.top-sr.top);
+  it.animate([{transform:'translate('+tx+'px,'+ty+'px) scale('+sx+','+sy+')',opacity:.4},{transform:'none',opacity:1}],{duration:560,easing:'cubic-bezier(.2,.8,.2,1)'});
+  document.querySelectorAll('.room').forEach(function(el){el.classList.toggle('lit',el.dataset.ch===k);});
+  setChips();
+}
+function closeRoom(){if(!st.focus)return;var it=$('#interior');var a=it.animate([{opacity:1,transform:'none'},{opacity:0,transform:'scale(.96)'}],{duration:260});a.onfinish=function(){it.classList.remove('on');};st.focus=null;$('#stage').classList.remove('focus');fit();setChips();renderGlances();}
+function head(k,extra){var c=CH[k];return '<div class="ihead" style="--gh:'+c.gh+'"><div><div class="crumb"><button data-act="home">The keep</button> › <span>'+c.name+' ('+c.fn+')</span>'+(extra?' › <span>'+extra+'</span>':'')+'</div><h2>'+c.name+'</h2></div><span class="pf">Chamber '+c.n+' of 4 · '+c.fn+'</span><div class="locator" aria-label="Chambers">'+ORDER.map(function(o){return '<button data-go="'+o+'" class="'+(o===k?'cur':'')+'" title="'+CH[o].name+' ('+CH[o].n+')">'+CH[o].n+'</button>';}).join('')+'</div><button class="btn" data-act="home" title="Back to the keep (Esc)">Back to the keep</button></div>';}
+function renderInterior(){var k=st.focus,it=$('#interior');if(!k)return;
+  var f={lot:lotInterior,gate:gateInterior,beacon:beaconInterior,map:mapInterior}[k];it.innerHTML=f();wireInterior(it);}
+function wireInterior(it){
+  it.querySelectorAll('[data-act=home]').forEach(function(b){b.onclick=closeRoom;});
+  it.querySelectorAll('[data-go]').forEach(function(b){b.onclick=function(){openRoom(b.dataset.go);};});
+  it.querySelectorAll('[data-say]').forEach(function(b){b.onclick=function(){hear(b.dataset.say);};});
+  it.querySelectorAll('[data-q]').forEach(function(b){b.onclick=function(){var q=C.queue[+b.dataset.q];decide(q,b.dataset.v);};});
+  it.querySelectorAll('[data-rule]').forEach(function(b){b.onclick=function(){var r=C.rules.filter(function(x){return x.id===b.dataset.rule;})[0];proposeMode(r,r.mode==='armed'?'shadow':'armed');};});
+  it.querySelectorAll('.hex').forEach(function(g){g.addEventListener('click',function(){hear('tile '+g.dataset.tile);});});
+  var h=it.querySelector('.hold');if(h)holdToSeal(h);
+}
+
+/* ---------- Lot Chamber ---------- */
+function lotInterior(){
+  var w=st.writ;
+  if(!w)return head('lot')+'<div class="ibody" style="grid-template-columns:1.2fr 1fr"><div class="col"><div class="empty"><div><p>No lots in the urn yet. Tell me which draw, and I will draft its writ here, in front of you.</p><div class="pick">'+S.lottery.draws.map(function(d){return '<button class="pickc" data-say="draft the '+(d.id==='urn-questions'?'question':d.id==='sub-thanks'?'monthly thank-you':'jury')+' draw"><b>'+esc(d.name)+'</b><span>'+esc(d.pool)+' · '+d.entries+' entries · '+(d.prize?'prize: '+esc(d.prize):'no prize')+'</span></button>';}).join('')+'</div></div></div></div><div class="col">'+pastHTML()+'</div></div>';
+  return head('lot','Writ · '+w.status+' · rev '+w.rev)+'<div class="ibody" style="grid-template-columns:minmax(0,1.15fr) minmax(0,1fr)"><div class="col">'+writHTML(w)+'</div><div class="col">'+(w.result?winnersHTML(w):'')+urnHTML(w)+pastHTML()+'</div></div>';
+}
+function fld(w,key,label,val){var a=w.amend&&w.amend[key],cls=a&&a.rev===w.rev?' amended ink-in':'';return '<div class="wrow"><span class="k">'+label+'</span><span class="v'+cls+'">'+(a&&a.rev===w.rev?'<s>'+esc(a.old)+'</s>':'')+val+(a&&a.rev===w.rev?'<span class="note">amended at your word</span>':'')+'</span></div>';}
+function writHTML(w){
+  var ex=C.excluded(w),el=C.eligible(w),stamp=w.status==='draft'?'Proposal · not sealed':w.status==='sealed'?'Sealed':'Cast';
+  var h='<div class="writ'+(w.status==='draft'?' proposal':'')+'"><span class="stamp">'+stamp+'</span><h3>'+esc(w.name)+'</h3><span class="rev">writ '+esc(w.id)+' · revision '+w.rev+'</span>';
+  if(w.status==='draft')h+='<div class="sealrow" style="margin:10px 0 6px"><button class="hold" title="Press and hold to seal the roll"><i></i>Hold to seal the roll</button><button class="btn" data-say="tear it up">Tear it up</button><span class="serif" style="font-size:16px;color:var(--ink-2)">Sealing freezes entries. You seal, not I.</span></div>';
+  if(w.status==='sealed')h+='<div class="sealrow" style="margin:10px 0 6px"><button class="btn prime" data-say="cast the lots">Cast against round #'+w.round+'</button><span class="serif" style="font-size:16px">The round is simulated in this prototype.</span></div>';
+  if(w.status==='cast')h+='<div class="sealrow" style="margin:10px 0 6px"><button class="btn" data-say="recompute the writ">Recompute from the writ</button><button class="btn" data-say="draft a question draw">New draw</button><span id="verify" class="serif" style="font-size:16px"></span></div>';
+  h+=fld(w,'pool','Who may enter',esc(w.pool)+' · <b class="num">'+w.entrants.length+'</b> lots');
+  h+=fld(w,'winners','Winners','<b class="num" style="font-size:24px">'+w.winners+'</b>');
+  h+=fld(w,'weights','Odds',esc(w.weights));
+  h+=fld(w,'cap','Raiders',esc(w.cap)+' · '+C.raiders(w)+' raiders in the pool');
+  h+=fld(w,'cooldown','Cooldown',esc(w.cooldown)+(ex.length?' · set aside: '+ex.map(esc).join(', '):''));
+  h+=fld(w,'prize','Prize',w.prize?esc(w.prize):'none (a thank-you, not a prize draw)');
+  h+='<div class="wrow"><span class="k">Eligible</span><span class="v"><b class="num">'+el.length+'</b> of '+w.entrants.length+' lots go in the urn</span></div>';
+  h+='<div class="wrow"><span class="k">Public round</span><span class="v">#<span class="num">'+C.nextRound+'</span> <small>(simulated randomness beacon)</small></span></div>';
+  h+='<div class="fair" id="fair"><b>Fairness, always shown</b>Equal odds. No paid entry and no paid weight on a prize draw. The roll is sealed before the round is known, and anyone can recompute the result from this writ.</div>';
+  if(w.disclaimer)h+='<div class="disclaim">On stream: '+esc(w.disclaimer)+(w.rulesTpl?' Official rules confirmed.':'')+'</div>';
+  if(w.warning)h+='<div class="warnline">Blocked by default: '+esc(w.warning.replace(/^blocked by default: /,''))+'</div>';
+  if(w.status!=='draft')h+='<div class="wrow"><span class="k">Seal (SHA-256)</span><span class="v hash">'+w.entriesHash+'</span></div>';
+  if(w.status!=='draft')h+='<div class="wax">Sealed<br>by you</div>';
+  return h+'</div>';
+}
+function urnHTML(w){
+  var el=C.eligible(w),N=w.entrants.length,out='',cx=230,cy=210;
+  w.entrants.forEach(function(l,i){var a=i*2.39996,r=182*Math.sqrt((i+.5)/N),x=cx+r*Math.cos(a),y=cy+r*Math.sin(a)*.78,v=C.viewer(l),inn=el.indexOf(l)>=0,won=w.result&&w.result.indexOf(l)>=0;
+    out+='<circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="'+(won?9:(N>200?3.6:5.6))+'" fill="'+(won?'var(--gules)':inn?'var(--ink)':'none')+'" stroke="'+(v.raid_cohort?'var(--azure)':'var(--ink)')+'" stroke-width="'+(v.raid_cohort?2.5:1.2)+'" opacity="'+(inn?1:.45)+'"><title>'+esc(l)+(inn?'':' (set aside by the cooldown)')+(v.raid_cohort?' · raider':'')+'</title></circle>';
+    if(!inn)out+='<path d="M'+(x-6)+' '+(y-6)+'L'+(x+6)+' '+(y+6)+'" stroke="var(--gules)" stroke-width="2"/>';});
+  return '<p class="sect ink">The urn · every lot drawn as a mark</p><div class="urn"><svg viewBox="0 0 460 400" role="img" aria-label="'+N+' lots in the urn"><ellipse cx="230" cy="210" rx="205" ry="168" fill="none" stroke="var(--gules)" stroke-width="3"/>'+out+'</svg></div><p class="gline2" style="font-size:14px;margin:4px 0 10px">● eligible lot · ○ set aside by cooldown · blue ring = came with the raid. Hover a mark for the login.</p>';
+}
+function winnersHTML(w){return '<p class="sect ink">Winners, in the order cast</p><div class="winners">'+w.result.map(function(l,i){return '<div class="winner" style="animation-delay:'+(i*.45)+'s">'+(i+1)+'. '+esc(l)+'<em>'+esc(C.viewerLine(l))+'</em></div>';}).join('')+'</div>';}
+function pastHTML(){return '<p class="sect ink" style="margin-top:18px">Past writs · all revealed and recomputable</p><div class="pastlist">'+S.lottery.past.slice().reverse().map(function(p){return '<div class="past"><span class="num">'+p.when+'</span><span>'+p.winners.map(esc).join(', ')+'</span><span class="num">#'+p.beacon_round+' ✓</span></div>';}).join('')+'</div>';}
+function holdToSeal(b){var t;function start(e){e.preventDefault();b.classList.add('going');t=setTimeout(function(){b.classList.remove('going');sealWrit('your hold');},900);}function stop(){clearTimeout(t);b.classList.remove('going');}
+  b.addEventListener('pointerdown',start);b.addEventListener('pointerup',stop);b.addEventListener('pointerleave',stop);b.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){if(!b.classList.contains('going'))start(e);}});b.addEventListener('keyup',stop);}
+function sealWrit(how){var w=st.writ;if(!w||w.status!=='draft')return;C.seal(w);if(st.pending&&st.pending.writ)clearPending();renderInterior();renderGlances();
+  say('Sealed by '+how+'. The roll is frozen at '+C.eligible(w).length+' lots; its seal is '+w.entriesHash.slice(0,12)+'… Public round #'+w.round+' (simulated) decides the winners. Say “cast” when ready.','lot');}
+function amend(key,old,nv,apply){var w=st.writ;w.rev++;w.amend=w.amend||{};w.amend[key]={old:old,rev:w.rev};apply(w);writPending();renderInterior();renderGlances();}
+function writPending(){var w=st.writ;if(!w||w.status!=='draft')return;propose({ch:'lot',writ:true,title:'Seal the roll: '+w.name+' (rev '+w.rev+')',detail:w.winners+(w.winners===1?' winner':' winners')+' from '+C.eligible(w).length+' eligible lots. Sealing freezes entries.',seal:function(){sealWrit('your hold');},tear:function(){st.writ=null;}});}
+
+/* ---------- Gatehouse ---------- */
+function gateInterior(){
+  var m=S.moderator,v=C.verdicts,armed=C.rules.filter(function(r){return r.mode==='armed';}).length,t=C.tier(S.channel.room_tier);
+  var q='<div class="portc"><h3>At the portcullis · '+C.queue.filter(function(x){return x.state==='held';}).length+' held for review</h3>'+C.queue.map(function(x,i){var done=x.state!=='held';return '<div class="held'+(x.state==='passed'?' passed':x.state==='barred'?' barred':'')+'">'+(done?'<span class="res" style="color:'+(x.state==='passed'?'var(--ok)':'var(--danger)')+'">'+(x.state==='passed'?'Pass · released':'Bar · removed')+'</span>':'')+'<div class="who">'+esc(x.line.login)+'<small>'+esc(C.viewerLine(x.line.login))+'</small></div><div class="txt">“'+esc(x.line.text)+'”</div><div class="why">Held because: '+esc(x.reason)+'</div>'+(done?'':'<div class="adv"><span class="p">Proposal: '+(x.advice.verdict==='pass'?'Pass':'Bar')+', '+esc(x.advice.why)+'</span><button class="btn a" data-q="'+i+'" data-v="passed">Pass</button><button class="btn g" data-q="'+i+'" data-v="barred">Bar</button></div>')+'</div>';}).join('')+
+   (C.queue.some(function(x){return x.state==='held';})?'<button class="btn prime" data-say="pass all as proposed">Pass all as proposed</button>':'<p class="serif" style="font-size:20px;margin:6px 0 0">The portcullis is clear.</p>')+'</div>';
+  var ban='<div class="banbox"><b>Ban waiting for a human:</b> '+esc(C.banPending.who)+' · '+esc(C.banPending.reason)+' ('+C.banPending.t+'). '+(st.decided.ban?'<b>'+st.decided.ban+'</b>':'<div style="margin-top:8px;display:flex;gap:8px"><button class="btn g" id="banyes">Ban (your click)</button><button class="btn" id="banno">Dismiss</button></div>')+'</div>';
+  var live='<p class="sect ink">The live room · replaying the sample chat</p><div class="kv"><span>Pass (released)</span><span class="num">'+v.released+'</span></div><div class="kv"><span>Hold (held for review)</span><span class="num">'+v.held+'</span></div><div class="kv"><span>Bar (removed)</span><span class="num">'+v.removed+'</span></div><div class="live" id="livelist" style="margin-top:8px">'+st.live.slice(-14).reverse().map(clHTML).join('')+'</div>';
+  var rules='<p class="sect ink">Garrison orders · rules</p>'+C.rules.map(function(r){return '<div class="rule"><span class="rm">'+esc(r.match)+'</span><span class="ra">'+esc(r.action)+'</span><button class="mode '+r.mode+(st.pending&&st.pending.rule===r.id?' pending':'')+'" data-rule="'+r.id+'" title="Propose a change; you seal it">'+(r.mode==='armed'?'Armed':'Watching')+'</button></div>';}).join('')+
+   '<p class="sect ink" style="margin-top:16px">The moat · chat delay</p><div class="gauge">'+[2,4,6].map(function(s){return '<i class="'+(st.moat>=s?'on':'')+'" title="'+s+' s"></i>';}).join('')+'</div><div class="kv"><span>Delay for non-moderators</span><span class="num">'+st.moat+' s</span></div>'+
+   '<div class="kv"><span>Room tier '+S.channel.room_tier+' · '+t.chatters+' chatters</span><span>'+t.modes.join(', ')+'</span></div><div class="kv"><span>Drawbridge (Shield Mode)</span><span><button class="btn '+(st.shield?'a':'')+'" data-say="'+(st.shield?'lower the drawbridge':'raise the drawbridge')+'">'+(st.shield?'Bridge up · lower it':'Raise it')+'</button></span></div>'+
+   '<p class="sect ink" style="margin-top:16px">The drill · '+esc(m.replay.stream)+'</p><div class="kv"><span>'+m.replay.messages.toLocaleString('en')+' messages replayed through today\'s rules</span><span></span></div><div class="kv"><span>would hold / remove / timeout / ban</span><span class="num">'+m.replay.would_hold+' / '+m.replay.would_remove+' / '+m.replay.would_timeout+' / '+m.replay.would_ban+'</span></div><div class="kv"><span>mode switches · review sample</span><span class="num">'+m.replay.mode_switches+' · '+m.replay.false_positive_review_sample+'</span></div>'+
+   '<p class="sect ink" style="margin-top:16px">Gate log</p>'+m.decisions.map(function(d){return '<div class="kv"><span><span class="num">'+d.t+'</span> '+esc(d.who)+': '+esc(d.reason)+'</span><span>'+esc(d.kind)+'</span></div>';}).join('');
+  return head('gate')+'<div class="ibody" style="grid-template-columns:minmax(0,1.3fr) minmax(0,1fr) minmax(0,.95fr)"><div class="col">'+q+ban+heraldChart()+'</div><div class="col">'+live+'</div><div class="col">'+rules+'</div></div>';
+}
+function clHTML(c){var lab={released:'Pass',held:'Hold',removed:'Bar'}[c.verdict];return '<div class="cl"><span class="m '+c.verdict+'">'+lab+'</span><b>'+esc(c.login)+'</b><span>'+esc(c.text)+'</span></div>';}
+function heraldChart(){var W=560,H=170,pts={},out='';C.dirs.forEach(function(d){pts[d[0]]=[];});
+  var base=S.consensus.map(function(){return 0;});
+  C.dirs.forEach(function(d){var top=[],bot=[];S.consensus.forEach(function(m,i){var x=i/(S.consensus.length-1)*W,y0=H-base[i]/100*H;base[i]+=m[d[0]];var y1=H-base[i]/100*H;top.push(x.toFixed(1)+','+y1.toFixed(1));bot.unshift(x.toFixed(1)+','+y0.toFixed(1));});
+    out+='<polygon points="'+top.concat(bot).join(' ')+'" fill="'+d[2]+'" opacity=".8" style="mix-blend-mode:var(--blend)"/>';});
+  return '<p class="sect ink" style="margin-top:16px">The Herald\'s chart · 15 minutes of chat consensus</p><div class="chart"><svg viewBox="0 0 '+W+' '+(H+22)+'" role="img" aria-label="Stacked share of chat per direction">'+out+'<text x="0" y="'+(H+18)+'" font-size="13" font-family="var(--font-num)" fill="var(--muted)">min 0</text><text x="'+W+'" y="'+(H+18)+'" text-anchor="end" font-size="13" font-family="var(--font-num)" fill="var(--muted)">min 14 · left '+C.lead().pct+'%</text></svg></div><div class="legend">'+C.dirs.map(function(d){return '<span><i style="background:'+d[2]+'"></i>'+d[1]+'</span>';}).join('')+'</div>';}
+function decide(q,v){if(!q||q.state!=='held')return;q.state=v;renderInterior();renderGlances();say((v==='passed'?'Passed (released) ':'Barred (removed) ')+q.line.login+'’s line, at your word.','gate');setChips();}
+function proposeMode(r,mode){propose({rule:r.id,ch:'gate',title:(mode==='armed'?'Arm':'Set to Watching')+': '+r.match,detail:mode==='armed'?'Armed rules act on people: “'+r.action+'”. ':'Watching: it says what it would do and does nothing.',seal:function(){r.mode=mode;say('Done. '+r.match+' is now '+(mode==='armed'?'Armed':'Watching')+'.','gate');}});
+  say((mode==='armed'?'I can arm “'+r.match+'”. It would then '+r.action+'. In the drill it would have acted on real chatters, so it waits for your seal.':'I can set “'+r.match+'” back to Watching. Seal it or tear it up.'),'gate');}
+
+/* ---------- Beacons ---------- */
+function beaconInterior(){
+  var ex=st.preview||{},fuel=C.altarFuel(ex.fuel),alt=C.look(C.visuals[0],fuel),lv=C.blaze(C.visuals[0],fuel),fc=C.frameCount(ex.count),hl=C.hypeLevel(ex.level);
+  var altar='<div class="altar"><svg viewBox="0 0 520 380" role="img" aria-label="The Offering altar at '+fuel+' fuel: '+alt.look+'">'+flameSVG(lv,520,300)+'<path d="M150 300h220l-30 70H180z" fill="var(--ink)"/><path d="M130 296h260v10H130z" fill="var(--ink-2)"/></svg><div class="preview'+(st.preview?' on':'')+'"><span>Preview · not on stream</span></div></div>';
+  var vis=C.visuals.map(function(v){var val=v.id==='altar'?fuel:v.id==='cam-frame'?fc:hl,lk=C.look(v,val);return '<div class="vis"><h4>'+esc(v.name)+'</h4><span class="gline2" style="font-size:14px">'+esc(v.kind)+' · fed by '+v.inputs.join(' + ')+(v.decay?' · '+esc(v.decay):'')+'</span><div class="look">Now: '+esc(lk.look)+' <span class="num" style="font-size:15px;color:var(--muted)">('+(v.id==='altar'?val.toLocaleString('en')+' fuel':v.id==='cam-frame'?val+' subs + gifts':'hype level '+val)+')</span></div><div class="ranges">'+v.ranges.map(function(r){return '<span class="'+(r===lk?'cur':'')+'">'+esc(r.look)+'<br><span class="num">'+(r.level!=null?'level '+r.level:r.from.toLocaleString('en')+'–'+r.to.toLocaleString('en'))+'</span></span>';}).join('')+'</div></div>';}).join('');
+  return head('beacon',st.preview?'Test fire (preview)':'')+'<div class="ibody" style="grid-template-columns:minmax(0,1.2fr) minmax(0,1fr)"><div class="col" style="position:relative">'+(hl>=1?'<div class="border-pulse" title="Hype border: '+esc(C.look(C.visuals[2],hl).look)+'"></div>':'')+'<p class="sect ink">The Offering altar · blaze from bits and gifts, halving every 5 minutes</p>'+altar+kindling(fuel)+'<div class="sealrow">'+(st.preview?'<button class="btn prime" data-say="end the test fire">End test fire</button>':'<button class="btn" data-say="test fire 50 gifts">Test fire: 50 gifts</button><button class="btn" data-say="test fire 500 bits">Test fire: 500 bits</button>')+'<span class="serif" style="font-size:17px">A test fire is a preview; nothing reaches the stream.</span></div></div><div class="col">'+vis+timeline()+'</div></div>';
+}
+function kindling(fuel){var W=560,H=120,v=C.visuals[0],top=v.ranges[v.ranges.length-1].to,x=function(f){return Math.log(1+f)/Math.log(1+top)*W;};
+  var out=v.ranges.map(function(r,i){return '<rect x="'+x(r.from)+'" y="0" width="'+(x(r.to)-x(r.from))+'" height="'+H+'" fill="var(--or)" opacity="'+(.18+i*.22)+'" style="mix-blend-mode:var(--blend)"/><text x="'+(x(r.from)+8)+'" y="20" font-size="15" font-family="var(--font-ui)" font-weight="700" fill="var(--ink)">'+r.look+'</text>';}).join('');
+  var d='M0 '+H;for(var i=0;i<=60;i++){var f=top*i/60;d+=' L'+x(f).toFixed(1)+' '+(H-Math.min(1,C.blaze(v,f))*H*.85).toFixed(1);}
+  return '<p class="sect ink" style="margin-top:8px">The kindling curve · contribution to blaze</p><div class="curve"><svg viewBox="0 0 '+W+' '+(H+20)+'">'+out+'<path d="'+d+'" fill="none" stroke="var(--ink)" stroke-width="2.4"/><line x1="'+x(fuel)+'" x2="'+x(fuel)+'" y1="0" y2="'+H+'" stroke="var(--gules)" stroke-width="3"/><text x="'+Math.min(W-6,x(fuel)+6)+'" y="'+(H-8)+'" text-anchor="'+(x(fuel)>W-120?'end':'start')+'" font-size="14" font-family="var(--font-num)" fill="var(--gules-text)" font-weight="700">now '+fuel.toLocaleString('en')+'</text><text x="0" y="'+(H+16)+'" font-size="12" font-family="var(--font-num)" fill="var(--muted)">0</text><text x="'+W+'" y="'+(H+16)+'" text-anchor="end" font-size="12" font-family="var(--font-num)" fill="var(--muted)">10,000 fuel (log scale)</text></svg></div>';}
+function timeline(){var W=480,H=120,out='',T=C.nowT,col={bits:'var(--or)',gift:'var(--gules)',sub:'var(--azure)',points:'var(--line)',hype_train:'var(--ink)'};
+  C.contrib.forEach(function(c){var x=c.t/T*W,amt=c.kind==='bits'?c.amount/100:c.kind==='gift'?c.amount:c.kind==='points'?c.amount/500:c.amount*2,r=Math.max(3,Math.min(18,Math.sqrt(amt)*3.2));out+='<circle cx="'+x.toFixed(1)+'" cy="'+(H/2+(C.h32(c.login)%40-20))+'" r="'+r.toFixed(1)+'" fill="'+col[c.kind]+'" stroke="var(--ink)" stroke-width="1" style="mix-blend-mode:var(--blend)"><title>'+esc(c.login)+': '+c.amount+' '+c.kind.replace('_',' ')+' at '+Math.floor(c.t/60)+' min</title></circle>';});
+  var t=C.totals;
+  return '<p class="sect ink">Offerings · all '+C.contrib.length+' contributions this stream (hover a mark)</p><div class="tl"><svg viewBox="0 0 '+W+' '+(H+18)+'">'+out+'<text x="0" y="'+(H+14)+'" font-size="12" font-family="var(--font-num)" fill="var(--muted)">0 min</text><text x="'+W+'" y="'+(H+14)+'" text-anchor="end" font-size="12" font-family="var(--font-num)" fill="var(--muted)">48 min · now</text></svg></div><div class="legend"><span><i style="background:var(--or)"></i>bits '+t.bits.toLocaleString('en')+'</span><span><i style="background:var(--gules)"></i>gifts '+t.gift+'</span><span><i style="background:var(--azure)"></i>subs '+t.sub+'</span><span><i style="background:var(--line)"></i>points '+t.points.toLocaleString('en')+'</span><span><i style="background:var(--ink)"></i>hype train '+t.hype_train+'</span></div><p class="gline2" style="font-size:13px">Illustrative weighting: one gifted sub feeds the altar like '+C.GIFT_BITS+' bits.</p>';}
+
+/* ---------- Map Room ---------- */
+function mapInterior(){
+  var p=C.mapProposal(),H=C.hex,rungs=[['Sand table','local test, only you see it'],['Muster','hosted test · '+H.test_stage],['Proclaimed','released after Twitch review (locked in this prototype)']];
+  var counts=[0,0,0];C.tiles.forEach(function(t){var o=st.mapDone[t.id]!=null?st.mapDone[t.id]:t.owner;if(o!=null)counts[o]++;});
+  return head('map',rungs[st.stageRung][0])+'<div class="ibody" style="grid-template-columns:minmax(0,1.6fr) minmax(0,.8fr)"><div class="col"><p class="sect ink">The war table · '+H.cols+'×'+H.rows+' hexes · '+esc(H.turn)+'</p><div class="legend">'+C.HOUSES.map(function(h,i){return '<span><i style="background:'+h.ink+'"></i>'+esc(h.name)+' · '+counts[i]+' tiles</span>';}).join('')+'<span><i style="background:var(--card);border:1px solid var(--ink)"></i>unclaimed · '+(54-counts[0]-counts[1]-counts[2])+'</span></div><div class="hexwrap">'+hexSVG(46,{prop:p,labels:true})+'</div><p class="gline2" style="font-size:14px">Tile calls are the last 140 sample chat lines assigned to tiles by login (illustrative). Click a tile to ask about it.</p></div>'+
+  '<div class="col"><p class="sect ink">This turn</p><div class="timer" id="turnbig">0:60</div><p class="gline2">Calls stay sealed until the turn ends.</p>'+(p?'<div class="writ proposal" style="padding:14px 16px;margin:10px 0"><span class="sect" style="color:var(--gules-text)">Malakor (AI) proposes</span><div style="font:800 30px/1 var(--font-display);font-stretch:75%;text-transform:uppercase;margin:4px 0">'+esc(C.HOUSES[p.house].name)+' takes '+p.tile.id+'</div><div class="gline2">'+p.votes+' of '+p.total+' calls on '+p.tile.id+' are for '+C.HOUSES[p.house].short+'.</div><div class="sealrow" style="margin-top:10px"><button class="btn prime" data-say="approve">Approve the move</button><button class="btn" data-say="tear it up">Tear it up</button></div></div>':'<p class="serif">The map table is settled.</p>')+
+  '<p class="sect ink" style="margin-top:14px">Test ladder</p><div class="ladder">'+rungs.map(function(r,i){return '<div class="rung'+(i===st.stageRung?' cur':'')+(i===2?' lock':'')+'"><b>'+r[0]+'</b>'+esc(r[1])+'</div>';}).join('')+'</div>'+(st.stageRung===0?'<button class="btn" style="margin-top:10px" data-say="muster the hosted test">Propose the muster</button>':'<p class="gline2" style="margin-top:8px">Allowlisted: '+C.allowlist.map(esc).join(', ')+'</p>')+'<p class="gline2" style="margin-top:12px;font-size:14px">'+esc(H.operator)+'.</p></div></div>';
+}
+
+/* ===================== the Steward (simulated) ===================== */
+var typingT;
+function say(text,ch,opts){var el=$('#says'),fig=$('#stewardfig');clearInterval(typingT);el.textContent='';fig.classList.add('talk');var i=0;
+  typingT=setInterval(function(){i+=3;el.textContent=text.slice(0,i);if(i>=text.length){clearInterval(typingT);fig.classList.remove('talk');}},16);
+  log('st',text);document.querySelectorAll('.room').forEach(function(r){r.classList.toggle('speaking',!!ch&&r.dataset.ch===ch&&!st.focus);});
+  if(ch&&!st.focus)setTimeout(function(){var r=$('.room.'+ch);if(r)r.classList.remove('speaking');},5000);}
+function log(who,text){st.history.push({who:who,text:text,t:C.uptime()});var l=$('#log');l.insertAdjacentHTML('beforeend','<div class="msg '+(who==='me'?'me':'st')+'"><span class="t">'+(who==='me'?'You':'Steward')+' · '+C.uptime()+'</span>'+esc(text)+'</div>');l.scrollTop=1e9;}
+function propose(p){st.pending=p;var el=$('#pending');el.className='pending';el.innerHTML='<span class="pt">Proposal · awaiting your seal</span><span class="pd">'+esc(p.title)+'</span><span class="gline2" style="font-size:14px">'+esc(p.detail||'')+'</span><span class="row"><button class="hold" id="psl" style="padding:10px 14px"><i></i>Hold to seal</button><button class="btn" id="ptr">Tear up</button></span>';
+  var b=$('#psl'),t;function start(e){e.preventDefault();b.classList.add('going');t=setTimeout(function(){b.classList.remove('going');sealPending();},900);}function stop(){clearTimeout(t);b.classList.remove('going');}
+  b.addEventListener('pointerdown',start);b.addEventListener('pointerup',stop);b.addEventListener('pointerleave',stop);b.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' ')start(e);});b.addEventListener('keyup',stop);
+  $('#ptr').onclick=tearPending;if(st.focus)renderInterior();}
+function clearPending(){st.pending=null;var el=$('#pending');el.className='pending none';el.innerHTML='<span class="pt">No proposal waiting</span><span class="gline2" style="font-size:14px">When I draft something that acts on people or prizes, it waits here for your seal.</span>';}
+function sealPending(){var p=st.pending;if(!p)return;clearPending();p.seal();renderGlances();if(st.focus)renderInterior();setChips();}
+function tearPending(){var p=st.pending;if(!p)return;clearPending();if(p.tear)p.tear();say(p.writ?'Torn up. No draw is open.':'Torn up. Nothing changed.',p.ch);renderGlances();if(st.focus)renderInterior();setChips();}
+
+function hear(text){if(!text)return;log('me',text);var el=$('#says');var r=C.parse(text);act(r);setChips();}
+function act(r){
+  var w=st.writ,i=r.intent,a=r.args;
+  if(i==='help'){say('Ask me in plain words: “draft a question draw”, “make it 5 winners”, “pass all”, “raise the drawbridge”, “test fire 50 gifts”, “what should the next turn be”. Keys 1 to 4 open a chamber; Esc returns to the keep.');return;}
+  if(i==='home'){closeRoom();say('Back in the keep.');return;}
+  if(i==='brief'){closeRoom();var b=C.brief();say(b.map(function(x){return x.text;}).join(' '));ORDER.forEach(function(k,j){setTimeout(function(){var e=$('.room.'+k);e.classList.add('lit');setTimeout(function(){e.classList.remove('lit');},1400);},j*350);});return;}
+  if(i==='confirm'){if(st.pending){sealPending();return;}if(w&&w.status==='draft'&&st.focus==='lot'){sealWrit('your word');return;}say('Nothing is waiting for a seal right now.');return;}
+  if(i==='reject'){if(st.pending){tearPending();return;}if(w&&w.status==='draft'){st.writ=null;clearPending();renderInterior();renderGlances();say('Torn up. No draw is open.','lot');return;}say('Nothing to tear up.');return;}
+  if(i==='undo'){say('I keep no undo for sealed acts: a seal is final by design. Drafts can be torn up.');return;}
+  if(i==='open'){openRoom(r.chamber);say(openLine(r.chamber),r.chamber);return;}
+  /* lot */
+  if(i==='lot.draft'){openRoom('lot');st.writ=C.newWrit(a.id);writPending();renderInterior();renderGlances();var nw=st.writ;
+    say('Here is a writ for '+nw.name+': '+nw.winners+(nw.winners===1?' winner':' winners')+' from '+nw.entrants.length+' lots, '+nw.weights.split(' (')[0]+' odds.'+(C.excluded(nw).length?' I set aside '+C.excluded(nw).length+' recent winners under the cooldown.':'')+(nw.prize?' It carries a prize, so the disclaimer and the free entry path show on stream.':'')+' Nothing changes until you seal it.','lot');return;}
+  if(i.indexOf('lot.')===0&&i!=='lot.past'&&!w){openRoom('lot');say('No writ is open yet. Shall I draft one? Say “draft a question draw”.','lot');return;}
+  if(i==='lot.winners'){if(w.status!=='draft'){say('That writ is sealed; its winners are fixed. I can draft a new one.','lot');return;}var o=w.winners;amend('winners',o,a.n,function(w){w.winners=Math.max(1,Math.min(a.n,C.eligible(w).length));});openRoom('lot');say('Amended: '+w.winners+' winners (was '+o+').'+(/1\/3/.test(w.cap)?' Raiders stay capped at '+Math.max(1,Math.floor(w.winners/3))+' of '+w.winners+'.':''),'lot');return;}
+  if(i==='lot.cap'){if(w.status!=='draft'){say('Sealed writs cannot change.','lot');return;}var oc=w.cap;amend('cap',oc,a.cap,function(w){w.cap=a.cap;});openRoom('lot');say('Amended: raiders '+(a.cap==='none'?'are no longer capped':a.cap)+'. '+C.eligible(w).length+' lots now go in the urn.','lot');return;}
+  if(i==='lot.cooldown'){if(w.status!=='draft')return say('Sealed writs cannot change.','lot');var od=w.cooldown;amend('cooldown',od,a.cooldown,function(w){w.cooldown=a.cooldown;});openRoom('lot');say(a.cooldown==='none'?'Amended: past winners may win again. '+C.eligible(w).length+' lots.':'Cooldown restored: no repeat for 3 draws.','lot');return;}
+  if(i==='lot.prize'){if(w.status!=='draft')return say('Sealed writs cannot change.','lot');var op=w.prize||'none';amend('prize',op,a.prize,function(w){w.prize=a.prize;w.disclaimer=a.prize?'No purchase necessary. The free !join path has equal odds. Not affiliated with or endorsed by Twitch.':null;});openRoom('lot');
+    say(a.prize?'Amended: the prize is '+a.prize+'. That makes it a prize draw, so the disclaimer now shows on stream and no paid entry or paid weight is allowed.':'Amended: no prize.','lot');return;}
+  if(i==='lot.paidweight'){openRoom('lot');var f=$('#fair');if(f){f.classList.remove('pulse');void f.offsetWidth;f.classList.add('pulse');}say('I will not weight subscribers: paid weight on a prize draw is blocked, and I keep every draw at equal odds so the writ stays clean. I can thank subscribers on the Beacons instead.','lot');return;}
+  if(i==='lot.cast'){openRoom('lot');if(w.status==='draft'){say('Seal it first: the roll must be frozen before the round is known. Hold the red button.','lot');return;}if(w.status==='cast'){say('Already cast. The winners stand; say “recompute” to check them.','lot');return;}
+    C.cast(w);renderInterior();renderGlances();say('Cast against round #'+w.round+' (simulated). Winners: '+w.result.join(', ')+'. Anyone can recompute this from the writ.','lot');return;}
+  if(i==='lot.verify'){openRoom('lot');if(!w||w.status!=='cast'){var lp=S.lottery.past[S.lottery.past.length-1];say('Fair question. The last writ, '+lp.id+' ('+lp.when+'), is sealed '+lp.entries_hash+' against round #'+lp.beacon_round+', and anyone can recompute it. Equal odds, no paid weight.','lot');return;}
+    var rc=C.recompute(w);var v=$('#verify');if(v)v.textContent=rc.hashOk&&rc.same?'✓ Seal matches. Same winners on recompute.':'✗ Mismatch';say(rc.hashOk&&rc.same?'Recomputed from the writ alone: the seal matches and the same '+(rc.result.length===1?'winner comes':rc.result.length+' winners come')+' out.':'The recompute did not match.','lot');return;}
+  if(i==='lot.past'){openRoom('lot');say(S.lottery.past.length+' past draws, all revealed. The latest, '+S.lottery.past[5].when+', drew '+S.lottery.past[5].winners.join(', ')+'.','lot');return;}
+  /* gate */
+  if(i==='gate.pass'||i==='gate.bar'){openRoom('gate');var v2=i==='gate.pass'?'passed':'barred',held=C.queue.filter(function(x){return x.state==='held';});
+    if(a.who){var one=C.queue.filter(function(x){return x.line.login===a.who;})[0];if(one&&one.state==='held'){decide(one,v2);return;}say('I see no held line from '+a.who+'.','gate');return;}
+    if(!held.length){say('The portcullis is clear.','gate');return;}
+    if(/as proposed/.test(r.raw.toLowerCase())){held.forEach(function(x){x.state=x.advice.verdict==='pass'?'passed':'barred';});renderInterior();renderGlances();say('Done as proposed, at your word: '+held.length+' lines decided.','gate');return;}
+    if(a.all){held.forEach(function(x){x.state=v2;});renderInterior();renderGlances();say((v2==='passed'?'Passed (released) ':'Barred (removed) ')+'all '+held.length+', at your word.','gate');return;}
+    decide(held[0],v2);return;}
+  if(i==='gate.shield'){openRoom('gate');if(st.shield){say('The drawbridge is already up.','gate');return;}propose({ch:'gate',title:'Raise the drawbridge (Shield Mode)',detail:'Holds first-time chatters and tightens every armed rule. Acts on the whole room.',seal:function(){st.shield=true;$('#bridge').style.transform='rotate(-62deg)';say('Bridge up. Shield Mode is on (simulated). Say “lower the drawbridge” to end it.','gate');}});say('I can raise the drawbridge: Shield Mode, holding first-time chatters. It acts on the whole room, so it waits for your seal.','gate');return;}
+  if(i==='gate.shieldoff'){openRoom('gate');if(!st.shield){say('The drawbridge is already down.','gate');return;}st.shield=false;$('#bridge').style.transform='';renderGlances();renderInterior();say('Bridge down. Shield Mode is off.','gate');return;}
+  if(i==='gate.mode'){openRoom('gate');var rr=C.rules.filter(function(x){return x.id===a.rule;})[0];if(rr.mode===a.mode){say('“'+rr.match+'” is already '+(a.mode==='armed'?'Armed':'Watching')+'.','gate');return;}proposeMode(rr,a.mode);return;}
+  if(i==='gate.ban'){openRoom('gate');say('A ban needs your own click, not my word: '+C.banPending.who+', '+C.banPending.reason+'. The button is in the Gatehouse, outlined in red.','gate');return;}
+  if(i==='gate.moat'){openRoom('gate');var s=[2,4,6].indexOf(a.s)>=0?a.s:2;propose({ch:'gate',title:'Set the moat to '+s+' s',detail:'Chat delay for non-moderators. Buys seconds, not magic.',seal:function(){st.moat=s;buildWorld();say('The moat is now '+s+' s.','gate');}});say('The moat can be 2, 4 or 6 s. I drafted '+s+' s; seal it or tear it up.','gate');return;}
+  if(i==='gate.drill'){openRoom('gate');var rp=S.moderator.replay;say('The drill replayed '+rp.messages.toLocaleString('en')+' messages of '+rp.stream+' through today’s rules: '+rp.would_hold+' would be held, '+rp.would_remove+' removed, '+rp.would_timeout+' timed out, '+rp.would_ban+' banned (each ban still needs a human).','gate');return;}
+  if(i==='gate.consensus'){var l=C.lead();say('Chat pulls '+l.label.toLowerCase()+': '+l.pct+'% in minute '+l.minute+', up from 37.8% at minute 0. Skip the boss is second.','gate');var h=$('#herald');h.animate([{transform:'scale(1)'},{transform:'scale(1.06)'},{transform:'scale(1)'}],{duration:700});return;}
+  /* beacons */
+  if(i==='beacon.test'){openRoom('beacon');var fuel=a.kind==='bits'?a.n:a.n*C.GIFT_BITS;st.preview={fuel:fuel,count:a.kind==='gift'?a.n:0,level:0};renderInterior();renderGlances();var lk=C.look(C.visuals[0],C.altarFuel(fuel)).look;
+    say('Test fire: a simulated '+a.n+' '+(a.kind==='bits'?'bits':'gifted subs')+'. The altar would burn as a '+lk+'. This is a preview; nothing reached the stream.','beacon');clearTimeout(st.pt);st.pt=setTimeout(function(){if(st.preview){st.preview=null;if(st.focus==='beacon')renderInterior();renderGlances();}},12000);return;}
+  if(/end the test/.test(r.raw.toLowerCase())||i==='beacon.dim'){st.preview=null;openRoom('beacon');renderInterior();renderGlances();say(i==='beacon.dim'?'The altar follows the offerings; I can only preview it. It halves every 5 minutes on its own.':'Test fire ended.','beacon');return;}
+  if(i==='beacon.status'){openRoom('beacon');var fu=C.altarFuel();say(C.lastGift.login+' gifted '+C.lastGift.amount+' a moment ago. The altar holds '+fu.toLocaleString('en')+' fuel: a '+C.look(C.visuals[0],fu).look+'. The camera frame shows '+C.look(C.visuals[1],C.frameCount()).look+' with '+C.frameCount()+' subs and gifts.','beacon');return;}
+  /* map */
+  if(i==='map.propose'||i==='map.tile'){openRoom('map');var p=C.mapProposal();
+    if(i==='map.tile'){var t=C.tile(a.tile);if(!t){say('There is no tile '+a.tile+'.','map');return;}var o=st.mapDone[t.id]!=null?st.mapDone[t.id]:t.owner,tot=t.votes[0]+t.votes[1]+t.votes[2];say(t.id+': '+(o!=null?'held by '+C.HOUSES[o].name:'unclaimed')+'. '+tot+' calls this turn: Quill '+t.votes[0]+', Tallow '+t.votes[1]+', Sable '+t.votes[2]+'.','map');return;}
+    if(!p){say('Every tile is held.','map');return;}
+    propose({ch:'map',title:C.HOUSES[p.house].name+' takes '+p.tile.id,detail:'Malakor (AI) proposes; the move reaches viewers when the turn ends.',seal:function(){st.mapDone[p.tile.id]=p.house;say('Approved. '+C.HOUSES[p.house].name+' takes '+p.tile.id+' when the turn ends (simulated).','map');}});
+    say('Malakor proposes '+C.HOUSES[p.house].name+' takes '+p.tile.id+': '+p.votes+' of its '+p.total+' calls. It waits for your seal.','map');return;}
+  if(i==='map.muster'){openRoom('map');if(st.stageRung>0){say('The muster is already called.','map');return;}propose({ch:'map',title:'Call the muster (hosted test)',detail:'12 allowlisted accounts see the Extension. Not public.',seal:function(){st.stageRung=1;say('Muster called: 12 allowlisted accounts can see the war table (simulated hosted test).','map');}});say('I can call the muster: a hosted test for 12 allowlisted accounts. Seal to proceed.','map');return;}
+  say('I did not catch that. Try “draft a question draw”, “pass all”, “test fire 50 gifts”, or “catch me up”. (I am a simulated Steward with a fixed vocabulary.)');
+}
+function openLine(k){var b=C.brief().filter(function(x){return x.ch===k;})[0];return b?b.text:'';}
+
+/* ---------- suggestions ---------- */
+function setChips(){var k=st.focus,w=st.writ,s=[];
+  if(st.pending)s=['seal it','tear it up'];
+  else if(k==='lot'){if(!w)s=['draft a question draw','draft the monthly thank-you draw','draft the jury draw'];else if(w.status==='draft')s=['make it 5 winners','no raiders in the draw','prize is a signed print','double weight for subs','seal it'];else if(w.status==='sealed')s=['cast the lots'];else s=['recompute the writ','draft a question draw'];}
+  else if(k==='gate')s=['pass all as proposed','raise the drawbridge','arm caps','set the moat to 4','run the drill','ban fogbard50'];
+  else if(k==='beacon')s=st.preview?['end the test fire','who lit the altar']:['test fire 50 gifts','test fire 500 bits','who lit the altar'];
+  else if(k==='map')s=['what should the next turn be','tile E3','muster the hosted test'];
+  else s=['catch me up','draft a question draw','what does chat want','pass all as proposed','test fire 50 gifts','what should the next turn be'];
+  $('#chips').innerHTML=s.map(function(x){return '<button type="button">'+esc(x)+'</button>';}).join('');
+  $('#chips').querySelectorAll('button').forEach(function(b){b.onclick=function(){hear(b.textContent);};});}
+
+/* ---------- live loops ---------- */
+function tickChat(){var c=S.chat[st.chatIdx%S.chat.length];st.chatIdx++;st.live.push(c);if(st.live.length>40)st.live.shift();
+  if(st.focus==='gate'){var l=$('#livelist');if(l){l.insertAdjacentHTML('afterbegin',clHTML(c));while(l.children.length>14)l.lastChild.remove();}}}
+function tickClock(){$('#uptime').textContent=C.uptime();var left=Math.max(0,Math.round((st.turnEnds-Date.now())/1000));if(left===0)st.turnEnds=Date.now()+90000;var s=Math.floor(left/60)+':'+('0'+left%60).slice(-2);var a=$('#turnmini'),b=$('#turnbig');if(a)a.textContent=s;if(b)b.textContent=s;}
+
+/* ---------- input ---------- */
+$('#ask').addEventListener('submit',function(e){e.preventDefault();var v=$('#q').value.trim();$('#q').value='';hear(v);});
+(function(){var m=$('#mic'),t,typing;function start(e){e.preventDefault();m.classList.add('on');m.lastChild.textContent='Listening (simulated)';var first=$('#chips button');var text=first?first.textContent:'catch me up',i=0;$('#q').value='';typing=setInterval(function(){i++;$('#q').value=text.slice(0,i);if(i>=text.length)clearInterval(typing);},28);}
+  function stop(){if(!m.classList.contains('on'))return;m.classList.remove('on');m.lastChild.textContent='Hold to speak';clearInterval(typing);var v=$('#q').value.trim();$('#q').value='';if(v)hear(v);}
+  m.addEventListener('pointerdown',start);m.addEventListener('pointerup',stop);m.addEventListener('pointerleave',stop);})();
+document.addEventListener('keydown',function(e){var inInput=document.activeElement&&document.activeElement.tagName==='INPUT';
+  if(e.key==='/'&&!inInput){e.preventDefault();$('#q').focus();return;}
+  if(e.key==='Escape'){if($('#ledger').classList.contains('on')){toggleLedger(false);return;}if(inInput){document.activeElement.blur();}closeRoom();return;}
+  if(inInput)return;
+  if(/^[1-4]$/.test(e.key)){openRoom(ORDER[+e.key-1]);}
+  if(e.key==='l'||e.key==='L')toggleLedger();});
+function toggleLedger(on){var l=$('#ledger');on=on==null?!l.classList.contains('on'):on;l.classList.toggle('on',on);$('#ledgerbtn').setAttribute('aria-pressed',on);}
+$('#ledgerbtn').onclick=function(){toggleLedger();};$('#ledgerclose').onclick=function(){toggleLedger(false);};
+$('#home').onclick=closeRoom;
+$('#stock').onclick=function(){var on=document.documentElement.getAttribute('data-theme')!=='stock';document.documentElement.setAttribute('data-theme',on?'stock':'paper');this.setAttribute('aria-pressed',on);};
+document.addEventListener('click',function(e){if(e.target.id==='banyes'){st.decided.ban='Banned by your click (simulated): '+C.banPending.who;renderInterior();say('Banned by your click (simulated). Recorded in the gate log.','gate');}if(e.target.id==='banno'){st.decided.ban='Dismissed: no ban.';renderInterior();say('Dismissed. '+C.banPending.who+' stays.','gate');}});
+window.addEventListener('resize',fit);
+
+/* ---------- first light ---------- */
+for(var i=0;i<30;i++){st.live.push(S.chat[i]);}st.chatIdx=30;
+buildWorld();clearPending();setChips();
+document.body.classList.add('intro');
+ORDER.forEach(function(k,j){setTimeout(function(){$('.room.'+k).classList.add('lit');},300+j*220);});
+setTimeout(function(){document.body.classList.remove('intro');document.querySelectorAll('.room').forEach(function(r){r.classList.remove('lit');});
+  say('Good evening. '+C.queue.length+' held at the portcullis, the altar is a pillar of fire after '+C.lastGift.login+'’s 50 gifts, and chat pulls left at '+C.lead().pct+'%. Shall I draft the question draw?');},1400);
+setInterval(tickChat,1300);setInterval(tickClock,1000);tickClock();
+})();
+</script>
+</body>
+</html>
