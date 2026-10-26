@@ -8,6 +8,7 @@ pub mod drill;
 mod drill_evaluate;
 mod drill_report;
 mod engine_classifier;
+pub mod gate;
 pub mod governor;
 pub mod herald;
 mod herald_features;

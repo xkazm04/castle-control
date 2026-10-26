@@ -22,6 +22,7 @@ pub struct Gatehouse {
     pub(crate) clock: Arc<dyn Clock>,
     pub(crate) strikes: Strikes,
     pub(crate) gate_available: bool,
+    pub(crate) gate_settings: crate::gate::Settings,
 }
 
 impl Gatehouse {
@@ -41,6 +42,7 @@ impl Gatehouse {
             clock,
             strikes: Strikes::default(),
             gate_available: true,
+            gate_settings: crate::gate::Settings::default(),
         })
     }
 

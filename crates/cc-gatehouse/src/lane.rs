@@ -1,5 +1,6 @@
 // Adapted from Shadowrunr OS @ 7e4b6f8,
 // crates/shadowrunr-daemon/src/moderator/lane.rs (Apache-2.0; see NOTICE).
+use crate::gate::{HoldBudget, MeasuredBatch};
 use crate::{
     Classifier, ClassifierError, Gatehouse, IngestedMessage, Result, classifier, date, internal,
     rules, store,
@@ -9,7 +10,7 @@ use cc_types::{
     Action, Decision, DecisionId, DecisionKind, Operator, Rule, RuleClass, RuleMode, Verdict,
 };
 use serde::{Deserialize, Serialize};
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -33,6 +34,10 @@ pub enum GatePath {
     HumanReview,
     Withheld,
     Configuration,
+    AutoModHeld,
+    SuspiciousReview,
+    ExternalHuman,
+    GateSetting,
 }
 
 impl GatePath {
@@ -49,6 +54,10 @@ impl GatePath {
             Self::HumanReview => "human_review",
             Self::Withheld => "withheld",
             Self::Configuration => "configuration",
+            Self::AutoModHeld => "automod_held",
+            Self::SuspiciousReview => "suspicious_review",
+            Self::ExternalHuman => "external_human",
+            Self::GateSetting => "gate_setting",
         }
     }
 }
@@ -78,6 +87,38 @@ impl Gatehouse {
         messages: Vec<IngestedMessage>,
         classifier: &dyn Classifier,
     ) -> Result<Vec<ScreenedMessage>> {
+        Ok(self
+            .screen_batch_measured(
+                messages,
+                classifier,
+                Duration::ZERO,
+                Duration::ZERO,
+                Duration::ZERO,
+            )
+            .await?
+            .messages)
+    }
+
+    /// Host-observed upstream spans are supplied separately; this crate measures
+    /// its rules, classifier round trip and final gate (including durable audit).
+    /// Batched messages share the measured model latency, never divided throughput.
+    pub async fn screen_batch_measured(
+        &mut self,
+        messages: Vec<IngestedMessage>,
+        classifier: &dyn Classifier,
+        twitch_delay: Duration,
+        scheduling_wait: Duration,
+        admission: Duration,
+    ) -> Result<MeasuredBatch> {
+        let mut budgets = vec![
+            HoldBudget {
+                twitch_delay,
+                scheduling_wait,
+                admission,
+                ..HoldBudget::default()
+            };
+            messages.len()
+        ];
         let mut output = vec![None; messages.len()];
         let mut pending = Vec::new();
         let plain: Vec<_> = self
@@ -87,6 +128,7 @@ impl Gatehouse {
             .map(|m| m.rule.clone())
             .collect();
         for (index, msg) in messages.into_iter().enumerate() {
+            let rules_start = Instant::now();
             let candidate = if rules::disclosure(&msg.text) || self.caring(&msg.user_id)? {
                 Some(Candidate::Care)
             } else {
@@ -113,8 +155,11 @@ impl Gatehouse {
                 }
                 hit.or_else(|| plain.is_empty().then_some(Candidate::Clean))
             };
+            budgets[index].rules = rules_start.elapsed();
             if let Some(candidate) = candidate {
+                let gate_start = Instant::now();
                 output[index] = Some(self.gate(msg, candidate)?);
+                budgets[index].gate = gate_start.elapsed();
             } else {
                 pending.push((index, msg));
             }
@@ -122,6 +167,7 @@ impl Gatehouse {
         for chunk in pending.chunks(classifier::MAX_BATCH) {
             let batch: Vec<_> = chunk.iter().map(|(_, msg)| msg.clone()).collect();
             let prompt = classifier::prompt(&plain, &batch);
+            let model_start = Instant::now();
             let reply = tokio::time::timeout(
                 Duration::from_secs(2),
                 classifier.classify(classifier::SYSTEM, &prompt),
@@ -132,7 +178,9 @@ impl Gatehouse {
                 Ok(Err(error)) => Err(error),
                 Err(_) => Err(ClassifierError::Unavailable),
             };
+            let model_elapsed = model_start.elapsed();
             for (i, (index, msg)) in chunk.iter().enumerate() {
+                budgets[*index].model = model_elapsed;
                 let candidate = match &parsed {
                     Err(error) => Candidate::Unavailable(*error),
                     Ok(None) => Candidate::Withheld,
@@ -148,13 +196,16 @@ impl Gatehouse {
                         ),
                     },
                 };
+                let gate_start = Instant::now();
                 output[*index] = Some(self.gate(msg.clone(), candidate)?);
+                budgets[*index].gate = gate_start.elapsed();
             }
         }
-        output
+        let messages = output
             .into_iter()
             .map(|item| item.ok_or_else(|| internal("unscreened message")))
-            .collect()
+            .collect::<Result<_>>()?;
+        Ok(MeasuredBatch { messages, budgets })
     }
 
     fn gate(&mut self, msg: IngestedMessage, candidate: Candidate) -> Result<ScreenedMessage> {

@@ -108,7 +108,7 @@ impl Gatehouse {
         }
         self.review_record(
             &queued,
-            self.context(&queued),
+            self.context(&queued)?,
             DecisionKind::Released,
             Verdict::Pass,
             "ban_dismissed",
@@ -128,7 +128,7 @@ impl Gatehouse {
         // integration owns the Twitch acknowledgement and execution lifecycle.
         self.review_record(
             &original,
-            self.context(&original),
+            self.context(&original)?,
             DecisionKind::Undone,
             Verdict::Pass,
             "decision_undone",
@@ -152,7 +152,7 @@ impl Gatehouse {
         };
         self.review_record(
             &original,
-            self.context(&original),
+            self.context(&original)?,
             kind,
             verdict,
             reason,
@@ -160,17 +160,20 @@ impl Gatehouse {
         )
     }
 
-    fn context(&self, record: &Record) -> IngestedMessage {
+    fn context(&self, record: &Record) -> Result<IngestedMessage> {
         // Reversals require IDs only, never reconstructed or summarized text.
-        IngestedMessage {
+        Ok(IngestedMessage {
             message_id: record.message_id.clone(),
-            user_id: record.user_id.clone(),
+            user_id: record
+                .user_id
+                .clone()
+                .ok_or_else(|| crate::internal("missing review subject"))?,
             login: String::new(),
             text: String::new(),
             at: record.at.clone(),
             simulated: record.simulated,
             metadata: None,
-        }
+        })
     }
 
     fn review_record(

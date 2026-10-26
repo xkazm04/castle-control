@@ -412,3 +412,77 @@ Validation on 2026-10-26, base `5073b63`:
 The Director must obtain a green full gate outside the Node subprocess
 restriction and recheck the existing lifecycle timing failure before merging.
 No install, git write, live executor, RPC wiring or external service was used.
+
+
+## Offline gate domain ? WP 1.2 (2026-10-26)
+
+Reconciled against `cffdd1a`: `48418f2` supplies payloads, `cffdd1a` supplies
+transport/parsers, and `9a27a64` supplies the governor; no gate domain existed.
+`src/gate/` adds no dependency, wire identifier, RPC, network call or executor.
+
+`automod_hold` persists originals through cc-store and the existing single
+ledger append. `held_queue` displays original text. `held_resolve` accepts
+`HeldResolveParams` and an injected confirmation future receiving that original.
+Confirmed allow/deny records released/removed; timeout records held and keeps
+the queue open across restart. Failed confirmations preserve existing error
+codes and retry_after_ms. Unavailable gates, erased/expired originals and
+already-resolved roots cannot proceed. Each valid attempt writes one decision.
+Duplicate holds are idempotent; identity/text mismatches fail.
+
+Delay/Shield preparation uses cc-types payloads plus a verified local GateActor.
+Only matching confirmations change applied state, after audit succeeds. Pending
+changes are bound to this service/revision; external observations invalidate
+stale echoes. Initial/restarted state is unknown until refreshed. Retained audit
+metadata associates the real operator/viewer IDs for cc-store erasure; originals
+stay under retention and audit caches contain no chat text. No inventory changes.
+
+Moderation events synchronously enter gate_roll as external, human-authored,
+with no rule/model attribution or action intent. Unknown kinds record a held
+unrecognised entry and grant no authority. Observed external allow/deny is still
+audited if intake was missed; known roots are linked without inventing text.
+Erasure of a completion association cannot reopen local resolution authority:
+it fails needs_human until reconciled. Room-mode observations require the
+existing Governor and reuse observe_human_change, preserving expiry/yield.
+Delay/Shield are not governor-owned modes. The existing LeaseEndParams contract
+stays typed/unregistered; this package does not replace WP 1.3 lease ownership.
+Suspicious messages always reach human review with original text, held verdict,
+no automatic action and no consensus intake, even with armed punitive rules.
+
+HoldBudget decomposes Twitch delay + scheduling wait + admission + rules + model
++ gate. screen_batch_measured accepts host-observed upstream spans and measures
+local rules/disclosure/care lookup, classifier round trip including reply parsing,
+and final gate/audit with Instant. Batch members share model latency. Existing
+screen_batch keeps its return type. Summaries use stagewise nearest-rank p95,
+include n, refuse empty samples, and are not a p95 of total latency.
+
+Measured 2026-10-26 using
+`cargo test --offline -p cc-gatehouse --test gate_budget seeded_simulated_stream_records_all_six_stage_p95s -- --nocapture`:
+seed 1202, n=128 simulated messages, one message/batch, fake classifier, local
+SQLite/JSONL. Recorded p95 in microseconds:
+
+| Stage | p95 (us) | Evidence |
+| --- | ---: | --- |
+| Twitch delay | 2000000 | Configured simulated 2-second delay, not network timing |
+| Scheduling wait | 0 | No host scheduler in this harness |
+| Admission | 0 | Fake classifier has no admission queue |
+| Rules | 23201 | Measured local work |
+| Model | 23 | Measured fake classifier, not LLM latency |
+| Gate | 24085 | Measured local gate and durable audit |
+
+These are one run's numbers, not thresholds or live evidence. At the Tue 10-27
+spike, check cc-twitch README's wire assumptions, distinguish own echoes from
+human changes, measure real upstream/model spans and Twitch-UI-to-ledger latency,
+and verify rate limits. Offline tests do not establish the live two-second exit.
+
+Evidence: 22 new tests in tests/gate_{held,settings,events,erasure,budget}.rs.
+The initial held test failed for missing methods before implementation. The
+complete final Gatehouse suite and crate Clippy passed, including the unchanged
+governor typed/no-registration assertion and doctest. Workspace Clippy and the
+once-run Rust workspace suite passed; the final event refinement then passed
+another full Gatehouse suite and crate Clippy. Format, source/secrets gates and
+desktop build passed. pnpm gate passed 14 tooling tests/inventories then failed
+in unchanged codegen (spawnSync cargo EPERM); recursive typecheck, lint and test
+independently failed with lifecycle spawn EPERM. Base cffdd1a documents the same
+restriction; git diff confirms tooling, packages, apps and lockfiles unchanged.
+No install, preload or bypass was used. The external result is partial until
+the Director reruns these pnpm checks where Node subprocesses are permitted.

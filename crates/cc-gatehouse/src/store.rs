@@ -110,7 +110,10 @@ pub(crate) struct Record {
     pub at: Timestamp,
     pub simulated: bool,
     pub reason_codes: Vec<String>,
-    pub user_id: TwitchUserId,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub user_id: Option<TwitchUserId>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub moderator_id: Option<TwitchUserId>,
     pub path: GatePath,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub parent: Option<DecisionId>,
@@ -119,6 +122,31 @@ pub(crate) struct Record {
     pub care: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub rule_snapshot: Option<Rule>,
+}
+
+struct AuditContext<'a> {
+    path: GatePath,
+    parent: Option<DecisionId>,
+    intent: Option<ActionIntent>,
+    care: bool,
+    actor: Option<&'a crate::gate::GateActor>,
+}
+
+impl Record {
+    pub(crate) fn decision(&self) -> Decision {
+        Decision {
+            decision_id: self.decision_id.clone(),
+            message_id: self.message_id.clone(),
+            kind: self.kind,
+            verdict: self.verdict,
+            rule_id: self.rule_id.clone(),
+            operator: self.operator,
+            at: self.at.clone(),
+            simulated: self.simulated,
+            reason_codes: self.reason_codes.clone(),
+            message_text: None,
+        }
+    }
 }
 
 impl Gatehouse {
@@ -156,14 +184,17 @@ impl Gatehouse {
             .find(|item| item.id == id)
             .ok_or_else(|| internal("original erased or expired"))?;
         let msg: IngestedMessage = serde_json::from_str(&item.content).map_err(internal)?;
-        if msg.message_id != record.message_id || msg.user_id != record.user_id {
+        if msg.message_id != record.message_id || Some(&msg.user_id) != record.user_id.as_ref() {
             return Err(internal("queue association mismatch"));
         }
         Ok(msg)
     }
 
     pub(crate) fn caring(&self, user: &TwitchUserId) -> Result<bool> {
-        Ok(self.records()?.iter().any(|r| &r.user_id == user && r.care))
+        Ok(self
+            .records()?
+            .iter()
+            .any(|r| r.user_id.as_ref() == Some(user) && r.care))
     }
 
     /// The only append_ledger call in the crate. Audit metadata is prepared first;
@@ -177,6 +208,53 @@ impl Gatehouse {
         intent: Option<ActionIntent>,
         care: bool,
     ) -> Result<Decision> {
+        self.persist_record(
+            decision,
+            msg,
+            AuditContext {
+                path,
+                parent,
+                intent,
+                care,
+                actor: None,
+            },
+        )
+    }
+
+    pub(crate) fn record_external(
+        &mut self,
+        decision: Decision,
+        msg: Option<&IngestedMessage>,
+        path: GatePath,
+        parent: Option<DecisionId>,
+        actor: &crate::gate::GateActor,
+    ) -> Result<Decision> {
+        self.persist_record(
+            decision,
+            msg,
+            AuditContext {
+                path,
+                parent,
+                intent: None,
+                care: false,
+                actor: Some(actor),
+            },
+        )
+    }
+
+    fn persist_record(
+        &mut self,
+        decision: Decision,
+        msg: Option<&IngestedMessage>,
+        context: AuditContext<'_>,
+    ) -> Result<Decision> {
+        let AuditContext {
+            path,
+            parent,
+            intent,
+            care,
+            actor,
+        } = context;
         let decision: Decision =
             serde_json::from_value(serde_json::to_value(decision).map_err(internal)?)
                 .map_err(internal)?;
@@ -187,12 +265,26 @@ impl Gatehouse {
             .map_err(internal)?;
         let at =
             cc_store::Timestamp::parse(&String::from(decision.at.clone())).map_err(internal)?;
-        if let Some(msg) = msg {
-            if !msg.login.is_empty() {
-                self.store
-                    .map_user(msg.user_id.clone(), &msg.login)
-                    .map_err(internal)?;
+        if let Some(msg) = msg
+            && !msg.login.is_empty()
+        {
+            self.store
+                .map_user(msg.user_id.clone(), &msg.login)
+                .map_err(internal)?;
+        }
+        let mut user_ids: Vec<_> = msg.map(|m| vec![m.user_id.clone()]).unwrap_or_default();
+        if let Some(actor) = actor {
+            self.store
+                .map_user(actor.user_id.clone(), &actor.login)
+                .map_err(internal)?;
+            if !user_ids.contains(&actor.user_id) {
+                user_ids.push(actor.user_id.clone());
             }
+        }
+        // Existing configuration records keep their legacy ledger-only shape.
+        // New gate settings/external room events need a readable gate-roll entry
+        // without fabricating a viewer or recording room changes as chat.
+        if msg.is_some() || matches!(path, GatePath::GateSetting | GatePath::ExternalHuman) {
             let audit = Record {
                 decision_id: decision.decision_id.clone(),
                 message_id: decision.message_id.clone(),
@@ -203,7 +295,8 @@ impl Gatehouse {
                 at: decision.at.clone(),
                 simulated: decision.simulated,
                 reason_codes: decision.reason_codes.clone(),
-                user_id: msg.user_id.clone(),
+                user_id: msg.map(|m| m.user_id.clone()),
+                moderator_id: actor.map(|a| a.user_id.clone()),
                 path,
                 parent,
                 intent,
@@ -216,7 +309,10 @@ impl Gatehouse {
             };
             // Only pending review requires retaining the original. Erasure and
             // retention remain wholly owned by cc-store's existing inventory.
-            if decision.kind == DecisionKind::BanPending {
+            if let Some(msg) = msg.filter(|_| {
+                decision.kind == DecisionKind::BanPending
+                    || matches!(path, GatePath::AutoModHeld | GatePath::SuspiciousReview)
+            }) {
                 self.store
                     .insert(
                         DataStore::Recordings,
@@ -236,9 +332,9 @@ impl Gatehouse {
                     &StoredItem {
                         id,
                         at: at.clone(),
-                        user_ids: vec![msg.user_id.clone()],
+                        user_ids,
                         content: serde_json::to_string(&audit).map_err(internal)?,
-                        simulated: msg.simulated,
+                        simulated: decision.simulated,
                     },
                 )
                 .map_err(internal)?;
