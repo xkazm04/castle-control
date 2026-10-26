@@ -4,17 +4,38 @@
 //! Callers consume only the final verdict; action intents are not executed here.
 
 mod classifier;
+pub mod drill;
+mod drill_evaluate;
+mod drill_report;
 mod engine_classifier;
+pub mod herald;
+mod herald_features;
+mod instrument;
 mod lane;
+pub mod recorder;
 mod review;
 mod rules;
 mod service;
+mod sha256;
+pub mod simulation;
 mod store;
 
 pub use classifier::{Classifier, ClassifierError};
 pub use engine_classifier::EngineClassifier;
 pub use lane::{ActionIntent, GatePath, ScreenedMessage};
 pub use service::Gatehouse;
+
+impl ScreenedMessage {
+    /// The only constructor of the chart's intake type. No intent crosses it.
+    pub fn for_consensus(&self) -> Option<herald::PassedMessage> {
+        (self.decision.verdict == cc_types::Verdict::Pass
+            && self.decision.message_id == self.message.message_id)
+            .then(|| herald::PassedMessage {
+                at: self.message.at.clone(),
+                text: self.message.text.clone(),
+            })
+    }
+}
 
 use cc_store::TwitchUserId;
 use cc_types::{ErrorCode, ErrorEnvelope, MessageId, Timestamp};

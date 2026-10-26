@@ -1,4 +1,4 @@
-# Gatehouse offline verdict pipeline — WP 1.1
+# Gatehouse offline moderation, consensus and replay — WP 1.1, 1.5, 1.6
 
 This crate adapts Shadowrunr OS `moderator/{rules,mod,lane,store,tests}.rs`
 at `7e4b6f8` (Apache-2.0; see the source headers and root NOTICE). Voice and
@@ -168,3 +168,166 @@ received `spawn EPERM`, before package checks could run. These remain failed
 validation attempts, not passes; the Director must rerun those merge checks
 outside this subprocess restriction. No install or junction modification was
 attempted, and no JS/TS source, dependency list or lockfile was changed.
+
+## Herald's chart — WP 1.5
+
+`ScreenedMessage::for_consensus()` is the only public constructor of
+`herald::PassedMessage`. It returns nothing for held/barred messages or mismatched
+message IDs. The token carries only timestamp/text: no decision, intent or action
+capability. `Herald::ingest` consumes it, and `Herald::get` returns the existing
+`ConsensusGetResult`. Neither chart module imports the live service, lane,
+executor, store or engine. `chart_module_has_no_action_or_live_service_surface`
+checks those module boundaries; `real_gate_verdict_prevents_barred_chart_intake`
+uses an actual simulated Gatehouse verdict.
+
+A host supplies direction keys/labels/keyword seeds, emote-to-meaning entries,
+a local deterministic `LocalEmbedding`, maximum query window, retained-message
+capacity and start time. `HashedWords` is the offline default: 256-bin hashed
+word counts and cosine similarity to seeds. This is lexical grouping, not a
+claim of model-quality semantic understanding. Ties follow sorted direction
+keys; zero similarity goes to `other`. No downloads, model or network are used.
+Unicode emotes and ordinary emote names are supported. Text and emote meanings
+are separated before grouping: `all` combines them; `text` uses ordinary words;
+`emotes` uses meanings; `emote` uses the chosen emote's meaning. Each eligible
+message contributes once per filter, including repeated emotes in one line.
+
+Windows are `(at - window_s, at]`, including subsecond timestamps. Queries and
+intake require monotonic time; oversized windows fail rather than returning
+partial history. Series points are sorted change points (arrivals and exits),
+plus the window start/end, each computed using the same trailing window as the
+current share. History retains `max(2 * max_window_s, max_window_s + 180)` seconds
+so early series points and the three-minute baseline keep their context.
+`delta_3m` is a fraction difference and is omitted until a complete baseline
+window exists. Shares describe retained eligible messages, not the shed ones.
+
+When retained capacity is full, intake records timestamped shedding counters
+for all/text/emotes/each emote, without keeping raw text. The query reports the
+matching window/filter count even when there are no directions. Expiry releases
+capacity; it does not rewrite old events. The chart is descriptive only.
+
+## Recorder and drill — WP 1.6
+
+`Gatehouse::recorder(owner_id, installed_at)` borrows its existing store writer.
+`record_live(source, messages, gaps)` captures immutable batches supplied by the
+authenticated channel adapter, rejects pre-installation input, and registers
+actual login aliases for erasure. `import(RecordingImportParams)` accepts inert
+logs, not a URL/path or authority claim. Both return `RecordingImportResult`;
+`resolve` accepts only a service-minted `recording-<ULID>` found in cc-store's
+`Recordings` inventory. No new persistent tables, files or store roots exist.
+The host owns channel authentication and batch scheduling; RPC registration is
+intentionally absent.
+
+Each batch is associated with its channel owner and every included viewer.
+Imports without usernames get collision-checked ID-derived aliases; existing
+real-login aliases remain usable. Erasing any associated viewer conservatively
+removes the entire batch. The oldest message/gap timestamp governs expiry, so a
+batch can disappear early but cannot preserve older chat beyond retention.
+Imports outside retention, future dates, duplicate message IDs, unordered
+messages and reversed gaps are rejected. Resolution checks the store's own
+retention preview even before its existing scheduled reaper runs. Forget,
+retention and authorization-revocation purge therefore invalidate references.
+Source labels and gaps remain in the recording and every replay/diff side;
+every outcome also retains its source. Imports never assert the stored content
+is simulated merely because they will be replayed; replay output always says
+`simulated`.
+
+`Drill::run` and `Drill::diff` consume the existing typed params and resolve
+retained recordings. A private evaluator reuses disclosure detection, pattern
+normalization/compilation, strikes and the fenced classifier/parser, with a
+two-second classifier deadline. It has no live Gatehouse instance, executor or
+ledger writer. Rule modes describe hypothetical behavior; bans remain held
+because imported logs cannot manufacture human consent. Crisis care precedes
+classification and persists within a replay. Recording gaps are preserved, and
+messages inside them are not evaluable. Missing verified badges/consent are
+never invented. This offline delivery does not claim the live M1 exit passed.
+
+Banks and judges are service-registered immutable configuration labels. A
+`BlindJudge` sees the message, case rubric and observed outcome, never host rules
+or prompts. Its resolved identity includes model, tier, rubric, revision and
+parameters, and registration refuses the subject's configured tier. The host
+must supply that tier accurately. `ExpectedJudge` is an offline baseline;
+production judging is an injected adapter. A valid judgment must quote text
+actually present in the message. A nonmatching quote is not evaluable. Pending,
+void, not evaluable and engine failure never produce an invented pass.
+`acted` denotes a completed evaluation observation, never proof of a Twitch
+execution; unknown ambient stimuli remain `not_provoked`.
+
+Every run carries SHA-256 component hashes and their canonical combined hash.
+Rules are validated and sorted by ID; canonical JSON sorts object keys while
+preserving array order. Hashes cover the resolved bank's cases/calibration,
+resolved judge settings, rule snapshots and actual host/system prompts. The
+prompt instrument also includes normalized source digests of the evaluator,
+classifier, rules and scoring logic, so implementation changes split the
+instrument automatically. The dependency-free SHA-256 implementation has
+standard empty, short, padding-boundary and million-byte known-answer tests.
+
+`Drill::verify` recomputes these hashes against resolved inputs, checks source,
+message alignment and gaps, and recomputes summary arithmetic. Passes are direct
+observations. Over-moderation independently counts validly evaluated safe-bank
+cases and the ones receiving an action or non-pass verdict. Only verified runs
+can enter `merge_runs`; different sources/instruments or duplicate IDs refuse to
+merge. A diff preserves both complete instruments/summaries and reports changed
+observations even when their named state stays the same.
+
+`simulation::generate` adapts the pinned Shadowrunr SplitMix64 generator. Its
+seeded IDs, text selection and one-second cadence are reproducible. The supplied
+bank includes requested roasts, dark jokes, fictional quotations and a violation.
+Its uniform mixture/cadence are explicitly labelled assumptions; these fixtures
+are not evidence about a real audience. New feature tests use generated simulated data,
+offline classifier fakes and local judges, with no new dependency or network.
+
+### WP 1.5/1.6 acceptance evidence
+
+- Intake/action boundary: `barred_and_held_messages_have_no_chart_intake_token`,
+  `real_gate_verdict_prevents_barred_chart_intake`,
+  `chart_module_has_no_action_or_live_service_surface`.
+- Chart semantics: `filters_count_messages_once_and_separate_text_from_emote_meaning`,
+  `window_is_left_open_right_closed_and_expiry_appears_in_series`,
+  `delta_is_fraction_difference_with_complete_baseline_history`,
+  `shedding_reports_matching_window_even_with_no_directions`,
+  `subsecond_shedding_uses_exact_same_window_as_messages`,
+  `historical_series_keeps_the_context_of_its_earliest_window`,
+  `chart_series_is_stable_under_seeded_offline_replay`.
+- Named states, direct passes and ledger isolation:
+  `all_six_states_count_observations_directly_without_live_ledger_writes`.
+- Instruments/arithmetic/merge:
+  `instrument_hashes_cover_resolved_contents_and_verify_arithmetic`,
+  `only_verified_disjoint_same_instrument_runs_can_merge`,
+  `canonical_rule_order_and_default_care_are_stable_without_authority_from_text`.
+- Separate over-moderation and diff sides:
+  `diff_keeps_instruments_and_summaries_separate_and_reports_over_moderation`.
+- Provenance, gaps, retention and erasure: `recorder.rs` integration tests and
+  `gaps_stay_gaps_and_are_never_scored_as_clean`.
+
+Regression proof: temporarily admitting barred messages at `for_consensus` made
+`barred_and_held_messages_have_no_chart_intake_token` fail (exit 101). The original
+check was restored in a `finally` block before the green focused run. No seeded
+violation remains.
+
+Validation on 2026-10-26, base `5073b63`:
+
+- `cargo --offline fmt --all -- --check` and
+  `cargo --offline clippy --workspace --all-targets -- -D warnings` passed.
+- `cargo --offline test -p cc-gatehouse` passed **64 tests**, including the
+  **24 new integration tests** and SHA-256 known-answer test. This is the final
+  narrowed Rust run; its actual output is in the build run's `gatehouse-tests.log`.
+- `cargo --offline test --workspace` exited 101 at the unchanged
+  `cc-engine/tests/lifecycle.rs:75` test
+  `silence_timeout_reaps_child_and_releases_the_process_permit`: expected `model`,
+  received `refused`. That test's 300 ms silence ceiling is in the base source;
+  cc-engine has no dependency on cc-gatehouse. Its isolated rerun passed. The
+  workspace run is still recorded as failed, with no out-of-scope fix or second
+  full run. Actual output is in the build run's `rust-tests.log`.
+- `pnpm --config.verify-deps-before-run=false gate` passed all 14 tooling fixture
+  tests and workspace inventories, then failed at the unchanged contract
+  exporter's `spawnSync cargo EPERM`, before package checks. A process-local
+  preload forced Cargo `--offline --locked` and removed the online override;
+  no checked-in gate script changed. Actual output is in the build run's
+  `gate.log`. Recursive pnpm typecheck, lint and test each independently exited
+  1 at lifecycle `spawn EPERM`; these checks remain failed, not skipped/passed.
+- Boundaries, hygiene, file cap and secrets checks passed (281 code files,
+  378 scanned files). Manifests, lockfiles and other package paths are unchanged.
+
+The Director must obtain a green full gate outside the Node subprocess
+restriction and recheck the existing lifecycle timing failure before merging.
+No install, git write, live executor, RPC wiring or external service was used.
