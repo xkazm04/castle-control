@@ -14,8 +14,9 @@ named evaluation states, observed passes, an over-moderation denominator and gap
 Its hashes are explicitly illustrative fixture values, not a live computation.
 
 `ModerationPort` is the local read/subscribe/command seam for a future client.
-This delivery implements only an in-memory preview. Review controls resolve the
-local queues and mark local operations. Rule-mode controls update `preview_modes`
+This delivery implements only an in-memory preview. Ban review controls resolve
+the local queue and mark local operations; held-message controls wait for fixture
+confirmation, as described below. Rule-mode controls update `preview_modes`
 only; the validated contract rules stay shadow. This is prominently labelled on
 the page, and the rampart continues to show the actual fixture Watching count.
 No port imports a transport; no command is sent or persisted. Leaving the
@@ -62,3 +63,68 @@ Validation on this builder run:
 
 No install was run over the worktree's dependency junction. No package, contract,
 lockfile, Rust source, native shell or gate script was changed.
+
+## WP 1.7: portcullis follow-up (fixture only)
+
+Reconciliation against the main checkout found the existing held queue in
+`moderation-review.tsx` (Pass/Strike), the hard-coded `4 s` hero delay in
+`moderation-page.tsx`, and immediate Shield preview toggling in
+`moderation-model.ts`. This follow-up extends those controls rather than adding
+a second queue. No delay selector or confirmation state existed there.
+
+Prerequisite delivery: `packages/contract/src/index.ts` now re-exports
+`gatehouseHeldResolve`, `gatehouseDelaySet`, `gatehouseShieldSet` and
+`gatehouseLeaseEnd`. All four already existed in generated validation. Their
+types were already public through `export type *`; no schema, generated file
+or Rust identifier was changed. App Master should commit that one-file
+prerequisite separately, before the desktop delivery, as it did for `df09a30`.
+
+The small `moderation-held.tsx` and `moderation-gate-controls.tsx` components use
+the existing panels, buttons, chips and windowed rows. Held rows show the original
+generated message and an explicit AutoMod hold reason. Allow/Deny are native
+buttons; both disable while resolution is pending. Until confirmation, the row,
+chat verdict and ledger retain the held state. Confirmation alone removes the
+row, updates the chat verdict and records a released/removed decision retaining
+the original text. Duplicate or opposing in-flight resolutions are ignored.
+
+The applied delay selector offers only off, 2, 4 and 6 seconds. It keeps its
+previous applied value while disabled/pending. Both Shield controls (hero and
+panel) share the same component and retain the confirmed pressed state until
+confirmation. New display strings live in `moderation-copy.ts`. The extended
+fixture provides initial states, a 400 ms confirmation delay, schema-validated
+request/result pairs and explicit Twitch-UI action provenance. Human actions
+from Twitch are labelled in the gate roll; local preview actions have a
+different label. Provenance metadata is local fixture data, not a new wire
+field. No RPC, transport, subscription, live timing or armed authority is added.
+
+Validation, 2026-10-26:
+
+- Red first: the new acceptance suite failed on the missing gate-controls
+  component before implementation.
+- Desktop command `pnpm --config.verify-deps-before-run=false exec vitest run
+  --pool=threads src/moderation-gate.test.tsx src/moderation.test.tsx` passed
+  18 tests. Coverage includes confirmation timing, applied select/pressed
+  displays, original text/reason, pending holds for both outcomes, duplicate
+  requests, native button tab-order semantics and keyboard-generated click
+  activation, provenance labels and no fetch. The keyboard proof checks the
+  native button contract and handler; it is not a mounted-browser Tab test.
+- Contract command with `src/gatehouse-gate.test.ts src/gatehouse.test.ts
+  src/index.test.ts` passed 37 tests, using the same Vitest flags.
+- `node ../../scripts/package-gate.mjs typecheck` passed independently from
+  both desktop (39 files) and contract (17 files). The equivalent lint runners
+  passed with boundary/cycle, hygiene, file-cap and secret inventories.
+- `pnpm --config.verify-deps-before-run=false --filter
+  @castle-control/desktop build` passed, including the first-load budget:
+  389,450 / 393,216 uncompressed JS+CSS bytes.
+- Recursive `pnpm --config.verify-deps-before-run=false -r typecheck` and
+  `-r lint` failed at subprocess launch with `spawn EPERM`, before checking
+  packages. These are failures, not full-repository passes.
+- `pnpm --config.verify-deps-before-run=false gate` passed 14 tooling tests
+  and workspace inventories, then failed in the unchanged contract exporter
+  with `spawnSync cargo EPERM`. Rust and later full-gate stages did not run.
+  `git diff HEAD -- scripts packages/contract/scripts` is empty; no gate was
+  changed to suppress this failure. App Master must run the full gate before
+  acceptance. No full-suite or visual-fidelity pass is claimed here.
+
+The changes remain uncommitted under the builder sandbox exception. No install
+or git write was run, and the node_modules junction was left untouched.

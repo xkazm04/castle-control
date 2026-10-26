@@ -1,5 +1,5 @@
 import { useState, useSyncExternalStore } from 'react';
-import { InkButton, NumberedPanel, PageHeader, RoomStatusHero, RuleTable, StatusChip } from '@castle-control/ui';
+import { NumberedPanel, PageHeader, RoomStatusHero, RuleTable, StatusChip } from '@castle-control/ui';
 import type { ModerationPort } from './moderation-model.js';
 import { createModerationPreview } from './moderation-model.js';
 import { fixtureCharts, fixtureReplay, fixtureRules } from './moderation-fixture.js';
@@ -8,6 +8,7 @@ import { ConsensusChart } from './moderation-chart.jsx';
 import { MessageList } from './moderation-messages.jsx';
 import { DecisionList, ReviewQueues } from './moderation-review.jsx';
 import { ReplayPage } from './moderation-replay.jsx';
+import { ShieldControl } from './moderation-gate-controls.jsx';
 import './moderation.css';
 
 export function ModerationPage({ replay = false, port }: { replay?: boolean; port?: ModerationPort }) {
@@ -21,10 +22,10 @@ export function ModerationPage({ replay = false, port }: { replay?: boolean; por
     <RoomStatusHero label="Room status · simulated" cells={[
       { id: 'orders', label: copy.orders, value: 'Slow · 10 s', detail: 'Timed lease · 90 s remaining' },
       { id: 'tier', label: 'Room tier · hysteresis', value: 'Hall · M', detail: 'Hearth / Hall / Courtyard / Tourney field' },
-      { id: 'delay', label: copy.delay, value: '4 s', detail: `${snapshot.held.length} held · ${snapshot.bans.length} bans pending` },
-    ]} actions={<InkButton size="small" variant={snapshot.shield ? 'danger' : 'outline'} aria-pressed={snapshot.shield}
-      onClick={() => adapter.send({ kind: 'shield' })}>{snapshot.shield ? copy.shield_on : copy.shield}</InkButton>}
-      action_detail="Shield Mode · preview only" />
+      { id: 'delay', label: copy.delay, value: snapshot.delay_s === 0 ? copy.delay_off : copy.delay_seconds(snapshot.delay_s),
+        detail: `${snapshot.held.length} held · ${snapshot.bans.length} bans pending` },
+    ]} actions={<ShieldControl snapshot={snapshot} send={adapter.send} />}
+      action_detail={copy.shield_label} />
     <div className="moderation-grid">
       <div className="moderation-column">
         <NumberedPanel number="2.2" title={copy.consensus} gloss={copy.consensus_gloss}>

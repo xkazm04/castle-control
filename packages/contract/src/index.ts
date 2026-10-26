@@ -9,3 +9,4 @@ export { statusGet, bridgeStatusGet, gatehouseRulesList, gatehouseBanConfirm,
   gatehouseConsensusGet, gatehouseDrillRun } from './generated/validation.js';
 export { beaconsVisualList, beaconsCurveSet, beaconsSimulate, beaconsSourceUrl } from './generated/validation.js';
 export { lotsDrawList, lotsDrawUpsert, lotsDrawCheck, lotsRollLookup, lotsRollSeal, lotsCast, lotsWritGet } from './generated/validation.js';
+export { gatehouseHeldResolve, gatehouseDelaySet, gatehouseShieldSet, gatehouseLeaseEnd } from './generated/validation.js';

@@ -1,16 +1,18 @@
 import { readFileSync } from 'node:fs';
 import { renderToReadableStream, renderToStaticMarkup } from 'react-dom/server';
-import { expect, test, vi } from 'vitest';
+import { afterEach, expect, test, vi } from 'vitest';
 import type { ModuleId } from '@castle-control/ui';
 import { ConsensusChart } from './moderation-chart.jsx';
 import { ReviewQueues } from './moderation-review.jsx';
 import { MessageList, messageWindow } from './moderation-messages.jsx';
 import { ReplayPage } from './moderation-replay.jsx';
-import { fixtureBans, fixtureCharts, fixtureMessages, fixtureReplay, fixtureRules } from './moderation-fixture.js';
+import { fixtureBans, fixtureCharts, fixtureConfirmationMs, fixtureMessages, fixtureReplay, fixtureRules } from './moderation-fixture.js';
 import { createModerationPreview } from './moderation-model.js';
 import { dispatchShortcut, routeFromHash } from './navigation.js';
 import { DesktopView } from './view.jsx';
 import { simulatedRead } from './simulated.js';
+
+afterEach(() => { vi.useRealTimers(); });
 
 test('4,200 generated chat lines mount only a window, including the final row on scroll', () => {
   expect(fixtureMessages).toHaveLength(4200);
@@ -61,6 +63,7 @@ test('key 2 opens the complete simulated page through the existing navigation re
 });
 
 test('fixture commands are observable local state; all contract rules remain shadow', () => {
+  vi.useFakeTimers();
   const network = vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('No network allowed'));
   try {
     const port = createModerationPreview();
@@ -76,14 +79,17 @@ test('fixture commands are observable local state; all contract rules remain sha
     expect(port.getSnapshot().preview_modes.get(rule.rule_id)).toBe('armed');
     expect(fixtureRules.rules.every(item => item.mode === 'shadow')).toBe(true);
     port.send({ kind: 'shield' });
+    expect(port.getSnapshot().shield).toBe(false);
+    vi.advanceTimersByTime(fixtureConfirmationMs);
     expect(port.getSnapshot().shield).toBe(true);
-    expect(listener).toHaveBeenCalledTimes(3);
+    expect(listener).toHaveBeenCalledTimes(4);
     stop();
     expect(network).not.toHaveBeenCalled();
   } finally { network.mockRestore(); }
 });
 
 test('review operations resolve only local queues and preserve the original text for review', () => {
+  vi.useFakeTimers();
   const port = createModerationPreview();
   const ban = port.getSnapshot().bans[0];
   const held = port.getSnapshot().held[0];
@@ -94,6 +100,8 @@ test('review operations resolve only local queues and preserve the original text
   expect(port.getSnapshot().messages.find(item => item.message_id === ban.message_id)?.verdict).toBe('bar');
   expect(port.getSnapshot().ledger[0]?.message_text).toBe(ban.message_text);
   port.send({ kind: 'release', decision_id: held.decision_id });
+  expect(port.getSnapshot().held).toHaveLength(1);
+  vi.advanceTimersByTime(fixtureConfirmationMs);
   expect(port.getSnapshot().held).toHaveLength(0);
   expect(port.getSnapshot().messages.find(item => item.message_id === held.message_id)?.verdict).toBe('pass');
   port.send({ kind: 'undo', decision_id: timeout.decision_id });

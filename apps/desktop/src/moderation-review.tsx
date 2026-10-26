@@ -1,7 +1,9 @@
 import type { Decision, Rule } from '@castle-control/contract';
-import { EmptyState, InkButton, NumberedPanel, ReviewRow, VerdictChip, WindowedRows, rowHeight } from '@castle-control/ui';
+import { InkButton, NumberedPanel, ReviewRow, VerdictChip, WindowedRows, rowHeight } from '@castle-control/ui';
 import type { ModerationPort, ModerationPreview } from './moderation-model.js';
 import { moderationCopy as copy } from './moderation-copy.js';
+import { HeldQueue } from './moderation-held.jsx';
+import { fixtureTwitchActions } from './moderation-fixture.js';
 
 type ReviewProps = { snapshot: ModerationPreview; rules: readonly Rule[]; send: ModerationPort['send'] };
 function ruleName(decision: Decision, rules: readonly Rule[]) {
@@ -9,13 +11,7 @@ function ruleName(decision: Decision, rules: readonly Rule[]) {
 }
 export function ReviewQueues({ snapshot, rules, send }: ReviewProps) {
   return <>
-    <NumberedPanel number="2.4" title={copy.held} gloss="Held for review" meta={`${snapshot.held.length} held`}>
-      {snapshot.held.length ? <WindowedRows empty_state="No matching entries." rows={snapshot.held} label="Held messages" row_key={item => item.decision_id} row_height={rowHeight * 4}>
-        {item => <ReviewRow quote={item.message_text ?? 'Original message unavailable'} detail={<>{ruleName(item, rules)} · simulated hold</>}
-          actions={<><InkButton size="small" onClick={() => send({ kind: 'release', decision_id: item.decision_id })}>{copy.pass}</InkButton>
-            <InkButton size="small" onClick={() => send({ kind: 'remove', decision_id: item.decision_id })}>{copy.strike}</InkButton></>} />}
-      </WindowedRows> : <EmptyState title={copy.clear} description="Nothing is held in this simulated queue." />}
-    </NumberedPanel>
+    <HeldQueue snapshot={snapshot} send={send} />
     <NumberedPanel number="2.5" title={copy.bans} gloss="Human review · simulated" meta={`${snapshot.bans.length} pending`}>
       {snapshot.bans.length ? <WindowedRows empty_state="No matching entries." rows={snapshot.bans} label="Pending bans" row_key={item => item.decision_id} row_height={rowHeight * 4}>
         {item => <ReviewRow quote={item.message_text ?? 'Original message unavailable — decision blocked'}
@@ -33,7 +29,8 @@ export function DecisionList({ snapshot, rules, send }: ReviewProps) {
     <WindowedRows empty_state="No matching entries." rows={snapshot.ledger} label="Decision ledger" row_key={item => item.decision_id} row_height={rowHeight * 4}>
       {item => <ReviewRow
         heading={<><time dateTime={item.at}>{item.at.slice(11, 19)}</time> <VerdictChip verdict={item.verdict} /> <b>{ruleName(item, rules)}</b></>}
-        detail={<>{(snapshot.operations.get(item.decision_id) ?? item.kind).replaceAll('_', ' ')} · {item.reason_codes.join(', ')}</>}
+        detail={<>{(snapshot.operations.get(item.decision_id) ?? item.kind).replaceAll('_', ' ')} · {item.reason_codes.join(', ')}
+          {item.operator === 'human' && <span> · {fixtureTwitchActions.has(item.decision_id) ? copy.twitch_human : copy.local_human}</span>}</>}
         actions={<>{item.kind === 'timed_out' || item.kind === 'banned' || snapshot.operations.has(`${item.decision_id}:ban`)
           ? <InkButton size="small" disabled={snapshot.operations.has(`${item.decision_id}:undo`)} onClick={() => send({ kind: 'undo', decision_id: item.decision_id })}>{copy.undo}</InkButton>
           : <small>No undo on Twitch</small>}

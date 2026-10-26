@@ -1,10 +1,12 @@
-import { parseMethodResult, gatehouseRulesList, gatehouseBanConfirm, gatehouseConsensusGet, gatehouseDrillRun } from '@castle-control/contract';
-import type { ConsensusFilter, ConsensusGetResult, Decision, DrillRunResult, RulesListResult } from '@castle-control/contract';
+import { parseMethodParams, parseMethodResult, gatehouseRulesList, gatehouseBanConfirm, gatehouseConsensusGet, gatehouseDrillRun,
+  gatehouseDelaySet, gatehouseShieldSet, gatehouseHeldResolve } from '@castle-control/contract';
+import type { ChatDelay, ConsensusFilter, ConsensusGetResult, Decision, DrillRunResult, HeldOutcome, RulesListResult } from '@castle-control/contract';
+import { moderationCopy as copy } from './moderation-copy.js';
 
 export const fixtureLabel = 'simulated';
 const at = '2026-10-26T12:15:00Z';
 const source = 'simulated-generated-room';
-const heldText = 'Simulated original held message: can I post my guide?';
+const heldText = copy.fixture_held_text;
 const banText = 'Simulated original message: simulated-blocked, quoted for human review.';
 
 // All fixture boundary decoding uses the contract door, including branded IDs.
@@ -31,7 +33,30 @@ export const fixtureMessages: readonly Decision[] = Array.from({ length: 4200 },
 export const fixtureHeld = [decision(0, 'held', 'hold', heldText)];
 export const fixtureBans = [decision(26, 'ban_pending', 'hold', banText, 'blocked-terms')];
 export const fixtureLedger = [decision(5003, 'timed_out', 'bar', 'Simulated repeated message before a timeout.', 'repeats'),
-  decision(5004, 'would_act', 'hold', 'Simulated link awaiting review.')];
+  decision(5004, 'would_act', 'hold', 'Simulated link awaiting review.'),
+  decision(5005, 'removed', 'bar', copy.fixture_twitch_text, 'repeats')];
+// Provenance is local fixture metadata, not a new wire field or an inferred operator rank.
+export const fixtureTwitchActions = new Set(fixtureLedger.slice(2).map(item => item.decision_id));
+export const fixtureHoldReasons = new Map(fixtureHeld.map(item => [item.message_id, copy.fixture_hold_reason]));
+export const fixtureConfirmationMs = 400;
+export const fixtureDelay = parseMethodResult(gatehouseDelaySet, '{"delay_s":4}');
+export const fixtureShield = parseMethodResult(gatehouseShieldSet, '{"enabled":false}');
+
+export function confirmFixtureDelay(delay_s: ChatDelay) {
+  const request = parseMethodParams(gatehouseDelaySet, { delay_s });
+  return parseMethodResult(gatehouseDelaySet, JSON.stringify(request));
+}
+export function confirmFixtureShield(enabled: boolean) {
+  const request = parseMethodParams(gatehouseShieldSet, { enabled });
+  return parseMethodResult(gatehouseShieldSet, JSON.stringify(request));
+}
+export function confirmFixtureHeld(target: Decision, outcome: HeldOutcome): Decision {
+  const request = parseMethodParams(gatehouseHeldResolve, { message_id: target.message_id, outcome });
+  return parseMethodResult(gatehouseHeldResolve, JSON.stringify({ ...target,
+    kind: request.outcome === 'allow' ? 'released' : 'removed',
+    verdict: request.outcome === 'allow' ? 'pass' : 'bar',
+  }));
+}
 
 export function fixtureConsensus(filter: ConsensusFilter): ConsensusGetResult {
   const scale = filter.kind === 'emotes' ? 0.8 : filter.kind === 'text' ? 0.9 : filter.kind === 'emote' ? 0.7 : 1;

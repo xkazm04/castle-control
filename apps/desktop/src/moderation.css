@@ -23,4 +23,8 @@
 .moderation-replay-link, .moderation-back { display: inline-flex; text-decoration: none; margin-block: var(--space-8); }
 .moderation-instrument dd { margin: var(--space-4) 0 var(--space-12); font: var(--text-small)/1.4 var(--font-num); overflow-wrap: anywhere; }
 .moderation-instrument dt { font-size: var(--text-small); font-weight: 700; }
+.moderation-gate-controls { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-8); margin-bottom: var(--space-12); }
+.moderation-gate-controls label { display: flex; align-items: center; gap: var(--space-8); font-size: var(--text-small); }
+.moderation-gate-controls select { background: var(--card); color: var(--ink); border: var(--rule-thin) solid var(--hair); padding: var(--space-4); font: inherit; }
+.moderation-gate-controls .moderation-meta { flex-basis: 100%; }
 @media (max-width: 1279px) { .moderation-grid { grid-template-columns: minmax(0, 1fr); } }
