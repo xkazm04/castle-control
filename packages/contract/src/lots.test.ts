@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { expect, test } from 'vitest';
-import { parseParams, parseResult } from './index.js';
+import { lotsDrawList, lotsDrawUpsert, lotsDrawCheck, lotsRollLookup, lotsRollSeal, lotsCast, lotsWritGet,
+  parseMethodParams, parseMethodResult, parseParams, parseResult } from './index.js';
 import type { RpcMethod } from './validate.js';
 import { parseJson } from './door.mjs';
 import { lotsEvent } from './generated/validators.mjs';
@@ -40,6 +41,33 @@ const samples: Array<{ method: RpcMethod; params: Record<string, unknown>; resul
   { method: 'lots.cast', params: { draw_run_id: id }, result: castResult },
   { method: 'lots.writ.get', params: { writ_id: id }, result: writ },
 ];
+
+test('public lots handles preserve their wire method names', () => {
+  expect(lotsDrawList.method).toBe('lots.draw.list');
+  expect(lotsDrawUpsert.method).toBe('lots.draw.upsert');
+  expect(lotsDrawCheck.method).toBe('lots.draw.check');
+  expect(lotsRollLookup.method).toBe('lots.roll.lookup');
+  expect(lotsRollSeal.method).toBe('lots.roll.seal');
+  expect(lotsCast.method).toBe('lots.cast');
+  expect(lotsWritGet.method).toBe('lots.writ.get');
+});
+
+test('public draw-check handle validates simulated fixtures through the method door', () => {
+  const params = { policy };
+  const result = { result: 'ok', reasons: [] };
+  expect(parseMethodParams(lotsDrawCheck, params)).toEqual(params);
+  expect(parseMethodResult(lotsDrawCheck, JSON.stringify(result))).toEqual(result);
+  expect(() => parseMethodParams(lotsDrawCheck, { policy: { ...policy, paid_entry: 'false' } })).toThrow();
+  expect(() => parseMethodResult(lotsDrawCheck, JSON.stringify({ ...result, extra: true }))).toThrow();
+});
+
+test('public cast handle validates simulated fixtures through the method door', () => {
+  const params = { draw_run_id: id };
+  expect(parseMethodParams(lotsCast, params)).toEqual(params);
+  expect(parseMethodResult(lotsCast, JSON.stringify(castResult))).toEqual(castResult);
+  expect(() => parseMethodParams(lotsCast, { draw_run_id: draw_id })).toThrow();
+  expect(() => parseMethodResult(lotsCast, JSON.stringify({ ...castResult, extra: true }))).toThrow();
+});
 
 test.each(samples)('$method has typed params and result', ({ method, params, result }) => {
   expect(parseParams(method, params)).toEqual(params);
