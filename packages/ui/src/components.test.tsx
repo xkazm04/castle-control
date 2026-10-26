@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { renderToStaticMarkup } from 'react-dom/server';
 import type { MouseEvent, ReactElement, ReactNode } from 'react';
 import { describe, expect, test } from 'vitest';
@@ -12,6 +13,17 @@ const rampart: RampartProps = {
   armed: 0, watching: 3, shield: false, home_href: '#home', gatehouse_href: '#moderator', theme: 'paper', on_theme_change: noop,
 };
 const click = (element: ReactElement<InkButtonProps>) => element.props.onClick?.({} as MouseEvent<HTMLButtonElement>);
+
+test('rampart status groups retain their gaps and reclaim unused brand width at the compact breakpoint', () => {
+  const css = readFileSync(new URL('./shell.css', import.meta.url), 'utf8');
+  const groups = css.match(/\.cc-live-group, \.cc-link-group\s*\{([^}]+)\}/)?.[1];
+  expect(groups).toMatch(/gap:\s*var\(--space-12\)/);
+  // A shrinking group lets its non-wrapping contents paint into the next group.
+  expect(groups).toMatch(/flex:\s*none\s*;/);
+  const compact = css.slice(css.indexOf('@media (max-width: 1420px)'));
+  expect(compact).toMatch(/\.cc-rampart\s*\{[^}]*gap:\s*var\(--space-11\)/);
+  expect(compact).toMatch(/\.cc-brand\s*\{[^}]*width:\s*auto\s*;/);
+});
 
 describe.each(['paper', 'stock'] as const)('%s theme', theme => {
   const render = (node: ReactNode) => renderToStaticMarkup(<ThemeFrame theme={theme}>{node}</ThemeFrame>);
