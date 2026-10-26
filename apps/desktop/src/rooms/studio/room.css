@@ -1,0 +1,31 @@
+.studio-room { --room-ink: var(--key); color: var(--ink); font: 400 var(--text-body)/1.5 var(--font-ui); }
+.studio-room-notice { padding: var(--space-8) var(--space-12); border: var(--rule-medium) dashed var(--key); font-size: var(--text-label); font-weight: 700; }
+.studio-room-layout { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, .8fr); }
+.studio-room-workbench { padding-inline-end: var(--space-20); border-inline-end: var(--rule-thin) solid var(--line); min-width: 0; }
+.studio-room-details { padding-inline-start: var(--space-20); min-width: 0; }
+.studio-room h2 { margin: 0; font: 800 var(--text-chamber-number)/1 var(--font-display); text-transform: uppercase; }
+.studio-room h3 { margin-block: var(--space-12); font: 800 var(--text-chamber)/1.2 var(--font-display); }
+.studio-room-legend { padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: var(--space-8); font-size: var(--text-label); }
+.studio-room-board { display: grid; grid-template-columns: repeat(9, minmax(0, 1fr)); padding: var(--space-8) var(--space-24) var(--space-16) 0; }
+.studio-room-board button { position: relative; display: grid; place-items: center; min-width: 0; aspect-ratio: .87; margin: 0; padding: 0; color: var(--ink); border: 0; background: transparent; cursor: pointer; }
+.studio-room-board button[data-row-offset="true"] { transform: translateX(50%); }
+.studio-room-hex-face { position: absolute; inset: var(--space-1); background: var(--paper-2); clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%); }
+.studio-room-board button[data-house="House Quill"] .studio-room-hex-face { background: repeating-linear-gradient(45deg, var(--paper-2) 0 var(--space-6), var(--hair-2) var(--space-6) var(--space-8)); }
+.studio-room-board button[data-house="House Tallow"] .studio-room-hex-face { background: var(--hair); }
+.studio-room-board button[data-house="House Sable"] .studio-room-hex-face { background: repeating-linear-gradient(90deg, var(--paper-2) 0 var(--space-4), var(--hair) var(--space-4) var(--space-5)); }
+.studio-room-board button[aria-pressed="true"] .studio-room-hex-face { background: var(--key); }
+.studio-room-board button[aria-pressed="true"] { color: var(--paper); }
+.studio-room-hex-label { position: relative; text-align: center; font: 700 var(--text-number)/1.3 var(--font-num); }
+.studio-room-hex-label small { display: block; font: 400 var(--text-label)/1.3 var(--font-ui); }
+.studio-room button:focus-visible { outline: var(--rule-strong) solid var(--key); outline-offset: var(--focus-offset); z-index: 1; }
+.studio-room-inspector { border-block: var(--rule-thin) solid var(--line); }
+.studio-room-ladder { margin-block-start: var(--space-20); }
+.studio-room-ladder [role="group"] { display: grid; gap: var(--space-8); }
+.studio-room-ladder button { text-align: left; padding: var(--space-10) var(--space-12); border: var(--rule-medium) solid var(--ink); color: var(--ink); background: var(--card); font: 400 var(--text-label)/1.4 var(--font-ui); cursor: pointer; }
+.studio-room-ladder button b { display: block; font: 800 var(--text-chamber)/1.2 var(--font-display); }
+.studio-room-ladder button[aria-pressed="true"] { border-style: double; border-width: var(--space-3); background: var(--paper-2); }
+@media (max-width: 1100px) {
+  .studio-room-layout { grid-template-columns: minmax(0, 1fr); gap: var(--space-20); }
+  .studio-room-workbench { border-inline-end: 0; padding: 0; }
+  .studio-room-details { padding: 0; }
+}
