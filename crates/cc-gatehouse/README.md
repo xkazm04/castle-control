@@ -1,4 +1,4 @@
-# Gatehouse offline moderation, consensus and replay — WP 1.1, 1.5, 1.6
+# Gatehouse offline moderation, governor, consensus and replay — WP 1.1, 1.3, 1.5, 1.6
 
 This crate adapts Shadowrunr OS `moderator/{rules,mod,lane,store,tests}.rs`
 at `7e4b6f8` (Apache-2.0; see the source headers and root NOTICE). Voice and
@@ -10,6 +10,87 @@ or executes a moderation action. `screen_batch` returns final verdicts and
 optional **action intents**; simulated tests do not prove a real Twitch action
 occurred. Live execution/acknowledgement is a later integration package,
 after the live spike and the owner's M1 sign-off.
+
+## Offline governor — WP 1.3
+
+`governor::Governor` is a pure, clock-injected state machine. Construct it with
+an explicit `GovernorConfig` and the existing `cc_store::Clock`. Thresholds,
+the count margin, the nonzero hysteresis interval, the nonzero lease duration
+and the four tier plans are supplied in process; no live policy is assumed.
+These Rust-only types have no serialization or wire schema. The existing
+`cc_types::Tier` and `RoomMode` are reused, and `gatehouse.lease.end` remains
+`Pending` in the method table. No contract identifier or dependency is added.
+
+Call `observe_chat` with final screened messages, then `tick` periodically,
+including during silence. Only matching, passed moderation results count.
+The census deduplicates Twitch IDs over `(now - 600 s, now]`, uses event time,
+ignores stale arrivals and never lets delayed duplicates shorten presence.
+Future messages and clock rollback are refused. Census IDs stay private and
+ephemeral; no chat content or handle is retained by the governor.
+
+The S/M, M/L and L/XL borders have an absolute chatter margin in both directions.
+A candidate must continuously clear the margin for the whole hysteresis
+interval, so successive transitions are at least that interval apart. A gap
+that invalidates the population resets the pending window. A large sustained
+change may skip intermediate tiers. The governor does not act on a person.
+
+Each tier activation can propose each configured setting once. Proposals cover
+slow, followers-only, emote-only and unique-chat settings, always with an expiry.
+They are **intents**, never executed. Ticks expire leases without chat; they do
+not renew leases automatically. Existing leases keep their original deadline
+across a tier change; a new tier's setting waits until that deadline. End intents
+precede new Apply intents. A later integration must retain the room's baseline
+and acknowledge application before interpreting End as a restoration.
+
+`observe_human_change(mode)` yields that setting without extending its lease.
+The observer must distinguish human changes from echoes of its own proposals.
+Yielded leases issue no End that could undo a human's replacement. After expiry,
+a waiting new tier plan may propose the setting again; the same tier activation
+does not. A human change without an active lease suppresses the current tier's
+pending proposal. `leases()` is a snapshot; expiry is processed by `tick`, with
+no background task, Twitch executor, network request, persistence or RPC.
+
+Acceptance evidence is in `tests/governor.rs` (14 simulated tests): the seeded
+4,001-second oscillation crosses both margin edges repeatedly and asserts at
+least 30 seconds between changes; all four lease kinds expire under an advanced
+fake clock; human overrides survive tier changes and late ticks; census tests
+cover distinct users, held/barred input, mismatched decisions and delayed events.
+The exhaustive intent/setting match and a compile-fail doctest prove the output
+cannot carry a user ID or punitive action. Subsecond lease deadlines are retained.
+All fixtures are generated and simulated.
+
+Behavioral red proof: temporarily setting the dwell requirement to zero made
+`tiers_cross_margins_only_after_a_continuous_window` fail at its first assertion
+(`M` instead of `S`, exit 101). The original condition was restored before the
+green run. No seeded defect remains.
+
+Validation on 2026-10-26, base `befdf88` (local main had no governor):
+
+- `cargo fmt --all -- --check` and
+  `cargo clippy --offline --locked --workspace --all-targets -- -D warnings`
+  passed. Boundaries, hygiene and file-cap checks walked 314 files and passed;
+  final secrets scanning walked 418 files and passed.
+- Final narrowed `cargo test --offline --locked -p cc-gatehouse` passed **79
+  tests**, including the 14 governor tests and its compile-fail doctest. Actual
+  output is in the build run's external `gatehouse-tests.log`.
+- The one full `cargo test --offline --locked --workspace` run failed at the
+  unchanged `cc-engine/tests/lifecycle.rs:75`,
+  `silence_timeout_reaps_child_and_releases_the_process_permit` (`refused`
+  instead of `model`). Its isolated rerun passed. cc-engine does not depend on
+  cc-gatehouse; no engine fix was made. The workspace run remains failed and
+  its output is in the external `rust-workspace-tests.log`.
+- Recursive pnpm typecheck and lint each failed before checks with lifecycle
+  `spawn EPERM`. `pnpm --config.verify-deps-before-run=false gate` passed its
+  14 tooling fixture tests and workspace inventories, then failed at the
+  unchanged contract exporter's `spawnSync cargo EPERM`. The gate/exporter,
+  engine, manifest and contract sources match the base. Package tests and the
+  desktop build were not reached. No install or subprocess-policy workaround
+  was attempted; the node_modules junction was left intact.
+
+Delivery is partial until the Director obtains the green full gate outside
+the Node subprocess restriction and rechecks the existing lifecycle timeout.
+No outside-scope path, wire identifier, live integration or owner action is
+needed for this offline module.
 
 ## In-process engine classifier
 
