@@ -95,6 +95,7 @@ fn main() {
             format!("{}-{}", "simulated", "child-only")
         );
     }
+    let answer = steward_answer(&prompt).unwrap_or(answer);
     if codex {
         println!("{{\"type\":\"thread.started\",\"thread_id\":\"simulated-thread\"}}");
         println!("{{\"type\":\"item.started\",\"item\":{{\"type\":\"reasoning\"}}}}");
@@ -126,6 +127,29 @@ fn main() {
     }
     if prompt == "simulated nonzero" {
         std::process::exit(4);
+    }
+}
+
+fn steward_answer(prompt: &str) -> Option<String> {
+    let scenario = prompt
+        .split_whitespace()
+        .find_map(|token| token.strip_prefix("cc-fake-scenario:"))?;
+    match scenario {
+        "writ-malformed" => Some("simulated malformed writ".into()),
+        "writ-ok" | "writ-schema-invalid" => {
+            // Shared simulated data: crates/cc-types/tests/fixtures/steward.json.
+            // Embed at build time because the child runs in an empty neutral directory.
+            let fixtures: Vec<serde_json::Value> = serde_json::from_str(include_str!(
+                "../../../cc-types/tests/fixtures/steward.json"
+            ))
+            .unwrap();
+            let mut writ = fixtures.into_iter().next().unwrap();
+            if scenario == "writ-schema-invalid" {
+                writ["chamber"] = serde_json::json!("beacons");
+            }
+            Some(writ.to_string())
+        }
+        _ => None,
     }
 }
 

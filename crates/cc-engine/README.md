@@ -130,6 +130,27 @@ without usage has zero *known* spend; a reported failed turn retains known usage
 and cost. This is not a provider billing reconciliation service. Configure paid
 model rates when building the routing table; no price or model roster is fetched.
 
+## Steward scenarios
+
+WP 5.1 tests can reuse the native `fake-cli` binary through the normal slow-lane
+spawn door. Put one whitespace-delimited marker in the prompt sent on stdin:
+
+- `cc-fake-scenario:writ-ok`: a proposed Writ from the first shared simulated
+  fixture in `crates/cc-types/tests/fixtures/steward.json`, embedded at build time.
+- `cc-fake-scenario:writ-schema-invalid`: the same JSON with a chamber/method
+  mismatch, rejected by the `cc_types::Writ` deserializer.
+- `cc-fake-scenario:writ-malformed`: non-JSON answer text.
+
+Both Codex and Claude wrap these answers in their normal successful JSONL
+events. Invalid proposal text is still an engine answer for the caller to
+validate; it neither applies a change nor bypasses engine billing. The existing
+posture, sandbox, sentinel and environment assertions run unchanged. No marker
+preserves the original behavior. No argv or environment selector is added.
+`tests/steward_scenarios.rs` covers all three markers on both slow classes and
+both providers, compares billing with an unmarked call, and checks that decision
+and draw ledgers stay empty. Steward should reuse this fake rather than keep a
+crate-local copy.
+
 ## Verification and owner reading
 
 Run `cargo test --offline --locked -p cc-engine`. Acceptance evidence:
