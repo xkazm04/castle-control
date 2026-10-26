@@ -62,6 +62,9 @@ assert.throws(() => eventParity([], [], []), /empty/);
 // Shared references must alias identical roots without weakening any schema.
 const compiled = await import(`data:text/javascript;base64,${Buffer.from(files['validators.mjs']).toString('base64')}`);
 assert.equal(compiled.p0, compiled.p1, 'identical Empty roots compile once');
+assert.equal(compiled.writSealParams, compiled.writTearParams, 'Steward ID-only parameters share one validator');
+assert.equal(compiled.askResult, compiled.writSealResult, 'Steward snapshots share one validator');
+assert.equal(compiled.askResult, compiled.writTearResult, 'tear snapshots keep the same strict envelope');
 const conflict = parseJson(JSON.stringify(schema));
 conflict.methods[0].result.$defs.Timestamp.pattern = '^simulated$';
 assert.throws(() => artifacts(conflict), /Conflicting shared definition: Timestamp/);

@@ -8,6 +8,47 @@ Only `src/door.mjs` parses JSON. Unknown keys and explicit null are refused;
 absent optional keys are omitted. UTC timestamps are validated as calendar dates.
 Numeric counters are safe JS integers; Twitch IDs, seeds and rounds stay strings.
 
+## Steward writ boundary (WP 5.1 contract delivery)
+
+The three existing Steward RPC entries remain `Pending`; this delivery exports
+standalone types and parsers before handler/registration work. `parseWrit(text)`
+validates the ID, chamber, typed proposal diff, status, UTC creation/update times
+and optional error. `parseStewardAskParams/Result`, `parseWritSealParams/Result`,
+`parseWritTearParams/Result` and `parseStewardEvent` use the same JSON door. All
+records reject unknown fields and explicit null; absent optional keys stay absent.
+
+`WritProposal` is tagged by the existing mutation method and reuses draw upsert,
+rule upsert/setMode, visual upsert and curve-set parameters. `WritDiff<T>` carries
+an optional before snapshot and required after snapshot. Chamber/method mismatches
+fail in Rust and the generated validator. Map Room remains deferred: its methods
+are Pending and rendering `DesignPackage` data does not define a studio mutation.
+The shared `WritId` minting door and existing event name are reused. No state
+transition, consent, guardrail application or executable action is supplied here.
+Future handlers must validate authoritative state and apply only sealed proposals.
+
+`crates/cc-types/tests/fixtures/steward.json` contains five simulated writs read by
+Rust and TypeScript tests, covering every proposal variant and all four statuses.
+Generator tests assert that identical parameter/result roots share validators.
+Pure initializers and static imports keep unused validators removable. An
+in-memory Vite build of the desktop with HEAD contract sources and then worktree
+sources produced exactly 387,914 JS/CSS bytes in each case (four output assets,
+below 393,216 bytes); both builds used this worktree and wrote no app files.
+All output asset names and SHA-256 hashes also match between those builds.
+
+Validation on 2026-10-26: the four new Rust tests and all workspace Rust tests
+pass, as do workspace formatting/Clippy, contract typecheck/lint, tooling lint,
+boundaries/hygiene/file-cap/secrets checks, 113 contract tests and generator
+assertions. The new TypeScript suite first failed because its
+parser exports did not exist. Drift/parity pass with fresh external schema and
+registry exports through the documented harness below (seven generated files,
+45 declared methods, seven registered methods, 16 mirrored event names).
+The full `pnpm gate` with those inputs completes tooling fixtures and all Rust
+checks, then stops at recursive typecheck with `spawn EPERM`. This is the same
+base limitation recorded in `docs/PLAN.md`; recursive lint has the same spawn
+failure, and recursive workspace pnpm tests were not reached. Full gate success
+is not claimed.
+The Director must run the ordinary merge gate after committing this delivery.
+
 Run `pnpm -C packages/contract generate` after changing Rust types. Run
 `pnpm -C packages/contract check` to regenerate in memory and compare the whole
 generated tree, including missing and orphan files. The gate refuses empty

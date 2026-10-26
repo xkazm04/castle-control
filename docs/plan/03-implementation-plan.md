@@ -920,6 +920,41 @@ widening privileges, enforce CSP and forbid remote loads, and deliver the verifi
 hash to OBS for cache busting. No RPC identifier, handler, renderer, asset loader,
 consent action, overlay or OBS call is added in this contract delivery.
 
+**Steward writ contract (WP 5.1).** Offline contract delivery only; existing
+Steward methods remain `Pending` in the method table. The registered
+`steward.writ` event kind and `WritId::mint()` door are reused without duplication.
+
+| Identifier | Fields and constraints |
+| --- | --- |
+| `AskParams` | `chamber: WritChamber`, nonblank `prompt: string`, optional `writ_id: WritId` referencing an existing writ for follow-up context; a new writ ID is minted by the service, never the caller |
+| `AskResult` | `writ: Writ`; standalone schema for the future `steward.ask` result |
+| `Writ` | `writ_id: WritId` (canonical ULID), `chamber: WritChamber`, `proposal: WritProposal`, `status: WritStatus`, `created_at: Timestamp`, `updated_at: Timestamp`, optional `error: ErrorEnvelope`; proposal method must belong to chamber |
+| `WritChamber` | `lots`, `gatehouse`, `beacons`; Map Room is deferred until its configuration mutation has a typed contract. `DesignPackage` is rendering data, not a Map Room configuration mutation |
+| `WritStatus` | `proposed`, `sealed`, `torn`, `invalid` |
+| `WritProposal` | Tagged by `method`, with typed `diff`: `lots.draw.upsert` -> `WritDiff<DrawUpsertParams>`; `gatehouse.rules.upsert` -> `WritDiff<RulesUpsertParams>`; `gatehouse.rules.setMode` -> `WritDiff<RulesSetModeParams>`; `beacons.visual.upsert` -> `WritDiff<VisualUpsertParams>`; `beacons.curve.set` -> `WritDiff<CurveSetParams>` |
+| `WritDiff<T>` | Optional `before: T`, required `after: T`; whole typed mutation snapshots, not JSON patch paths or executable code. Omitted before denotes creation; after is the proposal. TS schema specializations are named `WritDiff`, `WritDiff2`, `WritDiff3`, `WritDiff4`, `WritDiff5` in the method order above |
+| `WritSealParams`, `WritTearParams` | `writ_id: WritId`; standalone schemas for the existing seal/tear identifiers |
+| `WritSealResult`, `WritTearResult` | `writ: Writ`; the resulting authoritative snapshot |
+| `StewardEventPayload` | `{ kind: "steward.writ", payload: Writ }`; module payload binding only; the shared `StreamEvent` remains seq/at/kind invalidation |
+| JSON parsers | `parseStewardAskParams`, `parseStewardAskResult`, `parseWrit`, `parseWritSealParams`, `parseWritSealResult`, `parseWritTearParams`, `parseWritTearResult`, `parseStewardEvent`; each takes JSON text through the existing door and its standalone generated validator |
+
+All records deny unknown fields and present optional keys reject null. Missing
+keys stay omitted. UTC timestamps reuse the calendar-validated RFC 3339 `Timestamp`.
+The tagged proposal union reuses existing mutation schemas, including their
+arming acknowledgement, rule and numeric constraints. Rust and JSON Schema
+both reject mismatched chamber/method combinations. The generator retains shared
+definitions and the pure validator initializers from 80ec8c9 for tree shaking.
+
+These are data contracts, not authorization or a state machine. Later WP 5.1
+handlers must read authoritative configuration for before snapshots, detect stale
+proposals, enforce valid status/time transitions and error reporting, recheck
+guardrails at seal, and apply nothing without a seal. A proposal's acknowledgement
+data alone does not grant consent. Invalid proposals do not become executable
+configurations; a generation/validation failure can use the existing error
+envelope without accepting malformed proposal data. This delivery adds no handler,
+registration, engine, CLI lane, UI or Map Room variant. Shared simulated fixtures
+live in `crates/cc-types/tests/fixtures/steward.json` and are read by both languages.
+
 **WP 1.4 engine settings (D10).** The existing Settings.values map uses these
 exact dotted keys; `parse_engine_settings` in cc-types is their sole typed parser:
 

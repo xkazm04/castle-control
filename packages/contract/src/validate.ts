@@ -1,8 +1,10 @@
 import type { ValidateFunction } from 'ajv';
 import { parseJson } from './door.mjs';
 import { params, results, event, error } from './generated/validation.js';
-import { designPackage } from './generated/validators.mjs';
-import type { DesignPackage, ErrorEnvelope, RpcMethods, StreamEvent } from './generated/types.js';
+import { designPackage, askParams, askResult, writ, writSealParams, writSealResult,
+  writTearParams, writTearResult, stewardEventPayload } from './generated/validators.mjs';
+import type { DesignPackage, ErrorEnvelope, RpcMethods, StreamEvent, AskParams, AskResult,
+  Writ, WritSealParams, WritSealResult, WritTearParams, WritTearResult, StewardEventPayload } from './generated/types.js';
 
 export type RpcMethod = keyof RpcMethods;
 export type RpcParams<M extends RpcMethod> = RpcMethods[M]['params'];
@@ -20,6 +22,15 @@ export function parseEvent(text: string): StreamEvent { return checked(event, pa
 export function parseError(text: string): ErrorEnvelope { return checked(error, parseJson(text)); }
 /** Absent privileges grant data-only access; hosts must not infer script consent. */
 export function parseDesignPackage(text: string): DesignPackage { return checked(designPackage, parseJson(text)); }
+// Standalone parsers: Steward RPC entries intentionally remain Pending.
+export function parseStewardAskParams(text: string): AskParams { return checked(askParams, parseJson(text)); }
+export function parseStewardAskResult(text: string): AskResult { return checked(askResult, parseJson(text)); }
+export function parseWrit(text: string): Writ { return checked(writ, parseJson(text)); }
+export function parseWritSealParams(text: string): WritSealParams { return checked(writSealParams, parseJson(text)); }
+export function parseWritSealResult(text: string): WritSealResult { return checked(writSealResult, parseJson(text)); }
+export function parseWritTearParams(text: string): WritTearParams { return checked(writTearParams, parseJson(text)); }
+export function parseWritTearResult(text: string): WritTearResult { return checked(writTearResult, parseJson(text)); }
+export function parseStewardEvent(text: string): StewardEventPayload { return checked(stewardEventPayload, parseJson(text)); }
 export function parseParams<M extends RpcMethod>(method: M, value: unknown): RpcParams<M> {
   return checked(params.get(method), value);
 }

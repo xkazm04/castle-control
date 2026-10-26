@@ -17,6 +17,7 @@ mod lots_value;
 mod methods;
 mod recording;
 mod rule;
+mod steward;
 mod strike;
 mod value;
 
@@ -38,6 +39,7 @@ pub use lots_value::*;
 pub use methods::*;
 pub use recording::*;
 pub use rule::*;
+pub use steward::*;
 pub use strike::*;
 pub use value::*;
 

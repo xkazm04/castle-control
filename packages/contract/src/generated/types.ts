@@ -1,5 +1,7 @@
 // GENERATED from cc-types by pnpm -C packages/contract generate. Do not edit.
 export type Action = "warn" | "delete" | "timeout" | "ban" | "hold";
+export type AskParams = { "chamber": WritChamber; "prompt": string; "writ_id"?: WritId; };
+export type AskResult = { "writ": Writ; };
 export type AutoBanGrant = { "breaker_tripped": boolean; "expires_at": Timestamp; "max_bans_per_hour": number; };
 export type BeaconsEventPayload = ({ "kind": "beacons.contribution"; "payload": Contribution; }) | ({ "kind": "beacons.intensity"; "payload": BeaconsIntensity; });
 export type BeaconsIntensity = { "intensity": Intensity; "visual_id": VisualId; };
@@ -137,6 +139,7 @@ export type SimulationLabel = "simulated";
 export type SourceUrlParams = { "visual_id": VisualId; };
 export type SourceUrlResult = { "url": LoopbackSourceUrl; };
 export type StatusResult = { "at": Timestamp; "gatehouse"?: GatehouseSummary; "obs_connected": boolean; "simulated": boolean; "stream"?: StreamStatus; "twitch_connected": boolean; "uptime_ms": number; "version": string; };
+export type StewardEventPayload = ({ "kind": "steward.writ"; "payload": Writ; });
 export type StreamEvent = { "at": Timestamp; "kind": EventKind; "seq": number; };
 export type StreamStatus = { "live": boolean; "started_at"?: Timestamp; "viewer_count"?: number; };
 export type StrikePolicy = { "count": number; "then": Action; "then_timeout_s"?: number; "window_s": number; };
@@ -149,8 +152,21 @@ export type Visual = { "curve": IntensityCurve; "design_id"?: DesignId; "name": 
 export type VisualId = string & { readonly __brand: "VisualId" };
 export type VisualListResult = { "visuals": Array<Visual>; };
 export type VisualUpsertParams = { "visual": Visual; };
+export type Writ = { "chamber": WritChamber; "created_at": Timestamp; "error"?: ErrorEnvelope; "proposal": WritProposal; "status": WritStatus; "updated_at": Timestamp; "writ_id": WritId; };
+export type WritChamber = "lots" | "gatehouse" | "beacons";
+export type WritDiff = { "after": DrawUpsertParams; "before"?: DrawUpsertParams; };
+export type WritDiff2 = { "after": RulesUpsertParams; "before"?: RulesUpsertParams; };
+export type WritDiff3 = { "after": RulesSetModeParams; "before"?: RulesSetModeParams; };
+export type WritDiff4 = { "after": VisualUpsertParams; "before"?: VisualUpsertParams; };
+export type WritDiff5 = { "after": CurveSetParams; "before"?: CurveSetParams; };
 export type WritGetParams = { "writ_id": WritId; };
 export type WritId = string & { readonly __brand: "WritId" };
+export type WritProposal = ({ "diff": WritDiff; "method": "lots.draw.upsert"; }) | ({ "diff": WritDiff2; "method": "gatehouse.rules.upsert"; }) | ({ "diff": WritDiff3; "method": "gatehouse.rules.setMode"; }) | ({ "diff": WritDiff4; "method": "beacons.visual.upsert"; }) | ({ "diff": WritDiff5; "method": "beacons.curve.set"; });
+export type WritSealParams = { "writ_id": WritId; };
+export type WritSealResult = { "writ": Writ; };
+export type WritStatus = "proposed" | "sealed" | "torn" | "invalid";
+export type WritTearParams = { "writ_id": WritId; };
+export type WritTearResult = { "writ": Writ; };
 export type double = number;
 export interface RpcMethods {
   "status.get": { params: Empty; result: StatusResult };

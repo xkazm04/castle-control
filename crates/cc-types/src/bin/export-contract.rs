@@ -39,6 +39,14 @@ fn main() {
         LotsEventPayload,
         ConsensusEventPayload,
         BeaconsEventPayload,
+        AskParams,
+        AskResult,
+        Writ,
+        WritSealParams,
+        WritSealResult,
+        WritTearParams,
+        WritTearResult,
+        StewardEventPayload,
         RpcRequest
     );
     let doc: Value = json!({"methods": method_schemas(), "types": types,
