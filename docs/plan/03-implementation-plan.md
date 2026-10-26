@@ -877,8 +877,9 @@ are exact uint32 integers; Twitch identities remain strings. No contribution
 field is added to lots or Gatehouse contracts. The existing seq/at/kind-only
 StreamEvent remains an invalidation envelope; payload transport wiring is deferred.
 
-This delivery supplies contracts only. **Design-package layer schemas remain
-WP 3.2's job.** WP 3.1 must validate ordered distinct range totals, interpolation,
+This delivery supplies contracts only. Design-package layer schemas are supplied
+by the separate WP 3.2 contract delivery below. WP 3.1 must validate ordered
+distinct range totals, interpolation,
 source selection/weighting and compatible units, evaluate decay under its clock,
 and keep simulation labelled and separate from live contribution accounting.
 It must derive a canonical underlying contribution identity scoped by broadcaster:
@@ -887,6 +888,37 @@ dedupe_key even when their source and transport event_id differ. A nonblank key
 alone does not perform deduplication. WP 3.2 must return URLs from its isolated
 read-only overlay origin with no RPC route; loopback syntax alone proves no origin
 isolation. No handler, dedupe engine, publisher, renderer or OBS call is added here.
+
+**Design package typed payloads (contract delivery, 2026-10-26).**
+
+| Method or type | Params, result or fields |
+| --- | --- |
+| `DesignPackage` | `design_id: DesignId`, `content_hash: DesignContentHash`, ordered nonempty `layers: DesignLayer[]`, optional `privileges: DesignPrivileges`; layers paint back to front |
+| `DesignContentHash` | Claimed SHA-256 content identity, exactly 64 lowercase hexadecimal characters; syntax validation does not verify package bytes |
+| `DesignLayer` | Tagged by `kind`: `image` with `asset: LocalAssetPath`; `shape` with `shape: ShapeKind`; `text` with nonblank literal `text`; `particle_preset` with nonblank renderer-owned lookup name `preset`. Every variant requires `properties: LayerProperties` and `bindings: IntensityBinding[]` (empty means no bindings) |
+| `ShapeKind` | `rectangle`, `ellipse`; unknown shapes are rejected |
+| `LayerProperties` | Finite `x: DesignNumber`, `y: DesignNumber` in logical pixels; positive exact uint32 `width`, `height`; finite nonnegative multiplier `scale: DesignScale`; fraction `opacity: Intensity` in 0..1 |
+| `IntensityBinding` | Tagged by `property`: `opacity` with `output_range: BindingRange<Intensity>`; `scale` with `BindingRange<DesignScale>`; `x` or `y` with `BindingRange<DesignNumber>`. Input is always the existing `Intensity` domain 0..1; no arbitrary CSS property names |
+| `BindingRange<T>` | `at_zero: T`, `at_one: T`, the output endpoints at input intensity 0 and 1. Descending ranges are permitted; each endpoint independently obeys its property domain |
+| `DesignNumber`, `DesignScale` | Finite f64 values; scale additionally requires >= 0. Opacity and its binding endpoints reuse `Intensity` rather than percentages |
+| `LocalAssetPath` | ASCII package-relative path of nonempty slash-separated segments. Each segment starts with a letter, digit, underscore or hyphen, then letters, digits, dots, underscores or hyphens. No http(s) or other scheme, authority, absolute path, dot/traversal segment, backslash, percent escape, query, fragment or whitespace |
+| `DesignPrivileges` | Tagged by `kind`: `data_only` with no extra fields (the default), or explicit `scripts` with nonempty `scripts: LocalAssetPath[]` entry points. Omitted privileges mean data-only and stay omitted on serialization; present null is rejected |
+| Contract parser | `parseDesignPackage(text)` uses the generated standalone `designPackage` validator at the existing JSON door. Validators share definitions and retain the pure initializers from 80ec8c9 so unused package validation can be tree-shaken |
+
+All records deny unknown fields and enums reject unknown values. Present optional
+keys reject null; absent keys are omitted. Rust and generated validators enforce
+the same path, hash, finite-number and exact uint32 bounds. There is no script
+field on a layer or on the package: script entry points require the explicit
+privilege variant. This declares a capability request, never execution consent.
+
+**Renderer bindings and the overlay remain separate WP 3.2 work.** That work must
+evaluate bindings, resolve preset names, verify the content hash over a defined
+canonical package/asset representation, and confine local asset resolution
+(including symlinks) to the package root. The host renders text as literal text.
+It must isolate scripts on the overlay origin without /rpc, obtain consent before
+widening privileges, enforce CSP and forbid remote loads, and deliver the verified
+hash to OBS for cache busting. No RPC identifier, handler, renderer, asset loader,
+consent action, overlay or OBS call is added in this contract delivery.
 
 **WP 1.4 engine settings (D10).** The existing Settings.values map uses these
 exact dotted keys; `parse_engine_settings` in cc-types is their sole typed parser:

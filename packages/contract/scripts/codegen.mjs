@@ -163,7 +163,7 @@ function validators(schema) {
   const exports = {};
   const shared = sharedSchemas(schema);
   const declarations = [banner, "import type { ValidateFunction } from 'ajv';",
-    "import type { RpcMethods, StreamEvent, LotsEventPayload, ConsensusEventPayload, BeaconsEventPayload, ErrorEnvelope } from './types.js';"];
+    "import type { RpcMethods, StreamEvent, LotsEventPayload, ConsensusEventPayload, BeaconsEventPayload, DesignPackage, ErrorEnvelope } from './types.js';"];
   function entry(name, shape, type) {
     exports[name] = shared.reference(shape);
     declarations.push(`export const ${name}: ValidateFunction<${type}>;`);
@@ -176,6 +176,7 @@ function validators(schema) {
   entry('lotsEvent', schema.types.LotsEventPayload, 'LotsEventPayload');
   entry('consensusEvent', schema.types.ConsensusEventPayload, 'ConsensusEventPayload');
   entry('beaconsEvent', schema.types.BeaconsEventPayload, 'BeaconsEventPayload');
+  entry('designPackage', schema.types.DesignPackage, 'DesignPackage');
   entry('error', schema.types.ErrorEnvelope, 'ErrorEnvelope');
   ajv.addSchema(shared.document());
   const map = (prefix) => schema.methods.map((m, i) => `[${JSON.stringify(m.name)}, compiled.${prefix}${i}]`).join(',');

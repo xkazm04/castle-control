@@ -2,6 +2,7 @@
 mod beacons;
 mod core;
 mod decision;
+mod design;
 mod drill;
 mod drill_value;
 mod engine;
@@ -22,6 +23,7 @@ mod value;
 pub use beacons::*;
 pub use core::*;
 pub use decision::*;
+pub use design::*;
 pub use drill::*;
 pub use drill_value::*;
 pub use engine::*;

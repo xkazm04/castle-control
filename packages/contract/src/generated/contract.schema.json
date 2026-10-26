@@ -7006,6 +7006,401 @@
       "title": "DesignId",
       "type": "string"
     },
+    "DesignNumber": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "format": "double",
+      "title": "double",
+      "type": "number"
+    },
+    "DesignPackage": {
+      "$defs": {
+        "BindingRange": {
+          "additionalProperties": false,
+          "description": "Fixed input is Intensity 0..1. Endpoints are outputs at 0 and 1, so descending\noutput ranges are valid. Binding evaluation is separate renderer work.",
+          "properties": {
+            "at_one": {
+              "$ref": "#/$defs/Intensity"
+            },
+            "at_zero": {
+              "$ref": "#/$defs/Intensity"
+            }
+          },
+          "required": [
+            "at_zero",
+            "at_one"
+          ],
+          "type": "object"
+        },
+        "BindingRange2": {
+          "additionalProperties": false,
+          "description": "Fixed input is Intensity 0..1. Endpoints are outputs at 0 and 1, so descending\noutput ranges are valid. Binding evaluation is separate renderer work.",
+          "properties": {
+            "at_one": {
+              "$ref": "#/$defs/DesignScale"
+            },
+            "at_zero": {
+              "$ref": "#/$defs/DesignScale"
+            }
+          },
+          "required": [
+            "at_zero",
+            "at_one"
+          ],
+          "type": "object"
+        },
+        "BindingRange3": {
+          "additionalProperties": false,
+          "description": "Fixed input is Intensity 0..1. Endpoints are outputs at 0 and 1, so descending\noutput ranges are valid. Binding evaluation is separate renderer work.",
+          "properties": {
+            "at_one": {
+              "format": "double",
+              "type": "number"
+            },
+            "at_zero": {
+              "format": "double",
+              "type": "number"
+            }
+          },
+          "required": [
+            "at_zero",
+            "at_one"
+          ],
+          "type": "object"
+        },
+        "DesignContentHash": {
+          "pattern": "^[0-9a-f]{64}$(?![\\s\\S])",
+          "type": "string"
+        },
+        "DesignId": {
+          "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$(?![\\s\\S])",
+          "type": "string"
+        },
+        "DesignLayer": {
+          "oneOf": [
+            {
+              "additionalProperties": false,
+              "properties": {
+                "asset": {
+                  "$ref": "#/$defs/LocalAssetPath"
+                },
+                "bindings": {
+                  "items": {
+                    "$ref": "#/$defs/IntensityBinding"
+                  },
+                  "type": "array"
+                },
+                "kind": {
+                  "const": "image",
+                  "type": "string"
+                },
+                "properties": {
+                  "$ref": "#/$defs/LayerProperties"
+                }
+              },
+              "required": [
+                "kind",
+                "asset",
+                "properties",
+                "bindings"
+              ],
+              "type": "object"
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "bindings": {
+                  "items": {
+                    "$ref": "#/$defs/IntensityBinding"
+                  },
+                  "type": "array"
+                },
+                "kind": {
+                  "const": "shape",
+                  "type": "string"
+                },
+                "properties": {
+                  "$ref": "#/$defs/LayerProperties"
+                },
+                "shape": {
+                  "$ref": "#/$defs/ShapeKind"
+                }
+              },
+              "required": [
+                "kind",
+                "shape",
+                "properties",
+                "bindings"
+              ],
+              "type": "object"
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "bindings": {
+                  "items": {
+                    "$ref": "#/$defs/IntensityBinding"
+                  },
+                  "type": "array"
+                },
+                "kind": {
+                  "const": "text",
+                  "type": "string"
+                },
+                "properties": {
+                  "$ref": "#/$defs/LayerProperties"
+                },
+                "text": {
+                  "pattern": "\\S",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "kind",
+                "text",
+                "properties",
+                "bindings"
+              ],
+              "type": "object"
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "bindings": {
+                  "items": {
+                    "$ref": "#/$defs/IntensityBinding"
+                  },
+                  "type": "array"
+                },
+                "kind": {
+                  "const": "particle_preset",
+                  "type": "string"
+                },
+                "preset": {
+                  "description": "A renderer-owned preset lookup name, never code or a resource URL.",
+                  "pattern": "\\S",
+                  "type": "string"
+                },
+                "properties": {
+                  "$ref": "#/$defs/LayerProperties"
+                }
+              },
+              "required": [
+                "kind",
+                "preset",
+                "properties",
+                "bindings"
+              ],
+              "type": "object"
+            }
+          ]
+        },
+        "DesignPrivileges": {
+          "oneOf": [
+            {
+              "additionalProperties": false,
+              "properties": {
+                "kind": {
+                  "const": "data_only",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "kind"
+              ],
+              "type": "object"
+            },
+            {
+              "additionalProperties": false,
+              "description": "Explicit script entry points, relative to this package. This declaration\ndoes not authorize execution: the overlay host still checks consent.",
+              "properties": {
+                "kind": {
+                  "const": "scripts",
+                  "type": "string"
+                },
+                "scripts": {
+                  "items": {
+                    "$ref": "#/$defs/LocalAssetPath"
+                  },
+                  "minItems": 1,
+                  "type": "array"
+                }
+              },
+              "required": [
+                "kind",
+                "scripts"
+              ],
+              "type": "object"
+            }
+          ]
+        },
+        "DesignScale": {
+          "format": "double",
+          "minimum": 0,
+          "type": "number"
+        },
+        "Intensity": {
+          "description": "Finite fraction, not a percentage. Both schema and Rust reject nonfinite values.",
+          "format": "double",
+          "maximum": 1,
+          "minimum": 0,
+          "type": "number"
+        },
+        "IntensityBinding": {
+          "description": "The property tag also selects the output domain; opacity cannot exceed 1,\nscale cannot be negative, and positions must be finite. No arbitrary CSS.",
+          "oneOf": [
+            {
+              "additionalProperties": false,
+              "properties": {
+                "output_range": {
+                  "$ref": "#/$defs/BindingRange"
+                },
+                "property": {
+                  "const": "opacity",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "property",
+                "output_range"
+              ],
+              "type": "object"
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "output_range": {
+                  "$ref": "#/$defs/BindingRange2"
+                },
+                "property": {
+                  "const": "scale",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "property",
+                "output_range"
+              ],
+              "type": "object"
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "output_range": {
+                  "$ref": "#/$defs/BindingRange3"
+                },
+                "property": {
+                  "const": "x",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "property",
+                "output_range"
+              ],
+              "type": "object"
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "output_range": {
+                  "$ref": "#/$defs/BindingRange3"
+                },
+                "property": {
+                  "const": "y",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "property",
+                "output_range"
+              ],
+              "type": "object"
+            }
+          ]
+        },
+        "LayerProperties": {
+          "additionalProperties": false,
+          "description": "Base layout in logical pixels; scale is a nonnegative multiplier, opacity a\nfraction. Text is literal text, not HTML; no layer carries arbitrary CSS/JS.",
+          "properties": {
+            "height": {
+              "format": "uint32",
+              "minimum": 1,
+              "type": "integer"
+            },
+            "opacity": {
+              "$ref": "#/$defs/Intensity"
+            },
+            "scale": {
+              "$ref": "#/$defs/DesignScale"
+            },
+            "width": {
+              "format": "uint32",
+              "minimum": 1,
+              "type": "integer"
+            },
+            "x": {
+              "format": "double",
+              "type": "number"
+            },
+            "y": {
+              "format": "double",
+              "type": "number"
+            }
+          },
+          "required": [
+            "x",
+            "y",
+            "width",
+            "height",
+            "scale",
+            "opacity"
+          ],
+          "type": "object"
+        },
+        "LocalAssetPath": {
+          "description": "Canonical ASCII package-relative path. No scheme, authority, root, traversal,\npercent escapes, backslashes, query or fragment. The host must additionally\nconfine filesystem resolution (including symlinks) to its local asset root.",
+          "pattern": "^[A-Za-z0-9_-][A-Za-z0-9._-]*(/[A-Za-z0-9_-][A-Za-z0-9._-]*)*$(?![\\s\\S])",
+          "type": "string"
+        },
+        "ShapeKind": {
+          "enum": [
+            "rectangle",
+            "ellipse"
+          ],
+          "type": "string"
+        }
+      },
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "content_hash": {
+          "$ref": "#/$defs/DesignContentHash",
+          "description": "Claimed SHA-256 content identity. The host must verify it before delivery;\na well-formed digest alone proves neither integrity nor permission."
+        },
+        "design_id": {
+          "$ref": "#/$defs/DesignId"
+        },
+        "layers": {
+          "description": "Back-to-front paint order, retained exactly by serialization.",
+          "items": {
+            "$ref": "#/$defs/DesignLayer"
+          },
+          "minItems": 1,
+          "type": "array"
+        },
+        "privileges": {
+          "$ref": "#/$defs/DesignPrivileges",
+          "description": "Omission grants no script capability. Present null is never omission."
+        }
+      },
+      "required": [
+        "design_id",
+        "content_hash",
+        "layers"
+      ],
+      "title": "DesignPackage",
+      "type": "object"
+    },
     "DesignStage": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "enum": [

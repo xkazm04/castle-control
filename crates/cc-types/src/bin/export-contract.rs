@@ -32,6 +32,8 @@ fn main() {
         DrawId,
         VisualId,
         DesignId,
+        DesignPackage,
+        DesignNumber,
         ErrorEnvelope,
         StreamEvent,
         LotsEventPayload,

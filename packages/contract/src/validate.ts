@@ -1,7 +1,8 @@
 import type { ValidateFunction } from 'ajv';
 import { parseJson } from './door.mjs';
 import { params, results, event, error } from './generated/validation.js';
-import type { ErrorEnvelope, RpcMethods, StreamEvent } from './generated/types.js';
+import { designPackage } from './generated/validators.mjs';
+import type { DesignPackage, ErrorEnvelope, RpcMethods, StreamEvent } from './generated/types.js';
 
 export type RpcMethod = keyof RpcMethods;
 export type RpcParams<M extends RpcMethod> = RpcMethods[M]['params'];
@@ -17,6 +18,8 @@ function checked<T>(validator: ValidateFunction | undefined, value: unknown): T 
 }
 export function parseEvent(text: string): StreamEvent { return checked(event, parseJson(text)); }
 export function parseError(text: string): ErrorEnvelope { return checked(error, parseJson(text)); }
+/** Absent privileges grant data-only access; hosts must not infer script consent. */
+export function parseDesignPackage(text: string): DesignPackage { return checked(designPackage, parseJson(text)); }
 export function parseParams<M extends RpcMethod>(method: M, value: unknown): RpcParams<M> {
   return checked(params.get(method), value);
 }
