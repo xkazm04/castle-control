@@ -50,7 +50,34 @@ test('writ amendments strike the old value in gules and re-ink the new revision 
   expect(lotterySession(queue).port.getSnapshot().sealed).toBe(false);
   expect(markup).not.toContain('Sealed by you');
   expect(html(queue)).toContain('Fairness, always shown');
-  expect(readFileSync(new URL('./shell/room.css', import.meta.url), 'utf8')).toContain('s { color: var(--gules-text)');
+  expect(readFileSync(new URL('./rooms/lottery/room.css', import.meta.url), 'utf8')).toContain('s { color: var(--gules-text)');
+});
+
+test('room inks the pending writ and restores templates after it is torn up', async () => {
+  const queue = new ProposalQueue();
+  expect(html(queue)).toContain('Writ templates');
+  expect(html(queue)).toContain('Questions for the hall');
+  const steward = new SimulatedSteward(queue);
+  await steward.ask('draft a question draw', { surface: 'overview' });
+  await steward.ask('make it 5 winners', { surface: 'overview' });
+  const markup = html(queue);
+  expect(markup).toContain('lottery-writ');
+  expect(markup).toContain('<s>3</s><ins>5</ins>');
+  expect(markup).toContain('revision 2');
+  expect(markup).not.toContain('Writ templates');
+  expect(markup).not.toContain('generated fixtures only');
+  expect(lotterySession(queue).port.getSnapshot().sealed).toBe(false);
+  queue.tearUp(current(queue).id);
+  expect(html(queue)).toContain('Writ templates');
+});
+
+test('a pending writ takes the workbench even if an older sealed writ is selected', async () => {
+  const queue = new ProposalQueue(); draftRoll(queue);
+  const old = current(queue);
+  await sealLotteryProposal(queue, old);
+  draftRoll(queue);
+  queue.select(old.id);
+  expect(html(queue)).toContain('Proposal · not sealed');
 });
 
 test('offline hold completion freezes entry bytes and stores a recomputable SHA-256 wax seal', async () => {
@@ -81,6 +108,7 @@ test('offline hold completion freezes entry bytes and stores a recomputable SHA-
     expect(session.port.getSnapshot().draw).toBe(frozen_draw);
     expect(html(queue)).toContain(recomputed);
     expect(html(queue)).toContain('lottery-wax');
+    expect(html(queue)).toContain('Writ templates');
     expect(network).not.toHaveBeenCalled();
   } finally { network.mockRestore(); }
 });

@@ -1,81 +1,49 @@
 import { readFileSync } from 'node:fs';
-import { Children, isValidElement } from 'react';
-import type { ChangeEvent, ReactElement, ReactNode, InputHTMLAttributes } from 'react';
 import { renderToReadableStream, renderToStaticMarkup } from 'react-dom/server';
 import { expect, test, vi } from 'vitest';
-import { BeaconPreview, BeaconsFeed } from './beacons-visuals.jsx';
-import { CurveEditor } from './beacons-curve.jsx';
-import { BeaconsPage, copyFixtureUrl } from './beacons-page.jsx';
+import VisualsRoom, { VisualsWork, VisualSelector } from './rooms/visuals/room.jsx';
+import { TestFire } from './rooms/visuals/test-fire.jsx';
+import { BeaconArtwork } from './rooms/visuals/artwork.jsx';
 import { createBeaconsPreview } from './beacons-model.js';
-import { fixtureEvents, fixtureSourceUrl } from './beacons-fixture.js';
-import { DesktopView } from './view.jsx';
-import { simulatedRead } from './simulated.js';
+import { fixtureEvents } from './beacons-fixture.js';
+import Room from './shell/room.jsx';
 
-function find<T>(tree: ReactNode, label: string): ReactElement<T> {
-  let found: ReactElement<T> | undefined;
-  const visit = (node: ReactNode) => {
-    Children.forEach(node, child => {
-      if (!isValidElement<T & { children?: ReactNode; 'aria-label'?: string }>(child)) return;
-      if (child.props['aria-label'] === label) found = child;
-      else visit(child.props.children);
-    });
-  };
-  visit(tree);
-  if (!found) throw new Error(`Missing control: ${label}`);
-  return found;
-}
 function current(port: ReturnType<typeof createBeaconsPreview>) {
   const snapshot = port.getSnapshot();
   const item = snapshot.visuals.find(item => item.visual.visual_id === snapshot.selected);
   if (!item) throw new Error('Missing selected fixture visual');
   return item;
 }
-const preview = (port: ReturnType<typeof createBeaconsPreview>) => renderToStaticMarkup(<BeaconPreview item={current(port)} />);
+const preview = (port: ReturnType<typeof createBeaconsPreview>) => renderToStaticMarkup(<BeaconArtwork item={current(port)} hero />);
 
-test('600 fixture events render only a window of DOM rows, including at the end', () => {
-  expect(fixtureEvents).toHaveLength(600);
-  const html = renderToStaticMarkup(<BeaconsFeed events={fixtureEvents} />);
-  expect(html).toContain('aria-rowcount="600"');
-  expect(html.match(/data-contribution-row=/g)?.length).toBeGreaterThan(0);
-  expect(html.match(/data-contribution-row=/g)?.length).toBeLessThan(30);
-  expect(html).toContain('simulated-event-0');
-  expect(html).not.toContain('simulated-event-599');
-  const last = renderToStaticMarkup(<BeaconsFeed events={fixtureEvents} scroll_top={600 * 32} />);
-  expect(last).toContain('simulated-event-599');
-  expect(last.match(/data-contribution-row=/g)?.length).toBeLessThan(30);
+test('the room test-fire contribution changes preview intensity without sending to OBS', () => {
+  const network = vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('Offline preview only'));
+  try {
+    const port = createBeaconsPreview();
+    const before = preview(port);
+    const fire = TestFire({ port, selected: current(port), on_end: vi.fn() });
+    const subscribe = fire.props.children[2].props.children[1];
+    subscribe.props.onClick();
+    const after = preview(port);
+    expect(after).not.toBe(before);
+    expect(after).toContain(`--room-blaze:${current(port).intensity}`);
+    expect(after.replace(/style="[^"]*"/, '')).toBe(before.replace(/style="[^"]*"/, ''));
+    expect(renderToStaticMarkup(<VisualsWork port={port} />)).toContain('This room has no OBS connection.');
+    expect(network).not.toHaveBeenCalled();
+  } finally { network.mockRestore(); }
 });
 
-test('editing a real curve control changes the preview CSS variable and preserves its artwork', () => {
+test('the visual selection button selects the corresponding unchanged curve and artwork', () => {
   const port = createBeaconsPreview();
-  const before = preview(port);
-  const editor = CurveEditor({ item: current(port), port });
-  const input = find<InputHTMLAttributes<HTMLInputElement>>(editor, 'Point 2 intensity');
-  input.props.onChange?.({ currentTarget: { valueAsNumber: 0.8 } } as ChangeEvent<HTMLInputElement>);
-  const after = preview(port);
-  expect(after).toContain(`--blaze:${current(port).intensity}`);
-  expect(after).not.toEqual(before);
-  expect(after.replace(/style="[^"]*"/, '')).toEqual(before.replace(/style="[^"]*"/, ''));
-});
-
-test('dragging a curve handle maps pointer coordinates to a point and changes the CSS variable', () => {
-  const port = createBeaconsPreview();
-  const before = preview(port);
-  let captured = false;
-  const target = { setPointerCapture: () => { captured = true; }, hasPointerCapture: () => captured,
-    releasePointerCapture: () => { captured = false; },
-    ownerSVGElement: { getBoundingClientRect: () => ({ left: 0, top: 0, width: 560, height: 260 }) } };
-  const event = { currentTarget: target, pointerId: 1, clientX: 90, clientY: 75, preventDefault: () => undefined };
-  // Supply exactly the pointer protocol consumed by the handle, without a DOM shim.
-  type DragHandler = (value: typeof event) => void;
-  const handle = find<{ onPointerDown?: DragHandler; onPointerMove?: DragHandler; onPointerUp?: DragHandler }>(
-    CurveEditor({ item: current(port), port }), 'Drag point 2');
-  handle.props.onPointerDown?.(event);
-  expect(captured).toBe(true);
-  handle.props.onPointerMove?.({ ...event, clientY: 42 });
-  expect(preview(port)).not.toEqual(before);
-  expect(current(port).visual.curve.ranges[1]?.intensity).toBeCloseTo(0.9);
-  handle.props.onPointerUp?.(event);
-  expect(captured).toBe(false);
+  const second = port.getSnapshot().visuals[1];
+  if (!second) throw new Error('Missing second visual');
+  const selector = VisualSelector({ visuals: port.getSnapshot().visuals, selected: port.getSnapshot().selected,
+    on_select: item => port.select(item.visual.visual_id) });
+  selector.props.children[1]?.props.children[0].props.onClick();
+  expect(current(port)).toBe(second);
+  const html = renderToStaticMarkup(<VisualsWork port={port} />);
+  expect(html).toContain(`<h2>${second.visual.name}</h2>`);
+  expect(html).toContain(`${second.visual.name} intensity ranges`);
 });
 
 test('50-sub gift bomb adds exactly 50 simulated events in-process and updates only the selected visual', () => {
@@ -139,46 +107,34 @@ test('selecting and resetting a visual keep other curves and source fixtures unc
   expect(createBeaconsPreview().getSnapshot().visuals).toEqual(initial.visuals);
 });
 
-test('cards and selected preview have unique SVG paint references on the same page', () => {
-  const html = renderToStaticMarkup(<BeaconsPage />);
-  const ids = [...html.matchAll(/\bid="([^"]+)"/g)].map(match => match[1]);
-  const references = [...html.matchAll(/fill="url\(#([^)]+)\)"/g)].map(match => match[1]);
-  expect(references).toHaveLength(4);
-  expect(new Set(ids).size).toBe(ids.length);
-  for (const reference of references) expect(ids).toContain(reference);
-});
-
-test('placeholder copying is labelled, observes clipboard failures and never invokes a transport', async () => {
-  const port = createBeaconsPreview();
-  const url = fixtureSourceUrl(port.getSnapshot().selected);
-  const writeText = vi.fn<(text: string) => Promise<void>>().mockResolvedValue(undefined);
-  expect(await copyFixtureUrl(url, { writeText })).toContain('NOT LIVE');
-  expect(writeText).toHaveBeenCalledWith(url);
-  expect(await copyFixtureUrl(url, undefined)).toContain('unavailable');
-  writeText.mockRejectedValue(new Error('Denied'));
-  expect(await copyFixtureUrl(url, { writeText })).toContain('failed');
-  const html = renderToStaticMarkup(<BeaconsPage port={port} />);
-  for (const text of ['NOT LIVE', 'not served', '600 simulated events', 'Kindling curve', '50-sub gift bomb']) expect(html).toContain(text);
-});
-
-test('Beacons fixture route loads lazily while core mode keeps fixture controls hidden', async () => {
-  const props = { theme: 'paper', current: 'visuals', on_navigate: () => undefined, on_theme_change: () => undefined,
-    search: '', on_search: () => undefined } as const;
-  const stream = await renderToReadableStream(<DesktopView {...props} snapshot={{ mode: 'fixture', phase: 'ready', ...simulatedRead(1) }} />);
+test('fixture route lazily opens Beacons work; core keeps the honest empty state', async () => {
+  const props = { chamber: 'visuals', replay: false, origin: 'keep', on_open: vi.fn(), on_back: vi.fn() } as const;
+  const stream = await renderToReadableStream(<Room {...props} snapshot={{ mode: 'fixture', phase: 'ready' }} />);
   await stream.allReady;
   const html = await new Response(stream).text();
-  expect(html).toContain('Kindling curve');
-  expect(html).not.toContain('No beacon is lit');
-  const core = renderToStaticMarkup(<DesktopView {...props} snapshot={{ mode: 'core', phase: 'connecting' }} />);
-  expect(core).not.toContain('data-contribution-row');
-  expect(core).not.toContain('50-sub gift bomb');
+  for (const label of ['Beacons work', '60 offerings', 'Test fire: 50 gifts']) expect(html).toContain(label);
+  expect(html).not.toContain('visuals-room-notice');
+  expect(html).not.toContain('generated fixtures only');
+  const core = renderToStaticMarkup(<Room {...props} snapshot={{ mode: 'core', phase: 'connecting' }} />);
+  expect(core).toContain('Room data is not configured');
+  expect(core).not.toContain('Test fire');
+  expect(core).not.toContain('data-offering-mark');
+  expect(renderToStaticMarkup(<VisualsRoom snapshot={{ mode: 'core', phase: 'ready' }} />)).toContain('Beacons are not configured');
 });
 
-test('fixture modules import no core, transport or renderer and use the shared windowed list', () => {
-  for (const name of ['page.tsx', 'curve.tsx', 'visuals.tsx', 'model.ts', 'fixture.ts']) {
-    const source = readFileSync(new URL(`./beacons-${name}`, import.meta.url), 'utf8');
+test('room uses the existing 600-event model but renders the separate 60-offering illustration', () => {
+  expect(fixtureEvents).toHaveLength(600);
+  const port = createBeaconsPreview();
+  expect(port.getSnapshot().events).toBe(fixtureEvents);
+  const html = renderToStaticMarkup(<VisualsWork port={port} />);
+  expect(html.match(/data-offering-mark=/g)).toHaveLength(60);
+  expect(html).not.toContain('data-contribution-row');
+});
+
+test('Beacons work imports no core transport or renderer', () => {
+  for (const name of ['rooms/visuals/room.tsx', 'rooms/visuals/test-fire.tsx', 'beacons-model.ts', 'beacons-fixture.ts']) {
+    const source = readFileSync(new URL(`./${name}`, import.meta.url), 'utf8');
     expect(source).not.toMatch(/\b(fetch|invoke|WebSocket|XMLHttpRequest)\s*\(/);
     expect(source).not.toMatch(/from ['"].*(?:client|core-source|renderer)/);
   }
-  expect(readFileSync(new URL('./beacons-visuals.tsx', import.meta.url), 'utf8')).toContain('WindowedRows');
 });

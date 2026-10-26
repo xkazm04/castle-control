@@ -21,3 +21,13 @@
 .lottery-past code { overflow-wrap: anywhere; font-size: var(--text-small); }
 .lottery-room details { margin-block: var(--space-16); }
 @media (max-width: 900px) { .lottery-columns { grid-template-columns: minmax(0, 1fr); } }
+
+.lottery-writ-fields { margin-block: var(--space-16); }
+.lottery-writ-fields > div { display: grid; grid-template-columns: minmax(0, .75fr) minmax(0, 1fr); gap: var(--space-8); border-top: var(--rule-thin) solid var(--line); padding-block: var(--space-9); }
+.lottery-writ-fields dt { font-size: var(--text-small); text-transform: uppercase; letter-spacing: var(--track-label); color: var(--muted); }
+.lottery-writ-fields dd { margin: 0; overflow-wrap: anywhere; }
+.lottery-writ-fields s { color: var(--gules-text); margin-inline-end: var(--space-8); text-decoration-thickness: var(--rule-strong); }
+.lottery-writ-fields ins { color: var(--ink); text-decoration: none; animation: lottery-ink var(--motion-shell) var(--ease) both; }
+.lottery-writ-fields s + ins { background: var(--paper-2); }
+@keyframes lottery-ink { from { opacity: 0; clip-path: inset(0 100% 0 0); } to { opacity: 1; clip-path: inset(0); } }
+@media (prefers-reduced-motion: reduce) { .lottery-writ-fields ins { animation: none; } }

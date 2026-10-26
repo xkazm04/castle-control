@@ -2,9 +2,9 @@ import { Children, isValidElement } from 'react';
 import type { ButtonHTMLAttributes, KeyboardEvent, ReactElement, ReactNode } from 'react';
 import { renderToReadableStream, renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, expect, test, vi } from 'vitest';
-import { SealButton, sealHoldDurationMs } from '@castle-control/ui';
+import { ProposalCard, SealButton, sealHoldDurationMs } from '@castle-control/ui';
 import { ProposalQueue, SimulatedSteward } from '@castle-control/ui/steward';
-import SealSlot, { ProposalSlotCard, sealRoomProposal } from '../rooms/seal-slot/index.jsx';
+import SealSlot, { sealRoomProposal } from '../rooms/seal-slot/index.jsx';
 import { draftRoll } from '../rooms/lottery/session.js';
 import { backHash, dispatchShortcut, initialNavigation, navigateHash } from '../navigation.js';
 import Room from './room.jsx';
@@ -65,8 +65,8 @@ test('the focused root and tear button support Delete; unrelated keys and editab
   const queue = new ProposalQueue(); draftRoll(queue);
   const proposal = pending(queue);
   const seal = vi.fn();
-  const tree = ProposalSlotCard({ proposal, queue, focused: true, busy: false, on_seal: seal });
-  expect(tree.props['data-proposal-focused']).toBe('true');
+  const tree = ProposalCard({ proposal, focused: true, on_seal: seal, on_tear: () => queue.tearUp(proposal.id) });
+  expect(tree.props['data-proposal-focused']).toBe(true);
   const button = tearButton(tree);
   const tear = () => button.onClick?.({} as Parameters<NonNullable<typeof button.onClick>>[0]);
   expect(renderToStaticMarkup(tree)).toContain('data-tear-proposal="true"');
@@ -105,6 +105,8 @@ test('all chambers read the same queue, display their fields, and proclaim only 
   for (const chamber of ['lottery', 'moderator', 'visuals', 'studio'] as const) {
     const markup = renderToStaticMarkup(<SealSlot chamber={chamber} queue={queue} />);
     expect(markup).toContain('Proposal · awaiting your seal');
+    expect(markup).toContain('cc-proposal-card');
+    expect(markup).not.toContain('Simulated changes only.');
     expect(markup).toContain('Tear it up');
     expect(markup).toContain(chamber === 'visuals' || chamber === 'studio' ? 'Hold to seal and proclaim' : 'Hold to seal');
     expect(queue.pending(chamber)).toHaveLength(1);
@@ -124,6 +126,9 @@ test('lazy Room preserves its props contract, slot and replay link; core mode ex
     const markup = await new Response(stream).text();
     expect(markup).toContain('aria-label="Seal slot"');
     expect(markup).toContain('href="#/overview"');
+    expect(markup).not.toContain('generated fixtures only');
+    if (chamber === 'visuals') expect(markup).toContain('60 offerings');
+    if (chamber === 'studio') expect(markup).toContain('data-hex-tile');
     if (chamber === 'moderator') expect(markup).toContain('#/chamber/moderator/drill');
     const core = renderToStaticMarkup(<Room chamber={chamber} replay={false} snapshot={{ mode: 'core', phase: 'connecting' }}
       origin="keep" on_open={vi.fn()} on_back={vi.fn()} />);
@@ -131,5 +136,6 @@ test('lazy Room preserves its props contract, slot and replay link; core mode ex
     expect(core).not.toContain('data-message-row');
     expect(core).not.toContain('data-lot-dot');
     expect(core).not.toContain('Propose Ban');
+    expect(core).toContain(chamber === 'studio' ? 'The map table is bare' : 'Room data is not configured');
   }
 });

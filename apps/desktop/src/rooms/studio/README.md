@@ -20,21 +20,12 @@ and Proclaimed remain locked. M4 waits for Twitch's WP 4.0 answer. This room has
 no Extension bundle, connection, hosted test, review submission or release action.
 Core mode shows an unconfigured state without sample tiles or controls.
 
-## Mount in the follow-up
+## Mounted in wave 2b
 
-At base `cabd3b3`, edit these exact lines in
-`apps/desktop/src/shell/room.tsx` after merging AI-5 (line numbers may move):
-
-- Insert after line 10:
-  `const StudioRoom = lazy(() => import('../rooms/studio/room.jsx'));`.
-- Between the visuals branch at line 24 and fallback at line 25, add
-  `: chamber === 'studio' ? <StudioRoom snapshot={snapshot} />`.
-- Lines 25–26: simplify the remaining fallback to an unconfigured room; its
-  `chamber === 'studio'` title condition is no longer needed.
-
-The shell still supplies the breadcrumb, Back/Esc and shared seal slot. After
-mounting, open `#/chamber/studio` in fixture mode. AI-6 does not mount a route or
-change the shell; render tests exercise this default module directly.
+The shell lazily mounts `StudioRoom` at `#/chamber/studio` in fixture mode,
+passing `snapshot`. Live mode keeps the shell's empty state. Breadcrumb, Back/Esc,
+seal slot and Steward remain owned by the shell. The room-wide provenance strip
+is removed; draft layers still say `DRAFT ? NOT ON AIR`.
 
 ## Evidence
 

@@ -1,7 +1,7 @@
 // Castle vocabulary is display copy only. All fixtures are generated.
 export const lotsCopy = {
   title: 'Lot Chamber', description: 'Lottery manager · cast the lots fairly',
-  notice: 'SIMULATED · generated fixtures only. Controls change this page only. No Twitch, OBS or public round connection.',
+  notice: 'No draw changes yet.',
   badge: 'Simulated draws', roll: 'The roll', entries: 'lots · eligible entries',
   hero: 'The roll · simulated entry pool', illustration: 'Stylised illustration of generated data',
   pool: 'Post-verdict chatters · free !join with equal odds', tickets: 'Numbered lots', dots: 'Lots coloured by cohort',

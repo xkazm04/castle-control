@@ -8,9 +8,10 @@ export type ProposalCardProps = {
   on_seal: () => void; on_tear: () => void;
   /** Overview puts its sole authorization control below Program. */
   seal_at_monitor?: boolean;
+  busy?: boolean;
 };
 
-export function ProposalCard({ proposal, focused = false, on_focus, on_seal, on_tear, seal_at_monitor = false }: ProposalCardProps) {
+export function ProposalCard({ proposal, focused = false, on_focus, on_seal, on_tear, seal_at_monitor = false, busy = false }: ProposalCardProps) {
   const pending = isPending(proposal);
   return <article className="cc-proposal-card" data-module={proposal.chamber} data-proposal-focused={focused}
     tabIndex={0} onFocus={on_focus} aria-label={`${proposal.title} proposal`}>
@@ -23,7 +24,7 @@ export function ProposalCard({ proposal, focused = false, on_focus, on_seal, on_
     {proposal.seal_hash && <p className="cc-proposal-hash">SHA-256 · {proposal.seal_hash}</p>}
     {pending && <div className="cc-proposal-actions">
       {seal_at_monitor ? <p>Use the hold under Program to seal and proclaim.</p>
-        : <SealButton on_seal={on_seal} variant={proposal.kind} />}
+        : <SealButton key={`${proposal.id}:${proposal.revision}`} on_seal={on_seal} variant={proposal.kind} disabled={busy} />}
       <button type="button" data-tear-proposal onClick={on_tear}>Tear it up</button>
     </div>}
   </article>;

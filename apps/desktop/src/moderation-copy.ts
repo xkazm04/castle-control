@@ -1,7 +1,6 @@
 // Castle vocabulary is display copy only; state and component identifiers stay plain.
 export const moderationCopy = {
   title: 'Gatehouse', description: 'AI moderator · one verdict before anything counts',
-  notice: 'SIMULATED · generated fixtures only. Preview controls change this page only; nothing is sent.',
   modes: 'Armed / Watching preview only. Actual rules stay Watching; arming is unavailable before the live spike.',
   room: 'The room', orders: 'Garrison orders · room modes', delay: 'The moat · chat delay',
   shield: 'Raise the drawbridge', shield_on: 'Bridge up · lower it',

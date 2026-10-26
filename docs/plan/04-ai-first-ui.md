@@ -1,6 +1,7 @@
 # 04 · AI-first UI: the fused design (supersedes the panel pages)
 
 **Status:** decided by the owner on 2026-10-26. This is the design the desktop app is rebuilt to, starting the night of 10-26.
+Wave 2b run B: AI-6 is mounted, the Beacons page is retired, and the seal slot and Overview hold now share one seal path.
 It supersedes the stacked-panel chamber pages and the rejected two-layer stage (`#/lottery/stage`, section "Two-layer chambers" in 02-ui.md).
 02-ui.md still governs tokens, paper, inks, type, the rampart and the port contract's fidelity rule.
 

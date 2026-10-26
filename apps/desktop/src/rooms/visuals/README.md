@@ -19,21 +19,12 @@ values and never change the preview model or proposal state. Tests inject a
 separate queue into `VisualsWork`. No network, model or execution adapter exists.
 Core mode returns an unconfigured state without fixture controls.
 
-## Mount in the follow-up
+## Mounted in wave 2b
 
-AI-6 deliberately leaves the shell and old Beacons page untouched. At base
-`cabd3b3`, change these exact lines in `apps/desktop/src/shell/room.tsx` (AI-5 may
-move them, so use the expressions as anchors after merging):
-
-- Line 10: replace `const BeaconsPage = lazy(...)` with
-  `const VisualsRoom = lazy(() => import('../rooms/visuals/room.jsx'));`.
-- Line 24: replace `: fixture && chamber === 'visuals' ? <BeaconsPage />` with
-  `: chamber === 'visuals' ? <VisualsRoom snapshot={snapshot} />`.
-
-Dispatching core mode to the module is intentional: it owns its honest empty
-state. The follow-up retires the old page only after both room deliveries merge.
-Then open `#/chamber/visuals` in fixture mode. Until then the existing route still
-shows BeaconsPage; the standalone module is exercised by the render tests.
+The shell lazily mounts `VisualsRoom` at `#/chamber/visuals` in fixture mode,
+passing `snapshot`. Live mode keeps the shell's empty state. Breadcrumb, Back/Esc,
+seal slot and Steward remain owned by the shell. The room-wide provenance strip
+is removed; draft layers still say `DRAFT ? NOT ON AIR`.
 
 ## Evidence
 
@@ -41,10 +32,10 @@ shows BeaconsPage; the standalone module is exercised by the render tests.
 queue isolation and unchanged model accounting. `keyboard.test.tsx` covers every
 offering via the native range change path and every native selection/test-fire
 button activation path. These are component tests, not browser Tab automation.
-The existing `src/beacons.test.tsx` continues to cover the reused model and
+`src/beacons.test.tsx` covers the mounted room and reused model, including its
 600-event fixture. The Director compares mounted screenshots after integration.
 
-Verification on 2026-10-26: the two rooms plus the existing Beacons suite passed
+Original AI-6 verification before mounting on 2026-10-26: the two rooms plus the existing Beacons suite passed
 22 tests across five files. Direct desktop TypeScript, changed-file ESLint and
 the boundary/hygiene/file-cap/secret checks passed. The existing desktop build
 passed at 386,922 / 393,216 first-load bytes; these new modules remain unmounted.

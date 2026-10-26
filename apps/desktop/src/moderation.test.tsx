@@ -30,6 +30,8 @@ test('4,200 generated chat lines mount a window including the final row; room us
   const room = renderToStaticMarkup(<ModeratorRoom snapshot={{ mode: 'fixture', phase: 'ready' }} replay={false} queue={new ProposalQueue()} />);
   expect(room).toContain('420 lines');
   expect(room).toContain('aria-rowcount="420"');
+  expect(room).not.toContain('room-provenance');
+  expect(room).not.toContain('generated fixtures only');
 });
 
 test('pending ban displays the original message and rule for a held human proposal', () => {

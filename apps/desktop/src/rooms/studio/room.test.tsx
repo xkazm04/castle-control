@@ -9,7 +9,8 @@ test('fixture studio shows all 54 hexes and the local-only test ladder', () => {
   const html = renderToStaticMarkup(<Room snapshot={{ mode: 'fixture', phase: 'ready' }} />);
   expect(fixtureTiles).toHaveLength(54);
   expect(html.match(/data-hex-tile=/g)).toHaveLength(54);
-  for (const text of ['9 × 6', 'Sand table', 'Muster', 'Proclaimed', 'WP 4.0', 'SIMULATED']) expect(html).toContain(text);
+  for (const text of ['9 × 6', 'Sand table', 'Muster', 'Proclaimed', 'WP 4.0']) expect(html).toContain(text);
+  expect(html).not.toContain('studio-room-notice');
   expect(html).not.toContain('Hold to seal');
   expect(html).not.toContain('Approve the move');
 });

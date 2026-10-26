@@ -1,5 +1,4 @@
 .visuals-room { --room-ink: var(--or-text); color: var(--ink); font: 400 var(--text-body)/1.5 var(--font-ui); }
-.visuals-room-notice { padding: var(--space-8) var(--space-12); border: var(--rule-medium) dashed var(--or-text); font-size: var(--text-label); font-weight: 700; }
 .visuals-room-layout { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); }
 .visuals-room-workbench { padding-inline-end: var(--space-20); border-inline-end: var(--rule-thin) solid var(--line); min-width: 0; }
 .visuals-room-details { min-width: 0; padding-inline-start: var(--space-20); }

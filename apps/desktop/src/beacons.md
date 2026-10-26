@@ -1,58 +1,41 @@
-﻿# WP 3.3 offline Beacons preview
+# AI-6: Beacons room mounted
 
-The fixture-only Beacons route is lazy-loaded beside the Gatehouse route.
-Three generated visual cards lead into a kindling curve, test-fire preview,
-virtualised contribution history and a clearly unserved source URL placeholder.
-Core mode keeps the previous empty state; the preview never imports a transport.
+Open `#/chamber/visuals` in fixture mode. The shell lazily mounts
+`rooms/visuals/room.tsx`; `#/chamber/studio` mounts the Map Room. Live mode
+keeps the shell's unconfigured empty states and exposes no fixture controls.
 
-`beacons-model.ts` owns isolated local state. Curve points stay ordered with
-integer totals in the preview's 0–100 weighted-sub domain and intensity 0–1.
-Only subscriptions and gifts are combined, so incompatible contribution units
-are never summed. Gift weights affect future test fires. A bomb inserts exactly
-50 generated gift events. The initial totals and historical feed are illustrative
-snapshots, not reconstructed accounting. The simulated clock advances 60 seconds
-only on click; exponential decay acts on totals before interpolation.
+The old Beacons panel page, curve editor, artwork/feed implementation, stylesheet
+and page-only copy were removed. The unchanged beacons-model and beacons-fixture
+remain shared sources. The room presents altar, frame and border intensity ranges,
+60 illustrative offerings and local test fire. Its selection and contribution
+controls change the local preview only; nothing reaches OBS.
 
-The fixture and model use `parseMethodParams`/`parseMethodResult` with the public
-`beaconsVisualList`, `beaconsCurveSet`, `beaconsSimulate` and `beaconsSourceUrl`
-handles. This preserves schema validation without retaining the generic method
-registry. No private contract imports or duplicate schema parsers are used.
+`beacons.test.tsx` exercises the real selection and test-fire handlers, preview
+intensity, curve/reset/decay semantics, unique generated model events, mounted
+fixture/core separation and the no-network boundary. The visual room tests also
+cover draft amendments, accounting isolation, all offerings and native keyboard
+control paths. The retired page's clipboard placeholder and 600-row feed have no
+replacement UI; the model's 600-event fixture remains intact.
 
-SVG chart handles use pointer capture. Numeric fields provide keyboard access
-to every point. The illustrative visual artwork stays fixed while its `--blaze`
-custom property changes. SVG paint references are unique across cards and the
-selected preview. This is not the shared design-package renderer; no OBS or
-Extension delivery, asset loading, RPC or network path is implemented.
-Copied URLs contain `fixture-not-live` and are explicitly labelled not served.
-Clipboard unavailability and denial produce visible status instead of success.
+The shared seal slot uses the kit ProposalCard. Proposal layers retain
+`DRAFT ? NOT ON AIR`; room-wide provenance strips are removed because the
+rampart and Steward own surface-level labels. This does not enable live output.
 
-The page extracts the prototype's three-card hero and numbered two-column
-layout, using shared paper/stock tokens, components and co-located CSS. The feed
-uses the kit's WindowedRows. Tests use server markup and actual component
-handlers with a minimal pointer protocol, following the existing test pattern.
-Screenshot fidelity and mounted-browser pointer/clipboard behavior remain
-unverified: automatic approval review rejected Google Chrome access. No browser
-fidelity or performance claim is made. Offline scope does not deliver to OBS.
+## Wave 2b verification
 
-## Verification on base c86462b, 2026-10-26
-
-- Desktop production build passed the unchanged `src/check-build.ts` cap:
-  **382,201 / 393,216 uncompressed bytes**, across two eager JS/CSS assets.
-  Beacons and Gatehouse have deferred JS/CSS chunks. No budget/configuration
-  change, dependency addition, install or lockfile change was made.
-- Narrowed tests cover a 600-event bounded initial/end window; actual point
-  edit/drag handlers changing `--blaze` while preserving the artwork; exactly
-  50 gift events; local weighting; clock-driven decay; invalid points; visual
-  selection/reset isolation; unique paint references; clipboard failure;
-  fixture/core separation; and all four keyboard chamber shortcuts.
-- Full `pnpm --config.verify-deps-before-run=false gate` passed all 14 tooling
-  tests and workspace inventories, then failed in the unchanged contract
-  exporter with `spawnSync cargo EPERM`, before Rust checks or recursive suites.
-- Recursive `pnpm --config.verify-deps-before-run=false -r typecheck` and
-  `-r lint` each failed to launch their package subprocesses with `spawn EPERM`.
-  These failures are not green gates. App Master must run the full gate in
-  its verification environment and review screenshots at 1440×900/1280×800.
-
-Changes are confined to `apps/desktop`; package, contract, crate, prototype,
-plan, lockfile and first-load checker files remain untouched. The external
-result file records the final desktop-only checks and narrowed test counts.
+- Targeted desktop tests: 62 pass in 10 files (beacons, lots, moderation,
+  moderation-gate, shell/room, overview/program, visuals room/keyboard and studio
+  room/keyboard). ProposalCard: 2 pass, including busy and revision-keyed holds.
+- Direct `tsc --noEmit` for desktop and UI: pass. ESLint on both src trees: pass.
+- `node scripts/check.mjs`: pass; boundaries/hygiene/file cap walk 472 files,
+  secrets walk 595 files. No imports of the retired page remain.
+- Production Vite build: pass. First-load checker: 382,098 / 393,216 bytes.
+- Recursive `-r typecheck` and `-r lint`: fail before package checks with
+  `spawn EPERM`. Full `pnpm gate`: 14 tooling tests pass, then the unchanged
+  contract exporter fails with `spawnSync cargo EPERM`, before Rust/product
+  gates. Base HEAD docs/PLAN.md records these same failures, and a diff against
+  HEAD for the exporter/check and gate/run scripts is empty. No full-workspace
+  pass is claimed; App Master must rerun the full gate in its verification host.
+- Install skipped as required by the node_modules junction exception.
+  No live output or browser fidelity claim is made; Director re-shoots the two
+  mounted routes at 1440x900 and 1280x800 against the read-only references.

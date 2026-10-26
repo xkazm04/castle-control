@@ -9,12 +9,13 @@ import { createBeaconsPreview } from '../../beacons-model.js';
 
 test('fixture room contains the altar, frames, border, 60 offerings and local test fire', () => {
   const html = renderToStaticMarkup(<Room snapshot={{ mode: 'fixture', phase: 'ready' }} />);
-  for (const text of ['Offering altar', 'Gilded camera frame', 'Hype border', '60 offerings', 'Test fire', 'SIMULATED']) {
+  for (const text of ['Offering altar', 'Gilded camera frame', 'Hype border', '60 offerings', 'Test fire']) {
     expect(html).toContain(text);
   }
   expect(fixtureOfferings).toHaveLength(60);
   expect(html.match(/data-offering-mark=/g)).toHaveLength(60);
   expect(html).not.toContain('Hold to seal');
+  expect(html).not.toContain('visuals-room-notice');
 });
 
 test('core mode never shows simulated controls or a fixture proposal', () => {

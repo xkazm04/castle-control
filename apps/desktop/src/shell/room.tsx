@@ -9,7 +9,8 @@ import SealSlot from '../rooms/seal-slot/index.jsx';
 
 const LotteryRoom = lazy(() => import('../rooms/lottery/index.jsx'));
 const ModeratorRoom = lazy(() => import('../rooms/moderator/index.jsx'));
-const BeaconsPage = lazy(() => import('../beacons-page.jsx').then(module => ({ default: module.BeaconsPage })));
+const VisualsRoom = lazy(() => import('../rooms/visuals/room.jsx'));
+const StudioRoom = lazy(() => import('../rooms/studio/room.jsx'));
 
 export default function Room({ chamber, replay, snapshot, origin, on_open, on_back }: {
   chamber: ModuleId; replay: boolean; snapshot: Snapshot; origin: Surface;
@@ -23,7 +24,8 @@ export default function Room({ chamber, replay, snapshot, origin, on_open, on_ba
       <div className="shell-room-content"><Suspense fallback={<p role="status">Opening the room...</p>}>
         {fixture && chamber === 'lottery' ? <LotteryRoom snapshot={snapshot} replay={replay} />
           : fixture && chamber === 'moderator' ? <ModeratorRoom snapshot={snapshot} replay={replay} />
-          : fixture && chamber === 'visuals' ? <BeaconsPage />
+          : fixture && chamber === 'visuals' ? <VisualsRoom snapshot={snapshot} />
+          : fixture && chamber === 'studio' ? <StudioRoom snapshot={snapshot} />
           : <EmptyState title={chamber === 'studio' ? 'The map table is bare' : 'Room data is not configured'}
             description="No live actions are available in this room." />}
       </Suspense></div>

@@ -1,11 +1,10 @@
 import { useState, useSyncExternalStore } from 'react';
-import { proposalQueue } from '@castle-control/ui/steward';
+import { isPending, proposalQueue } from '@castle-control/ui/steward';
 import type { Proposal, ProposalQueue } from '@castle-control/ui/steward';
 import type { Snapshot } from '../../model.js';
 import { checkFixturePolicy, lookupFixture } from '../../lots-model.js';
 import { fixtureCooldown, fixtureDraws, fixtureWrit } from '../../lots-fixture.js';
 import { lotsCopy as copy } from '../../lots-copy.js';
-import { ProposalFields } from '../seal-slot/index.jsx';
 import { draftRoll, entryHash, lotterySession } from './session.js';
 import { Urn } from './urn.jsx';
 import './room.css';
@@ -14,7 +13,10 @@ export function LotteryWrit({ proposal }: { proposal: Proposal }) {
   return <article className="lottery-writ" data-state={proposal.state}>
     <p className="room-stamp">{proposal.state === 'sealed' ? 'Sealed by you · simulated' : 'Proposal · not sealed'}</p>
     <h2>{proposal.title}</h2><p>Writ · {proposal.state} · revision {proposal.revision}</p>
-    <ProposalFields proposal={proposal} />
+    <dl className="lottery-writ-fields">{proposal.fields.map(field => <div key={field.key}>
+      <dt>{field.label}</dt><dd>{field.struck.map((value, index) => <s key={index}>{String(value)}</s>)}
+        <ins key={`${field.key}-${proposal.revision}`}>{String(field.value)}</ins></dd>
+    </div>)}</dl>
     {proposal.seal_hash && <><div className="lottery-wax">Sealed<br />by you</div>
       <p className="room-hash">SHA-256 · {proposal.seal_hash}</p></>}
     <div className="lottery-fair"><b>Fairness, always shown</b><p>{copy.equal}</p>
@@ -31,7 +33,9 @@ export default function LotteryRoom({ snapshot, replay, queue = proposalQueue }:
   const [verification, setVerification] = useState('');
   if (snapshot.mode !== 'fixture') return <p>No live draw controls are available.</p>;
   const history = proposals.proposals.filter(item => item.chamber === 'lottery' && item.state !== 'torn');
-  const proposal = history.find(item => item.id === proposals.selected_proposal_id) ?? history.at(-1);
+  const pending = history.filter(isPending);
+  const candidates = pending.length ? pending : history;
+  const proposal = candidates.find(item => item.id === proposals.selected_proposal_id) ?? candidates.at(-1);
   const roll = proposal ? rolls.get(proposal.id) : undefined;
   const policy = checkFixturePolicy(state.draw.policy);
   const recompute = async () => {
@@ -40,11 +44,11 @@ export default function LotteryRoom({ snapshot, replay, queue = proposalQueue }:
     catch { setVerification('Hash recomputation failed. No verified result is available.'); }
   };
   return <div className="lottery-room" data-replay={replay}>
-    <p className="room-provenance">{copy.notice}</p>
     <div className="lottery-columns">
       <div className="room-column">
-        {proposal ? <LotteryWrit proposal={proposal} /> : <div className="lottery-empty">
-          <h2>No writ in the urn yet</h2><p>Tell the Steward which draw. Its proposal will ink in here.</p>
+        {proposal && <LotteryWrit proposal={proposal} />}
+        {!pending.length && <div className="lottery-empty">
+          <h2>Writ templates</h2><p>Tell the Steward which draw. Its proposal will ink in here.</p>
           {fixtureDraws.map(draw => <button key={draw.draw_id} type="button" onClick={() => { port.select(draw.draw_id); draftRoll(queue); }}>
             <b>{draw.name}</b><span>{draw.policy.content === 'prize' ? 'Prize' : 'No prize'} · proposal only</span></button>)}
         </div>}

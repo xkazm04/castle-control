@@ -53,6 +53,7 @@ test('delay select drafts only; applied value waits for a seal and then fixture 
   expect(state(queue).delay_s).toBe(4);
   expect(controls(queue)).toContain('value="4" selected=""');
   expect(controls(queue)).toContain(copy.gate_pending);
+  expect(controls(queue)).not.toContain('generated fixtures only');
   expect(controls(queue)).toContain('aria-busy="true"');
   expect(find<SelectHTMLAttributes<HTMLSelectElement>>(GateControls({ state: state(queue), queue }), props => props['aria-label'] === copy.delay_applied).props.disabled).toBe(true);
   vi.advanceTimersByTime(fixtureConfirmationMs - 1); expect(state(queue).delay_s).toBe(4);

@@ -14,7 +14,7 @@ export function Urn({ entries, scroll_top = 0 }: { entries: readonly FixtureEntr
         const radius = 180 * Math.sqrt((index + 0.5) / entries.length);
         return <circle key={entry.handle} data-lot-dot={entry.number} data-cohort={entry.cohort}
           cx={230 + radius * Math.cos(angle)} cy={210 + radius * Math.sin(angle) * 0.78} r={5}>
-          <title>{entry.handle} · {copy.cohorts[entry.cohort]}</title></circle>;
+          <title>{`${entry.handle} · ${copy.cohorts[entry.cohort]}`}</title></circle>;
       })}
     </svg> : <WindowedRows rows={rows} label={copy.dots} row_key={row => String(row[0]?.number)}
       row_height={rowHeight} scroll_top={scroll_top}>{row => <div className="lottery-marks">{row.map(entry =>

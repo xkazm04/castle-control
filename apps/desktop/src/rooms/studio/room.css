@@ -1,5 +1,4 @@
 .studio-room { --room-ink: var(--key); color: var(--ink); font: 400 var(--text-body)/1.5 var(--font-ui); }
-.studio-room-notice { padding: var(--space-8) var(--space-12); border: var(--rule-medium) dashed var(--key); font-size: var(--text-label); font-weight: 700; }
 .studio-room-layout { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, .8fr); }
 .studio-room-workbench { padding-inline-end: var(--space-20); border-inline-end: var(--rule-thin) solid var(--line); min-width: 0; }
 .studio-room-details { padding-inline-start: var(--space-20); min-width: 0; }

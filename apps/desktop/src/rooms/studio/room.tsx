@@ -11,7 +11,6 @@ export function StudioWork({ queue }: { queue?: ProposalQueue }) {
   const [tile, setTile] = useState('A1');
   const [rung, setRung] = useState(0);
   return <section className="studio-room" aria-label="Map Room work">
-    <p className="studio-room-notice">SIMULATED · ILLUSTRATIVE SAMPLE DATA · LOCAL STUDIO ONLY</p>
     <div className="studio-room-layout">
       <div className="studio-room-workbench">
         <HexTable selected={tile} on_select={setTile} />

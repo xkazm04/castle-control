@@ -7,7 +7,8 @@ lines marked Pass/Hold/Bar, and the rules, moat, drill and gate log. All lists
 that grow use the kit's WindowedRows. The existing 4,200-message fixture remains
 for the ten-times-volume endpoint tests. Both room components accept snapshot
 and replay, remain lazy, and are gated to fixture mode by shell/room.tsx.
-Beacons and the studio empty state retain their existing mount paths.
+Beacons and Map Room now mount their AI-6 rooms in fixture mode; live mode
+retains the shell empty states.
 
 ## Proposals and local model behavior
 
@@ -37,7 +38,7 @@ consensus fixtures retain their shed counts, barred-message exclusion and
 ## Shared slot
 
 `rooms/seal-slot` uses useSyncExternalStore against the queue singleton's stable
-snapshot, then reads pending(chamber). Each proposal shows its fields and
+snapshot, then reads pending(chamber). Each proposal uses the shared kit ProposalCard for its fields and
 revision, Hold to seal (or Hold to seal and proclaim), and Tear it up. Its root
 carries data-proposal-focused=true and its tear button data-tear-proposal, exactly
 as the existing app Delete handler expects. Focus selection works without a new
@@ -70,6 +71,6 @@ packages, generated contract identifiers or live actions were introduced.
 
 Visual screenshots could not be captured: the browser connector inventory was
 empty and native Chrome computer use was not approved. The Director must perform
-the reference comparison. The parallel overview's hold dispatcher should be
-checked during integration so lottery holds there use the same hash/guardrail
-preparation as the room's sealRoomProposal; this run cannot edit overview paths.
+the reference comparison. The Overview hold and the room now share sealRoomProposal, including lottery
+hash/guardrail preparation. Room-wide provenance strips are removed; artifact
+safety labels and the rampart/Steward markers remain.

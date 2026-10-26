@@ -5,7 +5,8 @@ stacked panels with the Lit Keep's nested writ-and-urn room. `shell/room.tsx`
 keeps its existing props contract, loads the room lazily and mounts the same
 proposal seal slot for every chamber. Core mode never loads simulated controls.
 
-The room reads the shared proposal queue. Its writ labels every open draft as
+The room reads the shared proposal queue. Pending drafts take priority over
+selected historical writs; with none pending the writ templates remain available. Its writ labels every open draft as
 Proposal, shows all struck values in gules, and re-inks amendments beside them.
 Every eligible fixture lot appears as a mark in the urn. Pools above 320 entries
 use token-sized, virtualised rows; the 10,000-entry test visits both endpoints.
@@ -19,7 +20,7 @@ call was added. Saved proof recomputation never claims to verify the editable
 ## Sealing and guardrails
 
 The room's template buttons draft proposals only. A completed kit SealButton
-hold calls `sealRoomProposal`, which lazily invokes the lottery session. That
+hold calls `sealRoomProposal`, also used by the Overview hold, which lazily invokes the lottery session. That
 session applies the existing giveaway policy check before sealing. Paid entry,
 paid weight, missing prize rules/disclaimer and the prize-value threshold keep
 their original behavior. A prize amendment is checked as a prize. A proposal
@@ -85,3 +86,13 @@ touching that cache. No permission or cache workaround was attempted.
 - Frozen-lockfile install: SKIPPED by the brief's explicit junction exception.
 - Visual comparison: UNVERIFIED; connector inventory empty, native Chrome
   automation not approved. Use the documented URLs/sizes for Director review.
+
+## Wave 2b integration
+
+The seal slot now renders the kit ProposalCard, with in-flight sealing disabled
+and revision-keyed holds. Writ inking stays in the room's left column with
+co-located styles. The empty/pending/amended/torn and older-selected-writ cases
+are covered by lots.test.tsx. Overview tests prove shared seal dispatch, identical
+guardrail refusal, weighted frozen-list SHA-256 and cancellation on amendment or
+tear during hashing. Room-wide provenance strips were removed; the saved-proof
+caveats and fairness labels remain.

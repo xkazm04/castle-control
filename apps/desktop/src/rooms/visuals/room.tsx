@@ -40,7 +40,6 @@ export function VisualsWork({ queue, port }: { queue?: ProposalQueue; port?: Bea
   const selected = preview.visuals.find(item => item.visual.visual_id === preview.selected);
   if (!selected) return <p role="status">No simulated visual is available.</p>;
   return <section className="visuals-room" aria-label="Beacons work">
-    <p className="visuals-room-notice">SIMULATED · ILLUSTRATIVE SAMPLE DATA · NOT ON AIR</p>
     <div className="visuals-room-layout">
       <div className="visuals-room-workbench">
         <h2>{selected.visual.name}</h2>

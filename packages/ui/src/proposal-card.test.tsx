@@ -3,6 +3,7 @@ import { expect, test, vi } from 'vitest';
 import { ProposalCard } from './proposal-card.jsx';
 import { ProposalQueue } from './steward/queue.js';
 import { SimulatedSteward } from './steward/simulated.js';
+import { SealButton } from './seal-button.jsx';
 
 test('proposal card strikes old values, re-inks amendments and exposes the focused tear target', async () => {
   const queue = new ProposalQueue(); const steward = new SimulatedSteward(queue);
@@ -20,4 +21,19 @@ test('proposal card strikes old values, re-inks amendments and exposes the focus
   expect(seal).not.toHaveBeenCalled();
   const proclaim = renderToStaticMarkup(<ProposalCard {...props} proposal={{ ...proposal, kind: 'proclaim' }} />);
   expect(proclaim).toContain('Hold to seal and proclaim');
+});
+
+test('a busy proposal disables its seal and a revised proposal remounts the hold', async () => {
+  const queue = new ProposalQueue(); const steward = new SimulatedSteward(queue);
+  await steward.ask('draft a question draw', { surface: 'room' });
+  const proposal = queue.pending()[0];
+  if (!proposal) throw new Error('Missing proposal');
+  const props = { proposal, on_seal: vi.fn(), on_tear: vi.fn(), busy: true };
+  expect(renderToStaticMarkup(<ProposalCard {...props} />)).toContain('class="cc-seal-button" disabled=""');
+  const hold = ProposalCard(props).props.children.at(-1).props.children[0];
+  expect(hold.type).toBe(SealButton);
+  expect(hold.props.disabled).toBe(true);
+  expect(hold.key).toBe(`${proposal.id}:${proposal.revision}`);
+  const revised = ProposalCard({ ...props, proposal: { ...proposal, revision: 2 } }).props.children.at(-1).props.children[0];
+  expect(revised.key).not.toBe(hold.key);
 });
