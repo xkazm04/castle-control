@@ -25,7 +25,7 @@ test('keyboard alone opens every chamber with its current content and simulated 
       on_navigate={() => undefined} on_theme_change={() => undefined} search="" on_search={() => undefined} />);
     await stream.allReady;
     const html = await new Response(stream).text();
-    for (const text of [title, empty, 'On air', 'Twitch: connected', 'OBS: connected', 'Watching', 'Simulated']) {
+    for (const text of [title, empty, 'ON AIR simulated', 'Twitch simulated', 'OBS simulated', 'Gatehouse simulated', 'Simulated']) {
       expect(html).toContain(text);
     }
     expect(html).toContain('SIMULATED SOURCE');

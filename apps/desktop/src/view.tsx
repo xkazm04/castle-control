@@ -38,7 +38,8 @@ export function DesktopView(props: ViewProps) {
       navigation={<ChambersColumn current={current.id} on_navigate={props.on_navigate}
         links={chambers.map(chamber => ({ id: chamber.id, href: `#/${chamber.id}`,
           figure: props.snapshot.mode === 'fixture' && chamber.id === 'moderator' ? 'Simulated moderation'
-            : props.snapshot.mode === 'fixture' && chamber.id === 'visuals' ? 'Simulated visuals' : 'Not configured' }))}
+            : props.snapshot.mode === 'fixture' && chamber.id === 'visuals' ? 'Simulated visuals'
+            : props.snapshot.mode === 'fixture' && chamber.id === 'lottery' ? 'Simulated draws' : 'Not configured' }))}
         home_href="#/lottery" brand_href="#shell-info" summary={simulated ? 'Simulated room · no live actions' : 'Room details not yet available'} />}>
       {simulated && <div className="desktop-simulated" role="status">{props.snapshot.mode === 'fixture'
         ? simulatedSourceLabel : 'SIMULATED SOURCE · core reports simulated data'}</div>}

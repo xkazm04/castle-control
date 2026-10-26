@@ -118,8 +118,8 @@ test('nested replay route keeps shell context and does not render the overview',
   const html = await new Response(stream).text();
   expect(html).toContain('Back to the Gatehouse');
   expect(html).toContain('aria-label="Breadcrumb"');
-  expect(html).toContain('Twitch: connected');
-  expect(html).toContain('3 watching');
+  expect(html).toContain('Twitch simulated');
+  expect(html).toContain('Gatehouse simulated');
   expect(html).not.toContain('data-message-row');
 });
 

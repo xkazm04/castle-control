@@ -17,7 +17,7 @@ test('validated simulated events update rampart chips on all four rendered route
     for (const { id, name } of chambers) {
       const html = renderToStaticMarkup(<DesktopView current={id} snapshot={client.getSnapshot()} theme="paper"
         on_navigate={() => undefined} on_theme_change={() => undefined} search="" on_search={() => undefined} />);
-      for (const label of [name, 'On air', 'Twitch: connected', 'OBS: connected', '3 watching', 'Simulated', 'SIMULATED SOURCE']) {
+      for (const label of [name, 'ON AIR simulated', 'Twitch simulated', 'OBS simulated', 'Gatehouse simulated', 'Simulated', 'SIMULATED SOURCE']) {
         expect(html).toContain(label);
       }
     }

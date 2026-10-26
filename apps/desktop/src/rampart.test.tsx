@@ -1,6 +1,7 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { expect, test } from 'vitest';
 import { DesktopView } from './view.jsx';
+import { DesktopRampart } from './rampart.jsx';
 import { simulatedRead } from './simulated.js';
 import type { Snapshot } from './model.js';
 import type { ModuleId } from '@castle-control/ui';
@@ -37,6 +38,36 @@ test('initial and disconnected display do not invent OBS, Twitch or moderation s
   expect(html).not.toContain('disconnected');
 });
 
+test.each([
+  { mode: 'fixture', simulated: true },
+  { mode: 'fixture', simulated: false },
+  { mode: 'core', simulated: true },
+] as const)('$mode with simulated=$simulated never presents fixture summaries as live', ({ mode, simulated }) => {
+  const data = simulatedRead(1);
+  const html = renderToStaticMarkup(<DesktopRampart snapshot={{ ...data, mode, phase: 'ready',
+    status: { ...data.status, simulated, gatehouse: { armed_rules: 2, shadow_rules: 3, shield: true } } }}
+    theme="paper" on_theme_change={() => undefined} />);
+  for (const label of ['ON AIR simulated', 'Twitch simulated', 'OBS simulated', 'Gatehouse simulated']) {
+    expect(html).toContain(`data-variant="dash">${label}</span>`);
+  }
+  expect(html).toContain('<b>Unknown</b><small>viewers</small>');
+  expect(html).toContain('<b>Unknown</b><small>uptime</small>');
+  for (const claim of ['cc-connection', 'connected', 'On air', '214', '01:00:00', 'Armed', 'Watching', 'Bridge up']) {
+    expect(html).not.toContain(claim);
+  }
+});
+
+test('fixture sidebar labels available chamber previews and leaves Map Room unconfigured', () => {
+  const html = render({ mode: 'fixture', phase: 'ready', ...simulatedRead(1) });
+  for (const [id, figure] of [
+    ['lottery', 'Simulated draws'], ['moderator', 'Simulated moderation'],
+    ['visuals', 'Simulated visuals'], ['studio', 'Not configured'],
+  ]) {
+    const link = html.match(new RegExp(`<a[^>]*data-module="${id}"[^>]*>[\\s\\S]*?</a>`))?.[0];
+    expect(link).toContain(`<em>${figure}</em>`);
+  }
+});
+
 test.each(['lottery', 'moderator', 'visuals', 'studio'] as const)('%s keeps an absent bridge UNKNOWN with a ready core', current => {
   const status = { ...simulatedRead(1).status, simulated: false, twitch_connected: false };
   const html = render({ mode: 'core', phase: 'ready', status }, current);
@@ -51,10 +82,11 @@ test.each(['lottery', 'moderator', 'visuals', 'studio'] as const)('%s keeps an a
 });
 
 test('explicit offline and zero rules remain distinct from unknown', () => {
-  const html = render({ mode: 'fixture', phase: 'ready', ...simulatedRead(0) });
+  const data = simulatedRead(0);
+  const html = render({ ...data, mode: 'core', phase: 'ready', status: { ...data.status, simulated: false } });
   expect(html).toContain('Offline');
   expect(html).toContain('0 rules armed');
   expect(html).toContain('Watching');
-  expect(html).toContain('SIMULATED SOURCE');
+  expect(html).not.toContain('SIMULATED SOURCE');
   expect(html).not.toContain('ON AIR unknown');
 });
