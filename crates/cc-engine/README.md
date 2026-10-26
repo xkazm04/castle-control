@@ -1,7 +1,8 @@
 # WP 1.4: engine and classifier lanes
 
 Offline preparation only. This crate is not wired to core, Twitch or
-the desktop app. No test launches a real coding CLI or calls a real model.
+the desktop app. Normal tests launch no real coding CLI and call no real model;
+the ignored floor-wire twins below are reserved for an owner-run local spike.
 Gatehouse provides an optional in-process `EngineClassifier` adapter.
 
 ## Routing and local admission
@@ -42,6 +43,136 @@ redirects are disabled. `CLOUD_NOTICE` is the plain notice for a future UI.
 The OpenAI path uses Responses with `store:false`; local runtimes use compatible
 Chat Completions JSON output. `measure_floor_with_key` permits cloud calibration
 only through those same opt-in and keychain checks; the command below is local-only.
+
+## Floor wire assumptions
+
+These describe the existing `measure_floor` implementation, not a broader
+OpenAI-compatibility claim. Each item has a normal FIXTURE test in
+`tests/floor_wire.rs`, named `simulated_fixture_<suffix>`, and a LIVE twin in
+`tests/floor_live.rs`, named `live_<suffix>`. All prompts/replies in fixtures and
+all prompts sent by live twins are labelled simulated. Live twins use the same
+production parser and `measure_floor`, with a fresh temporary measurement Store
+per reading; they never call `measure_floor_with_key` or configure routes.
+
+- **`local_only`:** `CC_LIVE_FLOOR` must be exactly `1`, with
+  `CC_LIVE_FLOOR_URL` and `CC_LIVE_FLOOR_MODEL` supplied separately. Before any
+  request/store, the twin rejects missing/other flags and non-loopback URLs.
+  Only literal loopback IPs such as `127.0.0.1` or `[::1]` qualify; `localhost`
+  and all cloud/DNS hosts are refused. Settings still pass the existing schema
+  door. The production client disables proxy inheritance and redirects and
+  sends no authorization header to this local-only floor path. The fixture also
+  tests the guard without mutating process environment variables.
+- **`request_shape`:** POST to the configured base path plus
+  `/chat/completions` (normally `/v1/chat/completions`), JSON content type, with
+  exactly `model`, one `messages` entry (`role: "user"`, simulated prompt),
+  `stream: false`, `max_tokens: 2048`, and
+  `response_format: {"type":"json_object"}`. No streaming, tools, temperature,
+  JSON-schema response format or Responses API is requested on this path.
+  The fixture compares the entire request; the live twin checks runtime acceptance.
+- **`response_shape`:** a JSON response with a valid `model`, a `usage` object
+  and a nonempty `choices` array. Only the first choice is read. It must have
+  `finish_reason: "stop"` and `message.content` as a nonblank string containing
+  exactly `{"verdict":"pass"}`, `{"verdict":"hold"}` or
+  `{"verdict":"bar"}`, matching the case's expectation. Arrays, extra verdict
+  keys, unknown verdicts, null/array content and truncated/tool-call finishes
+  fail. Extra envelope fields are tolerated; there is no streaming decoder here.
+- **`usage_shape`:** `usage` is required; missing counters default to zero.
+  `prompt_tokens` and `completion_tokens` are unsigned integers used for local
+  token cost calculation. The shared usage parser also accepts unsigned
+  `input_tokens`/`output_tokens`, but these do not price local Chat Completions;
+  `total_tokens` is ignored. Wrong types/negative counters fail parsing.
+  The local floor uses zero default prices, so each case's audit cost is zero
+  regardless of reported counts; the live twin validates parsing and that audit.
+- **`latency_budgets`:** existing admission requires at least six samples,
+  every structured verdict correct, p95 total at most **2,000 ms** and longest
+  silence at most **1,500 ms** for `live`; **5,000 ms** and **3,000 ms** for
+  `near_live`. Equality passes. Nonstreaming calls count their entire duration
+  as silence. The fixture checks both boundaries, one millisecond over, too few
+  cases and incorrect cases. The live twin prints the report and checks both
+  classes using `Evidence::admits`, without adding a threshold.
+- **`measurement_timeout`:** the floor reader's per-case HTTP/body deadline is
+  **5,000 ms**, independent of class admission. Timeout/transport/parse failures
+  still add a failed sample and an engine audit, not a fast successful sample.
+  The fixture accepts a connection but withholds the response until measurement
+  reports its timeout. The live twin requires the real runtime to complete
+  the six-case bank within that existing deadline, without deliberately stalling it.
+- **`model_identity`:** there is **no model-ID discovery** or `GET /models`.
+  The owner copies the exact loaded ID from their runtime into the model argument;
+  no model is downloaded or selected automatically. The response must report a
+  valid model ID (not necessarily the selected alias); it is recorded separately
+  from the selected ID. Served-ID drift invalidates the reading. The fixture
+  checks explicit selection, absent/invalid IDs, drift and the POST-only request
+  inventory; the live twin checks the supplied selection and stable reported ID.
+- **`http_errors`:** non-2xx statuses fail regardless of provider error-body
+  shape. Existing transport labels 401/403 as `Auth`, 429 as `RateLimited`,
+  other statuses as `Unavailable`; a 2xx error envelope without the required
+  completion fields fails parsing. Floor reports aggregate these as failed
+  cases, with no raw error body in the audit and no per-reason error counters.
+  The fixture covers 400/401/403/404/429/500/503/302 and a 200 error envelope.
+  The live twin requests a unique nonexistent simulated model ID and requires
+  endpoint failure rather than silent model substitution; it does not induce
+  authentication errors, throttling or outages.
+- **`refusal_shapes`:** null content with a refusal, refusal-only JSON content,
+  and `finish_reason: "content_filter"` do not count as structured verdicts.
+  There is no separate floor refusal result: they increment `failed`. An extra
+  `message.refusal` property is not independently interpreted; a valid verdict
+  with `finish_reason: "stop"` still follows the ordinary verdict parser.
+  The live twin harmlessly asks for `{"refusal":"simulated"}`, and requires
+  a parsed response rejected as a verdict. It does not seek an actual safety
+  refusal; provider-specific refusal envelopes remain covered by fixtures.
+
+### Spike: floor reading
+
+Owner step only; **nothing runs live during this delivery**. Start the intended
+local runtime and load the model first. Supply its literal-loopback `/v1` base
+URL in `CC_LIVE_FLOOR_URL` and exact model ID in `CC_LIVE_FLOOR_MODEL`. From the
+repository root, the measurement command uses a new temporary audit directory:
+
+```powershell
+cargo run --offline --locked -p cc-engine --bin measure-floor -- $env:CC_LIVE_FLOOR_URL $env:CC_LIVE_FLOOR_MODEL (Join-Path $env:TEMP ("castlecontrol-floor-" + [guid]::NewGuid()))
+```
+
+The binary itself has no environment opt-in guard; do not run it until the
+owner's spike. Its report is `instrument=simulated-floor-v1 n=6 correct=6
+failed=0 ... live_admitted=true` for a passing live reading. The p95/silence
+values must satisfy the existing budgets above. Exit zero alone is not a pass:
+the binary also prints unsuccessful readings. This six-case format/instruction
+instrument is not moderation-quality evidence; repeat representative cold/warm
+measurements before admitting a real model.
+
+For the LIVE twins, the owner must explicitly opt in with `CC_LIVE_FLOOR` equal
+to `1` in that shell, in addition to URL/model. This document deliberately does
+not set the flag. Run serially to avoid measuring this suite's own contention:
+
+```powershell
+cargo test --offline --locked -p cc-engine --test floor_live -- --ignored --test-threads=1 --nocapture
+```
+
+All nine twins must pass; successful positive readings have six correct cases
+and no failures, while the unknown-model and refusal-shaped negative probes
+must each record one failure. Each twin writes only a temporary Store, removed
+afterward. The owner-run binary's temporary audit directory remains available
+for inspection. No reading arms rules, enables wiring or persists admission.
+
+Offline delivery evidence, 2026-10-26:
+
+- `cargo test --offline -p cc-engine`: exit 0, 33 passed and nine LIVE twins
+  ignored with `live: CC_LIVE_FLOOR=1`. After the test-lock scope cleanup,
+  `cargo test --offline -p cc-engine --test floor_wire --test floor_live` also
+  exited 0: nine fixtures passed, nine LIVE twins ignored.
+- Red guard proof, with no live flag set:
+  `cargo test --offline -p cc-engine --test floor_live -- --ignored --test-threads=1`
+  exited 1: all nine twins panicked before requesting an endpoint, each with
+  `live floor disabled: CC_LIVE_FLOOR must be exactly 1; no endpoint request was made`.
+- `cargo fmt --all -- --check` and
+  `cargo clippy --offline --workspace --all-targets -- -D warnings`: exit 0.
+- `node scripts/check.mjs`: exit 0 for boundaries, hygiene, file cap and secrets.
+- Both `pnpm --config.verify-deps-before-run=false -r typecheck` and the
+  corresponding `-r lint` exited 1 at package-script launch with Node
+  `spawn EPERM` (errno -4048). These checks did not pass in the builder sandbox.
+  `git diff --exit-code HEAD -- package.json pnpm-lock.yaml pnpm-workspace.yaml scripts packages apps`
+  exited 0: their inputs are unchanged from this worktree's base. App Master
+  must rerun them in its permitted gate environment. No install was attempted.
 
 ## CLI custody and probes
 
