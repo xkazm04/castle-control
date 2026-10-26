@@ -64,7 +64,7 @@ export function artifacts(schema) {
   }
   for (const shape of Object.values(schema.types)) add(shape);
   for (const method of schema.methods) { add(method.params); add(method.result); }
-  const brands = new Set(['MessageId', 'DecisionId', 'WritId', 'DrawRunId', 'RuleId', 'DrawId', 'VisualId', 'DesignId', 'TwitchUserId']);
+  const brands = new Set(['MessageId', 'DecisionId', 'LeaseId', 'WritId', 'DrawRunId', 'RuleId', 'DrawId', 'VisualId', 'DesignId', 'TwitchUserId']);
   const types = [...definitions].sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0).map(([name, shape]) =>
     `export type ${name} = ${tsType(shape)}${brands.has(name) ? ` & { readonly __brand: ${JSON.stringify(name)} }` : ''};`);
   const nameOf = (shape) => shape.title ?? tsType(shape);

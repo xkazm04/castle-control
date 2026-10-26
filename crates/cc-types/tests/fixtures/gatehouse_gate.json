@@ -1,0 +1,20 @@
+[
+  {
+    "request": { "method": "gatehouse.held.resolve", "params": { "message_id": "simulated-held", "outcome": "allow" } },
+    "result": { "decision_id": "01ARZ3NDEKTSV4RRFFQ69G5FAV", "message_id": "simulated-held", "kind": "released", "verdict": "pass", "operator": "human", "at": "2026-10-26T12:00:00Z", "simulated": true, "reason_codes": ["simulated_allow"] }
+  },
+  {
+    "request": { "method": "gatehouse.held.resolve", "params": { "message_id": "simulated-held", "outcome": "deny" } },
+    "result": { "decision_id": "01ARZ3NDEKTSV4RRFFQ69G5FAW", "message_id": "simulated-held", "kind": "removed", "verdict": "bar", "operator": "human", "at": "2026-10-26T12:00:00Z", "simulated": true, "reason_codes": ["simulated_deny"], "rule_id": "simulated-links", "message_text": "Simulated held message" }
+  },
+  { "request": { "method": "gatehouse.delay.set", "params": { "delay_s": 0 } }, "result": { "delay_s": 0 } },
+  { "request": { "method": "gatehouse.delay.set", "params": { "delay_s": 2 } }, "result": { "delay_s": 2 } },
+  { "request": { "method": "gatehouse.delay.set", "params": { "delay_s": 4 } }, "result": { "delay_s": 4 } },
+  { "request": { "method": "gatehouse.delay.set", "params": { "delay_s": 6 } }, "result": { "delay_s": 6 } },
+  { "request": { "method": "gatehouse.shield.set", "params": { "enabled": true } }, "result": { "enabled": true } },
+  { "request": { "method": "gatehouse.shield.set", "params": { "enabled": false } }, "result": { "enabled": false } },
+  {
+    "request": { "method": "gatehouse.lease.end", "params": { "lease_id": "01ARZ3NDEKTSV4RRFFQ69G5FAX" } },
+    "result": { "decision_id": "01ARZ3NDEKTSV4RRFFQ69G5FAY", "message_id": "simulated-room-event", "kind": "mode_changed", "verdict": "pass", "operator": "human", "at": "2026-10-26T12:00:00Z", "simulated": true, "reason_codes": ["simulated_lease_ended"] }
+  }
+]

@@ -2277,32 +2277,218 @@
       "name": "gatehouse.held.resolve",
       "owner": "WP 1.2",
       "params": {
+        "$defs": {
+          "HeldOutcome": {
+            "description": "AutoMod's allow/deny resolution, separate from the resulting decision kind.",
+            "enum": [
+              "allow",
+              "deny"
+            ],
+            "type": "string"
+          },
+          "MessageId": {
+            "pattern": "^[A-Za-z0-9_-]+$(?![\\s\\S])",
+            "type": "string"
+          }
+        },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Deliberately unusable until its owning WP supplies request/result shapes.",
-        "not": {},
-        "title": "Pending"
+        "additionalProperties": false,
+        "properties": {
+          "message_id": {
+            "$ref": "#/$defs/MessageId"
+          },
+          "outcome": {
+            "$ref": "#/$defs/HeldOutcome"
+          }
+        },
+        "required": [
+          "message_id",
+          "outcome"
+        ],
+        "title": "HeldResolveParams",
+        "type": "object"
       },
       "result": {
+        "$defs": {
+          "DecisionId": {
+            "pattern": "^[0-7][0-9A-HJKMNP-TV-Z]{25}$(?![\\s\\S])",
+            "type": "string"
+          },
+          "DecisionKind": {
+            "enum": [
+              "held",
+              "released",
+              "removed",
+              "warned",
+              "timed_out",
+              "banned",
+              "ban_pending",
+              "mode_changed",
+              "undone",
+              "would_act"
+            ],
+            "type": "string"
+          },
+          "MessageId": {
+            "pattern": "^[A-Za-z0-9_-]+$(?![\\s\\S])",
+            "type": "string"
+          },
+          "Operator": {
+            "enum": [
+              "human",
+              "ai",
+              "ai_proposes"
+            ],
+            "type": "string"
+          },
+          "RuleId": {
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$(?![\\s\\S])",
+            "type": "string"
+          },
+          "Timestamp": {
+            "format": "date-time",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?Z$(?![\\s\\S])",
+            "type": "string"
+          },
+          "Verdict": {
+            "enum": [
+              "pass",
+              "hold",
+              "bar"
+            ],
+            "type": "string"
+          }
+        },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Deliberately unusable until its owning WP supplies request/result shapes.",
-        "not": {},
-        "title": "Pending"
+        "additionalProperties": false,
+        "description": "Review payload, not the append-only ledger record. Pending bans contain original text.",
+        "if": {
+          "properties": {
+            "kind": {
+              "const": "ban_pending"
+            }
+          }
+        },
+        "properties": {
+          "at": {
+            "$ref": "#/$defs/Timestamp"
+          },
+          "decision_id": {
+            "$ref": "#/$defs/DecisionId"
+          },
+          "kind": {
+            "$ref": "#/$defs/DecisionKind"
+          },
+          "message_id": {
+            "$ref": "#/$defs/MessageId"
+          },
+          "message_text": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "operator": {
+            "$ref": "#/$defs/Operator"
+          },
+          "reason_codes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "rule_id": {
+            "$ref": "#/$defs/RuleId"
+          },
+          "simulated": {
+            "type": "boolean"
+          },
+          "verdict": {
+            "$ref": "#/$defs/Verdict"
+          }
+        },
+        "required": [
+          "decision_id",
+          "message_id",
+          "kind",
+          "verdict",
+          "operator",
+          "at",
+          "simulated",
+          "reason_codes"
+        ],
+        "then": {
+          "properties": {
+            "message_text": true
+          },
+          "required": [
+            "message_text"
+          ]
+        },
+        "title": "Decision",
+        "type": "object"
       }
     },
     {
       "name": "gatehouse.delay.set",
       "owner": "WP 1.2",
       "params": {
+        "$defs": {
+          "ChatDelay": {
+            "description": "Numeric on the wire, including zero (no non-moderator delay).",
+            "enum": [
+              0,
+              2,
+              4,
+              6
+            ],
+            "format": "uint8",
+            "maximum": 255,
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Deliberately unusable until its owning WP supplies request/result shapes.",
-        "not": {},
-        "title": "Pending"
+        "additionalProperties": false,
+        "properties": {
+          "delay_s": {
+            "$ref": "#/$defs/ChatDelay",
+            "description": "Reuses ChatDelay's TryFrom validation: 0 (off), 2, 4 or 6 seconds only."
+          }
+        },
+        "required": [
+          "delay_s"
+        ],
+        "title": "DelaySetParams",
+        "type": "object"
       },
       "result": {
+        "$defs": {
+          "ChatDelay": {
+            "description": "Numeric on the wire, including zero (no non-moderator delay).",
+            "enum": [
+              0,
+              2,
+              4,
+              6
+            ],
+            "format": "uint8",
+            "maximum": 255,
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Deliberately unusable until its owning WP supplies request/result shapes.",
-        "not": {},
-        "title": "Pending"
+        "additionalProperties": false,
+        "properties": {
+          "delay_s": {
+            "$ref": "#/$defs/ChatDelay",
+            "description": "The applied setting, never an optimistic echo before Twitch confirms it."
+          }
+        },
+        "required": [
+          "delay_s"
+        ],
+        "title": "DelaySetResult",
+        "type": "object"
       }
     },
     {
@@ -2310,31 +2496,174 @@
       "owner": "WP 1.2",
       "params": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Deliberately unusable until its owning WP supplies request/result shapes.",
-        "not": {},
-        "title": "Pending"
+        "additionalProperties": false,
+        "properties": {
+          "enabled": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "enabled"
+        ],
+        "title": "ShieldSetParams",
+        "type": "object"
       },
       "result": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Deliberately unusable until its owning WP supplies request/result shapes.",
-        "not": {},
-        "title": "Pending"
+        "additionalProperties": false,
+        "properties": {
+          "enabled": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "enabled"
+        ],
+        "title": "ShieldState",
+        "type": "object"
       }
     },
     {
       "name": "gatehouse.lease.end",
       "owner": "WP 1.3",
       "params": {
+        "$defs": {
+          "LeaseId": {
+            "pattern": "^[0-7][0-9A-HJKMNP-TV-Z]{25}$(?![\\s\\S])",
+            "type": "string"
+          }
+        },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Deliberately unusable until its owning WP supplies request/result shapes.",
-        "not": {},
-        "title": "Pending"
+        "additionalProperties": false,
+        "properties": {
+          "lease_id": {
+            "$ref": "#/$defs/LeaseId",
+            "description": "References a service-minted lease, not a mode name or a viewer message."
+          }
+        },
+        "required": [
+          "lease_id"
+        ],
+        "title": "LeaseEndParams",
+        "type": "object"
       },
       "result": {
+        "$defs": {
+          "DecisionId": {
+            "pattern": "^[0-7][0-9A-HJKMNP-TV-Z]{25}$(?![\\s\\S])",
+            "type": "string"
+          },
+          "DecisionKind": {
+            "enum": [
+              "held",
+              "released",
+              "removed",
+              "warned",
+              "timed_out",
+              "banned",
+              "ban_pending",
+              "mode_changed",
+              "undone",
+              "would_act"
+            ],
+            "type": "string"
+          },
+          "MessageId": {
+            "pattern": "^[A-Za-z0-9_-]+$(?![\\s\\S])",
+            "type": "string"
+          },
+          "Operator": {
+            "enum": [
+              "human",
+              "ai",
+              "ai_proposes"
+            ],
+            "type": "string"
+          },
+          "RuleId": {
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$(?![\\s\\S])",
+            "type": "string"
+          },
+          "Timestamp": {
+            "format": "date-time",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?Z$(?![\\s\\S])",
+            "type": "string"
+          },
+          "Verdict": {
+            "enum": [
+              "pass",
+              "hold",
+              "bar"
+            ],
+            "type": "string"
+          }
+        },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Deliberately unusable until its owning WP supplies request/result shapes.",
-        "not": {},
-        "title": "Pending"
+        "additionalProperties": false,
+        "description": "Review payload, not the append-only ledger record. Pending bans contain original text.",
+        "if": {
+          "properties": {
+            "kind": {
+              "const": "ban_pending"
+            }
+          }
+        },
+        "properties": {
+          "at": {
+            "$ref": "#/$defs/Timestamp"
+          },
+          "decision_id": {
+            "$ref": "#/$defs/DecisionId"
+          },
+          "kind": {
+            "$ref": "#/$defs/DecisionKind"
+          },
+          "message_id": {
+            "$ref": "#/$defs/MessageId"
+          },
+          "message_text": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "operator": {
+            "$ref": "#/$defs/Operator"
+          },
+          "reason_codes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "rule_id": {
+            "$ref": "#/$defs/RuleId"
+          },
+          "simulated": {
+            "type": "boolean"
+          },
+          "verdict": {
+            "$ref": "#/$defs/Verdict"
+          }
+        },
+        "required": [
+          "decision_id",
+          "message_id",
+          "kind",
+          "verdict",
+          "operator",
+          "at",
+          "simulated",
+          "reason_codes"
+        ],
+        "then": {
+          "properties": {
+            "message_text": true
+          },
+          "required": [
+            "message_text"
+          ]
+        },
+        "title": "Decision",
+        "type": "object"
       }
     },
     {
@@ -8198,6 +8527,66 @@
       "title": "DecisionKind",
       "type": "string"
     },
+    "DelaySetParams": {
+      "$defs": {
+        "ChatDelay": {
+          "description": "Numeric on the wire, including zero (no non-moderator delay).",
+          "enum": [
+            0,
+            2,
+            4,
+            6
+          ],
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "delay_s": {
+          "$ref": "#/$defs/ChatDelay",
+          "description": "Reuses ChatDelay's TryFrom validation: 0 (off), 2, 4 or 6 seconds only."
+        }
+      },
+      "required": [
+        "delay_s"
+      ],
+      "title": "DelaySetParams",
+      "type": "object"
+    },
+    "DelaySetResult": {
+      "$defs": {
+        "ChatDelay": {
+          "description": "Numeric on the wire, including zero (no non-moderator delay).",
+          "enum": [
+            0,
+            2,
+            4,
+            6
+          ],
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "delay_s": {
+          "$ref": "#/$defs/ChatDelay",
+          "description": "The applied setting, never an optimistic echo before Twitch confirms it."
+        }
+      },
+      "required": [
+        "delay_s"
+      ],
+      "title": "DelaySetResult",
+      "type": "object"
+    },
     "DesignId": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$(?![\\s\\S])",
@@ -8727,6 +9116,75 @@
       "title": "ErrorEnvelope",
       "type": "object"
     },
+    "HeldOutcome": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "description": "AutoMod's allow/deny resolution, separate from the resulting decision kind.",
+      "enum": [
+        "allow",
+        "deny"
+      ],
+      "title": "HeldOutcome",
+      "type": "string"
+    },
+    "HeldResolveParams": {
+      "$defs": {
+        "HeldOutcome": {
+          "description": "AutoMod's allow/deny resolution, separate from the resulting decision kind.",
+          "enum": [
+            "allow",
+            "deny"
+          ],
+          "type": "string"
+        },
+        "MessageId": {
+          "pattern": "^[A-Za-z0-9_-]+$(?![\\s\\S])",
+          "type": "string"
+        }
+      },
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "message_id": {
+          "$ref": "#/$defs/MessageId"
+        },
+        "outcome": {
+          "$ref": "#/$defs/HeldOutcome"
+        }
+      },
+      "required": [
+        "message_id",
+        "outcome"
+      ],
+      "title": "HeldResolveParams",
+      "type": "object"
+    },
+    "LeaseEndParams": {
+      "$defs": {
+        "LeaseId": {
+          "pattern": "^[0-7][0-9A-HJKMNP-TV-Z]{25}$(?![\\s\\S])",
+          "type": "string"
+        }
+      },
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "lease_id": {
+          "$ref": "#/$defs/LeaseId",
+          "description": "References a service-minted lease, not a mode name or a viewer message."
+        }
+      },
+      "required": [
+        "lease_id"
+      ],
+      "title": "LeaseEndParams",
+      "type": "object"
+    },
+    "LeaseId": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "pattern": "^[0-7][0-9A-HJKMNP-TV-Z]{25}$(?![\\s\\S])",
+      "title": "LeaseId",
+      "type": "string"
+    },
     "LotsEventPayload": {
       "$defs": {
         "CastResult": {
@@ -9207,6 +9665,19 @@
           ],
           "type": "object"
         },
+        "ChatDelay": {
+          "description": "Numeric on the wire, including zero (no non-moderator delay).",
+          "enum": [
+            0,
+            2,
+            4,
+            6
+          ],
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "integer"
+        },
         "ConsensusFilter": {
           "oneOf": [
             {
@@ -9359,6 +9830,19 @@
           ],
           "type": "object"
         },
+        "DelaySetParams": {
+          "additionalProperties": false,
+          "properties": {
+            "delay_s": {
+              "$ref": "#/$defs/ChatDelay",
+              "description": "Reuses ChatDelay's TryFrom validation: 0 (off), 2, 4 or 6 seconds only."
+            }
+          },
+          "required": [
+            "delay_s"
+          ],
+          "type": "object"
+        },
         "DesignId": {
           "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$(?![\\s\\S])",
           "type": "string"
@@ -9496,6 +9980,30 @@
           "minLength": 1,
           "type": "string"
         },
+        "HeldOutcome": {
+          "description": "AutoMod's allow/deny resolution, separate from the resulting decision kind.",
+          "enum": [
+            "allow",
+            "deny"
+          ],
+          "type": "string"
+        },
+        "HeldResolveParams": {
+          "additionalProperties": false,
+          "properties": {
+            "message_id": {
+              "$ref": "#/$defs/MessageId"
+            },
+            "outcome": {
+              "$ref": "#/$defs/HeldOutcome"
+            }
+          },
+          "required": [
+            "message_id",
+            "outcome"
+          ],
+          "type": "object"
+        },
         "Intensity": {
           "description": "Finite fraction, not a percentage. Both schema and Rust reject nonfinite values.",
           "format": "double",
@@ -9577,6 +10085,23 @@
             "intensity"
           ],
           "type": "object"
+        },
+        "LeaseEndParams": {
+          "additionalProperties": false,
+          "properties": {
+            "lease_id": {
+              "$ref": "#/$defs/LeaseId",
+              "description": "References a service-minted lease, not a mode name or a viewer message."
+            }
+          },
+          "required": [
+            "lease_id"
+          ],
+          "type": "object"
+        },
+        "LeaseId": {
+          "pattern": "^[0-7][0-9A-HJKMNP-TV-Z]{25}$(?![\\s\\S])",
+          "type": "string"
         },
         "LotsCohortCap": {
           "additionalProperties": false,
@@ -10284,6 +10809,18 @@
           ],
           "type": "object"
         },
+        "ShieldSetParams": {
+          "additionalProperties": false,
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "enabled"
+          ],
+          "type": "object"
+        },
         "SimulatedBurst": {
           "additionalProperties": false,
           "description": "Synthetic input, never client-provided Twitch identities or live ledger events.",
@@ -10752,7 +11289,7 @@
               "type": "string"
             },
             "params": {
-              "$ref": "#/$defs/Pending"
+              "$ref": "#/$defs/HeldResolveParams"
             }
           },
           "required": [
@@ -10769,7 +11306,7 @@
               "type": "string"
             },
             "params": {
-              "$ref": "#/$defs/Pending"
+              "$ref": "#/$defs/DelaySetParams"
             }
           },
           "required": [
@@ -10786,7 +11323,7 @@
               "type": "string"
             },
             "params": {
-              "$ref": "#/$defs/Pending"
+              "$ref": "#/$defs/ShieldSetParams"
             }
           },
           "required": [
@@ -10803,7 +11340,7 @@
               "type": "string"
             },
             "params": {
-              "$ref": "#/$defs/Pending"
+              "$ref": "#/$defs/LeaseEndParams"
             }
           },
           "required": [
@@ -11230,6 +11767,34 @@
       ],
       "title": "RuleMode",
       "type": "string"
+    },
+    "ShieldSetParams": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "enabled"
+      ],
+      "title": "ShieldSetParams",
+      "type": "object"
+    },
+    "ShieldState": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "enabled"
+      ],
+      "title": "ShieldState",
+      "type": "object"
     },
     "StewardEventPayload": {
       "$defs": {

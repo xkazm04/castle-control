@@ -356,9 +356,9 @@ fn every_record_rejects_null_and_unknown_fields_including_optional_keys() {
 }
 
 #[test]
-fn later_gatehouse_payloads_remain_pending() {
+fn gate_and_governor_payloads_are_typed_but_empty_requests_still_fail() {
     let schemas = method_schemas();
-    let pending: Vec<_> = schemas
+    let typed: Vec<_> = schemas
         .iter()
         .filter(|method| {
             let name = method["name"].as_str().unwrap();
@@ -366,10 +366,10 @@ fn later_gatehouse_payloads_remain_pending() {
                 && matches!(method["owner"].as_str(), Some("WP 1.2" | "WP 1.3"))
         })
         .collect();
-    assert_eq!(pending.len(), 4);
-    for method in pending {
-        assert_eq!(method["params"]["not"], json!({}));
-        assert_eq!(method["result"]["not"], json!({}));
+    assert_eq!(typed.len(), 4);
+    for method in typed {
+        assert!(method["params"].get("not").is_none());
+        assert!(method["result"].get("not").is_none());
         assert_eq!(
             parse_request(
                 &serde_json::to_vec(&json!({"method":method["name"],"params":{}})).unwrap()

@@ -729,8 +729,8 @@ RulesListResult; rules.upsert takes RulesUpsertParams and returns Rule;
 rules.setMode takes RulesSetModeParams and returns Decision; ban.confirm,
 ban.dismiss and decision.undo take DecisionParams and return Decision;
 petition.resolve takes PetitionResolveParams and returns Decision. These names
-are under the existing gatehouse method prefix. WP 1.2/1.3 methods remain
-Pending; WP 1.5/1.6 and lots methods are typed by the deliveries below.
+are under the existing gatehouse method prefix. WP 1.2/1.3, WP 1.5/1.6 and
+lots methods are typed by the deliveries below; typing registers no RPC handler.
 
 Pattern rules require pattern and forbid text; classifier rules require text and
 forbid pattern. Rails forbid pattern, text and strikes: detectors are owned by
@@ -756,6 +756,32 @@ A ban_pending Decision requires the original message_text, never a summary.
 This is a review payload; the append-only ledger continues to store IDs rather
 than message text. The contract cannot prove that supplied text is original;
 the owning service must fetch it from its durable queue.
+
+**WP 1.2/1.3 typed payloads (offline contract delivery, 2026-10-26).**
+
+| Method or type | Params, result and invariants |
+| --- | --- |
+| `gatehouse.held.resolve` (WP 1.2) | `HeldResolveParams { message_id: MessageId, outcome: HeldOutcome }` -> existing `Decision`; the service resolves the original held message and returns `released` for allow or `removed` for deny |
+| `HeldOutcome` | Exactly `allow` or `deny`; resolution intent is separate from `Verdict` and `DecisionKind` |
+| `gatehouse.delay.set` (WP 1.2) | `DelaySetParams { delay_s: ChatDelay }` -> `DelaySetResult { delay_s: ChatDelay }`; numeric seconds, exactly 0 (off), 2, 4 or 6; reuses the existing ChatDelay TryFrom and schema enum |
+| `gatehouse.shield.set` (WP 1.2) | `ShieldSetParams { enabled: bool }` -> `ShieldState { enabled: bool }`; true enables Shield Mode, false disables it; numbers and string on/off values are rejected |
+| `gatehouse.lease.end` (WP 1.3) | `LeaseEndParams { lease_id: LeaseId }` -> existing `Decision`; the service records the room-mode change, not an action on a viewer |
+| `LeaseId` | Branded canonical uppercase ULID string; the lease-owning service mints through `LeaseId::mint`, reads parse through TryFrom. A lease has a separate lifecycle from a DecisionId; a mode name cannot identify a particular lease |
+
+All records deny unknown fields. Required keys cannot be missing or null;
+existing optional Decision keys must be omitted when absent and reject present
+null. Decision, DecisionId, MessageId, Timestamp and the ten-code ErrorEnvelope
+retain their existing validation. Rate limits use `rate_limited` with optional
+`retry_after_ms`, never a new error code. Rust and TypeScript consume the same
+generated, simulated JSON fixtures in `crates/cc-types/tests/fixtures/gatehouse_gate.json`.
+
+This delivery adds no RPC registration, Twitch calls or governor implementation.
+Typing an input grants no authority to act. WP 1.2 must fetch the durable original
+held message, enforce the action gate, report only Twitch-confirmed delay/Shield
+settings, honour rate limits and log Twitch UI actions. WP 1.3 must resolve the
+service-owned lease, preserve expiry and human-yield semantics, and return the
+resulting room decision. Those service semantics cannot be proved by shape
+validation. No live wiring precedes the WP 0.7 spike.
 
 **WP 1.5/1.6 typed payloads (contract delivery, 2026-10-25).**
 
@@ -980,7 +1006,7 @@ cloud opt-in enforcement remain the engine's job. The CLI remains slow-lane only
 - **Absent values: omit the key.** Use `Option` with skip-if-none in Rust and an optional property in TS. Never write `null`, and never `0` or `""` for unknown. Two packages coding a missing value must not drift.
 - **Branded ids**, each minted at one door:
   - `MessageId` (Twitch's);
-  - `DecisionId`, `WritId` and `DrawRunId` (ULIDs);
+  - `DecisionId`, `WritId`, `DrawRunId` and `LeaseId` (ULIDs);
   - `RuleId`, `DrawId`, `VisualId` and `DesignId` (slugs the streamer can read).
 
 | Module | Methods |
