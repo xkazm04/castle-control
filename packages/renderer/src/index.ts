@@ -8,3 +8,7 @@ export * from './draw/model.ts';
 export * from './draw/scenes.ts';
 export * from './draw/disclaimer.ts';
 export * from './draw/template.ts';
+export * from './templates/war-table.ts';
+export * from './templates/choice-board.ts';
+export * from './templates/viewer-card.ts';
+export * from './templates/contribution-meter.ts';

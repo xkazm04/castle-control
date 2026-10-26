@@ -11,6 +11,72 @@ Design bindings use local structural types that mirror the merged `cc-types`
 parse incoming design data at their contract boundary. There is no overlay
 server, Extension host, asset loader or package interpreter here yet.
 
+## Map Room templates (WP 4.1 part A)
+
+The public entry exports four frozen, simulated data templates and their pure
+parsers/scene builders from `src/templates/`. These are renderer-local data,
+not contract identifiers or wire schemas. The existing `OVERLORD_URN_TEMPLATE`
+and draw scenes are unchanged.
+
+| Data / builder | Scene |
+| --- | --- |
+| `WAR_TABLE_TEMPLATE` / `buildWarTableScene(data, hex_size)` | Pointy-top axial `(q, r)` tiles with optional sides, centre/corner pixel coordinates and pieces at tile centres. Size is the positive centre-to-corner radius. Empty maps, duplicate tiles/piece ids and pieces on missing tiles are refused. |
+| `CHOICE_BOARD_TEMPLATE` / `buildChoiceBoardScene(data)` | Two to six labelled options with nonnegative safe-integer vote tallies. Bars have normalized shares summing to one, or all zero with no votes; the total must remain a safe integer. |
+| `VIEWER_CARD_TEMPLATE` / `buildViewerCardScene(data)` | A nonempty string `twitch_user_id`, mandatory `display_name` and literal `approved: true`. The host must show that name as text on the card; this parser does not authenticate identity or grant approval. |
+| `CONTRIBUTION_METER_TEMPLATE` / `buildContributionMeterScene(data)` | Finite `current`, positive finite `goal` and a clamped `fill_fraction`. Negative progress displays empty; excess progress displays full. Units are host-selected and display-only. |
+
+Each builder validates unknown input through its matching `parseWarTable`,
+`parseChoiceBoard`, `parseViewerCard` or `parseContributionMeter` function and
+returns an immutable snapshot without DOM, network, clocks, timers or randomness.
+All record levels deny unknown fields, including `bits` and `cost`. Optional
+`image_path` references (tiles/pieces, options, cards and meters) accept local
+relative asset paths such as `assets/badge.png` or `./assets/badge.png` only.
+Schemes, absolute paths, traversal, backslashes, encoded paths and query strings
+are refused. Absent optional keys stay omitted; explicit undefined is refused.
+These templates accept no executable code or prices for viewer actions.
+
+Still for `apps/extension`: the bundled shell, viewer controls and JWT
+verification, configuration-segment/service loading, and the allowlisted image
+host. That host must resolve validated local paths through its own asset mapping
+and render names/labels as text. No Extension package, live wiring, submission
+or new contract is included. Per the operator's 2026-10-25 standup, M4 is for
+local test and allowlisted Hosted Test only; WP 4.0's email gate is dropped.
+
+`src/static-safety.test.ts` walks all renderer source files without following
+links, reports the inventory and refuses zero files. It rejects direct eval,
+Function constructors, string timers, HTTP(S) imports and script `src` tags;
+in-memory violations prove the check red without changing another tree. It is
+source lint, not a substitute for shell/bundle CSP or a runtime sandbox. Its
+test-only Node types reference uses the already-declared dev dependency.
+
+### WP 4.1 part A validation, 2026-10-26
+
+- Reconciled against `main`/HEAD `a7157f8b2368bd4e19ebc0f86025acb05d701a18`:
+  no `src/templates/` or war-table/choice-board/viewer-card/contribution-meter
+  implementation existed. The prior renderer delivery is `e37bfeb` (draw scenes).
+- Red first: the four new template suites failed with missing template modules.
+  After implementation, all 80 renderer tests across 12 files pass, including
+  20 new cases. Each template tests valid scenes, its required refusals,
+  unknown `bits`/`cost` fields and nonlocal images. The static scan walks 29
+  source files and proves each forbidden form red on in-memory input, as well
+  as an empty walk; no source violation or scratch tree is left behind.
+- Renderer typecheck and lint pass using
+  `pnpm --config.verify-deps-before-run=false --filter @castle-control/renderer
+  typecheck` (and `lint`): 29 TS files. Lint's boundaries/hygiene/file-cap check
+  walks 370 source files, and secrets scanning walks 477 files.
+- Renderer regression command:
+  `pnpm --config.verify-deps-before-run=false --filter @castle-control/renderer
+  exec vitest run --pool=threads --cache=false --reporter=verbose --silent=false`.
+  Cache writes are disabled because dependency installs are shared junctions.
+- `pnpm --config.verify-deps-before-run=false gate` passes 14 tooling tests
+  and workspace discovery (6 manifests, 124 TS files), then fails at the
+  unchanged contract exporter with `spawnSync cargo EPERM`. Recursive `-r
+  typecheck` and `-r lint` each stop with `spawn EPERM`. HEAD's `docs/PLAN.md`
+  already records these sandbox failures; `git diff HEAD -- scripts
+  packages/contract crates` is empty. Rust and later full-gate stages were not
+  reached. Full-workspace acceptance remains incomplete for App Master to
+  verify; no install, manifest/lockfile change or live action was performed.
+
 ## Provenance and adaptation
 
 Pure portions were read from Shadowrunr OS commit `7e4b6f8`, under Apache-2.0:
