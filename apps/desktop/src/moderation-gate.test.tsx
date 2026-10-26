@@ -1,13 +1,14 @@
 import { Children, isValidElement } from 'react';
 import type { ChangeEvent, ReactNode, ReactElement, MouseEvent, SelectHTMLAttributes } from 'react';
-import { renderToStaticMarkup } from 'react-dom/server';
+import { renderToReadableStream, renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, expect, test, vi } from 'vitest';
 import { InkButton } from '@castle-control/ui';
 import type { InkButtonProps } from '@castle-control/ui';
 import { gatehouseHeldResolve, gatehouseDelaySet, gatehouseShieldSet, gatehouseLeaseEnd, parseMethodParams } from '@castle-control/contract';
 import { createModerationPreview } from './moderation-model.js';
 import { fixtureConfirmationMs, fixtureHeld, fixtureHoldReasons } from './moderation-fixture.js';
-import { GateControls } from './moderation-gate-controls.jsx';
+import { GateControls, ShieldControl } from './moderation-gate-controls.jsx';
+import { ModerationPage } from './moderation-page.jsx';
 import { HeldQueue, HeldActions } from './moderation-held.jsx';
 import { DecisionList } from './moderation-review.jsx';
 import { fixtureRules } from './moderation-fixture.js';
@@ -31,6 +32,21 @@ function delayControl(tree: ReactNode): ReactElement<SelectHTMLAttributes<HTMLSe
   return found;
 }
 
+test('Gatehouse has one Shield toggle in the room hero and keeps the delay select in 2.4', async () => {
+  const port = createModerationPreview();
+  const stream = await renderToReadableStream(<ModerationPage port={port} />);
+  await stream.allReady;
+  const html = await new Response(stream).text();
+  const buttons = html.match(/<button\b[^>]*>[\s\S]*?<\/button>/g) ?? [];
+  expect(buttons.filter(button => button.includes(`aria-label="${copy.shield_label}"`))).toHaveLength(1);
+  expect(buttons.filter(button => button.includes(copy.shield))).toHaveLength(1);
+  const hero = html.match(/<section class="cc-room-status"[\s\S]*?<\/section>/)?.[0];
+  expect(hero).toContain(`aria-label="${copy.shield_label}"`);
+  const held = queue(port);
+  expect(held).toContain(`aria-label="${copy.delay_applied}"`);
+  expect(held).not.toContain(`aria-label="${copy.shield_label}"`);
+});
+
 test('all four gate handles are public and validate requests without invoking transport', () => {
   expect([gatehouseHeldResolve, gatehouseDelaySet, gatehouseShieldSet, gatehouseLeaseEnd].map(item => item.method))
     .toEqual(['gatehouse.held.resolve', 'gatehouse.delay.set', 'gatehouse.shield.set', 'gatehouse.lease.end']);
@@ -43,16 +59,22 @@ test('delay keeps its applied value until the fixture confirms and exposes only 
   const port = createModerationPreview();
   const before = controls(port);
   expect([...before.matchAll(/<option value="(\d+)"/g)].map(match => match[1])).toEqual(['0', '2', '4', '6']);
-  const select = delayControl(GateControls({ snapshot: port.getSnapshot(), send: port.send }));
+  const send = vi.fn(port.send);
+  const select = delayControl(GateControls({ snapshot: port.getSnapshot(), send }));
   select.props.onChange?.({ currentTarget: { value: '6' } } as ChangeEvent<HTMLSelectElement>);
+  expect(send).toHaveBeenCalledExactlyOnceWith({ kind: 'delay', delay_s: 6 });
   expect(port.getSnapshot().delay_s).toBe(4);
   expect(controls(port)).toContain('value="4" selected=""');
   expect(controls(port)).toContain(copy.gate_pending);
+  expect(controls(port)).toContain('aria-busy="true"');
+  expect(delayControl(GateControls({ snapshot: port.getSnapshot(), send })).props.disabled).toBe(true);
   vi.advanceTimersByTime(fixtureConfirmationMs - 1);
   expect(port.getSnapshot().delay_s).toBe(4);
   vi.advanceTimersByTime(1);
   expect(port.getSnapshot().delay_s).toBe(6);
   expect(controls(port)).toContain('value="6" selected=""');
+  expect(controls(port)).toContain('aria-busy="false"');
+  expect(controls(port)).toContain(copy.shield_label);
 });
 
 test('unsupported select values and duplicate pending requests do not change applied settings', () => {
@@ -76,11 +98,11 @@ test('Shield keeps its applied pressed state until confirmation in both directio
   for (const enabled of [true, false]) {
     port.send({ kind: 'shield' });
     expect(port.getSnapshot().shield).toBe(!enabled);
-    expect(controls(port)).toContain(`aria-pressed="${!enabled}"`);
+    expect(renderToStaticMarkup(<ShieldControl snapshot={port.getSnapshot()} send={port.send} />)).toContain(`aria-pressed="${!enabled}"`);
     expect(controls(port)).toContain(copy.gate_pending);
     vi.advanceTimersByTime(fixtureConfirmationMs);
     expect(port.getSnapshot().shield).toBe(enabled);
-    expect(controls(port)).toContain(`aria-pressed="${enabled}"`);
+    expect(renderToStaticMarkup(<ShieldControl snapshot={port.getSnapshot()} send={port.send} />)).toContain(`aria-pressed="${enabled}"`);
   }
 });
 

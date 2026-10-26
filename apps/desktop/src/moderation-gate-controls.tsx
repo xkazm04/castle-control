@@ -24,7 +24,6 @@ export function GateControls({ snapshot, send }: GateProps) {
         <option value="4">{copy.delay_seconds(4)}</option><option value="6">{copy.delay_seconds(6)}</option>
       </select>
     </label>
-    <ShieldControl snapshot={snapshot} send={send} />
     <p className="moderation-meta" role="status">{pending ? copy.gate_pending : copy.shield_label}</p>
   </div>;
 }

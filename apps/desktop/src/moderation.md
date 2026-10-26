@@ -88,9 +88,12 @@ row, updates the chat verdict and records a released/removed decision retaining
 the original text. Duplicate or opposing in-flight resolutions are ignored.
 
 The applied delay selector offers only off, 2, 4 and 6 seconds. It keeps its
-previous applied value while disabled/pending. Both Shield controls (hero and
-panel) share the same component and retain the confirmed pressed state until
-confirmation. New display strings live in `moderation-copy.ts`. The extended
+previous applied value while disabled/pending. The single Shield control in the
+room hero retains the confirmed pressed state until confirmation. Panel 2.4 keeps
+the delay selector and shared pending/status line. Its local header grid places
+the title and held count on the first line and the gloss on the second, without
+changing the shared NumberedPanel. New display strings live in
+`moderation-copy.ts`. The extended
 fixture provides initial states, a 400 ms confirmation delay, schema-validated
 request/result pairs and explicit Twitch-UI action provenance. Human actions
 from Twitch are labelled in the gate roll; local preview actions have a
@@ -128,3 +131,25 @@ Validation, 2026-10-26:
 
 The changes remain uncommitted under the builder sandbox exception. No install
 or git write was run, and the node_modules junction was left untouched.
+
+## WP 1.7: Gatehouse layout polish
+
+The duplicate Shield button in panel 2.4 is removed. The room hero is its only
+placement; the panel retains the applied delay selector and pending/status line.
+Local CSS gives the held panel a two-row header: number, title and an unbroken
+held count above the full-width gloss. Other panels and shared kit code are
+unchanged.
+
+Validation, 2026-10-26, on base `b118bb6`:
+
+- Red first: the page regression found two Shield buttons instead of one.
+- Narrowed desktop tests `src/moderation-gate.test.tsx` and
+  `src/moderation.test.tsx` pass, 19 tests. They cover exactly one Shield toggle
+  in the hero, no duplicate in the held queue, delay-event dispatch, applied
+  values, disabled/pending state, confirmation and Shield state in both directions.
+- Desktop typecheck and lint pass using `node ../../scripts/package-gate.mjs`
+  with the respective mode. Both walked 39 files; lint also checked boundaries,
+  hygiene and file caps over 388 files and secrets over 499 files.
+- Screenshots at 1280x800 and 1440x900 remain for Director review. Computer Use
+  returned "Computer Use was not approved to use Google Chrome", so no visual
+  pass is claimed. No install, dependency-junction change or git write was run.

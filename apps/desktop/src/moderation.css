@@ -1,6 +1,9 @@
 .moderation-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(calc(var(--space-34) * 10), calc(var(--space-36) * 11)); gap: var(--space-24); align-items: start; }
 .moderation-column { display: flex; flex-direction: column; gap: var(--space-22); min-width: 0; }
 .moderation-grid .cc-panel { margin-top: 0; }
+.moderation-grid .cc-panel:has(> .moderation-gate-controls) > .cc-panel-heading { display: grid; grid-template-columns: max-content minmax(0, 1fr) max-content; row-gap: var(--space-4); }
+.moderation-grid .cc-panel:has(> .moderation-gate-controls) > .cc-panel-heading .cc-panel-gloss { grid-column: 2 / -1; grid-row: 2; line-height: 1.4; }
+.moderation-grid .cc-panel:has(> .moderation-gate-controls) > .cc-panel-heading .cc-panel-meta { grid-column: 3; grid-row: 1; white-space: nowrap; }
 .moderation-meta { font-size: var(--text-small); color: var(--muted); line-height: 1.5; }
 .moderation-meta { margin-block: var(--space-8); }
 .moderation-notice { border-inline-start: var(--rule-strong) solid var(--azure); padding: var(--space-8) var(--space-12); background: var(--tint); font-size: var(--text-small); }
