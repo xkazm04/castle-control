@@ -1,11 +1,13 @@
 //! All HTTP requests are simulated and restricted to a local ephemeral server.
 use cc_obs::Overlay;
 #[tokio::test]
-async fn read_only_overlay_refuses_rpc_and_untrusted_hosts() {
+async fn simulated_overlay_origin() {
     let overlay = Overlay::start(0).await.unwrap();
     let client = reqwest::Client::builder().no_proxy().build().unwrap();
     let response = client.get(overlay.url()).send().await.unwrap();
     assert_eq!(response.status(), 200);
+    assert_eq!(response.headers()["x-content-type-options"], "nosniff");
+    assert_eq!(response.headers()["cache-control"], "no-store");
     assert!(
         response.headers()["content-security-policy"]
             .to_str()

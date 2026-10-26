@@ -1,77 +1,12 @@
 //! All peers, Hello recordings and credentials here are generated simulated data.
-use cc_obs::{BrowserSource, Client, Config, Error, PasswordReader};
-use futures::{SinkExt, StreamExt};
-use serde_json::{Value, json};
+mod simulated;
+use cc_obs::{Client, Error};
+use serde_json::json;
+use simulated::*;
 use std::{
     io::Write,
     sync::{Arc, Mutex},
-    time::Duration,
 };
-use tokio::{
-    net::{TcpListener, TcpStream},
-    task::JoinHandle,
-};
-use tokio_tungstenite::{WebSocketStream, accept_async, tungstenite::Message};
-use zeroize::Zeroizing;
-
-const SENTINEL: &str = "simulated-obs-password";
-const HELLO: &str = r#"{"op":0,"d":{"obsStudioVersion":"31.0.0-simulated","obsWebSocketVersion":"5.5.0-simulated","rpcVersion":1,"authentication":{"salt":"simulated-salt","challenge":"simulated-challenge"}}}"#;
-struct SimulatedKeychain;
-impl PasswordReader for SimulatedKeychain {
-    fn read(&self, label: &str) -> Result<Zeroizing<String>, Error> {
-        assert_eq!(label, "simulated-label");
-        Ok(Zeroizing::new(SENTINEL.into()))
-    }
-}
-type Socket = WebSocketStream<TcpStream>;
-async fn frame(socket: &mut Socket) -> Value {
-    let frame = tokio::time::timeout(Duration::from_secs(2), socket.next())
-        .await
-        .unwrap()
-        .unwrap()
-        .unwrap();
-    serde_json::from_str(frame.to_text().unwrap()).unwrap()
-}
-async fn send(socket: &mut Socket, frame: Value) {
-    socket
-        .send(Message::Text(frame.to_string().into()))
-        .await
-        .unwrap();
-}
-async fn peer() -> (Config, JoinHandle<Socket>) {
-    let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
-    let config = Config {
-        port: listener.local_addr().unwrap().port(),
-        password_label: "simulated-label".into(),
-    };
-    let task = tokio::spawn(async move {
-        let mut socket = accept_async(listener.accept().await.unwrap().0)
-            .await
-            .unwrap();
-        socket.send(Message::Text(HELLO.into())).await.unwrap();
-        let identify = frame(&mut socket).await;
-        assert_eq!(identify["op"], 1);
-        assert_eq!(identify["d"]["rpcVersion"], 1);
-        assert_eq!(identify["d"]["eventSubscriptions"], 0);
-        // Independently calculated with Python hashlib, not the implementation under test.
-        assert!(identify["d"]["authentication"] == "hhXX0601vwjVjnbHVKunUiX0uRmBULfqfVaEBrM2Mqk=");
-        send(&mut socket, json!({"op":2,"d":{"negotiatedRpcVersion":1}})).await;
-        socket
-    });
-    (config, task)
-}
-fn response(request: &Value, data: Value) -> Value {
-    json!({"op":7,"d":{"requestType":request["d"]["requestType"],"requestId":request["d"]["requestId"],"requestStatus":{"result":true,"code":100},"responseData":data}})
-}
-fn source() -> BrowserSource {
-    BrowserSource {
-        scene_name: "simulated-scene".into(),
-        source_name: "simulated-source".into(),
-        url: "http://localhost:43210/".into(),
-        width: 1280,
-        height: 720,
-    }
-}
 
 #[tokio::test]
 async fn recorded_simulated_hello_authenticates_then_correlates_get_version() {
@@ -137,7 +72,14 @@ async fn create_input_has_browser_source_shape_and_rejects_unsafe_origins() {
                 "inputSettings":{"url":"http://localhost:43210/","width":1280,"height":720,"is_local_file":false,"shutdown":false}
             })
         );
-        send(&mut socket, response(&request, json!({"sceneItemId":12}))).await;
+        send(
+            &mut socket,
+            response(
+                &request,
+                json!({"sceneItemId":12,"inputUuid":"simulated-input-uuid"}),
+            ),
+        )
+        .await;
     });
     client.create_browser_source(&source()).await.unwrap();
     task.await.unwrap();
@@ -160,6 +102,29 @@ async fn wrong_response_type_is_rejected_even_when_request_id_matches() {
         client.create_browser_source(&source()).await,
         Err(Error::Protocol)
     );
+    task.await.unwrap();
+}
+
+#[tokio::test]
+async fn simulated_get_version_requires_rpc_one() {
+    let (config, peer) = peer().await;
+    let mut client = Client::connect_with_reader(&config, &SimulatedKeychain)
+        .await
+        .unwrap();
+    let task = tokio::spawn(async move {
+        let mut socket = peer.await.unwrap();
+        let request = frame(&mut socket).await;
+        send(
+            &mut socket,
+            response(
+                &request,
+                json!({"obsVersion":"simulated",
+            "obsWebSocketVersion":"simulated","rpcVersion":2,"availableRequests":[]}),
+            ),
+        )
+        .await;
+    });
+    assert!(matches!(client.get_version().await, Err(Error::Protocol)));
     task.await.unwrap();
 }
 
