@@ -106,6 +106,9 @@ importers:
 
   packages/renderer:
     devDependencies:
+      '@castle-control/contract':
+        specifier: workspace:*
+        version: link:../contract
       '@types/node':
         specifier: 24.10.0
         version: 24.10.0
