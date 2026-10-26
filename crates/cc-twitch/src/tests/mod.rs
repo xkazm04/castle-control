@@ -8,4 +8,8 @@ mod fixtures;
 mod harness;
 mod helix;
 mod mock;
+mod moderation;
+mod moderation_actions;
+mod moderation_fixtures;
+mod moderation_notifications;
 mod safety;

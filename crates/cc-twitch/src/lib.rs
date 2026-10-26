@@ -6,6 +6,8 @@ mod eventsub;
 #[cfg(any(test, feature = "fault-injection"))]
 mod fault;
 mod handover;
+pub mod moderation;
+mod moderation_calls;
 pub mod scopes;
 mod store;
 #[cfg(test)]
@@ -20,6 +22,7 @@ use std::sync::{Arc, Mutex};
 use tokio::sync::mpsc;
 use tokio::task::JoinHandle;
 
+pub use moderation_calls::{ChatDelay, HeldMessageAction};
 use scopes::{Topic, module_plan, pack};
 use store::{CredentialStore, KeyringStore};
 pub use types::{

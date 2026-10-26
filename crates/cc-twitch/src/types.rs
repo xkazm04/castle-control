@@ -91,6 +91,21 @@ pub struct Notification {
     pub chat: Option<ChatMessage>,
 }
 
+impl Notification {
+    /// Typed view through the same schema door used at WebSocket ingress.
+    /// Keep the public struct shape compatible with existing offline producers.
+    pub fn moderation(
+        &self,
+    ) -> Result<Option<crate::moderation::ModerationNotification>, BridgeError> {
+        let version = crate::scopes::MODULE_SCOPES
+            .iter()
+            .flat_map(|module| module.topics)
+            .find(|topic| topic.name == self.subscription_type)
+            .map(|topic| topic.version);
+        crate::moderation::parse_notification(&self.subscription_type, version, &self.event)
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Viewer {
     pub id: String,

@@ -102,7 +102,13 @@ impl Vault {
             // Twitch's unpublished per-endpoint caps may omit all bucket headers.
             let retry = number("retry-after").unwrap_or(1).max(1);
             let fallback = chrono::Utc::now().timestamp() + i64::try_from(retry).unwrap_or(60);
-            rate.reset_at_s = Some(rate.reset_at_s.unwrap_or(fallback).max(fallback));
+            // An explicit reset is authoritative, including sub-second waits.
+            // Do not reuse an old bucket's reset when this response omits it.
+            rate.reset_at_s = Some(
+                number("ratelimit-reset")
+                    .and_then(|v| i64::try_from(v).ok())
+                    .unwrap_or(fallback),
+            );
         }
     }
 }

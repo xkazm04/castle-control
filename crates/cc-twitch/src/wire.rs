@@ -35,6 +35,7 @@ struct Metadata {
     message_type: String,
     message_timestamp: chrono::DateTime<chrono::Utc>,
     subscription_type: Option<String>,
+    subscription_version: Option<String>,
 }
 
 #[derive(Deserialize)]
@@ -95,14 +96,21 @@ pub(crate) fn parse_frame(text: &str) -> Result<Frame, BridgeError> {
         "notification" => {
             let payload: EventPayload =
                 serde_json::from_value(env.payload).map_err(|_| invalid())?;
+            let kind = env.metadata.subscription_type.ok_or_else(invalid)?;
+            let event = Value::Object(payload.event);
+            crate::moderation::parse_notification(
+                &kind,
+                env.metadata.subscription_version.as_deref(),
+                &event,
+            )?;
             Ok(Frame::Notification {
                 id: env.metadata.message_id,
                 at: env
                     .metadata
                     .message_timestamp
                     .to_rfc3339_opts(chrono::SecondsFormat::Millis, true),
-                kind: env.metadata.subscription_type.ok_or_else(invalid)?,
-                event: Value::Object(payload.event),
+                kind,
+                event,
             })
         }
         "revocation" => {

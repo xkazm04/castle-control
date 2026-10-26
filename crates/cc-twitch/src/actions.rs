@@ -31,7 +31,7 @@ struct Subscription {
 }
 
 impl TwitchBridge {
-    fn ids(&self) -> Result<(String, String), BridgeError> {
+    pub(crate) fn ids(&self) -> Result<(String, String), BridgeError> {
         let live = self.live.lock().expect("bridge state");
         match (&live.broadcaster_id, &live.user_id) {
             (Some(b), Some(m)) => Ok((b.clone(), m.clone())),

@@ -67,9 +67,34 @@ async fn log_grep_captured_output_contains_no_tokens() {
         p.say("simulated refresh")
             .await
             .expect("simulated refreshed call");
+        p.warn("222", "simulated warning")
+            .await
+            .expect("simulated warning");
+        p.resolve_held_message("simulated-message", crate::HeldMessageAction::Allow)
+            .await
+            .expect("simulated allow");
+        p.resolve_held_message("simulated-message", crate::HeldMessageAction::Deny)
+            .await
+            .expect("simulated deny");
+        p.set_shield_mode(true).await.expect("simulated shield");
+        p.set_chat_delay(crate::ChatDelay::FourSeconds)
+            .await
+            .expect("simulated delay");
         h.mock.echo_403.store(true, Ordering::SeqCst);
-        let error = p.say("simulated echo").await.expect_err("simulated 403");
-        tracing::warn!(%error, ?p, "simulated upstream error");
+        for error in [
+            p.warn("222", "simulated reason")
+                .await
+                .expect_err("simulated 403"),
+            p.resolve_held_message("simulated-message", crate::HeldMessageAction::Deny)
+                .await
+                .expect_err("simulated 403"),
+            p.set_shield_mode(false).await.expect_err("simulated 403"),
+            p.set_chat_delay(crate::ChatDelay::Disabled)
+                .await
+                .expect_err("simulated 403"),
+        ] {
+            tracing::warn!(%error, ?p, "simulated upstream error");
+        }
         p.disconnect().await.expect("simulated retirement");
     }
     .await;

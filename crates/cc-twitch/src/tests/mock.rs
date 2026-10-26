@@ -11,7 +11,7 @@ use axum::{
 use serde_json::{Value, json};
 use std::sync::{
     Arc, Mutex,
-    atomic::{AtomicBool, AtomicU32, Ordering},
+    atomic::{AtomicBool, AtomicI64, AtomicU32, Ordering},
 };
 
 #[derive(Clone)]
@@ -38,6 +38,9 @@ pub(super) struct Mock {
     pub device_polls: AtomicU32,
     pub reject: AtomicBool,
     pub rate_limit: AtomicBool,
+    pub exhaust_bucket: AtomicBool,
+    pub reset_at_s: AtomicI64,
+    pub omit_reset: AtomicBool,
     pub echo_403: AtomicBool,
     pub reject_refresh: AtomicBool,
     pub drop_chat: AtomicBool,
@@ -174,13 +177,20 @@ pub(super) async fn handle(
             }
             if m.rate_limit.load(Ordering::SeqCst) {
                 let mut response = reply(429, json!({}));
-                response.headers_mut().insert(
-                    "Ratelimit-Reset",
-                    (chrono::Utc::now().timestamp() + 30)
+                if !m.omit_reset.load(Ordering::SeqCst) {
+                    let reset = m.reset_at_s.load(Ordering::SeqCst);
+                    response.headers_mut().insert(
+                        "Ratelimit-Reset",
+                        (if reset == 0 {
+                            chrono::Utc::now().timestamp() + 30
+                        } else {
+                            reset
+                        })
                         .to_string()
                         .parse()
                         .expect("header"),
-                );
+                    );
+                }
                 response
                     .headers_mut()
                     .insert("Ratelimit-Remaining", "0".parse().expect("header"));
@@ -203,6 +213,28 @@ pub(super) async fn handle(
                     StatusCode::NO_CONTENT.into_response()
                 }
                 ("POST", "/helix/moderation/bans") => reply(200, json!({"data": [{}]})),
+                ("POST", "/helix/moderation/warnings") => reply(
+                    200,
+                    json!({"data": [{
+                    "broadcaster_id": BROADCASTER_ID, "moderator_id": BOT_ID,
+                    "user_id": call.json()["data"]["user_id"]}]}),
+                ),
+                ("POST", "/helix/moderation/automod/message") => {
+                    StatusCode::NO_CONTENT.into_response()
+                }
+                ("PUT", "/helix/moderation/shield_mode") => reply(
+                    200,
+                    json!({"data": [{
+                    "is_active": call.json()["is_active"], "moderator_id": BOT_ID,
+                    "moderator_login": "simulated_mod", "moderator_name": "SimulatedMod",
+                    "last_activated_at": "2026-10-26T12:00:00Z"}]}),
+                ),
+                ("PATCH", "/helix/chat/settings") => {
+                    let mut settings = call.json();
+                    settings["broadcaster_id"] = json!(BROADCASTER_ID);
+                    settings["moderator_id"] = json!(BOT_ID);
+                    reply(200, json!({"data": [settings]}))
+                }
                 ("POST", "/helix/chat/messages") if m.malformed_chat.load(Ordering::SeqCst) => {
                     reply(200, json!({}))
                 }
@@ -218,6 +250,25 @@ pub(super) async fn handle(
             response
                 .headers_mut()
                 .insert("Ratelimit-Remaining", "799".parse().expect("header"));
+            let reset = m.reset_at_s.load(Ordering::SeqCst);
+            if reset != 0 {
+                response.headers_mut().insert(
+                    "Ratelimit-Reset",
+                    reset.to_string().parse().expect("header"),
+                );
+            }
+            if m.exhaust_bucket.load(Ordering::SeqCst) {
+                response
+                    .headers_mut()
+                    .insert("Ratelimit-Remaining", "0".parse().expect("header"));
+                response.headers_mut().insert(
+                    "Ratelimit-Reset",
+                    (chrono::Utc::now().timestamp() + 30)
+                        .to_string()
+                        .parse()
+                        .expect("header"),
+                );
+            }
             response
         }
         _ => reply(404, json!({"message": "simulated not found"})),
