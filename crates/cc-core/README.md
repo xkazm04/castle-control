@@ -135,3 +135,72 @@ Validation for this delivery (2026-10-26):
   recorded in the base `docs/PLAN.md`. The full pnpm gate is **not** claimed
   green; App Master must rerun it and the frontend build outside this process
   restriction. No installation or junction modification was attempted.
+
+## Offline gatehouse module (WP 1.1)
+
+`cc_core::gatehouse::GatehouseModule` exports exactly the seven declared WP 1.1
+methods: `gatehouse.rules.list`, `gatehouse.rules.upsert`,
+`gatehouse.rules.setMode`, `gatehouse.ban.confirm`, `gatehouse.ban.dismiss`,
+`gatehouse.decision.undo`, and `gatehouse.petition.resolve`. Construct it with
+`GatehouseModule::open(root, Arc<dyn cc_store::Clock>)` and explicitly register
+it in a test-local `Registry::default()`. The caller owns the persistence root;
+the existing Gatehouse service owns `rules.json` and `store/` beneath it.
+
+The adapter serializes calls through a `Mutex<cc_gatehouse::Gatehouse>` and
+delegates the existing request types unchanged. Request parsing and response
+validation use the existing contract door; service errors retain their contract
+envelope. Lock poisoning and serialization failure return a sanitized internal
+error. The module starts no executor, feeds no chat and publishes no events.
+Exporting it does not register it: neither native constructor, the router nor
+the desktop integration is changed. Live wiring remains a separate delivery
+after the M0 spike. No held/delay/shield/lease/consensus/drill/recording methods
+are served here.
+
+Offline acceptance uses `tests/gatehouse.rs` and `tests/gatehouse_support/`.
+All seven methods dispatch only through a test-local registry, validate their
+responses, and reject unknown fields, null/string parameters and missing
+required fields with the contract error envelope. Generated simulated messages
+seed pending bans through the domain service while the RPC module is dropped;
+there is no added ingestion seam. Tests prove human confirm/dismiss, undo, both
+petition outcomes, repeated-resolution refusal, persistence through reopening,
+and an injected clock expiring review toward hold. The named
+`production_native_paths_serve_none_of_the_gatehouse_methods` guard exercises
+private `Registry::native(None)` via `with_status`, and `with_native`, asserting
+the exact `unavailable` / "method is not registered yet" response for all seven.
+
+Validation for this delivery (2026-10-26):
+
+- Red first: `cargo test -p cc-core --test gatehouse` failed on the missing
+  module and dependency before implementation.
+- `cargo test -p cc-core --test gatehouse --test lots`: five Gatehouse and six
+  Lots acceptance tests passed. Initial fixture expectations were corrected to
+  compare cc-store's nanosecond UTC serialization and to expect `invalid` when
+  the contract rejects armed mode without an acknowledgement before dispatch.
+- `cargo fmt --all -- --check` and `cargo clippy --workspace --all-targets --
+  -D warnings`: passed.
+- `cargo test --workspace`: passed, including documentation tests and the
+  1,000-draw independent verification property. Owner-only live tests and
+  explicit fixture generators remained ignored.
+- `node scripts/check.mjs`: boundaries, hygiene and file-cap walked 397 files;
+  secrets scanned 512 files; all passed.
+- `cargo run --quiet -p cc-types --bin export-contract` and `cargo run --quiet
+  -p cc-core --bin export-registry` produced fresh JSON outside the worktree.
+  `node packages/contract/scripts/check.mjs --schema <export>` passed (seven
+  generated and committed files). `node packages/contract/scripts/parity.mjs
+  --schema <export> --registry <export>` passed: 45 declared methods, seven
+  registered native methods, 38 unregistered, and all 16 event kinds mirrored.
+- `pnpm --config.verify-deps-before-run=false --filter @castle-control/desktop
+  build`: passed, including the first-load budget (389655/393216 bytes).
+- `pnpm --config.verify-deps-before-run=false gate`: 14 tooling tests and
+  workspace inventories passed, then the unchanged exporter failed with
+  `spawnSync cargo EPERM`. Recursive `-r typecheck`, `-r lint` and `-r test`
+  each failed with lifecycle `spawn EPERM`. These process restrictions are
+  already recorded in base `docs/PLAN.md`; no full pnpm pass is claimed.
+  App Master must rerun those gates in its verification environment. No install
+  or node_modules junction modification was attempted.
+
+Separate contract issue observed while testing, outside this delivery's scope:
+`cc_types::parse_request` accepts `[]` for the `Empty` params of rules.list,
+although its JSON Schema requires an object. The typed adapter cannot inspect
+the original JSON shape. No cc-types changes are included; negative acceptance
+cases above use shapes rejected by the existing contract door.

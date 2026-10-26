@@ -1,6 +1,7 @@
 //! Local authenticated RPC and resumable invalidation events. No overlay routes.
 mod auth;
 mod events;
+pub mod gatehouse;
 mod ingress;
 mod integration;
 mod login;

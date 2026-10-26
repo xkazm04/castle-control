@@ -20,6 +20,7 @@ cc-twitch = { path = "../cc-twitch" }
 cc-store = { path = "../cc-store" }
 cc-obs = { path = "../cc-obs" }
 cc-lots = { path = "../cc-lots" }
+cc-gatehouse = { path = "../cc-gatehouse" }
 cc-verify = { path = "../cc-verify" }
 chrono.workspace = true
 async-trait = "0.1.89"
