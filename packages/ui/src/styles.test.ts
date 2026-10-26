@@ -13,6 +13,7 @@ test('component styles use declared shared tokens, not raw colors or pixel sizes
   for (const [, name] of styles.matchAll(/var\(--([\w-]+)/g)) expect(known.has(name ?? '')).toBe(true);
   expect(styles).not.toMatch(/#[\da-f]{3,8}\b|\brgba?\(|\bhsla?\(/i);
   // Media queries cannot consume CSS custom properties. This is the measured prototype breakpoint.
-  const declarationsOnly = styles.replace('@media (max-width: 1420px)', '@media (max-width: breakpoint)');
+  const declarationsOnly = styles.replaceAll('@media (max-width: 1420px)', '@media (max-width: breakpoint)')
+    .replaceAll('@media (max-width: 900px)', '@media (max-width: breakpoint)');
   expect(declarationsOnly).not.toMatch(/\b\d+(?:\.\d+)?px\b/);
 });

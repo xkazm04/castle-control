@@ -1,5 +1,5 @@
 import { useState, useSyncExternalStore } from 'react';
-import { InkButton, NumberedPanel, PageHeader, RuleTable, StatusChip } from '@castle-control/ui';
+import { InkButton, NumberedPanel, PageHeader, RoomStatusHero, RuleTable, StatusChip } from '@castle-control/ui';
 import type { ModerationPort } from './moderation-model.js';
 import { createModerationPreview } from './moderation-model.js';
 import { fixtureCharts, fixtureReplay, fixtureRules } from './moderation-fixture.js';
@@ -18,13 +18,13 @@ export function ModerationPage({ replay = false, port }: { replay?: boolean; por
   return <>
     <PageHeader number={2} title={copy.title} description={copy.description} actions={<StatusChip variant="azure">Watching · simulated</StatusChip>} />
     <p className="moderation-notice" role="status">{copy.notice}</p>
-    <section className="moderation-room-hero" aria-label="Room status · simulated">
-      <div><span>{copy.orders}</span><b>Slow · 10 s</b><small>Timed lease · 90 s remaining</small></div>
-      <div><span>Room tier · hysteresis</span><b>Hall · M</b><small>Hearth / Hall / Courtyard / Tourney field</small></div>
-      <div><span>{copy.delay}</span><b>4 s</b><small>{snapshot.held.length} held · {snapshot.bans.length} bans pending</small></div>
-      <div><InkButton size="small" variant={snapshot.shield ? 'danger' : 'outline'} aria-pressed={snapshot.shield}
-        onClick={() => adapter.send({ kind: 'shield' })}>{snapshot.shield ? copy.shield_on : copy.shield}</InkButton><small>Shield Mode · preview only</small></div>
-    </section>
+    <RoomStatusHero label="Room status · simulated" cells={[
+      { id: 'orders', label: copy.orders, value: 'Slow · 10 s', detail: 'Timed lease · 90 s remaining' },
+      { id: 'tier', label: 'Room tier · hysteresis', value: 'Hall · M', detail: 'Hearth / Hall / Courtyard / Tourney field' },
+      { id: 'delay', label: copy.delay, value: '4 s', detail: `${snapshot.held.length} held · ${snapshot.bans.length} bans pending` },
+    ]} actions={<InkButton size="small" variant={snapshot.shield ? 'danger' : 'outline'} aria-pressed={snapshot.shield}
+      onClick={() => adapter.send({ kind: 'shield' })}>{snapshot.shield ? copy.shield_on : copy.shield}</InkButton>}
+      action_detail="Shield Mode · preview only" />
     <div className="moderation-grid">
       <div className="moderation-column">
         <NumberedPanel number="2.2" title={copy.consensus} gloss={copy.consensus_gloss}>

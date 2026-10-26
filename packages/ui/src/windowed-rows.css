@@ -1,0 +1,3 @@
+.cc-window { max-height: var(--table-window); overflow: auto; min-width: 0; }
+.cc-window:focus-visible { outline: var(--rule-strong) solid var(--azure); outline-offset: calc(-1 * var(--focus-offset)); }
+.cc-window-row { box-sizing: border-box; border-bottom: var(--rule-thin) solid var(--hair-2); }

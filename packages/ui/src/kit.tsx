@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { lazy, Suspense, useState } from 'react';
 import type { KeyboardEvent } from 'react';
 import { createRoot } from 'react-dom/client';
 import type { Theme } from '@castle-control/tokens';
@@ -6,6 +6,8 @@ import { ChambersColumn, EmptyState, GatehouseChip, InkButton, KitShell, Mark, N
   Rampart, RuleTable, StatusChip, ThemeFrame, VerdictChip, chambers, chipVariants, keymap, verdicts } from './index.js';
 import type { ConnectionState, ModuleId, RuleRow } from './index.js';
 import './kit.css';
+
+const PromotedGallery = lazy(() => import('./kit-promoted.jsx').then(module => ({ default: module.PromotedGallery })));
 
 const initialRules: readonly RuleRow[] = [
   { id: 'links', name: 'Links', match: 'Unapproved links', action: 'Hold', mode: 'shadow' },
@@ -71,6 +73,7 @@ function KitTheme({ initial_theme }: { initial_theme: Theme }) {
               <EmptyState title="The portcullis is clear" description="No messages are held for review." />
             </NumberedPanel>
           </div>
+          <Suspense fallback={<p className="cc-kit-note">Loading component examples…</p>}><PromotedGallery /></Suspense>
           <p className="cc-kit-note">Generated, simulated fixtures. Working name. Not affiliated with Twitch. Focus a control to use 1–4 or /.</p>
         </div>
       </KitShell>

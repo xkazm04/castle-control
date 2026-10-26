@@ -1,8 +1,7 @@
 import { useMemo, useState } from 'react';
 import type { Decision, Verdict } from '@castle-control/contract';
-import { InkButton, VerdictChip } from '@castle-control/ui';
-import { WindowedRows } from './moderation-window.jsx';
-export { rowWindow as messageWindow } from './moderation-window.jsx';
+import { InkButton, VerdictChip, WindowedRows } from '@castle-control/ui';
+export { rowWindow as messageWindow } from '@castle-control/ui';
 
 export function MessageList({ messages, scroll_top = 0 }: { messages: readonly Decision[]; scroll_top?: number }) {
   const [query, setQuery] = useState('');
@@ -20,7 +19,7 @@ export function MessageList({ messages, scroll_top = 0 }: { messages: readonly D
       <InkButton size="small" variant="ghost" aria-pressed={paused} onClick={() => setPaused(!paused)}>{paused ? 'Resume preview' : 'Pause live'}</InkButton>
     </div>
     <p className="moderation-meta">Simulated snapshot · {messages.length.toLocaleString('en-US')} lines · {filtered.length.toLocaleString('en-US')} matching · {paused ? 'paused' : 'no live intake'}</p>
-    <WindowedRows key={`${filter}:${query}`} rows={filtered} label="Chat messages with Pass, Hold or Bar" scroll_top={scroll_top} row_key={row => row.message_id}>
+    <WindowedRows empty_state="No matching entries." key={`${filter}:${query}`} rows={filtered} label="Chat messages with Pass, Hold or Bar" scroll_top={scroll_top} row_key={row => row.message_id}>
       {message => <div className="moderation-chat-row" data-message-row={message.message_id} data-verdict={message.verdict}>
         <time role="cell" dateTime={message.at}>{message.at.slice(11, 19)}</time>
         <span role="cell"><VerdictChip verdict={message.verdict} /></span>

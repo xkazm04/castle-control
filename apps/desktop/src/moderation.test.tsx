@@ -40,7 +40,7 @@ test('pending ban displays original message_text and rule name with Ban and Dism
 test('consensus module has no action/client imports and exposes shed count and history', () => {
   const code = readFileSync(new URL('./moderation-chart.tsx', import.meta.url), 'utf8');
   const imports = [...code.matchAll(/from\s+['"]([^'"]+)['"]/g)].map(match => match[1]);
-  expect(imports).toEqual(['@castle-control/contract', 'react', './moderation-copy.js']);
+  expect(imports).toEqual(['@castle-control/contract', '@castle-control/ui', './moderation-copy.js']);
   expect(code).not.toMatch(/\b(fetch|invoke|send|WebSocket|XMLHttpRequest)\s*\(/);
   const html = renderToStaticMarkup(<ConsensusChart results={fixtureCharts} />);
   expect(html).toContain('17 messages shed');

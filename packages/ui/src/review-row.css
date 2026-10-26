@@ -1,0 +1,7 @@
+.cc-review-row small { font-size: var(--text-small); color: var(--muted); line-height: 1.5; }
+.cc-review-actions { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-8); }
+.cc-review-row time { font: var(--text-small)/1.4 var(--font-num); color: var(--muted); }
+.cc-review-row { display: flex; flex-direction: column; gap: var(--space-6); padding: var(--space-8); height: 100%; box-sizing: border-box; font-size: var(--text-small); }
+.cc-review-row blockquote { overflow: auto; margin: 0; min-height: 0; flex: 1; font: var(--text-aside)/1.4 var(--font-ui); overflow-wrap: anywhere; }
+.cc-review-row > span { overflow-wrap: anywhere; }
+.cc-review-actions { margin-top: auto; }
