@@ -9,6 +9,7 @@ fn parse(event: &Value) -> Result<Option<ModerationNotification>, crate::BridgeE
 
 #[test]
 fn ui_actions_require_the_selected_detail_not_a_different_action_body() {
+    let mut exercised = std::collections::BTreeSet::new();
     let user = json!({"user_id": "222", "user_login": "simulated_viewer",
         "user_name": "SimulatedViewer"});
     let detail = |extras: Value| {
@@ -90,9 +91,11 @@ fn ui_actions_require_the_selected_detail_not_a_different_action_body() {
         ),
     ];
     for (action, key, detail) in cases {
+        exercised.insert(action);
         let mut event = actor();
         event["action"] = json!(action);
         event[key] = detail;
+        super::spike_checks::moderate(&event);
         assert!(parse(&event).expect("simulated action detail").is_some());
         event[key] = Value::Null;
         assert!(parse(&event).is_err());
@@ -110,10 +113,16 @@ fn ui_actions_require_the_selected_detail_not_a_different_action_body() {
         "subscribers",
         "subscribersoff",
     ] {
+        exercised.insert(action);
         let mut event = actor();
         event["action"] = json!(action);
+        super::spike_checks::moderate(&event);
         assert!(parse(&event).expect("simulated setting action").is_some());
     }
+    assert_eq!(
+        exercised,
+        super::spike_session::ACTIONS.iter().copied().collect()
+    );
 }
 
 #[test]

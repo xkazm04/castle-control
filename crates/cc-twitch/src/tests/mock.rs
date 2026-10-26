@@ -41,6 +41,7 @@ pub(super) struct Mock {
     pub exhaust_bucket: AtomicBool,
     pub reset_at_s: AtomicI64,
     pub omit_reset: AtomicBool,
+    pub retry_after_s: AtomicI64,
     pub echo_403: AtomicBool,
     pub reject_refresh: AtomicBool,
     pub drop_chat: AtomicBool,
@@ -177,6 +178,12 @@ pub(super) async fn handle(
             }
             if m.rate_limit.load(Ordering::SeqCst) {
                 let mut response = reply(429, json!({}));
+                let retry = m.retry_after_s.load(Ordering::SeqCst);
+                if retry > 0 {
+                    response
+                        .headers_mut()
+                        .insert("Retry-After", retry.to_string().parse().expect("header"));
+                }
                 if !m.omit_reset.load(Ordering::SeqCst) {
                     let reset = m.reset_at_s.load(Ordering::SeqCst);
                     response.headers_mut().insert(
