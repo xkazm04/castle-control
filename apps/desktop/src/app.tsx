@@ -5,11 +5,13 @@ import type { Theme } from '@castle-control/tokens';
 import type { DesktopClient } from './model.js';
 import { dispatchShortcut, routeFromHash } from './navigation.js';
 import { DesktopView } from './view.jsx';
+import { stageRoute } from './lots-stage-route.js';
 
 export function DesktopApp({ client }: { client: DesktopClient }) {
   const snapshot = useSyncExternalStore(client.subscribe, client.getSnapshot, client.getSnapshot);
   const [current, setCurrent] = useState(() => routeFromHash(window.location.hash));
   const [replay, setReplay] = useState(() => window.location.hash === '#/moderator/drill');
+  const [stage, setStage] = useState(() => stageRoute(window.location.hash));
   const [theme, setTheme] = useState<Theme>('paper');
   const [search, setSearch] = useState('');
   const root = useRef<HTMLDivElement>(null);
@@ -20,6 +22,7 @@ export function DesktopApp({ client }: { client: DesktopClient }) {
       if (window.location.hash.startsWith('#/')) {
         setCurrent(routeFromHash(window.location.hash));
         setReplay(window.location.hash === '#/moderator/drill');
+        setStage(stageRoute(window.location.hash));
       }
     };
     window.addEventListener('hashchange', sync);
@@ -29,6 +32,7 @@ export function DesktopApp({ client }: { client: DesktopClient }) {
   function navigate(id: ModuleId) {
     setCurrent(id);
     setReplay(false);
+    setStage(undefined);
     window.location.hash = `/${id}`;
     setSearch('');
   }
@@ -39,7 +43,7 @@ export function DesktopApp({ client }: { client: DesktopClient }) {
       preventDefault: () => { event.preventDefault(); } }, editable, navigate, () => { searchInput.current?.focus(); });
   }
   return <div className="desktop-root" ref={root} tabIndex={-1} onKeyDown={keyboard}>
-    <DesktopView current={current} replay={replay} snapshot={snapshot} theme={theme} on_navigate={navigate}
+    <DesktopView current={current} replay={replay} {...(stage ? { stage } : {})} snapshot={snapshot} theme={theme} on_navigate={navigate}
       on_theme_change={setTheme} search={search} on_search={setSearch} search_ref={searchInput} />
   </div>;
 }

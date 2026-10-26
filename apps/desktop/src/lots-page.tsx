@@ -116,7 +116,7 @@ export function LotsSetup({ snapshot, port }: PreviewProps) {
     <InkButton variant="plate" disabled={!snapshot.sealed || snapshot.started || check.result === 'blocked'} onClick={port.start}>{copy.start}</InkButton>
   </>;
 }
-export function LotsWritView({ snapshot, port }: PreviewProps) {
+export function LotsWritView({ snapshot, port, embedded = false }: PreviewProps & { embedded?: boolean }) {
   const writ = fixtureWrit;
   const label = copy.writ_fields;
   const fields = [
@@ -127,8 +127,9 @@ export function LotsWritView({ snapshot, port }: PreviewProps) {
     [label.seed, writ.proof.source === 'streamer_commit' ? writ.proof.seed : ''], [label.winners, writ.winners.join(', ')],
   ];
   return <>
-    <PageHeader number={1} title={copy.writ} description={copy.writ_notice} breadcrumbs={[{ label: copy.title }, { label: copy.writ }]} />
-    <InkButton onClick={() => port.nested(false)}>{copy.back}</InkButton>
+    {!embedded && <><PageHeader number={1} title={copy.writ} description={copy.writ_notice} breadcrumbs={[{ label: copy.title }, { label: copy.writ }]} />
+    <InkButton onClick={() => port.nested(false)}>{copy.back}</InkButton></>}
+    {embedded && <p className="lots-meta">{copy.writ_notice}</p>}
     <p className="lots-notice">{copy.notice}</p>
     <div className="lots-writ-grid">
       <dl className="lots-proof">{fields.map(([name, value]) => <div key={name}><dt>{name}</dt><dd>{value}</dd></div>)}</dl>
@@ -140,6 +141,33 @@ export function LotsWritView({ snapshot, port }: PreviewProps) {
     </div>
   </>;
 }
+export function LotsSaved({ snapshot, port }: PreviewProps) {
+  return <div className="lots-draws" role="group" aria-label={copy.saved}>{fixtureDraws.map(draw =>
+    <button type="button" className="lots-draw" key={draw.draw_id} aria-pressed={draw.draw_id === snapshot.draw.draw_id} onClick={() => port.select(draw.draw_id)}>
+      <b>{draw.name}</b><StatusChip variant={draw.policy.paid_weight ? 'bad' : draw.policy.content === 'prize' ? 'or' : 'dash'}>
+        {draw.policy.paid_weight ? copy.paid_blocked : draw.policy.content === 'prize' ? copy.content_options[2].label : copy.no_prize}
+      </StatusChip>
+    </button>)}</div>;
+}
+export function LotsLookup({ snapshot, port }: PreviewProps) {
+  return <><Field label={copy.lookup}><input aria-label={copy.lookup} type="search" value={snapshot.lookup} onChange={event => port.lookup(event.currentTarget.value)} /></Field>
+    <p className="lots-meta">{copy.lookup_hint}</p><p role="status">{lookupFixture(snapshot)}</p></>;
+}
+export function LotsFairness() {
+  return <><ol className="lots-steps">{copy.steps.map(([title, detail]) => <li key={title}><b>{title}</b><p>{detail}</p></li>)}</ol>
+    <p className="lots-meta">{copy.test_note}</p></>;
+}
+export function LotsStream({ snapshot, port }: PreviewProps) {
+  return <><p className="lots-meta">{copy.static_preview}</p>
+    <div className="lots-shape" role="img" aria-label={copy.shapes.find(shape => shape.value === snapshot.shape)?.label}>
+      <span aria-hidden="true">{copy.shapes.find(shape => shape.value === snapshot.shape)?.glyph}</span>
+      <b>{copy.shapes.find(shape => shape.value === snapshot.shape)?.label}</b>
+    </div>
+    <div className="lots-shapes" role="group" aria-label={copy.shape}>{copy.shapes.map(shape => <InkButton size="small" key={shape.value}
+      aria-pressed={snapshot.shape === shape.value} onClick={() => port.shape(shape.value)}>{shape.label}</InkButton>)}</div>
+    {snapshot.draw.policy.content === 'prize' && <p className="lots-disclaimer">{copy.disclaimer_text}</p>}
+    <InkButton onClick={() => port.nested(true)}>{copy.writ_open}</InkButton></>;
+}
 export function LotsContent({ snapshot, port }: PreviewProps) {
   if (snapshot.nested) return <LotsWritView snapshot={snapshot} port={port} />;
   return <>
@@ -148,36 +176,13 @@ export function LotsContent({ snapshot, port }: PreviewProps) {
     <LotsHero snapshot={snapshot} port={port} />
     <div className="lots-grid">
       <div className="lots-column">
-        <NumberedPanel number="1.1" title={copy.saved}>
-          <div className="lots-draws" role="group" aria-label={copy.saved}>{fixtureDraws.map(draw =>
-            <button type="button" className="lots-draw" key={draw.draw_id} aria-pressed={draw.draw_id === snapshot.draw.draw_id} onClick={() => port.select(draw.draw_id)}>
-              <b>{draw.name}</b><StatusChip variant={draw.policy.paid_weight ? 'bad' : draw.policy.content === 'prize' ? 'or' : 'dash'}>
-                {draw.policy.paid_weight ? copy.paid_blocked : draw.policy.content === 'prize' ? copy.content_options[2].label : copy.no_prize}
-              </StatusChip>
-            </button>)}</div>
-        </NumberedPanel>
-        <NumberedPanel number="1.2" title={copy.roll}>
-          <Field label={copy.lookup}><input aria-label={copy.lookup} type="search" value={snapshot.lookup} onChange={event => port.lookup(event.currentTarget.value)} /></Field>
-          <p className="lots-meta">{copy.lookup_hint}</p><p role="status">{lookupFixture(snapshot)}</p>
-        </NumberedPanel>
+        <NumberedPanel number="1.1" title={copy.saved}>{LotsSaved({ snapshot, port })}</NumberedPanel>
+        <NumberedPanel number="1.2" title={copy.roll}>{LotsLookup({ snapshot, port })}</NumberedPanel>
       </div>
       <div className="lots-column"><NumberedPanel number="1.3" title={copy.setup}><LotsSetup snapshot={snapshot} port={port} /></NumberedPanel></div>
       <div className="lots-column">
-        <NumberedPanel number="1.4" title={copy.fairness}>
-          <ol className="lots-steps">{copy.steps.map(([title, detail]) => <li key={title}><b>{title}</b><p>{detail}</p></li>)}</ol>
-          <p className="lots-meta">{copy.test_note}</p>
-        </NumberedPanel>
-        <NumberedPanel number="1.5" title={copy.stream}>
-          <p className="lots-meta">{copy.static_preview}</p>
-          <div className="lots-shape" role="img" aria-label={copy.shapes.find(shape => shape.value === snapshot.shape)?.label}>
-            <span aria-hidden="true">{copy.shapes.find(shape => shape.value === snapshot.shape)?.glyph}</span>
-            <b>{copy.shapes.find(shape => shape.value === snapshot.shape)?.label}</b>
-          </div>
-          <div className="lots-shapes" role="group" aria-label={copy.shape}>{copy.shapes.map(shape => <InkButton size="small" key={shape.value}
-            aria-pressed={snapshot.shape === shape.value} onClick={() => port.shape(shape.value)}>{shape.label}</InkButton>)}</div>
-          {snapshot.draw.policy.content === 'prize' && <p className="lots-disclaimer">{copy.disclaimer_text}</p>}
-          <InkButton onClick={() => port.nested(true)}>{copy.writ_open}</InkButton>
-        </NumberedPanel>
+        <NumberedPanel number="1.4" title={copy.fairness}>{LotsFairness()}</NumberedPanel>
+        <NumberedPanel number="1.5" title={copy.stream}>{LotsStream({ snapshot, port })}</NumberedPanel>
       </div>
     </div>
     <p className="lots-notice" role="status" aria-live="polite">{snapshot.notice}</p>

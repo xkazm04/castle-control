@@ -1,5 +1,6 @@
 import { chambers, keymap as kitKeymap } from '@castle-control/ui';
 import type { ModuleId } from '@castle-control/ui';
+import { stageRoute } from './lots-stage-route.js';
 
 type Binding = { key: string; action: ModuleId | 'search' };
 export function createKeymap(bindings: readonly Binding[]) {
@@ -27,6 +28,7 @@ export function dispatchShortcut(event: Shortcut, editable: boolean, navigate: (
 }
 
 export function routeFromHash(hash: string): ModuleId {
+  if (stageRoute(hash)) return 'lottery';
   if (hash === '#/moderator/drill') return 'moderator';
   return chambers.find(chamber => hash === `#/${chamber.id}`)?.id ?? 'lottery';
 }

@@ -18,3 +18,5 @@ export { RoomStatusHero } from './room-status-hero.jsx';
 export type { RoomStatusHeroProps, RoomStatusCell } from './room-status-hero.jsx';
 export { ReplaySummary } from './replay-summary.jsx';
 export type { ReplaySummaryItem } from './replay-summary.jsx';
+export { StageFrame } from './stage-frame.jsx';
+export type { StageFrameProps } from './stage-frame.jsx';

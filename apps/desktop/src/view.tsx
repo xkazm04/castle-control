@@ -7,10 +7,12 @@ import type { Snapshot } from './model.js';
 import { DesktopRampart } from './rampart.jsx';
 import { simulatedSourceLabel } from './simulated.js';
 import './view.css';
+import type { StageFocus } from './lots-stage-route.js';
 
 const ModerationPage = lazy(() => import('./moderation-page.jsx').then(module => ({ default: module.ModerationPage })));
 const BeaconsPage = lazy(() => import('./beacons-page.jsx').then(module => ({ default: module.BeaconsPage })));
 const LotsPage = lazy(() => import('./lots-page.jsx').then(module => ({ default: module.LotsPage })));
+const LotsStagePage = lazy(() => import('./lots-stage-page.jsx').then(module => ({ default: module.LotsStagePage })));
 
 const emptyStates = {
   lottery: { title: 'No lots in the urn yet', description: 'Draw setup and verifiable results arrive with the Lot Chamber milestone.' },
@@ -20,7 +22,7 @@ const emptyStates = {
 } as const;
 
 export type ViewProps = {
-  current: ModuleId; snapshot: Snapshot; theme: Theme; replay?: boolean;
+  current: ModuleId; snapshot: Snapshot; theme: Theme; replay?: boolean; stage?: StageFocus | 'stage';
   on_navigate: (id: ModuleId) => void; on_theme_change: (theme: Theme) => void;
   search: string; on_search: (text: string) => void; search_ref?: Ref<HTMLInputElement>;
 };
@@ -55,7 +57,7 @@ export function DesktopView(props: ViewProps) {
       {props.snapshot.phase !== 'ready' && <p className="desktop-notice" role="status">{props.snapshot.mode === 'fixture' ? 'Loading simulated snapshot.' : props.snapshot.message ?? 'Connecting to the core; status is unknown.'}</p>}
       {moderation ? <Suspense fallback={<p role="status">Loading Gatehouse preview.</p>}><ModerationPage replay={props.replay ?? false} /></Suspense>
         : beacons ? <Suspense fallback={<p role="status">Loading Beacons preview.</p>}><BeaconsPage /></Suspense>
-        : lots ? <Suspense fallback={null}><LotsPage /></Suspense> : <NumberedPanel number={`${current.number}.1`} title={current.description} gloss="Not configured">
+        : lots ? <Suspense fallback={null}>{props.stage ? <LotsStagePage route={props.stage} /> : <LotsPage />}</Suspense> : <NumberedPanel number={`${current.number}.1`} title={current.description} gloss="Not configured">
         <EmptyState title={empty.title} description={empty.description} />
       </NumberedPanel>}
       <p id="shell-info" className="desktop-note">Castle Control · working name · not affiliated with Twitch. Shared paper and dark-stock design. Keys 1–4 open chambers; / focuses search.</p>
