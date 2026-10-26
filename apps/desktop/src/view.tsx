@@ -10,6 +10,7 @@ import './view.css';
 
 const ModerationPage = lazy(() => import('./moderation-page.jsx').then(module => ({ default: module.ModerationPage })));
 const BeaconsPage = lazy(() => import('./beacons-page.jsx').then(module => ({ default: module.BeaconsPage })));
+const LotsPage = lazy(() => import('./lots-page.jsx').then(module => ({ default: module.LotsPage })));
 
 const emptyStates = {
   lottery: { title: 'No lots in the urn yet', description: 'Draw setup and verifiable results arrive with the Lot Chamber milestone.' },
@@ -30,6 +31,7 @@ export function DesktopView(props: ViewProps) {
   const simulated = props.snapshot.mode === 'fixture' || props.snapshot.status?.simulated === true;
   const moderation = current.id === 'moderator' && props.snapshot.mode === 'fixture';
   const beacons = current.id === 'visuals' && props.snapshot.mode === 'fixture';
+  const lots = current.id === 'lottery' && props.snapshot.mode === 'fixture';
   const matches = props.search.trim() ? chambers.filter(chamber => `${chamber.name} ${chamber.description}`.toLowerCase().includes(props.search.trim().toLowerCase())) : [];
   return <ThemeFrame theme={props.theme} module={current.id}>
     <KitShell rampart={<DesktopRampart snapshot={props.snapshot} theme={props.theme} on_theme_change={props.on_theme_change} />}
@@ -47,11 +49,12 @@ export function DesktopView(props: ViewProps) {
         {props.search.trim() && <div aria-label="Matching chambers">{matches.length ? matches.map(chamber =>
           <a key={chamber.id} href={`#/${chamber.id}`} onClick={event => { event.preventDefault(); props.on_navigate(chamber.id); }}>{chamber.name}</a>) : <p>No matching chamber.</p>}</div>}
       </div>
-      {!moderation && !beacons && <PageHeader number={Number(current.number)} title={current.name} description={current.description}
+      {!moderation && !beacons && !lots && <PageHeader number={Number(current.number)} title={current.name} description={current.description}
         actions={<StatusChip variant="dash">Not configured</StatusChip>} />}
       {props.snapshot.phase !== 'ready' && <p className="desktop-notice" role="status">{props.snapshot.mode === 'fixture' ? 'Loading simulated snapshot.' : props.snapshot.message ?? 'Connecting to the core; status is unknown.'}</p>}
       {moderation ? <Suspense fallback={<p role="status">Loading Gatehouse preview.</p>}><ModerationPage replay={props.replay ?? false} /></Suspense>
-        : beacons ? <Suspense fallback={<p role="status">Loading Beacons preview.</p>}><BeaconsPage /></Suspense> : <NumberedPanel number={`${current.number}.1`} title={current.description} gloss="Not configured">
+        : beacons ? <Suspense fallback={<p role="status">Loading Beacons preview.</p>}><BeaconsPage /></Suspense>
+        : lots ? <Suspense fallback={null}><LotsPage /></Suspense> : <NumberedPanel number={`${current.number}.1`} title={current.description} gloss="Not configured">
         <EmptyState title={empty.title} description={empty.description} />
       </NumberedPanel>}
       <p id="shell-info" className="desktop-note">Castle Control · working name · not affiliated with Twitch. Shared paper and dark-stock design. Keys 1–4 open chambers; / focuses search.</p>

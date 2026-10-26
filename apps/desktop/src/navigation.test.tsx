@@ -14,7 +14,7 @@ test('keyboard alone opens every chamber with its current content and simulated 
   let focused = false;
   const snapshot = { mode: 'fixture', phase: 'ready', ...simulatedRead(1) } as const;
   for (const [key, title, empty] of [
-    ['1', 'Lot Chamber', 'No lots in the urn yet'], ['2', 'Gatehouse', 'The live room'],
+    ['1', 'Lot Chamber', 'Fairness you can verify'], ['2', 'Gatehouse', 'The live room'],
     ['3', 'Beacons', 'Kindling curve'], ['4', 'Map Room', 'The map table is bare'],
   ]) {
     let prevented = false;
