@@ -64,7 +64,7 @@ test('lazy surfaces retain one Steward bar and the rampart, and rooms retain the
   const snapshot = { mode: 'fixture', phase: 'ready', ...simulatedRead(1) } as const;
   for (const [hash, content] of [['#/keep', 'Enter the keep'], ['#/overview', 'Stream preview'],
     ['#/chamber/lottery', 'Fairness you can verify'], ['#/chamber/moderator', 'The live room'],
-    ['#/chamber/visuals', 'Kindling curve'], ['#/chamber/studio', 'The map table is bare'],
+    ['#/chamber/visuals', 'aria-label="Beacons work"'], ['#/chamber/studio', 'aria-label="Map Room work"'],
     ['#/chamber/moderator/drill', 'The drill']]) {
     const stream = await renderToReadableStream(<DesktopView navigation={initialNavigation(hash ?? '')} snapshot={snapshot}
       theme="paper" on_navigate={() => undefined} on_theme_change={() => undefined} />);
