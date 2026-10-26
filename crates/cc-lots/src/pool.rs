@@ -104,6 +104,21 @@ pub struct Roll {
 }
 
 impl Roll {
+    /// Restore trusted draw-ledger history when opening or reconfiguring a pool.
+    /// This never admits an entry or chooses a winner. Callers must not source
+    /// this history from an RPC client.
+    pub fn restore_winner_history(
+        &mut self,
+        history: impl IntoIterator<Item = (TwitchUserId, DateTime<Utc>)>,
+    ) {
+        for (user, at) in history {
+            self.last_wins
+                .entry(user.as_str().to_owned())
+                .and_modify(|last| *last = (*last).max(at))
+                .or_insert(at);
+        }
+    }
+
     pub fn new(rules: RollRules) -> Result<Self> {
         if rules.winner_count == 0 {
             return Err(Error::Invalid("winner count must be positive"));

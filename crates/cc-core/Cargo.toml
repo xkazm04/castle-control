@@ -19,6 +19,9 @@ cc-types = { path = "../cc-types" }
 cc-twitch = { path = "../cc-twitch" }
 cc-store = { path = "../cc-store" }
 cc-obs = { path = "../cc-obs" }
+cc-lots = { path = "../cc-lots" }
+cc-verify = { path = "../cc-verify" }
+chrono.workspace = true
 async-trait = "0.1.89"
 ulid = "1.2.1"
 futures = "0.3.32"

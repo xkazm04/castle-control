@@ -4,6 +4,7 @@ mod events;
 mod ingress;
 mod integration;
 mod login;
+pub mod lots;
 mod registry;
 mod server;
 pub mod spike;
