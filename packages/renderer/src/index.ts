@@ -4,3 +4,7 @@ export * from './scene.ts';
 export * from './playback.ts';
 export * from './intensity.ts';
 export * from './bindings.ts';
+export * from './draw/model.ts';
+export * from './draw/scenes.ts';
+export * from './draw/disclaimer.ts';
+export * from './draw/template.ts';

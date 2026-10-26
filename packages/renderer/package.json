@@ -10,6 +10,7 @@
     "test": "node ../../scripts/package-gate.mjs test"
   },
   "devDependencies": {
+    "@castle-control/contract": "workspace:*",
     "@types/node": "24.10.0",
     "typescript": "catalog:",
     "vitest": "catalog:"

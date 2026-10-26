@@ -1,5 +1,9 @@
 {
   "extends": "../../tsconfig.base.json",
-  "compilerOptions": { "allowImportingTsExtensions": true, "types": [] },
+  "compilerOptions": {
+    "allowImportingTsExtensions": true,
+    "types": [],
+    "paths": { "@castle-control/contract": ["../contract/src/index.ts"] }
+  },
   "include": ["src/**/*.ts"]
 }
