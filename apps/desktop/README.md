@@ -34,89 +34,105 @@ Unknown-aware rampart composition reuses the kit's layout classes and individual
 primitives because its boolean-only `Rampart` API cannot express absence. Shared
 design tokens remain unchanged.
 
-## AI-2 shell and routes
+## AI-first Keep and Overview (AI-3 / AI-4)
 
-Open `#/keep` for the default landing, `#/overview` for Preview and Proclaim,
-or `#/chamber/lottery`, `#/chamber/moderator`, `#/chamber/visuals` and
-`#/chamber/studio` for a room. The replay deep link is
-`#/chamber/moderator/drill`. Old chamber hashes and `#/moderator/drill`
-redirect in place to those canonical routes. Unknown hashes, including the
-removed `#/lottery/stage` and its children, return to `#/keep`.
+Run `pnpm --config.verify-deps-before-run=false --filter @castle-control/desktop dev`
+in an ordinary checkout with dependencies already installed. Do not install over
+worktree node_modules junctions. For an isolated production preview, build the
+desktop then run `pnpm --config.verify-deps-before-run=false --filter
+@castle-control/desktop exec vite preview --host 127.0.0.1`.
 
-All three surfaces load lazily under `src/shell/`. The rampart stays above the
-scrolling work surface; one StewardBar stays below it. Keep tiles open rooms.
-The overview has a 16:9 placeholder and four tiles: click or focus selects a
-layer, Enter or double-click opens its room. Rooms retain the existing lazy
-chamber pages and have a Breadcrumb and empty seal slot. The Map Room retains
-its unconfigured empty state. Core mode never loads simulated chamber controls.
-These are Wave 1 placeholders, not a claim of reference-level visual fidelity.
+Open the reported local URL with `#/keep` for the printed cross-section or
+`#/overview` for Preview and Proclaim. Review both at **1440x900** and **1280x800**
+CSS viewport sizes, in paper and dark stock. The reference pages are
+`prototype/ai-first/keep/index.html` (home view) and
+`prototype/ai-first/preview/index.html`. Illustrations and surfaces load lazily.
+The desktop first-load cap remains 393,216 uncompressed JS+CSS bytes; no budget
+was raised. Program text uses the existing 13 px small-text token, above its
+12 px minimum; other readable text stays at least 13 px.
 
-`packages/ui/src/shell.tsx` declares the only keymap, consumed by navigation:
-0 opens overview; 1-4 open rooms; Esc returns to the room's landing/overview
-origin; / focuses the Steward input; Enter opens the selected strip tile;
-Delete belongs to a focused proposal; held Space belongs to the focused seal
-control. Typing suppresses shortcuts except Esc. Modified keys, composition
-and repeats never navigate. Native Enter on other buttons stays native.
-Direct room links default to a Keep origin; switching rooms preserves origin.
+The Keep has four inked chamber towers, a Herald watch tower and a moat. Rule
+counts and Shield Mode use the current snapshot. In fixture mode, lot, hold,
+delay, consensus and visual summaries use the existing generated chamber
+fixtures. Live chamber values absent from the core read model remain unknown.
+Every fixture room is labelled sample data. Clicking a room or pressing 1-4
+opens its detail room. Enter the keep or 0 opens Overview.
 
-The local `src/shell/steward-stub.ts` exposes ask, amend and tearUp, returning
-the fixed reply "The Steward is not wired yet. No changes have been made."
-with no proposals or focus change. Conversation/input state stays in one bar
-across surfaces. Its visible label is SIMULATED STEWARD · SAMPLE DATA, including
-in core mode. Speech is visibly unavailable. No network, model, RPC registration
-or new contract identifier is introduced. Wave 2 replaces this seam with
-`@castle-control/ui/steward`; this package imports nothing from that module.
+Overview combines a 16:9 illustrative crypt scene with four selectable chamber
+layers, a separate simulated Program monitor, Talkback/Inspector tabs, a shared
+Steward panel and the chamber strip. The urn/writ, chat/vote bar, altar/camera
+frame/border and war table are components, not prototype string HTML. Supplementary
+crypt art and the generated 54-tile layout are explicitly illustrative, in
+`src/overview/fixture.ts` and the drawing components. Held sample chat is greyed
+in Preview and filtered out of Program. The draw fairness box remains visible
+below the scrolling proposal list whenever the draw layer is inspected.
 
-Shared StewardBar, Breadcrumb and both SealButton variants are shown on the
-component kit's AI-first shell controls panel in both themes. SealButton uses a
-named 1,000 ms hold duration, visible native progress, and pointer/Space holds.
-Release before completion, blur, lost capture, cancellation, hiding the page,
-disabling or unmounting cancels. Click and Enter never seal. The completed hold
-fires once until released. The desktop stub offers no proposals to seal or tear.
+There is one Steward input on each surface, always labelled
+**SIMULATED STEWARD · SAMPLE DATA**, and one shared proposal queue imported from
+`@castle-control/ui/steward`. The local stub has been removed. SimulatedSteward
+runs through StewardPort; it makes no model, network or live mutation calls.
+The conversation persists across routes and its Talkback list is virtualised.
+Speech stays visibly unavailable. No wire method or identifier was introduced.
 
-Deleted superseded files (and no domain page/model files):
+To exercise the draft loop in Overview:
 
-- `src/lots-stage-copy.ts`
-- `src/lots-stage-design.tsx`
-- `src/lots-stage-model.ts`
-- `src/lots-stage-page.tsx`
-- `src/lots-stage-route.ts`
-- `src/lots-stage.css`
-- `src/lots-stage.md`
-- `src/lots-stage.test.tsx`
-- `../../packages/ui/src/stage-frame.tsx`
-- `../../packages/ui/src/stage-frame.css`
-- `../../packages/ui/src/stage-frame.test.tsx`
+1. Tell the Steward `draft a question draw`.
+2. Tell it `make it 5 winners`. One proposal remains in the queue: 3 is struck
+   and 5 is re-inked both on the preview layer and in the Inspector.
+3. Preview carries **DRAFT · NOT ON AIR**. The Program picture stays unchanged.
+4. Hold **Hold to seal and proclaim** below Program for one continuous second.
+   This is the Overview's sole authorization path. Click, Enter or an early
+   release cannot authorize. Changing proposal/revision replaces the control
+   and cancels any unfinished hold.
+5. The completed hold seals the proposal and updates only simulated Program.
+   The frozen generated sample roll is sorted by handle, JSON encoded and hashed
+   with SHA-256. Its displayed hash is illustrative proof of those sample bytes,
+   not a live draw writ or a verified drand result. Prize proposals are refused
+   here and must pass the room's policy checks. No prize, chat or viewer action
+   reaches Twitch, OBS or the core.
 
-StageFrame had no remaining consumer after deleting the rejected stage; a
-source import search confirmed that before the shared component was removed.
+Inspector and detail-room integrations use the exported queue singleton; app
+code creates no second proposal queue. Program stores immutable authorized
+presentation snapshots, separate from drafts. A later draft or tear cannot
+change its already authorized picture. Shared ProposalCard defaults to a hold
+and Tear it up; Overview places its hold below Program instead of duplicating
+it inside the Inspector. ChamberStrip, ProgramMonitor, DraftFrame and ProposalCard
+are exported by the UI kit and demonstrated under AI-first shell controls in
+`packages/ui/kit`, in both themes.
 
-AI-2 verification, 2026-10-26: the new route tests first failed against the old
-shell (5 failures), then passed. All UI tests passed (80 tests, 6 files) and all
-desktop tests passed (85 tests, 9 files), including unchanged chamber/domain
-tests. The hold test drives the actual pointer and Space handlers with fake
-timers: early release does not seal, a full hold fires once, and cancellation
-paths cannot seal. Route tests cover all surfaces, the drill, aliases, rejected
-stage fallback, origin-aware Esc, typing suppression and strip Enter/double-click.
-These are server renders and handler tests, not a mounted-browser smoke claim.
+The sole keymap stays in `packages/ui/src/shell.tsx`: 0 opens Overview, 1-4 open
+rooms, Esc returns to the room's Keep/Overview origin, / focuses the Steward,
+Enter on a strip tile opens its room, Delete tears the focused visible proposal,
+and held Space operates the seal control in focus. Strip click/focus selects a
+layer; double-click opens its room. Typing suppresses navigation shortcuts.
+Existing DesktopView chamber/test props and the Room mount contract are retained.
+The parallel room work owns `shell/room.tsx` and the domain chamber pages/models.
 
-Both affected packages passed their package-gate typecheck and lint scripts;
-the lazy kit module also passed ESLint. Boundaries, hygiene, file cap and secret
-scan passed (420 code files, 541 scanned text files). Desktop build passed at
-386,922 / 393,216 first-load bytes; the kit passed at 256,319 / 262,144 bytes
-after deferring the new examples. The budgets were not changed. All three
-surfaces and their existing chamber pages are separate emitted lazy chunks.
+Automated evidence is in `src/shell/surfaces.test.tsx`, `src/keep/keep.test.tsx`,
+`src/events-view.test.tsx`, the route tests, and each new shared component's test.
+They cover snapshot propagation, one input, navigation, focus, Delete, shared
+queue amendment, draft rendering, hold-only publication, sample SHA-256 and the
+held-chat filter. Source hygiene checks cover boundaries/cycles, the file cap
+and secrets. Visual screenshot comparison remains for the Director: this
+headless run's Computer Use attempt was rejected because Chrome was not approved.
+AI-3 / AI-4 verification, 2026-10-26: affected package-gate typecheck and lint
+passed for desktop and UI. The complete desktop suite passed 92 tests in 11
+files; UI passed 175 tests in 13 files. The new draft-frame and Program-monitor
+tests were first run red against absent components, then green. The desktop
+production build passed at 385,435 / 393,216 first-load bytes, and the kit at
+256,319 / 262,144. `git diff --check` passed. No dependency, lockfile, registry
+contract, token, Rust or domain-model file changed.
 
-The full `pnpm gate` is **not green in this sandbox**: it passed the 14 tooling
-boundary tests and workspace inventories, then stopped in the unchanged
-contract exporter at `spawnSync cargo EPERM`. Read-only git comparison confirms
-`scripts/gate.mjs` and the contract check/export scripts match HEAD. Recursive
-pnpm typecheck and lint separately stopped at `spawn EPERM` before package work.
-No gate or sandbox setting was changed. App Master must rerun the full gate in
-its verification environment. No Rust check or full-workspace test pass is
-claimed for this delivery. The node_modules junction was not installed over,
-followed, removed or changed; no dependencies or lockfile changed.
+`pnpm gate` is not green in this sandbox: 14 tooling tests and workspace
+inventories passed, then contract export stopped at `spawnSync cargo EPERM`.
+Recursive typecheck, lint and test each stopped at `spawn EPERM` before package
+execution. The root tooling lint and the affected package checks pass
+individually. App Master must rerun the full gate; Rust/schema parity checks
+were not run to completion here. This matches the existing sandbox limitation
+recorded below; gate scripts remain unchanged. Screenshot verification is also
+pending, with opening instructions and the Chrome approval rejection above.
 
+## Historical frontend verification (WP 0.5)
 Package `typecheck`, `lint` and `test` use the shared package-gate runner.
 `build` includes an inventory-based first-load cap of 384 KiB uncompressed
 JS+CSS for all four routes, including React DOM and generated contract validators.

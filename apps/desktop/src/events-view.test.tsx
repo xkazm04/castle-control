@@ -3,6 +3,7 @@ import { afterEach, expect, test, vi } from 'vitest';
 import { chambers } from '@castle-control/ui';
 import { createDesktopClient } from './client.js';
 import { DesktopView } from './view.jsx';
+import { initialNavigation } from './navigation.js';
 
 afterEach(() => { vi.useRealTimers(); });
 
@@ -22,6 +23,15 @@ test('validated simulated events update rampart chips on all four rendered route
       for (const label of [name, 'ON AIR simulated', 'Twitch simulated', 'OBS simulated', 'Gatehouse simulated', 'Simulated', 'SIMULATED SOURCE']) {
         expect(html).toContain(label);
       }
+    }
+    for (const surface of ['keep', 'overview']) {
+      const stream = await renderToReadableStream(<DesktopView navigation={initialNavigation(`#/${surface}`)}
+        snapshot={client.getSnapshot()} theme="paper" on_navigate={() => undefined} on_theme_change={() => undefined} />);
+      await stream.allReady;
+      const html = await new Response(stream).text();
+      expect(html).toContain('Armed 0');
+      expect(html).toContain('Watching 3');
+      expect(html.match(/aria-label="Talk to the Steward\.\.\."/g)).toHaveLength(1);
     }
   } finally { stop(); }
 });

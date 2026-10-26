@@ -6,6 +6,10 @@ import type { DesktopClient } from './model.js';
 import { backHash, canonicalHash, dispatchShortcut, initialNavigation, navigateHash } from './navigation.js';
 import { DesktopView } from './view.jsx';
 
+export function tearFocusedProposal(root: Pick<ParentNode, 'querySelector'> | null) {
+  root?.querySelector<HTMLElement>('[data-proposal-focused="true"] [data-tear-proposal]')?.click();
+}
+
 export function DesktopApp({ client }: { client: DesktopClient }) {
   const snapshot = useSyncExternalStore(client.subscribe, client.getSnapshot, client.getSnapshot);
   const [navigation, setNavigation] = useState(() => initialNavigation(window.location.hash));
@@ -53,8 +57,8 @@ export function DesktopApp({ client }: { client: DesktopClient }) {
       overview: () => go('#/overview'),
       back: () => go(backHash(navigation)),
       ...(navigation.current === 'overview' && (tile || event.target === root.current) ? { open: () => navigate(selected) } : {}),
-      // Only a focused proposal may own Delete. The offline stub has none.
-      tear: () => { root.current?.querySelector<HTMLElement>('[data-proposal-focused="true"] [data-tear-proposal]')?.click(); },
+      // Only the focused shared-queue proposal may own Delete.
+      tear: () => tearFocusedProposal(root.current),
     });
   }
   return <div className="desktop-root" ref={root} tabIndex={-1} onKeyDown={keyboard}>

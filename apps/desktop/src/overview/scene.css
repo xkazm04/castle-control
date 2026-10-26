@@ -1,0 +1,30 @@
+.overview-scene { position: absolute; inset: 0; color: var(--ink); font: var(--text-small)/1.3 var(--font-ui); overflow: hidden; }
+.overview-crypt { position: absolute; inset: 0; width: 100%; height: 100%; }
+.overview-scene-label { position: absolute; bottom: var(--space-8); left: 25%; right: 25%; text-align: center; font-size: var(--text-small); background: var(--paper); padding: var(--space-3); }
+.overview-layer { position: absolute; width: 24%; }
+.overview-layer > b, .overview-layer-select > b { display: block; font: 800 var(--text-small)/1.2 var(--font-ui); }
+.overview-layer-select { display: block; width: 100%; padding: var(--space-6); background: var(--card); color: var(--ink); border: var(--rule-thin) solid var(--hair); font: inherit; text-align: left; cursor: pointer; }
+.overview-layer-select:hover, .overview-layer-select:focus-visible { outline: var(--rule-strong) solid var(--ink); outline-offset: var(--focus-offset); }
+.overview-layer[data-layer="lottery"] { left: 3%; bottom: 9%; width: 27%; }
+.overview-layer[data-layer="moderator"] { top: 5%; right: 3%; width: 29%; }
+.overview-layer[data-layer="visuals"] { right: 3%; bottom: 9%; width: 22%; }
+.overview-layer[data-layer="studio"] { top: 5%; left: 3%; width: 27%; }
+.overview-layer .keep-chamber-art { height: calc(var(--space-56) * 1.4); width: 100%; }
+.overview-layer-fields { display: flex; flex-direction: column; gap: var(--space-2); }
+.overview-layer-fields s { margin-right: var(--space-4); color: var(--gules-text); }
+.overview-layer-fields strong { color: var(--gules-text); }
+.overview-layer svg:not(.keep-chamber-art) { display: block; max-height: calc(var(--space-56) * 1.5); width: 100%; }
+.overview-chat { max-height: calc(var(--space-56) * 2); overflow: hidden; }
+.overview-chat p { margin: var(--space-5) 0; border-top: var(--rule-thin) solid var(--line); padding-top: var(--space-3); }
+.overview-chat [data-held="true"] { color: var(--muted); text-decoration: line-through; background: var(--paper-2); }
+.overview-vote { display: flex; gap: var(--space-8); padding-block: var(--space-4); border-top: var(--space-5) solid var(--azure); font-weight: 700; }
+.overview-camera { display: block; border: var(--rule-strong) solid var(--or); padding: var(--space-4); }
+.overview-scene-border { position: absolute; inset: 0; border: var(--space-5) solid var(--or); pointer-events: none; opacity: var(--disabled-opacity); }
+.overview-scene[data-scene="program"] .overview-layer { font-size: var(--text-small); padding: var(--space-4); background: var(--card); }
+.overview-scene[data-scene="program"] .overview-layer[data-layer="lottery"] { left: 3%; bottom: 8%; width: 47%; }
+.overview-scene[data-scene="program"] .overview-layer[data-layer="studio"] { top: 5%; left: 3%; width: 38%; }
+.overview-scene[data-scene="program"] .overview-layer[data-layer="moderator"] { top: 5%; right: 3%; width: 52%; }
+.overview-scene[data-scene="program"] .overview-layer[data-layer="visuals"] { right: 3%; bottom: 8%; width: 40%; }
+.overview-scene[data-scene="program"] .overview-chat { max-height: calc(var(--space-14) * 3); }
+.overview-scene[data-scene="program"] .overview-chat p:not(:first-child), .overview-scene[data-scene="program"] .overview-vote, .overview-scene[data-scene="program"] .overview-camera, .overview-scene[data-scene="program"] .overview-scene-label, .overview-scene[data-scene="program"] .overview-layer-fields { display: none; }
+.overview-scene[data-scene="program"] .keep-chamber-art { height: var(--space-40); }

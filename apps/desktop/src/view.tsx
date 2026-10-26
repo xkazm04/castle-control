@@ -7,12 +7,12 @@ import type { Snapshot } from './model.js';
 import type { Navigation, Surface } from './navigation.js';
 import { DesktopRampart } from './rampart.jsx';
 import { simulatedSourceLabel } from './simulated.js';
-import { ShellSteward } from './shell/steward.jsx';
 import './view.css';
 
 const Keep = lazy(() => import('./shell/keep.jsx'));
 const Overview = lazy(() => import('./shell/overview.jsx'));
 const Room = lazy(() => import('./shell/room.jsx'));
+const Steward = lazy(() => import('./shell/steward.jsx').then(module => ({ default: module.ShellSteward })));
 
 export type ViewProps = {
   navigation?: Navigation; snapshot: Snapshot; theme: Theme;
@@ -28,6 +28,10 @@ export function DesktopView(props: ViewProps) {
   const navigation = props.navigation ?? { current: props.current ?? 'keep', replay: props.replay ?? false, origin: 'keep' };
   const { current } = navigation;
   const simulated = props.snapshot.mode === 'fixture' || props.snapshot.status?.simulated === true;
+  const steward = <Suspense fallback={<p role="status">Opening the simulated Steward...</p>}>
+    <Steward context={current} {...(props.steward_ref ? { input_ref: props.steward_ref } : {})}
+      on_select={props.on_select ?? (() => undefined)} on_open={props.on_navigate} on_overview={() => props.on_surface?.('overview')} />
+  </Suspense>;
   return <ThemeFrame theme={props.theme} {...(current === 'keep' || current === 'overview' ? {} : { module: current })}>
     <div className="desktop-shell">
       <DesktopRampart snapshot={props.snapshot} theme={props.theme} on_theme_change={props.on_theme_change}
@@ -39,13 +43,13 @@ export function DesktopView(props: ViewProps) {
           {props.snapshot.mode === 'fixture' ? 'Loading simulated snapshot.' : props.snapshot.message ?? 'Connecting to the core; status is unknown.'}
         </p>}
         <Suspense fallback={<p role="status">Opening the keep...</p>}>
-          {current === 'keep' ? <Keep on_open={props.on_navigate} on_enter={() => props.on_surface?.('overview')} />
-            : current === 'overview' ? <Overview selected={props.selected ?? 'lottery'} on_select={props.on_select ?? (() => undefined)} on_open={props.on_navigate} />
+          {current === 'keep' ? <Keep snapshot={props.snapshot} on_open={props.on_navigate} on_enter={() => props.on_surface?.('overview')} />
+            : current === 'overview' ? <Overview snapshot={props.snapshot} selected={props.selected ?? 'lottery'} on_select={props.on_select ?? (() => undefined)} on_open={props.on_navigate} steward={steward} />
             : <Room chamber={current} replay={navigation.replay} snapshot={props.snapshot} origin={navigation.origin}
               on_open={props.on_navigate} on_back={props.on_back ?? (() => undefined)} />}
         </Suspense>
       </main>
-      <ShellSteward context={current} {...(props.steward_ref ? { input_ref: props.steward_ref } : {})} />
+      {current !== 'overview' && steward}
     </div>
   </ThemeFrame>;
 }

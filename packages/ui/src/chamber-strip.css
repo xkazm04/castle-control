@@ -1,0 +1,13 @@
+.cc-chamber-strip { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-10); }
+.cc-chamber-tile { --chamber-ink: var(--ink); position: relative; min-width: 0; text-align: left; display: grid; gap: var(--space-6); border: var(--rule-strong) solid var(--ink); border-inline-start: var(--space-7) solid var(--chamber-ink); padding: var(--space-10) var(--space-12); background: var(--card); color: var(--ink); cursor: pointer; font: var(--text-small)/1.3 var(--font-ui); }
+.cc-chamber-tile[data-module="lottery"] { --chamber-ink: var(--gules); }
+.cc-chamber-tile[data-module="moderator"] { --chamber-ink: var(--azure); }
+.cc-chamber-tile[data-module="visuals"] { --chamber-ink: var(--or); }
+.cc-chamber-tile[aria-pressed="true"], .cc-chamber-tile:hover { background: var(--paper-2); box-shadow: inset 0 0 0 var(--rule-strong) var(--ink); }
+.cc-chamber-tile-title { display: flex; justify-content: space-between; gap: var(--space-6); }
+.cc-chamber-tile-title b { font: 800 var(--text-wordmark)/1.1 var(--font-display); text-transform: uppercase; }
+.cc-chamber-tile kbd { font: var(--text-small)/1.3 var(--font-num); }
+.cc-chamber-state { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cc-layer-lamps { display: flex; gap: var(--space-8); flex-wrap: wrap; }
+.cc-layer-lamps span::before { content: ''; display: inline-block; width: var(--space-6); height: var(--space-6); margin-right: var(--space-4); border: var(--rule-thin) solid var(--muted); border-radius: 50%; }
+.cc-layer-lamps [data-lit="true"]::before { background: var(--chamber-ink); border-color: var(--chamber-ink); }

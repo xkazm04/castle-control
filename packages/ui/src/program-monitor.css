@@ -1,0 +1,6 @@
+.cc-program-monitor { color: var(--ink); font: var(--text-small)/1.3 var(--font-ui); }
+.cc-program-monitor header { display: flex; justify-content: space-between; align-items: baseline; gap: var(--space-8); margin-bottom: var(--space-6); }
+.cc-program-monitor header strong { font: 800 var(--text-chamber)/1 var(--font-display); text-transform: uppercase; }
+.cc-program-monitor header span { color: var(--gules-text); font-weight: 800; }
+.cc-program-picture { aspect-ratio: 16 / 9; position: relative; border: var(--rule-strong) solid var(--ink); background: var(--paper-2); overflow: hidden; }
+.cc-program-monitor p { margin-block: var(--space-6); }

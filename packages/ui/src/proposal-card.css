@@ -1,0 +1,20 @@
+.cc-proposal-card { --proposal-ink: var(--ink); background: var(--card); color: var(--ink); border: var(--rule-strong) dashed var(--proposal-ink); padding: var(--space-14); font: var(--text-body)/1.4 var(--font-ui); }
+.cc-proposal-card[data-module="lottery"] { --proposal-ink: var(--gules-text); }
+.cc-proposal-card[data-module="moderator"] { --proposal-ink: var(--azure-text); }
+.cc-proposal-card[data-module="visuals"] { --proposal-ink: var(--or-text); }
+.cc-proposal-card[data-proposal-focused="true"] { outline: var(--rule-thin) solid var(--proposal-ink); outline-offset: var(--focus-offset); }
+.cc-proposal-stamp { margin: 0 0 var(--space-8); color: var(--proposal-ink); font-size: var(--text-small); font-weight: 800; letter-spacing: var(--track-label); }
+.cc-proposal-card h3 { margin: 0; font: 800 var(--text-chamber)/1 var(--font-display); text-transform: uppercase; }
+.cc-proposal-revision { margin: var(--space-6) 0; color: var(--muted); font-family: var(--font-num); font-size: var(--text-small); }
+.cc-proposal-card dl { margin: 0; }
+.cc-proposal-field { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr); gap: var(--space-8); padding-block: var(--space-8); border-top: var(--rule-thin) solid var(--line); }
+.cc-proposal-field dt { font-size: var(--text-small); font-weight: 700; }
+.cc-proposal-field dd { margin: 0; overflow-wrap: anywhere; }
+.cc-proposal-field s { color: var(--proposal-ink); margin-right: var(--space-8); text-decoration-thickness: var(--rule-strong); }
+.cc-proposal-reink { background: linear-gradient(transparent 65%, var(--paper-2) 65%); animation: cc-proposal-ink var(--motion-shell) var(--ease); }
+.cc-proposal-actions { display: flex; flex-wrap: wrap; gap: var(--space-10); align-items: center; margin-top: var(--space-12); }
+.cc-proposal-actions p { margin: 0; font-size: var(--text-small); }
+.cc-proposal-actions > button { font: inherit; color: var(--ink); background: var(--paper); border: var(--rule-thin) solid var(--ink); padding: var(--space-6) var(--space-10); cursor: pointer; }
+.cc-proposal-hash { overflow-wrap: anywhere; font: var(--text-small)/1.4 var(--font-num); }
+@keyframes cc-proposal-ink { from { opacity: 0; clip-path: inset(0 100% 0 0); } to { opacity: 1; clip-path: inset(0); } }
+@media (prefers-reduced-motion: reduce) { .cc-proposal-reink { animation: none; } }
