@@ -2,11 +2,13 @@ import { ChambersColumn, EmptyState, KitShell, NumberedPanel, PageHeader, Status
 import type { ModuleId } from '@castle-control/ui';
 import type { Theme } from '@castle-control/tokens';
 import type { Ref } from 'react';
+import { lazy, Suspense } from 'react';
 import type { Snapshot } from './model.js';
 import { DesktopRampart } from './rampart.jsx';
 import { simulatedSourceLabel } from './simulated.js';
-import { ModerationPage } from './moderation-page.jsx';
 import './view.css';
+
+const ModerationPage = lazy(() => import('./moderation-page.jsx').then(module => ({ default: module.ModerationPage })));
 
 const emptyStates = {
   lottery: { title: 'No lots in the urn yet', description: 'Draw setup and verifiable results arrive with the Lot Chamber milestone.' },
@@ -45,7 +47,7 @@ export function DesktopView(props: ViewProps) {
       {!moderation && <PageHeader number={Number(current.number)} title={current.name} description={current.description}
         actions={<StatusChip variant="dash">Not configured</StatusChip>} />}
       {props.snapshot.phase !== 'ready' && <p className="desktop-notice" role="status">{props.snapshot.mode === 'fixture' ? 'Loading simulated snapshot.' : props.snapshot.message ?? 'Connecting to the core; status is unknown.'}</p>}
-      {moderation ? <ModerationPage replay={props.replay ?? false} /> : <NumberedPanel number={`${current.number}.1`} title={current.description} gloss="Not configured">
+      {moderation ? <Suspense fallback={<p role="status">Loading Gatehouse preview.</p>}><ModerationPage replay={props.replay ?? false} /></Suspense> : <NumberedPanel number={`${current.number}.1`} title={current.description} gloss="Not configured">
         <EmptyState title={empty.title} description={empty.description} />
       </NumberedPanel>}
       <p id="shell-info" className="desktop-note">Castle Control · working name · not affiliated with Twitch. Shared paper and dark-stock design. Keys 1–4 open chambers; / focuses search.</p>

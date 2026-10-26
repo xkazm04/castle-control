@@ -21,7 +21,7 @@ export function exportRegistry() {
 function walk(directory) {
   if (!existsSync(directory)) return [];
   return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
-    if (entry.isSymbolicLink() || ['node_modules', 'target', 'generated', 'tests'].includes(entry.name)) return [];
+    if (entry.isSymbolicLink() || ['node_modules', 'target', 'dist', 'generated', 'tests'].includes(entry.name)) return [];
     const file = join(directory, entry.name);
     if (entry.isDirectory()) return walk(file);
     return /\.(rs|[cm]?[jt]sx?)$/.test(file) && !/\.(test|spec)\./.test(file) ? [file] : [];

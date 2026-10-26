@@ -49,6 +49,39 @@ Tests exercise keyboard dispatch plus actual shared-component renders, source
 isolation, validated RPC/event transport, reconnect/resync, invalid payloads,
 unknown state, and stale read races. They do not claim a mounted browser test.
 
+The production build now has a shell entry and a lazy Gatehouse JS/CSS pair;
+the latter loads its generated moderation fixtures only when that route opens.
+At base `5073b63`, first load was 956,229 bytes: JS 933,059 (97.58%) and CSS
+23,170 (2.42%). It is now 353,922 bytes: entry JS 337,975 (95.49%) and CSS
+15,947 (4.51%), with deferred Gatehouse JS 24,685 and CSS 7,224 (77.36% and
+22.64% of the deferred 31,909 bytes). Even all emitted JS/CSS totals 385,831
+bytes, below the same cap. The unchanged checker counts every JS/CSS
+reference in `dist/index.html`, including modulepreload links; this build has
+two such references and 39,294 bytes of headroom under 393,216. Ajv now interns
+shared definitions once (136 validator functions versus 393; standalone source
+442,932 versus 1,113,369 bytes), and pure local metadata initializers plus static
+method selections allow unused validators and dispatch Maps to be removed.
+Boot RPC results, errors and events remain synchronously schema-validated; the
+contract runtime is not dynamically imported. The generic parsing/invocation
+API remains available. Route tests await React's server stream to exercise the
+loaded lazy page and its original assertions. No Vite chunking override is used.
+
+Verification on 2026-10-26: regeneration and drift checks passed against schema
+exported by `cargo --offline run -p cc-types --bin export-contract`; parity
+passed against the offline core registry export. All five packages passed their
+individual typecheck, lint and test scripts (211 tests), including the existing
+1,000-writ cases. Generator tests, contract-script ESLint, tooling checks,
+`cargo fmt --all -- --check`, offline workspace Clippy and offline workspace
+tests passed, including the 1,000-generated-draw verification property. The
+boundary regression was proven red by bypassing result validation, then restored
+and passed; a second red/green proof excludes bundled `dist` from parity scans
+while still rejecting authored JSON parsing outside the door. `pnpm gate`
+stopped at `spawnSync cargo EPERM`; the unmodified `5073b63` generator reproduced
+the same sandbox denial. Recursive pnpm typecheck/lint also failed to launch
+with `spawn EPERM`. Individual checks are evidence, not a green full-gate claim;
+App Master must rerun `pnpm gate` outside this sandbox. Protected paths,
+including `src/check-build.ts`, are unchanged.
+
 Visual comparison at 1440×900 remains owed: computer-use approval rejected the
 Chrome action during this run. Source-level differences from the prototype are
 intentional shell empty states replacing populated heroes/panels, an added

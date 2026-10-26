@@ -1,15 +1,20 @@
-import { invoke, parseEvent } from '@castle-control/contract';
+import { invokeMethod, parseEvent, statusGet, bridgeStatusGet } from '@castle-control/contract';
+import type { MethodContract, RpcMethods } from '@castle-control/contract';
 import type { Source } from './model.js';
 
 export type CoreLaunch = { mode: 'core'; endpoint: string; session_token: string };
 export type Socket = Pick<WebSocket, 'onopen' | 'onmessage' | 'onclose' | 'onerror' | 'close'>;
+type BootMethod = 'status.get' | 'bridge.status.get';
+const bootMethods: { [M in BootMethod]: MethodContract<M> } = {
+  'status.get': statusGet, 'bridge.status.get': bridgeStatusGet,
+};
 export type Network = {
   socket: (url: string, protocols: string[]) => Socket;
-  rpc: typeof invoke;
+  rpc: <M extends BootMethod>(endpoint: string, session: string, method: M, value: RpcMethods[M]['params']) => Promise<RpcMethods[M]['result']>;
 };
 const network: Network = {
   socket: (url, protocols) => new WebSocket(url, protocols),
-  rpc: invoke,
+  rpc: (endpoint, session, method, value) => invokeMethod(endpoint, session, bootMethods[method], value),
 };
 
 export function validateCoreLaunch(launch: CoreLaunch) {

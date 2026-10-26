@@ -1,4 +1,4 @@
-import { renderToStaticMarkup } from 'react-dom/server';
+import { renderToReadableStream } from 'react-dom/server';
 import { expect, test } from 'vitest';
 import { createKeymap, dispatchShortcut, routeFromHash } from './navigation.js';
 import { DesktopView } from './view.jsx';
@@ -9,7 +9,7 @@ test('duplicate bindings throw before a handler can use them', () => {
   expect(() => createKeymap([{ key: '1', action: 'lottery' }, { key: '1', action: 'studio' }])).toThrow('Duplicate');
 });
 
-test('keyboard alone opens every chamber with its current content and simulated rampart', () => {
+test('keyboard alone opens every chamber with its current content and simulated rampart', async () => {
   let current: ModuleId = 'lottery';
   let focused = false;
   const snapshot = { mode: 'fixture', phase: 'ready', ...simulatedRead(1) } as const;
@@ -21,8 +21,10 @@ test('keyboard alone opens every chamber with its current content and simulated 
     dispatchShortcut({ key: key ?? '', preventDefault: () => { prevented = true; } }, false,
       id => { current = id; }, () => { focused = true; });
     expect(prevented).toBe(true);
-    const html = renderToStaticMarkup(<DesktopView current={current} snapshot={snapshot} theme="paper"
+    const stream = await renderToReadableStream(<DesktopView current={current} snapshot={snapshot} theme="paper"
       on_navigate={() => undefined} on_theme_change={() => undefined} search="" on_search={() => undefined} />);
+    await stream.allReady;
+    const html = await new Response(stream).text();
     for (const text of [title, empty, 'On air', 'Twitch: connected', 'OBS: connected', 'Watching', 'Simulated']) {
       expect(html).toContain(text);
     }

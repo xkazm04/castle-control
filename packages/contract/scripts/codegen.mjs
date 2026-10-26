@@ -7,6 +7,7 @@ import { parseJson } from '../src/door.mjs';
 import { Ajv2020 } from 'ajv/dist/2020.js';
 import standaloneCode from 'ajv/dist/standalone/index.js';
 import { _ } from 'ajv/dist/compile/codegen/index.js';
+import ts from 'typescript';
 
 export const root = resolve(import.meta.dirname, '../../..');
 export const output = join(root, 'packages/contract/src/generated');
@@ -79,6 +80,69 @@ export function artifacts(schema) {
   };
 }
 
+// Schemars exports self-contained documents. Giving every document its own Ajv
+// root compiles the same local $defs repeatedly, even with inlineRefs:false.
+// Intern identical shapes in one reference scope, retaining every constraint.
+function sharedSchemas(schema) {
+  const id = 'cc:shared';
+  const definitions = new Map();
+  const documents = [...Object.values(schema.types), ...schema.methods.flatMap((m) => [m.params, m.result])];
+  const body = (shape) => typeof shape === 'boolean' ? shape : Object.fromEntries(Object.entries(shape)
+    .filter(([key]) => !['$defs', '$schema', 'title'].includes(key)));
+  for (const doc of documents) {
+    for (const [name, shape] of Object.entries(doc.$defs ?? {})) {
+      const value = body(shape);
+      if (definitions.has(name) && JSON.stringify(definitions.get(name)) !== JSON.stringify(value)) {
+        throw new Error(`Conflicting shared definition: ${name}`);
+      }
+      definitions.set(name, value);
+    }
+  }
+  const names = new Map([...definitions].map(([name, shape]) => [JSON.stringify(shape), name]));
+  function reference(shape) {
+    const value = body(shape);
+    const key = JSON.stringify(value);
+    let name = names.get(key);
+    if (!name) {
+      name = `root${names.size}`;
+      if (definitions.has(name)) throw new Error(`Shared schema name collision: ${name}`);
+      names.set(key, name);
+      definitions.set(name, value);
+    }
+    return `${id}#/$defs/${name}`;
+  }
+  // Local references now resolve against the shared document, not each method.
+  function absolute(value) {
+    if (Array.isArray(value)) return value.map(absolute);
+    if (value === null || typeof value !== 'object') return value;
+    return Object.fromEntries(Object.entries(value).map(([key, item]) => [key,
+      key === '$ref' && typeof item === 'string' && item.startsWith('#/$defs/') ? `${id}${item}` : absolute(item)]));
+  }
+  return { reference, document: () => ({ $id: id, $defs: absolute(Object.fromEntries(definitions)) }) };
+}
+
+// Keep each function's evaluated-property metadata local to a pure initializer.
+// Bare `validateN.evaluated = ...` statements otherwise retain unused validators
+// as observable writes. Functions close over the later schema/helper constants;
+// exports come last so aliases never read a const in its temporal dead zone.
+function treeShakeable(source) {
+  const ast = ts.createSourceFile('validators.mjs', source, ts.ScriptTarget.Latest, true, ts.ScriptKind.JS);
+  const functions = [], constants = [], exports = [], metadata = new Map();
+  for (const node of ast.statements) {
+    if (ts.isFunctionDeclaration(node)) functions.push(node);
+    else if (ts.isExpressionStatement(node) && ts.isBinaryExpression(node.expression)
+      && node.expression.operatorToken.kind === ts.SyntaxKind.EqualsToken
+      && ts.isPropertyAccessExpression(node.expression.left) && node.expression.left.name.text === 'evaluated') {
+      metadata.set(node.expression.left.expression.getText(ast), node.getText(ast));
+    } else if (node.modifiers?.some((modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword)) exports.push(node.getText(ast));
+    else constants.push(node.getText(ast));
+  }
+  return functions.map((node) => {
+    const name = node.name.text;
+    return `const ${name} = /*#__PURE__*/ (() => { ${node.getText(ast)} ${metadata.get(name) ?? ''} return ${name}; })();`;
+  }).concat(constants, exports).join('');
+}
+
 function validators(schema) {
   const ajv = new Ajv2020({ strict: true,
     code: { source: true, esm: true, lines: false, formats: _`formats` }, inlineRefs: false });
@@ -97,12 +161,11 @@ function validators(schema) {
     `${JSON.stringify(name)}: ${typeof format === 'function' ? format.toString()
       : `{ type: 'number', validate: ${format.validate.toString()} }`}`).join(',');
   const exports = {};
+  const shared = sharedSchemas(schema);
   const declarations = [banner, "import type { ValidateFunction } from 'ajv';",
     "import type { RpcMethods, StreamEvent, LotsEventPayload, ConsensusEventPayload, BeaconsEventPayload, ErrorEnvelope } from './types.js';"];
   function entry(name, shape, type) {
-    const ref = `cc:${name}`;
-    ajv.addSchema(shape, ref);
-    exports[name] = ref;
+    exports[name] = shared.reference(shape);
     declarations.push(`export const ${name}: ValidateFunction<${type}>;`);
   }
   schema.methods.forEach((m, i) => {
@@ -114,10 +177,25 @@ function validators(schema) {
   entry('consensusEvent', schema.types.ConsensusEventPayload, 'ConsensusEventPayload');
   entry('beaconsEvent', schema.types.BeaconsEventPayload, 'BeaconsEventPayload');
   entry('error', schema.types.ErrorEnvelope, 'ErrorEnvelope');
+  ajv.addSchema(shared.document());
   const map = (prefix) => schema.methods.map((m, i) => `[${JSON.stringify(m.name)}, compiled.${prefix}${i}]`).join(',');
+  const methods = schema.methods.map((m, i) => {
+    const name = m.name.replace(/\.([a-z])/g, (_, letter) => letter.toUpperCase());
+    return `export const ${name} = { method: ${JSON.stringify(m.name)} as const, params: compiled.p${i}, result: compiled.r${i} };`;
+  });
   // Ajv's length keyword emits a CommonJS runtime reference even with esm:true.
   // Count Unicode code points inline so the generated browser module stays ESM.
-  const source = standaloneCode(ajv, exports)
+  // Ajv's standalone emitter does not mark an exported root completed. Emit
+  // each distinct root once, then alias public names that share that root.
+  const roots = new Map();
+  const unique = {};
+  const aliases = [];
+  for (const [name, ref] of Object.entries(exports)) {
+    const first = roots.get(ref);
+    if (first) aliases.push(`export const ${name} = ${first};`);
+    else { roots.set(ref, name); unique[name] = ref; }
+  }
+  const source = treeShakeable(standaloneCode(ajv, unique) + aliases.join(''))
     .replaceAll('require("ajv/dist/runtime/ucs2length").default', 'unicodeLength');
   if (/\brequire\s*\(/.test(source)) throw new Error('Unsupported CommonJS helper in ESM validators');
   const unicodeLength = source.includes('unicodeLength')
@@ -126,8 +204,9 @@ function validators(schema) {
     'validators.mjs': `${banner}/* eslint-disable */\n// Ajv standalone output; all authored code and generated types remain linted.\nconst formats = {${formatSource}};\n${unicodeLength}${source}\n`,
     'validators.d.mts': `${declarations.join('\n')}\n`,
     'validation.ts': `${banner}import type { ValidateFunction } from 'ajv';\nimport * as compiled from './validators.mjs';\n`
-      + `export const params = new Map<string, ValidateFunction>([${map('p')}]);\n`
-      + `export const results = new Map<string, ValidateFunction>([${map('r')}]);\n`
+      + `export const params = /*#__PURE__*/ new Map<string, ValidateFunction>([${map('p')}]);\n`
+      + `export const results = /*#__PURE__*/ new Map<string, ValidateFunction>([${map('r')}]);\n`
+      + `${methods.join('\n')}\n`
       + 'export const event = compiled.event;\nexport const error = compiled.error;\n',
   };
 }

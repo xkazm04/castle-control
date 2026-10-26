@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs';
-import { renderToStaticMarkup } from 'react-dom/server';
+import { renderToReadableStream, renderToStaticMarkup } from 'react-dom/server';
 import { expect, test, vi } from 'vitest';
 import type { ModuleId } from '@castle-control/ui';
 import { ConsensusChart } from './moderation-chart.jsx';
@@ -49,11 +49,13 @@ test('consensus module has no action/client imports and exposes shed count and h
   expect(html).toContain('<svg');
 });
 
-test('key 2 opens the complete simulated page through the existing navigation registry', () => {
+test('key 2 opens the complete simulated page through the existing navigation registry', async () => {
   let current: ModuleId = 'lottery';
   dispatchShortcut({ key: '2', preventDefault: () => undefined }, false, id => { current = id; }, () => undefined);
-  const html = renderToStaticMarkup(<DesktopView current={current} snapshot={{ mode: 'fixture', phase: 'ready', ...simulatedRead(1) }}
+  const stream = await renderToReadableStream(<DesktopView current={current} snapshot={{ mode: 'fixture', phase: 'ready', ...simulatedRead(1) }}
     theme="paper" on_navigate={() => undefined} on_theme_change={() => undefined} search="" on_search={() => undefined} />);
+  await stream.allReady;
+  const html = await new Response(stream).text();
   for (const text of ['The live room', 'The Herald', 'At the portcullis', 'Ban queue', 'Gate rules', 'The gate roll', 'The drill', 'SIMULATED']) expect(html).toContain(text);
   expect(routeFromHash('#/moderator/drill')).toBe('moderator');
 });
@@ -101,9 +103,11 @@ test('review operations resolve only local queues and preserve the original text
   expect(createModerationPreview().getSnapshot().bans).toHaveLength(1);
 });
 
-test('nested replay route keeps shell context and does not render the overview', () => {
-  const html = renderToStaticMarkup(<DesktopView current="moderator" replay snapshot={{ mode: 'fixture', phase: 'ready', ...simulatedRead(1) }}
+test('nested replay route keeps shell context and does not render the overview', async () => {
+  const stream = await renderToReadableStream(<DesktopView current="moderator" replay snapshot={{ mode: 'fixture', phase: 'ready', ...simulatedRead(1) }}
     theme="stock" on_navigate={() => undefined} on_theme_change={() => undefined} search="" on_search={() => undefined} />);
+  await stream.allReady;
+  const html = await new Response(stream).text();
   expect(html).toContain('Back to the Gatehouse');
   expect(html).toContain('aria-label="Breadcrumb"');
   expect(html).toContain('Twitch: connected');

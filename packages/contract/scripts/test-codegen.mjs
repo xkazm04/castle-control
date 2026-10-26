@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { existsSync, mkdtempSync, readFileSync, rmdirSync, unlinkSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmdirSync, unlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { parseJson } from '../src/door.mjs';
@@ -21,6 +21,8 @@ assert.throws(() => artifacts({ ...schema, error_codes: [...schema.error_codes, 
 assert.throws(() => differences({}), /empty/);
 
 const scratch = mkdtempSync(join(tmpdir(), 'cc-contract-proof-'));
+const authored = join(scratch, 'apps/desktop/src');
+const bundled = join(scratch, 'apps/desktop/dist/assets');
 try {
   assert.deepEqual(differences({ 'one.ts': 'fresh\n' }, scratch), ['missing one.ts']);
   writeFileSync(join(scratch, 'one.ts'), 'stale\n');
@@ -29,7 +31,19 @@ try {
   writeFileSync(join(scratch, 'orphan.ts'), 'simulated orphan\n');
   assert.deepEqual(differences({ 'one.ts': 'fresh\n' }, scratch), ['orphan orphan.ts']);
   assert.throws(() => usages(scratch), /empty/);
+  mkdirSync(bundled, { recursive: true });
+  writeFileSync(join(bundled, 'index.js'), "export const bundled = JSON.parse('null');\n");
+  assert.throws(() => usages(scratch), /empty/, 'built bundles are not authored contract usage');
+  mkdirSync(authored, { recursive: true });
+  writeFileSync(join(authored, 'main.ts'), "export const authored = JSON.parse('null');\n");
+  const usage = usages(scratch);
+  assert.equal(usage.files.length, 1);
+  assert.equal(usage.defects.length, 1, 'authored JSON parsing outside the door is still rejected');
 } finally {
+  for (const file of [join(authored, 'main.ts'), join(bundled, 'index.js')]) if (existsSync(file)) unlinkSync(file);
+  for (const directory of [authored, bundled, join(scratch, 'apps/desktop/dist'), join(scratch, 'apps/desktop'), join(scratch, 'apps')]) {
+    if (existsSync(directory)) rmdirSync(directory);
+  }
   for (const name of ['one.ts', 'orphan.ts']) if (existsSync(join(scratch, name))) unlinkSync(join(scratch, name));
   rmdirSync(scratch);
 }
@@ -44,4 +58,16 @@ assert.deepEqual(eventParity(['resync'], ['unknown'], ['invented']), [
   'mirrored unknown event: unknown', 'missing mirrored event: resync', 'used unknown event: invented',
 ]);
 assert.throws(() => eventParity([], [], []), /empty/);
+
+// Shared references must alias identical roots without weakening any schema.
+const compiled = await import(`data:text/javascript;base64,${Buffer.from(files['validators.mjs']).toString('base64')}`);
+assert.equal(compiled.p0, compiled.p1, 'identical Empty roots compile once');
+const conflict = parseJson(JSON.stringify(schema));
+conflict.methods[0].result.$defs.Timestamp.pattern = '^simulated$';
+assert.throws(() => artifacts(conflict), /Conflicting shared definition: Timestamp/);
+const booleans = artifacts({ ...schema, methods: schema.methods.map((method, i) =>
+  i === 0 ? { ...method, params: false, result: true } : method) });
+const booleanValidators = await import(`data:text/javascript;base64,${Buffer.from(booleans['validators.mjs']).toString('base64')}`);
+assert.equal(booleanValidators.p0({}), false, 'false schema still rejects everything');
+assert.equal(booleanValidators.r0(null), true, 'true schema still accepts everything');
 console.log('Contract generator, drift, empty-inventory and parity assertions passed');

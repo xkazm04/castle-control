@@ -1,4 +1,4 @@
-import { parseResult } from '@castle-control/contract';
+import { parseMethodResult, gatehouseRulesList, gatehouseBanConfirm, gatehouseConsensusGet, gatehouseDrillRun } from '@castle-control/contract';
 import type { ConsensusFilter, ConsensusGetResult, Decision, DrillRunResult, RulesListResult } from '@castle-control/contract';
 
 export const fixtureLabel = 'simulated';
@@ -8,14 +8,14 @@ const heldText = 'Simulated original held message: can I post my guide?';
 const banText = 'Simulated original message: simulated-blocked, quoted for human review.';
 
 // All fixture boundary decoding uses the contract door, including branded IDs.
-export const fixtureRules: RulesListResult = parseResult('gatehouse.rules.list', JSON.stringify({ rules: [
+export const fixtureRules: RulesListResult = parseMethodResult(gatehouseRulesList, JSON.stringify({ rules: [
   { rule_id: 'links', name: 'Links', rule_class: 'pattern', pattern: 'https?://', action: 'delete', mode: 'shadow', delivery: 'streamer' },
   { rule_id: 'repeats', name: 'Repeated messages', rule_class: 'pattern', pattern: 'repeat', action: 'timeout', timeout_s: 60, mode: 'shadow', delivery: 'streamer' },
   { rule_id: 'blocked-terms', name: 'Blocked terms', rule_class: 'pattern', pattern: 'simulated-blocked', action: 'ban', mode: 'shadow', delivery: 'streamer' },
 ] }));
 
 function decision(index: number, kind: Decision['kind'], verdict: Decision['verdict'], message_text: string, rule_id = 'links'): Decision {
-  return parseResult('gatehouse.ban.confirm', JSON.stringify({
+  return parseMethodResult(gatehouseBanConfirm, JSON.stringify({
     decision_id: `01ARZ3NDEKTSV4RRFF${String(index).padStart(8, '0')}`,
     message_id: `simulated-message-${index}`, at, kind, verdict, rule_id,
     message_text, operator: 'human', simulated: true, reason_codes: ['simulated_pattern_match'],
@@ -35,7 +35,7 @@ export const fixtureLedger = [decision(5003, 'timed_out', 'bar', 'Simulated repe
 
 export function fixtureConsensus(filter: ConsensusFilter): ConsensusGetResult {
   const scale = filter.kind === 'emotes' ? 0.8 : filter.kind === 'text' ? 0.9 : filter.kind === 'emote' ? 0.7 : 1;
-  return parseResult('gatehouse.consensus.get', JSON.stringify({
+  return parseMethodResult(gatehouseConsensusGet, JSON.stringify({
     at, window_s: 900, filter, shed_count: filter.kind === 'all' ? 17 : 4,
     directions: ['Go left', 'Hype', 'Skip the boss', 'Go right'].map((label, index) => {
       const series = Array.from({ length: 16 }, (_, minute) => {
@@ -56,7 +56,7 @@ export const fixtureCharts = [fixtureConsensus({ kind: 'all' }), fixtureConsensu
 
 // Hashes are illustrative fixture identifiers, never presented as a computed live instrument.
 const hash = 'a'.repeat(64);
-export const fixtureReplay: DrillRunResult = parseResult('gatehouse.drill.run', JSON.stringify({
+export const fixtureReplay: DrillRunResult = parseMethodResult(gatehouseDrillRun, JSON.stringify({
   label: fixtureLabel, source, instrument_hash: hash,
   instrument: { rules_hash: hash, bank_hash: hash, judge_hash: hash, prompts_hash: hash },
   outcomes: fixtureMessages.slice(0, 60).map((message, index) => ({
