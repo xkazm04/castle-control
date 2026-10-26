@@ -16,8 +16,13 @@ export const chambers = [
 // The shell owner can consume one table from an element's onKeyDown handler.
 // This kit deliberately installs no global handlers or persistence.
 export const keymap = [
+  { key: '0', action: 'overview' },
   ...chambers.map(({ id, number }) => ({ key: number, action: id })),
+  { key: 'Escape', action: 'back' },
   { key: '/', action: 'steward' },
+  { key: 'Enter', action: 'open' },
+  { key: 'Delete', action: 'tear' },
+  { key: ' ', action: 'seal' },
 ] as const;
 
 export type RampartProps = {
@@ -34,8 +39,8 @@ export function Rampart(props: RampartProps) {
     </a>
     <div className="cc-live-group">
       <span className="cc-air" data-live={props.on_air}><i />{props.on_air ? 'On air' : 'Offline'}</span>
-      <span className="cc-figure"><b>{props.on_air ? props.viewers : '—'}</b><small>viewers</small></span>
-      <span className="cc-figure"><b>{props.on_air ? props.uptime : '—'}</b><small>uptime</small></span>
+      <span className="cc-figure"><b>{props.on_air ? props.viewers : 'Offline'}</b><small>viewers</small></span>
+      <span className="cc-figure"><b>{props.on_air ? props.uptime : 'Offline'}</b><small>uptime</small></span>
     </div>
     <span className="cc-separator" />
     <div className="cc-link-group"><ConnectionMark name="Twitch" state={props.twitch} /><ConnectionMark name="OBS" state={props.obs} /></div>

@@ -1,0 +1,6 @@
+.cc-room-header { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-16); border-bottom: var(--rule-medium) solid var(--rule); padding-block: var(--space-12); font: 600 var(--text-body)/1.4 var(--font-ui); }
+.cc-room-header a { color: var(--ink); text-underline-offset: var(--space-3); }
+.cc-room-locator { display: flex; gap: var(--space-4); margin-inline-start: auto; }
+.cc-room-locator a { min-width: var(--space-30); text-align: center; padding: var(--space-4); border: var(--rule-thin) solid var(--ink); background: var(--card); font-family: var(--font-num); text-decoration: none; }
+.cc-room-locator a[aria-current] { color: var(--paper); background: var(--ink); }
+.cc-room-header kbd { font: 600 var(--text-small)/1.4 var(--font-num); }

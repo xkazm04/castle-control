@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState } from 'react';
+import { lazy, Suspense, useRef, useState } from 'react';
 import type { KeyboardEvent } from 'react';
 import { createRoot } from 'react-dom/client';
 import type { Theme } from '@castle-control/tokens';
@@ -8,6 +8,7 @@ import type { ConnectionState, ModuleId, RuleRow } from './index.js';
 import './kit.css';
 
 const PromotedGallery = lazy(() => import('./kit-promoted.jsx').then(module => ({ default: module.PromotedGallery })));
+const ShellControls = lazy(() => import('../kit/shell-controls.jsx'));
 
 const initialRules: readonly RuleRow[] = [
   { id: 'links', name: 'Links', match: 'Unapproved links', action: 'Hold', mode: 'shadow' },
@@ -24,16 +25,19 @@ function KitTheme({ initial_theme }: { initial_theme: Theme }) {
   const [shield, setShield] = useState(false);
   const [rules, setRules] = useState(initialRules);
   const [notice, setNotice] = useState('Simulated controls only. No Twitch, OBS or model calls.');
+  const stewardInput = useRef<HTMLInputElement>(null);
   const current = chambers.find(item => item.id === module) ?? chambers[1];
   const armed = rules.filter(rule => rule.mode === 'armed').length;
   const nextConnection = (value: ConnectionState): ConnectionState => value === 'connected' ? 'reconnecting' : value === 'reconnecting' ? 'down' : 'connected';
   function handleKey(event: KeyboardEvent<HTMLElement>) {
     if (event.ctrlKey || event.metaKey || event.altKey || event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) return;
     const binding = keymap.find(item => item.key === event.key);
-    if (!binding) return;
+    if (!binding || binding.action === 'seal' || event.defaultPrevented) return;
+    const chamber = chambers.find(item => item.id === binding.action);
+    if (!chamber && binding.action !== 'steward') return;
     event.preventDefault();
-    if (binding.action === 'steward') setNotice('The Steward drafts a proposed change. Nothing happens until you seal it.');
-    else setModule(binding.action);
+    if (binding.action === 'steward') stewardInput.current?.focus();
+    else if (chamber) setModule(chamber.id);
   }
   return <section className="cc-kit-sheet" aria-label={`${initial_theme} theme kit, 1440 by 900`} onKeyDown={handleKey}>
     <ThemeFrame theme={theme} module={module}>
@@ -74,6 +78,10 @@ function KitTheme({ initial_theme }: { initial_theme: Theme }) {
             </NumberedPanel>
           </div>
           <Suspense fallback={<p className="cc-kit-note">Loading component examples…</p>}><PromotedGallery /></Suspense>
+          <NumberedPanel number="0.9" title="AI-first shell controls" gloss="simulated">
+            <Suspense fallback={<p>Loading shell controls...</p>}><ShellControls chamber={module} input_ref={stewardInput}
+              message={notice} on_message={setNotice} on_navigate={setModule} /></Suspense>
+          </NumberedPanel>
           <p className="cc-kit-note">Generated, simulated fixtures. Working name. Not affiliated with Twitch. Focus a control to use 1–4 or /.</p>
         </div>
       </KitShell>

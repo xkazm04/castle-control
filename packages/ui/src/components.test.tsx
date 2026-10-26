@@ -143,5 +143,5 @@ test('virtualisation preserves total height and reaches the last row with bounde
 
 test('single keymap has no conflicts and every chamber and Steward has one shortcut', () => {
   expect(new Set(keymap.map(binding => binding.key)).size).toBe(keymap.length);
-  expect(keymap.map(binding => binding.key)).toEqual(['1', '2', '3', '4', '/']);
+  expect(keymap.map(binding => binding.key)).toEqual(['0', '1', '2', '3', '4', 'Escape', '/', 'Enter', 'Delete', ' ']);
 });

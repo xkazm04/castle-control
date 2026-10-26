@@ -32,15 +32,90 @@ In core mode, `bridge.status.get` answers `unavailable` until Twitch is configur
 the shell shows the bridge as UNKNOWN rather than an error.
 Unknown-aware rampart composition reuses the kit's layout classes and individual
 primitives because its boolean-only `Rampart` API cannot express absence. Shared
-kit code, CSS and tokens remain unchanged.
+design tokens remain unchanged.
 
-Hash routes `#/lottery`, `#/moderator`, `#/visuals` and `#/studio` support direct
-links and back/forward navigation. The kit's one keymap table is consumed with
-the brief's `/` override for search; duplicates throw at registry creation.
-One React `onKeyDown` handler receives shortcuts from the focusable shell.
-Typing, composition and modified shortcuts do not trigger navigation. Search
-offers at most four chamber links; there is no unbounded list in this shell.
-The Steward is visibly disabled until its milestone; no mutation is offered.
+## AI-2 shell and routes
+
+Open `#/keep` for the default landing, `#/overview` for Preview and Proclaim,
+or `#/chamber/lottery`, `#/chamber/moderator`, `#/chamber/visuals` and
+`#/chamber/studio` for a room. The replay deep link is
+`#/chamber/moderator/drill`. Old chamber hashes and `#/moderator/drill`
+redirect in place to those canonical routes. Unknown hashes, including the
+removed `#/lottery/stage` and its children, return to `#/keep`.
+
+All three surfaces load lazily under `src/shell/`. The rampart stays above the
+scrolling work surface; one StewardBar stays below it. Keep tiles open rooms.
+The overview has a 16:9 placeholder and four tiles: click or focus selects a
+layer, Enter or double-click opens its room. Rooms retain the existing lazy
+chamber pages and have a Breadcrumb and empty seal slot. The Map Room retains
+its unconfigured empty state. Core mode never loads simulated chamber controls.
+These are Wave 1 placeholders, not a claim of reference-level visual fidelity.
+
+`packages/ui/src/shell.tsx` declares the only keymap, consumed by navigation:
+0 opens overview; 1-4 open rooms; Esc returns to the room's landing/overview
+origin; / focuses the Steward input; Enter opens the selected strip tile;
+Delete belongs to a focused proposal; held Space belongs to the focused seal
+control. Typing suppresses shortcuts except Esc. Modified keys, composition
+and repeats never navigate. Native Enter on other buttons stays native.
+Direct room links default to a Keep origin; switching rooms preserves origin.
+
+The local `src/shell/steward-stub.ts` exposes ask, amend and tearUp, returning
+the fixed reply "The Steward is not wired yet. No changes have been made."
+with no proposals or focus change. Conversation/input state stays in one bar
+across surfaces. Its visible label is SIMULATED STEWARD · SAMPLE DATA, including
+in core mode. Speech is visibly unavailable. No network, model, RPC registration
+or new contract identifier is introduced. Wave 2 replaces this seam with
+`@castle-control/ui/steward`; this package imports nothing from that module.
+
+Shared StewardBar, Breadcrumb and both SealButton variants are shown on the
+component kit's AI-first shell controls panel in both themes. SealButton uses a
+named 1,000 ms hold duration, visible native progress, and pointer/Space holds.
+Release before completion, blur, lost capture, cancellation, hiding the page,
+disabling or unmounting cancels. Click and Enter never seal. The completed hold
+fires once until released. The desktop stub offers no proposals to seal or tear.
+
+Deleted superseded files (and no domain page/model files):
+
+- `src/lots-stage-copy.ts`
+- `src/lots-stage-design.tsx`
+- `src/lots-stage-model.ts`
+- `src/lots-stage-page.tsx`
+- `src/lots-stage-route.ts`
+- `src/lots-stage.css`
+- `src/lots-stage.md`
+- `src/lots-stage.test.tsx`
+- `../../packages/ui/src/stage-frame.tsx`
+- `../../packages/ui/src/stage-frame.css`
+- `../../packages/ui/src/stage-frame.test.tsx`
+
+StageFrame had no remaining consumer after deleting the rejected stage; a
+source import search confirmed that before the shared component was removed.
+
+AI-2 verification, 2026-10-26: the new route tests first failed against the old
+shell (5 failures), then passed. All UI tests passed (80 tests, 6 files) and all
+desktop tests passed (85 tests, 9 files), including unchanged chamber/domain
+tests. The hold test drives the actual pointer and Space handlers with fake
+timers: early release does not seal, a full hold fires once, and cancellation
+paths cannot seal. Route tests cover all surfaces, the drill, aliases, rejected
+stage fallback, origin-aware Esc, typing suppression and strip Enter/double-click.
+These are server renders and handler tests, not a mounted-browser smoke claim.
+
+Both affected packages passed their package-gate typecheck and lint scripts;
+the lazy kit module also passed ESLint. Boundaries, hygiene, file cap and secret
+scan passed (420 code files, 541 scanned text files). Desktop build passed at
+386,922 / 393,216 first-load bytes; the kit passed at 256,319 / 262,144 bytes
+after deferring the new examples. The budgets were not changed. All three
+surfaces and their existing chamber pages are separate emitted lazy chunks.
+
+The full `pnpm gate` is **not green in this sandbox**: it passed the 14 tooling
+boundary tests and workspace inventories, then stopped in the unchanged
+contract exporter at `spawnSync cargo EPERM`. Read-only git comparison confirms
+`scripts/gate.mjs` and the contract check/export scripts match HEAD. Recursive
+pnpm typecheck and lint separately stopped at `spawn EPERM` before package work.
+No gate or sandbox setting was changed. App Master must rerun the full gate in
+its verification environment. No Rust check or full-workspace test pass is
+claimed for this delivery. The node_modules junction was not installed over,
+followed, removed or changed; no dependencies or lockfile changed.
 
 Package `typecheck`, `lint` and `test` use the shared package-gate runner.
 `build` includes an inventory-based first-load cap of 384 KiB uncompressed
@@ -49,7 +124,7 @@ Tests exercise keyboard dispatch plus actual shared-component renders, source
 isolation, validated RPC/event transport, reconnect/resync, invalid payloads,
 unknown state, and stale read races. They do not claim a mounted browser test.
 
-The production build now has a shell entry and a lazy Gatehouse JS/CSS pair;
+The historical WP 0.5 production build had a shell entry and a lazy Gatehouse JS/CSS pair;
 the latter loads its generated moderation fixtures only when that route opens.
 At base `5073b63`, first load was 956,229 bytes: JS 933,059 (97.58%) and CSS
 23,170 (2.42%). It is now 353,922 bytes: entry JS 337,975 (95.49%) and CSS
@@ -82,7 +157,7 @@ with `spawn EPERM`. Individual checks are evidence, not a green full-gate claim;
 App Master must rerun `pnpm gate` outside this sandbox. Protected paths,
 including `src/check-build.ts`, are unchanged.
 
-Visual comparison at 1440×900 remains owed: computer-use approval rejected the
+Historical WP 0.5 visual comparison at 1440×900 remained owed: computer-use approval rejected the
 Chrome action during this run. Source-level differences from the prototype are
 intentional shell empty states replacing populated heroes/panels, an added
 simulated-source banner and search row above the header, unknown status chips,

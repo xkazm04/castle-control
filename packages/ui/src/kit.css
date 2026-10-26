@@ -8,3 +8,4 @@ body { margin: 0; }
 .cc-kit-note { color: var(--muted); font-size: var(--text-small); padding-top: var(--space-8); }
 .cc-kit-columns { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-24); }
 .cc-kit-entry { padding-inline: var(--space-8); display: flex; align-items: center; height: 100%; font-size: var(--text-small); }
+.cc-kit-seals { margin-block: var(--space-16); }

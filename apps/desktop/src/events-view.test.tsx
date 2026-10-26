@@ -1,4 +1,4 @@
-import { renderToStaticMarkup } from 'react-dom/server';
+import { renderToReadableStream } from 'react-dom/server';
 import { afterEach, expect, test, vi } from 'vitest';
 import { chambers } from '@castle-control/ui';
 import { createDesktopClient } from './client.js';
@@ -15,8 +15,10 @@ test('validated simulated events update rampart chips on all four rendered route
     await vi.advanceTimersByTimeAsync(1500);
     await vi.waitFor(() => { expect(client.getSnapshot().status?.stream?.live).toBe(true); });
     for (const { id, name } of chambers) {
-      const html = renderToStaticMarkup(<DesktopView current={id} snapshot={client.getSnapshot()} theme="paper"
+      const stream = await renderToReadableStream(<DesktopView current={id} snapshot={client.getSnapshot()} theme="paper"
         on_navigate={() => undefined} on_theme_change={() => undefined} search="" on_search={() => undefined} />);
+      await stream.allReady;
+      const html = await new Response(stream).text();
       for (const label of [name, 'ON AIR simulated', 'Twitch simulated', 'OBS simulated', 'Gatehouse simulated', 'Simulated', 'SIMULATED SOURCE']) {
         expect(html).toContain(label);
       }

@@ -3,47 +3,63 @@ import type { KeyboardEvent } from 'react';
 import type { ModuleId } from '@castle-control/ui';
 import type { Theme } from '@castle-control/tokens';
 import type { DesktopClient } from './model.js';
-import { dispatchShortcut, routeFromHash } from './navigation.js';
+import { backHash, canonicalHash, dispatchShortcut, initialNavigation, navigateHash } from './navigation.js';
 import { DesktopView } from './view.jsx';
-import { stageRoute } from './lots-stage-route.js';
 
 export function DesktopApp({ client }: { client: DesktopClient }) {
   const snapshot = useSyncExternalStore(client.subscribe, client.getSnapshot, client.getSnapshot);
-  const [current, setCurrent] = useState(() => routeFromHash(window.location.hash));
-  const [replay, setReplay] = useState(() => window.location.hash === '#/moderator/drill');
-  const [stage, setStage] = useState(() => stageRoute(window.location.hash));
+  const [navigation, setNavigation] = useState(() => initialNavigation(window.location.hash));
   const [theme, setTheme] = useState<Theme>('paper');
-  const [search, setSearch] = useState('');
+  const [selected, setSelected] = useState<ModuleId>('lottery');
   const root = useRef<HTMLDivElement>(null);
-  const searchInput = useRef<HTMLInputElement>(null);
+  const stewardInput = useRef<HTMLInputElement>(null);
+  const tileOrigin = useRef<ModuleId | undefined>(undefined);
   useEffect(() => client.start(), [client]);
   useEffect(() => {
     const sync = () => {
-      if (window.location.hash.startsWith('#/')) {
-        setCurrent(routeFromHash(window.location.hash));
-        setReplay(window.location.hash === '#/moderator/drill');
-        setStage(stageRoute(window.location.hash));
-      }
+      const hash = canonicalHash(window.location.hash);
+      if (hash !== window.location.hash) window.history.replaceState(null, '', hash);
+      setNavigation(previous => navigateHash(previous, hash));
     };
+    sync();
     window.addEventListener('hashchange', sync);
     root.current?.focus();
     return () => { window.removeEventListener('hashchange', sync); };
   }, []);
+  useEffect(() => {
+    if (navigation.current !== 'keep' && navigation.current !== 'overview') { root.current?.focus(); return; }
+    if (tileOrigin.current) {
+      root.current?.querySelector<HTMLElement>(`[data-room-tile="${tileOrigin.current}"]`)?.focus();
+      tileOrigin.current = undefined;
+    }
+  }, [navigation.current]);
+  function go(hash: string) {
+    const canonical = canonicalHash(hash);
+    setNavigation(previous => navigateHash(previous, canonical));
+    if (window.location.hash !== canonical) window.location.hash = canonical;
+  }
   function navigate(id: ModuleId) {
-    setCurrent(id);
-    setReplay(false);
-    setStage(undefined);
-    window.location.hash = `/${id}`;
-    setSearch('');
+    tileOrigin.current = id;
+    setSelected(id);
+    go(`#/chamber/${id}`);
   }
   function keyboard(event: KeyboardEvent<HTMLDivElement>) {
     const editable = event.target instanceof HTMLElement && Boolean(event.target.closest('input, textarea, select, [contenteditable]:not([contenteditable="false"])'));
+    const tile = event.target instanceof HTMLElement && event.target.closest('[data-room-tile]');
     dispatchShortcut({ key: event.key, ctrlKey: event.ctrlKey, metaKey: event.metaKey, altKey: event.altKey,
       isComposing: event.nativeEvent.isComposing, defaultPrevented: event.defaultPrevented, repeat: event.repeat,
-      preventDefault: () => { event.preventDefault(); } }, editable, navigate, () => { searchInput.current?.focus(); });
+      preventDefault: () => { event.preventDefault(); } }, editable, navigate, () => { stewardInput.current?.focus(); },
+    {
+      overview: () => go('#/overview'),
+      back: () => go(backHash(navigation)),
+      ...(navigation.current === 'overview' && (tile || event.target === root.current) ? { open: () => navigate(selected) } : {}),
+      // Only a focused proposal may own Delete. The offline stub has none.
+      tear: () => { root.current?.querySelector<HTMLElement>('[data-proposal-focused="true"] [data-tear-proposal]')?.click(); },
+    });
   }
   return <div className="desktop-root" ref={root} tabIndex={-1} onKeyDown={keyboard}>
-    <DesktopView current={current} replay={replay} {...(stage ? { stage } : {})} snapshot={snapshot} theme={theme} on_navigate={navigate}
-      on_theme_change={setTheme} search={search} on_search={setSearch} search_ref={searchInput} />
+    <DesktopView navigation={navigation} snapshot={snapshot} theme={theme} on_navigate={navigate}
+      on_surface={surface => go(`#/${surface}`)} on_back={() => go(backHash(navigation))}
+      on_theme_change={setTheme} selected={selected} on_select={setSelected} steward_ref={stewardInput} />
   </div>;
 }

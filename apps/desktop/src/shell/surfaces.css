@@ -1,0 +1,22 @@
+.shell-surface-title { margin-block: var(--space-24); }
+.shell-surface-title h1 { margin: var(--space-8) 0; font: 800 var(--text-title)/1 var(--font-display); text-transform: uppercase; }
+.shell-surface-title p { margin-block: var(--space-8); font-size: var(--text-body); }
+.shell-room-tiles, .shell-chamber-strip { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-16); margin-block: var(--space-24); }
+.shell-room-tile { --room-ink: var(--ink); display: flex; flex-direction: column; gap: var(--space-10); min-width: 0; padding: var(--space-20); text-align: left; border: var(--rule-strong) solid var(--room-ink); background: var(--card); color: var(--ink); font: var(--text-body)/1.4 var(--font-ui); cursor: pointer; }
+.shell-room-tile[data-module="lottery"] { --room-ink: var(--gules-text); }
+.shell-room-tile[data-module="moderator"] { --room-ink: var(--azure-text); }
+.shell-room-tile[data-module="visuals"] { --room-ink: var(--or-text); }
+.shell-room-tile strong { color: var(--room-ink); font: 800 var(--text-chamber)/1.1 var(--font-display); }
+.shell-room-tile:hover, .shell-room-tile[aria-pressed="true"] { background: var(--paper-2); }
+.shell-tile-key { align-self: end; font-family: var(--font-num); }
+.shell-keep kbd { font: inherit; }
+.shell-preview { display: flex; flex-direction: column; justify-content: center; align-items: center; gap: var(--space-16); width: min(100%, calc(var(--space-56) * 14)); aspect-ratio: 16 / 9; margin-inline: auto; padding: var(--space-20); border: var(--rule-strong) dashed var(--ink); background: var(--paper-2); text-align: center; font-size: var(--text-body); }
+.shell-preview strong { font: 800 var(--text-chamber-number)/1 var(--font-display); }
+.shell-room-work { display: grid; grid-template-columns: minmax(0, 1fr) minmax(calc(var(--space-56) * 3), 20%); gap: var(--space-20); padding-top: var(--space-20); }
+.shell-room-content { min-width: 0; }
+.shell-seal-slot { align-self: start; border: var(--rule-medium) dashed var(--gules); padding: var(--space-16); background: var(--card); font-size: var(--text-body); }
+.shell-seal-slot h2 { font: 800 var(--text-section)/1.3 var(--font-display); color: var(--gules-text); }
+@media (max-width: 900px) {
+  .shell-room-tiles, .shell-chamber-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .shell-room-work { grid-template-columns: minmax(0, 1fr); }
+}

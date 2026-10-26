@@ -5,6 +5,7 @@ import { DesktopRampart } from './rampart.jsx';
 import { simulatedRead } from './simulated.js';
 import type { Snapshot } from './model.js';
 import type { ModuleId } from '@castle-control/ui';
+import Keep from './shell/keep.jsx';
 
 function render(snapshot: Snapshot, current: ModuleId = 'lottery') {
   return renderToStaticMarkup(<DesktopView current={current} snapshot={snapshot} theme="stock"
@@ -57,15 +58,11 @@ test.each([
   }
 });
 
-test('fixture sidebar labels available chamber previews and leaves Map Room unconfigured', () => {
-  const html = render({ mode: 'fixture', phase: 'ready', ...simulatedRead(1) });
-  for (const [id, figure] of [
-    ['lottery', 'Simulated draws'], ['moderator', 'Simulated moderation'],
-    ['visuals', 'Simulated visuals'], ['studio', 'Not configured'],
-  ]) {
-    const link = html.match(new RegExp(`<a[^>]*data-module="${id}"[^>]*>[\\s\\S]*?</a>`))?.[0];
-    expect(link).toContain(`<em>${figure}</em>`);
-  }
+test('the keep replaces the sidebar with four explicitly labelled sample room tiles', () => {
+  const html = renderToStaticMarkup(<Keep on_open={() => undefined} on_enter={() => undefined} />);
+  for (const id of ['lottery', 'moderator', 'visuals', 'studio']) expect(html).toContain(`data-room-tile="${id}"`);
+  expect(html.match(/Room preview · sample data/g)).toHaveLength(4);
+  expect(html).toContain('Enter the keep');
 });
 
 test.each(['lottery', 'moderator', 'visuals', 'studio'] as const)('%s keeps an absent bridge UNKNOWN with a ready core', current => {
