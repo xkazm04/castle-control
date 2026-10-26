@@ -7,3 +7,4 @@ export { parseStewardAskParams, parseStewardAskResult, parseWrit, parseWritSealP
   parseWritSealResult, parseWritTearParams, parseWritTearResult, parseStewardEvent } from './validate.js';
 export { statusGet, bridgeStatusGet, gatehouseRulesList, gatehouseBanConfirm,
   gatehouseConsensusGet, gatehouseDrillRun } from './generated/validation.js';
+export { beaconsVisualList, beaconsCurveSet, beaconsSimulate, beaconsSourceUrl } from './generated/validation.js';

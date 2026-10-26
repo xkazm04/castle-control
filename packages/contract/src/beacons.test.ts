@@ -1,5 +1,6 @@
 import { expect, test } from 'vitest';
-import { parseParams, parseResult } from './index.js';
+import { beaconsVisualList, beaconsCurveSet, beaconsSimulate, beaconsSourceUrl,
+  parseMethodParams, parseMethodResult, parseParams, parseResult } from './index.js';
 import type { RpcMethod } from './validate.js';
 import { beaconsEvent } from './generated/validators.mjs';
 
@@ -19,6 +20,31 @@ const samples: Array<{ method: RpcMethod; params: Record<string, unknown>; resul
   { method: 'beacons.source.url', params: { visual_id: visual.visual_id },
     result: { url: 'http://localhost:4312/visuals/simulated-frame?hash=abc' } },
 ];
+
+test('public Beacons handles preserve their wire method names', () => {
+  expect(beaconsVisualList.method).toBe('beacons.visual.list');
+  expect(beaconsCurveSet.method).toBe('beacons.curve.set');
+  expect(beaconsSimulate.method).toBe('beacons.simulate');
+  expect(beaconsSourceUrl.method).toBe('beacons.source.url');
+});
+
+test('public visual-list handle validates simulated fixtures through the method door', () => {
+  const params = {};
+  const result = { visuals: [visual] };
+  expect(parseMethodParams(beaconsVisualList, params)).toEqual(params);
+  expect(parseMethodResult(beaconsVisualList, JSON.stringify(result))).toEqual(result);
+  expect(() => parseMethodParams(beaconsVisualList, { ...params, extra: true })).toThrow();
+  expect(() => parseMethodResult(beaconsVisualList, JSON.stringify({ ...result, extra: true }))).toThrow();
+});
+
+test('public simulation handle validates simulated fixtures through the method door', () => {
+  const params = { visual_id: visual.visual_id, burst: { source: 'gift', amount: 50 } };
+  const result = { label: 'simulated', intensity };
+  expect(parseMethodParams(beaconsSimulate, params)).toEqual(params);
+  expect(parseMethodResult(beaconsSimulate, JSON.stringify(result))).toEqual(result);
+  expect(() => parseMethodParams(beaconsSimulate, { ...params, extra: true })).toThrow();
+  expect(() => parseMethodResult(beaconsSimulate, JSON.stringify({ ...result, extra: true }))).toThrow();
+});
 
 test.each(samples)('$method round-trips its typed simulated fixture', ({ method, params, result }) => {
   expect(parseParams(method, params)).toEqual(params);
