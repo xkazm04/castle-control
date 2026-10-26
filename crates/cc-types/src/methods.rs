@@ -79,6 +79,14 @@ methods! {
 
 /// Single parse door for requests, including unknown-method and shape errors.
 pub fn parse_request(bytes: &[u8]) -> Result<RpcRequest, ErrorEnvelope> {
-    serde_json::from_slice(bytes)
-        .map_err(|_| ErrorEnvelope::new(ErrorCode::Invalid, "invalid RPC request"))
+    let invalid = || ErrorEnvelope::new(ErrorCode::Invalid, "invalid RPC request");
+    let value: Value = serde_json::from_slice(bytes).map_err(|_| invalid())?;
+    if value
+        .get("params")
+        .is_some_and(|params| !params.is_object())
+    {
+        return Err(invalid());
+    }
+    // Keep typed parsing on the original bytes so duplicate fields stay invalid.
+    serde_json::from_slice(bytes).map_err(|_| invalid())
 }
