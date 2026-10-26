@@ -1,0 +1,4 @@
+# Simulated beacon dedupe_key fixture ('simulated-cheer-1'), not a secret.
+984e8a77359bee8f62325a2d3d25aca991a0c493:crates/cc-types/tests/beacons.rs:generic-api-key:19
+# Simulated beacon dedupe_key fixture ('simulated-cheer-1'), not a secret.
+984e8a77359bee8f62325a2d3d25aca991a0c493:packages/contract/src/beacons.test.ts:generic-api-key:12

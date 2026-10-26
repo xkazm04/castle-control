@@ -5,10 +5,10 @@ the future OBS overlay and Extension hosts. It has no runtime or workspace
 dependencies. It performs no network requests, script evaluation, DOM creation,
 or clock/timer reads. The host supplies playback time explicitly.
 
-This delivery intentionally defines **no design-package or layer types**. Those
-are contract identifiers and must land in `cc-types`, with generated validators
-in `packages/contract`, in a separate delivery before renderer integration.
-There is no overlay server, Extension host, or package interpreter here yet.
+Design bindings use local structural types that mirror the merged `cc-types`
+`design.rs` contract, without importing `@castle-control/contract`. Hosts must
+parse incoming design data at their contract boundary. There is no overlay
+server, Extension host, asset loader or package interpreter here yet.
 
 ## Provenance and adaptation
 
@@ -58,6 +58,27 @@ Create one binder per root/property set and keep those properties under its
 ownership. Separate binders retain independent state. Property names are
 validated and snapshotted when binding.
 
+`evaluateBinding(binding, intensity)` linearly maps the clamped intensity 0..1
+between `output_range.at_zero` and `output_range.at_one`. The `property` tag is
+`opacity`, `scale`, `x` or `y`; descending and constant ranges work. Nonfinite
+inputs and endpoints throw. Opacity endpoints must be in 0..1 and scale
+endpoints must be nonnegative. Interpolation preserves these domains, including
+extreme finite coordinates without intermediate overflow.
+
+`applyLayerBindings(baseProperties, bindings, intensity)` returns a fresh
+`LayerProperties`, retaining unbound properties and dimensions. Bindings apply
+in array order, so the last binding to a repeated property wins. No input is
+mutated, and nonfinite intensity throws even for an empty binding list.
+
+`bindLayerBindings(root, baseProperties, bindings)` snapshots the configuration
+and returns an update function with the same boolean/cache behavior as
+`bindIntensity`. It writes six numeric custom properties: `--x`, `--y`,
+`--width`, `--height`, `--scale`, `--opacity`. Host CSS supplies units for logical
+pixels (for example `calc(var(--x) * 1px)`). Keep those properties under this
+binder's ownership. Recreate the binder for a configuration change. No DOM
+creation or markup replacement occurs, identical clamped intensity writes
+nothing, and failed writes do not advance the cache.
+
 ## Verification
 
 The package uses the shared `scripts/package-gate.mjs` runner for typecheck,
@@ -89,3 +110,27 @@ already records these same exporter and recursive-process failures. Full gate
 success remains for the Director to establish; it is not claimed here. NOTICE
 and `pnpm-lock.yaml` are unchanged, and all source changes are confined to this
 package.
+
+### WP 3.2 binding validation, 2026-10-26
+
+- Red first: `pnpm --config.verify-deps-before-run=false --filter
+  @castle-control/renderer exec vitest run src/bindings.test.ts --pool=threads`
+  failed all 18 new cases before the binding exports were implemented.
+- Package `typecheck` and `lint` with the same pnpm flag/filter passed (12
+  TypeScript files); lint also passed boundaries, hygiene, file cap (309 source
+  files) and the existing secrets gate (408 files).
+- Package `test` passed all 40 tests across five files. New cases cover all four
+  properties, endpoints, descending/constant ranges, clamping, opacity/scale
+  bounds, finite extremes, immutable application, nonfinite rejection, zero
+  writes for unchanged effective intensity, snapshots, independent roots and
+  retry after a failed CSS write.
+- `pnpm --config.verify-deps-before-run=false gate` passed 14 tooling tests and
+  workspace discovery, then failed at the unchanged contract exporter with
+  `spawnSync cargo EPERM`. Recursive `-r typecheck` and `-r lint` also failed
+  with `spawn EPERM`. These are the existing sandbox failures documented above
+  and in HEAD's `docs/PLAN.md`; full-workspace success is not claimed.
+- Gitleaks 8.30.1: `gitleaks git . --redact --no-banner --log-level debug`
+  scanned 44 commits, explicitly skipped both requested historical simulated
+  beacon fixture fingerprints from the root `.gitleaksignore`, and reported
+  no remaining leaks (exit 0). That file has exactly the two narrow ignores;
+  the repository's own secrets gate is unchanged.

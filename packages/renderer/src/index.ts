@@ -3,3 +3,4 @@ export * from './sceneModel.ts';
 export * from './scene.ts';
 export * from './playback.ts';
 export * from './intensity.ts';
+export * from './bindings.ts';
