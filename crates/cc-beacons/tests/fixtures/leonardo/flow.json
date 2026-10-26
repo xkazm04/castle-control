@@ -1,0 +1,41 @@
+[
+  {
+    "request": {
+      "method": "Post", "path": "v1/generations",
+      "body": { "public": false, "prompt": "Simulated gold beacon on a flat background", "modelId": "b24e16ff-06e3-43eb-8d33-4416c2d75876", "width": 512, "height": 512, "num_images": 1 }
+    },
+    "status": 200,
+    "response": { "sdGenerationJob": { "generationId": "00000000-0000-4000-8000-000000000001", "apiCreditCost": 12 } }
+  },
+  {
+    "request": { "method": "Get", "path": "v1/generations/00000000-0000-4000-8000-000000000001" },
+    "status": 200,
+    "response": { "generations_by_pk": { "id": "00000000-0000-4000-8000-000000000001", "status": "PENDING", "generated_images": [] } }
+  },
+  {
+    "request": { "method": "Get", "path": "v1/generations/00000000-0000-4000-8000-000000000001" },
+    "status": 200,
+    "response": { "generations_by_pk": { "id": "00000000-0000-4000-8000-000000000001", "status": "COMPLETE", "generated_images": [ { "id": "00000000-0000-4000-8000-000000000002", "url": "https://cdn.example.invalid/simulated-anchor.png" } ] } }
+  },
+  {
+    "request": {
+      "method": "Post", "path": "v1/generations",
+      "body": { "public": false, "prompt": "Simulated gold beacon on a flat background", "modelId": "b24e16ff-06e3-43eb-8d33-4416c2d75876", "width": 512, "height": 512, "num_images": 2, "init_generation_image_id": "00000000-0000-4000-8000-000000000002", "init_strength": 0.5 }
+    },
+    "status": 200,
+    "response": { "sdGenerationJob": { "generationId": "00000000-0000-4000-8000-000000000003", "cost": { "amount": "24.5", "unit": "CREDITS" } } }
+  },
+  {
+    "request": { "method": "Get", "path": "v1/generations/00000000-0000-4000-8000-000000000003" },
+    "status": 200,
+    "response": { "generations_by_pk": { "id": "00000000-0000-4000-8000-000000000003", "status": "COMPLETE", "generated_images": [ { "id": "00000000-0000-4000-8000-000000000004", "url": "https://cdn.example.invalid/simulated-set-1.png" }, { "id": "00000000-0000-4000-8000-000000000005", "url": "https://cdn.example.invalid/simulated-set-2.png" } ] } }
+  },
+  {
+    "request": {
+      "method": "Post", "path": "v2/generationssync",
+      "body": { "model": "remove-bg", "public": false, "parameters": { "format": "png", "guidances": { "image_reference": [ { "image": { "id": "00000000-0000-4000-8000-000000000004", "type": "GENERATED" } } ] } } }
+    },
+    "status": 200,
+    "response": { "id": "00000000-0000-4000-8000-000000000006", "blockedCount": 0, "cost": { "amount": "0.1047", "unit": "DOLLARS" }, "results": [ { "url": "https://cdn.example.invalid/simulated-cutout.png", "contentType": "image/png", "width": 512, "height": 512 } ] }
+  }
+]

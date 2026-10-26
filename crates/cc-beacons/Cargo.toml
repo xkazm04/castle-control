@@ -7,3 +7,22 @@ rust-version.workspace = true
 
 [dependencies]
 cc-types = { path = "../cc-types" }
+async-trait.workspace = true
+reqwest.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+ulid.workspace = true
+zeroize = "1.8.2"
+
+[target.'cfg(target_os = "windows")'.dependencies]
+keyring = { version = "3.6.3", default-features = false, features = ["windows-native"] }
+[target.'cfg(target_os = "macos")'.dependencies]
+keyring = { version = "3.6.3", default-features = false, features = ["apple-native"] }
+[target.'cfg(target_os = "linux")'.dependencies]
+keyring = { version = "3.6.3", default-features = false, features = ["sync-secret-service", "crypto-rust"] }
+
+[dev-dependencies]
+tokio.workspace = true
+tracing = "0.1.41"
+tracing-subscriber = { version = "0.3.20", features = ["fmt"] }

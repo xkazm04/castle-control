@@ -536,7 +536,18 @@ dependencies = [
 name = "cc-beacons"
 version = "0.1.0"
 dependencies = [
+ "async-trait",
  "cc-types",
+ "keyring",
+ "reqwest 0.12.28",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.21",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
+ "ulid",
+ "zeroize",
 ]
 
 [[package]]
