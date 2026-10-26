@@ -16,7 +16,7 @@ export const moderationCopy = {
   held_pending: 'Held · awaiting fixture confirmation',
   held_reason: 'Hold reason', held_count: (count: number) => `${count} held`,
   held_empty: 'Nothing is held in this simulated queue.', empty: 'No matching entries.',
-  original_unavailable: 'Original message unavailable — decision blocked',
+  original_unavailable: 'Original message unavailable · decision blocked',
   hold_reason_unavailable: 'Hold reason unavailable',
   fixture_hold_reason: 'AutoMod · simulated link requires moderator review',
   fixture_held_text: 'Simulated original held message: can I post my guide?',

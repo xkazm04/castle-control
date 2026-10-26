@@ -1,155 +1,75 @@
-# WP 1.7: offline moderation page
+﻿# AI-5: offline Gatehouse room and shared seal slot
 
-The desktop fixture route `#/moderator` composes the shared shell, panels,
-rule table, verdict chips and buttons. `#/moderator/drill` is a nested replay
-page with a breadcrumb and Back link. Key 2 still uses the existing registry.
-Core mode keeps its previous empty state; it cannot mount this fixture page.
+Open `#/chamber/moderator`; the nested replay is
+`#/chamber/moderator/drill`. The room replaces the numbered panels with the Lit
+Keep's three working columns: the portcullis and consensus, 420 sample chat
+lines marked Pass/Hold/Bar, and the rules, moat, drill and gate log. All lists
+that grow use the kit's WindowedRows. The existing 4,200-message fixture remains
+for the ten-times-volume endpoint tests. Both room components accept snapshot
+and replay, remain lazy, and are gated to fixture mode by shell/room.tsx.
+Beacons and the studio empty state retain their existing mount paths.
 
-`moderation-fixture.ts` generates labelled simulated payloads and validates them
-through the root contract entry. There is no real chat, endpoint or credential.
-The fixture consensus snapshots expose shed counts, filter variants, time series
-and three-minute deltas. The chart accepts only those snapshots; its local
-filter/selection cannot call a command port. Replay retains source, instrument,
-named evaluation states, observed passes, an over-moderation denominator and gaps.
-Its hashes are explicitly illustrative fixture values, not a live computation.
+## Proposals and local model behavior
 
-`ModerationPort` is the local read/subscribe/command seam for a future client.
-This delivery implements only an in-memory preview. Ban review controls resolve
-the local queue and mark local operations; held-message controls wait for fixture
-confirmation, as described below. Rule-mode controls update `preview_modes`
-only; the validated contract rules stay shadow. This is prominently labelled on
-the page, and the rampart continues to show the actual fixture Watching count.
-No port imports a transport; no command is sent or persisted. Leaving the
-chamber discards the preview. No live or armed authority is introduced.
+The moderator model, its contract-decoded fixtures and copy remain in use.
+Pass/Bar, Ban/Dismiss, rule-mode changes, delay, Shield, Undo and Petition create
+visibly labelled proposals in the same queue as the Steward. They do not send a
+model command until the seal slot's kit SealButton finishes a hold. Original
+held or ban messages are shown before review and carried into the proposal;
+unavailable originals block decisions. Unsupported or missing Steward targets
+remain unsealed with an explanation. Ban review requires a human hold. No
+actual rule leaves shadow mode: Armed is a fixture preview only.
 
-`WindowedRows` bounds chat, held/ban queues, ledger and replay DOM rows using the
-shared row/window tokens and overscan. The 4,200-line chat initially renders 16
-rows; a final-window proof reaches message 4,199. Search/verdict filters reset
-the window. Review quotes retain original text and can be focused/scrolled.
+After sealing, the existing model still waits its 400 ms fixture confirmation
+before changing a held verdict, delay or Shield pressed state. Opposing pending
+decisions cannot replace one another. A stale Shield proposal cannot silently
+toggle an already-confirmed setting back. Human actions from Twitch remain
+labelled as simulated provenance. The drill shows source, instrument hashes,
+recording gaps, all named states and over-moderation on its own axis. It has no
+live-ledger write path.
 
-Local candidates for later promotion to `packages/ui`:
+Illustrative per-minute consensus was ported as data only from
+prototype/ai-first/data/sample.js into moderation-fixture.ts. It is explicitly
+labelled illustrative and rendered as stacked shares; the existing filtered
+consensus fixtures retain their shed counts, barred-message exclusion and
+3-minute deltas. The chart accepts no action port.
 
-- `WindowedRows`: generic token-sized, accessible windowed rows and spacers.
-- `ConsensusChart`: read-only time-series plot and direction selector.
-- Review-row composition: original-message review with explicit action slots.
-- Room-status hero, tier table and replay summary/instrument layout.
+## Shared slot
 
-Design comes from the prototype layout and the written UI plan. No prototype
-product code is copied. Paper, inks, fonts, rules and rampart come from the shared
-kit; component dimensions use generated token variables. The right column uses
-the prototype's 340–396 width range; the main room hero follows the written plan.
-The chat window uses the existing 320-high kit token and 32-high rows rather
-than copying the prototype's 430-high container. All text meets the kit's
-13 px floor. Screenshots at 1440x900 and 1280x800 remain a review gate:
-Chrome computer-use access was denied here, so visual fidelity is not claimed.
+`rooms/seal-slot` uses useSyncExternalStore against the queue singleton's stable
+snapshot, then reads pending(chamber). Each proposal shows its fields and
+revision, Hold to seal (or Hold to seal and proclaim), and Tear it up. Its root
+carries data-proposal-focused=true and its tear button data-tear-proposal, exactly
+as the existing app Delete handler expects. Focus selection works without a new
+keyboard listener. Core mode displays the slot but no fixture actions. Tests
+seed separate ProposalQueue instances. Revision changes remount the hold button
+to cancel unfinished holds. Visual and studio proposals use their lifecycle's
+single proclaim transition; no extra seal transition is invented.
 
-Validation on this builder run:
+## Review and verification
 
-- The acceptance test first failed because the new chart component was absent.
-- Desktop package typecheck and lint passed; lint included boundary, cycle,
-  hygiene, file-cap and secret inventories. No new source file exceeds 400 lines.
-- Desktop tests passed: 43 tests in five files, including the four requested
-  acceptance cases, local-only review/mode operations, replay routing, and the
-  existing rampart/client checks. The window proof uses server rendering; a
-  mounted-browser interaction and performance check remains unverified.
-- Root `pnpm gate` failed before Rust execution: `spawnSync cargo EPERM` in
-  the unchanged contract generation script. Recursive typecheck/lint also
-  failed on sandbox `spawn EPERM`; desktop-only equivalents passed.
-- Vite built the frontend, but its existing first-load budget rejected
-  874,079 bytes against 393,216. Baseline comparison was unavailable because
-  Node's read-only git subprocess was also denied (`spawnSync git EPERM`).
-  The contract/codegen and budget threshold are unchanged; baseline size is
-  not asserted. This needs App Master investigation before acceptance.
+Use the commands in lots.md for narrowed tests, the full gate and the desktop
+build/budget. Tests preserve the domain policy assertions, original-message
+review, public contract handles, all four ChatDelay choices, delayed applied
+states, opposing in-flight requests, model isolation and no-network guarantees.
+Shared room tests drive the real kit held-Space handler, cancellation before
+the deadline, Delete through the tear button, room keys 1-4, Esc to either
+origin, lazy content and the drill deep link.
 
-No install was run over the worktree's dependency junction. No package, contract,
-lockfile, Rust source, native shell or gate script was changed.
+Build then run the production preview command in lots.md. Open:
 
-## WP 1.7: portcullis follow-up (fixture only)
+- `http://127.0.0.1:4178/#/chamber/lottery`
+- `http://127.0.0.1:4178/#/chamber/moderator`
+- `http://127.0.0.1:4178/#/chamber/moderator/drill`
 
-Reconciliation against the main checkout found the existing held queue in
-`moderation-review.tsx` (Pass/Strike), the hard-coded `4 s` hero delay in
-`moderation-page.tsx`, and immediate Shield preview toggling in
-`moderation-model.ts`. This follow-up extends those controls rather than adding
-a second queue. No delay selector or confirmation state existed there.
+Review at 1440x900 and 1280x800 in both paper and stock, beside the Lit Keep
+reference. Room styles are co-located, with mount/slot styles in shell/room.css;
+all colors, type, spacing and motion come from packages/tokens. The shared
+rampart and single Steward input remain outside these rooms. No new services,
+packages, generated contract identifiers or live actions were introduced.
 
-Prerequisite delivery: `packages/contract/src/index.ts` now re-exports
-`gatehouseHeldResolve`, `gatehouseDelaySet`, `gatehouseShieldSet` and
-`gatehouseLeaseEnd`. All four already existed in generated validation. Their
-types were already public through `export type *`; no schema, generated file
-or Rust identifier was changed. App Master should commit that one-file
-prerequisite separately, before the desktop delivery, as it did for `df09a30`.
-
-The small `moderation-held.tsx` and `moderation-gate-controls.tsx` components use
-the existing panels, buttons, chips and windowed rows. Held rows show the original
-generated message and an explicit AutoMod hold reason. Allow/Deny are native
-buttons; both disable while resolution is pending. Until confirmation, the row,
-chat verdict and ledger retain the held state. Confirmation alone removes the
-row, updates the chat verdict and records a released/removed decision retaining
-the original text. Duplicate or opposing in-flight resolutions are ignored.
-
-The applied delay selector offers only off, 2, 4 and 6 seconds. It keeps its
-previous applied value while disabled/pending. The single Shield control in the
-room hero retains the confirmed pressed state until confirmation. Panel 2.4 keeps
-the delay selector and shared pending/status line. Its local header grid places
-the title and held count on the first line and the gloss on the second, without
-changing the shared NumberedPanel. New display strings live in
-`moderation-copy.ts`. The extended
-fixture provides initial states, a 400 ms confirmation delay, schema-validated
-request/result pairs and explicit Twitch-UI action provenance. Human actions
-from Twitch are labelled in the gate roll; local preview actions have a
-different label. Provenance metadata is local fixture data, not a new wire
-field. No RPC, transport, subscription, live timing or armed authority is added.
-
-Validation, 2026-10-26:
-
-- Red first: the new acceptance suite failed on the missing gate-controls
-  component before implementation.
-- Desktop command `pnpm --config.verify-deps-before-run=false exec vitest run
-  --pool=threads src/moderation-gate.test.tsx src/moderation.test.tsx` passed
-  18 tests. Coverage includes confirmation timing, applied select/pressed
-  displays, original text/reason, pending holds for both outcomes, duplicate
-  requests, native button tab-order semantics and keyboard-generated click
-  activation, provenance labels and no fetch. The keyboard proof checks the
-  native button contract and handler; it is not a mounted-browser Tab test.
-- Contract command with `src/gatehouse-gate.test.ts src/gatehouse.test.ts
-  src/index.test.ts` passed 37 tests, using the same Vitest flags.
-- `node ../../scripts/package-gate.mjs typecheck` passed independently from
-  both desktop (39 files) and contract (17 files). The equivalent lint runners
-  passed with boundary/cycle, hygiene, file-cap and secret inventories.
-- `pnpm --config.verify-deps-before-run=false --filter
-  @castle-control/desktop build` passed, including the first-load budget:
-  389,450 / 393,216 uncompressed JS+CSS bytes.
-- Recursive `pnpm --config.verify-deps-before-run=false -r typecheck` and
-  `-r lint` failed at subprocess launch with `spawn EPERM`, before checking
-  packages. These are failures, not full-repository passes.
-- `pnpm --config.verify-deps-before-run=false gate` passed 14 tooling tests
-  and workspace inventories, then failed in the unchanged contract exporter
-  with `spawnSync cargo EPERM`. Rust and later full-gate stages did not run.
-  `git diff HEAD -- scripts packages/contract/scripts` is empty; no gate was
-  changed to suppress this failure. App Master must run the full gate before
-  acceptance. No full-suite or visual-fidelity pass is claimed here.
-
-The changes remain uncommitted under the builder sandbox exception. No install
-or git write was run, and the node_modules junction was left untouched.
-
-## WP 1.7: Gatehouse layout polish
-
-The duplicate Shield button in panel 2.4 is removed. The room hero is its only
-placement; the panel retains the applied delay selector and pending/status line.
-Local CSS gives the held panel a two-row header: number, title and an unbroken
-held count above the full-width gloss. Other panels and shared kit code are
-unchanged.
-
-Validation, 2026-10-26, on base `b118bb6`:
-
-- Red first: the page regression found two Shield buttons instead of one.
-- Narrowed desktop tests `src/moderation-gate.test.tsx` and
-  `src/moderation.test.tsx` pass, 19 tests. They cover exactly one Shield toggle
-  in the hero, no duplicate in the held queue, delay-event dispatch, applied
-  values, disabled/pending state, confirmation and Shield state in both directions.
-- Desktop typecheck and lint pass using `node ../../scripts/package-gate.mjs`
-  with the respective mode. Both walked 39 files; lint also checked boundaries,
-  hygiene and file caps over 388 files and secrets over 499 files.
-- Screenshots at 1280x800 and 1440x900 remain for Director review. Computer Use
-  returned "Computer Use was not approved to use Google Chrome", so no visual
-  pass is claimed. No install, dependency-junction change or git write was run.
+Visual screenshots could not be captured: the browser connector inventory was
+empty and native Chrome computer use was not approved. The Director must perform
+the reference comparison. The parallel overview's hold dispatcher should be
+checked during integration so lottery holds there use the same hash/guardrail
+preparation as the room's sealRoomProposal; this run cannot edit overview paths.

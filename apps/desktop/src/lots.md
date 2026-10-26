@@ -1,124 +1,87 @@
-# WP 2.3 part 1: offline Lot Chamber
+﻿# AI-5: offline Lot Chamber room
 
-The Lot Chamber is lazy-loaded only for the lottery route when the desktop
-snapshot mode is `fixture`. Core mode retains its empty state. The page owns
-no RPC registration, socket, Twitch/OBS adapter, drand request or renderer import.
-No install, lockfile, contract, crate or Tauri change is included.
+Open `#/chamber/lottery` in the desktop browser preview. This replaces the
+stacked panels with the Lit Keep's nested writ-and-urn room. `shell/room.tsx`
+keeps its existing props contract, loads the room lazily and mounts the same
+proposal seal slot for every chamber. Core mode never loads simulated controls.
 
-## Page and local behavior
+The room reads the shared proposal queue. Its writ labels every open draft as
+Proposal, shows all struck values in gules, and re-inks amendments beside them.
+Every eligible fixture lot appears as a mark in the urn. Pools above 320 entries
+use token-sized, virtualised rows; the 10,000-entry test visits both endpoints.
+The room also exposes handle lookup, cooldown provenance, past local seals,
+the existing saved simulated writ and its offline recomputation, and all four
+fairness steps. The existing model, fixture vector, copy and guardrail function
+remain the source of domain behavior. No RPC, network, model or public beacon
+call was added. Saved proof recomputation never claims to verify the editable
+87-entry roll.
 
-The hero presents 87 generated eligible entries, numbered tickets, cohort dots,
-an intake state and five generated cooldown exclusions. Pause/resume and seal
-change only this page's store. Sealing freezes the setup, and starting requires
-a seal plus an unblocked policy. Starting changes a simulated status only; it
-does not manufacture a live cast, cryptographic seal or public round.
+## Sealing and guardrails
 
-Panels 1.1 through 1.5 provide the three saved configuration examples, a handle
-lookup, editable setup, the four fairness steps and static draw-shape choices.
-Urn, wheel, deck and ballot box are labels and glyphs, with no animation.
-Setup edits do not reconstruct the illustrative entry pool; this limitation is
-visible beside the controls. Selecting a saved example resets its local setup.
-All new product copy is in `lots-copy.ts`, without em dashes.
+The room's template buttons draft proposals only. A completed kit SealButton
+hold calls `sealRoomProposal`, which lazily invokes the lottery session. That
+session applies the existing giveaway policy check before sealing. Paid entry,
+paid weight, missing prize rules/disclaimer and the prize-value threshold keep
+their original behavior. A prize amendment is checked as a prize. A proposal
+keeps its original draw policy even when another template is selected.
 
-`lots-model.ts` mirrors `cc-lots::check_draw` using the `LotsDrawPolicy` and
-`DrawCheckResult` types from the public contract root. The contract projects
-reason codes as strings, not an exported reason enum. The mirror uses the
-existing snake_case PolicyReason names, with display reasons in the copy file:
+Sealing copies and freezes the eligible entries. The displayed canonical bytes
+are UTF-8 JSON with field order `handle`, `weight` for each entry in pool order.
+Web Crypto SHA-256 hashes those exact bytes offline; `queue.seal(id, hash)` stores
+the hash and the writ stamps a wax seal. The published JSON and its hash can be
+recomputed independently. This illustrative entry-list seal is explicitly
+separate from the existing cc-verify v1 public-writ encoding. No round or cast
+is fabricated. Hash failure, a concurrent amendment or a torn draft leaves the
+proposal unsealed. The hold control remounts on revision changes, cancelling an
+unfinished hold. New local roll drafts remain explicit proposals.
 
-| Prize configuration | Fixture result |
-| --- | --- |
-| Paid entry or paid weight | Blocked, without an override |
-| Total above 500,000 USD cents without registration | Blocked |
-| Subscriber-only or points without an equal-odds free path | Warning |
-| Missing age or eligible regions | Warning |
-| Missing rules template or Twitch disclaimer acknowledgement | Blocked |
-| Content without a prize | OK |
+## Review and evidence
 
-Both the disabled controls and the local model enforce the prize preconditions.
-The rules checkbox attaches a built-in simulated rules example, displayed on
-the page; it does not claim a legally reviewed or live attachment. Warn states
-remain visible and allow an explicit seal. No Rust policy is added or changed.
+Run from the worktree, without installing over its node_modules junction:
 
-All contract imports are types only. Hand-authored fixture objects use those
-types directly, with readable fixture DrawId slugs minted in one file. There
-is no external JSON input, duplicate schema parser, private generated import,
-runtime lots method handle or `parseMethodParams` call.
+- `pnpm --config.verify-deps-before-run=false --filter @castle-control/desktop exec vitest run --pool threads src/lots.test.tsx src/moderation.test.tsx src/moderation-gate.test.tsx src/shell/room.test.tsx`
+- `pnpm --config.verify-deps-before-run=false gate`
+- `pnpm --config.verify-deps-before-run=false --filter @castle-control/desktop build`
 
-## Writ and performance
+The room tests cover struck 3 -> 5 winners, independent frozen-list SHA-256,
+immutable entries, policy rows and both rules/disclaimer orders, stale drafts,
+no raiders, lookup, model isolation, fixed-writ recomputation and failures,
+bounded urn marks, no network, and hold/keyboard behavior in the shared slot.
 
-The writ opens as a nested page with breadcrumb and Back, preserving the local
-setup. Focus returns to the page container on either transition. It displays a
-separate, fixed simulated commit-and-reveal vector from the merged offline
-verifier corpus. Its source, seal, entries, weights, timestamp, margin, revealed
-seed, commitment and winners are visible. The distinction from the editable
-roll is explicit. The recompute action recomputes SHA-256 v1 seal bytes, the
-seed commitment and weighted rejection-sampling winners in Web Crypto, solely
-from this built-in fixture. It accepts no imports and emits no verified wire
-cast. Failure produces a visible error, not a success or unverified animation.
+For the visual review, run a production build, then
+`pnpm --config.verify-deps-before-run=false --filter @castle-control/desktop exec vite preview --host 127.0.0.1 --port 4178 --strictPort`.
+Visit `http://127.0.0.1:4178/#/chamber/lottery` at 1440x900 and 1280x800, in paper
+and stock. Choose Questions for the hall to create a draft; after the parallel
+Steward wiring, say `draft a question draw`, then `make it 5 winners`. Inspect
+against `prototype/ai-first/keep/index.html`. The shared 1-4 locator, Esc back to
+the origin, Delete on the focused proposal, and held Space use the existing
+keymap. Ordinary clicks and Enter cannot seal. The actual hold handlers are
+exercised under React's server renderer without adding a DOM test dependency.
 
-The dot field groups 20 entries per shared WindowedRows row and memoizes that
-grouping. At 10,000 entries, 500 logical rows produce at most 16 DOM rows and
-320 dot cells, including at the final scroll window. The whole page remains
-under 800 element nodes in the test. The scroll viewport is keyboard focusable;
-inputs, selects and actions are native labelled controls. The existing central
-shortcut registry is unchanged. The navigation test's old lottery empty-state
-expectation is updated to the new page heading.
+Browser screenshot review remains with the Director: no browser connector was
+available, and native Chrome automation returned "Computer Use was not approved
+to use Google Chrome". No screenshots were claimed. Vite dev also hit EPERM on
+the junction's dependency cache; production preview serves built files without
+touching that cache. No permission or cache workaround was attempted.
 
-Co-located CSS uses the shared paper/stock tokens, display typography, gules,
-rules, numbered panels and shared components. The prototype is design reference
-only; its JavaScript is not copied. Screenshot fidelity at 1440x900/1280x800,
-mounted-browser keyboard behavior and paper/stock screenshots remain unverified:
-automatic approval review rejected Chrome access with "Computer Use was not
-approved to use Google Chrome." No alternative UI automation was attempted.
+## AI-5 validation on 2026-10-26
 
-## Verification, 2026-10-26
-
-- `pnpm --config.verify-deps-before-run=false --filter @castle-control/desktop
-  exec tsc --project tsconfig.json --noEmit`: exit 0.
-- The corresponding `exec eslint src --max-warnings 0`: exit 0.
-- Narrowed `exec vitest run src/lots.test.tsx src/navigation.test.tsx
-  src/beacons.test.tsx src/events-view.test.tsx --pool=threads`: **27 tests pass
-  across four files**, including 12 new Lot Chamber cases. Coverage includes
-  hero state, real lookup/checkbox/action handlers, both acknowledgement orders,
-  blocked paid weight, all policy table rows, first/end 10,000-lot windows,
-  nested proof recomputation and failure, shapes, key 1 and fixture/core isolation.
-- `pnpm --config.verify-deps-before-run=false --filter @castle-control/desktop
-  build`: exit 0. The unchanged first-load checker reports **382,502 / 393,216
-  uncompressed JS+CSS bytes** over two eager assets. Lot Chamber JS/CSS is deferred.
-- `node scripts/check.mjs`: boundaries, hygiene, file-cap and secrets pass.
-- Recursive `pnpm --config.verify-deps-before-run=false -r typecheck` and `-r
-  lint` each exit 1 on **spawn EPERM**, before package checks run. They are not
-  passing workspace gates despite the successful direct desktop checks.
-- `pnpm --config.verify-deps-before-run=false gate` passes all 14 tooling tests
-  and workspace inventories, then exits 1 in the unchanged contract exporter:
-  **spawnSync cargo EPERM**. Rust checks and the recursive suites are not reached.
-  The same errors are documented in the merged Beacons evidence on the base.
-  Read-only diff confirms tooling, contract, manifests and lockfile are unchanged.
-- The keyboard integration check first failed on its stale "No lots in the urn
-  yet" expectation, then passed after its single expected-string update.
-
-The App Master must run the full merge gate in its verification environment;
-the Director must review screenshots before claiming the full fidelity exit.
-Live draw delivery, disclaimer overlay, renderer animation and the test-channel
-draw remain outside this explicitly offline part of WP 2.3.
-
-## Hero height follow-up, 2026-10-26
-
-The hero art card now uses a flex column. `.lots-dotfield` takes the remaining
-height with `flex: 1`, retaining the existing three-row token minimum, and its
-`.cc-window` fills that area with `position: absolute; inset: 0; max-height: none`.
-This replaces the fixed 96 px viewport that left unused space below the art
-when the summary determined the hero row height. The legend now follows the
-expanded viewport at the bottom of the card, without a viewport-width constant.
-The same layout applies at 1440 and 1280; no React or windowed-row count changed.
-
-- Desktop package `typecheck` and `lint`: exit 0. Lint also passed boundaries,
-  hygiene, file-cap and secrets inventories.
-- Desktop package `test`: exit 0, 74 tests across eight files.
-- Narrowed `exec vitest run src/lots.test.tsx --pool=threads`: exit 0, 12 tests,
-  including the first/last 10,000-entry window and bounded DOM checks.
-- Target-size browser screenshots remain unverified: the current computer-use
-  inventory exposed native apps but no browser automation provider.
-
-All pnpm commands use `--config.verify-deps-before-run=false` and
-`--filter @castle-control/desktop`. No install or shared package change was made.
+- Desktop typecheck: PASS, 49 source files.
+- Desktop lint: PASS, 49 source files; boundary/hygiene/file-cap inventory
+  434 files, secret scan 555 files.
+- Narrowed room/navigation/event tests: PASS, 43 tests in six files.
+- Full desktop tests: PASS, 89 tests in ten files.
+- Production desktop build: PASS, 98 transformed modules; first load
+  387,118 / 393,216 uncompressed bytes. Both rooms and their session code
+  remain lazy chunks.
+- `git diff --check`: PASS.
+- Full `pnpm gate`: FAIL before Rust/product checks at the unchanged contract
+  exporter, `spawnSync cargo EPERM`. Its preceding 14 tooling tests passed.
+  Recursive `-r typecheck` and `-r lint` independently stop at `spawn EPERM`.
+  `git diff --exit-code -- packages/contract/scripts/codegen.mjs
+  packages/contract/scripts/check.mjs scripts/gate.mjs` passed, and the base
+  docs/PLAN.md already records the same exporter/subprocess errors. No gate or
+  unrelated exporter was modified. No full-workspace pass is claimed.
+- Frozen-lockfile install: SKIPPED by the brief's explicit junction exception.
+- Visual comparison: UNVERIFIED; connector inventory empty, native Chrome
+  automation not approved. Use the documented URLs/sizes for Director review.

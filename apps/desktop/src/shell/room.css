@@ -1,0 +1,31 @@
+.shell-room { position: relative; margin-top: var(--space-16); border: var(--rule-strong) solid var(--ink); background: var(--paper); box-shadow: var(--space-10) var(--space-10) 0 var(--hair-2); }
+.shell-room > .cc-room-header { padding: var(--space-12) var(--space-16); border-bottom: var(--rule-medium) solid var(--line); }
+.shell-room .shell-room-work { gap: 0; padding-top: 0; grid-template-columns: minmax(0, 1fr) minmax(0, 20%); }
+.shell-room .shell-room-content { min-width: 0; }
+.shell-room .shell-seal-slot { min-width: 0; align-self: stretch; padding: var(--space-14); border: 0; border-left: var(--rule-medium) solid var(--line); background: var(--paper-2); }
+.shell-seal-slot h2 { text-transform: uppercase; margin-top: 0; letter-spacing: var(--track-heading); }
+.room-provenance { margin: 0; padding: var(--space-8) var(--space-16); border-bottom: var(--rule-thin) solid var(--line); font: 700 var(--text-small)/1.4 var(--font-ui); color: var(--muted); }
+.room-column { min-width: 0; padding: var(--space-16); border-inline-end: var(--rule-thin) solid var(--line); }
+.room-column:last-child { border-inline-end: 0; }
+.room-proposal { margin-block: var(--space-16); padding: var(--space-12); border: var(--rule-medium) dashed var(--gules); background: var(--card); }
+.room-proposal h3 { font: 800 var(--text-chamber)/1.1 var(--font-display); overflow-wrap: anywhere; }
+.room-proposal[data-proposal-focused="true"] { outline: var(--rule-strong) solid var(--gules); outline-offset: var(--space-3); }
+.room-proposal .cc-seal-button { width: 100%; margin-block: var(--space-8); }
+.room-proposal-fields { margin-block: var(--space-16); }
+.room-proposal-fields > div { display: grid; grid-template-columns: minmax(0, .75fr) minmax(0, 1fr); gap: var(--space-8); border-top: var(--rule-thin) solid var(--line); padding-block: var(--space-9); }
+.room-proposal-fields dt { font-size: var(--text-small); text-transform: uppercase; letter-spacing: var(--track-label); color: var(--muted); }
+.room-proposal-fields dd { margin: 0; overflow-wrap: anywhere; }
+.room-proposal-fields s { color: var(--gules-text); margin-inline-end: var(--space-8); text-decoration-thickness: var(--rule-strong); }
+.room-proposal-fields ins { color: var(--ink); text-decoration: none; animation: room-ink var(--motion-shell) var(--ease) both; }
+.room-proposal-fields s + ins { background: var(--paper-2); }
+.room-hash { font: var(--text-small)/1.5 var(--font-num); overflow-wrap: anywhere; white-space: pre-wrap; }
+.shell-room button:not(.cc-seal-button):not(.cc-breadcrumb-locator button), .shell-room select, .shell-room input { font: 600 var(--text-body)/1.4 var(--font-ui); border: var(--rule-medium) solid var(--ink); background: var(--card); color: var(--ink); padding: var(--space-6) var(--space-8); max-width: 100%; cursor: pointer; }
+.shell-room button:disabled { opacity: var(--disabled-opacity); cursor: not-allowed; }
+.shell-room button:focus-visible, .shell-room a:focus-visible, .shell-room select:focus-visible, .shell-room input:focus-visible { outline: var(--rule-strong) solid var(--azure); outline-offset: var(--focus-offset); }
+.shell-room h2 { font-family: var(--font-display); }
+.shell-room h3 { font: 800 var(--text-section)/1.2 var(--font-display); text-transform: uppercase; }
+.shell-room { font: var(--text-body)/1.5 var(--font-ui); }
+.shell-room a { color: var(--azure-text); }
+@keyframes room-ink { from { opacity: 0; clip-path: inset(0 100% 0 0); } to { opacity: 1; clip-path: inset(0); } }
+@media (max-width: 900px) { .shell-room .shell-room-work { grid-template-columns: minmax(0, 1fr); } .shell-room .shell-seal-slot { border-left: 0; border-top: var(--rule-medium) solid var(--line); } }
+@media (prefers-reduced-motion: reduce) { .room-proposal-fields ins { animation: none; } }
