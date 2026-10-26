@@ -21,7 +21,9 @@ afterEach(() => { vi.useRealTimers(); });
 
 test('Keep is a cross-section with live rule summaries, the Herald, moat and numbered room paths', () => {
   const html = renderToStaticMarkup(<Keep snapshot={snapshot} on_open={() => undefined} on_enter={() => undefined} />);
-  for (const text of ['The lit keep', 'The Herald', 'Chat consensus', 'Chat delay', '4 s', 'Armed 0', 'Watching 3', 'ILLUSTRATIVE SAMPLE DATA', 'Enter the keep']) expect(html).toContain(text);
+  for (const text of ['The Herald', 'Chat consensus', 'Chat delay', '4 s', 'Armed 0', 'Watching 3', 'Enter the keep']) expect(html).toContain(text);
+  expect(html).not.toContain('The lit keep');
+  expect(html).not.toContain('<h1');
   for (const { id, number } of chambers) {
     expect(html).toContain(`data-room-tile="${id}"`);
     expect(html).toContain(`<kbd>${number}</kbd>`);

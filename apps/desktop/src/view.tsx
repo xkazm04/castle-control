@@ -6,7 +6,6 @@ import { lazy, Suspense } from 'react';
 import type { Snapshot } from './model.js';
 import type { Navigation, Surface } from './navigation.js';
 import { DesktopRampart } from './rampart.jsx';
-import { simulatedSourceLabel } from './simulated.js';
 import './view.css';
 
 const Keep = lazy(() => import('./shell/keep.jsx'));
@@ -27,7 +26,6 @@ export type ViewProps = {
 export function DesktopView(props: ViewProps) {
   const navigation = props.navigation ?? { current: props.current ?? 'keep', replay: props.replay ?? false, origin: 'keep' };
   const { current } = navigation;
-  const simulated = props.snapshot.mode === 'fixture' || props.snapshot.status?.simulated === true;
   const steward = <Suspense fallback={<p role="status">Opening the simulated Steward...</p>}>
     <Steward context={current} {...(props.steward_ref ? { input_ref: props.steward_ref } : {})}
       on_select={props.on_select ?? (() => undefined)} on_open={props.on_navigate} on_overview={() => props.on_surface?.('overview')} />
@@ -37,8 +35,6 @@ export function DesktopView(props: ViewProps) {
       <DesktopRampart snapshot={props.snapshot} theme={props.theme} on_theme_change={props.on_theme_change}
         on_steward={() => { if (props.steward_ref && 'current' in props.steward_ref) props.steward_ref.current?.focus(); }} />
       <main className="desktop-surface">
-        {simulated && <div className="desktop-simulated" role="status">{props.snapshot.mode === 'fixture'
-          ? simulatedSourceLabel : 'SIMULATED SOURCE · core reports simulated data'}</div>}
         {props.snapshot.phase !== 'ready' && <p className="desktop-notice" role="status">
           {props.snapshot.mode === 'fixture' ? 'Loading simulated snapshot.' : props.snapshot.message ?? 'Connecting to the core; status is unknown.'}
         </p>}

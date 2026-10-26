@@ -2,9 +2,7 @@ body { margin: 0; }
 .desktop-root:focus { outline: none; }
 .desktop-shell { display: grid; grid-template-rows: var(--mh) minmax(0, 1fr) auto; height: 100dvh; overflow: hidden; }
 .desktop-surface { min-height: 0; overflow: auto; padding: 0 var(--space-24) var(--space-24); }
-.desktop-simulated { margin-top: var(--space-12); padding: var(--space-8) var(--space-12); border: var(--rule-strong) solid var(--warn); background: var(--paper-2); color: var(--ink); font: 800 var(--text-small)/1.5 var(--font-ui); letter-spacing: var(--track-wide); }
 .desktop-notice { font-size: var(--text-small); line-height: 1.5; color: var(--muted); border-inline-start: var(--rule-strong) solid var(--warn); padding-inline-start: var(--space-12); }
 .desktop-shell > .cc-rampart { grid-column: auto; }
 .desktop-shell:has(.overview-workspace) { grid-template-rows: var(--mh) minmax(0, 1fr); }
 .desktop-shell:has(.overview-workspace) .desktop-surface { display: flex; flex-direction: column; padding-bottom: var(--space-8); }
-.desktop-shell:has(.overview-workspace) .desktop-simulated { margin-top: var(--space-4); padding-block: var(--space-4); }

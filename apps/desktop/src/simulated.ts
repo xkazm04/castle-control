@@ -1,7 +1,6 @@
 import { parseEvent, parseMethodParams, parseMethodResult, statusGet, bridgeStatusGet } from '@castle-control/contract';
 import type { ReadResult, Source } from './model.js';
 
-export const simulatedSourceLabel = 'SIMULATED SOURCE · generated fixture · no Twitch, OBS or core connection';
 const at = '2026-10-25T12:00:00Z';
 
 /** Generated fixtures only; this module has no network or endpoint capability. */

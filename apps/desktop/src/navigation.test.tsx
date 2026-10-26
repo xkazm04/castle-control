@@ -70,7 +70,9 @@ test('lazy surfaces retain one Steward bar and the rampart, and rooms retain the
       theme="paper" on_navigate={() => undefined} on_theme_change={() => undefined} />);
     await stream.allReady;
     const html = await new Response(stream).text();
-    for (const text of [content, 'ON AIR simulated', 'Twitch simulated', 'OBS simulated', 'Gatehouse simulated', 'SIMULATED SOURCE']) expect(html).toContain(text);
+    for (const text of [content, 'ON AIR simulated', 'Twitch simulated', 'OBS simulated', 'Gatehouse simulated']) expect(html).toContain(text);
+    expect(html).not.toContain('desktop-simulated');
+    expect(html).not.toContain('SIMULATED SOURCE');
     expect(html.match(/aria-label="Talk to the Steward\.\.\."/g)).toHaveLength(1);
     expect(html).toContain('SIMULATED STEWARD · SAMPLE DATA');
     expect(html).not.toContain('cc-stage-frame');

@@ -58,11 +58,22 @@ test.each([
   }
 });
 
-test('the keep replaces the sidebar with four explicitly labelled sample room tiles', () => {
+test('the keep replaces the sidebar with four room tiles without repeated sample stamps', () => {
   const html = renderToStaticMarkup(<Keep on_open={() => undefined} on_enter={() => undefined} />);
   for (const id of ['lottery', 'moderator', 'visuals', 'studio']) expect(html).toContain(`data-room-tile="${id}"`);
-  expect(html.match(/Room preview · sample data/g)).toHaveLength(4);
+  expect(html).not.toContain('Room preview · sample data');
+  expect(html).not.toContain('ILLUSTRATIVE SAMPLE DATA');
   expect(html).toContain('Enter the keep');
+});
+
+test('a live core reporting simulated data retains rampart chips without the removed banner', () => {
+  const html = render({ mode: 'core', phase: 'ready', ...simulatedRead(1) });
+  for (const label of ['ON AIR simulated', 'Twitch simulated', 'OBS simulated', 'Gatehouse simulated']) {
+    expect(html).toContain(`data-variant="dash">${label}</span>`);
+  }
+  expect(html).not.toContain('desktop-simulated');
+  expect(html).not.toContain('SIMULATED SOURCE');
+  expect(html).not.toContain('Twitch: connected');
 });
 
 test.each(['lottery', 'moderator', 'visuals', 'studio'] as const)('%s keeps an absent bridge UNKNOWN with a ready core', current => {
