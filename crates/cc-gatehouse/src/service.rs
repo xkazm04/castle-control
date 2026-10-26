@@ -23,6 +23,8 @@ pub struct Gatehouse {
     pub(crate) strikes: Strikes,
     pub(crate) gate_available: bool,
     pub(crate) gate_settings: crate::gate::Settings,
+    pub(crate) room_leases:
+        std::collections::BTreeMap<cc_types::LeaseId, crate::governor::LeaseRegistration>,
 }
 
 impl Gatehouse {
@@ -43,6 +45,7 @@ impl Gatehouse {
             strikes: Strikes::default(),
             gate_available: true,
             gate_settings: crate::gate::Settings::default(),
+            room_leases: Default::default(),
         })
     }
 

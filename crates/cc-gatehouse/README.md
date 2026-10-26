@@ -443,8 +443,8 @@ audited if intake was missed; known roots are linked without inventing text.
 Erasure of a completion association cannot reopen local resolution authority:
 it fails needs_human until reconciled. Room-mode observations require the
 existing Governor and reuse observe_human_change, preserving expiry/yield.
-Delay/Shield are not governor-owned modes. The existing LeaseEndParams contract
-stays typed/unregistered; this package does not replace WP 1.3 lease ownership.
+Delay/Shield are not governor-owned modes. LeaseEndParams remains unregistered;
+the service-side lease ownership completion is described below.
 Suspicious messages always reach human review with original text, held verdict,
 no automatic action and no consensus intake, even with armed punitive rules.
 
@@ -486,3 +486,86 @@ independently failed with lifecycle spawn EPERM. Base cffdd1a documents the same
 restriction; git diff confirms tooling, packages, apps and lockfiles unchanged.
 No install, preload or bypass was used. The external result is partial until
 the Director reruns these pnpm checks where Node subprocesses are permitted.
+
+## WP 1.2/1.3 service completion (2026-10-26)
+
+Reconciled against `3afe0a4`: `held_resolve` is already delivered. Its existing
+`gate_held.rs` tests cover allow -> released, deny -> removed, timeout retaining
+the durable held root, and confirmation errors preserving both the root and
+`retry_after_ms`. That implementation and its tests are unchanged.
+
+`delay_set(params, actor, response_budget, confirm)` and `shield_set(...)` add
+one-call async service seams over the public prepare/confirm pairs. Their
+confirmation closures receive the typed params and return the typed result.
+An unavailable gate or zero budget returns `Unavailable` without dispatch.
+Before dispatch, each method clears its applied state and rotates its epoch:
+older preparations must not revive a potentially changed setting. Only the
+existing matching, service-bound, audited confirmation publishes `Some` state.
+Timeout returns `Unavailable`; confirmation errors retain their original code
+and retry interval. Timeout, error, mismatched confirmation, cancellation or
+failed audit leaves the dispatched setting unknown (`None`), never guessed.
+The lower-level prepare/confirm pairs retain their previous semantics.
+
+The governor mints a `LeaseId` on issue and exposes it on `RoomLease` and both
+room intent variants. `register_governor_leases(&governor)` registers those
+service-issued leases with Gatehouse; call it after each tick and before
+dispatching room intents. The registrations share only lifecycle flags with
+the governor, so a human change invalidates permission immediately, without
+another registration. `lease_end(params, actor, response_budget, confirm)`
+passes a room-only `RoomModeIntent::End { lease_id, mode }` to the async fake or
+future adapter. Unknown/ended IDs fail `NotFound` or `Conflict`; yielded leases
+fail `Conflict` before dispatch. Gate unavailability and zero budget fail
+`Unavailable`. Timeout, confirmation failure or audit failure retains the
+registration for retry and records no completed end. Only confirmed, audited
+success writes `ModeChanged` for `configuration`, without a viewer subject,
+then removes the registration and marks its shared lifecycle ended.
+
+Confirmed ends disappear from governor snapshots and cannot fire again at the
+original deadline or be re-registered. Expiry still emits one End intent and
+clears the active snapshot; the governor retains at most one pending end per
+mode so late human changes also block delayed confirmation. A replacement lease
+invalidates the previous pending End, which must never disable the replacement.
+Retired lifecycle handles are pruned when registering. A restart starts with no
+known lease ownership; the host must re-establish it rather than guess.
+
+Acceptance evidence:
+
+- `gate_service_settings.rs`: all supported values, no-dispatch readiness and
+  zero-budget checks, timeout/error unknown state, preserved rate limits,
+  mismatches, invalidated old epochs and failed-audit non-publication.
+- `gate_lease.rs`: room-only confirmed decision/ledger, unknown/unregistered and
+  already-ended refusal, no resurrection, yielded refusal without snapshot
+  refresh (including after expiry), timeout/error retry, readiness/zero-budget
+  refusal, human changes during confirmation, expiry ID continuity, restart
+  refusal, replacement protection and failed-audit retention.
+- `governor.rs`: existing 13 state-machine tests, with unique IDs and matching
+  Apply/snapshot/End IDs added. The existing exhaustive room-only and deferred
+  registration test moved to `governor_boundaries.rs` to preserve the file cap.
+
+The initial `cargo test --offline --locked -p cc-gatehouse --test
+gate_service_settings` failed with E0599 for the missing one-call methods;
+the implementation then passed all 15 new service tests and 14 governor tests.
+This delivery adds no dependency, RPC registration, Twitch call or executor,
+and does not establish a live spike or M1 exit.
+
+Final validation on 2026-10-26:
+
+- `cargo fmt --all -- --check` and `cargo clippy --offline --locked --workspace
+  --all-targets -- -D warnings` passed.
+- The once-run `cargo test --offline --locked --workspace` passed: 401 tests,
+  29 ignored (including live probes). Final narrowed `cargo test --offline
+  --locked -p cc-gatehouse` passed all 116 tests, including its doctest. Actual
+  outputs are in this build run's external `workspace-tests.log`,
+  `gatehouse-tests.log` and `clippy.log`.
+- `node scripts/check.mjs` passed boundaries, hygiene, file cap and secrets;
+  code inventory was 403 files. `git diff --check` passed.
+- `pnpm --config.verify-deps-before-run=false gate` passed the 14 tooling tests
+  and workspace inventories, then failed at unchanged contract codegen with
+  `spawnSync cargo EPERM`. Recursive pnpm typecheck, lint and test each failed
+  at Node lifecycle `spawn EPERM`. Logs are external `gate.log`,
+  `typecheck.log`, `pnpm-lint.log` and `pnpm-test.log`. These are failures, not
+  passes or skipped checks. Tooling, packages, manifests, lockfiles, apps,
+  cc-core, cc-types and cc-twitch match base `3afe0a4`; the existing README
+  evidence above records the same sandbox restriction. No install, preload,
+  permission workaround or git write was attempted. The Director must rerun
+  the pnpm checks in an environment permitting Node subprocesses before merge.

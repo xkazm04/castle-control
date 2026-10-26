@@ -2,12 +2,16 @@
 //! It owns no executor, storage, task or transport. Call `tick` even during silence.
 use crate::{Result, ScreenedMessage, date, error, internal};
 use cc_store::Clock;
-use cc_types::{ErrorCode, RoomMode, Tier, Timestamp, Verdict};
+use cc_types::{ErrorCode, LeaseId, RoomMode, Tier, Timestamp, Verdict};
 use chrono::{DateTime, FixedOffset, TimeDelta};
 use std::{collections::BTreeMap, sync::Arc};
 
 type Time = DateTime<FixedOffset>;
 const TIERS: [Tier; 4] = [Tier::S, Tier::M, Tier::L, Tier::Xl];
+
+#[path = "governor_lease.rs"]
+mod lease;
+pub(crate) use lease::LeaseRegistration;
 
 /// A room setting, never an action on a viewer. No serialization is provided.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -44,10 +48,12 @@ impl RoomSetting {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum RoomModeIntent {
     Apply {
+        lease_id: LeaseId,
         setting: RoomSetting,
         expires_at: Timestamp,
     },
     End {
+        lease_id: LeaseId,
         mode: RoomMode,
     },
 }
@@ -102,6 +108,7 @@ impl GovernorConfig {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct RoomLease {
+    pub lease_id: LeaseId,
     pub setting: RoomSetting,
     pub expires_at: Timestamp,
     pub yielded: bool,
@@ -116,10 +123,8 @@ pub struct GovernorUpdate {
 }
 
 struct Lease {
-    setting: RoomSetting,
+    registration: LeaseRegistration,
     end: Time,
-    expires_at: Timestamp,
-    yielded: bool,
 }
 
 pub struct Governor {
@@ -130,6 +135,7 @@ pub struct Governor {
     tier_index: usize,
     candidate: Option<(usize, Time)>,
     leases: [Option<Lease>; 4],
+    pending_ends: [Option<LeaseRegistration>; 4],
     issued: [bool; 4],
 }
 
@@ -145,6 +151,7 @@ impl Governor {
             tier_index: 0,
             candidate: None,
             leases: std::array::from_fn(|_| None),
+            pending_ends: std::array::from_fn(|_| None),
             issued: [false; 4],
         })
     }
@@ -203,7 +210,10 @@ impl Governor {
         self.prune(at);
         let index = mode_index(mode);
         if let Some(lease) = &mut self.leases[index] {
-            lease.yielded = true;
+            lease.registration.yield_to_human();
+        }
+        if let Some(lease) = &self.pending_ends[index] {
+            lease.yield_to_human();
         }
         self.issued[index] = true;
         Ok(())
@@ -237,26 +247,39 @@ impl Governor {
         }
         let mut intents = Vec::new();
         for slot in &mut self.leases {
+            if slot
+                .as_ref()
+                .is_some_and(|lease| lease.registration.ended())
+            {
+                *slot = None;
+            }
             if slot.as_ref().is_some_and(|lease| at >= lease.end) {
                 let lease = slot.take().expect("checked lease");
-                if !lease.yielded {
+                if !lease.registration.yielded() {
                     intents.push(RoomModeIntent::End {
-                        mode: lease.setting.mode(),
+                        lease_id: lease.registration.lease_id.clone(),
+                        mode: lease.registration.setting.mode(),
                     });
+                    let index = mode_index(lease.registration.setting.mode());
+                    self.pending_ends[index] = Some(lease.registration);
+                } else {
+                    lease.registration.end();
                 }
             }
         }
         for &setting in &self.config.plans[self.tier_index] {
             let index = mode_index(setting.mode());
             if !self.issued[index] && self.leases[index].is_none() {
-                self.leases[index] = Some(Lease {
-                    setting,
-                    end,
-                    expires_at: expires_at.clone(),
-                    yielded: false,
-                });
+                // An old End must never disable a newly proposed replacement.
+                if let Some(previous) = self.pending_ends[index].take() {
+                    previous.end();
+                }
+                let registration = LeaseRegistration::new(setting, expires_at.clone());
+                let lease_id = registration.lease_id.clone();
+                self.leases[index] = Some(Lease { registration, end });
                 self.issued[index] = true;
                 intents.push(RoomModeIntent::Apply {
+                    lease_id,
                     setting,
                     expires_at: expires_at.clone(),
                 });
@@ -274,12 +297,18 @@ impl Governor {
         self.leases
             .iter()
             .flatten()
-            .map(|lease| RoomLease {
-                setting: lease.setting,
-                expires_at: lease.expires_at.clone(),
-                yielded: lease.yielded,
-            })
+            .filter(|lease| !lease.registration.ended())
+            .map(|lease| lease.registration.snapshot())
             .collect()
+    }
+
+    pub(crate) fn registrations(&self) -> impl Iterator<Item = LeaseRegistration> + '_ {
+        self.leases
+            .iter()
+            .flatten()
+            .map(|lease| lease.registration.clone())
+            .chain(self.pending_ends.iter().flatten().cloned())
+            .filter(|lease| !lease.ended())
     }
 
     fn target(&self) -> usize {

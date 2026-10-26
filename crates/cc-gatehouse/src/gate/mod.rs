@@ -4,6 +4,7 @@
 mod budget;
 mod events;
 mod held;
+mod leases;
 mod settings;
 
 pub use budget::{BudgetSummary, HoldBudget, MeasuredBatch};

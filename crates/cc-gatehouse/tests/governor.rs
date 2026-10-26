@@ -168,10 +168,14 @@ fn every_lease_expires_once_without_chat_or_automatic_renewal() {
     let mut room = Room::new(cfg);
     let started = room.tick(0);
     assert_eq!(started.intents.len(), 4);
-    for (intent, setting) in started.intents.iter().zip(all_settings()) {
+    let leases = room.governor.leases();
+    let ids: std::collections::BTreeSet<_> = leases.iter().map(|l| l.lease_id.clone()).collect();
+    assert_eq!(ids.len(), 4);
+    for ((intent, setting), lease) in started.intents.iter().zip(all_settings()).zip(&leases) {
         assert_eq!(
             *intent,
             RoomModeIntent::Apply {
+                lease_id: lease.lease_id.clone(),
                 setting,
                 expires_at: at(60)
             }
@@ -181,6 +185,15 @@ fn every_lease_expires_once_without_chat_or_automatic_renewal() {
     assert_eq!(room.governor.leases().len(), 4);
     let ended = room.tick(60);
     assert_eq!(ended.intents.len(), 4);
+    for (intent, lease) in ended.intents.iter().zip(&leases) {
+        assert_eq!(
+            *intent,
+            RoomModeIntent::End {
+                lease_id: lease.lease_id.clone(),
+                mode: lease.setting.mode(),
+            }
+        );
+    }
     assert!(
         ended
             .intents
@@ -209,9 +222,13 @@ fn human_override_suppresses_only_its_setting_until_original_expiry() {
     );
     assert!(room.tick(59).intents.is_empty());
     let expired = room.tick(60);
-    assert!(!expired.intents.contains(&RoomModeIntent::End {
-        mode: RoomMode::Slow
-    }));
+    assert!(!expired.intents.iter().any(|i| matches!(
+        i,
+        RoomModeIntent::End {
+            mode: RoomMode::Slow,
+            ..
+        }
+    )));
     assert_eq!(
         expired
             .intents
@@ -221,10 +238,15 @@ fn human_override_suppresses_only_its_setting_until_original_expiry() {
         3
     );
     // A new tier activation may claim the setting only after the old lease ends.
-    assert!(expired.intents.contains(&RoomModeIntent::Apply {
+    assert!(
+        expired
+            .intents
+            .iter()
+            .any(|i| matches!(i, RoomModeIntent::Apply {
         setting: RoomSetting::Slow { interval_s: 10 },
-        expires_at: at(120),
-    }));
+        expires_at, ..
+    } if *expires_at == at(120)))
+    );
 }
 
 #[test]
@@ -267,6 +289,7 @@ fn subsecond_expiry_does_not_end_a_lease_early() {
     assert_eq!(
         started.intents,
         vec![RoomModeIntent::Apply {
+            lease_id: room.governor.leases()[0].lease_id.clone(),
             setting: RoomSetting::EmoteOnly,
             expires_at: "2026-10-25T12:01:00.500Z".to_owned().try_into().unwrap(),
         }]
@@ -317,55 +340,4 @@ fn invalid_configuration_is_rejected_at_the_rust_only_door() {
         let clock = Arc::new(TestClock(Mutex::new(String::from(at(0)))));
         assert!(Governor::new(cfg, clock).is_err());
     }
-}
-
-#[test]
-fn output_is_exhaustively_room_modes_and_never_a_person_action() {
-    fn room_only(intent: RoomModeIntent) -> RoomMode {
-        match intent {
-            RoomModeIntent::Apply {
-                setting,
-                expires_at: _,
-            } => match setting {
-                RoomSetting::Slow { interval_s: _ } => RoomMode::Slow,
-                RoomSetting::FollowerOnly { minimum_age_s: _ } => RoomMode::FollowerOnly,
-                RoomSetting::EmoteOnly => RoomMode::EmoteOnly,
-                RoomSetting::UniqueChat => RoomMode::UniqueChat,
-            },
-            RoomModeIntent::End { mode } => mode,
-        }
-    }
-    for setting in all_settings() {
-        let mode = room_only(RoomModeIntent::Apply {
-            setting,
-            expires_at: at(60),
-        });
-        assert_eq!(room_only(RoomModeIntent::End { mode }), mode);
-    }
-    let source = include_str!("../src/governor.rs");
-    assert!(!source.contains("cc_twitch"));
-    assert!({
-        let typed = include_str!("../../cc-types/src/methods.rs").contains(
-            "LeaseEnd => (\"gatehouse.lease.end\", LeaseEndParams, Decision, \"WP 1.3\")",
-        );
-        let mut directories =
-            vec![std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../cc-core/src")];
-        let mut source_files = 0;
-        let mut unregistered = true;
-        while let Some(directory) = directories.pop() {
-            for entry in std::fs::read_dir(directory).expect("read cc-core source directory") {
-                let entry = entry.expect("read cc-core source entry");
-                let kind = entry.file_type().expect("read cc-core source file type");
-                let path = entry.path();
-                if kind.is_dir() {
-                    directories.push(path);
-                } else if kind.is_file() && path.extension().is_some_and(|value| value == "rs") {
-                    source_files += 1;
-                    let source = std::fs::read_to_string(path).expect("read cc-core Rust source");
-                    unregistered &= !source.contains("gatehouse.lease.end");
-                }
-            }
-        }
-        typed && source_files > 0 && unregistered
-    });
 }

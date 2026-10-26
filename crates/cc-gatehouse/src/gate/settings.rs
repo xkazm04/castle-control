@@ -4,6 +4,7 @@ use cc_types::{
     DecisionId, DecisionKind, DelaySetParams, DelaySetResult, ErrorCode, ShieldSetParams,
     ShieldState, Verdict,
 };
+use std::{future::Future, time::Duration};
 
 /// Applied settings are unknown until confirmation; restart never guesses state.
 pub(crate) struct Settings {
@@ -37,6 +38,56 @@ pub struct ShieldChange {
 }
 
 impl Gatehouse {
+    /// One-call service seam. Once sent, the old applied state is no longer
+    /// reliable: timeout, failure or cancellation must leave it unknown.
+    /// Rotate the epoch before dispatch so older preparations cannot revive it.
+    pub async fn delay_set<F, Fut>(
+        &mut self,
+        params: DelaySetParams,
+        actor: GateActor,
+        response_budget: Duration,
+        confirm: F,
+    ) -> Result<DelaySetResult>
+    where
+        F: FnOnce(DelaySetParams) -> Fut,
+        Fut: Future<Output = Result<DelaySetResult>>,
+    {
+        if !self.gate_available || response_budget.is_zero() {
+            return Err(error(ErrorCode::Unavailable, "gate unavailable"));
+        }
+        self.gate_settings.delay = None;
+        self.gate_settings.delay_epoch = DecisionId::mint();
+        let change = self.delay_prepare(params.clone(), actor)?;
+        let confirmed = tokio::time::timeout(response_budget, confirm(params))
+            .await
+            .map_err(|_| error(ErrorCode::Unavailable, "delay confirmation timed out"))?;
+        self.delay_confirm(change, confirmed)
+    }
+
+    /// Only a matching, audited confirmation publishes the requested Shield state.
+    pub async fn shield_set<F, Fut>(
+        &mut self,
+        params: ShieldSetParams,
+        actor: GateActor,
+        response_budget: Duration,
+        confirm: F,
+    ) -> Result<ShieldState>
+    where
+        F: FnOnce(ShieldSetParams) -> Fut,
+        Fut: Future<Output = Result<ShieldState>>,
+    {
+        if !self.gate_available || response_budget.is_zero() {
+            return Err(error(ErrorCode::Unavailable, "gate unavailable"));
+        }
+        self.gate_settings.shield = None;
+        self.gate_settings.shield_epoch = DecisionId::mint();
+        let change = self.shield_prepare(params.clone(), actor)?;
+        let confirmed = tokio::time::timeout(response_budget, confirm(params))
+            .await
+            .map_err(|_| error(ErrorCode::Unavailable, "Shield confirmation timed out"))?;
+        self.shield_confirm(change, confirmed)
+    }
+
     pub fn delay_state(&self) -> Option<DelaySetResult> {
         self.gate_settings.delay.clone()
     }
