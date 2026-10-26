@@ -101,3 +101,24 @@ The App Master must run the full merge gate in its verification environment;
 the Director must review screenshots before claiming the full fidelity exit.
 Live draw delivery, disclaimer overlay, renderer animation and the test-channel
 draw remain outside this explicitly offline part of WP 2.3.
+
+## Hero height follow-up, 2026-10-26
+
+The hero art card now uses a flex column. `.lots-dotfield` takes the remaining
+height with `flex: 1`, retaining the existing three-row token minimum, and its
+`.cc-window` fills that area with `position: absolute; inset: 0; max-height: none`.
+This replaces the fixed 96 px viewport that left unused space below the art
+when the summary determined the hero row height. The legend now follows the
+expanded viewport at the bottom of the card, without a viewport-width constant.
+The same layout applies at 1440 and 1280; no React or windowed-row count changed.
+
+- Desktop package `typecheck` and `lint`: exit 0. Lint also passed boundaries,
+  hygiene, file-cap and secrets inventories.
+- Desktop package `test`: exit 0, 74 tests across eight files.
+- Narrowed `exec vitest run src/lots.test.tsx --pool=threads`: exit 0, 12 tests,
+  including the first/last 10,000-entry window and bounded DOM checks.
+- Target-size browser screenshots remain unverified: the current computer-use
+  inventory exposed native apps but no browser automation provider.
+
+All pnpm commands use `--config.verify-deps-before-run=false` and
+`--filter @castle-control/desktop`. No install or shared package change was made.
