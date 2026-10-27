@@ -176,14 +176,14 @@ longest silence <= 1,500 ms (near-live: 5,000 / 3,000 ms).
 | T8 warning reason echo (owned target only) | T8 | `test tests::spike_live::live_warning_reason_limit ... ok` | pending owner live run | pending owner live run |
 | T9 headers / bounded cap observation | T9 | `test tests::spike_live::live_rate_headers_and_caps ... ok` | pending owner live run | pending owner live run |
 | T10 identity / scopes / subscriptions | T10 | `test tests::spike_live::live_scope_sufficiency ... ok` | pending owner live run | pending owner live run |
-| O1 handshake / RPC | O1 | `test live_handshake_rpc_versions ... ok` | pending owner live run | pending owner live run |
-| O2 authenticated vector | O2 | `test live_auth_vector ... ok` | pending owner live run | pending owner live run |
-| O3 version correlation | O3 | `test live_get_version_correlation ... ok` | pending owner live run | pending owner live run |
-| O4 browser-source shape | O4 | `test live_create_input_shape ... ok` | pending owner live run | pending owner live run |
-| O5 existing Scene | O5 | `test live_scene_exists ... ok` | pending owner live run | pending owner live run |
-| O6 status / error mapping | O6 | `test live_status_codes ... ok` | pending owner live run | pending owner live run |
-| O7 explicit reconnect | O7 | `test live_reconnect_is_explicit ... ok` | pending owner live run | pending owner live run |
-| O8 isolated overlay / 17891 | O8 | `test live_overlay_17891 ... ok` | pending owner live run | pending owner live run |
+| O1 handshake / RPC | O1 | `test live_handshake_rpc_versions ... ok` | 2026-10-27T16:50:05Z | PASS (Athena, owner-authorized autonomous run) |
+| O2 authenticated vector | O2 | `test live_auth_vector ... ok` | 2026-10-27T16:50:06Z | PASS (Athena, owner-authorized autonomous run) |
+| O3 version correlation | O3 | `test live_get_version_correlation ... ok` | 2026-10-27T16:50:07Z | PASS (Athena, owner-authorized autonomous run) |
+| O4 browser-source shape | O4 | `test live_create_input_shape ... ok` | 2026-10-27T16:50:26Z | FAILED in cleanup: on OBS 33 RemoveInput does not remove an input that is still a scene item; leftovers removed by RemoveSceneItem first. Test fix owed (Athena, owner-authorized autonomous run) |
+| O5 existing Scene | O5 | `test live_scene_exists ... ok` | 2026-10-27T16:50:10Z | PASS (Athena, owner-authorized autonomous run) |
+| O6 status / error mapping | O6 | `test live_status_codes ... ok` | 2026-10-27T16:51:00Z | PASS (Athena, owner-authorized autonomous run) |
+| O7 explicit reconnect | O7 | `test live_reconnect_is_explicit ... ok` | 2026-10-27T16:50:14Z | PASS (Athena, owner-authorized autonomous run) |
+| O8 isolated overlay / 17891 | O8 | `test live_overlay_17891 ... ok` | 2026-10-27T16:50:31Z | FAILED in cleanup: same OBS 33 RemoveInput-vs-scene-item cause as O4. Test fix owed (Athena, owner-authorized autonomous run) |
 | F0 floor reading | F0 | `instrument=simulated-floor-v1 n=6 correct=6 failed=0 ... live_admitted=true` | pending owner live run | pending owner live run |
 | F1 local-only path | F-suite | `test live_local_only ... ok` | pending owner live run | pending owner live run |
 | F2 request shape | F-suite | `test live_request_shape ... ok` | pending owner live run | pending owner live run |
