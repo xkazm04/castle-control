@@ -10,6 +10,7 @@ import { Offerings } from './timeline.jsx';
 import { TestFire } from './test-fire.jsx';
 import { KindlingCurve } from './kindling-curve.jsx';
 import CoreVisualsRoom from './core.jsx';
+import { ContributionFeed } from './event-feed.jsx';
 import './room.css';
 
 function IntensityRanges({ item }: { item: PreviewVisual }) {
@@ -65,6 +66,7 @@ export function VisualsWork({ queue, port, seal_slot }: { queue?: ProposalQueue;
       <div className="visuals-room-details">
         <VisualSelector visuals={preview.visuals} selected={preview.selected} on_select={item => adapter.select(item.visual.visual_id)} />
         <Offerings />
+        <ContributionFeed events={preview.events} origin="Local preview" />
         {seal_slot}
       </div>
     </div>

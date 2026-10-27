@@ -1,0 +1,5 @@
+.visuals-event-feed { margin-block: var(--space-16); min-width: 0; }
+.visuals-event-feed p { font-size: var(--text-label); }
+.visuals-event-row { display: grid; align-content: center; box-sizing: border-box; height: 100%; min-width: 0; padding: var(--space-8); font-size: var(--text-label); }
+.visuals-event-row strong, .visuals-event-detail { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.visuals-event-detail { font-family: var(--font-num); }

@@ -65,12 +65,60 @@ test('simulate renders the core fraction with its simulated label, without chang
   expect(html).not.toContain('Offering altar'); expect(html).not.toContain('60 offerings');
 });
 
+test('600 successful core simulations retain labelled feed rows without creating live accounting', async () => {
+  const h = harness(); await h.port.load();
+  const saved = h.port.getSnapshot().visuals;
+  expect(h.port.getSnapshot().events).toEqual([]);
+  const sources = ['cheer', 'bits_use', 'subscribe', 'gift', 'resub', 'hype_train', 'channel_points'] as const;
+  for (let index = 0; index < 600; index++) {
+    const source = sources[index % sources.length];
+    if (!source) throw new Error('Expected synthetic source');
+    await h.port.simulate({ visual_id: visual.visual_id as VisualId, burst: { source, amount: index + 1 } });
+  }
+  const events = h.port.getSnapshot().events;
+  expect(events).toHaveLength(600);
+  expect(new Set(events.map(event => event.id)).size).toBe(600);
+  expect(events.every(event => event.label === 'simulated' && event.visual_id === visual.visual_id)).toBe(true);
+  expect(events[0]?.burst.amount).toBe(600);
+  expect(events[599]?.burst.amount).toBe(1);
+  expect(new Set(events.map(event => event.burst.source))).toEqual(new Set(sources));
+  expect(events.every(event => new Date(event.at).toISOString() === event.at)).toBe(true);
+  expect(Object.isFrozen(events[0]?.burst)).toBe(true);
+  expect(h.port.getSnapshot().visuals).toBe(saved);
+  const html = renderToStaticMarkup(createElement(ConnectedBeacons, { port: h.port }));
+  expect(html).toContain('aria-rowcount="600"');
+  expect(html.match(/data-contribution-row=/g)?.length).toBeLessThan(20);
+  expect(html).toContain('simulated · Core simulation');
+  expect(html).toContain('data-contribution-row="simulated-core-event-599"');
+  expect(html).not.toContain('data-contribution-row="simulated-core-event-0"');
+  await h.port.load();
+  expect(h.port.getSnapshot().events).toBe(events);
+  const fresh = harness();
+  expect(fresh.port.getSnapshot().events).toEqual([]);
+});
+
+test('failed or mismatched simulations never enter the contribution feed', async () => {
+  const h = harness();
+  const params = { visual_id: visual.visual_id as VisualId, burst: { source: 'gift', amount: 50 } } as const;
+  await h.port.simulate(params);
+  const events = h.port.getSnapshot().events;
+  h.responses.set('beacons.simulate', { label: 'simulated', intensity: { visual_id: 'wrong-visual', intensity: 0.5 } });
+  await h.port.simulate(params);
+  expect(h.port.getSnapshot().events).toBe(events);
+  h.rpc.mockRejectedValueOnce(new Error('Lost response'));
+  await h.port.simulate(params);
+  expect(h.port.getSnapshot().events).toBe(events);
+  await h.port.simulate({ ...params, burst: { source: 'gift', amount: -1 } });
+  expect(h.port.getSnapshot().events).toBe(events);
+});
+
 test('malformed responses and mismatched visual IDs are rejected; typed errors hide upstream prose', async () => {
   const h = harness(); await h.port.load();
   const saved = h.port.getSnapshot().visuals[0]; if (!saved) throw new Error('Expected core visual');
   h.responses.set('beacons.simulate', { label: 'simulated', intensity: { visual_id: saved.visual_id, intensity: 2 } });
   await h.port.simulate({ visual_id: saved.visual_id, burst: { source: 'gift', amount: 50 } });
   expect(h.port.getSnapshot().phase).toBe('error'); expect(h.port.getSnapshot().simulation).toBeUndefined();
+  expect(h.port.getSnapshot().events).toEqual([]);
   h.responses.set('beacons.visual.upsert', { ...visual, visual_id: 'different-visual' });
   await h.port.upsert({ visual: saved }); expect(h.port.getSnapshot().visuals).toEqual([saved]);
   expect(h.port.getSnapshot().phase).toBe('error');

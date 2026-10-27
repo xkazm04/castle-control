@@ -3,6 +3,7 @@ import type { BeaconsSimulateParams, BeaconsSimulateResult, CurveSetParams, Erro
   MethodContract, RpcMethods, Visual, VisualId, VisualUpsertParams } from '@castle-control/contract';
 import { validateCoreLaunch } from './core-source.js';
 import type { CoreLaunch } from './core-source.js';
+import type { PreviewEvent } from './beacons-fixture.js';
 
 type BeaconsMethod = 'beacons.visual.list' | 'beacons.visual.upsert' | 'beacons.curve.set' | 'beacons.simulate' | 'beacons.source.url';
 /** Restricted transport seam; launch capabilities never enter read snapshots. */
@@ -11,6 +12,7 @@ export type BeaconsNetwork = {
 };
 export type CoreBeaconsSnapshot = {
   visuals: readonly Visual[]; selected?: VisualId; simulation?: BeaconsSimulateResult;
+  events: readonly PreviewEvent[];
   busy: boolean; phase: 'idle' | 'loading' | 'ready' | 'error'; notice: string; error?: ErrorEnvelope;
 };
 
@@ -37,7 +39,8 @@ export function createCoreBeaconsPort(launch: CoreLaunch, transport?: BeaconsNet
   let validators: ReturnType<typeof importValidators> | undefined;
   function importValidators() { return import('@castle-control/contract/beacons'); }
   const contracts = () => validators ??= importValidators();
-  let snapshot: CoreBeaconsSnapshot = freeze({ visuals: [], busy: false, phase: 'idle', notice: 'Load Beacons from the local core.' });
+  let snapshot: CoreBeaconsSnapshot = freeze({ visuals: [], events: [], busy: false, phase: 'idle', notice: 'Load Beacons from the local core.' });
+  let event_serial = 0;
   const listeners = new Set<() => void>();
   function publish(change: Partial<CoreBeaconsSnapshot>, omit: ('selected' | 'simulation' | 'error')[] = []) {
     const previous = { ...snapshot };
@@ -98,7 +101,11 @@ export function createCoreBeaconsPort(launch: CoreLaunch, transport?: BeaconsNet
         publish({}, ['simulation']);
         const simulation = await call((await contracts()).beaconsSimulate, proposed);
         if (simulation.intensity.visual_id !== proposed.visual_id) throw new Error('Mismatched simulation');
-        publish({ simulation, notice: 'Simulated burst computed by the core from an empty state. Saved configuration and live totals are unchanged.' });
+        // One row per acknowledged test burst, not a reconstructed Twitch event.
+        const event: PreviewEvent = { id: `simulated-core-event-${event_serial++}`, at: new Date().toISOString(),
+          visual_id: proposed.visual_id, burst: proposed.burst, label: simulation.label };
+        publish({ simulation, events: [event, ...snapshot.events],
+          notice: 'Simulated burst computed by the core from an empty state. Saved configuration and live totals are unchanged.' });
       });
     },
     async sourceUrl(visual_id: VisualId) {

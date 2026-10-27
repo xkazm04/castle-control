@@ -7,6 +7,7 @@ import { createCoreBeaconsPort } from '../../beacons-core.js';
 import type { CoreBeaconsPort } from '../../beacons-core.js';
 import type { Snapshot } from '../../model.js';
 import { BrowserSourceButton, BrowserSourceNotice, createBrowserSourceCopy } from './source-copy.jsx';
+import { ContributionFeed } from './event-feed.jsx';
 import './room.css';
 import './core.css';
 
@@ -110,6 +111,7 @@ export function ConnectedBeacons({ port, seal_slot }: { port: CoreBeaconsPort; s
         <VisualEditor key={`visual-${creating ? 'new' : JSON.stringify(visual)}`} port={port} busy={state.busy}
           {...(!creating && visual ? { visual } : {})} />
         {visual && <CurveEditor key={JSON.stringify(visual)} visual={visual} port={port} busy={state.busy} />}
+        <ContributionFeed events={state.events} origin="Core simulation" />
         {seal_slot}
       </div>
     </div>

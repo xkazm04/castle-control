@@ -73,7 +73,76 @@ and mismatched replies, safe typed errors, request validation, production HTTP,
 lazy validators, connection persistence and the core shell route. Fixture tests
 keep their existing accounting and keyboard behavior.
 
-## Evidence
+## WP 3.3 contribution feed
+
+At base `60eb569`, the room only rendered the separate 60-offering timeline;
+the 600-event model fixture had no feed UI. `event-feed.tsx` now reuses the
+shared `WindowedRows` primitive, as the Gatehouse does. Its token-sized rows
+show the source, amount, visual ID, UTC time and an explicit simulated label.
+The named scroll table is a native Tab stop with the shared focus treatment;
+browser scrolling uses the existing primitive, with no second keymap.
+
+Fixture mode reads `preview.events`: the existing 600 generated gift/subscription
+events plus local test fires. Every visible row says `simulated · Local preview`.
+Those historical rows and fixed-clock times are illustrative and never reconstruct
+the preview's starting totals. The 60-offering timeline stays separate and does
+not feed accounting. End test fire resets the model and its local feed together.
+
+Core mode starts empty. After a schema-validated, matching `beacons.simulate`
+reply, the port records one row for the acknowledged burst, newest calls first.
+A 50-gift burst is one row with amount 50, not 50 claimed Twitch contributions.
+Rows say `simulated · Core simulation`; their time is local reply receipt time,
+not a Twitch event time. The UI-only history survives refresh, selection and
+room navigation on the cached port, and disappears with a new connection.
+Malformed, mismatched, failed and unacknowledged calls add no rows. History
+never changes saved configurations or becomes live intensity or accounting.
+The existing `PreviewEvent` shape is reused as an in-memory projection only;
+the core adapter imports its type without loading fixture data at runtime.
+
+The source labels cover all existing `ContributionSource` values: cheer/Bits
+use in Bits, subscriptions/gifts/resubs in counts, Hype Train level, channel
+points, charity/goal minor currency units and power-up counts. No identities,
+ledger persistence, external connection, new identifier or contract changes
+are introduced.
+
+Live intake is a follow-up: `beacons.contribution` and its typed payload already
+exist in the contract, but this Beacons connection has no live subscription or
+authoritative contribution-history read. There is no missing identifier to
+invent here. A future delivery must wire the existing event source and settle
+resync/history semantics within its own scope; any new read identifier must
+land in `cc-types` first. This feed does not subscribe to live events or claim
+OBS delivery, and core mode never substitutes fixture rows.
+
+`event-feed.test.tsx` pushes 600 new test-fire events and checks bounded markup
+windows at the start, middle and end, including the first/last IDs, positional
+ARIA metadata and per-row simulated labels. It covers every source label and
+the honest empty state. `beacons-core.test.ts` retains 600 validated core bursts
+with unique IDs and checks frozen history, failures, refresh and fresh-port
+isolation. `keyboard.test.tsx` checks the shared primitive, its accessible name
+and native Tab stop in the same component-test style as the other controls.
+These are component/markup window tests, not browser Tab or fidelity automation.
+
+Verification, 2026-10-27:
+
+- Red first: the new feed suite could not import `event-feed.jsx`, and the
+  600-core-burst test failed because snapshot `events` was absent.
+- Final narrowed run: **67 tests pass in 7 files**, using
+  `pnpm --config.verify-deps-before-run=false exec vitest run --pool=threads`
+  from `apps/desktop`, with `src/rooms/visuals/event-feed.test.tsx`,
+  `src/beacons-core.test.ts`, `src/beacons.test.tsx`,
+  `src/rooms/visuals/keyboard.test.tsx`, `src/rooms/visuals/room.test.tsx`,
+  `src/rooms/visuals/source-copy.test.tsx` and `src/shell/room.test.tsx`.
+  The 600-row windows render fewer than 20 rows at each tested scroll position.
+- Desktop `typecheck`, `lint` and `build` pass via
+  `pnpm --config.verify-deps-before-run=false --filter @castle-control/desktop`.
+  Typecheck/lint inventory 89 TS/TSX files; boundary/hygiene/file-cap checks
+  inventory 535 code files and secrets inventory 665 files. First load remains
+  **382,338 / 393,216 bytes**, with no budget increase.
+- `git diff --check` passes. No install or git write was run. Full workspace
+  tests and Rust gates are left to App Master for this desktop-only change;
+  no full-suite, live, browser fidelity or OBS test is claimed.
+
+## Earlier evidence
 
 WP 3.3 Copy browser-source URL verification, 2026-10-27:
 

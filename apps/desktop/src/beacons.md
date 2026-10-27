@@ -4,7 +4,7 @@ Open `#/chamber/visuals` in fixture mode. The shell lazily mounts
 `rooms/visuals/room.tsx`; `#/chamber/studio` mounts the Map Room. Core mode now
 uses the Beacons core port described in `rooms/visuals/README.md`, with a
 virtualised configuration list, saved curves and core-computed simulations.
-It exposes no fixture feed or local preview controls. The Map Room keeps its
+It exposes core simulation history without a fixture feed or local preview controls. The Map Room keeps its
 unconfigured core state.
 
 The old Beacons panel page, curve editor, artwork/feed implementation, stylesheet
@@ -17,8 +17,11 @@ controls change the local preview only; nothing reaches OBS.
 intensity, curve/reset/decay semantics, unique generated model events, mounted
 fixture/core separation and the no-network boundary. The visual room tests also
 cover draft amendments, accounting isolation, all offerings and native keyboard
-control paths. The retired page's clipboard placeholder and 600-row feed have no
-replacement UI; the model's 600-event fixture remains intact.
+control paths. The room now renders the model's 600-event fixture and local test
+fires through the shared windowed feed. Core mode starts with an empty history
+and adds one simulated row for each successful core test burst. Both feeds label
+every row simulated; neither is live contribution accounting. See the room README
+for source units, timestamp semantics and the live-intake follow-up.
 
 The shared seal slot uses the kit ProposalCard. Proposal layers retain
 `DRAFT ? NOT ON AIR`; room-wide provenance strips are removed because the

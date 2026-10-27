@@ -6,6 +6,8 @@ import { createBeaconsPreview } from '../../beacons-model.js';
 import { OfferingTimeline } from './timeline.jsx';
 import { TestFire } from './test-fire.jsx';
 import { VisualSelector } from './room.jsx';
+import { ContributionFeed } from './event-feed.jsx';
+import { WindowedRows } from '@castle-control/ui';
 
 type NativeControl = { type?: string; children?: ReactNode; tabIndex?: number; disabled?: boolean; onClick?: () => void };
 function buttons(tree: ReactNode): ReactElement<NativeControl>[] {
@@ -74,4 +76,18 @@ test('all visual selection and test-fire actions are tabbable native buttons wit
   expect(port.getSnapshot().events).toHaveLength(initial.events.length + 51);
   expect(port.getSnapshot().elapsed_s).toBe(60);
   expect(ended).toBe(true);
+});
+
+test('contribution feed reuses the named, tabbable native scroll window without a second keymap', () => {
+  const port = createBeaconsPreview();
+  const feed = ContributionFeed({ events: port.getSnapshot().events, origin: 'Local preview' });
+  const window = feed.props.children[2];
+  expect(window.type).toBe(WindowedRows);
+  expect(window.props.label).toBe('Simulated Beacons contribution events');
+  const html = renderToStaticMarkup(window);
+  // The shared scroll region is a native Tab stop. Arrow/Page/Home/End scrolling
+  // stays with the browser; this component test does not claim browser automation.
+  expect(html).toContain('role="table" aria-label="Simulated Beacons contribution events"');
+  expect(html).toContain('tabindex="0"');
+  expect(html).toContain('simulated · Local preview');
 });

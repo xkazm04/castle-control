@@ -124,13 +124,19 @@ test('fixture route lazily opens Beacons work; core requires a shell connection'
   expect(renderToStaticMarkup(<VisualsRoom snapshot={{ mode: 'core', phase: 'ready' }} />)).toContain('Beacons are not configured');
 });
 
-test('room uses the existing 600-event model but renders the separate 60-offering illustration', () => {
+test('room renders a bounded window of the 600-event model beside the separate 60-offering illustration', () => {
   expect(fixtureEvents).toHaveLength(600);
   const port = createBeaconsPreview();
   expect(port.getSnapshot().events).toBe(fixtureEvents);
   const html = renderToStaticMarkup(<VisualsWork port={port} />);
   expect(html.match(/data-offering-mark=/g)).toHaveLength(60);
-  expect(html).not.toContain('data-contribution-row');
+  expect(html).toContain('aria-rowcount="600"');
+  expect(html.match(/data-contribution-row=/g)?.length).toBeLessThan(20);
+  expect(html).toContain('simulated · Local preview');
+  port.fire('subscribe', 1);
+  const after = renderToStaticMarkup(<VisualsWork port={port} />);
+  expect(after).toContain('aria-rowcount="601"');
+  expect(after).toContain('data-contribution-row="simulated-event-600"');
 });
 
 test('Beacons work imports no core transport or renderer', () => {
