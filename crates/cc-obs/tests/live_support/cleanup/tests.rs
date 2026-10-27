@@ -156,3 +156,33 @@ async fn simulated_cleanup_bounds_wait_and_names_stuck_input() {
     let message = panic.downcast_ref::<String>().expect("cleanup diagnostic");
     assert!(message.contains("live cleanup failed") && message.contains(name));
 }
+
+#[tokio::test]
+async fn simulated_cleanup_accepts_input_released_with_its_last_scene_item() {
+    // OBS 33: removing the last scene item can release the input, so RemoveInput answers 600.
+    let name = "cc-live-simulated-released";
+    let mut removed = step("RemoveInput", json!({"inputName":name}), json!({}));
+    removed.ok = false;
+    let (mut observer, peer) = simulated(vec![
+        step(
+            "GetSceneList",
+            json!({}),
+            json!({"scenes":[{"sceneName":"Scene"}]}),
+        ),
+        step(
+            "GetSceneItemList",
+            json!({"sceneName":"Scene"}),
+            json!({"sceneItems":[{"sourceName":name,"sceneItemId":3}]}),
+        ),
+        step(
+            "RemoveSceneItem",
+            json!({"sceneName":"Scene","sceneItemId":3}),
+            json!({}),
+        ),
+        removed,
+        step("GetInputList", json!({}), json!({"inputs":[]})),
+    ])
+    .await;
+    success(&remove_input(&mut observer, name).await);
+    peer.await.unwrap();
+}

@@ -23,6 +23,7 @@ pub async fn remove_input(observer: &mut Observer, name: &str) -> Value {
     let scenes = scenes.unwrap_or_else(|| {
         vec![std::env::var("CC_LIVE_OBS_SCENE").unwrap_or_else(|_| "Scene".into())]
     });
+    let mut detached = 0;
     for scene in scenes {
         let listed = observer
             .request("GetSceneItemList", json!({"sceneName":scene}))
@@ -39,6 +40,7 @@ pub async fn remove_input(observer: &mut Observer, name: &str) -> Value {
                         json!({"sceneName":scene,"sceneItemId":id}),
                     )
                     .await;
+                detached += 1;
             }
         }
     }
@@ -63,6 +65,11 @@ pub async fn remove_input(observer: &mut Observer, name: &str) -> Value {
         absent.is_ok(),
         "live cleanup failed: remove this run's cc-live input manually: {name}"
     );
+    // OBS 33 can release an input together with its last scene item, so RemoveInput
+    // then answers 600 (not found). Absence was just confirmed; that counts as removed.
+    if detached > 0 && removed["requestStatus"]["code"] == 600 {
+        return json!({"requestStatus":{"result":true,"code":100}});
+    }
     removed
 }
 
