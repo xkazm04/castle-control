@@ -160,12 +160,12 @@ longest silence <= 1,500 ms (near-live: 5,000 / 3,000 ms).
 
 | check | command | expected PASS line | timestamp | owner evidence |
 | --- | --- | --- | --- | --- |
-| WP device login | WP (below) | `<UTC> PASS device_login` | pending owner live run | pending owner live run |
-| WP chat | WP (below) | `<UTC> PASS live_chat` | pending owner live run | pending owner live run |
-| WP shadow stub | WP (below) | `<UTC> PASS shadow_verdict_stub` | pending owner live run | pending owner live run |
-| WP timeout / undo — ARMED, owned target only | WP (below) | `<UTC> PASS timeout_and_undo` | pending owner live run | pending owner live run |
-| WP OBS source + owner visual confirmation | WP (below) | `<UTC> PASS obs_source` + owner screenshot reference | pending owner live run | pending owner live run |
-| WP socket recovery / gap | WP (below) | `<UTC> PASS socket_drop_gap` | pending owner live run | pending owner live run |
+| WP device login | WP (below) | `<UTC> PASS device_login` | 2026-10-27T16:44:45.849Z | run 10: stored keychain login reused (1684515); device flow passed earlier in runs 3-7 (e.g. 14:36:43.834Z) |
+| WP chat | WP (below) | `<UTC> PASS live_chat` | 2026-10-27T16:44:56.806Z | run 10: `!castle-spike` sent from castlecontroltarget |
+| WP shadow stub | WP (below) | `<UTC> PASS shadow_verdict_stub` | 2026-10-27T16:44:56.814Z | run 10: would_act recorded to decisions.jsonl |
+| WP timeout / undo — ARMED, owned target only | WP (below) | `<UTC> PASS timeout_and_undo` | 2026-10-27T16:44:57.252Z | run 10: 30 s timeout on castlecontroltarget, undone |
+| WP OBS source + owner visual confirmation | WP (below) | `<UTC> PASS obs_source` + owner screenshot reference | 2026-10-27T16:44:57.259Z | run 10 with plate 77c8320; visual check in scene `Scene`: `docs/spike-evidence/2026-10-27-obs-plate-run10.png` (Athena, owner-delegated) |
+| WP socket recovery / gap | WP (below) | `<UTC> PASS socket_drop_gap` | 2026-10-27T16:45:01.830Z | run 10: socket drop recovered with gap |
 | T1 AutoMod hold | T1 | `test tests::spike_live::live_automod_hold_v2 ... ok` | pending owner live run | pending owner live run |
 | T2 AutoMod update | T2 | `test tests::spike_live::live_automod_update_v2 ... ok` | pending owner live run | pending owner live run |
 | T3 suspicious-user message | T3 | `test tests::spike_live::live_suspicious_v1 ... ok` | pending owner live run | pending owner live run |
@@ -197,12 +197,12 @@ longest silence <= 1,500 ms (near-live: 5,000 / 3,000 ms).
 
 | WP 0.7 acceptance item | Status | Timestamp / owner evidence |
 | --- | --- | --- |
-| Device login completes | pending owner live run | |
-| Chat typed on the test channel appears in the app | pending owner live run | |
-| One shadow verdict is logged | pending owner live run | |
-| One armed timeout lands on an owned test account and is undone | pending owner live run | |
-| OBS shows a browser source the app created | pending owner live run | |
-| A forced socket drop recovers with a gap event | pending owner live run | |
+| Device login completes | PASS | 2026-10-27T16:44:45Z (run 10) |
+| Chat typed on the test channel appears in the app | PASS | 2026-10-27T16:44:56Z (run 10) |
+| One shadow verdict is logged | PASS | 2026-10-27T16:44:56Z (run 10) |
+| One armed timeout lands on an owned test account and is undone | PASS | 2026-10-27T16:44:57Z (run 10) |
+| OBS shows a browser source the app created | PASS | 2026-10-27T16:44:57Z (run 10) + docs/spike-evidence/2026-10-27-obs-plate-run10.png |
+| A forced socket drop recovers with a gap event | PASS | 2026-10-27T16:45:01Z (run 10) |
 
 ## Owner preparation and exact command
 
