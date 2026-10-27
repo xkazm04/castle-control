@@ -6,6 +6,32 @@ import { ProposalQueue, SimulatedSteward } from '@castle-control/ui/steward';
 import Room, { VisualsWork } from './room.jsx';
 import { fixtureOfferings } from '../../beacons-fixture.js';
 import { createBeaconsPreview } from '../../beacons-model.js';
+import { tokens } from '@castle-control/tokens';
+
+test('Beacons stage has an inner token inset, captioned artwork and a model-driven active tier', () => {
+  const style = readFileSync(new URL('./room.css', import.meta.url), 'utf8');
+  const inset = style.match(/\.visuals-room-workbench\s*\{[^}]*\bpadding:\s*var\(--(space-\d+)\)/)?.[1];
+  expect(inset).toBeDefined();
+  expect(Number.parseFloat(tokens.layout[inset as keyof typeof tokens.layout])).toBeGreaterThan(0);
+  expect(style).not.toMatch(/\.visuals-room-workbench\s*\{[^}]*\bpadding:\s*0[;\s}]/);
+  expect(style).toMatch(/\.visuals-room-tier-active\s*\{[^}]*background:\s*var\(--or\)/);
+  const port = createBeaconsPreview();
+  const markup = () => renderToStaticMarkup(<VisualsWork port={port} />);
+  const before = markup();
+  expect(before).toContain('<figcaption');
+  expect(before).toContain('The kindling curve');
+  expect(before.match(/class="visuals-room-tier-active"/g)).toHaveLength(3);
+  expect(before).toContain('Now:');
+  // Each model selects its own interval. A burst moves only the selected card's tier.
+  const firstCard = (html: string) => html.match(/<article>[\s\S]*?<\/article>/)?.[0] ?? '';
+  expect(firstCard(before)).toContain('data-tier-start="10" class="visuals-room-tier-active"');
+  port.fire('gift', 50);
+  const after = markup();
+  expect(firstCard(after)).toContain('data-tier-start="30" class="visuals-room-tier-active"');
+  expect(firstCard(after)).not.toContain('data-tier-start="100" class="visuals-room-tier-active"');
+  port.fire('gift', 50);
+  expect(firstCard(markup())).toContain('data-tier-start="100" class="visuals-room-tier-active"');
+});
 
 test('fixture room contains the altar, frames, border, 60 offerings and local test fire', () => {
   const html = renderToStaticMarkup(<Room snapshot={{ mode: 'fixture', phase: 'ready' }} />);

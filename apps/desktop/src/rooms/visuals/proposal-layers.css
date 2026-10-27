@@ -7,3 +7,6 @@
 .room-proposal-draft dt { font-weight: 700; }
 .room-proposal-draft dd { margin: 0; overflow-wrap: anywhere; }
 .room-proposal-draft s { color: var(--room-ink, var(--ink)); margin-inline-end: var(--space-8); text-decoration-thickness: var(--rule-strong); }
+.room-proposal-draft strong { animation: room-proposal-ink var(--motion-shell) var(--ease) both; }
+@keyframes room-proposal-ink { from { opacity: 0; clip-path: inset(0 100% 0 0); } to { opacity: 1; clip-path: inset(0); } }
+@media (prefers-reduced-motion: reduce) { .room-proposal-draft strong { animation: none; } }

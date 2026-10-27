@@ -13,7 +13,7 @@ export function ProposalLayers({ chamber, queue = proposalQueue }: { chamber: Ch
       <h3>{proposal.title}</h3><p>Proposal · revision {proposal.revision} · awaiting your seal</p>
       <dl>{proposal.fields.map(field => <div key={field.key}><dt>{field.label}</dt><dd>
         {field.struck.map((value, index) => <s key={index}>{String(value)}</s>)}
-        <strong>{String(field.value)}</strong>
+        <strong key={`${field.key}-${proposal.revision}`}>{String(field.value)}</strong>
       </dd></div>)}</dl>
     </article>)}
   </div>;

@@ -1,9 +1,25 @@
 # Beacons detail room (AI-6)
 
+## AI-9 room polish
+
+Open `#/chamber/visuals` in fixture mode. The Director's Lit Keep stills at
+1440x900 and 1280x800 guide the two-column composition. The shell supplies the
+display header; the gold-framed stage has token padding at every breakpoint.
+Its large artwork and read-only kindling curve use the existing preview model.
+Cards have display headings, a Now line and an active range derived from each
+visual's current total. Miniature duplicate artwork is removed. Test fire stays
+in a native details disclosure; all four controls retain their existing handlers.
+
+The optional `seal_slot` is supplied by the shell under the right column, after
+the offerings timeline. It is the original shared queue and hold control, not
+another proposal store. The Steward bar remains at the bottom of the app.
+DOM/CSS tests prove token padding, captioned figures and tier changes after a
+local burst. Existing keyboard and accounting tests remain the behavior proof.
+
 `room.tsx` default-exports `VisualsRoom({ snapshot }: { snapshot: Snapshot })`.
 `Snapshot` comes from `../../model.ts`. The module can be imported with React
-`lazy`; it imports neither the app entry nor the view. It contains no breadcrumb,
-seal control, or Steward input. The shell owns those.
+`lazy`; it imports neither the app entry nor the view. It defines no breadcrumb,
+seal control, or Steward input. The shell owns those and supplies the seal slot.
 
 Fixture mode shows an illustrated altar, camera frame and border with ranges
 from the unchanged `beacons-model.ts`. Selection, gifts, subscriptions and clock

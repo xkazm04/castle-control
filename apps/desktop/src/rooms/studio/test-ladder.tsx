@@ -9,7 +9,7 @@ export function TestLadder({ selected, on_select }: { selected: number; on_selec
     <h3>Test ladder</h3><p>Current stage: Sand table</p>
     <p>Inspect a stage below. These controls show requirements only.</p>
     <div role="group" aria-label="Inspect test stage requirements">
-      {ladderRungs.map((rung, index) => <button type="button" key={rung.title} aria-pressed={selected === index}
+      {ladderRungs.map((rung, index) => <button type="button" key={rung.title} aria-pressed={selected === index} data-current={index === 0}
         aria-label={`Inspect ${rung.title} requirements`} onClick={() => on_select(index)}>
         <b>{rung.title}</b><span>{index === 0 ? 'Local only' : 'Locked · requirements only'}</span>
       </button>)}

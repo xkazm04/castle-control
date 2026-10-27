@@ -1,4 +1,5 @@
 import { useState, useSyncExternalStore } from 'react';
+import type { ReactNode } from 'react';
 import { isPending, proposalQueue } from '@castle-control/ui/steward';
 import type { Proposal, ProposalQueue } from '@castle-control/ui/steward';
 import type { Snapshot } from '../../model.js';
@@ -24,8 +25,8 @@ export function LotteryWrit({ proposal }: { proposal: Proposal }) {
   </article>;
 }
 
-export default function LotteryRoom({ snapshot, replay, queue = proposalQueue }: {
-  snapshot: Snapshot; replay: boolean; queue?: ProposalQueue;
+export default function LotteryRoom({ snapshot, replay, queue = proposalQueue, seal_slot }: {
+  snapshot: Snapshot; replay: boolean; queue?: ProposalQueue; seal_slot?: ReactNode;
 }) {
   const { port, rolls } = lotterySession(queue);
   const state = useSyncExternalStore(port.subscribe, port.getSnapshot, port.getSnapshot);
@@ -45,27 +46,34 @@ export default function LotteryRoom({ snapshot, replay, queue = proposalQueue }:
   };
   return <div className="lottery-room" data-replay={replay}>
     <div className="lottery-columns">
-      <div className="room-column">
+      <div className="room-column lottery-workbench">
+        <section className="room-stage lottery-stage" aria-label="Draw workbench">
+        <p className="room-caption">The writ · drafted in ink, sealed by you</p>
+        <p className="room-now">Now: {pending.length ? 'proposal awaiting your seal'
+          : state.sealed ? 'entry list frozen' : 'no draft waiting'} · simulated</p>
         {proposal && <LotteryWrit proposal={proposal} />}
         {!pending.length && <div className="lottery-empty">
           <h2>Writ templates</h2><p>Tell the Steward which draw. Its proposal will ink in here.</p>
-          {fixtureDraws.map(draw => <button key={draw.draw_id} type="button" onClick={() => { port.select(draw.draw_id); draftRoll(queue); }}>
+          {fixtureDraws.map(draw => <button key={draw.draw_id} type="button" data-active={draw.draw_id === state.draw.draw_id}
+            onClick={() => { port.select(draw.draw_id); draftRoll(queue); }}>
             <b>{draw.name}</b><span>{draw.policy.content === 'prize' ? 'Prize' : 'No prize'} · proposal only</span></button>)}
         </div>}
         {state.sealed && <button type="button" onClick={() => { port.select(state.draw.draw_id); draftRoll(queue); }}>Draft a new roll</button>}
+        </section>
         <section className="lottery-fair" aria-label={copy.gate}><h3>{copy.gate}</h3><p>{copy.checks[policy.result]}</p>
           {policy.reasons.map(reason => <p key={reason}>{copy.reasons[reason as keyof typeof copy.reasons] ?? reason}</p>)}
           {state.draw.policy.twitch_disclaimer && <p>{copy.disclaimer_text}</p>}
           {state.draw.policy.official_rules && <p>{copy.template_text}</p>}
         </section>
-        <h3>{copy.fairness}</h3><ol className="lottery-steps">{copy.steps.map(([title, text]) => <li key={title}><b>{title}</b> · {text}</li>)}</ol>
-        <p>{copy.test_note}</p><p>{copy.fixture_only}</p>
+        <details><summary>{copy.fairness}</summary><ol className="lottery-steps">{copy.steps.map(([title, text]) => <li key={title}><b>{title}</b> · {text}</li>)}</ol>
+          <p>{copy.test_note}</p><p>{copy.fixture_only}</p></details>
         {roll && <><button type="button" onClick={() => { void recompute(); }}>Recompute frozen entry seal</button>
           <details><summary>Frozen entry list · UTF-8 JSON · handle, weight field order</summary><pre className="room-hash">{roll.bytes}</pre></details></>}
         <p role="status">{verification}</p>
       </div>
-      <div className="room-column">
-        <Urn entries={roll?.entries ?? state.entries} />
+      <div className="room-column lottery-details">
+        <figure className="lottery-urn-figure"><figcaption className="room-caption">The urn · the entry pool and every eligible mark</figcaption>
+          <Urn entries={roll?.entries ?? state.entries} /></figure>
         <p>{copy.pool} · {fixtureCooldown.length} {copy.cooldown}</p>
         <label>{copy.lookup}<input type="search" aria-label={copy.lookup} value={state.lookup} onChange={event => port.lookup(event.currentTarget.value)} /></label>
         <p>{lookupFixture(state)}</p>
@@ -75,6 +83,7 @@ export default function LotteryRoom({ snapshot, replay, queue = proposalQueue }:
         <details><summary>Saved simulated proof bundle</summary><p>{copy.writ_notice}</p><code className="room-hash">{fixtureWrit.seal}</code>
           <p>Recorded winners: {fixtureWrit.winners.join(', ')}</p>
           <button type="button" onClick={() => { void port.recompute(); }}>{copy.recompute}</button><p role="status">{state.notice}</p></details>
+        {seal_slot}
       </div>
     </div>
   </div>;

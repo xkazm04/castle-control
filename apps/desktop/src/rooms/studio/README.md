@@ -1,5 +1,16 @@
 # Map Room detail room (AI-6)
 
+## AI-9 room polish
+
+Open `#/chamber/studio` in fixture mode. The framed, captioned war table is the
+dominant column; the inspector, Now line, test ladder and optional shell-owned
+`seal_slot` share the right column. Existing palette tokens distinguish the
+three houses, with their names retained on every tile. Sand table alone has the
+filled current-stage treatment: inspecting a locked rung never makes it current.
+Columns scroll within the room at desktop sizes, leaving the Steward visible.
+The shell header supplies the large title and plain function. No ownership,
+proposal lifecycle, keyboard handler or test-stage transition changes.
+
 `room.tsx` default-exports `StudioRoom({ snapshot }: { snapshot: Snapshot })`.
 `Snapshot` comes from `../../model.ts`. The module is lazy-loadable and has no
 breadcrumb, seal control, app entry import or Steward input.
@@ -8,7 +19,7 @@ Fixture mode contains the 9 by 6 war table, an inspector, pending war-table pane
 drafts, and the test ladder. `fixture.ts` uses the reference sample's dimensions
 and house names. The reference has no tile dataset (`keep/NOTES.md`); the 54
 invented territory records are explicitly illustrative. They contain no viewer
-identities or votes. House names and monochrome patterns distinguish territories.
+identities or votes. House names and shared chamber inks distinguish territories.
 Each native hex button changes only inspection, never ownership.
 
 The shared queue's pending `studio` proposals appear as dashed

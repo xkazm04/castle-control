@@ -4,6 +4,7 @@ import { expect, test, vi } from 'vitest';
 import { ProposalQueue, SimulatedSteward } from '@castle-control/ui/steward';
 import Room, { StudioWork } from './room.jsx';
 import { fixtureTiles } from './fixture.js';
+import { TestLadder } from './test-ladder.jsx';
 
 test('fixture studio shows all 54 hexes and the local-only test ladder', () => {
   const html = renderToStaticMarkup(<Room snapshot={{ mode: 'fixture', phase: 'ready' }} />);
@@ -36,6 +37,13 @@ test('war-table proposals stay in dashed draft layers without claiming a tile or
   expect(html).toContain('Current stage: Sand table');
   expect(queue.pending('studio')).toHaveLength(1);
   expect(JSON.stringify(fixtureTiles)).toBe(before);
+});
+
+test('inspecting a locked rung does not move the filled current-stage indicator', () => {
+  const markup = renderToStaticMarkup(<TestLadder selected={2} on_select={vi.fn()} />);
+  expect(markup).toMatch(/aria-pressed="false" data-current="true"[^>]*aria-label="Inspect Sand table requirements"/);
+  expect(markup).toMatch(/aria-pressed="true" data-current="false"[^>]*aria-label="Inspect Proclaimed requirements"/);
+  expect(markup).toContain('Current stage: Sand table');
 });
 
 test('default module loads lazily with no network or submission action', async () => {

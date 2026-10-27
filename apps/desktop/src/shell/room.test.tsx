@@ -1,4 +1,5 @@
 import { Children, isValidElement } from 'react';
+import { readFileSync } from 'node:fs';
 import type { ButtonHTMLAttributes, KeyboardEvent, ReactElement, ReactNode } from 'react';
 import { renderToReadableStream, renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, expect, test, vi } from 'vitest';
@@ -8,6 +9,47 @@ import SealSlot, { sealRoomProposal } from '../rooms/seal-slot/index.jsx';
 import { draftRoll } from '../rooms/lottery/session.js';
 import { backHash, dispatchShortcut, initialNavigation, navigateHash } from '../navigation.js';
 import Room from './room.jsx';
+
+test('all room headers hold the display title, plain subtitle, locator and origin Back link', async () => {
+  for (const [chamber, title, description] of [
+    ['lottery', 'The Lot Chamber', 'Lottery manager'], ['moderator', 'The Gatehouse', 'AI moderator'],
+    ['visuals', 'The Beacons', 'Contribution visuals'], ['studio', 'The Map Room', 'Extension studio'],
+  ] as const) {
+    const stream = await renderToReadableStream(<Room chamber={chamber} replay={false}
+      snapshot={{ mode: 'fixture', phase: 'ready' }} origin="overview" on_open={vi.fn()} on_back={vi.fn()} />);
+    await stream.allReady;
+    const markup = await new Response(stream).text();
+    const header = markup.match(/<header class="shell-room-header"[\s\S]*?<\/header>/)?.[0]?.replace(/<!--.*?-->/g, '') ?? '';
+    expect(header).toContain(`<h1>${title}</h1>`);
+    expect(header).toContain(description);
+    expect(header).toContain('Chamber locator');
+    expect(header).toContain('Back to the overview');
+    expect(header).toContain('href="#/overview"');
+    expect(markup).toContain('SIMULATED');
+    const column = chamber === 'lottery' ? 'lottery-details' : chamber === 'moderator' ? 'moderator-details'
+      : chamber === 'visuals' ? 'visuals-room-details' : 'studio-room-details';
+    expect(markup.indexOf(column)).toBeGreaterThan(0);
+    expect(markup.indexOf('aria-label="Seal slot"')).toBeGreaterThan(markup.indexOf(column));
+    expect(markup).toMatch(/<aside class="shell-seal-slot"[\s\S]*?<\/aside><\/div><\/div>/);
+  }
+  const style = readFileSync(new URL('./room.css', import.meta.url), 'utf8');
+  expect(style).toMatch(/\.shell-room-header h1\s*\{[^}]*var\(--font-display\)/);
+  expect(style).toMatch(/\.shell-room \.shell-room-work\s*\{[^}]*display:\s*block/);
+  expect(style).toMatch(/\.shell-room \.shell-seal-slot\s*\{[^}]*border-top:/);
+});
+
+test('room stages retain token insets and model states use the existing accent fills', () => {
+  const shell = readFileSync(new URL('./room.css', import.meta.url), 'utf8');
+  expect(shell).toMatch(/\.room-stage\s*\{[^}]*padding:\s*var\(--space-16\)/);
+  expect(shell).toMatch(/\.room-column\s*\{[^}]*padding:\s*var\(--space-16\)/);
+  const studio = readFileSync(new URL('../rooms/studio/room.css', import.meta.url), 'utf8');
+  expect(studio).toMatch(/\.studio-room-workbench\s*\{[^}]*padding:\s*var\(--space-16\)/);
+  expect(studio).toMatch(/button\[data-current="true"\][^}]*background:\s*var\(--ink\)/);
+  const moderator = readFileSync(new URL('../rooms/moderator/room.css', import.meta.url), 'utf8');
+  expect(moderator).toMatch(/i\[data-on="true"\][^}]*background:\s*var\(--azure\)/);
+  const lottery = readFileSync(new URL('../rooms/lottery/room.css', import.meta.url), 'utf8');
+  expect(lottery).toMatch(/button\[data-active="true"\][^}]*border-color:\s*var\(--gules\)/);
+});
 
 afterEach(() => { vi.useRealTimers(); });
 const fixture = { mode: 'fixture', phase: 'ready' } as const;
