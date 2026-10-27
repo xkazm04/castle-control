@@ -1,5 +1,7 @@
 //! Native registration is fixture-only. This module owns no network capability.
-use crate::{EventHub, Module, gatehouse::GatehouseModule, lots::LotsModule};
+use crate::{
+    EventHub, Module, beacons::BeaconsModule, gatehouse::GatehouseModule, lots::LotsModule,
+};
 use cc_types::{ErrorCode, ErrorEnvelope, RpcRequest, RuleMode};
 use futures::future::BoxFuture;
 use serde_json::Value;
@@ -16,8 +18,9 @@ pub(crate) struct OfflineModules {
 }
 
 struct Loaded {
-    // Gatehouse closes before Lots releases the shared temporary fixture root.
+    // Other modules close before Lots releases the shared temporary fixture root.
     gatehouse: GatehouseModule,
+    beacons: BeaconsModule,
     lots: Arc<LotsModule>,
 }
 
@@ -68,9 +71,11 @@ impl OfflineModules {
                 let mut lots =
                     LotsModule::open(root.join("lots"), events, recorded.clone(), recorded, true)?;
                 let gatehouse = GatehouseModule::open_offline(root.join("gatehouse"))?;
+                let beacons = BeaconsModule::open(root.join("beacons"))?;
                 lots.temporary_root = temporary_root;
                 Ok(Loaded {
                     gatehouse,
+                    beacons,
                     lots: Arc::new(lots),
                 })
             })
@@ -81,19 +86,30 @@ impl OfflineModules {
 
 pub(crate) struct OfflineModule {
     shared: Arc<OfflineModules>,
-    lots: bool,
+    kind: OfflineKind,
+}
+
+enum OfflineKind {
+    Lots,
+    Gatehouse,
+    Beacons,
 }
 
 impl OfflineModule {
-    pub fn pair(shared: Arc<OfflineModules>) -> [Self; 2] {
+    // Preserve the registry's existing factory entry point as modules are added.
+    pub fn pair(shared: Arc<OfflineModules>) -> [Self; 3] {
         [
             Self {
                 shared: shared.clone(),
-                lots: true,
+                kind: OfflineKind::Lots,
+            },
+            Self {
+                shared: shared.clone(),
+                kind: OfflineKind::Gatehouse,
             },
             Self {
                 shared,
-                lots: false,
+                kind: OfflineKind::Beacons,
             },
         ]
     }
@@ -101,10 +117,10 @@ impl OfflineModule {
 
 impl Module for OfflineModule {
     fn methods(&self) -> &'static [&'static str] {
-        if self.lots {
-            LotsModule::METHODS
-        } else {
-            GatehouseModule::METHODS
+        match self.kind {
+            OfflineKind::Lots => LotsModule::METHODS,
+            OfflineKind::Gatehouse => GatehouseModule::METHODS,
+            OfflineKind::Beacons => BeaconsModule::METHODS,
         }
     }
 
@@ -124,10 +140,10 @@ impl Module for OfflineModule {
                 ));
             }
             let loaded = self.shared.load()?;
-            if self.lots {
-                loaded.lots.call(request).await
-            } else {
-                loaded.gatehouse.call(request).await
+            match self.kind {
+                OfflineKind::Lots => loaded.lots.call(request).await,
+                OfflineKind::Gatehouse => loaded.gatehouse.call(request).await,
+                OfflineKind::Beacons => loaded.beacons.call(request).await,
             }
         })
     }

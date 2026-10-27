@@ -5,7 +5,8 @@ mod lots_support;
 mod offline_support;
 
 use cc_core::{
-    AppState, EventHub, NativeServices, Registry, gatehouse::GatehouseModule, lots::LotsModule,
+    AppState, EventHub, NativeServices, Registry, beacons::BeaconsModule,
+    gatehouse::GatehouseModule, lots::LotsModule,
 };
 use cc_lots::{Intake, PassedMessage};
 use cc_types::{ErrorCode, EventKind, Verdict};
@@ -23,9 +24,11 @@ fn exporter_lists_the_native_inventory_without_starting_services() {
     let mut expected = NativeServices::METHODS.to_vec();
     expected.extend(LotsModule::METHODS);
     expected.extend(GatehouseModule::METHODS);
+    expected.extend(BeaconsModule::METHODS);
     expected.sort();
     assert_eq!(methods, expected);
     assert_eq!(Registry::with_status().methods(), expected);
+    assert!(!methods.iter().any(|name| name == "beacons.source.url"));
     assert!(
         methods
             .iter()

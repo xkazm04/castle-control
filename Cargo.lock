@@ -556,6 +556,7 @@ version = "0.1.0"
 dependencies = [
  "async-trait",
  "axum",
+ "cc-beacons",
  "cc-gatehouse",
  "cc-lots",
  "cc-obs",
