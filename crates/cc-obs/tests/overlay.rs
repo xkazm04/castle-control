@@ -1,5 +1,48 @@
 //! All HTTP requests are simulated and restricted to a local ephemeral server.
 use cc_obs::Overlay;
+
+#[tokio::test]
+async fn simulated_overlay_csp_only_allows_inline_styles() {
+    let overlay = Overlay::start(0).await.unwrap();
+    let client = reqwest::Client::builder().no_proxy().build().unwrap();
+    let response = client.get(overlay.url()).send().await.unwrap();
+    let policy = response.headers()["content-security-policy"]
+        .to_str()
+        .unwrap();
+    let mut directives: Vec<_> = policy.split(';').map(str::trim).collect();
+    directives.sort_unstable();
+    // Exact directive/source sets reject remote styles, overrides and duplicates.
+    assert_eq!(
+        directives,
+        [
+            "base-uri 'none'",
+            "connect-src 'none'",
+            "default-src 'none'",
+            "form-action 'none'",
+            "frame-ancestors 'none'",
+            "img-src 'none'",
+            "script-src 'none'",
+            "style-src 'unsafe-inline'",
+        ]
+    );
+}
+
+#[tokio::test]
+async fn simulated_overlay_declares_transparent_background() {
+    let overlay = Overlay::start(0).await.unwrap();
+    let client = reqwest::Client::builder().no_proxy().build().unwrap();
+    let page = client
+        .get(overlay.url())
+        .send()
+        .await
+        .unwrap()
+        .text()
+        .await
+        .unwrap();
+    assert!(page.contains("<style>html, body { background: transparent; margin: 0; }</style>"));
+    assert!(!page.contains("<script") && !page.contains("src=") && !page.contains("<link"));
+}
+
 #[tokio::test]
 async fn simulated_overlay_origin() {
     let overlay = Overlay::start(0).await.unwrap();

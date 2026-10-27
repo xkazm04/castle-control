@@ -43,10 +43,27 @@
 - **Overlay:** the spike's separate page is `http://localhost:17891/`, bound to
   IPv4 loopback. Only the exact `localhost:<port>` Host is allowed (else 403).
   Root is GET/HEAD only (POST 405); `/rpc` and `/events` are absent (GET/POST
-  404). The static page has no scripts or remote resources; CSP is
-  `default-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'`,
-  with `nosniff` and `no-store`. Drop stops the server. Fixtures choose an
-  ephemeral port; live tests reserve 17891 and do not attach to another server.
+  404). The static page declares `html, body { background: transparent; margin: 0; }`
+  in an inline style. CSP permits only `style-src 'unsafe-inline'`; `default-src`,
+  `script-src`, `connect-src`, `img-src`, `frame-ancestors`, `base-uri` and
+  `form-action` are all `'none'`, with `nosniff` and `no-store`. Drop stops the
+  server. Fixtures choose an ephemeral port; live tests reserve 17891 and do not
+  attach to another server.
+
+### WP 0.7 OBS styling exception
+
+OBS injects source-configurable CSS through a `<style>` without a nonce in
+[`BrowserClient::OnLoadEnd`](https://github.com/obsproject/obs-browser/blob/master/browser-client.cpp#L609-L625)
+(checked 2026-10-27). The page cannot attach a nonce to that injected element,
+and a fixed hash would depend on the exact source's custom CSS. The scoped
+exception is therefore `style-src 'unsafe-inline'`, without `'self'`, host or
+scheme sources. Remote styles, CSS imports/images/fonts, scripts, connections
+and frames remain blocked. Explicit page transparency also works outside OBS.
+
+`simulated_overlay_csp_only_allows_inline_styles` checks the exact directive
+and source sets; `simulated_overlay_declares_transparent_background` checks
+the permitted style declaration. Both failed against the original overlay
+before the fix; the existing Host/method/isolated-origin checks remain intact.
 
 ## Live flip
 
@@ -76,6 +93,7 @@ These are instructions, not commands executed by the builder.
 | Status/error mapping | `simulated_status_codes`, `wrong_response_type_is_rejected_even_when_request_id_matches`, `log_grep_excludes_password_and_token_even_from_hostile_error_comments` | `live_status_codes` | `CC_LIVE_OBS=1 cargo test -p cc-obs -- --ignored live_status_codes` |
 | Explicit reconnect | `simulated_reconnect_is_explicit` | `live_reconnect_is_explicit` | `CC_LIVE_OBS=1 cargo test -p cc-obs -- --ignored live_reconnect_is_explicit` |
 | Overlay origin / 17891 | `simulated_overlay_origin` | `live_overlay_17891` | `CC_LIVE_OBS=1 cargo test -p cc-obs -- --ignored live_overlay_17891` |
+| Overlay pixels / CSP regression | `simulated_overlay_csp_only_allows_inline_styles`, `simulated_overlay_declares_transparent_background`, `simulated_screenshot_checks_pixels_and_rejects_invalid_frames` | `live_overlay_screenshot_not_white` | `CC_LIVE_OBS=1 cargo test -p cc-obs --test live live_overlay_screenshot_not_white -- --ignored --nocapture` |
 
 Live OBS websocket targets are hardcoded to `127.0.0.1:4455`; overlay HTTP probes
 use `127.0.0.1:17891` with the required localhost Host and proxies disabled.
@@ -83,9 +101,18 @@ Browser-source checks use a `cc-live-<pid>-<run-id>` input name, attempt
 `RemoveInput` even after an assertion or uncertain creation, then verify absence
 with `GetInputList`. Cleanup failure fails the test and requires owner inspection;
 process termination or an unreachable OBS can prevent cleanup. No other inputs,
-scene settings, RPC registrations or core services are changed. Automated checks
-cannot establish that OBS actually painted the page: the spike still requires
-the owner's visual confirmation in `docs/spike-log.md`.
+scene settings, RPC registrations or core services are changed.
+
+The screenshot check cleanly skips before any access unless `CC_LIVE_OBS=1`.
+When enabled, it uses the existing guarded connection and keychain label,
+creates its own source, calls `GetSourceScreenshot` with BMP (required in
+`GetVersion.supportedImageFormats`), and checks decoded pixels rather than
+encoded bytes. It waits one second before each of up to ten captures, so an
+all-white frame fails after the retry window. Images stay in memory. Its
+synthetic decoder test rejects all-white, truncated and compressed frames.
+BMP checks non-white RGB pixels, not alpha: an empty non-white frame can pass,
+so the owner's visual confirmation of content and transparency in
+`docs/spike-log.md` is still required. No live run is claimed by this delivery.
 
 ## Build evidence
 
@@ -114,3 +141,28 @@ Windows builder verification, 2026-10-26; simulated peers only:
   are not claimed green. The shared `node_modules` junction was not modified.
 
 Live tests have not been enabled or run. This is not owner live-spike evidence.
+
+### WP 0.7 CSP fix verification, 2026-10-27
+
+- Red: `cargo test --locked -p cc-obs --test overlay` failed the two new
+  CSP/transparency assertions against the original code; origin checks passed.
+- Green: the same command passed all three tests after the fix.
+- `cargo test --locked -p cc-obs`: 14 passed, nine live tests ignored.
+- `cargo fmt --all -- --check` and
+  `cargo --config net.offline=false clippy --workspace --all-targets -- -D warnings`:
+  passed. The final narrowed `cc-obs` test run also passed all 14 tests.
+- With `CC_LIVE_OBS` absent,
+  `cargo test --locked -p cc-obs --test live live_overlay_screenshot_not_white -- --ignored --nocapture`
+  printed `SKIPPED: CC_LIVE_OBS=1 required; no socket or keychain access attempted`
+  and exited 0. This verifies the opt-in guard, not live rendering.
+- `node scripts/check.mjs`: passed boundaries, hygiene and file cap (518 code
+  files), and secrets (645 files). `git diff --check`: passed.
+- `pnpm --config.verify-deps-before-run=false gate`: failed in unchanged
+  `packages/contract/scripts/codegen.mjs` with `spawnSync cargo EPERM` after the
+  tooling tests (14 passed), workspace inventory and Cargo fetch. It did not
+  reach the Rust or package checks. Separate recursive `typecheck` and `lint`
+  commands both failed at pnpm's lifecycle launcher with `spawn EPERM`.
+  These match the earlier builder restriction above; gate scripts, contract
+  files, manifests and lockfiles have no diff from the base commit. App Master
+  must rerun the full gate in its verifier. No install was attempted over the
+  shared `node_modules` junction.

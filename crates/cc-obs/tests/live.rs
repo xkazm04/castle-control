@@ -1,5 +1,6 @@
 //! LIVE twins are opt-in owner checks, never fixture evidence. Run one at a time.
 mod live_support;
+mod screenshot;
 use cc_obs::{BrowserSource, Error, Overlay};
 use futures::FutureExt;
 use live_support::{Observer, client, guard, run_id, success};
@@ -144,17 +145,27 @@ async fn live_reconnect_is_explicit() {
 #[ignore = "live: CC_LIVE_OBS=1"]
 async fn live_create_input_shape() {
     guard();
-    browser_source_roundtrip().await;
+    browser_source_roundtrip(false).await;
 }
 
 #[tokio::test]
 #[ignore = "live: CC_LIVE_OBS=1"]
 async fn live_overlay_17891() {
     guard();
-    browser_source_roundtrip().await;
+    browser_source_roundtrip(false).await;
 }
 
-async fn browser_source_roundtrip() {
+#[tokio::test]
+#[ignore = "live: CC_LIVE_OBS=1; owner OBS screenshot check"]
+async fn live_overlay_screenshot_not_white() {
+    if std::env::var("CC_LIVE_OBS").as_deref() != Ok("1") {
+        eprintln!("SKIPPED: CC_LIVE_OBS=1 required; no socket or keychain access attempted");
+        return;
+    }
+    browser_source_roundtrip(true).await;
+}
+
+async fn browser_source_roundtrip(check_screenshot: bool) {
     guard();
     let _overlay = Overlay::start(17891)
         .await
@@ -229,6 +240,9 @@ async fn browser_source_roundtrip() {
             "live source must be enabled in Scene"
         );
         check_overlay().await;
+        if check_screenshot {
+            screenshot::check(&mut observer, &name).await;
+        }
     })
     .catch_unwind()
     .await;
