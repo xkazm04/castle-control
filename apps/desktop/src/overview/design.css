@@ -1,0 +1,20 @@
+.overview-design-inspector { flex: none; display: grid; gap: var(--space-8); padding-block: var(--space-8); font-size: var(--text-small); }
+.overview-design-inspector > strong { color: var(--or-text); }
+.overview-design-inspector > .cc-window { height: calc(var(--space-56) * 3); }
+.overview-design-artifact { display: grid; gap: var(--space-4); border-bottom: var(--rule-thin) solid var(--line); padding-bottom: var(--space-8); }
+.overview-design-artifact > div { display: flex; flex-wrap: wrap; gap: var(--space-8); }
+.overview-design-inspector button, .overview-design-close { font: inherit; color: var(--ink); background: var(--card); padding: var(--space-6) var(--space-8); border: var(--rule-thin) solid var(--ink); cursor: pointer; }
+.overview-design-inspector :focus-visible, .overview-design-dialog :focus-visible { outline: var(--rule-strong) solid var(--azure-text); outline-offset: var(--focus-offset); }
+.overview-design-dialog { width: min(90vw, calc(var(--space-56) * 20)); max-height: 90dvh; overflow: auto; padding: var(--space-16); border: var(--rule-strong) solid var(--ink); background: var(--paper); color: var(--ink); font: var(--text-body)/1.4 var(--font-ui); }
+.overview-design-dialog::backdrop { background: var(--ink); opacity: var(--disabled-opacity); }
+.overview-design-look { color: var(--ink); background: var(--card); display: grid; font-size: var(--text-small); }
+.overview-design-look[data-ink="gules"] { color: var(--gules-text); }
+.overview-design-look[data-ink="azure"] { color: var(--azure-text); }
+.overview-design-look[data-ink="or"] { color: var(--or-text); }
+.overview-design-look svg { fill: none; stroke: currentColor; stroke-width: 2; }
+.overview-design-look[data-treatment="engraved"] svg { stroke-width: 1; }
+.overview-design-look[data-treatment="halftone"] { background-image: var(--paper-grain); }
+.overview-design-look[data-density="bold"] svg { stroke-width: 3; }
+.overview-design-look[data-density="quiet"] svg { opacity: var(--disabled-opacity); }
+.overview-design-look > b { border: var(--rule-thin) dashed var(--ink); }
+.overview-inspector { overflow: auto; }

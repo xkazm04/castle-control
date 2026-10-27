@@ -3,9 +3,23 @@ import type { ModuleId } from '@castle-control/ui';
 import { isPending } from '@castle-control/ui/steward';
 import type { Proposal } from '@castle-control/ui/steward';
 import type { ReactNode } from 'react';
+import { lazy, Suspense } from 'react';
+import type { ArtifactId } from '@castle-control/ui/design';
 import { ChamberArt } from '../keep/art.jsx';
+import { isDesignProposal } from './design-proposal.js';
 import { illustrativeSceneLabel, illustrativeTiles, sceneChat, sceneConsensus } from './fixture.js';
 import './scene.css';
+
+const DesignArtwork = lazy(() => import('./design.jsx').then(module => ({ default: module.DesignArtwork })));
+const DesignPresence = lazy(() => import('./design.jsx').then(module => ({ default: module.DesignPresence })));
+
+function Present({ artifact, mode, visible, children }: { artifact: ArtifactId; mode: 'preview' | 'program'; visible: boolean; children: ReactNode }) {
+  return visible ? children : <Suspense fallback={null}><DesignPresence artifact={artifact} mode={mode}>{children}</DesignPresence></Suspense>;
+}
+
+function Look({ artifact, mode, children }: { artifact: ArtifactId; mode: 'preview' | 'program'; children: ReactNode }) {
+  return <Suspense fallback={children}><DesignArtwork artifact={artifact} mode={mode}>{children}</DesignArtwork></Suspense>;
+}
 
 export function CryptBackdrop() {
   return <svg className="overview-crypt" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
@@ -47,26 +61,27 @@ export function StreamScene({ mode, proposals, sample, on_select }: {
   mode: 'preview' | 'program'; proposals: readonly Proposal[]; sample: boolean; on_select?: (id: ModuleId) => void;
 }) {
   const preview = mode === 'preview';
-  const draft = (chamber: ModuleId) => proposals.filter(item => item.chamber === chamber && item.state !== 'torn').at(-1);
+  const draft = (chamber: ModuleId) => proposals.filter(item => item.chamber === chamber && item.state !== 'torn' && !isDesignProposal(item)).at(-1);
   const draw = draft('lottery'); const chat = draft('moderator'); const beacon = draft('visuals'); const map = draft('studio');
   const selection = on_select ? { on_select } : {};
   return <div className="overview-scene" data-scene={mode}>
     <CryptBackdrop />
     <span className="overview-scene-label">{sample ? illustrativeSceneLabel : 'Illustrative preview · live chamber data unavailable'}</span>
-    {(preview || draw) && <Layer chamber="lottery" title={draw?.title ?? 'Urn and writ'} {...(draw ? { proposal: draw } : {})} {...selection}>
-      <ChamberArt chamber="lottery" />{!draw && <span>No draw on screen</span>}
-    </Layer>}
-    {(sample || chat) && <Layer chamber="moderator" title={chat?.title ?? 'Chat and Herald'} {...(chat ? { proposal: chat } : {})} {...selection}>
-      {sample && <><div className="overview-chat">{sceneChat.filter(line => preview || line.verdict === 'pass').map(line =>
+    <Present artifact="draw" mode={mode} visible={preview || Boolean(draw)}><Layer chamber="lottery" title={draw?.title ?? 'Urn and writ'} {...(draw ? { proposal: draw } : {})} {...selection}>
+      <Look artifact="draw" mode={mode}><ChamberArt chamber="lottery" /></Look>{!draw && <span>No draw on screen</span>}
+    </Layer></Present>
+    <Present artifact="overlay" mode={mode} visible={sample || Boolean(chat)}><Layer chamber="moderator" title={chat?.title ?? 'Chat and Herald'} {...(chat ? { proposal: chat } : {})} {...selection}>
+      <Look artifact="overlay" mode={mode}>{sample && <div className="overview-chat">{sceneChat.filter(line => preview || line.verdict === 'pass').map(line =>
         <p key={line.message_id} data-held={line.verdict !== 'pass'}>{line.verdict !== 'pass' && <b>HELD · NOT ON AIR </b>}{line.message_text}</p>)}</div>
-        <div className="overview-vote">{sceneConsensus.map(direction => <span key={direction.key}>{direction.label} {Math.round(direction.share * 100)}%</span>)}</div></>}
-    </Layer>}
-    {(sample || beacon) && <Layer chamber="visuals" title={beacon?.title ?? 'Altar, frame and border'} {...(beacon ? { proposal: beacon } : {})} {...selection}>
-      <ChamberArt chamber="visuals" /><span className="overview-camera">Camera frame · sample</span>
-    </Layer>}
-    {(preview || map) && <Layer chamber="studio" title={map?.title ?? 'War table'} {...(map ? { proposal: map } : {})} {...selection}>
-      {preview && !map ? <DraftFrame><MapPanel /><span>Illustrative layout</span></DraftFrame> : <MapPanel />}
-    </Layer>}
+      }</Look>
+      {sample && <div className="overview-vote">{sceneConsensus.map(direction => <span key={direction.key}>{direction.label} {Math.round(direction.share * 100)}%</span>)}</div>}
+    </Layer></Present>
+    <Present artifact="beacon" mode={mode} visible={sample || Boolean(beacon)}><Layer chamber="visuals" title={beacon?.title ?? 'Altar, frame and border'} {...(beacon ? { proposal: beacon } : {})} {...selection}>
+      <Look artifact="beacon" mode={mode}><ChamberArt chamber="visuals" /><span className="overview-camera">Camera frame · sample</span></Look>
+    </Layer></Present>
+    <Present artifact="map" mode={mode} visible={preview || Boolean(map)}><Layer chamber="studio" title={map?.title ?? 'War table'} {...(map ? { proposal: map } : {})} {...selection}>
+      <Look artifact="map" mode={mode}>{preview && !map ? <DraftFrame><MapPanel /><span>Illustrative layout</span></DraftFrame> : <MapPanel />}</Look>
+    </Layer></Present>
     <span className="overview-scene-border" aria-hidden="true" />
   </div>;
 }

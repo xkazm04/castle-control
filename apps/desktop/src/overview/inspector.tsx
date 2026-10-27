@@ -2,9 +2,12 @@ import { ProposalCard, WindowedRows } from '@castle-control/ui';
 import type { ModuleId } from '@castle-control/ui';
 import { isPending, proposalQueue } from '@castle-control/ui/steward';
 import type { Proposal } from '@castle-control/ui/steward';
-import { useSyncExternalStore } from 'react';
+import { lazy, Suspense, useSyncExternalStore } from 'react';
 import { stewardConversation } from '../shell/steward.jsx';
+import { isDesignProposal } from './design-proposal.js';
 import './inspector.css';
+
+const DesignInspector = lazy(() => import('./design.jsx').then(module => ({ default: module.DesignInspector })));
 
 export function FairnessBox() {
   return <aside className="overview-fairness" aria-label="Draw fairness">
@@ -19,8 +22,9 @@ export function Inspector({ selected, proposals, on_open, active = true }: {
   selected: ModuleId; proposals: readonly Proposal[]; on_open: (chamber: ModuleId) => void; active?: boolean;
 }) {
   const queue = useSyncExternalStore(proposalQueue.subscribe, proposalQueue.getSnapshot, proposalQueue.getSnapshot);
-  const items = proposals.filter(item => item.chamber === selected && isPending(item));
+  const items = proposals.filter(item => item.chamber === selected && isPending(item) && !isDesignProposal(item));
   return <section className="overview-inspector" aria-label="Selected layer inspector">
+    {active && <Suspense fallback={<p>Loading simulated design controls…</p>}><DesignInspector selected={selected} /></Suspense>}
     {items.length > 0 && <WindowedRows rows={items} label="Layer proposals" row_key={proposal => proposal.id} row_height={480}>
       {proposal => <ProposalCard proposal={proposal} focused={active && queue.selected_proposal_id === proposal.id}
         on_focus={() => { if (proposalQueue.getSnapshot().selected_proposal_id !== proposal.id) proposalQueue.select(proposal.id); }}

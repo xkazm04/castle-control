@@ -1,6 +1,7 @@
 import { isPending, proposalQueue } from '@castle-control/ui/steward';
 import type { Proposal } from '@castle-control/ui/steward';
 import { sealRoomProposal } from '../rooms/seal-slot/index.jsx';
+import { isDesignProposal } from './design-proposal.js';
 
 // Presentation snapshots only. This is neither a proposal queue nor OBS delivery.
 let snapshot: readonly Proposal[] = [];
@@ -12,6 +13,7 @@ export const sampleProgram = {
 
 export function programCandidate(chamber: Proposal['chamber']): Proposal | undefined {
   const candidates = proposalQueue.byChamber(chamber).filter(item => isPending(item) || item.state === 'sealed')
+    .filter(item => !isDesignProposal(item))
     .filter(item => !snapshot.some(aired => aired.id === item.id && aired.revision === item.revision));
   return candidates.find(item => item.id === proposalQueue.getSnapshot().selected_proposal_id) ?? candidates.at(-1);
 }
@@ -19,6 +21,7 @@ export function programCandidate(chamber: Proposal['chamber']): Proposal | undef
 /** Only the Overview monitor's completed hold calls this local projection. */
 export async function proclaimToSampleProgram(id: string): Promise<string> {
   const before = proposalQueue.getSnapshot().proposals.find(item => item.id === id);
+  if (before && isDesignProposal(before)) return 'Open the design focus. Preview there, then hold to seal and proclaim.';
   if (!before || (!isPending(before) && before.state !== 'sealed')) return 'This proposal is no longer available.';
   if (isPending(before)) {
     try { await sealRoomProposal(proposalQueue, before); }
