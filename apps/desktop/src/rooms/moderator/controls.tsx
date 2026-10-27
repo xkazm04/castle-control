@@ -13,7 +13,7 @@ export function HeldActions({ item, pending, queue }: { item: Decision; pending:
 }
 
 export function HeldQueue({ state, queue }: Props) {
-  return <section className="room-stage moderator-portcullis"><h2>{copy.held} · held for human review</h2>
+  return <section className="room-stage moderator-portcullis"><h2 className="room-caption">{copy.held} · held for human review</h2>
     <p className="room-now">Now: {state.held.length} held · {state.bans.length} pending ban · simulated</p><p>{copy.gate_gloss}</p>
     {state.held.length ? state.held.map(item => <article key={item.decision_id} data-verdict="hold" className="moderator-held">
       <b>{item.message_id}</b><blockquote>{item.message_text ?? copy.original_unavailable}</blockquote>

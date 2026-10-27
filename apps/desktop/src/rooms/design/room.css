@@ -1,0 +1,8 @@
+.room-design-dialog { width: min(calc(var(--space-56) * 20), calc(100% - var(--space-32))); max-height: calc(100% - var(--space-32)); overflow: auto; padding: 0; border: var(--rule-strong) solid var(--ink); background: var(--paper); color: var(--ink); }
+.room-design-dialog::backdrop { background: var(--ink); opacity: var(--disabled-opacity); }
+.room-design-close { margin: var(--space-12) var(--space-20); }
+.room-design-actions { display: grid; gap: var(--space-12); padding-block: var(--space-12); border-bottom: var(--rule-thin) solid var(--line); }
+.room-design-actions [role="group"] { display: grid; gap: var(--space-6); }
+.room-design-actions [role="group"] > div { display: flex; flex-wrap: wrap; gap: var(--space-6); }
+.room-design-proposal { padding-block: var(--space-12); border-top: var(--rule-thin) solid var(--line); }
+.room-design-proposal > button { margin: 0 var(--space-6) var(--space-6) 0; }

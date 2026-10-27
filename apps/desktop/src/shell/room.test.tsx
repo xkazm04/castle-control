@@ -53,6 +53,31 @@ test('room stages retain token insets and model states use the existing accent f
 
 afterEach(() => { vi.useRealTimers(); });
 const fixture = { mode: 'fixture', phase: 'ready' } as const;
+
+test.each([
+  ['lottery', 'Draw shapes'], ['moderator', 'Chat overlay and vote bar'],
+  ['visuals', 'Beacon visuals'], ['studio', 'War-table panel'],
+] as const)('%s room exposes native, tabbable design actions in its seal slot', async (chamber, label) => {
+  const stream = await renderToReadableStream(<Room chamber={chamber} replay={false} snapshot={fixture}
+    origin="overview" on_open={vi.fn()} on_back={vi.fn()} />);
+  await stream.allReady;
+  const markup = await new Response(stream).text();
+  const slot = markup.slice(markup.indexOf('aria-label="Seal slot"'));
+  expect(slot).toContain(`aria-label="${label} design"`);
+  expect(slot).toContain('>Restyle</button>');
+  expect(slot).toContain('>Custom design</button>');
+  expect(slot).toContain('SIMULATED');
+  expect(slot).not.toContain('tabindex="-1"');
+});
+
+test('the portcullis heading uses the room caption scale so the held message dominates', () => {
+  const controls = readFileSync(new URL('../rooms/moderator/controls.tsx', import.meta.url), 'utf8');
+  expect(controls).toContain('<h2 className="room-caption">');
+  const css = readFileSync(new URL('../rooms/moderator/room.css', import.meta.url), 'utf8');
+  const heading = css.match(/\.moderator-portcullis h2\s*\{[^}]*\}/)?.[0] ?? '';
+  expect(heading).not.toContain('--text-chamber-number');
+  expect(heading).toContain('var(--text-label)');
+});
 test('polished rooms render each stage title once and expose keyboard scroll regions', async () => {
   for (const [chamber, title] of [['lottery', 'The urn'], ['moderator', 'At the portcullis'], ['studio', 'The war table']] as const) {
     const stream = await renderToReadableStream(<Room chamber={chamber} replay={false} snapshot={fixture}
@@ -215,6 +240,8 @@ test('lazy Room preserves its props contract, slot and replay link; core mode ex
     expect(core).not.toContain('data-message-row');
     expect(core).not.toContain('data-lot-dot');
     expect(core).not.toContain('Propose Ban');
+    expect(core).not.toContain('>Restyle</button>');
+    expect(core).not.toContain('>Custom design</button>');
     expect(core).toContain(chamber === 'studio' ? 'The map table is bare' : 'Room data is not configured');
   }
 });
