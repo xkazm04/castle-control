@@ -28,11 +28,12 @@ export function Overview({ snapshot, selected, on_select, on_open, steward }: Ov
     if (queue.selected_proposal_id && queue.proposals.some(item => item.id === queue.selected_proposal_id && isPending(item))) setTab('inspector');
   }, [queue.selected_proposal_id, queue.proposals]);
   const states = Object.fromEntries(Object.entries(read.states).map(([id, state]) => {
-    const draft = pending.filter(item => item.chamber === id).at(-1);
+    const drafts = pending.filter(item => item.chamber === id);
+    const draft = drafts.at(-1);
     const aired = program.find(item => item.chamber === id);
     return [id, { line: draft ? `${draft.title} · rev ${draft.revision}` : aired ? `${aired.title} · simulated Program` : state.line,
       on_air: program.some(item => item.chamber === id) || snapshot.mode === 'fixture' && (id === 'moderator' || id === 'visuals'),
-      preview: true, draft: Boolean(draft) }];
+      preview: true, draft: Boolean(draft), pending_count: drafts.length }];
   })) as Record<ModuleId, ChamberLayerState>;
   const select = (chamber: ModuleId) => {
     on_select(chamber); setTab('inspector');
@@ -50,7 +51,7 @@ export function Overview({ snapshot, selected, on_select, on_open, steward }: Ov
   return <section className="overview-workspace" aria-label="Overview">
     <div className="overview-bench">
       <header className="overview-heading"><div><h1>Preview and Proclaim</h1><span>The whole keep, in one picture.</span></div>
-        <b>{pending.length} proposals</b></header>
+        <b>{pending.length} {pending.length === 1 ? 'proposal' : 'proposals'}</b></header>
       <div className="overview-preview-wrap"><div className="overview-preview" aria-label="Stream preview">
         <StreamScene mode="preview" proposals={[...program, ...pending]} sample={snapshot.mode === 'fixture'} on_select={select} />
       </div></div>

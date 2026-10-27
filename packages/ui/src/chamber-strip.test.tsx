@@ -16,3 +16,21 @@ test('strip selects on click/focus, opens on double click, and exposes all three
   const html = renderToStaticMarkup(<ChamberStrip {...props} />);
   for (const text of ['On air', 'Preview', 'Draft', 'data-room-tile="lottery"', 'aria-pressed="true"']) expect(html).toContain(text);
 });
+
+test('tile names contain only the chamber and pending count, with visible lamps hidden from accessibility', () => {
+  const state = { line: 'Preview draft sample layer', on_air: true, preview: true, draft: true };
+  const html = renderToStaticMarkup(<ChamberStrip selected="lottery" states={{
+    lottery: { ...state, pending_count: 2 }, moderator: { ...state, pending_count: 1 },
+    visuals: { ...state, pending_count: 0 }, studio: state,
+  }} on_select={vi.fn()} on_open={vi.fn()} />);
+  const tiles = [...html.matchAll(/<button\b[^>]*>/g)];
+  const labels = tiles.map(([tag]) => /aria-label="([^"]*)"/.exec(tag)?.[1]);
+  expect(labels).toEqual(['Lot Chamber, 2 proposals', 'Gatehouse, 1 proposal', 'Beacons, no proposals', 'Map Room, no proposals']);
+  for (const label of labels) expect(label).not.toMatch(/Preview|Draft/i);
+  const lamps = [...html.matchAll(/<span\b[^>]*data-lit="(?:true|false)"[^>]*>(On air|Preview|Draft)<\/span>/g)];
+  expect(lamps).toHaveLength(12);
+  for (const [lamp] of lamps) {
+    expect(lamp).toContain('aria-hidden="true"');
+    expect(lamp).not.toMatch(/(?:\s|["'])hidden(?:\s|=|>)/);
+  }
+});
