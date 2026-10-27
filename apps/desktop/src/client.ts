@@ -2,6 +2,13 @@ import { createCoreSource } from './core-source.js';
 import type { CoreLaunch, Network } from './core-source.js';
 import { createReadModel } from './model.js';
 import { createSimulatedSource } from './simulated.js';
+import type { Snapshot } from './model.js';
+import type { CoreLotsPort, LotsNetwork } from './lots-core.js';
+
+type LotsConnection = { launch: CoreLaunch; transport?: LotsNetwork; port?: CoreLotsPort };
+const lotsConnections = new WeakMap<Snapshot, LotsConnection>();
+/** In-memory only, per client. Keep capabilities out of snapshots and preserve lazy rooms. */
+export function coreLotsConnection(snapshot: Snapshot) { return lotsConnections.get(snapshot); }
 
 // Reserved opt-in metadata only. It does not select a Steward implementation.
 export type Launch = { mode: 'fixture' } | (CoreLaunch & { steward: 'live' | 'simulated' });
@@ -23,8 +30,15 @@ export function parseLaunch(value: unknown): Launch {
   throw new Error('Invalid shell launch');
 }
 
-export function createDesktopClient(value: unknown, transport?: Network) {
+export function createDesktopClient(value: unknown, transport?: Network, lots_transport?: LotsNetwork) {
   const launch = parseLaunch(value);
   // Fixture mode has no endpoint or network dependency, even at runtime.
-  return createReadModel(launch.mode === 'fixture' ? createSimulatedSource() : createCoreSource(launch, transport));
+  const client = createReadModel(launch.mode === 'fixture' ? createSimulatedSource() : createCoreSource(launch, transport));
+  if (launch.mode === 'fixture') return client;
+  const connection: LotsConnection = { launch, ...(lots_transport ? { transport: lots_transport } : {}) };
+  return { ...client, getSnapshot() {
+    const snapshot = client.getSnapshot();
+    lotsConnections.set(snapshot, connection);
+    return snapshot;
+  } };
 }

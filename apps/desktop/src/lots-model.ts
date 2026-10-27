@@ -8,8 +8,8 @@ export type LotsPreview = {
   draw: LotsDraw; entries: readonly FixtureEntry[]; paused: boolean; sealed: boolean; started: boolean;
   shape: Shape; lookup: string; nested: boolean; notice: string; recomputing: boolean;
 };
-export type LotsPort = {
-  getSnapshot: () => LotsPreview; subscribe: (listener: () => void) => () => void;
+export type LotsPort<State = LotsPreview> = {
+  getSnapshot: () => State; subscribe: (listener: () => void) => () => void;
   select: (id: string) => void; edit: (draw: LotsDraw) => void; lookup: (handle: string) => void;
   pause: () => void; seal: () => void; start: () => void; shape: (shape: Shape) => void;
   nested: (show: boolean) => void; recompute: () => Promise<void>;

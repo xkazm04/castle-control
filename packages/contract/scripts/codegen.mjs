@@ -17,7 +17,12 @@ export function exportSchema() {
   const option = process.argv.indexOf('--schema');
   const schemaFile = option < 0 ? process.env.CC_CONTRACT_SCHEMA : process.argv[option + 1];
   if (option >= 0 && !schemaFile) throw new Error('--schema requires a file');
-  if (schemaFile) return parseJson(readFileSync(resolve(schemaFile), 'utf8').replace(/^\uFEFF/, ''));
+  if (schemaFile) {
+    const schema = parseJson(readFileSync(resolve(schemaFile), 'utf8').replace(/^\uFEFF/, ''));
+    // A committed snapshot is also a supported input; do not re-embed our banner.
+    if (schema.$comment === banner.trim()) delete schema.$comment;
+    return schema;
+  }
   const result = spawnSync('cargo', ['--config', 'net.offline=false', 'run', '--quiet', '-p', 'cc-types', '--bin', 'export-contract'], {
     cwd: root, encoding: 'utf8', maxBuffer: 16 * 1024 * 1024, timeout: 120000,
   });
@@ -160,20 +165,24 @@ function validators(schema) {
   const formatSource = Object.entries(formats).map(([name, format]) =>
     `${JSON.stringify(name)}: ${typeof format === 'function' ? format.toString()
       : `{ type: 'number', validate: ${format.validate.toString()} }`}`).join(',');
-  const exports = {};
+  const exports = {}, lotsExports = {};
   const shared = sharedSchemas(schema);
   const declarations = [banner, "import type { ValidateFunction } from 'ajv';",
     "import type { RpcMethods, StreamEvent, LotsEventPayload, ConsensusEventPayload, BeaconsEventPayload, DesignPackage, ErrorEnvelope, AskParams, AskResult, Writ, WritSealParams, WritSealResult, WritTearParams, WritTearResult, StewardEventPayload } from './types.js';"];
-  function entry(name, shape, type) {
+  const lotsDeclarations = [banner, "import type { ValidateFunction } from 'ajv';",
+    "import type { RpcMethods, LotsEventPayload } from './types.js';"];
+  function entry(name, shape, type, lots = false) {
     exports[name] = shared.reference(shape);
-    declarations.push(`export const ${name}: ValidateFunction<${type}>;`);
+    const declaration = `export const ${name}: ValidateFunction<${type}>;`;
+    declarations.push(declaration);
+    if (lots) { lotsExports[name] = exports[name]; lotsDeclarations.push(declaration); }
   }
   schema.methods.forEach((m, i) => {
-    entry(`p${i}`, m.params, `RpcMethods[${JSON.stringify(m.name)}]['params']`);
-    entry(`r${i}`, m.result, `RpcMethods[${JSON.stringify(m.name)}]['result']`);
+    entry(`p${i}`, m.params, `RpcMethods[${JSON.stringify(m.name)}]['params']`, m.name.startsWith('lots.'));
+    entry(`r${i}`, m.result, `RpcMethods[${JSON.stringify(m.name)}]['result']`, m.name.startsWith('lots.'));
   });
   entry('event', schema.types.StreamEvent, 'StreamEvent');
-  entry('lotsEvent', schema.types.LotsEventPayload, 'LotsEventPayload');
+  entry('lotsEvent', schema.types.LotsEventPayload, 'LotsEventPayload', true);
   entry('consensusEvent', schema.types.ConsensusEventPayload, 'ConsensusEventPayload');
   entry('beaconsEvent', schema.types.BeaconsEventPayload, 'BeaconsEventPayload');
   entry('designPackage', schema.types.DesignPackage, 'DesignPackage');
@@ -184,10 +193,32 @@ function validators(schema) {
   entry('error', schema.types.ErrorEnvelope, 'ErrorEnvelope');
   ajv.addSchema(shared.document());
   const map = (prefix) => schema.methods.map((m, i) => `[${JSON.stringify(m.name)}, compiled.${prefix}${i}]`).join(',');
-  const methods = schema.methods.map((m, i) => {
+  const methods = [], lotsMethods = [];
+  schema.methods.forEach((m, i) => {
     const name = m.name.replace(/\.([a-z])/g, (_, letter) => letter.toUpperCase());
-    return `export const ${name} = { method: ${JSON.stringify(m.name)} as const, params: compiled.p${i}, result: compiled.r${i} };`;
+    const declaration = `export const ${name} = { method: ${JSON.stringify(m.name)} as const, params: compiled.p${i}, result: compiled.r${i} };`;
+    methods.push(declaration);
+    if (m.name.startsWith('lots.')) lotsMethods.push({ name, declaration });
   });
+  return {
+    'validators.mjs': compileValidators(ajv, exports, formatSource),
+    'validators.d.mts': `${declarations.join('\n')}\n`,
+    'lots-validators.mjs': compileValidators(ajv, lotsExports, formatSource),
+    'lots-validators.d.mts': `${lotsDeclarations.join('\n')}\n`,
+    'lots-validation.ts': `${banner}import * as compiled from './lots-validators.mjs';\n`
+      + `${lotsMethods.map(method => method.declaration).join('\n')}\n`,
+    'validation.ts': `${banner}import type { ValidateFunction } from 'ajv';\nimport * as compiled from './validators.mjs';\n`
+      + `export const params = /*#__PURE__*/ new Map<string, ValidateFunction>([${map('p')}]);\n`
+      + `export const results = /*#__PURE__*/ new Map<string, ValidateFunction>([${map('r')}]);\n`
+      + `${methods.join('\n')}\n`
+      + 'export const event = compiled.event;\nexport const error = compiled.error;\n',
+  };
+}
+
+// Compile the lazy subpath independently of the legacy synchronous registry.
+// Shared function objects would hoist the lazy view's validators into first load.
+// Both use the same schema scope, which checks conflicts before compilation.
+function compileValidators(ajv, exports, formatSource) {
   // Ajv's length keyword emits a CommonJS runtime reference even with esm:true.
   // Count Unicode code points inline so the generated browser module stays ESM.
   // Ajv's standalone emitter does not mark an exported root completed. Emit
@@ -205,15 +236,7 @@ function validators(schema) {
   if (/\brequire\s*\(/.test(source)) throw new Error('Unsupported CommonJS helper in ESM validators');
   const unicodeLength = source.includes('unicodeLength')
     ? 'function unicodeLength(value) { return Array.from(value).length; }\n' : '';
-  return {
-    'validators.mjs': `${banner}/* eslint-disable */\n// Ajv standalone output; all authored code and generated types remain linted.\nconst formats = {${formatSource}};\n${unicodeLength}${source}\n`,
-    'validators.d.mts': `${declarations.join('\n')}\n`,
-    'validation.ts': `${banner}import type { ValidateFunction } from 'ajv';\nimport * as compiled from './validators.mjs';\n`
-      + `export const params = /*#__PURE__*/ new Map<string, ValidateFunction>([${map('p')}]);\n`
-      + `export const results = /*#__PURE__*/ new Map<string, ValidateFunction>([${map('r')}]);\n`
-      + `${methods.join('\n')}\n`
-      + 'export const event = compiled.event;\nexport const error = compiled.error;\n',
-  };
+  return `${banner}/* eslint-disable */\n// Ajv standalone output; all authored code and generated types remain linted.\nconst formats = {${formatSource}};\n${unicodeLength}${source}\n`;
 }
 
 export function filesIn(directory) {

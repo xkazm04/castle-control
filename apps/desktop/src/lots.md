@@ -36,6 +36,56 @@ is fabricated. Hash failure, a concurrent amendment or a torn draft leaves the
 proposal unsealed. The hold control remounts on revision changes, cancelling an
 unfinished hold. New local roll drafts remain explicit proposals.
 
+## Core mode
+
+Core launches mount `rooms/lottery/core.tsx` with `createCoreLotsPort`. Connection
+capabilities stay in memory, outside snapshots. Fixture/browser preview keeps
+the original room, `createLotsPreview`, ProposalQueue and `sealRoomProposal`.
+Core mode renders no simulated templates, design controls or fixture proofs.
+No `steward.*` call is added.
+
+The port reuses `validateCoreLaunch` unchanged and the seven existing Lots
+contracts. Production uses `invokeMethod`; fake-network results use the same
+generated validators, imported from `@castle-control/contract/lots`. The generator
+compiles this subpath independently from the legacy synchronous registry so its
+validator functions stay in the lazy core-room chunk. The original generated
+schema, types and registry remain unchanged. RPC errors become visible code/retry notices; upstream
+prose is withheld to protect capabilities. Errors never substitute fixtures.
+Lookup requires a Twitch user ID. Seal supplies only draw ID, `drand_quicknet`
+and a six-second margin; cast supplies only run ID; writ retrieval only writ ID.
+The client submits no entries, winners or seed. Frozen entries, winners and the
+downloadable proof come from core responses, with virtualised lists.
+
+The shared hold control initiates sealing after a fresh service policy check.
+Sending the seal request locks edits, selection, refresh and resealing, even if
+the response is lost. Published data is frozen. Uncertain seals need core
+reconciliation; the contract has no resume-by-draw method. Intake pause is
+explicitly unavailable. Schema validation makes no cryptographic claim: check
+the downloaded proof with an independent verifier.
+
+### Core prerequisite validation, 2026-10-27
+
+- Desktop typecheck and lint pass (78 source files), as do contract typecheck
+  and lint (18 files) and tooling ESLint (15 files). Boundary/hygiene/file-cap
+  checks walk 509 files; secrets scanning walks 636.
+- All desktop tests pass: 176 tests in 20 files. The exact requested narrowed
+  Lots command passes 27 tests. All contract tests pass: 124 tests in 11 files.
+  Core tests use a fake RPC transport and assert no fetch or WebSocket calls.
+- Generator tests cover ten deterministic artifacts, independent lazy validator
+  function objects, all seven Lots methods and the unchanged 1,000-writ corpus.
+  Drift passes with the committed schema input. All original seven generated
+  files have no Git diff, including contract.schema.json and types.ts.
+- Full `pnpm --config.verify-deps-before-run=false gate` fails at the unchanged
+  Rust schema-export spawn with `spawnSync cargo EPERM`, before Rust/product
+  checks. Its preceding 14 tooling tests pass. Full Rust registry parity hits
+  the same sandbox error; generator parity unit tests pass. The Director reruns
+  full drift/parity and the merge gate outside this sandbox, as instructed.
+- Desktop production build passes: first load drops from 463,926 to 382,135
+  uncompressed JS+CSS bytes against the unchanged 393,216-byte cap. The core
+  Lots view and its validators occupy a separate 93,249-byte lazy JS chunk.
+- No installs, new packages, git writes or live-channel tests were run. The
+  worktree is left uncommitted for the App Master.
+
 ## Review and evidence
 
 Run from the worktree, without installing over its node_modules junction:

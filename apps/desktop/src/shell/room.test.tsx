@@ -7,6 +7,8 @@ import { ProposalCard, SealButton, sealHoldDurationMs } from '@castle-control/ui
 import { ProposalQueue, SimulatedSteward } from '@castle-control/ui/steward';
 import SealSlot, { sealRoomProposal } from '../rooms/seal-slot/index.jsx';
 import { draftRoll } from '../rooms/lottery/session.js';
+import { coreLotsConnection, createDesktopClient } from '../client.js';
+import { fixtureDraws } from '../lots-fixture.js';
 import { backHash, dispatchShortcut, initialNavigation, navigateHash } from '../navigation.js';
 import Room from './room.jsx';
 
@@ -51,7 +53,7 @@ test('room stages retain token insets and model states use the existing accent f
   expect(lottery).toMatch(/button\[data-active="true"\][^}]*border-color:\s*var\(--gules\)/);
 });
 
-afterEach(() => { vi.useRealTimers(); });
+afterEach(() => { vi.useRealTimers(); vi.unstubAllGlobals(); vi.restoreAllMocks(); });
 const fixture = { mode: 'fixture', phase: 'ready' } as const;
 
 test.each([
@@ -242,6 +244,55 @@ test('lazy Room preserves its props contract, slot and replay link; core mode ex
     expect(core).not.toContain('Propose Ban');
     expect(core).not.toContain('>Restyle</button>');
     expect(core).not.toContain('>Custom design</button>');
-    expect(core).toContain(chamber === 'studio' ? 'The map table is bare' : 'Room data is not configured');
+    if (chamber !== 'lottery') expect(core).toContain(chamber === 'studio' ? 'The map table is bare' : 'Room data is not configured');
   }
+});
+
+test('fixture launch mounts the existing Lot preview, proposal slot and saved simulated proof', async () => {
+  const client = createDesktopClient({ mode: 'fixture' });
+  const fetch = vi.fn(); const socket = vi.fn();
+  vi.stubGlobal('fetch', fetch); vi.stubGlobal('WebSocket', socket);
+  const stream = await renderToReadableStream(<Room chamber="lottery" replay={false} snapshot={client.getSnapshot()}
+    origin="keep" on_open={vi.fn()} on_back={vi.fn()} />);
+  await stream.allReady;
+  const markup = await new Response(stream).text();
+  expect(markup).toContain('Writ templates');
+  expect(markup).toContain('Saved simulated proof bundle');
+  expect(markup).toContain('aria-label="Seal slot"');
+  expect(markup).toContain('>Restyle</button>');
+  expect(markup).not.toContain('aria-label="Core Lot Chamber"');
+  expect(fetch).not.toHaveBeenCalled(); expect(socket).not.toHaveBeenCalled();
+});
+
+test('core launch mounts the connected Lots view and never renders simulated controls', async () => {
+  const rpc = vi.fn(async (_endpoint: string, _session: string, method: string) =>
+    method === 'lots.draw.list' ? { draws: fixtureDraws } : { result: 'ok', reasons: [] });
+  const client = createDesktopClient({ mode: 'core', endpoint: 'http://127.0.0.1:3210/', session_token: 'a'.repeat(64) }, undefined, { rpc });
+  const snapshot = client.getSnapshot();
+  const render = async () => {
+    const stream = await renderToReadableStream(<Room chamber="lottery" replay={false} snapshot={snapshot}
+      origin="keep" on_open={vi.fn()} on_back={vi.fn()} />);
+    await stream.allReady;
+    return new Response(stream).text();
+  };
+  const fetch = vi.fn(); const socket = vi.fn();
+  vi.stubGlobal('fetch', fetch); vi.stubGlobal('WebSocket', socket);
+  expect(await render()).toContain('aria-label="Core Lot Chamber"');
+  const port = coreLotsConnection(snapshot)?.port;
+  expect(port).toBeDefined(); await port?.load();
+  const markup = await render();
+  expect(markup).toContain('Draws in your core'); expect(markup).toContain('Questions for the hall');
+  expect(markup).toContain('Twitch user ID'); expect(markup).toContain('aria-label="Hold to seal"');
+  for (const simulated of ['SIMULATED', 'Saved simulated proof', 'Writ templates', 'Recompute fixture', '>Restyle</button>', '>Custom design</button>', 'data-lot-dot']) {
+    expect(markup).not.toContain(simulated);
+  }
+  expect(rpc.mock.calls.map(call => call[2])).toEqual(['lots.draw.list', 'lots.draw.check']);
+  expect(fetch).not.toHaveBeenCalled(); expect(socket).not.toHaveBeenCalled();
+  expect(coreLotsConnection(createDesktopClient({ mode: 'fixture' }).getSnapshot())).toBeUndefined();
+  rpc.mockRejectedValueOnce({ code: 'unavailable', message: 'Private upstream detail' });
+  await port?.check();
+  const failed = await render();
+  expect(failed).toContain('Draw request failed: unavailable');
+  expect(failed).not.toContain('Private upstream detail');
+  expect(failed).not.toContain('Saved simulated proof');
 });

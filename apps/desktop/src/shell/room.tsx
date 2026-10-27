@@ -9,6 +9,7 @@ import './room.css';
 import SealSlot from '../rooms/seal-slot/index.jsx';
 
 const LotteryRoom = lazy(() => import('../rooms/lottery/index.jsx'));
+const CoreLotteryRoom = lazy(() => import('../rooms/lottery/core.jsx'));
 const ModeratorRoom = lazy(() => import('../rooms/moderator/index.jsx'));
 const VisualsRoom = lazy(() => import('../rooms/visuals/room.jsx'));
 const StudioRoom = lazy(() => import('../rooms/studio/room.jsx'));
@@ -56,6 +57,7 @@ export default function Room({ chamber, replay, snapshot, origin, on_open, on_ba
     <div className="shell-room-work">
       <div className="shell-room-content"><Suspense fallback={<p role="status">Opening the room...</p>}>
         {fixture && chamber === 'lottery' ? <LotteryRoom snapshot={snapshot} replay={replay} seal_slot={seal_slot} />
+          : chamber === 'lottery' ? <CoreLotteryRoom snapshot={snapshot} seal_slot={seal_slot} />
           : fixture && chamber === 'moderator' ? <ModeratorRoom snapshot={snapshot} replay={replay} seal_slot={seal_slot} />
           : fixture && chamber === 'visuals' ? <VisualsRoom snapshot={snapshot} seal_slot={seal_slot} />
           : fixture && chamber === 'studio' ? <StudioRoom snapshot={snapshot} seal_slot={seal_slot} />
