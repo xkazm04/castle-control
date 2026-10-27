@@ -68,6 +68,8 @@ methods! {
     CurveSet => ("beacons.curve.set", CurveSetParams, Visual, "WP 3.1"),
     Simulate => ("beacons.simulate", BeaconsSimulateParams, BeaconsSimulateResult, "WP 3.1"),
     SourceUrl => ("beacons.source.url", SourceUrlParams, SourceUrlResult, "WP 3.2"),
+    ArtStatus => ("beacons.art.status", Empty, ArtStatusResult, "WP 3.4"),
+    ArtGenerate => ("beacons.art.generate", ArtGenerateParams, ArtGenerateResult, "WP 3.4"),
     DesignGet => ("maproom.design.get", Pending, Pending, "WP 4.3"),
     DesignUpsert => ("maproom.design.upsert", Pending, Pending, "WP 4.3"),
     StageGet => ("maproom.stage.get", Pending, Pending, "WP 4.3"),

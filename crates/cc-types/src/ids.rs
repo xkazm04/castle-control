@@ -71,6 +71,11 @@ string_id!(
     r"^[0-7][0-9A-HJKMNP-TV-Z]{25}$(?![\s\S])",
     canonical_ulid
 );
+string_id!(
+    ArtCallId,
+    r"^[0-7][0-9A-HJKMNP-TV-Z]{25}$(?![\s\S])",
+    canonical_ulid
+);
 string_id!(RuleId, r"^[a-z0-9]+(-[a-z0-9]+)*$(?![\s\S])", slug);
 string_id!(DrawId, r"^[a-z0-9]+(-[a-z0-9]+)*$(?![\s\S])", slug);
 string_id!(VisualId, r"^[a-z0-9]+(-[a-z0-9]+)*$(?![\s\S])", slug);
@@ -82,4 +87,4 @@ macro_rules! minted_id {
         pub fn mint() -> Self { Self(ulid::Ulid::new().to_string()) }
     })+ };
 }
-minted_id!(DecisionId, WritId, DrawRunId, LeaseId);
+minted_id!(DecisionId, WritId, DrawRunId, LeaseId, ArtCallId);

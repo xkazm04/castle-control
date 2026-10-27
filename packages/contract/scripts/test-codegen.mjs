@@ -14,9 +14,9 @@ delete schema.$comment;
 const files = artifacts(schema);
 assert.deepEqual(files, artifacts(schema), 'generation must be byte deterministic');
 assert.equal(Object.keys(files).length, 16);
-const beaconsNames = ['visual.list', 'visual.upsert', 'curve.set', 'simulate', 'source.url'].map(name => `beacons.${name}`);
+const beaconsNames = ['visual.list', 'visual.upsert', 'curve.set', 'simulate', 'source.url', 'art.status', 'art.generate'].map(name => `beacons.${name}`);
 const beaconsMethods = schema.methods.map((method, index) => ({ ...method, index })).filter(method => beaconsNames.includes(method.name));
-assert.equal(beaconsMethods.length, 5);
+assert.equal(beaconsMethods.length, 7);
 assert(files['beacons-validators.mjs'], 'Beacons validators have a separate generated module');
 assert(files['beacons-validators.d.mts'], 'Beacons validators retain typed declarations');
 assert(files['beacons-validation.ts'].includes("from './beacons-validators.mjs'"));
@@ -106,6 +106,12 @@ const beaconsPositive = new Map([
   ['beacons.simulate', [{ visual_id: visual.visual_id, burst: { source: 'gift', amount: 50 } },
     { label: 'simulated', intensity: { visual_id: visual.visual_id, intensity: 1 } }]],
   ['beacons.source.url', [{ visual_id: visual.visual_id }, { url: 'http://localhost:4312/visuals/simulated-frame' }]],
+  ['beacons.art.status', [{}, { available: false }]],
+  ['beacons.art.generate', [{ design_id: 'simulated-design', prompt: 'Simulated gold frame',
+    model_id: 'simulated-model', width: 512, height: 512, quantity: 1, remove_background: true },
+  { design_id: 'simulated-design', assets: [{ asset: 'assets/simulated-frame.png', generated: true,
+    provenance: 'leonardo_background_removed' }], costs: [{ call_id: '01ARZ3NDEKTSV4RRFFQ69G5FAV',
+    model: 'simulated-model', charge: { credits: '1.250000' } }] }]],
 ]);
 for (const { name, index } of beaconsMethods) {
   for (const [offset, prefix] of ['p', 'r'].entries()) {

@@ -12,3 +12,7 @@ export const p36: ValidateFunction<RpcMethods["beacons.simulate"]['params']>;
 export const r36: ValidateFunction<RpcMethods["beacons.simulate"]['result']>;
 export const p37: ValidateFunction<RpcMethods["beacons.source.url"]['params']>;
 export const r37: ValidateFunction<RpcMethods["beacons.source.url"]['result']>;
+export const p38: ValidateFunction<RpcMethods["beacons.art.status"]['params']>;
+export const r38: ValidateFunction<RpcMethods["beacons.art.status"]['result']>;
+export const p39: ValidateFunction<RpcMethods["beacons.art.generate"]['params']>;
+export const r39: ValidateFunction<RpcMethods["beacons.art.generate"]['result']>;

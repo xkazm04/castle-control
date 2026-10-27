@@ -5,3 +5,5 @@ export const beaconsVisualUpsert = { method: "beacons.visual.upsert" as const, p
 export const beaconsCurveSet = { method: "beacons.curve.set" as const, params: compiled.p35, result: compiled.r35 };
 export const beaconsSimulate = { method: "beacons.simulate" as const, params: compiled.p36, result: compiled.r36 };
 export const beaconsSourceUrl = { method: "beacons.source.url" as const, params: compiled.p37, result: compiled.r37 };
+export const beaconsArtStatus = { method: "beacons.art.status" as const, params: compiled.p38, result: compiled.r38 };
+export const beaconsArtGenerate = { method: "beacons.art.generate" as const, params: compiled.p39, result: compiled.r39 };

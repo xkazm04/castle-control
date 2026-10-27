@@ -6819,6 +6819,264 @@
       }
     },
     {
+      "name": "beacons.art.status",
+      "owner": "WP 3.4",
+      "params": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "title": "Empty",
+        "type": "object"
+      },
+      "result": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "available": {
+            "description": "Local key presence only. Keychain failure is an error, not unavailable.",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "available"
+        ],
+        "title": "ArtStatusResult",
+        "type": "object"
+      }
+    },
+    {
+      "name": "beacons.art.generate",
+      "owner": "WP 3.4",
+      "params": {
+        "$defs": {
+          "ArtDimension": {
+            "format": "uint32",
+            "maximum": 1536,
+            "minimum": 32,
+            "multipleOf": 8,
+            "type": "integer"
+          },
+          "ArtModelId": {
+            "pattern": "^[A-Za-z0-9_-]{1,128}$(?![\\s\\S])",
+            "type": "string"
+          },
+          "ArtQuantity": {
+            "format": "uint8",
+            "maximum": 8,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "DesignId": {
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$(?![\\s\\S])",
+            "type": "string"
+          },
+          "LocalAssetPath": {
+            "description": "Canonical ASCII package-relative path. No scheme, authority, root, traversal,\npercent escapes, backslashes, query or fragment. The host must additionally\nconfine filesystem resolution (including symlinks) to its local asset root.",
+            "pattern": "^[A-Za-z0-9_-][A-Za-z0-9._-]*(/[A-Za-z0-9_-][A-Za-z0-9._-]*)*$(?![\\s\\S])",
+            "type": "string"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "allOf": [
+          {
+            "else": {
+              "properties": {
+                "quantity": {
+                  "const": 1
+                }
+              }
+            },
+            "if": {
+              "properties": {
+                "reference": true
+              },
+              "required": [
+                "reference"
+              ]
+            }
+          }
+        ],
+        "description": "An absent reference generates one anchor. A reference selects an imported\ngenerated image in this design; the host resolves its original provider ID.\nNeither the caller nor the result can supply a provider URL or public flag.",
+        "properties": {
+          "design_id": {
+            "$ref": "#/$defs/DesignId"
+          },
+          "height": {
+            "$ref": "#/$defs/ArtDimension"
+          },
+          "model_id": {
+            "$ref": "#/$defs/ArtModelId"
+          },
+          "prompt": {
+            "maxLength": 1500,
+            "pattern": "[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000]",
+            "type": "string"
+          },
+          "quantity": {
+            "$ref": "#/$defs/ArtQuantity"
+          },
+          "reference": {
+            "$ref": "#/$defs/LocalAssetPath",
+            "default": null
+          },
+          "remove_background": {
+            "type": "boolean"
+          },
+          "width": {
+            "$ref": "#/$defs/ArtDimension"
+          }
+        },
+        "required": [
+          "design_id",
+          "prompt",
+          "model_id",
+          "width",
+          "height",
+          "quantity",
+          "remove_background"
+        ],
+        "title": "ArtGenerateParams",
+        "type": "object"
+      },
+      "result": {
+        "$defs": {
+          "ArtCallId": {
+            "pattern": "^[0-7][0-9A-HJKMNP-TV-Z]{25}$(?![\\s\\S])",
+            "type": "string"
+          },
+          "ArtCharge": {
+            "oneOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "credits": {
+                    "$ref": "#/$defs/ArtCredits"
+                  }
+                },
+                "required": [
+                  "credits"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "description": "Preserve the client's integer micro-USD shape, refusing unsafe JS numbers.",
+                "properties": {
+                  "micro_usd": {
+                    "format": "uint64",
+                    "maximum": 9007199254740991,
+                    "minimum": 0,
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "micro_usd"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "ArtCostReceipt": {
+            "additionalProperties": false,
+            "description": "Matches cc-beacons::art::CostRecord without importing the provider crate.",
+            "properties": {
+              "call_id": {
+                "$ref": "#/$defs/ArtCallId"
+              },
+              "charge": {
+                "$ref": "#/$defs/ArtCharge"
+              },
+              "model": {
+                "$ref": "#/$defs/ArtModelId"
+              }
+            },
+            "required": [
+              "call_id",
+              "model",
+              "charge"
+            ],
+            "type": "object"
+          },
+          "ArtCredits": {
+            "pattern": "^[0-9]{1,12}(\\.[0-9]{1,6})?$(?![\\s\\S])",
+            "type": "string"
+          },
+          "ArtModelId": {
+            "pattern": "^[A-Za-z0-9_-]{1,128}$(?![\\s\\S])",
+            "type": "string"
+          },
+          "ArtProvenance": {
+            "enum": [
+              "leonardo_generated",
+              "leonardo_background_removed"
+            ],
+            "type": "string"
+          },
+          "DesignId": {
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$(?![\\s\\S])",
+            "type": "string"
+          },
+          "GeneratedArtAsset": {
+            "additionalProperties": false,
+            "description": "An imported asset-list entry. Hosts retain these labels beside the local\npath; a generated file is never presented as a manually supplied asset.",
+            "properties": {
+              "asset": {
+                "$ref": "#/$defs/LocalAssetPath"
+              },
+              "generated": {
+                "const": true,
+                "type": "boolean"
+              },
+              "provenance": {
+                "$ref": "#/$defs/ArtProvenance"
+              }
+            },
+            "required": [
+              "asset",
+              "generated",
+              "provenance"
+            ],
+            "type": "object"
+          },
+          "LocalAssetPath": {
+            "description": "Canonical ASCII package-relative path. No scheme, authority, root, traversal,\npercent escapes, backslashes, query or fragment. The host must additionally\nconfine filesystem resolution (including symlinks) to its local asset root.",
+            "pattern": "^[A-Za-z0-9_-][A-Za-z0-9._-]*(/[A-Za-z0-9_-][A-Za-z0-9._-]*)*$(?![\\s\\S])",
+            "type": "string"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "assets": {
+            "description": "Only successfully imported package assets. Moderated output may be empty.",
+            "items": {
+              "$ref": "#/$defs/GeneratedArtAsset"
+            },
+            "maxItems": 8,
+            "type": "array"
+          },
+          "costs": {
+            "description": "One receipt per paid call, including each background-removal call.\nEmpty output never discards the original submission receipt.",
+            "items": {
+              "$ref": "#/$defs/ArtCostReceipt"
+            },
+            "minItems": 1,
+            "type": "array"
+          },
+          "design_id": {
+            "$ref": "#/$defs/DesignId"
+          }
+        },
+        "required": [
+          "design_id",
+          "assets",
+          "costs"
+        ],
+        "title": "ArtGenerateResult",
+        "type": "object"
+      }
+    },
+    {
       "name": "maproom.design.get",
       "owner": "WP 4.3",
       "params": {
@@ -9599,6 +9857,85 @@
           ],
           "type": "string"
         },
+        "ArtDimension": {
+          "format": "uint32",
+          "maximum": 1536,
+          "minimum": 32,
+          "multipleOf": 8,
+          "type": "integer"
+        },
+        "ArtGenerateParams": {
+          "additionalProperties": false,
+          "allOf": [
+            {
+              "else": {
+                "properties": {
+                  "quantity": {
+                    "const": 1
+                  }
+                }
+              },
+              "if": {
+                "properties": {
+                  "reference": true
+                },
+                "required": [
+                  "reference"
+                ]
+              }
+            }
+          ],
+          "description": "An absent reference generates one anchor. A reference selects an imported\ngenerated image in this design; the host resolves its original provider ID.\nNeither the caller nor the result can supply a provider URL or public flag.",
+          "properties": {
+            "design_id": {
+              "$ref": "#/$defs/DesignId"
+            },
+            "height": {
+              "$ref": "#/$defs/ArtDimension"
+            },
+            "model_id": {
+              "$ref": "#/$defs/ArtModelId"
+            },
+            "prompt": {
+              "maxLength": 1500,
+              "pattern": "[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000]",
+              "type": "string"
+            },
+            "quantity": {
+              "$ref": "#/$defs/ArtQuantity"
+            },
+            "reference": {
+              "$ref": "#/$defs/LocalAssetPath",
+              "default": null
+            },
+            "remove_background": {
+              "type": "boolean"
+            },
+            "width": {
+              "$ref": "#/$defs/ArtDimension"
+            }
+          },
+          "required": [
+            "design_id",
+            "prompt",
+            "model_id",
+            "width",
+            "height",
+            "quantity",
+            "remove_background"
+          ],
+          "type": "object"
+        },
+        "ArtModelId": {
+          "pattern": "^[A-Za-z0-9_-]{1,128}$(?![\\s\\S])",
+          "type": "string"
+        },
+        "ArtQuantity": {
+          "format": "uint8",
+          "maximum": 8,
+          "minimum": 1,
+          "type": "integer"
+        },
         "AutoBanGrant": {
           "additionalProperties": false,
           "properties": {
@@ -10101,6 +10438,11 @@
         },
         "LeaseId": {
           "pattern": "^[0-7][0-9A-HJKMNP-TV-Z]{25}$(?![\\s\\S])",
+          "type": "string"
+        },
+        "LocalAssetPath": {
+          "description": "Canonical ASCII package-relative path. No scheme, authority, root, traversal,\npercent escapes, backslashes, query or fragment. The host must additionally\nconfine filesystem resolution (including symlinks) to its local asset root.",
+          "pattern": "^[A-Za-z0-9_-][A-Za-z0-9._-]*(/[A-Za-z0-9_-][A-Za-z0-9._-]*)*$(?![\\s\\S])",
           "type": "string"
         },
         "LotsCohortCap": {
@@ -11613,6 +11955,40 @@
             },
             "params": {
               "$ref": "#/$defs/SourceUrlParams"
+            }
+          },
+          "required": [
+            "method",
+            "params"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "method": {
+              "const": "beacons.art.status",
+              "type": "string"
+            },
+            "params": {
+              "$ref": "#/$defs/Empty"
+            }
+          },
+          "required": [
+            "method",
+            "params"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "method": {
+              "const": "beacons.art.generate",
+              "type": "string"
+            },
+            "params": {
+              "$ref": "#/$defs/ArtGenerateParams"
             }
           },
           "required": [

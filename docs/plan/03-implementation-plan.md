@@ -915,6 +915,46 @@ alone does not perform deduplication. WP 3.2 must return URLs from its isolated
 read-only overlay origin with no RPC route; loopback syntax alone proves no origin
 isolation. No handler, dedupe engine, publisher, renderer or OBS call is added here.
 
+**Beacons art typed payloads (contract delivery), 2026-10-27.**
+
+| Method or type | Params, result or fields |
+| --- | --- |
+| `beacons.art.status` (WP 3.4) | `Empty` -> `ArtStatusResult { available: bool }`; local key presence only, not provider health. No key material or keychain account label crosses this boundary; keychain failure remains an error |
+| `beacons.art.generate` (WP 3.4) | `ArtGenerateParams` -> `ArtGenerateResult`; generate one anchor or a matching set, optionally remove backgrounds, then import successful outputs into the selected local design package before returning |
+| `ArtGenerateParams` | `design_id: DesignId`, nonblank `prompt: string` (at most 1500 Unicode code points), `model_id: ArtModelId`, `width: ArtDimension`, `height: ArtDimension`, `quantity: ArtQuantity`, optional `reference: LocalAssetPath`, `remove_background: bool`. Without reference, quantity must be 1 (anchor); with reference, quantity is 1..8 (matching set) |
+| `ArtModelId` | 1..128 ASCII letters, digits, underscores or hyphens, matching the existing client's model-id domain; used by both generation requests and cost receipts (`remove-bg` for background removal) |
+| `ArtDimension`, `ArtQuantity` | Dimensions are integer multiples of 8 in 32..1536; quantity is an integer in 1..8. Rust and generated schema enforce the same bounds |
+| `ArtGenerateResult` | `design_id: DesignId`, `assets: GeneratedArtAsset[]` (0..8 successfully imported files), nonempty `costs: ArtCostReceipt[]`. Empty moderated output still carries the paid submission receipt |
+| `GeneratedArtAsset` | Asset-list entry with `asset: LocalAssetPath`, required `generated: true`, and `provenance: ArtProvenance`. Both parsers reject false; the host retains these labels in imported asset metadata for later asset-list display |
+| `ArtProvenance` | `leonardo_generated` or `leonardo_background_removed`, matching the existing image client's provenance values |
+| `ArtCostReceipt` | `call_id: ArtCallId`, `model: ArtModelId`, `charge: ArtCharge`; same serialized receipt fields as `cc-beacons::art::CostRecord`. One receipt per successful paid submission/removal call; read-only polls create no new receipt |
+| `ArtCallId` | Canonical uppercase ULID; parsing/minting reuse the shared ID doors, independently of provider job/image identifiers |
+| `ArtCharge` | Exactly one externally tagged value: `{ credits: ArtCredits }` or `{ micro_usd: integer }`. Micro-USD is nonnegative and at most 9007199254740991 (safe JS integer); larger values are refused rather than rounded. Credits are never converted to dollars |
+| `ArtCredits` | Exact decimal string: 1..12 whole digits and optionally a decimal point with 1..6 fractional digits, matching the client's cost parser; no signs, exponent, numeric coercion or invented zero |
+
+All records deny unknown fields. Absent reference is omitted; present null is
+rejected. Existing DesignId slug and LocalAssetPath doors are reused. `public`
+is not a caller option: future handlers always use the client's server-owned
+`public:false`. Keychain labels, provider URLs and provider job/image IDs are
+not fields of either result. References identify local assets in `design_id`;
+the future host must resolve them to that package's stored generated anchor and
+original provider image ID, and reject missing/non-generated references. Path
+syntax alone does not establish ownership, filesystem confinement or existence.
+
+This delivery defines the contract only: no handler, RPC registration, importer,
+ledger writer, asset store or UI. The existing client returns receipts but does
+not yet write the engine ledger; integration must map them at its approved write
+door and retain receipts even when the provider withholds output. Generated
+assets must be downloaded and confined to the local package before return;
+provider URLs never reach the UI or overlay. `remove_background` applies to each
+generated output. No automatic paid retries are authorized. The owner's terms
+check still gates generated art in a public Extension.
+
+Type-only exports remain available from the contract root. New runtime handles
+`beaconsArtStatus` and `beaconsArtGenerate` are exported through the independently
+compiled `@castle-control/contract/beacons` subpath, for lazy desktop loading
+within the unchanged 393216-byte first-load budget.
+
 **Design package typed payloads (contract delivery, 2026-10-26).**
 
 | Method or type | Params, result or fields |
@@ -1006,7 +1046,7 @@ cloud opt-in enforcement remain the engine's job. The CLI remains slow-lane only
 - **Absent values: omit the key.** Use `Option` with skip-if-none in Rust and an optional property in TS. Never write `null`, and never `0` or `""` for unknown. Two packages coding a missing value must not drift.
 - **Branded ids**, each minted at one door:
   - `MessageId` (Twitch's);
-  - `DecisionId`, `WritId`, `DrawRunId` and `LeaseId` (ULIDs);
+  - `DecisionId`, `WritId`, `DrawRunId`, `LeaseId` and `ArtCallId` (ULIDs);
   - `RuleId`, `DrawId`, `VisualId` and `DesignId` (slugs the streamer can read).
 
 | Module | Methods |
@@ -1014,7 +1054,7 @@ cloud opt-in enforcement remain the engine's job. The CLI remains slow-lane only
 | core | `status.get`, `settings.get`, `settings.set`, `auth.twitch.start`, `auth.twitch.status`, `auth.twitch.revoke`, `bridge.status.get`, `obs.status.get`, `obs.source.create`, `store.forgetUser`, `store.purgeAll` |
 | gatehouse | `gatehouse.rules.list`, `gatehouse.rules.upsert`, `gatehouse.rules.setMode`, `gatehouse.ban.confirm`, `gatehouse.ban.dismiss`, `gatehouse.decision.undo`, `gatehouse.petition.resolve`, `gatehouse.held.resolve`, `gatehouse.delay.set`, `gatehouse.shield.set`, `gatehouse.lease.end`, `gatehouse.consensus.get`, `gatehouse.drill.run`, `gatehouse.drill.diff`, `gatehouse.recording.import` |
 | lots | `lots.draw.list`, `lots.draw.upsert`, `lots.draw.check`, `lots.roll.lookup`, `lots.roll.seal`, `lots.cast`, `lots.writ.get` |
-| beacons | `beacons.visual.list`, `beacons.visual.upsert`, `beacons.curve.set`, `beacons.simulate`, `beacons.source.url` |
+| beacons | `beacons.visual.list`, `beacons.visual.upsert`, `beacons.curve.set`, `beacons.simulate`, `beacons.source.url`, `beacons.art.status`, `beacons.art.generate` |
 | maproom | `maproom.design.get`, `maproom.design.upsert`, `maproom.stage.get`, `maproom.turn.run` |
 | steward | `steward.ask`, `steward.writ.seal`, `steward.writ.tear` |
 

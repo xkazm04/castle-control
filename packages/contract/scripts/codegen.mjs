@@ -69,7 +69,7 @@ export function artifacts(schema) {
   }
   for (const shape of Object.values(schema.types)) add(shape);
   for (const method of schema.methods) { add(method.params); add(method.result); }
-  const brands = new Set(['MessageId', 'DecisionId', 'LeaseId', 'WritId', 'DrawRunId', 'RuleId', 'DrawId', 'VisualId', 'DesignId', 'TwitchUserId']);
+  const brands = new Set(['MessageId', 'DecisionId', 'LeaseId', 'ArtCallId', 'WritId', 'DrawRunId', 'RuleId', 'DrawId', 'VisualId', 'DesignId', 'TwitchUserId']);
   const types = [...definitions].sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0).map(([name, shape]) =>
     `export type ${name} = ${tsType(shape)}${brands.has(name) ? ` & { readonly __brand: ${JSON.stringify(name)} }` : ''};`);
   const nameOf = (shape) => shape.title ?? tsType(shape);
@@ -166,7 +166,7 @@ function validators(schema) {
     `${JSON.stringify(name)}: ${typeof format === 'function' ? format.toString()
       : `{ type: 'number', validate: ${format.validate.toString()} }`}`).join(',');
   const exports = {}, lotsExports = {}, gatehouseExports = {}, beaconsExports = {};
-  const beaconsNames = new Set(['visual.list', 'visual.upsert', 'curve.set', 'simulate', 'source.url'].map(name => `beacons.${name}`));
+  const beaconsNames = new Set(['visual.list', 'visual.upsert', 'curve.set', 'simulate', 'source.url', 'art.status', 'art.generate'].map(name => `beacons.${name}`));
   const gatehouseNames = new Set(['rules.list', 'rules.upsert', 'ban.confirm', 'ban.dismiss', 'decision.undo',
     'petition.resolve', 'recording.import', 'drill.run', 'drill.diff', 'consensus.get'].map(name => `gatehouse.${name}`));
   const shared = sharedSchemas(schema);
