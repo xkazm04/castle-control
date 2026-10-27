@@ -245,7 +245,8 @@ test('lazy Room preserves its props contract, slot and replay link; core mode ex
     expect(core).not.toContain('Propose Ban');
     expect(core).not.toContain('>Restyle</button>');
     expect(core).not.toContain('>Custom design</button>');
-    if (chamber === 'visuals' || chamber === 'studio') expect(core).toContain(chamber === 'studio' ? 'The map table is bare' : 'Room data is not configured');
+    if (chamber === 'studio') expect(core).toContain('The map table is bare');
+    if (chamber === 'visuals') expect(core).toContain('Local connection unavailable');
   }
 });
 

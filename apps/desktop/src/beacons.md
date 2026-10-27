@@ -1,8 +1,11 @@
 # AI-6: Beacons room mounted
 
 Open `#/chamber/visuals` in fixture mode. The shell lazily mounts
-`rooms/visuals/room.tsx`; `#/chamber/studio` mounts the Map Room. Live mode
-keeps the shell's unconfigured empty states and exposes no fixture controls.
+`rooms/visuals/room.tsx`; `#/chamber/studio` mounts the Map Room. Core mode now
+uses the Beacons core port described in `rooms/visuals/README.md`, with a
+virtualised configuration list, saved curves and core-computed simulations.
+It exposes no fixture feed or local preview controls. The Map Room keeps its
+unconfigured core state.
 
 The old Beacons panel page, curve editor, artwork/feed implementation, stylesheet
 and page-only copy were removed. The unchanged beacons-model and beacons-fixture

@@ -1,5 +1,4 @@
 import { useState, useSyncExternalStore } from 'react';
-import { EmptyState } from '@castle-control/ui';
 import type { ProposalQueue } from '@castle-control/ui/steward';
 import type { ReactNode } from 'react';
 import type { Snapshot } from '../../model.js';
@@ -10,6 +9,7 @@ import { ProposalLayers } from './proposal-layers.jsx';
 import { Offerings } from './timeline.jsx';
 import { TestFire } from './test-fire.jsx';
 import { KindlingCurve } from './kindling-curve.jsx';
+import CoreVisualsRoom from './core.jsx';
 import './room.css';
 
 function IntensityRanges({ item }: { item: PreviewVisual }) {
@@ -72,7 +72,6 @@ export function VisualsWork({ queue, port, seal_slot }: { queue?: ProposalQueue;
 }
 
 export default function VisualsRoom({ snapshot, seal_slot }: { snapshot: Snapshot; seal_slot?: ReactNode }) {
-  if (snapshot.mode !== 'fixture') return <EmptyState title="Beacons are not configured"
-    description="No live visuals are connected. Configure the Beacons before using this room." />;
+  if (snapshot.mode !== 'fixture') return <CoreVisualsRoom snapshot={snapshot} seal_slot={seal_slot} />;
   return <VisualsWork seal_slot={seal_slot} />;
 }

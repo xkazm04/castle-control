@@ -13,7 +13,14 @@ const schema = parseJson(readFileSync(join(output, 'contract.schema.json'), 'utf
 delete schema.$comment;
 const files = artifacts(schema);
 assert.deepEqual(files, artifacts(schema), 'generation must be byte deterministic');
-assert.equal(Object.keys(files).length, 13);
+assert.equal(Object.keys(files).length, 16);
+const beaconsNames = ['visual.list', 'visual.upsert', 'curve.set', 'simulate'].map(name => `beacons.${name}`);
+const beaconsMethods = schema.methods.map((method, index) => ({ ...method, index })).filter(method => beaconsNames.includes(method.name));
+assert.equal(beaconsMethods.length, 4);
+assert(files['beacons-validators.mjs'], 'Beacons validators have a separate generated module');
+assert(files['beacons-validators.d.mts'], 'Beacons validators retain typed declarations');
+assert(files['beacons-validation.ts'].includes("from './beacons-validators.mjs'"));
+assert(!files['beacons-validation.ts'].includes("from './validators.mjs'"));
 const gatehouseNames = ['rules.list', 'rules.upsert', 'ban.confirm', 'ban.dismiss', 'decision.undo',
   'petition.resolve', 'recording.import', 'drill.run', 'drill.diff', 'consensus.get'].map(name => `gatehouse.${name}`);
 const gatehouseMethods = schema.methods.map((method, index) => ({ ...method, index })).filter(method => gatehouseNames.includes(method.name));
@@ -32,6 +39,7 @@ assert(!files['lots-validators.mjs'].includes('require('), 'Lots validators stay
 const manifest = parseJson(readFileSync(join(output, '../../package.json'), 'utf8'));
 assert.equal(manifest.exports['./lots'], './src/generated/lots-validation.ts', 'Lots use a distinct public subpath');
 assert.equal(manifest.exports['./gatehouse'], './src/generated/gatehouse-validation.ts');
+assert.equal(manifest.exports['./beacons'], './src/generated/beacons-validation.ts');
 assert(!/\brequire\s*\(/.test(files['validators.mjs']), 'standalone validators must run as browser ESM');
 assert.deepEqual(differences(files), []);
 assert.throws(() => artifacts({ methods: [], event_kinds: [], error_codes: [] }), /empty/);
@@ -84,6 +92,32 @@ function validatorUrl(generated, name = 'validators.mjs') {
 const compiled = await import(validatorUrl(files));
 const lots = await import(validatorUrl(files, 'lots-validators.mjs'));
 const gatehouse = await import(validatorUrl(files, 'gatehouse-validators.mjs'));
+const beacons = await import(validatorUrl(files, 'beacons-validators.mjs'));
+assert.deepEqual(Object.keys(beacons).sort(), beaconsMethods.flatMap(({ index }) => [`p${index}`, `r${index}`]).sort());
+assert.equal(beaconsMethods.length, (files['beacons-validation.ts'].match(/export const beacons/g) ?? []).length);
+assert(!/\b(?:import |require\s*\()/.test(files['beacons-validators.mjs']), 'Beacons stays standalone browser ESM');
+assert(!files['validators.mjs'].includes('beacons-validators'), 'legacy registry stays independent');
+const visual = { visual_id: 'simulated-frame', name: 'Simulated frame', curve: {
+  ranges: [{ total: 0, intensity: 0 }, { total: 50, intensity: 1 }], decay: { kind: 'none' },
+} };
+const beaconsPositive = new Map([
+  ['beacons.visual.list', [{}, { visuals: [visual] }]], ['beacons.visual.upsert', [{ visual }, visual]],
+  ['beacons.curve.set', [{ visual_id: visual.visual_id, curve: visual.curve }, visual]],
+  ['beacons.simulate', [{ visual_id: visual.visual_id, burst: { source: 'gift', amount: 50 } },
+    { label: 'simulated', intensity: { visual_id: visual.visual_id, intensity: 1 } }]],
+]);
+for (const { name, index } of beaconsMethods) {
+  for (const [offset, prefix] of ['p', 'r'].entries()) {
+    const eager = compiled[`${prefix}${index}`], lazy = beacons[`${prefix}${index}`];
+    assert.notEqual(eager, lazy, 'Beacons functions must be independent of first-load registry');
+    const positive = beaconsPositive.get(name)[offset];
+    for (const value of [positive, { ...positive, extra: true }, null, [], '', 0, { extra: true }]) {
+      assert.equal(lazy(value), eager(value), `unchanged ${name} ${prefix}`);
+    }
+    assert.equal(lazy(positive), true, `${name} ${prefix} accepts synthetic values`);
+    assert.equal(lazy({ ...positive, extra: true }), false, `${name} ${prefix} rejects unknown fields`);
+  }
+}
 assert.deepEqual(Object.keys(gatehouse).sort(), gatehouseMethods.flatMap(({ index }) => [`p${index}`, `r${index}`]).sort());
 assert.equal(gatehouseMethods.length, (files['gatehouse-validation.ts'].match(/export const gatehouse/g) ?? []).length);
 assert(!/\b(?:import |require\s*\()/.test(files['gatehouse-validators.mjs']), 'Gatehouse stays standalone browser ESM');

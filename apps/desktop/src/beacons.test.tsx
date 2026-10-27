@@ -107,7 +107,7 @@ test('selecting and resetting a visual keep other curves and source fixtures unc
   expect(createBeaconsPreview().getSnapshot().visuals).toEqual(initial.visuals);
 });
 
-test('fixture route lazily opens Beacons work; core keeps the honest empty state', async () => {
+test('fixture route lazily opens Beacons work; core requires a shell connection', async () => {
   const props = { chamber: 'visuals', replay: false, origin: 'keep', on_open: vi.fn(), on_back: vi.fn() } as const;
   const stream = await renderToReadableStream(<Room {...props} snapshot={{ mode: 'fixture', phase: 'ready' }} />);
   await stream.allReady;
@@ -115,8 +115,10 @@ test('fixture route lazily opens Beacons work; core keeps the honest empty state
   for (const label of ['Beacons work', '60 offerings', 'Test fire: 50 gifts']) expect(html).toContain(label);
   expect(html).not.toContain('visuals-room-notice');
   expect(html).not.toContain('generated fixtures only');
-  const core = renderToStaticMarkup(<Room {...props} snapshot={{ mode: 'core', phase: 'connecting' }} />);
-  expect(core).toContain('Room data is not configured');
+  const coreStream = await renderToReadableStream(<Room {...props} snapshot={{ mode: 'core', phase: 'connecting' }} />);
+  await coreStream.allReady;
+  const core = await new Response(coreStream).text();
+  expect(core).toContain('Local connection unavailable');
   expect(core).not.toContain('Test fire');
   expect(core).not.toContain('data-offering-mark');
   expect(renderToStaticMarkup(<VisualsRoom snapshot={{ mode: 'core', phase: 'ready' }} />)).toContain('Beacons are not configured');

@@ -5,6 +5,7 @@ import { createSimulatedSource } from './simulated.js';
 import type { Snapshot } from './model.js';
 import type { CoreLotsPort, LotsNetwork } from './lots-core.js';
 import type { CoreGatehousePort, GatehouseNetwork } from './gatehouse-core.js';
+import type { CoreBeaconsPort, BeaconsNetwork } from './beacons-core.js';
 
 type LotsConnection = { launch: CoreLaunch; transport?: LotsNetwork; port?: CoreLotsPort };
 const lotsConnections = new WeakMap<Snapshot, LotsConnection>();
@@ -13,6 +14,10 @@ export function coreLotsConnection(snapshot: Snapshot) { return lotsConnections.
 type GatehouseConnection = { launch: CoreLaunch; transport?: GatehouseNetwork; port?: CoreGatehousePort };
 const gatehouseConnections = new WeakMap<Snapshot, GatehouseConnection>();
 export function coreGatehouseConnection(snapshot: Snapshot) { return gatehouseConnections.get(snapshot); }
+
+type BeaconsConnection = { launch: CoreLaunch; transport?: BeaconsNetwork; port?: CoreBeaconsPort };
+const beaconsConnections = new WeakMap<Snapshot, BeaconsConnection>();
+export function coreBeaconsConnection(snapshot: Snapshot) { return beaconsConnections.get(snapshot); }
 
 // Reserved opt-in metadata only. It does not select a Steward implementation.
 export type Launch = { mode: 'fixture' } | (CoreLaunch & { steward: 'live' | 'simulated' });
@@ -41,10 +46,12 @@ export function createDesktopClient(value: unknown, transport?: Network, lots_tr
   if (launch.mode === 'fixture') return client;
   const connection: LotsConnection = { launch, ...(lots_transport ? { transport: lots_transport } : {}) };
   const gatehouse: GatehouseConnection = { launch, ...(gatehouse_transport ? { transport: gatehouse_transport } : {}) };
+  const beacons: BeaconsConnection = { launch };
   return { ...client, getSnapshot() {
     const snapshot = client.getSnapshot();
     lotsConnections.set(snapshot, connection);
     gatehouseConnections.set(snapshot, gatehouse);
+    beaconsConnections.set(snapshot, beacons);
     return snapshot;
   } };
 }

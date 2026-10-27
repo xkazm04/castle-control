@@ -165,7 +165,8 @@ function validators(schema) {
   const formatSource = Object.entries(formats).map(([name, format]) =>
     `${JSON.stringify(name)}: ${typeof format === 'function' ? format.toString()
       : `{ type: 'number', validate: ${format.validate.toString()} }`}`).join(',');
-  const exports = {}, lotsExports = {}, gatehouseExports = {};
+  const exports = {}, lotsExports = {}, gatehouseExports = {}, beaconsExports = {};
+  const beaconsNames = new Set(['visual.list', 'visual.upsert', 'curve.set', 'simulate'].map(name => `beacons.${name}`));
   const gatehouseNames = new Set(['rules.list', 'rules.upsert', 'ban.confirm', 'ban.dismiss', 'decision.undo',
     'petition.resolve', 'recording.import', 'drill.run', 'drill.diff', 'consensus.get'].map(name => `gatehouse.${name}`));
   const shared = sharedSchemas(schema);
@@ -175,6 +176,7 @@ function validators(schema) {
     "import type { RpcMethods, LotsEventPayload } from './types.js';"];
   const gatehouseDeclarations = [banner, "import type { ValidateFunction } from 'ajv';",
     "import type { RpcMethods } from './types.js';"];
+  const beaconsDeclarations = [...gatehouseDeclarations];
   function entry(name, shape, type, lots = false) {
     exports[name] = shared.reference(shape);
     const declaration = `export const ${name}: ValidateFunction<${type}>;`;
@@ -190,6 +192,12 @@ function validators(schema) {
         gatehouseDeclarations.push(`export const ${prefix}${i}: ValidateFunction<RpcMethods[${JSON.stringify(m.name)}]['${type}']>;`);
       }
     }
+    if (beaconsNames.has(m.name)) {
+      for (const [prefix, type] of [['p', 'params'], ['r', 'result']]) {
+        beaconsExports[`${prefix}${i}`] = exports[`${prefix}${i}`];
+        beaconsDeclarations.push(`export const ${prefix}${i}: ValidateFunction<RpcMethods[${JSON.stringify(m.name)}]['${type}']>;`);
+      }
+    }
   });
   entry('event', schema.types.StreamEvent, 'StreamEvent');
   entry('lotsEvent', schema.types.LotsEventPayload, 'LotsEventPayload', true);
@@ -203,13 +211,14 @@ function validators(schema) {
   entry('error', schema.types.ErrorEnvelope, 'ErrorEnvelope');
   ajv.addSchema(shared.document());
   const map = (prefix) => schema.methods.map((m, i) => `[${JSON.stringify(m.name)}, compiled.${prefix}${i}]`).join(',');
-  const methods = [], lotsMethods = [], gatehouseMethods = [];
+  const methods = [], lotsMethods = [], gatehouseMethods = [], beaconsMethods = [];
   schema.methods.forEach((m, i) => {
     const name = m.name.replace(/\.([a-z])/g, (_, letter) => letter.toUpperCase());
     const declaration = `export const ${name} = { method: ${JSON.stringify(m.name)} as const, params: compiled.p${i}, result: compiled.r${i} };`;
     methods.push(declaration);
     if (m.name.startsWith('lots.')) lotsMethods.push({ name, declaration });
     if (gatehouseNames.has(m.name)) gatehouseMethods.push(declaration);
+    if (beaconsNames.has(m.name)) beaconsMethods.push(declaration);
   });
   return {
     'validators.mjs': compileValidators(ajv, exports, formatSource),
@@ -227,6 +236,10 @@ function validators(schema) {
     'gatehouse-validators.d.mts': `${gatehouseDeclarations.join('\n')}\n`,
     'gatehouse-validation.ts': `${banner}import * as compiled from './gatehouse-validators.mjs';\n`
       + `${gatehouseMethods.join('\n')}\n`,
+    'beacons-validators.mjs': compileValidators(ajv, beaconsExports, formatSource),
+    'beacons-validators.d.mts': `${beaconsDeclarations.join('\n')}\n`,
+    'beacons-validation.ts': `${banner}import * as compiled from './beacons-validators.mjs';\n`
+      + `${beaconsMethods.join('\n')}\n`,
   };
 }
 
