@@ -53,6 +53,13 @@ private keys and literal credential assignments; it is a heuristic gate.
 
 ## Gate proofs
 
+Current WP 0.1 closure checks, reproducible scratch proofs and the cold-cache
+validation status are in [gate-evidence.md](gate-evidence.md). Run
+`node scripts/closure-proofs.mjs` to refresh that concise table without changing
+product files. `pnpm gate` now fetches every platform in the lockfile before
+Cargo-backed checks, using `cargo --config net.offline=false fetch --locked`.
+The dependency-direction test remains offline, locked and all-target.
+
 Recorded by `pnpm gate:proofs`: each deliberate violation is restored in a
 `finally` block. The following section contains actual non-zero command output,
 not expected output. All seeded changes must be absent in the finished tree.

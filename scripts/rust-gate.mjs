@@ -4,6 +4,7 @@ import { run } from './run.mjs';
 
 const mode = process.argv[2];
 const commands = {
+  fetch: ['fetch', '--locked'],
   fmt: ['fmt', '--all', '--', '--check'],
   clippy: ['clippy', '--workspace', '--all-targets', '--', '-D', 'warnings'],
   test: ['test', '--workspace'],
