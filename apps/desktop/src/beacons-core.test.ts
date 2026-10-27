@@ -6,6 +6,7 @@ import type { BeaconsNetwork } from './beacons-core.js';
 import { createDesktopClient, coreBeaconsConnection } from './client.js';
 import { ConnectedBeacons } from './rooms/visuals/core.jsx';
 import Room from './shell/room.jsx';
+import type { VisualId } from '@castle-control/contract';
 
 const launch = { mode: 'core', endpoint: 'http://127.0.0.1:3210/', session_token: 'a'.repeat(64) } as const;
 // Generated synthetic configuration, unrelated to any channel or viewer.
@@ -124,14 +125,76 @@ test('production HTTP transport sends the existing method and parses the respons
   expect(port.getSnapshot().notice).not.toContain('Private detail');
 });
 
+test('sourceUrl validates its round trip and never exposes a URL in read snapshots', async () => {
+  const h = harness();
+  const visual_id = visual.visual_id as VisualId;
+  const result = { url: `http://localhost:4312/beacons/${visual_id}` };
+  h.responses.set('beacons.source.url', result);
+  expect(await h.port.sourceUrl(visual_id)).toEqual(result);
+  expect(h.rpc).toHaveBeenCalledExactlyOnceWith(launch.endpoint, launch.session_token, 'beacons.source.url', { visual_id });
+  expect(h.port.getSnapshot().phase).toBe('ready');
+  expect(JSON.stringify(h.port.getSnapshot())).not.toContain(result.url);
+  h.rpc.mockClear();
+  await h.port.sourceUrl('Bad Id' as VisualId);
+  expect(h.rpc).not.toHaveBeenCalled();
+  expect(h.port.getSnapshot().phase).toBe('error');
+});
+
+test.each([{ intensity: 0.5 }, { url: null }, { url: 'http://example.com:4312/beacons/synthetic-frame' },
+  { url: 'http://localhost.evil:4312/' }, { url: 'http://localhost:4312/', extra: true }])(
+  'sourceUrl rejects malformed, mismatched and non-loopback results: %j', async result => {
+    const h = harness(); h.responses.set('beacons.source.url', result);
+    expect(await h.port.sourceUrl(visual.visual_id as VisualId)).toBeUndefined();
+    expect(h.port.getSnapshot().phase).toBe('error');
+    expect(h.port.getSnapshot().busy).toBe(false);
+    expect(h.rpc).toHaveBeenCalledTimes(1);
+  },
+);
+
+test.each(['unavailable', 'not_found', 'rate_limited'] as const)('sourceUrl preserves safe %s codes without retries or upstream prose', async code => {
+  const h = harness();
+  h.rpc.mockRejectedValueOnce({ code, message: 'Private source error', detail: { url: 'http://private.example/' }, retry_after_ms: 2000 });
+  expect(await h.port.sourceUrl(visual.visual_id as VisualId)).toBeUndefined();
+  expect(h.port.getSnapshot().error).toEqual({ code, message: 'Beacons request failed.', retry_after_ms: 2000 });
+  expect(JSON.stringify(h.port.getSnapshot())).not.toContain('Private');
+  expect(JSON.stringify(h.port.getSnapshot())).not.toContain('private.example');
+  expect(h.rpc).toHaveBeenCalledTimes(1);
+});
+
+test('sourceUrl blocks duplicate and other requests while a reply is pending', async () => {
+  let resolve: (value: unknown) => void = () => { throw new Error('Expected pending call'); };
+  const rpc = vi.fn<BeaconsNetwork['rpc']>(() => new Promise(done => { resolve = done; }));
+  const port = createCoreBeaconsPort(launch, { rpc });
+  const pending = port.sourceUrl(visual.visual_id as VisualId);
+  await vi.waitFor(() => expect(rpc).toHaveBeenCalledTimes(1));
+  expect(port.getSnapshot().busy).toBe(true);
+  expect(await port.sourceUrl(visual.visual_id as VisualId)).toBeUndefined();
+  await port.load();
+  expect(rpc).toHaveBeenCalledTimes(1);
+  const result = { url: 'http://localhost:4312/beacons/synthetic-frame' };
+  resolve(result); expect(await pending).toEqual(result);
+  expect(port.getSnapshot().busy).toBe(false);
+});
+
+test('sourceUrl production HTTP uses the same validated method door', async () => {
+  const result = { url: 'http://localhost:4312/beacons/synthetic-frame' };
+  const fetch = vi.fn(async () => new Response(JSON.stringify(result)));
+  vi.stubGlobal('fetch', fetch);
+  expect(await createCoreBeaconsPort(launch).sourceUrl(visual.visual_id as VisualId)).toEqual(result);
+  expect(fetch).toHaveBeenCalledWith(new URL('/rpc', launch.endpoint), expect.objectContaining({
+    body: JSON.stringify({ method: 'beacons.source.url', params: { visual_id: visual.visual_id } }),
+  }));
+});
+
 // Keep this isolated module-cache probe last: resetting modules also resets client WeakMaps.
 test('validators remain unloaded until the first port call', async () => {
   vi.resetModules();
   const loaded = vi.fn();
   vi.doMock('@castle-control/contract/beacons', async importOriginal => { loaded(); return importOriginal(); });
   const { createCoreBeaconsPort: createPort } = await import('./beacons-core.js');
-  const port = createPort(launch, { rpc: async () => ({ visuals: [] }) });
+  const port = createPort(launch, { rpc: async () => ({ url: 'http://localhost:4312/beacons/synthetic-frame' }) });
   port.getSnapshot(); port.subscribe(() => undefined)();
   expect(loaded).not.toHaveBeenCalled();
-  await port.load(); expect(loaded).toHaveBeenCalledTimes(1); expect(port.getSnapshot().phase).toBe('ready');
+  await port.sourceUrl(visual.visual_id as VisualId);
+  expect(loaded).toHaveBeenCalledTimes(1); expect(port.getSnapshot().phase).toBe('ready');
 });

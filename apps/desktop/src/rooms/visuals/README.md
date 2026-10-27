@@ -49,9 +49,9 @@ snapshots. The cached `createCoreBeaconsPort(launch, transport?)` survives shell
 snapshot updates and room navigation. A missing connection renders an honest
 unconfigured state; it never substitutes the fixture preview.
 
-The port exposes `load`, `upsert`, `setCurve` and `simulate`, using only the four
+The port exposes `load`, `upsert`, `setCurve`, `simulate` and `sourceUrl`, using the five
 registered methods: `beacons.visual.list`, `beacons.visual.upsert`,
-`beacons.curve.set` and `beacons.simulate`. Generated parameter/result validators
+`beacons.curve.set`, `beacons.simulate` and `beacons.source.url`. Generated parameter/result validators
 load through `@castle-control/contract/beacons` on the first call, independently
 of the eager contract registry. Existing generated files are unchanged. Reads
 replace the list, including empty lists; writes publish core-confirmed values.
@@ -63,8 +63,8 @@ forms, and synthetic burst controls. Saving a new visual starts a visible
 0-to-50-unit curve that can be edited after saving. Simulation fractions come
 only from the core, are labelled simulated, start from an empty state per call,
 and never become live contribution totals. No local accounting, fictional feed,
-live intensity or OBS delivery is substituted. `beacons.source.url` is absent
-from `cc-core`'s offline registration and is deliberately not called (WP 3.2).
+live intensity or OBS delivery is substituted. Source URL availability follows
+the actual core registration described below.
 The shell continues to own the seal slot; this delivery does not connect Steward
 execution or arm live output.
 
@@ -74,6 +74,69 @@ lazy validators, connection persistence and the core shell route. Fixture tests
 keep their existing accounting and keyboard behavior.
 
 ## Evidence
+
+WP 3.3 Copy browser-source URL verification, 2026-10-27:
+
+- Red first: the generator test expected `p37`/`r37` in the lazy Beacons module
+  and failed because they were absent. The port tests then failed with
+  `sourceUrl is not a function`, and the room copy test failed on the missing
+  copy module. After implementation, all 61 narrowed tests pass across
+  `beacons-core.test.ts`, `rooms/visuals/source-copy.test.tsx`, the existing
+  visuals room/keyboard tests, `beacons.test.tsx` and `shell/room.test.tsx`.
+- All 214 desktop tests in 23 files pass, as do desktop `typecheck`, `lint`
+  and `build`. First-load bytes remain **382,338 / 393,216**, with no budget
+  change; the Beacons validator remains a separate dynamic chunk.
+- The contract package's `typecheck`, `lint` and 124 tests in 11 files pass,
+  together with its standalone generator tests. The generator now selects
+  the already-declared `beacons.source.url` params/result for the lazy subpath.
+  Tests prove lazy/eager equivalence, independent function objects, closed
+  schemas and rejection of non-loopback URLs. Only the three generated Beacons
+  files change; all other generated artifacts are unchanged. The verifier's
+  source fingerprint is unchanged, so its HTML is not regenerated.
+- All six JS/TS workspace test scripts pass individually: 723 tests across
+  67 files, plus the standalone generator assertions. This includes the
+  unchanged tokens, UI, renderer and verifier-web suites.
+- Direct fresh Rust contract and registry exports, saved outside the worktree,
+  pass `check.mjs --schema` and `parity.mjs --schema ... --registry ...`:
+  16 artifacts, 45 declared / 30 registered methods, 16 event kinds.
+- Direct `cargo fmt --all -- --check`, workspace Clippy with all targets and
+  warnings denied, and `cargo test --workspace` pass with downloads enabled
+  and `CARGO_BUILD_JOBS=6`. Owner-only live tests and fixture generators remain
+  ignored; no live or owner step is claimed.
+- Tooling ESLint, boundaries, hygiene, file cap and secrets pass (532 code
+  files; final secret scan inventories 666 files after native build output).
+- Full `pnpm --config.verify-deps-before-run=false gate` passes its 14 tooling
+  tests and workspace inventories, then fails at the existing contract
+  exporter's `spawnSync cargo EPERM`. Recursive `-r typecheck` and `-r lint`
+  fail in pnpm's subprocess launcher with `spawn EPERM`. The export/spawn
+  implementations are unchanged; base `docs/PLAN.md` and the historical WP 3.1
+  evidence below record these same failures. A full green gate still requires
+  App Master verification on its host; the individual passes are not a claim
+  that the full gate passed here.
+
+The connected visual list has one native, keyboard-reachable copy button per
+visual, named with the visual's name for assistive technology. Its existing
+token-sized virtualised rows reserve space for the extra action. The feedback
+region stays outside those rows and uses `role="status"`, polite live updates
+and atomic announcements, including clipboard denial or missing clipboard
+support. Component tests drive native click handlers (the Enter/Space activation
+path) and render the feedback; they do not claim browser Tab or visual fidelity
+automation.
+
+`sourceUrl(visual_id)` validates params and the result through the generated
+lazy contract door, strips upstream prose/details from typed errors, and never
+retries automatically. The copy controller also blocks duplicates until clipboard
+completion. Only the exact validated loopback URL returned by core reaches
+`navigator.clipboard.writeText`; no URL enters read snapshots or rendered
+feedback. A failed refresh/copy never reuses a previous URL or fixture source.
+
+At base `43c687f`, core registers `beacons.source.url` in every constructor.
+Native core can return the isolated overlay URL; socket-free offline core
+returns `unavailable` for a known visual, and an unknown visual returns
+`not_found`. Both errors produce the labelled unavailable state with no URL
+copied. URL plumbing alone does not supply Beacons rendering or live intensity;
+the existing unavailable delivery notice stays visible. No fixture URL, new
+identifier, credential, dependency install, live action or owner step is added.
 
 WP 3.1 verification, 2026-10-27:
 

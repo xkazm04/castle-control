@@ -1,4 +1,4 @@
-import { useEffect, useState, useSyncExternalStore } from 'react';
+import { useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import type { ReactNode } from 'react';
 import type { ContributionSource, Visual, VisualId, DesignId } from '@castle-control/contract';
 import { WindowedRows, rowHeight } from '@castle-control/ui';
@@ -6,6 +6,7 @@ import { coreBeaconsConnection } from '../../client.js';
 import { createCoreBeaconsPort } from '../../beacons-core.js';
 import type { CoreBeaconsPort } from '../../beacons-core.js';
 import type { Snapshot } from '../../model.js';
+import { BrowserSourceButton, BrowserSourceNotice, createBrowserSourceCopy } from './source-copy.jsx';
 import './room.css';
 import './core.css';
 
@@ -62,6 +63,8 @@ const sources: readonly ContributionSource[] = ['gift', 'subscribe', 'resub', 'c
 
 export function ConnectedBeacons({ port, seal_slot }: { port: CoreBeaconsPort; seal_slot?: ReactNode }) {
   const state = useSyncExternalStore(port.subscribe, port.getSnapshot, port.getSnapshot);
+  const source_copy = useMemo(() => createBrowserSourceCopy(port), [port]);
+  const copy_state = useSyncExternalStore(source_copy.subscribe, source_copy.getSnapshot, source_copy.getSnapshot);
   const [creating, setCreating] = useState(false);
   useEffect(() => { void port.load(); }, [port]);
   const visual = state.visuals.find(item => item.visual_id === state.selected);
@@ -72,12 +75,14 @@ export function ConnectedBeacons({ port, seal_slot }: { port: CoreBeaconsPort; s
         <button type="button" disabled={state.busy} onClick={() => { void port.load(); }}>Refresh Beacons</button>
         <h2>Beacons · core configurations</h2>
         <p>Live contribution totals and OBS delivery are unavailable in this connection. Money changes visuals only.</p>
-        <WindowedRows rows={state.visuals} label="Core beacon visuals" row_height={rowHeight * 3}
+        <BrowserSourceNotice state={copy_state} />
+        <WindowedRows rows={state.visuals} label="Core beacon visuals" row_height={rowHeight * 4}
           row_key={item => item.visual_id} empty_state="No visuals loaded from the core.">
           {item => <article className="visuals-core-item">
             <button type="button" disabled={state.busy} aria-pressed={item.visual_id === state.selected}
               onClick={() => { port.select(item.visual_id); setCreating(false); }}>{item.name}</button>
             <p>{item.design_id ? `Design: ${item.design_id}` : 'No design assigned'} · {item.curve.ranges.length} control points</p>
+            <BrowserSourceButton copy={source_copy} visual={item} busy={state.busy || copy_state.busy} />
           </article>}
         </WindowedRows>
         <button type="button" disabled={state.busy} onClick={() => setCreating(true)}>New visual</button>

@@ -166,7 +166,7 @@ function validators(schema) {
     `${JSON.stringify(name)}: ${typeof format === 'function' ? format.toString()
       : `{ type: 'number', validate: ${format.validate.toString()} }`}`).join(',');
   const exports = {}, lotsExports = {}, gatehouseExports = {}, beaconsExports = {};
-  const beaconsNames = new Set(['visual.list', 'visual.upsert', 'curve.set', 'simulate'].map(name => `beacons.${name}`));
+  const beaconsNames = new Set(['visual.list', 'visual.upsert', 'curve.set', 'simulate', 'source.url'].map(name => `beacons.${name}`));
   const gatehouseNames = new Set(['rules.list', 'rules.upsert', 'ban.confirm', 'ban.dismiss', 'decision.undo',
     'petition.resolve', 'recording.import', 'drill.run', 'drill.diff', 'consensus.get'].map(name => `gatehouse.${name}`));
   const shared = sharedSchemas(schema);

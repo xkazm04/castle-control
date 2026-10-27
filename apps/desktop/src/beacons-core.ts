@@ -4,7 +4,7 @@ import type { BeaconsSimulateParams, BeaconsSimulateResult, CurveSetParams, Erro
 import { validateCoreLaunch } from './core-source.js';
 import type { CoreLaunch } from './core-source.js';
 
-type BeaconsMethod = 'beacons.visual.list' | 'beacons.visual.upsert' | 'beacons.curve.set' | 'beacons.simulate';
+type BeaconsMethod = 'beacons.visual.list' | 'beacons.visual.upsert' | 'beacons.curve.set' | 'beacons.simulate' | 'beacons.source.url';
 /** Restricted transport seam; launch capabilities never enter read snapshots. */
 export type BeaconsNetwork = {
   rpc: <M extends BeaconsMethod>(endpoint: string, session: string, method: M, params: RpcMethods[M]['params']) => Promise<unknown>;
@@ -51,10 +51,10 @@ export function createCoreBeaconsPort(launch: CoreLaunch, transport?: BeaconsNet
     const result = await transport.rpc(base.href, launch.session_token, contract.method, params);
     return parseMethodResult(contract, JSON.stringify(result));
   }
-  async function perform(work: () => Promise<void>) {
+  async function perform<T>(work: () => Promise<T>): Promise<T | undefined> {
     if (snapshot.busy) { publish({ notice: 'A Beacons request is in progress. Wait for its result.' }); return; }
     publish({ busy: true, phase: 'loading' }, ['error']);
-    try { await work(); publish({ phase: 'ready' }); }
+    try { const result = await work(); publish({ phase: 'ready' }); return result; }
     catch (error: unknown) {
       const safe = safeError(error);
       publish({ phase: 'error', error: safe, notice: `Beacons request failed: ${safe.code}. ${safe.message}${
@@ -99,6 +99,13 @@ export function createCoreBeaconsPort(launch: CoreLaunch, transport?: BeaconsNet
         const simulation = await call((await contracts()).beaconsSimulate, proposed);
         if (simulation.intensity.visual_id !== proposed.visual_id) throw new Error('Mismatched simulation');
         publish({ simulation, notice: 'Simulated burst computed by the core from an empty state. Saved configuration and live totals are unchanged.' });
+      });
+    },
+    async sourceUrl(visual_id: VisualId) {
+      return perform(async () => {
+        const result = await call((await contracts()).beaconsSourceUrl, { visual_id });
+        publish({ notice: 'Browser-source URL received from the core. Rendering remains unavailable in this connection.' });
+        return result;
       });
     },
   };

@@ -14,9 +14,9 @@ delete schema.$comment;
 const files = artifacts(schema);
 assert.deepEqual(files, artifacts(schema), 'generation must be byte deterministic');
 assert.equal(Object.keys(files).length, 16);
-const beaconsNames = ['visual.list', 'visual.upsert', 'curve.set', 'simulate'].map(name => `beacons.${name}`);
+const beaconsNames = ['visual.list', 'visual.upsert', 'curve.set', 'simulate', 'source.url'].map(name => `beacons.${name}`);
 const beaconsMethods = schema.methods.map((method, index) => ({ ...method, index })).filter(method => beaconsNames.includes(method.name));
-assert.equal(beaconsMethods.length, 4);
+assert.equal(beaconsMethods.length, 5);
 assert(files['beacons-validators.mjs'], 'Beacons validators have a separate generated module');
 assert(files['beacons-validators.d.mts'], 'Beacons validators retain typed declarations');
 assert(files['beacons-validation.ts'].includes("from './beacons-validators.mjs'"));
@@ -105,6 +105,7 @@ const beaconsPositive = new Map([
   ['beacons.curve.set', [{ visual_id: visual.visual_id, curve: visual.curve }, visual]],
   ['beacons.simulate', [{ visual_id: visual.visual_id, burst: { source: 'gift', amount: 50 } },
     { label: 'simulated', intensity: { visual_id: visual.visual_id, intensity: 1 } }]],
+  ['beacons.source.url', [{ visual_id: visual.visual_id }, { url: 'http://localhost:4312/visuals/simulated-frame' }]],
 ]);
 for (const { name, index } of beaconsMethods) {
   for (const [offset, prefix] of ['p', 'r'].entries()) {
@@ -117,6 +118,12 @@ for (const { name, index } of beaconsMethods) {
     assert.equal(lazy(positive), true, `${name} ${prefix} accepts synthetic values`);
     assert.equal(lazy({ ...positive, extra: true }), false, `${name} ${prefix} rejects unknown fields`);
   }
+}
+const sourceIndex = beaconsMethods.find(method => method.name === 'beacons.source.url').index;
+for (const url of ['http://example.com:4312/', 'http://localhost.evil:4312/', 'https://localhost:4312/',
+  'http://localhost:0/', 'http://localhost:4312/#fragment']) {
+  assert.equal(beacons[`r${sourceIndex}`]({ url }), false, 'lazy source URL rejects noncanonical loopback URLs');
+  assert.equal(beacons[`r${sourceIndex}`]({ url }), compiled[`r${sourceIndex}`]({ url }));
 }
 assert.deepEqual(Object.keys(gatehouse).sort(), gatehouseMethods.flatMap(({ index }) => [`p${index}`, `r${index}`]).sort());
 assert.equal(gatehouseMethods.length, (files['gatehouse-validation.ts'].match(/export const gatehouse/g) ?? []).length);

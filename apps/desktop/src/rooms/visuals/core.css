@@ -4,4 +4,5 @@
 .visuals-core-form fieldset { min-width: 0; display: grid; gap: var(--space-8); border: var(--rule-thin) solid var(--line); }
 .visuals-core-item { padding-block: var(--space-8); border-bottom: var(--rule-thin) solid var(--line); }
 .visuals-core-item p { margin: var(--space-4) 0; }
+.visuals-core-source-status { min-height: var(--space-20); font-size: var(--text-label); overflow-wrap: anywhere; }
 .visuals-core button:disabled { color: var(--muted); cursor: wait; }
