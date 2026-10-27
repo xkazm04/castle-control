@@ -71,12 +71,21 @@ wrapper. Live chat intake and live beacon wiring remain absent. Standalone
 domain tests can still explicitly register a module in `Registry::default()`.
 
 Construct it with a caller-owned root, `Arc<EventHub>`, an injected
-`BeaconSource`, a `LotsClock`, and an explicit simulated-data flag. No beacon
-HTTP implementation is provided. The source supplies trusted chain metadata and
-an already-recorded round; `cc-lots`/`cc-verify` enforce the selected round,
+`BeaconSource`, a `LotsClock`, and an explicit simulated-data flag. The source
+supplies trusted chain metadata and a round; `cc-lots`/`cc-verify` enforce the selected round,
 signature, seal and winner derivation. Streamer fallback seeds are generated
 inside the module, committed at seal, and revealed only in the verified writ.
 Clients cannot supply entries, winners, seeds or replacement proof inputs.
+
+`lots::live_beacon::LiveBeacon::new(trusted_chain)` is now available for a future
+WP 2.3 opt-in. It uses cc-verify's HTTPS quicknet transport (redirects off),
+selected schedule and BLS verification; it is **not registered**. AI-7 still uses
+`simulated: true` and `RecordedBeacon`. Its synchronous round call blocks, so
+future live dispatch must use a blocking worker. Transport failure returns a
+typed error without a cast or fabricated round; explicitly selecting
+`streamer_commit` still works locally and is labelled `streamer-controlled`.
+`tests/live_beacon.rs` uses fixture transports; its sole HTTPS test is ignored
+and labelled owner-run.
 
 The future trusted post-verdict adapter must call `map_user` with verified
 Twitch identity and `intake(draw_id, PassedMessage)`; nothing feeds it today.

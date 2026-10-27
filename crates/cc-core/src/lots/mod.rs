@@ -1,6 +1,7 @@
-//! Offline RPC module. Native registration uses recorded fixtures and no chat adapter.
+//! Lots RPC module. Native registration uses recorded fixtures and no chat adapter.
 mod convert;
 mod lifecycle;
+pub mod live_beacon;
 pub(crate) mod recorded;
 mod storage;
 
@@ -20,8 +21,8 @@ use std::{
 };
 use tokio::sync::broadcast;
 
-/// The caller supplies trusted chain metadata and already-recorded rounds.
-/// This module provides no HTTP implementation and never fetches a beacon.
+/// The caller explicitly supplies trusted chain metadata and a round source.
+/// Native registration uses recorded rounds; live_beacon is opt-in only.
 pub trait BeaconSource: Send + Sync {
     fn chain(&self) -> Result<QuicknetChain, ErrorEnvelope>;
     fn round(&self, sealed: &LotsSealedRoll) -> Result<BeaconRound, ErrorEnvelope>;
