@@ -60,11 +60,10 @@ export default function LotteryRoom({ snapshot, replay, queue = proposalQueue, s
         </div>}
         {state.sealed && <button type="button" onClick={() => { port.select(state.draw.draw_id); draftRoll(queue); }}>Draft a new roll</button>}
         </section>
-        <section className="lottery-fair" aria-label={copy.gate}><h3>{copy.gate}</h3><p>{copy.checks[policy.result]}</p>
-          {policy.reasons.map(reason => <p key={reason}>{copy.reasons[reason as keyof typeof copy.reasons] ?? reason}</p>)}
-          {state.draw.policy.twitch_disclaimer && <p>{copy.disclaimer_text}</p>}
-          {state.draw.policy.official_rules && <p>{copy.template_text}</p>}
-        </section>
+        <p className="lottery-guardrails" role="status">Giveaway guardrails · {copy.checks[policy.result]} · local preview</p>
+        {policy.reasons.map(reason => <p key={reason}>{copy.reasons[reason as keyof typeof copy.reasons] ?? reason}</p>)}
+        {state.draw.policy.twitch_disclaimer && <p>{copy.disclaimer_text}</p>}
+        {state.draw.policy.official_rules && <p>{copy.template_text}</p>}
         <details><summary>{copy.fairness}</summary><ol className="lottery-steps">{copy.steps.map(([title, text]) => <li key={title}><b>{title}</b> · {text}</li>)}</ol>
           <p>{copy.test_note}</p><p>{copy.fixture_only}</p></details>
         {roll && <><button type="button" onClick={() => { void recompute(); }}>Recompute frozen entry seal</button>
@@ -72,14 +71,11 @@ export default function LotteryRoom({ snapshot, replay, queue = proposalQueue, s
         <p role="status">{verification}</p>
       </div>
       <div className="room-column lottery-details">
-        <figure className="lottery-urn-figure"><figcaption className="room-caption">The urn · the entry pool and every eligible mark</figcaption>
+        <figure className="lottery-urn-figure" aria-label="Eligible entry pool">
           <Urn entries={roll?.entries ?? state.entries} /></figure>
         <p>{copy.pool} · {fixtureCooldown.length} {copy.cooldown}</p>
         <label>{copy.lookup}<input type="search" aria-label={copy.lookup} value={state.lookup} onChange={event => port.lookup(event.currentTarget.value)} /></label>
         <p>{lookupFixture(state)}</p>
-        <h3>Past writs · simulated</h3>
-        {history.filter(item => item.state === 'sealed').map(item => <div className="lottery-past" key={item.id}>
-          <b>{item.title}</b><span>Revision {item.revision} · sealed</span><code>{item.seal_hash}</code></div>)}
         <details><summary>Saved simulated proof bundle</summary><p>{copy.writ_notice}</p><code className="room-hash">{fixtureWrit.seal}</code>
           <p>Recorded winners: {fixtureWrit.winners.join(', ')}</p>
           <button type="button" onClick={() => { void port.recompute(); }}>{copy.recompute}</button><p role="status">{state.notice}</p></details>

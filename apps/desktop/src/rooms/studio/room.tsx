@@ -13,8 +13,9 @@ export function StudioWork({ queue, seal_slot }: { queue?: ProposalQueue; seal_s
   const [rung, setRung] = useState(0);
   return <section className="studio-room" aria-label="Map Room work">
     <div className="studio-room-layout">
-      <div className="studio-room-workbench">
-        <p className="room-caption">The war table · 9 × 6 hexes · illustrative territory</p>
+      <div className="studio-room-workbench" role="region" aria-label="War table and panel drafts" tabIndex={0}
+        aria-describedby="studio-scroll-hint">
+        <p id="studio-scroll-hint" className="room-scroll-hint">Scroll to inspect all six rows and panel drafts ↓</p>
         <HexTable selected={tile} on_select={setTile} />
         <div className="studio-room-panel-drafts" aria-label="War-table panel proposals" data-on-air="false">
           <ProposalLayers chamber="studio" {...(queue ? { queue } : {})} />

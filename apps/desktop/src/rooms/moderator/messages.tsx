@@ -8,8 +8,9 @@ export function MessageList({ messages, scroll_top = 0 }: { messages: readonly D
   const [filter, setFilter] = useState<Verdict | 'all'>('all');
   const filtered = useMemo(() => messages.filter(message => (filter === 'all' || message.verdict === filter)
     && `${message.message_id} ${message.message_text ?? ''}`.toLowerCase().includes(query.trim().toLowerCase())), [messages, query, filter]);
-  return <section className="moderator-messages">
-    <h3>The live room · sample chat replay</h3><p>SIMULATED · {messages.length.toLocaleString('en-US')} lines · {filtered.length.toLocaleString('en-US')} matching</p>
+  return <section className="moderator-messages moderator-card">
+    <h3>The live room · sample chat replay</h3>
+    <p className="room-now">Now: {messages.length.toLocaleString('en-US')} lines · {filtered.length.toLocaleString('en-US')} matching · SIMULATED</p>
     <div className="moderator-toolbar"><label>Verdict <select value={filter} onChange={event => {
       const value = event.currentTarget.value;
       if (value === 'all' || value === 'pass' || value === 'hold' || value === 'bar') setFilter(value);

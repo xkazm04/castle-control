@@ -45,3 +45,48 @@ typecheck and lint were attempted separately and also stopped at process spawn
 base `45e8e76`; the same environment errors are recorded in the existing
 `docs/PLAN.md`. The full gate is not claimed green. App Master must run its
 merge verification in its approved environment; the Director judges the re-shoot.
+
+## AI-9b room polish, 2026-10-27
+
+Compared Athena's AI-9 stills with the Lit Keep reference stills at both
+1440x900 and 1280x800. Gatehouse now has a dominant held-message/ban-review
+stage and one right column of cards for sample replay, rules, moat, drill and
+gate log. Each card describes its current simulated state with a `Now:` line.
+The portcullis title appears once. Review and tool columns scroll independently;
+the review region is keyboard focusable, with a persistent scroll cue and a
+reserved, coloured scrollbar so a ban's original text remains reachable below
+the frame. No message text is truncated in the review stage.
+
+Lot Chamber shows the urn title once and giveaway guardrails as a status line.
+Policy reasons, prize disclaimers, official rules, writ fairness and recompute
+remain available. `lots-model.ts` exposes the current preview and one saved
+simulated proof bundle, not a collection of past writs. A past-writs ledger is
+therefore omitted, including the former in-memory proposal-history list; no
+historical data is invented. Writ templates and the saved proof stay in place.
+
+Map Room has one war-table title. It retains readable tile labels instead of
+shrinking them below the type floor. At 1280x800, overflow is explicitly
+scrollable: the focusable board region has a sticky scroll cue, reserved
+scrollbar and keyboard access to every row. The Director should re-shoot the
+three fixture routes above at both target sizes and check scrolling through
+ban review, the sixth map row and the right-column seal slot. The Steward bar,
+Beacons and overview are untouched. Models, lazy imports and hold semantics
+are reused without changes.
+
+Verification: the two new room-polish assertions failed before implementation
+(duplicate urn title and missing scroll affordance). Final targeted command:
+`node node_modules/vitest/vitest.mjs run --pool=threads apps/desktop/src/shell/room.test.tsx apps/desktop/src/rooms/studio/room.test.tsx apps/desktop/src/rooms/studio/keyboard.test.tsx apps/desktop/src/lots.test.tsx apps/desktop/src/moderation.test.tsx apps/desktop/src/moderation-gate.test.tsx apps/desktop/src/navigation.test.tsx`
+passed 55 tests in 7 files, including unique titles, right-column cards,
+keyboard Enter/Esc, all 54 native tile controls and continuous held-Space sealing.
+Direct desktop TypeScript and ESLint over the assigned room/frame code passed.
+`node scripts/check.mjs` passed all four checks (492 code files, 617 secret-scan
+files before this README update). The desktop build passed at unchanged
+381,433 / 393,216 first-load bytes.
+
+The full `node scripts/gate.mjs` attempt passed 14 tooling tests and workspace
+inventory, then stopped in the unchanged contract exporter at
+`spawnSync cargo EPERM`. Recursive pnpm typecheck and lint also stopped at
+`spawn EPERM` before checks ran. These gate/exporter paths have no diff against
+base `a936778`; this environment failure is already recorded above. The full
+gate is not green here; App Master must run merge verification in its approved
+environment. No install ran over the shared node_modules junction.

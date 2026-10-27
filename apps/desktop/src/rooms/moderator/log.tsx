@@ -6,7 +6,8 @@ import { moderationCopy as copy } from '../../moderation-copy.js';
 import { proposeCommand } from './session.js';
 
 export function GateLog({ state, queue }: { state: ModerationPreview; queue: ProposalQueue }) {
-  return <section><h3>Gate log · {copy.ledger}</h3>
+  return <section className="moderator-card"><h3>Gate log · {copy.ledger}</h3>
+    <p className="room-now">Now: {state.ledger.length} decisions · simulated</p>
     <WindowedRows rows={state.ledger} label="Decision ledger" row_key={item => item.decision_id} row_height={rowHeight * 5}>
       {item => <article className="moderator-log-row"><time dateTime={item.at}>{item.at.slice(11, 19)}</time> <VerdictChip verdict={item.verdict} />
         <b>{fixtureRules.rules.find(rule => rule.rule_id === item.rule_id)?.name ?? 'Rule unavailable'}</b>

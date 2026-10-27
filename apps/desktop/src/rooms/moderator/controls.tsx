@@ -13,7 +13,8 @@ export function HeldActions({ item, pending, queue }: { item: Decision; pending:
 }
 
 export function HeldQueue({ state, queue }: Props) {
-  return <section className="moderator-portcullis"><h2>{copy.held} · {state.held.length} held</h2><p>{copy.gate_gloss}</p>
+  return <section className="room-stage moderator-portcullis"><h2>{copy.held} · held for human review</h2>
+    <p className="room-now">Now: {state.held.length} held · {state.bans.length} pending ban · simulated</p><p>{copy.gate_gloss}</p>
     {state.held.length ? state.held.map(item => <article key={item.decision_id} data-verdict="hold" className="moderator-held">
       <b>{item.message_id}</b><blockquote>{item.message_text ?? copy.original_unavailable}</blockquote>
       <p>{copy.held_reason}: {fixtureHoldReasons.get(item.message_id) ?? copy.hold_reason_unavailable}</p>
@@ -33,7 +34,8 @@ export function HeldQueue({ state, queue }: Props) {
 }
 
 export function GateControls({ state, queue }: Props) {
-  return <section className="moderator-gate"><h3>The moat · chat delay</h3>
+  return <section className="moderator-gate moderator-card"><h3>The moat · chat delay</h3>
+    <p className="room-now">Now: {state.delay_s} s delay · {state.shield ? 'Bridge up' : 'Bridge down'} · simulated</p>
     <div className="moderator-gauge" aria-hidden="true">{[2, 4, 6].map(value => <i key={value} data-on={state.delay_s >= value} />)}</div>
     <p>Applied chat delay: {state.delay_s} s</p>
     <label>Propose chat delay <select aria-label={copy.delay_applied} value={state.delay_s} disabled={state.delay_pending}
@@ -49,7 +51,9 @@ export function GateControls({ state, queue }: Props) {
 }
 
 export function Rules({ state, queue }: Props) {
-  return <section><h3>Garrison orders · Gate rules</h3><p>{copy.modes}</p>
+  const armed = fixtureRules.rules.filter(rule => state.preview_modes.get(rule.rule_id) === 'armed').length;
+  return <section className="moderator-card"><h3>Garrison orders · Gate rules</h3>
+    <p className="room-now">Now: {armed} Armed · {fixtureRules.rules.length - armed} Watching · simulated</p><p>{copy.modes}</p>
     {fixtureRules.rules.map(rule => {
       const mode = state.preview_modes.get(rule.rule_id) ?? 'shadow';
       return <div className="moderator-rule" key={rule.rule_id}><b>{rule.name}</b><span>{rule.pattern} · {rule.action}</span>

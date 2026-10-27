@@ -2,7 +2,7 @@ import { fixtureHouses, fixtureTiles } from './fixture.js';
 
 export function HexTable({ selected, on_select }: { selected: string; on_select: (id: string) => void }) {
   return <section className="studio-room-war-table" aria-label="Illustrative 9 by 6 war table">
-    <h2>The war table</h2><p>9 × 6 hexes · illustrative territory · no live turn</p>
+    <h2>The war table · 9 × 6 hexes</h2><p>Illustrative territory · no live turn</p>
     <ul className="studio-room-legend">{fixtureHouses.map(house => <li key={house}>
       {house} · {fixtureTiles.filter(tile => tile.owner === house).length}
     </li>)}<li>Unclaimed · {fixtureTiles.filter(tile => !tile.owner).length}</li></ul>

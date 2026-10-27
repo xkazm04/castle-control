@@ -1,6 +1,8 @@
 .studio-room { --room-ink: var(--key); height: 100%; color: var(--ink); font: 400 var(--text-body)/1.5 var(--font-ui); }
 .studio-room-layout { display: grid; height: 100%; min-height: 0; grid-template-columns: minmax(0, 1.8fr) minmax(0, 1fr); }
 .studio-room-workbench { padding: var(--space-16) var(--space-20); border: var(--rule-medium) solid var(--key); min-width: 0; min-height: 0; overflow: auto; }
+.studio-room-layout > .studio-room-workbench { overflow-y: scroll; scrollbar-gutter: stable; scrollbar-color: var(--ink) var(--paper-2); }
+.studio-room-workbench:focus-visible { outline: var(--rule-strong) solid var(--key); outline-offset: calc(0 - var(--rule-strong)); }
 .studio-room-details { padding: var(--space-16) var(--space-20); min-width: 0; min-height: 0; overflow: auto; }
 .studio-room h2 { margin: 0; font: 800 var(--text-chamber)/1 var(--font-display); text-transform: uppercase; }
 .studio-room h3 { margin-block: var(--space-12); font: 800 var(--text-chamber)/1.2 var(--font-display); }
@@ -28,5 +30,5 @@
 @media (max-width: 900px) {
   .studio-room { height: auto; }
   .studio-room-layout { height: auto; grid-template-columns: minmax(0, 1fr); }
-  .studio-room-workbench, .studio-room-details { overflow: visible; }
+  .studio-room-layout > .studio-room-workbench, .studio-room-details { overflow: visible; }
 }

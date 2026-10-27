@@ -53,6 +53,43 @@ test('room stages retain token insets and model states use the existing accent f
 
 afterEach(() => { vi.useRealTimers(); });
 const fixture = { mode: 'fixture', phase: 'ready' } as const;
+test('polished rooms render each stage title once and expose keyboard scroll regions', async () => {
+  for (const [chamber, title] of [['lottery', 'The urn'], ['moderator', 'At the portcullis'], ['studio', 'The war table']] as const) {
+    const stream = await renderToReadableStream(<Room chamber={chamber} replay={false} snapshot={fixture}
+      origin="keep" on_open={vi.fn()} on_back={vi.fn()} />);
+    await stream.allReady;
+    const markup = (await new Response(stream).text()).replace(/<!--.*?-->/g, '');
+    expect(markup.match(new RegExp(`>${title}(?: ·|<)`, 'g'))).toHaveLength(1);
+    if (chamber === 'lottery') {
+      expect(markup).toContain('Giveaway guardrails · OK');
+      expect(markup).not.toContain('Past writs');
+      expect(markup).not.toContain('aria-label="Giveaway guardrails · local preview"');
+    } else {
+      expect(markup).toContain('class="room-scroll-hint"');
+      expect(markup).toContain('tabindex="0"');
+      expect(markup).toContain(chamber === 'moderator' ? 'aria-describedby="moderator-scroll-hint"' : 'aria-describedby="studio-scroll-hint"');
+    }
+    if (chamber === 'moderator') {
+      const details = markup.slice(markup.indexOf('moderator-details'));
+      expect(details).toContain('moderator-messages moderator-card');
+      expect(details).toContain('Garrison orders');
+      expect(details).toContain('Now: 420 lines');
+      expect(details).toContain('Now: 0 Armed · 3 Watching');
+      expect(markup).toContain('Simulated original message: simulated-blocked, quoted for human review.');
+    }
+  }
+});
+
+test('review and map scroll affordances remain visible without hiding content at desktop sizes', () => {
+  for (const path of ['../rooms/moderator/room.css', '../rooms/studio/room.css']) {
+    const css = readFileSync(new URL(path, import.meta.url), 'utf8');
+    expect(css).toContain('scrollbar-gutter: stable');
+    expect(css).toContain('overflow-y: scroll');
+  }
+  const css = readFileSync(new URL('./room.css', import.meta.url), 'utf8');
+  expect(css).toMatch(/\.room-scroll-hint\s*\{[^}]*font:[^}]*var\(--text-label\)/);
+});
+
 const pending = (queue: ProposalQueue) => {
   const proposal = queue.pending().at(-1);
   if (!proposal) throw new Error('Missing proposal');
