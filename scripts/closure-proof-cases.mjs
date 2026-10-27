@@ -8,6 +8,16 @@ export function closureCases(proof, root) {
   const source = 'packages/proof/src/index.ts';
   const pkg = (mode) => ['$S/scripts/package-gate.mjs', mode];
   const cwd = { cwd: 'packages/proof' };
+  proof('Version drift: bumped package manifest', ['$R/scripts/version-drift.mjs'],
+    'package.json: expected 0.1.0, found 0.2.0', {
+      'Cargo.toml': '[workspace]\nmembers = ["crates/*"]\n[workspace.package]\nversion = "0.1.0"\n',
+      'package.json': '{"name":"simulated-proof-root","version":"0.2.0","private":true,"type":"module"}\n',
+      'packages/proof/package.json': '{"name":"simulated-proof-package","version":"0.1.0"}\n',
+      'apps/desktop/src-tauri/Cargo.toml': '[package]\nname = "simulated-desktop"\nversion.workspace = true\n',
+      'apps/desktop/src-tauri/tauri.conf.json': '{"version":"0.1.0"}\n',
+    });
+  proof('Empty version drift', ['$R/scripts/version-drift.mjs'], 'version drift: refused empty inventory',
+    {}, { empty: true });
   proof('Rust format: unformatted function', ['$S/scripts/rust-gate.mjs', 'fmt'], 'Diff in', {
     [rust]: 'pub fn value( )->u8{1}\n',
   });

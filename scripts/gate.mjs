@@ -1,5 +1,6 @@
 import { run } from './run.mjs';
 
+run('node', ['scripts/version-drift.mjs']);
 run('node', ['scripts/tooling-test.mjs']);
 run('node', ['scripts/workspaces.mjs']);
 // Fetch every platform in the lockfile before any Cargo-backed checks.

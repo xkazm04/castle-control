@@ -61,6 +61,86 @@ The exporter and recursive pnpm failures occur in unchanged
 code; earlier occurrences of the same `EPERM` restrictions are recorded in
 `docs/PLAN.md`. No sandbox restriction was bypassed.
 
+## WP 6.1 version drift and unsigned Windows configuration
+
+2026-10-28, Windows, worktree `850be0fc`. Root `Cargo.toml`
+`[workspace.package].version` is the authoritative product version. No protected
+manifest was changed. This evidence is for the owner-free first slice, not the
+remaining installer, signing, updater or cross-platform release exits.
+
+The initial new test run exited 1: 8 tests passed and the NSIS configuration
+assertion failed (`false !== true`). The initial real-tree version check exited
+1 after walking 20 files, naming the missing version in
+`apps/desktop/src-tauri/tauri.conf.json`. Adding its checked version mirror and
+enabling only NSIS bundling resolved both failures.
+
+Final narrowed command (exit 0):
+`node --test --test-isolation=none scripts/version-drift.test.mjs`.
+All 10 tests passed, including the actual standalone CLI exit check. Its logged
+red/green sequence was:
+
+```text
+[version drift] walked 8 files
+Version drift:
+packages/proof/package.json: expected 0.1.0, found 0.2.0
+[version proof] standalone RED exit 1
+[version drift] walked 8 files
+[version drift] all manifests match Cargo.toml [workspace.package] version 0.1.0
+[version proof] standalone GREEN exit 0
+```
+
+`closure-proof-cases.mjs` registers the bumped-package proof and an empty-root
+proof. Both new registrations were also run alone through a temporary-fixture
+callback (without rerunning unrelated closure cases): the drift fixture walked
+6 files and exited 1 naming `package.json` (`expected 0.1.0, found 0.2.0`); after
+restoration it walked 6 files and exited 0. The empty fixture walked 0 files,
+printed `version drift: refused empty inventory`, and exited 1. All fixtures were
+removed in `finally`. The reusable full proof entry point remains
+`node scripts/closure-proofs.mjs`; its historical table below was not regenerated.
+
+Final real-tree command `node scripts/version-drift.mjs` exited 0:
+
+```text
+[version drift] walked 20 files
+[version drift] all manifests match Cargo.toml [workspace.package] version 0.1.0
+```
+
+`pnpm --config.verify-deps-before-run=false gate` was attempted once with
+`npm_config_verify_deps_before_run=false` and `CARGO_BUILD_JOBS=6`. It exited 1.
+It ran the new version gate (20 files, green), tooling tests (2 test files,
+23 tests green at that point), workspace checks (6 manifests, 221 TS files),
+and Cargo fetch (256 Rust files). The existing contract exporter then failed:
+`Error: spawnSync cargo EPERM`, while attempting
+`cargo --config net.offline=false run --quiet -p cc-types --bin export-contract`.
+The exporter and spawn runner are unchanged from the base (`git diff` for those
+paths is empty). Rust fmt/Clippy/tests and the subsequent recursive checks were
+not reached by this full-gate attempt. The final added standalone CLI test was
+run by the final 10-test narrowed command above.
+
+`pnpm --config.verify-deps-before-run=false typecheck` exited 1 with `spawn EPERM`
+when recursive package lifecycles started. `pnpm
+--config.verify-deps-before-run=false lint` likewise exited 1 at recursive package
+lifecycles, after tooling ESLint (17 files), workspace inventory, boundaries,
+hygiene and file-cap checks (558 files each), and secrets (693 files) passed.
+Final scoped ESLint for the four touched tooling files exited 0; `git diff
+--check` also passed. These sandbox failures are not passing typecheck/lint gates.
+
+`cargo tauri --version` failed: `error: no such command: tauri`. The release
+bundle was therefore not attempted; no CLI/dependency install, release artifact,
+signing, updater, clean-machine install or update rehearsal is claimed. The
+packaging procedure and intended per-platform artifact inventory are in
+[release/packaging.md](release/packaging.md); its NSIS configuration supersedes
+the historical M0 bundling-disabled note in the desktop README.
+
+Director follow-up: rerun `pnpm --config.verify-deps-before-run=false gate` in the
+authorized verification environment, including Rust and recursive package gates;
+run `node scripts/closure-proofs.mjs` to refresh the full proof table if needed.
+With an already-installed Tauri 2 CLI and sufficient build budget, follow
+`release/packaging.md` to build and inspect the unsigned Windows NSIS installer.
+Signing/updater keys and release publishing remain owner steps. `pnpm install`
+was not run, and no junction, git metadata, protected manifest or other worktree
+was modified.
+
 <!-- current red-once proofs -->
 
 | Gate / seed | Standalone command | Exit | Inventory | First relevant diagnostic |
