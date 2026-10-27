@@ -9,8 +9,10 @@
     "lint": "node ../../scripts/package-gate.mjs lint",
     "test": "node ../../scripts/package-gate.mjs test"
   },
+  "dependencies": {
+    "@castle-control/contract": "workspace:*"
+  },
   "devDependencies": {
-    "@castle-control/contract": "workspace:*",
     "@types/node": "24.10.0",
     "typescript": "catalog:",
     "vitest": "catalog:"
