@@ -1,4 +1,77 @@
-use cc_core::spike::{Options, STEPS, report};
+use cc_core::spike::{LoginDecision, Options, STEPS, login_decision, report};
+use cc_twitch::{BridgeState, BridgeStatus};
+
+#[test]
+fn stored_login_waits_until_the_keychain_check_settles() {
+    assert_eq!(
+        login_decision(&BridgeStatus::default(), "simulated_owner"),
+        LoginDecision::Wait
+    );
+    for detail in [None, Some("simulated connection in progress".into())] {
+        let status = BridgeStatus {
+            state: BridgeState::Connecting,
+            bot_login: Some("simulated_owner".into()),
+            detail,
+            ..BridgeStatus::default()
+        };
+        assert_eq!(
+            login_decision(&status, "simulated_owner"),
+            LoginDecision::Wait
+        );
+    }
+}
+
+#[test]
+fn stored_login_reuses_only_the_connected_test_broadcaster_case_insensitively() {
+    for login in ["simulated_owner", "SIMULATED_OWNER"] {
+        let status = BridgeStatus {
+            state: BridgeState::Connected,
+            bot_login: Some(login.into()),
+            ..BridgeStatus::default()
+        };
+        assert_eq!(
+            login_decision(&status, "simulated_owner"),
+            LoginDecision::Reuse
+        );
+    }
+}
+
+#[test]
+fn missing_or_invalid_stored_login_requires_device_login() {
+    for (state, detail) in [
+        (BridgeState::Disconnected, Some("simulated no stored login")),
+        (BridgeState::Error, Some("simulated invalid stored login")),
+        (BridgeState::Error, None),
+    ] {
+        let status = BridgeStatus {
+            state,
+            detail: detail.map(String::from),
+            // Even a stale matching login cannot make an invalid session reusable.
+            bot_login: Some("simulated_owner".into()),
+            ..BridgeStatus::default()
+        };
+        assert_eq!(
+            login_decision(&status, "simulated_owner"),
+            LoginDecision::DeviceLogin
+        );
+    }
+}
+
+#[test]
+fn connected_wrong_or_unknown_account_is_refused_without_device_login() {
+    for login in [Some("simulated_other"), None] {
+        let status = BridgeStatus {
+            state: BridgeState::Connected,
+            bot_login: login.map(String::from),
+            ..BridgeStatus::default()
+        };
+        assert_eq!(
+            login_decision(&status, "simulated_owner"),
+            LoginDecision::WrongAccount
+        );
+    }
+}
+
 fn args() -> Vec<String> {
     [
         "--client-id",

@@ -1,5 +1,34 @@
 //! Operator-only spike configuration and pasteable, credential-free step reports.
+use cc_twitch::{BridgeState, BridgeStatus};
 use std::path::PathBuf;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum LoginDecision {
+    Wait,
+    Reuse,
+    DeviceLogin,
+    WrongAccount,
+}
+
+/// A default status is not proof that the asynchronous keychain check has run.
+pub fn login_decision(status: &BridgeStatus, test_channel: &str) -> LoginDecision {
+    match status.state {
+        BridgeState::Connected => {
+            if status
+                .bot_login
+                .as_deref()
+                .is_some_and(|login| login.eq_ignore_ascii_case(test_channel))
+            {
+                LoginDecision::Reuse
+            } else {
+                LoginDecision::WrongAccount
+            }
+        }
+        BridgeState::Error => LoginDecision::DeviceLogin,
+        BridgeState::Disconnected if status.detail.is_some() => LoginDecision::DeviceLogin,
+        BridgeState::Disconnected | BridgeState::Connecting => LoginDecision::Wait,
+    }
+}
 
 pub const STEPS: [&str; 6] = [
     "device_login",

@@ -1,6 +1,6 @@
 use crate::{
     NativeConfig, NativeServices, bind, desktop_login_presenter,
-    spike::{Options, STEPS, report},
+    spike::{LoginDecision, Options, STEPS, login_decision, report},
 };
 use cc_store::{DecisionAction, LedgerEvent, Store, Timestamp, TwitchUserId};
 use cc_twitch::{BridgeState, TwitchConfig};
@@ -50,6 +50,19 @@ async fn steps(
     // Subscribe before login: no first-message race after connection.
     let mut chat = services.subscribe_chat();
     let login = async {
+        loop {
+            match login_decision(&services.bridge.status(), &options.test_channel) {
+                LoginDecision::Wait => tokio::time::sleep(Duration::from_millis(100)).await,
+                LoginDecision::Reuse => {
+                    println!("Stored Twitch login reused.");
+                    return Ok(());
+                }
+                LoginDecision::DeviceLogin => break,
+                LoginDecision::WrongAccount => {
+                    return Err("spike requires the test channel broadcaster login");
+                }
+            }
+        }
         services
             .start_login()
             .await
