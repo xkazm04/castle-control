@@ -301,3 +301,71 @@ AI-7 validation (2026-10-27):
   restriction is already recorded in base `docs/PLAN.md`. The full Node gate is
   **not green**. App Master must rerun those commands in its verification
   environment. No install, junction modification or sandbox bypass was attempted.
+
+## Beacons source URL (WP 3.2 slice)
+
+All registry constructors register `beacons.source.url` alongside the four
+Beacons configuration/preview methods. It uses the same visual map as
+`beacons.visual.list/upsert`: an unknown `visual_id` returns `not_found`.
+`Registry::with_status()` and `with_fixture_root()` stay socket-free; a known
+visual returns `unavailable` because those constructors own no overlay server.
+With native services, registry construction supplies only the server-owned
+overlay origin to that same Beacons state. No bridge or OBS connection is needed.
+
+For a known visual, the result is the existing `SourceUrlResult`, containing a
+canonical `http://localhost:<overlay-port>/beacons/<visual-id>`. Both the origin
+and path are built by the server from its bound port and the schema-checked ID.
+No caller URL, credential, session token, query or fragment enters the result.
+This is a different port from core. GET serves a deliberately blank transparent
+placeholder titled "Castle Control Beacons (rendering unavailable)". The route
+does not load visual data or reflect the path; unknown HTTP path IDs therefore
+serve the same public placeholder, while the RPC enforces visual existence.
+POST is refused; the existing exact-host check and CSP are unchanged: inline
+styles only, no scripts, connections, images or remote resources. Neither
+`/rpc` nor `/events` exists on this origin, including beneath a visual path.
+
+This slice proves URL delivery and the no-remote-resource/origin-isolation
+portion of WP 3.2 acceptance only. It does **not** display a design package.
+Still pending: the package interpreter and shared OBS/Extension host bundle,
+verified package/asset hashing and confined local asset loading, script privilege
+consent, live intensity delivery, subsecond updates, and unchanged-intensity DOM
+reuse. `obs.source.create` still accepts only the existing root connection-test
+URL; accepting per-visual sources with verified-hash cache busting remains with
+that rendering work. This delivery changes no contract identifier or export.
+
+Evidence: `tests/beacons_offline.rs` checks registration and offline errors;
+`tests/offline_registration.rs` exercises these errors with no I/O driver and
+the OS socket inventory; `tests/obs_native.rs` dispatches authenticated HTTP RPC,
+validates the typed URL, excludes the real per-launch session token, rejects
+untrusted URL/path input and checks overlay GET/POST route isolation.
+`cc-obs/tests/overlay.rs` checks the placeholder's exact inherited CSP, lack of
+remote-resource references, read-only behavior and a captured-log sentinel grep.
+
+Validation on the approved delivery scope:
+
+- Red first: the native HTTP test failed because `beacons.source.url` was
+  unregistered; the offline error test received `unavailable` rather than
+  `not_found`. After implementation, all 15 cc-core tests across
+  `beacons_offline`, `native`, `offline_registration` and `obs_native` passed,
+  and all four cc-obs overlay tests passed.
+- Rust format and workspace Clippy (`--all-targets -- -D warnings`) passed.
+  Tooling ESLint, boundaries, hygiene, file-cap and secret scanning passed.
+  The desktop production build passed at 382338/393216 first-load bytes.
+- `cargo test --workspace` passed every cc-core test, then failed in unchanged
+  `cc-engine/tests/lifecycle.rs:75` at
+  `silence_timeout_reaps_child_and_releases_the_process_permit` (expected
+  `model`, received `refused`). The same case passed when rerun alone with
+  `cargo test -p cc-engine --test lifecycle
+  silence_timeout_reaps_child_and_releases_the_process_permit -- --exact`.
+  `git diff HEAD -- crates/cc-engine` is empty. This suggests a timing-sensitive
+  failure, but the workspace run remains failed; no unrelated fix or full-suite
+  rerun was attempted.
+- The verifier's computed source fingerprint matches the committed HTML;
+  contract exports are unchanged, so no regeneration is needed.
+- The exact full `pnpm --config.verify-deps-before-run=false gate` command
+  passed 14 tooling tests and inventories, then failed at `spawnSync cargo
+  EPERM` in the unchanged contract exporter. Recursive pnpm typecheck, lint and
+  tests each failed at lifecycle `spawn EPERM`. These restrictions are already
+  documented in base `docs/PLAN.md`; no full-gate pass is claimed. App Master
+  must rerun the full gate in its verification environment. No installation,
+  junction modification, git write or sandbox bypass was attempted.

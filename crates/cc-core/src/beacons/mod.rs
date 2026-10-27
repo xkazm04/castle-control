@@ -7,7 +7,9 @@ use cc_beacons::{
     intensity::{simulate, validate_curve},
 };
 use cc_store::Store;
-use cc_types::{ErrorCode, ErrorEnvelope, RpcRequest, Visual, VisualId, VisualListResult};
+use cc_types::{
+    ErrorCode, ErrorEnvelope, RpcRequest, SourceUrlResult, Visual, VisualId, VisualListResult,
+};
 use futures::future::BoxFuture;
 use serde::Serialize;
 use serde_json::Value;
@@ -26,6 +28,7 @@ struct State {
 pub struct BeaconsModule {
     state: Mutex<State>,
     root: PathBuf,
+    overlay_origin: Option<String>,
 }
 
 impl BeaconsModule {
@@ -34,6 +37,7 @@ impl BeaconsModule {
         "beacons.visual.upsert",
         "beacons.curve.set",
         "beacons.simulate",
+        "beacons.source.url",
     ];
 
     /// Caller-owned root. As with Lots, viewer-free configuration is atomic JSON
@@ -48,7 +52,15 @@ impl BeaconsModule {
                 visuals,
             }),
             root,
+            overlay_origin: None,
         })
+    }
+
+    /// Supplied only by native registry composition from its bound overlay.
+    /// No caller URL or core session capability is accepted at the RPC door.
+    pub(crate) fn with_overlay_origin(mut self, origin: Option<String>) -> Self {
+        self.overlay_origin = origin;
+        self
     }
 
     fn handle(&self, request: &RpcRequest) -> Result<Value, ErrorEnvelope> {
@@ -78,6 +90,18 @@ impl BeaconsModule {
                 let inputs =
                     InputSelection::new(vec![(params.burst.source, 1)]).map_err(invalid)?;
                 encode(simulate(visual, &inputs, &params.burst).map_err(invalid)?)
+            }
+            RpcRequest::SourceUrl(params) => {
+                // Existence is checked first, including in socket-free registries.
+                let visual = state.visuals.get(&params.visual_id).ok_or_else(not_found)?;
+                let origin = self.overlay_origin.as_ref().ok_or_else(|| {
+                    ErrorEnvelope::new(ErrorCode::Unavailable, "beacons overlay is not configured")
+                })?;
+                encode(SourceUrlResult {
+                    url: format!("{origin}beacons/{}", visual.visual_id.as_str())
+                        .try_into()
+                        .map_err(|_| internal())?,
+                })
             }
             _ => Err(ErrorEnvelope::new(
                 ErrorCode::Unavailable,

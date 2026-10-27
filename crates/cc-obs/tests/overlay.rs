@@ -1,5 +1,72 @@
 //! All HTTP requests are simulated and restricted to a local ephemeral server.
 use cc_obs::Overlay;
+use std::{
+    io::Write,
+    sync::{Arc, Mutex},
+};
+
+#[derive(Clone, Default)]
+struct Captured(Arc<Mutex<Vec<u8>>>);
+impl Write for Captured {
+    fn write(&mut self, bytes: &[u8]) -> std::io::Result<usize> {
+        self.0.lock().unwrap().extend_from_slice(bytes);
+        Ok(bytes.len())
+    }
+    fn flush(&mut self) -> std::io::Result<()> {
+        Ok(())
+    }
+}
+
+#[tokio::test]
+async fn beacons_placeholder_keeps_csp_and_does_not_log_session_sentinel() {
+    let output = Captured::default();
+    let writer = output.clone();
+    let subscriber = tracing_subscriber::fmt()
+        .with_max_level(tracing::Level::TRACE)
+        .with_writer(move || writer.clone())
+        .finish();
+    let _guard = tracing::subscriber::set_default(subscriber);
+    let overlay = Overlay::start(0).await.unwrap();
+    let client = reqwest::Client::builder().no_proxy().build().unwrap();
+    let root = client.get(overlay.url()).send().await.unwrap();
+    let policy = root.headers()["content-security-policy"].clone();
+    let sentinel = "simulated-session-sentinel";
+    let url = format!("{}beacons/simulated-frame", overlay.url());
+    let response = client.get(&url).bearer_auth(sentinel).send().await.unwrap();
+    assert_eq!(response.status(), 200);
+    assert_eq!(response.headers()["content-security-policy"], policy);
+    assert_eq!(response.headers()["cache-control"], "no-store");
+    assert_eq!(response.headers()["x-content-type-options"], "nosniff");
+    let page = response.text().await.unwrap();
+    assert!(page.contains("rendering unavailable"));
+    assert!(page.contains("<body></body>"));
+    assert!(page.contains("background: transparent"));
+    for forbidden in [
+        "<script", "@import", "url(", "http:", "https:", "//", "src=", "<link",
+    ] {
+        assert!(
+            !page.contains(forbidden),
+            "unexpected resource: {forbidden}"
+        );
+    }
+    assert_eq!(client.post(&url).send().await.unwrap().status(), 405);
+    assert_eq!(
+        client
+            .get(&url)
+            .header("host", "remote.example")
+            .send()
+            .await
+            .unwrap()
+            .status(),
+        403
+    );
+    tracing::info!("simulated Beacons URL check complete");
+    let logs = String::from_utf8(output.0.lock().unwrap().clone()).unwrap();
+    assert!(logs.contains("simulated Beacons URL check complete"));
+    for text in [&url, &page, &logs] {
+        assert!(!text.contains(sentinel));
+    }
+}
 
 #[tokio::test]
 async fn simulated_overlay_csp_only_allows_inline_styles() {

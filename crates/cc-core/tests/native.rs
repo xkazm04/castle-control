@@ -127,7 +127,7 @@ async fn native_registry_serves_reads_and_revoke_purges_the_real_store() {
     expected.sort();
     assert_eq!(app.registry.methods(), expected);
     assert_eq!(Registry::with_status().methods(), expected);
-    assert!(!app.registry.methods().contains(&"beacons.source.url"));
+    assert!(app.registry.methods().contains(&"beacons.source.url"));
     let request = parse_request(br#"{"method":"lots.draw.list","params":{}}"#).unwrap();
     assert_eq!(
         app.registry.dispatch(&request).await.unwrap(),

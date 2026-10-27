@@ -59,7 +59,7 @@ impl Registry {
         Self::native(Some(services))
     }
     fn native(services: Option<Arc<NativeServices>>) -> Self {
-        Self::native_offline(services, Arc::new(OfflineModules::default()))
+        Self::native_offline(services, OfflineModules::default())
     }
 
     /// Caller-owned simulated state, isolated from native credentials and chat.
@@ -67,7 +67,7 @@ impl Registry {
         root: impl AsRef<std::path::Path>,
         events: Arc<crate::EventHub>,
     ) -> Result<Self, ErrorEnvelope> {
-        let offline = Arc::new(OfflineModules::at(root.as_ref().to_owned(), events));
+        let offline = OfflineModules::at(root.as_ref().to_owned(), events);
         offline.lots()?;
         Ok(Self::native_offline(None, offline))
     }
@@ -89,7 +89,10 @@ impl Registry {
         Ok(())
     }
 
-    fn native_offline(services: Option<Arc<NativeServices>>, offline: Arc<OfflineModules>) -> Self {
+    fn native_offline(services: Option<Arc<NativeServices>>, offline: OfflineModules) -> Self {
+        let offline = Arc::new(
+            offline.with_overlay_origin(services.as_ref().map(|service| service.overlay_url())),
+        );
         let mut registry = Self::default();
         registry
             .register(Arc::new(StatusModule {

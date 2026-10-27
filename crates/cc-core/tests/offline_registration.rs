@@ -28,7 +28,7 @@ fn exporter_lists_the_native_inventory_without_starting_services() {
     expected.sort();
     assert_eq!(methods, expected);
     assert_eq!(Registry::with_status().methods(), expected);
-    assert!(!methods.iter().any(|name| name == "beacons.source.url"));
+    assert!(methods.iter().any(|name| name == "beacons.source.url"));
     assert!(
         methods
             .iter()
@@ -56,6 +56,33 @@ fn fixture_workflow_persists_and_opens_no_sockets_without_live_flags() {
 
 async fn default_registration() {
     let app = AppState::new(Registry::with_status(), 64).unwrap();
+    // URL registration must not make the socket-free constructors start a server.
+    let visual = json!({"visual_id":"simulated-frame", "name":"Simulated frame",
+        "curve":{"ranges":[{"total":0,"intensity":0.0}],"decay":{"kind":"none"}}});
+    assert_eq!(
+        error(
+            &app.registry,
+            "beacons.source.url",
+            json!({"visual_id":"missing"})
+        )
+        .await,
+        ErrorCode::NotFound
+    );
+    rpc(
+        &app.registry,
+        "beacons.visual.upsert",
+        json!({"visual":visual}),
+    )
+    .await;
+    assert_eq!(
+        error(
+            &app.registry,
+            "beacons.source.url",
+            json!({"visual_id":"simulated-frame"})
+        )
+        .await,
+        ErrorCode::Unavailable
+    );
     assert_eq!(
         rpc(&app.registry, "lots.draw.list", json!({})).await,
         json!({"draws":[]})

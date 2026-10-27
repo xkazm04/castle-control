@@ -41,6 +41,19 @@ impl Overlay {
                     ))
                 }),
             )
+            .route(
+                "/beacons/{visual_id}",
+                get(|| async {
+                    // URL plumbing only: no package host or live intensity yet.
+                    // Never reflect the path or replace missing art with spike UI.
+                    Html(concat!(
+                        "<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\">",
+                        "<title>Castle Control Beacons (rendering unavailable)</title>",
+                        "<style>html, body { background: transparent; margin: 0; }</style>",
+                        "</head><body></body></html>"
+                    ))
+                }),
+            )
             .layer(middleware::from_fn(move |request, next| {
                 secure(request, next, port)
             }));

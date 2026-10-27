@@ -13,6 +13,7 @@ use std::{
 #[derive(Default)]
 pub(crate) struct OfflineModules {
     root: Option<PathBuf>,
+    overlay_origin: Option<String>,
     events: OnceLock<Arc<EventHub>>,
     loaded: OnceLock<Result<Loaded, ErrorEnvelope>>,
 }
@@ -28,9 +29,17 @@ impl OfflineModules {
     pub fn at(root: PathBuf, events: Arc<EventHub>) -> Self {
         Self {
             root: Some(root),
+            overlay_origin: None,
             events: OnceLock::from(events),
             loaded: OnceLock::new(),
         }
+    }
+
+    /// Only native services supply an already-bound overlay origin. This never
+    /// starts a listener or grants these modules access to core RPC credentials.
+    pub fn with_overlay_origin(mut self, origin: Option<String>) -> Self {
+        self.overlay_origin = origin;
+        self
     }
 
     pub fn bind_events(&self, events: Arc<EventHub>) -> Result<(), ErrorEnvelope> {
@@ -71,7 +80,8 @@ impl OfflineModules {
                 let mut lots =
                     LotsModule::open(root.join("lots"), events, recorded.clone(), recorded, true)?;
                 let gatehouse = GatehouseModule::open_offline(root.join("gatehouse"))?;
-                let beacons = BeaconsModule::open(root.join("beacons"))?;
+                let beacons = BeaconsModule::open(root.join("beacons"))?
+                    .with_overlay_origin(self.overlay_origin.clone());
                 lots.temporary_root = temporary_root;
                 Ok(Loaded {
                     gatehouse,

@@ -1,13 +1,110 @@
 //! A simulated local OBS peer; the Hello needs no keychain credentials.
-use cc_core::{NativeConfig, NativeServices};
+use cc_core::{AppState, NativeConfig, NativeServices, Registry, bind};
 use cc_store::Store;
-use cc_types::{EventKind, parse_request};
+use cc_types::{ErrorCode, EventKind, SourceUrlResult, parse_request};
 use futures::{SinkExt, StreamExt};
 use serde_json::{Value, json};
 use std::{
     sync::{Arc, Mutex},
     time::Duration,
 };
+
+#[tokio::test]
+async fn beacons_source_url_uses_only_the_owned_overlay_and_never_the_session() {
+    let directory = tempfile::tempdir().unwrap();
+    let service = NativeServices::new(
+        NativeConfig {
+            twitch: Default::default(),
+            obs: cc_obs::Config {
+                port: 0,
+                password_label: "simulated-unused".into(),
+            },
+            overlay_port: 0,
+        },
+        Store::open(directory.path()).unwrap(),
+        Arc::new(|_| panic!("no live login")),
+    )
+    .await
+    .unwrap();
+    // No bridge/OBS workers: URL delivery must not depend on either connection.
+    let app = AppState::new(Registry::with_native(service.clone()), 32).unwrap();
+    let (address, server) = bind(app.clone(), ([127, 0, 0, 1], 0).into()).await.unwrap();
+    let server = tokio::spawn(server);
+    let client = reqwest::Client::builder().no_proxy().build().unwrap();
+    let endpoint = format!("http://{address}/rpc");
+    let visual = json!({"visual_id":"simulated-frame", "name":"Simulated frame",
+        "curve":{"ranges":[{"total":0,"intensity":0.0}],"decay":{"kind":"none"}}});
+    let response = client
+        .post(&endpoint)
+        .bearer_auth(app.session_token())
+        .json(&json!({"method":"beacons.visual.upsert","params":{"visual":visual}}))
+        .send()
+        .await
+        .unwrap();
+    assert!(response.status().is_success());
+    for id in ["simulated-frame", "missing"] {
+        let response = client
+            .post(&endpoint)
+            .bearer_auth(app.session_token())
+            .json(&json!({"method":"beacons.source.url","params":{"visual_id":id}}))
+            .send()
+            .await
+            .unwrap();
+        let status = response.status();
+        let text = response.text().await.unwrap();
+        assert!(!text.contains(app.session_token()));
+        if id == "missing" {
+            let error: cc_types::ErrorEnvelope = serde_json::from_str(&text).unwrap();
+            assert_eq!(error.code, ErrorCode::NotFound);
+            continue;
+        }
+        assert!(status.is_success());
+        let result: SourceUrlResult = serde_json::from_str(&text).unwrap();
+        let url = String::from(result.url);
+        assert_eq!(
+            url,
+            format!("{}beacons/simulated-frame", service.overlay_url())
+        );
+        let parsed = reqwest::Url::parse(&url).unwrap();
+        assert_eq!(parsed.scheme(), "http");
+        assert_eq!(parsed.host_str(), Some("localhost"));
+        assert_ne!(parsed.port(), Some(address.port()));
+        assert!(parsed.username().is_empty());
+        assert!(parsed.password().is_none());
+        assert!(parsed.query().is_none());
+        assert!(parsed.fragment().is_none());
+        let page = client.get(&url).send().await.unwrap();
+        assert_eq!(page.status(), 200);
+        assert!(page.text().await.unwrap().contains("rendering unavailable"));
+        for route in [
+            "rpc",
+            "events",
+            "beacons/simulated-frame/rpc",
+            "beacons/simulated-frame/events",
+        ] {
+            let target = format!("{}{route}", service.overlay_url());
+            assert_eq!(client.get(&target).send().await.unwrap().status(), 404);
+            assert_eq!(client.post(&target).send().await.unwrap().status(), 404);
+        }
+    }
+    // The request schema accepts an ID only, never a caller-supplied URL.
+    for params in [
+        json!({"visual_id":"../rpc"}),
+        json!({"visual_id":"simulated-frame","url":"http://remote.example/"}),
+    ] {
+        let response = client
+            .post(&endpoint)
+            .bearer_auth(app.session_token())
+            .json(&json!({"method":"beacons.source.url","params":params}))
+            .send()
+            .await
+            .unwrap();
+        let error: cc_types::ErrorEnvelope = response.json().await.unwrap();
+        assert_eq!(error.code, ErrorCode::Invalid);
+    }
+    app.shutdown();
+    server.await.unwrap().unwrap();
+}
 
 #[tokio::test]
 async fn native_obs_rpc_reads_live_status_creates_owned_source_and_invalidates_changes() {

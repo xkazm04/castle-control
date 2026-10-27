@@ -222,7 +222,7 @@ async fn gift_fifty_is_an_isolated_labelled_preview_without_live_events() {
 }
 
 #[test]
-fn registry_registers_exactly_the_four_offline_beacons_methods() {
+fn registry_registers_all_five_beacons_methods_without_starting_an_overlay() {
     let root = tempfile::tempdir().unwrap();
     let registry = open(root.path());
     let methods: Vec<_> = registry
@@ -235,9 +235,44 @@ fn registry_registers_exactly_the_four_offline_beacons_methods() {
         [
             "beacons.curve.set",
             "beacons.simulate",
+            "beacons.source.url",
             "beacons.visual.list",
             "beacons.visual.upsert"
         ]
     );
-    assert!(!registry.methods().contains(&"beacons.source.url"));
+    assert!(registry.methods().contains(&"beacons.source.url"));
+}
+
+#[tokio::test]
+async fn offline_source_url_checks_visual_before_reporting_missing_overlay() {
+    let registry = Registry::with_status();
+    assert_eq!(
+        call(
+            &registry,
+            "beacons.source.url",
+            json!({"visual_id":"missing"})
+        )
+        .await
+        .unwrap_err()
+        .code,
+        ErrorCode::NotFound
+    );
+    call(
+        &registry,
+        "beacons.visual.upsert",
+        json!({"visual":visual()}),
+    )
+    .await
+    .unwrap();
+    assert_eq!(
+        call(
+            &registry,
+            "beacons.source.url",
+            json!({"visual_id":"simulated-frame"})
+        )
+        .await
+        .unwrap_err()
+        .code,
+        ErrorCode::Unavailable
+    );
 }
