@@ -23,6 +23,16 @@ const grammar: readonly {
   { text: 'catch me up' },
   { text: 'what should the next turn be', chamber: 'studio', kind: 'proclaim', fields: { turn: 'Preview the next unclaimed tile' }, layer: 'map' },
   { text: 'unrecognised request' },
+  { text: 'restyle the beacon as hype border', chamber: 'visuals', kind: 'proclaim',
+    fields: { design_action: 'restyle', artifact: 'beacon', preset_id: 'hype-border', shape: 'border', simulated: true }, layer: 'beacon' },
+  { text: 'show me presets for the draw', chamber: 'lottery', kind: 'proclaim',
+    fields: { design_action: 'restyle', artifact: 'draw', preset_id: 'urn', simulated: true }, layer: 'draw' },
+  { text: 'design a quiet engraved look for the urn', chamber: 'lottery', kind: 'proclaim',
+    fields: { design_action: 'custom', artifact: 'urn', prompt: 'quiet engraved', treatment: 'engraved', density: 'quiet', simulated: true }, layer: 'draw' },
+  { text: 'restyle the map as choice board', chamber: 'studio', kind: 'proclaim',
+    fields: { artifact: 'map', preset_id: 'choice-board' }, layer: 'map' },
+  { text: 'restyle the overlay as stream frame', chamber: 'visuals', kind: 'proclaim',
+    fields: { artifact: 'overlay', preset_id: 'stream-frame' }, layer: 'beacon' },
 ];
 
 test.each(grammar)('grammar: $text', async row => {
@@ -139,4 +149,39 @@ test('input keeps prize and line case; mixed case and punctuation still match', 
   expect(prize.proposals[0]?.fields.find(field => field.key === 'prize')?.value).toBe('a Signed Print');
   const pass = await steward.ask('Pass Message42', context);
   expect(pass.proposals[0]?.fields.find(field => field.key === 'line')?.value).toBe('Message42');
+});
+
+test('design requests list presets and stay simulated until explicitly previewed and held', async () => {
+  const queue = new ProposalQueue(); const steward = new SimulatedSteward(queue);
+  const list = await steward.ask('Show me presets for the DRAW!', context);
+  expect(list.reply).toContain('SIMULATED');
+  for (const label of ['Urn', 'Wheel', 'Deck', 'Ballot box', 'Overlord urn']) expect(list.reply).toContain(label);
+  expect(list.proposals[0]?.title).toBe('Restyle');
+  expect(queue.pending()).toHaveLength(1);
+  expect((await steward.ask('seal it', context)).proposals).toEqual([]);
+  expect(queue.pending()[0]?.state).toBe('drafted');
+});
+
+test.each([
+  ['restyle the beacon as hype border', 'restyle the beacon as gilded camera frame', 'preset_id', 'gilded-camera-frame'],
+  ['design a quiet look for the urn', 'design a bold engraved look for the urn', 'density', 'bold'],
+])('design amendments preserve history: %s', async (initial, amendment, key, value) => {
+  const queue = new ProposalQueue(); const steward = new SimulatedSteward(queue);
+  const proposal = (await steward.ask(initial, context)).proposals[0];
+  if (!proposal) throw new Error('Expected design proposal');
+  const next = await steward.amend(proposal.id, amendment, context);
+  expect(next.reply).toContain('SIMULATED');
+  expect(next.proposals[0]).toMatchObject({ id: proposal.id, state: 'amended', revision: 2 });
+  expect(next.proposals[0]?.fields.find(field => field.key === key)).toMatchObject({ value });
+  expect(next.proposals[0]?.fields.find(field => field.key === key)?.struck).toHaveLength(1);
+  expect(queue.pending()).toHaveLength(1);
+  expect((await steward.tearUp(proposal.id)).proposals[0]?.state).toBe('torn');
+  expect((await steward.amend(proposal.id, amendment, context)).proposals).toEqual([]);
+});
+
+test.each(['restyle the beacon as remote code', 'design a ' + 'x'.repeat(201) + ' look for the urn'])('invalid design request: %s', async text => {
+  const queue = new ProposalQueue(); const steward = new SimulatedSteward(queue);
+  const before = queue.getSnapshot();
+  expect((await steward.ask(text, context)).proposals).toEqual([]);
+  expect(queue.getSnapshot()).toBe(before);
 });

@@ -126,6 +126,8 @@ Declare the keymap once.
 
 **Wave 3** (only after the owner sees wave 2): presets, Restyle and custom design through the Steward (02-ui.md's preset rule), wired through the same draft and proclaim loop.
 
+**Wave 3 status (AI-10):** `@castle-control/ui/design` supplies the preset catalog, shared-queue Restyle and Custom design proposals, and the side-by-side `DesignFocus`. Custom design is data-only scene/style parameters, validated at one schema door, and stays a labelled SIMULATED fixture until the live engine is wired. Preview captures both proposal and current-look revisions; stale drafts require another preview, a human hold applies exactly that preview to the simulated look, and tear-up discards it. No code frame, network, model call or new contract identifier is registered. Room mounting after AI-9 is the next step: lazy-import the design subpath, share `designSession` (or one `DesignSession` for the existing queue), and route design preview/seal/tear through it. Plain queue authorization cannot apply a design look. AI-10 does not mount rooms or change live output.
+
 Each work package's acceptance:
 - tests for its behaviour, including the keyboard path;
 - every drafted proposal is visibly a proposal, and nothing acts without a hold;

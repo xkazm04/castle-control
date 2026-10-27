@@ -1,0 +1,25 @@
+.cc-design-focus { color: var(--ink); background: var(--paper); padding: var(--space-20); font: var(--text-body)/1.4 var(--font-ui); }
+.cc-design-focus header { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: var(--space-12); }
+.cc-design-focus h2 { margin: 0; font: 800 var(--text-chamber)/1.2 var(--font-display); }
+.cc-design-focus h3 { margin: 0 0 var(--space-12); font: 700 var(--text-section)/1.3 var(--font-ui); }
+.cc-design-focus header strong { color: var(--or-text); font-size: var(--text-label); }
+.cc-design-focus p { font-size: var(--text-body); }
+.cc-design-comparison { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-16); }
+.cc-design-comparison > section { min-width: 0; padding: var(--space-12); border-top: var(--rule-thin) solid var(--line); }
+.cc-design-controls, .cc-design-actions { display: flex; flex-wrap: wrap; align-items: end; gap: var(--space-12); margin-block: var(--space-16); }
+.cc-design-controls label { display: grid; gap: var(--space-6); font-size: var(--text-label); }
+.cc-design-controls input, .cc-design-controls select, .cc-design-controls button, .cc-design-actions > button:not(.cc-seal-button) { background: var(--card); color: var(--ink); border: var(--rule-thin) solid var(--ink); padding: var(--space-8) var(--space-12); font: inherit; }
+.cc-design-focus button { cursor: pointer; }
+.cc-design-focus button:disabled { opacity: var(--disabled-opacity); cursor: not-allowed; }
+.cc-design-focus :focus-visible { outline: var(--rule-strong) solid var(--azure-text); outline-offset: var(--focus-offset); }
+.cc-design-focus [role="alert"] { color: var(--danger); border-left: var(--rule-strong) solid var(--danger); padding-inline: var(--space-12); }
+.cc-design-scene { --design-ink: var(--ink); background: var(--card); text-align: center; }
+.cc-design-scene[data-ink="gules"] { --design-ink: var(--gules-text); }
+.cc-design-scene[data-ink="azure"] { --design-ink: var(--azure-text); }
+.cc-design-scene[data-ink="or"] { --design-ink: var(--or-text); }
+.cc-design-scene svg { display: block; width: 100%; max-height: var(--cw); color: var(--design-ink); fill: none; stroke: currentColor; stroke-width: 2; }
+.cc-design-scene[data-treatment="engraved"] svg { stroke-width: 1; }
+.cc-design-scene[data-treatment="halftone"] { background-image: var(--paper-grain); }
+.cc-design-scene[data-treatment="plain"] .cc-design-grain { display: none; }
+.cc-design-scene[data-density="bold"] svg { stroke-width: 3; }
+.cc-design-scene p { margin: 0; padding: var(--space-8); font-size: var(--text-small); text-transform: capitalize; }

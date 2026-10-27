@@ -1,6 +1,7 @@
 import { parseIntent } from './grammar.js';
 import { isPending, ProposalQueue, proposalQueue } from './queue.js';
 import type { ChamberId, FieldAmendment, FieldValue, Proposal, ProposalKind, ProposalResult, StewardContext, StewardFocus, StewardPort, StewardTurn } from './port.js';
+import type { Intent } from './grammar.js';
 
 export interface StewardFacts {
   /** Provenance shown with every factual reply. Defaults are fictional sample data. */
@@ -19,7 +20,7 @@ export const sampleStewardFacts: Readonly<StewardFacts> = Object.freeze({
 const layers: Readonly<Record<ChamberId, string>> = Object.freeze({
   lottery: 'draw', moderator: 'chat', visuals: 'beacon', studio: 'map',
 });
-const help = 'I understand: draft a question draw; make it N winners; no raiders; prize is a signed print; pass or bar a line; pass all as proposed; raise the drawbridge; test fire N gifts; what does chat want; catch me up; what should the next turn be.';
+const help = 'I understand: draft a question draw; make it N winners; no raiders; prize is a signed print; pass or bar a line; pass all as proposed; raise the drawbridge; test fire N gifts; what does chat want; catch me up; what should the next turn be; restyle the beacon as hype border; show me presets for the draw; design a quiet look for the urn.';
 
 function field(key: string, label: string, value: FieldValue) {
   return { key, label, value, struck: [] };
@@ -48,11 +49,33 @@ export class SimulatedSteward implements StewardPort {
     return this.#reply(reply, [proposal], { chamber: proposal.chamber, layer: layers[proposal.chamber] });
   }
 
-  #draft(chamber: ChamberId, kind: ProposalKind, title: string, fields: Proposal['fields']): StewardTurn {
+  #nextId(): string {
     let id: string;
     do { id = `proposal-${++this.#sequence}`; } while (this.#queue.getSnapshot().proposals.some(proposal => proposal.id === id));
+    return id;
+  }
+
+  #draft(chamber: ChamberId, kind: ProposalKind, title: string, fields: Proposal['fields']): StewardTurn {
+    const id = this.#nextId();
     return this.#result(this.#queue.addOrUpdate({ id, chamber, kind, title, revision: 1, state: 'drafted', fields }),
       `Drafted: ${title}. Nothing acts until you hold to ${kind === 'seal' ? 'seal' : 'seal and proclaim'}.`);
+  }
+
+  async #design(intent: Extract<Intent, { type: 'restyle' | 'presets' | 'custom' }>, id?: string): Promise<StewardTurn> {
+    // Keep the design core off the initial Steward/UI chunk. No component or CSS loads here.
+    const { draftDesign } = await import('../design/proposals.js');
+    const { presetsFor } = await import('../design/catalog.js');
+    const presets = presetsFor(intent.artifact);
+    const preset = intent.type === 'restyle'
+      ? presets.find(item => item.id === intent.preset.toLowerCase().replaceAll(' ', '-')
+        || item.label.toLowerCase() === intent.preset.toLowerCase()) : presets[0];
+    if (intent.type !== 'custom' && !preset) return this.#reply(`Choose a preset: ${presets.map(item => item.label).join(', ')}.`);
+    if (id !== undefined && !this.#queue.pending().some(proposal => proposal.id === id
+      && proposal.fields.some(field => field.key === 'design_action'))) return this.#reply('Choose an open design draft to amend.');
+    const request = intent.type === 'custom' ? { action: 'custom', artifact: intent.artifact, prompt: intent.prompt } as const
+      : { action: 'restyle', artifact: intent.artifact, preset_id: preset?.id ?? '' } as const;
+    return this.#result(draftDesign(this.#queue, id ?? this.#nextId(), request),
+      `SIMULATED design fixture. ${intent.type === 'presets' ? `Presets: ${presets.map(item => item.label).join(', ')}. ` : ''}Preview the draft before holding to seal and proclaim. The current look stays intact.`);
   }
 
   #amend(fields: readonly FieldAmendment[], context: StewardContext, id?: string): StewardTurn {
@@ -68,6 +91,7 @@ export class SimulatedSteward implements StewardPort {
   async ask(text: string, context: StewardContext): Promise<StewardTurn> {
     const intent = parseIntent(text);
     switch (intent.type) {
+      case 'restyle': case 'presets': case 'custom': return this.#design(intent);
       case 'draw': return this.#draft('lottery', 'seal', 'Question draw', [
         field('winners', 'Winners', 3), field('cap', 'Raid cohort cap', '1/3 of winners'),
         field('cooldown', 'Cooldown', 'no repeat for 3 draws'), field('prize', 'Prize', 'none'),
@@ -88,6 +112,7 @@ export class SimulatedSteward implements StewardPort {
 
   async amend(proposalId: string, text: string, context: StewardContext): Promise<StewardTurn> {
     const intent = parseIntent(text);
+    if (intent.type === 'restyle' || intent.type === 'custom') return this.#design(intent, proposalId);
     return intent.type === 'amend' ? this.#amend(intent.fields, context, proposalId) : this.#reply(help);
   }
 

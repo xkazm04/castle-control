@@ -1,6 +1,10 @@
 import type { FieldAmendment } from './port.js';
+import type { ArtifactId } from '../design/catalog.js';
 
 export type Intent =
+  | { readonly type: 'restyle'; readonly artifact: ArtifactId; readonly preset: string }
+  | { readonly type: 'presets'; readonly artifact: ArtifactId }
+  | { readonly type: 'custom'; readonly artifact: ArtifactId; readonly prompt: string }
   | { readonly type: 'draw' }
   | { readonly type: 'amend'; readonly fields: readonly FieldAmendment[] }
   | { readonly type: 'verdict'; readonly verdict: 'pass' | 'bar'; readonly line: string }
@@ -23,6 +27,12 @@ interface GrammarRule {
 }
 
 const rules: readonly GrammarRule[] = [
+  { pattern: /^restyle (?:the )?(draw|urn|beacon|map|overlay) (?:as|to) (.+)$/i,
+    intent: match => ({ type: 'restyle', artifact: artifact(match[1]), preset: match[2] ?? '' }) },
+  { pattern: /^show me presets for (?:the )?(draw|urn|beacon|map|overlay)$/i,
+    intent: match => ({ type: 'presets', artifact: artifact(match[1]) }) },
+  { pattern: /^design (?:an? )?(.+) look for (?:the )?(draw|urn|beacon|map|overlay)$/i,
+    intent: match => ({ type: 'custom', artifact: artifact(match[2]), prompt: match[1] ?? '' }) },
   { pattern: /^(?:draft|make|start|new|set up|setup|run|open|prepare|create)(?: a)? (?:question )?(?:draw|lottery|raffle|giveaway|urn)$/i,
     intent: () => ({ type: 'draw' }) },
   { pattern: /^(?:make it )?(\d+|one|two|three|four|five|six|seven|eight|nine|ten) winners?$/i,
@@ -50,6 +60,16 @@ const rules: readonly GrammarRule[] = [
   { pattern: /^(?:yes|yep|ok|okay|do it|seal(?: it)?|approve(?: it)?|confirm|proclaim(?: it)?)$/i,
     intent: () => ({ type: 'confirm' }) },
 ];
+
+function artifact(raw: string | undefined): ArtifactId {
+  switch (raw?.toLowerCase()) {
+    case 'urn': return 'urn';
+    case 'beacon': return 'beacon';
+    case 'map': return 'map';
+    case 'overlay': return 'overlay';
+    default: return 'draw';
+  }
+}
 
 /** Ported as typed intent data from the keep/preview grammar, never executable UI. */
 export function parseIntent(text: string): Intent {
