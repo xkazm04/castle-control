@@ -7,7 +7,8 @@ import { ProposalCard, SealButton, sealHoldDurationMs } from '@castle-control/ui
 import { ProposalQueue, SimulatedSteward } from '@castle-control/ui/steward';
 import SealSlot, { sealRoomProposal } from '../rooms/seal-slot/index.jsx';
 import { draftRoll } from '../rooms/lottery/session.js';
-import { coreLotsConnection, createDesktopClient } from '../client.js';
+import { coreGatehouseConnection, coreLotsConnection, createDesktopClient } from '../client.js';
+import { fixtureCharts, fixtureRules } from '../moderation-fixture.js';
 import { fixtureDraws } from '../lots-fixture.js';
 import { backHash, dispatchShortcut, initialNavigation, navigateHash } from '../navigation.js';
 import Room from './room.jsx';
@@ -244,8 +245,44 @@ test('lazy Room preserves its props contract, slot and replay link; core mode ex
     expect(core).not.toContain('Propose Ban');
     expect(core).not.toContain('>Restyle</button>');
     expect(core).not.toContain('>Custom design</button>');
-    if (chamber !== 'lottery') expect(core).toContain(chamber === 'studio' ? 'The map table is bare' : 'Room data is not configured');
+    if (chamber === 'visuals' || chamber === 'studio') expect(core).toContain(chamber === 'studio' ? 'The map table is bare' : 'Room data is not configured');
   }
+});
+
+test('core launch reaches the lazy Gatehouse and drill routes with an isolated connection and no fixture controls', async () => {
+  const rpc = vi.fn(async (_endpoint: string, _session: string, method: string) =>
+    method === 'gatehouse.rules.list' ? fixtureRules : fixtureCharts[0]);
+  const launch = { mode: 'core', endpoint: 'http://127.0.0.1:3210/', session_token: 'a'.repeat(64) };
+  const client = createDesktopClient(launch, undefined, undefined, { rpc });
+  const snapshot = client.getSnapshot();
+  const fetch = vi.fn(); const socket = vi.fn();
+  vi.stubGlobal('fetch', fetch); vi.stubGlobal('WebSocket', socket);
+  const render = async (replay: boolean) => {
+    const stream = await renderToReadableStream(<Room chamber="moderator" replay={replay} snapshot={snapshot}
+      origin="keep" on_open={vi.fn()} on_back={vi.fn()} />);
+    await stream.allReady;
+    return new Response(stream).text();
+  };
+  expect(await render(false)).toContain('aria-label="Core Gatehouse"');
+  const connection = coreGatehouseConnection(snapshot);
+  expect(connection?.port).toBeDefined(); await connection?.port?.load();
+  const markup = await render(false);
+  expect(markup).toContain('Core opinion directions'); expect(markup).toContain('Save watching rule');
+  expect(markup).toContain('href="#/chamber/moderator/drill"');
+  expect(markup).toContain('aria-label="Seal slot"');
+  for (const text of ['Room data is not configured', 'Propose Ban', 'data-message-row', 'SIMULATED', '>Restyle</button>', '>Custom design</button>', 'Hold to seal']) {
+    expect(markup).not.toContain(text);
+  }
+  const drill = await render(true);
+  expect(drill).toContain('simulated replay from core'); expect(drill).toContain('Import recording');
+  expect(drill).not.toContain('Generated fixture output');
+  expect(rpc.mock.calls.map(call => call[2])).toEqual(['gatehouse.rules.list', 'gatehouse.consensus.get']);
+  expect(fetch).not.toHaveBeenCalled(); expect(socket).not.toHaveBeenCalled();
+  expect(coreGatehouseConnection(createDesktopClient({ mode: 'fixture' }).getSnapshot())).toBeUndefined();
+  const other = createDesktopClient({ ...launch, session_token: 'b'.repeat(64) });
+  expect(coreGatehouseConnection(other.getSnapshot())).not.toBe(connection);
+  expect(coreGatehouseConnection(other.getSnapshot())?.port).toBeUndefined();
+  expect(JSON.stringify(snapshot)).not.toContain(launch.session_token);
 });
 
 test('fixture launch mounts the existing Lot preview, proposal slot and saved simulated proof', async () => {

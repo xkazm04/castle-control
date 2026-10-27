@@ -1,0 +1,24 @@
+// GENERATED from cc-types by pnpm -C packages/contract generate. Do not edit.
+
+import type { ValidateFunction } from 'ajv';
+import type { RpcMethods } from './types.js';
+export const p11: ValidateFunction<RpcMethods["gatehouse.rules.list"]['params']>;
+export const r11: ValidateFunction<RpcMethods["gatehouse.rules.list"]['result']>;
+export const p12: ValidateFunction<RpcMethods["gatehouse.rules.upsert"]['params']>;
+export const r12: ValidateFunction<RpcMethods["gatehouse.rules.upsert"]['result']>;
+export const p14: ValidateFunction<RpcMethods["gatehouse.ban.confirm"]['params']>;
+export const r14: ValidateFunction<RpcMethods["gatehouse.ban.confirm"]['result']>;
+export const p15: ValidateFunction<RpcMethods["gatehouse.ban.dismiss"]['params']>;
+export const r15: ValidateFunction<RpcMethods["gatehouse.ban.dismiss"]['result']>;
+export const p16: ValidateFunction<RpcMethods["gatehouse.decision.undo"]['params']>;
+export const r16: ValidateFunction<RpcMethods["gatehouse.decision.undo"]['result']>;
+export const p17: ValidateFunction<RpcMethods["gatehouse.petition.resolve"]['params']>;
+export const r17: ValidateFunction<RpcMethods["gatehouse.petition.resolve"]['result']>;
+export const p22: ValidateFunction<RpcMethods["gatehouse.consensus.get"]['params']>;
+export const r22: ValidateFunction<RpcMethods["gatehouse.consensus.get"]['result']>;
+export const p23: ValidateFunction<RpcMethods["gatehouse.drill.run"]['params']>;
+export const r23: ValidateFunction<RpcMethods["gatehouse.drill.run"]['result']>;
+export const p24: ValidateFunction<RpcMethods["gatehouse.drill.diff"]['params']>;
+export const r24: ValidateFunction<RpcMethods["gatehouse.drill.diff"]['result']>;
+export const p25: ValidateFunction<RpcMethods["gatehouse.recording.import"]['params']>;
+export const r25: ValidateFunction<RpcMethods["gatehouse.recording.import"]['result']>;

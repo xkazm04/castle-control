@@ -1,4 +1,4 @@
-import { useSyncExternalStore } from 'react';
+import { lazy, useSyncExternalStore } from 'react';
 import type { ReactNode } from 'react';
 import { proposalQueue } from '@castle-control/ui/steward';
 import type { ProposalQueue } from '@castle-control/ui/steward';
@@ -13,9 +13,15 @@ import { Drill } from './drill.jsx';
 import { moderationSession } from './session.js';
 import './room.css';
 
-export default function ModeratorRoom({ snapshot, replay, queue = proposalQueue, seal_slot }: {
-  snapshot: Snapshot; replay: boolean; queue?: ProposalQueue; seal_slot?: ReactNode;
-}) {
+const CoreModeratorRoom = lazy(() => import('./core.jsx'));
+type Props = { snapshot: Snapshot; replay: boolean; queue?: ProposalQueue; seal_slot?: ReactNode };
+
+export default function ModeratorRoom(props: Props) {
+  return props.snapshot.mode === 'core' ? <CoreModeratorRoom snapshot={props.snapshot} replay={props.replay} seal_slot={props.seal_slot} />
+    : <FixtureModeratorRoom {...props} />;
+}
+
+function FixtureModeratorRoom({ snapshot, replay, queue = proposalQueue, seal_slot }: Props) {
   const { port } = moderationSession(queue);
   const state = useSyncExternalStore(port.subscribe, port.getSnapshot, port.getSnapshot);
   if (snapshot.mode !== 'fixture') return <p>No live moderation controls are available.</p>;

@@ -38,4 +38,8 @@
 .moderator-drill { padding: var(--space-16); }
 .moderator-drill-room { height: 100%; overflow: auto; padding: var(--space-16); }
 .moderator-room section { min-width: 0; }
+.moderator-core-status { padding: var(--space-8) var(--space-16); }
+.moderator-core-drill label, .moderator-core-drill textarea { display: block; width: 100%; }
+.moderator-core-drill textarea { min-height: var(--space-40); }
+.moderator-core-drill input, .moderator-rule input { width: 100%; min-width: 0; }
 @media (max-width: 900px) { .moderator-room, .moderator-columns { height: auto; } .moderator-columns, .moderator-drill-columns { grid-template-columns: minmax(0, 1fr); } .moderator-columns > .room-column { overflow: visible; } }

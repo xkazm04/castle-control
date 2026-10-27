@@ -13,7 +13,15 @@ const schema = parseJson(readFileSync(join(output, 'contract.schema.json'), 'utf
 delete schema.$comment;
 const files = artifacts(schema);
 assert.deepEqual(files, artifacts(schema), 'generation must be byte deterministic');
-assert.equal(Object.keys(files).length, 10);
+assert.equal(Object.keys(files).length, 13);
+const gatehouseNames = ['rules.list', 'rules.upsert', 'ban.confirm', 'ban.dismiss', 'decision.undo',
+  'petition.resolve', 'recording.import', 'drill.run', 'drill.diff', 'consensus.get'].map(name => `gatehouse.${name}`);
+const gatehouseMethods = schema.methods.map((method, index) => ({ ...method, index })).filter(method => gatehouseNames.includes(method.name));
+assert.equal(gatehouseMethods.length, 10);
+assert(files['gatehouse-validators.mjs'], 'Gatehouse validators have a separate generated module');
+assert(files['gatehouse-validators.d.mts'], 'Gatehouse validators retain typed declarations');
+assert(files['gatehouse-validation.ts'].includes("from './gatehouse-validators.mjs'"));
+assert(!files['gatehouse-validation.ts'].includes("from './validators.mjs'"));
 const lotsMethods = schema.methods.map((method, index) => ({ ...method, index })).filter(method => method.name.startsWith('lots.'));
 assert.equal(lotsMethods.length, 7);
 assert(files['lots-validators.mjs'], 'Lots validators have a separate generated module');
@@ -23,6 +31,7 @@ assert(!files['lots-validation.ts'].includes("from './validators.mjs'"), 'lazy L
 assert(!files['lots-validators.mjs'].includes('require('), 'Lots validators stay standalone browser ESM');
 const manifest = parseJson(readFileSync(join(output, '../../package.json'), 'utf8'));
 assert.equal(manifest.exports['./lots'], './src/generated/lots-validation.ts', 'Lots use a distinct public subpath');
+assert.equal(manifest.exports['./gatehouse'], './src/generated/gatehouse-validation.ts');
 assert(!/\brequire\s*\(/.test(files['validators.mjs']), 'standalone validators must run as browser ESM');
 assert.deepEqual(differences(files), []);
 assert.throws(() => artifacts({ methods: [], event_kinds: [], error_codes: [] }), /empty/);
@@ -74,6 +83,49 @@ function validatorUrl(generated, name = 'validators.mjs') {
 }
 const compiled = await import(validatorUrl(files));
 const lots = await import(validatorUrl(files, 'lots-validators.mjs'));
+const gatehouse = await import(validatorUrl(files, 'gatehouse-validators.mjs'));
+assert.deepEqual(Object.keys(gatehouse).sort(), gatehouseMethods.flatMap(({ index }) => [`p${index}`, `r${index}`]).sort());
+assert.equal(gatehouseMethods.length, (files['gatehouse-validation.ts'].match(/export const gatehouse/g) ?? []).length);
+assert(!/\b(?:import |require\s*\()/.test(files['gatehouse-validators.mjs']), 'Gatehouse stays standalone browser ESM');
+assert(!files['validators.mjs'].includes('gatehouse-validators'), 'legacy registry stays independent');
+for (const { index } of gatehouseMethods) {
+  for (const prefix of ['p', 'r']) {
+    assert.notEqual(compiled[`${prefix}${index}`], gatehouse[`${prefix}${index}`], 'Gatehouse functions must be independent');
+    for (const value of [null, [], '', 0, {}, { extra: true }, { decision_id: '01ARZ3NDEKTSV4RRFFQ69G5FAV' }]) {
+      assert.equal(compiled[`${prefix}${index}`](value), gatehouse[`${prefix}${index}`](value));
+    }
+  }
+}
+const at = '2026-10-27T12:00:00Z';
+const rule = { rule_id: 'simulated-rule', name: 'Simulated rule', rule_class: 'pattern', pattern: 'simulated',
+  action: 'hold', mode: 'shadow', delivery: 'streamer' };
+const decision = { decision_id: '01ARZ3NDEKTSV4RRFFQ69G5FAV', message_id: 'simulated-message', at,
+  kind: 'held', verdict: 'hold', operator: 'human', simulated: true, reason_codes: [] };
+const configuration = { rules: [rule], bank: 'simulated-bank', judge: 'simulated-judge', prompts: [] };
+const hash = 'a'.repeat(64);
+const replay = { label: 'simulated', source: 'simulated-recording', instrument_hash: hash,
+  instrument: { bank_hash: hash, judge_hash: hash, prompts_hash: hash, rules_hash: hash }, outcomes: [], gaps: [],
+  summary: { passes: 0, states: { acted: 0, not_provoked: 0, not_evaluable: 0, judge_pending: 0, judge_void: 0, engine_failed: 0 },
+    over_moderation: { evaluated: 0, false_positives: 0 } } };
+const positive = new Map([
+  ['gatehouse.rules.list', [{}, { rules: [rule] }]], ['gatehouse.rules.upsert', [{ rule }, rule]],
+  ...['ban.confirm', 'ban.dismiss', 'decision.undo'].map(name => [`gatehouse.${name}`, [{ decision_id: decision.decision_id }, decision]]),
+  ['gatehouse.petition.resolve', [{ decision_id: decision.decision_id, outcome: 'overturned' }, decision]],
+  ['gatehouse.consensus.get', [{ filter: { kind: 'all' }, window_s: 900 }, { at, filter: { kind: 'all' }, window_s: 900, shed_count: 0, directions: [] }]],
+  ['gatehouse.recording.import', [{ source: 'simulated-import', messages: [], gaps: [] }, { source: 'simulated-import', recording: 'simulated-recording', message_count: 0, gaps: [] }]],
+  ['gatehouse.drill.run', [{ recording: 'simulated-recording', configuration }, replay]],
+  ['gatehouse.drill.diff', [{ recording: 'simulated-recording', baseline: configuration, candidate: configuration }, { baseline: replay, candidate: replay, changes: [], label: 'simulated' }]],
+]);
+for (const { name, index } of gatehouseMethods) {
+  const values = positive.get(name);
+  assert(values, `missing positive example for ${name}`);
+  for (const [offset, prefix] of ['p', 'r'].entries()) {
+    for (const validator of [compiled[`${prefix}${index}`], gatehouse[`${prefix}${index}`]]) {
+      assert.equal(validator(values[offset]), true, `unchanged ${name} ${prefix} accepts simulated values`);
+      assert.equal(validator({ ...values[offset], extra: true }), false, `${name} ${prefix} rejects unknown fields`);
+    }
+  }
+}
 assert.deepEqual(Object.keys(lots).sort(), [...lotsMethods.flatMap(({ index }) => [`p${index}`, `r${index}`]), 'lotsEvent'].sort());
 for (const { index } of lotsMethods) {
   assert.notEqual(compiled[`p${index}`], lots[`p${index}`], 'lazy params must not share eager function objects');

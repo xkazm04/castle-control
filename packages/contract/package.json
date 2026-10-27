@@ -6,6 +6,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./lots": "./src/generated/lots-validation.ts",
+    "./gatehouse": "./src/generated/gatehouse-validation.ts",
     "./door": {
       "types": "./src/door.d.mts",
       "import": "./src/door.mjs"

@@ -4,11 +4,15 @@ import { createReadModel } from './model.js';
 import { createSimulatedSource } from './simulated.js';
 import type { Snapshot } from './model.js';
 import type { CoreLotsPort, LotsNetwork } from './lots-core.js';
+import type { CoreGatehousePort, GatehouseNetwork } from './gatehouse-core.js';
 
 type LotsConnection = { launch: CoreLaunch; transport?: LotsNetwork; port?: CoreLotsPort };
 const lotsConnections = new WeakMap<Snapshot, LotsConnection>();
 /** In-memory only, per client. Keep capabilities out of snapshots and preserve lazy rooms. */
 export function coreLotsConnection(snapshot: Snapshot) { return lotsConnections.get(snapshot); }
+type GatehouseConnection = { launch: CoreLaunch; transport?: GatehouseNetwork; port?: CoreGatehousePort };
+const gatehouseConnections = new WeakMap<Snapshot, GatehouseConnection>();
+export function coreGatehouseConnection(snapshot: Snapshot) { return gatehouseConnections.get(snapshot); }
 
 // Reserved opt-in metadata only. It does not select a Steward implementation.
 export type Launch = { mode: 'fixture' } | (CoreLaunch & { steward: 'live' | 'simulated' });
@@ -30,15 +34,17 @@ export function parseLaunch(value: unknown): Launch {
   throw new Error('Invalid shell launch');
 }
 
-export function createDesktopClient(value: unknown, transport?: Network, lots_transport?: LotsNetwork) {
+export function createDesktopClient(value: unknown, transport?: Network, lots_transport?: LotsNetwork, gatehouse_transport?: GatehouseNetwork) {
   const launch = parseLaunch(value);
   // Fixture mode has no endpoint or network dependency, even at runtime.
   const client = createReadModel(launch.mode === 'fixture' ? createSimulatedSource() : createCoreSource(launch, transport));
   if (launch.mode === 'fixture') return client;
   const connection: LotsConnection = { launch, ...(lots_transport ? { transport: lots_transport } : {}) };
+  const gatehouse: GatehouseConnection = { launch, ...(gatehouse_transport ? { transport: gatehouse_transport } : {}) };
   return { ...client, getSnapshot() {
     const snapshot = client.getSnapshot();
     lotsConnections.set(snapshot, connection);
+    gatehouseConnections.set(snapshot, gatehouse);
     return snapshot;
   } };
 }
