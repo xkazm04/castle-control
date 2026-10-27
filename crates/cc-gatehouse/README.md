@@ -79,8 +79,9 @@ an explicit `GovernorConfig` and the existing `cc_store::Clock`. Thresholds,
 the count margin, the nonzero hysteresis interval, the nonzero lease duration
 and the four tier plans are supplied in process; no live policy is assumed.
 These Rust-only types have no serialization or wire schema. The existing
-`cc_types::Tier` and `RoomMode` are reused, and `gatehouse.lease.end` remains
-`Pending` in the method table. No contract identifier or dependency is added.
+`cc_types::Tier` and `RoomMode` are reused. The later service composition below
+registers the existing typed `gatehouse.lease.end`. No contract identifier or
+dependency is added.
 
 Call `observe_chat` with final screened messages, then `tick` periodically,
 including during silence. Only matching, passed moderation results count.
@@ -108,8 +109,8 @@ The observer must distinguish human changes from echoes of its own proposals.
 Yielded leases issue no End that could undo a human's replacement. After expiry,
 a waiting new tier plan may propose the setting again; the same tier activation
 does not. A human change without an active lease suppresses the current tier's
-pending proposal. `leases()` is a snapshot; expiry is processed by `tick`, with
-no background task, Twitch executor, network request, persistence or RPC.
+pending proposal. `leases()` is a snapshot; expiry is processed by `tick`.
+The pure governor owns no background task, executor, network or persistence.
 
 Acceptance evidence is in `tests/governor.rs` (14 simulated tests): the seeded
 4,001-second oscillation crosses both margin edges repeatedly and asserts at
@@ -630,3 +631,98 @@ Final validation on 2026-10-26:
   evidence above records the same sandbox restriction. No install, preload,
   permission workaround or git write was attempted. The Director must rerun
   the pnpm checks in an environment permitting Node subprocesses before merge.
+
+## WP 1.3 core service composition (2026-10-27)
+
+`cc_core::gatehouse::GatehouseModule::open_with_governor(root, clock, config)`
+composes the existing governor with Gatehouse under one service mutex. Policy
+is explicit Rust-only `GovernorConfig`; no thresholds, plans or live authority
+are guessed. This configured offline constructor refuses persisted armed
+non-rail rules. Default/native `open` registration remains inactive and starts
+no ticker, classifier, network adapter or executor.
+
+The service's `screen_batch` accepts only generated, simulated intake, screens
+it through Gatehouse first, then feeds final decisions to `observe_chat` and
+ticks. Held messages do not enter the governor census. `ingest_moderation`
+accepts only simulated verified-human observations and calls the existing
+`gate/events.rs` path with the same governor, including `observe_human_change`.
+The future Twitch adapter must distinguish human changes from its own echoes;
+this delivery does not connect live intake before the owner-assisted spike.
+
+A one-second service timer also ticks during silence. The injected `Clock`
+determines deadlines, including fake-clock advancement; wall time only schedules
+ticks. Missed scheduling ticks are skipped, not replayed. The module aborts its
+task on drop and the task holds only a weak state reference between ticks.
+`tick_governor` exposes the identical path to deterministic hosts. Failed ticks
+latch an error, stop the ticker and refuse subsequent RPC/ingress/audit reads;
+restart is required rather than silently continuing a partially audited update.
+
+`GovernorUpdate.expired` is a Rust-only lifecycle snapshot, including yielded
+leases that correctly emit no End intent. `record_simulated_governor_update`
+uses the existing single ledger chokepoint and shared lease registrations.
+Every proposed setting and every expiry is a simulated `ModeChanged` record,
+with a lease ID/setting reason, `configuration` message ID, no viewer subject,
+no rule and no message text. Expiry of a yielded lease records its lifecycle
+only and never reverts the human's replacement. Cache association uses an
+explicit simulated operator; the ledger's viewer subject remains absent.
+
+The existing `gatehouse.lease.end` method is registered without changing
+cc-types or generated packages. It parses `LeaseEndParams { lease_id }` and
+returns the existing validated `Decision`, resolving only this service's
+registrations through `Gatehouse::lease_end`. It ends a simulation only; its
+confirmation is never represented as a Twitch acknowledgement. Unknown,
+expired or previously ended leases fail `not_found`; yielded leases fail
+`conflict`. A late RPC ticks expiry first. No new contract identifier,
+dependency, live setting change or viewer action is introduced.
+
+Acceptance evidence in `cc-core/tests/gatehouse_governor.rs`:
+
+- `oscillating_population_is_screened_and_switches_at_most_once_per_window`:
+  repeated crossings of both margin edges over 4,000 simulated seconds, at least
+  six transitions, each at least one hysteresis window apart; held crisis input
+  leaves the census unchanged.
+- `every_room_lease_expires_during_silence_without_renewal_or_viewer_actions`:
+  all four modes expire under the timer after fake-clock advancement, with no
+  incoming chat, RPC or explicit tick; later ticks do not renew them. All eight
+  issue/end ledger records are room changes with no viewer subject.
+- `human_twitch_setting_change_yields_through_service_until_original_expiry`:
+  external-human audit, preserved deadline across a tier change, refused RPC,
+  no End intent for the yielded setting and replacement only after expiry.
+- `lease_end_rpc_resolves_only_service_owned_ids_and_records_room_decision`:
+  contract validation, unknown/repeated IDs, room-only result and no resurrection.
+- `default_service_is_inactive_and_configured_service_refuses_real_intake`:
+  default inactivity and refusal of live data at the simulation seam.
+- `failed_expiry_audit_stops_ticks_and_is_visible_to_rpc_callers`:
+  corrupt simulated ledger tail refuses expiry audit and subsequent RPCs/ticks.
+
+The initial targeted service test command failed with E0599 for the missing
+composition methods. The obsolete crate test that asserted RPC registration
+must still be deferred was removed; its exhaustive room-only intent checks,
+typed contract assertion and compile-fail doctest remain.
+
+Final validation on base `2a2b254`:
+
+- `cargo fmt --all -- --check` and the once-run
+  `cargo clippy --offline --locked --workspace --all-targets -- -D warnings`
+  passed (`clippy.log` in the external build run).
+- Final narrowed `cargo test --offline --locked -p cc-core -p cc-gatehouse`
+  passed: **181 tests, 1 ignored**, including all six new service tests and
+  both compile-fail doctests (`rust-tests.log`). No full-workspace test rerun
+  was made for this scoped change.
+- `pnpm --config.verify-deps-before-run=false gate` passed its 14 tooling tests,
+  workspace inventories and Cargo fetch, then failed in unchanged contract
+  codegen with `spawnSync cargo EPERM` (`gate.log`). This is not a green gate.
+  Independent recursive pnpm typecheck, lint and test also failed at Node's
+  lifecycle `spawn EPERM` (`typecheck.log`, `pnpm-lint.log`, `pnpm-test.log`).
+  The base README already records the same restriction; `git diff HEAD --
+  scripts packages apps Cargo.toml Cargo.lock pnpm-lock.yaml` is empty. No
+  preload, tooling change, install or permission workaround was used.
+- The desktop build passed its four-route first-load budget, 382338/393216
+  bytes (`desktop-build.log`). Boundaries, hygiene, file cap and secrets passed
+  with final inventories of 540 code files and 674 scanned files; `git diff --check`
+  passed. All logs named here are outside the worktree beside `result.json`.
+
+The delivery is partial until the Director reruns the required pnpm checks in
+an environment permitting Node subprocesses. The configured simulation path is
+ready for that review; default native registration intentionally starts no room
+policy, and no offline result establishes the owner-assisted live spike/M1 exit.

@@ -3,6 +3,7 @@
 //! Twitch metadata before constructing these inputs; text grants no authority.
 mod budget;
 mod events;
+mod governor;
 mod held;
 mod leases;
 mod settings;

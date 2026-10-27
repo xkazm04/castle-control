@@ -120,6 +120,9 @@ pub struct GovernorUpdate {
     pub tier: Tier,
     pub chatters: usize,
     pub intents: Vec<RoomModeIntent>,
+    /// Lifecycle observations, including yielded leases with no End intent.
+    /// Auditing expiry must never imply reverting a human's replacement.
+    pub expired: Vec<RoomLease>,
 }
 
 struct Lease {
@@ -246,6 +249,7 @@ impl Governor {
             }
         }
         let mut intents = Vec::new();
+        let mut expired = Vec::new();
         for slot in &mut self.leases {
             if slot
                 .as_ref()
@@ -255,6 +259,7 @@ impl Governor {
             }
             if slot.as_ref().is_some_and(|lease| at >= lease.end) {
                 let lease = slot.take().expect("checked lease");
+                expired.push(lease.registration.snapshot());
                 if !lease.registration.yielded() {
                     intents.push(RoomModeIntent::End {
                         lease_id: lease.registration.lease_id.clone(),
@@ -289,6 +294,7 @@ impl Governor {
             tier: TIERS[self.tier_index],
             chatters: self.last_seen.len(),
             intents,
+            expired,
         })
     }
 
