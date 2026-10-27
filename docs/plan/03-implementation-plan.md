@@ -537,6 +537,7 @@ above; it grants no live bridge wiring or armed actions before the spike.
   - a design-package schema of layers (image, shape, text, particle preset) whose properties bind to intensity;
   - `packages/renderer`, CSS-first and built for OBS's embedded Chromium;
   - `apps/overlay`, served by `cc-core` on `http://localhost` with a strict CSP;
+  - accepted full replacements via `beacons.render.snapshot` on the overlay host's SSE stream (see Contract identifiers), separate from control invalidations;
   - `obs.source.create`, which busts the cache with the package hash.
 - **Acceptance:**
   - one bundle renders the same package in OBS and in the Extension test harness;
@@ -914,6 +915,23 @@ dedupe_key even when their source and transport event_id differ. A nonblank key
 alone does not perform deduplication. WP 3.2 must return URLs from its isolated
 read-only overlay origin with no RPC route; loopback syntax alone proves no origin
 isolation. No handler, dedupe engine, publisher, renderer or OBS call is added here.
+
+**Beacons render push contract (WP 3.2 contract delivery), 2026-10-27.**
+
+| Push event or type | Fields and constraints |
+| --- | --- |
+| `beacons.render.snapshot` | Overlay-host SSE event carrying `BeaconsRenderSnapshot`, not an RPC or control `/events` invalidation. Accepted state only: last committed visual, last hash-verified package and last computed intensity, never an unsaved edit or unverified package. Every snapshot is a full replacement, not a patch |
+| `BeaconsRenderSnapshot` | `visual: Visual`, optional `package: DesignPackage` (omitted when absent; null rejected), `intensity: BeaconsIntensity`; unknown fields rejected. `intensity.visual_id == visual.visual_id`; package present iff `visual.design_id` present; when present, `package.design_id == visual.design_id` |
+
+A visual without a design is legal and renders a neutral placeholder. A visual
+that names a design without a verified package is illegal: the host sends nothing
+until verification. Rust's validated parse door and the generated TS parser enforce
+all three relationships. JSON Schema enforces shape and conditional presence;
+the TS validator adds cross-field ID equality. Parsing never verifies package bytes.
+Runtime exports `parseBeaconsRenderSnapshot`, `validateBeaconsRenderSnapshot` and
+`BEACONS_RENDER_SNAPSHOT_EVENT` live only at `@castle-control/contract/beacons-render`.
+No producer, consumer, RPC, control-event kind or host integration is added here.
+The desktop's 393216-byte first-load budget stays unchanged.
 
 **Beacons art typed payloads (contract delivery), 2026-10-27.**
 

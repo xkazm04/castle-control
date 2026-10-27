@@ -16,6 +16,7 @@ export type AskResult = { "writ": Writ; };
 export type AutoBanGrant = { "breaker_tripped": boolean; "expires_at": Timestamp; "max_bans_per_hour": number; };
 export type BeaconsEventPayload = ({ "kind": "beacons.contribution"; "payload": Contribution; }) | ({ "kind": "beacons.intensity"; "payload": BeaconsIntensity; });
 export type BeaconsIntensity = { "intensity": Intensity; "visual_id": VisualId; };
+export type BeaconsRenderSnapshot = { "intensity": BeaconsIntensity; "package"?: DesignPackage; "visual": Visual; };
 export type BeaconsSimulateParams = { "burst": SimulatedBurst; "visual_id": VisualId; };
 export type BeaconsSimulateResult = { "intensity": BeaconsIntensity; "label": SimulationLabel; };
 export type BindingRange = { "at_one": Intensity; "at_zero": Intensity; };

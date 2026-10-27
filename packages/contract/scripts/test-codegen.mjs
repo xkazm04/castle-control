@@ -13,7 +13,14 @@ const schema = parseJson(readFileSync(join(output, 'contract.schema.json'), 'utf
 delete schema.$comment;
 const files = artifacts(schema);
 assert.deepEqual(files, artifacts(schema), 'generation must be byte deterministic');
-assert.equal(Object.keys(files).length, 16);
+assert.equal(Object.keys(files).length, 19);
+assert.equal(schema.overlay_push_events['beacons.render.snapshot'], 'BeaconsRenderSnapshot');
+assert(files['beacons-render-validators.mjs'], 'overlay render validators compile independently');
+assert(files['beacons-render-validators.d.mts'], 'overlay render shape retains typed declarations');
+assert(files['beacons-render-validation.ts'].includes("from './beacons-render-validators.mjs'"));
+assert(!files['beacons-render-validation.ts'].includes("from './validators.mjs'"));
+assert(!files['validators.d.mts'].includes('BeaconsRenderSnapshot'), 'render roots stay out of eager registry');
+assert(!files['validators.mjs'].includes('snapshot intensity'), 'no eager render validation');
 const beaconsNames = ['visual.list', 'visual.upsert', 'curve.set', 'simulate', 'source.url', 'art.status', 'art.generate'].map(name => `beacons.${name}`);
 const beaconsMethods = schema.methods.map((method, index) => ({ ...method, index })).filter(method => beaconsNames.includes(method.name));
 assert.equal(beaconsMethods.length, 7);
@@ -40,6 +47,7 @@ const manifest = parseJson(readFileSync(join(output, '../../package.json'), 'utf
 assert.equal(manifest.exports['./lots'], './src/generated/lots-validation.ts', 'Lots use a distinct public subpath');
 assert.equal(manifest.exports['./gatehouse'], './src/generated/gatehouse-validation.ts');
 assert.equal(manifest.exports['./beacons'], './src/generated/beacons-validation.ts');
+assert.equal(manifest.exports['./beacons-render'], './src/generated/beacons-render-validation.ts');
 assert(!/\brequire\s*\(/.test(files['validators.mjs']), 'standalone validators must run as browser ESM');
 assert.deepEqual(differences(files), []);
 assert.throws(() => artifacts({ methods: [], event_kinds: [], error_codes: [] }), /empty/);

@@ -209,6 +209,11 @@ function validators(schema) {
     entry(name[0].toLowerCase() + name.slice(1), schema.types[name], name);
   }
   entry('error', schema.types.ErrorEnvelope, 'ErrorEnvelope');
+  // Independent roots: render validation never enters the eager RPC registry.
+  const renderEvent = Object.entries(schema.overlay_push_events ?? {})
+    .find(([, type]) => type === 'BeaconsRenderSnapshot')?.[0];
+  if (!renderEvent) throw new Error('Missing overlay render snapshot identifier');
+  const renderExports = { shape: shared.reference(schema.types.BeaconsRenderSnapshot) };
   ajv.addSchema(shared.document());
   const map = (prefix) => schema.methods.map((m, i) => `[${JSON.stringify(m.name)}, compiled.${prefix}${i}]`).join(',');
   const methods = [], lotsMethods = [], gatehouseMethods = [], beaconsMethods = [];
@@ -221,6 +226,25 @@ function validators(schema) {
     if (beaconsNames.has(m.name)) beaconsMethods.push(declaration);
   });
   return {
+    'beacons-render-validators.mjs': compileValidators(ajv, renderExports, formatSource),
+    'beacons-render-validators.d.mts': `${banner}import type { ValidateFunction } from 'ajv';\n`
+      + `import type { BeaconsRenderSnapshot } from './types.js';\n`
+      + `export const shape: ValidateFunction<BeaconsRenderSnapshot>;\n`,
+    'beacons-render-validation.ts': `${banner}import { parseJson } from '../door.mjs';\n`
+      + `import { shape } from './beacons-render-validators.mjs';\n`
+      + `import type { BeaconsRenderSnapshot } from './types.js';\n`
+      + `export type { BeaconsRenderSnapshot } from './types.js';\n`
+      + `export const BEACONS_RENDER_SNAPSHOT_EVENT = ${JSON.stringify(renderEvent)} as const;\n`
+      + `/** Schema plus cross-field ID checks, matching cc-types' validated TryFrom. */\n`
+      + `export function validateBeaconsRenderSnapshot(value: unknown): value is BeaconsRenderSnapshot {\n`
+      + `  return shape(value) && value.intensity.visual_id === value.visual.visual_id\n`
+      + `    && (value.package !== undefined) === (value.visual.design_id !== undefined)\n`
+      + `    && value.package?.design_id === value.visual.design_id;\n}\n`
+      + `/** Accepted full replacement only; hosts verify package bytes before publishing. */\n`
+      + `export function parseBeaconsRenderSnapshot(text: string): BeaconsRenderSnapshot {\n`
+      + `  const value = parseJson(text);\n`
+      + `  if (!validateBeaconsRenderSnapshot(value)) throw new Error('Invalid render snapshot');\n`
+      + `  return value;\n}\n`,
     'validators.mjs': compileValidators(ajv, exports, formatSource),
     'validators.d.mts': `${declarations.join('\n')}\n`,
     'lots-validators.mjs': compileValidators(ajv, lotsExports, formatSource),

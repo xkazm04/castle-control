@@ -47,6 +47,7 @@ fn main() {
         LotsEventPayload,
         ConsensusEventPayload,
         BeaconsEventPayload,
+        BeaconsRenderSnapshot,
         AskParams,
         AskResult,
         Writ,
@@ -58,6 +59,7 @@ fn main() {
         RpcRequest
     );
     let doc: Value = json!({"methods": method_schemas(), "types": types,
+        "overlay_push_events": {BEACONS_RENDER_SNAPSHOT_EVENT: "BeaconsRenderSnapshot"},
         "event_kinds": EventKind::NAMES, "error_codes": ErrorCode::VALUES});
     println!(
         "{}",

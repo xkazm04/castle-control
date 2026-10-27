@@ -8,6 +8,71 @@ Only `src/door.mjs` parses JSON. Unknown keys and explicit null are refused;
 absent optional keys are omitted. UTC timestamps are validated as calendar dates.
 Numeric counters are safe JS integers; Twitch IDs, seeds and rounds stay strings.
 
+## Beacons render snapshot boundary (WP 3.2 contract delivery, 2026-10-27)
+
+The overlay SSE event **`beacons.render.snapshot`** carries a
+`BeaconsRenderSnapshot { visual, package?, intensity }`. Runtime exports live
+only at **`@castle-control/contract/beacons-render`**:
+`BEACONS_RENDER_SNAPSHOT_EVENT`, `parseBeaconsRenderSnapshot(text)` and
+`validateBeaconsRenderSnapshot(value)`. The type is available there and as a
+type-only root export. The subpath compiles its own standalone shape validator;
+it imports neither the eager RPC registry nor the root parser module. No runtime
+export is added to the root, and the desktop first-load budget stays 393216 bytes.
+
+Rust deserialization uses a validated `TryFrom` wrapper and the generated TS
+parse door applies the same three invariants after schema validation:
+
+- `intensity.visual_id` equals `visual.visual_id`.
+- `package` is present if and only if `visual.design_id` is present.
+- When present, `package.design_id` equals `visual.design_id`.
+
+All records reject unknown fields. Absent package stays omitted on round-trip;
+present null is rejected, including when the visual has no design. Standard JSON
+Schema captures shape and conditional presence; arbitrary sibling ID equality is
+checked by the generated public validator/parser, not by the internal shape
+validator alone. Consumers must use that public parse door.
+
+Snapshots contain **accepted state only**: the last committed visual, last
+hash-verified package and last computed intensity, never an unsaved edit or an
+unverified package. Each is a **full replacement, not a patch**. A visual without
+a design is legal and renders a neutral placeholder. When a visual names a design
+but the host has no verified package, it sends nothing until verification. Parsing
+checks digest syntax and consistency; verifying package bytes, confinement and
+consent remains the host's duty.
+
+The identifier is exported from cc-types and its schema export's
+`overlay_push_events` map, separate from `EventKind` and `BeaconsEventPayload`.
+It is an overlay-host SSE push on `/push/beacons`, not an RPC, a control
+`/events` kind or an invalidation. This delivery implements no producer, consumer,
+host route, OBS refresh or renderer behavior. See ADR 0002 and WP 3.2 for those.
+
+Snapshot validation in the builder worktree, base `93885a0`:
+
+| Check | Evidence |
+| --- | --- |
+| Red first | New Rust tests failed with missing snapshot imports; the TS suite failed because `/beacons-render` was not exported |
+| Rust boundary | `cargo --config net.offline=false test --locked -p cc-types --test beacons_render --test contract` passed: five snapshot tests and six contract/plan tests. Both legal states, all three consistency rules, both directions of conditional presence, unknown fields and present-null package are covered |
+| TS boundary | Contract package tests passed: 139 tests in 13 files plus generator assertions. Final narrowed `src/beacons-render.test.ts` passed all 11 cases; it mirrors the Rust cases and checks nested boundaries and malformed JSON |
+| Drift and parity | Fresh external schema/registry exports passed via the supported harness below: 19 generated files, 47 declared methods, 31 registered methods, 16 mirrored control-event kinds. The SSE identifier is in the separate `overlay_push_events` map |
+| Scoped gates | Contract typecheck/lint, tooling ESLint, boundaries/hygiene/file-cap/secrets and `git diff --check` passed |
+| Workspace Rust | The full gate with fresh external schema/registry inputs passed workspace format, Clippy with warnings denied, all non-ignored workspace tests and doc tests, including the 1,000-roll independent-verification property test. Build jobs stayed at 6; owner-run live tests and fixture-generation tests remained ignored |
+| Desktop budget | In-memory Vite production build using this worktree's packages: 382338 / 393216 first-load JS+CSS bytes across three files; no render snapshot module in first load and no app artifact written |
+| Offline verifier | The official `node packages/verifier-web/src/generate.ts` pipeline changed only the source-fingerprint comment (the contract export map is an input). All 17 verifier tests passed |
+
+The ordinary `pnpm --config.verify-deps-before-run=false gate` passed its 14
+tooling tests and inventories, then failed at the unchanged exporter's
+`spawnSync cargo EPERM`. Recursive `-r typecheck`, `-r lint` and `-r test` each
+failed with `spawn EPERM` before package checks ran. These match the environment
+limitation already recorded for base in `docs/PLAN.md` and the art delivery above;
+they are failures, not passes. The supported external-export harness below permits
+drift/parity verification without changing the exporter, gate runners or CI.
+With both fresh inputs set, the full gate passed tooling, drift/parity and all
+Rust checks, then stopped at recursive typecheck with the same `spawn EPERM`.
+The Director must run the ordinary full gate, recursive workspace checks and
+desktop production build in its verification environment before merging.
+No install, git write, credential access, live service call or producer/consumer
+change is part of this delivery.
+
 ## Beacons art boundary (WP 3.4 contract delivery, 2026-10-27)
 
 The lazy `@castle-control/contract/beacons` subpath exports `beaconsArtStatus`
