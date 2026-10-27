@@ -3,6 +3,8 @@
 pub struct Options {
     pub native: Option<NativeOptions>,
     pub login: bool,
+    /// Reserved public opt-in metadata. This never creates a Steward connection.
+    pub steward_live: bool,
 }
 
 pub struct NativeOptions {
@@ -17,9 +19,14 @@ impl Options {
         let mut args = args.into_iter();
         let mut values = std::collections::BTreeMap::new();
         let mut login = false;
+        let mut steward_live = false;
         while let Some(key) = args.next() {
             if key == "--login" && !login {
                 login = true;
+                continue;
+            }
+            if key == "--steward-live" && !steward_live {
+                steward_live = true;
                 continue;
             }
             if ![
@@ -38,7 +45,10 @@ impl Options {
             }
         }
         if values.is_empty() && !login {
-            return Ok(Self::default());
+            return Ok(Self {
+                steward_live,
+                ..Self::default()
+            });
         }
         let client_id = values
             .remove("--client-id")
@@ -75,6 +85,7 @@ impl Options {
                 obs_password_label,
             }),
             login,
+            steward_live,
         })
     }
 }
@@ -123,5 +134,27 @@ mod tests {
             .err()
             .unwrap();
         assert!(!error.contains("simulated-value"));
+    }
+
+    #[test]
+    fn steward_opt_in_is_public_off_by_default_and_refuses_duplicates() {
+        assert!(!parse(&[]).unwrap().steward_live);
+        let options = parse(&["--steward-live"]).unwrap();
+        assert!(options.steward_live);
+        assert!(options.native.is_none());
+        assert!(!options.login);
+        assert!(parse(&["--steward-live", "--steward-live"]).is_err());
+        assert!(parse(&["--steward-live", "--unknown"]).is_err());
+        assert!(parse(&["--steward-live", "true"]).is_err());
+        let native = parse(&[
+            "--client-id",
+            "simulatedPublicId",
+            "--steward-live",
+            "--test-channel",
+            "simulated_owner",
+            "--login",
+        ])
+        .unwrap();
+        assert!(native.steward_live && native.login && native.native.is_some());
     }
 }

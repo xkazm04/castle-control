@@ -48,6 +48,8 @@ async fn bound_core_injection_has_exact_keys_accepted_origin_and_no_capability_i
         ["endpoint", "mode", "session_token"]
     );
     assert_eq!(payload["mode"], "core");
+    assert!(host._services.is_none());
+    assert!(host.login.is_none());
     let endpoint = payload["endpoint"].as_str().unwrap();
     let url = tauri::Url::parse(endpoint).unwrap();
     assert_eq!(url.scheme(), "http");
@@ -116,18 +118,50 @@ async fn bound_core_injection_has_exact_keys_accepted_origin_and_no_capability_i
         .unwrap()
         .unwrap()
         .unwrap();
-    let captured = logs.lock().unwrap();
-    assert!(String::from_utf8_lossy(&captured).contains("desktop core ready"));
-    assert!(
-        !captured
-            .windows(64)
-            .any(|s| s.iter().all(u8::is_ascii_hexdigit))
+    {
+        let captured = logs.lock().unwrap();
+        assert!(String::from_utf8_lossy(&captured).contains("desktop core ready"));
+        assert!(
+            !captured
+                .windows(64)
+                .any(|s| s.iter().all(u8::is_ascii_hexdigit))
+        );
+        assert!(
+            !captured
+                .windows(64)
+                .any(|s| s == host.state.session_token().as_bytes())
+        );
+    }
+    assert_steward_flag_round_trips_as_metadata_without_native_services_or_secrets().await;
+}
+
+async fn assert_steward_flag_round_trips_as_metadata_without_native_services_or_secrets() {
+    let options = Options::parse(["--steward-live".to_owned()]).unwrap();
+    let host = CoreHost::start(options, Path::new("unused-store-path"))
+        .await
+        .unwrap();
+    assert!(host._services.is_none());
+    assert!(host.login.is_none());
+    let launch = host.launch().unwrap();
+    let payload = serde_json::to_value(&launch).unwrap();
+    assert_eq!(
+        payload
+            .as_object()
+            .unwrap()
+            .keys()
+            .map(String::as_str)
+            .collect::<Vec<_>>(),
+        ["endpoint", "mode", "session_token", "steward"]
     );
-    assert!(
-        !captured
-            .windows(64)
-            .any(|s| s == host.state.session_token().as_bytes())
-    );
+    assert_eq!(payload["steward"], "live");
+    assert_eq!(payload["session_token"], host.state.session_token());
+    let script = launch
+        .script(&tauri::Url::parse(BUILT_ORIGIN).unwrap())
+        .unwrap();
+    assert!(script.contains(&serde_json::to_string(&launch).unwrap()));
+    for forbidden in ["api_key", "password", "credential", "CODEX", "OPENAI"] {
+        assert!(!script.contains(forbidden));
+    }
 }
 
 #[test]

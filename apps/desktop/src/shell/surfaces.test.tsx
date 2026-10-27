@@ -11,13 +11,52 @@ import { Keep } from '../keep/keep.jsx';
 import { Overview } from '../overview/overview.jsx';
 import { StreamScene } from '../overview/scene.jsx';
 import { programCandidate, proclaimToSampleProgram, sampleProgram } from '../overview/program.js';
-import { createStewardConversation, routeStewardTurn, stewardContext } from './steward.jsx';
+import { createStewardConversation, routeStewardTurn, ShellSteward, stewardContext, StewardProposal } from './steward.jsx';
 
 const snapshot = { mode: 'fixture', phase: 'ready', ...simulatedRead(1) } as const;
 const overview = () => renderToStaticMarkup(<Overview snapshot={snapshot} selected="lottery" on_select={() => undefined} on_open={() => undefined} />);
 const program = () => renderToStaticMarkup(<StreamScene mode="program" proposals={sampleProgram.getSnapshot()} sample />);
 beforeEach(() => { for (const proposal of proposalQueue.pending()) proposalQueue.tearUp(proposal.id); proposalQueue.select(); });
 afterEach(() => { vi.useRealTimers(); });
+
+test('Steward bar shows only the newest pending queue proposal and removes empty chrome after tear-up', async () => {
+  const steward = new SimulatedSteward();
+  await steward.ask('draft a question draw', { surface: 'keep' });
+  const first = proposalQueue.pending().at(-1);
+  await steward.ask('raise the drawbridge', { surface: 'keep' });
+  const newest = proposalQueue.pending().at(-1);
+  if (!first || !newest || first.id === newest.id) throw new Error('Missing distinct proposals');
+  proposalQueue.amend(newest.id, [{ key: 'shield', value: true }]);
+  const render = () => renderToStaticMarkup(<ShellSteward context="keep" on_select={vi.fn()} on_open={vi.fn()} on_overview={vi.fn()} />);
+  const before = proposalQueue.getSnapshot();
+  const html = render();
+  expect(html).toContain('aria-label="Steward identity"');
+  expect(html).toContain('PROPOSAL · AWAITING YOUR SEAL');
+  expect(html).toContain(newest.title);
+  expect(html).not.toContain(first.title);
+  expect(html.match(/<input/g)).toHaveLength(1);
+  expect(proposalQueue.getSnapshot()).toBe(before);
+  proposalQueue.tearUp(newest.id);
+  expect(render()).toContain(first.title);
+  proposalQueue.tearUp(first.id);
+  expect(render()).not.toContain('aria-label="Steward proposal"');
+});
+
+test('Steward proposal review selects and opens the existing guarded room without sealing or tearing', async () => {
+  await new SimulatedSteward().ask('draft a question draw', { surface: 'keep' });
+  const proposal = proposalQueue.pending().at(-1);
+  if (!proposal) throw new Error('Missing proposal');
+  const open = vi.fn();
+  const tree = StewardProposal({ proposal, on_open: open });
+  const html = renderToStaticMarkup(tree);
+  expect(html).toContain('Review in the room');
+  expect(html).not.toContain('data-seal-control');
+  expect(html).not.toContain('data-tear-proposal');
+  tree.props.children[3].props.onClick();
+  expect(open).toHaveBeenCalledWith('lottery');
+  expect(proposalQueue.getSnapshot().selected_proposal_id).toBe(proposal.id);
+  expect(proposalQueue.pending().at(-1)).toBe(proposal);
+});
 
 test('Keep is a cross-section with live rule summaries, the Herald, moat and numbered room paths', () => {
   const html = renderToStaticMarkup(<Keep snapshot={snapshot} on_open={() => undefined} on_enter={() => undefined} />);

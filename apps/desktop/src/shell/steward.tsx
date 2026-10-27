@@ -1,10 +1,11 @@
 import { useState, useSyncExternalStore } from 'react';
 import type { Ref } from 'react';
-import { StewardBar } from '@castle-control/ui';
+import { InkButton, StewardBar } from '@castle-control/ui';
 import type { ModuleId } from '@castle-control/ui';
 import { isPending, proposalQueue, SimulatedSteward } from '@castle-control/ui/steward';
-import type { StewardContext, StewardPort, StewardTurn } from '@castle-control/ui/steward';
+import type { Proposal, StewardContext, StewardPort, StewardTurn } from '@castle-control/ui/steward';
 import type { Surface } from '../navigation.js';
+import './surfaces.css';
 
 export type TalkbackLine = { id: number; who: 'You' | 'Steward'; text: string };
 const greeting = 'Good evening. Draft in the preview, amend in ink, then hold to seal. Nothing acts on a spoken request.';
@@ -57,6 +58,15 @@ export function routeStewardTurn(turn: StewardTurn, current: ModuleId | Surface,
   } else if (current === 'keep') overview();
 }
 
+/** Review uses the room's existing guarded seal/tear paths, never a second authorization control. */
+export function StewardProposal({ proposal, on_open }: { proposal: Proposal; on_open: (chamber: ModuleId) => void }) {
+  return <article className="shell-steward-proposal" aria-label={`${proposal.title} proposal`}>
+    <b>PROPOSAL · AWAITING YOUR SEAL</b><h3>{proposal.title}</h3>
+    <p>Rev {proposal.revision} · {proposal.state}. Review the draft before holding to seal.</p>
+    <InkButton onClick={() => { proposalQueue.select(proposal.id); on_open(proposal.chamber); }}>Review in the room</InkButton>
+  </article>;
+}
+
 export function ShellSteward({ context, input_ref, on_select, on_open, on_overview }: {
   context: ModuleId | Surface; input_ref?: Ref<HTMLInputElement>;
   on_select: (chamber: ModuleId) => void; on_open: (chamber: ModuleId) => void; on_overview: () => void;
@@ -64,6 +74,8 @@ export function ShellSteward({ context, input_ref, on_select, on_open, on_overvi
   const [value, setValue] = useState('');
   const [busy, setBusy] = useState(false);
   const history = useSyncExternalStore(stewardConversation.subscribe, stewardConversation.getSnapshot, stewardConversation.getSnapshot);
+  const queue = useSyncExternalStore(proposalQueue.subscribe, proposalQueue.getSnapshot, proposalQueue.getSnapshot);
+  const proposal = queue.proposals.findLast(isPending);
   const message = busy ? 'Drafting locally. No live action.' : history.at(-1)?.text ?? greeting;
   async function tell() {
     if (busy || !value.trim()) return;
@@ -74,6 +86,8 @@ export function ShellSteward({ context, input_ref, on_select, on_open, on_overvi
     setBusy(false);
   }
   return <StewardBar message={message} value={value} suggestions={['Catch me up', 'Draft a question draw', 'What does chat want?']}
+    identity={{ name: 'The Steward', state: busy ? 'Drafting locally' : 'Simulated co-pilot' }}
+    proposal={proposal ? <StewardProposal proposal={proposal} on_open={on_open} /> : null}
     on_change={setValue} on_tell={() => { void tell(); }}
     on_suggest={text => {
       setValue(text);

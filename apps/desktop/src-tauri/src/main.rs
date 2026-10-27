@@ -24,9 +24,9 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
                 Url::parse(BUILT_ORIGIN)?
             };
             let script = if fixture {
-                if options.native.is_some() || options.login {
+                if options.native.is_some() || options.login || options.steward_live {
                     return Err(
-                        "native options require the built frontend; Vite runs fixtures only".into(),
+                        "launch options require the built frontend; Vite runs fixtures only".into(),
                     );
                 }
                 Launch::fixture().script(&origin)?

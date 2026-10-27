@@ -14,6 +14,7 @@ pub struct CoreHost {
     // purging the user's authorization when an ordinary window closes.
     _services: Option<Arc<NativeServices>>,
     login: Option<JoinHandle<()>>,
+    steward_live: bool,
 }
 
 impl CoreHost {
@@ -67,11 +68,12 @@ impl CoreHost {
             server: tokio::spawn(server),
             _services: services,
             login,
+            steward_live: options.steward_live,
         })
     }
 
     pub fn launch(&self) -> Result<Launch<'_>, &'static str> {
-        Launch::core(self.address, self.state.session_token())
+        Launch::core(self.address, self.state.session_token(), self.steward_live)
     }
 
     pub fn shutdown(&self) {

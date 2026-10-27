@@ -1,12 +1,43 @@
 import { invoke } from '@castle-control/contract';
 import type { ErrorCode, StatusResult } from '@castle-control/contract';
 import { afterEach, expect, test, vi } from 'vitest';
-import { createDesktopClient } from './client.js';
+import { createDesktopClient, parseLaunch } from './client.js';
+import { createSteward, SimulatedSteward } from '@castle-control/ui/steward';
+import { stewardConversation } from './shell/steward.jsx';
 import { createReadModel } from './model.js';
 import type { Source } from './model.js';
 import { simulatedRead } from './simulated.js';
 
 const cleanup: (() => void)[] = [];
+
+test('core launch accepts only explicit Steward modes, defaults simulated, and keeps fixtures exact', () => {
+  const core = { mode: 'core', endpoint: 'http://127.0.0.1:3210/', session_token: 'a'.repeat(64) };
+  expect(parseLaunch(core)).toEqual({ ...core, steward: 'simulated' });
+  for (const steward of ['live', 'simulated']) expect(parseLaunch({ ...core, steward })).toEqual({ ...core, steward });
+  for (const steward of [null, undefined, false, true, '', 'LIVE', 'local', {}]) {
+    expect(() => parseLaunch({ ...core, steward })).toThrow('Invalid shell launch');
+  }
+  for (const value of [{ ...core, extra: true }, { ...core, steward: 'live', extra: true },
+    { mode: 'fixture', steward: 'live' }, { mode: 'fixture', steward: 'simulated' }]) {
+    expect(() => parseLaunch(value)).toThrow('Invalid shell launch');
+  }
+  expect(parseLaunch({ mode: 'fixture' })).toEqual({ mode: 'fixture' });
+});
+
+test.each([undefined, 'simulated', 'live'])('Steward launch opt-in %s stays metadata and uses simulation without connections', async steward => {
+  const fetch = vi.fn(); const socket = vi.fn();
+  vi.stubGlobal('fetch', fetch); vi.stubGlobal('WebSocket', socket);
+  const launch = parseLaunch({ mode: 'core', endpoint: 'http://127.0.0.1:3210/', session_token: 'a'.repeat(64),
+    ...(steward === undefined ? {} : { steward }) });
+  expect(launch.mode === 'core' && launch.steward).toBe(steward ?? 'simulated');
+  const port = createSteward();
+  expect(port).toBeInstanceOf(SimulatedSteward);
+  await port.ask('Catch me up', { surface: 'keep' });
+  const simulated = vi.spyOn(SimulatedSteward.prototype, 'ask');
+  await stewardConversation.ask('Catch me up', { surface: 'keep' });
+  expect(simulated).toHaveBeenCalledOnce();
+  expect(fetch).not.toHaveBeenCalled(); expect(socket).not.toHaveBeenCalled();
+});
 afterEach(() => {
   for (const stop of cleanup.splice(0)) stop();
   vi.unstubAllGlobals(); vi.restoreAllMocks(); vi.useRealTimers();

@@ -2,4 +2,7 @@
 .shell-room-content { min-width: 0; }
 .shell-seal-slot { align-self: start; border: var(--rule-medium) dashed var(--gules); padding: var(--space-16); background: var(--card); font-size: var(--text-body); }
 .shell-seal-slot h2 { font: 800 var(--text-section)/1.3 var(--font-display); color: var(--gules-text); }
+.shell-steward-proposal b { font-size: var(--text-small); letter-spacing: var(--track-label); color: var(--gules-text); }
+.shell-steward-proposal h3 { margin: var(--space-4) 0; font: 800 var(--text-section)/1.2 var(--font-display); }
+.shell-steward-proposal p { margin: 0 0 var(--space-8); font-size: var(--text-small); color: var(--muted); }
 @media (max-width: 900px) { .shell-room-work { grid-template-columns: minmax(0, 1fr); } }

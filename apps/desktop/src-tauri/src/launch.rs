@@ -15,6 +15,8 @@ pub enum Launch<'a> {
         mode: &'static str,
         endpoint: String,
         session_token: &'a str,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        steward: Option<&'static str>,
     },
     Fixture {
         mode: &'static str,
@@ -22,7 +24,11 @@ pub enum Launch<'a> {
 }
 
 impl<'a> Launch<'a> {
-    pub fn core(address: SocketAddr, session_token: &'a str) -> Result<Self, &'static str> {
+    pub fn core(
+        address: SocketAddr,
+        session_token: &'a str,
+        steward_live: bool,
+    ) -> Result<Self, &'static str> {
         if address.ip() != IpAddr::V4(Ipv4Addr::LOCALHOST) || address.port() == 0 {
             return Err("desktop requires a bound 127.0.0.1 endpoint");
         }
@@ -37,6 +43,7 @@ impl<'a> Launch<'a> {
             mode: "core",
             endpoint: format!("http://{address}"),
             session_token,
+            steward: steward_live.then_some("live"),
         })
     }
 
@@ -80,9 +87,9 @@ mod tests {
             "127.0.0.2:7",
             "127.0.0.1:0",
         ] {
-            assert!(Launch::core(address.parse().unwrap(), &token).is_err());
+            assert!(Launch::core(address.parse().unwrap(), &token, false).is_err());
         }
-        assert!(Launch::core("127.0.0.1:7".parse().unwrap(), "invalid").is_err());
+        assert!(Launch::core("127.0.0.1:7".parse().unwrap(), "invalid", true).is_err());
     }
 
     #[test]
