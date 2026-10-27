@@ -1,6 +1,8 @@
 //! Owner-run wire observer. No connection, keychain read or overlay before guard.
+mod cleanup;
 use base64::{Engine, engine::general_purpose::STANDARD};
 use cc_obs::{Client, Config};
+pub use cleanup::remove_input;
 use futures::{SinkExt, StreamExt};
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};

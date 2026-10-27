@@ -107,9 +107,13 @@ These are instructions, not commands executed by the builder.
 
 Live OBS websocket targets are hardcoded to `127.0.0.1:4455`; overlay HTTP probes
 use `127.0.0.1:17891` with the required localhost Host and proxies disabled.
-Browser-source checks use a `cc-live-<pid>-<run-id>` input name, attempt
-`RemoveInput` even after an assertion or uncertain creation, then verify absence
-with `GetInputList`. Cleanup failure fails the test and requires owner inspection;
+Browser-source checks use a `cc-live-<pid>-<run-id>` input name. Shared cleanup
+enumerates scenes and removes matching scene items before `RemoveInput` (OBS 33
+can retain an input while it is placed). If scene enumeration is unavailable,
+cleanup uses `CC_LIVE_OBS_SCENE`, defaulting to `Scene`. It runs even after an
+assertion or uncertain creation, then polls `GetInputList` every 100 ms for up
+to 3 seconds; an already absent input is clean. Cleanup failure names the run's
+input, fails the test and requires owner inspection;
 process termination or an unreachable OBS can prevent cleanup. No other inputs,
 scene settings, RPC registrations or core services are changed.
 

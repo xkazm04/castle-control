@@ -5,7 +5,7 @@ mod live_support;
 mod screenshot;
 use cc_obs::{BrowserSource, Error, Overlay};
 use futures::FutureExt;
-use live_support::{Observer, client, guard, run_id, success};
+use live_support::{Observer, client, guard, remove_input, run_id, success};
 use serde_json::json;
 use std::panic::AssertUnwindSafe;
 
@@ -111,17 +111,7 @@ async fn live_status_codes() {
     };
     let result = client.create_browser_source(&missing_scene).await;
     // Always remove this run's input even if OBS unexpectedly accepted the scene.
-    observer
-        .request("RemoveInput", json!({"inputName":name}))
-        .await;
-    let absent = observer.request("GetInputList", json!({})).await;
-    success(&absent);
-    assert!(
-        absent["responseData"]["inputs"]
-            .as_array()
-            .is_some_and(|inputs| inputs.iter().all(|input| input["inputName"] != name)),
-        "live rejection cleanup failed: inspect OBS for this run's cc-live input"
-    );
+    remove_input(&mut observer, &name).await;
     assert_eq!(result, Err(Error::Rejected));
 }
 
@@ -186,7 +176,7 @@ async fn browser_source_roundtrip(check_screenshot: bool) {
         width: 1280,
         height: 720,
     };
-    // Catch assertion panics so RemoveInput runs even after uncertain CreateInput.
+    // Catch assertion panics so cleanup runs even after uncertain CreateInput.
     let outcome = AssertUnwindSafe(async {
         let program = observer.request("GetCurrentProgramScene", json!({})).await;
         success(&program);
@@ -221,9 +211,7 @@ async fn browser_source_roundtrip(check_screenshot: bool) {
             settings["is_local_file"] == false && settings["shutdown"] == false,
             "live source must remain a URL source without shutdown"
         );
-        let removed = observer
-            .request("RemoveInput", json!({"inputName":name}))
-            .await;
+        let removed = remove_input(&mut observer, &name).await;
         success(&removed);
         // Independent observer sees fields the production client currently ignores.
         let created = observer
@@ -263,18 +251,8 @@ async fn browser_source_roundtrip(check_screenshot: bool) {
     .catch_unwind()
     .await;
     let cleanup = AssertUnwindSafe(async {
-        let removed = observer
-            .request("RemoveInput", json!({"inputName":name}))
-            .await;
         // If CreateInput never succeeded, absence also satisfies cleanup.
-        let absent = observer.request("GetInputList", json!({})).await;
-        success(&absent);
-        assert!(
-            absent["responseData"]["inputs"]
-                .as_array()
-                .is_some_and(|inputs| inputs.iter().all(|input| input["inputName"] != name)),
-            "live cleanup failed: remove this run's cc-live input manually"
-        );
+        let removed = remove_input(&mut observer, &name).await;
         if outcome.is_ok() {
             success(&removed);
         }
@@ -282,7 +260,7 @@ async fn browser_source_roundtrip(check_screenshot: bool) {
     .catch_unwind()
     .await;
     if cleanup.is_err() {
-        panic!("live cleanup failed: inspect OBS for cc-live inputs from this run");
+        panic!("live cleanup failed: inspect OBS for this run's cc-live input: {name}");
     }
     if let Err(panic) = outcome {
         std::panic::resume_unwind(panic);
