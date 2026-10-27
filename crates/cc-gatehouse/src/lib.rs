@@ -3,6 +3,7 @@
 //! Offline moderation service. No Twitch executor or RPC registration.
 //! Callers consume only the final verdict; action intents are not executed here.
 
+mod analysis;
 mod classifier;
 pub mod drill;
 mod drill_evaluate;

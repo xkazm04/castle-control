@@ -165,7 +165,7 @@ impl Drill {
         self.replay(&recording, params.configuration, engine).await
     }
 
-    async fn replay(
+    pub(crate) async fn replay(
         &self,
         recording: &Recording,
         mut config: DrillConfiguration,
@@ -283,8 +283,19 @@ impl Drill {
     ) -> Result<DrillDiffResult> {
         // One retained snapshot for both sides; missing IDs cannot silently align.
         let recording = recorder.resolve(&params.recording)?;
-        let baseline = self.replay(&recording, params.baseline, engine).await?;
-        let candidate = self.replay(&recording, params.candidate, engine).await?;
+        self.compare(&recording, params.baseline, params.candidate, engine)
+            .await
+    }
+
+    pub(crate) async fn compare(
+        &self,
+        recording: &Recording,
+        baseline: DrillConfiguration,
+        candidate: DrillConfiguration,
+        engine: &dyn Classifier,
+    ) -> Result<DrillDiffResult> {
+        let baseline = self.replay(recording, baseline, engine).await?;
+        let candidate = self.replay(recording, candidate, engine).await?;
         if baseline.outcomes.len() != candidate.outcomes.len() {
             return Err(internal("diff length mismatch"));
         }

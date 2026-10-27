@@ -1,5 +1,66 @@
 # Gatehouse offline moderation, governor, consensus and replay — WP 1.1, 1.3, 1.5, 1.6
 
+## Offline RPC integration — WP 1.5/1.6, 2026-10-27
+
+`cc-core::GatehouseModule` registers `gatehouse.recording.import`,
+`gatehouse.drill.run`, `gatehouse.drill.diff` and `gatehouse.consensus.get`
+using the existing typed contract. Its async mutex serializes the service's
+sole store writer. Native fixture registration retains its arming refusal.
+No live adapter, model, dependency or wire identifier is added.
+
+The service owns the Drill and Herald. Offline drill configuration uses bank
+`simulated-near-misses-v1` and judge label `rules-only`. This label selects the
+existing deterministic `ExpectedJudge`: it compares observed actions with the
+immutable generated bank, with model identity `none`, and calls no model.
+Unknown judge labels (including model judges) and classifier rules return typed
+`Unavailable`, on either diff side, before evaluation. Unknown banks retain
+the existing `NotFound` error. No model verdict or evaluation is invented.
+Runs remain `simulated`, retain source/gaps and hash the resolved instrument.
+Diffs retain separate instruments, outcomes and summaries. Neither replay nor
+import writes live decisions or populates the consensus chart.
+
+`recording_import` borrows the existing Recorder/store; imports have no
+authenticated channel owner, so they associate only the recorded viewers with
+the erasure inventory. The live Recorder still includes its supplied owner.
+Recording references remain opaque canonical `recording-<ULID>` handles:
+resolution queries only this service root's store and enforces retention.
+Absolute paths, traversal, absent handles and another root's handles return
+typed `NotFound`. A source label is inert provenance, never a file to read.
+
+`consensus_ingest` accepts only the existing post-verdict `PassedMessage`
+token. A later adapter must obtain it through `ScreenedMessage::for_consensus`;
+no live intake is wired here. The service Herald starts with no assumed seeds
+or emote meanings, a 900-second maximum query window and 4,200 retained entries.
+Only observed intake can populate its Other direction; a fresh root is empty.
+`consensus_get` delegates to Herald at the service clock, retaining filter,
+history and shedding semantics, including a nonzero shed count with no current
+directions. History and shedding are ephemeral and reset on service reopen.
+
+Acceptance evidence: `cc-core/tests/gatehouse_drill.rs` covers import, identical
+repeat/reopened runs, preserved provenance/gaps, unchanged live ledger, separate
+diff summaries, unavailable models/classifiers, root-scoped references, empty
+consensus for every filter, and retained offline arming refusal. All five tests
+failed first against base `e058bd2` with `method is not registered yet`.
+`cc-gatehouse/tests/analysis.rs` covers service-owned post-verdict intake,
+clock-ended windows, expiry and shedding after all directions expire.
+
+Validation on base `e058bd2`: `cargo fmt --all -- --check`, workspace Clippy
+with `-D warnings`, and the once-run `cargo test --locked --workspace` passed
+(415 passed, 30 ignored). Final narrowed core and Gatehouse regression runs
+passed (12 core tests, 26 Gatehouse tests). Boundaries, hygiene and file-cap
+checks walked 514 code files; final secrets scanning walked 645 files; all
+passed, as did `git diff --check`.
+The full `pnpm --config.verify-deps-before-run=false gate` passed tooling and
+workspace inventories, then failed at contract export with `spawnSync cargo
+EPERM`. Recursive pnpm typecheck, lint and test each failed at lifecycle
+`spawn EPERM`; the desktop JS build was not run. Those scripts, manifests and
+contract sources match the base, and the earlier evidence below records the
+same restriction. No install or permission workaround was attempted. Full gate
+status remains failed until the Director reruns it where Node may spawn children.
+Actual outputs are retained in the external build run's `gate.log`,
+`typecheck.log`, `pnpm-lint.log`, `pnpm-test.log`, `clippy.log`,
+`workspace-tests.log`, `core-focused.log` and `gatehouse-focused.log`.
+
 This crate adapts Shadowrunr OS `moderator/{rules,mod,lane,store,tests}.rs`
 at `7e4b6f8` (Apache-2.0; see the source headers and root NOTICE). Voice and
 show logic are excluded. It uses the expanded `cc-types` contract from

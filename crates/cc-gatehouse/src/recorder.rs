@@ -28,7 +28,7 @@ struct Envelope {
 pub struct Recorder<'a> {
     store: &'a mut Store,
     clock: &'a dyn Clock,
-    owner: TwitchUserId,
+    owner: Option<TwitchUserId>,
     installed_at: Timestamp,
 }
 
@@ -37,13 +37,24 @@ impl Gatehouse {
         Recorder {
             store: &mut self.store,
             clock: self.clock.as_ref(),
-            owner,
+            owner: Some(owner),
             installed_at,
         }
     }
 }
 
-impl Recorder<'_> {
+impl<'a> Recorder<'a> {
+    /// Offline imports have no authenticated channel owner. Associate only the
+    /// recorded viewers with the existing erasure inventory; invent no identity.
+    pub(crate) fn for_import(store: &'a mut Store, clock: &'a dyn Clock) -> Result<Self> {
+        Ok(Self {
+            store,
+            clock,
+            owner: None,
+            installed_at: clock.now().as_rfc3339().try_into().map_err(internal)?,
+        })
+    }
+
     /// Capture batches from the authenticated channel adapter. Each batch is an
     /// immutable handle; the host schedules batches, not a second data store.
     pub fn record_live(
@@ -137,7 +148,7 @@ impl Recorder<'_> {
                 "recording outside retention or in the future",
             ));
         }
-        let mut users = BTreeSet::from([self.owner.as_str().to_owned()]);
+        let mut users: BTreeSet<_> = self.owner.iter().map(|id| id.as_str().to_owned()).collect();
         for message in &params.messages {
             users.insert(String::from(message.user_id.clone()));
         }

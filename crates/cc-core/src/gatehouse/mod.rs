@@ -7,10 +7,8 @@ use cc_types::{ErrorCode, ErrorEnvelope, RpcRequest};
 use futures::future::BoxFuture;
 use serde::Serialize;
 use serde_json::Value;
-use std::{
-    path::Path,
-    sync::{Arc, Mutex},
-};
+use std::{path::Path, sync::Arc};
+use tokio::sync::Mutex;
 
 pub struct GatehouseModule {
     state: Mutex<Gatehouse>,
@@ -25,6 +23,10 @@ impl GatehouseModule {
         "gatehouse.ban.dismiss",
         "gatehouse.decision.undo",
         "gatehouse.petition.resolve",
+        "gatehouse.recording.import",
+        "gatehouse.drill.run",
+        "gatehouse.drill.diff",
+        "gatehouse.consensus.get",
     ];
 
     /// The caller owns the persistence root and clock. No live adapter is started;
@@ -39,7 +41,7 @@ impl GatehouseModule {
         let module = Self::open(root, Arc::new(cc_store::SystemClock))?;
         let rules = module
             .state
-            .lock()
+            .try_lock()
             .map_err(|_| internal())?
             .rules_list(cc_types::Empty {})?;
         if rules.rules.iter().any(|rule| {
@@ -53,8 +55,8 @@ impl GatehouseModule {
         Ok(module)
     }
 
-    fn handle(&self, request: &RpcRequest) -> Result<Value, ErrorEnvelope> {
-        let mut gate = self.state.lock().map_err(|_| internal())?;
+    async fn handle(&self, request: &RpcRequest) -> Result<Value, ErrorEnvelope> {
+        let mut gate = self.state.lock().await;
         match request {
             RpcRequest::RulesList(params) => encode(gate.rules_list(params.clone())?),
             RpcRequest::RulesUpsert(params) => encode(gate.rules_upsert(params.clone())?),
@@ -63,6 +65,10 @@ impl GatehouseModule {
             RpcRequest::BanDismiss(params) => encode(gate.ban_dismiss(params.clone())?),
             RpcRequest::DecisionUndo(params) => encode(gate.decision_undo(params.clone())?),
             RpcRequest::PetitionResolve(params) => encode(gate.petition_resolve(params.clone())?),
+            RpcRequest::RecordingImport(params) => encode(gate.recording_import(params.clone())?),
+            RpcRequest::DrillRun(params) => encode(gate.drill_run(params.clone()).await?),
+            RpcRequest::DrillDiff(params) => encode(gate.drill_diff(params.clone()).await?),
+            RpcRequest::ConsensusGet(params) => encode(gate.consensus_get(params.clone())?),
             _ => Err(ErrorEnvelope::new(
                 ErrorCode::Unavailable,
                 "method is outside gatehouse module",
@@ -77,7 +83,7 @@ impl Module for GatehouseModule {
     }
 
     fn call<'a>(&'a self, request: &'a RpcRequest) -> BoxFuture<'a, Result<Value, ErrorEnvelope>> {
-        Box::pin(async move { self.handle(request) })
+        Box::pin(async move { self.handle(request).await })
     }
 }
 

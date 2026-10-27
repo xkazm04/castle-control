@@ -16,6 +16,7 @@ use std::{
 };
 
 pub struct Gatehouse {
+    pub(crate) analysis: crate::analysis::Analysis,
     pub(crate) store: Store,
     pub(crate) config: Config,
     pub(crate) config_path: PathBuf,
@@ -38,6 +39,9 @@ impl Gatehouse {
         let config = store::load(&config_path)?;
         store::save(&config_path, &config)?;
         Ok(Self {
+            analysis: crate::analysis::Analysis::new(
+                Timestamp::try_from(clock.now().as_rfc3339()).map_err(internal)?,
+            )?,
             store,
             config,
             config_path,
