@@ -2,7 +2,7 @@
 
 Date: 2026-10-27
 
-Status: Implemented for WP 3.2; browser enforcement/timing and live OBS verification pending
+Status: Implemented for WP 3.2; Director browser probe passed; live OBS verification pending
 
 Decision authority: App Master decision under the plan's WP 3.2 acceptance; owner may overrule
 
@@ -177,8 +177,8 @@ The overlay-host verification requirements are:
   update widens privileges, and confinement of scripted packages to the overlay.
 - Measure accepted package and curve changes through to rendered OBS output
   within 1 s without manual refresh. The overlay-host builder owns that timing
-  measurement, including reconnect/latest-state behavior; this ADR claims no
-  measured latency or completed implementation test.
+  measurement, including reconnect/latest-state behavior. Browser-probe evidence
+  is recorded below; live OBS timing still requires an owner-attended check.
 
 ## WP 3.2 implementation and evidence (2026-10-27)
 
@@ -212,12 +212,18 @@ requires rebuilding that output when its inputs change.
 | Configuration acceptance, simulation isolation, bounded inventory | `rejected_visual_never_commits_and_simulation_never_changes_live_snapshot`, `render_inventory_is_bounded_and_unknown_intensity_is_rejected` |
 | Scene retained with unchanged intensity; invalid push ignored | Renderer `overlay.test.ts` |
 | Bundle source fingerprint and static no-eval proof | Renderer `overlay-build.test.ts` and `static-safety.test.ts` |
-| Real browser CSP enforcement, scripts after consent, reconnect, n/p50/p95/max render timing | `native_handoff_to_browser_render_delivery_budget_and_csp` exists and compiles; execution failed before page load because Chrome's Windows IPC/crash server received access denied in the builder sandbox |
+| Real browser CSP enforcement, scripts after consent, widening, reload latest state, retained scene nodes and render timing | Director, 2026-10-28, main `c3dea03`: `cargo test -p cc-core --test overlay_browser -- --ignored`: PASS. Disposable headless Chrome, not OBS. Package changes n=20, p50 33 ms, p95 49 ms, max 49 ms. Curve changes n=20, p50 49 ms, p95 50 ms, max 51 ms. Budget 1000 ms. |
 
-No browser timing sample or live OBS latency was measured in this delivery.
-The explicit probe and manual OBS procedure are in `crates/cc-core/README.md`.
-The Director must run that probe and record its actual results; the 1 s OBS
-acceptance remains pending. Existing live OBS twins and cleanup tests are
+The Director ran `cargo test -p cc-core --test overlay_browser -- --ignored`
+on 2026-10-28 on main `c3dea03`: PASS. Package changes n=20, p50 33 ms,
+p95 49 ms, max 49 ms. Curve changes n=20, p50 49 ms, p95 50 ms, max 51 ms.
+Budget 1000 ms. The browser was disposable headless Chrome, not OBS.
+Real-browser CSP enforcement, script execution after consent, widening, reload
+latest state and retained scene nodes were all checked by that passing probe.
+These Director-supplied results supersede the earlier builder launch failure.
+The live OBS 1 s acceptance is still pending as an owner-attended step, using
+the procedure in [the core README](../../crates/cc-core/README.md#reproduction-and-measurement).
+No OBS timing figure is claimed. Existing live OBS twins and cleanup tests are
 preserved; the static spike plate is unchanged.
 
 Builder checks, completed 2026-10-28: the Rust workspace test run and workspace

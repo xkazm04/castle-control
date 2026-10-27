@@ -104,10 +104,15 @@ script execution after consent, widening, latest state after reload, retained
 scene nodes, and 20 accepted package plus 20 accepted curve changes. It reports
 n/p50/p95/max from native handoff (curve sample includes its disk commit) through
 client DOM application, computed opacity and two browser frame boundaries; it asserts max <1 s.
-Those figures describe headless Chrome, not OBS. The builder sandbox denied
-Chrome's Windows IPC/crash server before page load, so this run produced **zero
-render timing samples** and no observed browser-enforcement result. The Director
-must run this command outside that restriction and record actual output.
+The Director ran `cargo test -p cc-core --test overlay_browser -- --ignored`
+on 2026-10-28 on main `c3dea03`: PASS. Package changes n=20, p50 33 ms,
+p95 49 ms, max 49 ms. Curve changes n=20, p50 49 ms, p95 50 ms, max 51 ms.
+Budget 1000 ms. The browser was disposable headless Chrome, not OBS.
+Real-browser CSP enforcement, script execution after consent, widening, reload
+latest state and retained scene nodes were all checked by that passing probe.
+These Director-supplied results supersede the earlier builder launch failure.
+The live OBS 1 s acceptance is still pending as an owner-attended step using
+the procedure below. No OBS timing figure is claimed.
 
 For an owner-attended OBS check, set `$env:CC_OVERLAY_OBS_DEMO_SECONDS='120'` and
 run that explicit browser probe. It prints the owned simulated source URL and
@@ -126,7 +131,7 @@ cleanup tests remain separate owner-run checks.
 
 The operator-only command is `cargo run -p cc-core --features spike --bin spike
 -- ...`; its target login is mandatory. Default builds expose no fault hook.
-See [the live-run template](../../../docs/spike-log.md) for the exact command,
+See [the live-run template](../../docs/spike-log.md) for the exact command,
 owner preparation, sanitized evidence format and pending live acceptance items.
 
 GET `/events?since_seq=<last applied seq>` upgrades to a WebSocket with the same

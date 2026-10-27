@@ -18,7 +18,9 @@ Status key: **done** means the narrowly stated artifact is committed on local
 main, with a proving commit below. **pending-build** means implementation,
 integration, evidence or document finalization remains. **pending-owner** means
 an owner/Director action, approval or external check remains. An offline code
-commit never counts as a live exit. These draft files are not yet on main and
+commit never counts as a live exit. **pending-owner review** means a prepared
+document still needs owner review; it does not close a release exit.
+These draft files are not yet on main and
 do not mark their own delivery done.
 
 ## Dates and submission items
@@ -34,8 +36,8 @@ do not mark their own delivery done.
 | Public YouTube video **at most 3 minutes**, showing the app working on Twitch and how Codex built it | pending-owner | Owner records, checks final duration, uploads publicly and supplies verified URL. Draft script is preparation only. Never substitute fixtures for live proof. |
 | Public README finalized | pending-build | Review [readme-draft.md](readme-draft.md), update status/links/commands, fill verified metadata, then promote in a separately authorized change. Root README is untouched here. |
 | Description of how Codex was used | pending-build | Workflow prose is drafted; `5a9e4dc` establishes builder rules and `e9fbb4c`, `5073b63`, `9925769` show package deliveries. Director must verify the final narrative and thread-to-commit map. |
-| Codex thread map | pending-owner | **TODO — Director:** verify package → thread → delivered commit(s) → review evidence against the journal. Publish no private transcript data. |
-| Main Codex session ID for Devpost | pending-owner | **TODO — Director:** verify the main thread ID from the journal and fill the README/form slot. No ID is fabricated or copied into this draft. |
+| Codex thread map | pending-owner | **TODO: Director:** verify package → thread → delivered commit(s) → review evidence against the journal. Publish no private transcript data. |
+| Main Codex session ID for Devpost | pending-owner | **TODO: Director:** verify the main thread ID from the journal and fill the README/form slot. No ID is fabricated or copied into this draft. |
 | Final OpenAI-lane proof before final video, planned **Sun 2026-11-01** | pending-build | D10 requires Steward and classifier end to end on Codex CLI and OpenAI API, provider changed in settings only. `f129a5e` provides offline engine routing, `93caf59` its in-process classifier adapter, `befdf88` Steward contracts; none proves the end-to-end lane. |
 | Runtime prerequisites for that proof | pending-owner | Prepare user's own CLI sign-in/keychain key and opt into cloud classification where required. Do not paste credentials, codes or keychain contents into evidence. |
 | Factual attribution and final artwork review | pending-owner | Before publication verify current OpenAI brand guidelines as the plan requires; no implied endorsement. This offline draft adds no logo or endorsement claim. |
@@ -70,8 +72,11 @@ a public production release or imply a reviewed Extension/signed installer.
 | Lawyer review of official-rules template and giveaway guardrails | pending-owner | Obtain review; offline policy code is not legal sign-off. |
 | Twitch policy answer and shell review submission (historical WP 6.3 item) | pending-owner | **Deferred by operator standup:** no WP 4.0 email and no review submission for current test-only M4. Any public Extension release needs a new owner decision; do not present this as an active email ask or as completed. |
 | Leonardo terms confirmed before public Extension AI art | pending-owner | Confirm ownership/use terms before shipping art in a public Extension. No such confirmation is evidenced here. |
-| Privacy notice: local chat storage, retention, forget/purge, cloud opt-in | pending-build | Finalize/review notice against actual behavior. `d9e6ff2` adds store controls, not proof of a complete privacy notice. |
-| Install/login/chamber/self-host/verifier user docs complete | pending-build | Existing desktop and verifier instructions are partial evidence; complete the release doc set against working features. This README draft does not finish WP 6.3. |
+| Privacy notice: local chat storage, retention, forget/purge, cloud opt-in | pending-owner review | [Draft privacy notice](../privacy.md), checked against `c3dea03` on 2026-10-28, cites implemented behavior and planned integration. Not reviewed by a lawyer; owner review remains open. |
+| Install and login user docs | pending-owner review | [Install](../guide/install.md) and [login](../guide/login.md) cover unsigned Windows NSIS status, device flow and keychain custody. Artifact/install and owner-attended login evidence remain separate. |
+| Chamber user docs | pending-owner review | [Gatehouse](../guide/gatehouse.md), [Lot Chamber](../guide/lots.md), [Beacons](../guide/beacons.md) and [Map Room](../guide/map-room.md) distinguish current features, fixtures and pending live exits. |
+| Extension-service self-hosting user docs | pending-owner review | [Self-hosting stub](../guide/self-hosting.md) explicitly says M4 is not built yet. Review the stub now; a runnable deployment guide still needs the service implementation. |
+| Verifier user docs and guide index | pending-owner review | [Verify a writ](../guide/verifier.md) covers CLI/web checks and independent trust; [guide index](../guide/README.md) links the doc set. No live draw or completed public release is claimed. |
 | Signed Windows/macOS/Linux installers and rehearsed updater (WP 6.1) | pending-build | Supply artifacts and installation/update evidence before claiming release readiness. |
 | Landing with downloads/docs/source links (WP 6.2) | pending-build | Finalize and verify actual destinations; prototype art alone is not a published landing. |
 
