@@ -22,6 +22,15 @@ ticket arrangement, sample chat/chart and map) are static compositions here.
 No prototype runtime, event handlers, CSS or sample-data loader is used.
 `site.css` and `site.js` are new implementations of the design and interactions.
 The brand mark is defined once in the HTML and reused by SVG reference.
+
+The follow-up rebuilds the missing textures as static vector geometry in
+`art.svg`, not prototype runtime code. `beacon-glow` contains 713 gold dots in
+fading rings around the two flames, including the flame over the wordmark's O.
+The rings leave the flame cores and tower faces clear. `moat-tone` contains 697
+blue dots on a diagonal grid, growing denser toward the moat's lower edge behind
+the waves. Both inherit the existing `--or` / `--azure` shared tokens and the
+plate's theme blend. Neither adds an asset, palette, script, continuous animation
+or layout box. Reduced motion retains both as calm, static print textures.
 The page uses the generated system-font stacks unchanged. No remote font or
 font service is used; absent platform faces fall through the shared stack.
 
@@ -56,10 +65,15 @@ uses the shared paper/stock definitions; it does not write desktop app settings.
 
 Navigation is enabled from the outset. For normal motion the five plates
 register in sequence, then the drawbridge drops. The visual handover timer is
-2,800 ms. Any keyboard or pointer input ends it immediately, and the visible
-Skip intro button supports native keyboard and pointer activation. Reduced
-motion starts at the complete composition, schedules no intro, and disables
-all animations and transitions. There is no ambient autoplay motion.
+2,800 ms, shortened to the remaining time before 4,000 ms from navigation start
+if script startup is delayed. Navigation stays enabled throughout. A chamber
+shortcut or pointer input outside Skip intro ends printing immediately.
+The named, native Skip intro button is second in document tab order, directly
+after Skip to content. Tab keeps it visible; Enter, Space and pointer activation
+reach its native click handler before it is hidden. Skip moves focus to the
+first chamber link, as does automatic handover if the skip button has focus.
+Reduced motion starts at the complete composition, schedules no intro, and
+disables all animations and transitions. There is no ambient autoplay motion.
 
 Honesty labels present in the page:
 
@@ -82,7 +96,7 @@ Run from the repository root, without installing anything:
 ```powershell
 node apps/site/check.mjs
 node --test --test-isolation=none apps/site/site.test.mjs
-pnpm --config.verify-deps-before-run=false exec eslint apps/site --max-warnings 0
+node node_modules/eslint/bin/eslint.js apps/site --max-warnings 0
 node scripts/check.mjs
 ```
 
@@ -92,22 +106,29 @@ copy hygiene, no remote scripts/fonts, the 400-line cap and a **180 KiB** total
 uncompressed first-load budget (HTML, CSS, JS, SVG and shared tokens). The finite
 four-chamber marketing content has no growing live lists to virtualise.
 
-The five behavior tests execute the actual `site.js` in a small DOM adapter.
-They cover the real event-loop handover timer, keyboard/pointer skip, reduced
-motion at startup and when changed, all chamber shortcuts, nested views,
-route validation, focus return, hover and both themes. An initial successful
-run measured visual handover at **2,808 ms**; the final run measured **2,815 ms**.
-The final first-load inventory was **97,081 bytes**. This is script timing, not a
-browser paint or navigation measurement. The default isolated Node test runner
-failed to spawn; the repository's documented in-process mode above passed.
+The nine behavior tests execute the actual `site.js` in a small DOM adapter
+with a controlled monotonic clock, including `performance.now`, `setTimeout`
+and `clearTimeout`. They never sleep. The unattended intro is still printing at
+2,799 ms and hands over at exactly **2,800 ms**, with no timer left. A simulated
+2,500 ms script startup shortens printing and hands over at exactly **4,000 ms**
+from navigation start. Reduced motion hands over at **0 ms** with no timer;
+switching the preference at 800 ms also cancels the pending timer.
+
+The tests assert a named native button before header links, uncancelled Tab and
+Enter/Space, survival through pointerdown until click, focus return, cancelled
+timers, shortcuts, nested views, route validation, hover and both themes.
+Five new regression cases failed against the previous implementation before
+its handlers were fixed. Native event dispatch and keyboard traversal still
+need browser verification; the adapter checks the actual handlers and markup.
+The first-load inventory after restoring both textures is **152,814 bytes**.
 
 ## Required Director browser proof
 
 **No screenshot was taken and no rendered layout assertion was run here.**
-Chrome is installed, but launching it from Node in this sandbox failed with
-`spawn EPERM`. Static checks and DOM-adapter tests cannot establish pixel
-fidelity or the full browser time to control. Run this procedure on a machine
-that permits a browser, saving proof outside the worktree:
+The browser automation interface reports no available browsers in this build
+session. Static checks and DOM-adapter tests cannot establish pixel fidelity,
+horizontal overflow or the full browser time to control. Run this procedure on
+a machine that permits a browser, saving proof outside the worktree:
 
 1. Serve the repository root as above. Open `/prototype/index.html` and
    `/apps/site/index.html`. In DevTools device emulation set the viewport to
@@ -116,17 +137,22 @@ that permits a browser, saving proof outside the worktree:
 2. At each size, capture the home print in paper and dark stock, and all four
    chamber views. Compare retained paper, ink, type, ruled notes, masthead,
    desktop composition and mobile strips. The deliberate wordmark-mask fix
-   should leave both L feet solid. Check no clipping, banner/masthead overlap,
+   should leave both L feet solid. Check the gold dotted halo behind the flame
+   over the O and the blue dotted moat behind its waves in both themes.
+   Check no clipping, banner/masthead overlap,
    horizontal page overflow, or body text below 13 CSS pixels. The 390 viewport
    should show four vertical strips and a banner with a release link.
 3. Reload without interacting. After the print settles, record
    `document.body.dataset.navigationReadyMs` and
    `document.body.dataset.controlReadyMs`. Both are milliseconds from browser
    navigation start. The second, conservative visual-handover measurement must
-   be below **4000**; navigation must already work before it. Capture the result.
-4. Reload, press Tab during the print, and confirm printing stops. Repeat with
-   the Skip intro button using Enter and a pointer click. Tab/Enter through all
-   four strips/banner links, open Full feature list, then return with Escape and
+   be at or below **4000**; navigation must already work before it. Capture the result.
+   A slow page load or a blocked browser main thread can delay browser timers;
+   the controlled-clock test proves the script deadline, not a paint guarantee.
+4. Reload, press Tab twice during the print, and confirm Skip intro receives
+   focus and remains visible. Activate it with Enter, then repeat using Space
+   and a pointer click. Printing stops and focus moves to the first chamber link.
+   Tab/Enter through all four strips/banner links, open Full feature list, then return with Escape and
    each Back link. Confirm origin focus returns; drive 1 through 4 and left/right.
    Check hover ghosting and the chamber name printed above the keep.
 5. In DevTools Rendering, emulate `prefers-reduced-motion: reduce` and reload.
@@ -140,7 +166,18 @@ that permits a browser, saving proof outside the worktree:
    navigation happens only through the explicit GitHub links. Re-run with JS
    disabled to verify the ordinary anchor fallback.
 
-The sandbox also denied recursive pnpm typecheck/lint lifecycle spawns and
-`pnpm gate` at the contract exporter's `spawnSync cargo` boundary. Those commands
-did not pass. App Master must run the normal workspace gates during review.
-No install was run and the existing `node_modules` junction was not modified.
+Follow-up validation, 2026-10-28: `check.mjs`, all nine behavior tests, direct
+site ESLint and `node scripts/check.mjs` passed. The latter walked 556 code
+files for boundaries, hygiene and the file cap, and 690 files for secrets.
+Both texture groups parse as SVG and every new dot stays inside the existing
+1600 by 1000 viewBox. No CSS or layout dimensions changed.
+
+Recursive pnpm typecheck and lint failed at lifecycle startup with `spawn EPERM`.
+`pnpm --config.verify-deps-before-run=false gate` passed 14 tooling tests and the
+workspace inventory, then failed at the contract exporter with `spawnSync cargo
+EPERM`. Those commands did not pass; their runners are unchanged from HEAD.
+App Master must rerun the normal full gate, recursive typecheck/lint, workspace
+tests and desktop build during review, plus the separate site checks above.
+Browser screenshots, native skip activation and horizontal-overflow assertions
+at all three sizes remain required. No install was run and the existing
+`node_modules` junction was not modified.

@@ -20,6 +20,7 @@ let introTimer;
 function finishIntro() {
   window.clearTimeout(introTimer);
   body.dataset.phase = 'done';
+  if (document.activeElement === skip) document.querySelector('.banner a').focus();
   skip.hidden = true;
   if (!body.dataset.controlReadyMs) {
     body.dataset.controlReadyMs = String(Math.round(performance.now()));
@@ -94,12 +95,12 @@ if (new Set(keymap.bindings.map((binding) => binding.key)).size !== keymap.bindi
 }
 document.addEventListener(keymap.event, (event) => {
   if (event.ctrlKey || event.metaKey || event.altKey || event.target.closest('input,textarea,select,[contenteditable="true"]')) return;
-  if (body.dataset.phase === 'printing') finishIntro();
   const binding = keymap.bindings.find((candidate) => candidate.key === event.key && (!candidate.when || candidate.when()));
-  if (binding) { event.preventDefault(); binding.run(); }
+  if (binding) { finishIntro(); event.preventDefault(); binding.run(); }
 });
-document.addEventListener('pointerdown', () => {
-  if (body.dataset.phase === 'printing') finishIntro();
+document.addEventListener('pointerdown', (event) => {
+  // Keep the native button present until pointer-up dispatches its click.
+  if (body.dataset.phase === 'printing' && !skip.contains(event.target)) finishIntro();
 }, { passive: true });
 skip.addEventListener('click', () => {
   finishIntro();
@@ -126,8 +127,9 @@ showRoute({ focus: window.location.hash !== '' });
 // Navigation is never disabled during printing. This timestamp marks the end
 // of the visual handover, so the acceptance measurement is conservative.
 body.dataset.navigationReadyMs = String(Math.round(performance.now()));
-if (!motion.matches && current === 'home') {
+const introDurationMs = Math.min(2800, 4000 - performance.now());
+if (!motion.matches && current === 'home' && introDurationMs > 0) {
   body.dataset.phase = 'printing';
   skip.hidden = false;
-  introTimer = window.setTimeout(finishIntro, 2800);
+  introTimer = window.setTimeout(finishIntro, introDurationMs);
 } else finishIntro();
