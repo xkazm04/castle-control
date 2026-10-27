@@ -8,6 +8,7 @@ import type { CoreBeaconsPort } from '../../beacons-core.js';
 import type { Snapshot } from '../../model.js';
 import { BrowserSourceButton, BrowserSourceNotice, createBrowserSourceCopy } from './source-copy.jsx';
 import { ContributionFeed } from './event-feed.jsx';
+import { EditableKindlingCurve } from './kindling-curve.jsx';
 import './room.css';
 import './core.css';
 
@@ -28,34 +29,6 @@ function VisualEditor({ visual, port, busy }: { visual?: Visual; port: CoreBeaco
     <label>Design ID (optional)<input name="design_id" defaultValue={visual?.design_id ?? ''} disabled={busy} /></label>
     {!visual && <p>New curves start at 0 intensity for 0 units and 100% for 50 units, with no decay. Edit after saving.</p>}
     <button type="submit" disabled={busy}>Save visual to core</button>
-  </form>;
-}
-
-function CurveEditor({ visual, port, busy }: { visual: Visual; port: CoreBeaconsPort; busy: boolean }) {
-  return <form className="visuals-core-form" onSubmit={event => {
-    event.preventDefault(); const form = new FormData(event.currentTarget);
-    void port.setCurve({ visual_id: visual.visual_id, curve: {
-      ranges: visual.curve.ranges.map((_point, index) => ({ total: Number(form.get(`total-${index}`)),
-        intensity: Number(form.get(`intensity-${index}`)) / 100 })),
-      decay: form.get('decay') === 'exponential'
-        ? { kind: 'exponential', half_life_s: Number(form.get('half_life_s')) } : { kind: 'none' },
-    } });
-  }}>
-    <h2>Kindling curve · contribution to intensity</h2>
-    <p>Use the native units of the input you simulate. The core validates ordering and decay.</p>
-    {visual.curve.ranges.map((point, index) => <fieldset key={index} disabled={busy}>
-      <legend>Control point {index + 1}</legend>
-      <label>Contribution total<input name={`total-${index}`} type="number" min="0" max="4294967295" step="1"
-        required defaultValue={point.total} /></label>
-      <label>Intensity (%)<input name={`intensity-${index}`} type="number" min="0" max="100" step="any"
-        required defaultValue={point.intensity * 100} /></label>
-    </fieldset>)}
-    <label>Decay<select name="decay" defaultValue={visual.curve.decay.kind} disabled={busy}>
-      <option value="none">No decay</option><option value="exponential">Exponential</option>
-    </select></label>
-    <label>Half-life (seconds, exponential only)<input name="half_life_s" type="number" min="1" step="1" disabled={busy}
-      defaultValue={visual.curve.decay.kind === 'exponential' ? visual.curve.decay.half_life_s : 300} /></label>
-    <button type="submit" disabled={busy}>Save curve to core</button>
   </form>;
 }
 
@@ -110,7 +83,7 @@ export function ConnectedBeacons({ port, seal_slot }: { port: CoreBeaconsPort; s
       <div className="visuals-room-details">
         <VisualEditor key={`visual-${creating ? 'new' : JSON.stringify(visual)}`} port={port} busy={state.busy}
           {...(!creating && visual ? { visual } : {})} />
-        {visual && <CurveEditor key={JSON.stringify(visual)} visual={visual} port={port} busy={state.busy} />}
+        {visual && <EditableKindlingCurve visual={visual} port={port} busy={state.busy} />}
         <ContributionFeed events={state.events} origin="Core simulation" />
         {seal_slot}
       </div>

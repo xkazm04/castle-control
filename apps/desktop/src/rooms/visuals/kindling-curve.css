@@ -1,0 +1,7 @@
+.visuals-curve-editor svg { display: block; width: 100%; height: calc(var(--space-56) * 3); overflow: visible; }
+.visuals-curve-editor circle { fill: var(--or); stroke: var(--ink); stroke-width: var(--rule-medium); cursor: grab; touch-action: none; }
+.visuals-curve-editor circle:focus-visible { outline: var(--rule-strong) solid var(--or-text); outline-offset: var(--focus-offset); }
+.visuals-curve-editor circle:active { cursor: grabbing; }
+.visuals-curve-editor circle[aria-disabled="true"] { fill: var(--muted); cursor: wait; }
+.visuals-curve-editor p { font-size: var(--text-label); }
+.visuals-curve-editor [role="alert"] { color: var(--danger); }

@@ -93,7 +93,11 @@ export function createCoreBeaconsPort(launch: CoreLaunch, transport?: BeaconsNet
     },
     async setCurve(params: CurveSetParams) {
       const proposed = structuredClone(params);
-      await perform(async () => { saved(await call((await contracts()).beaconsCurveSet, proposed), proposed.visual_id); });
+      return perform(async () => {
+        const visual = await call((await contracts()).beaconsCurveSet, proposed);
+        saved(visual, proposed.visual_id);
+        return visual;
+      });
     },
     async simulate(params: BeaconsSimulateParams) {
       const proposed = structuredClone(params);

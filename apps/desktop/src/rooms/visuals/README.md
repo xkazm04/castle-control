@@ -73,6 +73,56 @@ and mismatched replies, safe typed errors, request validation, production HTTP,
 lazy validators, connection persistence and the core shell route. Fixture tests
 keep their existing accounting and keyboard behavior.
 
+## WP 3.3 desktop curve editor
+
+Core mode mounts `EditableKindlingCurve` through `core.tsx`, the connected
+branch of `room.tsx`. Each labelled control point is a Tab stop. Dragging
+previews the draft curve and releasing saves it. Arrow keys move the focused
+point by one contribution unit horizontally or one percentage point vertically;
+Shift uses ten units or ten percentage points. Enter commits and Escape cancels
+without bubbling to shell navigation. Labelled numeric and decay controls share
+the same draft, with explicit Save and Cancel actions.
+
+The editor keeps contribution totals as uint32 integers in strictly increasing
+order, intensity finite in 0..1, and exponential half-life a positive uint32.
+Descending intensities and single-point curves remain valid. The generated
+`beacons.curve.set` contract door validates the outgoing request and incoming
+Visual. `setCurve` returns that validated, matching Visual only after the core
+acknowledges it. Draft previews and pending saves never replace the port's
+confirmed curve. A rejected, malformed, mismatched or failed reply rolls back
+to the last confirmed curve with a safe inline alert. No automatic retry occurs.
+Fixture mode retains its read-only illustrative curve and local test fire.
+
+**OBS acceptance and the 1 s package-to-OBS latency are DEFERRED to the WP 3.2
+overlay host lane.** `crates/cc-obs/src/overlay.rs` serves `/beacons/{visual_id}`
+as a static placeholder under a script-free CSP; no curve-to-overlay channel
+exists. This desktop delivery neither changes that host nor claims OBS proof.
+
+`kindling-curve.test.tsx` drives the rendered native point handlers and the real
+core adapter through a synthetic transport. It covers pointer capture/drag,
+keyboard fine/coarse moves and commit/cancel, acknowledgement timing, rollback,
+ordering, range bounds and pointer cancellation. Node provides `Event` but no
+`KeyboardEvent`, `PointerEvent`, DOM renderer or testing-library installation.
+Event-backed test projections document their casts and exercise native
+cancellation; they do not claim browser focus, Tab traversal or layout proof.
+No dependencies are installed and no product types are loosened.
+
+Verification after the Director's resume, 2026-10-27:
+
+- `pnpm --config.verify-deps-before-run=false --filter @castle-control/desktop
+  typecheck` and `lint` pass. Both inventory 91 TS/TSX files; lint also passes
+  boundaries, hygiene and file cap across 540 code files and secrets across
+  670 files.
+- From `apps/desktop`, `pnpm --config.verify-deps-before-run=false exec vitest
+  run --pool=threads src/rooms/visuals/kindling-curve.test.tsx` passes all
+  **10 tests**. The full desktop `test` script passes **230 tests in 25 files**.
+- The desktop `build` script passes, including its unchanged first-load budget
+  check: **382,338 / 393,216 bytes**, three entry JS/CSS assets. The curve code
+  stays in the lazy visuals route and no budget is raised.
+- `git diff --check` passes. No install, git write or out-of-scope edit was run.
+  These are the requested desktop checks; no full Rust/workspace gate, browser
+  fidelity, live test or OBS acceptance is claimed by this split delivery.
+
 ## WP 3.3 contribution feed
 
 At base `60eb569`, the room only rendered the separate 60-offering timeline;
