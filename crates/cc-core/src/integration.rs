@@ -1,6 +1,7 @@
 use crate::{
     AppState, EventHub, LoginPresenter, Module, Registry, bridge_status, forward_bridge_event,
 };
+mod render;
 use cc_obs::{BrowserSource, Client, Config as ObsConfig, Overlay};
 use cc_store::Store;
 use cc_twitch::{BridgeError, BridgeState, RevocationHandler, TwitchBridge, TwitchConfig};
@@ -33,6 +34,7 @@ pub struct NativeServices {
     obs: AsyncMutex<Option<Client>>,
     obs_config: ObsConfig,
     overlay: Overlay,
+    render: Arc<crate::overlay::RenderHost>,
     presenter: LoginPresenter,
     scopes: Vec<String>,
     started: Instant,
@@ -86,13 +88,15 @@ impl NativeServices {
         let store = Arc::new(Mutex::new(store));
         let bridge = TwitchBridge::new(config.twitch, Arc::new(Eraser(store.clone())))
             .map_err(bridge_error)?;
-        let overlay = Overlay::start(config.overlay_port)
+        let render = Arc::new(crate::overlay::RenderHost::default());
+        let overlay = Overlay::start_with_routes(config.overlay_port, render.routes())
             .await
             .map_err(obs_error)?;
         Ok(Arc::new(Self {
             bridge,
             store,
             overlay,
+            render,
             presenter,
             scopes,
             obs_config: config.obs,
@@ -205,7 +209,7 @@ impl NativeServices {
         &self,
         params: &cc_types::ObsSourceParams,
     ) -> Result<(), ErrorEnvelope> {
-        if params.url != self.overlay_url() {
+        if !self.render.owns_source(&self.overlay_url(), &params.url) {
             return Err(ErrorEnvelope::new(
                 ErrorCode::Invalid,
                 "source must use the owned overlay origin",

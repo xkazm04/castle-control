@@ -3,7 +3,10 @@
   "compilerOptions": {
     "allowImportingTsExtensions": true,
     "types": [],
-    "paths": { "@castle-control/contract": ["../contract/src/index.ts"] }
+    "paths": {
+      "@castle-control/contract": ["../contract/src/index.ts"],
+      "@castle-control/contract/beacons-render": ["../contract/src/generated/beacons-render-validation.ts"]
+    }
   },
   "include": ["src/**/*.ts"]
 }

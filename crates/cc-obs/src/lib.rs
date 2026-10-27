@@ -4,7 +4,7 @@ mod overlay;
 mod protocol;
 
 pub use client::{Client, Config, PasswordReader};
-pub use overlay::Overlay;
+pub use overlay::{Overlay, content_digest};
 pub use protocol::{BrowserSource, Version};
 
 /// Only fixed diagnostics cross the transport door; peer frames are never logged.

@@ -91,7 +91,9 @@ impl Registry {
 
     fn native_offline(services: Option<Arc<NativeServices>>, offline: OfflineModules) -> Self {
         let offline = Arc::new(
-            offline.with_overlay_origin(services.as_ref().map(|service| service.overlay_url())),
+            offline
+                .with_overlay_origin(services.as_ref().map(|service| service.overlay_url()))
+                .with_native(services.as_ref().map(Arc::downgrade)),
         );
         let mut registry = Self::default();
         registry

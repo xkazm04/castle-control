@@ -20,7 +20,10 @@
 - **CreateInput:** `sceneName`, `inputName`, `inputKind: browser_source`,
   `sceneItemEnabled: true`; `inputSettings` has `url`, `width`, `height`,
   `is_local_file: false`, `shutdown: false`. The URL must be an HTTP
-  `localhost:<nonzero-port>/` root without credentials/query; dimensions are
+  `localhost:<nonzero-port>/` spike root, or a canonical
+  `/beacons/<visual-slug>` with an optional exact `package_hash=<64 lowercase hex>`
+  query, without credentials. NativeServices additionally checks the owned
+  origin and current accepted visual/hash; syntax alone grants no source. Dimensions are
   1..8192 and names must be nonblank. The expected OBS response data contains
   `sceneItemId` and `inputUuid`. **The client currently ignores response data:**
   successful correlated status alone acknowledges creation. The live twin
@@ -47,9 +50,10 @@
   404). The static page declares `html, body { background: transparent; margin: 0; }`
   in an inline style. A small rounded, padded plate uses white system-font text
   with a dark shadow over a semi-transparent dark background; outside it remains
-  transparent. CSP permits only `style-src 'unsafe-inline'`; `default-src`,
-  `script-src`, `connect-src`, `img-src`, `frame-ancestors`, `base-uri` and
-  `form-action` are all `'none'`, with `nosniff` and `no-store`. Drop stops the
+  transparent. WP 3.2 CSP permits external same-origin scripts, images from
+  self/data, nonce-less inline styles, and only the exact HTTP push endpoint
+  on this bound port; all other classes default to none. It retains nosniff,
+  no-store and the exact Host check across every route and error. Drop stops the
   server. Fixtures choose an ephemeral port; live tests reserve 17891 and do not
   attach to another server.
 
@@ -61,9 +65,12 @@ OBS injects source-configurable CSS through a `<style>` without a nonce in
 and a fixed hash would depend on the exact source's custom CSS. The scoped
 exception is therefore `style-src 'unsafe-inline'`, without `'self'`, host or
 scheme sources. Remote styles, CSS imports/images/fonts, scripts, connections
-and frames remain blocked. Explicit page transparency also works outside OBS.
+and frames remained blocked at that stage. WP 3.2 now permits the local renderer,
+verified local raster images and the single SSE endpoint under ADR 0002;
+inline/eval scripts and remote resources remain blocked. Explicit page
+transparency also works outside OBS.
 
-`simulated_overlay_csp_only_allows_inline_styles` checks the byte-identical CSP
+`simulated_overlay_csp_matches_adr_exactly` checks the byte-identical bound-port CSP
 header and exact directive/source sets;
 `simulated_overlay_declares_transparent_background` checks transparency, the
 visible plate and absence of scripts, imports, URLs and remote hosts. The

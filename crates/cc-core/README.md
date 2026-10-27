@@ -35,9 +35,94 @@ state and the latest recorded gap. Gaps publish `bridge.gap`; chat notifications
 publish `chat.message` without message bodies. M0 uses a labelled shadow/pass
 stub; M1 owns the real verdict pipeline. OBS is probed with GetVersion every two
 seconds and publishes `obs.status` changes. Source creation accepts only the
-owned overlay URL from `services.overlay_url()`; hand that URL to the native
-shell rather than accepting another localhost service or an arbitrary website.
+owned spike URL from `services.overlay_url()`, or the exact accepted per-visual
+URL from `beacons.source.url`, including its verified package-hash query;
+another localhost service, stale hash or arbitrary path is refused.
 The overlay has its own port and read-only router, never core's RPC origin.
+
+## WP 3.2 accepted overlay state
+
+`NativeServices` owns `RenderHost` and mounts its GET/HEAD-only render routes on
+the `cc-obs` overlay listener: `/beacons/{visual_id}`, `/bundle.js`, verified
+`/assets/{visual_id}/{hash}/{path}`, and read-only `/push/beacons?visual_id=...`.
+No route, script, response or push payload receives a control capability.
+`beacons.render.snapshot` carries the existing `BeaconsRenderSnapshot` contract.
+Each event replaces the whole accepted state; watch slots coalesce slow clients
+and return the latest accepted state on reconnect. A visual naming an unverified
+design emits nothing until package verification. The transparent, empty scene
+is the neutral placeholder for a visual with no design.
+
+The Beacons module validates render capacity/metadata before saving, then hands
+the committed visual to `NativeServices` under the same render-state lock.
+An unchanged curve preserves the latest accepted intensity. Changed curves
+recompute the empty contribution total in the current configuration-only
+registration; this delivery adds no live contribution intake. Native engines
+can hand over subsequent `BeaconsIntensity` values through
+`accept_beacons_intensity`. `beacons.simulate` remains isolated.
+
+`accept_beacons_package(package, root, consent)` is a trusted native import door,
+not a new RPC. It parses the merged schema, verifies local assets/content hash,
+checks initial or widened script privileges, then atomically updates affected
+visuals. Consent is not inferred from package declarations. Assets are captured
+in immutable memory; modifying the source file later has no effect until a new
+hash-verified import. Restart drops imports/consent and requires reverification.
+The host supports the fixed `embers` particle preset and rejects unknown presets.
+Limits and script-origin custody are documented in `docs/SECURITY.md`.
+
+### Package content identity v1
+
+`overlay::package::package_hash` is the native importer/verifier's shared hash
+implementation. Start with ASCII `castle-control-design-v1` plus one NUL byte.
+Append one framed canonical metadata value: serialize the parsed package to a
+serde_json Value, remove `content_hash`, sort object keys recursively (the
+workspace's default serde_json maps are ordered), and serialize compact UTF-8.
+Preserve array order and serde_json's numeric representation. Then append, in
+ascending ASCII path order, a framed path and framed raw bytes for every
+distinct declared image/script asset. A frame is an unsigned 64-bit big-endian
+byte length followed by exactly those bytes. The content identity is the
+lowercase hexadecimal SHA-256 of the result. This is a versioned local package
+format, not a claim of RFC 8785 interoperability. Undeclared files are excluded
+and never served. Every resolved asset must remain inside the canonical package
+root, including symlink/junction resolution. PNG/JPEG/GIF/WebP image MIME and
+UTF-8 `.js` script MIME are fixed by the verifier; HTML/SVG are not served.
+
+### Reproduction and measurement
+
+Run the root `pnpm gate` for release verification. Focused tests:
+
+```powershell
+cargo test -p cc-core --test overlay_host --test overlay_invariants --test obs_native --locked
+cargo test -p cc-obs --locked
+pnpm --config.verify-deps-before-run=false --filter @castle-control/renderer test
+cargo test -p cc-core --test overlay_browser --locked -- --ignored --nocapture
+```
+
+The explicit browser probe launches a disposable headless Chrome profile, never
+the owner's browser. `CC_OVERLAY_CHROME` can select an installed Chrome binary.
+It checks actual CSP blocking against a simulated second loopback server, local
+script execution after consent, widening, latest state after reload, retained
+scene nodes, and 20 accepted package plus 20 accepted curve changes. It reports
+n/p50/p95/max from native handoff (curve sample includes its disk commit) through
+client DOM application, computed opacity and two browser frame boundaries; it asserts max <1 s.
+Those figures describe headless Chrome, not OBS. The builder sandbox denied
+Chrome's Windows IPC/crash server before page load, so this run produced **zero
+render timing samples** and no observed browser-enforcement result. The Director
+must run this command outside that restriction and record actual output.
+
+For an owner-attended OBS check, set `$env:CC_OVERLAY_OBS_DEMO_SECONDS='120'` and
+run that explicit browser probe. It prints the owned simulated source URL and
+holds it after automated checks while importing timestamped package changes and
+curve changes every second. Add that URL as an OBS Browser Source at 1280x720
+on the owner's test scene (use a light background or OBS custom CSS for readable
+text). The curve alternates text opacity as well as its diagnostic value.
+Confirm changes appear without source refresh; record
+the handoff output and OBS preview on the same recording/time base, count frames
+to first displayed change, and report n/p50/p95/max and frame-rate uncertainty.
+Record OBS and obs-browser versions and whether every sample met 1 s. Recreate
+the source during the demo to check reconnect/latest state. Remove only that
+test source afterwards and clear the environment variable. No OBS latency or
+visual sign-off is claimed by the builder; the existing ignored live twins and
+cleanup tests remain separate owner-run checks.
 
 The operator-only command is `cargo run -p cc-core --features spike --bin spike
 -- ...`; its target login is mandatory. Default builds expose no fault hook.
@@ -303,6 +388,10 @@ AI-7 validation (2026-10-27):
   environment. No install, junction modification or sandbox bypass was attempted.
 
 ## Beacons source URL (WP 3.2 slice)
+
+Historical record of the earlier URL-only slice. The WP 3.2 accepted overlay
+state section above supersedes the placeholder, CSP and pending-work statements
+in this record; its validation results are retained as delivery history.
 
 All registry constructors register `beacons.source.url` alongside the four
 Beacons configuration/preview methods. It uses the same visual map as

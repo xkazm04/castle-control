@@ -16,7 +16,7 @@ use serde_json::Value;
 use std::{
     collections::BTreeMap,
     path::{Path, PathBuf},
-    sync::Mutex,
+    sync::{Mutex, Weak},
 };
 
 struct State {
@@ -29,6 +29,7 @@ pub struct BeaconsModule {
     state: Mutex<State>,
     root: PathBuf,
     overlay_origin: Option<String>,
+    native: Option<Weak<crate::NativeServices>>,
 }
 
 impl BeaconsModule {
@@ -53,6 +54,7 @@ impl BeaconsModule {
             }),
             root,
             overlay_origin: None,
+            native: None,
         })
     }
 
@@ -61,6 +63,19 @@ impl BeaconsModule {
     pub(crate) fn with_overlay_origin(mut self, origin: Option<String>) -> Self {
         self.overlay_origin = origin;
         self
+    }
+
+    pub(crate) fn with_native(
+        mut self,
+        native: Option<Weak<crate::NativeServices>>,
+    ) -> Result<Self, ErrorEnvelope> {
+        self.native = native;
+        if let Some(service) = self.native.as_ref().and_then(Weak::upgrade) {
+            for visual in self.state.lock().map_err(|_| internal())?.visuals.values() {
+                service.accept_beacons_visual(visual.clone())?;
+            }
+        }
+        Ok(self)
     }
 
     fn handle(&self, request: &RpcRequest) -> Result<Value, ErrorEnvelope> {
@@ -97,10 +112,13 @@ impl BeaconsModule {
                 let origin = self.overlay_origin.as_ref().ok_or_else(|| {
                     ErrorEnvelope::new(ErrorCode::Unavailable, "beacons overlay is not configured")
                 })?;
+                let url = if let Some(native) = self.native.as_ref().and_then(Weak::upgrade) {
+                    native.beacons_source_url(&visual.visual_id)?
+                } else {
+                    format!("{origin}beacons/{}", visual.visual_id.as_str())
+                };
                 encode(SourceUrlResult {
-                    url: format!("{origin}beacons/{}", visual.visual_id.as_str())
-                        .try_into()
-                        .map_err(|_| internal())?,
+                    url: url.try_into().map_err(|_| internal())?,
                 })
             }
             _ => Err(ErrorEnvelope::new(
@@ -113,8 +131,12 @@ impl BeaconsModule {
     fn save(&self, state: &mut State, visual: Visual) -> Result<(), ErrorEnvelope> {
         validate_curve(&visual.curve).map_err(invalid)?;
         let mut visuals = state.visuals.clone();
-        visuals.insert(visual.visual_id.clone(), visual);
-        storage::save(&self.root, &visuals)?;
+        visuals.insert(visual.visual_id.clone(), visual.clone());
+        if let Some(native) = self.native.as_ref().and_then(Weak::upgrade) {
+            native.commit_beacons_visual(visual, || storage::save(&self.root, &visuals))?;
+        } else {
+            storage::save(&self.root, &visuals)?;
+        }
         state.visuals = visuals;
         Ok(())
     }

@@ -1,4 +1,5 @@
 //! A simulated local OBS peer; the Hello needs no keychain credentials.
+mod overlay_support;
 use cc_core::{AppState, NativeConfig, NativeServices, Registry, bind};
 use cc_store::Store;
 use cc_types::{ErrorCode, EventKind, SourceUrlResult, parse_request};
@@ -75,7 +76,7 @@ async fn beacons_source_url_uses_only_the_owned_overlay_and_never_the_session() 
         assert!(parsed.fragment().is_none());
         let page = client.get(&url).send().await.unwrap();
         assert_eq!(page.status(), 200);
-        assert!(page.text().await.unwrap().contains("rendering unavailable"));
+        assert!(page.text().await.unwrap().contains("/bundle.js"));
         for route in [
             "rpc",
             "events",
@@ -198,6 +199,34 @@ async fn native_obs_rpc_reads_live_status_creates_owned_source_and_invalidates_c
     assert_eq!(
         source["d"]["requestData"]["inputSettings"]["url"],
         service.overlay_url()
+    );
+    let visual = overlay_support::visual(true);
+    overlay_support::call(&app, "beacons.visual.upsert", json!({"visual":visual})).await;
+    let package = overlay_support::seal(
+        overlay_support::package("Simulated source"),
+        &Default::default(),
+    );
+    service
+        .accept_beacons_package(package, directory.path(), false)
+        .unwrap();
+    let url = overlay_support::call(
+        &app,
+        "beacons.source.url",
+        json!({"visual_id":"simulated-frame"}),
+    )
+    .await["url"]
+        .as_str()
+        .unwrap()
+        .to_owned();
+    assert!(url.contains("/beacons/simulated-frame?package_hash="));
+    overlay_support::call(&app,"obs.source.create",json!({"scene_name":"simulated-scene","source_name":"simulated-beacons-source","url":url,"width":1280,"height":720})).await;
+    assert_eq!(
+        seen.lock()
+            .unwrap()
+            .iter()
+            .rfind(|v| v["d"]["requestType"] == "CreateInput")
+            .unwrap()["d"]["requestData"]["inputSettings"]["url"],
+        url
     );
     let cursor = app.events.since(0).unwrap().last().unwrap().seq;
     peer.abort();

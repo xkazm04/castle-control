@@ -7,13 +7,14 @@ use futures::future::BoxFuture;
 use serde_json::Value;
 use std::{
     path::PathBuf,
-    sync::{Arc, OnceLock},
+    sync::{Arc, OnceLock, Weak},
 };
 
 #[derive(Default)]
 pub(crate) struct OfflineModules {
     root: Option<PathBuf>,
     overlay_origin: Option<String>,
+    native: Option<Weak<crate::NativeServices>>,
     events: OnceLock<Arc<EventHub>>,
     loaded: OnceLock<Result<Loaded, ErrorEnvelope>>,
 }
@@ -30,6 +31,7 @@ impl OfflineModules {
         Self {
             root: Some(root),
             overlay_origin: None,
+            native: None,
             events: OnceLock::from(events),
             loaded: OnceLock::new(),
         }
@@ -39,6 +41,10 @@ impl OfflineModules {
     /// starts a listener or grants these modules access to core RPC credentials.
     pub fn with_overlay_origin(mut self, origin: Option<String>) -> Self {
         self.overlay_origin = origin;
+        self
+    }
+    pub fn with_native(mut self, native: Option<Weak<crate::NativeServices>>) -> Self {
+        self.native = native;
         self
     }
 
@@ -81,7 +87,8 @@ impl OfflineModules {
                     LotsModule::open(root.join("lots"), events, recorded.clone(), recorded, true)?;
                 let gatehouse = GatehouseModule::open_offline(root.join("gatehouse"))?;
                 let beacons = BeaconsModule::open(root.join("beacons"))?
-                    .with_overlay_origin(self.overlay_origin.clone());
+                    .with_overlay_origin(self.overlay_origin.clone())
+                    .with_native(self.native.clone())?;
                 lots.temporary_root = temporary_root;
                 Ok(Loaded {
                     gatehouse,

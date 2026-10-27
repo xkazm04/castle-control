@@ -1,5 +1,47 @@
 # Security
 
+## OBS overlay host (WP 3.2)
+
+The OBS overlay has a separate IPv4 loopback listener, exact `localhost:<port>`
+Host check, router and origin. Every response, including failures, carries
+nosniff and no-store. Its CSP is the exact policy in
+[ADR 0002](adr/0002-overlay-host-csp.md), with the actual overlay port in the
+single `/push/beacons` connection source. The root spike plate remains static;
+Beacons pages load only the bundled local renderer. There is no RPC, control
+events, proxy, redirect or core session capability in overlay resources or SSE.
+The control service grants this origin no CORS or Origin permission, even when
+a request supplies an otherwise valid simulated capability.
+
+`NativeServices` is the trusted in-process handoff. Packages are parsed with the
+existing contract, confined to their canonical package root including symlinks
+and junctions, read into immutable bounded memory and hash-verified before
+acceptance. Raster images have fixed sniffed MIME types (PNG/JPEG/GIF/WebP);
+SVG/HTML and undeclared files are not served. Scripts require explicit native
+consent for initial or widened entry-point privileges and are served only as
+declared local external `.js` files. Declaration alone grants nothing. Consent
+is in memory; restarting requires reimport/reverification/reconsent. Script
+grants concern entry points; updates to already-granted entry-point bytes still
+require hash verification. Consented code shares the overlay origin and is not
+trusted desktop code; it receives no control capability. Removing a script tag
+does not revoke effects of code already executed: reload the source to end an
+existing script execution context after removing its privileges.
+
+Push uses `BeaconsRenderSnapshot` full replacements on the exact event
+`beacons.render.snapshot`. Visual/design/intensity IDs must agree. Only committed
+visuals, verified accepted packages and computed intensities publish. A named
+but unverified design publishes nothing. Pending updates coalesce in one watch
+slot per visual; reconnects receive the latest accepted snapshot. Limits are
+128 visuals, 16 packages, 128 assets/layers and 8 MiB of assets per package,
+128 simultaneous SSE clients, 64 KiB visual metadata and 128 KiB package metadata.
+No preview mutation enters this channel. Package files are never reopened by
+HTTP routes, so later filesystem edits cannot replace verified bytes.
+
+HTTP/schema/consent/confinement tests pass. A separate real-browser test is
+provided for CSP enforcement and native-handoff render timing; Chrome launch
+was denied by Windows IPC permissions in the builder sandbox. No browser or OBS
+latency result is claimed. See ADR 0002 and the core README for the remaining
+Director-run checks.
+
 The loopback `/rpc` service allows CORS only for the exact origins
 `tauri://localhost` and `http://tauri.localhost`, echoing the allowed origin and
 varying responses by Origin, including error responses. OPTIONS preflights carry

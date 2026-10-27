@@ -69,34 +69,34 @@ async fn beacons_placeholder_keeps_csp_and_does_not_log_session_sentinel() {
 }
 
 #[tokio::test]
-async fn simulated_overlay_csp_only_allows_inline_styles() {
+async fn simulated_overlay_csp_matches_adr_exactly() {
     let overlay = Overlay::start(0).await.unwrap();
     let client = reqwest::Client::builder().no_proxy().build().unwrap();
     let response = client.get(overlay.url()).send().await.unwrap();
     let policy = response.headers()["content-security-policy"]
         .to_str()
         .unwrap();
+    let port = reqwest::Url::parse(&overlay.url()).unwrap().port().unwrap();
     assert_eq!(
-        policy.as_bytes(),
-        concat!(
-            "default-src 'none'; script-src 'none'; connect-src 'none'; img-src 'none'; ",
-            "style-src 'unsafe-inline'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'"
+        policy,
+        format!(
+            "default-src 'none'; script-src 'self'; connect-src http://localhost:{port}/push/beacons; img-src 'self' data:; style-src 'unsafe-inline'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'"
         )
-        .as_bytes()
     );
     let mut directives: Vec<_> = policy.split(';').map(str::trim).collect();
     directives.sort_unstable();
     // Exact directive/source sets reject remote styles, overrides and duplicates.
+    let connect = format!("connect-src http://localhost:{port}/push/beacons");
     assert_eq!(
         directives,
         [
             "base-uri 'none'",
-            "connect-src 'none'",
+            connect.as_str(),
             "default-src 'none'",
             "form-action 'none'",
             "frame-ancestors 'none'",
-            "img-src 'none'",
-            "script-src 'none'",
+            "img-src 'self' data:",
+            "script-src 'self'",
             "style-src 'unsafe-inline'",
         ]
     );

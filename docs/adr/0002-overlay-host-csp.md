@@ -2,11 +2,14 @@
 
 Date: 2026-10-27
 
-Status: Accepted for WP 3.2, implementation queued
+Status: Implemented for WP 3.2; browser enforcement/timing and live OBS verification pending
 
 Decision authority: App Master decision under the plan's WP 3.2 acceptance; owner may overrule
 
 ## Context and constraint
+
+The context below records the host before WP 3.2. The implementation and actual
+verification limits are recorded at the end of this ADR.
 
 [WP 3.2](../plan/03-implementation-plan.md#wp-32--design-packages-renderer-and-obs-delivery)
 requires a CSS-first renderer, image layers, and package changes reaching OBS
@@ -109,8 +112,8 @@ future host builder substitutes the listener's actual port into the connection
 source. Apply the policy to overlay pages and retain the Host and response-header
 protection across the asset and push routes.
 
-In the queued implementation, `NativeServices` in
-`crates/cc-core/src/integration.rs` will own the in-process handoff to the overlay
+In the implementation, `NativeServices` in
+`crates/cc-core/src/integration.rs` owns the in-process handoff to the overlay
 push state. After a package is validated, its content hash and local assets are
 verified, and any privilege expansion is consented, hand its accepted snapshot
 to that state. After a successful curve mutation, hand over the accepted curve
@@ -121,8 +124,8 @@ The SSE host sends the latest accepted render snapshot on connection and
 reconnection, then updates without reloading the page. Bound/coalesce pending
 updates by visual and retain the latest state so a slow consumer or reconnect
 does not leave stale art or intensity. The renderer updates its existing scene;
-unchanged intensity causes no per-frame DOM rebuild. This handoff is future
-work, not a claim that the static host already publishes updates.
+unchanged intensity causes no per-frame DOM rebuild. This handoff uses the merged
+`BeaconsRenderSnapshot` contract and the separately registered private SSE event.
 
 Reuse the plan's [Beacons contract rows](../plan/03-implementation-plan.md#contract-identifiers):
 `beacons.source.url` returns `LoopbackSourceUrl` from the isolated overlay host;
@@ -155,12 +158,12 @@ header enforcement. Scripts are opt-in; widening package privileges waits for
 the streamer's consent before the new package becomes active. The CSP does not
 replace schema validation, asset checks or that consent boundary. This is an
 overlay-host decision, not permission to execute package scripts in the Twitch
-Extension shell. Implementation stays queued; this delivery changes no product
-code, header string or test.
+Extension shell. The native implementation now serves a local bundle, verified
+assets and accepted snapshots on the separate overlay listener.
 
 ## Verification
 
-The later overlay-host builder must provide evidence for all of these:
+The overlay-host verification requirements are:
 
 - Assert the exact CSP header string above for a known bound port, not a subset
   of its directives. Assert `nosniff`, `no-store` and refusal of an incorrect Host.
@@ -176,3 +179,56 @@ The later overlay-host builder must provide evidence for all of these:
   within 1 s without manual refresh. The overlay-host builder owns that timing
   measurement, including reconnect/latest-state behavior; this ADR claims no
   measured latency or completed implementation test.
+
+## WP 3.2 implementation and evidence (2026-10-27)
+
+`cc-obs::overlay::secure` constructs the exact port-specific header above and
+applies it, nosniff and no-store even to errors and wrong-Host refusals.
+`cc-core::overlay::RenderHost` supplies only read-only page/bundle/asset/SSE
+routes to the owned listener. The control router and its CORS rules are unchanged.
+`NativeServices` receives verified package imports and accepted intensity values;
+Beacons commits configuration before publishing it. Rejected/oversized config
+never commits, simulation never publishes, and a visual naming an unverified
+design emits nothing. With the current configuration-only Beacons registration,
+curve mutations recompute the empty contribution total. The native intensity
+handoff accepts subsequent computed values; this adds no live contribution sink.
+
+Packages use the documented v1 digest in `crates/cc-core/README.md`. The importer
+captures bounded asset bytes after canonical filesystem confinement (including
+symlinks/junctions), checks the digest and checks privilege consent before any
+snapshot or script route becomes active. A later file edit cannot alter served
+verified bytes. Only declared raster assets and consented local `.js` entry
+points are served. The renderer is packaged as static output in `apps/overlay`
+without another pnpm member or a lockfile change. A source fingerprint test
+requires rebuilding that output when its inputs change.
+
+| Requirement | Evidence |
+| --- | --- |
+| Exact CSP/security headers, wrong Host, no control routes | `simulated_overlay_csp_matches_adr_exactly`, `simulated_overlay_origin`, `local_bundle_assets_sse_contract_and_origin_isolation` |
+| Valid simulated capability still refused from overlay Origin | `local_bundle_assets_sse_contract_and_origin_isolation` |
+| Local bundle, immutable images, SSE event name and typed payload | `local_bundle_assets_sse_contract_and_origin_isolation` |
+| Remote asset syntax/hash tampering refused; junction confinement | `schema_rejects_remote_assets_and_hash_verifier_rejects_tampering`, `asset_symlink_escape_is_refused` |
+| Data-only default, unverified state withheld, consent and widening, coalescing/reconnect | `accepted_state_only_consent_widening_and_latest_on_reconnect` |
+| Configuration acceptance, simulation isolation, bounded inventory | `rejected_visual_never_commits_and_simulation_never_changes_live_snapshot`, `render_inventory_is_bounded_and_unknown_intensity_is_rejected` |
+| Scene retained with unchanged intensity; invalid push ignored | Renderer `overlay.test.ts` |
+| Bundle source fingerprint and static no-eval proof | Renderer `overlay-build.test.ts` and `static-safety.test.ts` |
+| Real browser CSP enforcement, scripts after consent, reconnect, n/p50/p95/max render timing | `native_handoff_to_browser_render_delivery_budget_and_csp` exists and compiles; execution failed before page load because Chrome's Windows IPC/crash server received access denied in the builder sandbox |
+
+No browser timing sample or live OBS latency was measured in this delivery.
+The explicit probe and manual OBS procedure are in `crates/cc-core/README.md`.
+The Director must run that probe and record its actual results; the 1 s OBS
+acceptance remains pending. Existing live OBS twins and cleanup tests are
+preserved; the static spike plate is unchanged.
+
+Builder checks, completed 2026-10-28: the Rust workspace test run and workspace
+Clippy (`--all-targets -- -D warnings`) passed, as did Rust format, the desktop
+production build (382338/393216 first-load bytes), renderer typecheck/lint and
+all 83 renderer tests. After strengthening the simulated curve fixture and
+computed-opacity probe, the eight focused core tests, three focused renderer
+tests, core Clippy and browser-probe compilation passed again. Boundary,
+hygiene, 400-line cap and secret scans pass. No manifest/lockfile or contract
+file changed. `pnpm gate` passed its 14 tooling tests, workspace inventory and
+Cargo fetch, then failed at the unchanged contract exporter with `spawnSync
+cargo EPERM`. Recursive pnpm typecheck/lint/test each failed with `spawn EPERM`.
+These restrictions are already recorded in base `docs/PLAN.md`; no full pnpm
+gate pass is claimed. The Director must rerun it in its verifier.

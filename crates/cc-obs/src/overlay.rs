@@ -9,7 +9,7 @@ use axum::{
 };
 use tokio::{net::TcpListener, sync::watch, task::JoinHandle};
 
-/// Separate read-only origin. No RPC, credentials, scripts or remote resources.
+/// Separate read-only origin. No RPC, control capability or remote resources.
 pub struct Overlay {
     port: u16,
     stop: watch::Sender<bool>,
@@ -17,6 +17,14 @@ pub struct Overlay {
 }
 impl Overlay {
     pub async fn start(port: u16) -> Result<Self, Error> {
+        Self::start_with_routes(port, Router::new().route(
+            "/beacons/{visual_id}", get(|| async {
+                Html("<!doctype html><title>Castle Control Beacons (rendering unavailable)</title><style>html, body { background: transparent; margin: 0; }</style><body></body>")
+            }),
+        )).await
+    }
+    /// Native composition supplies only read-only render routes, never control routes.
+    pub async fn start_with_routes(port: u16, routes: Router) -> Result<Self, Error> {
         let listener = TcpListener::bind((std::net::Ipv4Addr::LOCALHOST, port))
             .await
             .map_err(|_| Error::Transport)?;
@@ -41,19 +49,7 @@ impl Overlay {
                     ))
                 }),
             )
-            .route(
-                "/beacons/{visual_id}",
-                get(|| async {
-                    // URL plumbing only: no package host or live intensity yet.
-                    // Never reflect the path or replace missing art with spike UI.
-                    Html(concat!(
-                        "<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\">",
-                        "<title>Castle Control Beacons (rendering unavailable)</title>",
-                        "<style>html, body { background: transparent; margin: 0; }</style>",
-                        "</head><body></body></html>"
-                    ))
-                }),
-            )
+            .merge(routes)
             .layer(middleware::from_fn(move |request, next| {
                 secure(request, next, port)
             }));
@@ -78,23 +74,21 @@ impl Drop for Overlay {
 }
 async fn secure(request: Request<Body>, next: Next, port: u16) -> Response {
     let expected = format!("localhost:{port}");
-    if request
+    let allowed = request
         .headers()
         .get(header::HOST)
         .and_then(|v| v.to_str().ok())
-        != Some(expected.as_str())
-    {
-        return StatusCode::FORBIDDEN.into_response();
-    }
-    let mut response = next.run(request).await;
-    // OBS injects a nonce-less <style> with source-configurable CSS. Allow only
-    // inline styling; scripts and every remote resource remain forbidden.
+        == Some(expected.as_str());
+    let mut response = if allowed {
+        next.run(request).await
+    } else {
+        StatusCode::FORBIDDEN.into_response()
+    };
+    // OBS injects nonce-less style. Scripts are local external files only; the
+    // native asset router separately enforces verification and script consent.
     response.headers_mut().insert(
         header::CONTENT_SECURITY_POLICY,
-        concat!(
-            "default-src 'none'; script-src 'none'; connect-src 'none'; img-src 'none'; ",
-            "style-src 'unsafe-inline'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'"
-        )
+        format!("default-src 'none'; script-src 'self'; connect-src http://localhost:{port}/push/beacons; img-src 'self' data:; style-src 'unsafe-inline'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'")
         .parse()
         .expect("static CSP"),
     );
@@ -107,4 +101,10 @@ async fn secure(request: Request<Body>, next: Next, port: u16) -> Response {
         "no-store".parse().expect("static header"),
     );
     response
+}
+
+/// SHA-256 for the native package verifier; bytes never cross the HTTP boundary.
+pub fn content_digest(bytes: &[u8]) -> String {
+    use sha2::{Digest, Sha256};
+    format!("{:x}", Sha256::digest(bytes))
 }

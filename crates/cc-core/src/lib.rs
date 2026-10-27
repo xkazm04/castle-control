@@ -8,6 +8,7 @@ mod integration;
 mod login;
 pub mod lots;
 mod offline;
+pub mod overlay;
 mod registry;
 mod server;
 pub mod spike;

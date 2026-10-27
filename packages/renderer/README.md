@@ -1,15 +1,54 @@
 # Renderer core
 
-`@castle-control/renderer` is a private TypeScript package with no runtime
-dependencies for the future OBS overlay and Extension hosts. Its only workspace
-dev dependency is the contract, imported with `import type` for cast and tier
-types. It performs no network requests, script evaluation, DOM creation,
-or clock/timer reads. The host supplies playback time explicitly.
+## WP 3.2 overlay entry
+
+The overlay now has one approved runtime dependency on the lazy
+`@castle-control/contract/beacons-render` door. `src/overlay-entry.ts` connects an
+`EventSource` to the same-origin `/push/beacons` endpoint. Only
+`beacons.render.snapshot` payloads accepted by `parseBeaconsRenderSnapshot` and
+naming this visual reach `OverlayScene`; malformed/mismatched payloads leave the
+scene intact. A verified package hash change rebuilds its layers once; intensity
+changes update existing CSS bindings, and unchanged intensity does no DOM writes.
+There is no per-frame renderer loop or page/source refresh.
+
+Text uses literal `textContent`; images use verified local hash-qualified asset
+paths. Shapes and the fixed `embers` preset are renderer-owned. Data-only is
+the default and creates no package script. Explicit script entries create local
+external module elements only; the native host verifies and obtains consent
+before sending or serving them. The renderer never evaluates package strings,
+creates inline scripts, or loads a remote URL. CSP and native verification are
+the enforcement boundary; the renderer does not invent a consent wire field.
+
+`apps/overlay` contains only the static shell and built output, with no new pnpm
+member. Rebuild using the installed desktop Vite CLI:
+
+```powershell
+pnpm --config.verify-deps-before-run=false --filter @castle-control/desktop exec vite build --config ../../packages/renderer/vite-overlay.config.mjs --configLoader native
+```
+
+`overlay-build.test.ts` verifies the bundle's source fingerprint, including the
+lazy contract parser/validator, and rejects eval/Function/dynamic imports in the
+served output. `overlay.test.ts` proves invalid-payload rejection, literal text,
+node retention, no unchanged-intensity CSS writes and package replacement using
+a small simulated DOM surface. This is not a browser or OBS timing measurement.
+The core's explicit `overlay_browser` test performs browser enforcement and
+delivery measurements when Chrome can launch. That launch failed with Windows
+IPC access denied in this sandbox; actual browser/OBS timing remains for the
+Director. See `crates/cc-core/README.md` for commands and the live OBS procedure.
+
+The sections below retain earlier package delivery history; the current runtime
+dependency and overlay host behavior are described above.
+
+`@castle-control/renderer` is a private TypeScript package. Pure timing, draw and
+template helpers use contract types without transport or DOM work; the host
+supplies their playback time explicitly. The overlay entry adds EventSource,
+DOM rendering and the approved lazy contract runtime parser as described above.
 
 Design bindings use local structural types that mirror the merged `cc-types`
 `design.rs` contract, without importing `@castle-control/contract`. Hosts must
-parse incoming design data at their contract boundary. There is no overlay
-server, Extension host, asset loader or package interpreter here yet.
+parse incoming design data at their contract boundary. The overlay package
+interpreter is described above; its server-side verification and asset custody
+belong to the native core. The Twitch Extension host remains separate work.
 
 ## Map Room templates (WP 4.1 part A)
 
