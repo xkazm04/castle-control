@@ -8,3 +8,5 @@ export { isPending, ProposalQueue, proposalQueue } from './queue.js';
 export type { ProposalSnapshot } from './queue.js';
 export { SimulatedSteward, sampleStewardFacts } from './simulated.js';
 export type { StewardFacts } from './simulated.js';
+export { createSteward, LiveSteward } from './live.js';
+export type { StewardOptions, StewardTransport } from './live.js';

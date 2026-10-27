@@ -20,6 +20,7 @@
     "test": "node ../../scripts/package-gate.mjs test"
   },
   "dependencies": {
+    "@castle-control/contract": "workspace:*",
     "@castle-control/tokens": "workspace:*",
     "react": "catalog:",
     "react-dom": "catalog:"

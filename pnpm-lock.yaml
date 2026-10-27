@@ -133,6 +133,9 @@ importers:
 
   packages/ui:
     dependencies:
+      '@castle-control/contract':
+        specifier: workspace:*
+        version: link:../contract
       '@castle-control/tokens':
         specifier: workspace:*
         version: link:../tokens
