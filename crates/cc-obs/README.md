@@ -26,8 +26,9 @@
   successful correlated status alone acknowledges creation. The live twin
   reads back the production-created input, then independently recreates it to
   inspect the actual response fields and matching scene item.
-- **Scene:** the spike expects an existing scene named exactly `Scene`; cc-obs
-  does not create scenes or hardcode that name and forwards caller-supplied names.
+- **Scene:** the spike defaults to an existing scene named exactly `Scene`.
+  The cc-obs live twins accept `CC_LIVE_OBS_SCENE` to select another existing
+  scene. cc-obs does not create scenes and forwards caller-supplied names.
 - **Status / errors:** success requires BOTH `result: true` AND `code: 100`.
   Every other status becomes fixed `Error::Rejected`; peer comments are never
   surfaced. Malformed/mismatched protocol becomes `Protocol`, socket closure or
@@ -44,7 +45,9 @@
   IPv4 loopback. Only the exact `localhost:<port>` Host is allowed (else 403).
   Root is GET/HEAD only (POST 405); `/rpc` and `/events` are absent (GET/POST
   404). The static page declares `html, body { background: transparent; margin: 0; }`
-  in an inline style. CSP permits only `style-src 'unsafe-inline'`; `default-src`,
+  in an inline style. A small rounded, padded plate uses white system-font text
+  with a dark shadow over a semi-transparent dark background; outside it remains
+  transparent. CSP permits only `style-src 'unsafe-inline'`; `default-src`,
   `script-src`, `connect-src`, `img-src`, `frame-ancestors`, `base-uri` and
   `form-action` are all `'none'`, with `nosniff` and `no-store`. Drop stops the
   server. Fixtures choose an ephemeral port; live tests reserve 17891 and do not
@@ -60,9 +63,11 @@ exception is therefore `style-src 'unsafe-inline'`, without `'self'`, host or
 scheme sources. Remote styles, CSS imports/images/fonts, scripts, connections
 and frames remain blocked. Explicit page transparency also works outside OBS.
 
-`simulated_overlay_csp_only_allows_inline_styles` checks the exact directive
-and source sets; `simulated_overlay_declares_transparent_background` checks
-the permitted style declaration. Both failed against the original overlay
+`simulated_overlay_csp_only_allows_inline_styles` checks the byte-identical CSP
+header and exact directive/source sets;
+`simulated_overlay_declares_transparent_background` checks transparency, the
+visible plate and absence of scripts, imports, URLs and remote hosts. The
+original CSP/transparency assertions failed against the original overlay
 before the fix; the existing Host/method/isolated-origin checks remain intact.
 
 ## Live flip
@@ -77,6 +82,11 @@ credential UI if authentication is enabled. Never pass a password in an
 environment variable, argument, fixture or log. With authentication disabled,
 other live twins work without a keychain read; `live_auth_vector` deliberately
 fails as **untested** until auth is enabled, rather than claiming vector proof.
+
+Switch OBS to scene `Scene` (or set `CC_LIVE_OBS_SCENE` for the cc-obs live twins)
+before the visual check. The live roundtrip asks `GetCurrentProgramScene` and
+prints the source and program scenes with a switch reminder if they differ.
+A mismatch does not fail the test; the test never switches the operator's scene.
 
 Run one named test at a time. The table uses POSIX environment-prefix notation;
 in PowerShell set `$env:CC_LIVE_OBS='1'` **only for an owner-authorized run**,
@@ -110,9 +120,11 @@ creates its own source, calls `GetSourceScreenshot` with BMP (required in
 encoded bytes. It waits one second before each of up to ten captures, so an
 all-white frame fails after the retry window. Images stay in memory. Its
 synthetic decoder test rejects all-white, truncated and compressed frames.
-BMP checks non-white RGB pixels, not alpha: an empty non-white frame can pass,
-so the owner's visual confirmation of content and transparency in
-`docs/spike-log.md` is still required. No live run is claimed by this delivery.
+Fully transparent BGRA frames cannot pass regardless of their hidden RGB.
+`GetSourceScreenshot` returns fully transparent frames on the owner's OBS, so
+those captures are inconclusive and the screenshot test stays ignored. The
+human visual check is the authority for content and transparency; screenshots
+cannot close that check on this OBS. No live run is claimed by this delivery.
 
 ## Build evidence
 
@@ -166,3 +178,29 @@ Live tests have not been enabled or run. This is not owner live-spike evidence.
   files, manifests and lockfiles have no diff from the base commit. App Master
   must rerun the full gate in its verifier. No install was attempted over the
   shared `node_modules` junction.
+
+### WP 0.7 visible plate follow-up, 2026-10-27
+
+- Red: `cargo test --locked -p cc-obs --test overlay` failed the plate assertion
+  against the unstyled page (two tests passed). The synthetic decoder test in
+  `cargo test --locked -p cc-obs --test overlay --test live` separately failed
+  because a fully transparent BGRA frame incorrectly returned `Some(true)`.
+- Green: `cargo test --locked -p cc-obs` passed all 14 simulated tests with nine
+  live tests ignored. Transparent frames with hidden non-white RGB and entirely
+  zeroed pixels now both return `Some(false)`; opaque non-white pixels still pass.
+- `cargo fmt --all -- --check` and
+  `cargo clippy -p cc-obs --all-targets -- -D warnings`: passed.
+- `cargo --config net.offline=false clippy --workspace --all-targets -- -D warnings`:
+  passed.
+- `node scripts/check.mjs`: passed boundaries, hygiene and file cap (524 code
+  files), and secrets (653 files). `git diff --check`: passed.
+- Recursive `pnpm --config.verify-deps-before-run=false -r typecheck` and `-r lint`
+  both failed before package checks with lifecycle-launcher `spawn EPERM`.
+  `pnpm --config.verify-deps-before-run=false gate` passed 14 tooling tests,
+  workspace inventory and Cargo fetch, then failed with `spawnSync cargo EPERM`
+  in the unchanged contract exporter. These match the earlier sandbox failures;
+  gate scripts, contract files, manifests and lockfiles have no diff from HEAD.
+  App Master must rerun these gates in its verifier. No install was attempted
+  over the shared `node_modules` junction.
+- Scene mismatch reporting is compiled, not claimed live-verified. No live
+  checks ran, no OBS scene was switched, and no visual sign-off is claimed.

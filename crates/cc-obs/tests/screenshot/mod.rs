@@ -35,11 +35,14 @@ pub async fn check(observer: &mut Observer, source_name: &str) {
             return;
         }
     }
-    panic!("live overlay screenshot remained all-white; check OBS browser CSP errors");
+    panic!(
+        "live overlay screenshot remained white or transparent: inconclusive on owner OBS; human visual check is authoritative"
+    );
 }
 
 // Qt's BMP writer emits uncompressed BGR/BGRA. Check pixels, never BMP headers
 // or row padding: those contain non-white bytes even for an all-white image.
+// Transparent BGRA pixels are inconclusive regardless of their hidden RGB.
 fn nonwhite_bmp(bytes: &[u8]) -> Option<bool> {
     fn word(bytes: &[u8], offset: usize) -> Option<u32> {
         Some(u32::from_le_bytes(
@@ -70,7 +73,7 @@ fn nonwhite_bmp(bytes: &[u8]) -> Option<bool> {
     Some(pixels.chunks_exact(stride).any(|row| {
         row[..320 * pixel_size]
             .chunks_exact(pixel_size)
-            .any(|pixel| pixel[..3] != [255, 255, 255])
+            .any(|pixel| pixel[..3] != [255, 255, 255] && (pixel_size == 3 || pixel[3] != 0))
     }))
 }
 
@@ -86,10 +89,18 @@ fn simulated_screenshot_checks_pixels_and_rejects_invalid_frames() {
     bytes[28] = 32;
     for pixel in bytes[54..].chunks_exact_mut(4) {
         pixel[..3].fill(255);
+        pixel[3] = 255;
     }
     assert_eq!(nonwhite_bmp(&bytes), Some(false));
     bytes[54] = 0;
     assert_eq!(nonwhite_bmp(&bytes), Some(true));
+    // Owner OBS returns fully transparent frames: hidden RGB is inconclusive.
+    for pixel in bytes[54..].chunks_exact_mut(4) {
+        pixel[3] = 0;
+    }
+    assert_eq!(nonwhite_bmp(&bytes), Some(false));
+    bytes[54..].fill(0);
+    assert_eq!(nonwhite_bmp(&bytes), Some(false));
     assert_eq!(nonwhite_bmp(&bytes[..100]), None);
     bytes[30] = 1;
     assert_eq!(nonwhite_bmp(&bytes), None);

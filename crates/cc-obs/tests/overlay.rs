@@ -9,6 +9,14 @@ async fn simulated_overlay_csp_only_allows_inline_styles() {
     let policy = response.headers()["content-security-policy"]
         .to_str()
         .unwrap();
+    assert_eq!(
+        policy.as_bytes(),
+        concat!(
+            "default-src 'none'; script-src 'none'; connect-src 'none'; img-src 'none'; ",
+            "style-src 'unsafe-inline'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'"
+        )
+        .as_bytes()
+    );
     let mut directives: Vec<_> = policy.split(';').map(str::trim).collect();
     directives.sort_unstable();
     // Exact directive/source sets reject remote styles, overrides and duplicates.
@@ -39,8 +47,33 @@ async fn simulated_overlay_declares_transparent_background() {
         .text()
         .await
         .unwrap();
-    assert!(page.contains("<style>html, body { background: transparent; margin: 0; }</style>"));
-    assert!(!page.contains("<script") && !page.contains("src=") && !page.contains("<link"));
+    assert!(page.contains("html, body { background: transparent; margin: 0; }"));
+    assert!(page.contains("<title>Castle Control spike</title>"));
+    assert!(page.contains("WP 0.7 OBS connection test"));
+    assert!(page.contains("<main class=\"spike-plate\">"));
+    let plate = page
+        .split_once(".spike-plate {")
+        .and_then(|(_, style)| style.split_once('}'))
+        .expect("inline plate style must exist")
+        .0;
+    for declaration in [
+        "color: #fff;",
+        "background: rgba(0, 0, 0, 0.6);",
+        "text-shadow:",
+        "padding:",
+        "border-radius:",
+    ] {
+        assert!(plate.contains(declaration), "missing {declaration}");
+    }
+    let page = page.to_ascii_lowercase();
+    for forbidden in [
+        "<script", "@import", "url(", "http:", "https:", "//", "src=", "<link",
+    ] {
+        assert!(
+            !page.contains(forbidden),
+            "unexpected resource: {forbidden}"
+        );
+    }
 }
 
 #[tokio::test]

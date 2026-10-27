@@ -1,4 +1,6 @@
 //! LIVE twins are opt-in owner checks, never fixture evidence. Run one at a time.
+//! CC_LIVE_OBS_SCENE optionally selects the source scene (default: Scene).
+//! Switch OBS to that scene for the human visual check; tests never switch it.
 mod live_support;
 mod screenshot;
 use cc_obs::{BrowserSource, Error, Overlay};
@@ -56,14 +58,15 @@ async fn live_get_version_correlation() {
 #[ignore = "live: CC_LIVE_OBS=1"]
 async fn live_scene_exists() {
     guard();
+    let scene_name = scene_name();
     let mut observer = Observer::connect().await;
     let response = observer.request("GetSceneList", json!({})).await;
     success(&response);
     assert!(
         response["responseData"]["scenes"]
             .as_array()
-            .is_some_and(|scenes| scenes.iter().any(|scene| scene["sceneName"] == "Scene")),
-        "live spike prerequisite missing: create an OBS scene named Scene"
+            .is_some_and(|scenes| scenes.iter().any(|scene| scene["sceneName"] == scene_name)),
+        "live spike prerequisite missing: create an OBS scene named {scene_name}"
     );
 }
 
@@ -87,7 +90,7 @@ async fn live_status_codes() {
     // Invalid production source must fail locally, without sending a mutation.
     let mut client = client().await;
     let invalid = BrowserSource {
-        scene_name: "Scene".into(),
+        scene_name: scene_name(),
         source_name: run_id(),
         url: "http://localhost:17891/rpc".into(),
         width: 1280,
@@ -156,7 +159,9 @@ async fn live_overlay_17891() {
 }
 
 #[tokio::test]
-#[ignore = "live: CC_LIVE_OBS=1; owner OBS screenshot check"]
+// GetSourceScreenshot returns transparent frames on owner OBS: inconclusive.
+// The human visual check is authoritative; transparent frames cannot pass.
+#[ignore = "live: CC_LIVE_OBS=1; transparent frames inconclusive on owner OBS; human visual check is authority"]
 async fn live_overlay_screenshot_not_white() {
     if std::env::var("CC_LIVE_OBS").as_deref() != Ok("1") {
         eprintln!("SKIPPED: CC_LIVE_OBS=1 required; no socket or keychain access attempted");
@@ -175,7 +180,7 @@ async fn browser_source_roundtrip(check_screenshot: bool) {
     let name = run_id();
     eprintln!("live OBS browser-source input: {name}");
     let source = BrowserSource {
-        scene_name: "Scene".into(),
+        scene_name: scene_name(),
         source_name: name.clone(),
         url: "http://localhost:17891/".into(),
         width: 1280,
@@ -183,6 +188,17 @@ async fn browser_source_roundtrip(check_screenshot: bool) {
     };
     // Catch assertion panics so RemoveInput runs even after uncertain CreateInput.
     let outcome = AssertUnwindSafe(async {
+        let program = observer.request("GetCurrentProgramScene", json!({})).await;
+        success(&program);
+        let program_scene = program["responseData"]["currentProgramSceneName"]
+            .as_str()
+            .expect("live OBS program scene name missing");
+        if program_scene != source.scene_name {
+            eprintln!(
+                "spike source in scene {}; OBS program scene is {program_scene}; switch to {} for the visual check",
+                source.scene_name, source.scene_name
+            );
+        }
         client
             .create_browser_source(&source)
             .await
@@ -213,7 +229,7 @@ async fn browser_source_roundtrip(check_screenshot: bool) {
         let created = observer
             .request(
                 "CreateInput",
-                json!({"sceneName":"Scene",
+                json!({"sceneName":source.scene_name,
             "inputName":name,"inputKind":"browser_source","sceneItemEnabled":true,
             "inputSettings":{"url":source.url,"width":1280,"height":720,
                 "is_local_file":false,"shutdown":false}}),
@@ -228,7 +244,7 @@ async fn browser_source_roundtrip(check_screenshot: bool) {
             "live CreateInput must return a sceneItemId and inputUuid"
         );
         let items = observer
-            .request("GetSceneItemList", json!({"sceneName":"Scene"}))
+            .request("GetSceneItemList", json!({"sceneName":source.scene_name}))
             .await;
         success(&items);
         assert!(
@@ -237,7 +253,7 @@ async fn browser_source_roundtrip(check_screenshot: bool) {
                 .is_some_and(|items| items.iter().any(|item| item["sourceName"] == name
                     && item["sceneItemEnabled"] == true
                     && item["sceneItemId"] == created["responseData"]["sceneItemId"])),
-            "live source must be enabled in Scene"
+            "live source must be enabled in {}", source.scene_name
         );
         check_overlay().await;
         if check_screenshot {
@@ -271,6 +287,10 @@ async fn browser_source_roundtrip(check_screenshot: bool) {
     if let Err(panic) = outcome {
         std::panic::resume_unwind(panic);
     }
+}
+
+fn scene_name() -> String {
+    std::env::var("CC_LIVE_OBS_SCENE").unwrap_or_else(|_| "Scene".into())
 }
 
 async fn check_overlay() {

@@ -29,9 +29,15 @@ impl Overlay {
                     Html(concat!(
                         "<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\">",
                         "<title>Castle Control spike</title>",
-                        "<style>html, body { background: transparent; margin: 0; }</style>",
-                        "</head><body><h1>Castle Control</h1>",
-                        "<p>WP 0.7 OBS connection test. Static test page.</p></body></html>"
+                        "<style>html, body { background: transparent; margin: 0; }",
+                        ".spike-plate { display: inline-block; margin: 16px; padding: 16px 24px; ",
+                        "border-radius: 12px; color: #fff; background: rgba(0, 0, 0, 0.6); ",
+                        "text-shadow: 0 1px 3px #000; ",
+                        "font: 20px/1.4 system-ui, 'Segoe UI', sans-serif; }",
+                        ".spike-plate h1 { margin: 0; font-size: 32px; }",
+                        ".spike-plate p { margin: 8px 0 0; }</style>",
+                        "</head><body><main class=\"spike-plate\"><h1>Castle Control</h1>",
+                        "<p>WP 0.7 OBS connection test. Static test page.</p></main></body></html>"
                     ))
                 }),
             )
