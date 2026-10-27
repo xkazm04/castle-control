@@ -1,11 +1,10 @@
 mod gatehouse_support;
 
-use cc_core::{NativeConfig, NativeServices, Registry, gatehouse::GatehouseModule};
+use cc_core::gatehouse::GatehouseModule;
 use cc_store::Clock;
 use cc_types::ErrorCode;
 use gatehouse_support::*;
 use serde_json::json;
-use std::sync::Arc;
 
 #[tokio::test]
 async fn seven_methods_round_trip_and_human_reviews_are_single_use() {
@@ -176,32 +175,4 @@ async fn injected_clock_expires_review_toward_hold() {
     assert_eq!(held["kind"], "held");
     assert_eq!(held["verdict"], "hold");
     assert_eq!(held["at"], h.clock.now().as_rfc3339());
-}
-
-#[tokio::test]
-async fn production_native_paths_serve_none_of_the_gatehouse_methods() {
-    let directory = tempfile::tempdir().unwrap();
-    let services = NativeServices::new(
-        NativeConfig {
-            twitch: cc_twitch::TwitchConfig::default(),
-            obs: cc_obs::Config {
-                port: 0,
-                password_label: "simulated-unused".into(),
-            },
-            overlay_port: 0,
-        },
-        cc_store::Store::open(directory.path()).unwrap(),
-        Arc::new(|_| panic!("no login during offline guard")),
-    )
-    .await
-    .unwrap();
-    // with_status exercises the private Registry::native(None) constructor.
-    for registry in [Registry::with_status(), Registry::with_native(services)] {
-        for (method, params) in requests() {
-            assert!(!registry.methods().contains(&method));
-            let error = failure(&registry, method, params).await;
-            assert_eq!(error.code, ErrorCode::Unavailable);
-            assert_eq!(error.message, "method is not registered yet");
-        }
-    }
 }

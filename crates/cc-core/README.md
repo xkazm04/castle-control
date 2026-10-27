@@ -11,8 +11,9 @@ POST `/rpc` carries `Authorization: Bearer <session>` and a JSON body such as
 failure is `{code,message,retry_after_ms?,detail?}` with omitted optional keys.
 Module handlers receive generated request variants; results are validated at
 the same contract door before serialization. `Registry::with_status()` registers
-the native method inventory without starting adapters; its status is disconnected
-and adapter calls return unavailable. For a configured app, create
+the native method inventory plus the fixture-only Lots and Gatehouse methods,
+without starting adapters; its status is disconnected and native adapter calls
+return unavailable. For an explicitly configured native app, create
 `NativeServices::new(NativeConfig, Store, LoginPresenter).await`, retain it, then
 call `services.app(capacity)` and `bind`. It wires the Twitch bridge and OBS into
 that registry and the same event hub used by `/events`. Call `shutdown` when
@@ -65,10 +66,9 @@ real local HTTP/WebSocket connections, with no Twitch/OBS calls.
 ## Offline lots module (WP 2.1/2.2)
 
 `cc_core::lots::LotsModule` implements exactly the seven declared `lots.*`
-methods. It is exported but **not registered** by any native constructor,
-router, desktop integration or live adapter. Tests alone construct it and call
-`Registry::default().register(module)`. Production wiring waits for the live
-spike and a separate delivery.
+methods. AI-7 registers it in both native constructors behind a fixture-only
+wrapper. Live chat intake and live beacon wiring remain absent. Standalone
+domain tests can still explicitly register a module in `Registry::default()`.
 
 Construct it with a caller-owned root, `Arc<EventHub>`, an injected
 `BeaconSource`, a `LotsClock`, and an explicit simulated-data flag. No beacon
@@ -113,7 +113,8 @@ Run `cargo test -p cc-core --test lots`. Tests dispatch through test-local
 registries, run `validate_result`, independently verify both writ sources, use
 recorded public quicknet round 2, reject a corrupted signature, preserve
 cooldowns across reopen, exercise cc-store erasure, and dispatch all seven
-methods against both native constructors to prove they remain unavailable.
+methods through a standalone registry. The old native-unavailable guard was
+replaced by AI-7's registration and no-network acceptance below.
 
 Validation for this delivery (2026-10-26):
 
@@ -143,7 +144,7 @@ methods: `gatehouse.rules.list`, `gatehouse.rules.upsert`,
 `gatehouse.rules.setMode`, `gatehouse.ban.confirm`, `gatehouse.ban.dismiss`,
 `gatehouse.decision.undo`, and `gatehouse.petition.resolve`. Construct it with
 `GatehouseModule::open(root, Arc<dyn cc_store::Clock>)` and explicitly register
-it in a test-local `Registry::default()`. The caller owns the persistence root;
+it in a standalone `Registry::default()`. The caller owns the persistence root;
 the existing Gatehouse service owns `rules.json` and `store/` beneath it.
 
 The adapter serializes calls through a `Mutex<cc_gatehouse::Gatehouse>` and
@@ -151,10 +152,9 @@ delegates the existing request types unchanged. Request parsing and response
 validation use the existing contract door; service errors retain their contract
 envelope. Lock poisoning and serialization failure return a sanitized internal
 error. The module starts no executor, feeds no chat and publishes no events.
-Exporting it does not register it: neither native constructor, the router nor
-the desktop integration is changed. Live wiring remains a separate delivery
-after the M0 spike. No held/delay/shield/lease/consensus/drill/recording methods
-are served here.
+AI-7 additionally registers a guarded instance in both native constructors;
+no live adapter or desktop invocation is added. No held/delay/shield/lease/
+consensus/drill/recording methods are served here.
 
 Offline acceptance uses `tests/gatehouse.rs` and `tests/gatehouse_support/`.
 All seven methods dispatch only through a test-local registry, validate their
@@ -164,9 +164,8 @@ seed pending bans through the domain service while the RPC module is dropped;
 there is no added ingestion seam. Tests prove human confirm/dismiss, undo, both
 petition outcomes, repeated-resolution refusal, persistence through reopening,
 and an injected clock expiring review toward hold. The named
-`production_native_paths_serve_none_of_the_gatehouse_methods` guard exercises
-private `Registry::native(None)` via `with_status`, and `with_native`, asserting
-the exact `unavailable` / "method is not registered yet" response for all seven.
+native-unavailable guard was replaced by AI-7's registration, shadow-only and
+no-network acceptance below.
 
 Validation for this delivery (2026-10-26):
 
@@ -199,8 +198,97 @@ Validation for this delivery (2026-10-26):
   App Master must rerun those gates in its verification environment. No install
   or node_modules junction modification was attempted.
 
-Separate contract issue observed while testing, outside this delivery's scope:
-`cc_types::parse_request` accepts `[]` for the `Empty` params of rules.list,
-although its JSON Schema requires an object. The typed adapter cannot inspect
-the original JSON shape. No cc-types changes are included; negative acceptance
-cases above use shapes rejected by the existing contract door.
+Historical contract note:
+The earlier `Empty` array-parameter issue was corrected in cc-types before
+AI-7's base. No cc-types changes are included here.
+
+## AI-7 fixture-first native registration (2026-10-27)
+
+The operator's standup authorizes offline registration ahead of the live spike.
+Both `Registry::with_status()` and `Registry::with_native(services)` now register
+the seven existing Lots and seven WP 1.1 Gatehouse methods beside the seven
+native status/auth/OBS methods: **21 registered methods**, all already declared
+in cc-types. The other declared methods remain unavailable. `export-registry`
+reports that actual inventory without opening a store, socket or credential.
+No schema, migration, identifier or desktop invocation changes are included.
+No spike item is marked done.
+
+Registration uses lazy wrappers around `LotsModule` and `GatehouseModule`.
+First offline dispatch creates an isolated temporary fixture root with separate
+`lots/` and `gatehouse/` namespaces; it never reuses the native credential or
+viewer-data store. `tempfile` was already locked as a test dependency; it is
+now also a runtime dependency for these automatically cleaned fixture roots.
+For caller-owned persistent simulated state, use
+`Registry::with_fixture_root(root, events)` and pass the same `Arc<EventHub>`
+to `AppState::with_events`. That constructor surfaces persistence errors.
+Default initialization errors are cached and returned as contract errors.
+`AppState` binds its authoritative invalidation hub before any offline dispatch;
+attempting to rebind an already-used registry to another hub returns conflict.
+
+Lots always uses `simulated: true`, public recorded quicknet round 2, and the
+fixed fixture clock `2023-08-23T15:09:28Z`. The chain, signature and randomness
+in `src/lots/recorded.rs` match `cc-verify/tests/fixtures/drand-quicknet/`.
+Seal with `drand_quicknet` and `margin_s: 1` selects that round. Other schedules
+are verified against the same recording and fail if it does not match; they
+never trigger a fetch. The independent verifier still checks the real BLS
+signature and recomputes winners. The `streamer_commit` fallback remains local.
+`Registry::simulated_lots()` exposes the existing Rust-only, verdict-checked
+intake for generated fixtures. No RPC admits entries, no sample pool is silently
+seeded, and no bridge subscription feeds either module. Default state disappears
+when its registry and outstanding intake handles drop. The fixed clock means
+this is a fixture workflow, not a real-time draw service or live cooldown test.
+
+Gatehouse starts no classifier, executor, chat adapter or background task.
+Registered upsert/setMode calls reject armed mode even with acknowledgement;
+reopening a fixture root containing an armed user rule is also refused.
+The existing mandatory crisis-care rail remains fixed in the domain's armed
+hold/human-handoff configuration; no executor consumes it. Ban review, undo and
+petition methods operate only on local domain state, with not_found for absent
+decisions. No ban, timeout or announcement can leave this registration. Existing
+explicitly configured `NativeServices` behavior is unchanged and remains a
+separate opt-in path; offline module registration never creates those services.
+This delivery adds **no live source, CC_LIVE_* switch or credential access**.
+Setting any live flag does not upgrade these fixture modules.
+
+Acceptance is in `tests/offline_registration.rs` and `tests/offline_support/`:
+
+- The actual exporter process lists all 21 registered methods and every name
+  belongs to `RpcRequest::NAMES`. The existing native integration test checks
+  the same inventory through `services.app`.
+- Default native and caller-root registries run upsert/check/seal/cast/writ
+  against recorded round 2; the writ independently verifies. Invalidations go
+  to the app's hub and saved writs retain `simulated: true` across reopening.
+- Gatehouse list/upsert/setMode persist under a temporary caller root, including
+  the mode-change audit. Arming requests and previously armed user rules fail.
+- With all CC_LIVE_* unset, workflows run on a Tokio runtime with no I/O driver.
+  Windows TCP/UDP owner tables (IPv4 and IPv6) contain no endpoints owned by the
+  dedicated test process before or after the workflows. Linux checks its file
+  descriptors; other platforms use a read-only lsof check. Existing transport
+  and mock-adapter tests separately use local sockets intentionally.
+
+AI-7 validation (2026-10-27):
+
+- `cargo fmt --all -- --check` and `cargo clippy --workspace --all-targets --
+  -D warnings` passed. `cargo test --workspace` passed, including all 35 cc-core
+  tests, desktop host tests, the 1,000-draw independent-verification property and
+  every doc-test (including cc-core's raw-intake compile-fail example).
+  Owner-only live tests and explicit fixture generators stayed ignored.
+- The initial offline acceptance run exposed an incorrect empty-rules fixture
+  expectation. The existing mandatory crisis-care rail was preserved and the
+  expectation corrected. Final offline acceptance passes all three tests.
+- Fresh Rust exports saved outside the worktree passed the existing contract
+  check/parity scripts using their supported `--schema` and `--registry` inputs:
+  seven generated/committed artifacts; 45 declared methods; 21 registered; 24
+  unregistered; zero desktop invocations; all 16 event kinds matched.
+- `node scripts/check.mjs` passed: boundaries, hygiene and file cap walked 476
+  files; the final secrets scan walked 603 files. `git diff --check` passed.
+- `pnpm --config.verify-deps-before-run=false --filter @castle-control/desktop
+  build` passed, including its 381433/393216-byte first-load budget.
+- The exact `pnpm --config.verify-deps-before-run=false gate` command passed
+  14 tooling tests and workspace inventories, then failed at `spawnSync cargo
+  EPERM` in the unchanged exporter. Recursive `-r typecheck`, `-r lint` and
+  `-r test` each failed at lifecycle child spawning with `spawn EPERM`.
+  The exporter/runner files are unchanged from base `45e8e76`; the same process
+  restriction is already recorded in base `docs/PLAN.md`. The full Node gate is
+  **not green**. App Master must rerun those commands in its verification
+  environment. No install, junction modification or sandbox bypass was attempted.

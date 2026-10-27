@@ -1,6 +1,6 @@
 mod lots_support;
 use cc_core::{
-    NativeConfig, NativeServices, Registry,
+    Registry,
     lots::{LotsClock, LotsModule},
 };
 use cc_lots::{Intake, PassedMessage};
@@ -328,56 +328,4 @@ async fn writs_configuration_and_cooldowns_survive_reopen_and_reconfiguration() 
         .unwrap();
     assert!(store.items(cc_store::DataStore::Writs).unwrap().is_empty());
     let _: LotsWrit = serde_json::from_value(writ).unwrap();
-}
-
-#[tokio::test]
-async fn production_native_paths_serve_none_of_the_seven_methods() {
-    let h = Harness::new();
-    h.upsert().await;
-    h.add("1");
-    let sealed = h.seal("streamer_commit").await;
-    let cast = h
-        .call("lots.cast", json!({"draw_run_id":sealed["draw_run_id"]}))
-        .await;
-    let directory = tempfile::tempdir().unwrap();
-    let services = NativeServices::new(
-        NativeConfig {
-            twitch: cc_twitch::TwitchConfig::default(),
-            obs: cc_obs::Config {
-                port: 0,
-                password_label: "simulated-unused".into(),
-            },
-            overlay_port: 0,
-        },
-        cc_store::Store::open(directory.path()).unwrap(),
-        Arc::new(|_| panic!("no login during offline guard")),
-    )
-    .await
-    .unwrap();
-    for registry in [
-        Registry::with_status(),
-        Registry::with_native(services.clone()),
-    ] {
-        for (method, params) in [
-            ("lots.draw.list", json!({})),
-            ("lots.draw.upsert", json!({"draw":draw()})),
-            ("lots.draw.check", json!({"policy":draw()["policy"]})),
-            (
-                "lots.roll.lookup",
-                json!({"draw_id":"simulated-draw","user_id":"1"}),
-            ),
-            (
-                "lots.roll.seal",
-                json!({"draw_id":"simulated-draw","source":"streamer_commit","margin_s":1}),
-            ),
-            ("lots.cast", json!({"draw_run_id":sealed["draw_run_id"]})),
-            ("lots.writ.get", json!({"writ_id":cast["writ_id"]})),
-        ] {
-            assert!(!registry.methods().contains(&method));
-            assert_eq!(
-                error(&registry, method, params).await,
-                ErrorCode::Unavailable
-            );
-        }
-    }
 }

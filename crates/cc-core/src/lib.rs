@@ -6,6 +6,7 @@ mod ingress;
 mod integration;
 mod login;
 pub mod lots;
+mod offline;
 mod registry;
 mod server;
 pub mod spike;

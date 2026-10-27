@@ -1,4 +1,4 @@
-//! Offline RPC module. Exporting this module does not register or feed it.
+//! Offline RPC module. Native registration refuses arming and starts no executor.
 
 use crate::Module;
 use cc_gatehouse::Gatehouse;
@@ -33,6 +33,24 @@ impl GatehouseModule {
         Ok(Self {
             state: Mutex::new(Gatehouse::with_clock(root, clock)?),
         })
+    }
+
+    pub(crate) fn open_offline(root: impl AsRef<Path>) -> Result<Self, ErrorEnvelope> {
+        let module = Self::open(root, Arc::new(cc_store::SystemClock))?;
+        let rules = module
+            .state
+            .lock()
+            .map_err(|_| internal())?
+            .rules_list(cc_types::Empty {})?;
+        if rules.rules.iter().any(|rule| {
+            rule.mode == cc_types::RuleMode::Armed && rule.rule_class != cc_types::RuleClass::Rail
+        }) {
+            return Err(ErrorEnvelope::new(
+                ErrorCode::BlockedByPolicy,
+                "offline registration refuses armed rules",
+            ));
+        }
+        Ok(module)
     }
 
     fn handle(&self, request: &RpcRequest) -> Result<Value, ErrorEnvelope> {

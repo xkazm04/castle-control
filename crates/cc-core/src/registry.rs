@@ -1,4 +1,5 @@
 use crate::NativeServices;
+use crate::offline::{OfflineModule, OfflineModules};
 use cc_types::{ErrorCode, ErrorEnvelope, RpcRequest, StatusResult, Timestamp};
 use futures::future::BoxFuture;
 use serde_json::Value;
@@ -15,6 +16,7 @@ pub trait Module: Send + Sync {
 #[derive(Default)]
 pub struct Registry {
     handlers: BTreeMap<&'static str, Arc<dyn Module>>,
+    offline: Option<Arc<OfflineModules>>,
 }
 
 impl Registry {
@@ -57,6 +59,37 @@ impl Registry {
         Self::native(Some(services))
     }
     fn native(services: Option<Arc<NativeServices>>) -> Self {
+        Self::native_offline(services, Arc::new(OfflineModules::default()))
+    }
+
+    /// Caller-owned simulated state, isolated from native credentials and chat.
+    pub fn with_fixture_root(
+        root: impl AsRef<std::path::Path>,
+        events: Arc<crate::EventHub>,
+    ) -> Result<Self, ErrorEnvelope> {
+        let offline = Arc::new(OfflineModules::at(root.as_ref().to_owned(), events));
+        offline.lots()?;
+        Ok(Self::native_offline(None, offline))
+    }
+
+    /// Rust-only, verdict-checked simulated intake; no RPC accepts entries.
+    pub fn simulated_lots(&self) -> Result<Arc<crate::lots::LotsModule>, ErrorEnvelope> {
+        self.offline
+            .as_ref()
+            .ok_or_else(|| {
+                ErrorEnvelope::new(ErrorCode::Unavailable, "offline modules are not configured")
+            })?
+            .lots()
+    }
+
+    pub(crate) fn bind_events(&self, events: Arc<crate::EventHub>) -> Result<(), ErrorEnvelope> {
+        if let Some(offline) = &self.offline {
+            offline.bind_events(events)?;
+        }
+        Ok(())
+    }
+
+    fn native_offline(services: Option<Arc<NativeServices>>, offline: Arc<OfflineModules>) -> Self {
         let mut registry = Self::default();
         registry
             .register(Arc::new(StatusModule {
@@ -64,6 +97,12 @@ impl Registry {
                 services,
             }))
             .expect("built-in method is declared and unique");
+        for module in OfflineModule::pair(offline.clone()) {
+            registry
+                .register(Arc::new(module))
+                .expect("offline methods are declared and unique");
+        }
+        registry.offline = Some(offline);
         registry
     }
 }

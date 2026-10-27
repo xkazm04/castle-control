@@ -121,9 +121,25 @@ async fn native_registry_serves_reads_and_revoke_purges_the_real_store() {
     .unwrap();
     let app = services.app(32).unwrap();
     let mut expected = NativeServices::METHODS.to_vec();
+    expected.extend(cc_core::lots::LotsModule::METHODS);
+    expected.extend(cc_core::gatehouse::GatehouseModule::METHODS);
     expected.sort();
     assert_eq!(app.registry.methods(), expected);
     assert_eq!(Registry::with_status().methods(), expected);
+    let request = parse_request(br#"{"method":"lots.draw.list","params":{}}"#).unwrap();
+    assert_eq!(
+        app.registry.dispatch(&request).await.unwrap(),
+        json!({"draws":[]})
+    );
+    let request = parse_request(br#"{"method":"gatehouse.rules.list","params":{}}"#).unwrap();
+    let rules = app.registry.dispatch(&request).await.unwrap();
+    assert!(
+        rules["rules"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .all(|rule| { rule["rule_class"] == "rail" || rule["mode"] == "shadow" })
+    );
     for (method, expected) in [
         ("bridge.status.get", json!({"state":"disconnected"})),
         (

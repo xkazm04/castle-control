@@ -1,6 +1,7 @@
-//! Offline RPC module. Exporting this module does not register or feed it.
+//! Offline RPC module. Native registration uses recorded fixtures and no chat adapter.
 mod convert;
 mod lifecycle;
+pub(crate) mod recorded;
 mod storage;
 
 use crate::{EventHub, Module};
@@ -58,6 +59,8 @@ pub struct LotsModule {
     beacon: Arc<dyn BeaconSource>,
     clock: Arc<dyn LotsClock>,
     simulated: bool,
+    // Keep default fixture files until every Rust intake handle releases its store.
+    pub(crate) temporary_root: Option<tempfile::TempDir>,
 }
 
 impl LotsModule {
@@ -100,6 +103,7 @@ impl LotsModule {
             clock,
             simulated,
             payloads: broadcast::channel(256).0,
+            temporary_root: None,
         })
     }
 

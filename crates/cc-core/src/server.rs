@@ -31,6 +31,7 @@ impl AppState {
         registry: Registry,
         events: Arc<EventHub>,
     ) -> Result<Arc<Self>, ErrorEnvelope> {
+        registry.bind_events(events.clone())?;
         Ok(Arc::new(Self {
             registry,
             events,
