@@ -1,9 +1,12 @@
 import { spawnSync } from 'node:child_process';
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
-import { join, resolve } from 'node:path';
+import { join, relative, resolve } from 'node:path';
 import ts from 'typescript';
 import { parseJson } from '../src/door.mjs';
 import { exportSchema, root } from './codegen.mjs';
+
+// packages/renderer/src/overlay-build.test.ts ties bundle.js to its source fingerprint.
+const trackedBuildOutputs = ['apps/overlay/bundle.js'];
 
 export function exportRegistry() {
   const option = process.argv.indexOf('--registry');
@@ -18,20 +21,25 @@ export function exportRegistry() {
   return parseJson(result.stdout);
 }
 
-function walk(directory) {
+function walk(directory, project) {
   if (!existsSync(directory)) return [];
   return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
     if (entry.isSymbolicLink() || ['node_modules', 'target', 'dist', 'generated', 'tests'].includes(entry.name)) return [];
     const file = join(directory, entry.name);
-    if (entry.isDirectory()) return walk(file);
+    if (trackedBuildOutputs.includes(relative(project, file).replaceAll('\\', '/'))) return [];
+    if (entry.isDirectory()) return walk(file, project);
     return /\.(rs|[cm]?[jt]sx?)$/.test(file) && !/\.(test|spec)\./.test(file) ? [file] : [];
   });
 }
 
 export function usages(project = root) {
-  const files = ['crates', 'apps', 'packages'].flatMap((part) => walk(join(project, part)));
+  const files = ['crates', 'apps', 'packages'].flatMap((part) => walk(join(project, part), project));
   console.log(`[contract usage] walked ${files.length} files`);
   if (!files.length) throw new Error('Refused empty usage inventory');
+  for (const output of trackedBuildOutputs) {
+    if (!existsSync(join(project, output))) throw new Error(`Missing listed build output: ${output}`);
+  }
+  console.log(`[contract usage] excluded ${trackedBuildOutputs.length} build output(s): ${trackedBuildOutputs.join(', ')}`);
   const invoked = [], events = [], variants = [], defects = [];
   for (const file of files) {
     const text = readFileSync(file, 'utf8');

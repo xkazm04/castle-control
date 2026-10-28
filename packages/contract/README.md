@@ -241,6 +241,7 @@ registered. Declared names awaiting later WPs are reported with their count.
 The event gate checks emitted Rust enum variants, literal TS event subscriptions
 and publications, and the generated event-name mirror against the closed registry.
 It also refuses JSON parsing outside the contract door in application/packages code.
+Tracked build outputs are excluded by exact repo-relative name because they inline validated source (currently `apps/overlay/bundle.js`, covered by the renderer's source-fingerprint test); missing listed outputs fail the gate.
 
 Later WPs own the placeholder shapes named in the Rust method table. `Pending`
 is uninhabited (`never` in TS), so a placeholder cannot accidentally accept live

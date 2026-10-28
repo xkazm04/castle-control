@@ -73,6 +73,8 @@ export function closureCases(proof, root) {
     'packages/proof/package.json': '{"scripts":{"typecheck":"tsc","lint":"eslint","test":""}}\n',
   });
   const schemaPath = join(root, 'packages/contract/src/generated/contract.schema.json');
+  const readContract = (name) => readFileSync(join(root, 'packages/contract/scripts', name), 'utf8');
+  const moduleUrl = (local) => pathToFileURL(join(root, 'packages/contract', local)).href;
   const schema = ts.parseConfigFileTextToJson(schemaPath, readFileSync(schemaPath, 'utf8')).config;
   const changed = { ...schema, simulated_gate_proof: true };
   proof('Contract codegen: stale schema', ['$R/packages/contract/scripts/check.mjs', '--schema', '$S/schema.json'], 'Contract drift:', {
@@ -85,17 +87,37 @@ export function closureCases(proof, root) {
   proof('Event parity: missing mirror', ['$R/packages/contract/scripts/parity.mjs', '--schema', '$S/schema.json', '--registry', '$S/registry.json'], 'missing mirrored event: simulated.event', {
     'schema.json': JSON.stringify(events), 'registry.json': JSON.stringify(schema.methods.map((method) => method.name)),
   });
+  proof('Contract usage: source parse rejected and named build output excluded', ['$S/usage.mjs'],
+    '[proof verified] source JSON.parse rejected; named build output excluded', {
+      'apps/overlay/bundle.js': "export const compiled = JSON.parse('{}');\n",
+      'apps/overlay/source.js': "export const source = JSON.parse('{}');\n",
+      'usage.mjs': `import assert from 'node:assert/strict';
+import { join } from 'node:path';
+import { usages } from ${JSON.stringify(moduleUrl('scripts/parity.mjs'))};
+const usage = usages(import.meta.dirname);
+assert(!usage.files.includes(join(import.meta.dirname, 'apps/overlay/bundle.js')));
+assert(usage.files.includes(join(import.meta.dirname, 'apps/overlay/source.js')));
+assert.deepEqual(usage.defects, [join(import.meta.dirname, 'apps/overlay/source.js') + ': JSON parsing outside the contract door']);
+console.log('[proof verified] source JSON.parse rejected; named build output excluded');
+throw new Error(usage.defects[0]);
+`,
+    });
+  proof('Contract usage: stale build output exclusion', ['$S/usage.mjs'],
+    'Missing listed build output: apps/overlay/bundle.js', {
+      'usage.mjs': `import { usages } from ${JSON.stringify(moduleUrl('scripts/parity.mjs'))};\nusages(import.meta.dirname);\n`,
+    });
   proof('Tooling node tests: failing assertion', ['$S/scripts/tooling-test.mjs'], 'simulated node failure', {
     'scripts/seed.test.mjs': "import { test } from 'node:test';\ntest('simulated failure', () => { throw new Error('simulated node failure'); });\n",
   });
-  const readContract = (name) => readFileSync(join(root, 'packages/contract/scripts', name), 'utf8');
-  const moduleUrl = (local) => pathToFileURL(join(root, 'packages/contract', local)).href;
+  const countMatch = readContract('test-codegen.mjs').match(/Object.keys\(files\).length, (\d+)/);
+  if (!countMatch) throw new Error('Generator proof requires an artifact-count assertion');
+  const count = Number(countMatch[1]);
   const codegenTest = readContract('test-codegen.mjs')
     .replace("'./codegen.mjs'", JSON.stringify(moduleUrl('scripts/codegen.mjs')))
     .replace("'./parity.mjs'", JSON.stringify(moduleUrl('scripts/parity.mjs')))
     .replace("'../src/door.mjs'", JSON.stringify(moduleUrl('src/door.mjs')))
-    .replace('Object.keys(files).length, 7', 'Object.keys(files).length, 8');
-  proof('Generator node assertions: wrong artifact count', ['$S/generator/test-codegen.mjs'], '7 !== 8', {
+    .replace(`Object.keys(files).length, ${count}`, `Object.keys(files).length, ${count + 1}`);
+  proof('Generator node assertions: wrong artifact count', ['$S/generator/test-codegen.mjs'], `${count} !== ${count + 1}`, {
     'generator/test-codegen.mjs': codegenTest,
     'generator/codegen.mjs': readContract('codegen.mjs'),
     'generator/parity.mjs': readContract('parity.mjs'),

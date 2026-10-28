@@ -66,6 +66,7 @@ assert.throws(() => differences({}), /empty/);
 const scratch = mkdtempSync(join(tmpdir(), 'cc-contract-proof-'));
 const authored = join(scratch, 'apps/desktop/src');
 const bundled = join(scratch, 'apps/desktop/dist/assets');
+const overlay = join(scratch, 'apps/overlay');
 try {
   assert.deepEqual(differences({ 'one.ts': 'fresh\n' }, scratch), ['missing one.ts']);
   writeFileSync(join(scratch, 'one.ts'), 'stale\n');
@@ -78,13 +79,22 @@ try {
   writeFileSync(join(bundled, 'index.js'), "export const bundled = JSON.parse('null');\n");
   assert.throws(() => usages(scratch), /empty/, 'built bundles are not authored contract usage');
   mkdirSync(authored, { recursive: true });
+  mkdirSync(overlay, { recursive: true });
+  writeFileSync(join(overlay, 'bundle.js'), "export const compiled = JSON.parse('{}');\n");
   writeFileSync(join(authored, 'main.ts'), "export const authored = JSON.parse('null');\n");
   const usage = usages(scratch);
   assert.equal(usage.files.length, 1);
+  assert(!usage.files.includes(join(overlay, 'bundle.js')), 'only the named tracked build output is excluded');
   assert.equal(usage.defects.length, 1, 'authored JSON parsing outside the door is still rejected');
+  writeFileSync(join(overlay, 'source.js'), "export const source = JSON.parse('{}');\n");
+  const neighbor = usages(scratch);
+  assert.equal(neighbor.files.length, 2, 'neighboring overlay JavaScript stays in the inventory');
+  assert(neighbor.defects.some(defect => defect.includes('source.js: JSON parsing outside the contract door')));
+  unlinkSync(join(overlay, 'bundle.js'));
+  assert.throws(() => usages(scratch), /Missing listed build output: apps\/overlay\/bundle.js/, 'stale exclusions must fail');
 } finally {
-  for (const file of [join(authored, 'main.ts'), join(bundled, 'index.js')]) if (existsSync(file)) unlinkSync(file);
-  for (const directory of [authored, bundled, join(scratch, 'apps/desktop/dist'), join(scratch, 'apps/desktop'), join(scratch, 'apps')]) {
+  for (const file of [join(authored, 'main.ts'), join(bundled, 'index.js'), join(overlay, 'bundle.js'), join(overlay, 'source.js')]) if (existsSync(file)) unlinkSync(file);
+  for (const directory of [authored, bundled, overlay, join(scratch, 'apps/desktop/dist'), join(scratch, 'apps/desktop'), join(scratch, 'apps')]) {
     if (existsSync(directory)) rmdirSync(directory);
   }
   for (const name of ['one.ts', 'orphan.ts']) if (existsSync(join(scratch, name))) unlinkSync(join(scratch, name));
