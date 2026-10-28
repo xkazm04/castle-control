@@ -6,6 +6,7 @@ import type { Snapshot } from './model.js';
 import type { CoreLotsPort, LotsNetwork } from './lots-core.js';
 import type { CoreGatehousePort, GatehouseNetwork } from './gatehouse-core.js';
 import type { CoreBeaconsPort, BeaconsNetwork } from './beacons-core.js';
+import type { StewardTransport } from '@castle-control/ui/steward';
 
 type LotsConnection = { launch: CoreLaunch; transport?: LotsNetwork; port?: CoreLotsPort };
 const lotsConnections = new WeakMap<Snapshot, LotsConnection>();
@@ -19,7 +20,13 @@ type BeaconsConnection = { launch: CoreLaunch; transport?: BeaconsNetwork; port?
 const beaconsConnections = new WeakMap<Snapshot, BeaconsConnection>();
 export function coreBeaconsConnection(snapshot: Snapshot) { return beaconsConnections.get(snapshot); }
 
-// Reserved opt-in metadata only. It does not select a Steward implementation.
+export type StewardConnection = { launch: CoreLaunch; live: boolean; reachable: () => boolean; transport?: StewardTransport };
+const stewardConnections = new WeakMap<Snapshot, StewardConnection>();
+/** Ready core reads prove reachability; capabilities never enter the serializable read model. */
+export function coreStewardConnection(snapshot: Snapshot) {
+  return snapshot.phase === 'ready' ? stewardConnections.get(snapshot) : undefined;
+}
+
 export type Launch = { mode: 'fixture' } | (CoreLaunch & { steward: 'live' | 'simulated' });
 
 // The shell injects an object in memory before loading main.tsx. Never use URL
@@ -39,7 +46,8 @@ export function parseLaunch(value: unknown): Launch {
   throw new Error('Invalid shell launch');
 }
 
-export function createDesktopClient(value: unknown, transport?: Network, lots_transport?: LotsNetwork, gatehouse_transport?: GatehouseNetwork) {
+export function createDesktopClient(value: unknown, transport?: Network, lots_transport?: LotsNetwork,
+  gatehouse_transport?: GatehouseNetwork, steward_transport?: StewardTransport) {
   const launch = parseLaunch(value);
   // Fixture mode has no endpoint or network dependency, even at runtime.
   const client = createReadModel(launch.mode === 'fixture' ? createSimulatedSource() : createCoreSource(launch, transport));
@@ -47,11 +55,15 @@ export function createDesktopClient(value: unknown, transport?: Network, lots_tr
   const connection: LotsConnection = { launch, ...(lots_transport ? { transport: lots_transport } : {}) };
   const gatehouse: GatehouseConnection = { launch, ...(gatehouse_transport ? { transport: gatehouse_transport } : {}) };
   const beacons: BeaconsConnection = { launch };
+  const steward: StewardConnection = { launch, live: launch.steward === 'live',
+    reachable: () => client.getSnapshot().phase === 'ready',
+    ...(steward_transport ? { transport: steward_transport } : {}) };
   return { ...client, getSnapshot() {
     const snapshot = client.getSnapshot();
     lotsConnections.set(snapshot, connection);
     gatehouseConnections.set(snapshot, gatehouse);
     beaconsConnections.set(snapshot, beacons);
+    stewardConnections.set(snapshot, steward);
     return snapshot;
   } };
 }

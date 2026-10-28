@@ -29,6 +29,14 @@ test('StewardBar accepts an owner-supplied identity and proposal without owning 
   expect(renderToStaticMarkup(<StewardBar {...props} proposal={null} />)).not.toContain('cc-steward-proposal');
 });
 
+test('StewardBar labels an explicitly live engine without sample or simulated claims', () => {
+  const html = renderToStaticMarkup(<StewardBar mode="live" message="Awaiting your seal." value="" suggestions={[]}
+    on_change={vi.fn()} on_tell={vi.fn()} on_suggest={vi.fn()} />);
+  expect(html).toContain('LIVE STEWARD');
+  expect(html).toContain('Live co-pilot');
+  expect(html).not.toMatch(/simulated|sample data/i);
+});
+
 test('StewardBar sends input and suggestion callbacks, ignores empty submissions and never calls an engine', () => {
   const tell = vi.fn(); const change = vi.fn(); const suggest = vi.fn();
   const props = { message: '', value: 'Draft a draw', suggestions: ['Catch me up'], on_change: change, on_tell: tell, on_suggest: suggest };

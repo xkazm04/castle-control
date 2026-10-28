@@ -1,5 +1,6 @@
-import { parseStewardAskParams, parseStewardAskResult, parseWritTearParams, parseWritTearResult } from '@castle-control/contract';
-import type { AskParams, Writ, WritChamber, WritSealParams, WritTearParams } from '@castle-control/contract';
+import { parseStewardAskParams, parseStewardAskResult, parseWritSealParams, parseWritSealResult,
+  parseWritTearParams, parseWritTearResult } from './contract.js';
+import type { AskParams, Writ, WritChamber, WritSealParams, WritTearParams } from './contract.js';
 import type { ChamberId, Proposal, ProposalResult, StewardContext, StewardPort, StewardTurn } from './port.js';
 import { ProposalQueue, proposalQueue } from './queue.js';
 import { SimulatedSteward } from './simulated.js';
@@ -8,7 +9,7 @@ import { SimulatedSteward } from './simulated.js';
 export interface StewardTransport {
   /** steward.ask */
   ask(params: AskParams): Promise<string>;
-  /** steward.writ.seal: reserved for the separate human hold path; never called here. */
+  /** steward.writ.seal: only the separate human hold path may call this. */
   seal(params: WritSealParams): Promise<string>;
   /** steward.writ.tear */
   tear(params: WritTearParams): Promise<string>;
@@ -65,6 +66,8 @@ export class LiveSteward implements StewardPort {
   readonly #transport: StewardTransport;
   readonly #queue: ProposalQueue;
   readonly #writs = new Map<string, Writ>();
+  readonly #uncertain = new Set<string>();
+  #requests = 0;
 
   constructor(transport: StewardTransport, queue: ProposalQueue = proposalQueue) {
     this.#transport = transport;
@@ -72,13 +75,22 @@ export class LiveSteward implements StewardPort {
   }
 
   #current(id: string): Writ | undefined {
-    return this.#queue.pending().some(proposal => proposal.id === id) ? this.#writs.get(id) : undefined;
+    const writ = this.#writs.get(id);
+    const proposal = this.#queue.pending().find(item => item.id === id);
+    if (!writ || !proposal || this.#uncertain.has(id)) return undefined;
+    const expected = draft(writ);
+    return proposal.chamber === expected.chamber && proposal.kind === expected.kind
+      && expected.fields.every(field => proposal.fields.some(item => item.key === field.key && item.value === field.value))
+      ? writ : undefined;
   }
+
+  owns(id: string): boolean { return this.#writs.has(id); }
 
   #turn(result: ProposalResult, reply: string): StewardTurn {
     if (!result.ok) return failure;
     const proposal = result.proposal;
-    this.#queue.select(proposal.id);
+    if (proposal.state === 'drafted' || proposal.state === 'amended') this.#queue.select(proposal.id);
+    else if (this.#queue.getSnapshot().selected_proposal_id === proposal.id) this.#queue.select();
     const writ = this.#writs.get(proposal.id);
     const focus = { chamber: proposal.chamber, ...(writ ? { layer: layers[writ.chamber] } : {}) };
     this.#queue.focus(focus);
@@ -86,7 +98,9 @@ export class LiveSteward implements StewardPort {
   }
 
   async #ask(text: string, chamber: WritChamber, previous?: Writ): Promise<StewardTurn> {
+    if (this.#requests) return failure;
     const before = this.#queue.getSnapshot();
+    this.#requests++;
     try {
       const params = parseStewardAskParams(JSON.stringify({ chamber, prompt: text,
         ...(previous ? { writ_id: previous.writ_id } : {}) }));
@@ -102,6 +116,8 @@ export class LiveSteward implements StewardPort {
         : 'Drafted the proposed configuration. Nothing acts until you hold to seal.');
     } catch {
       return failure;
+    } finally {
+      this.#requests--;
     }
   }
 
@@ -121,9 +137,11 @@ export class LiveSteward implements StewardPort {
   }
 
   async tearUp(proposalId: string): Promise<StewardTurn> {
+    if (this.#requests) return failure;
     const previous = this.#current(proposalId);
     if (!previous) return failure;
     const before = this.#queue.getSnapshot();
+    this.#requests++;
     try {
       const params = parseWritTearParams(JSON.stringify({ writ_id: proposalId }));
       const { writ } = parseWritTearResult(await this.#transport.tear(params));
@@ -135,6 +153,36 @@ export class LiveSteward implements StewardPort {
       return this.#turn(result, 'Torn up. This proposal will not act.');
     } catch {
       return failure;
+    } finally {
+      this.#requests--;
+    }
+  }
+
+  /** Called only after a human hold; ask/amend/tear never call it. No automatic retry. */
+  async seal(proposalId: string): Promise<StewardTurn> {
+    const previous = this.#current(proposalId);
+    if (!previous || this.#requests) return failure;
+    const before = this.#queue.getSnapshot();
+    const proposal = before.proposals.find(item => item.id === proposalId);
+    if (!proposal) return failure;
+    this.#requests++;
+    this.#uncertain.add(proposalId);
+    const unknown: StewardTurn = { reply: 'The Steward could not confirm the seal. Reconcile its outcome with the core before trying again.',
+      proposals: [], focus: null };
+    try {
+      const params = parseWritSealParams(JSON.stringify({ writ_id: proposalId }));
+      const { writ } = parseWritSealResult(await this.#transport.seal(params));
+      if (this.#queue.getSnapshot() !== before || writ.status !== 'sealed' || writ.error !== undefined
+        || !matches(writ, previous) || snapshotText(writ.proposal) !== snapshotText(previous.proposal)) return unknown;
+      const result = proposal.kind === 'proclaim' ? this.#queue.proclaim(proposalId) : this.#queue.seal(proposalId);
+      if (!result.ok) return unknown;
+      this.#writs.set(proposalId, writ);
+      this.#uncertain.delete(proposalId);
+      return this.#turn(result, 'The core confirmed your sealed configuration.');
+    } catch {
+      return unknown;
+    } finally {
+      this.#requests--;
     }
   }
 }
@@ -146,8 +194,7 @@ export interface StewardOptions {
   readonly queue?: ProposalQueue;
 }
 
-export function createSteward(options: StewardOptions = {}): StewardPort {
-  if (options.live !== true) return new SimulatedSteward(options.queue);
-  if (!options.transport) throw new Error('Live Steward requires an injected transport.');
+export function createSteward(options: StewardOptions = {}): SimulatedSteward | LiveSteward {
+  if (options.live !== true || !options.transport) return new SimulatedSteward(options.queue);
   return new LiveSteward(options.transport, options.queue);
 }

@@ -2,6 +2,7 @@ import type { ReactNode, Ref } from 'react';
 import './steward-bar.css';
 
 export type StewardBarProps = {
+  mode?: 'simulated' | 'live';
   message: string;
   value: string;
   suggestions: readonly string[];
@@ -24,13 +25,14 @@ function StewardFigure() {
 
 /** One presentational input; conversation and proposals belong to its owner. */
 export function StewardBar(props: StewardBarProps) {
-  const identity = props.identity ?? { name: 'The Steward', state: 'Simulated co-pilot' };
+  const live = props.mode === 'live';
+  const identity = props.identity ?? { name: 'The Steward', state: live ? 'Live co-pilot' : 'Simulated co-pilot' };
   const has_proposal = props.proposal !== undefined && props.proposal !== null && props.proposal !== false;
   return <section className={`cc-steward-bar${has_proposal ? ' cc-steward-with-proposal' : ''}`} aria-label="The Steward">
     <div className="cc-steward-identity" role="group" aria-label="Steward identity">
       {identity.figure ?? <StewardFigure />}
       <strong>{identity.name}</strong><span>{identity.state}</span>
-      <b>SIMULATED STEWARD · SAMPLE DATA</b>
+      <b>{live ? 'LIVE STEWARD' : 'SIMULATED STEWARD · SAMPLE DATA'}</b>
     </div>
     <div className="cc-steward-controls" role="group" aria-label="Steward conversation controls">
       <div className="cc-steward-message"><p role="status">{props.message}</p></div>

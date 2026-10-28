@@ -7,10 +7,13 @@ The delegate approved `@castle-control/contract` as a workspace dependency of
 `@castle-control/ui` for AI-8; the lockfile change is limited to that importer.
 
 `createSteward()` returns `SimulatedSteward`. Supplying a transport alone does
-not enable live mode. A future caller must explicitly forward its existing
+not enable live mode. A caller must explicitly forward its existing
 `CC_LIVE_*` opt-in as `live: true` and provide a `StewardTransport`. The factory
-reads no environment variables and opens no connection. The desktop shell
-continues to construct `SimulatedSteward`; this delivery does not wire it live.
+reads no environment variables and opens no connection. Without an injected
+transport it stays simulated, even when live mode is requested. The desktop
+shell supplies the live transport only for a reachable core launch with
+`steward: 'live'`; fixtures, disconnected launches and omitted opt-ins stay
+visibly simulated. Capabilities stay outside the serializable read snapshot.
 
 ```ts
 const offline = createSteward();
@@ -20,10 +23,13 @@ const optedIn = createSteward({ live: true, transport, queue: proposalQueue });
 The injected transport mirrors the declared contract: `ask` is `steward.ask`,
 `seal` is `steward.writ.seal`, and `tear` is `steward.writ.tear`. Each accepts
 the generated parameter type and returns untrusted JSON text. The adapter
-parses ask/tear parameters and results through the existing contract parsers.
+parses ask/seal/tear parameters and results through the generated standalone
+`@castle-control/contract/steward` validators. `contract.ts` infers their types
+and decodes JSON through the existing `@castle-control/contract/door`; it
+does not import the general RPC registry or define a schema.
 There is no network client, model call, credential handling, or executable
 configuration in this adapter or its fixtures. The transport's seal member is
-reserved for a separate human hold path and is never invoked by this port.
+used only by the separate human hold path, never by asking or amending.
 
 Ask needs a supported chamber in its context, or an explicit selection of an
 open writ owned by this adapter. Lots maps to lottery, Gatehouse to moderator,
@@ -45,7 +51,14 @@ If any queue state changes while a request is pending, its result is discarded.
 Failure returns a plain "No authorization was given" reply and leaves queue,
 selection, and focus untouched. There are no automatic retries or rollbacks of
 transport effects; an injected production transport still needs the core's
-authorization and guardrails. A later delivery owns the human hold integration.
+authorization and guardrails.
+
+The desktop bar and room slot share the same per-connection adapter. The slot
+uses the existing hold-to-seal control, displays only that adapter's pending
+proposals, and calls the core for seal or tear. A seal response must match the
+draft and confirm sealed status before the local queue changes; an uncertain
+seal is never automatically retried. No local sample program is applied.
+The Map Room remains unsupported until its Writ contract exists.
 
 `fixtures/recorded.ts` contains synthetic recorded-format Writs for all five
 supported mutations and a scripted in-memory transport. No real chat or service
@@ -83,3 +96,31 @@ materialize an approved missing workspace dependency in the main checkout.
 Delivery is partial pending the Director's approved dependency link and gate
 rerun. No relative-import fallback, TypeScript alias, or module installation was
 used to hide the resolution failure.
+
+## Steward live recovery evidence (2026-10-28)
+
+Recovered the 13 saved files from worktree `5102986b`, byte-checked before
+adapting their imports. None of the nine modified paths changed between
+`032d83a` and this delivery's base, `ade9202`; newer room changes are retained.
+
+- Direct desktop Vitest: 29 files, 241 tests passed, including the copied
+  client, lazy-view and shell hold/seal/tear integration tests.
+- Direct UI Vitest: 18 files, 292 tests passed, including the copied live
+  adapter and bar tests. Fixtures are synthetic; no live services were called.
+- All six package suites run directly: 78 files, 780 tests passed. Contract
+  generator, drift and parity fixture assertions also passed.
+- Direct `tsc --noEmit` and ESLint passed across all six packages; tooling
+  ESLint passed too. Boundary, hygiene,
+  400-line and secret checks passed (600 code files, 749 secret-scan files).
+- Desktop build and unchanged bundle gate passed: 382,560/393,216 bytes.
+  Before the import adaptation it failed at 450,634 bytes. The first-load
+  assets contain neither the live adapter nor its label or parser; those stay
+  in lazy chunks. No cap, gate, contract or room source was changed.
+- Required recursive pnpm typecheck, lint and test commands each failed before
+  executing package checks with Windows `spawn EPERM`. Those gates need an
+  App Master rerun; direct checks above do not claim a recursive gate pass.
+- `pnpm --config.verify-deps-before-run=false gate` passed its 24 tooling
+  tests and workspace inventories, then failed at `spawnSync cargo EPERM`
+  in contract export. A separate live parity check hit the same spawn error.
+  Rust format, Clippy and tests were not reached. No git writes were run;
+  App Master commits the uncommitted delivery under the sandbox exception.

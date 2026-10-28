@@ -1,4 +1,4 @@
-import type { AskParams, WritSealParams, WritTearParams } from '@castle-control/contract';
+import type { AskParams, WritSealParams, WritTearParams } from '../contract.js';
 import type { StewardTransport } from '../live.js';
 
 // Recorded-format synthetic replies only. No real chat, model or service was used.

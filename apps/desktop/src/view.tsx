@@ -6,6 +6,7 @@ import { lazy, Suspense } from 'react';
 import type { Snapshot } from './model.js';
 import type { Navigation, Surface } from './navigation.js';
 import { DesktopRampart } from './rampart.jsx';
+import { coreStewardConnection } from './client.js';
 import './view.css';
 
 const Keep = lazy(() => import('./shell/keep.jsx'));
@@ -26,8 +27,10 @@ export type ViewProps = {
 export function DesktopView(props: ViewProps) {
   const navigation = props.navigation ?? { current: props.current ?? 'keep', replay: props.replay ?? false, origin: 'keep' };
   const { current } = navigation;
-  const steward = <Suspense fallback={<p role="status">Opening the simulated Steward...</p>}>
-    <Steward context={current} {...(props.steward_ref ? { input_ref: props.steward_ref } : {})}
+  const connection = coreStewardConnection(props.snapshot);
+  const steward_connection = connection ? { connection } : {};
+  const steward = <Suspense fallback={<p role="status">Opening the Steward...</p>}>
+    <Steward context={current} {...steward_connection} {...(props.steward_ref ? { input_ref: props.steward_ref } : {})}
       on_select={props.on_select ?? (() => undefined)} on_open={props.on_navigate} on_overview={() => props.on_surface?.('overview')} />
   </Suspense>;
   return <ThemeFrame theme={props.theme} {...(current === 'keep' || current === 'overview' ? {} : { module: current })}>
@@ -42,6 +45,7 @@ export function DesktopView(props: ViewProps) {
           {current === 'keep' ? <Keep snapshot={props.snapshot} on_open={props.on_navigate} on_enter={() => props.on_surface?.('overview')} />
             : current === 'overview' ? <Overview snapshot={props.snapshot} selected={props.selected ?? 'lottery'} on_select={props.on_select ?? (() => undefined)} on_open={props.on_navigate} steward={steward} />
             : <Room chamber={current} replay={navigation.replay} snapshot={props.snapshot} origin={navigation.origin}
+              {...steward_connection}
               on_open={props.on_navigate} on_back={props.on_back ?? (() => undefined)} />}
         </Suspense>
       </main>

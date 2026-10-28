@@ -94,9 +94,39 @@ test('factory defaults to simulated and requires explicit true and an injected t
   expect(createSteward({ transport })).toBeInstanceOf(SimulatedSteward);
   expect(createSteward({ live: false, transport })).toBeInstanceOf(SimulatedSteward);
   expect(createSteward({ live: true, transport })).toBeInstanceOf(LiveSteward);
-  expect(() => createSteward({ live: true })).toThrow(/transport/i);
+  expect(createSteward({ live: true })).toBeInstanceOf(SimulatedSteward);
   expect(transport.calls).toEqual([]);
 });
+
+test('an opted-in adapter seals only on an explicit call and validates the seal round trip', async () => {
+  const queue = new ProposalQueue();
+  const transport = new RecordedStewardTransport([reply(draw)]);
+  const seal = vi.spyOn(transport, 'seal').mockResolvedValue(reply({ ...draw, status: 'sealed' }));
+  const steward = createSteward({ live: true, transport, queue });
+  expect(steward).toBeInstanceOf(LiveSteward);
+  if (!(steward instanceof LiveSteward)) throw new Error('Expected live adapter');
+  await steward.ask('Draft questions', context);
+  expect(seal).not.toHaveBeenCalled();
+  expect(queue.pending()).toHaveLength(1);
+  expect((await steward.seal(draw.writ_id)).proposals[0]?.state).toBe('sealed');
+  expect(seal).toHaveBeenCalledExactlyOnceWith({ writ_id: draw.writ_id });
+  expect(queue.pending()).toHaveLength(0);
+  await steward.seal(draw.writ_id);
+  expect(seal).toHaveBeenCalledTimes(1);
+});
+
+test.each(['{', reply({ ...draw, status: 'proposed' }), reply({ ...draw, status: 'sealed', simulated: true }),
+  reply({ ...draw, status: 'sealed', proposal: recordedWrits[1].proposal })])(
+  'a malformed or changed seal reply cannot mark the local draft applied', async response => {
+    const queue = new ProposalQueue();
+    const transport = new RecordedStewardTransport([reply(draw)]);
+    vi.spyOn(transport, 'seal').mockResolvedValue(response);
+    const steward = new LiveSteward(transport, queue);
+    await steward.ask('Draft questions', context);
+    const before = queue.getSnapshot();
+    expect((await steward.seal(draw.writ_id)).proposals).toEqual([]);
+    expect(queue.getSnapshot()).toBe(before);
+  });
 
 test('missing, unsupported and foreign selections fail before transport; terminal drafts cannot be amended', async () => {
   const queue = new ProposalQueue();

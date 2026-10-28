@@ -7,6 +7,10 @@ import type { Surface } from '../navigation.js';
 import './surfaces.css';
 import './room.css';
 import SealSlot from '../rooms/seal-slot/index.jsx';
+import { LiveSteward } from '@castle-control/ui/steward';
+import type { StewardConnection } from '../client.js';
+import { shellStewardPort } from './core-steward.js';
+import { StewardSealSlot } from './steward-slot.jsx';
 
 const LotteryRoom = lazy(() => import('../rooms/lottery/index.jsx'));
 const CoreLotteryRoom = lazy(() => import('../rooms/lottery/core.jsx'));
@@ -46,12 +50,15 @@ function RoomHeader({ chamber, replay, origin, fixture, on_open, on_back }: {
   </header>;
 }
 
-export default function Room({ chamber, replay, snapshot, origin, on_open, on_back }: {
+export default function Room({ chamber, replay, snapshot, origin, connection, on_open, on_back }: {
   chamber: ModuleId; replay: boolean; snapshot: Snapshot; origin: Surface;
+  connection?: StewardConnection;
   on_open: (id: ModuleId) => void; on_back: () => void;
 }) {
   const fixture = snapshot.mode === 'fixture';
-  const seal_slot = <SealSlot key={chamber} chamber={chamber} enabled={fixture} />;
+  const port = shellStewardPort(connection);
+  const seal_slot = port instanceof LiveSteward ? <StewardSealSlot key={chamber} chamber={chamber} port={port} />
+    : <SealSlot key={chamber} chamber={chamber} enabled={fixture} />;
   return <section className="shell-room" data-chamber={chamber} aria-label="Chamber detail room">
     <RoomHeader chamber={chamber} replay={replay} origin={origin} fixture={fixture} on_open={on_open} on_back={on_back} />
     <div className="shell-room-work">

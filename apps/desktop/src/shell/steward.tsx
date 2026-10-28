@@ -2,9 +2,11 @@ import { useState, useSyncExternalStore } from 'react';
 import type { Ref } from 'react';
 import { InkButton, StewardBar } from '@castle-control/ui';
 import type { ModuleId } from '@castle-control/ui';
-import { isPending, proposalQueue, SimulatedSteward } from '@castle-control/ui/steward';
+import { isPending, LiveSteward, proposalQueue } from '@castle-control/ui/steward';
 import type { Proposal, StewardContext, StewardPort, StewardTurn } from '@castle-control/ui/steward';
 import type { Surface } from '../navigation.js';
+import type { StewardConnection } from '../client.js';
+import { shellStewardPort } from './core-steward.js';
 import './surfaces.css';
 
 export type TalkbackLine = { id: number; who: 'You' | 'Steward'; text: string };
@@ -22,17 +24,17 @@ export function createStewardConversation(port: StewardPort) {
   return {
     getSnapshot: () => snapshot,
     subscribe(listener: () => void) { listeners.add(listener); return () => { listeners.delete(listener); }; },
-    async ask(text: string, context: StewardContext): Promise<StewardTurn> {
+    async ask(text: string, context: StewardContext, engine: StewardPort = port): Promise<StewardTurn> {
       append('You', text);
       try {
-        const turn = await port.ask(text, context);
+        const turn = await engine.ask(text, context);
         for (const proposal of turn.proposals) {
           if (isPending(proposal)) proposalQueue.addOrUpdate(proposal);
         }
         append('Steward', turn.reply);
         return turn;
       } catch {
-        const reply = 'The simulated Steward could not finish. No authorization was given. Try again.';
+        const reply = 'The Steward could not finish. No authorization was given. Try again.';
         append('Steward', reply);
         return { reply, proposals: [], focus: null };
       }
@@ -40,7 +42,7 @@ export function createStewardConversation(port: StewardPort) {
   };
 }
 
-export const stewardConversation = createStewardConversation(new SimulatedSteward());
+export const stewardConversation = createStewardConversation(shellStewardPort());
 
 export function stewardContext(current: ModuleId | Surface): StewardContext {
   const selected_proposal_id = proposalQueue.getSnapshot().selected_proposal_id;
@@ -67,26 +69,30 @@ export function StewardProposal({ proposal, on_open }: { proposal: Proposal; on_
   </article>;
 }
 
-export function ShellSteward({ context, input_ref, on_select, on_open, on_overview }: {
+export function ShellSteward({ context, connection, input_ref, on_select, on_open, on_overview }: {
   context: ModuleId | Surface; input_ref?: Ref<HTMLInputElement>;
+  connection?: StewardConnection;
   on_select: (chamber: ModuleId) => void; on_open: (chamber: ModuleId) => void; on_overview: () => void;
 }) {
+  const port = shellStewardPort(connection);
+  const live = port instanceof LiveSteward;
   const [value, setValue] = useState('');
   const [busy, setBusy] = useState(false);
   const history = useSyncExternalStore(stewardConversation.subscribe, stewardConversation.getSnapshot, stewardConversation.getSnapshot);
   const queue = useSyncExternalStore(proposalQueue.subscribe, proposalQueue.getSnapshot, proposalQueue.getSnapshot);
   const proposal = queue.proposals.findLast(isPending);
-  const message = busy ? 'Drafting locally. No live action.' : history.at(-1)?.text ?? greeting;
+  const message = busy ? 'Drafting. Nothing acts until your hold to seal.' : history.at(-1)?.text ?? greeting;
   async function tell() {
     if (busy || !value.trim()) return;
     setBusy(true);
     const text = value.trim(); setValue('');
-    const turn = await stewardConversation.ask(text, stewardContext(context));
+    const turn = await stewardConversation.ask(text, stewardContext(context), port);
     routeStewardTurn(turn, context, on_select, on_open, on_overview);
     setBusy(false);
   }
-  return <StewardBar message={message} value={value} suggestions={['Catch me up', 'Draft a question draw', 'What does chat want?']}
-    identity={{ name: 'The Steward', state: busy ? 'Drafting locally' : 'Simulated co-pilot' }}
+  return <StewardBar mode={live ? 'live' : 'simulated'} message={message} value={value}
+    suggestions={['Catch me up', 'Draft a question draw', 'What does chat want?']}
+    identity={{ name: 'The Steward', state: busy ? 'Drafting' : live ? 'Live co-pilot' : 'Simulated co-pilot' }}
     proposal={proposal ? <StewardProposal proposal={proposal} on_open={on_open} /> : null}
     on_change={setValue} on_tell={() => { void tell(); }}
     on_suggest={text => {

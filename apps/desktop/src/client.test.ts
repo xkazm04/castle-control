@@ -1,7 +1,7 @@
 import { invoke } from '@castle-control/contract';
 import type { ErrorCode, StatusResult } from '@castle-control/contract';
 import { afterEach, expect, test, vi } from 'vitest';
-import { createDesktopClient, parseLaunch } from './client.js';
+import { coreStewardConnection, createDesktopClient, parseLaunch } from './client.js';
 import { createSteward, SimulatedSteward } from '@castle-control/ui/steward';
 import { stewardConversation } from './shell/steward.jsx';
 import { createReadModel } from './model.js';
@@ -24,7 +24,7 @@ test('core launch accepts only explicit Steward modes, defaults simulated, and k
   expect(parseLaunch({ mode: 'fixture' })).toEqual({ mode: 'fixture' });
 });
 
-test.each([undefined, 'simulated', 'live'])('Steward launch opt-in %s stays metadata and uses simulation without connections', async steward => {
+test.each([undefined, 'simulated', 'live'])('Steward launch opt-in %s does not enable an unconnected adapter', async steward => {
   const fetch = vi.fn(); const socket = vi.fn();
   vi.stubGlobal('fetch', fetch); vi.stubGlobal('WebSocket', socket);
   const launch = parseLaunch({ mode: 'core', endpoint: 'http://127.0.0.1:3210/', session_token: 'a'.repeat(64),
@@ -37,6 +37,23 @@ test.each([undefined, 'simulated', 'live'])('Steward launch opt-in %s stays meta
   await stewardConversation.ask('Catch me up', { surface: 'keep' });
   expect(simulated).toHaveBeenCalledOnce();
   expect(fetch).not.toHaveBeenCalled(); expect(socket).not.toHaveBeenCalled();
+});
+
+test('Steward capability is retained per client but absent from snapshots and unavailable during disconnects', async () => {
+  const h = harness();
+  const client = createDesktopClient({ ...h.config, steward: 'live' }, { socket: h.socket, rpc: invoke });
+  expect(coreStewardConnection(client.getSnapshot())).toBeUndefined();
+  cleanup.push(client.start());
+  await vi.waitFor(() => { expect(client.getSnapshot().phase).toBe('ready'); });
+  const connection = coreStewardConnection(client.getSnapshot());
+  expect(connection?.live).toBe(true);
+  expect(connection?.launch).toMatchObject(h.config);
+  expect(JSON.stringify(client.getSnapshot())).not.toContain(h.config.session_token);
+  expect(JSON.stringify(client.getSnapshot())).not.toContain('steward');
+  expect(coreStewardConnection(createDesktopClient({ mode: 'fixture' }).getSnapshot())).toBeUndefined();
+  h.sockets[0]?.close();
+  expect(coreStewardConnection(client.getSnapshot())).toBeUndefined();
+  expect(connection?.reachable()).toBe(false);
 });
 afterEach(() => {
   for (const stop of cleanup.splice(0)) stop();
