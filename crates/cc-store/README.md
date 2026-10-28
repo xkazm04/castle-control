@@ -67,13 +67,13 @@ The public append API accepts a `LedgerEvent`, never arbitrary JSON or free text
 - `draw_risk_acknowledged`: configured draw slug and typed blocked setting;
 - `engine`: ULID call ID, integer cost in micro-US dollars, role class, provider,
   selected model and optional served model;
-- `image_provider_cost`: typed image provider, exact decimal credits, optional
-  integer cost in micro-US dollars and `ArtCallId`.
+- `image_provider_cost`: typed image provider, one exact credit or dollar amount,
+  optional historical dollar-cost metadata and `ArtCallId`.
 
 These are store-internal audit events, not wire contract identifiers. The schema
-remains version 1: the new event is additive, with all previous representations
-and digest inputs unchanged. No SQLite tables, inventory entries or file formats
-change, so neither a database migration nor a ledger rewrite is needed.
+remains version 1: the amount alternative is additive, with all previous
+representations and digest inputs unchanged. No SQLite tables or inventory
+entries change, so neither a database migration nor a ledger rewrite is needed.
 `LedgerEvent::DrawSealed` goes to `draws.jsonl`. Its `seal_digest: SealDigest`
 accepts exactly 64 lowercase hexadecimal characters at construction and serde
 deserialization; `draw_id` uses `DrawSlug` and both counts are `u32`. All fields
@@ -104,15 +104,31 @@ Both newtypes provide `as_str()` and conversion into `String`. A rules-only
 fallback or refusal has no `model_served` key; explicit null is rejected.
 No new store, inventory entry or purge policy is introduced.
 
-`LedgerEvent::ImageProviderCost { provider: ImageProvider, credits: ArtCredits,
+`LedgerEvent::ImageProviderCost { provider: ImageProvider, amount: ImageProviderAmount,
 cost_microusd: Option<u64>, call_id: ArtCallId }` goes to `engine.jsonl` through
 the existing append-only writer. `ImageProvider::Leonardo` serializes as
-`leonardo`. `ArtCredits` and `ArtCallId` are reused from `cc-types` unchanged:
+`leonardo`. The exported store-internal `ImageProviderAmount` is exactly one of
+`Credits(ArtCredits)` or `MicroUsd(u64)`. It is flattened into the event as either
+`"credits":"12.340000"` or `"micro_usd":104700` (0.1047 USD); both primary amount
+keys together, or neither key, are rejected. No credits are invented for a dollar
+receipt and no dollars are invented for a credit receipt.
+
+`ArtCredits` and `ArtCallId` are reused from `cc-types` unchanged:
 credits have 1–12 whole digits and optionally 1–6 fractional digits, and the
 call ID is a canonical uppercase ULID. Credits are never parsed as a float,
 normalized or converted to dollars: leading and trailing zeroes survive exactly.
-`cost_microusd` is omitted when unknown, accepts the full `u64` range when known,
-and rejects explicit null. Unknown fields/providers and invalid values are refused.
+Existing credit rows may also carry an independently known `cost_microusd`.
+That optional metadata is retained unchanged, distinct from the primary
+`micro_usd` charge key, so legacy rows with and without it retain their meaning,
+canonical bytes and digests. New credit producers continue to omit it. A
+dollar-only receipt uses `MicroUsd`, with no legacy cost metadata or credits.
+Both dollar fields accept the full `u64` range, including zero; absent metadata
+is omitted. Explicit nulls, unknown fields/providers and invalid values are refused.
+
+Owner ruling 1 (2026-10-28, option A): this adds dollar-only storage support;
+cc-core still writes credit receipts only and still refuses remove-bg. Enabling
+remove-bg is a separate follow-up; no contract generation or dependency change
+is needed for this store-internal type.
 
 Owner ruling A (2026-10-28): approve this store-only art-cost ledger prerequisite; Leonardo wiring and the unchanged 30/day spend cap remain a later delivery.
 Director clarification (2026-10-28 07:46Z): allow the internal cc-types path edge and its already-locked transitives; no new direct external dependency or lockfile package/version, only cc-store's dependency list may gain cc-types.
@@ -144,10 +160,11 @@ accidental changes; it is not a signature or protection against an attacker who
 can rewrite both data and digest. There is no API for editing or deleting an
 individual audit line; explicit full purge is the sole truncation operation.
 
-`tests/art_cost.rs` checks exact decimal bytes, optional full-range integer cost,
-append/read/reopen routing, type-door rejection, and a frozen pre-art version-1
-engine record with an independently computed digest. Appending preserves the old
-record's bytes; forgetting preserves art receipts and full purge erases them.
+`tests/art_cost.rs` checks exact decimal bytes, dollar-only amounts, optional
+full-range legacy cost, exclusive primary amounts, append/read/reopen routing
+and type-door rejection. Frozen version-1 credit rows (with and without cost)
+and a pre-art engine row use independently computed digests. Appending preserves
+the old bytes; forgetting preserves art receipts and full purge erases them.
 
 ## Retention and dry runs
 

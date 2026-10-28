@@ -46,6 +46,14 @@ pub enum DecisionAction {
     WouldAct,
 }
 
+/// The provider's exact charge, without conversion between credits and dollars.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ImageProviderAmount {
+    Credits(ArtCredits),
+    MicroUsd(u64),
+}
+
 /// No free-form text is accepted by audit schemas. Viewer references are numeric IDs.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
@@ -93,10 +101,11 @@ pub enum LedgerEvent {
         )]
         model_served: Option<ModelName>,
     },
-    /// Exact provider credits; a dollar cost is absent unless independently known.
+    /// One exact provider charge, with optional independently known legacy cost.
     ImageProviderCost {
         provider: ImageProvider,
-        credits: ArtCredits,
+        #[serde(flatten)]
+        amount: ImageProviderAmount,
         #[serde(
             default,
             skip_serializing_if = "Option::is_none",

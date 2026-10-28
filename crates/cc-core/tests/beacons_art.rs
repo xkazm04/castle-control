@@ -6,7 +6,7 @@ mod support;
 use cc_beacons::art::{ArtError, KeyStore, LeonardoClient, SecretKey};
 use cc_core::beacons::{ArtCatalog, ArtDownload, BeaconsModule};
 use cc_core::{EventHub, Registry};
-use cc_store::{LedgerEvent, LedgerLine};
+use cc_store::{ImageProviderAmount, LedgerEvent, LedgerLine};
 use cc_types::{ErrorCode, ErrorEnvelope};
 use serde_json::json;
 use std::sync::Arc;
@@ -175,7 +175,7 @@ async fn credit_generate_audits_once_and_imports_a_labelled_local_anchor() {
     assert_eq!(rows.len(), 1);
     let LedgerEvent::ImageProviderCost {
         provider,
-        credits,
+        amount,
         cost_microusd,
         call_id,
     } = &rows[0].event
@@ -183,8 +183,16 @@ async fn credit_generate_audits_once_and_imports_a_labelled_local_anchor() {
         panic!("expected image provider audit");
     };
     assert_eq!(*provider, cc_store::ImageProvider::Leonardo);
-    assert_eq!(String::from(credits.clone()), "12");
+    assert_eq!(
+        *amount,
+        ImageProviderAmount::Credits("12".to_owned().try_into().unwrap())
+    );
     assert_eq!(*cost_microusd, None);
+    assert_eq!(
+        serde_json::to_value(&rows[0].event).unwrap(),
+        json!({"kind":"image_provider_cost", "provider":"leonardo", "credits":"12",
+            "call_id":call_id.as_str()})
+    );
     assert_eq!(
         call_id.as_str(),
         result["costs"][0]["call_id"].as_str().unwrap()

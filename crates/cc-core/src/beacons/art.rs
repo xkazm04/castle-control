@@ -2,7 +2,7 @@
 use super::art_assets::{ArtCatalog, ArtDownload};
 use super::{BeaconsModule, encode, internal};
 use cc_beacons::art::{ArtError, Charge, GenerationState, ImageProvider, ImageRequest};
-use cc_store::{LedgerEvent, Timestamp};
+use cc_store::{ImageProviderAmount, LedgerEvent, Timestamp};
 use cc_types::{
     ArtCharge, ArtCostReceipt, ArtGenerateParams, ArtGenerateResult, ArtStatusResult, ErrorCode,
     ErrorEnvelope, RpcRequest,
@@ -120,7 +120,7 @@ impl BeaconsModule {
                 Timestamp::now(),
                 LedgerEvent::ImageProviderCost {
                     provider: cc_store::ImageProvider::Leonardo,
-                    credits: credits.clone(),
+                    amount: ImageProviderAmount::Credits(credits.clone()),
                     cost_microusd: None,
                     call_id: receipt.call_id.clone(),
                 },
