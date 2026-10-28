@@ -56,7 +56,7 @@ export function Rules({ state, queue }: Props) {
     <p className="room-now">Now: {armed} Armed · {fixtureRules.rules.length - armed} Watching · simulated</p><p>{copy.modes}</p>
     {fixtureRules.rules.map(rule => {
       const mode = state.preview_modes.get(rule.rule_id) ?? 'shadow';
-      return <div className="moderator-rule" key={rule.rule_id}><b>{rule.name}</b><span>{rule.pattern} · {rule.action}</span>
+      return <div className="moderator-rule moderator-fixture-rule" key={rule.rule_id}><b>{rule.name}</b><span>{rule.pattern} · {rule.action}</span>
         <button type="button" data-mode={mode} onClick={() => proposeCommand(queue,
           { kind: 'mode', rule_id: rule.rule_id, mode: mode === 'shadow' ? 'armed' : 'shadow' }, `${mode === 'shadow' ? 'Arm' : 'Watch'} ${rule.name}`)}>
           {mode === 'armed' ? 'Armed' : 'Watching'} · propose change</button></div>;

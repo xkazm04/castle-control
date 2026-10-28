@@ -1,12 +1,12 @@
 .lottery-room { --room-ink: var(--gules-text); height: 100%; }
-.lottery-columns { display: grid; height: 100%; min-height: 0; grid-template-columns: minmax(0, 1.22fr) minmax(0, 1fr); }
+.lottery-columns { display: grid; height: 100%; min-height: 0; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); }
 .lottery-stage { min-height: calc(var(--space-56) * 6); }
-.lottery-urn-figure { margin: 0; padding: var(--space-16); border: var(--rule-medium) solid var(--gules); }
-.lottery-urn h3 { font: 800 var(--text-label)/1.4 var(--font-ui); text-transform: uppercase; letter-spacing: var(--track-label); }
-.lottery-writ { position: relative; padding: var(--space-20); background: var(--card); border: var(--rule-strong) dashed var(--gules); }
+.lottery-urn-figure { margin: 0; }
+.lottery-urn h3 { margin: 0 0 var(--space-8); font: 800 var(--text-label)/1.4 var(--font-ui); text-transform: uppercase; letter-spacing: var(--track-label); }
+.lottery-writ { position: relative; padding: var(--space-20) var(--space-22) var(--space-16); margin-top: var(--space-20); background: var(--card); border: var(--rule-strong) dashed var(--gules); }
 .lottery-writ[data-state="sealed"] { border-style: solid; }
-.lottery-writ h2 { font: 800 var(--text-chamber-number)/1.05 var(--font-display); text-transform: uppercase; margin-block: var(--space-12); overflow-wrap: anywhere; }
-.room-stamp { color: var(--gules-text); border: var(--rule-strong) solid var(--gules); padding: var(--space-6); display: inline-block; font-weight: 800; text-transform: uppercase; }
+.lottery-writ h2 { font: 800 var(--space-34)/1.05 var(--font-display); text-transform: uppercase; margin: 0 0 var(--space-8); overflow-wrap: anywhere; }
+.room-stamp { position: absolute; top: calc(0 - var(--space-16)); right: var(--space-16); max-width: calc(100% - var(--space-32)); color: var(--gules-text); border: var(--rule-strong) solid var(--gules); padding: var(--space-6) var(--space-9); background: var(--card); margin: 0; display: inline-block; font: 800 var(--text-body)/1.2 var(--font-ui); letter-spacing: var(--track-label); text-transform: uppercase; transform: rotate(3deg); }
 .lottery-fair { border: var(--rule-medium) solid var(--ink); padding: var(--space-12); margin-block: var(--space-12); }
 .lottery-fair > b { text-transform: uppercase; }
 .lottery-guardrails { margin-block: var(--space-12); font-weight: 700; }
@@ -24,6 +24,20 @@
 .lottery-marks { display: grid; grid-template-columns: repeat(20, 1fr); gap: var(--space-2); width: 100%; }
 .lottery-marks [data-cohort="raider"] { color: var(--azure-text); }
 .lottery-room details { margin-block: var(--space-16); }
+.lottery-room[data-replay] .lottery-stage { min-height: 0; border: 0; padding: var(--space-16) 0 0; background: transparent; }
+.lottery-stage > .room-caption, .lottery-stage > .room-now { margin: 0 0 var(--space-12); }
+.lottery-stage > .room-now { font: 600 var(--text-body)/1.4 var(--font-ui); color: var(--muted); }
+.lottery-writ > p:not(.room-stamp, .room-hash) { margin-block: var(--space-4); font: 600 var(--text-body)/1.4 var(--font-num); color: var(--muted); }
+.lottery-fair { background: var(--paper); font-size: var(--text-aside); }
+.lottery-fair p { margin-block: var(--space-4); }
+.lottery-proof, .lottery-fairness { margin-top: var(--space-20); border-top: var(--rule-medium) solid var(--line); padding-top: var(--space-12); }
+.lottery-proof h3, .lottery-fairness h3 { margin: 0 0 var(--space-8); font: 800 var(--text-label)/1.4 var(--font-ui); text-transform: uppercase; letter-spacing: var(--track-label); }
+.lottery-past-writ { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--space-10); padding-block: var(--space-8); border-block: var(--rule-thin) solid var(--line); }
+.lottery-past-writ time { color: var(--muted); font: var(--text-small)/1.5 var(--font-num); }
+.lottery-past-writ p { margin: 0; overflow-wrap: anywhere; }
+.lottery-proof > [role="status"]:empty { display: none; }
+.lottery-steps { margin-block: var(--space-8); }
+.lottery-writ-fields dd { font: 500 calc(var(--space-16) + var(--space-2))/1.35 var(--font-ui); }
 @media (max-width: 900px) { .lottery-room, .lottery-columns { height: auto; } .lottery-columns { grid-template-columns: minmax(0, 1fr); } }
 
 .lottery-writ-fields { margin-block: var(--space-16); }

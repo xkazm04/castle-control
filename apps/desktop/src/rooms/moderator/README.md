@@ -45,3 +45,66 @@ the public package export changes its fingerprint; only the stamp changed.
 Native parity could not run for the same reason, and recursive workspace
 typecheck/lint wrappers failed at subprocess creation (`spawn EPERM`). These
 checks still require App Master verification; they are not claimed green.
+
+## Closer to A/1, 2026-10-28
+
+Open `#/chamber/moderator` in browser fixture mode (no injected core launch).
+Tab between the three scroll regions and their native controls. The drill
+still opens at `#/chamber/moderator/drill`; Back/Escape and the shared Steward
+keyboard paths remain owned by the shell.
+
+Compared with `prototype/ai-first/keep/index.html`, `gateInterior`, and section
+3 of `docs/plan/04-ai-first-ui.md`:
+
+Gaps closed:
+
+- The fixture room now has A/1's three independent columns, in the reference's
+  1.3:1:.95 proportions: holds/ban review/consensus, sample replay, then tools.
+  The 420-line Pass/Hold/Bar replay no longer shares a narrow scrolling column
+  with all the rules, moat, drill, ledger and seal controls.
+- The tools column keeps rules before moat, drill and gate log. The existing
+  seal slot, including its design focus entry points, remains at its end.
+- The columns use the reference's 16/18-unit insets, derived from shared
+  tokens. Unnecessary outer card borders and padding are removed from fixture
+  tools and replay, restoring the reference's rule-separated composition.
+- Rule names and match/action text now sit beside Watching/Armed proposal
+  buttons, instead of stacking each button below the text. Tool headings use
+  the existing readable label scale, with tighter current-state spacing.
+- Held quotations use A/1's 26-unit scale while retaining the caption-sized
+  portcullis title, the original message and review reason. Replay search and
+  verdict controls align their labels and fields in the center column.
+- All three columns remain keyboard-focusable and independently scrollable;
+  the stable scrollbar affordances and held-queue scroll hint remain. Below
+  the existing 900px breakpoint they stack in reading order.
+
+Gaps left:
+
+- The fixtures, message IDs/times, hold reasons and proposal labels are
+  unchanged. A/1's login/profile summaries, advice capsules, running replay
+  animation and additional aggregate counters are not invented here.
+- The existing ban queue, consensus filters, safety/status notices and gate-log
+  controls have more content than the prototype. They remain visible and
+  scrollable rather than being discarded to imitate its shorter sample.
+- The portcullis heading retains the existing caption-scale accessibility and
+  regression contract. A/1's larger portcullis heading is not reproduced.
+- The shared shell, keep background, header, Steward, seal slot and design
+  focus are unchanged. The core-connected room retains two columns because
+  its contract currently supplies no live chat/held-list read surface. New
+  layout rules are scoped to fixture columns; core rule forms are unchanged.
+- Visual fidelity, exact fold positions and three-column readability at
+  1440x900 and 1280x800 remain unverified. Computer Use denied Chrome access
+  with “Computer Use was not approved to use Google Chrome”. The comparison
+  above is source-based; no screenshots were captured and no `shots/`
+  artifacts are claimed.
+
+Evidence: `structure.test.tsx` first failed on the absent center replay column,
+then passed with holds/consensus, the windowed 420-line replay, ordered tools
+and the trailing supplied seal slot. Existing lots, moderation,
+moderation-gate, navigation and shell room tests remain in the narrowed run.
+
+Validation for this delivery: desktop typecheck (93 files), desktop lint
+(including boundaries, hygiene, file-cap and secrets checks) and production
+build passed. First-load JS+CSS: 382,467/393,216 bytes. Final narrowed Vitest
+run: 108 tests in 15 files passed (`lots`, `moderation`, `moderation-gate`,
+`navigation`, `shell/room` and `src/rooms/`). Both new structure tests were
+proven red before the layout change. No install, git write or live test ran.

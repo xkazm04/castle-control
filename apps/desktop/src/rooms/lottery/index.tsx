@@ -64,21 +64,26 @@ export default function LotteryRoom({ snapshot, replay, queue = proposalQueue, s
         {policy.reasons.map(reason => <p key={reason}>{copy.reasons[reason as keyof typeof copy.reasons] ?? reason}</p>)}
         {state.draw.policy.twitch_disclaimer && <p>{copy.disclaimer_text}</p>}
         {state.draw.policy.official_rules && <p>{copy.template_text}</p>}
-        <details><summary>{copy.fairness}</summary><ol className="lottery-steps">{copy.steps.map(([title, text]) => <li key={title}><b>{title}</b> · {text}</li>)}</ol>
-          <p>{copy.test_note}</p><p>{copy.fixture_only}</p></details>
-        {roll && <><button type="button" onClick={() => { void recompute(); }}>Recompute frozen entry seal</button>
-          <details><summary>Frozen entry list · UTF-8 JSON · handle, weight field order</summary><pre className="room-hash">{roll.bytes}</pre></details></>}
-        <p role="status">{verification}</p>
       </div>
       <div className="room-column lottery-details">
         <figure className="lottery-urn-figure" aria-label="Eligible entry pool">
           <Urn entries={roll?.entries ?? state.entries} /></figure>
+        <section className="lottery-proof">
+          {roll && <><button type="button" onClick={() => { void recompute(); }}>Recompute frozen entry seal</button>
+            <details><summary>Frozen entry list · UTF-8 JSON · handle, weight field order</summary><pre className="room-hash">{roll.bytes}</pre></details></>}
+          <p role="status">{verification}</p>
+          <h3>Saved simulated proof bundle</h3>
+          <div className="lottery-past-writ"><time dateTime={fixtureWrit.roll.sealed_at}>{fixtureWrit.roll.sealed_at.slice(0, 10)}</time>
+            <p>Recorded winners: {fixtureWrit.winners.join(', ')}</p></div>
+          <details><summary>{copy.writ}</summary><p>{copy.writ_notice}</p><code className="room-hash">{fixtureWrit.seal}</code>
+            <button type="button" onClick={() => { void port.recompute(); }}>{copy.recompute}</button><p role="status">{state.notice}</p></details>
+        </section>
+        <section className="lottery-fairness"><h3>{copy.fairness}</h3>
+          <ol className="lottery-steps">{copy.steps.map(([title, text]) => <li key={title}><b>{title}</b> · {text}</li>)}</ol>
+          <p>{copy.test_note}</p><p>{copy.fixture_only}</p></section>
         <p>{copy.pool} · {fixtureCooldown.length} {copy.cooldown}</p>
         <label>{copy.lookup}<input type="search" aria-label={copy.lookup} value={state.lookup} onChange={event => port.lookup(event.currentTarget.value)} /></label>
         <p>{lookupFixture(state)}</p>
-        <details><summary>Saved simulated proof bundle</summary><p>{copy.writ_notice}</p><code className="room-hash">{fixtureWrit.seal}</code>
-          <p>Recorded winners: {fixtureWrit.winners.join(', ')}</p>
-          <button type="button" onClick={() => { void port.recompute(); }}>{copy.recompute}</button><p role="status">{state.notice}</p></details>
         {seal_slot}
       </div>
     </div>
