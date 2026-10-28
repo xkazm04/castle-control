@@ -12,3 +12,6 @@ export * from './templates/war-table.ts';
 export * from './templates/choice-board.ts';
 export * from './templates/viewer-card.ts';
 export * from './templates/contribution-meter.ts';
+export * from './viewer/config.ts';
+export * from './viewer/policy.ts';
+export * from './viewer/controls.ts';
