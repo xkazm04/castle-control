@@ -1,5 +1,23 @@
 # Lot Chamber room
 
+## Content-sized stage, 2026-10-28
+
+Removed `.lottery-stage`'s six-`space-56` minimum height so short or idle
+workbench content no longer reserves an empty band below it. The replay rule
+keeps its border, padding and background treatment; its redundant minimum-height
+reset is removed because both modes now use content height. The core inset is
+unchanged. No markup or test assertions change. The Director checks the expected
+visual effect at 1440x900 and 1280x800 after integration; no browser was launched
+for this slice.
+
+Source-check evidence for this slice: the unchanged `lottery/structure.test.tsx`
+and `visuals/room.test.tsx` pass all 7 tests together. `git diff --check`, Rust
+format and workspace Clippy pass. Boundary, hygiene and file-cap checks inventory
+592 code files; secrets scanning inventories 740 files and passes. Recursive
+pnpm typecheck and lint fail in their launcher with `spawn EPERM`, before package
+checks run. Base `docs/PLAN.md` records the same failure; the launchers are
+unchanged. App Master must rerun those gates on its verification host.
+
 ## Closer to A/1, 2026-10-28
 
 Open `#/chamber/lottery` in browser fixture mode (no injected core launch).
