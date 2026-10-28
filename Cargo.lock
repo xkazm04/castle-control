@@ -670,6 +670,7 @@ dependencies = [
 name = "cc-store"
 version = "0.1.0"
 dependencies = [
+ "cc-types",
  "chrono",
  "fs2",
  "rusqlite",

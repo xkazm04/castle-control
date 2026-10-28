@@ -1,7 +1,8 @@
 use crate::{
-    DrawRiskSetting, DrawSlug, EngineClass, EngineProvider, Error, ModelName, Result, SealDigest,
-    Store, Timestamp, TwitchUserId,
+    DrawRiskSetting, DrawSlug, EngineClass, EngineProvider, Error, ImageProvider, ModelName,
+    Result, SealDigest, Store, Timestamp, TwitchUserId,
 };
+use cc_types::{ArtCallId, ArtCredits};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::{
@@ -92,6 +93,24 @@ pub enum LedgerEvent {
         )]
         model_served: Option<ModelName>,
     },
+    /// Exact provider credits; a dollar cost is absent unless independently known.
+    ImageProviderCost {
+        provider: ImageProvider,
+        credits: ArtCredits,
+        #[serde(
+            default,
+            skip_serializing_if = "Option::is_none",
+            deserialize_with = "optional_cost_microusd"
+        )]
+        cost_microusd: Option<u64>,
+        call_id: ArtCallId,
+    },
+}
+
+fn optional_cost_microusd<'de, D: serde::Deserializer<'de>>(
+    deserializer: D,
+) -> std::result::Result<Option<u64>, D::Error> {
+    u64::deserialize(deserializer).map(Some)
 }
 
 // Missing means absent. An explicit null is a schema error.
@@ -115,7 +134,7 @@ impl LedgerEvent {
             Self::Draw { .. } | Self::DrawSealed { .. } | Self::DrawRiskAcknowledged { .. } => {
                 LedgerKind::Draws
             }
-            Self::Engine { .. } => LedgerKind::Engine,
+            Self::Engine { .. } | Self::ImageProviderCost { .. } => LedgerKind::Engine,
         }
     }
 }

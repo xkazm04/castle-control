@@ -1,4 +1,4 @@
-//! Store-internal audit values, independent of the wire contract.
+//! Store-internal audit values; shared art scalar types come from cc-types.
 use crate::{Error, Result};
 use serde::{Deserialize, Serialize};
 
@@ -20,6 +20,13 @@ pub enum EngineProvider {
     OpenaiApi,
     ClaudeCli,
     CodexCli,
+}
+
+/// Image provider charged for a call, without provider URLs or job identifiers.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ImageProvider {
+    Leonardo,
 }
 
 /// Blocked settings from docs/plan/01-analysis.md:115,117; never free-form reasons.

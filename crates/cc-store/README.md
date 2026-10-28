@@ -1,7 +1,8 @@
 # cc-store
 
 Standalone Rust library for Castle Control's local viewer data, audit ledgers and
-retention. No network, bridge or contract dependency. SQLite uses bundled
+retention. No network or bridge dependency; an internal `cc-types` path dependency
+reuses the validated art credit and call-ID types. SQLite uses bundled
 rusqlite 0.38. `Store::open(directory)` migrates the database (`user_version = 1`),
 checks the inventory and ledgers, and holds an exclusive OS file lock until drop.
 Share one `Store` through a mutex; a second writer to the directory is refused.
@@ -65,10 +66,14 @@ The public append API accepts a `LedgerEvent`, never arbitrary JSON or free text
   integer entry count and winner count;
 - `draw_risk_acknowledged`: configured draw slug and typed blocked setting;
 - `engine`: ULID call ID, integer cost in micro-US dollars, role class, provider,
-  selected model and optional served model.
+  selected model and optional served model;
+- `image_provider_cost`: typed image provider, exact decimal credits, optional
+  integer cost in micro-US dollars and `ArtCallId`.
 
 These are store-internal audit events, not wire contract identifiers. The schema
-remains version 1: ledgers have only been written by tests at this stage.
+remains version 1: the new event is additive, with all previous representations
+and digest inputs unchanged. No SQLite tables, inventory entries or file formats
+change, so neither a database migration nor a ledger rewrite is needed.
 `LedgerEvent::DrawSealed` goes to `draws.jsonl`. Its `seal_digest: SealDigest`
 accepts exactly 64 lowercase hexadecimal characters at construction and serde
 deserialization; `draw_id` uses `DrawSlug` and both counts are `u32`. All fields
@@ -99,16 +104,31 @@ Both newtypes provide `as_str()` and conversion into `String`. A rules-only
 fallback or refusal has no `model_served` key; explicit null is rejected.
 No new store, inventory entry or purge policy is introduced.
 
+`LedgerEvent::ImageProviderCost { provider: ImageProvider, credits: ArtCredits,
+cost_microusd: Option<u64>, call_id: ArtCallId }` goes to `engine.jsonl` through
+the existing append-only writer. `ImageProvider::Leonardo` serializes as
+`leonardo`. `ArtCredits` and `ArtCallId` are reused from `cc-types` unchanged:
+credits have 1–12 whole digits and optionally 1–6 fractional digits, and the
+call ID is a canonical uppercase ULID. Credits are never parsed as a float,
+normalized or converted to dollars: leading and trailing zeroes survive exactly.
+`cost_microusd` is omitted when unknown, accepts the full `u64` range when known,
+and rejects explicit null. Unknown fields/providers and invalid values are refused.
+
+Owner ruling A (2026-10-28): approve this store-only art-cost ledger prerequisite; Leonardo wiring and the unchanged 30/day spend cap remain a later delivery.
+Director clarification (2026-10-28 07:46Z): allow the internal cc-types path edge and its already-locked transitives; no new direct external dependency or lockfile package/version, only cc-store's dependency list may gain cc-types.
+
 Every line contains `schema_version: 1`, `event`, `event_at`, `recorded_at`, and
 `digest`. Both times are RFC 3339 UTC, normalized to nine fractional digits and
-`Z`. Keys and enum values are snake_case. Absent `user_id`/`model_served` are omitted; explicit
-nulls, unknown fields and invalid IDs/times are rejected by the typed boundary.
+`Z`. Keys and enum values are snake_case. Absent `user_id`, `model_served` and
+`cost_microusd` are omitted; explicit nulls, unknown fields and invalid IDs/times
+are rejected by the typed boundary.
 
 Canonical serialization sorts object keys recursively in ascending ASCII order,
 retains array order, and emits compact JSON with no whitespace or trailing LF in
-the hashed bytes. This schema contains only ASCII keys, IDs, enums, timestamps
-and integers; no floats or arbitrary Unicode content. SHA-256 covers the object
-with **only `digest` omitted**. The digest is 64 lowercase hexadecimal characters.
+the hashed bytes. This schema contains only ASCII keys, IDs, enums, timestamps,
+exact decimal strings and integers; no floats or arbitrary Unicode content.
+SHA-256 covers the object with **only `digest` omitted**. The digest is 64
+lowercase hexadecimal characters.
 The final object including `digest` is serialized by the same canonical function,
 then the LF is appended. This is a defined integer-only canonical profile, not a
 general-purpose JSON canonicalization protocol.
@@ -123,6 +143,11 @@ open to fail and require operator recovery of the directory. The digest detects
 accidental changes; it is not a signature or protection against an attacker who
 can rewrite both data and digest. There is no API for editing or deleting an
 individual audit line; explicit full purge is the sole truncation operation.
+
+`tests/art_cost.rs` checks exact decimal bytes, optional full-range integer cost,
+append/read/reopen routing, type-door rejection, and a frozen pre-art version-1
+engine record with an independently computed digest. Appending preserves the old
+record's bytes; forgetting preserves art receipts and full purge erases them.
 
 ## Retention and dry runs
 
