@@ -222,7 +222,7 @@ async fn gift_fifty_is_an_isolated_labelled_preview_without_live_events() {
 }
 
 #[test]
-fn registry_registers_all_five_beacons_methods_without_starting_an_overlay() {
+fn registry_registers_beacons_methods_without_starting_an_overlay() {
     let root = tempfile::tempdir().unwrap();
     let registry = open(root.path());
     let methods: Vec<_> = registry
@@ -233,6 +233,8 @@ fn registry_registers_all_five_beacons_methods_without_starting_an_overlay() {
     assert_eq!(
         methods,
         [
+            "beacons.art.generate",
+            "beacons.art.status",
             "beacons.curve.set",
             "beacons.simulate",
             "beacons.source.url",

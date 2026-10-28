@@ -11,7 +11,9 @@ impl NativeServices {
         root: &Path,
         consent: bool,
     ) -> Result<(), ErrorEnvelope> {
-        self.render.accept_package(package, root, consent)
+        let id = package.design_id.clone();
+        self.render.accept_package(package, root, consent)?;
+        self.art_catalog.accept_design(id, root)
     }
     /// Only the committed Beacons configuration calls this handoff. No drafts.
     pub(crate) fn accept_beacons_visual(&self, visual: Visual) -> Result<(), ErrorEnvelope> {

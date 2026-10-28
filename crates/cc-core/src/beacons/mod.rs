@@ -1,5 +1,8 @@
 //! Shared Beacons configuration, isolated previews and store-only live intake.
+mod art;
+mod art_assets;
 mod live;
+pub use art_assets::{ArtCatalog, ArtDownload};
 mod storage;
 #[cfg(test)]
 mod tests;
@@ -30,6 +33,8 @@ struct State {
 }
 
 pub struct BeaconsModule {
+    art: Option<art::ArtRuntime>,
+    art_serial: tokio::sync::Mutex<()>,
     state: Mutex<State>,
     root: PathBuf,
     overlay_origin: Option<String>,
@@ -38,6 +43,8 @@ pub struct BeaconsModule {
 
 impl BeaconsModule {
     pub const METHODS: &'static [&'static str] = &[
+        "beacons.art.status",
+        "beacons.art.generate",
         "beacons.visual.list",
         "beacons.visual.upsert",
         "beacons.curve.set",
@@ -52,6 +59,8 @@ impl BeaconsModule {
         let store = Store::open(root.join("store")).map_err(|_| internal())?;
         let visuals = storage::load(&root)?;
         Ok(Self {
+            art: None,
+            art_serial: tokio::sync::Mutex::new(()),
             state: Mutex::new(State {
                 _store: store,
                 visuals,
@@ -76,6 +85,14 @@ impl BeaconsModule {
     ) -> Result<Self, ErrorEnvelope> {
         self.native = native;
         if let Some(service) = self.native.as_ref().and_then(Weak::upgrade) {
+            self.art = Some(art::ArtRuntime {
+                provider: std::sync::Arc::new(
+                    cc_beacons::art::LeonardoClient::from_keychain("default".into())
+                        .map_err(art::provider_error)?,
+                ),
+                download: std::sync::Arc::new(art_assets::LeonardoDownload),
+                catalog: service.art_catalog.clone(),
+            });
             for visual in self.state.lock().map_err(|_| internal())?.visuals.values() {
                 service.accept_beacons_visual(visual.clone())?;
             }
@@ -153,7 +170,14 @@ impl Module for BeaconsModule {
     }
 
     fn call<'a>(&'a self, request: &'a RpcRequest) -> BoxFuture<'a, Result<Value, ErrorEnvelope>> {
-        Box::pin(async move { self.handle(request) })
+        Box::pin(async move {
+            match request {
+                RpcRequest::ArtStatus(_) | RpcRequest::ArtGenerate(_) => {
+                    self.art_call(request).await
+                }
+                _ => self.handle(request),
+            }
+        })
     }
 }
 

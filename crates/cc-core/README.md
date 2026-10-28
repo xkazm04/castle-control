@@ -463,3 +463,7 @@ Validation on the approved delivery scope:
   documented in base `docs/PLAN.md`; no full-gate pass is claimed. App Master
   must rerun the full gate in its verification environment. No installation,
   junction modification, git write or sandbox bypass was attempted.
+
+## WP 3.4 art
+
+Credit-priced Leonardo calls use the existing ArtCredits ledger; the receipt-shape decision is parked for the owner: A, ImageProviderCost amount becomes a Credits-or-MicroUsd enum with a read-compatible migration; B, a second ledger variant for dollar-only receipts; C, keep remove-bg out of the product; remove-bg returns Unavailable until the owner rules.

@@ -30,6 +30,7 @@ pub struct NativeConfig {
     pub overlay_port: u16,
 }
 pub struct NativeServices {
+    pub(crate) art_catalog: Arc<crate::beacons::ArtCatalog>,
     pub bridge: Arc<TwitchBridge>,
     pub store: Arc<Mutex<Store>>,
     obs: AsyncMutex<Option<Client>>,
@@ -108,6 +109,7 @@ impl NativeServices {
             .await
             .map_err(obs_error)?;
         Ok(Arc::new(Self {
+            art_catalog: Arc::new(crate::beacons::ArtCatalog::default()),
             bridge,
             store,
             overlay,
