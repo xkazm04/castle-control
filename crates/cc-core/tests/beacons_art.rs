@@ -28,13 +28,6 @@ struct Harness {
 }
 impl Harness {
     fn new(keys: impl KeyStore + 'static, transport: Recording) -> Self {
-        Self::custom(keys, transport.clone(), transport)
-    }
-    fn custom(
-        keys: impl KeyStore + 'static,
-        recording: Recording,
-        transport: impl cc_beacons::art::HttpTransport + 'static,
-    ) -> Self {
         let root = tempfile::tempdir().unwrap();
         let catalog = Arc::new(ArtCatalog::default());
         let package = root.path().join("package");
@@ -42,7 +35,7 @@ impl Harness {
         catalog
             .accept_design("simulated-frame".to_owned().try_into().unwrap(), &package)
             .unwrap();
-        let client = LeonardoClient::new(transport, keys, "simulated".into()).unwrap();
+        let client = LeonardoClient::new(transport.clone(), keys, "simulated".into()).unwrap();
         let module = BeaconsModule::open(root.path().join("beacons"))
             .unwrap()
             .with_art_provider(Arc::new(client), Arc::new(SimulatedDownload), catalog);
@@ -51,7 +44,7 @@ impl Harness {
         Self {
             registry,
             root,
-            transport: recording,
+            transport,
         }
     }
     fn ledger(&self) -> Vec<LedgerLine> {
@@ -73,39 +66,13 @@ impl Harness {
     }
 }
 
-struct PollOverride(Recording, &'static str);
-#[async_trait::async_trait]
-impl cc_beacons::art::HttpTransport for PollOverride {
-    async fn send(
-        &self,
-        key: &SecretKey,
-        request: cc_beacons::art::HttpRequest,
-    ) -> Result<cc_beacons::art::HttpResponse, ArtError> {
-        if request.method == cc_beacons::art::HttpMethod::Get {
-            let flow: serde_json::Value = serde_json::from_str(include_str!(
-                "../../cc-beacons/tests/fixtures/leonardo/flow.json"
-            ))
-            .unwrap();
-            let mut response = flow[2]["response"].clone();
-            response["generations_by_pk"]["status"] = json!(self.1);
-            response["generations_by_pk"]["generated_images"] = json!([]);
-            Recording::response(200, response).send(key, request).await
-        } else {
-            self.0.send(key, request).await
-        }
-    }
-}
-
 #[tokio::test]
 async fn withheld_and_failed_output_keep_the_paid_credit_audit() {
     for status in ["COMPLETE", "FAILED"] {
-        let recorded = Recording::flow();
-        let h = Harness::custom(
-            MemoryStore::present(),
-            recorded.clone(),
-            PollOverride(recorded, status),
-        );
-        let result = h.call("beacons.art.generate", params()).await;
+        let h = Harness::new(MemoryStore::present(), Recording::generation_output(status));
+        let mut request = params();
+        request["remove_background"] = json!(true);
+        let result = h.call("beacons.art.generate", request).await;
         if status == "COMPLETE" {
             let result = result.unwrap();
             assert_eq!(result["assets"], json!([]));
@@ -116,7 +83,7 @@ async fn withheld_and_failed_output_keep_the_paid_credit_audit() {
         assert_eq!(h.ledger().len(), 1);
         assert_eq!(
             h.transport.sent().len(),
-            1,
+            2,
             "paid submission is never retried"
         );
     }
@@ -139,13 +106,17 @@ async fn status_reports_presence_and_missing_key_generate_is_typed_and_socket_fr
             json!({"available":available})
         );
         if !available {
-            assert_eq!(
-                h.call("beacons.art.generate", params())
-                    .await
-                    .unwrap_err()
-                    .code,
-                ErrorCode::Unavailable
-            );
+            for remove_background in [false, true] {
+                let mut request = params();
+                request["remove_background"] = json!(remove_background);
+                assert_eq!(
+                    h.call("beacons.art.generate", request)
+                        .await
+                        .unwrap_err()
+                        .code,
+                    ErrorCode::Unavailable
+                );
+            }
             assert_eq!(
                 h.call("beacons.visual.list", json!({})).await.unwrap(),
                 json!({"visuals":[]})
@@ -173,30 +144,15 @@ async fn credit_generate_audits_once_and_imports_a_labelled_local_anchor() {
     );
     let rows = h.ledger();
     assert_eq!(rows.len(), 1);
-    let LedgerEvent::ImageProviderCost {
-        provider,
-        amount,
-        cost_microusd,
-        call_id,
-    } = &rows[0].event
-    else {
+    let LedgerEvent::ImageProviderCost { call_id, .. } = &rows[0].event else {
         panic!("expected image provider audit");
     };
-    assert_eq!(*provider, cc_store::ImageProvider::Leonardo);
-    assert_eq!(
-        *amount,
-        ImageProviderAmount::Credits("12".to_owned().try_into().unwrap())
-    );
-    assert_eq!(*cost_microusd, None);
     assert_eq!(
         serde_json::to_value(&rows[0].event).unwrap(),
         json!({"kind":"image_provider_cost", "provider":"leonardo", "credits":"12",
             "call_id":call_id.as_str()})
     );
-    assert_eq!(
-        call_id.as_str(),
-        result["costs"][0]["call_id"].as_str().unwrap()
-    );
+    assert_eq!(result["costs"][0]["call_id"], call_id.as_str());
     assert_eq!(h.transport.sent().len(), 3);
     assert_eq!(
         h.transport.sent()[0].body.as_ref().unwrap()["public"],
@@ -213,54 +169,115 @@ async fn credit_generate_audits_once_and_imports_a_labelled_local_anchor() {
 
 #[tokio::test]
 async fn matching_set_resolves_only_an_imported_anchor_in_the_selected_design() {
-    let h = Harness::new(MemoryStore::present(), Recording::flow());
-    let anchor = h.call("beacons.art.generate", params()).await.unwrap();
-    let mut matching = params();
-    matching["quantity"] = json!(2);
-    matching["reference"] = anchor["assets"][0]["asset"].clone();
-    let result = h
-        .call("beacons.art.generate", matching.clone())
-        .await
-        .unwrap();
-    assert_eq!(result["assets"].as_array().unwrap().len(), 2);
-    assert_eq!(result["costs"][0]["charge"], json!({"credits":"24.5"}));
-    assert_eq!(h.ledger().len(), 2);
-    assert_eq!(h.transport.sent().len(), 5);
-    matching["design_id"] = json!("another-design");
-    assert_eq!(
-        h.call("beacons.art.generate", matching.clone())
+    for credits in [true, false] {
+        let h = Harness::new(
+            MemoryStore::present(),
+            Recording::background_flow(credits, None, false),
+        );
+        let anchor = h.call("beacons.art.generate", params()).await.unwrap();
+        let mut matching = params();
+        matching["quantity"] = json!(2);
+        matching["reference"] = anchor["assets"][0]["asset"].clone();
+        matching["remove_background"] = json!(true);
+        let result = h
+            .call("beacons.art.generate", matching.clone())
             .await
-            .unwrap_err()
-            .code,
-        ErrorCode::NotFound
-    );
-    matching["design_id"] = json!("simulated-frame");
-    matching["reference"] = json!("loose-file.png");
-    assert_eq!(
-        h.call("beacons.art.generate", matching)
-            .await
-            .unwrap_err()
-            .code,
-        ErrorCode::Invalid
-    );
-    assert_eq!(h.transport.sent().len(), 5);
-    assert_eq!(h.ledger().len(), 2);
+            .unwrap();
+        assert_eq!(result["assets"].as_array().unwrap().len(), 2);
+        assert_eq!(result["costs"][0]["charge"], json!({"credits":"24.5"}));
+        let charge = if credits {
+            json!({"credits":"1.2500"})
+        } else {
+            json!({"micro_usd":104700})
+        };
+        let rows = h.ledger();
+        assert_eq!(rows.len(), 4);
+        assert_eq!(result["costs"].as_array().unwrap().len(), 3);
+        for index in 1..=2 {
+            assert_eq!(result["costs"][index]["model"], "remove-bg");
+            assert_eq!(result["costs"][index]["charge"], charge);
+            let mut expected = charge.clone();
+            expected["kind"] = json!("image_provider_cost");
+            expected["provider"] = json!("leonardo");
+            expected["call_id"] = result["costs"][index]["call_id"].clone();
+            assert_eq!(
+                serde_json::to_value(&rows[index + 1].event).unwrap(),
+                expected
+            );
+            assert_eq!(
+                result["assets"][index - 1]["provenance"],
+                "leonardo_background_removed"
+            );
+            assert!(
+                h.root
+                    .path()
+                    .join("package")
+                    .join(result["assets"][index - 1]["asset"].as_str().unwrap())
+                    .is_file()
+            );
+        }
+        matching["design_id"] = json!("another-design");
+        assert_eq!(
+            h.call("beacons.art.generate", matching.clone())
+                .await
+                .unwrap_err()
+                .code,
+            ErrorCode::NotFound
+        );
+        matching["design_id"] = json!("simulated-frame");
+        matching["reference"] = json!("loose-file.png");
+        assert_eq!(
+            h.call("beacons.art.generate", matching)
+                .await
+                .unwrap_err()
+                .code,
+            ErrorCode::Invalid
+        );
+        assert_eq!(h.transport.sent().len(), 7, "no paid call is retried");
+        assert_eq!(h.ledger().len(), 4);
+        h.transport.assert_finished();
+    }
 }
 
 #[tokio::test]
-async fn remove_background_is_unavailable_before_any_key_or_provider_operation() {
-    let h = Harness::new(BrokenKeychain, Recording::empty());
-    let mut request = params();
-    request["remove_background"] = json!(true);
-    let error = h.call("beacons.art.generate", request).await.unwrap_err();
-    assert_eq!(error.code, ErrorCode::Unavailable);
-    assert!(
-        error
-            .message
-            .contains("background removal is not supported yet")
-    );
-    assert!(h.transport.sent().is_empty());
-    assert!(h.ledger().is_empty());
+async fn removal_failure_or_withheld_output_preserves_only_actual_paid_receipts() {
+    for fail_at in [Some(0), Some(1), None] {
+        let h = Harness::new(
+            MemoryStore::present(),
+            Recording::background_flow(false, fail_at, true),
+        );
+        let anchor = h.call("beacons.art.generate", params()).await.unwrap();
+        let mut request = params();
+        request["reference"] = anchor["assets"][0]["asset"].clone();
+        request["quantity"] = json!(2);
+        request["remove_background"] = json!(true);
+        let result = h.call("beacons.art.generate", request).await;
+        if fail_at.is_some() {
+            let error = result.unwrap_err();
+            assert_eq!(error.code, ErrorCode::Upstream);
+            assert!(!serde_json::to_string(&error).unwrap().contains(SENTINEL));
+        } else {
+            let result = result.unwrap();
+            assert_eq!(result["assets"], json!([]));
+            assert_eq!(result["costs"].as_array().unwrap().len(), 3);
+        }
+        let rows = h.ledger();
+        assert_eq!(rows.len(), 2 + fail_at.unwrap_or(2));
+        for row in rows.iter().skip(2) {
+            assert!(matches!(
+                row.event,
+                LedgerEvent::ImageProviderCost {
+                    amount: ImageProviderAmount::MicroUsd(104_700),
+                    ..
+                }
+            ));
+        }
+        assert_eq!(
+            h.transport.sent().len(),
+            5 + fail_at.map_or(2, |index| index + 1)
+        );
+        h.transport.assert_finished();
+    }
 }
 
 #[tokio::test]
@@ -320,8 +337,16 @@ async fn logs_errors_results_and_ledger_never_expose_the_simulated_key() {
         .with_writer(captured.clone())
         .finish();
     tracing::subscriber::set_global_default(subscriber).unwrap();
-    let h = Harness::new(MemoryStore::present(), Recording::flow());
-    let result = h.call("beacons.art.generate", params()).await.unwrap();
+    let h = Harness::new(
+        MemoryStore::present(),
+        Recording::background_flow(false, None, false),
+    );
+    let anchor = h.call("beacons.art.generate", params()).await.unwrap();
+    let mut request = params();
+    request["reference"] = anchor["assets"][0]["asset"].clone();
+    request["quantity"] = json!(2);
+    request["remove_background"] = json!(true);
+    let result = h.call("beacons.art.generate", request).await.unwrap();
     assert!(!result.to_string().contains(SENTINEL));
     assert!(
         !serde_json::to_string(&h.ledger())

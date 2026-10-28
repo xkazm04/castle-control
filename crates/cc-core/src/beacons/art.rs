@@ -1,7 +1,7 @@
-//! Credit-only RPC integration. Never retry a paid submission or invent credits.
+//! Art RPC integration. Never retry a paid submission or invent credits.
 use super::art_assets::{ArtCatalog, ArtDownload};
 use super::{BeaconsModule, encode, internal};
-use cc_beacons::art::{ArtError, Charge, GenerationState, ImageProvider, ImageRequest};
+use cc_beacons::art::{ArtError, Charge, CostRecord, GenerationState, ImageProvider, ImageRequest};
 use cc_store::{ImageProviderAmount, LedgerEvent, Timestamp};
 use cc_types::{
     ArtCharge, ArtCostReceipt, ArtGenerateParams, ArtGenerateResult, ArtStatusResult, ErrorCode,
@@ -41,10 +41,6 @@ impl BeaconsModule {
                 },
             }),
             RpcRequest::ArtGenerate(params) => {
-                // Before key access, package resolution, or ANY provider operation.
-                if params.remove_background {
-                    return Err(unavailable("background removal is not supported yet"));
-                }
                 let _serial = self.art_serial.lock().await;
                 let art = self
                     .art
@@ -103,29 +99,7 @@ impl BeaconsModule {
                 "art receipts without credits are not supported yet",
             ));
         }
-        let receipt: ArtCostReceipt =
-            serde_json::from_value(serde_json::to_value(&generation.cost).map_err(|_| internal())?)
-                .map_err(|_| provider_error(ArtError::Response))?;
-        let ArtCharge::Credits(credits) = &receipt.charge else {
-            return Err(unavailable(
-                "art receipts without credits are not supported yet",
-            ));
-        };
-        self.state
-            .lock()
-            .map_err(|_| internal())?
-            ._store
-            .append_ledger(
-                submitted_at,
-                Timestamp::now(),
-                LedgerEvent::ImageProviderCost {
-                    provider: cc_store::ImageProvider::Leonardo,
-                    amount: ImageProviderAmount::Credits(credits.clone()),
-                    cost_microusd: None,
-                    call_id: receipt.call_id.clone(),
-                },
-            )
-            .map_err(|_| internal())?;
+        let receipt = self.record_art_cost(&generation.cost, submitted_at)?;
         // The charge is durable even for withheld/failed output, timeout, or a
         // failed import. Failures stay typed errors rather than empty successes.
         let mut result = ArtGenerateResult {
@@ -154,6 +128,29 @@ impl BeaconsModule {
         if outputs.len() > usize::from(u8::from(params.quantity.clone())) {
             return Err(provider_error(ArtError::Response));
         }
+        let outputs = if params.remove_background {
+            let mut cutouts = Vec::new();
+            for image in outputs {
+                let submitted_at = Timestamp::now();
+                let removed = art
+                    .provider
+                    .remove_background(&image)
+                    .await
+                    .map_err(provider_error)?;
+                // Persist the exact receipt before examining/importing output.
+                // Withheld output and later failures never erase a paid call.
+                result
+                    .costs
+                    .push(self.record_art_cost(&removed.cost, submitted_at)?);
+                cutouts.extend(removed.assets);
+            }
+            cutouts
+        } else {
+            outputs
+        };
+        if outputs.len() > usize::from(u8::from(params.quantity.clone())) {
+            return Err(provider_error(ArtError::Response));
+        }
         for (index, image) in outputs.into_iter().enumerate() {
             let bytes = art.download.fetch(&image.url).await.map_err(|_| {
                 ErrorEnvelope::new(ErrorCode::Upstream, "generated art download failed")
@@ -165,6 +162,36 @@ impl BeaconsModule {
             result.assets.push(asset);
         }
         Ok(result)
+    }
+
+    fn record_art_cost(
+        &self,
+        cost: &CostRecord,
+        submitted_at: Timestamp,
+    ) -> Result<ArtCostReceipt, ErrorEnvelope> {
+        let receipt: ArtCostReceipt =
+            serde_json::from_value(serde_json::to_value(cost).map_err(|_| internal())?)
+                .map_err(|_| provider_error(ArtError::Response))?;
+        let amount = match &receipt.charge {
+            ArtCharge::Credits(credits) => ImageProviderAmount::Credits(credits.clone()),
+            ArtCharge::MicroUsd(value) => ImageProviderAmount::MicroUsd(*value),
+        };
+        self.state
+            .lock()
+            .map_err(|_| internal())?
+            ._store
+            .append_ledger(
+                submitted_at,
+                Timestamp::now(),
+                LedgerEvent::ImageProviderCost {
+                    provider: cc_store::ImageProvider::Leonardo,
+                    amount,
+                    cost_microusd: None,
+                    call_id: receipt.call_id.clone(),
+                },
+            )
+            .map_err(|_| internal())?;
+        Ok(receipt)
     }
 }
 
@@ -179,4 +206,116 @@ pub(super) fn provider_error(error: ArtError) -> ErrorEnvelope {
     };
     // ArtError carries only closed local messages, never upstream text or keys.
     ErrorEnvelope::new(code, error.to_string())
+}
+
+#[cfg(test)]
+#[allow(dead_code)]
+#[path = "../../../cc-beacons/tests/leonardo_support/mod.rs"]
+mod test_support;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use cc_beacons::art::LeonardoClient;
+    use cc_store::{LedgerKind, Store};
+    use serde_json::json;
+    use test_support::{MemoryStore, Recording};
+
+    struct RefuseCutouts;
+    #[async_trait::async_trait]
+    impl ArtDownload for RefuseCutouts {
+        async fn fetch(&self, url: &str) -> Result<Vec<u8>, ErrorEnvelope> {
+            assert!(url.starts_with("https://cdn.example.invalid/simulated-"));
+            if url.ends_with("simulated-cutout.png") {
+                return Err(unavailable("simulated cutout download failure"));
+            }
+            Ok(b"\x89PNG\r\n\x1a\nSimulated anchor".to_vec())
+        }
+    }
+
+    fn request() -> ArtGenerateParams {
+        let image = test_support::image_request();
+        serde_json::from_value(json!({
+            "design_id":"simulated-frame", "prompt":image.prompt, "model_id":image.model_id,
+            "width":image.width, "height":image.height, "quantity":1, "remove_background":true
+        }))
+        .unwrap()
+    }
+
+    fn module(root: &std::path::Path, transport: Recording) -> BeaconsModule {
+        let provider =
+            LeonardoClient::new(transport, MemoryStore::present(), "simulated".into()).unwrap();
+        BeaconsModule::open(root).unwrap().with_art_provider(
+            Arc::new(provider),
+            Arc::new(RefuseCutouts),
+            Arc::default(),
+        )
+    }
+
+    #[tokio::test]
+    async fn no_provider_or_revoked_refuses_removal_before_package_or_paid_operations() {
+        let root = tempfile::tempdir().unwrap();
+        let module = BeaconsModule::open(root.path()).unwrap();
+        let call = RpcRequest::ArtGenerate(request());
+        assert_eq!(
+            module.art_call(&call).await.unwrap_err().code,
+            ErrorCode::Unavailable
+        );
+        drop(module);
+        let transport = Recording::empty();
+        let module = self::module(root.path(), transport.clone());
+        module.purge_live_data().unwrap();
+        assert_eq!(
+            module.art_call(&call).await.unwrap_err().code,
+            ErrorCode::Unavailable
+        );
+        assert!(transport.sent().is_empty());
+        assert!(
+            module
+                .state
+                .lock()
+                .unwrap()
+                ._store
+                .read_ledger(LedgerKind::Engine)
+                .unwrap()
+                .is_empty()
+        );
+    }
+
+    #[tokio::test]
+    async fn cutout_import_failure_keeps_all_paid_rows_after_reopening() {
+        let root = tempfile::tempdir().unwrap();
+        let transport = Recording::background_flow(false, None, false);
+        let module = module(root.path(), transport.clone());
+        let art = module.art.as_ref().unwrap();
+        let mut params = request();
+        art.catalog
+            .accept_design(params.design_id.clone(), root.path())
+            .unwrap();
+        params.remove_background = false;
+        let anchor = module.generate_art(art, &params).await.unwrap();
+        params.remove_background = true;
+        params.reference = Some(anchor.assets[0].asset.clone());
+        params.quantity = 2.try_into().unwrap();
+        let error = module
+            .art_call(&RpcRequest::ArtGenerate(params))
+            .await
+            .unwrap_err();
+        assert_eq!(error.code, ErrorCode::Upstream);
+        assert_eq!(transport.sent().len(), 7, "no paid call is retried");
+        transport.assert_finished();
+        drop(module);
+        let store = Store::open(root.path().join("store")).unwrap();
+        let rows = store.read_ledger(LedgerKind::Engine).unwrap();
+        assert_eq!(rows.len(), 4);
+        for row in rows.iter().skip(2) {
+            assert!(matches!(
+                row.event,
+                LedgerEvent::ImageProviderCost {
+                    amount: ImageProviderAmount::MicroUsd(104_700),
+                    ..
+                }
+            ));
+        }
+    }
 }

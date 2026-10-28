@@ -47,6 +47,49 @@ impl Recording {
     pub fn flow() -> Self {
         Self::from_json(include_str!("../fixtures/leonardo/flow.json"))
     }
+    // These fixture variants are used by cc-core's tests, a separate test crate.
+    #[allow(dead_code)]
+    pub fn generation_output(status: &str) -> Self {
+        let mut steps: Vec<Value> =
+            serde_json::from_str(include_str!("../fixtures/leonardo/flow.json")).unwrap();
+        let mut poll = steps[2].clone();
+        poll["response"]["generations_by_pk"]["status"] = serde_json::json!(status);
+        poll["response"]["generations_by_pk"]["generated_images"] = serde_json::json!([]);
+        steps.truncate(1);
+        steps.push(poll);
+        Self::from_json(&serde_json::to_string(&steps).unwrap())
+    }
+    /// The recorded anchor/set flow, then one sync removal per set image.
+    #[allow(dead_code)]
+    pub fn background_flow(credits: bool, fail_at: Option<usize>, withheld: bool) -> Self {
+        let mut steps: Vec<Value> =
+            serde_json::from_str(include_str!("../fixtures/leonardo/flow.json")).unwrap();
+        let removal = steps.pop().unwrap();
+        let images = steps[4]["response"]["generations_by_pk"]["generated_images"]
+            .as_array()
+            .unwrap()
+            .clone();
+        for (index, image) in images.iter().enumerate() {
+            let mut step = removal.clone();
+            step["request"]["body"]["parameters"]["guidances"]["image_reference"][0]["image"]["id"] =
+                image["id"].clone();
+            if credits {
+                step["response"]["cost"] = serde_json::json!({"amount":"1.2500", "unit":"CREDITS"});
+            }
+            if withheld {
+                step["response"]["results"] = serde_json::json!([]);
+            }
+            if fail_at == Some(index) {
+                step["status"] = serde_json::json!(429);
+                step["response"] = serde_json::json!({"error":SENTINEL});
+            }
+            steps.push(step);
+            if fail_at == Some(index) {
+                break;
+            }
+        }
+        Self::from_json(&serde_json::to_string(&steps).unwrap())
+    }
     pub fn error_fixture() -> Self {
         Self::from_json(include_str!("../fixtures/leonardo/http-error.json"))
     }

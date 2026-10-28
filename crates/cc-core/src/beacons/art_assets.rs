@@ -118,11 +118,14 @@ impl ArtCatalog {
         image: ImageAsset,
         bytes: Vec<u8>,
     ) -> Result<GeneratedArtAsset, ErrorEnvelope> {
-        if !image.generated
-            || image.provenance != Provenance::LeonardoGenerated
-            || image.image_id.is_none()
-            || bytes.len() > crate::overlay::package::MAX_BYTES
-        {
+        let provenance = match (image.generated, image.provenance, &image.image_id) {
+            (true, Provenance::LeonardoGenerated, Some(_)) => ArtProvenance::LeonardoGenerated,
+            (true, Provenance::LeonardoBackgroundRemoved, None) => {
+                ArtProvenance::LeonardoBackgroundRemoved
+            }
+            _ => return Err(refused()),
+        };
+        if bytes.len() > crate::overlay::package::MAX_BYTES {
             return Err(refused());
         }
         let extension = if bytes.starts_with(b"\x89PNG\r\n\x1a\n") {
@@ -154,7 +157,7 @@ impl ArtCatalog {
         Ok(GeneratedArtAsset {
             asset,
             generated: true,
-            provenance: ArtProvenance::LeonardoGenerated,
+            provenance,
         })
     }
 }
