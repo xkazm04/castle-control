@@ -11,10 +11,11 @@
 .visuals-room-layer { position: relative; margin: 0; }
 .visuals-room-art svg { display: block; width: 100%; height: auto; }
 .visuals-room-art-hero { display: grid; align-content: start; justify-items: center; }
-.visuals-room-art-hero svg { max-width: calc(var(--space-56) * 9); aspect-ratio: 360 / 240; }
+.visuals-room-art-hero svg { max-width: calc(var(--space-56) * 9); aspect-ratio: var(--room-art-aspect); }
 .visuals-room-stone { fill: var(--ink); }
 .visuals-room-cutout { fill: var(--paper-2); }
 .visuals-room-fire { fill: var(--or); opacity: calc(.3 + var(--room-blaze) * .7); transform-box: fill-box; transform-origin: bottom; transform: scaleY(calc(.3 + var(--room-blaze) * .7)); }
+.visuals-room-art-hero .visuals-room-fire { transform: none; }
 .visuals-room-fire-core { fill: var(--gules); opacity: var(--room-blaze); }
 .visuals-room-glow { fill: none; stroke: var(--or); stroke-width: var(--space-8); opacity: calc(.2 + var(--room-blaze) * .8); }
 .visuals-room-visuals { display: grid; gap: var(--space-16); }
