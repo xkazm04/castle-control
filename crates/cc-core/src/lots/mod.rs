@@ -1,4 +1,4 @@
-//! Lots RPC module. Native registration uses recorded fixtures and no chat adapter.
+//! Lots RPC module. Intake accepts post-verdict capabilities only.
 mod convert;
 mod lifecycle;
 pub mod live_beacon;
@@ -22,7 +22,7 @@ use std::{
 use tokio::sync::broadcast;
 
 /// The caller explicitly supplies trusted chain metadata and a round source.
-/// Native registration uses recorded rounds; live_beacon is opt-in only.
+/// Fixture registration uses recorded rounds; live_beacon is opt-in only.
 pub trait BeaconSource: Send + Sync {
     fn chain(&self) -> Result<QuicknetChain, ErrorEnvelope>;
     fn round(&self, sealed: &LotsSealedRoll) -> Result<BeaconRound, ErrorEnvelope>;
@@ -114,7 +114,7 @@ impl LotsModule {
         self.payloads.subscribe()
     }
 
-    /// The future trusted intake adapter supplies verified Twitch identity, never
+    /// The trusted intake adapter supplies verified Twitch identity, never
     /// a name claimed in chat. The store requires associations for erasable writs.
     pub fn map_user(&self, user: cc_store::TwitchUserId, login: &str) -> Result<(), ErrorEnvelope> {
         self.state
@@ -126,7 +126,7 @@ impl LotsModule {
     }
 
     /// Only the domain's verdict-checked capability is accepted. No RPC admits entries.
-    /// No production adapter feeds this API before the live spike.
+    /// Native shadow ingress uses intake_screened after a committed decision.
     /// ```compile_fail,E0308
     /// use cc_core::lots::LotsModule;
     /// use cc_lots::MessageFacts;
@@ -148,6 +148,50 @@ impl LotsModule {
             }))?;
         }
         Ok(result)
+    }
+
+    /// Internal post-verdict fan-out to the currently open rolls. Raw chat has
+    /// no entry point; held/denied or mismatched decisions cannot mint a token.
+    pub fn intake_screened(
+        &self,
+        screened: &cc_gatehouse::ScreenedMessage,
+        facts: cc_lots::MessageFacts,
+    ) -> Result<(), ErrorEnvelope> {
+        if screened.decision.verdict != Verdict::Pass
+            || screened.decision.message_id != facts.message_id
+            || screened.message.message_id != facts.message_id
+            || screened.message.user_id != facts.user_id
+            || screened.message.text != facts.text
+        {
+            return Ok(());
+        }
+        let mut state = self.state.lock().map_err(|_| internal())?;
+        state
+            .store
+            .map_user(facts.user_id.clone(), &screened.message.login)
+            .map_err(|_| internal())?;
+        for (draw_id, roll) in &mut state.rolls {
+            let passed = PassedMessage::from_verdict(facts.clone(), screened.decision.verdict)
+                .map_err(|_| internal())?;
+            if roll.intake(passed) == Intake::Added {
+                self.emit(LotsEventPayload::Roll(LotsRollPayload {
+                    draw_id: draw_id.clone(),
+                    weight_table: convert::table(roll.weight_table(self.now()))?,
+                }))?;
+            }
+        }
+        Ok(())
+    }
+
+    pub(crate) fn purge_live_data(&self) -> Result<(), ErrorEnvelope> {
+        let mut state = self.state.lock().map_err(|_| internal())?;
+        state.rolls.clear();
+        state.pending.clear();
+        state
+            .store
+            .purge_all(cc_store::Timestamp::now())
+            .map_err(|_| internal())?;
+        Ok(())
     }
 
     fn now(&self) -> DateTime<Utc> {

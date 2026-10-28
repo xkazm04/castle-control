@@ -20,7 +20,10 @@ pub struct CoreHost {
 impl CoreHost {
     pub async fn start(options: Options, data_dir: &Path) -> Result<Self, &'static str> {
         let services = if let Some(native) = options.native {
-            let store = cc_store::Store::open(data_dir).map_err(|_| "desktop store unavailable")?;
+            // cc-store's inventory owns its directory exclusively. Module
+            // stores are siblings under data_dir, never children of this store.
+            let store = cc_store::Store::open(data_dir.join("native"))
+                .map_err(|_| "desktop store unavailable")?;
             Some(
                 NativeServices::new(
                     NativeConfig {
@@ -45,7 +48,7 @@ impl CoreHost {
             None
         };
         let state = match &services {
-            Some(services) => services.app(EVENT_CAPACITY),
+            Some(services) => services.app_with_data_dir(EVENT_CAPACITY, data_dir),
             None => AppState::new(Registry::with_status(), EVENT_CAPACITY),
         }
         .map_err(|_| "desktop core setup failed")?;

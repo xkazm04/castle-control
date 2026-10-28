@@ -20,7 +20,7 @@ use std::{
 };
 use tokio::{
     sync::{Mutex as AsyncMutex, broadcast, mpsc},
-    task::JoinHandle,
+    task::AbortHandle,
 };
 
 pub struct NativeConfig {
@@ -39,14 +39,24 @@ pub struct NativeServices {
     scopes: Vec<String>,
     started: Instant,
     chat: broadcast::Sender<crate::ChatIngress>,
-    workers: Mutex<Vec<JoinHandle<()>>>,
+    workers: Mutex<Vec<AbortHandle>>,
     events: OnceLock<Weak<EventHub>>,
     obs_connected: AtomicBool,
+    pipeline: Arc<OnceLock<Weak<crate::live::ShadowPipeline>>>,
 }
-struct Eraser(Arc<Mutex<Store>>);
+struct Eraser(
+    Arc<Mutex<Store>>,
+    Arc<OnceLock<Weak<crate::live::ShadowPipeline>>>,
+);
 #[async_trait::async_trait]
 impl RevocationHandler for Eraser {
     async fn purge_all(&self) -> Result<(), BridgeError> {
+        if let Some(pipeline) = self.1.get().and_then(Weak::upgrade) {
+            pipeline
+                .revoke()
+                .await
+                .map_err(|_| BridgeError::Unavailable("live store purge failed"))?;
+        }
         let store = self.0.clone();
         tokio::task::spawn_blocking(move || {
             store
@@ -86,8 +96,12 @@ impl NativeServices {
             .into_iter()
             .collect();
         let store = Arc::new(Mutex::new(store));
-        let bridge = TwitchBridge::new(config.twitch, Arc::new(Eraser(store.clone())))
-            .map_err(bridge_error)?;
+        let pipeline = Arc::new(OnceLock::new());
+        let bridge = TwitchBridge::new(
+            config.twitch,
+            Arc::new(Eraser(store.clone(), pipeline.clone())),
+        )
+        .map_err(bridge_error)?;
         let render = Arc::new(crate::overlay::RenderHost::default());
         let overlay = Overlay::start_with_routes(config.overlay_port, render.routes())
             .await
@@ -106,6 +120,7 @@ impl NativeServices {
             workers: Mutex::new(Vec::new()),
             events: OnceLock::new(),
             obs_connected: AtomicBool::new(false),
+            pipeline,
         }))
     }
     pub fn overlay_url(&self) -> String {
@@ -116,6 +131,22 @@ impl NativeServices {
     }
     /// Wires the real modules and bridge pump into the same event hub used by /events.
     pub fn app(self: &Arc<Self>, capacity: usize) -> Result<Arc<AppState>, ErrorEnvelope> {
+        self.attach(capacity, None)
+    }
+    /// Production host supplies its persistent data directory explicitly. The
+    /// legacy app() entry point retains recorded-fixture/spike behavior.
+    pub fn app_with_data_dir(
+        self: &Arc<Self>,
+        capacity: usize,
+        root: &std::path::Path,
+    ) -> Result<Arc<AppState>, ErrorEnvelope> {
+        self.attach(capacity, Some(root))
+    }
+    fn attach(
+        self: &Arc<Self>,
+        capacity: usize,
+        root: Option<&std::path::Path>,
+    ) -> Result<Arc<AppState>, ErrorEnvelope> {
         let mut workers = self.workers.lock().map_err(|_| internal())?;
         if !workers.is_empty() {
             return Err(ErrorEnvelope::new(
@@ -123,12 +154,29 @@ impl NativeServices {
                 "bridge already attached",
             ));
         }
-        let registry = Registry::with_native(self.clone());
         let events = Arc::new(EventHub::new(capacity)?);
+        let registry = match root {
+            Some(root) => Registry::with_native_root(self.clone(), root, events.clone()),
+            None => Registry::with_native(self.clone()),
+        };
+        let pipeline = registry.shadow_pipeline()?;
+        let live = pipeline.is_some();
         self.events
             .set(Arc::downgrade(&events))
             .map_err(|_| internal())?;
         let app = AppState::with_events(registry, events.clone())?;
+        if let Some(pipeline) = pipeline {
+            self.pipeline
+                .set(Arc::downgrade(&pipeline))
+                .map_err(|_| internal())?;
+            let task = pipeline
+                .start(
+                    Some(self.subscribe_chat()),
+                    Arc::new(crate::live::RulesOnly),
+                )
+                .ok_or_else(internal)?;
+            workers.push(task.abort_handle());
+        }
         let (sender, mut receiver) = mpsc::channel(256);
         self.bridge.start(sender);
         let weak = Arc::downgrade(self);
@@ -139,7 +187,8 @@ impl NativeServices {
                 tokio::select! {
                     event = receiver.recv() => {
                         let Some(event) = event else { break; };
-                        if forward_bridge_event(&events, &event).is_err() { break; }
+                        if (!live || !matches!(&event, cc_twitch::BridgeEvent::Notification(n) if n.chat.is_some()))
+                            && forward_bridge_event(&events, &event).is_err() { break; }
                         if let cc_twitch::BridgeEvent::Notification(n) = event
                             && let Some(chat) = crate::ingress::chat_ingress(n)
                             && let Some(service) = weak.upgrade() {
@@ -157,19 +206,22 @@ impl NativeServices {
                     }
                 }
             }
-        }));
+        }).abort_handle());
         let weak = Arc::downgrade(self);
-        workers.push(tokio::spawn(async move {
-            let mut poll = tokio::time::interval(Duration::from_secs(2));
-            loop {
-                poll.tick().await;
-                let Some(service) = weak.upgrade() else {
-                    break;
-                };
-                // Probe failures are reflected as disconnected, not claimed successes.
-                let _connected = service.obs_status().await;
-            }
-        }));
+        workers.push(
+            tokio::spawn(async move {
+                let mut poll = tokio::time::interval(Duration::from_secs(2));
+                loop {
+                    poll.tick().await;
+                    let Some(service) = weak.upgrade() else {
+                        break;
+                    };
+                    // Probe failures are reflected as disconnected, not claimed successes.
+                    let _connected = service.obs_status().await;
+                }
+            })
+            .abort_handle(),
+        );
         Ok(app)
     }
     pub async fn start_login(&self) -> Result<(), ErrorEnvelope> {

@@ -10,6 +10,12 @@ pub struct ChatIngress {
     pub login: String,
     pub message: cc_twitch::ChatMessage,
 }
+// Error diagnostics (including broadcast SendError) must never echo chat.
+impl std::fmt::Debug for ChatIngress {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("ChatIngress").finish_non_exhaustive()
+    }
+}
 pub(crate) fn chat_ingress(notification: cc_twitch::Notification) -> Option<ChatIngress> {
     #[derive(serde::Deserialize)]
     struct Identity {
@@ -66,7 +72,8 @@ pub fn forward_bridge_event(hub: &EventHub, event: &BridgeEvent) -> Result<(), E
             hub.publish(EventKind::BridgeGap)?;
         }
         BridgeEvent::Notification(notification) if notification.chat.is_some() => {
-            // M0 has no classifier: intake is shadow/pass. M1 owns the verdict pipeline.
+            // Legacy fixture/spike invalidation. The native shadow host publishes
+            // this only after a committed verdict, through ShadowPipeline.
             hub.publish(EventKind::ChatMessage)?;
         }
         _ => {}

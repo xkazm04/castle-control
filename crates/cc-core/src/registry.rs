@@ -58,6 +58,26 @@ impl Registry {
     pub fn with_native(services: Arc<NativeServices>) -> Self {
         Self::native(Some(services))
     }
+    pub(crate) fn with_native_root(
+        services: Arc<NativeServices>,
+        root: &std::path::Path,
+        events: Arc<crate::EventHub>,
+    ) -> Self {
+        Self::native_offline(
+            Some(services),
+            OfflineModules::native_at(root.to_owned(), events),
+        )
+    }
+
+    /// Rust-only seam for the native subscriber and fake-bridge acceptance tests.
+    /// No bridge means no pipeline and no module load or worker startup.
+    pub fn shadow_pipeline(
+        &self,
+    ) -> Result<Option<Arc<crate::live::ShadowPipeline>>, ErrorEnvelope> {
+        self.offline
+            .as_ref()
+            .map_or(Ok(None), |modules| modules.shadow_pipeline())
+    }
     fn native(services: Option<Arc<NativeServices>>) -> Self {
         Self::native_offline(services, OfflineModules::default())
     }

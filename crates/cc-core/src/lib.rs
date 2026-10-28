@@ -5,6 +5,7 @@ mod events;
 pub mod gatehouse;
 mod ingress;
 mod integration;
+pub mod live;
 mod login;
 pub mod lots;
 mod offline;

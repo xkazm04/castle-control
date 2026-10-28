@@ -1,4 +1,4 @@
-//! Native registration is fixture-only. This module owns no network capability.
+//! Shared module ownership. Fixture defaults remain lazy and socket-free.
 use crate::{
     EventHub, Module, beacons::BeaconsModule, gatehouse::GatehouseModule, lots::LotsModule,
 };
@@ -15,13 +15,15 @@ pub(crate) struct OfflineModules {
     root: Option<PathBuf>,
     overlay_origin: Option<String>,
     native: Option<Weak<crate::NativeServices>>,
+    live: bool,
     events: OnceLock<Arc<EventHub>>,
     loaded: OnceLock<Result<Loaded, ErrorEnvelope>>,
+    pipeline: OnceLock<Arc<crate::live::ShadowPipeline>>,
 }
 
 struct Loaded {
     // Other modules close before Lots releases the shared temporary fixture root.
-    gatehouse: GatehouseModule,
+    gatehouse: Arc<GatehouseModule>,
     beacons: BeaconsModule,
     lots: Arc<LotsModule>,
 }
@@ -32,8 +34,17 @@ impl OfflineModules {
             root: Some(root),
             overlay_origin: None,
             native: None,
+            live: false,
             events: OnceLock::from(events),
             loaded: OnceLock::new(),
+            pipeline: OnceLock::new(),
+        }
+    }
+
+    pub fn native_at(root: PathBuf, events: Arc<EventHub>) -> Self {
+        Self {
+            live: true,
+            ..Self::at(root, events)
         }
     }
 
@@ -63,6 +74,29 @@ impl OfflineModules {
         Ok(self.load()?.lots.clone())
     }
 
+    pub fn shadow_pipeline(
+        &self,
+    ) -> Result<Option<Arc<crate::live::ShadowPipeline>>, ErrorEnvelope> {
+        if !self.live {
+            return Ok(None);
+        }
+        let loaded = self.load()?;
+        Ok(Some(
+            self.pipeline
+                .get_or_init(|| {
+                    Arc::new(crate::live::ShadowPipeline::new(
+                        loaded.gatehouse.clone(),
+                        loaded.lots.clone(),
+                        self.events
+                            .get()
+                            .expect("loaded modules bind events")
+                            .clone(),
+                    ))
+                })
+                .clone(),
+        ))
+    }
+
     fn load(&self) -> Result<&Loaded, ErrorEnvelope> {
         self.loaded
             .get_or_init(|| {
@@ -82,16 +116,36 @@ impl OfflineModules {
                         Arc::new(EventHub::new(256).expect("nonzero offline event capacity"))
                     })
                     .clone();
-                let recorded = Arc::new(crate::lots::recorded::RecordedBeacon);
-                let mut lots =
-                    LotsModule::open(root.join("lots"), events, recorded.clone(), recorded, true)?;
-                let gatehouse = GatehouseModule::open_offline(root.join("gatehouse"))?;
+                let (mut lots, gatehouse) = if self.live {
+                    (
+                        LotsModule::open(
+                            root.join("lots"),
+                            events,
+                            Arc::new(crate::live::NoBeacon),
+                            Arc::new(crate::lots::SystemLotsClock),
+                            false,
+                        )?,
+                        GatehouseModule::open_shadow(root.join("gatehouse"))?,
+                    )
+                } else {
+                    let recorded = Arc::new(crate::lots::recorded::RecordedBeacon);
+                    (
+                        LotsModule::open(
+                            root.join("lots"),
+                            events,
+                            recorded.clone(),
+                            recorded,
+                            true,
+                        )?,
+                        GatehouseModule::open_offline(root.join("gatehouse"))?,
+                    )
+                };
                 let beacons = BeaconsModule::open(root.join("beacons"))?
                     .with_overlay_origin(self.overlay_origin.clone())
                     .with_native(self.native.clone())?;
                 lots.temporary_root = temporary_root;
                 Ok(Loaded {
-                    gatehouse,
+                    gatehouse: Arc::new(gatehouse),
                     beacons,
                     lots: Arc::new(lots),
                 })

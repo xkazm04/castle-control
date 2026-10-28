@@ -23,6 +23,7 @@ pub struct Gatehouse {
     pub(crate) clock: Arc<dyn Clock>,
     pub(crate) strikes: Strikes,
     pub(crate) gate_available: bool,
+    pub(crate) shadow_only: bool,
     pub(crate) gate_settings: crate::gate::Settings,
     pub(crate) room_leases:
         std::collections::BTreeMap<cc_types::LeaseId, crate::governor::LeaseRegistration>,
@@ -48,6 +49,7 @@ impl Gatehouse {
             clock,
             strikes: Strikes::default(),
             gate_available: true,
+            shadow_only: false,
             gate_settings: crate::gate::Settings::default(),
             room_leases: Default::default(),
         })
@@ -60,6 +62,12 @@ impl Gatehouse {
     /// A failed readiness probe cannot be treated as a successful clean gate.
     pub fn set_gate_available(&mut self, available: bool) {
         self.gate_available = available;
+    }
+
+    /// Irreversible for this instance. Live observation cannot create an action
+    /// intent, even when a previously consented armed rule is loaded from disk.
+    pub fn require_shadow(&mut self) {
+        self.shadow_only = true;
     }
 
     pub fn rules_list(&self, _: Empty) -> Result<RulesListResult> {

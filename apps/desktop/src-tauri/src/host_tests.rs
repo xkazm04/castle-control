@@ -133,6 +133,95 @@ async fn bound_core_injection_has_exact_keys_accepted_origin_and_no_capability_i
         );
     }
     assert_steward_flag_round_trips_as_metadata_without_native_services_or_secrets().await;
+    assert_native_data_directory_and_shadow_diagnostics(&logs).await;
+}
+
+async fn assert_native_data_directory_and_shadow_diagnostics(logs: &Arc<Mutex<Vec<u8>>>) {
+    let root = std::env::temp_dir().join(format!(
+        "cc-shadow-host-{}-{}",
+        std::process::id(),
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_nanos()
+    ));
+    let host = CoreHost::start(
+        Options {
+            native: Some(crate::options::NativeOptions {
+                client_id: String::new(),
+                test_channel: "simulated".into(),
+                obs_port: 0,
+                obs_password_label: "simulated-unused".into(),
+            }),
+            login: false,
+            steward_live: false,
+        },
+        &root,
+    )
+    .await
+    .unwrap();
+    let pipeline = host.state.registry.shadow_pipeline().unwrap().unwrap();
+    let (sender, receiver) = tokio::sync::broadcast::channel(4);
+    let task = pipeline
+        .start(Some(receiver), Arc::new(cc_core::live::RulesOnly))
+        .unwrap();
+    let body = "simulated-private-shadow-body";
+    let raw = cc_core::ChatIngress {
+        login: "simulated_viewer".into(),
+        message: cc_twitch::ChatMessage {
+            id: "simulated-shadow-message".into(),
+            at: cc_store::Timestamp::now().as_rfc3339(),
+            viewer: cc_twitch::Viewer {
+                id: "123".into(),
+                name: "simulated_viewer".into(),
+                is_mod: false,
+                sub_tier: None,
+            },
+            text: format!("{body} {}", host.state.session_token()),
+        },
+    };
+    // Exercise a diagnostic with the real new adapter type. Debug must redact
+    // both the synthetic body and any secret-looking content inside chat.
+    tracing::info!(ingress = ?raw, "simulated shadow diagnostic");
+    sender.send(raw).unwrap();
+    drop(sender);
+    task.await.unwrap().unwrap();
+    assert!(root.join("native/store.sqlite3").is_file());
+    assert!(root.join("gatehouse/store/decisions.jsonl").is_file());
+    assert!(root.join("lots/store/store.sqlite3").is_file());
+    let audit = std::fs::read_to_string(root.join("gatehouse/store/decisions.jsonl")).unwrap();
+    assert!(!audit.contains(body));
+    assert!(!audit.contains(host.state.session_token()));
+    {
+        let captured = logs.lock().unwrap();
+        let captured = String::from_utf8_lossy(&captured);
+        assert!(captured.contains("simulated shadow diagnostic"));
+        for forbidden in [body, host.state.session_token(), "simulated_viewer"] {
+            assert!(!captured.contains(forbidden));
+        }
+    }
+    host.shutdown();
+    drop(pipeline);
+    drop(host);
+    tokio::task::yield_now().await;
+    // Every native store remains reopenable with cc-store's strict inventory;
+    // state was never written into a temporary fixture root.
+    for store in ["native", "gatehouse/store", "lots/store"] {
+        drop(cc_store::Store::open(root.join(store)).unwrap());
+    }
+    let resolved = root.canonicalize().unwrap();
+    assert_eq!(
+        resolved.parent().unwrap(),
+        std::env::temp_dir().canonicalize().unwrap()
+    );
+    assert!(
+        resolved
+            .file_name()
+            .unwrap()
+            .to_string_lossy()
+            .starts_with("cc-shadow-host-")
+    );
+    std::fs::remove_dir_all(resolved).unwrap();
 }
 
 async fn assert_steward_flag_round_trips_as_metadata_without_native_services_or_secrets() {

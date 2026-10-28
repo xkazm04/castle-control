@@ -15,6 +15,7 @@ pub mod herald;
 mod herald_features;
 mod instrument;
 mod lane;
+mod live;
 pub mod recorder;
 mod review;
 mod rules;

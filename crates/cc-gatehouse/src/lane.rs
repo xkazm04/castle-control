@@ -264,7 +264,10 @@ impl Gatehouse {
                         return Err(internal("stale rule"));
                     }
                     let (action, timeout_s) = self.strikes.hit(msg.user_id.as_str(), &rule, &at)?;
-                    if rule.mode != RuleMode::Armed || !self.consented(&managed)? {
+                    if self.shadow_only
+                        || rule.mode != RuleMode::Armed
+                        || !self.consented(&managed)?
+                    {
                         decision.kind = DecisionKind::WouldAct;
                         GatePath::Shadow
                     } else if verdict == Verdict::Hold || action == Action::Hold {

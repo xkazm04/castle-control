@@ -1,4 +1,4 @@
-//! Offline RPC module. Native registration refuses arming and starts no executor.
+//! RPC module. Fixture and live-shadow registration refuse arming; no executor.
 
 use crate::Module;
 use cc_gatehouse::Gatehouse;
@@ -11,6 +11,7 @@ use std::{path::Path, sync::Arc};
 use tokio::sync::Mutex;
 
 mod governor;
+mod live;
 use governor::Service;
 
 pub struct GatehouseModule {
