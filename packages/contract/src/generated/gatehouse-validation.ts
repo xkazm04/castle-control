@@ -10,3 +10,5 @@ export const gatehouseConsensusGet = { method: "gatehouse.consensus.get" as cons
 export const gatehouseDrillRun = { method: "gatehouse.drill.run" as const, params: compiled.p23, result: compiled.r23 };
 export const gatehouseDrillDiff = { method: "gatehouse.drill.diff" as const, params: compiled.p24, result: compiled.r24 };
 export const gatehouseRecordingImport = { method: "gatehouse.recording.import" as const, params: compiled.p25, result: compiled.r25 };
+export const gatehouseChatList = { method: "gatehouse.chat.list" as const, params: compiled.p47, result: compiled.r47 };
+export const gatehouseHistoryList = { method: "gatehouse.history.list" as const, params: compiled.p48, result: compiled.r48 };

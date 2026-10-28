@@ -10709,6 +10709,412 @@
         "title": "WritTearResult",
         "type": "object"
       }
+    },
+    {
+      "name": "gatehouse.chat.list",
+      "owner": "Gatehouse live reads",
+      "params": {
+        "$defs": {
+          "GatehouseReadCursor": {
+            "description": "Opaque endpoint-scoped position in the append-only decision ledger. Clients\nreturn it unchanged; an absent cursor starts at the beginning of history.",
+            "pattern": "^(chat|history):(0|[1-9][0-9]{0,15})$(?![\\s\\S])",
+            "type": "string"
+          },
+          "GatehouseReadLimit": {
+            "description": "Above-maximum limits are refused, never silently expanded or clamped.",
+            "format": "uint32",
+            "maximum": 100,
+            "minimum": 1,
+            "type": "integer"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Read an append-ordered ledger window with a required limit of 1 through 100.\nLegacy ledger-only decisions and retention-removed metadata are counted as\nunavailable in the response; their verdicts or provenance are never fabricated.\nFollow the returned cursor even when the page contains no available items.",
+        "properties": {
+          "cursor": {
+            "$ref": "#/$defs/GatehouseReadCursor"
+          },
+          "limit": {
+            "$ref": "#/$defs/GatehouseReadLimit"
+          }
+        },
+        "required": [
+          "limit"
+        ],
+        "title": "GatehouseReadParams",
+        "type": "object"
+      },
+      "result": {
+        "$defs": {
+          "DecisionId": {
+            "pattern": "^[0-7][0-9A-HJKMNP-TV-Z]{25}$(?![\\s\\S])",
+            "type": "string"
+          },
+          "DecisionKind": {
+            "enum": [
+              "held",
+              "released",
+              "removed",
+              "warned",
+              "timed_out",
+              "banned",
+              "ban_pending",
+              "mode_changed",
+              "undone",
+              "would_act"
+            ],
+            "type": "string"
+          },
+          "GatehouseChatItem": {
+            "additionalProperties": false,
+            "properties": {
+              "decision": {
+                "$ref": "#/$defs/GatehouseReadDecision"
+              },
+              "message": {
+                "$ref": "#/$defs/RecordedMessage"
+              },
+              "provenance": {
+                "$ref": "#/$defs/GatehouseProvenance"
+              }
+            },
+            "required": [
+              "message",
+              "decision",
+              "provenance"
+            ],
+            "type": "object"
+          },
+          "GatehouseProvenance": {
+            "enum": [
+              "live",
+              "simulated"
+            ],
+            "type": "string"
+          },
+          "GatehouseReadCursor": {
+            "description": "Opaque endpoint-scoped position in the append-only decision ledger. Clients\nreturn it unchanged; an absent cursor starts at the beginning of history.",
+            "pattern": "^(chat|history):(0|[1-9][0-9]{0,15})$(?![\\s\\S])",
+            "type": "string"
+          },
+          "GatehouseReadDecision": {
+            "additionalProperties": false,
+            "description": "Retained audit metadata, without message text or action intents. Pending ban\nreview still uses its existing human-review door and original-message checks.",
+            "properties": {
+              "at": {
+                "$ref": "#/$defs/Timestamp"
+              },
+              "decision_id": {
+                "$ref": "#/$defs/DecisionId"
+              },
+              "kind": {
+                "$ref": "#/$defs/DecisionKind"
+              },
+              "message_id": {
+                "$ref": "#/$defs/MessageId"
+              },
+              "operator": {
+                "$ref": "#/$defs/Operator"
+              },
+              "reason_codes": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "rule_id": {
+                "$ref": "#/$defs/RuleId"
+              },
+              "verdict": {
+                "$ref": "#/$defs/Verdict"
+              }
+            },
+            "required": [
+              "decision_id",
+              "message_id",
+              "kind",
+              "verdict",
+              "operator",
+              "at",
+              "reason_codes"
+            ],
+            "type": "object"
+          },
+          "MessageId": {
+            "pattern": "^[A-Za-z0-9_-]+$(?![\\s\\S])",
+            "type": "string"
+          },
+          "Operator": {
+            "enum": [
+              "human",
+              "ai",
+              "ai_proposes"
+            ],
+            "type": "string"
+          },
+          "RecordedMessage": {
+            "additionalProperties": false,
+            "properties": {
+              "at": {
+                "$ref": "#/$defs/Timestamp"
+              },
+              "message_id": {
+                "$ref": "#/$defs/MessageId"
+              },
+              "text": {
+                "type": "string"
+              },
+              "user_id": {
+                "$ref": "#/$defs/TwitchUserId"
+              }
+            },
+            "required": [
+              "message_id",
+              "user_id",
+              "at",
+              "text"
+            ],
+            "type": "object"
+          },
+          "RuleId": {
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$(?![\\s\\S])",
+            "type": "string"
+          },
+          "Timestamp": {
+            "format": "date-time",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?Z$(?![\\s\\S])",
+            "type": "string"
+          },
+          "TwitchUserId": {
+            "pattern": "^[1-9][0-9]{0,31}$(?![\\s\\S])",
+            "type": "string"
+          },
+          "Verdict": {
+            "enum": [
+              "pass",
+              "hold",
+              "bar"
+            ],
+            "type": "string"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "A page scans at most `limit` ledger entries in append order. A page\nmay be empty and still have a next cursor. unavailable_count counts\nlegacy ledger-only decisions and entries missing required metadata\nor text after retention/erasure; verdicts or provenance are never\nfabricated for these unavailable rows. Follow next_cursor\nuntil absent, rather than stopping on an empty items array.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/$defs/GatehouseChatItem"
+            },
+            "maxItems": 100,
+            "type": "array"
+          },
+          "next_cursor": {
+            "$ref": "#/$defs/GatehouseReadCursor"
+          },
+          "unavailable_count": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "unavailable_count"
+        ],
+        "title": "GatehouseChatResult",
+        "type": "object"
+      }
+    },
+    {
+      "name": "gatehouse.history.list",
+      "owner": "Gatehouse live reads",
+      "params": {
+        "$defs": {
+          "GatehouseReadCursor": {
+            "description": "Opaque endpoint-scoped position in the append-only decision ledger. Clients\nreturn it unchanged; an absent cursor starts at the beginning of history.",
+            "pattern": "^(chat|history):(0|[1-9][0-9]{0,15})$(?![\\s\\S])",
+            "type": "string"
+          },
+          "GatehouseReadLimit": {
+            "description": "Above-maximum limits are refused, never silently expanded or clamped.",
+            "format": "uint32",
+            "maximum": 100,
+            "minimum": 1,
+            "type": "integer"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Read an append-ordered ledger window with a required limit of 1 through 100.\nLegacy ledger-only decisions and retention-removed metadata are counted as\nunavailable in the response; their verdicts or provenance are never fabricated.\nFollow the returned cursor even when the page contains no available items.",
+        "properties": {
+          "cursor": {
+            "$ref": "#/$defs/GatehouseReadCursor"
+          },
+          "limit": {
+            "$ref": "#/$defs/GatehouseReadLimit"
+          }
+        },
+        "required": [
+          "limit"
+        ],
+        "title": "GatehouseReadParams",
+        "type": "object"
+      },
+      "result": {
+        "$defs": {
+          "DecisionId": {
+            "pattern": "^[0-7][0-9A-HJKMNP-TV-Z]{25}$(?![\\s\\S])",
+            "type": "string"
+          },
+          "DecisionKind": {
+            "enum": [
+              "held",
+              "released",
+              "removed",
+              "warned",
+              "timed_out",
+              "banned",
+              "ban_pending",
+              "mode_changed",
+              "undone",
+              "would_act"
+            ],
+            "type": "string"
+          },
+          "GatehouseHistoryItem": {
+            "additionalProperties": false,
+            "properties": {
+              "decision": {
+                "$ref": "#/$defs/GatehouseReadDecision"
+              },
+              "provenance": {
+                "$ref": "#/$defs/GatehouseProvenance"
+              },
+              "recorded_at": {
+                "$ref": "#/$defs/Timestamp"
+              }
+            },
+            "required": [
+              "decision",
+              "recorded_at",
+              "provenance"
+            ],
+            "type": "object"
+          },
+          "GatehouseProvenance": {
+            "enum": [
+              "live",
+              "simulated"
+            ],
+            "type": "string"
+          },
+          "GatehouseReadCursor": {
+            "description": "Opaque endpoint-scoped position in the append-only decision ledger. Clients\nreturn it unchanged; an absent cursor starts at the beginning of history.",
+            "pattern": "^(chat|history):(0|[1-9][0-9]{0,15})$(?![\\s\\S])",
+            "type": "string"
+          },
+          "GatehouseReadDecision": {
+            "additionalProperties": false,
+            "description": "Retained audit metadata, without message text or action intents. Pending ban\nreview still uses its existing human-review door and original-message checks.",
+            "properties": {
+              "at": {
+                "$ref": "#/$defs/Timestamp"
+              },
+              "decision_id": {
+                "$ref": "#/$defs/DecisionId"
+              },
+              "kind": {
+                "$ref": "#/$defs/DecisionKind"
+              },
+              "message_id": {
+                "$ref": "#/$defs/MessageId"
+              },
+              "operator": {
+                "$ref": "#/$defs/Operator"
+              },
+              "reason_codes": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "rule_id": {
+                "$ref": "#/$defs/RuleId"
+              },
+              "verdict": {
+                "$ref": "#/$defs/Verdict"
+              }
+            },
+            "required": [
+              "decision_id",
+              "message_id",
+              "kind",
+              "verdict",
+              "operator",
+              "at",
+              "reason_codes"
+            ],
+            "type": "object"
+          },
+          "MessageId": {
+            "pattern": "^[A-Za-z0-9_-]+$(?![\\s\\S])",
+            "type": "string"
+          },
+          "Operator": {
+            "enum": [
+              "human",
+              "ai",
+              "ai_proposes"
+            ],
+            "type": "string"
+          },
+          "RuleId": {
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$(?![\\s\\S])",
+            "type": "string"
+          },
+          "Timestamp": {
+            "format": "date-time",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?Z$(?![\\s\\S])",
+            "type": "string"
+          },
+          "Verdict": {
+            "enum": [
+              "pass",
+              "hold",
+              "bar"
+            ],
+            "type": "string"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "A page scans at most `limit` ledger entries in append order. A page\nmay be empty and still have a next cursor. unavailable_count counts\nlegacy ledger-only decisions and entries missing required metadata\nor text after retention/erasure; verdicts or provenance are never\nfabricated for these unavailable rows. Follow next_cursor\nuntil absent, rather than stopping on an empty items array.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/$defs/GatehouseHistoryItem"
+            },
+            "maxItems": 100,
+            "type": "array"
+          },
+          "next_cursor": {
+            "$ref": "#/$defs/GatehouseReadCursor"
+          },
+          "unavailable_count": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "unavailable_count"
+        ],
+        "title": "GatehouseHistoryResult",
+        "type": "object"
+      }
     }
   ],
   "overlay_push_events": {
@@ -14417,6 +14823,34 @@
           ],
           "type": "object"
         },
+        "GatehouseReadCursor": {
+          "description": "Opaque endpoint-scoped position in the append-only decision ledger. Clients\nreturn it unchanged; an absent cursor starts at the beginning of history.",
+          "pattern": "^(chat|history):(0|[1-9][0-9]{0,15})$(?![\\s\\S])",
+          "type": "string"
+        },
+        "GatehouseReadLimit": {
+          "description": "Above-maximum limits are refused, never silently expanded or clamped.",
+          "format": "uint32",
+          "maximum": 100,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "GatehouseReadParams": {
+          "additionalProperties": false,
+          "description": "Read an append-ordered ledger window with a required limit of 1 through 100.\nLegacy ledger-only decisions and retention-removed metadata are counted as\nunavailable in the response; their verdicts or provenance are never fabricated.\nFollow the returned cursor even when the page contains no available items.",
+          "properties": {
+            "cursor": {
+              "$ref": "#/$defs/GatehouseReadCursor"
+            },
+            "limit": {
+              "$ref": "#/$defs/GatehouseReadLimit"
+            }
+          },
+          "required": [
+            "limit"
+          ],
+          "type": "object"
+        },
         "GatehouseText": {
           "description": "Nonempty opaque text. Recording references are service-owned handles, not paths.",
           "minLength": 1,
@@ -16246,6 +16680,40 @@
             },
             "params": {
               "$ref": "#/$defs/WritTearParams"
+            }
+          },
+          "required": [
+            "method",
+            "params"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "method": {
+              "const": "gatehouse.chat.list",
+              "type": "string"
+            },
+            "params": {
+              "$ref": "#/$defs/GatehouseReadParams"
+            }
+          },
+          "required": [
+            "method",
+            "params"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "method": {
+              "const": "gatehouse.history.list",
+              "type": "string"
+            },
+            "params": {
+              "$ref": "#/$defs/GatehouseReadParams"
             }
           },
           "required": [

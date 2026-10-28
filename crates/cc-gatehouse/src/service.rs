@@ -30,6 +30,12 @@ pub struct Gatehouse {
 }
 
 impl Gatehouse {
+    /// Borrow the existing store for read-only projections while the host holds
+    /// its service mutex. The sole writer and its directory lock stay here.
+    pub fn store(&self) -> &Store {
+        &self.store
+    }
+
     pub fn open(root: impl AsRef<Path>) -> Result<Self> {
         Self::with_clock(root, Arc::new(SystemClock))
     }

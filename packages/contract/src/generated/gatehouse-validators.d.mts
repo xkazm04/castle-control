@@ -22,3 +22,7 @@ export const p24: ValidateFunction<RpcMethods["gatehouse.drill.diff"]['params']>
 export const r24: ValidateFunction<RpcMethods["gatehouse.drill.diff"]['result']>;
 export const p25: ValidateFunction<RpcMethods["gatehouse.recording.import"]['params']>;
 export const r25: ValidateFunction<RpcMethods["gatehouse.recording.import"]['result']>;
+export const p47: ValidateFunction<RpcMethods["gatehouse.chat.list"]['params']>;
+export const r47: ValidateFunction<RpcMethods["gatehouse.chat.list"]['result']>;
+export const p48: ValidateFunction<RpcMethods["gatehouse.history.list"]['params']>;
+export const r48: ValidateFunction<RpcMethods["gatehouse.history.list"]['result']>;

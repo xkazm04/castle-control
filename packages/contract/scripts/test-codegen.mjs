@@ -37,9 +37,9 @@ assert(files['beacons-validators.d.mts'], 'Beacons validators retain typed decla
 assert(files['beacons-validation.ts'].includes("from './beacons-validators.mjs'"));
 assert(!files['beacons-validation.ts'].includes("from './validators.mjs'"));
 const gatehouseNames = ['rules.list', 'rules.upsert', 'ban.confirm', 'ban.dismiss', 'decision.undo',
-  'petition.resolve', 'recording.import', 'drill.run', 'drill.diff', 'consensus.get'].map(name => `gatehouse.${name}`);
+  'petition.resolve', 'recording.import', 'drill.run', 'drill.diff', 'consensus.get', 'chat.list', 'history.list'].map(name => `gatehouse.${name}`);
 const gatehouseMethods = schema.methods.map((method, index) => ({ ...method, index })).filter(method => gatehouseNames.includes(method.name));
-assert.equal(gatehouseMethods.length, 10);
+assert.equal(gatehouseMethods.length, 12);
 assert(files['gatehouse-validators.mjs'], 'Gatehouse validators have a separate generated module');
 assert(files['gatehouse-validators.d.mts'], 'Gatehouse validators retain typed declarations');
 assert(files['gatehouse-validation.ts'].includes("from './gatehouse-validators.mjs'"));
@@ -191,6 +191,8 @@ const replay = { label: 'simulated', source: 'simulated-recording', instrument_h
   summary: { passes: 0, states: { acted: 0, not_provoked: 0, not_evaluable: 0, judge_pending: 0, judge_void: 0, engine_failed: 0 },
     over_moderation: { evaluated: 0, false_positives: 0 } } };
 const positive = new Map([
+  ['gatehouse.chat.list', [{ limit: 100 }, { items: [], unavailable_count: 0 }]],
+  ['gatehouse.history.list', [{ limit: 100 }, { items: [], unavailable_count: 0 }]],
   ['gatehouse.rules.list', [{}, { rules: [rule] }]], ['gatehouse.rules.upsert', [{ rule }, rule]],
   ...['ban.confirm', 'ban.dismiss', 'decision.undo'].map(name => [`gatehouse.${name}`, [{ decision_id: decision.decision_id }, decision]]),
   ['gatehouse.petition.resolve', [{ decision_id: decision.decision_id, outcome: 'overturned' }, decision]],

@@ -12,6 +12,8 @@ use tokio::sync::Mutex;
 
 mod governor;
 mod live;
+mod read_store;
+mod reads;
 use governor::Service;
 
 pub struct GatehouseModule {
@@ -33,6 +35,8 @@ impl GatehouseModule {
         "gatehouse.drill.diff",
         "gatehouse.consensus.get",
         "gatehouse.lease.end",
+        "gatehouse.chat.list",
+        "gatehouse.history.list",
     ];
 
     /// The caller owns the persistence root and clock. No live adapter is started;
@@ -75,6 +79,10 @@ impl GatehouseModule {
         }
         let gate = &mut service.gate;
         match request {
+            RpcRequest::ChatList(params) => encode(reads::chat(gate.store(), params.clone())?),
+            RpcRequest::HistoryList(params) => {
+                encode(reads::history(gate.store(), params.clone())?)
+            }
             RpcRequest::RulesList(params) => encode(gate.rules_list(params.clone())?),
             RpcRequest::RulesUpsert(params) => encode(gate.rules_upsert(params.clone())?),
             RpcRequest::RulesSetMode(params) => encode(gate.rules_set_mode(params.clone())?),

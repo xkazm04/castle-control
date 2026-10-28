@@ -76,7 +76,9 @@ methods! {
     TurnRun => ("maproom.turn.run", Pending, Pending, "WP 4.3"),
     Ask => ("steward.ask", AskParams, AskResult, "WP 5.1"),
     WritSeal => ("steward.writ.seal", WritSealParams, WritSealResult, "WP 5.1"),
-    WritTear => ("steward.writ.tear", WritTearParams, WritTearResult, "WP 5.1")
+    WritTear => ("steward.writ.tear", WritTearParams, WritTearResult, "WP 5.1"),
+    ChatList => ("gatehouse.chat.list", GatehouseReadParams, GatehouseChatResult, "Gatehouse live reads"),
+    HistoryList => ("gatehouse.history.list", GatehouseReadParams, GatehouseHistoryResult, "Gatehouse live reads")
 }
 
 /// Single parse door for requests, including unknown-method and shape errors.

@@ -131,6 +131,8 @@ impl Registry {
                 services,
             }))
             .expect("built-in method is declared and unique");
+        // Gatehouse's read methods follow the same lazy module registration as
+        // its existing methods, sharing the service mutex and sole Store owner.
         for module in OfflineModule::pair(offline.clone()) {
             registry
                 .register(Arc::new(module))

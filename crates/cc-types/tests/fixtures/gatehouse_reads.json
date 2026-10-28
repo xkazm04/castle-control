@@ -1,0 +1,18 @@
+{
+  "note": "Generated simulated data; live labels exercise provenance serialization only.",
+  "decision": {
+    "decision_id": "01ARZ3NDEKTSV4RRFFQ69G5FAV",
+    "message_id": "simulated-read-message",
+    "kind": "would_act",
+    "verdict": "pass",
+    "operator": "ai",
+    "at": "2026-10-28T12:00:00Z",
+    "reason_codes": ["simulated_pattern_match"]
+  },
+  "message": {
+    "message_id": "simulated-read-message",
+    "user_id": "123",
+    "at": "2026-10-28T12:00:00Z",
+    "text": "Generated simulated chat fixture"
+  }
+}
