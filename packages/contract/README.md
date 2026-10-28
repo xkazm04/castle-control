@@ -8,6 +8,8 @@ Only `src/door.mjs` parses JSON. Unknown keys and explicit null are refused;
 absent optional keys are omitted. UTC timestamps are validated as calendar dates.
 Numeric counters are safe JS integers; Twitch IDs, seeds and rounds stay strings.
 
+`./steward` lazily exports `stewardAsk`, `stewardWritSeal`, `stewardWritTear` (params/results) and `stewardEventPayload` (`steward.writ`), matching the root validators.
+
 ## Beacons render snapshot boundary (WP 3.2 contract delivery, 2026-10-27)
 
 The overlay SSE event **`beacons.render.snapshot`** carries a
@@ -129,6 +131,32 @@ delivery and the Director must run the ordinary **`pnpm gate`**, recursive
 workspace checks and desktop production build in its verification environment.
 
 ## Steward writ boundary (WP 5.1 contract delivery)
+
+### Lazy Steward validator subpath (2026-10-28)
+
+Re-delivered the held `0b6a16b` change onto base `6db28db`, which did not
+expose `@castle-control/contract/steward`. The public subpath compiles the three
+existing method handles and `stewardEventPayload` independently of the eager
+root registry. It adds no wire identifier or schema change. The root also
+exports the same handles for compatibility; generated validators stay pure
+and tree-shakeable.
+
+Validation in the builder worktree:
+
+| Check | Evidence |
+| --- | --- |
+| Red/green | `steward-subpath.test.ts` first failed on its missing generated module, then all five tests passed; they compare independent eager/lazy validators against simulated fixtures |
+| Schema/codegen | Generated from `src/generated/contract.schema.json` using the supported `--schema` input; all 19 existing generated artifacts remain unchanged, including wire schemas, types and method metadata; deterministic generation/drift/parity assertions pass for all 22 artifacts |
+| Offline verifier | The fingerprint test failed after adding the package export; `pnpm --config.verify-deps-before-run=false --filter @castle-control/verifier-web generate` regenerated `index.html`; only its fingerprint comment changed, and all 17 tests pass, including no remote resources |
+| Full workspace tests | `pnpm --config.verify-deps-before-run=false --workspace-concurrency=1 -r test` passed all six packages: 764 tests in 74 files, plus contract codegen assertions |
+| Scoped checks | Individual `pnpm --config.verify-deps-before-run=false --filter <package> typecheck` and `lint` passed for contract and verifier-web; lint also passed global boundaries, hygiene, file-cap and secrets checks |
+| Bundle budget | In-memory desktop production builds with HEAD root exports and worktree root exports both produced 382,467 / 393,216 first-load JS/CSS bytes across three files; all 49 output artifact names and SHA-256 hashes match; no app files were written |
+
+The default concurrent recursive pnpm invocation failed before running checks
+with the sandbox's existing `spawn EPERM` pipe limitation. Running the same
+complete recursive test command with workspace concurrency one uses inherited
+stdio and passes. No gate, sandbox policy, dependency install or bundle budget
+was changed. No Rust source changed; the Director owns the final merge gate.
 
 Owner ruling, 2026-10-28 (option 1): bind the three existing Steward RPC methods to their existing typed structs before AI-11 or createSteward integration; SIMULATED remains internal storage metadata, absent from the wire.
 

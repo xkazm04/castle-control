@@ -9,6 +9,7 @@
     "./gatehouse": "./src/generated/gatehouse-validation.ts",
     "./beacons": "./src/generated/beacons-validation.ts",
     "./beacons-render": "./src/generated/beacons-render-validation.ts",
+    "./steward": "./src/generated/steward-validation.ts",
     "./door": {
       "types": "./src/door.d.mts",
       "import": "./src/door.mjs"

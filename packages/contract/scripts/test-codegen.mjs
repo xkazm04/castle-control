@@ -13,7 +13,15 @@ const schema = parseJson(readFileSync(join(output, 'contract.schema.json'), 'utf
 delete schema.$comment;
 const files = artifacts(schema);
 assert.deepEqual(files, artifacts(schema), 'generation must be byte deterministic');
-assert.equal(Object.keys(files).length, 19);
+assert.equal(Object.keys(files).length, 22);
+const stewardNames = ['steward.ask', 'steward.writ.seal', 'steward.writ.tear'];
+const stewardMethods = schema.methods.map((method, index) => ({ ...method, index })).filter(method => stewardNames.includes(method.name));
+assert.equal(stewardMethods.length, 3);
+assert(files['steward-validators.mjs'], 'Steward validators compile independently');
+assert(files['steward-validators.d.mts'].includes('ValidateFunction<StewardEventPayload>'));
+assert(files['steward-validation.ts'].includes("from './steward-validators.mjs'"));
+assert(!files['steward-validation.ts'].includes("from './validators.mjs'"));
+assert(files['steward-validation.ts'].includes('export const stewardEventPayload = compiled.stewardEventPayload;'));
 assert.equal(schema.overlay_push_events['beacons.render.snapshot'], 'BeaconsRenderSnapshot');
 assert(files['beacons-render-validators.mjs'], 'overlay render validators compile independently');
 assert(files['beacons-render-validators.d.mts'], 'overlay render shape retains typed declarations');
@@ -48,6 +56,7 @@ assert.equal(manifest.exports['./lots'], './src/generated/lots-validation.ts', '
 assert.equal(manifest.exports['./gatehouse'], './src/generated/gatehouse-validation.ts');
 assert.equal(manifest.exports['./beacons'], './src/generated/beacons-validation.ts');
 assert.equal(manifest.exports['./beacons-render'], './src/generated/beacons-render-validation.ts');
+assert.equal(manifest.exports['./steward'], './src/generated/steward-validation.ts');
 assert(!/\brequire\s*\(/.test(files['validators.mjs']), 'standalone validators must run as browser ESM');
 assert.deepEqual(differences(files), []);
 assert.throws(() => artifacts({ methods: [], event_kinds: [], error_codes: [] }), /empty/);
@@ -101,6 +110,15 @@ const compiled = await import(validatorUrl(files));
 const lots = await import(validatorUrl(files, 'lots-validators.mjs'));
 const gatehouse = await import(validatorUrl(files, 'gatehouse-validators.mjs'));
 const beacons = await import(validatorUrl(files, 'beacons-validators.mjs'));
+const steward = await import(validatorUrl(files, 'steward-validators.mjs'));
+assert.deepEqual(Object.keys(steward).sort(), [
+  ...stewardMethods.flatMap(({ index }) => [`p${index}`, `r${index}`]), 'stewardEventPayload',
+].sort());
+assert(!/\b(?:import |require\s*\()/.test(files['steward-validators.mjs']), 'Steward stays standalone browser ESM');
+assert(!files['validators.mjs'].includes('steward-validators'), 'root registry stays independent');
+for (const name of Object.keys(steward)) {
+  assert.notEqual(steward[name], compiled[name], 'Steward validators must be independent of the eager module');
+}
 assert.deepEqual(Object.keys(beacons).sort(), beaconsMethods.flatMap(({ index }) => [`p${index}`, `r${index}`]).sort());
 assert.equal(beaconsMethods.length, (files['beacons-validation.ts'].match(/export const beacons/g) ?? []).length);
 assert(!/\b(?:import |require\s*\()/.test(files['beacons-validators.mjs']), 'Beacons stays standalone browser ESM');

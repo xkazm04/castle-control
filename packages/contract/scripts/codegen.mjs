@@ -165,7 +165,8 @@ function validators(schema) {
   const formatSource = Object.entries(formats).map(([name, format]) =>
     `${JSON.stringify(name)}: ${typeof format === 'function' ? format.toString()
       : `{ type: 'number', validate: ${format.validate.toString()} }`}`).join(',');
-  const exports = {}, lotsExports = {}, gatehouseExports = {}, beaconsExports = {};
+  const exports = {}, lotsExports = {}, gatehouseExports = {}, beaconsExports = {}, stewardExports = {};
+  const stewardNames = new Set(['steward.ask', 'steward.writ.seal', 'steward.writ.tear']);
   const beaconsNames = new Set(['visual.list', 'visual.upsert', 'curve.set', 'simulate', 'source.url', 'art.status', 'art.generate'].map(name => `beacons.${name}`));
   const gatehouseNames = new Set(['rules.list', 'rules.upsert', 'ban.confirm', 'ban.dismiss', 'decision.undo',
     'petition.resolve', 'recording.import', 'drill.run', 'drill.diff', 'consensus.get'].map(name => `gatehouse.${name}`));
@@ -177,6 +178,8 @@ function validators(schema) {
   const gatehouseDeclarations = [banner, "import type { ValidateFunction } from 'ajv';",
     "import type { RpcMethods } from './types.js';"];
   const beaconsDeclarations = [...gatehouseDeclarations];
+  const stewardDeclarations = [banner, "import type { ValidateFunction } from 'ajv';",
+    "import type { RpcMethods, StewardEventPayload } from './types.js';"];
   function entry(name, shape, type, lots = false) {
     exports[name] = shared.reference(shape);
     const declaration = `export const ${name}: ValidateFunction<${type}>;`;
@@ -198,6 +201,12 @@ function validators(schema) {
         beaconsDeclarations.push(`export const ${prefix}${i}: ValidateFunction<RpcMethods[${JSON.stringify(m.name)}]['${type}']>;`);
       }
     }
+    if (stewardNames.has(m.name)) {
+      for (const [prefix, type] of [['p', 'params'], ['r', 'result']]) {
+        stewardExports[`${prefix}${i}`] = exports[`${prefix}${i}`];
+        stewardDeclarations.push(`export const ${prefix}${i}: ValidateFunction<RpcMethods[${JSON.stringify(m.name)}]['${type}']>;`);
+      }
+    }
   });
   entry('event', schema.types.StreamEvent, 'StreamEvent');
   entry('lotsEvent', schema.types.LotsEventPayload, 'LotsEventPayload', true);
@@ -209,6 +218,8 @@ function validators(schema) {
     entry(name[0].toLowerCase() + name.slice(1), schema.types[name], name);
   }
   entry('error', schema.types.ErrorEnvelope, 'ErrorEnvelope');
+  stewardExports.stewardEventPayload = exports.stewardEventPayload;
+  stewardDeclarations.push('export const stewardEventPayload: ValidateFunction<StewardEventPayload>;');
   // Independent roots: render validation never enters the eager RPC registry.
   const renderEvent = Object.entries(schema.overlay_push_events ?? {})
     .find(([, type]) => type === 'BeaconsRenderSnapshot')?.[0];
@@ -216,7 +227,7 @@ function validators(schema) {
   const renderExports = { shape: shared.reference(schema.types.BeaconsRenderSnapshot) };
   ajv.addSchema(shared.document());
   const map = (prefix) => schema.methods.map((m, i) => `[${JSON.stringify(m.name)}, compiled.${prefix}${i}]`).join(',');
-  const methods = [], lotsMethods = [], gatehouseMethods = [], beaconsMethods = [];
+  const methods = [], lotsMethods = [], gatehouseMethods = [], beaconsMethods = [], stewardMethods = [];
   schema.methods.forEach((m, i) => {
     const name = m.name.replace(/\.([a-z])/g, (_, letter) => letter.toUpperCase());
     const declaration = `export const ${name} = { method: ${JSON.stringify(m.name)} as const, params: compiled.p${i}, result: compiled.r${i} };`;
@@ -224,6 +235,7 @@ function validators(schema) {
     if (m.name.startsWith('lots.')) lotsMethods.push({ name, declaration });
     if (gatehouseNames.has(m.name)) gatehouseMethods.push(declaration);
     if (beaconsNames.has(m.name)) beaconsMethods.push(declaration);
+    if (stewardNames.has(m.name)) stewardMethods.push(declaration);
   });
   return {
     'beacons-render-validators.mjs': compileValidators(ajv, renderExports, formatSource),
@@ -264,6 +276,10 @@ function validators(schema) {
     'beacons-validators.d.mts': `${beaconsDeclarations.join('\n')}\n`,
     'beacons-validation.ts': `${banner}import * as compiled from './beacons-validators.mjs';\n`
       + `${beaconsMethods.join('\n')}\n`,
+    'steward-validators.mjs': compileValidators(ajv, stewardExports, formatSource),
+    'steward-validators.d.mts': `${stewardDeclarations.join('\n')}\n`,
+    'steward-validation.ts': `${banner}import * as compiled from './steward-validators.mjs';\n`
+      + `${stewardMethods.join('\n')}\nexport const stewardEventPayload = compiled.stewardEventPayload;\n`,
   };
 }
 
