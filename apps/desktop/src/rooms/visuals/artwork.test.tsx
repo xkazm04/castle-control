@@ -143,12 +143,31 @@ for (const item of cases) {
   });
 }
 
-test('hero aspect consumes the geometry ratio and cancels the bottom-origin flame scale only in heroes', () => {
+test('hero flame retains the blaze transform at partial intensity', () => {
+  const altar = preview.visuals.find(item => item.visual.design_id === 'altar');
+  if (!altar) throw new Error('Missing simulated altar');
+  const html = renderToStaticMarkup(<BeaconArtwork item={{ ...altar, intensity: 0.39 }} hero />);
+  expect(attribute(html, 'class')).toContain('visuals-room-art-hero');
+  expect(attribute(html, 'style')).toMatch(/--room-blaze:0\.39(?:;|$)/);
+  expect(html).toMatch(/<path\b[^>]*class="visuals-room-fire"/);
+  expect(style).not.toMatch(/\.visuals-room-art-hero[^{}]*\.visuals-room-fire\s*\{[^}]*\btransform:\s*none\b/);
+  const fireRule = style.match(/(?:^|\})\s*\.visuals-room-fire\s*\{([^}]+)\}/)?.[1];
+  expect(fireRule).toMatch(/transform-origin:\s*bottom;/);
+  expect(fireRule).toMatch(/\btransform:\s*scaleY\(calc\(\.3\s*\+\s*var\(--room-blaze\)\s*\*\s*\.7\)\)/);
+});
+
+test('hero svg caps its height with an existing space token while preserving its aspect', () => {
+  const heroRule = style.match(/\.visuals-room-art-hero svg\s*\{([^}]+)\}/)?.[1];
+  expect(heroRule).toMatch(/max-height:\s*calc\(var\(--space-56\)\s*\*\s*6\)/);
+  expect(heroRule).toMatch(/(?:^|;)\s*width:\s*auto;/);
+  expect(heroRule).toMatch(/max-width:\s*100%;/);
+  expect(heroRule).toMatch(/aspect-ratio:\s*var\(--room-art-aspect\)/);
+});
+
+test('hero aspect consumes the geometry ratio and non-flame shapes remain untransformed', () => {
   expect(style).toMatch(/\.visuals-room-art-hero svg\s*\{[^}]*aspect-ratio:\s*var\(--room-art-aspect\)/);
-  expect(style).toMatch(/\.visuals-room-art-hero \.visuals-room-fire\s*\{\s*transform:\s*none;?\s*\}/);
-  expect(style).toMatch(/\.visuals-room-fire\s*\{[^}]*transform-origin:\s*bottom;[^}]*transform:\s*scaleY/);
-  // These rules justify measuring untransformed geometry; a future transform
-  // needs to be incorporated into the bounds calculation instead of silently clipping.
+  // Only the flame scales, within its full-intensity painted bounds. The other
+  // shapes keep those bounds at every intensity.
   for (const name of ['stone', 'fire-core', 'glow', 'cutout']) {
     const rule = style.match(new RegExp(`\\.visuals-room-${name}\\s*\\{([^}]+)\\}`))?.[1];
     expect(rule).toBeDefined();

@@ -1,7 +1,7 @@
 # Beacons detail room (AI-6)
 
 Hero geometry correction: altar bounds (90,31)–(270,237), camera-frame/border/fallback (20,30)–(340,210); viewBoxes add six units per edge and supply matching aspect ratios.
-Hero flames now retain full height (blaze still controls opacity); thumbnails keep their original viewport and scaling. `artwork.test.tsx` proves relative-path/cubic bounds and margins at zero, fixture and full blaze without a browser.
+Hero flames keep the blaze scaling used by thumbnails; the hero height is capped at space-56 x 6, preserving its aspect ratio. `artwork.test.tsx` checks partial blaze, the token-based cap and unchanged geometry without a browser.
 
 ## Aspect-sized, top-aligned artwork hero, 2026-10-28
 
