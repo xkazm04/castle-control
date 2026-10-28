@@ -1,21 +1,27 @@
 # Beacons detail room (AI-6)
 
-## Content-sized artwork hero, 2026-10-28
+## Aspect-sized, top-aligned artwork hero, 2026-10-28
 
-Removed `.visuals-room-art-hero`'s six-`space-56` minimum height so absent or
-small artwork no longer sits inside a reserved tall band. Grid centering remains,
-and the SVG retains its existing six-`space-56` maximum height: artwork still
-centres without forcing the wrapper to that height. No markup or test assertions
-change. The Director checks the expected visual effect at 1440x900 and 1280x800
-after integration; no browser was launched for this slice.
+The Director's DOM probe located the upper band inside the SVG viewport, not
+in a minimum-height wrapper. Removing the minimum height in `25385be` did not
+close that band. The hero now uses `align-content: start` instead of vertical
+centering. Its SVG keeps `width: 100%` and `height: auto`, adds the explicit
+`360 / 240` aspect ratio, and replaces the six-`space-56` height cap with a
+nine-`space-56` width cap. At that ratio the maximum artwork height is unchanged,
+but a narrower column reduces both dimensions together rather than leaving a
+tall, letterboxed viewport. Hero-only `preserveAspectRatio="xMidYMin meet"`
+anchors any remaining fit space below the artwork, close under the caption.
 
-Source-check evidence for this slice: the unchanged `lottery/structure.test.tsx`
-and `visuals/room.test.tsx` pass all 7 tests together. `git diff --check`, Rust
-format and workspace Clippy pass. Boundary, hygiene and file-cap checks inventory
-592 code files; secrets scanning inventories 740 files and passes. Recursive
-pnpm typecheck and lint fail in their launcher with `spawn EPERM`, before package
-checks run. Base `docs/PLAN.md` records the same failure; the launchers are
-unchanged. App Master must rerun those gates on its verification host.
+The entire `0 0 360 240` viewBox, altar/frame/default paths, intensity transforms,
+labels and controls stay intact: no crop or cover scaling can cut off a design.
+These are source-based expectations. No browser or screenshot measurement was
+attempted; the Director checks the result at 1440x900 and 1280x800 after merge.
+
+Verification for this slice: desktop typecheck and lint pass (93 TS/TSX files).
+Lint also checks boundaries, hygiene and the file cap across 592 code files,
+and secrets across 740 files. Narrowed Vitest over `src/rooms/visuals` and
+`src/rooms/lottery` passes 32 tests in six files. No install, git write, Rust
+gate, full workspace suite or live test was run. App Master owns the commit.
 
 ## Polish (line 4), 2026-10-28
 

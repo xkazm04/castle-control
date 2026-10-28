@@ -1,22 +1,26 @@
 # Lot Chamber room
 
-## Content-sized stage, 2026-10-28
+## Proof and fairness under the writ, 2026-10-28
 
-Removed `.lottery-stage`'s six-`space-56` minimum height so short or idle
-workbench content no longer reserves an empty band below it. The replay rule
-keeps its border, padding and background treatment; its redundant minimum-height
-reset is removed because both modes now use content height. The core inset is
-unchanged. No markup or test assertions change. The Director checks the expected
-visual effect at 1440x900 and 1280x800 after integration; no browser was launched
-for this slice.
+The Director's DOM probe found unused space in the left column while the proof
+and fairness sections sat below the urn, off-screen in the right column.
+Removing the stage minimum height in `25385be` did not close that band. The
+workbench now contains the writ stage, guardrails and notices, saved proof with
+both existing recompute paths, then the visible fairness steps. Moving these
+sections into the left column uses its spare space and removes their height
+from the right column before lookup and sealing. Their existing `space-20` top
+margins, divider rules and `space-12` insets still separate the sections, so no
+CSS change is needed. The urn figure, cooldown/pool line, lookup and supplied
+seal slot remain in the details column. All handlers, labels and marks remain.
 
-Source-check evidence for this slice: the unchanged `lottery/structure.test.tsx`
-and `visuals/room.test.tsx` pass all 7 tests together. `git diff --check`, Rust
-format and workspace Clippy pass. Boundary, hygiene and file-cap checks inventory
-592 code files; secrets scanning inventories 740 files and passes. Recursive
-pnpm typecheck and lint fail in their launcher with `spawn EPERM`, before package
-checks run. Base `docs/PLAN.md` records the same failure; the launchers are
-unchanged. App Master must rerun those gates on its verification host.
+`structure.test.tsx` failed on the base because proof was absent from the
+workbench. It now checks writ-before-guardrails-before-proof-before-fairness,
+the steps list in that column, urn and seal slot exclusively in details, and
+the unchanged eligible-lot count. Desktop typecheck and lint pass (93 TS/TSX
+files); the narrowed two-room Vitest run passes 32 tests in six files. No install,
+git write, Rust gate, full workspace suite or live test was run. No browser was
+launched or pixels measured. The Director renders 1440x900 and 1280x800 after
+merge; source-order tests do not prove fold positions. App Master commits.
 
 ## Closer to A/1, 2026-10-28
 
@@ -40,13 +44,13 @@ Gaps closed:
 - The urn no longer has an extra rectangular border and inset around its
   elliptical outline. Each eligible entry still has its own mark, with raider
   rings; pools over 320 entries retain the existing windowed representation.
-- Below the urn, the saved simulated proof is now an explicit dated record
+- Below the writ and guardrails, the saved simulated proof is an explicit dated record
   with its recorded winners visible before opening proof details. Its existing
   local recompute action is retained. The current frozen-entry recompute and
   byte details also sit in this proof region after a roll is sealed.
-- The four fairness steps follow the proof region and are visible without
-  opening a disclosure. Fixture limitations remain explicit. Entry lookup
-  follows these regions, with the supplied seal/design slot still mounted last.
+- The four fairness steps follow the proof region in the workbench and are
+  visible without opening a disclosure. Fixture limitations remain explicit.
+  Entry lookup follows the urn in details, with the seal/design slot mounted last.
 
 Gaps left:
 
@@ -66,7 +70,7 @@ Gaps left:
   not approved to use Google Chrome”. The comparison above is source-based;
   no screenshots were captured and no `shots/` artifacts are claimed.
 
-Evidence: `structure.test.tsx` first failed on the missing proof/fairness
+Earlier A/1 evidence (before the column move): `structure.test.tsx` first failed on the missing proof/fairness
 regions, then passed with the writ in the left column, the urn/proof/fairness
 order in the right column, every eligible mark and the supplied seal slot.
 Existing lots, moderation, moderation-gate, navigation and shell room tests

@@ -5,7 +5,8 @@ import type { PreviewVisual } from '../../beacons-model.js';
 export function BeaconArtwork({ item, hero = false }: { item: PreviewVisual; hero?: boolean }) {
   const style: CSSProperties & { '--room-blaze': number } = { '--room-blaze': item.intensity };
   return <div className={`visuals-room-art${hero ? ' visuals-room-art-hero' : ''}`} style={style}>
-    <svg viewBox="0 0 360 240" role="img" aria-label={`${item.visual.name} · simulated local preview`}>
+    <svg viewBox="0 0 360 240" preserveAspectRatio={hero ? 'xMidYMin meet' : undefined}
+      role="img" aria-label={`${item.visual.name} · simulated local preview`}>
       {item.visual.design_id === 'altar' ? <>
         <path className="visuals-room-stone" d="M90 197h180v12H90zm12 12h156l-20 28H122z" />
         <path className="visuals-room-fire" d="M135 194c-60-54 34-75 37-163 42 48 1 68 34 87 12-25 21-30 20-53 55 73 37 100-7 129Z" />
