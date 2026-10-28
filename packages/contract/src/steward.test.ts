@@ -2,7 +2,8 @@ import { readFileSync } from 'node:fs';
 import { expect, test } from 'vitest';
 import { parseJson } from './door.mjs';
 import { parseStewardAskParams, parseStewardAskResult, parseWrit, parseWritSealParams,
-  parseWritSealResult, parseWritTearParams, parseWritTearResult, parseStewardEvent, parseParams } from './index.js';
+  parseWritSealResult, parseWritTearParams, parseWritTearResult, parseStewardEvent, parseParams,
+  parseResult } from './index.js';
 
 // The exact same synthetic JSON bytes are round-tripped by Rust.
 const input: unknown = parseJson(readFileSync(new URL('../../../crates/cc-types/tests/fixtures/steward.json', import.meta.url), 'utf8'));
@@ -82,5 +83,29 @@ test('reused config constraints are enforced inside the typed diff', () => {
     proposal: { ...sample.proposal, diff: { after: { draw: null } } } }))).toThrow();
   for (const method of ['steward.ask', 'steward.writ.seal', 'steward.writ.tear'] as const) {
     expect(() => parseParams(method, {})).toThrow();
+  }
+});
+
+test('bound Steward methods use the existing typed parameters and results without storage metadata', () => {
+  for (const writ of writs) {
+    const cases = [
+      { method: 'steward.ask', params: { chamber: writ.chamber, prompt: 'Simulated request' } },
+      { method: 'steward.writ.seal', params: { writ_id: writ.writ_id } },
+      { method: 'steward.writ.tear', params: { writ_id: writ.writ_id } },
+    ] as const;
+    for (const { method, params } of cases) {
+      expect(parseParams(method, params)).toEqual(params);
+      const result = parseResult(method, JSON.stringify({ writ }));
+      expect(result).toEqual({ writ });
+      for (const value of [params, result]) {
+        expect(JSON.stringify(value)).not.toMatch(/"(?:simulated|SIMULATED)":/);
+      }
+      expect(() => parseResult(method, '{}')).toThrow();
+      for (const key of ['simulated', 'SIMULATED']) {
+        expect(() => parseParams(method, { ...params, [key]: true })).toThrow();
+        expect(() => parseResult(method, JSON.stringify({ writ, [key]: true }))).toThrow();
+        expect(() => parseResult(method, JSON.stringify({ writ: { ...writ, [key]: true } }))).toThrow();
+      }
+    }
   }
 });

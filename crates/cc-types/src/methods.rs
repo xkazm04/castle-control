@@ -74,9 +74,9 @@ methods! {
     DesignUpsert => ("maproom.design.upsert", Pending, Pending, "WP 4.3"),
     StageGet => ("maproom.stage.get", Pending, Pending, "WP 4.3"),
     TurnRun => ("maproom.turn.run", Pending, Pending, "WP 4.3"),
-    Ask => ("steward.ask", Pending, Pending, "WP 5.1"),
-    WritSeal => ("steward.writ.seal", Pending, Pending, "WP 5.1"),
-    WritTear => ("steward.writ.tear", Pending, Pending, "WP 5.1")
+    Ask => ("steward.ask", AskParams, AskResult, "WP 5.1"),
+    WritSeal => ("steward.writ.seal", WritSealParams, WritSealResult, "WP 5.1"),
+    WritTear => ("steward.writ.tear", WritTearParams, WritTearResult, "WP 5.1")
 }
 
 /// Single parse door for requests, including unknown-method and shape errors.

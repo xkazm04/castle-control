@@ -22,7 +22,7 @@ export function parseEvent(text: string): StreamEvent { return checked(event, pa
 export function parseError(text: string): ErrorEnvelope { return checked(error, parseJson(text)); }
 /** Absent privileges grant data-only access; hosts must not infer script consent. */
 export function parseDesignPackage(text: string): DesignPackage { return checked(designPackage, parseJson(text)); }
-// Standalone parsers: Steward RPC entries intentionally remain Pending.
+// Standalone parsers share the types bound to the Steward RPC entries.
 export function parseStewardAskParams(text: string): AskParams { return checked(askParams, parseJson(text)); }
 export function parseStewardAskResult(text: string): AskResult { return checked(askResult, parseJson(text)); }
 export function parseWrit(text: string): Writ { return checked(writ, parseJson(text)); }

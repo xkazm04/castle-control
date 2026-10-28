@@ -130,8 +130,12 @@ workspace checks and desktop production build in its verification environment.
 
 ## Steward writ boundary (WP 5.1 contract delivery)
 
-The three existing Steward RPC entries remain `Pending`; this delivery exports
-standalone types and parsers before handler/registration work. `parseWrit(text)`
+Owner ruling, 2026-10-28 (option 1): bind the three existing Steward RPC methods to their existing typed structs before AI-11 or createSteward integration; SIMULATED remains internal storage metadata, absent from the wire.
+
+`steward.ask`, `steward.writ.seal` and `steward.writ.tear` are now typed in the
+method table instead of `Pending`, using `AskParams/Result`, `WritSealParams/Result`
+and `WritTearParams/Result` respectively; handler/registration work is separate.
+`parseWrit(text)`
 validates the ID, chamber, typed proposal diff, status, UTC creation/update times
 and optional error. `parseStewardAskParams/Result`, `parseWritSealParams/Result`,
 `parseWritTearParams/Result` and `parseStewardEvent` use the same JSON door. All
@@ -168,6 +172,17 @@ base limitation recorded in `docs/PLAN.md`; recursive lint has the same spawn
 failure, and recursive workspace pnpm tests were not reached. Full gate success
 is not claimed.
 The Director must run the ordinary merge gate after committing this delivery.
+
+Binding validation, 2026-10-28: six Rust Steward tests, all `cc-types` tests and
+the full Rust workspace suite pass (live tests remain disabled); all 140 contract
+tests, generator assertions, contract typecheck/lint and workspace Rust
+formatting/Clippy pass. New Rust/TS RPC tests first failed against
+`Pending` and now pass, including rejection of internal simulation metadata.
+Fresh generation through the documented harness passes drift; a seeded stale
+`types.ts` fails the drift command and passes again after byte-for-byte restoration.
+Workspace parity fails on the unchanged tracked `apps/overlay/bundle.js` JSON
+parse, reproduced using the base schema as well. Recursive pnpm checks encounter
+the already documented `spawn EPERM`; the Director must verify the full gate.
 
 Run `pnpm -C packages/contract generate` after changing Rust types. Run
 `pnpm -C packages/contract check` to regenerate in memory and compare the whole

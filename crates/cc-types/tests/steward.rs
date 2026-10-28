@@ -117,7 +117,7 @@ fn writs_reject_unknowns_nulls_and_chamber_mismatches() {
 }
 
 #[test]
-fn reused_mutation_safety_constraints_and_pending_methods_remain_intact() {
+fn reused_mutation_safety_constraints_and_required_parameters_remain_intact() {
     let mut value = fixtures()[0].clone();
     value["chamber"] = json!("gatehouse");
     value["proposal"] = json!({"method":"gatehouse.rules.setMode","diff":{
@@ -135,4 +135,89 @@ fn reused_mutation_safety_constraints_and_pending_methods_remain_intact() {
         );
     }
     assert!(EventKind::NAMES.contains(&"steward.writ"));
+}
+
+#[test]
+fn bound_methods_round_trip_the_existing_types() {
+    for value in fixtures() {
+        let writ: Writ = serde_json::from_value(value).unwrap();
+        let requests = [
+            RpcRequest::Ask(AskParams {
+                chamber: writ.chamber,
+                prompt: "Simulated: propose a configuration".into(),
+                writ_id: None,
+            }),
+            RpcRequest::WritSeal(WritSealParams {
+                writ_id: writ.writ_id.clone(),
+            }),
+            RpcRequest::WritTear(WritTearParams {
+                writ_id: writ.writ_id.clone(),
+            }),
+        ];
+        let results = [
+            serde_json::to_value(AskResult { writ: writ.clone() }).unwrap(),
+            serde_json::to_value(WritSealResult { writ: writ.clone() }).unwrap(),
+            serde_json::to_value(WritTearResult { writ }).unwrap(),
+        ];
+        for (request, result) in requests.into_iter().zip(results) {
+            let wire = serde_json::to_vec(&request).unwrap();
+            assert_eq!(parse_request(&wire).unwrap(), request);
+            assert_eq!(request.validate_result(result.clone()).unwrap(), result);
+            assert!(request.validate_result(json!({})).is_err());
+            round_trip::<RpcRequest>(serde_json::to_value(request).unwrap());
+        }
+    }
+}
+
+#[test]
+fn simulated_storage_metadata_never_crosses_the_steward_wire() {
+    let writ = fixtures()[0].clone();
+    for (method, params) in [
+        (
+            "steward.ask",
+            json!({"chamber":"lots","prompt":"Simulated request"}),
+        ),
+        ("steward.writ.seal", json!({"writ_id":writ["writ_id"]})),
+        ("steward.writ.tear", json!({"writ_id":writ["writ_id"]})),
+    ] {
+        let request = parse_request(
+            &serde_json::to_vec(&json!({
+                "method":method,"params":params
+            }))
+            .unwrap(),
+        )
+        .unwrap();
+        let response = request.validate_result(json!({"writ":writ})).unwrap();
+        for value in [serde_json::to_value(&request).unwrap(), response.clone()] {
+            assert!(
+                !serde_json::to_string(&value)
+                    .unwrap()
+                    .contains("\"simulated\"")
+            );
+            assert!(
+                !serde_json::to_string(&value)
+                    .unwrap()
+                    .contains("\"SIMULATED\"")
+            );
+        }
+        for key in ["simulated", "SIMULATED"] {
+            let mut bad_params = params.clone();
+            bad_params[key] = json!(true);
+            assert!(
+                parse_request(
+                    &serde_json::to_vec(&json!({
+                        "method":method,"params":bad_params
+                    }))
+                    .unwrap()
+                )
+                .is_err()
+            );
+            let mut bad_response = response.clone();
+            bad_response[key] = json!(true);
+            assert!(request.validate_result(bad_response).is_err());
+            let mut bad_writ = response.clone();
+            bad_writ["writ"][key] = json!(true);
+            assert!(request.validate_result(bad_writ).is_err());
+        }
+    }
 }
