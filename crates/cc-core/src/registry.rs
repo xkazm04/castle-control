@@ -82,6 +82,15 @@ impl Registry {
         Self::native_offline(services, OfflineModules::default())
     }
 
+    pub(crate) fn beacons(&self) -> Result<Arc<crate::beacons::BeaconsModule>, ErrorEnvelope> {
+        self.offline
+            .as_ref()
+            .ok_or_else(|| {
+                ErrorEnvelope::new(ErrorCode::Unavailable, "beacons module unavailable")
+            })?
+            .beacons()
+    }
+
     /// Caller-owned simulated state, isolated from native credentials and chat.
     pub fn with_fixture_root(
         root: impl AsRef<std::path::Path>,

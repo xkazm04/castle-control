@@ -24,7 +24,7 @@ pub(crate) struct OfflineModules {
 struct Loaded {
     // Other modules close before Lots releases the shared temporary fixture root.
     gatehouse: Arc<GatehouseModule>,
-    beacons: BeaconsModule,
+    beacons: Arc<BeaconsModule>,
     lots: Arc<LotsModule>,
 }
 
@@ -74,6 +74,10 @@ impl OfflineModules {
         Ok(self.load()?.lots.clone())
     }
 
+    pub(crate) fn beacons(&self) -> Result<Arc<BeaconsModule>, ErrorEnvelope> {
+        Ok(self.load()?.beacons.clone())
+    }
+
     pub fn shadow_pipeline(
         &self,
     ) -> Result<Option<Arc<crate::live::ShadowPipeline>>, ErrorEnvelope> {
@@ -87,6 +91,7 @@ impl OfflineModules {
                     Arc::new(crate::live::ShadowPipeline::new(
                         loaded.gatehouse.clone(),
                         loaded.lots.clone(),
+                        loaded.beacons.clone(),
                         self.events
                             .get()
                             .expect("loaded modules bind events")
@@ -146,7 +151,7 @@ impl OfflineModules {
                 lots.temporary_root = temporary_root;
                 Ok(Loaded {
                     gatehouse: Arc::new(gatehouse),
-                    beacons,
+                    beacons: Arc::new(beacons),
                     lots: Arc::new(lots),
                 })
             })

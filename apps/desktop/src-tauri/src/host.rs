@@ -30,7 +30,7 @@ impl CoreHost {
                         twitch: cc_twitch::TwitchConfig {
                             client_id: native.client_id,
                             channel: native.test_channel,
-                            modules: vec!["gatehouse".into()],
+                            modules: vec!["gatehouse".into(), "beacons".into()],
                         },
                         obs: cc_obs::Config {
                             port: native.obs_port,

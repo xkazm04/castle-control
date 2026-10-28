@@ -4,6 +4,34 @@ use cc_types::{
     BridgeGap, BridgeState, BridgeStatus, ErrorCode, ErrorEnvelope, EventKind, Timestamp,
 };
 
+#[derive(Clone, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+pub(crate) struct ContributionIngress {
+    pub contribution: cc_types::Contribution,
+    pub broadcaster_login: String,
+    pub user_login: Option<String>,
+    #[serde(skip)]
+    pub at: String,
+}
+impl std::fmt::Debug for ContributionIngress {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("ContributionIngress")
+            .finish_non_exhaustive()
+    }
+}
+pub(crate) fn contribution_ingress(
+    notification: &cc_twitch::Notification,
+) -> Result<Option<ContributionIngress>, ErrorEnvelope> {
+    let invalid = || ErrorEnvelope::new(ErrorCode::Upstream, "invalid contribution notification");
+    let Some(value) = notification.contribution().map_err(|_| invalid())? else {
+        return Ok(None);
+    };
+    let mut input: ContributionIngress = serde_json::from_value(value).map_err(|_| invalid())?;
+    timestamp(notification.at.clone())?;
+    input.at = notification.at.clone();
+    Ok(Some(input))
+}
+
 #[derive(Clone)]
 pub struct ChatIngress {
     /// Twitch's verified login, distinct from a potentially localized display name.

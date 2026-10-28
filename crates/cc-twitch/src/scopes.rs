@@ -117,8 +117,7 @@ pub const MODULE_SCOPES: &[ModuleScopes] = &[
             "channel:read:goals",
         ],
         topics: &[
-            topic!("channel.cheer", "1", Broadcaster),
-            // Includes custom Power-ups; overlaps cheer, cc-beacons dedupes contributions.
+            // Single authoritative Bits topic; delivery IDs identify retries.
             topic!("channel.bits.use", "1", Broadcaster),
             topic!("channel.subscribe", "1", Broadcaster),
             topic!("channel.subscription.gift", "1", Broadcaster),

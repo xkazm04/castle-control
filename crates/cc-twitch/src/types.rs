@@ -92,6 +92,12 @@ pub struct Notification {
 }
 
 impl Notification {
+    /// Private normalized serde payload for the core contribution schema door.
+    /// No cc-types dependency or public RPC/event payload is introduced here.
+    pub fn contribution(&self) -> Result<Option<serde_json::Value>, BridgeError> {
+        crate::eventsub::contribution(self)
+    }
+
     /// Typed view through the same schema door used at WebSocket ingress.
     /// Keep the public struct shape compatible with existing offline producers.
     pub fn moderation(

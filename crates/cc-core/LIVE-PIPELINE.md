@@ -3,6 +3,62 @@
 This delivery contains fake-bridge evidence only. It claims no live stream,
 armed moderation, Twitch ACK, OBS result, M1 exit or M2 exit.
 
+## Beacons live intake (WP 3.1 stage 1)
+
+The existing native launch opt-in now enables `beacons` beside `gatehouse`.
+Fixture/default registration starts no contribution subscriber. The production
+registry loads one `Arc<BeaconsModule>` for RPC and intake. Its path is EventSub
+envelope -> `Notification::contribution` (private serde schemas in cc-twitch's
+`eventsub.rs`) -> the existing `cc_types::Contribution` at cc-core's
+`contribution_ingress` schema door -> bounded internal broadcast (256 deliveries)
+-> shared Beacons store -> existing `beacons.contribution` invalidation. Raw
+payloads, messages and credentials never enter public events or diagnostics.
+The bridge pump remains independent of the shadow classifier's wait; no
+per-delivery task fan-out is used. Overflow, malformed contributions, unavailable
+intake and socket discontinuities publish the existing `bridge.gap` invalidation.
+Socket recovery retains the bridge's resubscription and gap protocol.
+
+This cut admits `channel.subscribe` (non-gift only),
+`channel.subscription.gift` (the batch's `total`, not cumulative totals),
+`channel.subscription.message` (one resub), and `channel.bits.use` (Bits,
+including paid Power-ups). Gift recipients do not count again. These are the
+four source mappings assigned to stage 1; other subscribed notifications do not
+enter this sink. `channel.goal.*` and charity normalization are deferred.
+
+Contributions are retained as typed envelopes (original notification time plus
+the existing Contribution) in the Beacons store's existing `recordings` inventory;
+row time is host receipt time for retention. Verified broadcaster/viewer logins
+are mapped through cc-store, with broadcaster and optional viewer associations.
+Anonymous gifts retain no donor identity and belong to the broadcaster. Existing
+retention, forget and purge predicates apply, with expiry reaped on intake.
+Retained rows are the dedupe authority across reconnects and restarts; identity
+survives for the retention window. Purge on revocation closes admission under
+the module lock before clearing rows, so queued deliveries cannot refill them.
+The internal row ULID is storage identity only, never a contribution identity.
+
+No contribution moves a saved curve, intensity, visual or renderer snapshot.
+Every RPC method/response and `VisualListResult`/`BeaconsRenderSnapshot` remains
+unchanged. The contribution read contract and per-visual source/unit routing
+are **PARKED for the owner**. Acceptance reads the inventoried rows through a
+test-visible Rust-only accessor; there is no read RPC.
+
+- Ruling 1 (07:48Z): store only in the shared BeaconsModule; existing contribution invalidation only; public reads and snapshots unchanged.
+- Ruling 2 (07:48Z): private serde mapping in cc-twitch, existing Contribution parsed at core ingress; no cc-twitch -> cc-types edge, dependency or lockfile change.
+- Ruling 3 (07:52Z), **FOR OWNER REVIEW**: `Notification.id` is EventSub `metadata.message_id`, used as `dedupe_key` scoped by broadcaster for Bits, subscriptions, gift batches and resubs; this interpretation requires `channel.bits.use` as the single authoritative Bits topic and `channel.cheer` unsubscribed/suppressed. It differs from the frozen cc-types/intake comments; those remain unchanged. No heuristic or fabricated contribution ID is used.
+
+Automated simulated evidence: `cargo test --locked -p cc-core --lib beacons::tests`
+asserts units/counts for a 50-gift bomb and a Bits cheer, all four source mappings,
+gift-recipient/cheer suppression, shared registry state, unchanged saved curves
+and preview output, contribution invalidations, restart persistence, broadcaster
+scoping, duplicate gift/Bits deliveries, gap forwarding, anonymous gifts and
+revocation. `cargo test --locked -p cc-twitch contributions` drives actual
+loopback EventSub sockets through a drop, checks every subscription is recreated,
+observes a gap and unchanged metadata IDs, and proves redeliveries are suppressed.
+The existing captured-log grep test additionally exercises malformed contribution
+payloads containing synthetic secrets and verifies neither token is printed.
+These are fixture-only checks. The 1 s live OBS check remains an owner step and
+was not attempted; no Beacons intensity routing or M3 exit is claimed.
+
 ## Construction and ownership
 
 The built desktop passes its existing `data_dir` to

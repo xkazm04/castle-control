@@ -11,6 +11,124 @@ use crate::{BridgeError, BridgeEvent, BridgeState, TwitchBridge};
 
 pub(crate) type Ws = WebSocketStream<MaybeTlsStream<TcpStream>>;
 
+// Private adapter schema, not the public cc-types contract. Only metadata IDs
+// identify these deliveries; cheer must never be admitted alongside bits.use.
+#[derive(serde::Deserialize)]
+struct ContributionIdentity {
+    broadcaster_user_id: String,
+    broadcaster_user_login: String,
+    user_id: Option<String>,
+    user_login: Option<String>,
+}
+
+#[derive(serde::Deserialize)]
+struct Subscribe {
+    is_gift: bool,
+}
+#[derive(serde::Deserialize)]
+struct Gift {
+    total: u32,
+    is_anonymous: bool,
+}
+#[derive(serde::Deserialize)]
+struct Bits {
+    bits: u32,
+    #[serde(rename = "type")]
+    kind: BitsKind,
+}
+#[derive(serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
+enum BitsKind {
+    Cheer,
+    PowerUp,
+    CustomPowerUp,
+}
+
+#[derive(serde::Serialize)]
+struct Contribution {
+    source: &'static str,
+    broadcaster_id: String,
+    event_id: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    user_id: Option<String>,
+    amount: u32,
+    dedupe_key: String,
+}
+#[derive(serde::Serialize)]
+struct ContributionDelivery {
+    contribution: Contribution,
+    broadcaster_login: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    user_login: Option<String>,
+}
+
+pub(crate) fn contribution(
+    notification: &crate::Notification,
+) -> Result<Option<serde_json::Value>, BridgeError> {
+    let invalid = || BridgeError::Invalid("invalid EventSub contribution");
+    let event = &notification.event;
+    let (source, amount, anonymous) = match notification.subscription_type.as_str() {
+        "channel.subscribe" => {
+            let sub: Subscribe = serde_json::from_value(event.clone()).map_err(|_| invalid())?;
+            // Gift batches already account for their recipients.
+            if sub.is_gift {
+                return Ok(None);
+            }
+            ("subscribe", 1, false)
+        }
+        "channel.subscription.gift" => {
+            let gift: Gift = serde_json::from_value(event.clone()).map_err(|_| invalid())?;
+            ("gift", gift.total, gift.is_anonymous)
+        }
+        "channel.subscription.message" => ("resub", 1, false),
+        "channel.bits.use" => {
+            let bits: Bits = serde_json::from_value(event.clone()).map_err(|_| invalid())?;
+            let _kind = bits.kind;
+            ("bits_use", bits.bits, false)
+        }
+        _ => return Ok(None),
+    };
+    let identity: ContributionIdentity =
+        serde_json::from_value(event.clone()).map_err(|_| invalid())?;
+    let id_valid = |id: &str| {
+        !id.is_empty()
+            && id.len() <= 32
+            && !id.starts_with('0')
+            && id.bytes().all(|b| b.is_ascii_digit())
+    };
+    let login_valid = |login: &str| {
+        !login.is_empty()
+            && login.len() <= 25
+            && login
+                .bytes()
+                .all(|b| b.is_ascii_alphanumeric() || b == b'_')
+    };
+    if notification.id.trim().is_empty()
+        || !id_valid(&identity.broadcaster_user_id)
+        || !login_valid(&identity.broadcaster_user_login)
+        || (!anonymous
+            && (!identity.user_id.as_deref().is_some_and(id_valid)
+                || !identity.user_login.as_deref().is_some_and(login_valid)))
+        || amount == 0
+    {
+        return Err(invalid());
+    }
+    serde_json::to_value(ContributionDelivery {
+        contribution: Contribution {
+            source,
+            broadcaster_id: identity.broadcaster_user_id,
+            event_id: notification.id.clone(),
+            user_id: if anonymous { None } else { identity.user_id },
+            amount,
+            dedupe_key: notification.id.clone(),
+        },
+        broadcaster_login: identity.broadcaster_user_login,
+        user_login: if anonymous { None } else { identity.user_login },
+    })
+    .map(Some)
+    .map_err(|_| invalid())
+}
+
 impl TwitchBridge {
     pub(crate) async fn worker(&self, index: usize, topics: &[Topic]) -> Result<(), BridgeError> {
         let mut backoff = 1;

@@ -25,6 +25,7 @@ impl Classifier for RulesOnly {
 pub struct ShadowPipeline {
     gatehouse: Arc<GatehouseModule>,
     lots: Arc<LotsModule>,
+    beacons: Arc<crate::beacons::BeaconsModule>,
     events: Arc<EventHub>,
     serial: tokio::sync::Mutex<()>,
     revoked: AtomicBool,
@@ -34,11 +35,13 @@ impl ShadowPipeline {
     pub(crate) fn new(
         gatehouse: Arc<GatehouseModule>,
         lots: Arc<LotsModule>,
+        beacons: Arc<crate::beacons::BeaconsModule>,
         events: Arc<EventHub>,
     ) -> Self {
         Self {
             gatehouse,
             lots,
+            beacons,
             events,
             serial: tokio::sync::Mutex::new(()),
             revoked: AtomicBool::new(false),
@@ -141,7 +144,8 @@ impl ShadowPipeline {
         // race a purge and repopulate the stores afterwards.
         let _serial = self.serial.lock().await;
         self.gatehouse.purge_live_data().await?;
-        self.lots.purge_live_data()
+        self.lots.purge_live_data()?;
+        self.beacons.purge_live_data()
     }
 }
 

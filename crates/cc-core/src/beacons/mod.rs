@@ -1,5 +1,8 @@
-//! Offline Beacons configuration and isolated previews; no live contribution sink.
+//! Shared Beacons configuration, isolated previews and store-only live intake.
+mod live;
 mod storage;
+#[cfg(test)]
+mod tests;
 
 use crate::Module;
 use cc_beacons::{
@@ -23,6 +26,7 @@ struct State {
     // Hold cc-store's exclusive writer lock across configuration reads and writes.
     _store: Store,
     visuals: BTreeMap<VisualId, Visual>,
+    revoked: bool,
 }
 
 pub struct BeaconsModule {
@@ -51,6 +55,7 @@ impl BeaconsModule {
             state: Mutex::new(State {
                 _store: store,
                 visuals,
+                revoked: false,
             }),
             root,
             overlay_origin: None,

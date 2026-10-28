@@ -2,6 +2,7 @@
 // crates/shadowrunr-daemon/src/platform/twitch/tests.rs.
 //! Every identity, chat line and credential in these local-server tests is simulated.
 mod auth;
+mod contributions;
 mod eventsub;
 mod fault;
 mod fixtures;

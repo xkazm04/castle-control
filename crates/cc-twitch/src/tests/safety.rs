@@ -80,6 +80,21 @@ async fn log_grep_captured_output_contains_no_tokens() {
         p.set_chat_delay(crate::ChatDelay::FourSeconds)
             .await
             .expect("simulated delay");
+        // A malformed contribution may contain private upstream data. Its error
+        // is static, so neither token-shaped data nor message text is echoed.
+        let n = crate::Notification {
+            id: "simulated-private-contribution".into(),
+            at: "2026-10-28T07:00:00Z".into(),
+            subscription_type: "channel.bits.use".into(),
+            event: json!({"bits":100,"type":"cheer", "broadcaster_user_id":"111",
+                "broadcaster_user_login":"simulated_channel", "user_id":ACCESS,
+                "user_login":"simulated_viewer", "message":{"text":REFRESH}}),
+            chat: None,
+        };
+        let error = n
+            .contribution()
+            .expect_err("simulated malformed contribution");
+        tracing::warn!(%error, "simulated contribution rejected");
         h.mock.echo_403.store(true, Ordering::SeqCst);
         for error in [
             p.warn("222", "simulated reason")
@@ -102,6 +117,7 @@ async fn log_grep_captured_output_contains_no_tokens() {
     assert!(logs.contains("credential refreshed"));
     assert!(logs.contains("purge_all requested"));
     assert!(logs.contains("simulated upstream error"));
+    assert!(logs.contains("simulated contribution rejected"));
     assert_no_secret(&logs);
 }
 

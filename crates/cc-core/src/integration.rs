@@ -1,6 +1,7 @@
 use crate::{
     AppState, EventHub, LoginPresenter, Module, Registry, bridge_status, forward_bridge_event,
 };
+pub(crate) mod intake;
 mod render;
 use cc_obs::{BrowserSource, Client, Config as ObsConfig, Overlay};
 use cc_store::Store;
@@ -19,7 +20,7 @@ use std::{
     time::{Duration, Instant},
 };
 use tokio::{
-    sync::{Mutex as AsyncMutex, broadcast, mpsc},
+    sync::{Mutex as AsyncMutex, broadcast},
     task::AbortHandle,
 };
 
@@ -177,36 +178,15 @@ impl NativeServices {
                 .ok_or_else(internal)?;
             workers.push(task.abort_handle());
         }
-        let (sender, mut receiver) = mpsc::channel(256);
-        self.bridge.start(sender);
-        let weak = Arc::downgrade(self);
-        workers.push(tokio::spawn(async move {
-            let mut poll = tokio::time::interval(Duration::from_millis(100));
-            let mut previous = None;
-            loop {
-                tokio::select! {
-                    event = receiver.recv() => {
-                        let Some(event) = event else { break; };
-                        if (!live || !matches!(&event, cc_twitch::BridgeEvent::Notification(n) if n.chat.is_some()))
-                            && forward_bridge_event(&events, &event).is_err() { break; }
-                        if let cc_twitch::BridgeEvent::Notification(n) = event
-                            && let Some(chat) = crate::ingress::chat_ingress(n)
-                            && let Some(service) = weak.upgrade() {
-                                // Broadcast stays internal; no unmoderated payload is sent over /events.
-                                let _ = service.chat.send(chat);
-                            }
-                    }
-                    _ = poll.tick() => {
-                        let Some(service) = weak.upgrade() else { break; };
-                        let Ok(status) = bridge_status(service.bridge.status()) else { break; };
-                        if previous.as_ref() != Some(&status) {
-                            previous = Some(status);
-                            if events.publish(EventKind::BridgeStatus).is_err() { break; }
-                        }
-                    }
-                }
-            }
-        }).abort_handle());
+        let contribution = if live {
+            let module = app.registry.beacons()?;
+            let (sender, receiver) = broadcast::channel(256);
+            workers.push(module.start_intake(receiver, events.clone()).abort_handle());
+            Some(sender)
+        } else {
+            None
+        };
+        workers.push(self.bridge_pump(events, live, contribution));
         let weak = Arc::downgrade(self);
         workers.push(
             tokio::spawn(async move {
