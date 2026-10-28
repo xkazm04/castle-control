@@ -2,7 +2,7 @@
 
 Date: 2026-10-26
 
-Status: Accepted, implementation queued (not scheduled for 2026-10-26).
+Status: Accepted, step 1 (the cc-store contract) delivered; step 2 remains queued.
 
 Decision authority: operator ruling at the 2026-10-26 standup, captured by the
 `technical-decision-capture` brief. This ADR records the ruling; it does not

@@ -20,7 +20,7 @@ tests deliberately introduce both an extra table and an extra file.
 | rollups | SQLite items | Delete associated items | Delete all rows |
 | caches | SQLite items | Delete associated items | Delete all rows |
 | exports | SQLite items | Delete associated items | Delete all rows |
-| writs | SQLite items | Delete associated items | Delete all rows |
+| writs | SQLite viewer items and allowlisted configuration | Delete associated items; preserve viewer-free configuration | Delete all rows of both kinds |
 | viewer_mappings | SQLite login → Twitch ID | Delete every alias for the ID | Delete all rows |
 | settings | SQLite retention setting | Preserve | Delete; default applies again |
 | decisions.jsonl, draws.jsonl, engine.jsonl | Typed audit records | Preserve byte for byte | Truncate and sync |
@@ -33,7 +33,29 @@ All five viewer-data stores accept `StoredItem`: ULID `id`, UTC `at`, nonempty
 viewer represented by a shared item in `user_ids`: forgetting any one of them
 deletes the entire item, including its content. Login lookup is case insensitive.
 Renames retain old aliases; reassignment of a login replaces that alias's ID.
-An unknown login has zero matches. `items(DataStore)` reads validated items.
+An unknown login has zero matches. `items(DataStore)` reads validated viewer
+items only, preserving existing Lot Chamber proof readers.
+
+`CONFIGURATION_STORES` in the authoritative `inventory.rs` is the explicit
+viewer-free configuration-store allowlist: **only `DataStore::Writs`**. Use the
+separate `ConfigurationItem::new(id, at, content, simulated)` shape with
+`insert_configuration` and `configuration_items`. Its serialized `kind` is
+`configuration` and it has no `user_ids` field; the SQLite association column is
+`[]`. Configuration content must be viewer-free, never a way to exempt viewer
+data from erasure. `StoredItem` still requires nonempty, fully mapped viewer IDs,
+even in Writs. Other stores reject configuration access with typed
+`Error::ConfigurationStoreNotAllowed`. Both readers validate every row before
+returning their respective shape; an ordinary empty-association item is invalid.
+
+Viewer-free writs do not match the inventory's `DeleteAssociatedItem` forget
+predicate, so they survive forgetting any viewer. Viewer-bearing writs still
+disappear when **any** associated viewer is forgotten. Writs retain `DeleteRows`
+for full purge and revoked-authorization purge: both shapes are deleted. No timed
+retention exemption is inferred for future stores; adding an allowlist entry
+requires an explicit inventory/purge policy. Existing rows and schema version 1
+are unchanged; no migration is needed. `tests/configuration.rs` proves both
+shapes coexist across reopen, exact dry-run/execution counts, refusal in every
+other store, and the unchanged inventory check for unlisted tables.
 
 Exports and writs are managed SQLite documents, not unmanaged copies on disk.
 Callers must not keep additional viewer-bearing files or mirrors outside this

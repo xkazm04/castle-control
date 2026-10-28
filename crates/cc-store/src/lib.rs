@@ -14,12 +14,14 @@ pub use audit::{
     DrawRiskSetting, DrawSlug, EngineClass, EngineProvider, ImageProvider, ModelName, SealDigest,
 };
 pub use error::{Error, Result};
-pub use inventory::{DataStore, ForgetPolicy, PurgePolicy, STORE_INVENTORY, Storage, StoreSpec};
+pub use inventory::{
+    CONFIGURATION_STORES, DataStore, ForgetPolicy, PurgePolicy, STORE_INVENTORY, Storage, StoreSpec,
+};
 pub use ledger::{DecisionAction, ImageProviderAmount, LedgerEvent, LedgerKind, LedgerLine};
 pub use purge::{Purge, PurgePreview};
 pub use retention::{Clock, SystemClock, run_retention_job, spawn_retention_task};
 pub use store::Store;
-pub use types::{StoredItem, Timestamp, TwitchUserId};
+pub use types::{ConfigurationItem, StoredItem, Timestamp, TwitchUserId};
 
 pub const MIN_RETENTION_S: u64 = 24 * 60 * 60;
 pub const DEFAULT_RETENTION_S: u64 = 30 * 24 * 60 * 60;

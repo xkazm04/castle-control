@@ -8,6 +8,8 @@ pub enum Error {
     Json(#[from] serde_json::Error),
     #[error("invalid {0}")]
     Invalid(&'static str),
+    #[error("viewer-free configuration records are not allowed in {0:?}")]
+    ConfigurationStoreNotAllowed(crate::DataStore),
     #[error("retention {requested_s}s is below the {floor_s}s floor")]
     RetentionBelowFloor { requested_s: u64, floor_s: u64 },
     #[error("store inventory does not match persistent storage")]

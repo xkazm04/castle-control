@@ -7,7 +7,23 @@ pub enum DataStore {
     Writs,
 }
 
+/// Viewer-free records require an explicit configuration-store policy here.
+/// Writs keep DeleteAssociatedItem on forget and DeleteRows on full/revoked purge.
+pub const CONFIGURATION_STORES: &[DataStore] = &[DataStore::Writs];
+
 impl DataStore {
+    pub fn allows_configuration(self) -> bool {
+        CONFIGURATION_STORES.contains(&self)
+    }
+
+    pub(crate) fn require_configuration(self) -> crate::Result<()> {
+        if self.allows_configuration() {
+            Ok(())
+        } else {
+            Err(crate::Error::ConfigurationStoreNotAllowed(self))
+        }
+    }
+
     pub const ALL: [Self; 5] = [
         Self::Recordings,
         Self::Rollups,
@@ -86,6 +102,8 @@ pub const STORE_INVENTORY: &[StoreSpec] = &[
     StoreSpec {
         name: "writs",
         storage: SqliteTable,
+        // Empty associations of allowlisted configuration writs never match forget.
+        // Viewer-bearing writs still match any associated ID; full purge deletes both.
         forget_user: DeleteAssociatedItem,
         purge_all: DeleteRows,
     },

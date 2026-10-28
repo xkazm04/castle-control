@@ -1,5 +1,6 @@
 use crate::{
-    DataStore, Error, LedgerKind, Result, STORE_INVENTORY, Storage, StoredItem, TwitchUserId,
+    ConfigurationItem, DataStore, Error, LedgerKind, Result, STORE_INVENTORY, Storage, StoredItem,
+    Timestamp, TwitchUserId, types::StoredRecord,
 };
 use fs2::FileExt;
 use rusqlite::{Connection, OptionalExtension, params};
@@ -113,32 +114,75 @@ impl Store {
                 return Err(Error::Invalid("unmapped viewer association"));
             }
         }
+        self.insert_row(store, item.id, &item.at, &item.user_ids, item)
+    }
+
+    /// Only explicitly allowlisted stores accept viewer-free configuration.
+    /// Viewer data must continue through insert with every represented viewer ID.
+    pub fn insert_configuration(
+        &mut self,
+        store: DataStore,
+        item: &ConfigurationItem,
+    ) -> Result<()> {
+        self.ready()?;
+        store.require_configuration()?;
+        self.insert_row(store, item.id, &item.at, &[], item)
+    }
+
+    fn insert_row(
+        &self,
+        store: DataStore,
+        id: ulid::Ulid,
+        at: &Timestamp,
+        user_ids: &[TwitchUserId],
+        item: &impl serde::Serialize,
+    ) -> Result<()> {
         let item_json = serde_json::to_string(item)?;
-        let users_json = serde_json::to_string(&item.user_ids)?;
+        let users_json = serde_json::to_string(user_ids)?;
         self.conn.execute(
             &format!(
                 "INSERT INTO {} (id,at,user_ids,item) VALUES (?1,?2,?3,?4)",
                 store.name()
             ),
-            params![
-                item.id.to_string(),
-                item.at.as_rfc3339(),
-                users_json,
-                item_json
-            ],
+            params![id.to_string(), at.as_rfc3339(), users_json, item_json],
         )?;
         Ok(())
     }
 
     pub fn items(&self, store: DataStore) -> Result<Vec<StoredItem>> {
+        Ok(self
+            .records(store)?
+            .into_iter()
+            .filter_map(|record| match record {
+                StoredRecord::Viewer(item) => Some(item),
+                StoredRecord::Configuration(_) => None,
+            })
+            .collect())
+    }
+
+    /// Separate reader keeps configuration content out of existing viewer-item consumers.
+    pub fn configuration_items(&self, store: DataStore) -> Result<Vec<ConfigurationItem>> {
+        self.ready()?;
+        store.require_configuration()?;
+        Ok(self
+            .records(store)?
+            .into_iter()
+            .filter_map(|record| match record {
+                StoredRecord::Configuration(item) => Some(item),
+                StoredRecord::Viewer(_) => None,
+            })
+            .collect())
+    }
+
+    fn records(&self, store: DataStore) -> Result<Vec<StoredRecord>> {
         self.ready()?;
         let mut stmt = self
             .conn
             .prepare(&format!("SELECT item FROM {} ORDER BY id", store.name()))?;
         let rows = stmt.query_map([], |row| row.get::<_, String>(0))?;
         rows.map(|row| {
-            let item: StoredItem = serde_json::from_str(&row?)?;
-            item.validate()?;
+            let item: StoredRecord = serde_json::from_str(&row?)?;
+            item.validate(store)?;
             Ok(item)
         })
         .collect()

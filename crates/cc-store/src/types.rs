@@ -107,6 +107,54 @@ impl StoredItem {
     }
 }
 
+/// Viewer-free chamber configuration, never viewer content or a draw proof.
+/// Its explicit shape leaves StoredItem's required viewer associations intact.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ConfigurationItem {
+    kind: ConfigurationKind,
+    pub id: Ulid,
+    pub at: Timestamp,
+    pub content: String,
+    pub simulated: bool,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+enum ConfigurationKind {
+    Configuration,
+}
+
+impl ConfigurationItem {
+    pub fn new(id: Ulid, at: Timestamp, content: String, simulated: bool) -> Self {
+        Self {
+            kind: ConfigurationKind::Configuration,
+            id,
+            at,
+            content,
+            simulated,
+        }
+    }
+}
+
+/// Legacy viewer items retain their exact serialized shape; only new configuration
+/// items carry a discriminator. Both readers validate every row before filtering.
+#[derive(Deserialize)]
+#[serde(untagged)]
+pub(crate) enum StoredRecord {
+    Viewer(StoredItem),
+    Configuration(ConfigurationItem),
+}
+
+impl StoredRecord {
+    pub(crate) fn validate(&self, store: crate::DataStore) -> Result<()> {
+        match self {
+            Self::Viewer(item) => item.validate(),
+            Self::Configuration(_) => store.require_configuration(),
+        }
+    }
+}
+
 pub(crate) fn login(value: &str) -> Result<String> {
     if value.is_empty()
         || value.len() > 25
