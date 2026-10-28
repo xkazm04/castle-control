@@ -10,7 +10,7 @@ import { tokens } from '@castle-control/tokens';
 
 test('Beacons stage has an inner token inset, captioned artwork and a model-driven active tier', () => {
   const style = readFileSync(new URL('./room.css', import.meta.url), 'utf8');
-  const inset = style.match(/\.visuals-room-workbench\s*\{[^}]*\bpadding:\s*var\(--(space-\d+)\)/)?.[1];
+  const inset = style.match(/\.visuals-room-workbench(?:,\s*\.visuals-room-details)?\s*\{[^}]*\bpadding:\s*var\(--(space-\d+)\)/)?.[1];
   expect(inset).toBeDefined();
   expect(Number.parseFloat(tokens.layout[inset as keyof typeof tokens.layout])).toBeGreaterThan(0);
   expect(style).not.toMatch(/\.visuals-room-workbench\s*\{[^}]*\bpadding:\s*0[;\s}]/);
@@ -42,6 +42,25 @@ test('fixture room contains the altar, frames, border, 60 offerings and local te
   expect(html.match(/data-offering-mark=/g)).toHaveLength(60);
   expect(html).not.toContain('Hold to seal');
   expect(html).not.toContain('visuals-room-notice');
+});
+
+test('Beacons columns share even panel insets and a section rhythm without changing region order', () => {
+  const style = readFileSync(new URL('./room.css', import.meta.url), 'utf8');
+  const columns = style.match(/\.visuals-room-workbench,\s*\.visuals-room-details\s*\{([^}]+)\}/)?.[1];
+  expect(columns).toBeDefined();
+  expect(columns).toContain('padding: var(--space-24)');
+  expect(columns).toContain('gap: var(--space-24)');
+  expect(columns).toContain('flex-direction: column');
+  expect(style).toMatch(/\.visuals-room-workbench > \*,\s*\.visuals-room-details > \*\s*\{[^}]*flex-shrink: 0;[^}]*margin-block: 0/);
+  expect(style).toMatch(/\.visuals-room-details > \.shell-seal-slot\s*\{[^}]*margin-block: 0/);
+  expect(style).toMatch(/\.visuals-room-visuals\s*\{[^}]*gap: var\(--space-16\)/);
+  const html = renderToStaticMarkup(<Room snapshot={{ mode: 'fixture', phase: 'ready' }} />);
+  const regions = ['class="visuals-room-workbench"', 'class="visuals-room-layer"',
+    'class="visuals-room-curve"', 'class="visuals-room-test-tools"', 'class="visuals-room-details"',
+    'aria-label="Beacon visuals"', 'aria-label="Illustrative offerings timeline"', 'aria-label="Contribution feed"'];
+  const positions = regions.map(region => html.indexOf(region));
+  expect(positions.every(position => position >= 0)).toBe(true);
+  expect(positions).toEqual([...positions].sort((left, right) => left - right));
 });
 
 test('core mode never shows simulated controls or a fixture proposal', () => {

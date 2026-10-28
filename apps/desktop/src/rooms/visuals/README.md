@@ -1,5 +1,80 @@
 # Beacons detail room (AI-6)
 
+## Polish (line 4), 2026-10-28
+
+Open `#/chamber/visuals` in fixture mode (the browser preview defaults to
+fixture mode). Compare at **1440x900** and **1280x800**. The A/1 composition
+keeps the illustrated altar, kindling curve and test fire on the left, with
+altar/frame/border cards, the 60-offering timeline, contribution feed and the
+shell's existing seal/design slot on the right. Each column scrolls vertically;
+open the native Test fire disclosure and scroll down both columns to inspect
+the lower controls. The shared header and Steward remain owned by the shell.
+
+Spacing changes below use the existing `packages/tokens` CSS variables. Values
+are CSS declarations, not measurements from rendered screenshots. Zero margins
+let the column's 24 px gap own section spacing rather than adding margins to it.
+
+| Area | Before | After |
+| --- | --- | --- |
+| Both column insets | 16 px vertical / 20 px horizontal | 24 px on every side (`space-24`) |
+| Direct column sections | Mixed section/browser margins; no layout gap | 24 px gap; direct-child block margins 0; sections do not flex-shrink |
+| Card-to-card gap | 10 px | 16 px (`space-16`) |
+| Card padding | 12 px vertical / 14 px horizontal | 16 px on every side |
+| Card text and ranges | Description 4 px vertical margin; Now line 4 px top / 8 px bottom | Both margins 0; 8 px grid gap between selector, description, Now and ranges |
+| Range cells | 4 px gap / 5 px padding | 8 px gap / 8 px padding |
+| Room buttons | 8 px vertical / 10 px horizontal padding; no minimum height | 6 px vertical / 12 px horizontal; 32 px minimum (`button-h`); card selectors retain 0 padding |
+| Kindling curve outer spacing | 16 px vertical margin | 0 margin; 24 px column gap |
+| Curve, timeline and test-fire contents | Browser heading/paragraph margins; no common gap | 0 child margins and 12 px grid gap |
+| Curve label gap | 4 px, no wrapping | 8 px, wrapping |
+| Test-fire divider inset | 10 px top | 16 px top |
+| Expanded test-fire content after summary | Browser heading margin | 16 px top margin |
+| Test-fire trailing note | Browser paragraph margins | 12 px top / 0 bottom margin |
+| Timeline outer spacing | 16 px top margin | 0 margin; 24 px column gap |
+| Timeline time labels | No gap, no wrapping | 8 px gap, wrapping |
+| Offering inspection label | 12 px top margin; 6 px label/control gap | 0 top margin; 8 px label/control gap |
+| Offering range input | Browser margins and content sizing | 0 margin, border-box width 100%, minimum width 0 |
+| Contribution feed | 16 px vertical margins; browser heading/paragraph margins | 0 margins; 12 px internal gap and 24 px column gap |
+| Existing seal/design slot | 20 px additional top margin | 0 additional margin; 24 px column gap |
+| Connected-mode forms | 20 px vertical margins; 10 px gap | 0 margins; 12 px gap; headings/paragraph margins 0 |
+| Connected-mode nested burst form | Browser flow, no grid gap | 12 px grid gap |
+| Connected-mode fieldsets | Browser padding | 12 px on every side |
+| Connected-mode visual/source-copy rows | 8 px vertical / 0 horizontal padding | 12 px on every side |
+
+The connected-mode source-copy action remains in its existing visual row; fixture
+mode does not invent a browser-source URL or add a copy action. Shared column,
+button and form spacing covers that existing connected-mode UI as well.
+Typography retains the 13 px label floor. Zero-minimum grid tracks/children,
+wrapping labels/buttons and border-box range sizing keep wide content from
+forcing the columns wider; the 900 px stacking breakpoint is unchanged.
+
+**Screenshots unavailable:** headless Chrome could not launch in this builder's
+sandbox: its Crashpad/Mojo process/IPC setup returned `Access is denied (0x5)`.
+No screenshots were captured and there are no claimed paths under `shots/`.
+Browser fidelity and horizontal-overflow verification at both target sizes
+remain for the operator/Director; DOM/CSS assertions are not rendered proof.
+
+The new `room.test.tsx` test fails on the base CSS and guards even token insets,
+the section/card rhythm, removal of the extra seal-slot margin and unchanged
+workbench/card/timeline/feed region order. Existing behavior tests cover the
+unchanged selection, tier changes, local test fire, source copy and virtual feed.
+
+Verification for this delivery:
+
+- Desktop `typecheck` and `lint` pass via
+  `pnpm --config.verify-deps-before-run=false --filter @castle-control/desktop`.
+  Both inventory 91 TS/TSX files. Lint also passes boundaries, hygiene and
+  the file cap over 590 code files, and secrets over 737 files.
+- From `apps/desktop`, `pnpm --config.verify-deps-before-run=false exec vitest
+  run --pool=threads --cache=false src/rooms/visuals` passes **31 tests in five
+  files** (room, keyboard, kindling curve, event feed and source copy). The new
+  spacing test was red on the base CSS before the change and is now green.
+- Desktop production `build` passes, including the unchanged first-load cap:
+  **382,467 / 393,216 bytes** across three entry JS/CSS assets, equal to this
+  worktree's baseline. Room CSS remains lazy-loaded.
+- `git diff --check` passes. No install, git write, dependency change, Rust gate,
+  full workspace test or live test was run. App Master owns the commit and
+  merge verification; the browser inspection above remains outstanding.
+
 ## AI-9 room polish
 
 Open `#/chamber/visuals` in fixture mode. The Director's Lit Keep stills at
