@@ -3,6 +3,7 @@ import type { DrillConfiguration } from '@castle-control/contract';
 import { WindowedRows } from '@castle-control/ui';
 import type { CoreGatehousePort, CoreGatehouseSnapshot } from '../../gatehouse-core.js';
 import { Drill } from './drill.jsx';
+import { moderationCopy as copy } from '../../moderation-copy.js';
 
 export function CoreDrill({ state, port }: { state: CoreGatehouseSnapshot; port: CoreGatehousePort }) {
   const [importText, setImportText] = useState('');
@@ -15,6 +16,7 @@ export function CoreDrill({ state, port }: { state: CoreGatehouseSnapshot; port:
   const configuration: DrillConfiguration = { rules: [...state.rules], bank, judge, prompts: prompts.split('\n').filter(text => text.trim()) };
   const ready = !state.busy && !!recording.trim() && !!bank.trim() && !!judge.trim();
   return <section className="moderator-core-drill"><h2>The drill · simulated replay from core</h2>
+    <p role="status">{copy.live_parity}</p>
     <a href="#/chamber/moderator">Back to the Gatehouse</a>
     <p>Replays and comparisons do not write to the live decision ledger. Sources, recording gaps and instrument hashes come from core.</p>
     <section className="moderator-card"><h3>Recording</h3>

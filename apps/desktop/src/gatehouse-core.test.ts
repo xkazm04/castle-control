@@ -5,6 +5,16 @@ import { createCoreGatehousePort } from './gatehouse-core.js';
 import type { GatehouseNetwork } from './gatehouse-core.js';
 import { fixtureCharts, fixtureLedger, fixtureReplay, fixtureRules } from './moderation-fixture.js';
 import { ConnectedGatehouse } from './rooms/moderator/core.jsx';
+import { CoreChat } from './rooms/moderator/core-reads.jsx';
+
+// Generated data only: a simulated transport may return either provenance label.
+const readDecision = { at: '2026-10-28T12:00:00Z', decision_id: '01ARZ3NDEKTSV4RRFFQ69G5FAV',
+  message_id: 'synthetic-core-message', kind: 'would_act', verdict: 'pass', operator: 'human', reason_codes: [] };
+const chatPage = { items: [{ decision: readDecision, provenance: 'live', message: {
+  message_id: readDecision.message_id, user_id: '123', at: readDecision.at, text: 'Synthetic core chat text',
+} }], unavailable_count: 2, next_cursor: 'chat:100' };
+const historyPage = { items: [{ decision: readDecision, provenance: 'simulated', recorded_at: readDecision.at }],
+  unavailable_count: 3, next_cursor: 'history:100' };
 
 const launch = { mode: 'core', endpoint: 'http://127.0.0.1:3210/', session_token: 'a'.repeat(64) } as const;
 const rule = fixtureRules.rules[0];
@@ -26,6 +36,7 @@ function harness() {
     ['gatehouse.decision.undo', decision], ['gatehouse.petition.resolve', decision],
     ['gatehouse.recording.import', recording], ['gatehouse.consensus.get', consensus],
     ['gatehouse.drill.run', fixtureReplay], ['gatehouse.drill.diff', diffResult],
+    ['gatehouse.chat.list', chatPage], ['gatehouse.history.list', historyPage],
   ]);
   const rpc = vi.fn<GatehouseNetwork['rpc']>(async (_endpoint, _session, method) => structuredClone(responses.get(method)));
   const fetch = vi.fn(() => { throw new Error('Unexpected fetch'); });
@@ -35,7 +46,7 @@ function harness() {
 }
 afterEach(() => { vi.unstubAllGlobals(); vi.restoreAllMocks(); });
 
-test('all ten existing methods send schema-validated parameters over the injected transport', async () => {
+test('all twelve existing methods send schema-validated parameters over the injected transport', async () => {
   const h = harness();
   await h.port.load();
   await h.port.upsertRule({ rule });
@@ -48,6 +59,7 @@ test('all ten existing methods send schema-validated parameters over the injecte
   await h.port.diffDrill(diff);
   expect(h.rpc.mock.calls.map(call => call.slice(2))).toEqual([
     ['gatehouse.rules.list', {}], ['gatehouse.consensus.get', { filter: { kind: 'all' }, window_s: 900 }],
+    ['gatehouse.chat.list', { limit: 100 }], ['gatehouse.history.list', { limit: 100 }],
     ['gatehouse.rules.upsert', { rule }], ['gatehouse.ban.confirm', { decision_id: decision.decision_id }],
     ['gatehouse.ban.dismiss', { decision_id: decision.decision_id }], ['gatehouse.decision.undo', { decision_id: decision.decision_id }],
     ['gatehouse.petition.resolve', { decision_id: decision.decision_id, outcome: 'overturned' }],
@@ -59,6 +71,25 @@ test('all ten existing methods send schema-validated parameters over the injecte
   expect(h.port.getSnapshot().recording).toEqual(recording);
   expect(h.port.getSnapshot().diff).toEqual(diffResult);
   expect(h.fetch).not.toHaveBeenCalled(); expect(h.socket).not.toHaveBeenCalled();
+});
+
+test('chat and history parse generated read contracts, preserve provenance and refuse malformed replies', async () => {
+  const h = harness(); await h.port.load();
+  expect(h.port.getSnapshot().chat).toEqual(chatPage);
+  expect(h.port.getSnapshot().history).toEqual(historyPage);
+  const html = renderToStaticMarkup(createElement(ConnectedGatehouse, { port: h.port, replay: false }));
+  for (const text of ['Synthetic core chat text', 'live', 'simulated', 'unavailable_count: 2', 'unavailable_count: 3']) {
+    expect(html).toContain(text);
+  }
+  expect(html).not.toContain('Propose Ban'); expect(html).not.toContain('Save armed rule');
+  for (const method of ['gatehouse.chat.list', 'gatehouse.history.list']) {
+    const bad = method === 'gatehouse.chat.list' ? { ...chatPage, items: [{ ...chatPage.items[0], provenance: 'invented' }] }
+      : { ...historyPage, unavailable_count: -1 };
+    h.responses.set(method, bad); await h.port.load();
+    expect(h.port.getSnapshot().phase).toBe('error');
+    expect(h.port.getSnapshot()[method === 'gatehouse.chat.list' ? 'chat' : 'history']).toBeUndefined();
+    h.responses.set(method, method === 'gatehouse.chat.list' ? chatPage : historyPage);
+  }
 });
 
 test('consensus filters are sent to core and the returned series is rendered without fixture illustration', async () => {
@@ -84,6 +115,8 @@ test('core rules and drill-diff views render the fake transport results with pro
   expect(html).toContain('simulated-candidate'); expect(html).toContain(fixtureReplay.instrument_hash);
   expect(html).toContain('Recording gap'); expect(html).toContain('acted'); expect(html).toContain('not provoked');
   expect(html).toContain('simulated replay'); expect(html).not.toContain('Generated fixture output');
+  expect(html).toContain('live parity: pending capture evidence');
+  expect(html).not.toMatch(/live (?:match|mismatch)|parity (?:match|mismatch)/i);
   const rules = renderToStaticMarkup(createElement(ConnectedGatehouse, { port: h.port, replay: false }));
   expect(rules).toContain('Core configured rule');
 });
@@ -163,5 +196,52 @@ test('a baseline survives leaving the drill and editing rules without sending a 
   expect(baseline?.rules[0]?.name).toBe(rule.name);
   const html = renderToStaticMarkup(createElement(ConnectedGatehouse, { port: h.port, replay: true }));
   expect(html).toContain(run.recording); expect(html).toContain('Comparison baseline saved for this core connection');
-  expect(h.rpc.mock.calls.map(call => call[2])).toEqual(['gatehouse.rules.list', 'gatehouse.consensus.get', 'gatehouse.rules.upsert']);
+  expect(h.rpc.mock.calls.map(call => call[2])).toEqual(['gatehouse.rules.list', 'gatehouse.consensus.get',
+    'gatehouse.chat.list', 'gatehouse.history.list', 'gatehouse.rules.upsert']);
+});
+
+test('empty scanned pages keep cursors, counts accumulate, refresh resets and malformed next pages never replace rows', async () => {
+  const h = harness(); await h.port.load();
+  h.responses.set('gatehouse.chat.list', { items: [], unavailable_count: 4, next_cursor: 'chat:200' });
+  await h.port.moreChat();
+  expect(h.port.getSnapshot().chat).toMatchObject({ items: chatPage.items, unavailable_count: 6, next_cursor: 'chat:200' });
+  expect(h.rpc).toHaveBeenLastCalledWith(launch.endpoint, launch.session_token, 'gatehouse.chat.list', { limit: 100, cursor: 'chat:100' });
+  h.responses.set('gatehouse.chat.list', { items: [], unavailable_count: 0 });
+  await h.port.moreChat();
+  expect(h.port.getSnapshot().chat?.next_cursor).toBeUndefined();
+  const calls = h.rpc.mock.calls.length; await h.port.moreChat(); expect(h.rpc).toHaveBeenCalledTimes(calls);
+  const previous = h.port.getSnapshot().history;
+  h.responses.set('gatehouse.history.list', { items: [], unavailable_count: null }); await h.port.moreHistory();
+  expect(h.port.getSnapshot().history).toBe(previous); expect(h.port.getSnapshot().phase).toBe('error');
+  h.responses.set('gatehouse.history.list', { items: [], unavailable_count: 5 }); await h.port.moreHistory();
+  expect(h.port.getSnapshot().history).toEqual({ items: historyPage.items, unavailable_count: 8 });
+  expect(h.rpc).toHaveBeenLastCalledWith(launch.endpoint, launch.session_token, 'gatehouse.history.list', { limit: 100, cursor: 'history:100' });
+  h.responses.set('gatehouse.chat.list', chatPage); h.responses.set('gatehouse.history.list', historyPage);
+  await h.port.load(); expect(h.port.getSnapshot().chat).toEqual(chatPage); expect(h.port.getSnapshot().history).toEqual(historyPage);
+});
+
+test('4,200 validated core chat rows mount bounded windows with provenance through the final row', async () => {
+  const h = harness(); let page = 0;
+  h.rpc.mockImplementation(async (_endpoint, _session, method) => {
+    if (method !== 'gatehouse.chat.list') return structuredClone(h.responses.get(method));
+    const start = page++ * 100;
+    return { items: Array.from({ length: 100 }, (_, i) => {
+      const index = start + i;
+      return { ...chatPage.items[0], provenance: index % 2 ? 'simulated' : 'live',
+        decision: { ...readDecision, decision_id: `01ARZ3NDEKTSV4RR${index.toString().padStart(10, '0')}`,
+          message_id: `synthetic-core-${index}` },
+        message: { ...chatPage.items[0]?.message, message_id: `synthetic-core-${index}`, text: `Synthetic core row ${index}` } };
+    }), unavailable_count: 0, ...(page < 42 ? { next_cursor: `chat:${page * 100}` } : {}) };
+  });
+  await h.port.load();
+  for (let i = 1; i < 42; i++) await h.port.moreChat();
+  expect(h.port.getSnapshot().chat?.items).toHaveLength(4200);
+  const render = (scroll_top: number) => renderToStaticMarkup(createElement(CoreChat, { state: h.port.getSnapshot(), port: h.port, scroll_top }));
+  const first = render(0); const last = render(4200 * 64);
+  expect(first).toContain('aria-rowcount="4200"'); expect(first).toContain('Synthetic core row 0');
+  expect(first).not.toContain('Synthetic core row 4199'); expect(last).toContain('Synthetic core row 4199');
+  for (const html of [first, last]) {
+    expect(html.match(/data-message-row=/g)?.length).toBeLessThan(30);
+    expect(html).toContain('data-provenance="live"'); expect(html).toContain('data-provenance="simulated"');
+  }
 });

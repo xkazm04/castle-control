@@ -2,22 +2,25 @@ import { invokeMethod, parseError, parseMethodParams, parseMethodResult } from '
 import { parseJson } from '@castle-control/contract/door';
 import { gatehouseRulesList, gatehouseRulesUpsert, gatehouseBanConfirm, gatehouseBanDismiss,
   gatehouseDecisionUndo, gatehousePetitionResolve, gatehouseRecordingImport, gatehouseDrillRun,
-  gatehouseDrillDiff, gatehouseConsensusGet } from '@castle-control/contract/gatehouse';
+  gatehouseDrillDiff, gatehouseConsensusGet, gatehouseChatList, gatehouseHistoryList } from '@castle-control/contract/gatehouse';
 import type { ConsensusGetParams, ConsensusGetResult, Decision, DecisionParams, DrillDiffParams, DrillDiffResult,
   DrillConfiguration, DrillRunParams, DrillRunResult, MethodContract, PetitionResolveParams, RecordingImportResult, Rule,
-  RpcMethods, RulesUpsertParams } from '@castle-control/contract';
+  GatehouseChatResult, GatehouseHistoryResult, RpcMethods, RulesUpsertParams } from '@castle-control/contract';
 import { validateCoreLaunch } from './core-source.js';
 import type { CoreLaunch } from './core-source.js';
 
 type GatehouseMethod = 'gatehouse.rules.list' | 'gatehouse.rules.upsert' | 'gatehouse.ban.confirm'
   | 'gatehouse.ban.dismiss' | 'gatehouse.decision.undo' | 'gatehouse.petition.resolve'
-  | 'gatehouse.recording.import' | 'gatehouse.drill.run' | 'gatehouse.drill.diff' | 'gatehouse.consensus.get';
-/** Test seam restricted to the ten existing core methods; capabilities never enter read snapshots. */
+  | 'gatehouse.recording.import' | 'gatehouse.drill.run' | 'gatehouse.drill.diff' | 'gatehouse.consensus.get'
+  | 'gatehouse.chat.list' | 'gatehouse.history.list';
+/** Test seam restricted to existing core methods; capabilities never enter read snapshots. */
 export type GatehouseNetwork = {
   rpc: <M extends GatehouseMethod>(endpoint: string, session: string, method: M, params: RpcMethods[M]['params']) => Promise<unknown>;
 };
 export type CoreGatehouseSnapshot = {
   rules: readonly Rule[]; consensus?: ConsensusGetResult; last_decision?: Decision;
+  // Accumulated read pages, each parsed separately at the contract door.
+  chat?: GatehouseChatResult; history?: GatehouseHistoryResult;
   recording?: RecordingImportResult; drill?: DrillRunResult; diff?: DrillDiffResult;
   baseline?: DrillConfiguration; baseline_recording?: string;
   busy: boolean; phase: 'idle' | 'loading' | 'ready' | 'error'; notice: string;
@@ -44,7 +47,7 @@ export function createCoreGatehousePort(launch: CoreLaunch, transport?: Gatehous
   const base = validateCoreLaunch(launch);
   let snapshot: CoreGatehouseSnapshot = freeze({ rules: [], busy: false, phase: 'idle', notice: 'Load Gatehouse data from the local core.' });
   const listeners = new Set<() => void>();
-  type OptionalResult = 'consensus' | 'last_decision' | 'recording' | 'drill' | 'diff';
+  type OptionalResult = 'consensus' | 'last_decision' | 'recording' | 'drill' | 'diff' | 'chat' | 'history';
   function publish(change: Partial<CoreGatehouseSnapshot>, omit: OptionalResult[] = []) {
     const previous = { ...snapshot };
     for (const key of omit) delete previous[key];
@@ -82,11 +85,33 @@ export function createCoreGatehousePort(launch: CoreLaunch, transport?: Gatehous
     subscribe(listener: () => void) { listeners.add(listener); return () => { listeners.delete(listener); }; },
     async load() {
       await perform(async () => {
-        publish({ rules: [] }, ['consensus']);
+        publish({ rules: [] }, ['consensus', 'chat', 'history']);
         const { rules } = await call(gatehouseRulesList, {});
         publish({ rules });
         const consensus = await call(gatehouseConsensusGet, { filter: { kind: 'all' }, window_s: 900 });
-        publish({ consensus, notice: 'Rules and consensus loaded from the core.' });
+        publish({ consensus });
+        const chat = await call(gatehouseChatList, { limit: 100 });
+        publish({ chat });
+        const history = await call(gatehouseHistoryList, { limit: 100 });
+        publish({ history, notice: 'Rules, chat, history and consensus loaded from the core. Refresh for current data.' });
+      });
+    },
+    async moreChat() {
+      const previous = snapshot.chat;
+      if (!previous?.next_cursor) return;
+      await perform(async () => {
+        const page = await call(gatehouseChatList, { limit: 100, cursor: previous.next_cursor });
+        publish({ chat: { ...page, items: [...previous.items, ...page.items],
+          unavailable_count: previous.unavailable_count + page.unavailable_count }, notice: 'Next chat page loaded.' });
+      });
+    },
+    async moreHistory() {
+      const previous = snapshot.history;
+      if (!previous?.next_cursor) return;
+      await perform(async () => {
+        const page = await call(gatehouseHistoryList, { limit: 100, cursor: previous.next_cursor });
+        publish({ history: { ...page, items: [...previous.items, ...page.items],
+          unavailable_count: previous.unavailable_count + page.unavailable_count }, notice: 'Next history page loaded.' });
       });
     },
     async upsertRule(params: RulesUpsertParams) {

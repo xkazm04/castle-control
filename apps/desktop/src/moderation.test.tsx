@@ -30,6 +30,7 @@ test('4,200 generated chat lines mount a window including the final row; room us
   const room = renderToStaticMarkup(<ModeratorRoom snapshot={{ mode: 'fixture', phase: 'ready' }} replay={false} queue={new ProposalQueue()} />);
   expect(room).toContain('420 lines');
   expect(room).toContain('aria-rowcount="420"');
+  expect(room).toContain('SIMULATED');
   expect(room).not.toContain('room-provenance');
   expect(room).not.toContain('generated fixtures only');
 });
@@ -115,6 +116,8 @@ test('drill deep link retains shell context and opens simulated provenance, gaps
   for (const text of ['simulated-generated-room', fixtureReplay.instrument_hash, 'judge pending', 'engine failed', 'Recording gap', '1 / 20']) expect(drill).toContain(text);
   expect(drill).toContain('#/chamber/moderator');
   expect(drill).not.toContain('Apply to');
+  expect(drill).toContain('live parity: pending capture evidence');
+  expect(drill).not.toMatch(/live (?:match|mismatch)|parity (?:match|mismatch)/i);
 });
 
 test('core mode never exposes fixture chat or action controls', () => {

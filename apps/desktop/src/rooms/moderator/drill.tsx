@@ -8,6 +8,7 @@ export function Drill({ result, origin = 'fixture' }: { result: DrillRunResult; 
   const states = Object.keys(result.summary.states) as DrillState[];
   const outcomes = result.outcomes.filter(item => filter === 'all' || item.state === filter);
   return <section className="moderator-drill"><h2>{copy.replay} · simulated replay</h2>
+    <p>{copy.live_parity}</p>
     <a href="#/chamber/moderator">{copy.back}</a><p>{origin === 'fixture' ? 'Generated fixture output · no live ledger is invoked.' : 'Simulated replay from the local core · no live ledger is invoked.'}</p>
     <div className="moderator-drill-columns"><div className="room-column"><h3>Instrument and source</h3><p>{result.source}</p>
       <p>Instrument hash · {origin === 'fixture' ? 'illustrative' : 'reported by core'}</p><code className="room-hash">{result.instrument_hash}</code>

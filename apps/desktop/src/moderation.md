@@ -1,5 +1,17 @@
 ﻿# AI-5: offline Gatehouse room and shared seal slot
 
+M1a (2026-10-29): core mode now reads retained chat and decision history using
+the existing generated `gatehouse.chat.list` / `gatehouse.history.list` contracts,
+alongside consensus. `rooms/moderator/core-reads.tsx` windows the lists, shows
+live/simulated provenance per row and accumulates explicit unavailable counts
+over cursor pages, including empty pages. Refresh restarts the read walk. The
+drill remains simulated and says `live parity: pending capture evidence`; no
+capture-time hash or recording reference is invented. No action/arming control
+was added. See [the runbook](../../../docs/guide/gatehouse.md#m1-live-run) for
+owner capture and the still-pending live exit. The existing shell integration
+test's two-read mock/expectation needs a separate authorized update; see the room
+README. The fixture description below remains unchanged.
+
 Open `#/chamber/moderator`; the nested replay is
 `#/chamber/moderator/drill`. The room replaces the numbered panels with the Lit
 Keep's three working columns: the portcullis and consensus, 420 sample chat

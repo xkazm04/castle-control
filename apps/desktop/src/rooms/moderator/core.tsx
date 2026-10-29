@@ -7,6 +7,8 @@ import { createCoreGatehousePort } from '../../gatehouse-core.js';
 import type { CoreGatehousePort, CoreGatehouseSnapshot } from '../../gatehouse-core.js';
 import type { Snapshot } from '../../model.js';
 import { CoreDrill } from './core-drill.jsx';
+import { CoreChat, CoreHistory } from './core-reads.jsx';
+import { moderationCopy as copy } from '../../moderation-copy.js';
 import './room.css';
 
 function CoreRule({ rule, busy, port }: { rule: Rule; busy: boolean; port: CoreGatehousePort }) {
@@ -69,8 +71,9 @@ export function ConnectedGatehouse({ port, replay, seal_slot }: { port: CoreGate
       : <div className="moderator-columns">
         <div className="room-column moderator-workbench" role="region" aria-label="Core room consensus" tabIndex={0}>
           <CoreConsensus state={state} port={port} />
-          <section className="moderator-card"><h3>Live room and ban review</h3>
-            <p>Live chat, held messages and the pending ban queue are unavailable in this connection. No sample messages are shown.</p>
+          <CoreChat state={state} port={port} />
+          <section className="moderator-card"><h3>Held messages and ban review</h3>
+            <p>The held-message queue and pending ban queue are unavailable in this connection. No sample messages are shown.</p>
             <p>Bans require the original message and human review. Use the channel’s moderation tools.</p></section>
         </div>
         <div className="room-column moderator-details" role="region" aria-label="Core Gatehouse rules" tabIndex={0}>
@@ -83,8 +86,10 @@ export function ConnectedGatehouse({ port, replay, seal_slot }: { port: CoreGate
             </WindowedRows>
           </section>
           <section className="moderator-card"><h3>The drill · replay simulator</h3>
+            <p>{copy.live_parity}</p>
             <p>Import a recording or choose one already held by the core, then compare rules without acting on viewers.</p>
-            <a href="#/chamber/moderator/drill">Open the drill</a></section>{seal_slot}
+            <a href="#/chamber/moderator/drill">Open the drill</a></section>
+          <CoreHistory state={state} port={port} />{seal_slot}
         </div>
       </div>}
   </div>;

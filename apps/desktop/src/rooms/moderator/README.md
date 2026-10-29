@@ -8,13 +8,17 @@ preview and proposal flow; the Steward slot is unchanged.
 The port validates requests and replies through generated method contracts from
 `@castle-control/contract/gatehouse`. That independently compiled subpath keeps
 these validators out of the first-load bundle without changing the wire schema.
-It sends only the ten existing methods named in the brief. Errors expose validated
+It sends only existing methods, including the chat/history reads added at
+`5890925`. Errors expose validated
 codes and retry timing, never upstream prose, and mutations are not retried.
 
-The connected view reads rules and consensus from core. Watching pattern rules
+The connected view reads rules, chat, history and consensus from core. Watching pattern rules
 can be edited; arming, rail changes and live action grants are not offered.
 Consensus filters fetch their actual core window and series. There is no preview
-history or fixture fallback. Rules and drill change lists are windowed.
+history or fixture fallback. Chat, history, rules and drill change lists are windowed.
+Chat/history retain row provenance and explicit `unavailable_count`; Load more
+walks opaque 100-entry page cursors, including empty pages. Refresh starts a new
+walk and refreshes consensus; this is an explicit read view, not automatic tailing.
 
 The drill imports a source-labelled recording JSON document (source, messages,
 gaps), or uses a recording name already held by core. Bank, judge and prompts
@@ -22,19 +26,36 @@ are explicit inputs. A saved baseline remains with the connection while the
 streamer returns to edit watching rules. Run and comparison results display
 simulated labels, provenance, gaps, outcome states and each instrument hash.
 
-The current read contract has no pending-ban or chat-list lookup. Those views
+The current read contract has no pending-ban queue lookup. That view
 therefore explain their unavailability instead of inventing review records. The
 typed ban/dismiss/undo/petition port methods are tested, but the UI does not act
 on an unseen original message. No live tests or owner steps are claimed.
 
-Evidence: `gatehouse-core.test.ts` exercises all ten methods, invalid values,
+The drill and its room panel say `live parity: pending capture evidence`.
+Existing hashes describe simulated replays only. No live hash is calculated
+from current rules; no replay result is compared to fabricated live evidence.
+
+M1a evidence: `gatehouse-core.test.ts` exercises all twelve methods, invalid values,
 HTTP and transport failures, immutable snapshots, concurrent mutation suppression,
-baseline persistence, and rendered consensus/comparison data. `shell/room.test.tsx`
-checks actual lazy core and drill routing, per-client capability isolation and
-fixture separation. `packages/contract/scripts/test-codegen.mjs` checks the split,
+baseline persistence, rendered provenance/consensus/comparison data, bounded page
+continuation and 4,200 core rows. `moderation.test.tsx` keeps fixture labels and
+pending-parity copy. The older `shell/room.test.tsx:280` still expects only two
+reads and mocks every non-rule read as consensus; this out-of-scope test needs
+empty valid chat/history responses and a four-method expectation before the
+full suite can pass. `packages/contract/scripts/test-codegen.mjs` checks the split,
 positive and negative schema parity, independent function objects and determinism.
 
-Validation in this worktree: desktop typecheck/lint, all 186 desktop tests,
+M1a verification: the desktop package runners pass typecheck (99 files) and
+lint, including boundaries/hygiene/file-cap (615 files) and secrets (767 files).
+The narrowed gatehouse-core, moderation, moderation-gate and client suites pass
+52/52 tests. Adding the shell suite yields 69 passed / 1 failed at the old
+two-method assertion described above. The desktop production build passes its
+382,560/393,216-byte first-load budget. Recursive typecheck/lint encounter
+`spawn EPERM`; `pnpm gate` passes 24 tooling tests and stops at the schema
+exporter's `spawnSync cargo EPERM`. Director full-gate verification remains open.
+No Rust, contract, node_modules, or git metadata was modified by M1a.
+
+Historical validation before M1a: desktop typecheck/lint, all 186 desktop tests,
 contract typecheck/lint, all 124 contract tests plus generator assertions, and
 all 17 verifier tests passed. The production desktop first-load check passed at
 382,254/393,216 bytes. Snapshot-based contract drift passed; the ten pre-existing

@@ -39,6 +39,9 @@
 .moderator-drill-room { height: 100%; overflow: auto; padding: var(--space-16); }
 .moderator-room section { min-width: 0; }
 .moderator-core-status { padding: var(--space-8) var(--space-16); }
+.moderator-core-read-row { width: 100%; min-width: 0; overflow: hidden; font-size: var(--text-body); }
+.moderator-core-read-row p { margin-block: var(--space-4); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.moderator-core-read-row time { font-family: var(--font-num); }
 .moderator-core-drill label, .moderator-core-drill textarea { display: block; width: 100%; }
 .moderator-core-drill textarea { min-height: var(--space-40); }
 .moderator-core-drill input, .moderator-rule input { width: 100%; min-width: 0; }

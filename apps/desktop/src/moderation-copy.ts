@@ -9,6 +9,7 @@ export const moderationCopy = {
   bans: 'Ban queue', ledger: 'The gate roll', replay: 'The drill',
   replay_gloss: 'Replay simulator · generated recording', back: '← Back to the Gatehouse',
   replay_open: 'Run the drill', clear: 'The portcullis is clear',
+  live_parity: 'live parity: pending capture evidence',
   pass: 'Pass', strike: 'Strike', ban: 'Ban', dismiss: 'Dismiss', undo: 'Undo', petition: 'Petition',
   gate_gloss: 'AutoMod held queue · fixture only', held_label: 'Held messages',
   allow: 'Allow', deny: 'Deny', held_state: 'Held for review',
