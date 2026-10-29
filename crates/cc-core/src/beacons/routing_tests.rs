@@ -6,6 +6,9 @@ use serde_json::json;
 use std::{sync::Arc, time::Duration};
 use tokio::sync::broadcast;
 
+#[path = "simulate_overlay.rs"]
+mod simulate_overlay;
+
 struct Harness {
     _root: tempfile::TempDir,
     native: Arc<NativeServices>,
@@ -134,7 +137,7 @@ fn input(source: ContributionSource, key: &str, amount: u32) -> ContributionIngr
 }
 
 #[tokio::test]
-async fn cheer_routes_only_selected_visuals_dedupes_and_isolates_simulation() {
+async fn cheer_routes_only_selected_visuals_and_dedupes() {
     let h = Harness::new().await;
     h.save(
         "cheer",
@@ -177,14 +180,6 @@ async fn cheer_routes_only_selected_visuals_dedupes_and_isolates_simulation() {
     h.accepted(2).await;
     assert_eq!(h.intensity("cheer").await, 0.5);
     assert_eq!(h.intensity("gift").await, 0.1);
-    let preview = h
-        .call(
-            "beacons.simulate",
-            json!({"visual_id":"cheer",
-        "burst":{"source":"cheer","amount":100}}),
-        )
-        .await;
-    assert_eq!(preview["intensity"]["intensity"], 1.0);
     h.module.snapshot_live().unwrap();
     assert_eq!(h.intensity("cheer").await, 0.5);
     assert!(

@@ -1,4 +1,4 @@
-//! Shared Beacons configuration, isolated previews and accepted live routing.
+//! Shared Beacons configuration, simulated overlay previews and live routing.
 mod art;
 mod art_assets;
 mod live;
@@ -139,7 +139,11 @@ impl BeaconsModule {
                 // unit at weight one. No cross-source totals or live state exist.
                 let inputs =
                     InputSelection::new(vec![(params.burst.source, 1)]).map_err(invalid)?;
-                encode(simulate(visual, &inputs, &params.burst).map_err(invalid)?)
+                let preview = simulate(visual, &inputs, &params.burst).map_err(invalid)?;
+                if let Some(native) = self.native.as_ref().and_then(Weak::upgrade) {
+                    native.accept_beacons_simulation(preview.intensity.clone())?;
+                }
+                encode(preview)
             }
             RpcRequest::SourceUrl(params) => {
                 // Existence is checked first, including in socket-free registries.

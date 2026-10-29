@@ -17,12 +17,21 @@ use tokio::sync::{Semaphore, watch};
 
 const MAX_VISUALS: usize = 128;
 const MAX_PACKAGES: usize = 16;
-type Snapshot = Option<Arc<BeaconsRenderSnapshot>>;
+type Snapshot = Option<Arc<RenderPush>>;
+
+/// Host-only provenance travels as an SSE comment, outside the wire payload.
+#[derive(PartialEq)]
+struct RenderPush {
+    data: BeaconsRenderSnapshot,
+    simulated: bool,
+}
 
 #[derive(Default)]
 struct State {
     visuals: BTreeMap<VisualId, Visual>,
     intensities: BTreeMap<VisualId, BeaconsIntensity>,
+    // Rendering overrides only: never overwrite the accepted live intensity.
+    previews: BTreeMap<VisualId, BeaconsIntensity>,
     packages: BTreeMap<DesignId, VerifiedPackage>,
     slots: BTreeMap<VisualId, watch::Sender<Snapshot>>,
 }
@@ -91,6 +100,7 @@ impl RenderHost {
         commit()?;
         state.visuals.insert(id.clone(), visual);
         state.intensities.insert(id.clone(), intensity);
+        state.previews.remove(&id);
         state
             .slots
             .entry(id.clone())
@@ -98,7 +108,7 @@ impl RenderHost {
         publish(&state, &id)
     }
 
-    /// Caller supplies the last computed accepted engine value, never a preview.
+    /// Last accepted live engine value. Replaces this visual's preview, if any.
     pub fn accept_intensity(&self, intensity: BeaconsIntensity) -> Result<(), ErrorEnvelope> {
         let mut state = self.state.lock().map_err(|_| unavailable())?;
         let id = intensity.visual_id.clone();
@@ -106,6 +116,21 @@ impl RenderHost {
             return Err(invalid());
         }
         state.intensities.insert(id.clone(), intensity);
+        state.previews.remove(&id);
+        publish(&state, &id)
+    }
+
+    /// SIMULATED per-visual render override. No live intensity or store mutation.
+    pub(crate) fn accept_simulation(
+        &self,
+        intensity: BeaconsIntensity,
+    ) -> Result<(), ErrorEnvelope> {
+        let mut state = self.state.lock().map_err(|_| unavailable())?;
+        let id = intensity.visual_id.clone();
+        if !state.visuals.contains_key(&id) {
+            return Err(invalid());
+        }
+        state.previews.insert(id.clone(), intensity);
         publish(&state, &id)
     }
 
@@ -160,7 +185,7 @@ impl RenderHost {
             .and_then(|s| s.borrow().clone())
             .ok_or_else(unavailable)?;
         let mut url = format!("{origin}beacons/{}", id.as_str());
-        if let Some(package) = &snapshot.package {
+        if let Some(package) = &snapshot.data.package {
             url.push_str("?package_hash=");
             url.push_str(&String::from(package.content_hash.clone()));
         }
@@ -202,13 +227,22 @@ fn publish(state: &State, id: &VisualId) -> Result<(), ErrorEnvelope> {
     let snapshot = BeaconsRenderSnapshot {
         visual,
         package,
-        intensity: state.intensities.get(id).ok_or_else(invalid)?.clone(),
+        intensity: state
+            .previews
+            .get(id)
+            .or_else(|| state.intensities.get(id))
+            .ok_or_else(invalid)?
+            .clone(),
     };
     let snapshot: BeaconsRenderSnapshot =
         serde_json::from_value(serde_json::to_value(snapshot).map_err(|_| invalid())?)
             .map_err(|_| invalid())?;
-    if slot.borrow().as_deref() != Some(&snapshot) {
-        slot.send_replace(Some(Arc::new(snapshot)));
+    let push = RenderPush {
+        data: snapshot,
+        simulated: state.previews.contains_key(id),
+    };
+    if slot.borrow().as_deref() != Some(&push) {
+        slot.send_replace(Some(Arc::new(push)));
     }
     Ok(())
 }

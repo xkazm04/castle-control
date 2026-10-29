@@ -132,12 +132,15 @@ preview is simulated and cannot prove live intake. Complete login privately.
    **simulated · Core simulation** feed label visible. The app should show a
    core-computed blaze result and one synthetic row with amount 50. This models
    a 50-sub gift bomb; it does not send gifts or change the saved bits input.
-4. Observe OBS as well: `beacons.simulate` is deliberately isolated and does
-   **not** push the simulated result to OBS or alter live totals. Thus these
-   controls cannot yet supply the M3 proof that a simulated 50-sub gift bomb
-   moves the live OBS visual. Record the gap for the Director as a separate
-   delivery; do not relabel a real gift or a fixture preview as that proof.
-   Source: [simulation-isolation test](../../crates/cc-core/src/beacons/routing_tests.rs).
+4. Observe OBS as well: `beacons.simulate` now pushes the simulated burst to
+   **that visual only**, so it also moves that visual in OBS. It is labelled
+   simulated in the app and `SIMULATED` in the native overlay push stream; it
+   never enters live totals, retained contributions or the live feed. The
+   preview remains until a changed live intensity or configuration replaces it.
+   The current OBS page does not display the stream's simulated marker: keep
+   the app's simulation label visible in capture and record this display gap.
+   Do not relabel a real gift or a fixture preview as simulated-burst evidence.
+   Source: [native simulation tests](../../crates/cc-core/src/beacons/simulate_overlay.rs).
 
 ### Package timing and evidence
 
@@ -157,5 +160,6 @@ and contribution records never become repository fixtures. Publish only
 sanitized extracts reviewed by the owner.
 
 **M3 remains pending-owner:** no live cheer result or OBS timing is claimed.
-The simulated-bomb-to-OBS gap also needs a separate implementation delivery
-before the full exit can be demonstrated. Beacons stays beyond the floor demo.
+The simulation push is code completion only; OBS movement and a visible OBS
+simulation label are not proved by the offline tests. Beacons stays beyond the
+floor demo.

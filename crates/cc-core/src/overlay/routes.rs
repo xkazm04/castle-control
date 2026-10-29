@@ -100,10 +100,13 @@ async fn push(State(host): State<Arc<RenderHost>>, Query(query): Query<PushQuery
                 ready = false;
                 let snapshot = receiver.borrow_and_update().clone();
                 if let Some(snapshot) = snapshot {
-                    let data = serde_json::to_string(snapshot.as_ref()).ok()?;
-                    let event = Event::default()
+                    let data = serde_json::to_string(&snapshot.data).ok()?;
+                    let mut event = Event::default()
                         .event(BEACONS_RENDER_SNAPSHOT_EVENT)
                         .data(data);
+                    if snapshot.simulated {
+                        event = event.comment("SIMULATED");
+                    }
                     return Some((Ok::<_, Infallible>(event), (receiver, false, permit)));
                 }
             }

@@ -30,12 +30,20 @@ impl NativeServices {
     ) -> Result<(), ErrorEnvelope> {
         self.render.commit_visual_after(visual, commit)
     }
-    /// Native engine handoff; simulated preview RPCs never call it.
+    /// Live engine/reset handoff. Clears that visual's simulated overlay preview;
+    /// simulation RPCs use the sibling handoff and never enter live totals.
     pub fn accept_beacons_intensity(
         &self,
         intensity: BeaconsIntensity,
     ) -> Result<(), ErrorEnvelope> {
         self.render.accept_intensity(intensity)
+    }
+    /// A single-visual SIMULATED render override, never a contribution or total.
+    pub(crate) fn accept_beacons_simulation(
+        &self,
+        intensity: BeaconsIntensity,
+    ) -> Result<(), ErrorEnvelope> {
+        self.render.accept_simulation(intensity)
     }
     pub(crate) fn beacons_source_url(&self, id: &VisualId) -> Result<String, ErrorEnvelope> {
         self.render.source_url(&self.overlay_url(), id)
