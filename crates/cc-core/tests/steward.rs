@@ -214,7 +214,8 @@ async fn unconfigured_registers_all_three_and_returns_unavailable() {
             assert_eq!(error.code, ErrorCode::Unavailable);
             assert_eq!(error.message, "no Steward engine is configured");
         }
-        assert_eq!(RpcRequest::NAMES.len() - registry.methods().len(), 11);
+        // beacons.contribution.list is declared but intentionally unregistered.
+        assert_eq!(RpcRequest::NAMES.len() - registry.methods().len(), 12);
     }
 }
 
