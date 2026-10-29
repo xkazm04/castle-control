@@ -26,6 +26,10 @@ use tokio::sync::broadcast;
 pub trait BeaconSource: Send + Sync {
     fn chain(&self) -> Result<QuicknetChain, ErrorEnvelope>;
     fn round(&self, sealed: &LotsSealedRoll) -> Result<BeaconRound, ErrorEnvelope>;
+    /// Live sources enforce chronology. Recorded fixtures have no wall-clock gate.
+    fn round_time(&self, _: &LotsSealedRoll) -> Result<Option<DateTime<Utc>>, ErrorEnvelope> {
+        Ok(None)
+    }
 }
 
 pub trait LotsClock: Send + Sync {
@@ -60,6 +64,7 @@ pub struct LotsModule {
     beacon: Arc<dyn BeaconSource>,
     clock: Arc<dyn LotsClock>,
     simulated: bool,
+    render: Option<Arc<crate::overlay::RenderHost>>,
     // Keep default fixture files until every Rust intake handle releases its store.
     pub(crate) temporary_root: Option<tempfile::TempDir>,
 }
@@ -103,6 +108,7 @@ impl LotsModule {
             beacon,
             clock,
             simulated,
+            render: None,
             payloads: broadcast::channel(256).0,
             temporary_root: None,
         })
@@ -112,6 +118,12 @@ impl LotsModule {
     /// Subscribers detect lag through broadcast::error::RecvError::Lagged.
     pub fn subscribe(&self) -> broadcast::Receiver<LotsEventPayload> {
         self.payloads.subscribe()
+    }
+
+    /// Trusted Rust composition only; the overlay exposes no mutation door.
+    pub fn with_render_host(mut self, render: Arc<crate::overlay::RenderHost>) -> Self {
+        self.render = Some(render);
+        self
     }
 
     /// The trusted intake adapter supplies verified Twitch identity, never
@@ -187,6 +199,9 @@ impl LotsModule {
         let mut state = self.state.lock().map_err(|_| internal())?;
         state.rolls.clear();
         state.pending.clear();
+        if let Some(render) = &self.render {
+            render.clear_lots()?;
+        }
         state
             .store
             .purge_all(cc_store::Timestamp::now())
@@ -203,13 +218,16 @@ impl LotsModule {
             LotsEventPayload::Sealed(_) => EventKind::Sealed,
             LotsEventPayload::Cast(_) => EventKind::Cast,
         };
+        if let Some(render) = &self.render {
+            render.accept_lots(&payload, self.simulated)?;
+        }
         self.events.publish(kind)?;
         // No subscribers is normal: this internal sink is optional, never a ledger.
         let _no_subscribers = self.payloads.send(payload);
         Ok(())
     }
 
-    fn handle(&self, request: &RpcRequest) -> Result<Value, ErrorEnvelope> {
+    pub(crate) fn handle(&self, request: &RpcRequest) -> Result<Value, ErrorEnvelope> {
         let mut state = self.state.lock().map_err(|_| internal())?;
         match request {
             RpcRequest::DrawList(_) => encode(DrawListResult {

@@ -1,8 +1,40 @@
-//! Explicit opt-in only; native fixture registration never constructs this source.
+//! Native quicknet opt-in and an independently pinned chain; fixtures stay offline.
 use super::{BeaconSource, convert};
 use cc_types::{ErrorCode, ErrorEnvelope, LotsSealedRoll};
 use cc_verify::{BeaconRound, Entry, QuicknetChain, QuicknetClient, SealedRoll};
 use std::sync::Arc;
+
+/// Trust is compiled in, never learned from the round response or imported writ.
+pub fn official_chain() -> QuicknetChain {
+    QuicknetChain::new(
+        "52db9ba70e0cc0f6eaf7803dd07447a1f5477735fd3f661792ba94600c84e971".into(),
+        concat!(
+            "83cf0f2896adee7eb8b5f01fcad3912212c437e0073e911fb90022d3e760183c8c4b",
+            "450b6a0a6c3ac6a5776a2d1064510d1fec758c921cc22b0e17e63aaf4bcb5ed66304d",
+            "e9cf809bd274ca73bab4af5a6e9c76a4bc09e76eae8991ef5ece45a"
+        )
+        .into(),
+        "2023-08-23T15:09:27Z".into(),
+    )
+    .expect("compiled quicknet trust anchor")
+}
+
+pub(crate) fn configured(root: &std::path::Path) -> Result<Arc<dyn BeaconSource>, ErrorEnvelope> {
+    let path = root.join("live-quicknet");
+    match std::fs::symlink_metadata(&path) {
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => {
+            Ok(Arc::new(crate::live::NoBeacon))
+        }
+        Ok(metadata) if metadata.is_file() && metadata.len() <= 64 => {
+            let text = std::fs::read_to_string(path).map_err(|_| invalid())?;
+            if text.trim() != "enable-live-quicknet" {
+                return Err(invalid());
+            }
+            Ok(Arc::new(LiveBeacon::new(official_chain())))
+        }
+        _ => Err(invalid()),
+    }
+}
 
 /// Transport seam for recorded fixtures. Its output is always untrusted: the
 /// source independently verifies the selected round and signature with cc-verify.
@@ -11,7 +43,7 @@ pub trait BeaconTransport: Send + Sync {
 }
 
 /// A caller-provided trust anchor, never learned from a writ or HTTP response.
-/// Construction is the opt-in; there is no default, flag, RPC or registration.
+/// Native registration constructs this only with an explicit local opt-in file.
 pub struct LiveBeacon {
     chain: QuicknetChain,
     transport: Arc<dyn BeaconTransport>,
@@ -57,6 +89,32 @@ impl LiveBeacon {
 }
 
 impl BeaconSource for LiveBeacon {
+    fn round_time(
+        &self,
+        sealed: &LotsSealedRoll,
+    ) -> Result<Option<chrono::DateTime<chrono::Utc>>, ErrorEnvelope> {
+        // The schedule comes from our validated anchor, never the round response.
+        let anchor = serde_json::to_value(&self.chain).map_err(|_| invalid())?;
+        let genesis: chrono::DateTime<chrono::Utc> = anchor["genesis_time"]
+            .as_str()
+            .ok_or_else(invalid)?
+            .parse()
+            .map_err(|_| invalid())?;
+        let cc_types::LotsRandomnessPlan::Drand { round, .. } = &sealed.roll.randomness else {
+            return Ok(None);
+        };
+        let number: u64 = String::from(round.clone()).parse().map_err(|_| invalid())?;
+        let seconds = number
+            .checked_sub(1)
+            .and_then(|n| n.checked_mul(3))
+            .and_then(|n| i64::try_from(n).ok())
+            .ok_or_else(invalid)?;
+        let duration = chrono::Duration::try_seconds(seconds).ok_or_else(invalid)?;
+        Ok(Some(
+            genesis.checked_add_signed(duration).ok_or_else(invalid)?,
+        ))
+    }
+
     fn chain(&self) -> Result<QuicknetChain, ErrorEnvelope> {
         Ok(self.chain.clone())
     }
@@ -86,8 +144,8 @@ impl BeaconTransport for HttpsTransport {
         let sealed = sealed.clone();
         // BeaconSource is synchronous. Own the async client and runtime on a
         // worker so calling from a Tokio runtime never nests block_on or drops
-        // an I/O runtime there. This call still blocks: future live registration
-        // must dispatch lots operations from a blocking worker, not a UI thread.
+        // an I/O runtime there. Native registration dispatches Lots operations
+        // from a blocking worker, never the async bridge or UI executor.
         std::thread::Builder::new()
             .name("quicknet-beacon".into())
             .spawn(move || {

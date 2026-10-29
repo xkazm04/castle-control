@@ -2,12 +2,12 @@ import { useEffect, useState, useSyncExternalStore } from 'react';
 import type { ReactNode } from 'react';
 import { SealButton, WindowedRows } from '@castle-control/ui';
 import { coreLotsConnection } from '../../client.js';
-import { createCoreLotsPort } from '../../lots-core.js';
+import { createCoreLotsPort, lotsRoundLabel } from '../../lots-core.js';
 import type { CoreLotsPort } from '../../lots-core.js';
 import type { Snapshot } from '../../model.js';
 import './room.css';
 
-function ConnectedLotsRoom({ port, seal_slot }: { port: CoreLotsPort; seal_slot?: ReactNode }) {
+export function ConnectedLotsRoom({ port, simulated, seal_slot }: { port: CoreLotsPort; simulated?: boolean; seal_slot?: ReactNode }) {
   const state = useSyncExternalStore(port.subscribe, port.getSnapshot, port.getSnapshot);
   const [user, setUser] = useState('');
   useEffect(() => { if (!port.getSnapshot().locked) void port.load(); }, [port]);
@@ -17,7 +17,9 @@ function ConnectedLotsRoom({ port, seal_slot }: { port: CoreLotsPort; seal_slot?
       <div className="room-column lottery-workbench">
         <section className="room-stage lottery-stage" aria-label="Core draw workbench">
           <h2>Draws in your core</h2>
+          <p aria-label="Round source">{lotsRoundLabel(simulated, state.seal_result)}</p>
           <button type="button" disabled={state.busy || state.locked} onClick={() => { void port.load(); }}>Refresh draws</button>
+          {!state.draws.some(item => item.draw_id === 'questions') && <button type="button" disabled={state.busy || state.locked} onClick={() => { void port.createQuestionDraw(); }}>Create no-prize question draw</button>}
           <label>Draw<select value={draw?.draw_id ?? ''} disabled={state.busy || state.locked}
             onChange={event => { void port.select(event.currentTarget.value); }}>
             {!draw && <option value="">No draw selected</option>}
@@ -38,8 +40,10 @@ function ConnectedLotsRoom({ port, seal_slot }: { port: CoreLotsPort; seal_slot?
               on_seal={() => { void port.seal(); }} />
           </>}
           {state.seal_result && <>
+            <p>Seal announced · entry list frozen before cast. Keep the announcement and OBS capture.</p>
             <p className="room-hash">Seal · SHA-256 · {state.seal_result.sealed.seal}</p>
             <p>{state.entries.length} frozen entries · {state.seal_result.sealed.roll.randomness.source}</p>
+            {state.seal_result.sealed.roll.randomness.source === 'drand_quicknet' && <p>Target round · {state.seal_result.sealed.roll.randomness.round} · wait until the round arrives before Cast.</p>}
             <button type="button" disabled={state.busy || state.started} onClick={() => { void port.start(); }}>Cast the lots</button>
           </>}
           {state.cast_result && <section aria-label="Core draw result">
@@ -79,5 +83,5 @@ export default function CoreLotteryRoom({ snapshot, seal_slot }: { snapshot: Sna
     <p role="status">Local draw connection unavailable. Reopen the desktop shell.</p>{seal_slot}
   </section>;
   connection.port ??= createCoreLotsPort(connection.launch, connection.transport);
-  return <ConnectedLotsRoom port={connection.port} seal_slot={seal_slot} />;
+  return <ConnectedLotsRoom port={connection.port} {...(snapshot.status ? { simulated: snapshot.status.simulated } : {})} seal_slot={seal_slot} />;
 }

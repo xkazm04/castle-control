@@ -18,6 +18,27 @@ export type CoreLotsSnapshot = Omit<LotsPreview, 'draw' | 'entries'> & {
   cast_result?: CastResult; writ?: LotsWrit; busy: boolean; locked: boolean;
 };
 
+/** Labels use the existing core status and accepted seal; no launch flag is
+ * treated as proof that a live source exists. Verification remains in core. */
+export function lotsRoundLabel(simulated: boolean | undefined, sealed: RollSealResult | undefined): string {
+  if (simulated === true || sealed?.sealed.roll.sealed_at === '2023-08-23T15:09:28Z') return 'Recorded · simulated round source';
+  if (simulated === undefined) return 'Round source unknown · wait for core status';
+  if (!sealed) return 'Live mode · trusted quicknet needs the local opt-in; no round selected';
+  const plan = sealed.sealed.roll.randomness;
+  if (plan.source === 'streamer_commit') return 'Streamer-controlled · commit/reveal';
+  if (plan.chain_hash !== '52db9ba70e0cc0f6eaf7803dd07447a1f5477735fd3f661792ba94600c84e971') return 'Round source unknown · unexpected chain';
+  return `Live-trusted quicknet · target round ${plan.round}`;
+}
+
+const questionDraw = {
+  draw_id: 'questions', name: 'Questions for the hall · no prize',
+  policy: { content: 'question', paid_entry: false, paid_weight: false, subscriber_only: false,
+    channel_points: false, free_entry_equal_odds: true, regions: [], prize_value_usd_cents: 0,
+    registration_confirmed: false, official_rules: false, twitch_disclaimer: false },
+  rules: { pool: { kind: 'keyword', keyword: '!join' }, winner_count: 1, cooldown_s: 0,
+    cohort_caps: [], weight_curve: { kind: 'equal' }, free_join_equal_odds: true },
+} as const;
+
 function freeze<T>(value: T): T {
   if (typeof value === 'object' && value !== null && !Object.isFrozen(value)) {
     for (const child of Object.values(value)) freeze(child);
@@ -112,6 +133,11 @@ export function createCoreLotsPort(launch: CoreLaunch, transport?: LotsNetwork) 
         await check(saved);
       });
     },
+    async createQuestionDraw() {
+      // The same schema door as every other configuration. No fixture is used.
+      const { draw } = parseMethodParams(lotsDrawUpsert, { draw: questionDraw });
+      await this.edit(draw);
+    },
     async check() { await perform(async () => { await check(currentDraw()); }); },
     async lookup(user_id: string) {
       await perform(async () => {
@@ -133,7 +159,7 @@ export function createCoreLotsPort(launch: CoreLaunch, transport?: LotsNetwork) 
         const result = await call(lotsRollSeal, { draw_id: draw.draw_id, source: 'drand_quicknet', margin_s: 6 });
         if (result.draw_id !== draw.draw_id) throw new Error('Seal returned a different draw');
         publish({ sealed: true, paused: true, seal_result: result, entries: result.sealed.roll.entries,
-          notice: 'Entry list sealed by the core. The animation will use only the core cast.' });
+          notice: 'Seal announced through the core event. Native live runs also publish the OBS plate; recorded cores remain simulated.' });
       });
     },
     async start() {
@@ -155,6 +181,6 @@ export function createCoreLotsPort(launch: CoreLaunch, transport?: LotsNetwork) 
         finally { publish({ recomputing: false }); }
       });
     },
-  } satisfies LotsPort<CoreLotsSnapshot> & { load: () => Promise<void>; check: () => Promise<void> };
+  } satisfies LotsPort<CoreLotsSnapshot> & { load: () => Promise<void>; check: () => Promise<void>; createQuestionDraw: () => Promise<void> };
 }
 export type CoreLotsPort = ReturnType<typeof createCoreLotsPort>;

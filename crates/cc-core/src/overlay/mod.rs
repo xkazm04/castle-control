@@ -1,4 +1,5 @@
 //! Accepted render state on the isolated OBS listener. Never mounted on core.
+mod lots;
 pub mod package;
 mod routes;
 
@@ -28,12 +29,14 @@ struct State {
 
 pub struct RenderHost {
     state: Mutex<State>,
+    lots: Mutex<BTreeMap<cc_types::DrawId, lots::DrawScene>>,
     clients: Arc<Semaphore>,
 }
 impl Default for RenderHost {
     fn default() -> Self {
         Self {
             state: Mutex::new(State::default()),
+            lots: Mutex::new(BTreeMap::new()),
             clients: Arc::new(Semaphore::new(128)),
         }
     }
@@ -165,6 +168,10 @@ impl RenderHost {
     }
 
     pub fn owns_source(&self, origin: &str, url: &str) -> bool {
+        if let Some(id) = url.strip_prefix(&format!("{origin}lots/")) {
+            return cc_types::DrawId::try_from(id.to_owned())
+                .is_ok_and(|id| self.lots_seal(&id).is_ok_and(|seal| seal.is_some()));
+        }
         if url == origin {
             return true;
         } // The owner-attended spike's static plate.

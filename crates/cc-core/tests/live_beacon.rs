@@ -120,10 +120,16 @@ fn live_beacon_rejects_modified_seal_before_transport() {
     assert_eq!(transport.calls.load(Ordering::SeqCst), 0);
 }
 
-struct Clock;
+struct Clock(std::sync::atomic::AtomicBool);
 impl cc_core::lots::LotsClock for Clock {
     fn now(&self) -> chrono::DateTime<chrono::Utc> {
-        "2023-08-23T15:09:28Z".parse().unwrap()
+        if self.0.load(Ordering::SeqCst) {
+            "2023-08-23T15:09:31Z"
+        } else {
+            "2023-08-23T15:09:28Z"
+        }
+        .parse()
+        .unwrap()
     }
 }
 
@@ -144,12 +150,13 @@ async fn live_beacon_network_failure_is_typed_without_cast_and_streamer_commit_s
     )));
     let root = tempfile::tempdir().unwrap();
     let events = Arc::new(EventHub::new(64).unwrap());
+    let clock = Arc::new(Clock(std::sync::atomic::AtomicBool::new(false)));
     let module = Arc::new(
         LotsModule::open(
             root.path(),
             events.clone(),
             Arc::new(source),
-            Arc::new(Clock),
+            clock.clone(),
             true,
         )
         .unwrap(),
@@ -170,6 +177,7 @@ async fn live_beacon_network_failure_is_typed_without_cast_and_streamer_commit_s
         }
     });
     for randomness in ["drand_quicknet", "streamer_commit"] {
+        clock.0.store(false, Ordering::SeqCst);
         rpc(&registry, "lots.draw.upsert", json!({"draw":draw}))
             .await
             .unwrap();
@@ -203,6 +211,7 @@ async fn live_beacon_network_failure_is_typed_without_cast_and_streamer_commit_s
         .await
         .unwrap();
         let params = json!({"draw_run_id":sealed["draw_run_id"]});
+        clock.0.store(true, Ordering::SeqCst);
         let cast = rpc(&registry, "lots.cast", params.clone()).await;
         if randomness == "drand_quicknet" {
             let error = cast.unwrap_err();

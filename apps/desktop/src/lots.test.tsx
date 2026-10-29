@@ -9,6 +9,8 @@ import { draftRoll, entryHash, lotterySession, sealLotteryProposal } from './roo
 import { checkFixturePolicy, createLotsPreview, lookupFixture, recomputeFixture } from './lots-model.js';
 import { fixtureDraws, fixtureEntries, fixtureWrit } from './lots-fixture.js';
 import { lotsCopy as copy } from './lots-copy.js';
+import { createCoreLotsPort } from './lots-core.js';
+import { ConnectedLotsRoom } from './rooms/lottery/core.jsx';
 
 const snapshot = { mode: 'fixture', phase: 'ready' } as const;
 const html = (queue = new ProposalQueue()) => renderToStaticMarkup(<LotteryRoom snapshot={snapshot} replay={false} queue={queue} />);
@@ -17,6 +19,27 @@ const current = (queue: ProposalQueue) => {
   if (!item) throw new Error('Missing roll proposal');
   return item;
 };
+
+test('connected room renders source provenance and the announcement before any winners', async () => {
+  const draw = fixtureDraws[0];
+  if (!draw) throw new Error('Missing simulated draw');
+  const port = createCoreLotsPort({ mode: 'core', endpoint: 'http://127.0.0.1:3210/', session_token: 'a'.repeat(64) }, {
+    rpc: async (_endpoint, _session, method) => {
+      if (method === 'lots.draw.list') return { draws: [draw] };
+      if (method === 'lots.draw.check') return { result: 'ok', reasons: [] };
+      if (method === 'lots.roll.seal') return { draw_id: draw.draw_id, draw_run_id: '01ARZ3NDEKTSV4RRFFQ69G5FAV',
+        sealed: { roll: fixtureWrit.roll, seal: fixtureWrit.seal } };
+      throw new Error('Unexpected request in simulated room test');
+    },
+  });
+  await port.load(); await port.seal();
+  const markup = renderToStaticMarkup(<ConnectedLotsRoom port={port} simulated />);
+  expect(markup).toContain('Recorded · simulated round source');
+  expect(markup).toContain('Seal announced');
+  expect(markup).toContain('Cast the lots');
+  expect(markup).not.toContain('Winners ·');
+  expect(markup).not.toContain('Live-trusted');
+});
 
 test('fixture policy mirrors every giveaway-table row, uses cents, and omits absent age', () => {
   const source = fixtureDraws[1];

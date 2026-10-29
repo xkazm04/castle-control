@@ -15,6 +15,6 @@ impl BeaconSource for NoBeacon {
 fn unavailable() -> ErrorEnvelope {
     ErrorEnvelope::new(
         ErrorCode::Unavailable,
-        "live public beacon is not configured; streamer-controlled commit-and-reveal is available",
+        "live public beacon disabled; opt in with the data-directory live-quicknet file before launch",
     )
 }

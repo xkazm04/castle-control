@@ -3,6 +3,10 @@ use cc_types::{BeaconsIntensity, DesignPackage, ErrorEnvelope, Visual, VisualId}
 use std::path::Path;
 
 impl NativeServices {
+    /// Separate Lots handoff; no draw is represented as a Beacons visual.
+    pub(crate) fn lots_render_host(&self) -> std::sync::Arc<crate::overlay::RenderHost> {
+        self.render.clone()
+    }
     /// Trusted native package-import door. No RPC or overlay route accepts this
     /// decision. Verify bytes first, then consent, then atomically publish.
     pub fn accept_beacons_package(

@@ -1,6 +1,8 @@
 import { afterEach, expect, test, vi } from 'vitest';
 import type { DrawCheckResult } from '@castle-control/contract';
-import { createCoreLotsPort } from './lots-core.js';
+import { parseMethodResult } from '@castle-control/contract';
+import { lotsRollSeal } from '@castle-control/contract/lots';
+import { createCoreLotsPort, lotsRoundLabel } from './lots-core.js';
 import type { LotsNetwork } from './lots-core.js';
 import { fixtureDraws, fixtureWrit } from './lots-fixture.js';
 
@@ -179,4 +181,30 @@ test('reuses strict launch validation before any network call', () => {
   }
   expect(() => createCoreLotsPort({ ...launch, session_token: 'invalid' }, { rpc })).toThrow();
   expect(rpc).not.toHaveBeenCalled();
+});
+
+test('source labels distinguish recorded simulated rounds, unknown native source and live-trusted seals', () => {
+  const accepted = (value: unknown) => parseMethodResult(lotsRollSeal, JSON.stringify(value));
+  expect(lotsRoundLabel(undefined, undefined)).toContain('unknown');
+  expect(lotsRoundLabel(true, undefined)).toContain('Recorded · simulated');
+  expect(lotsRoundLabel(false, undefined)).toContain('opt-in');
+  const live = { ...sealed, sealed: { ...sealed.sealed, roll: { ...sealed.sealed.roll,
+    randomness: { source: 'drand_quicknet' as const, chain_hash: '52db9ba70e0cc0f6eaf7803dd07447a1f5477735fd3f661792ba94600c84e971', round: '33333333' } } } };
+  expect(lotsRoundLabel(false, accepted(live))).toContain('Live-trusted quicknet');
+  expect(lotsRoundLabel(true, accepted(live))).toContain('Recorded · simulated');
+  expect(lotsRoundLabel(false, accepted(sealed))).toContain('Streamer-controlled');
+  const recorded = { ...live, sealed: { ...live.sealed, roll: { ...live.sealed.roll, sealed_at: '2023-08-23T15:09:28Z' } } };
+  expect(lotsRoundLabel(false, accepted(recorded))).toContain('Recorded · simulated');
+});
+
+test('seal-announced state precedes cast and no-prize creation needs only existing upsert', async () => {
+  const h = harness();
+  await h.port.createQuestionDraw();
+  const proposed = h.rpc.mock.calls.find(call => call[2] === 'lots.draw.upsert')?.[3];
+  expect(proposed).toMatchObject({ draw: { policy: { content: 'question', paid_entry: false, paid_weight: false },
+    rules: { pool: { kind: 'keyword', keyword: '!join' }, winner_count: 1 } } });
+  await h.port.seal();
+  expect(h.port.getSnapshot().notice).toContain('Seal announced');
+  expect(h.port.getSnapshot().cast_result).toBeUndefined();
+  expect(h.rpc.mock.calls.some(call => call[2] === 'lots.cast')).toBe(false);
 });

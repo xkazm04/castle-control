@@ -59,7 +59,29 @@ impl LotsModule {
             sealed: serde_json::from_str(&sealed.to_json().map_err(domain)?)
                 .map_err(|_| internal())?,
         };
+        if self
+            .beacon
+            .round_time(&published.sealed)?
+            .is_some_and(|target| self.now() >= target)
+        {
+            return Err(ErrorEnvelope::new(
+                ErrorCode::Conflict,
+                "seal announcement missed the target round; attempt consumed",
+            ));
+        }
         self.emit(LotsEventPayload::Sealed(published.clone()))?;
+        // Publication is synchronous. Do not accept a late announcement even if
+        // store/event work exhausted the margin; it can never be cast.
+        if self
+            .beacon
+            .round_time(&published.sealed)?
+            .is_some_and(|target| self.now() >= target)
+        {
+            return Err(ErrorEnvelope::new(
+                ErrorCode::Conflict,
+                "seal announcement missed the target round; attempt consumed",
+            ));
+        }
         state.pending.insert(
             published.draw_run_id.clone(),
             Pending {
@@ -84,6 +106,18 @@ impl LotsModule {
             .find(|s| s.result.draw_run_id == params.draw_run_id)
         {
             return encode(saved.result);
+        }
+        if let Some(pending) = state.pending.get(&params.draw_run_id)
+            && pending.chain.is_some()
+            && self
+                .beacon
+                .round_time(&pending.published.sealed)?
+                .is_some_and(|target| self.now() < target)
+        {
+            return Err(ErrorEnvelope::new(
+                ErrorCode::Conflict,
+                "seal announced; wait for the target quicknet round before casting",
+            ));
         }
         let pending = state
             .pending

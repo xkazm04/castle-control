@@ -126,7 +126,7 @@ impl OfflineModules {
                         LotsModule::open(
                             root.join("lots"),
                             events,
-                            Arc::new(crate::live::NoBeacon),
+                            crate::lots::live_beacon::configured(root)?,
                             Arc::new(crate::lots::SystemLotsClock),
                             false,
                         )?,
@@ -145,6 +145,11 @@ impl OfflineModules {
                         GatehouseModule::open_offline(root.join("gatehouse"))?,
                     )
                 };
+                if self.live
+                    && let Some(native) = self.native.as_ref().and_then(Weak::upgrade)
+                {
+                    lots = lots.with_render_host(native.lots_render_host());
+                }
                 let beacons = BeaconsModule::open(root.join("beacons"))?
                     .with_overlay_origin(self.overlay_origin.clone())
                     .with_native(self.native.clone())?;
@@ -217,7 +222,15 @@ impl Module for OfflineModule {
             }
             let loaded = self.shared.load()?;
             match self.kind {
-                OfflineKind::Lots => loaded.lots.call(request).await,
+                OfflineKind::Lots => {
+                    let lots = loaded.lots.clone();
+                    let request = request.clone();
+                    // HTTPS is a synchronous, bounded transport. Never block the
+                    // async bridge or UI executor while verifying a round.
+                    tokio::task::spawn_blocking(move || lots.handle(&request))
+                        .await
+                        .map_err(|_| unavailable())?
+                }
                 OfflineKind::Gatehouse => loaded.gatehouse.call(request).await,
                 OfflineKind::Beacons => loaded.beacons.call(request).await,
             }

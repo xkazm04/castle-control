@@ -18,6 +18,7 @@ use tokio::sync::{OwnedSemaphorePermit, watch};
 pub(super) fn router(host: Arc<RenderHost>) -> Router {
     Router::new()
         .route("/beacons/{visual_id}", get(page))
+        .route("/lots/{draw_id}", get(super::lots::page))
         .route(
             "/bundle.js",
             get(|| async {

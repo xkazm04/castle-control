@@ -1,0 +1,6 @@
+html, body { background: transparent; margin: 0; font-family: var(--font-ui); color: var(--ink); }
+main { margin: var(--space-16); padding: var(--space-24); background: var(--paper); border: var(--rule-strong) solid var(--gules); }
+h1, h2 { font-family: var(--font-display); }
+h1 { font-size: var(--text-chamber); }
+p, li { font-size: var(--text-body); }
+.seal { font-family: var(--font-num); overflow-wrap: anywhere; }

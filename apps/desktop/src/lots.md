@@ -146,3 +146,18 @@ are covered by lots.test.tsx. Overview tests prove shared seal dispatch, identic
 guardrail refusal, weighted frozen-list SHA-256 and cancellation on amendment or
 tear during hashing. Room-wide provenance strips were removed; the saved-proof
 caveats and fairness labels remain.
+
+## M2 native live draw
+
+The connected page can create a one-winner no-prize `!join` question draw through
+the existing `lots.draw.upsert` schema. It never creates entries locally.
+Round labels use existing core status plus the accepted seal, distinguishing
+unknown/opt-in-required, recorded simulated, streamer-controlled and pinned
+live-trusted quicknet. The seal-announced state includes the target round before
+Cast is offered. The fixture room remains simulated and independent.
+
+Native live mode requires the data-directory `live-quicknet` file. Its separate
+`/lots/{draw_id}` OBS result plate is fed by the typed sealed/cast handoff, not
+Beacons or a fixture animation. See [the M2 owner runbook](../../../docs/guide/lots.md#m2-live-run)
+for exact launch, capture and verifier steps. The owner run and visual review
+remain pending; recorded regression tests do not establish a live exit.
