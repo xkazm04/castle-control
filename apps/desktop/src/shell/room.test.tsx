@@ -252,7 +252,9 @@ test('lazy Room preserves its props contract, slot and replay link; core mode ex
 
 test('core launch reaches the lazy Gatehouse and drill routes with an isolated connection and no fixture controls', async () => {
   const rpc = vi.fn(async (_endpoint: string, _session: string, method: string) =>
-    method === 'gatehouse.rules.list' ? fixtureRules : fixtureCharts[0]);
+    method === 'gatehouse.chat.list' || method === 'gatehouse.history.list'
+      ? { items: [], unavailable_count: 0 }
+      : method === 'gatehouse.rules.list' ? fixtureRules : fixtureCharts[0]);
   const launch = { mode: 'core', endpoint: 'http://127.0.0.1:3210/', session_token: 'a'.repeat(64) };
   const client = createDesktopClient(launch, undefined, undefined, { rpc });
   const snapshot = client.getSnapshot();
@@ -277,7 +279,8 @@ test('core launch reaches the lazy Gatehouse and drill routes with an isolated c
   const drill = await render(true);
   expect(drill).toContain('simulated replay from core'); expect(drill).toContain('Import recording');
   expect(drill).not.toContain('Generated fixture output');
-  expect(rpc.mock.calls.map(call => call[2])).toEqual(['gatehouse.rules.list', 'gatehouse.consensus.get']);
+  expect(rpc.mock.calls.map(call => call[2])).toEqual(['gatehouse.rules.list', 'gatehouse.consensus.get',
+    'gatehouse.chat.list', 'gatehouse.history.list']);
   expect(fetch).not.toHaveBeenCalled(); expect(socket).not.toHaveBeenCalled();
   expect(coreGatehouseConnection(createDesktopClient({ mode: 'fixture' }).getSnapshot())).toBeUndefined();
   const other = createDesktopClient({ ...launch, session_token: 'b'.repeat(64) });
