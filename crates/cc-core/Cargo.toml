@@ -18,6 +18,7 @@ axum = { workspace = true, features = ["ws"] }
 cc-types = { path = "../cc-types" }
 cc-twitch = { path = "../cc-twitch" }
 cc-store = { path = "../cc-store" }
+cc-engine = { path = "../cc-engine" }
 cc-obs = { path = "../cc-obs" }
 cc-lots = { path = "../cc-lots" }
 cc-beacons = { path = "../cc-beacons" }

@@ -29,6 +29,12 @@ struct Loaded {
 }
 
 impl OfflineModules {
+    pub(crate) fn writ_changed(&self) -> Result<(), ErrorEnvelope> {
+        self.events
+            .get_or_init(|| Arc::new(EventHub::new(256).expect("nonzero event capacity")))
+            .publish(cc_types::EventKind::Writ)?;
+        Ok(())
+    }
     pub fn at(root: PathBuf, events: Arc<EventHub>) -> Self {
         Self {
             root: Some(root),

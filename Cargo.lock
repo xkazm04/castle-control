@@ -557,6 +557,7 @@ dependencies = [
  "async-trait",
  "axum",
  "cc-beacons",
+ "cc-engine",
  "cc-gatehouse",
  "cc-lots",
  "cc-obs",

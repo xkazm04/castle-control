@@ -25,6 +25,7 @@ fn exporter_lists_the_native_inventory_without_starting_services() {
     expected.extend(LotsModule::METHODS);
     expected.extend(GatehouseModule::METHODS);
     expected.extend(BeaconsModule::METHODS);
+    expected.extend(["steward.ask", "steward.writ.seal", "steward.writ.tear"]);
     expected.sort();
     assert_eq!(methods, expected);
     assert_eq!(Registry::with_status().methods(), expected);

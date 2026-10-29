@@ -15,6 +15,7 @@ mod server;
 pub mod spike;
 #[cfg(feature = "spike")]
 mod spike_run;
+pub mod steward;
 #[cfg(feature = "spike")]
 pub use spike_run::run as run_spike;
 

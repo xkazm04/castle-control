@@ -11,12 +11,21 @@ use std::time::Instant;
 pub trait Module: Send + Sync {
     fn methods(&self) -> &'static [&'static str];
     fn call<'a>(&'a self, request: &'a RpcRequest) -> BoxFuture<'a, Result<Value, ErrorEnvelope>>;
+    /// Configuration composers reuse the authoritative dispatch and result door.
+    fn call_in<'a>(
+        &'a self,
+        request: &'a RpcRequest,
+        _registry: &'a Registry,
+    ) -> BoxFuture<'a, Result<Value, ErrorEnvelope>> {
+        self.call(request)
+    }
 }
 
 #[derive(Default)]
 pub struct Registry {
     handlers: BTreeMap<&'static str, Arc<dyn Module>>,
     offline: Option<Arc<OfflineModules>>,
+    pub(crate) configuration: tokio::sync::Mutex<()>,
 }
 
 impl Registry {
@@ -46,10 +55,41 @@ impl Registry {
     }
 
     pub async fn dispatch(&self, request: &RpcRequest) -> Result<Value, ErrorEnvelope> {
-        let module = self.handlers.get(request.method()).ok_or_else(|| {
-            ErrorEnvelope::new(ErrorCode::Unavailable, "method is not registered yet")
-        })?;
-        request.validate_result(module.call(request).await?)
+        let _configuration = if crate::steward::is_mutation(request) {
+            Some(self.configuration.lock().await)
+        } else {
+            None
+        };
+        self.dispatch_inner(request).await
+    }
+
+    pub(crate) fn dispatch_inner<'a>(
+        &'a self,
+        request: &'a RpcRequest,
+    ) -> BoxFuture<'a, Result<Value, ErrorEnvelope>> {
+        Box::pin(async move {
+            let module = self.handlers.get(request.method()).ok_or_else(|| {
+                ErrorEnvelope::new(ErrorCode::Unavailable, "method is not registered yet")
+            })?;
+            request.validate_result(module.call_in(request, self).await?)
+        })
+    }
+
+    /// The host constructs its engine, audit/configuration Store and vault.
+    /// This does not select providers or configure the native/desktop host.
+    pub fn with_steward(mut self, config: crate::steward::StewardConfig) -> Self {
+        let module: Arc<dyn Module> = Arc::new(crate::steward::StewardModule::configured(config));
+        for &name in crate::steward::StewardModule::METHODS {
+            self.handlers.insert(name, module.clone());
+        }
+        self
+    }
+
+    pub(crate) fn writ_changed(&self) -> Result<(), ErrorEnvelope> {
+        if let Some(offline) = &self.offline {
+            offline.writ_changed()?;
+        }
+        Ok(())
     }
 
     pub fn with_status() -> Self {
@@ -138,6 +178,9 @@ impl Registry {
                 .register(Arc::new(module))
                 .expect("offline methods are declared and unique");
         }
+        registry
+            .register(Arc::new(crate::steward::StewardModule::default()))
+            .expect("Steward methods are declared and unique");
         registry.offline = Some(offline);
         registry
     }
