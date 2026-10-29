@@ -1,0 +1,4 @@
+.visuals-input-picker { display: flex; align-items: end; flex-wrap: wrap; gap: var(--space-12); }
+.visuals-input-picker label { display: grid; gap: var(--space-4); min-width: 0; }
+.visuals-input-picker select { max-width: 100%; min-width: 0; color: var(--ink); background: var(--paper); border: var(--rule-thin) solid var(--ink); padding: var(--space-8); font: inherit; }
+.visuals-input-picker output { font-variant-numeric: tabular-nums; }

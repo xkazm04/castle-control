@@ -4,12 +4,15 @@ import type { SimulatedBurst, Visual, VisualId } from '@castle-control/contract'
 // Generated demo data crosses the same schema door as an eventual response.
 export const fixtureVisuals: readonly Visual[] = parseMethodResult(beaconsVisualList, JSON.stringify({ visuals: [
   { visual_id: 'offering-altar', name: 'Offering altar', design_id: 'altar',
+    input: { source: 'channel_points', unit: 'points' },
     curve: { ranges: [{ total: 0, intensity: 0 }, { total: 10, intensity: 0.25 }, { total: 30, intensity: 0.6 }, { total: 100, intensity: 1 }],
       decay: { kind: 'exponential', half_life_s: 300 } } },
   { visual_id: 'gilded-frame', name: 'Gilded camera frame', design_id: 'camera-frame',
+    input: { source: 'gift', unit: 'count' },
     curve: { ranges: [{ total: 0, intensity: 0 }, { total: 10, intensity: 0.35 }, { total: 30, intensity: 0.7 }, { total: 100, intensity: 1 }],
       decay: { kind: 'exponential', half_life_s: 120 } } },
   { visual_id: 'hype-border', name: 'Hype border', design_id: 'border',
+    input: { source: 'hype_train', unit: 'level' },
     curve: { ranges: [{ total: 0, intensity: 0 }, { total: 10, intensity: 0.2 }, { total: 30, intensity: 0.5 }, { total: 100, intensity: 1 }],
       decay: { kind: 'exponential', half_life_s: 900 } } },
 ] })).visuals;

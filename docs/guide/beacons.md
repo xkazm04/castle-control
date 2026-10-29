@@ -24,6 +24,13 @@ to commit or Escape to cancel. Numeric fields also provide Save/Cancel.
 Rejected saves roll back to confirmed core state. Source:
 [connected room and curve editor](../../apps/desktop/src/rooms/visuals/README.md).
 
+Choose **Driven by** for each visual and save in core mode. The read-only native
+unit follows the source: bits, count, level, points or minor_currency, with no
+conversion implied. **Not routed** removes the input selection for legacy
+visuals. Fixture mode lets you try this locally as simulated configuration.
+Live routing of that input to the curve is a separate core step; saving a choice
+does not establish live contribution-to-OBS delivery.
+
 Simulation starts empty per call and never becomes a live contribution total.
 The native registration is configuration-only; changed curves recompute an
 empty contribution total until a real intake is connected. Source:

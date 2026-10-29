@@ -1,13 +1,7 @@
-import type { ContributionSource } from '@castle-control/contract';
 import { WindowedRows, rowHeight } from '@castle-control/ui';
 import type { PreviewEvent } from '../../beacons-fixture.js';
+import { source_labels } from './contribution-input.js';
 import './event-feed.css';
-
-const source_labels: Record<ContributionSource, string> = {
-  cheer: 'Bits cheer', bits_use: 'Bits use', subscribe: 'subscriptions', gift: 'gift subscriptions',
-  resub: 'resubscriptions', hype_train: 'Hype Train level', channel_points: 'channel points',
-  charity: 'charity minor currency units', goal: 'goal minor currency units', power_up: 'power-ups',
-};
 
 /** UI history of synthetic inputs only. It is not a contribution ledger. */
 export function ContributionFeed({ events, origin, scroll_top = 0 }: {

@@ -11,6 +11,8 @@ import { TestFire } from './test-fire.jsx';
 import { KindlingCurve } from './kindling-curve.jsx';
 import CoreVisualsRoom from './core.jsx';
 import { ContributionFeed } from './event-feed.jsx';
+import { InputPicker } from './input-picker.jsx';
+import { inputDescription } from './contribution-input.js';
 import './room.css';
 
 function IntensityRanges({ item }: { item: PreviewVisual }) {
@@ -34,6 +36,7 @@ export function VisualSelector({ visuals, selected, on_select }: {
       <p className="visuals-room-description">{item.visual.design_id === 'altar' ? 'On-screen object'
         : item.visual.design_id === 'camera-frame' ? 'Camera frame' : 'Screen border'} · gifts + subs ·{' '}
         {item.visual.curve.decay.kind === 'none' ? 'No decay' : `Halves every ${item.visual.curve.decay.half_life_s / 60} min`}</p>
+      <p className="visuals-room-description">Driven by: {inputDescription(item.visual.input)} · simulated configuration</p>
       <p className="visuals-room-now">Now: <strong>{Math.round(item.intensity * 100)}% blaze</strong>{' '}
         <span>({item.total.toFixed(1)} weighted subs)</span> · simulated</p>
       <IntensityRanges item={item} />
@@ -56,6 +59,8 @@ export function VisualsWork({ queue, port, seal_slot }: { queue?: ProposalQueue;
           <BeaconArtwork item={selected} hero />
           <ProposalLayers chamber="visuals" {...(queue ? { queue } : {})} />
         </figure>
+        <InputPicker source={selected.visual.input?.source ?? ''} busy={false} on_change={adapter.input} />
+        <p>Simulated configuration only. Test fires use gifts/subs independently; live routing is a separate core step.</p>
         <KindlingCurve item={selected} />
         <details className="visuals-room-test-tools"><summary>Test fire · local preview controls</summary>
           <TestFire port={adapter} selected={selected} on_end={() => setAdapter(createBeaconsPreview())} />

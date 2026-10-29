@@ -1,13 +1,15 @@
 import { parseMethodParams, beaconsCurveSet } from '@castle-control/contract';
-import type { IntensityCurve, IntensityDecay, IntensityRange, Visual, VisualId } from '@castle-control/contract';
+import type { ContributionSource, IntensityCurve, IntensityDecay, IntensityRange, Visual, VisualId } from '@castle-control/contract';
 import type { PreviewEvent } from './beacons-fixture.js';
 import { fixtureBurst, fixtureEvents, fixtureVisuals } from './beacons-fixture.js';
+import { contributionInput } from './rooms/visuals/contribution-input.js';
 
 export type PreviewVisual = { visual: Visual; gift_weight: number; total: number; intensity: number };
 export type BeaconsPreview = { selected: VisualId; visuals: readonly PreviewVisual[]; events: readonly PreviewEvent[]; elapsed_s: number; notice: string };
 export type BeaconsPort = {
   getSnapshot: () => BeaconsPreview; subscribe: (listener: () => void) => () => void;
   select: (id: VisualId) => void; point: (index: number, point: IntensityRange) => void;
+  input: (source: ContributionSource | '') => void;
   decay: (decay: IntensityDecay) => void; weight: (weight: number) => void;
   fire: (source: 'gift' | 'subscribe', count: number) => void; advance: () => void; reset: () => void;
 };
@@ -57,6 +59,13 @@ export function createBeaconsPreview(): BeaconsPort {
     getSnapshot: () => snapshot,
     subscribe(listener) { listeners.add(listener); return () => { listeners.delete(listener); }; },
     select(id) { if (snapshot.visuals.some(item => item.visual.visual_id === id)) publish({ ...snapshot, selected: id }); },
+    input(source) {
+      update(item => {
+        const visual = { ...item.visual };
+        delete visual.input;
+        return { ...item, visual: { ...visual, ...(source ? { input: contributionInput(source) } : {}) } };
+      }, 'Input changed locally · simulated configuration only. Test fires remain gifts/subs; live routing is a separate core step.');
+    },
     point(index, point) {
       const item = selected();
       if (!item || !item.visual.curve.ranges[index] || !Number.isInteger(point.total) || point.total < 0 || point.total > 100
