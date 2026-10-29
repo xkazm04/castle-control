@@ -58,6 +58,21 @@ pub struct Drill {
 }
 
 impl Drill {
+    pub(crate) fn snapshot(
+        &self,
+        mut config: DrillConfiguration,
+    ) -> Result<(
+        DrillConfiguration,
+        cc_types::DrillInstrument,
+        cc_types::InstrumentHash,
+        cc_types::GatehouseInstrumentInputs,
+    )> {
+        let (bank, judge) = self.resolve(&mut config)?;
+        let (parts, hash) = instrument::instrument(&config, bank, &judge.identity)?;
+        let inputs = instrument::inputs(&config, bank, &judge.identity)?;
+        Ok((config, parts, hash, inputs))
+    }
+
     /// The subject's configured tier is service-owned, never imported log data.
     pub fn new(subject_tier: String) -> Self {
         Self {

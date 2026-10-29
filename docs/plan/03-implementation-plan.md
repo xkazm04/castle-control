@@ -1075,7 +1075,7 @@ cloud opt-in enforcement remain the engine's job. The CLI remains slow-lane only
 | beacons | `beacons.visual.list`, `beacons.visual.upsert`, `beacons.curve.set`, `beacons.simulate`, `beacons.source.url`, `beacons.art.status`, `beacons.art.generate` |
 | maproom | `maproom.design.get`, `maproom.design.upsert`, `maproom.stage.get`, `maproom.turn.run` |
 | steward | `steward.ask`, `steward.writ.seal`, `steward.writ.tear` |
-| gatehouse (read additions) | `gatehouse.chat.list`, `gatehouse.history.list` |
+| gatehouse (read additions) | `gatehouse.chat.list`, `gatehouse.history.list`, `gatehouse.liveRun.get` |
 
 **Stream events on `/events`.** Every event carries `seq`, `at` and `kind`:
 

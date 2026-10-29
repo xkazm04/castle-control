@@ -122,6 +122,8 @@ pub(crate) struct Record {
     pub care: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub rule_snapshot: Option<Rule>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub live_capture: Option<cc_types::GatehouseLiveCapture>,
 }
 
 struct AuditContext<'a> {
@@ -286,6 +288,7 @@ impl Gatehouse {
         // without fabricating a viewer or recording room changes as chat.
         if msg.is_some() || matches!(path, GatePath::GateSetting | GatePath::ExternalHuman) {
             let audit = Record {
+                live_capture: self.live_capture.clone(),
                 decision_id: decision.decision_id.clone(),
                 message_id: decision.message_id.clone(),
                 kind: decision.kind,

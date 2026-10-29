@@ -24,6 +24,7 @@ pub struct Gatehouse {
     pub(crate) strikes: Strikes,
     pub(crate) gate_available: bool,
     pub(crate) shadow_only: bool,
+    pub(crate) live_capture: Option<cc_types::GatehouseLiveCapture>,
     pub(crate) gate_settings: crate::gate::Settings,
     pub(crate) room_leases:
         std::collections::BTreeMap<cc_types::LeaseId, crate::governor::LeaseRegistration>,
@@ -56,6 +57,7 @@ impl Gatehouse {
             strikes: Strikes::default(),
             gate_available: true,
             shadow_only: false,
+            live_capture: None,
             gate_settings: crate::gate::Settings::default(),
             room_leases: Default::default(),
         })

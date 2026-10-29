@@ -44,6 +44,41 @@ impl Gatehouse {
 }
 
 impl<'a> Recorder<'a> {
+    /// The shadow host has already authenticated intake. Keep its original
+    /// simulated flag and erasure associations; imports cannot mint this evidence.
+    pub(crate) fn record_shadow(
+        &mut self,
+        message: &IngestedMessage,
+        gaps: Vec<BridgeGap>,
+    ) -> Result<RecordingImportResult> {
+        self.save(
+            RecordingImportParams {
+                source: (if message.simulated {
+                    "simulated-live-shadow"
+                } else {
+                    "live-shadow"
+                })
+                .to_owned()
+                .try_into()
+                .map_err(internal)?,
+                messages: vec![RecordedMessage {
+                    message_id: message.message_id.clone(),
+                    user_id: message
+                        .user_id
+                        .as_str()
+                        .to_owned()
+                        .try_into()
+                        .map_err(internal)?,
+                    at: message.at.clone(),
+                    text: message.text.clone(),
+                }],
+                gaps,
+            },
+            message.simulated,
+            std::slice::from_ref(message),
+        )
+    }
+
     /// Offline imports have no authenticated channel owner. Associate only the
     /// recorded viewers with the existing erasure inventory; invent no identity.
     pub(crate) fn for_import(store: &'a mut Store, clock: &'a dyn Clock) -> Result<Self> {

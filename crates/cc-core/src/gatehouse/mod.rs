@@ -37,6 +37,7 @@ impl GatehouseModule {
         "gatehouse.lease.end",
         "gatehouse.chat.list",
         "gatehouse.history.list",
+        "gatehouse.liveRun.get",
     ];
 
     /// The caller owns the persistence root and clock. No live adapter is started;
@@ -79,6 +80,9 @@ impl GatehouseModule {
         }
         let gate = &mut service.gate;
         match request {
+            RpcRequest::LiveRunGet(params) => {
+                encode(reads::live_run(gate.store(), params.clone())?)
+            }
             RpcRequest::ChatList(params) => encode(reads::chat(gate.store(), params.clone())?),
             RpcRequest::HistoryList(params) => {
                 encode(reads::history(gate.store(), params.clone())?)

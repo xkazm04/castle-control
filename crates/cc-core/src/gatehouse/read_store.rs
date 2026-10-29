@@ -74,6 +74,12 @@ pub(super) struct ReadStore {
     pub audit: BTreeMap<String, AuditRecord>,
 }
 
+pub(super) fn live_captures(
+    store: &Store,
+) -> Result<BTreeMap<DecisionId, cc_gatehouse::live_capture::RetainedCapture>, ErrorEnvelope> {
+    cc_gatehouse::live_capture::captures(store)
+}
+
 impl ReadStore {
     pub fn load(store: &Store) -> Result<Self, ErrorEnvelope> {
         let ledger = store

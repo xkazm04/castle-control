@@ -13,7 +13,7 @@ use cc_types::{
 use std::{collections::BTreeMap, sync::Arc};
 
 pub(crate) struct Analysis {
-    drill: Drill,
+    pub(crate) drill: Drill,
     herald: Herald,
 }
 
@@ -59,6 +59,7 @@ impl Gatehouse {
         rules_only(&params.configuration)?;
         let recording = Recorder::for_import(&mut self.store, self.clock.as_ref())?
             .resolve(&params.recording)?;
+        self.check_capture_instrument(&params.recording, &recording.source, &params.configuration)?;
         self.analysis
             .drill
             .replay(&recording, params.configuration, &NoModel)
@@ -71,6 +72,7 @@ impl Gatehouse {
         rules_only(&params.candidate)?;
         let recording = Recorder::for_import(&mut self.store, self.clock.as_ref())?
             .resolve(&params.recording)?;
+        self.check_capture_instrument(&params.recording, &recording.source, &params.baseline)?;
         self.analysis
             .drill
             .compare(&recording, params.baseline, params.candidate, &NoModel)

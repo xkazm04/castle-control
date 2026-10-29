@@ -1,0 +1,30 @@
+{
+  "items": [{
+    "coverage": "retained",
+    "decision_id": "01K8F7A0000000000000000001",
+    "provenance": "simulated",
+    "capture": {
+      "recording": "recording-01K8F7A0000000000000000002",
+      "from": "2026-10-29T12:00:00Z",
+      "to": "2026-10-29T12:00:00Z",
+      "configuration": {"rules": [], "bank": "simulated-bank", "judge": "rules-only", "prompts": []},
+      "instrument": {
+        "rules_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "bank_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "judge_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+        "prompts_hash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+      },
+      "instrument_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+      "inputs": {
+        "bank": {"label": "simulated-bank", "calibration": "simulated", "cases": []},
+        "judge": {"revision": "simulated", "model": "none", "tier": "simulated", "rubric": "simulated", "parameters": {}},
+        "prompts": {"version": "simulated", "system": "simulated", "prompts": [], "sources": {}}
+      },
+      "gaps": []
+    }
+  }, {
+    "coverage": "unavailable", "decision_id": "01K8F7A0000000000000000003", "reason": "capture_unavailable"
+  }],
+  "unavailable_count": 1,
+  "next_cursor": "liveRun:2"
+}

@@ -100,6 +100,8 @@ export const p47: ValidateFunction<RpcMethods["gatehouse.chat.list"]['params']>;
 export const r47: ValidateFunction<RpcMethods["gatehouse.chat.list"]['result']>;
 export const p48: ValidateFunction<RpcMethods["gatehouse.history.list"]['params']>;
 export const r48: ValidateFunction<RpcMethods["gatehouse.history.list"]['result']>;
+export const p49: ValidateFunction<RpcMethods["gatehouse.liveRun.get"]['params']>;
+export const r49: ValidateFunction<RpcMethods["gatehouse.liveRun.get"]['result']>;
 export const event: ValidateFunction<StreamEvent>;
 export const lotsEvent: ValidateFunction<LotsEventPayload>;
 export const consensusEvent: ValidateFunction<ConsensusEventPayload>;

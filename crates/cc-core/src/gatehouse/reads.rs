@@ -11,6 +11,59 @@ use cc_types::{
 };
 use std::ops::Range;
 
+pub(super) fn live_run(
+    store: &Store,
+    params: GatehouseReadParams,
+) -> Result<cc_types::GatehouseLiveRunResult, ErrorEnvelope> {
+    use cc_types::{DecisionId, GatehouseLiveRunGapReason as Reason, GatehouseLiveRunItem as Item};
+    let read = ReadStore::load(store)?;
+    let captures = super::read_store::live_captures(store)?;
+    let (range, next_cursor) = window(params, "liveRun", read.ledger.len())?;
+    let mut items = Vec::new();
+    let mut unavailable_count = 0;
+    for line in &read.ledger[range] {
+        let LedgerEvent::Decision { decision_id, .. } = &line.event else {
+            return Err(internal());
+        };
+        let decision_id: DecisionId = decision_id.to_string().try_into().map_err(|_| internal())?;
+        let retained = captures.get(&decision_id);
+        let audit = read.audit.get(decision_id.as_str());
+        let reason = match (retained, audit) {
+            (Some(retained), Some(audit)) if audit.is_chat_intake() => {
+                if retained.simulated != audit.simulated
+                    || retained.message_id != audit.decision.message_id
+                    || audit
+                        .user_id
+                        .as_ref()
+                        .is_none_or(|id| !retained.user_ids.contains(id))
+                {
+                    return Err(internal());
+                }
+                if retained.recording_available {
+                    items.push(Item::Retained {
+                        decision_id,
+                        provenance: audit.provenance(),
+                        capture: Box::new(retained.capture.clone()),
+                    });
+                    continue;
+                }
+                Reason::RecordingUnavailable
+            }
+            _ => Reason::CaptureUnavailable,
+        };
+        unavailable_count += 1;
+        items.push(Item::Unavailable {
+            decision_id,
+            reason,
+        });
+    }
+    Ok(cc_types::GatehouseLiveRunResult {
+        items,
+        next_cursor,
+        unavailable_count,
+    })
+}
+
 fn window(
     params: GatehouseReadParams,
     kind: &str,

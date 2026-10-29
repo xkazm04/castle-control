@@ -78,7 +78,8 @@ methods! {
     WritSeal => ("steward.writ.seal", WritSealParams, WritSealResult, "WP 5.1"),
     WritTear => ("steward.writ.tear", WritTearParams, WritTearResult, "WP 5.1"),
     ChatList => ("gatehouse.chat.list", GatehouseReadParams, GatehouseChatResult, "Gatehouse live reads"),
-    HistoryList => ("gatehouse.history.list", GatehouseReadParams, GatehouseHistoryResult, "Gatehouse live reads")
+    HistoryList => ("gatehouse.history.list", GatehouseReadParams, GatehouseHistoryResult, "Gatehouse live reads"),
+    LiveRunGet => ("gatehouse.liveRun.get", GatehouseReadParams, GatehouseLiveRunResult, "Gatehouse live capture")
 }
 
 /// Single parse door for requests, including unknown-method and shape errors.

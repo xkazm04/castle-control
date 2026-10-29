@@ -169,7 +169,7 @@ function validators(schema) {
   const stewardNames = new Set(['steward.ask', 'steward.writ.seal', 'steward.writ.tear']);
   const beaconsNames = new Set(['visual.list', 'visual.upsert', 'curve.set', 'simulate', 'source.url', 'art.status', 'art.generate'].map(name => `beacons.${name}`));
   const gatehouseNames = new Set(['rules.list', 'rules.upsert', 'ban.confirm', 'ban.dismiss', 'decision.undo',
-    'petition.resolve', 'recording.import', 'drill.run', 'drill.diff', 'consensus.get', 'chat.list', 'history.list'].map(name => `gatehouse.${name}`));
+    'petition.resolve', 'recording.import', 'drill.run', 'drill.diff', 'consensus.get', 'chat.list', 'history.list', 'liveRun.get'].map(name => `gatehouse.${name}`));
   const shared = sharedSchemas(schema);
   const declarations = [banner, "import type { ValidateFunction } from 'ajv';",
     "import type { RpcMethods, StreamEvent, LotsEventPayload, ConsensusEventPayload, BeaconsEventPayload, DesignPackage, ErrorEnvelope, AskParams, AskResult, Writ, WritSealParams, WritSealResult, WritTearParams, WritTearResult, StewardEventPayload } from './types.js';"];

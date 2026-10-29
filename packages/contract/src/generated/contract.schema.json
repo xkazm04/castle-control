@@ -10717,7 +10717,7 @@
         "$defs": {
           "GatehouseReadCursor": {
             "description": "Opaque endpoint-scoped position in the append-only decision ledger. Clients\nreturn it unchanged; an absent cursor starts at the beginning of history.",
-            "pattern": "^(chat|history):(0|[1-9][0-9]{0,15})$(?![\\s\\S])",
+            "pattern": "^(chat|history|liveRun):(0|[1-9][0-9]{0,15})$(?![\\s\\S])",
             "type": "string"
           },
           "GatehouseReadLimit": {
@@ -10795,7 +10795,7 @@
           },
           "GatehouseReadCursor": {
             "description": "Opaque endpoint-scoped position in the append-only decision ledger. Clients\nreturn it unchanged; an absent cursor starts at the beginning of history.",
-            "pattern": "^(chat|history):(0|[1-9][0-9]{0,15})$(?![\\s\\S])",
+            "pattern": "^(chat|history|liveRun):(0|[1-9][0-9]{0,15})$(?![\\s\\S])",
             "type": "string"
           },
           "GatehouseReadDecision": {
@@ -10934,7 +10934,7 @@
         "$defs": {
           "GatehouseReadCursor": {
             "description": "Opaque endpoint-scoped position in the append-only decision ledger. Clients\nreturn it unchanged; an absent cursor starts at the beginning of history.",
-            "pattern": "^(chat|history):(0|[1-9][0-9]{0,15})$(?![\\s\\S])",
+            "pattern": "^(chat|history|liveRun):(0|[1-9][0-9]{0,15})$(?![\\s\\S])",
             "type": "string"
           },
           "GatehouseReadLimit": {
@@ -11012,7 +11012,7 @@
           },
           "GatehouseReadCursor": {
             "description": "Opaque endpoint-scoped position in the append-only decision ledger. Clients\nreturn it unchanged; an absent cursor starts at the beginning of history.",
-            "pattern": "^(chat|history):(0|[1-9][0-9]{0,15})$(?![\\s\\S])",
+            "pattern": "^(chat|history|liveRun):(0|[1-9][0-9]{0,15})$(?![\\s\\S])",
             "type": "string"
           },
           "GatehouseReadDecision": {
@@ -11113,6 +11113,697 @@
           "unavailable_count"
         ],
         "title": "GatehouseHistoryResult",
+        "type": "object"
+      }
+    },
+    {
+      "name": "gatehouse.liveRun.get",
+      "owner": "Gatehouse live capture",
+      "params": {
+        "$defs": {
+          "GatehouseReadCursor": {
+            "description": "Opaque endpoint-scoped position in the append-only decision ledger. Clients\nreturn it unchanged; an absent cursor starts at the beginning of history.",
+            "pattern": "^(chat|history|liveRun):(0|[1-9][0-9]{0,15})$(?![\\s\\S])",
+            "type": "string"
+          },
+          "GatehouseReadLimit": {
+            "description": "Above-maximum limits are refused, never silently expanded or clamped.",
+            "format": "uint32",
+            "maximum": 100,
+            "minimum": 1,
+            "type": "integer"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Read an append-ordered ledger window with a required limit of 1 through 100.\nLegacy ledger-only decisions and retention-removed metadata are counted as\nunavailable in the response; their verdicts or provenance are never fabricated.\nFollow the returned cursor even when the page contains no available items.",
+        "properties": {
+          "cursor": {
+            "$ref": "#/$defs/GatehouseReadCursor"
+          },
+          "limit": {
+            "$ref": "#/$defs/GatehouseReadLimit"
+          }
+        },
+        "required": [
+          "limit"
+        ],
+        "title": "GatehouseReadParams",
+        "type": "object"
+      },
+      "result": {
+        "$defs": {
+          "Action": {
+            "enum": [
+              "warn",
+              "delete",
+              "timeout",
+              "ban",
+              "hold"
+            ],
+            "type": "string"
+          },
+          "AutoBanGrant": {
+            "additionalProperties": false,
+            "properties": {
+              "breaker_tripped": {
+                "type": "boolean"
+              },
+              "expires_at": {
+                "$ref": "#/$defs/Timestamp"
+              },
+              "max_bans_per_hour": {
+                "format": "uint32",
+                "minimum": 1,
+                "type": "integer"
+              }
+            },
+            "required": [
+              "expires_at",
+              "max_bans_per_hour",
+              "breaker_tripped"
+            ],
+            "type": "object"
+          },
+          "BridgeGap": {
+            "additionalProperties": false,
+            "properties": {
+              "from": {
+                "$ref": "#/$defs/Timestamp"
+              },
+              "to": {
+                "$ref": "#/$defs/Timestamp"
+              }
+            },
+            "required": [
+              "from",
+              "to"
+            ],
+            "type": "object"
+          },
+          "DecisionId": {
+            "pattern": "^[0-7][0-9A-HJKMNP-TV-Z]{25}$(?![\\s\\S])",
+            "type": "string"
+          },
+          "DrillConfiguration": {
+            "additionalProperties": false,
+            "description": "Bank and judge are service-resolved configuration labels, not model names or code.\nWP 1.6 resolves their immutable contents and hashes all four inputs before running.",
+            "properties": {
+              "bank": {
+                "$ref": "#/$defs/GatehouseText"
+              },
+              "judge": {
+                "$ref": "#/$defs/GatehouseText"
+              },
+              "prompts": {
+                "items": {
+                  "$ref": "#/$defs/GatehouseText"
+                },
+                "type": "array"
+              },
+              "rules": {
+                "items": {
+                  "$ref": "#/$defs/Rule"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "rules",
+              "bank",
+              "judge",
+              "prompts"
+            ],
+            "type": "object"
+          },
+          "DrillInstrument": {
+            "additionalProperties": false,
+            "properties": {
+              "bank_hash": {
+                "$ref": "#/$defs/InstrumentHash"
+              },
+              "judge_hash": {
+                "$ref": "#/$defs/InstrumentHash"
+              },
+              "prompts_hash": {
+                "$ref": "#/$defs/InstrumentHash"
+              },
+              "rules_hash": {
+                "$ref": "#/$defs/InstrumentHash"
+              }
+            },
+            "required": [
+              "rules_hash",
+              "bank_hash",
+              "judge_hash",
+              "prompts_hash"
+            ],
+            "type": "object"
+          },
+          "GatehouseInstrumentBank": {
+            "additionalProperties": false,
+            "properties": {
+              "calibration": {
+                "$ref": "#/$defs/GatehouseText"
+              },
+              "cases": {
+                "items": {
+                  "$ref": "#/$defs/GatehouseInstrumentCase"
+                },
+                "type": "array"
+              },
+              "label": {
+                "$ref": "#/$defs/GatehouseText"
+              }
+            },
+            "required": [
+              "label",
+              "calibration",
+              "cases"
+            ],
+            "type": "object"
+          },
+          "GatehouseInstrumentCase": {
+            "additionalProperties": false,
+            "properties": {
+              "expected": {
+                "$ref": "#/$defs/GatehouseInstrumentExpectation"
+              },
+              "key": {
+                "$ref": "#/$defs/GatehouseText"
+              },
+              "text": {
+                "$ref": "#/$defs/GatehouseText"
+              }
+            },
+            "required": [
+              "key",
+              "text",
+              "expected"
+            ],
+            "type": "object"
+          },
+          "GatehouseInstrumentExpectation": {
+            "oneOf": [
+              {
+                "enum": [
+                  "allow"
+                ],
+                "type": "string"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "action": {
+                    "$ref": "#/$defs/Action"
+                  }
+                },
+                "required": [
+                  "action"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "GatehouseInstrumentInputs": {
+            "additionalProperties": false,
+            "description": "Resolved, canonical inputs used by the drill fingerprint, not just their labels.\nThese inert JSON values contain the bank, judge identity and prompt/source revisions.",
+            "properties": {
+              "bank": {
+                "$ref": "#/$defs/GatehouseInstrumentBank"
+              },
+              "judge": {
+                "$ref": "#/$defs/GatehouseInstrumentJudge"
+              },
+              "prompts": {
+                "$ref": "#/$defs/GatehouseInstrumentPrompts"
+              }
+            },
+            "required": [
+              "bank",
+              "judge",
+              "prompts"
+            ],
+            "type": "object"
+          },
+          "GatehouseInstrumentJudge": {
+            "additionalProperties": false,
+            "properties": {
+              "model": {
+                "$ref": "#/$defs/GatehouseText"
+              },
+              "parameters": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "type": "object"
+              },
+              "revision": {
+                "$ref": "#/$defs/GatehouseText"
+              },
+              "rubric": {
+                "$ref": "#/$defs/GatehouseText"
+              },
+              "tier": {
+                "$ref": "#/$defs/GatehouseText"
+              }
+            },
+            "required": [
+              "revision",
+              "model",
+              "tier",
+              "rubric",
+              "parameters"
+            ],
+            "type": "object"
+          },
+          "GatehouseInstrumentPrompts": {
+            "additionalProperties": false,
+            "properties": {
+              "prompts": {
+                "items": {
+                  "$ref": "#/$defs/GatehouseText"
+                },
+                "type": "array"
+              },
+              "sources": {
+                "additionalProperties": {
+                  "$ref": "#/$defs/InstrumentHash"
+                },
+                "type": "object"
+              },
+              "system": {
+                "$ref": "#/$defs/GatehouseText"
+              },
+              "version": {
+                "$ref": "#/$defs/GatehouseText"
+              }
+            },
+            "required": [
+              "version",
+              "system",
+              "prompts",
+              "sources"
+            ],
+            "type": "object"
+          },
+          "GatehouseLiveCapture": {
+            "additionalProperties": false,
+            "description": "Each capture currently covers one screened notification. from/to are inclusive\nmessage times; bridge gaps retain their original intervals separately.",
+            "properties": {
+              "configuration": {
+                "$ref": "#/$defs/DrillConfiguration"
+              },
+              "from": {
+                "$ref": "#/$defs/Timestamp"
+              },
+              "gaps": {
+                "items": {
+                  "$ref": "#/$defs/BridgeGap"
+                },
+                "type": "array"
+              },
+              "inputs": {
+                "$ref": "#/$defs/GatehouseInstrumentInputs"
+              },
+              "instrument": {
+                "$ref": "#/$defs/DrillInstrument"
+              },
+              "instrument_hash": {
+                "$ref": "#/$defs/InstrumentHash"
+              },
+              "recording": {
+                "$ref": "#/$defs/GatehouseText"
+              },
+              "replay_gap": {
+                "$ref": "#/$defs/GatehouseLiveRunGapReason"
+              },
+              "to": {
+                "$ref": "#/$defs/Timestamp"
+              }
+            },
+            "required": [
+              "recording",
+              "from",
+              "to",
+              "configuration",
+              "instrument",
+              "instrument_hash",
+              "inputs",
+              "gaps"
+            ],
+            "type": "object"
+          },
+          "GatehouseLiveRunGapReason": {
+            "enum": [
+              "capture_unavailable",
+              "recording_unavailable",
+              "classifier_not_replayable",
+              "runtime_context_not_replayable",
+              "bridge_gap"
+            ],
+            "type": "string"
+          },
+          "GatehouseLiveRunItem": {
+            "description": "Coverage is keyed to committed live decision IDs, including missing legacy rows.",
+            "oneOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "capture": {
+                    "$ref": "#/$defs/GatehouseLiveCapture"
+                  },
+                  "coverage": {
+                    "const": "retained",
+                    "type": "string"
+                  },
+                  "decision_id": {
+                    "$ref": "#/$defs/DecisionId"
+                  },
+                  "provenance": {
+                    "$ref": "#/$defs/GatehouseProvenance"
+                  }
+                },
+                "required": [
+                  "coverage",
+                  "decision_id",
+                  "provenance",
+                  "capture"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "coverage": {
+                    "const": "unavailable",
+                    "type": "string"
+                  },
+                  "decision_id": {
+                    "$ref": "#/$defs/DecisionId"
+                  },
+                  "reason": {
+                    "$ref": "#/$defs/GatehouseLiveRunGapReason"
+                  }
+                },
+                "required": [
+                  "coverage",
+                  "decision_id",
+                  "reason"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "GatehouseProvenance": {
+            "enum": [
+              "live",
+              "simulated"
+            ],
+            "type": "string"
+          },
+          "GatehouseReadCursor": {
+            "description": "Opaque endpoint-scoped position in the append-only decision ledger. Clients\nreturn it unchanged; an absent cursor starts at the beginning of history.",
+            "pattern": "^(chat|history|liveRun):(0|[1-9][0-9]{0,15})$(?![\\s\\S])",
+            "type": "string"
+          },
+          "GatehouseText": {
+            "description": "Nonempty opaque text. Recording references are service-owned handles, not paths.",
+            "minLength": 1,
+            "type": "string"
+          },
+          "InstrumentHash": {
+            "description": "Canonical SHA-256 digest. Checking its contents against inputs belongs to WP 1.6.",
+            "pattern": "^[0-9a-f]{64}$(?![\\s\\S])",
+            "type": "string"
+          },
+          "Rule": {
+            "additionalProperties": false,
+            "allOf": [
+              {
+                "if": {
+                  "properties": {
+                    "rule_class": {
+                      "const": "rail"
+                    }
+                  }
+                },
+                "then": {
+                  "properties": {
+                    "mode": {
+                      "const": "armed"
+                    },
+                    "pattern": false,
+                    "strikes": false,
+                    "text": false
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "rule_class": {
+                      "const": "pattern"
+                    }
+                  }
+                },
+                "then": {
+                  "properties": {
+                    "pattern": true,
+                    "text": false
+                  },
+                  "required": [
+                    "pattern"
+                  ]
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "rule_class": {
+                      "const": "classifier"
+                    }
+                  }
+                },
+                "then": {
+                  "properties": {
+                    "pattern": false,
+                    "strikes": {
+                      "properties": {
+                        "then": {
+                          "not": {
+                            "const": "ban"
+                          }
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "text": true
+                  },
+                  "required": [
+                    "text"
+                  ]
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "rule_class": {
+                      "enum": [
+                        "rail",
+                        "classifier"
+                      ]
+                    }
+                  }
+                },
+                "then": {
+                  "properties": {
+                    "auto_ban_grant": false
+                  }
+                }
+              },
+              {
+                "else": {
+                  "properties": {
+                    "timeout_s": false
+                  }
+                },
+                "if": {
+                  "properties": {
+                    "action": {
+                      "const": "timeout"
+                    }
+                  }
+                },
+                "then": {
+                  "properties": {
+                    "timeout_s": true
+                  },
+                  "required": [
+                    "timeout_s"
+                  ]
+                }
+              }
+            ],
+            "description": "Rail modes are fixed. Delivery is a nonblank routing label, not executable code.\nPatterns are nonblank data here; cc-gatehouse compiles regexes and refuses bad\npatterns on upsert. This contract does not validate regex compilation.",
+            "properties": {
+              "action": {
+                "$ref": "#/$defs/Action"
+              },
+              "auto_ban_grant": {
+                "$ref": "#/$defs/AutoBanGrant"
+              },
+              "delivery": {
+                "pattern": "\\S",
+                "type": "string"
+              },
+              "mode": {
+                "$ref": "#/$defs/RuleMode"
+              },
+              "name": {
+                "pattern": "\\S",
+                "type": "string"
+              },
+              "pattern": {
+                "pattern": "\\S",
+                "type": "string"
+              },
+              "rule_class": {
+                "$ref": "#/$defs/RuleClass"
+              },
+              "rule_id": {
+                "$ref": "#/$defs/RuleId"
+              },
+              "strikes": {
+                "$ref": "#/$defs/StrikePolicy"
+              },
+              "text": {
+                "maxLength": 500,
+                "pattern": "\\S",
+                "type": "string"
+              },
+              "timeout_s": {
+                "format": "uint32",
+                "maximum": 1209600,
+                "minimum": 1,
+                "type": "integer"
+              }
+            },
+            "required": [
+              "rule_id",
+              "name",
+              "rule_class",
+              "mode",
+              "action",
+              "delivery"
+            ],
+            "type": "object"
+          },
+          "RuleClass": {
+            "enum": [
+              "rail",
+              "pattern",
+              "classifier"
+            ],
+            "type": "string"
+          },
+          "RuleId": {
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$(?![\\s\\S])",
+            "type": "string"
+          },
+          "RuleMode": {
+            "enum": [
+              "shadow",
+              "armed"
+            ],
+            "type": "string"
+          },
+          "StrikePolicy": {
+            "additionalProperties": false,
+            "allOf": [
+              {
+                "else": {
+                  "properties": {
+                    "then_timeout_s": false
+                  }
+                },
+                "if": {
+                  "properties": {
+                    "then": {
+                      "const": "timeout"
+                    }
+                  }
+                },
+                "then": {
+                  "properties": {
+                    "then_timeout_s": true
+                  },
+                  "required": [
+                    "then_timeout_s"
+                  ]
+                }
+              }
+            ],
+            "description": "Escalate after `count` hits of the same rule by the same viewer within `window_s`.",
+            "properties": {
+              "count": {
+                "format": "uint32",
+                "minimum": 1,
+                "type": "integer"
+              },
+              "then": {
+                "$ref": "#/$defs/Action"
+              },
+              "then_timeout_s": {
+                "format": "uint32",
+                "maximum": 1209600,
+                "minimum": 1,
+                "type": "integer"
+              },
+              "window_s": {
+                "format": "uint32",
+                "minimum": 1,
+                "type": "integer"
+              }
+            },
+            "required": [
+              "count",
+              "window_s",
+              "then"
+            ],
+            "type": "object"
+          },
+          "Timestamp": {
+            "format": "date-time",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?Z$(?![\\s\\S])",
+            "type": "string"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "A page scans at most `limit` ledger entries in append order. A page\nmay be empty and still have a next cursor. unavailable_count counts\nlegacy ledger-only decisions and entries missing required metadata\nor text after retention/erasure; verdicts or provenance are never\nfabricated for these unavailable rows. Follow next_cursor\nuntil absent, rather than stopping on an empty items array.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/$defs/GatehouseLiveRunItem"
+            },
+            "maxItems": 100,
+            "type": "array"
+          },
+          "next_cursor": {
+            "$ref": "#/$defs/GatehouseReadCursor"
+          },
+          "unavailable_count": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "unavailable_count"
+        ],
+        "title": "GatehouseLiveRunResult",
         "type": "object"
       }
     }
@@ -14825,7 +15516,7 @@
         },
         "GatehouseReadCursor": {
           "description": "Opaque endpoint-scoped position in the append-only decision ledger. Clients\nreturn it unchanged; an absent cursor starts at the beginning of history.",
-          "pattern": "^(chat|history):(0|[1-9][0-9]{0,15})$(?![\\s\\S])",
+          "pattern": "^(chat|history|liveRun):(0|[1-9][0-9]{0,15})$(?![\\s\\S])",
           "type": "string"
         },
         "GatehouseReadLimit": {
@@ -16710,6 +17401,23 @@
           "properties": {
             "method": {
               "const": "gatehouse.history.list",
+              "type": "string"
+            },
+            "params": {
+              "$ref": "#/$defs/GatehouseReadParams"
+            }
+          },
+          "required": [
+            "method",
+            "params"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "method": {
+              "const": "gatehouse.liveRun.get",
               "type": "string"
             },
             "params": {

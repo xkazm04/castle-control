@@ -12,3 +12,4 @@ export const gatehouseDrillDiff = { method: "gatehouse.drill.diff" as const, par
 export const gatehouseRecordingImport = { method: "gatehouse.recording.import" as const, params: compiled.p25, result: compiled.r25 };
 export const gatehouseChatList = { method: "gatehouse.chat.list" as const, params: compiled.p47, result: compiled.r47 };
 export const gatehouseHistoryList = { method: "gatehouse.history.list" as const, params: compiled.p48, result: compiled.r48 };
+export const gatehouseLiveRunGet = { method: "gatehouse.liveRun.get" as const, params: compiled.p49, result: compiled.r49 };

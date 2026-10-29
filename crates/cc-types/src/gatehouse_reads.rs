@@ -32,14 +32,14 @@ impl From<GatehouseReadLimit> for u32 {
 /// return it unchanged; an absent cursor starts at the beginning of history.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 #[serde(try_from = "String", into = "String")]
-#[schemars(with = "String", extend("pattern" = r"^(chat|history):(0|[1-9][0-9]{0,15})$(?![\s\S])"))]
+#[schemars(with = "String", extend("pattern" = r"^(chat|history|liveRun):(0|[1-9][0-9]{0,15})$(?![\s\S])"))]
 pub struct GatehouseReadCursor(String);
 
 impl TryFrom<String> for GatehouseReadCursor {
     type Error = &'static str;
     fn try_from(value: String) -> Result<Self, Self::Error> {
         let valid = value.split_once(':').is_some_and(|(kind, offset)| {
-            matches!(kind, "chat" | "history")
+            matches!(kind, "chat" | "history" | "liveRun")
                 && !offset.is_empty()
                 && offset.len() <= 16
                 && (offset == "0" || !offset.starts_with('0'))
@@ -177,4 +177,10 @@ page!(
     GatehouseHistoryPageFields,
     "GatehouseHistoryPageFields",
     GatehouseHistoryItem
+);
+page!(
+    GatehouseLiveRunResult,
+    GatehouseLiveRunPageFields,
+    "GatehouseLiveRunPageFields",
+    crate::GatehouseLiveRunItem
 );
