@@ -1,9 +1,8 @@
 # Hackathon package checklist
 
-Offline evidence snapshot: **2026-10-26**, local main
-`0181ffd985cb627b73b2290b1d3abcb8b83bacd2`; Beacons/ruling 4 update checked
-**2026-10-29** at `6cd46e6`. Commit citations are verified in this worktree's
-local history; later updates extend the original snapshot. No remote
+Evidence snapshot checked offline on **2026-10-29** against local main
+`97d8dd4d6bc5adf0ba2b0c4e2f29aa8336832f04`. Commit citations and recorded
+spike results are read from this worktree; this task ran no live checks. No remote
 visibility, live service behavior, upload or submission was checked.
 
 Sources: [plan entry point](../PLAN.md), implementation plan sections
@@ -21,8 +20,8 @@ integration, evidence or document finalization remains. **pending-owner** means
 an owner/Director action, approval or external check remains. An offline code
 commit never counts as a live exit. **pending-owner review** means a prepared
 document still needs owner review; it does not close a release exit.
-These draft files are not yet on main and
-do not mark their own delivery done.
+These drafts are on local main; their presence does not finalize the submission
+or mark owner review complete.
 
 ## Dates and submission items
 
@@ -54,12 +53,13 @@ do not mark their own delivery done.
 | Offline draw seal/cast and verifiers | done | `3380ffc` connects immutable offline seal/cast; `ac51742` audits sealing; `9c34d41` adds browser BLS/quicknet conformance; `71d125f` restores offline writ file verification. No live draw is proved. |
 | Ruling 4: `castlecontrol.beacons_routing = A` — per-visual input and bounded read contract | done | Code at `c34855d` adds the source/native-unit selection and bounded `beacons.contribution.list` contract. This is code completion, not a live result. |
 | Ruling 4 — accepted live contribution routing to curves and overlay | done | Code at `6cd46e6` registers `beacons.contribution.list`, deduplicates retained contributions before routing, and hands selected-curve intensity to the native overlay. [Routing tests](../../crates/cc-core/src/beacons/routing_tests.rs) use simulated inputs; no real cheer or live OBS acceptance is proved. |
-| Ruling 4 — desktop Driven-by picker | done | Code at `b6c4e9b` adds the per-visual picker and saved source/unit pair. A desktop live contribution feed remains a separate delivery; the existing feed is simulated. See [Beacons](../guide/beacons.md). |
+| Ruling 4 — desktop Driven-by picker | done | Code at `b6c4e9b` adds the per-visual picker and saved source/unit pair. Live feed code followed at `97d8dd4`; see the next row and [Beacons](../guide/beacons.md). |
+| Ruling 4 — desktop live contribution feed | done | **Code completion only**, at `97d8dd4`: core mode reads `beacons.contribution.list` on room entry or explicit refresh, beside the labelled simulated feed. Rows show amount, source/unit and user ID when present. Time/login columns were dropped because Contribution carries neither; adding them needs a later contract step. No live totals, real-cheer result or OBS movement is proved by this code completion. |
 | Owner test channel and two owned test accounts | pending-owner | Prepare isolated capture; armed spike action targets only an owned non-moderator account. Do not use a real viewer. |
 | Twitch device-flow application, OBS v5 and local runtime | pending-owner | Prepare public client configuration, OS keychain entries and local model. Record only sanitized outcomes. |
-| **M0 exit / WP 0.7**, scheduled Tue 10-27 | pending-owner | `cf75bb7` supplies the runner, but [spike-log.md](../spike-log.md) explicitly says pending owner live run: device login, app chat arrival, shadow stub, owned-account timeout/undo, visual OBS confirmation, forced-drop reconnect/gap. Fill every acceptance row with genuine evidence. |
+| **M0 exit / WP 0.7**, recorded Tue 10-27; Director clearance/capture review | pending-owner | [spike-log.md](../spike-log.md) acceptance table records all six WP checks PASS in run 10, 16:44:45–16:45:01 UTC: login, app chat, shadow stub, owned-target timeout/undo, static OBS source with screenshot reference, and reconnect/gap. O1–O8 also have recorded passes (O4/O8 after cleanup fixes); T1–T10 and F0–F9 remain pending. The log's pending header is stale for WP/O rows. Director must reconcile clearance and approve capture evidence; this task does not close the owner row or infer M1/M2 acceptance. |
 | M1/M2 live bridge and UI wiring after spike | pending-build | M1a page/read wiring and M2 live wiring are built; live acceptance remains pending owner evidence after spike approval. **M1 update (M1a, 2026-10-29): page wiring built** at `c14ff93` on the existing chat/history/consensus reads, using generated validators, per-row provenance, explicit unavailable counts and virtualised lists. `gatehouse-core.test.ts` proves malformed-read rejection, page continuation and 4,200 rows; `moderation.test.tsx` preserves simulated fixture labels. Drill run/diff remain simulated; live parity: pending capture evidence. The older shell test's mock/expectation update landed at `b6184b5`; full gate: Director verification. See the [M1 runbook](../guide/gatehouse.md#m1-live-run). M2 live wiring landed at `0ea0d04` (see the M2 exit row and [M2 live run](../guide/lots.md#m2-live-run)). |
-| **M1 exit**: two-hour shadow stream, all decisions logged, drill reproduces them under the same instrument hash; disclosure bank reports every case routed to a human with n | pending-owner | M1a reads/page wiring built with synthetic transport tests; no owner live run is claimed. Follow the [M1 live run](../guide/gatehouse.md#m1-live-run), retain the private ledger, history/consensus evidence and actual disclosure-bank output with n. Live parity: pending capture evidence from the separate `gatehouse.liveRun.get` delivery and its subsequent wiring. Capture-time instrument/recording, parity and written owner sign-off remain open; today's rules cannot substitute for the live instrument. |
+| **M1 exit**: two-hour shadow stream, all decisions logged, drill reproduces them under the same instrument hash; disclosure bank reports every case routed to a human with n | pending-owner | M1a reads/page wiring is built at `c14ff93`; capture-time instruments and `gatehouse.liveRun.get` at `617e094`, and retained-capture drill wiring at `c789279`. These are code completion with simulated tests, not owner live evidence. Follow the [M1 live run](../guide/gatehouse.md#m1-live-run), retaining the private ledger, history/consensus evidence and actual disclosure-bank output with n. Two-hour recording, live/replay parity and written owner sign-off remain open; today's rules cannot substitute for the live instrument. |
 | Written owner sign-off before any armed real-viewer rule | pending-owner | Retain signed M1 approval. The demo still targets only owned test accounts; this package grants no real-viewer permission. |
 | **M2 exit**: draw on test channel and same writ verifies in web and CLI | pending-owner | Native opt-in trusted quicknet (data-directory `live-quicknet` file, compiled-in anchor), post-verdict intake through the `ShadowPipeline`, a synchronous seal announcement before the target round, a separate cast-fed OBS Lots plate and writ export are built and recorded-transport tested at `0ea0d04` ([lots_live.rs](../../crates/cc-core/tests/lots_live.rs), [live_beacon.rs](../../crates/cc-core/tests/live_beacon.rs)). The owner must still keep a no-prize test-channel capture with the matching pool, the pre-round announcement, the signed round, the OBS winners, the writ and both verifier outputs, following the [M2 live run](../guide/lots.md#m2-live-run). No live exit is claimed. |
 | Prize-draw capture prerequisites if substituted later | pending-owner | Rules template, disclaimer, free equal-odds path and policy checks must be in place. Do not unlock paid entry/weight or expand this demo to actual prize distribution. |

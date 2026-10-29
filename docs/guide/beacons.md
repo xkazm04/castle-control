@@ -1,6 +1,6 @@
 # Beacons: contribution visuals
 
-Draft for owner review, current at `6cd46e6` (2026-10-29).
+Draft for owner review, current at `97d8dd4` (2026-10-29).
 Open `#/chamber/visuals` or press 3. Contributions are intended to change visual
 intensity only; they do not buy draw odds, votes, rank or moderation decisions.
 Offline intake/intensity logic, core configuration controls and the local
@@ -37,9 +37,8 @@ and [curve routing](../../crates/cc-core/src/beacons/routing.rs).
 
 Simulation starts empty per call and never becomes a live contribution total.
 Saving configuration resets that visual's live total; configure it before the
-test contribution. Decay snapshots run once a second. The desktop's existing
-feed contains simulated events only; a **desktop live contribution feed is a
-separate delivery**, even though the bounded core read now exists.
+test contribution. Decay snapshots run once a second.
+The desktop live feed reads `beacons.contribution.list` on room entry or explicit refresh (`97d8dd4`), beside the labelled simulated feed; rows show amount, source/unit and user ID when present, with no time or login because the Contribution contract carries neither (adding them needs a later contract step).
 
 ## Source URL and packages
 
@@ -120,11 +119,14 @@ preview is simulated and cannot prove live intake. Complete login privately.
    amount in bits. Observe whether the matching OBS visual changes without a
    manual refresh and follows its configured decay. Do not save the visual or
    curve during this observation, since saving resets its live total.
-2. In the app, verify the saved Driven-by selection and connection status with
-   **Refresh Beacons** as needed. The current room does not display live totals
-   or a live contribution feed, and still carries an unavailable-delivery
-   notice. Neither that notice nor its simulated feed establishes whether the
-   cheer reached OBS; keep the actual OBS observation, including no movement.
+2. In the app, verify the saved Driven-by selection and connection status. Use
+   **Refresh live contributions** or **Refresh Beacons** to read current data;
+   expect the test cheer under **Contribution feed · live from core**, showing
+   its amount in bits, source and user ID when supplied. There is no time or
+   login column. The room still does not display live totals and still carries
+   an unavailable-delivery notice. A live row is app-side intake evidence only:
+   observe OBS movement separately, including no movement. If the read fails or
+   no matching row appears, retain that result without substituting simulation.
 3. Separately select the test visual and click **Simulate 50 gift subs** under
    **Test fire · core simulation**. Keep the **simulated** output and
    **simulated · Core simulation** feed label visible. The app should show a

@@ -1,7 +1,7 @@
 # Castle Control
 
 > Public README draft, not yet installed at the repository root. Status checked
-> offline on 2026-10-26 against local main `0181ffd`. Links below work from this
+> offline on 2026-10-29 against local main `97d8dd4`. Links below work from this
 > draft's location; adjust them when promoting it to the root README. Recheck
 > feature status, run instructions and submission links before publication.
 
@@ -10,14 +10,18 @@ Its four chambers bring audience tools into one local-first app:
 
 | Chamber | Plain function | Current scope |
 | --- | --- | --- |
-| Lot Chamber | Verifiable draws with eligible pools, giveaway guardrails, seals and downloadable proofs | Offline draw/proof logic, CLI and web verifiers, and a fixture page exist. A Twitch draw and its live OBS delivery remain unproved. |
-| Gatehouse | AI-assisted moderation, a consensus chart and a replay drill | Offline rules, human-review safety gate, engine adapter, consensus/replay logic and fixture UI exist. Live integration and the two-hour shadow/replay exit remain pending. |
-| Beacons | Contribution-driven OBS visuals | Offline contribution/intensity and renderer work plus a fixture designer exist. This is beyond the M0–M2 floor; live OBS contribution behavior remains unproved. |
+| Lot Chamber | Verifiable draws with eligible pools, giveaway guardrails, seals and downloadable proofs | Native post-verdict intake, trusted quicknet seal/cast, OBS result plate and writ export are wired at `0ea0d04`, alongside CLI/web verifiers and fixture previews. The owner test-channel draw, matching OBS result and verification remain unproved; follow the [M2 runbook](../guide/lots.md#m2-live-run). |
+| Gatehouse | AI-assisted moderation, a consensus chart and a replay drill | Rules/safety logic, consensus and fixture UI exist. Native chat/history/consensus reads are wired at `c14ff93`; stored capture instruments/read at `617e094` and capture drill at `c789279`. Current native intake is rules-only; the two-hour shadow/replay exit and owner sign-off remain pending. See the [M1 runbook](../guide/gatehouse.md#m1-live-run). |
+| Beacons | Contribution-driven OBS visuals | Core configuration/curve controls, input picker, live routing/overlay host and a live contribution read feed (`97d8dd4`) exist beside labelled simulation. Feed rows show amount, source/unit and optional user ID, with no time/login or live totals. Real-cheer OBS movement and 1 s OBS timing remain unproved; simulation still does not drive OBS. See the [M3 runbook](../guide/beacons.md#m3-live-run); this is beyond the floor. |
 | Map Room | An Extension studio | Planned local/Hosted Test scope for allowlisted accounts; no released or reviewed Twitch Extension is claimed. |
 
 The submission floor is M0–M2: a protected room and verifiable draws on the
 owner's test channel. It is targeted for October 30, not marked complete here.
-The [spike record](../spike-log.md) still awaits the October 27 owner live run.
+The [spike record](../spike-log.md) acceptance table records all six WP 0.7
+checks PASS on October 27, run 10 (16:44:45–16:45:01 UTC), including the static
+OBS plate screenshot reference. O1–O8 have recorded passes; T1–T10 and F0–F9
+remain pending despite the log's blanket pending header. These records do not
+prove M1/M2 exits or a real-viewer moderation action.
 Fixture screenshots show generated, labelled simulated data. They are previews.
 Overlord is the first showcase; its urn and war table are data templates.
 Castle Control is a working name and is not affiliated with Twitch.
@@ -63,7 +67,8 @@ With no native arguments, this opens a real core with unconfigured adapters;
 unknown status stays unknown. It does not log in or arm moderation. Owner-only
 test-channel login and the separate spike runner are documented in
 [desktop setup](../../apps/desktop/README.md) and
-[the spike record](../spike-log.md); those live checks remain pending.
+[the spike record](../spike-log.md). Recorded WP spike results are distinct from
+the pending M1/M2 owner runs and fresh demo capture.
 There is no root `start` script or public installer promised by this draft.
 
 Open [the self-contained web verifier](../../packages/verifier-web/index.html)
@@ -108,7 +113,10 @@ describes implementation tools and providers, not an endorsement by OpenAI.
 Chat enters downstream modules only after a moderation verdict. Watching
 (shadow) is the default; a deterministic action gate enforces safety and bans
 require human approval by default. Contribution money affects visuals only.
-The planned Steward proposes changes that require a human seal.
+The Steward has a core-mode bar/seal slot (`21d113e`) and a host-configured writ
+protocol (`2a080c1`); changes require a human seal. These code deliveries do not
+prove the end-to-end runtime provider demonstration. An unconfigured host stays
+unavailable rather than substituting a simulated success.
 
 Use only the owner's test channel and owned test accounts for live tests. No
 armed action may reach a real viewer before the M1 exit and written owner
