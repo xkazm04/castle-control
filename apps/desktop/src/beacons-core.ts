@@ -1,12 +1,12 @@
 import { invokeMethod, parseError, parseMethodParams, parseMethodResult } from '@castle-control/contract';
-import type { BeaconsSimulateParams, BeaconsSimulateResult, Contribution, ContributionListParams, CurveSetParams, ErrorEnvelope,
+import type { ArtGenerateParams, BeaconsSimulateParams, BeaconsSimulateResult, Contribution, ContributionListParams, CurveSetParams, ErrorEnvelope,
   MethodContract, RpcMethods, Visual, VisualId, VisualUpsertParams } from '@castle-control/contract';
 import { validateCoreLaunch } from './core-source.js';
 import type { CoreLaunch } from './core-source.js';
 import type { PreviewEvent } from './beacons-fixture.js';
 
 type BeaconsMethod = 'beacons.visual.list' | 'beacons.visual.upsert' | 'beacons.curve.set' | 'beacons.simulate'
-  | 'beacons.source.url' | 'beacons.contribution.list';
+  | 'beacons.source.url' | 'beacons.contribution.list' | 'beacons.art.status' | 'beacons.art.generate';
 /** Restricted transport seam; launch capabilities never enter read snapshots. */
 export type BeaconsNetwork = {
   rpc: <M extends BeaconsMethod>(endpoint: string, session: string, method: M, params: RpcMethods[M]['params']) => Promise<unknown>;
@@ -14,6 +14,7 @@ export type BeaconsNetwork = {
 export type CoreBeaconsSnapshot = {
   visuals: readonly Visual[]; selected?: VisualId; simulation?: BeaconsSimulateResult;
   events: readonly PreviewEvent[];
+  art_available: boolean; art_busy: boolean;
   contributions: { phase: 'idle' | 'loading' | 'error' } | { phase: 'ready'; items: readonly Contribution[] };
   busy: boolean; phase: 'idle' | 'loading' | 'ready' | 'error'; notice: string; error?: ErrorEnvelope;
 };
@@ -41,9 +42,10 @@ export function createCoreBeaconsPort(launch: CoreLaunch, transport?: BeaconsNet
   let validators: ReturnType<typeof importValidators> | undefined;
   function importValidators() { return import('@castle-control/contract/beacons'); }
   const contracts = () => validators ??= importValidators();
-  let snapshot: CoreBeaconsSnapshot = freeze({ visuals: [], events: [], contributions: { phase: 'idle' },
+  let snapshot: CoreBeaconsSnapshot = freeze({ visuals: [], events: [], art_available: false, art_busy: false, contributions: { phase: 'idle' },
     busy: false, phase: 'idle', notice: 'Load Beacons from the local core.' });
   let event_serial = 0;
+  let art_status_serial = 0;
   const listeners = new Set<() => void>();
   function publish(change: Partial<CoreBeaconsSnapshot>, omit: ('selected' | 'simulation' | 'error')[] = []) {
     const previous = { ...snapshot };
@@ -76,6 +78,28 @@ export function createCoreBeaconsPort(launch: CoreLaunch, transport?: BeaconsNet
   return {
     getSnapshot: () => snapshot,
     subscribe(listener: () => void) { listeners.add(listener); return () => { listeners.delete(listener); }; },
+    async loadArtStatus() {
+      const serial = ++art_status_serial;
+      publish({ art_available: false });
+      try {
+        const { available } = await call((await contracts()).beaconsArtStatus, {});
+        if (serial === art_status_serial) publish({ art_available: available });
+      } catch {
+        // Optional art stays hidden. Never change the room notice or toast.
+        if (serial === art_status_serial) publish({ art_available: false });
+      }
+    },
+    async generateArt(params: ArtGenerateParams) {
+      if (snapshot.art_busy || !snapshot.art_available) throw { code: 'unavailable', message: 'Art generation is unavailable or already in progress.' };
+      publish({ art_busy: true });
+      try {
+        const proposed = structuredClone(params);
+        const result = await call((await contracts()).beaconsArtGenerate, proposed);
+        if (result.design_id !== proposed.design_id) throw new Error('Mismatched art design');
+        return result;
+      } catch (error: unknown) { throw safeError(error); }
+      finally { publish({ art_busy: false }); }
+    },
     async loadContributions(params: ContributionListParams) {
       if (snapshot.contributions.phase === 'loading') return;
       const proposed = { ...params };

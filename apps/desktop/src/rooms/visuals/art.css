@@ -1,0 +1,3 @@
+.visuals-art pre { white-space: pre-wrap; overflow-wrap: anywhere; font: var(--text-label) var(--font-num); }
+.visuals-art code { overflow-wrap: anywhere; }
+.visuals-art [role="group"] { display: grid; gap: var(--space-12); }

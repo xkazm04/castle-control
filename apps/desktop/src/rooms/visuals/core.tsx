@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useSyncExternalStore } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import type { ReactNode } from 'react';
 import { WindowedRows, rowHeight } from '@castle-control/ui';
 import { coreBeaconsConnection } from '../../client.js';
@@ -14,12 +14,15 @@ import { contribution_sources as sources, inputDescription, source_labels } from
 import './room.css';
 import './core.css';
 
+const ArtSection = lazy(() => import('./art.jsx'));
+
 export function ConnectedBeacons({ port, seal_slot }: { port: CoreBeaconsPort; seal_slot?: ReactNode }) {
   const state = useSyncExternalStore(port.subscribe, port.getSnapshot, port.getSnapshot);
   const source_copy = useMemo(() => createBrowserSourceCopy(port), [port]);
   const copy_state = useSyncExternalStore(source_copy.subscribe, source_copy.getSnapshot, source_copy.getSnapshot);
   const [creating, setCreating] = useState(false);
   useEffect(() => { void port.load(); void port.loadContributions({ limit: 100 }); }, [port]);
+  useEffect(() => { void port.loadArtStatus(); }, [port]);
   const visual = state.visuals.find(item => item.visual_id === state.selected);
   return <section className="visuals-room visuals-core" aria-label="Core Beacons" aria-busy={state.busy}>
     <div className="visuals-room-layout">
@@ -63,6 +66,9 @@ export function ConnectedBeacons({ port, seal_slot }: { port: CoreBeaconsPort; s
         </section>}
       </div>
       <div className="visuals-room-details">
+        {state.art_available && visual && <Suspense fallback={null}>
+          <ArtSection key={visual.visual_id} port={port} visual={visual} />
+        </Suspense>}
         <VisualEditor key={`visual-${creating ? 'new' : JSON.stringify(visual)}`} port={port} busy={state.busy}
           {...(!creating && visual ? { visual } : {})} />
         {visual && <EditableKindlingCurve visual={visual} port={port} busy={state.busy} />}
