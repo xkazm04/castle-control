@@ -68,9 +68,13 @@ the owner-attended [measurement procedure](../../crates/cc-core/README.md#reprod
 No OBS timing is inferred from them.
 
 Live intake and curve routing are built, but **a real test cheer moving the live
-OBS visual is not verified live yet**. Leonardo generation is an implemented
-bring-your-own-key client with `public:false`, but is not yet connected to these
-desktop controls. See [privacy](../privacy.md#optional-leonardo-art) and
+OBS visual is not verified live yet**. In core mode, the desktop offers opt-in
+Leonardo generation when a key is present and hides it otherwise, including
+availability errors. Each generation requires explicit credit confirmation and
+shows generated asset labels and the exact core cost receipt. The 30-a-day
+generation cap is not enforced by the app; keeping count is the owner's
+discipline. Public Extension use of generated art still requires the owner's
+terms check. See [privacy](../privacy.md#optional-leonardo-art) and
 [M3 acceptance](../plan/03-implementation-plan.md#m3--beacons).
 
 ## M3 live run
