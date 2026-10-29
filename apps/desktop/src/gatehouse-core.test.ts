@@ -6,6 +6,18 @@ import type { GatehouseNetwork } from './gatehouse-core.js';
 import { fixtureCharts, fixtureLedger, fixtureReplay, fixtureRules } from './moderation-fixture.js';
 import { ConnectedGatehouse } from './rooms/moderator/core.jsx';
 import { CoreChat } from './rooms/moderator/core-reads.jsx';
+import { CaptureList } from './rooms/moderator/capture-drill.jsx';
+
+const capture = {
+  recording: 'recording-01K8F7A0000000000000000002', from: '2026-10-29T12:00:00Z', to: '2026-10-29T12:00:00Z',
+  configuration: { rules: [], bank: 'simulated-capture-bank', judge: 'rules-only', prompts: [] },
+  instrument: fixtureReplay.instrument, instrument_hash: fixtureReplay.instrument_hash, gaps: [],
+  inputs: { bank: { label: 'simulated-capture-bank', calibration: 'simulated', cases: [] },
+    judge: { revision: 'simulated', model: 'none', tier: 'simulated', rubric: 'simulated', parameters: {} },
+    prompts: { version: 'simulated', system: 'simulated', prompts: [], sources: {} } },
+};
+const captureItem = { coverage: 'retained', decision_id: '01K8F7A0000000000000000001', provenance: 'simulated', capture } as const;
+const capturePage = { items: [captureItem], unavailable_count: 0, next_cursor: 'liveRun:100' };
 
 // Generated data only: a simulated transport may return either provenance label.
 const readDecision = { at: '2026-10-28T12:00:00Z', decision_id: '01ARZ3NDEKTSV4RRFFQ69G5FAV',
@@ -37,6 +49,7 @@ function harness() {
     ['gatehouse.recording.import', recording], ['gatehouse.consensus.get', consensus],
     ['gatehouse.drill.run', fixtureReplay], ['gatehouse.drill.diff', diffResult],
     ['gatehouse.chat.list', chatPage], ['gatehouse.history.list', historyPage],
+    ['gatehouse.liveRun.get', capturePage],
   ]);
   const rpc = vi.fn<GatehouseNetwork['rpc']>(async (_endpoint, _session, method) => structuredClone(responses.get(method)));
   const fetch = vi.fn(() => { throw new Error('Unexpected fetch'); });
@@ -244,4 +257,92 @@ test('4,200 validated core chat rows mount bounded windows with provenance throu
     expect(html.match(/data-message-row=/g)?.length).toBeLessThan(30);
     expect(html).toContain('data-provenance="live"'); expect(html).toContain('data-provenance="simulated"');
   }
+});
+
+test('a listed capture replays its stored configuration and compares against that capture baseline', async () => {
+  const h = harness(); await h.port.load(); await h.port.loadLiveRuns();
+  h.port.selectCapture(captureItem.decision_id);
+  await h.port.runCapture();
+  expect(h.rpc).toHaveBeenLastCalledWith(launch.endpoint, launch.session_token, 'gatehouse.drill.run', {
+    recording: capture.recording, configuration: capture.configuration,
+  });
+  expect(h.port.getSnapshot().replay_capture?.instrument_hash).toBe(capture.instrument_hash);
+  const html = renderToStaticMarkup(createElement(ConnectedGatehouse, { port: h.port, replay: true }));
+  expect(html).toContain(capture.recording); expect(html).toContain('Capture and replay instrument hashes match.');
+  h.responses.set('gatehouse.drill.diff', { ...diffResult, candidate: { ...fixtureReplay, instrument_hash: 'f'.repeat(64) } });
+  await h.port.compareCapture(configuration);
+  expect(h.rpc).toHaveBeenLastCalledWith(launch.endpoint, launch.session_token, 'gatehouse.drill.diff', {
+    recording: capture.recording, baseline: capture.configuration, candidate: configuration,
+  });
+  const compared = renderToStaticMarkup(createElement(ConnectedGatehouse, { port: h.port, replay: true }));
+  expect(compared).toContain('Capture and replay instrument hashes match.');
+  expect(compared).toContain('Capture and replay instrument hashes differ.');
+  expect(compared).toContain('their results are not merged');
+  h.port.selectCapture();
+  expect(h.port.getSnapshot().drill).toBeUndefined(); expect(h.port.getSnapshot().diff).toBeUndefined();
+  expect(h.port.getSnapshot().replay_capture).toBeUndefined();
+});
+
+test('capture paging replaces bounded pages, follows empty windows and refuses malformed or oversized pages', async () => {
+  const h = harness(); await h.port.loadLiveRuns();
+  h.port.selectCapture(captureItem.decision_id);
+  const selected = h.port.getSnapshot().selected_capture;
+  expect(h.rpc).toHaveBeenLastCalledWith(launch.endpoint, launch.session_token, 'gatehouse.liveRun.get', { limit: 100 });
+  const unavailable = { coverage: 'unavailable', decision_id: '01K8F7A0000000000000000003', reason: 'recording_unavailable' };
+  const rows = Array.from({ length: 100 }, (_, i) => ({ ...unavailable,
+    decision_id: `01ARZ3NDEKTSV4RR${i.toString().padStart(10, '0')}` }));
+  h.responses.set('gatehouse.liveRun.get', { items: rows, unavailable_count: 100, next_cursor: 'liveRun:200' });
+  await h.port.moreLiveRuns(); expect(h.port.getSnapshot().live_runs?.items).toHaveLength(100);
+  expect(h.port.getSnapshot().selected_capture).toBe(selected);
+  const render = (scroll_top: number) => renderToStaticMarkup(createElement(CaptureList, { state: h.port.getSnapshot(), port: h.port, scroll_top }));
+  const first = render(0); const last = render(100 * 256);
+  expect(first).toContain('aria-rowcount="100"'); expect(first).toContain(rows[0]?.decision_id);
+  expect(first).not.toContain(rows[99]?.decision_id); expect(last).toContain(rows[99]?.decision_id);
+  for (const html of [first, last]) expect(html.match(/data-capture-id=/g)?.length).toBeLessThan(10);
+  expect(h.rpc).toHaveBeenLastCalledWith(launch.endpoint, launch.session_token, 'gatehouse.liveRun.get', { limit: 100, cursor: 'liveRun:100' });
+  h.responses.set('gatehouse.liveRun.get', { items: [], unavailable_count: 0, next_cursor: 'liveRun:300' });
+  await h.port.moreLiveRuns(); expect(h.port.getSnapshot().live_runs?.items).toEqual([]);
+  h.responses.set('gatehouse.liveRun.get', { items: Array.from({ length: 101 }, () => unavailable), unavailable_count: 101 });
+  await h.port.moreLiveRuns(); expect(h.port.getSnapshot().phase).toBe('error');
+  expect(h.port.getSnapshot().live_runs?.items).toEqual([]);
+  h.responses.set('gatehouse.liveRun.get', { items: [], unavailable_count: 0 }); await h.port.moreLiveRuns();
+  expect(h.rpc).toHaveBeenLastCalledWith(launch.endpoint, launch.session_token, 'gatehouse.liveRun.get', { limit: 100, cursor: 'liveRun:300' });
+  const count = h.rpc.mock.calls.length; await h.port.moreLiveRuns(); expect(h.rpc).toHaveBeenCalledTimes(count);
+  h.responses.set('gatehouse.liveRun.get', { items: [{ ...captureItem, provenance: 'unsupported' }], unavailable_count: 0 });
+  await h.port.loadLiveRuns(); expect(h.port.getSnapshot().phase).toBe('error');
+  expect(h.port.getSnapshot().live_runs).toBeUndefined();
+});
+
+test('replay gaps and unavailable captures cannot run or compare and display explicit coverage gaps', async () => {
+  const h = harness();
+  for (const item of [
+    { ...captureItem, capture: { ...capture, replay_gap: 'bridge_gap' } },
+    { ...captureItem, capture: { ...capture, replay_gap: 'runtime_context_not_replayable' } },
+    { ...captureItem, capture: { ...capture, replay_gap: 'classifier_not_replayable' } },
+    { ...captureItem, capture: { ...capture, gaps: [{ from: capture.from, to: capture.to }] } },
+    { coverage: 'unavailable', decision_id: captureItem.decision_id, reason: 'capture_unavailable' },
+    { coverage: 'unavailable', decision_id: captureItem.decision_id, reason: 'recording_unavailable' },
+  ]) {
+    h.responses.set('gatehouse.liveRun.get', { items: [item], unavailable_count: item.coverage === 'unavailable' ? 1 : 0 });
+    await h.port.loadLiveRuns(); const count = h.rpc.mock.calls.length;
+    const html = renderToStaticMarkup(createElement(ConnectedGatehouse, { port: h.port, replay: true }));
+    expect(html).toContain('Coverage gap'); expect(html).toMatch(/<button[^>]*disabled=""[^>]*>Use capture<\/button>/);
+    h.port.selectCapture(captureItem.decision_id); await h.port.runCapture(); await h.port.compareCapture(configuration);
+    expect(h.rpc).toHaveBeenCalledTimes(count); expect(h.port.getSnapshot().selected_capture).toBeUndefined();
+  }
+});
+
+test('capture expiry and rule conflicts fail without stale comparison or hash-match output', async () => {
+  const h = harness(); await h.port.loadLiveRuns(); h.port.selectCapture(captureItem.decision_id);
+  await h.port.runCapture(); expect(h.port.getSnapshot().drill).toBeDefined();
+  h.rpc.mockRejectedValueOnce({ code: 'unavailable', message: 'Synthetic expired recording' });
+  await h.port.runCapture();
+  expect(h.port.getSnapshot().phase).toBe('error'); expect(h.port.getSnapshot().drill).toBeUndefined();
+  expect(h.port.getSnapshot().replay_capture).toBeUndefined();
+  const html = renderToStaticMarkup(createElement(ConnectedGatehouse, { port: h.port, replay: true }));
+  expect(html).not.toContain('Capture and replay instrument hashes match.'); expect(html).toContain('unavailable');
+  await h.port.compareCapture(configuration); expect(h.port.getSnapshot().diff).toBeDefined();
+  h.rpc.mockRejectedValueOnce({ code: 'conflict', message: 'Synthetic changed instrument' });
+  await h.port.compareCapture(configuration); expect(h.port.getSnapshot().diff).toBeUndefined();
+  expect(h.port.getSnapshot().notice).toContain('conflict'); expect(h.port.getSnapshot().replay_capture).toBeUndefined();
 });

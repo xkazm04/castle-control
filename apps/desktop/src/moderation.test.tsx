@@ -126,3 +126,15 @@ test('core mode never exposes fixture chat or action controls', () => {
   expect(html).not.toContain('data-message-row');
   expect(html).not.toContain('Propose Ban');
 });
+
+test('capture and replay instrument hashes show matching and differing instruments without claiming a live exit', () => {
+  for (const matching of [true, false]) {
+    const capture_hash = matching ? fixtureReplay.instrument_hash : 'f'.repeat(64);
+    const html = renderToStaticMarkup(<Drill result={fixtureReplay} origin="core" capture_hash={capture_hash} />);
+    expect(html).toContain('Stored capture instrument hash');
+    expect(html).toContain(capture_hash); expect(html).toContain(fixtureReplay.instrument_hash);
+    expect(html).toContain(matching ? 'Capture and replay instrument hashes match.' : 'Capture and replay instrument hashes differ.');
+    expect(html).toContain('Matching instruments alone do not prove matching decisions or the two-hour live exit.');
+    expect(html).not.toContain('live parity: pending capture evidence');
+  }
+});

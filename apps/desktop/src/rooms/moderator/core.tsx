@@ -86,8 +86,7 @@ export function ConnectedGatehouse({ port, replay, seal_slot }: { port: CoreGate
             </WindowedRows>
           </section>
           <section className="moderator-card"><h3>The drill · replay simulator</h3>
-            <p>{copy.live_parity}</p>
-            <p>Import a recording or choose one already held by the core, then compare rules without acting on viewers.</p>
+            <p>{copy.capture_intro}</p>
             <a href="#/chamber/moderator/drill">Open the drill</a></section>
           <CoreHistory state={state} port={port} />{seal_slot}
         </div>

@@ -47,7 +47,37 @@ people. Filters request that core window/series. A connected room is not
 evidence that live Twitch chat is feeding the chart. Source:
 [Gatehouse analysis](../../crates/cc-gatehouse/README.md).
 
-For an offline drill:
+For a retained live capture drill:
+
+1. Open the drill and select **Load captures from start**. This reads
+   `gatehouse.liveRun.get` through the generated contract. Each page scans at
+   most 100 ledger entries. **Next capture page** replaces the current page;
+   keep following it even if a page is empty or entirely unavailable. Refresh
+   from the start clears the selection and old replay results.
+2. Choose **Use capture** on a retained entry. Its recording reference,
+   live/simulated provenance, inclusive interval and stored capture instrument
+   hash are shown. **Run simulated replay** sends the capture's stored
+   configuration, rather than reconstructing it from today's settings. The
+   core resolves the instrument and checks it against the retained capture;
+   no caller-supplied hash is sent.
+3. **Compare rules** uses that stored configuration as its baseline and the
+   current watching rules plus the displayed bank, judge and prompts as its
+   candidate. Baseline and candidate hashes and outcomes stay separate.
+4. Results show the stored capture hash beside each replay's instrument hash
+   and explicitly state whether they match. Matching hashes establish the
+   instrument identity, not matching decisions or completion of the two-hour
+   M1 live exit. Core conflicts or unavailable results are errors, never passes.
+
+Coverage gaps cannot be selected, run or compared. Retained entries with
+`replay_gap` or bridge gaps remain visible as incomplete coverage. Unsupported
+classifier/runtime state is labelled explicitly. The core groups legacy,
+erased or unsupported capture metadata as `capture_unavailable`, and expired,
+erased or missing recordings as `recording_unavailable`; the UI reports these
+possibilities without inventing a more specific reason. Erasure or expiry
+after selection is still enforced by the core when replaying. Different
+instrument hashes are never merged.
+
+Choose **Use manual recording** to return to the existing offline import path:
 
 1. Open the drill and import a source-labelled recording JSON document with
    `source`, `messages` and `gaps`, or select a recording name already in core.
@@ -117,15 +147,13 @@ intake. This runbook adds no arming or cloud opt-in.
    The current bank asserts n=96 and prints its result. This is generated,
    simulated safety-test evidence, not proof of live model behavior; retain
    actual output rather than filling a result in advance.
-6. Open **The drill**. Existing recording import, **Run simulated replay**,
-   **Save comparison baseline** and **Compare rules** remain available for
-   replay-only evaluation. The panel says **live parity: pending capture
-   evidence**. Capture-time `instrument_hash` and a retained live recording
-   reference are not exposed by today's reads. Live parity (a drill against
-   that exact capture-time instrument) is pending the separate
-   `gatehouse.liveRun.get` delivery and its subsequent wiring. Do not hash
-   today's rules as a substitute, relabel a replay as live, or claim a
-   match/mismatch. Preserve the private capture for that later check.
+6. Open **The drill**, select **Load captures from start**, and choose a retained
+   capture from the bounded pages. Follow the capture workflow above to run
+   its stored configuration, inspect both instrument hashes and compare the
+   replay decisions with the private original. Record all coverage gaps;
+   unavailable or unsupported captures cannot establish replay parity. Manual
+   imports remain available but do not establish capture authority. Do not
+   hash today's rules as a substitute or relabel simulated replay as live.
 
 The two-hour run, complete decision accounting, capture-time replay parity and
 written owner sign-off remain **pending-owner**. No rule may act on real viewers

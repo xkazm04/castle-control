@@ -20,20 +20,40 @@ Chat/history retain row provenance and explicit `unavailable_count`; Load more
 walks opaque 100-entry page cursors, including empty pages. Refresh starts a new
 walk and refreshes consensus; this is an explicit read view, not automatic tailing.
 
-The drill imports a source-labelled recording JSON document (source, messages,
-gaps), or uses a recording name already held by core. Bank, judge and prompts
-are explicit inputs. A saved baseline remains with the connection while the
-streamer returns to edit watching rules. Run and comparison results display
-simulated labels, provenance, gaps, outcome states and each instrument hash.
+The drill reads `gatehouse.liveRun.get` on request. Each validated page contains
+at most 100 ledger entries and replaces the previous page; opaque cursors are
+followed even on empty/unavailable-only windows. The capture list is windowed.
+A selected retained snapshot stays with the connection across pages. Replay
+uses its stored recording/configuration; comparison uses that configuration
+as baseline with today's rules as candidate. No caller hash crosses the wire.
+Coverage gaps (including replay_gap, bridge gaps, erased/expired evidence and
+unsupported context) cannot run or compare. Core still checks retention and
+instrument identity at execution time. Results keep the capture hash alongside
+each replay hash with explicit match/difference copy, without merging runs or
+claiming that matching hashes prove matching decisions or the M1 live exit.
+
+Manual source-labelled JSON import and recording names keep their existing
+bank/judge/prompts and saved-baseline flow. Switching source or refreshing the
+capture walk clears results so a different capture cannot inherit a result.
+Manual/fixture replays have no capture authority and retain pending-parity copy.
 
 The current read contract has no pending-ban queue lookup. That view
 therefore explain their unavailability instead of inventing review records. The
 typed ban/dismiss/undo/petition port methods are tested, but the UI does not act
 on an unseen original message. No live tests or owner steps are claimed.
 
-The drill and its room panel say `live parity: pending capture evidence`.
-Existing hashes describe simulated replays only. No live hash is calculated
-from current rules; no replay result is compared to fabricated live evidence.
+The room panel offers retained capture evidence and manual imports. All replay
+output remains simulated, including replay of a capture whose provenance is live.
+No live hash is calculated from current rules or fabricated evidence.
+
+M1b desktop follow-up verification: the new capture tests first failed on the
+absent live-read port, then passed. Focused gatehouse-core, moderation,
+moderation-gate, client and moderator structure suites cover stored configuration
+replay, capture-baseline comparison, matching/differing hashes, refused gaps,
+100-entry paging with empty-window continuation, oversized/invalid replies,
+windowed rows through the last entry, and stale-output clearing on expiry or
+instrument conflict. Typecheck/lint and the production build are package-local;
+no install, git write, live Twitch call or owner acceptance is performed.
 
 M1a evidence: `gatehouse-core.test.ts` exercises all twelve methods, invalid values,
 HTTP and transport failures, immutable snapshots, concurrent mutation suppression,

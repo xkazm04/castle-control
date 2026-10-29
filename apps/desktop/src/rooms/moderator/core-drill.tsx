@@ -3,6 +3,7 @@ import type { DrillConfiguration } from '@castle-control/contract';
 import { WindowedRows } from '@castle-control/ui';
 import type { CoreGatehousePort, CoreGatehouseSnapshot } from '../../gatehouse-core.js';
 import { Drill } from './drill.jsx';
+import { CaptureList, CaptureConfiguration } from './capture-drill.jsx';
 import { moderationCopy as copy } from '../../moderation-copy.js';
 
 export function CoreDrill({ state, port }: { state: CoreGatehouseSnapshot; port: CoreGatehousePort }) {
@@ -15,41 +16,43 @@ export function CoreDrill({ state, port }: { state: CoreGatehouseSnapshot; port:
   const recording = recordingName || state.recording?.recording || '';
   const configuration: DrillConfiguration = { rules: [...state.rules], bank, judge, prompts: prompts.split('\n').filter(text => text.trim()) };
   const ready = !state.busy && !!recording.trim() && !!bank.trim() && !!judge.trim();
-  return <section className="moderator-core-drill"><h2>The drill · simulated replay from core</h2>
+  return <section className="moderator-core-drill"><h2>{copy.core_drill_title}</h2>
+    <a href="#/chamber/moderator">{copy.back}</a>
+    <p>{copy.core_drill_note}</p>
+    <CaptureList state={state} port={port} />
+    {state.selected_capture ? <CaptureConfiguration key={state.selected_capture.decision_id} state={state} port={port} /> : <>
     <p role="status">{copy.live_parity}</p>
-    <a href="#/chamber/moderator">Back to the Gatehouse</a>
-    <p>Replays and comparisons do not write to the live decision ledger. Sources, recording gaps and instrument hashes come from core.</p>
-    <section className="moderator-card"><h3>Recording</h3>
-      <label>Import recording JSON<textarea value={importText} disabled={state.busy}
+    <section className="moderator-card"><h3>{copy.recording_title}</h3>
+      <label>{copy.recording_import_json}<textarea value={importText} disabled={state.busy}
         onChange={event => setImportText(event.currentTarget.value)} /></label>
-      <p>Import your channel’s exported recording, including its source, messages and gaps. It stays with the local core.</p>
-      <button type="button" disabled={state.busy || !importText.trim()} onClick={() => { void port.importRecordingJson(importText); }}>Import recording</button>
-      {state.recording && <p>Imported {state.recording.message_count} messages · source: {state.recording.source} · recording: {state.recording.recording}</p>}
-      <label>Recording name<input value={recording} disabled={state.busy} onChange={event => setRecordingName(event.currentTarget.value)} /></label>
+      <p>{copy.recording_import_note}</p>
+      <button type="button" disabled={state.busy || !importText.trim()} onClick={() => { void port.importRecordingJson(importText); }}>{copy.recording_import}</button>
+      {state.recording && <p>{copy.recording_imported(state.recording.message_count, state.recording.source, state.recording.recording)}</p>}
+      <label>{copy.recording_name}<input value={recording} disabled={state.busy} onChange={event => setRecordingName(event.currentTarget.value)} /></label>
     </section>
-    <section className="moderator-card"><h3>Replay configuration</h3>
-      <p>{state.rules.length} rules loaded. Save a baseline, edit the watching rules in the Gatehouse, then compare the current configuration.</p>
-      <label>Test bank<input value={bank} disabled={state.busy} onChange={event => setBank(event.currentTarget.value)} /></label>
-      <label>Judge configuration<input value={judge} disabled={state.busy} onChange={event => setJudge(event.currentTarget.value)} /></label>
-      <label>Prompts (one per line)<textarea value={prompts} disabled={state.busy} onChange={event => setPrompts(event.currentTarget.value)} /></label>
+    <section className="moderator-card"><h3>{copy.configuration_title}</h3>
+      <p>{copy.configuration_note(state.rules.length)}</p>
+      <label>{copy.bank}<input value={bank} disabled={state.busy} onChange={event => setBank(event.currentTarget.value)} /></label>
+      <label>{copy.judge}<input value={judge} disabled={state.busy} onChange={event => setJudge(event.currentTarget.value)} /></label>
+      <label>{copy.prompts}<textarea value={prompts} disabled={state.busy} onChange={event => setPrompts(event.currentTarget.value)} /></label>
       <div className="moderator-actions">
-        <button type="button" disabled={!ready} onClick={() => { void port.runDrill({ recording, configuration }); }}>Run simulated replay</button>
-        <button type="button" disabled={!ready} onClick={() => { void port.saveBaseline({ recording, configuration }); }}>Save comparison baseline</button>
+        <button type="button" disabled={!ready} onClick={() => { void port.runDrill({ recording, configuration }); }}>{copy.run_replay}</button>
+        <button type="button" disabled={!ready} onClick={() => { void port.saveBaseline({ recording, configuration }); }}>{copy.save_baseline}</button>
         <button type="button" disabled={!ready || !baseline} onClick={() => {
           if (baseline) void port.diffDrill({ recording, baseline, candidate: configuration });
-        }}>Compare rules</button>
-      </div><p>{baseline ? 'Comparison baseline saved for this core connection.' : 'No comparison baseline saved.'}</p>
-    </section>
-    {state.drill && <Drill result={state.drill} origin="core" />}
-    {state.diff && <section className="moderator-card" aria-label="Core drill comparison"><h3>Rule comparison · simulated</h3>
-      <p>Instrument hashes describe different runs; their results are not merged.</p>
-      <WindowedRows rows={state.diff.changes} label="Core drill changes" row_key={change => change.message_id}
-        empty_state="No changed outcomes in this comparison.">
+        }}>{copy.compare}</button>
+      </div><p>{baseline ? copy.baseline_saved : copy.baseline_empty}</p>
+    </section></>}
+    {state.drill && <Drill result={state.drill} origin="core" capture_hash={state.replay_capture?.instrument_hash} />}
+    {state.diff && <section className="moderator-card" aria-label={copy.comparison_label}><h3>{copy.comparison_title}</h3>
+      <p>{copy.comparison_note}</p>
+      <WindowedRows rows={state.diff.changes} label={copy.changes_label} row_key={change => change.message_id}
+        empty_state={copy.changes_empty}>
         {change => <p>{change.message_id}: {change.before.replaceAll('_', ' ')} → {change.after.replaceAll('_', ' ')}</p>}
       </WindowedRows>
-      <h3>Baseline</h3><Drill result={state.diff.baseline} origin="core" />
-      <h3>Candidate</h3><Drill result={state.diff.candidate} origin="core" />
+      <h3>{copy.baseline}</h3><Drill result={state.diff.baseline} origin="core" capture_hash={state.replay_capture?.instrument_hash} />
+      <h3>{copy.candidate}</h3><Drill result={state.diff.candidate} origin="core" capture_hash={state.replay_capture?.instrument_hash} />
     </section>}
-    {!state.drill && !state.diff && <p role="status">No core replay results loaded.</p>}
+    {!state.drill && !state.diff && <p role="status">{copy.replay_empty}</p>}
   </section>;
 }
