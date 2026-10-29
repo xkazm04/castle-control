@@ -13,7 +13,7 @@ const schema = parseJson(readFileSync(join(output, 'contract.schema.json'), 'utf
 delete schema.$comment;
 const files = artifacts(schema);
 assert.deepEqual(files, artifacts(schema), 'generation must be byte deterministic');
-assert.equal(Object.keys(files).length, 22);
+assert.equal(Object.keys(files).length, 23);
 const stewardNames = ['steward.ask', 'steward.writ.seal', 'steward.writ.tear'];
 const stewardMethods = schema.methods.map((method, index) => ({ ...method, index })).filter(method => stewardNames.includes(method.name));
 assert.equal(stewardMethods.length, 3);
@@ -36,6 +36,8 @@ assert(files['beacons-validators.mjs'], 'Beacons validators have a separate gene
 assert(files['beacons-validators.d.mts'], 'Beacons validators retain typed declarations');
 assert(files['beacons-validation.ts'].includes("from './beacons-validators.mjs'"));
 assert(!files['beacons-validation.ts'].includes("from './validators.mjs'"));
+assert.equal(files['beacons-root-validation.ts'], files['beacons-validation.ts'],
+  'root barrel handles share the independent validators without importing the lazy method module');
 const gatehouseNames = ['rules.list', 'rules.upsert', 'ban.confirm', 'ban.dismiss', 'decision.undo',
   'petition.resolve', 'recording.import', 'drill.run', 'drill.diff', 'consensus.get', 'chat.list', 'history.list', 'liveRun.get'].map(name => `gatehouse.${name}`);
 const gatehouseMethods = schema.methods.map((method, index) => ({ ...method, index })).filter(method => gatehouseNames.includes(method.name));

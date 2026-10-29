@@ -235,6 +235,20 @@ Use external run-directory files and freshly export both from the current tree.
 Outside the sandbox no flags are required: both scripts run Cargo themselves.
 These overrides are a build-harness input, never a product or CI default.
 
+Root Beacons method handles reuse the independently compiled validators behind
+the `./beacons` door, including visual input and recent-contribution validation.
+They do not import the lazy method module itself, so it still loads on demand.
+The package declares `sideEffects: false`: its runtime modules only define parsers, schemas
+and handles; importing them performs no registration or I/O. This lets the
+desktop drop unused barrel re-exports from first load while room imports retain
+their full validators. Generic synchronous `parseParams`/`parseResult` remain
+available with the complete registry. Keep future runtime modules free of import
+side effects, or declare an explicit exception in the package manifest.
+
+Ruling 4 budget verification: the unchanged desktop build/check-build command
+went from 393,381 to 358,659 uncompressed first-load JS+CSS bytes against its
+unchanged 393,216-byte limit. Beacons validators remain in a deferred chunk.
+
 `Registry::with_status()` reports the actual built-in registration. Parity
 requires registered methods to be declared and literal TS `invoke` calls to be
 registered. Declared names awaiting later WPs are reported with their count.

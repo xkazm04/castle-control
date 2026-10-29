@@ -4,7 +4,9 @@ import { beaconsVisualList, beaconsCurveSet, beaconsSimulate, beaconsSourceUrl,
 import type { RpcMethod } from './validate.js';
 import { beaconsEvent } from './generated/validators.mjs';
 import { beaconsContributionList } from './index.js';
-import { beaconsContributionList as lazyContributionList } from './generated/beacons-validation.js';
+import { beaconsContributionList as lazyContributionList, beaconsVisualList as lazyVisualList,
+  beaconsCurveSet as lazyCurveSet, beaconsSimulate as lazySimulate,
+  beaconsSourceUrl as lazySourceUrl } from './generated/beacons-validation.js';
 
 // Generated simulated data, matching the Rust Beacons fixtures. No live intake.
 const curve = { ranges: [{ total: 0, intensity: 0 }, { total: 50, intensity: 1 }],
@@ -30,6 +32,15 @@ test('public Beacons handles preserve their wire method names', () => {
   expect(beaconsSourceUrl.method).toBe('beacons.source.url');
   expect(beaconsContributionList.method).toBe('beacons.contribution.list');
   expect(lazyContributionList.method).toBe('beacons.contribution.list');
+});
+
+test('root Beacons handles reuse the independently compiled lazy validators', () => {
+  for (const [root, lazy] of [[beaconsVisualList, lazyVisualList], [beaconsCurveSet, lazyCurveSet],
+    [beaconsSimulate, lazySimulate], [beaconsSourceUrl, lazySourceUrl],
+    [beaconsContributionList, lazyContributionList]] as const) {
+    expect(root.params).toBe(lazy.params);
+    expect(root.result).toBe(lazy.result);
+  }
 });
 
 test('per-visual input round-trips and legacy absence remains omitted', () => {

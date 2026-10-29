@@ -7,8 +7,8 @@ export { parseStewardAskParams, parseStewardAskResult, parseWrit, parseWritSealP
   parseWritSealResult, parseWritTearParams, parseWritTearResult, parseStewardEvent } from './validate.js';
 export { statusGet, bridgeStatusGet, gatehouseRulesList, gatehouseBanConfirm,
   gatehouseConsensusGet, gatehouseDrillRun } from './generated/validation.js';
-export { beaconsVisualList, beaconsCurveSet, beaconsSimulate, beaconsSourceUrl } from './generated/validation.js';
-export { beaconsContributionList } from './generated/validation.js';
+export { beaconsVisualList, beaconsCurveSet, beaconsSimulate, beaconsSourceUrl,
+  beaconsContributionList } from './generated/beacons-root-validation.js';
 export { lotsDrawList, lotsDrawUpsert, lotsDrawCheck, lotsRollLookup, lotsRollSeal, lotsCast, lotsWritGet } from './generated/validation.js';
 export { gatehouseHeldResolve, gatehouseDelaySet, gatehouseShieldSet, gatehouseLeaseEnd } from './generated/validation.js';
 export { stewardAsk, stewardWritSeal, stewardWritTear } from './generated/validation.js';

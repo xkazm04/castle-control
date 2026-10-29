@@ -276,6 +276,10 @@ function validators(schema) {
     'beacons-validators.d.mts': `${beaconsDeclarations.join('\n')}\n`,
     'beacons-validation.ts': `${banner}import * as compiled from './beacons-validators.mjs';\n`
       + `${beaconsMethods.join('\n')}\n`,
+    // Separate wrapper keeps root barrel exports tree-shakeable without loading
+    // the on-demand method module. Both use the same independent validators.
+    'beacons-root-validation.ts': `${banner}import * as compiled from './beacons-validators.mjs';\n`
+      + `${beaconsMethods.join('\n')}\n`,
     'steward-validators.mjs': compileValidators(ajv, stewardExports, formatSource),
     'steward-validators.d.mts': `${stewardDeclarations.join('\n')}\n`,
     'steward-validation.ts': `${banner}import * as compiled from './steward-validators.mjs';\n`
