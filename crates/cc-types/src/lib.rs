@@ -1,6 +1,7 @@
 //! The single authority for Castle Control's wire vocabulary and schemas.
 mod beacons;
 mod beacons_art;
+mod beacons_reads;
 mod beacons_render;
 mod core;
 mod decision;
@@ -28,6 +29,7 @@ mod value;
 
 pub use beacons::*;
 pub use beacons_art::*;
+pub use beacons_reads::*;
 pub use beacons_render::*;
 pub use core::*;
 pub use decision::*;

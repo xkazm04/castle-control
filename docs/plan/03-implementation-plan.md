@@ -882,11 +882,15 @@ delivery to /events remains part of later RPC wiring, preserving existing caller
 | Method or type | Params, result or fields |
 | --- | --- |
 | `beacons.visual.list` (WP 3.1) | `Empty` -> `VisualListResult { visuals: Visual[] }` |
+| `beacons.contribution.list` (WP 3.1, ruling 4) | `ContributionListParams { limit: ContributionReadLimit }` -> `ContributionListResult { items: Contribution[] }`; latest accepted contributions for the connected channel, newest first; at most the requested limit, no cursor or history export |
+| `ContributionReadLimit` | Required integer 1..100; out-of-range limits are rejected, never clamped. `BEACONS_MAX_PAGE_SIZE` is 100; result `items` also rejects more than 100 contributions |
 | `beacons.visual.upsert` (WP 3.1) | `VisualUpsertParams { visual: Visual }` -> `Visual` |
 | `beacons.curve.set` (WP 3.1) | `CurveSetParams { visual_id: VisualId, curve: IntensityCurve }` -> `Visual` |
 | `beacons.simulate` (WP 3.1) | `BeaconsSimulateParams { visual_id: VisualId, burst: SimulatedBurst }` -> `BeaconsSimulateResult { label: simulated, intensity: BeaconsIntensity }`; `{ source: gift, amount: 50 }` models a 50-sub gift bomb |
 | `beacons.source.url` (WP 3.2) | `SourceUrlParams { visual_id: VisualId }` -> `SourceUrlResult { url: LoopbackSourceUrl }` |
-| `Visual` | `visual_id: VisualId`, nonblank `name`, optional `design_id: DesignId`, `curve: IntensityCurve`; existing slug ID doors are reused |
+| `Visual` | `visual_id: VisualId`, nonblank `name`, optional `design_id: DesignId`, optional `input: VisualInput`, `curve: IntensityCurve`; existing slug ID doors are reused. Legacy visuals omit `input`; present null is rejected |
+| `VisualInput` | `source: ContributionSource`, `unit: VisualInputUnit`; one selected source, with a matching native unit; unknown fields and source/unit mismatches rejected. Contract only: routing and the UI picker follow separately |
+| `VisualInputUnit` | `bits` for cheer/bits_use; `count` for subscribe/gift/resub/power_up; `level` for hype_train; `points` for channel_points; `minor_currency` for charity/goal. No unit or currency conversion is implied |
 | `IntensityCurve` | Nonempty `ranges: IntensityRange[]`, `decay: IntensityDecay`; each range is a control point `{ total: uint32, intensity: Intensity }` |
 | `IntensityDecay` | Tagged by `kind`: `none`, or `exponential` with positive uint32 `half_life_s` |
 | `ContributionSource` | `cheer`, `bits_use`, `subscribe`, `gift`, `resub`, `hype_train`, `channel_points`, `charity`, `goal`, `power_up` |
@@ -1072,7 +1076,7 @@ cloud opt-in enforcement remain the engine's job. The CLI remains slow-lane only
 | core | `status.get`, `settings.get`, `settings.set`, `auth.twitch.start`, `auth.twitch.status`, `auth.twitch.revoke`, `bridge.status.get`, `obs.status.get`, `obs.source.create`, `store.forgetUser`, `store.purgeAll` |
 | gatehouse | `gatehouse.rules.list`, `gatehouse.rules.upsert`, `gatehouse.rules.setMode`, `gatehouse.ban.confirm`, `gatehouse.ban.dismiss`, `gatehouse.decision.undo`, `gatehouse.petition.resolve`, `gatehouse.held.resolve`, `gatehouse.delay.set`, `gatehouse.shield.set`, `gatehouse.lease.end`, `gatehouse.consensus.get`, `gatehouse.drill.run`, `gatehouse.drill.diff`, `gatehouse.recording.import` |
 | lots | `lots.draw.list`, `lots.draw.upsert`, `lots.draw.check`, `lots.roll.lookup`, `lots.roll.seal`, `lots.cast`, `lots.writ.get` |
-| beacons | `beacons.visual.list`, `beacons.visual.upsert`, `beacons.curve.set`, `beacons.simulate`, `beacons.source.url`, `beacons.art.status`, `beacons.art.generate` |
+| beacons | `beacons.visual.list`, `beacons.contribution.list`, `beacons.visual.upsert`, `beacons.curve.set`, `beacons.simulate`, `beacons.source.url`, `beacons.art.status`, `beacons.art.generate` |
 | maproom | `maproom.design.get`, `maproom.design.upsert`, `maproom.stage.get`, `maproom.turn.run` |
 | steward | `steward.ask`, `steward.writ.seal`, `steward.writ.tear` |
 | gatehouse (read additions) | `gatehouse.chat.list`, `gatehouse.history.list`, `gatehouse.liveRun.get` |

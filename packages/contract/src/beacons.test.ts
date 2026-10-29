@@ -3,6 +3,8 @@ import { beaconsVisualList, beaconsCurveSet, beaconsSimulate, beaconsSourceUrl,
   parseMethodParams, parseMethodResult, parseParams, parseResult } from './index.js';
 import type { RpcMethod } from './validate.js';
 import { beaconsEvent } from './generated/validators.mjs';
+import { beaconsContributionList } from './index.js';
+import { beaconsContributionList as lazyContributionList } from './generated/beacons-validation.js';
 
 // Generated simulated data, matching the Rust Beacons fixtures. No live intake.
 const curve = { ranges: [{ total: 0, intensity: 0 }, { total: 50, intensity: 1 }],
@@ -26,6 +28,53 @@ test('public Beacons handles preserve their wire method names', () => {
   expect(beaconsCurveSet.method).toBe('beacons.curve.set');
   expect(beaconsSimulate.method).toBe('beacons.simulate');
   expect(beaconsSourceUrl.method).toBe('beacons.source.url');
+  expect(beaconsContributionList.method).toBe('beacons.contribution.list');
+  expect(lazyContributionList.method).toBe('beacons.contribution.list');
+});
+
+test('per-visual input round-trips and legacy absence remains omitted', () => {
+  for (const [source, unit] of [['cheer', 'bits'], ['bits_use', 'bits'], ['subscribe', 'count'],
+    ['gift', 'count'], ['resub', 'count'], ['power_up', 'count'], ['hype_train', 'level'],
+    ['channel_points', 'points'], ['charity', 'minor_currency'], ['goal', 'minor_currency']]) {
+    const configured = { ...visual, input: { source, unit } };
+    expect(parseParams('beacons.visual.upsert', { visual: configured })).toEqual({ visual: configured });
+    expect(parseResult('beacons.visual.upsert', JSON.stringify(configured))).toEqual(configured);
+  }
+  const parsed = parseResult('beacons.visual.upsert', JSON.stringify(visual));
+  expect(parsed).toEqual(visual);
+  expect(parsed).not.toHaveProperty('input');
+});
+
+test('per-visual input rejects null, unknown fields, sources, units and mismatched units', () => {
+  for (const input of [null, {}, { source: 'gift', unit: 'unknown' },
+    { source: 'unknown', unit: 'count' }, { source: 'gift', unit: 'bits' },
+    { source: 'cheer', unit: 'count' }, { source: 'hype_train', unit: 'points' },
+    { source: 'charity', unit: 'count' }, { source: 'channel_points', unit: 'level' },
+    { source: null, unit: 'count' }, { source: 'gift', unit: null },
+    { source: 'gift', unit: 'count', extra: true }]) {
+    expect(() => parseParams('beacons.visual.upsert', { visual: { ...visual, input } })).toThrow();
+    expect(() => parseResult('beacons.visual.upsert', JSON.stringify({ ...visual, input }))).toThrow();
+  }
+});
+
+test('recent contribution reads require a bounded limit and validate typed items', () => {
+  expect(parseMethodParams(lazyContributionList, { limit: 1 })).toEqual({ limit: 1 });
+  expect(parseMethodResult(beaconsContributionList, JSON.stringify({ items: [contribution] })))
+    .toEqual({ items: [contribution] });
+  for (const limit of [1, 100]) {
+    expect(parseParams('beacons.contribution.list', { limit })).toEqual({ limit });
+  }
+  for (const params of [{}, { limit: 0 }, { limit: 101 }, { limit: -1 }, { limit: 1.5 },
+    { limit: '1' }, { limit: null }, { limit: 1, extra: true }]) {
+    expect(() => parseParams('beacons.contribution.list', params)).toThrow();
+  }
+  for (const items of [[], [contribution], Array.from({ length: 100 }, () => contribution)]) {
+    expect(parseResult('beacons.contribution.list', JSON.stringify({ items }))).toEqual({ items });
+  }
+  for (const result of [{ items: null }, { items: [null] }, { items: [{ ...contribution, source: 'unknown' }] },
+    { items: Array.from({ length: 101 }, () => contribution) }, { items: [], extra: true }]) {
+    expect(() => parseResult('beacons.contribution.list', JSON.stringify(result))).toThrow();
+  }
 });
 
 test('public visual-list handle validates simulated fixtures through the method door', () => {

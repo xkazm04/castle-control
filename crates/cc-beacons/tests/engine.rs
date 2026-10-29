@@ -31,6 +31,7 @@ fn visual() -> Visual {
         visual_id: VisualId::try_from("simulated-beacon".to_owned()).unwrap(),
         name: "Simulated beacon".to_owned(),
         design_id: None,
+        input: None,
         curve: IntensityCurve {
             ranges: vec![
                 IntensityRange {

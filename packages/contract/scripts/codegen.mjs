@@ -167,7 +167,7 @@ function validators(schema) {
       : `{ type: 'number', validate: ${format.validate.toString()} }`}`).join(',');
   const exports = {}, lotsExports = {}, gatehouseExports = {}, beaconsExports = {}, stewardExports = {};
   const stewardNames = new Set(['steward.ask', 'steward.writ.seal', 'steward.writ.tear']);
-  const beaconsNames = new Set(['visual.list', 'visual.upsert', 'curve.set', 'simulate', 'source.url', 'art.status', 'art.generate'].map(name => `beacons.${name}`));
+  const beaconsNames = new Set(['visual.list', 'contribution.list', 'visual.upsert', 'curve.set', 'simulate', 'source.url', 'art.status', 'art.generate'].map(name => `beacons.${name}`));
   const gatehouseNames = new Set(['rules.list', 'rules.upsert', 'ban.confirm', 'ban.dismiss', 'decision.undo',
     'petition.resolve', 'recording.import', 'drill.run', 'drill.diff', 'consensus.get', 'chat.list', 'history.list', 'liveRun.get'].map(name => `gatehouse.${name}`));
   const shared = sharedSchemas(schema);

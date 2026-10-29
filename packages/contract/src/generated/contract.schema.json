@@ -6046,6 +6046,21 @@
       },
       "result": {
         "$defs": {
+          "ContributionSource": {
+            "enum": [
+              "cheer",
+              "bits_use",
+              "subscribe",
+              "gift",
+              "resub",
+              "hype_train",
+              "channel_points",
+              "charity",
+              "goal",
+              "power_up"
+            ],
+            "type": "string"
+          },
           "DesignId": {
             "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$(?![\\s\\S])",
             "type": "string"
@@ -6141,6 +6156,9 @@
               "design_id": {
                 "$ref": "#/$defs/DesignId"
               },
+              "input": {
+                "$ref": "#/$defs/VisualInput"
+              },
               "name": {
                 "pattern": "\\S",
                 "type": "string"
@@ -6158,6 +6176,127 @@
           },
           "VisualId": {
             "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$(?![\\s\\S])",
+            "type": "string"
+          },
+          "VisualInput": {
+            "additionalProperties": false,
+            "description": "One selected source in its native unit; routing is a later delivery.",
+            "oneOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "source": {
+                    "enum": [
+                      "cheer",
+                      "bits_use"
+                    ]
+                  },
+                  "unit": {
+                    "const": "bits"
+                  }
+                },
+                "required": [
+                  "source",
+                  "unit"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "source": {
+                    "enum": [
+                      "subscribe",
+                      "gift",
+                      "resub",
+                      "power_up"
+                    ]
+                  },
+                  "unit": {
+                    "const": "count"
+                  }
+                },
+                "required": [
+                  "source",
+                  "unit"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "source": {
+                    "const": "hype_train"
+                  },
+                  "unit": {
+                    "const": "level"
+                  }
+                },
+                "required": [
+                  "source",
+                  "unit"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "source": {
+                    "const": "channel_points"
+                  },
+                  "unit": {
+                    "const": "points"
+                  }
+                },
+                "required": [
+                  "source",
+                  "unit"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "source": {
+                    "enum": [
+                      "charity",
+                      "goal"
+                    ]
+                  },
+                  "unit": {
+                    "const": "minor_currency"
+                  }
+                },
+                "required": [
+                  "source",
+                  "unit"
+                ],
+                "type": "object"
+              }
+            ],
+            "properties": {
+              "source": {
+                "$ref": "#/$defs/ContributionSource"
+              },
+              "unit": {
+                "$ref": "#/$defs/VisualInputUnit"
+              }
+            },
+            "required": [
+              "source",
+              "unit"
+            ],
+            "type": "object"
+          },
+          "VisualInputUnit": {
+            "description": "Native integer units, matching Contribution amounts. No conversion is implied.",
+            "enum": [
+              "bits",
+              "count",
+              "level",
+              "points",
+              "minor_currency"
+            ],
             "type": "string"
           }
         },
@@ -6179,10 +6318,132 @@
       }
     },
     {
+      "name": "beacons.contribution.list",
+      "owner": "WP 3.1",
+      "params": {
+        "$defs": {
+          "ContributionReadLimit": {
+            "format": "uint32",
+            "maximum": 100,
+            "minimum": 1,
+            "type": "integer"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Latest accepted contributions for the connected channel, newest first.\nRequired limit bounds the recent window; this is not a history export.",
+        "properties": {
+          "limit": {
+            "$ref": "#/$defs/ContributionReadLimit"
+          }
+        },
+        "required": [
+          "limit"
+        ],
+        "title": "ContributionListParams",
+        "type": "object"
+      },
+      "result": {
+        "$defs": {
+          "Contribution": {
+            "additionalProperties": false,
+            "description": "Units: Bits for cheer/bits_use; counts for subs/gifts/resubs/power-ups;\nlevel for hype_train; points for channel_points; minor currency units for\ncharity/goal. WP 3.1 must configure compatible inputs before aggregating totals.",
+            "properties": {
+              "amount": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "broadcaster_id": {
+                "$ref": "#/$defs/TwitchUserId"
+              },
+              "dedupe_key": {
+                "description": "Canonical underlying contribution identity, scoped by broadcaster, NOT\nthe transport event ID or source. Overlapping cheer/bits_use use one key.",
+                "pattern": "\\S",
+                "type": "string"
+              },
+              "event_id": {
+                "$ref": "#/$defs/MessageId"
+              },
+              "source": {
+                "$ref": "#/$defs/ContributionSource"
+              },
+              "user_id": {
+                "$ref": "#/$defs/TwitchUserId"
+              }
+            },
+            "required": [
+              "source",
+              "broadcaster_id",
+              "event_id",
+              "amount",
+              "dedupe_key"
+            ],
+            "type": "object"
+          },
+          "ContributionSource": {
+            "enum": [
+              "cheer",
+              "bits_use",
+              "subscribe",
+              "gift",
+              "resub",
+              "hype_train",
+              "channel_points",
+              "charity",
+              "goal",
+              "power_up"
+            ],
+            "type": "string"
+          },
+          "MessageId": {
+            "pattern": "^[A-Za-z0-9_-]+$(?![\\s\\S])",
+            "type": "string"
+          },
+          "TwitchUserId": {
+            "pattern": "^[1-9][0-9]{0,31}$(?![\\s\\S])",
+            "type": "string"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "At most the requested limit, never more than 100. No viewer data is fabricated.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/$defs/Contribution"
+            },
+            "maxItems": 100,
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "ContributionListResult",
+        "type": "object"
+      }
+    },
+    {
       "name": "beacons.visual.upsert",
       "owner": "WP 3.1",
       "params": {
         "$defs": {
+          "ContributionSource": {
+            "enum": [
+              "cheer",
+              "bits_use",
+              "subscribe",
+              "gift",
+              "resub",
+              "hype_train",
+              "channel_points",
+              "charity",
+              "goal",
+              "power_up"
+            ],
+            "type": "string"
+          },
           "DesignId": {
             "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$(?![\\s\\S])",
             "type": "string"
@@ -6278,6 +6539,9 @@
               "design_id": {
                 "$ref": "#/$defs/DesignId"
               },
+              "input": {
+                "$ref": "#/$defs/VisualInput"
+              },
               "name": {
                 "pattern": "\\S",
                 "type": "string"
@@ -6296,6 +6560,127 @@
           "VisualId": {
             "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$(?![\\s\\S])",
             "type": "string"
+          },
+          "VisualInput": {
+            "additionalProperties": false,
+            "description": "One selected source in its native unit; routing is a later delivery.",
+            "oneOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "source": {
+                    "enum": [
+                      "cheer",
+                      "bits_use"
+                    ]
+                  },
+                  "unit": {
+                    "const": "bits"
+                  }
+                },
+                "required": [
+                  "source",
+                  "unit"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "source": {
+                    "enum": [
+                      "subscribe",
+                      "gift",
+                      "resub",
+                      "power_up"
+                    ]
+                  },
+                  "unit": {
+                    "const": "count"
+                  }
+                },
+                "required": [
+                  "source",
+                  "unit"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "source": {
+                    "const": "hype_train"
+                  },
+                  "unit": {
+                    "const": "level"
+                  }
+                },
+                "required": [
+                  "source",
+                  "unit"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "source": {
+                    "const": "channel_points"
+                  },
+                  "unit": {
+                    "const": "points"
+                  }
+                },
+                "required": [
+                  "source",
+                  "unit"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "source": {
+                    "enum": [
+                      "charity",
+                      "goal"
+                    ]
+                  },
+                  "unit": {
+                    "const": "minor_currency"
+                  }
+                },
+                "required": [
+                  "source",
+                  "unit"
+                ],
+                "type": "object"
+              }
+            ],
+            "properties": {
+              "source": {
+                "$ref": "#/$defs/ContributionSource"
+              },
+              "unit": {
+                "$ref": "#/$defs/VisualInputUnit"
+              }
+            },
+            "required": [
+              "source",
+              "unit"
+            ],
+            "type": "object"
+          },
+          "VisualInputUnit": {
+            "description": "Native integer units, matching Contribution amounts. No conversion is implied.",
+            "enum": [
+              "bits",
+              "count",
+              "level",
+              "points",
+              "minor_currency"
+            ],
+            "type": "string"
           }
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -6313,6 +6698,21 @@
       },
       "result": {
         "$defs": {
+          "ContributionSource": {
+            "enum": [
+              "cheer",
+              "bits_use",
+              "subscribe",
+              "gift",
+              "resub",
+              "hype_train",
+              "channel_points",
+              "charity",
+              "goal",
+              "power_up"
+            ],
+            "type": "string"
+          },
           "DesignId": {
             "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$(?![\\s\\S])",
             "type": "string"
@@ -6402,6 +6802,127 @@
           "VisualId": {
             "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$(?![\\s\\S])",
             "type": "string"
+          },
+          "VisualInput": {
+            "additionalProperties": false,
+            "description": "One selected source in its native unit; routing is a later delivery.",
+            "oneOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "source": {
+                    "enum": [
+                      "cheer",
+                      "bits_use"
+                    ]
+                  },
+                  "unit": {
+                    "const": "bits"
+                  }
+                },
+                "required": [
+                  "source",
+                  "unit"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "source": {
+                    "enum": [
+                      "subscribe",
+                      "gift",
+                      "resub",
+                      "power_up"
+                    ]
+                  },
+                  "unit": {
+                    "const": "count"
+                  }
+                },
+                "required": [
+                  "source",
+                  "unit"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "source": {
+                    "const": "hype_train"
+                  },
+                  "unit": {
+                    "const": "level"
+                  }
+                },
+                "required": [
+                  "source",
+                  "unit"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "source": {
+                    "const": "channel_points"
+                  },
+                  "unit": {
+                    "const": "points"
+                  }
+                },
+                "required": [
+                  "source",
+                  "unit"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "source": {
+                    "enum": [
+                      "charity",
+                      "goal"
+                    ]
+                  },
+                  "unit": {
+                    "const": "minor_currency"
+                  }
+                },
+                "required": [
+                  "source",
+                  "unit"
+                ],
+                "type": "object"
+              }
+            ],
+            "properties": {
+              "source": {
+                "$ref": "#/$defs/ContributionSource"
+              },
+              "unit": {
+                "$ref": "#/$defs/VisualInputUnit"
+              }
+            },
+            "required": [
+              "source",
+              "unit"
+            ],
+            "type": "object"
+          },
+          "VisualInputUnit": {
+            "description": "Native integer units, matching Contribution amounts. No conversion is implied.",
+            "enum": [
+              "bits",
+              "count",
+              "level",
+              "points",
+              "minor_currency"
+            ],
+            "type": "string"
           }
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -6412,6 +6933,9 @@
           },
           "design_id": {
             "$ref": "#/$defs/DesignId"
+          },
+          "input": {
+            "$ref": "#/$defs/VisualInput"
           },
           "name": {
             "pattern": "\\S",
@@ -6541,6 +7065,21 @@
       },
       "result": {
         "$defs": {
+          "ContributionSource": {
+            "enum": [
+              "cheer",
+              "bits_use",
+              "subscribe",
+              "gift",
+              "resub",
+              "hype_train",
+              "channel_points",
+              "charity",
+              "goal",
+              "power_up"
+            ],
+            "type": "string"
+          },
           "DesignId": {
             "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$(?![\\s\\S])",
             "type": "string"
@@ -6630,6 +7169,127 @@
           "VisualId": {
             "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$(?![\\s\\S])",
             "type": "string"
+          },
+          "VisualInput": {
+            "additionalProperties": false,
+            "description": "One selected source in its native unit; routing is a later delivery.",
+            "oneOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "source": {
+                    "enum": [
+                      "cheer",
+                      "bits_use"
+                    ]
+                  },
+                  "unit": {
+                    "const": "bits"
+                  }
+                },
+                "required": [
+                  "source",
+                  "unit"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "source": {
+                    "enum": [
+                      "subscribe",
+                      "gift",
+                      "resub",
+                      "power_up"
+                    ]
+                  },
+                  "unit": {
+                    "const": "count"
+                  }
+                },
+                "required": [
+                  "source",
+                  "unit"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "source": {
+                    "const": "hype_train"
+                  },
+                  "unit": {
+                    "const": "level"
+                  }
+                },
+                "required": [
+                  "source",
+                  "unit"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "source": {
+                    "const": "channel_points"
+                  },
+                  "unit": {
+                    "const": "points"
+                  }
+                },
+                "required": [
+                  "source",
+                  "unit"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "source": {
+                    "enum": [
+                      "charity",
+                      "goal"
+                    ]
+                  },
+                  "unit": {
+                    "const": "minor_currency"
+                  }
+                },
+                "required": [
+                  "source",
+                  "unit"
+                ],
+                "type": "object"
+              }
+            ],
+            "properties": {
+              "source": {
+                "$ref": "#/$defs/ContributionSource"
+              },
+              "unit": {
+                "$ref": "#/$defs/VisualInputUnit"
+              }
+            },
+            "required": [
+              "source",
+              "unit"
+            ],
+            "type": "object"
+          },
+          "VisualInputUnit": {
+            "description": "Native integer units, matching Contribution amounts. No conversion is implied.",
+            "enum": [
+              "bits",
+              "count",
+              "level",
+              "points",
+              "minor_currency"
+            ],
+            "type": "string"
           }
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -6640,6 +7300,9 @@
           },
           "design_id": {
             "$ref": "#/$defs/DesignId"
+          },
+          "input": {
+            "$ref": "#/$defs/VisualInput"
           },
           "name": {
             "pattern": "\\S",
@@ -7215,6 +7878,21 @@
             ],
             "type": "object"
           },
+          "ContributionSource": {
+            "enum": [
+              "cheer",
+              "bits_use",
+              "subscribe",
+              "gift",
+              "resub",
+              "hype_train",
+              "channel_points",
+              "charity",
+              "goal",
+              "power_up"
+            ],
+            "type": "string"
+          },
           "CurveSetParams": {
             "additionalProperties": false,
             "properties": {
@@ -7995,6 +8673,9 @@
               "design_id": {
                 "$ref": "#/$defs/DesignId"
               },
+              "input": {
+                "$ref": "#/$defs/VisualInput"
+              },
               "name": {
                 "pattern": "\\S",
                 "type": "string"
@@ -8012,6 +8693,127 @@
           },
           "VisualId": {
             "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$(?![\\s\\S])",
+            "type": "string"
+          },
+          "VisualInput": {
+            "additionalProperties": false,
+            "description": "One selected source in its native unit; routing is a later delivery.",
+            "oneOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "source": {
+                    "enum": [
+                      "cheer",
+                      "bits_use"
+                    ]
+                  },
+                  "unit": {
+                    "const": "bits"
+                  }
+                },
+                "required": [
+                  "source",
+                  "unit"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "source": {
+                    "enum": [
+                      "subscribe",
+                      "gift",
+                      "resub",
+                      "power_up"
+                    ]
+                  },
+                  "unit": {
+                    "const": "count"
+                  }
+                },
+                "required": [
+                  "source",
+                  "unit"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "source": {
+                    "const": "hype_train"
+                  },
+                  "unit": {
+                    "const": "level"
+                  }
+                },
+                "required": [
+                  "source",
+                  "unit"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "source": {
+                    "const": "channel_points"
+                  },
+                  "unit": {
+                    "const": "points"
+                  }
+                },
+                "required": [
+                  "source",
+                  "unit"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "source": {
+                    "enum": [
+                      "charity",
+                      "goal"
+                    ]
+                  },
+                  "unit": {
+                    "const": "minor_currency"
+                  }
+                },
+                "required": [
+                  "source",
+                  "unit"
+                ],
+                "type": "object"
+              }
+            ],
+            "properties": {
+              "source": {
+                "$ref": "#/$defs/ContributionSource"
+              },
+              "unit": {
+                "$ref": "#/$defs/VisualInputUnit"
+              }
+            },
+            "required": [
+              "source",
+              "unit"
+            ],
+            "type": "object"
+          },
+          "VisualInputUnit": {
+            "description": "Native integer units, matching Contribution amounts. No conversion is implied.",
+            "enum": [
+              "bits",
+              "count",
+              "level",
+              "points",
+              "minor_currency"
+            ],
             "type": "string"
           },
           "VisualUpsertParams": {
@@ -8399,6 +9201,21 @@
             ],
             "type": "object"
           },
+          "ContributionSource": {
+            "enum": [
+              "cheer",
+              "bits_use",
+              "subscribe",
+              "gift",
+              "resub",
+              "hype_train",
+              "channel_points",
+              "charity",
+              "goal",
+              "power_up"
+            ],
+            "type": "string"
+          },
           "CurveSetParams": {
             "additionalProperties": false,
             "properties": {
@@ -9179,6 +9996,9 @@
               "design_id": {
                 "$ref": "#/$defs/DesignId"
               },
+              "input": {
+                "$ref": "#/$defs/VisualInput"
+              },
               "name": {
                 "pattern": "\\S",
                 "type": "string"
@@ -9196,6 +10016,127 @@
           },
           "VisualId": {
             "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$(?![\\s\\S])",
+            "type": "string"
+          },
+          "VisualInput": {
+            "additionalProperties": false,
+            "description": "One selected source in its native unit; routing is a later delivery.",
+            "oneOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "source": {
+                    "enum": [
+                      "cheer",
+                      "bits_use"
+                    ]
+                  },
+                  "unit": {
+                    "const": "bits"
+                  }
+                },
+                "required": [
+                  "source",
+                  "unit"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "source": {
+                    "enum": [
+                      "subscribe",
+                      "gift",
+                      "resub",
+                      "power_up"
+                    ]
+                  },
+                  "unit": {
+                    "const": "count"
+                  }
+                },
+                "required": [
+                  "source",
+                  "unit"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "source": {
+                    "const": "hype_train"
+                  },
+                  "unit": {
+                    "const": "level"
+                  }
+                },
+                "required": [
+                  "source",
+                  "unit"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "source": {
+                    "const": "channel_points"
+                  },
+                  "unit": {
+                    "const": "points"
+                  }
+                },
+                "required": [
+                  "source",
+                  "unit"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "source": {
+                    "enum": [
+                      "charity",
+                      "goal"
+                    ]
+                  },
+                  "unit": {
+                    "const": "minor_currency"
+                  }
+                },
+                "required": [
+                  "source",
+                  "unit"
+                ],
+                "type": "object"
+              }
+            ],
+            "properties": {
+              "source": {
+                "$ref": "#/$defs/ContributionSource"
+              },
+              "unit": {
+                "$ref": "#/$defs/VisualInputUnit"
+              }
+            },
+            "required": [
+              "source",
+              "unit"
+            ],
+            "type": "object"
+          },
+          "VisualInputUnit": {
+            "description": "Native integer units, matching Contribution amounts. No conversion is implied.",
+            "enum": [
+              "bits",
+              "count",
+              "level",
+              "points",
+              "minor_currency"
+            ],
             "type": "string"
           },
           "VisualUpsertParams": {
@@ -9583,6 +10524,21 @@
             ],
             "type": "object"
           },
+          "ContributionSource": {
+            "enum": [
+              "cheer",
+              "bits_use",
+              "subscribe",
+              "gift",
+              "resub",
+              "hype_train",
+              "channel_points",
+              "charity",
+              "goal",
+              "power_up"
+            ],
+            "type": "string"
+          },
           "CurveSetParams": {
             "additionalProperties": false,
             "properties": {
@@ -10363,6 +11319,9 @@
               "design_id": {
                 "$ref": "#/$defs/DesignId"
               },
+              "input": {
+                "$ref": "#/$defs/VisualInput"
+              },
               "name": {
                 "pattern": "\\S",
                 "type": "string"
@@ -10380,6 +11339,127 @@
           },
           "VisualId": {
             "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$(?![\\s\\S])",
+            "type": "string"
+          },
+          "VisualInput": {
+            "additionalProperties": false,
+            "description": "One selected source in its native unit; routing is a later delivery.",
+            "oneOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "source": {
+                    "enum": [
+                      "cheer",
+                      "bits_use"
+                    ]
+                  },
+                  "unit": {
+                    "const": "bits"
+                  }
+                },
+                "required": [
+                  "source",
+                  "unit"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "source": {
+                    "enum": [
+                      "subscribe",
+                      "gift",
+                      "resub",
+                      "power_up"
+                    ]
+                  },
+                  "unit": {
+                    "const": "count"
+                  }
+                },
+                "required": [
+                  "source",
+                  "unit"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "source": {
+                    "const": "hype_train"
+                  },
+                  "unit": {
+                    "const": "level"
+                  }
+                },
+                "required": [
+                  "source",
+                  "unit"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "source": {
+                    "const": "channel_points"
+                  },
+                  "unit": {
+                    "const": "points"
+                  }
+                },
+                "required": [
+                  "source",
+                  "unit"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "source": {
+                    "enum": [
+                      "charity",
+                      "goal"
+                    ]
+                  },
+                  "unit": {
+                    "const": "minor_currency"
+                  }
+                },
+                "required": [
+                  "source",
+                  "unit"
+                ],
+                "type": "object"
+              }
+            ],
+            "properties": {
+              "source": {
+                "$ref": "#/$defs/ContributionSource"
+              },
+              "unit": {
+                "$ref": "#/$defs/VisualInputUnit"
+              }
+            },
+            "required": [
+              "source",
+              "unit"
+            ],
+            "type": "object"
+          },
+          "VisualInputUnit": {
+            "description": "Native integer units, matching Contribution amounts. No conversion is implied.",
+            "enum": [
+              "bits",
+              "count",
+              "level",
+              "points",
+              "minor_currency"
+            ],
             "type": "string"
           },
           "VisualUpsertParams": {
@@ -11896,6 +12976,21 @@
           ],
           "type": "object"
         },
+        "ContributionSource": {
+          "enum": [
+            "cheer",
+            "bits_use",
+            "subscribe",
+            "gift",
+            "resub",
+            "hype_train",
+            "channel_points",
+            "charity",
+            "goal",
+            "power_up"
+          ],
+          "type": "string"
+        },
         "CurveSetParams": {
           "additionalProperties": false,
           "properties": {
@@ -12676,6 +13771,9 @@
             "design_id": {
               "$ref": "#/$defs/DesignId"
             },
+            "input": {
+              "$ref": "#/$defs/VisualInput"
+            },
             "name": {
               "pattern": "\\S",
               "type": "string"
@@ -12693,6 +13791,127 @@
         },
         "VisualId": {
           "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$(?![\\s\\S])",
+          "type": "string"
+        },
+        "VisualInput": {
+          "additionalProperties": false,
+          "description": "One selected source in its native unit; routing is a later delivery.",
+          "oneOf": [
+            {
+              "additionalProperties": false,
+              "properties": {
+                "source": {
+                  "enum": [
+                    "cheer",
+                    "bits_use"
+                  ]
+                },
+                "unit": {
+                  "const": "bits"
+                }
+              },
+              "required": [
+                "source",
+                "unit"
+              ],
+              "type": "object"
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "source": {
+                  "enum": [
+                    "subscribe",
+                    "gift",
+                    "resub",
+                    "power_up"
+                  ]
+                },
+                "unit": {
+                  "const": "count"
+                }
+              },
+              "required": [
+                "source",
+                "unit"
+              ],
+              "type": "object"
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "source": {
+                  "const": "hype_train"
+                },
+                "unit": {
+                  "const": "level"
+                }
+              },
+              "required": [
+                "source",
+                "unit"
+              ],
+              "type": "object"
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "source": {
+                  "const": "channel_points"
+                },
+                "unit": {
+                  "const": "points"
+                }
+              },
+              "required": [
+                "source",
+                "unit"
+              ],
+              "type": "object"
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "source": {
+                  "enum": [
+                    "charity",
+                    "goal"
+                  ]
+                },
+                "unit": {
+                  "const": "minor_currency"
+                }
+              },
+              "required": [
+                "source",
+                "unit"
+              ],
+              "type": "object"
+            }
+          ],
+          "properties": {
+            "source": {
+              "$ref": "#/$defs/ContributionSource"
+            },
+            "unit": {
+              "$ref": "#/$defs/VisualInputUnit"
+            }
+          },
+          "required": [
+            "source",
+            "unit"
+          ],
+          "type": "object"
+        },
+        "VisualInputUnit": {
+          "description": "Native integer units, matching Contribution amounts. No conversion is implied.",
+          "enum": [
+            "bits",
+            "count",
+            "level",
+            "points",
+            "minor_currency"
+          ],
           "type": "string"
         },
         "VisualUpsertParams": {
@@ -13222,6 +14441,21 @@
           ],
           "type": "object"
         },
+        "ContributionSource": {
+          "enum": [
+            "cheer",
+            "bits_use",
+            "subscribe",
+            "gift",
+            "resub",
+            "hype_train",
+            "channel_points",
+            "charity",
+            "goal",
+            "power_up"
+          ],
+          "type": "string"
+        },
         "DesignContentHash": {
           "pattern": "^[0-9a-f]{64}$(?![\\s\\S])",
           "type": "string"
@@ -13638,6 +14872,9 @@
             "design_id": {
               "$ref": "#/$defs/DesignId"
             },
+            "input": {
+              "$ref": "#/$defs/VisualInput"
+            },
             "name": {
               "pattern": "\\S",
               "type": "string"
@@ -13655,6 +14892,127 @@
         },
         "VisualId": {
           "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$(?![\\s\\S])",
+          "type": "string"
+        },
+        "VisualInput": {
+          "additionalProperties": false,
+          "description": "One selected source in its native unit; routing is a later delivery.",
+          "oneOf": [
+            {
+              "additionalProperties": false,
+              "properties": {
+                "source": {
+                  "enum": [
+                    "cheer",
+                    "bits_use"
+                  ]
+                },
+                "unit": {
+                  "const": "bits"
+                }
+              },
+              "required": [
+                "source",
+                "unit"
+              ],
+              "type": "object"
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "source": {
+                  "enum": [
+                    "subscribe",
+                    "gift",
+                    "resub",
+                    "power_up"
+                  ]
+                },
+                "unit": {
+                  "const": "count"
+                }
+              },
+              "required": [
+                "source",
+                "unit"
+              ],
+              "type": "object"
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "source": {
+                  "const": "hype_train"
+                },
+                "unit": {
+                  "const": "level"
+                }
+              },
+              "required": [
+                "source",
+                "unit"
+              ],
+              "type": "object"
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "source": {
+                  "const": "channel_points"
+                },
+                "unit": {
+                  "const": "points"
+                }
+              },
+              "required": [
+                "source",
+                "unit"
+              ],
+              "type": "object"
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "source": {
+                  "enum": [
+                    "charity",
+                    "goal"
+                  ]
+                },
+                "unit": {
+                  "const": "minor_currency"
+                }
+              },
+              "required": [
+                "source",
+                "unit"
+              ],
+              "type": "object"
+            }
+          ],
+          "properties": {
+            "source": {
+              "$ref": "#/$defs/ContributionSource"
+            },
+            "unit": {
+              "$ref": "#/$defs/VisualInputUnit"
+            }
+          },
+          "required": [
+            "source",
+            "unit"
+          ],
+          "type": "object"
+        },
+        "VisualInputUnit": {
+          "description": "Native integer units, matching Contribution amounts. No conversion is implied.",
+          "enum": [
+            "bits",
+            "count",
+            "level",
+            "points",
+            "minor_currency"
+          ],
           "type": "string"
         }
       },
@@ -15295,6 +16653,25 @@
           ],
           "type": "object"
         },
+        "ContributionListParams": {
+          "additionalProperties": false,
+          "description": "Latest accepted contributions for the connected channel, newest first.\nRequired limit bounds the recent window; this is not a history export.",
+          "properties": {
+            "limit": {
+              "$ref": "#/$defs/ContributionReadLimit"
+            }
+          },
+          "required": [
+            "limit"
+          ],
+          "type": "object"
+        },
+        "ContributionReadLimit": {
+          "format": "uint32",
+          "maximum": 100,
+          "minimum": 1,
+          "type": "integer"
+        },
         "ContributionSource": {
           "enum": [
             "cheer",
@@ -16497,6 +17874,9 @@
             "design_id": {
               "$ref": "#/$defs/DesignId"
             },
+            "input": {
+              "$ref": "#/$defs/VisualInput"
+            },
             "name": {
               "pattern": "\\S",
               "type": "string"
@@ -16514,6 +17894,127 @@
         },
         "VisualId": {
           "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$(?![\\s\\S])",
+          "type": "string"
+        },
+        "VisualInput": {
+          "additionalProperties": false,
+          "description": "One selected source in its native unit; routing is a later delivery.",
+          "oneOf": [
+            {
+              "additionalProperties": false,
+              "properties": {
+                "source": {
+                  "enum": [
+                    "cheer",
+                    "bits_use"
+                  ]
+                },
+                "unit": {
+                  "const": "bits"
+                }
+              },
+              "required": [
+                "source",
+                "unit"
+              ],
+              "type": "object"
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "source": {
+                  "enum": [
+                    "subscribe",
+                    "gift",
+                    "resub",
+                    "power_up"
+                  ]
+                },
+                "unit": {
+                  "const": "count"
+                }
+              },
+              "required": [
+                "source",
+                "unit"
+              ],
+              "type": "object"
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "source": {
+                  "const": "hype_train"
+                },
+                "unit": {
+                  "const": "level"
+                }
+              },
+              "required": [
+                "source",
+                "unit"
+              ],
+              "type": "object"
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "source": {
+                  "const": "channel_points"
+                },
+                "unit": {
+                  "const": "points"
+                }
+              },
+              "required": [
+                "source",
+                "unit"
+              ],
+              "type": "object"
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "source": {
+                  "enum": [
+                    "charity",
+                    "goal"
+                  ]
+                },
+                "unit": {
+                  "const": "minor_currency"
+                }
+              },
+              "required": [
+                "source",
+                "unit"
+              ],
+              "type": "object"
+            }
+          ],
+          "properties": {
+            "source": {
+              "$ref": "#/$defs/ContributionSource"
+            },
+            "unit": {
+              "$ref": "#/$defs/VisualInputUnit"
+            }
+          },
+          "required": [
+            "source",
+            "unit"
+          ],
+          "type": "object"
+        },
+        "VisualInputUnit": {
+          "description": "Native integer units, matching Contribution amounts. No conversion is implied.",
+          "enum": [
+            "bits",
+            "count",
+            "level",
+            "points",
+            "minor_currency"
+          ],
           "type": "string"
         },
         "VisualUpsertParams": {
@@ -17162,6 +18663,23 @@
           "additionalProperties": false,
           "properties": {
             "method": {
+              "const": "beacons.contribution.list",
+              "type": "string"
+            },
+            "params": {
+              "$ref": "#/$defs/ContributionListParams"
+            }
+          },
+          "required": [
+            "method",
+            "params"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "method": {
               "const": "beacons.visual.upsert",
               "type": "string"
             },
@@ -17519,6 +19037,21 @@
             "breaker_tripped"
           ],
           "type": "object"
+        },
+        "ContributionSource": {
+          "enum": [
+            "cheer",
+            "bits_use",
+            "subscribe",
+            "gift",
+            "resub",
+            "hype_train",
+            "channel_points",
+            "charity",
+            "goal",
+            "power_up"
+          ],
+          "type": "string"
         },
         "CurveSetParams": {
           "additionalProperties": false,
@@ -18300,6 +19833,9 @@
             "design_id": {
               "$ref": "#/$defs/DesignId"
             },
+            "input": {
+              "$ref": "#/$defs/VisualInput"
+            },
             "name": {
               "pattern": "\\S",
               "type": "string"
@@ -18317,6 +19853,127 @@
         },
         "VisualId": {
           "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$(?![\\s\\S])",
+          "type": "string"
+        },
+        "VisualInput": {
+          "additionalProperties": false,
+          "description": "One selected source in its native unit; routing is a later delivery.",
+          "oneOf": [
+            {
+              "additionalProperties": false,
+              "properties": {
+                "source": {
+                  "enum": [
+                    "cheer",
+                    "bits_use"
+                  ]
+                },
+                "unit": {
+                  "const": "bits"
+                }
+              },
+              "required": [
+                "source",
+                "unit"
+              ],
+              "type": "object"
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "source": {
+                  "enum": [
+                    "subscribe",
+                    "gift",
+                    "resub",
+                    "power_up"
+                  ]
+                },
+                "unit": {
+                  "const": "count"
+                }
+              },
+              "required": [
+                "source",
+                "unit"
+              ],
+              "type": "object"
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "source": {
+                  "const": "hype_train"
+                },
+                "unit": {
+                  "const": "level"
+                }
+              },
+              "required": [
+                "source",
+                "unit"
+              ],
+              "type": "object"
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "source": {
+                  "const": "channel_points"
+                },
+                "unit": {
+                  "const": "points"
+                }
+              },
+              "required": [
+                "source",
+                "unit"
+              ],
+              "type": "object"
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "source": {
+                  "enum": [
+                    "charity",
+                    "goal"
+                  ]
+                },
+                "unit": {
+                  "const": "minor_currency"
+                }
+              },
+              "required": [
+                "source",
+                "unit"
+              ],
+              "type": "object"
+            }
+          ],
+          "properties": {
+            "source": {
+              "$ref": "#/$defs/ContributionSource"
+            },
+            "unit": {
+              "$ref": "#/$defs/VisualInputUnit"
+            }
+          },
+          "required": [
+            "source",
+            "unit"
+          ],
+          "type": "object"
+        },
+        "VisualInputUnit": {
+          "description": "Native integer units, matching Contribution amounts. No conversion is implied.",
+          "enum": [
+            "bits",
+            "count",
+            "level",
+            "points",
+            "minor_currency"
+          ],
           "type": "string"
         },
         "VisualUpsertParams": {
@@ -18839,6 +20496,21 @@
           ],
           "type": "object"
         },
+        "ContributionSource": {
+          "enum": [
+            "cheer",
+            "bits_use",
+            "subscribe",
+            "gift",
+            "resub",
+            "hype_train",
+            "channel_points",
+            "charity",
+            "goal",
+            "power_up"
+          ],
+          "type": "string"
+        },
         "CurveSetParams": {
           "additionalProperties": false,
           "properties": {
@@ -19619,6 +21291,9 @@
             "design_id": {
               "$ref": "#/$defs/DesignId"
             },
+            "input": {
+              "$ref": "#/$defs/VisualInput"
+            },
             "name": {
               "pattern": "\\S",
               "type": "string"
@@ -19636,6 +21311,127 @@
         },
         "VisualId": {
           "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$(?![\\s\\S])",
+          "type": "string"
+        },
+        "VisualInput": {
+          "additionalProperties": false,
+          "description": "One selected source in its native unit; routing is a later delivery.",
+          "oneOf": [
+            {
+              "additionalProperties": false,
+              "properties": {
+                "source": {
+                  "enum": [
+                    "cheer",
+                    "bits_use"
+                  ]
+                },
+                "unit": {
+                  "const": "bits"
+                }
+              },
+              "required": [
+                "source",
+                "unit"
+              ],
+              "type": "object"
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "source": {
+                  "enum": [
+                    "subscribe",
+                    "gift",
+                    "resub",
+                    "power_up"
+                  ]
+                },
+                "unit": {
+                  "const": "count"
+                }
+              },
+              "required": [
+                "source",
+                "unit"
+              ],
+              "type": "object"
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "source": {
+                  "const": "hype_train"
+                },
+                "unit": {
+                  "const": "level"
+                }
+              },
+              "required": [
+                "source",
+                "unit"
+              ],
+              "type": "object"
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "source": {
+                  "const": "channel_points"
+                },
+                "unit": {
+                  "const": "points"
+                }
+              },
+              "required": [
+                "source",
+                "unit"
+              ],
+              "type": "object"
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "source": {
+                  "enum": [
+                    "charity",
+                    "goal"
+                  ]
+                },
+                "unit": {
+                  "const": "minor_currency"
+                }
+              },
+              "required": [
+                "source",
+                "unit"
+              ],
+              "type": "object"
+            }
+          ],
+          "properties": {
+            "source": {
+              "$ref": "#/$defs/ContributionSource"
+            },
+            "unit": {
+              "$ref": "#/$defs/VisualInputUnit"
+            }
+          },
+          "required": [
+            "source",
+            "unit"
+          ],
+          "type": "object"
+        },
+        "VisualInputUnit": {
+          "description": "Native integer units, matching Contribution amounts. No conversion is implied.",
+          "enum": [
+            "bits",
+            "count",
+            "level",
+            "points",
+            "minor_currency"
+          ],
           "type": "string"
         },
         "VisualUpsertParams": {
@@ -20013,6 +21809,21 @@
           ],
           "type": "object"
         },
+        "ContributionSource": {
+          "enum": [
+            "cheer",
+            "bits_use",
+            "subscribe",
+            "gift",
+            "resub",
+            "hype_train",
+            "channel_points",
+            "charity",
+            "goal",
+            "power_up"
+          ],
+          "type": "string"
+        },
         "CurveSetParams": {
           "additionalProperties": false,
           "properties": {
@@ -20793,6 +22604,9 @@
             "design_id": {
               "$ref": "#/$defs/DesignId"
             },
+            "input": {
+              "$ref": "#/$defs/VisualInput"
+            },
             "name": {
               "pattern": "\\S",
               "type": "string"
@@ -20810,6 +22624,127 @@
         },
         "VisualId": {
           "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$(?![\\s\\S])",
+          "type": "string"
+        },
+        "VisualInput": {
+          "additionalProperties": false,
+          "description": "One selected source in its native unit; routing is a later delivery.",
+          "oneOf": [
+            {
+              "additionalProperties": false,
+              "properties": {
+                "source": {
+                  "enum": [
+                    "cheer",
+                    "bits_use"
+                  ]
+                },
+                "unit": {
+                  "const": "bits"
+                }
+              },
+              "required": [
+                "source",
+                "unit"
+              ],
+              "type": "object"
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "source": {
+                  "enum": [
+                    "subscribe",
+                    "gift",
+                    "resub",
+                    "power_up"
+                  ]
+                },
+                "unit": {
+                  "const": "count"
+                }
+              },
+              "required": [
+                "source",
+                "unit"
+              ],
+              "type": "object"
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "source": {
+                  "const": "hype_train"
+                },
+                "unit": {
+                  "const": "level"
+                }
+              },
+              "required": [
+                "source",
+                "unit"
+              ],
+              "type": "object"
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "source": {
+                  "const": "channel_points"
+                },
+                "unit": {
+                  "const": "points"
+                }
+              },
+              "required": [
+                "source",
+                "unit"
+              ],
+              "type": "object"
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "source": {
+                  "enum": [
+                    "charity",
+                    "goal"
+                  ]
+                },
+                "unit": {
+                  "const": "minor_currency"
+                }
+              },
+              "required": [
+                "source",
+                "unit"
+              ],
+              "type": "object"
+            }
+          ],
+          "properties": {
+            "source": {
+              "$ref": "#/$defs/ContributionSource"
+            },
+            "unit": {
+              "$ref": "#/$defs/VisualInputUnit"
+            }
+          },
+          "required": [
+            "source",
+            "unit"
+          ],
+          "type": "object"
+        },
+        "VisualInputUnit": {
+          "description": "Native integer units, matching Contribution amounts. No conversion is implied.",
+          "enum": [
+            "bits",
+            "count",
+            "level",
+            "points",
+            "minor_currency"
+          ],
           "type": "string"
         },
         "VisualUpsertParams": {
@@ -21193,6 +23128,21 @@
           ],
           "type": "object"
         },
+        "ContributionSource": {
+          "enum": [
+            "cheer",
+            "bits_use",
+            "subscribe",
+            "gift",
+            "resub",
+            "hype_train",
+            "channel_points",
+            "charity",
+            "goal",
+            "power_up"
+          ],
+          "type": "string"
+        },
         "CurveSetParams": {
           "additionalProperties": false,
           "properties": {
@@ -21973,6 +23923,9 @@
             "design_id": {
               "$ref": "#/$defs/DesignId"
             },
+            "input": {
+              "$ref": "#/$defs/VisualInput"
+            },
             "name": {
               "pattern": "\\S",
               "type": "string"
@@ -21990,6 +23943,127 @@
         },
         "VisualId": {
           "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$(?![\\s\\S])",
+          "type": "string"
+        },
+        "VisualInput": {
+          "additionalProperties": false,
+          "description": "One selected source in its native unit; routing is a later delivery.",
+          "oneOf": [
+            {
+              "additionalProperties": false,
+              "properties": {
+                "source": {
+                  "enum": [
+                    "cheer",
+                    "bits_use"
+                  ]
+                },
+                "unit": {
+                  "const": "bits"
+                }
+              },
+              "required": [
+                "source",
+                "unit"
+              ],
+              "type": "object"
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "source": {
+                  "enum": [
+                    "subscribe",
+                    "gift",
+                    "resub",
+                    "power_up"
+                  ]
+                },
+                "unit": {
+                  "const": "count"
+                }
+              },
+              "required": [
+                "source",
+                "unit"
+              ],
+              "type": "object"
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "source": {
+                  "const": "hype_train"
+                },
+                "unit": {
+                  "const": "level"
+                }
+              },
+              "required": [
+                "source",
+                "unit"
+              ],
+              "type": "object"
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "source": {
+                  "const": "channel_points"
+                },
+                "unit": {
+                  "const": "points"
+                }
+              },
+              "required": [
+                "source",
+                "unit"
+              ],
+              "type": "object"
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "source": {
+                  "enum": [
+                    "charity",
+                    "goal"
+                  ]
+                },
+                "unit": {
+                  "const": "minor_currency"
+                }
+              },
+              "required": [
+                "source",
+                "unit"
+              ],
+              "type": "object"
+            }
+          ],
+          "properties": {
+            "source": {
+              "$ref": "#/$defs/ContributionSource"
+            },
+            "unit": {
+              "$ref": "#/$defs/VisualInputUnit"
+            }
+          },
+          "required": [
+            "source",
+            "unit"
+          ],
+          "type": "object"
+        },
+        "VisualInputUnit": {
+          "description": "Native integer units, matching Contribution amounts. No conversion is implied.",
+          "enum": [
+            "bits",
+            "count",
+            "level",
+            "points",
+            "minor_currency"
+          ],
           "type": "string"
         },
         "VisualUpsertParams": {

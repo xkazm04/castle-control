@@ -64,6 +64,7 @@ methods! {
     Cast => ("lots.cast", CastParams, CastResult, "WP 2.2"),
     WritGet => ("lots.writ.get", WritGetParams, LotsWrit, "WP 2.2"),
     VisualList => ("beacons.visual.list", Empty, VisualListResult, "WP 3.1"),
+    ContributionList => ("beacons.contribution.list", ContributionListParams, ContributionListResult, "WP 3.1"),
     VisualUpsert => ("beacons.visual.upsert", VisualUpsertParams, Visual, "WP 3.1"),
     CurveSet => ("beacons.curve.set", CurveSetParams, Visual, "WP 3.1"),
     Simulate => ("beacons.simulate", BeaconsSimulateParams, BeaconsSimulateResult, "WP 3.1"),

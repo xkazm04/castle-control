@@ -19,6 +19,70 @@ pub enum ContributionSource {
     PowerUp,
 }
 
+/// Native integer units, matching Contribution amounts. No conversion is implied.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum VisualInputUnit {
+    Bits,
+    Count,
+    Level,
+    Points,
+    MinorCurrency,
+}
+
+/// One selected source in its native unit; routing is a later delivery.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(try_from = "VisualInputFields")]
+#[schemars(with = "VisualInputFields")]
+pub struct VisualInput {
+    pub source: ContributionSource,
+    pub unit: VisualInputUnit,
+}
+
+#[derive(Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+#[schemars(extend("oneOf" = [
+    {"type":"object","required":["source","unit"],"additionalProperties":false,
+        "properties":{"source":{"enum":["cheer","bits_use"]},"unit":{"const":"bits"}}},
+    {"type":"object","required":["source","unit"],"additionalProperties":false,
+        "properties":{"source":{"enum":["subscribe","gift","resub","power_up"]},"unit":{"const":"count"}}},
+    {"type":"object","required":["source","unit"],"additionalProperties":false,
+        "properties":{"source":{"const":"hype_train"},"unit":{"const":"level"}}},
+    {"type":"object","required":["source","unit"],"additionalProperties":false,
+        "properties":{"source":{"const":"channel_points"},"unit":{"const":"points"}}},
+    {"type":"object","required":["source","unit"],"additionalProperties":false,
+        "properties":{"source":{"enum":["charity","goal"]},"unit":{"const":"minor_currency"}}}
+]))]
+struct VisualInputFields {
+    source: ContributionSource,
+    unit: VisualInputUnit,
+}
+
+impl TryFrom<VisualInputFields> for VisualInput {
+    type Error = &'static str;
+    fn try_from(value: VisualInputFields) -> Result<Self, Self::Error> {
+        let expected = match value.source {
+            ContributionSource::Cheer | ContributionSource::BitsUse => VisualInputUnit::Bits,
+            ContributionSource::Subscribe
+            | ContributionSource::Gift
+            | ContributionSource::Resub
+            | ContributionSource::PowerUp => VisualInputUnit::Count,
+            ContributionSource::HypeTrain => VisualInputUnit::Level,
+            ContributionSource::ChannelPoints => VisualInputUnit::Points,
+            ContributionSource::Charity | ContributionSource::Goal => {
+                VisualInputUnit::MinorCurrency
+            }
+        };
+        if value.unit != expected {
+            return Err("visual input unit must match the source's native unit");
+        }
+        Ok(Self {
+            source: value.source,
+            unit: value.unit,
+        })
+    }
+}
+
 /// Finite fraction, not a percentage. Both schema and Rust reject nonfinite values.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 #[serde(try_from = "f64", into = "f64")]
@@ -89,6 +153,13 @@ pub struct Visual {
     )]
     #[schemars(with = "DesignId")]
     pub design_id: Option<DesignId>,
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        deserialize_with = "crate::present"
+    )]
+    #[schemars(with = "VisualInput")]
+    pub input: Option<VisualInput>,
     pub curve: IntensityCurve,
 }
 

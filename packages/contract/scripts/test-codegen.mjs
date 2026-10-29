@@ -29,9 +29,9 @@ assert(files['beacons-render-validation.ts'].includes("from './beacons-render-va
 assert(!files['beacons-render-validation.ts'].includes("from './validators.mjs'"));
 assert(!files['validators.d.mts'].includes('BeaconsRenderSnapshot'), 'render roots stay out of eager registry');
 assert(!files['validators.mjs'].includes('snapshot intensity'), 'no eager render validation');
-const beaconsNames = ['visual.list', 'visual.upsert', 'curve.set', 'simulate', 'source.url', 'art.status', 'art.generate'].map(name => `beacons.${name}`);
+const beaconsNames = ['visual.list', 'contribution.list', 'visual.upsert', 'curve.set', 'simulate', 'source.url', 'art.status', 'art.generate'].map(name => `beacons.${name}`);
 const beaconsMethods = schema.methods.map((method, index) => ({ ...method, index })).filter(method => beaconsNames.includes(method.name));
-assert.equal(beaconsMethods.length, 7);
+assert.equal(beaconsMethods.length, 8);
 assert(files['beacons-validators.mjs'], 'Beacons validators have a separate generated module');
 assert(files['beacons-validators.d.mts'], 'Beacons validators retain typed declarations');
 assert(files['beacons-validation.ts'].includes("from './beacons-validators.mjs'"));
@@ -137,6 +137,7 @@ const visual = { visual_id: 'simulated-frame', name: 'Simulated frame', curve: {
   ranges: [{ total: 0, intensity: 0 }, { total: 50, intensity: 1 }], decay: { kind: 'none' },
 } };
 const beaconsPositive = new Map([
+  ['beacons.contribution.list', [{ limit: 100 }, { items: [] }]],
   ['beacons.visual.list', [{}, { visuals: [visual] }]], ['beacons.visual.upsert', [{ visual }, visual]],
   ['beacons.curve.set', [{ visual_id: visual.visual_id, curve: visual.curve }, visual]],
   ['beacons.simulate', [{ visual_id: visual.visual_id, burst: { source: 'gift', amount: 50 } },
