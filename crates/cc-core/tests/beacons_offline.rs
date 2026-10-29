@@ -29,6 +29,22 @@ fn open(root: &std::path::Path) -> Registry {
     Registry::with_fixture_root(root, Arc::new(EventHub::new(64).unwrap())).unwrap()
 }
 
+#[test]
+fn contribution_read_is_empty_without_sockets_or_a_live_channel() {
+    tokio::runtime::Builder::new_current_thread()
+        .build()
+        .unwrap()
+        .block_on(async {
+            let registry = Registry::with_status();
+            assert_eq!(
+                call(&registry, "beacons.contribution.list", json!({"limit":100}))
+                    .await
+                    .unwrap(),
+                json!({"items":[]})
+            );
+        });
+}
+
 #[tokio::test]
 async fn upsert_list_and_update_survive_reopening() {
     let root = tempfile::tempdir().unwrap();
@@ -235,6 +251,7 @@ fn registry_registers_beacons_methods_without_starting_an_overlay() {
         [
             "beacons.art.generate",
             "beacons.art.status",
+            "beacons.contribution.list",
             "beacons.curve.set",
             "beacons.simulate",
             "beacons.source.url",

@@ -325,3 +325,31 @@ fn simulated_identified_contributions_follow_existing_forget_policy() {
         .unwrap();
     assert!(module.contributions().unwrap().is_empty());
 }
+
+#[tokio::test]
+async fn contribution_read_is_newest_first_bounded_and_empty_after_purge() {
+    let root = tempfile::tempdir().unwrap();
+    let events = Arc::new(EventHub::new(64).unwrap());
+    let registry = Registry::with_fixture_root(root.path(), events).unwrap();
+    let module = registry.beacons().unwrap();
+    for id in ["simulated-first", "simulated-second", "simulated-third"] {
+        let input = crate::ingress::contribution_ingress(&notification("channel.bits.use", id, 25))
+            .unwrap()
+            .unwrap();
+        assert!(module.intake(input).unwrap());
+    }
+    let result = rpc(&registry, "beacons.contribution.list", json!({"limit":2})).await;
+    let ids: Vec<_> = result["items"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|item| item["event_id"].as_str().unwrap())
+        .collect();
+    assert_eq!(ids, ["simulated-third", "simulated-second"]);
+    assert_eq!(module.contributions().unwrap().len(), 3);
+    module.purge_live_data().unwrap();
+    assert_eq!(
+        rpc(&registry, "beacons.contribution.list", json!({"limit":100})).await,
+        json!({"items":[]})
+    );
+}

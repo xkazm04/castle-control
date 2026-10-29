@@ -1,8 +1,11 @@
-//! Shared Beacons configuration, isolated previews and store-only live intake.
+//! Shared Beacons configuration, isolated previews and accepted live routing.
 mod art;
 mod art_assets;
 mod live;
+mod routing;
 pub use art_assets::{ArtCatalog, ArtDownload};
+#[cfg(test)]
+mod routing_tests;
 mod storage;
 #[cfg(test)]
 mod tests;
@@ -29,6 +32,7 @@ struct State {
     // Hold cc-store's exclusive writer lock across configuration reads and writes.
     _store: Store,
     visuals: BTreeMap<VisualId, Visual>,
+    engines: BTreeMap<VisualId, routing::LiveEngine>,
     revoked: bool,
 }
 
@@ -46,6 +50,7 @@ impl BeaconsModule {
         "beacons.art.status",
         "beacons.art.generate",
         "beacons.visual.list",
+        "beacons.contribution.list",
         "beacons.visual.upsert",
         "beacons.curve.set",
         "beacons.simulate",
@@ -64,6 +69,7 @@ impl BeaconsModule {
             state: Mutex::new(State {
                 _store: store,
                 visuals,
+                engines: BTreeMap::new(),
                 revoked: false,
             }),
             root,
@@ -105,6 +111,13 @@ impl BeaconsModule {
         match request {
             RpcRequest::VisualList(_) => encode(VisualListResult {
                 visuals: state.visuals.values().cloned().collect(),
+            }),
+            RpcRequest::ContributionList(params) => encode(cc_types::ContributionListResult {
+                items: live::read(&state._store)?
+                    .into_iter()
+                    .rev()
+                    .take(u32::from(params.limit.clone()) as usize)
+                    .collect(),
             }),
             RpcRequest::VisualUpsert(params) => {
                 self.save(&mut state, params.visual.clone())?;
@@ -155,11 +168,12 @@ impl BeaconsModule {
         let mut visuals = state.visuals.clone();
         visuals.insert(visual.visual_id.clone(), visual.clone());
         if let Some(native) = self.native.as_ref().and_then(Weak::upgrade) {
-            native.commit_beacons_visual(visual, || storage::save(&self.root, &visuals))?;
+            native.commit_beacons_visual(visual.clone(), || storage::save(&self.root, &visuals))?;
         } else {
             storage::save(&self.root, &visuals)?;
         }
         state.visuals = visuals;
+        self.reset_live_visual(state, &visual)?;
         Ok(())
     }
 }

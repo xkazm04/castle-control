@@ -1,4 +1,4 @@
-//! Store-only lane: no curve, renderer, moderation or draw capabilities.
+//! Retained contributions decide deduplication before any live curve is fed.
 use super::{BeaconsModule, internal};
 use crate::{EventHub, ingress::ContributionIngress};
 use cc_beacons::intake::Intake;
@@ -16,7 +16,6 @@ struct RetainedContribution {
 
 impl BeaconsModule {
     // Read from the inventoried store rather than a second in-memory count.
-    // This is Rust-only; no contribution read RPC or overlay payload is added.
     #[cfg(test)]
     pub(crate) fn contributions(&self) -> Result<Vec<Contribution>, ErrorEnvelope> {
         let state = self.state.lock().map_err(|_| internal())?;
@@ -76,7 +75,7 @@ impl BeaconsModule {
                     at: Timestamp::now(),
                     user_ids,
                     content: serde_json::to_string(&RetainedContribution {
-                        contribution: input.contribution,
+                        contribution: input.contribution.clone(),
                         at: input.at.try_into().map_err(|_| internal())?,
                     })
                     .map_err(|_| internal())?,
@@ -84,6 +83,9 @@ impl BeaconsModule {
                 },
             )
             .map_err(|_| internal())?;
+        // The store accepted this key. Duplicates return before routing, even
+        // after a configuration reset or restart clears the engine's state.
+        self.route_contribution(&mut state, &input.contribution)?;
         Ok(true)
     }
 
@@ -94,22 +96,34 @@ impl BeaconsModule {
     ) -> JoinHandle<Result<(), ErrorEnvelope>> {
         let module = self.clone();
         tokio::spawn(async move {
+            let mut tick = tokio::time::interval(std::time::Duration::from_secs(1));
+            tick.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
             loop {
-                match receiver.recv().await {
-                    Ok(input) => match module.intake(input) {
-                        Ok(true) => {
-                            events.publish(EventKind::Contribution)?;
-                        }
-                        Ok(false) => {}
-                        Err(error) => {
+                tokio::select! {
+                    _ = tick.tick() => {
+                        if let Err(error) = module.snapshot_live() {
                             events.publish(EventKind::BridgeGap)?;
                             return Err(error);
                         }
-                    },
-                    Err(broadcast::error::RecvError::Lagged(_)) => {
-                        events.publish(EventKind::BridgeGap)?;
                     }
-                    Err(broadcast::error::RecvError::Closed) => return Ok(()),
+                    input = receiver.recv() => {
+                        match input {
+                            Ok(input) => match module.intake(input) {
+                                Ok(true) => {
+                                    events.publish(EventKind::Contribution)?;
+                                }
+                                Ok(false) => {}
+                                Err(error) => {
+                                    events.publish(EventKind::BridgeGap)?;
+                                    return Err(error);
+                                }
+                            },
+                            Err(broadcast::error::RecvError::Lagged(_)) => {
+                                events.publish(EventKind::BridgeGap)?;
+                            }
+                            Err(broadcast::error::RecvError::Closed) => return Ok(()),
+                        }
+                    }
                 }
             }
         })
@@ -118,6 +132,7 @@ impl BeaconsModule {
     pub(crate) fn purge_live_data(&self) -> Result<(), ErrorEnvelope> {
         let mut state = self.state.lock().map_err(|_| internal())?;
         state.revoked = true;
+        state.engines.clear();
         state
             ._store
             .purge_all(Timestamp::now())
@@ -126,10 +141,12 @@ impl BeaconsModule {
     }
 }
 
-fn read(store: &cc_store::Store) -> Result<Vec<Contribution>, ErrorEnvelope> {
-    store
-        .items(DataStore::Recordings)
-        .map_err(|_| internal())?
+pub(super) fn read(store: &cc_store::Store) -> Result<Vec<Contribution>, ErrorEnvelope> {
+    let mut items = store.items(DataStore::Recordings).map_err(|_| internal())?;
+    // Receipt time orders accepted rows, including redeliveries whose Twitch
+    // timestamp predates other events. Store IDs break equal-time ties.
+    items.sort_by(|left, right| left.at.cmp(&right.at).then(left.id.cmp(&right.id)));
+    items
         .into_iter()
         .map(|item| {
             serde_json::from_str::<RetainedContribution>(&item.content)
