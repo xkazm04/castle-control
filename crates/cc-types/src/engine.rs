@@ -6,6 +6,12 @@ pub struct EngineSettings {
     pub cli_provider: CliProvider,
     pub live_endpoint: String,
     pub cloud_opt_in: bool,
+    pub claude_exe_path: Option<String>,
+    pub codex_exe_path: Option<String>,
+    pub posture_helper_path: Option<String>,
+    pub model_local: Option<String>,
+    pub model_claude: Option<String>,
+    pub model_codex: Option<String>,
 }
 
 impl Default for EngineSettings {
@@ -14,11 +20,18 @@ impl Default for EngineSettings {
             cli_provider: CliProvider::ClaudeCli,
             live_endpoint: "http://127.0.0.1:11434/v1".into(),
             cloud_opt_in: false,
+            claude_exe_path: None,
+            codex_exe_path: None,
+            posture_helper_path: None,
+            model_local: None,
+            model_claude: None,
+            model_codex: None,
         }
     }
 }
 
-/// The sole parser for engine.* keys. No network calls or credential lookup.
+/// The sole parser for engine.* keys. No filesystem access, spawning or network/
+/// credential lookup. Optional paths and models have no inferred defaults.
 /// Cloud authorization and endpoint admission remain the engine's responsibility.
 pub fn parse_engine_settings(settings: &Settings) -> Result<EngineSettings, ErrorEnvelope> {
     let mut parsed = EngineSettings::default();
@@ -40,7 +53,35 @@ pub fn parse_engine_settings(settings: &Settings) -> Result<EngineSettings, Erro
             _ => return Err(invalid("engine.cloud_opt_in")),
         }
     }
+    parsed.claude_exe_path = optional_string(settings, "engine.claude_exe_path", absolute_path)?;
+    parsed.codex_exe_path = optional_string(settings, "engine.codex_exe_path", absolute_path)?;
+    parsed.posture_helper_path =
+        optional_string(settings, "engine.posture_helper_path", absolute_path)?;
+    parsed.model_local = optional_string(settings, "engine.model_local", model_id)?;
+    parsed.model_claude = optional_string(settings, "engine.model_claude", model_id)?;
+    parsed.model_codex = optional_string(settings, "engine.model_codex", model_id)?;
     Ok(parsed)
+}
+
+fn optional_string(
+    settings: &Settings,
+    key: &str,
+    accepts: fn(&str) -> bool,
+) -> Result<Option<String>, ErrorEnvelope> {
+    match settings.values.get(key) {
+        None => Ok(None),
+        Some(DataValue::String(value)) if accepts(value) => Ok(Some(value.clone())),
+        Some(_) => Err(invalid(key)),
+    }
+}
+
+fn absolute_path(value: &str) -> bool {
+    // Native path rules: on Windows a root without a drive is not absolute.
+    std::path::Path::new(value).is_absolute() && !value.chars().any(char::is_control)
+}
+
+fn model_id(value: &str) -> bool {
+    !value.is_empty() && value.len() <= 128 && value.bytes().all(|b| b.is_ascii_graphic())
 }
 
 fn invalid(key: &str) -> ErrorEnvelope {

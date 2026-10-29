@@ -1051,6 +1051,14 @@ exact dotted keys; `parse_engine_settings` in cc-types is their sole typed parse
 | `engine.cli_provider` | `CliProvider` | `claude_cli` (development default) |
 | `engine.live_endpoint` | HTTP(S) URL string | `http://127.0.0.1:11434/v1` (loopback OpenAI-compatible local model) |
 | `engine.cloud_opt_in` | bool | false |
+| `engine.claude_exe_path` | absolute native path string, no control characters | absent |
+| `engine.codex_exe_path` | absolute native path string, no control characters | absent |
+| `engine.posture_helper_path` | absolute native path string, no control characters | absent |
+| `engine.model_local` | printable ASCII model id string, 1–128 characters, no whitespace | absent |
+| `engine.model_claude` | printable ASCII model id string, 1–128 characters, no whitespace | absent |
+| `engine.model_codex` | printable ASCII model id string, 1–128 characters, no whitespace | absent |
+
+These six optional keys will be read by cc-core and the desktop `--steward-live` wiring in a later delivery.
 
 `EngineSettings` is the Rust-only typed view with `cli_provider`, `live_endpoint`
 and `cloud_opt_in`; it adds no second settings wire format. Missing keys take
