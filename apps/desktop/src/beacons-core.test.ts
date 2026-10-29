@@ -234,15 +234,109 @@ test('sourceUrl production HTTP uses the same validated method door', async () =
   }));
 });
 
+// Generated synthetic contributions; these are not recordings of real viewers.
+const contribution = { source: 'cheer', amount: 123, broadcaster_id: '100', event_id: 'synthetic-cheer',
+  dedupe_key: 'synthetic-cheer', user_id: '200' } as const;
+
+test('contribution read validates the page, passes the limit and preserves core order', async () => {
+  const h = harness(); const listener = vi.fn(); h.port.subscribe(listener);
+  const items = [contribution, { ...contribution, event_id: 'synthetic-older', dedupe_key: 'synthetic-older', amount: 50 }];
+  h.responses.set('beacons.contribution.list', { items });
+  await h.port.loadContributions({ limit: 2 });
+  expect(h.rpc).toHaveBeenCalledExactlyOnceWith(launch.endpoint, launch.session_token, 'beacons.contribution.list', { limit: 2 });
+  expect(h.port.getSnapshot().contributions).toEqual({ phase: 'ready', items });
+  expect(Object.isFrozen(h.port.getSnapshot().contributions)).toBe(true);
+  const read = h.port.getSnapshot().contributions;
+  if (read.phase !== 'ready') throw new Error('Expected parsed contribution read');
+  expect(Object.isFrozen(read.items[0])).toBe(true); expect(listener).toHaveBeenCalled();
+  expect(h.port.getSnapshot().events).toEqual([]);
+  expect(JSON.stringify(h.port.getSnapshot())).not.toContain(launch.session_token);
+  h.responses.set('beacons.contribution.list', { items: [] });
+  await h.port.loadContributions({ limit: 100 });
+  expect(h.port.getSnapshot().contributions).toEqual({ phase: 'ready', items: [] });
+});
+
+test.each([{ items: [{ ...contribution, amount: -1 }] }, { items: [{ ...contribution, extra: true }] },
+  { items: [{ ...contribution, user_id: null }] }, { items: null }, { visuals: [] }])(
+  'malformed contribution reads clear old live rows instead of substituting a preview: %j', async result => {
+    const h = harness(); h.responses.set('beacons.contribution.list', { items: [contribution] });
+    await h.port.loadContributions({ limit: 100 });
+    h.responses.set('beacons.contribution.list', result);
+    await h.port.loadContributions({ limit: 100 });
+    expect(h.port.getSnapshot().contributions).toEqual({ phase: 'error' });
+    expect(h.port.getSnapshot().events).toEqual([]);
+    expect(h.rpc).toHaveBeenCalledTimes(2);
+  },
+);
+
+test('failed contribution reads hide upstream prose, keep simulations separate and require explicit retry', async () => {
+  const h = harness(); await h.port.simulate({ visual_id: visual.visual_id as VisualId, burst: { source: 'gift', amount: 50 } });
+  const events = h.port.getSnapshot().events;
+  h.responses.set('beacons.contribution.list', { items: [contribution] });
+  await h.port.loadContributions({ limit: 100 }); h.rpc.mockClear();
+  h.rpc.mockRejectedValueOnce({ code: 'unavailable', message: 'Private upstream prose' });
+  await h.port.loadContributions({ limit: 100 });
+  expect(h.port.getSnapshot().contributions).toEqual({ phase: 'error' });
+  expect(h.port.getSnapshot().events).toBe(events);
+  expect(JSON.stringify(h.port.getSnapshot())).not.toContain('Private upstream prose');
+  expect(h.rpc).toHaveBeenCalledTimes(1);
+  await h.port.loadContributions({ limit: 100 });
+  expect(h.port.getSnapshot().contributions.phase).toBe('ready');
+});
+
+test.each([0, 101, 1.5])('invalid contribution limit %s never reaches the transport', async limit => {
+  const h = harness(); await h.port.loadContributions({ limit });
+  expect(h.rpc).not.toHaveBeenCalled();
+  expect(h.port.getSnapshot().contributions).toEqual({ phase: 'error' });
+});
+
+test('contribution read rejects a page larger than its requested limit', async () => {
+  const h = harness(); h.responses.set('beacons.contribution.list', { items: [contribution, contribution] });
+  await h.port.loadContributions({ limit: 1 });
+  expect(h.port.getSnapshot().contributions).toEqual({ phase: 'error' });
+});
+
+test('pending contribution reads clear old rows, block duplicates and leave configuration reads available', async () => {
+  const h = harness(); h.responses.set('beacons.contribution.list', { items: [contribution] });
+  await h.port.loadContributions({ limit: 100 }); h.rpc.mockClear();
+  let finish: (value: unknown) => void = () => { throw new Error('Expected pending contribution read'); };
+  h.rpc.mockImplementationOnce(() => new Promise(resolve => { finish = resolve; }));
+  const pending = h.port.loadContributions({ limit: 100 });
+  await vi.waitFor(() => expect(h.rpc).toHaveBeenCalledTimes(1));
+  expect(h.port.getSnapshot().contributions).toEqual({ phase: 'loading' });
+  expect(h.port.getSnapshot().busy).toBe(false);
+  await h.port.loadContributions({ limit: 100 });
+  expect(h.rpc).toHaveBeenCalledTimes(1);
+  await h.port.load();
+  expect(h.port.getSnapshot().visuals).toEqual([visual]);
+  expect(h.port.getSnapshot().contributions).toEqual({ phase: 'loading' });
+  finish({ items: [contribution] }); await pending;
+  expect(h.port.getSnapshot().contributions).toEqual({ phase: 'ready', items: [contribution] });
+});
+
+test('contribution HTTP read uses the existing RPC door and validates malformed replies', async () => {
+  const fetch = vi.fn(async () => new Response(JSON.stringify({ items: [contribution] })));
+  vi.stubGlobal('fetch', fetch);
+  const port = createCoreBeaconsPort(launch);
+  await port.loadContributions({ limit: 5 });
+  expect(fetch).toHaveBeenCalledWith(new URL('/rpc', launch.endpoint), expect.objectContaining({
+    method: 'POST', body: JSON.stringify({ method: 'beacons.contribution.list', params: { limit: 5 } }),
+  }));
+  expect(port.getSnapshot().contributions).toEqual({ phase: 'ready', items: [contribution] });
+  fetch.mockResolvedValueOnce(new Response(JSON.stringify({ items: [{ ...contribution, amount: '123' }] })));
+  await port.loadContributions({ limit: 5 });
+  expect(port.getSnapshot().contributions).toEqual({ phase: 'error' });
+});
+
 // Keep this isolated module-cache probe last: resetting modules also resets client WeakMaps.
 test('validators remain unloaded until the first port call', async () => {
   vi.resetModules();
   const loaded = vi.fn();
   vi.doMock('@castle-control/contract/beacons', async importOriginal => { loaded(); return importOriginal(); });
   const { createCoreBeaconsPort: createPort } = await import('./beacons-core.js');
-  const port = createPort(launch, { rpc: async () => ({ url: 'http://localhost:4312/beacons/synthetic-frame' }) });
+  const port = createPort(launch, { rpc: async () => ({ items: [] }) });
   port.getSnapshot(); port.subscribe(() => undefined)();
   expect(loaded).not.toHaveBeenCalled();
-  await port.sourceUrl(visual.visual_id as VisualId);
-  expect(loaded).toHaveBeenCalledTimes(1); expect(port.getSnapshot().phase).toBe('ready');
+  await port.loadContributions({ limit: 100 });
+  expect(loaded).toHaveBeenCalledTimes(1); expect(port.getSnapshot().contributions.phase).toBe('ready');
 });

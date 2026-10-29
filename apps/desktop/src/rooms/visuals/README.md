@@ -1,5 +1,7 @@
 # Beacons detail room (AI-6)
 
+The core-mode live contribution feed is a read view of `beacons.contribution.list`, loaded on room entry and explicit refresh, with unavailable reads kept separate from the simulated test-fire feed; live acceptance on the owner's test channel remains the owner's. The Contribution contract carries no timestamp or login, so the live feed shows neither; adding them is a later contract step.
+
 Hero geometry correction: altar bounds (90,31)–(270,237), camera-frame/border/fallback (20,30)–(340,210); viewBoxes add six units per edge and supply matching aspect ratios.
 Hero flames keep the blaze scaling used by thumbnails; the hero height is capped at space-56 x 6, preserving its aspect ratio. `artwork.test.tsx` checks partial blaze, the token-based cap and unchanged geometry without a browser.
 

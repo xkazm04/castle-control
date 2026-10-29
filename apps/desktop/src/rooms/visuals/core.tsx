@@ -7,6 +7,7 @@ import type { CoreBeaconsPort } from '../../beacons-core.js';
 import type { Snapshot } from '../../model.js';
 import { BrowserSourceButton, BrowserSourceNotice, createBrowserSourceCopy } from './source-copy.jsx';
 import { ContributionFeed } from './event-feed.jsx';
+import { LiveContributionFeed } from './live-feed.jsx';
 import { EditableKindlingCurve } from './kindling-curve.jsx';
 import { VisualEditor } from './visual-editor.jsx';
 import { contribution_sources as sources, inputDescription, source_labels } from './contribution-input.js';
@@ -18,13 +19,15 @@ export function ConnectedBeacons({ port, seal_slot }: { port: CoreBeaconsPort; s
   const source_copy = useMemo(() => createBrowserSourceCopy(port), [port]);
   const copy_state = useSyncExternalStore(source_copy.subscribe, source_copy.getSnapshot, source_copy.getSnapshot);
   const [creating, setCreating] = useState(false);
-  useEffect(() => { void port.load(); }, [port]);
+  useEffect(() => { void port.load(); void port.loadContributions({ limit: 100 }); }, [port]);
   const visual = state.visuals.find(item => item.visual_id === state.selected);
   return <section className="visuals-room visuals-core" aria-label="Core Beacons" aria-busy={state.busy}>
     <div className="visuals-room-layout">
       <div className="visuals-room-workbench">
         <p role="status" aria-live="polite">{state.notice}</p>
-        <button type="button" disabled={state.busy} onClick={() => { void port.load(); }}>Refresh Beacons</button>
+        <button type="button" disabled={state.busy} onClick={() => {
+          void port.load(); void port.loadContributions({ limit: 100 });
+        }}>Refresh Beacons</button>
         <h2>Beacons · core configurations</h2>
         <p>Live contribution totals and OBS delivery are unavailable in this connection. Money changes visuals only.</p>
         <BrowserSourceNotice state={copy_state} />
@@ -63,6 +66,7 @@ export function ConnectedBeacons({ port, seal_slot }: { port: CoreBeaconsPort; s
         <VisualEditor key={`visual-${creating ? 'new' : JSON.stringify(visual)}`} port={port} busy={state.busy}
           {...(!creating && visual ? { visual } : {})} />
         {visual && <EditableKindlingCurve visual={visual} port={port} busy={state.busy} />}
+        <LiveContributionFeed read={state.contributions} on_refresh={() => { void port.loadContributions({ limit: 100 }); }} />
         <ContributionFeed events={state.events} origin="Core simulation" />
         {seal_slot}
       </div>

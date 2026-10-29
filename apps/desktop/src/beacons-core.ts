@@ -1,11 +1,12 @@
 import { invokeMethod, parseError, parseMethodParams, parseMethodResult } from '@castle-control/contract';
-import type { BeaconsSimulateParams, BeaconsSimulateResult, CurveSetParams, ErrorEnvelope,
+import type { BeaconsSimulateParams, BeaconsSimulateResult, Contribution, ContributionListParams, CurveSetParams, ErrorEnvelope,
   MethodContract, RpcMethods, Visual, VisualId, VisualUpsertParams } from '@castle-control/contract';
 import { validateCoreLaunch } from './core-source.js';
 import type { CoreLaunch } from './core-source.js';
 import type { PreviewEvent } from './beacons-fixture.js';
 
-type BeaconsMethod = 'beacons.visual.list' | 'beacons.visual.upsert' | 'beacons.curve.set' | 'beacons.simulate' | 'beacons.source.url';
+type BeaconsMethod = 'beacons.visual.list' | 'beacons.visual.upsert' | 'beacons.curve.set' | 'beacons.simulate'
+  | 'beacons.source.url' | 'beacons.contribution.list';
 /** Restricted transport seam; launch capabilities never enter read snapshots. */
 export type BeaconsNetwork = {
   rpc: <M extends BeaconsMethod>(endpoint: string, session: string, method: M, params: RpcMethods[M]['params']) => Promise<unknown>;
@@ -13,6 +14,7 @@ export type BeaconsNetwork = {
 export type CoreBeaconsSnapshot = {
   visuals: readonly Visual[]; selected?: VisualId; simulation?: BeaconsSimulateResult;
   events: readonly PreviewEvent[];
+  contributions: { phase: 'idle' | 'loading' | 'error' } | { phase: 'ready'; items: readonly Contribution[] };
   busy: boolean; phase: 'idle' | 'loading' | 'ready' | 'error'; notice: string; error?: ErrorEnvelope;
 };
 
@@ -39,7 +41,8 @@ export function createCoreBeaconsPort(launch: CoreLaunch, transport?: BeaconsNet
   let validators: ReturnType<typeof importValidators> | undefined;
   function importValidators() { return import('@castle-control/contract/beacons'); }
   const contracts = () => validators ??= importValidators();
-  let snapshot: CoreBeaconsSnapshot = freeze({ visuals: [], events: [], busy: false, phase: 'idle', notice: 'Load Beacons from the local core.' });
+  let snapshot: CoreBeaconsSnapshot = freeze({ visuals: [], events: [], contributions: { phase: 'idle' },
+    busy: false, phase: 'idle', notice: 'Load Beacons from the local core.' });
   let event_serial = 0;
   const listeners = new Set<() => void>();
   function publish(change: Partial<CoreBeaconsSnapshot>, omit: ('selected' | 'simulation' | 'error')[] = []) {
@@ -73,6 +76,20 @@ export function createCoreBeaconsPort(launch: CoreLaunch, transport?: BeaconsNet
   return {
     getSnapshot: () => snapshot,
     subscribe(listener: () => void) { listeners.add(listener); return () => { listeners.delete(listener); }; },
+    async loadContributions(params: ContributionListParams) {
+      if (snapshot.contributions.phase === 'loading') return;
+      const proposed = { ...params };
+      // This independent read never blocks configuration/simulation or reuses its rows.
+      publish({ contributions: { phase: 'loading' } });
+      try {
+        const { items } = await call((await contracts()).beaconsContributionList, proposed);
+        if (items.length > proposed.limit) throw new Error('Contribution page exceeds requested limit');
+        publish({ contributions: { phase: 'ready', items } });
+      } catch {
+        // Discard stale live rows and never expose upstream prose or synthetic inputs.
+        publish({ contributions: { phase: 'error' } });
+      }
+    },
     async load() {
       await perform(async () => {
         const selected = snapshot.selected;
