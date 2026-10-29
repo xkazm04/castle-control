@@ -1,8 +1,9 @@
 # Hackathon package checklist
 
 Offline evidence snapshot: **2026-10-26**, local main
-`0181ffd985cb627b73b2290b1d3abcb8b83bacd2`. All short commit citations below
-refer to ancestors of that main tip, read from this worktree. No remote
+`0181ffd985cb627b73b2290b1d3abcb8b83bacd2`; Beacons/ruling 4 update checked
+**2026-10-29** at `6cd46e6`. Commit citations are verified in this worktree's
+local history; later updates extend the original snapshot. No remote
 visibility, live service behavior, upload or submission was checked.
 
 Sources: [plan entry point](../PLAN.md), implementation plan sections
@@ -51,6 +52,9 @@ do not mark their own delivery done.
 | Lot Chamber fixture page | done | `9925769` adds the fixture-only draw page, guardrails and nested proof preview. The preview writ is a fixed vector separate from the editable pool. |
 | Offline consensus, recorder and drill logic | done | `146728b` adds the offline domain and tests. It does not supply the two-hour live recording or live/replay parity evidence. |
 | Offline draw seal/cast and verifiers | done | `3380ffc` connects immutable offline seal/cast; `ac51742` audits sealing; `9c34d41` adds browser BLS/quicknet conformance; `71d125f` restores offline writ file verification. No live draw is proved. |
+| Ruling 4: `castlecontrol.beacons_routing = A` — per-visual input and bounded read contract | done | Code at `c34855d` adds the source/native-unit selection and bounded `beacons.contribution.list` contract. This is code completion, not a live result. |
+| Ruling 4 — accepted live contribution routing to curves and overlay | done | Code at `6cd46e6` registers `beacons.contribution.list`, deduplicates retained contributions before routing, and hands selected-curve intensity to the native overlay. [Routing tests](../../crates/cc-core/src/beacons/routing_tests.rs) use simulated inputs; no real cheer or live OBS acceptance is proved. |
+| Ruling 4 — desktop Driven-by picker | done | Code at `b6c4e9b` adds the per-visual picker and saved source/unit pair. A desktop live contribution feed remains a separate delivery; the existing feed is simulated. See [Beacons](../guide/beacons.md). |
 | Owner test channel and two owned test accounts | pending-owner | Prepare isolated capture; armed spike action targets only an owned non-moderator account. Do not use a real viewer. |
 | Twitch device-flow application, OBS v5 and local runtime | pending-owner | Prepare public client configuration, OS keychain entries and local model. Record only sanitized outcomes. |
 | **M0 exit / WP 0.7**, scheduled Tue 10-27 | pending-owner | `cf75bb7` supplies the runner, but [spike-log.md](../spike-log.md) explicitly says pending owner live run: device login, app chat arrival, shadow stub, owned-account timeout/undo, visual OBS confirmation, forced-drop reconnect/gap. Fill every acceptance row with genuine evidence. |
@@ -59,6 +63,7 @@ do not mark their own delivery done.
 | Written owner sign-off before any armed real-viewer rule | pending-owner | Retain signed M1 approval. The demo still targets only owned test accounts; this package grants no real-viewer permission. |
 | **M2 exit**: draw on test channel and same writ verifies in web and CLI | pending-owner | Native opt-in trusted quicknet (data-directory `live-quicknet` file, compiled-in anchor), post-verdict intake through the `ShadowPipeline`, a synchronous seal announcement before the target round, a separate cast-fed OBS Lots plate and writ export are built and recorded-transport tested at `0ea0d04` ([lots_live.rs](../../crates/cc-core/tests/lots_live.rs), [live_beacon.rs](../../crates/cc-core/tests/live_beacon.rs)). The owner must still keep a no-prize test-channel capture with the matching pool, the pre-round announcement, the signed round, the OBS winners, the writ and both verifier outputs, following the [M2 live run](../guide/lots.md#m2-live-run). No live exit is claimed. |
 | Prize-draw capture prerequisites if substituted later | pending-owner | Rules template, disclaimer, free equal-odds path and policy checks must be in place. Do not unlock paid entry/weight or expand this demo to actual prize distribution. |
+| **M3 exit**: simulated 50-sub gift bomb plus a real test cheer move the live OBS visual; package change reaches OBS within 1 s | pending-owner | Follow the owner [M3 live run](../guide/beacons.md#m3-live-run) and retain sanitized OBS/app evidence and measured timings. Cheer-to-live-OBS and OBS 1 s acceptance are not verified live yet. Existing simulation controls update only the labelled app preview, so simulated-bomb-to-OBS delivery also needs a separate implementation before this full exit can close. Code completion above and Chrome timings do not close it. Beacons remains beyond the floor demonstration. |
 | Current full gate and secret scan for submitted revision | pending-build | Director must run the project gates on the final assembled revision and retain output. `5a9e4dc` proves gate tooling exists; it cannot prove future checks pass. |
 
 ## WP 6.3: public release checks, separate from submission
