@@ -1,7 +1,7 @@
 #![cfg(windows)]
 mod common;
 use cc_engine::{Call, Engine, EngineClass, Failure, NoKeychain, Outcome, SpawnDoor};
-use cc_store::{LedgerKind, Store};
+use cc_store::{LedgerEvent, LedgerKind, Store};
 
 #[tokio::test]
 async fn both_providers_probe_installed_version_and_login_through_spawn_door() {
@@ -30,8 +30,12 @@ fn startup_sweeps_stale_owned_markers_and_refuses_second_owner() {
 #[tokio::test]
 async fn silence_timeout_reaps_child_and_releases_the_process_permit() {
     let dir = tempfile::tempdir().unwrap();
+    // Windows child startup can exceed 300 ms on a loaded builder. This is a
+    // lifecycle check, not a latency budget: leave the healthy child headroom,
+    // but keep silence well below both the total ceiling and the 60 s hang.
+    // Reuse this runtime: a new runtime would also create a fresh semaphore.
     let cli = common::cli(&dir.path().join("process"))
-        .with_ceilings(3_000, 300)
+        .with_ceilings(30_000, 5_000)
         .unwrap();
     let engine = Engine::new(
         &common::settings("claude_cli", "http://127.0.0.1:1/v1"),
@@ -40,7 +44,7 @@ async fn silence_timeout_reaps_child_and_releases_the_process_permit() {
     )
     .unwrap();
     let mut store = Store::open(dir.path().join("store")).unwrap();
-    let reply = engine
+    let timed_out = engine
         .complete(
             Call {
                 class: EngineClass::Batch,
@@ -54,7 +58,7 @@ async fn silence_timeout_reaps_child_and_releases_the_process_permit() {
         .await
         .unwrap();
     assert!(matches!(
-        reply.outcome,
+        timed_out.outcome,
         Outcome::Refused {
             reason: Failure::Timeout
         }
@@ -72,8 +76,17 @@ async fn silence_timeout_reaps_child_and_releases_the_process_permit() {
         )
         .await
         .unwrap();
-    assert_eq!(reply.outcome.label(), "model");
-    assert_eq!(store.read_ledger(LedgerKind::Engine).unwrap().len(), 2);
+    assert_eq!(
+        reply.outcome,
+        Outcome::Model {
+            text: "simulated answer".into()
+        }
+    );
+    let rows = store.read_ledger(LedgerKind::Engine).unwrap();
+    assert_eq!(rows.len(), 2);
+    for (row, expected_id) in rows.iter().zip([timed_out.call_id, reply.call_id]) {
+        assert!(matches!(row.event, LedgerEvent::Engine { call_id, .. } if call_id == expected_id));
+    }
 }
 #[tokio::test]
 async fn windows_job_kills_descendants_after_successful_parent_exit() {
