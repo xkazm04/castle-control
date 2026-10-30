@@ -56,3 +56,32 @@ export function defaultPreset(artifact: ArtifactId): DesignPreset {
   if (!item) throw new Error('Artifact has no presets.');
   return item;
 }
+
+/** Display-only sample art, separate from shape presets and proposal data. */
+export const artStyleCatalog = Object.freeze([
+  { id: 'heraldic', label: 'Heraldic', thesis: 'Carved bronze and ember: the house look of Castle Control.' },
+  { id: 'pixel', label: 'Arcade', thesis: '16-bit sprites for retro and speedrun channels.' },
+  { id: 'synthwave', label: 'Neon', thesis: 'Glowing tubes and chrome for late-night and music streams.' },
+  { id: 'watercolor', label: 'Storybook', thesis: 'Soft painted washes for cozy and creative channels.' },
+  { id: 'anime', label: 'Cel', thesis: 'Bold outlines and flat colour for anime and VTuber channels.' },
+  { id: 'glass', label: 'Glass', thesis: 'Frosted panels and thin light for clean, modern setups.' },
+] as const);
+
+type ArtStyleId = typeof artStyleCatalog[number]['id'];
+const artPreviewAssets = {
+  draw: { asset: 'urn', label: 'draw urn' }, urn: { asset: 'urn', label: 'draw urn' },
+  beacon: { asset: 'altar', label: 'beacon altar' }, map: { asset: 'hexmap', label: 'map' },
+  overlay: { asset: 'votebar', label: 'vote bar' },
+} as const satisfies Record<ArtifactId, { readonly asset: string; readonly label: string }>;
+
+/** The one URL builder for the desktop's static sample-art folder. */
+export function artPreviewUrl(style: ArtStyleId, artifact: ArtifactId): string {
+  const base = '/art/';
+  return `${base}preset-${style}-${artPreviewAssets[artifact].asset}.webp`;
+}
+
+export function artPreviewsFor(artifact: ArtifactId) {
+  return artStyleCatalog.map(style => ({ ...style, src: artPreviewUrl(style.id, artifact),
+    alt: `${style.label} sample art: ${artPreviewAssets[artifact].label} (AI-generated)`,
+  }));
+}

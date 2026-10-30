@@ -4,8 +4,8 @@ import { tokens } from '@castle-control/tokens';
 import { expect, test, vi } from 'vitest';
 import { ProposalQueue } from '../steward/queue.js';
 import { SealButton, SealControl, createSealHold, sealHoldDurationMs } from '../seal-button.jsx';
-import { DesignFocus, DesignFocusView } from './focus.jsx';
-import { presetCatalog } from './catalog.js';
+import { ArtPreviewImage, DesignFocus, DesignFocusView } from './focus.jsx';
+import { artPreviewsFor, artStyleCatalog, presetCatalog } from './catalog.js';
 import { DesignScene } from './scene.jsx';
 import { DesignSession } from './session.js';
 
@@ -25,6 +25,46 @@ test.each(['draw', 'urn', 'beacon', 'map', 'overlay'] as const)('%s focus render
   expect(html).not.toContain('\u2014');
   expect(html).not.toContain('iframe');
   session.dispose();
+});
+
+test.each(['draw', 'urn', 'beacon', 'map', 'overlay'] as const)('%s art gallery is labelled, accessible and display-only', artifact => {
+  const session = new DesignSession(new ProposalQueue());
+  const before = session.getSnapshot();
+  const html = renderToStaticMarkup(<DesignFocus artifact={artifact} session={session} />);
+  expect(html).toContain('aria-label="Art styles"');
+  expect(html).toContain('Art styles');
+  expect(html).toContain('SIMULATED');
+  const figures = html.match(/<figure\b[\s\S]*?<\/figure>/g) ?? [];
+  expect(figures).toHaveLength(6);
+  for (const [index, preview] of artPreviewsFor(artifact).entries()) {
+    const figure = figures[index] ?? '';
+    expect(figure).toContain('SAMPLE ART');
+    expect(figure).toContain('AI-generated');
+    expect(figure).toContain(`src="${preview.src}"`);
+    expect(figure).toContain(`alt="${preview.alt}"`);
+    expect(figure).toContain('loading="lazy"');
+    expect(figure).not.toMatch(/<button|<input|<select/);
+  }
+  for (const style of artStyleCatalog) {
+    expect(html).toContain(style.label);
+    expect(html).toContain(style.thesis);
+  }
+  expect(session.getSnapshot()).toBe(before);
+  session.dispose();
+});
+
+test('an unavailable preview removes the image and shows a plain fallback', () => {
+  const image = new ArtPreviewImage({ src: '/art/preset-heraldic-urn.webp', alt: 'Heraldic sample art: draw urn' });
+  const setState = vi.spyOn(image, 'setState');
+  setState.mockImplementation(() => undefined);
+  const initial = image.render();
+  expect(initial.type).toBe('img');
+  initial.props.onError();
+  expect(setState).toHaveBeenCalledWith({ unavailable: true });
+  image.state = { unavailable: true };
+  const fallback = renderToStaticMarkup(image.render());
+  expect(fallback).toContain('not available');
+  expect(fallback).not.toContain('<img');
 });
 
 test('preview and tear handlers use the same queue; a preview error leaves current visible', () => {

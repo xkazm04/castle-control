@@ -4,6 +4,8 @@ The public entry is `@castle-control/ui`. Components own their co-located CSS,
 use generated tokens, and accept caller data and copy without importing a
 desktop fixture, contract or command port.
 
+Design focus includes six display-only art-style previews, labelled SAMPLE ART and AI-generated, at `/art/preset-<style>-<asset>.webp`; unavailable images show a plain fallback, and proposals stay unchanged.
+
 The WP 1.7 promotion adds:
 
 | Export | Caller responsibility |

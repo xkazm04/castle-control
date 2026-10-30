@@ -1,7 +1,28 @@
 import { expect, test } from 'vitest';
 import { ProposalQueue } from '../steward/queue.js';
 import { DesignSession } from './session.js';
-import { presetCatalog, presetsFor } from './catalog.js';
+import { artStyleCatalog, artPreviewsFor, presetCatalog, presetsFor } from './catalog.js';
+
+test('art catalog contains exactly the six kept styles with the owner\'s copy', () => {
+  expect(artStyleCatalog).toEqual([
+    { id: 'heraldic', label: 'Heraldic', thesis: 'Carved bronze and ember: the house look of Castle Control.' },
+    { id: 'pixel', label: 'Arcade', thesis: '16-bit sprites for retro and speedrun channels.' },
+    { id: 'synthwave', label: 'Neon', thesis: 'Glowing tubes and chrome for late-night and music streams.' },
+    { id: 'watercolor', label: 'Storybook', thesis: 'Soft painted washes for cozy and creative channels.' },
+    { id: 'anime', label: 'Cel', thesis: 'Bold outlines and flat colour for anime and VTuber channels.' },
+    { id: 'glass', label: 'Glass', thesis: 'Frosted panels and thin light for clean, modern setups.' },
+  ]);
+  expect(artStyleCatalog.map(style => style.id)).not.toEqual(expect.arrayContaining(['clay', 'comic']));
+});
+
+test.each([
+  ['draw', 'urn'], ['urn', 'urn'], ['beacon', 'altar'], ['map', 'hexmap'], ['overlay', 'votebar'],
+] as const)('%s previews use the six expected %s URLs', (artifact, asset) => {
+  expect(artPreviewsFor(artifact).map(preview => preview.src)).toEqual(
+    ['heraldic', 'pixel', 'synthwave', 'watercolor', 'anime', 'glass']
+      .map(style => `/art/preset-${style}-${asset}.webp`),
+  );
+});
 
 function setup() {
   const queue = new ProposalQueue();

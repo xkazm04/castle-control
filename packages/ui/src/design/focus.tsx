@@ -1,9 +1,10 @@
-import { useState, useSyncExternalStore } from 'react';
+import { Component, useState, useSyncExternalStore } from 'react';
 import { DraftFrame } from '../draft-frame.jsx';
 import { SealButton } from '../seal-button.jsx';
+import { StatusChip } from '../chips.jsx';
 import { isPending } from '../steward/queue.js';
 import type { ArtifactId } from './catalog.js';
-import { defaultPreset, presetsFor } from './catalog.js';
+import { artPreviewsFor, defaultPreset, presetsFor } from './catalog.js';
 import { DesignScene } from './scene.jsx';
 import { designSession } from './session.js';
 import type { DesignSession, DesignSnapshot } from './session.js';
@@ -46,6 +47,7 @@ export function DesignFocusView({ artifact, proposal_id, session, snapshot }: {
     {snapshot.error && <p role="alert">{snapshot.error}</p>}
     <DesignControls key={artifact} artifact={artifact} on_restyle={preset_id => session.draft({ action: 'restyle', artifact, preset_id })}
       on_custom={prompt => session.draft({ action: 'custom', artifact, prompt })} />
+    <ArtStyleGallery artifact={artifact} />
     {pending && <div className="cc-design-actions">
       <button type="button" onClick={() => session.preview(proposal.id)}>Preview draft</button>
       <SealButton key={`${proposal.id}:${proposal.revision}:${preview?.base_revision}:${ready}`} variant="proclaim" disabled={!ready}
@@ -54,6 +56,30 @@ export function DesignFocusView({ artifact, proposal_id, session, snapshot }: {
     </div>}
     <p>Seal applies exactly the previewed revision to this simulated look. Room and live engine wiring follow separately.</p>
   </section>;
+}
+
+function ArtStyleGallery({ artifact }: { artifact: ArtifactId }) {
+  return <section className="cc-design-art" aria-label="Art styles">
+    <header><h3>Art styles</h3><StatusChip variant="dash">SIMULATED</StatusChip></header>
+    <p>Sample previews only. These art styles do not change a design or its proposal.</p>
+    <div className="cc-design-art-grid">
+      {artPreviewsFor(artifact).map(preview => <figure key={preview.src}>
+        <div className="cc-design-art-image"><ArtPreviewImage src={preview.src} alt={preview.alt} /></div>
+        <figcaption><h4>{preview.label}</h4><p>{preview.thesis}</p>
+          <div className="cc-design-art-labels"><StatusChip variant="dash">SAMPLE ART</StatusChip><span>AI-generated</span></div>
+        </figcaption>
+      </figure>)}
+    </div>
+  </section>;
+}
+
+/** Remove an unavailable image entirely so the browser never retains a broken icon. */
+export class ArtPreviewImage extends Component<{ src: string; alt: string }, { unavailable: boolean }> {
+  override state = { unavailable: false };
+  override render() {
+    return this.state.unavailable ? <p role="status">not available</p>
+      : <img src={this.props.src} alt={this.props.alt} loading="lazy" onError={() => this.setState({ unavailable: true })} />;
+  }
 }
 
 export function DesignControls({ artifact, on_restyle, on_custom }: {
