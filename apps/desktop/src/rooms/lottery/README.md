@@ -42,6 +42,9 @@ fixtures, authority and transport behavior are unchanged.
 - App Master's ruling keeps the supplied seal_slot unchanged and sole owner of
   the proposal hold, tear and design controls. It is wrapped in a raised seal
   HeraldicCard at C's seal-card position. No hold or tear is added to the writ.
+  The Lot frame removes the shell's inner rule, top margin and top padding above
+  the seal slot heading, matching `lottery-c-paper.png`; only the card's own
+  padding remains above it. The slot's bottom spacing is unchanged.
   The full shared ProposalCard repeats its fields and keeps its existing
   spacing/frame and normal-sized SealButton, confirmed by the Director on review;
   no compact/large change to that shared slot is requested tonight. The core's

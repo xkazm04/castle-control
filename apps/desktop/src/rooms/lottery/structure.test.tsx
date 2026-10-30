@@ -1,5 +1,6 @@
 ﻿import { renderToStaticMarkup } from 'react-dom/server';
 import { expect, test } from 'vitest';
+import { readFileSync } from 'node:fs';
 import { ProposalQueue } from '@castle-control/ui/steward';
 import LotteryRoom from './index.jsx';
 import SealSlot from '../seal-slot/index.jsx';
@@ -10,6 +11,16 @@ import { lotsCopy as copy } from '../../lots-copy.js';
 const snapshot = { mode: 'fixture', phase: 'ready' } as const;
 const render = (queue: ProposalQueue) => renderToStaticMarkup(<LotteryRoom snapshot={snapshot}
   replay={false} queue={queue} seal_slot={<SealSlot chamber="lottery" queue={queue} />} />);
+
+test('the seal frame removes only the shell slot top rule and spacing', () => {
+  const css = readFileSync(new URL('./room.css', import.meta.url), 'utf8');
+  const rule = css.match(/\.lottery-room\s+\.lottery-seal-frame\s+\.shell-seal-slot\s*\{([^}]*)\}/)?.[1];
+  expect(rule).toBeDefined();
+  for (const property of ['border-top', 'margin-top', 'padding-top']) {
+    expect(rule).toMatch(new RegExp(`(?:^|;)\\s*${property}:\\s*0\\s*(?:;|$)`));
+  }
+  expect(rule).not.toMatch(/(?:^|;)\s*(?:border|margin|padding|padding-bottom)\s*:/);
+});
 
 test('C puts the urn stage before the independently scrolling desk and its ordered tools', () => {
   // lottery/README.md, C · Herald: “The stage moves to the left ... reverses
