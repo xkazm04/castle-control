@@ -1,7 +1,8 @@
 //! Class-based orchestration. Every completed attempt, including fallbacks, is audited.
 use crate::{
-    AnswerShape, CliRuntime, Endpoint, EngineClass, Failure, Keychain, Outcome, Result, Route,
-    RoutingTable, Transport, api::Answer, cli::CliCall, ladder::fallback, ledger::Audit,
+    AnswerShape, CliRuntime, ConstructionError, Endpoint, EngineClass, Failure, Keychain, Outcome,
+    Result, Route, RoutingTable, SpawnDoor, Transport, api::Answer, cli::CliCall, ladder::fallback,
+    ledger::Audit,
 };
 use cc_store::{Store, Timestamp};
 use cc_types::{EngineSettings, Settings, Verdict, parse_engine_settings};
@@ -20,6 +21,31 @@ pub struct Engine {
     cli: Option<CliRuntime>,
 }
 impl Engine {
+    /// Build the native CLI lane from the existing engine.* settings map.
+    /// Only the selected provider's executable and model are required; Codex
+    /// also requires its posture helper. Missing-key errors contain key names
+    /// in lexical order, never values. Unrelated lane models may remain absent;
+    /// calls to such lanes return Failure::MissingModel before any attempt/audit.
+    /// Paths/models are never inferred. This does not spawn, probe or connect.
+    pub fn from_settings(
+        settings: &Settings,
+        door: SpawnDoor,
+        max_processes: usize,
+    ) -> std::result::Result<Self, ConstructionError> {
+        let settings =
+            parse_engine_settings(settings).map_err(|_| ConstructionError::InvalidSettings)?;
+        crate::configuration::require_selected(&settings)?;
+        let routes = RoutingTable::from_settings(&settings)?;
+        let endpoint = Endpoint::new(&settings)?;
+        let cli = Some(CliRuntime::from_settings(door, &settings, max_processes)?);
+        Ok(Self {
+            settings,
+            endpoint,
+            routes,
+            cli,
+        })
+    }
+
     pub fn new(settings: &Settings, routes: RoutingTable, cli: Option<CliRuntime>) -> Result<Self> {
         let settings = parse_engine_settings(settings).map_err(|_| Failure::Invalid)?;
         let endpoint = Endpoint::new(&settings)?;
@@ -52,7 +78,7 @@ impl Engine {
         key_label: Option<&str>,
         shape: AnswerShape<'_>,
     ) -> Result<crate::Reply> {
-        let route = self.routes.get(call.class, self.settings.cli_provider);
+        let route = self.routes.get(call.class, self.settings.cli_provider)?;
         let call_id = Ulid::new();
         let at = Timestamp::now();
         let attempted = self

@@ -12,6 +12,41 @@ the only source of engine settings. The table is configured with explicit model
 IDs; `Engine::complete` accepts a class, prompt and optional deterministic rules
 verdict. No call site chooses a model or reads an engine setting itself.
 
+The additive native constructor is:
+
+```rust,ignore
+pub fn Engine::from_settings(
+    settings: &cc_types::Settings,
+    door: cc_engine::SpawnDoor,
+    max_processes: usize,
+) -> Result<cc_engine::Engine, cc_engine::ConstructionError>
+```
+
+It uses the same settings parser and endpoint admission/authorization as
+`Engine::new`. The caller supplies the private spawn-control directory via
+`SpawnDoor` and the concurrency cap. Construction does not probe a CLI or make
+a network request. It requires only the selected `engine.cli_provider`'s
+executable path and model: `engine.claude_exe_path` and `engine.model_claude`,
+or `engine.codex_exe_path`, `engine.model_codex` and `engine.posture_helper_path`.
+The parser's default selected provider is Claude. There are no inferred paths
+or models, and the other CLI provider and `engine.model_local` may stay absent.
+
+Incomplete settings return `ConstructionError::MissingKeys(Vec<&'static str>)`
+in lexical key order. Display is `missing engine settings: <keys joined by , >`;
+Display and Debug retain only key names, never configured values. The host can
+keep launching while reporting the Steward unavailable with this reason; core
+and host wiring are a later delivery. Invalid settings and runtime setup failures
+also return sanitized typed construction errors.
+
+An absent class model returns `Failure::MissingModel("engine.model_local")`
+at call time (live/near-live), before any provider attempt. No engine audit row
+is invented for that configuration failure because its required selected-model
+field has no value. Configured calls retain the existing admission, fallback,
+custody and audit behavior. `RoutingTable::new`, `CliRuntime::new` and
+`Engine::new` keep their signatures and behavior for explicit legacy callers.
+`tests/construction.rs` covers selected-provider construction, fake CLI calls,
+missing-key order/redaction, absent lane models and endpoint safety.
+
 | Class | Default transport | Total ceiling | Silence ceiling |
 | --- | --- | --- | --- |
 | live | local compatible HTTP | 2,000 ms | 1,500 ms |

@@ -19,7 +19,7 @@ impl CliRuntime {
         key_label: Option<&str>,
         vault: &dyn Keychain,
     ) -> Result<Probe> {
-        let (backend, executable) = self.backend(provider);
+        let (backend, executable) = self.backend(provider)?;
         let key = key_label.map(|label| (label, backend.key_variable()));
         let version = self
             .door

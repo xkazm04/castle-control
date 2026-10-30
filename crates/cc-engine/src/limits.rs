@@ -5,6 +5,8 @@
 pub enum Failure {
     #[error("invalid engine configuration")]
     Invalid,
+    #[error("missing engine model: {0}")]
+    MissingModel(&'static str),
     #[error("provider unavailable")]
     Unavailable,
     #[error("deadline or silence ceiling exceeded")]

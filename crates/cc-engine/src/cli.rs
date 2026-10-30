@@ -7,7 +7,7 @@ use crate::{
     claude_cli::Claude,
     codex_cli::Codex,
 };
-use cc_types::CliProvider;
+use cc_types::{CliProvider, EngineSettings};
 use std::{path::PathBuf, time::Duration};
 
 /// Native executable paths only. Never invoke a .cmd/.bat shim through a shell.
@@ -23,7 +23,9 @@ pub(crate) trait CliProviderBackend {
 }
 pub struct CliRuntime {
     pub(crate) door: SpawnDoor,
-    pub(crate) executables: CliExecutables,
+    claude: Option<PathBuf>,
+    codex: Option<PathBuf>,
+    posture_probe: Option<PathBuf>,
     admission: Admission,
     ceilings: Option<(u64, u64)>,
 }
@@ -31,7 +33,23 @@ impl CliRuntime {
     pub fn new(door: SpawnDoor, executables: CliExecutables, max_processes: usize) -> Result<Self> {
         Ok(Self {
             door,
-            executables,
+            claude: Some(executables.claude),
+            codex: Some(executables.codex),
+            posture_probe: Some(executables.posture_probe),
+            admission: Admission::new(max_processes)?,
+            ceilings: None,
+        })
+    }
+    pub(crate) fn from_settings(
+        door: SpawnDoor,
+        settings: &EngineSettings,
+        max_processes: usize,
+    ) -> Result<Self> {
+        Ok(Self {
+            door,
+            claude: settings.claude_exe_path.as_ref().map(PathBuf::from),
+            codex: settings.codex_exe_path.as_ref().map(PathBuf::from),
+            posture_probe: settings.posture_helper_path.as_ref().map(PathBuf::from),
             admission: Admission::new(max_processes)?,
             ceilings: None,
         })
@@ -47,11 +65,15 @@ impl CliRuntime {
     pub(crate) fn backend(
         &self,
         provider: CliProvider,
-    ) -> (&dyn CliProviderBackend, &std::path::Path) {
-        match provider {
-            CliProvider::ClaudeCli => (&Claude, &self.executables.claude),
-            CliProvider::CodexCli => (&Codex, &self.executables.codex),
-        }
+    ) -> Result<(&dyn CliProviderBackend, &std::path::Path)> {
+        let (backend, executable): (&dyn CliProviderBackend, _) = match provider {
+            CliProvider::ClaudeCli => (&Claude, &self.claude),
+            CliProvider::CodexCli => (&Codex, &self.codex),
+        };
+        Ok((
+            backend,
+            executable.as_deref().ok_or(crate::Failure::Unavailable)?,
+        ))
     }
     pub(crate) async fn complete(
         &self,
@@ -81,7 +103,7 @@ impl CliRuntime {
             .admission
             .enter(request.class, Duration::from_millis(limits.total_ms))
             .await?;
-        let (backend, executable) = self.backend(request.provider);
+        let (backend, executable) = self.backend(request.provider)?;
         if request.provider == CliProvider::CodexCli {
             // Execute a native write-denial probe inside this CLI's read-only sandbox.
             // Never infer that a sandbox came up from a flag alone.
@@ -92,8 +114,9 @@ impl CliRuntime {
                 "-c".into(),
                 "sandbox_mode=\"read-only\"".into(),
                 "--".into(),
-                self.executables
-                    .posture_probe
+                self.posture_probe
+                    .as_ref()
+                    .ok_or(crate::Failure::Posture)?
                     .to_string_lossy()
                     .into_owned(),
                 target.to_string_lossy().into_owned(),

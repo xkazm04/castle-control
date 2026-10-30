@@ -2,7 +2,7 @@
 // crates/shadowrunr-engine/src/model.rs.
 use crate::{Evidence, Failure, Result};
 use cc_store::{EngineClass, EngineProvider, ModelName};
-use cc_types::CliProvider;
+use cc_types::{CliProvider, EngineSettings};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Transport {
@@ -34,9 +34,9 @@ pub struct Route {
 /// The sole class-to-model table. Callers supply a class, never a model.
 #[derive(Clone, Debug)]
 pub struct RoutingTable {
-    rows: [Route; 4],
-    claude_model: ModelName,
-    codex_model: ModelName,
+    rows: [Option<Route>; 4],
+    claude_model: Option<ModelName>,
+    codex_model: Option<ModelName>,
 }
 impl RoutingTable {
     pub fn new(local: ModelName, claude: ModelName, codex: ModelName) -> Self {
@@ -46,40 +46,94 @@ impl RoutingTable {
             EngineClass::Batch,
             EngineClass::Offline,
         ]
-        .map(|class| Route {
-            class,
-            model: local.clone(),
-            prices: Prices::default(),
-            evidence: None,
-            transport: if live(class) {
-                Transport::Endpoint
-            } else {
-                Transport::Cli
-            },
+        .map(|class| {
+            Some(Route {
+                class,
+                model: local.clone(),
+                prices: Prices::default(),
+                evidence: None,
+                transport: if live(class) {
+                    Transport::Endpoint
+                } else {
+                    Transport::Cli
+                },
+            })
         });
         Self {
             rows,
-            claude_model: claude,
-            codex_model: codex,
+            claude_model: Some(claude),
+            codex_model: Some(codex),
         }
+    }
+    pub(crate) fn from_settings(settings: &EngineSettings) -> Result<Self> {
+        let parse = |model: &Option<String>| {
+            model
+                .as_deref()
+                .map(ModelName::parse)
+                .transpose()
+                .map_err(|_| Failure::Invalid)
+        };
+        let local = parse(&settings.model_local)?;
+        let claude_model = parse(&settings.model_claude)?;
+        let codex_model = parse(&settings.model_codex)?;
+        let selected = match settings.cli_provider {
+            CliProvider::ClaudeCli => &claude_model,
+            CliProvider::CodexCli => &codex_model,
+        };
+        let rows = [
+            EngineClass::Live,
+            EngineClass::NearLive,
+            EngineClass::Batch,
+            EngineClass::Offline,
+        ]
+        .map(|class| {
+            let model = if live(class) { &local } else { selected };
+            model.clone().map(|model| Route {
+                class,
+                model,
+                prices: Prices::default(),
+                evidence: None,
+                transport: if live(class) {
+                    Transport::Endpoint
+                } else {
+                    Transport::Cli
+                },
+            })
+        });
+        Ok(Self {
+            rows,
+            claude_model,
+            codex_model,
+        })
     }
     pub fn set(&mut self, route: Route) -> Result<()> {
         if live(route.class) && route.transport == Transport::Cli {
             return Err(Failure::CliOnLive);
         }
         let position = index(route.class);
-        self.rows[position] = route;
+        self.rows[position] = Some(route);
         Ok(())
     }
-    pub(crate) fn get(&self, class: EngineClass, cli: CliProvider) -> Route {
-        let mut row = self.rows[index(class)].clone();
+    pub(crate) fn get(&self, class: EngineClass, cli: CliProvider) -> Result<Route> {
+        let cli_key = match cli {
+            CliProvider::ClaudeCli => "engine.model_claude",
+            CliProvider::CodexCli => "engine.model_codex",
+        };
+        let mut row = self.rows[index(class)]
+            .clone()
+            .ok_or(Failure::MissingModel(if live(class) {
+                "engine.model_local"
+            } else {
+                cli_key
+            }))?;
         if row.transport == Transport::Cli {
             row.model = match cli {
                 CliProvider::ClaudeCli => self.claude_model.clone(),
                 CliProvider::CodexCli => self.codex_model.clone(),
-            };
+            }
+            .ok_or(Failure::MissingModel(cli_key))?;
         }
-        row
+        Ok(row)
     }
 }
 pub(crate) fn live(class: EngineClass) -> bool {
