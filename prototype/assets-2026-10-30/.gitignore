@@ -1,0 +1,5 @@
+img/
+log/
+*.log
+jobs*.tsv
+__pycache__/

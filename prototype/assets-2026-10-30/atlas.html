@@ -1,0 +1,299 @@
+<title>Castle Control Preset Atlas</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap">
+<style>
+/* Layout: a printed atlas. One live stream mock up top (dark, it is a screen), then one ruled row per art style. */
+:root{
+  --paper:#F4F0E6; --paper-2:#EAE4D4; --card:#FBF9F3; --ink:#16181D; --ink-2:#3A3D45; --muted:#656972;
+  --line:#D9D2BE; --rule:#16181D; --gules:#E4472E; --gules-text:#B3321B; --azure-text:#1D5BAA; --or:#F2B233; --or-text:#7A5800;
+  --keep:#2E7D4F; --keep-bg:#DDEFE3; --maybe-bg:#F7E9C4; --drop-bg:#F4D9D2;
+  --well:#1A1C22; --well-ink:#F2EEE3;
+  --display:"Bahnschrift","Barlow Condensed","Arial Narrow",sans-serif;
+  --serif:"Source Serif 4","Iowan Old Style","Palatino Linotype",Georgia,serif;
+  --num:ui-monospace,"Cascadia Mono",Consolas,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#121317; --paper-2:#1A1C22; --card:#1D2027; --ink:#F2EEE3; --ink-2:#C9C5B8; --muted:#8E919A;
+  --line:#2A2D36; --rule:#F2EEE3; --gules-text:#FF8B72; --azure-text:#86B6F0; --or-text:#FFD36B;
+  --keep:#7FD3A0; --keep-bg:#1D3427; --maybe-bg:#3A3018; --drop-bg:#3D211C; --well:#0B0C0F; color-scheme:dark }}
+:root[data-theme="dark"]{
+  --paper:#121317; --paper-2:#1A1C22; --card:#1D2027; --ink:#F2EEE3; --ink-2:#C9C5B8; --muted:#8E919A;
+  --line:#2A2D36; --rule:#F2EEE3; --gules-text:#FF8B72; --azure-text:#86B6F0; --or-text:#FFD36B;
+  --keep:#7FD3A0; --keep-bg:#1D3427; --maybe-bg:#3A3018; --drop-bg:#3D211C; --well:#0B0C0F; color-scheme:dark }
+
+body{background:var(--paper);color:var(--ink);font:16px/1.5 var(--serif)}
+.wrap{max-width:1360px;margin:0 auto;padding-block:28px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:40px}
+h1,h2,h3,.cap{font-family:var(--display);text-transform:uppercase;letter-spacing:.04em;font-weight:700;text-wrap:balance}
+h1{font-size:clamp(34px,5vw,56px);line-height:.95;margin:0}
+h2{font-size:24px;margin:0;display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+h2 small{font-family:var(--serif);text-transform:none;letter-spacing:0;font-weight:400;font-size:15px;color:var(--muted)}
+.mast{display:grid;grid-template-columns:1fr auto;gap:16px 32px;align-items:end;border-bottom:3px solid var(--rule);padding-bottom:16px}
+.mast p{margin:6px 0 0;max-width:62ch;color:var(--ink-2)}
+.tally{display:flex;gap:18px;font-family:var(--num);font-size:13px;color:var(--ink-2)}
+.tally b{font-size:22px;display:block;font-family:var(--display);color:var(--ink)}
+.sync{font-family:var(--num);font-size:12px;color:var(--muted);grid-column:1/-1}
+@media (max-width:700px){.mast{grid-template-columns:1fr}}
+
+/* the stream mock */
+.controls{display:flex;flex-wrap:wrap;gap:10px 22px;align-items:center}
+.seg{display:flex;flex-wrap:wrap;gap:4px;align-items:center}
+.seg>span{font-family:var(--display);text-transform:uppercase;font-size:13px;letter-spacing:.06em;color:var(--muted);margin-right:4px}
+.seg button,.vchip{font:600 13px/1 var(--display);text-transform:uppercase;letter-spacing:.05em;padding:7px 10px;border:1.5px solid var(--rule);background:var(--card);color:var(--ink);border-radius:3px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+button:focus-visible{outline:3px solid var(--azure-text);outline-offset:2px}
+.page{display:grid;grid-template-columns:minmax(0,1fr) 280px;background:var(--well);border:3px solid var(--rule);border-radius:6px;overflow:hidden}
+@media (max-width:900px){.page{grid-template-columns:1fr}.chat{max-height:220px}}
+.stage{position:relative;aspect-ratio:16/9;max-width:100%;overflow:hidden;container-type:inline-size;background:#000}
+.stage .bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.ov{position:absolute;display:grid;justify-items:center;gap:.4cqw}
+.ov img{width:100%;height:auto;display:block;filter:drop-shadow(0 .4cqw .8cqw rgba(0,0,0,.6))}
+.plate{font:700 1.15cqw/1 var(--display);text-transform:uppercase;letter-spacing:.06em;color:#F2EEE3;background:rgba(14,15,19,.82);border:.12cqw solid rgba(242,238,227,.55);padding:.45cqw .8cqw;border-radius:.25cqw;white-space:nowrap}
+.plate em{font-style:normal;color:#FFD36B;font-family:var(--num)}
+.o-vote{top:2.5%;left:27%;width:46%}
+.o-altar{left:1.5%;top:12%;width:16%}
+.o-urn{left:1.5%;bottom:3%;width:14%}
+.o-map{right:2%;top:2.5%;width:21%}
+.cam{position:absolute;right:3.2%;bottom:5.5%;width:29%;aspect-ratio:16/9}
+.cam .shot{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 30%}
+.cam .frame{position:absolute;left:-4%;top:-6%;width:108%;height:112%;object-fit:fill;pointer-events:none}
+.cam .plate{position:absolute;left:50%;bottom:-3.2cqw;transform:translateX(-50%)}
+.live{position:absolute;left:1.2%;top:2.2%;font:700 1.1cqw/1 var(--display);letter-spacing:.08em;background:#E4472E;color:#fff;padding:.35cqw .6cqw;border-radius:.2cqw}
+.sim{position:absolute;left:1.2%;top:5.6%;font:600 .95cqw/1 var(--num);color:#F2EEE3;background:rgba(0,0,0,.6);padding:.3cqw .5cqw}
+.stage.chatting .o-altar{top:30%}
+.chat{background:#121317;color:#E9E5DA;display:flex;flex-direction:column;min-width:0;border-left:1px solid #2A2D36}
+.chat header{font:700 13px/1 var(--display);text-transform:uppercase;letter-spacing:.08em;padding:12px 14px;border-bottom:1px solid #2A2D36;color:#C9C5B8}
+.chat ol{list-style:none;margin:0;padding:10px 14px;display:grid;gap:7px;font:14px/1.35 var(--serif);overflow:auto;flex:1;align-content:end}
+.chat .n{font-family:var(--display);font-weight:700;letter-spacing:.02em}
+.chat .sys{color:#FFD36B;font-family:var(--num);font-size:12px}
+.panel-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;padding:12px;background:#16181D;border-top:1px solid #2A2D36;grid-column:1/-1}
+.ext{background:#1D2027;border:1px solid #2A2D36;border-radius:4px;padding:10px;color:#C9C5B8;display:grid;gap:6px;font-size:13px}
+.ext .cap{font-size:13px;color:#F2EEE3}
+.ext img{width:100%;border-radius:2px}
+
+/* the library */
+.style{display:grid;gap:14px;padding-top:18px;border-top:2px solid var(--rule)}
+.style-head{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;justify-content:space-between}
+.verdicts{display:flex;gap:4px;flex-wrap:wrap}
+.vchip{padding:6px 9px;font-size:12px;border-color:var(--line);color:var(--ink-2)}
+.vchip[aria-pressed="true"][data-v="keep"]{background:var(--keep-bg);border-color:var(--keep);color:var(--ink)}
+.vchip[aria-pressed="true"][data-v="maybe"]{background:var(--maybe-bg);border-color:var(--or-text);color:var(--ink)}
+.vchip[aria-pressed="true"][data-v="drop"]{background:var(--drop-bg);border-color:var(--gules-text);color:var(--ink)}
+.cards{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}
+@media (max-width:1100px){.cards{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:640px){.cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:4px;display:grid;grid-template-rows:auto 1fr auto;min-width:0}
+.card[data-verdict="keep"]{border-color:var(--keep);box-shadow:inset 0 0 0 1px var(--keep)}
+.card[data-verdict="drop"] .well img{opacity:.35}
+.well{aspect-ratio:1;display:grid;place-items:center;padding:8px;border-radius:3px 3px 0 0;overflow:hidden;box-sizing:border-box;min-height:0;
+  background:repeating-conic-gradient(var(--paper-2) 0 25%,var(--card) 0 50%) 0 0/18px 18px}
+.well.dark{background:radial-gradient(circle at 50% 40%,#2a2d36,#0e0f13)}
+.well img{width:100%;height:100%;object-fit:contain;min-height:0}
+.card{grid-template-rows:auto auto 1fr}
+.o-altar img{height:24cqw;width:auto;max-width:100%;object-fit:contain}
+.o-urn img{max-height:15cqw;width:auto;max-width:100%;object-fit:contain}
+.o-map img{max-height:17cqw;width:auto;max-width:100%;object-fit:contain}
+.well .missing{font:600 12px var(--num);color:var(--muted)}
+.meta{padding:8px 10px 0;display:grid;gap:1px}
+.meta b{font:700 14px/1.1 var(--display);text-transform:uppercase;letter-spacing:.04em}
+.meta span{font-size:12.5px;color:var(--muted)}
+.card .verdicts{padding:8px 10px 10px}
+.shots{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.shots .well{aspect-ratio:16/10;padding:0;overflow:hidden}
+.shots .well img{width:100%;height:100%;object-fit:cover;max-height:none}
+.toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+textarea{width:100%;min-height:96px;font:15px/1.5 var(--serif);background:var(--card);color:var(--ink);border:1.5px solid var(--line);border-radius:4px;padding:10px;box-sizing:border-box}
+.foot{color:var(--muted);font-size:14px;max-width:70ch}
+@media (prefers-reduced-motion:no-preference){.card{transition:border-color .15s}}
+</style>
+
+<div class="wrap">
+  <header class="mast">
+    <div>
+      <h1>Preset Atlas</h1>
+      <p>Sample art for Castle Control's first-run demo: eight art styles across the five things the chambers put on a stream, and Malakor standing in for the streamer. Mark each piece keep, maybe or drop. Athena reads your marks from here.</p>
+    </div>
+    <div class="tally" aria-live="polite"><div><b id="t-keep">0</b>keep</div><div><b id="t-maybe">0</b>maybe</div><div><b id="t-drop">0</b>drop</div><div><b id="t-open">0</b>open</div></div>
+    <div class="sync" id="sync">Connecting to the shared store…</div>
+  </header>
+
+  <section aria-labelledby="h-stream" style="display:grid;gap:14px">
+    <h2 id="h-stream">On stream <small>How one style looks as a whole broadcast. All overlays and chat are simulated.</small></h2>
+    <div class="controls">
+      <div class="seg" id="c-style"><span>Style</span></div>
+      <div class="seg" id="c-layout"><span>Layout</span></div>
+      <div class="seg" id="c-shot"><span>Malakor</span></div>
+    </div>
+    <div class="page">
+      <div class="stage" id="stage">
+        <img class="bg" id="s-bg" alt="">
+        <span class="live">LIVE</span><span class="sim">SIMULATED · SAMPLE ART</span>
+        <div class="ov o-vote"><img id="s-vote" alt="Vote bar"><span class="plate">Gatehouse vote · Raze the mill <em>62%</em> · Spare it <em>38%</em> · <em>0:41</em></span></div>
+        <div class="ov o-altar"><img id="s-altar" alt="Hype altar"><span class="plate">Beacons · blaze <em>54%</em></span></div>
+        <div class="ov o-urn"><img id="s-urn" alt="Draw urn"><span class="plate">Lot draw · <em>128</em> tickets</span></div>
+        <div class="ov o-map"><img id="s-map" alt="Realm map"><span class="plate">Map Room · <em>7</em> of 31 held</span></div>
+        <div class="cam" id="cam"><img class="shot" id="s-cam" alt="Malakor on camera"><img class="frame" id="s-frame" alt=""><span class="plate">Arch-Lich Malakor</span></div>
+      </div>
+      <aside class="chat" aria-label="Simulated chat">
+        <header>Chat · simulated</header>
+        <ol>
+          <li><span class="n" style="color:#FF8B72">bonepile_77</span> RAZE IT</li>
+          <li><span class="n" style="color:#86B6F0">quillwright</span> the mill has done nothing wrong</li>
+          <li><span class="sys">Beacons · 50 gift subs from ledger_goblin (simulated)</span></li>
+          <li><span class="n" style="color:#FFD36B">ledger_goblin</span> tribute paid, my lord</li>
+          <li><span class="n" style="color:#7FD3A0">mossy_minion</span> can I be a bone-clerk</li>
+          <li><span class="sys">Lot Chamber · draw opens in 2:00</span></li>
+          <li><span class="n" style="color:#86B6F0">quillwright</span> spare the mill 🌾</li>
+          <li><span class="n" style="color:#FF8B72">bonepile_77</span> the audit demands it</li>
+          <li><span class="sys">Gatehouse · 1 message held for review</span></li>
+        </ol>
+      </aside>
+      <div class="panel-row">
+        <div class="ext"><span class="cap">Map Room extension</span><img id="p-map" alt="Realm map panel">Viewers claim hexes for the realm.</div>
+        <div class="ext"><span class="cap">Lot Chamber</span><img id="p-urn" alt="Draw urn panel">Enter the draw with channel points.</div>
+        <div class="ext"><span class="cap">Beacons</span><img id="p-altar" alt="Hype altar panel">Every cheer and sub feeds the blaze.</div>
+      </div>
+    </div>
+  </section>
+
+  <section aria-labelledby="h-frames" style="display:grid;gap:14px">
+    <h2 id="h-frames">Thin cam frames <small>Round two, after your note that the frames were too thick: hairline outlines, glow and shadow, accents only at the corners. The stream above uses these.</small></h2>
+    <div class="cards" id="frames2"></div>
+  </section>
+
+  <section aria-labelledby="h-lib" style="display:grid;gap:24px">
+    <h2 id="h-lib">Presets by style <small>Five assets per style, background removed. Keep a whole style, or single pieces.</small></h2>
+    <div class="toolbar"><button class="vchip" id="well-toggle" aria-pressed="false">Dark backdrop</button></div>
+    <div id="lib" style="display:grid;gap:32px"></div>
+  </section>
+
+  <section aria-labelledby="h-shots" style="display:grid;gap:14px">
+    <h2 id="h-shots">Stream shots <small>Malakor in the streamer's seat, and the Overlord-themed backgrounds.</small></h2>
+    <div class="shots" id="shots"></div>
+  </section>
+
+  <section aria-labelledby="h-notes" style="display:grid;gap:10px">
+    <h2 id="h-notes">Notes for Athena</h2>
+    <label for="notes" class="foot">Anything the marks don't say: a style to add, a piece to redo, what the in-app demo should show first. Saved when you leave the box.</label>
+    <textarea id="notes"></textarea>
+  </section>
+
+  <p class="foot">Generated 2026-10-30 with Gemini image generation through the Antigravity CLI. Sample art for triage only; nothing here ships until it is picked and ported. Cutouts are automatic, so some edges are rough.</p>
+</div>
+
+<script>
+const STYLES=[
+ ["heraldic","Heraldic","Carved bronze and ember: the house look of Castle Control."],
+ ["pixel","Arcade","16-bit sprites for retro and speedrun channels."],
+ ["synthwave","Neon","Glowing tubes and chrome for late-night and music streams."],
+ ["watercolor","Storybook","Soft painted washes for cozy and creative channels."],
+ ["anime","Cel","Bold outlines and flat colour for anime and VTuber channels."],
+ ["clay","Clay","Chunky plasticine toys for family and party-game streams."],
+ ["comic","Ink","Brush lines and halftone for loud, punchy energy."],
+ ["glass","Glass","Frosted panels and thin light for clean, modern setups."]];
+const ASSETS=[["urn","Draw urn","Lot Chamber"],["frame","Cam frame","Beacons"],["altar","Hype altar","Beacons"],["votebar","Vote bar","Gatehouse"],["hexmap","Realm map","Map Room"]];
+const SHOTS=[["malakor-facecam","Malakor · facecam","Chest-up, talking to camera"],["malakor-lair-wide","Malakor · lair","Your prompt as written, wide"],["malakor-laugh","Malakor · villain laugh","Pointing at the conquest map"],["scene-warmap","War map","Gameplay background"],["scene-throne","Throne room","Just-chatting background"]];
+const THIN=["heraldic","pixel","synthwave","watercolor","anime","glass"];
+const src=id=>"web/"+id+".webp";
+const state={verdicts:{},style:"heraldic",layout:"game",shot:"malakor-facecam"};
+let db=null;
+
+function el(tag,attrs={},...kids){const e=document.createElement(tag);for(const[k,v]of Object.entries(attrs)){if(k==="class")e.className=v;else if(k==="text")e.textContent=v;else e.setAttribute(k,v)}kids.forEach(k=>k&&e.append(k));return e}
+function img(id,alt){const i=el("img",{src:src(id),alt,loading:"lazy"});i.onerror=()=>i.replaceWith(el("span",{class:"missing",text:"not generated"}));return i}
+
+function verdictChips(id){
+  const box=el("div",{class:"verdicts",role:"group","aria-label":"Verdict"});
+  for(const[v,label]of[["keep","Keep"],["maybe","Maybe"],["drop","Drop"]]){
+    const b=el("button",{class:"vchip","data-v":v,"data-id":id,"aria-pressed":"false",text:label});
+    b.onclick=()=>setVerdict(id,state.verdicts[id]===v?null:v);box.append(b)}
+  return box}
+
+function buildLib(){
+  const lib=document.getElementById("lib");
+  for(const[s,name,thesis]of STYLES){
+    const sec=el("article",{class:"style",id:"style-"+s});
+    const head=el("div",{class:"style-head"});
+    const h=el("div");h.append(el("h3",{text:name,style:"margin:0;font-size:22px"}),el("span",{text:thesis,style:"color:var(--muted)"}));
+    const right=el("div",{class:"toolbar"});
+    const see=el("button",{class:"vchip",text:"See on stream"});see.onclick=()=>{setStyle(s);document.getElementById("h-stream").scrollIntoView({behavior:"smooth"})};
+    const sv=verdictChips("style-"+s);sv.prepend(el("span",{class:"cap",text:"Whole style",style:"font-size:12px;color:var(--muted);align-self:center;margin-right:4px"}));
+    right.append(see,sv);head.append(h,right);
+    const cards=el("div",{class:"cards"});
+    for(const[a,label,mod]of ASSETS){
+      const id=`preset-${s}-${a}`;
+      const c=el("div",{class:"card","data-card":id});
+      const w=el("div",{class:"well"});w.append(img(id,`${name} ${label}`));
+      const m=el("div",{class:"meta"});m.append(el("b",{text:label}),el("span",{text:mod}));
+      c.append(w,m,verdictChips(id));cards.append(c)}
+    sec.append(head,cards);lib.append(sec)}
+  const f2=document.getElementById("frames2");
+  for(const s of THIN){
+    const[,name]=STYLES.find(x=>x[0]===s);const id=`preset-${s}-frame2`;
+    const c=el("div",{class:"card","data-card":id});
+    const w=el("div",{class:"well dark"});w.append(img(id,`${name} thin cam frame`));
+    const m=el("div",{class:"meta"});m.append(el("b",{text:name+" frame"}),el("span",{text:"Beacons · round two"}));
+    c.append(w,m,verdictChips(id));f2.append(c)}
+  const shots=document.getElementById("shots");
+  for(const[id,label,sub]of SHOTS){
+    const c=el("div",{class:"card","data-card":id});
+    const w=el("div",{class:"well dark"});w.append(img(id,label));
+    const m=el("div",{class:"meta"});m.append(el("b",{text:label}),el("span",{text:sub}));
+    c.append(w,m,verdictChips(id));shots.append(c)}
+}
+
+function segment(boxId,opts,key,fn){
+  const box=document.getElementById(boxId);
+  for(const[v,label]of opts){const b=el("button",{"data-v":v,"aria-pressed":String(state[key]===v),text:label});b.onclick=()=>fn(v);box.append(b)}
+}
+function press(boxId,v){document.querySelectorAll(`#${boxId} button`).forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.v===v)))}
+function setStyle(s){state.style=s;press("c-style",s);renderStage()}
+function renderStage(){
+  const s=state.style,st=document.getElementById("stage");
+  for(const[k,a]of[["s-vote","votebar"],["s-altar","altar"],["s-urn","urn"],["s-map","hexmap"],["s-frame",THIN.includes(s)?"frame2":"frame"],["p-map","hexmap"],["p-urn","urn"],["p-altar","altar"]])document.getElementById(k).src=src(`preset-${s}-${a}`);
+  const chatting=state.layout==="chat";
+  st.classList.toggle("chatting",chatting);
+  document.getElementById("cam").hidden=chatting;
+  document.getElementById("s-cam").src=src(state.shot);
+  document.getElementById("s-bg").src=src(chatting?(state.shot==="malakor-facecam"?"malakor-lair-wide":state.shot):"scene-warmap");
+}
+
+function paint(){
+  const t={keep:0,maybe:0,drop:0};
+  document.querySelectorAll(".vchip[data-id]").forEach(b=>b.setAttribute("aria-pressed",String(state.verdicts[b.dataset.id]===b.dataset.v)));
+  document.querySelectorAll("[data-card]").forEach(c=>{const v=state.verdicts[c.dataset.card];v?c.dataset.verdict=v:delete c.dataset.verdict});
+  const items=STYLES.length*ASSETS.length+SHOTS.length+THIN.length;let marked=0;
+  for(const[id,v]of Object.entries(state.verdicts)){if(!v||id.startsWith("style-"))continue;t[v]++;marked++}
+  for(const k of["keep","maybe","drop"])document.getElementById("t-"+k).textContent=t[k];
+  document.getElementById("t-open").textContent=items-marked;
+}
+
+async function setVerdict(id,v){
+  state.verdicts[id]=v;paint();
+  if(!db){try{localStorage.setItem("atlas-verdicts",JSON.stringify(state.verdicts))}catch(e){}return}
+  try{const ref=db.collection("triage").doc(id);v?await ref.set({verdict:v,at:new Date().toISOString()}):await ref.delete()}
+  catch(e){document.getElementById("sync").textContent="Could not save that mark ("+e.code+"). It stays on this screen only."}
+}
+
+async function start(){
+  buildLib();
+  segment("c-style",STYLES.map(([s,n])=>[s,n]),"style",setStyle);
+  segment("c-layout",[["game","Game + cam"],["chat","Just chatting"]],"layout",v=>{state.layout=v;press("c-layout",v);renderStage()});
+  segment("c-shot",[["malakor-facecam","Facecam"],["malakor-lair-wide","Lair"],["malakor-laugh","Laugh"]],"shot",v=>{state.shot=v;press("c-shot",v);renderStage()});
+  renderStage();paint();
+  const wt=document.getElementById("well-toggle");
+  wt.onclick=()=>{const on=wt.getAttribute("aria-pressed")!=="true";wt.setAttribute("aria-pressed",String(on));document.querySelectorAll("#lib .well").forEach(w=>w.classList.toggle("dark",on))};
+  const sync=document.getElementById("sync"),notes=document.getElementById("notes");
+  try{const saved=JSON.parse(localStorage.getItem("atlas-verdicts")||"{}");Object.assign(state.verdicts,saved);paint()}catch(e){}
+  db=window.claude?await window.claude.use("db"):null;
+  if(!db){sync.textContent="Marks stay in this browser only: the shared store is not available in this view.";return}
+  const timer=setTimeout(()=>sync.textContent="The shared store has not answered yet. Marks you make will save when it does.",10000);
+  db.collection("triage").onSnapshot(snap=>{
+    if(!snap.metadata.fromCache){clearTimeout(timer);sync.textContent="Marks save to the shared store. Athena reads them from there."}
+    const v={};snap.docs.forEach(d=>{const x=d.data();if(x&&x.verdict)v[d.id]=x.verdict});state.verdicts=v;paint();
+  },e=>{clearTimeout(timer);sync.textContent="The shared store stopped answering ("+e.code+"). Reload to reconnect."});
+  const nref=db.doc("notes/main");
+  nref.get().then(d=>{if(d.exists&&!notes.value)notes.value=d.data().text||""}).catch(()=>{});
+  let last=null;notes.addEventListener("blur",async()=>{if(notes.value===last)return;last=notes.value;try{await nref.set({text:notes.value,at:new Date().toISOString()})}catch(e){sync.textContent="Could not save the notes ("+e.code+")."}});
+}
+start();
+</script>
