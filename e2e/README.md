@@ -4,10 +4,10 @@ Status at delivery: **not yet run**. `@playwright/test` is not resolvable in the
 shared install. No browser test result or screenshot is claimed. This lane is
 not part of `pnpm gate` or CI yet.
 
-The Director must install **`@playwright/test@1.55.1`** as an exact root
+The Director must install **`@playwright/test@1.64.1`** as an exact root
 devDependency in the main checkout and update its lockfile there. The config
-also enforces that exact runtime version. Version 1.55.1 predates this dispatch
-by more than two weeks ([release](https://github.com/microsoft/playwright/releases/tag/v1.55.1)).
+also enforces that exact runtime version. Version 1.64.1 (2026-10-14) predates this dispatch
+by more than two weeks ([release](https://github.com/microsoft/playwright/releases/tag/v1.64.1)).
 This builder changed no dependencies or lockfile, and installed nothing.
 Never install packages or browsers through a worktree's `node_modules` junction.
 
@@ -22,7 +22,7 @@ The expanded command is `playwright test -c e2e/playwright.config.ts`.
 Optional `--headed` is for manual review; **headless is the default**. The two
 projects use system `channel: 'chrome'` at 1440×900 and 1280×800. No bundled
 browser download is needed. The server command is the desktop workspace's Vite
-dev server on 127.0.0.1:5173, with a strict port and no reuse of an existing server.
+dev server on 127.0.0.1:5174 (override with CC_E2E_PORT; 5173 stays free for tauri dev), with a strict port and no reuse of an existing server.
 `main.tsx` receives no native launch and therefore uses its fixture source.
 No core, Twitch viewer, credential or paid call is involved.
 
@@ -100,7 +100,7 @@ pnpm --config.verify-deps-before-run=false exec tsc -p e2e/tsconfig.json
 
 The directory is deliberately outside `pnpm-workspace.yaml`. CI can run headless
 once Chrome, Node 24+, pnpm and the exact dependency are provisioned, with port
-5173 available. It is **not yet proven reliable in CI**: system Chrome can drift,
+5174 available. It is **not yet proven reliable in CI**: system Chrome can drift,
 browser assertions have not run, and the overlay policy finding needs review.
 Run it for real and retain evidence before adding it to the blocking gate.
 
