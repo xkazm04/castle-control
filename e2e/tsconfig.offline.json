@@ -1,0 +1,6 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "paths": { "@playwright/test": ["./shims/playwright.d.ts"] }
+  }
+}

@@ -10,7 +10,8 @@
     "gate:proofs": "node scripts/prove-gates.mjs",
     "typecheck": "pnpm -r typecheck",
     "lint": "node scripts/tooling-lint.mjs && pnpm -r lint",
-    "test": "pnpm -r test"
+    "test": "pnpm -r test",
+    "e2e": "playwright test -c e2e/playwright.config.ts"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",

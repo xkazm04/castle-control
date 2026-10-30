@@ -1,0 +1,35 @@
+import assert from 'node:assert/strict';
+import type { Page } from '@playwright/test';
+
+export function loopback(url: string): boolean {
+  const parsed = new URL(url);
+  return ['http:', 'https:', 'ws:', 'wss:'].includes(parsed.protocol)
+    && ['127.0.0.1', 'localhost', '[::1]'].includes(parsed.hostname);
+}
+
+/** Install before navigation: HTTP/SSE and WebSockets have separate doors. */
+export async function guardPage(page: Page): Promise<() => void> {
+  const blocked: string[] = [];
+  const consoleErrors: string[] = [];
+  const pageErrors: string[] = [];
+  let requests = 0;
+  page.on('console', message => {
+    if (message.type() === 'error') consoleErrors.push(message.text());
+  });
+  page.on('pageerror', error => pageErrors.push(error.message));
+  await page.context().route('**/*', async route => {
+    requests++;
+    const url = route.request().url();
+    if (loopback(url)) await route.continue();
+    else { blocked.push(url); await route.abort('blockedbyclient'); }
+  });
+  await page.context().routeWebSocket('**/*', socket => {
+    if (loopback(socket.url())) socket.connectToServer();
+    else { blocked.push(socket.url()); socket.close({ code: 1008, reason: 'Loopback fixtures only' }); }
+  });
+  return () => {
+    console.log(`[e2e diagnostics] walked ${requests} requests, 1 console listener, 1 page-error listener`);
+    assert.ok(requests > 0, 'Network guard refused empty request inventory');
+    assert.deepEqual({ blocked, consoleErrors, pageErrors }, { blocked: [], consoleErrors: [], pageErrors: [] });
+  };
+}

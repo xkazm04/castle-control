@@ -1,0 +1,10 @@
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["ES2024", "DOM", "DOM.Iterable"],
+    "types": ["node"],
+    "typeRoots": ["../apps/desktop/node_modules/@types"],
+    "allowImportingTsExtensions": true
+  },
+  "include": ["./**/*.ts"]
+}
