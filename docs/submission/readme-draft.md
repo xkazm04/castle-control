@@ -92,11 +92,10 @@ history record that workflow. The app uses Rust, Tauri 2 and React 19 with
 schema-generated TypeScript contracts. Gate checks cover types, lint, tests,
 contract drift, boundaries, code hygiene and secrets.
 
-- **TODO — Director: verified Codex thread map.** Add work package, build-thread
-  ID, delivered commit(s), review result and evidence from the private journal.
-  Do not invent IDs or publish private prompts, credentials or real chat.
-- **TODO — Director: main Codex thread ID for Devpost.** Confirm against the
-  project journal before adding the submission's required session ID.
+- **Pending Director verification:** the [Codex thread map](codex-thread-map.md)
+  records merged runs, public commit subjects, thread IDs and resume counts.
+  Main Codex session ID for Devpost: `01a1741c-c7ad-7f32-9992-27f322adeb5c`,
+  read from the Director journal; verify before publication or form entry.
 - **TODO — owner: final public YouTube video and submitted Devpost entry.**
   Add only verified links after upload/submission.
 
