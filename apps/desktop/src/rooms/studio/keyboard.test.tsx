@@ -2,6 +2,8 @@ import { Children, isValidElement } from 'react';
 import type { ReactElement, ReactNode } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { expect, test } from 'vitest';
+import { HeraldicCard } from '@castle-control/ui';
+import type { HeraldicCardProps } from '@castle-control/ui';
 import { HexTable, TileInspector } from './hex-table.jsx';
 import { TestLadder, ladderRungs } from './test-ladder.jsx';
 import { fixtureTiles } from './fixture.js';
@@ -12,6 +14,8 @@ function nativeButtons(tree: ReactNode): ReactElement<ButtonProps>[] {
   Children.forEach(tree, child => {
     if (!isValidElement<ButtonProps>(child)) return;
     if (child.type === 'button') found.push(child);
+    // C README decision 4 replaces native rung markup with the kit's native-button tablet.
+    else if (child.type === HeraldicCard && isValidElement<HeraldicCardProps>(child)) found.push(...nativeButtons(HeraldicCard(child.props)));
     else found.push(...nativeButtons(child.props.children));
   });
   return found;

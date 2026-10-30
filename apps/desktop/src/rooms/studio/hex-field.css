@@ -1,0 +1,31 @@
+/* C field geometry. Every ancestor preserves min-height:0 so the size query fits all six rows. */
+.studio-room .cc-hexfield { position: relative; flex: 1; min-height: 0; container-type: size; }
+.studio-room .cc-hexfield-plate {
+  --s: min(calc((100cqw - var(--space-6)) / 16.46), calc((100cqh - var(--space-6)) / 9.52));
+  --hw: calc(var(--s) * 1.7320508);
+  position: absolute; inset: 0; margin: auto; width: calc(var(--hw) * 9.5); height: calc(var(--s) * 9.5);
+}
+.studio-room .cc-hex {
+  position: absolute; left: calc((var(--c) + var(--o, 0)) * var(--hw)); top: calc(var(--r) * var(--s) * 1.5);
+  width: var(--hw); height: calc(var(--s) * 2); display: flex; flex-direction: column; align-items: center; justify-content: center;
+  margin: 0; padding: 0; border: 0; background: transparent; color: var(--press); cursor: pointer;
+  transition: filter var(--motion-fast) var(--ease); max-width: none;
+}
+.studio-room .cc-hex[data-row-offset="true"] { --o: .5; }
+.studio-room .cc-hex::before, .studio-room .cc-hex-face { position: absolute; clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%); }
+.studio-room .cc-hex::before { content: ""; inset: 0; background: transparent; }
+.studio-room .cc-hex-face { inset: var(--space-2); background: var(--house); }
+.studio-room .cc-hex[data-house="unclaimed"] { color: var(--ink); }
+.studio-room .cc-hex[data-house="unclaimed"]::before { background: var(--hair); }
+.studio-room .cc-hex[data-house="unclaimed"] .cc-hex-face { inset: var(--space-3); background: var(--paper-2); }
+.studio-room .cc-hex-id, .studio-room .cc-hex-house { position: relative; }
+.studio-room .cc-hex-id { font: 800 clamp(var(--text-wordmark), calc(var(--s) * .44), var(--text-chamber))/1 var(--font-display); letter-spacing: var(--track-title); }
+.studio-room .cc-hex-house { margin-top: var(--space-4); padding: var(--space-1) var(--space-5); border-radius: var(--r-sm); background: var(--card); color: var(--ink); font: 700 var(--text-label)/1.2 var(--font-ui); }
+.studio-room .cc-hex[data-house="unclaimed"] .cc-hex-house { background: transparent; color: var(--ink-2); font-weight: 600; }
+.studio-room .cc-hex:hover { filter: drop-shadow(var(--space-2) var(--space-2) 0 var(--hair)); }
+.studio-room .cc-hex[aria-pressed="true"] { z-index: 2; filter: drop-shadow(var(--space-4) var(--space-4) 0 var(--key)); }
+.studio-room .cc-hex[aria-pressed="true"]::before { background: var(--key); }
+.studio-room .cc-hex[aria-pressed="true"] .cc-hex-face { inset: var(--space-4); }
+.studio-room .cc-hex.cc-hex:focus-visible { outline: none; }
+.studio-room .cc-hex:focus-visible::before { background: var(--azure); }
+.studio-room .cc-hex:focus-visible .cc-hex-face { inset: var(--space-4); }

@@ -42,6 +42,8 @@ test('all room headers hold the display title, plain subtitle, locator and origi
       expect(order[0]).toBeGreaterThan(0);
       expect(order.every((index, position) => position === 0 || index > (order[position - 1] ?? -1))).toBe(true);
       expect(markup).toMatch(/<aside class="shell-seal-slot"[^>]*aria-label="Seal slot"/);
+    } else if (chamber === 'studio') { // Prototype studio README C, L96/L106: hero and seal card live in the side column.
+      expect(markup).toMatch(/cc-herald-side[\s\S]*cc-hero[\s\S]*cc-ladder[\s\S]*cc-seal-card[\s\S]*<aside class="shell-seal-slot"[^>]*aria-label="Seal slot"/);
     } else {
       const column = chamber === 'moderator' ? 'moderator-details'
         : chamber === 'visuals' ? 'visuals-room-details' : 'studio-room-details';
@@ -61,8 +63,8 @@ test('room stages retain token insets and model states use the existing accent f
   expect(shell).toMatch(/\.room-stage\s*\{[^}]*padding:\s*var\(--space-16\)/);
   expect(shell).toMatch(/\.room-column\s*\{[^}]*padding:\s*var\(--space-16\)/);
   const studio = readFileSync(new URL('../rooms/studio/room.css', import.meta.url), 'utf8');
-  expect(studio).toMatch(/\.studio-room-workbench\s*\{[^}]*padding:\s*var\(--space-16\)/);
-  expect(studio).toMatch(/button\[data-current="true"\][^}]*background:\s*var\(--ink\)/);
+  /* Prototype studio README C, L98 + PORT NOTES cc-herald-field: replace the workbench with the full-ink field, insets 16/24/14. */ expect(studio).toMatch(/\.cc-herald-field\s*\{[^}]*padding:\s*var\(--space-16\) var\(--space-24\) var\(--space-14\)/);
+  /* Prototype studio README C, L103: kit tablets own the key current fill, independent of inspection. */ expect(readFileSync(new URL('../../../../packages/ui/src/heraldic-card.css', import.meta.url), 'utf8')).toMatch(/\[data-current="true"\][^}]*background:\s*var\(--key\)/);
   const moderator = readFileSync(new URL('../rooms/moderator/room.css', import.meta.url), 'utf8');
   expect(moderator).toMatch(/\.moderator-moat-gauge rect\[data-on="true"\]\s*\{[^}]*fill:\s*var\(--azure\)/);
   const queue = new ProposalQueue();
@@ -126,6 +128,8 @@ test('polished rooms render each stage title once and expose keyboard scroll reg
       expect(ribbon).toContain('<span class="cc-ribbon-note">local preview</span>');
       expect(markup).not.toContain('Past writs');
       expect(markup).not.toContain('aria-label="Giveaway guardrails · local preview"');
+    } else if (chamber === 'studio') { // Prototype studio README L15 and C L110: six rows fit; only the side column needs a scroll hint.
+      expect(markup).not.toContain('class="room-scroll-hint"'); expect(markup).toMatch(/class="cc-herald-side"[^>]*tabindex="0"[^>]*aria-describedby="studio-scroll-hint"/); expect(markup).toContain('id="studio-scroll-hint" class="studio-visually-hidden"');
     } else {
       if (chamber === 'moderator') expect(markup).toContain('id="moderator-scroll-hint" class="moderator-visually-hidden"');
       else expect(markup).toContain('class="room-scroll-hint"');
@@ -169,7 +173,7 @@ test('review and map scroll affordances remain visible without hiding content at
       expect(css).toMatch(/\.moderator-feed > \.cc-window\s*\{[^}]*flex:\s*1[^}]*min-height:\s*0[^}]*scrollbar-gutter:\s*stable/);
       const window = readFileSync(new URL('../../../../packages/ui/src/windowed-rows.css', import.meta.url), 'utf8');
       expect(window).toMatch(/\.cc-window\s*\{[^}]*overflow:\s*auto/);
-    } else expect(css).toContain('overflow-y: scroll');
+    } else { /* Prototype studio README L15 and C L110: size-container field, scrolling side column. */ expect(css).toMatch(/\.cc-herald-side\s*\{[^}]*overflow:\s*auto/); expect(readFileSync(new URL('../rooms/studio/hex-field.css', import.meta.url), 'utf8')).toContain('container-type: size'); }
   }
   const css = readFileSync(new URL('./room.css', import.meta.url), 'utf8');
   expect(css).toMatch(/\.room-scroll-hint\s*\{[^}]*font:[^}]*var\(--text-label\)/);
