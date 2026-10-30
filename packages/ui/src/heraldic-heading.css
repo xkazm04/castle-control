@@ -1,0 +1,13 @@
+.cc-section-heading { --cc-heading-size: var(--text-section); --cc-heading-leading: 1.1; display: flex; align-items: baseline; flex-wrap: wrap; gap: var(--space-2) var(--space-10); margin: 0 0 var(--space-10); }
+.cc-section-heading :is(h2, h3) { position: relative; isolation: isolate; margin: 0; font: 800 var(--cc-heading-size, var(--text-section))/var(--cc-heading-leading) var(--font-display); font-stretch: 75%; text-transform: uppercase; letter-spacing: var(--track-heading); }
+.cc-section-gloss { font: italic var(--text-small)/1.3 var(--font-serif); color: var(--muted); }
+.cc-section-count { margin-left: auto; font: 700 var(--text-small)/1 var(--font-num); color: var(--ink-2); white-space: nowrap; }
+.cc-section-heading[data-ghost="true"] :is(h2, h3)::after { content: attr(data-text); position: absolute; left: var(--space-2); top: var(--space-2); z-index: -1; color: var(--cc-ink, var(--ink)); mix-blend-mode: var(--blend); white-space: nowrap; pointer-events: none; }
+.cc-section-heading[data-heading="banner"] { --cc-heading-size: var(--space-30); display: flex; justify-content: space-between; align-items: center; gap: var(--space-10) var(--space-16); margin: 0; }
+.cc-section-heading[data-heading="banner"] :is(h2, h3) { font-size: var(--cc-heading-size, var(--space-30)); line-height: 1; letter-spacing: var(--track-title); }
+.cc-section-heading[data-heading="banner"] .cc-section-gloss { margin: var(--space-4) 0 0; font: italic var(--text-aside)/1.3 var(--font-serif); color: var(--ink-2); }
+.cc-section-heading[data-heading="inline"] { --cc-heading-size: var(--text-chamber); gap: var(--space-4) var(--space-14); margin: 0; }
+.cc-section-heading[data-heading="inline"] :is(h2, h3), .cc-section-heading[data-heading="ruled"] :is(h2, h3) { font-size: var(--cc-heading-size, var(--text-chamber)); line-height: 1; letter-spacing: var(--track-chamber); }
+.cc-section-heading[data-heading="inline"] .cc-section-gloss { font: italic var(--text-aside)/1.3 var(--font-serif); color: var(--ink-2); }
+.cc-section-heading[data-heading="ruled"] { --cc-heading-size: var(--text-chamber); gap: var(--space-4) var(--space-10); padding-bottom: var(--space-6); margin: 0; border-bottom: var(--rule-strong) solid var(--rule); }
+.cc-section-heading[data-heading="ruled"] .cc-section-count { font: 600 var(--text-label)/1.3 var(--font-ui); color: var(--muted); }

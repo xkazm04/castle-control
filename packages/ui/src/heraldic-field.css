@@ -1,0 +1,17 @@
+.cc-field[data-field] { display: flex; flex-direction: column; gap: var(--space-6); min-width: 0; }
+.cc-field[data-field] > label { font: 800 var(--text-label)/1.3 var(--font-ui); letter-spacing: var(--track-heading); text-transform: uppercase; }
+.cc-frame .cc-field[data-field] input {
+  width: 100%; min-width: 0; height: calc(var(--button-h) + var(--space-4)); padding: 0 var(--space-12);
+  border: var(--rule-medium) solid var(--ink); border-radius: var(--r-sm); background: var(--paper); color: var(--ink);
+  font: 500 var(--text-body)/1 var(--font-num);
+}
+.cc-field[data-field] input::placeholder { color: var(--muted); }
+.cc-field-hint { margin: 0; font: var(--text-small)/1.4 var(--font-ui); color: var(--muted); }
+.cc-field-result { margin: 0; font: 600 var(--text-body)/1.4 var(--font-ui); }
+.cc-frame .cc-field[data-field="select"] select {
+  appearance: none; flex: 1; min-width: 0; height: var(--space-40); padding: 0 var(--space-28) 0 var(--space-12);
+  border: var(--rule-strong) solid var(--ink); border-radius: var(--r-sm); background-color: var(--card);
+  background-image: linear-gradient(45deg, transparent 50%, var(--ink) 50%), linear-gradient(135deg, var(--ink) 50%, transparent 50%);
+  background-size: var(--space-5) var(--space-5); background-position: right var(--space-14) center, right var(--space-9) center;
+  background-repeat: no-repeat; color: var(--ink); font: 700 var(--text-body)/1 var(--font-ui); cursor: pointer;
+}

@@ -9,19 +9,20 @@ export type ProposalCardProps = {
   /** Overview puts its sole authorization control below Program. */
   seal_at_monitor?: boolean;
   busy?: boolean;
+  compact?: boolean;
 };
 
-export function ProposalCard({ proposal, focused = false, on_focus, on_seal, on_tear, seal_at_monitor = false, busy = false }: ProposalCardProps) {
+export function ProposalCard({ proposal, focused = false, on_focus, on_seal, on_tear, seal_at_monitor = false, busy = false, compact = false }: ProposalCardProps) {
   const pending = isPending(proposal);
   return <article className="cc-proposal-card" data-module={proposal.chamber} data-proposal-focused={focused}
-    tabIndex={0} onFocus={on_focus} aria-label={`${proposal.title} proposal`}>
+    tabIndex={0} onFocus={on_focus} aria-label={`${proposal.title} proposal`} data-compact={compact || undefined}>
     <p className="cc-proposal-stamp">{pending ? 'PROPOSAL · AWAITING YOUR SEAL' : `PROPOSAL · ${proposal.state.toUpperCase()}`}</p>
     <h3>{proposal.title}</h3><p className="cc-proposal-revision">Rev {proposal.revision} · {proposal.state}</p>
-    <dl>{proposal.fields.map(field => <div className="cc-proposal-field" key={field.key}>
+    {!compact && <dl>{proposal.fields.map(field => <div className="cc-proposal-field" key={field.key}>
       <dt>{field.label}</dt><dd>{field.struck.map((old, index) => <s key={index}>{String(old)}</s>)}
         <span className={field.struck.length ? 'cc-proposal-reink' : ''} key={`${field.key}-${proposal.revision}`}>{String(field.value)}</span>
-      </dd></div>)}</dl>
-    {proposal.seal_hash && <p className="cc-proposal-hash">SHA-256 · {proposal.seal_hash}</p>}
+      </dd></div>)}</dl>}
+    {!compact && proposal.seal_hash && <p className="cc-proposal-hash">SHA-256 · {proposal.seal_hash}</p>}
     {pending && <div className="cc-proposal-actions">
       {seal_at_monitor ? <p>Use the hold under Program to seal and proclaim.</p>
         : <SealButton key={`${proposal.id}:${proposal.revision}`} on_seal={on_seal} variant={proposal.kind} disabled={busy} />}

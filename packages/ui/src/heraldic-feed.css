@@ -1,0 +1,26 @@
+.cc-feed { min-width: 0; min-height: 0; background: var(--card); border-top: var(--rule-medium) solid var(--ink); }
+.cc-ruled-row {
+  --cc-feed-mark-width: calc(var(--space-56) + var(--space-16)); --cc-feed-row-height: var(--row-h); --cc-feed-rule-ink: var(--hair-2);
+  display: grid; grid-template-columns: var(--cc-feed-mark-width, calc(var(--space-56) + var(--space-16))) minmax(0, 1fr) auto;
+  align-items: center; gap: var(--space-6); height: var(--cc-feed-row-height, var(--row-h)); min-width: 0; box-sizing: border-box; overflow: hidden;
+  padding: 0 var(--space-10) 0 0; border-bottom: var(--rule-thin) solid var(--cc-feed-rule-ink, var(--hair-2));
+}
+.cc-window-row:has(> .cc-ruled-row) { border-bottom: 0; }
+.cc-ruled-row:hover { background: var(--tint); }
+.cc-feed-mark { display: flex; align-items: center; gap: var(--space-6); height: 100%; min-width: 0; }
+.cc-feed-text { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cc-feed-trailing { font: var(--text-small)/1 var(--font-num); color: var(--muted); white-space: nowrap; }
+.cc-ruled-row[data-layout="amount"] {
+  --cc-feed-row-height: calc(var(--row-h) * 1.5);
+  grid-template-columns: var(--space-34) minmax(0, 1fr) auto; grid-template-rows: auto auto; gap: 0 var(--space-10);
+  height: var(--cc-feed-row-height, calc(var(--row-h) * 1.5)); padding: 0; border-bottom-color: var(--line);
+  font: var(--text-label)/1.25 var(--font-num);
+}
+.cc-ruled-row[data-layout="amount"] .cc-feed-mark { grid-row: 1 / span 2; justify-content: center; height: var(--space-26); border: var(--rule-medium) solid var(--ink); border-radius: var(--r-sm); font-variant-numeric: tabular-nums; }
+.cc-ruled-row[data-layout="amount"] .cc-feed-text { font: 700 var(--text-label)/1.25 var(--font-ui); }
+.cc-ruled-row[data-layout="amount"] .cc-feed-trailing { color: var(--ink-2); font: inherit; }
+.cc-feed-detail { grid-column: 2 / -1; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cc-ruled-row[data-layout="entry"] { --cc-feed-row-height: 100%; grid-template-columns: auto minmax(0, 1fr) auto; height: var(--cc-feed-row-height); padding: var(--space-10) 0; align-content: start; }
+.cc-ruled-row[data-layout="entry"] .cc-feed-mark { height: auto; }
+.cc-ruled-row[data-layout="entry"] .cc-feed-detail { grid-column: 1 / -1; white-space: normal; overflow-wrap: anywhere; }
+.cc-feed-actions { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: var(--space-4) var(--space-14); }

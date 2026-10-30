@@ -1,0 +1,14 @@
+.cc-stage {
+  position: relative; margin: 0; flex: 1; min-width: 0; min-height: 0;
+  padding: var(--cc-stage-padding, var(--space-16) var(--space-22) var(--space-14));
+  border: var(--cc-stage-rule, var(--rule-strong)) solid var(--cc-border-ink, var(--cc-ink, var(--ink))); background: var(--card);
+}
+.cc-stage[data-frame="print"] {
+  --cc-stage-padding: var(--space-12); --cc-stage-rule: var(--rule-thin);
+  --cc-border-ink: var(--hair); --cc-crop-size: var(--space-12); --cc-crop-offset: var(--space-6);
+}
+.cc-crop { position: absolute; width: var(--cc-crop-size, var(--space-14)); height: var(--cc-crop-size, var(--space-14)); pointer-events: none; border: 0 solid var(--ink); }
+.cc-crop[data-corner="tl"], .cc-crop[data-corner="tr"] { top: calc(-1 * var(--cc-crop-offset, var(--space-10))); border-top-width: var(--rule-thin); }
+.cc-crop[data-corner="bl"], .cc-crop[data-corner="br"] { bottom: calc(-1 * var(--cc-crop-offset, var(--space-10))); border-bottom-width: var(--rule-thin); }
+.cc-crop[data-corner="tl"], .cc-crop[data-corner="bl"] { left: calc(-1 * var(--cc-crop-offset, var(--space-10))); border-left-width: var(--rule-thin); }
+.cc-crop[data-corner="tr"], .cc-crop[data-corner="br"] { right: calc(-1 * var(--cc-crop-offset, var(--space-10))); border-right-width: var(--rule-thin); }

@@ -1,0 +1,4 @@
+.cc-offset-shadow {
+  --cc-offset-shadow: var(--cc-shadow-offset, var(--space-6)) var(--cc-shadow-offset, var(--space-6)) 0 var(--cc-shadow-ink, var(--cc-ink, var(--ink)));
+  box-shadow: var(--cc-offset-shadow);
+}

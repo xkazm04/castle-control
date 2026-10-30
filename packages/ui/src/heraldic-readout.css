@@ -1,0 +1,39 @@
+.cc-hero-readout { --cc-figure-size: var(--text-title); --cc-ghost-offset: var(--title-ghost); --cc-unit-size: var(--text-chamber); --cc-caption-ink: var(--or-text); display: flex; flex-direction: column; gap: var(--space-6); min-width: 0; min-height: 0; }
+.cc-hero-figure {
+  position: relative; isolation: isolate; align-self: flex-start; color: var(--ink);
+  font: 800 var(--cc-figure-size, var(--text-title))/.9 var(--font-display); font-stretch: 75%;
+  letter-spacing: var(--track-title); font-variant-numeric: tabular-nums;
+  text-transform: uppercase;
+}
+.cc-hero-readout[data-ghost="shadow"] .cc-hero-figure { text-shadow: var(--cc-ghost-offset, var(--title-ghost)) var(--cc-ghost-offset, var(--title-ghost)) 0 var(--cc-ink, var(--ink)); }
+.cc-hero-readout[data-ghost="overprint"] .cc-hero-figure::after {
+  content: attr(data-text); position: absolute; left: var(--cc-ghost-offset, var(--space-4)); top: var(--cc-ghost-offset, var(--space-4));
+  z-index: -1; color: var(--cc-ink, var(--ink)); mix-blend-mode: var(--blend); pointer-events: none;
+}
+.cc-hero-figure small { margin-left: var(--space-4); font-size: var(--cc-unit-size, var(--text-chamber)); text-shadow: none; }
+.cc-hero-caption { font: italic var(--text-wordmark)/1.2 var(--font-serif); color: var(--ink); }
+.cc-hero-readout[data-caption="label"] { gap: 0; }
+.cc-hero-readout[data-caption="label"] .cc-hero-caption { margin-top: var(--space-6); font: 700 var(--text-label)/1.2 var(--font-ui); text-transform: uppercase; letter-spacing: var(--track-wide); color: var(--muted); }
+.cc-hero-readout[data-scale="viewport"] { --cc-figure-size: clamp(calc(var(--space-36) * 2), 11.5vh, calc(var(--space-56) + var(--space-24) * 2)); --cc-ghost-offset: var(--space-4); }
+.cc-hero-readout[data-scale="viewport"] .cc-hero-figure {
+  font-size: var(--cc-figure-size);
+  line-height: .8; letter-spacing: var(--track-number);
+}
+.cc-hero-readout[data-scale="numeric"] { --cc-figure-size: calc(var(--text-chamber) * 1.9); gap: var(--space-2); }
+.cc-hero-readout[data-scale="numeric"] .cc-hero-figure {
+  font: 700 var(--cc-figure-size, calc(var(--text-chamber) * 1.9))/.9 var(--font-num); letter-spacing: var(--track-number);
+}
+.cc-hero-readout[data-scale="numeric"] .cc-hero-figure small { font-size: .45em; color: var(--cc-caption-ink, var(--or-text)); }
+.cc-hero-readout[data-scale="numeric"] .cc-hero-caption { font: 600 var(--text-label)/1.25 var(--font-ui); color: var(--muted); }
+.cc-medals { display: flex; flex-direction: column; gap: var(--space-10); margin: 0; padding: var(--space-12) 0 0; list-style: none; border-top: var(--rule-medium) solid var(--rule); }
+.cc-medal { --cc-medal-text: var(--gules-text); display: grid; grid-template-columns: var(--space-40) minmax(0, 1fr); gap: var(--space-12); align-items: center; }
+.cc-medal-disc { display: grid; place-items: center; width: var(--space-40); height: var(--space-40); border: var(--rule-strong) solid var(--cc-ink, var(--ink)); border-radius: 50%; background: var(--paper); font: 700 var(--text-number)/1 var(--font-num); font-variant-numeric: tabular-nums; letter-spacing: var(--track-number); }
+.cc-medal-copy b { display: block; font: 700 var(--text-body)/1.25 var(--font-ui); }
+.cc-medal-copy span { display: block; font: var(--text-small)/1.3 var(--font-ui); color: var(--muted); }
+.cc-medal s { color: var(--cc-medal-text); text-decoration-thickness: var(--rule-strong); }
+.cc-numbered-discs { --cc-disc-columns: 4; list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(var(--cc-disc-columns), minmax(0, 1fr)); gap: var(--space-12); counter-reset: cc-disc; }
+.cc-numbered-discs li { position: relative; display: flex; flex-direction: column; gap: var(--space-4); counter-increment: cc-disc; }
+.cc-numbered-discs li::before { content: counter(cc-disc); position: relative; z-index: 1; display: grid; place-items: center; width: var(--space-34); height: var(--space-34); margin-bottom: var(--space-4); border: var(--rule-strong) solid var(--ink); border-radius: 50%; background: var(--card); font: 800 var(--text-number)/1 var(--font-display); }
+.cc-numbered-discs li:not(:last-child)::after { content: ""; position: absolute; top: var(--space-16); left: var(--space-34); right: calc(-1 * var(--space-12)); border-top: var(--rule-strong) dashed var(--hair); }
+.cc-numbered-discs b { font: 700 var(--text-body)/1.25 var(--font-ui); }
+.cc-numbered-discs span { font: var(--text-small)/1.4 var(--font-ui); color: var(--ink-2); }

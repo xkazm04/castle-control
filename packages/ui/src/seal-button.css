@@ -4,3 +4,5 @@
 .cc-seal-button progress::-webkit-progress-bar { background: var(--paper); }
 .cc-seal-button progress::-webkit-progress-value { background: var(--press); }
 .cc-seal-button progress::-moz-progress-bar { background: var(--press); }
+.cc-seal-button[data-size="large"] { --cc-shadow-offset: var(--space-4); --cc-shadow-ink: var(--ink); display: inline-grid; min-width: calc(var(--space-56) * 3.5); padding: var(--space-12) var(--space-16) var(--space-10); border-radius: var(--r-md); font: 800 var(--text-wordmark)/1 var(--font-display); letter-spacing: var(--track-chamber); text-transform: uppercase; text-align: start; }
+.cc-seal-button[data-size="large"] progress { appearance: none; }

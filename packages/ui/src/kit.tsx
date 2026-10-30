@@ -2,13 +2,20 @@ import { lazy, Suspense, useRef, useState } from 'react';
 import type { KeyboardEvent } from 'react';
 import { createRoot } from 'react-dom/client';
 import type { Theme } from '@castle-control/tokens';
-import { ChambersColumn, EmptyState, GatehouseChip, InkButton, KitShell, Mark, NumberedPanel, PageHeader,
-  Rampart, RuleTable, StatusChip, ThemeFrame, VerdictChip, chambers, chipVariants, keymap, verdicts } from './index.js';
-import type { ConnectionState, ModuleId, RuleRow } from './index.js';
+import '@castle-control/tokens';
+import { ChambersColumn, KitShell, Rampart, chambers, keymap } from './shell.jsx';
+import { EmptyState, InkButton, Mark, ThemeFrame } from './primitives.jsx';
+import type { ModuleId } from './primitives.jsx';
+import { GatehouseChip, StatusChip, VerdictChip, chipVariants, verdicts } from './chips.jsx';
+import type { ConnectionState } from './chips.jsx';
+import { NumberedPanel, PageHeader } from './panels.jsx';
+import { RuleTable } from './rule-table.jsx';
+import type { RuleRow } from './rule-table.jsx';
 import './kit.css';
 
 const PromotedGallery = lazy(() => import('./kit-promoted.jsx').then(module => ({ default: module.PromotedGallery })));
 const ShellControls = lazy(() => import('../kit/shell-controls.jsx'));
+const HeraldicGallery = lazy(() => import('../kit/heraldic-gallery.jsx'));
 
 const initialRules: readonly RuleRow[] = [
   { id: 'links', name: 'Links', match: 'Unapproved links', action: 'Hold', mode: 'shadow' },
@@ -78,6 +85,7 @@ function KitTheme({ initial_theme }: { initial_theme: Theme }) {
             </NumberedPanel>
           </div>
           <Suspense fallback={<p className="cc-kit-note">Loading component examples…</p>}><PromotedGallery /></Suspense>
+          <Suspense fallback={<p className="cc-kit-note">Loading heraldic examples…</p>}><HeraldicGallery theme={theme} /></Suspense>
           <NumberedPanel number="0.9" title="AI-first shell controls" gloss="simulated">
             <Suspense fallback={<p>Loading shell controls...</p>}><ShellControls chamber={module} input_ref={stewardInput}
               message={notice} on_message={setNotice} on_navigate={setModule} /></Suspense>

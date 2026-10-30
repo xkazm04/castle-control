@@ -1,10 +1,18 @@
 import './chips.css';
+import { printStyle } from './heraldic-options.js';
+import type { PrintInk, PrintStyle } from './heraldic-options.js';
 
 export const chipVariants = ['gules', 'azure', 'or', 'solid-gules', 'solid-azure', 'solid-or', 'solid', 'ok', 'bad', 'warn', 'dash'] as const;
 export type ChipVariant = typeof chipVariants[number];
 
-export function StatusChip({ variant, children }: { variant: ChipVariant; children: string }) {
-  return <span className="cc-chip" data-variant={variant}>{children}</span>;
+export type StatusChipProps = {
+  variant: ChipVariant; children: string; stamp?: 'label' | 'mode' | 'verdict' | 'draft';
+  tone?: 'neutral' | 'spot' | 'ok' | 'warn' | 'blocked' | 'solid'; ink?: PrintInk; style?: PrintStyle;
+};
+export function StatusChip({ variant, children, stamp, tone, ink, style }: StatusChipProps) {
+  if (stamp && !children.trim()) throw new Error('A stamp needs its word');
+  return <span className={stamp ? 'cc-chip cc-stamp' : 'cc-chip'} data-variant={variant} data-stamp={stamp} data-tone={tone}
+    style={ink || style ? printStyle({ ink }, style) : undefined}>{children}</span>;
 }
 
 export const verdicts = ['pass', 'hold', 'bar'] as const;

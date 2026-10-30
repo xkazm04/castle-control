@@ -4,10 +4,11 @@ import { expect, test } from 'vitest';
 
 test('component styles use declared shared tokens, not raw colors or pixel sizes', () => {
   const directory = new URL('.', import.meta.url);
-  const files = readdirSync(directory).filter(path => path.endsWith('.css'));
+  const files = [directory, new URL('../kit/', directory)].flatMap(folder => readdirSync(folder)
+    .filter(path => path.endsWith('.css')).map(path => new URL(path, folder)));
   expect(files.length).toBeGreaterThan(0);
   console.log(`[component CSS] walked ${files.length} files`);
-  const styles = files.map(path => readFileSync(new URL(path, directory), 'utf8')).join('\n');
+  const styles = files.map(path => readFileSync(path, 'utf8')).join('\n');
   const declarations = new Set([...styles.matchAll(/--([\w-]+)\s*:/g)].map(match => match[1]));
   const known = new Set([...Object.keys(tokens.theme.paper), ...Object.keys(tokens.layout), ...declarations]);
   for (const [, name] of styles.matchAll(/var\(--([\w-]+)/g)) expect(known.has(name ?? '')).toBe(true);

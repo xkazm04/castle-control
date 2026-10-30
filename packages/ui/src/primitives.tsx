@@ -1,5 +1,7 @@
 import type { ButtonHTMLAttributes, ReactNode } from 'react';
 import type { Theme } from '@castle-control/tokens';
+import { printStyle } from './heraldic-options.js';
+import type { PrintOptions, PrintStyle } from './heraldic-options.js';
 import './primitives.css';
 
 export type ModuleId = 'lottery' | 'moderator' | 'visuals' | 'studio';
@@ -20,13 +22,16 @@ export function Mark({ label = 'Castle Control mark: a chat bubble topped with b
   </svg>;
 }
 
-export type ButtonVariant = 'outline' | 'primary' | 'plate' | 'ghost' | 'danger';
-export type InkButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
-  variant?: ButtonVariant; size?: 'normal' | 'small' | 'icon';
+export type ButtonVariant = 'outline' | 'primary' | 'plate' | 'ghost' | 'danger' | 'offset' | 'pass' | 'bar' | 'shield';
+export type InkButtonProps = Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'style'> & PrintOptions & {
+  variant?: ButtonVariant; size?: 'normal' | 'small' | 'icon' | 'room' | 'big' | 'wrap'; style?: PrintStyle;
 };
 
-export function InkButton({ variant = 'outline', size = 'normal', className = '', ...props }: InkButtonProps) {
-  return <button {...props} type={props.type ?? 'button'} className={`cc-button ${className}`} data-variant={variant} data-size={size} />;
+export function InkButton({ variant = 'outline', size = 'normal', className = '', ink, offset, shadow_ink, border_ink, style, ...props }: InkButtonProps) {
+  const heraldic = ['room', 'big', 'wrap'].includes(size) || ['offset', 'pass', 'bar', 'shield'].includes(variant);
+  const classes = heraldic ? `cc-button cc-heraldic-button${variant === 'offset' ? ' cc-offset-shadow' : ''} ${className}` : `cc-button ${className}`;
+  const print = ink || offset || shadow_ink || border_ink || style ? printStyle({ ink, offset, shadow_ink, border_ink }, style) : undefined;
+  return <button {...props} type={props.type ?? 'button'} className={classes} data-variant={variant} data-size={size} style={print} />;
 }
 
 export function ThemeToggle({ theme, onChange }: { theme: Theme; onChange: (theme: Theme) => void }) {

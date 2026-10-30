@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { keymap } from './shell.jsx';
 import './seal-button.css';
+import './heraldic-shadow.css';
 
 export const sealHoldDurationMs = 1000;
 const progressIntervalMs = 16;
@@ -9,6 +10,7 @@ export type SealButtonProps = {
   on_seal: () => void;
   variant?: 'seal' | 'proclaim';
   disabled?: boolean;
+  size?: 'normal' | 'large';
 };
 
 /** A release, lost focus/capture, or teardown always cancels unfinished work. */
@@ -34,11 +36,11 @@ export function createSealHold(on_seal: () => void, on_progress: (progress: numb
 }
 
 // Separate rendering lets the real event handlers be exercised without a DOM shim.
-export function SealControl({ hold, progress, variant = 'seal', disabled = false }: {
-  hold: ReturnType<typeof createSealHold>; progress: number; variant?: 'seal' | 'proclaim'; disabled?: boolean;
+export function SealControl({ hold, progress, variant = 'seal', disabled = false, size }: {
+  hold: ReturnType<typeof createSealHold>; progress: number; variant?: 'seal' | 'proclaim'; disabled?: boolean; size?: 'normal' | 'large';
 }) {
   const label = variant === 'proclaim' ? 'Hold to seal and proclaim' : 'Hold to seal';
-  return <button type="button" className="cc-seal-button" disabled={disabled} aria-label={label}
+  return <button type="button" className={size === 'large' ? 'cc-seal-button cc-offset-shadow' : 'cc-seal-button'} data-size={size} disabled={disabled} aria-label={label}
     onPointerDown={event => {
       if (disabled || event.button !== 0) return;
       event.currentTarget.focus();
@@ -59,7 +61,7 @@ export function SealControl({ hold, progress, variant = 'seal', disabled = false
   </button>;
 }
 
-export function SealButton({ on_seal, variant, disabled }: SealButtonProps) {
+export function SealButton({ on_seal, variant, disabled, size }: SealButtonProps) {
   const [progress, setProgress] = useState(0);
   const callback = useRef(on_seal);
   callback.current = on_seal;
@@ -71,5 +73,5 @@ export function SealButton({ on_seal, variant, disabled }: SealButtonProps) {
     return () => { window.removeEventListener('blur', cancel); document.removeEventListener('visibilitychange', cancel); hold.cancel(); };
   }, [hold]);
   useEffect(() => { if (disabled) hold.cancel(); }, [disabled, hold]);
-  return <SealControl hold={hold} progress={progress} {...(variant ? { variant } : {})} {...(disabled === undefined ? {} : { disabled })} />;
+  return <SealControl hold={hold} progress={progress} {...(variant ? { variant } : {})} {...(size ? { size } : {})} {...(disabled === undefined ? {} : { disabled })} />;
 }

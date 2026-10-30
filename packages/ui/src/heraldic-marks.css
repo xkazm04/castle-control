@@ -1,0 +1,17 @@
+.cc-pennant { --cc-pennant-height: calc(var(--row-h) - var(--space-10)); display: inline-flex; align-items: center; gap: var(--space-6); height: 100%; }
+.cc-pennant > i { flex: none; width: var(--space-8); height: var(--cc-pennant-height, calc(var(--row-h) - var(--space-10))); background: var(--cc-ink, var(--ink)); clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 72%, 0 100%); }
+.cc-pennant[data-pennant="standing"] { gap: var(--space-10); height: auto; padding: var(--space-5) var(--space-12) var(--space-5) var(--space-10); border: var(--rule-medium) solid var(--rule); border-left: var(--space-10) solid var(--cc-ink, var(--ink)); background: var(--card); }
+.cc-pennant[data-pennant="standing"] > i { display: none; }
+.cc-pennant[data-pennant="standing"] b { font: 800 var(--text-chamber)/1 var(--font-display); font-variant-numeric: tabular-nums; }
+.cc-pennant[data-pennant="standing"] > span { font: 700 var(--text-label)/1.2 var(--font-ui); letter-spacing: var(--track-label); text-transform: uppercase; }
+.cc-ribbon { --cc-signal-ink: var(--ok); display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-4) var(--space-12); padding: var(--space-10) var(--space-28); background: var(--cc-ink, var(--ink)); color: var(--paper); clip-path: polygon(0 0, 100% 0, calc(100% - var(--space-14)) 50%, 100% 100%, 0 100%, var(--space-14) 50%); }
+.cc-ribbon-label { font: 800 var(--text-label)/1.2 var(--font-ui); letter-spacing: var(--track-heading); text-transform: uppercase; }
+.cc-ribbon-word { display: inline-flex; align-items: center; gap: var(--space-8); font: 800 var(--text-chamber)/1 var(--font-display); text-transform: uppercase; }
+.cc-ribbon-word::before { content: ""; width: var(--space-12); height: var(--space-12); border-radius: 50%; background: var(--cc-signal-ink, var(--ok)); box-shadow: 0 0 0 var(--space-2) var(--paper); }
+.cc-ribbon-note { margin-inline-start: auto; font: var(--text-small)/1.3 var(--font-ui); }
+.cc-shield { width: var(--space-40); height: calc(var(--space-40) + var(--space-6)); }
+.cc-shield path:first-child { fill: var(--tint-2); stroke: var(--ink); stroke-width: 1.5; }
+.cc-shield-charge { fill: none; stroke: var(--ink); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.cc-shield text { fill: var(--ink); font: 800 var(--space-20)/1 var(--font-display); text-anchor: middle; }
+.cc-card[data-card="selectable"][data-selected="true"] .cc-shield path:first-child { fill: var(--cc-ink, var(--ink)); stroke: var(--cc-ink, var(--ink)); }
+.cc-card[data-card="selectable"][data-selected="true"] .cc-shield text { fill: var(--press); }

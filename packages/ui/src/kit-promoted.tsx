@@ -1,6 +1,12 @@
 import { useState } from 'react';
-import { ConsensusChart, InkButton, NumberedPanel, ReplaySummary, ReviewRow, RoomStatusHero, WindowedRows, rowHeight } from './index.js';
-import type { ConsensusResult } from './index.js';
+import { ConsensusChart } from './consensus-chart.jsx';
+import type { ConsensusResult } from './consensus-chart.jsx';
+import { InkButton } from './primitives.jsx';
+import { NumberedPanel } from './panels.jsx';
+import { ReplaySummary } from './replay-summary.jsx';
+import { ReviewRow } from './review-row.jsx';
+import { RoomStatusHero } from './room-status-hero.jsx';
+import { WindowedRows, rowHeight } from './windowed-rows.jsx';
 
 const entries = Array.from({ length: 10000 }, (_, id) => ({ id: `simulated-entry-${id}`, label: `Generated entry ${id + 1}` }));
 const reviews = [
@@ -16,7 +22,7 @@ const results: readonly ConsensusResult[] = ['All messages', 'Text only'].map(la
   label, at, window_s: 900, directions, aria_label: `${label} · generated opinion history`, summary: '15 min · 17 messages shed · simulated',
 }));
 
-/** Exercises the public kit entry with generated data, without desktop or contract imports. */
+/** Deferred shared component examples with generated data and no desktop or contract imports. */
 export function PromotedGallery() {
   const [paused, setPaused] = useState(false);
   const [notice, setNotice] = useState('No action selected');
