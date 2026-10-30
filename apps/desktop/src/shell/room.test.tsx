@@ -6,7 +6,8 @@ import { afterEach, expect, test, vi } from 'vitest';
 import { ProposalCard, SealButton, sealHoldDurationMs } from '@castle-control/ui';
 import { ProposalQueue, SimulatedSteward } from '@castle-control/ui/steward';
 import SealSlot, { sealRoomProposal } from '../rooms/seal-slot/index.jsx';
-import { draftRoll } from '../rooms/lottery/session.js';
+import { draftRoll, lotterySession } from '../rooms/lottery/session.js';
+import LotteryRoom from '../rooms/lottery/index.jsx';
 import { coreGatehouseConnection, coreLotsConnection, createDesktopClient } from '../client.js';
 import { fixtureCharts, fixtureRules } from '../moderation-fixture.js';
 import { fixtureDraws } from '../lots-fixture.js';
@@ -31,11 +32,22 @@ test('all room headers hold the display title, plain subtitle, locator and origi
     expect(header).toContain('Back to the overview');
     expect(header).toContain('href="#/overview"');
     expect(markup).toContain('SIMULATED');
-    const column = chamber === 'lottery' ? 'lottery-details' : chamber === 'moderator' ? 'moderator-details'
-      : chamber === 'visuals' ? 'visuals-room-details' : 'studio-room-details';
-    expect(markup.indexOf(column)).toBeGreaterThan(0);
-    expect(markup.indexOf('aria-label="Seal slot"')).toBeGreaterThan(markup.indexOf(column));
-    expect(markup).toMatch(/<aside class="shell-seal-slot"[\s\S]*?<\/aside><\/div><\/div>/);
+    // The lottery C port replaces details-last, data-active and prose guardrails with stage/desk, pressed kit cards and Ribbon slots.
+    expect(markup.match(/aria-label="Seal slot"/g)).toHaveLength(1);
+    if (chamber === 'lottery') {
+      const order = ['class="cc-stage-wrap"', 'class="cc-desk"', 'aria-label="Seal slot"',
+        'aria-label="Entry lookup"', 'aria-label="Saved simulated proof bundle"', 'class="cc-numbered-discs"']
+        .map(marker => markup.indexOf(marker));
+      expect(order[0]).toBeGreaterThan(0);
+      expect(order.every((index, position) => position === 0 || index > (order[position - 1] ?? -1))).toBe(true);
+      expect(markup).toMatch(/<aside class="shell-seal-slot"[^>]*aria-label="Seal slot"/);
+    } else {
+      const column = chamber === 'moderator' ? 'moderator-details'
+        : chamber === 'visuals' ? 'visuals-room-details' : 'studio-room-details';
+      expect(markup.indexOf(column)).toBeGreaterThan(0);
+      expect(markup.indexOf('aria-label="Seal slot"')).toBeGreaterThan(markup.indexOf(column));
+      expect(markup).toMatch(/<aside class="shell-seal-slot"[\s\S]*?<\/aside><\/div><\/div>/);
+    }
   }
   const style = readFileSync(new URL('./room.css', import.meta.url), 'utf8');
   expect(style).toMatch(/\.shell-room-header h1\s*\{[^}]*var\(--font-display\)/);
@@ -52,8 +64,23 @@ test('room stages retain token insets and model states use the existing accent f
   expect(studio).toMatch(/button\[data-current="true"\][^}]*background:\s*var\(--ink\)/);
   const moderator = readFileSync(new URL('../rooms/moderator/room.css', import.meta.url), 'utf8');
   expect(moderator).toMatch(/i\[data-on="true"\][^}]*background:\s*var\(--azure\)/);
-  const lottery = readFileSync(new URL('../rooms/lottery/room.css', import.meta.url), 'utf8');
-  expect(lottery).toMatch(/button\[data-active="true"\][^}]*border-color:\s*var\(--gules\)/);
+  const queue = new ProposalQueue();
+  for (const draw of fixtureDraws) {
+    lotterySession(queue).port.select(draw.draw_id);
+    const markup = renderToStaticMarkup(<LotteryRoom snapshot={{ mode: 'fixture', phase: 'ready' }} replay={false} queue={queue} />);
+    const cards = markup.match(/<button[^>]*data-card="selectable"[\s\S]*?<\/button>/g) ?? [];
+    const selected = cards.filter(card => card.includes('aria-pressed="true"'));
+    expect(cards).toHaveLength(fixtureDraws.length);
+    expect(selected).toHaveLength(1);
+    expect(selected[0]).toContain(draw.name);
+    expect(selected[0]).toContain('data-selected="true"');
+    expect(selected[0]).toContain('--cc-ink:var(--gules)');
+    expect(cards.filter(card => card.includes('aria-pressed="false"'))).toHaveLength(fixtureDraws.length - 1);
+  }
+  const lottery = readFileSync(new URL('../../../../packages/ui/src/heraldic-card.css', import.meta.url), 'utf8');
+  const selectedStyle = lottery.match(/\[data-card="selectable"\]\[data-selected="true"\]\s*\{([^}]+)\}/)?.[1] ?? '';
+  expect(selectedStyle).toContain('border-color: var(--cc-ink, var(--ink))');
+  expect(selectedStyle).toContain('--cc-shadow-ink: var(--cc-ink, var(--ink))');
 });
 
 afterEach(() => { vi.useRealTimers(); vi.unstubAllGlobals(); vi.restoreAllMocks(); });
@@ -91,7 +118,11 @@ test('polished rooms render each stage title once and expose keyboard scroll reg
     const markup = (await new Response(stream).text()).replace(/<!--.*?-->/g, '');
     expect(markup.match(new RegExp(`>${title}(?: ·|<)`, 'g'))).toHaveLength(1);
     if (chamber === 'lottery') {
-      expect(markup).toContain('Giveaway guardrails · OK');
+      const ribbon = markup.match(/<div class="cc-ribbon"[^>]*>[\s\S]*?<\/div>/)?.[0] ?? '';
+      expect(ribbon).toContain('role="status"');
+      expect(ribbon).toContain('<span class="cc-ribbon-label">Giveaway guardrails</span>');
+      expect(ribbon).toContain('<b class="cc-ribbon-word">OK</b>');
+      expect(ribbon).toContain('<span class="cc-ribbon-note">local preview</span>');
       expect(markup).not.toContain('Past writs');
       expect(markup).not.toContain('aria-label="Giveaway guardrails · local preview"');
     } else {

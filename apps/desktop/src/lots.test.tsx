@@ -39,6 +39,10 @@ test('connected room renders source provenance and the announcement before any w
   expect(markup).toContain('Cast the lots');
   expect(markup).not.toContain('Winners ·');
   expect(markup).not.toContain('Live-trusted');
+  expect(markup.indexOf('class="cc-stage-wrap"')).toBeLessThan(markup.indexOf('class="cc-desk"'));
+  expect(markup).toContain('data-scale="viewport"');
+  expect(markup).toContain('data-size="large"');
+  expect(markup).not.toContain(copy.illustration);
 });
 
 test('fixture policy mirrors every giveaway-table row, uses cents, and omits absent age', () => {
@@ -73,7 +77,10 @@ test('writ amendments strike the old value in gules and re-ink the new revision 
   expect(lotterySession(queue).port.getSnapshot().sealed).toBe(false);
   expect(markup).not.toContain('Sealed by you');
   expect(html(queue)).toContain('Fairness, always shown');
-  expect(readFileSync(new URL('./rooms/lottery/room.css', import.meta.url), 'utf8')).toContain('s { color: var(--gules-text)');
+  const styles = readFileSync(new URL('./rooms/lottery/room.css', import.meta.url), 'utf8');
+  expect(styles).toContain('.cc-writ-fields s { color: var(--gules-text)');
+  expect(styles).toContain('@keyframes lottery-ink');
+  expect(styles).toContain('.cc-writ-fields ins { animation: none; }');
 });
 
 test('room inks the pending writ and restores templates after it is torn up', async () => {
@@ -84,7 +91,7 @@ test('room inks the pending writ and restores templates after it is torn up', as
   await steward.ask('draft a question draw', { surface: 'overview' });
   await steward.ask('make it 5 winners', { surface: 'overview' });
   const markup = html(queue);
-  expect(markup).toContain('lottery-writ');
+  expect(markup).toContain('cc-ticket cc-writ');
   expect(markup).toContain('<s>3</s><ins>5</ins>');
   expect(markup).toContain('revision 2');
   expect(markup).not.toContain('Writ templates');

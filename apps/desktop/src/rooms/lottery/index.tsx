@@ -1,29 +1,19 @@
-import { useState, useSyncExternalStore } from 'react';
+﻿import { useState, useSyncExternalStore } from 'react';
 import type { ReactNode } from 'react';
+import { CardCopy, CardSide, HeraldicCard, InkButton, SectionHeading, ShieldCharge, StatusChip } from '@castle-control/ui';
 import { isPending, proposalQueue } from '@castle-control/ui/steward';
-import type { Proposal, ProposalQueue } from '@castle-control/ui/steward';
+import type { ProposalQueue } from '@castle-control/ui/steward';
 import type { Snapshot } from '../../model.js';
 import { checkFixturePolicy, lookupFixture } from '../../lots-model.js';
 import { fixtureCooldown, fixtureDraws, fixtureWrit } from '../../lots-fixture.js';
 import { lotsCopy as copy } from '../../lots-copy.js';
 import { draftRoll, entryHash, lotterySession } from './session.js';
 import { Urn } from './urn.jsx';
+import { FairnessSteps, PolicyRibbon, PoolStage, Ticket, policyReason } from './print.jsx';
+import { LotteryWrit } from './writ.jsx';
 import './room.css';
 
-export function LotteryWrit({ proposal }: { proposal: Proposal }) {
-  return <article className="lottery-writ" data-state={proposal.state}>
-    <p className="room-stamp">{proposal.state === 'sealed' ? 'Sealed by you · simulated' : 'Proposal · not sealed'}</p>
-    <h2>{proposal.title}</h2><p>Writ · {proposal.state} · revision {proposal.revision}</p>
-    <dl className="lottery-writ-fields">{proposal.fields.map(field => <div key={field.key}>
-      <dt>{field.label}</dt><dd>{field.struck.map((value, index) => <s key={index}>{String(value)}</s>)}
-        <ins key={`${field.key}-${proposal.revision}`}>{String(field.value)}</ins></dd>
-    </div>)}</dl>
-    {proposal.seal_hash && <><div className="lottery-wax">Sealed<br />by you</div>
-      <p className="room-hash">SHA-256 · {proposal.seal_hash}</p></>}
-    <div className="lottery-fair"><b>Fairness, always shown</b><p>{copy.equal}</p>
-      <p>No paid entry or paid weight on a prize draw. Sealing freezes this entry list before any round is known.</p></div>
-  </article>;
-}
+export { LotteryWrit } from './writ.jsx';
 
 export default function LotteryRoom({ snapshot, replay, queue = proposalQueue, seal_slot }: {
   snapshot: Snapshot; replay: boolean; queue?: ProposalQueue; seal_slot?: ReactNode;
@@ -32,59 +22,85 @@ export default function LotteryRoom({ snapshot, replay, queue = proposalQueue, s
   const state = useSyncExternalStore(port.subscribe, port.getSnapshot, port.getSnapshot);
   const proposals = useSyncExternalStore(queue.subscribe, queue.getSnapshot, queue.getSnapshot);
   const [verification, setVerification] = useState('');
-  if (snapshot.mode !== 'fixture') return <p>No live draw controls are available.</p>;
+  if (snapshot.mode !== 'fixture') return <p>{copy.no_live_controls}</p>;
   const history = proposals.proposals.filter(item => item.chamber === 'lottery' && item.state !== 'torn');
   const pending = history.filter(isPending);
   const candidates = pending.length ? pending : history;
   const proposal = candidates.find(item => item.id === proposals.selected_proposal_id) ?? candidates.at(-1);
   const roll = proposal ? rolls.get(proposal.id) : undefined;
+  const entries = roll?.entries ?? state.entries;
   const policy = checkFixturePolicy(state.draw.policy);
+  const cap = state.draw.rules.cohort_caps.find(item => item.cohort === 'raider');
+  const winner_field = proposal?.fields.find(field => field.key === 'winners');
+  const winners = winner_field ? <>{winner_field.struck.map((value, index) => <s key={index}>{String(value)}</s>)}
+    <ins key={proposal?.revision}>{String(winner_field.value)}</ins></> : state.draw.rules.winner_count;
   const recompute = async () => {
     if (!roll) return;
-    try { setVerification(await entryHash(roll.bytes) === roll.hash ? 'Frozen entry list matches its SHA-256 seal.' : 'Seal mismatch.'); }
-    catch { setVerification('Hash recomputation failed. No verified result is available.'); }
+    try { setVerification(await entryHash(roll.bytes) === roll.hash ? copy.hash_match : copy.hash_mismatch); }
+    catch { setVerification(copy.hash_failed); }
   };
   return <div className="lottery-room" data-replay={replay}>
-    <div className="lottery-columns">
-      <div className="room-column lottery-workbench">
-        <section className="room-stage lottery-stage" aria-label="Draw workbench">
-        <p className="room-caption">The writ · drafted in ink, sealed by you</p>
-        <p className="room-now">Now: {pending.length ? 'proposal awaiting your seal'
-          : state.sealed ? 'entry list frozen' : 'no draft waiting'} · simulated</p>
-        {proposal && <LotteryWrit proposal={proposal} />}
-        {!pending.length && <div className="lottery-empty">
-          <h2>Writ templates</h2><p>Tell the Steward which draw. Its proposal will ink in here.</p>
-          {fixtureDraws.map(draw => <button key={draw.draw_id} type="button" data-active={draw.draw_id === state.draw.draw_id}
-            onClick={() => { port.select(draw.draw_id); draftRoll(queue); }}>
-            <b>{draw.name}</b><span>{draw.policy.content === 'prize' ? 'Prize' : 'No prize'} · proposal only</span></button>)}
+    <div className="cc-hall" aria-label={copy.title}>
+      <PoolStage count={entries.length} winners={winners} winner_detail={pending.length ? copy.proposed : copy.selected_draw}
+        held_out={fixtureCooldown.length} cap={cap ? `${cap.numerator}/${cap.denominator}` : copy.no_cap}
+        illustration={copy.illustration} foot={<>
+          <ul className="cc-legend" aria-label={copy.dots}>{(['new_account', 'subscriber', 'raider'] as const).map(cohort =>
+            <li key={cohort} data-cohort={cohort}>{copy.cohorts[cohort]} <b>{entries.filter(entry => entry.cohort === cohort).length}</b></li>)}</ul>
+          <p>{copy.pool} · {fixtureCooldown.length} {copy.cooldown} · {copy.equal_entry}</p>
+        </>}><Urn entries={entries} /></PoolStage>
+      <div className="cc-desk" aria-label={copy.workbench}>
+        <SectionHeading variant="banner" level={2} title={copy.writ} gloss={copy.writ_gloss} ink="gules"
+          count={<StatusChip variant="gules" stamp="label" {...(pending.length ? { tone: 'spot' as const } : {})}>
+            {pending.length ? copy.awaiting : state.sealed ? copy.frozen_stamp : copy.waiting}
+          </StatusChip>} />
+        {!pending.length && <div className="cc-group">
+          <p className="cc-kicker">{copy.templates}</p><p className="cc-aside">{copy.templates_hint}</p>
+          <ul className="cc-blazons" aria-label={copy.templates}>{fixtureDraws.map(draw => {
+            const check = checkFixturePolicy(draw.policy);
+            return <li key={draw.draw_id}><HeraldicCard variant="selectable" ink="gules"
+              selected={draw.draw_id === state.draw.draw_id} on_select={() => { port.select(draw.draw_id); draftRoll(queue); }}>
+              <ShieldCharge charge={draw.policy.paid_weight ? 'struck-coin' : draw.policy.content === 'prize' ? 'cup' : 'question'} />
+              <CardCopy title={draw.name} meta={`${draw.policy.content === 'prize' ? copy.prize : copy.no_prize} · ${copy.proposal_only}`}
+                reasons={check.reasons.map(policyReason)} />
+              <CardSide action={copy.draft_writ}><StatusChip variant="gules" stamp="verdict" tone={check.result}>
+                {copy.checks[check.result]}</StatusChip></CardSide>
+            </HeraldicCard></li>;
+          })}</ul>
         </div>}
-        {state.sealed && <button type="button" onClick={() => { port.select(state.draw.draw_id); draftRoll(queue); }}>Draft a new roll</button>}
-        </section>
-        <p className="lottery-guardrails" role="status">Giveaway guardrails · {copy.checks[policy.result]} · local preview</p>
-        {policy.reasons.map(reason => <p key={reason}>{copy.reasons[reason as keyof typeof copy.reasons] ?? reason}</p>)}
-        {state.draw.policy.twitch_disclaimer && <p>{copy.disclaimer_text}</p>}
-        {state.draw.policy.official_rules && <p>{copy.template_text}</p>}
-        <section className="lottery-proof">
-          {roll && <><button type="button" onClick={() => { void recompute(); }}>Recompute frozen entry seal</button>
-            <details><summary>Frozen entry list · UTF-8 JSON · handle, weight field order</summary><pre className="room-hash">{roll.bytes}</pre></details></>}
-          <p role="status">{verification}</p>
-          <h3>Saved simulated proof bundle</h3>
-          <div className="lottery-past-writ"><time dateTime={fixtureWrit.roll.sealed_at}>{fixtureWrit.roll.sealed_at.slice(0, 10)}</time>
-            <p>Recorded winners: {fixtureWrit.winners.join(', ')}</p></div>
-          <details><summary>{copy.writ}</summary><p>{copy.writ_notice}</p><code className="room-hash">{fixtureWrit.seal}</code>
-            <button type="button" onClick={() => { void port.recompute(); }}>{copy.recompute}</button><p role="status">{state.notice}</p></details>
-        </section>
-        <section className="lottery-fairness"><h3>{copy.fairness}</h3>
-          <ol className="lottery-steps">{copy.steps.map(([title, text]) => <li key={title}><b>{title}</b> · {text}</li>)}</ol>
-          <p>{copy.test_note}</p><p>{copy.fixture_only}</p></section>
-      </div>
-      <div className="room-column lottery-details">
-        <figure className="lottery-urn-figure" aria-label="Eligible entry pool">
-          <Urn entries={roll?.entries ?? state.entries} /></figure>
-        <p>{copy.pool} · {fixtureCooldown.length} {copy.cooldown}</p>
-        <label>{copy.lookup}<input type="search" aria-label={copy.lookup} value={state.lookup} onChange={event => port.lookup(event.currentTarget.value)} /></label>
-        <p>{lookupFixture(state)}</p>
-        {seal_slot}
+        {proposal && <LotteryWrit proposal={proposal} />}
+        {state.sealed && <InkButton size="room" onClick={() => { port.select(state.draw.draw_id); draftRoll(queue); }}>{copy.draft_new}</InkButton>}
+        <PolicyRibbon result={policy.result} />
+        {policy.reasons.map(reason => <p className="cc-aside" key={reason}>{policyReason(reason)}</p>)}
+        {state.draw.policy.twitch_disclaimer && <p className="cc-aside">{copy.disclaimer_text}</p>}
+        {state.draw.policy.official_rules && <p className="cc-aside">{copy.template_text}</p>}
+        <div className="lottery-seal-frame"><HeraldicCard variant="raised" tone="seal" ink="gules">{seal_slot}</HeraldicCard></div>
+        <HeraldicCard variant="raised" aria-label={copy.lookup_title}>
+          <div className="lottery-lookup">
+            <label htmlFor="lottery-lookup">{copy.lookup}</label>
+            <input id="lottery-lookup" type="search" aria-label={copy.lookup} placeholder={copy.lookup_placeholder}
+              autoComplete="off" value={state.lookup} onChange={event => port.lookup(event.currentTarget.value)} />
+            <p className="lottery-lookup-hint">{copy.lookup_hint}</p>
+            <p className="lottery-lookup-result" role="status">{lookupFixture(state)}</p>
+          </div>
+        </HeraldicCard>
+        <Ticket label={copy.saved_proof}>
+          <div className="cc-ticket-head"><p className="cc-kicker">{copy.saved_proof}</p>
+            <time dateTime={fixtureWrit.roll.sealed_at}>{fixtureWrit.roll.sealed_at.slice(0, 10)}</time></div>
+          <p className="cc-caption">{copy.writ_fields.winners}</p>
+          <ul className="cc-handles">{fixtureWrit.winners.map(winner => <li className="cc-handle" key={winner}>{winner}</li>)}</ul>
+          <details className="cc-disclosure"><summary>{copy.writ}</summary><div className="cc-disclosure-body">
+            <p className="cc-aside">{copy.writ_notice}</p><code className="cc-hash">{fixtureWrit.seal}</code>
+            <InkButton size="room" onClick={() => { void port.recompute(); }}>{copy.recompute}</InkButton>
+            <p className="cc-status" role="status">{state.notice}</p>
+          </div></details>
+          {roll && <div className="cc-group">
+            <InkButton size="room" onClick={() => { void recompute(); }}>{copy.frozen_recompute}</InkButton>
+            <details className="cc-disclosure"><summary>{copy.frozen_bytes}</summary>
+              <pre className="cc-hash">{roll.bytes}</pre></details>
+            <p className="cc-status" role="status">{verification}</p>
+          </div>}
+        </Ticket>
+        <FairnessSteps simulated />
       </div>
     </div>
   </div>;
