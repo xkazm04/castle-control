@@ -41,7 +41,7 @@ function RoomHeader({ chamber, replay, origin, fixture, on_open, on_back }: {
         {fixture && <span className="shell-room-simulated">SIMULATED</span>}
       </div>
     </div>
-    <nav className="cc-room-locator" aria-label="Chamber locator">{chambers.map(item =>
+    <nav className="cc-room-locator" aria-label="Chamber locator"><span>Chambers</span>{chambers.map(item =>
       <a key={item.id} href={`#/chamber/${item.id}`} aria-label={`${item.number}: ${item.name}`}
         aria-current={item.id === chamber ? 'location' : undefined}
         onClick={event => follow(event, () => on_open(item.id))}>{item.number}</a>)}</nav>

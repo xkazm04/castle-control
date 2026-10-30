@@ -1,14 +1,14 @@
 # Desktop and overlay browser lane
 
-Status at delivery: **not yet run**. `@playwright/test` is not resolvable in the
-shared install. No browser test result or screenshot is claimed. This lane is
-not part of `pnpm gate` or CI yet.
+The Director's first run on main `71fd803` reported 58 failures, including
+default serif leakage and the overlay's missing token styles. This polish
+delivery addresses those sources and scopes the OBS transparency policy below.
+It has not rerun Chrome or claimed new screenshots. This lane is not part of
+`pnpm gate` or CI yet.
 
-The Director must install **`@playwright/test@1.64.1`** as an exact root
-devDependency in the main checkout and update its lockfile there. The config
-also enforces that exact runtime version. Version 1.64.1 (2026-10-14) predates this dispatch
-by more than two weeks ([release](https://github.com/microsoft/playwright/releases/tag/v1.64.1)).
-This builder changed no dependencies or lockfile, and installed nothing.
+Main now declares **`@playwright/test@1.64.1`** as an exact root devDependency;
+the config enforces that exact runtime version. This polish delivery changes no
+dependencies or lockfile and installs nothing.
 Never install packages or browsers through a worktree's `node_modules` junction.
 
 With that dependency and system Google Chrome already available, run from the
@@ -47,6 +47,10 @@ tokens, visible surfaces' font/colour/effective background, default serif leakag
 through visible HTML elements, the default-white canvas, and document overflow.
 Intentional brand serif stacks are permitted; browser-default serif is rejected.
 Transparent child surfaces inherit their effective background from ancestors.
+Only `overlay-simulated-connected` allows a transparent canvas: OBS composites
+the page over the streamer's scene. Explicit browser-white backgrounds still
+fail, and the rendered simulated layer must use the token UI font and ink.
+Every desktop route retains the opaque canvas policy and all other checks.
 The current chamber navigation appears as the keep cross-section, chamber strip
 or room locator rather than the old vertical column; all are audited under that
 surface role, alongside the frame, rampart and room body. Each surface counts its
@@ -63,13 +67,12 @@ It answers `/push/beacons?visual_id=simulated-frame` with two generated,
 SIMULATED-labelled snapshots accepted by the actual contract parser, then asserts
 the rendered text and final intensity. SSE stays open until teardown, avoiding
 EventSource reconnect errors. No native listener is required. It applies the
-same style/overflow/error policy to the canvas and rendered layer.
+same style/overflow/error policy to the canvas and rendered layer, with only
+the explicitly scoped OBS transparency exception above.
 
-**Known source-level finding, not an executed browser result:** the current
-overlay HTML loads no tokens, has a transparent canvas by design, and its text
-layers set no font. The strict style audit will report those omissions. No test
-CSS is injected and no app styles are changed here. The Director should review
-that result against OBS transparency requirements before wiring the lane into CI.
+The renderer embeds the unchanged token sheet and its overlay styles in the
+single local module. Its canvas stays transparent; scene text inherits the UI
+font and token ink. No test CSS is injected into product content.
 
 Screenshots are taken in `afterEach`, including after failed assertions, at
 `e2e/screenshots/<project>/<route-and-state-slug>.png`. They use stable names,
@@ -80,19 +83,21 @@ by real runs. This is a style smoke lane, not a pixel-diff baseline suite.
 ## Checks without Playwright
 
 ```powershell
-node --test --test-isolation=none e2e/harness.test.ts
+node --test --test-isolation=none e2e/harness.test.ts e2e/styles.test.ts
 pnpm --config.verify-deps-before-run=false exec tsc -p e2e/tsconfig.offline.json
 pnpm --config.verify-deps-before-run=false exec eslint e2e --max-warnings 0
 ```
 
 The Node tests exercise live source discovery, synthetic route additions,
 negative/empty inventories, loopback URL policy, and the real contract-parser
-and static/SSE server. They require no browser or Playwright runtime.
+and static/SSE server. Policy tests also keep desktop canvas checks strict and
+reject missing/non-token overlay text styles under the transparency exception.
+They require no browser or Playwright runtime.
 `--test-isolation=none` runs them in-process because this headless Windows
 environment can deny the default test runner's child-process spawn.
 The offline TypeScript config uses a **compile-only local API subset shim**;
 it checks this lane's strict TS but cannot certify compatibility with Playwright.
-After installation, check against the real declarations instead:
+With the installed dependency, check against the real declarations instead:
 
 ```powershell
 pnpm --config.verify-deps-before-run=false exec tsc -p e2e/tsconfig.json
@@ -101,10 +106,10 @@ pnpm --config.verify-deps-before-run=false exec tsc -p e2e/tsconfig.json
 The directory is deliberately outside `pnpm-workspace.yaml`. CI can run headless
 once Chrome, Node 24+, pnpm and the exact dependency are provisioned, with port
 5174 available. It is **not yet proven reliable in CI**: system Chrome can drift,
-browser assertions have not run, and the overlay policy finding needs review.
+the amended browser assertions still need the Director's run and screenshots.
 Run it for real and retain evidence before adding it to the blocking gate.
 
-Delivery validation: the six in-process harness tests, offline strict TypeScript,
+Initial lane delivery validation (before main installed Playwright): the six in-process harness tests, offline strict TypeScript,
 e2e ESLint and repository boundaries/hygiene/file-cap/secrets checks passed.
 `pnpm --config.verify-deps-before-run=false gate` stopped in the unchanged contract
 exporter with `spawnSync cargo EPERM`; recursive typecheck/lint/test also stopped

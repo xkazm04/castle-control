@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 const inputs = [
   './src/overlay-entry.ts', './src/overlay.ts', './src/bindings.ts',
+  '../tokens/src/generated.css', './src/overlay.css',
   '../contract/src/generated/beacons-render-validation.ts',
   '../contract/src/generated/beacons-render-validators.mjs', '../contract/src/door.mjs',
   './vite-overlay.config.mjs',
@@ -12,6 +13,11 @@ const source_hash = createHash('sha256');
 for (const path of inputs) source_hash.update(readFileSync(new URL(path, import.meta.url), 'utf8').replaceAll('\r\n', '\n'));
 const banner = `/*! Castle Control overlay source SHA-256: ${source_hash.digest('hex')} */`;
 export default {
+  // Embed CSS because the native host intentionally serves only index + bundle.
+  // Reading build inputs adds no runtime package or cross-package source import.
+  define: { __CC_OVERLAY_STYLES__: JSON.stringify(
+    readFileSync(new URL('../tokens/src/generated.css', import.meta.url), 'utf8')
+      .replaceAll('\r\n', '\n') + '\n' + readFileSync(new URL('./src/overlay.css', import.meta.url), 'utf8').replaceAll('\r\n', '\n')) },
   plugins: [{ name: 'overlay-source-inventory', generateBundle(_options, bundle) {
     for (const output of Object.values(bundle)) {
       if (output.type === 'chunk') output.code = `${banner}\n${output.code}`;

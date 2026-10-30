@@ -1,0 +1,3 @@
+html, body, #scene { font-family: var(--font-ui); color: var(--ink); background: transparent; }
+html, body { margin: 0; }
+#scene { position: relative; min-height: 100vh; }

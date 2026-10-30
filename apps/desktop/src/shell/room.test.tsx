@@ -26,6 +26,8 @@ test('all room headers hold the display title, plain subtitle, locator and origi
     expect(header).toContain(`<h1>${title}</h1>`);
     expect(header).toContain(description);
     expect(header).toContain('Chamber locator');
+    expect(header).toContain('<span>Chambers</span>');
+    expect(header.match(/aria-label="[1-4]: /g)).toHaveLength(4);
     expect(header).toContain('Back to the overview');
     expect(header).toContain('href="#/overview"');
     expect(markup).toContain('SIMULATED');

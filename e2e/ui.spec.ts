@@ -62,10 +62,10 @@ test('overlay-simulated-connected', async ({ page }) => {
   await expect(page.locator('#scene')).toContainText('SIMULATED');
   await expect(page.locator('#scene')).toHaveAttribute('data-intensity', '0.75');
   expect(overlay.pushes() - before, 'Walked simulated SSE connections').toBeGreaterThan(0);
-  // The same strict policy intentionally exposes missing tokens/typography in
-  // the current bare static overlay. Do not patch or inject CSS to make it green.
+  // OBS composites this canvas over a scene. Only this test permits transparency;
+  // token font/ink, explicit white backgrounds and all other audits stay strict.
   await auditStyles(page, [
     { name: 'overlay canvas', selector: '#scene' },
     { name: 'simulated rendered layer', selector: '#scene > div' },
-  ]);
+  ], { canvas: 'obs-transparent' });
 });

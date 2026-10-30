@@ -1,5 +1,7 @@
 # Desktop frontend (WP 0.5a)
 
+`src/view.css` sets the desktop body/root base font (`--font-ui`), ink and paper.
+
 Production CSS depends on the tokens entry being declared side-effectful; marking
 only CSS files let tree-shaking remove its stylesheet import (also in the UI kit).
 Both build checks now derive token names from the generated tokens stylesheet,

@@ -3,6 +3,7 @@ import type { Page } from '@playwright/test';
 import { counted, tokens } from './inventory.ts';
 
 export type Surface = { name: string; selector: string };
+type StylePolicy = { canvas: 'opaque' | 'obs-transparent' };
 export const desktopSurfaces: Surface[] = [
   { name: 'frame', selector: '.cc-frame' },
   { name: 'rampart', selector: '.cc-rampart' },
@@ -11,9 +12,8 @@ export const desktopSurfaces: Surface[] = [
   { name: 'room body', selector: '.keep-home, .overview-workspace, .shell-room' },
 ];
 
-/** No injected product CSS: compare rendered styles to a fresh browser document. */
-export async function auditStyles(page: Page, surfaces: Surface[]): Promise<void> {
-  const report = await page.evaluate(({ names, surfaces }) => {
+/** Runs in the page; exported so the policy can also be tested without Chrome. */
+export function measureStyles({ names, surfaces, policy }: { names: string[]; surfaces: Surface[]; policy: StylePolicy }) {
     const errors: string[] = [];
     const iframe = document.createElement('iframe');
     iframe.hidden = true;
@@ -25,13 +25,22 @@ export async function auditStyles(page: Page, surfaces: Surface[]): Promise<void
     const defaultFont = defaults.fontFamily;
     const defaultColor = defaults.color;
     iframe.remove();
+    // A measurement-only probe resolves the actual token font and ink to the
+    // same computed syntax as rendered nodes. It never styles product content.
+    const probe = document.createElement('span');
+    probe.style.fontFamily = 'var(--font-ui)';
+    probe.style.color = 'var(--ink)';
+    document.body.append(probe);
+    const tokenFont = getComputedStyle(probe).fontFamily;
+    const tokenInk = getComputedStyle(probe).color;
+    probe.remove();
     const transparent = (color: string) => color === 'transparent' || color === 'rgba(0, 0, 0, 0)';
     const effectiveBackground = (element: Element): string => {
       for (let current: Element | null = element; current; current = current.parentElement) {
         const background = getComputedStyle(current).backgroundColor;
         if (!transparent(background)) return background;
       }
-      return 'rgb(255, 255, 255)'; // The browser canvas under transparent html/body.
+      return policy.canvas === 'obs-transparent' ? 'transparent' : 'rgb(255, 255, 255)';
     };
     const rootStyle = getComputedStyle(document.documentElement);
     const missingTokens = names.filter(name => !rootStyle.getPropertyValue(name).trim());
@@ -46,6 +55,10 @@ export async function auditStyles(page: Page, surfaces: Surface[]): Promise<void
         const style = getComputedStyle(node);
         if (!style.fontFamily || style.fontFamily === defaultFont) errors.push(`${surface.name}: browser-default font ${style.fontFamily}`);
         if (!style.color || style.color === defaultColor) errors.push(`${surface.name}: browser-default colour ${style.color}`);
+        if (policy.canvas === 'obs-transparent') {
+          if (style.fontFamily !== tokenFont) errors.push(`${surface.name}: expected token UI font ${tokenFont}, got ${style.fontFamily}`);
+          if (style.color !== tokenInk) errors.push(`${surface.name}: expected token ink ${tokenInk}, got ${style.color}`);
+        }
         const background = effectiveBackground(node);
         if (background === 'rgb(255, 255, 255)') errors.push(`${surface.name}: default white background`);
       }
@@ -70,7 +83,11 @@ export async function auditStyles(page: Page, surfaces: Surface[]): Promise<void
     if (width > innerWidth) errors.push(`Horizontal overflow: ${width} > ${innerWidth}`);
     return { errors, tokenCount: names.length, walkedSurfaces, visibleCount: elements.length,
       canvasCount: canvasPoints.length, width, viewport: innerWidth };
-  }, { names: tokens, surfaces });
+}
+
+/** No injected product CSS: compare rendered styles to a fresh browser document. */
+export async function auditStyles(page: Page, surfaces: Surface[], policy: StylePolicy = { canvas: 'opaque' }): Promise<void> {
+  const report = await page.evaluate(measureStyles, { names: tokens, surfaces, policy });
   counted('resolved-token checks', report.tokenCount);
   counted('surface groups', report.walkedSurfaces.length);
   counted('visible elements', report.visibleCount);

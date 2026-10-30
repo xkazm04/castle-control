@@ -2,10 +2,12 @@
 import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { expect, it } from 'vitest';
+import ts from 'typescript';
 
 it('ships a local bundle rebuilt from this renderer and the lazy contract door', () => {
   const inputs = [
     './overlay-entry.ts', './overlay.ts', './bindings.ts',
+    '../../tokens/src/generated.css', './overlay.css',
     '../../contract/src/generated/beacons-render-validation.ts',
     '../../contract/src/generated/beacons-render-validators.mjs', '../../contract/src/door.mjs',
     '../vite-overlay.config.mjs',
@@ -15,9 +17,23 @@ it('ships a local bundle rebuilt from this renderer and the lazy contract door',
   const bundle = readFileSync(new URL('../../../apps/overlay/bundle.js', import.meta.url), 'utf8');
   expect(bundle).toContain(`Castle Control overlay source SHA-256: ${hash.digest('hex')}`);
   expect(bundle).toContain('beacons.render.snapshot');
+  const tokens = readFileSync(new URL('../../tokens/src/generated.css', import.meta.url), 'utf8');
+  const styles = readFileSync(new URL('./overlay.css', import.meta.url), 'utf8');
+  // Inspect the static CSS literal without executing any bundle code.
+  const embedded: string[] = [];
+  const visit = (node: ts.Node): void => {
+    if (ts.isBinaryExpression(node) && node.operatorToken.kind === ts.SyntaxKind.EqualsToken
+      && ts.isPropertyAccessExpression(node.left) && node.left.name.text === 'textContent'
+      && ts.isStringLiteralLike(node.right)) embedded.push(node.right.text);
+    ts.forEachChild(node, visit);
+  };
+  visit(ts.createSourceFile('bundle.js', bundle, ts.ScriptTarget.Latest, true));
+  expect(embedded).toContain((tokens + '\n' + styles).replaceAll('\r\n', '\n'));
   expect(bundle).not.toMatch(/\beval\s*\(|new\s+Function\s*\(|\bimport\s*\(/);
   const shell = readFileSync(new URL('../../../apps/overlay/index.html', import.meta.url), 'utf8');
   expect(shell).toContain('src="/bundle.js"');
+  expect(shell.match(/\x3cscript\b/g)).toHaveLength(1);
+  expect(shell).toMatch(/\x3cscript type="module" src="\/bundle.js"><\/script>/);
   expect(shell).not.toContain('http:');
   expect(shell).not.toContain('https:');
 });
