@@ -75,17 +75,23 @@ Existing moderation, gate, governor, proposal, drill and core-read tests remain.
 No Vite, Chrome, build, e2e, install, network or live operation is run here;
 Director visual comparison and build/budget/full-gate checks remain required.
 
-Validation: desktop typecheck (113 files) and lint pass. UI typecheck (70 files),
-lint and all 305 tests pass; no kit file changed. Focused moderator/core suites
-pass 41 tests. The full desktop test command reports 310 passed / 4 failed.
-All four failures are in the forbidden `shell/room.test.tsx` surface: lines 53
-(old `i[data-on]` gauge CSS), 85 (caption-scale portcullis), 95 (visible scroll
-hint / old message-card and Now copy), and 125 (`overflow-y: scroll`). These
-expectations describe the superseded A/1 presentation. They need a Director
-follow-up to assert C's SVG gauge, PlateBand title, hidden hint/fixed replay
-header and auto-scrolling columns. No obsolete CSS or hidden compatibility
-copy was introduced to satisfy them. This delivery is partial until those
-out-of-scope test updates and the Director's visual/build checks are complete.
+Review bounce resolved: the Director authorized test-only changes to the four
+Gatehouse assertion groups in `shell/room.test.tsx`. They now check the SVG
+rect gauge and applied moat state, the standard PlateBand above the original
+held message, the hidden hint and fixed replay plate/banners, separate live
+and rule-state readouts, and independent scroll regions with stable gutters.
+The replay region contains the windowed feed below its fixed plate; only that
+feed scrolls. Lottery C assertions from `c261d3d` remain unchanged, and no shell
+product code or kit file changed. The shell test file remains under 400 lines.
+
+The four obsolete assertions failed first, then all 18 shell tests passed.
+Final bounce validation on the combined Lot/Gatehouse C tree: desktop
+typecheck (115 files), desktop lint and the full desktop suite (317 tests in
+35 files) pass. UI typecheck (70 files) and lint pass. Shared lint inventories
+walked 698 code files and 879 files for secrets. The earlier 41 focused tests
+and 305 UI tests also passed; UI tests were not rerun for this test-only bounce.
+No install, git write, build or e2e ran. Director visual comparison,
+build/budgets and full merge-gate checks remain reserved for review.
 
 ## Historical core Gatehouse connection (WP 1.7 desktop half)
 

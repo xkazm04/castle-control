@@ -8,8 +8,9 @@ import { ProposalQueue, SimulatedSteward } from '@castle-control/ui/steward';
 import SealSlot, { sealRoomProposal } from '../rooms/seal-slot/index.jsx';
 import { draftRoll, lotterySession } from '../rooms/lottery/session.js';
 import LotteryRoom from '../rooms/lottery/index.jsx';
+import ModeratorRoom from '../rooms/moderator/index.jsx';
 import { coreGatehouseConnection, coreLotsConnection, createDesktopClient } from '../client.js';
-import { fixtureCharts, fixtureRules } from '../moderation-fixture.js';
+import { fixtureCharts, fixtureHeld, fixtureRules } from '../moderation-fixture.js';
 import { fixtureDraws } from '../lots-fixture.js';
 import { backHash, dispatchShortcut, initialNavigation, navigateHash } from '../navigation.js';
 import Room from './room.jsx';
@@ -63,7 +64,7 @@ test('room stages retain token insets and model states use the existing accent f
   expect(studio).toMatch(/\.studio-room-workbench\s*\{[^}]*padding:\s*var\(--space-16\)/);
   expect(studio).toMatch(/button\[data-current="true"\][^}]*background:\s*var\(--ink\)/);
   const moderator = readFileSync(new URL('../rooms/moderator/room.css', import.meta.url), 'utf8');
-  expect(moderator).toMatch(/i\[data-on="true"\][^}]*background:\s*var\(--azure\)/);
+  expect(moderator).toMatch(/\.moderator-moat-gauge rect\[data-on="true"\]\s*\{[^}]*fill:\s*var\(--azure\)/);
   const queue = new ProposalQueue();
   for (const draw of fixtureDraws) {
     lotterySession(queue).port.select(draw.draw_id);
@@ -102,13 +103,13 @@ test.each([
   expect(slot).not.toContain('tabindex="-1"');
 });
 
-test('the portcullis heading uses the room caption scale so the held message dominates', () => {
-  const controls = readFileSync(new URL('../rooms/moderator/controls.tsx', import.meta.url), 'utf8');
-  expect(controls).toContain('<h2 className="room-caption">');
-  const css = readFileSync(new URL('../rooms/moderator/room.css', import.meta.url), 'utf8');
-  const heading = css.match(/\.moderator-portcullis h2\s*\{[^}]*\}/)?.[0] ?? '';
-  expect(heading).not.toContain('--text-chamber-number');
-  expect(heading).toContain('var(--text-label)');
+test('the portcullis uses a standard C PlateBand above the original held message', () => {
+  const markup = renderToStaticMarkup(<ModeratorRoom snapshot={fixture} replay={false} queue={new ProposalQueue()} />);
+  const plate = markup.match(/<section[^>]*class="cc-plate[^"]*moderator-held-plate"[\s\S]*?<\/section>/)?.[0] ?? '';
+  expect(plate).toContain('<header class="cc-plate-band" data-band="standard">');
+  expect(plate).toContain('<h2 class="cc-plate-title">At the portcullis</h2>');
+  expect(plate).toContain('class="moderator-plate-quote"');
+  expect(plate).toContain(fixtureHeld[0]?.message_text);
 });
 test('polished rooms render each stage title once and expose keyboard scroll regions', async () => {
   for (const [chamber, title] of [['lottery', 'The urn'], ['moderator', 'At the portcullis'], ['studio', 'The war table']] as const) {
@@ -126,16 +127,31 @@ test('polished rooms render each stage title once and expose keyboard scroll reg
       expect(markup).not.toContain('Past writs');
       expect(markup).not.toContain('aria-label="Giveaway guardrails · local preview"');
     } else {
-      expect(markup).toContain('class="room-scroll-hint"');
+      if (chamber === 'moderator') expect(markup).toContain('id="moderator-scroll-hint" class="moderator-visually-hidden"');
+      else expect(markup).toContain('class="room-scroll-hint"');
       expect(markup).toContain('tabindex="0"');
       expect(markup).toContain(chamber === 'moderator' ? 'aria-describedby="moderator-scroll-hint"' : 'aria-describedby="studio-scroll-hint"');
     }
     if (chamber === 'moderator') {
-      const details = markup.slice(markup.indexOf('moderator-details'));
-      expect(details).toContain('moderator-messages moderator-card');
-      expect(details).toContain('Garrison orders');
-      expect(details).toContain('Now: 420 lines');
-      expect(details).toContain('Now: 0 Armed · 3 Watching');
+      const replay = markup.slice(markup.indexOf('moderator-details'), markup.indexOf('moderator-tools'));
+      expect(markup.match(/<div class="room-column[^"]*" role="region"[^>]*tabindex="0"/g)).toHaveLength(3);
+      expect(replay).toContain('data-fill="true"');
+      const plate = replay.match(/<section[^>]*moderator-replay-plate[\s\S]*?<\/section>/)?.[0] ?? '';
+      expect(plate).toContain('<h2 class="cc-plate-title">The live room</h2>');
+      expect(plate).toContain('<span class="cc-plate-count">420<small class="moderator-count-label"><span>lines</span><span>simulated</span>');
+      expect(plate).toContain('class="moderator-banners" role="group" aria-label="Verdict"');
+      for (const [verdict, count] of [['all', 420], ['pass', 332], ['hold', 33], ['bar', 55]]) {
+        expect(plate).toMatch(new RegExp(`data-verdict-pick="${verdict}"[^>]*>.*?</span><b>${count}</b>`));
+      }
+      expect(replay).toContain('aria-rowcount="420"');
+      expect(replay.indexOf('</section>')).toBeLessThan(replay.indexOf('class="cc-feed moderator-feed"'));
+      const tools = markup.slice(markup.indexOf('moderator-tools'));
+      expect(tools).toContain('Garrison orders');
+      expect(tools).toContain('<div class="moderator-figures"><span><b>0</b>Armed</span><span><b>3</b>Watching</span>');
+      const moat = tools.match(/<section[^>]*moderator-moat[\s\S]*?<\/section>/)?.[0] ?? '';
+      expect(moat).toContain('class="cc-hero-figure" data-text="4">4<small>s</small>');
+      expect([...moat.matchAll(/<rect[^>]*data-on="([^"]+)"/g)].map(rect => rect[1])).toEqual(['true', 'true', 'false']);
+      expect(moat).toContain('Bridge down'); expect(moat).toContain('Shield Mode off');
       expect(markup).toContain('Simulated original message: simulated-blocked, quoted for human review.');
     }
   }
@@ -145,7 +161,15 @@ test('review and map scroll affordances remain visible without hiding content at
   for (const path of ['../rooms/moderator/room.css', '../rooms/studio/room.css']) {
     const css = readFileSync(new URL(path, import.meta.url), 'utf8');
     expect(css).toContain('scrollbar-gutter: stable');
-    expect(css).toContain('overflow-y: scroll');
+    if (path.includes('/moderator/')) {
+      const columns = css.match(/\.moderator-columns > \.room-column\s*\{[^}]*\}/)?.[0] ?? '';
+      expect(columns).toContain('overflow-y: auto'); expect(columns).toContain('scrollbar-gutter: stable');
+      expect(css).toMatch(/\.moderator-columns > \[data-fill\]\s*\{[^}]*display:\s*flex[^}]*overflow:\s*hidden/);
+      expect(css).toMatch(/\.moderator-columns \.moderator-replay-plate\s*\{[^}]*flex:\s*none/);
+      expect(css).toMatch(/\.moderator-feed > \.cc-window\s*\{[^}]*flex:\s*1[^}]*min-height:\s*0[^}]*scrollbar-gutter:\s*stable/);
+      const window = readFileSync(new URL('../../../../packages/ui/src/windowed-rows.css', import.meta.url), 'utf8');
+      expect(window).toMatch(/\.cc-window\s*\{[^}]*overflow:\s*auto/);
+    } else expect(css).toContain('overflow-y: scroll');
   }
   const css = readFileSync(new URL('./room.css', import.meta.url), 'utf8');
   expect(css).toMatch(/\.room-scroll-hint\s*\{[^}]*font:[^}]*var\(--text-label\)/);
