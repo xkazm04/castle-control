@@ -1,4 +1,4 @@
-import { Component, useState, useSyncExternalStore } from 'react';
+import { useState, useSyncExternalStore } from 'react';
 import { DraftFrame } from '../draft-frame.jsx';
 import { SealButton } from '../seal-button.jsx';
 import { StatusChip } from '../chips.jsx';
@@ -74,12 +74,10 @@ function ArtStyleGallery({ artifact }: { artifact: ArtifactId }) {
 }
 
 /** Remove an unavailable image entirely so the browser never retains a broken icon. */
-export class ArtPreviewImage extends Component<{ src: string; alt: string }, { unavailable: boolean }> {
-  override state = { unavailable: false };
-  override render() {
-    return this.state.unavailable ? <p role="status">not available</p>
-      : <img src={this.props.src} alt={this.props.alt} loading="lazy" onError={() => this.setState({ unavailable: true })} />;
-  }
+export function ArtPreviewImage({ src, alt }: { src: string; alt: string }) {
+  const [failed, setFailed] = useState(false);
+  return failed ? <p role="status">not available</p>
+    : <img src={src} alt={alt} loading="lazy" onError={() => setFailed(true)} />;
 }
 
 export function DesignControls({ artifact, on_restyle, on_custom }: {

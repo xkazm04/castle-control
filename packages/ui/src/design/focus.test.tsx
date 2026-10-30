@@ -53,16 +53,31 @@ test.each(['draw', 'urn', 'beacon', 'map', 'overlay'] as const)('%s art gallery 
   session.dispose();
 });
 
+test('art previews support the desktop harness plain-function invocation under the server dispatcher', () => {
+  function Probe() {
+    return ArtPreviewImage({ src: '/art/preset-heraldic-urn.webp', alt: 'Heraldic sample art: draw urn' });
+  }
+  const html = renderToStaticMarkup(<Probe />);
+  expect(html).toContain('<img');
+  expect(html).toContain('src="/art/preset-heraldic-urn.webp"');
+  expect(html).toContain('alt="Heraldic sample art: draw urn"');
+  expect(html).toContain('loading="lazy"');
+});
+
 test('an unavailable preview removes the image and shows a plain fallback', () => {
-  const image = new ArtPreviewImage({ src: '/art/preset-heraldic-urn.webp', alt: 'Heraldic sample art: draw urn' });
-  const setState = vi.spyOn(image, 'setState');
-  setState.mockImplementation(() => undefined);
-  const initial = image.render();
-  expect(initial.type).toBe('img');
-  initial.props.onError();
-  expect(setState).toHaveBeenCalledWith({ unavailable: true });
-  image.state = { unavailable: true };
-  const fallback = renderToStaticMarkup(image.render());
+  const onError = vi.fn();
+  function Probe() {
+    const image = ArtPreviewImage({ src: '/art/preset-heraldic-urn.webp', alt: 'Heraldic sample art: draw urn' });
+    if (image.type === 'img') {
+      onError();
+      // React re-renders this probe after the image's actual error handler sets state.
+      image.props.onError();
+    }
+    return image;
+  }
+  const fallback = renderToStaticMarkup(<Probe />);
+  expect(onError).toHaveBeenCalledOnce();
+  expect(fallback).toContain('role="status"');
   expect(fallback).toContain('not available');
   expect(fallback).not.toContain('<img');
 });
