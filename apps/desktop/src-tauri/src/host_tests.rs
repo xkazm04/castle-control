@@ -154,12 +154,21 @@ async fn assert_native_data_directory_and_shadow_diagnostics(logs: &Arc<Mutex<Ve
                 obs_password_label: "simulated-unused".into(),
             }),
             login: false,
-            steward_live: false,
+            steward_live: true,
         },
         &root,
     )
     .await
     .unwrap();
+    let request = serde_json::from_value(json!({
+        "method": "steward.ask",
+        "params": {"chamber": "lots", "prompt": "simulated"}
+    }))
+    .unwrap();
+    let error = host.state.registry.dispatch(&request).await.unwrap_err();
+    assert!(
+        error.message == "missing engine settings: engine.claude_exe_path, engine.model_claude"
+    );
     let pipeline = host.state.registry.shadow_pipeline().unwrap().unwrap();
     let (sender, receiver) = tokio::sync::broadcast::channel(4);
     let task = pipeline
@@ -231,6 +240,13 @@ async fn assert_steward_flag_round_trips_as_metadata_without_native_services_or_
         .unwrap();
     assert!(host._services.is_none());
     assert!(host.login.is_none());
+    let request = serde_json::from_value(json!({
+        "method": "steward.ask",
+        "params": {"chamber": "lots", "prompt": "simulated"}
+    }))
+    .unwrap();
+    let error = host.state.registry.dispatch(&request).await.unwrap_err();
+    assert!(error.message == "no Steward engine is configured");
     let launch = host.launch().unwrap();
     let payload = serde_json::to_value(&launch).unwrap();
     assert_eq!(

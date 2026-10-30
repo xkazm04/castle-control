@@ -134,7 +134,7 @@ impl NativeServices {
     }
     /// Wires the real modules and bridge pump into the same event hub used by /events.
     pub fn app(self: &Arc<Self>, capacity: usize) -> Result<Arc<AppState>, ErrorEnvelope> {
-        self.attach(capacity, None)
+        self.attach(capacity, None, false)
     }
     /// Production host supplies its persistent data directory explicitly. The
     /// legacy app() entry point retains recorded-fixture/spike behavior.
@@ -143,12 +143,23 @@ impl NativeServices {
         capacity: usize,
         root: &std::path::Path,
     ) -> Result<Arc<AppState>, ErrorEnvelope> {
-        self.attach(capacity, Some(root))
+        self.app_with_steward(capacity, root, false)
+    }
+    /// Native host opt-in. Engine configuration is resolved only on steward.ask;
+    /// missing settings never prevent startup. No credential broker is installed.
+    pub fn app_with_steward(
+        self: &Arc<Self>,
+        capacity: usize,
+        root: &std::path::Path,
+        steward_live: bool,
+    ) -> Result<Arc<AppState>, ErrorEnvelope> {
+        self.attach(capacity, Some(root), steward_live)
     }
     fn attach(
         self: &Arc<Self>,
         capacity: usize,
         root: Option<&std::path::Path>,
+        steward_live: bool,
     ) -> Result<Arc<AppState>, ErrorEnvelope> {
         let mut workers = self.workers.lock().map_err(|_| internal())?;
         if !workers.is_empty() {
@@ -159,7 +170,13 @@ impl NativeServices {
         }
         let events = Arc::new(EventHub::new(capacity)?);
         let registry = match root {
-            Some(root) => Registry::with_native_root(self.clone(), root, events.clone()),
+            Some(root) => {
+                if steward_live {
+                    Registry::with_native_root_and_steward(self.clone(), root, events.clone(), true)
+                } else {
+                    Registry::with_native_root(self.clone(), root, events.clone())
+                }
+            }
             None => Registry::with_native(self.clone()),
         };
         let pipeline = registry.shadow_pipeline()?;

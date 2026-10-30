@@ -48,7 +48,9 @@ impl CoreHost {
             None
         };
         let state = match &services {
-            Some(services) => services.app_with_data_dir(EVENT_CAPACITY, data_dir),
+            Some(services) => {
+                services.app_with_steward(EVENT_CAPACITY, data_dir, options.steward_live)
+            }
             None => AppState::new(Registry::with_status(), EVENT_CAPACITY),
         }
         .map_err(|_| "desktop core setup failed")?;

@@ -3,7 +3,8 @@
 pub struct Options {
     pub native: Option<NativeOptions>,
     pub login: bool,
-    /// Reserved public opt-in metadata. This never creates a Steward connection.
+    /// Opt into the native Steward using persisted engine settings, without
+    /// keychain access. Offline launches retain the unconfigured Steward.
     pub steward_live: bool,
 }
 

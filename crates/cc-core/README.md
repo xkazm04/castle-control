@@ -1,5 +1,30 @@
 # Local core service
 
+## Native Steward and engine settings (WP 1.4)
+
+The desktop's `--steward-live` opts its native composition into the Steward.
+Startup succeeds with incomplete engine settings; `steward.ask` returns the
+existing `unavailable` envelope naming only the missing `engine.*` keys.
+`Engine::from_settings` requires only the selected CLI provider's executable
+and model, plus the posture helper for Codex. No executable or model is inferred.
+Without the flag, and in offline/fixture composition, the response remains
+`no Steward engine is configured`.
+
+Each ask constructs its engine lazily from the persisted settings in the same
+native Store Arc used by SettingsModule and revocation/purge. A successful
+`settings.set` therefore applies to the next ask without restart; failed writes
+leave the persisted configuration untouched. The Store lock serializes complete
+Steward operations on a blocking worker, including engine auditing, writ storage
+and purge; the per-ask CLI admission cap remains one across engine rebuilds.
+Executable/helper paths never come from an ask or an environment variable, and
+errors never include configured values. Spawn control is a sibling directory
+of the native Store, outside its data inventory.
+
+For now the native vault is `NoKeychain`: subscription CLI lanes need no secret;
+a lane requiring a secret fails with `Failure::Auth` and is unavailable to the
+Steward. Wiring a native engine keychain is a separate decision for the owner.
+No keychain dependency or credential-label convention is introduced here.
+
 Construct `AppState::new(Registry::with_status(), capacity)` in the native shell,
 hand its per-launch `session_token()` only to that shell, then call `bind` with
 `127.0.0.1:<port>` (zero chooses a free port). Every other address is refused.

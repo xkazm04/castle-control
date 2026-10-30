@@ -21,11 +21,11 @@ pub trait Module: Send + Sync {
     }
 }
 
-#[derive(Default)]
+#[derive(Clone, Default)]
 pub struct Registry {
     handlers: BTreeMap<&'static str, Arc<dyn Module>>,
     offline: Option<Arc<OfflineModules>>,
-    pub(crate) configuration: tokio::sync::Mutex<()>,
+    pub(crate) configuration: Arc<tokio::sync::Mutex<()>>,
 }
 
 impl Registry {
@@ -103,9 +103,24 @@ impl Registry {
         root: &std::path::Path,
         events: Arc<crate::EventHub>,
     ) -> Self {
+        Self::with_native_root_and_steward(services, root, events, false)
+    }
+    pub(crate) fn with_native_root_and_steward(
+        services: Arc<NativeServices>,
+        root: &std::path::Path,
+        events: Arc<crate::EventHub>,
+        steward_live: bool,
+    ) -> Self {
+        let steward = steward_live.then(|| {
+            crate::steward::StewardModule::native(
+                services.store.clone(),
+                root.join("steward-process"),
+            )
+        });
         Self::native_offline(
             Some(services),
             OfflineModules::native_at(root.to_owned(), events),
+            steward,
         )
     }
 
@@ -119,7 +134,7 @@ impl Registry {
             .map_or(Ok(None), |modules| modules.shadow_pipeline())
     }
     fn native(services: Option<Arc<NativeServices>>) -> Self {
-        Self::native_offline(services, OfflineModules::default())
+        Self::native_offline(services, OfflineModules::default(), None)
     }
 
     pub(crate) fn beacons(&self) -> Result<Arc<crate::beacons::BeaconsModule>, ErrorEnvelope> {
@@ -138,7 +153,7 @@ impl Registry {
     ) -> Result<Self, ErrorEnvelope> {
         let offline = OfflineModules::at(root.as_ref().to_owned(), events);
         offline.lots()?;
-        Ok(Self::native_offline(None, offline))
+        Ok(Self::native_offline(None, offline, None))
     }
 
     /// Rust-only, verdict-checked simulated intake; no RPC accepts entries.
@@ -158,7 +173,11 @@ impl Registry {
         Ok(())
     }
 
-    fn native_offline(services: Option<Arc<NativeServices>>, offline: OfflineModules) -> Self {
+    fn native_offline(
+        services: Option<Arc<NativeServices>>,
+        offline: OfflineModules,
+        steward: Option<crate::steward::StewardModule>,
+    ) -> Self {
         let offline = Arc::new(
             offline
                 .with_overlay_origin(services.as_ref().map(|service| service.overlay_url()))
@@ -185,7 +204,7 @@ impl Registry {
                 .expect("offline methods are declared and unique");
         }
         registry
-            .register(Arc::new(crate::steward::StewardModule::default()))
+            .register(Arc::new(steward.unwrap_or_default()))
             .expect("Steward methods are declared and unique");
         registry.offline = Some(offline);
         registry

@@ -1,4 +1,5 @@
 //! Viewer-free proposals. Generation has no configuration mutation authority.
+mod native;
 mod proposal;
 mod storage;
 
@@ -16,9 +17,10 @@ use tokio::sync::Mutex;
 
 /// Rust-only composition seam. Store ownership stays with the host's inventory;
 /// the host must include this Store in its revocation/full-purge lifecycle.
+#[derive(Clone)]
 pub struct StewardConfig {
-    engine: Arc<Engine>,
-    store: Arc<Mutex<Store>>,
+    engine: native::EngineSource,
+    store: native::StoreOwner,
     vault: Arc<dyn Keychain>,
     key_label: Option<String>,
     simulated: bool,
@@ -32,8 +34,8 @@ impl StewardConfig {
         simulated: bool,
     ) -> Self {
         Self {
-            engine: Arc::new(engine),
-            store,
+            engine: native::EngineSource::Fixed(Arc::new(engine)),
+            store: native::StoreOwner::Isolated(store),
             vault,
             key_label: None,
             simulated,
@@ -68,16 +70,44 @@ impl StewardModule {
         registry: &Registry,
     ) -> Result<Value, ErrorEnvelope> {
         let config = self.config.as_ref().ok_or_else(unavailable)?;
-        // Serialize lifecycle decisions and read from Store every time: no cache
-        // can resurrect a writ following a purge, or seal it twice concurrently.
-        let mut store = config.store.clone().lock_owned().await;
+        let config = config.clone();
+        let request = request.clone();
+        // Registry clones share handlers, events and the configuration lock.
+        // Keep the entire lifecycle under the Store's existing lock, including
+        // native purge/revoke. Never hold a synchronous guard on an RPC worker.
+        let registry = registry.clone();
+        tokio::task::spawn_blocking(move || {
+            let runtime = tokio::runtime::Handle::current();
+            match &config.store {
+                native::StoreOwner::Isolated(store) => {
+                    let mut store = store.blocking_lock();
+                    runtime.block_on(config.handle_store(&request, &registry, &mut store))
+                }
+                native::StoreOwner::Native(store) => {
+                    let mut store = store.lock().map_err(|_| internal())?;
+                    runtime.block_on(config.handle_store(&request, &registry, &mut store))
+                }
+            }
+        })
+        .await
+        .map_err(|_| internal())?
+    }
+}
+
+impl StewardConfig {
+    async fn handle_store(
+        &self,
+        request: &RpcRequest,
+        registry: &Registry,
+        store: &mut Store,
+    ) -> Result<Value, ErrorEnvelope> {
         match request {
             RpcRequest::Ask(params) => {
-                let writ = config.ask(params, store, registry).await?;
+                let writ = self.ask(params, store, registry).await?;
                 encode(AskResult { writ })
             }
             RpcRequest::WritSeal(params) => {
-                let mut writ = storage::find(&store, &params.writ_id)?;
+                let mut writ = storage::find(store, &params.writ_id)?;
                 require_proposed(&writ)?;
                 // Direct mutations take this same lock. Snapshot check, policy
                 // check and authoritative apply form one configuration operation.
@@ -95,16 +125,16 @@ impl StewardModule {
                     .await?;
                 writ.status = WritStatus::Sealed;
                 storage::advance(&mut writ)?;
-                storage::append(&mut store, &writ, config.simulated)?;
+                storage::append(store, &writ, self.simulated)?;
                 registry.writ_changed()?;
                 encode(WritSealResult { writ })
             }
             RpcRequest::WritTear(params) => {
-                let mut writ = storage::find(&store, &params.writ_id)?;
+                let mut writ = storage::find(store, &params.writ_id)?;
                 require_proposed(&writ)?;
                 writ.status = WritStatus::Torn;
                 storage::advance(&mut writ)?;
-                storage::append(&mut store, &writ, config.simulated)?;
+                storage::append(store, &writ, self.simulated)?;
                 registry.writ_changed()?;
                 encode(WritTearResult { writ })
             }
@@ -120,13 +150,13 @@ impl StewardConfig {
     async fn ask(
         &self,
         params: &AskParams,
-        mut store: tokio::sync::OwnedMutexGuard<Store>,
+        store: &mut Store,
         registry: &Registry,
     ) -> Result<Writ, ErrorEnvelope> {
         let context = params
             .writ_id
             .as_ref()
-            .map(|id| storage::find(&store, id))
+            .map(|id| storage::find(store, id))
             .transpose()?;
         if context
             .as_ref()
@@ -152,27 +182,20 @@ impl StewardConfig {
                 .transpose()?
                 .unwrap_or_else(|| "none".into())
         );
-        let engine = self.engine.clone();
-        let vault = self.vault.clone();
-        let key_label = self.key_label.clone();
-        // The engine's CLI supervision future is thread-local. Construct and
-        // poll it on a blocking worker using the active Tokio runtime, never
-        // block an RPC worker or require unsafe Send assertions in cc-engine.
-        let (reply, mut store) = tokio::task::spawn_blocking(move || {
-            let reply = tokio::runtime::Handle::current().block_on(engine.complete(
+        let engine = self.engine.resolve(store)?;
+        // This future is thread-local and runs on handle()'s blocking worker.
+        let reply = engine
+            .complete(
                 Call {
                     class: EngineClass::Batch,
                     prompt: &prompt,
                     rules_verdict: None,
                 },
-                &mut store,
-                vault.as_ref(),
-                key_label.as_deref(),
-            ));
-            (reply, store)
-        })
-        .await
-        .map_err(|_| internal())?;
+                store,
+                self.vault.as_ref(),
+                self.key_label.as_deref(),
+            )
+            .await;
         let reply = reply.map_err(|_| {
             ErrorEnvelope::new(ErrorCode::Unavailable, "Steward engine call failed")
         })?;
@@ -201,7 +224,7 @@ impl StewardConfig {
         writ.error = None;
         let _configuration = registry.configuration.lock().await;
         writ.proposal = proposal::snapshot(&writ.proposal, registry).await?;
-        storage::append(&mut store, &writ, self.simulated)?;
+        storage::append(store, &writ, self.simulated)?;
         registry.writ_changed()?;
         Ok(writ)
     }
