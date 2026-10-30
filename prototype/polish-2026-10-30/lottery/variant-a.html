@@ -1,0 +1,541 @@
+<!doctype html>
+<!--
+PORT NOTES · Lot Chamber · Variant A "Broadsheet"
+Thesis: print the chamber like a broadsheet - three ruled columns, numbered sections and one
+ghosted hero figure, with no boxes around anything.
+
+Scope: only the markup between the two "ROOM BODY" comments is the proposal. The rampart, the
+room header and the Steward dock above/below it are a copy of today's shell; do not port them.
+The corner "proto" switch is prototype-only (theme + "no draft" / "writ drafted" state).
+.proto-empty / .proto-writ are NOT kit classes: they stand for the React conditionals
+(!pending.length / proposal present) in rooms/lottery/index.tsx.
+
+Components introduced (all go to packages/ui unless marked "room"):
+- .cc-broadsheet + .cc-column (room)  REPLACES .lottery-columns / .room-column (rooms/lottery/room.css,
+  shell/room.css). Three columns 1.12fr / 1fr / minmax(17rem,.84fr), each scrolls on its own.
+  Column 1 = workbench (writ, guardrails, fairness). Column 2 = urn only. Column 3 = seal slot,
+  lookup, saved proof. This MOVES the lookup out from under the urn and the seal slot up into
+  column 3, so it is visible at 1440x900.
+- .cc-head (section head: roman numeral, display caps h2, serif standfirst, double rule)
+  REPLACES .room-caption and the h3s in .lottery-proof / .lottery-fairness / .lottery-urn.
+- .cc-dateline  REPLACES .room-now ("Now: ... · simulated").
+- .cc-ledger / .cc-ledger-row / .cc-ledger-pip / .cc-tally  REPLACES .lottery-empty > button.
+  Same <button> and onClick (port.select + draftRoll); data-active becomes aria-pressed.
+  NEW DATA PER ROW: checkFixturePolicy(draw.policy) is run per template; the row shows the
+  result as .cc-tally and each reason from lotsCopy.reasons as .cc-ledger-note. With today's
+  fixtures both prize examples read Blocked; Questions for the hall reads OK.
+- .cc-verdict  REPLACES .lottery-guardrails. Reasons/disclaimer/template paragraphs, when present,
+  render as .cc-aside lines under it (not shown: the default draw has none).
+- .cc-deed  REPLACES .lottery-writ + .room-stamp + .lottery-writ-fields + .lottery-fair.
+  Same strike/re-ink markup (<s> then <ins>); sealed state = data-state="sealed" (double rule);
+  keep the re-ink keyframes and the reduced-motion rule from room.css.
+- .cc-steps  REPLACES .lottery-steps (2x2 grid, CSS counter numerals).
+- .cc-lede + .cc-figures  NEW. Hero figure = entries.length; figures = selected draw's
+  rules.winner_count (or the proposal's struck/new value), fixtureCooldown.length, and
+  rules.cohort_caps[0] as n/d.
+- .cc-plate + .cc-urn + .cc-legend  REPLACES .lottery-urn-figure / .lottery-urn. urn.tsx keeps its
+  circles and data-cohort; changes: viewBox "18 36 424 348" (crops empty margin), subscribers
+  printed gules, raiders as hollow azure rings, legend with per-cohort counts (count the
+  entries by cohort). The >320-entry WindowedRows fallback is untouched.
+- .cc-field  REPLACES the bare <label><input type=search> lookup. Uses lotsCopy.lookup_hint, which
+  exists in lots-copy.ts but was never shown.
+- .cc-empty-line, .cc-designs, .cc-design-row, .cc-textbutton  restyle the fixture SealSlot
+  (rooms/seal-slot/index.tsx) and RoomDesignActions (rooms/design/actions.tsx) inside this room.
+- .cc-seal-card + .cc-hold  A COMPACT ProposalCard for the room's own seal slot: title, revision
+  and actions only, because the deed already prints the fields. Needs a `compact` prop on
+  packages/ui ProposalCard. .cc-hold is SealButton at large-text size (display 19px caps) so
+  ink-on-gules passes WCAG AA; same hold logic, same progress element.
+- .cc-entry, .cc-handles, .cc-disclosure, .cc-hash, .cc-status  REPLACE .lottery-past-writ and the
+  <details> in .lottery-proof. The frozen-entry recompute button and its <details> (shown only
+  after a seal) take the same .cc-textbutton / .cc-disclosure.
+
+Must not miss:
+- shell/room.css has `.shell-room :where(button:not(.cc-seal-button))` (border, card background,
+  padding). It is reproduced here on purpose: every button component above sets border,
+  background, padding and font itself, scoped `.shell-room .cc-...` where it matters. Keep that.
+- Every colour is a token; the only derived colours are color-mix() of token inks (ins highlight).
+- Text on paper never uses --faint, and --ok is only used for marks, never for text (fails AA on
+  paper). Signal words (OK / Blocked) are ink text beside a signal-coloured mark.
+- Below 900px the columns stack (same breakpoint as today).
+-->
+<html lang="en" data-theme="paper" data-state="empty">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Lot Chamber · A · Broadsheet</title>
+<link rel="stylesheet" href="../../../packages/tokens/src/generated.css">
+<script>
+/* Prototype only: ?theme=stock and ?state=writ for headless screenshots, plus the corner switch. */
+(function () {
+  var q = new URLSearchParams(location.search), h = document.documentElement;
+  h.setAttribute('data-theme', q.get('theme') === 'stock' ? 'stock' : 'paper');
+  h.setAttribute('data-state', q.get('state') === 'writ' ? 'writ' : 'empty');
+  addEventListener('click', function (e) {
+    var b = e.target.closest('[data-flip-theme],[data-flip-state]');
+    if (!b) return;
+    if (b.hasAttribute('data-flip-theme')) h.setAttribute('data-theme', h.getAttribute('data-theme') === 'stock' ? 'paper' : 'stock');
+    if (b.hasAttribute('data-flip-state')) h.setAttribute('data-state', h.getAttribute('data-state') === 'writ' ? 'empty' : 'writ');
+  });
+})();
+</script>
+<style>
+/* ==========================================================================
+   FIXED SHELL - reproduced from apps/desktop/src/view.css, shell/room.css,
+   shell/surfaces.css and packages/ui/src/{shell,primitives,chips,steward-bar}.css.
+   NOT part of this proposal. Do not port anything from this block.
+   ========================================================================== */
+:root { color-scheme: light; }
+:root[data-theme="stock"] { color-scheme: dark; }
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body { font-family: var(--font-ui); color: var(--ink); background: var(--paper); -webkit-font-smoothing: antialiased; }
+.desktop-shell { display: grid; grid-template-rows: var(--mh) minmax(0, 1fr) auto; height: 100vh; height: 100dvh; overflow: hidden; }
+.desktop-surface { min-height: 0; display: flex; flex-direction: column; overflow: hidden; padding: 0 var(--space-16) var(--space-12); background: var(--paper); }
+
+/* rampart */
+.cc-rampart { position: relative; z-index: 60; display: flex; align-items: center; height: var(--mh); gap: var(--space-14); padding: 0 var(--space-14) 0 var(--space-16); border-bottom: var(--rule-thin) solid var(--rule); background: var(--paper); }
+.cc-rampart::after { content: ""; position: absolute; inset-inline: 0; bottom: calc(-1 * var(--space-5)); height: var(--rule-thin); background: var(--rule); opacity: .55; }
+.cc-brand { width: calc(var(--cw) - var(--space-30)); display: flex; align-items: center; gap: var(--space-10); flex: none; text-decoration: none; color: var(--ink); }
+.cc-mark { display: block; width: var(--mark-w); height: var(--mark-h); flex: none; }
+.cc-mark-gate { mix-blend-mode: var(--blend); }
+.cc-wordmark { position: relative; isolation: isolate; white-space: pre-line; font: 800 var(--text-wordmark)/.9 var(--font-display); font-stretch: 75%; text-transform: uppercase; letter-spacing: var(--track-wordmark); }
+.cc-wordmark::after { content: attr(data-text); position: absolute; left: var(--wordmark-ghost); top: var(--wordmark-ghost); color: var(--or); mix-blend-mode: var(--blend); pointer-events: none; }
+.cc-live-group, .cc-link-group { display: flex; flex: none; align-items: center; gap: var(--space-12); min-width: 0; }
+.cc-figure { display: flex; flex-direction: column; line-height: 1.05; }
+.cc-figure b { font: 700 var(--text-number)/1.1 var(--font-num); font-variant-numeric: tabular-nums; }
+.cc-figure small { margin-top: var(--space-2); font: 600 var(--text-label)/1.2 var(--font-ui); letter-spacing: var(--track-wide); text-transform: uppercase; color: var(--muted); }
+.cc-separator { flex: none; width: var(--rule-thin); height: var(--space-28); background: var(--hair); }
+.cc-spacer { flex: 1 1 0; min-width: 0; }
+.cc-sample { flex: none; white-space: nowrap; display: inline-flex; align-items: center; height: var(--chip-h); padding-inline: var(--space-7); border: var(--rule-thin) dashed var(--hair); border-radius: var(--r-sm); color: var(--muted); font: 700 var(--text-label)/1 var(--font-ui); text-transform: uppercase; letter-spacing: var(--track-wide); }
+.cc-chip { display: inline-flex; align-items: center; white-space: nowrap; height: var(--chip-h); padding-inline: var(--space-7); gap: var(--space-5); border: var(--rule-medium) dashed var(--hair); border-radius: var(--r-sm); background: transparent; color: var(--muted); font: 700 var(--text-label)/1 var(--font-ui); letter-spacing: var(--track-label); text-transform: uppercase; }
+.cc-rampart a { color: inherit; }
+.cc-button { display: inline-flex; justify-content: center; align-items: center; gap: var(--space-7); height: var(--button-h); padding: 0 var(--space-12); cursor: pointer; white-space: nowrap; border: var(--rule-medium) solid var(--ink); border-radius: var(--r-sm); background: var(--paper); color: var(--ink); font: 700 var(--text-label)/1 var(--font-ui); letter-spacing: var(--track-label); text-transform: uppercase; }
+.cc-button:hover { background: var(--ink); color: var(--paper); }
+.cc-button[data-size="icon"] { width: var(--mark-w); padding: 0; flex: none; }
+.cc-button svg { width: var(--icon-sm); height: var(--icon-sm); fill: none; stroke: currentColor; stroke-width: 1.7; }
+:root[data-theme="stock"] .cc-theme-toggle { background: var(--ink); color: var(--paper); }
+@media (max-width: 1420px) { .cc-rampart { gap: var(--space-11); } .cc-brand { width: auto; } .cc-separator { display: none; } }
+
+/* room frame + header */
+.shell-room { --room-ink: var(--gules-text); position: relative; flex: 1; min-height: 0; display: flex; flex-direction: column; margin-top: var(--space-16); border: var(--rule-strong) solid var(--ink); background: var(--paper); box-shadow: var(--space-10) var(--space-10) 0 var(--hair-2); font: var(--text-body)/1.5 var(--font-ui); }
+.shell-room-header { display: flex; align-items: center; gap: var(--space-16); padding: var(--space-12) var(--space-20); border-bottom: var(--rule-medium) solid var(--line); }
+.shell-room-heading { flex: 1; min-width: 0; }
+.shell-room-heading nav { font: 600 var(--text-label)/1.3 var(--font-ui); color: var(--muted); }
+.shell-room-title { display: flex; align-items: baseline; flex-wrap: wrap; gap: var(--space-8) var(--space-24); }
+.shell-room-header h1 { margin: 0; font: 800 var(--text-chamber-number)/1 var(--font-display); text-transform: uppercase; text-shadow: var(--wordmark-ghost) var(--wordmark-ghost) 0 var(--room-ink); }
+.shell-room-title p { margin: 0; font: italic var(--text-wordmark)/1.3 var(--font-serif); }
+.shell-room-simulated { color: var(--muted); font: 700 var(--text-label)/1.4 var(--font-ui); letter-spacing: var(--track-label); }
+.shell-room .cc-room-locator { display: flex; align-items: center; gap: var(--space-4); font-size: var(--text-small); }
+.shell-room .cc-room-locator > span { margin-inline-end: var(--space-4); color: var(--muted); }
+.shell-room .cc-room-locator a { min-width: var(--space-30); padding: var(--space-4); border: var(--rule-thin) solid var(--ink); background: var(--card); color: var(--ink); font-family: var(--font-num); text-align: center; text-decoration: none; }
+.shell-room .cc-room-locator a[aria-current] { color: var(--paper); background: var(--ink); }
+.shell-room .shell-room-back { flex-shrink: 0; padding: var(--space-8) var(--space-14); border: var(--rule-medium) solid var(--ink); color: var(--ink); text-decoration: none; font-weight: 700; }
+.shell-room-back kbd { font: var(--text-small)/1.4 var(--font-num); margin-inline-start: var(--space-8); }
+.shell-room-work { flex: 1; min-height: 0; overflow: hidden; }
+.shell-room-content { min-width: 0; height: 100%; overflow: auto; }
+.shell-room a { color: var(--azure-text); }
+.shell-room h2 { font-family: var(--font-display); }
+.shell-room :where(h3) { font: 800 var(--text-section)/1.2 var(--font-display); text-transform: uppercase; }
+/* Room-wide button default from shell/room.css. Kept on purpose: every room
+   component below must win over it (see PORT NOTES). */
+.shell-room :where(button:not(.cc-seal-button)) { font: 600 var(--text-body)/1.4 var(--font-ui); border: var(--rule-medium) solid var(--ink); background: var(--card); color: var(--ink); padding: var(--space-6) var(--space-8); max-width: 100%; cursor: pointer; }
+.shell-room button:focus-visible, .shell-room a:focus-visible, .shell-room input:focus-visible, .shell-room summary:focus-visible { outline: var(--rule-strong) solid var(--azure); outline-offset: var(--focus-offset); }
+
+/* steward dock */
+.cc-steward-bar { display: grid; grid-template-columns: calc(var(--space-40) * 3) minmax(0, 1fr); gap: var(--space-12); padding: var(--space-8) var(--space-24); background: var(--paper); border-top: var(--rule-medium) solid var(--rule); font: var(--text-body)/1.4 var(--font-ui); }
+.cc-steward-with-proposal { grid-template-columns: calc(var(--space-40) * 3) minmax(0, 1fr) minmax(0, 25%); }
+.cc-steward-identity { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--space-4); padding-right: var(--space-12); border-right: var(--rule-medium) solid var(--line); text-align: center; }
+.cc-steward-identity strong { font: 800 var(--text-section)/1.1 var(--font-display); text-transform: uppercase; }
+.cc-steward-identity span { color: var(--muted); font-size: var(--text-small); }
+.cc-steward-identity b { font-size: var(--text-small); color: var(--gules-text); letter-spacing: var(--track-label); }
+.cc-steward-controls { min-width: 0; align-self: center; }
+.cc-steward-message p { margin: 0 0 var(--space-8); font: var(--text-body)/1.4 var(--font-ui); overflow-wrap: anywhere; }
+.cc-steward-proposal { min-width: 0; align-self: center; padding-left: var(--space-16); border-left: var(--rule-medium) solid var(--line); overflow-wrap: anywhere; }
+.cc-steward-bar form { display: flex; align-items: end; gap: var(--space-10); margin: 0; }
+.cc-steward-bar label { display: flex; flex: 1; min-width: 0; flex-direction: column; gap: var(--space-4); font-size: var(--text-small); }
+.cc-steward-bar input { min-width: 0; border: var(--rule-thin) solid var(--ink); border-radius: var(--r-sm); background: var(--card); color: var(--ink); padding: var(--space-7) var(--space-10); font: var(--text-body)/1.4 var(--font-ui); }
+.cc-steward-bar input::placeholder { color: var(--muted); }
+.cc-steward-bar button { font: inherit; color: var(--ink); background: var(--card); border: var(--rule-thin) solid var(--ink); padding: var(--space-7) var(--space-10); border-radius: var(--r-sm); cursor: pointer; }
+.cc-steward-bar button:disabled { opacity: var(--disabled-opacity); cursor: default; }
+.cc-steward-suggestions { display: flex; flex-wrap: wrap; gap: var(--space-8); margin-top: var(--space-8); }
+.cc-steward-suggestions button { font-size: var(--text-small); padding-block: var(--space-4); }
+.shell-steward-proposal b { font-size: var(--text-small); letter-spacing: var(--track-label); color: var(--gules-text); }
+.shell-steward-proposal h3 { margin: var(--space-4) 0; font: 800 var(--text-section)/1.2 var(--font-display); text-transform: uppercase; }
+.shell-steward-proposal p { margin: 0 0 var(--space-8); font-size: var(--text-small); color: var(--muted); }
+.cc-steward-bar .shell-steward-proposal .cc-button { height: var(--button-small-h); padding: 0 var(--space-9); border-width: var(--rule-medium); border-radius: var(--r-sm); background: var(--paper); font: 700 var(--text-label)/1 var(--font-ui); text-transform: uppercase; letter-spacing: var(--track-label); }
+
+/* ==========================================================================
+   PROTOTYPE CONTROLS - not part of the design. Theme + demo state switch.
+   ========================================================================== */
+.proto-tools { position: fixed; right: var(--space-6); bottom: var(--space-6); z-index: 100; display: flex; align-items: center; gap: var(--space-4); padding: var(--space-4) var(--space-6); border: var(--rule-thin) dashed var(--muted); border-radius: var(--r-sm); background: var(--card); color: var(--ink); font: 600 var(--text-small)/1 var(--font-num); opacity: .92; }
+.proto-tools > span { color: var(--muted); padding-inline: var(--space-2); }
+.proto-tools button { font: inherit; color: var(--ink); background: transparent; border: var(--rule-thin) solid transparent; border-radius: var(--r-sm); padding: var(--space-3) var(--space-5); cursor: pointer; }
+.proto-tools button:hover { border-color: var(--hair); }
+:root[data-theme="stock"] .proto-tools .proto-theme,
+:root[data-state="writ"] .proto-tools .proto-state { background: var(--ink); color: var(--paper); }
+:root[data-state="writ"] .proto-empty, :root:not([data-state="writ"]) .proto-writ { display: none !important; }
+
+/* ==========================================================================
+   VARIANT A · BROADSHEET - the room body. Everything below is the proposal.
+   ========================================================================== */
+.cc-broadsheet { display: grid; grid-template-columns: minmax(0, 1.12fr) minmax(0, 1fr) minmax(17rem, .84fr); height: 100%; min-height: 0; }
+.cc-column { min-width: 0; min-height: 0; overflow: auto; display: flex; flex-direction: column; gap: var(--space-28); padding: var(--space-16) var(--space-22) var(--space-24); border-inline-end: var(--rule-thin) solid var(--line); }
+.cc-column:last-child { border-inline-end: 0; }
+.cc-section { display: flex; flex-direction: column; gap: var(--space-12); min-width: 0; }
+
+/* Section head: roman numeral, display caps, serif standfirst, double rule */
+.cc-head { position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: var(--space-10); align-items: baseline; margin-bottom: var(--space-5); padding-bottom: var(--space-8); border-bottom: var(--rule-strong) solid var(--rule); }
+.cc-head::after { content: ""; position: absolute; inset-inline: 0; bottom: calc(-1 * var(--space-5)); border-bottom: var(--rule-thin) solid var(--rule); }
+.cc-head-no { min-width: var(--space-20); font: 800 var(--text-chamber)/1 var(--font-display); font-stretch: 75%; color: var(--gules-text); }
+.cc-head h2 { margin: 0; font: 800 var(--text-section)/1.15 var(--font-display); letter-spacing: var(--track-heading); text-transform: uppercase; overflow-wrap: anywhere; }
+.cc-head p { grid-column: 2; margin: var(--space-2) 0 0; font: italic var(--text-aside)/1.3 var(--font-serif); color: var(--ink-2); }
+
+.cc-kicker { margin: 0; font: 800 var(--text-label)/1.3 var(--font-ui); letter-spacing: var(--track-heading); text-transform: uppercase; }
+.cc-copy { margin: 0; font: var(--text-body)/1.5 var(--font-ui); color: var(--ink); }
+.cc-aside { margin: 0; font: italic var(--text-aside)/1.45 var(--font-serif); color: var(--ink-2); }
+
+/* Dateline: the "Now" status of the workbench */
+.cc-dateline { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-4) var(--space-8); margin: 0; font: var(--text-body)/1.4 var(--font-ui); }
+.cc-dateline-key { padding: var(--space-3) var(--space-6); border: var(--rule-thin) solid var(--ink); font: 700 var(--text-small)/1 var(--font-num); letter-spacing: var(--track-label); text-transform: uppercase; }
+.cc-dateline b { font-weight: 700; }
+.cc-dateline-note { color: var(--muted); }
+
+.cc-subhead { margin: var(--space-4) 0 0; font: 700 var(--text-chamber)/1.15 var(--font-display); letter-spacing: var(--track-title); text-transform: none; }
+
+/* Ledger: ruled, selectable rows (writ templates) */
+.cc-ledger { list-style: none; margin: 0; padding: 0; border-top: var(--rule-medium) solid var(--rule); }
+.cc-ledger > li { border-bottom: var(--rule-thin) solid var(--line); }
+.shell-room .cc-ledger-row { display: grid; grid-template-columns: var(--space-22) minmax(0, 1fr) auto; gap: var(--space-4) var(--space-12); align-items: start; width: 100%; max-width: none; margin: 0; padding: var(--space-12) var(--space-6) var(--space-12) var(--space-2); border: 0; border-radius: 0; background: transparent; color: var(--ink); text-align: start; font: var(--text-body)/1.4 var(--font-ui); cursor: pointer; transition: background var(--motion-fast) var(--ease); }
+.shell-room .cc-ledger-row:hover { background: var(--tint); }
+.cc-ledger-pip { width: var(--space-14); height: var(--space-14); margin-top: var(--space-5); border: var(--rule-medium) solid var(--ink); border-radius: 50%; }
+.cc-ledger-row[aria-pressed="true"] .cc-ledger-pip { border-color: var(--gules); background: var(--gules); box-shadow: inset 0 0 0 var(--space-2) var(--paper); }
+.cc-ledger-body { min-width: 0; }
+.cc-ledger-title { display: block; font: 700 var(--text-chamber)/1.15 var(--font-display); letter-spacing: var(--track-title); overflow-wrap: anywhere; }
+.cc-ledger-meta { display: block; margin-top: var(--space-2); font: var(--text-small)/1.4 var(--font-ui); color: var(--muted); }
+.cc-ledger-note { display: block; margin-top: var(--space-4); font: italic var(--text-body)/1.4 var(--font-serif); color: var(--ink-2); }
+.cc-ledger-side { display: flex; flex-direction: column; align-items: flex-end; gap: var(--space-8); padding-top: var(--space-5); }
+.cc-ledger-act { font: 700 var(--text-small)/1 var(--font-ui); letter-spacing: var(--track-label); text-transform: uppercase; color: var(--gules-text); white-space: nowrap; }
+
+/* Tally: a guardrail result as a printed mark + word (ink text, signal-colour mark) */
+.cc-tally { display: inline-flex; align-items: center; gap: var(--space-6); font: 700 var(--text-label)/1 var(--font-ui); letter-spacing: var(--track-label); text-transform: uppercase; white-space: nowrap; color: var(--ink); }
+.cc-tally::before { content: ""; flex: none; width: var(--space-10); height: var(--space-10); border-radius: 50%; background: var(--ok); }
+.cc-tally[data-result="warn"]::before { border-radius: 0; background: var(--warn); clip-path: polygon(50% 0, 100% 100%, 0 100%); }
+.cc-tally[data-result="blocked"]::before { border-radius: 0; background: var(--danger); }
+
+/* Verdict: the giveaway guardrails line under the workbench */
+.cc-verdict { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: var(--space-2) var(--space-12); padding-top: var(--space-10); border-top: var(--rule-strong) solid var(--rule); }
+.cc-verdict-sub { margin: 0; grid-column: 1; font: var(--text-small)/1.4 var(--font-ui); color: var(--muted); }
+.cc-verdict-word { grid-column: 2; grid-row: 1 / span 2; display: inline-flex; align-items: center; gap: var(--space-8); font: 800 var(--space-28)/1 var(--font-display); text-transform: uppercase; letter-spacing: var(--track-title); }
+.cc-verdict-word::before { content: ""; width: var(--space-14); height: var(--space-14); border-radius: 50%; background: var(--ok); }
+
+/* Deed: the drafted writ, printed between two dashed gules rules */
+.cc-deed { position: relative; margin-top: var(--space-14); padding: var(--space-22) 0 var(--space-16); border-block: var(--rule-strong) dashed var(--gules); }
+.cc-deed[data-state="sealed"] { border-block-style: double; border-block-width: var(--space-4); }
+.cc-deed-stamp { position: absolute; top: calc(-1 * var(--space-14)); right: 0; margin: 0; padding: var(--space-5) var(--space-9); border: var(--rule-strong) solid var(--gules); background: var(--paper); color: var(--gules-text); font: 800 var(--text-label)/1.2 var(--font-ui); letter-spacing: var(--track-label); text-transform: uppercase; transform: rotate(2deg); }
+.cc-deed-title { margin: 0; font: 800 var(--space-34)/1.02 var(--font-display); text-transform: uppercase; overflow-wrap: anywhere; }
+.cc-deed-rev { margin: var(--space-6) 0 0; font: 600 var(--text-small)/1.4 var(--font-num); color: var(--muted); }
+.cc-deed-fields { margin: var(--space-14) 0 0; border-top: var(--rule-medium) solid var(--rule); }
+.cc-deed-fields > div { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1fr); gap: var(--space-12); align-items: baseline; padding-block: var(--space-9); border-bottom: var(--rule-thin) solid var(--line); }
+.cc-deed-fields dt { font: 700 var(--text-label)/1.3 var(--font-ui); letter-spacing: var(--track-label); text-transform: uppercase; color: var(--muted); }
+.cc-deed-fields dd { margin: 0; font: 500 calc(var(--space-16) + var(--space-2))/1.35 var(--font-ui); overflow-wrap: anywhere; }
+.cc-deed-fields s { margin-inline-end: var(--space-8); color: var(--gules-text); text-decoration-thickness: var(--rule-strong); }
+.cc-deed-fields ins { text-decoration: none; }
+.cc-deed-fields s + ins { padding-inline: var(--space-2); background: linear-gradient(transparent 58%, color-mix(in srgb, var(--gules) 26%, transparent) 58%); }
+.cc-deed-fair { margin-top: var(--space-14); padding-inline-start: var(--space-12); border-inline-start: var(--space-3) solid var(--ink); }
+.cc-deed-fair p { margin: var(--space-4) 0 0; font: italic var(--text-aside)/1.4 var(--font-serif); color: var(--ink-2); }
+
+/* Steps: fairness you can verify, numbered in display figures */
+.cc-steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-16) var(--space-20); counter-reset: cc-step; }
+.cc-step { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--space-2) var(--space-10); counter-increment: cc-step; }
+.cc-step::before { content: counter(cc-step); grid-row: span 2; font: 800 var(--space-34)/.85 var(--font-display); font-stretch: 75%; color: var(--gules-text); }
+.cc-step b { font: 700 var(--text-body)/1.3 var(--font-ui); }
+.cc-step p { margin: 0; font: var(--text-small)/1.45 var(--font-ui); color: var(--ink-2); }
+.cc-footnotes { display: flex; flex-direction: column; gap: var(--space-6); padding-top: var(--space-10); border-top: var(--rule-thin) solid var(--line); }
+
+/* Lede figure: the one hero number, ghosted in the chamber ink */
+.cc-lede { display: flex; align-items: flex-end; gap: var(--space-14); }
+.cc-lede-figure { position: relative; isolation: isolate; font: 800 calc(var(--space-56) + var(--space-20))/.8 var(--font-display); font-stretch: 75%; letter-spacing: var(--track-number); font-variant-numeric: tabular-nums; }
+.cc-lede-figure::after { content: attr(data-t); position: absolute; left: var(--space-3); top: var(--space-3); z-index: -1; color: var(--gules); mix-blend-mode: var(--blend); }
+.cc-lede-copy { display: flex; flex-direction: column; gap: var(--space-2); padding-bottom: var(--space-2); }
+.cc-lede-copy b { font: italic var(--text-wordmark)/1.2 var(--font-serif); font-weight: 400; }
+.cc-lede-copy span { font: var(--text-small)/1.4 var(--font-ui); color: var(--muted); }
+
+/* Figures: three ruled readouts under the lede */
+.cc-figures { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin: 0; border-block: var(--rule-thin) solid var(--rule); }
+.cc-figures > div { min-width: 0; padding: var(--space-8) var(--space-10); border-inline-start: var(--rule-thin) solid var(--line); }
+.cc-figures > div:first-child { padding-inline-start: 0; border-inline-start: 0; }
+.cc-figures dt { font: 700 var(--text-label)/1.25 var(--font-ui); letter-spacing: var(--track-label); text-transform: uppercase; color: var(--muted); }
+.cc-figures dd { display: flex; align-items: baseline; gap: var(--space-6); margin: var(--space-4) 0 0; font: 700 var(--space-24)/1 var(--font-num); font-variant-numeric: tabular-nums; }
+.cc-figures dd s { font-size: var(--text-number); color: var(--gules-text); text-decoration-thickness: var(--rule-strong); }
+
+/* Plate: the urn as a captioned figure, no frame */
+.cc-plate { display: flex; flex-direction: column; gap: var(--space-10); min-height: 0; margin: 0; }
+.cc-section[data-fill] { flex: 1; min-height: 0; }
+.cc-section[data-fill] > .cc-plate { flex: 1; min-height: calc(var(--space-56) * 4); }
+.cc-urn { display: block; flex: 1 1 0; width: 100%; min-height: 0; height: auto; }
+.cc-urn ellipse { fill: none; stroke: var(--gules); stroke-width: 2.5; }
+.cc-urn circle { fill: var(--ink); }
+.cc-urn circle[data-cohort="subscriber"] { fill: var(--gules); mix-blend-mode: var(--blend); }
+.cc-urn circle[data-cohort="raider"] { fill: var(--paper); stroke: var(--azure); stroke-width: 3; }
+.cc-plate figcaption { display: flex; flex-direction: column; gap: var(--space-6); padding-top: var(--space-8); border-top: var(--rule-thin) solid var(--line); }
+.cc-legend { display: flex; flex-wrap: wrap; gap: var(--space-4) var(--space-16); margin: 0; padding: 0; list-style: none; font: var(--text-small)/1.4 var(--font-ui); }
+.cc-legend li { display: inline-flex; align-items: center; gap: var(--space-6); }
+.cc-legend li::before { content: ""; width: var(--space-10); height: var(--space-10); border-radius: 50%; background: var(--ink); }
+.cc-legend [data-cohort="subscriber"]::before { background: var(--gules); }
+.cc-legend [data-cohort="raider"]::before { background: var(--paper); box-shadow: inset 0 0 0 var(--space-2) var(--azure); }
+.cc-legend b { font: 700 var(--text-small)/1 var(--font-num); font-variant-numeric: tabular-nums; }
+
+/* Field: underline-only input with kicker label, hint and live result */
+.cc-field { display: flex; flex-direction: column; gap: var(--space-6); }
+.cc-field label { font: 800 var(--text-label)/1.3 var(--font-ui); letter-spacing: var(--track-heading); text-transform: uppercase; }
+.cc-field input { width: 100%; min-width: 0; padding: var(--space-6) 0; border: 0; border-bottom: var(--rule-medium) solid var(--ink); border-radius: 0; background: transparent; color: var(--ink); font: 500 var(--text-number)/1.4 var(--font-num); }
+.cc-field input::placeholder { color: var(--muted); }
+.cc-field input:focus { border-bottom-color: var(--gules); }
+.cc-field-hint { margin: 0; font: var(--text-small)/1.4 var(--font-ui); color: var(--muted); }
+.cc-field-result { margin: 0; font: 600 var(--text-body)/1.4 var(--font-ui); }
+
+/* Seal slot pieces */
+.cc-empty-line { margin: 0; padding-inline-start: var(--space-10); border-inline-start: var(--rule-strong) solid var(--line); font: italic var(--text-aside)/1.4 var(--font-serif); color: var(--ink-2); }
+.cc-designs { display: flex; flex-direction: column; gap: var(--space-6); padding-top: var(--space-10); border-top: var(--rule-thin) solid var(--line); }
+.cc-designs .cc-kicker { color: var(--muted); font-weight: 700; letter-spacing: var(--track-label); }
+.cc-design-row { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: var(--space-6) var(--space-12); }
+.cc-design-row b { font: 700 var(--text-body)/1.4 var(--font-ui); }
+.cc-design-row span { display: flex; gap: var(--space-14); }
+.shell-room .cc-textbutton { margin: 0; padding: var(--space-2) 0; border: 0; border-bottom: var(--rule-medium) solid currentColor; border-radius: 0; background: transparent; color: var(--ink); font: 700 var(--text-label)/1.3 var(--font-ui); letter-spacing: var(--track-label); text-transform: uppercase; cursor: pointer; }
+.shell-room .cc-textbutton:hover { color: var(--gules-text); }
+.cc-seal-card { display: flex; flex-direction: column; gap: var(--space-10); }
+.cc-seal-card-title { margin: 0; font: 800 var(--text-chamber)/1.1 var(--font-display); text-transform: uppercase; }
+.cc-seal-card-rev { margin: 0; font: 600 var(--text-small)/1.4 var(--font-num); color: var(--muted); }
+.cc-seal-card-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-10) var(--space-16); }
+/* Hold: restyled kit SealButton - display caps at large-text size so ink-on-gules passes AA */
+.cc-hold { display: inline-flex; flex-direction: column; gap: var(--space-8); min-width: calc(var(--space-56) * 3); padding: var(--space-12) var(--space-16) var(--space-10); border: var(--rule-strong) solid var(--gules); border-radius: var(--r-sm); background: var(--gules); color: var(--press); font: 800 var(--text-wordmark)/1 var(--font-display); letter-spacing: var(--track-chamber); text-transform: uppercase; text-align: start; cursor: pointer; touch-action: none; user-select: none; }
+.cc-hold progress { width: 100%; height: var(--space-6); border: 0; background: var(--paper); accent-color: var(--press); appearance: none; }
+.cc-hold progress::-webkit-progress-bar { background: var(--paper); }
+.cc-hold progress::-webkit-progress-value { background: var(--press); }
+.cc-hold progress::-moz-progress-bar { background: var(--press); }
+
+/* Record: dated proof entry + disclosure */
+.cc-entry { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--space-4) var(--space-14); padding-block: var(--space-10); border-block: var(--rule-thin) solid var(--line); }
+.cc-entry time { font: 600 var(--text-small)/1.6 var(--font-num); color: var(--muted); }
+.cc-entry-label { font: 700 var(--text-label)/1.4 var(--font-ui); letter-spacing: var(--track-label); text-transform: uppercase; color: var(--muted); }
+.cc-handles { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-10); margin: var(--space-2) 0 0; font: 600 var(--text-number)/1.4 var(--font-num); }
+.cc-disclosure > summary { display: flex; align-items: center; gap: var(--space-8); padding-block: var(--space-4); list-style: none; cursor: pointer; font: 700 var(--text-body)/1.4 var(--font-ui); }
+.cc-disclosure > summary::-webkit-details-marker { display: none; }
+.cc-disclosure > summary::before { content: "+"; width: var(--space-16); font: 700 var(--text-number)/1 var(--font-num); color: var(--gules-text); }
+.cc-disclosure[open] > summary::before { content: "\2212"; }
+.cc-disclosure-body { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-10); padding: var(--space-6) 0 var(--space-4) var(--space-24); }
+.cc-hash { font: var(--text-small)/1.5 var(--font-num); color: var(--ink-2); overflow-wrap: anywhere; word-break: break-all; }
+.cc-status { margin: 0; font: var(--text-small)/1.4 var(--font-ui); color: var(--muted); }
+
+@media (max-width: 900px) {
+  .cc-broadsheet { grid-template-columns: minmax(0, 1fr); height: auto; }
+  .cc-column { overflow: visible; border-inline-end: 0; border-bottom: var(--rule-thin) solid var(--line); }
+}
+@media (prefers-reduced-motion: reduce) { .shell-room .cc-ledger-row { transition: none; } }
+</style>
+</head>
+<body>
+<div class="desktop-shell">
+  <header class="cc-rampart">
+    <a class="cc-brand" href="#/keep" aria-label="Castle Control, the whole keep">
+      <svg class="cc-mark" viewBox="0 0 72 64" role="img" aria-label="Castle Control mark: a chat bubble topped with battlements, its gate lit"><path d="M6 6h9v7h8V6h9v7h8V6h9v7h8V6h9v42a4 4 0 0 1-4 4H27l-12 10V52h-5a4 4 0 0 1-4-4ZM28 52V39a8 8 0 0 1 16 0V52Z" fill="var(--gules)" fill-rule="evenodd"/><path class="cc-mark-gate" d="M28 52V39a8 8 0 0 1 16 0V52Z" transform="translate(1.6 -1.4)" fill="var(--or)"/></svg>
+      <span class="cc-wordmark" data-text="Castle&#10;Control">Castle<br>Control</span>
+    </a>
+    <div class="cc-live-group" aria-label="Stream status">
+      <span class="cc-chip">ON AIR simulated</span>
+      <span class="cc-figure"><b>Unknown</b><small>viewers</small></span>
+      <span class="cc-figure"><b>Unknown</b><small>uptime</small></span>
+    </div>
+    <span class="cc-separator"></span>
+    <div class="cc-link-group"><span class="cc-chip">Twitch simulated</span><span class="cc-chip">OBS simulated</span></div>
+    <a href="#/chamber/moderator"><span class="cc-chip">Gatehouse simulated</span></a>
+    <span class="cc-spacer"></span>
+    <span class="cc-sample">Simulated</span>
+    <button type="button" class="cc-button cc-theme-toggle" data-size="icon" data-flip-theme aria-label="Toggle paper and dark stock" title="Paper / dark stock"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2a8 8 0 1 0 0 16V2Zm0 0a8 8 0 0 1 0 16"/></svg></button>
+    <button type="button" class="cc-button" title="Talk to the Steward (/)">Steward</button>
+  </header>
+  <main class="desktop-surface">
+    <section class="shell-room" data-chamber="lottery" aria-label="Chamber detail room">
+      <header class="shell-room-header">
+        <div class="shell-room-heading">
+          <nav aria-label="Breadcrumb"><a href="#/keep">The keep</a><span aria-hidden="true"> › </span><span aria-current="page">The Lot Chamber (Lottery manager)</span></nav>
+          <div class="shell-room-title"><h1>The Lot Chamber</h1><p>Chamber 1 of 4 · Lottery manager</p><span class="shell-room-simulated">SIMULATED</span></div>
+        </div>
+        <nav class="cc-room-locator" aria-label="Chamber locator"><span>Chambers</span><a href="#/chamber/lottery" aria-label="1: Lot Chamber" aria-current="location">1</a><a href="#/chamber/moderator" aria-label="2: Gatehouse">2</a><a href="#/chamber/visuals" aria-label="3: Beacons">3</a><a href="#/chamber/studio" aria-label="4: Map Room">4</a></nav>
+        <a class="shell-room-back" href="#/keep">Back to the keep <kbd>Esc</kbd></a>
+      </header>
+      <div class="shell-room-work"><div class="shell-room-content">
+<!-- ===================== ROOM BODY: the proposal starts here ===================== -->
+<div class="cc-broadsheet" aria-label="Lot Chamber">
+
+  <!-- Column 1 · the workbench -->
+  <div class="cc-column" aria-label="Draw workbench">
+    <section class="cc-section">
+      <header class="cc-head"><span class="cc-head-no" aria-hidden="true">I</span><h2>The writ</h2><p>drafted in ink, sealed by you</p></header>
+      <p class="cc-dateline proto-empty"><span class="cc-dateline-key">Now</span><b>No draft waiting</b><span class="cc-dateline-note">· simulated</span></p>
+      <p class="cc-dateline proto-writ"><span class="cc-dateline-key">Now</span><b>Proposal awaiting your seal</b><span class="cc-dateline-note">· simulated</span></p>
+
+      <!-- empty: writ templates -->
+      <h3 class="cc-subhead proto-empty">Writ templates</h3>
+      <p class="cc-aside proto-empty">Tell the Steward which draw. Its proposal will ink in here.</p>
+      <ol class="cc-ledger proto-empty" aria-label="Writ templates">
+        <li><button type="button" class="cc-ledger-row" aria-pressed="true">
+          <span class="cc-ledger-pip" aria-hidden="true"></span>
+          <span class="cc-ledger-body"><b class="cc-ledger-title">Questions for the hall</b><span class="cc-ledger-meta">No prize · proposal only</span></span>
+          <span class="cc-ledger-side"><span class="cc-tally" data-result="ok">OK</span><span class="cc-ledger-act">Draft writ</span></span>
+        </button></li>
+        <li><button type="button" class="cc-ledger-row" aria-pressed="false">
+          <span class="cc-ledger-pip" aria-hidden="true"></span>
+          <span class="cc-ledger-body"><b class="cc-ledger-title">Free-entry prize example</b><span class="cc-ledger-meta">Prize · proposal only</span>
+            <span class="cc-ledger-note">Attach an official-rules template before starting a prize draw.</span><span class="cc-ledger-note">Acknowledge the Twitch disclaimer before starting a prize draw.</span></span>
+          <span class="cc-ledger-side"><span class="cc-tally" data-result="blocked">Blocked</span><span class="cc-ledger-act">Draft writ</span></span>
+        </button></li>
+        <li><button type="button" class="cc-ledger-row" aria-pressed="false">
+          <span class="cc-ledger-pip" aria-hidden="true"></span>
+          <span class="cc-ledger-body"><b class="cc-ledger-title">Paid-weight blocked example</b><span class="cc-ledger-meta">Prize · proposal only</span>
+            <span class="cc-ledger-note">Paid weight on a prize draw is blocked.</span></span>
+          <span class="cc-ledger-side"><span class="cc-tally" data-result="blocked">Blocked</span><span class="cc-ledger-act">Draft writ</span></span>
+        </button></li>
+      </ol>
+
+      <!-- writ drafted: the deed -->
+      <article class="cc-deed proto-writ" data-state="amended" aria-label="Questions for the hall writ">
+        <p class="cc-deed-stamp">Proposal · not sealed</p>
+        <h3 class="cc-deed-title">Questions for the hall</h3>
+        <p class="cc-deed-rev">Writ · amended · revision 2</p>
+        <dl class="cc-deed-fields">
+          <div><dt>Winners</dt><dd><s>3</s><ins>5</ins></dd></div>
+          <div><dt>Raid cohort cap</dt><dd><ins>1/3 of winners</ins></dd></div>
+          <div><dt>Cooldown</dt><dd><ins>600 seconds</ins></dd></div>
+          <div><dt>Prize</dt><dd><ins>none</ins></dd></div>
+        </dl>
+        <div class="cc-deed-fair"><p class="cc-kicker">Fairness, always shown</p>
+          <p>Weight table: every generated entry has weight 1. Two newcomers outweigh the heaviest entrant.</p>
+          <p>No paid entry or paid weight on a prize draw. Sealing freezes this entry list before any round is known.</p></div>
+      </article>
+
+      <div class="cc-verdict" role="status">
+        <p class="cc-kicker">Giveaway guardrails</p>
+        <p class="cc-verdict-sub">Questions for the hall · local preview</p>
+        <b class="cc-verdict-word">OK</b>
+      </div>
+    </section>
+
+    <section class="cc-section" aria-label="Fairness you can verify">
+      <header class="cc-head"><span class="cc-head-no" aria-hidden="true">II</span><h2>Fairness you can verify</h2></header>
+      <ol class="cc-steps">
+        <li class="cc-step"><b>Seal</b><p>Freeze the entry list and publish its hash.</p></li>
+        <li class="cc-step"><b>Public round announced</b><p>Choose a future public round after the seal.</p></li>
+        <li class="cc-step"><b>Round arrives</b><p>Authenticate the public round before deriving winners.</p></li>
+        <li class="cc-step"><b>Cast</b><p>Derive winners, then show the fixed result.</p></li>
+      </ol>
+      <div class="cc-footnotes">
+        <p class="cc-aside">Test mode only. These steps describe the live protocol. This page neither publishes a seal nor fetches a round.</p>
+        <p class="cc-aside">This recompute accepts only the built-in simulated proof. It is not an imported-writ verifier.</p>
+      </div>
+    </section>
+  </div>
+
+  <!-- Column 2 · the urn -->
+  <div class="cc-column" aria-label="Eligible entry pool">
+    <section class="cc-section" data-fill>
+      <header class="cc-head"><span class="cc-head-no" aria-hidden="true">III</span><h2>The urn</h2><p>every lot drawn as a mark</p></header>
+      <div class="cc-lede">
+        <span class="cc-lede-figure" data-t="87">87</span>
+        <span class="cc-lede-copy"><b>lots · eligible entries</b><span>Lots coloured by cohort</span></span>
+      </div>
+      <dl class="cc-figures">
+        <div><dt>Winners</dt><dd class="proto-empty">3</dd><dd class="proto-writ"><s>3</s>5</dd></div>
+        <div><dt>Held out by cooldown</dt><dd>5</dd></div>
+        <div><dt>Raider cap</dt><dd>1/3</dd></div>
+      </dl>
+      <figure class="cc-plate">
+        <svg class="cc-urn" viewBox="18 36 424 348" role="img" aria-label="87 lots in the urn"><ellipse cx="230" cy="210" rx="205" ry="168"/><circle data-lot-dot="1" data-cohort="raider" cx="243.6" cy="210.0" r="5"><title>simulated_00001 · Raiders</title></circle><circle data-lot-dot="2" data-cohort="new_account" cx="212.6" cy="222.5" r="5"><title>simulated_00002 · New accounts</title></circle><circle data-lot-dot="3" data-cohort="new_account" cx="232.7" cy="186.3" r="5"><title>simulated_00003 · New accounts</title></circle><circle data-lot-dot="4" data-cohort="subscriber" cx="252.0" cy="232.3" r="5"><title>simulated_00004 · Subscribers</title></circle><circle data-lot-dot="5" data-cohort="new_account" cx="189.7" cy="204.4" r="5"><title>simulated_00005 · New accounts</title></circle><circle data-lot-dot="6" data-cohort="new_account" cx="268.2" cy="191.1" r="5"><title>simulated_00006 · New accounts</title></circle><circle data-lot-dot="7" data-cohort="subscriber" cx="217.2" cy="247.1" r="5"><title>simulated_00007 · Subscribers</title></circle><circle data-lot-dot="8" data-cohort="raider" cx="205.6" cy="173.4" r="5"><title>simulated_00008 · Raiders</title></circle><circle data-lot-dot="9" data-cohort="new_account" cx="282.8" cy="225.1" r="5"><title>simulated_00009 · New accounts</title></circle><circle data-lot-dot="10" data-cohort="subscriber" cx="175.0" cy="227.7" r="5"><title>simulated_00010 · Subscribers</title></circle><circle data-lot-dot="11" data-cohort="new_account" cx="256.5" cy="165.8" r="5"><title>simulated_00011 · New accounts</title></circle><circle data-lot-dot="12" data-cohort="new_account" cx="249.6" cy="258.7" r="5"><title>simulated_00012 · New accounts</title></circle><circle data-lot-dot="13" data-cohort="subscriber" cx="171.0" cy="183.3" r="5"><title>simulated_00013 · Subscribers</title></circle><circle data-lot-dot="14" data-cohort="new_account" cx="299.3" cy="198.1" r="5"><title>simulated_00014 · New accounts</title></circle><circle data-lot-dot="15" data-cohort="raider" cx="187.7" cy="256.9" r="5"><title>simulated_00015 · Raiders</title></circle><circle data-lot-dot="16" data-cohort="subscriber" cx="220.2" cy="151.2" r="5"><title>simulated_00016 · Subscribers</title></circle><circle data-lot-dot="17" data-cohort="new_account" cx="289.9" cy="249.4" r="5"><title>simulated_00017 · New accounts</title></circle><circle data-lot-dot="18" data-cohort="new_account" cx="149.3" cy="212.6" r="5"><title>simulated_00018 · New accounts</title></circle><circle data-lot-dot="19" data-cohort="subscriber" cx="288.8" cy="164.3" r="5"><title>simulated_00019 · Subscribers</title></circle><circle data-lot-dot="20" data-cohort="new_account" cx="226.1" cy="276.4" r="5"><title>simulated_00020 · New accounts</title></circle><circle data-lot-dot="21" data-cohort="new_account" cx="174.0" cy="157.7" r="5"><title>simulated_00021 · New accounts</title></circle><circle data-lot-dot="22" data-cohort="raider" cx="318.7" cy="219.3" r="5"><title>simulated_00022 · Raiders</title></circle><circle data-lot-dot="23" data-cohort="new_account" cx="154.9" cy="250.8" r="5"><title>simulated_00023 · New accounts</title></circle><circle data-lot-dot="24" data-cohort="new_account" cx="250.5" cy="138.8" r="5"><title>simulated_00024 · New accounts</title></circle><circle data-lot-dot="25" data-cohort="subscriber" cx="277.5" cy="274.6" r="5"><title>simulated_00025 · Subscribers</title></circle><circle data-lot-dot="26" data-cohort="new_account" cx="137.2" cy="186.9" r="5"><title>simulated_00026 · New accounts</title></circle><circle data-lot-dot="27" data-cohort="new_account" cx="320.2" cy="177.5" r="5"><title>simulated_00027 · New accounts</title></circle><circle data-lot-dot="28" data-cohort="subscriber" cx="190.9" cy="282.8" r="5"><title>simulated_00028 · Subscribers</title></circle><circle data-lot-dot="29" data-cohort="raider" cx="195.1" cy="134.4" r="5"><title>simulated_00029 · Raiders</title></circle><circle data-lot-dot="30" data-cohort="new_account" cx="322.8" cy="248.0" r="5"><title>simulated_00030 · New accounts</title></circle><circle data-lot-dot="31" data-cohort="subscriber" cx="126.9" cy="231.2" r="5"><title>simulated_00031 · Subscribers</title></circle><circle data-lot-dot="32" data-cohort="new_account" cx="288.6" cy="138.9" r="5"><title>simulated_00032 · New accounts</title></circle><circle data-lot-dot="33" data-cohort="new_account" cx="248.6" cy="294.6" r="5"><title>simulated_00033 · New accounts</title></circle><circle data-lot-dot="34" data-cohort="subscriber" cx="141.7" cy="156.7" r="5"><title>simulated_00034 · Subscribers</title></circle><circle data-lot-dot="35" data-cohort="new_account" cx="343.0" cy="202.7" r="5"><title>simulated_00035 · New accounts</title></circle><circle data-lot-dot="36" data-cohort="raider" cx="151.9" cy="275.8" r="5"><title>simulated_00036 · Raiders</title></circle><circle data-lot-dot="37" data-cohort="subscriber" cx="230.6" cy="119.1" r="5"><title>simulated_00037 · Subscribers</title></circle><circle data-lot-dot="38" data-cohort="new_account" cx="309.4" cy="278.3" r="5"><title>simulated_00038 · New accounts</title></circle><circle data-lot-dot="39" data-cohort="new_account" cx="110.8" cy="201.4" r="5"><title>simulated_00039 · New accounts</title></circle><circle data-lot-dot="40" data-cohort="subscriber" cx="326.6" cy="152.8" r="5"><title>simulated_00040 · Subscribers</title></circle><circle data-lot-dot="41" data-cohort="new_account" cx="208.0" cy="304.2" r="5"><title>simulated_00041 · New accounts</title></circle><circle data-lot-dot="42" data-cohort="new_account" cx="163.8" cy="127.9" r="5"><title>simulated_00042 · New accounts</title></circle><circle data-lot-dot="43" data-cohort="raider" cx="351.3" cy="235.9" r="5"><title>simulated_00043 · Raiders</title></circle><circle data-lot-dot="44" data-cohort="new_account" cx="116.8" cy="255.3" r="5"><title>simulated_00044 · New accounts</title></circle><circle data-lot-dot="45" data-cohort="new_account" cx="274.8" cy="115.8" r="5"><title>simulated_00045 · New accounts</title></circle><circle data-lot-dot="46" data-cohort="subscriber" cx="279.1" cy="304.0" r="5"><title>simulated_00046 · Subscribers</title></circle><circle data-lot-dot="47" data-cohort="new_account" cx="111.1" cy="166.0" r="5"><title>simulated_00047 · New accounts</title></circle><circle data-lot-dot="48" data-cohort="new_account" cx="357.1" cy="179.4" r="5"><title>simulated_00048 · New accounts</title></circle><circle data-lot-dot="49" data-cohort="subscriber" cx="162.0" cy="300.4" r="5"><title>simulated_00049 · Subscribers</title></circle><circle data-lot-dot="50" data-cohort="raider" cx="201.5" cy="106.5" r="5"><title>simulated_00050 · Raiders</title></circle><circle data-lot-dot="51" data-cohort="new_account" cx="341.8" cy="271.9" r="5"><title>simulated_00051 · New accounts</title></circle><circle data-lot-dot="52" data-cohort="subscriber" cx="92.6" cy="223.4" r="5"><title>simulated_00052 · Subscribers</title></circle><circle data-lot-dot="53" data-cohort="new_account" cx="320.6" cy="126.9" r="5"><title>simulated_00053 · New accounts</title></circle><circle data-lot-dot="54" data-cohort="new_account" cx="235.1" cy="320.0" r="5"><title>simulated_00054 · New accounts</title></circle><circle data-lot-dot="55" data-cohort="subscriber" cx="130.0" cy="130.9" r="5"><title>simulated_00055 · Subscribers</title></circle><circle data-lot-dot="56" data-cohort="new_account" cx="373.6" cy="215.7" r="5"><title>simulated_00056 · New accounts</title></circle><circle data-lot-dot="57" data-cohort="raider" cx="118.2" cy="282.1" r="5"><title>simulated_00057 · Raiders</title></circle><circle data-lot-dot="58" data-cohort="subscriber" cx="250.2" cy="97.0" r="5"><title>simulated_00058 · Subscribers</title></circle><circle data-lot-dot="59" data-cohort="new_account" cx="313.7" cy="304.8" r="5"><title>simulated_00059 · New accounts</title></circle><circle data-lot-dot="60" data-cohort="new_account" cx="84.9" cy="184.0" r="5"><title>simulated_00060 · New accounts</title></circle><circle data-lot-dot="61" data-cohort="subscriber" cx="360.6" cy="152.3" r="5"><title>simulated_00061 · Subscribers</title></circle><circle data-lot-dot="62" data-cohort="new_account" cx="183.3" cy="322.3" r="5"><title>simulated_00062 · New accounts</title></circle><circle data-lot-dot="63" data-cohort="new_account" cx="166.7" cy="101.7" r="5"><title>simulated_00063 · New accounts</title></circle><circle data-lot-dot="64" data-cohort="raider" cx="371.6" cy="256.8" r="5"><title>simulated_00064 · Raiders</title></circle><circle data-lot-dot="65" data-cohort="new_account" cx="83.9" cy="250.4" r="5"><title>simulated_00065 · New accounts</title></circle><circle data-lot-dot="66" data-cohort="new_account" cx="303.3" cy="102.4" r="5"><title>simulated_00066 · New accounts</title></circle><circle data-lot-dot="67" data-cohort="subscriber" cx="269.4" cy="328.8" r="5"><title>simulated_00067 · Subscribers</title></circle><circle data-lot-dot="68" data-cohort="new_account" cx="97.1" cy="142.6" r="5"><title>simulated_00068 · New accounts</title></circle><circle data-lot-dot="69" data-cohort="new_account" cx="387.5" cy="189.5" r="5"><title>simulated_00069 · New accounts</title></circle><circle data-lot-dot="70" data-cohort="subscriber" cx="130.9" cy="308.8" r="5"><title>simulated_00070 · Subscribers</title></circle><circle data-lot-dot="71" data-cohort="raider" cx="217.4" cy="84.0" r="5"><title>simulated_00071 · Raiders</title></circle><circle data-lot-dot="72" data-cohort="new_account" cx="349.2" cy="296.9" r="5"><title>simulated_00072 · New accounts</title></circle><circle data-lot-dot="73" data-cohort="subscriber" cx="65.7" cy="208.7" r="5"><title>simulated_00073 · Subscribers</title></circle><circle data-lot-dot="74" data-cohort="new_account" cx="353.1" cy="123.8" r="5"><title>simulated_00074 · New accounts</title></circle><circle data-lot-dot="75" data-cohort="new_account" cx="213.8" cy="339.3" r="5"><title>simulated_00075 · New accounts</title></circle><circle data-lot-dot="76" data-cohort="subscriber" cx="129.3" cy="105.4" r="5"><title>simulated_00076 · Subscribers</title></circle><circle data-lot-dot="77" data-cohort="new_account" cx="395.9" cy="234.2" r="5"><title>simulated_00077 · New accounts</title></circle><circle data-lot-dot="78" data-cohort="raider" cx="85.8" cy="280.0" r="5"><title>simulated_00078 · Raiders</title></circle><circle data-lot-dot="79" data-cohort="subscriber" cx="276.0" cy="81.6" r="5"><title>simulated_00079 · Subscribers</title></circle><circle data-lot-dot="80" data-cohort="new_account" cx="307.8" cy="329.7" r="5"><title>simulated_00080 · New accounts</title></circle><circle data-lot-dot="81" data-cohort="new_account" cx="67.9" cy="162.4" r="5"><title>simulated_00081 · New accounts</title></circle><circle data-lot-dot="82" data-cohort="subscriber" cx="391.7" cy="159.4" r="5"><title>simulated_00082 · Subscribers</title></circle><circle data-lot-dot="83" data-cohort="new_account" cx="154.2" cy="333.3" r="5"><title>simulated_00083 · New accounts</title></circle><circle data-lot-dot="84" data-cohort="new_account" cx="178.9" cy="78.4" r="5"><title>simulated_00084 · New accounts</title></circle><circle data-lot-dot="85" data-cohort="raider" cx="382.6" cy="280.5" r="5"><title>simulated_00085 · Raiders</title></circle><circle data-lot-dot="86" data-cohort="new_account" cx="55.4" cy="238.6" r="5"><title>simulated_00086 · New accounts</title></circle><circle data-lot-dot="87" data-cohort="new_account" cx="334.7" cy="96.3" r="5"><title>simulated_00087 · New accounts</title></circle></svg>
+        <figcaption>
+          <ul class="cc-legend" aria-label="Cohorts">
+            <li data-cohort="new_account">New accounts <b>50</b></li>
+            <li data-cohort="subscriber">Subscribers <b>24</b></li>
+            <li data-cohort="raider">Raiders <b>13</b></li>
+          </ul>
+          <p class="cc-aside">Every entry has equal weight.</p>
+        </figcaption>
+      </figure>
+    </section>
+  </div>
+
+  <!-- Column 3 · seal, roll, record -->
+  <div class="cc-column" aria-label="Seal and record">
+    <section class="cc-section" aria-label="Seal slot">
+      <header class="cc-head"><span class="cc-head-no" aria-hidden="true">IV</span><h2>The seal</h2><p>Proposal · awaiting your seal</p></header>
+      <p class="cc-copy">Nothing acts until you hold to seal.</p>
+      <p class="cc-empty-line proto-empty">No proposals. Ask the Steward to draft one.</p>
+      <div class="cc-seal-card proto-writ" aria-label="Questions for the hall proposal">
+        <p class="cc-seal-card-title">Questions for the hall</p>
+        <p class="cc-seal-card-rev">Rev 2 · amended</p>
+        <div class="cc-seal-card-actions">
+          <button type="button" class="cc-hold" aria-label="Hold to seal"><span>Hold to seal</span><progress aria-label="Seal hold progress" max="1" value="0"></progress></button>
+          <button type="button" class="cc-textbutton">Tear it up</button>
+        </div>
+      </div>
+      <div class="cc-designs" role="group" aria-label="Room designs">
+        <p class="cc-kicker">Simulated · data-only designs</p>
+        <div class="cc-design-row" role="group" aria-label="Draw shapes design"><b>Draw shapes</b>
+          <span><button type="button" class="cc-textbutton">Restyle</button><button type="button" class="cc-textbutton">Custom design</button></span></div>
+      </div>
+    </section>
+
+    <section class="cc-section" aria-label="Entry lookup">
+      <header class="cc-head"><span class="cc-head-no" aria-hidden="true">V</span><h2>The roll</h2><p>Post-verdict chatters · free !join with equal odds · 5 held out by cooldown</p></header>
+      <div class="cc-field">
+        <label for="lookup-a">Find a handle in the roll</label>
+        <input id="lookup-a" type="search" placeholder="simulated_00001" autocomplete="off">
+        <p class="cc-field-hint">Try simulated_00001 or simulated_cooldown.</p>
+        <p class="cc-field-result" role="status">Enter a generated handle to check this pool.</p>
+      </div>
+    </section>
+
+    <section class="cc-section" aria-label="Saved simulated proof bundle">
+      <header class="cc-head"><span class="cc-head-no" aria-hidden="true">VI</span><h2>The record</h2><p>Saved simulated proof bundle</p></header>
+      <div class="cc-entry">
+        <time datetime="2026-10-25T12:00:00Z">2026-10-25</time>
+        <div><span class="cc-entry-label">Recorded winners</span><p class="cc-handles"><span>simulated_01</span><span>simulated_00</span></p></div>
+      </div>
+      <details class="cc-disclosure">
+        <summary>The writ</summary>
+        <div class="cc-disclosure-body">
+          <p class="cc-aside">Saved simulated proof bundle · independent of the current setup and roll. Streamer-controlled seed, not public randomness.</p>
+          <code class="cc-hash">7a3df29d6035aa8ede203967174adfeaad804e9421fc46e2d5cd5f9c40ae403a</code>
+          <button type="button" class="cc-textbutton">Recompute fixture cast</button>
+          <p class="cc-status" role="status">No draw changes yet.</p>
+        </div>
+      </details>
+    </section>
+  </div>
+</div>
+<!-- ===================== ROOM BODY: the proposal ends here ===================== -->
+      </div></div>
+    </section>
+  </main>
+  <section class="cc-steward-bar proto-empty" aria-label="The Steward">
+    <div class="cc-steward-identity" role="group" aria-label="Steward identity"><strong>The Steward</strong><span>Simulated co-pilot</span><b>SIMULATED STEWARD · SAMPLE DATA</b></div>
+    <div class="cc-steward-controls" role="group" aria-label="Steward conversation controls">
+      <div class="cc-steward-message"><p role="status">Good evening. Draft in the preview, amend in ink, then hold to seal. Nothing acts on a spoken request.</p></div>
+      <form onsubmit="return false"><label><span>Talk to the Steward...</span><input aria-label="Talk to the Steward..." placeholder="Talk to the Steward..."></label><button type="button" disabled>Hold to speak</button><button type="submit" disabled>Tell</button></form>
+      <div class="cc-steward-suggestions" role="group" aria-label="Steward suggestions"><button type="button">Catch me up</button><button type="button">Draft a question draw</button><button type="button">What does chat want?</button></div>
+    </div>
+  </section>
+  <section class="cc-steward-bar cc-steward-with-proposal proto-writ" aria-label="The Steward">
+    <div class="cc-steward-identity" role="group" aria-label="Steward identity"><strong>The Steward</strong><span>Simulated co-pilot</span><b>SIMULATED STEWARD · SAMPLE DATA</b></div>
+    <div class="cc-steward-controls" role="group" aria-label="Steward conversation controls">
+      <div class="cc-steward-message"><p role="status">Re-inked the draft. The previous value stays struck. It still awaits your hold to seal.</p></div>
+      <form onsubmit="return false"><label><span>Talk to the Steward...</span><input aria-label="Talk to the Steward..." placeholder="Talk to the Steward..."></label><button type="button" disabled>Hold to speak</button><button type="submit" disabled>Tell</button></form>
+      <div class="cc-steward-suggestions" role="group" aria-label="Steward suggestions"><button type="button">Catch me up</button><button type="button">Draft a question draw</button><button type="button">What does chat want?</button></div>
+    </div>
+    <aside class="cc-steward-proposal" aria-label="Steward proposal"><article class="shell-steward-proposal" aria-label="Questions for the hall proposal"><b>PROPOSAL · AWAITING YOUR SEAL</b><h3>Questions for the hall</h3><p>Rev 2 · amended. Review the draft before holding to seal.</p><button type="button" class="cc-button">Review in the room</button></article></aside>
+  </section>
+</div>
+<div class="proto-tools" role="group" aria-label="Prototype controls, not part of the design">
+  <button type="button" class="proto-theme" data-flip-theme title="Paper / stock (or ?theme=stock)">stock</button><button type="button" class="proto-state" data-flip-state title="No draft / writ drafted (or ?state=writ)">writ</button>
+</div>
+</body>
+</html>

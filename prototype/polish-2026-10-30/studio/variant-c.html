@@ -1,0 +1,428 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Map Room · Herald</title>
+<!--
+PORT NOTES · Variant C "Herald" · Map Room (Chamber 4, ink: key)
+Thesis: one heraldic hero; the selected tile is a big banner card in its house's ink, and the
+houses and stages are bold cards you can read from across the room.
+
+Components this variant introduces (packages/ui candidates, one vocabulary):
+- .cc-herald / .cc-herald-field / .cc-herald-side  two columns: field (board) and side (cards).
+    Replaces .studio-room-layout / -workbench / -details.
+- .cc-banner-head (h2 + serif sub)  the board title. Replaces the bare h2 + p in hex-table.tsx.
+- .cc-hexfield / .cc-hexfield-plate + .cc-hex (+ face/id/house)
+    Full spot-ink fills, paper gutters; the tile id is set large (>= 19px bold, so press ink
+    on gules passes AA as large text) and the house name sits on a small --card scroll so it
+    passes AA at 13px. The pressed hex is lifted: key ring + a hard key drop-shadow.
+    Same button contract as today. Replaces .studio-room-board button and .room-scroll-hint.
+- .cc-pennants / .cc-pennant[data-house]  bold house standings under the board. Replaces .studio-room-legend.
+- .cc-hero[data-house] (+ -band, -body, -kicker, -figure, -now, -house, -note, -hint)
+    The inspector as a heraldic banner card: a band in the house ink, a 54px tile id with an
+    out-of-register ghost in the house ink, and a hard offset shadow in the house ink.
+    Replaces .studio-room-inspector, .room-caption and .room-now. data-house is updated with the selection.
+- .cc-side-head  section title + meta in the side column.
+- .cc-tablets / .cc-tablet  the ladder as three stage cards (current = key fill, locked = dashed).
+    Replaces .studio-room-ladder button.
+- .cc-proclamation  requirement readout (role=status). .cc-seal-card  the seal slot as a card with
+    a key head band. .cc-draft  dashed draft layer (ProposalLayers).
+
+Must not miss:
+- House ink on large surfaces (hero band, hex fill) carries press-ink text ONLY at >= 19px bold;
+  smaller text goes on --card. Do not shrink .cc-hero-band or .cc-hex-id below --text-wordmark.
+- The hero's box-shadow and the tile id's text-shadow follow --house; unclaimed falls back to --hair.
+- The board fits the column via a CSS size container (no scrolling for the 6 rows).
+- data-current stays on Sand table; aria-pressed only marks the inspected stage.
+- "Sample draft" / "Paper / Stock" bottom-right are prototype controls, not design.
+
+-->
+<link rel="stylesheet" href="../../../packages/tokens/src/generated.css">
+<script>(function(){var q=new URLSearchParams(location.search),r=document.documentElement;r.setAttribute('data-theme',q.get('theme')==='stock'?'stock':'paper');if(q.get('draft'))r.setAttribute('data-show-draft','');})();</script>
+<style>
+
+/* ===== FIXED SHELL: copied from the app, not part of this proposal ===== */
+*, *::before, *::after { box-sizing: border-box; }
+html { color-scheme: light; }
+html[data-theme="stock"] { color-scheme: dark; }
+html, body { height: 100%; }
+body { margin: 0; font-family: var(--font-ui); color: var(--ink); background: var(--paper); -webkit-font-smoothing: antialiased; }
+.desktop-shell { display: grid; grid-template-rows: var(--mh) minmax(0, 1fr) auto; height: 100dvh; overflow: hidden; }
+.desktop-surface { min-height: 0; display: flex; flex-direction: column; overflow: hidden; padding: 0 var(--space-16) var(--space-12); background: var(--paper); }
+/* rampart: packages/ui/src/shell.css */
+.cc-rampart { position: relative; z-index: 60; display: flex; align-items: center; height: var(--mh); gap: var(--space-14); padding: 0 var(--space-14) 0 var(--space-16); border-bottom: var(--rule-thin) solid var(--rule); background: var(--paper); }
+.cc-rampart::after { content: ""; position: absolute; inset-inline: 0; bottom: calc(-1 * var(--space-5)); height: var(--rule-thin); background: var(--rule); opacity: .55; }
+.cc-rampart a { color: inherit; text-decoration: none; }
+.cc-brand { width: calc(var(--cw) - var(--space-30)); display: flex; align-items: center; gap: var(--space-10); flex: none; text-decoration: none; color: var(--ink); }
+.cc-mark { display: block; width: var(--mark-w); height: var(--mark-h); flex: none; }
+.cc-mark-gate { mix-blend-mode: var(--blend); }
+.cc-wordmark { position: relative; isolation: isolate; white-space: pre-line; font: 800 var(--text-wordmark)/.9 var(--font-display); font-stretch: 75%; text-transform: uppercase; letter-spacing: var(--track-wordmark); }
+.cc-wordmark::after { content: attr(data-text); position: absolute; left: var(--wordmark-ghost); top: var(--wordmark-ghost); color: var(--or); mix-blend-mode: var(--blend); pointer-events: none; }
+.cc-live-group, .cc-link-group { display: flex; flex: none; align-items: center; gap: var(--space-12); min-width: 0; }
+.cc-figure { display: flex; flex-direction: column; line-height: 1.05; }
+.cc-figure b { font: 700 var(--text-number)/1.1 var(--font-num); font-variant-numeric: tabular-nums; }
+.cc-figure small { margin-top: var(--space-2); font: 600 var(--text-label)/1.2 var(--font-ui); letter-spacing: var(--track-wide); text-transform: uppercase; color: var(--muted); }
+.cc-separator { flex: none; width: var(--rule-thin); height: var(--space-28); background: var(--hair); }
+.cc-spacer { flex: 1 1 0; min-width: 0; }
+.cc-sample { flex: none; white-space: nowrap; display: inline-flex; align-items: center; height: var(--chip-h); padding-inline: var(--space-7); border: var(--rule-thin) dashed var(--hair); border-radius: var(--r-sm); color: var(--muted); font: 700 var(--text-label)/1 var(--font-ui); text-transform: uppercase; letter-spacing: var(--track-wide); }
+.cc-chip { display: inline-flex; align-items: center; white-space: nowrap; height: var(--chip-h); padding-inline: var(--space-7); gap: var(--space-5); border: var(--rule-medium) solid var(--ink); border-radius: var(--r-sm); background: transparent; color: var(--ink); font: 700 var(--text-label)/1 var(--font-ui); letter-spacing: var(--track-label); text-transform: uppercase; }
+.cc-chip[data-variant="dash"] { border-style: dashed; color: var(--muted); border-color: var(--hair); }
+.cc-button { display: inline-flex; justify-content: center; align-items: center; gap: var(--space-7); height: var(--button-h); padding: 0 var(--space-12); cursor: pointer; white-space: nowrap; border: var(--rule-medium) solid var(--ink); border-radius: var(--r-sm); background: var(--paper); color: var(--ink); text-decoration: none; font: 700 var(--text-label)/1 var(--font-ui); letter-spacing: var(--track-label); text-transform: uppercase; transition: background var(--motion-fast), color var(--motion-fast), transform var(--motion-fast); }
+.cc-button:hover, .cc-button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+.cc-button:active { transform: translateY(var(--space-1)); }
+.cc-button[data-size="small"] { height: var(--button-small-h); padding-inline: var(--space-9); }
+.cc-button[data-size="icon"] { width: var(--mark-w); padding: 0; flex: none; }
+.cc-button svg { width: var(--icon-sm); height: var(--icon-sm); fill: none; stroke: currentColor; stroke-width: 1.7; }
+@media (max-width: 1420px) { .cc-rampart { gap: var(--space-11); } .cc-brand { width: auto; } .cc-separator { display: none; } }
+/* room frame: apps/desktop/src/shell/room.css */
+.shell-room { --room-ink: var(--ink); position: relative; flex: 1; min-height: 0; display: flex; flex-direction: column; margin-top: var(--space-16); border: var(--rule-strong) solid var(--ink); background: var(--paper); box-shadow: var(--space-10) var(--space-10) 0 var(--hair-2); font: var(--text-body)/1.5 var(--font-ui); }
+.shell-room-header { display: flex; align-items: center; gap: var(--space-16); padding: var(--space-12) var(--space-20); border-bottom: var(--rule-medium) solid var(--line); }
+.shell-room-heading { flex: 1; min-width: 0; }
+.shell-room-heading nav { font: 600 var(--text-label)/1.3 var(--font-ui); color: var(--muted); }
+.shell-room-title { display: flex; align-items: baseline; flex-wrap: wrap; gap: var(--space-8) var(--space-24); }
+.shell-room-header h1 { margin: 0; font: 800 var(--text-chamber-number)/1 var(--font-display); text-transform: uppercase; text-shadow: var(--wordmark-ghost) var(--wordmark-ghost) 0 var(--room-ink); }
+.shell-room-title p { margin: 0; font: italic var(--text-wordmark)/1.3 var(--font-serif); }
+.shell-room-simulated { color: var(--muted); font: 700 var(--text-label)/1.4 var(--font-ui); letter-spacing: var(--track-label); }
+.shell-room .cc-room-locator { display: flex; align-items: center; gap: var(--space-4); font-size: var(--text-small); }
+.shell-room .cc-room-locator > span { margin-inline-end: var(--space-4); color: var(--muted); }
+.shell-room .cc-room-locator a { min-width: var(--space-30); padding: var(--space-4); border: var(--rule-thin) solid var(--ink); background: var(--card); color: var(--ink); font-family: var(--font-num); text-align: center; text-decoration: none; }
+.shell-room .cc-room-locator a[aria-current] { color: var(--paper); background: var(--ink); }
+.shell-room .shell-room-back { flex-shrink: 0; padding: var(--space-8) var(--space-14); border: var(--rule-medium) solid var(--ink); color: var(--ink); text-decoration: none; font-weight: 700; }
+.shell-room-back kbd { font: var(--text-small)/1.4 var(--font-num); margin-inline-start: var(--space-8); }
+.shell-room .shell-room-work { display: block; flex: 1; min-height: 0; padding: 0; overflow: hidden; }
+.shell-room .shell-room-content { min-width: 0; height: 100%; overflow: auto; }
+.shell-room :where(button:not(.cc-seal-button)) { font: 600 var(--text-body)/1.4 var(--font-ui); border: var(--rule-medium) solid var(--ink); background: var(--card); color: var(--ink); padding: var(--space-6) var(--space-8); max-width: 100%; cursor: pointer; }
+.shell-room button:focus-visible, .shell-room a:focus-visible { outline: var(--rule-strong) solid var(--azure); outline-offset: var(--focus-offset); }
+.shell-room h2 { font-family: var(--font-display); }
+.shell-room :where(h3) { font: 800 var(--text-section)/1.2 var(--font-display); text-transform: uppercase; }
+.shell-room a { color: var(--azure-text); }
+/* steward dock: packages/ui/src/steward-bar.css + apps/desktop/src/view.css */
+.cc-steward-bar { display: grid; grid-template-columns: calc(var(--space-40) * 3) minmax(0, 1fr); gap: var(--space-12); padding: var(--space-8) var(--space-24); background: var(--paper); border-top: var(--rule-medium) solid var(--rule); font: var(--text-body)/1.4 var(--font-ui); }
+.cc-steward-identity { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--space-4); padding-right: var(--space-12); border-right: var(--rule-medium) solid var(--line); text-align: center; }
+.cc-steward-identity strong { font: 800 var(--text-section)/1.1 var(--font-display); text-transform: uppercase; }
+.cc-steward-identity span { color: var(--muted); font-size: var(--text-small); }
+.cc-steward-identity b { font-size: var(--text-small); color: var(--gules-text); letter-spacing: var(--track-label); }
+.cc-steward-controls { min-width: 0; align-self: center; }
+.cc-steward-message p { margin: 0 0 var(--space-8); font: var(--text-body)/1.4 var(--font-ui); overflow-wrap: anywhere; }
+.cc-steward-bar form { display: flex; align-items: end; gap: var(--space-10); margin: 0; }
+.cc-steward-bar label { display: flex; flex: 1; min-width: 0; flex-direction: column; gap: var(--space-4); font-size: var(--text-small); }
+.cc-steward-bar input { min-width: 0; padding: var(--space-7) var(--space-10); border: var(--rule-thin) solid var(--hair); border-radius: var(--r-sm); background: var(--card); color: var(--ink); font: var(--text-body)/1.4 var(--font-ui); }
+.cc-steward-bar input::placeholder { color: var(--muted); }
+.cc-steward-bar button { font: inherit; color: var(--ink); background: var(--card); border: var(--rule-thin) solid var(--ink); padding: var(--space-7) var(--space-10); border-radius: var(--r-sm); cursor: pointer; }
+.cc-steward-bar button:disabled { opacity: var(--disabled-opacity); cursor: default; }
+.cc-steward-suggestions { display: flex; flex-wrap: wrap; gap: var(--space-8); margin-top: var(--space-8); }
+.cc-steward-suggestions button { font-size: var(--text-small); padding-block: var(--space-4); }
+/* house inks: one mapping, shared by every component that shows a house */
+[data-house="House Quill"] { --house: var(--gules); --house-text: var(--gules-text); }
+[data-house="House Tallow"] { --house: var(--or); --house-text: var(--or-text); }
+[data-house="House Sable"] { --house: var(--azure); --house-text: var(--azure-text); }
+[data-house="unclaimed"] { --house: var(--paper-2); --house-text: var(--muted); }
+/* ===== PROTOTYPE CONTROL: not part of any design ===== */
+.proto-ctl { position: fixed; right: var(--space-6); bottom: var(--space-6); z-index: 100; display: flex; align-items: center; gap: var(--space-4); padding: var(--space-3) var(--space-4) var(--space-3) var(--space-8); border: var(--rule-thin) dashed var(--muted); border-radius: var(--r-sm); background: var(--paper); color: var(--muted); font: 600 11px/1 var(--font-ui); }
+.proto-ctl button { padding: var(--space-3) var(--space-6); border: var(--rule-thin) solid var(--hair); border-radius: var(--r-sm); background: transparent; color: var(--ink-2); font: inherit; cursor: pointer; }
+.proto-ctl button[aria-pressed="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+
+/* ===== THE PROPOSAL: Map Room chamber body ===== */
+
+.cc-herald { height: 100%; display: grid; grid-template-columns: minmax(0, 1fr) minmax(21rem, 33%); color: var(--ink); font: 400 var(--text-body)/1.45 var(--font-ui); }
+:where(.cc-herald) :is(p, h2, h3, ul) { margin: 0; }
+.cc-herald-field { display: flex; flex-direction: column; gap: var(--space-12); min-width: 0; min-height: 0; padding: var(--space-16) var(--space-24) var(--space-14); }
+.cc-herald-side { display: flex; flex-direction: column; gap: var(--space-22); min-width: 0; min-height: 0; overflow: auto; scrollbar-gutter: stable; scrollbar-color: var(--faint) transparent; padding: var(--space-16) var(--space-14) var(--space-24) var(--space-20); border-left: var(--rule-medium) solid var(--rule); }
+
+/* banner head */
+.cc-banner-head { display: flex; align-items: baseline; flex-wrap: wrap; gap: var(--space-4) var(--space-14); }
+.cc-banner-head h2 { font: 800 var(--text-chamber)/1 var(--font-display); text-transform: uppercase; letter-spacing: var(--track-chamber); }
+.cc-banner-head p { font: italic var(--text-aside)/1.3 var(--font-serif); color: var(--ink-2); }
+
+/* the field: full spot inks, lifted selection */
+.cc-hexfield { position: relative; flex: 1; min-height: 0; container-type: size; }
+.cc-hexfield-plate { --s: min(calc((100cqw - var(--space-6)) / 16.46), calc((100cqh - var(--space-6)) / 9.52)); --hw: calc(var(--s) * 1.7320508); position: absolute; inset: 0; margin: auto; width: calc(var(--hw) * 9.5); height: calc(var(--s) * 9.5); }
+.cc-hex { position: absolute; left: calc((var(--c) + var(--o, 0)) * var(--hw)); top: calc(var(--r) * var(--s) * 1.5); width: var(--hw); height: calc(var(--s) * 2); display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 0; padding: 0; border: 0; background: transparent; color: var(--press); cursor: pointer; transition: filter var(--motion-fast) var(--ease); }
+.cc-hex[data-row-offset="true"] { --o: .5; }
+.cc-hex::before, .cc-hex-face { position: absolute; clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%); }
+.cc-hex::before { content: ""; inset: 0; background: transparent; }
+.cc-hex-face { inset: var(--space-2); background: var(--house); }
+.cc-hex[data-house="unclaimed"] { color: var(--ink); }
+.cc-hex[data-house="unclaimed"]::before { background: var(--hair); }
+.cc-hex[data-house="unclaimed"] .cc-hex-face { inset: var(--space-3); background: var(--paper-2); }
+.cc-hex-id, .cc-hex-house { position: relative; }
+.cc-hex-id { font: 800 clamp(var(--text-wordmark), calc(var(--s) * .44), var(--text-chamber))/1 var(--font-display); letter-spacing: var(--track-title); }
+.cc-hex-house { margin-top: var(--space-4); padding: var(--space-1) var(--space-5); border-radius: var(--r-sm); background: var(--card); color: var(--ink); font: 700 var(--text-label)/1.2 var(--font-ui); }
+.cc-hex[data-house="unclaimed"] .cc-hex-house { background: transparent; color: var(--ink-2); font-weight: 600; }
+.cc-hex:hover { filter: drop-shadow(var(--space-2) var(--space-2) 0 var(--hair)); }
+.cc-hex[aria-pressed="true"] { z-index: 2; filter: drop-shadow(var(--space-4) var(--space-4) 0 var(--key)); }
+.cc-hex[aria-pressed="true"]::before { background: var(--key); }
+.cc-hex[aria-pressed="true"] .cc-hex-face { inset: var(--space-4); }
+.shell-room .cc-hex:focus-visible { outline: none; }
+.cc-hex:focus-visible::before { background: var(--azure); }
+.cc-hex:focus-visible .cc-hex-face { inset: var(--space-4); }
+
+/* pennants: house standings */
+.cc-pennants { display: flex; flex-wrap: wrap; gap: var(--space-10); padding: 0; list-style: none; }
+.cc-pennant { display: flex; align-items: center; gap: var(--space-10); padding: var(--space-5) var(--space-12) var(--space-5) var(--space-10); border: var(--rule-medium) solid var(--rule); border-left: var(--space-10) solid var(--house); background: var(--card); }
+.cc-pennant[data-house="unclaimed"] { border-left-color: var(--hair); border-left-style: dashed; }
+.cc-pennant b { font: 800 var(--text-chamber)/1 var(--font-display); font-variant-numeric: tabular-nums; }
+.cc-pennant span { font: 700 var(--text-label)/1.2 var(--font-ui); letter-spacing: var(--track-label); text-transform: uppercase; }
+
+/* hero: the selected tile as a banner */
+.cc-hero { flex: none; border: var(--rule-strong) solid var(--rule); background: var(--card); box-shadow: var(--space-6) var(--space-6) 0 var(--house); margin-right: var(--space-6); }
+.cc-hero[data-house="unclaimed"] { box-shadow: var(--space-6) var(--space-6) 0 var(--hair); }
+.cc-hero-band { display: flex; align-items: center; justify-content: space-between; gap: var(--space-8); padding: var(--space-8) var(--space-14); background: var(--house); color: var(--press); border-bottom: var(--rule-strong) solid var(--rule); }
+.cc-hero[data-house="unclaimed"] .cc-hero-band { color: var(--ink); }
+.cc-hero-band b { font: 800 var(--text-wordmark)/1.1 var(--font-display); text-transform: uppercase; letter-spacing: var(--track-chamber); }
+.cc-hero-band small { padding: var(--space-2) var(--space-6); border-radius: var(--r-sm); background: var(--card); color: var(--ink); font: 700 var(--text-label)/1.2 var(--font-ui); letter-spacing: var(--track-label); text-transform: uppercase; white-space: nowrap; }
+.cc-hero-body { display: grid; gap: var(--space-8); padding: var(--space-14); }
+.cc-hero-kicker { font: 800 var(--text-label)/1.4 var(--font-ui); letter-spacing: var(--track-air); text-transform: uppercase; color: var(--muted); }
+.cc-hero-figure { display: flex; align-items: center; gap: var(--space-14); }
+.cc-hero-figure .cc-swatch { width: var(--space-40); height: calc(var(--space-40) * 1.1547); flex: none; overflow: visible; }
+.cc-hero-figure .cc-swatch polygon { fill: var(--house); stroke: var(--rule); stroke-width: 1.5; }
+.cc-hero-figure > b { font: 800 var(--text-title)/.9 var(--font-display); text-transform: uppercase; text-shadow: var(--title-ghost) var(--title-ghost) 0 var(--house); }
+.cc-hero-sub { display: grid; gap: var(--space-2); margin-left: auto; text-align: right; font: 600 var(--text-label)/1.35 var(--font-ui); color: var(--ink-2); }
+.cc-hero-sub strong { font-family: var(--font-num); color: var(--ink); }
+.cc-hero-now { font: italic var(--text-wordmark)/1.3 var(--font-serif); }
+.cc-hero-house { font: 600 var(--text-body)/1.4 var(--font-ui); }
+.cc-hero-note { font: var(--text-small)/1.45 var(--font-ui); color: var(--ink-2); }
+.cc-hero-hint { padding-top: var(--space-8); border-top: var(--rule-thin) dashed var(--line); font: italic var(--text-small)/1.4 var(--font-serif); color: var(--muted); }
+
+/* side heads */
+.cc-side-head { display: flex; align-items: baseline; flex-wrap: wrap; gap: var(--space-4) var(--space-10); padding-bottom: var(--space-6); border-bottom: var(--rule-strong) solid var(--rule); }
+.cc-side-head h3 { font: 800 var(--text-chamber)/1 var(--font-display); text-transform: uppercase; letter-spacing: var(--track-chamber); }
+.cc-side-head span { margin-left: auto; font: 600 var(--text-label)/1.3 var(--font-ui); color: var(--muted); }
+.cc-side-lede { margin-top: var(--space-8); font: var(--text-small)/1.45 var(--font-ui); color: var(--ink-2); }
+.cc-side-fine { font: var(--text-small)/1.4 var(--font-ui); color: var(--muted); }
+.cc-ladder > .cc-side-fine { margin-top: var(--space-10); }
+
+/* tablets: the ladder as three stage cards */
+.cc-tablets { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-10); margin-top: var(--space-12); }
+.cc-tablet { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-2); min-width: 0; max-width: none; min-height: calc(var(--space-56) * 2); margin: 0; padding: var(--space-8) var(--space-10) var(--space-10); border: var(--rule-strong) solid var(--rule); border-radius: 0; background: var(--card); color: var(--ink); text-align: left; cursor: pointer; font: inherit; }
+.cc-tablet-no { font: 800 var(--text-chamber)/1 var(--font-num); }
+.cc-tablet b { font: 800 var(--text-section)/1.15 var(--font-display); letter-spacing: var(--track-title); }
+.cc-tablet i { font: italic var(--text-small)/1.2 var(--font-serif); color: var(--ink-2); }
+.cc-tablet-state { display: flex; align-items: center; gap: var(--space-4); margin-top: auto; padding-top: var(--space-6); font: 700 var(--text-label)/1.2 var(--font-ui); }
+.cc-tablet-state svg { width: var(--icon-sm); height: var(--icon-sm); flex: none; fill: none; stroke: currentColor; stroke-width: 1.6; }
+.cc-tablet[data-current="true"] { background: var(--key); border-color: var(--key); color: var(--paper); }
+.cc-tablet[data-current="true"] i { color: var(--paper); }
+.cc-tablet[data-current="false"] { border-style: dashed; }
+.cc-tablet[data-current="false"] .cc-tablet-state { color: var(--ink-2); }
+.cc-tablet[data-current="false"]:hover { background: var(--tint); }
+.cc-tablet[aria-pressed="true"] { outline: var(--rule-strong) solid var(--rule); outline-offset: var(--space-3); }
+.cc-proclamation { margin-top: var(--space-14); padding: var(--space-10) var(--space-14) var(--space-12); border: var(--rule-medium) solid var(--rule); border-top: var(--space-5) solid var(--key); background: var(--card); }
+.cc-proclamation-label { font: 800 var(--text-label)/1.4 var(--font-ui); letter-spacing: var(--track-label); text-transform: uppercase; }
+.cc-proclamation p + p { margin-top: var(--space-4); }
+
+/* draft + seal card */
+.cc-draft { display: none; padding: var(--space-14); border: var(--rule-strong) dashed var(--key); background: var(--card); }
+[data-show-draft] .cc-draft { display: block; }
+.cc-draft-stamp { font: 800 var(--text-label)/1.4 var(--font-ui); letter-spacing: var(--track-label); }
+.cc-draft h3 { margin-top: var(--space-4); font: 800 var(--text-chamber)/1.1 var(--font-display); text-transform: uppercase; }
+.cc-draft-rev { margin: var(--space-4) 0 var(--space-8); font: var(--text-small)/1.4 var(--font-ui); color: var(--muted); }
+.cc-draft dl { margin: 0; }
+.cc-draft dl div { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr); gap: var(--space-8); padding-top: var(--space-8); border-top: var(--rule-thin) solid var(--line); }
+.cc-draft dt { font: 700 var(--text-small)/1.4 var(--font-ui); }
+.cc-draft dd { margin: 0; }
+.cc-seal-card { flex: none; border: var(--rule-strong) solid var(--rule); background: var(--card); }
+.cc-seal-card-head { padding: var(--space-8) var(--space-14); background: var(--key); color: var(--paper); font: 800 var(--text-section)/1.2 var(--font-display); text-transform: uppercase; letter-spacing: var(--track-label); }
+.cc-seal-card-body { display: grid; gap: var(--space-10); padding: var(--space-12) var(--space-14) var(--space-14); }
+.cc-seal-designs { display: grid; gap: var(--space-6); padding: var(--space-10) 0; border-block: var(--rule-thin) solid var(--line); }
+.cc-seal-designs strong { font: 700 var(--text-body)/1.3 var(--font-ui); }
+.cc-seal-designs div { display: flex; flex-wrap: wrap; gap: var(--space-8); }
+.cc-seal-caption { font: 800 var(--text-label)/1.4 var(--font-ui); letter-spacing: var(--track-label); color: var(--muted); }
+.cc-seal-empty { font: italic var(--text-aside)/1.4 var(--font-serif); color: var(--muted); }
+
+</style>
+</head>
+<body>
+<div class="desktop-shell">
+  <header class="cc-rampart">
+    <a class="cc-brand" href="#/keep" aria-label="Castle Control, the whole keep">
+      <svg class="cc-mark" viewBox="0 0 72 64" role="img" aria-label="Castle Control mark: a chat bubble topped with battlements, its gate lit"><path d="M6 6h9v7h8V6h9v7h8V6h9v7h8V6h9v42a4 4 0 0 1-4 4H27l-12 10V52h-5a4 4 0 0 1-4-4ZM28 52V39a8 8 0 0 1 16 0V52Z" fill="var(--gules)" fill-rule="evenodd"/><path d="M28 52V39a8 8 0 0 1 16 0V52Z" transform="translate(1.6 -1.4)" fill="var(--or)" class="cc-mark-gate"/></svg>
+      <span class="cc-wordmark" data-text="Castle&#10;Control">Castle<br>Control</span>
+    </a>
+    <div class="cc-live-group" aria-label="Stream status">
+      <span class="cc-chip" data-variant="dash">ON AIR simulated</span>
+      <span class="cc-figure"><b>Unknown</b><small>viewers</small></span>
+      <span class="cc-figure"><b>Unknown</b><small>uptime</small></span>
+    </div>
+    <span class="cc-separator"></span>
+    <div class="cc-link-group"><span class="cc-chip" data-variant="dash">Twitch simulated</span><span class="cc-chip" data-variant="dash">OBS simulated</span></div>
+    <a href="#/chamber/moderator"><span class="cc-chip" data-variant="dash">Gatehouse simulated</span></a>
+    <span class="cc-spacer"></span>
+    <span class="cc-sample">Simulated</span>
+    <button type="button" class="cc-button" data-size="icon" id="rampart-theme" aria-label="Toggle paper and dark stock" title="Paper / dark stock" aria-pressed="false"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2a8 8 0 1 0 0 16V2Zm0 0a8 8 0 0 1 0 16"/></svg></button>
+    <button type="button" class="cc-button" data-variant="outline" data-size="normal" title="Talk to the Steward (/)">Steward</button>
+  </header>
+  <main class="desktop-surface">
+    <section class="shell-room" data-chamber="studio" aria-label="Chamber detail room">
+      <header class="shell-room-header">
+        <div class="shell-room-heading">
+          <nav aria-label="Breadcrumb"><a href="#/keep">The keep</a><span aria-hidden="true"> › </span><span aria-current="page">The Map Room (Extension studio)</span></nav>
+          <div class="shell-room-title"><h1>The Map Room</h1><p>Chamber 4 of 4 · Extension studio</p><span class="shell-room-simulated">SIMULATED</span></div>
+        </div>
+        <nav class="cc-room-locator" aria-label="Chamber locator"><span>Chambers</span><a href="#/chamber/lottery" aria-label="1: Lot Chamber">1</a><a href="#/chamber/moderator" aria-label="2: Gatehouse">2</a><a href="#/chamber/visuals" aria-label="3: Beacons">3</a><a href="#/chamber/studio" aria-label="4: Map Room" aria-current="location">4</a></nav>
+        <a class="shell-room-back" href="#/keep">Back to the keep <kbd>Esc</kbd></a>
+      </header>
+      <div class="shell-room-work"><div class="shell-room-content">
+        <section class="cc-herald" aria-label="Map Room work">
+          <div class="cc-herald-field" role="region" aria-label="Illustrative 9 by 6 war table">
+            <header class="cc-banner-head"><h2>The war table · 9 × 6 hexes</h2><p>Illustrative territory · no live turn</p></header>
+            <div class="cc-hexfield"><div class="cc-hexfield-plate" role="group" aria-label="Inspect the 54 sample tiles">
+              <button type="button" class="cc-hex" data-hex-tile="A1" data-house="House Quill" data-row-offset="false" style="--c:0;--r:0" aria-label="Tile A1, House Quill" aria-pressed="true"><span class="cc-hex-face" aria-hidden="true"></span><span class="cc-hex-id">A1</span><span class="cc-hex-house">Quill</span></button>
+              <button type="button" class="cc-hex" data-hex-tile="B1" data-house="House Quill" data-row-offset="false" style="--c:1;--r:0" aria-label="Tile B1, House Quill" aria-pressed="false"><span class="cc-hex-face" aria-hidden="true"></span><span class="cc-hex-id">B1</span><span class="cc-hex-house">Quill</span></button>
+              <button type="button" class="cc-hex" data-hex-tile="C1" data-house="House Quill" data-row-offset="false" style="--c:2;--r:0" aria-label="Tile C1, House Quill" aria-pressed="false"><span class="cc-hex-face" aria-hidden="true"></span><span class="cc-hex-id">C1</span><span class="cc-hex-house">Quill</span></button>
+              <button type="button" class="cc-hex" data-hex-tile="D1" data-house="House Quill" data-row-offset="false" style="--c:3;--r:0" aria-label="Tile D1, House Quill" aria-pressed="false"><span class="cc-hex-face" aria-hidden="true"></span><span class="cc-hex-id">D1</span><span class="cc-hex-house">Quill</span></button>
+              <button type="button" class="cc-hex" data-hex-tile="E1" data-house="unclaimed" data-row-offset="false" style="--c:4;--r:0" aria-label="Tile E1, unclaimed" aria-pressed="false"><span class="cc-hex-face" aria-hidden="true"></span><span class="cc-hex-id">E1</span><span class="cc-hex-house">Free</span></button>
+              <button type="button" class="cc-hex" data-hex-tile="F1" data-house="House Tallow" data-row-offset="false" style="--c:5;--r:0" aria-label="Tile F1, House Tallow" aria-pressed="false"><span class="cc-hex-face" aria-hidden="true"></span><span class="cc-hex-id">F1</span><span class="cc-hex-house">Tallow</span></button>
+              <button type="button" class="cc-hex" data-hex-tile="G1" data-house="House Tallow" data-row-offset="false" style="--c:6;--r:0" aria-label="Tile G1, House Tallow" aria-pressed="false"><span class="cc-hex-face" aria-hidden="true"></span><span class="cc-hex-id">G1</span><span class="cc-hex-house">Tallow</span></button>
+              <button type="button" class="cc-hex" data-hex-tile="H1" data-house="House Tallow" data-row-offset="false" style="--c:7;--r:0" aria-label="Tile H1, House Tallow" aria-pressed="false"><span class="cc-hex-face" aria-hidden="true"></span><span class="cc-hex-id">H1</span><span class="cc-hex-house">Tallow</span></button>
+              <button type="button" class="cc-hex" data-hex-tile="I1" data-house="House Tallow" data-row-offset="false" style="--c:8;--r:0" aria-label="Tile I1, House Tallow" aria-pressed="false"><span class="cc-hex-face" aria-hidden="true"></span><span class="cc-hex-id">I1</span><span class="cc-hex-house">Tallow</span></button>
+              <button type="button" class="cc-hex" data-hex-tile="A2" data-house="House Quill" data-row-offset="true" style="--c:0;--r:1" aria-label="Tile A2, House Quill" aria-pressed="false"><span class="cc-hex-face" aria-hidden="true"></span><span class="cc-hex-id">A2</span><span class="cc-hex-house">Quill</span></button>
+              <button type="button" class="cc-hex" data-hex-tile="B2" data-house="House Quill" data-row-offset="true" style="--c:1;--r:1" aria-label="Tile B2, House Quill" aria-pressed="false"><span class="cc-hex-face" aria-hidden="true"></span><span class="cc-hex-id">B2</span><span class="cc-hex-house">Quill</span></button>
+              <button type="button" class="cc-hex" data-hex-tile="C2" data-house="House Quill" data-row-offset="true" style="--c:2;--r:1" aria-label="Tile C2, House Quill" aria-pressed="false"><span class="cc-hex-face" aria-hidden="true"></span><span class="cc-hex-id">C2</span><span class="cc-hex-house">Quill</span></button>
+              <button type="button" class="cc-hex" data-hex-tile="D2" data-house="House Quill" data-row-offset="true" style="--c:3;--r:1" aria-label="Tile D2, House Quill" aria-pressed="false"><span class="cc-hex-face" aria-hidden="true"></span><span class="cc-hex-id">D2</span><span class="cc-hex-house">Quill</span></button>
+              <button type="button" class="cc-hex" data-hex-tile="E2" data-house="unclaimed" data-row-offset="true" style="--c:4;--r:1" aria-label="Tile E2, unclaimed" aria-pressed="false"><span class="cc-hex-face" aria-hidden="true"></span><span class="cc-hex-id">E2</span><span class="cc-hex-house">Free</span></button>
+              <button type="button" class="cc-hex" data-hex-tile="F2" data-house="House Tallow" data-row-offset="true" style="--c:5;--r:1" aria-label="Tile F2, House Tallow" aria-pressed="false"><span class="cc-hex-face" aria-hidden="true"></span><span class="cc-hex-id">F2</span><span class="cc-hex-house">Tallow</span></button>
+              <button type="button" class="cc-hex" data-hex-tile="G2" data-house="House Tallow" data-row-offset="true" style="--c:6;--r:1" aria-label="Tile G2, House Tallow" aria-pressed="false"><span class="cc-hex-face" aria-hidden="true"></span><span class="cc-hex-id">G2</span><span class="cc-hex-house">Tallow</span></button>
+              <button type="button" class="cc-hex" data-hex-tile="H2" data-house="House Tallow" data-row-offset="true" style="--c:7;--r:1" aria-label="Tile H2, House Tallow" aria-pressed="false"><span class="cc-hex-face" aria-hidden="true"></span><span class="cc-hex-id">H2</span><span class="cc-hex-house">Tallow</span></button>
+              <button type="button" class="cc-hex" data-hex-tile="I2" data-house="House Tallow" data-row-offset="true" style="--c:8;--r:1" aria-label="Tile I2, House Tallow" aria-pressed="false"><span class="cc-hex-face" aria-hidden="true"></span><span class="cc-hex-id">I2</span><span class="cc-hex-house">Tallow</span></button>
+              <button type="button" class="cc-hex" data-hex-tile="A3" data-house="House Quill" data-row-offset="false" style="--c:0;--r:2" aria-label="Tile A3, House Quill" aria-pressed="false"><span class="cc-hex-face" aria-hidden="true"></span><span class="cc-hex-id">A3</span><span class="cc-hex-house">Quill</span></button>
+              <button type="button" class="cc-hex" data-hex-tile="B3" data-house="House Quill" data-row-offset="false" style="--c:1;--r:2" aria-label="Tile B3, House Quill" aria-pressed="false"><span class="cc-hex-face" aria-hidden="true"></span><span class="cc-hex-id">B3</span><span class="cc-hex-house">Quill</span></button>
+              <button type="button" class="cc-hex" data-hex-tile="C3" data-house="House Quill" data-row-offset="false" style="--c:2;--r:2" aria-label="Tile C3, House Quill" aria-pressed="false"><span class="cc-hex-face" aria-hidden="true"></span><span class="cc-hex-id">C3</span><span class="cc-hex-house">Quill</span></button>
+              <button type="button" class="cc-hex" data-hex-tile="D3" data-house="unclaimed" data-row-offset="false" style="--c:3;--r:2" aria-label="Tile D3, unclaimed" aria-pressed="false"><span class="cc-hex-face" aria-hidden="true"></span><span class="cc-hex-id">D3</span><span class="cc-hex-house">Free</span></button>
+              <button type="button" class="cc-hex" data-hex-tile="E3" data-house="unclaimed" data-row-offset="false" style="--c:4;--r:2" aria-label="Tile E3, unclaimed" aria-pressed="false"><span class="cc-hex-face" aria-hidden="true"></span><span class="cc-hex-id">E3</span><span class="cc-hex-house">Free</span></button>
+              <button type="button" class="cc-hex" data-hex-tile="F3" data-house="unclaimed" data-row-offset="false" style="--c:5;--r:2" aria-label="Tile F3, unclaimed" aria-pressed="false"><span class="cc-hex-face" aria-hidden="true"></span><span class="cc-hex-id">F3</span><span class="cc-hex-house">Free</span></button>
+              <button type="button" class="cc-hex" data-hex-tile="G3" data-house="House Tallow" data-row-offset="false" style="--c:6;--r:2" aria-label="Tile G3, House Tallow" aria-pressed="false"><span class="cc-hex-face" aria-hidden="true"></span><span class="cc-hex-id">G3</span><span class="cc-hex-house">Tallow</span></button>
+              <button type="button" class="cc-hex" data-hex-tile="H3" data-house="House Tallow" data-row-offset="false" style="--c:7;--r:2" aria-label="Tile H3, House Tallow" aria-pressed="false"><span class="cc-hex-face" aria-hidden="true"></span><span class="cc-hex-id">H3</span><span class="cc-hex-house">Tallow</span></button>
+              <button type="button" class="cc-hex" data-hex-tile="I3" data-house="House Tallow" data-row-offset="false" style="--c:8;--r:2" aria-label="Tile I3, House Tallow" aria-pressed="false"><span class="cc-hex-face" aria-hidden="true"></span><span class="cc-hex-id">I3</span><span class="cc-hex-house">Tallow</span></button>
+              <button type="button" class="cc-hex" data-hex-tile="A4" data-house="House Quill" data-row-offset="true" style="--c:0;--r:3" aria-label="Tile A4, House Quill" aria-pressed="false"><span class="cc-hex-face" aria-hidden="true"></span><span class="cc-hex-id">A4</span><span class="cc-hex-house">Quill</span></button>
+              <button type="button" class="cc-hex" data-hex-tile="B4" data-house="House Quill" data-row-offset="true" style="--c:1;--r:3" aria-label="Tile B4, House Quill" aria-pressed="false"><span class="cc-hex-face" aria-hidden="true"></span><span class="cc-hex-id">B4</span><span class="cc-hex-house">Quill</span></button>
+              <button type="button" class="cc-hex" data-hex-tile="C4" data-house="unclaimed" data-row-offset="true" style="--c:2;--r:3" aria-label="Tile C4, unclaimed" aria-pressed="false"><span class="cc-hex-face" aria-hidden="true"></span><span class="cc-hex-id">C4</span><span class="cc-hex-house">Free</span></button>
+              <button type="button" class="cc-hex" data-hex-tile="D4" data-house="House Sable" data-row-offset="true" style="--c:3;--r:3" aria-label="Tile D4, House Sable" aria-pressed="false"><span class="cc-hex-face" aria-hidden="true"></span><span class="cc-hex-id">D4</span><span class="cc-hex-house">Sable</span></button>
+              <button type="button" class="cc-hex" data-hex-tile="E4" data-house="House Sable" data-row-offset="true" style="--c:4;--r:3" aria-label="Tile E4, House Sable" aria-pressed="false"><span class="cc-hex-face" aria-hidden="true"></span><span class="cc-hex-id">E4</span><span class="cc-hex-house">Sable</span></button>
+              <button type="button" class="cc-hex" data-hex-tile="F4" data-house="House Sable" data-row-offset="true" style="--c:5;--r:3" aria-label="Tile F4, House Sable" aria-pressed="false"><span class="cc-hex-face" aria-hidden="true"></span><span class="cc-hex-id">F4</span><span class="cc-hex-house">Sable</span></button>
+              <button type="button" class="cc-hex" data-hex-tile="G4" data-house="unclaimed" data-row-offset="true" style="--c:6;--r:3" aria-label="Tile G4, unclaimed" aria-pressed="false"><span class="cc-hex-face" aria-hidden="true"></span><span class="cc-hex-id">G4</span><span class="cc-hex-house">Free</span></button>
+              <button type="button" class="cc-hex" data-hex-tile="H4" data-house="House Tallow" data-row-offset="true" style="--c:7;--r:3" aria-label="Tile H4, House Tallow" aria-pressed="false"><span class="cc-hex-face" aria-hidden="true"></span><span class="cc-hex-id">H4</span><span class="cc-hex-house">Tallow</span></button>
+              <button type="button" class="cc-hex" data-hex-tile="I4" data-house="House Tallow" data-row-offset="true" style="--c:8;--r:3" aria-label="Tile I4, House Tallow" aria-pressed="false"><span class="cc-hex-face" aria-hidden="true"></span><span class="cc-hex-id">I4</span><span class="cc-hex-house">Tallow</span></button>
+              <button type="button" class="cc-hex" data-hex-tile="A5" data-house="House Quill" data-row-offset="false" style="--c:0;--r:4" aria-label="Tile A5, House Quill" aria-pressed="false"><span class="cc-hex-face" aria-hidden="true"></span><span class="cc-hex-id">A5</span><span class="cc-hex-house">Quill</span></button>
+              <button type="button" class="cc-hex" data-hex-tile="B5" data-house="unclaimed" data-row-offset="false" style="--c:1;--r:4" aria-label="Tile B5, unclaimed" aria-pressed="false"><span class="cc-hex-face" aria-hidden="true"></span><span class="cc-hex-id">B5</span><span class="cc-hex-house">Free</span></button>
+              <button type="button" class="cc-hex" data-hex-tile="C5" data-house="House Sable" data-row-offset="false" style="--c:2;--r:4" aria-label="Tile C5, House Sable" aria-pressed="false"><span class="cc-hex-face" aria-hidden="true"></span><span class="cc-hex-id">C5</span><span class="cc-hex-house">Sable</span></button>
+              <button type="button" class="cc-hex" data-hex-tile="D5" data-house="House Sable" data-row-offset="false" style="--c:3;--r:4" aria-label="Tile D5, House Sable" aria-pressed="false"><span class="cc-hex-face" aria-hidden="true"></span><span class="cc-hex-id">D5</span><span class="cc-hex-house">Sable</span></button>
+              <button type="button" class="cc-hex" data-hex-tile="E5" data-house="House Sable" data-row-offset="false" style="--c:4;--r:4" aria-label="Tile E5, House Sable" aria-pressed="false"><span class="cc-hex-face" aria-hidden="true"></span><span class="cc-hex-id">E5</span><span class="cc-hex-house">Sable</span></button>
+              <button type="button" class="cc-hex" data-hex-tile="F5" data-house="House Sable" data-row-offset="false" style="--c:5;--r:4" aria-label="Tile F5, House Sable" aria-pressed="false"><span class="cc-hex-face" aria-hidden="true"></span><span class="cc-hex-id">F5</span><span class="cc-hex-house">Sable</span></button>
+              <button type="button" class="cc-hex" data-hex-tile="G5" data-house="House Sable" data-row-offset="false" style="--c:6;--r:4" aria-label="Tile G5, House Sable" aria-pressed="false"><span class="cc-hex-face" aria-hidden="true"></span><span class="cc-hex-id">G5</span><span class="cc-hex-house">Sable</span></button>
+              <button type="button" class="cc-hex" data-hex-tile="H5" data-house="unclaimed" data-row-offset="false" style="--c:7;--r:4" aria-label="Tile H5, unclaimed" aria-pressed="false"><span class="cc-hex-face" aria-hidden="true"></span><span class="cc-hex-id">H5</span><span class="cc-hex-house">Free</span></button>
+              <button type="button" class="cc-hex" data-hex-tile="I5" data-house="House Tallow" data-row-offset="false" style="--c:8;--r:4" aria-label="Tile I5, House Tallow" aria-pressed="false"><span class="cc-hex-face" aria-hidden="true"></span><span class="cc-hex-id">I5</span><span class="cc-hex-house">Tallow</span></button>
+              <button type="button" class="cc-hex" data-hex-tile="A6" data-house="unclaimed" data-row-offset="true" style="--c:0;--r:5" aria-label="Tile A6, unclaimed" aria-pressed="false"><span class="cc-hex-face" aria-hidden="true"></span><span class="cc-hex-id">A6</span><span class="cc-hex-house">Free</span></button>
+              <button type="button" class="cc-hex" data-hex-tile="B6" data-house="House Sable" data-row-offset="true" style="--c:1;--r:5" aria-label="Tile B6, House Sable" aria-pressed="false"><span class="cc-hex-face" aria-hidden="true"></span><span class="cc-hex-id">B6</span><span class="cc-hex-house">Sable</span></button>
+              <button type="button" class="cc-hex" data-hex-tile="C6" data-house="House Sable" data-row-offset="true" style="--c:2;--r:5" aria-label="Tile C6, House Sable" aria-pressed="false"><span class="cc-hex-face" aria-hidden="true"></span><span class="cc-hex-id">C6</span><span class="cc-hex-house">Sable</span></button>
+              <button type="button" class="cc-hex" data-hex-tile="D6" data-house="House Sable" data-row-offset="true" style="--c:3;--r:5" aria-label="Tile D6, House Sable" aria-pressed="false"><span class="cc-hex-face" aria-hidden="true"></span><span class="cc-hex-id">D6</span><span class="cc-hex-house">Sable</span></button>
+              <button type="button" class="cc-hex" data-hex-tile="E6" data-house="House Sable" data-row-offset="true" style="--c:4;--r:5" aria-label="Tile E6, House Sable" aria-pressed="false"><span class="cc-hex-face" aria-hidden="true"></span><span class="cc-hex-id">E6</span><span class="cc-hex-house">Sable</span></button>
+              <button type="button" class="cc-hex" data-hex-tile="F6" data-house="House Sable" data-row-offset="true" style="--c:5;--r:5" aria-label="Tile F6, House Sable" aria-pressed="false"><span class="cc-hex-face" aria-hidden="true"></span><span class="cc-hex-id">F6</span><span class="cc-hex-house">Sable</span></button>
+              <button type="button" class="cc-hex" data-hex-tile="G6" data-house="House Sable" data-row-offset="true" style="--c:6;--r:5" aria-label="Tile G6, House Sable" aria-pressed="false"><span class="cc-hex-face" aria-hidden="true"></span><span class="cc-hex-id">G6</span><span class="cc-hex-house">Sable</span></button>
+              <button type="button" class="cc-hex" data-hex-tile="H6" data-house="House Sable" data-row-offset="true" style="--c:7;--r:5" aria-label="Tile H6, House Sable" aria-pressed="false"><span class="cc-hex-face" aria-hidden="true"></span><span class="cc-hex-id">H6</span><span class="cc-hex-house">Sable</span></button>
+              <button type="button" class="cc-hex" data-hex-tile="I6" data-house="unclaimed" data-row-offset="true" style="--c:8;--r:5" aria-label="Tile I6, unclaimed" aria-pressed="false"><span class="cc-hex-face" aria-hidden="true"></span><span class="cc-hex-id">I6</span><span class="cc-hex-house">Free</span></button>
+            </div></div>
+            <ul class="cc-pennants" aria-label="House standings">
+                <li class="cc-pennant" data-house="House Quill"><b>14</b><span>House Quill</span></li>
+                <li class="cc-pennant" data-house="House Tallow"><b>14</b><span>House Tallow</span></li>
+                <li class="cc-pennant" data-house="House Sable"><b>15</b><span>House Sable</span></li>
+                <li class="cc-pennant" data-house="unclaimed"><b>11</b><span>Unclaimed</span></li>
+            </ul>
+          </div>
+          <div class="cc-herald-side">
+            <section class="cc-hero" data-house-of data-house="House Quill" aria-label="Selected tile" aria-live="polite">
+              <div class="cc-hero-band"><b data-bind="house">House Quill</b><small>Sample territory</small></div>
+              <div class="cc-hero-body">
+                <p class="cc-hero-kicker">This turn · local sand table</p>
+                <div class="cc-hero-figure"><svg class="cc-swatch" viewBox="0 0 28 32" aria-hidden="true"><polygon points="14,1 27,8.5 27,23.5 14,31 1,23.5 1,8.5"/></svg><b data-bind="tile">A1</b><span class="cc-hero-sub"><span>Column <strong data-bind="col">A</strong> · Row <strong data-bind="row">1</strong></span><span data-bind="share">14 of 54 tiles</span></span></div>
+                <p class="cc-hero-now">Now: inspecting <span data-bind="tile">A1</span> · simulated</p>
+                <p class="cc-hero-house"><span data-bind="house">House Quill</span> · illustrative sample territory</p>
+                <p class="cc-hero-note">The Steward can propose a war-table panel change. A proposal never claims a tile here.</p>
+                <p class="cc-hero-hint">Choose any hex to inspect it. Calls and ownership here are illustrative; selecting a tile changes only the inspector.</p>
+              </div>
+            </section>
+            <section class="cc-ladder" aria-label="Local studio test ladder">
+              <header class="cc-side-head"><h3>Test ladder</h3><span>Current stage: Sand table</span></header>
+              <p class="cc-side-lede">Inspect a stage below. These controls show requirements only.</p>
+              <div class="cc-tablets" role="group" aria-label="Inspect test stage requirements">
+                <button type="button" class="cc-tablet" data-rung="0" data-current="true" aria-pressed="true" aria-label="Inspect Sand table requirements"><span class="cc-tablet-no">1</span><b>Sand table</b><i>local test</i><span class="cc-tablet-state"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 15V1.5M4 2.5h8.5l-2 3 2 3H4"/></svg>Local only</span></button>
+                <button type="button" class="cc-tablet" data-rung="1" data-current="false" aria-pressed="false" aria-label="Inspect Muster requirements"><span class="cc-tablet-no">2</span><b>Muster</b><i>hosted test</i><span class="cc-tablet-state"><svg viewBox="0 0 16 16" aria-hidden="true"><rect x="3" y="7" width="10" height="7" rx="1"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2"/></svg>Locked</span></button>
+                <button type="button" class="cc-tablet" data-rung="2" data-current="false" aria-pressed="false" aria-label="Inspect Proclaimed requirements"><span class="cc-tablet-no">3</span><b>Proclaimed</b><i>released</i><span class="cc-tablet-state"><svg viewBox="0 0 16 16" aria-hidden="true"><rect x="3" y="7" width="10" height="7" rx="1"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2"/></svg>Locked</span></button>
+              </div>
+              <div class="cc-proclamation" role="status" aria-live="polite"><p class="cc-proclamation-label">Requirements · <span data-bind="rung-title">Sand table</span></p><p data-bind="rung-detail">Local test, only you see it. Inspect sample tiles and drafts without changing a channel.</p></div>
+              <p class="cc-side-fine">WP 4.0 is pending. The room makes no network call and cannot advance the test stage.</p>
+            </section>
+            <article class="cc-draft" aria-label="Proposal: Next turn" data-on-air="false">
+            <p class="cc-draft-stamp">DRAFT · NOT ON AIR</p>
+            <h3>Next turn</h3>
+            <p class="cc-draft-rev">Proposal · revision 1 · awaiting your seal</p>
+            <dl><div><dt>Proposed turn</dt><dd>Preview the next unclaimed tile</dd></div></dl>
+            </article>
+            <aside class="cc-seal-card" aria-label="Seal slot">
+              <h3 class="cc-seal-card-head">Proposal · awaiting your seal</h3>
+              <div class="cc-seal-card-body">
+                <p>Nothing acts until you hold to seal.</p>
+                <p class="cc-side-fine">Human operator · AI proposes, the human approves in the shared seal slot.</p>
+                <div class="cc-seal-designs" role="group" aria-label="War-table panel design">
+                  <p class="cc-seal-caption">SIMULATED · DATA-ONLY DESIGNS</p>
+                  <strong>War-table panel</strong>
+                  <div><button type="button" class="cc-button" data-size="small">Restyle</button><button type="button" class="cc-button" data-size="small">Custom design</button></div>
+                </div>
+                <p class="cc-seal-empty">No proposals. Ask the Steward to draft one.</p>
+              </div>
+            </aside>
+          </div>
+        </section>
+      </div></div>
+    </section>
+  </main>
+  <section class="cc-steward-bar" aria-label="The Steward">
+    <div class="cc-steward-identity" role="group" aria-label="Steward identity"><strong>The Steward</strong><span>Simulated co-pilot</span><b>SIMULATED STEWARD · SAMPLE DATA</b></div>
+    <div class="cc-steward-controls" role="group" aria-label="Steward conversation controls">
+      <div class="cc-steward-message"><p role="status">Good evening. Draft in the preview, amend in ink, then hold to seal. Nothing acts on a spoken request.</p></div>
+      <form onsubmit="return false"><label><span>Talk to the Steward...</span><input aria-label="Talk to the Steward..." placeholder="Talk to the Steward..."></label><button type="button" disabled title="Speech input is not wired yet">Hold to speak</button><button type="submit" disabled>Tell</button></form>
+      <div class="cc-steward-suggestions" role="group" aria-label="Steward suggestions"><button type="button">Catch me up</button><button type="button">Draft a question draw</button><button type="button">What does chat want?</button></div>
+    </div>
+  </section>
+</div>
+<div class="proto-ctl" role="group" aria-label="Prototype controls, not part of the design"><span>Prototype</span><button type="button" data-theme-set="paper">Paper</button><button type="button" data-theme-set="stock">Stock</button><button type="button" data-draft-toggle aria-pressed="false">Sample draft</button></div>
+<script>
+/* Prototype behaviour only: theme, sample draft, inspection. The port keeps its own React state. */
+(function () {
+  var root = document.documentElement, all = function (s) { return Array.prototype.slice.call(document.querySelectorAll(s)); };
+  var RUNGS = [{"title":"Sand table","detail":"Local test, only you see it. Inspect sample tiles and drafts without changing a channel."},{"title":"Muster","detail":"Locked. Hosted testing waits for Twitch’s WP 4.0 policy answer. No Extension is built or connected."},{"title":"Proclaimed","detail":"Locked. No release or submission is available. Twitch policy clearance and owner approval are required."}];
+  function theme(t) {
+    root.setAttribute('data-theme', t);
+    all('[data-theme-set]').forEach(function (b) { b.setAttribute('aria-pressed', String(b.getAttribute('data-theme-set') === t)); });
+    document.getElementById('rampart-theme').setAttribute('aria-pressed', String(t === 'stock'));
+  }
+  theme(root.getAttribute('data-theme') === 'stock' ? 'stock' : 'paper');
+  all('[data-theme-set]').forEach(function (b) { b.addEventListener('click', function () { theme(b.getAttribute('data-theme-set')); }); });
+  document.getElementById('rampart-theme').addEventListener('click', function () { theme(root.getAttribute('data-theme') === 'stock' ? 'paper' : 'stock'); });
+  var draft = document.querySelector('[data-draft-toggle]');
+  function syncDraft() { var on = root.hasAttribute('data-show-draft'); draft.setAttribute('aria-pressed', String(on)); all('[data-bind="draft-count"]').forEach(function (e) { e.textContent = on ? '1 pending' : '0 pending'; }); }
+  draft.addEventListener('click', function () { root.toggleAttribute('data-show-draft'); syncDraft(); });
+  syncDraft();
+  var tiles = all('[data-hex-tile]');
+  function pick(b) {
+    tiles.forEach(function (x) { x.setAttribute('aria-pressed', String(x === b)); });
+    var id = b.getAttribute('data-hex-tile'), house = b.getAttribute('data-house'), owned = house !== 'unclaimed';
+    var n = tiles.filter(function (x) { return x.getAttribute('data-house') === house; }).length;
+    var v = { tile: id, house: owned ? house : 'Unclaimed', short: owned ? house.replace('House ', '') : 'Free', col: id.charAt(0), row: id.slice(1), share: n + ' of ' + tiles.length + ' tiles' };
+    all('[data-bind]').forEach(function (e) { var k = e.getAttribute('data-bind'); if (k in v) e.textContent = v[k]; });
+    all('[data-house-of]').forEach(function (e) { e.setAttribute('data-house', house); });
+    all('[data-axis-col]').forEach(function (e) { e.toggleAttribute('data-current', e.getAttribute('data-axis-col') === v.col); });
+    all('[data-axis-row]').forEach(function (e) { e.toggleAttribute('data-current', e.getAttribute('data-axis-row') === v.row); });
+  }
+  tiles.forEach(function (b) { b.addEventListener('click', function () { pick(b); }); });
+  var rungs = all('[data-rung]');
+  rungs.forEach(function (b) { b.addEventListener('click', function () {
+    var i = Number(b.getAttribute('data-rung'));
+    rungs.forEach(function (x) { x.setAttribute('aria-pressed', String(x === b)); });
+    all('[data-bind="rung-title"]').forEach(function (e) { e.textContent = RUNGS[i].title; });
+    all('[data-bind="rung-detail"]').forEach(function (e) { e.textContent = RUNGS[i].detail; });
+  }); });
+})();
+</script>
+</body>
+</html>

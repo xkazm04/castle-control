@@ -1,0 +1,406 @@
+<!doctype html>
+<html lang="en">
+<head>
+<!--
+PORT NOTES · Beacons · Variant B "Ledger" (editorial ruled print, one scroll)
+Thesis: read the chamber like a printed ledger: one ruled table compares every beacon, numbered figures below it
+explain the selected one.
+
+Components introduced (class -> what it replaces):
+- .cc-folio             -> .visuals-room-layout and its two independently scrolling columns (rooms/visuals/room.css).
+                           ONE vertical scroll, full width, sections stacked with a 28px rhythm.
+- .cc-sec, .cc-sec-no, .cc-gloss, .cc-sec-meta
+                        -> every ad-hoc caption/h3 in the room (.room-caption figcaptions, timeline/feed/test-fire h3).
+                           Numbered section head (3.1 ... 3.6) from the original concept (prototype/app.css .sec-h):
+                           or-text number box, display caps title, italic serif gloss, right-aligned meta, 2px rule.
+- .cc-ledger, .cc-ledger-row, .cc-ledger-name, .cc-ledger-figure, .cc-sub
+                        -> VisualSelector's three boxed articles (.visuals-room-visuals article, .visuals-room-select,
+                           .visuals-room-description x2, .visuals-room-now). One <table>, one <tr> per visual.
+                           The row carries aria-selected; the name cell holds the existing selection <button aria-pressed>.
+                           Columns: No. / Beacon / Lights / Driven by / Halves every / Intensity tiers / Blaze.
+- .cc-cell-edit / .cc-cell-read + .cc-select
+                        -> InputPicker (.visuals-input-picker). The picker lives IN the selected row's "Driven by"
+                           cell (same <select name="input_source" aria-label="Driven by">, same options, same
+                           <output aria-label="Native unit">); other rows show the same words read-only.
+- .cc-scale             -> IntensityRanges (.visuals-room-ranges / .visuals-room-tier-active). Four joined cells in one
+                           ink frame; active cell = or fill, --press text. Ramp "25→60%" = point.intensity →
+                           next.intensity (the old "25% intensity" contradicted the 39% Now figure in that tier).
+- .cc-footnote          -> the loose "Simulated configuration only..." paragraph and the .visuals-room-status line.
+- .cc-spread, .cc-fig, .cc-fig-plate, .cc-crop, .cc-figcap
+                        -> figure.visuals-room-layer + .visuals-room-art-hero (Fig. 3.2) and KindlingCurve figure
+                           (Fig. 3.3). Artwork geometry and its .visuals-room-* classes are unchanged; ProposalLayers keeps
+                           rendering inside .cc-fig-plate. Crop marks are the brand's print marks (prototype/app.css .crop).
+- .cc-plot, .cc-plot-y, .cc-plot-x, .cc-plot-marker
+                        -> .visuals-room-curve-labels + svg. The curve stays LINEAR in total (honest x axis, 0..last
+                           point), now with a y axis (0/50/100%) and x ticks at each point total; marker label is HTML.
+- .cc-actions, .cc-btn  -> <details class="visuals-room-test-tools"> + .visuals-room-tools. Always open, one ruled row.
+- .cc-table             -> .visuals-event-row in WindowedRows (keep WindowedRows, 32px rows, 4 cells).
+- .cc-timeline bits     -> .visuals-room-timeline (same svg geometry, label, range input, status).
+- .shell-seal-slot      -> unchanged (shell-owned), last block of the folio.
+
+Must not miss: the ledger is a real <table> with <th scope="col">; keep aria-pressed on the name button and
+aria-selected on the row in sync; role="status" aria-live="polite" stays on the notice; or is a FILL only
+(text uses --or-text, or --press on or); at <=1100px the two spreads stack to one column.
+-->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Beacons · B Ledger</title>
+<link rel="stylesheet" href="../../../packages/tokens/src/generated.css">
+<script>(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='stock'||t==='paper')document.documentElement.setAttribute('data-theme',t);})();</script>
+<style>
+
+*,*::before,*::after{box-sizing:border-box}
+[hidden]{display:none!important}
+html{color-scheme:light}
+html[data-theme="stock"]{color-scheme:dark}
+html,body{margin:0;height:100%}
+body{font:400 var(--text-body)/1.45 var(--font-ui);color:var(--ink);background:var(--paper);-webkit-font-smoothing:antialiased}
+.desktop-shell{display:grid;grid-template-rows:var(--mh) minmax(0,1fr) auto;height:100dvh;overflow:hidden}
+/* Rampart: packages/ui/src/shell.css + chips.css + primitives.css */
+.cc-rampart{position:relative;z-index:60;display:flex;align-items:center;height:var(--mh);gap:var(--space-14);padding:0 var(--space-14) 0 var(--space-16);border-bottom:var(--rule-thin) solid var(--rule);background:var(--paper)}
+.cc-rampart::after{content:"";position:absolute;inset-inline:0;bottom:calc(-1 * var(--space-5));height:var(--rule-thin);background:var(--rule);opacity:.55}
+.cc-rampart a{text-decoration:none;color:inherit}
+.cc-brand{width:calc(var(--cw) - var(--space-30));display:flex;align-items:center;gap:var(--space-10);flex:none}
+.cc-mark{display:block;width:var(--mark-w);height:var(--mark-h);flex:none}
+.cc-mark-gate{mix-blend-mode:var(--blend)}
+.cc-wordmark{position:relative;isolation:isolate;white-space:pre-line;font:800 var(--text-wordmark)/.9 var(--font-display);font-stretch:75%;text-transform:uppercase;letter-spacing:var(--track-wordmark)}
+.cc-wordmark::after{content:attr(data-text);position:absolute;left:var(--wordmark-ghost);top:var(--wordmark-ghost);color:var(--or);mix-blend-mode:var(--blend);pointer-events:none}
+.cc-live-group,.cc-link-group{display:flex;flex:none;align-items:center;gap:var(--space-12);min-width:0}
+.cc-figure{display:flex;flex-direction:column;line-height:1.05}
+.cc-figure b{font:700 var(--text-number)/1.1 var(--font-num);font-variant-numeric:tabular-nums}
+.cc-figure small{margin-top:var(--space-2);font:600 var(--text-label)/1.2 var(--font-ui);letter-spacing:var(--track-wide);text-transform:uppercase;color:var(--muted)}
+.cc-separator{flex:none;width:var(--rule-thin);height:var(--space-28);background:var(--hair)}
+.cc-spacer{flex:1 1 0;min-width:0}
+.cc-sample{flex:none;white-space:nowrap;display:inline-flex;align-items:center;height:var(--chip-h);padding-inline:var(--space-7);border:var(--rule-thin) dashed var(--hair);border-radius:var(--r-sm);color:var(--muted);font:700 var(--text-label)/1 var(--font-ui);text-transform:uppercase;letter-spacing:var(--track-wide)}
+.cc-chip{display:inline-flex;align-items:center;white-space:nowrap;height:var(--chip-h);padding-inline:var(--space-7);gap:var(--space-5);border:var(--rule-medium) solid var(--ink);border-radius:var(--r-sm);background:transparent;color:var(--ink);font:700 var(--text-label)/1 var(--font-ui);letter-spacing:var(--track-label);text-transform:uppercase}
+.cc-chip[data-variant="dash"]{border-style:dashed;color:var(--muted);border-color:var(--hair)}
+.cc-button{display:inline-flex;justify-content:center;align-items:center;gap:var(--space-7);height:var(--button-h);padding:0 var(--space-12);cursor:pointer;white-space:nowrap;border:var(--rule-medium) solid var(--ink);border-radius:var(--r-sm);background:var(--paper);color:var(--ink);font:700 var(--text-label)/1 var(--font-ui);letter-spacing:var(--track-label);text-transform:uppercase}
+.cc-button:hover{background:var(--ink);color:var(--paper)}
+.cc-button[data-size="icon"]{width:var(--mark-w);padding:0;flex:none}
+.cc-button svg{width:var(--icon-sm);height:var(--icon-sm);fill:none;stroke:currentColor;stroke-width:1.7}
+@media (max-width:1420px){.cc-rampart{gap:var(--space-11)}.cc-brand{width:auto}.cc-separator{display:none}}
+/* Room frame and header: apps/desktop/src/shell/room.css + view.css */
+.desktop-surface{min-height:0;display:flex;flex-direction:column;overflow:hidden;padding:0 var(--space-16) var(--space-12);background:var(--paper)}
+.shell-room{--room-ink:var(--or-text);position:relative;flex:1;min-height:0;display:flex;flex-direction:column;margin-top:var(--space-16);border:var(--rule-strong) solid var(--ink);background:var(--paper);box-shadow:var(--space-10) var(--space-10) 0 var(--hair-2);font:var(--text-body)/1.5 var(--font-ui)}
+.shell-room-header{display:flex;align-items:center;gap:var(--space-16);padding:var(--space-12) var(--space-20);border-bottom:var(--rule-medium) solid var(--line)}
+.shell-room-heading{flex:1;min-width:0}
+.shell-room-heading nav{font:600 var(--text-label)/1.3 var(--font-ui);color:var(--muted)}
+.shell-room-title{display:flex;align-items:baseline;flex-wrap:wrap;gap:var(--space-8) var(--space-24)}
+.shell-room-header h1{margin:0;font:800 var(--text-chamber-number)/1 var(--font-display);text-transform:uppercase;text-shadow:var(--wordmark-ghost) var(--wordmark-ghost) 0 var(--room-ink)}
+.shell-room-title p{margin:0;font:italic var(--text-wordmark)/1.3 var(--font-serif)}
+.shell-room-simulated{color:var(--muted);font:700 var(--text-label)/1.4 var(--font-ui);letter-spacing:var(--track-label)}
+.shell-room .cc-room-locator{display:flex;align-items:center;gap:var(--space-4);font-size:var(--text-small)}
+.shell-room .cc-room-locator > span{margin-inline-end:var(--space-4);color:var(--muted)}
+.shell-room .cc-room-locator a{min-width:var(--space-30);padding:var(--space-4);border:var(--rule-thin) solid var(--ink);background:var(--card);color:var(--ink);font-family:var(--font-num);text-align:center;text-decoration:none}
+.shell-room .cc-room-locator a[aria-current]{color:var(--paper);background:var(--ink)}
+.shell-room .shell-room-back{flex-shrink:0;padding:var(--space-8) var(--space-14);border:var(--rule-medium) solid var(--ink);color:var(--ink);text-decoration:none;font-weight:700}
+.shell-room-back kbd{font:var(--text-small)/1.4 var(--font-num);margin-inline-start:var(--space-8)}
+.shell-room .shell-room-work{display:block;flex:1;min-height:0;padding:0;overflow:hidden}
+.shell-room .shell-room-content{min-width:0;height:100%;overflow:auto}
+.shell-room a{color:var(--azure-text)}
+.shell-room :where(button){font:600 var(--text-body)/1.4 var(--font-ui);border:var(--rule-medium) solid var(--ink);background:var(--card);color:var(--ink);padding:var(--space-6) var(--space-8);max-width:100%;cursor:pointer}
+.shell-room :where(button,a,select,input,summary):focus-visible{outline:var(--rule-strong) solid var(--azure);outline-offset:var(--focus-offset)}
+.shell-room h2{font-family:var(--font-display)}
+/* Seal slot: shell-owned (rooms/seal-slot + design/room.css). Not redesigned here. */
+.shell-room .shell-seal-slot{min-width:0;padding:var(--space-16) 0;border:0;border-top:var(--rule-medium) solid var(--line);background:transparent;font-size:var(--text-body)}
+.shell-seal-slot h2{margin:0;font:800 var(--text-section)/1.3 var(--font-display);color:var(--gules-text);text-transform:uppercase;letter-spacing:var(--track-heading)}
+.shell-seal-slot p{margin:var(--space-6) 0}
+.room-design-actions{display:grid;gap:var(--space-12);padding-block:var(--space-12);border-bottom:var(--rule-thin) solid var(--line)}
+.room-design-actions [role="group"]{display:grid;gap:var(--space-6)}
+.room-design-actions [role="group"] > div{display:flex;flex-wrap:wrap;gap:var(--space-6)}
+.room-caption{margin:0;font:800 var(--text-label)/1.4 var(--font-ui);text-transform:uppercase;letter-spacing:var(--track-air)}
+/* Steward dock: packages/ui/src/steward-bar.css + view.css overrides */
+.cc-steward-bar{display:grid;grid-template-columns:calc(var(--space-40) * 3) minmax(0,1fr);gap:var(--space-12);padding:var(--space-8) var(--space-24);background:var(--paper);border-top:var(--rule-medium) solid var(--rule);font:var(--text-body)/1.4 var(--font-ui)}
+.cc-steward-identity{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:var(--space-4);padding-right:var(--space-12);border-right:var(--rule-medium) solid var(--line);text-align:center}
+.cc-steward-identity strong{font:800 var(--text-section)/1.1 var(--font-display);text-transform:uppercase}
+.cc-steward-identity span{color:var(--muted);font-size:var(--text-small)}
+.cc-steward-identity b{font-size:var(--text-small);color:var(--gules-text);letter-spacing:var(--track-label)}
+.cc-steward-controls{min-width:0;align-self:center}
+.cc-steward-message p{margin:0 0 var(--space-8);font:var(--text-body)/1.4 var(--font-ui);overflow-wrap:anywhere}
+.cc-steward-bar form{display:flex;align-items:end;gap:var(--space-10);margin:0}
+.cc-steward-bar label{display:flex;flex:1;min-width:0;flex-direction:column;gap:var(--space-4);font-size:var(--text-small)}
+.cc-steward-bar input{appearance:none;min-width:0;border:var(--rule-thin) solid var(--ink);border-radius:var(--r-sm);background:var(--card);color:var(--ink);padding:var(--space-7) var(--space-10);font:var(--text-body)/1.4 var(--font-ui)}
+.cc-steward-bar button{font:inherit;color:var(--ink);background:var(--card);border:var(--rule-thin) solid var(--ink);padding:var(--space-7) var(--space-10);border-radius:var(--r-sm);cursor:pointer}
+.cc-steward-bar button:disabled{opacity:var(--disabled-opacity);cursor:default}
+.cc-steward-bar :is(input,button):focus-visible{outline:var(--rule-strong) solid var(--azure-text);outline-offset:var(--focus-offset)}
+.cc-steward-suggestions{display:flex;flex-wrap:wrap;gap:var(--space-8);margin-top:var(--space-8)}
+.cc-steward-suggestions button{font-size:var(--text-small);padding-block:var(--space-4)}
+/* Prototype-only theme switch. NOT part of the design; do not port. */
+.proto-theme{position:fixed;right:var(--space-8);bottom:var(--space-6);z-index:999;padding:var(--space-4) var(--space-8);border:var(--rule-thin) dashed var(--muted);border-radius:var(--r-sm);background:var(--paper);color:var(--muted);font:600 var(--text-label)/1.2 var(--font-num);cursor:pointer}
+.proto-theme:focus-visible{outline:var(--rule-strong) solid var(--azure);outline-offset:var(--focus-offset)}
+
+/* Artwork: artwork.tsx classes, unchanged. */
+.visuals-room-stone{fill:var(--ink)}
+.visuals-room-cutout{fill:var(--paper-2)}
+.visuals-room-fire{fill:var(--or);opacity:calc(.3 + var(--room-blaze) * .7);transform-box:fill-box;transform-origin:bottom;transform:scaleY(calc(.3 + var(--room-blaze) * .7))}
+.visuals-room-fire-core{fill:var(--gules);opacity:var(--room-blaze)}
+.visuals-room-glow{fill:none;stroke:var(--or);stroke-width:var(--space-8);opacity:calc(.2 + var(--room-blaze) * .8)}
+/* ===== Variant B · Ledger ===== */
+.cc-folio{height:100%;overflow:auto;padding:var(--space-16) var(--space-28) var(--space-28)}
+.cc-folio > *{margin:0}
+.cc-folio > * + *{margin-top:var(--space-28)}
+.cc-sheet{display:grid;align-content:start;gap:var(--space-10);min-width:0}
+.cc-sheet > *{min-width:0;margin:0}
+.cc-sec{display:flex;flex-wrap:wrap;align-items:baseline;gap:var(--space-4) var(--space-10);padding-bottom:var(--space-6);border-bottom:var(--rule-strong) solid var(--rule)}
+.cc-sec-no{align-self:center;padding:var(--space-2) var(--space-4);border:var(--rule-medium) solid var(--or-text);border-radius:var(--r-sm);font:700 var(--text-label)/1 var(--font-num);color:var(--or-text)}
+.cc-sec h2{margin:0;font:800 var(--text-section)/1.15 var(--font-display);letter-spacing:var(--track-heading);text-transform:uppercase}
+.cc-gloss{font:italic var(--text-aside)/1.2 var(--font-serif);color:var(--muted)}
+.cc-sec-meta{margin-left:auto;font:600 var(--text-label)/1.2 var(--font-ui);color:var(--muted)}
+.cc-sec-meta output{font:600 var(--text-label)/1.2 var(--font-num);color:var(--ink-2)}
+.cc-sec-meta output b{color:var(--ink)}
+.cc-ledger{width:100%;table-layout:fixed;border-collapse:collapse;margin-top:calc(-1 * var(--space-10))}
+.cc-ledger th{padding:var(--space-8) var(--space-10);border-bottom:var(--rule-thin) solid var(--ink);text-align:left;vertical-align:bottom;font:700 var(--text-label)/1.25 var(--font-ui);letter-spacing:var(--track-wide);text-transform:uppercase;color:var(--muted)}
+.cc-th-gloss{display:block;font:italic 400 var(--text-label)/1.25 var(--font-serif);letter-spacing:0;text-transform:none}
+.cc-ledger td{padding:var(--space-10);vertical-align:middle;border-bottom:var(--rule-thin) solid var(--line);font-size:var(--text-body);line-height:1.3;overflow-wrap:anywhere}
+.cc-ledger tbody tr{cursor:pointer}
+.cc-ledger tbody tr:hover td{background:var(--tint)}
+.cc-ledger tr[aria-selected="true"] td{background:var(--card)}
+.cc-ledger tr[aria-selected="true"] td:first-child{box-shadow:inset var(--nav-stripe-active) 0 0 var(--or)}
+.cc-ledger .cc-num{text-align:right}
+.cc-ledger td.cc-ledger-no{padding-left:var(--space-16);font:700 var(--text-label)/1 var(--font-num);color:var(--muted)}
+.shell-room .cc-ledger-name{display:block;max-width:100%;padding:0;border:0;background:none;color:var(--ink);text-align:left;font:800 var(--text-section)/1.15 var(--font-display);letter-spacing:var(--track-chamber);text-transform:uppercase;cursor:pointer}
+.cc-ledger tr[aria-selected="true"] .cc-ledger-name{color:var(--or-text)}
+.cc-sub{display:block;margin-top:var(--space-2);font:400 var(--text-label)/1.3 var(--font-ui);color:var(--muted)}
+.cc-mono{font-family:var(--font-num)}
+.cc-sub output{font:700 var(--text-label)/1.3 var(--font-num);color:var(--ink-2)}
+.cc-ledger tr:not([aria-selected="true"]) .cc-cell-edit,.cc-ledger tr[aria-selected="true"] .cc-cell-read{display:none}
+.cc-select{appearance:none;display:block;width:100%;min-width:0;height:var(--button-h);padding:0 var(--space-26) 0 var(--space-8);border:var(--rule-medium) solid var(--ink);border-radius:var(--r-sm);background-color:var(--paper);background-image:linear-gradient(45deg,transparent 50%,var(--ink) 50%),linear-gradient(135deg,var(--ink) 50%,transparent 50%);background-size:var(--space-5) var(--space-5);background-position:right var(--space-12) center,right var(--space-7) center;background-repeat:no-repeat;color:var(--ink);font:600 var(--text-body)/1 var(--font-ui);cursor:pointer}
+.cc-ledger-figure{font:700 calc(var(--text-chamber) * 1.25)/1 var(--font-num);letter-spacing:var(--track-number);font-variant-numeric:tabular-nums}
+.cc-ledger-figure small{font-size:.55em;color:var(--muted)}
+.cc-ledger tr[aria-selected="true"] .cc-ledger-figure small{color:var(--or-text)}
+.cc-scale{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border:var(--rule-thin) solid var(--ink)}
+.cc-scale > span{min-width:0;padding:var(--space-4) var(--space-6);border-left:var(--rule-thin) solid var(--line);font:400 var(--text-label)/1.3 var(--font-num);color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cc-scale > span:first-child{border-left:0}
+.cc-scale b{display:block;font-weight:700;color:var(--ink-2)}
+.cc-scale [data-state="passed"]{box-shadow:inset 0 calc(-1 * var(--space-3)) 0 var(--or)}
+.cc-scale [data-state="active"]{background:var(--or);color:var(--press-2);font-weight:700}
+.cc-scale [data-state="active"] b{color:var(--press)}
+.cc-footnote{display:flex;flex-wrap:wrap;justify-content:space-between;gap:var(--space-4) var(--space-16);font:var(--text-label)/1.45 var(--font-ui);color:var(--muted)}
+.cc-footnote-status{font-family:var(--font-num);color:var(--ink-2)}
+.cc-spread{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:var(--space-32)}
+.cc-fig{display:grid;align-content:start;gap:var(--space-10);margin:0;min-width:0}
+.cc-fig-body{display:grid;gap:var(--space-8);min-width:0}
+.cc-fig-plate{position:relative;height:calc(var(--space-56) * 3.5);background:var(--card);border:var(--rule-thin) solid var(--hair)}
+.cc-fig-plate svg{position:absolute;inset:var(--space-16) var(--space-20) var(--space-12);width:calc(100% - var(--space-40));height:calc(100% - var(--space-28))}
+.cc-fig-stamp{position:absolute;right:var(--space-10);top:var(--space-10);padding:var(--space-2) var(--space-6);border:var(--rule-medium) solid var(--ink);border-radius:var(--r-sm);background:var(--paper);font:700 var(--text-label)/1.2 var(--font-num)}
+.cc-crop{position:absolute;width:var(--space-14);height:var(--space-14);pointer-events:none;opacity:.7}
+.cc-crop::before,.cc-crop::after{content:"";position:absolute;background:var(--ink)}
+.cc-crop::before{width:var(--space-14);height:var(--rule-thin);top:var(--space-6);left:0}
+.cc-crop::after{height:var(--space-14);width:var(--rule-thin);left:var(--space-6);top:0}
+.cc-crop[data-corner="tl"]{left:calc(-1 * var(--space-7));top:calc(-1 * var(--space-7));clip-path:inset(0 var(--space-7) var(--space-7) 0)}
+.cc-crop[data-corner="tr"]{right:calc(-1 * var(--space-7));top:calc(-1 * var(--space-7));clip-path:inset(0 0 var(--space-7) var(--space-7))}
+.cc-crop[data-corner="bl"]{left:calc(-1 * var(--space-7));bottom:calc(-1 * var(--space-7));clip-path:inset(var(--space-7) var(--space-7) 0 0)}
+.cc-crop[data-corner="br"]{right:calc(-1 * var(--space-7));bottom:calc(-1 * var(--space-7));clip-path:inset(var(--space-7) 0 0 var(--space-7))}
+.cc-figcap{font:italic var(--text-aside)/1.4 var(--font-serif);color:var(--ink-2)}
+.cc-figcap b{margin-right:var(--space-6);font:800 var(--text-label)/1 var(--font-ui);font-style:normal;letter-spacing:var(--track-wide);text-transform:uppercase;color:var(--or-text)}
+.cc-plot{display:grid;grid-template-columns:var(--space-40) minmax(0,1fr);grid-template-rows:calc(var(--space-56) * 3.5 - var(--space-22)) var(--space-22)}
+.cc-plot-y{display:flex;flex-direction:column;justify-content:space-between;padding-right:var(--space-6);text-align:right;font:600 var(--text-label)/1 var(--font-num);color:var(--muted)}
+.cc-plot-area{position:relative;border-left:var(--rule-thin) solid var(--ink);border-bottom:var(--rule-medium) solid var(--ink);background:var(--card)}
+.cc-plot-svg{position:absolute;inset:0;width:100%;height:100%}
+.cc-plot-band{fill:var(--or)}
+.cc-plot-line{fill:none;stroke:var(--ink);stroke-width:2;stroke-linejoin:round;vector-effect:non-scaling-stroke}
+.cc-plot-now{stroke:var(--gules);stroke-width:2;vector-effect:non-scaling-stroke}
+.cc-plot-marker{position:absolute;top:var(--space-8);left:var(--at);margin-left:var(--space-6);padding:var(--space-2) var(--space-6);border-radius:var(--r-sm);background:var(--ink);color:var(--paper);font:700 var(--text-label)/1.2 var(--font-num);white-space:nowrap}
+.cc-plot-x{grid-column:2;position:relative;font:600 var(--text-label)/1 var(--font-num);color:var(--muted)}
+.cc-plot-x span{position:absolute;top:var(--space-6);transform:translateX(-50%)}
+.cc-plot-x span:first-child{transform:none}
+.cc-plot-x span:last-child{transform:translateX(-100%)}
+.cc-actions{display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-8)}
+.cc-btn{display:inline-flex;align-items:center;justify-content:center;min-height:var(--button-small-h);padding:var(--space-4) var(--space-10);border:var(--rule-medium) solid var(--ink);border-radius:var(--r-sm);background:transparent;color:var(--ink);font:700 var(--text-label)/1.15 var(--font-ui);letter-spacing:var(--track-label);text-transform:uppercase;cursor:pointer;transition:background var(--motion-fast) var(--ease),color var(--motion-fast) var(--ease)}
+.cc-btn:hover{background:var(--ink);color:var(--paper)}
+.cc-btn[data-variant="plate"]{background:var(--or);color:var(--press)}
+.cc-btn[data-variant="plate"]:hover{background:var(--ink);color:var(--paper)}
+.cc-tl-svg{display:block;width:100%;height:auto;max-height:calc(var(--space-56) * 2.4)}
+.cc-tl-rule{fill:none;stroke:var(--ink)}
+.cc-tl-mark{fill:var(--or);stroke:var(--ink)}
+.cc-tl-mark[data-selected]{fill:var(--ink);stroke:var(--or-text);stroke-width:2}
+.cc-axis{display:flex;justify-content:space-between;gap:var(--space-8);font:600 var(--text-label)/1.3 var(--font-num);color:var(--muted)}
+.cc-range{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:var(--space-12);font:700 var(--text-label)/1.2 var(--font-ui);letter-spacing:var(--track-wide);text-transform:uppercase;color:var(--ink-2)}
+.cc-range input{width:100%;margin:0;accent-color:var(--or-text)}
+.cc-readline{display:flex;flex-wrap:wrap;gap:var(--space-2) var(--space-12);padding:var(--space-6) 0;border-block:var(--rule-thin) solid var(--line);font:var(--text-label)/1.4 var(--font-num)}
+.cc-table{width:100%;table-layout:fixed;border-collapse:collapse;font-size:var(--text-label)}
+.cc-table th{padding:var(--space-6) var(--space-8);border-bottom:var(--rule-thin) solid var(--ink);text-align:left;font:700 var(--text-label)/1.2 var(--font-ui);letter-spacing:var(--track-wide);text-transform:uppercase;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cc-table td{height:var(--row-h);padding:0 var(--space-8);border-bottom:var(--rule-thin) solid var(--line);font-family:var(--font-num);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cc-table tbody tr:hover td{background:var(--tint)}
+.cc-table .cc-num{text-align:right;font-variant-numeric:tabular-nums}
+.cc-table .cc-dim{color:var(--muted)}
+@media (max-width:1100px){.cc-spread{grid-template-columns:minmax(0,1fr)}}
+</style>
+</head>
+<body>
+<div class="desktop-shell">
+<header class="cc-rampart">
+  <a class="cc-brand" href="#/keep" aria-label="Castle Control, the whole keep"><svg class="cc-mark" viewBox="0 0 72 64" role="img" aria-label="Castle Control mark: a chat bubble topped with battlements, its gate lit"><path d="M6 6h9v7h8V6h9v7h8V6h9v7h8V6h9v42a4 4 0 0 1-4 4H27l-12 10V52h-5a4 4 0 0 1-4-4ZM28 52V39a8 8 0 0 1 16 0V52Z" fill="var(--gules)" fill-rule="evenodd"/><path class="cc-mark-gate" d="M28 52V39a8 8 0 0 1 16 0V52Z" transform="translate(1.6 -1.4)" fill="var(--or)"/></svg><span class="cc-wordmark" data-text="Castle&#10;Control">Castle<br>Control</span></a>
+  <div class="cc-live-group" aria-label="Stream status"><span class="cc-chip" data-variant="dash">ON AIR simulated</span>
+    <span class="cc-figure"><b>Unknown</b><small>viewers</small></span><span class="cc-figure"><b>Unknown</b><small>uptime</small></span></div>
+  <span class="cc-separator"></span>
+  <div class="cc-link-group"><span class="cc-chip" data-variant="dash">Twitch simulated</span><span class="cc-chip" data-variant="dash">OBS simulated</span></div>
+  <a href="#/chamber/moderator"><span class="cc-chip" data-variant="dash">Gatehouse simulated</span></a>
+  <span class="cc-spacer"></span>
+  <span class="cc-sample">Simulated</span>
+  <button class="cc-button" type="button" data-size="icon" data-theme-toggle aria-label="Toggle paper and dark stock" title="Paper / dark stock" aria-pressed="false"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2a8 8 0 1 0 0 16V2Zm0 0a8 8 0 0 1 0 16"/></svg></button>
+  <button class="cc-button" type="button" title="Talk to the Steward (/)">Steward</button>
+</header>
+<main class="desktop-surface">
+<section class="shell-room" data-chamber="visuals" aria-label="Chamber detail room">
+  <header class="shell-room-header">
+    <div class="shell-room-heading">
+      <nav aria-label="Breadcrumb"><a href="#/keep">The keep</a><span aria-hidden="true"> › </span><span aria-current="page">The Beacons (Contribution visuals)</span></nav>
+      <div class="shell-room-title"><h1>The Beacons</h1><p>Chamber 3 of 4 · Contribution visuals</p><span class="shell-room-simulated">SIMULATED</span></div>
+    </div>
+    <nav class="cc-room-locator" aria-label="Chamber locator"><span>Chambers</span><a href="#/chamber/lottery" aria-label="1: Lot Chamber">1</a><a href="#/chamber/moderator" aria-label="2: Gatehouse">2</a><a href="#/chamber/visuals" aria-label="3: Beacons" aria-current="location">3</a><a href="#/chamber/studio" aria-label="4: Map Room">4</a></nav>
+    <a class="shell-room-back" href="#/keep">Back to the keep <kbd>Esc</kbd></a>
+  </header>
+  <div class="shell-room-work"><div class="shell-room-content">
+<!-- ===== CHAMBER BODY (the redesigned part) ===== -->
+<div class="cc-folio" aria-label="Beacons work">
+  <section class="cc-sheet" aria-label="Beacon visuals">
+    <header class="cc-sec"><span class="cc-sec-no">3.1</span><h2>The beacons</h2><em class="cc-gloss">contribution visuals, and how hot each one burns</em><span class="cc-sec-meta">3 visuals · simulated configuration</span></header>
+    <table class="cc-ledger">
+      <colgroup><col style="width:3.5rem"><col style="width:19%"><col style="width:12%"><col style="width:19%"><col style="width:7.5rem"><col><col style="width:7.5rem"></colgroup>
+      <thead><tr><th scope="col">No.</th><th scope="col">Beacon</th><th scope="col">Lights</th><th scope="col">Driven by</th><th scope="col" class="cc-num">Halves every</th><th scope="col">Intensity tiers <span class="cc-th-gloss">weighted subs → blaze</span></th><th scope="col" class="cc-num">Blaze <span class="cc-th-gloss">weighted subs</span></th></tr></thead>
+      <tbody>
+        <tr class="cc-ledger-row" data-row="offering-altar" data-pick="offering-altar" aria-selected="true">
+          <td class="cc-ledger-no">01</td>
+          <td><button type="button" class="cc-ledger-name" data-pick="offering-altar" aria-pressed="true">Offering altar</button><span class="cc-sub cc-mono">offering-altar</span></td>
+          <td>On-screen object<span class="cc-sub">gifts + subs</span></td>
+          <td><span class="cc-cell-edit"><select id="drive-offering-altar" class="cc-select" name="input_source" aria-label="Driven by"><option value="">Not routed</option><option value="gift">gift subscriptions</option><option value="subscribe">subscriptions</option><option value="resub">resubscriptions</option><option value="cheer">Bits cheer</option><option value="bits_use">Bits use</option><option value="hype_train">Hype Train level</option><option value="channel_points" selected>channel points</option><option value="charity">charity minor currency units</option><option value="goal">goal minor currency units</option><option value="power_up">power-ups</option></select><span class="cc-sub">Native unit · <output aria-label="Native unit">points</output></span></span>
+              <span class="cc-cell-read">channel points<span class="cc-sub">Native unit · points</span></span></td>
+          <td class="cc-num">5 min<span class="cc-sub">simulated</span></td>
+          <td><span class="cc-scale" role="group" aria-label="Offering altar intensity ranges · weighted subs to blaze"><span data-state="passed"><b>0–10</b>0→25%</span><span data-state="active"><b>10–30</b>25→60%</span><span data-state="ahead"><b>30–100</b>60→100%</span><span data-state="ahead"><b>100+</b>100%</span></span></td>
+          <td class="cc-num"><b class="cc-ledger-figure">39<small>%</small></b><span class="cc-sub cc-mono">18.0</span></td>
+        </tr>
+        <tr class="cc-ledger-row" data-row="gilded-frame" data-pick="gilded-frame" aria-selected="false">
+          <td class="cc-ledger-no">02</td>
+          <td><button type="button" class="cc-ledger-name" data-pick="gilded-frame" aria-pressed="false">Gilded camera frame</button><span class="cc-sub cc-mono">gilded-frame</span></td>
+          <td>Camera frame<span class="cc-sub">gifts + subs</span></td>
+          <td><span class="cc-cell-edit"><select id="drive-gilded-frame" class="cc-select" name="input_source" aria-label="Driven by"><option value="">Not routed</option><option value="gift" selected>gift subscriptions</option><option value="subscribe">subscriptions</option><option value="resub">resubscriptions</option><option value="cheer">Bits cheer</option><option value="bits_use">Bits use</option><option value="hype_train">Hype Train level</option><option value="channel_points">channel points</option><option value="charity">charity minor currency units</option><option value="goal">goal minor currency units</option><option value="power_up">power-ups</option></select><span class="cc-sub">Native unit · <output aria-label="Native unit">count</output></span></span>
+              <span class="cc-cell-read">gift subscriptions<span class="cc-sub">Native unit · count</span></span></td>
+          <td class="cc-num">2 min<span class="cc-sub">simulated</span></td>
+          <td><span class="cc-scale" role="group" aria-label="Gilded camera frame intensity ranges · weighted subs to blaze"><span data-state="passed"><b>0–10</b>0→35%</span><span data-state="active"><b>10–30</b>35→70%</span><span data-state="ahead"><b>30–100</b>70→100%</span><span data-state="ahead"><b>100+</b>100%</span></span></td>
+          <td class="cc-num"><b class="cc-ledger-figure">60<small>%</small></b><span class="cc-sub cc-mono">24.0</span></td>
+        </tr>
+        <tr class="cc-ledger-row" data-row="hype-border" data-pick="hype-border" aria-selected="false">
+          <td class="cc-ledger-no">03</td>
+          <td><button type="button" class="cc-ledger-name" data-pick="hype-border" aria-pressed="false">Hype border</button><span class="cc-sub cc-mono">hype-border</span></td>
+          <td>Screen border<span class="cc-sub">gifts + subs</span></td>
+          <td><span class="cc-cell-edit"><select id="drive-hype-border" class="cc-select" name="input_source" aria-label="Driven by"><option value="">Not routed</option><option value="gift">gift subscriptions</option><option value="subscribe">subscriptions</option><option value="resub">resubscriptions</option><option value="cheer">Bits cheer</option><option value="bits_use">Bits use</option><option value="hype_train" selected>Hype Train level</option><option value="channel_points">channel points</option><option value="charity">charity minor currency units</option><option value="goal">goal minor currency units</option><option value="power_up">power-ups</option></select><span class="cc-sub">Native unit · <output aria-label="Native unit">level</output></span></span>
+              <span class="cc-cell-read">Hype Train level<span class="cc-sub">Native unit · level</span></span></td>
+          <td class="cc-num">15 min<span class="cc-sub">simulated</span></td>
+          <td><span class="cc-scale" role="group" aria-label="Hype border intensity ranges · weighted subs to blaze"><span data-state="passed"><b>0–10</b>0→20%</span><span data-state="passed"><b>10–30</b>20→50%</span><span data-state="active"><b>30–100</b>50→100%</span><span data-state="ahead"><b>100+</b>100%</span></span></td>
+          <td class="cc-num"><b class="cc-ledger-figure">50<small>%</small></b><span class="cc-sub cc-mono">30.0</span></td>
+        </tr>
+      </tbody>
+    </table>
+    <p class="cc-footnote"><span>† Simulated configuration only. Test fires use gifts/subs independently; live routing is a separate core step.</span><span class="cc-footnote-status" role="status" aria-live="polite">Simulated snapshot · no live input.</span></p>
+  </section>
+
+  <div class="cc-spread">
+    <figure class="cc-fig" aria-label="The brazier">
+      <header class="cc-sec"><span class="cc-sec-no">3.2</span><h2>The brazier</h2><em class="cc-gloss">the selected beacon, as viewers would see it</em></header>
+      <div class="cc-fig-body" data-panel="offering-altar">
+        <div class="cc-fig-plate" data-on-air="false"><i class="cc-crop" data-corner="tl"></i><i class="cc-crop" data-corner="tr"></i><i class="cc-crop" data-corner="bl"></i><i class="cc-crop" data-corner="br"></i><svg class="" viewBox="84 25 192 218" preserveAspectRatio="xMidYMax meet" role="img" aria-label="Offering altar · simulated local preview" style="--room-blaze:0.390"><path class="visuals-room-stone" d="M90 197h180v12H90zm12 12h156l-20 28H122z"/><path class="visuals-room-fire" d="M135 194c-60-54 34-75 37-163 42 48 1 68 34 87 12-25 21-30 20-53 55 73 37 100-7 129Z"/><path class="visuals-room-fire-core" d="M160 194c-24-30 27-42 22-89 39 42 44 60 21 89Z"/></svg><span class="cc-fig-stamp">39% blaze</span></div>
+        <figcaption class="cc-figcap"><b>Fig. 3.2</b> Offering altar · simulated blaze from gifts and subs · halving every 5 minutes.</figcaption>
+      </div>
+      <div class="cc-fig-body" data-panel="gilded-frame" hidden>
+        <div class="cc-fig-plate" data-on-air="false"><i class="cc-crop" data-corner="tl"></i><i class="cc-crop" data-corner="tr"></i><i class="cc-crop" data-corner="bl"></i><i class="cc-crop" data-corner="br"></i><svg class="" viewBox="14 24 332 192" preserveAspectRatio="xMidYMax meet" role="img" aria-label="Gilded camera frame · simulated local preview" style="--room-blaze:0.595"><rect class="visuals-room-stone" x="20" y="30" width="320" height="180" rx="6"/><rect class="visuals-room-cutout" x="31" y="41" width="298" height="158"/><path class="visuals-room-glow" d="M25 35h310v170H25Z"/><circle class="visuals-room-stone" cx="180" cy="98" r="26"/><path class="visuals-room-stone" d="M125 183c0-70 110-70 110 0Z"/></svg><span class="cc-fig-stamp">60% blaze</span></div>
+        <figcaption class="cc-figcap"><b>Fig. 3.2</b> Gilded camera frame · simulated blaze from gifts and subs · halving every 2 minutes.</figcaption>
+      </div>
+      <div class="cc-fig-body" data-panel="hype-border" hidden>
+        <div class="cc-fig-plate" data-on-air="false"><i class="cc-crop" data-corner="tl"></i><i class="cc-crop" data-corner="tr"></i><i class="cc-crop" data-corner="bl"></i><i class="cc-crop" data-corner="br"></i><svg class="" viewBox="14 24 332 192" preserveAspectRatio="xMidYMax meet" role="img" aria-label="Hype border · simulated local preview" style="--room-blaze:0.500"><rect class="visuals-room-stone" x="20" y="30" width="320" height="180" rx="6"/><rect class="visuals-room-cutout" x="31" y="41" width="298" height="158"/><path class="visuals-room-glow" d="M25 35h310v170H25Z"/><path class="visuals-room-fire" d="m48 190 20-60 15 32 17-85 22 113zm190 0 20-75 13 42 23-36 20 69Z"/></svg><span class="cc-fig-stamp">50% blaze</span></div>
+        <figcaption class="cc-figcap"><b>Fig. 3.2</b> Hype border · simulated blaze from gifts and subs · halving every 15 minutes.</figcaption>
+      </div>
+    </figure>
+    <figure class="cc-fig" aria-label="The kindling curve">
+      <header class="cc-sec"><span class="cc-sec-no">3.3</span><h2>The kindling curve</h2><em class="cc-gloss">contribution to blaze</em></header>
+      <div class="cc-fig-body" data-panel="offering-altar">
+        <div class="cc-plot">
+          <div class="cc-plot-y" aria-hidden="true"><span>100%</span><span>50%</span><span>0%</span></div>
+          <div class="cc-plot-area"><svg class="cc-plot-svg" viewBox="0 0 600 140" preserveAspectRatio="none" role="img" aria-label="Offering altar contribution to intensity curve · simulated"><rect class="cc-plot-band" x="0" y="0" width="60" height="140" opacity="0.20"/><rect class="cc-plot-band" x="60" y="0" width="120" height="140" opacity="0.35"/><rect class="cc-plot-band" x="180" y="0" width="420" height="140" opacity="0.56"/><polyline class="cc-plot-line" points="0,140 60,105 180,56 600,0"/><line class="cc-plot-now" x1="108" x2="108" y1="0" y2="140"/></svg><span class="cc-plot-marker" style="--at:18.0%"><b>18.0 → 39%</b></span></div>
+          <div class="cc-plot-x" aria-hidden="true"><span style="left:0%">0</span><span style="left:10%">10</span><span style="left:30%">30</span><span style="left:100%">100</span></div>
+        </div>
+        <figcaption class="cc-figcap"><b>Fig. 3.3</b> Offering altar · 18.0 weighted subs · 39% blaze · simulated.</figcaption>
+      </div>
+      <div class="cc-fig-body" data-panel="gilded-frame" hidden>
+        <div class="cc-plot">
+          <div class="cc-plot-y" aria-hidden="true"><span>100%</span><span>50%</span><span>0%</span></div>
+          <div class="cc-plot-area"><svg class="cc-plot-svg" viewBox="0 0 600 140" preserveAspectRatio="none" role="img" aria-label="Gilded camera frame contribution to intensity curve · simulated"><rect class="cc-plot-band" x="0" y="0" width="60" height="140" opacity="0.20"/><rect class="cc-plot-band" x="60" y="0" width="120" height="140" opacity="0.41"/><rect class="cc-plot-band" x="180" y="0" width="420" height="140" opacity="0.62"/><polyline class="cc-plot-line" points="0,140 60,91 180,42 600,0"/><line class="cc-plot-now" x1="144" x2="144" y1="0" y2="140"/></svg><span class="cc-plot-marker" style="--at:24.0%"><b>24.0 → 60%</b></span></div>
+          <div class="cc-plot-x" aria-hidden="true"><span style="left:0%">0</span><span style="left:10%">10</span><span style="left:30%">30</span><span style="left:100%">100</span></div>
+        </div>
+        <figcaption class="cc-figcap"><b>Fig. 3.3</b> Gilded camera frame · 24.0 weighted subs · 60% blaze · simulated.</figcaption>
+      </div>
+      <div class="cc-fig-body" data-panel="hype-border" hidden>
+        <div class="cc-plot">
+          <div class="cc-plot-y" aria-hidden="true"><span>100%</span><span>50%</span><span>0%</span></div>
+          <div class="cc-plot-area"><svg class="cc-plot-svg" viewBox="0 0 600 140" preserveAspectRatio="none" role="img" aria-label="Hype border contribution to intensity curve · simulated"><rect class="cc-plot-band" x="0" y="0" width="60" height="140" opacity="0.20"/><rect class="cc-plot-band" x="60" y="0" width="120" height="140" opacity="0.32"/><rect class="cc-plot-band" x="180" y="0" width="420" height="140" opacity="0.50"/><polyline class="cc-plot-line" points="0,140 60,112 180,70 600,0"/><line class="cc-plot-now" x1="180" x2="180" y1="0" y2="140"/></svg><span class="cc-plot-marker" style="--at:30.0%"><b>30.0 → 50%</b></span></div>
+          <div class="cc-plot-x" aria-hidden="true"><span style="left:0%">0</span><span style="left:10%">10</span><span style="left:30%">30</span><span style="left:100%">100</span></div>
+        </div>
+        <figcaption class="cc-figcap"><b>Fig. 3.3</b> Hype border · 30.0 weighted subs · 50% blaze · simulated.</figcaption>
+      </div>
+    </figure>
+  </div>
+
+  <section class="cc-sheet" aria-label="Simulated local test fire">
+    <header class="cc-sec"><span class="cc-sec-no">3.4</span><h2>Test fire</h2><em class="cc-gloss">local preview only</em><span class="cc-sec-meta"><output data-panel="offering-altar"><b>39% blaze</b> · 18.0 weighted subs</output><output data-panel="gilded-frame" hidden><b>60% blaze</b> · 24.0 weighted subs</output><output data-panel="hype-border" hidden><b>50% blaze</b> · 30.0 weighted subs</output></span></header>
+    <div class="cc-actions"><button type="button" class="cc-btn" data-variant="plate">Test fire: 50 gifts</button><button type="button" class="cc-btn">Test fire: 1 sub</button><button type="button" class="cc-btn">Advance simulated clock 60 s</button><button type="button" class="cc-btn">End test fire</button></div>
+    <p class="cc-footnote"><span>Nothing reaches the stream. A viewer-facing change requires the shared hold to seal and proclaim. Money changes looks only. This room has no OBS connection.</span></p>
+  </section>
+
+  <div class="cc-spread">
+    <section class="cc-sheet" aria-label="Illustrative offerings timeline">
+      <header class="cc-sec"><span class="cc-sec-no">3.5</span><h2>60 offerings</h2><em class="cc-gloss">illustrative timeline</em><span class="cc-sec-meta">sample data</span></header>
+      <svg class="cc-tl-svg" viewBox="0 0 480 100" role="img" aria-label="60 fictional contributions across 48 minutes"><path class="cc-tl-rule" d="M8 82H472"/><circle class="cc-tl-mark" cx="13.0" cy="30" r="4.86"><title>gravebard50: 500 points at 0 min · illustrative</title></circle><circle class="cc-tl-mark" cx="17.8" cy="42" r="4.86"><title>bonewarden20: 500 points at 1 min · illustrative</title></circle><circle class="cc-tl-mark" cx="27.2" cy="54" r="3.83"><title>ashnewt81: 100 bits at 1 min · illustrative</title></circle><circle class="cc-tl-mark" cx="36.4" cy="66" r="3.08"><title>sabletoad35: 1 sub at 2 min · illustrative</title></circle><circle class="cc-tl-mark" cx="49.1" cy="30" r="3.08"><title>rookscribe69: 1 sub at 4 min · illustrative</title></circle><circle class="cc-tl-mark" cx="50.7" cy="42" r="4.32"><title>embernewt86: 250 bits at 4 min · illustrative</title></circle><circle class="cc-tl-mark" cx="57.5" cy="54" r="8.89"><title>bonewisp72: 5000 points at 5 min · illustrative</title></circle><circle class="cc-tl-mark" cx="62.6" cy="66" r="3.83"><title>rookscribe69: 100 bits at 5 min · illustrative</title></circle><circle class="cc-tl-mark" cx="74.2" cy="30" r="4.86"><title>sablemonk52: 500 points at 6 min · illustrative</title></circle><circle class="cc-tl-mark" cx="77.8" cy="42" r="3.08"><title>cinderpage29: 1 sub at 7 min · illustrative</title></circle><circle class="cc-tl-mark" cx="88.9" cy="54" r="4.86"><title>fogwisp96: 500 points at 8 min · illustrative</title></circle><circle class="cc-tl-mark" cx="90.5" cy="66" r="4.86"><title>hollowsmith82: 500 bits at 8 min · illustrative</title></circle><circle class="cc-tl-mark" cx="102.4" cy="30" r="5.64"><title>candlewisp37: 1000 bits at 9 min · illustrative</title></circle><circle class="cc-tl-mark" cx="112.4" cy="42" r="3.83"><title>cryptpage25: 100 bits at 10 min · illustrative</title></circle><circle class="cc-tl-mark" cx="119.7" cy="54" r="3.08"><title>mothmonk54: 1 sub at 11 min · illustrative</title></circle><circle class="cc-tl-mark" cx="131.4" cy="66" r="4.32"><title>lanternwisp75: 250 bits at 12 min · illustrative</title></circle><circle class="cc-tl-mark" cx="141.4" cy="30" r="5.64"><title>fogwisp40: 1000 points at 13 min · illustrative</title></circle><circle class="cc-tl-mark" cx="147.0" cy="42" r="5.64"><title>candlewisp93: 1000 points at 14 min · illustrative</title></circle><circle class="cc-tl-mark" cx="159.4" cy="54" r="4.32"><title>ashelk27: 250 bits at 15 min · illustrative</title></circle><circle class="cc-tl-mark" cx="166.1" cy="66" r="3.26"><title>inkrat69: 10 gift at 16 min · illustrative</title></circle><circle class="cc-tl-mark" cx="176.2" cy="30" r="3.83"><title>sableclerk53: 100 bits at 17 min · illustrative</title></circle><circle class="cc-tl-mark" cx="190.2" cy="42" r="3.08"><title>mothmonk45: 1 sub at 18 min · illustrative</title></circle><circle class="cc-tl-mark" cx="197.9" cy="54" r="4.86"><title>boneowl83: 500 bits at 19 min · illustrative</title></circle><circle class="cc-tl-mark" cx="210.5" cy="66" r="4.86"><title>sablebard69: 500 bits at 20 min · illustrative</title></circle><circle class="cc-tl-mark" cx="221.5" cy="30" r="3.83"><title>hollowpage39: 100 bits at 22 min · illustrative</title></circle><circle class="cc-tl-mark" cx="229.7" cy="42" r="4.86"><title>duskwolf63: 500 points at 22 min · illustrative</title></circle><circle class="cc-tl-mark" cx="231.6" cy="54" r="3.37"><title>boneelk8: 20 gift at 23 min · illustrative</title></circle><circle class="cc-tl-mark" cx="244.4" cy="66" r="4.32"><title>bonescribe24: 250 bits at 24 min · illustrative</title></circle><circle class="cc-tl-mark" cx="245.3" cy="30" r="8.89"><title>ashhare42: 5000 points at 24 min · illustrative</title></circle><circle class="cc-tl-mark" cx="250.8" cy="42" r="3.08"><title>mothowl31: 1 sub at 25 min · illustrative</title></circle><circle class="cc-tl-mark" cx="260.5" cy="54" r="5.64"><title>gravebard50: 1000 bits at 26 min · illustrative</title></circle><circle class="cc-tl-mark" cx="270.1" cy="66" r="3.26"><title>fogwisp40: 10 gift at 27 min · illustrative</title></circle><circle class="cc-tl-mark" cx="273.2" cy="30" r="5.64"><title>duskfox44: 1000 bits at 27 min · illustrative</title></circle><circle class="cc-tl-mark" cx="274.3" cy="42" r="4.86"><title>hollowscribe89: 500 bits at 27 min · illustrative</title></circle><circle class="cc-tl-mark" cx="282.5" cy="54" r="4.32"><title>duskowl39: 250 bits at 28 min · illustrative</title></circle><circle class="cc-tl-mark" cx="294.5" cy="66" r="4.86"><title>duskcrow55: 500 points at 29 min · illustrative</title></circle><circle class="cc-tl-mark" cx="304.8" cy="30" r="4.86"><title>lanternrat58: 500 points at 30 min · illustrative</title></circle><circle class="cc-tl-mark" cx="315.2" cy="42" r="5.64"><title>duskelk88: 1000 bits at 31 min · illustrative</title></circle><circle class="cc-tl-mark" cx="321.5" cy="54" r="4.86"><title>cindermonk35: 500 points at 32 min · illustrative</title></circle><circle class="cc-tl-mark" cx="335.1" cy="66" r="4.32"><title>sableclerk53: 250 bits at 33 min · illustrative</title></circle><circle class="cc-tl-mark" cx="340.5" cy="30" r="4.32"><title>candlesmith38: 250 bits at 34 min · illustrative</title></circle><circle class="cc-tl-mark" cx="348.8" cy="42" r="4.86"><title>ledgerrat11: 500 points at 35 min · illustrative</title></circle><circle class="cc-tl-mark" cx="358.9" cy="54" r="4.32"><title>rookscribe69: 250 bits at 36 min · illustrative</title></circle><circle class="cc-tl-mark" cx="365.5" cy="66" r="3.08"><title>duskmage99: 1 sub at 36 min · illustrative</title></circle><circle class="cc-tl-mark" cx="367.1" cy="30" r="5.64"><title>duskmage99: 1000 points at 37 min · illustrative</title></circle><circle class="cc-tl-mark" cx="377.1" cy="42" r="3.08"><title>candlesmith38: 1 sub at 38 min · illustrative</title></circle><circle class="cc-tl-mark" cx="387.1" cy="54" r="3.12"><title>quillpage50: 2 hype_train at 39 min · illustrative</title></circle><circle class="cc-tl-mark" cx="393.1" cy="66" r="3.83"><title>hollowknight44: 100 bits at 39 min · illustrative</title></circle><circle class="cc-tl-mark" cx="404.8" cy="30" r="4.32"><title>inkwarden42: 250 bits at 41 min · illustrative</title></circle><circle class="cc-tl-mark" cx="410.3" cy="42" r="3.08"><title>fogwisp40: 1 sub at 41 min · illustrative</title></circle><circle class="cc-tl-mark" cx="420.3" cy="54" r="4.86"><title>embernewt86: 500 points at 42 min · illustrative</title></circle><circle class="cc-tl-mark" cx="422.9" cy="66" r="3.08"><title>boneowl6: 1 sub at 42 min · illustrative</title></circle><circle class="cc-tl-mark" cx="433.2" cy="30" r="3.83"><title>mothclerk93: 100 bits at 43 min · illustrative</title></circle><circle class="cc-tl-mark" cx="440.9" cy="42" r="4.86"><title>inkrat69: 500 points at 44 min · illustrative</title></circle><circle class="cc-tl-mark" cx="442.4" cy="54" r="4.32"><title>sabletoad68: 250 bits at 44 min · illustrative</title></circle><circle class="cc-tl-mark" cx="446.5" cy="66" r="3.08"><title>graveclerk74: 1 sub at 45 min · illustrative</title></circle><circle class="cc-tl-mark" cx="449.1" cy="30" r="5.64"><title>sabletoad35: 1000 points at 45 min · illustrative</title></circle><circle class="cc-tl-mark" cx="452.8" cy="42" r="8.89"><title>fogwisp34: 5000 points at 46 min · illustrative</title></circle><circle class="cc-tl-mark" cx="460.4" cy="54" r="8.89"><title>fogwisp40: 5000 points at 46 min · illustrative</title></circle><circle class="cc-tl-mark" data-selected="" cx="465.4" cy="66" r="3.59"><title>rookscribe69: 50 gift at 47 min · illustrative</title></circle></svg>
+      <div class="cc-axis"><span>0 min</span><span>48 min · sample end</span></div>
+      <label class="cc-range"><span>Inspect an offering</span><input type="range" min="0" max="59" step="1" value="59" aria-label="Inspect offering"></label>
+      <p class="cc-readline" role="status" aria-live="polite"><b>Offering 60 of 60 · 47 min 19 s</b><span>rookscribe69 · 50 gift · illustrative</span></p>
+      <p class="cc-footnote"><span>Bits, gifts, subscriptions, points and Hype Train marks are fictional. This timeline does not feed live accounting.</span></p>
+    </section>
+    <section class="cc-sheet" aria-label="Contribution feed">
+      <header class="cc-sec"><span class="cc-sec-no">3.6</span><h2>Contribution feed</h2><em class="cc-gloss">simulated</em><span class="cc-sec-meta">600 simulated events · Local preview</span></header>
+      <table class="cc-table"><colgroup><col style="width:3.5rem"><col style="width:7rem"><col style="width:6rem"><col><col style="width:30%"></colgroup>
+        <thead><tr><th scope="col">No.</th><th scope="col">Time UTC</th><th scope="col" class="cc-num">Amount</th><th scope="col">Source</th><th scope="col">Beacon</th></tr></thead>
+        <tbody><tr data-contribution-row><td class="cc-dim">600</td><td><time datetime="2026-10-26T12:00:00.000Z">12:00:00</time></td><td class="cc-num">1</td><td>subscriptions</td><td>offering-altar</td></tr><tr data-contribution-row><td class="cc-dim">599</td><td><time datetime="2026-10-26T11:59:59.000Z">11:59:59</time></td><td class="cc-num">1</td><td>gift subscriptions</td><td>gilded-frame</td></tr><tr data-contribution-row><td class="cc-dim">598</td><td><time datetime="2026-10-26T11:59:58.000Z">11:59:58</time></td><td class="cc-num">1</td><td>subscriptions</td><td>hype-border</td></tr><tr data-contribution-row><td class="cc-dim">597</td><td><time datetime="2026-10-26T11:59:57.000Z">11:59:57</time></td><td class="cc-num">1</td><td>gift subscriptions</td><td>offering-altar</td></tr><tr data-contribution-row><td class="cc-dim">596</td><td><time datetime="2026-10-26T11:59:56.000Z">11:59:56</time></td><td class="cc-num">1</td><td>subscriptions</td><td>gilded-frame</td></tr><tr data-contribution-row><td class="cc-dim">595</td><td><time datetime="2026-10-26T11:59:55.000Z">11:59:55</time></td><td class="cc-num">1</td><td>gift subscriptions</td><td>hype-border</td></tr><tr data-contribution-row><td class="cc-dim">594</td><td><time datetime="2026-10-26T11:59:54.000Z">11:59:54</time></td><td class="cc-num">1</td><td>subscriptions</td><td>offering-altar</td></tr><tr data-contribution-row><td class="cc-dim">593</td><td><time datetime="2026-10-26T11:59:53.000Z">11:59:53</time></td><td class="cc-num">1</td><td>gift subscriptions</td><td>gilded-frame</td></tr><tr data-contribution-row><td class="cc-dim">592</td><td><time datetime="2026-10-26T11:59:52.000Z">11:59:52</time></td><td class="cc-num">1</td><td>subscriptions</td><td>hype-border</td></tr><tr data-contribution-row><td class="cc-dim">591</td><td><time datetime="2026-10-26T11:59:51.000Z">11:59:51</time></td><td class="cc-num">1</td><td>gift subscriptions</td><td>offering-altar</td></tr></tbody>
+      </table>
+      <p class="cc-footnote"><span>These inputs are not live accounting.</span></p>
+    </section>
+  </div>
+
+  <aside class="shell-seal-slot" aria-label="Seal slot">
+  <h2>Proposal · awaiting your seal</h2><p>Nothing acts until you hold to seal.</p>
+  <section class="room-design-actions" aria-label="Room designs"><p class="room-caption">SIMULATED · DATA-ONLY DESIGNS</p>
+    <div role="group" aria-label="Beacon visuals design"><strong>Beacon visuals</strong><div><button type="button">Restyle</button><button type="button">Custom design</button></div></div>
+    <div role="group" aria-label="Chat overlay and vote bar design"><strong>Chat overlay and vote bar</strong><div><button type="button">Restyle</button><button type="button">Custom design</button></div></div>
+  </section>
+  <p>No proposals. Ask the Steward to draft one.</p>
+</aside>
+</div>
+<!-- ===== END CHAMBER BODY ===== -->
+  </div></div>
+</section>
+</main>
+<section class="cc-steward-bar" aria-label="The Steward">
+  <div class="cc-steward-identity" role="group" aria-label="Steward identity"><strong>The Steward</strong><span>Simulated co-pilot</span><b>SIMULATED STEWARD · SAMPLE DATA</b></div>
+  <div class="cc-steward-controls" role="group" aria-label="Steward conversation controls">
+    <div class="cc-steward-message"><p role="status">Good evening. Draft in the preview, amend in ink, then hold to seal. Nothing acts on a spoken request.</p></div>
+    <form onsubmit="return false"><label><span>Talk to the Steward...</span><input aria-label="Talk to the Steward..." placeholder="Talk to the Steward..."></label>
+      <button type="button" disabled title="Speech input is not wired yet">Hold to speak</button><button type="submit" disabled>Tell</button></form>
+    <div class="cc-steward-suggestions" role="group" aria-label="Steward suggestions"><button type="button">Catch me up</button><button type="button">Draft a question draw</button><button type="button">What does chat want?</button></div>
+  </div>
+</section>
+</div>
+<button class="proto-theme" type="button" data-theme-toggle aria-pressed="false" title="Prototype only: switch paper / stock">proto · paper/stock</button>
+<script>
+(function(){
+  var root=document.documentElement;
+  function sync(){var s=root.getAttribute('data-theme')==='stock';document.querySelectorAll('[data-theme-toggle]').forEach(function(b){b.setAttribute('aria-pressed',String(s));});}
+  document.querySelectorAll('[data-theme-toggle]').forEach(function(b){b.addEventListener('click',function(){root.setAttribute('data-theme',root.getAttribute('data-theme')==='stock'?'paper':'stock');sync();});});
+  sync();
+  // Static selection only: mirrors VisualSelector -> adapter.select(id).
+  document.addEventListener('click',function(e){var b=e.target.closest('[data-pick]');if(!b)return;var id=b.getAttribute('data-pick');
+    document.querySelectorAll('[data-pick]').forEach(function(el){var on=el.getAttribute('data-pick')===id;if(el.hasAttribute('aria-pressed'))el.setAttribute('aria-pressed',String(on));if(el.getAttribute('role')==='radio')el.setAttribute('aria-checked',String(on));});
+    document.querySelectorAll('[data-row]').forEach(function(el){el.setAttribute('aria-selected',String(el.getAttribute('data-row')===id));});
+    document.querySelectorAll('[data-panel]').forEach(function(el){el.hidden=el.getAttribute('data-panel')!==id;});});
+})();
+</script>
+</body>
+</html>
