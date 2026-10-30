@@ -1,3 +1,17 @@
+.visuals-room-curve { display: grid; gap: var(--space-10); min-width: 0; margin: 0; }
+.visuals-room-curve > * { min-width: 0; margin: 0; }
+.visuals-curve { display: grid; grid-template-rows: calc(var(--space-56) * 1.9) var(--space-20); }
+.visuals-curve-area { position: relative; border-left: var(--rule-thin) solid var(--ink); border-bottom: var(--rule-medium) solid var(--ink); background: var(--card); }
+.visuals-curve-area svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.visuals-room-curve-band { fill: var(--or); }
+.visuals-room-curve-line { fill: none; stroke: var(--ink); stroke-width: var(--rule-medium); stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+.visuals-room-curve-current { stroke: var(--gules); stroke-width: var(--rule-medium); vector-effect: non-scaling-stroke; }
+.visuals-curve-marker { position: absolute; top: var(--space-6); margin-left: var(--space-6); padding: var(--space-2) var(--space-6); border-radius: var(--r-sm); background: var(--ink); color: var(--paper); font: 700 var(--text-label)/1.2 var(--font-num); }
+.visuals-curve-axis { position: relative; font: 600 var(--text-label)/1 var(--font-num); color: var(--muted); }
+.visuals-curve-axis span { position: absolute; top: var(--space-4); transform: translateX(-50%); }
+.visuals-curve-axis span:first-child { transform: none; }
+.visuals-curve-axis span:last-child { transform: translateX(-100%); }
+.visuals-room-curve figcaption { font: var(--text-label)/1.4 var(--font-num); }
 .visuals-curve-editor svg { display: block; width: 100%; height: calc(var(--space-56) * 3); overflow: visible; }
 .visuals-curve-editor circle { fill: var(--or); stroke: var(--ink); stroke-width: var(--rule-medium); cursor: grab; touch-action: none; }
 .visuals-curve-editor circle:focus-visible { outline: var(--rule-strong) solid var(--or-text); outline-offset: var(--focus-offset); }

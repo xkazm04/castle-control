@@ -8,29 +8,27 @@ import { fixtureOfferings } from '../../beacons-fixture.js';
 import { createBeaconsPreview } from '../../beacons-model.js';
 import { tokens } from '@castle-control/tokens';
 
-test('Beacons stage has an inner token inset, captioned artwork and a model-driven active tier', () => {
+// C replaces the standalone figure and boxed tiers with literal radio plates and stair ramps.
+test('C plate inset and active stairs track the unchanged preview totals', () => {
   const style = readFileSync(new URL('./room.css', import.meta.url), 'utf8');
-  const inset = style.match(/\.visuals-room-workbench(?:,\s*\.visuals-room-details)?\s*\{[^}]*\bpadding:\s*var\(--(space-\d+)\)/)?.[1];
-  expect(inset).toBeDefined();
-  expect(Number.parseFloat(tokens.layout[inset as keyof typeof tokens.layout])).toBeGreaterThan(0);
-  expect(style).not.toMatch(/\.visuals-room-workbench\s*\{[^}]*\bpadding:\s*0[;\s}]/);
-  expect(style).toMatch(/\.visuals-room-tier-active\s*\{[^}]*background:\s*var\(--or\)/);
+  expect(style).toContain('padding: var(--space-20) var(--space-24) var(--space-28)');
+  expect(Number.parseFloat(tokens.layout['space-24'])).toBeGreaterThan(0);
+  expect(style).toContain('clip-path: polygon(0 100%, 0 calc((1 - var(--from)) * 100%)');
+  expect(style).toContain('background: var(--or)');
   const port = createBeaconsPreview();
   const markup = () => renderToStaticMarkup(<VisualsWork port={port} />);
   const before = markup();
   expect(before).toContain('<figcaption');
   expect(before).toContain('The kindling curve');
-  expect(before.match(/class="visuals-room-tier-active"/g)).toHaveLength(3);
-  expect(before).toContain('Now:');
-  // Each model selects its own interval. A burst moves only the selected card's tier.
-  const firstCard = (html: string) => html.match(/<article>[\s\S]*?<\/article>/)?.[0] ?? '';
-  expect(firstCard(before)).toContain('data-tier-start="10" class="visuals-room-tier-active"');
+  expect(before.match(/data-state="active"/g)).toHaveLength(3);
+  const firstCard = (html: string) => html.match(/<button[^>]*role="radio"[\s\S]*?<\/button>/)?.[0] ?? '';
+  expect(firstCard(before)).toContain('data-tier-start="10" data-state="active"');
   port.fire('gift', 50);
   const after = markup();
-  expect(firstCard(after)).toContain('data-tier-start="30" class="visuals-room-tier-active"');
-  expect(firstCard(after)).not.toContain('data-tier-start="100" class="visuals-room-tier-active"');
+  expect(firstCard(after)).toContain('data-tier-start="30" data-state="active"');
+  expect(firstCard(after)).not.toContain('data-tier-start="100" data-state="active"');
   port.fire('gift', 50);
-  expect(firstCard(markup())).toContain('data-tier-start="100" class="visuals-room-tier-active"');
+  expect(firstCard(markup())).toContain('data-tier-start="100" data-state="active"');
 });
 
 test('fixture room contains the altar, frames, border, 60 offerings and local test fire', () => {
@@ -44,23 +42,23 @@ test('fixture room contains the altar, frames, border, 60 offerings and local te
   expect(html).not.toContain('visuals-room-notice');
 });
 
-test('Beacons columns share even panel insets and a section rhythm without changing region order', () => {
+// C has one scrolling board and a lower panel row; the previous two-column rhythm is superseded.
+test('C regions remain compare, tune, timeline, feed, then the original seal slot', () => {
   const style = readFileSync(new URL('./room.css', import.meta.url), 'utf8');
-  const columns = style.match(/\.visuals-room-workbench,\s*\.visuals-room-details\s*\{([^}]+)\}/)?.[1];
-  expect(columns).toBeDefined();
-  expect(columns).toContain('padding: var(--space-24)');
-  expect(columns).toContain('gap: var(--space-24)');
-  expect(columns).toContain('flex-direction: column');
-  expect(style).toMatch(/\.visuals-room-workbench > \*,\s*\.visuals-room-details > \*\s*\{[^}]*flex-shrink: 0;[^}]*margin-block: 0/);
-  expect(style).toMatch(/\.visuals-room-details > \.shell-seal-slot\s*\{[^}]*margin-block: 0/);
-  expect(style).toMatch(/\.visuals-room-visuals\s*\{[^}]*gap: var\(--space-16\)/);
-  const html = renderToStaticMarkup(<Room snapshot={{ mode: 'fixture', phase: 'ready' }} />);
-  const regions = ['class="visuals-room-workbench"', 'class="visuals-room-layer"',
-    'class="visuals-room-curve"', 'class="visuals-room-test-tools"', 'class="visuals-room-details"',
-    'aria-label="Beacon visuals"', 'aria-label="Illustrative offerings timeline"', 'aria-label="Contribution feed"'];
+  expect(style).toMatch(/\.visuals-board\s*\{[^}]*overflow: auto;[^}]*flex-direction: column/);
+  expect(style).toMatch(/\.visuals-board > \*\s*\{[^}]*flex-shrink: 0/);
+  expect(style).toContain('padding: var(--space-20) var(--space-24) var(--space-28)');
+  const html = renderToStaticMarkup(<VisualsWork seal_slot={<aside className="shell-seal-slot" aria-label="Seal slot" />} />);
+  const regions = ['class="visuals-plates"', 'visuals-bench', 'The kindling curve', 'visuals-fire-grid',
+    'visuals-room-details', 'aria-label="Illustrative offerings timeline"', 'aria-label="Contribution feed"', 'aria-label="Seal slot"'];
   const positions = regions.map(region => html.indexOf(region));
   expect(positions.every(position => position >= 0)).toBe(true);
   expect(positions).toEqual([...positions].sort((left, right) => left - right));
+  expect(html).toContain('</aside></div></div>');
+  expect(style).toMatch(/\.visuals-seal-panel\s*\{[^}]*border: var\(--rule-medium\) solid var\(--ink\)/);
+  const frame = style.match(/\.visuals-seal-panel\s*\{([^}]+)\}/)?.[1];
+  expect(frame).not.toMatch(/padding|border-top/);
+  expect(style).toMatch(/\.visuals-seal-panel > \.shell-seal-slot\s*\{[^}]*padding: var\(--space-12\) var\(--space-14\) var\(--space-14\); border-top: 0/);
 });
 
 test('core mode never shows simulated controls or a fixture proposal', () => {

@@ -6,6 +6,7 @@ import type { CoreBeaconsPort } from '../../beacons-core.js';
 import { createCurveEditor } from './curve-editor.js';
 import type { CurveEditor } from './curve-editor.js';
 import './kindling-curve.css';
+import { beaconsCopy as copy } from '../../beacons-copy.js';
 
 /** A read-only figure of the existing model's curve, never another intensity engine. */
 export function KindlingCurve({ item }: { item: PreviewVisual }) {
@@ -13,18 +14,22 @@ export function KindlingCurve({ item }: { item: PreviewVisual }) {
   const maximum = ranges.at(-1)?.total || 1;
   const x = (total: number) => Math.min(total / maximum, 1) * 600;
   return <figure className="visuals-room-curve">
-    <figcaption className="room-caption">The kindling curve · contribution to blaze</figcaption>
-    <div className="visuals-room-curve-labels">{ranges.map(point =>
-      <span key={point.total}>{Math.round(point.intensity * 100)}% blaze</span>)}</div>
-    <svg viewBox="0 0 600 140" role="img" aria-label={`${item.visual.name} contribution to intensity curve · simulated`}>
-      {ranges.slice(0, -1).map((point, index) => <rect key={point.total} x={x(point.total)} y="0"
-        width={x(ranges[index + 1]?.total ?? maximum) - x(point.total)} height="140"
-        className="visuals-room-curve-band" opacity={0.2 + point.intensity * 0.6} />)}
-      <polyline points={ranges.map(point => `${x(point.total)},${140 - point.intensity * 140}`).join(' ')}
-        className="visuals-room-curve-line" />
-      <line x1={x(item.total)} x2={x(item.total)} y1="0" y2="140" className="visuals-room-curve-current" />
-    </svg>
-    <p>{item.total.toFixed(1)} weighted subs · {Math.round(item.intensity * 100)}% blaze · simulated</p>
+    <div className="visuals-curve">
+      <div className="visuals-curve-area">
+        <svg viewBox="0 0 600 140" preserveAspectRatio="none" role="img" aria-label={`${item.visual.name} contribution to intensity curve · simulated`}>
+          {ranges.slice(0, -1).map((point, index) => <rect key={point.total} x={x(point.total)} y="0"
+            width={x(ranges[index + 1]?.total ?? maximum) - x(point.total)} height="140"
+            className="visuals-room-curve-band" opacity={0.2 + point.intensity * 0.6} />)}
+          <polyline points={ranges.map(point => `${x(point.total)},${140 - point.intensity * 140}`).join(' ')}
+            className="visuals-room-curve-line" />
+          <line x1={x(item.total)} x2={x(item.total)} y1="0" y2="140" className="visuals-room-curve-current" />
+        </svg>
+        <span className="visuals-curve-marker" style={{ left: `${x(item.total) / 6}%` }}><b>{Math.round(item.intensity * 100)}%</b></span>
+      </div>
+      <div className="visuals-curve-axis" aria-hidden="true">{ranges.map(point =>
+        <span key={point.total} style={{ left: `${x(point.total) / 6}%` }}>{point.total}</span>)}</div>
+    </div>
+    <figcaption>{item.total.toFixed(1)} weighted subs · {Math.round(item.intensity * 100)}% {copy.blaze} · {copy.simulated}</figcaption>
   </figure>;
 }
 

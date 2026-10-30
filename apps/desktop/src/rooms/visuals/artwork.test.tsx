@@ -132,7 +132,8 @@ for (const item of cases) {
       const ratio = attribute(html, 'style').match(/--room-art-aspect:([\d.]+)\s*\/\s*([\d.]+)/);
       expect(ratio).not.toBeNull();
       expect(Number(ratio?.[1]) / Number(ratio?.[2])).toBeCloseTo(width / height, 10);
-      expect(html).toContain('preserveAspectRatio="xMidYMin meet"');
+      // C bottom-aligns each hero inside its 112px plate; crop bounds remain identical.
+      expect(html).toContain('preserveAspectRatio="xMidYMax meet"');
       expect(html).toContain('role="img"');
       expect(attribute(html, 'aria-label')).toBe(`${item.visual.name} · simulated local preview`);
     }
@@ -156,16 +157,18 @@ test('hero flame retains the blaze transform at partial intensity', () => {
   expect(fireRule).toMatch(/\btransform:\s*scaleY\(calc\(\.3\s*\+\s*var\(--room-blaze\)\s*\*\s*\.7\)\)/);
 });
 
-test('hero svg caps its height with an existing space token while preserving its aspect', () => {
+// C replaces the former standalone aspect-sized hero with three fixed-height plate viewports.
+test('C hero fits the token-sized plate without cropping any painted geometry', () => {
+  expect(style).toMatch(/\.visuals-plate-art\s*\{[^}]*height: calc\(var\(--space-56\) \* 2\)/);
   const heroRule = style.match(/\.visuals-room-art-hero svg\s*\{([^}]+)\}/)?.[1];
-  expect(heroRule).toMatch(/max-height:\s*calc\(var\(--space-56\)\s*\*\s*6\)/);
-  expect(heroRule).toMatch(/(?:^|;)\s*width:\s*auto;/);
-  expect(heroRule).toMatch(/max-width:\s*100%;/);
-  expect(heroRule).toMatch(/aspect-ratio:\s*var\(--room-art-aspect\)/);
+  expect(heroRule).toContain('width: 100%');
+  expect(heroRule).toContain('height: 100%');
+  expect(heroRule).toContain('max-width: 100%');
+  expect(heroRule).toContain('max-height: 100%');
+  expect(style).not.toMatch(/object-fit:\s*cover|overflow:\s*clip/);
 });
 
-test('hero aspect consumes the geometry ratio and non-flame shapes remain untransformed', () => {
-  expect(style).toMatch(/\.visuals-room-art-hero svg\s*\{[^}]*aspect-ratio:\s*var\(--room-art-aspect\)/);
+test('hero keeps its viewBox fit and non-flame shapes remain untransformed', () => {
   // Only the flame scales, within its full-intensity painted bounds. The other
   // shapes keep those bounds at every intensity.
   for (const name of ['stone', 'fire-core', 'glow', 'cutout']) {

@@ -34,7 +34,8 @@ test('Driven by lists all sources with the feed labels, plus Not routed for lega
   expect(html.match(/<option /g)).toHaveLength(11);
   expect(html).toContain('<option value="" selected="">Not routed</option>');
   for (const source of contribution_sources) expect(html).toContain(`value="${source}">${source_labels[source]}</option>`);
-  expect(html).toContain('Native unit:');
+  // C boxes the native unit under a label instead of a prose colon.
+  expect(html).toContain('<small>Native unit</small>');
   expect(html).toContain('Not routed</output>');
 });
 

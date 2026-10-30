@@ -24,8 +24,10 @@ test('connected room separates live core rows from the unchanged simulated feed'
   const h = harness(); await h.port.loadContributions({ limit: 100 });
   const html = h.html();
   expect(html).toContain('Contribution feed · live from core');
-  expect(html).toContain('123 Bits cheer'); expect(html).toContain('user ID 200');
-  expect(html).toContain('Contribution feed · simulated');
+  // C uses a boxed amount and separate source cell.
+  expect(html).toContain('>123</b>'); expect(html).toContain('class="cc-feed-text">Bits cheer</span>'); expect(html).toContain('user ID 200');
+  // C puts the simulated qualifier in CardHead's gloss.
+  expect(html).toContain('<h2>Contribution feed</h2><span>simulated</span>');
   expect(html).toContain('0 simulated events · Core simulation');
   expect(html.match(/data-live-contribution-row=/g)).toHaveLength(1);
   expect(html).not.toContain('data-contribution-row=');
@@ -40,11 +42,13 @@ test.each(['cheer', 'bits_use', 'subscribe', 'gift', 'resub', 'hype_train', 'cha
     h.rpc.mockResolvedValueOnce({ items: [{ source, amount: 3, broadcaster_id: '100', event_id: 'synthetic-anonymous', dedupe_key: 'synthetic-anonymous' }] });
     await h.port.loadContributions({ limit: 100 });
     const html = renderToStaticMarkup(<LiveContributionFeed read={h.port.getSnapshot().contributions} on_refresh={vi.fn()} />);
-    expect(html).toContain(`3 ${labels[source]}`);
+    // C retains the amount and source in separate cells.
+    expect(html).toContain('>3</b>'); expect(html).toContain(`class="cc-feed-text">${labels[source]}</span>`);
     expect(html).not.toContain('user ID');
   },
 );
 
+// C retains the live window and order with the same 48px amount-row geometry as the simulated feed.
 test('core-returned order is retained and live rows use bounded, keyboard-reachable windows', async () => {
   const h = harness();
   const items = Array.from({ length: 100 }, (_, index) => ({ ...contribution,
@@ -52,7 +56,7 @@ test('core-returned order is retained and live rows use bounded, keyboard-reacha
   h.rpc.mockResolvedValueOnce({ items }); await h.port.loadContributions({ limit: 100 });
   const read = h.port.getSnapshot().contributions;
   const render = (scroll_top: number) => renderToStaticMarkup(<LiveContributionFeed read={read} on_refresh={vi.fn()} scroll_top={scroll_top} />);
-  const first = render(0); const last = render(100 * rowHeight * 3);
+  const first = render(0); const last = render(100 * rowHeight * 1.5);
   expect(first).toContain('aria-rowcount="100"'); expect(first).toContain('tabindex="0"');
   expect(first.match(/data-live-contribution-row=/g)?.length).toBeLessThan(20);
   expect(first).toContain('data-live-contribution-row="synthetic-0"');
@@ -72,7 +76,8 @@ test('failed and malformed live reads show unavailable, clear old rows and never
     expect(html).toContain('Live contribution feed unavailable');
     expect(html).not.toContain('data-live-contribution-row=');
     expect(html).not.toContain('Private upstream prose');
-    expect(html).toContain('Contribution feed · simulated');
+    // C puts the simulated qualifier in CardHead's gloss.
+    expect(html).toContain('<h2>Contribution feed</h2><span>simulated</span>');
   }
 });
 
@@ -87,7 +92,8 @@ test('a successful empty read is distinct from an unavailable feed', async () =>
 test('native refresh loads a core page and remains disabled while the live read is pending', async () => {
   const h = harness();
   const on_refresh = () => h.port.loadContributions({ limit: 100 });
-  const control = () => LiveContributionFeed({ read: h.port.getSnapshot().contributions, on_refresh }).props.children[1];
+  // C's CardBody wraps the unchanged native refresh button.
+  const control = () => LiveContributionFeed({ read: h.port.getSnapshot().contributions, on_refresh }).props.children[1].props.children[0];
   expect(control().type).toBe('button'); expect(control().props.type).toBe('button');
   expect(control().props.disabled).toBe(false);
   expect(h.html()).toContain('Live contributions have not been loaded.');
@@ -97,7 +103,7 @@ test('native refresh loads a core page and remains disabled while the live read 
   await pending;
   expect(h.rpc).toHaveBeenCalledExactlyOnceWith(launch.endpoint, launch.session_token, 'beacons.contribution.list', { limit: 100 });
   expect(control().props.disabled).toBe(false);
-  expect(h.html()).toContain('123 Bits cheer');
+  expect(h.html()).toContain('>123</b>'); expect(h.html()).toContain('class="cc-feed-text">Bits cheer</span>');
 });
 
 test('fixture mode keeps the simulated label and issues no contribution RPC or other network call', async () => {
@@ -109,7 +115,8 @@ test('fixture mode keeps the simulated label and issues no contribution RPC or o
     const room = Room({ snapshot: client.getSnapshot() });
     expect(room.type).toBe(VisualsWork);
     const html = renderToStaticMarkup(room);
-    expect(html).toContain('Contribution feed · simulated');
+    // C puts the simulated qualifier in CardHead's gloss.
+    expect(html).toContain('<h2>Contribution feed</h2><span>simulated</span>');
     expect(html).not.toContain('Contribution feed · live from core');
     expect(network).not.toHaveBeenCalled();
   } finally { stop(); }

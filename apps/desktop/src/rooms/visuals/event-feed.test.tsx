@@ -5,15 +5,16 @@ import { createBeaconsPreview } from '../../beacons-model.js';
 import { ContributionFeed } from './event-feed.jsx';
 import type { ContributionSource } from '@castle-control/contract';
 
+// C amount rows are 48px (rowHeight * 1.5), so all window geometry uses that same height.
 test('600 pushed test-fire events render bounded windows reaching the first and last events', () => {
   const port = createBeaconsPreview();
   for (let burst = 0; burst < 12; burst++) port.fire('gift', 50);
   const events = port.getSnapshot().events.slice(0, 600);
   expect(events).toHaveLength(600);
   expect(new Set(events.map(event => event.id)).size).toBe(600);
-  for (const scroll_top of [0, 300 * rowHeight * 3, 600 * rowHeight * 3]) {
+  for (const scroll_top of [0, 300 * rowHeight * 1.5, 600 * rowHeight * 1.5]) {
     const html = renderToStaticMarkup(<ContributionFeed events={events} origin="Local preview" scroll_top={scroll_top} />);
-    const range = rowWindow(600, scroll_top, rowHeight * 3);
+    const range = rowWindow(600, scroll_top, rowHeight * 1.5);
     const count = range.end - range.start;
     expect(html).toContain('aria-rowcount="600"');
     expect(html.match(/data-contribution-row=/g)).toHaveLength(count);
@@ -25,7 +26,7 @@ test('600 pushed test-fire events render bounded windows reaching the first and 
     if (scroll_top === 0) {
       expect(html).toContain('data-contribution-row="simulated-event-1150"');
       expect(html).not.toContain('data-contribution-row="simulated-event-649"');
-    } else if (scroll_top === 600 * rowHeight * 3) {
+    } else if (scroll_top === 600 * rowHeight * 1.5) {
       expect(html).toContain('data-contribution-row="simulated-event-649"');
       expect(html).not.toContain('data-contribution-row="simulated-event-1150"');
     }
@@ -52,7 +53,9 @@ test('each supported contribution source keeps its units, timestamp and simulate
   for (const [source, label] of cases) {
     const html = renderToStaticMarkup(<ContributionFeed origin="Core simulation"
       events={[{ ...base, burst: { source, amount: 123 } }]} />);
-    expect(html).toContain(`123 ${label}`);
+    // C splits the boxed amount from the source cell, retaining both units and provenance.
+    expect(html).toContain('>123</b>');
+    expect(html).toContain(`class="cc-feed-text">${label}</span>`);
     expect(html).toContain(`dateTime="${base.at}"`);
     expect(html).toContain('simulated · Core simulation');
     expect(html).toContain('not live accounting');

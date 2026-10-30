@@ -1,3 +1,4 @@
-.visuals-input-picker { display: flex; align-items: last baseline; flex-wrap: wrap; gap: var(--space-12); }
-.visuals-input-picker label { display: grid; gap: var(--space-4); min-width: 0; }
-.visuals-input-picker output { font-variant-numeric: tabular-nums; }
+.visuals-input-picker { display: flex; gap: var(--space-8); align-items: stretch; min-width: 0; }
+.visuals-native-unit { display: flex; flex-direction: column; justify-content: center; gap: var(--space-2); padding-inline: var(--space-10); border: var(--rule-medium) solid var(--or); border-radius: var(--r-sm); background: color-mix(in srgb, var(--or) 16%, transparent); white-space: nowrap; }
+.visuals-native-unit small { font: 700 var(--text-label)/1 var(--font-ui); letter-spacing: var(--track-label); text-transform: uppercase; color: var(--or-text); }
+.visuals-native-unit output { font: 700 var(--text-label)/1.1 var(--font-num); font-variant-numeric: tabular-nums; }

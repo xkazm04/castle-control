@@ -22,7 +22,8 @@ test('the room test-fire contribution changes preview intensity without sending 
     const port = createBeaconsPreview();
     const before = preview(port);
     const fire = TestFire({ port, selected: current(port), on_end: vi.fn() });
-    const subscribe = fire.props.children[2].props.children[1];
+    // C exposes the four kit buttons in its always-visible first child grid.
+    const subscribe = fire.props.children[0].props.children[1];
     subscribe.props.onClick();
     const after = preview(port);
     expect(after).not.toBe(before);
@@ -39,10 +40,11 @@ test('the visual selection button selects the corresponding unchanged curve and 
   if (!second) throw new Error('Missing second visual');
   const selector = VisualSelector({ visuals: port.getSnapshot().visuals, selected: port.getSnapshot().selected,
     on_select: item => port.select(item.visual.visual_id) });
-  selector.props.children[1]?.props.children[0].props.onClick();
+  // C's Plate owns the native radio click instead of an article's child button.
+  selector.props.children[1]?.props.onClick();
   expect(current(port)).toBe(second);
   const html = renderToStaticMarkup(<VisualsWork port={port} />);
-  expect(html).toContain(`<h2>${second.visual.name}</h2>`);
+  expect(html).toContain(`<span class="visuals-plate-name">${second.visual.name}</span>`);
   expect(html).toContain(`${second.visual.name} intensity ranges`);
 });
 

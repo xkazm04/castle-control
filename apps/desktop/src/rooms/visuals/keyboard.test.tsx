@@ -1,5 +1,5 @@
 import { Children, isValidElement } from 'react';
-import type { ChangeEvent, InputHTMLAttributes, ReactElement, ReactNode } from 'react';
+import type { ChangeEvent, ComponentProps, InputHTMLAttributes, ReactElement, ReactNode } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { expect, test } from 'vitest';
 import { createBeaconsPreview } from '../../beacons-model.js';
@@ -7,13 +7,16 @@ import { OfferingTimeline } from './timeline.jsx';
 import { TestFire } from './test-fire.jsx';
 import { VisualSelector } from './room.jsx';
 import { ContributionFeed } from './event-feed.jsx';
-import { WindowedRows } from '@castle-control/ui';
+import { InkButton, Plate, WindowedRows } from '@castle-control/ui';
 
 type NativeControl = { type?: string; children?: ReactNode; tabIndex?: number; disabled?: boolean; onClick?: () => void };
 function buttons(tree: ReactNode): ReactElement<NativeControl>[] {
   const found: ReactElement<NativeControl>[] = [];
   Children.forEach(tree, child => {
     if (!isValidElement<NativeControl>(child)) return;
+    // C uses public kit wrappers; exercise their real native controls, not a replacement.
+    if (child.type === Plate && isValidElement<ComponentProps<typeof Plate>>(child)) { found.push(...buttons(Plate(child.props))); return; }
+    if (child.type === InkButton && isValidElement<ComponentProps<typeof InkButton>>(child)) { found.push(...buttons(InkButton(child.props))); return; }
     if (child.type === 'button') found.push(child);
     else found.push(...buttons(child.props.children));
   });
@@ -48,7 +51,7 @@ test('timeline native keyboard range reaches every offering, including Home and 
   }
 });
 
-test('all visual selection and test-fire actions are tabbable native buttons with Enter/Space activation', () => {
+test('radio selection has one Tab stop and test-fire actions retain native Enter/Space activation', () => {
   const port = createBeaconsPreview();
   const initial = port.getSnapshot();
   const selections = buttons(VisualSelector({ visuals: initial.visuals, selected: initial.selected,
@@ -56,7 +59,8 @@ test('all visual selection and test-fire actions are tabbable native buttons wit
   expect(selections).toHaveLength(3);
   selections.forEach((button, index) => {
     expect(button.props.type).toBe('button');
-    expect(button.props.tabIndex).not.toBe(-1);
+    // C uses roving tabindex; arrows reach the two plates outside the single Tab stop.
+    expect(button.props.tabIndex).toBe(index === 0 ? 0 : -1);
     expect(button.props.disabled).not.toBe(true);
     // Browsers deliver click for Enter/Space on native buttons.
     button.props.onClick?.();
@@ -81,7 +85,8 @@ test('all visual selection and test-fire actions are tabbable native buttons wit
 test('contribution feed reuses the named, tabbable native scroll window without a second keymap', () => {
   const port = createBeaconsPreview();
   const feed = ContributionFeed({ events: port.getSnapshot().events, origin: 'Local preview' });
-  const window = feed.props.children[2];
+  // C cards put the unchanged scroll window inside CardBody and RuledFeed.
+  const window = feed.props.children[1].props.children[1].props.children;
   expect(window.type).toBe(WindowedRows);
   expect(window.props.label).toBe('Simulated Beacons contribution events');
   const html = renderToStaticMarkup(window);

@@ -1,0 +1,23 @@
+.visuals-bench-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.35fr) minmax(0, 1fr); }
+.visuals-bay { display: flex; flex-direction: column; gap: var(--space-10); min-width: 0; padding: var(--space-14) var(--space-16) var(--space-16); border-left: var(--rule-thin) solid var(--line); }
+.visuals-bay:first-child { border-left: 0; }
+.visuals-bay > * { margin: 0; min-width: 0; }
+.visuals-bay > .cc-section-heading { gap: var(--space-2) var(--space-8); }
+.visuals-bay .cc-section-gloss { font: italic 400 var(--text-label)/1.2 var(--font-serif); letter-spacing: 0; text-transform: none; }
+.visuals-bench .cc-plate-band[data-band="bench"] .cc-plate-title::before { content: var(--cc-bench-prefix); color: var(--cream); }
+.visuals-bench .cc-plate-band[data-band="bench"] .cc-plate-count { text-transform: none; }
+.visuals-room-test { display: grid; gap: var(--space-10); min-width: 0; }
+.visuals-room-test > * { margin: 0; min-width: 0; }
+.visuals-fire-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-8); }
+.visuals-fire-output { font: 600 var(--text-label)/1.3 var(--font-num); color: var(--ink-2); }
+.visuals-fire-output b { color: var(--ink); }
+/* The field audit outranks the prototype's strong select border. */
+.visuals-room.visuals-room .cc-field[data-field="select"] select,
+.visuals-room .visuals-core-form :is(input, select) { appearance: none; border: var(--rule-thin) solid var(--ink); }
+.visuals-room .visuals-core-form input { min-width: 0; width: 100%; padding: var(--space-7) var(--space-10); border-radius: var(--r-sm); background: var(--card); color: var(--ink); font: var(--text-body)/1.4 var(--font-ui); }
+/* Heading is supplied by the bay; the label remains in the accessibility tree. */
+.visuals-bay > .cc-field > label { position: absolute; width: var(--rule-thin); height: var(--rule-thin); padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+@media (max-width: 68.75rem) {
+  .visuals-bench-grid { grid-template-columns: minmax(0, 1fr); }
+  .visuals-bay { border-left: 0; border-top: var(--rule-thin) solid var(--line); }
+}

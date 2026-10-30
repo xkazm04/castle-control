@@ -1,58 +1,57 @@
-﻿.visuals-room { --room-ink: var(--or-text); height: 100%; color: var(--ink); font: 400 var(--text-body)/1.5 var(--font-ui); }
-.visuals-room-layout { display: grid; height: 100%; min-height: 0; grid-template-columns: minmax(0, 1.22fr) minmax(0, 1fr); }
-.visuals-room-workbench, .visuals-room-details { display: flex; flex-direction: column; gap: var(--space-24); padding: var(--space-24); min-width: 0; min-height: 0; overflow: auto; }
-.visuals-room-workbench { border: var(--rule-medium) solid var(--or); box-shadow: inset 0 0 0 var(--space-4) var(--paper-2); }
-.visuals-room-workbench > *, .visuals-room-details > * { flex-shrink: 0; min-width: 0; margin-block: 0; }
-.visuals-room-details > .shell-seal-slot { margin-block: 0; }
-.visuals-room :where(p, h2, h3, button) { overflow-wrap: anywhere; }
-.visuals-room .room-caption h2 { display: inline; margin: 0; font: inherit; }
-.visuals-room .room-caption h2::after { content: ' · '; }
-.visuals-room h3 { font: 800 var(--text-section)/1.3 var(--font-display); }
-.visuals-room-layer { position: relative; margin: 0; }
+/* C Plates: one scroll, then compare, tune, inspect. Shared chrome stays in the kit. */
+.visuals-room { --room-ink: var(--or-text); height: 100%; min-height: 0; color: var(--ink); font: 400 var(--text-body)/1.5 var(--font-ui); }
+.visuals-board { height: 100%; overflow: auto; display: flex; flex-direction: column; gap: var(--space-20); padding: var(--space-20) var(--space-24) var(--space-28); }
+.visuals-board > * { flex-shrink: 0; min-width: 0; margin: 0; }
+.visuals-plates { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-20); padding: 0 var(--space-6) var(--space-6) 0; }
+.visuals-plate .visuals-plate-name { font: 800 var(--text-chamber)/1.05 var(--font-display); letter-spacing: var(--track-chamber); text-transform: uppercase; overflow-wrap: anywhere; }
+.visuals-plate[aria-checked="true"] .visuals-plate-name { color: var(--or-text); }
+.visuals-plate .cc-plate-band[data-band="chief"] { white-space: nowrap; }
+.visuals-plate .cc-plate-band[data-band="chief"] .cc-plate-count { flex-shrink: 0; }
+.visuals-plate .visuals-plate-state[data-idle="true"] { font-weight: 600; color: var(--muted); }
+.visuals-plate-art { position: relative; display: block; height: calc(var(--space-56) * 2); background: var(--paper-2); border: var(--rule-thin) solid var(--line); }
+.visuals-plate-art .visuals-room-art { position: absolute; inset: var(--space-8); }
 .visuals-room-art svg { display: block; width: 100%; height: auto; }
-.visuals-room-art-hero { display: grid; align-content: start; justify-items: center; }
-.visuals-room-art-hero svg { width: auto; max-width: 100%; max-height: calc(var(--space-56) * 6); aspect-ratio: var(--room-art-aspect); }
+.visuals-plate-art .visuals-room-art-hero svg { width: 100%; height: 100%; max-width: 100%; max-height: 100%; }
 .visuals-room-stone { fill: var(--ink); }
 .visuals-room-cutout { fill: var(--paper-2); }
 .visuals-room-fire { fill: var(--or); opacity: calc(.3 + var(--room-blaze) * .7); transform-box: fill-box; transform-origin: bottom; transform: scaleY(calc(.3 + var(--room-blaze) * .7)); }
 .visuals-room-fire-core { fill: var(--gules); opacity: var(--room-blaze); }
 .visuals-room-glow { fill: none; stroke: var(--or); stroke-width: var(--space-8); opacity: calc(.2 + var(--room-blaze) * .8); }
-.visuals-room-visuals { display: grid; gap: var(--space-16); }
-.visuals-room-visuals article { display: grid; gap: var(--space-8); min-width: 0; background: var(--card); padding: var(--space-16); border: var(--rule-medium) solid var(--ink); }
-.visuals-room button { min-height: var(--button-h); font: 700 var(--text-label)/1.3 var(--font-ui); color: var(--ink); border: var(--rule-medium) solid var(--ink); background: var(--paper); padding: var(--space-6) var(--space-12); cursor: pointer; }
-.visuals-room button:hover { background: var(--paper-2); }
-.visuals-room button:focus-visible, .visuals-room input:focus-visible { outline: var(--rule-strong) solid var(--or-text); outline-offset: var(--focus-offset); }
-.visuals-room .visuals-room-select { display: block; width: 100%; text-align: left; padding: 0; border: 0; background: transparent; font: 800 var(--text-chamber)/1.2 var(--font-display); text-transform: uppercase; }
-.visuals-room-select[aria-pressed="true"] { color: var(--or-text); }
-.visuals-room-description { margin: 0; color: var(--ink-2); font-size: var(--text-label); }
-.visuals-room-now { margin: 0; font-size: var(--text-section); }
-.visuals-room-now span { font: 600 var(--text-label)/1.4 var(--font-num); color: var(--muted); }
-.visuals-room-ranges { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-8); }
-.visuals-room-ranges span { padding: var(--space-8); border: var(--rule-thin) solid var(--or); font-size: var(--text-label); overflow-wrap: anywhere; }
-.visuals-room-ranges b { font-family: var(--font-num); }
-.visuals-room-tier-active { background: var(--or); color: var(--press); font-weight: 700; }
-.visuals-room-curve, .visuals-room-timeline, .visuals-room-test { display: grid; gap: var(--space-12); min-width: 0; margin: 0; }
-.visuals-room-curve > *, .visuals-room-timeline > *, .visuals-room-test > * { min-width: 0; margin: 0; }
-.visuals-room-curve-labels { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--space-8); font: 700 var(--text-label)/1.4 var(--font-ui); }
-.visuals-room-curve svg { display: block; width: 100%; height: auto; }
-.visuals-room-curve-band { fill: var(--or); }
-.visuals-room-curve-line { fill: none; stroke: var(--ink); stroke-width: var(--rule-strong); }
-.visuals-room-curve-current { stroke: var(--gules); stroke-width: var(--rule-strong); }
-.visuals-room-curve p, .visuals-room-status { font-size: var(--text-label); }
-.visuals-room-test-tools { border-top: var(--rule-thin) solid var(--line); padding-top: var(--space-16); }
-.visuals-room-test-tools[open] > .visuals-room-test { margin-block-start: var(--space-16); }
-.visuals-room-test-tools > p { margin: var(--space-12) 0 0; }
-.visuals-room-tools { display: flex; flex-wrap: wrap; gap: var(--space-8); }
-.visuals-room-timeline h3 { font: 800 var(--text-label)/1.4 var(--font-ui); letter-spacing: var(--track-air); text-transform: uppercase; }
-.visuals-room-timeline svg { display: block; width: 100%; }
+.visuals-plate-row { display: grid; grid-template-columns: minmax(0, calc(var(--space-28) * 3)) minmax(0, 1fr); gap: var(--space-12); align-items: end; }
+.visuals-plate-meta { margin-top: calc(-1 * var(--space-4)); font: 600 var(--text-label)/1.3 var(--font-num); color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.visuals-plate-foot { display: flex; flex-wrap: wrap; gap: var(--space-6); margin-top: auto; }
+/* Numeric kit markup keeps the literal 2px readout gap, not the label-caption opt-in. */
+.visuals-plate-row .cc-hero-figure small { margin-left: 0; }
+.visuals-plate-row .cc-hero-figure[data-text="Unavailable"] { font-size: var(--text-label); letter-spacing: 0; }
+.visuals-stair { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-2); min-width: 0; }
+.visuals-stair-step { display: grid; gap: var(--space-1); min-width: 0; font: 400 var(--text-label)/1.2 var(--font-num); color: var(--muted); white-space: nowrap; }
+.visuals-stair-step i { position: relative; display: block; height: var(--space-40); margin-bottom: var(--space-4); border-bottom: var(--rule-medium) solid var(--ink); }
+.visuals-stair-step i::before { content: ""; position: absolute; inset: 0; background: var(--hair-2); clip-path: polygon(0 100%, 0 calc((1 - var(--from)) * 100%), 100% calc((1 - var(--to)) * 100%), 100% 100%); }
+.visuals-stair-step:is([data-state="passed"], [data-state="active"]) i::before { background: var(--or); }
+.visuals-stair-step[data-state="active"] i { box-shadow: inset 0 0 0 var(--rule-thin) var(--ink); }
+.visuals-stair-step[data-state="active"] i::after { content: ""; position: absolute; top: 0; bottom: 0; left: var(--frac); width: var(--rule-strong); background: var(--gules); }
+.visuals-stair-step b { font-weight: 700; color: var(--ink-2); overflow: hidden; text-overflow: ellipsis; }
+.visuals-stair-step > span { overflow: hidden; text-overflow: ellipsis; }
+.visuals-stair-step[data-state="active"] :is(b, span) { color: var(--ink); font-weight: 700; }
+/* A draft is read-only shared content. Expand its plate so the full provenance stays visible. */
+.visuals-plate-art .room-proposal-layers:empty { display: none; }
+.visuals-plate-art:has(.room-proposal-draft) { height: auto; padding-top: calc(var(--space-56) * 2); }
+.visuals-plate-art:has(.room-proposal-draft) .visuals-room-art { bottom: auto; height: calc(var(--space-56) * 2 - var(--space-16)); }
+.visuals-plate-art .room-proposal-layers { position: relative; margin: var(--space-8); }
+.visuals-plate-art .room-proposal-draft { text-align: left; }
+.visuals-panels { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-20); align-items: start; }
+.visuals-seal-panel { min-width: 0; border: var(--rule-medium) solid var(--ink); background: var(--card); }
+/* No inner frame, extra padding or rule: only the prototype's slot inset. */
+.visuals-room .visuals-seal-panel > .shell-seal-slot { margin: 0; padding: var(--space-12) var(--space-14) var(--space-14); border-top: 0; }
+.visuals-note { margin: 0; font-size: var(--text-label); line-height: 1.45; color: var(--muted); }
+.visuals-readout { padding: var(--space-8) var(--space-10); border: var(--rule-thin) solid var(--line); background: var(--paper); font: var(--text-label)/1.5 var(--font-num); }
+.visuals-room-timeline svg { display: block; width: 100%; height: auto; }
 .visuals-room-timeline-rule { fill: none; stroke: var(--ink); }
 .visuals-room-offering { fill: var(--or); stroke: var(--ink); }
-.visuals-room-offering-selected { fill: var(--ink); stroke: var(--or-text); stroke-width: var(--rule-strong); }
-.visuals-room-time-labels { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--space-8); font: 400 var(--text-label)/1.3 var(--font-num); }
-.visuals-room-timeline label { display: grid; gap: var(--space-8); }
+.visuals-room-offering-selected { fill: var(--ink); stroke: var(--or-text); stroke-width: var(--rule-medium); }
+.visuals-room-time-labels { display: flex; justify-content: space-between; gap: var(--space-8); font: 600 var(--text-label)/1.3 var(--font-num); color: var(--muted); }
+.visuals-room-timeline label { display: grid; gap: var(--space-6); font: 800 var(--text-label)/1.2 var(--font-ui); letter-spacing: var(--track-wide); text-transform: uppercase; color: var(--ink-2); }
 .visuals-room-timeline input { box-sizing: border-box; min-width: 0; width: 100%; margin: 0; accent-color: var(--or-text); }
-@media (max-width: 900px) {
-  .visuals-room { height: auto; }
-  .visuals-room-layout { height: auto; grid-template-columns: minmax(0, 1fr); }
-  .visuals-room-workbench, .visuals-room-details { overflow: visible; }
-}
+@media (max-width: 68.75rem) { .visuals-panels { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 56.25rem) { .visuals-plates { grid-template-columns: minmax(0, 1fr); } }
+@media (prefers-reduced-motion: reduce) { .visuals-plate { transition: none; } }

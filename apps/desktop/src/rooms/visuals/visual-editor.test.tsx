@@ -111,7 +111,8 @@ test('fixture picker has sensible inputs, edits locally, and keeps simulated acc
   if (!first) throw new Error('Missing simulated visual');
   let html = renderToStaticMarkup(<VisualsWork port={port} />);
   expect(html).toContain('value="channel_points" selected=""');
-  expect(html).toContain('Driven by: Hype Train level (level)');
+  // C prints driver and decay as kit chips; the native unit stays in the picker.
+  expect(html).toMatch(/data-variant="or"[^>]*>Hype Train level<\/span>/);
   port.input('gift');
   const edited = port.getSnapshot();
   expect(edited.visuals[0]?.visual).toEqual({ ...first.visual, input: { source: 'gift', unit: 'count' } });
@@ -120,7 +121,7 @@ test('fixture picker has sensible inputs, edits locally, and keeps simulated acc
   expect(edited.events).toBe(initial.events);
   html = renderToStaticMarkup(<VisualsWork port={port} />);
   expect(html).toContain('value="gift" selected=""');
-  expect(html).toContain('simulated configuration');
+  expect(html).toContain('Simulated configuration');
   expect(html).toContain('live routing is a separate core step');
   port.input('');
   expect(port.getSnapshot().visuals[0]?.visual).not.toHaveProperty('input');

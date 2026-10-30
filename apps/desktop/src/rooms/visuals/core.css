@@ -7,3 +7,5 @@
 .visuals-core-item p { margin: var(--space-4) 0; }
 .visuals-core-source-status { min-height: var(--space-20); font-size: var(--text-label); overflow-wrap: anywhere; }
 .visuals-core button:disabled { color: var(--muted); cursor: wait; }
+.visuals-core-feeds { display: grid; gap: var(--space-20); min-width: 0; }
+.visuals-core-item h3 { margin: 0; }

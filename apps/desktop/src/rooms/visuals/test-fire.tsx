@@ -1,15 +1,16 @@
 import type { BeaconsPort, PreviewVisual } from '../../beacons-model.js';
+import { InkButton } from '@castle-control/ui';
+import { beaconsCopy as copy } from '../../beacons-copy.js';
 
 export function TestFire({ port, selected, on_end }: { port: BeaconsPort; selected: PreviewVisual; on_end: () => void }) {
-  return <section className="visuals-room-test" aria-label="Simulated local test fire">
-    <h3>Test fire · local preview only</h3>
-    <p>Nothing reaches the stream. A viewer-facing change requires the shared hold to seal and proclaim.</p>
-    <div className="visuals-room-tools">
-      <button type="button" onClick={() => port.fire('gift', 50)}>Test fire: 50 gifts</button>
-      <button type="button" onClick={() => port.fire('subscribe', 1)}>Test fire: 1 sub</button>
-      <button type="button" onClick={port.advance}>Advance simulated clock 60 s</button>
-      <button type="button" onClick={on_end}>End test fire</button>
+  return <section className="visuals-room-test" aria-label={copy.test_label}>
+    <div className="visuals-fire-grid">
+      <InkButton size="wrap" variant="offset" ink="or" onClick={() => port.fire('gift', 50)}>{copy.fire_gifts}</InkButton>
+      <InkButton size="wrap" onClick={() => port.fire('subscribe', 1)}>{copy.fire_sub}</InkButton>
+      <InkButton size="wrap" onClick={port.advance}>{copy.advance}</InkButton>
+      <InkButton size="wrap" onClick={on_end}>{copy.end}</InkButton>
     </div>
-    <p><strong>{Math.round(selected.intensity * 100)}% blaze</strong> · {selected.total.toFixed(1)} weighted subs</p>
+    <output className="visuals-fire-output"><b>{Math.round(selected.intensity * 100)}% {copy.blaze}</b> · {selected.total.toFixed(1)} weighted subs</output>
+    <p className="visuals-note">{copy.fire_notice} {copy.fixture_money}</p>
   </section>;
 }
