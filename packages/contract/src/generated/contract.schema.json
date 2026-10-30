@@ -15048,7 +15048,7 @@
           }
         }
       ],
-      "description": "Accepted state only: the last committed visual, last hash-verified package\nand last computed intensity, never an unsaved edit or unverified package.\nEach snapshot is a full replacement, not a patch. A visual without a design\nis legal and renders a neutral placeholder. If a visual names a design but\nits package is not verified, the host sends nothing until verification.\nParsing checks consistency and digest syntax; the host verifies actual bytes.",
+      "description": "Accepted state only: the last committed visual, last hash-verified package\nand last computed intensity (or explicitly simulated preview), never an\nunsaved edit or unverified package.\nEach snapshot is a full replacement, not a patch. A visual without a design\nis legal and renders a neutral placeholder. If a visual names a design but\nits package is not verified, the host sends nothing until verification.\nParsing checks consistency and digest syntax; the host verifies actual bytes.",
       "properties": {
         "intensity": {
           "$ref": "#/$defs/BeaconsIntensity"
@@ -15057,13 +15057,18 @@
           "$ref": "#/$defs/DesignPackage",
           "default": null
         },
+        "simulated": {
+          "description": "True for a simulated burst/preview rather than live accepted state.",
+          "type": "boolean"
+        },
         "visual": {
           "$ref": "#/$defs/Visual"
         }
       },
       "required": [
         "visual",
-        "intensity"
+        "intensity",
+        "simulated"
       ],
       "title": "BeaconsRenderSnapshot",
       "type": "object"

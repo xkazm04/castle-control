@@ -58,10 +58,13 @@ async fn gift_burst_pushes_only_its_visual_with_simulated_provenance_and_no_live
     let (pushed, simulated) = event(&mut target).await;
     assert_eq!(pushed.visual.visual_id.as_str(), "gift");
     assert_eq!(f64::from(pushed.intensity.intensity), 0.5);
+    assert!(pushed.simulated);
     assert!(simulated);
     // Reconnects retain provenance and no-op live ticks do not relabel a preview.
     h.module.snapshot_live().unwrap();
-    assert!(event(&mut h.stream("gift").await).await.1);
+    let (reconnected, tagged) = event(&mut h.stream("gift").await).await;
+    assert!(reconnected.simulated);
+    assert!(tagged);
     assert_eq!(h.intensity("other").await, 0.1);
     assert!(
         tokio::time::timeout(Duration::from_millis(100), other.chunk())
@@ -85,6 +88,7 @@ async fn gift_burst_pushes_only_its_visual_with_simulated_provenance_and_no_live
         .unwrap();
     let (live, simulated) = event(&mut target).await;
     assert_eq!(f64::from(live.intensity.intensity), 0.2);
+    assert!(!live.simulated);
     assert!(!simulated);
     assert_eq!(h.intensity("other").await, 0.2);
 }
@@ -136,6 +140,7 @@ async fn equal_intensity_still_updates_provenance_and_config_clears_only_its_pre
     }
     let mut target = h.stream("gift").await;
     let (simulated, tagged) = event(&mut target).await;
+    assert!(simulated.simulated);
     assert!(tagged);
     // A real value equal to a simulated value must still replace its source tag.
     h.native
@@ -143,6 +148,7 @@ async fn equal_intensity_still_updates_provenance_and_config_clears_only_its_pre
         .unwrap();
     let (live, tagged) = event(&mut target).await;
     assert_eq!(f64::from(live.intensity.intensity), 0.5);
+    assert!(!live.simulated);
     assert!(!tagged);
     h.call(
         "beacons.simulate",
@@ -154,6 +160,7 @@ async fn equal_intensity_still_updates_provenance_and_config_clears_only_its_pre
     h.save("gift", None, json!({"kind":"none"})).await;
     let (reset, tagged) = event(&mut target).await;
     assert_eq!(f64::from(reset.intensity.intensity), 0.5);
+    assert!(!reset.simulated);
     assert!(!tagged);
     assert!(event(&mut h.stream("other").await).await.1);
 }

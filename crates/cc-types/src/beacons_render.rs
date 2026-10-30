@@ -6,7 +6,8 @@ use serde::{Deserialize, Serialize};
 pub const BEACONS_RENDER_SNAPSHOT_EVENT: &str = "beacons.render.snapshot";
 
 /// Accepted state only: the last committed visual, last hash-verified package
-/// and last computed intensity, never an unsaved edit or unverified package.
+/// and last computed intensity (or explicitly simulated preview), never an
+/// unsaved edit or unverified package.
 /// Each snapshot is a full replacement, not a patch. A visual without a design
 /// is legal and renders a neutral placeholder. If a visual names a design but
 /// its package is not verified, the host sends nothing until verification.
@@ -19,6 +20,9 @@ pub struct BeaconsRenderSnapshot {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub package: Option<DesignPackage>,
     pub intensity: BeaconsIntensity,
+    /// True when this snapshot reflects a simulated burst/preview rather than
+    /// live accepted state.
+    pub simulated: bool,
 }
 
 #[derive(Deserialize, JsonSchema)]
@@ -29,6 +33,8 @@ struct RenderSnapshotFields {
     #[schemars(with = "DesignPackage")]
     package: Option<DesignPackage>,
     intensity: BeaconsIntensity,
+    /// True for a simulated burst/preview rather than live accepted state.
+    simulated: bool,
 }
 
 impl TryFrom<RenderSnapshotFields> for BeaconsRenderSnapshot {
@@ -49,6 +55,7 @@ impl TryFrom<RenderSnapshotFields> for BeaconsRenderSnapshot {
             visual: value.visual,
             package: value.package,
             intensity: value.intensity,
+            simulated: value.simulated,
         })
     }
 }

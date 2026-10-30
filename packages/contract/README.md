@@ -13,8 +13,10 @@ Numeric counters are safe JS integers; Twitch IDs, seeds and rounds stay strings
 ## Beacons render snapshot boundary (WP 3.2 contract delivery, 2026-10-27)
 
 The overlay SSE event **`beacons.render.snapshot`** carries a
-`BeaconsRenderSnapshot { visual, package?, intensity }`. Runtime exports live
-only at **`@castle-control/contract/beacons-render`**:
+`BeaconsRenderSnapshot { visual, package?, intensity, simulated }`. Required
+boolean `simulated` is true for a simulated burst/preview and false for live
+accepted state; missing, null and non-boolean provenance are rejected. Runtime
+exports live only at **`@castle-control/contract/beacons-render`**:
 `BEACONS_RENDER_SNAPSHOT_EVENT`, `parseBeaconsRenderSnapshot(text)` and
 `validateBeaconsRenderSnapshot(value)`. The type is available there and as a
 type-only root export. The subpath compiles its own standalone shape validator;
@@ -35,7 +37,8 @@ checked by the generated public validator/parser, not by the internal shape
 validator alone. Consumers must use that public parse door.
 
 Snapshots contain **accepted state only**: the last committed visual, last
-hash-verified package and last computed intensity, never an unsaved edit or an
+hash-verified package and last computed intensity (or a labelled simulated
+preview), never an unsaved edit or an
 unverified package. Each is a **full replacement, not a patch**. A visual without
 a design is legal and renders a neutral placeholder. When a visual names a design
 but the host has no verified package, it sends nothing until verification. Parsing

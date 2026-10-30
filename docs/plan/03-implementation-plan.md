@@ -925,7 +925,7 @@ isolation. No handler, dedupe engine, publisher, renderer or OBS call is added h
 | Push event or type | Fields and constraints |
 | --- | --- |
 | `beacons.render.snapshot` | Overlay-host SSE event carrying `BeaconsRenderSnapshot`, not an RPC or control `/events` invalidation. Accepted state only: last committed visual, last hash-verified package and last computed intensity, never an unsaved edit or unverified package. Every snapshot is a full replacement, not a patch |
-| `BeaconsRenderSnapshot` | `visual: Visual`, optional `package: DesignPackage` (omitted when absent; null rejected), `intensity: BeaconsIntensity`; unknown fields rejected. `intensity.visual_id == visual.visual_id`; package present iff `visual.design_id` present; when present, `package.design_id == visual.design_id` |
+| `BeaconsRenderSnapshot` | `visual: Visual`, optional `package: DesignPackage` (omitted when absent; null rejected), `intensity: BeaconsIntensity`, required `simulated: bool` (true for a simulated burst/preview rather than live accepted state; missing, null or non-boolean rejected); unknown fields rejected. `intensity.visual_id == visual.visual_id`; package present iff `visual.design_id` present; when present, `package.design_id == visual.design_id` |
 
 A visual without a design is legal and renders a neutral placeholder. A visual
 that names a design without a verified package is illegal: the host sends nothing

@@ -21,6 +21,7 @@ export async function simulatedSnapshots(): Promise<string[]> {
   const content_hash = createHash('sha256').update(JSON.stringify(layers)).digest('hex');
   const snapshots = [0.25, 0.75].map(intensity => {
     const wire = JSON.stringify({
+      simulated: true,
       visual: { visual_id: visualId, name: 'SIMULATED e2e visual', design_id: 'simulated-art',
         curve: { ranges: [{ total: 0, intensity: 0 }], decay: { kind: 'none' } } },
       intensity: { visual_id: visualId, intensity },

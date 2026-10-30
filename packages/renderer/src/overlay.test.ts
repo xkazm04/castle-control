@@ -3,6 +3,7 @@ import { parseBeaconsRenderSnapshot } from '@castle-control/contract/beacons-ren
 import { OverlayScene, receiveSnapshot } from './overlay.ts';
 
 const text = (intensity = 0.5, hash = 'a'.repeat(64)) => JSON.stringify({
+  simulated: true,
   visual: { visual_id: 'simulated-frame', name: 'Simulated frame', design_id: 'simulated-art',
     curve: { ranges: [{ total: 0, intensity: 0 }], decay: { kind: 'none' } } },
   intensity: { visual_id: 'simulated-frame', intensity },

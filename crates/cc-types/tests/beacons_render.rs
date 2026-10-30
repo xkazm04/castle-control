@@ -6,7 +6,8 @@ fn snapshot(with_package: bool) -> Value {
     let mut value = json!({
         "visual": {"visual_id":"simulated-frame","name":"Simulated frame",
             "curve":{"ranges":[{"total":0,"intensity":0.0}],"decay":{"kind":"none"}}},
-        "intensity":{"visual_id":"simulated-frame","intensity":0.5}
+        "intensity":{"visual_id":"simulated-frame","intensity":0.5},
+        "simulated": true
     });
     if with_package {
         value["visual"]["design_id"] = json!("simulated-design");
@@ -31,6 +32,32 @@ fn accepted_snapshot_round_trips_with_package_or_neutral_placeholder() {
         include_str!("../../../docs/plan/03-implementation-plan.md")
             .contains(&format!("| `{BEACONS_RENDER_SNAPSHOT_EVENT}`"))
     );
+}
+
+#[test]
+fn snapshot_requires_boolean_simulated_provenance() {
+    for with_package in [true, false] {
+        let mut missing = snapshot(with_package);
+        missing.as_object_mut().unwrap().remove("simulated");
+        assert!(serde_json::from_value::<BeaconsRenderSnapshot>(missing).is_err());
+        for invalid in [Value::Null, json!("true"), json!(1)] {
+            let mut bad = snapshot(with_package);
+            bad["simulated"] = invalid;
+            assert!(serde_json::from_value::<BeaconsRenderSnapshot>(bad).is_err());
+        }
+    }
+}
+
+#[test]
+fn snapshot_round_trips_true_and_false_simulated_provenance() {
+    for with_package in [true, false] {
+        for simulated in [true, false] {
+            let mut value = snapshot(with_package);
+            value["simulated"] = json!(simulated);
+            let parsed: BeaconsRenderSnapshot = serde_json::from_value(value.clone()).unwrap();
+            assert_eq!(serde_json::to_value(parsed).unwrap(), value);
+        }
+    }
 }
 
 #[test]

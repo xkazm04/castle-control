@@ -19,7 +19,7 @@ const MAX_VISUALS: usize = 128;
 const MAX_PACKAGES: usize = 16;
 type Snapshot = Option<Arc<RenderPush>>;
 
-/// Host-only provenance travels as an SSE comment, outside the wire payload.
+/// Snapshot provenance is also retained in the legacy SSE comment.
 #[derive(PartialEq)]
 struct RenderPush {
     data: BeaconsRenderSnapshot,
@@ -224,9 +224,11 @@ fn publish(state: &State, id: &VisualId) -> Result<(), ErrorEnvelope> {
         slot.send_replace(None); // Named but unverified: emit nothing, including on reconnect.
         return Ok(());
     }
+    let simulated = state.previews.contains_key(id);
     let snapshot = BeaconsRenderSnapshot {
         visual,
         package,
+        simulated,
         intensity: state
             .previews
             .get(id)
@@ -239,7 +241,7 @@ fn publish(state: &State, id: &VisualId) -> Result<(), ErrorEnvelope> {
             .map_err(|_| invalid())?;
     let push = RenderPush {
         data: snapshot,
-        simulated: state.previews.contains_key(id),
+        simulated,
     };
     if slot.borrow().as_deref() != Some(&push) {
         slot.send_replace(Some(Arc::new(push)));
