@@ -11,6 +11,7 @@ import './view.css';
 
 const Keep = lazy(() => import('./shell/keep.jsx'));
 const Overview = lazy(() => import('./shell/overview.jsx'));
+const Demo = lazy(() => import('./demo/demo.jsx'));
 const Room = lazy(() => import('./shell/room.jsx'));
 const Steward = lazy(() => import('./shell/steward.jsx').then(module => ({ default: module.ShellSteward })));
 
@@ -33,7 +34,7 @@ export function DesktopView(props: ViewProps) {
     <Steward context={current} {...steward_connection} {...(props.steward_ref ? { input_ref: props.steward_ref } : {})}
       on_select={props.on_select ?? (() => undefined)} on_open={props.on_navigate} on_overview={() => props.on_surface?.('overview')} />
   </Suspense>;
-  return <ThemeFrame theme={props.theme} {...(current === 'keep' || current === 'overview' ? {} : { module: current })}>
+  return <ThemeFrame theme={props.theme} {...(current === 'keep' || current === 'overview' || current === 'demo' ? {} : { module: current })}>
     <div className="desktop-shell">
       <DesktopRampart snapshot={props.snapshot} theme={props.theme} on_theme_change={props.on_theme_change}
         on_steward={() => { if (props.steward_ref && 'current' in props.steward_ref) props.steward_ref.current?.focus(); }} />
@@ -42,8 +43,10 @@ export function DesktopView(props: ViewProps) {
           {props.snapshot.mode === 'fixture' ? 'Loading simulated snapshot.' : props.snapshot.message ?? 'Connecting to the core; status is unknown.'}
         </p>}
         <Suspense fallback={<p role="status">Opening the keep...</p>}>
-          {current === 'keep' ? <Keep snapshot={props.snapshot} on_open={props.on_navigate} on_enter={() => props.on_surface?.('overview')} />
+          {current === 'keep' ? <Keep snapshot={props.snapshot} on_open={props.on_navigate} on_enter={() => props.on_surface?.('overview')}
+            on_demo={() => props.on_surface?.('demo')} />
             : current === 'overview' ? <Overview snapshot={props.snapshot} selected={props.selected ?? 'lottery'} on_select={props.on_select ?? (() => undefined)} on_open={props.on_navigate} steward={steward} />
+            : current === 'demo' ? <Demo on_back={props.on_back ?? (() => props.on_surface?.('keep'))} />
             : <Room chamber={current} replay={navigation.replay} snapshot={props.snapshot} origin={navigation.origin}
               {...steward_connection}
               on_open={props.on_navigate} on_back={props.on_back ?? (() => undefined)} />}

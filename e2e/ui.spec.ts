@@ -32,7 +32,7 @@ for (const route of routes) for (const theme of themes) for (const steward of st
     // main.tsx defaults to fixtures when no native launch is injected.
     await page.goto(`/${route}`);
     await expect(page.locator('.cc-sample')).toHaveText('Simulated');
-    await expect(page.locator('.keep-home, .overview-workspace, .shell-room')).toBeVisible();
+    await expect(page.locator('.keep-home, .overview-workspace, .shell-room, .demo-workspace')).toBeVisible();
     await expect(page.getByText('Opening the room...', { exact: true })).toHaveCount(0);
     await expect(page.locator('.cc-steward-bar')).toBeVisible();
     if (route.endsWith('/drill')) await expect(page.locator('.moderator-drill')).toBeVisible();

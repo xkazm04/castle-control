@@ -1,5 +1,49 @@
 # Desktop frontend (WP 0.5a)
 
+## On-stream demo (delivery A)
+
+From `#/keep`, choose **See it on stream** beside **Enter the keep**, or open
+`#/demo` directly. Back and Escape return to the keep through the existing
+navigation/keymap. There is no first-run path in the app; none was added.
+The lazy demo retains the rampart and Steward. It is a non-chamber surface:
+it never becomes a ModuleId, ThemeFrame module or StewardContext chamber, and
+its Steward context is the keep's context.
+
+The stage follows `prototype/assets-2026-10-30/atlas.html` at `7270e60`:
+16:9 container-query geometry, four captioned overlays, the camera, nine
+simulated chat lines and three Extension panels. The segmented controls choose
+six styles, Game + cam / Just chatting, and three Malakor shots. Just chatting
+hides the camera and uses the selected shot as background; Facecam maps to
+the wide lair. Game + cam always uses the war map. The visible provenance is
+**SIMULATED · SAMPLE ART · AI-generated**. Art is illustrative and the demo
+does not make chamber, network or live mutation calls.
+
+`public/art/` holds exactly 34 byte-identical copies of the selected atlas WebPs:
+six styles × (urn, altar, votebar, hexmap, frame2), three Malakor shots and the
+war map. The shared URL convention is **`/art/preset-<style>-<asset>.webp`**;
+style IDs are `heraldic`, `pixel`, `synthwave`, `watercolor`, `anime`, `glass`.
+Vite's default publicDir copies these to `dist/art/`. No clay, comic, round-one
+frame or throne background is shipped. The owner's frame pick is still pending:
+`src/demo/model.ts` has the sole style-to-frame URL map, provisionally using
+`frame2`; replace the affected entry when the owner picks a frame.
+
+Verification in this worktree: desktop typecheck, lint, all 332 tests in 37 files,
+and production build pass. The unchanged first-load cap passes at
+364,604 / 393,216 JS+CSS bytes; demo JS and CSS are separate lazy chunks.
+All 34 images also appear in `dist/art/`. The 16 focused tests cover controls,
+captions, provenance in both layouts, all 36 combinations' asset URLs,
+byte equality, canonical routing, keep entry, Back/Escape, and keep-equivalent
+Steward context. `scripts/check.mjs secrets` passed without modification.
+
+The e2e inventory now discovers eight canonical routes. Its narrowed navigation
+harness test, e2e TypeScript check and e2e ESLint pass. Browser tests were attempted
+with `pnpm --config.verify-deps-before-run=false exec playwright test -c
+e2e/playwright.config.ts e2e/demo.spec.ts`, but the sandbox returned `spawn EPERM`
+before browser execution. Mounted interaction, plate visibility and screenshots
+remain unverified here. The Director can run that command at both configured
+viewport sizes, plus the existing canonical route/theme/Steward audit. No
+existing audit or safety-label assertion was removed.
+
 `src/view.css` sets the desktop body/root base font (`--font-ui`), ink and paper.
 
 Production CSS depends on the tokens entry being declared side-effectful; marking

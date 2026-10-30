@@ -1,0 +1,45 @@
+/* Atlas 7270e60 stage geometry; shared tokens replace its raw ink and type. */
+.demo-workspace { --demo-rule: var(--rule); display: grid; gap: var(--space-14); padding-block: var(--space-14); max-width: 85rem; margin-inline: auto; font: var(--text-body)/1.5 var(--font-serif); }
+.demo-heading { display: flex; justify-content: space-between; align-items: center; gap: var(--space-16); flex-wrap: wrap; }
+.demo-heading h1 { margin: 0; font: 700 var(--text-chamber)/1 var(--font-display); text-transform: uppercase; letter-spacing: var(--track-chamber); }
+.demo-heading p { margin: var(--space-6) 0 0; color: var(--ink-2); }
+.demo-controls { display: flex; flex-wrap: wrap; gap: var(--space-10) var(--space-22); align-items: center; }
+.demo-seg { display: flex; flex-wrap: wrap; gap: var(--space-4); align-items: center; }
+.demo-seg > span { font: var(--text-small)/1 var(--font-display); text-transform: uppercase; letter-spacing: var(--track-label); color: var(--muted); margin-right: var(--space-4); }
+.demo-seg .cc-button { font: 600 var(--text-small)/1 var(--font-display); text-transform: uppercase; letter-spacing: .05em; padding: var(--space-7) var(--space-10); border: var(--rule-medium) solid var(--rule); background: var(--card); color: var(--ink); border-radius: var(--r-sm); }
+.demo-seg .cc-button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+.demo-page { display: grid; grid-template-columns: minmax(0, 1fr) 17.5rem; background: var(--paper-2); border: var(--space-3) solid var(--demo-rule); border-radius: var(--r-md); overflow: hidden; }
+.demo-page .stage { position: relative; aspect-ratio: 16/9; max-width: 100%; overflow: hidden; container-type: inline-size; background: var(--press); }
+.demo-page .stage .bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.demo-page .ov { position: absolute; display: grid; justify-items: center; gap: .4cqw; }
+.demo-page .ov img { width: 100%; height: auto; display: block; filter: drop-shadow(0 .4cqw .8cqw color-mix(in srgb, var(--press) 60%, transparent)); }
+.demo-page .plate { font: 700 1.15cqw/1 var(--font-display); text-transform: uppercase; letter-spacing: var(--track-label); color: var(--cream); background: color-mix(in srgb, var(--paper) 82%, transparent); border: .12cqw solid color-mix(in srgb, var(--cream) 55%, transparent); padding: .45cqw .8cqw; border-radius: .25cqw; white-space: nowrap; }
+.demo-page .plate em { font-style: normal; color: var(--or-text); font-family: var(--font-num); }
+.demo-page .o-vote { top: 2.5%; left: 27%; width: 46%; }
+.demo-page .o-altar { left: 1.5%; top: 12%; width: 16%; }
+.demo-page .o-urn { left: 1.5%; bottom: 3%; width: 14%; }
+.demo-page .o-map { right: 2%; top: 2.5%; width: 21%; }
+.demo-page .o-altar img { height: 24cqw; width: auto; max-width: 100%; object-fit: contain; }
+.demo-page .o-urn img { max-height: 15cqw; width: auto; max-width: 100%; object-fit: contain; }
+.demo-page .o-map img { max-height: 17cqw; width: auto; max-width: 100%; object-fit: contain; }
+.demo-page .cam { position: absolute; right: 3.2%; bottom: 5.5%; width: 29%; aspect-ratio: 16/9; }
+.demo-page .cam .shot { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 30%; }
+.demo-page .cam .frame { position: absolute; left: -4%; top: -6%; width: 108%; height: 112%; object-fit: fill; pointer-events: none; }
+.demo-page .cam .plate { position: absolute; left: 50%; bottom: -3.2cqw; transform: translateX(-50%); }
+.demo-page .live { position: absolute; left: 1.2%; top: 2.2%; font: 700 1.1cqw/1 var(--font-display); letter-spacing: .08em; background: var(--gules); color: var(--white); padding: .35cqw .6cqw; border-radius: .2cqw; }
+.demo-page .sim { position: absolute; left: 1.2%; top: 5.6%; font: 600 .95cqw/1 var(--font-num); color: var(--cream); background: color-mix(in srgb, var(--press) 60%, transparent); padding: .3cqw .5cqw; }
+.demo-page .stage.chatting .o-altar { top: 30%; }
+.demo-chat { background: var(--paper); color: var(--ink); display: flex; flex-direction: column; min-width: 0; border-left: var(--rule-thin) solid var(--line); }
+.demo-chat header { font: 700 var(--text-small)/1 var(--font-display); text-transform: uppercase; letter-spacing: .08em; padding: var(--space-12) var(--space-14); border-bottom: var(--rule-thin) solid var(--line); color: var(--ink-2); }
+.demo-chat ol { list-style: none; margin: 0; padding: var(--space-10) var(--space-14); display: grid; gap: var(--space-7); font: var(--text-body)/1.35 var(--font-serif); overflow: auto; flex: 1; align-content: end; }
+.demo-chat .n { font-family: var(--font-display); font-weight: 700; letter-spacing: .02em; }
+.demo-chat [data-tone="gules"] { color: var(--gules-text); }
+.demo-chat [data-tone="azure"] { color: var(--azure-text); }
+.demo-chat [data-tone="or"] { color: var(--or-text); }
+.demo-chat [data-tone="green"] { color: var(--green); }
+.demo-chat .sys { color: var(--or-text); font-family: var(--font-num); font-size: var(--text-small); }
+.demo-panel-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(13.75rem, 1fr)); gap: var(--space-12); padding: var(--space-12); background: var(--press); border-top: var(--rule-thin) solid var(--line); grid-column: 1/-1; }
+.demo-ext { background: var(--card); border: var(--rule-thin) solid var(--line); border-radius: var(--space-4); padding: var(--space-10); color: var(--ink-2); display: grid; gap: var(--space-6); font-size: var(--text-small); }
+.demo-ext .cap { font: 700 var(--text-small)/1.5 var(--font-display); color: var(--cream); text-transform: uppercase; letter-spacing: var(--track-chamber); }
+.demo-ext img { width: 100%; border-radius: var(--space-2); }
+@media (max-width: 56.25rem) { .demo-page { grid-template-columns: 1fr; } .demo-chat { max-height: 13.75rem; } }

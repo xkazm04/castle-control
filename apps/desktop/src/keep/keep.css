@@ -1,5 +1,5 @@
 .keep-home { display: grid; grid-template-rows: auto minmax(0, 1fr); height: 100%; min-height: 0; font: var(--text-body)/1.4 var(--font-ui); }
-.keep-heading { display: flex; justify-content: flex-end; align-items: center; padding-block: clamp(var(--space-8), 1.5vh, var(--space-14)); }
+.keep-heading { display: flex; justify-content: flex-end; align-items: center; flex-wrap: wrap; gap: var(--space-12); padding-block: clamp(var(--space-8), 1.5vh, var(--space-14)); }
 .keep-heading kbd { margin-left: var(--space-12); font: var(--text-small)/1 var(--font-num); }
 .keep-cross-section { position: relative; isolation: isolate; display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1.65fr) minmax(0, .85fr) minmax(0, .65fr); grid-template-rows: minmax(0, .9fr) minmax(0, 1.1fr) auto; gap: clamp(var(--space-16), 2vh, var(--space-20)); min-height: 0; padding: var(--space-28) var(--space-24) 0; }
 .keep-stone { position: absolute; inset: var(--space-16) 0 var(--space-30); z-index: -1; background: radial-gradient(var(--hair) 18%, transparent 22%) 0 0 / var(--space-6) var(--space-6), var(--paper-2); clip-path: polygon(0 25%, 24% 25%, 24% 0, 63% 0, 63% 12%, 83% 12%, 83% 30%, 100% 30%, 100% 100%, 0 100%); }

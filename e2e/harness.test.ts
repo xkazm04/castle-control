@@ -6,10 +6,11 @@ import { simulatedSnapshots, snapshotEvent, startOverlay, visualId } from './ove
 
 test('real navigation yields canonical routes including every chamber and nested drill', () => {
   const ids = chamberIds(source('packages/ui/src/shell.tsx'));
-  assert.equal(routes.length, ids.length + 3);
+  assert.equal(routes.length, ids.length + 4);
   for (const id of ids) assert.ok(routes.includes(`#/chamber/${id}`));
   assert.ok(routes.includes('#/keep'));
   assert.ok(routes.includes('#/overview'));
+  assert.ok(routes.includes('#/demo'));
   assert.ok(routes.includes('#/chamber/moderator/drill'));
   assert.ok(!routes.includes('#/moderator/drill'));
 });

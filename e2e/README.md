@@ -31,13 +31,13 @@ No core, Twitch viewer, credential or paid call is involved.
 `inventory.ts` reads the actual `chambers` declaration in the UI shell, walks the
 `canonicalHash` AST for literals and ID templates, and runs that function in an
 isolated VM to deduplicate aliases into canonical routes. It currently finds
-seven routes. Unknown template syntax fails rather than silently losing a route.
+eight routes, including `#/demo`. Unknown template syntax fails rather than silently losing a route.
 Empty ID, route, token and rendered-element inventories fail loudly. CSS custom
 property names come from declarations in `packages/tokens/src/generated.css`
 (currently 122 unique names), with no maintained token list.
 
 Every route runs in paper and stock, with the Steward resting and open: currently
-28 desktop cases per project. The Steward is already mounted in the current
+32 desktop cases per project. The Steward is already mounted in the current
 shell; “open” focuses its real input via the rampart button and selects Overview's
 Talkback tab where present. It submits no request. Routes wait for fixture and
 lazy content, and assert that navigation stayed on the intended canonical hash.

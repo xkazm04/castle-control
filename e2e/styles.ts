@@ -8,8 +8,8 @@ export const desktopSurfaces: Surface[] = [
   { name: 'frame', selector: '.cc-frame' },
   { name: 'rampart', selector: '.cc-rampart' },
   // The current shell exposes chamber navigation as a keep, strip or locator.
-  { name: 'chamber navigation', selector: '.cc-chambers, .cc-chamber-strip, .cc-room-locator, .keep-cross-section' },
-  { name: 'room body', selector: '.keep-home, .overview-workspace, .shell-room' },
+  { name: 'chamber navigation', selector: '.cc-chambers, .cc-chamber-strip, .cc-room-locator, .keep-cross-section, .demo-heading' },
+  { name: 'room body', selector: '.keep-home, .overview-workspace, .shell-room, .demo-workspace' },
 ];
 
 type FieldBorder = { color: string; style: string; width: string };

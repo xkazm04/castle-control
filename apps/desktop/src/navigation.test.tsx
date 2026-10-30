@@ -4,9 +4,40 @@ import { chambers } from '@castle-control/ui';
 import { backHash, canonicalHash, createKeymap, dispatchShortcut, initialNavigation, navigateHash, routeFromHash } from './navigation.js';
 import { DesktopView } from './view.jsx';
 import { simulatedRead } from './simulated.js';
+import { KeepEntrance } from './keep/keep.jsx';
+import { DemoHeader } from './demo/demo.jsx';
+import { stewardContext } from './shell/steward.jsx';
 
 test('duplicate bindings throw before a handler can use them', () => {
   expect(() => createKeymap([{ key: '1', action: 'lottery' }, { key: '1', action: 'studio' }])).toThrow('Duplicate');
+});
+
+test('keep demo entry, direct URL, Back and Escape use the canonical non-chamber demo surface', async () => {
+  expect(canonicalHash('#/demo')).toBe('#/demo');
+  expect(routeFromHash('#/demo')).toBe('demo');
+  expect(backHash(initialNavigation('#/demo'))).toBe('#/keep');
+  expect(stewardContext('demo')).toEqual(stewardContext('keep'));
+  expect(stewardContext('demo')).not.toHaveProperty('chamber');
+  let state = initialNavigation('#/keep');
+  const entry = KeepEntrance({ on_enter: () => undefined, on_demo: () => { state = navigateHash(state, '#/demo'); } });
+  expect(entry.props.children[1].props.children).toBe('See it on stream');
+  entry.props.children[1].props.onClick?.();
+  expect(state.current).toBe('demo');
+  const view = <DesktopView navigation={state} snapshot={{ mode: 'fixture', phase: 'ready' }} theme="paper"
+    on_navigate={() => undefined} on_theme_change={() => undefined} />;
+  const stream = await renderToReadableStream(view);
+  await stream.allReady;
+  const html = await new Response(stream).text();
+  expect(html).toContain('demo-workspace');
+  expect(html).not.toContain('data-module="demo"');
+  expect(html).not.toContain('shell-room');
+  DemoHeader({ on_back: () => { state = navigateHash(state, backHash(state)); } }).props.children[1].props.onClick();
+  expect(state.current).toBe('keep');
+  state = navigateHash(state, '#/demo');
+  dispatchShortcut({ key: 'Escape', preventDefault: () => undefined }, false, () => undefined, () => undefined,
+    { back: () => { state = navigateHash(state, backHash(state)); } });
+  expect(state.current).toBe('keep');
+  expect(backHash(navigateHash(initialNavigation('#/overview'), '#/demo'))).toBe('#/keep');
 });
 
 test('default, direct links and legacy hashes canonicalize without the rejected stage', () => {
@@ -62,7 +93,7 @@ test('typing, modified shortcuts, repeats and composition do not navigate', () =
 
 test('lazy surfaces retain one Steward bar and the rampart, and rooms retain their existing content', async () => {
   const snapshot = { mode: 'fixture', phase: 'ready', ...simulatedRead(1) } as const;
-  for (const [hash, content] of [['#/keep', 'Enter the keep'], ['#/overview', 'Stream preview'],
+  for (const [hash, content] of [['#/keep', 'Enter the keep'], ['#/overview', 'Stream preview'], ['#/demo', 'SIMULATED · SAMPLE ART · AI-generated'],
     ['#/chamber/lottery', 'Fairness you can verify'], ['#/chamber/moderator', 'The live room'],
     ['#/chamber/visuals', 'aria-label="Beacons work"'], ['#/chamber/studio', 'aria-label="Map Room work"'],
     ['#/chamber/moderator/drill', 'The drill']]) {

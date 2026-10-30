@@ -18,6 +18,7 @@ export function DesktopApp({ client }: { client: DesktopClient }) {
   const root = useRef<HTMLDivElement>(null);
   const stewardInput = useRef<HTMLInputElement>(null);
   const tileOrigin = useRef<ModuleId | undefined>(undefined);
+  const demoOrigin = useRef(false);
   useEffect(() => client.start(), [client]);
   useEffect(() => {
     const sync = () => {
@@ -32,6 +33,10 @@ export function DesktopApp({ client }: { client: DesktopClient }) {
   }, []);
   useEffect(() => {
     if (navigation.current !== 'keep' && navigation.current !== 'overview') { root.current?.focus(); return; }
+    if (navigation.current === 'keep' && demoOrigin.current) {
+      root.current?.querySelector<HTMLElement>('[data-demo-entry]')?.focus();
+      demoOrigin.current = false;
+    }
     if (tileOrigin.current) {
       root.current?.querySelector<HTMLElement>(`[data-room-tile="${tileOrigin.current}"]`)?.focus();
       tileOrigin.current = undefined;
@@ -39,6 +44,7 @@ export function DesktopApp({ client }: { client: DesktopClient }) {
   }, [navigation.current]);
   function go(hash: string) {
     const canonical = canonicalHash(hash);
+    if (canonical === '#/demo') demoOrigin.current = true;
     setNavigation(previous => navigateHash(previous, canonical));
     if (window.location.hash !== canonical) window.location.hash = canonical;
   }

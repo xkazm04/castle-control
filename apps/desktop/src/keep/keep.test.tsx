@@ -15,7 +15,7 @@ test('every Keep room click opens its chamber and Enter the keep invokes Overvie
     tile.props.onClick();
     expect(open).toHaveBeenLastCalledWith(chamber.id);
   }
-  KeepEntrance({ on_enter: enter }).props.children.props.onClick();
+  KeepEntrance({ on_enter: enter }).props.children[0].props.onClick();
   expect(enter).toHaveBeenCalledOnce();
 });
 

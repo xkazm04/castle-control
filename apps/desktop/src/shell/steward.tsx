@@ -46,8 +46,9 @@ export const stewardConversation = createStewardConversation(shellStewardPort())
 
 export function stewardContext(current: ModuleId | Surface): StewardContext {
   const selected_proposal_id = proposalQueue.getSnapshot().selected_proposal_id;
+  const surface = current === 'demo' ? 'keep' : current;
   return {
-    ...(current === 'keep' || current === 'overview' ? { surface: current } : { surface: 'room' as const, chamber: current }),
+    ...(surface === 'keep' || surface === 'overview' ? { surface } : { surface: 'room' as const, chamber: surface }),
     ...(selected_proposal_id ? { selected_proposal_id } : {}),
   };
 }

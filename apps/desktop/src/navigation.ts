@@ -2,7 +2,7 @@ import { chambers, keymap } from '@castle-control/ui';
 import type { ModuleId } from '@castle-control/ui';
 
 type Action = (typeof keymap)[number]['action'];
-export type Surface = 'keep' | 'overview';
+export type Surface = 'keep' | 'overview' | 'demo';
 export type Navigation = { current: ModuleId | Surface; origin: Surface; replay: boolean };
 export function createKeymap(bindings: readonly { key: string; action: Action }[]) {
   const registry = new Map<string, Action>();
@@ -30,7 +30,7 @@ export function dispatchShortcut(event: Shortcut, editable: boolean, navigate: (
 }
 
 export function canonicalHash(hash: string): string {
-  if (hash === '#/keep' || hash === '#/overview') return hash;
+  if (hash === '#/keep' || hash === '#/overview' || hash === '#/demo') return hash;
   if (hash === '#/moderator/drill' || hash === '#/chamber/moderator/drill') return '#/chamber/moderator/drill';
   for (const { id } of chambers) if (hash === `#/${id}` || hash === `#/chamber/${id}`) return `#/chamber/${id}`;
   return '#/keep';
@@ -38,6 +38,7 @@ export function canonicalHash(hash: string): string {
 export function routeFromHash(hash: string): ModuleId | Surface {
   const canonical = canonicalHash(hash);
   if (canonical === '#/overview') return 'overview';
+  if (canonical === '#/demo') return 'demo';
   return chambers.find(({ id }) => canonical === `#/chamber/${id}` || canonical === `#/chamber/${id}/drill`)?.id ?? 'keep';
 }
 export function initialNavigation(hash: string): Navigation {
@@ -48,5 +49,5 @@ export function navigateHash(previous: Navigation, hash: string): Navigation {
   return { ...next, origin: previous.current === 'keep' || previous.current === 'overview' ? previous.current : previous.origin };
 }
 export function backHash(state: Navigation): string {
-  return `#/${state.current === 'keep' || state.current === 'overview' ? 'keep' : state.origin}`;
+  return `#/${state.current === 'keep' || state.current === 'overview' || state.current === 'demo' ? 'keep' : state.origin}`;
 }
