@@ -1046,7 +1046,7 @@ live in `crates/cc-types/tests/fixtures/steward.json` and are read by both langu
 **WP 1.4 engine settings (D10).** The existing Settings.values map uses these
 exact dotted keys; `parse_engine_settings` in cc-types is their sole typed parser:
 
-Status (2026-10-30): settings.get/set registered, store at v2; the Steward reads them in a following delivery.
+Status (2026-10-30): `settings.get`/`settings.set` are registered behind the session token, with the store at v2 (`f55d2f4`). `Engine::from_settings` builds only the selected provider and reports missing key names without values (`4c40ee0`). The native Steward under `--steward-live` reads persisted `engine.*` settings with `cc_engine::NoKeychain`; missing settings return `Unavailable` with only the missing key names while startup continues (`5d78d89`).
 
 | Settings key | Type | Default |
 | --- | --- | --- |
@@ -1060,7 +1060,9 @@ Status (2026-10-30): settings.get/set registered, store at v2; the Steward reads
 | `engine.model_claude` | printable ASCII model id string, 1–128 characters, no whitespace | absent |
 | `engine.model_codex` | printable ASCII model id string, 1–128 characters, no whitespace | absent |
 
-These six optional keys will be read by cc-core and the desktop `--steward-live` wiring in a later delivery.
+These six optional keys are read by cc-core's native Steward under the desktop `--steward-live` flag. Each ask lazily constructs its engine from persisted settings; a successful settings change applies to the next ask without restart. Only the selected CLI provider's executable and model are required, plus the posture helper for Codex. A lane requiring a secret fails with `Failure::Auth` under `NoKeychain` and is unavailable to the Steward; no live-provider or OpenAI-lane proof is implied.
+
+Native engine keychain wiring and its credential-label convention remain an open owner decision (credentials), not built.
 
 `EngineSettings` is the Rust-only typed view with `cli_provider`, `live_endpoint`
 and `cloud_opt_in`; it adds no second settings wire format. Missing keys take
