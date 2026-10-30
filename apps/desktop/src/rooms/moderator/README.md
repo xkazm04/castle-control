@@ -1,4 +1,93 @@
-# Core Gatehouse connection (WP 1.7 desktop half)
+# Gatehouse C · Herald (WP 1.7 polish, 2026-10-30)
+
+Reconciled against `a9aec46`: the shared heraldic kit existed, but no C room
+port did. The binding design is `prototype/polish-2026-10-30/moderator/variant-c.html`
+and the two `moderator-c-{paper,stock}.png` acceptance pictures. The older
+delivery notes below are historical where they describe the A/1 layout.
+
+The fixture and core rooms now share the C grid (`cc-keep`, 1.07:1:.97), with
+three focusable independent regions. Their right insets retain the extra
+`space-8` needed by the azure plate shadows. The center is data-fill: its plate
+stays above the only scrolling replay feed. WindowedRows owns row roles,
+spacers and `aria-rowcount`; line height remains `row-h` for 4,200-line intake.
+
+| Prototype component | Port |
+| --- | --- |
+| cc-keep / cc-col | moderator-columns / room-column, three regions |
+| cc-plate/band/body/actions | kit Plate, PlateBand, PlateBody, PlateActions; azure, offset space-8 |
+| cc-plate-meta/quote/reason | ReviewMeta, moderator-plate-quote/reason |
+| cc-big-button | kit InkButton big; pass, bar, shield; token overrides for small big actions |
+| cc-heading | kit SectionHeading; plain 17/13/13 hierarchy |
+| cc-card | kit HeraldicCard plain; bar tone for pending bans |
+| cc-banners/banner/search | room-local moderator-banners/banner/search |
+| cc-feed/feed-row/pennant/verdict | kit RuledFeed, WindowedRows, RuledRow, Pennant; VerdictMark/ VerdictChip |
+| cc-print/crops | kit StageFrame print; illustrative SVG remains fixture-only |
+| cc-chip-toggles/tiles/legend | room-local ConsensusSelection, ConsensusTiles, moderator-legend |
+| cc-moat-figure/gauge/bridge/stops | kit HeroReadout (54, no ghost, label caption), room-local SVG and labels |
+| cc-figures/note/rule-card/side/stamp | room-local counts/rule layout and kit StatusChip mode stamp |
+| cc-roll-entry | room-local ruled moderator-roll-entry in windowed ledger |
+| cc-drill | kit HeraldicCard and a native drill-route link |
+
+The tools order is deliberately moat, garrison orders, drill, gate roll, then
+the supplied shared seal slot. The prototype README's C Porting risks calls
+out this emergency-control-first change. The shell, header, Steward, seal-slot
+markup/styles and design actions are untouched. Paragraph resets explicitly
+exclude the shared seal slot.
+
+Forced differences:
+
+- Kit wrappers replace prototype-specific names: WindowedRows owns the sole
+  row; RuledRow provides presentational layout and cell slots. Its inner
+  message span holds message/verdict/provenance attributes. Pennant owns its
+  word, with the decorative icon positioned beside it, rather than a separate
+  naked flag. Pass keeps a transparent flag.
+- PlateBand receives a React CountLabel containing two lines, rather than
+  literal HTML small/span children. StageFrame supplies its own crop elements.
+- The static prototype's 420 full DOM rows become bounded virtual windows.
+  Ledger entries also remain windowed, with fixed six-row-token height and
+  scrollable originals/actions, so arbitrarily long messages remain accessible.
+- Core has no held/ban-queue or applied moat settings read contract. Those two
+  C plates explain unavailability without inventing counts, settings or action
+  authority. Core history lacks message_text, so only fixture Decisions show
+  original messages in the gate roll. Retained core chat still displays text
+  and provenance. No new endpoint or contract is introduced.
+- Core retains watching-rule editing, fixed safety-rail notices and explicit
+  refresh/paging. It offers no arming control. Its chip selection still requires
+  Refresh consensus; plots and tiles use only the returned core window, never
+  the fixture illustration. These controls require more room than the picture.
+- The drill remains a native anchor for routing (with the prototype's small
+  big-button geometry). The sealed fixture shield's inverse action reads
+  “Lower the drawbridge”; its applied state remains Bridge up / Shield Mode on.
+- All has a decorative list icon, as the brief requires an icon on each banner;
+  the source picture omits the All icon. The three verdict icons are unchanged.
+- The prototype's 1360/900 desktop breakpoints are expressed as 85/56.25 rem:
+  CSS media conditions cannot resolve custom properties. Room styles contain
+  no raw pixel dimensions or colours, and field chrome remains inherited.
+- The native-review-button test resolves the new InkButton leaf by its
+  accessible name because the old bare text-only button is gone. Every native
+  keyboard, disabled, proposal, seal and confirmation assertion is retained.
+
+`structure.test.tsx` cites the order change and checks regions, plate count,
+replay rowcount and trailing seal slot. `herald.test.tsx` exercises banner
+press/count/filter/search behavior, verdict words/inks, Watching/Armed stamps,
+consensus chip/tile selection, original ledger text and the core C structure.
+Existing moderation, gate, governor, proposal, drill and core-read tests remain.
+No Vite, Chrome, build, e2e, install, network or live operation is run here;
+Director visual comparison and build/budget/full-gate checks remain required.
+
+Validation: desktop typecheck (113 files) and lint pass. UI typecheck (70 files),
+lint and all 305 tests pass; no kit file changed. Focused moderator/core suites
+pass 41 tests. The full desktop test command reports 310 passed / 4 failed.
+All four failures are in the forbidden `shell/room.test.tsx` surface: lines 53
+(old `i[data-on]` gauge CSS), 85 (caption-scale portcullis), 95 (visible scroll
+hint / old message-card and Now copy), and 125 (`overflow-y: scroll`). These
+expectations describe the superseded A/1 presentation. They need a Director
+follow-up to assert C's SVG gauge, PlateBand title, hidden hint/fixed replay
+header and auto-scrolling columns. No obsolete CSS or hidden compatibility
+copy was introduced to satisfy them. This delivery is partial until those
+out-of-scope test updates and the Director's visual/build checks are complete.
+
+## Historical core Gatehouse connection (WP 1.7 desktop half)
 
 Core launches enter the lazy moderator route and use `createCoreGatehousePort`.
 `client.ts` keeps the launch capability, injected transport and cached port in a

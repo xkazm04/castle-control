@@ -1,6 +1,7 @@
 import { lazy, useSyncExternalStore } from 'react';
 import type { ReactNode } from 'react';
 import { proposalQueue } from '@castle-control/ui/steward';
+import { HeraldicCard, SectionHeading } from '@castle-control/ui';
 import type { ProposalQueue } from '@castle-control/ui/steward';
 import type { Snapshot } from '../../model.js';
 import { fixtureCharts, fixtureReplay } from '../../moderation-fixture.js';
@@ -24,20 +25,21 @@ export default function ModeratorRoom(props: Props) {
 function FixtureModeratorRoom({ snapshot, replay, queue = proposalQueue, seal_slot }: Props) {
   const { port } = moderationSession(queue);
   const state = useSyncExternalStore(port.subscribe, port.getSnapshot, port.getSnapshot);
-  if (snapshot.mode !== 'fixture') return <p>No live moderation controls are available.</p>;
+  if (snapshot.mode !== 'fixture') return <p>{copy.no_controls}</p>;
   return <div className="moderator-room">
-    {replay ? <div className="moderator-drill-room"><Drill result={fixtureReplay} />{seal_slot}</div> : <div className="moderator-columns moderator-fixture-columns">
+    {replay ? <div className="moderator-drill-room"><Drill result={fixtureReplay} />{seal_slot}</div> : <div className="cc-keep moderator-columns moderator-fixture-columns">
       <div className="room-column moderator-workbench" role="region" aria-label="Held messages and ban review" tabIndex={0}
         aria-describedby="moderator-scroll-hint">
-        <p id="moderator-scroll-hint" className="room-scroll-hint">Scroll for the full held queue, ban review and consensus ↓</p>
+        <p id="moderator-scroll-hint" className="moderator-visually-hidden">{copy.scroll_hint}</p>
         <HeldQueue state={state} queue={queue} /><Consensus results={fixtureCharts} /></div>
-      <div className="room-column moderator-details moderator-replay" role="region" aria-label="The live room" tabIndex={0}>
+      <div className="room-column moderator-details moderator-replay" role="region" aria-label={copy.live} tabIndex={0} data-fill="true">
         <MessageList messages={state.messages.slice(0, 420)} />
       </div>
       <div className="room-column moderator-tools" role="region" aria-label="Gatehouse tools and seal slot" tabIndex={0}>
-        <Rules state={state} queue={queue} /><GateControls state={state} queue={queue} />
-        <section className="moderator-card"><h3>{copy.replay}</h3><p className="room-now">Now: sample recording ready · simulated</p>
-          <p>{copy.replay_gloss}</p><a href="#/chamber/moderator/drill">{copy.replay_open}</a></section>
+        <GateControls state={state} queue={queue} /><Rules state={state} queue={queue} />
+        <section className="moderator-block"><SectionHeading title={copy.replay} gloss={copy.replay_gloss} />
+          <HeraldicCard className="moderator-drill-card"><span className="moderator-status">{copy.drill_ready}</span>
+            <a className="moderator-drill-link" href="#/chamber/moderator/drill">{copy.replay_open}</a></HeraldicCard></section>
         <GateLog state={state} queue={queue} />{seal_slot}</div>
     </div>}
   </div>;

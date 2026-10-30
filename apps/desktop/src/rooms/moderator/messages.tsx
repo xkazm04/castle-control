@@ -1,28 +1,62 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
+import type { ReactNode } from 'react';
 import type { Decision, Verdict } from '@castle-control/contract';
-import { VerdictChip, WindowedRows } from '@castle-control/ui';
+import { Plate, PlateBand, PlateBody, RuledFeed, RuledRow, WindowedRows } from '@castle-control/ui';
+import { moderationCopy as copy } from '../../moderation-copy.js';
+import { CountLabel, VerdictIcon, VerdictMark, verdictWords } from './presentation.jsx';
 export { rowWindow as messageWindow } from '@castle-control/ui';
 
-export function MessageList({ messages, scroll_top = 0 }: { messages: readonly Decision[]; scroll_top?: number }) {
+type ReplayDecision = Pick<Decision, 'decision_id' | 'message_id' | 'message_text' | 'at' | 'verdict'>;
+export type ReplayProps = {
+  messages: readonly ReplayDecision[]; scroll_top?: number; core?: boolean; notes?: ReactNode; footer?: ReactNode;
+  provenance?: ReadonlyMap<string, string>;
+};
+type Filter = Verdict | 'all';
+type Selection = { filter: Filter; query: string; on_filter: (filter: Filter) => void; on_query: (query: string) => void };
+
+export function MessageList(props: ReplayProps) {
   const [query, setQuery] = useState('');
-  const [filter, setFilter] = useState<Verdict | 'all'>('all');
-  const filtered = useMemo(() => messages.filter(message => (filter === 'all' || message.verdict === filter)
-    && `${message.message_id} ${message.message_text ?? ''}`.toLowerCase().includes(query.trim().toLowerCase())), [messages, query, filter]);
-  return <section className="moderator-messages moderator-card">
-    <h3>The live room · sample chat replay</h3>
-    <p className="room-now">Now: {messages.length.toLocaleString('en-US')} lines · {filtered.length.toLocaleString('en-US')} matching · SIMULATED</p>
-    <div className="moderator-toolbar"><label>Verdict <select value={filter} onChange={event => {
-      const value = event.currentTarget.value;
-      if (value === 'all' || value === 'pass' || value === 'hold' || value === 'bar') setFilter(value);
-    }}><option value="all">All</option><option value="pass">Pass</option><option value="hold">Hold</option><option value="bar">Bar</option></select></label>
-      <label>Search the room <input type="search" value={query} onChange={event => setQuery(event.currentTarget.value)} /></label></div>
-    <WindowedRows empty_state="No matching entries." key={`${filter}:${query}`} rows={filtered}
-      label="Chat messages with Pass, Hold or Bar" scroll_top={scroll_top} row_key={row => row.message_id}>
-      {message => <div className="moderator-chat-row" data-message-row={message.message_id} data-verdict={message.verdict}>
-        <span role="cell"><VerdictChip verdict={message.verdict} /></span>
-        <time role="cell" dateTime={message.at}>{message.at.slice(11, 19)}</time>
-        <span role="cell" title={message.message_text}>{message.message_text ?? 'Message text unavailable'}</span>
-      </div>}
-    </WindowedRows>
+  const [filter, setFilter] = useState<Filter>('all');
+  return <ReplayPanel {...props} filter={filter} query={query} on_filter={setFilter} on_query={setQuery} />;
+}
+
+/** Controlled body shared by the fixture replay and retained core intake. */
+export function ReplayPanel({ messages, scroll_top = 0, core = false, notes, footer, provenance,
+  filter, query, on_filter, on_query }: ReplayProps & Selection) {
+  const filtered = messages.filter(message => (filter === 'all' || message.verdict === filter)
+    && `${message.message_id} ${message.message_text ?? ''}`.toLowerCase().includes(query.trim().toLowerCase()));
+  return <section className="moderator-messages">
+    <Plate ink="azure" offset="space-8" className="moderator-replay-plate" aria-label={copy.live}
+      band={<PlateBand title={copy.live} gloss={core ? copy.core_chat_gloss : copy.replay_header}
+        count={<>{messages.length.toLocaleString('en-US')}<CountLabel first={copy.lines} second={core ? copy.core_label : copy.simulated} /></>} />}>
+      <PlateBody>
+        <div className="moderator-banners" role="group" aria-label={core ? copy.core_verdict_filter : copy.verdict_filter}>
+          {(['all', 'pass', 'hold', 'bar'] as const).map(value => <button type="button" className="moderator-banner" key={value}
+            data-verdict-pick={value} aria-pressed={filter === value} onClick={() => on_filter(value)}>
+            <span><VerdictIcon verdict={value} />{verdictWords[value]}</span>
+            <b>{(value === 'all' ? messages.length : messages.filter(message => message.verdict === value).length).toLocaleString('en-US')}</b>
+          </button>)}
+        </div>
+        <label className="moderator-search">{core ? copy.core_search : copy.search}
+          <input type="search" value={query} onChange={event => on_query(event.currentTarget.value)} />
+          <output>{copy.matching(filtered.length)}</output></label>
+        {notes && <div className="moderator-core-notes">{notes}</div>}
+        <span className="moderator-visually-hidden">{copy.replay_total(messages.length)} · {core ? copy.core_label : copy.simulated_caps}</span>
+      </PlateBody>
+    </Plate>
+    <RuledFeed className="moderator-feed">
+      <WindowedRows empty_state={core ? copy.core_chat_empty : copy.empty} key={`${filter}:${query}`} rows={filtered}
+        label={core ? copy.core_chat_label : copy.chat_label} scroll_top={scroll_top} row_key={row => core ? row.decision_id : row.message_id}>
+        {message => <RuledRow mark={<VerdictMark verdict={message.verdict} />}
+          trailing={<time dateTime={message.at} title={message.at}>{message.at.slice(11, 19)}</time>}>
+          <span data-message-row={message.message_id} data-verdict={message.verdict}
+            data-provenance={provenance?.get(message.decision_id)}
+            title={[message.message_text ?? copy.text_unavailable, provenance?.get(message.decision_id)].filter(Boolean).join(' · ')}>
+            {message.message_text ?? copy.text_unavailable}{provenance && <> · <b>{provenance.get(message.decision_id)}</b></>}
+          </span>
+        </RuledRow>}
+      </WindowedRows>
+    </RuledFeed>
+    {footer}
   </section>;
 }

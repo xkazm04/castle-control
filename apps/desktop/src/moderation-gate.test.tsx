@@ -3,6 +3,8 @@ import type { ChangeEvent, ReactNode, ReactElement, ButtonHTMLAttributes, Select
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, expect, test, vi } from 'vitest';
 import { ProposalQueue, SimulatedSteward } from '@castle-control/ui/steward';
+import { InkButton } from '@castle-control/ui';
+import type { InkButtonProps } from '@castle-control/ui';
 import { gatehouseHeldResolve, gatehouseDelaySet, gatehouseShieldSet, gatehouseLeaseEnd, parseMethodParams } from '@castle-control/contract';
 import { createModerationPreview } from './moderation-model.js';
 import { fixtureConfirmationMs, fixtureHeld, fixtureHoldReasons, fixtureRules } from './moderation-fixture.js';
@@ -82,7 +84,9 @@ test.each(['release', 'remove'] as const)('%s proposes via a native keyboard but
   vi.useFakeTimers(); const queue = new ProposalQueue(); const held = fixtureHeld[0];
   if (!held?.message_text) throw new Error('Missing original');
   const label = kind === 'release' ? 'Propose Pass' : 'Propose Bar';
-  const button = find<ButtonHTMLAttributes<HTMLButtonElement>>(HeldActions({ item: held, pending: false, queue }), props => props.children === label);
+  // C replaces the bare review button with InkButton plus a decorative icon.
+  // Resolve that kit leaf to keep every native-button and proposal assertion.
+  const button = InkButton(find<InkButtonProps>(HeldActions({ item: held, pending: false, queue }), props => props['aria-label'] === label).props);
   expect(button.type).toBe('button'); expect(button.props.type).toBe('button');
   expect(button.props.disabled).toBe(false); expect(button.props.tabIndex ?? 0).toBeGreaterThanOrEqual(0);
   click(button.props);
