@@ -5,7 +5,7 @@ import type { Page } from '@playwright/test';
 import { repo, routes, slug, stewardStates, themes } from './inventory.ts';
 import { guardPage } from './network.ts';
 import { startOverlay, visualId } from './overlay-server.ts';
-import { auditStyles, desktopSurfaces } from './styles.ts';
+import { auditFields, auditStyles, desktopSurfaces } from './styles.ts';
 
 const diagnostics = new WeakMap<Page, () => void>();
 let overlay: Awaited<ReturnType<typeof startOverlay>>;
@@ -53,6 +53,7 @@ for (const route of routes) for (const theme of themes) for (const steward of st
     }
     await page.evaluate(() => document.fonts.ready.then(() => undefined));
     await auditStyles(page, desktopSurfaces);
+    await auditFields(page);
   });
 }
 

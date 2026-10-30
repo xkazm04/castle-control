@@ -8,9 +8,9 @@
 .cc-design-comparison > section { min-width: 0; padding: var(--space-12); border-top: var(--rule-thin) solid var(--line); }
 .cc-design-controls, .cc-design-actions { display: flex; flex-wrap: wrap; align-items: end; gap: var(--space-12); margin-block: var(--space-16); }
 .cc-design-controls label { display: grid; gap: var(--space-6); font-size: var(--text-label); }
-.cc-design-controls input, .cc-design-controls select, .cc-design-controls button, .cc-design-actions > button:not(.cc-seal-button) { background: var(--card); color: var(--ink); border: var(--rule-thin) solid var(--ink); padding: var(--space-8) var(--space-12); font: inherit; }
+.cc-design-controls button, .cc-design-actions > button:not(.cc-seal-button) { background: var(--card); color: var(--ink); border: var(--rule-thin) solid var(--ink); padding: var(--space-8) var(--space-12); font: inherit; }
 .cc-design-focus button { cursor: pointer; }
-.cc-design-focus button:disabled { opacity: var(--disabled-opacity); cursor: not-allowed; }
+.cc-design-focus button:disabled:not(.cc-seal-button) { opacity: var(--disabled-opacity); cursor: not-allowed; }
 .cc-design-focus :focus-visible { outline: var(--rule-strong) solid var(--azure-text); outline-offset: var(--focus-offset); }
 .cc-design-focus [role="alert"] { color: var(--danger); border-left: var(--rule-strong) solid var(--danger); padding-inline: var(--space-12); }
 .cc-design-scene { --design-ink: var(--ink); background: var(--card); text-align: center; }

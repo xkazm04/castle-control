@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { runInNewContext } from 'node:vm';
-import { measureStyles } from './styles.ts';
+import { fieldStyleErrors, measureStyles } from './styles.ts';
 
 // Only the CSS audit's DOM surface is simulated. This is policy coverage,
 // not computed-browser-style or screenshot evidence.
@@ -58,4 +58,32 @@ test('transparent overlay still rejects non-token fonts, ink, unresolved tokens 
   assert.match(measure({ canvas, unresolved: true }).errors.join('\n'), /Root tokens unresolved/);
   assert.match(measure({ canvas, missing: true }).errors.join('\n'), /Missing visible simulated layer/);
   assert.match(measure({ canvas, overflow: true }).errors.join('\n'), /Horizontal overflow/);
+});
+
+const fieldBorder = { color: 'rgb(22, 24, 29)', style: 'solid', width: '1px' };
+const kitField = { appearance: 'none', borders: Array.from({ length: 4 }, () => ({ ...fieldBorder })) };
+
+test('field policy rejects browser chrome even when a field already has token borders', () => {
+  for (const appearance of ['auto', 'menulist', 'textfield']) {
+    assert.match(fieldStyleErrors({ ...kitField, appearance }, fieldBorder).join('\n'), /Browser-default field appearance/);
+  }
+  const chrome = { appearance: 'auto', borders: Array.from({ length: 4 }, () => ({
+    color: 'rgb(118, 118, 118)', style: 'inset', width: '2px',
+  })) };
+  const errors = fieldStyleErrors(chrome, fieldBorder);
+  assert.equal(errors.length, 5);
+  assert.match(errors.join('\n'), /Field border/);
+});
+
+test('field policy accepts kit fields in paper and stock and checks every border side', () => {
+  assert.deepEqual(fieldStyleErrors(kitField, fieldBorder), []);
+  const stockBorder = { ...fieldBorder, color: 'rgb(242, 238, 227)' };
+  assert.deepEqual(fieldStyleErrors({ appearance: 'none', borders: Array(4).fill(stockBorder) }, stockBorder), []);
+  for (const side of [0, 1, 2, 3]) for (const replacement of [
+    { color: 'rgb(118, 118, 118)' }, { style: 'inset' }, { style: 'none' }, { width: '2px' },
+  ]) {
+    const borders = kitField.borders.map((border, index) => index === side ? { ...border, ...replacement } : border);
+    assert.match(fieldStyleErrors({ appearance: 'none', borders }, fieldBorder).join('\n'), new RegExp(`Field border ${side}:`));
+  }
+  assert.match(fieldStyleErrors({ appearance: 'none', borders: [] }, fieldBorder).join('\n'), /Missing field border sides/);
 });

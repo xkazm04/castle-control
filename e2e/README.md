@@ -51,6 +51,8 @@ Only `overlay-simulated-connected` allows a transparent canvas: OBS composites
 the page over the streamer's scene. Explicit browser-white backgrounds still
 fail, and the rendered simulated layer must use the token UI font and ink.
 Every desktop route retains the opaque canvas policy and all other checks.
+The kit's `.cc-frame` base styles own select and text-like input chrome in every room.
+Every desktop case audits visible fields for `appearance: none` and all four token borders (hidden, checkbox, radio and range inputs are excluded).
 The current chamber navigation appears as the keep cross-section, chamber strip
 or room locator rather than the old vertical column; all are audited under that
 surface role, alongside the frame, rampart and room body. Each surface counts its

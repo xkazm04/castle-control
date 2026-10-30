@@ -24,8 +24,8 @@
 .shell-seal-slot .cc-proposal-card { margin-block: var(--space-16); }
 .room-column:last-child { border-inline-end: 0; }
 .room-hash { font: var(--text-small)/1.5 var(--font-num); overflow-wrap: anywhere; white-space: pre-wrap; }
-.shell-room :where(button:not(.cc-seal-button), select, input) { font: 600 var(--text-body)/1.4 var(--font-ui); border: var(--rule-medium) solid var(--ink); background: var(--card); color: var(--ink); padding: var(--space-6) var(--space-8); max-width: 100%; cursor: pointer; }
-.shell-room button:disabled { opacity: var(--disabled-opacity); cursor: not-allowed; }
+.shell-room :where(button:not(.cc-seal-button)) { font: 600 var(--text-body)/1.4 var(--font-ui); border: var(--rule-medium) solid var(--ink); background: var(--card); color: var(--ink); padding: var(--space-6) var(--space-8); max-width: 100%; cursor: pointer; }
+.shell-room button:disabled:not(.cc-seal-button) { opacity: var(--disabled-opacity); cursor: not-allowed; }
 .shell-room button:focus-visible, .shell-room a:focus-visible, .shell-room select:focus-visible, .shell-room input:focus-visible { outline: var(--rule-strong) solid var(--azure); outline-offset: var(--focus-offset); }
 .shell-room h2 { font-family: var(--font-display); }
 .shell-room :where(h3) { font: 800 var(--text-section)/1.2 var(--font-display); text-transform: uppercase; }

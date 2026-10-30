@@ -12,6 +12,55 @@ export const desktopSurfaces: Surface[] = [
   { name: 'room body', selector: '.keep-home, .overview-workspace, .shell-room' },
 ];
 
+type FieldBorder = { color: string; style: string; width: string };
+type FieldStyle = { appearance: string; borders: FieldBorder[] };
+
+/** Pure policy: removing native chrome alone does not establish kit borders. */
+export function fieldStyleErrors(actual: FieldStyle, expected: FieldBorder): string[] {
+  const errors: string[] = [];
+  if (actual.appearance !== 'none') errors.push(`Browser-default field appearance: ${actual.appearance}`);
+  if (actual.borders.length !== 4) errors.push('Missing field border sides');
+  for (const [side, border] of actual.borders.entries()) {
+    if (border.color !== expected.color || border.style !== 'solid' || border.width !== expected.width) {
+      errors.push(`Field border ${side}: expected ${expected.width} solid ${expected.color}, got ${border.width} ${border.style} ${border.color}`);
+    }
+  }
+  return errors;
+}
+
+/** Runs in the page, resolving tokens under each field's own theme scope. */
+export function measureFields() {
+  const selector = 'select, input:not([type="hidden"], [type="checkbox"], [type="radio"], [type="range"])';
+  const fields = [...document.querySelectorAll(selector)].filter((node): node is HTMLElement =>
+    node instanceof HTMLElement && node.checkVisibility({ checkOpacity: true, checkVisibilityCSS: true }));
+  return fields.map(field => {
+    const probe = document.createElement('span');
+    probe.hidden = true;
+    probe.style.border = 'var(--rule-thin) solid var(--ink)';
+    if (!field.parentElement) throw new Error('Cannot resolve field theme tokens');
+    field.parentElement.append(probe);
+    const token = getComputedStyle(probe);
+    const expected = { color: token.borderTopColor, style: token.borderTopStyle, width: token.borderTopWidth };
+    probe.remove();
+    const style = getComputedStyle(field);
+    const actual = { appearance: style.appearance, borders: [
+      { color: style.borderTopColor, style: style.borderTopStyle, width: style.borderTopWidth },
+      { color: style.borderRightColor, style: style.borderRightStyle, width: style.borderRightWidth },
+      { color: style.borderBottomColor, style: style.borderBottomStyle, width: style.borderBottomWidth },
+      { color: style.borderLeftColor, style: style.borderLeftStyle, width: style.borderLeftWidth },
+    ] };
+    return { name: `${field.tagName}[${field.getAttribute('aria-label') ?? field.getAttribute('name') ?? ''}]`, actual, expected };
+  });
+}
+
+export async function auditFields(page: Page): Promise<void> {
+  const fields = await page.evaluate(measureFields);
+  counted('visible desktop fields', fields.length);
+  const errors = fields.flatMap(field => fieldStyleErrors(field.actual, field.expected).map(error => `${field.name}: ${error}`));
+  console.log(`[e2e field inventory] ${JSON.stringify(fields)}`);
+  assert.deepEqual(errors, [], 'Rendered desktop fields must use kit appearance and token borders');
+}
+
 /** Runs in the page; exported so the policy can also be tested without Chrome. */
 export function measureStyles({ names, surfaces, policy }: { names: string[]; surfaces: Surface[]; policy: StylePolicy }) {
     const errors: string[] = [];

@@ -1,7 +1,6 @@
 .cc-consensus-toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-8); }
 .cc-consensus-toolbar { padding: var(--space-8) var(--space-10); border-bottom: var(--rule-thin) solid var(--hair); }
 .cc-consensus-toolbar label { font-size: var(--text-small); }
-.cc-consensus-toolbar select { background: var(--card); color: var(--ink); border: var(--rule-thin) solid var(--hair); padding: var(--space-4); font: inherit; max-width: 100%; }
 .cc-consensus-chart { background: var(--card); border: var(--rule-thin) solid var(--hair); }
 .cc-consensus-chart button:focus-visible { outline: var(--rule-strong) solid var(--azure); outline-offset: calc(-1 * var(--focus-offset)); }
 .cc-consensus-chart svg { display: block; width: 100%; height: calc(var(--space-56) * 4); }

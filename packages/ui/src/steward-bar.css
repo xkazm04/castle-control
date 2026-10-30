@@ -12,7 +12,7 @@
 .cc-steward-proposal { min-width: 0; align-self: center; padding-left: var(--space-16); border-left: var(--rule-medium) solid var(--line); overflow-wrap: anywhere; }
 .cc-steward-bar form { display: flex; align-items: end; gap: var(--space-10); }
 .cc-steward-bar label { display: flex; flex: 1; min-width: 0; flex-direction: column; gap: var(--space-4); font-size: var(--text-small); }
-.cc-steward-bar input, .cc-steward-bar button { font: inherit; color: var(--ink); background: var(--card); border: var(--rule-thin) solid var(--ink); padding: var(--space-7) var(--space-10); border-radius: var(--r-sm); }
+.cc-steward-bar button { font: inherit; color: var(--ink); background: var(--card); border: var(--rule-thin) solid var(--ink); padding: var(--space-7) var(--space-10); border-radius: var(--r-sm); }
 .cc-steward-bar input { min-width: 0; }
 .cc-steward-bar button { cursor: pointer; }
 .cc-steward-bar button:disabled { opacity: var(--disabled-opacity); cursor: default; }

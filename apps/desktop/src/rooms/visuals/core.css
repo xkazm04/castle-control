@@ -2,7 +2,6 @@
 .visuals-core-form > * { min-width: 0; margin: 0; }
 .visuals-core-form form { display: grid; gap: var(--space-12); }
 .visuals-core-form label { display: grid; gap: var(--space-4); }
-.visuals-core-form input, .visuals-core-form select { min-width: 0; max-width: 100%; color: var(--ink); background: var(--paper); border: var(--rule-thin) solid var(--ink); padding: var(--space-8); font: inherit; }
 .visuals-core-form fieldset { min-width: 0; display: grid; gap: var(--space-8); padding: var(--space-12); border: var(--rule-thin) solid var(--line); }
 .visuals-core-item { padding: var(--space-12); border-bottom: var(--rule-thin) solid var(--line); }
 .visuals-core-item p { margin: var(--space-4) 0; }
