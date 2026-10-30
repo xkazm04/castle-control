@@ -121,6 +121,7 @@ async fn native_registry_serves_reads_and_revoke_purges_the_real_store() {
     .unwrap();
     let app = services.app(32).unwrap();
     let mut expected = NativeServices::METHODS.to_vec();
+    expected.extend(["settings.get", "settings.set"]);
     expected.extend(cc_core::lots::LotsModule::METHODS);
     expected.extend(cc_core::gatehouse::GatehouseModule::METHODS);
     expected.extend(cc_core::beacons::BeaconsModule::METHODS);
@@ -128,6 +129,21 @@ async fn native_registry_serves_reads_and_revoke_purges_the_real_store() {
     expected.sort();
     assert_eq!(app.registry.methods(), expected);
     assert_eq!(Registry::with_status().methods(), expected);
+    let request = parse_request(
+        br#"{"method":"settings.set","params":{"values":{"engine.cli_provider":"codex_cli"}}}"#,
+    )
+    .unwrap();
+    let settings = app.registry.dispatch(&request).await.unwrap();
+    assert_eq!(
+        settings,
+        json!({"values":{"engine.cli_provider":"codex_cli"}})
+    );
+    assert_eq!(
+        serde_json::to_value(services.store.lock().unwrap().engine_settings().unwrap()).unwrap(),
+        settings
+    );
+    let request = parse_request(br#"{"method":"settings.get","params":{}}"#).unwrap();
+    assert_eq!(app.registry.dispatch(&request).await.unwrap(), settings);
     assert!(app.registry.methods().contains(&"beacons.source.url"));
     let request = parse_request(br#"{"method":"lots.draw.list","params":{}}"#).unwrap();
     assert_eq!(
@@ -177,6 +193,7 @@ async fn native_registry_serves_reads_and_revoke_purges_the_real_store() {
     let store = services.store.lock().unwrap();
     assert!(store.items(DataStore::Recordings).unwrap().is_empty());
     assert!(store.read_ledger(LedgerKind::Engine).unwrap().is_empty());
+    assert!(store.engine_settings().unwrap().values.is_empty());
     app.shutdown();
 }
 

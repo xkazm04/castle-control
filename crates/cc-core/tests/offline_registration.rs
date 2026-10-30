@@ -22,6 +22,7 @@ fn exporter_lists_the_native_inventory_without_starting_services() {
     assert!(result.status.success());
     let methods: Vec<String> = serde_json::from_slice(&result.stdout).unwrap();
     let mut expected = NativeServices::METHODS.to_vec();
+    expected.extend(["settings.get", "settings.set"]);
     expected.extend(LotsModule::METHODS);
     expected.extend(GatehouseModule::METHODS);
     expected.extend(BeaconsModule::METHODS);

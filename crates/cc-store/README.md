@@ -3,7 +3,7 @@
 Standalone Rust library for Castle Control's local viewer data, audit ledgers and
 retention. No network or bridge dependency; an internal `cc-types` path dependency
 reuses the validated art credit and call-ID types. SQLite uses bundled
-rusqlite 0.38. `Store::open(directory)` migrates the database (`user_version = 1`),
+rusqlite 0.38. `Store::open(directory)` migrates the database (`user_version = 2`),
 checks the inventory and ledgers, and holds an exclusive OS file lock until drop.
 Share one `Store` through a mutex; a second writer to the directory is refused.
 
@@ -23,6 +23,7 @@ tests deliberately introduce both an extra table and an extra file.
 | writs | SQLite viewer items and allowlisted configuration | Delete associated items; preserve viewer-free configuration | Delete all rows of both kinds |
 | viewer_mappings | SQLite login → Twitch ID | Delete every alias for the ID | Delete all rows |
 | settings | SQLite retention setting | Preserve | Delete; default applies again |
+| engine_settings | SQLite allowlisted engine overrides, JSON values | Preserve (no viewer data) | Delete all overrides; defaults apply again |
 | decisions.jsonl, draws.jsonl, engine.jsonl | Typed audit records | Preserve byte for byte | Truncate and sync |
 | purge_state | SQLite recovery marker | Preserve | Clear after successful erasure |
 | store.sqlite3, store.sqlite3-journal, writer.lock | Database container, transient rollback journal, empty lock | Keep containers | Keep containers |
@@ -65,7 +66,7 @@ schemas; audit viewer references accept only nonzero decimal Twitch IDs as
 strings (including IDs larger than JavaScript's safe integer range).
 
 `forget_user` removes data and mappings in one SQLite transaction. `purge_all`
-also removes the ledgers and the explicit retention setting. It durably records
+also removes the ledgers, explicit retention setting and engine overrides. It durably records
 an erasure intent before touching the ledger files. An error leaves that intent
 in place and normal operations refuse to serve data; retry `purge_all` or reopen
 to complete it. On reopen recovery runs before any data or ledger is returned.
@@ -189,6 +190,26 @@ and a pre-art engine row use independently computed digests. Appending preserves
 the old bytes; forgetting preserves art receipts and full purge erases them.
 
 ## Retention and dry runs
+
+Migration v2 adds only `engine_settings`; v1's `settings` table, INTEGER
+`retention_s`, constraints and existing values remain unchanged. Fresh databases
+land at v2 in one transaction; existing v1 data and ledgers are preserved.
+`engine_settings()` reads explicit overrides as `cc_types::Settings`, and
+`set_engine_settings(&Settings)` atomically replaces the whole engine subset.
+Omitted keys are reset to the sole parser's defaults; an empty map removes all
+overrides. Both APIs use `cc_types::parse_engine_settings` for value validation;
+`ENGINE_SETTING_KEYS` is the closed nine-key inventory from WP 1.4. Unknown keys
+(including `retention_s`), malformed values and failed writes change nothing.
+Paths and endpoints are never logged. These APIs neither spawn nor contact engines.
+
+Core `settings.get/set` expose only this subset, under the existing per-launch
+RPC token. Native registration shares `NativeServices.store`; fixture registration
+uses its own `settings/` store. Retention remains on its existing store API: the
+plan's core-method row does not specify it in the RPC settings map. Full/revoked
+purge clears engine overrides like the existing retention setting, despite their
+being viewer-free, so configuration resets consistently. Forget preserves them.
+`tests/engine_settings.rs` covers fresh v2, v1 migration, all nine keys, reopen,
+invalid/unknown keys, transaction rollback and forget/full-purge behavior.
 
 - `MIN_RETENTION_S`: 86,400 seconds (24 hours).
 - `DEFAULT_RETENTION_S`: 2,592,000 seconds (30 days).

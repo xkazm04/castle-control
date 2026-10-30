@@ -29,6 +29,10 @@ struct Loaded {
 }
 
 impl OfflineModules {
+    pub(crate) fn settings_root(&self) -> Option<PathBuf> {
+        self.root.as_ref().map(|root| root.join("settings"))
+    }
+
     pub(crate) fn writ_changed(&self) -> Result<(), ErrorEnvelope> {
         self.events
             .get_or_init(|| Arc::new(EventHub::new(256).expect("nonzero event capacity")))

@@ -120,6 +120,13 @@ pub const STORE_INVENTORY: &[StoreSpec] = &[
         purge_all: DeleteRows,
     },
     StoreSpec {
+        name: "engine_settings",
+        storage: SqliteTable,
+        // Viewer-free configuration, matching the existing settings policy.
+        forget_user: Keep,
+        purge_all: DeleteRows,
+    },
+    StoreSpec {
         name: "purge_state",
         storage: SqliteTable,
         forget_user: Keep,

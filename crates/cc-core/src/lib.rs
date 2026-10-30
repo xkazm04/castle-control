@@ -12,6 +12,7 @@ mod offline;
 pub mod overlay;
 mod registry;
 mod server;
+mod settings;
 pub mod spike;
 #[cfg(feature = "spike")]
 mod spike_run;

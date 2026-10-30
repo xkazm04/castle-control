@@ -44,10 +44,22 @@ async fn modules_are_checked_atomically_and_results_use_the_generated_schema_doo
         registry.dispatch(&request).await.unwrap_err().code,
         ErrorCode::Internal
     );
-    let request = parse_request(br#"{"method":"settings.get","params":{}}"#).unwrap();
+    let request = parse_request(br#"{"method":"auth.twitch.status","params":{}}"#).unwrap();
     assert_eq!(
         registry.dispatch(&request).await.unwrap_err().code,
         ErrorCode::Unavailable
+    );
+}
+
+#[tokio::test]
+async fn built_in_registry_registers_settings_get_and_set() {
+    let registry = Registry::with_status();
+    assert!(registry.methods().contains(&"settings.get"));
+    assert!(registry.methods().contains(&"settings.set"));
+    let request = parse_request(br#"{"method":"settings.get","params":{}}"#).unwrap();
+    assert_eq!(
+        registry.dispatch(&request).await.unwrap(),
+        json!({"values":{}})
     );
 }
 

@@ -166,6 +166,12 @@ impl Registry {
         );
         let mut registry = Self::default();
         registry
+            .register(Arc::new(crate::settings::SettingsModule::new(
+                services.as_ref().map(|service| service.store.clone()),
+                offline.settings_root(),
+            )))
+            .expect("settings methods are declared and unique");
+        registry
             .register(Arc::new(StatusModule {
                 started: Instant::now(),
                 services,

@@ -1046,6 +1046,8 @@ live in `crates/cc-types/tests/fixtures/steward.json` and are read by both langu
 **WP 1.4 engine settings (D10).** The existing Settings.values map uses these
 exact dotted keys; `parse_engine_settings` in cc-types is their sole typed parser:
 
+Status (2026-10-30): settings.get/set registered, store at v2; the Steward reads them in a following delivery.
+
 | Settings key | Type | Default |
 | --- | --- | --- |
 | `engine.cli_provider` | `CliProvider` | `claude_cli` (development default) |
