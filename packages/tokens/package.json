@@ -3,8 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "exports": { ".": "./src/index.ts" },
-  "sideEffects": ["**/*.css"],
+  "exports": {
+    ".": "./src/index.ts",
+    "./check-build": "./src/check-build.ts"
+  },
+  "sideEffects": ["./src/index.ts", "**/*.css"],
   "scripts": {
     "generate": "node src/generate.ts",
     "typecheck": "node ../../scripts/package-gate.mjs typecheck",

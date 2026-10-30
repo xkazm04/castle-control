@@ -1,5 +1,11 @@
 # Desktop frontend (WP 0.5a)
 
+Production CSS depends on the tokens entry being declared side-effectful; marking
+only CSS files let tree-shaking remove its stylesheet import (also in the UI kit).
+Both build checks now derive token names from the generated tokens stylesheet,
+print the number defined in initial CSS, and fail if any generated name is missing.
+The guard rejected the broken build at 2/122 names; the fixed build defines 122/122.
+
 Run `pnpm --filter @castle-control/desktop dev` for a browser preview. It defaults
 to an isolated, generated fixture source, labelled in both the rampart and a
 prominent banner on every route. After 1.5 seconds simulated invalidations update
