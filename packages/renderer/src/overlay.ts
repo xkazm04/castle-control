@@ -17,7 +17,16 @@ export class OverlayScene {
   private identity: string | undefined;
   private bindings: ((intensity: number) => boolean)[] = [];
   private readonly root: HTMLElement;
-  constructor(root: HTMLElement) { this.root = root; }
+  private readonly badge: HTMLElement;
+  constructor(root: HTMLElement) {
+    this.root = root;
+    this.badge = root.ownerDocument.createElement('div');
+    this.badge.dataset['simulatedBadge'] = '';
+    this.badge.textContent = 'SIMULATED';
+    this.badge.hidden = true;
+    // Scene-owned chrome stays outside the package's replaceable layer list.
+    root.after(this.badge);
+  }
 
   apply(snapshot: BeaconsRenderSnapshot): void {
     const pkg = snapshot.package;
@@ -69,6 +78,9 @@ export class OverlayScene {
     const intensity = String(snapshot.intensity.intensity);
     if (this.root.dataset['packageHash'] !== hash) this.root.dataset['packageHash'] = hash;
     if (this.root.dataset['intensity'] !== intensity) this.root.dataset['intensity'] = intensity;
+    const simulated = String(snapshot.simulated);
+    if (this.root.dataset['simulated'] !== simulated) this.root.dataset['simulated'] = simulated;
+    this.badge.hidden = !snapshot.simulated;
   }
 }
 

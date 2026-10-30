@@ -1,3 +1,19 @@
 html, body, #scene { font-family: var(--font-ui); color: var(--ink); background: transparent; }
 html, body { margin: 0; }
 #scene { position: relative; min-height: 100vh; }
+[data-simulated-badge] {
+  position: fixed;
+  bottom: var(--space-12);
+  right: var(--space-12);
+  z-index: 1;
+  padding: var(--space-4) var(--space-8);
+  border: var(--rule-thin) solid var(--ink);
+  border-radius: var(--r-sm);
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: var(--text-label);
+  font-weight: 700;
+  letter-spacing: var(--track-label);
+  pointer-events: none;
+}

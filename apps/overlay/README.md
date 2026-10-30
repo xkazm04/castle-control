@@ -23,3 +23,7 @@ connects only to `/push/beacons?visual_id=<slug>` and consumes the approved lazy
 contract parser. Asset URLs name the visual, verified package hash and a declared
 local path. All pages, assets and push responses receive the host CSP/security
 headers. The static owner-attended spike plate at `/` remains separate.
+
+The corner SIMULATED badge marks a simulated burst or preview, driven by
+`BeaconsRenderSnapshot.simulated`. It survives package rebuilds and hides when
+the next accepted snapshot is live; rejected snapshots leave its state unchanged.

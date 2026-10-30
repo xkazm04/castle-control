@@ -60,6 +60,10 @@ test('overlay-simulated-connected', async ({ page }) => {
   const before = overlay.pushes();
   await page.goto(`${overlay.url}/beacons/${visualId}`);
   await expect(page.locator('#scene')).toContainText('SIMULATED');
+  const badge = page.locator('[data-simulated-badge]');
+  await expect(badge).toBeVisible();
+  await expect(badge).toHaveText('SIMULATED');
+  await expect(page.locator('#scene')).toHaveAttribute('data-simulated', 'true');
   await expect(page.locator('#scene')).toHaveAttribute('data-intensity', '0.75');
   expect(overlay.pushes() - before, 'Walked simulated SSE connections').toBeGreaterThan(0);
   // OBS composites this canvas over a scene. Only this test permits transparency;
@@ -67,5 +71,6 @@ test('overlay-simulated-connected', async ({ page }) => {
   await auditStyles(page, [
     { name: 'overlay canvas', selector: '#scene' },
     { name: 'simulated rendered layer', selector: '#scene > div' },
+    { name: 'simulated provenance badge', selector: '[data-simulated-badge]' },
   ], { canvas: 'obs-transparent' });
 });
