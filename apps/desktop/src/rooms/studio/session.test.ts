@@ -23,8 +23,8 @@ test('all map sizes preserve sample records, grow deterministically and repair a
 
 test('banner inspection selects a real tile of that house without claiming territory', () => {
   const state = createStudioSession();
-  for (const [house, id] of [['House Quill', 'A1'], ['House Tallow', 'F1'],
-    ['House Sable', 'D4'], ['unclaimed', 'E1']] as const) {
+  for (const [house, id] of [['quill', 'A1'], ['tallow', 'F1'],
+    ['sable', 'D4'], ['', 'E1']] as const) {
     expect(updateStudioSession(state, 'banner', house).selected).toBe(id);
   }
   expect(updateStudioSession(state, 'banner', 'missing')).toBe(state);

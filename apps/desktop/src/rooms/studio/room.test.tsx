@@ -75,7 +75,11 @@ test('C keeps ink text large, fits all six rows and delegates locked/current car
   expect(field).toMatch(/\.cc-hex-id\s*\{[^}]*font:\s*800 clamp\(var\(--text-wordmark\)/);
   expect(plate).toMatch(/\[data-band="hero"\] \.cc-plate-title\s*\{[^}]*font-size:\s*var\(--text-wordmark\)/);
   expect(field).toContain('container-type: size');
-  expect(field).toContain('/ 16.46'); expect(field).toContain('/ 9.52');
+  expect(field).toContain('var(--board-w)'); expect(field).toContain('var(--board-h)');
+  expect(field).toContain('var(--x)'); expect(field).toContain('var(--y)');
+  expect(field).not.toMatch(/16\.46|9\.52|9\.5|data-row-offset/);
+  expect(css).not.toContain('data-house="House');
+  expect(renderToStaticMarkup(<Room snapshot={{ mode: 'fixture', phase: 'ready' }} />)).toContain('--board-w:9.5;--board-h:9.5');
   expect(field).toContain('var(--space-4) var(--space-4) 0 var(--key)');
   expect(css + field).not.toMatch(/#[\da-f]{3,8}\b|\brgba?\(|\bhsla?\(|\b\d+(?:\.\d+)?px\b/i);
   expect(css).toContain('--house-shadow: var(--hair)');

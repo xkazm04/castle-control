@@ -1,8 +1,8 @@
 /** Copy for the selected Map Room C body; illustrative data never grants authority. */
 export const studioCopy = {
   work: 'Map Room work',
-  board_label: (columns: number, rows: number) => `Illustrative ${columns} by ${rows} war table`,
-  board_title: (columns: number, rows: number) => `The war table · ${columns} × ${rows} hexes`,
+  board_label: (columns: number, rows: number, title: string) => `Illustrative ${columns} by ${rows} · ${title}`,
+  board_title: (columns: number, rows: number, title: string) => `${title} · ${columns} × ${rows} hexes`,
   board_gloss: 'Illustrative territory · no live turn',
   tiles_label: (count: number) => `Inspect the ${count} sample tiles`,
   unclaimed: 'Unclaimed', free: 'Free',

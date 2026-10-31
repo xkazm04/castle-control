@@ -2,41 +2,46 @@ import { FieldGroup, InkButton, Plate, PlateBody, SectionHeading } from '@castle
 import type { CSSProperties } from 'react';
 import { art, styles } from '../../demo/model.js';
 import { studioCopy as copy } from '../../studio-copy.js';
-import { fixtureHouses } from './fixture.js';
-import type { HexTile } from './fixture.js';
-import { mapAnchors, mapColours, mapSizes } from './session.js';
+import { STUDIO_SAMPLE_BOARD } from './fixture.js';
+import { boardGeometry } from './board.js';
+import type { StudioBoard } from './board.js';
+import { boardForSize, mapAnchors, mapColours, mapSizes } from './session.js';
 import type { SessionField, StudioSession } from './session.js';
 import './design.css';
 
-export function BannerInspector({ tiles, selected, on_select }: {
-  tiles: readonly HexTile[]; selected: string; on_select: (house: string) => void;
+export function BannerInspector({ board = STUDIO_SAMPLE_BOARD, selected, on_select }: {
+  board?: StudioBoard; selected: string; on_select: (side: string) => void;
 }) {
-  const current = tiles.find(tile => tile.id === selected);
+  const geometry = boardGeometry(board);
+  const current = geometry.tiles.find(tile => tile.id === selected);
+  const banners = [...geometry.sides, { id: '', label: copy.unclaimed, count: geometry.unclaimed }];
   return <section className="studio-banners" aria-label={copy.banners}>
     <SectionHeading variant="inline" title={copy.banners} />
     <div role="group" aria-label={copy.banner_choices}>
-      {[...fixtureHouses, 'unclaimed'].map(house => <InkButton key={house} size="small"
-        aria-label={copy.inspect_banner(house)} aria-pressed={!!current && (current.owner ?? 'unclaimed') === house}
-        disabled={!tiles.some(tile => (tile.owner ?? 'unclaimed') === house)} onClick={() => on_select(house)}>
-        {house === 'unclaimed' ? copy.unclaimed : house}
+      {banners.map(side => <InkButton key={side.id} size="small"
+        aria-label={copy.inspect_banner(side.id ? side.label : 'unclaimed')} aria-pressed={!!current && (current.side?.id ?? '') === side.id}
+        disabled={side.count === 0} onClick={() => on_select(side.id)}>
+        {side.label}
       </InkButton>)}
     </div>
     <p className="cc-side-fine">{copy.banner_hint}</p>
   </section>;
 }
 
-export function StudioDesignControls({ session, on_change }: {
-  session: StudioSession; on_change: (field: SessionField, value?: string) => void;
+export function StudioDesignControls({ session, on_change, board }: {
+  session: StudioSession; on_change: (field: SessionField, value?: string) => void; board?: StudioBoard;
 }) {
   const { design } = session;
+  const geometry = boardGeometry(board ?? boardForSize(design.size));
   return <Plate className="studio-design" border_ink="rule" aria-label={copy.design}>
     <PlateBody>
       <SectionHeading variant="ruled" title={copy.design} />
       <p className="cc-side-fine" role="status" aria-label={copy.design_status}>{copy.session_only}</p>
       <div className="studio-design-fields">
         <FieldGroup control_id="studio-map-size" label={copy.size} variant="select">
-          <select id="studio-map-size" value={design.size} onChange={event => on_change('size', event.currentTarget.value)}>
-            {mapSizes.map(item => <option key={item.id} value={item.id}>{item.label}</option>)}
+          <select id="studio-map-size" value={design.size} disabled={!!board} onChange={event => on_change('size', event.currentTarget.value)}>
+            {board ? <option value={design.size}>{geometry.columns} × {geometry.rows}</option>
+              : mapSizes.map(item => <option key={item.id} value={item.id}>{item.label}</option>)}
           </select>
         </FieldGroup>
         <FieldGroup control_id="studio-map-anchor" label={copy.anchor} variant="select">
@@ -61,7 +66,7 @@ export function StudioDesignControls({ session, on_change }: {
         </FieldGroup>
       </div>
       {session.error && <p id="studio-reveal-error" role="alert">{session.error}</p>}
-      <MapPreview session={session} />
+      <MapPreview session={session} {...(board ? { board } : {})} />
       <div className="studio-design-actions">
         <InkButton size="small" onClick={() => on_change('replay')}>{copy.replay}</InkButton>
         <InkButton size="small" onClick={() => on_change('reset')}>{copy.reset}</InkButton>
@@ -70,9 +75,9 @@ export function StudioDesignControls({ session, on_change }: {
   </Plate>;
 }
 
-export function MapPreview({ session }: { session: StudioSession }) {
+export function MapPreview({ session, board }: { session: StudioSession; board?: StudioBoard }) {
   const { design } = session;
-  const dimensions = mapSizes.find(item => item.id === design.size) ?? mapSizes[1];
+  const dimensions = boardGeometry(board ?? boardForSize(design.size));
   const style: CSSProperties & { '--studio-colour': string; '--studio-reveal': string } = {
     '--studio-colour': `var(--${design.colour})`, '--studio-reveal': `${design.reveal_ms}ms`,
   };

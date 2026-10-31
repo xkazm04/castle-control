@@ -5,7 +5,8 @@ import { expect, test, vi } from 'vitest';
 import { art, styles } from '../../demo/model.js';
 import { BannerInspector, MapPreview, StudioDesignControls } from './design.jsx';
 import { HexTable, TileInspector } from './hex-table.jsx';
-import { createStudioSession, tilesForSize, updateStudioSession } from './session.js';
+import { boardForSize, createStudioSession, tilesForSize, updateStudioSession } from './session.js';
+import { parseStudioBoard } from './board.js';
 import type { SessionField } from './session.js';
 
 type ControlProps = {
@@ -60,24 +61,28 @@ test('every kept style uses its read-only hexmap art and a simulated provenance 
 test('banner controls inspect first territory, disclose no ownership change, and disable missing banners', () => {
   let session = createStudioSession();
   const select = (house: string) => { session = updateStudioSession(session, 'banner', house); };
-  const props = controls(BannerInspector({ tiles: tilesForSize('m'), selected: session.selected, on_select: select }));
+  const props = controls(BannerInspector({ board: boardForSize('m'), selected: session.selected, on_select: select }));
   expect(props).toHaveLength(4);
   const tallow = props.find(control => control['aria-label'] === 'Inspect House Tallow banner');
   tallow?.onClick?.(); expect(session.selected).toBe('F1');
-  const html = renderToStaticMarkup(<BannerInspector tiles={tilesForSize('m')} selected={session.selected} on_select={select} />);
+  const html = renderToStaticMarkup(<BannerInspector board={boardForSize('m')} selected={session.selected} on_select={select} />);
   expect(html).toContain('never claims a tile or joins a side');
   expect(html.match(/aria-pressed="true"/g)).toHaveLength(1);
-  expect(controls(BannerInspector({ tiles: [], selected: 'missing', on_select: select })).every(button => button.disabled)).toBe(true);
+  const empty = parseStudioBoard({ ...boardForSize('m'), tiles: [{ q: 0, r: 0 }] });
+  if (!empty.ok) throw new Error(empty.error.message);
+  const banners = controls(BannerInspector({ board: empty.board, selected: 'missing', on_select: select }));
+  expect(banners.slice(0, 3).every(button => button.disabled)).toBe(true);
+  expect(banners[3]?.disabled).toBe(false);
 });
 
 test('all three map sizes render matching geometry, accessible tile inventory and correct inspector shares', () => {
   for (const size of ['s', 'm', 'l'] as const) {
     const tiles = tilesForSize(size);
-    const markup = renderToStaticMarkup(<HexTable selected="F1" size={size} tiles={tiles} on_select={vi.fn()} />);
+    const markup = renderToStaticMarkup(<HexTable selected="F1" size={size} board={boardForSize(size)} on_select={vi.fn()} />);
     expect(markup.match(/data-hex-tile=/g)).toHaveLength(tiles.length);
     expect(markup).toContain(`Inspect the ${tiles.length} sample tiles`);
     expect(markup.match(/aria-pressed="true"/g)).toHaveLength(1);
-    const inspector = renderToStaticMarkup(<TileInspector selected="F1" tiles={tiles} />);
+    const inspector = renderToStaticMarkup(<TileInspector selected="F1" board={boardForSize(size)} />);
     const share = tiles.filter(tile => tile.owner === 'House Tallow').length;
     expect(inspector).toContain(`${share} of ${tiles.length} tiles`);
   }

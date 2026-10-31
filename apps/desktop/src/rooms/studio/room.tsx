@@ -8,23 +8,24 @@ import { ProposalLayers } from '../visuals/proposal-layers.jsx';
 import { HexTable, TileInspector } from './hex-table.jsx';
 import { TestLadder } from './test-ladder.jsx';
 import { BannerInspector, StudioDesignControls } from './design.jsx';
-import { createStudioSession, tilesForSize, updateStudioSession } from './session.js';
+import { boardForSize, createStudioSession, updateStudioSession } from './session.js';
 import type { SessionField } from './session.js';
+import type { StudioBoard } from './board.js';
 import './room.css';
 import './hex-field.css';
 
-export function StudioWork({ queue, seal_slot }: { queue?: ProposalQueue; seal_slot?: ReactNode }) {
-  const [session, setSession] = useState(createStudioSession);
+export function StudioWork({ queue, seal_slot, board }: { queue?: ProposalQueue; seal_slot?: ReactNode; board?: StudioBoard }) {
+  const [session, setSession] = useState(() => createStudioSession(board));
   const [rung, setRung] = useState(0);
-  const tiles = tilesForSize(session.design.size);
-  const change = (field: SessionField, value?: string) => setSession(state => updateStudioSession(state, field, value));
+  const current_board = board ?? boardForSize(session.design.size);
+  const change = (field: SessionField, value?: string) => setSession(state => updateStudioSession(state, field, value, board));
   return <section className="studio-room cc-herald" aria-label={copy.work}>
-    <HexTable selected={session.selected} on_select={id => change('tile', id)} tiles={tiles} size={session.design.size} />
+    <HexTable selected={session.selected} on_select={id => change('tile', id)} board={current_board} size={session.design.size} />
     <div className="cc-herald-side" role="region" aria-label={copy.side_label} tabIndex={0} aria-describedby="studio-scroll-hint">
       <p id="studio-scroll-hint" className="studio-visually-hidden">{copy.side_hint}</p>
-      <TileInspector selected={session.selected} tiles={tiles} />
-      <BannerInspector selected={session.selected} tiles={tiles} on_select={house => change('banner', house)} />
-      <StudioDesignControls session={session} on_change={change} />
+      <TileInspector selected={session.selected} board={current_board} />
+      <BannerInspector selected={session.selected} board={current_board} on_select={side => change('banner', side)} />
+      <StudioDesignControls session={session} on_change={change} {...(board ? { board } : {})} />
       <TestLadder selected={rung} on_select={setRung} />
       <div className="studio-room-panel-drafts" aria-label={copy.drafts} data-on-air="false">
         <ProposalLayers chamber="studio" {...(queue ? { queue } : {})} />

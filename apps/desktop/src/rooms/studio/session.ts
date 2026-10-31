@@ -1,8 +1,10 @@
 import { styles } from '../../demo/model.js';
 import type { DemoStyle } from '../../demo/model.js';
 import { studioCopy as copy } from '../../studio-copy.js';
-import { fixtureHouses, fixtureTiles } from './fixture.js';
+import { STUDIO_SAMPLE_BOARD, fixtureTiles } from './fixture.js';
 import type { HexTile } from './fixture.js';
+import { boardGeometry, parseStudioBoard } from './board.js';
+import type { StudioBoard } from './board.js';
 
 export const mapSizes = [
   { id: 's', label: 'S · 6 × 4', columns: 6, rows: 4 },
@@ -29,29 +31,45 @@ export type StudioSession = Readonly<{
 export type SessionField = keyof MapDesign | 'tile' | 'banner' | 'reset' | 'replay';
 
 /** Local simulated design only. There is no persistence, RPC or stage transition. */
-export function createStudioSession(): StudioSession {
+export function createStudioSession(board: StudioBoard = STUDIO_SAMPLE_BOARD): StudioSession {
+  const first = boardGeometry(board).tiles[0];
+  if (!first) throw new Error('Parsed studio board has no tiles');
   return { design: { size: 'm', anchor: 'centre', colour: 'gules', art_style: 'heraldic', reveal_ms: 300 },
-    selected: 'A1', reveal_input: '300', reveal_run: 0 };
+    selected: first.id, reveal_input: '300', reveal_run: 0 };
 }
 
+function sizedBoard(size: MapSize): StudioBoard {
+  if (size === 'm') return STUDIO_SAMPLE_BOARD;
+  const dimensions = mapSizes.find(item => item.id === size) ?? mapSizes[1];
+  const sample = boardGeometry(STUDIO_SAMPLE_BOARD);
+  const tiles = Array.from({ length: dimensions.columns * dimensions.rows }, (_, index) => {
+    const column = index % dimensions.columns; const row = Math.floor(index / dimensions.columns);
+    const existing = sample.tiles.find(tile => tile.column === column && tile.row === row);
+    const side = existing ? existing.side : STUDIO_SAMPLE_BOARD.sides[(column + row) % 4];
+    return { q: column - Math.floor(row / 2), r: row, ...(side ? { side: side.id } : {}) };
+  });
+  const result = parseStudioBoard({ title: STUDIO_SAMPLE_BOARD.title, sides: STUDIO_SAMPLE_BOARD.sides, tiles });
+  if (!result.ok) throw new Error(result.error.message);
+  return result.board;
+}
+
+const sizeBoards = { s: sizedBoard('s'), m: STUDIO_SAMPLE_BOARD, l: sizedBoard('l') };
+export function boardForSize(size: MapSize): StudioBoard { return sizeBoards[size]; }
+
+/** Compatibility inventory only; rendering and selection consume the board. */
 export function tilesForSize(size: MapSize): readonly HexTile[] {
   if (size === 'm') return fixtureTiles;
-  const dimensions = mapSizes.find(item => item.id === size) ?? mapSizes[1];
-  return Array.from({ length: dimensions.columns * dimensions.rows }, (_, index) => {
-    const column = index % dimensions.columns; const row = Math.floor(index / dimensions.columns);
-    const existing = fixtureTiles.find(tile => tile.column === column && tile.row === row);
-    if (existing) return existing;
-    const owner = fixtureHouses[(column + row) % 4];
-    return { id: `${String.fromCharCode(65 + column)}${row + 1}`, column, row, ...(owner ? { owner } : {}) };
-  });
+  return Object.freeze(boardGeometry(boardForSize(size)).tiles.map(tile => Object.freeze({
+    id: tile.id, column: tile.column, row: tile.row, ...(tile.side ? { owner: tile.side.label } : {}),
+  })));
 }
 
-export function updateStudioSession(state: StudioSession, field: SessionField, value = ''): StudioSession {
-  if (field === 'reset') return createStudioSession();
+export function updateStudioSession(state: StudioSession, field: SessionField, value = '', board?: StudioBoard): StudioSession {
+  if (field === 'reset') return createStudioSession(board);
   if (field === 'replay') return { ...state, reveal_run: state.reveal_run + 1 };
-  const tiles = tilesForSize(state.design.size);
+  const tiles = boardGeometry(board ?? boardForSize(state.design.size)).tiles;
   if (field === 'tile' || field === 'banner') {
-    const selected = tiles.find(tile => field === 'tile' ? tile.id === value : (tile.owner ?? 'unclaimed') === value);
+    const selected = tiles.find(tile => field === 'tile' ? tile.id === value : (tile.side?.id ?? '') === value);
     return selected ? { ...state, selected: selected.id } : state;
   }
   if (field === 'reveal_ms') {
@@ -63,9 +81,10 @@ export function updateStudioSession(state: StudioSession, field: SessionField, v
       reveal_input: value, reveal_run: state.reveal_run };
   }
   if (field === 'size') {
+    if (board) return state; // A supplied board owns its dimensions; the fixture size picker cannot replace it.
     const choice = mapSizes.find(item => item.id === value);
     if (!choice) return state;
-    const nextTiles = tilesForSize(choice.id);
+    const nextTiles = boardGeometry(boardForSize(choice.id)).tiles;
     return { ...state, design: { ...state.design, size: choice.id },
       selected: nextTiles.some(tile => tile.id === state.selected) ? state.selected : 'A1' };
   }

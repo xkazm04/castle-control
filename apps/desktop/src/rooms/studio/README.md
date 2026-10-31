@@ -15,7 +15,7 @@ was already present. The shared kit is the merged `a9aec46` delivery.
 | cc-pennants / pennant | List with Pennant standing; house stripe, 22px count and word |
 | cc-hero / band / body | Plate, PlateBand hero and PlateBody with 14-token padding |
 | cc-hero-figure | HeroReadout display (54px), local swatch and Column/Row/Share |
-| cc-hero-kicker / now / house / note / hint | Room-local copy and typography; data-house drives band, shadow, swatch and ghost |
+| cc-hero-kicker / now / house / note / hint | Room-local copy and typography; parsed side data-ink drives band, shadow, swatch and ghost |
 | cc-side-head | SectionHeading ruled with current-stage count |
 | cc-tablets / tablet | Local three-column group and HeraldicCard tablet; current and inspected states remain separate |
 | cc-tablet-no / state | Local number, flag/lock SVG and state word |
@@ -143,3 +143,75 @@ typecheck/lint pass via `node ../../scripts/package-gate.mjs <mode>` from each
 package (the recursive pnpm lifecycle launcher encountered spawn EPERM before
 running them). Lint covers boundaries, hygiene, the 400-line cap and secrets.
 Renderer output proofs and their limits are documented in viewer/README.md.
+
+## maproom-A: one board-spec door (2026-10-31)
+
+Decision: `board.ts` owns the desktop-room-local display parameter, not a new
+wire schema. `parseStudioBoard(unknown)` returns `{ ok: true, board }` or
+`{ ok: false, error: { code: 'invalid_board', message } }`, never a partial
+board. It snapshots and freezes `{ title, sides: [{ id, label, short, ink }],
+tiles: [{ q, r, side? }] }`, including every array and record. Unknown fields
+at all three levels, duplicate side ids/locations, undeclared sides, blank
+text, non-integer coordinates, empty/sparse tile arrays and over 200 tiles
+are refused. Absent side keys stay omitted. The closed inks are gules, or,
+azure and key; arbitrary CSS and colour values cannot cross the door.
+
+Tile fields deliberately mirror the renderer's axial HexTile minus image_path.
+No renderer import, dependency, contract identifier, host route or schema change
+is involved. A future shell adapter can consume q/r/side without remodelling.
+`boardGeometry` is a pure derivation of pointy-top centres using q+r/2 and
+1.5*r, normalised to full-hex bounds. X uses hex-width units; Y uses radii.
+It also supplies offset display columns/rows, spreadsheet column labels,
+display ids, side counts and unclaimed count. Display ids are labels only;
+neither coordinates nor short side labels are parsed out of their text.
+
+The sample is parsed once at module load as `STUDIO_SAMPLE_BOARD`. All original
+54 territories and A1–I6 ids remain; counts are 14/14/15/11. `fixtureTiles`
+and `tilesForSize` remain read-only compatibility inventories derived from
+boards, not a second rendering model. L4's S/M/L boards now pass the same
+parser, and session selection, banner inspection, preview dimensions and the
+inspector consume those boards. HexTable, TileInspector and StudioWork accept
+another parsed board; its dimensions/labels/counts replace the sample's. The
+fixture-size picker is disabled for an explicitly supplied board, whose shape
+it does not own; other local preview controls still work. Reset and banner
+selection use that board, and selection never mutates its ownership.
+
+The CSS receives numeric `--board-w`/`--board-h`, fit bounds and each centre's
+`--x`/`--y`; no odd-row placement selector or fixed grid dimensions remain.
+The sample's fit is preserved exactly by deriving a conservative width rounded
+up to hundredths of a radius and a height with 0.02-radius breathing room.
+Together with the unchanged hex-width ratio this reproduces the prior sample
+rectangles and container fit. A 3-column/2-row board spans 3.5 hex-widths by
+3.5 radii, as corrected by the card critic. Colours use four data-ink token
+selectors, never house-name selectors; explicit data-unclaimed handles paper-2
+without reserving any side id or label. Copy derives its title, dimensions and
+tile count from the supplied board. WP 4.0 wording remains the owner's call.
+
+Evidence: board.test.ts first failed because board.ts was absent. Its tests
+cover the refusal matrix, deep freeze/copy, exact independent ownership parity,
+sample and corrected 3×2 bounds, signed sparse coordinates, all inks and original
+sample rectangle parity with width/height-limited containers. board-view.test.tsx
+covers a two-side 4×3 board, exact pennant counts, short N/S labels, azure tiles/
+pennant/inspector, activation of all twelve native buttons, non-mutation,
+StudioWork/custom-board session controls, no fetch, D4 coordinates and AB1's
+multi-letter column. Existing fixture, proposal, lazy-load, no-network and
+keyboard tests remain; shell/room.tsx and its 400-line test are untouched.
+
+Validation for this delivery: desktop typecheck and lint pass (152 source files;
+the lint's boundary/hygiene/file-cap inventory is 751 and secret scan 1021).
+The card's full desktop test command passes 385 tests in 50 files. The final
+narrowed studio plus untouched shell/room test run passes 47 tests in eight
+files. The desktop production build passes token parity (122/122) and the
+all-route initial bundle budget (364457/393216 uncompressed bytes).
+
+The required `pnpm gate` was attempted with dependency verification disabled
+for the shared node_modules junction; nothing was installed. It passes version
+drift, all 24 tooling tests, workspace inventories and the fetch step, then
+stops in the contract exporter at `spawnSync cargo EPERM` (codegen.mjs:26).
+The exporter, check script and gate script are byte-unchanged from base
+`6cc8455` according to git diff. This is an execution permission failure, not a
+contract-drift result; the later Rust format/Clippy/tests and recursive workspace
+gates did not run. Full-gate verification remains for the Director. No second
+tree, alternative spawn path, install, gate-tooling change or git write was used
+to bypass that refusal. Screenshot/browser verification was not run; sample
+placement fidelity is established numerically against the original C geometry.

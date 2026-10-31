@@ -5,10 +5,11 @@
 }
 :where(.studio-room) :is(p, h2, h3, ul) { margin: 0; }
 .studio-room [data-house] { --house: var(--paper-2); --house-shadow: var(--house); --house-press: var(--press); }
-.studio-room [data-house="House Quill"] { --house: var(--gules); }
-.studio-room [data-house="House Tallow"] { --house: var(--or); }
-.studio-room [data-house="House Sable"] { --house: var(--azure); }
-.studio-room [data-house="unclaimed"] { --house-shadow: var(--hair); --house-press: var(--ink); }
+.studio-room [data-ink="gules"] { --house: var(--gules); }
+.studio-room [data-ink="or"] { --house: var(--or); }
+.studio-room [data-ink="azure"] { --house: var(--azure); }
+.studio-room [data-ink="key"] { --house: var(--key); }
+.studio-room [data-unclaimed="true"] { --house-shadow: var(--hair); --house-press: var(--ink); }
 .studio-room .cc-herald-field {
   display: flex; flex-direction: column; gap: var(--space-12); min-width: 0; min-height: 0;
   padding: var(--space-16) var(--space-24) var(--space-14);

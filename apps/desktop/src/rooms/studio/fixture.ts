@@ -1,9 +1,6 @@
-/** Illustrative sample only. The reference sample.js supplies a 9×6 board and
- * these house names, but no tiles (keep/NOTES.md). These invented territories
- * are local design data, not votes, identities or a Twitch Extension state. */
-export const fixtureHouses = ['House Quill', 'House Tallow', 'House Sable'] as const;
-export type House = typeof fixtureHouses[number];
-export type HexTile = { id: string; column: number; row: number; owner?: House };
+import { boardGeometry, parseStudioBoard } from './board.js';
+
+/** Invented sample territory, not votes, identities or Twitch Extension state. */
 const territoryRows = [
   'QQQQ.TTTT',
   'QQQQ.TTTT',
@@ -12,7 +9,24 @@ const territoryRows = [
   'Q.SSSSS.T',
   '.SSSSSSS.',
 ] as const;
-const owners: Readonly<Record<string, House>> = { Q: 'House Quill', T: 'House Tallow', S: 'House Sable' };
-export const fixtureTiles: readonly HexTile[] = Object.freeze(territoryRows.flatMap((row, rowIndex) =>
-  Array.from(row, (mark, column) => Object.freeze({ id: `${String.fromCharCode(65 + column)}${rowIndex + 1}`,
-    column, row: rowIndex, ...(owners[mark] ? { owner: owners[mark] } : {}) }))));
+const sides = [
+  { id: 'quill', label: 'House Quill', short: 'Quill', ink: 'gules' },
+  { id: 'tallow', label: 'House Tallow', short: 'Tallow', ink: 'or' },
+  { id: 'sable', label: 'House Sable', short: 'Sable', ink: 'azure' },
+] as const;
+const owners: Readonly<Record<string, string>> = { Q: 'quill', T: 'tallow', S: 'sable' };
+const sample = parseStudioBoard({ title: 'The war table', sides,
+  tiles: territoryRows.flatMap((row, r) => Array.from(row, (mark, column) => ({
+    q: column - Math.floor(r / 2), r, ...(owners[mark] ? { side: owners[mark] } : {}),
+  }))),
+});
+if (!sample.ok) throw new Error(sample.error.message);
+export const STUDIO_SAMPLE_BOARD = sample.board;
+
+/** Compatibility projections for the local journey's inventory checks.
+ * The parsed axial board is the source of truth, including ownership labels. */
+export type House = string;
+export type HexTile = Readonly<{ id: string; column: number; row: number; owner?: House }>;
+export const fixtureHouses = Object.freeze(STUDIO_SAMPLE_BOARD.sides.map(side => side.label));
+export const fixtureTiles: readonly HexTile[] = Object.freeze(boardGeometry(STUDIO_SAMPLE_BOARD).tiles.map(tile =>
+  Object.freeze({ id: tile.id, column: tile.column, row: tile.row, ...(tile.side ? { owner: tile.side.label } : {}) })));
