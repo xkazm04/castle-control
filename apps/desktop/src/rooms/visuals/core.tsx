@@ -41,7 +41,7 @@ export function ConnectedBeacons({ port, seal_slot }: { port: CoreBeaconsPort; s
       <BeaconBench name={visual?.name ?? copy.visuals} notice={state.notice}>
         <BeaconBay title={copy.driven_by} gloss={copy.core_input}>
           <h2>Beacons · core configurations</h2>
-          <p>Live contribution totals and OBS delivery are unavailable in this connection. Money changes visuals only.</p>
+          <p>The copied browser-source URL is a transparent OBS browser source that scales to fit the source width and height. A visual naming an unverified design shows nothing. Money changes visuals only.</p>
           <InkButton size="wrap" disabled={state.busy} onClick={() => {
             void port.load(); void port.loadContributions({ limit: 100 });
           }}>Refresh Beacons</InkButton>

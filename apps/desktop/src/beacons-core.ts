@@ -156,7 +156,7 @@ export function createCoreBeaconsPort(launch: CoreLaunch, transport?: BeaconsNet
     async sourceUrl(visual_id: VisualId) {
       return perform(async () => {
         const result = await call((await contracts()).beaconsSourceUrl, { visual_id });
-        publish({ notice: 'Browser-source URL received from the core. Rendering remains unavailable in this connection.' });
+        publish({ notice: 'Browser-source URL received from the core: a transparent OBS browser source that scales to fit the source width and height. A visual naming an unverified design shows nothing.' });
         return result;
       });
     },

@@ -182,6 +182,10 @@ test('sourceUrl validates its round trip and never exposes a URL in read snapsho
   expect(h.rpc).toHaveBeenCalledExactlyOnceWith(launch.endpoint, launch.session_token, 'beacons.source.url', { visual_id });
   expect(h.port.getSnapshot().phase).toBe('ready');
   expect(JSON.stringify(h.port.getSnapshot())).not.toContain(result.url);
+  expect(h.port.getSnapshot().notice).not.toContain('Rendering remains unavailable');
+  expect(h.port.getSnapshot().notice).toContain('a transparent OBS browser source');
+  expect(h.port.getSnapshot().notice).toContain('scales to fit the source width and height');
+  expect(h.port.getSnapshot().notice).toContain('A visual naming an unverified design shows nothing.');
   h.rpc.mockClear();
   await h.port.sourceUrl('Bad Id' as VisualId);
   expect(h.rpc).not.toHaveBeenCalled();
