@@ -1,10 +1,10 @@
 /** Copy for the selected Map Room C body; illustrative data never grants authority. */
 export const studioCopy = {
   work: 'Map Room work',
-  board_label: 'Illustrative 9 by 6 war table',
-  board_title: 'The war table · 9 × 6 hexes',
+  board_label: (columns: number, rows: number) => `Illustrative ${columns} by ${rows} war table`,
+  board_title: (columns: number, rows: number) => `The war table · ${columns} × ${rows} hexes`,
   board_gloss: 'Illustrative territory · no live turn',
-  tiles_label: 'Inspect the 54 sample tiles',
+  tiles_label: (count: number) => `Inspect the ${count} sample tiles`,
   unclaimed: 'Unclaimed', free: 'Free',
   tile_label: (id: string, house: string) => `Tile ${id}, ${house}`,
   tile_title: (id: string) => `Tile ${id}`,
@@ -30,6 +30,19 @@ export const studioCopy = {
   pending: 'WP 4.0 is pending. The room makes no network call and cannot advance the test stage.',
   bare: 'The map table is bare',
   unconfigured: 'No live studio is connected. Twitch policy clearance is pending; no Extension is available.',
+  no_tile: 'No tile selected', no_tile_hint: 'Choose a hex on the current map to inspect its sample territory.',
+  banners: 'Inspect banners', banner_choices: 'Sample house banners',
+  inspect_banner: (house: string) => `Inspect ${house} banner`,
+  banner_hint: 'A banner inspects its first visible territory. It never claims a tile or joins a side.',
+  design: 'Local map design', design_status: 'Map design status',
+  session_only: 'Session only · resets when you leave this room or reload. No design is saved or sent to a channel.',
+  size: 'Map size', anchor: 'Map anchor', colour: 'Preset colour', art_style: 'Art style',
+  colour_hint: 'Preview frame ink. Sample territories keep their house colours.',
+  reveal: 'Reveal timing (ms)', reveal_hint: '0–60000 ms. Reduced motion shows the final art immediately.',
+  reveal_error: 'Enter a whole number from 0 to 60000 ms. The preview keeps the last valid timing.',
+  replay: 'Replay local reveal', reset: 'Reset local design', preview: 'Session-only map preview',
+  art_alt: 'Illustrative hex-map art; the inspectable territory map is alongside',
+  simulated_art: 'SIMULATED · SAMPLE ART · AI-generated',
 } as const;
 
 export const studioStages = [

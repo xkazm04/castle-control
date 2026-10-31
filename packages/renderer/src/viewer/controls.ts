@@ -1,4 +1,5 @@
 import { integer, list, record, text } from '../templates/validation.ts';
+import { escapeMarkup, outputDimensions } from './markup.ts';
 
 /** Local UI intent only: no transport identifier, identity, tally or game outcome. */
 export type ViewerAction =
@@ -90,4 +91,35 @@ export function reduceViewerControls(state: ViewerControlState, value: unknown):
       selection = {};
   }
   return Object.freeze({ controls: state.controls, selection: Object.freeze(selection) });
+}
+
+/**
+ * Static markup for the reviewed host to bind to the local reducer. This is not
+ * an Extension connection or a submission; all three controls remain free.
+ * A fixed-size transparent viewport scrolls its contents at narrow panel widths.
+ */
+export function renderViewerPanel(state: ViewerControlState, options: unknown = {}): string {
+  const { width, height } = outputDimensions(options);
+  // Revalidate the host's choices at the markup door, including unknown/payment fields.
+  const { controls } = createViewerControls(state.controls);
+  const button = (kind: string, label: string, selected: boolean, data: string) =>
+    `<button type="button" data-viewer-choice="${kind}" ${data} aria-pressed="${selected}" `
+    + `style="font:inherit;color:var(--${selected ? 'paper' : 'ink'});background:var(--${selected ? 'ink' : 'paper'});`
+    + 'border:var(--rule-thin) solid var(--ink);padding:var(--space-8);overflow-wrap:anywhere">'
+    + `${escapeMarkup(label)}${selected ? ' · ✓ Selected' : ''}</button>`;
+  const votes = controls.options.map((label, index) => button('vote', label,
+    state.selection.option_index === index, `data-option-index="${index}"`)).join('');
+  const tiles = controls.tiles.map(tile => button('pick_tile', `Tile ${tile.q},${tile.r}`,
+    state.selection.tile?.q === tile.q && state.selection.tile.r === tile.r,
+    `data-q="${tile.q}" data-r="${tile.r}"`)).join('');
+  const sides = controls.sides.map(side => button('join_side', side, state.selection.side === side,
+    `data-side="${escapeMarkup(side)}"`)).join('');
+  const group = (label: string, content: string) => content ? `<fieldset style="min-width:0;border:0;padding:var(--space-8);margin:0">`
+    + `<legend>${label}</legend><div style="display:flex;flex-wrap:wrap;gap:var(--space-8)">${content}</div></fieldset>` : '';
+  return `<section data-viewer-panel="simulated" data-output-width="${width}" data-output-height="${height}" `
+    + `aria-label="SIMULATED viewer controls" style="width:${width}px;height:${height}px;max-width:100%;`
+    + 'box-sizing:border-box;overflow:auto;background:transparent;font:var(--text-body)/1.4 var(--font-ui);color:var(--ink)">'
+    + '<p>SIMULATED · local selections only; nothing is sent to Twitch.</p>'
+    + (votes || tiles || sides ? group('Vote', votes) + group('Pick a tile', tiles) + group('Join a side', sides)
+      : '<p role="status">No viewer controls configured</p>') + '</section>';
 }

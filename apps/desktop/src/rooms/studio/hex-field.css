@@ -3,7 +3,10 @@
 .studio-room .cc-hexfield-plate {
   --s: min(calc((100cqw - var(--space-6)) / 16.46), calc((100cqh - var(--space-6)) / 9.52));
   --hw: calc(var(--s) * 1.7320508);
-  position: absolute; inset: 0; margin: auto; width: calc(var(--hw) * 9.5); height: calc(var(--s) * 9.5);
+  position: absolute; inset: 0; margin: auto; width: calc(var(--hw) * var(--columns, 9.5)); height: calc(var(--s) * var(--rows, 9.5));
+}
+.studio-room .cc-hexfield[data-map-size]:not([data-map-size="m"]) .cc-hexfield-plate {
+  --s: min(calc((100cqw - var(--space-6)) / var(--field-width)), calc((100cqh - var(--space-6)) / var(--field-height)));
 }
 .studio-room .cc-hex {
   position: absolute; left: calc((var(--c) + var(--o, 0)) * var(--hw)); top: calc(var(--r) * var(--s) * 1.5);

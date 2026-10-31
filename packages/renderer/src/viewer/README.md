@@ -70,3 +70,43 @@ tests passed 91 cases in 17 files; the final narrowed viewer/draw/template/stati
 and overlay run passed 49 cases in 11 files. `git diff --check` passed. Overlay
 entry, implementation, bindings, build configuration and served bundle are
 unchanged from HEAD; the existing bundle remains 54,683 bytes with no growth.
+
+## WP L4 local output proofs (2026-10-31)
+
+`renderWarTableSvg(data, options?)` and `layoutWarTableOutput(data, options?)`
+live in templates/war-table.ts. Options are renderer-local: width/height default
+to 318, anchor defaults to centre, and an optional axial selected tile gets a
+stronger outline. Output fits every polygon and piece centre inside a 12-unit
+safe margin. The original parseWarTable, buildWarTableScene and template data
+remain unchanged. No design or RPC identifiers were added.
+
+`renderViewerPanel(state, options?)`, exported by controls.ts, returns static
+HTML with free vote, tile and side buttons. Native buttons expose local intent
+through data attributes for a future reviewed host to bind to the existing
+reducer; this renderer does not install handlers or send submissions. Selected
+choices carry aria-pressed, inverted token colours and a visible Selected mark.
+Empty choices show No viewer controls configured. Width/height default to 318;
+the transparent viewport scrolls internally and wraps long labels. Hosts supply
+the existing token CSS. Labels and attributes are escaped as literal text.
+
+The new output APIs validate viewport dimensions (whole numbers, 32–16384) and
+reject unknown options. They neither render executable data nor load images,
+remote scripts or other resources. The static safety test remains unchanged and
+scans every renderer source for eval, Function construction and remote scripts.
+Existing policy, config and contribution/payment guards remain unchanged.
+
+Red first: output tests failed because these APIs were absent; a separate
+selected-button assertion failed on paper background before the inverted ink
+and visible mark were added. Markup tests assert transparent roots and exact
+318 × 318, 1920 × 1080 and 1280 × 720 output dimensions. War-table tests also
+prove all geometry fits these viewports, all corner/centre anchors, selected
+tile feedback, escaped labels, invalid-option rejection and stable defaults.
+These are string/geometry proofs, not browser screenshots or Hosted Test.
+
+Run focused tests from the repo root:
+`pnpm --config.verify-deps-before-run=false --filter @castle-control/renderer
+exec vitest run --pool=threads src/templates/war-table.test.ts src/viewer
+src/static-safety.test.ts` (21 cases, six files). Run the normal renderer
+typecheck and lint runners as well. No renderer index, scene or overlay file,
+dependency, manifest or lockfile is modified. Desktop's local art preview stays
+separate, as explicitly required by the Director's scope revision.

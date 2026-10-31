@@ -94,3 +94,52 @@ C checks first failed against the old room. Lint proves boundaries, hygiene,
 400-line cap and secrets; shell/room.test.tsx remains at 400 lines. No install,
 network, Vite, Chrome, build, e2e or git write was run. Director screenshot,
 budget, full-gate and browser verification remains required after integration.
+
+## WP L4 local journey (2026-10-31)
+
+The Director's revised scope keeps desktop independent of the renderer package.
+This room imports the six kept styles and `art(style, 'hexmap')` from the demo
+model read-only. No dependency, contract, shared kit, scene or overlay changes.
+
+The default M board keeps all 54 original records, territory counts and geometry.
+S is 6 × 4 (24 tiles); L is 12 × 8 (96 tiles), with deterministic additional
+sample territories. Each size fits its container using numeric CSS geometry.
+Hexes remain native keyboard buttons. Banner buttons inspect the first visible
+tile of that house; they never join a side, claim territory or change outcomes.
+Shrinking the map retains a valid selection or returns to A1; an unavailable
+tile now shows an honest empty inspector instead of silently displaying A1.
+
+The kit FieldGroups expose size, anchor, preset colour, all six art styles and
+reveal timing. Native selects and number fields support keyboard editing. The
+preview positions and scales the kept hex-map art, applies the chosen token ink
+to its frame, and reveals it over the chosen duration. The territorial board
+keeps house colours. Invalid timing (blank, fractional, negative or over 60000)
+shows an accessible error and keeps the last valid preview. Replay restarts the
+local animation; reduced motion shows its final state immediately. Reset restores
+the default design. SIMULATED · SAMPLE ART · AI-generated remains visible.
+
+All these settings are React session state: leaving the room or reloading resets
+them. `maproom.design.upsert` still takes `Pending = never`; there are no typed
+payload fields for `size`, `anchor`, `colour`, `art_style` or `reveal_ms`. No RPC,
+storage, channel transition, Hosted Test, paid call or external service is used.
+Sand table remains current; Muster and Proclaimed remain requirement inspectors.
+Core mode keeps its original empty state and exposes no sample controls.
+
+Red-first evidence: journey.test.tsx initially failed on missing Map size and
+the invalid-tile fallback; session.test.ts initially could not load the absent
+session module. The new Playwright journey was written before implementation;
+its expected-red base assertions are missing banner controls, map fields,
+24/96-tile sizes, preview attributes/art, invalid-timing error, replay and reset.
+Existing hex and test-ladder keyboard assertions remain. The Director executes
+`pnpm --config.verify-deps-before-run=false exec playwright test -c
+e2e/playwright.config.ts e2e/journey-maproom.spec.ts` at both configured viewport
+sizes. The spec reuses network/style/field audits without changing those helpers.
+Only Playwright discovery and TypeScript compilation were run in this builder.
+
+Focused validation: studio plus shell/room tests pass 38 cases across six files.
+New design tests activate native field callbacks and banner controls, render all
+six kept styles, verify every map size and prove no fetch. Desktop and renderer
+typecheck/lint pass via `node ../../scripts/package-gate.mjs <mode>` from each
+package (the recursive pnpm lifecycle launcher encountered spawn EPERM before
+running them). Lint covers boundaries, hygiene, the 400-line cap and secrets.
+Renderer output proofs and their limits are documented in viewer/README.md.

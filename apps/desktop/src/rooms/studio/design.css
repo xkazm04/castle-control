@@ -1,0 +1,21 @@
+.studio-room .studio-design, .studio-room .studio-banners { flex: none; }
+.studio-room .studio-design .cc-plate-body { display: grid; gap: var(--space-12); }
+.studio-room .studio-design-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-12); }
+.studio-room .studio-design-fields .cc-field:last-child { grid-column: 1 / -1; }
+.studio-room .studio-design .studio-design-fields .cc-field :is(select, input) { appearance: none; border: var(--rule-thin) solid var(--ink); }
+.studio-room .studio-design-fields :is(select, input):focus-visible { outline: var(--rule-strong) solid var(--azure); outline-offset: var(--space-2); }
+.studio-room .studio-design [role="alert"] { color: var(--danger); font: 600 var(--text-small)/1.4 var(--font-ui); }
+.studio-room .studio-design-actions, .studio-room .studio-banners [role="group"] { display: flex; flex-wrap: wrap; gap: var(--space-8); }
+.studio-room .studio-banners { display: grid; gap: var(--space-8); }
+.studio-room .studio-map-preview { margin: 0; padding: var(--space-8); border: var(--rule-medium) solid var(--studio-colour); background: transparent; }
+.studio-room .studio-map-art { height: calc(var(--space-56) * 3); display: flex; align-items: center; justify-content: center; overflow: hidden; }
+.studio-room .studio-map-art img { display: block; width: 70%; height: 70%; object-fit: contain; animation: studio-reveal var(--studio-reveal) var(--ease) both; }
+.studio-room .studio-map-preview[data-size="s"] img { width: 50%; height: 50%; }
+.studio-room .studio-map-preview[data-size="l"] img { width: 90%; height: 90%; }
+.studio-room .studio-map-preview[data-anchor^="top"] .studio-map-art { align-items: flex-start; }
+.studio-room .studio-map-preview[data-anchor^="bottom"] .studio-map-art { align-items: flex-end; }
+.studio-room .studio-map-preview[data-anchor$="left"] .studio-map-art { justify-content: flex-start; }
+.studio-room .studio-map-preview[data-anchor$="right"] .studio-map-art { justify-content: flex-end; }
+.studio-room .studio-map-preview figcaption { margin-top: var(--space-8); font: 600 var(--text-small)/1.4 var(--font-ui); color: var(--ink-2); }
+@keyframes studio-reveal { from { opacity: 0; transform: scale(.96); } to { opacity: 1; transform: scale(1); } }
+@media (prefers-reduced-motion: reduce) { .studio-room .studio-map-art img { animation: none; } }

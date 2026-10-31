@@ -1,5 +1,51 @@
 import { describe, expect, it } from 'vitest';
 import { buildWarTableScene, parseWarTable, WAR_TABLE_TEMPLATE } from './war-table.ts';
+import * as warTable from './war-table.ts';
+
+it('renders a transparent fitted map at panel and video sizes with safe selected feedback', () => {
+  expect(typeof warTable.renderWarTableSvg).toBe('function');
+  for (const [width, height] of [[318, 318], [1920, 1080], [1280, 720]] as const) {
+    const markup = warTable.renderWarTableSvg(WAR_TABLE_TEMPLATE, { width, height, selected: { q: 1, r: 0 } });
+    expect(markup).toContain(`width="${width}" height="${height}"`);
+    expect(markup).toContain(`viewBox="0 0 ${width} ${height}"`);
+    expect(markup).toContain('background:transparent');
+    expect(markup.match(/data-tile=/g)).toHaveLength(7);
+    expect(markup.match(/data-piece=/g)).toHaveLength(2);
+    expect(markup.match(/aria-pressed="true"/g)).toHaveLength(1);
+    expect(markup).toContain('SIMULATED');
+    expect(markup).not.toMatch(/<rect|<script|<image|foreignObject|NaN|Infinity/);
+  }
+});
+
+it('fits every polygon and piece inside all requested viewports and honours corner anchoring', () => {
+  for (const [width, height] of [[318, 318], [1920, 1080], [1280, 720]] as const) {
+    for (const anchor of ['top_left', 'centre', 'bottom_right'] as const) {
+      const layout = warTable.layoutWarTableOutput(WAR_TABLE_TEMPLATE, { width, height, anchor });
+      for (const point of [...layout.tiles.flatMap(tile => tile.corners), ...layout.pieces.map(piece => piece.centre)]) {
+        expect(point.x).toBeGreaterThanOrEqual(12 - 1e-6);
+        expect(point.x).toBeLessThanOrEqual(width - 12 + 1e-6);
+        expect(point.y).toBeGreaterThanOrEqual(12 - 1e-6);
+        expect(point.y).toBeLessThanOrEqual(height - 12 + 1e-6);
+      }
+      if (anchor === 'top_left') expect(Math.min(...layout.tiles.flatMap(tile => tile.corners.map(p => p.x)))).toBeCloseTo(12);
+      if (anchor === 'bottom_right') expect(Math.max(...layout.tiles.flatMap(tile => tile.corners.map(p => p.x)))).toBeCloseTo(width - 12);
+    }
+  }
+  expect(warTable.renderWarTableSvg(WAR_TABLE_TEMPLATE))
+    .toBe(warTable.renderWarTableSvg(WAR_TABLE_TEMPLATE, { width: 318, height: 318, anchor: 'centre' }));
+});
+
+it('refuses malformed output options and escapes map labels without executing or fetching them', () => {
+  for (const options of [{ width: 0 }, { height: Infinity }, { width: 1.5 }, { width: 16385 },
+    { anchor: 'elsewhere' }, { selected: { q: .5, r: 0 } }, { script: 'no' }]) {
+    expect(() => warTable.renderWarTableSvg(WAR_TABLE_TEMPLATE, options)).toThrow();
+  }
+  const markup = warTable.renderWarTableSvg({ tiles: [{ q: 0, r: 0, side: '<script>' }],
+    pieces: [{ id: '" scout', q: 0, r: 0 }] });
+  expect(markup).toContain('&lt;script&gt;');
+  expect(markup).toContain('&quot; scout');
+  expect(markup).not.toContain('<script>');
+});
 
 describe('war-table renderer-local data (simulated)', () => {
   it('lays out pointy-top axial hexes and pieces deterministically without changing input', () => {
