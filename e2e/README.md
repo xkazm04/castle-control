@@ -18,7 +18,8 @@ repo root:
 pnpm --config.verify-deps-before-run=false e2e
 ```
 
-The expanded command is `playwright test -c e2e/playwright.config.ts`.
+`pnpm e2e` runs the desktop/overlay lane, then `pnpm e2e:site`, which builds the site before running `e2e/site.config.ts` against its preview server on 5175; either lane failing makes the command fail.
+Extra arguments in `pnpm e2e --headed` go only to the desktop lane; use `pnpm e2e:site --headed` for site arguments.
 Optional `--headed` is for manual review; **headless is the default**. The two
 projects use system `channel: 'chrome'` at 1440×900 and 1280×800. No bundled
 browser download is needed. The server command is the desktop workspace's Vite
