@@ -23,7 +23,8 @@
     "@castle-control/contract": "workspace:*",
     "@castle-control/tokens": "workspace:*",
     "react": "catalog:",
-    "react-dom": "catalog:"
+    "react-dom": "catalog:",
+    "@castle-control/duel": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "24.10.0",

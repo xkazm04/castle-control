@@ -24,7 +24,7 @@ export function productCode(root) {
   return walk(root, (path) => {
     const local = relative(root, path).replaceAll('\\', '/');
     return !local.startsWith('prototype/') && !local.startsWith('docs/')
-      && !local.startsWith('.personas/') && codeExtensions.has(extname(path));
+      && !local.startsWith('.personas/') && !local.startsWith('.port/') && codeExtensions.has(extname(path));
   });
 }
 

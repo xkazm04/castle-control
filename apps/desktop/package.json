@@ -15,7 +15,8 @@
     "@castle-control/tokens": "workspace:*",
     "@castle-control/ui": "workspace:*",
     "react": "catalog:",
-    "react-dom": "catalog:"
+    "react-dom": "catalog:",
+    "@castle-control/duel": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "24.10.0",
