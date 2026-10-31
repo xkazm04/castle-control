@@ -75,3 +75,33 @@ test('overlay-simulated-connected', async ({ page }) => {
     { name: 'simulated provenance badge', selector: '[data-simulated-badge]' },
   ], { canvas: 'obs-transparent' });
 });
+
+test('fixture draw rehearsal seals, casts, reveals in the urn and recomputes this cast', async ({ page }) => {
+  await page.goto('/#/chamber/lottery');
+  await expect(page.locator('.cc-sample')).toHaveText('Simulated');
+  await page.getByRole('button', { name: 'Preview this draw', exact: true }).click();
+  await expect(page.getByText('Proposal · not sealed', { exact: true })).toBeVisible();
+  const hold = page.getByRole('button', { name: 'Hold to seal', exact: true });
+  await hold.focus();
+  await page.keyboard.down('Space');
+  try { await expect(page.getByText('Entry list frozen · simulated', { exact: true })).toBeVisible(); }
+  finally { await page.keyboard.up('Space'); }
+  await expect(page.getByRole('button', { name: 'Draft a new roll', exact: true })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Start simulated draw', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Cast the lots · rehearsal', exact: true }).click();
+  const result = page.getByRole('region', { name: 'Current SIMULATED cast', exact: true });
+  await expect(result.locator('[data-current-winner]')).toHaveCount(3);
+  // This lane uses reduced motion, so every winner is revealed immediately.
+  for (const order of [1, 2, 3]) await expect(page.locator(`.cc-urn [data-winner="${order}"]`)).toHaveCount(1);
+  const winners = await result.locator('[data-current-winner]').allTextContents();
+  for (const [index, winner] of winners.entries()) await expect(page.locator(`.lottery-winner-badge[aria-label="${index + 1}. ${winner}"]`)).toHaveCount(1);
+  await result.getByRole('button', { name: 'Read current simulated writ', exact: true }).click();
+  const writ = page.getByRole('region', { name: 'Current simulated writ', exact: true });
+  await expect(writ).toContainText('Not a cc-verify proof');
+  for (const winner of winners) await expect(writ).toContainText(winner);
+  await result.getByRole('button', { name: 'Recompute this cast', exact: true }).click();
+  await expect(page.getByRole('status').filter({ hasText: 'This cast’s seal, commitment and winners match.' }).first()).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Draft a new roll', exact: true })).toBeVisible();
+  await auditStyles(page, desktopSurfaces);
+  await auditFields(page);
+});

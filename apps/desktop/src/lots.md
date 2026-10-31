@@ -1,5 +1,80 @@
 ﻿# AI-5: offline Lot Chamber room
 
+## lots-B rehearsal delta, 2026-10-31
+
+Reconciled against L1 (`a6f305f`): setup, Start simulated draw, FixtureCast and
+simulateCast already existed. This delivery extracts the desktop's cc-verify v1
+bytes into `lots-cast.ts` (`sealOf`, `commitmentOf`, `castWinners`, `verifyWrit`).
+The saved corpus vector still pins ordered winners simulated_01, simulated_00;
+it is a secondary reference, not the result of the editable roll.
+
+A completed proposal hold retains the original canonical JSON bytes/digest and
+also stores a frozen v1 LotsProofRoll and its v1 seal. The actual generated
+contract name is LotsProofRoll (the card calls it LotsRoll). It contains this
+roll's eligible handles/weights, winner count, whole-second simulated session
+time, six-second margin and streamer_commit commitment. The fixture clock is
+explicitly fixed at 2026-10-31T12:00:00Z and its seed is 32 bytes of 01; this is
+reproducible simulated data, not live time or entropy. Tests can inject a clock.
+Asynchronous hashing checks for concurrent proposal/setup changes before any
+seal; a failed or stale hash never authorizes a cast.
+
+After sealing, **Cast the lots · rehearsal** and the preserved **Start simulated
+draw** action invoke the same v1 cast. No Draft a new roll appears until a cast
+is accepted. The cast, winners, roll and writ are frozen, concurrent starts are
+single-flight, and a second start explains that the cast is fixed. Accepted
+winners alone feed the urn. The current ticket lists them and exposes
+**Recompute this cast**, which recomputes its seal, commitment and ordered
+winners; its raw v1 writ is available under the existing current-writ action.
+The current SIMULATED region, existing setup names and the required **Not a
+cc-verify proof** disclaimer remain; the disclaimer now specifies a live draw.
+The reference vector and original JSON digest have separate recompute actions.
+
+The v1 proof protocol has no cohort field. Like cc-lots, the fixture checks caps
+separately and refuses an over-cap v1 outcome without rerolling, relabelling it
+as accepted or changing sealed eligibility. The older simulateCast now serves
+only as a feasibility preflight. Only the existing `raiders excluded` proposal
+amendment changes eligibility during sealing. Draft cap/prize copy comes from
+the selected draw, including a changed or missing raider cap.
+
+`reveal.ts` mirrors `packages/renderer/src/draw/scenes.ts` buildDrawScene:
+1200 ms flourish, then one winner every 900 ms; reduced motion reveals all at
+once. The session-owned playback cursor resumes the same cast across room
+remounts and cleans up browser timers/listeners. Urn props are normalized once
+from entry count: columns=min(20,ceil(sqrt(count))), SVG limit=columns*16 and
+radius=min(5,52/sqrt(count)). Revealed SVG dots receive one order badge and ring;
+windowed rows mark winners and retain an ordered revealed-winner list even
+when the corresponding entry is outside the scroll window. Existing appearance
+parameters and their labels remain; their reveal_ms controls preview/ticket
+animation, while the urn uses the documented canonical cadence.
+
+Acceptance evidence lives in `lots-cast.test.ts`, the added cases in
+`lots.test.tsx`, the updated async `rooms/lottery/journey.test.tsx`, and the
+fixture-only rehearsal journey added to `e2e/ui.spec.ts`. The extraction test
+was red for the absent module before implementation. Vitest checks vector and
+tamper parity, 87-entry determinism, frozen v1/session results, caps/amendments,
+the selected draw's draft fields, exact reveal times, SVG/windowed winner marks,
+and cast/recompute/new-roll rendering. The frozen `e2e/journey-lots.spec.ts`
+belongs to another delivery and is untouched. No renderer/verifier dependency,
+contract, RPC, store, core room, OBS or live-channel path changes.
+
+Run desktop test/typecheck/lint, the touched ui.spec.ts Playwright lane and
+`pnpm --config.verify-deps-before-run=false gate` without installing over the
+worktree's node_modules junction. Exact command outcomes are recorded in the
+external result.json; an attempted Playwright run stopped at spawn EPERM before
+browser assertions, so no browser pass or screenshot fidelity is claimed.
+
+Validation: full desktop test passed (505 tests in 51 files before the additional
+cap-refusal regression); desktop and e2e TypeScript checks and ESLint passed.
+Production build passed with all 122 tokens and 364,599/393,216 initial JS+CSS
+bytes. Full `pnpm gate` passed its 24 tooling proofs and workspace inventories,
+then failed at the unchanged contract exporter with `spawnSync cargo EPERM`.
+Read-only diff confirms exporter, gate, Playwright config and the other builder's
+journey spec are identical to HEAD; HEAD's docs/PLAN.md records the same exporter
+failure. No full-workspace pass is claimed. The merge gate must run the browser
+and remaining full gate checks where child-process spawning is permitted.
+
+## Earlier implementation notes
+
 L1 update, 2026-10-31: fixtures now include editable setup, generated pool/weight
 previews, session-only urn appearance and a fixed-seed SIMULATED cast after
 sealing. The current writ is explicitly not a cc-verify proof; the saved fixture

@@ -43,15 +43,15 @@ test('pool and concave weights change the generated preview; free entry restores
   expect(port.getSnapshot().entries.every(entry => entry.weight === 1)).toBe(true);
 });
 
-test('an empty or impossible pool reports the problem without starting a cast', () => {
-  const port = createLotsPreview(0); port.seal(); port.start();
+test('an empty or impossible pool reports the problem without starting a cast', async () => {
+  const port = createLotsPreview(0); await port.seal(); await port.start();
   expect(port.getSnapshot().started).toBe(false);
   expect(port.getSnapshot().notice).toContain('No generated entries');
   const normal = createLotsPreview();
   normal.edit({ ...normal.getSnapshot().draw, rules: { ...normal.getSnapshot().draw.rules,
     pool: { kind: 'keyword', keyword: '!absent' }, free_join_equal_odds: false } });
   expect(normal.getSnapshot().entries).toHaveLength(0);
-  normal.seal(); expect(normal.getSnapshot().sealed).toBe(false);
+  await normal.seal(); expect(normal.getSnapshot().sealed).toBe(false);
 });
 
 test('the sealed current roll yields distinct simulated winners and its own readable writ', async () => {
@@ -61,7 +61,7 @@ test('the sealed current roll yields distinct simulated winners and its own read
     draftRoll(queue); const proposal = queue.pending('lottery')[0];
     if (!proposal) throw new Error('Missing preview');
     await sealLotteryProposal(queue, proposal);
-    const sealed = port.getSnapshot(); port.start();
+    const sealed = port.getSnapshot(); await port.start();
     const cast = room(queue);
     expect(cast).toContain('Current SIMULATED cast');
     expect(cast.match(/data-current-winner=/g)).toHaveLength(3);
@@ -70,7 +70,7 @@ test('the sealed current roll yields distinct simulated winners and its own read
     const writ = room(queue);
     expect(writ).toContain('Current simulated writ'); expect(writ).toContain('Not a cc-verify proof');
     expect(writ).toContain(lotterySession(queue).rolls.get(proposal.id)?.hash);
-    port.start(); expect(port.getSnapshot().entries).toBe(sealed.entries);
+    await port.start(); expect(port.getSnapshot().entries).toBe(sealed.entries);
     expect(room(queue)).toContain('Current SIMULATED cast');
     expect(network).not.toHaveBeenCalled();
   } finally { network.mockRestore(); }
@@ -80,7 +80,7 @@ test('a new roll clears the current result while the old frozen writ stays separ
   const queue = new ProposalQueue(); const { port } = lotterySession(queue);
   draftRoll(queue); const proposal = queue.pending('lottery')[0];
   if (!proposal) throw new Error('Missing preview');
-  await sealLotteryProposal(queue, proposal); port.start(); port.nested(true);
+  await sealLotteryProposal(queue, proposal); await port.start(); port.nested(true);
   port.select('hall-questions');
   expect(port.getSnapshot().nested).toBe(false);
   expect(room(queue)).not.toContain('aria-label="Current SIMULATED cast"');

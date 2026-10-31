@@ -11,6 +11,9 @@ import { fixtureDraws, fixtureEntries, fixtureWrit } from './lots-fixture.js';
 import { lotsCopy as copy } from './lots-copy.js';
 import { createCoreLotsPort } from './lots-core.js';
 import { ConnectedLotsRoom } from './rooms/lottery/core.jsx';
+import { castWinners, sealOf, verifyWrit } from './lots-cast.js';
+import { createRevealClock } from './rooms/lottery/playback.js';
+import { prepareFixtureRoll, rehearsalClock, rehearsalSeed } from './rooms/lottery/simulation.js';
 
 const snapshot = { mode: 'fixture', phase: 'ready' } as const;
 const html = (queue = new ProposalQueue()) => renderToStaticMarkup(<LotteryRoom snapshot={snapshot} replay={false} queue={queue} />);
@@ -150,7 +153,7 @@ test.each([['official_rules', 'twitch_disclaimer'], ['twitch_disclaimer', 'offic
     port.select('free-prize'); draftRoll(queue);
     const proposal = current(queue);
     await expect(sealLotteryProposal(queue, proposal)).rejects.toThrow('guardrails');
-    port.seal(); port.start();
+    await port.seal(); await port.start();
     expect(port.getSnapshot().started).toBe(false);
     let draw = port.getSnapshot().draw;
     port.edit({ ...draw, policy: { ...draw.policy, [first]: true } });
@@ -160,13 +163,13 @@ test.each([['official_rules', 'twitch_disclaimer'], ['twitch_disclaimer', 'offic
     port.edit({ ...draw, policy: { ...draw.policy, [second]: true } });
     await sealLotteryProposal(queue, proposal);
     expect(port.getSnapshot().sealed).toBe(true);
-    port.start(); expect(port.getSnapshot().started).toBe(true);
+    await port.start(); expect(port.getSnapshot().started).toBe(true);
     const blocked = new ProposalQueue();
     const paid = lotterySession(blocked).port;
     paid.select('paid-prize'); draftRoll(blocked);
     expect(html(blocked)).toContain(copy.reasons.paid_weight);
     await expect(sealLotteryProposal(blocked, current(blocked))).rejects.toThrow('guardrails');
-    paid.seal(); paid.start();
+    await paid.seal(); await paid.start();
     expect(paid.getSnapshot().sealed).toBe(false);
     expect(paid.getSnapshot().started).toBe(false);
   });
@@ -197,6 +200,96 @@ test('no raiders amendment freezes only eligible lots; all fixture entries retai
   const roll = lotterySession(queue).rolls.get(proposal.id);
   expect(roll?.entries.every(entry => entry.cohort !== 'raider' && entry.weight === 1)).toBe(true);
   expect(roll?.entries.length).toBeLessThan(87);
+  const { port } = lotterySession(queue);
+  await port.start();
+  expect(port.getSnapshot().writ?.winners).toHaveLength(3);
+  expect(port.getSnapshot().writ?.winners.every(handle => roll?.entries.some(entry => entry.handle === handle && entry.cohort !== 'raider'))).toBe(true);
+});
+
+test('sealed v1 rehearsal is immutable, appears on this ticket, and recomputes this cast', async () => {
+  const queue = new ProposalQueue(); draftRoll(queue);
+  const session = lotterySession(queue); const { port } = session;
+  expect(current(queue).fields.find(field => field.key === 'cap')?.value).toBe('1/3 of winners');
+  const proposal = current(queue);
+  await sealLotteryProposal(queue, proposal);
+  const frozen = session.rolls.get(proposal.id);
+  if (!frozen) throw new Error('Missing v1 roll');
+  expect(frozen.roll.version).toBe(1);
+  expect(frozen.roll.sealed_at).toBe('2026-10-31T12:00:00Z');
+  expect(await sealOf(frozen.roll)).toBe(frozen.seal);
+  expect(html(queue)).toContain('Cast the lots · rehearsal');
+  expect(html(queue)).not.toContain('Draft a new roll');
+  await Promise.all([port.start(), port.start()]);
+  const writ = port.getSnapshot().writ;
+  if (!writ) throw new Error(`Missing rehearsal writ: ${port.getSnapshot().notice}`);
+  expect(writ.roll).toBe(frozen.roll);
+  expect(writ.winners.every(handle => frozen.entries.some(entry => entry.handle === handle))).toBe(true);
+  expect(await verifyWrit(writ)).toEqual(writ.winners);
+  expect(Object.isFrozen(writ)).toBe(true); expect(Object.isFrozen(writ.winners)).toBe(true);
+  expect(Object.isFrozen(writ.roll.entries[0])).toBe(true);
+  await port.start(); expect(port.getSnapshot().writ).toBe(writ);
+  expect(port.getSnapshot().notice).toBe(copy.cast_fixed);
+  const markup = html(queue);
+  expect(markup).toContain('Draft a new roll'); expect(markup).toContain('Recompute this cast');
+  for (const handle of writ.winners) expect(markup).toContain(handle);
+  await port.recompute(); expect(port.getSnapshot().notice).toBe(copy.cast_match);
+  await port.recompute(true); expect(port.getSnapshot().notice).toBe(copy.recomputed);
+});
+
+test('draft cap and prize come from the selected draw rather than fixture literals', () => {
+  const queue = new ProposalQueue(); const { port } = lotterySession(queue);
+  port.select('free-prize');
+  const draw = port.getSnapshot().draw;
+  port.edit({ ...draw, rules: { ...draw.rules, cohort_caps: [{ cohort: 'raider', numerator: 1, denominator: 2 }] } });
+  draftRoll(queue);
+  expect(current(queue).fields.find(field => field.key === 'cap')?.value).toBe('1/2 of winners');
+  expect(current(queue).fields.find(field => field.key === 'prize')?.value).toBe('Prize example');
+  port.select('hall-questions'); draftRoll(queue);
+  expect(current(queue).fields.find(field => field.key === 'prize')?.value).toBe('none');
+});
+
+test('urn marks exactly the revealed winners in SVG and keeps a windowed winner visible', () => {
+  const entries = fixtureEntries(400); const first = entries[0]; const second = entries[1];
+  if (!first || !second) throw new Error('Missing simulated marks');
+  const markup = renderToStaticMarkup(<Urn entries={entries.slice(0, 87)} winners={[first.handle, second.handle]} revealed={1} />);
+  expect(markup.match(/data-winner="1"/g)).toHaveLength(1);
+  expect(markup).not.toContain('data-winner="2"');
+  expect(markup).toContain('lottery-winner-badge');
+  const windowed = renderToStaticMarkup(<Urn entries={entries} winners={[first.handle, second.handle]} revealed={1} />);
+  expect(windowed).toContain('lottery-urn-window'); expect(windowed).toContain('data-winner="1"');
+  expect(windowed).not.toContain('data-winner="2"');
+  const last = entries.at(-1);
+  if (!last) throw new Error('Missing offscreen simulated winner');
+  expect(renderToStaticMarkup(<Urn entries={entries} winners={[last.handle]} revealed={1} />))
+    .toContain(`data-revealed-winner="1"><b>1.</b> ${last.handle}`);
+});
+
+test('session reveal cursor resumes the same cast and resets for a new roll', async () => {
+  const queue = new ProposalQueue(); draftRoll(queue);
+  const { port } = lotterySession(queue); await sealLotteryProposal(queue, current(queue)); await port.start();
+  const clock = createRevealClock(); const writ = port.getSnapshot().writ;
+  clock.tick(writ, 100, false); expect(clock.getSnapshot()).toBe(0);
+  clock.tick(writ, 1300, false); expect(clock.getSnapshot()).toBe(1);
+  clock.tick(writ, 2200, false); expect(clock.getSnapshot()).toBe(2);
+  clock.tick(writ, 3100, true); expect(clock.getSnapshot()).toBe(3);
+  clock.tick(writ, 3101, false); expect(clock.getSnapshot()).toBe(3);
+  clock.tick(undefined, 3200, false); expect(clock.getSnapshot()).toBe(0);
+});
+
+test('a v1 outcome exceeding a cohort cap is refused without resealing or rerolling', async () => {
+  const port = createLotsPreview(); const before = port.getSnapshot();
+  const sealed = await prepareFixtureRoll(before.draw, before.entries, rehearsalClock());
+  const winners = await castWinners(rehearsalSeed, sealed.seal, sealed.roll);
+  const cohort = before.entries.find(entry => entry.handle === winners[0])?.cohort;
+  if (!cohort) throw new Error('Missing simulated cohort');
+  port.edit({ ...before.draw, rules: { ...before.draw.rules, cohort_caps: [{ cohort, numerator: 0, denominator: 1 }] } });
+  await port.seal();
+  const roll = port.getSnapshot().sealed_roll;
+  expect(roll?.seal).toBe(sealed.seal); // Caps do not change the v1 proof bytes.
+  await port.start(); await port.start();
+  expect(port.getSnapshot().writ).toBeUndefined(); expect(port.getSnapshot().started).toBe(false);
+  expect(port.getSnapshot().notice).toBe(copy.cast_cap);
+  expect(port.getSnapshot().sealed_roll).toBe(roll);
 });
 
 test('selecting another draw cannot strip the guardrails from an earlier prize proposal', async () => {

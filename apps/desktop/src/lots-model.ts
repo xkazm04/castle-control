@@ -1,20 +1,22 @@
-import type { DrawCheckResult, LotsDraw, LotsDrawPolicy, LotsHandle } from '@castle-control/contract';
+import type { DrawCheckResult, LotsDraw, LotsDrawPolicy, LotsHandle, LotsSealedRoll, LotsWrit } from '@castle-control/contract';
 import { fixtureCooldown, fixtureDraws, fixturePool, fixtureWrit } from './lots-fixture.js';
 import type { FixtureEntry } from './lots-fixture.js';
 import { lotsCopy as copy } from './lots-copy.js';
-import { freezeFixture, simulateCast } from './rooms/lottery/simulation.js';
+import { freezeFixture, prepareFixtureRoll, rehearsalClock, rehearsalSeed, respectsCaps, simulateCast } from './rooms/lottery/simulation.js';
+import { castWinners, verifyWrit } from './lots-cast.js';
 
 export type Shape = typeof copy.shapes[number]['value'];
 export type LotsPreview = {
   draw: LotsDraw; entries: readonly FixtureEntry[]; paused: boolean; sealed: boolean; started: boolean;
   shape: Shape; lookup: string; nested: boolean; notice: string; recomputing: boolean;
   simulated_winners?: readonly LotsHandle[];
+  sealed_roll?: LotsSealedRoll; writ?: LotsWrit; casting?: boolean;
 };
 export type LotsPort<State = LotsPreview> = {
   getSnapshot: () => State; subscribe: (listener: () => void) => () => void;
   select: (id: string) => void; edit: (draw: LotsDraw) => void; lookup: (handle: string) => void;
-  pause: () => void; seal: (entries?: readonly FixtureEntry[]) => void; start: () => void; shape: (shape: Shape) => void;
-  nested: (show: boolean) => void; recompute: () => Promise<void>;
+  pause: () => void; seal: (entries?: readonly FixtureEntry[], prepared?: LotsSealedRoll) => Promise<void>; start: () => Promise<void>; shape: (shape: Shape) => void;
+  nested: (show: boolean) => void; recompute: (reference?: boolean) => Promise<void>;
 };
 
 /** Fixture-only mirror of cc-lots::check_draw. Reasons use the strings documented
@@ -53,11 +55,11 @@ function validDraw(draw: LotsDraw, count: number): boolean {
     && (!cap || Number.isInteger(cap.numerator) && cap.numerator >= 0 && cap.numerator <= cap.denominator)
     && (draw.rules.pool.kind !== 'keyword' || /^\S+$/.test(draw.rules.pool.keyword));
 }
-export function createLotsPreview(count = 87): LotsPort {
+export function createLotsPreview(count = 87, clock = rehearsalClock): LotsPort {
   const first = fixtureDraws[0];
   if (!first) throw new Error(copy.empty);
   let snapshot: LotsPreview = { draw: first, entries: fixturePool(first, count), paused: false, sealed: false, started: false,
-    shape: 'urn', lookup: '', nested: false, notice: copy.notice, recomputing: false };
+    shape: 'urn', lookup: '', nested: false, notice: copy.notice, recomputing: false, casting: false };
   const listeners = new Set<() => void>();
   const publish = (change: Partial<LotsPreview>) => { snapshot = { ...snapshot, ...change }; for (const listener of listeners) listener(); };
   return {
@@ -65,8 +67,9 @@ export function createLotsPreview(count = 87): LotsPort {
     select(id) {
       const draw = fixtureDraws.find(draw => draw.draw_id === id);
       if (draw) {
-        const next = { ...snapshot }; delete next.simulated_winners; snapshot = next;
-        publish({ draw, entries: fixturePool(draw, count), paused: false, sealed: false, started: false, nested: false, notice: copy.selected });
+        const next = { ...snapshot }; delete next.simulated_winners; delete next.writ; delete next.sealed_roll; snapshot = next;
+        publish({ draw, entries: fixturePool(draw, count), paused: false, sealed: false, started: false, nested: false,
+          casting: false, recomputing: false, notice: copy.selected });
       }
     },
     edit(draw) {
@@ -77,74 +80,51 @@ export function createLotsPreview(count = 87): LotsPort {
     },
     lookup(lookup) { publish({ lookup }); },
     pause() { if (!snapshot.sealed) publish({ paused: !snapshot.paused }); },
-    seal(entries = snapshot.entries) {
+    async seal(entries = snapshot.entries, prepared) {
       if (snapshot.sealed) return;
       if (!entries.length) { publish({ notice: copy.empty }); return; }
       if (checkFixturePolicy(snapshot.draw.policy).result === 'blocked') { publish({ notice: copy.frozen }); return; }
       try { simulateCast(snapshot.draw, entries); }
       catch { publish({ notice: copy.insufficient }); return; }
-      publish({ draw: freezeFixture(structuredClone(snapshot.draw)), entries: freezeFixture(entries.map(entry => ({ ...entry }))),
-        sealed: true, paused: true, notice: copy.sealed_notice });
+      const before = snapshot;
+      try {
+        const sealed_roll = prepared ?? await prepareFixtureRoll(before.draw, entries, clock());
+        if (snapshot !== before) return;
+        publish({ draw: freezeFixture(structuredClone(snapshot.draw)), entries: freezeFixture(entries.map(entry => ({ ...entry }))),
+          sealed_roll, sealed: true, paused: true, notice: copy.sealed_notice });
+      } catch { if (snapshot === before) publish({ notice: copy.hash_failed }); }
     },
-    start() {
-      if (snapshot.started) return;
+    async start() {
+      if (snapshot.started) { publish({ notice: copy.cast_fixed }); return; }
+      if (snapshot.casting) return;
       if (!snapshot.entries.length) { publish({ notice: copy.empty }); return; }
-      if (!snapshot.sealed || checkFixturePolicy(snapshot.draw.policy).result === 'blocked') { publish({ notice: copy.frozen }); return; }
-      try { publish({ started: true, simulated_winners: simulateCast(snapshot.draw, snapshot.entries), notice: copy.cast_notice }); }
-      catch { publish({ notice: copy.insufficient }); }
+      const sealed = snapshot.sealed_roll;
+      if (!sealed || checkFixturePolicy(snapshot.draw.policy).result === 'blocked') { publish({ notice: copy.frozen }); return; }
+      const { draw, entries } = snapshot;
+      publish({ casting: true });
+      try {
+        const winners = await castWinners(rehearsalSeed, sealed.seal, sealed.roll);
+        if (snapshot.sealed_roll !== sealed) return;
+        if (!respectsCaps(draw, entries, winners)) { publish({ casting: false, notice: copy.cast_cap }); return; }
+        const writ = freezeFixture({ ...sealed, proof: { source: 'streamer_commit' as const, seed: rehearsalSeed }, winners: [...winners] });
+        publish({ started: true, casting: false, writ, simulated_winners: writ.winners, notice: copy.cast_notice });
+      } catch { if (snapshot.sealed_roll === sealed) publish({ casting: false, notice: copy.recompute_failed }); }
     },
     shape(shape) { publish({ shape }); }, nested(nested) { publish({ nested }); },
-    async recompute() {
+    async recompute(reference = false) {
       if (snapshot.recomputing) return;
+      const current = snapshot.writ;
+      const writ = reference ? undefined : current;
       publish({ recomputing: true, notice: copy.computing });
-      try { await recomputeFixture(); publish({ recomputing: false, notice: copy.recomputed }); }
-      catch { publish({ recomputing: false, notice: copy.recompute_failed }); }
+      try {
+        await verifyWrit(writ ?? fixtureWrit);
+        if (snapshot.writ === current) publish({ recomputing: false, notice: writ ? copy.cast_match : copy.recomputed });
+      } catch { if (snapshot.writ === current) publish({ recomputing: false, notice: copy.recompute_failed }); }
     },
   };
 }
 
-/** Only the built-in, typed fallback vector is accepted. No parser or network.
- * The byte encoding follows cc-verify v1; this never emits a verified wire cast. */
+/** The saved corpus vector continues to pin cc-verify v1 byte parity. */
 export async function recomputeFixture(): Promise<readonly LotsHandle[]> {
-  const writ = fixtureWrit;
-  const roll = writ.roll;
-  if (writ.proof.source !== 'streamer_commit' || roll.randomness.source !== 'streamer_commit') throw new Error(copy.recompute_failed);
-  const text = (value: string) => new TextEncoder().encode(value);
-  const number = (value: bigint, size: number) => {
-    const bytes = new Uint8Array(size);
-    for (let index = size - 1; index >= 0; index--) { bytes[index] = Number(value & 255n); value >>= 8n; }
-    return bytes;
-  };
-  const u32 = (value: number) => number(BigInt(value), 4);
-  const hex = (value: string) => Uint8Array.from(value.match(/../g) ?? [], byte => Number.parseInt(byte, 16));
-  const join = (...values: Uint8Array[]) => {
-    const result = new Uint8Array(values.reduce((size, value) => size + value.length, 0));
-    let offset = 0;
-    for (const value of values) { result.set(value, offset); offset += value.length; }
-    return result;
-  };
-  const hash = async (...values: Uint8Array[]) => new Uint8Array(await globalThis.crypto.subtle.digest('SHA-256', join(...values)));
-  const encode = (value: Uint8Array) => Array.from(value, byte => byte.toString(16).padStart(2, '0')).join('');
-  const entries = join(...roll.entries.map(entry => join(u32(entry.handle.length), text(entry.handle), u32(entry.weight))));
-  const seal = await hash(text('castle-control/seal/v1\0'), u32(roll.entries.length), entries, u32(roll.winner_count),
-    text(roll.sealed_at), u32(roll.margin_s), new Uint8Array([1]), hex(roll.randomness.commitment));
-  const revealed = hex(writ.proof.seed);
-  if (encode(seal) !== writ.seal || encode(await hash(text('castle-control/commit/v1\0'), revealed)) !== roll.randomness.commitment) throw new Error(copy.recompute_failed);
-  const seed = await hash(text('castle-control/cast/v1\0'), revealed, seal, entries);
-  const pool = [...roll.entries];
-  const winners: LotsHandle[] = [];
-  let counter = 0n;
-  while (winners.length < roll.winner_count) {
-    const block = await hash(seed, number(counter++, 8));
-    const candidate = new DataView(block.buffer).getBigUint64(0);
-    const total = pool.reduce((sum, entry) => sum + BigInt(entry.weight), 0n);
-    if (candidate >= ((1n << 64n) / total) * total) continue;
-    let target = candidate % total;
-    const index = pool.findIndex(entry => { if (target < BigInt(entry.weight)) return true; target -= BigInt(entry.weight); return false; });
-    const winner = pool.splice(index, 1)[0];
-    if (!winner) throw new Error(copy.recompute_failed);
-    winners.push(winner.handle);
-  }
-  if (winners.length !== writ.winners.length || winners.some((winner, index) => winner !== writ.winners[index])) throw new Error(copy.recompute_failed);
-  return winners;
+  return verifyWrit(fixtureWrit);
 }

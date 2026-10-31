@@ -15,6 +15,7 @@ import type { LotsDraw } from '@castle-control/contract';
 import { DrawSetup } from './setup.jsx';
 import { DrawAppearance } from './appearance.jsx';
 import { FixtureCast } from './result.jsx';
+import { useReveal } from './playback.js';
 import './room.css';
 
 export { LotteryWrit } from './writ.jsx';
@@ -22,9 +23,10 @@ export { LotteryWrit } from './writ.jsx';
 export default function LotteryRoom({ snapshot, replay, queue = proposalQueue, seal_slot }: {
   snapshot: Snapshot; replay: boolean; queue?: ProposalQueue; seal_slot?: ReactNode;
 }) {
-  const { port, rolls, display } = lotterySession(queue);
+  const { port, rolls, display, reveal } = lotterySession(queue);
   const state = useSyncExternalStore(port.subscribe, port.getSnapshot, port.getSnapshot);
   const appearance = useSyncExternalStore(display.subscribe, display.getSnapshot, display.getSnapshot);
+  const revealed = useReveal(reveal, state.writ);
   const proposals = useSyncExternalStore(queue.subscribe, queue.getSnapshot, queue.getSnapshot);
   const [verification, setVerification] = useState('');
   if (snapshot.mode !== 'fixture') return <p>{copy.no_live_controls}</p>;
@@ -32,7 +34,9 @@ export default function LotteryRoom({ snapshot, replay, queue = proposalQueue, s
   const pending = history.filter(isPending);
   const candidates = pending.length ? pending : history;
   const proposal = candidates.find(item => item.id === proposals.selected_proposal_id) ?? candidates.at(-1);
-  const roll = proposal ? rolls.get(proposal.id) : undefined;
+  const sealed_roll = state.sealed_roll;
+  const roll = sealed_roll ? Array.from(rolls.values()).find(item => item.roll === sealed_roll.roll)
+    : proposal ? rolls.get(proposal.id) : undefined;
   const entries = state.sealed ? roll?.entries ?? state.entries : state.entries;
   const policy = checkFixturePolicy(state.draw.policy);
   const cap = state.draw.rules.cohort_caps.find(item => item.cohort === 'raider');
@@ -60,7 +64,7 @@ export default function LotteryRoom({ snapshot, replay, queue = proposalQueue, s
           <ul className="cc-legend" aria-label={copy.dots}>{(['new_account', 'subscriber', 'raider'] as const).map(cohort =>
             <li key={cohort} data-cohort={cohort}>{copy.cohorts[cohort]} <b>{entries.filter(entry => entry.cohort === cohort).length}</b></li>)}</ul>
           <p>{copy.core.pool(state.draw.rules.pool.kind, state.draw.policy.content, state.draw.rules.cooldown_s)} · {fixtureCooldown.length} {copy.cooldown} · {fixtureWeightNotice(state)}</p>
-        </>}><Urn entries={entries} /></PoolStage>
+        </>}><Urn entries={state.entries} winners={state.simulated_winners ?? []} revealed={revealed} /></PoolStage>
       <div className="cc-desk" aria-label={copy.workbench}>
         <SectionHeading variant="banner" level={2} title={copy.writ} gloss={copy.writ_gloss} ink="gules"
           count={<StatusChip variant="gules" stamp="label" {...(pending.length ? { tone: 'spot' as const } : {})}>
@@ -81,7 +85,7 @@ export default function LotteryRoom({ snapshot, replay, queue = proposalQueue, s
           })}</ul>
         </div>}
         {proposal && <LotteryWrit proposal={proposal} weight_notice={fixtureWeightNotice(state)} />}
-        {state.sealed && <InkButton size="room" onClick={() => { port.select(state.draw.draw_id); draftRoll(queue); }}>{copy.draft_new}</InkButton>}
+        {state.started && <InkButton size="room" onClick={() => { port.select(state.draw.draw_id); draftRoll(queue); }}>{copy.draft_new}</InkButton>}
         <DrawSetup port={port} on_edit={edit} on_preview={() => { discardPreview(); draftRoll(queue); }} />
         <DrawAppearance port={display} />
         <PolicyRibbon result={policy.result} />
@@ -105,8 +109,9 @@ export default function LotteryRoom({ snapshot, replay, queue = proposalQueue, s
           <p className="cc-caption">{copy.writ_fields.winners}</p>
           <ul className="cc-handles">{fixtureWrit.winners.map(winner => <li className="cc-handle" key={winner}>{winner}</li>)}</ul>
           <details className="cc-disclosure"><summary>{copy.writ}</summary><div className="cc-disclosure-body">
+            <p className="cc-caption">{copy.reference_vector}</p>
             <p className="cc-aside">{copy.writ_notice}</p><code className="cc-hash">{fixtureWrit.seal}</code>
-            <InkButton size="room" onClick={() => { void port.recompute(); }}>{copy.recompute}</InkButton>
+            <InkButton size="room" onClick={() => { void port.recompute(true); }}>{copy.recompute}</InkButton>
             <p className="cc-status" role="status">{state.notice}</p>
           </div></details>
           {roll && <div className="cc-group">
