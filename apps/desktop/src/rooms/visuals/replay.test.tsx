@@ -86,6 +86,13 @@ test('the curve goes to the Steward as a proposal, amends in place, and seals as
   expect(queue.seal(amended?.id ?? '').ok).toBe(true);
   expect(sealedCurve(retuned.visual_id, queue)).toEqual(retuned.curve);
   expect(openCurveDraft(retuned.visual_id, queue)).toBeUndefined();
+  // Once sealed here, the dashed baseline and the way back both name the sealed curve.
+  editor.move(3, 120, 1);
+  const moved = port.getSnapshot().visuals[0];
+  if (!moved) throw new Error('Missing generated altar');
+  const html = renderToStaticMarkup(<NightReplay item={moved} editor={editor} queue={queue} />);
+  expect(html).toContain('Dashed, the last sealed curve:');
+  expect(html).toContain('Back to the sealed curve');
   expect(proposeCurve(retuned, 'again', queue).ok).toBe(true);
   expect(openCurveDraft(retuned.visual_id, queue)?.id).not.toBe(amended?.id);
 });
@@ -99,7 +106,28 @@ test('the replay draws the last sealed curve dashed once the draft differs', () 
   if (!item) throw new Error('Missing generated altar');
   const html = renderToStaticMarkup(<NightReplay item={item} editor={editor} queue={queue} />);
   expect(html).toContain('data-trace="before"');
-  expect(html).toContain('Dashed, the last sealed curve: climbs · Peak');
+  expect(html).toContain('Dashed, the sample curve: climbs · Peak');
+  expect(html).toContain('Back to the sample curve');
+});
+
+test('back to the sealed curve restores the whole curve as a draft through the same editor', async () => {
+  const port = createBeaconsPreview();
+  const editor = createFixtureCurveEditor(port);
+  const original = port.getSnapshot().visuals[0]?.visual.curve;
+  if (!original) throw new Error('Missing generated altar');
+  editor.move(3, 60, 1);
+  editor.setDecay({ kind: 'none' });
+  await editor.save();
+  expect(port.getSnapshot().visuals[0]?.visual.curve).not.toEqual(original);
+  editor.restore(original);
+  expect(editor.getSnapshot()).toMatchObject({ draft: original, phase: 'editing' });
+  await editor.save();
+  expect(port.getSnapshot().visuals[0]?.visual.curve).toEqual(original);
+  const item = port.getSnapshot().visuals[0];
+  if (!item) throw new Error('Missing generated altar');
+  const html = renderToStaticMarkup(<NightReplay item={item} editor={editor} queue={new ProposalQueue()} />);
+  expect(html).not.toContain('Back to the');
+  expect(html).not.toContain('data-trace="before"');
 });
 
 test('replay styles stay token-only', () => {

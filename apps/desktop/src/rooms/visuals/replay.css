@@ -55,6 +55,7 @@
 .visuals-replay-spent-pinned { fill: var(--gules); opacity: .55; }
 .visuals-replay-past-top { fill: var(--gules); opacity: .08; }
 .visuals-replay-legend { margin-top: var(--space-2); color: var(--muted); font-size: var(--text-label); }
+.visuals-replay-moves { display: flex; flex-wrap: wrap; gap: var(--space-6); }
 .visuals-replay-verdict [role="status"] { display: grid; gap: var(--space-2); min-width: 0; }
 .visuals-replay-art[data-pinned="true"] { border-color: var(--gules); box-shadow: inset 0 0 0 var(--rule-medium) var(--gules); }
 .visuals-replay-flare { position: absolute; inset: 0; animation: visuals-replay-flare var(--motion-shell) var(--ease); }

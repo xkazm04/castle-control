@@ -27,7 +27,8 @@ subs count; bits, points and Hype Train marks stay as muted ticks. Shaded
 **pinned at max** spans mark minutes past the curve's top point, and **Never
 lit** means the total never reaches the curve's second point. Drag a point in
 the replay's curve (or Tab to it and use arrows, Shift for ten) and the whole
-night re-runs; the last sealed curve stays dashed. The trace names its **lit**
+night re-runs; the last sealed curve (or the sample curve) stays dashed, and
+**Back to the sealed curve** puts it back in one press. The trace names its **lit**
 line and flags the minute the night first lights. One button offers a single
 fitted point move (a pinned or never-lit night, or a peak under 90%). **Send curve to the Steward** drafts a proposal; nothing
 changes until you hold to seal. Reduced motion draws the static trace only.

@@ -61,6 +61,12 @@ export function createCurveEditor(visual: Visual, port: {
     getSnapshot: () => state,
     subscribe(listener: () => void) { listeners.add(listener); return () => { listeners.delete(listener); }; },
     move, save, cancel,
+    /** Puts a whole known curve back as the draft (the replay's "back to the sealed curve"); the caller saves it. */
+    restore(curve: IntensityCurve) {
+      if (busy() || curve.ranges.length === 0) return;
+      drag = undefined;
+      publish({ draft: frozen(curve), phase: 'editing', notice: 'Draft preview only. Commit to save to core.' });
+    },
     setDecay(decay: IntensityCurve['decay']) {
       if (busy() || (decay.kind === 'exponential' && (!Number.isInteger(decay.half_life_s)
         || decay.half_life_s < 1 || decay.half_life_s > uint32_max))) return;

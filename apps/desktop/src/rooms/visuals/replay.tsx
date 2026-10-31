@@ -47,6 +47,11 @@ export function NightReplay({ item, editor, queue = proposalQueue, initial_night
     editor.move(fit.index, fit.total, point.intensity);
     void editor.save();
   };
+  const restore = () => {
+    if (!sealed) return;
+    editor.restore(sealed);
+    void editor.save();
+  };
   const now = traceAt(trace, curve, time.position_s);
   const top = curve.ranges.at(-1)?.total ?? 0;
   const draft = openCurveDraft(item.visual.visual_id, queue);
@@ -97,9 +102,13 @@ export function NightReplay({ item, editor, queue = proposalQueue, initial_night
     <div className="visuals-replay-verdict" data-tone={verdict.tone}>
       <div role="status" aria-live="polite">
         <p><b>{verdict_words[verdict.tone]}</b> {verdict.text}</p>
-        {before && <p className="visuals-replay-legend">Dashed, the last sealed curve: {verdict_words[replayVerdict(before).tone].toLowerCase()} · {replayVerdict(before).text}</p>}
+        {before && <p className="visuals-replay-legend">Dashed, {sealed_here ? 'the last sealed curve' : 'the sample curve'}: {verdict_words[replayVerdict(before).tone].toLowerCase()} · {replayVerdict(before).text}</p>}
       </div>
-      {fit && <InkButton size="small" disabled={editing.phase === 'saving'} onClick={applyFit}>{fit.label}</InkButton>}
+      <div className="visuals-replay-moves">
+        {fit && <InkButton size="small" disabled={editing.phase === 'saving'} onClick={applyFit}>{fit.label}</InkButton>}
+        {before && <InkButton size="small" disabled={editing.phase === 'saving'} onClick={restore}>
+          {sealed_here ? 'Back to the sealed curve' : 'Back to the sample curve'}</InkButton>}
+      </div>
     </div>
     <div className="visuals-replay-tune">
       <ReplayCurve item={item} editor={editor} state={editing} trace={trace} now={now} help_id={help_id} />
