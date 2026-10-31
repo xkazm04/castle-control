@@ -1,5 +1,6 @@
 ﻿import { readFileSync } from 'node:fs';
 import { renderToReadableStream, renderToStaticMarkup } from 'react-dom/server';
+import * as React from 'react';
 import { afterEach, expect, test, vi } from 'vitest';
 import { ProposalQueue } from '@castle-control/ui/steward';
 import ModeratorRoom from './rooms/moderator/index.jsx';
@@ -8,13 +9,15 @@ import { HeldQueue } from './rooms/moderator/controls.jsx';
 import { MessageList, messageWindow } from './rooms/moderator/messages.jsx';
 import { Drill } from './rooms/moderator/drill.jsx';
 import { moderationSession } from './rooms/moderator/session.js';
-import { fixtureBans, fixtureCharts, fixtureConfirmationMs, fixtureMessages, fixtureReplay, fixtureRules, illustrativeConsensus } from './moderation-fixture.js';
+import { fixtureBans, fixtureCharts, fixtureConfirmationMs, fixtureMessages, fixtureReplay, fixtureRules } from './moderation-fixture.js';
 import { createModerationPreview } from './moderation-model.js';
 import { initialNavigation } from './navigation.js';
 import { DesktopView } from './view.jsx';
 import { simulatedRead } from './simulated.js';
 
-afterEach(() => { vi.useRealTimers(); });
+vi.mock('react', async importOriginal => ({ ...await importOriginal<typeof React>() }));
+
+afterEach(() => { vi.useRealTimers(); vi.restoreAllMocks(); });
 
 test('4,200 generated chat lines mount a window including the final row; room uses 420 sample lines', () => {
   expect(fixtureMessages).toHaveLength(4200);
@@ -48,11 +51,76 @@ test('consensus never imports an action port and labels per-minute reference dat
   const code = readFileSync(new URL('./rooms/moderator/consensus.tsx', import.meta.url), 'utf8');
   expect(code).not.toMatch(/\b(fetch|invoke|send|WebSocket|XMLHttpRequest)\s*\(/);
   expect(code).not.toContain('./session');
-  expect(illustrativeConsensus).toHaveLength(15);
-  expect(illustrativeConsensus[0]['go-left']).toBe(37.8);
-  expect(illustrativeConsensus[14]['go-left']).toBe(51.3);
+  const series = fixtureCharts[0]?.directions[0]?.series;
+  expect(series).toHaveLength(16);
+  expect(series?.[0]?.share).toBeCloseTo(0.3785166613518237, 12);
+  expect(series?.[15]?.share).toBeCloseTo(0.366743278225684, 12);
   const html = renderToStaticMarkup(<Consensus results={fixtureCharts} />);
   for (const text of ['17 messages shed', 'Go left', '3 min', 'illustrative', '<svg']) expect(html).toContain(text);
+});
+
+test('consensus caption agrees with the Go left tile share instead of 51.3%', () => {
+  const html = renderToStaticMarkup(<Consensus results={fixtureCharts} />);
+  const share = ((fixtureCharts[0]?.directions[0]?.share ?? 0) * 100).toFixed(1);
+  expect(share).toBe('36.7');
+  expect(html).toContain(`<span>Go left</span><b>${share}%</b>`);
+  expect(html.match(/moderator-reference">([^<]*)</)?.[1]).toContain(`Go left ${share}%`);
+  expect(html).not.toContain('51.3%');
+});
+
+test('selecting Emotes only changes the consensus polygon points compared with All', () => {
+  const all = renderToStaticMarkup(<Consensus results={fixtureCharts} />);
+  vi.spyOn(React, 'useState').mockReturnValue([1, vi.fn()]);
+  const emotes = renderToStaticMarkup(<Consensus results={fixtureCharts} />);
+  expect(emotes).toContain('aria-pressed="true">Emotes only');
+  const points = (html: string) => [...html.matchAll(/<polygon[^>]*points="([^"]*)"/g)].map(match => match[1]);
+  expect(points(all).length).toBeGreaterThan(0);
+  expect(points(emotes)).not.toEqual(points(all));
+});
+
+test('every fixture chart sums to one including Other at every series point', () => {
+  for (const chart of fixtureCharts) {
+    expect(chart.directions.reduce((sum, direction) => sum + direction.share, 0)).toBeCloseTo(1, 3);
+    if (chart.filter.kind !== 'all') expect(chart.directions.some(direction => direction.label === 'Other')).toBe(true);
+    for (let index = 0; index < 16; index++) {
+      expect(chart.directions.reduce((sum, direction) => sum + (direction.series[index]?.share ?? 0), 0)).toBeCloseTo(1, 3);
+    }
+  }
+});
+
+test('each filter draws every stacked series point and its selected reference and remainder', () => {
+  const selection = vi.spyOn(React, 'useState');
+  for (const [selected, chart] of fixtureCharts.entries()) {
+    selection.mockReturnValue([selected, vi.fn()]);
+    const html = renderToStaticMarkup(<Consensus results={fixtureCharts} />);
+    const polygons = [...html.matchAll(/<polygon[^>]*points="([^"]*)"/g)];
+    expect(polygons).toHaveLength(chart.directions.length);
+    for (const [index, direction] of chart.directions.entries()) {
+      const points = polygons[index]?.[1]?.split(' ').map(point => point.split(',').map(Number)) ?? [];
+      expect(points).toHaveLength(direction.series.length * 2);
+      for (const [minute, point] of direction.series.entries()) {
+        const lower = chart.directions.slice(0, index).reduce((sum, item) => sum + (item.series[minute]?.share ?? 0), 0);
+        expect(points[minute]?.[0]).toBeCloseTo(minute / 15 * 560, 10);
+        expect(points[minute]?.[1]).toBeCloseTo(170 - (lower + point.share) * 170, 10);
+        expect(points.at(-1 - minute)?.[1]).toBeCloseTo(170 - lower * 170, 10);
+      }
+    }
+    const share = ((chart.directions[0]?.share ?? 0) * 100).toFixed(1);
+    expect(html.match(/moderator-reference">([^<]*)</)?.[1]).toContain(`min 0 → min 15 · Go left ${share}% · illustrative`);
+    const other = chart.directions.find(direction => direction.label === 'Other');
+    if (other) expect(html).toContain(`Other · ${(other.share * 100).toFixed(1)}%`);
+  }
+});
+
+test('consensus axis and caption follow the available series timestamps', () => {
+  const chart = fixtureCharts[0];
+  if (!chart) throw new Error('Missing consensus fixture');
+  const result = { ...chart, directions: chart.directions.map(direction => ({ ...direction, series: direction.series.slice(5, 11) })) };
+  const html = renderToStaticMarkup(<Consensus results={[result]} />);
+  expect(html).toContain('<span>min 0</span><span>min 5</span>');
+  expect(html).toContain('min 0 → min 5');
+  expect(html).not.toContain('min 14');
+  expect(renderToStaticMarkup(<Consensus results={[]} />)).toContain('No consensus history available.');
 });
 
 test('fixture commands are observable local state; all contract rules remain shadow', () => {

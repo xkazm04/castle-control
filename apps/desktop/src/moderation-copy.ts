@@ -48,7 +48,9 @@ export const moderationCopy = {
   propose_undo: 'Propose Undo', propose_petition: 'Propose Petition', rule_unavailable: 'Rule unavailable',
   consensus_hint: '15 minutes of sample consensus.', consensus_caption: 'consensus · describes the room, never acts on anyone',
   consensus_plot: 'Illustrative stacked share of chat per direction',
-  consensus_reference: 'min 0 → min 14 · left 51.3% · illustrative', min_start: 'min 0', min_end: 'min 14',
+  consensus_reference: (start: string, end: string, label: string, share: number) =>
+    `${start} → ${end} · ${label} ${(share * 100).toFixed(1)}% · illustrative`,
+  consensus_minute: (minute: number) => `min ${minute}`, consensus_other: 'Other',
   consensus_filters: 'Consensus filters · simulated fixture · Messages', all_messages: 'All messages',
   emotes_only: 'Emotes only', text_only: 'Text only', one_emote: 'One emote', history_unavailable: 'History unavailable',
   consensus_empty: 'No consensus history available.',

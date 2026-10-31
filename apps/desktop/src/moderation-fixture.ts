@@ -60,20 +60,29 @@ export function confirmFixtureHeld(target: Decision, outcome: HeldOutcome): Deci
 
 export function fixtureConsensus(filter: ConsensusFilter): ConsensusGetResult {
   const scale = filter.kind === 'emotes' ? 0.8 : filter.kind === 'text' ? 0.9 : filter.kind === 'emote' ? 0.7 : 1;
+  const directions = ['Go left', 'Hype', 'Skip the boss', 'Go right'].map((label, index) => {
+    const series = Array.from({ length: 16 }, (_, minute) => {
+      const weights = [40, 28, 19, 13].map((base, position) => base + Math.sin(minute / 3 + position) * 3);
+      return {
+        at: new Date(Date.parse(at) - (15 - minute) * 60000).toISOString(),
+        share: (weights[index] ?? 0) / weights.reduce((sum, weight) => sum + weight, 0) * scale,
+      };
+    });
+    const share = series.at(-1)?.share ?? 0;
+    return { key: `direction-${index}`, label, share,
+      delta_3m: share - (series.at(-4)?.share ?? 0), messages: Math.round(share * 280), series };
+  });
+  // Preserve the filtered direction shares; account for unassigned mass explicitly.
+  if (scale < 1) {
+    const series = directions[0]?.series.map((point, index) => ({
+      at: point.at, share: Math.max(0, 1 - directions.reduce((sum, direction) => sum + (direction.series[index]?.share ?? 0), 0)),
+    })) ?? [];
+    const share = series.at(-1)?.share ?? 0;
+    directions.push({ key: 'other', label: copy.consensus_other, share,
+      delta_3m: share - (series.at(-4)?.share ?? 0), messages: Math.round(share * 280), series });
+  }
   return parseMethodResult(gatehouseConsensusGet, JSON.stringify({
-    at, window_s: 900, filter, shed_count: filter.kind === 'all' ? 17 : 4,
-    directions: ['Go left', 'Hype', 'Skip the boss', 'Go right'].map((label, index) => {
-      const series = Array.from({ length: 16 }, (_, minute) => {
-        const weights = [40, 28, 19, 13].map((base, position) => base + Math.sin(minute / 3 + position) * 3);
-        return {
-          at: new Date(Date.parse(at) - (15 - minute) * 60000).toISOString(),
-          share: (weights[index] ?? 0) / weights.reduce((sum, weight) => sum + weight, 0) * scale,
-        };
-      });
-      const share = series.at(-1)?.share ?? 0;
-      return { key: `direction-${index}`, label, share,
-        delta_3m: share - (series.at(-4)?.share ?? 0), messages: Math.round(share * 280), series };
-    }),
+    at, window_s: 900, filter, shed_count: filter.kind === 'all' ? 17 : 4, directions,
   }));
 }
 export const fixtureCharts = [fixtureConsensus({ kind: 'all' }), fixtureConsensus({ kind: 'emotes' }),
@@ -92,23 +101,3 @@ export const fixtureReplay: DrillRunResult = parseMethodResult(gatehouseDrillRun
     over_moderation: { evaluated: 20, false_positives: 1 } },
   gaps: [{ from: '2026-10-26T12:05:00Z', to: '2026-10-26T12:05:10Z' }],
 }));
-
-// Illustrative consensus per minute from prototype/ai-first/data/sample.js.
-// Fictional channel and invented numbers, never live Twitch measurements.
-export const illustrativeConsensus = [
-  {"minute": 0, "go-left": 37.8, "hype": 24.4, "skip-boss": 28.2, "go-right": 9.7},
-  {"minute": 1, "go-left": 38.0, "hype": 22.9, "skip-boss": 30.0, "go-right": 9.1},
-  {"minute": 2, "go-left": 39.8, "hype": 21.1, "skip-boss": 29.2, "go-right": 9.8},
-  {"minute": 3, "go-left": 42.6, "hype": 21.6, "skip-boss": 27.0, "go-right": 8.8},
-  {"minute": 4, "go-left": 36.3, "hype": 32.6, "skip-boss": 22.7, "go-right": 8.3},
-  {"minute": 5, "go-left": 35.6, "hype": 33.4, "skip-boss": 23.4, "go-right": 7.6},
-  {"minute": 6, "go-left": 38.1, "hype": 31.8, "skip-boss": 22.3, "go-right": 7.8},
-  {"minute": 7, "go-left": 43.9, "hype": 21.6, "skip-boss": 24.0, "go-right": 10.5},
-  {"minute": 8, "go-left": 46.6, "hype": 18.6, "skip-boss": 24.8, "go-right": 10.0},
-  {"minute": 9, "go-left": 45.5, "hype": 19.4, "skip-boss": 25.1, "go-right": 10.0},
-  {"minute": 10, "go-left": 49.2, "hype": 19.0, "skip-boss": 22.3, "go-right": 9.5},
-  {"minute": 11, "go-left": 49.4, "hype": 18.9, "skip-boss": 23.6, "go-right": 8.1},
-  {"minute": 12, "go-left": 49.3, "hype": 18.8, "skip-boss": 22.1, "go-right": 9.9},
-  {"minute": 13, "go-left": 51.2, "hype": 19.1, "skip-boss": 20.5, "go-right": 9.2},
-  {"minute": 14, "go-left": 51.3, "hype": 20.3, "skip-boss": 20.3, "go-right": 8.1},
-] as const;
