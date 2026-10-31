@@ -113,7 +113,8 @@ export function NightReplay({ item, editor, queue = proposalQueue, initial_night
     <div className="visuals-replay-tune">
       <ReplayCurve item={item} editor={editor} state={editing} trace={trace} now={now} help_id={help_id} />
       <ReplayBeacon item={item} now={now} position={time.position_s} offerings={night.offerings} counted={counted}
-        pinned={now.total >= top && trace.pinned_s > 0} never_lit={trace.first_lit_s === undefined} />
+        pinned={now.total >= top && trace.pinned_s > 0} never_lit={trace.first_lit_s === undefined}
+        lit_intensity={curveIntensity(curve, trace.lit_total)} />
     </div>
     <div className="visuals-replay-handoff">
       <InkButton size="wrap" variant="offset" ink="or" onClick={send}>{draft ? 'Update the Steward proposal' : 'Send curve to the Steward'}</InkButton>

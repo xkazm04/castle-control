@@ -215,4 +215,6 @@ test('the trace names the lit threshold and flags the minute it first lights, ne
   expect(raid).toContain(`data-peak="${raid_trace.peak.t}"`);
   expect(raid).toContain(`peak ${Math.round(raid_trace.peak.intensity * 100)}% · ${clockLabel(raid_trace.peak.t)}`);
   expect(cold).not.toContain('data-peak=');
+  // The preview's blaze meter carries the same lit level as the trace's dashed line.
+  expect(cold).toContain('class="visuals-replay-meter-lit" style="bottom:25%"');
 });

@@ -60,9 +60,9 @@ function recent(offerings: readonly Offering[], position: number) {
 }
 
 /** The selected visual's art at the playhead, plus the last offerings to tick by. */
-export function ReplayBeacon({ item, now, position, offerings, counted, pinned, never_lit = false }: {
+export function ReplayBeacon({ item, now, position, offerings, counted, pinned, never_lit = false, lit_intensity }: {
   item: PreviewVisual; now: TracePoint; position: number; offerings: readonly Offering[];
-  counted: ReadonlySet<number>; pinned: boolean; never_lit?: boolean;
+  counted: ReadonlySet<number>; pinned: boolean; never_lit?: boolean; lit_intensity?: number;
 }) {
   const ticks = recent(offerings, position);
   const flare = ticks.find(index => counted.has(index));
@@ -75,7 +75,8 @@ export function ReplayBeacon({ item, now, position, offerings, counted, pinned, 
       </div>
       {pinned && <span className="visuals-replay-stamp">Pinned at max</span>}
       {never_lit && <span className="visuals-replay-stamp" data-tone="cold">Never lit tonight</span>}
-      <span className="visuals-replay-meter" aria-hidden="true"><i style={{ height: `${now.intensity * 100}%` }} /></span>
+      <span className="visuals-replay-meter" aria-hidden="true"><i style={{ height: `${now.intensity * 100}%` }} />
+        {lit_intensity !== undefined && <b className="visuals-replay-meter-lit" style={{ bottom: `${lit_intensity * 100}%` }} />}</span>
     </div>
     <p className="visuals-readout"><b>{now.total.toFixed(1)} weighted subs at {clockLabel(position)}</b></p>
     <ol className="visuals-replay-ticker" aria-label="Latest simulated offerings">
