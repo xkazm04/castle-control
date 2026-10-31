@@ -1,16 +1,18 @@
+import { verifyDecodedWrit } from '@castle-control/verifier-web';
 import type { LotsHandle, LotsProofRoll, LotsWrit } from '@castle-control/contract';
+import type { BeaconAnchor } from './beacon-anchors.js';
 
 /** Writ Lab: an in-memory proof inspector for the cc-verify v1 byte protocol.
  * Every tamper produces a frozen copy; the frozen roll itself is never edited.
- * The beacon's BLS signature is not authenticated here (no pairing library in
- * the desktop); that step reports `unverified` and defers to cc-verify. */
-export type TamperKind = 'weight' | 'handle' | 'seed' | 'plan' | 'winners';
+ * A beacon's BLS signature is authenticated with verifier-web against a compiled-in
+ * anchor for its chain; a chain without an anchor reports `unverified`. */
+export type TamperKind = 'weight' | 'handle' | 'seed' | 'plan' | 'winners' | 'forge';
 export type Tamper = Readonly<{ kind: TamperKind; index?: number }>;
 export type StepId = 'serialization' | 'seal' | 'randomness' | 'derivation';
 export type StepStatus = 'pass' | 'fail' | 'blocked' | 'unverified';
 export type LabReason = 'invalid_version' | 'invalid_entries' | 'handle_order' | 'invalid_winner_count'
   | 'seal_mismatch' | 'commitment_mismatch' | 'randomness_mismatch' | 'source_mismatch' | 'invalid_round'
-  | 'signature_not_authenticated' | 'cast_mismatch' | 'blocked_by_earlier_step';
+  | 'signature_not_authenticated' | 'signature_invalid' | 'round_schedule' | 'cast_mismatch' | 'blocked_by_earlier_step';
 export type PreimageField = 'domain' | 'entry_count' | 'entry_length' | 'entry_handle' | 'entry_weight'
   | 'winner_count' | 'sealed_at' | 'margin_s' | 'source_tag' | 'chain_hash' | 'round' | 'commitment';
 export type PreimageSegment = Readonly<{ field: PreimageField; start: number; end: number; entry?: number }>;
@@ -25,6 +27,8 @@ export type LabReport = Readonly<{
   source: LotsWrit['proof']['source']; entry_count: number; byte_length: number; preimage: Uint8Array;
   segments: readonly PreimageSegment[]; diff?: ByteDiff; trace: readonly TracePick[];
   computed_winners: readonly LotsHandle[]; round?: string;
+  /** The anchor a beacon's BLS signature was checked against, when one exists for its chain. */
+  anchor?: BeaconAnchor['name'];
 }>;
 
 const encoder = new TextEncoder();
@@ -172,7 +176,7 @@ export function applyTamper(writ: LotsWrit, tamper: Tamper): LotsWrit {
     copy.winners = copy.winners.map(winner => winner === entry.handle ? altered : winner);
     entry.handle = altered;
   }
-  if (tamper.kind === 'seed') {
+  if (tamper.kind === 'seed' || tamper.kind === 'forge') {
     copy.proof = copy.proof.source === 'streamer_commit' ? { ...copy.proof, seed: flipNibble(copy.proof.seed) }
       : { ...copy.proof, signature: flipNibble(copy.proof.signature) };
   }
@@ -196,8 +200,12 @@ export function defaultTamperIndex(writ: LotsWrit): number {
 }
 
 /** Four-step proof walk. A failed step blocks every later step. */
-export async function inspectWrit(original: LotsWrit, tamper?: Tamper): Promise<LabReport> {
-  const writ = tamper ? applyTamper(original, tamper) : original;
+export async function inspectWrit(original: LotsWrit, tamper?: Tamper, anchors: readonly BeaconAnchor[] = []): Promise<LabReport> {
+  let writ = tamper ? applyTamper(original, tamper) : original;
+  // Forge: a made-up beacon signature with its matching hash, so only BLS authentication can catch it.
+  if (tamper?.kind === 'forge' && writ.proof.source === 'drand_quicknet') {
+    writ = deepFreeze({ ...writ, proof: { ...writ.proof, randomness: toHex(await sha256(hexBytes(writ.proof.signature))) } });
+  }
   const { bytes, segments } = sealPreimage(writ.roll);
   const baseline = sealPreimage(original.roll).bytes;
   const diff = tamper ? preimageDiff(baseline, bytes, segments) : undefined;
@@ -214,6 +222,7 @@ export async function inspectWrit(original: LotsWrit, tamper?: Tamper): Promise<
   add(recomputed === writ.seal ? { id: 'seal', status: 'pass', recorded: writ.seal, recomputed }
     : { id: 'seal', status: 'fail', reason: 'seal_mismatch', recorded: writ.seal, recomputed });
   let randomness: Uint8Array | undefined;
+  let anchor_name: BeaconAnchor['name'] | undefined;
   if (!failed) {
     const proof = writ.proof; const plan = writ.roll.randomness;
     if (proof.source === 'streamer_commit' && plan.source === 'streamer_commit') {
@@ -225,9 +234,23 @@ export async function inspectWrit(original: LotsWrit, tamper?: Tamper): Promise<
       const digest = await sha256(hexBytes(proof.signature));
       randomness = digest;
       const computed = toHex(digest);
-      add(!/^[1-9][0-9]{0,19}$/.test(plan.round) ? { id: 'randomness', status: 'fail', reason: 'invalid_round' }
-        : computed !== proof.randomness ? { id: 'randomness', status: 'fail', reason: 'randomness_mismatch', recorded: proof.randomness, recomputed: computed }
-          : { id: 'randomness', status: 'unverified', reason: 'signature_not_authenticated', recorded: proof.randomness, recomputed: computed });
+      const anchor = anchors.find(item => item.chain.hash === plan.chain_hash);
+      const compared = { recorded: proof.randomness, recomputed: computed };
+      if (!/^[1-9][0-9]{0,19}$/.test(plan.round)) add({ id: 'randomness', status: 'fail', reason: 'invalid_round' });
+      else if (computed !== proof.randomness) add({ id: 'randomness', status: 'fail', reason: 'randomness_mismatch', ...compared });
+      else if (!anchor) add({ id: 'randomness', status: 'unverified', reason: 'signature_not_authenticated', ...compared });
+      else {
+        anchor_name = anchor.name;
+        // verifier-web re-checks seal, round schedule and BLS; the cast is the lab's own step 4.
+        const cast = await traceCast(digest, writ.seal, writ.roll);
+        try {
+          await verifyDecodedWrit({ ...writ, winners: [...cast.winners] }, anchor.chain);
+          add({ id: 'randomness', status: 'pass', ...compared });
+        } catch (error) {
+          const schedule = error instanceof Error && /schedule|chain/i.test(error.message);
+          add({ id: 'randomness', status: 'fail', reason: schedule ? 'round_schedule' : 'signature_invalid', ...compared });
+        }
+      }
     } else add({ id: 'randomness', status: 'fail', reason: 'source_mismatch' });
   } else add({ id: 'randomness', status: 'blocked' });
   let computed_winners: readonly LotsHandle[] = [];
@@ -244,7 +267,7 @@ export async function inspectWrit(original: LotsWrit, tamper?: Tamper): Promise<
     verdict: failed ? 'caught' : steps.some(step => step.status === 'unverified') ? 'unverified' : 'verified',
     entry_count: writ.roll.entries.length, byte_length: bytes.length, preimage: bytes, segments, trace, computed_winners,
     ...(failed ? { caught_at: failed } : {}), ...(tamper ? { tamper } : {}), ...(diff ? { diff } : {}),
-    ...(plan.source === 'drand_quicknet' ? { round: plan.round } : {}),
+    ...(plan.source === 'drand_quicknet' ? { round: plan.round } : {}), ...(anchor_name ? { anchor: anchor_name } : {}),
   };
   return Object.freeze(report);
 }

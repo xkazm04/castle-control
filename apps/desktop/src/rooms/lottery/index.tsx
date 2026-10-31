@@ -20,8 +20,12 @@ import type { StageCast } from './stage-model.js';
 import { WeightEqualizer } from './equalizer.jsx';
 import { WritLab } from './lab.jsx';
 import { UrnTierPreset } from './tier.jsx';
+import { quicknet_anchor, simulated_anchor } from './beacon-anchors.js';
 import { verifyWrit } from '../../lots-cast.js';
 import './room.css';
+
+/** Fixture mode may authenticate its simulated specimen; real chains keep the public anchor. */
+const fixture_anchors = [quicknet_anchor, simulated_anchor] as const;
 
 export { LotteryWrit } from './writ.jsx';
 
@@ -111,7 +115,7 @@ export default function LotteryRoom({ snapshot, replay, queue = proposalQueue, s
         {state.draw.policy.official_rules && <p className="cc-aside">{copy.template_text}</p>}
         <div className="lottery-seal-frame"><HeraldicCard variant="raised" tone="seal" ink="gules">{seal_slot}</HeraldicCard></div>
         {state.sealed && roll && <FixtureCast port={port} hash={roll.hash} display={appearance} />}
-        <WritLab writ={state.writ ?? fixtureWrit} simulated prove={prove} beacon={fixtureBeaconWrit} />
+        <WritLab writ={state.writ ?? fixtureWrit} simulated prove={prove} beacon={fixtureBeaconWrit} anchors={fixture_anchors} />
         <HeraldicCard variant="raised" aria-label={copy.lookup_title}>
           <div className="lottery-lookup">
             <label htmlFor="lottery-lookup">{copy.lookup}</label>

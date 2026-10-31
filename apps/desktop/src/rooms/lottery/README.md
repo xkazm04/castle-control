@@ -23,8 +23,12 @@ activity cap, free !join and raider-cap controls (core edits go through
 `lots.draw.upsert`). `lab.tsx` (Writ Lab) tampers with an in-memory copy of the
 current writ (weight, handle, seed, plan, winner order) and walks canonical
 serialization, SHA-256 seal, randomness commitment and rejection-sampling
-derivation; a failed step blocks the rest. drand BLS authentication stays with
-cc-verify and the offline verifier, so step 3 reads UNVERIFIED for beacon writs.
+derivation; a failed step blocks the rest. For beacon writs, step 3 also runs
+verifier-web's `verifyDecodedWrit` (round schedule and BLS signature) against a
+compiled-in anchor (`beacon-anchors.ts`: the public quicknet key; fixture mode
+adds verifier-web's simulated chain key for its specimen). A chain without an
+anchor reads UNVERIFIED. "Forge the beacon" (a made-up signature with its
+matching hash) is caught by BLS alone.
 A finished ceremony closes on its proof (theatre: a verdict card naming a
 local recompute or a core-verified cast, with "Prove it in the Writ Lab", which
 returns to the desk, restores the canonical writ and replays the walk; desk: a

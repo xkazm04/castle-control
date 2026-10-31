@@ -15,7 +15,11 @@ import { WeightEqualizer } from './equalizer.jsx';
 import { WritLab } from './lab.jsx';
 import { UrnTierPreset } from './tier.jsx';
 import { CoreDrawSetup } from './core-setup.jsx';
+import { quicknet_anchor } from './beacon-anchors.js';
 import './room.css';
+
+/** Core mode authenticates real draws against the public quicknet key only, never a simulated chain. */
+const core_anchors = [quicknet_anchor] as const;
 
 /** Presentation state per core port: shape, appearance and reveal cursor never reach RPC. */
 const stages = new WeakMap<CoreLotsPort, { display: ReturnType<typeof createDrawDisplay>; reveal: ReturnType<typeof createRevealClock> }>();
@@ -151,7 +155,7 @@ export function ConnectedLotsRoom({ port, simulated, seal_slot }: { port: CoreLo
             {state.writ && <a download="castle-control-writ.json" href={`data:application/json;charset=utf-8,${encodeURIComponent(JSON.stringify(state.writ))}`}>{copy.core.download}</a>}
           </section>
         </Ticket>}
-        {state.writ && <WritLab writ={state.writ} simulated={simulated ?? false} prove={prove} />}
+        {state.writ && <WritLab writ={state.writ} simulated={simulated ?? false} prove={prove} anchors={core_anchors} />}
         <p className="cc-status" role="status">{state.notice}</p>
         <FairnessSteps />
       </div>

@@ -8,6 +8,7 @@ import { applyTamper, defaultTamperIndex, hexBytes, inspectWrit, sealOfRoll, sea
 import type { LabReport } from './lab-model.js';
 import { labVerdict, WritLab, WritLabView } from './lab.jsx';
 import { labCopy } from './lab-copy.js';
+import { quicknet_anchor, simulated_anchor } from './beacon-anchors.js';
 
 const statuses = (report: LabReport) => report.steps.map(step => step.status);
 // Generated, labelled-simulated values only: no real seed, signature or chat.
@@ -178,9 +179,40 @@ test('the specimen switch shows which writ is on the bench and explains the beac
     on_tamper={() => undefined} />);
   expect(html).toMatch(/aria-pressed="true"[^>]*>Simulated beacon writ</);
   expect(html).toMatch(/aria-pressed="false"[^>]*>Current writ</);
-  expect(html).toContain('the BLS signature itself is checked by cc-verify');
+  expect(html).toContain('the BLS signature against the simulated chain key');
+  expect(html).toMatch(/>Forge the beacon</);
   expect(labCopy.label('drand_quicknet', fixtureBeaconWrit.roll.randomness.source === 'drand_quicknet' ? fixtureBeaconWrit.roll.randomness.chain_hash : ''))
     .toBe('Simulated chain · drand quicknet format');
   expect(labCopy.label('drand_quicknet', '52db9ba70e0cc0f6eaf7803dd07447a1f5477735fd3f661792ba94600c84e971')).toBe('Public beacon · drand quicknet');
-  expect(renderToStaticMarkup(<WritLabView writ={fixtureWrit} simulated on_tamper={() => undefined} />)).not.toContain('Specimen');
+  const plain = renderToStaticMarkup(<WritLabView writ={fixtureWrit} simulated on_tamper={() => undefined} />);
+  expect(plain).not.toContain('Specimen'); expect(plain).not.toContain('Forge the beacon');
+});
+
+const corpus = (name: string) => JSON.parse(readFileSync(new URL(`../../../../../packages/verifier-web/src/${name}`, import.meta.url), 'utf8')) as
+  { chain: unknown; cases: { writ: LotsWrit }[] };
+
+test('compiled-in beacon anchors are exactly the public quicknet and simulated chains of verifier-web', () => {
+  expect(quicknet_anchor.chain).toEqual(corpus('public-writs.json').chain);
+  expect(simulated_anchor.chain).toEqual(corpus('simulated-writs.json').chain);
+});
+
+test('with an anchor the beacon walk fully passes, and a forged beacon is caught by BLS alone', async () => {
+  const anchored = await inspectWrit(fixtureBeaconWrit, undefined, [simulated_anchor]);
+  expect(statuses(anchored)).toEqual(['pass', 'pass', 'pass', 'pass']);
+  expect(anchored).toMatchObject({ verdict: 'verified', anchor: 'simulated' });
+  const forged = await inspectWrit(fixtureBeaconWrit, { kind: 'forge' }, [simulated_anchor]);
+  expect(statuses(forged)).toEqual(['pass', 'pass', 'fail', 'blocked']);
+  expect(forged.steps[2]?.reason).toBe('signature_invalid');
+  // Without an anchor the forger's matching hash slips past step 3; only the cast betrays it.
+  expect(statuses(await inspectWrit(fixtureBeaconWrit, { kind: 'forge' }))).toEqual(['pass', 'pass', 'unverified', 'fail']);
+  // A simulated chain is never authenticated by the public key.
+  expect(statuses(await inspectWrit(fixtureBeaconWrit, undefined, [quicknet_anchor]))).toEqual(['pass', 'pass', 'unverified', 'pass']);
+});
+
+test('a recorded official quicknet beacon verifies against the public key in the room', async () => {
+  const writ = corpus('public-writs.json').cases[0]?.writ;
+  if (!writ) throw new Error('Missing public writ vector');
+  const report = await inspectWrit(writ, undefined, [quicknet_anchor]);
+  expect(statuses(report)).toEqual(['pass', 'pass', 'pass', 'pass']);
+  expect(report.anchor).toBe('public');
 });

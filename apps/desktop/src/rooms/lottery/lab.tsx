@@ -5,10 +5,13 @@ import type { LotsWrit } from '@castle-control/contract';
 import { byteWindow, defaultTamperIndex, inspectWrit } from './lab-model.js';
 import type { LabReport, LabStep, StepStatus, Tamper, TamperKind, TracePick } from './lab-model.js';
 import { labCopy as copy } from './lab-copy.js';
+import type { BeaconAnchor } from './beacon-anchors.js';
 import { useReducedMotion } from './playback.js';
 import './lab.css';
 
 const kinds: readonly TamperKind[] = ['weight', 'handle', 'seed', 'plan', 'winners'];
+/** Forging only means something for a beacon writ: there is no signature to forge on a streamer seed. */
+const kindsFor = (writ: LotsWrit): readonly TamperKind[] => writ.proof.source === 'drand_quicknet' ? [...kinds, 'forge'] : kinds;
 const stepOrder = ['serialization', 'seal', 'randomness', 'derivation'] as const;
 const stamp: Record<StepStatus, { variant: 'ok' | 'bad' | 'dash' | 'warn'; tone: 'ok' | 'blocked' | 'neutral' | 'warn' }> = {
   pass: { variant: 'ok', tone: 'ok' }, fail: { variant: 'bad', tone: 'blocked' },
@@ -67,6 +70,7 @@ function StepCard({ step, index, report }: { step: LabStep | undefined; index: n
       <p className="lottery-lab-aside">{description}</p>
       {id === 'serialization' && report && <p className="lottery-lab-fact">{copy.entries_shown(report.entry_count, report.entry_count)} · {copy.byte_count(report.byte_length)}</p>}
       {id === 'randomness' && report && <p className="lottery-lab-fact">{copy.label(report.source, report.writ.roll.randomness.source === 'drand_quicknet' ? report.writ.roll.randomness.chain_hash : undefined)}{report.round ? ` · ${copy.round(report.round)}` : ''}</p>}
+      {id === 'randomness' && status === 'pass' && report?.anchor && <p className="lottery-lab-fact" data-anchor={report.anchor}>{copy.anchor(report.anchor)}</p>}
       {step?.recorded !== undefined && <dl className="lottery-lab-compare" data-match={step.recorded === step.recomputed}>
         <div><dt>{copy.recorded}</dt><dd title={step.recorded}>{detail(step.recorded)}</dd></div>
         <div><dt>{copy.recomputed}</dt><dd title={step.recomputed}>{detail(step.recomputed ?? '')}</dd></div>
@@ -133,7 +137,7 @@ export function WritLabView({ writ, simulated, tamper, report, failed = false, r
       <div className="lottery-lab-bench">
         <p className="lottery-lab-kicker">{copy.tamper_title}</p>
         <div className="lottery-lab-tampers" role="group" aria-label={copy.tamper_title}>
-          {kinds.map(kind => <InkButton key={kind} size="room" aria-pressed={tamper?.kind === kind} title={hint(kind)}
+          {kindsFor(writ).map(kind => <InkButton key={kind} size="room" aria-pressed={tamper?.kind === kind} title={hint(kind)}
             onClick={() => on_tamper(tamper?.kind === kind ? undefined : { kind, index })}>{copy.tampers[kind]}</InkButton>)}
         </div>
         <p className="lottery-lab-aside">{tamper ? hint(tamper.kind) : copy.restored}</p>
@@ -163,7 +167,11 @@ type Result = { writ: LotsWrit; tamper: Tamper | undefined; report?: LabReport; 
 /** In-room tamper-and-verify lab. Newer tamper selections always win over older recomputes.
  * Each new `prove` request (from the stage) restores the canonical writ, brings the lab into
  * view and replays the four-step walk. */
-export function WritLab({ writ: cast_writ, simulated, prove = 0, beacon }: { writ: LotsWrit; simulated: boolean; prove?: number; beacon?: LotsWrit }) {
+export function WritLab({ writ: cast_writ, simulated, prove = 0, beacon, anchors = [] }: {
+  writ: LotsWrit; simulated: boolean; prove?: number; beacon?: LotsWrit;
+  /** Compiled-in chain anchors this lab may authenticate beacons against. */
+  anchors?: readonly BeaconAnchor[];
+}) {
   const [specimen, setSpecimen] = useState<Specimen>('cast');
   const writ = specimen === 'beacon' && beacon ? beacon : cast_writ;
   const [selection, setSelection] = useState<{ writ: LotsWrit; tamper?: Tamper }>({ writ });
@@ -183,12 +191,12 @@ export function WritLab({ writ: cast_writ, simulated, prove = 0, beacon }: { wri
   }, [prove]);
   useEffect(() => {
     let live = true;
-    inspectWrit(writ, tamper).then(report => {
+    inspectWrit(writ, tamper, anchors).then(report => {
       if (!live) return;
       setResult({ writ, tamper, report }); setRun(count => count + 1);
     }, () => { if (live) setResult({ writ, tamper, failed: true }); });
     return () => { live = false; };
-  }, [writ, tamper]);
+  }, [writ, tamper, anchors]);
   const current = result && result.writ === writ && result.tamper === tamper ? result : undefined;
   return <WritLabView section={section} writ={writ} simulated={simulated} run={run} on_tamper={next => setSelection(next ? { writ, tamper: next } : { writ })}
     {...(tamper ? { tamper } : {})} {...(current?.report ? { report: current.report } : {})} failed={current?.failed ?? false}
