@@ -9,14 +9,18 @@ export type DrawDisplay = {
 export function createDrawDisplay() {
   let state: DrawDisplay = { size: 'M', anchor: 'br', colour: 'gules', art_style: 'heraldic', reveal_ms: 1500 };
   const listeners = new Set<() => void>();
+  const edit = (change: Partial<DrawDisplay>) => {
+    const value = change.reveal_ms ?? state.reveal_ms;
+    const reveal_ms = Number.isFinite(value) ? Math.min(10_000, Math.max(100, Math.round(value))) : 1500;
+    state = { ...state, ...change, reveal_ms };
+    for (const listener of listeners) listener();
+  };
   return {
     getSnapshot: () => state,
     subscribe(listener: () => void) { listeners.add(listener); return () => { listeners.delete(listener); }; },
-    edit(change: Partial<DrawDisplay>) {
-      const value = change.reveal_ms ?? state.reveal_ms;
-      const reveal_ms = Number.isFinite(value) ? Math.min(10_000, Math.max(100, Math.round(value))) : 1500;
-      state = { ...state, ...change, reveal_ms };
-      for (const listener of listeners) listener();
+    edit,
+    commitReveal(value: string) {
+      edit({ reveal_ms: value.trim() === '' ? Number.NaN : Number(value) });
     },
   };
 }

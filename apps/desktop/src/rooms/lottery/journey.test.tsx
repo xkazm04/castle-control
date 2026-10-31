@@ -1,11 +1,94 @@
+import * as React from 'react';
+import type { ChangeEvent, FocusEvent, InputHTMLAttributes, KeyboardEvent, ReactElement, ReactNode } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { expect, test, vi } from 'vitest';
+import { afterEach, expect, test, vi } from 'vitest';
 import { ProposalQueue } from '@castle-control/ui/steward';
 import LotteryRoom from './index.jsx';
 import { draftRoll, lotterySession, sealLotteryProposal } from './session.js';
 import { createLotsPreview } from '../../lots-model.js';
 import { fixtureDraws } from '../../lots-fixture.js';
 import { createDrawDisplay } from './display.js';
+import { DrawAppearance } from './appearance.jsx';
+
+vi.mock('react', async importOriginal => ({ ...await importOriginal<typeof React>() }));
+afterEach(() => vi.restoreAllMocks());
+
+function revealInput(tree: ReactNode): ReactElement<InputHTMLAttributes<HTMLInputElement>> | undefined {
+  let found: ReactElement<InputHTMLAttributes<HTMLInputElement>> | undefined;
+  React.Children.forEach(tree, child => {
+    if (found || !React.isValidElement<InputHTMLAttributes<HTMLInputElement>>(child)) return;
+    if (child.props.id === 'lots-reveal') found = child;
+    else found = revealInput(child.props.children);
+  });
+  return found;
+}
+
+// Node-only handler coverage: retain the input's local state between SSR probes.
+// Event projections supply the native input values read by the real handlers.
+function appearanceHarness() {
+  const display = createDrawDisplay();
+  let draft: unknown;
+  const state = vi.spyOn(React, 'useState');
+  const render = () => {
+    state.mockReturnValue([draft, value => { draft = value; }]);
+    let input: ReactElement<InputHTMLAttributes<HTMLInputElement>> | undefined;
+    function Probe() { input = revealInput(DrawAppearance({ port: display })); return null; }
+    renderToStaticMarkup(<Probe />);
+    if (!input) throw new Error('Missing appearance probe');
+    return input;
+  };
+  const target = (value: string) => ({ value, valueAsNumber: value === '' ? Number.NaN : Number(value) }) as HTMLInputElement;
+  return { display, render,
+    change(value: string) {
+      render().props.onChange?.({ currentTarget: target(value) } as ChangeEvent<HTMLInputElement>);
+    },
+    commit(value: string, method: 'blur' | 'Enter') {
+      const props = render().props;
+      if (method === 'blur') props.onBlur?.({ currentTarget: target(value) } as FocusEvent<HTMLInputElement>);
+      else {
+        const event: Partial<KeyboardEvent<HTMLInputElement>> = {
+          key: 'Enter', currentTarget: target(value), preventDefault: vi.fn(),
+        };
+        props.onKeyDown?.(event as KeyboardEvent<HTMLInputElement>);
+      }
+    },
+  };
+}
+
+test.each(['blur', 'Enter'] as const)('reveal timing preserves 7, 75, 750 while typing and commits 750 on %s', method => {
+  const h = appearanceHarness();
+  for (const value of ['7', '75', '750']) {
+    h.change(value);
+    expect(String(h.render().props.value)).toBe(value);
+    expect(h.display.getSnapshot().reveal_ms).toBe(1500);
+  }
+  h.commit('750', method);
+  expect(h.display.getSnapshot().reveal_ms).toBe(750);
+  expect(String(h.render().props.value)).toBe('750');
+});
+
+test('clearing reveal timing leaves the input empty until commit', () => {
+  const h = appearanceHarness();
+  h.change('');
+  expect(h.render().props.value).toBe('');
+  expect(h.display.getSnapshot().reveal_ms).toBe(1500);
+  h.commit('', 'blur');
+  expect(h.display.getSnapshot().reveal_ms).toBe(1500);
+  expect(String(h.render().props.value)).toBe('1500');
+});
+
+test.each(['blur', 'Enter'] as const)('reveal timing clamps only on %s commit', method => {
+  const h = appearanceHarness();
+  for (const [value, expected] of [['999999', 10000], ['-20', 100]] as const) {
+    const before = h.display.getSnapshot().reveal_ms;
+    h.change(value);
+    expect(String(h.render().props.value)).toBe(value);
+    expect(h.display.getSnapshot().reveal_ms).toBe(before);
+    h.commit(value, method);
+    expect(h.display.getSnapshot().reveal_ms).toBe(expected);
+    expect(String(h.render().props.value)).toBe(String(expected));
+  }
+});
 
 const snapshot = { mode: 'fixture', phase: 'ready' } as const;
 const room = (queue: ProposalQueue) => renderToStaticMarkup(<LotteryRoom snapshot={snapshot} replay={false} queue={queue} />);

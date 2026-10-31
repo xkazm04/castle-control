@@ -23,6 +23,8 @@ export function DrawPreview({ display }: { display: DrawDisplay }) {
 
 export function DrawAppearance({ port }: { port: DrawDisplayPort }) {
   const display = useSyncExternalStore(port.subscribe, port.getSnapshot, port.getSnapshot);
+  const [revealDraft, setRevealDraft] = useState<string>();
+  const commitReveal = (value: string) => { port.commitReveal(value); setRevealDraft(undefined); };
   return <HeraldicCard variant="raised" aria-label={copy.stream}>
     <h2 className="lottery-card-title">{copy.stream}</h2>
     <div className="lottery-settings">
@@ -47,8 +49,12 @@ export function DrawAppearance({ port }: { port: DrawDisplayPort }) {
         }}>{styles.map(item => <option key={item.id} value={item.id}>{item.label}</option>)}</select>
       </FieldGroup>
       <FieldGroup label={copy.journey.reveal} control_id="lots-reveal">
-        <input id="lots-reveal" type="number" min={100} max={10000} value={display.reveal_ms}
-          onChange={event => port.edit({ reveal_ms: event.currentTarget.valueAsNumber })} />
+        <input id="lots-reveal" type="number" min={100} max={10000} value={revealDraft ?? String(display.reveal_ms)}
+          onChange={event => setRevealDraft(event.currentTarget.value)}
+          onBlur={event => commitReveal(event.currentTarget.value)}
+          onKeyDown={event => {
+            if (event.key === 'Enter') { event.preventDefault(); commitReveal(event.currentTarget.value); }
+          }} />
       </FieldGroup>
     </div>
     <DrawPreview key={`${display.art_style}-${display.reveal_ms}`} display={display} />
