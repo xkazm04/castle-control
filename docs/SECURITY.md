@@ -1,5 +1,38 @@
 # Security
 
+## Provider keychain convention (owner rulings 11 and 14)
+
+The Steward vault uses service `castle-control` and a lowercase provider name
+as its account: `openai`, `anthropic`, `leonardo`, and future provider names.
+Labels contain only lowercase ASCII letters, digits and hyphens (1 to 64 bytes).
+Windows uses `windows-native`, macOS `apple-native`, and Linux
+`sync-secret-service` with `crypto-rust`, matching Beacons' keyring 3.6.3 backends.
+This is OS-user custody with the same limits described under Twitch below;
+there is no plaintext fallback. Tests inject an in-memory backend and never
+access the real keychain. Native vault construction performs no credential I/O.
+
+**No Steward lane reads a key yet.** Native Steward always uses the Batch CLI
+route and always passes no key label, regardless of `engine.live_endpoint` or
+`engine.cloud_opt_in`. Codex and Claude retain the user's own CLI sign-in;
+cloud opt-in never changes that lane into paid API use. The wrapper accepts an
+OpenAI API key under service `castle-control`, account `openai`. Only a future
+secondary endpoint lane, off by default and with CLI first, will read that key.
+Selecting that lane needs a separate settings, contract and engine-routing
+delivery, decided by the owner. This vault does not build, select or enable the
+lane, and no live API call is made by this delivery.
+
+Loaded values have redacted Debug and Display representations inside the vault.
+Only the existing `cc-engine::Keychain` boundary releases a plaintext String;
+it must never be formatted or logged. The vault's missing, empty and OS-failure
+errors use the existing Unavailable envelope, naming only the provider account;
+underlying OS errors are discarded without formatting. The engine trait itself
+can return only its payload-free `Failure::Unavailable`. No key or raw OS error
+is written to logs, notices, ledgers or configuration.
+
+Follow-up: migrate the existing `castlecontrol-leonardo` and `castlecontrol-obs`
+services in a separate owner-approved delivery. This change neither reads nor
+migrates those services, and it leaves Twitch's OAuth service unchanged.
+
 ## OBS overlay host (WP 3.2)
 
 The OBS overlay has a separate IPv4 loopback listener, exact `localhost:<port>`

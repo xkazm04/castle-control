@@ -1,6 +1,6 @@
 //! Persisted settings are the only source of native executable/model selection.
-use super::{StewardConfig, StewardModule, internal};
-use cc_engine::{ConstructionError, Engine, NoKeychain, SpawnDoor};
+use super::{StewardConfig, StewardModule, internal, keychain::Vault};
+use cc_engine::{ConstructionError, Engine, SpawnDoor};
 use cc_store::Store;
 use cc_types::{ErrorCode, ErrorEnvelope};
 use std::{path::PathBuf, sync::Arc};
@@ -51,7 +51,9 @@ impl StewardModule {
         Self::configured(StewardConfig {
             engine: EngineSource::Settings(process_root),
             store: StoreOwner::Native(store),
-            vault: Arc::new(NoKeychain),
+            vault: Arc::new(Vault::default()),
+            // Batch always routes to CLI today. Never let live endpoint settings
+            // inject an API credential into the user's subscription CLI lane.
             key_label: None,
             simulated: false,
         })

@@ -250,3 +250,91 @@ async fn no_keychain_fake_cli_and_settings_completion_rebuild_without_restart() 
     assert_eq!(error.code, ErrorCode::NotFound);
     assert_eq!(h.ask().await.unwrap_err().code, ErrorCode::Unavailable);
 }
+
+#[test]
+fn native_never_selects_a_key_label_from_live_endpoint_or_cloud_opt_in() {
+    use cc_types::{DataValue, Settings};
+
+    let root = tempfile::tempdir().unwrap();
+    let store = Arc::new(std::sync::Mutex::new(
+        Store::open(root.path().join("native")).unwrap(),
+    ));
+    for provider in ["claude_cli", "codex_cli"] {
+        for endpoint in ["http://127.0.0.1:11434/v1", "https://api.openai.com/v1"] {
+            for enabled in [false, true] {
+                store
+                    .lock()
+                    .unwrap()
+                    .set_engine_settings(&Settings {
+                        values: [
+                            (
+                                "engine.cli_provider".into(),
+                                DataValue::String(provider.into()),
+                            ),
+                            (
+                                "engine.live_endpoint".into(),
+                                DataValue::String(endpoint.into()),
+                            ),
+                            ("engine.cloud_opt_in".into(), DataValue::Bool(enabled)),
+                        ]
+                        .into(),
+                    })
+                    .unwrap();
+                let module =
+                    super::StewardModule::native(store.clone(), root.path().join("process"));
+                assert!(module.config.as_ref().unwrap().key_label.is_none());
+            }
+        }
+    }
+}
+
+#[cfg(windows)]
+#[tokio::test]
+async fn native_cli_calls_never_load_a_key_even_with_cloud_settings() {
+    struct RejectKeys;
+    impl cc_engine::Keychain for RejectKeys {
+        fn load(&self, _: &str) -> cc_engine::Result<String> {
+            panic!("native subscription CLI must never request a key")
+        }
+    }
+
+    let root = tempfile::tempdir().unwrap();
+    let store = Arc::new(std::sync::Mutex::new(
+        Store::open(root.path().join("native")).unwrap(),
+    ));
+    let mut module = super::StewardModule::native(store.clone(), root.path().join("process"));
+    let mut config = module.config.take().unwrap();
+    assert!(config.key_label.is_none());
+    // Only the fake is reachable by engine calls in this test.
+    config.vault = Arc::new(RejectKeys);
+    let registry = Registry::with_fixture_root(
+        root.path().join("modules"),
+        Arc::new(EventHub::new(32).unwrap()),
+    )
+    .unwrap()
+    .with_steward(config);
+    for provider in ["claude_cli", "codex_cli"] {
+        for endpoint in ["http://127.0.0.1:11434/v1", "https://api.openai.com/v1"] {
+            for enabled in [false, true] {
+                let settings = serde_json::from_value(json!({"values": {
+                    "engine.cli_provider":provider,
+                    "engine.claude_exe_path":fake_cli(),
+                    "engine.codex_exe_path":fake_cli(),
+                    "engine.posture_helper_path":fake_cli(),
+                    "engine.model_claude":"simulated-selected",
+                    "engine.model_codex":"simulated-selected",
+                    "engine.live_endpoint":endpoint,
+                    "engine.cloud_opt_in":enabled
+                }}))
+                .unwrap();
+                store
+                    .lock()
+                    .unwrap()
+                    .set_engine_settings(&settings)
+                    .unwrap();
+                let request = parse_request(br#"{"method":"steward.ask","params":{"chamber":"lots","prompt":"simulated cc-fake-scenario:writ-ok"}}"#).unwrap();
+                assert!(registry.dispatch(&request).await.is_ok());
+            }
+        }
+    }
+}

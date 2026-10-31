@@ -1,4 +1,7 @@
 //! Viewer-free proposals. Generation has no configuration mutation authority.
+mod keychain;
+#[cfg(test)]
+mod keychain_tests;
 mod native;
 mod proposal;
 mod storage;
