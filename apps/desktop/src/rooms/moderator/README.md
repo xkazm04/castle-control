@@ -263,7 +263,7 @@ spacers and `aria-rowcount`; line height remains `row-h` for 4,200-line intake.
 | cc-print/crops | kit StageFrame print; illustrative SVG remains fixture-only |
 | cc-chip-toggles/tiles/legend | room-local ConsensusSelection, ConsensusTiles, moderator-legend |
 | cc-moat-figure/gauge/bridge/stops | kit HeroReadout (54, no ghost, label caption), room-local SVG and labels |
-| cc-figures/note/rule-card/side/stamp | room-local counts/rule layout and kit StatusChip mode stamp |
+| cc-figures/note/rule-card/side/stamp | room-local counts/rule layout and kit Stamp kind shadow/armed |
 | cc-roll-entry | room-local ruled moderator-roll-entry in windowed ledger |
 | cc-drill | kit HeraldicCard and a native drill-route link |
 
@@ -483,3 +483,20 @@ build passed. First-load JS+CSS: 382,467/393,216 bytes. Final narrowed Vitest
 run: 108 tests in 15 files passed (`lots`, `moderation`, `moderation-gate`,
 `navigation`, `shell/room` and `src/rooms/`). Both new structure tests were
 proven red before the layout change. No install, git write or live test ran.
+
+
+## WP4b shared state stamps
+
+Rule rows and rule totals in both fixture and core views use `Stamp` with the
+shadow/armed kinds and the existing Watching/Armed words. The stamp table owns
+the inks, including gules for armed rules. The rampart retains the rule counts
+inside the shared stamps and preserves the link's complete safety description.
+VerdictMark and the shared VerdictChip use pass/held/blocked stamps while
+retaining the Pass/Hold/Bar words. Review actions and verdict filter buttons
+retain their action semantics and decorative icons.
+
+The moat, orders, fixture chat, drill and output headings use simulated stamps.
+Provenance notices, hidden totals, SVG descriptions and output figcaptions stay
+text. No moderation state, RPC, proposal, seal or action-gate behavior changes.
+Tests cover stamp kinds, words, accessible labels and the production-source ban
+on the old scoped badge paths. No install, git write or live test is performed.

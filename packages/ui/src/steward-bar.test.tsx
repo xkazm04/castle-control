@@ -1,7 +1,39 @@
 import type { ChangeEvent, FormEvent } from 'react';
+import { readFileSync } from 'node:fs';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { expect, test, vi } from 'vitest';
 import { StewardBar } from './steward-bar.jsx';
+import { ThemeFrame } from './primitives.jsx';
+import { Stamp } from './stamp/stamp.jsx';
+import { stampTable } from './stamp/table.js';
+
+test.each(['paper', 'stock'] as const)('Steward identity leaves stamp ink and size to the stamp table on %s', theme => {
+  const html = renderToStaticMarkup(<ThemeFrame theme={theme}><StewardBar message="Simulated example." value="" suggestions={[]}
+    on_change={vi.fn()} on_tell={vi.fn()} on_suggest={vi.fn()}
+    identity={{ name: 'The Steward', state: 'Watching', figure: <Stamp kind="shadow" word="Watching" /> }} /></ThemeFrame>);
+  expect(html).toContain('data-stamp="shadow" role="img" aria-label="Shadow: watching, takes no action: Watching"');
+  expect(html).toContain('data-stamp="simulated" role="img" aria-label="Simulated: SIMULATED STEWARD · SAMPLE DATA"');
+  expect(html).toContain('<span class="cc-steward-state">Watching</span>');
+  const css = readFileSync(new URL('./steward-bar.css', import.meta.url), 'utf8');
+  const identityTextRules = [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].filter(([, selector, body]) =>
+    /cc-steward-(?:identity|name|state|mode)/.test(selector ?? '')
+    && /(?:^|;)\s*(?:color|font[\w-]*|--stamp[\w-]*)\s*:/.test(body ?? ''));
+  // Every identity text rule must opt into its own leaf class, so neither the
+  // stamp container nor its decorative word can inherit an identity override.
+  expect(identityTextRules.map(([, selector]) => selector?.trim()).sort()).toEqual([
+    '.cc-steward-mode', '.cc-steward-name', '.cc-steward-state',
+  ]);
+  const stampCss = readFileSync(new URL('./stamp/stamp.css', import.meta.url), 'utf8');
+  const base = stampCss.match(/\.cc-stamp:where\(:not\(\.cc-chip\)\)\s*\{([^}]*)\}/)?.[1];
+  expect(base).toContain('font-size: var(--stamp-size, var(--text-shell-stamp))');
+  expect(base).toContain('color: var(--stamp-ink)');
+  for (const kind of ['simulated', 'shadow'] as const) {
+    const ink = stampTable[kind].ink;
+    const token = ink === 'key' ? 'ink' : `${ink}-text`;
+    const rule = stampCss.split('\n').find(line => line.includes(`[data-stamp="${kind}"]`));
+    expect(rule).toContain(`--stamp-ink: var(--${token})`);
+  }
+});
 
 test('StewardBar renders one honest input, last message and suggestions without a speech button when handlers are absent', () => {
   const props = { message: 'No changes made.', value: '', suggestions: ['Catch me up'],
@@ -14,6 +46,7 @@ test('StewardBar renders one honest input, last message and suggestions without 
   expect(html).toContain('aria-label="Steward identity"');
   expect(html).toContain('<svg');
   expect(html).toContain('Simulated co-pilot');
+  expect(html).toContain('data-stamp="simulated" role="img" aria-label="Simulated: SIMULATED STEWARD · SAMPLE DATA"');
   expect(html).not.toContain('aria-label="Steward proposal"');
 });
 

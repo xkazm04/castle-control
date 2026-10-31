@@ -12,21 +12,11 @@
 .cc-wordmark br { display: none; }
 .cc-live-group, .cc-link-group { display: flex; flex: none; align-items: center; gap: var(--space-12); min-width: 0; }
 .cc-link-group { gap: var(--space-8); }
-.cc-air {
-  --stamp-ink: var(--stamp-act-ground); display: inline-flex; align-items: center; gap: var(--space-6); flex: none;
-  padding: var(--space-4) var(--space-6) var(--space-3); border: var(--rule-strong) solid var(--stamp-ink);
-  border-radius: var(--r-sm); background: var(--stamp-ink); color: var(--stamp-paper); transform: rotate(-1.5deg);
-  font: 800 var(--text-shell-stamp)/1 var(--font-display); letter-spacing: .1em; text-transform: uppercase; white-space: nowrap;
-}
-.cc-air i { width: var(--space-8); height: var(--space-8); border-radius: 50%; background: currentColor; }
-.cc-air[data-live="false"] { --stamp-ink: var(--rampart-offair); color: var(--stamp-ink); background: transparent; }
-.cc-air[data-live="false"] i { background: transparent; border: var(--rule-strong) solid currentColor; }
 .cc-figure { display: flex; flex-direction: column; gap: var(--space-2); }
 .cc-figure b { font: 700 var(--text-shell-meter)/1 var(--font-ui); font-variant-numeric: tabular-nums; }
 .cc-figure small { font: 600 var(--text-shell-meter-label)/1 var(--font-ui); letter-spacing: .12em; text-transform: uppercase; color: var(--rampart-muted); }
 .cc-separator { flex: none; width: var(--rule-thin); height: var(--space-28); background: var(--rampart-rule); }
 .cc-spacer { flex: 1 1 0; min-width: 0; }
-.cc-sample { --stamp-ink: var(--rampart-paper); flex: none; white-space: nowrap; display: inline-flex; align-items: center; padding: var(--space-4) var(--space-6) var(--space-3); border: var(--rule-strong) dashed var(--stamp-ink); border-radius: var(--r-sm); color: var(--stamp-ink); font: 800 var(--text-shell-stamp)/1 var(--font-display); letter-spacing: .1em; text-transform: uppercase; }
 .cc-rampart .cc-button { height: var(--space-32); padding: 0 var(--space-12); border: var(--rule-medium) solid var(--rampart-paper); border-radius: 0; background: transparent; color: var(--rampart-paper); box-shadow: none; font: 700 var(--text-shell-action-small)/1 var(--font-ui); letter-spacing: .08em; text-transform: uppercase; }
 .cc-rampart .cc-button[data-size="icon"] { width: var(--space-32); padding: 0; }
 .cc-rampart .cc-button:hover { background: var(--rampart-paper); color: var(--rampart-background); }

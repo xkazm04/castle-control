@@ -90,6 +90,9 @@ test('each preset renders only passed chat, read-only vote art and illustrative 
 
 test('settings use labelled kit fields and hidden output keeps its provenance', () => {
   const port = createOutputPreview(); const labels = renderToStaticMarkup(<OutputSettings layer="chat" value={port.getSnapshot().chat} port={port} />);
+  const preview = renderToStaticMarkup(<OutputPreview port={port} messages={[]} directions={[]} />);
+  expect(preview).toContain('data-stamp="simulated" role="img" aria-label="Simulated: SIMULATED"');
+  expect(preview).toContain('>SIMULATED</span>');
   expect(labels.match(/class="cc-field"/g)).toHaveLength(6);
   expect(labels).toContain('Chat overlay art style');
   const html = renderToStaticMarkup(<OutputFrame width={1920} settings={port.getSnapshot()} messages={[]}

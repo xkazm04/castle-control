@@ -1,3 +1,4 @@
+import { Stamp } from '@castle-control/ui';
 import type { ArtifactId } from '@castle-control/ui/design';
 import type { ChamberId, Proposal, ProposalQueue } from '@castle-control/ui/steward';
 import { isDesignProposal } from '../../overview/design-proposal.js';
@@ -34,7 +35,7 @@ export function RoomDesignActions({ chamber, on_open }: {
   chamber: ChamberId; on_open: (selection: RoomDesignSelection) => void;
 }) {
   return <section className="room-design-actions" aria-label="Room designs">
-    <p className="room-caption">SIMULATED · DATA-ONLY DESIGNS</p>
+    <p className="room-caption"><Stamp kind="simulated" word="SIMULATED · DATA-ONLY DESIGNS" /></p>
     {roomArtifacts[chamber].map(artifact => <div key={artifact} role="group" aria-label={`${roomArtifactLabels[artifact]} design`}>
       <strong>{roomArtifactLabels[artifact]}</strong>
       <div><button type="button" onClick={() => on_open({ artifact, action: 'restyle' })}>Restyle</button>

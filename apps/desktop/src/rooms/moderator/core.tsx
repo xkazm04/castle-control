@@ -1,7 +1,7 @@
 import { useId, useEffect, useSyncExternalStore } from 'react';
 import type { ReactNode } from 'react';
 import type { Rule } from '@castle-control/contract';
-import { FieldGroup, HeraldicCard, InkButton, Plate, PlateBand, PlateBody, SectionHeading, StatusChip, WindowedRows, rowHeight } from '@castle-control/ui';
+import { FieldGroup, HeraldicCard, InkButton, Plate, PlateBand, PlateBody, SectionHeading, Stamp, WindowedRows, rowHeight } from '@castle-control/ui';
 import { coreGatehouseConnection } from '../../client.js';
 import { createCoreGatehousePort } from '../../gatehouse-core.js';
 import type { CoreGatehousePort } from '../../gatehouse-core.js';
@@ -29,8 +29,7 @@ function CoreRule({ rule, busy, port }: { rule: Rule; busy: boolean; port: CoreG
     void port.upsertRule({ rule: { ...rule, name } });
   }}>
     <div className="moderator-rule-card"><div className="moderator-rule-text"><b>{rule.name}</b><span>{rule.rule_class} · {rule.action}</span></div>
-      <StatusChip variant="azure" stamp="mode" ink="azure" tone={rule.mode === 'armed' ? 'solid' : 'neutral'}>
-        {rule.mode === 'armed' ? copy.armed : copy.watching}</StatusChip></div>
+      <Stamp kind={rule.mode} word={rule.mode === 'armed' ? copy.armed : copy.watching} /></div>
     {editable && <FieldGroup label={copy.rule_name} control_id={name_id}><input id={name_id} name="name" defaultValue={rule.name} disabled={busy} required /></FieldGroup>}
     {editable && <InkButton type="submit" size="room" disabled={busy}>{copy.save_watching}</InkButton>}
     {!editable && <p>{rule.rule_class === 'rail' ? copy.rail_fixed : rule.mode === 'shadow' ? copy.bench_edit_here : copy.edit_shadow}</p>}
@@ -68,8 +67,8 @@ export function ConnectedGatehouse({ port, replay, seal_slot }: { port: CoreGate
             <PlateBody><p>{copy.core_moat_unavailable}</p></PlateBody>
           </Plate>
           <section className="moderator-block moderator-core-rules"><SectionHeading title={copy.orders_title} gloss={copy.core_rules_gloss} />
-            <div className="moderator-figures"><span><b>{state.rules.filter(rule => rule.mode === 'armed').length}</b>{copy.armed}</span>
-              <span><b>{state.rules.filter(rule => rule.mode === 'shadow').length}</b>{copy.watching}</span></div>
+            <div className="moderator-figures"><span><b>{state.rules.filter(rule => rule.mode === 'armed').length}</b><Stamp kind="armed" word={copy.armed} /></span>
+              <span><b>{state.rules.filter(rule => rule.mode === 'shadow').length}</b><Stamp kind="shadow" word={copy.watching} /></span></div>
             <p className="moderator-note">{copy.core_rules_notice}</p>
             <WindowedRows rows={state.rules} label={copy.core_rules_label} row_height={rowHeight * 10}
               row_key={rule => JSON.stringify(rule)} empty_state={copy.core_rules_empty}>

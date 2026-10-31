@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useSyncExternalStore } from 'react';
-import { HeraldicCard, InkButton, SealButton, StatusChip, WindowedRows } from '@castle-control/ui';
+import { HeraldicCard, InkButton, SealButton, Stamp, StatusChip, WindowedRows } from '@castle-control/ui';
 import { tokens } from '@castle-control/tokens';
 import { createStreamSetup, streamPresets } from './setup-model.js';
 import type { StreamRow, StreamSetupModel, StreamState } from './setup-model.js';
@@ -35,7 +35,8 @@ export function StreamSetupContent({ model, state, on_back }: { model: StreamSet
       <InkButton onClick={on_back}>Back to the keep</InkButton><h1>On stream <span>Set up OBS</span></h1>
     </header>
     <HeraldicCard variant="raised" aria-label="OBS connection and source size">
-      <div className="stream-status"><StatusChip variant="dash">{statusCopy[state.obs]}</StatusChip>
+      <div className="stream-status">{state.obs === 'simulated' ? <Stamp kind="simulated" word={statusCopy[state.obs]} />
+        : <StatusChip variant="dash">{statusCopy[state.obs]}</StatusChip>}
         <InkButton disabled={state.busy} onClick={() => { void model.refresh(); }}>Refresh OBS and outputs</InkButton></div>
       <p>Choose an existing scene in OBS. Hold to add a transparent browser source, then inspect its placement in OBS.</p>
       <div className="stream-fields">

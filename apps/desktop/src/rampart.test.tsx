@@ -10,7 +10,7 @@ import Keep from './shell/keep.jsx';
 test('the hook-free fixture rampart links its OBS chip to setup', () => {
   const html = renderToStaticMarkup(DesktopRampart({ snapshot: { mode: 'fixture', phase: 'ready' },
     theme: 'paper', on_theme_change: () => undefined }));
-  expect(html).toMatch(/<a href="#\/stream"[^>]*><span[^>]*>OBS simulated<\/span><\/a>/);
+  expect(html).toMatch(/<a href="#\/stream"[^>]*><span[^>]*data-stamp="simulated"[^>]*aria-label="Simulated: OBS simulated"><span aria-hidden="true">OBS simulated<\/span><\/span><\/a>/);
 });
 
 function render(snapshot: Snapshot, current: ModuleId = 'lottery') {
@@ -23,6 +23,9 @@ test.each(['lottery', 'moderator', 'visuals', 'studio'] as const)('%s renders au
   const html = render({ ...data, mode: 'core', phase: 'ready', status: { ...data.status, simulated: false,
     twitch_connected: false, uptime_ms: 999, gatehouse: { armed_rules: 2, shadow_rules: 3, shield: true } } }, current);
   for (const text of ['On air', 'Twitch: connected', 'OBS: connected', 'Bridge up', '2 rules armed', '3 watching', '01:00:00', '214']) expect(html).toContain(text);
+  expect(html).toContain('data-stamp="on-air" role="img" aria-label="On air"');
+  expect(html).toContain('data-stamp="armed" role="img" aria-label="Armed: can act on viewers: Armed 2"');
+  expect(html).toContain('data-stamp="shadow" role="img" aria-label="Shadow: watching, takes no action: Watching 3"');
   expect(html).not.toContain('Simulated');
 });
 
@@ -32,6 +35,8 @@ test('absent stream and Gatehouse fields render unknown, never offline or zero w
   delete status.gatehouse;
   const html = render({ mode: 'core', phase: 'ready', status: { ...status, simulated: false }, bridge: { state: 'connecting' } });
   expect(html).toContain('ON AIR unknown');
+  expect(html).toContain('data-variant="dash">ON AIR unknown</span>');
+  expect(html).not.toMatch(/data-stamp="(?:on-air|off-air)"/);
   expect(html).toContain('Gatehouse unknown');
   expect(html).toContain('Twitch: reconnecting');
   expect(html).not.toContain('Offline');
@@ -54,12 +59,14 @@ test.each([
   const html = renderToStaticMarkup(<DesktopRampart snapshot={{ ...data, mode, phase: 'ready',
     status: { ...data.status, simulated, gatehouse: { armed_rules: 2, shadow_rules: 3, shield: true } } }}
     theme="paper" on_theme_change={() => undefined} />);
-  for (const label of ['ON AIR simulated', 'Twitch simulated', 'OBS simulated', 'Gatehouse simulated']) {
-    expect(html).toContain(`data-variant="dash">${label}</span>`);
+  expect(html).toContain('data-stamp="off-air" role="img" aria-label="On air is simulated: nothing is broadcast"');
+  expect(html).toContain('>On air · simulated</span>');
+  for (const label of ['Twitch simulated', 'OBS simulated', 'Gatehouse simulated']) {
+    expect(html).toContain(`data-stamp="simulated" role="img" aria-label="Simulated: ${label}"><span aria-hidden="true">${label}</span>`);
   }
   expect(html).toContain('<b>Unknown</b><small>viewers</small>');
   expect(html).toContain('<b>Unknown</b><small>uptime</small>');
-  for (const claim of ['cc-connection', 'connected', 'On air', '214', '01:00:00', 'Armed', 'Watching', 'Bridge up']) {
+  for (const claim of ['cc-connection', 'connected', 'data-stamp="on-air"', '214', '01:00:00', 'Armed', 'Watching', 'Bridge up']) {
     expect(html).not.toContain(claim);
   }
 });
@@ -76,8 +83,10 @@ test('the Keep offers four room hits and honest lintel stamps', () => {
 
 test('a live core reporting simulated data retains rampart chips without the removed banner', () => {
   const html = render({ mode: 'core', phase: 'ready', ...simulatedRead(1) });
-  for (const label of ['ON AIR simulated', 'Twitch simulated', 'OBS simulated', 'Gatehouse simulated']) {
-    expect(html).toContain(`data-variant="dash">${label}</span>`);
+  expect(html).toContain('data-stamp="off-air"');
+  expect(html).toContain('>On air · simulated</span>');
+  for (const label of ['Twitch simulated', 'OBS simulated', 'Gatehouse simulated']) {
+    expect(html).toContain(`data-stamp="simulated" role="img" aria-label="Simulated: ${label}"><span aria-hidden="true">${label}</span>`);
   }
   expect(html).not.toContain('desktop-simulated');
   expect(html).not.toContain('SIMULATED SOURCE');
@@ -101,6 +110,7 @@ test('explicit offline and zero rules remain distinct from unknown', () => {
   const data = simulatedRead(0);
   const html = render({ ...data, mode: 'core', phase: 'ready', status: { ...data.status, simulated: false } });
   expect(html).toContain('Offline');
+  expect(html).toContain('data-stamp="off-air"');
   expect(html).toContain('0 rules armed');
   expect(html).toContain('Watching');
   expect(html).not.toContain('SIMULATED SOURCE');

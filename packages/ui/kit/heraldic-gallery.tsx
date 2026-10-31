@@ -9,16 +9,14 @@ import { Pennant, Ribbon, ShieldCharge } from '../src/heraldic-marks.jsx';
 import { RuledFeed, RuledRow } from '../src/heraldic-feed.jsx';
 import { FieldGroup } from '../src/heraldic-field.jsx';
 import { InkButton } from '../src/primitives.jsx';
-import { StatusChip } from '../src/chips.jsx';
+import { Stamp } from '../src/stamp/stamp.jsx';
 import { SealButton } from '../src/seal-button.jsx';
 import { ProposalCard } from '../src/proposal-card.jsx';
 import { chambers } from '../src/shell.jsx';
 import { WindowedRows, rowHeight } from '../src/windowed-rows.jsx';
-import type { PrintInk } from '../src/heraldic-options.js';
 import Stamps from './stamps.jsx';
 import './heraldic-gallery.css';
 import '../src/heraldic-buttons.css';
-import '../src/heraldic-stamp.css';
 
 const inks = ['gules', 'azure', 'or', 'key'] as const;
 const entries = Array.from({ length: 10000 }, (_, id) => ({ id: String(id), title: `Generated event ${id + 1}` }));
@@ -27,9 +25,8 @@ const noop = () => undefined;
 function InkSheet({ ink }: { ink: typeof inks[number] }) {
   const [selected, setSelected] = useState('first');
   const [notice, setNotice] = useState('Simulated controls only');
-  const text_ink: PrintInk = ink === 'key' ? 'ink' : `${ink}-text`;
   return <section className="cc-heraldic-sheet" aria-label={`${ink} primitives`}>
-    <SectionHeading variant="banner" title={`${ink} print`} gloss="Shared heraldic vocabulary" count="Simulated" ink={ink} />
+    <SectionHeading variant="banner" title={`${ink} print`} gloss="Shared heraldic vocabulary" count={<Stamp kind="simulated" />} ink={ink} />
     <Plate ink={ink} offset="space-6" style={{ '--cc-band-text': ink === 'key' ? 'var(--paper)' : 'var(--press)' }}
       band={<PlateBand title="Primary plate" gloss="Plain function" count="3" count_label="Generated" />}>
       <PlateBody><StageFrame ink={ink}><HeroReadout value="87" caption="Generated entries" ink={ink} ghost="overprint" />
@@ -54,7 +51,7 @@ function InkSheet({ ink }: { ink: typeof inks[number] }) {
     </div>
     <HeraldicCard variant="selectable" selected on_select={noop} ink={ink}>
       <ShieldCharge charge="question" /><CardCopy title="Generated card" meta="Selection preview" reasons={['Local example only']} />
-      <CardSide action="Draft"><StatusChip variant="dash" stamp="verdict" tone="ok">OK</StatusChip></CardSide>
+      <CardSide action="Draft"><Stamp kind="ok" /></CardSide>
     </HeraldicCard>
     <HeraldicCard variant="raised" ink={ink}><SectionHeading title="Secondary card" gloss="Raised" />
       <div className="cc-heraldic-samples"><ShieldCharge charge="cup" /><ShieldCharge charge="struck-coin" /></div></HeraldicCard>
@@ -66,18 +63,18 @@ function InkSheet({ ink }: { ink: typeof inks[number] }) {
       <StageFrame variant="print"><HeroReadout value="4" unit="s" caption="Applied value" caption_style="label" ghost="none" /></StageFrame>
     </CardBody></HeraldicCard>
     <Plate variant="plain" ink={ink} band={<PlateBand variant="bench" title="Workbench" count="Local preview" />}><PlateBody>Plain plate with a fixed press band</PlateBody></Plate>
-    <Plate ink={ink} border_ink="rule" style={{ '--cc-band-text': ink === 'key' ? 'var(--paper)' : 'var(--press)' }} band={<PlateBand variant="hero" title="Selected item" count="Sample" />}>
+    <Plate ink={ink} border_ink="rule" style={{ '--cc-band-text': ink === 'key' ? 'var(--paper)' : 'var(--press)' }} band={<PlateBand variant="hero" title="Selected item" count={<Stamp kind="sample" />} />}>
       <PlateBody><HeroReadout value="I2" caption="Selected item" ink={ink} /></PlateBody></Plate>
     <Plate variant="plain" border_ink="rule" band={<PlateBand variant="seal" title="Proposal awaiting seal" />}><PlateBody>Nothing acts without a seal.</PlateBody></Plate>
     <div className="cc-heraldic-samples">{[false, true].map(current => <HeraldicCard key={String(current)} variant="tablet" current={current} locked={!current} selected={current} on_select={noop}>
       <b>{current ? 'Current' : 'Locked'}</b><i>Simulated stage</i></HeraldicCard>)}</div>
-    <div className="cc-heraldic-samples"><StatusChip variant="dash" stamp="label">Sample</StatusChip>
-      <StatusChip variant="azure" stamp="mode" ink={ink} style={{ '--cc-stamp-text': `var(--${text_ink})` }}>Watching</StatusChip>
-      <StatusChip variant="azure" stamp="mode" tone="solid" ink={ink}>Armed</StatusChip>
-      <StatusChip variant="dash" stamp="draft">Draft</StatusChip>
+    <div className="cc-heraldic-samples"><Stamp kind="sample" />
+      <Stamp kind="shadow" word="Watching" />
+      <Stamp kind="armed" />
+      <Stamp kind="draft" word="Draft" />
       <Pennant word="Sample group" ink={ink} /><Pennant word="Sample group" ink={ink} count="8" variant="standing" />
     </div>
-    <Ribbon label="Guardrails" word="OK" note="Local preview" />
+    <div className="cc-heraldic-samples"><Ribbon label="Guardrails" word="Checks" note="Local preview" /><Stamp kind="ok" /></div>
     <NumberedDiscs items={[{ id: 'first', title: 'First', description: 'Prepare' }, { id: 'second', title: 'Second', description: 'Check' },
       { id: 'third', title: 'Third', description: 'Confirm' }, { id: 'fourth', title: 'Fourth', description: 'Publish' }]} />
     <SectionHeading title="Ruled heading" gloss="Plain function" count="10,000" variant="ruled" />
@@ -86,7 +83,7 @@ function InkSheet({ ink }: { ink: typeof inks[number] }) {
       {row => <RuledRow layout="amount" mark="1" trailing="12:00" detail="Generated detail">{row.title}</RuledRow>}
     </WindowedRows></RuledFeed>
     <RuledFeed><WindowedRows rows={entries} row_key={row => row.id} label={`${ink} generated lines`}>
-      {row => <RuledRow mark={<Pennant word="Held" ink={ink} />} trailing="12:00">{row.title}</RuledRow>}
+      {row => <RuledRow mark={<Stamp kind="held" word="Held" />} trailing="12:00">{row.title}</RuledRow>}
     </WindowedRows></RuledFeed>
     <RuledFeed><WindowedRows rows={entries} row_key={row => row.id} row_height={rowHeight * 4} label={`${ink} generated ledger`}>
       {row => <RuledRow layout="entry" mark="Recorded" trailing="12:00" detail="Original generated message" actions={<InkButton size="room">Inspect</InkButton>}>{row.title}</RuledRow>}

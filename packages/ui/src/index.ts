@@ -1,7 +1,6 @@
 import '@castle-control/tokens';
 import './heraldic-shadow.css';
 import './heraldic-buttons.css';
-import './heraldic-stamp.css';
 export { ThemeFrame, Mark, InkButton, ThemeToggle, EmptyState } from './primitives.jsx';
 export type { ModuleId, InkButtonProps, ButtonVariant } from './primitives.jsx';
 export { Notice, outcomeTone } from './notice.jsx';

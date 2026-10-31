@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from 'react';
+import { Stamp } from '@castle-control/ui';
 import { proposalQueue } from '@castle-control/ui/steward';
 import type { ChamberId, ProposalQueue } from '@castle-control/ui/steward';
 import './proposal-layers.css';
@@ -9,7 +10,7 @@ export function ProposalLayers({ chamber, queue = proposalQueue }: { chamber: Ch
   return <div className="room-proposal-layers" aria-label="Proposed layers">
     {queue.pending(chamber).map(proposal => <article className="room-proposal-draft" key={proposal.id}
       data-proposal-layer={proposal.id} data-on-air="false" aria-label={`Proposal: ${proposal.title}`}>
-      <p className="room-proposal-stamp">DRAFT · NOT ON AIR</p>
+      <p className="room-proposal-stamp"><Stamp kind="draft" word="DRAFT · NOT ON AIR" /></p>
       <h3>{proposal.title}</h3><p>Proposal · revision {proposal.revision} · awaiting your seal</p>
       <dl>{proposal.fields.map(field => <div key={field.key}><dt>{field.label}</dt><dd>
         {field.struck.map((value, index) => <s key={index}>{String(value)}</s>)}

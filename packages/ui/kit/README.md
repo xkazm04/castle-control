@@ -27,7 +27,7 @@ The specimen screen is deferred to keep initial assets within the kit budget.
 | --- | --- |
 | `#rampart` | `.cc-rampart` |
 | `#rampart .mark`, `.meter`, `.meter small`, `.sep`, `.right` | `.cc-brand` / `.cc-wordmark`, `.cc-figure`, `.cc-figure small`, `.cc-separator`, `.cc-spacer` followed by controls |
-| `#connStamps`, `#airStamp .stamp`, `.rbtn` | `.cc-link-group`, `.cc-air` / `.cc-rampart .cc-stamp`, `.cc-rampart .cc-button` |
+| `#connStamps`, `#airStamp .stamp`, `.rbtn` | `.cc-link-group`, `.cc-rampart .cc-stamp`, `.cc-rampart .cc-button` |
 | `#strip`, `#strip button`, `#strip button::before`, `#strip b`, `#strip span.st`, `.keep` | `.cc-chamber-strip`, `.cc-chamber-tile`, `.cc-chamber-tile::before`, `.cc-chamber-tile-title`, `.cc-chamber-state`, `.cc-keep-tile` |
 | `#col`, `.monlab`, `.lamp`, `.mon`, `.mon .empty` | `.cc-monitor-column`, `.cc-monitor-label`, `.cc-monitor-lamp`, `.cc-monitor-picture`, `.cc-monitor-empty` |
 | `.draftframe`, `.draftframe .stamp` | `.cc-draft-frame`, `.cc-draft-frame > .cc-stamp` |
@@ -87,3 +87,19 @@ the existing CSS test intentionally inventories every stylesheet in the kit.
 No dependencies were installed or workspace links changed by this package. Desktop sources,
 stamp sources and token sources were not edited. Browser verification remains
 unavailable: the browser host failed and native Chrome access was not approved.
+
+## WP4b state badges
+
+The heraldic gallery renders fixed state badges with `Stamp`. Its ink controls
+apply to the surrounding print primitives; state meanings keep their shared ink
+from the stamp table. Armed and On air use gules, Watching uses azure, and
+Sample/Simulated use key. StatusChip remains for generic and unknown statuses;
+its stamp, tone, ink and print-style props and the old stylesheet are removed.
+The production-source regression test walks the complete WP4b file inventory.
+
+The kit Rampart also uses `Stamp`: known live output is `on-air`, sample or
+simulated output is `off-air` with "On air · simulated", and known offline
+output is `off-air` with "Offline". Provenance uses the sample/simulated kind.
+The old air/sample classes and their rules are removed. Steward identity
+typography targets its own name, state and mode classes, leaving nested stamp
+ink and size to the shared stamp stylesheet.

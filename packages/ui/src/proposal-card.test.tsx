@@ -15,12 +15,25 @@ test('proposal card strikes old values, re-inks amendments and exposes the focus
   const props = { proposal, focused: true, on_seal: seal, on_tear: tear };
   const html = renderToStaticMarkup(<ProposalCard {...props} />);
   for (const text of ['PROPOSAL · AWAITING YOUR SEAL', '<s>3</s>', 'cc-proposal-reink', '>5</span>', 'data-proposal-focused="true"', 'data-tear-proposal', 'Hold to seal']) expect(html).toContain(text);
+  expect(html).toContain('data-stamp="draft" role="img" aria-label="Draft, not on air: PROPOSAL · AWAITING YOUR SEAL"');
   const tree = ProposalCard(props);
   tree.props.children.at(-1).props.children[1].props.onClick();
   expect(tear).toHaveBeenCalledOnce();
   expect(seal).not.toHaveBeenCalled();
   const proclaim = renderToStaticMarkup(<ProposalCard {...props} proposal={{ ...proposal, kind: 'proclaim' }} />);
   expect(proclaim).toContain('Hold to seal and proclaim');
+});
+
+test('a sealed proposal uses the sealed stamp and keeps its revision and state word', async () => {
+  const queue = new ProposalQueue();
+  await new SimulatedSteward(queue).ask('draft a question draw', { surface: 'room' });
+  const proposal = queue.pending()[0];
+  if (!proposal) throw new Error('Missing simulated proposal');
+  const html = renderToStaticMarkup(<ProposalCard proposal={{ ...proposal, state: 'sealed' }} on_seal={vi.fn()} on_tear={vi.fn()} />);
+  expect(html).toContain('data-stamp="sealed" role="img" aria-label="Sealed by the streamer: PROPOSAL · SEALED"');
+  expect(html).toContain('>PROPOSAL · SEALED</span>');
+  expect(html).toContain('Rev 1 · sealed');
+  expect(html).not.toContain('Hold to seal');
 });
 
 test('a busy proposal disables its seal and a revised proposal remounts the hold', async () => {

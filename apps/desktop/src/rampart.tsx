@@ -1,4 +1,4 @@
-import { ConnectionMark, GatehouseChip, InkButton, Mark, StatusChip, ThemeToggle } from '@castle-control/ui';
+import { ConnectionMark, GatehouseChip, InkButton, Mark, Stamp, StatusChip, ThemeToggle } from '@castle-control/ui';
 import type { ConnectionState } from '@castle-control/ui';
 import type { Theme } from '@castle-control/tokens';
 import type { Snapshot } from './model.js';
@@ -26,20 +26,22 @@ export function DesktopRampart({ snapshot, theme, on_theme_change, on_steward }:
       <Mark /><span className="cc-wordmark" data-text={'Castle\nControl'}>Castle<br />Control</span>
     </a>
     <div className="cc-live-group" aria-label="Stream status">
-      {stream ? <span className="cc-air" data-live={stream.live}><i />{stream.live ? 'On air' : 'Offline'}</span>
-        : <StatusChip variant="dash">{simulated ? 'ON AIR simulated' : 'ON AIR unknown'}</StatusChip>}
+      {stream ? <Stamp kind={stream.live ? 'on-air' : 'off-air'} word={stream.live ? 'On air' : 'Offline'} />
+        : simulated ? <Stamp kind="off-air" word="On air · simulated" /> : <StatusChip variant="dash">ON AIR unknown</StatusChip>}
       <span className="cc-figure"><b>{stream?.live ? stream.viewer_count ?? 'Unknown' : stream ? 'Offline' : 'Unknown'}</b><small>viewers</small></span>
       <span className="cc-figure"><b>{stream?.live && status ? uptime(status.at, stream.started_at) : stream ? 'Offline' : 'Unknown'}</b><small>uptime</small></span>
     </div>
     <span className="cc-separator" />
     <div className="cc-link-group">
-      {twitch ? <ConnectionMark name="Twitch" state={twitch} /> : <StatusChip variant="dash">{simulated ? 'Twitch simulated' : 'Twitch unknown'}</StatusChip>}
-      <a href="#/stream" title="Set up OBS">{!simulated && status ? <ConnectionMark name="OBS" state={status.obs_connected ? 'connected' : 'down'} /> : <StatusChip variant="dash">{simulated ? 'OBS simulated' : 'OBS unknown'}</StatusChip>}</a>
+      {twitch ? <ConnectionMark name="Twitch" state={twitch} /> : simulated ? <Stamp kind="simulated" word="Twitch simulated" /> : <StatusChip variant="dash">Twitch unknown</StatusChip>}
+      <a href="#/stream" title="Set up OBS">{!simulated && status ? <ConnectionMark name="OBS" state={status.obs_connected ? 'connected' : 'down'} />
+        : simulated ? <Stamp kind="simulated" word="OBS simulated" /> : <StatusChip variant="dash">OBS unknown</StatusChip>}</a>
     </div>
     {gatehouse ? <GatehouseChip armed={gatehouse.armed_rules} watching={gatehouse.shadow_rules}
-      shield={gatehouse.shield} href="#/chamber/moderator" /> : <a href="#/chamber/moderator"><StatusChip variant="dash">{simulated ? 'Gatehouse simulated' : 'Gatehouse unknown'}</StatusChip></a>}
+      shield={gatehouse.shield} href="#/chamber/moderator" /> : <a href="#/chamber/moderator">{simulated
+        ? <Stamp kind="simulated" word="Gatehouse simulated" /> : <StatusChip variant="dash">Gatehouse unknown</StatusChip>}</a>}
     <span className="cc-spacer" />
-    {simulated && <span className="cc-sample">Simulated</span>}
+    {simulated && <Stamp kind="simulated" />}
     <ThemeToggle theme={theme} onChange={on_theme_change} />
     <InkButton disabled={!on_steward} onClick={on_steward} title="Talk to the Steward (/)">Steward</InkButton>
   </header>;

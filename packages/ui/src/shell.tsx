@@ -4,6 +4,7 @@ import { ConnectionMark, GatehouseChip } from './chips.jsx';
 import type { ConnectionState } from './chips.jsx';
 import { InkButton, Mark, ThemeToggle } from './primitives.jsx';
 import type { ModuleId } from './primitives.jsx';
+import { Stamp } from './stamp/stamp.jsx';
 import './shell.css';
 
 export const chambers = [
@@ -38,7 +39,8 @@ export function Rampart(props: RampartProps) {
       <Mark /><span className="cc-wordmark">Castle Control</span>
     </a>
     <div className="cc-live-group">
-      <span className="cc-air" data-live={props.on_air}><i />{props.on_air ? 'On air' : 'Offline'}</span>
+      <Stamp kind={props.on_air && props.data_kind === undefined ? 'on-air' : 'off-air'}
+        word={props.on_air ? props.data_kind === undefined ? 'On air' : 'On air · simulated' : 'Offline'} />
       <span className="cc-figure"><b>{props.on_air ? props.viewers : 'Offline'}</b><small>viewers</small></span>
       <span className="cc-figure"><b>{props.on_air ? props.uptime : 'Offline'}</b><small>uptime</small></span>
     </div>
@@ -46,7 +48,7 @@ export function Rampart(props: RampartProps) {
     <div className="cc-link-group"><ConnectionMark name="Twitch" state={props.twitch} /><ConnectionMark name="OBS" state={props.obs} /></div>
     <GatehouseChip armed={props.armed} watching={props.watching} shield={props.shield} href={props.gatehouse_href} />
     <span className="cc-spacer" />
-    {props.data_kind && <span className="cc-sample">{props.data_kind === 'sample' ? 'Sample data' : 'Simulated'}</span>}
+    {props.data_kind && <Stamp kind={props.data_kind} word={props.data_kind === 'sample' ? 'Sample data' : 'Simulated'} />}
     <InkButton size="icon" aria-label="Settings" onClick={props.on_settings} disabled={!props.on_settings}>
       <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 6h14M3 14h14" /><circle cx="7" cy="6" r="2" /><circle cx="13" cy="14" r="2" /></svg>
     </InkButton>
