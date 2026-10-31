@@ -13,6 +13,13 @@ export type BalanceReport = Readonly<{
 
 const percentOf = (count: number, total: number) => Math.round(count / total * 100);
 
+/** Chokepoints: ground that keeps swapping hands, a tile that changed owner in two or more of the first `through` turns. */
+export function chokepointIds(rehearsal: Rehearsal, through = rehearsal.turns.length): ReadonlySet<string> {
+  const swaps = new Map<string, number>();
+  for (const turn of rehearsal.turns.slice(0, through)) for (const change of turn.changes) swaps.set(change.id, (swaps.get(change.id) ?? 0) + 1);
+  return new Set([...swaps].filter(([, count]) => count >= 2).map(([id]) => id));
+}
+
 /** Plain-words balance of a rehearsal after `through` turns, computed from the simulation alone.
  * Shares count every tile of the board, so unclaimed land is part of the denominator. */
 export function balanceReport(rehearsal: Rehearsal, through = rehearsal.turns.length): BalanceReport {
@@ -39,10 +46,7 @@ export function balanceReport(rehearsal: Rehearsal, through = rehearsal.turns.le
     const sole = tops.length === 1 ? tops[0]?.[0] : undefined;
     if (sole !== undefined && sole !== lead) { lead_changes += lead === undefined ? 0 : 1; lead = sole; }
   }
-  // A chokepoint is ground that keeps swapping hands: a tile that changed owner in two or more turns.
-  const swaps = new Map<string, number>();
-  for (const turn of seen) for (const change of turn.changes) swaps.set(change.id, (swaps.get(change.id) ?? 0) + 1);
-  const chokepoints = [...swaps.values()].filter(count => count >= 2).length;
+  const chokepoints = chokepointIds(rehearsal, through).size;
   const quiet = through - last_change;
   const kind: VerdictKind = leader.percent >= 55 || margin >= 30 ? 'runaway'
     : quiet >= 2 ? 'stalemate' : margin <= 8 ? 'tight' : 'contested';

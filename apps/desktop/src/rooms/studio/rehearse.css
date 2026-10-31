@@ -96,6 +96,11 @@
 .studio-room .cc-hex[data-flipped] .cc-hex-face { inset: var(--space-4); }
 .studio-room .cc-hex[data-flipped="a"] .cc-hex-face { animation: studio-hex-ink-a var(--motion-shell) var(--ease) both; }
 .studio-room .cc-hex[data-flipped="b"] .cc-hex-face { animation: studio-hex-ink-b var(--motion-shell) var(--ease) both; }
+/* Chokepoints: a small black diamond in the tile's top corner, so the contested ground can be found and redrawn. */
+.studio-room .cc-hex-choke {
+  position: absolute; z-index: 2; top: 15%; right: 5%; width: var(--space-10); height: var(--space-10);
+  background: var(--key); border: var(--rule-thin) solid var(--paper); transform: rotate(45deg); pointer-events: none;
+}
 @keyframes studio-ink { from { opacity: 0; clip-path: inset(0 100% 0 0); } to { opacity: 1; clip-path: inset(0); } }
 @keyframes studio-hex-ink-a {
   from { opacity: 0; clip-path: polygon(0 25%, 0 25%, 0 75%, 0 75%, 0 75%, 0 25%); }
@@ -125,3 +130,21 @@
 .studio-room .studio-rehearse[data-painting="true"] .cc-hex { cursor: crosshair; }
 /* Small hexes cannot hold the word Unclaimed at label size, so it scales with the hex. */
 .studio-room .studio-rehearse .cc-hex[data-unclaimed="true"] .cc-hex-house { padding: 0; font-size: min(var(--text-label), calc(var(--hw) * .16)); }
+/* Territory by turn: one thin stacked column per turn, houses in their inks, gaps of surface between segments. */
+.studio-room .studio-strip { display: grid; gap: var(--space-8); margin: 0; }
+.studio-room .studio-strip-bars { display: flex; align-items: stretch; gap: var(--space-2); height: calc(var(--space-56) * 1.5); margin: 0; padding: 0; list-style: none; }
+.studio-room .studio-strip-bars > li { display: flex; flex: 1 1 0; flex-direction: column; min-width: 0; }
+.studio-room .studio-strip-stack {
+  display: flex; flex: 1; flex-direction: column-reverse; gap: var(--space-2); min-height: 0;
+  border-bottom: var(--rule-medium) solid var(--rule);
+}
+.studio-room .studio-strip-bars > li[data-shown="false"] .studio-strip-stack { border-bottom-style: dashed; border-bottom-color: var(--hair); }
+.studio-room .studio-strip-bars > li[data-now="true"] .studio-strip-stack { border-bottom-color: var(--key); border-bottom-width: var(--rule-strong); }
+.studio-room .studio-strip-stack > span { min-height: var(--space-1); background: var(--house); box-shadow: inset 0 0 0 var(--rule-thin) var(--rule); }
+.studio-room .studio-strip-stack > span[data-unclaimed="true"] { background: var(--paper-2); box-shadow: inset 0 0 0 var(--rule-thin) var(--hair); }
+.studio-room .studio-strip-bars small { height: var(--space-14); font: var(--text-label)/1.1 var(--font-num); text-align: center; color: var(--ink-2); }
+.studio-room .studio-strip-bars > li[data-now="true"] small { font-weight: 800; color: var(--ink); }
+.studio-room .studio-strip-key { display: flex; flex-wrap: wrap; gap: var(--space-4) var(--space-12); margin: 0; padding: 0; list-style: none; font: 700 var(--text-small)/1.3 var(--font-ui); }
+.studio-room .studio-strip-key li { display: flex; align-items: center; gap: var(--space-5); }
+.studio-room .studio-strip-key i { width: var(--space-10); height: var(--space-10); background: var(--house); box-shadow: inset 0 0 0 var(--rule-thin) var(--rule); }
+.studio-room .studio-strip-key li[data-unclaimed="true"] i { background: var(--paper-2); box-shadow: inset 0 0 0 var(--rule-thin) var(--hair); }

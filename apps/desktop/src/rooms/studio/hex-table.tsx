@@ -28,7 +28,11 @@ function inspectNeighbour(event: KeyboardEvent<HTMLButtonElement>, tile: BoardTi
 }
 
 /** Tiles that changed owner this turn. `phase` alternates so the same tile can flip on consecutive turns. */
-export type TableFlip = Readonly<{ ids: ReadonlySet<string>; phase: 0 | 1; picked?: ReadonlySet<string>; flipped_label?: string }>;
+export type TableFlip = Readonly<{
+  ids: ReadonlySet<string>; phase: 0 | 1; picked?: ReadonlySet<string>; flipped_label?: string;
+  /** Tiles marked as chokepoints, and the word a screen reader hears for them. */
+  marked?: ReadonlySet<string>; marked_label?: string;
+}>;
 
 export function HexTable({ selected, on_select, board = STUDIO_SAMPLE_BOARD, size = 'm', look, flip, gloss = copy.board_gloss, pennants = true, quiet = false, on_paint }: {
   selected: string; on_select: (id: string) => void; board?: StudioBoard; size?: MapSize; look?: DesignOutput['style'];
@@ -49,8 +53,10 @@ export function HexTable({ selected, on_select, board = STUDIO_SAMPLE_BOARD, siz
         data-house={tile.side?.label ?? 'unclaimed'} data-ink={tile.side?.ink} data-unclaimed={!tile.side}
         data-flipped={flip?.ids.has(tile.id) ? (flip.phase === 0 ? 'a' : 'b') : undefined}
         data-picked={flip?.picked?.has(tile.id) ? (flip.phase === 0 ? 'a' : 'b') : undefined}
+        data-contested={flip?.marked?.has(tile.id) ? 'true' : undefined}
         style={hexPosition(tile.centre.x, tile.centre.y)}
         aria-label={copy.tile_label(tile.id, tile.side?.short ?? copy.unclaimed, tile.side?.label)
+          + (flip?.marked?.has(tile.id) && flip.marked_label ? `, ${flip.marked_label}` : '')
           + (flip?.ids.has(tile.id) && flip.flipped_label ? `, ${flip.flipped_label}` : '')} aria-pressed={selected === tile.id}
         tabIndex={tab_stop === tile.id ? 0 : -1}
         onClick={() => (on_paint ?? on_select)(tile.id)}
@@ -60,6 +66,7 @@ export function HexTable({ selected, on_select, board = STUDIO_SAMPLE_BOARD, siz
         <span className="cc-hex-face" aria-hidden="true" />
         <span className="cc-hex-id">{tile.id}</span>
         <span className="cc-hex-house">{tile.side?.short ?? copy.unclaimed}</span>
+        {flip?.marked?.has(tile.id) && <span className="cc-hex-choke" aria-hidden="true" />}
       </button>)}
     </div></div>
     {pennants && <ul className="cc-pennants">{geometry.sides.map(side => <li key={side.id} data-house={side.label} data-ink={side.ink}>

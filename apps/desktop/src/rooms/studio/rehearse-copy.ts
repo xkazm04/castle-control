@@ -24,7 +24,7 @@ export const rehearseCopy = {
   this_turn: (changed: number, crowd: readonly string[]) =>
     `${changed === 0 ? 'No tile changed owner' : `${changed} ${changed === 1 ? 'tile' : 'tiles'} changed owner (outlined)`}`
     + ` · Crowd ${crowd.join(', ')} · Only picked tiles change owner.`,
-  tile_flipped: 'changed owner this turn',
+  tile_flipped: 'changed owner this turn', tile_choke: 'chokepoint',
   ribbon: 'Held tiles', ribbon_label: 'Held tiles by house',
   held_text: (short: string, held: number) => `${short} ${held}`,
   held_pct: (short: string, held: number, percent: number) => `${short} ${held} · ${percent}%`,
@@ -53,7 +53,7 @@ export const rehearseCopy = {
     `${percents.join(' · ')}${unclaimed > 0 ? ` · ${unclaimed}% unclaimed` : ''}`,
   margin_value: (points: number) => `${points} ${points === 1 ? 'point' : 'points'}`,
   chokepoints_value: (count: number) => `${count} ${count === 1 ? 'tile' : 'tiles'}`,
-  chokepoints_hint: 'Chokepoints are tiles that changed hands two or more times.',
+  chokepoints_hint: 'Chokepoints are tiles that changed hands two or more times; they carry a black diamond on the board.',
   report_hint: 'Plain words, computed from the simulation only.',
   none: 'none', verdict_pending: 'decided at the end',
   replay_ok: (seed: string, of: number) => `Seed ${seed} replayed: all ${of} turns matched.`,
@@ -66,6 +66,8 @@ export const rehearseCopy = {
   size_col: 'Size', result_col: 'Result', size_tiles: (tiles: number) => `${tiles} tiles`,
   size_last: (turn: number) => turn === 0 ? 'no tile changed' : `last change turn ${turn}`,
   size_use: (label: string) => `Use map size ${label}`, size_use_word: 'Use', size_current: 'On the table',
+  strip: 'Territory by turn', strip_label: 'Simulated territory by turn', strip_turn: 'Turn', strip_start: 'Start',
+  strip_tip: (when: string, name: string, held: number, percent: number) => `${when}: ${name} ${held} ${held === 1 ? 'tile' : 'tiles'} · ${percent}%`,
   tools: 'What if', tools_label: 'Change the board or the crowd and rehearse again',
   compare_crowds: 'Compare crowds', crowds_label: 'Simulated comparison across crowd sizes',
   crowds_hint: 'Plays this board at 30, 120 and 300 simulated viewers. Same seed, same turns, so only the crowd differs.',

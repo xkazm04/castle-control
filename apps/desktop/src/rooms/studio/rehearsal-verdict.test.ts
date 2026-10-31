@@ -1,7 +1,7 @@
 import { expect, test } from 'vitest';
 import { STUDIO_SAMPLE_BOARD } from './fixture.js';
 import type { Rehearsal, RehearsalTurn, TilePicks } from './rehearsal.js';
-import { balanceReport } from './rehearsal-verdict.js';
+import { balanceReport, chokepointIds } from './rehearsal-verdict.js';
 
 type Spec = Readonly<{ held: readonly [number, number, number]; changed?: readonly string[]; picks?: readonly TilePicks[] }>;
 type HouseId = 'quill' | 'tallow' | 'sable';
@@ -73,6 +73,16 @@ test('chokepoints are tiles that changed hands in two or more turns, however har
     { held: [14, 14, 16], picks: [pick('E2', { tallow: 2, sable: 2 })] },
   ]));
   expect(report.chokepoints).toBe(2); // D4 (turns 1 and 2) and A1 (turns 1 and 3); E2 was fought over but never changed hands
+});
+
+test('chokepointIds names the same tiles the report counts, and follows how many turns are shown', () => {
+  const play = round([
+    { held: [14, 14, 15], changed: ['A1', 'D4'] }, { held: [14, 14, 16], changed: ['A2', 'D4'] }, { held: [14, 14, 16], changed: ['A1'] },
+  ]);
+  expect([...chokepointIds(play)].sort()).toEqual(['A1', 'D4']);
+  expect([...chokepointIds(play, 2)]).toEqual(['D4']);
+  expect([...chokepointIds(play, 1)]).toEqual([]); expect([...chokepointIds(play, 0)]).toEqual([]);
+  expect(balanceReport(play).chokepoints).toBe(chokepointIds(play).size);
 });
 
 test('a partial report reads only the turns shown, and turn zero is the starting territory', () => {

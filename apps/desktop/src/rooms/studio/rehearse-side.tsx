@@ -3,6 +3,7 @@ import { boardGeometry } from './board.js';
 import type { StudioBoard } from './board.js';
 import { rehearseCopy as copy } from './rehearse-copy.js';
 import { turnLine } from './rehearse-state.js';
+import { TerritoryStrip } from './rehearse-strip.jsx';
 import type { CrowdCompare, PastRun, RehearseState, RehearseView, SizeCompare } from './rehearse-state.js';
 import type { RehearseHandlers } from './use-rehearse.js';
 
@@ -158,6 +159,7 @@ export function RehearseSide({ state, view, handlers, size = '', on_size }: {
   const viewers = Number(state.inputs.viewers);
   return <div className="studio-rehearse-side">
     <VerdictBlock state={state} view={view} handlers={handlers} />
+    {state.run && <TerritoryStrip run={state.run} shown={state.turn} />}
     <TurnLog state={state} board={view.shown} />
     {state.crowds && <CrowdTable crowds={state.crowds} viewers={viewers} on_clear={handlers.clear_crowds}
       on_viewers={count => handlers.input('viewers', String(count))} />}

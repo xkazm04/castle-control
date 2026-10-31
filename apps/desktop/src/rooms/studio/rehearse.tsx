@@ -101,7 +101,8 @@ export function RehearseWork({ state, view, handlers, board, size, look, sizes }
     <RehearseTools state={state} handlers={handlers} board={board} can_compare={!!sizes?.length} />
     <HexTable board={view.shown} selected={painting ? '' : state.selected} on_select={handlers.select} size={size}
       {...(look ? { look } : {})} {...(painting ? { on_paint: handlers.paint } : {})}
-      flip={{ ids: view.flipped, phase: view.phase, picked: view.picked, flipped_label: copy.tile_flipped }}
+      flip={{ ids: view.flipped, phase: view.phase, picked: view.picked, flipped_label: copy.tile_flipped,
+        marked: view.contested, marked_label: copy.tile_choke }}
       gloss={painting ? copy.paint_gloss : copy.board_gloss(turn, view.of)} pennants={false} quiet={start.tiles.length > denseTiles} />
     <div className="studio-rehearse-now">
       <Notice message={message} label={copy.log_label} className="studio-rehearse-line" />
