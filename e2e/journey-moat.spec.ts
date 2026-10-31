@@ -274,3 +274,49 @@ test.describe('with motion allowed', () => {
     } finally { verify(); }
   });
 });
+
+
+test.describe('Keep desktop bounds', () => {
+  test.use({ reducedMotion: 'no-preference' });
+  for (const viewport of [{ width: 1280, height: 800 }, { width: 1440, height: 900 }, { width: 1920, height: 1080 }]) {
+    test(`Keep footer and headings fit ${viewport.width}x${viewport.height}`, async ({ page }) => {
+      const verify = await guardPage(page);
+      try {
+        await page.setViewportSize(viewport);
+        await page.goto('/#/keep');
+        await expect(page.getByRole('button', { name: 'Pause the sample loop', exact: true })).toBeVisible();
+        for (const theme of ['paper', 'stock']) {
+          if (theme === 'stock') await page.getByRole('button', { name: 'Toggle paper and dark stock' }).click();
+          await expect.poll(() => page.locator('.keep-home').evaluate(element => {
+            const requireNode = (selector: string) => {
+              const node = element.querySelector(selector);
+              if (!node) throw new Error(`Missing Keep element: ${selector}`);
+              return node;
+            };
+            const footer = requireNode('.keep-moat');
+            const bounds = footer.getBoundingClientRect();
+            const style = getComputedStyle(footer);
+            const items = ['.keep-moatlab', '.moat-heartbeat small', '.moat-heartbeat-strip', '.moat-heartbeat button', '.keep-moat-link']
+              .map(selector => requireNode(selector).getBoundingClientRect());
+            const issues: string[] = [];
+            for (const at of items) {
+              if (Math.abs((at.top + at.bottom) / 2 - (bounds.top + bounds.bottom) / 2) > 1) issues.push('footer control wrapped');
+              if (at.left < bounds.left || at.right > bounds.right || at.width <= 0) issues.push('footer control outside its row');
+            }
+            const expected = Math.max(...items.map(at => at.height)) + Number.parseFloat(style.paddingTop)
+              + Number.parseFloat(style.paddingBottom) + Number.parseFloat(style.borderTopWidth) + Number.parseFloat(style.borderBottomWidth);
+            if (bounds.height > expected + 1) issues.push('footer height exceeds one row');
+            const eyebrow = requireNode('[data-role="keep-eyebrow"]').getBoundingClientRect();
+            const caption = requireNode('[data-role="keep-vlabel"]').getBoundingClientRect();
+            if (eyebrow.left < caption.right && caption.left < eyebrow.right && eyebrow.top < caption.bottom && caption.top < eyebrow.bottom) issues.push('illustration covers eyebrow');
+            const title = requireNode('[data-role="plaque"][data-room="lottery"] [data-role="plaque-name"]');
+            const range = document.createRange(); range.selectNodeContents(title);
+            if (new Set([...range.getClientRects()].map(at => Math.round(at.top))).size > 1) issues.push('Lot Chamber title wrapped');
+            if (title.scrollWidth > title.clientWidth + 1) issues.push('Lot Chamber title overflows');
+            return issues;
+          })).toEqual([]);
+        }
+      } finally { await page.goto('about:blank'); verify(); }
+    });
+  }
+});
