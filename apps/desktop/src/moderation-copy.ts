@@ -124,6 +124,8 @@ export const moderationCopy = {
   held_reason: 'Hold reason', held_count: (count: number) => `${count} held`,
   held_empty: 'Nothing is held in this simulated queue.', empty: 'No matching entries.',
   original_unavailable: 'Original message unavailable · decision blocked',
+  confirmation_pending: 'Awaiting fixture confirmation before another change.',
+  operation_unavailable: 'This decision no longer allows that operation. Draft a new change.',
   hold_reason_unavailable: 'Hold reason unavailable',
   fixture_hold_reason: 'AutoMod · simulated link requires moderator review',
   fixture_held_text: 'Simulated original held message: can I post my guide?',
@@ -136,4 +138,5 @@ export const moderationCopy = {
   local_human: 'Human · local preview · simulated',
   nothing_sent: 'Nothing sent.', mode_changed: 'Mode preview changed only. Actual rules remain Watching.',
   operation_recorded: (kind: string) => `Simulated ${kind} recorded locally. Nothing sent.`,
+  operation_confirming: (kind: string) => `Simulated ${kind} confirming. Nothing sent.`,
 } as const;

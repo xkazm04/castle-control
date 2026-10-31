@@ -7,11 +7,12 @@ import { InkButton } from '@castle-control/ui';
 import type { InkButtonProps } from '@castle-control/ui';
 import { gatehouseHeldResolve, gatehouseDelaySet, gatehouseShieldSet, gatehouseLeaseEnd, parseMethodParams } from '@castle-control/contract';
 import { createModerationPreview } from './moderation-model.js';
-import { fixtureConfirmationMs, fixtureHeld, fixtureHoldReasons, fixtureRules } from './moderation-fixture.js';
+import { fixtureBans, fixtureConfirmationMs, fixtureHeld, fixtureHoldReasons, fixtureRules } from './moderation-fixture.js';
 import { GateControls, HeldActions, HeldQueue, Rules } from './rooms/moderator/controls.jsx';
 import { GateLog } from './rooms/moderator/log.jsx';
 import { moderationSession, proposeCommand, sealModerationProposal } from './rooms/moderator/session.js';
 import { moderationCopy as copy } from './moderation-copy.js';
+import { decisionTransition, LifecycleRefusal } from './moderation-lifecycle.js';
 
 afterEach(() => { vi.useRealTimers(); vi.restoreAllMocks(); });
 function find<T>(tree: ReactNode, predicate: (props: T) => boolean): ReactElement<T> {
@@ -38,7 +39,7 @@ const click = (props: ButtonHTMLAttributes<HTMLButtonElement>) => props.onClick?
 test('gate handles validate only public requests and the four ChatDelay choices', () => {
   expect([gatehouseHeldResolve, gatehouseDelaySet, gatehouseShieldSet, gatehouseLeaseEnd].map(item => item.method))
     .toEqual(['gatehouse.held.resolve', 'gatehouse.delay.set', 'gatehouse.shield.set', 'gatehouse.lease.end']);
-  expect(parseMethodParams(gatehouseDelaySet, { delay_s: 6 })).toEqual({ delay_s: 6 });
+  for (const delay_s of [0, 2, 4, 6]) expect(parseMethodParams(gatehouseDelaySet, { delay_s })).toEqual({ delay_s });
   expect(() => parseMethodParams(gatehouseDelaySet, { delay_s: 3 })).toThrow();
 });
 
@@ -49,17 +50,17 @@ test('delay select drafts only; applied value waits for a seal and then fixture 
   select.props.onChange?.({ currentTarget: { value: '3' } } as ChangeEvent<HTMLSelectElement>);
   expect(queue.pending()).toHaveLength(0);
   select.props.onChange?.({ currentTarget: { value: '6' } } as ChangeEvent<HTMLSelectElement>);
-  expect(state(queue).delay_s).toBe(4); expect(state(queue).delay_pending).toBe(false);
+  expect(state(queue).delay.value).toBe(4); expect(state(queue).delay.kind).toBe('applied');
   expect(queue.pending()).toHaveLength(1);
   seal(queue);
-  expect(state(queue).delay_s).toBe(4);
+  expect(state(queue).delay.value).toBe(4);
   expect(controls(queue)).toContain('value="4" selected=""');
   expect(controls(queue)).toContain(copy.gate_pending);
   expect(controls(queue)).not.toContain('generated fixtures only');
   expect(controls(queue)).toContain('aria-busy="true"');
   expect(find<SelectHTMLAttributes<HTMLSelectElement>>(GateControls({ state: state(queue), queue }), props => props['aria-label'] === copy.delay_applied).props.disabled).toBe(true);
-  vi.advanceTimersByTime(fixtureConfirmationMs - 1); expect(state(queue).delay_s).toBe(4);
-  vi.advanceTimersByTime(1); expect(state(queue).delay_s).toBe(6);
+  vi.advanceTimersByTime(fixtureConfirmationMs - 1); expect(state(queue).delay.value).toBe(4);
+  vi.advanceTimersByTime(1); expect(state(queue).delay.value).toBe(6);
   expect(controls(queue)).toContain('value="6" selected=""');
   expect(controls(queue)).toContain('aria-busy="false"');
 });
@@ -68,13 +69,13 @@ test('duplicate requests cannot replace pending settings; Shield pressed state w
   vi.useFakeTimers(); const port = createModerationPreview();
   port.send({ kind: 'delay', delay_s: 2 }); port.send({ kind: 'delay', delay_s: 6 });
   port.send({ kind: 'shield' }); port.send({ kind: 'shield' }); vi.runAllTimers();
-  expect(port.getSnapshot().delay_s).toBe(2); expect(port.getSnapshot().shield).toBe(true);
+  expect(port.getSnapshot().delay.value).toBe(2); expect(port.getSnapshot().shield.value).toBe(true);
   const queue = new ProposalQueue();
   for (const enabled of [true, false]) {
     proposeCommand(queue, { kind: 'shield' }, 'Shield proposal');
-    expect(state(queue).shield).toBe(!enabled); seal(queue);
+    expect(state(queue).shield.value).toBe(!enabled); seal(queue);
     expect(controls(queue)).toContain(`aria-pressed="${!enabled}"`);
-    vi.advanceTimersByTime(fixtureConfirmationMs); expect(state(queue).shield).toBe(enabled);
+    vi.advanceTimersByTime(fixtureConfirmationMs); expect(state(queue).shield.value).toBe(enabled);
     expect(controls(queue)).toContain(`aria-pressed="${enabled}"`);
   }
   expect(controls(queue).match(/aria-label="Shield Mode/g)).toHaveLength(1);
@@ -86,11 +87,11 @@ test.each(['release', 'remove'] as const)('%s proposes via a native keyboard but
   const label = kind === 'release' ? 'Propose Pass' : 'Propose Bar';
   // C replaces the bare review button with InkButton plus a decorative icon.
   // Resolve that kit leaf to keep every native-button and proposal assertion.
-  const button = InkButton(find<InkButtonProps>(HeldActions({ item: held, pending: false, queue }), props => props['aria-label'] === label).props);
+  const button = InkButton(find<InkButtonProps>(HeldActions({ item: held, state: state(queue), queue }), props => props['aria-label'] === label).props);
   expect(button.type).toBe('button'); expect(button.props.type).toBe('button');
   expect(button.props.disabled).toBe(false); expect(button.props.tabIndex ?? 0).toBeGreaterThanOrEqual(0);
   click(button.props);
-  expect(state(queue).held_pending.size).toBe(0);
+  expect([...state(queue).phases.values()].some(phase => phase.kind === 'confirming')).toBe(false);
   expect(state(queue).messages[0]?.verdict).toBe('hold');
   expect(queue.pending()[0]?.fields.some(field => field.value === held.message_text)).toBe(true);
   seal(queue);
@@ -129,26 +130,85 @@ test('two old Shield proposals cannot toggle a confirmed setting back by acciden
   proposeCommand(queue, { kind: 'shield' }, 'Raise the drawbridge');
   proposeCommand(queue, { kind: 'shield' }, 'Raise the drawbridge');
   seal(queue); vi.runAllTimers();
-  expect(state(queue).shield).toBe(true);
+  expect(state(queue).shield.value).toBe(true);
   expect(() => seal(queue)).toThrow('already matches');
-  expect(state(queue).shield).toBe(true);
+  expect(state(queue).shield.value).toBe(true);
 });
 
 test('Steward verdict/shield draft through the same fixture port; unknown targets remain unsealed', async () => {
   vi.useFakeTimers(); const queue = new ProposalQueue(); const steward = new SimulatedSteward(queue);
   await steward.ask('pass all as proposed', { surface: 'room' });
-  expect(state(queue).held_pending.size).toBe(0); seal(queue); vi.runAllTimers(); expect(state(queue).held).toHaveLength(0);
+  expect([...state(queue).phases.values()].some(phase => phase.kind === 'confirming')).toBe(false); seal(queue); vi.runAllTimers(); expect(state(queue).held).toHaveLength(0);
   await steward.ask('bar unknown line', { surface: 'room' });
   expect(() => seal(queue)).toThrow('original held message'); expect(queue.pending().at(-1)?.state).toBe('drafted');
-  await steward.ask('raise the drawbridge', { surface: 'room' }); seal(queue); vi.runAllTimers(); expect(state(queue).shield).toBe(true);
+  await steward.ask('raise the drawbridge', { surface: 'room' }); seal(queue); vi.runAllTimers(); expect(state(queue).shield.value).toBe(true);
 });
 
 test('missing original blocks review; Twitch-origin actions stay labelled and operations never use fetch', () => {
   const queue = new ProposalQueue(); const original = fixtureHeld[0];
   if (!original) throw new Error('Missing fixture');
   const withoutText = { ...original }; delete withoutText.message_text;
-  expect(renderToStaticMarkup(<HeldActions item={withoutText} pending={false} queue={queue} />).match(/disabled=""/g)).toHaveLength(2);
+  expect(renderToStaticMarkup(<HeldActions item={withoutText} state={{ ...state(queue), held: [withoutText] }} queue={queue} />).match(/disabled=""/g)).toHaveLength(2);
   const network = vi.spyOn(globalThis, 'fetch');
   expect(renderToStaticMarkup(<GateLog state={state(queue)} queue={queue} />)).toContain(copy.twitch_human);
   expect(network).not.toHaveBeenCalled();
+});
+
+test('a Ban draft waits for the human seal, then retains its queue entry until 400 ms confirmation', () => {
+  vi.useFakeTimers(); const queue = new ProposalQueue(); const ban = fixtureBans[0];
+  if (!ban) throw new Error('Missing simulated ban');
+  proposeCommand(queue, { kind: 'ban', decision_id: ban.decision_id }, 'Ban · human review');
+  vi.advanceTimersByTime(4000);
+  expect(state(queue).bans).toContain(ban);
+  seal(queue);
+  expect(state(queue).bans).toContain(ban);
+  expect(state(queue).phases.get(ban.decision_id)).toMatchObject({ kind: 'confirming', op: 'ban' });
+  const confirming = heldQueue(queue);
+  expect(confirming).toContain('ban pending, ban confirming');
+  expect(confirming.match(/disabled=""/g)).toHaveLength(2);
+  vi.advanceTimersByTime(fixtureConfirmationMs - 1); expect(state(queue).bans).toContain(ban);
+  vi.advanceTimersByTime(1); expect(state(queue).bans).toHaveLength(0);
+  expect(state(queue).phases.get(ban.decision_id)).toEqual({ kind: 'banned' });
+});
+
+test('two Undo drafts cannot both seal the same timed-out decision', () => {
+  vi.useFakeTimers(); const queue = new ProposalQueue(); const timeout = state(queue).ledger[0];
+  if (!timeout) throw new Error('Missing simulated timeout');
+  proposeCommand(queue, { kind: 'undo', decision_id: timeout.decision_id }, 'First Undo');
+  proposeCommand(queue, { kind: 'undo', decision_id: timeout.decision_id }, 'Second Undo');
+  const [first, second] = queue.pending('moderator');
+  if (!first || !second) throw new Error('Missing drafts');
+  sealModerationProposal(queue, first); vi.advanceTimersByTime(fixtureConfirmationMs);
+  expect(() => sealModerationProposal(queue, second)).toThrow(copy.operation_unavailable);
+  expect(() => sealModerationProposal(queue, second)).toThrow(LifecycleRefusal);
+  expect(queue.pending('moderator')).toContain(second);
+  expect(second.state).toBe('drafted');
+});
+
+test('an absent ban rule disables the room button and refuses a direct command at seal time', () => {
+  const queue = new ProposalQueue(); const port = moderationSession(queue).port;
+  const ban = state(queue).bans[0];
+  if (!ban) throw new Error('Missing simulated ban');
+  const missingRule = { ...state(queue), rules: state(queue).rules.filter(rule => rule.rule_id !== ban.rule_id) };
+  vi.spyOn(port, 'getSnapshot').mockReturnValue(missingRule);
+  const button = find<InkButtonProps>(HeldQueue({ state: missingRule, queue }), props => props.children === copy.propose_ban);
+  expect(button.props.disabled).toBe(true);
+  proposeCommand(queue, { kind: 'ban', decision_id: ban.decision_id }, 'Direct Ban');
+  expect(decisionTransition(missingRule, ban.decision_id, 'ban')).toEqual({ ok: false, refusal: 'rule_unavailable' });
+  expect(() => seal(queue)).toThrow(copy.rule_unavailable);
+  expect(() => seal(queue)).toThrow(expect.objectContaining({ refusal: 'rule_unavailable' }));
+  expect(queue.pending('moderator').at(-1)?.state).toBe('drafted');
+});
+
+test('a missing original refuses a proposal with visible feedback instead of a dead click', () => {
+  const queue = new ProposalQueue(); const port = moderationSession(queue).port;
+  const original = state(queue).held[0];
+  if (!original) throw new Error('Missing simulated original');
+  const withoutText = { ...original }; delete withoutText.message_text;
+  const snapshot = { ...state(queue), held: [withoutText] };
+  const read = vi.spyOn(port, 'getSnapshot').mockReturnValue(snapshot);
+  proposeCommand(queue, { kind: 'release', decision_id: original.decision_id }, 'Unavailable original');
+  read.mockRestore();
+  expect(queue.pending('moderator')).toHaveLength(0);
+  expect(state(queue).notice).toBe(copy.original_unavailable);
 });

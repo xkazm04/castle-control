@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+﻿import { readFileSync } from 'node:fs';
 import { renderToReadableStream, renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, expect, test, vi } from 'vitest';
 import { ProposalQueue } from '@castle-control/ui/steward';
@@ -66,16 +66,18 @@ test('fixture commands are observable local state; all contract rules remain sha
     const rule = fixtureRules.rules[0];
     if (!ban || !rule) throw new Error('Missing generated fixture');
     port.send({ kind: 'dismiss', decision_id: ban.decision_id });
+    expect(port.getSnapshot().bans).toHaveLength(1);
+    vi.advanceTimersByTime(fixtureConfirmationMs);
     expect(port.getSnapshot().bans).toHaveLength(0);
-    expect(port.getSnapshot().operations.get(ban.decision_id)).toBe('dismiss');
+    expect(port.getSnapshot().phases.get(ban.decision_id)).toEqual({ kind: 'dismissed' });
     port.send({ kind: 'mode', rule_id: rule.rule_id, mode: 'armed' });
     expect(port.getSnapshot().preview_modes.get(rule.rule_id)).toBe('armed');
     expect(fixtureRules.rules.every(item => item.mode === 'shadow')).toBe(true);
     port.send({ kind: 'shield' });
-    expect(port.getSnapshot().shield).toBe(false);
+    expect(port.getSnapshot().shield.value).toBe(false);
     vi.advanceTimersByTime(fixtureConfirmationMs);
-    expect(port.getSnapshot().shield).toBe(true);
-    expect(listener).toHaveBeenCalledTimes(4);
+    expect(port.getSnapshot().shield.value).toBe(true);
+    expect(listener).toHaveBeenCalledTimes(5);
     stop();
     expect(network).not.toHaveBeenCalled();
   } finally { network.mockRestore(); }
@@ -89,6 +91,8 @@ test('review operations resolve only local queues and preserve the original text
   const timeout = port.getSnapshot().ledger[0];
   if (!ban || !held || !timeout) throw new Error('Missing simulated review fixtures');
   port.send({ kind: 'ban', decision_id: ban.decision_id });
+  expect(port.getSnapshot().bans).toHaveLength(1);
+  vi.advanceTimersByTime(fixtureConfirmationMs);
   expect(port.getSnapshot().bans).toHaveLength(0);
   expect(port.getSnapshot().messages.find(item => item.message_id === ban.message_id)?.verdict).toBe('bar');
   expect(port.getSnapshot().ledger[0]?.message_text).toBe(ban.message_text);
@@ -98,9 +102,13 @@ test('review operations resolve only local queues and preserve the original text
   expect(port.getSnapshot().held).toHaveLength(0);
   expect(port.getSnapshot().messages.find(item => item.message_id === held.message_id)?.verdict).toBe('pass');
   port.send({ kind: 'undo', decision_id: timeout.decision_id });
-  expect(port.getSnapshot().operations.get(timeout.decision_id)).toBe('undo');
+  expect(port.getSnapshot().phases.get(timeout.decision_id)).toMatchObject({ kind: 'confirming', op: 'undo' });
+  vi.advanceTimersByTime(fixtureConfirmationMs);
+  expect(port.getSnapshot().phases.get(timeout.decision_id)).toMatchObject({ kind: 'undone' });
   port.send({ kind: 'petition', decision_id: timeout.decision_id });
-  expect(port.getSnapshot().operations.get(timeout.decision_id)).toBe('petition');
+  expect(port.getSnapshot().phases.get(timeout.decision_id)).toMatchObject({ kind: 'confirming', op: 'petition' });
+  vi.advanceTimersByTime(fixtureConfirmationMs);
+  expect(port.getSnapshot().phases.get(timeout.decision_id)).toMatchObject({ kind: 'petitioned' });
   expect(createModerationPreview().getSnapshot().bans).toHaveLength(1);
 });
 
