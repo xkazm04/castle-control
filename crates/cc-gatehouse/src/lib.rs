@@ -20,6 +20,8 @@ pub mod live_capture;
 pub mod recorder;
 mod review;
 mod rules;
+#[cfg(test)]
+mod rules_parity;
 mod service;
 mod sha256;
 pub mod simulation;

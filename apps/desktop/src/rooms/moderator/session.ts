@@ -1,5 +1,11 @@
 import { isPending } from '@castle-control/ui/steward';
 import type { Proposal, ProposalField, ProposalQueue } from '@castle-control/ui/steward';
+import { parseMethodParams } from '@castle-control/contract';
+import type { Rule } from '@castle-control/contract';
+import { gatehouseRulesUpsert } from '@castle-control/contract/gatehouse';
+import { createRuleBench } from '../../moderation-bench.js';
+import type { RuleBenchPort } from '../../moderation-bench.js';
+import type { CoreGatehousePort } from '../../gatehouse-core.js';
 import { createModerationPreview } from '../../moderation-model.js';
 import type { ModerationPort, PreviewCommand } from '../../moderation-model.js';
 import { confirmFixtureDelay } from '../../moderation-fixture.js';
@@ -7,11 +13,45 @@ import { decisionTransition, LifecycleRefusal, settingTransition } from '../../m
 import { createOutputPreview } from './output-model.js';
 import type { OutputPort } from './output-model.js';
 
-type Session = { port: ModerationPort; commands: Map<string, PreviewCommand>; output: OutputPort };
+type Session = { port: ModerationPort; commands: Map<string, PreviewCommand>; output: OutputPort; bench: RuleBenchPort };
 const sessions = new WeakMap<ProposalQueue, Session>();
+const coreBenches = new WeakMap<CoreGatehousePort, RuleBenchPort>();
+export function coreRuleBench(port: CoreGatehousePort): RuleBenchPort {
+  let bench = coreBenches.get(port);
+  if (!bench) { bench = createRuleBench(); coreBenches.set(port, bench); }
+  return bench;
+}
+
+/** Extend the existing fixture port with sealed new rules. Existing lifecycle,
+ * timers, edits and verdicts stay owned by the original moderation model. */
+function sessionPreview(): ModerationPort {
+  const base = createModerationPreview();
+  const added = new Map<string, Rule>();
+  const listeners = new Set<() => void>();
+  let snapshot = base.getSnapshot();
+  function publish() {
+    const current = base.getSnapshot();
+    const preview_modes = new Map(current.preview_modes);
+    for (const rule of added.values()) if (!preview_modes.has(rule.rule_id)) preview_modes.set(rule.rule_id, rule.mode);
+    snapshot = { ...current, rules: [...current.rules, ...added.values()], preview_modes };
+    for (const listener of listeners) listener();
+  }
+  base.subscribe(publish);
+  return { ...base, getSnapshot: () => snapshot,
+    subscribe(listener) { listeners.add(listener); return () => { listeners.delete(listener); }; },
+    send(command) {
+      if (command.kind === 'rule' && !base.getSnapshot().rules.some(rule => rule.rule_id === command.rule.rule_id)) {
+        const { rule } = parseMethodParams(gatehouseRulesUpsert, { rule: command.rule });
+        if (rule.mode !== 'shadow' || rule.rule_class !== 'pattern') throw new Error('Only watching pattern rules can be saved.');
+        added.set(rule.rule_id, rule); publish();
+      } else base.send(command);
+    },
+  };
+}
+
 export function moderationSession(queue: ProposalQueue): Session {
   let session = sessions.get(queue);
-  if (!session) { session = { port: createModerationPreview(), commands: new Map(), output: createOutputPreview() }; sessions.set(queue, session); }
+  if (!session) { session = { port: sessionPreview(), commands: new Map(), output: createOutputPreview(), bench: createRuleBench() }; sessions.set(queue, session); }
   return session;
 }
 
@@ -82,5 +122,12 @@ export function sealModerationProposal(queue: ProposalQueue, proposal: Proposal)
   }
   const result = queue.seal(proposal.id);
   if (!result.ok) throw new Error(result.reason);
-  pending.forEach(port.send);
+  pending.forEach(item => {
+    port.send(item);
+    const bench = moderationSession(queue).bench;
+    const draft = bench.getSnapshot().draft;
+    if (item.kind === 'rule' && draft?.name.trim() === item.rule.name && draft.pattern === item.rule.pattern) {
+      bench.setDraft(draft, item.rule.rule_id);
+    }
+  });
 }

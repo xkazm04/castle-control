@@ -1,6 +1,64 @@
 # Gatehouse shadow journey (lane L2, 2026-10-31)
 
-Open `#/chamber/moderator` without a native core launch. In Garrison orders,
+## Rule bench (gatehouse-B)
+
+The existing watching-rule editor is now the **Rule bench** above Garrison
+orders. Choose **New watching rule** to draft a name, pattern and action;
+the mode is fixed to shadow. IDs are readable slugs with collision suffixes.
+The existing **Watching rule name**, **Watching match pattern** and
+**Propose watching rule** accessible names are unchanged. A fixture rule is
+added or edited only through the existing proposal and seal. Core uses
+**Save as watching**, sending the existing `gatehouse.rules.upsert` once.
+After saving, further edits retain that rule ID rather than creating copies.
+
+Counts update over the current loaded replay: total pattern hits and the
+subset currently labelled Pass ("would newly act on"). Three sample hits,
+**draft matches** row marks and a Draft matches filter expose those matches.
+The session retains the draft through navigation. The fixture drill shows a
+separate **Draft pattern preview**, without hashes or evaluator outcome states;
+the original illustrative drill result remains separately labelled. Nothing
+claims a new gate verdict. The care detector runs first in the real pipeline,
+and the deterministic action gate runs before any action. This bench never arms.
+
+Core comparisons require a saved recording baseline; otherwise the button is
+disabled with a reason and a link to the drill. **Drill against today's rules**
+uses the existing `gatehouse.drill.diff`, the saved baseline/recording and
+the current rules plus the draft (replaced by ID when editing). The existing
+comparison view shows the result. The saved baseline is not mutated.
+
+`moderation-pattern.ts` previews a conservative common regex subset, with the
+Rust raw/lowercased/zero-width-stripped/apostrophe-normalized/destretched
+variants and Unicode case-insensitivity. Dot and end anchoring are adapted to
+Rust semantics. Lookaround, backreferences, flags, Unicode shorthand classes
+and boundaries, class-set algebra, quantified groups and complex repetition
+are refused as `unsupported_by_gate`; invalid/oversized patterns return
+`invalid`. A refusal produces zero claimed hits, never an approximate answer.
+Rust remains the regex authority. Shared `pattern_vectors.json` is exercised
+by `rules_parity` (test-only) and `moderation-bench.test.ts` (Vitest).
+
+Verification: the new bench tests cover slug collisions, current-verdict counts,
+shadow-only upserts, the saved-baseline diff payload, disabled comparison,
+fixture seals, route persistence, replay marks and a hash-free preview. The
+new test in `e2e/journey-gatehouse.spec.ts` keeps the original journey and adds
+new-rule typing → 166 hits → marked-only replay → drill preview, with guarded
+networking and no requests after page load. Browser execution must be verified
+by the Director: this builder's Playwright launch failed with `spawn EPERM`
+before test execution.
+
+Builder evidence: desktop package tests passed 52 files / 507 tests; after
+adding the final draft-filter assertion, the narrowed bench/moderator/core/
+shell suite passed 9 files / 63 tests. Desktop typecheck, desktop lint, the
+e2e TypeScript project, `cargo test -p cc-gatehouse`, workspace Rust format
+and workspace Clippy with warnings denied passed. Desktop production build
+passed its first-load budget (364480 / 393216 bytes). The new unit suite first
+failed on its missing implementation, then exposed the JS end-anchor
+difference before going green. `pnpm gate` passed version checks, 24 tooling
+tests, workspace inventory and Cargo fetch, then failed in the unchanged
+contract check with `spawnSync cargo EPERM`. Gate scripts and contract files
+have no diff against HEAD. The command never reached the remaining full gate
+stages; this is not a full-gate pass.
+
+Open `#/chamber/moderator` without a native core launch. In the Rule bench,
 edit an existing Watching pattern rule's name/match, then **Propose watching
 rule**. The existing seal slot shows its validated upsert payload; hold Space
 on **Hold to seal** to apply it to this simulated session. Invalid/blank

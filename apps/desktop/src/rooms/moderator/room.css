@@ -143,6 +143,15 @@
 .moderator-core-drill textarea { min-height: var(--space-40); }
 .moderator-core-drill input, .moderator-rule input { width: 100%; min-width: 0; }
 .moderator-rule { display: grid; gap: var(--space-6); }
+.moderator-rule-editor, .moderator-rule-form, .moderator-bench-feedback { display: grid; gap: var(--space-10); min-width: 0; }
+.moderator-rule-editor > h3 { margin: 0; font: 800 var(--text-section)/1.2 var(--font-display); }
+.moderator-bench-feedback output { font: 700 var(--text-body)/1.4 var(--font-num); }
+.moderator-bench-feedback ul { margin: 0; padding-left: var(--space-20); }
+.moderator-bench-feedback li { font-size: var(--text-small); overflow-wrap: anywhere; }
+.moderator-bench-feedback [role="alert"] { color: var(--gules-text); font-size: var(--text-small); }
+.moderator-draft-mark { color: var(--azure-text); font-size: var(--text-small); }
+.moderator-banners:has(button:nth-child(5)) { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.moderator-banner > span { min-width: 0; }
 .moderator-core-rules .cc-window { margin-top: var(--space-10); }
 .moderator-core-rules .cc-window-row { overflow: auto; }
 .moderator-core-consensus .moderator-print { margin-top: var(--space-12); }

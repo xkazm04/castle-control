@@ -11,32 +11,37 @@ import { CoreChat, CoreHistory } from './core-reads.jsx';
 import { CoreConsensus } from './core-consensus.jsx';
 import { moderationCopy as copy } from '../../moderation-copy.js';
 import { CountLabel } from './presentation.jsx';
+import { coreRuleBench } from './session.js';
+import { RuleBench } from './rule-bench.jsx';
+import { benchInput, evaluateDraft } from '../../moderation-bench.js';
 import './room.css';
 
 function CoreRule({ rule, busy, port }: { rule: Rule; busy: boolean; port: CoreGatehousePort }) {
-  const editable = rule.mode === 'shadow' && rule.rule_class !== 'rail';
+  const editable = rule.mode === 'shadow' && rule.rule_class === 'classifier';
   return <HeraldicCard><form className="moderator-rule" onSubmit={event => {
     event.preventDefault();
     if (!editable || busy) return;
     const form = new FormData(event.currentTarget);
-    const name = form.get('name'); const pattern = form.get('pattern');
+    const name = form.get('name');
     if (typeof name !== 'string') return;
-    void port.upsertRule({ rule: { ...rule, name,
-      ...(rule.rule_class === 'pattern' && typeof pattern === 'string' ? { pattern } : {}) } });
+    void port.upsertRule({ rule: { ...rule, name } });
   }}>
     <div className="moderator-rule-card"><div className="moderator-rule-text"><b>{rule.name}</b><span>{rule.rule_class} · {rule.action}</span></div>
       <StatusChip variant="azure" stamp="mode" ink="azure" tone={rule.mode === 'armed' ? 'solid' : 'neutral'}>
         {rule.mode === 'armed' ? copy.armed : copy.watching}</StatusChip></div>
-    <label>{copy.rule_name}<input name="name" defaultValue={rule.name} disabled={busy || !editable} required /></label>
-    {rule.rule_class === 'pattern' && <label>{copy.match_pattern}<input name="pattern" defaultValue={rule.pattern ?? ''}
-      disabled={busy || !editable} required /></label>}
+    {editable && <label>{copy.rule_name}<input name="name" defaultValue={rule.name} disabled={busy} required /></label>}
     {editable && <InkButton type="submit" size="room" disabled={busy}>{copy.save_watching}</InkButton>}
-    {!editable && <p>{rule.rule_class === 'rail' ? copy.rail_fixed : copy.edit_shadow}</p>}
+    {!editable && <p>{rule.rule_class === 'rail' ? copy.rail_fixed : rule.mode === 'shadow' ? copy.bench_edit_here : copy.edit_shadow}</p>}
   </form></HeraldicCard>;
 }
 
 export function ConnectedGatehouse({ port, replay, seal_slot }: { port: CoreGatehousePort; replay: boolean; seal_slot?: ReactNode }) {
   const state = useSyncExternalStore(port.subscribe, port.getSnapshot, port.getSnapshot);
+  const bench = coreRuleBench(port);
+  const draft = useSyncExternalStore(bench.subscribe, bench.getSnapshot, bench.getSnapshot);
+  const messages = state.chat?.items.map(item => ({ ...item.decision, message_text: item.message.text })) ?? [];
+  const { input, original } = benchInput(draft, state.rules);
+  const result = evaluateDraft(input, state.rules, messages, original);
   useEffect(() => { void port.load(); }, [port]);
   return <div className="moderator-room" aria-label="Core Gatehouse" aria-busy={state.busy}>
     <div className="moderator-core-status"><p role="status">{state.notice}</p>
@@ -51,9 +56,10 @@ export function ConnectedGatehouse({ port, replay, seal_slot }: { port: CoreGate
           <CoreConsensus state={state} port={port} />
         </div>
         <div className="room-column moderator-details moderator-replay" role="region" aria-label={copy.live} tabIndex={0} data-fill="true">
-          <CoreChat state={state} port={port} />
+          <CoreChat state={state} port={port} marked={draft.draft ? result.hit_ids : undefined} />
         </div>
         <div className="room-column moderator-tools" role="region" aria-label="Gatehouse tools and seal slot" tabIndex={0}>
+          <RuleBench rules={state.rules} messages={messages} bench={bench} core={port} />
           <Plate ink="azure" offset="space-8" className="moderator-moat"
             band={<PlateBand title={copy.moat_title} gloss={copy.moat_gloss} count={<CountLabel first={copy.unavailable} />} />}>
             <PlateBody><p>{copy.core_moat_unavailable}</p></PlateBody>

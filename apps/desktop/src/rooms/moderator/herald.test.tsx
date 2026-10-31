@@ -31,7 +31,7 @@ const click = (props: ButtonHTMLAttributes<HTMLButtonElement>) => props.onClick?
 
 test('C banners select exactly one verdict; counts and rowcount derive from the same replay', () => {
   const messages = fixtureMessages.slice(0, 420);
-  let filter: Verdict | 'all' = 'all'; let query = '';
+  let filter: Verdict | 'all' | 'draft' = 'all'; let query = '';
   const panel = () => ReplayPanel({ messages, filter, query, on_filter: value => { filter = value; }, on_query: value => { query = value; } });
   for (const verdict of ['all', 'pass', 'hold', 'bar'] as const) {
     click(find<Banner>(panel(), props => props['data-verdict-pick'] === verdict).props);
@@ -122,7 +122,8 @@ test('core also renders three C plates with moat before rules and honest unavail
   expect(html.match(/class="cc-plate cc-offset-shadow/g)).toHaveLength(3);
   expect(html.match(/role="region"[^>]*tabindex="0"/g)).toHaveLength(3);
   expect(html.indexOf('The moat')).toBeLessThan(html.indexOf('Garrison orders'));
-  expect(html.indexOf('Garrison orders')).toBeLessThan(html.indexOf('href="#/chamber/moderator/drill"'));
+  expect(html.indexOf('Rule bench')).toBeLessThan(html.indexOf('Garrison orders'));
+  expect(html).toContain(copy.bench_baseline_needed);
   expect(html.indexOf('core decision history')).toBeLessThan(html.indexOf('aria-label="Seal slot"'));
   expect(html).toContain(copy.core_queues_unavailable); expect(html).toContain(copy.core_moat_unavailable);
   expect(html).not.toContain('Propose Ban'); expect(html).not.toContain('sample chat replay');

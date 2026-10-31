@@ -9,9 +9,9 @@ export { rowWindow as messageWindow } from '@castle-control/ui';
 type ReplayDecision = Pick<Decision, 'decision_id' | 'message_id' | 'message_text' | 'at' | 'verdict'>;
 export type ReplayProps = {
   messages: readonly ReplayDecision[]; scroll_top?: number; core?: boolean; notes?: ReactNode; footer?: ReactNode;
-  provenance?: ReadonlyMap<string, string>;
+  provenance?: ReadonlyMap<string, string>; marked?: ReadonlySet<string> | undefined;
 };
-type Filter = Verdict | 'all';
+type Filter = Verdict | 'all' | 'draft';
 type Selection = { filter: Filter; query: string; on_filter: (filter: Filter) => void; on_query: (query: string) => void };
 
 export function MessageList(props: ReplayProps) {
@@ -21,9 +21,9 @@ export function MessageList(props: ReplayProps) {
 }
 
 /** Controlled body shared by the fixture replay and retained core intake. */
-export function ReplayPanel({ messages, scroll_top = 0, core = false, notes, footer, provenance,
+export function ReplayPanel({ messages, scroll_top = 0, core = false, notes, footer, provenance, marked,
   filter, query, on_filter, on_query }: ReplayProps & Selection) {
-  const filtered = messages.filter(message => (filter === 'all' || message.verdict === filter)
+  const filtered = messages.filter(message => (filter === 'all' || filter === 'draft' && marked?.has(message.message_id) || message.verdict === filter)
     && `${message.message_id} ${message.message_text ?? ''}`.toLowerCase().includes(query.trim().toLowerCase()));
   return <section className="moderator-messages">
     <Plate ink="azure" offset="space-8" className="moderator-replay-plate" aria-label={copy.live}
@@ -36,6 +36,8 @@ export function ReplayPanel({ messages, scroll_top = 0, core = false, notes, foo
             <span><VerdictIcon verdict={value} />{verdictWords[value]}</span>
             <b>{(value === 'all' ? messages.length : messages.filter(message => message.verdict === value).length).toLocaleString('en-US')}</b>
           </button>)}
+          {marked && <button type="button" className="moderator-banner" aria-pressed={filter === 'draft'} onClick={() => on_filter('draft')}>
+            <span>{copy.draft_filter}</span><b>{messages.filter(message => marked.has(message.message_id)).length}</b></button>}
         </div>
         <label className="moderator-search">{core ? copy.core_search : copy.search}
           <input type="search" value={query} onChange={event => on_query(event.currentTarget.value)} />
@@ -50,9 +52,11 @@ export function ReplayPanel({ messages, scroll_top = 0, core = false, notes, foo
         {message => <RuledRow mark={<VerdictMark verdict={message.verdict} />}
           trailing={<time dateTime={message.at} title={message.at}>{message.at.slice(11, 19)}</time>}>
           <span data-message-row={message.message_id} data-verdict={message.verdict}
+            data-draft-match={marked?.has(message.message_id) ? 'true' : undefined}
             data-provenance={provenance?.get(message.decision_id)}
             title={[message.message_text ?? copy.text_unavailable, provenance?.get(message.decision_id)].filter(Boolean).join(' · ')}>
             {message.message_text ?? copy.text_unavailable}{provenance && <> · <b>{provenance.get(message.decision_id)}</b></>}
+            {marked?.has(message.message_id) && <strong className="moderator-draft-mark"> · {copy.draft_mark}</strong>}
           </span>
         </RuledRow>}
       </WindowedRows>

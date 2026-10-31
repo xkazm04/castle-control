@@ -11,6 +11,29 @@ async function seal(page: Page) {
   await page.keyboard.up('Space');
 }
 
+test('Gatehouse Rule bench previews a watching draft on chat and in the drill', async ({ page }) => {
+  const verify = await guardPage(page);
+  const requests: string[] = [];
+  try {
+    await page.goto('/#/chamber/moderator');
+    await page.getByRole('combobox', { name: 'Watching rule', exact: true }).selectOption('');
+    await page.waitForLoadState('networkidle');
+    page.on('request', request => requests.push(request.url()));
+    await page.getByRole('textbox', { name: 'Watching rule name' }).fill('Caps lock!');
+    await page.getByRole('textbox', { name: 'Watching match pattern' }).fill('go left');
+    await expect(page.getByLabel('Draft pattern hits', { exact: true })).toHaveText('166 draft pattern hits');
+    await expect(page.getByLabel('Would newly act on', { exact: true })).toContainText('166');
+    await expect(page.locator('[data-draft-match="true"]').first()).toBeVisible();
+    await page.getByRole('button', { name: 'Draft matches', exact: false }).click();
+    await expect(page.locator('.moderator-feed [data-message-row]:not([data-draft-match="true"])')).toHaveCount(0);
+    await page.getByRole('link', { name: 'Run the drill', exact: true }).click();
+    const preview = page.getByRole('region', { name: 'Draft pattern preview', exact: true });
+    await expect(preview).toBeVisible(); await expect(preview).toContainText('166 draft pattern hits');
+    await expect(preview).not.toContainText(/instrument.hash/i);
+    expect(requests).toEqual([]);
+  } finally { await page.goto('about:blank'); verify(); }
+});
+
 test('Gatehouse shadow journey and transparent stream previews', async ({ page }) => {
   const verify = await guardPage(page);
   try {

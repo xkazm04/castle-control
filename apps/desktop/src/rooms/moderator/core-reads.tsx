@@ -3,11 +3,11 @@ import type { CoreGatehousePort, CoreGatehouseSnapshot } from '../../gatehouse-c
 import { moderationCopy as copy } from '../../moderation-copy.js';
 import { MessageList } from './messages.jsx';
 
-export function CoreChat({ state, port, scroll_top = 0 }: {
-  state: CoreGatehouseSnapshot; port: CoreGatehousePort; scroll_top?: number;
+export function CoreChat({ state, port, scroll_top = 0, marked }: {
+  state: CoreGatehouseSnapshot; port: CoreGatehousePort; scroll_top?: number; marked?: ReadonlySet<string> | undefined;
 }) {
   const page = state.chat;
-  return <MessageList core scroll_top={scroll_top}
+  return <MessageList core scroll_top={scroll_top} marked={marked}
     messages={page?.items.map(item => ({ ...item.decision, message_text: item.message.text, at: item.message.at })) ?? []}
     provenance={new Map(page?.items.map(item => [item.decision.decision_id, item.provenance]))}
     notes={<><p>{copy.core_chat_notice}</p>

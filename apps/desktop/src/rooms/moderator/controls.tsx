@@ -7,7 +7,6 @@ import { available, phaseLabel } from '../../moderation-lifecycle.js';
 import { moderationCopy as copy } from '../../moderation-copy.js';
 import { CountLabel, ReviewMeta, VerdictIcon } from './presentation.jsx';
 import { proposeCommand } from './session.js';
-import { WatchingRuleEditor } from './watching-rule.jsx';
 
 type Props = { state: ModerationPreview; queue: ProposalQueue };
 const smallBig = { minHeight: 'var(--button-h)', fontSize: 'var(--text-label)' };
@@ -93,6 +92,6 @@ export function Rules({ state, queue }: Props) {
             { kind: 'mode', rule_id: rule.rule_id, mode: mode === 'shadow' ? 'armed' : 'shadow' }, `${mode === 'shadow' ? 'Arm' : 'Watch'} ${rule.name}`)}>
             {mode === 'armed' ? copy.propose_watch : copy.propose_arm}</button></div>
       </HeraldicCard>;
-    })}<WatchingRuleEditor rules={state.rules} queue={queue} />
+    })}
   </section>;
 }
