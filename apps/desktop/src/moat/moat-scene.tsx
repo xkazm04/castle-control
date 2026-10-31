@@ -25,6 +25,18 @@ const stampX = (x: number, g: MoatGeometry) => Math.min(Math.max(x, g.stamp_w / 
 const yOf = (lift: number, g: MoatGeometry) => lift <= 0.5 ? g.chat_y + (g.gate_y - g.chat_y) * (lift / 0.5)
   : g.gate_y + (g.stream_y - g.gate_y) * ((lift - 0.5) / 0.5);
 
+/** Where a time falls on the strip, in scene units. */
+const xFor = (offset_ms: number, window: MoatWindow, g: MoatGeometry) =>
+  g.gutter + Math.min(Math.max((offset_ms - window.from_ms) / Math.max(window.to_ms - window.from_ms, 1), 0), 1) * (g.width - g.gutter * 2);
+
+/** What the strip draws for one window: the dots, which stops get a stamp, and at what level. One answer for the scene and its overflow note. */
+function planStamps(model: MoatModel, window: MoatWindow, g: MoatGeometry, compact: boolean, spotlight?: string, selected?: number) {
+  const drawable = visibleMarkers(model, window);
+  const stops = drawable.markers.filter(marker => marker.fate === 'held' && (spotlight === undefined || marker.rule_id === spotlight || marker.index === selected));
+  const stacked = compact ? { levels: [], overflow: 0 } : stampLevels(stops.map(marker => stampX(xFor(marker.offset_ms, window, g), g)), g.stamp_w, g.levels);
+  return { drawable, stops, level_of: new Map(stops.map((marker, position) => [marker.index, stacked.levels[position] ?? -1])), overflow: stacked.overflow };
+}
+
 export type MoatSceneProps = {
   model: MoatModel; playhead_ms: number; window: MoatWindow; selected?: number | undefined;
   on_select?: ((index: number) => void) | undefined; delay_s?: number | undefined; compact?: boolean;
@@ -50,13 +62,9 @@ function Waves({ id }: { id: string }) {
 export function MoatScene({ model, playhead_ms, window, selected, on_select, delay_s, compact = false, uid, geometry, caption, axis = !compact, changed, spotlight }: MoatSceneProps) {
   const g = geometry ?? (compact ? compactGeometry : fullGeometry);
   const id = `moat-${uid}`;
-  const inner = g.width - g.gutter * 2;
   const range = Math.max(window.to_ms - window.from_ms, 1);
-  const xOf = (offset_ms: number) => g.gutter + Math.min(Math.max((offset_ms - window.from_ms) / range, 0), 1) * inner;
-  const drawable = visibleMarkers(model, window);
-  const stops = drawable.markers.filter(marker => marker.fate === 'held' && (spotlight === undefined || marker.rule_id === spotlight || marker.index === selected));
-  const stacked = compact ? { levels: [], overflow: 0 } : stampLevels(stops.map(marker => stampX(xOf(marker.offset_ms), g)), g.stamp_w, g.levels);
-  const level_of = new Map(stops.map((marker, position) => [marker.index, stacked.levels[position] ?? -1]));
+  const xOf = (offset_ms: number) => xFor(offset_ms, window, g);
+  const { drawable, stops, level_of } = planStamps(model, window, g, compact, spotlight, selected);
   const gaps = model.gaps.filter(gap => gap.to_ms >= window.from_ms && gap.from_ms <= window.to_ms);
   const ticks = !axis ? [] : [0, 0.2, 0.4, 0.6, 0.8, 1].map(share => window.from_ms + range * share);
   return <div className="moat-scene" data-compact={compact} data-paged={window.paged} style={{ aspectRatio: `${g.width} / ${g.height}` }}>
@@ -126,9 +134,6 @@ export function MoatScene({ model, playhead_ms, window, selected, on_select, del
 export type MoatSceneNotes = { thinned: number; overflow: number };
 /** What the strip could not draw, so the panel can say so instead of hiding it. */
 export function sceneNotes(model: MoatModel, window: MoatWindow, spotlight?: string, selected?: number): MoatSceneNotes {
-  const drawable = visibleMarkers(model, window);
-  const range = Math.max(window.to_ms - window.from_ms, 1);
-  const xs = drawable.markers.filter(marker => marker.fate === 'held' && (spotlight === undefined || marker.rule_id === spotlight || marker.index === selected))
-    .map(marker => stampX(fullGeometry.gutter + (marker.offset_ms - window.from_ms) / range * (fullGeometry.width - fullGeometry.gutter * 2), fullGeometry));
-  return { thinned: drawable.thinned, overflow: stampLevels(xs, fullGeometry.stamp_w, fullGeometry.levels).overflow };
+  const plan = planStamps(model, window, fullGeometry, false, spotlight, selected);
+  return { thinned: plan.drawable.thinned, overflow: plan.overflow };
 }
