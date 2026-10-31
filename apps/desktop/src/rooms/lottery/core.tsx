@@ -41,6 +41,7 @@ export function ConnectedLotsRoom({ port, simulated, seal_slot }: { port: CoreLo
   const cast = useMemo<StageCast | undefined>(() => state.cast_result
     ? { winners: state.cast_result.cast.winners, label: state.cast_result.cast.label } : undefined, [state.cast_result]);
   const [user, setUser] = useState('');
+  const [prove, setProve] = useState(0);
   useEffect(() => { if (!port.getSnapshot().locked) void port.load(); }, [port]);
   const draw = state.draw;
   const field_id = useId();
@@ -64,7 +65,8 @@ export function ConnectedLotsRoom({ port, simulated, seal_slot }: { port: CoreLo
         foot={<p>{state.sealed ? copy.core.frozen_notice : copy.core.roll_notice}</p>}>
         <DrawStage shape={appearance.shape} on_shape={shape => display.edit({ shape })} entries={state.entries} cast={cast}
           content={draw?.policy.content ?? 'question'} sealed={state.sealed} seal={state.seal_result?.sealed.seal}
-          clock={reveal} reveal_ms={appearance.reveal_ms} theatre={appearance.theatre} on_theatre={display.theatre} />
+          clock={reveal} reveal_ms={appearance.reveal_ms} theatre={appearance.theatre} on_theatre={display.theatre} proof="core"
+          {...(state.writ ? { on_prove: () => { display.theatre(false); setProve(count => count + 1); } } : {})} />
       </PoolStage>
       <div className="cc-desk">
         <SectionHeading variant="banner" level={2} title={copy.writ} gloss={copy.writ_gloss} ink="gules" />
@@ -145,7 +147,7 @@ export function ConnectedLotsRoom({ port, simulated, seal_slot }: { port: CoreLo
             {state.writ && <a download="castle-control-writ.json" href={`data:application/json;charset=utf-8,${encodeURIComponent(JSON.stringify(state.writ))}`}>{copy.core.download}</a>}
           </section>
         </Ticket>}
-        {state.writ && <WritLab writ={state.writ} simulated={simulated ?? false} />}
+        {state.writ && <WritLab writ={state.writ} simulated={simulated ?? false} prove={prove} />}
         <p className="cc-status" role="status">{state.notice}</p>
         <FairnessSteps />
       </div>

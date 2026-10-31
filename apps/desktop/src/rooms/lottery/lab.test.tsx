@@ -136,6 +136,10 @@ test('lab view stamps every step, marks the tampered byte and announces the catc
   expect(html).toContain('{&quot;handle&quot;:&quot;simulated_01&quot;,&quot;weight&quot;:22}');
   expect(html).toMatch(/aria-pressed="true"[^>]*>Weight \+1</);
   expect(html).toMatch(/role="status"[^>]*>Tamper caught at step 2/);
+  expect([...html.matchAll(/data-strip="(\w+)"/g)].map(match => match[1])).toEqual(['pass', 'fail', 'blocked', 'blocked']);
+  // The strip and the verdict sit beside the tamper bench, before the detailed walk.
+  expect(html.indexOf('lottery-lab-strip')).toBeLessThan(html.indexOf('lottery-lab-pipeline'));
+  expect(html.indexOf('role="status"')).toBeLessThan(html.indexOf('lottery-lab-pipeline'));
   expect(html).toContain('download="castle-control-writ.json"');
   expect(html).toContain(encodeURIComponent(JSON.stringify(fixtureWrit)).replaceAll('&', '&amp;'));
   expect(html).toContain('Simulated');
@@ -145,6 +149,7 @@ test('lab first renders a pending recompute and the restore control disabled', (
   const html = renderToStaticMarkup(<WritLab writ={fixtureWrit} simulated={false} />);
   expect(html).toMatch(/role="status"[^>]*>Recomputing the proof locally/);
   expect(html.match(/data-status="pending"/g)).toHaveLength(4);
+  expect(html.match(/data-strip="pending"/g)).toHaveLength(4);
   expect(html).toMatch(/disabled=""[^>]*>Restore canonical writ/);
   expect(html).toContain('Proof bundle from the local core');
 });

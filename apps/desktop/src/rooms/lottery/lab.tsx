@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react';
-import type { CSSProperties } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import type { CSSProperties, Ref } from 'react';
 import { InkButton, SectionHeading, StatusChip, WindowedRows } from '@castle-control/ui';
 import type { LotsWrit } from '@castle-control/contract';
 import { byteWindow, defaultTamperIndex, inspectWrit } from './lab-model.js';
 import type { LabReport, LabStep, StepStatus, Tamper, TamperKind, TracePick } from './lab-model.js';
 import { labCopy as copy } from './lab-copy.js';
+import { useReducedMotion } from './playback.js';
 import './lab.css';
 
 const kinds: readonly TamperKind[] = ['weight', 'handle', 'seed', 'plan', 'winners'];
@@ -76,6 +77,18 @@ function StepCard({ step, index, report }: { step: LabStep | undefined; index: n
   </li>;
 }
 
+/** One-line proof summary beside the tamper bench, so a catch is visible without scrolling. */
+function ProofStrip({ report, run }: { report: LabReport | undefined; run: number }) {
+  return <ol className="lottery-lab-strip" key={run} aria-label={copy.strip}>
+    {stepOrder.map((id, index) => {
+      const status = report?.steps.find(step => step.id === id)?.status;
+      return <li key={id} data-strip={status ?? 'pending'} style={stepStyle(index)}>
+        <b aria-hidden="true">{index + 1}</b><span>{copy.strip_steps[id]}</span><i>{status ? copy.stamps[status] : copy.pending}</i>
+      </li>;
+    })}
+  </ol>;
+}
+
 function TraceRow({ pick }: { pick: TracePick }) {
   return <p className="lottery-lab-pick" data-accepted={pick.accepted}>
     <b>{copy.trace_draw(pick.counter)}</b> <code>{pick.candidate}</code>{' '}
@@ -95,14 +108,15 @@ function Trace({ trace }: { trace: readonly TracePick[] }) {
   </details>;
 }
 
-export function WritLabView({ writ, simulated, tamper, report, failed = false, run = 0, on_tamper }: {
+export function WritLabView({ writ, simulated, tamper, report, failed = false, run = 0, on_tamper, section }: {
   writ: LotsWrit; simulated: boolean; tamper?: Tamper; report?: LabReport; failed?: boolean; run?: number;
-  on_tamper: (tamper: Tamper | undefined) => void;
+  on_tamper: (tamper: Tamper | undefined) => void; section?: Ref<HTMLElement>;
 }) {
   const index = defaultTamperIndex(writ);
   const target = writ.roll.entries[index]?.handle ?? '';
   const hint = (kind: TamperKind) => copy.tamper_hints[kind](kind === 'weight' || kind === 'handle' ? target : writ.proof.source);
-  return <section className="lottery-lab" aria-label={copy.title} data-verdict={failed ? 'failed' : report?.verdict ?? 'pending'}>
+  return <section ref={section} className="lottery-lab" aria-label={copy.title}
+    data-verdict={failed ? 'failed' : report?.verdict ?? 'pending'}>
     <SectionHeading variant="banner" level={2} title={copy.title} gloss={copy.gloss} ink="gules"
       count={simulated ? <StatusChip variant="gules" stamp="label">{copy.simulated}</StatusChip> : undefined} />
     <p className="lottery-lab-intro">{copy.intro}</p>
@@ -114,6 +128,9 @@ export function WritLabView({ writ, simulated, tamper, report, failed = false, r
             onClick={() => on_tamper(tamper?.kind === kind ? undefined : { kind, index })}>{copy.tampers[kind]}</InkButton>)}
         </div>
         <p className="lottery-lab-aside">{tamper ? hint(tamper.kind) : copy.restored}</p>
+        <ProofStrip report={report} run={run} />
+        <p className="lottery-lab-verdict" role="status" data-verdict={failed ? 'failed' : report?.verdict ?? 'pending'}>
+          {labVerdict(report, failed)}</p>
         <InkButton size="room" variant="primary" disabled={!tamper} onClick={() => on_tamper(undefined)}>{copy.restore}</InkButton>
         <RollBytes writ={writ} report={report} tamper={tamper} />
         <p className="lottery-lab-aside"><a download="castle-control-writ.json"
@@ -125,8 +142,6 @@ export function WritLabView({ writ, simulated, tamper, report, failed = false, r
           {stepOrder.map((id, position) => <StepCard key={id} index={position} report={report}
             step={report?.steps.find(step => step.id === id)} />)}
         </ol>
-        <p className="lottery-lab-verdict" role="status" data-verdict={failed ? 'failed' : report?.verdict ?? 'pending'}>
-          {labVerdict(report, failed)}</p>
         {report && <Trace trace={report.trace} />}
       </div>
     </div>
@@ -136,12 +151,25 @@ export function WritLabView({ writ, simulated, tamper, report, failed = false, r
 
 type Result = { writ: LotsWrit; tamper: Tamper | undefined; report?: LabReport; failed?: boolean };
 
-/** In-room tamper-and-verify lab. Newer tamper selections always win over older recomputes. */
-export function WritLab({ writ, simulated }: { writ: LotsWrit; simulated: boolean }) {
+/** In-room tamper-and-verify lab. Newer tamper selections always win over older recomputes.
+ * Each new `prove` request (from the stage) restores the canonical writ, brings the lab into
+ * view and replays the four-step walk. */
+export function WritLab({ writ, simulated, prove = 0 }: { writ: LotsWrit; simulated: boolean; prove?: number }) {
   const [selection, setSelection] = useState<{ writ: LotsWrit; tamper?: Tamper }>({ writ });
+  const section = useRef<HTMLElement>(null);
+  const reduced = useReducedMotion();
   const tamper = selection.writ === writ ? selection.tamper : undefined;
   const [result, setResult] = useState<Result>();
   const [run, setRun] = useState(0);
+  // Only a new prove request acts; a new writ alone keeps the streamer's place.
+  useEffect(() => {
+    if (!prove) return;
+    setSelection({ writ }); setRun(count => count + 1);
+    const node = section.current;
+    node?.scrollIntoView?.({ behavior: reduced ? 'auto' : 'smooth', block: 'start' });
+    // Keyboard users land on the first tamper control, ready to try the proof.
+    node?.querySelector<HTMLButtonElement>('.lottery-lab-tampers button')?.focus({ preventScroll: true });
+  }, [prove]);
   useEffect(() => {
     let live = true;
     inspectWrit(writ, tamper).then(report => {
@@ -151,6 +179,6 @@ export function WritLab({ writ, simulated }: { writ: LotsWrit; simulated: boolea
     return () => { live = false; };
   }, [writ, tamper]);
   const current = result && result.writ === writ && result.tamper === tamper ? result : undefined;
-  return <WritLabView writ={writ} simulated={simulated} run={run} on_tamper={next => setSelection(next ? { writ, tamper: next } : { writ })}
+  return <WritLabView section={section} writ={writ} simulated={simulated} run={run} on_tamper={next => setSelection(next ? { writ, tamper: next } : { writ })}
     {...(tamper ? { tamper } : {})} {...(current?.report ? { report: current.report } : {})} failed={current?.failed ?? false} />;
 }

@@ -64,10 +64,22 @@ function Proclamation({ handle, order, total, cohort }: { handle: string; order:
   </p>;
 }
 
-export function DrawStage({ shape, on_shape, entries, cast, content, sealed, seal, clock, reveal_ms, verified = true, theatre = false, on_theatre }: {
+/** Closes the ceremony with the proof that let it play: a locally recomputed writ or a core-verified cast. */
+function Verdict({ total, proof, on_prove }: { total: number; proof: 'local' | 'core'; on_prove: (() => void) | undefined }) {
+  const [title, detail] = copy.stage.proof[proof];
+  return <div className="lottery-stage-verdict" data-proof={proof}>
+    <svg className="lottery-stage-verdict-seal" viewBox="0 0 24 24" aria-hidden="true"><circle cx={12} cy={12} r={11} />
+      <path d="M6.5 12.5l3.6 3.6L17.5 8.2" /></svg>
+    <div><small>{copy.stage.complete(total)}</small><b>{title}</b><p>{detail}</p>
+      {on_prove && <InkButton size="room" onClick={on_prove}>{copy.stage.prove}</InkButton>}</div>
+  </div>;
+}
+
+export function DrawStage({ shape, on_shape, entries, cast, content, sealed, seal, clock, reveal_ms, verified = true, theatre = false,
+  on_theatre, proof = 'local', on_prove }: {
   shape: DrawShape; on_shape: (shape: DrawShape) => void; entries: readonly StageEntry[]; cast: StageCast | undefined;
   content: DrawContent; sealed: boolean; seal?: string | undefined; clock: RevealClock; reveal_ms: number; verified?: boolean;
-  theatre?: boolean; on_theatre?: (theatre: boolean) => void;
+  theatre?: boolean; on_theatre?: (theatre: boolean) => void; proof?: 'local' | 'core'; on_prove?: () => void;
 }) {
   const reduced = useReducedMotion();
   const playable = cast && verified ? cast : undefined;
@@ -121,6 +133,7 @@ export function DrawStage({ shape, on_shape, entries, cast, content, sealed, sea
       {revealed.length > 0 && <div className="lottery-stage-rail">
         {phase === 'revealing' && latest && <Proclamation key={latest} handle={latest} order={revealed.length}
           total={winners.length} cohort={cohorts.get(latest)} />}
+        {phase === 'revealed' && theatre && <Verdict total={winners.length} proof={proof} on_prove={on_prove} />}
         <ol aria-label={copy.stage.rail}>
           {revealed.slice(0, rail_limit).map((handle, index) => {
             const cohort = cohorts.get(handle);
@@ -137,6 +150,7 @@ export function DrawStage({ shape, on_shape, entries, cast, content, sealed, sea
     <div className="lottery-stage-foot">
       {playable && <StatusChip variant="gules" stamp="label" tone={phase === 'revealed' ? 'spot' : 'neutral'}>
         {copy.stage.labels[playable.label]}</StatusChip>}
+      {phase === 'revealed' && !theatre && <StatusChip variant="ok" stamp="verdict" tone="ok">{copy.stage.proof[proof][0]}</StatusChip>}
       <p className="cc-aside">{cast && !verified ? copy.stage.unverified : copy.stage.note}
         {drawn.length < entries.length ? ` ${copy.stage.sampled(drawn.length, entries.length)}` : ''}</p>
       {playable && <InkButton size="room" disabled={!state.finished} onClick={() => clock.replay()}>{copy.stage.replay}</InkButton>}

@@ -95,6 +95,24 @@ test('a revealed ceremony shows medals and scoreboard in cast order; an unverifi
   expect(refused).not.toContain('data-medal=');
 });
 
+test('a finished ceremony closes on its proof: a verdict card with the lab handoff in theatre, a chip at the desk', () => {
+  const clock = createRevealClock();
+  const scene = stageScene('wheel', cast, 'question', false);
+  clock.tick(scene, `${seal}:wheel:0`, 0); clock.tick(scene, `${seal}:wheel:0`, 5000);
+  const theatre = render({ shape: 'wheel', clock, cast, sealed: true, seal, theatre: true, on_theatre: () => undefined,
+    on_prove: () => undefined });
+  expect(theatre).toContain('lottery-stage-verdict');
+  expect(theatre).toContain(copy.stage.complete(3)); expect(theatre).toContain(copy.stage.proof.local[0]);
+  expect(theatre).toContain(`>${copy.stage.prove}</button>`);
+  const core = render({ shape: 'wheel', clock, cast, sealed: true, seal, theatre: true, proof: 'core' });
+  expect(core).toContain(copy.stage.proof.core[0]); expect(core).not.toContain(copy.stage.prove);
+  const desk = render({ shape: 'wheel', clock, cast, sealed: true, seal, on_prove: () => undefined });
+  expect(desk).not.toContain('lottery-stage-verdict');
+  expect(desk).toMatch(new RegExp(`data-variant="ok"[^>]*>${copy.stage.proof.local[0]}<`));
+  const playing = createRevealClock(); playing.tick(scene, `${seal}:wheel:0`, 0);
+  expect(render({ shape: 'wheel', clock: playing, cast, sealed: true, seal, theatre: true })).not.toContain(copy.stage.proof.local[0]);
+});
+
 test('theatre toggle is exposed with its pressed state, and the sealed stage stamps its wax', () => {
   const html = render({ sealed: true, seal, theatre: true, on_theatre: () => undefined });
   expect(html).toContain('data-phase="sealed"'); expect(html).toContain('lottery-stage-wax');

@@ -124,6 +124,12 @@ export const lotsCopy = {
     labels: { 'streamer-controlled': 'Streamer-controlled seed', 'drand-quicknet': 'Public drand quicknet round' },
     sampled: (shown: number, total: number) => `${shown} of ${total} lots drawn · every winner always shown`,
     unverified: 'This cast did not recompute against its writ, so the ceremony will not play it.',
+    complete: (total: number) => `Cast complete · ${total} ${total === 1 ? 'winner' : 'winners'}`,
+    proof: {
+      local: ['Writ verified', 'Recomputed in this window: SHA-256 seal, seed commitment and every winner match.'],
+      core: ['Core verified', 'The core checked this cast against its seal and randomness before the ceremony.'],
+    },
+    prove: 'Prove it in the Writ Lab',
   },
   tier: {
     title: 'Overlord urn · room tier', sizes: { s: 'S', m: 'M', l: 'L' },

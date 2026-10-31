@@ -44,6 +44,8 @@ export const labCopy = {
     derivation: ['Winner derivation', 'Re-run rejection sampling from the seed and compare winners in order.'],
   } satisfies Record<StepId, readonly [string, string]>,
   stamps: { pass: 'Pass', fail: 'Mismatch', blocked: 'Blocked', unverified: 'Unverified' } satisfies Record<StepStatus, string>,
+  strip: 'Proof at a glance', strip_steps: { serialization: 'Roll', seal: 'Seal', randomness: 'Seed', derivation: 'Winners' },
+  pending: 'Checking',
   reasons: {
     invalid_version: 'Unknown roll version.',
     invalid_entries: 'An entry handle or weight is outside the protocol.',

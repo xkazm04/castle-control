@@ -36,6 +36,7 @@ export default function LotteryRoom({ snapshot, replay, queue = proposalQueue, s
     ? { winners: state.writ.winners, label: 'streamer-controlled' } : undefined, [state.writ]);
   const proposals = useSyncExternalStore(queue.subscribe, queue.getSnapshot, queue.getSnapshot);
   const [verification, setVerification] = useState('');
+  const [prove, setProve] = useState(0);
   if (snapshot.mode !== 'fixture') return <p>{copy.no_live_controls}</p>;
   const history = proposals.proposals.filter(item => item.chamber === 'lottery' && item.state !== 'torn');
   const pending = history.filter(isPending);
@@ -74,7 +75,8 @@ export default function LotteryRoom({ snapshot, replay, queue = proposalQueue, s
         </>}><DrawStage shape={appearance.shape} on_shape={shape => display.edit({ shape })} entries={entries} cast={cast}
           verified={writ_checked === true} content={state.draw.policy.content} sealed={state.sealed}
           seal={state.sealed_roll?.seal} clock={reveal} reveal_ms={appearance.reveal_ms}
-          theatre={appearance.theatre} on_theatre={display.theatre} /></PoolStage>
+          theatre={appearance.theatre} on_theatre={display.theatre}
+          on_prove={() => { display.theatre(false); setProve(count => count + 1); }} /></PoolStage>
       <div className="cc-desk">
         <SectionHeading variant="banner" level={2} title={copy.writ} gloss={copy.writ_gloss} ink="gules"
           count={<StatusChip variant="gules" stamp="label" {...(pending.length ? { tone: 'spot' as const } : {})}>
@@ -107,7 +109,7 @@ export default function LotteryRoom({ snapshot, replay, queue = proposalQueue, s
         {state.draw.policy.official_rules && <p className="cc-aside">{copy.template_text}</p>}
         <div className="lottery-seal-frame"><HeraldicCard variant="raised" tone="seal" ink="gules">{seal_slot}</HeraldicCard></div>
         {state.sealed && roll && <FixtureCast port={port} hash={roll.hash} display={appearance} />}
-        <WritLab writ={state.writ ?? fixtureWrit} simulated />
+        <WritLab writ={state.writ ?? fixtureWrit} simulated prove={prove} />
         <HeraldicCard variant="raised" aria-label={copy.lookup_title}>
           <div className="lottery-lookup">
             <label htmlFor="lottery-lookup">{copy.lookup}</label>
