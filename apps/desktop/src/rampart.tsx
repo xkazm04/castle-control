@@ -34,7 +34,7 @@ export function DesktopRampart({ snapshot, theme, on_theme_change, on_steward }:
     <span className="cc-separator" />
     <div className="cc-link-group">
       {twitch ? <ConnectionMark name="Twitch" state={twitch} /> : <StatusChip variant="dash">{simulated ? 'Twitch simulated' : 'Twitch unknown'}</StatusChip>}
-      {!simulated && status ? <ConnectionMark name="OBS" state={status.obs_connected ? 'connected' : 'down'} /> : <StatusChip variant="dash">{simulated ? 'OBS simulated' : 'OBS unknown'}</StatusChip>}
+      <a href="#/stream" title="Set up OBS">{!simulated && status ? <ConnectionMark name="OBS" state={status.obs_connected ? 'connected' : 'down'} /> : <StatusChip variant="dash">{simulated ? 'OBS simulated' : 'OBS unknown'}</StatusChip>}</a>
     </div>
     {gatehouse ? <GatehouseChip armed={gatehouse.armed_rules} watching={gatehouse.shadow_rules}
       shield={gatehouse.shield} href="#/chamber/moderator" /> : <a href="#/chamber/moderator"><StatusChip variant="dash">{simulated ? 'Gatehouse simulated' : 'Gatehouse unknown'}</StatusChip></a>}

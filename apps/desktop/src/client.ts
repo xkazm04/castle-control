@@ -7,6 +7,10 @@ import type { CoreLotsPort, LotsNetwork } from './lots-core.js';
 import type { CoreGatehousePort, GatehouseNetwork } from './gatehouse-core.js';
 import type { CoreBeaconsPort, BeaconsNetwork } from './beacons-core.js';
 import type { StewardTransport } from '@castle-control/ui/steward';
+import type { StreamConnection } from './stream/obs-core.js';
+
+const streamConnections = new WeakMap<Snapshot, StreamConnection>();
+export function coreStreamConnection(snapshot: Snapshot) { return streamConnections.get(snapshot); }
 
 type LotsConnection = { launch: CoreLaunch; transport?: LotsNetwork; port?: CoreLotsPort };
 const lotsConnections = new WeakMap<Snapshot, LotsConnection>();
@@ -55,6 +59,7 @@ export function createDesktopClient(value: unknown, transport?: Network, lots_tr
   const connection: LotsConnection = { launch, ...(lots_transport ? { transport: lots_transport } : {}) };
   const gatehouse: GatehouseConnection = { launch, ...(gatehouse_transport ? { transport: gatehouse_transport } : {}) };
   const beacons: BeaconsConnection = { launch };
+  const stream: StreamConnection = { launch };
   const steward: StewardConnection = { launch, live: launch.steward === 'live',
     reachable: () => client.getSnapshot().phase === 'ready',
     ...(steward_transport ? { transport: steward_transport } : {}) };
@@ -63,6 +68,7 @@ export function createDesktopClient(value: unknown, transport?: Network, lots_tr
     lotsConnections.set(snapshot, connection);
     gatehouseConnections.set(snapshot, gatehouse);
     beaconsConnections.set(snapshot, beacons);
+    streamConnections.set(snapshot, stream);
     stewardConnections.set(snapshot, steward);
     return snapshot;
   } };

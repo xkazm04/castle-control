@@ -12,6 +12,25 @@ test('duplicate bindings throw before a handler can use them', () => {
   expect(() => createKeymap([{ key: '1', action: 'lottery' }, { key: '1', action: 'studio' }])).toThrow('Duplicate');
 });
 
+test('OBS setup is a lazy non-chamber surface reached from the Keep with Back to the Keep', async () => {
+  expect(canonicalHash('#/stream')).toBe('#/stream');
+  expect(routeFromHash('#/stream')).toBe('stream');
+  expect(backHash(navigateHash(initialNavigation('#/overview'), '#/stream'))).toBe('#/keep');
+  const open = vi.fn();
+  const entry = KeepEntrance({ on_enter: () => undefined, on_stream: open });
+  expect(entry.props.children[2].props.children).toBe('Set up OBS');
+  entry.props.children[2].props.onClick();
+  expect(open).toHaveBeenCalledOnce();
+  const stream = await renderToReadableStream(<DesktopView navigation={initialNavigation('#/stream')}
+    snapshot={{ mode: 'fixture', phase: 'ready' }} theme="paper" on_navigate={() => undefined} on_theme_change={() => undefined} />);
+  await stream.allReady;
+  const html = await new Response(stream).text();
+  expect(html).toContain('stream-workspace');
+  expect(html).not.toContain('data-module="stream"');
+  expect(html).not.toContain('shell-room');
+  expect(html.match(/aria-label="Talk to the Steward\.\.\."/g)).toHaveLength(1);
+});
+
 test('keep demo entry, direct URL, Back and Escape use the canonical non-chamber demo surface', async () => {
   expect(canonicalHash('#/demo')).toBe('#/demo');
   expect(routeFromHash('#/demo')).toBe('demo');

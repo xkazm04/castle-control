@@ -7,12 +7,13 @@ import { keepReadModel } from './read-model.js';
 import { ChamberArt } from './art.jsx';
 import './keep.css';
 
-export type KeepProps = { snapshot?: Snapshot; on_open: (id: ModuleId) => void; on_enter: () => void; on_demo?: () => void };
+export type KeepProps = { snapshot?: Snapshot; on_open: (id: ModuleId) => void; on_enter: () => void; on_demo?: () => void; on_stream?: () => void };
 
-export function KeepEntrance({ on_enter, on_demo }: { on_enter: () => void; on_demo?: () => void }) {
+export function KeepEntrance({ on_enter, on_demo, on_stream }: { on_enter: () => void; on_demo?: () => void; on_stream?: () => void }) {
   return <header className="keep-heading">
     <InkButton variant="primary" onClick={on_enter}>Enter the keep <kbd>0</kbd></InkButton>
-    <InkButton data-demo-entry onClick={on_demo}>See it on stream</InkButton></header>;
+    <InkButton data-demo-entry onClick={on_demo}>See it on stream</InkButton>
+    <InkButton onClick={on_stream}>Set up OBS</InkButton></header>;
 }
 
 export function KeepRoomTile({ chamber, word, line, on_open }: {
@@ -27,11 +28,11 @@ export function KeepRoomTile({ chamber, word, line, on_open }: {
   </button>;
 }
 
-export function Keep({ snapshot = { mode: 'fixture', phase: 'ready' }, on_open, on_enter, on_demo }: KeepProps) {
+export function Keep({ snapshot = { mode: 'fixture', phase: 'ready' }, on_open, on_enter, on_demo, on_stream }: KeepProps) {
   const queue = useSyncExternalStore(proposalQueue.subscribe, proposalQueue.getSnapshot, proposalQueue.getSnapshot);
   const read = keepReadModel(snapshot);
   return <section className="keep-home" aria-label="The keep">
-    <KeepEntrance on_enter={on_enter} {...(on_demo ? { on_demo } : {})} />
+    <KeepEntrance on_enter={on_enter} {...(on_demo ? { on_demo } : {})} {...(on_stream ? { on_stream } : {})} />
     <div className="keep-cross-section">
       <div className="keep-stone" aria-hidden="true" />
       {chambers.map(chamber => {

@@ -3,7 +3,9 @@ import type { ModuleId } from '@castle-control/ui';
 
 type Action = (typeof keymap)[number]['action'];
 export type Surface = 'keep' | 'overview' | 'demo';
-export type Navigation = { current: ModuleId | Surface; origin: Surface; replay: boolean };
+// Setup has no chamber or Steward context; its shell maps that context to the Keep.
+export type ShellSurface = Surface | 'stream';
+export type Navigation = { current: ModuleId | ShellSurface; origin: Surface; replay: boolean };
 export function createKeymap(bindings: readonly { key: string; action: Action }[]) {
   const registry = new Map<string, Action>();
   for (const { key, action } of bindings) {
@@ -30,15 +32,16 @@ export function dispatchShortcut(event: Shortcut, editable: boolean, navigate: (
 }
 
 export function canonicalHash(hash: string): string {
-  if (hash === '#/keep' || hash === '#/overview' || hash === '#/demo') return hash;
+  if (hash === '#/keep' || hash === '#/overview' || hash === '#/demo' || hash === '#/stream') return hash;
   if (hash === '#/moderator/drill' || hash === '#/chamber/moderator/drill') return '#/chamber/moderator/drill';
   for (const { id } of chambers) if (hash === `#/${id}` || hash === `#/chamber/${id}`) return `#/chamber/${id}`;
   return '#/keep';
 }
-export function routeFromHash(hash: string): ModuleId | Surface {
+export function routeFromHash(hash: string): ModuleId | ShellSurface {
   const canonical = canonicalHash(hash);
   if (canonical === '#/overview') return 'overview';
   if (canonical === '#/demo') return 'demo';
+  if (canonical === '#/stream') return 'stream';
   return chambers.find(({ id }) => canonical === `#/chamber/${id}` || canonical === `#/chamber/${id}/drill`)?.id ?? 'keep';
 }
 export function initialNavigation(hash: string): Navigation {
@@ -49,5 +52,5 @@ export function navigateHash(previous: Navigation, hash: string): Navigation {
   return { ...next, origin: previous.current === 'keep' || previous.current === 'overview' ? previous.current : previous.origin };
 }
 export function backHash(state: Navigation): string {
-  return `#/${state.current === 'keep' || state.current === 'overview' || state.current === 'demo' ? 'keep' : state.origin}`;
+  return `#/${state.current === 'keep' || state.current === 'overview' || state.current === 'demo' || state.current === 'stream' ? 'keep' : state.origin}`;
 }

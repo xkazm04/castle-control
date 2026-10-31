@@ -7,6 +7,12 @@ import type { Snapshot } from './model.js';
 import type { ModuleId } from '@castle-control/ui';
 import Keep from './shell/keep.jsx';
 
+test('the hook-free fixture rampart links its OBS chip to setup', () => {
+  const html = renderToStaticMarkup(DesktopRampart({ snapshot: { mode: 'fixture', phase: 'ready' },
+    theme: 'paper', on_theme_change: () => undefined }));
+  expect(html).toMatch(/<a href="#\/stream"[^>]*><span[^>]*>OBS simulated<\/span><\/a>/);
+});
+
 function render(snapshot: Snapshot, current: ModuleId = 'lottery') {
   return renderToStaticMarkup(<DesktopView current={current} snapshot={snapshot} theme="stock"
     on_navigate={() => undefined} on_theme_change={() => undefined} search="" on_search={() => undefined} />);

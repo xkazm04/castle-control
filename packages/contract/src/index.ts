@@ -5,7 +5,7 @@ export type { MethodContract } from './validate.js';
 export { parseDesignPackage } from './validate.js';
 export { parseStewardAskParams, parseStewardAskResult, parseWrit, parseWritSealParams,
   parseWritSealResult, parseWritTearParams, parseWritTearResult, parseStewardEvent } from './validate.js';
-export { statusGet, bridgeStatusGet, gatehouseRulesList, gatehouseBanConfirm,
+export { statusGet, bridgeStatusGet, obsStatusGet, obsSourceCreate, gatehouseRulesList, gatehouseBanConfirm,
   gatehouseConsensusGet, gatehouseDrillRun } from './generated/validation.js';
 export { beaconsVisualList, beaconsCurveSet, beaconsSimulate, beaconsSourceUrl,
   beaconsContributionList } from './generated/beacons-root-validation.js';

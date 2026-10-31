@@ -27,12 +27,35 @@ test.afterEach(async ({ page }, info) => {
   }
 });
 
+test('fixture OBS setup from Keep sizes a source and requires a hold before simulated add', async ({ page }) => {
+  const rpc: string[] = [];
+  page.on('request', request => { if (new URL(request.url()).pathname === '/rpc') rpc.push(request.url()); });
+  await page.goto('/#/keep');
+  await page.getByRole('button', { name: 'Set up OBS', exact: true }).click();
+  await expect(page).toHaveURL(/#\/stream$/);
+  await page.getByRole('combobox', { name: 'Source size' }).selectOption('720p');
+  await expect(page.getByText('1280 × 720', { exact: true }).first()).toBeVisible();
+  const row = page.getByRole('article', { name: 'Offering altar', exact: true });
+  const hold = row.getByRole('button', { name: 'Hold to seal and proclaim', exact: true });
+  await row.getByRole('heading', { name: 'Offering altar' }).click();
+  await hold.click();
+  await expect(row).not.toContainText('no OBS source was created');
+  await hold.focus();
+  await page.keyboard.down('Space');
+  try { await expect(row).toContainText('Simulated · no OBS source was created'); }
+  finally { await page.keyboard.up('Space'); }
+  await expect(page.getByText('SIMULATED', { exact: true })).toBeVisible();
+  expect(rpc).toEqual([]);
+  await auditStyles(page, desktopSurfaces);
+  await auditFields(page);
+});
+
 for (const route of routes) for (const theme of themes) for (const steward of stewardStates) {
   test(`desktop-${slug(route)}-${theme}-steward-${steward}`, async ({ page }) => {
     // main.tsx defaults to fixtures when no native launch is injected.
     await page.goto(`/${route}`);
     await expect(page.locator('.cc-sample')).toHaveText('Simulated');
-    await expect(page.locator('.keep-home, .overview-workspace, .shell-room, .demo-workspace')).toBeVisible();
+    await expect(page.locator('.keep-home, .overview-workspace, .shell-room, .demo-workspace, .stream-workspace')).toBeVisible();
     await expect(page.getByText('Opening the room...', { exact: true })).toHaveCount(0);
     await expect(page.locator('.cc-steward-bar')).toBeVisible();
     if (route.endsWith('/drill')) await expect(page.locator('.moderator-drill')).toBeVisible();
