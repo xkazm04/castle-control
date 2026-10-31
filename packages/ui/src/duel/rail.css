@@ -1,0 +1,29 @@
+/* Ported rule by rule from .port/winner/index.html, cc-t2-duel A/1. */
+.ty-rail{display:grid;grid-template-columns:minmax(0,1fr);gap:var(--space-12);padding:var(--space-10) var(--space-16) var(--space-14);background:linear-gradient(transparent,var(--ty-rail-shadow) 30%);color:var(--cream)}
+.ty-rail.ty-split{grid-template-columns:minmax(0,1.25fr) minmax(var(--ty-split-min),1fr)}
+.ty-rail h4{margin:0 0 var(--space-6);font:800 var(--ty-text-detail)/1 var(--font-display);letter-spacing:var(--track-air);text-transform:uppercase;color:var(--ty-stage-text-dim);display:flex;gap:var(--space-10);align-items:baseline}
+.ty-rail h4 span{font:italic var(--text-label)/1 var(--font-serif);letter-spacing:0;text-transform:none;color:var(--muted)}
+.ty-tree{display:flex;gap:var(--space-14);overflow-x:auto;padding-bottom:var(--space-4)}
+.ty-tcol{display:grid;grid-template-rows:auto auto;gap:var(--space-4);flex:var(--ty-matches,1) 1 0;min-width:calc(var(--ty-matches,1) * var(--ty-match-width))}
+.ty-tcol .ty-ms{display:flex;gap:var(--space-6)}
+.ty-tcol .ty-ms>*{flex:1 1 0;min-width:0}
+.ty-tcol>small{font:700 var(--ty-text-column)/1 var(--font-ui);letter-spacing:var(--track-air);color:var(--muted);text-transform:uppercase}
+.ty-tm{border:var(--rule-medium) solid var(--ty-match-rule);background:var(--ty-match-well);cursor:default}
+.ty-tm.ty-cur{border-color:var(--or);box-shadow:0 0 0 var(--space-2) var(--ty-current-ring)}
+.ty-tm .ty-row{display:grid;grid-template-columns:var(--space-16) var(--space-22) 1fr;gap:var(--space-5);align-items:center;padding:var(--space-3) var(--space-6);font:var(--ty-text-detail)/1.2 var(--font-ui);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ty-tm .ty-row+.ty-row{border-top:var(--rule-thin) solid var(--ty-match-divider)}
+.ty-tm .ty-row svg{width:var(--space-14);height:var(--ty-mini-shield-height)}
+.ty-tm .ty-row .ty-sd{font:700 var(--ty-text-number-small)/1 var(--font-num);color:var(--muted)}
+.ty-tm .ty-row span{overflow:hidden;text-overflow:ellipsis}
+.ty-tm .ty-row.ty-w{color:var(--or);font-weight:700}
+.ty-tm .ty-row.ty-l{color:var(--ty-stage-muted);text-decoration:line-through}
+.ty-tm .ty-row.ty-tbd{color:var(--muted);font-style:italic}
+.ty-champ-slot{border:var(--rule-strong) dashed var(--ty-champion-rule);padding:var(--space-8);text-align:center;font:800 var(--text-body)/1.2 var(--font-display);text-transform:uppercase;color:var(--or)}
+.ty-champ-slot.ty-set{border-style:solid;background:var(--or);color:var(--ty-parchment-ink)}
+.ty-rail .ty-btns{display:flex;gap:var(--space-8);flex-wrap:wrap;margin-top:var(--space-8)}
+.ty-yb{border:var(--rule-medium) solid var(--cream);background:transparent;color:var(--cream);padding:var(--space-7) var(--space-12);font:700 var(--ty-text-detail)/1 var(--font-ui);letter-spacing:var(--track-label);text-transform:uppercase;cursor:pointer;display:inline-flex;gap:var(--space-8);align-items:center}
+.ty-yb:hover{background:var(--cream);color:var(--ty-parchment-ink)}
+.ty-yb.ty-primary{background:var(--or);border-color:var(--or);color:var(--ty-parchment-ink)}
+.ty-yb:disabled{opacity:.4;cursor:not-allowed}
+
+@container ty-stage (max-width:980px){.ty-rail.ty-split{grid-template-columns:1fr}}
