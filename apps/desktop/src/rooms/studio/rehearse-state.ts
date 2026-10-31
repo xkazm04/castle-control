@@ -5,6 +5,8 @@ import type { Rehearsal, RehearsalField, RehearsalTurn } from './rehearsal.js';
 import { balanceReport, chokepointIds } from './rehearsal-verdict.js';
 import type { BalanceReport } from './rehearsal-verdict.js';
 import { rehearseCopy as copy } from './rehearse-copy.js';
+import { sweepBoard } from './rehearsal-sweep.js';
+import type { Sweep } from './rehearsal-sweep.js';
 import { paintEdits } from './rehearse-paint.js';
 import type { StartEdits } from './rehearse-paint.js';
 import { boardForSize, mapSizes } from './session.js';
@@ -19,12 +21,14 @@ export type SizeChoice = Readonly<{ id: string; label: string; board: StudioBoar
 export type SizeRow = Readonly<{
   id: string; label: string; columns: number; rows: number; tiles: number; verdict: string; kind: BalanceReport['kind'];
   leader: string; percent: number; last_change: number; lead_changes: number; board: StudioBoard; edited: boolean;
+  /** How twelve seeds of this size ended, so one lucky seed does not decide the row. */
+  sweep: Sweep;
 }>;
 /** The same board, seed and turns played at several crowd sizes: only the crowd differs. */
 export const crowdLevels: readonly number[] = Object.freeze([30, 120, 300]);
 export type CrowdRow = Readonly<{
   viewers: number; verdict: string; kind: BalanceReport['kind']; leader: string; percent: number;
-  last_change: number; lead_changes: number; board: StudioBoard;
+  last_change: number; lead_changes: number; board: StudioBoard; sweep: Sweep;
 }>;
 export type CrowdCompare = Readonly<{
   seed: string; turns: number; columns: number; rows: number; tiles: number; edited: number; lines: readonly CrowdRow[];
@@ -95,11 +99,13 @@ function compareSizes(state: RehearseState, choices: readonly SizeChoice[]): Reh
     const run = runRehearsal(choice.board, parsed.setup);
     if (!run.ok) return { ...state, error: { field: run.error.field, message: run.error.message } };
     const report = balanceReport(run.rehearsal);
+    const sweep = sweepBoard(choice.board, parsed.setup);
+    if (!sweep) return { ...state, error: { field: 'seed', message: copy.needs_two_houses } };
     const geometry = boardGeometry(choice.board);
     rows.push(Object.freeze({ id: choice.id, label: choice.label, columns: geometry.columns, rows: geometry.rows,
       tiles: geometry.tiles.length, verdict: report.verdict, kind: report.kind, leader: report.leader.short,
       percent: report.leader.percent, last_change: report.last_change, lead_changes: report.lead_changes,
-      board: run.rehearsal.turns.at(-1)?.board ?? choice.board, edited: choice.edited === true }));
+      board: run.rehearsal.turns.at(-1)?.board ?? choice.board, edited: choice.edited === true, sweep }));
   }
   const { seed, viewers, turns } = parsed.setup;
   return { ...state, error: null, sizes: Object.freeze({ seed, viewers, turns, rows: Object.freeze(rows) }) };
@@ -116,10 +122,12 @@ function compareCrowds(state: RehearseState, board: StudioBoard): RehearseState 
     const run = runRehearsal(board, parsed.setup);
     if (!run.ok) return { ...state, error: { field: run.error.field, message: run.error.message } };
     const report = balanceReport(run.rehearsal);
+    const sweep = sweepBoard(board, parsed.setup);
+    if (!sweep) return { ...state, error: { field: 'seed', message: copy.needs_two_houses } };
     shared = { seed: parsed.setup.seed, turns: parsed.setup.turns };
     lines.push(Object.freeze({ viewers, verdict: report.verdict, kind: report.kind, leader: report.leader.short,
       percent: report.leader.percent, last_change: report.last_change, lead_changes: report.lead_changes,
-      board: run.rehearsal.turns.at(-1)?.board ?? board }));
+      board: run.rehearsal.turns.at(-1)?.board ?? board, sweep }));
   }
   if (!shared) return state;
   const geometry = boardGeometry(board);

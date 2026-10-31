@@ -71,6 +71,8 @@ export const rehearseCopy = {
   tools: 'What if', tools_label: 'Change the board or the crowd and rehearse again',
   compare_crowds: 'Compare crowds', crowds_label: 'Simulated comparison across crowd sizes',
   crowds_hint: 'Plays this board at 30, 120 and 300 simulated viewers. Same seed, same turns, so only the crowd differs.',
+  spread_line: (rounds: number, kinds: readonly (readonly [string, number])[]) =>
+    `Across ${rounds} seeds: ${kinds.map(([kind, count]) => `${count}\u00a0${kind}`).join(', ')}`,
   crowd_col: 'Crowd', crowd_word: (viewers: number) => `${viewers} viewers`,
   crowd_use: (viewers: number) => `Use ${viewers} simulated viewers`,
   crowd_on_form: 'In the form',

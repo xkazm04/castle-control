@@ -3,6 +3,7 @@ import { boardGeometry } from './board.js';
 import type { StudioBoard } from './board.js';
 import { rehearseCopy as copy } from './rehearse-copy.js';
 import { turnLine } from './rehearse-state.js';
+import type { Sweep } from './rehearsal-sweep.js';
 import { TerritoryStrip } from './rehearse-strip.jsx';
 import type { CrowdCompare, PastRun, RehearseState, RehearseView, SizeCompare } from './rehearse-state.js';
 import type { RehearseHandlers } from './use-rehearse.js';
@@ -102,7 +103,7 @@ export function VerdictBlock({ state, view, handlers }: { state: RehearseState; 
 
 type Line = Readonly<{
   key: string; label: string; note: string; verdict: string; kind: string; last_change: number; board: StudioBoard;
-  mini: string; current: boolean; on_use?: () => void; use_label: string; current_word: string;
+  mini: string; current: boolean; on_use?: () => void; use_label: string; current_word: string; sweep: Sweep;
 }>;
 
 /** One comparison table, shared by sizes and crowds: a mini end-state board, the verdict, and a Use button.
@@ -119,6 +120,7 @@ function CompareTable({ className, title, label, summary, first, lines, on_clear
         <th scope="row"><MiniBoard board={line.board} label={line.mini} />
           <span>{line.label}</span><small>{line.note}</small></th>
         <td><b>{line.verdict}</b><small>{copy.size_last(line.last_change)}</small>
+          <small className="studio-spread">{copy.spread_line(line.sweep.rounds, line.sweep.kinds.map(entry => [entry.kind, entry.count] as const))}</small>
           {line.on_use && (line.current ? <em>{line.current_word}</em>
             : <InkButton size="small" aria-label={line.use_label} onClick={line.on_use}>{copy.size_use_word}</InkButton>)}
         </td>
@@ -134,7 +136,7 @@ export function SizeTable({ sizes, current, on_size, on_clear }: {
   const lines = sizes.rows.map((row): Line => ({ key: row.id, label: row.label, verdict: row.verdict, kind: row.kind,
     note: row.edited ? `${copy.size_tiles(row.tiles)} · ${copy.edited_row}` : copy.size_tiles(row.tiles),
     last_change: row.last_change, board: row.board, current: row.id === current, mini: copy.mini_label(row.verdict, row.columns, row.rows),
-    use_label: copy.size_use(row.label), current_word: copy.size_current, ...(on_size ? { on_use: () => on_size(row.id) } : {}) }));
+    use_label: copy.size_use(row.label), current_word: copy.size_current, sweep: row.sweep, ...(on_size ? { on_use: () => on_size(row.id) } : {}) }));
   return CompareTable({ className: 'studio-sizes', title: copy.compare_sizes, label: copy.sizes_label,
     summary: copy.summary(sizes.viewers, sizes.turns, sizes.seed), first: copy.size_col, lines, on_clear });
 }
@@ -147,7 +149,7 @@ export function CrowdTable({ crowds, viewers, on_viewers, on_clear }: {
     note: copy.compare_board(crowds.columns, crowds.rows, crowds.tiles), verdict: row.verdict, kind: row.kind,
     last_change: row.last_change, board: row.board, current: row.viewers === viewers,
     mini: copy.mini_label(row.verdict, crowds.columns, crowds.rows), use_label: copy.crowd_use(row.viewers),
-    current_word: copy.crowd_on_form, ...(on_viewers ? { on_use: () => on_viewers(row.viewers) } : {}) }));
+    current_word: copy.crowd_on_form, sweep: row.sweep, ...(on_viewers ? { on_use: () => on_viewers(row.viewers) } : {}) }));
   return CompareTable({ className: 'studio-crowds', title: copy.compare_crowds, label: copy.crowds_label,
     summary: `${crowds.turns} turns · seed ${crowds.seed}${crowds.edited > 0 ? ` · ${copy.edited_row}` : ''}`,
     first: copy.crowd_col, lines, on_clear });
