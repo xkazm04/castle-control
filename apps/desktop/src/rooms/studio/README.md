@@ -358,8 +358,11 @@ adds no wire identifier, dependency, network call or stage transition.
 | --- | --- |
 | `rehearsal.ts` | Pure simulation and the setup door `parseRehearsalSetup` (seed 1-24 chars, viewers 10-1000, turns 2-24). |
 | `rehearsal-verdict.ts` | `balanceReport`: spread of shares, leader margin, chokepoints, turn of last change, lead changes and the verdict words. |
-| `rehearse-state.ts` | Pure reducer: start, step, tick, pause, resume, reset, again, replay, compare sizes, comparison list. |
-| `use-rehearse.ts` | The only hooks: the clock tick, the reduced-motion flag and the reset when the board changes. |
+| `rehearse-state.ts` | Pure reducer: start, step, tick, pause, resume, reset, again, replay, compare sizes, compare crowds, brush, paint, restore, comparison list. |
+| `rehearse-paint.ts` | Redraw start: the edit overlay (`paintEdits`) and the board it makes (`startBoard`, re-parsed by `parseStudioBoard`). |
+| `rehearse-tools.tsx` | The What if row (Compare sizes, Compare crowds, Redraw start) and the brush palette. |
+| `rehearse-strip.tsx` | Territory by turn: one stacked column per turn, legend, tooltips and a table for screen readers. |
+| `use-rehearse.ts` | The only hooks: the clock tick, the reduced-motion flag, the redrawn start board and the reset when the base board changes. |
 | `rehearse.tsx`, `rehearse-side.tsx` | Hook-free views (the same split as Spyglass), so tests render them directly. |
 | `rehearse-copy.ts`, `rehearse.css` | Copy and token-only styles. |
 
@@ -398,6 +401,23 @@ Compare sizes is offered only when the room owns the S/M/L boards.
 **Layout.** The board needs height, so the verdict, replay, report and log sit in
 the side column and the table's own heading is kept for screen readers only.
 Boards over 60 tiles drop the house words from the hexes.
+
+**What if.** Three tools sit between the run controls and the board. *Redraw start* opens a brush palette (one
+brush per house, plus Unclaimed); pressing a hex, pressing Enter on a focused hex, or dragging across hexes repaints
+the rehearsal's starting territory. The edits are an overlay of tile id to house id on one base board, so painting a
+tile back to what it was removes the edit; the board that is played is rebuilt through `parseStudioBoard` and never
+mutated. The Table and Spyglass views keep the untouched sample, a size change drops the edits, and a painted tile is
+announced in the polite notice. Painting ends the round on screen and voids a crowd table made on the old start;
+finished runs stay in Compare runs, marked "redrawn start". Arrow keys still only move focus in paint mode.
+*Compare crowds* plays the same board, seed and turns at 30, 120 and 300 simulated viewers (each through the
+setup door) and shows verdict rows with a Use button that puts that crowd in the form. *Compare sizes* plays the
+redrawn start for the current size and the stock layouts for the others, and says so in the row.
+
+**Reading the round.** Chokepoints (tiles that changed hands twice) carry a black diamond on the board as soon as
+they qualify, so the contested ground can be found and redrawn; the count in the report uses the same function.
+Territory by turn is a stacked column per turn in the house inks. The inks are the repo's locked tokens: the
+colour-blind separation passes, but the gold is pale on paper (1.83:1), so segments carry an inked edge, the
+legend names each house, each segment has a tooltip and the same numbers are a table for screen readers.
 
 **Kit note.** The kit's `primary` button variant hides its label on hover in the
 paper theme (hover text and fill are both `--press`); this view uses `plate`.

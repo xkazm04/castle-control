@@ -38,8 +38,13 @@ runaway" or "Stalemate by turn 4".
 The same board, seed and viewer count always replay the same round. **Replay
 seed** re-runs it and says whether every turn matched; **Rehearse again** draws a
 fresh seed. **Compare sizes** plays the S, M and L boards with the same settings,
-and finished runs stay under **Compare runs** while you change Map size in the
-local design. The Spyglass shows the end state of a finished rehearsal. Nothing
+and **Compare crowds** plays your board at 30, 120 and 300 simulated viewers, so
+you can see whether it makes a good round for a small or a big chat. **Redraw
+start** lets you paint houses onto the starting territory (press hexes or drag
+across them) and rehearse again to watch the verdict change; it only changes the
+rehearsal, never your table. Tiles that keep changing hands carry a black diamond,
+and Territory by turn shows the shape of the round. Finished runs stay under
+**Compare runs** while you change Map size in the local design. The Spyglass shows the end state of a finished rehearsal. Nothing
 is saved or sent, reduced motion jumps straight to the end state, and core mode
 still shows the unconfigured state. Source:
 [Rehearse notes](../../apps/desktop/src/rooms/studio/README.md#rehearse-a-round-2026-10-31).
