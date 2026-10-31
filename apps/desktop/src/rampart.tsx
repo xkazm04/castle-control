@@ -23,7 +23,7 @@ export function DesktopRampart({ snapshot, theme, on_theme_change, on_steward }:
   const twitch: ConnectionState | undefined = !simulated && bridge ? ({ connected: 'connected', connecting: 'reconnecting', disconnected: 'down', error: 'down' } as const)[bridge.state] : undefined;
   return <header className="cc-rampart">
     <a className="cc-brand" href="#/keep" aria-label="Castle Control, the whole keep">
-      <Mark /><span className="cc-wordmark" data-text={'Castle\nControl'}>Castle<br />Control</span>
+      <Mark /><span className="cc-wordmark" data-text="Castle Control">Castle Control</span>
     </a>
     <div className="cc-live-group" aria-label="Stream status">
       {stream ? <Stamp kind={stream.live ? 'on-air' : 'off-air'} word={stream.live ? 'On air' : 'Offline'} />

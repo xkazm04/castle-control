@@ -14,6 +14,13 @@ const rampart: RampartProps = {
 };
 const click = (element: ReactElement<InkButtonProps>) => element.props.onClick?.({} as MouseEvent<HTMLButtonElement>);
 
+test('Rampart wordmark has a real space on one line and matching ghost text', () => {
+  const html = renderToStaticMarkup(<Rampart {...rampart} />);
+  const wordmark = /<span class="cc-wordmark" data-text="([^"]*)">([^<]*)<\/span>/.exec(html);
+  expect(wordmark?.[2]).toBe('Castle Control');
+  expect(wordmark?.[1]).toBe('Castle Control');
+});
+
 test('rampart status groups retain their gaps and reclaim unused brand width at the compact breakpoint', () => {
   const css = readFileSync(new URL('./shell.css', import.meta.url), 'utf8');
   const groups = css.match(/\.cc-live-group, \.cc-link-group\s*\{([^}]+)\}/)?.[1];
