@@ -69,7 +69,7 @@ export function NightReplay({ item, editor, queue = proposalQueue, initial_night
         gift subs ×{item.gift_weight}</span>
     </div>
     <div className="visuals-replay-transport" role="group" aria-label="Replay controls">
-      <InkButton size="wrap" variant="offset" ink="or" disabled={reduced} aria-pressed={time.playing}
+      <InkButton size="wrap" variant="offset" ink="or" disabled={reduced}
         onClick={clock.toggle}>{time.playing ? 'Pause' : ended ? 'Replay' : time.position_s > 0 ? 'Resume' : 'Play'}</InkButton>
       <span className="visuals-replay-speeds" role="group" aria-label="Replay speed">{replay_speeds.map(speed =>
         <InkButton key={speed} size="small" aria-pressed={time.speed === speed} disabled={reduced}
