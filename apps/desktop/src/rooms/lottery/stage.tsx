@@ -200,9 +200,10 @@ export function DrawStage({ shape, on_shape, entries, cast, content, sealed, sea
         {phase === 'revealing' && latest && <Proclamation key={latest} handle={latest} order={revealed.length}
           total={winners.length} cohort={cohorts.get(latest)} share={share(latest)} />}
         {phase === 'revealed' && theatre && <Verdict total={winners.length} proof={proof} on_prove={on_prove} />}
-        {state.waiting && <span ref={call} className="lottery-stage-call"><InkButton size="room" variant="primary"
+        {state.waiting && <span ref={call} className="lottery-stage-call"><InkButton size="room" variant="primary" aria-keyshortcuts="Space"
           onClick={() => clock.callNext(performance.now())}>
-          {revealed.length ? copy.stage.call_next(revealed.length + 1, winners.length) : copy.stage.call_first}</InkButton></span>}
+          {revealed.length ? copy.stage.call_next(revealed.length + 1, winners.length) : copy.stage.call_first}</InkButton>
+          <small aria-hidden="true">{copy.stage.call_key}</small></span>}
         {revealed.length > 0 && <ol aria-label={copy.stage.rail}>
           {revealed.slice(0, limit).map((handle, index) => {
             const cohort = cohorts.get(handle);

@@ -134,6 +134,7 @@ export const lotsCopy = {
     options: 'Ceremony options', by_hand: 'Reveal by hand', by_hand_hint: 'The flourish plays, then each winner waits for your call. The sealed roll already fixed the order.',
     call_first: 'Call the first lot', call_next: (order: number, total: number) => `Call lot ${order} of ${total}`,
     held: 'Held for your call · the order is already fixed',
+    call_key: 'Space calls the next lot',
     sound: '♪ Ceremony sound', sound_hint: 'Synthesized in this window: a flourish, a bell per winner, a fanfare at the close. Off until you turn it on.',
   },
   core_setup: {

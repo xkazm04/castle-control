@@ -72,6 +72,8 @@
 .lottery-stage-foot .cc-aside { flex: 1 1 calc(var(--space-56) * 3); font-size: var(--text-small); }
 .lottery-stage-foot .cc-stamp { transform: none; }
 .lottery-stage-options .lottery-stage-toggle[aria-pressed="true"] { border-color: var(--gules); background: color-mix(in srgb, var(--gules) 18%, var(--paper)); color: var(--gules-text); }
+.lottery-stage-call { display: grid; justify-items: center; gap: var(--space-4); }
+.lottery-stage-call small { font: 700 var(--text-label)/1.2 var(--font-ui); letter-spacing: var(--track-label); text-transform: uppercase; color: var(--muted); }
 .lottery-stage-call .cc-button { padding-inline: var(--space-24); box-shadow: var(--space-3) var(--space-3) 0 var(--ink); animation: lottery-call 1.4s var(--ease) infinite; }
 .lottery-stage-call .cc-button:focus-visible { outline: var(--rule-medium) solid var(--azure); outline-offset: var(--focus-offset); }
 @keyframes lottery-call { 50% { transform: translateY(calc(var(--space-2) * -1)); box-shadow: var(--space-4) var(--space-5) 0 var(--ink); } }
