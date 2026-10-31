@@ -1,0 +1,21 @@
+{
+  "name": "@castle-control/duel",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": { ".": "./src/index.ts", "./ballots": "./src/ballots.ts" },
+  "sideEffects": false,
+  "scripts": {
+    "typecheck": "node ../../scripts/package-gate.mjs typecheck",
+    "lint": "node ../../scripts/package-gate.mjs lint",
+    "test": "node ../../scripts/package-gate.mjs test"
+  },
+  "dependencies": {
+    "@castle-control/contract": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "24.10.0",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

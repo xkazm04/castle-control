@@ -106,6 +106,10 @@ export function createCoreGatehousePort(launch: CoreLaunch, transport?: Gatehous
   }
   return {
     getSnapshot: () => snapshot,
+    /** A standalone validated page for read-only consumers such as live ballots. */
+    readChat(cursor?: string) {
+      return call(gatehouseChatList, { limit: 100, ...(cursor === undefined ? {} : { cursor }) });
+    },
     async copyVoteBarSource(write: (url: string) => Promise<void> = url => navigator.clipboard.writeText(url)) {
       await perform(async () => {
         const { url } = await call(gatehouseSourceUrl, {});

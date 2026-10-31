@@ -425,3 +425,52 @@ legend names each house, each segment has a tooltip and the same numbers are a t
 **Kit note.** The kit's `primary` button variant hides its label on hover in the
 paper theme (hover text and fill are both `--press`); this view uses `plate`.
 The kit is another package, so it is reported here, not changed.
+
+## WP7: Tiltyard host (2026-10-31)
+
+Fixture mode adds Tiltyard after Table and Spyglass as a third native pressed
+button. The choice is local React state and never changes the hash. Table and
+Spyglass keep their contents and session state; the table is unmounted while
+the duel is shown. Core mode retains the bare-map empty state and shared slot.
+
+`tiltyard-view.tsx` is a separate React.lazy import. It supplies the parsed SAMPLE
+lists, simulateChatPages and tiltyardWords to the shared stage. The view row shows
+“The duel component · hosted as a Map Room view” beside “Sample items · simulated
+chat”. The active room uses one full-width grid column; the unchanged inspector,
+ladder, drafts and shared seal slot follow below, accessible by room scrolling.
+
+The host adds no key handler. The stage consumes live Escape with preventDefault
+and stopPropagation, calling off the duel while retaining the Map Room. Enter
+reopens it. Escape on the placed board falls through to the existing shell back
+dispatcher, which already checks defaultPrevented. Enter and live Escape
+intentionally shadow the shell open/back bindings while the stage has focus.
+
+Validation from the worktree root, with no install or browser launch:
+
+- `pnpm --config.verify-deps-before-run=false --filter @castle-control/desktop typecheck`
+  and `lint` exit 0; both walk 194 source files.
+- The same prefix with `test` exits 0: 733 tests in 73 files. The five new
+  server-render cases check the host labels, stage, three switch states, default
+  54-tile table, lazy import and core fallback. No existing test line changed;
+  no existing two-button-switch assertion was present to update.
+- The same prefix with `build` exits 1 at the new duel budget. First-load output
+  is unchanged from the measured base: 7 files, 370818/393216 bytes (delta 0).
+  Duel output is 2 files, 84750/49152 bytes: 56971 JS + 27779 CSS. The 48 KiB
+  limit remains enforced; reducing the shared duel is outside this host scope.
+- `e2e/journey-tiltyard.spec.ts` covers all three modes, theatre skips, seven
+  decided matches/eight final places, live Escape/reopen, barred ballots, a
+  streamer call with frozen before/after tally numbers, ten hill rungs, idle
+  Escape to the keep, and return to the 54-tile Table. It uses guardPage and the
+  existing reduced-motion configuration. Browser execution is unrun by owner
+  instruction: the Director runs this journey at both configured viewports.
+- `node scripts/check.mjs` exits 0: boundaries/hygiene/file-cap each walk 915
+  files; secrets walks 1342. Every changed file is below 400 lines.
+- `pnpm --config.verify-deps-before-run=false exec tsc -p e2e/tsconfig.json --noEmit`
+  and `exec eslint e2e/journey-tiltyard.spec.ts --max-warnings 0` exit 0.
+- `pnpm --config.verify-deps-before-run=false exec playwright test -c
+  e2e/playwright.config.ts e2e/journey-tiltyard.spec.ts --list` discovers two
+  cases in one file, without starting a server or browser.
+- The UI keymap suite passes all three cases and reports zero conflicts,
+  including live/verdict Escape consumption and idle/done Escape fallthrough.
+
+The merged Map view switch is Table, Spyglass, Rehearse, Tiltyard, in that order.

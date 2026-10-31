@@ -68,7 +68,7 @@ export default function Room({ chamber, replay, snapshot, origin, connection, on
           : chamber === 'lottery' ? <CoreLotteryRoom snapshot={snapshot} seal_slot={port instanceof LiveSteward ? seal_slot : undefined} />
           : chamber === 'moderator' ? <ModeratorRoom snapshot={snapshot} replay={replay} seal_slot={seal_slot} />
           : chamber === 'visuals' ? <VisualsRoom snapshot={snapshot} seal_slot={seal_slot} />
-          : fixture && chamber === 'studio' ? <StudioRoom snapshot={snapshot} seal_slot={seal_slot} />
+          : chamber === 'studio' ? <StudioRoom snapshot={snapshot} seal_slot={seal_slot} />
           : <><EmptyState title={chamber === 'studio' ? 'The map table is bare' : 'Room data is not configured'}
             description="No live actions are available in this room." />{seal_slot}</>}
       </Suspense></div>

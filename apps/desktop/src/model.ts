@@ -1,4 +1,4 @@
-import type { BridgeStatus, StatusResult } from '@castle-control/contract';
+import type { BridgeStatus, EventKind, StatusResult, StreamEvent } from '@castle-control/contract';
 
 export type Mode = 'fixture' | 'core';
 export type ReadResult = { status: StatusResult; bridge?: BridgeStatus };
@@ -9,13 +9,14 @@ export type Snapshot = {
 export type Source = {
   mode: Mode;
   read: () => Promise<ReadResult>;
-  listen: (invalidate: () => void, unavailable: () => void) => () => void;
+  listen: (invalidate: (event?: StreamEvent) => void, unavailable: () => void) => () => void;
 };
 
 /** One authoritative read model. In-flight invalidations are drained, never lost. */
 export function createReadModel(source: Source) {
   let snapshot: Snapshot = { mode: source.mode, phase: 'connecting' };
   const listeners = new Set<() => void>();
+  const event_listeners = new Set<(kind: EventKind) => void>();
   let active = false;
   let generation = 0;
   let connection = 0;
@@ -50,11 +51,16 @@ export function createReadModel(source: Source) {
   return {
     getSnapshot: () => snapshot,
     subscribe(listener: () => void) { listeners.add(listener); return () => { listeners.delete(listener); }; },
+    subscribeEvents(listener: (kind: EventKind) => void) { event_listeners.add(listener); return () => { event_listeners.delete(listener); }; },
     start() {
       if (active) throw new Error('Desktop client already started');
       active = true;
       const run = ++generation;
-      const stop = source.listen(() => { void refresh(run); }, () => {
+      const stop = source.listen(event => {
+        if (!active || run !== generation) return;
+        if (event) for (const listener of event_listeners) listener(event.kind);
+        void refresh(run);
+      }, () => {
         if (active && run === generation) {
           connection++;
           publish({ mode: source.mode, phase: 'connecting', message: 'Core connection interrupted; status is unknown.' });
@@ -65,4 +71,5 @@ export function createReadModel(source: Source) {
     },
   };
 }
-export type DesktopClient = ReturnType<typeof createReadModel>;
+/** Shell consumers need only the established read-model surface. */
+export type DesktopClient = Pick<ReturnType<typeof createReadModel>, 'getSnapshot' | 'subscribe' | 'start'>;

@@ -91,8 +91,8 @@ test('everything the view says about itself stays plainly simulated, with no das
 test('Rehearse is the third view in the existing switch and the default stays the table', () => {
   const html = renderToStaticMarkup(<StudioWork />);
   const buttons = (html.match(/<div class="studio-view-switch"[\s\S]*?<\/div>/)?.[0] ?? '').match(/<button[^>]*>[^<]*<\/button>/g) ?? [];
-  expect(buttons.map(button => button.replace(/<[^>]*>/g, ''))).toEqual(['Table', 'Spyglass', 'Rehearse']);
-  expect(buttons.map(button => button.includes('aria-pressed="true"'))).toEqual([true, false, false]);
+  expect(buttons.map(button => button.replace(/<[^>]*>/g, ''))).toEqual(['Table', 'Spyglass', 'Rehearse', 'Tiltyard']);
+  expect(buttons.map(button => button.includes('aria-pressed="true"'))).toEqual([true, false, false, false]);
   expect(html.match(/data-hex-tile=/g)).toHaveLength(54);
   expect(html).toContain('cc-hero'); // the tile inspector still opens the side
   // Core mode has no Rehearse at all: the room stays honestly bare.

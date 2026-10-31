@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import ts from 'typescript';
 
@@ -151,4 +151,14 @@ throw new Error(usage.defects[0]);
   proof('Empty contract usage', ['$S/empty.mjs'], 'Refused empty usage inventory', {
     'empty.mjs': `import { usages } from ${JSON.stringify(moduleUrl('scripts/parity.mjs'))};\nusages(import.meta.dirname);\n`,
   }, { empty: true });
+  const duelPath = join(root, 'packages/duel/tsconfig.json');
+  const duel = ts.parseConfigFileTextToJson(duelPath, readFileSync(duelPath, 'utf8')).config;
+  const duelBasePath = resolve(dirname(duelPath), duel.extends);
+  const duelBase = ts.parseConfigFileTextToJson(duelBasePath, readFileSync(duelBasePath, 'utf8')).config;
+  proof('Duel engine: DOM reference without DOM lib', pkg('typecheck'), "Cannot find name 'document'", {
+    'packages/proof/tsconfig.json': JSON.stringify({
+      compilerOptions: { ...duelBase.compilerOptions, ...duel.compilerOptions }, include: ['src'],
+    }),
+    [source]: 'export const title = document.title;\n',
+  }, cwd);
 }

@@ -59,6 +59,9 @@ importers:
       '@castle-control/contract':
         specifier: workspace:*
         version: link:../../packages/contract
+      '@castle-control/duel':
+        specifier: workspace:*
+        version: link:../../packages/duel
       '@castle-control/renderer':
         specifier: workspace:*
         version: link:../../packages/renderer
@@ -113,6 +116,22 @@ importers:
         specifier: 'catalog:'
         version: 5.0.5(@types/node@24.10.0)(vite@8.3.5(@types/node@24.10.0))
 
+  packages/duel:
+    dependencies:
+      '@castle-control/contract':
+        specifier: workspace:*
+        version: link:../contract
+    devDependencies:
+      '@types/node':
+        specifier: 24.10.0
+        version: 24.10.0
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.3
+      vitest:
+        specifier: 'catalog:'
+        version: 5.0.5(@types/node@24.10.0)(vite@8.3.5(@types/node@24.10.0))
+
   packages/renderer:
     dependencies:
       '@castle-control/contract':
@@ -146,6 +165,9 @@ importers:
       '@castle-control/contract':
         specifier: workspace:*
         version: link:../contract
+      '@castle-control/duel':
+        specifier: workspace:*
+        version: link:../duel
       '@castle-control/tokens':
         specifier: workspace:*
         version: link:../tokens
