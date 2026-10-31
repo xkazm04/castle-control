@@ -71,6 +71,11 @@ test('layout and shot buttons hide the camera and follow the atlas background ma
   }
 });
 
+test('both layouts keep the altar in the same position', () => {
+  const css = readFileSync(new URL('./demo.css', import.meta.url), 'utf8');
+  expect(css).not.toMatch(/\.chatting\s+\.o-altar\s*\{/);
+});
+
 test('all producible art URLs exist, are byte-identical to the atlas, and exhaust exactly the 34 allowed files', () => {
   const directory = new URL('../../public/art/', import.meta.url);
   const expected = ['heraldic', 'pixel', 'synthwave', 'watercolor', 'anime', 'glass'].flatMap(style =>
@@ -87,7 +92,8 @@ test('all producible art URLs exist, are byte-identical to the atlas, and exhaus
   }
   expect([...urls].sort()).toEqual(actual);
   for (const file of urls) {
-    expect(readFileSync(new URL(file, directory))).toEqual(readFileSync(
-      new URL(`../../../../prototype/assets-2026-10-30/web/${file}`, import.meta.url)));
+    const produced = readFileSync(new URL(file, directory));
+    const atlas = readFileSync(new URL(`../../../../prototype/assets-2026-10-30/web/${file}`, import.meta.url));
+    expect(produced.equals(atlas), `${file} must be byte-identical to the atlas`).toBe(true);
   }
-});
+}, 30000);

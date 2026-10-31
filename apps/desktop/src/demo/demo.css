@@ -28,7 +28,6 @@
 .demo-page .cam .plate { position: absolute; left: 50%; bottom: -3.2cqw; transform: translateX(-50%); }
 .demo-page .live { position: absolute; left: 1.2%; top: 2.2%; font: 700 1.1cqw/1 var(--font-display); letter-spacing: .08em; background: var(--gules); color: var(--white); padding: .35cqw .6cqw; border-radius: .2cqw; }
 .demo-page .sim { position: absolute; left: 1.2%; top: 5.6%; font: 600 .95cqw/1 var(--font-num); color: var(--cream); background: color-mix(in srgb, var(--press) 60%, transparent); padding: .3cqw .5cqw; }
-.demo-page .stage.chatting .o-altar { top: 30%; }
 .demo-chat { background: var(--paper); color: var(--ink); display: flex; flex-direction: column; min-width: 0; border-left: var(--rule-thin) solid var(--line); }
 .demo-chat header { font: 700 var(--text-small)/1 var(--font-display); text-transform: uppercase; letter-spacing: .08em; padding: var(--space-12) var(--space-14); border-bottom: var(--rule-thin) solid var(--line); color: var(--ink-2); }
 .demo-chat ol { list-style: none; margin: 0; padding: var(--space-10) var(--space-14); display: grid; gap: var(--space-7); font: var(--text-body)/1.35 var(--font-serif); overflow: auto; flex: 1; align-content: end; }
