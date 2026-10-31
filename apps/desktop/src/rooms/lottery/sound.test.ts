@@ -13,21 +13,23 @@ import { draw_shapes } from './stage-model.js';
 type Started = { kind: 'oscillator' | 'noise'; at: number; frequency?: number; type?: string };
 function fakeContext() {
   const started: Started[] = [];
-  const param = () => ({ value: 0, setValueAtTime() { return this; }, exponentialRampToValueAtTime() { return this; } });
-  const node = () => ({ connect() { return undefined; } });
-  const context = {
+  const param = () => ({ value: 0, setValueAtTime: () => undefined, exponentialRampToValueAtTime: () => undefined });
+  const connect = () => undefined;
+  const context: SoundContext = {
     currentTime: 10, sampleRate: 8000, destination: {},
-    createGain: () => ({ ...node(), gain: param() }),
-    createBiquadFilter: () => ({ ...node(), type: 'lowpass', frequency: param(), Q: param() }),
-    createBuffer: (_channels: number, length: number) => { const data = new Float32Array(length); return { getChannelData: () => data }; },
-    createBufferSource: () => ({ ...node(), buffer: null, start(at: number) { started.push({ kind: 'noise', at }); } }),
+    createGain: () => ({ connect, gain: param() }),
+    createBiquadFilter: () => ({ connect, type: 'lowpass', frequency: param(), Q: param() }),
+    createBuffer: (_channels, length) => { const data = new Float32Array(length); return { getChannelData: () => data }; },
+    createBufferSource: () => ({ connect, buffer: null, start: (at: number) => { started.push({ kind: 'noise', at }); } }),
     createOscillator: () => {
-      const oscillator = { ...node(), type: 'sine', frequency: { setValueAtTime(value: number) { oscillator.hz = value; } }, hz: 0,
-        start(at: number) { started.push({ kind: 'oscillator', at, frequency: oscillator.hz, type: oscillator.type }); }, stop() { return undefined; } };
+      let hz = 0;
+      const oscillator: ReturnType<SoundContext['createOscillator']> = { connect, type: 'sine',
+        frequency: { setValueAtTime: (value: number) => { hz = value; } },
+        start: (at: number) => { started.push({ kind: 'oscillator', at, frequency: hz, type: oscillator.type }); }, stop: () => undefined };
       return oscillator;
     },
   };
-  return { context: context as unknown as SoundContext, started };
+  return { context, started };
 }
 
 test('each shape has its own flourish texture; the wheel ticks slow down as it settles', () => {

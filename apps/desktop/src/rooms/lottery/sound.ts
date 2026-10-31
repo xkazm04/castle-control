@@ -8,9 +8,17 @@ export type CeremonySound = {
   fanfare(): void;
 };
 
-/** The parts of Web Audio this module uses; a fake satisfies it in tests. */
-export type SoundContext = Pick<BaseAudioContext, 'currentTime' | 'sampleRate' | 'destination' | 'createGain'
-  | 'createOscillator' | 'createBiquadFilter' | 'createBuffer' | 'createBufferSource'> & { resume?: () => Promise<void> };
+/** The parts of Web Audio this module uses, structurally; a real AudioContext and a test fake both fit. */
+type Param = { value: number; setValueAtTime(value: number, at: number): unknown; exponentialRampToValueAtTime(value: number, at: number): unknown };
+type Patch = { connect(target: unknown): unknown };
+export type SoundContext = {
+  readonly currentTime: number; readonly sampleRate: number; readonly destination: unknown;
+  createGain(): Patch & { gain: Param };
+  createOscillator(): Patch & { type: OscillatorType; frequency: Pick<Param, 'setValueAtTime'>; start(at: number): void; stop(at: number): void };
+  createBiquadFilter(): Patch & { type: BiquadFilterType; frequency: Param; Q: Param };
+  createBuffer(channels: number, length: number, rate: number): { getChannelData(channel: number): Float32Array };
+  createBufferSource(): Patch & { buffer: unknown; start(at: number, offset?: number, duration?: number): void };
+};
 
 /** Per-shape flourish texture: hit spacing (ms, first and last), band-pass centre (Hz) and hit length (s). */
 export const flourish_texture: Readonly<Record<DrawShape, { gap: readonly [number, number]; band: number; hit: number; tone?: number }>> = {
