@@ -91,7 +91,7 @@ export const lotsCopy = {
     ], colours: [ { value: 'gules', label: 'Gules · red' }, { value: 'azure', label: 'Azure · blue' },
       { value: 'or', label: 'Or · gold' }, { value: 'key', label: 'Key · ink' } ],
     display_hint: 'Appearance stays in this session and is not saved with the draw. Reveal timing: 100–10000 ms.',
-    sample_art: 'SIMULATED · SAMPLE ART · AI-generated', fallback: 'Sample art unavailable · token-colour urn',
+    sample_art: 'SIMULATED · SAMPLE ART · AI-generated', obs_shape: (shape: string) => `${shape} · as the OBS draw page paints it`, fallback: 'Sample art unavailable · token-colour urn',
     cast_title: 'Current SIMULATED cast', read: 'Read current simulated writ', close: 'Close current simulated writ',
     proof_title: 'Current simulated writ', proof_notice: 'Not a cc-verify proof of a live draw. Uses v1 bytes for a fixed-seed rehearsal of this frozen roll; no public randomness, publication or OBS delivery.',
     overlay: 'OBS draw page', overlay_gap: 'This simulated rehearsal stays in the app. To display an accepted draw in OBS, use the connected desktop app and its browser-source URL after sealing.',
