@@ -125,6 +125,9 @@ export function replayDomain(trace: ReplayTrace): number {
   return Math.ceil(want / step) * step;
 }
 
+/** A climbing night is offered a fit only while its peak stays under this share of full blaze. */
+export const fit_offer_below = 0.9;
+
 export type FitSuggestion = Readonly<{ index: number; total: number; label: string }>;
 
 /** One draft point move, derived from the trace. It goes through the same editor and still needs a seal. */
@@ -141,8 +144,10 @@ export function fitSuggestion(trace: ReplayTrace, curve: IntensityCurve): FitSug
   const total = Math.ceil(busiest) + 1;
   const current = ranges[top]?.total ?? 0;
   if (total === current || total <= (ranges[top - 1]?.total ?? 0)) return undefined;
-  return { index: top, total, label: trace.pinned_s > 0 ? `Fit the top point to this night's peak · move it to ${total}`
-    : `Reach full blaze at this night's peak · move the top point to ${total}` };
+  if (trace.pinned_s > 0) return { index: top, total, label: `Fit the top point to this night's peak · move it to ${total}` };
+  // A peak already near the top gains next to nothing from a fit, so only a curve this night barely uses is offered one.
+  if (trace.peak.intensity >= fit_offer_below) return undefined;
+  return { index: top, total, label: `Let this night's peak reach the top · move the top point to ${total}` };
 }
 
 export const minute = (seconds: number) => Math.floor(seconds / 60);

@@ -2,7 +2,7 @@ import { expect, test } from 'vitest';
 import type { IntensityCurve } from '@castle-control/contract';
 import { fixtureOfferings, fixtureVisuals } from './beacons-fixture.js';
 import { generateNights, sampleNight, sampleNights } from './beacons-nights.js';
-import { fitSuggestion, night_duration_s, nightBursts, replayDomain, replayTrace, replayVerdict, timeSpent } from './beacons-replay.js';
+import { fit_offer_below, fitSuggestion, night_duration_s, nightBursts, replayDomain, replayTrace, replayVerdict, timeSpent } from './beacons-replay.js';
 
 const altar = fixtureVisuals[0]?.curve;
 if (!altar) throw new Error('Missing generated altar');
@@ -72,4 +72,12 @@ test('fit suggestions move one point and fix the verdict they target', () => {
   const lit = { ...altar, ranges: altar.ranges.map((point, index) => index === 1 ? { ...point, total: light?.total ?? 0 } : point) };
   expect(replayVerdict(replayTrace(lit, 1, train)).tone).not.toBe('never_lit');
   expect(fitSuggestion(fitted, withTop(altar, top?.total ?? 0))).toBeUndefined();
+  // Near the top already: no offer. A curve the night barely uses: one move, and the peak lands just under the top.
+  const near = replayTrace(withTop(altar, Math.ceil(pinned.max_total) + 4), 1, wave);
+  expect(near.peak.intensity).toBeGreaterThanOrEqual(fit_offer_below);
+  expect(fitSuggestion(near, withTop(altar, Math.ceil(pinned.max_total) + 4))).toBeUndefined();
+  const loose = withTop(altar, 1000);
+  const reach = fitSuggestion(replayTrace(loose, 1, wave), loose);
+  expect(reach).toMatchObject({ index: 3, total: Math.ceil(pinned.max_total) + 1 });
+  expect(reach?.label).toBe(`Let this night's peak reach the top · move the top point to ${reach?.total}`);
 });
