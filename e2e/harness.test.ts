@@ -43,6 +43,24 @@ test('network policy rejects lookalike hosts, external HTTP and external sockets
     'http://127.0.0.1.example.com', 'http://127.0.0.1@example.com', 'file:///fixture']) assert.equal(loopback(url), false);
 });
 
+test('overlay harness CSP equals the native host CSP', async () => {
+  const templates = [...source('crates/cc-obs/src/overlay.rs')
+    .matchAll(/header::CONTENT_SECURITY_POLICY,\s*format!\("([^"]+)"\)/g)];
+  assert.equal(templates.length, 1, 'Expected one native host CSP format! template');
+  const template = templates[0]?.[1];
+  assert.ok(template, 'Native host CSP template must not be empty');
+  assert.ok(template.includes('{port}'), 'Native host CSP must include its port');
+  const overlay = await startOverlay();
+  try {
+    const url = new URL(overlay.url);
+    const response = await fetch(`${overlay.url}/beacons/${visualId}`);
+    assert.equal(response.status, 200);
+    await response.arrayBuffer();
+    assert.equal(response.headers.get('content-security-policy'), template.replaceAll('{port}', url.port));
+    assert.equal(url.hostname, 'localhost');
+  } finally { await overlay.close(); }
+});
+
 test('overlay server serves actual assets and contract-parsed simulated SSE without native core', async () => {
   const snapshots = await simulatedSnapshots();
   assert.equal(snapshots.length, 2);

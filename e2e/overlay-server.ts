@@ -50,10 +50,10 @@ export async function startOverlay(): Promise<{
   const timers = new Set<ReturnType<typeof setTimeout>>();
   let pushes = 0;
   const server = createServer((request, response) => {
-    const url = new URL(request.url ?? '/', 'http://127.0.0.1');
+    const url = new URL(request.url ?? '/', 'http://localhost');
     response.setHeader('Cache-Control', 'no-store');
     response.setHeader('X-Content-Type-Options', 'nosniff');
-    response.setHeader('Content-Security-Policy', "default-src 'none'; script-src 'self'; connect-src 'self'; style-src 'unsafe-inline'; img-src 'self' data:; frame-src 'self'");
+    response.setHeader('Content-Security-Policy', csp);
     if (url.pathname === `/beacons/${visualId}` || url.pathname === '/') {
       response.setHeader('Content-Type', 'text/html; charset=utf-8'); response.end(html);
     } else if (url.pathname === '/bundle.js') {
@@ -74,12 +74,14 @@ export async function startOverlay(): Promise<{
   });
   await new Promise<void>((resolve, reject) => {
     server.once('error', reject);
-    server.listen(0, '127.0.0.1', resolve);
+    server.listen(0, 'localhost', resolve);
   });
   const address = server.address();
   if (!address || typeof address === 'string') throw new Error('Overlay did not bind loopback');
+  // Keep the native host's template; harness.test.ts checks parity with Rust.
+  const csp = `default-src 'none'; script-src 'self'; connect-src http://localhost:${address.port}/push/beacons; img-src 'self' data:; style-src 'unsafe-inline'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'`;
   return {
-    url: `http://127.0.0.1:${address.port}`,
+    url: `http://localhost:${address.port}`,
     pushes: () => pushes,
     publish: async options => {
       const data = options.invalid ? '{}' : (await simulatedSnapshots(options))[1];
