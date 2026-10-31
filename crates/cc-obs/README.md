@@ -22,7 +22,10 @@
   `is_local_file: false`, `shutdown: false`. The URL must be an HTTP
   `localhost:<nonzero-port>/` spike root, or a canonical
   `/beacons/<visual-slug>` with an optional exact `package_hash=<64 lowercase hex>`
-  query, without credentials. NativeServices additionally checks the owned
+  query, plus the optional display-only `scale` and `anchor` keys, without
+  credentials. Their values are forwarded unchanged and interpreted only by
+  the overlay entry (including invalid-value fallback); unknown query keys and
+  duplicate package hashes are refused. NativeServices additionally checks the owned
   origin and current accepted visual/hash; syntax alone grants no source. Dimensions are
   1..8192 and names must be nonblank. The expected OBS response data contains
   `sceneItemId` and `inputUuid`. **The client currently ignores response data:**

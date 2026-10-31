@@ -98,12 +98,20 @@ fn render_path(path: &str, query: Option<&str>) -> bool {
         return false;
     }
     query.is_none_or(|query| {
-        query.strip_prefix("package_hash=").is_some_and(|hash| {
-            hash.len() == 64
-                && hash
-                    .bytes()
-                    .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
-        })
+        // Only the entry parses presentation values; they carry no capability.
+        let mut identity = query
+            .split('&')
+            .filter(|part| !matches!(part.split('=').next(), Some("scale" | "anchor")));
+        let Some(query) = identity.next() else {
+            return true;
+        };
+        identity.next().is_none()
+            && query.strip_prefix("package_hash=").is_some_and(|hash| {
+                hash.len() == 64
+                    && hash
+                        .bytes()
+                        .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
+            })
     })
 }
 

@@ -207,8 +207,21 @@ impl RenderHost {
         let Ok(id) = VisualId::try_from(id.to_owned()) else {
             return false;
         };
+        // Presentation never changes authority or package identity. Values are
+        // interpreted only by the overlay entry; every other key stays exact.
+        let (base, query) = url.split_once('?').unwrap_or((url, ""));
+        let query = query
+            .split('&')
+            .filter(|part| !matches!(part.split('=').next(), Some("scale" | "anchor")))
+            .collect::<Vec<_>>()
+            .join("&");
+        let canonical = if query.is_empty() {
+            base.to_owned()
+        } else {
+            format!("{base}?{query}")
+        };
         self.source_url(origin, &id)
-            .is_ok_and(|expected| expected == url)
+            .is_ok_and(|expected| expected == canonical)
     }
 }
 

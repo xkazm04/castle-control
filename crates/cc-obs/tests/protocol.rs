@@ -86,6 +86,47 @@ async fn create_input_has_browser_source_shape_and_rejects_unsafe_origins() {
 }
 
 #[tokio::test]
+async fn beacons_create_input_preserves_display_url_hash_and_both_obs_sizes() {
+    let (config, peer) = peer().await;
+    let mut client = Client::connect_with_reader(&config, &SimulatedKeychain)
+        .await
+        .unwrap();
+    let url = format!(
+        "http://localhost:43210/beacons/simulated-frame?scale=0.5&package_hash={}&anchor=br",
+        "a".repeat(64)
+    );
+    let expected_url = url.clone();
+    let task = tokio::spawn(async move {
+        let mut socket = peer.await.unwrap();
+        for (width, height) in [(1920, 1080), (1280, 720)] {
+            let request = frame(&mut socket).await;
+            assert_eq!(request["d"]["requestType"], "CreateInput");
+            let settings = &request["d"]["requestData"]["inputSettings"];
+            assert_eq!(settings["url"], expected_url);
+            assert_eq!(settings["width"], width);
+            assert_eq!(settings["height"], height);
+            send(&mut socket, response(&request, json!({"sceneItemId":1}))).await;
+        }
+    });
+    for suffix in ["&remote=bad", "&package_hash=bad"] {
+        let mut invalid = source();
+        invalid.url = format!("{url}{suffix}");
+        assert_eq!(
+            client.create_browser_source(&invalid).await,
+            Err(Error::Invalid)
+        );
+    }
+    for (width, height) in [(1920, 1080), (1280, 720)] {
+        let mut source = source();
+        source.url.clone_from(&url);
+        source.width = width;
+        source.height = height;
+        client.create_browser_source(&source).await.unwrap();
+    }
+    task.await.unwrap();
+}
+
+#[tokio::test]
 async fn wrong_response_type_is_rejected_even_when_request_id_matches() {
     let (config, peer) = peer().await;
     let mut client = Client::connect_with_reader(&config, &SimulatedKeychain)

@@ -70,7 +70,11 @@ async fn local_bundle_assets_sse_contract_and_origin_isolation() {
         .unwrap();
     assert_eq!(page.status(), 200);
     let policy = page.headers()["content-security-policy"].clone();
-    assert!(page.text().await.unwrap().contains("src=\"/bundle.js\""));
+    assert_eq!(page.headers()["cache-control"], "no-store");
+    let html = page.text().await.unwrap();
+    assert!(html.contains("src=\"/bundle.js\""));
+    assert!(html.contains("background: transparent"));
+    assert!(html.contains("width: 100%; height: 100%; overflow: hidden"));
     for route in [
         "bundle.js".to_owned(),
         format!("assets/simulated-frame/{hash}/art.png"),

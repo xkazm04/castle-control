@@ -11,6 +11,14 @@ scene intact. A verified package hash change rebuilds its layers once; intensity
 changes update existing CSS bindings, and unchanged intensity does no DOM writes.
 There is no per-frame renderer loop or page/source refresh.
 
+Lane L5 adds `parseOverlayDisplay` at the overlay entry for URL-only `scale`
+and `anchor`. The full grammar and OBS reproduction commands are in
+[`apps/overlay/README.md`](../../apps/overlay/README.md). Scene fitting uses a
+stable envelope across all intensity bindings, normalized to its top-left and
+contained at the requested scale/anchor. Window resize changes only root CSS;
+unchanged snapshots retain nodes and produce no geometry writes. Text stays
+inside its declared layer box. The badge is independent of scene transforms.
+
 Text uses literal `textContent`; images use verified local hash-qualified asset
 paths. Shapes and the fixed `embers` preset are renderer-owned. Data-only is
 the default and creates no package script. Explicit script entries create local

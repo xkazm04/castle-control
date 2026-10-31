@@ -1,6 +1,15 @@
 html, body, #scene { font-family: var(--font-ui); color: var(--ink); background: transparent; }
-html, body { margin: 0; }
-#scene { position: relative; min-height: 100vh; }
+html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; }
+#scene {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: var(--scene-width, 0px);
+  height: var(--scene-height, 0px);
+  overflow: hidden;
+  transform-origin: top left;
+  transform: translate(var(--scene-x, 0px), var(--scene-y, 0px)) scale(var(--scene-scale, 1));
+}
 [data-simulated-badge] {
   position: fixed;
   bottom: var(--space-12);

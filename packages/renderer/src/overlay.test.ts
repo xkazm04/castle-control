@@ -2,6 +2,23 @@ import { afterEach, expect, it, vi } from 'vitest';
 import { parseBeaconsRenderSnapshot } from '@castle-control/contract/beacons-render';
 import { OverlayScene, receiveSnapshot } from './overlay.ts';
 
+it('parses display-only query values once, falling back per invalid or duplicate key', async () => {
+  vi.stubGlobal('document', { createElement: () => ({ textContent: '' }), head: { append: vi.fn() }, getElementById: () => null });
+  vi.stubGlobal('location', { pathname: '' });
+  vi.stubGlobal('__CC_OVERLAY_STYLES__', '');
+  const { parseOverlayDisplay } = await import('./overlay-entry.ts');
+  expect(parseOverlayDisplay('')).toEqual({ scale: 1, anchor: 'center' });
+  for (const anchor of ['tl', 'tr', 'bl', 'br', 'center']) {
+    expect(parseOverlayDisplay(`?scale=0.5&anchor=${anchor}&package_hash=ignored`)).toEqual({ scale: 0.5, anchor });
+  }
+  expect(parseOverlayDisplay('?scale=2&anchor=br')).toEqual({ scale: 2, anchor: 'br' });
+  for (const scale of ['', '0', '0.49', '2.01', 'NaN', 'Infinity', '-1', '0x1', '1e0', '%201']) {
+    expect(parseOverlayDisplay(`?scale=${scale}&anchor=tl`)).toEqual({ scale: 1, anchor: 'tl' });
+  }
+  expect(parseOverlayDisplay('?scale=0.5&scale=2&anchor=TL')).toEqual({ scale: 1, anchor: 'center' });
+  expect(parseOverlayDisplay('?anchor=tl&anchor=br')).toEqual({ scale: 1, anchor: 'center' });
+});
+
 const text = (intensity = 0.5, hash = 'a'.repeat(64), simulated = true) => JSON.stringify({
   simulated,
   visual: { visual_id: 'simulated-frame', name: 'Simulated frame', design_id: 'simulated-art',
@@ -115,4 +132,41 @@ it('retains scene nodes and writes nothing for unchanged intensity', () => {
   expect(root.replaceChildren).toHaveBeenCalledOnce();
   scene.apply(parseBeaconsRenderSnapshot(text(0.8, 'b'.repeat(64))));
   expect(root.replaceChildren).toHaveBeenCalledTimes(2);
+});
+
+it('fits and anchors the whole binding envelope at both OBS sizes and after resize', () => {
+  const { root, scene } = createScene();
+  const snapshot = parseBeaconsRenderSnapshot(text());
+  const layer = snapshot.package?.layers[0];
+  if (!layer) throw new Error('Missing simulated layer');
+  layer.properties = { x: -100, y: -50, width: 2000, height: 1200, scale: 1, opacity: 1 };
+  layer.bindings = [{ property: 'scale', output_range: { at_zero: 1, at_one: 2 } }];
+  scene.resize(1920, 1080);
+  scene.apply(snapshot);
+  expect(root.style.setProperty).toHaveBeenCalledWith('--scene-scale', '0.45');
+  expect(root.style.setProperty).toHaveBeenCalledWith('--scene-x', '60px');
+  expect(root.style.setProperty).toHaveBeenCalledWith('--scene-y', '0px');
+  expect(root.style.setProperty).toHaveBeenCalledWith('--scene-left', '-100');
+  expect(root.style.setProperty).toHaveBeenCalledWith('--scene-top', '-50');
+  const node = root.children[0] as HTMLElement;
+  expect(node.style.setProperty).toHaveBeenCalledWith('transform-origin', 'top left');
+  const writes = vi.mocked(root.style.setProperty).mock.calls.length;
+  scene.apply(snapshot);
+  expect(vi.mocked(root.style.setProperty).mock.calls).toHaveLength(writes);
+  scene.resize(1280, 720);
+  expect(root.style.setProperty).toHaveBeenCalledWith('--scene-scale', '0.3');
+  expect(root.replaceChildren).toHaveBeenCalledOnce();
+});
+
+it('applies display scale and corner anchor without mutating snapshots', () => {
+  const { root } = createScene();
+  const scene = new OverlayScene(root, { scale: 0.5, anchor: 'br' });
+  scene.resize(1280, 720);
+  const snapshot = parseBeaconsRenderSnapshot(text());
+  const before = JSON.stringify(snapshot);
+  scene.apply(snapshot);
+  expect(root.style.setProperty).toHaveBeenCalledWith('--scene-scale', '0.5');
+  expect(root.style.setProperty).toHaveBeenCalledWith('--scene-x', '1230px');
+  expect(root.style.setProperty).toHaveBeenCalledWith('--scene-y', '680px');
+  expect(JSON.stringify(snapshot)).toBe(before);
 });

@@ -7,7 +7,9 @@ import { counted } from './inventory.ts';
 export const visualId = 'simulated-frame';
 export const snapshotEvent = 'beacons.render.snapshot';
 
-export async function simulatedSnapshots(): Promise<string[]> {
+interface SnapshotOptions { oversized?: boolean; simulated?: boolean; invalid?: boolean }
+
+export async function simulatedSnapshots(options: SnapshotOptions = {}): Promise<string[]> {
   // Import the worktree's real public parser implementation at runtime. This
   // avoids a root workspace dependency and never bypasses the contract door.
   const parserUrl = new URL('../packages/contract/src/generated/beacons-render-validation.ts', import.meta.url);
@@ -15,13 +17,15 @@ export async function simulatedSnapshots(): Promise<string[]> {
   if (!parser || typeof parser !== 'object' || !('parseBeaconsRenderSnapshot' in parser)
     || typeof parser.parseBeaconsRenderSnapshot !== 'function') throw new Error('Snapshot contract parser unavailable');
   const parseSnapshot = parser.parseBeaconsRenderSnapshot;
-  const layers = [{ kind: 'text', text: 'SIMULATED · Castle Control e2e',
-    properties: { x: 24, y: 24, width: 360, height: 80, scale: 1, opacity: 1 },
+  const layers = [{ kind: 'text', text: options.oversized ? 'Oversized SIMULATED artwork' : 'SIMULATED · Castle Control e2e',
+    properties: options.oversized
+      ? { x: -120, y: -60, width: 3840, height: 2160, scale: 1, opacity: 1 }
+      : { x: 24, y: 24, width: 360, height: 80, scale: 1, opacity: 1 },
     bindings: [{ property: 'opacity', output_range: { at_zero: 0.25, at_one: 1 } }] }];
   const content_hash = createHash('sha256').update(JSON.stringify(layers)).digest('hex');
   const snapshots = [0.25, 0.75].map(intensity => {
     const wire = JSON.stringify({
-      simulated: true,
+      simulated: options.simulated ?? true,
       visual: { visual_id: visualId, name: 'SIMULATED e2e visual', design_id: 'simulated-art',
         curve: { ranges: [{ total: 0, intensity: 0 }], decay: { kind: 'none' } } },
       intensity: { visual_id: visualId, intensity },
@@ -34,12 +38,16 @@ export async function simulatedSnapshots(): Promise<string[]> {
   return snapshots;
 }
 
-export async function startOverlay(): Promise<{ url: string; close: () => Promise<void>; pushes: () => number }> {
+export async function startOverlay(): Promise<{
+  url: string; close: () => Promise<void>; pushes: () => number;
+  publish: (options: SnapshotOptions) => Promise<void>;
+}> {
   const snapshots = await simulatedSnapshots();
   const html = readFileSync(new URL('../apps/overlay/index.html', import.meta.url));
   const bundle = readFileSync(new URL('../apps/overlay/bundle.js', import.meta.url));
   counted('static overlay assets', [html, bundle].filter(bytes => bytes.length > 0).length);
   const streams = new Set<ServerResponse>();
+  const timers = new Set<ReturnType<typeof setTimeout>>();
   let pushes = 0;
   const server = createServer((request, response) => {
     const url = new URL(request.url ?? '/', 'http://127.0.0.1');
@@ -60,7 +68,8 @@ export async function startOverlay(): Promise<{ url: string; close: () => Promis
       streams.add(response);
       response.write(`event: ${snapshotEvent}\ndata: ${snapshots[0]}\n\n`);
       const timer = setTimeout(() => response.write(`event: ${snapshotEvent}\ndata: ${snapshots[1]}\n\n`), 100);
-      response.on('close', () => { clearTimeout(timer); streams.delete(response); });
+      timers.add(timer);
+      response.on('close', () => { clearTimeout(timer); timers.delete(timer); streams.delete(response); });
     } else { response.writeHead(404); response.end('Not a simulated overlay resource'); }
   });
   await new Promise<void>((resolve, reject) => {
@@ -72,7 +81,14 @@ export async function startOverlay(): Promise<{ url: string; close: () => Promis
   return {
     url: `http://127.0.0.1:${address.port}`,
     pushes: () => pushes,
+    publish: async options => {
+      const data = options.invalid ? '{}' : (await simulatedSnapshots(options))[1];
+      for (const timer of timers) clearTimeout(timer);
+      timers.clear();
+      for (const stream of streams) stream.write(`event: ${snapshotEvent}\ndata: ${data}\n\n`);
+    },
     close: () => new Promise<void>((resolve, reject) => {
+      for (const timer of timers) clearTimeout(timer);
       for (const stream of streams) stream.end();
       server.close(error => error ? reject(error) : resolve());
       server.closeAllConnections();

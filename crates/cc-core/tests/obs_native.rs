@@ -219,15 +219,49 @@ async fn native_obs_rpc_reads_live_status_creates_owned_source_and_invalidates_c
         .unwrap()
         .to_owned();
     assert!(url.contains("/beacons/simulated-frame?package_hash="));
-    overlay_support::call(&app,"obs.source.create",json!({"scene_name":"simulated-scene","source_name":"simulated-beacons-source","url":url,"width":1280,"height":720})).await;
-    assert_eq!(
-        seen.lock()
-            .unwrap()
+    for (width, height) in [(1920, 1080), (1280, 720)] {
+        let display_url = format!("{url}&scale=0.5&anchor=br");
+        overlay_support::call(&app,"obs.source.create",json!({"scene_name":"simulated-scene","source_name":"simulated-beacons-source","url":display_url,"width":width,"height":height})).await;
+        let seen = seen.lock().unwrap();
+        let settings = &seen
             .iter()
             .rfind(|v| v["d"]["requestType"] == "CreateInput")
-            .unwrap()["d"]["requestData"]["inputSettings"]["url"],
-        url
+            .unwrap()["d"]["requestData"]["inputSettings"];
+        assert_eq!(settings["url"], display_url);
+        assert_eq!(settings["width"], width);
+        assert_eq!(settings["height"], height);
+    }
+    let replacement = overlay_support::seal(
+        overlay_support::package("Changed simulated source"),
+        &Default::default(),
     );
+    let new_hash = String::from(replacement.content_hash.clone());
+    service
+        .accept_beacons_package(replacement, directory.path(), false)
+        .unwrap();
+    let new_url = overlay_support::call(
+        &app,
+        "beacons.source.url",
+        json!({"visual_id":"simulated-frame"}),
+    )
+    .await["url"]
+        .as_str()
+        .unwrap()
+        .to_owned();
+    assert_ne!(url, new_url);
+    assert!(new_url.ends_with(&format!("?package_hash={new_hash}")));
+    let stale = service
+        .create_source(&cc_types::ObsSourceParams {
+            scene_name: "simulated-scene".into(),
+            source_name: "simulated-stale".into(),
+            url,
+            width: 1920,
+            height: 1080,
+        })
+        .await
+        .unwrap_err();
+    assert_eq!(stale.code, ErrorCode::Invalid);
+    overlay_support::call(&app,"obs.source.create",json!({"scene_name":"simulated-scene","source_name":"simulated-current","url":new_url,"width":1920,"height":1080})).await;
     let cursor = app.events.since(0).unwrap().last().unwrap().seq;
     peer.abort();
     let _ = peer.await;

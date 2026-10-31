@@ -36,4 +36,8 @@ it('ships a local bundle rebuilt from this renderer and the lazy contract door',
   expect(shell).toMatch(/\x3cscript type="module" src="\/bundle.js"><\/script>/);
   expect(shell).not.toContain('http:');
   expect(shell).not.toContain('https:');
+  // Critical geometry must exist before the module (and its embedded tokens) loads.
+  expect(shell).toContain('overflow: hidden');
+  expect(shell).toContain('width: 100%; height: 100%');
+  expect(shell).toContain('background: transparent');
 });

@@ -1,6 +1,29 @@
 import { BEACONS_RENDER_SNAPSHOT_EVENT, parseBeaconsRenderSnapshot } from '@castle-control/contract/beacons-render';
 import type { BeaconsRenderSnapshot } from '@castle-control/contract/beacons-render';
-import { bindLayerBindings } from './bindings.ts';
+import { applyLayerBindings, bindLayerBindings } from './bindings.ts';
+
+export interface OverlayDisplay {
+  readonly scale: number;
+  readonly anchor: 'tl' | 'tr' | 'bl' | 'br' | 'center';
+}
+interface Bounds { x: number; y: number; width: number; height: number }
+
+/** Conservative envelope across the entire intensity range; no zoom pumping. */
+function packageBounds(snapshot: BeaconsRenderSnapshot): Bounds {
+  let left = Infinity, top = Infinity, right = -Infinity, bottom = -Infinity;
+  for (const layer of snapshot.package?.layers ?? []) {
+    const a = applyLayerBindings(layer.properties, layer.bindings, 0);
+    const b = applyLayerBindings(layer.properties, layer.bindings, 1);
+    const scale = Math.max(a.scale, b.scale);
+    left = Math.min(left, a.x, b.x);
+    top = Math.min(top, a.y, b.y);
+    right = Math.max(right, Math.max(a.x, b.x) + a.width * scale);
+    bottom = Math.max(bottom, Math.max(a.y, b.y) + a.height * scale);
+  }
+  return Number.isFinite(right) && Number.isFinite(bottom)
+    ? { x: left, y: top, width: Math.max(1, right - left), height: Math.max(1, bottom - top) }
+    : { x: 0, y: 0, width: 1, height: 1 };
+}
 
 /** Invalid push data is ignored before touching the existing accepted scene. */
 export function receiveSnapshot(text: string, visual_id: string, apply: (snapshot: BeaconsRenderSnapshot) => void): boolean {
@@ -18,14 +41,41 @@ export class OverlayScene {
   private bindings: ((intensity: number) => boolean)[] = [];
   private readonly root: HTMLElement;
   private readonly badge: HTMLElement;
-  constructor(root: HTMLElement) {
+  private readonly display: OverlayDisplay;
+  private bounds: Bounds = { x: 0, y: 0, width: 1, height: 1 };
+  private viewport = { width: 1, height: 1 };
+  constructor(root: HTMLElement, display: OverlayDisplay = { scale: 1, anchor: 'center' }) {
     this.root = root;
+    this.display = { ...display };
     this.badge = root.ownerDocument.createElement('div');
     this.badge.dataset['simulatedBadge'] = '';
     this.badge.textContent = 'SIMULATED';
     this.badge.hidden = true;
     // Scene-owned chrome stays outside the package's replaceable layer list.
     root.after(this.badge);
+  }
+
+  resize(width: number, height: number): void {
+    if (!Number.isFinite(width) || !Number.isFinite(height) || width <= 0 || height <= 0) return;
+    if (this.viewport.width === width && this.viewport.height === height) return;
+    this.viewport = { width, height };
+    this.fit();
+  }
+
+  private fit(): void {
+    const { width, height } = this.viewport;
+    const bounds = this.bounds;
+    const scale = Math.min(this.display.scale, width / bounds.width, height / bounds.height);
+    const anchor = this.display.anchor;
+    const x = anchor === 'center' ? 0.5 : anchor.endsWith('r') ? 1 : 0;
+    const y = anchor === 'center' ? 0.5 : anchor.startsWith('b') ? 1 : 0;
+    this.root.style.setProperty('--scene-scale', String(scale));
+    this.root.style.setProperty('--scene-x', `${(width - bounds.width * scale) * x}px`);
+    this.root.style.setProperty('--scene-y', `${(height - bounds.height * scale) * y}px`);
+    this.root.style.setProperty('--scene-left', String(bounds.x));
+    this.root.style.setProperty('--scene-top', String(bounds.y));
+    this.root.style.setProperty('--scene-width', `${bounds.width}px`);
+    this.root.style.setProperty('--scene-height', `${bounds.height}px`);
   }
 
   apply(snapshot: BeaconsRenderSnapshot): void {
@@ -38,11 +88,14 @@ export class OverlayScene {
       for (const layer of pkg?.layers ?? []) {
         const node = document.createElement(layer.kind === 'image' ? 'img' : 'div');
         node.style.setProperty('position', 'absolute');
-        node.style.setProperty('left', 'calc(var(--x) * 1px)');
-        node.style.setProperty('top', 'calc(var(--y) * 1px)');
+        node.style.setProperty('left', 'calc((var(--x) - var(--scene-left)) * 1px)');
+        node.style.setProperty('top', 'calc((var(--y) - var(--scene-top)) * 1px)');
         node.style.setProperty('width', 'calc(var(--width) * 1px)');
         node.style.setProperty('height', 'calc(var(--height) * 1px)');
         node.style.setProperty('transform', 'scale(var(--scale))');
+        node.style.setProperty('transform-origin', 'top left');
+        node.style.setProperty('overflow', 'hidden');
+        node.style.setProperty('overflow-wrap', 'anywhere');
         node.style.setProperty('opacity', 'var(--opacity)');
         if (layer.kind === 'text') node.textContent = layer.text;
         if (layer.kind === 'shape') {
@@ -71,6 +124,8 @@ export class OverlayScene {
       this.root.replaceChildren(...nodes);
       this.bindings = bindings;
       this.identity = identity;
+      this.bounds = packageBounds(snapshot);
+      this.fit();
     }
     for (const bind of this.bindings) bind(snapshot.intensity.intensity);
     // Local diagnostics for the native-to-client delivery probe, not wire data.
@@ -90,11 +145,14 @@ function assetUrl(snapshot: BeaconsRenderSnapshot, path: string): string {
   return `/assets/${snapshot.visual.visual_id}/${pkg.content_hash}/${path}`;
 }
 
-export function connectOverlay(root: HTMLElement, visual_id: string): () => void {
-  const scene = new OverlayScene(root);
+export function connectOverlay(root: HTMLElement, visual_id: string, display?: OverlayDisplay): () => void {
+  const scene = new OverlayScene(root, display);
+  const resize = () => scene.resize(window.innerWidth, window.innerHeight);
+  resize();
+  window.addEventListener('resize', resize);
   const stream = new EventSource(`/push/beacons?visual_id=${encodeURIComponent(visual_id)}`);
   stream.addEventListener(BEACONS_RENDER_SNAPSHOT_EVENT, (event: MessageEvent<string>) => {
     receiveSnapshot(event.data, visual_id, (snapshot) => scene.apply(snapshot));
   });
-  return () => stream.close();
+  return () => { window.removeEventListener('resize', resize); stream.close(); };
 }

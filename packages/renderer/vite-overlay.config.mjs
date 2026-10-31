@@ -13,6 +13,8 @@ const source_hash = createHash('sha256');
 for (const path of inputs) source_hash.update(readFileSync(new URL(path, import.meta.url), 'utf8').replaceAll('\r\n', '\n'));
 const banner = `/*! Castle Control overlay source SHA-256: ${source_hash.digest('hex')} */`;
 export default {
+  // This output has no public assets; never copy the desktop's public tree.
+  publicDir: false,
   // Embed CSS because the native host intentionally serves only index + bundle.
   // Reading build inputs adds no runtime package or cross-package source import.
   define: { __CC_OVERLAY_STYLES__: JSON.stringify(
