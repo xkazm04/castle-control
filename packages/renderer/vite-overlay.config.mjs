@@ -3,7 +3,7 @@ import { fileURLToPath } from 'node:url';
 import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 const inputs = [
-  './src/overlay-entry.ts', './src/overlay.ts', './src/bindings.ts',
+  './src/overlay-entry.ts', './src/overlay-path.ts', './src/overlay.ts', './src/bindings.ts',
   '../tokens/src/generated.css', './src/overlay.css',
   '../contract/src/generated/beacons-render-validation.ts',
   '../contract/src/generated/beacons-render-validators.mjs', '../contract/src/door.mjs',

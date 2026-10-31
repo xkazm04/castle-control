@@ -3,6 +3,7 @@ mod lots;
 pub mod package;
 mod routes;
 
+use cc_obs::pages::{self, OverlayPage};
 use cc_types::{
     BeaconsIntensity, BeaconsRenderSnapshot, DesignId, DesignPackage, ErrorCode, ErrorEnvelope,
     Visual, VisualId,
@@ -184,44 +185,46 @@ impl RenderHost {
             .get(id)
             .and_then(|s| s.borrow().clone())
             .ok_or_else(unavailable)?;
-        let mut url = format!("{origin}beacons/{}", id.as_str());
-        if let Some(package) = &snapshot.data.package {
-            url.push_str("?package_hash=");
-            url.push_str(&String::from(package.content_hash.clone()));
-        }
-        Ok(url)
+        let hash = snapshot
+            .data
+            .package
+            .as_ref()
+            .map(|package| String::from(package.content_hash.clone()));
+        let page = OverlayPage::Beacons {
+            visual: id.as_str(),
+            package_hash: hash.as_deref(),
+        };
+        Ok(format!(
+            "{}{}",
+            origin.trim_end_matches('/'),
+            page.path_and_query()
+        ))
     }
 
     pub fn owns_source(&self, origin: &str, url: &str) -> bool {
-        if let Some(id) = url.strip_prefix(&format!("{origin}lots/")) {
-            return cc_types::DrawId::try_from(id.to_owned())
-                .is_ok_and(|id| self.lots_seal(&id).is_ok_and(|seal| seal.is_some()));
+        let Some(suffix) = url.strip_prefix(origin) else {
+            return false;
+        };
+        let target = format!("/{suffix}");
+        let (path, query) = target
+            .split_once('?')
+            .map_or((target.as_str(), None), |(path, query)| (path, Some(query)));
+        let Some(page) = pages::parse(path, query) else {
+            return false;
+        };
+        match page {
+            OverlayPage::Spike => true,
+            OverlayPage::Lots { draw } => cc_types::DrawId::try_from(draw.to_owned())
+                .is_ok_and(|id| self.lots_seal(&id).is_ok_and(|seal| seal.is_some())),
+            OverlayPage::Beacons { visual, .. } => {
+                VisualId::try_from(visual.to_owned()).is_ok_and(|id| {
+                    self.source_url(origin, &id).is_ok_and(|expected| {
+                        expected
+                            == format!("{}{}", origin.trim_end_matches('/'), page.path_and_query())
+                    })
+                })
+            }
         }
-        if url == origin {
-            return true;
-        } // The owner-attended spike's static plate.
-        let Some(path) = url.strip_prefix(&format!("{origin}beacons/")) else {
-            return false;
-        };
-        let id = path.split('?').next().unwrap_or("");
-        let Ok(id) = VisualId::try_from(id.to_owned()) else {
-            return false;
-        };
-        // Presentation never changes authority or package identity. Values are
-        // interpreted only by the overlay entry; every other key stays exact.
-        let (base, query) = url.split_once('?').unwrap_or((url, ""));
-        let query = query
-            .split('&')
-            .filter(|part| !matches!(part.split('=').next(), Some("scale" | "anchor")))
-            .collect::<Vec<_>>()
-            .join("&");
-        let canonical = if query.is_empty() {
-            base.to_owned()
-        } else {
-            format!("{base}?{query}")
-        };
-        self.source_url(origin, &id)
-            .is_ok_and(|expected| expected == canonical)
     }
 }
 

@@ -49,7 +49,6 @@ async fn display_query_is_parsed_once_with_safe_defaults_and_no_markup_injection
         ("?scale=0.1&anchor=br", "1", "br"),
         ("?scale=inf&anchor=tl", "1", "tl"),
         ("?scale=&anchor=", "1", "br"),
-        ("?other=ignored", "1", "br"),
         ("?scale=2&scale=1&anchor=tl&anchor=tr", "1", "br"),
         (
             "?scale=%22%3E%3Cscript%3E&anchor=%22%3E%3Cscript%3E",
@@ -80,6 +79,13 @@ async fn display_query_is_parsed_once_with_safe_defaults_and_no_markup_injection
         assert!(html.contains("max-height: 100%"));
         assert!(html.contains("overflow: auto"));
     }
+    let rejected = format!("{}lots/simulated-draw?other=ignored", server.url());
+    assert_eq!(
+        client.get(&rejected).send().await.unwrap().status(),
+        404,
+        "unknown query keys are refused by the page table"
+    );
+    assert!(!host.owns_source(&server.url(), &rejected));
 }
 
 #[tokio::test]

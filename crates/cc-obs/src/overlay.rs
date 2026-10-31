@@ -1,8 +1,8 @@
-use crate::Error;
+use crate::{Error, pages};
 use axum::{
     Router,
     body::Body,
-    http::{Request, StatusCode, header},
+    http::{Request, StatusCode, Uri, header},
     middleware::{self, Next},
     response::{Html, IntoResponse, Response},
     routing::get,
@@ -18,8 +18,11 @@ pub struct Overlay {
 impl Overlay {
     pub async fn start(port: u16) -> Result<Self, Error> {
         Self::start_with_routes(port, Router::new().route(
-            "/beacons/{visual_id}", get(|| async {
-                Html("<!doctype html><title>Castle Control Beacons (rendering unavailable)</title><style>html, body { background: transparent; margin: 0; }</style><body></body>")
+            pages::BEACONS_ROUTE, get(|uri: Uri| async move {
+                if pages::parse(uri.path(), uri.query()).is_none() {
+                    return StatusCode::NOT_FOUND.into_response();
+                }
+                Html("<!doctype html><title>Castle Control Beacons (rendering unavailable)</title><style>html, body { background: transparent; margin: 0; }</style><body></body>").into_response()
             }),
         )).await
     }
@@ -32,8 +35,11 @@ impl Overlay {
         let (stop, mut stopped) = watch::channel(false);
         let app = Router::new()
             .route(
-                "/",
-                get(|| async {
+                pages::SPIKE_ROUTE,
+                get(|uri: Uri| async move {
+                    if pages::parse(uri.path(), uri.query()).is_none() {
+                        return StatusCode::NOT_FOUND.into_response();
+                    }
                     Html(concat!(
                         "<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\">",
                         "<title>Castle Control spike</title>",
@@ -47,6 +53,7 @@ impl Overlay {
                         "</head><body><main class=\"spike-plate\"><h1>Castle Control</h1>",
                         "<p>WP 0.7 OBS connection test. Static test page.</p></main></body></html>"
                     ))
+                    .into_response()
                 }),
             )
             .merge(routes)

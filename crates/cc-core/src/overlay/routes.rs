@@ -1,14 +1,17 @@
 use super::{RenderHost, Snapshot};
 use axum::{
     Router,
+    body::Body,
     extract::{Path, Query, State},
-    http::{StatusCode, header},
+    http::{Method, Request, StatusCode, header},
+    middleware::{self, Next},
     response::{
         Html, IntoResponse, Response, Sse,
         sse::{Event, KeepAlive},
     },
     routing::get,
 };
+use cc_obs::pages;
 use cc_types::{BEACONS_RENDER_SNAPSHOT_EVENT, LocalAssetPath, VisualId};
 use futures::stream;
 use serde::Deserialize;
@@ -17,8 +20,20 @@ use tokio::sync::{OwnedSemaphorePermit, watch};
 
 pub(super) fn router(host: Arc<RenderHost>) -> Router {
     Router::new()
-        .route("/beacons/{visual_id}", get(page))
-        .route("/lots/{draw_id}", get(super::lots::page))
+        .route(pages::BEACONS_ROUTE, get(page))
+        .route(pages::LOTS_ROUTE, get(super::lots::page))
+        .route_layer(middleware::from_fn(
+            |request: Request<Body>, next: Next| async move {
+                // Preserve the read-only router's 405 for unsupported methods.
+                if matches!(*request.method(), Method::GET | Method::HEAD)
+                    && pages::parse(request.uri().path(), request.uri().query()).is_none()
+                {
+                    StatusCode::NOT_FOUND.into_response()
+                } else {
+                    next.run(request).await
+                }
+            },
+        ))
         .route(
             "/bundle.js",
             get(|| async {

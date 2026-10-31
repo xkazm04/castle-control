@@ -1,5 +1,6 @@
 import { connectOverlay } from './overlay.ts';
 import type { OverlayDisplay } from './overlay.ts';
+import { parseOverlayPath } from './overlay-path.ts';
 
 /** URL-only presentation grammar, independent of RPC and package identity. */
 export function parseOverlayDisplay(search: string): OverlayDisplay {
@@ -20,5 +21,5 @@ styles.textContent = __CC_OVERLAY_STYLES__;
 document.head.append(styles);
 
 const root = document.getElementById('scene');
-const match = /^\/beacons\/([a-z0-9]+(?:-[a-z0-9]+)*)$/.exec(location.pathname);
-if (root && match?.[1]) connectOverlay(root, match[1], parseOverlayDisplay(location.search));
+const page = parseOverlayPath(location.pathname, location.search);
+if (root && page?.kind === 'beacons') connectOverlay(root, page.visual, parseOverlayDisplay(location.search));

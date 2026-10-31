@@ -1,6 +1,7 @@
 //! OBS v5 transport and a separate read-only localhost overlay origin.
 mod client;
 mod overlay;
+pub mod pages;
 mod protocol;
 
 pub use client::{Client, Config, PasswordReader};

@@ -61,7 +61,7 @@ impl BrowserSource {
         if url.scheme_str() != Some("http")
             || url.host() != Some("localhost")
             || url.port_u16().is_none_or(|port| port == 0)
-            || !render_path(url.path(), url.query())
+            || crate::pages::parse(url.path(), url.query()).is_none()
             || url.authority().map(|a| a.as_str())
                 != url.port_u16().map(|p| format!("localhost:{p}")).as_deref()
             || self.scene_name.trim().is_empty()
@@ -78,41 +78,6 @@ impl BrowserSource {
                 "is_local_file": false, "shutdown": false}
         }))
     }
-}
-
-fn render_path(path: &str, query: Option<&str>) -> bool {
-    if path == "/" {
-        return query.is_none();
-    }
-    let Some(id) = path.strip_prefix("/beacons/") else {
-        return false;
-    };
-    if id.is_empty()
-        || !id.split('-').all(|part| {
-            !part.is_empty()
-                && part
-                    .bytes()
-                    .all(|b| b.is_ascii_lowercase() || b.is_ascii_digit())
-        })
-    {
-        return false;
-    }
-    query.is_none_or(|query| {
-        // Only the entry parses presentation values; they carry no capability.
-        let mut identity = query
-            .split('&')
-            .filter(|part| !matches!(part.split('=').next(), Some("scale" | "anchor")));
-        let Some(query) = identity.next() else {
-            return true;
-        };
-        identity.next().is_none()
-            && query.strip_prefix("package_hash=").is_some_and(|hash| {
-                hash.len() == 64
-                    && hash
-                        .bytes()
-                        .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
-            })
-    })
 }
 
 pub(crate) fn authentication(password: &str, challenge: &Challenge) -> Zeroizing<String> {

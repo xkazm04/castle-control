@@ -1,0 +1,227 @@
+[
+  {
+    "target": "/",
+    "kind": "spike",
+    "canonical": "/"
+  },
+  {
+    "target": "/beacons/simulated-frame",
+    "kind": "beacons",
+    "canonical": "/beacons/simulated-frame"
+  },
+  {
+    "target": "/lots/simulated-draw",
+    "kind": "lots",
+    "canonical": "/lots/simulated-draw"
+  },
+  {
+    "target": "/beacons/simulated-frame?package_hash=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "kind": "beacons",
+    "canonical": "/beacons/simulated-frame?package_hash=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  },
+  {
+    "target": "/beacons/simulated-frame?scale=2&anchor=top-left",
+    "kind": "beacons",
+    "canonical": "/beacons/simulated-frame"
+  },
+  {
+    "target": "/beacons/simulated-frame?scale=&anchor=",
+    "kind": "beacons",
+    "canonical": "/beacons/simulated-frame"
+  },
+  {
+    "target": "/beacons/simulated-frame?scale=NaN&scale=2&anchor=invalid",
+    "kind": "beacons",
+    "canonical": "/beacons/simulated-frame"
+  },
+  {
+    "target": "/beacons/simulated-frame?anchor=tl&scale=.5",
+    "kind": "beacons",
+    "canonical": "/beacons/simulated-frame"
+  },
+  {
+    "target": "/beacons/simulated-frame?scale&anchor",
+    "kind": "beacons",
+    "canonical": "/beacons/simulated-frame"
+  },
+  {
+    "target": "/beacons/simulated-frame?scale=1=2&anchor=%26other%3D1",
+    "kind": "beacons",
+    "canonical": "/beacons/simulated-frame"
+  },
+  {
+    "target": "/lots/simulated-draw?scale=2&anchor=top-left",
+    "kind": "lots",
+    "canonical": "/lots/simulated-draw"
+  },
+  {
+    "target": "/lots/simulated-draw?scale=&anchor=",
+    "kind": "lots",
+    "canonical": "/lots/simulated-draw"
+  },
+  {
+    "target": "/lots/simulated-draw?scale=NaN&scale=2&anchor=invalid",
+    "kind": "lots",
+    "canonical": "/lots/simulated-draw"
+  },
+  {
+    "target": "/lots/simulated-draw?anchor=tl&scale=.5",
+    "kind": "lots",
+    "canonical": "/lots/simulated-draw"
+  },
+  {
+    "target": "/lots/simulated-draw?scale&anchor",
+    "kind": "lots",
+    "canonical": "/lots/simulated-draw"
+  },
+  {
+    "target": "/lots/simulated-draw?scale=1=2&anchor=%26other%3D1",
+    "kind": "lots",
+    "canonical": "/lots/simulated-draw"
+  },
+  {
+    "target": "/beacons/simulated-frame?scale=.5&package_hash=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa&anchor=br",
+    "kind": "beacons",
+    "canonical": "/beacons/simulated-frame?package_hash=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  },
+  {
+    "target": "/beacons/a--b",
+    "kind": null,
+    "canonical": null
+  },
+  {
+    "target": "/beacons/Upper",
+    "kind": null,
+    "canonical": null
+  },
+  {
+    "target": "/beacons/x?package_hash=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "kind": null,
+    "canonical": null
+  },
+  {
+    "target": "/beacons/x?package_hash=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+    "kind": null,
+    "canonical": null
+  },
+  {
+    "target": "/beacons/x?package_hash=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa&package_hash=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "kind": null,
+    "canonical": null
+  },
+  {
+    "target": "/beacons/x?other=1",
+    "kind": null,
+    "canonical": null
+  },
+  {
+    "target": "/?x=1",
+    "kind": null,
+    "canonical": null
+  },
+  {
+    "target": "/?scale=2",
+    "kind": null,
+    "canonical": null
+  },
+  {
+    "target": "/?",
+    "kind": null,
+    "canonical": null
+  },
+  {
+    "target": "/lots/",
+    "kind": null,
+    "canonical": null
+  },
+  {
+    "target": "/lots/a--b",
+    "kind": null,
+    "canonical": null
+  },
+  {
+    "target": "/lots/Upper",
+    "kind": null,
+    "canonical": null
+  },
+  {
+    "target": "/lots/x?other=1",
+    "kind": null,
+    "canonical": null
+  },
+  {
+    "target": "/lots/x?scale=&other=1",
+    "kind": null,
+    "canonical": null
+  },
+  {
+    "target": "/lots/x?package_hash=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "kind": null,
+    "canonical": null
+  },
+  {
+    "target": "/lots/x?",
+    "kind": null,
+    "canonical": null
+  },
+  {
+    "target": "/beacons/x?",
+    "kind": null,
+    "canonical": null
+  },
+  {
+    "target": "/beacons/x?scale=1&",
+    "kind": null,
+    "canonical": null
+  },
+  {
+    "target": "/beacons/x?%73cale=1",
+    "kind": null,
+    "canonical": null
+  },
+  {
+    "target": "/beacons/x?Package_hash=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "kind": null,
+    "canonical": null
+  },
+  {
+    "target": "/beacons/x/y",
+    "kind": null,
+    "canonical": null
+  },
+  {
+    "target": "/beacons/%78",
+    "kind": null,
+    "canonical": null
+  },
+  {
+    "target": "/lots/%78",
+    "kind": null,
+    "canonical": null
+  },
+  {
+    "target": "/bundle.js",
+    "kind": null,
+    "canonical": null
+  },
+  {
+    "target": "/rpc",
+    "kind": null,
+    "canonical": null
+  },
+  {
+    "target": "/events",
+    "kind": null,
+    "canonical": null
+  },
+  {
+    "target": "/push/beacons",
+    "kind": null,
+    "canonical": null
+  },
+  {
+    "target": "/assets/x/y/z",
+    "kind": null,
+    "canonical": null
+  }
+]

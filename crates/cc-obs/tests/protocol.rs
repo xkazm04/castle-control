@@ -52,6 +52,9 @@ async fn create_input_has_browser_source_shape_and_rejects_unsafe_origins() {
         "http://localhost:43210/rpc",
         "http://localhost:43210/?token=simulated",
         "http://localhost:0/",
+        "http://localhost:43210/lots/Upper",
+        "http://localhost:43210/lots/simulated-draw?other=1",
+        "http://localhost:43210/beacons/simulated-frame?other=1",
     ] {
         let mut invalid = source();
         invalid.url = url.into();
@@ -121,6 +124,32 @@ async fn beacons_create_input_preserves_display_url_hash_and_both_obs_sizes() {
         source.url.clone_from(&url);
         source.width = width;
         source.height = height;
+        client.create_browser_source(&source).await.unwrap();
+    }
+    task.await.unwrap();
+}
+
+#[tokio::test]
+async fn lots_create_input_preserves_the_path_and_presentation_query() {
+    let (config, peer) = peer().await;
+    let mut client = Client::connect_with_reader(&config, &SimulatedKeychain)
+        .await
+        .unwrap();
+    let task = tokio::spawn(async move {
+        let mut socket = peer.await.unwrap();
+        for suffix in ["", "?scale=2&anchor=top-left", "?scale=&anchor="] {
+            let request = frame(&mut socket).await;
+            assert_eq!(request["d"]["requestType"], "CreateInput");
+            assert_eq!(
+                request["d"]["requestData"]["inputSettings"]["url"],
+                format!("http://localhost:43210/lots/simulated-draw{suffix}")
+            );
+            send(&mut socket, response(&request, json!({"sceneItemId":1}))).await;
+        }
+    });
+    for suffix in ["", "?scale=2&anchor=top-left", "?scale=&anchor="] {
+        let mut source = source();
+        source.url = format!("http://localhost:43210/lots/simulated-draw{suffix}");
         client.create_browser_source(&source).await.unwrap();
     }
     task.await.unwrap();

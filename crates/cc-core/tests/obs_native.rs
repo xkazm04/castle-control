@@ -1,4 +1,7 @@
 //! A simulated local OBS peer; the Hello needs no keychain credentials.
+#[allow(dead_code)]
+#[path = "lots_support/mod.rs"]
+mod lots_support;
 mod overlay_support;
 use cc_core::{AppState, NativeConfig, NativeServices, Registry, bind};
 use cc_store::Store;
@@ -164,7 +167,7 @@ async fn native_obs_rpc_reads_live_status_creates_owned_source_and_invalidates_c
     )
     .await
     .unwrap();
-    let app = service.app(32).unwrap();
+    let app = service.app_with_data_dir(64, directory.path()).unwrap();
     let request = parse_request(br#"{"method":"obs.status.get","params":{}}"#).unwrap();
     assert_eq!(
         app.registry.dispatch(&request).await.unwrap(),
@@ -219,6 +222,108 @@ async fn native_obs_rpc_reads_live_status_creates_owned_source_and_invalidates_c
         .unwrap()
         .to_owned();
     assert!(url.contains("/beacons/simulated-frame?package_hash="));
+    // A sealed, generated draw and verified visual exercise every page variant.
+    let module = app.registry.simulated_lots().unwrap();
+    overlay_support::call(
+        &app,
+        "lots.draw.upsert",
+        json!({"draw":lots_support::draw()}),
+    )
+    .await;
+    module
+        .map_user(cc_store::TwitchUserId::parse("1").unwrap(), "simulated_1")
+        .unwrap();
+    module
+        .intake(
+            &"simulated-draw".to_owned().try_into().unwrap(),
+            cc_lots::PassedMessage::from_verdict(
+                lots_support::facts("1", chrono::Utc::now() - chrono::Duration::seconds(1)),
+                cc_types::Verdict::Pass,
+            )
+            .unwrap(),
+        )
+        .unwrap();
+    overlay_support::call(
+        &app,
+        "lots.roll.seal",
+        json!({"draw_id":"simulated-draw","source":"streamer_commit","margin_s":1}),
+    )
+    .await;
+    let client = overlay_support::client();
+    let origin = service.overlay_url();
+    let input_count = || {
+        seen.lock()
+            .unwrap()
+            .iter()
+            .filter(|v| v["d"]["requestType"] == "CreateInput")
+            .count()
+    };
+    for target in [
+        origin.clone(),
+        url.clone(),
+        format!("{origin}lots/simulated-draw"),
+        format!("{origin}lots/simulated-draw?scale=2&anchor=top-left"),
+        format!("{origin}lots/simulated-draw?scale=&anchor="),
+    ] {
+        assert_eq!(
+            client.get(&target).send().await.unwrap().status(),
+            200,
+            "{target}"
+        );
+        let before = input_count();
+        overlay_support::call(&app, "obs.source.create", json!({"scene_name":"simulated-scene","source_name":"simulated-page","url":target,"width":1280,"height":720})).await;
+        let seen = seen.lock().unwrap();
+        let frames: Vec<_> = seen
+            .iter()
+            .filter(|v| v["d"]["requestType"] == "CreateInput")
+            .collect();
+        assert_eq!(frames.len(), before + 1);
+        assert_eq!(
+            frames.last().unwrap()["d"]["requestData"]["inputSettings"]["url"],
+            target
+        );
+    }
+    for path in [
+        "beacons/Upper",
+        "beacons/a--b",
+        "beacons/simulated-frame?other=1",
+        "lots/simulated-draw?other=ignored",
+        "lots/simulated-draw?package_hash=bad",
+        "?scale=2",
+        "lots/",
+    ] {
+        let target = format!("{origin}{path}");
+        assert_eq!(
+            client.get(&target).send().await.unwrap().status(),
+            404,
+            "{target}"
+        );
+        let before = input_count();
+        let request = parse_request(&serde_json::to_vec(&json!({"method":"obs.source.create","params":{
+            "scene_name":"simulated-scene","source_name":"simulated-refused","url":target,"width":1280,"height":720
+        }})).unwrap()).unwrap();
+        assert_eq!(
+            app.registry.dispatch(&request).await.unwrap_err().code,
+            ErrorCode::Invalid
+        );
+        assert_eq!(input_count(), before);
+    }
+    // Valid syntax grants no authority to an unsealed draw, even with display keys.
+    for path in ["lots/unsealed", "lots/unsealed?scale=&anchor="] {
+        let before = input_count();
+        let error = service
+            .create_source(&cc_types::ObsSourceParams {
+                scene_name: "simulated-scene".into(),
+                source_name: "simulated-unsealed".into(),
+                url: format!("{origin}{path}"),
+                width: 1280,
+                height: 720,
+            })
+            .await
+            .unwrap_err();
+        assert_eq!(error.code, ErrorCode::Invalid);
+        assert_eq!(input_count(), before);
+    }
     for (width, height) in [(1920, 1080), (1280, 720)] {
         let display_url = format!("{url}&scale=0.5&anchor=br");
         overlay_support::call(&app,"obs.source.create",json!({"scene_name":"simulated-scene","source_name":"simulated-beacons-source","url":display_url,"width":width,"height":height})).await;
@@ -250,6 +355,7 @@ async fn native_obs_rpc_reads_live_status_creates_owned_source_and_invalidates_c
         .to_owned();
     assert_ne!(url, new_url);
     assert!(new_url.ends_with(&format!("?package_hash={new_hash}")));
+    let before = input_count();
     let stale = service
         .create_source(&cc_types::ObsSourceParams {
             scene_name: "simulated-scene".into(),
@@ -261,6 +367,7 @@ async fn native_obs_rpc_reads_live_status_creates_owned_source_and_invalidates_c
         .await
         .unwrap_err();
     assert_eq!(stale.code, ErrorCode::Invalid);
+    assert_eq!(input_count(), before);
     overlay_support::call(&app,"obs.source.create",json!({"scene_name":"simulated-scene","source_name":"simulated-current","url":new_url,"width":1920,"height":1080})).await;
     let cursor = app.events.since(0).unwrap().last().unwrap().seq;
     peer.abort();

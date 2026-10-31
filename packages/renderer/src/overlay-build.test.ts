@@ -6,7 +6,7 @@ import ts from 'typescript';
 
 it('ships a local bundle rebuilt from this renderer and the lazy contract door', () => {
   const inputs = [
-    './overlay-entry.ts', './overlay.ts', './bindings.ts',
+    './overlay-entry.ts', './overlay-path.ts', './overlay.ts', './bindings.ts',
     '../../tokens/src/generated.css', './overlay.css',
     '../../contract/src/generated/beacons-render-validation.ts',
     '../../contract/src/generated/beacons-render-validators.mjs', '../../contract/src/door.mjs',

@@ -60,10 +60,59 @@ state and the latest recorded gap. Gaps publish `bridge.gap`; chat notifications
 publish `chat.message` without message bodies. M0 uses a labelled shadow/pass
 stub; M1 owns the real verdict pipeline. OBS is probed with GetVersion every two
 seconds and publishes `obs.status` changes. Source creation accepts only the
-owned spike URL from `services.overlay_url()`, or the exact accepted per-visual
-URL from `beacons.source.url`, including its verified package-hash query;
-another localhost service, stale hash or arbitrary path is refused.
+owned spike URL from `services.overlay_url()`, a per-visual URL from
+`beacons.source.url` with its current verified hash when a package is attached,
+or a sealed `/lots/{draw_id}` URL. Another localhost service, stale hash or arbitrary path
+is refused. The page grammar and guard ruling are described below.
 The overlay has its own port and read-only router, never core's RPC origin.
+
+### Overlay page grammar and guard ruling (obs-A)
+
+`cc-obs::pages` owns the page variants, route patterns, parsing and canonical
+identity paths. The core page router, native ownership check and OBS CreateInput
+guard consume it. Resource URLs (`/bundle.js`, assets and push) are not page
+capabilities. The renderer's local `parseOverlayPath` is pinned to the same
+accept/reject fixtures in `cc-obs/tests/fixtures/overlay-paths.json`.
+
+The spike `/` accepts no query. Beacons and Lots accept `scale` and `anchor`
+as presentation-only keys: empty, invalid or repeated values retain each
+renderer's existing defaults and convey no authority. Only Beacons admits
+one `package_hash`, exactly 64 lowercase hex characters; its value must match
+the current verified package for ownership. Lots ownership reads the parsed
+draw ID after stripping the query and requires a seal. No hash or display
+option can create that seal. Every other query key is rejected. Raw key names
+remain exact, with no decoding or normalization at the identity door.
+
+The ruling is that syntactically rejected page URLs return HTTP 404 and
+`obs.source.create` returns `Invalid`, without sending CreateInput. Valid
+grammar alone grants no ownership: unsealed draws and stale Beacons hashes
+also return `Invalid`. Accepted sources send the original URL verbatim.
+Scheme, exact localhost authority, nonzero port and 1..8192 size checks remain
+unchanged. `tests/overlay_pages.rs`, `tests/obs_native.rs` and the cc-obs
+protocol tests pin router/ownership/guard agreement using simulated data and
+an ephemeral OBS peer; no live OBS or Twitch claim is made.
+
+Builder evidence (2026-10-31): the new Lots CreateInput test failed with
+`Invalid` before the change, as did native source creation for the sealed draw.
+The renderer entry test first reported two Beacons connections instead of one
+because the old entry ignored unknown query keys. Final focused checks pass:
+`cargo test -p cc-obs --locked` (22 passed, 9 owner-only live tests ignored),
+`cargo test -p cc-core --test overlay_pages --test obs_native --test lots_live
+--test overlay_host --test lots_overlay_page --locked` (14 passed), and the renderer test script
+(150 passed across 19 files, including the 45-row shared grammar and bundle
+fingerprint). Renderer typecheck/lint, workspace formatting/Clippy, hygiene,
+boundaries, file cap, secrets and the desktop build/bundle budget pass.
+The required `pnpm gate` stops at unchanged contract codegen with
+`spawnSync cargo EPERM`; recursive pnpm typecheck/lint/test fail in the
+lifecycle runner with `spawn EPERM`. Base `docs/PLAN.md` already records these
+process-spawn restrictions. No full pnpm gate pass is claimed.
+The initial full `cargo test --workspace --locked` run found a legacy
+`tests/lots_overlay_page.rs` row expecting 200 for `?other=ignored`. The Director
+approved extending the write set to that test: only that row moves to explicit
+404 and refused-ownership assertions; every display/default/injection check
+remains unchanged. The native agreement test also pins `Invalid` with no
+CreateInput for that exact query on a sealed draw. The Director reruns the full
+gate and recursive checks outside the sandbox.
 
 ## WP 3.2 accepted overlay state
 
@@ -448,9 +497,10 @@ portion of WP 3.2 acceptance only. It does **not** display a design package.
 Still pending: the package interpreter and shared OBS/Extension host bundle,
 verified package/asset hashing and confined local asset loading, script privilege
 consent, live intensity delivery, subsecond updates, and unchanged-intensity DOM
-reuse. `obs.source.create` still accepts only the existing root connection-test
-URL; accepting per-visual sources with verified-hash cache busting remains with
-that rendering work. This delivery changes no contract identifier or export.
+reuse. That was this slice's original scope; subsequent rendering work accepts
+verified per-visual sources, and obs-A adds sealed Lots pages through the shared
+grammar above. The root connection-test URL remains accepted. No wire contract
+identifier is added by obs-A.
 
 Evidence: `tests/beacons_offline.rs` checks registration and offline errors;
 `tests/offline_registration.rs` exercises these errors with no I/O driver and
