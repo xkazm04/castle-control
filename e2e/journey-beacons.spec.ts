@@ -76,3 +76,43 @@ test('Beacons streamer journey: tune, test fire, inspect and copy a simulated so
   await auditStyles(page, desktopSurfaces);
   await auditFields(page);
 });
+
+test('Beacons night replay: a pinned night, a fit, the way back, and a sealed Steward proposal', async ({ page }) => {
+  await page.goto('/#/chamber/visuals');
+  const replay = page.getByRole('article', { name: 'Night replay' });
+  const verdict = replay.locator('.visuals-replay-verdict [role="status"]');
+  await expect(replay).toContainText('SIMULATED');
+  await expect(replay).toContainText('Money affects visuals only');
+  await replay.getByRole('button', { name: 'Gift wave', exact: true }).click();
+  await expect(verdict).toContainText('Pinned at max for 8 of 48 minutes · first pinned at minute 30');
+  // The lane runs with reduced motion: the night is drawn whole and Play stays off.
+  await expect(replay.getByRole('button', { name: 'Play', exact: true })).toBeDisabled();
+  await replay.getByRole('slider', { name: /^Scrub the night/ }).fill('1860');
+  await expect(replay.getByText('Gift wave · 31:00 / 48:00')).toBeVisible();
+  await expect(replay.locator('.visuals-replay-stamp')).toHaveText('Pinned at max');
+  await expect(replay.locator('[data-pinned-band]')).not.toHaveCount(0);
+  await expect(replay.locator('[data-first-lit]')).toHaveText('first lit · 12:05');
+  const fit = replay.getByRole('button', { name: "Fit the top point to this night's peak · move it to 167", exact: true });
+  await fit.click();
+  await expect(verdict).toContainText('Peak 99% at minute 33 · never pinned');
+  await expect(verdict).toContainText('Dashed, the sample curve: saturates');
+  await expect(replay.locator('[data-trace="before"]')).toHaveCount(1);
+  await expect(replay.locator('.visuals-replay-peak-label')).toContainText('peak 99%');
+  await replay.getByRole('button', { name: 'Back to the sample curve', exact: true }).click();
+  await expect(verdict).toContainText('Pinned at max for 8 of 48 minutes');
+  await expect(replay.locator('[data-trace="before"]')).toHaveCount(0);
+  await fit.click();
+  await replay.getByRole('button', { name: 'Send curve to the Steward', exact: true }).click();
+  await expect(replay).toContainText('Draft · revision 1 · not on air');
+  const hold = page.getByRole('button', { name: /hold to seal/i });
+  await expect(hold).toHaveCount(1);
+  await hold.focus(); await page.keyboard.down('Space');
+  await expect(replay).toContainText('Sealed · this is the curve');
+  await page.keyboard.up('Space');
+  await replay.getByRole('button', { name: 'Sub train', exact: true }).click();
+  await expect(verdict).toContainText('Never lit · the night peaks at 9.9 weighted subs');
+  await expect(replay.locator('.visuals-replay-stamp')).toHaveText('Never lit tonight');
+  await expect(replay.locator('[data-first-lit]')).toHaveCount(0);
+  await auditStyles(page, desktopSurfaces);
+  await auditFields(page);
+});

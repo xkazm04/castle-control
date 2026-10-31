@@ -16,6 +16,26 @@ does not call OBS or create a real contribution. Draft artwork from the shared
 proposal queue is marked `DRAFT` and does not silently replace the current look.
 Source: [fixture room](../../apps/desktop/src/rooms/visuals/README.md).
 
+### Replay a night (fixture mode)
+
+**Replay a night** sits under the plates. Pick **Sample night** (the 60
+illustrative offerings), **Gift wave**, **Raid spike** or **Sub train**, then
+**Play** at 1x, 10x or 30x (the whole 48 minutes in 96 s), or scrub with the
+range or by pressing on the trace; pointing at the trace reads any minute's
+blaze and weighted subs without moving the playhead. The trace runs every generated offering
+through the preview model's own weighting, decay and curve, so only gifts and
+subs count; bits, points and Hype Train marks stay as muted ticks. Shaded
+**pinned at max** spans mark minutes past the curve's top point, and **Never
+lit** means the total never reaches the curve's second point. Drag a point in
+the replay's curve (or Tab to it and use arrows, Shift for ten) and the whole
+night re-runs; the last sealed curve (or the sample curve) stays dashed, and
+**Back to the sealed curve** puts it back in one press. The trace names its **lit**
+line and flags the minute the night first lights. One button offers a single
+fitted point move (a pinned or never-lit night, or a peak under 90%). **Send curve to the Steward** drafts a proposal; nothing
+changes until you hold to seal. Reduced motion draws the static trace only.
+Every night is generated and simulated. Source:
+[night replay](../../apps/desktop/src/rooms/visuals/README.md).
+
 Core mode reads the registered visual list. Save a visual, edit its kindling
 curve and decay, and use the labelled simulation controls to inspect synthetic
 intensity. Dragging a curve point previews a draft; release saves it. Focus a
