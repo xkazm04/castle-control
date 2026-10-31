@@ -60,7 +60,7 @@ export function NightReplay({ item, editor, queue = proposalQueue, initial_night
       : `Not sent: ${result.reason}` });
   };
   return <HeraldicCard variant="panel" className="visuals-replay" aria-label="Night replay">
-    <CardHead title="Replay a night" gloss="tune against time, not single events" />
+    <CardHead title={`Replay a night · ${item.visual.name}`} gloss="tune against time, not single events" />
     <CardBody>
     <div className="visuals-replay-nights" role="group" aria-label="Sample night">
       {sampleNights.map(option => <InkButton key={option.id} size="small" aria-pressed={option.id === night_id}
@@ -88,8 +88,10 @@ export function NightReplay({ item, editor, queue = proposalQueue, initial_night
       lit_intensity={curveIntensity(curve, trace.lit_total)} on_seek={clock.seek}
       label={`${item.visual.name} intensity across the simulated 48-minute ${night.name.toLowerCase()} · ${verdict.text}`} />
     <div className="visuals-replay-verdict" data-tone={verdict.tone}>
-      <p role="status" aria-live="polite"><b>{verdict_words[verdict.tone]}</b> {verdict.text}
-        {before && <span className="visuals-replay-legend"> · dashed: the last sealed curve</span>}</p>
+      <div role="status" aria-live="polite">
+        <p><b>{verdict_words[verdict.tone]}</b> {verdict.text}</p>
+        {before && <p className="visuals-replay-legend">Dashed, the last sealed curve: {verdict_words[replayVerdict(before).tone].toLowerCase()} · {replayVerdict(before).text}</p>}
+      </div>
       {fit && <InkButton size="small" disabled={editing.phase === 'saving'} onClick={applyFit}>{fit.label}</InkButton>}
     </div>
     <div className="visuals-replay-tune">

@@ -41,7 +41,7 @@ test('the room shows the simulated replay above the bench without fetching anyth
   const network = vi.spyOn(globalThis, 'fetch');
   try {
     const html = renderToStaticMarkup(<VisualsWork />);
-    for (const text of ['Replay a night', 'Sample night · 00:00 / 48:00', 'SIMULATED', 'Money affects visuals only',
+    for (const text of ['Replay a night · Offering altar', 'Sample night · 00:00 / 48:00', 'SIMULATED', 'Money affects visuals only',
       'Send curve to the Steward', 'Scrub the night', '1×', '10×', '30×']) expect(html).toContain(text);
     expect(html.match(/data-offering-tick=/g)).toHaveLength(60);
     expect(html.match(/class="visuals-replay-tick"/g)).toHaveLength(bursts.length);
@@ -97,7 +97,7 @@ test('the replay draws the last sealed curve dashed once the draft differs', () 
   if (!item) throw new Error('Missing generated altar');
   const html = renderToStaticMarkup(<NightReplay item={item} editor={editor} queue={queue} />);
   expect(html).toContain('data-trace="before"');
-  expect(html).toContain('dashed: the last sealed curve');
+  expect(html).toContain('Dashed, the last sealed curve: climbs · Peak');
 });
 
 test('replay styles stay token-only', () => {
