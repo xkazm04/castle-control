@@ -8,7 +8,10 @@ import { beaconsCopy as copy } from '../../beacons-copy.js';
 import { ProposalLayers } from './proposal-layers.jsx';
 import { Offerings } from './timeline.jsx';
 import { TestFire } from './test-fire.jsx';
-import { KindlingCurve } from './kindling-curve.jsx';
+import { FixtureCurve } from './fixture-curve.jsx';
+import { FixtureSourceCopy } from './source-copy.jsx';
+import { createAppearanceSession } from './appearance-state.js';
+import { AppearanceControls } from './appearance.jsx';
 import CoreVisualsRoom from './core.jsx';
 import { ContributionFeed } from './event-feed.jsx';
 import { InputPicker } from './input-picker.jsx';
@@ -23,7 +26,8 @@ export function VisualSelector({ visuals, selected, on_select, draft }: {
 }
 
 export function VisualsWork({ queue, port, seal_slot }: { queue?: ProposalQueue; port?: BeaconsPort; seal_slot?: ReactNode }) {
-  const [adapter, setAdapter] = useState(() => port ?? createBeaconsPreview());
+  const [adapter] = useState(() => port ?? createBeaconsPreview());
+  const [appearance] = useState(createAppearanceSession);
   const preview = useSyncExternalStore(adapter.subscribe, adapter.getSnapshot, adapter.getSnapshot);
   const selected = preview.visuals.find(item => item.visual.visual_id === preview.selected);
   if (!selected) return <p role="status">{copy.no_visual}</p>;
@@ -35,10 +39,14 @@ export function VisualsWork({ queue, port, seal_slot }: { queue?: ProposalQueue;
         <BeaconBay title={copy.driven_by} gloss={copy.input_gloss}>
           <InputPicker source={selected.visual.input?.source ?? ''} busy={false} on_change={adapter.input} />
           <p className="visuals-note">{copy.fixture_input_note}</p>
+          <AppearanceControls session={appearance} visual={selected.visual} intensity={selected.intensity} burst={preview.events[0]?.id ?? 0} />
         </BeaconBay>
-        <BeaconBay title={copy.curve} gloss={copy.curve_gloss}><KindlingCurve item={selected} /></BeaconBay>
+        <BeaconBay title={copy.curve} gloss={copy.curve_gloss}>
+          <FixtureCurve key={preview.selected} item={selected} port={adapter} />
+        </BeaconBay>
         <BeaconBay title={copy.test_fire} gloss={copy.test_gloss}>
-          <TestFire port={adapter} selected={selected} on_end={() => setAdapter(createBeaconsPreview())} />
+          <TestFire port={adapter} selected={selected} on_end={adapter.end} />
+          <FixtureSourceCopy port={adapter} visual={selected.visual} />
         </BeaconBay>
       </BeaconBench>
       <div className="visuals-room-details visuals-panels">

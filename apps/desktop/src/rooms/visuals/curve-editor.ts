@@ -14,13 +14,17 @@ function frozen(curve: IntensityCurve): IntensityCurve {
 }
 
 /** Local drafts only. Accounting and the authoritative curve remain in core. */
-export function createCurveEditor(visual: Visual, port: CoreBeaconsPort) {
+export function createCurveEditor(visual: Visual, port: {
+  getSnapshot: () => { busy: boolean; error?: { code: string } }; setCurve: CoreBeaconsPort['setCurve'];
+},
+  preview?: (curve: IntensityCurve) => void) {
   const confirmed = frozen(visual.curve);
   let state: CurveState = Object.freeze({ draft: confirmed, confirmed, phase: 'idle', notice: 'Core-confirmed curve.' });
   let drag: { index: number; pointer_id: number; maximum: number } | undefined;
   const listeners = new Set<() => void>();
   function publish(change: Partial<CurveState>) {
     state = Object.freeze({ ...state, ...change });
+    if (change.draft) preview?.(change.draft);
     for (const listener of listeners) listener();
   }
   const busy = () => state.phase === 'saving' || port.getSnapshot().busy;

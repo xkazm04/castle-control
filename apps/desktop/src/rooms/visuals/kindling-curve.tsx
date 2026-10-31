@@ -58,8 +58,8 @@ function dragPoint(event: PointerEvent<SVGCircleElement>, editor: CurveEditor) {
     (event.clientY - rect.top) / rect.height * 164 - 12);
 }
 
-export function CurveControls({ editor, state, busy }: {
-  editor: CurveEditor; state: ReturnType<CurveEditor['getSnapshot']>; busy: boolean;
+export function CurveControls({ editor, state, busy, local = false }: {
+  editor: CurveEditor; state: ReturnType<CurveEditor['getSnapshot']>; busy: boolean; local?: boolean;
 }) {
   const { draft } = state;
   const disabled = busy || state.phase === 'saving';
@@ -68,7 +68,7 @@ export function CurveControls({ editor, state, busy }: {
   return <form className="visuals-core-form visuals-curve-editor" aria-label="Kindling curve editor"
     onSubmit={event => { event.preventDefault(); void editor.save(); }}>
     <h2>The kindling curve · contribution to intensity</h2>
-    <p id="visuals-curve-help">Draft preview only. Drag a point and release to save. Tab to a point, then use arrows:
+    <p id="visuals-curve-help">{local ? 'SIMULATED local preview.' : 'Draft preview only.'} Drag a point and release to save. Tab to a point, then use arrows:
       left/right moves 1 contribution unit; up/down moves 1% intensity. Hold Shift for 10 units or 10%.
       Enter saves; Escape cancels. Totals stay in order. OBS delivery is unavailable.</p>
     <svg viewBox="-12 -12 624 164" preserveAspectRatio="none" role="group" aria-label="Editable contribution to intensity curve">
@@ -91,7 +91,7 @@ export function CurveControls({ editor, state, busy }: {
         onLostPointerCapture={event => editor.cancelPointer(event.pointerId)} />)}
     </svg>
     <p role={state.phase === 'error' ? 'alert' : 'status'} aria-live={state.phase === 'error' ? 'assertive' : 'polite'}
-      aria-atomic="true">{state.notice}</p>
+      aria-atomic="true">{local ? copy.local_curve_notice : state.notice}</p>
     {draft.ranges.map((point, index) => <fieldset key={index} disabled={disabled}>
       <legend>Control point {index + 1}</legend>
       <label>Contribution total<input name={`total-${index}`} type="number" min={draft.ranges[index - 1] ? (draft.ranges[index - 1]?.total ?? 0) + 1 : 0}
@@ -109,7 +109,7 @@ export function CurveControls({ editor, state, busy }: {
     {draft.decay.kind === 'exponential' && <label>Half-life (seconds)<input name="half_life_s" type="number" min="1"
       max="4294967295" step="1" required disabled={disabled} value={draft.decay.half_life_s}
       onChange={event => editor.setDecay({ kind: 'exponential', half_life_s: event.currentTarget.valueAsNumber })} /></label>}
-    <button type="submit" disabled={disabled}>Save curve to core</button>
+    <button type="submit" disabled={disabled}>{local ? copy.save_local_curve : 'Save curve to core'}</button>
     <button type="button" disabled={disabled} onClick={() => editor.cancel()}>Cancel curve edits</button>
   </form>;
 }

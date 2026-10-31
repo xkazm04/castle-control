@@ -1,0 +1,17 @@
+.visuals-appearance { display: grid; gap: var(--space-12); min-width: 0; }
+.visuals-appearance > p { margin: 0; }
+.visuals-appearance-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-10); }
+.visuals-appearance-fields .cc-field { min-width: 0; }
+.visuals-appearance-fields :is(input, select) { width: 100%; min-width: 0; appearance: none; border: var(--rule-thin) solid var(--ink); background: var(--card); color: var(--ink); font: var(--text-body)/1.4 var(--font-ui); padding: var(--space-7) var(--space-10); border-radius: var(--r-sm); }
+.visuals-room .visuals-appearance-fields .cc-field[data-field] input { appearance: none; border: var(--rule-thin) solid var(--ink); }
+.visuals-appearance-preview { position: relative; display: grid; height: calc(var(--space-56) * 3); padding: var(--space-12); border: var(--rule-thin) solid var(--line); background: var(--paper-2); overflow: hidden; }
+.visuals-appearance-preview > .cc-chip { position: absolute; top: var(--space-4); left: var(--space-4); }
+.visuals-appearance-object { width: 65%; height: 75%; align-self: end; justify-self: start; transform: scale(var(--beacon-scale)); transform-origin: bottom left; border-bottom: var(--rule-strong) solid var(--beacon-colour); background: radial-gradient(ellipse at bottom, var(--beacon-colour), transparent 70%); opacity: calc(.4 + var(--beacon-blaze) * .6); animation: beacon-room-burst var(--beacon-burst-duration) ease-out; }
+.visuals-appearance-object > img { width: 100%; height: 100%; object-fit: contain; }
+.visuals-appearance-object .visuals-room-art { height: 100%; }
+.visuals-appearance-preview[data-anchor="top-left"] .visuals-appearance-object { align-self: start; transform-origin: top left; }
+.visuals-appearance-preview[data-anchor="top-right"] .visuals-appearance-object { align-self: start; justify-self: end; transform-origin: top right; }
+.visuals-appearance-preview[data-anchor="center"] .visuals-appearance-object { align-self: center; justify-self: center; transform-origin: center; }
+.visuals-appearance-preview[data-anchor="bottom-right"] .visuals-appearance-object { justify-self: end; transform-origin: bottom right; }
+@keyframes beacon-room-burst { from { filter: brightness(1.8); } to { filter: brightness(1); } }
+@media (prefers-reduced-motion: reduce) { .visuals-appearance-object { animation: none; } }

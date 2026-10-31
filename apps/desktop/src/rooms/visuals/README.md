@@ -1,5 +1,69 @@
 # Beacons · C Plates (WP 3.3 polish, 2026-10-30)
 
+## L3 streamer journey, 2026-10-31
+
+Open `#/chamber/visuals` without a native launch (fixture mode). Pick a plate
+with click or the existing radio keys. The bench now exposes the existing curve
+model through labelled points, numeric ranges, decay/half-life and gift-sub
+weighting. Dragging changes the selected preview immediately; release saves
+locally. Arrows/Shift+arrows edit, Enter saves and Escape restores the last local
+save without reaching shell navigation. Accounting and other visuals stay intact.
+Each editor stays bound to its original visual; late local save completion after
+switching plates cannot replace the next visual's curve (proved red then green).
+The 50-gift test adds exactly 50 SIMULATED rows. The explicit 60-second clock
+applies decay; End test fire resets test accounting/feed/clock while retaining
+the selected visual, curves, routing, weighting and appearance settings.
+
+The new appearance preview has kit-labelled native controls for S/M/L size,
+anchor, token ink (gold/red/blue/key), and burst duration (integer 0–60000 ms).
+Altar art consumes the six kept `styles` and `art(style, 'altar')` from the demo
+model read-only. Other shapes retain their existing artwork and do not expose
+an ineffective art-style picker. Size/anchor affect placement; ink colours the
+preview glow; intensity controls its opacity; a test burst starts a duration-
+controlled highlight. Reduced motion disables the highlight animation.
+
+Appearance is a per-visual room-session map in fixture and connected core mode.
+`Visual` has no `size`, `anchor`, `colour`, `art_style`, `burst_ms` or
+`gift_weight` fields. No unsupported field is sent to an RPC. Core curve editing
+still saves ranges and decay through `beacons.curve.set`; existing visual
+creation/input editing stays on `beacons.visual.upsert`. Fixture curves and
+gift weighting remain local. Leaving the room discards this session state.
+Only the existing core simulation supplies a core preview intensity; missing
+live measurements still say unavailable.
+
+Fixture Copy browser-source URL copies the pre-existing validated
+`fixture-not-live` example and explicitly says it is SIMULATED and not a live
+source. Core copy still calls `beacons.source.url` unchanged. Its confirmation
+names the captured visual and says to paste into an OBS browser source, even if
+selection changed while the clipboard was pending. Capability URLs never enter
+the read snapshot or confirmation text. Denied clipboard access reports failure
+and requires an explicit retry. Optional paid art remains hidden without a key;
+the kept sample-art picker makes no paid call.
+
+### Verification and handoff
+
+`e2e/journey-beacons.spec.ts` was written before implementation. It reuses the
+unaltered network and style audits and walks selection, keyboard/pointer edits,
+decay, weighting, all appearance parameters, test fire, virtual feed, decay
+clock, copy confirmation and configuration-preserving End test fire at both
+configured viewport sizes. The Director runs Chrome; no browser or OBS pass is
+claimed by the builder. Expected-red base assertions: no fixture curve form or
+point controls, no weighting/appearance controls or kept altar image, no fixture
+copy action/confirmation, and End test fire discards configuration.
+
+The first Vitest run recorded five new failures (four journey assertions plus
+visual-specific core copy feedback), with nine existing source-copy tests green.
+New handler/model tests additionally cover immediate drag intensity, save/cancel,
+unchanged accounting, all six art URLs, per-visual session isolation, invalid
+parameter rejection and clipboard failure. All existing Beacons tests are kept.
+Desktop typecheck/lint and e2e TypeScript validation pass. Final narrowed test
+counts and exact commands are recorded in external `result.json`.
+
+Lane L5 still owns renderer/scene/overlay output. These local parameter controls
+do not change OBS. Persisting/rendering the missing fields requires a separate
+contract delivery and L5 integration; no overlay bundle, demo, kit, token,
+contract, dependency or Rust file is changed here. No install or git write ran.
+
 Reconciled at `683b0f6`: the earlier two-column room was still present. The
 binding pick is `prototype/polish-2026-10-30/visuals/variant-c.html`; acceptance
 pictures are `_shots/visuals-c-paper.png` and `_shots/visuals-c-stock.png`.

@@ -11,7 +11,8 @@ export type BeaconsPort = {
   select: (id: VisualId) => void; point: (index: number, point: IntensityRange) => void;
   input: (source: ContributionSource | '') => void;
   decay: (decay: IntensityDecay) => void; weight: (weight: number) => void;
-  fire: (source: 'gift' | 'subscribe', count: number) => void; advance: () => void; reset: () => void;
+  curve: (curve: IntensityCurve) => void;
+  fire: (source: 'gift' | 'subscribe', count: number) => void; advance: () => void; reset: () => void; end: () => void;
 };
 
 export function curveIntensity(curve: IntensityCurve, total: number): number {
@@ -57,6 +58,7 @@ export function createBeaconsPreview(): BeaconsPort {
   const selected = () => snapshot.visuals.find(item => item.visual.visual_id === snapshot.selected);
   return {
     getSnapshot: () => snapshot,
+    curve: setCurve,
     subscribe(listener) { listeners.add(listener); return () => { listeners.delete(listener); }; },
     select(id) { if (snapshot.visuals.some(item => item.visual.visual_id === id)) publish({ ...snapshot, selected: id }); },
     input(source) {
@@ -102,6 +104,14 @@ export function createBeaconsPreview(): BeaconsPort {
     reset() {
       const original = fixtureVisuals.find(item => item.visual_id === snapshot.selected);
       if (original) update(item => ({ ...item, visual: original, gift_weight: 1 }), 'Curve, decay and weighting reset locally.');
+    },
+    end() {
+      publish({ ...snapshot, events: fixtureEvents, elapsed_s: 0, notice: 'Test fire ended · simulated accounting reset; configuration kept.',
+        visuals: snapshot.visuals.map((item, index) => {
+          const total = 18 + index * 6;
+          return { ...item, total, intensity: curveIntensity(item.visual.curve, total) };
+        }),
+      });
     },
   };
 }

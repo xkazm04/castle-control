@@ -5,6 +5,8 @@ import { createCoreBeaconsPort } from '../../beacons-core.js';
 import type { BeaconsNetwork } from '../../beacons-core.js';
 import { ConnectedBeacons } from './core.jsx';
 import { BrowserSourceButton, BrowserSourceNotice, createBrowserSourceCopy } from './source-copy.jsx';
+import { createFixtureSourceCopy } from './source-copy.jsx';
+import { createBeaconsPreview } from '../../beacons-model.js';
 
 const visual_id = 'simulated-frame' as VisualId;
 const url = 'http://localhost:4312/beacons/simulated-frame';
@@ -23,6 +25,39 @@ function harness() {
   return { port, rpc, writeText, copy, notice, button };
 }
 afterEach(() => { vi.unstubAllGlobals(); });
+
+test('copy confirmation identifies the captured visual even if selection changes while copying', async () => {
+  const h = harness(); await h.port.load();
+  let finish: () => void = () => { throw new Error('Missing pending clipboard'); };
+  h.writeText.mockImplementationOnce(() => new Promise(resolve => { finish = resolve; }));
+  const copying = h.copy.copy(visual_id);
+  await vi.waitFor(() => expect(h.writeText).toHaveBeenCalledOnce());
+  const second = h.port.getSnapshot().visuals[1];
+  if (!second) throw new Error('Missing generated second visual');
+  h.port.select(second.visual_id);
+  finish(); await copying;
+  expect(h.notice()).toContain('Copied for Simulated frame');
+  expect(h.notice()).toContain('Paste into an OBS browser source');
+});
+
+test('fixture copy labels the exact simulated example and clipboard failure never claims success', async () => {
+  const port = createBeaconsPreview();
+  const network = vi.spyOn(globalThis, 'fetch');
+  const writeText = vi.fn<(value: string) => Promise<void>>(async () => undefined);
+  vi.stubGlobal('navigator', { clipboard: { writeText } });
+  try {
+    const source = createFixtureSourceCopy(port);
+    await source.copy(port.getSnapshot().selected);
+    expect(writeText).toHaveBeenCalledExactlyOnceWith('http://localhost:4821/fixture-not-live/offering-altar');
+    expect(source.getSnapshot().notice).toContain('SIMULATED example URL copied for Offering altar');
+    expect(source.getSnapshot().notice).toContain('Not a live browser source');
+    writeText.mockRejectedValueOnce(new Error('denied'));
+    await source.copy(port.getSnapshot().selected);
+    expect(source.getSnapshot().phase).toBe('error');
+    expect(source.getSnapshot().notice).not.toContain('copied');
+    expect(network).not.toHaveBeenCalled();
+  } finally { network.mockRestore(); }
+});
 
 test('connected room offers one native copy action per visual and an accessible status', async () => {
   const h = harness(); await h.port.load();

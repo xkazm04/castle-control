@@ -11,6 +11,8 @@ import { ContributionFeed } from './event-feed.jsx';
 import { LiveContributionFeed } from './live-feed.jsx';
 import { EditableKindlingCurve } from './kindling-curve.jsx';
 import { VisualEditor } from './visual-editor.jsx';
+import { createAppearanceSession } from './appearance-state.js';
+import { AppearanceControls } from './appearance.jsx';
 import { contribution_sources as sources, inputDescription, source_labels } from './contribution-input.js';
 import { BeaconPlates } from './plates.jsx';
 import { BeaconBay, BeaconBench, SealPanel } from './bench.jsx';
@@ -24,6 +26,7 @@ export function ConnectedBeacons({ port, seal_slot }: { port: CoreBeaconsPort; s
   const source_copy = useMemo(() => createBrowserSourceCopy(port), [port]);
   const copy_state = useSyncExternalStore(source_copy.subscribe, source_copy.getSnapshot, source_copy.getSnapshot);
   const [creating, setCreating] = useState(false);
+  const [appearance] = useState(createAppearanceSession);
   useEffect(() => { void port.load(); void port.loadContributions({ limit: 100 }); }, [port]);
   useEffect(() => { void port.loadArtStatus(); }, [port]);
   const visual = state.visuals.find(item => item.visual_id === state.selected);
@@ -45,6 +48,9 @@ export function ConnectedBeacons({ port, seal_slot }: { port: CoreBeaconsPort; s
           <InkButton size="wrap" disabled={state.busy} onClick={() => setCreating(true)}>New visual</InkButton>
           <VisualEditor key={`visual-${creating ? 'new' : JSON.stringify(visual)}`} port={port} busy={state.busy}
             {...(!creating && visual ? { visual } : {})} />
+          {visual && <AppearanceControls session={appearance} visual={visual}
+            {...(state.simulation?.intensity.visual_id === visual.visual_id ? { intensity: state.simulation.intensity.intensity } : {})}
+            burst={state.events[0]?.id ?? 0} />}
         </BeaconBay>
         <BeaconBay title={copy.curve} gloss={copy.core_curve}>
           {visual && <EditableKindlingCurve visual={visual} port={port} busy={state.busy} />}
