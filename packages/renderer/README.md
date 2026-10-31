@@ -27,6 +27,8 @@ before sending or serving them. The renderer never evaluates package strings,
 creates inline scripts, or loads a remote URL. CSP and native verification are
 the enforcement boundary; the renderer does not invent a consent wire field.
 
+The overlay embeds `packages/tokens/src/generated-base.css` for its theme and layout tokens, omitting the unused Cutaway, motion and type-scale groups to stay within its bundle budget.
+
 `apps/overlay` contains only the static shell and built output, with no new pnpm
 member. Rebuild using the installed desktop Vite CLI:
 

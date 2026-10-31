@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { expect, test } from 'vitest';
-import { renderMirror, renderStylesheet } from './render.js';
+import { renderBaseStylesheet, renderMirror, renderStylesheet } from './render.js';
 import { layoutTokens, stockLayoutTokens, themeTokens } from './source.js';
 
 const read = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf8');
@@ -29,7 +29,22 @@ test('every prototype token value is byte-equal, in both themes', () => {
   }
 });
 
-test('generated CSS and typed mirror have no drift', () => {
+test('base CSS contains exactly the pre-Cutaway groups in both themes', () => {
+  const blocks = [...renderBaseStylesheet().matchAll(/(?:^|\n)([^{}\n]+)\s*\{([^}]+)\}/g)];
+  expect(blocks.map(block => block[1]?.trim())).toEqual([':root, [data-theme="paper"]', '[data-theme="stock"]']);
+  const themes = [[themeTokens.paper, layoutTokens], [themeTokens.stock, stockLayoutTokens]];
+  for (const [index, groups] of themes.entries()) {
+    const body = blocks[index]?.[2];
+    if (!body) throw new Error('Missing base theme');
+    const entries = groups.flatMap(group => Object.entries(group));
+    expect([...body.matchAll(/--([\w-]+):/g)].map(match => match[1]))
+      .toEqual(entries.map(([name]) => name));
+    for (const [name, value] of entries) expect(body).toContain(`--${name}:${value};`);
+  }
+});
+
+test('both generated CSS sheets and typed mirror have no drift', () => {
   expect(read('./generated.css')).toBe(renderStylesheet());
+  expect(read('./generated-base.css')).toBe(renderBaseStylesheet());
   expect(read('./generated.ts')).toBe(renderMirror());
 });
