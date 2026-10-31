@@ -1,4 +1,4 @@
-import { useEffect, useRef, useSyncExternalStore } from 'react';
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { ProposalCard } from '@castle-control/ui';
 import { DesignFocus, designSession } from '@castle-control/ui/design';
 import type { ArtifactId, DesignSession, DesignSnapshot } from '@castle-control/ui/design';
@@ -37,16 +37,20 @@ export function RoomDesignProposal({ proposal, artifact, focused, on_open, sessi
 export function RoomDesignProposalView({ proposal, artifact, focused, on_open, session, snapshot }: {
   proposal: Proposal; artifact: ArtifactId; focused: boolean; on_open: () => void; session: DesignSession; snapshot: DesignSnapshot;
 }) {
+  const [error, setError] = useState<{ proposal_id: string; artifact: ArtifactId; reason: string }>();
+  const capture = (result: { readonly ok: true } | { readonly ok: false; readonly reason: string }) => {
+    setError(result.ok ? undefined : { proposal_id: proposal.id, artifact, reason: result.reason });
+  };
   const preview = snapshot.previews[proposal.id];
   const ready = preview !== undefined && session.canSeal(preview);
   return <section className="room-design-proposal" aria-label={`${roomArtifactLabels[artifact]} proposal`}>
     <p>SIMULATED · {roomArtifactLabels[artifact]} · {ready ? 'Preview ready' : preview ? 'Stale draft · preview again' : 'Preview required'}</p>
     <button type="button" onClick={on_open}>Review design</button>
-    <button type="button" onClick={() => { session.preview(proposal.id); on_open(); }}>Preview draft</button>
+    <button type="button" onClick={() => { capture(session.preview(proposal.id)); on_open(); }}>Preview draft</button>
     <ProposalCard key={`${proposal.id}:${proposal.revision}:${preview?.base_revision}:${ready}`}
       proposal={proposal} focused={focused} busy={!ready}
       on_focus={() => { if (session.queue.getSnapshot().selected_proposal_id !== proposal.id) session.queue.select(proposal.id); }}
-      on_tear={() => session.tearUp(proposal.id)} on_seal={() => { if (preview) session.seal(preview); }} />
-    {snapshot.error && <p role="alert">{snapshot.error}</p>}
+      on_tear={() => capture(session.tearUp(proposal.id))} on_seal={() => { if (preview) capture(session.seal(preview)); }} />
+    {error?.proposal_id === proposal.id && error.artifact === artifact && <p role="alert">{error.reason}</p>}
   </section>;
 }
