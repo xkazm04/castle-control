@@ -7,6 +7,43 @@ import Room, { VisualsWork } from './room.jsx';
 import { fixtureOfferings } from '../../beacons-fixture.js';
 import { createBeaconsPreview } from '../../beacons-model.js';
 import { tokens } from '@castle-control/tokens';
+import { createCoreBeaconsPort } from '../../beacons-core.js';
+import { ConnectedBeacons } from './core.jsx';
+import { ArtControls } from './art.jsx';
+import { createArtGeneration } from './art-state.js';
+
+test('fixture and core Beacons markup never place an h2 after an h3 inside .visuals-bench', async () => {
+  const port = createCoreBeaconsPort({ mode: 'core', endpoint: 'http://127.0.0.1:3210/', session_token: 'a'.repeat(64) },
+    { rpc: async () => ({ visuals: [{ visual_id: 'synthetic-heading', name: 'Synthetic heading',
+      curve: { ranges: [{ total: 0, intensity: 0 }, { total: 50, intensity: 1 }], decay: { kind: 'none' } },
+    }] }) });
+  await port.load();
+  for (const room of [<VisualsWork />, <ConnectedBeacons port={port} />]) {
+    const html = renderToStaticMarkup(room);
+    const bench = html.slice(html.indexOf('visuals-bench'), html.indexOf('visuals-room-details'));
+    expect(bench).toContain('<h3');
+    expect(bench).not.toMatch(/<h[12](?:\s|>)/);
+    expect(bench).not.toMatch(/<h[45][^>]*>[^<]*(The kindling curve|Test fire|Driven by)/);
+  }
+});
+
+test('art outside the bays sits below the h2 configuration panel and its receipts sit below art', async () => {
+  const port = createCoreBeaconsPort({ mode: 'core', endpoint: 'http://127.0.0.1:3210/', session_token: 'a'.repeat(64) },
+    { rpc: async () => ({ visuals: [{ visual_id: 'synthetic-art-heading', name: 'Synthetic art heading',
+      curve: { ranges: [{ total: 0, intensity: 0 }], decay: { kind: 'none' } },
+    }] }) });
+  await port.load();
+  const visual = port.getSnapshot().visuals[0];
+  if (!visual) throw new Error('Missing synthetic visual');
+  const art = createArtGeneration(port, visual.design_id);
+  const html = renderToStaticMarkup(<ArtControls art={art} visual={visual} state={{ ...art.getSnapshot(),
+    result: { design_id: 'synthetic-design' as NonNullable<typeof visual.design_id>, assets: [], costs: [] },
+  }} />);
+  expect(html).toContain('<h3>Generate art</h3>');
+  expect(html).toContain('<h4>Returned assets</h4>');
+  expect(html).toContain('<h4>Cost receipt from core</h4>');
+  expect(html).not.toContain('<h2>');
+});
 
 // C replaces the standalone figure and boxed tiers with literal radio plates and stair ramps.
 test('C plate inset and active stairs track the unchanged preview totals', () => {

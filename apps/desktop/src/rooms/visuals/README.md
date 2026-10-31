@@ -1,5 +1,45 @@
 # Beacons · C Plates (WP 3.3 polish, 2026-10-30)
 
+## Stabilize beacons-01/02/03/09, 2026-10-31
+
+Re-anchored at `4d936e1`, after `d1df7eb`, `4f8f45a` and `14d2e78`.
+The four named failing-first suites recorded 10 failures and 17 passes before
+product edits: duplicate/create completion, route defaults/disclosure/refusal,
+failed-load versus empty copy, heading outline, and the standalone Amount label.
+
+Successful creates now return to the selected visual's edit form; duplicate IDs
+are refused inline before transport. Failed saves keep create mode. Subsequent
+edits preserve the confirmed curve, design and input. The form leaf stays free
+of hooks; its wrapper owns the inline error and the room owns create mode.
+
+Core test fires default to the saved route. Off-route and unrouted tests are
+refused on the desktop, including direct handler calls, so they send no
+simulation to the core/OBS. Matching quick/custom tests retain the same wire.
+The route notice explains the refusal; the gift button uses shared copy.
+Switching visual or saved route remounts the custom form. Amount now has a
+standalone label linked with `htmlFor`/`useId`.
+
+The desktop read projection retains the last confirmed list and selection
+during refresh and on failure, without changing the core port's clear-on-load
+contract. A typed failure alert labels the retained configurations and pauses
+configuration/simulation/source-copy controls; Refresh remains available.
+A successful empty refresh clears the retained list and shows the true empty
+state. No fixture rows, live totals, upstream prose or credentials are substituted.
+
+Bay form headings use h4 below h3 and describe their action without repeating
+the bay name. At HEAD art lives in the lower h2 configuration panel, outside
+the bays, so its heading is h3 and its receipts descend to h4. Token-based styles preserve
+the type floor. The original source-copy, plates, renderer, overlay, core wire
+and e2e code are unchanged. No registry subjects were named in this brief.
+Verification commands and final outcomes are recorded in external `result.json`.
+Final scoped desktop typecheck/lint and build pass, including all 122 tokens
+and the first-load budget. The whole desktop suite passes 670 tests in 64 files;
+the five focused suites pass 45 tests. The requested Playwright journey stops
+at `spawn EPERM` before browser startup. `pnpm gate` stops in the unchanged
+contract exporter at `spawnSync cargo EPERM`; recursive pnpm typecheck/lint
+also stop at `spawn EPERM`. Full-gate and browser acceptance remain unverified
+and must be rerun by App Master. No install, git write or live action ran.
+
 ## L3 accessible select names, 2026-10-31
 
 Decay and the core simulation's Input source use standalone labels linked to

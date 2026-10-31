@@ -16,6 +16,7 @@ import { AppearanceControls } from './appearance.jsx';
 import { contribution_sources as sources, inputDescription, source_labels } from './contribution-input.js';
 import { BeaconPlates } from './plates.jsx';
 import { BeaconBay, BeaconBench, SealPanel } from './bench.jsx';
+import { createBeaconsView } from './core-view.js';
 import './room.css';
 import './core.css';
 
@@ -23,7 +24,12 @@ const ArtSection = lazy(() => import('./art.jsx'));
 
 export function ConnectedBeacons({ port, seal_slot }: { port: CoreBeaconsPort; seal_slot?: ReactNode }) {
   const source_id = useId();
-  const state = useSyncExternalStore(port.subscribe, port.getSnapshot, port.getSnapshot);
+  const amount_id = useId();
+  const view = useMemo(() => createBeaconsView(port), [port]);
+  const state = useSyncExternalStore(view.subscribe, view.getSnapshot, view.getSnapshot);
+  const failed = state.phase === 'error';
+  const disabled = state.busy || failed;
+  const failure = failed ? copy.core_failed(state.error?.code ?? 'unavailable') : '';
   const [appearance] = useState(createAppearanceSession);
   const source_copy = useMemo(() => createBrowserSourceCopy(port, false,
     id => displayQuery(appearance.getSnapshot()[id] ?? initialAppearance)), [port, appearance]);
@@ -37,48 +43,59 @@ export function ConnectedBeacons({ port, seal_slot }: { port: CoreBeaconsPort; s
   }));
   return <section className="visuals-room visuals-core" aria-label="Core Beacons" aria-busy={state.busy}>
     <div className="visuals-board">
-      <BeaconPlates visuals={plates} selected={state.selected ?? ''} core busy={state.busy}
+      <BeaconPlates visuals={plates} selected={state.selected ?? ''} core busy={disabled}
         on_select={item => { port.select(item.visual.visual_id); setCreating(false); }} />
       <BeaconBench name={visual?.name ?? copy.visuals} notice={state.notice}>
         <BeaconBay title={copy.driven_by} gloss={copy.core_input}>
-          <h2>Beacons · core configurations</h2>
+          <h4>Core configurations</h4>
+          {failed && <p role="alert">{failure}{state.visuals.length > 0 && ` ${copy.core_retained}`}</p>}
           <p>The copied browser-source URL is a transparent OBS browser source that scales to fit the source width and height when needed. Size and anchor travel in the copied URL; colour and burst timing stay in this session. A visual naming an unverified design shows nothing. Money changes visuals only.</p>
           <InkButton size="wrap" disabled={state.busy} onClick={() => {
             void port.load(); void port.loadContributions({ limit: 100 });
           }}>Refresh Beacons</InkButton>
           {visual && <p>Driven by: {inputDescription(visual.input)}</p>}
-          <InkButton size="wrap" disabled={state.busy} onClick={() => setCreating(true)}>New visual</InkButton>
-          <VisualEditor key={`visual-${creating ? 'new' : JSON.stringify(visual)}`} port={port} busy={state.busy}
+          <InkButton size="wrap" disabled={disabled} onClick={() => setCreating(true)}>New visual</InkButton>
+          <VisualEditor key={`visual-${creating ? 'new' : JSON.stringify(visual)}`} port={port} busy={disabled}
+            on_saved={() => setCreating(false)}
             {...(!creating && visual ? { visual } : {})} />
           {visual && <AppearanceControls session={appearance} visual={visual}
             {...(state.simulation?.intensity.visual_id === visual.visual_id ? { intensity: state.simulation.intensity.intensity } : {})}
             burst={state.events[0]?.id ?? 0} />}
         </BeaconBay>
         <BeaconBay title={copy.curve} gloss={copy.core_curve}>
-          {visual && <EditableKindlingCurve visual={visual} port={port} busy={state.busy} />}
+          {visual && <EditableKindlingCurve visual={visual} port={port} busy={disabled} />}
         </BeaconBay>
         <BeaconBay title={copy.test_fire} gloss={copy.core_test}>
-          {visual && <section className="visuals-core-form"><h2>Test fire · core simulation</h2>
+          {visual && <section className="visuals-core-form"><h4>Core simulation</h4>
             <p>Each test starts empty; it does not change live totals or saved configuration.</p>
+            <p role="status">{visual.input
+              ? copy.test_route(inputDescription(visual.input), visual.input.source === 'gift') : copy.test_unrouted}</p>
             <div className="visuals-fire-grid">
-              <InkButton size="wrap" variant="offset" ink="or" disabled={state.busy} onClick={() => { void port.simulate({
+              <InkButton size="wrap" variant="offset" ink="or" disabled={disabled || visual.input?.source !== 'gift'} onClick={() => {
+                if (disabled || visual.input?.source !== 'gift') return;
+                void port.simulate({
                 visual_id: visual.visual_id, burst: { source: 'gift', amount: 50 },
-              }); }}>Simulate 50 gift subs</InkButton>
-              <InkButton size="wrap" disabled={state.busy} onClick={() => { void port.simulate({
+              }); }}>{copy.fire_gifts}</InkButton>
+              <InkButton size="wrap" disabled={disabled || visual.input?.source !== 'subscribe'} onClick={() => {
+                if (disabled || visual.input?.source !== 'subscribe') return;
+                void port.simulate({
                 visual_id: visual.visual_id, burst: { source: 'subscribe', amount: 1 },
               }); }}>{copy.fire_sub}</InkButton>
             </div>
-            <form onSubmit={event => {
+            <form key={`${visual.visual_id}-${visual.input?.source ?? 'unrouted'}`} onSubmit={event => {
               event.preventDefault(); const form = new FormData(event.currentTarget);
               const source = sources.find(item => item === form.get('source'));
-              if (source) void port.simulate({ visual_id: visual.visual_id, burst: { source, amount: Number(form.get('amount')) } });
+              if (!disabled && source && source === visual.input?.source)
+                void port.simulate({ visual_id: visual.visual_id, burst: { source, amount: Number(form.get('amount')) } });
             }}>
               <div className="visuals-core-field"><label htmlFor={source_id}>Input source</label>
-                <select id={source_id} name="source" disabled={state.busy}>{sources.map(source =>
+                <select id={source_id} name="source" defaultValue={visual.input?.source ?? sources[0]}
+                  disabled={disabled || !visual.input}>{sources.map(source =>
                   <option key={source} value={source}>{source_labels[source]}</option>)}</select></div>
-              <label>Amount (source units)<input name="amount" type="number" min="0" max="4294967295" step="1"
-                defaultValue={1} required disabled={state.busy} /></label>
-              <InkButton size="wrap" type="submit" disabled={state.busy}>Simulate burst</InkButton>
+              <div className="visuals-core-field"><label htmlFor={amount_id}>Amount (source units)</label>
+                <input id={amount_id} name="amount" type="number" min="0" max="4294967295" step="1"
+                  defaultValue={1} required disabled={disabled || !visual.input} /></div>
+              <InkButton size="wrap" type="submit" disabled={disabled || !visual.input}>Simulate burst</InkButton>
             </form>
             {state.simulation && state.simulation.intensity.visual_id === visual.visual_id
               && <output>{Math.round(state.simulation.intensity.intensity * 100)}% blaze · {state.simulation.label} · core result</output>}
@@ -91,11 +108,11 @@ export function ConnectedBeacons({ port, seal_slot }: { port: CoreBeaconsPort; s
           <CardBody>
             <BrowserSourceNotice state={copy_state} />
             <WindowedRows rows={state.visuals} label="Core beacon visuals" row_height={rowHeight * 4}
-              row_key={item => item.visual_id} empty_state="No visuals loaded from the core.">
+              row_key={item => item.visual_id} empty_state={failed ? failure : 'No visuals loaded from the core.'}>
               {item => <article className="visuals-core-item">
                 <h3>{item.name}</h3>
                 <p>{item.design_id ? `Design: ${item.design_id}` : 'No design assigned'} · {item.curve.ranges.length} control points</p>
-                <BrowserSourceButton copy={source_copy} visual={item} busy={state.busy || copy_state.busy} />
+                <BrowserSourceButton copy={source_copy} visual={item} busy={disabled || copy_state.busy} />
               </article>}
             </WindowedRows>
             {state.art_available && visual && <Suspense fallback={null}>

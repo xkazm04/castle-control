@@ -19,7 +19,7 @@ export function ConfirmButton({ art, state }: Controls) {
 
 export function ArtControls({ art, state, visual }: Controls & { visual: Visual }) {
   return <section className="visuals-core-form visuals-art" aria-label="Generate art" aria-busy={state.busy}>
-    <h2>Generate art</h2>
+    <h3>Generate art</h3>
     <p>For {visual.name}. Generates one 512 by 512 image in its local design package.</p>
     {!visual.design_id && <p>Save a design ID for this visual before generating art.</p>}
     <label>Art prompt<input value={state.prompt} disabled={state.busy || state.confirming} required
@@ -36,12 +36,12 @@ export function ArtControls({ art, state, visual }: Controls & { visual: Visual 
     {state.busy && <p role="status">Generating art. Waiting for the core result.</p>}
     {state.error && <p role="alert">{state.error}</p>}
     {state.result && <div>
-      <h3>Returned assets</h3>
+      <h4>Returned assets</h4>
       {state.result.assets.length === 0 && <p>No assets returned. The receipt still records the cost.</p>}
       <ul>{state.result.assets.map(asset => <li key={asset.asset}>
         Generated (Leonardo): <code>{asset.asset}</code> ({asset.provenance})
       </li>)}</ul>
-      <h3>Cost receipt from core</h3>
+      <h4>Cost receipt from core</h4>
       <pre>{JSON.stringify(state.result.costs, null, 2)}</pre>
     </div>}
   </section>;

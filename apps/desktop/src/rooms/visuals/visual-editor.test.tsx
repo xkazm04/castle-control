@@ -1,7 +1,8 @@
-import type { FormEvent } from 'react';
+import { Children, isValidElement, useState } from 'react';
+import type { ComponentProps, FormEvent, ReactNode } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, expect, test, vi } from 'vitest';
-import type { ContributionSource, VisualInput } from '@castle-control/contract';
+import type { ContributionSource, IntensityCurve, VisualInput } from '@castle-control/contract';
 import { createCoreBeaconsPort } from '../../beacons-core.js';
 import type { BeaconsNetwork } from '../../beacons-core.js';
 import { createBeaconsPreview } from '../../beacons-model.js';
@@ -12,6 +13,7 @@ import { VisualEditor, VisualForm } from './visual-editor.jsx';
 import { StylePickerFields } from './style-picker.jsx';
 import { presets, styleChoice } from './presets.js';
 import { styles } from '../../demo/model.js';
+import { controls, submitEvent } from './test-controls.jsx';
 
 const launch = { mode: 'core', endpoint: 'http://127.0.0.1:3210/', session_token: 'a'.repeat(64) } as const;
 const synthetic = { visual_id: 'synthetic-picker', name: 'Synthetic visual', design_id: 'synthetic-design',
@@ -32,12 +34,13 @@ afterEach(() => vi.unstubAllGlobals());
 
 // Node has FormData but no DOM form. Populate native FormData with the values
 // the browser would collect; the real form handler and real port/schema run.
-function formData(source: ContributionSource | '', name: string = synthetic.name, design: string = synthetic.design_id) {
+function formData(source: ContributionSource | '', name: string = synthetic.name, design: string = synthetic.design_id,
+  id: string = synthetic.visual_id) {
   const NativeFormData = globalThis.FormData;
   vi.stubGlobal('FormData', class extends NativeFormData {
     constructor() {
       super();
-      this.set('visual_id', synthetic.visual_id); this.set('name', name);
+      this.set('visual_id', id); this.set('name', name);
       this.set('design_id', design); this.set('input_source', source);
     }
   });
@@ -66,6 +69,100 @@ test('choosing gift saves its native count pair through the contract and core tr
     visual: { ...h.visual, input: { source: 'gift', unit: 'count' } },
   });
   expect(h.port.getSnapshot().visuals[0]?.input).toEqual({ source: 'gift', unit: 'count' });
+});
+
+test('create mode refuses a visual_id already in the core list, shows an inline alert and sends no beacons.visual.upsert', async () => {
+  const h = await harness(); h.rpc.mockClear(); formData('');
+  function Probe() {
+    const [submitted, setSubmitted] = useState(false);
+    const editor = VisualEditor({ port: h.port, busy: false });
+    const form = VisualForm(editor.props);
+    if (!submitted) { void form.props.onSubmit(submitEvent()); setSubmitted(true); }
+    return form;
+  }
+  const html = renderToStaticMarkup(<Probe />);
+  await vi.waitFor(() => expect(h.port.getSnapshot().busy).toBe(false));
+  expect(h.rpc).not.toHaveBeenCalled();
+  expect(html).toMatch(/role="alert"[^>]*>[^<]*already exists/);
+  expect(h.port.getSnapshot().visuals).toEqual([h.visual]);
+});
+
+type EditorControl = ComponentProps<typeof VisualEditor>;
+function editorControl(tree: ReactNode): EditorControl {
+  const found: EditorControl[] = [];
+  function visit(node: ReactNode) {
+    Children.forEach(node, child => {
+      if (!isValidElement<{ children?: ReactNode }>(child)) return;
+      if (child.type === VisualEditor) found.push(child.props as EditorControl);
+      else visit(child.props.children);
+    });
+  }
+  visit(tree);
+  const editor = found[0];
+  if (!editor) throw new Error('Missing visual editor');
+  return editor;
+}
+
+test('after a confirmed create, ConnectedBeacons shows Edit visual configuration for the new visual and its saved curve is resent on the next Save', async () => {
+  const h = await harness(); formData('gift', 'New synthetic visual', '', 'synthetic-created');
+  const on_saved = vi.fn();
+  const form = VisualForm({ port: h.port, busy: false, source: 'gift', on_source: vi.fn(), on_saved });
+  await form.props.onSubmit(submitEvent());
+  await vi.waitFor(() => expect(h.port.getSnapshot().busy).toBe(false));
+  expect(on_saved).toHaveBeenCalledOnce();
+  const created = h.port.getSnapshot().visuals.find(item => item.visual_id === 'synthetic-created');
+  if (!created) throw new Error('Missing confirmed created visual');
+  let props: EditorControl | undefined;
+  function Probe() {
+    const [step, setStep] = useState(0);
+    const tree = ConnectedBeacons({ port: h.port }); props = editorControl(tree);
+    if (step === 0) { controls(tree).find(item => item.children === 'New visual')?.onClick?.(); setStep(1); }
+    if (step === 1) { expect(props.visual).toBeUndefined(); expect(props.on_saved).toBeDefined(); props.on_saved?.(); setStep(2); }
+    return tree;
+  }
+  expect(renderToStaticMarkup(<Probe />)).toContain('Edit visual configuration');
+  expect(props?.visual).toEqual(created);
+  const curve: IntensityCurve = { ranges: [{ total: 0, intensity: 0 }, { total: 25, intensity: 0.4 }, { total: 200, intensity: 1 }],
+    decay: { kind: 'exponential', half_life_s: 100 } };
+  h.rpc.mockImplementation(async (_endpoint, _session, method, params) => method === 'beacons.curve.set'
+    ? { ...created, curve } : 'visual' in params ? params.visual : undefined);
+  await h.port.setCurve({ visual_id: created.visual_id, curve });
+  const saved = h.port.getSnapshot().visuals.find(item => item.visual_id === created.visual_id);
+  if (!saved) throw new Error('Missing saved curve');
+  formData('gift', 'Renamed created visual', '', created.visual_id);
+  const edit = VisualForm({ visual: saved, port: h.port, busy: false, source: 'gift', on_source: vi.fn() });
+  await edit.props.onSubmit(submitEvent());
+  await vi.waitFor(() => expect(h.port.getSnapshot().busy).toBe(false));
+  expect(h.rpc).toHaveBeenLastCalledWith(launch.endpoint, launch.session_token, 'beacons.visual.upsert', {
+    visual: { ...saved, name: 'Renamed created visual' },
+  });
+});
+
+test('a failed create keeps the editor in create mode and never reports a saved visual', async () => {
+  const h = await harness(); formData('gift', 'New synthetic visual', '', 'synthetic-created');
+  h.rpc.mockRejectedValueOnce({ code: 'unavailable', message: 'Simulated failure' });
+  const on_saved = vi.fn();
+  const form = VisualForm({ port: h.port, busy: false, source: 'gift', on_source: vi.fn(), on_saved });
+  await form.props.onSubmit(submitEvent());
+  expect(h.port.getSnapshot().phase).toBe('error');
+  expect(h.port.getSnapshot().visuals).toEqual([h.visual]);
+  expect(on_saved).not.toHaveBeenCalled();
+});
+
+test('New visual after a confirmed create opens a blank editor again', async () => {
+  const h = await harness();
+  function Probe() {
+    const [step, setStep] = useState(0);
+    const tree = ConnectedBeacons({ port: h.port });
+    const editor = editorControl(tree);
+    if (step === 0 || step === 2) { controls(tree).find(item => item.children === 'New visual')?.onClick?.(); setStep(step + 1); }
+    if (step === 1) { editor.on_saved?.(); setStep(2); }
+    return tree;
+  }
+  const html = renderToStaticMarkup(<Probe />);
+  expect(html).toContain('Create a visual');
+  expect(html).toContain('name="visual_id" value=""');
+  expect(html).toContain('name="name" value=""');
 });
 
 test('visual form offers neutral, twelve atlas designs, custom ID, and one saved art-style control', async () => {

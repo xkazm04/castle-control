@@ -1,5 +1,6 @@
 .visuals-core-form { display: grid; gap: var(--space-12); margin: 0; min-width: 0; }
 .visuals-core-form > * { min-width: 0; margin: 0; }
+.visuals-core-form :is(h3, h4), .visuals-bay > h4 { font: 700 var(--text-label)/1.4 var(--font-ui); }
 .visuals-core-form form { display: grid; gap: var(--space-12); }
 .visuals-core-form label, .visuals-core-form .visuals-core-field { display: grid; gap: var(--space-4); }
 .visuals-core-form fieldset { min-width: 0; display: grid; gap: var(--space-8); padding: var(--space-12); border: var(--rule-thin) solid var(--line); }

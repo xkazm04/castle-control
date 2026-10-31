@@ -68,7 +68,7 @@ export function CurveControls({ editor, state, busy, local = false }: {
   const x = (total: number) => total / maximum * 600;
   return <form className="visuals-core-form visuals-curve-editor" aria-label="Kindling curve editor"
     onSubmit={event => { event.preventDefault(); void editor.save(); }}>
-    <h2>The kindling curve · contribution to intensity</h2>
+    <h4>Edit control points</h4>
     <p id="visuals-curve-help">{local ? 'SIMULATED local preview.' : 'Draft preview only.'} Drag a point and release to save. Tab to a point, then use arrows:
       left/right moves 1 contribution unit; up/down moves 1% intensity. Hold Shift for 10 units or 10%.
       Enter saves; Escape cancels. Totals stay in order.{!local && " Saved curves drive this visual's OBS browser source."}</p>
