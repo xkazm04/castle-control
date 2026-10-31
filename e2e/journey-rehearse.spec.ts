@@ -73,7 +73,7 @@ test('Map Room Rehearse: simulated round, verdict, replay, sizes, comparison and
     await expect(room.getByText('Showing the end of your simulated rehearsal', { exact: false })).toBeVisible();
     await room.getByRole('button', { name: 'Table', exact: true }).click();
     await expect(room.getByLabel('Selected tile', { exact: true })).toContainText('Now: inspecting');
-    await expect(room).toContainText('WP 4.0 is pending');
+    await expect(room).toContainText('The room awaits Twitch’s answer on the Extension policy. It makes no network call and cannot advance the test stage.');
 
     await toggle.click();
     await auditStyles(page, desktopSurfaces); await auditFields(page);
