@@ -16,7 +16,7 @@ const origin = `http://127.0.0.1:${port}`;
 export default defineConfig({
   testDir: '.',
   testMatch: '**/*.spec.ts',
-  testIgnore: '**/site.spec.ts',
+  testIgnore: ['**/site.spec.ts', '**/tauri/**'],
   tsconfig: './tsconfig.json',
   outputDir: './test-results',
   fullyParallel: false,
