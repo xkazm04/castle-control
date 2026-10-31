@@ -1,4 +1,4 @@
-import { useState, useSyncExternalStore } from 'react';
+import { lazy, Suspense, useState, useSyncExternalStore } from 'react';
 import type { ReactNode } from 'react';
 import { EmptyState, Plate } from '@castle-control/ui';
 import type { ProposalQueue } from '@castle-control/ui/steward';
@@ -17,22 +17,36 @@ import { Spyglass } from './spyglass.jsx';
 import './room.css';
 import './hex-field.css';
 
+const TiltyardView = lazy(() => import('./tiltyard-view.jsx'));
+type StudioView = 'table' | 'spyglass' | 'tiltyard';
+
+export function StudioViewSwitch({ view, on_view }: { view: StudioView; on_view: (view: StudioView) => void }) {
+  return <div className="studio-view-switch" role="group" aria-label={copy.view}>
+    <button type="button" aria-pressed={view === 'table'} onClick={() => on_view('table')}>{copy.table}</button>
+    <button type="button" aria-pressed={view === 'spyglass'} onClick={() => on_view('spyglass')}>{copy.spyglass}</button>
+    <button type="button" aria-pressed={view === 'tiltyard'} onClick={() => on_view('tiltyard')}>{copy.tiltyard}</button>
+    {view === 'tiltyard' && <>
+      <span className="studio-tiltyard-note">{copy.tiltyard_note}</span>
+      <span className="studio-tiltyard-sample">{copy.tiltyard_sample}</span>
+    </>}
+  </div>;
+}
+
 export function StudioWork({ queue, seal_slot, board, design_session = designSession }: {
   queue?: ProposalQueue; seal_slot?: ReactNode; board?: StudioBoard; design_session?: DesignSession;
 }) {
   const looks = useSyncExternalStore(design_session.subscribe, design_session.getSnapshot, design_session.getSnapshot).looks;
   const [session, setSession] = useState(() => createStudioSession(board));
   const [rung, setRung] = useState(0);
-  const [spyglass, setSpyglass] = useState(false);
+  const [view, setView] = useState<StudioView>('table');
   const current_board = board ?? boardForSize(session.design.size);
   const change = (field: SessionField, value?: string) => setSession(state => updateStudioSession(state, field, value, board));
-  return <section className="studio-room cc-herald" aria-label={copy.work}>
+  return <section className="studio-room cc-herald" aria-label={copy.work} data-view={view}>
     <div className="studio-table-work">
-      <div className="studio-view-switch" role="group" aria-label={copy.view}>
-        <button type="button" aria-pressed={!spyglass} onClick={() => setSpyglass(false)}>{copy.table}</button>
-        <button type="button" aria-pressed={spyglass} onClick={() => setSpyglass(true)}>{copy.spyglass}</button>
-      </div>
-      {spyglass ? <Spyglass board={current_board} size={session.design.size} session={design_session} />
+      <StudioViewSwitch view={view} on_view={setView} />
+      {view === 'tiltyard' ? <Suspense fallback={<p className="studio-tiltyard-note" role="status">{copy.tiltyard}</p>}>
+        <TiltyardView />
+      </Suspense> : view === 'spyglass' ? <Spyglass board={current_board} size={session.design.size} session={design_session} />
         : <HexTable selected={session.selected} on_select={id => change('tile', id)} board={current_board}
           size={session.design.size} look={looks.map.output.style} />}
     </div>

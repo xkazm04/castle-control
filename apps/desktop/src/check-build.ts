@@ -1,4 +1,4 @@
-import { readFileSync, statSync } from 'node:fs';
+import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { checkTokenDefinitions } from '@castle-control/tokens/check-build';
 
 const directory = new URL('../dist/', import.meta.url);
@@ -17,3 +17,15 @@ checkTokenDefinitions(css, 'Desktop');
 const limit = 384 * 1024;
 console.log(`[desktop first-load budget, all four routes] walked ${paths.size} files; ${bytes}/${limit} uncompressed JS+CSS bytes`);
 if (bytes > limit) throw new Error('Desktop first-load budget exceeded');
+
+const assets = new URL('assets/', directory);
+const duel_paths = readdirSync(assets).filter(path => /^tiltyard-view-[\w-]+\.(?:js|css)$/.test(path));
+if (!duel_paths.some(path => path.endsWith('.js'))) throw new Error('Duel chunk budget refuses empty chunks');
+const duel_size = (suffix: string) => duel_paths.filter(path => path.endsWith(suffix))
+  .reduce((total, path) => total + statSync(new URL(path, assets)).size, 0);
+const duel_js = duel_size('.js');
+const duel_css = duel_size('.css');
+const duel_bytes = duel_js + duel_css;
+const duel_limit = 98_304;
+console.log(`[duel chunk budget] walked ${duel_paths.length} files; ${duel_bytes}/${duel_limit} uncompressed JS+CSS bytes (js ${duel_js}, css ${duel_css})`);
+if (duel_bytes > duel_limit) throw new Error('Duel chunk budget exceeded');

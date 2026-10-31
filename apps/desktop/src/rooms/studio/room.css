@@ -3,6 +3,15 @@
   height: 100%; min-height: 0; display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(calc(var(--space-56) * 6), 33%);
 }
+.studio-room.cc-herald[data-view="tiltyard"] {
+  height: auto; min-height: 100%; grid-template-columns: minmax(0, 1fr);
+}
+.studio-room[data-view="tiltyard"] .cc-herald-side {
+  overflow: visible; border-left: 0; border-top: var(--rule-medium) solid var(--rule);
+}
+.studio-room[data-view="tiltyard"] .studio-view-switch { align-items: center; padding-bottom: var(--space-12); }
+.studio-room .studio-tiltyard-note { color: var(--muted); font: italic var(--text-small)/1.4 var(--font-serif); }
+.studio-room .studio-tiltyard-sample { margin-left: auto; color: var(--muted); font: 700 var(--text-label)/1.4 var(--font-ui); }
 :where(.studio-room) :is(p, h2, h3, ul) { margin: 0; }
 .studio-room [data-house] { --house: var(--paper-2); --house-shadow: var(--house); --house-press: var(--press); }
 .studio-room [data-ink="gules"] { --house: var(--gules); }
