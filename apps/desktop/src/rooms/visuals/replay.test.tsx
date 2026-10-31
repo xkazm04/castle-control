@@ -210,4 +210,9 @@ test('the trace names the lit threshold and flags the minute it first lights, ne
   expect(cold).toContain('data-never-lit="true"');
   expect(raid).not.toContain('Never lit tonight');
   expect(raid).toContain('Space plays or pauses');
+  // A climbing night names its peak; a cold night has no peak flag to celebrate.
+  const raid_trace = replayTrace(item.visual.curve, item.gift_weight, nightBursts(sampleNight('raid_spike').offerings));
+  expect(raid).toContain(`data-peak="${raid_trace.peak.t}"`);
+  expect(raid).toContain(`peak ${Math.round(raid_trace.peak.intensity * 100)}% · ${clockLabel(raid_trace.peak.t)}`);
+  expect(cold).not.toContain('data-peak=');
 });

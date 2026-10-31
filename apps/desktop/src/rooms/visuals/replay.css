@@ -102,4 +102,9 @@
 .visuals-replay-first-lit[data-place="below"][data-edge="end"] { transform: translate(calc(-100% + var(--rule-thin)), var(--space-6)); }
 .visuals-replay-first-lit[data-place="below"]::after { top: calc(var(--space-6) * -1 - var(--space-4)); }
 .visuals-replay-first-lit[data-edge="end"]::after { left: auto; right: calc(var(--rule-strong) * -1 - var(--space-4) + var(--rule-thin)); }
+/* A climbing night's peak: a dotted guide from the floor, a dot on the trace, the label at the foot. */
+.visuals-replay-peak-guide { stroke: var(--ink-2); stroke-width: var(--rule-thin); stroke-dasharray: 2 3; vector-effect: non-scaling-stroke; }
+.visuals-replay-peak-dot { position: absolute; width: var(--space-8); height: var(--space-8); border: var(--rule-thin) solid var(--paper); border-radius: 50%; background: var(--ink); transform: translate(-50%, -50%); pointer-events: none; }
+.visuals-replay-peak-label { position: absolute; bottom: calc(var(--space-56) * 3 * 22 / 140 + var(--space-4)); margin-left: var(--space-4); padding: 0 var(--space-4); background: var(--card); color: var(--ink); font: 700 var(--text-label)/1.3 var(--font-num); white-space: nowrap; pointer-events: none; }
+.visuals-replay-peak-label[data-edge="end"] { margin-left: 0; transform: translateX(calc(-100% - var(--space-4))); }
 .visuals-replay-plot[data-scrub="pointer"] { cursor: ew-resize; touch-action: none; }
