@@ -117,6 +117,7 @@ export const lotsCopy = {
     pool: (kind: string, content: string, seconds: number) => `Pool: ${kind} · ${content} · ${seconds} second cooldown`,
     check: 'Check giveaway guardrails',
     seal_notice: 'Sealing freezes the eligible roll in the core and selects a future public round. Entries and randomness stay with the service.',
+    proposal_seal: 'Seal Steward proposals',
     announced: 'Seal announced · entry list frozen before cast. Keep the announcement and OBS capture.',
     frozen_entries: (count: number, source: string) => `${count} frozen entries · ${source}`,
     target_round: (round: string) => `Target round · ${round} · wait until the round arrives before Cast.`,

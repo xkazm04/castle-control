@@ -65,7 +65,7 @@ export default function Room({ chamber, replay, snapshot, origin, connection, on
     <div className="shell-room-work">
       <div className="shell-room-content"><Suspense fallback={<p role="status">Opening the room...</p>}>
         {fixture && chamber === 'lottery' ? <LotteryRoom snapshot={snapshot} replay={replay} seal_slot={seal_slot} />
-          : chamber === 'lottery' ? <CoreLotteryRoom snapshot={snapshot} seal_slot={seal_slot} />
+          : chamber === 'lottery' ? <CoreLotteryRoom snapshot={snapshot} seal_slot={port instanceof LiveSteward ? seal_slot : undefined} />
           : chamber === 'moderator' ? <ModeratorRoom snapshot={snapshot} replay={replay} seal_slot={seal_slot} />
           : chamber === 'visuals' ? <VisualsRoom snapshot={snapshot} seal_slot={seal_slot} />
           : fixture && chamber === 'studio' ? <StudioRoom snapshot={snapshot} seal_slot={seal_slot} />

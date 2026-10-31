@@ -9,6 +9,15 @@ import type { Snapshot } from '../../model.js';
 import { FairnessSteps, PolicyRibbon, PoolStage, Ticket, policyReason } from './print.jsx';
 import './room.css';
 
+function ProposalSealFrame({ seal_slot }: { seal_slot?: ReactNode }) {
+  return seal_slot ? <div className="lottery-seal-frame">
+    <HeraldicCard variant="raised" tone="seal" ink="gules">
+      <h2 className="lottery-card-title">{copy.core.proposal_seal}</h2>
+      {seal_slot}
+    </HeraldicCard>
+  </div> : null;
+}
+
 export function ConnectedLotsRoom({ port, simulated, seal_slot }: { port: CoreLotsPort; simulated?: boolean; seal_slot?: ReactNode }) {
   const state = useSyncExternalStore(port.subscribe, port.getSnapshot, port.getSnapshot);
   const [user, setUser] = useState('');
@@ -60,7 +69,7 @@ export function ConnectedLotsRoom({ port, simulated, seal_slot }: { port: CoreLo
           <SealButton size="large" disabled={state.busy || state.locked || !state.check || state.check.result === 'blocked'}
             on_seal={() => { void port.seal(); }} />
         </HeraldicCard>}
-        <div className="lottery-seal-frame"><HeraldicCard variant="raised" tone="seal" ink="gules">{seal_slot}</HeraldicCard></div>
+        <ProposalSealFrame seal_slot={seal_slot} />
         <HeraldicCard variant="raised" aria-label={copy.lookup_title}>
           <h2 className="lottery-card-title">{copy.lookup_title}</h2><p className="cc-aside">{copy.core.lookup_hint}</p>
           <div className="lottery-lookup"><label htmlFor="lottery-core-lookup">{copy.core.user_id}</label>
@@ -100,7 +109,7 @@ export function ConnectedLotsRoom({ port, simulated, seal_slot }: { port: CoreLo
 export default function CoreLotteryRoom({ snapshot, seal_slot }: { snapshot: Snapshot; seal_slot?: ReactNode }) {
   const connection = coreLotsConnection(snapshot);
   if (!connection) return <section className="lottery-room" aria-label={copy.core.title}>
-    <p role="status">{copy.core.unavailable}</p>{seal_slot}
+    <p role="status">{copy.core.unavailable}</p><ProposalSealFrame seal_slot={seal_slot} />
   </section>;
   connection.port ??= createCoreLotsPort(connection.launch, connection.transport);
   return <ConnectedLotsRoom port={connection.port} {...(snapshot.status ? { simulated: snapshot.status.simulated } : {})} seal_slot={seal_slot} />;
