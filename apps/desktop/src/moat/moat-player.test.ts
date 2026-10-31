@@ -1,5 +1,5 @@
 import { expect, test, vi } from 'vitest';
-import { createMoatPlayer, manualClock } from './moat-player.js';
+import { browserClock, createMoatPlayer, manualClock } from './moat-player.js';
 
 test('a finished replay is the resting state and play runs it again from the start', () => {
   const clock = manualClock();
@@ -94,4 +94,23 @@ test('a throttled player publishes less often but covers the same time', () => {
   clock.advance(100);
   expect(player.getSnapshot().playhead_ms).toBeGreaterThanOrEqual(240);
   expect(player.getSnapshot().playhead_ms).toBeLessThanOrEqual(260);
+});
+
+test('the browser clock stays stopped when a tick stops it from inside, so a later seek cannot restart the replay unseen', () => {
+  const frames = new Map<number, () => void>(); let issued = 0; let now = 0;
+  vi.stubGlobal('requestAnimationFrame', (callback: () => void) => { issued += 1; frames.set(issued, callback); return issued; });
+  vi.stubGlobal('cancelAnimationFrame', (id: number) => { frames.delete(id); });
+  vi.stubGlobal('performance', { now: () => now });
+  try {
+    const frame = () => { const [id, callback] = [...frames][0] ?? []; if (id === undefined) return false; frames.delete(id); now += 16; callback?.(); return true; };
+    const player = createMoatPlayer(1000, browserClock, { start: 'start', speed: 60 });
+    player.play();
+    while (player.getSnapshot().playing && frame()) { /* run frames until the replay ends */ }
+    expect(player.getSnapshot()).toMatchObject({ playhead_ms: 1000, playing: false });
+    // The loop that ended itself books no further frame.
+    expect(frames.size).toBe(0);
+    player.seek(0);
+    expect(frame()).toBe(false);
+    expect(player.getSnapshot()).toMatchObject({ playhead_ms: 0, playing: false });
+  } finally { vi.unstubAllGlobals(); }
 });

@@ -40,7 +40,9 @@ test('the drill opens on the moat: three stamps, a gap, a live summary, and the 
   expect(html.indexOf('class="moat-panel"')).toBeLessThan(html.indexOf('moderator-drill-columns'));
   expect(html).toContain('aria-label="Simulated replay outcomes"');
   expect(moat).toContain('The moat · simulated replay');
-  expect(moat).toMatch(/<p[^>]*role="status"[^>]*aria-live="polite"[^>]*><span class="cc-chip" data-variant="azure">Held 3 of 40 · simulated<\/span><\/p>/);
+  // The chip is for the eye and moves with every stop; the one status region is for a screen reader and settles (see use-settled.ts).
+  expect(moat).toMatch(/<span class="moat-live" aria-hidden="true"><span class="cc-chip" data-variant="azure">Held 3 of 40 · simulated<\/span><\/span>/);
+  expect(moat).toMatch(/<p[^>]*role="status"[^>]*aria-live="polite"[^>]*>Held 3 of 40 · simulated<\/p>/);
   expect(moat.match(/role="status"/g)).toHaveLength(1);
   expect(moat.match(/role="alert"/g)).toHaveLength(1);
   expect(moat).toContain('35 aired · 3 held · 2 not evaluated');

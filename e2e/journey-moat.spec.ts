@@ -204,9 +204,35 @@ test.describe('with motion allowed', () => {
       await slider.fill('0');
       await expect(stamps).toHaveCount(0);
       await expect(page.getByRole('status').filter({ hasText: 'Held 0 of 40' })).toHaveCount(1);
+      // A replay that has ended must stay put: no frame loop outlives it and walks the playhead on by itself.
+      await page.waitForTimeout(700);
+      await expect(slider).toHaveAttribute('aria-valuetext', /· 1 of 40$/);
+      await expect(page.getByRole('button', { name: 'Play', exact: true })).toBeVisible();
       await slider.press('End');
       await expect(stamps).toHaveCount(3);
       await expect(slider).toHaveAttribute('aria-valuetext', /40 of 40$/);
+    } finally { verify(); }
+  });
+
+  test('on a busy night the spoken count settles while the eye still sees every stop', async ({ page }) => {
+    const verify = await guardPage(page);
+    try {
+      await page.goto(drill);
+      await page.getByRole('button', { name: 'Replay a busy night · 2,000 simulated messages', exact: true }).click();
+      await page.getByRole('button', { name: '60×', exact: true }).click();
+      await page.getByRole('button', { name: 'Play', exact: true }).click();
+      const spoken = page.getByRole('status').filter({ hasText: 'Held' });
+      const chip = page.locator('.moat-live');
+      const heard = new Set<string>(); const seen = new Set<string>();
+      for (let sample = 0; sample < 40; sample += 1) {
+        heard.add((await spoken.textContent()) ?? ''); seen.add((await chip.textContent()) ?? '');
+        await page.waitForTimeout(100);
+      }
+      // Four seconds of a 60x replay of 150 stops: the chip follows the replay, the live region does not chase it.
+      expect(seen.size).toBeGreaterThan(heard.size);
+      expect(heard.size).toBeLessThanOrEqual(4);
+      await page.getByRole('button', { name: 'Pause', exact: true }).click();
+      await expect.poll(async () => (await spoken.textContent()) === (await chip.textContent())).toBe(true);
     } finally { verify(); }
   });
 

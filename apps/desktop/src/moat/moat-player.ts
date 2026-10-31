@@ -12,8 +12,13 @@ export type MoatClock = {
 export const browserClock: MoatClock = {
   now: () => performance.now(),
   frames: tick => {
-    let id = requestAnimationFrame(function next() { tick(); id = requestAnimationFrame(next); });
-    return () => cancelAnimationFrame(id);
+    // A tick may stop the loop from inside itself (the replay reaching its end). Cancelling the frame that is
+    // running does nothing, so the loop checks a flag before it books the next one.
+    let stopped = false;
+    let id = 0;
+    const next = () => { if (stopped) return; tick(); if (!stopped) id = requestAnimationFrame(next); };
+    id = requestAnimationFrame(next);
+    return () => { stopped = true; cancelAnimationFrame(id); };
   },
 };
 

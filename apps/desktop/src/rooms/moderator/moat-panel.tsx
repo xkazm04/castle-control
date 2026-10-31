@@ -11,6 +11,7 @@ import { MoatScene, sceneNotes } from '../../moat/moat-scene.jsx';
 import { MoatReportPortal } from '../../moat/moat-report.jsx';
 import type { MoatReportInfo } from '../../moat/moat-report.jsx';
 import { useMoatPlayer } from '../../moat/use-moat-player.js';
+import { useSettled } from '../../moat/use-settled.js';
 import { ClockTime } from './presentation.jsx';
 
 /** Where a stamped rule can be taken for editing. Only rules the bench can edit are offered. */
@@ -106,12 +107,15 @@ export function MoatPanel({ model, delay_s, clock, selected_id, on_select, rule_
   const stops = useMemo(() => spotlightStops(model, spotlight), [model, spotlight]);
   const notes = useMemo(() => sceneNotes(model, view, spotlight, selected?.index), [model, view.from_ms, view.to_ms, spotlight, selected?.index]);
   const held = heldCount(model, state.playhead_ms);
+  const announced = useSettled(held, state.playing);
   const position = copy.position_text(clockText(model.start_ms + Math.min(state.playhead_ms, model.span_ms)), replayedCount(model, state.playhead_ms), model.counts.total);
   if (model.markers.length === 0) return <section className="moat-panel" aria-labelledby={heading_id}>
     <h3 id={heading_id}>{copy.title}</h3><p>{copy.empty}</p></section>;
   return <section className="moat-panel" aria-labelledby={heading_id} data-playing={state.playing}>
     <header className="moat-head"><h3 id={heading_id}>{copy.title}</h3>
-      <Notice className="moat-live" message={<StatusChip variant="azure">{copy.summary(held, model.counts.total)}</StatusChip>} />
+      <span className="moat-live" aria-hidden="true"><StatusChip variant="azure">{copy.summary(held, model.counts.total)}</StatusChip></span>
+      {/* The chip moves with every stop; the region a screen reader speaks from settles, so a long night is not read out one count at a time. */}
+      <Notice className="moat-sr" message={copy.summary(announced, model.counts.total)} />
       <p className="moat-small moat-breakdown">{copy.breakdown(model.counts)}</p>
       {report && <InkButton type="button" size="small" variant="ghost" onClick={() => { setPrinting(true); }}>{copy.print}</InkButton>}</header>
     {report && printing && <MoatReportPortal model={model} info={report} delay_s={delay_s} uid={uid} />}

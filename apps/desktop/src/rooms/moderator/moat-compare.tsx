@@ -9,6 +9,7 @@ import type { MoatMarker, MoatModel } from '../../moat/moat-model.js';
 import type { MoatClock } from '../../moat/moat-player.js';
 import { MoatScene, compareGeometry } from '../../moat/moat-scene.jsx';
 import { useMoatPlayer } from '../../moat/use-moat-player.js';
+import { useSettled } from '../../moat/use-settled.js';
 import { MoatControls } from './moat-panel.jsx';
 
 const words = copy.compare;
@@ -52,6 +53,8 @@ export function MoatCompare({ diff, note, delay_s, clock }: MoatCompareProps) {
   const ticks = useMemo(() => scrubTicks(after), [after]);
   const { player, state, reduced } = useMoatPlayer(before.run_ms, clock ? { clock } : {});
   const view = windowFor(before, state.playhead_ms);
+  const held = [heldCount(before, state.playhead_ms), heldCount(after, state.playhead_ms)] as const;
+  const announced = useSettled(held.join('/'), state.playing).split('/').map(Number);
   if (!comparison.aligned || before.markers.length === 0) return <section className="moat-panel moat-compare" aria-labelledby={heading_id}>
     <h3 id={heading_id}>{words.title}</h3><p>{words.unaligned}</p></section>;
   const position = copy.position_text(clockText(before.start_ms + Math.min(state.playhead_ms, before.span_ms)), replayedCount(before, state.playhead_ms), before.counts.total);
@@ -59,7 +62,8 @@ export function MoatCompare({ diff, note, delay_s, clock }: MoatCompareProps) {
   const pick = (model: MoatModel) => (at: number) => { setSelected(model.markers[at]?.message_id); };
   return <section className="moat-panel moat-compare" aria-labelledby={heading_id} data-playing={state.playing}>
     <header className="moat-head"><h3 id={heading_id}>{words.title}</h3>
-      <Notice className="moat-live" message={<StatusChip variant="azure">{words.summary(heldCount(before, state.playhead_ms), heldCount(after, state.playhead_ms), before.counts.total)}</StatusChip>} />
+      <span className="moat-live" aria-hidden="true"><StatusChip variant="azure">{words.summary(held[0], held[1], before.counts.total)}</StatusChip></span>
+      <Notice className="moat-sr" message={words.summary(announced[0] ?? 0, announced[1] ?? 0, before.counts.total)} />
       <p className="moat-small moat-breakdown">{words.breakdown(comparison.changed.size, comparison.newly_held, comparison.released)}</p></header>
     <p className="moat-small">{note}</p>
     <MoatControls state={state} ticks={ticks} position={position} reduced={reduced} range_id={range_id} on_play={player.play}
