@@ -1,7 +1,7 @@
-import { memo } from 'react';
+import { memo, useState } from 'react';
 import type { CSSProperties, PointerEvent } from 'react';
 import type { Offering } from '../../beacons-fixture.js';
-import type { ReplayTrace } from '../../beacons-replay.js';
+import type { ReplayTrace, TracePoint } from '../../beacons-replay.js';
 import { clockLabel, minute } from '../../beacons-replay.js';
 
 const width = 600;
@@ -47,10 +47,15 @@ function seekFrom(event: PointerEvent<HTMLDivElement>, duration: number, seek: (
 
 /** The night as one figure: pinned bands, the lit threshold, the before/after traces and every offering tick.
  * Pressing on the figure scrubs too; the labelled range above stays the keyboard control. */
-export function TraceFigure({ trace, before, offerings, counted, position, lit_intensity, label, on_seek, now_intensity }: {
+export function TraceFigure({ trace, before, offerings, counted, position, lit_intensity, label, on_seek, now_intensity, inspect }: {
   trace: ReplayTrace; before?: ReplayTrace | undefined; offerings: readonly Offering[]; counted: ReadonlySet<number>;
   position: number; lit_intensity: number; label: string; on_seek?: (seconds: number) => void; now_intensity?: number;
+  /** Pointer-only readout of any moment without moving the playhead; the range stays the keyboard path. */
+  inspect?: (seconds: number) => TracePoint;
 }) {
+  const [hover, setHover] = useState<number>();
+  const ghost = hover !== undefined && inspect ? inspect(hover) : undefined;
+  const ghost_share = ghost ? ghost.t / trace.duration_s : 0;
   const share = position / trace.duration_s;
   const lit_at = trace.first_lit_s === undefined ? undefined
     : trace.points.find(point => point.t === trace.first_lit_s && point.total >= trace.lit_total);
@@ -63,12 +68,18 @@ export function TraceFigure({ trace, before, offerings, counted, position, lit_i
     <div className="visuals-replay-plot" data-scrub={on_seek ? 'pointer' : undefined}
       onPointerDown={event => {
         if (!on_seek || event.button !== 0) return;
+        setHover(undefined);
         event.currentTarget.setPointerCapture?.(event.pointerId);
         seekFrom(event, trace.duration_s, on_seek);
       }}
-      onPointerMove={event => { if (on_seek && event.currentTarget.hasPointerCapture?.(event.pointerId)) seekFrom(event, trace.duration_s, on_seek); }}>
+      onPointerMove={event => {
+        if (on_seek && event.currentTarget.hasPointerCapture?.(event.pointerId)) seekFrom(event, trace.duration_s, on_seek);
+        else if (inspect && event.pointerType === 'mouse') setHover(scrubSeconds(event.clientX, event.currentTarget.getBoundingClientRect(), trace.duration_s));
+      }}
+      onPointerLeave={() => setHover(undefined)}>
       <svg viewBox={`0 0 ${width} 140`} preserveAspectRatio="none" role="img" aria-label={label}>
         <TraceLayers trace={trace} before={before} offerings={offerings} counted={counted} lit_intensity={lit_intensity} />
+        {ghost && <line className="visuals-replay-ghost" x1={ghost_share * width} x2={ghost_share * width} y1="0" y2={plot} />}
         {peak && <line className="visuals-replay-peak-guide" x1={peak_share * width} x2={peak_share * width}
           y1={y(peak.intensity)} y2={plot} />}
         <line className="visuals-replay-playhead" x1={position / trace.duration_s * width} x2={position / trace.duration_s * width} y1="0" y2="140" />
@@ -87,6 +98,11 @@ export function TraceFigure({ trace, before, offerings, counted, position, lit_i
         <span className="visuals-replay-peak-label" aria-hidden="true" data-peak={peak.t} style={percent(peak.t, trace.duration_s)}
           data-edge={peak_share > 0.85 ? 'end' : undefined}>{`peak ${Math.round(peak.intensity * 100)}% · ${clockLabel(peak.t)}`}</span>
       </>}
+      {ghost && <span className="visuals-replay-ghost-dot" aria-hidden="true"
+        style={{ left: `${ghost_share * 100}%`, top: `${y(ghost.intensity) / 140 * 100}%` }} />}
+      {ghost && <span className="visuals-replay-ghost-label" aria-hidden="true" style={{ left: `${ghost_share * 100}%` }}
+        data-edge={ghost_share > 0.8 ? 'end' : undefined}>
+        {`${clockLabel(ghost.t)} · ${Math.round(ghost.intensity * 100)}% · ${ghost.total.toFixed(1)} weighted subs`}</span>}
       <span className="visuals-replay-axis-lit" aria-hidden="true" style={{ top: `${y(lit_intensity) / 140 * 100}%` }}>lit</span>
       <span className="visuals-replay-axis-top" aria-hidden="true">100%</span>
       <span className="visuals-replay-axis-zero" aria-hidden="true">0%</span>

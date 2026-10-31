@@ -108,4 +108,9 @@
 .visuals-replay-peak-dot { position: absolute; width: var(--space-8); height: var(--space-8); border: var(--rule-thin) solid var(--paper); border-radius: 50%; background: var(--ink); transform: translate(-50%, -50%); pointer-events: none; }
 .visuals-replay-peak-label { position: absolute; bottom: calc(var(--space-56) * 3 * 22 / 140 + var(--space-4)); margin-left: var(--space-4); padding: 0 var(--space-4); background: var(--card); color: var(--ink); font: 700 var(--text-label)/1.3 var(--font-num); white-space: nowrap; pointer-events: none; }
 .visuals-replay-peak-label[data-edge="end"] { margin-left: 0; transform: translateX(calc(-100% - var(--space-4))); }
+/* Hover readout: a ghost line and one line of numbers; pressing hands over to the playhead. */
+.visuals-replay-ghost { stroke: var(--ink-2); stroke-width: var(--rule-thin); stroke-dasharray: 3 3; vector-effect: non-scaling-stroke; pointer-events: none; }
+.visuals-replay-ghost-label { position: absolute; top: var(--space-4); transform: translateX(var(--space-6)); padding: 0 var(--space-4); border: var(--rule-thin) solid var(--ink-2); background: var(--paper); color: var(--ink); font: 700 var(--text-label)/1.3 var(--font-num); white-space: nowrap; pointer-events: none; }
+.visuals-replay-ghost-label[data-edge="end"] { transform: translateX(calc(-100% - var(--space-6))); }
+.visuals-replay-ghost-dot { position: absolute; width: var(--space-8); height: var(--space-8); border: var(--rule-thin) solid var(--ink); border-radius: 50%; background: var(--paper); transform: translate(-50%, -50%); pointer-events: none; }
 .visuals-replay-plot[data-scrub="pointer"] { cursor: ew-resize; touch-action: none; }

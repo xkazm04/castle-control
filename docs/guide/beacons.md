@@ -21,7 +21,8 @@ Source: [fixture room](../../apps/desktop/src/rooms/visuals/README.md).
 **Replay a night** sits under the plates. Pick **Sample night** (the 60
 illustrative offerings), **Gift wave**, **Raid spike** or **Sub train**, then
 **Play** at 1x, 10x or 30x (the whole 48 minutes in 96 s), or scrub with the
-range or by pressing on the trace. The trace runs every generated offering
+range or by pressing on the trace; pointing at the trace reads any minute's
+blaze and weighted subs without moving the playhead. The trace runs every generated offering
 through the preview model's own weighting, decay and curve, so only gifts and
 subs count; bits, points and Hype Train marks stay as muted ticks. Shaded
 **pinned at max** spans mark minutes past the curve's top point, and **Never

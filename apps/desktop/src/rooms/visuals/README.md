@@ -25,7 +25,9 @@ its dashed **lit** line and flags the first-lit moment from the trace's own
 `first_lit_s`; a night that never lights reads cold (azure verdict and a
 "Never lit tonight" stamp on the preview). A climbing night is offered a fit only
 under a 90% peak (`fit_offer_below`). Space on the focused scrubber plays or
-pauses.
+pauses. A mouse over the trace shows a ghost readout (`traceAt`, the same exact
+lookup as the playhead) without moving the clock; a climbing night names its
+peak at the plot's foot, and the blaze meter carries the lit notch.
 
 `beacons-nights.ts` builds four seeded, fictional nights (sample, gift wave,
 raid spike, sub train). `replay-proposal.ts` drafts a `visuals` proposal in the

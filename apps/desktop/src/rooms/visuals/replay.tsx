@@ -98,6 +98,7 @@ export function NightReplay({ item, editor, queue = proposalQueue, initial_night
     </label>
     <TraceFigure trace={trace} before={before} offerings={night.offerings} counted={counted} position={time.position_s}
       lit_intensity={curveIntensity(curve, trace.lit_total)} on_seek={clock.seek} now_intensity={now.intensity}
+      inspect={seconds => traceAt(trace, curve, seconds)}
       label={`${item.visual.name} intensity across the simulated 48-minute ${night.name.toLowerCase()} · ${verdict.text}`} />
     <div className="visuals-replay-verdict" data-tone={verdict.tone}>
       <div role="status" aria-live="polite">
