@@ -3,20 +3,18 @@ import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { expect, it } from 'vitest';
 import ts from 'typescript';
+// @ts-expect-error Build configuration is native JavaScript, outside the TS product tree.
+import { overlayInputs } from '../vite-overlay.config.mjs';
 
 it('ships a local bundle rebuilt from this renderer and the lazy contract door', () => {
-  const inputs = [
-    './overlay-entry.ts', './overlay-path.ts', './overlay.ts', './bindings.ts',
-    '../../tokens/src/generated.css', './overlay.css',
-    '../../contract/src/generated/beacons-render-validation.ts',
-    '../../contract/src/generated/beacons-render-validators.mjs', '../../contract/src/door.mjs',
-    '../vite-overlay.config.mjs',
-  ];
   const hash = createHash('sha256');
-  for (const path of inputs) hash.update(readFileSync(new URL(path, import.meta.url), 'utf8').replaceAll('\r\n', '\n'));
+  for (const path of overlayInputs as readonly string[]) hash.update(readFileSync(new URL(path, new URL('../vite-overlay.config.mjs', import.meta.url)), 'utf8').replaceAll('\r\n', '\n'));
   const bundle = readFileSync(new URL('../../../apps/overlay/bundle.js', import.meta.url), 'utf8');
   expect(bundle).toContain(`Castle Control overlay source SHA-256: ${hash.digest('hex')}`);
   expect(bundle).toContain('beacons.render.snapshot');
+  expect(bundle).toContain('cc-cast');
+  expect(bundle).toContain('lots');
+  expect(bundle).toContain('cc-lots-played:');
   const tokens = readFileSync(new URL('../../tokens/src/generated.css', import.meta.url), 'utf8');
   const styles = readFileSync(new URL('./overlay.css', import.meta.url), 'utf8');
   // Inspect the static CSS literal without executing any bundle code.

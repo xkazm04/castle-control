@@ -247,8 +247,8 @@ Every scene carries the exact cast label, `drand-quicknet` or
 with `Twitch does not sponsor this promotion` and the same cast label. A prize
 scene with a missing or false disclaimer throws before construction. The
 canonical text cannot be replaced by a caller. The host must preserve these
-layers; this scene description alone does not connect to OBS or approve a prize
-draw's official rules, which remain enforced by the draw policy.
+layers. The `/lots/{draw_id}` OBS host below paints them; a prize draw's
+official rules remain enforced by the draw policy.
 
 `OVERLORD_URN_TEMPLATE` is frozen data, not a renderer branch: id `overlord-urn`,
 shape `urn`, and counts `{ s: 3, m: 7, l: 15, xl: 15 }`. The plan specifies three
@@ -260,10 +260,9 @@ data are original to this delivery; no Shadowrunr files were copied.
 
 The type-only workspace dependency is declared in this package's manifest.
 Its TypeScript paths mapping resolves the contract's public source entry in this
-worktree without installing or modifying the `node_modules` junction. App Master
-must synchronize the renderer importer in the root lockfile during integration;
-that file is outside this delivery's allowed paths. There is no new external npm
-package, runtime import, schema or wire identifier.
+worktree without installing or modifying the `node_modules` junction. The draw
+host imports the existing public `/lots` validators and `/door` JSON parser.
+No new npm dependency, schema or wire identifier is introduced.
 
 ### Draw validation, 2026-10-26
 
@@ -330,3 +329,41 @@ package.
   beacon fixture fingerprints from the root `.gitleaksignore`, and reported
   no remaining leaks (exit 0). That file has exactly the two narrow ignores;
   the repository's own secrets gate is unchanged.
+
+
+### OBS draw host (`/lots/{draw_id}`)
+
+The isolated Rust overlay serves an escaped text fallback plus non-executable
+`cc-seal` / `cc-cast` JSON islands containing exactly `RollSealResult` / `CastResult`.
+JSON escapes `<` as `\u003c`, so raw script end tags cannot terminate an island.
+The module routes through `parseOverlayPath`, parses each island once with the
+existing contract door and `lotsRollSeal` / `lotsCast` validators, checks draw/run
+and seal identity, and leaves the fallback untouched on rejection. Proof
+verification stays in core. There is no polling, event schema or CSP change.
+
+Seal-only pages show the seal and target round, without winner nodes. Waiting
+pages refresh every second; completed scenes refresh after `max(60, 3 + winners)`
+seconds, allowing even a long reveal to finish while still clearing a revoked
+scene on the next read. Content is captured at seal time, so a prize scene always
+has the canonical disclaimer and cast label, including after configuration edits.
+
+The current draw contract has no shape field, so OBS uses **urn**. The four shape
+builders remain available to typed hosts. `/lots` admits only `scale` and `anchor`;
+Rust resolves them to `--draw-scale` and `data-anchor` on `<main>`. JavaScript
+never reparses their values. Layout uses vmin and transparent, bare chrome, with
+no image request. Motion follows `prefers-reduced-motion`: all winners at time
+zero when reduced, otherwise 1200 ms flourish then one reveal every 900 ms.
+Only the artwork group animates; the disclaimer, label and SIMULATED badge stay
+in the foreground. No `shape`, `motion` or `chrome` query key is accepted.
+
+Completed playback is remembered as `cc-lots-played:<draw_id>:<seal>` in
+sessionStorage. A reload of that seal shows the final static frame; a new seal
+plays normally. If OBS disables storage, playback remains available and the root
+reports `data-replay-storage="unavailable"`. Repeated mounts should dispose the
+previous host first. Normal delivery mounts once per page reload.
+
+`overlayInputs` in `vite-overlay.config.mjs` is the single fingerprint inventory,
+including production `draw/*.ts`, playback, and the existing lots validator
+inputs. Rebuild `apps/overlay/bundle.js` with the command in
+[`apps/overlay/README.md`](../../apps/overlay/README.md). Tests import that inventory
+and reject stale output, eval, Function constructors and dynamic imports.

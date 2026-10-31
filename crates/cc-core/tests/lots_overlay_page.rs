@@ -28,7 +28,10 @@ async fn call(module: &LotsModule, method: &str, params: Value) -> Value {
     let request =
         parse_request(&serde_json::to_vec(&json!({"method":method,"params":params})).unwrap())
             .unwrap();
-    let value = module.call(&request).await.unwrap();
+    let value = module
+        .call(&request)
+        .await
+        .unwrap_or_else(|error| panic!("{method}: {error:?}"));
     request.validate_result(value).unwrap()
 }
 
@@ -90,82 +93,139 @@ async fn display_query_is_parsed_once_with_safe_defaults_and_no_markup_injection
 
 #[tokio::test]
 async fn page_shows_only_accepted_seal_then_fixed_simulated_winners_and_no_write_door() {
-    let root = tempfile::tempdir().unwrap();
-    let host = Arc::new(RenderHost::default());
-    let module = LotsModule::open(
-        root.path(),
-        Arc::new(EventHub::new(32).unwrap()),
-        Arc::new(NoBeacon),
-        Arc::new(NoBeacon),
-        true,
-    )
-    .unwrap()
-    .with_render_host(host.clone());
-    call(&module, "lots.draw.upsert", json!({"draw":{
+    for content in ["question", "prize"] {
+        let root = tempfile::tempdir().unwrap();
+        let host = Arc::new(RenderHost::default());
+        let module = LotsModule::open(
+            root.path(),
+            Arc::new(EventHub::new(32).unwrap()),
+            Arc::new(NoBeacon),
+            Arc::new(NoBeacon),
+            true,
+        )
+        .unwrap()
+        .with_render_host(host.clone());
+        let mut draw = call(&module, "lots.draw.upsert", json!({"draw":{
         "draw_id":"simulated-draw", "name":"SIMULATED questions",
-        "policy":{"content":"question","paid_entry":false,"paid_weight":false,"subscriber_only":false,
+        "policy":{"content":content,"paid_entry":false,"paid_weight":false,"subscriber_only":false,
             "channel_points":false,"free_entry_equal_odds":true,"regions":[],"prize_value_usd_cents":0,
             "registration_confirmed":false,"official_rules":true,"twitch_disclaimer":true},
-        "rules":{"pool":{"kind":"chatters"},"winner_count":1,"cooldown_s":0,
+        "rules":{"pool":{"kind":"chatters"},"winner_count":2,"cooldown_s":0,
             "cohort_caps":[],"weight_curve":{"kind":"equal"},"free_join_equal_odds":true}
     }})).await;
-    let user = cc_store::TwitchUserId::parse("42").unwrap();
-    module.map_user(user.clone(), "simulated_viewer").unwrap();
-    module
-        .intake(
-            &"simulated-draw".to_owned().try_into().unwrap(),
-            cc_lots::PassedMessage::from_verdict(
-                cc_lots::MessageFacts {
-                    message_id: "simulated-message".to_owned().try_into().unwrap(),
-                    user_id: user,
-                    at: "2026-10-25T12:00:00Z".parse().unwrap(),
-                    text: "!join".into(),
-                    follower: false,
-                    subscriber: false,
-                    redeemed: false,
-                    activity_units: 0,
-                    cohorts: Default::default(),
-                },
-                cc_types::Verdict::Pass,
-            )
-            .unwrap(),
-        )
-        .unwrap();
-    let server = cc_obs::Overlay::start_with_routes(0, host.routes())
-        .await
-        .unwrap();
-    let url = format!("{}lots/simulated-draw?scale=2&anchor=tl", server.url());
-    let sealed = call(
-        &module,
-        "lots.roll.seal",
-        json!({"draw_id":"simulated-draw","source":"streamer_commit","margin_s":1}),
-    )
-    .await;
-    let html = reqwest::get(&url).await.unwrap().text().await.unwrap();
-    assert!(html.contains("Seal announced"));
-    assert!(html.contains(sealed["sealed"]["seal"].as_str().unwrap()));
-    assert!(!html.contains("<h2>Winners"));
-    assert!(html.contains("SIMULATED"));
-    let cast = call(
-        &module,
-        "lots.cast",
-        json!({"draw_run_id":sealed["draw_run_id"]}),
-    )
-    .await;
-    let html = reqwest::get(&url).await.unwrap().text().await.unwrap();
-    assert!(html.contains("<h2>Winners"));
-    assert!(html.contains(cast["cast"]["winners"][0].as_str().unwrap()));
-    assert!(html.contains("data-anchor=\"tl\""));
-    assert!(html.contains("--draw-scale:2"));
-    let client = reqwest::Client::new();
-    assert_eq!(client.post(&url).send().await.unwrap().status(), 405);
-    assert_eq!(
-        client
-            .get(format!("{}rpc", server.url()))
-            .send()
+        for user_id in ["42", "43"] {
+            let user = cc_store::TwitchUserId::parse(user_id).unwrap();
+            module
+                .map_user(user.clone(), &format!("simulated_viewer_{user_id}"))
+                .unwrap();
+            module
+                .intake(
+                    &"simulated-draw".to_owned().try_into().unwrap(),
+                    cc_lots::PassedMessage::from_verdict(
+                        cc_lots::MessageFacts {
+                            message_id: format!("simulated-message-{user_id}").try_into().unwrap(),
+                            user_id: user,
+                            at: "2026-10-25T12:00:00Z".parse().unwrap(),
+                            text: "!join".into(),
+                            follower: false,
+                            subscriber: false,
+                            redeemed: false,
+                            activity_units: 0,
+                            cohorts: Default::default(),
+                        },
+                        cc_types::Verdict::Pass,
+                    )
+                    .unwrap(),
+                )
+                .unwrap();
+        }
+        let server = cc_obs::Overlay::start_with_routes(0, host.routes())
             .await
+            .unwrap();
+        let url = format!("{}lots/simulated-draw?scale=2&anchor=tl", server.url());
+        let mut events = module.subscribe();
+        let sealed = call(
+            &module,
+            "lots.roll.seal",
+            json!({"draw_id":"simulated-draw","source":"streamer_commit","margin_s":1}),
+        )
+        .await;
+        let html = reqwest::get(&url).await.unwrap().text().await.unwrap();
+        assert!(html.contains("Seal announced"));
+        assert_eq!(island(&html, "cc-seal"), sealed);
+        assert!(!html.contains("id=\"cc-cast\""));
+        assert!(html.contains("<script type=\"module\" src=\"/bundle.js\"></script>"));
+        assert!(html.contains("http-equiv=\"refresh\" content=\"1\""));
+        assert!(html.contains(&format!("data-content=\"{content}\"")));
+        let cc_types::LotsEventPayload::Sealed(event) = events.recv().await.unwrap() else {
+            panic!("seal event expected")
+        };
+        assert_eq!(serde_json::to_value(event).unwrap(), sealed);
+        assert!(html.contains(sealed["sealed"]["seal"].as_str().unwrap()));
+        assert!(!html.contains("<h2>Winners"));
+        assert!(html.contains("SIMULATED"));
+        let cast = call(
+            &module,
+            "lots.cast",
+            json!({"draw_run_id":sealed["draw_run_id"]}),
+        )
+        .await;
+        // Reconfiguration after a cast must not change its seal-time content.
+        draw["policy"]["content"] = json!(if content == "prize" {
+            "question"
+        } else {
+            "prize"
+        });
+        call(&module, "lots.draw.upsert", json!({"draw": draw})).await;
+        let html = reqwest::get(&url).await.unwrap().text().await.unwrap();
+        assert!(html.contains(&format!("data-content=\"{content}\"")));
+        assert!(html.contains("<h2>Winners"));
+        assert_eq!(island(&html, "cc-cast"), cast);
+        assert_eq!(cast["cast"]["seal"], sealed["sealed"]["seal"]);
+        assert!(html.contains("http-equiv=\"refresh\" content=\"60\""));
+        let parsed: cc_types::CastResult =
+            serde_json::from_value(island(&html, "cc-cast")).unwrap();
+        assert_eq!(
+            parsed,
+            host.lots_cast(&"simulated-draw".to_owned().try_into().unwrap())
+                .unwrap()
+                .unwrap()
+        );
+        assert_eq!(
+            html.contains("<footer>Twitch does not sponsor this promotion</footer>"),
+            content == "prize"
+        );
+        let expected = cast["cast"]["winners"]
+            .as_array()
             .unwrap()
-            .status(),
-        404
-    );
+            .iter()
+            .map(|winner| format!("<li>{}</li>", winner.as_str().unwrap()))
+            .collect::<String>();
+        assert!(html.contains(&format!("<ol>{expected}</ol>")));
+        assert!(html.contains("data-anchor=\"tl\""));
+        assert!(html.contains("--draw-scale:2"));
+        let client = reqwest::Client::new();
+        assert_eq!(client.post(&url).send().await.unwrap().status(), 405);
+        assert_eq!(
+            client
+                .get(format!("{}rpc", server.url()))
+                .send()
+                .await
+                .unwrap()
+                .status(),
+            404
+        );
+    }
+}
+
+fn island(html: &str, id: &str) -> Value {
+    let start = format!("<script type=\"application/json\" id=\"{id}\">");
+    let json = html
+        .split_once(&start)
+        .unwrap()
+        .1
+        .split_once("</script>")
+        .unwrap()
+        .0;
+    serde_json::from_str(json).unwrap()
 }

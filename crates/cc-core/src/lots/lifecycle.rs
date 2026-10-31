@@ -19,6 +19,7 @@ impl LotsModule {
                 "draw policy is blocked",
             ));
         }
+        let content = draw.policy.content;
         let guarded = GuardedDraw::new(draw.draw_id.clone(), convert::policy(&draw.policy));
         // Source errors leave the open pool untouched. After transfer to the domain,
         // every failed attempt is consumed; there is no reroll of a frozen snapshot.
@@ -69,7 +70,7 @@ impl LotsModule {
                 "seal announcement missed the target round; attempt consumed",
             ));
         }
-        self.emit(LotsEventPayload::Sealed(published.clone()))?;
+        self.emit(LotsEventPayload::Sealed(published.clone()), Some(content))?;
         // Publication is synchronous. Do not accept a late announcement even if
         // store/event work exhausted the margin; it can never be cast.
         if self
@@ -157,7 +158,7 @@ impl LotsModule {
         };
         storage::save_cast(&mut state.store, &saved, at, self.simulated)?;
         state.rolls.insert(pending.draw_id, result.into_next_roll());
-        self.emit(LotsEventPayload::Cast(saved.result.clone()))?;
+        self.emit(LotsEventPayload::Cast(saved.result.clone()), None)?;
         encode(saved.result)
     }
 }

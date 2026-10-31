@@ -1,5 +1,6 @@
 //! Accepted render state on the isolated OBS listener. Never mounted on core.
 mod lots;
+mod lots_page;
 pub mod package;
 mod routes;
 

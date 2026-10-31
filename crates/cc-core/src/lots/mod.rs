@@ -154,10 +154,13 @@ impl LotsModule {
         let result = roll.intake(passed);
         if result == Intake::Added {
             let weight_table = convert::table(roll.weight_table(self.now()))?;
-            self.emit(LotsEventPayload::Roll(LotsRollPayload {
-                draw_id: draw_id.clone(),
-                weight_table,
-            }))?;
+            self.emit(
+                LotsEventPayload::Roll(LotsRollPayload {
+                    draw_id: draw_id.clone(),
+                    weight_table,
+                }),
+                None,
+            )?;
         }
         Ok(result)
     }
@@ -186,10 +189,13 @@ impl LotsModule {
             let passed = PassedMessage::from_verdict(facts.clone(), screened.decision.verdict)
                 .map_err(|_| internal())?;
             if roll.intake(passed) == Intake::Added {
-                self.emit(LotsEventPayload::Roll(LotsRollPayload {
-                    draw_id: draw_id.clone(),
-                    weight_table: convert::table(roll.weight_table(self.now()))?,
-                }))?;
+                self.emit(
+                    LotsEventPayload::Roll(LotsRollPayload {
+                        draw_id: draw_id.clone(),
+                        weight_table: convert::table(roll.weight_table(self.now()))?,
+                    }),
+                    None,
+                )?;
             }
         }
         Ok(())
@@ -212,14 +218,18 @@ impl LotsModule {
     fn now(&self) -> DateTime<Utc> {
         self.clock.now()
     }
-    fn emit(&self, payload: LotsEventPayload) -> Result<(), ErrorEnvelope> {
+    fn emit(
+        &self,
+        payload: LotsEventPayload,
+        content: Option<DrawContent>,
+    ) -> Result<(), ErrorEnvelope> {
         let kind = match &payload {
             LotsEventPayload::Roll(_) => EventKind::Roll,
             LotsEventPayload::Sealed(_) => EventKind::Sealed,
             LotsEventPayload::Cast(_) => EventKind::Cast,
         };
         if let Some(render) = &self.render {
-            render.accept_lots(&payload, self.simulated)?;
+            render.accept_lots(&payload, self.simulated, content)?;
         }
         self.events.publish(kind)?;
         // No subscribers is normal: this internal sink is optional, never a ledger.
@@ -251,10 +261,13 @@ impl LotsModule {
                 state.draws = draws;
                 let weight_table = convert::table(roll.weight_table(self.now()))?;
                 state.rolls.insert(draw.draw_id.clone(), roll);
-                self.emit(LotsEventPayload::Roll(LotsRollPayload {
-                    draw_id: draw.draw_id.clone(),
-                    weight_table,
-                }))?;
+                self.emit(
+                    LotsEventPayload::Roll(LotsRollPayload {
+                        draw_id: draw.draw_id.clone(),
+                        weight_table,
+                    }),
+                    None,
+                )?;
                 encode(draw)
             }
             RpcRequest::RollLookup(params) => {

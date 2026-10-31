@@ -1,6 +1,7 @@
 import { connectOverlay } from './overlay.ts';
 import type { OverlayDisplay } from './overlay.ts';
 import { parseOverlayPath } from './overlay-path.ts';
+import { mountDraw } from './draw/host.ts';
 
 /** URL-only presentation grammar, independent of RPC and package identity. */
 export function parseOverlayDisplay(search: string): OverlayDisplay {
@@ -23,3 +24,7 @@ document.head.append(styles);
 const root = document.getElementById('scene');
 const page = parseOverlayPath(location.pathname, location.search);
 if (root && page?.kind === 'beacons') connectOverlay(root, page.visual, parseOverlayDisplay(location.search));
+if (page?.kind === 'lots') {
+  const draw = document.getElementById('draw');
+  if (draw) mountDraw(draw, page.draw);
+}
