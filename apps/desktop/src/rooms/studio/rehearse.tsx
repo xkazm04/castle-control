@@ -7,6 +7,7 @@ import { HexTable } from './hex-table.jsx';
 import { rehearsalLimits } from './rehearsal.js';
 import type { RehearsalField } from './rehearsal.js';
 import { rehearseCopy as copy } from './rehearse-copy.js';
+import { RehearseTools } from './rehearse-tools.jsx';
 import { turnLine } from './rehearse-state.js';
 import type { RehearseState, RehearseView, SizeChoice } from './rehearse-state.js';
 import type { RehearseHandlers } from './use-rehearse.js';
@@ -47,7 +48,7 @@ const fieldProps = (id: RehearsalField, state: RehearseState) => ({
   'aria-describedby': `studio-rehearse-${id}-hint${state.error?.field === id ? ' studio-rehearse-error' : ''}`,
 });
 
-export function RehearseControls({ state, view, handlers, can_compare = false }: Pick<RehearseProps, 'state' | 'view' | 'handlers'> & { can_compare?: boolean }) {
+export function RehearseControls({ state, view, handlers }: Pick<RehearseProps, 'state' | 'view' | 'handlers'>) {
   const { run, playing } = state; const finished = run !== null && view.done;
   const { viewers, turns } = rehearsalLimits;
   const submit = (event: FormEvent) => { event.preventDefault(); handlers.start(); };
@@ -76,7 +77,6 @@ export function RehearseControls({ state, view, handlers, can_compare = false }:
             : <InkButton variant="plate" size="small" onClick={handlers.start}>{copy.play}</InkButton>}
       <InkButton size="small" onClick={handlers.step} disabled={finished}>{copy.step}</InkButton>
       <InkButton size="small" onClick={handlers.reset} disabled={run === null}>{copy.reset}</InkButton>
-      {can_compare && <InkButton size="small" onClick={handlers.compare}>{copy.compare_sizes}</InkButton>}
     </div>
   </form>;
 }
@@ -89,14 +89,20 @@ export function RehearseWork({ state, view, handlers, board, size, look, sizes }
   const unclaimed = view.turn ? view.turn.unclaimed : start.unclaimed;
   const last = view.turn;
   const line = run && last ? turnLine(run, last) : '';
-  const message = !run ? copy.idle_hint : !last ? copy.idle_hint
+  const painted = state.last_paint && !run ? copy.painted_line(state.last_paint.id,
+    board.sides.find(house => house.id === state.last_paint?.side)?.label ?? copy.unclaimed,
+    Object.keys(state.edits?.by ?? {}).length) : '';
+  const message = painted ? painted : state.brush !== null && !run ? copy.redraw_hint : !run ? copy.idle_hint : !last ? copy.idle_hint
     : view.done && view.report ? copy.announce_done(line, view.report.verdict) : line;
-  return <section className="studio-rehearse" aria-label={copy.work} data-turn={turn} data-playing={state.playing}>
+  const painting = state.brush !== null;
+  return <section className="studio-rehearse" aria-label={copy.work} data-turn={turn} data-playing={state.playing} data-painting={painting}>
     <SimulatedBand />
-    <RehearseControls state={state} view={view} handlers={handlers} can_compare={!!sizes?.length} />
-    <HexTable board={view.shown} selected={state.selected} on_select={handlers.select} size={size}
-      {...(look ? { look } : {})} flip={{ ids: view.flipped, phase: view.phase, picked: view.picked, flipped_label: copy.tile_flipped }}
-      gloss={copy.board_gloss(turn, view.of)} pennants={false} quiet={start.tiles.length > denseTiles} />
+    <RehearseControls state={state} view={view} handlers={handlers} />
+    <RehearseTools state={state} handlers={handlers} board={board} can_compare={!!sizes?.length} />
+    <HexTable board={view.shown} selected={painting ? '' : state.selected} on_select={handlers.select} size={size}
+      {...(look ? { look } : {})} {...(painting ? { on_paint: handlers.paint } : {})}
+      flip={{ ids: view.flipped, phase: view.phase, picked: view.picked, flipped_label: copy.tile_flipped }}
+      gloss={painting ? copy.paint_gloss : copy.board_gloss(turn, view.of)} pennants={false} quiet={start.tiles.length > denseTiles} />
     <div className="studio-rehearse-now">
       <Notice message={message} label={copy.log_label} className="studio-rehearse-line" />
       {run && <p className="studio-rehearse-turn"><span className="studio-rehearse-progress">{copy.progress(state.turn, view.of)}</span>

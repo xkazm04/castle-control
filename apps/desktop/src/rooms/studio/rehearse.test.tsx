@@ -13,6 +13,7 @@ import type { RehearseAction, RehearseState } from './rehearse-state.js';
 import { rehearseCopy as copy } from './rehearse-copy.js';
 import { RehearseControls, RehearseWork, SimulatedBand } from './rehearse.jsx';
 import { RehearseSide, SizeTable } from './rehearse-side.jsx';
+import { RehearseTools } from './rehearse-tools.jsx';
 import type { RehearseHandlers } from './use-rehearse.js';
 
 const BAND = 'SIMULATED REHEARSAL · no viewers, no identities, no Extension state · sample territory';
@@ -21,7 +22,8 @@ const apply = (...actions: RehearseAction[]): RehearseState => actions.reduce(re
 const ticks = (count: number): RehearseAction[] => Array.from({ length: count }, () => ({ type: 'tick' }));
 const start: RehearseAction = { type: 'start', board, reduced_motion: false };
 const handlers = (): RehearseHandlers => ({ input: vi.fn(), start: vi.fn(), again: vi.fn(), replay: vi.fn(), step: vi.fn(),
-  pause: vi.fn(), resume: vi.fn(), reset: vi.fn(), select: vi.fn(), clear_past: vi.fn(), compare: vi.fn(), clear_sizes: vi.fn() });
+  pause: vi.fn(), resume: vi.fn(), reset: vi.fn(), select: vi.fn(), clear_past: vi.fn(), compare: vi.fn(), clear_sizes: vi.fn(),
+  compare_crowds: vi.fn(), clear_crowds: vi.fn(), brush: vi.fn(), paint: vi.fn(), restore_start: vi.fn() });
 function work(state: RehearseState, on = board, h = handlers()) {
   return <RehearseWork state={state} view={rehearseView(state, on)} handlers={h} board={on} size="m" />;
 }
@@ -248,10 +250,13 @@ test('Compare sizes shows one row per map size with its verdict, and a way to pu
 });
 
 test('the Compare sizes button exists only where the room owns the sizes, and the side shows the table once compared', () => {
-  const controls = (can_compare: boolean) => collect(RehearseControls({ state: createRehearseState(), view: rehearseView(createRehearseState(), board),
-    handlers: handlers(), can_compare })).filter(control => control.onClick).map(textOf);
-  expect(controls(true)).toEqual(['Play round', 'Step', 'Reset', 'Compare sizes']);
-  expect(controls(false)).toEqual(['Play round', 'Step', 'Reset']);
+  const controls = () => collect(RehearseControls({ state: createRehearseState(), view: rehearseView(createRehearseState(), board),
+    handlers: handlers() })).filter(control => control.onClick).map(textOf);
+  expect(controls()).toEqual(['Play round', 'Step', 'Reset']);
+  const tools = (can_compare: boolean) => collect(RehearseTools({ state: createRehearseState(), handlers: handlers(), board, can_compare }))
+    .filter(control => control.onClick).map(textOf);
+  expect(tools(true)).toEqual(['Compare sizes', 'Compare crowds', 'Redraw start']);
+  expect(tools(false)).toEqual(['Compare crowds', 'Redraw start']);
   const state = reduceRehearse(createRehearseState(), { type: 'compare_sizes', sizes: sizeChoices });
   expect(renderToStaticMarkup(side(state))).toContain('Simulated comparison across map sizes');
   expect(renderToStaticMarkup(side(createRehearseState()))).not.toContain('studio-sizes');

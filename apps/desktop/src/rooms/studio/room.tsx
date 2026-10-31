@@ -45,7 +45,7 @@ export function StudioWork({ queue, seal_slot, board, design_session = designSes
         <button type="button" aria-pressed={view === 'spyglass'} onClick={() => open('spyglass')}>{copy.spyglass}</button>
         <button type="button" aria-pressed={view === 'rehearse'} onClick={() => open('rehearse')}>{rehearseCopy.view}</button>
       </div>
-      {view === 'rehearse' ? <RehearseWork {...rehearse} board={current_board} size={session.design.size} look={looks.map.output.style}
+      {view === 'rehearse' ? <RehearseWork {...rehearse} size={session.design.size} look={looks.map.output.style}
         {...(size_choices ? { sizes: size_choices } : {})} />
         : view === 'spyglass' ? <>
           {end_board && <p className="studio-spyglass-note" role="status">{rehearseCopy.spyglass_note(rehearse.state.run?.setup.seed ?? '')}</p>}

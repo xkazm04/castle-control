@@ -70,21 +70,21 @@
 .studio-room .studio-mini { width: 100%; max-height: calc(var(--space-56) * 2); }
 .studio-room .studio-mini polygon { fill: var(--house); stroke: var(--rule); stroke-width: .06; }
 .studio-room .studio-mini polygon[data-unclaimed="true"] { fill: var(--paper-2); stroke: var(--hair); }
-.studio-room .studio-sizes { display: grid; gap: var(--space-8); }
-.studio-room .studio-sizes table { width: 100%; border-collapse: collapse; table-layout: fixed; }
-.studio-room .studio-sizes th[scope="col"] { padding: var(--space-4) 0; border-bottom: var(--rule-medium) solid var(--rule); text-align: left; font: 800 var(--text-label)/1.3 var(--font-ui); letter-spacing: var(--track-label); text-transform: uppercase; color: var(--muted); }
-.studio-room .studio-sizes th[scope="col"]:first-child, .studio-room .studio-sizes th[scope="row"] { width: 38%; }
-.studio-room .studio-sizes tr { border-bottom: var(--rule-thin) solid var(--line); }
-.studio-room .studio-sizes th[scope="row"], .studio-room .studio-sizes td { padding: var(--space-8) var(--space-6) var(--space-8) 0; vertical-align: top; text-align: left; }
-.studio-room .studio-sizes th[scope="row"] { display: table-cell; font: 800 var(--text-label)/1.3 var(--font-ui); }
-.studio-room .studio-sizes th[scope="row"] > span, .studio-room .studio-sizes small { display: block; font: var(--text-small)/1.35 var(--font-ui); color: var(--ink-2); }
-.studio-room .studio-sizes th[scope="row"] > span { font-weight: 800; color: var(--ink); }
-.studio-room .studio-sizes td b { display: block; font: 800 var(--text-body)/1.2 var(--font-display); text-transform: uppercase; }
-.studio-room .studio-sizes td > .cc-button, .studio-room .studio-sizes td > em { margin-top: var(--space-6); }
-.studio-room .studio-sizes td > em { display: block; font: italic var(--text-small)/1.3 var(--font-serif); color: var(--muted); }
-.studio-room .studio-sizes tr[data-current="true"] { background: var(--tint); }
-.studio-room :is(.studio-sizes, .studio-compare) > .cc-button { justify-self: start; }
-.studio-room .studio-sizes .studio-mini { max-height: calc(var(--space-56) * 1); margin-bottom: var(--space-4); }
+.studio-room :is(.studio-sizes, .studio-crowds) { display: grid; gap: var(--space-8); }
+.studio-room :is(.studio-sizes, .studio-crowds) table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+.studio-room :is(.studio-sizes, .studio-crowds) th[scope="col"] { padding: var(--space-4) 0; border-bottom: var(--rule-medium) solid var(--rule); text-align: left; font: 800 var(--text-label)/1.3 var(--font-ui); letter-spacing: var(--track-label); text-transform: uppercase; color: var(--muted); }
+.studio-room :is(.studio-sizes, .studio-crowds) th[scope="col"]:first-child, .studio-room :is(.studio-sizes, .studio-crowds) th[scope="row"] { width: 38%; }
+.studio-room :is(.studio-sizes, .studio-crowds) tr { border-bottom: var(--rule-thin) solid var(--line); }
+.studio-room :is(.studio-sizes, .studio-crowds) th[scope="row"], .studio-room :is(.studio-sizes, .studio-crowds) td { padding: var(--space-8) var(--space-6) var(--space-8) 0; vertical-align: top; text-align: left; }
+.studio-room :is(.studio-sizes, .studio-crowds) th[scope="row"] { display: table-cell; font: 800 var(--text-label)/1.3 var(--font-ui); }
+.studio-room :is(.studio-sizes, .studio-crowds) th[scope="row"] > span, .studio-room :is(.studio-sizes, .studio-crowds) small { display: block; font: var(--text-small)/1.35 var(--font-ui); color: var(--ink-2); }
+.studio-room :is(.studio-sizes, .studio-crowds) th[scope="row"] > span { font-weight: 800; color: var(--ink); }
+.studio-room :is(.studio-sizes, .studio-crowds) td b { display: block; font: 800 var(--text-body)/1.2 var(--font-display); text-transform: uppercase; }
+.studio-room :is(.studio-sizes, .studio-crowds) td > .cc-button, .studio-room :is(.studio-sizes, .studio-crowds) td > em { margin-top: var(--space-6); }
+.studio-room :is(.studio-sizes, .studio-crowds) td > em { display: block; font: italic var(--text-small)/1.3 var(--font-serif); color: var(--muted); }
+.studio-room :is(.studio-sizes, .studio-crowds) tr[data-current="true"] { background: var(--tint); }
+.studio-room :is(.studio-sizes, .studio-crowds, .studio-compare) > .cc-button { justify-self: start; }
+.studio-room :is(.studio-sizes, .studio-crowds) .studio-mini { max-height: calc(var(--space-56) * 1); margin-bottom: var(--space-4); }
 .studio-room .studio-spyglass-note { padding: var(--space-8) var(--space-24) 0; font: italic var(--text-small)/1.4 var(--font-serif); color: var(--ink-2); }
 /* Where the crowd clicked this turn: a short glow in the tile's own ink, before and under the flips. */
 .studio-room .cc-hex[data-picked="a"] { animation: studio-pick-a calc(var(--motion-shell) * 3) var(--ease) both; }
@@ -109,3 +109,19 @@
   .studio-room .cc-hex[data-flipped] .cc-hex-face, .studio-room .cc-hex[data-picked], .studio-room .studio-verdict { animation: none; }
   .studio-room .studio-ribbon > li { transition: none; }
 }
+/* What if: the compare and redraw tools sit between the run controls and the board. */
+.studio-room .studio-rehearse-tools { display: grid; gap: var(--space-6); padding: var(--space-6) var(--space-24) 0; }
+.studio-room .studio-tools-row, .studio-room .studio-palette { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-6) var(--space-8); }
+.studio-room .studio-tools-title, .studio-room .studio-palette-label {
+  font: 800 var(--text-label)/1.4 var(--font-ui); letter-spacing: var(--track-air); text-transform: uppercase; color: var(--muted);
+}
+.studio-room .studio-tools-edited { font: italic var(--text-small)/1.3 var(--font-serif); color: var(--ink-2); }
+.studio-room .studio-palette { padding: var(--space-6) var(--space-8); border: var(--rule-medium) dashed var(--key); background: var(--card); }
+.studio-room .studio-palette .cc-button { display: inline-flex; align-items: center; gap: var(--space-5); }
+.studio-room .studio-swatch { width: var(--space-10); height: var(--space-10); border: var(--rule-thin) solid var(--rule); background: var(--house); }
+.studio-room .studio-swatch[data-unclaimed="true"] { background: var(--paper-2); border-style: dashed; }
+/* In paint mode the board says so before a hand reaches it. */
+.studio-room .studio-rehearse[data-painting="true"] .cc-hexfield { cursor: crosshair; box-shadow: inset 0 0 0 var(--rule-medium) var(--key); }
+.studio-room .studio-rehearse[data-painting="true"] .cc-hex { cursor: crosshair; }
+/* Small hexes cannot hold the word Unclaimed at label size, so it scales with the hex. */
+.studio-room .studio-rehearse .cc-hex[data-unclaimed="true"] .cc-hex-house { padding: 0; font-size: min(var(--text-label), calc(var(--hw) * .16)); }

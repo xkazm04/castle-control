@@ -3,7 +3,7 @@ import { boardGeometry } from './board.js';
 import type { StudioBoard } from './board.js';
 import { rehearseCopy as copy } from './rehearse-copy.js';
 import { turnLine } from './rehearse-state.js';
-import type { PastRun, RehearseState, RehearseView, SizeCompare } from './rehearse-state.js';
+import type { CrowdCompare, PastRun, RehearseState, RehearseView, SizeCompare } from './rehearse-state.js';
 import type { RehearseHandlers } from './use-rehearse.js';
 
 const ROOT3 = Math.sqrt(3);
@@ -57,7 +57,7 @@ export function BalanceTable({ view }: { view: RehearseView }) {
 
 function PastCard({ run, index }: { run: PastRun; index: number }) {
   return <li className="studio-past" data-verdict={run.kind}>
-    <b>{copy.compare_run(index + 1)} · {copy.compare_board(run.columns, run.rows, run.tiles)}</b>
+    <b>{copy.compare_run(index + 1)} · {copy.compare_board(run.columns, run.rows, run.tiles)}{run.edited > 0 && ` · ${copy.edited_row}`}</b>
     <MiniBoard board={run.board} label={copy.mini_label(run.verdict, run.columns, run.rows)} />
     <p className="studio-past-verdict">{run.verdict}</p>
     <p className="cc-side-fine">{copy.summary(run.viewers, run.turns, run.seed)}</p>
@@ -99,20 +99,27 @@ export function VerdictBlock({ state, view, handlers }: { state: RehearseState; 
   </section>;
 }
 
-export function SizeTable({ sizes, current, on_size, on_clear }: {
-  sizes: SizeCompare; current: string; on_size?: (id: string) => void; on_clear: () => void;
+type Line = Readonly<{
+  key: string; label: string; note: string; verdict: string; kind: string; last_change: number; board: StudioBoard;
+  mini: string; current: boolean; on_use?: () => void; use_label: string; current_word: string;
+}>;
+
+/** One comparison table, shared by sizes and crowds: a mini end-state board, the verdict, and a Use button.
+ * Hook-free, and called directly by its two wrappers, so a test can walk the whole tree. */
+function CompareTable({ className, title, label, summary, first, lines, on_clear }: {
+  className: string; title: string; label: string; summary: string; first: string; lines: readonly Line[]; on_clear: () => void;
 }) {
-  return <section className="studio-sizes" aria-label={copy.sizes_label}>
-    <SectionHeading variant="ruled" title={copy.compare_sizes} count={copy.summary(sizes.viewers, sizes.turns, sizes.seed)} />
+  return <section className={className} aria-label={label}>
+    <SectionHeading variant="ruled" title={title} count={summary} />
     <table>
-      <caption className="studio-visually-hidden">{copy.sizes_label}</caption>
-      <thead><tr><th scope="col">{copy.size_col}</th><th scope="col">{copy.result_col}</th></tr></thead>
-      <tbody>{sizes.rows.map(row => <tr key={row.id} data-verdict={row.kind} data-current={row.id === current}>
-        <th scope="row"><MiniBoard board={row.board} label={copy.mini_label(row.verdict, row.columns, row.rows)} />
-          <span>{row.label}</span><small>{copy.size_tiles(row.tiles)}</small></th>
-        <td><b>{row.verdict}</b><small>{copy.size_last(row.last_change)}</small>
-          {on_size && (row.id === current ? <em>{copy.size_current}</em>
-            : <InkButton size="small" aria-label={copy.size_use(row.label)} onClick={() => on_size(row.id)}>{copy.size_use_word}</InkButton>)}
+      <caption className="studio-visually-hidden">{label}</caption>
+      <thead><tr><th scope="col">{first}</th><th scope="col">{copy.result_col}</th></tr></thead>
+      <tbody>{lines.map(line => <tr key={line.key} data-verdict={line.kind} data-current={line.current}>
+        <th scope="row"><MiniBoard board={line.board} label={line.mini} />
+          <span>{line.label}</span><small>{line.note}</small></th>
+        <td><b>{line.verdict}</b><small>{copy.size_last(line.last_change)}</small>
+          {line.on_use && (line.current ? <em>{line.current_word}</em>
+            : <InkButton size="small" aria-label={line.use_label} onClick={line.on_use}>{copy.size_use_word}</InkButton>)}
         </td>
       </tr>)}</tbody>
     </table>
@@ -120,12 +127,40 @@ export function SizeTable({ sizes, current, on_size, on_clear }: {
   </section>;
 }
 
+export function SizeTable({ sizes, current, on_size, on_clear }: {
+  sizes: SizeCompare; current: string; on_size?: (id: string) => void; on_clear: () => void;
+}) {
+  const lines = sizes.rows.map((row): Line => ({ key: row.id, label: row.label, verdict: row.verdict, kind: row.kind,
+    note: row.edited ? `${copy.size_tiles(row.tiles)} · ${copy.edited_row}` : copy.size_tiles(row.tiles),
+    last_change: row.last_change, board: row.board, current: row.id === current, mini: copy.mini_label(row.verdict, row.columns, row.rows),
+    use_label: copy.size_use(row.label), current_word: copy.size_current, ...(on_size ? { on_use: () => on_size(row.id) } : {}) }));
+  return CompareTable({ className: 'studio-sizes', title: copy.compare_sizes, label: copy.sizes_label,
+    summary: copy.summary(sizes.viewers, sizes.turns, sizes.seed), first: copy.size_col, lines, on_clear });
+}
+
+/** The same board at several crowd sizes. `viewers` is what the form holds now, so that row reads "In the form". */
+export function CrowdTable({ crowds, viewers, on_viewers, on_clear }: {
+  crowds: CrowdCompare; viewers: number; on_viewers?: (viewers: number) => void; on_clear: () => void;
+}) {
+  const lines = crowds.lines.map((row): Line => ({ key: String(row.viewers), label: copy.crowd_word(row.viewers),
+    note: copy.compare_board(crowds.columns, crowds.rows, crowds.tiles), verdict: row.verdict, kind: row.kind,
+    last_change: row.last_change, board: row.board, current: row.viewers === viewers,
+    mini: copy.mini_label(row.verdict, crowds.columns, crowds.rows), use_label: copy.crowd_use(row.viewers),
+    current_word: copy.crowd_on_form, ...(on_viewers ? { on_use: () => on_viewers(row.viewers) } : {}) }));
+  return CompareTable({ className: 'studio-crowds', title: copy.compare_crowds, label: copy.crowds_label,
+    summary: `${crowds.turns} turns · seed ${crowds.seed}${crowds.edited > 0 ? ` · ${copy.edited_row}` : ''}`,
+    first: copy.crowd_col, lines, on_clear });
+}
+
 export function RehearseSide({ state, view, handlers, size = '', on_size }: {
   state: RehearseState; view: RehearseView; handlers: RehearseHandlers; size?: string; on_size?: (id: string) => void;
 }) {
+  const viewers = Number(state.inputs.viewers);
   return <div className="studio-rehearse-side">
     <VerdictBlock state={state} view={view} handlers={handlers} />
     <TurnLog state={state} board={view.shown} />
+    {state.crowds && <CrowdTable crowds={state.crowds} viewers={viewers} on_clear={handlers.clear_crowds}
+      on_viewers={count => handlers.input('viewers', String(count))} />}
     {state.sizes && <SizeTable sizes={state.sizes} current={size} {...(on_size ? { on_size } : {})} on_clear={handlers.clear_sizes} />}
     <BalanceTable view={view} />
     <ComparePast past={state.past} on_clear={handlers.clear_past} />

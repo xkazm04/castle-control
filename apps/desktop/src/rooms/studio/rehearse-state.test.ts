@@ -4,7 +4,8 @@ import { boardForSize } from './session.js';
 import { parseStudioBoard } from './board.js';
 import { rehearsalDefaults, runRehearsal } from './rehearsal.js';
 import { balanceReport } from './rehearsal-verdict.js';
-import { createRehearseState, maxPastRuns, reduceRehearse, rehearseView, sizeChoices, turnLine } from './rehearse-state.js';
+import { crowdLevels, createRehearseState, maxPastRuns, reduceRehearse, rehearseView, sizeChoices, turnLine } from './rehearse-state.js';
+import { startBoard } from './rehearse-paint.js';
 import type { RehearseAction, RehearseState } from './rehearse-state.js';
 
 const board = STUDIO_SAMPLE_BOARD;
@@ -161,4 +162,80 @@ test('Compare sizes follows the settings, and bad settings never compare', () =>
   if (!solo.ok) throw new Error(solo.error.message);
   const refused = reduceRehearse(createRehearseState(), { type: 'compare_sizes', sizes: [{ id: 'x', label: 'X', board: solo.board }] });
   expect(refused.sizes).toBeNull(); expect(refused.error?.message).toMatch(/at least two houses/);
+});
+
+const paint = (id: string): RehearseAction => ({ type: 'paint', board, id });
+
+test('painting needs a brush, repaints the start only, and ends the round and the crowd table on the old start', () => {
+  const idle = createRehearseState();
+  expect(reduceRehearse(idle, paint('D1'))).toBe(idle);
+  const played = apply({ type: 'start', board, reduced_motion: true }, { type: 'compare_crowds', board });
+  expect(played.run).not.toBeNull(); expect(played.crowds).not.toBeNull();
+  const painted = [{ type: 'brush', side: 'sable' }, paint('D1')].reduce<RehearseState>((state, action) => reduceRehearse(state, action as RehearseAction), played);
+  expect(painted.edits?.by).toEqual({ D1: 'sable' }); expect(painted.last_paint).toEqual({ id: 'D1', side: 'sable' });
+  expect(painted.run).toBeNull(); expect(painted.turn).toBe(0); expect(painted.playing).toBe(false); expect(painted.crowds).toBeNull();
+  expect(painted.past).toEqual(played.past); expect(painted.inputs).toEqual(played.inputs);
+  expect(startBoard(board, painted.edits).tiles.filter((tile, index) => tile.side !== board.tiles[index]?.side)).toHaveLength(1);
+  // Painting the same thing again is not an event.
+  expect(reduceRehearse(painted, paint('D1'))).toBe(painted);
+  expect(reduceRehearse(painted, { type: 'brush', side: null }).edits).toBe(painted.edits);
+  expect(reduceRehearse(painted, { type: 'brush', side: null }).brush).toBeNull();
+});
+
+test('restoring the sample drops every edit, and a run started on a redrawn start remembers how many tiles were repainted', () => {
+  let state = [{ type: 'brush', side: 'tallow' }, paint('A1'), paint('A2'), { type: 'brush', side: '' }, paint('B1')]
+    .reduce<RehearseState>((acc, action) => reduceRehearse(acc, action as RehearseAction), createRehearseState());
+  expect(Object.keys(state.edits?.by ?? {})).toEqual(['A1', 'A2', 'B1']);
+  const mine = startBoard(board, state.edits);
+  state = reduceRehearse(state, { type: 'start', board: mine, reduced_motion: true });
+  expect(state.run?.start).toBe(mine); expect(state.past[0]).toMatchObject({ edited: 3 });
+  state = reduceRehearse(state, { type: 'restore_start' });
+  expect(state.edits).toBeNull(); expect(state.run).toBeNull(); expect(state.past).toHaveLength(1);
+  expect(reduceRehearse(state, { type: 'restore_start' })).toBe(state);
+  expect(reduceRehearse(state, { type: 'start', board, reduced_motion: true }).past.at(-1)).toMatchObject({ edited: 0 });
+});
+
+test('Compare crowds plays the board at 30, 120 and 300 viewers with the seed and turns on the form, each equal to a lone run', () => {
+  expect(crowdLevels).toEqual([30, 120, 300]);
+  const compared = reduceRehearse(createRehearseState(), { type: 'compare_crowds', board });
+  expect(compared.crowds?.lines.map(line => line.viewers)).toEqual([30, 120, 300]);
+  expect(compared.crowds).toMatchObject({ seed: '2041', turns: 8, columns: 9, rows: 6, tiles: 54, edited: 0 });
+  for (const line of compared.crowds?.lines ?? []) {
+    const lone = runRehearsal(board, { ...rehearsalDefaults, viewers: line.viewers });
+    if (!lone.ok) throw new Error('lone run failed');
+    const report = balanceReport(lone.rehearsal);
+    expect(line).toMatchObject({ verdict: report.verdict, kind: report.kind, percent: report.leader.percent, last_change: report.last_change });
+    expect(line.board).toEqual(lone.rehearsal.turns.at(-1)?.board);
+  }
+  // The crowd changes the story, which is the whole point of the table.
+  expect(new Set(compared.crowds?.lines.map(line => line.verdict)).size).toBeGreaterThan(1);
+  expect(compared.run).toBeNull(); expect(compared.past).toEqual([]);
+  expect(compared.inputs.viewers).toBe('120');
+  expect(reduceRehearse(compared, { type: 'reset' }).crowds).toBe(compared.crowds);
+  expect(reduceRehearse(compared, { type: 'clear_crowds' }).crowds).toBeNull();
+  const again = reduceRehearse(createRehearseState(), { type: 'compare_crowds', board });
+  expect(again.crowds?.lines.map(line => line.verdict)).toEqual(compared.crowds?.lines.map(line => line.verdict));
+});
+
+test('Compare crowds follows seed and turns, refuses bad settings, and says when the start was redrawn', () => {
+  const other = reduceRehearse(apply({ type: 'input', field: 'seed', value: '77' }, { type: 'input', field: 'turns', value: '5' }), { type: 'compare_crowds', board });
+  expect(other.crowds).toMatchObject({ seed: '77', turns: 5 });
+  for (const [field, value] of [['seed', ' '], ['turns', '1']] as const) {
+    const bad = reduceRehearse(apply({ type: 'input', field, value }), { type: 'compare_crowds', board });
+    expect(bad.crowds).toBeNull(); expect(bad.error?.field).toBe(field);
+  }
+  const drawn = [{ type: 'brush', side: 'sable' }, paint('D1'), paint('E1')]
+    .reduce<RehearseState>((acc, action) => reduceRehearse(acc, action as RehearseAction), createRehearseState());
+  const compared = reduceRehearse(drawn, { type: 'compare_crowds', board: startBoard(board, drawn.edits) });
+  expect(compared.crowds?.edited).toBe(2);
+  const solo = parseStudioBoard({ title: 'Solo', sides: board.sides.slice(0, 1), tiles: [{ q: 0, r: 0 }] });
+  if (!solo.ok) throw new Error(solo.error.message);
+  const refused = reduceRehearse(createRehearseState(), { type: 'compare_crowds', board: solo.board });
+  expect(refused.crowds).toBeNull(); expect(refused.error?.message).toMatch(/at least two houses/);
+});
+
+test('a size choice that carries a redrawn start is marked in the size comparison', () => {
+  const choices = sizeChoices.map(choice => (choice.id === 'm' ? { ...choice, edited: true } : choice));
+  const compared = reduceRehearse(createRehearseState(), { type: 'compare_sizes', sizes: choices });
+  expect(compared.sizes?.rows.map(row => [row.id, row.edited])).toEqual([['s', false], ['m', true], ['l', false]]);
 });

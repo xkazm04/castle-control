@@ -5,17 +5,29 @@ import type { Rehearsal, RehearsalField, RehearsalTurn } from './rehearsal.js';
 import { balanceReport } from './rehearsal-verdict.js';
 import type { BalanceReport } from './rehearsal-verdict.js';
 import { rehearseCopy as copy } from './rehearse-copy.js';
+import { paintEdits } from './rehearse-paint.js';
+import type { StartEdits } from './rehearse-paint.js';
 import { boardForSize, mapSizes } from './session.js';
 
 export type RehearseInputs = Readonly<Record<RehearsalField, string>>;
 export type PastRun = Readonly<{
   id: number; seed: string; viewers: number; turns: number; verdict: string; kind: BalanceReport['kind'];
-  columns: number; rows: number; tiles: number; board: StudioBoard;
+  columns: number; rows: number; tiles: number; board: StudioBoard; edited: number;
 }>;
-export type SizeChoice = Readonly<{ id: string; label: string; board: StudioBoard }>;
+/** `edited` marks the choice whose board carries the streamer's own redrawn start. */
+export type SizeChoice = Readonly<{ id: string; label: string; board: StudioBoard; edited?: boolean }>;
 export type SizeRow = Readonly<{
   id: string; label: string; columns: number; rows: number; tiles: number; verdict: string; kind: BalanceReport['kind'];
-  leader: string; percent: number; last_change: number; lead_changes: number; board: StudioBoard;
+  leader: string; percent: number; last_change: number; lead_changes: number; board: StudioBoard; edited: boolean;
+}>;
+/** The same board, seed and turns played at several crowd sizes: only the crowd differs. */
+export const crowdLevels: readonly number[] = Object.freeze([30, 120, 300]);
+export type CrowdRow = Readonly<{
+  viewers: number; verdict: string; kind: BalanceReport['kind']; leader: string; percent: number;
+  last_change: number; lead_changes: number; board: StudioBoard;
+}>;
+export type CrowdCompare = Readonly<{
+  seed: string; turns: number; columns: number; rows: number; tiles: number; edited: number; lines: readonly CrowdRow[];
 }>;
 export type SizeCompare = Readonly<{ seed: string; viewers: number; turns: number; rows: readonly SizeRow[] }>;
 /** The room's own S / M / L boards, in order, for the one-press size comparison. */
@@ -27,22 +39,29 @@ export type RehearseState = Readonly<{
   inputs: RehearseInputs; error: Readonly<{ field: RehearsalField; message: string }> | null;
   run: Rehearsal | null; run_id: number; turn: number; playing: boolean;
   replay: Readonly<{ seed: string; matched: number; of: number }> | null;
-  past: readonly PastRun[]; selected: string; sizes: SizeCompare | null;
+  past: readonly PastRun[]; selected: string; sizes: SizeCompare | null; crowds: CrowdCompare | null;
+  /** Redrawn starting territory, the brush (a house id, '' for unclaimed, null when not painting) and the last tile painted. */
+  edits: StartEdits | null; brush: string | null; last_paint: Readonly<{ id: string; side: string }> | null; run_edits: number;
 }>;
 export type RehearseAction =
   | { type: 'input'; field: RehearsalField; value: string }
   | { type: 'start' | 'again'; board: StudioBoard; reduced_motion: boolean }
   | { type: 'step'; board: StudioBoard }
   | { type: 'replay'; reduced_motion: boolean }
-  | { type: 'tick' | 'pause' | 'resume' | 'reset' | 'clear_past' | 'clear_sizes' }
+  | { type: 'tick' | 'pause' | 'resume' | 'reset' | 'clear_past' | 'clear_sizes' | 'clear_crowds' }
   | { type: 'compare_sizes'; sizes: readonly SizeChoice[] }
+  | { type: 'compare_crowds'; board: StudioBoard }
+  | { type: 'brush'; side: string | null }
+  | { type: 'paint'; board: StudioBoard; id: string }
+  | { type: 'restore_start' }
   | { type: 'select'; id: string };
 
 export const maxPastRuns = 3;
 export function createRehearseState(): RehearseState {
   const { seed, viewers, turns } = rehearsalDefaults;
   return { inputs: { seed, viewers: String(viewers), turns: String(turns) }, error: null, run: null, run_id: 0,
-    turn: 0, playing: false, replay: null, past: [], selected: '', sizes: null };
+    turn: 0, playing: false, replay: null, past: [], selected: '', sizes: null, crowds: null,
+    edits: null, brush: null, last_paint: null, run_edits: 0 };
 }
 
 /** Records a finished run once, so replaying a seed never adds a duplicate comparison. */
@@ -52,7 +71,7 @@ function settle(state: RehearseState): RehearseState {
   const geometry = boardGeometry(run.start);
   const entry: PastRun = Object.freeze({ id: state.run_id, seed: run.setup.seed, viewers: run.setup.viewers,
     turns: run.setup.turns, verdict: balanceReport(run).verdict, kind: balanceReport(run).kind, columns: geometry.columns,
-    rows: geometry.rows, tiles: geometry.tiles.length, board: run.turns.at(-1)?.board ?? run.start });
+    rows: geometry.rows, tiles: geometry.tiles.length, board: run.turns.at(-1)?.board ?? run.start, edited: state.run_edits });
   return { ...state, past: [...state.past, entry].slice(-maxPastRuns) };
 }
 
@@ -63,6 +82,7 @@ function begin(state: RehearseState, board: StudioBoard, reduced_motion: boolean
   if (!run.ok) return { ...state, inputs, error: { field: run.error.field, message: run.error.message }, playing: false };
   const last = run.rehearsal.turns.length;
   return settle({ ...state, inputs, error: null, run: run.rehearsal, run_id: state.run_id + 1, replay: null, selected: '',
+    last_paint: null, run_edits: Object.keys(state.edits?.by ?? {}).length,
     turn: reduced_motion ? last : 0, playing: !reduced_motion });
 }
 
@@ -79,10 +99,37 @@ function compareSizes(state: RehearseState, choices: readonly SizeChoice[]): Reh
     rows.push(Object.freeze({ id: choice.id, label: choice.label, columns: geometry.columns, rows: geometry.rows,
       tiles: geometry.tiles.length, verdict: report.verdict, kind: report.kind, leader: report.leader.short,
       percent: report.leader.percent, last_change: report.last_change, lead_changes: report.lead_changes,
-      board: run.rehearsal.turns.at(-1)?.board ?? choice.board }));
+      board: run.rehearsal.turns.at(-1)?.board ?? choice.board, edited: choice.edited === true }));
   }
   const { seed, viewers, turns } = parsed.setup;
   return { ...state, error: null, sizes: Object.freeze({ seed, viewers, turns, rows: Object.freeze(rows) }) };
+}
+
+/** The board at 30, 120 and 300 simulated viewers. Seed and turns come from the form and every
+ * crowd goes through the same setup door as a typed one, so nothing here is a second way in. */
+function compareCrowds(state: RehearseState, board: StudioBoard): RehearseState {
+  const lines: CrowdRow[] = [];
+  let shared: { seed: string; turns: number } | undefined;
+  for (const viewers of crowdLevels) {
+    const parsed = parseRehearsalSetup({ seed: state.inputs.seed, viewers, turns: state.inputs.turns });
+    if (!parsed.ok) return { ...state, error: { field: parsed.error.field, message: parsed.error.message } };
+    const run = runRehearsal(board, parsed.setup);
+    if (!run.ok) return { ...state, error: { field: run.error.field, message: run.error.message } };
+    const report = balanceReport(run.rehearsal);
+    shared = { seed: parsed.setup.seed, turns: parsed.setup.turns };
+    lines.push(Object.freeze({ viewers, verdict: report.verdict, kind: report.kind, leader: report.leader.short,
+      percent: report.leader.percent, last_change: report.last_change, lead_changes: report.lead_changes,
+      board: run.rehearsal.turns.at(-1)?.board ?? board }));
+  }
+  if (!shared) return state;
+  const geometry = boardGeometry(board);
+  return { ...state, error: null, crowds: Object.freeze({ ...shared, columns: geometry.columns, rows: geometry.rows,
+    tiles: geometry.tiles.length, edited: Object.keys(state.edits?.by ?? {}).length, lines: Object.freeze(lines) }) };
+}
+
+/** A new starting territory ends the round on screen and voids any crowd table made on the old one. */
+function redrawn(state: RehearseState, edits: StartEdits | null): RehearseState {
+  return { ...state, edits, error: null, run: null, turn: 0, playing: false, replay: null, selected: '', crowds: null, run_edits: 0 };
 }
 
 export function reduceRehearse(state: RehearseState, action: RehearseAction): RehearseState {
@@ -104,7 +151,7 @@ export function reduceRehearse(state: RehearseState, action: RehearseAction): Re
     }
     case 'pause': return { ...state, playing: false };
     case 'resume': return state.run && state.turn < last ? { ...state, playing: true } : state;
-    case 'reset': return { ...state, error: null, run: null, turn: 0, playing: false, replay: null, selected: '' };
+    case 'reset': return { ...state, error: null, run: null, turn: 0, playing: false, replay: null, selected: '', last_paint: null };
     case 'replay': {
       const first = state.run;
       if (!first) return state;
@@ -116,6 +163,16 @@ export function reduceRehearse(state: RehearseState, action: RehearseAction): Re
     }
     case 'compare_sizes': return compareSizes(state, action.sizes);
     case 'clear_sizes': return { ...state, sizes: null };
+    case 'compare_crowds': return compareCrowds(state, action.board);
+    case 'clear_crowds': return { ...state, crowds: null };
+    case 'brush': return { ...state, brush: action.side };
+    case 'paint': {
+      if (state.brush === null) return state;
+      const edits = paintEdits(state.edits, action.board, action.id, state.brush);
+      if (edits === state.edits) return state;
+      return { ...redrawn(state, edits), last_paint: { id: action.id, side: state.brush } };
+    }
+    case 'restore_start': return state.edits === null ? state : { ...redrawn(state, null), last_paint: null };
     case 'select': return { ...state, selected: action.id };
     case 'clear_past': return { ...state, past: [] };
   }

@@ -1,4 +1,4 @@
-import type { CSSProperties, KeyboardEvent } from 'react';
+import type { CSSProperties, KeyboardEvent, PointerEvent } from 'react';
 import type { DesignOutput } from '@castle-control/ui/design';
 import { EmptyState, HeroReadout, Pennant, Plate, PlateBand, PlateBody, SectionHeading } from '@castle-control/ui';
 import { studioCopy as copy } from '../../studio-copy.js';
@@ -30,9 +30,12 @@ function inspectNeighbour(event: KeyboardEvent<HTMLButtonElement>, tile: BoardTi
 /** Tiles that changed owner this turn. `phase` alternates so the same tile can flip on consecutive turns. */
 export type TableFlip = Readonly<{ ids: ReadonlySet<string>; phase: 0 | 1; picked?: ReadonlySet<string>; flipped_label?: string }>;
 
-export function HexTable({ selected, on_select, board = STUDIO_SAMPLE_BOARD, size = 'm', look, flip, gloss = copy.board_gloss, pennants = true, quiet = false }: {
+export function HexTable({ selected, on_select, board = STUDIO_SAMPLE_BOARD, size = 'm', look, flip, gloss = copy.board_gloss, pennants = true, quiet = false, on_paint }: {
   selected: string; on_select: (id: string) => void; board?: StudioBoard; size?: MapSize; look?: DesignOutput['style'];
   flip?: TableFlip; gloss?: string; pennants?: boolean; quiet?: boolean;
+  /** When set the table is in paint mode: pressing, activating by keyboard or dragging across a hex paints it,
+   * and the arrow keys still only move focus. Painting is idempotent, so a press and its click are harmless together. */
+  on_paint?: (id: string) => void;
 }) {
   const geometry = boardGeometry(board);
   const tab_stop = geometry.tiles.find(tile => tile.id === selected)?.id ?? geometry.tiles[0]?.id;
@@ -50,7 +53,10 @@ export function HexTable({ selected, on_select, board = STUDIO_SAMPLE_BOARD, siz
         aria-label={copy.tile_label(tile.id, tile.side?.short ?? copy.unclaimed, tile.side?.label)
           + (flip?.ids.has(tile.id) && flip.flipped_label ? `, ${flip.flipped_label}` : '')} aria-pressed={selected === tile.id}
         tabIndex={tab_stop === tile.id ? 0 : -1}
-        onClick={() => on_select(tile.id)} onKeyDown={event => inspectNeighbour(event, tile, geometry.tiles, on_select)}>
+        onClick={() => (on_paint ?? on_select)(tile.id)}
+        {...(on_paint ? { onPointerDown: (event: PointerEvent<HTMLButtonElement>) => { if (event.buttons === 1) on_paint(tile.id); },
+          onPointerEnter: (event: PointerEvent<HTMLButtonElement>) => { if (event.buttons === 1) on_paint(tile.id); } } : {})}
+        onKeyDown={event => inspectNeighbour(event, tile, geometry.tiles, on_select)}>
         <span className="cc-hex-face" aria-hidden="true" />
         <span className="cc-hex-id">{tile.id}</span>
         <span className="cc-hex-house">{tile.side?.short ?? copy.unclaimed}</span>
