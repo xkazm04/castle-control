@@ -69,7 +69,7 @@ test('Beacons streamer journey: tune, test fire, inspect and copy a simulated so
   await expect(page.locator('.visuals-bench [role="status"]').first()).toContainText('decay applied locally');
   await page.getByRole('button', { name: 'Copy browser-source URL for Offering altar' }).click();
   await expect(page.locator('.visuals-core-source-status')).toContainText('SIMULATED example URL copied for Offering altar');
-  await expect(page.locator('html')).toHaveAttribute('data-copied-source', 'http://localhost:4821/fixture-not-live/offering-altar');
+  await expect(page.locator('html')).toHaveAttribute('data-copied-source', 'http://localhost:4821/fixture-not-live/offering-altar?scale=1&anchor=br');
   await page.getByRole('button', { name: 'End test fire' }).click();
   await expect(page.getByLabel('Gift-sub weighting')).toHaveValue('2');
   await expect(page.getByLabel('Size', { exact: true })).toHaveValue('L');

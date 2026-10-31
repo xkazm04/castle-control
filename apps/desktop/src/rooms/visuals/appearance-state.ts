@@ -1,4 +1,4 @@
-// Room session data only. These are not wire fields or design-package promises.
+// Room session data. Size/anchor travel as overlay URL parameters, never wire fields.
 export const sizes = ['S', 'M', 'L'] as const;
 export const anchors = ['top-left', 'top-right', 'center', 'bottom-left', 'bottom-right'] as const;
 export const colours = ['or', 'gules', 'azure', 'key'] as const;
@@ -9,6 +9,13 @@ export type Appearance = Readonly<{
 export const initialAppearance: Appearance = Object.freeze({
   size: 'M', anchor: 'bottom-left', colour: 'or', burst_ms: 600,
 });
+
+/** Match the preview scale and the overlay's existing display query grammar. */
+export function displayQuery(value: Appearance): string {
+  const scale = { S: 0.5, M: 0.75, L: 1 }[value.size];
+  const anchor = { 'top-left': 'tl', 'top-right': 'tr', center: 'center', 'bottom-left': 'bl', 'bottom-right': 'br' }[value.anchor];
+  return `scale=${scale}&anchor=${anchor}`;
+}
 
 export function createAppearanceSession() {
   let state: Readonly<Record<string, Appearance>> = Object.freeze({});

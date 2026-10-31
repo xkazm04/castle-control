@@ -47,7 +47,7 @@ export function VisualsWork({ queue, port, seal_slot }: { queue?: ProposalQueue;
         </BeaconBay>
         <BeaconBay title={copy.test_fire} gloss={copy.test_gloss}>
           <TestFire port={adapter} selected={selected} on_end={adapter.end} />
-          <FixtureSourceCopy port={adapter} visual={selected.visual} />
+          <FixtureSourceCopy port={adapter} visual={selected.visual} appearance={appearance} />
         </BeaconBay>
       </BeaconBench>
       <div className="visuals-room-details visuals-panels">

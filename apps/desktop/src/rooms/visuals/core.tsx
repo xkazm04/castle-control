@@ -11,7 +11,7 @@ import { ContributionFeed } from './event-feed.jsx';
 import { LiveContributionFeed } from './live-feed.jsx';
 import { EditableKindlingCurve } from './kindling-curve.jsx';
 import { VisualEditor } from './visual-editor.jsx';
-import { createAppearanceSession } from './appearance-state.js';
+import { createAppearanceSession, displayQuery, initialAppearance } from './appearance-state.js';
 import { AppearanceControls } from './appearance.jsx';
 import { contribution_sources as sources, inputDescription, source_labels } from './contribution-input.js';
 import { BeaconPlates } from './plates.jsx';
@@ -24,10 +24,11 @@ const ArtSection = lazy(() => import('./art.jsx'));
 export function ConnectedBeacons({ port, seal_slot }: { port: CoreBeaconsPort; seal_slot?: ReactNode }) {
   const source_id = useId();
   const state = useSyncExternalStore(port.subscribe, port.getSnapshot, port.getSnapshot);
-  const source_copy = useMemo(() => createBrowserSourceCopy(port), [port]);
+  const [appearance] = useState(createAppearanceSession);
+  const source_copy = useMemo(() => createBrowserSourceCopy(port, false,
+    id => displayQuery(appearance.getSnapshot()[id] ?? initialAppearance)), [port, appearance]);
   const copy_state = useSyncExternalStore(source_copy.subscribe, source_copy.getSnapshot, source_copy.getSnapshot);
   const [creating, setCreating] = useState(false);
-  const [appearance] = useState(createAppearanceSession);
   useEffect(() => { void port.load(); void port.loadContributions({ limit: 100 }); }, [port]);
   useEffect(() => { void port.loadArtStatus(); }, [port]);
   const visual = state.visuals.find(item => item.visual_id === state.selected);
@@ -41,7 +42,7 @@ export function ConnectedBeacons({ port, seal_slot }: { port: CoreBeaconsPort; s
       <BeaconBench name={visual?.name ?? copy.visuals} notice={state.notice}>
         <BeaconBay title={copy.driven_by} gloss={copy.core_input}>
           <h2>Beacons · core configurations</h2>
-          <p>The copied browser-source URL is a transparent OBS browser source that scales to fit the source width and height. A visual naming an unverified design shows nothing. Money changes visuals only.</p>
+          <p>The copied browser-source URL is a transparent OBS browser source that scales to fit the source width and height when needed. Size and anchor travel in the copied URL; colour and burst timing stay in this session. A visual naming an unverified design shows nothing. Money changes visuals only.</p>
           <InkButton size="wrap" disabled={state.busy} onClick={() => {
             void port.load(); void port.loadContributions({ limit: 100 });
           }}>Refresh Beacons</InkButton>
