@@ -21,10 +21,10 @@ export const rehearseCopy = {
   board_gloss: (turn: number, of: number) => turn === 0
     ? 'Simulated rehearsal · starting territory' : `Simulated rehearsal · turn ${turn} of ${of}`,
   idle_hint: 'Press Rehearse to play the round, or Step to go one turn at a time.',
-  this_turn: (changed: number) => changed === 0
-    ? 'No tile changed owner this turn.'
-    : `${changed} ${changed === 1 ? 'tile' : 'tiles'} changed owner this turn (outlined).`,
-  only_picked: 'Only picked tiles change owner.',
+  this_turn: (changed: number, crowd: readonly string[]) =>
+    `${changed === 0 ? 'No tile changed owner' : `${changed} ${changed === 1 ? 'tile' : 'tiles'} changed owner (outlined)`}`
+    + ` · Crowd ${crowd.join(', ')} · Only picked tiles change owner.`,
+  tile_flipped: 'changed owner this turn',
   ribbon: 'Held tiles', ribbon_label: 'Held tiles by house',
   held_text: (short: string, held: number) => `${short} ${held}`,
   held_pct: (short: string, held: number, percent: number) => `${short} ${held} · ${percent}%`,
@@ -55,7 +55,7 @@ export const rehearseCopy = {
   chokepoints_value: (count: number) => `${count} ${count === 1 ? 'tile' : 'tiles'}`,
   chokepoints_hint: 'Chokepoints are tiles that changed hands two or more times.',
   report_hint: 'Plain words, computed from the simulation only.',
-  none: 'none',
+  none: 'none', verdict_pending: 'decided at the end',
   replay_ok: (seed: string, of: number) => `Seed ${seed} replayed: all ${of} turns matched.`,
   replay_bad: (seed: string, matched: number, of: number) => `Seed ${seed} replayed: only ${matched} of ${of} turns matched.`,
   summary: (viewers: number, turns: number, seed: string) => `${viewers} viewers · ${turns} turns · seed ${seed}`,

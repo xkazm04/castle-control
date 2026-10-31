@@ -256,3 +256,18 @@ test('the Compare sizes button exists only where the room owns the sizes, and th
   expect(renderToStaticMarkup(side(state))).toContain('Simulated comparison across map sizes');
   expect(renderToStaticMarkup(side(createRehearseState()))).not.toContain('studio-sizes');
 });
+
+test('picked tiles pulse and flipped tiles say so to screen readers, and the turn line shows the crowd split', () => {
+  const state = apply(start, ...ticks(3));
+  const view = rehearseView(state, board);
+  const html = renderToStaticMarkup(work(state));
+  const picked = [...html.matchAll(/data-hex-tile="([A-Z]\d+)"[^>]*data-picked="[ab]"/g)].map(match => match[1]);
+  expect(picked.sort()).toEqual([...view.picked].sort());
+  expect(picked.length).toBeGreaterThan(view.flipped.size);
+  for (const id of view.flipped) expect(html).toMatch(new RegExp(`aria-label="Tile ${id} [^"]*, changed owner this turn"`));
+  expect(html.match(/changed owner this turn"/g)).toHaveLength(view.flipped.size);
+  const joined = state.run?.turns[2]?.joined ?? {};
+  expect(html).toContain(`Crowd ${board.sides.map(side => `${side.short} ${joined[side.id]}`).join(', ')}`);
+  expect(html).toContain('Only picked tiles change owner.');
+  expect(renderToStaticMarkup(work(createRehearseState()))).not.toContain('data-picked');
+});

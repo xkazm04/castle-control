@@ -28,7 +28,7 @@ function inspectNeighbour(event: KeyboardEvent<HTMLButtonElement>, tile: BoardTi
 }
 
 /** Tiles that changed owner this turn. `phase` alternates so the same tile can flip on consecutive turns. */
-export type TableFlip = Readonly<{ ids: ReadonlySet<string>; phase: 0 | 1 }>;
+export type TableFlip = Readonly<{ ids: ReadonlySet<string>; phase: 0 | 1; picked?: ReadonlySet<string>; flipped_label?: string }>;
 
 export function HexTable({ selected, on_select, board = STUDIO_SAMPLE_BOARD, size = 'm', look, flip, gloss = copy.board_gloss, pennants = true, quiet = false }: {
   selected: string; on_select: (id: string) => void; board?: StudioBoard; size?: MapSize; look?: DesignOutput['style'];
@@ -45,8 +45,10 @@ export function HexTable({ selected, on_select, board = STUDIO_SAMPLE_BOARD, siz
       {geometry.tiles.map(tile => <button type="button" className="cc-hex" key={tile.id} data-hex-tile={tile.id}
         data-house={tile.side?.label ?? 'unclaimed'} data-ink={tile.side?.ink} data-unclaimed={!tile.side}
         data-flipped={flip?.ids.has(tile.id) ? (flip.phase === 0 ? 'a' : 'b') : undefined}
+        data-picked={flip?.picked?.has(tile.id) ? (flip.phase === 0 ? 'a' : 'b') : undefined}
         style={hexPosition(tile.centre.x, tile.centre.y)}
-        aria-label={copy.tile_label(tile.id, tile.side?.short ?? copy.unclaimed, tile.side?.label)} aria-pressed={selected === tile.id}
+        aria-label={copy.tile_label(tile.id, tile.side?.short ?? copy.unclaimed, tile.side?.label)
+          + (flip?.ids.has(tile.id) && flip.flipped_label ? `, ${flip.flipped_label}` : '')} aria-pressed={selected === tile.id}
         tabIndex={tab_stop === tile.id ? 0 : -1}
         onClick={() => on_select(tile.id)} onKeyDown={event => inspectNeighbour(event, tile, geometry.tiles, on_select)}>
         <span className="cc-hex-face" aria-hidden="true" />

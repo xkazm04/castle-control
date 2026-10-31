@@ -13,7 +13,7 @@ function round(specs: readonly Spec[]): Rehearsal {
   const turns = specs.map((spec, index): RehearsalTurn => ({
     turn: index + 1, actions: [], picks: spec.picks ?? [],
     changes: (spec.changed ?? []).map(id => ({ id, to: 'sable' })), took: { quill: 0, tallow: 0, sable: 0 },
-    held: { quill: spec.held[0], tallow: spec.held[1], sable: spec.held[2] },
+    held: { quill: spec.held[0], tallow: spec.held[1], sable: spec.held[2] }, joined: { quill: 40, tallow: 40, sable: 40 },
     unclaimed: 54 - spec.held[0] - spec.held[1] - spec.held[2], board: STUDIO_SAMPLE_BOARD, signature: String(index),
   }));
   return { setup: { seed: 'x', viewers: 120, turns: specs.length }, start: STUDIO_SAMPLE_BOARD, turns };

@@ -122,7 +122,7 @@ export function reduceRehearse(state: RehearseState, action: RehearseAction): Re
 }
 
 export type RehearseView = Readonly<{
-  shown: StudioBoard; turn: RehearsalTurn | undefined; flipped: ReadonlySet<string>; phase: 0 | 1;
+  shown: StudioBoard; turn: RehearsalTurn | undefined; flipped: ReadonlySet<string>; picked: ReadonlySet<string>; phase: 0 | 1;
   of: number; done: boolean; report: BalanceReport | undefined; /* live: through the shown turn */
 }>;
 /** What the table shows: the starting board at turn 0, else that turn's snapshot. */
@@ -132,7 +132,7 @@ export function rehearseView(state: RehearseState, board: StudioBoard): Rehearse
   const of = run?.turns.length ?? 0;
   const done = !!run && state.turn >= of;
   return { shown: turn?.board ?? run?.start ?? board, turn, of, done,
-    flipped: new Set(turn?.changes.map(change => change.id)), phase: state.turn % 2 === 0 ? 0 : 1,
+    flipped: new Set(turn?.changes.map(change => change.id)), picked: new Set(turn?.picks.map(pick => pick.id)), phase: state.turn % 2 === 0 ? 0 : 1,
     report: run && state.turn > 0 ? balanceReport(run, state.turn) : undefined };
 }
 

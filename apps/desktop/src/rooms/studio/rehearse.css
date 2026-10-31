@@ -86,6 +86,11 @@
 .studio-room :is(.studio-sizes, .studio-compare) > .cc-button { justify-self: start; }
 .studio-room .studio-sizes .studio-mini { max-height: calc(var(--space-56) * 1); margin-bottom: var(--space-4); }
 .studio-room .studio-spyglass-note { padding: var(--space-8) var(--space-24) 0; font: italic var(--text-small)/1.4 var(--font-serif); color: var(--ink-2); }
+/* Where the crowd clicked this turn: a short glow in the tile's own ink, before and under the flips. */
+.studio-room .cc-hex[data-picked="a"] { animation: studio-pick-a calc(var(--motion-shell) * 3) var(--ease) both; }
+.studio-room .cc-hex[data-picked="b"] { animation: studio-pick-b calc(var(--motion-shell) * 3) var(--ease) both; }
+@keyframes studio-pick-a { from { filter: drop-shadow(0 0 var(--space-8) var(--house)); } to { filter: drop-shadow(0 0 0 transparent); } }
+@keyframes studio-pick-b { from { filter: drop-shadow(0 0 var(--space-8) var(--house)); } to { filter: drop-shadow(0 0 0 transparent); } }
 /* Tiles that changed owner this turn: outlined like a chosen tile, inked in from the left. */
 .studio-room .cc-hex[data-flipped]::before { background: var(--key); }
 .studio-room .cc-hex[data-flipped] .cc-hex-face { inset: var(--space-4); }
@@ -101,6 +106,6 @@
   to { opacity: 1; clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .studio-room .cc-hex[data-flipped] .cc-hex-face, .studio-room .studio-verdict { animation: none; }
+  .studio-room .cc-hex[data-flipped] .cc-hex-face, .studio-room .cc-hex[data-picked], .studio-room .studio-verdict { animation: none; }
   .studio-room .studio-ribbon > li { transition: none; }
 }

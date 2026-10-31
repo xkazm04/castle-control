@@ -163,3 +163,13 @@ test('Rehearse again draws a fresh seed from the last one without a clock, and i
   expect(nextSeed('x')).toMatch(/^[1-9]\d{3}$/);
   expect(parseRehearsalSetup({ ...rehearsalDefaults, seed: nextSeed('x') }).ok).toBe(true);
 });
+
+test('each turn reports how the crowd split, and it matches the join_side actions that were emitted', () => {
+  const round = play(STUDIO_SAMPLE_BOARD, { seed: '11', viewers: 77, turns: 5 });
+  for (const turn of round.turns) {
+    expect(Object.values(turn.joined).reduce((sum, count) => sum + count, 0)).toBe(77);
+    for (const side of STUDIO_SAMPLE_BOARD.sides) {
+      expect(turn.joined[side.id]).toBe(turn.actions.filter(action => action.kind === 'join_side' && action.side === side.id).length);
+    }
+  }
+});

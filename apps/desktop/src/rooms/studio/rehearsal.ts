@@ -49,7 +49,7 @@ export type TilePicks = Readonly<{ id: string; q: number; r: number; by: Readonl
 export type TileChange = Readonly<{ id: string; from?: string; to: string }>;
 export type RehearsalTurn = Readonly<{
   turn: number; actions: readonly RehearsalAction[]; picks: readonly TilePicks[]; changes: readonly TileChange[];
-  took: Readonly<Record<string, number>>; held: Readonly<Record<string, number>>; unclaimed: number;
+  took: Readonly<Record<string, number>>; held: Readonly<Record<string, number>>; joined: Readonly<Record<string, number>>; unclaimed: number;
   board: StudioBoard; signature: string;
 }>;
 export type Rehearsal = Readonly<{
@@ -138,10 +138,11 @@ export function runRehearsal(board: StudioBoard, setup: RehearsalSetup): Rehears
       * (model.floor + (held[side] ?? 0) / board.tiles.length) ** model.bandwagon);
     const attack = sides.map((_, side) => frontier(side, owner, near, held));
     const defend = sides.map((_, side) => border(side, owner, near));
-    const actions: RehearsalAction[] = []; const counts = new Map<number, number[]>();
+    const actions: RehearsalAction[] = []; const counts = new Map<number, number[]>(); const crowd = sides.map(() => 0);
     for (let viewer = 0; viewer < setup.viewers; viewer += 1) {
       const side = weighted(joins, random());
       actions.push({ kind: 'join_side', side: sides[side] ?? '' });
+      crowd[side] = (crowd[side] ?? 0) + 1;
       const front = attack[side]; const wall = defend[side];
       const list = front?.tiles.length && (!wall?.tiles.length || random() < model.attack) ? front : wall;
       if (!list?.tiles.length) continue;
@@ -173,7 +174,7 @@ export function runRehearsal(board: StudioBoard, setup: RehearsalSetup): Rehears
       by: tally(row, board) }));
     const now = sides.map((_, side) => owner.filter(holder => holder === side).length);
     turns.push(Object.freeze({ turn, actions: Object.freeze(actions), picks: Object.freeze(picks),
-      changes: Object.freeze(changes), took: tally(took, board), held: tally(now, board),
+      changes: Object.freeze(changes), took: tally(took, board), held: tally(now, board), joined: tally(crowd, board),
       unclaimed: owner.filter(holder => holder < 0).length, board: snapshot(board, owner),
       signature: fnv(owner.join(',')).toString(16).padStart(8, '0') }));
   }

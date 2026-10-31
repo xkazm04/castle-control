@@ -46,7 +46,7 @@ export function BalanceTable({ view }: { view: RehearseView }) {
     [copy.chokepoints, copy.chokepoints_value(report.chokepoints)],
     [copy.last_change, report.last_change === 0 ? copy.none : String(report.last_change)],
     [copy.lead_changes, String(report.lead_changes)],
-    [copy.verdict_row, view.done ? report.kind : copy.none],
+    [copy.verdict_row, view.done ? report.kind : copy.verdict_pending],
   ];
   return <section className="studio-report" aria-label={copy.report_label}>
     <SectionHeading variant="ruled" title={copy.report} count={copy.progress(report.through, report.of)} />
