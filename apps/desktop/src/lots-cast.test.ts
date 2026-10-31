@@ -1,8 +1,25 @@
+import { readFileSync } from 'node:fs';
 import { expect, test } from 'vitest';
 import type { LotsProofRoll, LotsWrit } from '@castle-control/contract';
+import { lotsWritGet } from '@castle-control/contract/lots';
+import { parseJson } from '@castle-control/contract/door';
 import { castWinners, commitmentOf, sealOf, verifyWrit } from './lots-cast.js';
 import { fixtureEntries, fixtureWrit } from './lots-fixture.js';
 import { revealedAt } from './rooms/lottery/reveal.js';
+
+test('cc-verify v1 Rust corpus pins all 900 streamer-controlled desktop casts', async () => {
+  const fixture = parseJson(readFileSync(new URL('../../../packages/verifier-web/src/simulated-writs.json', import.meta.url), 'utf8'));
+  if (!fixture || typeof fixture !== 'object' || !('label' in fixture) || fixture.label !== 'simulated'
+    || !('cases' in fixture) || !Array.isArray(fixture.cases)) throw new Error('Missing simulated parity inventory');
+  const cases = fixture.cases.map((value: unknown) => {
+    if (!value || typeof value !== 'object' || !('writ' in value) || !lotsWritGet.result(value.writ)
+      || !('winners' in value) || !Array.isArray(value.winners)
+      || !value.winners.every((winner: unknown) => typeof winner === 'string')) throw new Error('Invalid parity case');
+    return { writ: value.writ, winners: value.winners };
+  }).filter(item => item.writ.proof.source === 'streamer_commit');
+  expect(cases).toHaveLength(900);
+  for (const item of cases) await expect(verifyWrit(item.writ)).resolves.toEqual(item.winners);
+});
 
 test('cc-verify v1 reference vector pins seal, commitment and winner parity', async () => {
   expect(await verifyWrit(fixtureWrit)).toEqual(['simulated_01', 'simulated_00']);

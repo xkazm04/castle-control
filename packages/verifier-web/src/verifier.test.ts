@@ -1,4 +1,5 @@
-import { expect, test } from 'vitest';
+import { expect, test, vi } from 'vitest';
+import { createHash } from 'node:crypto';
 import { readFileSync, readdirSync } from 'node:fs';
 import fixture from './simulated-writs.json' with { type: 'json' };
 import { animationCast, sample, verifyDecodedWrit } from './index.ts';
@@ -6,9 +7,51 @@ import { checkWrit, roundNumber, timestamp } from './schema.ts';
 import { checkGeneratedWrits } from './parity-check.ts';
 import { checkFileImports, checkHtml } from './html-check.ts';
 import { sourceFingerprint } from './artifact.ts';
+import * as beacon from './beacon.ts';
+import * as verifier from './index.ts';
 
 test('same_winners_as_rust_across_1000_generated_simulated_writs', async () => {
-  expect(await checkGeneratedWrits()).toEqual({ offline: 900, beacons: 100 });
+  const pairing = vi.spyOn(beacon, 'verifyBeaconRound');
+  try {
+    expect.soft(await checkGeneratedWrits()).toEqual({ offline: 900, beacons: 100, distinct_rounds: 1 });
+    expect(pairing).toHaveBeenCalledTimes(1);
+  } finally { pairing.mockRestore(); }
+}, 30000);
+
+test('a different beacon signature is authenticated as a second tuple and rejected', async () => {
+  const changed = structuredClone(fixture);
+  const second = changed.cases.filter(item => item.writ.proof.source === 'drand_quicknet')[1];
+  if (!second) throw new Error('Missing second simulated beacon');
+  const signature = '00'.repeat(48);
+  second.writ.proof = { source: 'drand_quicknet', signature,
+    randomness: createHash('sha256').update(Buffer.from(signature, 'hex')).digest('hex') };
+  const pairing = vi.spyOn(beacon, 'verifyBeaconRound');
+  try {
+    await expect.soft(checkGeneratedWrits(changed)).rejects.toThrow('BLS signature');
+    expect(pairing).toHaveBeenCalledTimes(2);
+  } finally { pairing.mockRestore(); }
+}, 30000);
+
+test.each(['sealed_at', 'margin_s', 'round', 'chain_hash'])('beacon tuple includes %s before skipping authentication', async (field) => {
+  const changed = structuredClone(fixture);
+  const second = changed.cases.filter(item => item.writ.proof.source === 'drand_quicknet')[1];
+  if (!second) throw new Error('Missing second simulated beacon');
+  if (field === 'sealed_at') second.writ.roll.sealed_at = '2026-10-25T12:00:03Z';
+  if (field === 'margin_s') second.writ.roll.margin_s++;
+  if (field === 'round') second.writ.roll.randomness.round = '14405';
+  if (field === 'chain_hash') second.writ.roll.randomness.chain_hash = '00'.repeat(32);
+  const verify = verifyDecodedWrit;
+  const verification = vi.spyOn(verifier, 'verifyDecodedWrit').mockImplementation(async (value, chain) => {
+    if (value === second.writ) {
+      // Stop at the authentication boundary: these changed fields also invalidate the seal.
+      expect(chain).toEqual(changed.chain);
+      throw new Error('Distinct tuple requires authentication');
+    }
+    return verify(value, chain);
+  });
+  try {
+    await expect(checkGeneratedWrits(changed)).rejects.toThrow('Distinct tuple requires authentication');
+  } finally { verification.mockRestore(); }
 }, 30000);
 
 test('tampering_with_sealed_fields_or_claimed_winners_fails', async () => {
