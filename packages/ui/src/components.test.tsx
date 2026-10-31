@@ -21,15 +21,15 @@ test('Rampart wordmark has a real space on one line and matching ghost text', ()
   expect(wordmark?.[1]).toBe('Castle Control');
 });
 
-test('rampart status groups retain their gaps and reclaim unused brand width at the compact breakpoint', () => {
+test('rampart status groups retain their wide gaps and compact within their own container', () => {
   const css = readFileSync(new URL('./shell.css', import.meta.url), 'utf8');
   const groups = css.match(/\.cc-live-group, \.cc-link-group\s*\{([^}]+)\}/)?.[1];
   expect(groups).toMatch(/gap:\s*var\(--space-12\)/);
   // A shrinking group lets its non-wrapping contents paint into the next group.
   expect(groups).toMatch(/flex:\s*none\s*;/);
-  const compact = css.slice(css.indexOf('@media (max-width: 1420px)'));
-  expect(compact).toMatch(/\.cc-rampart\s*\{[^}]*gap:\s*var\(--space-11\)/);
-  expect(compact).toMatch(/\.cc-brand\s*\{[^}]*width:\s*auto\s*;/);
+  const compact = css.slice(css.indexOf('@container cc-rampart'));
+  expect(compact).toMatch(/\.cc-rampart \.cc-live-group\s*\{[^}]*gap:\s*var\(--space-6\)/);
+  expect(compact).toMatch(/\.cc-rampart \.cc-brand\s*\{[^}]*gap:\s*var\(--space-6\)[^}]*margin-right:\s*0\s*;/);
 });
 
 describe.each(['paper', 'stock'] as const)('%s theme', theme => {

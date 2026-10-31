@@ -10,7 +10,7 @@
 .keep-heading .cc-button:hover:not(:disabled) { transform: translate(calc(-1 * var(--space-1)), calc(-1 * var(--space-1))); box-shadow: var(--space-4) var(--space-4) 0 var(--ink); }
 .keep-heading .cc-button:active:not(:disabled) { transform: translate(var(--space-2), var(--space-2)); box-shadow: var(--space-1) var(--space-1) 0 var(--ink); }
 .keep-heading kbd { margin-left: var(--space-12); font: var(--text-shell-shortcut)/1 var(--font-num); }
-.keep-viewport { position: relative; min-height: 0; overflow: hidden; background: var(--paper-grain), linear-gradient(180deg, var(--stage-top), var(--stage-mid) 62%, var(--stage-low)); }
+.keep-viewport { container: keep-surface / inline-size; position: relative; min-height: 0; overflow: hidden; background: var(--paper-grain), linear-gradient(180deg, var(--stage-top), var(--stage-mid) 62%, var(--stage-low)); }
 .keep-diorama { position: absolute; left: 50%; top: 50%; width: calc(var(--space-1) * 1060); height: calc(var(--space-1) * 698); transform: translate(-50%, -50%) scale(var(--keep-scale)); transform-origin: 50% 50%; }
 .keep-diorama, .keep-castle {
   --keep-label-size: max(var(--text-shell-label), calc(var(--text-shell-label) * var(--keep-inverse)));
@@ -46,6 +46,11 @@
 [data-room="studio"] { --keep-ink: var(--ink); --keep-text: var(--ink); }
 .keep-khead [data-room] { color: var(--keep-text); }
 .keep-plaque { box-sizing: border-box; position: absolute; z-index: 3; background: var(--plaque-paper); border: var(--title-ghost) solid var(--ink); border-left: var(--space-10) solid var(--keep-ink, var(--ink)); padding: var(--space-7) var(--space-12) var(--space-8); box-shadow: var(--space-4) var(--space-4) 0 var(--plaque-shadow); pointer-events: none; min-width: calc(var(--space-1) * 200); line-height: normal; transition: opacity var(--m-slip); }
+/* Below the winner's 1060-unit host (66.25rem), fit scale is necessarily < 1.
+   Keep the reference size uncapped; reserve the smaller plaques' column gutters. */
+@container keep-surface (width < 66.25rem) {
+  .keep-plaque { max-width: calc(var(--space-56) * 5); }
+}
 .keep-plaque .nm { font: 700 var(--keep-name-size, var(--text-shell-plaque-name))/1 var(--font-ui); letter-spacing: .1em; text-transform: uppercase; color: var(--ink-2); display: flex; gap: var(--space-8); align-items: center; }
 .keep-plaque .wd { font: 700 var(--keep-word-size, var(--text-shell-plaque-word))/1 var(--font-display); text-transform: uppercase; letter-spacing: .02em; margin-top: var(--space-5); color: var(--keep-text, var(--ink)); }
 .keep-plaque .ln { font: 500 var(--keep-line-size, var(--text-shell-plaque-state))/1.25 var(--font-ui); color: var(--ink-2); margin-top: var(--space-4); }

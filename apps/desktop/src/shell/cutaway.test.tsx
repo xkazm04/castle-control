@@ -189,3 +189,11 @@ test('the Keep column has a bounded grid row, scrolls independently and keeps it
   expect(css).toMatch(/\.shell-program-column > \*\s*\{\s*flex-shrink: 0/);
   expect(css).toContain('.shell-program-column:focus-visible');
 });
+
+test('shell and Keep column tracks shrink below a child min-content width', () => {
+  const shell = readFileSync(new URL('../view.css', import.meta.url), 'utf8');
+  expect(shell).toMatch(/\.desktop-shell\s*\{[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\)/);
+  expect(shell).toMatch(/\.desktop-shell\s*\{[^}]*min-width:\s*0/);
+  const keep = readFileSync(new URL('./program-column.css', import.meta.url), 'utf8');
+  expect(keep).toMatch(/\.shell-keep-workspace\s*\{[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\)\s+calc\(var\(--space-1\)\s*\*\s*380\)/);
+});

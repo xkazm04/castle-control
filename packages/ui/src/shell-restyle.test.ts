@@ -37,3 +37,20 @@ test('Rampart scopes preserve key, gules, azure and or stamp families instead of
   }
   expect(css).toContain('[data-theme="stock"] .cc-rampart { background: var(--rampart-background); }');
 });
+
+test('narrow Rampart rules constrain intrinsic width and compact connections without shrinking type', () => {
+  const css = readFileSync(new URL('./shell.css', import.meta.url), 'utf8');
+  const root = css.match(/\.cc-rampart\s*\{([^}]+)\}/)?.[1] ?? '';
+  expect(root).toContain('container: cc-rampart / inline-size');
+  expect(root).toContain('min-width: 0');
+  expect(root).toContain('gap: var(--space-14)');
+  const query = '@container cc-rampart (max-width: 86rem)';
+  expect(css).toContain(query);
+  expect(css).not.toContain('@media');
+  const compact = css.slice(css.indexOf(query));
+  expect(compact).toMatch(/\.cc-link-group\s*\{[^}]*display:\s*grid;[^}]*grid-template-columns:\s*max-content;[^}]*gap:\s*var\(--space-1\)/);
+  expect(compact).toMatch(/\.cc-connection span\s*\{[^}]*flex-direction:\s*row;[^}]*gap:\s*var\(--space-4\)/);
+  expect(compact).not.toMatch(/\bfont(?:-[\w-]+)?\s*:|\bzoom\s*:|\bscale\s*\(/);
+  // Size queries affect descendants, never the query container itself.
+  expect(compact).not.toMatch(/\.cc-rampart\s*\{/);
+});

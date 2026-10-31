@@ -1,5 +1,6 @@
 .cc-shell { --mh: calc(var(--space-56) - var(--space-4)); position: relative; display: grid; grid-template-columns: var(--cw) minmax(0, 1fr); grid-template-rows: var(--mh) 1fr; min-height: 100vh; }
 .cc-rampart {
+  container: cc-rampart / inline-size; min-width: 0;
   position: sticky; top: 0; z-index: 60; grid-column: 1 / -1; display: flex; align-items: center;
   height: calc(var(--space-56) - var(--space-4)); gap: var(--space-14); padding: 0 calc(var(--space-16) + var(--space-2));
   border-bottom: var(--space-3) solid var(--gules); background: var(--ink); color: var(--rampart-paper);
@@ -79,8 +80,14 @@
 .cc-colorbar i:nth-child(4) { background: var(--key); }
 .cc-page { min-width: 0; padding: 0 var(--space-24) var(--space-40); }
 @keyframes cc-pulse { 0%, 100% { opacity: 1; } 50% { opacity: .25; } }
-@media (max-width: 1420px) {
-  .cc-rampart { gap: var(--space-11); }
-  .cc-brand { width: auto; }
-  .cc-separator { display: none; }
+/* Query the bar's available inline size; its wide-layout chrome stays unchanged. */
+@container cc-rampart (max-width: 86rem) {
+  .cc-rampart .cc-brand { gap: var(--space-6); margin-right: 0; }
+  .cc-rampart .cc-live-group { gap: var(--space-6); }
+  .cc-rampart .cc-separator { display: none; }
+  .cc-rampart .cc-link-group { display: grid; grid-template-columns: max-content; gap: var(--space-1); }
+  .cc-rampart .cc-link-group > a { display: flex; align-items: center; }
+  .cc-rampart .cc-link-group .cc-connection { gap: var(--space-4); }
+  .cc-rampart .cc-link-group .cc-connection svg { flex: none; }
+  .cc-rampart .cc-link-group .cc-connection span { flex-direction: row; align-items: center; gap: var(--space-4); }
 }

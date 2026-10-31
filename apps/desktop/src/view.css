@@ -1,7 +1,7 @@
 body { margin: 0; font-family: var(--font-ui); color: var(--ink); background: var(--paper); }
 .desktop-root { font-family: var(--font-ui); color: var(--ink); background: var(--paper); }
 .desktop-root:focus { outline: none; }
-.desktop-shell { display: grid; grid-template-rows: var(--mh) minmax(0, 1fr) auto; height: 100dvh; overflow: hidden; }
+.desktop-shell { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: var(--mh) minmax(0, 1fr) auto; min-width: 0; height: 100dvh; overflow: hidden; }
 .desktop-shell.desktop-cutaway { grid-template-rows: var(--mh) auto minmax(0, 1fr) auto; }
 .desktop-cutaway > .desktop-surface { display: flex; flex-direction: column; padding: 0; min-width: 0; overflow: hidden; }
 .desktop-cutaway > .cc-chamber-strip { min-width: 0; }
