@@ -31,7 +31,7 @@ const xFor = (offset_ms: number, window: MoatWindow, g: MoatGeometry) =>
 
 /** What the strip draws for one window: the dots, which stops get a stamp, and at what level. One answer for the scene and its overflow note. */
 function planStamps(model: MoatModel, window: MoatWindow, g: MoatGeometry, compact: boolean, spotlight?: string, selected?: number) {
-  const drawable = visibleMarkers(model, window);
+  const drawable = visibleMarkers(model, window, undefined, selected);
   const stops = drawable.markers.filter(marker => marker.fate === 'held' && (spotlight === undefined || marker.rule_id === spotlight || marker.index === selected));
   const stacked = compact ? { levels: [], overflow: 0 } : stampLevels(stops.map(marker => stampX(xFor(marker.offset_ms, window, g), g)), g.stamp_w, g.levels);
   return { drawable, stops, level_of: new Map(stops.map((marker, position) => [marker.index, stacked.levels[position] ?? -1])), overflow: stacked.overflow };

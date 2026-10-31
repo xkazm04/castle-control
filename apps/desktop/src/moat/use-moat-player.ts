@@ -3,14 +3,16 @@ import { browserClock, createMoatPlayer } from './moat-player.js';
 import type { MoatClock, MoatPlayer, MoatPlayerState, MoatSpeed } from './moat-player.js';
 
 const query = '(prefers-reduced-motion: reduce)';
+const canAsk = () => typeof window !== 'undefined' && typeof window.matchMedia === 'function';
 function subscribeMotion(listener: () => void) {
+  if (!canAsk()) return () => undefined;
   const media = window.matchMedia(query);
   media.addEventListener('change', listener);
   return () => media.removeEventListener('change', listener);
 }
 /** True when the host asks for less motion. Server rendering and tests see false. */
 export function useReducedMotion(): boolean {
-  return useSyncExternalStore(subscribeMotion, () => window.matchMedia(query).matches, () => false);
+  return useSyncExternalStore(subscribeMotion, () => canAsk() && window.matchMedia(query).matches, () => false);
 }
 
 export type UseMoatPlayer = { player: MoatPlayer; state: MoatPlayerState; reduced: boolean };

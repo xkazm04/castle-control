@@ -74,8 +74,9 @@ export function MoatControls({ state, ticks, position, reduced, range_id, on_pla
       {moatSpeeds.map(speed => <InkButton key={speed} type="button" size="small" aria-pressed={state.speed === speed}
         onClick={() => { on_speed(speed); }}>{copy.speed_label(speed)}</InkButton>)}</div>
     {on_stop && <div className="moat-stops" role="group" aria-label={copy.stops}>
-      <InkButton type="button" size="small" disabled={!can_stop?.previous} onClick={() => { on_stop(-1); }}>{copy.previous_stop}</InkButton>
-      <InkButton type="button" size="small" disabled={!can_stop?.next} onClick={() => { on_stop(1); }}>{copy.next_stop}</InkButton></div>}
+      {/* aria-disabled, not disabled: pressing Next up to the last stop must not throw the keyboard's place away. */}
+      <InkButton type="button" size="small" aria-disabled={!can_stop?.previous} onClick={() => { if (can_stop?.previous) on_stop(-1); }}>{copy.previous_stop}</InkButton>
+      <InkButton type="button" size="small" aria-disabled={!can_stop?.next} onClick={() => { if (can_stop?.next) on_stop(1); }}>{copy.next_stop}</InkButton></div>}
     <div className="moat-scrub"><label htmlFor={range_id} className="moat-sr">{copy.position}</label>
       {/* Whole thousandths of the replay, not milliseconds: the far end is then always a valid value, so End lands on the finished frame. */}
       <input id={range_id} type="range" min={0} max={scrubSteps} step={1} value={Math.round(state.run_ms > 0 ? state.playhead_ms / state.run_ms * scrubSteps : 0)}
@@ -105,7 +106,8 @@ export function MoatPanel({ model, delay_s, clock, selected_id, on_select, rule_
   const [rule, setRule] = useState<string | undefined>();
   const tally = useMemo(() => ruleTally(model), [model]);
   // A rule that is no longer in the night (a new run) is dropped rather than shown as an empty strip.
-  const spotlight = rule !== undefined && tally.some(item => item.rule_id === rule) ? rule : undefined;
+  // With fewer than two rules there is no chip to clear it, so a stale pick must not dim anything.
+  const spotlight = rule !== undefined && tally.length >= 2 && tally.some(item => item.rule_id === rule) ? rule : undefined;
   const stops = useMemo(() => spotlightStops(model, spotlight), [model, spotlight]);
   const notes = useMemo(() => sceneNotes(model, view, spotlight, selected?.index), [model, view.from_ms, view.to_ms, spotlight, selected?.index]);
   const held = heldCount(model, state.playhead_ms);

@@ -94,6 +94,8 @@
 .moat-heartbeat { display: flex; align-items: center; gap: var(--space-10); flex: 0 1 calc(var(--space-56) * 9); min-width: 0; line-height: 0; }
 .moat-heartbeat small { flex: none; font: 700 var(--text-label)/1.1 var(--font-ui); letter-spacing: var(--track-label); text-transform: uppercase; }
 .moat-heartbeat .moat-scene { flex: 1 1 auto; }
+.moat-heartbeat-strip { display: block; flex: 1 1 calc(var(--space-56) * 4); min-width: calc(var(--space-56) * 3); }
+.moat-heartbeat .cc-button { flex: none; line-height: 1.2; }
 .moat-heartbeat .moat-bank { stroke-width: .6; }
 .moat-heartbeat .moat-track { stroke-width: .6; }
 .moat-heartbeat .moat-dot { stroke-width: .5; }
@@ -142,3 +144,5 @@
 
 .moat-extras { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-4) var(--space-12); }
 .moat-extras .moat-small { flex: 1 1 calc(var(--space-56) * 4); }
+
+.moat-stops .cc-button[aria-disabled="true"] { opacity: var(--disabled-opacity); cursor: not-allowed; }

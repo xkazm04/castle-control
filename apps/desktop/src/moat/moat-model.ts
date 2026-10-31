@@ -151,7 +151,7 @@ export function windowFor(model: MoatModel, playhead_ms: number, capacity = 150)
 
 export type MoatDrawable = Readonly<{ markers: readonly MoatMarker[]; thinned: number }>;
 /** Markers inside a window, found by bisection so ten thousand outcomes cost the same as forty. */
-export function visibleMarkers(model: MoatModel, window: MoatWindow, max_dots = 360): MoatDrawable {
+export function visibleMarkers(model: MoatModel, window: MoatWindow, max_dots = 360, keep_index?: number): MoatDrawable {
   const first = firstReached(model.markers.length, index => offsetOf(model)(index) >= window.from_ms);
   const last = firstReached(model.markers.length, index => offsetOf(model)(index) > window.to_ms);
   const inside = model.markers.slice(first, last);
@@ -161,7 +161,8 @@ export function visibleMarkers(model: MoatModel, window: MoatWindow, max_dots = 
   const keep = Math.max(max_dots - (inside.length - aired.length), 0);
   const stride = keep ? Math.ceil(aired.length / keep) : 1;
   const shown = new Set(keep ? aired.filter((_, position) => position % stride === 0) : []);
-  const kept = inside.filter(marker => marker.fate !== 'aired' || shown.has(marker));
+  // The picked message keeps its dot even when it is an aired one thinning would merge.
+  const kept = inside.filter(marker => marker.fate !== 'aired' || shown.has(marker) || marker.index === keep_index);
   return { markers: kept, thinned: inside.length - kept.length };
 }
 

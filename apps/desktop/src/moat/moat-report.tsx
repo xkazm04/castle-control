@@ -2,7 +2,7 @@ import { createPortal } from 'react-dom';
 import { clockText } from './clock.js';
 import { actionWords, moatCopy as copy } from './moat-copy.js';
 import type { MoatModel } from './moat-model.js';
-import { MoatScene } from './moat-scene.jsx';
+import { MoatScene, sceneNotes } from './moat-scene.jsx';
 
 export type MoatReportInfo = { source: string; instrument_hash: string; origin: 'fixture' | 'core' };
 const rowCap = 60;
@@ -13,6 +13,8 @@ export function MoatReport({ model, info, delay_s, uid }: { model: MoatModel; in
   const stopped = model.markers.filter(marker => marker.fate === 'held');
   const end = model.start_ms + model.span_ms;
   const words = copy.report;
+  // The sheet draws the whole night at once, so it says what the strip could not fit, as the panel does.
+  const notes = sceneNotes(model, { from_ms: 0, to_ms: model.span_ms, paged: false });
   return <article className="moat-report" data-theme="paper" aria-label={words.title}>
     <header><h2>{words.title}</h2><p>{words.kicker}</p></header>
     <dl className="moat-report-facts">
@@ -23,6 +25,8 @@ export function MoatReport({ model, info, delay_s, uid }: { model: MoatModel; in
     </dl>
     <p className="moat-report-figure"><b>{copy.summary(model.counts.held, model.counts.total)}</b> · {copy.breakdown(model.counts)}</p>
     <MoatScene model={model} playhead_ms={model.run_ms} window={{ from_ms: 0, to_ms: model.span_ms, paged: false }} delay_s={delay_s} uid={`${uid}-report`} />
+    {notes.thinned > 0 && <p>{copy.thinned(notes.thinned)}</p>}
+    {notes.overflow > 0 && <p>{words.overflow(notes.overflow)}</p>}
     <h3>{words.gaps}</h3>
     {model.gaps.length ? <ul>{model.gaps.map((gap, position) => <li key={`${position}-${gap.from}`}>{words.gap_line(clockText(Date.parse(gap.from)), clockText(Date.parse(gap.to)))}</li>)}</ul> : <p>{words.no_gaps}</p>}
     <h3>{words.stopped}</h3>

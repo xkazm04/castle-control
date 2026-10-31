@@ -26,12 +26,17 @@ export function Drill({ result: given, origin = 'fixture', capture_hash, draft, 
   const state_id = useId();
   const [busy, setBusy] = useState<DrillRunResult | undefined>();
   const result = busy ?? given;
+  // A new run replaces the old one in place (the core room), and message ids repeat from run to run:
+  // nothing picked or filtered on the last run carries over to this one.
+  const [shown, setShown] = useState(given);
   const [selected, setSelected] = useState<string | undefined>();
   const [comparing, setComparing] = useState(false);
   // Only a pick made on the strip scrolls the table; a pick made in the table stays where the reader is.
   const [reveal, setReveal] = useState<{ key: string } | undefined>();
   const model = useMemo(() => buildMoat(result, delay_s && delay_s > 0 ? delay_s * 1000 : crossingMs), [result, delay_s]);
   const [filter, setFilter] = useState<DrillState | 'all'>('all');
+  if (shown !== given) { setShown(given); setBusy(undefined); setSelected(undefined); setReveal(undefined); setComparing(false); setFilter('all'); }
+  const drawn = useMemo(() => new Set(model.markers.map(marker => marker.message_id)), [model]);
   const states = Object.keys(result.summary.states) as DrillState[];
   const outcomes = result.outcomes.filter(item => filter === 'all' || item.state === filter);
   return <section className="moderator-drill"><h2>{copy.replay} · {copy.replay_simulated}</h2>
@@ -68,8 +73,11 @@ export function Drill({ result: given, origin = 'fixture', capture_hash, draft, 
         if (value === 'all' || states.some(state => state === value)) setFilter(value as DrillState | 'all');
       }}><option value="all">{copy.outcomes_all}</option>{states.map(state => <option key={state} value={state}>{state.replaceAll('_', ' ')}</option>)}</select></div>
       <WindowedRows rows={outcomes} label={copy.outcomes_label} row_key={item => item.message_id} row_height={rowHeight * 3} reveal={reveal}>
-        {item => <div className="moat-row" data-selected={selected === item.message_id}><b><button type="button" className="moat-row-id" aria-pressed={selected === item.message_id}
-          aria-label={moatCopy.table_inspect(item.message_id)} onClick={() => { setSelected(item.message_id); }}>{item.message_id}</button></b><p>{item.state.replaceAll('_', ' ')} · {item.source}{item.rule_id && <> · {moatCopy.rule_line(item.rule_id)}</>}{item.action && <> · {actionWords[item.action]}</>}</p>
+        {item => <div className="moat-row" data-selected={selected === item.message_id}><b>{moat && drawn.has(item.message_id)
+          // A line with no usable time has no dot, so there is nothing for a press to show: it stays plain text.
+          ? <button type="button" className="moat-row-id" aria-pressed={selected === item.message_id}
+            aria-label={moatCopy.table_inspect(item.message_id)} onClick={() => { setSelected(item.message_id); }}>{item.message_id}</button>
+          : item.message_id}</b><p>{item.state.replaceAll('_', ' ')} · {item.source}{item.rule_id && <> · {moatCopy.rule_line(item.rule_id)}</>}{item.action && <> · {actionWords[item.action]}</>}</p>
           {item.verdict ? <VerdictChip verdict={item.verdict} /> : <span>{copy.not_evaluable}</span>}</div>}</WindowedRows>
     </div></div>
   </section>;

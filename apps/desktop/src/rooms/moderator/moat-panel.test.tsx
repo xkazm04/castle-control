@@ -4,12 +4,12 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { expect, test, vi } from 'vitest';
 import { tokens } from '@castle-control/tokens';
 import { readFileSync } from 'node:fs';
-import { simulatedDrill } from '../../drill-fixture.js';
+import { busyNight, simulatedDrill } from '../../drill-fixture.js';
 import { fixtureReplay, fixtureRules } from '../../moderation-fixture.js';
 import { createRuleBench } from '../../moderation-bench.js';
 import { ruleBenchLink } from './rule-bench.jsx';
 import { MoatHeartbeat } from '../../moat/heartbeat.jsx';
-import { buildMoat, windowFor } from '../../moat/moat-model.js';
+import { buildMoat, visibleMarkers, windowFor } from '../../moat/moat-model.js';
 import { MoatScene } from '../../moat/moat-scene.jsx';
 import { MoatReport } from '../../moat/moat-report.jsx';
 import { Drill } from './drill.jsx';
@@ -124,8 +124,14 @@ test('stop buttons appear with the panel, jump on press and disable at either en
   expect(on_stop).toHaveBeenCalledWith(1);
   named(view({ previous: true, next: true }), 'Previous stop')?.props.onClick?.();
   expect(on_stop).toHaveBeenLastCalledWith(-1);
-  expect(renderToStaticMarkup(view({ previous: false, next: true }))).toMatch(/<button[^>]*disabled=""[^>]*>Previous stop<\/button>/);
-  expect(renderToStaticMarkup(view({ previous: true, next: false }))).toMatch(/<button[^>]*disabled=""[^>]*>Next stop<\/button>/);
+  // aria-disabled, not disabled: the focused button stays focusable when it reaches the end, and a press there does nothing.
+  expect(renderToStaticMarkup(view({ previous: false, next: true }))).toMatch(/<button[^>]*aria-disabled="true"[^>]*>Previous stop<\/button>/);
+  expect(renderToStaticMarkup(view({ previous: true, next: false }))).toMatch(/<button[^>]*aria-disabled="true"[^>]*>Next stop<\/button>/);
+  expect(renderToStaticMarkup(view({ previous: true, next: true }))).not.toContain('disabled=""');
+  on_stop.mockClear();
+  named(view({ previous: true, next: false }), 'Next stop')?.props.onClick?.();
+  named(view({ previous: false, next: true }), 'Previous stop')?.props.onClick?.();
+  expect(on_stop).not.toHaveBeenCalled();
   const html = panel(renderToStaticMarkup(<Drill result={fixtureReplay} delay_s={4} />));
   expect(html).toContain('role="group" aria-label="Stopped messages"');
   expect(html).toMatch(/<button[^>]*>Next stop<\/button>/);
@@ -236,12 +242,14 @@ test('a night of ten thousand renders one page of it and says what it merged', (
   expect(text(html)).toMatch(/Held [\d,]+ of 10,000 · simulated/);
 });
 
-test('the Keep heartbeat is a labelled loop of the same model, with nothing to press', () => {
+test('the Keep heartbeat is a labelled loop of the same model, with one button to stop it', () => {
   const html = renderToStaticMarkup(<MoatHeartbeat source={fixtureReplay} delay_s={4} />);
   expect(html).toContain('role="img"');
   expect(html).toContain('aria-label="Sample replay loop · simulated"');
   expect(html).toContain('data-compact="true"');
-  expect(html).not.toContain('<button');
+  // A loop that starts by itself can be paused. Nothing else in it is pressable.
+  expect(html.match(/<button/g)).toHaveLength(1);
+  expect(html).toMatch(/<button[^>]*aria-pressed="false"[^>]*>Pause the sample loop<\/button>/);
   expect(html).not.toContain('HELD');
   expect(html).toContain('<small>Sample replay · simulated</small>');
 });
@@ -303,3 +311,37 @@ test('the print button belongs to the panel, and the report waits until it is pr
 });
 
 function never(): never { throw new Error('Expected an outcome'); }
+
+test('the printed sheet of a busy night says what the strip merged and what did not fit as a stamp', () => {
+  const busy = buildMoat(busyNight());
+  const html = renderToStaticMarkup(<MoatReport model={busy} uid="busy" info={{ source: 'x', instrument_hash: 'a'.repeat(64), origin: 'fixture' }} delay_s={4} />);
+  expect(text(html)).toMatch(/[\d,]+ aired dots are merged in this view/);
+  expect(text(html)).toMatch(/[\d,]+ more stopped here than fit as stamps on the strip/);
+  // The short night fits whole, so its sheet claims nothing was left out.
+  const short = renderToStaticMarkup(<MoatReport model={model} uid="short" info={{ source: 'x', instrument_hash: 'a'.repeat(64), origin: 'fixture' }} delay_s={4} />);
+  expect(text(short)).not.toContain('merged in this view');
+  expect(text(short)).not.toContain('more stopped here');
+});
+
+test('a table row is a button only when the strip has a dot for it', () => {
+  // The first line loses its time: it is counted, listed, and has no dot, so its id stays plain text.
+  const undated = { ...fixtureReplay, outcomes: fixtureReplay.outcomes.map((item, position) => position === 0 ? { ...item, at: 'not a time' } : item) };
+  const withMoat = renderToStaticMarkup(<Drill result={undated} delay_s={4} />);
+  expect(buildMoat(undated).markers.some(marker => marker.message_id === 'simulated-message-0')).toBe(false);
+  expect(withMoat).not.toContain('aria-label="Inspect simulated-message-0"');
+  expect(withMoat).toContain('aria-label="Inspect simulated-message-1"');
+  expect(text(withMoat)).toContain('1 without a usable time, not drawn');
+  // The core comparison draws tables without a strip, so its rows have nothing to point at.
+  const bare = renderToStaticMarkup(<Drill result={fixtureReplay} moat={false} />);
+  expect(bare).not.toContain('moat-row-id');
+  expect(bare).toContain('simulated-message-0');
+});
+
+test('a message picked on a long night keeps its dot even when thinning would merge it', () => {
+  const busy = buildMoat(busyNight());
+  const view = windowFor(busy, 0);
+  const plain = visibleMarkers(busy, view, 60);
+  const dropped = busy.markers.find(marker => marker.fate === 'aired' && marker.offset_ms <= view.to_ms && !plain.markers.includes(marker));
+  if (!dropped) throw new Error('Expected thinning to merge at least one aired dot');
+  expect(visibleMarkers(busy, view, 60, dropped.index).markers).toContain(dropped);
+});
