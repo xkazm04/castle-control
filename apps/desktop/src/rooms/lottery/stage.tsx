@@ -35,31 +35,33 @@ export function ShapePicker({ shape, on_shape, disabled = false }: { shape: Draw
   </div>;
 }
 
-/** `--lot-r` lets the radius ease when weights change (the equalizer), instead of jumping. */
-const markStyle = (index: number, r: number): CSSProperties & { '--lot-i': number; '--lot-r': string } =>
-  ({ '--lot-i': index % 24, '--lot-r': `${r}px` });
+/** Position and radius as custom properties, so lots glide to a new shape and ease to a new weight. */
+const markStyle = (index: number, mark: StageMark): CSSProperties & { '--lot-i': number; '--lot-r': string; '--lot-x': string; '--lot-y': string } =>
+  ({ '--lot-i': index % 24, '--lot-r': `${mark.r}px`, '--lot-x': `${mark.x}px`, '--lot-y': `${mark.y}px` });
 
 function Marks({ marks, order }: { marks: readonly StageMark[]; order: (handle: string) => number | undefined }) {
   return <>{marks.map((mark, index) => <circle key={mark.handle} data-lot-dot={index + 1} data-cohort={mark.cohort}
     data-winner={order(mark.handle)} cx={mark.x} cy={mark.y} r={mark.r}
-    style={markStyle(index, mark.r)}><title>{mark.cohort ? `${mark.handle} · ${copy.cohorts[mark.cohort]}` : mark.handle}</title></circle>)}</>;
+    style={markStyle(index, mark)}><title>{mark.cohort ? `${mark.handle} · ${copy.cohorts[mark.cohort]}` : mark.handle}</title></circle>)}</>;
 }
 
-/** Plays the renderer's motion on the artwork group exactly as the OBS painter does. */
-function useFlourish(scene: DrawScene, fresh: boolean) {
+/** Plays the renderer's motion on the artwork group exactly as the OBS painter does. The wheel's lots ride
+ * its rim, so they get the same motion; they live in their own group so they can glide between shapes. */
+function useFlourish(scene: DrawScene, fresh: boolean, rides: boolean) {
   const group = useRef<SVGGElement>(null);
+  const lots = useRef<SVGGElement>(null);
   useEffect(() => {
-    const node = group.current;
-    if (!fresh || !node?.animate) return undefined;
+    const nodes = [group.current, rides ? lots.current : null];
+    if (!fresh) return undefined;
     const transform = (property: DrawScene['motions'][number]['property'], n: number) => property === 'rotate_deg'
       ? `rotate(${n}deg)` : property === 'scale_x' ? `scaleX(${n})` : `translateY(${n}%)`;
-    const animations = scene.motions.map(motion => node.animate(
+    const animations = nodes.flatMap(node => node?.animate ? scene.motions.map(motion => node.animate(
       [{ transform: transform(motion.property, motion.from) }, { transform: transform(motion.property, motion.to) }],
       { duration: motion.duration_ms, delay: motion.at_ms, easing: motion.easing },
-    ));
+    )) : []);
     return () => { for (const animation of animations) animation.cancel(); };
-  }, [scene, fresh]);
-  return group;
+  }, [scene, fresh, rides]);
+  return { group, lots };
 }
 
 /** Follows the reveal cursor: flourish texture on a fresh cast, a bell per winner, a fanfare at the close.
@@ -142,7 +144,7 @@ export function DrawStage({ shape, on_shape, entries, cast, content, sealed, sea
   const revealed = state.revealed;
   const order = (handle: string) => { const index = revealed.indexOf(handle); return index < 0 ? undefined : index + 1; };
   const fresh = Boolean(playable) && revealed.length === 0 && !reduced;
-  const group = useFlourish(scene, fresh);
+  const flourish = useFlourish(scene, fresh, shape === 'wheel');
   // A fresh ceremony takes the whole chamber; the streamer returns to the desk when ready.
   useEffect(() => { if (fresh && on_theatre) on_theatre(true); }, [fresh, key, on_theatre]);
   const phase = !sealed && !playable ? 'open' : !cast ? 'sealed' : !verified ? 'casting'
@@ -172,11 +174,10 @@ export function DrawStage({ shape, on_shape, entries, cast, content, sealed, sea
     </div>
     <div className="lottery-draw-theatre">
       <svg className="lottery-draw-svg" viewBox={stage_view_box} role="img" aria-label={copy.stage.label(shapeLabel(shape), entries.length)}>
-        <g className="lottery-draw-motion" ref={group}>
+        <g className="lottery-draw-motion" ref={flourish.group}>
           <Artwork layer={artworkOf(scene)} />
-          {shape === 'wheel' && <g className="lottery-draw-lots">{lots}</g>}
         </g>
-        {shape !== 'wheel' && <g className="lottery-draw-lots">{lots}</g>}
+        <g className="lottery-draw-lots" ref={flourish.lots}>{lots}</g>
         {revealed.map((handle, index) => {
           const mark = by_handle.get(handle);
           const origin = call_origin[shape];
