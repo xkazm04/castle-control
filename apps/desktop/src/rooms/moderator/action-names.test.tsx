@@ -34,6 +34,12 @@ test('fixture ModeratorRoom announces each notice in exactly one status region',
     const notices = [...html.matchAll(/<([a-z]+)\b[^>]*role="status"[^>]*>([\s\S]*?)<\/\1>/g)]
       .filter(match => text(match[2] ?? '') === port.getSnapshot().notice);
     expect(notices).toHaveLength(1);
+    const review = renderToStaticMarkup(<HeldQueue state={port.getSnapshot()} queue={queue} />);
+    expect(review).toContain('role="status" data-review-feedback="true"');
+    expect(review).toContain(port.getSnapshot().notice);
+    const controls = renderToStaticMarkup(<GateControls state={port.getSnapshot()} queue={queue} />);
+    expect(controls).not.toContain('role="status"');
+    expect(controls).not.toContain('data-review-feedback');
   };
   assertNotice();
   port.send({ kind: 'delay', delay_s: 6 }); assertNotice();

@@ -24,7 +24,7 @@ export function HeldQueue({ state, queue }: Props) {
     <Plate ink="azure" offset="space-8" className="moderator-held-plate" aria-label={copy.held}
       band={<PlateBand title={copy.held} gloss={copy.held_gloss}
         count={<>{state.held.length}<CountLabel first={copy.held_unit} second={copy.fixture_only} /></>} />}>
-      <PlateBody>{state.held.length ? state.held.map(item => <article key={item.decision_id} data-verdict="hold" className="moderator-held">
+      <PlateBody><p role="status" data-review-feedback="true" className="moderator-small">{state.notice}</p>{state.held.length ? state.held.map(item => <article key={item.decision_id} data-verdict="hold" className="moderator-held">
         <ReviewMeta verdict="hold" id={item.message_id} status={state.phases.get(item.decision_id)?.kind === 'confirming' ? copy.held_pending : copy.held_state} />
         <blockquote className="moderator-plate-quote">{item.message_text ?? copy.original_unavailable}</blockquote>
         <p className="moderator-plate-reason"><b>{copy.held_reason}</b>{fixtureHoldReasons.get(item.message_id) ?? copy.hold_reason_unavailable}</p>
@@ -69,12 +69,12 @@ export function GateControls({ state, queue }: Props) {
       <div className="moderator-moat-row" aria-busy={(state.delay.kind === 'confirming') || (state.shield.kind === 'confirming')}>
         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 'var(--space-8)' }}>
           <label htmlFor={delay_id}>{copy.propose_delay}</label><select id={delay_id} value={state.delay.value} disabled={(state.delay.kind === 'confirming')}
+          aria-description={state.delay.kind === 'confirming' ? copy.gate_pending : undefined}
           onChange={event => {
             const value = Number(event.currentTarget.value);
             if ([0, 2, 4, 6].includes(value)) proposeCommand(queue, { kind: 'delay', delay_s: value as ChatDelay }, `Set chat delay to ${value} s`);
           }}><option value={0}>{copy.delay_off}</option>{[2, 4, 6].map(value => <option key={value} value={value}>{copy.delay_seconds(value)}</option>)}</select></span>
       </div>
-      <p role="status" data-review-feedback="true" className="moderator-small">{state.notice}</p>
       <div role="group" aria-label={copy.shield_label}>
         <InkButton type="button" size="big" variant="shield" aria-pressed={state.shield.value} disabled={(state.shield.kind === 'confirming')}
           onClick={() => proposeCommand(queue, { kind: 'shield' }, state.shield.value ? 'Lower the drawbridge' : 'Raise the drawbridge')}>
