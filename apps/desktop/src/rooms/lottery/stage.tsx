@@ -34,12 +34,14 @@ export function ShapePicker({ shape, on_shape, disabled = false }: { shape: Draw
   </div>;
 }
 
-const markStyle = (index: number): CSSProperties & { '--lot-i': number } => ({ '--lot-i': index % 24 });
+/** `--lot-r` lets the radius ease when weights change (the equalizer), instead of jumping. */
+const markStyle = (index: number, r: number): CSSProperties & { '--lot-i': number; '--lot-r': string } =>
+  ({ '--lot-i': index % 24, '--lot-r': `${r}px` });
 
 function Marks({ marks, order }: { marks: readonly StageMark[]; order: (handle: string) => number | undefined }) {
   return <>{marks.map((mark, index) => <circle key={mark.handle} data-lot-dot={index + 1} data-cohort={mark.cohort}
     data-winner={order(mark.handle)} cx={mark.x} cy={mark.y} r={mark.r}
-    style={markStyle(index)}><title>{mark.cohort ? `${mark.handle} · ${copy.cohorts[mark.cohort]}` : mark.handle}</title></circle>)}</>;
+    style={markStyle(index, mark.r)}><title>{mark.cohort ? `${mark.handle} · ${copy.cohorts[mark.cohort]}` : mark.handle}</title></circle>)}</>;
 }
 
 /** Plays the renderer's motion on the artwork group exactly as the OBS painter does. */

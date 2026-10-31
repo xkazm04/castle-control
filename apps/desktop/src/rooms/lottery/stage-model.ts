@@ -72,7 +72,8 @@ export function layoutMarks(shape: DrawShape, entries: readonly StageEntry[]): r
   if (!count) return [];
   const heaviest = Math.max(1, ...entries.map(entry => entry.weight));
   const base = Math.max(1.1, Math.min(4.2, 46 / Math.sqrt(count)));
-  const radius = (weight: number) => Math.round(base * (0.6 + 0.4 * Math.sqrt(weight / heaviest)) * 100) / 100;
+  // Area proportional to weight (radius ∝ √weight), floored so the lightest lot stays visible.
+  const radius = (weight: number) => Math.round(base * Math.max(0.35, Math.sqrt(weight / heaviest)) * 100) / 100;
   const at = (entry: StageEntry, x: number, y: number, angle?: number): StageMark => ({
     handle: entry.handle, x: Math.round(x * 100) / 100, y: Math.round(y * 100) / 100, r: radius(entry.weight),
     ...(entry.cohort ? { cohort: entry.cohort } : {}), ...(angle === undefined ? {} : { angle }),

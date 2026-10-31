@@ -23,7 +23,7 @@
 .lottery-draw-motion { transform-box: fill-box; transform-origin: center; }
 .lottery-draw-stage[data-phase="open"][data-shape="wheel"] .lottery-draw-motion { animation: lottery-wheel-idle 40s linear infinite; }
 
-.lottery-draw-lots circle { fill: var(--ink); stroke: var(--paper); stroke-width: .5; transform-box: fill-box; transform-origin: center; transition: opacity var(--motion-shell) var(--ease), fill var(--motion-fast) var(--ease); }
+.lottery-draw-lots circle { r: var(--lot-r); fill: var(--ink); stroke: var(--paper); stroke-width: .5; transform-box: fill-box; transform-origin: center; transition: opacity var(--motion-shell) var(--ease), fill var(--motion-fast) var(--ease), r calc(var(--motion-shell) * 2) var(--ease); }
 .lottery-draw-lots circle[data-cohort="subscriber"] { fill: var(--or); stroke: var(--ink); }
 .lottery-draw-lots circle[data-cohort="raider"] { fill: var(--paper); stroke: var(--azure); stroke-width: 1.2; }
 .lottery-draw-stage[data-phase="open"] .lottery-draw-lots circle { animation: lottery-lot-breathe 2.6s var(--ease) infinite alternate; animation-delay: calc(var(--lot-i) * -110ms); }
