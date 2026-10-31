@@ -41,9 +41,8 @@ export function StewardBar(props: StewardBarProps) {
           <input ref={props.input_ref} aria-label="Talk to the Steward..." value={props.value}
             onChange={event => props.on_change(event.currentTarget.value)} placeholder="Talk to the Steward..." />
         </label>
-        <button type="button" disabled={!props.on_speak_start || !props.on_speak_end}
-          title="Speech input is not wired yet" onPointerDown={props.on_speak_start}
-          onPointerUp={props.on_speak_end} onPointerCancel={props.on_speak_end} onBlur={props.on_speak_end}>Hold to speak</button>
+        {props.on_speak_start && props.on_speak_end && <button type="button" onPointerDown={props.on_speak_start}
+          onPointerUp={props.on_speak_end} onPointerCancel={props.on_speak_end} onBlur={props.on_speak_end}>Hold to speak</button>}
         <button type="submit" disabled={!props.value.trim()}>Tell</button>
       </form>
       <div className="cc-steward-suggestions" role="group" aria-label="Steward suggestions">

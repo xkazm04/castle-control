@@ -3,17 +3,35 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { expect, test, vi } from 'vitest';
 import { StewardBar } from './steward-bar.jsx';
 
-test('StewardBar renders one honest input, last message, speech control and suggestions', () => {
+test('StewardBar renders one honest input, last message and suggestions without a speech button when handlers are absent', () => {
   const props = { message: 'No changes made.', value: '', suggestions: ['Catch me up'],
     on_change: vi.fn(), on_tell: vi.fn(), on_suggest: vi.fn() };
   const html = renderToStaticMarkup(<StewardBar {...props} />);
-  for (const text of ['SIMULATED STEWARD · SAMPLE DATA', 'Talk to the Steward...', 'No changes made.', 'Hold to speak', 'Tell', 'Catch me up']) expect(html).toContain(text);
+  for (const text of ['SIMULATED STEWARD · SAMPLE DATA', 'Talk to the Steward...', 'No changes made.', 'Tell', 'Catch me up']) expect(html).toContain(text);
+  expect(html).not.toContain('Hold to speak');
   expect(html.match(/<input/g)).toHaveLength(1);
   expect(html).toContain('disabled=""');
   expect(html).toContain('aria-label="Steward identity"');
   expect(html).toContain('<svg');
   expect(html).toContain('Simulated co-pilot');
   expect(html).not.toContain('aria-label="Steward proposal"');
+});
+
+test('StewardBar renders an enabled speech button when both handlers are provided', () => {
+  const html = renderToStaticMarkup(<StewardBar message="No changes made." value="" suggestions={[]}
+    on_change={vi.fn()} on_tell={vi.fn()} on_suggest={vi.fn()}
+    on_speak_start={vi.fn()} on_speak_end={vi.fn()} />);
+  const speech_button = html.match(/<button\b[^>]*>Hold to speak<\/button>/)?.[0];
+  expect(speech_button).toBeDefined();
+  expect(speech_button).not.toContain('disabled');
+  expect(html).not.toContain('Speech input is not wired yet');
+});
+
+test.each(['start', 'end'] as const)('StewardBar hides speech when only the %s handler is provided', handler => {
+  const speech = handler === 'start' ? { on_speak_start: vi.fn() } : { on_speak_end: vi.fn() };
+  const html = renderToStaticMarkup(<StewardBar message="No changes made." value="" suggestions={[]}
+    on_change={vi.fn()} on_tell={vi.fn()} on_suggest={vi.fn()} {...speech} />);
+  expect(html).not.toContain('Hold to speak');
 });
 
 test('StewardBar accepts an owner-supplied identity and proposal without owning their state', () => {
