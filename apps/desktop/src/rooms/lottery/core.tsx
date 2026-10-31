@@ -54,7 +54,7 @@ export function ConnectedLotsRoom({ port, simulated, seal_slot }: { port: CoreLo
     }
   };
   const cap = draw?.rules.cohort_caps.find(item => item.cohort === 'raider');
-  return <div className="lottery-room" role="region" aria-label={copy.core.title} aria-busy={state.busy}>
+  return <div className="lottery-room" role="region" aria-label={copy.core.title} aria-busy={state.busy} data-theatre={appearance.theatre}>
     <div className="cc-hall">
       <PoolStage count={state.entries.length} winners={draw?.rules.winner_count ?? copy.not_available}
         winner_detail={copy.selected_draw} held_out={copy.not_available}
@@ -63,7 +63,7 @@ export function ConnectedLotsRoom({ port, simulated, seal_slot }: { port: CoreLo
         foot={<p>{state.sealed ? copy.core.frozen_notice : copy.core.roll_notice}</p>}>
         <DrawStage shape={appearance.shape} on_shape={shape => display.edit({ shape })} entries={state.entries} cast={cast}
           content={draw?.policy.content ?? 'question'} sealed={state.sealed} seal={state.seal_result?.sealed.seal}
-          clock={reveal} reveal_ms={appearance.reveal_ms} />
+          clock={reveal} reveal_ms={appearance.reveal_ms} theatre={appearance.theatre} on_theatre={display.theatre} />
       </PoolStage>
       <div className="cc-desk">
         <SectionHeading variant="banner" level={2} title={copy.writ} gloss={copy.writ_gloss} ink="gules" />

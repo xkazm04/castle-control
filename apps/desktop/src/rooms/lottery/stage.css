@@ -1,11 +1,11 @@
 /* Lot Chamber draw stage: renderer artwork + lots + reveals. Token-only; SVG geometry lives in logical viewBox units. */
-.lottery-draw-stage { grid-area: urn; display: flex; flex-direction: column; gap: var(--space-10); min-width: 0; min-height: 0; }
-.lottery-draw-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-8); }
-.lottery-shape-picker { display: inline-flex; flex-wrap: wrap; gap: var(--space-4); padding: var(--space-3); border: var(--rule-medium) solid var(--ink); border-radius: var(--r-md); background: var(--paper); box-shadow: var(--space-3) var(--space-3) 0 var(--hair-2); }
-.lottery-shape-picker button { appearance: none; display: inline-flex; align-items: center; gap: var(--space-6); min-height: var(--button-h); padding: var(--space-3) var(--space-10) var(--space-3) var(--space-4); border: var(--rule-thin) solid transparent; border-radius: var(--r-sm); background: transparent; color: var(--ink); font: 800 var(--text-label)/1 var(--font-ui); letter-spacing: var(--track-label); text-transform: uppercase; cursor: pointer; transition: background var(--motion-fast) var(--ease), transform var(--motion-fast) var(--ease); }
+.lottery-draw-stage { grid-area: urn; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; gap: var(--space-8); min-width: 0; min-height: 0; }
+.lottery-shape-picker { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-4); padding: var(--space-3); border: var(--rule-medium) solid var(--ink); border-radius: var(--r-md); background: var(--paper); box-shadow: var(--space-3) var(--space-3) 0 var(--hair-2); }
+.lottery-shape-picker button { appearance: none; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--space-2); min-width: 0; min-height: var(--button-h); padding: var(--space-3) var(--space-4) var(--space-4); border: var(--rule-thin) solid transparent; border-radius: var(--r-sm); background: transparent; color: var(--ink); font: 800 var(--text-label)/1 var(--font-ui); letter-spacing: var(--track-label); text-transform: uppercase; cursor: pointer; transition: background var(--motion-fast) var(--ease), transform var(--motion-fast) var(--ease); }
 .lottery-shape-picker button:hover:not(:disabled) { background: color-mix(in srgb, var(--gules) 12%, var(--paper)); }
 .lottery-shape-picker button:active:not(:disabled) { transform: translateY(var(--space-1)); }
-.lottery-shape-picker button svg { width: var(--space-32); height: var(--space-24); border-radius: var(--r-sm); background: var(--paper); }
+.lottery-shape-picker button span { white-space: nowrap; }
+.lottery-shape-picker button svg { width: var(--space-28); height: var(--space-20); border-radius: var(--r-sm); background: var(--paper); }
 .lottery-shape-picker button[aria-pressed="true"] { border-color: var(--ink); background: var(--gules); color: var(--press); box-shadow: var(--space-2) var(--space-2) 0 var(--ink); }
 .lottery-shape-picker button:focus-visible { outline: var(--rule-medium) solid var(--azure); outline-offset: var(--focus-offset); }
 .lottery-shape-picker button:disabled { cursor: default; opacity: var(--disabled-opacity); }
@@ -14,10 +14,12 @@
 .lottery-room path[data-ink="or"] { fill: var(--or); }
 .lottery-room path[data-ink="paper"] { fill: var(--paper); }
 
-.lottery-draw-theatre { position: relative; flex: 1 1 auto; display: grid; place-items: center; min-height: calc(var(--space-56) * 3); padding: var(--space-8); border: var(--rule-medium) solid var(--ink); border-radius: var(--r-md); background: radial-gradient(ellipse at 50% 46%, color-mix(in srgb, var(--or) 30%, var(--paper)) 0, color-mix(in srgb, var(--or) 8%, var(--paper)) 48%, var(--paper) 72%); overflow: hidden; }
+.lottery-draw-theatre { position: relative; min-height: calc(var(--space-56) * 3); border: var(--rule-medium) solid var(--ink); border-radius: var(--r-md); background: radial-gradient(ellipse at 50% 46%, color-mix(in srgb, var(--or) 30%, var(--paper)) 0, color-mix(in srgb, var(--or) 8%, var(--paper)) 48%, var(--paper) 72%); overflow: hidden; }
 .lottery-draw-theatre::before { content: ""; position: absolute; inset: var(--space-5); border: var(--rule-thin) dashed var(--hair); border-radius: var(--r-sm); pointer-events: none; }
 .lottery-draw-stage[data-phase="sealed"] .lottery-draw-theatre { border-style: double; border-width: var(--rule-strong); }
-.lottery-draw-svg { position: relative; display: block; width: 100%; height: 100%; max-height: calc(var(--space-56) * 7); overflow: visible; }
+.lottery-draw-svg { position: absolute; top: var(--space-30); left: var(--space-8); display: block; width: calc(100% - var(--space-16)); height: calc(100% - var(--space-30) - var(--space-12)); overflow: visible; }
+.lottery-draw-stage[data-phase="revealing"] .lottery-draw-svg { height: calc(100% - var(--space-30) - var(--space-56) - var(--space-40)); }
+.lottery-draw-stage[data-phase="revealed"] .lottery-draw-svg { height: calc(100% - var(--space-30) - var(--space-40)); }
 .lottery-draw-motion { transform-box: fill-box; transform-origin: center; }
 .lottery-draw-stage[data-phase="open"][data-shape="wheel"] .lottery-draw-motion { animation: lottery-wheel-idle 40s linear infinite; }
 
@@ -34,19 +36,29 @@
 .lottery-stage-medal-body .lottery-stage-pulse { fill: none; stroke: var(--or); stroke-width: 2.4; transform-box: fill-box; transform-origin: center; animation: lottery-pulse var(--draw-reveal) var(--ease) both; }
 .lottery-stage-medal-body text { fill: var(--ink); text-anchor: middle; dominant-baseline: central; font-family: var(--font-num); font-weight: 800; }
 
-.lottery-stage-wax { position: absolute; top: var(--space-14); right: var(--space-14); display: grid; place-content: center; width: calc(var(--space-56) + var(--space-24)); aspect-ratio: 1; border-radius: 50%; background: var(--gules); color: var(--press); text-align: center; box-shadow: inset 0 0 0 var(--space-4) var(--hair-2), var(--space-3) var(--space-3) 0 var(--ink); transform: rotate(-10deg); animation: lottery-wax-stamp var(--motion-shell) var(--ease) both; }
+.lottery-stage-wax { position: absolute; top: var(--space-30); right: var(--space-12); display: grid; place-content: center; width: calc(var(--space-56) + var(--space-24)); aspect-ratio: 1; border-radius: 50%; background: var(--gules); color: var(--press); text-align: center; box-shadow: inset 0 0 0 var(--space-4) var(--hair-2), var(--space-3) var(--space-3) 0 var(--ink); transform: rotate(-10deg); animation: lottery-wax-stamp var(--motion-shell) var(--ease) both; }
 .lottery-stage-wax b { font: 800 var(--text-section)/1 var(--font-display); text-transform: uppercase; }
 .lottery-stage-wax span { font: 700 var(--text-label)/1.2 var(--font-ui); letter-spacing: var(--track-air); text-transform: uppercase; }
 
-.lottery-stage-phase { margin: 0; font: 800 var(--text-label)/1.3 var(--font-ui); letter-spacing: var(--track-air); text-transform: uppercase; color: var(--gules-text); }
-.lottery-stage-rail { display: flex; flex-wrap: wrap; gap: var(--space-8); margin: 0; padding: 0; list-style: none; }
-.lottery-stage-rail li { display: inline-flex; align-items: center; gap: var(--space-8); padding: var(--space-4) var(--space-12) var(--space-4) var(--space-4); border: var(--rule-medium) solid var(--ink); border-radius: var(--r-sm); background: var(--card); box-shadow: var(--space-3) var(--space-3) 0 var(--gules); font: 700 var(--text-body)/1.2 var(--font-num); animation: lottery-placard var(--draw-reveal) var(--ease) both; }
-.lottery-stage-rail b { display: inline-grid; place-content: center; min-width: var(--space-24); height: var(--space-24); border-radius: 50%; background: var(--gules); color: var(--press); font: 800 var(--text-small)/1 var(--font-num); }
-.lottery-stage-rail small { font: 700 var(--text-label)/1 var(--font-ui); letter-spacing: var(--track-label); text-transform: uppercase; color: var(--muted); }
+.lottery-stage-phase { position: absolute; top: var(--space-8); left: var(--space-10); right: var(--space-10); display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-2) var(--space-10); margin: 0; font: 800 var(--text-label)/1.3 var(--font-ui); letter-spacing: var(--track-air); text-transform: uppercase; color: var(--gules-text); }
+.lottery-stage-phase small { font: 600 var(--text-label)/1.3 var(--font-num); letter-spacing: 0; text-transform: none; color: var(--muted); }
+.lottery-stage-rail { position: absolute; left: var(--space-8); right: var(--space-8); bottom: var(--space-8); display: flex; flex-direction: column; align-items: center; gap: var(--space-8); }
+.lottery-stage-rail ol { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--space-4) var(--space-6); margin: 0; padding: 0; list-style: none; }
+.lottery-stage-rail li { display: inline-flex; align-items: center; gap: var(--space-6); padding: var(--space-2) var(--space-8) var(--space-2) var(--space-2); border: var(--rule-thin) solid var(--ink); border-radius: var(--r-sm); background: var(--card); box-shadow: var(--space-2) var(--space-2) 0 var(--gules); font: 700 var(--text-small)/1.2 var(--font-num); animation: lottery-placard var(--draw-reveal) var(--ease) both; }
+.lottery-stage-rail li b { display: inline-grid; place-content: center; min-width: var(--space-20); height: var(--space-20); border-radius: 50%; background: var(--gules); color: var(--press); font: 800 var(--text-label)/1 var(--font-num); }
+.lottery-stage-rail li[data-cohort="subscriber"] b { background: var(--or); color: var(--ink); }
+.lottery-stage-rail li[data-cohort="raider"] b { background: var(--paper); color: var(--azure-text); box-shadow: inset 0 0 0 var(--rule-medium) var(--azure); }
+.lottery-stage-proclaim { display: grid; justify-items: center; gap: var(--space-2); max-width: 100%; margin: 0; padding: var(--space-8) var(--space-20) var(--space-10); border: var(--rule-strong) solid var(--ink); border-radius: var(--r-md); background: var(--gules); color: var(--press); box-shadow: var(--space-4) var(--space-4) 0 var(--ink); text-align: center; animation: lottery-proclaim calc(var(--draw-reveal) * .7) var(--ease) both; }
+.lottery-stage-proclaim small { font: 800 var(--text-label)/1.1 var(--font-ui); letter-spacing: var(--track-air); text-transform: uppercase; }
+.lottery-stage-proclaim b { font: 800 clamp(var(--text-chamber), 3.2vw, var(--text-chamber-number))/1 var(--font-display); letter-spacing: var(--track-heading); overflow-wrap: anywhere; }
+.lottery-stage-proclaim span { font: 700 var(--text-label)/1.1 var(--font-ui); letter-spacing: var(--track-label); text-transform: uppercase; color: var(--or); }
 .lottery-stage-rail .lottery-stage-more { border-style: dashed; box-shadow: none; font: italic var(--text-aside)/1.2 var(--font-serif); color: var(--ink-2); }
-.lottery-stage-disclaimer { margin: 0; padding: var(--space-4) var(--space-8); border-top: var(--rule-medium) solid var(--ink); font: 700 var(--text-small)/1.3 var(--font-ui); letter-spacing: var(--track-label); text-transform: uppercase; }
-.lottery-stage-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-8) var(--space-16); }
-.lottery-stage-foot .cc-aside { flex: 1 1 calc(var(--space-56) * 4); }
+.lottery-stage-disclaimer { position: absolute; left: 0; right: 0; bottom: 0; margin: 0; padding: var(--space-2) var(--space-8); border-top: var(--rule-thin) solid var(--ink); background: var(--paper); text-align: center; font: 700 var(--text-small)/1.3 var(--font-ui); letter-spacing: var(--track-label); text-transform: uppercase; }
+.lottery-stage-foot { position: relative; display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-4) var(--space-12); }
+.lottery-stage-foot .cc-aside { flex: 1 1 calc(var(--space-56) * 3); font-size: var(--text-small); }
+.lottery-stage-foot .cc-stamp { transform: none; }
+/* Visually hidden live region: the proclamation already shows each winner on screen. */
+.lottery-stage-announce { position: absolute; width: var(--space-1); height: var(--space-1); margin: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .lottery-room .cc-legend [data-cohort="subscriber"]::before { background: var(--or); box-shadow: inset 0 0 0 var(--rule-thin) var(--ink); }
 
 @keyframes lottery-lot-breathe { from { transform: scale(.82); } to { transform: scale(1.12); } }
@@ -54,7 +66,20 @@
 @keyframes lottery-medal-in { 0% { transform: scale(0); } 65% { transform: scale(1.35); } 100% { transform: scale(1); } }
 @keyframes lottery-pulse { from { opacity: 1; transform: scale(.5); } to { opacity: 0; transform: scale(2.6); } }
 @keyframes lottery-wax-stamp { from { opacity: 0; transform: rotate(-24deg) scale(1.8); } to { opacity: 1; transform: rotate(-10deg) scale(1); } }
+@keyframes lottery-proclaim { 0% { opacity: 0; transform: translateY(var(--space-20)) scale(.6) rotate(-4deg); } 55% { opacity: 1; transform: translateY(calc(var(--space-2) * -1)) scale(1.08) rotate(1deg); } 100% { opacity: 1; transform: none; } }
 @keyframes lottery-placard { 0% { opacity: 0; transform: translateY(calc(var(--space-12) * -1)) scale(.9) rotate(-2deg); } 60% { opacity: 1; transform: translateY(var(--space-2)) scale(1.04) rotate(.5deg); } 100% { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) {
   .lottery-draw-stage *, .lottery-draw-stage *::before { animation: none !important; transition: none !important; }
 }
+.lottery-draw-theatre:has(.lottery-stage-disclaimer) .lottery-stage-rail { bottom: var(--space-30); }
+/* Theatre mode: the ceremony takes the whole chamber; the desk is one click away. */
+.lottery-room[data-theatre="true"] .cc-hall { grid-template-columns: minmax(0, 1fr); }
+.lottery-room[data-theatre="true"] .cc-desk { display: none; }
+.lottery-room[data-theatre="true"] .lottery-draw-theatre { min-height: calc(var(--space-56) * 6); }
+.lottery-room[data-theatre="true"] .lottery-stage-proclaim { padding: var(--space-12) var(--space-40) var(--space-14); }
+.lottery-room[data-theatre="true"] .lottery-stage-proclaim b { font-size: clamp(var(--text-chamber), 2.6vw, calc(var(--text-chamber-number) * 1.4)); }
+.lottery-room[data-theatre="true"] .lottery-stage-rail li { font-size: var(--text-body); }
+.lottery-room[data-theatre="true"] [data-phase="revealing"] .lottery-draw-svg,
+.lottery-room[data-theatre="true"] [data-phase="revealed"] .lottery-draw-svg { width: calc(50% - var(--space-8)); height: calc(100% - var(--space-30) - var(--space-12)); }
+.lottery-room[data-theatre="true"] .lottery-draw-theatre .lottery-stage-rail { top: var(--space-30); bottom: var(--space-12); left: 50%; right: var(--space-24); justify-content: center; gap: var(--space-14); }
+.lottery-room[data-theatre="true"] .lottery-draw-theatre:has(.lottery-stage-disclaimer) .lottery-stage-rail { bottom: var(--space-34); }

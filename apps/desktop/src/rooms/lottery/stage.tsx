@@ -11,7 +11,7 @@ import { artworkOf, draw_shapes, layoutMarks, sampleEntries, stage_view_box, sta
 import type { StageCast, StageEntry, StageMark } from './stage-model.js';
 import './stage.css';
 
-const rail_limit = 12;
+const rail_limit = 8;
 const shapeLabel = (shape: DrawShape) => copy.shapes.find(item => item.value === shape)?.label ?? shape;
 
 function Artwork({ layer }: { layer: DrawArtworkLayer | undefined }) {
@@ -54,9 +54,16 @@ function useFlourish(scene: DrawScene, fresh: boolean) {
   return group;
 }
 
-export function DrawStage({ shape, on_shape, entries, cast, content, sealed, seal, clock, reveal_ms, verified = true }: {
+function Proclamation({ handle, order, total, cohort }: { handle: string; order: number; total: number; cohort: StageEntry['cohort'] }) {
+  return <p className="lottery-stage-proclaim" aria-hidden="true">
+    <small>{copy.stage.winner_of(order, total)}</small><b>{handle}</b>{cohort && <span>{copy.cohorts[cohort]}</span>}
+  </p>;
+}
+
+export function DrawStage({ shape, on_shape, entries, cast, content, sealed, seal, clock, reveal_ms, verified = true, theatre = false, on_theatre }: {
   shape: DrawShape; on_shape: (shape: DrawShape) => void; entries: readonly StageEntry[]; cast: StageCast | undefined;
   content: DrawContent; sealed: boolean; seal?: string | undefined; clock: RevealClock; reveal_ms: number; verified?: boolean;
+  theatre?: boolean; on_theatre?: (theatre: boolean) => void;
 }) {
   const reduced = useReducedMotion();
   const playable = cast && verified ? cast : undefined;
@@ -73,17 +80,15 @@ export function DrawStage({ shape, on_shape, entries, cast, content, sealed, sea
   const order = (handle: string) => { const index = revealed.indexOf(handle); return index < 0 ? undefined : index + 1; };
   const fresh = Boolean(playable) && revealed.length === 0 && !reduced;
   const group = useFlourish(scene, fresh);
+  // A fresh ceremony takes the whole chamber; the streamer returns to the desk when ready.
+  useEffect(() => { if (fresh && on_theatre) on_theatre(true); }, [fresh, key, on_theatre]);
   const phase = !sealed && !playable ? 'open' : !cast ? 'sealed' : !verified ? 'casting'
     : state.finished && revealed.length === winners.length ? 'revealed' : 'revealing';
   const disclaimer = scene.layers.find(layer => layer.kind === 'disclaimer');
   const latest = revealed.at(-1);
   const lots = <Marks marks={marks} order={order} />;
   return <div className="lottery-draw-stage" data-shape={shape} data-phase={phase} style={revealStyle(reveal_ms)}>
-    <div className="lottery-draw-head">
-      <ShapePicker shape={shape} on_shape={on_shape} />
-      {playable && <StatusChip variant="gules" stamp="label" tone={phase === 'revealed' ? 'spot' : 'neutral'}>
-        {copy.stage.labels[playable.label]}</StatusChip>}
-    </div>
+    <ShapePicker shape={shape} on_shape={on_shape} />
     <div className="lottery-draw-theatre">
       <svg className="lottery-draw-svg" viewBox={stage_view_box} role="img" aria-label={copy.stage.label(shapeLabel(shape), entries.length)}>
         <g className="lottery-draw-motion" ref={group}>
@@ -99,24 +104,32 @@ export function DrawStage({ shape, on_shape, entries, cast, content, sealed, sea
           </g> : null;
         })}
       </svg>
+      <p className="lottery-stage-phase">{copy.stage[phase]}{seal ? <small>{copy.stage.seal(seal)}</small> : null}</p>
       {sealed && !playable && seal && <div className="lottery-stage-wax" aria-hidden="true">
         <b>{copy.stage.wax[0]}</b><span>{copy.stage.wax[1]}</span></div>}
+      {revealed.length > 0 && <div className="lottery-stage-rail">
+        {phase === 'revealing' && latest && <Proclamation key={latest} handle={latest} order={revealed.length}
+          total={winners.length} cohort={cohorts.get(latest)} />}
+        <ol aria-label={copy.stage.rail}>
+          {revealed.slice(0, rail_limit).map((handle, index) => {
+            const cohort = cohorts.get(handle);
+            return <li key={handle} data-stage-winner={index + 1} data-cohort={cohort}
+              title={cohort ? copy.cohorts[cohort] : undefined}><b>{index + 1}</b><span>{handle}</span></li>;
+          })}
+          {revealed.length > rail_limit && <li className="lottery-stage-more">{copy.stage.more(revealed.length - rail_limit)}</li>}
+        </ol>
+      </div>}
+      {disclaimer?.kind === 'disclaimer' && <p className="lottery-stage-disclaimer">{disclaimer.text}</p>}
     </div>
-    <p className="lottery-stage-phase">{copy.stage[phase]}{seal ? ` · ${copy.stage.seal(seal)}` : ''}</p>
-    {revealed.length > 0 && <ol className="lottery-stage-rail" aria-label={copy.stage.rail}>
-      {revealed.slice(0, rail_limit).map((handle, index) => {
-        const cohort = cohorts.get(handle);
-        return <li key={handle} data-stage-winner={index + 1}><b>{index + 1}</b><span>{handle}</span>
-          {cohort && <small>{copy.cohorts[cohort]}</small>}</li>;
-      })}
-      {revealed.length > rail_limit && <li className="lottery-stage-more">{copy.stage.more(revealed.length - rail_limit)}</li>}
-    </ol>}
-    <p className="cc-status" role="status">{latest ? copy.stage.announce(revealed.length, winners.length, latest) : ''}</p>
-    {disclaimer?.kind === 'disclaimer' && <p className="lottery-stage-disclaimer">{disclaimer.text}</p>}
     <div className="lottery-stage-foot">
+      {playable && <StatusChip variant="gules" stamp="label" tone={phase === 'revealed' ? 'spot' : 'neutral'}>
+        {copy.stage.labels[playable.label]}</StatusChip>}
       <p className="cc-aside">{cast && !verified ? copy.stage.unverified : copy.stage.note}
-        {drawn.length < entries.length ? ` ${copy.stage.sampled(drawn.length, entries.length)}` : ''} {copy.stage.weight_hint}</p>
+        {drawn.length < entries.length ? ` ${copy.stage.sampled(drawn.length, entries.length)}` : ''}</p>
       {playable && <InkButton size="room" disabled={!state.finished} onClick={() => clock.replay()}>{copy.stage.replay}</InkButton>}
+      {on_theatre && <InkButton size="room" aria-pressed={theatre} onClick={() => on_theatre(!theatre)}>
+        {theatre ? copy.stage.desk : copy.stage.theatre}</InkButton>}
+      <p className="lottery-stage-announce" role="status">{latest ? copy.stage.announce(revealed.length, winners.length, latest) : ''}</p>
     </div>
   </div>;
 }

@@ -62,17 +62,18 @@ export default function LotteryRoom({ snapshot, replay, queue = proposalQueue, s
     port.edit(draw);
     if (port.getSnapshot().draw !== before) discardPreview();
   };
-  return <div className="lottery-room" data-replay={replay}>
+  return <div className="lottery-room" data-replay={replay} data-theatre={appearance.theatre}>
     <div className="cc-hall">
       <PoolStage count={entries.length} winners={winners} winner_detail={pending.length ? copy.proposed : copy.selected_draw}
         held_out={fixtureCooldown.length} cap={cap ? `${cap.numerator}/${cap.denominator}` : copy.no_cap}
-        illustration={copy.illustration} foot={<>
+        illustration={copy.illustration} title={copy.stage.titles[appearance.shape]} foot={<>
           <ul className="cc-legend" aria-label={copy.dots}>{(['new_account', 'subscriber', 'raider'] as const).map(cohort =>
             <li key={cohort} data-cohort={cohort}>{copy.cohorts[cohort]} <b>{entries.filter(entry => entry.cohort === cohort).length}</b></li>)}</ul>
           <p>{copy.core.pool(state.draw.rules.pool.kind, state.draw.policy.content, state.draw.rules.cooldown_s)} · {fixtureCooldown.length} {copy.cooldown} · {fixtureWeightNotice(state)}</p>
         </>}><DrawStage shape={appearance.shape} on_shape={shape => display.edit({ shape })} entries={entries} cast={cast}
           verified={writ_checked === true} content={state.draw.policy.content} sealed={state.sealed}
-          seal={state.sealed_roll?.seal} clock={reveal} reveal_ms={appearance.reveal_ms} /></PoolStage>
+          seal={state.sealed_roll?.seal} clock={reveal} reveal_ms={appearance.reveal_ms}
+          theatre={appearance.theatre} on_theatre={display.theatre} /></PoolStage>
       <div className="cc-desk">
         <SectionHeading variant="banner" level={2} title={copy.writ} gloss={copy.writ_gloss} ink="gules"
           count={<StatusChip variant="gules" stamp="label" {...(pending.length ? { tone: 'spot' as const } : {})}>
