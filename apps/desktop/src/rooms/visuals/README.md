@@ -107,10 +107,12 @@ parameter rejection and clipboard failure. All existing Beacons tests are kept.
 Desktop typecheck/lint and e2e TypeScript validation pass. Final narrowed test
 counts and exact commands are recorded in external `result.json`.
 
-Lane L5 still owns renderer/scene/overlay output. These local parameter controls
-do not change OBS. Persisting/rendering the missing fields requires a separate
-contract delivery and L5 integration; no overlay bundle, demo, kit, token,
-contract, dependency or Rust file is changed here. No install or git write ran.
+Lane L5 still owns renderer/scene/overlay output. Size and anchor travel in the
+copied browser-source URL and change OBS placement when that URL is used.
+Colour and burst timing remain session-only previews. Persisting those appearance
+fields requires a separate contract delivery and L5 integration; no overlay
+bundle, demo, kit, token, contract, dependency or Rust file is changed here.
+No install or git write ran.
 
 Reconciled at `683b0f6`: the earlier two-column room was still present. The
 binding pick is `prototype/polish-2026-10-30/visuals/variant-c.html`; acceptance

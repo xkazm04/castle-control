@@ -4,11 +4,13 @@ Open `#/chamber/visuals` in fixture mode. The shell lazily mounts
 `rooms/visuals/room.tsx`; `#/chamber/studio` mounts the Map Room. Core mode now
 uses the Beacons core port described in `rooms/visuals/README.md`, with a
 virtualised configuration list, saved curves and core-computed simulations.
-It exposes core simulation history without a fixture feed or local preview controls. The Map Room keeps its
-unconfigured core state.
+It exposes core simulation history without a fixture feed, alongside appearance
+controls. Size and anchor travel in the copied browser-source URL; colour and
+burst timing remain local session previews. The Map Room keeps its unconfigured
+core state.
 
 The old Beacons panel page, curve editor, artwork/feed implementation, stylesheet
-and page-only copy were removed. The unchanged beacons-model and beacons-fixture
+and page-only copy were removed. The beacons-model and beacons-fixture
 remain shared sources. The room presents altar, frame and border intensity ranges,
 60 illustrative offerings and local test fire. Its selection and contribution
 controls change the local preview only; nothing reaches OBS.

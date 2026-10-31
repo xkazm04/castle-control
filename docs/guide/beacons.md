@@ -44,16 +44,19 @@ The desktop live feed reads `beacons.contribution.list` on room entry or explici
 
 **Copy browser-source URL** requests the validated URL from core and copies it
 only after a successful reply. An unavailable source or denied clipboard action
-is shown as feedback. There is no invented fixture URL. A native core owns a
-separate localhost overlay listener; a socket-free offline core cannot provide
-one. Source: [source-copy behavior](../../apps/desktop/src/rooms/visuals/README.md).
+is shown as feedback. Fixture mode copies a `fixture-not-live` example labelled
+SIMULATED, not a live browser source. A native core owns a separate localhost
+overlay listener; a socket-free offline core cannot provide one.
+Source: [source-copy behavior](../../apps/desktop/src/rooms/visuals/README.md).
 
-A URL alone does not import art. Packages must enter the trusted native import
-door, pass schema/hash/local-asset checks, and receive consent before initial or
-widened script privileges. A visual naming an unverified design publishes
-nothing. Restart drops imported packages and consent, requiring verification
-again. The overlay has no route to control RPC. A general end-user package
-import workflow is not supplied by these controls. Sources:
+A URL alone does not import art. Choose one of the 12 built-in **Art styles**,
+which the native core installs on save. Custom packages must enter the trusted
+native import door, pass schema/hash/local-asset checks, and receive consent
+before initial or widened script privileges. A visual naming an unverified
+design publishes nothing. Restart drops custom imported packages and consent,
+requiring verification again; saved built-in presets are reinstalled at startup.
+The overlay has no route to control RPC. A general end-user package import
+workflow is not supplied by these controls. Sources:
 [accepted state](../../crates/cc-core/README.md#wp-32-accepted-overlay-state),
 [overlay custody](../SECURITY.md#obs-overlay-host-wp-32).
 
@@ -104,11 +107,13 @@ preview is simulated and cannot prove live intake. Complete login privately.
    **Save visual to core**. Finish curve edits before the cheer: choose a
    non-flat range in bits so the owner's planned test amount produces a visible
    change, with a baseline below full blaze. Record the curve and decay.
-2. The visual must name an already verified, intensity-bound design imported
-   through the trusted native package door. Arrange that preparation with the
+2. Use an already verified, intensity-bound design imported through the trusted
+   native package door, or choose one of the 12 built-in **Art styles**, which
+   the native core installs on save. Arrange custom package preparation with the
    Director; these desktop controls do not provide a package-import workflow.
-   A URL without a verified design is insufficient. Restart loses imported
-   packages/consent, so arrange reverification after any restart.
+   A URL without a verified design is insufficient. Restart loses custom imported
+   packages/consent, so arrange reverification after any restart; saved built-in
+   presets are reinstalled at startup.
 3. Use **Copy browser-source URL** for that visual, then add the returned URL as
    an OBS Browser source in the test scene, at 1280×720. Record its baseline;
    do not expose control capabilities or invent a URL. If copying fails, the
@@ -127,22 +132,26 @@ preview is simulated and cannot prove live intake. Complete login privately.
    **Refresh live contributions** or **Refresh Beacons** to read current data;
    expect the test cheer under **Contribution feed · live from core**, showing
    its amount in bits, source and user ID when supplied. There is no time or
-   login column. The room still does not display live totals and still carries
-   an unavailable-delivery notice. A live row is app-side intake evidence only:
+   login column. The room still does not display live totals.
+   A live row is app-side intake evidence only:
    observe OBS movement separately, including no movement. If the read fails or
    no matching row appears, retain that result without substituting simulation.
-3. Separately select the test visual and click **Simulate 50 gift subs** under
-   **Test fire · core simulation**. Keep the **simulated** output and
-   **simulated · Core simulation** feed label visible. The app should show a
-   core-computed blaze result and one synthetic row with amount 50. This models
-   a 50-sub gift bomb; it does not send gifts or change the saved bits input.
+3. Separately click **Test fire: 50 gifts** on a visual routed to Gift subs
+   (**gift subscriptions** in **Driven by**; the button is disabled for other
+   routes). Prepare its design and OBS source as above. For the Bits visual use
+   the custom burst form with source **Bits cheer** and the intended amount.
+   Keep the **simulated** output and **simulated · Core simulation** feed label
+   visible. The app should show a core-computed blaze result and one synthetic
+   row with the chosen amount (50 for the gift button). The gift test models a
+   50-sub gift bomb; it does not send gifts or change the saved bits input.
 4. Observe OBS as well: `beacons.simulate` now pushes the simulated burst to
    **that visual only**, so it also moves that visual in OBS. It is labelled
    simulated in the app and `SIMULATED` in the native overlay push stream; it
-   never enters live totals, retained contributions or the live feed. The
-   preview remains until a changed live intensity or configuration replaces it.
-   The current OBS page does not display the stream's simulated marker: keep
-   the app's simulation label visible in capture and record this display gap.
+   never enters live totals, retained contributions or the live feed. A test fire
+   decays like the curve and returns OBS to the live value; a no-decay visual
+   holds for 30 s and every test fire ends by 600 s (`PREVIEW_HOLD_S` /
+   `PREVIEW_MAX_S`). OBS shows a SIMULATED badge while the test fire runs;
+   keep it and the app's simulation label visible in capture.
    Do not relabel a real gift or a fixture preview as simulated-burst evidence.
    Source: [native simulation tests](../../crates/cc-core/src/beacons/simulate_overlay.rs).
 
