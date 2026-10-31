@@ -120,7 +120,7 @@ test('Map Room Tiltyard: champion, cancellation, simulated tally, streamer call 
     await expect(page).toHaveURL(/#\/keep$/);
     await expect(stage).toHaveCount(0);
 
-    await page.getByRole('button', { name: 'Open Map Room', exact: true }).click();
+    await page.getByRole('button', { name: /^Open chamber 4, Map Room/ }).click();
     await expect(page).toHaveURL(/#\/chamber\/studio$/);
     await room.getByRole('button', { name: 'Tiltyard', exact: true }).click();
     await expect(stage).toBeVisible();
