@@ -210,6 +210,8 @@ test.describe('with motion allowed', () => {
       await expect(page.getByRole('button', { name: 'Play', exact: true })).toBeVisible();
       await slider.press('End');
       await expect(stamps).toHaveCount(3);
+      // End is the true end: the last crossing has landed too, so every aired dot is on the stream bank.
+      await expect(moat.locator('.moat-marker[data-phase="aired"]')).toHaveCount(35);
       await expect(slider).toHaveAttribute('aria-valuetext', /40 of 40$/);
     } finally { verify(); }
   });

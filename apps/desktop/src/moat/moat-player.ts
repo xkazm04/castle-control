@@ -60,8 +60,10 @@ export function createMoatPlayer(run_ms: number, clock: MoatClock, options: Moat
     const delta = owed;
     owed = 0;
     if (state.playhead_ms >= run_ms) {
+      // Seeked to the end while playing: a replay that is over stops, so Pause never shows for a finished night.
+      if (!options.loop) { halt(); publish({ ...state, playing: false }); return; }
       rested += delta;
-      if (options.loop && rested >= options.loop.rest_ms) { rested = 0; publish({ ...state, playhead_ms: 0 }); }
+      if (rested >= options.loop.rest_ms) { rested = 0; publish({ ...state, playhead_ms: 0 }); }
       return;
     }
     const playhead_ms = Math.min(state.playhead_ms + delta * state.speed, run_ms);

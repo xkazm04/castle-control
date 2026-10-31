@@ -103,8 +103,15 @@ test('controls call the player: play, pause, speed and a scrub that pauses', () 
   named(view(false), '60×')?.props.onClick?.();
   expect(calls.speed).toHaveBeenCalledWith(60);
   const [range] = find(view(false), element => element.props.onChange !== undefined);
-  range?.props.onChange?.({ currentTarget: { value: '4500' } } as ChangeEvent<HTMLInputElement>);
+  // The range counts thousandths of the replay, so the far end is always a value the browser accepts.
+  range?.props.onChange?.({ currentTarget: { value: '50' } } as ChangeEvent<HTMLInputElement>);
   expect(calls.seek).toHaveBeenCalledWith(4500);
+  range?.props.onChange?.({ currentTarget: { value: '1000' } } as ChangeEvent<HTMLInputElement>);
+  expect(calls.seek).toHaveBeenLastCalledWith(90000);
+  // An awkward run length (not a multiple of any round step) still ends exactly on the finished frame.
+  const odd = renderToStaticMarkup(MoatControls({ state: { playhead_ms: 115144, run_ms: 115144, playing: false, speed: 8 }, ticks: [], position: 'replay', reduced: false,
+    range_id: 'range', on_play: calls.play, on_pause: calls.pause, on_seek: calls.seek, on_speed: calls.speed }));
+  expect(odd).toMatch(/<input[^>]*max="1000"[^>]*step="1"[^>]*value="1000"/);
 });
 
 test('stop buttons appear with the panel, jump on press and disable at either end', () => {

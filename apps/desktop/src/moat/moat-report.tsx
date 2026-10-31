@@ -24,7 +24,7 @@ export function MoatReport({ model, info, delay_s, uid }: { model: MoatModel; in
     <p className="moat-report-figure"><b>{copy.summary(model.counts.held, model.counts.total)}</b> · {copy.breakdown(model.counts)}</p>
     <MoatScene model={model} playhead_ms={model.run_ms} window={{ from_ms: 0, to_ms: model.span_ms, paged: false }} delay_s={delay_s} uid={`${uid}-report`} />
     <h3>{words.gaps}</h3>
-    {model.gaps.length ? <ul>{model.gaps.map(gap => <li key={gap.from}>{words.gap_line(clockText(Date.parse(gap.from)), clockText(Date.parse(gap.to)))}</li>)}</ul> : <p>{words.no_gaps}</p>}
+    {model.gaps.length ? <ul>{model.gaps.map((gap, position) => <li key={`${position}-${gap.from}`}>{words.gap_line(clockText(Date.parse(gap.from)), clockText(Date.parse(gap.to)))}</li>)}</ul> : <p>{words.no_gaps}</p>}
     <h3>{words.stopped}</h3>
     {stopped.length ? <table><thead><tr>{[words.time, words.message, words.verdict, words.rule, words.action, words.evaluation].map(name => <th key={name} scope="col">{name}</th>)}</tr></thead>
       <tbody>{stopped.slice(0, rowCap).map(marker => <tr key={marker.index}>

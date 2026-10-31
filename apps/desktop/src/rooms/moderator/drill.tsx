@@ -38,7 +38,12 @@ export function Drill({ result: given, origin = 'fixture', capture_hash, draft, 
     {!capture_hash && <p>{copy.live_parity}</p>}
     <a href="#/chamber/moderator">{copy.back}</a><p>{origin === 'fixture' ? copy.replay_fixture_note : copy.replay_core_note}</p>
     {draft && <DraftPatternPreview result={draft} />}
-    {moat && <MoatPanel model={model} delay_s={delay_s} clock={clock} selected_id={selected} on_select={id => { setSelected(id); setReveal(id === undefined ? undefined : { key: id }); }} rule_bench={rule_bench} report={{ source: result.source, instrument_hash: result.instrument_hash, origin }} />}
+    {moat && <MoatPanel model={model} delay_s={delay_s} clock={clock} selected_id={selected} on_select={id => {
+      setSelected(id); setReveal(id === undefined ? undefined : { key: id });
+      // A pick the table's state filter hides would scroll nowhere: show every state so the row can be found.
+      const picked = result.outcomes.find(item => item.message_id === id);
+      if (picked && filter !== 'all' && picked.state !== filter) setFilter('all');
+    }} rule_bench={rule_bench} report={{ source: result.source, instrument_hash: result.instrument_hash, origin }} />}
     {moat && (compare || busy_night) && <div className="moat-extras">
       {compare && !busy && <InkButton type="button" size="small" className="moat-compare-toggle" aria-pressed={comparing} onClick={() => { setComparing(!comparing); }}>{moatCopy.compare.toggle}</InkButton>}
       {busy_night && <InkButton type="button" size="small" aria-pressed={!!busy} onClick={() => {

@@ -114,3 +114,14 @@ test('the browser clock stays stopped when a tick stops it from inside, so a lat
     expect(player.getSnapshot()).toMatchObject({ playhead_ms: 0, playing: false });
   } finally { vi.unstubAllGlobals(); }
 });
+
+test('seeking to the end while playing ends the replay instead of leaving Pause on a finished night', () => {
+  const clock = manualClock();
+  const player = createMoatPlayer(10000, clock, { start: 'start', speed: 1 });
+  player.play();
+  clock.advance(100);
+  player.seek(10000);
+  clock.advance(100);
+  expect(player.getSnapshot()).toMatchObject({ playhead_ms: 10000, playing: false });
+  expect(clock.running()).toBe(false);
+});

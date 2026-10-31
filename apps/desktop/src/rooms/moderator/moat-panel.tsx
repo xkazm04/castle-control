@@ -58,6 +58,7 @@ export function RuleSpotlight({ tally, rule, on_rule }: { tally: readonly RuleTa
     {rule !== undefined && <span className="moat-small">{copy.spotlight.note(rule)}</span>}</fieldset>;
 }
 
+const scrubSteps = 1000;
 export type MoatControlsProps = {
   state: MoatPlayerState; ticks: readonly ScrubTick[]; position: string; reduced: boolean; range_id: string;
   on_play: () => void; on_pause: () => void; on_seek: (playhead_ms: number) => void; on_speed: (speed: MoatSpeed) => void;
@@ -76,8 +77,9 @@ export function MoatControls({ state, ticks, position, reduced, range_id, on_pla
       <InkButton type="button" size="small" disabled={!can_stop?.previous} onClick={() => { on_stop(-1); }}>{copy.previous_stop}</InkButton>
       <InkButton type="button" size="small" disabled={!can_stop?.next} onClick={() => { on_stop(1); }}>{copy.next_stop}</InkButton></div>}
     <div className="moat-scrub"><label htmlFor={range_id} className="moat-sr">{copy.position}</label>
-      <input id={range_id} type="range" min={0} max={state.run_ms} step={Math.max(Math.round(state.run_ms / 200), 100)} value={state.playhead_ms}
-        aria-valuetext={position} onChange={(event: ChangeEvent<HTMLInputElement>) => { on_seek(Number(event.currentTarget.value)); }} />
+      {/* Whole thousandths of the replay, not milliseconds: the far end is then always a valid value, so End lands on the finished frame. */}
+      <input id={range_id} type="range" min={0} max={scrubSteps} step={1} value={Math.round(state.run_ms > 0 ? state.playhead_ms / state.run_ms * scrubSteps : 0)}
+        aria-valuetext={position} onChange={(event: ChangeEvent<HTMLInputElement>) => { on_seek(Number(event.currentTarget.value) / scrubSteps * state.run_ms); }} />
       <div className="moat-ticks" aria-hidden="true">{ticks.map(tick => <i key={tick.at} style={{ left: `${tick.at * 100}%` }} data-many={tick.held > 1} />)}</div></div>
     <output className="moat-readout" aria-live="off">{position}</output>
   </div>;
@@ -122,11 +124,11 @@ export function MoatPanel({ model, delay_s, clock, selected_id, on_select, rule_
     <MoatControls state={state} ticks={ticks} position={position} reduced={reduced} range_id={range_id} on_play={player.play}
       on_pause={player.pause} on_speed={player.setSpeed} on_seek={playhead_ms => { player.pause(); player.seek(playhead_ms); }}
       on_stop={direction => {
-        const stop = stopNeighbour(stops, state.playhead_ms, direction);
+        const stop = stopNeighbour(stops, state.playhead_ms, direction, selected?.index);
         if (!stop) return;
         player.pause(); player.seek(stop.at_ms); on_select(stop.marker.message_id);
       }}
-      can_stop={{ previous: !!stopNeighbour(stops, state.playhead_ms, -1), next: !!stopNeighbour(stops, state.playhead_ms, 1) }} />
+      can_stop={{ previous: !!stopNeighbour(stops, state.playhead_ms, -1, selected?.index), next: !!stopNeighbour(stops, state.playhead_ms, 1, selected?.index) }} />
     {reduced && <p className="moat-small">{copy.reduced}</p>}
     <div className="moat-body">
       <div className="moat-scroll" role="group" aria-label={copy.region}>

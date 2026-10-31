@@ -51,7 +51,7 @@ export function CoreDrill({ state, port }: { state: CoreGatehouseSnapshot; port:
     {state.drill && <Drill result={state.drill} origin="core" capture_hash={state.replay_capture?.instrument_hash} rule_bench={ruleBenchLink(state.rules, coreRuleBench(port))} />}
     {state.diff && <section className="moderator-card" aria-label={copy.comparison_label}><h3>{copy.comparison_title}</h3>
       <p>{copy.comparison_note}</p>
-      <MoatCompare diff={state.diff} note={moatCopy.compare.note_core} />
+      <MoatCompare key={`${state.diff.baseline.instrument_hash}/${state.diff.candidate.instrument_hash}`} diff={state.diff} note={moatCopy.compare.note_core} />
       <WindowedRows rows={state.diff.changes} label={copy.changes_label} row_key={change => change.message_id}
         empty_state={copy.changes_empty}>
         {change => <p>{change.message_id}: {change.before.replaceAll('_', ' ')} → {change.after.replaceAll('_', ' ')}</p>}

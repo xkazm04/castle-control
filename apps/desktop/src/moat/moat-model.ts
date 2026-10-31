@@ -51,9 +51,10 @@ export function buildMoat(result: MoatSource, cross_ms = crossingMs): MoatModel 
   const dated = result.outcomes.map(outcome => ({ outcome, at_ms: Date.parse(outcome.at) })).filter(item => Number.isFinite(item.at_ms));
   const gaps = result.gaps.map(gap => ({ gap, from: Date.parse(gap.from), to: Date.parse(gap.to) }))
     .filter(item => Number.isFinite(item.from) && Number.isFinite(item.to) && item.to >= item.from);
-  const times = [...dated.map(item => item.at_ms), ...gaps.flatMap(item => [item.from, item.to])];
-  const start = times.length ? Math.min(...times) : 0;
-  const end = times.length ? Math.max(...times) : 0;
+  // A loop, not Math.min(...times): a night of a hundred thousand lines would overflow the argument limit.
+  let start = Number.POSITIVE_INFINITY; let end = Number.NEGATIVE_INFINITY;
+  for (const time of [...dated.map(item => item.at_ms), ...gaps.flatMap(item => [item.from, item.to])]) { if (time < start) start = time; if (time > end) end = time; }
+  if (start > end) { start = 0; end = 0; }
   // Array.prototype.sort is stable, so equal times keep the order the drill reported.
   const sorted = [...dated].sort((a, b) => a.at_ms - b.at_ms);
   const markers = sorted.map(({ outcome, at_ms }, index): MoatMarker => ({
@@ -122,8 +123,15 @@ export function spotlightStops(model: StopSet, rule_id: string | undefined): Sto
 }
 
 /** The next stop after the playhead, or the last one before it. The moment is when its stamp drops. */
-export function stopNeighbour(model: StopSet, playhead_ms: number, direction: 1 | -1): { marker: MoatMarker; at_ms: number } | undefined {
+export function stopNeighbour(model: StopSet, playhead_ms: number, direction: 1 | -1, anchor?: number): { marker: MoatMarker; at_ms: number } | undefined {
   const slack = 1;
+  // Recorded times are whole seconds, so several stops can drop at one instant. Standing on one of them (it is
+  // the picked message and the playhead sits at its gate), the neighbour is the next in order, never the same instant again.
+  const standing = anchor === undefined ? -1 : model.stops.findIndex(marker => marker.index === anchor);
+  if (standing >= 0 && Math.abs((model.held_arrivals[standing] ?? Number.NaN) - playhead_ms) <= slack) {
+    const marker = model.stops[standing + direction];
+    return marker && standing + direction >= 0 ? { marker, at_ms: model.held_arrivals[standing + direction] ?? 0 } : undefined;
+  }
   const upcoming = firstReached(model.held_arrivals.length, index => (model.held_arrivals[index] ?? 0) > playhead_ms + slack);
   const position = direction === 1 ? upcoming
     : firstReached(model.held_arrivals.length, index => (model.held_arrivals[index] ?? 0) >= playhead_ms - slack) - 1;
@@ -151,8 +159,8 @@ export function visibleMarkers(model: MoatModel, window: MoatWindow, max_dots = 
   // Thin only the aired dots. Stopped and unresolved messages are the point and always stay.
   const aired = inside.filter(marker => marker.fate === 'aired');
   const keep = Math.max(max_dots - (inside.length - aired.length), 0);
-  const stride = keep ? Math.ceil(aired.length / keep) : aired.length + 1;
-  const shown = new Set(aired.filter((_, position) => position % stride === 0));
+  const stride = keep ? Math.ceil(aired.length / keep) : 1;
+  const shown = new Set(keep ? aired.filter((_, position) => position % stride === 0) : []);
   const kept = inside.filter(marker => marker.fate !== 'aired' || shown.has(marker));
   return { markers: kept, thinned: inside.length - kept.length };
 }

@@ -178,3 +178,34 @@ test('the busy night is a seeded two thousand lines with a gap that fits the pag
   expect(windowFor(busy, 0).paged).toBe(true);
   expect(ruleTally(busy).reduce((total, item) => total + item.held, 0)).toBe(150);
 });
+
+test('stops that drop at the same instant are each reachable with Next and Previous', () => {
+  // Whole-second recordings: three stops share a second, so they share an arrival.
+  const tied = buildMoat({ outcomes: [outcome(0), outcome(3, { verdict: 'hold', state: 'acted', rule_id: 'links', action: 'delete' }),
+    outcome(3, { verdict: 'bar', state: 'acted', rule_id: 'repeats', action: 'timeout' }), outcome(3, { verdict: 'hold', state: 'acted', rule_id: 'links', action: 'delete' }),
+    outcome(9)], gaps: [] });
+  expect(new Set(tied.held_arrivals).size).toBe(1);
+  const first = stopNeighbour(tied, 0, 1);
+  expect(first?.marker.index).toBe(tied.stops[0]?.index);
+  // Standing on a tied stop (picked, playhead at its gate) the next one is the following stop, not the same instant again.
+  const second = stopNeighbour(tied, first?.at_ms ?? 0, 1, first?.marker.index);
+  expect(second?.marker.index).toBe(tied.stops[1]?.index);
+  const third = stopNeighbour(tied, second?.at_ms ?? 0, 1, second?.marker.index);
+  expect(third?.marker.index).toBe(tied.stops[2]?.index);
+  expect(stopNeighbour(tied, third?.at_ms ?? 0, 1, third?.marker.index)).toBeUndefined();
+  expect(stopNeighbour(tied, third?.at_ms ?? 0, -1, third?.marker.index)?.marker.index).toBe(tied.stops[1]?.index);
+  expect(stopNeighbour(tied, first?.at_ms ?? 0, -1, first?.marker.index)).toBeUndefined();
+  // A pick the playhead has moved away from is not an anchor: the playhead decides.
+  expect(stopNeighbour(tied, 0, 1, tied.stops[2]?.index)?.marker.index).toBe(tied.stops[0]?.index);
+});
+
+test('a very long night builds without spreading its times into call arguments, and an empty budget draws no aired dot', () => {
+  const lines = Array.from({ length: 200000 }, (_, index) => outcome(index));
+  const huge = buildMoat({ outcomes: lines, gaps: [] });
+  expect(huge.counts.total).toBe(200000);
+  expect(huge.span_ms).toBe(199999 * 1000);
+  const crowded = buildMoat({ outcomes: [outcome(0), ...Array.from({ length: 6 }, (_, index) => outcome(1 + index, { verdict: 'hold', state: 'acted', rule_id: 'links', action: 'delete' }))], gaps: [] });
+  const drawn = visibleMarkers(crowded, { from_ms: 0, to_ms: crowded.span_ms, paged: false }, 6);
+  expect(drawn.markers.filter(marker => marker.fate === 'aired')).toHaveLength(0);
+  expect(drawn.thinned).toBe(1);
+});

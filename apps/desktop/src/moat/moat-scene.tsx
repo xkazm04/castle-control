@@ -70,9 +70,9 @@ export function MoatScene({ model, playhead_ms, window, selected, on_select, del
       <rect className="moat-bank" x="0" y={g.stream_top} width={g.width} height={g.height - g.stream_top} />
       {!compact && <><text className="moat-label" fontSize="12" x="12" y="15">{caption ?? copy.chat}</text>
         <text className="moat-label" fontSize="12" x="12" y={g.stream_top + 16}>{copy.stream}</text></>}
-      {gaps.map(gap => {
+      {gaps.map((gap, position) => {
         const left = xOf(gap.from_ms); const right = Math.max(xOf(gap.to_ms), left + 6);
-        return <g key={gap.from} className="moat-gap" data-gap={gap.from}>
+        return <g key={`${position}-${gap.from}`} className="moat-gap" data-gap={gap.from}>
           <title>{`${copy.gap}: ${clockText(Date.parse(gap.from))} to ${clockText(Date.parse(gap.to))}, ${copy.gap_note}`}</title>
           <rect className="moat-gap-base" x={left} y={g.chat_h} width={right - left} height={g.stream_top - g.chat_h} />
           <rect className="moat-gap-hatch" x={left} y={g.chat_h} width={right - left} height={g.stream_top - g.chat_h} fill={`url(#${id}-hatch)`} />
