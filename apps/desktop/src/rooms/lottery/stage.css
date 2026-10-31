@@ -24,7 +24,6 @@
 .lottery-draw-stage[data-phase="revealing"] .lottery-draw-svg { height: calc(100% - var(--space-30) - var(--space-56) - var(--space-40)); }
 .lottery-draw-stage[data-phase="revealed"] .lottery-draw-svg { height: calc(100% - var(--space-30) - var(--space-40)); }
 .lottery-draw-motion { transform-box: fill-box; transform-origin: center; }
-.lottery-draw-lots { transform-box: fill-box; transform-origin: center; }
 .lottery-draw-stage[data-phase="open"][data-shape="wheel"] .lottery-draw-motion,
 .lottery-draw-stage[data-phase="open"][data-shape="wheel"] .lottery-draw-lots { animation: lottery-wheel-idle 40s linear infinite; }
 

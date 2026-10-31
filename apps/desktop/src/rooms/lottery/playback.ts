@@ -70,8 +70,10 @@ export function createRevealClock() {
     pace(hand: boolean, now: number) {
       if (by_hand === hand) return;
       by_hand = hand;
+      // Only a held ceremony has stopped time; one still in its flourish keeps running in real time.
+      const held = gate !== undefined && playback !== undefined && playback.position_ms >= gate;
       gate = hand ? hold() : undefined;
-      if (!hand && playback && Number.isFinite(playback.position_ms)) began = now - playback.position_ms;
+      if (!hand && held && playback && Number.isFinite(playback.position_ms)) began = now - playback.position_ms;
       if (state.key !== undefined) sync(state.key);
     },
     get by_hand() { return by_hand; },

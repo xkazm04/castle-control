@@ -66,6 +66,17 @@ test('switching back to auto after a long hold continues from the hold, never fl
   expect(held.getSnapshot().revealed).toEqual(cast.winners.slice(0, 1));
 });
 
+test('switching by hand off during the flourish keeps the renderer cadence', () => {
+  const scene = stageScene('wheel', cast, 'question', false);
+  const first = scene.events[0]?.at_ms ?? 0;
+  const clock = createRevealClock(); clock.pace(true, 0);
+  clock.tick(scene, 'f', 0);
+  clock.pace(false, 1000);
+  expect(clock.tick(scene, 'f', 1000)).toBe(first - 1000);
+  clock.tick(scene, 'f', first);
+  expect(clock.getSnapshot().revealed).toEqual(cast.winners.slice(0, 1));
+});
+
 test('reduced motion reveals every winner at once and drops the flourish', () => {
   const scene = stageScene('deck', cast, 'question', true);
   expect(scene.motions).toEqual([]);

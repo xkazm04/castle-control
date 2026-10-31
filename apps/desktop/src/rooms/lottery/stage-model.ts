@@ -38,6 +38,10 @@ export function sampleEntries(entries: readonly StageEntry[], winners: readonly 
 
 const golden = Math.PI * (3 - Math.sqrt(5));
 
+/** The renderer rotates the wheel artwork about its bounding-box centre (pointer to stand: y 10..224);
+ * the wheel's lots get the same pivot so they stay on the rim through the flourish and the idle spin. */
+export const wheel_pivot = { x: 160, y: 117 } as const;
+
 /** Where each shape "calls" a lot from: urn mouth, wheel hub, deck top, ballot slot. Decorative only. */
 export const call_origin: Readonly<Record<DrawShape, { x: number; y: number }>> = {
   urn: { x: 160, y: 50 }, wheel: { x: 160, y: 116 }, deck: { x: 162, y: 28 }, ballot_box: { x: 169, y: 87 },

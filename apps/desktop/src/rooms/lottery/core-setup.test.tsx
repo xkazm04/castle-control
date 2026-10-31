@@ -6,7 +6,7 @@ import type { LotsDraw } from '@castle-control/contract';
 import { fixtureDraws } from '../../lots-fixture.js';
 import { lotsCopy as copy } from '../../lots-copy.js';
 import { createCoreLotsPort } from '../../lots-core.js';
-import { CoreDrawSetup, coreSetupCandidate } from './core-setup.jsx';
+import { CoreDrawSetup, coreSetupCandidate, editStands } from './core-setup.jsx';
 import { ConnectedLotsRoom } from './core.jsx';
 
 type Props = { children?: ReactNode; id?: string; value?: string | number; disabled?: boolean; onClick?: () => void; on_save?: (draw: LotsDraw) => void;
@@ -128,4 +128,25 @@ test('Save stays off for values the contract schema rejects, and regions formatt
     .toEqual(['US', 'CA']);
   const markup = renderToStaticMarkup(<CoreDrawSetup draw={prize} disabled={false} on_save={vi.fn()} />);
   expect(markup).toContain(copy.core_setup.clean);
+});
+
+test('when the core changes a field a pending edit also changed, the newer core value wins on Save', () => {
+  const on_save = vi.fn();
+  let current = draw;
+  function Sequence() {
+    const [step, setStep] = useState(0);
+    const tree = CoreDrawSetup({ draw: current, disabled: false, on_save });
+    if (step === 0) { change(tree, 'weights', 'concave'); change(tree, 'name', 'Raffle of the hall'); setStep(1); }
+    else if (step === 1) {
+      // The equalizer saves concave with a cap of 6 before the rule card is saved.
+      current = { ...draw, rules: { ...draw.rules, weight_curve: { kind: 'concave', max_units: 6 } } }; setStep(2);
+    } else if (step === 2) { button(tree, copy.core_setup.save).onClick?.(); setStep(3); }
+    return tree;
+  }
+  renderToStaticMarkup(<Sequence />);
+  expect(on_save).toHaveBeenCalledTimes(1);
+  expect(on_save.mock.calls[0]?.[0]).toMatchObject({ name: 'Raffle of the hall', rules: { weight_curve: { kind: 'concave', max_units: 6 } } });
+  const edit = { origin: draw, apply: (value: LotsDraw) => ({ ...value, name: 'Changed' }) };
+  expect(editStands(edit, { ...draw, rules: { ...draw.rules, winner_count: 9 } })).toBe(true);
+  expect(editStands(edit, { ...draw, name: 'Renamed in the core' })).toBe(false);
 });

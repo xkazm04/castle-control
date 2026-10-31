@@ -7,7 +7,7 @@ import { lotsCopy as copy } from '../../lots-copy.js';
 import { revealStyle } from './display.js';
 import type { RevealClock } from './playback.js';
 import { useReducedMotion, useReveal } from './playback.js';
-import { artworkOf, call_origin, chatLine, confetti, draw_shapes, layoutMarks, lift_path, sampleEntries, stage_view_box, stageScene, weightShare } from './stage-model.js';
+import { artworkOf, call_origin, chatLine, confetti, draw_shapes, layoutMarks, lift_path, sampleEntries, stage_view_box, stageScene, weightShare, wheel_pivot } from './stage-model.js';
 import type { StageCast, StageEntry, StageMark } from './stage-model.js';
 import { ceremonySound } from './sound.js';
 import './stage.css';
@@ -36,6 +36,8 @@ export function ShapePicker({ shape, on_shape, disabled = false }: { shape: Draw
 }
 
 /** Position and radius as custom properties, so lots glide to a new shape and ease to a new weight. */
+const wheel_spin: CSSProperties = { transformBox: 'view-box', transformOrigin: `${wheel_pivot.x}px ${wheel_pivot.y}px` };
+
 const markStyle = (index: number, mark: StageMark): CSSProperties & { '--lot-i': number; '--lot-r': string; '--lot-x': string; '--lot-y': string } =>
   ({ '--lot-i': index % 24, '--lot-r': `${mark.r}px`, '--lot-x': `${mark.x}px`, '--lot-y': `${mark.y}px` });
 
@@ -194,7 +196,7 @@ export function DrawStage({ shape, on_shape, entries, cast, content, sealed, sea
         <g className="lottery-draw-motion" ref={flourish.group}>
           <Artwork layer={artworkOf(scene)} />
         </g>
-        <g className="lottery-draw-lots" ref={flourish.lots}>{lots}</g>
+        <g className="lottery-draw-lots" ref={flourish.lots} style={shape === 'wheel' ? wheel_spin : undefined}>{lots}</g>
         {revealed.map((handle, index) => {
           const mark = by_handle.get(handle);
           const origin = call_origin[shape];

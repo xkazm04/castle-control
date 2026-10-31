@@ -167,7 +167,9 @@ type Result = { writ: LotsWrit; tamper: Tamper | undefined; report?: LabReport; 
 /** In-room tamper-and-verify lab. Newer tamper selections always win over older recomputes.
  * Each new `prove` request (from the stage) restores the canonical writ, brings the lab into
  * view and replays the four-step walk. */
-export function WritLab({ writ: cast_writ, simulated, prove = 0, beacon, anchors = [] }: {
+const no_anchors: readonly BeaconAnchor[] = [];
+
+export function WritLab({ writ: cast_writ, simulated, prove = 0, beacon, anchors = no_anchors }: {
   writ: LotsWrit; simulated: boolean; prove?: number; beacon?: LotsWrit;
   /** Compiled-in chain anchors this lab may authenticate beacons against. */
   anchors?: readonly BeaconAnchor[];

@@ -6,9 +6,21 @@ import type { LotsDraw, LotsDrawPolicy } from '@castle-control/contract';
 import { lotsCopy as copy } from '../../lots-copy.js';
 
 /** A draft is the streamer's own edits, replayed over whatever the core currently holds for this draw.
- * A winner-count, tier or equalizer update from elsewhere therefore never wipes unsaved rule edits. */
-type Edit = (draw: LotsDraw) => LotsDraw;
+ * A winner-count, tier or equalizer update elsewhere never wipes unsaved rule edits. When the core
+ * changes a field an edit also changed, the newer core value wins and that edit stands down. */
+type Edit = Readonly<{ apply: (draw: LotsDraw) => LotsDraw; origin: LotsDraw }>;
 type Draft = { draw_id: string; edits: readonly Edit[]; regions?: string };
+function fields(draw: LotsDraw): Record<string, string | undefined> {
+  const out: Record<string, string | undefined> = { name: JSON.stringify(draw.name) };
+  for (const [key, value] of Object.entries(draw.rules)) out[`rules.${key}`] = JSON.stringify(value);
+  for (const [key, value] of Object.entries(draw.policy)) out[`policy.${key}`] = JSON.stringify(value);
+  return out;
+}
+/** An edit stands while the core still holds, in every field it changes, what it held when the edit was made. */
+export function editStands(edit: Edit, draw: LotsDraw): boolean {
+  const before = fields(edit.origin); const after = fields(edit.apply(edit.origin)); const now = fields(draw);
+  return Object.keys({ ...before, ...after }).every(key => before[key] === after[key] || now[key] === before[key]);
+}
 const fresh = (draw: LotsDraw): Draft => ({ draw_id: draw.draw_id, edits: [] });
 const regionList = (text: string) => text.split(',').map(value => value.trim()).filter(Boolean);
 const prize_flags = [['paid_entry', copy.paid_entry], ['paid_weight', copy.journey.paid_weight], ['official_rules', copy.template],
@@ -33,10 +45,10 @@ export function CoreDrawSetup({ draw, disabled, on_save }: { draw: LotsDraw; dis
   const [state, setDraft] = useState<Draft>(() => fresh(draw));
   const draft = state.draw_id === draw.draw_id ? state : fresh(draw);
   if (draft !== state) setDraft(draft);
-  const value = draft.edits.reduce((current, edit) => edit(current), draw);
+  const value = draft.edits.filter(edit => editStands(edit, draw)).reduce((current, edit) => edit.apply(current), draw);
   const regions = draft.regions ?? value.policy.regions.join(', ');
   const rules = value.rules;
-  const update = (edit: Edit) => setDraft(prior => ({ ...prior, edits: [...prior.edits, edit] }));
+  const update = (apply: Edit['apply']) => setDraft(prior => ({ ...prior, edits: [...prior.edits, { apply, origin: draw }] }));
   const rule = (change: Partial<LotsDraw['rules']>) => update(current => ({ ...current, rules: { ...current.rules, ...change } }));
   const policy = (change: Partial<LotsDrawPolicy>) => update(current => ({ ...current, policy: { ...current.policy, ...change } }));
   const candidate = coreSetupCandidate({ value, regions });
