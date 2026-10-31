@@ -1,5 +1,44 @@
 # Gatehouse shadow journey (lane L2, 2026-10-31)
 
+## Stabilize findings 04, 06, 08 and 11 (2026-10-31)
+
+Re-anchored at `d1df7eb`, including `83afe49`, `c7d7b75` and `39bf3b6`.
+The four findings still reproduced: the initial focused run had 13 failing
+assertions and 148 passing tests before product edits. No item was declined.
+
+- **04:** settlement shares one verdict between chat and the inserted/updated
+  gate-roll row. Existing ledger identity, kind, original text and provenance
+  stay intact. Ban, Dismiss, Undo, release, removal and appeal tests cover the
+  400 ms boundary and duplicate-row prevention. Shadow observations now say
+  **No action was taken**, rather than claiming Twitch lacks Undo.
+- **06:** explicit phase/confirmation and action labels replace raw display
+  identifiers. Pattern refusal codes remain in `data-pattern-refusal`, with
+  plain sentences for streamers. Ban/decision/arrival counts handle 0/1/2;
+  loaded/unavailable counts and sanitized request errors use plain words.
+- **08:** rules remain the first prerequisite. Consensus, chat and history
+  then settle independently and publish each success immediately. The local
+  snapshot records per-read `read_failures`; the room notice names failures
+  and loaded reads without upstream prose. Busy lasts through the final read,
+  refresh clears old failures, and a failed rules read starts no other reads.
+- **11:** the real editor awaits its save callback. Failure is a bench-local
+  alert with the sanitized core notice; success names the saved rule in plain
+  text. The next edit clears either outcome. Counts remain the bench's sole
+  polite status. Duplicate submits are blocked; fixture saves still need seals.
+
+Final focused coverage passes **178 tests / 6 files**: lifecycle, gate, core,
+bench, action names and journey assertions. Desktop typecheck and lint pass
+over 175 source files; boundary/hygiene/file-cap inventories cover 797 files,
+and the secrets scan covers 1,069. The whole desktop suite passes **614 tests / 62 files**;
+the production build passes at **364,654 / 393,216 bytes**. The existing
+contract exporter blocks `pnpm gate` with `spawnSync cargo EPERM`, after the
+24 tooling tests, inventories and Cargo fetch pass. Recursive typecheck/lint
+also stop at subprocess `spawn EPERM`; these are not green full-gate results.
+Gate/export/package-runner scripts have no diff against HEAD. App Master must
+verify those stages in its permitted environment. No install, git write, e2e,
+live request, prohibited component edit or contract change was performed.
+
+## Earlier shadow-journey evidence
+
 The Rule bench has one polite status region for its pattern-hit counts. The
 watching-rule editor's save/proposal notice stays visible as plain text. The
 drill's capture comparison is outside the bench and retains its status role.

@@ -22,11 +22,11 @@ export function GateLog({ state, queue }: { state: ModerationPreview; queue: Pro
             <time dateTime={item.at}>{item.at.slice(11, 19)}</time></div>
           <p className="moderator-roll-message">{item.message_text ?? copy.text_unavailable}</p>
           <span id={`${target_id}-${item.decision_id}`} className="moderator-visually-hidden">{item.message_id}</span>
-          <p className="moderator-small">{phaseLabel(phase)} · {item.reason_codes.join(', ')} · {fixtureTwitchActions.has(item.decision_id) ? copy.twitch_human : copy.local_human}</p>
+          <p className="moderator-small">{phaseLabel(phase)} · {item.reason_codes.map(copy.decision_reason).join(', ')} · {fixtureTwitchActions.has(item.decision_id) ? copy.twitch_human : copy.local_human}</p>
           <div className="moderator-roll-entry-actions">{(item.kind === 'timed_out' || item.kind === 'banned' || status.kind === 'banned' || status.kind === 'undone' || choices.includes('undo'))
             ? <button className="moderator-text-button" type="button" disabled={!choices.includes('undo')} aria-describedby={`${target_id}-${item.decision_id}`}
               onClick={() => proposeCommand(queue, { kind: 'undo', decision_id: item.decision_id }, 'Undo decision')}>{copy.propose_undo}</button>
-            : <span className="moderator-small">{copy.no_undo}</span>}
+            : <span className="moderator-small">{item.kind === 'would_act' ? copy.no_action_taken : copy.no_undo}</span>}
             <button className="moderator-text-button" type="button" disabled={!choices.includes('petition')} aria-describedby={`${target_id}-${item.decision_id}`}
               onClick={() => proposeCommand(queue, { kind: 'petition', decision_id: item.decision_id }, 'Petition decision')}>{copy.propose_petition}</button></div>
         </article>; }}

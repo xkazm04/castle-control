@@ -69,7 +69,10 @@ export function settingTransition<T>(phase: SettingPhase<T>, target: T): { ok: t
     : { ok: true, next: { kind: 'confirming', value: phase.value, target } };
 }
 export function phaseLabel(phase: DecisionPhase): string {
-  return phase.kind === 'confirming' ? `${phaseLabel(phase.from)}, ${phase.op} confirming` : phase.kind.replaceAll('_', ' ');
+  if (phase.kind === 'confirming') return `${phaseLabel(phase.from)} · ${copy.confirming_operations[phase.op]}`;
+  if (phase.kind === 'undone') return contains(phase.from, 'timed_out') ? copy.timeout_undone : copy.ban_undone;
+  if (phase.kind === 'petitioned') return `${phaseLabel(phase.from)} · ${copy.appeal_requested}`;
+  return copy.decision_phases[phase.kind];
 }
 export class LifecycleRefusal extends Error {
   readonly refusal: Refusal;

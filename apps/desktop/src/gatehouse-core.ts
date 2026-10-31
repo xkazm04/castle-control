@@ -19,7 +19,9 @@ type GatehouseMethod = 'gatehouse.rules.list' | 'gatehouse.rules.upsert' | 'gate
 export type GatehouseNetwork = {
   rpc: <M extends GatehouseMethod>(endpoint: string, session: string, method: M, params: RpcMethods[M]['params']) => Promise<unknown>;
 };
+type ReadName = 'rules' | 'consensus' | 'chat' | 'history';
 export type CoreGatehouseSnapshot = {
+  read_failures: Partial<Record<ReadName, string>>;
   rules: readonly Rule[]; consensus?: ConsensusGetResult; last_decision?: Decision;
   // Accumulated read pages, each parsed separately at the contract door.
   chat?: GatehouseChatResult; history?: GatehouseHistoryResult;
@@ -42,19 +44,19 @@ function freeze<T>(value: T): T {
   }
   return value;
 }
-function errorNotice(error: unknown): string {
+function errorNotice(error: unknown, context = 'Gatehouse request failed'): string {
   try {
     const envelope = parseError(JSON.stringify(error));
     // Never render upstream prose, which may contain credentials or private details.
-    return `Gatehouse request failed: ${envelope.code}.${envelope.retry_after_ms === undefined ? '' : ` Retry after ${envelope.retry_after_ms} ms.`}`;
+    return `${context}: ${copy.request_errors[envelope.code]}.${envelope.retry_after_ms === undefined ? '' : ` Retry after ${envelope.retry_after_ms} ms.`}`;
   } catch {
-    return 'Gatehouse request failed. The result is unavailable or invalid. Refresh before trying again; no preview was substituted.';
+    return `${context}. The result is unavailable or invalid. Refresh before trying again; no preview was substituted.`;
   }
 }
 
 export function createCoreGatehousePort(launch: CoreLaunch, transport?: GatehouseNetwork) {
   const base = validateCoreLaunch(launch);
-  let snapshot: CoreGatehouseSnapshot = freeze({ rules: [], busy: false, phase: 'idle', notice: 'Load Gatehouse data from the local core.' });
+  let snapshot: CoreGatehouseSnapshot = freeze({ rules: [], read_failures: {}, busy: false, phase: 'idle', notice: 'Load Gatehouse data from the local core.' });
   const listeners = new Set<() => void>();
   type OptionalResult = 'consensus' | 'last_decision' | 'recording' | 'drill' | 'diff' | 'chat' | 'history'
     | 'live_runs' | 'selected_capture' | 'replay_capture';
@@ -70,10 +72,22 @@ export function createCoreGatehousePort(launch: CoreLaunch, transport?: Gatehous
     const result = await transport.rpc(base.href, launch.session_token, contract.method, params);
     return parseMethodResult(contract, JSON.stringify(result));
   }
-  async function perform(work: () => Promise<void>) {
+  async function readResult<K extends ReadName>(key: K, request: () => Promise<CoreGatehouseSnapshot[K]>) {
+    try {
+      const value = await request();
+      const read_failures = { ...snapshot.read_failures }; delete read_failures[key];
+      publish({ [key]: value, read_failures });
+      return true;
+    } catch (error: unknown) {
+      const notice = errorNotice(error, copy.core_read_failed(copy.read_names[key]));
+      publish({ read_failures: { ...snapshot.read_failures, [key]: notice }, notice });
+      return false;
+    }
+  }
+  async function perform(work: () => Promise<void | boolean>) {
     if (snapshot.busy) { publish({ notice: 'A Gatehouse request is in progress. Wait for its result.' }); return; }
     publish({ busy: true, phase: 'loading' });
-    try { await work(); publish({ phase: 'ready' }); }
+    try { const ready = await work(); publish({ phase: ready === false ? 'error' : 'ready' }); }
     catch (error: unknown) { publish({ phase: 'error', notice: errorNotice(error) }); }
     finally { publish({ busy: false }); }
   }
@@ -137,15 +151,17 @@ export function createCoreGatehousePort(launch: CoreLaunch, transport?: Gatehous
     },
     async load() {
       await perform(async () => {
-        publish({ rules: [] }, ['consensus', 'chat', 'history']);
-        const { rules } = await call(gatehouseRulesList, {});
-        publish({ rules });
-        const consensus = await call(gatehouseConsensusGet, { filter: { kind: 'all' }, window_s: 900 });
-        publish({ consensus });
-        const chat = await call(gatehouseChatList, { limit: 100 });
-        publish({ chat });
-        const history = await call(gatehouseHistoryList, { limit: 100 });
-        publish({ history, notice: 'Rules, chat, history and consensus loaded from the core. Refresh for current data.' });
+        publish({ rules: [], read_failures: {} }, ['consensus', 'chat', 'history']);
+        if (!await readResult('rules', async () => (await call(gatehouseRulesList, {})).rules)) return false;
+        await Promise.all([
+          readResult('consensus', () => call(gatehouseConsensusGet, { filter: { kind: 'all' }, window_s: 900 })),
+          readResult('chat', () => call(gatehouseChatList, { limit: 100 })),
+          readResult('history', () => call(gatehouseHistoryList, { limit: 100 })),
+        ]);
+        const failures = Object.values(snapshot.read_failures);
+        const loaded = (['rules', 'consensus', 'chat', 'history'] as const).filter(key => !snapshot.read_failures[key]).map(key => copy.read_names[key]);
+        publish({ notice: failures.length ? copy.core_partial_reads(failures, loaded) : copy.core_reads_loaded });
+        return failures.length === 0;
       });
     },
     async moreChat() {
@@ -182,12 +198,16 @@ export function createCoreGatehousePort(launch: CoreLaunch, transport?: Gatehous
     async consensus(params: ConsensusGetParams) {
       await perform(async () => {
         publish({}, ['consensus']);
-        const consensus = await call(gatehouseConsensusGet, params);
-        if (consensus.window_s !== params.window_s || consensus.filter.kind !== params.filter.kind
-            || (consensus.filter.kind === 'emote' && params.filter.kind === 'emote' && consensus.filter.emote !== params.filter.emote)) {
-          throw new Error('Mismatched consensus filter');
-        }
-        publish({ consensus, notice: 'Consensus loaded from the core. This chart never acts on anyone.' });
+        const ready = await readResult('consensus', async () => {
+          const consensus = await call(gatehouseConsensusGet, params);
+          if (consensus.window_s !== params.window_s || consensus.filter.kind !== params.filter.kind
+              || (consensus.filter.kind === 'emote' && params.filter.kind === 'emote' && consensus.filter.emote !== params.filter.emote)) {
+            throw new Error('Mismatched consensus filter');
+          }
+          return consensus;
+        });
+        if (ready) publish({ notice: 'Consensus loaded from the core. This chart never acts on anyone.' });
+        return ready;
       });
     },
     async importRecording(value: unknown) { await perform(() => importRecording(value)); },

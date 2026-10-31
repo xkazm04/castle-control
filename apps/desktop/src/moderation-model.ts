@@ -79,7 +79,9 @@ export function createModerationPreview(): ModerationPort {
         const target = [...snapshot.held, ...snapshot.bans, ...snapshot.ledger].find(item => item.decision_id === id);
         if (!target) { refuse('original_unavailable'); return; }
         const resolvingHeld = command.kind === 'release' || command.kind === 'remove';
-        const result = resolvingHeld ? confirmFixtureHeld(target, command.kind === 'release' ? 'allow' : 'deny') : target;
+        const result: Decision = resolvingHeld ? confirmFixtureHeld(target, command.kind === 'release' ? 'allow' : 'deny')
+          : { ...target, verdict: command.kind === 'ban' ? 'bar'
+            : command.kind === 'dismiss' || command.kind === 'undo' ? 'pass' : target.verdict };
         snapshot = { ...snapshot, phases: new Map(snapshot.phases).set(id, change.next),
           notice: resolvingHeld ? copy.gate_pending : `${copy.operation_confirming(command.kind)} ${copy.gate_pending}` };
         setTimeout(() => {
@@ -91,9 +93,9 @@ export function createModerationPreview(): ModerationPort {
           snapshot = { ...snapshot, phases,
             held: snapshot.held.filter(item => queued(item, 'held')), bans: snapshot.bans.filter(item => queued(item, 'ban_pending')),
             messages: snapshot.messages.map(item => item.message_id === target.message_id
-              ? { ...item, verdict: resolvingHeld ? result.verdict : command.kind === 'dismiss' || command.kind === 'undo'
-                ? 'pass' : command.kind === 'ban' ? 'bar' : item.verdict } : item),
-            ledger: snapshot.ledger.some(item => item.decision_id === id) ? snapshot.ledger : [result, ...snapshot.ledger],
+              ? { ...item, verdict: result.verdict } : item),
+            ledger: snapshot.ledger.some(item => item.decision_id === id)
+              ? snapshot.ledger.map(item => item.decision_id === id ? result : item) : [result, ...snapshot.ledger],
             notice: resolvingHeld ? copy.held_resolved(result.verdict) : copy.operation_recorded(command.kind) };
           notify();
         }, fixtureConfirmationMs);

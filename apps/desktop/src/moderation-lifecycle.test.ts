@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { expect, test } from 'vitest';
-import { available, decisionTransition, settingTransition, transition } from './moderation-lifecycle.js';
+import { available, decisionTransition, phaseLabel, settingTransition, transition } from './moderation-lifecycle.js';
+import { moderationCopy as copy } from './moderation-copy.js';
 import type { Op, SettledPhase } from './moderation-lifecycle.js';
 import { fixtureBans, fixtureHeld, fixtureLedger } from './moderation-fixture.js';
 import { createModerationPreview } from './moderation-model.js';
@@ -29,6 +30,26 @@ const cases: readonly { phase: SettledPhase; legal: readonly Op[] }[] = [
   { phase: { kind: 'undone', from: { kind: 'petitioned', from: { kind: 'banned' } } }, legal: [] },
 ];
 const terminal = { release: 'released', remove: 'removed', ban: 'banned', dismiss: 'dismissed', undo: 'undone', petition: 'petitioned' } as const;
+
+test('every settled phase and confirming operation has display copy rather than raw identifiers', () => {
+  for (const { phase } of cases) {
+    expect(phaseLabel(phase)).not.toContain('_'); expect(phaseLabel(phase)).not.toBe(phase.kind);
+    for (const op of ops) {
+      const label = phaseLabel({ kind: 'confirming', op, from: phase, next: phase });
+      expect(label).not.toContain('_'); expect(label).toContain('Confirming');
+    }
+  }
+  expect(phaseLabel({ kind: 'undone', from: { kind: 'timed_out' } })).toBe('Timeout undone');
+});
+
+test('refusal copy hides machine codes and counts use singular and plural forms', () => {
+  expect(copy.unsupported_by_gate).not.toMatch(/^unsupported_by_gate/); expect(copy.invalid).not.toMatch(/^invalid/);
+  for (const count of [0, 1, 2]) {
+    expect(copy.pending_bans(count)).toBe(`${count} pending ban${count === 1 ? '' : 's'}`);
+    expect(copy.decisions(count)).toBe(`${count} decision${count === 1 ? '' : 's'} · simulated`);
+    expect(copy.chat_arrivals(count)).toBe(`${count} new simulated line${count === 1 ? '' : 's'}`);
+  }
+});
 
 for (const { phase, legal } of cases) for (const op of ops) {
   test(`${JSON.stringify(phase)} + ${op} follows the transition table`, () => {

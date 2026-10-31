@@ -32,9 +32,11 @@ export function RuleBench({ rules, messages, bench, queue, core }: {
   const can_drill = !!live?.baseline && !!live.baseline_recording;
   return <section className="moderator-block moderator-rule-bench" aria-label={copy.rule_bench}>
     <WatchingRuleEditor rules={rules} bench={bench} result={result} queue={queue} busy={live?.busy ?? false}
-      on_save={core ? () => { void saveBenchRule(core, result).then(saved => {
+      on_save={core ? async () => {
+        const saved = await saveBenchRule(core, result);
         if (saved && result.ok && bench.getSnapshot() === state) bench.setDraft(input, result.rule.rule_id);
-      }); } : undefined}>
+        return { saved, notice: core.getSnapshot().notice };
+      } : undefined}>
       <BenchFeedback result={result} />
       {core && <><InkButton type="button" size="room" disabled={live?.busy || !result.ok || !can_drill}
         onClick={() => { void drillBenchRule(core, result); }}>{copy.drill_draft}</InkButton>

@@ -179,11 +179,35 @@ test('a Ban draft waits for the human seal, then retains its queue entry until 4
   expect(state(queue).bans).toContain(ban);
   expect(state(queue).phases.get(ban.decision_id)).toMatchObject({ kind: 'confirming', op: 'ban' });
   const confirming = heldQueue(queue);
-  expect(confirming).toContain('ban pending, ban confirming');
+  expect(confirming).toContain('Pending ban · Confirming ban');
   expect(confirming.match(/disabled=""/g)).toHaveLength(2);
   vi.advanceTimersByTime(fixtureConfirmationMs - 1); expect(state(queue).bans).toContain(ban);
   vi.advanceTimersByTime(1); expect(state(queue).bans).toHaveLength(0);
   expect(state(queue).phases.get(ban.decision_id)).toEqual({ kind: 'banned' });
+});
+
+test.each(['ban', 'dismiss', 'undo', 'release', 'remove', 'petition'] as const)('%s settlement keeps the gate-roll verdict aligned with chat', kind => {
+  vi.useFakeTimers(); const queue = new ProposalQueue();
+  const target = kind === 'ban' || kind === 'dismiss' ? state(queue).bans[0]
+    : kind === 'release' || kind === 'remove' ? state(queue).held[0] : state(queue).ledger[0];
+  if (!target) throw new Error('Missing simulated target');
+  proposeCommand(queue, { kind, decision_id: target.decision_id }, 'Simulated review'); seal(queue);
+  expect(state(queue).ledger.find(item => item.decision_id === target.decision_id)?.verdict).toBe(kind === 'undo' || kind === 'petition' ? 'bar' : undefined);
+  vi.advanceTimersByTime(fixtureConfirmationMs);
+  const expected = kind === 'ban' || kind === 'remove' || kind === 'petition' ? 'bar' : 'pass';
+  const entry = state(queue).ledger.find(item => item.decision_id === target.decision_id);
+  expect(entry?.verdict).toBe(expected);
+  const message = state(queue).messages.find(item => item.message_id === target.message_id);
+  if (message) expect(message.verdict).toBe(entry?.verdict);
+  expect(state(queue).ledger.filter(item => item.decision_id === target.decision_id)).toHaveLength(1);
+});
+
+test('recorded shadow entries explain that no action was taken instead of claiming Twitch cannot undo', () => {
+  const queue = new ProposalQueue();
+  const html = renderToStaticMarkup(<GateLog state={state(queue)} queue={queue} />);
+  const row = [...html.matchAll(/<article\b[^>]*>([\s\S]*?)<\/article>/g)].find(match => match[1]?.includes('Simulated link awaiting review.'))?.[1];
+  expect(row).toBeTruthy(); expect(row).not.toContain('No undo on Twitch'); expect(row).toContain('No action was taken');
+  expect(html.replace(/<[^>]+>/g, '')).not.toContain('simulated_pattern_match');
 });
 
 test('two Undo drafts cannot both seal the same timed-out decision', () => {

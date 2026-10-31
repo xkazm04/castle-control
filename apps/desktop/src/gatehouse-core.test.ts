@@ -59,6 +59,53 @@ function harness() {
 }
 afterEach(() => { vi.unstubAllGlobals(); vi.restoreAllMocks(); });
 
+test.each(['consensus', 'chat', 'history'] as const)('a failed %s read does not prevent independent reads from loading', async failed => {
+  const h = harness();
+  h.rpc.mockImplementation(async (_endpoint, _session, method) => {
+    if (method === `gatehouse.${failed}.${failed === 'consensus' ? 'get' : 'list'}`) throw { code: 'invalid', message: 'Private read detail' };
+    return structuredClone(h.responses.get(method));
+  });
+  await h.port.load(); const snapshot = h.port.getSnapshot();
+  expect(h.rpc.mock.calls.map(call => call[2])).toEqual(['gatehouse.rules.list', 'gatehouse.consensus.get', 'gatehouse.chat.list', 'gatehouse.history.list']);
+  for (const [key, value] of [['consensus', consensus], ['chat', chatPage], ['history', historyPage]] as const) {
+    expect(snapshot[key]).toEqual(key === failed ? undefined : value);
+  }
+  expect(snapshot).toHaveProperty(`read_failures.${failed}`);
+  expect(snapshot.notice).toMatch(new RegExp(`${failed} read failed`, 'i'));
+  expect(snapshot.notice).not.toContain('Private read detail'); expect(snapshot.busy).toBe(false); expect(snapshot.phase).toBe('error');
+  h.rpc.mockImplementation(async (_endpoint, _session, method) => structuredClone(h.responses.get(method)));
+  await h.port.load(); expect(h.port.getSnapshot()).toHaveProperty('read_failures', {}); expect(h.port.getSnapshot().phase).toBe('ready');
+});
+
+test('a failed rules read stops dependent loading and clears earlier successes', async () => {
+  const h = harness(); await h.port.load(); h.rpc.mockClear();
+  h.rpc.mockRejectedValueOnce({ code: 'unavailable', message: 'Private read detail' });
+  await h.port.load(); const snapshot = h.port.getSnapshot();
+  expect(h.rpc.mock.calls.map(call => call[2])).toEqual(['gatehouse.rules.list']);
+  expect(snapshot.rules).toEqual([]);
+  for (const key of ['chat', 'history', 'consensus'] as const) expect(snapshot[key]).toBeUndefined();
+});
+
+test('load publishes independent successes while busy until the last read settles', async () => {
+  const h = harness();
+  let finish: (value: unknown) => void = () => { throw new Error('Missing pending history'); };
+  h.rpc.mockImplementation(async (_endpoint, _session, method) => {
+    if (method === 'gatehouse.consensus.get') throw { code: 'rate_limited', message: 'Private detail', retry_after_ms: 2000 };
+    if (method === 'gatehouse.history.list') return new Promise(resolve => { finish = resolve; });
+    return structuredClone(h.responses.get(method));
+  });
+  const pending = h.port.load();
+  await vi.waitFor(() => expect(h.port.getSnapshot().chat).toEqual(chatPage));
+  expect(h.port.getSnapshot().busy).toBe(true); expect(h.port.getSnapshot().phase).toBe('loading');
+  expect(h.port.getSnapshot().notice).toContain('Consensus read failed');
+  const calls = h.rpc.mock.calls.length; await h.port.load(); expect(h.rpc).toHaveBeenCalledTimes(calls);
+  finish(historyPage); await pending;
+  const snapshot = h.port.getSnapshot();
+  expect(snapshot.history).toEqual(historyPage); expect(snapshot.busy).toBe(false); expect(snapshot.phase).toBe('error');
+  expect(snapshot.notice).toContain('rate limited'); expect(snapshot.notice).toContain('2000');
+  expect(snapshot.notice).toContain('Loaded: Rules, Chat, History'); expect(snapshot.notice).not.toContain('Private detail');
+});
+
 test('all twelve existing methods send schema-validated parameters over the injected transport', async () => {
   const h = harness();
   await h.port.load();
@@ -91,7 +138,7 @@ test('chat and history parse generated read contracts, preserve provenance and r
   expect(h.port.getSnapshot().chat).toEqual(chatPage);
   expect(h.port.getSnapshot().history).toEqual(historyPage);
   const html = renderToStaticMarkup(createElement(ConnectedGatehouse, { port: h.port, replay: false }));
-  for (const text of ['Synthetic core chat text', 'live', 'simulated', 'unavailable_count: 2', 'unavailable_count: 3']) {
+  for (const text of ['Synthetic core chat text', 'live', 'simulated', '2 unavailable', '3 unavailable']) {
     expect(html).toContain(text);
   }
   expect(html).not.toContain('Propose Ban'); expect(html).not.toContain('Save armed rule');
@@ -141,10 +188,10 @@ test('errors and malformed replies produce calm error states, clear unavailable 
   await h.port.diffDrill(diff);
   expect(h.port.getSnapshot().phase).toBe('error'); expect(h.port.getSnapshot().busy).toBe(false);
   expect(h.port.getSnapshot().diff).toBeUndefined();
-  expect(h.port.getSnapshot().notice).toContain('rate_limited'); expect(h.port.getSnapshot().notice).toContain('2000');
+  expect(h.port.getSnapshot().notice).toContain('rate limited'); expect(h.port.getSnapshot().notice).toContain('2000');
   expect(h.port.getSnapshot().notice).not.toContain('Private upstream detail');
   const failed = renderToStaticMarkup(createElement(ConnectedGatehouse, { port: h.port, replay: true }));
-  expect(failed).toContain('role="status"'); expect(failed).toContain('rate_limited');
+  expect(failed).toContain('role="status"'); expect(failed).toContain('rate limited');
   h.responses.set('gatehouse.rules.list', { rules: [{ ...rule, extra: true }] });
   await h.port.load(); expect(h.port.getSnapshot().rules).toEqual([]);
   expect(h.port.getSnapshot().phase).toBe('error');
