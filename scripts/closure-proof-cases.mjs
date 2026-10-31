@@ -72,6 +72,28 @@ export function closureCases(proof, root) {
   proof('Workspace scripts: blank test script', ['$S/scripts/workspaces.mjs'], 'missing test script', {
     'packages/proof/package.json': '{"scripts":{"typecheck":"tsc","lint":"eslint","test":""}}\n',
   });
+  const tokens = 'packages/tokens/src/generated.css';
+  proof('Type floor: raw px font size', ['$S/scripts/check.mjs', 'type-floor'], 'font size must use a --text-* token', {
+    'packages/ui/src/seed.css': '.x{font-size:12px}',
+    [tokens]: ':root{--text-body:14px;}',
+  });
+  proof('Type floor: token below floor', ['$S/scripts/check.mjs', 'type-floor'], 'below the 13px floor', {
+    [tokens]: ':root{--text-tiny:12px;}',
+  });
+  proof('Type floor: stage token below stage floor', ['$S/scripts/check.mjs', 'type-floor'], 'below the 15px floor', {
+    [tokens]: ':root{--text-stage-x:14px;}',
+  });
+  proof('Type floor: TSX literal below floor', ['$S/scripts/check.mjs', 'type-floor'], 'font size 12 is below the 13px floor', {
+    'packages/ui/src/seed.tsx': '// Simulated type-floor proof.\nexport const seed = <svg><text fontSize={12}>Simulated</text></svg>;\n',
+    [tokens]: ':root{--text-body:14px;}',
+  });
+  const siteFiles = Object.fromEntries(['check.mjs', 'index.html', 'site.css', 'site.js', 'art.svg']
+    .map((name) => [`apps/site/${name}`, readFileSync(join(root, 'apps/site', name), 'utf8')]));
+  siteFiles['apps/site/index.html'] = siteFiles['apps/site/index.html']
+    .replace(/<link\b[^>]*href="\.\.\/\.\.\/packages\/tokens\/src\/generated\.css"[^>]*>\s*/, '');
+  proof('Site check: missing token reference', ['$S/apps/site/check.mjs'], 'Use shared tokens directly', {
+    ...siteFiles, [tokens]: readFileSync(join(root, tokens), 'utf8'),
+  });
   const schemaPath = join(root, 'packages/contract/src/generated/contract.schema.json');
   const readContract = (name) => readFileSync(join(root, 'packages/contract/scripts', name), 'utf8');
   const moduleUrl = (local) => pathToFileURL(join(root, 'packages/contract', local)).href;
@@ -127,7 +149,7 @@ throw new Error(usage.defects[0]);
     'generator/codegen.mjs': readContract('codegen.mjs'),
     'generator/parity.mjs': readContract('parity.mjs'),
   });
-  for (const gate of ['boundaries', 'hygiene', 'file-cap', 'secrets']) {
+  for (const gate of ['boundaries', 'hygiene', 'file-cap', 'secrets', 'type-floor']) {
     proof(`Empty ${gate}`, ['$R/scripts/check.mjs', gate, '$S'], 'refused empty inventory', {}, { empty: true });
   }
   for (const gate of ['fetch', 'fmt', 'clippy', 'test']) {
