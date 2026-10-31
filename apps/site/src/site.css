@@ -84,7 +84,7 @@ kbd {
   border:var(--rule-strong) solid var(--ink); box-shadow:var(--space-3) var(--space-3) 0 var(--ink); transition:opacity var(--m-slip);
 }
 .room-mode .tag { opacity:0; }
-/* Empty hosts are filled by WP5b; keep their winner geometry ready for that delivery. */
+/* Fixed winner sheet and dock geometry. */
 #broadside {
   position:absolute; left:calc(var(--space-40) * 23 + var(--space-12)); top:var(--nav-row);
   width:calc(var(--space-40) * 12 - var(--space-4)); height:calc(var(--space-40) * 19); z-index:30;
@@ -92,14 +92,18 @@ kbd {
   padding:var(--space-28) var(--space-34) var(--space-22); display:none; flex-direction:column; background-image:var(--paper-grain);
 }
 .room-mode #broadside { display:flex; }
+.toy-stack {
+  position:absolute; left:var(--space-30); bottom:calc(var(--space-56) + var(--space-2));
+  width:calc(var(--space-40) * 22 - var(--space-6)); min-height:calc(var(--space-40) * 4 + var(--space-14));
+  z-index:30; display:flex; flex-direction:column;
+}
 #toy {
-  position:absolute; left:var(--space-30); top:calc(var(--space-40) * 17 + var(--space-20));
-  width:calc(var(--space-40) * 22 - var(--space-6)); height:calc(var(--space-40) * 3 + var(--space-22));
+  position:relative; width:100%; min-height:calc(var(--space-40) * 3 + var(--space-22));
   z-index:30; display:none; background:var(--toy-scrim); border:var(--rule-strong) solid var(--ink);
   box-shadow:var(--space-6) var(--space-6) 0 var(--ink); padding:var(--space-14) calc(var(--space-9) * 2); gap:calc(var(--space-9) * 2); align-items:center;
 }
 .vlabel {
-  position:absolute; left:var(--space-30); top:calc(var(--space-40) * 16 + var(--space-28)); z-index:30;
+  align-self:flex-start; margin-bottom:var(--space-9);
   font:600 var(--text-stage-label)/1 var(--font-ui); color:var(--ink-2); display:none; letter-spacing:.03em;
 }
 .room-mode .vlabel { display:block; background:var(--stage-label-scrim); padding:var(--space-4) var(--space-6); }
@@ -111,9 +115,6 @@ kbd {
 #theme { flex:none; height:var(--space-22); background:var(--card); color:var(--ink); border:var(--rule-medium) solid var(--ink); border-bottom-width:var(--space-3); border-radius:var(--r-sm); padding:0 var(--space-5); font:600 var(--text-stage-shortcut-hint)/1 var(--font-ui); cursor:pointer; }
 .room-mode #footer .cta { display:none; }
 .room-mode #footer { background:var(--footer-scrim); left:0; right:0; bottom:0; height:calc(var(--space-56) - var(--space-4)); padding:0 var(--space-28); border-top:var(--rule-strong) solid var(--ink); }
-.steward-notices h2 { margin:var(--space-10) 0 var(--space-20); font-size:var(--text-stage-principles-title); color:var(--or-text); }
-.steward-notices p { margin:0 0 var(--space-14); font:400 var(--text-stage-body)/1.55 var(--font-ui); color:var(--ink-2); }
-.steward-notices nav { display:flex; gap:var(--space-20); font:700 var(--text-stage-navigation)/1 var(--font-ui); }
 #skip {
   position:absolute; right:var(--space-28); top:calc(var(--space-56) + var(--space-12)); z-index:60;
   background:var(--card); border:var(--rule-strong) solid var(--ink); padding:var(--space-6) var(--space-12);

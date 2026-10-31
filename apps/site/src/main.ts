@@ -2,6 +2,8 @@ import '@castle-control/tokens';
 import '@castle-control/keep-art/keep-art.css';
 import '@castle-control/ui/stamp.css';
 import './site.css';
+import './broadside.css';
+import './toys.css';
 import { bindFit } from './fit.ts';
 import { createIntro } from './intro.ts';
 import { bindKeys } from './keymap.ts';
@@ -17,11 +19,9 @@ const nodes = buildStage(document);
 const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
 const review = parseReview(window.location.search);
 let state = initialState(motion.matches, parse(window.location.hash));
-const view = createView(nodes, () => motion.matches);
+const view = createView(nodes, () => motion.matches, state.room === 'lots' ? review.seed : undefined);
 view.update(state);
 view.reviewHover(review.hover ?? null);
-// WP5b consumes this already-validated seed when it mounts the toy dock.
-if (review.seed !== undefined) nodes.toy.dataset['seed'] = review.seed;
 
 const intro = createIntro({
   schedule: (run, delay) => window.setTimeout(run, delay),
@@ -42,6 +42,7 @@ function dispatch(event: Event): void {
 
 function act(action: Action): void {
   if (action.type === 'focus') view.moveFocus(action.direction);
+  else if (action.type === 'claim') view.claimHex();
   else dispatch(action);
 }
 
@@ -61,7 +62,7 @@ for (const [room, hit] of nodes.hits) {
   hit.addEventListener('blur', () => view.focus(null));
 }
 document.addEventListener('pointerdown', (event) => intro.pointer(event.target === nodes.skip), { passive: true });
-motion.addEventListener('change', () => { if (motion.matches) intro.reduce(); });
+motion.addEventListener('change', () => { if (motion.matches) intro.reduce(); view.update(state); });
 window.addEventListener('hashchange', () => {
   const route = parse(window.location.hash);
   // Route changes pass through the same transition table as clicks and keys.
@@ -70,6 +71,6 @@ window.addEventListener('hashchange', () => {
   intro.sync(false);
   view.update(state);
 });
-bindKeys(document, () => ({ level: level(state) }), act,
+bindKeys(document, () => ({ level: level(state), liveHex: view.liveHex() }), act,
   (key, target) => intro.key(key, target === nodes.skip));
 bindFit(window, nodes.stage);

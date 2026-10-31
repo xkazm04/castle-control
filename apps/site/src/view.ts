@@ -5,11 +5,13 @@ import type { State } from './machine.ts';
 import { artRoom, chamberIds } from './route.ts';
 import type { SiteRoom } from './route.ts';
 import type { Stage } from './stage.ts';
+import { buildToyDock } from './toy-dock.ts';
 
 const ink = { key: 'var(--ink)', gules: 'var(--gules)', azure: 'var(--azure)', or: 'var(--or)' } as const;
 const textInk = { key: 'var(--ink)', gules: 'var(--gules-text)', azure: 'var(--azure-text)', or: 'var(--or-text)' } as const;
 
-export function createView(nodes: Stage, reduced: () => boolean) {
+export function createView(nodes: Stage, reduced: () => boolean, seed?: string) {
+  const dock = buildToyDock(nodes.toy, nodes.castle, reduced, seed);
   let previous: State = { phase: 'overview', room: null };
   let pointer: SiteRoom | null = null;
   let focused: SiteRoom | null = null;
@@ -85,7 +87,8 @@ export function createView(nodes: Stage, reduced: () => boolean) {
     nodes.broadside.style.setProperty('--bc', ink[colour]);
     nodes.broadside.style.setProperty('--bt', textInk[colour]);
     nodes.broadside.hidden = depth === 0;
-    nodes.stewardNotices.hidden = state.room !== 'steward';
+    nodes.sheet.update(state, reduced());
+    dock.update(state);
     previous = state;
     if (state.room !== null) {
       pointer = null; focused = null; review = null;
@@ -104,5 +107,6 @@ export function createView(nodes: Stage, reduced: () => boolean) {
     if (next) nodes.hits.get(next)?.focus({ preventScroll: true });
   }
 
-  return { update, hover, focus, reviewHover, moveFocus };
+  return { update, hover, focus, reviewHover, moveFocus, liveHex: dock.liveHex,
+    claimHex: (): void => dock.claimHex(nodes.stage.ownerDocument.activeElement) };
 }

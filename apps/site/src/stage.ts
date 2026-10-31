@@ -1,9 +1,10 @@
 import { keepArt, keepRooms } from '@castle-control/keep-art';
 import { mountArt } from '@castle-control/keep-art/dom';
-import { stampParts } from '@castle-control/ui/stamp';
-import { chamber, releases, stewardCopy, words } from './copy.ts';
+import { chamber, releases, words } from './copy.ts';
 import { button, element } from './dom.ts';
+import { buildBroadside } from './broadside.ts';
 import { mountInkFilter } from './ink-filter.ts';
+import { makeStamp } from './stamp.ts';
 import { artRoom, encode, roomIds } from './route.ts';
 import type { SiteRoom } from './route.ts';
 
@@ -52,7 +53,7 @@ export function buildStage(document: Document) {
   theme.type = 'button';
   theme.setAttribute('aria-pressed', 'false');
   theme.setAttribute('aria-label', 'Use dark stock theme');
-  const cta = element(document, 'a', { cls: 'cta', role: 'cta', text: 'Open the app →' });
+  const cta = element(document, 'a', { cls: 'cta', role: 'cta', text: 'Get the app →' });
   cta.href = releases;
   topbar.append(mark, crumbs, study, keys, theme, cta);
   const headline = element(document, 'div', { id: 'headline' });
@@ -97,47 +98,21 @@ export function buildStage(document: Document) {
   broadside.tabIndex = -1;
   broadside.setAttribute('aria-label', 'Chamber details');
   broadside.setAttribute('aria-live', 'polite');
-  // Make the relocated notices visible now, before WP5b fills the complete study.
-  const stewardNotices = element(document, 'div', { cls: 'steward-notices' });
-  stewardNotices.hidden = true;
-  stewardNotices.append(element(document, 'h2', { cls: 'display', text: stewardCopy.title }));
-  for (const notice of stewardCopy.notices) {
-    const paragraph = element(document, 'p');
-    if ('href' in notice) {
-      const link = element(document, 'a', { text: notice.text });
-      link.href = notice.href;
-      paragraph.append(link);
-    } else paragraph.textContent = notice.text;
-    stewardNotices.append(paragraph);
-  }
-  const studyLinks = element(document, 'nav');
-  studyLinks.setAttribute('aria-label', 'Project links');
-  for (const item of stewardCopy.links) {
-    const link = element(document, 'a', { text: item.text });
-    link.href = item.href;
-    studyLinks.append(link);
-  }
-  stewardNotices.append(studyLinks);
-  broadside.append(stewardNotices);
+  const sheet = buildBroadside(broadside);
   const toy = element(document, 'section', { id: 'toy' });
   toy.setAttribute('aria-label', 'Sample toy');
+  const toyStack = element(document, 'div', { cls: 'toy-stack' });
+  toyStack.append(vlabel, toy);
   const footer = element(document, 'footer', { id: 'footer', role: 'footer' });
-  const parts = stampParts('sample', words.sample);
-  const stamp = element(document, 'span', { cls: parts.className });
-  stamp.dataset['stamp'] = parts.dataset.stamp;
-  stamp.setAttribute('role', 'img');
-  stamp.setAttribute('aria-label', parts.ariaLabel);
-  const word = element(document, 'span', { text: parts.word });
-  word.setAttribute('aria-hidden', 'true');
-  stamp.append(word);
+  const stamp = makeStamp(document, 'sample', words.sample);
   const footerCta = element(document, 'a', { cls: 'cta ghostbtn', text: words.footer_cta });
   footerCta.href = releases;
   footer.append(stamp, element(document, 'span', { text: words.footer }),
     element(document, 'span', { cls: 'mid serif', text: words.footer_aside }), footerCta);
-  stage.append(topbar, headline, world, vlabel, broadside, toy, footer);
+  stage.append(topbar, headline, world, toyStack, broadside, footer);
   document.body.append(stage);
   return { stage, skiplink, skip, mark, crumbs: { home, room, sep, detailSep, detail, hint },
-    headline: { eyebrow, name, sub }, castle, rooms, hits, broadside, stewardNotices, toy, footer, theme, study };
+    headline: { eyebrow, name, sub }, castle, rooms, hits, broadside, sheet, toy, footer, theme, study };
 }
 
 export type Stage = ReturnType<typeof buildStage>;

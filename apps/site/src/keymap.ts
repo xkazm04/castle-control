@@ -2,12 +2,14 @@ import type { Event } from './machine.ts';
 import { chamberIds } from './route.ts';
 
 const keyboardEvent = 'keydown';
-export type Context = Readonly<{ level: 0 | 1 | 2 }>;
-export type Action = Event | { type: 'focus'; direction: -1 | 1 };
-export type Binding = Readonly<{ key: string; when: readonly Context['level'][]; action: Action }>;
+export type Context = Readonly<{ level: 0 | 1 | 2; liveHex?: boolean }>;
+export type Action = Event | { type: 'focus'; direction: -1 | 1 } | { type: 'claim' };
+export type Binding = Readonly<{ key: string; when: readonly Context['level'][]; action: Action; scope?: 'live-hex' }>;
 const all = [0, 1, 2] as const;
 
 export const keymap: readonly Binding[] = [
+  { key: 'Enter', when: [1, 2], scope: 'live-hex', action: { type: 'claim' } },
+  { key: ' ', when: [1, 2], scope: 'live-hex', action: { type: 'claim' } },
   ...chamberIds.map((room, index): Binding => ({
     key: String(index + 1), when: all, action: { type: 'open', room },
   })),
@@ -42,7 +44,8 @@ export function editable(target: KeyTarget | null): boolean {
 export function resolveKey(input: KeyInput, context: Context, editing = false): Action | 'blur' | null {
   if (input.ctrlKey || input.metaKey || input.altKey || input.shiftKey || input.isComposing || input.repeat) return null;
   if (editing) return input.key === 'Escape' ? 'blur' : null;
-  return keymap.find((binding) => binding.key === input.key && binding.when.includes(context.level))?.action ?? null;
+  return keymap.find((binding) => binding.key === input.key && binding.when.includes(context.level)
+    && (binding.scope !== 'live-hex' || context.liveHex === true))?.action ?? null;
 }
 
 export function bindKeys(
@@ -51,6 +54,7 @@ export function bindKeys(
 ): () => void {
   const listen = (event: KeyboardEvent): void => {
     input(event.key, event.target);
+    // SVG hexes resolve through context; editable HTML targets retain their native behavior.
     const target = event.target instanceof document.defaultView!.HTMLElement ? event.target : null;
     const action = resolveKey(event, context(), editable(target));
     if (action === 'blur') target?.blur();

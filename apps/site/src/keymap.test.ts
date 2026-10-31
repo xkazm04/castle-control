@@ -40,3 +40,13 @@ test('modifiers, composition and repeat cannot navigate or blur editable targets
     expect(resolveKey({ key: 'Escape', [guard]: true }, { level: 1 }, true)).toBeNull();
   }
 });
+
+test('Enter and Space claim only a focused live hex, through this registry', () => {
+  for (const key of ['Enter', ' ']) for (const level of [0, 1, 2] as const) {
+    expect(resolveKey({ key }, { level })).toBeNull();
+    expect(resolveKey({ key }, { level, liveHex: false })).toBeNull();
+    expect(resolveKey({ key }, { level, liveHex: true })).toEqual(level === 0 ? null : { type: 'claim' });
+    expect(resolveKey({ key }, { level, liveHex: true }, true)).toBeNull();
+    expect(resolveKey({ key, repeat: true }, { level, liveHex: true })).toBeNull();
+  }
+});

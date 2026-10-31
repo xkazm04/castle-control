@@ -100,6 +100,8 @@ test('the poster footer has four items and the releases CTA; theme and study liv
   expect(footer?.children[3]?.href).toBe(releases);
   expect(footer?.children[3]?.classList.contains('ghostbtn')).toBe(true);
   const topbar = document.created.find((node) => node.dataset['role'] === 'topbar');
+  expect(topbar?.children.at(-1)?.textContent).toBe('Get the app →');
+  expect(topbar?.children.at(-1)?.href).toBe(releases);
   const keys = topbar?.children.find((node) => node.dataset['role'] === 'keys');
   expect(keys?.children.filter((node) => node.tagName === 'KBD').map((node) => node.textContent))
     .toEqual(['1', '4', '0', 'Esc']);
@@ -112,14 +114,13 @@ test('the poster footer has four items and the releases CTA; theme and study liv
 
 test('the relocated honesty notices and project links are visible only in the Steward study', () => {
   const { document, nodes, view } = fixture();
-  const study = document.created.find((node) => node.className === 'steward-notices');
-  expect(study?.children[0]?.textContent).toBe(stewardCopy.title);
+  const study = document.created.find((node) => node.classList.contains('steward-notices'));
   expect(study?.children.at(-1)?.children.map((node) => node.textContent)).toEqual(['Docs', 'Source']);
   view.update(initialState(true, { room: 'lots', features: false }));
-  expect(nodes.stewardNotices.hidden).toBe(true);
+  expect(nodes.sheet.notices.hidden).toBe(true);
   view.update(initialState(true, { room: 'steward', features: false }));
-  expect(nodes.stewardNotices.hidden).toBe(false);
+  expect(nodes.sheet.notices.hidden).toBe(false);
   expect(nodes.broadside.hidden).toBe(false);
-  expect(study?.children.slice(1, -1).map((node) => node.textContent ?? node.children[0]?.textContent))
+  expect(study?.children.slice(0, -1).map((node) => node.textContent ?? node.children[0]?.textContent))
     .toEqual(stewardCopy.notices.map((notice) => notice.text));
 });

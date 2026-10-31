@@ -2,7 +2,9 @@
 class FakeStyle {
   readonly properties = new Map<string, string>();
   transform = ''; color = ''; background = ''; left = ''; top = ''; width = ''; height = '';
+  transition = ''; fill = ''; transformBox = ''; transformOrigin = '';
   setProperty(name: string, value: string): void { this.properties.set(name, value); }
+  getPropertyValue(name: string): string { return this.properties.get(name) ?? ''; }
 }
 
 export class FakeNode {
@@ -13,6 +15,7 @@ export class FakeNode {
   readonly listeners = new Map<string, EventListenerOrEventListenerObject[]>();
   textContent: string | null = null;
   id = ''; className = ''; type = ''; href = ''; tabIndex = 0; hidden = false; disabled = false;
+  value = ''; scrollTop = 0; clientHeight = 0; scrollHeight = 0;
   readonly ownerDocument: FakeDocument;
   readonly tagName: string;
   constructor(ownerDocument: FakeDocument, tagName: string) {
@@ -33,6 +36,11 @@ export class FakeNode {
 
   append(...nodes: FakeNode[]): void { this.children.push(...nodes); }
   appendChild(node: FakeNode): FakeNode { this.append(node); return node; }
+  get lastChild(): FakeNode | null { return this.children.at(-1) ?? null; }
+  insertBefore(node: FakeNode, before: FakeNode | null): void {
+    const index = before === null ? -1 : this.children.indexOf(before);
+    if (index < 0) this.append(node); else this.children.splice(index, 0, node);
+  }
   setAttribute(name: string, value: string): void {
     this.attrs.set(name, value);
     if (name === 'class') this.className = value;
@@ -59,12 +67,14 @@ export class FakeNode {
   }
   blur(): void { this.ownerDocument.activeElement = null; this.emit('blur'); }
   querySelectorAll(selector: string): FakeNode[] {
-    const classes = selector.split(',').map((part) => part.slice(1));
+    const selectors = selector.split(',');
     return this.children.flatMap((child) => [
-      ...(classes.some((cls) => child.classList.contains(cls)) ? [child] : []),
+      ...(selectors.some((part) => part.startsWith('#') ? child.id === part.slice(1)
+        : child.classList.contains(part.slice(1))) ? [child] : []),
       ...child.querySelectorAll(selector),
     ]);
   }
+  querySelector(selector: string): FakeNode | null { return this.querySelectorAll(selector)[0] ?? null; }
 }
 
 export class FakeDocument {
