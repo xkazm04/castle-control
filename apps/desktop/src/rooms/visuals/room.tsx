@@ -39,7 +39,7 @@ export function VisualsWork({ queue, port, seal_slot }: { queue?: ProposalQueue;
     <div className="visuals-board">
       <VisualSelector visuals={preview.visuals} selected={preview.selected} on_select={item => adapter.select(item.visual.visual_id)}
         draft={<ProposalLayers chamber="visuals" {...(queue ? { queue } : {})} />} />
-      <NightReplay item={selected} editor={editor} {...(queue ? { queue } : {})} />
+      <NightReplay item={selected} editor={editor} visuals={preview.visuals} on_select={adapter.select} {...(queue ? { queue } : {})} />
       <BeaconBench name={selected.visual.name} notice={preview.notice}>
         <BeaconBay title={copy.driven_by} gloss={copy.input_gloss}>
           <InputPicker source={selected.visual.input?.source ?? ''} busy={false} on_change={adapter.input} />

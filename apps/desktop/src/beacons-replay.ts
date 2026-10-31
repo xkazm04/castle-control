@@ -11,7 +11,8 @@ export type ReplayTrace = Readonly<{
   duration_s: number; points: readonly TracePoint[];
   /** Spans where the running total sits at or past the top point, so more offerings change nothing. */
   pinned: readonly ReplayBand[]; pinned_s: number;
-  lit_total: number; first_lit_s?: number;
+  /** Seconds at or past the lit threshold, integrated exactly like the pinned spans. */
+  lit_total: number; lit_s: number; first_lit_s?: number;
   peak: TracePoint; max_total: number;
 }>;
 
@@ -34,11 +35,11 @@ export function litTotal(curve: IntensityCurve): number {
   return (curve.ranges[1] ?? curve.ranges[0])?.total ?? 0;
 }
 
-function pinnedUntil(total: number, top: number, from: number, to: number, curve: IntensityCurve): number {
-  if (total < top) return from;
-  if (curve.decay.kind === 'none' || top <= 0) return to;
-  // Exact crossing of the decayed total with the top point; no sampling error.
-  return Math.min(to, from + curve.decay.half_life_s * Math.log2(total / top));
+/** When a decaying total falls back under a threshold: the exact crossing, no sampling error. */
+function aboveUntil(total: number, threshold: number, from: number, to: number, curve: IntensityCurve): number {
+  if (total < threshold) return from;
+  if (curve.decay.kind === 'none' || threshold <= 0) return to;
+  return Math.min(to, from + curve.decay.half_life_s * Math.log2(total / threshold));
 }
 
 /** Deterministic: the same curve, weighting and bursts always return the same trace. */
@@ -53,10 +54,10 @@ export function replayTrace(curve: IntensityCurve, gift_weight: number, bursts: 
     points.push(next);
     return next;
   };
-  let total = 0; let at = 0; let first_lit_s: number | undefined; let pinned_s = 0; let max_total = 0;
+  let total = 0; let at = 0; let first_lit_s: number | undefined; let pinned_s = 0; let lit_s = 0; let max_total = 0;
   let peak = point(0, 0);
   const pin = (from: number, to: number) => {
-    const until = pinnedUntil(total, top, from, to, curve);
+    const until = aboveUntil(total, top, from, to, curve);
     if (until <= from) return;
     pinned_s += until - from;
     // Dips shorter than the merge gap read as one pinned span; the minutes stay exact.
@@ -66,6 +67,7 @@ export function replayTrace(curve: IntensityCurve, gift_weight: number, bursts: 
   };
   const advance = (t: number) => {
     pin(at, t);
+    if (lit_total > 0) lit_s += aboveUntil(total, lit_total, at, t, curve) - at;
     total = decayedTotal(total, t - at, curve.decay);
     at = t;
   };
@@ -88,7 +90,7 @@ export function replayTrace(curve: IntensityCurve, gift_weight: number, bursts: 
     if (t >= duration_s) break;
   }
   return Object.freeze({ duration_s, points: Object.freeze(points), pinned: Object.freeze(pinned.map(band => Object.freeze(band))),
-    pinned_s, lit_total, peak, max_total, ...(first_lit_s === undefined ? {} : { first_lit_s }) });
+    pinned_s, lit_total, lit_s, peak, max_total, ...(first_lit_s === undefined ? {} : { first_lit_s }) });
 }
 
 /** The exact running total at any playhead: the last recorded point, decayed to the playhead. */

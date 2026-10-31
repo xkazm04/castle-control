@@ -47,10 +47,11 @@ function seekFrom(event: PointerEvent<HTMLDivElement>, duration: number, seek: (
 
 /** The night as one figure: pinned bands, the lit threshold, the before/after traces and every offering tick.
  * Pressing on the figure scrubs too; the labelled range above stays the keyboard control. */
-export function TraceFigure({ trace, before, offerings, counted, position, lit_intensity, label, on_seek }: {
+export function TraceFigure({ trace, before, offerings, counted, position, lit_intensity, label, on_seek, now_intensity }: {
   trace: ReplayTrace; before?: ReplayTrace | undefined; offerings: readonly Offering[]; counted: ReadonlySet<number>;
-  position: number; lit_intensity: number; label: string; on_seek?: (seconds: number) => void;
+  position: number; lit_intensity: number; label: string; on_seek?: (seconds: number) => void; now_intensity?: number;
 }) {
+  const share = position / trace.duration_s;
   const marks = Array.from({ length: Math.floor(trace.duration_s / 360) + 1 }, (_, index) => index * 360);
   return <figure className="visuals-replay-figure">
     <div className="visuals-replay-plot" data-scrub={on_seek ? 'pointer' : undefined}
@@ -66,6 +67,9 @@ export function TraceFigure({ trace, before, offerings, counted, position, lit_i
       </svg>
       {trace.pinned.filter(band => band.to - band.from >= 120).map(band =>
         <span key={band.from} className="visuals-replay-band-label" style={percent(band.from, trace.duration_s)}>pinned at max</span>)}
+      {now_intensity !== undefined && <span className="visuals-replay-now-label" aria-hidden="true"
+        style={{ left: `${share * 100}%`, top: `${y(now_intensity) / 140 * 100}%` }}
+        data-edge={share > 0.92 ? 'end' : share < 0.04 ? 'start' : undefined}>{`${Math.round(now_intensity * 100)}%`}</span>}
       <span className="visuals-replay-axis-top" aria-hidden="true">100%</span>
       <span className="visuals-replay-axis-zero" aria-hidden="true">0%</span>
     </div>

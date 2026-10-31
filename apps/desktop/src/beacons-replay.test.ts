@@ -82,6 +82,11 @@ test('pinned spans end exactly where the decayed total crosses the top point', (
   // 40 halves to 10 after two half-lives.
   expect(trace.pinned).toEqual([{ from: 100, to: 220 }]);
   expect(trace.pinned_s).toBe(120);
+  // Lit from the gift until 40 halves under 10 too: the top point here is also the lit point.
+  expect(trace.lit_s).toBe(120);
+  const stair: IntensityCurve = { ...curve, ranges: [{ total: 0, intensity: 0 }, { total: 5, intensity: 0.5 }, { total: 10, intensity: 1 }] };
+  // 40 falls to 5 after three half-lives.
+  expect(replayTrace(stair, 1, [{ t: 100, source: 'gift', count: 40, offering: 0 }], 600).lit_s).toBeCloseTo(180, 9);
 });
 
 test('the replay clock is deterministic: injected ticks only, speeds, scrubbing and end of night', () => {

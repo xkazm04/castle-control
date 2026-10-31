@@ -131,3 +131,21 @@ test('a pinned night offers one fit, and the fit button never writes by itself',
   expect(queue.getSnapshot().proposals).toHaveLength(0);
   expect(port.getSnapshot().visuals[0]).toBe(item);
 });
+
+test('tonight across your beacons: every beacon against the same night, the selected one pressed', () => {
+  const port = createBeaconsPreview();
+  const editor = createFixtureCurveEditor(port);
+  const { visuals } = port.getSnapshot();
+  const item = visuals[0];
+  if (!item) throw new Error('Missing generated altar');
+  const html = renderToStaticMarkup(<NightReplay item={item} editor={editor} queue={new ProposalQueue()}
+    initial_night="gift_wave" visuals={visuals} on_select={() => undefined} />);
+  const rows = html.match(/<button type="button" class="visuals-replay-compare-row"[^>]*>/g) ?? [];
+  expect(rows).toHaveLength(3);
+  expect(rows.filter(row => row.includes('aria-pressed="true"'))).toHaveLength(1);
+  expect(rows[0]).toContain('aria-label="Offering altar: Saturates.');
+  expect(rows.every(row => row.includes('data-tone="pinned"'))).toBe(true);
+  expect(html).toMatch(/pinned \d+ min · lit \d+ of 48 min/);
+  expect(renderToStaticMarkup(<NightReplay item={item} editor={editor} queue={new ProposalQueue()} />))
+    .not.toContain('visuals-replay-compare');
+});

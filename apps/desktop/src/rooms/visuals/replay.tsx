@@ -2,6 +2,7 @@ import { useId, useMemo, useState, useSyncExternalStore } from 'react';
 import { CardBody, CardHead, HeraldicCard, InkButton, StatusChip } from '@castle-control/ui';
 import { proposalQueue } from '@castle-control/ui/steward';
 import type { ProposalQueue } from '@castle-control/ui/steward';
+import type { VisualId } from '@castle-control/contract';
 import type { PreviewVisual } from '../../beacons-model.js';
 import { curveIntensity } from '../../beacons-model.js';
 import { sampleNight, sampleNights } from '../../beacons-nights.js';
@@ -13,13 +14,13 @@ import { useReducedMotion, useReplayDriver } from './replay-driver.js';
 import { openCurveDraft, proposeCurve, sameCurve, sealedCurve, sealedHere } from './replay-proposal.js';
 import { TraceFigure } from './replay-trace.jsx';
 import { ReplayBeacon, ReplayCurve } from './replay-tune.jsx';
+import { NightCompare, verdict_words } from './replay-compare.jsx';
 import './replay.css';
 
-const verdict_words = { pinned: 'Saturates', never_lit: 'Never lit', balanced: 'Climbs' } as const;
-
 /** Replays a generated night through the preview model's own intensity. Curve edits re-run the whole trace. */
-export function NightReplay({ item, editor, queue = proposalQueue, initial_night = 'sample' }: {
+export function NightReplay({ item, editor, queue = proposalQueue, initial_night = 'sample', visuals, on_select }: {
   item: PreviewVisual; editor: CurveEditor; queue?: ProposalQueue; initial_night?: NightId;
+  visuals?: readonly PreviewVisual[]; on_select?: (id: VisualId) => void;
 }) {
   const [clock] = useState(() => createReplayClock(night_duration_s));
   const [night_id, setNight] = useState<NightId>(initial_night);
@@ -68,6 +69,8 @@ export function NightReplay({ item, editor, queue = proposalQueue, initial_night
       <span className="visuals-note">{night.gloss} · {night.offerings.length} fictional offerings; {bursts.length} gifts or subs count,
         gift subs ×{item.gift_weight}</span>
     </div>
+    {visuals && on_select && visuals.length > 1 && <NightCompare visuals={visuals} selected={item.visual.visual_id}
+      bursts={bursts} on_select={on_select} />}
     <div className="visuals-replay-transport" role="group" aria-label="Replay controls">
       <InkButton size="wrap" variant="offset" ink="or" disabled={reduced}
         onClick={clock.toggle}>{time.playing ? 'Pause' : ended ? 'Replay' : time.position_s > 0 ? 'Resume' : 'Play'}</InkButton>
@@ -85,7 +88,7 @@ export function NightReplay({ item, editor, queue = proposalQueue, initial_night
         onChange={event => clock.seek(event.currentTarget.valueAsNumber)} />
     </label>
     <TraceFigure trace={trace} before={before} offerings={night.offerings} counted={counted} position={time.position_s}
-      lit_intensity={curveIntensity(curve, trace.lit_total)} on_seek={clock.seek}
+      lit_intensity={curveIntensity(curve, trace.lit_total)} on_seek={clock.seek} now_intensity={now.intensity}
       label={`${item.visual.name} intensity across the simulated 48-minute ${night.name.toLowerCase()} · ${verdict.text}`} />
     <div className="visuals-replay-verdict" data-tone={verdict.tone}>
       <div role="status" aria-live="polite">
