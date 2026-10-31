@@ -8,14 +8,16 @@ import './moat.css';
 /** Scene units, not pixels: the SVG scales as a whole and the stamps are placed by percentage. */
 export type MoatGeometry = Readonly<{
   width: number; height: number; chat_y: number; gate_y: number; stream_y: number;
-  chat_h: number; gate_top: number; gate_h: number; stream_top: number; dot: number; stamp_w: number; stamp_step: number; gutter: number;
+  chat_h: number; gate_top: number; gate_h: number; stream_top: number; dot: number; stamp_w: number; stamp_step: number; gutter: number; levels: number;
 }>;
 export const fullGeometry: MoatGeometry = { width: 1200, height: 340, chat_y: 22, gate_y: 226, stream_y: 312,
-  chat_h: 40, gate_top: 236, gate_h: 18, stream_top: 282, dot: 5, stamp_w: 184, stamp_step: 58, gutter: 24 };
+  chat_h: 40, gate_top: 236, gate_h: 18, stream_top: 282, dot: 5, stamp_w: 184, stamp_step: 58, gutter: 24, levels: 3 };
+/** Two of these stack in the comparison, so it trades a level of stamps for height. */
+export const compareGeometry: MoatGeometry = { width: 1200, height: 262, chat_y: 16, gate_y: 168, stream_y: 236,
+  chat_h: 30, gate_top: 176, gate_h: 14, stream_top: 206, dot: 4.5, stamp_w: 184, stamp_step: 58, gutter: 24, levels: 2 };
 /** The Keep heartbeat: the same drawing at the size of a status bar, with no stamps or labels. */
 export const compactGeometry: MoatGeometry = { width: 360, height: 44, chat_y: 5, gate_y: 19, stream_y: 38,
-  chat_h: 10, gate_top: 22, gate_h: 4, stream_top: 32, dot: 2.2, stamp_w: 0, stamp_step: 0, gutter: 4 };
-const maxLevels = 3;
+  chat_h: 10, gate_top: 22, gate_h: 4, stream_top: 32, dot: 2.2, stamp_w: 0, stamp_step: 0, gutter: 4, levels: 0 };
 const stampLift = 16;
 
 /** A stamp near either edge slides inward; its pin, the dot below it, stays where the message was. */
@@ -26,6 +28,14 @@ const yOf = (lift: number, g: MoatGeometry) => lift <= 0.5 ? g.chat_y + (g.gate_
 export type MoatSceneProps = {
   model: MoatModel; playhead_ms: number; window: MoatWindow; selected?: number | undefined;
   on_select?: ((index: number) => void) | undefined; delay_s?: number | undefined; compact?: boolean;
+  /** Overrides the size, for the stacked comparison. */
+  geometry?: MoatGeometry;
+  /** Text for the chat bank, in place of the default caption. */
+  caption?: string;
+  /** Show the clock axis along the stream bank. */
+  axis?: boolean;
+  /** Message ids to ring: outcomes a candidate changes. */
+  changed?: ReadonlySet<string> | undefined;
   /** Unique per scene on the page: SVG patterns are referenced by id. */
   uid: string;
 };
@@ -35,19 +45,19 @@ function Waves({ id }: { id: string }) {
     <path className="moat-wave" d="M0 8q7-7 14 0t14 0" /></pattern>;
 }
 
-export function MoatScene({ model, playhead_ms, window, selected, on_select, delay_s, compact = false, uid }: MoatSceneProps) {
-  const g = compact ? compactGeometry : fullGeometry;
+export function MoatScene({ model, playhead_ms, window, selected, on_select, delay_s, compact = false, uid, geometry, caption, axis = !compact, changed }: MoatSceneProps) {
+  const g = geometry ?? (compact ? compactGeometry : fullGeometry);
   const id = `moat-${uid}`;
   const inner = g.width - g.gutter * 2;
   const range = Math.max(window.to_ms - window.from_ms, 1);
   const xOf = (offset_ms: number) => g.gutter + Math.min(Math.max((offset_ms - window.from_ms) / range, 0), 1) * inner;
   const drawable = visibleMarkers(model, window);
   const stops = drawable.markers.filter(marker => marker.fate === 'held');
-  const stacked = compact ? { levels: [], overflow: 0 } : stampLevels(stops.map(marker => stampX(xOf(marker.offset_ms), g)), g.stamp_w, maxLevels);
+  const stacked = compact ? { levels: [], overflow: 0 } : stampLevels(stops.map(marker => stampX(xOf(marker.offset_ms), g)), g.stamp_w, g.levels);
   const level_of = new Map(stops.map((marker, position) => [marker.index, stacked.levels[position] ?? -1]));
   const gaps = model.gaps.filter(gap => gap.to_ms >= window.from_ms && gap.from_ms <= window.to_ms);
-  const ticks = compact ? [] : [0, 0.2, 0.4, 0.6, 0.8, 1].map(share => window.from_ms + range * share);
-  return <div className="moat-scene" data-compact={compact} data-paged={window.paged}>
+  const ticks = !axis ? [] : [0, 0.2, 0.4, 0.6, 0.8, 1].map(share => window.from_ms + range * share);
+  return <div className="moat-scene" data-compact={compact} data-paged={window.paged} style={{ aspectRatio: `${g.width} / ${g.height}` }}>
     <svg viewBox={`0 0 ${g.width} ${g.height}`} aria-hidden="true" focusable="false">
       <defs><Waves id={id} />
         <pattern id={`${id}-hatch`} width="12" height="12" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
@@ -56,7 +66,7 @@ export function MoatScene({ model, playhead_ms, window, selected, on_select, del
       <rect className="moat-water" x="0" y={g.chat_h} width={g.width} height={g.stream_top - g.chat_h} />
       <rect className="moat-water-waves" x="0" y={g.chat_h} width={g.width} height={g.stream_top - g.chat_h} fill={`url(#${id}-waves)`} />
       <rect className="moat-bank" x="0" y={g.stream_top} width={g.width} height={g.height - g.stream_top} />
-      {!compact && <><text className="moat-label" fontSize="12" x="12" y="15">{copy.chat}</text>
+      {!compact && <><text className="moat-label" fontSize="12" x="12" y="15">{caption ?? copy.chat}</text>
         <text className="moat-label" fontSize="12" x="12" y={g.stream_top + 16}>{copy.stream}</text></>}
       {gaps.map(gap => {
         const left = xOf(gap.from_ms); const right = Math.max(xOf(gap.to_ms), left + 6);
@@ -64,8 +74,9 @@ export function MoatScene({ model, playhead_ms, window, selected, on_select, del
           <title>{`${copy.gap}: ${clockText(Date.parse(gap.from))} to ${clockText(Date.parse(gap.to))}, ${copy.gap_note}`}</title>
           <rect className="moat-gap-base" x={left} y={g.chat_h} width={right - left} height={g.stream_top - g.chat_h} />
           <rect className="moat-gap-hatch" x={left} y={g.chat_h} width={right - left} height={g.stream_top - g.chat_h} fill={`url(#${id}-hatch)`} />
-          {!compact && right - left > 96 && <><text className="moat-gap-label" fontSize="13" x={(left + right) / 2} y={g.chat_h + 34} textAnchor="middle">{copy.gap}</text>
-            <text className="moat-gap-note" fontSize="12" x={(left + right) / 2} y={g.chat_h + 52} textAnchor="middle">{copy.gap_note}</text></>}
+          {/* Stamps gather where stops are, usually before the gap; the label hangs from the far edge. */}
+          {!compact && right - left > 150 && <><text className="moat-gap-label" fontSize="13" x={right - 10} y={g.chat_h + 24} textAnchor="end">{copy.gap}</text>
+            <text className="moat-gap-note" fontSize="12" x={right - 10} y={g.chat_h + 42} textAnchor="end">{copy.gap_note}</text></>}
         </g>;
       })}
       <rect className="moat-gate" x="0" y={g.gate_top} width={g.width} height={g.gate_h} />
@@ -79,6 +90,7 @@ export function MoatScene({ model, playhead_ms, window, selected, on_select, del
           data-selected={picked} {...(on_select ? { onClick: () => on_select(marker.index) } : {})}>
           {phase !== 'waiting' && <line className="moat-track" x1={x} x2={x} y1={g.chat_y} y2={y} />}
           {picked && <circle className="moat-ring" cx={x} cy={y} r={g.dot * 2.4} />}
+          {phase !== 'waiting' && changed?.has(marker.message_id) && <circle className="moat-changed" cx={x} cy={y} r={g.dot * 1.9} />}
           {marker.fate === 'unresolved' && phase === 'unresolved'
             ? <rect className="moat-dot" x={x - g.dot} y={y - g.dot} width={g.dot * 2} height={g.dot * 2} transform={`rotate(45 ${x} ${y})`} />
             : <circle className="moat-dot" cx={x} cy={y} r={g.dot} />}
@@ -100,7 +112,7 @@ export function MoatScene({ model, playhead_ms, window, selected, on_select, del
         <span className="moat-stamp-rule">{copy.rule_line(marker.rule_id)}</span></>;
       // Without a handler (the printed report) a stamp is a plain mark, not a button.
       return on_select ? <button key={marker.index} type="button" className="moat-stamp" data-selected={selected === marker.index} data-level={level}
-        aria-pressed={selected === marker.index} aria-label={copy.stamp_name(marker)} style={place} onClick={() => on_select(marker.index)}>{chip}</button>
+        aria-pressed={selected === marker.index} aria-label={copy.stamp_name(marker)} data-changed={changed?.has(marker.message_id) || undefined} style={place} onClick={() => on_select(marker.index)}>{chip}</button>
         : <span key={marker.index} className="moat-stamp" data-level={level} style={place}>{chip}</span>;
     })}
   </div>;
@@ -113,5 +125,5 @@ export function sceneNotes(model: MoatModel, window: MoatWindow): MoatSceneNotes
   const range = Math.max(window.to_ms - window.from_ms, 1);
   const xs = drawable.markers.filter(marker => marker.fate === 'held')
     .map(marker => stampX(fullGeometry.gutter + (marker.offset_ms - window.from_ms) / range * (fullGeometry.width - fullGeometry.gutter * 2), fullGeometry));
-  return { thinned: drawable.thinned, overflow: stampLevels(xs, fullGeometry.stamp_w, maxLevels).overflow };
+  return { thinned: drawable.thinned, overflow: stampLevels(xs, fullGeometry.stamp_w, fullGeometry.levels).overflow };
 }

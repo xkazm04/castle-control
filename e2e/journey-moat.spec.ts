@@ -44,6 +44,29 @@ test('a stamp opens its inspector, and the inspector opens the rule bench on tha
   } finally { verify(); }
 });
 
+test('a simulated candidate is drawn under the baseline on one playhead, and a ringed dot shows what changed', async ({ page }) => {
+  const verify = await guardPage(page);
+  try {
+    await page.goto(drill);
+    await expect(page.getByRole('group', { name: 'Baseline and candidate moats, simulated replay' })).toHaveCount(0);
+    const toggle = page.getByRole('button', { name: 'Compare with a simulated candidate', exact: true });
+    await toggle.click();
+    await expect(toggle).toHaveAttribute('aria-pressed', 'true');
+    const both = page.getByRole('group', { name: 'Baseline and candidate moats, simulated replay', exact: true });
+    await expect(both.locator('.moat-scene')).toHaveCount(2);
+    await expect(page.getByRole('status').filter({ hasText: 'Baseline held 3 of 40 · candidate held 6 of 40 · simulated' })).toHaveCount(1);
+    await expect(both.locator('.moat-changed').first()).toBeVisible();
+    // A new stop in the candidate: its stamp opens a side-by-side inspector.
+    const stamp = both.locator('.moat-scene').nth(1).locator('button.moat-stamp[data-changed="true"]').first();
+    await stamp.click();
+    const inspector = page.getByRole('complementary', { name: 'Selected message', exact: true }).last();
+    await expect(inspector).toContainText('Changed by the candidate');
+    await expect(inspector).toContainText('Aired');
+    await toggle.click();
+    await expect(both).toHaveCount(0);
+  } finally { verify(); }
+});
+
 test('the night report is not on screen and prints on its own sheet', async ({ page }) => {
   const verify = await guardPage(page);
   try {

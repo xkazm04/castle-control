@@ -1,23 +1,29 @@
 import { useId, useMemo, useState } from 'react';
-import type { DrillRunResult, DrillState } from '@castle-control/contract';
-import { VerdictChip, WindowedRows, rowHeight } from '@castle-control/ui';
+import type { DrillDiffResult, DrillRunResult, DrillState } from '@castle-control/contract';
+import { InkButton, VerdictChip, WindowedRows, rowHeight } from '@castle-control/ui';
 import { moderationCopy as copy } from '../../moderation-copy.js';
 import type { BenchResult } from '../../moderation-bench.js';
 import { DraftPatternPreview } from './rule-bench.jsx';
 import { ClockTime } from './presentation.jsx';
 import { MoatPanel } from './moat-panel.jsx';
+import { MoatCompare } from './moat-compare.jsx';
 import type { RuleBenchLink } from './moat-panel.jsx';
 import { buildMoat, crossingMs } from '../../moat/moat-model.js';
 import type { MoatClock } from '../../moat/moat-player.js';
 import { actionWords, moatCopy } from '../../moat/moat-copy.js';
 
-export function Drill({ result, origin = 'fixture', capture_hash, draft, delay_s, clock, rule_bench }: {
+export function Drill({ result, origin = 'fixture', capture_hash, draft, delay_s, clock, rule_bench, compare, moat = true }: {
   result: DrillRunResult; origin?: 'fixture' | 'core'; capture_hash?: string | undefined; draft?: BenchResult | undefined;
   /** The applied chat delay, when the source knows it. The moat never invents one. */
   delay_s?: number | undefined; clock?: MoatClock | undefined; rule_bench?: RuleBenchLink | undefined;
+  /** A simulated candidate to offer beside this run. Only the fixture room has one. */
+  compare?: DrillDiffResult | undefined;
+  /** False when a comparison above already draws this run's moat. */
+  moat?: boolean;
 }) {
   const state_id = useId();
   const [selected, setSelected] = useState<string | undefined>();
+  const [comparing, setComparing] = useState(false);
   const model = useMemo(() => buildMoat(result, delay_s && delay_s > 0 ? delay_s * 1000 : crossingMs), [result, delay_s]);
   const [filter, setFilter] = useState<DrillState | 'all'>('all');
   const states = Object.keys(result.summary.states) as DrillState[];
@@ -26,7 +32,9 @@ export function Drill({ result, origin = 'fixture', capture_hash, draft, delay_s
     {!capture_hash && <p>{copy.live_parity}</p>}
     <a href="#/chamber/moderator">{copy.back}</a><p>{origin === 'fixture' ? copy.replay_fixture_note : copy.replay_core_note}</p>
     {draft && <DraftPatternPreview result={draft} />}
-    <MoatPanel model={model} delay_s={delay_s} clock={clock} selected_id={selected} on_select={setSelected} rule_bench={rule_bench} report={{ source: result.source, instrument_hash: result.instrument_hash, origin }} />
+    {moat && <MoatPanel model={model} delay_s={delay_s} clock={clock} selected_id={selected} on_select={setSelected} rule_bench={rule_bench} report={{ source: result.source, instrument_hash: result.instrument_hash, origin }} />}
+    {moat && compare && <><InkButton type="button" size="small" className="moat-compare-toggle" aria-pressed={comparing} onClick={() => { setComparing(!comparing); }}>{moatCopy.compare.toggle}</InkButton>
+      {comparing && <MoatCompare diff={compare} note={moatCopy.compare.note_fixture} delay_s={delay_s} clock={clock} />}</>}
     <div className="moderator-drill-columns"><div className="room-column"><h3>{copy.instrument_source}</h3><p>{result.source}</p>
       {capture_hash && <><p>{copy.capture_hash}</p><code className="room-hash">{capture_hash}</code>
         <p role="status">{capture_hash === result.instrument_hash ? copy.capture_match : copy.capture_mismatch}</p>

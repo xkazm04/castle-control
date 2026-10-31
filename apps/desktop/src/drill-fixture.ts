@@ -1,5 +1,6 @@
 import { gatehouseDrillRun, parseMethodResult } from '@castle-control/contract';
-import type { DrillRunResult, DrillState } from '@castle-control/contract';
+import { gatehouseDrillDiff } from '@castle-control/contract/gatehouse';
+import type { DrillDiffResult, DrillRunResult, DrillState } from '@castle-control/contract';
 
 // Generated, never recorded chat. A string seed draws the same simulated night every run.
 const source = 'simulated-generated-room';
@@ -72,18 +73,51 @@ export function simulatedDrill({ seed = 'castle-night', count = 40, gap_s = 20 }
   });
   const shift = gap_opens - gap.from;
   const outcomes = drawn.map(outcome => ({ ...outcome, at: iso(outcome.at + shift) }));
+  return parseMethodResult(gatehouseDrillRun, JSON.stringify(runBody(outcomes, [{ from: iso(gap.from + shift), to: iso(gap.to + shift) }])));
+}
+
+type Line = { message_id: string; at: string; source: string; state: DrillState; verdict?: string; action?: string; rule_id?: string; passed?: boolean };
+/** A run body whose summary is counted from its outcomes, so the two can never disagree. */
+function runBody(outcomes: readonly Line[], gaps: readonly { from: string; to: string }[]) {
   const states: Record<DrillState, number> = { acted: 0, not_provoked: 0, not_evaluable: 0, judge_pending: 0, judge_void: 0, engine_failed: 0 };
   for (const outcome of outcomes) states[outcome.state] += 1;
   const acted = outcomes.filter(outcome => outcome.state === 'acted');
-  return parseMethodResult(gatehouseDrillRun, JSON.stringify({
+  return {
     label: 'simulated', source, instrument_hash: hash,
     instrument: { rules_hash: hash, bank_hash: hash, judge_hash: hash, prompts_hash: hash },
     outcomes,
     summary: { passes: outcomes.filter(outcome => outcome.passed === true).length, states,
       over_moderation: { evaluated: acted.length, false_positives: acted.filter(outcome => outcome.passed === false).length } },
-    gaps: [{ from: iso(gap.from + shift), to: iso(gap.to + shift) }],
-  }));
+    gaps,
+  };
+}
+
+/**
+ * A simulated candidate rule set for the same recording: the links rule is disarmed and the
+ * repeats rule is tightened, so one stop is released and a few new ones appear. The candidate
+ * gets its own instrument hash, because a run with different rules is never the same instrument.
+ */
+export function simulatedCandidate(baseline: DrillRunResult, seed = 'castle-candidate'): DrillDiffResult {
+  const random = seededRandom(seed);
+  const aired = baseline.outcomes.filter(outcome => outcome.verdict === 'pass' || outcome.state === 'not_provoked');
+  const tightened = new Set(aired.filter((_, position) => position > 3 && random() < 0.12).slice(0, 4).map(outcome => outcome.message_id));
+  const outcomes: Line[] = baseline.outcomes.map(outcome => {
+    const line = { message_id: outcome.message_id, at: outcome.at, source: 'simulated-candidate-room' };
+    if (outcome.rule_id === 'links') return { ...line, state: 'not_provoked', verdict: 'pass', passed: true };
+    if (tightened.has(outcome.message_id)) return { ...line, state: 'acted', verdict: 'hold', action: 'timeout', rule_id: 'repeats', passed: true };
+    return { ...line, state: outcome.state, ...(outcome.verdict ? { verdict: outcome.verdict } : {}), ...(outcome.action ? { action: outcome.action } : {}),
+      ...(outcome.rule_id ? { rule_id: outcome.rule_id } : {}), ...(outcome.passed === undefined ? {} : { passed: outcome.passed }) };
+  });
+  const run = runBody(outcomes, baseline.gaps);
+  const candidate_hash = 'b'.repeat(64);
+  const changes = baseline.outcomes.flatMap((before, index) => {
+    const after = outcomes[index];
+    return after && after.state !== before.state ? [{ message_id: before.message_id, before: before.state, after: after.state }] : [];
+  });
+  return parseMethodResult(gatehouseDrillDiff, JSON.stringify({ label: 'simulated', baseline,
+    candidate: { ...run, instrument_hash: candidate_hash, instrument: { ...run.instrument, rules_hash: candidate_hash } }, changes }));
 }
 
 // Hashes are illustrative fixture identifiers, never presented as a computed live instrument.
 export const fixtureReplay: DrillRunResult = simulatedDrill();
+export const fixtureCandidate: DrillDiffResult = simulatedCandidate(fixtureReplay);
