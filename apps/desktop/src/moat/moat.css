@@ -47,6 +47,13 @@
 .moat-marker[data-fate="unresolved"] .moat-dot { fill: var(--card); stroke: var(--ink-2); stroke-width: 1.6; stroke-dasharray: 3 2; }
 .moat-marker[data-fate="unresolved"][data-phase="waiting"] .moat-dot { stroke-dasharray: none; stroke: var(--muted); }
 .moat-ring { fill: none; stroke: var(--ink); stroke-width: 2; }
+/* A stop lands: one ring leaves the dot. It runs once when the marker reaches the gate. */
+.moat-thud { fill: none; stroke: var(--or); stroke-width: 2.2; pointer-events: none; transform-box: fill-box; transform-origin: center; animation: moat-thud var(--motion-shell) var(--ease) both; }
+.moat-marker[data-verdict="bar"] .moat-thud { stroke: var(--gules); }
+@keyframes moat-thud { from { opacity: .9; transform: scale(1); } to { opacity: 0; transform: scale(3.6); } }
+.moat-marker[data-dim="true"] { opacity: .3; }
+.moat-spotlight { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-4) var(--space-8); margin: 0; padding: 0; border: 0; }
+.moat-spotlight legend { float: left; margin-right: var(--space-8); padding: 0; font: 700 var(--text-small)/1.4 var(--font-ui); color: var(--ink-2); }
 
 .moat-stamp { position: absolute; transform: translate(-50%, -100%); display: grid; justify-items: center; gap: var(--space-2); margin: 0; padding: 0; border: 0; background: none; color: var(--ink); font: inherit; cursor: pointer; animation: moat-stamp-down var(--motion-fast) var(--ease) both; }
 .moat-stamp .cc-chip.cc-stamp { background: var(--card); }
@@ -66,7 +73,7 @@
 
 .moat-inspector { display: grid; gap: var(--space-6); padding: var(--space-10) var(--space-12); border: var(--rule-strong) solid var(--azure); background: var(--paper); }
 .moat-inspector[data-empty="true"] { border-style: dashed; border-color: var(--hair); }
-.moat-inspector h4 { margin: 0; font: 800 var(--text-section)/1.2 var(--font-num); overflow-wrap: anywhere; }
+.moat-inspector h4 { margin: 0; font: 800 var(--text-body)/1.2 var(--font-num); overflow-wrap: anywhere; }
 .moat-inspector p { margin: 0; font: var(--text-small)/1.4 var(--font-ui); }
 .moat-inspector dl { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--space-3) var(--space-10); margin: 0; font: var(--text-small)/1.3 var(--font-ui); }
 .moat-inspector dt { color: var(--muted); }
@@ -78,7 +85,7 @@
 .moat-row[data-selected="true"] { background: var(--tint-2); box-shadow: inset var(--space-4) 0 0 var(--azure); }
 
 @media (max-width: 68.75rem) { .moat-body { grid-template-columns: minmax(0, 1fr); } }
-@media (prefers-reduced-motion: reduce) { .moat-stamp { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .moat-stamp, .moat-thud { animation: none; } .moat-thud { display: none; } }
 
 /* The Keep heartbeat sits in the moat bar: a small sample loop, not a live reading. */
 .moat-heartbeat { display: flex; align-items: center; gap: var(--space-10); flex: 0 1 calc(var(--space-56) * 9); min-width: 0; line-height: 0; }

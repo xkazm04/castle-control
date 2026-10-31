@@ -105,8 +105,24 @@ export function replayedCount(model: MoatModel, playhead_ms: number): number {
   return firstReached(model.markers.length, index => offsetOf(model)(index) > playhead_ms);
 }
 
+/** Held messages per named rule, most first. A rule that stopped nothing is not listed. */
+export type RuleTally = Readonly<{ rule_id: string; held: number }>;
+export function ruleTally(model: Pick<MoatModel, 'stops'>): readonly RuleTally[] {
+  const counts = new Map<string, number>();
+  for (const marker of model.stops) if (marker.rule_id) counts.set(marker.rule_id, (counts.get(marker.rule_id) ?? 0) + 1);
+  return [...counts].map(([rule_id, held]) => ({ rule_id, held })).sort((a, b) => b.held - a.held || (a.rule_id < b.rule_id ? -1 : 1));
+}
+
+/** The stops of one rule, with the moments they reach the gate, in the shape `stopNeighbour` reads. */
+export type StopSet = Pick<MoatModel, 'stops' | 'held_arrivals'>;
+export function spotlightStops(model: StopSet, rule_id: string | undefined): StopSet {
+  if (rule_id === undefined) return model;
+  const keep = model.stops.map((marker, position) => marker.rule_id === rule_id ? position : -1).filter(position => position >= 0);
+  return { stops: keep.map(position => model.stops[position] as MoatMarker), held_arrivals: keep.map(position => model.held_arrivals[position] ?? 0) };
+}
+
 /** The next stop after the playhead, or the last one before it. The moment is when its stamp drops. */
-export function stopNeighbour(model: MoatModel, playhead_ms: number, direction: 1 | -1): { marker: MoatMarker; at_ms: number } | undefined {
+export function stopNeighbour(model: StopSet, playhead_ms: number, direction: 1 | -1): { marker: MoatMarker; at_ms: number } | undefined {
   const slack = 1;
   const upcoming = firstReached(model.held_arrivals.length, index => (model.held_arrivals[index] ?? 0) > playhead_ms + slack);
   const position = direction === 1 ? upcoming

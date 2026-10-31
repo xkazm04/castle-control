@@ -3,8 +3,8 @@ import type { ChangeEvent } from 'react';
 import { InkButton, Notice, StatusChip, VerdictChip } from '@castle-control/ui';
 import { clockText } from '../../moat/clock.js';
 import { actionWords, fateWords, moatCopy as copy } from '../../moat/moat-copy.js';
-import { heldCount, replayedCount, scrubTicks, stopNeighbour, windowFor } from '../../moat/moat-model.js';
-import type { MoatMarker, MoatModel, ScrubTick } from '../../moat/moat-model.js';
+import { heldCount, replayedCount, ruleTally, scrubTicks, spotlightStops, stopNeighbour, windowFor } from '../../moat/moat-model.js';
+import type { MoatMarker, MoatModel, RuleTally, ScrubTick } from '../../moat/moat-model.js';
 import { moatSpeeds } from '../../moat/moat-player.js';
 import type { MoatClock, MoatPlayerState, MoatSpeed } from '../../moat/moat-player.js';
 import { MoatScene, sceneNotes } from '../../moat/moat-scene.jsx';
@@ -46,6 +46,15 @@ function Legend() {
   return <ul className="moat-legend" aria-label="Legend">
     {(['aired', 'stopped', 'unresolved', 'waiting', 'gap'] as const).map(kind =>
       <li key={kind}>{dot(kind)}{copy.legend[kind]}</li>)}</ul>;
+}
+
+/** One rule at a time on the strip. Offered only when two or more rules stopped something. */
+export function RuleSpotlight({ tally, rule, on_rule }: { tally: readonly RuleTally[]; rule: string | undefined; on_rule: (rule: string | undefined) => void }) {
+  if (tally.length < 2) return null;
+  return <fieldset className="moat-spotlight"><legend>{copy.spotlight.label}</legend>
+    {tally.map(item => <InkButton key={item.rule_id} type="button" size="small" aria-pressed={rule === item.rule_id}
+      onClick={() => { on_rule(rule === item.rule_id ? undefined : item.rule_id); }}>{copy.spotlight.chip(item.rule_id, item.held)}</InkButton>)}
+    {rule !== undefined && <span className="moat-small">{copy.spotlight.note(rule)}</span>}</fieldset>;
 }
 
 export type MoatControlsProps = {
@@ -90,7 +99,12 @@ export function MoatPanel({ model, delay_s, clock, selected_id, on_select, rule_
   const selected = useMemo(() => selected_id === undefined ? undefined : model.markers.find(marker => marker.message_id === selected_id), [model, selected_id]);
   const ticks = useMemo(() => scrubTicks(model), [model]);
   const view = windowFor(model, state.playhead_ms);
-  const notes = useMemo(() => sceneNotes(model, view), [model, view.from_ms, view.to_ms]);
+  const [rule, setRule] = useState<string | undefined>();
+  const tally = useMemo(() => ruleTally(model), [model]);
+  // A rule that is no longer in the night (a new run) is dropped rather than shown as an empty strip.
+  const spotlight = rule !== undefined && tally.some(item => item.rule_id === rule) ? rule : undefined;
+  const stops = useMemo(() => spotlightStops(model, spotlight), [model, spotlight]);
+  const notes = useMemo(() => sceneNotes(model, view, spotlight, selected?.index), [model, view.from_ms, view.to_ms, spotlight, selected?.index]);
   const held = heldCount(model, state.playhead_ms);
   const position = copy.position_text(clockText(model.start_ms + Math.min(state.playhead_ms, model.span_ms)), replayedCount(model, state.playhead_ms), model.counts.total);
   if (model.markers.length === 0) return <section className="moat-panel" aria-labelledby={heading_id}>
@@ -104,17 +118,18 @@ export function MoatPanel({ model, delay_s, clock, selected_id, on_select, rule_
     <MoatControls state={state} ticks={ticks} position={position} reduced={reduced} range_id={range_id} on_play={player.play}
       on_pause={player.pause} on_speed={player.setSpeed} on_seek={playhead_ms => { player.pause(); player.seek(playhead_ms); }}
       on_stop={direction => {
-        const stop = stopNeighbour(model, state.playhead_ms, direction);
+        const stop = stopNeighbour(stops, state.playhead_ms, direction);
         if (!stop) return;
         player.pause(); player.seek(stop.at_ms); on_select(stop.marker.message_id);
       }}
-      can_stop={{ previous: !!stopNeighbour(model, state.playhead_ms, -1), next: !!stopNeighbour(model, state.playhead_ms, 1) }} />
+      can_stop={{ previous: !!stopNeighbour(stops, state.playhead_ms, -1), next: !!stopNeighbour(stops, state.playhead_ms, 1) }} />
     {reduced && <p className="moat-small">{copy.reduced}</p>}
     <div className="moat-body">
       <div className="moat-scroll" role="group" aria-label={copy.region}>
-        <MoatScene model={model} playhead_ms={state.playhead_ms} window={view} selected={selected?.index} delay_s={delay_s} uid={uid}
+        <MoatScene model={model} playhead_ms={state.playhead_ms} window={view} selected={selected?.index} delay_s={delay_s} uid={uid} spotlight={spotlight}
           on_select={index => { on_select(model.markers[index]?.message_id); }} />
         <Legend />
+        <RuleSpotlight tally={tally} rule={spotlight} on_rule={setRule} />
         <p className="moat-small">{copy.honesty}</p>
         {view.paged && <p className="moat-small">{copy.page}</p>}
         {notes.thinned > 0 && <p className="moat-small">{copy.thinned(notes.thinned)}</p>}

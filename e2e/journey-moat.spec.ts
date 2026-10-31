@@ -73,6 +73,33 @@ test('Next and Previous stop walk the stamps in order and select each one', asyn
   } finally { verify(); }
 });
 
+test('spotlighting a rule keeps its stamp, dims the rest, and Next stop walks only that rule', async ({ page }) => {
+  const verify = await guardPage(page);
+  try {
+    await page.goto(drill);
+    const moat = page.getByRole('group', { name: 'Moat timeline, simulated replay', exact: true });
+    const spotlight = page.getByRole('group', { name: 'Spotlight a rule', exact: true });
+    const repeats = spotlight.getByRole('button', { name: 'repeats · 1', exact: true });
+    await expect(repeats).toHaveAttribute('aria-pressed', 'false');
+    await repeats.click();
+    await expect(repeats).toHaveAttribute('aria-pressed', 'true');
+    await expect(spotlight).toContainText('Stamps for rule repeats only');
+    await expect(moat.getByRole('button', { name: /Held, not on air/ })).toHaveCount(1);
+    await expect(moat.getByRole('button', { name: /rule repeats\. Inspect\.$/ })).toHaveCount(1);
+    await expect(moat.locator('.moat-marker[data-dim="true"]')).toHaveCount(2);
+    // The live count is about the whole night, not the spotlight.
+    await expect(page.getByRole('status').filter({ hasText: held })).toHaveCount(1);
+    await page.getByRole('slider', { name: 'Replay position', exact: true }).fill('0');
+    await page.getByRole('button', { name: 'Next stop', exact: true }).click();
+    await expect(page.getByRole('complementary', { name: 'Selected message', exact: true })).toContainText('simulated-message-17');
+    await expect(page.getByRole('button', { name: 'Next stop', exact: true })).toBeDisabled();
+    // Back to every rule: the playhead sits at the repeats stop, so links has landed and blocked-terms has not.
+    await repeats.click();
+    await expect(moat.getByRole('button', { name: /Held, not on air/ })).toHaveCount(2);
+    await expect(moat.locator('.moat-marker[data-dim="true"]')).toHaveCount(0);
+  } finally { verify(); }
+});
+
 test('a simulated candidate is drawn under the baseline on one playhead, and a ringed dot shows what changed', async ({ page }) => {
   const verify = await guardPage(page);
   try {

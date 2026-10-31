@@ -10,11 +10,11 @@ export type MoatGeometry = Readonly<{
   width: number; height: number; chat_y: number; gate_y: number; stream_y: number;
   chat_h: number; gate_top: number; gate_h: number; stream_top: number; dot: number; stamp_w: number; stamp_step: number; gutter: number; levels: number;
 }>;
-export const fullGeometry: MoatGeometry = { width: 1200, height: 340, chat_y: 22, gate_y: 226, stream_y: 312,
+export const fullGeometry: MoatGeometry = { width: 1200, height: 340, chat_y: 29, gate_y: 226, stream_y: 312,
   chat_h: 40, gate_top: 236, gate_h: 18, stream_top: 282, dot: 5, stamp_w: 184, stamp_step: 58, gutter: 24, levels: 3 };
 /** Two of these stack in the comparison, so it trades a level of stamps for height. */
-export const compareGeometry: MoatGeometry = { width: 1200, height: 262, chat_y: 16, gate_y: 168, stream_y: 236,
-  chat_h: 30, gate_top: 176, gate_h: 14, stream_top: 206, dot: 4.5, stamp_w: 184, stamp_step: 58, gutter: 24, levels: 2 };
+export const compareGeometry: MoatGeometry = { width: 1200, height: 262, chat_y: 25, gate_y: 168, stream_y: 236,
+  chat_h: 34, gate_top: 176, gate_h: 14, stream_top: 206, dot: 4.5, stamp_w: 184, stamp_step: 58, gutter: 24, levels: 2 };
 /** The Keep heartbeat: the same drawing at the size of a status bar, with no stamps or labels. */
 export const compactGeometry: MoatGeometry = { width: 360, height: 44, chat_y: 5, gate_y: 19, stream_y: 38,
   chat_h: 10, gate_top: 22, gate_h: 4, stream_top: 32, dot: 2.2, stamp_w: 0, stamp_step: 0, gutter: 4, levels: 0 };
@@ -36,6 +36,8 @@ export type MoatSceneProps = {
   axis?: boolean;
   /** Message ids to ring: outcomes a candidate changes. */
   changed?: ReadonlySet<string> | undefined;
+  /** One rule to look at: only its stamps are drawn, and the other stops dim. The picked message always keeps its stamp. */
+  spotlight?: string | undefined;
   /** Unique per scene on the page: SVG patterns are referenced by id. */
   uid: string;
 };
@@ -45,14 +47,14 @@ function Waves({ id }: { id: string }) {
     <path className="moat-wave" d="M0 8q7-7 14 0t14 0" /></pattern>;
 }
 
-export function MoatScene({ model, playhead_ms, window, selected, on_select, delay_s, compact = false, uid, geometry, caption, axis = !compact, changed }: MoatSceneProps) {
+export function MoatScene({ model, playhead_ms, window, selected, on_select, delay_s, compact = false, uid, geometry, caption, axis = !compact, changed, spotlight }: MoatSceneProps) {
   const g = geometry ?? (compact ? compactGeometry : fullGeometry);
   const id = `moat-${uid}`;
   const inner = g.width - g.gutter * 2;
   const range = Math.max(window.to_ms - window.from_ms, 1);
   const xOf = (offset_ms: number) => g.gutter + Math.min(Math.max((offset_ms - window.from_ms) / range, 0), 1) * inner;
   const drawable = visibleMarkers(model, window);
-  const stops = drawable.markers.filter(marker => marker.fate === 'held');
+  const stops = drawable.markers.filter(marker => marker.fate === 'held' && (spotlight === undefined || marker.rule_id === spotlight || marker.index === selected));
   const stacked = compact ? { levels: [], overflow: 0 } : stampLevels(stops.map(marker => stampX(xOf(marker.offset_ms), g)), g.stamp_w, g.levels);
   const level_of = new Map(stops.map((marker, position) => [marker.index, stacked.levels[position] ?? -1]));
   const gaps = model.gaps.filter(gap => gap.to_ms >= window.from_ms && gap.from_ms <= window.to_ms);
@@ -86,10 +88,12 @@ export function MoatScene({ model, playhead_ms, window, selected, on_select, del
         const { phase, lift } = markerProgress(marker, playhead_ms, model.cross_ms);
         const x = xOf(marker.offset_ms); const y = yOf(lift, g);
         const picked = selected === marker.index;
+        const dim = spotlight !== undefined && marker.fate === 'held' && marker.rule_id !== spotlight;
         return <g key={marker.index} className="moat-marker" data-phase={phase} data-fate={marker.fate} data-verdict={marker.verdict}
-          data-selected={picked} {...(on_select ? { onClick: () => on_select(marker.index) } : {})}>
+          data-selected={picked} data-dim={dim || undefined} {...(on_select ? { onClick: () => on_select(marker.index) } : {})}>
           {phase !== 'waiting' && <line className="moat-track" x1={x} x2={x} y1={g.chat_y} y2={y} />}
           {picked && <circle className="moat-ring" cx={x} cy={y} r={g.dot * 2.4} />}
+          {!compact && phase === 'stopped' && <circle className="moat-thud" cx={x} cy={y} r={g.dot} />}
           {phase !== 'waiting' && changed?.has(marker.message_id) && <circle className="moat-changed" cx={x} cy={y} r={g.dot * 1.9} />}
           {marker.fate === 'unresolved' && phase === 'unresolved'
             ? <rect className="moat-dot" x={x - g.dot} y={y - g.dot} width={g.dot * 2} height={g.dot * 2} transform={`rotate(45 ${x} ${y})`} />
@@ -121,10 +125,10 @@ export function MoatScene({ model, playhead_ms, window, selected, on_select, del
 
 export type MoatSceneNotes = { thinned: number; overflow: number };
 /** What the strip could not draw, so the panel can say so instead of hiding it. */
-export function sceneNotes(model: MoatModel, window: MoatWindow): MoatSceneNotes {
+export function sceneNotes(model: MoatModel, window: MoatWindow, spotlight?: string, selected?: number): MoatSceneNotes {
   const drawable = visibleMarkers(model, window);
   const range = Math.max(window.to_ms - window.from_ms, 1);
-  const xs = drawable.markers.filter(marker => marker.fate === 'held')
+  const xs = drawable.markers.filter(marker => marker.fate === 'held' && (spotlight === undefined || marker.rule_id === spotlight || marker.index === selected))
     .map(marker => stampX(fullGeometry.gutter + (marker.offset_ms - window.from_ms) / range * (fullGeometry.width - fullGeometry.gutter * 2), fullGeometry));
   return { thinned: drawable.thinned, overflow: stampLevels(xs, fullGeometry.stamp_w, fullGeometry.levels).overflow };
 }

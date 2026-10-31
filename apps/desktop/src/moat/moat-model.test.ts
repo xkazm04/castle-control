@@ -1,7 +1,7 @@
 import { expect, test } from 'vitest';
 import { simulatedDrill } from '../drill-fixture.js';
 import type { MoatOutcome, MoatSource } from './moat-model.js';
-import { buildMoat, fateOf, heldCount, markerProgress, replayedCount, scrubTicks, stampLevels, stopNeighbour, visibleMarkers, windowFor } from './moat-model.js';
+import { buildMoat, fateOf, heldCount, markerProgress, replayedCount, ruleTally, scrubTicks, spotlightStops, stampLevels, stopNeighbour, visibleMarkers, windowFor } from './moat-model.js';
 
 const night = simulatedDrill();
 const model = buildMoat(night);
@@ -147,4 +147,23 @@ test('previous and next stop walk the stops in time order, stopping where each s
   const seen: string[] = []; let at = -1;
   for (let step = 0; step < 10; step += 1) { const next = stopNeighbour(model, at, 1); if (!next) break; seen.push(next.marker.message_id); at = next.at_ms; }
   expect(seen).toEqual(model.stops.map(marker => marker.message_id));
+});
+
+test('the rule tally counts each named rule once per stop, most first, and the spotlight keeps the arrivals aligned', () => {
+  expect(ruleTally(model)).toEqual([{ rule_id: 'blocked-terms', held: 1 }, { rule_id: 'links', held: 1 }, { rule_id: 'repeats', held: 1 }]);
+  const busy = buildMoat({ outcomes: [
+    outcome(0, { verdict: 'hold', state: 'acted', rule_id: 'links', action: 'delete' }), outcome(5, { verdict: 'bar', state: 'acted', rule_id: 'repeats', action: 'timeout' }),
+    outcome(9, { verdict: 'hold', state: 'acted', rule_id: 'links', action: 'delete' }), outcome(12, { verdict: 'hold', state: 'acted' }), outcome(14)], gaps: [] });
+  // A stop with no rule id is not counted under any rule, and aired lines are not stops.
+  expect(ruleTally(busy)).toEqual([{ rule_id: 'links', held: 2 }, { rule_id: 'repeats', held: 1 }]);
+  expect(spotlightStops(busy, undefined)).toBe(busy);
+  const links = spotlightStops(busy, 'links');
+  expect(links.stops.map(marker => marker.message_id)).toEqual(['simulated-message-0', 'simulated-message-9']);
+  expect(links.held_arrivals).toEqual([busy.held_arrivals[0], busy.held_arrivals[2]]);
+  // Next and Previous walk only that rule's stops.
+  const next = stopNeighbour(links, links.held_arrivals[0] ?? 0, 1);
+  expect(next?.marker.message_id).toBe('simulated-message-9');
+  expect(stopNeighbour(links, next?.at_ms ?? 0, 1)).toBeUndefined();
+  expect(spotlightStops(busy, 'no-such-rule').stops).toEqual([]);
+  expect(stopNeighbour(spotlightStops(busy, 'no-such-rule'), 0, 1)).toBeUndefined();
 });

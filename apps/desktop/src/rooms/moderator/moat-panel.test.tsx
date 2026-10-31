@@ -13,7 +13,8 @@ import { buildMoat, windowFor } from '../../moat/moat-model.js';
 import { MoatScene } from '../../moat/moat-scene.jsx';
 import { MoatReport } from '../../moat/moat-report.jsx';
 import { Drill } from './drill.jsx';
-import { MarkerInspector, MoatControls, MoatPanel } from './moat-panel.jsx';
+import { MarkerInspector, MoatControls, MoatPanel, RuleSpotlight } from './moat-panel.jsx';
+import { ruleTally } from '../../moat/moat-model.js';
 
 const model = buildMoat(fixtureReplay, 4000);
 const text = (html: string) => html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
@@ -148,6 +149,42 @@ test('stamps drop only when a held message reaches the gate, and stack when they
   expect(end.match(/data-phase="unresolved"/g)).toHaveLength(2);
 });
 
+test('a spotlighted rule keeps its own stamps, dims the other stops and always keeps the picked message', () => {
+  const draw = (spotlight?: string, selected?: number) => renderToStaticMarkup(<MoatScene model={model} playhead_ms={model.run_ms}
+    window={windowFor(model, model.run_ms)} selected={selected} spotlight={spotlight} on_select={() => undefined} uid="test" />);
+  expect(draw().match(/class="moat-stamp"/g)).toHaveLength(3);
+  expect(draw().match(/data-dim="true"/g)).toBeNull();
+  const repeats = draw('repeats');
+  expect(repeats.match(/class="moat-stamp"/g)).toHaveLength(1);
+  expect(repeats).toContain('rule · repeats');
+  expect(repeats).not.toContain('rule · links');
+  expect(repeats.match(/data-dim="true"/g)).toHaveLength(2);
+  // The aired dots and the unevaluated diamonds are not dimmed: only other rules' stops are.
+  expect(repeats.match(/data-phase="aired"/g)).toHaveLength(35);
+  // A message picked from the table keeps its stamp so the pick never vanishes.
+  expect(draw('repeats', first.index).match(/class="moat-stamp"/g)).toHaveLength(2);
+});
+
+test('the spotlight is offered only when two rules stopped something, and a press toggles it', () => {
+  const on_rule = vi.fn();
+  const tally = ruleTally(model);
+  expect(RuleSpotlight({ tally: tally.slice(0, 1), rule: undefined, on_rule })).toBeNull();
+  const tree = RuleSpotlight({ tally, rule: undefined, on_rule });
+  const html = renderToStaticMarkup(tree);
+  expect(html).toContain('<legend>Spotlight a rule</legend>');
+  for (const name of ['links · 1', 'repeats · 1', 'blocked-terms · 1']) expect(html).toMatch(new RegExp(`<button[^>]*aria-pressed="false"[^>]*>${name}</button>`));
+  const [repeatsButton] = find(tree, element => Children.toArray(element.props.children).join('') === 'repeats · 1');
+  repeatsButton?.props.onClick?.();
+  expect(on_rule).toHaveBeenLastCalledWith('repeats');
+  const pressed = RuleSpotlight({ tally, rule: 'repeats', on_rule });
+  expect(renderToStaticMarkup(pressed)).toContain('Stamps for rule repeats only.');
+  find(pressed, element => Children.toArray(element.props.children).join('') === 'repeats · 1')[0]?.props.onClick?.();
+  expect(on_rule).toHaveBeenLastCalledWith(undefined);
+  // The panel carries it, under the legend.
+  const panelHtml = panel(renderToStaticMarkup(<Drill result={fixtureReplay} delay_s={4} />));
+  expect(panelHtml.indexOf('aria-label="Legend"')).toBeLessThan(panelHtml.indexOf('Spotlight a rule'));
+});
+
 test('clicking a stamp or a dot selects that message', () => {
   const on_select = vi.fn();
   const tree = MoatScene({ model, playhead_ms: model.run_ms, window: windowFor(model, model.run_ms), on_select, uid: 'test' });
@@ -169,7 +206,7 @@ test('the inspector shows state, action and rule, and says so when a field was n
   expect(bare).toContain('Outcome Not evaluated');
   expect(bare).toContain('Action none recorded');
   expect(bare).toContain('Rule none recorded');
-  expect(bare).toContain('Evaluation no valid answer');
+  expect(bare).toContain('Judge no valid answer');
   const empty = renderToStaticMarkup(<MarkerInspector marker={undefined} />);
   expect(empty).toContain('Nothing selected');
   expect(empty).toContain('data-empty="true"');
