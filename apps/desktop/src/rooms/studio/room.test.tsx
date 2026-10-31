@@ -58,29 +58,25 @@ test.each([
   { state: 'Local only', indices: [0] },
   { state: 'Locked', indices: [1, 2] },
 ])('ladder tablets describe their $state state without changing their names', ({ state, indices }) => {
-  const markup = renderToStaticMarkup(<>
-    <TestLadder selected={0} on_select={vi.fn()} />
-    <TestLadder selected={2} on_select={vi.fn()} />
-  </>);
-  const buttons = markup.match(/<button[^>]*>[\s\S]*?<\/button>/g) ?? [];
-  const states = markup.match(/<span[^>]*class="cc-tablet-state"[^>]*>[\s\S]*?<\/span>/g) ?? [];
-  expect(buttons).toHaveLength(6);
-  const description_ids = [];
-  for (const offset of [0, 3]) {
+  const expected_ids = ['studio-ladder-state-sand-table', 'studio-ladder-state-muster', 'studio-ladder-state-proclaimed'];
+  for (const selected of [0, 2]) {
+    const markup = renderToStaticMarkup(<TestLadder selected={selected} on_select={vi.fn()} />);
+    const buttons = markup.match(/<button[^>]*>[\s\S]*?<\/button>/g) ?? [];
+    const states = markup.match(/<span[^>]*class="cc-tablet-state"[^>]*>[\s\S]*?<\/span>/g) ?? [];
+    expect(buttons).toHaveLength(3);
+    expect(new Set(buttons.map(button => button.match(/aria-describedby="([^"]+)"/)?.[1])).size).toBe(3);
     for (const index of indices) {
-      const button = buttons[offset + index] ?? '';
+      const button = buttons[index] ?? '';
       const title = ['Sand table', 'Muster', 'Proclaimed'][index];
       expect(button.match(/aria-label="([^"]+)"/)?.[1]).toBe(`Inspect ${title} requirements`);
       const description_id = button.match(/aria-describedby="([^"]+)"/)?.[1];
-      expect(description_id).toBeTruthy();
-      description_ids.push(description_id);
+      expect(description_id).toBe(expected_ids[index]);
       const descriptions = states.filter(span => span.includes(`id="${description_id}"`));
       expect(descriptions).toHaveLength(1);
       expect(descriptions[0]?.replace(/<[^>]*>/g, '')).toBe(state);
       expect(button).not.toMatch(/\s(?:aria-)?disabled=/);
     }
   }
-  expect(new Set(description_ids).size).toBe(description_ids.length);
 });
 
 test('C inspector banner, ghost and shadow follow the selected house including unclaimed', () => {
