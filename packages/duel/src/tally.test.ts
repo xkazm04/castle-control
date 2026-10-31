@@ -3,7 +3,8 @@ import { indexWindow, recentEvents, tallyAt, wouldFlip } from './ballots.js';
 import type { Tally, WindowEvent } from './ballots.js';
 
 function generatedEvent(index: number): WindowEvent {
-  const details = { t_ms: Math.floor(index / 2) * 3, user_id: String(index + 1), text: '[generated]', cheer: index % 3 === 0 };
+  const details = { t_ms: Math.floor(index / 2) * 3, user_id: String(index + 1), text: '[generated]',
+    cheer: index % 3 === 0, provenance: 'simulated' as const };
   const option = index % 2 === 0 ? 0 : 1;
   switch (index % 5) {
     case 0: return { ...details, option, status: 'counted', vote: { kind: 'vote', option_index: option } };

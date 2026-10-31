@@ -35,6 +35,26 @@ test('the single door maps validated messages and preserves an optional cursor',
   expect(parseBallotPage(JSON.stringify(page([live]))).items[0]?.provenance).toBe('live');
 });
 
+test.each(['simulated', 'live'] as const)('%s provenance survives classification and indexing for every status', provenance => {
+  const events = classify([
+    item('191'), item('191', '2', 'pass', 1), item('947', '1', 'bar', 2),
+    item('948', '2', 'hold', 3), item('949', '[generated chatter]', 'pass', 4),
+  ].map(ballot => ({ ...ballot, provenance })));
+  expect(events.map(event => event.status)).toEqual(['counted', 'repeat', 'barred', 'held', 'chatter']);
+  expect(events.map(event => event.provenance)).toEqual(Array(5).fill(provenance));
+  const window = indexWindow(events);
+  expect(window.provenance).toBe(provenance);
+  expect(window.events.map(event => event.provenance)).toEqual(Array(5).fill(provenance));
+});
+
+test('mixed and empty windows never claim a single provenance', () => {
+  const events = classify([item('191'), { ...item('947', '2', 'pass', 1), provenance: 'live' }, item('948', '1', 'pass', 2)]);
+  const window = indexWindow(events);
+  expect(window.provenance).toBe('mixed');
+  expect(window.events.map(event => event.provenance)).toEqual(['simulated', 'live', 'simulated']);
+  expect(indexWindow([]).provenance).toBe('mixed');
+});
+
 test.each([
   ['1', 0], ['2!', 1], ['1!!', 0], ['2 [generated ballot]', 1], [' Cheer100 1! ', 0],
   ['cheer42 2', 1], ['Cheer100 [generated chatter]', null], ['12', null], ['1.0', null],

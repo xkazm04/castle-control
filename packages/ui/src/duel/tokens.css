@@ -77,4 +77,14 @@
   --ty-order-delay-start:200ms;
   --ty-order-delay-step:70ms;
   --ty-reduced-duration:.001ms;
+  /* WP5 chat: winner's smaller arms, tug, ticker and night signals. */
+  --ty-chat-arms-width:clamp(70px,6.5vw,104px);
+  --ty-tug-width:900px;
+  --ty-tug-well:#1D2027;
+  --ty-tug-text:15px;
+  --ty-ticker-height:126px;
+  --ty-signal-counted:#37D08E;
+  --ty-signal-barred:#FF8B72;
+  --ty-signal-held:#FFD36B;
+  --ty-ring-track:rgba(242,238,227,.18);
 }

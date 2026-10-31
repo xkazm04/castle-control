@@ -26,3 +26,4 @@ import type { ShowVerdict } from './session/show.js';
 import type { ChatVerdict } from './session/chat.js';
 import type { LadderVerdict } from './session/ladder.js';
 export type Verdict = ShowVerdict | ChatVerdict | LadderVerdict;
+export { chatOpenedAt, chatWindowFor, nextChatDue } from './chat-flow.js';

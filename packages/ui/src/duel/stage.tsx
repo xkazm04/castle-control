@@ -1,8 +1,10 @@
-import { useCallback, useEffect, useReducer, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useReducer, useRef } from 'react';
 import type { DuelEvent } from '@castle-control/duel';
+import { tallyAt } from '@castle-control/duel/ballots';
 import { Arena } from './arena.jsx';
 import { Lineup } from './boards.jsx';
 import { nextDue, useSessionClock } from './clock.js';
+import { Chat, chatWindows } from './chat.jsx';
 import { duelKeyAction } from './keymap.js';
 import { useReducedMotion } from './motion.js';
 import { duelModes, Pennants } from './pennants.jsx';
@@ -15,17 +17,31 @@ import './arena.css';
 import './card.css';
 import './rail.css';
 import './champion.css';
+import './chat.css';
+import './ticker.css';
 
-export function Tiltyard({ lists, words, initial_mode = 'show', label }: TiltyardProps) {
+export function Tiltyard({ lists, words, initial_mode = 'show', label, ballots }: TiltyardProps) {
   const reduced = useReducedMotion();
-  const [state, dispatch] = useReducer(tiltyardReducer, null, () => createTiltyardState(lists, initial_mode, reduced));
+  const [state, dispatch] = useReducer(tiltyardReducer, null, () => createTiltyardState(lists, initial_mode, reduced, words));
   const root = useRef<HTMLElement>(null);
   const session = state[state.mode];
-  const live = session.phase === 'live' || session.phase === 'verdict';
-  const on_mode = useCallback((mode: DuelMode) => dispatch({ kind: 'mode', mode }), []);
-  const on_event = useCallback((event: DuelEvent) => dispatch({ kind: 'event', event, words }), [words]);
-  const on_tick = useCallback((ms: number) => on_event({ kind: 'tick', ms }), [on_event]);
-  useSessionClock(nextDue(session), on_tick);
+  const windows = useMemo(() => chatWindows(ballots), [ballots]);
+  const window = state.mode === 'chat' ? windows(state.chat) : undefined;
+  const connected = state.mode !== 'chat' || ballots !== undefined;
+  const live = connected && (session.phase === 'live' || session.phase === 'verdict');
+  const send = useCallback((event: DuelEvent, elapsed_ms = 0) => {
+    if (!connected) return;
+    const ms = event.kind === 'tick' ? event.ms : elapsed_ms;
+    const counted = window ? tallyAt(window, Math.min(state.chat.window_ms, state.chat.elapsed + ms * state.chat.speed)).counted : undefined;
+    dispatch({ kind: 'event', event, words, elapsed_ms, ...(counted ? { counted } : {}) });
+  }, [connected, window, state.chat, words]);
+  const on_tick = useCallback((ms: number) => send({ kind: 'tick', ms }), [send, session]);
+  const elapsed = useSessionClock(connected ? nextDue(session, window) : null, on_tick);
+  const on_event = useCallback((event: DuelEvent) => send(event, state.mode === 'chat' ? elapsed() : 0), [send, elapsed, state.mode]);
+  const on_mode = useCallback((mode: DuelMode) => {
+    if (state.mode === 'chat' && live) on_tick(elapsed());
+    dispatch({ kind: 'mode', mode, words });
+  }, [state.mode, live, on_tick, elapsed, words]);
   useEffect(() => { root.current?.focus({ preventScroll: true }); }, [state.mode]);
   useEffect(() => dispatch({ kind: 'motion', reduced }), [reduced]);
   const enter_hint = state.mode === 'show' ? words.enter_show : state.mode === 'ladder' ? words.enter_ladder
@@ -34,7 +50,7 @@ export function Tiltyard({ lists, words, initial_mode = 'show', label }: Tiltyar
   return <section ref={root} className={`ty-stage${session.phase === 'verdict' && !reduced ? ' ty-shake' : ''}`}
     data-role="ty-stage" data-provenance={sample} data-motion={reduced ? 'reduced' : 'full'} role="dialog" aria-modal="false" aria-label={label}
     tabIndex={-1} onKeyDown={event => {
-      const action = duelKeyAction(event, session);
+      const action = duelKeyAction(event, connected ? session : { phase: 'done' });
       if (action === null) return;
       event.preventDefault(); event.stopPropagation();
       if (action === 'mode_prev' || action === 'mode_next') {
@@ -52,11 +68,12 @@ export function Tiltyard({ lists, words, initial_mode = 'show', label }: Tiltyar
       </div>
     </Pennants>
     {state.mode === 'show' ? <Showdown session={state.show} words={words} on_event={on_event} />
+      : state.mode === 'chat' ? <Chat session={state.chat} window={window} words={words} on_event={on_event} />
       : <Arena><div className="ty-board">
         <h2 data-role="ty-board-title">{words.modes[state.mode].title}</h2>
-        <p data-role="ty-board-text">{state.mode === 'chat' ? lists.chat.prompt : lists.ladder.title}</p>
-        <Lineup list={state.mode === 'chat' ? lists.chat : lists.ladder.top} words={words} />
+        <p data-role="ty-board-text">{lists.ladder.title}</p>
+        <Lineup list={lists.ladder.top} words={words} />
       </div></Arena>}
-    <span className="ty-announcement" aria-live="polite" aria-atomic="true">{state.announcement}</span>
+    <span className="ty-announcement" aria-live="polite" aria-atomic="true">{connected ? state.announcement : ''}</span>
   </section>;
 }

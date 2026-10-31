@@ -43,7 +43,7 @@ function styleFiles(directory: URL): StyleFile[] {
 test('duel styles walk every CSS file and use only declared shared/local tokens', () => {
   const files = styleFiles(new URL('.', import.meta.url));
   console.log(`[duel CSS] walked ${files.length} files`);
-  expect(files.length).toBeGreaterThanOrEqual(6);
+  expect(files.length).toBeGreaterThanOrEqual(8);
   expect(checkDuelStyles(files)).toEqual([]);
 });
 test('duel styles prove red for a raw colour, an unknown variable and an unused local', () => {

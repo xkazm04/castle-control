@@ -32,7 +32,7 @@ export function classifyWindow(ballots: readonly Ballot[], opened_at: string, wi
     .sort((a, b) => a.t_ms - b.t_ms)
     .map(({ ballot, t_ms }): WindowEvent => {
       const option = ballotOption(ballot.text);
-      const details = { t_ms, user_id: ballot.user_id, text: ballot.text, cheer: isCheer(ballot.text) };
+      const details = { t_ms, user_id: ballot.user_id, text: ballot.text, cheer: isCheer(ballot.text), provenance: ballot.provenance };
       const selected = { ...details, ...(option === null ? {} : { option }) };
       if (ballot.verdict === 'bar') return { ...selected, status: 'barred' };
       if (ballot.verdict === 'hold') return { ...selected, status: 'held' };

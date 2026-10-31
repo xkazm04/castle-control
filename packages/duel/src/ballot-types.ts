@@ -6,7 +6,7 @@ export type Vote = Readonly<{ kind: 'vote'; option_index: number }>;
 export type Ballot = RecordedMessage & { verdict: Verdict; provenance: GatehouseProvenance };
 export type BallotPage = { items: Ballot[]; next_cursor?: GatehouseReadCursor };
 
-type EventDetails = { t_ms: number; user_id: string; text: string; cheer: boolean };
+type EventDetails = { t_ms: number; user_id: string; text: string; cheer: boolean; provenance: GatehouseProvenance };
 export type WindowEvent = EventDetails & (
   | { status: 'counted'; option: BallotOption; vote: Vote }
   | { status: 'barred' | 'held' | 'repeat' | 'chatter'; option?: BallotOption; vote?: never }
@@ -26,6 +26,7 @@ export type Tally = {
 };
 
 export type IndexedWindow = {
+  readonly provenance: GatehouseProvenance | 'mixed';
   readonly events: readonly WindowEvent[];
   readonly prefix: readonly Tally[];
   readonly time_index: TimeIndex;

@@ -16,8 +16,10 @@ export function indexWindow(events: readonly WindowEvent[]): IndexedWindow {
     ? { ...event, vote: { ...event.vote } } : { ...event }).sort((a, b) => a.t_ms - b.t_ms);
   const prefix = [emptyTally()];
   const time_index = { seen: 0 };
+  let provenance: IndexedWindow['provenance'] = ordered[0]?.provenance ?? 'mixed';
   let tally = emptyTally();
   for (const event of ordered) {
+    if (event.provenance !== provenance) provenance = 'mixed';
     tally = copyTally(tally);
     tally.seen++;
     indexTime(time_index, event.t_ms, tally.seen);
@@ -32,7 +34,7 @@ export function indexWindow(events: readonly WindowEvent[]): IndexedWindow {
     tally.shadow = [tally.counted[0] + tally.barred[0], tally.counted[1] + tally.barred[1]];
     prefix.push(tally);
   }
-  return { events: ordered, prefix, time_index };
+  return { events: ordered, prefix, time_index, provenance };
 }
 
 function seenAt(window: IndexedWindow, t_ms: number, meter?: TallyMeter): number {

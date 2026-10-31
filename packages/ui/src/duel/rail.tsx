@@ -1,4 +1,4 @@
-import type { CSSProperties } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
 import { currentMatch, finalOrder, plannedRounds, totalMatches } from '@castle-control/duel';
 import type { Bracket, DuelItem, DuelItemId, DuelList, PlannedMatch, ShowVerdict } from '@castle-control/duel';
 import { Shield } from './shield.jsx';
@@ -18,10 +18,11 @@ export function RailButtons({ words, on_undo, on_reset, can_undo = true, again =
     </button>
   </div>;
 }
-export function Rail({ bracket, list, words, verdict, can_undo, on_undo, on_reset }: {
+export function Rail({ bracket, list, words, verdict, can_undo, on_undo, on_reset, aside }: {
   bracket: Bracket; list: DuelList; words: TiltyardWords;
   verdict: Pick<ShowVerdict, 'round' | 'index'> | null;
   can_undo: boolean; on_undo: () => void; on_reset: () => void;
+  aside?: ReactNode;
 }) {
   const rounds = plannedRounds(bracket);
   const current = verdict ?? currentMatch(bracket);
@@ -37,7 +38,7 @@ export function Rail({ bracket, list, words, verdict, can_undo, on_undo, on_rese
       <span>{item.title}</span>
     </div>;
   }
-  return <div className="ty-rail" data-role="ty-rail">
+  return <div className={`ty-rail${aside ? ' ty-split' : ''}`} data-role="ty-rail">
     <div><h4 data-role="ty-rail-heading">{words.rail_heading(list.title)} <span>{words.rail_detail(totalMatches(bracket))}</span></h4>
       <div className="ty-tree">{rounds.map((round, r) => <div className="ty-tcol" key={r}
         style={columnStyle(round.length)}>
@@ -54,6 +55,6 @@ export function Rail({ bracket, list, words, verdict, can_undo, on_undo, on_rese
         </div>
       </div></div>
     </div>
-    <RailButtons words={words} on_undo={on_undo} on_reset={on_reset} can_undo={can_undo} />
+    {aside ?? <RailButtons words={words} on_undo={on_undo} on_reset={on_reset} can_undo={can_undo} />}
   </div>;
 }

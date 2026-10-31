@@ -1,8 +1,10 @@
-import type { Bracket, DuelItem, Side } from '@castle-control/duel';
+import type { Bracket, ChatVerdict, Counted, DuelItem, Side } from '@castle-control/duel';
+import type { WindowEvent } from '@castle-control/duel/ballots';
 import { totalRounds } from '@castle-control/duel';
 
 /** All stage copy, including accessible labels and outcome announcements. */
 export interface TiltyardWords {
+  readonly chat: ChatWords;
   readonly modes: Readonly<Record<'show' | 'chat' | 'ladder', { number: string; title: string; detail: string }>>;
   readonly mode_label: string;
   readonly sample: string;
@@ -60,8 +62,63 @@ export interface TiltyardWords {
   new_announcement(round: string, a: DuelItem, b: DuelItem): string;
 }
 
+export interface ChatWords {
+  readonly no_source_title: string; readonly no_source_text: string;
+  readonly paused_title: string; readonly paused_before_enter: string; readonly paused_before_escape: string;
+  readonly paused_after_escape: string; readonly resume: string; readonly new_vote: string;
+  readonly seconds: string; readonly closed: string; readonly window_closed: string;
+  readonly close_now: string; readonly call: string; readonly call_verb: string;
+  readonly chose: string; readonly your_call: string;
+  readonly tally_label: string; readonly counted_for: string; readonly one_per_viewer: string;
+  readonly barred: string; readonly held: string; readonly repeats: string; readonly bits: string;
+  readonly excluded: string; readonly ticker_title: string; readonly ticker_detail: string;
+  readonly ticker_label: string; readonly simulated: string; readonly waiting: string; readonly bits_ignored: string;
+  readonly status: Readonly<Record<'counted' | 'barred' | 'held' | 'repeat' | 'chatter', string>>;
+  readonly closed_before: string; readonly closed_after: string;
+  readonly tally_enter: string; readonly now: string;
+  tag(type: number, seed: number): string;
+  viewer(user_id: string, provenance: WindowEvent['provenance']): string;
+  ballots(number: number): string;
+  flip(barred: number, shadow: Counted): string;
+  speed(speed: number): string;
+  verdict(verdict: ChatVerdict, seconds: number): string;
+  tally_line(verdict: ChatVerdict): string;
+  outcome(verdict: ChatVerdict, winner: DuelItem): string;
+  opened(round: string, a: DuelItem, b: DuelItem): string;
+  champion(winner: DuelItem): string;
+}
+
 /** Verbatim English from .port/winner/index.html (cc-t2-duel A/1). */
 export const tiltyardWords: TiltyardWords = {
+  chat: {
+    no_source_title: 'No ballot source connected', no_source_text: 'No ballot source is connected.',
+    paused_title: 'Vote window paused',
+    paused_before_enter: 'The duel was called off, so the simulated chat window stopped where it was. You are still in the room. ',
+    paused_before_escape: ' resumes the window; ', paused_after_escape: ' goes back to the keep.',
+    resume: 'Resume the window', new_vote: 'New vote', seconds: 'seconds', closed: 'closed', window_closed: 'window closed',
+    close_now: ' close now · ', call: 'streamer call', call_verb: 'by streamer call', chose: 'Chat chose', your_call: 'Your call',
+    tally_label: 'Simulated tally', counted_for: 'Counted for', one_per_viewer: 'counted ballots · one per viewer',
+    barred: 'Barred · never counted', held: '· held for review', repeats: ' · repeats counted once', bits: ' · bits weighed as 1',
+    excluded: 'Barred ballots are shown, struck through, and left out of every number above.',
+    ticker_title: 'Simulated chat', ticker_detail: 'fixture verdicts · generated, not real chat',
+    ticker_label: 'Simulated chat ticker', simulated: 'SIMULATED', waiting: 'Waiting for simulated chat…', bits_ignored: ' · bits ignored',
+    status: { counted: 'counted', barred: 'barred', held: 'held', repeat: 'repeat', chatter: 'chatter' },
+    closed_before: 'Each counted ballot becomes only ', closed_after: ' · bits are refused at the door.',
+    tally_enter: 's · ', now: ' now',
+    tally_line: verdict => `Chat chose ${verdict.counted[verdict.side]}–${verdict.counted[1 - verdict.side]} · next match in `,
+    tag: (type, seed) => `Type ${type} · seed #${seed}`,
+    viewer: (user_id, provenance) => provenance === 'simulated' ? `simulated_viewer_${user_id.padStart(4, '0')}` : user_id,
+    ballots: number => `${number} ${number === 1 ? 'ballot' : 'ballots'}`,
+    flip: (barred, shadow) => `If the ${barred} barred ballots counted, the bar would read ${shadow[0]}–${shadow[1]} and lean the other way. They never count.`,
+    speed: speed => `Speed ×${speed === 1 ? 3 : 1}`,
+    verdict: (verdict, seconds) => verdict.how === 'call'
+      ? `Streamer call · logged openly. Tally at the call: ${verdict.counted[0]}–${verdict.counted[1]}.`
+      : verdict.how === 'tie' ? `Tie ${verdict.counted[0]}–${verdict.counted[1]} → better seed goes through`
+        : `Chat chose ${verdict.counted[verdict.side]}–${verdict.counted[1 - verdict.side]} · next match in ${seconds}s · Enter now`,
+    outcome: (verdict, winner) => `${verdict.how === 'call' ? 'Streamer call' : verdict.how === 'tie' ? 'Tie, better seed goes through' : 'Chat chose'}: ${winner.title}, ${verdict.counted[verdict.side]} to ${verdict.counted[1 - verdict.side]}.`,
+    opened: (round, a, b) => `${round}: ${a.title} versus ${b.title}. Window open.`,
+    champion: winner => `Chat's champion: ${winner.title}.`,
+  },
   modes: {
     show: { number: 'I', title: 'Showdown', detail: 'You pick · 8 seeds · 7 picks' },
     chat: { number: 'II', title: 'Chat decides', detail: 'Simulated tally · barred never count' },

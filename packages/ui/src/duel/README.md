@@ -1,9 +1,10 @@
-# Tiltyard (WP4)
+# Tiltyard (WP4–WP5)
 
 `@castle-control/ui/duel` exports `Tiltyard`, its data/words props, the English
 `tiltyardWords`, the declared keymap, and the session clock helpers. Lists have
 already crossed the engine's `parseDuelList` door. This component does not parse
-JSON, connect to a service, persist state or perform live actions.
+JSON itself, connect to a service, persist state or perform live actions. Chat
+pages cross the engine's `parseBallotPage` door before classification/indexing.
 
 The stage exposes the active list's provenance through `data-provenance` and
 does not show a provenance chip in its key legend. The host must show a visible
@@ -17,15 +18,34 @@ called by a live-duel Escape. Enter and Escape intentionally shadow the shell's
 `open` and `back` bindings when handled.
 
 The reducer keeps one session per mode and settles outgoing theatre on a mode
-change. Chat uses the supplied `key` (SAMPLE uses `mill`). Chat and ladder have
-lineup placeholders here; their full drawings and ballot counts belong to WP5
-and WP6. `StageAction` accepts a counted pair for the chat integration. Shared
+change. Chat uses the supplied `key` (SAMPLE uses `mill`). Ladder has a lineup
+placeholder until WP6. `StageAction` accepts a counted pair for chat. Shared
 `Arena`, `Card`, `Centre`, `Seal`, `Rail`, `Champion` and board components are
-available as local modules. The clock schedules one timeout for theatre; WP5
-extends `nextDue` with seconds and ballot arrivals. Motion uses a live media
+available as local modules. `Rail` takes an optional right-hand slot for chat,
+so both modes use the same bracket drawing. The clock schedules one timeout at
+`nextDue(session, window)`: the next visible second, indexed arrival, window
+end or verdict end. Motion uses a live media
 subscription and changes both the stage attribute and session theatre durations.
 
-## Validation
+Chat requires a `ballots(match_key, window_ms, opened_at)` prop. Without it the
+stage shows a plain disconnected board and runs no chat clock. `opened_at` is
+the fixed simulated epoch `2026-01-01T00:00:00.000Z` plus the zero-based match
+number in milliseconds. Each source's window is parsed, classified and indexed
+once per match key, retained across pause, undo and New vote. The component
+never generates a fallback source.
+
+The ring runs in CSS at `window_ms / speed` with a negative elapsed delay.
+Reduced motion uses a static indexed offset. Tug and ticker are memoised on
+the indexed prefix/seen count and visible second; only the newest five events
+are rendered. Enter closes, arrows log streamer calls, Escape pauses, Enter
+resumes, and verdicts last four seconds (tally/tie) or three (call). Calls keep
+the actual tally. Inputs include the monotonic time since the last wakeup, and
+a key at a theatre deadline cannot accidentally decide the next match with an
+old window's counts. Close/new-window/champion announcements use the winner's
+copy. Ticker provenance is explicitly SIMULATED; the host still labels SAMPLE
+contestants visibly.
+
+## WP4 validation
 
 Commands run from the worktree root, without installing dependencies:
 
@@ -139,4 +159,51 @@ local because those pigments must remain unchanged under the stock theme.
 | `--ty-order-delay-start` | `200ms` |
 | `--ty-order-delay-step` | `70ms` |
 | `--ty-reduced-duration` | `.001ms` |
+
+## WP5 validation
+
+No dependency installation or network calls. All six package commands exited 0:
+
+| Command | Relevant output |
+| --- | --- |
+| `pnpm --config.verify-deps-before-run=false --filter @castle-control/ui typecheck` | `[pnpm typecheck] walked 99 files` |
+| `pnpm --config.verify-deps-before-run=false --filter @castle-control/ui lint` | `[pnpm lint] walked 99 files` |
+| `pnpm --config.verify-deps-before-run=false --filter @castle-control/ui test` | `Test Files 25 passed (25)`; `Tests 383 passed (383)` |
+| `pnpm --config.verify-deps-before-run=false --filter @castle-control/duel typecheck` | `[pnpm typecheck] walked 31 files` |
+| `pnpm --config.verify-deps-before-run=false --filter @castle-control/duel lint` | `[pnpm lint] walked 31 files` |
+| `pnpm --config.verify-deps-before-run=false --filter @castle-control/duel test` | `Test Files 12 passed (12)`; `Tests 369 passed (369)` |
+
+`node scripts/check.mjs` exited 0: boundaries, hygiene and file-cap each walked
+907 files; secrets walked 1308 files. Every changed code file is below 400 lines.
+
+`pnpm --config.verify-deps-before-run=false --filter @castle-control/ui exec vitest run src/duel --pool=threads --reporter=verbose --silent=false`
+exited 0, with 24 tests in 4 files. It prints `[duel CSS] walked 8 files`, its
+three seeded style defects, the zero-conflict keymap proof, and
+`[nextDue churn] 125 wakeups <= 127; 110 distinct arrivals; final 20–39`.
+The pure engine test also prints the same budget and final tally through
+`pnpm --config.verify-deps-before-run=false --filter @castle-control/duel exec vitest run src/chat-flow.test.ts --pool=threads --reporter=verbose --silent=false`.
+The markup tests cover the 9000ms tally, barred ballots, all requested roles,
+SIMULATED provenance, five ticker events, call snapshots, tally close/flip
+note, tie copy, disconnected board, pause/resume, source caching and champion.
+Existing Showdown tests still pass, and its button-inheritance rule is unchanged.
+
+Browser verification remains incomplete. A headless Playwright attempt to open
+the local winner failed at `chromium.launch`: `browserType.launch: spawn EPERM`.
+No winner playback, screenshots or browser style-contract measurement is
+claimed. No Computer Use or desktop browser was used. The full root `pnpm gate`
+was not run because this brief forbids downloads/network calls.
+
+### WP5 additions for T1
+
+| Property | Winner value/default |
+| --- | --- |
+| `--ty-chat-arms-width` | `clamp(70px,6.5vw,104px)` |
+| `--ty-tug-width` | `900px` |
+| `--ty-tug-well` | `#1D2027` |
+| `--ty-tug-text` | `15px` |
+| `--ty-ticker-height` | `126px` |
+| `--ty-signal-counted` | `#37D08E` |
+| `--ty-signal-barred` | `#FF8B72` |
+| `--ty-signal-held` | `#FFD36B` |
+| `--ty-ring-track` | `rgba(242,238,227,.18)` |
 
