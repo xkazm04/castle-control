@@ -20,7 +20,7 @@ export const rehearseCopy = {
   progress: (turn: number, of: number) => `turn ${turn} of ${of}`,
   board_gloss: (turn: number, of: number) => turn === 0
     ? 'Simulated rehearsal · starting territory' : `Simulated rehearsal · turn ${turn} of ${of}`,
-  idle_hint: 'Press Rehearse to play the round, or Step to go one turn at a time.',
+  idle_hint: 'Press Play round to run it, or Step to go one turn at a time. Redraw start or Compare crowds ask what if.',
   this_turn: (changed: number, crowd: readonly string[]) =>
     `${changed === 0 ? 'No tile changed owner' : `${changed} ${changed === 1 ? 'tile' : 'tiles'} changed owner (outlined)`}`
     + ` · Crowd ${crowd.join(', ')} · Only picked tiles change owner.`,

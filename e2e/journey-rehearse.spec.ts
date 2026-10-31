@@ -104,3 +104,66 @@ test('Map Room Rehearse plays turn by turn with motion allowed: pause, step, fin
     await expect(room.locator('.studio-verdict')).toBeVisible();
   } finally { await page.goto('about:blank'); verify(); await context.close(); }
 });
+
+test('Map Room Rehearse: redraw the start by painting and dragging, compare crowds, and the table stays untouched', async ({ page }) => {
+  const verify = await guardPage(page);
+  try {
+    await page.goto('/#/chamber/studio');
+    const room = page.getByRole('region', { name: 'Map Room work', exact: true });
+    await room.getByRole('button', { name: 'Rehearse', exact: true }).click();
+    const house = (id: string) => room.locator(`[data-hex-tile="${id}"]`).getAttribute('data-house');
+    expect(await house('E1')).toBe('unclaimed');
+
+    // Redraw start: a palette with one brush per house; Sable paints E1 by press and F1 to H1 by drag.
+    await room.getByRole('button', { name: 'Redraw start', exact: true }).click();
+    await expect(room.getByRole('group', { name: 'Paint with', exact: true })).toBeVisible();
+    await expect(room.getByRole('note', { name: 'Simulated rehearsal notice', exact: true })).toHaveText(BAND);
+    await room.getByRole('button', { name: 'Paint with House Sable', exact: true }).click();
+    await room.locator('[data-hex-tile="E1"]').click();
+    expect(await house('E1')).toBe('House Sable');
+    await expect(room.getByRole('status').filter({ hasText: 'E1 painted House Sable. 1 tile differs from the starting territory.' })).toBeVisible();
+    const from = await room.locator('[data-hex-tile="F1"]').boundingBox(); const to = await room.locator('[data-hex-tile="H1"]').boundingBox();
+    if (!from || !to) throw new Error('hexes not laid out');
+    await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2); await page.mouse.down();
+    await page.mouse.move(to.x + to.width / 2, to.y + to.height / 2, { steps: 10 }); await page.mouse.up();
+    for (const id of ['F1', 'G1', 'H1']) expect(await house(id), id).toBe('House Sable');
+    expect(await house('I1')).toBe('House Tallow');
+    await expect(room.getByText('Redrawn start · 4 tiles repainted', { exact: true })).toBeVisible();
+
+    // Keyboard: Enter on a focused hex paints it; arrows only move.
+    await room.getByRole('button', { name: 'Paint with Unclaimed', exact: true }).click();
+    await room.locator('[data-hex-tile="A1"]').focus(); await page.keyboard.press('ArrowRight');
+    expect(await house('B1')).toBe('House Quill');
+    await page.keyboard.press('Enter');
+    expect(await house('B1')).toBe('unclaimed');
+    await room.getByRole('button', { name: 'Done', exact: true }).click();
+    await expect(room.getByRole('group', { name: 'Paint with', exact: true })).toHaveCount(0);
+
+    // The round plays on the redrawn start, and the earlier table view still shows the untouched sample.
+    await room.getByRole('button', { name: 'Play round', exact: true }).click();
+    await expect(room.locator('.studio-verdict')).toBeVisible();
+    await room.getByRole('button', { name: 'Table', exact: true }).click();
+    expect(await house('E1')).toBe('unclaimed'); expect(await house('B1')).toBe('House Quill');
+    await room.getByRole('button', { name: 'Rehearse', exact: true }).click();
+
+    // Compare crowds: 30, 120 and 300 on this redrawn board; Use puts a crowd in the form.
+    await room.getByRole('button', { name: 'Compare crowds', exact: true }).click();
+    const crowds = room.getByRole('region', { name: 'Simulated comparison across crowd sizes', exact: true });
+    await expect(crowds.locator('tbody tr')).toHaveCount(3);
+    await expect(crowds).toContainText('redrawn start');
+    await crowds.getByRole('button', { name: 'Use 300 simulated viewers', exact: true }).click();
+    await expect(room.getByLabel('Simulated viewers', { exact: true })).toHaveValue('300');
+    await expect(crowds.locator('tr[data-current="true"]')).toContainText('300 viewers');
+
+    // Restore sample puts the starting territory back, and a new map size drops the edits.
+    await room.getByRole('button', { name: 'Redraw start', exact: true }).click();
+    await room.getByRole('button', { name: 'Restore sample', exact: true }).click();
+    expect(await house('E1')).toBe('unclaimed'); expect(await house('B1')).toBe('House Quill');
+    await room.getByRole('button', { name: 'Paint with House Tallow', exact: true }).click();
+    await room.locator('[data-hex-tile="A1"]').click();
+    await expect(room.getByText('Redrawn start · 1 tile repainted', { exact: true })).toBeVisible();
+    await room.getByLabel('Map size', { exact: true }).selectOption('s');
+    await expect(room.getByText(/Redrawn start/)).toHaveCount(0);
+    await auditStyles(page, desktopSurfaces); await auditFields(page);
+  } finally { await page.goto('about:blank'); verify(); }
+});
