@@ -57,7 +57,7 @@ export function WatchingRuleEditor({ rules, queue, bench, result, busy = false, 
       </FieldGroup>}
       <p className="moderator-small">{copy.bench_shadow}{original && ` · ${original.action}`}</p>
       <InkButton type="submit" size="room" disabled={busy || !result.ok}>{queue ? copy.propose_rule : original ? copy.save_watching : copy.save_as_watching}</InkButton>
-      <p role="status" className="moderator-small">{notice}</p>
+      <p className="moderator-small">{notice}</p>
     </form>{children}
   </HeraldicCard>;
 }

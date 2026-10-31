@@ -1,5 +1,15 @@
 # Gatehouse shadow journey (lane L2, 2026-10-31)
 
+The Rule bench has one polite status region for its pattern-hit counts. The
+watching-rule editor's save/proposal notice stays visible as plain text. The
+drill's capture comparison is outside the bench and retains its status role.
+`action-names.test.tsx` renders the full fixture bench and its draft drill
+preview; its regression first failed with two bench statuses instead of one.
+After the fix, all 595 desktop tests in 62 files, desktop typecheck and lint
+passed. `pnpm gate` passed the version checks, 24 tooling tests, workspace
+inventory and Cargo fetch, then stopped at contract export with
+`spawnSync cargo EPERM`. The Director owns browser e2e verification.
+
 ## Rule bench (gatehouse-B)
 
 The existing watching-rule editor is now the **Rule bench** above Garrison

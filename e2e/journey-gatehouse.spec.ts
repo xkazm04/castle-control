@@ -24,7 +24,7 @@ test('Gatehouse actions identify targets and expose one notice and count region'
     const cards = page.locator('.moderator-rule-card');
     await expect(cards).toHaveCount(3);
     for (const card of await cards.all()) {
-      const rule_name = await card.locator('.moderator-rule-text b').innerText();
+      const rule_name = (await card.locator('.moderator-rule-text b').textContent() ?? '').trim();
       await expect(card.getByRole('button', { name: 'Propose Arm', exact: true })).toHaveAccessibleDescription(rule_name);
     }
     await cards.first().getByRole('button', { name: 'Propose Arm', exact: true }).click();

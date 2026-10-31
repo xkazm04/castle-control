@@ -116,6 +116,24 @@ test('BenchFeedback has one polite count region and non-live labelled count hook
   }
 });
 
+test('Rule bench with a draft drill preview has exactly one polite count status', () => {
+  const queue = new ProposalQueue();
+  const { bench } = moderationSession(queue);
+  bench.setDraft({ name: 'Simulated draft', pattern: 'go left', action: 'warn' });
+  const room = renderToStaticMarkup(<ModeratorRoom snapshot={{ mode: 'fixture', phase: 'ready' }} replay={false} queue={queue} />);
+  const drill = renderToStaticMarkup(<ModeratorRoom snapshot={{ mode: 'fixture', phase: 'ready' }} replay queue={queue} />);
+  const preview = drill.match(/<section\b[^>]*aria-label="Draft pattern preview"[^>]*>([\s\S]*?)<\/section>/)?.[1];
+  expect(preview).toBeTruthy();
+  expect(preview).toContain('166 draft pattern hits');
+  const region = room.match(/<section\b[^>]*aria-label="Rule bench"[^>]*>([\s\S]*?)<\/section>/)?.[1];
+  expect(region).toBeTruthy();
+  const statuses = [...(region ?? '').matchAll(/<([a-z]+)\b[^>]*role="status"[^>]*>([\s\S]*?)<\/\1>/g)];
+  expect(statuses).toHaveLength(1);
+  expect(statuses[0]?.[0]).toContain('aria-live="polite"');
+  expect(statuses[0]?.[2]).toContain('166 draft pattern hits');
+  expect(statuses[0]?.[2]).toContain(`aria-label="${copy.newly_acting}"`);
+});
+
 test('Play uses a changing action name without a pressed state', () => {
   const port = createModerationPreview();
   const html = renderToStaticMarkup(<ChatPlayback port={port} state={port.getSnapshot()} />);
