@@ -9,7 +9,7 @@ import { createCoreLotsPort } from '../../lots-core.js';
 import { CoreDrawSetup, coreSetupCandidate } from './core-setup.jsx';
 import { ConnectedLotsRoom } from './core.jsx';
 
-type Props = { children?: ReactNode; id?: string; disabled?: boolean; onClick?: () => void; on_save?: (draw: LotsDraw) => void;
+type Props = { children?: ReactNode; id?: string; value?: string | number; disabled?: boolean; onClick?: () => void; on_save?: (draw: LotsDraw) => void;
   onChange?: (event: ChangeEvent<HTMLInputElement & HTMLSelectElement>) => void };
 function elements(tree: ReactNode): Props[] {
   const found: Props[] = [];
@@ -94,4 +94,38 @@ test('the core room carries the rule draft, and one save is one upsert followed 
   await vi.waitFor(() => expect(port.getSnapshot().busy).toBe(false));
   expect(rpc.mock.calls.slice(before).map(call => call[2])).toEqual(['lots.draw.upsert', 'lots.draw.check']);
   expect(port.getSnapshot().draw?.rules.cooldown_s).toBe(45);
+});
+
+test('unsaved rule edits survive an update to the same draw from another control, and land in the save', () => {
+  const on_save = vi.fn();
+  let current = draw;
+  const seen: string[] = [];
+  function Sequence() {
+    const [step, setStep] = useState(0);
+    const tree = CoreDrawSetup({ draw: current, disabled: false, on_save });
+    if (step === 0) { change(tree, 'name', 'Raffle of the hall'); change(tree, 'cooldown', '45'); setStep(1); }
+    else if (step === 1) {
+      // The winner-count field (or tier, or equalizer) saves first; the core returns a new draw object.
+      current = { ...draw, rules: { ...draw.rules, winner_count: 9 } }; setStep(2);
+    } else if (step === 2) {
+      seen.push(String(byId(tree, 'name').value ?? ''));
+      button(tree, copy.core_setup.save).onClick?.(); setStep(3);
+    }
+    return tree;
+  }
+  renderToStaticMarkup(<Sequence />);
+  expect(seen).toEqual(['Raffle of the hall']);
+  expect(on_save).toHaveBeenCalledTimes(1);
+  expect(on_save.mock.calls[0]?.[0]).toMatchObject({ name: 'Raffle of the hall', rules: { cooldown_s: 45, winner_count: 9 } });
+});
+
+test('Save stays off for values the contract schema rejects, and regions formatting alone is not a change', () => {
+  const prize = { ...draw, policy: { ...draw.policy, content: 'prize' as const, regions: ['US', 'CA'] } };
+  expect(coreSetupCandidate({ value: { ...prize, policy: { ...prize.policy, minimum_age: 17.5 } }, regions: 'US, CA' })).toBeUndefined();
+  expect(coreSetupCandidate({ value: { ...prize, policy: { ...prize.policy, minimum_age: 300 } }, regions: 'US, CA' })).toBeUndefined();
+  expect(coreSetupCandidate({ value: { ...prize, rules: { ...prize.rules, cooldown_s: 2 ** 33 } }, regions: 'US, CA' })).toBeUndefined();
+  expect(coreSetupCandidate({ value: { ...prize, policy: { ...prize.policy, minimum_age: 18 } }, regions: 'US,CA' })?.policy.regions)
+    .toEqual(['US', 'CA']);
+  const markup = renderToStaticMarkup(<CoreDrawSetup draw={prize} disabled={false} on_save={vi.fn()} />);
+  expect(markup).toContain(copy.core_setup.clean);
 });

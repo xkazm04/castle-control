@@ -4,7 +4,7 @@ import type { DrawShape } from '@castle-control/renderer';
  * Presentation only: it follows the renderer's reveal cursor and never decides anything. */
 export type CeremonySound = {
   flourish(shape: DrawShape, duration_ms: number): void;
-  chime(order: number): void;
+  chime(order: number, delay_s?: number): void;
   fanfare(): void;
 };
 
@@ -79,8 +79,8 @@ export function createCeremonySound(context: SoundContext, volume = 0.16): Cerem
         if (texture.tone) tone(texture.tone, at, texture.hit, 0.12, 'square');
       }
     },
-    chime(order) {
-      const at = context.currentTime + 0.01; const pitch = chimeHz(order);
+    chime(order, delay_s = 0) {
+      const at = context.currentTime + 0.01 + delay_s; const pitch = chimeHz(order);
       tone(pitch, at, 1.4, 0.55); tone(pitch * 2.76, at, 0.5, 0.12); tone(pitch * 5.4, at, 0.2, 0.05);
     },
     fanfare() {

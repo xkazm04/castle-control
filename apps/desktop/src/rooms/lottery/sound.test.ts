@@ -59,6 +59,8 @@ test('the synthesizer schedules after the current time and never throws on a bar
   expect(started.every(item => item.at >= 10)).toBe(true);
   sound.chime(3);
   expect(started.slice(ticks).map(item => item.frequency)).toContain(chimeHz(3));
+  const staggered = started.length; sound.chime(4, 0.28);
+  expect(started.slice(staggered).every(item => item.at >= 10.28)).toBe(true);
   const before = started.length; sound.fanfare();
   expect(started.slice(before).filter(item => item.type === 'triangle')).toHaveLength(4);
 });

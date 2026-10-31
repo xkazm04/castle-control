@@ -35,7 +35,7 @@ test('the reveal cursor follows the renderer scene events, resumes one key and r
 test('by hand, the flourish plays, then each call reveals exactly the next winner in the renderer order', () => {
   const scene = stageScene('wheel', cast, 'question', false);
   const first = scene.events[0]?.at_ms ?? 0;
-  const clock = createRevealClock(); clock.pace(true);
+  const clock = createRevealClock(); clock.pace(true, 0);
   expect(clock.by_hand).toBe(true);
   expect(clock.tick(scene, 'h', 0)).toBe(first - 1);
   expect(clock.tick(scene, 'h', 9000)).toBeUndefined();
@@ -49,15 +49,21 @@ test('by hand, the flourish plays, then each call reveals exactly the next winne
   clock.callNext(9005); expect(clock.getSnapshot().revealed).toEqual(cast.winners);
 });
 
-test('switching back to auto releases a held ceremony from where it stopped', () => {
+test('switching back to auto after a long hold continues from the hold, never flooding the backlog', () => {
   const scene = stageScene('urn', cast, 'question', false);
-  const [, second, third] = scene.events.map(event => event.at_ms);
-  const clock = createRevealClock(); clock.pace(true);
+  const [first, second, third] = scene.events.map(event => event.at_ms);
+  const clock = createRevealClock(); clock.pace(true, 0);
   clock.tick(scene, 'a', 0); clock.tick(scene, 'a', 4000); clock.callNext(4000);
-  clock.pace(false);
+  // The streamer chats for ten seconds, then switches back to auto.
+  clock.pace(false, 14000);
   expect(clock.getSnapshot()).toMatchObject({ revealed: [cast.winners[0]], waiting: false });
-  expect(clock.tick(scene, 'a', 4001)).toBe((third ?? 0) - (second ?? 0));
+  expect(clock.tick(scene, 'a', 14001)).toBe((third ?? 0) - (second ?? 0));
   expect(clock.getSnapshot().revealed).toEqual(cast.winners.slice(0, 2));
+  const held = createRevealClock(); held.pace(true, 0);
+  held.tick(scene, 'b', 0); held.tick(scene, 'b', 30000);
+  held.pace(false, 30000);
+  expect(held.tick(scene, 'b', 30001)).toBe((second ?? 0) - (first ?? 0));
+  expect(held.getSnapshot().revealed).toEqual(cast.winners.slice(0, 1));
 });
 
 test('reduced motion reveals every winner at once and drops the flourish', () => {
@@ -139,7 +145,7 @@ test('mid-ceremony, the latest winner lifts out of its shape and the proclamatio
 });
 
 test('a held ceremony says so and offers the next call', () => {
-  const clock = createRevealClock(); clock.pace(true);
+  const clock = createRevealClock(); clock.pace(true, 0);
   const scene = stageScene('deck', cast, 'question', false);
   clock.tick(scene, `${seal}:deck:0`, 0); clock.tick(scene, `${seal}:deck:0`, 5000);
   const held = render({ shape: 'deck', clock, cast, sealed: true, seal, theatre: true, by_hand: true, on_by_hand: () => undefined });

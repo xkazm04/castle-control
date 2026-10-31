@@ -1,38 +1,52 @@
 import { useId, useState } from 'react';
 import { FieldGroup, HeraldicCard, InkButton } from '@castle-control/ui';
+import { parseMethodParams } from '@castle-control/contract';
+import { lotsDrawUpsert } from '@castle-control/contract/lots';
 import type { LotsDraw, LotsDrawPolicy } from '@castle-control/contract';
 import { lotsCopy as copy } from '../../lots-copy.js';
 
-type Draft = { base: LotsDraw; value: LotsDraw; regions: string };
-const fresh = (draw: LotsDraw): Draft => ({ base: draw, value: draw, regions: draw.policy.regions.join(', ') });
+/** A draft is the streamer's own edits, replayed over whatever the core currently holds for this draw.
+ * A winner-count, tier or equalizer update from elsewhere therefore never wipes unsaved rule edits. */
+type Edit = (draw: LotsDraw) => LotsDraw;
+type Draft = { draw_id: string; edits: readonly Edit[]; regions?: string };
+const fresh = (draw: LotsDraw): Draft => ({ draw_id: draw.draw_id, edits: [] });
 const regionList = (text: string) => text.split(',').map(value => value.trim()).filter(Boolean);
 const prize_flags = [['paid_entry', copy.paid_entry], ['paid_weight', copy.journey.paid_weight], ['official_rules', copy.template],
   ['twitch_disclaimer', copy.disclaimer], ['registration_confirmed', copy.registration]] as const;
 
-/** Saves the candidate after the regions draft is applied; undefined while a field is invalid. */
-export function coreSetupCandidate(draft: Pick<Draft, 'value' | 'regions'>): LotsDraw | undefined {
-  const draw = draft.value; const rules = draw.rules;
+/** The draw a save would send, after the regions text is applied; undefined unless the contract's own
+ * `lots.draw.upsert` schema accepts it (the same door the core port uses), so Save never offers a value
+ * that would only fail at the boundary. */
+export function coreSetupCandidate(draft: { value: LotsDraw; regions: string }): LotsDraw | undefined {
+  const draw = draft.value;
   if (!draw.name.trim()) return undefined;
-  if (rules.pool.kind === 'keyword' && !/^\S+$/.test(rules.pool.keyword)) return undefined;
-  if (!Number.isInteger(rules.cooldown_s) || rules.cooldown_s < 0) return undefined;
-  if (!Number.isInteger(draw.policy.prize_value_usd_cents) || draw.policy.prize_value_usd_cents < 0) return undefined;
-  return { ...draw, policy: { ...draw.policy, regions: regionList(draft.regions) } };
+  const candidate = { ...draw, policy: { ...draw.policy, regions: regionList(draft.regions) } };
+  try { return parseMethodParams(lotsDrawUpsert, { draw: candidate }).draw; } catch { return undefined; }
 }
 
 /** Core rule setup as a draft: edits stay in this card until one save sends a single
  * `lots.draw.upsert` (which also re-runs the core's policy check). Winner count keeps its
- * own commit-on-blur field above; a new draw from the core replaces an unsaved draft. */
+ * own commit-on-blur field above. Edits survive updates to the same draw and are dropped
+ * once the core holds them (or when another draw is selected). */
 export function CoreDrawSetup({ draw, disabled, on_save }: { draw: LotsDraw; disabled: boolean; on_save: (draw: LotsDraw) => void }) {
   const id = useId();
   const [state, setDraft] = useState<Draft>(() => fresh(draw));
-  const draft = state.base === draw ? state : fresh(draw);
+  const draft = state.draw_id === draw.draw_id ? state : fresh(draw);
   if (draft !== state) setDraft(draft);
-  const value = draft.value; const rules = value.rules;
-  const update = (next: (current: LotsDraw) => LotsDraw) => setDraft(prior => ({ ...prior, value: next(prior.value) }));
+  const value = draft.edits.reduce((current, edit) => edit(current), draw);
+  const regions = draft.regions ?? value.policy.regions.join(', ');
+  const rules = value.rules;
+  const update = (edit: Edit) => setDraft(prior => ({ ...prior, edits: [...prior.edits, edit] }));
   const rule = (change: Partial<LotsDraw['rules']>) => update(current => ({ ...current, rules: { ...current.rules, ...change } }));
   const policy = (change: Partial<LotsDrawPolicy>) => update(current => ({ ...current, policy: { ...current.policy, ...change } }));
-  const candidate = coreSetupCandidate(draft);
-  const dirty = JSON.stringify(candidate ?? value) !== JSON.stringify(draw) || draft.regions !== draw.policy.regions.join(', ');
+  const candidate = coreSetupCandidate({ value, regions });
+  const dirty = JSON.stringify(candidate ?? value) !== JSON.stringify(draw);
+  // Absorbed: the core now holds everything this draft changed, so the next draft starts clean. Regions text
+  // that is mid-typing ("US, " while the core holds US) is kept as typed.
+  const canonical = draw.policy.regions.join(', ');
+  if (candidate && !dirty && (draft.edits.length || draft.regions === canonical)) {
+    setDraft(draft.regions === undefined || draft.regions === canonical ? fresh(draw) : { ...fresh(draw), regions: draft.regions });
+  }
   const field = (name: string) => `${id}-${name}`;
   return <HeraldicCard variant="raised" aria-label={copy.core_setup.title}>
     <h2 className="lottery-card-title">{copy.core_setup.title}</h2>
@@ -103,8 +117,8 @@ export function CoreDrawSetup({ draw, disabled, on_save }: { draw: LotsDraw; dis
           }} />
         </FieldGroup>
         <FieldGroup label={copy.regions} control_id={field('regions')}>
-          <input id={field('regions')} value={draft.regions} onChange={event => {
-            const regions = event.currentTarget.value; setDraft(prior => ({ ...prior, regions }));
+          <input id={field('regions')} value={regions} onChange={event => {
+            const text = event.currentTarget.value; setDraft(prior => ({ ...prior, regions: text }));
           }} />
         </FieldGroup>
       </>}

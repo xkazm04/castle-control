@@ -74,7 +74,8 @@ function useCeremonySound(on: boolean, shape: DrawShape, scene: DrawScene, key: 
     const sound = on && key !== undefined ? ceremonySound() : undefined;
     if (!sound) return;
     if (last.key !== key) { if (fresh && count === 0) sound.flourish(shape, scene.events[0]?.at_ms ?? 1200); return; }
-    if (count > last.count) sound.chime(count);
+    // One bell per newly revealed winner, staggered when several arrive at once (reduced motion).
+    for (let order = last.count + 1; order <= Math.min(count, last.count + 12); order++) sound.chime(order, (order - last.count - 1) * 0.14);
     if (done && !last.done) sound.fanfare();
   }, [on, shape, scene, key, fresh, count, done]);
 }
@@ -125,10 +126,13 @@ export function DrawStage({ shape, on_shape, entries, cast, content, sealed, sea
 }) {
   const reduced = useReducedMotion();
   const playable = cast && verified ? cast : undefined;
-  const scene = useMemo(() => stageScene(shape, playable, content, reduced), [shape, playable, content, reduced]);
+  // By hand needs one onset per winner, so it keeps the renderer's timed events even under reduced motion
+  // (no motion plays either way: the flourish and CSS animations stay off).
+  const timed = reduced && !by_hand;
+  const scene = useMemo(() => stageScene(shape, playable, content, timed), [shape, playable, content, timed]);
   const take = clock.getSnapshot().take;
   const key = playable ? `${seal ?? 'cast'}:${shape}:${take}` : undefined;
-  useEffect(() => { clock.pace(by_hand); }, [clock, by_hand]);
+  useEffect(() => { clock.pace(by_hand, performance.now()); }, [clock, by_hand]);
   const state = useReveal(clock, playable ? scene : undefined, key);
   const call = useRef<HTMLSpanElement>(null);
   const root = useRef<HTMLDivElement>(null);

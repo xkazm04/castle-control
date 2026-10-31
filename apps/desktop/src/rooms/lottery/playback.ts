@@ -65,11 +65,13 @@ export function createRevealClock() {
       began = now - position;
       sync(key);
     },
-    /** Switches pace; switching to auto releases a held ceremony on the host's next tick. */
-    pace(hand: boolean) {
+    /** Switches pace; switching to auto releases a held ceremony on the host's next tick, continuing
+     * from where it was held (time spent waiting never counts towards the next onset). */
+    pace(hand: boolean, now: number) {
       if (by_hand === hand) return;
       by_hand = hand;
       gate = hand ? hold() : undefined;
+      if (!hand && playback && Number.isFinite(playback.position_ms)) began = now - playback.position_ms;
       if (state.key !== undefined) sync(state.key);
     },
     get by_hand() { return by_hand; },

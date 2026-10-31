@@ -41,11 +41,13 @@ renderer `draw/host.test.ts`, cc-obs `tests/pages.rs` and cc-core
 
 Each called lot lifts out of its shape (`lift_path`: urn mouth, wheel pointer,
 dealt off the deck, up through the ballot slot), and the proclamation states
-the winner's share of the pool's weight. Dot area is proportional to weight and
-eases when the curve changes. Two session-only options sit beside the shape
+the winner's share of the pool's weight. Dot area follows weight (radius ∝
+√weight, floored at 35% so the lightest lot stays visible) and eases when the
+curve changes; pointing at an equalizer bar lights the lots holding that weight. Two session-only options sit beside the shape
 picker. **Reveal by hand** holds the renderer's cursor just before each onset
 until the streamer calls the next lot (`createRevealClock().callNext`). Only the
-timing changes; winners and order never do. **Ceremony sound** (`sound.ts`) is
+timing changes; winners and order never do. The hold applies to this window
+only: the OBS draw page keeps its own cadence. **Ceremony sound** (`sound.ts`) is
 Web Audio synthesis with no assets, off until switched on. The *On stream*
 preview draws the renderer artwork the OBS page paints for the chosen shape.
 
