@@ -155,6 +155,11 @@ textarea{width:100%;min-height:96px;font:15px/1.5 var(--serif);background:var(--
     </div>
   </section>
 
+  <section aria-labelledby="h-frames3" style="display:grid;gap:14px">
+    <h2 id="h-frames3">Cam frames, round three <small>Your notes: Heraldic and Storybook fit, so they stay. Arcade and Neon were too thick, and Cel and Glass had the wrong scope. Each of those four now has a single hairline (a) and a double hairline (b), meant to run edge to edge around a 16:9 window. The stream above uses variant a.</small></h2>
+    <div class="cards" id="frames3"></div>
+  </section>
+
   <section aria-labelledby="h-frames" style="display:grid;gap:14px">
     <h2 id="h-frames">Thin cam frames <small>Round two, after your note that the frames were too thick: hairline outlines, glow and shadow, accents only at the corners. The stream above uses these.</small></h2>
     <div class="cards" id="frames2"></div>
@@ -193,6 +198,8 @@ const STYLES=[
 const ASSETS=[["urn","Draw urn","Lot Chamber"],["frame","Cam frame","Beacons"],["altar","Hype altar","Beacons"],["votebar","Vote bar","Gatehouse"],["hexmap","Realm map","Map Room"]];
 const SHOTS=[["malakor-facecam","Malakor · facecam","Chest-up, talking to camera"],["malakor-lair-wide","Malakor · lair","Your prompt as written, wide"],["malakor-laugh","Malakor · villain laugh","Pointing at the conquest map"],["scene-warmap","War map","Gameplay background"],["scene-throne","Throne room","Just-chatting background"]];
 const THIN=["heraldic","pixel","synthwave","watercolor","anime","glass"];
+const R3=["pixel","synthwave","anime","glass"];
+const frameFor=s=>R3.includes(s)?"frame3a":(THIN.includes(s)?"frame2":"frame");
 const src=id=>"web/"+id+".webp";
 const state={verdicts:{},style:"heraldic",layout:"game",shot:"malakor-facecam"};
 let db=null;
@@ -225,6 +232,13 @@ function buildLib(){
       const m=el("div",{class:"meta"});m.append(el("b",{text:label}),el("span",{text:mod}));
       c.append(w,m,verdictChips(id));cards.append(c)}
     sec.append(head,cards);lib.append(sec)}
+  const f3=document.getElementById("frames3");
+  for(const s of R3)for(const v of["a","b"]){
+    const[,name]=STYLES.find(x=>x[0]===s);const id=`preset-${s}-frame3${v}`;
+    const c=el("div",{class:"card","data-card":id});
+    const w=el("div",{class:"well dark"});w.append(img(id,`${name} round three frame ${v}`));
+    const m=el("div",{class:"meta"});m.append(el("b",{text:`${name} frame ${v}`}),el("span",{text:v==="a"?"Single hairline":"Double hairline"}));
+    c.append(w,m,verdictChips(id));f3.append(c)}
   const f2=document.getElementById("frames2");
   for(const s of THIN){
     const[,name]=STYLES.find(x=>x[0]===s);const id=`preset-${s}-frame2`;
@@ -248,7 +262,7 @@ function press(boxId,v){document.querySelectorAll(`#${boxId} button`).forEach(b=
 function setStyle(s){state.style=s;press("c-style",s);renderStage()}
 function renderStage(){
   const s=state.style,st=document.getElementById("stage");
-  for(const[k,a]of[["s-vote","votebar"],["s-altar","altar"],["s-urn","urn"],["s-map","hexmap"],["s-frame",THIN.includes(s)?"frame2":"frame"],["p-map","hexmap"],["p-urn","urn"],["p-altar","altar"]])document.getElementById(k).src=src(`preset-${s}-${a}`);
+  for(const[k,a]of[["s-vote","votebar"],["s-altar","altar"],["s-urn","urn"],["s-map","hexmap"],["s-frame",frameFor(s)],["p-map","hexmap"],["p-urn","urn"],["p-altar","altar"]])document.getElementById(k).src=src(`preset-${s}-${a}`);
   const chatting=state.layout==="chat";
   st.classList.toggle("chatting",chatting);
   document.getElementById("cam").hidden=chatting;
@@ -260,7 +274,7 @@ function paint(){
   const t={keep:0,maybe:0,drop:0};
   document.querySelectorAll(".vchip[data-id]").forEach(b=>b.setAttribute("aria-pressed",String(state.verdicts[b.dataset.id]===b.dataset.v)));
   document.querySelectorAll("[data-card]").forEach(c=>{const v=state.verdicts[c.dataset.card];v?c.dataset.verdict=v:delete c.dataset.verdict});
-  const items=STYLES.length*ASSETS.length+SHOTS.length+THIN.length;let marked=0;
+  const items=STYLES.length*ASSETS.length+SHOTS.length+THIN.length+R3.length*2;let marked=0;
   for(const[id,v]of Object.entries(state.verdicts)){if(!v||id.startsWith("style-"))continue;t[v]++;marked++}
   for(const k of["keep","maybe","drop"])document.getElementById("t-"+k).textContent=t[k];
   document.getElementById("t-open").textContent=items-marked;

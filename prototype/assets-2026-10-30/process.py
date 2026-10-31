@@ -43,7 +43,7 @@ for p in sorted(SRC.glob("*.png")):
     im = Image.open(p)
     if p.stem.startswith("preset-"):
         im = im.convert("RGB").resize((640, round(640 * im.height / im.width)), Image.LANCZOS)
-        im = key_black(im, centre=p.stem.endswith(("-frame", "-frame2")))
+        im = key_black(im, centre=("-frame" in p.stem))
         im.save(dst, "WEBP", quality=84, method=6)
     else:
         w = 1600
