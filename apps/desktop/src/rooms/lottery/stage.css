@@ -64,7 +64,8 @@
 .lottery-stage-verdict small { font: 800 var(--text-label)/1.1 var(--font-ui); letter-spacing: var(--track-air); text-transform: uppercase; color: var(--gules-text); }
 .lottery-stage-verdict b { font: 800 var(--text-section)/1 var(--font-display); letter-spacing: var(--track-heading); text-transform: uppercase; color: var(--ok); }
 .lottery-stage-verdict p { margin: 0; font: italic var(--text-aside)/1.35 var(--font-serif); color: var(--ink-2); }
-.lottery-stage-verdict .cc-button { margin-top: var(--space-4); }
+.lottery-stage-verdict-actions { display: flex; flex-wrap: wrap; gap: var(--space-6); margin-top: var(--space-4); }
+.lottery-stage-verdict .lottery-stage-copied { min-height: 1lh; color: var(--ok); letter-spacing: var(--track-label); }
 .lottery-stage-verdict-seal { width: var(--space-56); height: var(--space-56); overflow: visible; transform: rotate(-8deg); animation: lottery-wax-stamp var(--motion-shell) var(--ease) calc(var(--draw-reveal) * .3) both; }
 .lottery-stage-verdict-seal circle { fill: var(--ok); stroke: var(--ink); stroke-width: 1.2; }
 .lottery-stage-verdict-seal path { fill: none; stroke: var(--press); stroke-width: 2.8; stroke-linecap: round; stroke-linejoin: round; }

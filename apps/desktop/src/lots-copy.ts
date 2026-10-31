@@ -131,6 +131,7 @@ export const lotsCopy = {
       core: ['Core verified', 'The core checked this cast against its seal and randomness before the ceremony.'],
     },
     prove: 'Prove it in the Writ Lab',
+    chat: 'Copy for chat', chat_done: { copied: 'Copied · paste it into chat', failed: 'Clipboard unavailable here' },
     options: 'Ceremony options', by_hand: 'Reveal by hand', by_hand_hint: 'The flourish plays, then each winner waits for your call in this window. The OBS draw page keeps its own cadence. The sealed roll already fixed the order.',
     call_first: 'Call the first lot', call_next: (order: number, total: number) => `Call lot ${order} of ${total}`,
     held: 'Held for your call · the order is already fixed',

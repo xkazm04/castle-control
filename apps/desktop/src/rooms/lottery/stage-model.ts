@@ -52,6 +52,15 @@ export const lift_path: Readonly<Record<DrawShape, { via: { x: number; y: number
   ballot_box: { via: { x: 169, y: 86 }, out: { x: 169, y: 2 }, turn: -8 },
 };
 
+/** One chat-ready line announcing a cast: winners as @mentions in cast order and the seal prefix.
+ * Anything not explicitly live is labelled a simulated rehearsal. Capped at Twitch's 500 characters. */
+export function chatLine(winners: readonly LotsHandle[], seal: string | undefined, live: boolean): string {
+  const head = live ? 'Winners' : '[SIMULATED rehearsal] Winners';
+  const tail = seal ? ` · seal ${seal.slice(0, 8)}…${seal.slice(-4)}` : '';
+  const line = `${head}: ${winners.map(winner => `@${winner}`).join(' ')}${tail}`;
+  return line.length <= 500 ? line : `${line.slice(0, 499)}…`;
+}
+
 /** A winner's share of the pool's total weight, in percent with one decimal. */
 export function weightShare(weight: number, total: number): number {
   return total > 0 ? Math.round(weight / total * 1000) / 10 : 0;

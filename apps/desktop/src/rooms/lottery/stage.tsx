@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties } from 'react';
 import { InkButton, StatusChip } from '@castle-control/ui';
 import type { DrawContent } from '@castle-control/contract';
@@ -7,7 +7,7 @@ import { lotsCopy as copy } from '../../lots-copy.js';
 import { revealStyle } from './display.js';
 import type { RevealClock } from './playback.js';
 import { useReducedMotion, useReveal } from './playback.js';
-import { artworkOf, call_origin, confetti, draw_shapes, layoutMarks, lift_path, sampleEntries, stage_view_box, stageScene, weightShare } from './stage-model.js';
+import { artworkOf, call_origin, chatLine, confetti, draw_shapes, layoutMarks, lift_path, sampleEntries, stage_view_box, stageScene, weightShare } from './stage-model.js';
 import type { StageCast, StageEntry, StageMark } from './stage-model.js';
 import { ceremonySound } from './sound.js';
 import './stage.css';
@@ -106,23 +106,35 @@ function LiftToken({ shape, mark }: { shape: DrawShape; mark: StageMark }) {
 }
 
 /** Closes the ceremony with the proof that let it play: a locally recomputed writ or a core-verified cast. */
-function Verdict({ total, proof, on_prove }: { total: number; proof: 'local' | 'core'; on_prove: (() => void) | undefined }) {
+function Verdict({ total, proof, on_prove, line }: { total: number; proof: 'local' | 'core'; on_prove: (() => void) | undefined; line: string }) {
   const [title, detail] = copy.stage.proof[proof];
+  const [copied, setCopied] = useState<'copied' | 'failed'>();
+  const copyLine = () => {
+    const clipboard = typeof navigator === 'undefined' ? undefined : navigator.clipboard;
+    if (!clipboard) { setCopied('failed'); return; }
+    clipboard.writeText(line).then(() => setCopied('copied'), () => setCopied('failed'));
+  };
   return <div className="lottery-stage-verdict" data-proof={proof}>
     <svg className="lottery-stage-verdict-seal" viewBox="0 0 24 24" aria-hidden="true"><circle cx={12} cy={12} r={11} />
       <path d="M6.5 12.5l3.6 3.6L17.5 8.2" /></svg>
     <div><small>{copy.stage.complete(total)}</small><b>{title}</b><p>{detail}</p>
-      {on_prove && <InkButton size="room" onClick={on_prove}>{copy.stage.prove}</InkButton>}</div>
+      <span className="lottery-stage-verdict-actions">
+        {on_prove && <InkButton size="room" onClick={on_prove}>{copy.stage.prove}</InkButton>}
+        <InkButton size="room" title={line} onClick={copyLine}>{copy.stage.chat}</InkButton>
+      </span>
+      <small className="lottery-stage-copied" role="status">{copied ? copy.stage.chat_done[copied] : ''}</small></div>
   </div>;
 }
 
 export function DrawStage({ shape, on_shape, entries, cast, content, sealed, seal, clock, reveal_ms, verified = true, theatre = false,
-  on_theatre, proof = 'local', on_prove, sound = false, on_sound, by_hand = false, on_by_hand, focus_weight }: {
+  on_theatre, proof = 'local', on_prove, sound = false, on_sound, by_hand = false, on_by_hand, focus_weight, live = false }: {
   shape: DrawShape; on_shape: (shape: DrawShape) => void; entries: readonly StageEntry[]; cast: StageCast | undefined;
   content: DrawContent; sealed: boolean; seal?: string | undefined; clock: RevealClock; reveal_ms: number; verified?: boolean;
   theatre?: boolean; on_theatre?: (theatre: boolean) => void; proof?: 'local' | 'core'; on_prove?: () => void;
   sound?: boolean; on_sound?: (sound: boolean) => void; by_hand?: boolean; on_by_hand?: (by_hand: boolean) => void;
   focus_weight?: number | undefined;
+  /** Only an explicitly live core cast is announced without the simulated label. */
+  live?: boolean;
 }) {
   const reduced = useReducedMotion();
   const playable = cast && verified ? cast : undefined;
@@ -204,7 +216,8 @@ export function DrawStage({ shape, on_shape, entries, cast, content, sealed, sea
       {(revealed.length > 0 || state.waiting) && <div className="lottery-stage-rail">
         {phase === 'revealing' && latest && <Proclamation key={latest} handle={latest} order={revealed.length}
           total={winners.length} cohort={cohorts.get(latest)} share={share(latest)} />}
-        {phase === 'revealed' && theatre && <Verdict total={winners.length} proof={proof} on_prove={on_prove} />}
+        {phase === 'revealed' && theatre && <Verdict total={winners.length} proof={proof} on_prove={on_prove}
+          line={chatLine(winners, seal, live)} />}
         {state.waiting && <span ref={call} className="lottery-stage-call"><InkButton size="room" variant="primary" aria-keyshortcuts="Space"
           onClick={() => clock.callNext(performance.now())}>
           {revealed.length ? copy.stage.call_next(revealed.length + 1, winners.length) : copy.stage.call_first}</InkButton>

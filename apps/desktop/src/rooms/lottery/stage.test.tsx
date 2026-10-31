@@ -7,7 +7,7 @@ import { fixtureEntries } from '../../lots-fixture.js';
 import { lotsCopy as copy } from '../../lots-copy.js';
 import { createRevealClock } from './playback.js';
 import { DrawStage } from './stage.jsx';
-import { draw_shapes, isDrawShape, layoutMarks, lift_path, sampleEntries, stageScene, weightShare } from './stage-model.js';
+import { chatLine, draw_shapes, isDrawShape, layoutMarks, lift_path, sampleEntries, stageScene, weightShare } from './stage-model.js';
 import type { StageCast } from './stage-model.js';
 import { draftRoll, lotterySession, sealLotteryProposal } from './session.js';
 
@@ -165,6 +165,7 @@ test('a finished ceremony closes on its proof: a verdict card with the lab hando
   expect(theatre).toContain('lottery-stage-verdict');
   expect(theatre).toContain(copy.stage.complete(3)); expect(theatre).toContain(copy.stage.proof.local[0]);
   expect(theatre).toContain(`>${copy.stage.prove}</button>`);
+  expect(theatre).toContain(`>${copy.stage.chat}</button>`); expect(theatre).toContain('[SIMULATED rehearsal] Winners: @simulated_00014');
   const core = render({ shape: 'wheel', clock, cast, sealed: true, seal, theatre: true, proof: 'core' });
   expect(core).toContain(copy.stage.proof.core[0]); expect(core).not.toContain(copy.stage.prove);
   const desk = render({ shape: 'wheel', clock, cast, sealed: true, seal, on_prove: () => undefined });
@@ -180,6 +181,12 @@ test('pointing at an equalizer bar lights exactly the lots holding that weight',
   expect(html).toContain('data-focusing="true"');
   expect(html.match(/data-focus="true"/g)).toHaveLength(29);
   expect(render({ entries: weighted })).not.toContain('data-focus');
+});
+
+test('the chat line names winners in cast order, carries the seal and labels anything not live', () => {
+  expect(chatLine(cast.winners, seal, false)).toBe(`[SIMULATED rehearsal] Winners: @simulated_00014 @simulated_00002 @simulated_00080 · seal ${seal.slice(0, 8)}…${seal.slice(-4)}`);
+  expect(chatLine(cast.winners, undefined, true)).toBe('Winners: @simulated_00014 @simulated_00002 @simulated_00080');
+  expect(chatLine(Array.from({ length: 40 }, (_, index) => `simulated_${String(index).padStart(5, '0')}`), seal, true).length).toBeLessThanOrEqual(500);
 });
 
 test('theatre toggle is exposed with its pressed state, and the sealed stage stamps its wax', () => {
