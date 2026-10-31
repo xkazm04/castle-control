@@ -73,34 +73,18 @@ text nodes. Tests pin the count, hooks, deterministic independent trees,
 
 ## Motion
 
-The stylesheet keeps the winner's registration offsets and timings. Its
-pending motion variables have these fallbacks (WP2 may supply them later):
-
-| Variable | Fallback |
-| --- | --- |
-| `--m-plate-key` | `.5s` |
-| `--m-plate-key-delay` | `.05s` |
-| `--m-plate-colour` | `.45s` |
-| `--m-plate-gules-delay` | `.55s` |
-| `--m-plate-azure-delay` | `1s` |
-| `--m-plate-or-delay` | `1.45s` |
-| `--m-register` | `.32s` |
-| `--m-register-delay` | `2.05s` |
-| `--m-cloud` | `38s` |
-| `--m-cloud-2` | `52s` |
-| `--m-flame` | `1.6s` |
-| `--m-flame-2` | `1.15s` |
-| `--m-flame-2-delay` | `-.4s` |
-| `--m-ember` | `3.6s` |
-| `--m-chatroll` | `14s` |
-| `--m-wave` | `5s` |
-| `--ease-stamp` | `cubic-bezier(.34, 1.72, .52, 1)` |
-| `--dx` (ember displacement) | `10px` |
+The stylesheet keeps the winner's registration offsets. All motion durations,
+delays and the stamp easing now reference the generated WP2 tokens without
+fallbacks. The plate offsets `--rx` and `--ry` are local CSS properties;
+per-ember `--dx` keeps its original `10px` fallback. The CSS test reads
+`packages/tokens/src/generated.css` directly, without a package dependency,
+and checks every variable reference against generated tokens or local art
+inputs. Only `--dx` may carry a fallback.
 
 Reduced motion disables plate and ambient animations and hides embers without
 applying a global motion override to the host application.
 
-Verification on 2026-10-31:
+Initial WP3b verification on 2026-10-31:
 
 - WP3b uses the brief's equivalent direct commands from the repo root, because
   the member is not installed. No install or package-wrapper run is attempted:
@@ -117,4 +101,13 @@ Verification on 2026-10-31:
   Room counts: Herald 16, Gatehouse 54, Lots 81, Studio 64, Beacons 31,
   Steward 20. WP3a separately verified the shell geometry.
 
-All changes are uncommitted and confined to this package. No live data is used.
+Director motion follow-up on 2026-10-31, after WP2 and package installation:
+
+- `pnpm --filter @castle-control/keep-art typecheck`: exit 0;
+  `[pnpm typecheck] walked 23 files`.
+- `pnpm --filter @castle-control/keep-art lint`: exit 0;
+  `[pnpm lint] walked 23 files`; repository checks also pass.
+- `pnpm --filter @castle-control/keep-art test`: exit 0;
+  `Tests 30 passed (30)`, `Test Files 6 passed (6)`.
+
+Follow-up changes are uncommitted and confined to this package. No live data is used.
