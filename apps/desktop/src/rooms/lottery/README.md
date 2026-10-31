@@ -28,7 +28,9 @@ verifier-web's `verifyDecodedWrit` (round schedule and BLS signature) against a
 compiled-in anchor (`beacon-anchors.ts`: the public quicknet key; fixture mode
 adds verifier-web's simulated chain key for its specimen). A chain without an
 anchor reads UNVERIFIED. "Forge the beacon" (a made-up signature with its
-matching hash) is caught by BLS alone.
+matching hash) is caught by BLS alone. "Open a writ file…" parses a JSON writ with
+the contract's `lots.writ.get` schema (`writ-file.ts`, at most 2 MiB) and puts it
+on the bench as a third specimen, checked against the room's own anchors.
 A finished ceremony closes on its proof (theatre: a verdict card naming a
 local recompute or a core-verified cast, with "Prove it in the Writ Lab", which
 returns to the desk, restores the canonical writ and replays the walk; desk: a
