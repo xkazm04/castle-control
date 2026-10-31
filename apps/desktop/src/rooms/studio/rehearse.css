@@ -114,15 +114,14 @@
   .studio-room .cc-hex[data-flipped] .cc-hex-face, .studio-room .cc-hex[data-picked], .studio-room .studio-verdict { animation: none; }
   .studio-room .studio-ribbon > li { transition: none; }
 }
-/* What if: the compare and redraw tools sit between the run controls and the board. */
-.studio-room .studio-rehearse-tools { display: grid; gap: var(--space-6); padding: var(--space-6) var(--space-24) 0; }
-.studio-room .studio-tools-row, .studio-room .studio-palette { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-6) var(--space-8); }
-.studio-room .studio-tools-title, .studio-room .studio-palette-label {
+/* What if: one row of tools between the run controls and the board; the brushes take the compare buttons' place. */
+.studio-room .studio-rehearse-tools { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-6) var(--space-8); padding: var(--space-6) var(--space-24) 0; }
+.studio-room .studio-tools-title {
   font: 800 var(--text-label)/1.4 var(--font-ui); letter-spacing: var(--track-air); text-transform: uppercase; color: var(--muted);
 }
 .studio-room .studio-tools-edited { font: italic var(--text-small)/1.3 var(--font-serif); color: var(--ink-2); }
-.studio-room .studio-palette { padding: var(--space-6) var(--space-8); border: var(--rule-medium) dashed var(--key); background: var(--card); }
-.studio-room .studio-palette .cc-button { display: inline-flex; align-items: center; gap: var(--space-5); }
+.studio-room .studio-palette { display: contents; }
+.studio-room .studio-palette .cc-button, .studio-room .studio-rehearse-tools .cc-button[aria-pressed] { display: inline-flex; align-items: center; gap: var(--space-5); }
 .studio-room .studio-swatch { width: var(--space-10); height: var(--space-10); border: var(--rule-thin) solid var(--rule); background: var(--house); }
 .studio-room .studio-swatch[data-unclaimed="true"] { background: var(--paper-2); border-style: dashed; }
 /* In paint mode the board says so before a hand reaches it. */

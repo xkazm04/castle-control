@@ -74,9 +74,11 @@ export const rehearseCopy = {
   crowd_col: 'Crowd', crowd_word: (viewers: number) => `${viewers} viewers`,
   crowd_use: (viewers: number) => `Use ${viewers} simulated viewers`,
   crowd_on_form: 'In the form',
-  redraw: 'Redraw start', redraw_hint: 'Press or drag across hexes to repaint the starting territory. Only this rehearsal changes; the table and your real map do not.',
+  redraw: 'Redraw start', redraw_hint: 'Press or drag across hexes to repaint the starting territory. Only this rehearsal changes; the table and your real map do not. Press Redraw start again when you are done.',
   paint_with: 'Paint with', paint_house: (label: string) => `Paint with ${label}`, paint_clear: 'Unclaimed',
-  paint_done: 'Done', restore: 'Restore sample',
+  restore: (edited: number) => (edited > 0 ? `Restore (${edited})` : 'Restore'),
+  restore_label: (edited: number) => (edited > 0
+    ? `Restore the sample territory, ${edited} ${edited === 1 ? 'tile' : 'tiles'} repainted` : 'Restore the sample territory'),
   paint_gloss: 'Simulated rehearsal · redrawing the starting territory',
   painted_line: (id: string, owner: string, count: number) =>
     `${id} painted ${owner}. ${count} ${count === 1 ? 'tile differs' : 'tiles differ'} from the starting territory.`,

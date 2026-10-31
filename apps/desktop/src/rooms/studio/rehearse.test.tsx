@@ -255,8 +255,8 @@ test('the Compare sizes button exists only where the room owns the sizes, and th
   expect(controls()).toEqual(['Play round', 'Step', 'Reset']);
   const tools = (can_compare: boolean) => collect(RehearseTools({ state: createRehearseState(), handlers: handlers(), board, can_compare }))
     .filter(control => control.onClick).map(textOf);
-  expect(tools(true)).toEqual(['Compare sizes', 'Compare crowds', 'Redraw start']);
-  expect(tools(false)).toEqual(['Compare crowds', 'Redraw start']);
+  expect(tools(true)).toEqual(['Redraw start', 'Compare sizes', 'Compare crowds']);
+  expect(tools(false)).toEqual(['Redraw start', 'Compare crowds']);
   const state = reduceRehearse(createRehearseState(), { type: 'compare_sizes', sizes: sizeChoices });
   expect(renderToStaticMarkup(side(state))).toContain('Simulated comparison across map sizes');
   expect(renderToStaticMarkup(side(createRehearseState()))).not.toContain('studio-sizes');

@@ -128,7 +128,7 @@ test('Map Room Rehearse: redraw the start by painting and dragging, compare crow
     await page.mouse.move(to.x + to.width / 2, to.y + to.height / 2, { steps: 10 }); await page.mouse.up();
     for (const id of ['F1', 'G1', 'H1']) expect(await house(id), id).toBe('House Sable');
     expect(await house('I1')).toBe('House Tallow');
-    await expect(room.getByText('Redrawn start · 4 tiles repainted', { exact: true })).toBeVisible();
+    await expect(room.getByRole('button', { name: 'Restore the sample territory, 4 tiles repainted', exact: true })).toBeVisible();
 
     // Keyboard: Enter on a focused hex paints it; arrows only move.
     await room.getByRole('button', { name: 'Paint with Unclaimed', exact: true }).click();
@@ -136,7 +136,7 @@ test('Map Room Rehearse: redraw the start by painting and dragging, compare crow
     expect(await house('B1')).toBe('House Quill');
     await page.keyboard.press('Enter');
     expect(await house('B1')).toBe('unclaimed');
-    await room.getByRole('button', { name: 'Done', exact: true }).click();
+    await room.getByRole('button', { name: 'Redraw start', exact: true }).click();
     await expect(room.getByRole('group', { name: 'Paint with', exact: true })).toHaveCount(0);
 
     // The round plays on the redrawn start, and the earlier table view still shows the untouched sample.
@@ -157,13 +157,13 @@ test('Map Room Rehearse: redraw the start by painting and dragging, compare crow
 
     // Restore sample puts the starting territory back, and a new map size drops the edits.
     await room.getByRole('button', { name: 'Redraw start', exact: true }).click();
-    await room.getByRole('button', { name: 'Restore sample', exact: true }).click();
+    await room.getByRole('button', { name: /^Restore the sample territory/ }).click();
     expect(await house('E1')).toBe('unclaimed'); expect(await house('B1')).toBe('House Quill');
     await room.getByRole('button', { name: 'Paint with House Tallow', exact: true }).click();
     await room.locator('[data-hex-tile="A1"]').click();
-    await expect(room.getByText('Redrawn start · 1 tile repainted', { exact: true })).toBeVisible();
+    await expect(room.getByRole('button', { name: 'Restore the sample territory, 1 tile repainted', exact: true })).toBeVisible();
     await room.getByLabel('Map size', { exact: true }).selectOption('s');
-    await expect(room.getByText(/Redrawn start/)).toHaveCount(0);
+    await expect(room.getByRole('button', { name: /^Restore the sample territory, \d+ tiles? repainted$/ })).toHaveCount(0);
     await auditStyles(page, desktopSurfaces); await auditFields(page);
   } finally { await page.goto('about:blank'); verify(); }
 });

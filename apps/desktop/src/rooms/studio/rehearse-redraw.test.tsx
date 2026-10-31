@@ -44,7 +44,8 @@ test('Redraw start opens a palette with one brush per house and unclaimed, and t
     expect(html).toContain(`aria-label="${label}"`);
   }
   expect(html.match(/aria-pressed="true"[^>]*aria-label="Paint with/g)).toHaveLength(1);
-  expect(html).toContain('Redrawn start · 1 tile repainted');
+  expect(html).toContain('aria-label="Restore the sample territory, 1 tile repainted"'); expect(html).toContain('>Restore (1)</button>');
+  expect(html).not.toContain('Redrawn start · 1 tile repainted'); // the count lives on the Restore button while painting
   expect(html).toContain('Simulated rehearsal · redrawing the starting territory');
   expect(html).toContain('D1 painted House Sable. 1 tile differs from the starting territory.');
   expect(html.split(BAND)).toHaveLength(2);
@@ -57,14 +58,19 @@ test('with no edit yet the palette says how to paint, and Restore sample stays o
   const html = renderToStaticMarkup(work(apply({ type: 'brush', side: 'quill' })));
   expect(html).toContain('Press or drag across hexes to repaint the starting territory.');
   expect(html).toContain('Only this rehearsal changes; the table and your real map do not.');
-  expect(html).toMatch(/<button[^>]*disabled=""[^>]*>Restore sample<\/button>/);
+  expect(html).toContain('Press Redraw start again when you are done.');
+  expect(html).toMatch(/<button[^>]*aria-label="Restore the sample territory"[^>]*disabled=""[^>]*>Restore<\/button>/);
   expect(html).not.toContain('Redrawn start');
+  const quiet = apply({ type: 'brush', side: 'tallow' }, { type: 'paint', board, id: 'A1' }, { type: 'brush', side: null });
+  const closed = renderToStaticMarkup(work(quiet, startBoard(board, quiet.edits)));
+  expect(closed).toContain('Redrawn start · 1 tile repainted'); expect(closed).not.toContain('studio-palette');
+  expect(closed).toContain('Compare crowds');
 });
 
-test('the palette and tool buttons reach the handlers: a house, unclaimed, restore, done, the two comparisons and the redraw toggle', () => {
+test('the palette and tool buttons reach the handlers: a house, unclaimed, restore, the two comparisons and the redraw toggle', () => {
   const h = handlers();
   click(PaintPalette({ board, brush: 'sable', edited: 2, handlers: h }));
-  expect(vi.mocked(h.brush).mock.calls.map(call => call[0])).toEqual(['quill', 'tallow', 'sable', '', null]);
+  expect(vi.mocked(h.brush).mock.calls.map(call => call[0])).toEqual(['quill', 'tallow', 'sable', '']);
   expect(h.restore_start).toHaveBeenCalledTimes(1);
   const tools = handlers();
   click(RehearseTools({ state: createRehearseState(), handlers: tools, board, can_compare: true }));
