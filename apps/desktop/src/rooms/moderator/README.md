@@ -563,3 +563,30 @@ classes and controls remain. The Keep regression checks the Cutaway moat DOM
 and the fixture/core distinction. Existing e2e provenance assertions now target
 the shared simulated Stamp in the rampart, replacing the retired cc-sample
 class; their simulated-data requirement is unchanged.
+
+
+### WP13 Keep footer correction
+
+At desktop widths (1280 and up), the footer and its nested heartbeat are
+non-wrapping flex rows. The strip takes the flexible width with min-width: 0;
+its height is bounded by space-28, while honesty text, Pause and the replay
+link keep their widths. The azure moat label retains its restored treatment
+and moat-label hook. Below 1280 the footer may wrap.
+
+The Keep heading is a bounded grid: eyebrow and illustration caption occupy
+separate cells and wrap within their columns; the name and subtitle span both
+columns below. The caption is no longer an independent absolute overlay.
+Plaque names stay on one line. Structural regressions pin the heading tracks
+and shrinking, non-wrapping desktop moat. The browser regression covers
+1280x800, 1440x900 and 1920x1080 in paper and stock with the real autoplay/Pause
+control present, checking footer height, contained controls, separated heading
+labels and an unwrapped Lot Chamber name.
+
+
+At 1440 and wider, all three headline blocks share one fit-content grid track,
+restoring the winner's common intrinsic width rather than stretching each
+block across the cell or both columns. The fit-content cap leaves a separate
+caption cell available for long chamber readings. No fixed headline width or
+type change is introduced. The caption's computed max-width is none there;
+max-width: 100% applies only below 1440, retaining the verified 1280 grid and
+wrapping behavior. Footer, heartbeat and plaque rules are unchanged.

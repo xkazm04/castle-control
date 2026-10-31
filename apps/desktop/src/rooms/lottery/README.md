@@ -333,3 +333,14 @@ are unchanged. journey-lots-stage.spec.ts adds six viewport/theme cases
 control-row containment, the type floor, an unscrolled urn panel and theatre
 enter/return. Browser execution is blocked by spawn EPERM before assertions,
 including a direct headless launch; no browser layout pass is claimed.
+
+
+## WP13 fidelity re-check after dae85b9
+
+The urn panel restores the port's space-16 horizontal padding and the legend's
+text-shell-legend/1 rule (14 with line height 14). The compact count/stat widths
+and flexible stage-first tracks remain the accepted structural changes.
+The Keep's moat-label hook is back on the label span. Its azure, white, bold
+700 print face, .02em tracking, space-6/space-12 padding, key rule and offset
+shadow match the pre-merge treatment; only the old absolute art coordinates
+are omitted so the accepted heartbeat/footer stays in normal flow.

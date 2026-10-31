@@ -53,3 +53,40 @@ test.each([0.85, 800 / 1060])('capped plaque boxes from shared anchors do not in
     }
   }
 });
+
+
+function layoutRule(selector: string) {
+  const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const body = new RegExp(`(?:^|\\n)${escaped} \\{([^}]+)\\}`).exec(css)?.[1];
+  if (!body) throw new Error(`Missing Keep layout rule: ${selector}`);
+  return body;
+}
+
+test('the desktop moat keeps both flex rows unwrapped and gives the strip the shrinking track', () => {
+  expect(layoutRule('.keep-moat')).toContain('flex-wrap: nowrap');
+  const heartbeat = layoutRule('.keep-moat .moat-heartbeat');
+  const strip = layoutRule('.keep-moat .moat-heartbeat-strip');
+  for (const rule of [heartbeat, strip]) {
+    expect(rule).toContain('min-width: 0');
+    expect(rule).toContain('flex: 1 1 0');
+  }
+  expect(heartbeat).toContain('flex-wrap: nowrap');
+  expect(layoutRule('.keep-moatlab, .keep-moat-link, .keep-moat .moat-heartbeat .cc-button')).toContain('flex: none');
+  expect(css).toContain('@media (width < 80rem)');
+});
+
+test('Keep heading cells separate the eyebrow and wrapping illustration caption', () => {
+  const heading = layoutRule('.keep-khead');
+  expect(heading).toContain('display: grid');
+  expect(heading).toContain('grid-template-areas: "eyebrow illustration" "name name" "sub sub"');
+  expect(layoutRule('.keep-khead .eyebrow')).toContain('grid-area: eyebrow');
+  const caption = layoutRule('.keep-vlab');
+  expect(caption).toContain('grid-area: illustration');
+  expect(caption).toContain('max-width: none');
+  expect(css).toMatch(/@media \(width < 90rem\)\s*\{\s*\.keep-vlab \{ max-width: 100%; \}/);
+  expect(caption).toContain('overflow-wrap: anywhere');
+  expect(caption).not.toContain('position: absolute');
+  const wide = css.split('@media (width >= 90rem)')[1];
+  expect(wide).toContain('grid-template-columns: fit-content(68%) minmax(0, 1fr)');
+  expect(wide).toContain('grid-template-areas: "eyebrow illustration" "name ." "sub ."');
+});

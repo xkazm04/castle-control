@@ -23,13 +23,13 @@
   --keep-word-size: max(var(--text-shell-plaque-word), calc(var(--text-shell-label) * var(--keep-inverse)));
 }
 .keep-dio { position: absolute; inset: 0; overflow: hidden; transition: height var(--m-dolly) var(--ease-dolly); height: 100%; }
-.keep-khead { position: absolute; left: var(--space-24); top: var(--space-10); z-index: 12; pointer-events: none; }
-.keep-khead .eyebrow { display: block; margin-bottom: var(--space-6); font: 700 var(--keep-eyebrow-size, var(--text-shell-eyebrow))/1 var(--font-ui); letter-spacing: .14em; text-transform: uppercase; color: var(--ink-2); }
+.keep-khead { position: absolute; left: var(--space-24); right: var(--space-16); top: var(--space-10); z-index: 12; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 32%); grid-template-areas: "eyebrow illustration" "name name" "sub sub"; align-items: start; column-gap: var(--space-12); pointer-events: none; }
+.keep-khead .eyebrow { grid-area: eyebrow; min-width: 0; overflow-wrap: anywhere; display: block; margin-bottom: var(--space-6); font: 700 var(--keep-eyebrow-size, var(--text-shell-eyebrow))/1 var(--font-ui); letter-spacing: .14em; text-transform: uppercase; color: var(--ink-2); }
 .keep-khead .display { font-family: var(--font-display); font-weight: 700; font-stretch: condensed; letter-spacing: .005em; line-height: .86; text-transform: uppercase; }
-.keep-khead h1 { margin: 0; font-size: var(--keep-headline-size, var(--text-shell-headline)); text-shadow: var(--space-4) var(--space-3) 0 var(--gules); }
-.keep-khead .sub { display: block; margin-top: var(--space-6); font: italic var(--keep-sub-size, var(--text-shell-tagline))/1.2 var(--font-serif); color: var(--ink-2); }
+.keep-khead h1 { grid-area: name; margin: 0; font-size: var(--keep-headline-size, var(--text-shell-headline)); text-shadow: var(--space-4) var(--space-3) 0 var(--gules); }
+.keep-khead .sub { grid-area: sub; display: block; margin-top: var(--space-6); font: italic var(--keep-sub-size, var(--text-shell-tagline))/1.2 var(--font-serif); color: var(--ink-2); }
 .keep-khead .slip { animation: keep-registration-slip var(--m-slip) var(--ease-press) both; }
-.keep-vlab { position: absolute; right: var(--space-16); top: var(--space-12); z-index: 12; font: 600 var(--keep-label-size, var(--text-shell-label))/1 var(--font-ui); color: var(--ink-2); background: var(--shell-label-scrim); padding: var(--space-4) var(--space-7); pointer-events: none; }
+.keep-vlab { grid-area: illustration; box-sizing: border-box; justify-self: end; max-width: none; min-width: 0; white-space: normal; overflow-wrap: anywhere; text-align: right; font: 600 var(--keep-label-size, var(--text-shell-label))/1 var(--font-ui); color: var(--ink-2); background: var(--shell-label-scrim); padding: var(--space-4) var(--space-7); pointer-events: none; }
 .keep-castle { position: absolute; left: 0; top: 0; width: calc(var(--space-1) * 1200); height: calc(var(--space-1) * 640); transform-origin: 0 0; transition: transform var(--m-dolly) var(--ease-dolly); }
 .keep-castle > svg { display: block; width: 100%; height: 100%; overflow: visible; }
 .keep-castle > svg text { font-size: var(--keep-art-size, var(--text-shell-label)); }
@@ -51,7 +51,7 @@
 @container keep-surface (width < 66.25rem) {
   .keep-plaque { max-width: calc(var(--space-56) * 5); }
 }
-.keep-plaque .nm { font: 700 var(--keep-name-size, var(--text-shell-plaque-name))/1 var(--font-ui); letter-spacing: .1em; text-transform: uppercase; color: var(--ink-2); display: flex; gap: var(--space-8); align-items: center; }
+.keep-plaque .nm { font: 700 var(--keep-name-size, var(--text-shell-plaque-name))/1 var(--font-ui); letter-spacing: .1em; text-transform: uppercase; color: var(--ink-2); display: flex; gap: var(--space-8); align-items: center; white-space: nowrap; }
 .keep-plaque .wd { font: 700 var(--keep-word-size, var(--text-shell-plaque-word))/1 var(--font-display); text-transform: uppercase; letter-spacing: .02em; margin-top: var(--space-5); color: var(--keep-text, var(--ink)); }
 .keep-plaque .ln { font: 500 var(--keep-line-size, var(--text-shell-plaque-state))/1.25 var(--font-ui); color: var(--ink-2); margin-top: var(--space-4); }
 .keep-plaque > .cc-stamp { --stamp-size: var(--keep-label-size); position: absolute; right: calc(-1 * var(--space-14)); top: calc(-1 * var(--space-16)); background: var(--plaque-paper); }
@@ -71,10 +71,29 @@
 }
 
 /* The replay is an unscaled moat band below the art, outside plaque and hit geometry. */
-.keep-moat { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-8) var(--space-12); padding: var(--space-8) var(--space-12); border: var(--rule-strong) solid var(--ink); background: var(--plaque-paper); box-shadow: inset 0 var(--space-4) 0 var(--azure); }
-.keep-moatlab { font: 700 var(--text-shell-moat-state)/1.2 var(--font-ui); color: var(--azure-text); }
-.keep-moat .moat-heartbeat { flex: 1 1 calc(var(--space-56) * 6); flex-wrap: wrap; gap: var(--space-6); }
-.keep-moat .moat-heartbeat small { font: 700 var(--text-shell-label)/1.2 var(--font-ui); color: var(--ink-2); }
-.keep-moat .moat-heartbeat-strip { min-width: calc(var(--space-56) * 2); }
+.keep-moat { display: flex; min-width: 0; flex-wrap: nowrap; align-items: center; justify-content: space-between; gap: var(--space-8) var(--space-12); padding: var(--space-8) var(--space-12); border: var(--rule-strong) solid var(--ink); background: var(--plaque-paper); box-shadow: inset 0 var(--space-4) 0 var(--azure); }
+/* Keep the pre-merge label's print treatment in the unscaled footer flow. */
+.keep-moatlab { font: 700 var(--keep-line-size, var(--text-shell-moat-state))/1 var(--font-ui); background: var(--azure); color: var(--white); padding: var(--space-6) var(--space-12); border: var(--rule-strong) solid var(--ink); box-shadow: var(--space-3) var(--space-3) 0 var(--ink); pointer-events: none; letter-spacing: .02em; white-space: nowrap; }
+.keep-moatlab small { font: 600 var(--keep-label-size, var(--text-shell-label))/1 var(--font-ui); opacity: .85; margin-left: var(--space-8); }
+.keep-moat .moat-heartbeat { flex: 1 1 0; min-width: 0; flex-wrap: nowrap; gap: var(--space-6); }
+.keep-moat .moat-heartbeat small { flex: none; white-space: nowrap; font: 700 var(--text-shell-label)/1.2 var(--font-ui); color: var(--ink-2); }
+.keep-moat .moat-heartbeat-strip { flex: 1 1 0; min-width: 0; height: var(--space-28); }
+.keep-moat .moat-heartbeat .moat-scene { height: 100%; }
+.keep-moatlab, .keep-moat-link, .keep-moat .moat-heartbeat .cc-button { flex: none; white-space: nowrap; }
 .keep-moat-link { color: var(--azure-text); font: 700 var(--text-shell-panel-action)/1.2 var(--font-ui); text-decoration: underline; text-underline-offset: var(--space-3); }
 .keep-moat-link:focus-visible { outline: var(--rule-strong) solid var(--azure); outline-offset: var(--focus-offset); }
+
+/* Smaller windows may stack controls; desktop Keep widths reserve one moat row. */
+@media (width < 80rem) {
+  .keep-moat, .keep-moat .moat-heartbeat { flex-wrap: wrap; }
+  .keep-moat .moat-heartbeat { flex-basis: calc(var(--space-56) * 6); }
+}
+
+/* Keep the verified small-window grid; wider windows use the winner's shared
+   intrinsic headline width instead of stretching its three block elements. */
+@media (width < 90rem) {
+  .keep-vlab { max-width: 100%; }
+}
+@media (width >= 90rem) {
+  .keep-khead { grid-template-columns: fit-content(68%) minmax(0, 1fr); grid-template-areas: "eyebrow illustration" "name ." "sub ."; }
+}

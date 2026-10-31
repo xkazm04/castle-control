@@ -68,8 +68,8 @@ export function Keep({ snapshot = { mode: 'fixture', phase: 'ready' }, on_open, 
             ? `${chamber.name} · ${state.word}` : 'The Keep'}</h1>
           <span className="sub" data-role="keep-sub">{chamber && state
             ? `${state.line}. ${chamberLines[chamber.id]}` : 'Point at a room, or press 1 to 4.'}</span>
+          <span className="keep-vlab" data-role="keep-vlabel">Stylised illustration · drawn, not captured</span>
         </header>
-        <span className="keep-vlab" data-role="keep-vlabel">Stylised illustration · drawn, not captured</span>
         <div className="keep-dio">
           <div className={`keep-castle${active ? ' focus' : ''}`} ref={castle} style={castleStyle}
             onTransitionEnd={transitionEnd} onPointerLeave={() => setHovered(undefined)}>
@@ -89,8 +89,8 @@ export function Keep({ snapshot = { mode: 'fixture', phase: 'ready' }, on_open, 
         </div>
       </div>
     </div>
-    <div className="keep-moat" data-role="moat-label">
-      <span className="keep-moatlab">The moat · chat delay {read.delay}</span>
+    <div className="keep-moat">
+      <span className="keep-moatlab" data-role="moat-label">The moat · chat delay {read.delay}</span>
       {snapshot.mode === 'fixture' && <><MoatHeartbeat source={fixtureReplay} delay_s={read.delay_s} />
         <a className="keep-moat-link" href="#/chamber/moderator/drill">Watch the full replay</a></>}
     </div>

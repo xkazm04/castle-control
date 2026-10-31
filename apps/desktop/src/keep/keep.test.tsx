@@ -146,6 +146,8 @@ test('the retired room drawing has no remaining production importer', () => {
 test('the moat bar carries a labelled sample heartbeat in the fixture and none from a core room', () => {
   const fixture = renderToStaticMarkup(<Keep snapshot={{ mode: 'fixture', phase: 'ready', ...simulatedRead(1) }} on_open={vi.fn()} on_enter={vi.fn()} />);
   const bar = fixture.slice(fixture.indexOf('class="keep-moat"'));
+  expect(bar).toContain('class="keep-moatlab" data-role="moat-label"');
+  expect(bar).not.toContain('class="keep-moat" data-role="moat-label"');
   expect(bar).toContain('The moat · chat delay 4 s');
   expect(bar).toContain('role="img" aria-label="Sample replay loop · simulated"');
   expect(bar).toContain('<a class="keep-moat-link" href="#/chamber/moderator/drill">Watch the full replay</a>');
