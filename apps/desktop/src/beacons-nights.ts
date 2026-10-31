@@ -62,7 +62,7 @@ const sub_train = night(59, (add, random) => {
 });
 
 export const sampleNights: readonly SampleNight[] = Object.freeze([
-  { id: 'sample', name: 'Sample night', gloss: '60 fictional offerings · the timeline below', offerings: fixtureOfferings },
+  { id: 'sample', name: 'Sample night', gloss: 'the illustrative timeline below, replayed', offerings: fixtureOfferings },
   { id: 'gift_wave', name: 'Gift wave', gloss: 'a 20-gift bomb at minute 12, then a gift wave from minute 26 to 36', offerings: gift_wave },
   { id: 'raid_spike', name: 'Raid spike', gloss: 'quiet, then a raid rush of subs at minute 20', offerings: raid_spike },
   { id: 'sub_train', name: 'Sub train', gloss: 'one sub every 40–60 s, all night', offerings: sub_train },

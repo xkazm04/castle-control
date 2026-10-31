@@ -69,3 +69,4 @@
 @keyframes visuals-replay-flare { from { filter: brightness(1.7); transform: scale(1.04); } to { filter: brightness(1); transform: none; } }
 @media (prefers-reduced-motion: reduce) { .visuals-replay-flare { animation: none; } }
 @media (max-width: 68.75rem) { .visuals-replay-tune { grid-template-columns: minmax(0, 1fr); } }
+.visuals-replay-plot[data-scrub="pointer"] { cursor: ew-resize; touch-action: none; }

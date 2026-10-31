@@ -10,7 +10,7 @@ import { clockLabel, night_duration_s, nightBursts, replayTrace, replayVerdict, 
 import type { CurveEditor } from './curve-editor.js';
 import { createReplayClock, replay_speeds } from './replay-clock.js';
 import { useReducedMotion, useReplayDriver } from './replay-driver.js';
-import { openCurveDraft, proposeCurve, sameCurve, sealedCurve } from './replay-proposal.js';
+import { openCurveDraft, proposeCurve, sameCurve, sealedCurve, sealedHere } from './replay-proposal.js';
 import { TraceFigure } from './replay-trace.jsx';
 import { ReplayBeacon, ReplayCurve } from './replay-tune.jsx';
 import './replay.css';
@@ -42,6 +42,8 @@ export function NightReplay({ item, editor, queue = proposalQueue, initial_night
   const now = traceAt(trace, curve, time.position_s);
   const top = curve.ranges.at(-1)?.total ?? 0;
   const draft = openCurveDraft(item.visual.visual_id, queue);
+  const matches_seal = !!sealed && sameCurve(sealed, curve);
+  const sealed_here = sealedHere(item.visual.visual_id, queue);
   const ended = time.position_s >= night_duration_s;
   const notice_key = `${item.visual.visual_id}:${draft?.revision ?? 0}`;
   const send = () => {
@@ -56,7 +58,8 @@ export function NightReplay({ item, editor, queue = proposalQueue, initial_night
     <div className="visuals-replay-nights" role="group" aria-label="Sample night">
       {sampleNights.map(option => <InkButton key={option.id} size="small" aria-pressed={option.id === night_id}
         onClick={() => { setNight(option.id); clock.seek(0); }}>{option.name}</InkButton>)}
-      <span className="visuals-note">{night.gloss} · {night.offerings.length} fictional offerings, {bursts.length} gifts or subs count</span>
+      <span className="visuals-note">{night.gloss} · {night.offerings.length} fictional offerings; {bursts.length} gifts or subs count,
+        gift subs ×{item.gift_weight}</span>
     </div>
     <div className="visuals-replay-transport" role="group" aria-label="Replay controls">
       <InkButton size="wrap" variant="offset" ink="or" disabled={reduced} aria-pressed={time.playing}
@@ -75,7 +78,7 @@ export function NightReplay({ item, editor, queue = proposalQueue, initial_night
         onChange={event => clock.seek(event.currentTarget.valueAsNumber)} />
     </label>
     <TraceFigure trace={trace} before={before} offerings={night.offerings} counted={counted} position={time.position_s}
-      lit_intensity={curveIntensity(curve, trace.lit_total)}
+      lit_intensity={curveIntensity(curve, trace.lit_total)} on_seek={clock.seek}
       label={`${item.visual.name} intensity across the simulated 48-minute ${night.name.toLowerCase()} · ${verdict.text}`} />
     <p className="visuals-replay-verdict" data-tone={verdict.tone} role="status" aria-live="polite">
       <b>{verdict_words[verdict.tone]}</b> {verdict.text}
@@ -87,7 +90,8 @@ export function NightReplay({ item, editor, queue = proposalQueue, initial_night
     </div>
     <div className="visuals-replay-handoff">
       <InkButton size="wrap" variant="offset" ink="or" onClick={send}>{draft ? 'Update the Steward proposal' : 'Send curve to the Steward'}</InkButton>
-      {draft && <StatusChip variant="dash" stamp="draft">{`Draft · revision ${draft.revision} · not on air`}</StatusChip>}
+      {draft ? <StatusChip variant="dash" stamp="draft">{`Draft · revision ${draft.revision} · not on air`}</StatusChip>
+        : matches_seal && <StatusChip variant="ok">{sealed_here ? 'Sealed · this is the curve' : 'Sample curve · unchanged'}</StatusChip>}
       <p className="visuals-note">Never a direct write: the Steward holds a proposal and nothing changes on air until you hold to seal. Money affects visuals only. SIMULATED.</p>
       {notice.key === notice_key && <p className="visuals-note" role="status">{notice.text}</p>}
     </div>

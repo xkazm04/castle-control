@@ -27,6 +27,13 @@ export function sealedCurve(visual_id: VisualId, queue: ProposalQueue = proposal
   return (last && known.get(last.id)?.curve) ?? fixtureVisuals.find(item => item.visual_id === visual_id)?.curve;
 }
 
+/** Whether a human sealed a curve for this visual in this session. */
+export function sealedHere(visual_id: VisualId, queue: ProposalQueue = proposalQueue): boolean {
+  const known = drafts(queue);
+  return queue.getSnapshot().proposals.some(proposal => proposal.chamber === 'visuals'
+    && (proposal.state === 'sealed' || proposal.state === 'proclaimed') && known.get(proposal.id)?.visual_id === visual_id);
+}
+
 /** The open curve draft for this visual, if the Steward queue holds one. */
 export function openCurveDraft(visual_id: VisualId, queue: ProposalQueue = proposalQueue) {
   const known = drafts(queue);
