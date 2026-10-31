@@ -2,6 +2,7 @@ use crate::{
     AppState, EventHub, LoginPresenter, Module, Registry, bridge_status, forward_bridge_event,
 };
 pub(crate) mod intake;
+mod obs_probe;
 mod render;
 use cc_obs::{BrowserSource, Client, Config as ObsConfig, Overlay};
 use cc_store::Store;
@@ -206,21 +207,7 @@ impl NativeServices {
             None
         };
         workers.push(self.bridge_pump(events, live, contribution));
-        let weak = Arc::downgrade(self);
-        workers.push(
-            tokio::spawn(async move {
-                let mut poll = tokio::time::interval(Duration::from_secs(2));
-                loop {
-                    poll.tick().await;
-                    let Some(service) = weak.upgrade() else {
-                        break;
-                    };
-                    // Probe failures are reflected as disconnected, not claimed successes.
-                    let _connected = service.obs_status().await;
-                }
-            })
-            .abort_handle(),
-        );
+        workers.push(obs_probe::start(Arc::downgrade(self)));
         Ok(app)
     }
     pub async fn start_login(&self) -> Result<(), ErrorEnvelope> {
