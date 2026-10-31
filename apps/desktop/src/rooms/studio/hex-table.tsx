@@ -27,8 +27,12 @@ function inspectNeighbour(event: KeyboardEvent<HTMLButtonElement>, tile: BoardTi
   event.currentTarget.parentElement?.querySelectorAll<HTMLButtonElement>('[data-hex-tile]')[index]?.focus();
 }
 
-export function HexTable({ selected, on_select, board = STUDIO_SAMPLE_BOARD, size = 'm', look }: {
+/** Tiles that changed owner this turn. `phase` alternates so the same tile can flip on consecutive turns. */
+export type TableFlip = Readonly<{ ids: ReadonlySet<string>; phase: 0 | 1 }>;
+
+export function HexTable({ selected, on_select, board = STUDIO_SAMPLE_BOARD, size = 'm', look, flip, gloss = copy.board_gloss, pennants = true }: {
   selected: string; on_select: (id: string) => void; board?: StudioBoard; size?: MapSize; look?: DesignOutput['style'];
+  flip?: TableFlip; gloss?: string; pennants?: boolean;
 }) {
   const geometry = boardGeometry(board);
   const tab_stop = geometry.tiles.find(tile => tile.id === selected)?.id ?? geometry.tiles[0]?.id;
@@ -36,10 +40,11 @@ export function HexTable({ selected, on_select, board = STUDIO_SAMPLE_BOARD, siz
     '--fit-w': geometry.fit_width, '--fit-h': geometry.fit_height };
   return <div className="cc-herald-field" role="region" aria-label={copy.board_label(geometry.columns, geometry.rows, board.title)}
     data-look-ink={look?.ink} data-treatment={look?.treatment} data-density={look?.density}>
-    <SectionHeading variant="inline" level={2} title={copy.board_title(geometry.columns, geometry.rows, board.title)} gloss={copy.board_gloss} />
+    <SectionHeading variant="inline" level={2} title={copy.board_title(geometry.columns, geometry.rows, board.title)} gloss={gloss} />
     <div className="cc-hexfield" data-map-size={size} style={style}><div className="cc-hexfield-plate" role="group" aria-label={copy.tiles_label(geometry.tiles.length)}>
       {geometry.tiles.map(tile => <button type="button" className="cc-hex" key={tile.id} data-hex-tile={tile.id}
         data-house={tile.side?.label ?? 'unclaimed'} data-ink={tile.side?.ink} data-unclaimed={!tile.side}
+        data-flipped={flip?.ids.has(tile.id) ? (flip.phase === 0 ? 'a' : 'b') : undefined}
         style={hexPosition(tile.centre.x, tile.centre.y)}
         aria-label={copy.tile_label(tile.id, tile.side?.short ?? copy.unclaimed, tile.side?.label)} aria-pressed={selected === tile.id}
         tabIndex={tab_stop === tile.id ? 0 : -1}
@@ -49,12 +54,12 @@ export function HexTable({ selected, on_select, board = STUDIO_SAMPLE_BOARD, siz
         <span className="cc-hex-house">{tile.side?.short ?? copy.unclaimed}</span>
       </button>)}
     </div></div>
-    <ul className="cc-pennants">{geometry.sides.map(side => <li key={side.id} data-house={side.label} data-ink={side.ink}>
+    {pennants && <ul className="cc-pennants">{geometry.sides.map(side => <li key={side.id} data-house={side.label} data-ink={side.ink}>
       <Pennant variant="standing" word={side.label} count={String(side.count)} style={{ '--cc-ink': 'var(--house)' }} />
     </li>)}<li data-house="unclaimed" data-unclaimed="true">
       <Pennant variant="standing" word={copy.unclaimed} count={String(geometry.unclaimed)}
         style={{ '--cc-ink': 'var(--house)', borderLeftColor: 'var(--hair)', borderLeftStyle: 'dashed' }} />
-    </li></ul>
+    </li></ul>}
   </div>;
 }
 
