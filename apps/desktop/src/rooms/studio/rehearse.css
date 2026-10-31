@@ -148,3 +148,4 @@
 .studio-room .studio-strip-key i { width: var(--space-10); height: var(--space-10); background: var(--house); box-shadow: inset 0 0 0 var(--rule-thin) var(--rule); }
 .studio-room .studio-strip-key li[data-unclaimed="true"] i { background: var(--paper-2); box-shadow: inset 0 0 0 var(--rule-thin) var(--hair); }
 .studio-room :is(.studio-sizes, .studio-crowds) small.studio-spread { margin-top: var(--space-4); font-weight: 700; color: var(--ink); }
+.studio-room .studio-rehearse[data-painting="true"] .cc-hex { user-select: none; touch-action: none; }
