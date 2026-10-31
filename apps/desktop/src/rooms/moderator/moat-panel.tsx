@@ -1,0 +1,89 @@
+import { useId, useMemo } from 'react';
+import type { ChangeEvent } from 'react';
+import { InkButton, Notice, StatusChip, VerdictChip } from '@castle-control/ui';
+import { clockText } from '../../moat/clock.js';
+import { actionWords, fateWords, moatCopy as copy } from '../../moat/moat-copy.js';
+import { heldCount, replayedCount, scrubTicks, windowFor } from '../../moat/moat-model.js';
+import type { MoatMarker, MoatModel } from '../../moat/moat-model.js';
+import { moatSpeeds } from '../../moat/moat-player.js';
+import type { MoatClock } from '../../moat/moat-player.js';
+import { MoatScene, sceneNotes } from '../../moat/moat-scene.jsx';
+import { useMoatPlayer } from '../../moat/use-moat-player.js';
+import { ClockTime } from './presentation.jsx';
+
+export function MarkerInspector({ marker }: { marker: MoatMarker | undefined }) {
+  return <aside className="moat-inspector" aria-label={copy.inspector} data-empty={!marker}>
+    <h4>{marker ? marker.message_id : copy.inspect_none}</h4>
+    {marker ? <dl>
+      <dt>{copy.outcome}</dt><dd>{fateWords[marker.fate]}</dd>
+      <dt>{copy.state}</dt><dd>{marker.state.replaceAll('_', ' ')}</dd>
+      <dt>{copy.verdict}</dt><dd>{marker.verdict ? <VerdictChip verdict={marker.verdict} /> : copy.none}</dd>
+      <dt>{copy.action}</dt><dd>{marker.action ? actionWords[marker.action] : copy.none}</dd>
+      <dt>{copy.rule}</dt><dd>{marker.rule_id ? <code>{marker.rule_id}</code> : copy.none}</dd>
+      <dt>{copy.evaluation}</dt><dd>{copy.evaluation_words[marker.passed === undefined ? 'none' : marker.passed ? 'true' : 'false']}</dd>
+      <dt>{copy.source}</dt><dd>{marker.source}</dd>
+      <dt>{copy.at}</dt><dd><ClockTime at={marker.at} /></dd>
+    </dl> : <p>{copy.inspect_empty}</p>}
+    <p className="moat-small">{copy.no_text}</p>
+  </aside>;
+}
+
+function Legend() {
+  const dot = (kind: string) => <svg viewBox="0 0 12 12" aria-hidden="true" className="moat-legend-dot" data-kind={kind}>
+    {kind === 'gap' ? <rect x="1" y="1" width="10" height="10" /> : kind === 'unresolved' ? <rect x="2.5" y="2.5" width="7" height="7" transform="rotate(45 6 6)" />
+      : <circle cx="6" cy="6" r="4" />}</svg>;
+  return <ul className="moat-legend" aria-label="Legend">
+    {(['aired', 'stopped', 'unresolved', 'waiting', 'gap'] as const).map(kind =>
+      <li key={kind}>{dot(kind)}{copy.legend[kind]}</li>)}</ul>;
+}
+
+export type MoatPanelProps = {
+  model: MoatModel; delay_s?: number | undefined; clock?: MoatClock | undefined;
+  selected_id?: string | undefined; on_select: (message_id: string | undefined) => void;
+};
+
+/** Play, scrubber, strip and inspector over one replay. The table below the panel stays the text equivalent. */
+export function MoatPanel({ model, delay_s, clock, selected_id, on_select }: MoatPanelProps) {
+  const range_id = useId(); const heading_id = useId();
+  const { player, state, reduced } = useMoatPlayer(model.run_ms, clock ? { clock } : {});
+  const selected = useMemo(() => selected_id === undefined ? undefined : model.markers.find(marker => marker.message_id === selected_id), [model, selected_id]);
+  const ticks = useMemo(() => scrubTicks(model), [model]);
+  const window = windowFor(model, state.playhead_ms);
+  const notes = useMemo(() => sceneNotes(model, window), [model, window.from_ms, window.to_ms]);
+  const held = heldCount(model, state.playhead_ms);
+  const replayed = replayedCount(model, state.playhead_ms);
+  const position = copy.position_text(clockText(model.start_ms + Math.min(state.playhead_ms, model.span_ms)), replayed, model.counts.total);
+  const step = Math.max(Math.round(model.run_ms / 200), 100);
+  if (model.markers.length === 0) return <section className="moat-panel" aria-labelledby={heading_id}>
+    <h3 id={heading_id}>{copy.title}</h3><p>{copy.empty}</p></section>;
+  return <section className="moat-panel" aria-labelledby={heading_id} data-playing={state.playing}>
+    <header className="moat-head"><h3 id={heading_id}>{copy.title}</h3>
+      <Notice className="moat-live" message={<StatusChip variant="azure">{copy.summary(held, model.counts.total)}</StatusChip>} />
+      <p className="moat-small moat-breakdown">{copy.breakdown(model.counts)}</p></header>
+    <div className="moat-controls">
+      <InkButton type="button" size="small" variant={state.playing ? 'primary' : 'outline'} disabled={reduced}
+        onClick={() => { if (state.playing) player.pause(); else player.play(); }}>{state.playing ? copy.pause : copy.play}</InkButton>
+      <div className="moat-speeds" role="group" aria-label={copy.speed}>
+        {moatSpeeds.map(speed => <InkButton key={speed} type="button" size="small" aria-pressed={state.speed === speed}
+          onClick={() => { player.setSpeed(speed); }}>{copy.speed_label(speed)}</InkButton>)}</div>
+      <div className="moat-scrub"><label htmlFor={range_id} className="moat-sr">{copy.position}</label>
+        <input id={range_id} type="range" min={0} max={model.run_ms} step={step} value={state.playhead_ms} aria-valuetext={position}
+          onChange={(event: ChangeEvent<HTMLInputElement>) => { player.pause(); player.seek(Number(event.currentTarget.value)); }} />
+        <div className="moat-ticks" aria-hidden="true">{ticks.map(tick => <i key={tick.at} style={{ left: `${tick.at * 100}%` }} data-many={tick.held > 1} />)}</div></div>
+      <output className="moat-readout" aria-live="off">{position}</output>
+    </div>
+    {reduced && <p className="moat-small">{copy.reduced}</p>}
+    <div className="moat-body">
+      <div className="moat-scroll" role="group" aria-label={copy.region}>
+        <MoatScene model={model} playhead_ms={state.playhead_ms} window={window} selected={selected?.index} delay_s={delay_s}
+          on_select={index => { on_select(model.markers[index]?.message_id); }} />
+        <Legend />
+        <p className="moat-small">{copy.honesty}</p>
+        {window.paged && <p className="moat-small">{copy.page}</p>}
+        {notes.thinned > 0 && <p className="moat-small">{copy.thinned(notes.thinned)}</p>}
+        {notes.overflow > 0 && <p className="moat-small">{copy.overflow(notes.overflow)}</p>}
+      </div>
+      <MarkerInspector marker={selected} />
+    </div>
+  </section>;
+}

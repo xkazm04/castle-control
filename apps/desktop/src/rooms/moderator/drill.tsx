@@ -1,16 +1,23 @@
-import { useState } from 'react';
-import { useId } from 'react';
+import { useId, useMemo, useState } from 'react';
 import type { DrillRunResult, DrillState } from '@castle-control/contract';
 import { VerdictChip, WindowedRows, rowHeight } from '@castle-control/ui';
 import { moderationCopy as copy } from '../../moderation-copy.js';
 import type { BenchResult } from '../../moderation-bench.js';
 import { DraftPatternPreview } from './rule-bench.jsx';
 import { ClockTime } from './presentation.jsx';
+import { MoatPanel } from './moat-panel.jsx';
+import { buildMoat, crossingMs } from '../../moat/moat-model.js';
+import type { MoatClock } from '../../moat/moat-player.js';
+import { moatCopy } from '../../moat/moat-copy.js';
 
-export function Drill({ result, origin = 'fixture', capture_hash, draft }: {
+export function Drill({ result, origin = 'fixture', capture_hash, draft, delay_s, clock }: {
   result: DrillRunResult; origin?: 'fixture' | 'core'; capture_hash?: string | undefined; draft?: BenchResult | undefined;
+  /** The applied chat delay, when the source knows it. The moat never invents one. */
+  delay_s?: number | undefined; clock?: MoatClock | undefined;
 }) {
   const state_id = useId();
+  const [selected, setSelected] = useState<string | undefined>();
+  const model = useMemo(() => buildMoat(result, delay_s && delay_s > 0 ? delay_s * 1000 : crossingMs), [result, delay_s]);
   const [filter, setFilter] = useState<DrillState | 'all'>('all');
   const states = Object.keys(result.summary.states) as DrillState[];
   const outcomes = result.outcomes.filter(item => filter === 'all' || item.state === filter);
@@ -18,6 +25,7 @@ export function Drill({ result, origin = 'fixture', capture_hash, draft }: {
     {!capture_hash && <p>{copy.live_parity}</p>}
     <a href="#/chamber/moderator">{copy.back}</a><p>{origin === 'fixture' ? copy.replay_fixture_note : copy.replay_core_note}</p>
     {draft && <DraftPatternPreview result={draft} />}
+    <MoatPanel model={model} delay_s={delay_s} clock={clock} selected_id={selected} on_select={setSelected} />
     <div className="moderator-drill-columns"><div className="room-column"><h3>{copy.instrument_source}</h3><p>{result.source}</p>
       {capture_hash && <><p>{copy.capture_hash}</p><code className="room-hash">{capture_hash}</code>
         <p role="status">{capture_hash === result.instrument_hash ? copy.capture_match : copy.capture_mismatch}</p>
@@ -34,7 +42,8 @@ export function Drill({ result, origin = 'fixture', capture_hash, draft }: {
         if (value === 'all' || states.some(state => state === value)) setFilter(value as DrillState | 'all');
       }}><option value="all">{copy.outcomes_all}</option>{states.map(state => <option key={state} value={state}>{state.replaceAll('_', ' ')}</option>)}</select></div>
       <WindowedRows rows={outcomes} label={copy.outcomes_label} row_key={item => item.message_id} row_height={rowHeight * 3}>
-        {item => <div><b>{item.message_id}</b><p>{item.state.replaceAll('_', ' ')} · {item.source}</p>
+        {item => <div className="moat-row" data-selected={selected === item.message_id}><b><button type="button" className="moat-row-id" aria-pressed={selected === item.message_id}
+          aria-label={moatCopy.table_inspect(item.message_id)} onClick={() => { setSelected(item.message_id); }}>{item.message_id}</button></b><p>{item.state.replaceAll('_', ' ')} · {item.source}</p>
           {item.verdict ? <VerdictChip verdict={item.verdict} /> : <span>{copy.not_evaluable}</span>}</div>}</WindowedRows>
     </div></div>
   </section>;

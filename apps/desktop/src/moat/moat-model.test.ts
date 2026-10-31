@@ -1,0 +1,131 @@
+import { expect, test } from 'vitest';
+import { simulatedDrill } from '../drill-fixture.js';
+import type { MoatOutcome, MoatSource } from './moat-model.js';
+import { buildMoat, fateOf, heldCount, markerProgress, replayedCount, scrubTicks, stampLevels, visibleMarkers, windowFor } from './moat-model.js';
+
+const night = simulatedDrill();
+const model = buildMoat(night);
+const outcome = (index: number, patch: Partial<MoatOutcome> = {}): MoatOutcome => ({
+  message_id: `simulated-message-${index}`, source: 'simulated-test', at: new Date(Date.UTC(2026, 9, 26, 12, 0, index)).toISOString(),
+  state: 'not_provoked', verdict: 'pass', passed: true, ...patch,
+});
+
+test('the seeded night is the same every time and holds three stops among forty simulated lines', () => {
+  expect(simulatedDrill()).toEqual(night);
+  expect(simulatedDrill({ seed: 'another-night' })).not.toEqual(night);
+  expect(model.counts).toEqual({ total: 40, aired: 35, held: 3, unresolved: 2, undated: 0 });
+  const stopped = model.markers.filter(marker => marker.fate === 'held');
+  expect(stopped.map(marker => marker.rule_id)).toEqual(['links', 'repeats', 'blocked-terms']);
+  expect(stopped.every(marker => marker.action && marker.verdict)).toBe(true);
+  // The last two stops sit side by side so the cluster layout is always exercised.
+  expect((stopped[2]?.index ?? 0) - (stopped[1]?.index ?? 0)).toBe(1);
+});
+
+test('the fixture summary is derived from its outcomes, never typed in', () => {
+  const states = night.outcomes.reduce<Record<string, number>>((all, item) => ({ ...all, [item.state]: (all[item.state] ?? 0) + 1 }), {});
+  for (const [state, count] of Object.entries(night.summary.states)) expect(states[state] ?? 0).toBe(count);
+  expect(night.summary.passes).toBe(night.outcomes.filter(item => item.passed === true).length);
+  expect(night.summary.over_moderation.evaluated).toBe(night.summary.states.acted);
+  expect(night.gaps[0]?.from).toBe('2026-10-26T12:05:00Z');
+});
+
+test('a gap is a span on the axis and no message falls inside it', () => {
+  expect(model.gaps).toHaveLength(1);
+  const gap = model.gaps[0];
+  expect(gap && gap.to_ms - gap.from_ms).toBe(20000);
+  expect(model.markers.some(marker => gap && marker.offset_ms > gap.from_ms && marker.offset_ms < gap.to_ms)).toBe(false);
+  expect(model.run_ms).toBe(model.span_ms + model.cross_ms);
+});
+
+test('only a verdict or an unprovoked state can say a line aired', () => {
+  expect(fateOf({ verdict: 'pass', state: 'not_provoked' })).toBe('aired');
+  expect(fateOf({ state: 'not_provoked' })).toBe('aired');
+  expect(fateOf({ verdict: 'hold', state: 'acted' })).toBe('held');
+  expect(fateOf({ verdict: 'bar', state: 'acted' })).toBe('held');
+  for (const state of ['acted', 'not_evaluable', 'judge_pending', 'judge_void', 'engine_failed'] as const) {
+    expect(fateOf({ state })).toBe('unresolved');
+  }
+});
+
+test('messages move chat to gate to stream, and held ones stop at the gate', () => {
+  const [aired] = model.markers.filter(marker => marker.fate === 'aired');
+  const [held] = model.markers.filter(marker => marker.fate === 'held');
+  const [unknown] = model.markers.filter(marker => marker.fate === 'unresolved');
+  if (!aired || !held || !unknown) throw new Error('Expected every fate in the simulated night');
+  const cross = model.cross_ms;
+  expect(markerProgress(aired, aired.offset_ms - 1, cross)).toEqual({ phase: 'waiting', lift: 0 });
+  expect(markerProgress(aired, aired.offset_ms + cross / 2, cross)).toEqual({ phase: 'crossing', lift: 0.5 });
+  expect(markerProgress(aired, aired.offset_ms + cross * 9, cross)).toEqual({ phase: 'aired', lift: 1 });
+  expect(markerProgress(held, held.offset_ms + cross / 4, cross)).toEqual({ phase: 'crossing', lift: 0.25 });
+  expect(markerProgress(held, held.offset_ms + cross * 9, cross)).toEqual({ phase: 'stopped', lift: 0.5 });
+  expect(markerProgress(unknown, unknown.offset_ms + cross * 9, cross)).toEqual({ phase: 'unresolved', lift: 0.5 });
+});
+
+test('the held count and replayed count follow the playhead and end at the totals', () => {
+  expect(heldCount(model, 0)).toBe(0);
+  expect(replayedCount(model, -1)).toBe(0);
+  expect(heldCount(model, model.run_ms)).toBe(3);
+  expect(replayedCount(model, model.run_ms)).toBe(40);
+  const first = model.held_arrivals[0] ?? 0;
+  expect(heldCount(model, first - 1)).toBe(0);
+  expect(heldCount(model, first)).toBe(1);
+  let last = 0;
+  for (let at = 0; at <= model.run_ms; at += 500) { const count = heldCount(model, at); expect(count).toBeGreaterThanOrEqual(last); last = count; }
+});
+
+test('lines without a usable time are counted aside and never drawn', () => {
+  const result: MoatSource = { outcomes: [outcome(1), outcome(2, { at: 'not a time' }), outcome(3)], gaps: [] };
+  const sparse = buildMoat(result);
+  expect(sparse.markers).toHaveLength(2);
+  expect(sparse.counts).toMatchObject({ total: 3, undated: 1 });
+  expect(buildMoat({ outcomes: [], gaps: [] }).markers).toEqual([]);
+});
+
+test('equal times keep the drill order and out-of-order input is sorted', () => {
+  const same = '2026-10-26T12:00:00Z';
+  const ordered = buildMoat({ outcomes: [outcome(2, { at: same }), outcome(1, { at: same }), outcome(0, { at: '2026-10-26T11:59:00Z' })], gaps: [] });
+  expect(ordered.markers.map(marker => marker.message_id)).toEqual(['simulated-message-0', 'simulated-message-2', 'simulated-message-1']);
+  expect(ordered.markers.map(marker => marker.index)).toEqual([0, 1, 2]);
+});
+
+test('a short night fits whole and a long one shows the page the playhead is in', () => {
+  expect(windowFor(model, 0)).toEqual({ from_ms: 0, to_ms: model.span_ms, paged: false });
+  const long = buildMoat(simulatedDrill({ seed: 'long', count: 10000 }));
+  const early = windowFor(long, 0);
+  const late = windowFor(long, long.run_ms);
+  expect(early).toMatchObject({ from_ms: 0, paged: true });
+  expect(late.to_ms).toBe(long.span_ms);
+  expect(late.from_ms).toBeGreaterThan(early.to_ms);
+  const middle = windowFor(long, long.run_ms / 2);
+  expect(visibleMarkers(long, middle).markers.length).toBeGreaterThan(100);
+  expect(visibleMarkers(long, middle).markers.length).toBeLessThanOrEqual(360);
+});
+
+test('ten thousand outcomes build quickly and a window always keeps every stop', () => {
+  const started = performance.now();
+  const long = buildMoat(simulatedDrill({ seed: 'long', count: 10000 }));
+  expect(long.counts.total).toBe(10000);
+  expect(long.counts.held).toBeGreaterThan(500);
+  for (const fraction of [0, 0.25, 0.5, 0.99]) {
+    const window = windowFor(long, long.run_ms * fraction);
+    const visible = visibleMarkers(long, window, 60);
+    const inside = long.markers.filter(marker => marker.offset_ms >= window.from_ms && marker.offset_ms <= window.to_ms);
+    const stops = (list: readonly { fate: string }[]) => list.filter(marker => marker.fate !== 'aired').length;
+    expect(stops(visible.markers)).toBe(stops(inside));
+    expect(visible.markers.length + visible.thinned).toBe(inside.length);
+  }
+  expect(performance.now() - started).toBeLessThan(5000);
+});
+
+test('stamps that would overlap stack upward and the overflow is counted', () => {
+  expect(stampLevels([100, 300, 500], 50, 3)).toEqual({ levels: [0, 0, 0], overflow: 0 });
+  expect(stampLevels([100, 110, 120, 130], 50, 3)).toEqual({ levels: [0, 1, 2, -1], overflow: 1 });
+  expect(stampLevels([100, 110, 400], 50, 2)).toEqual({ levels: [0, 1, 0], overflow: 0 });
+});
+
+test('the scrubber ticks sit where the stops are', () => {
+  const ticks = scrubTicks(model);
+  expect(ticks.reduce((total, tick) => total + tick.held, 0)).toBe(3);
+  expect(ticks.every(tick => tick.at > 0 && tick.at < 1)).toBe(true);
+  expect(scrubTicks(buildMoat({ outcomes: [], gaps: [] }))).toEqual([]);
+});
