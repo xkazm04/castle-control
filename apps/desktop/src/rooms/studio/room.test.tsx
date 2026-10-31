@@ -27,6 +27,22 @@ test('core studio is honestly unconfigured and hides all sample controls', () =>
   expect(html).not.toContain('<button');
 });
 
+test('studio side column keeps its order, keyboard scroll hint and prototype ink insets', () => {
+  const html = renderToStaticMarkup(<StudioWork seal_slot={<SealSlot chamber="studio" queue={new ProposalQueue()} />} />);
+  const css = readFileSync(new URL('./room.css', import.meta.url), 'utf8');
+  const cards = readFileSync(new URL('../../../../../packages/ui/src/heraldic-card.css', import.meta.url), 'utf8');
+  // Prototype C: hero, ladder and seal card share the scrolling side; all board rows fit.
+  expect(html).toMatch(/cc-herald-side[\s\S]*cc-hero[\s\S]*cc-ladder[\s\S]*cc-seal-card/);
+  expect(html.match(/>The war table(?: ·|<)/g)).toHaveLength(1);
+  expect(html).not.toContain('class="room-scroll-hint"');
+  expect(html).toMatch(/class="cc-herald-side"[^>]*tabindex="0"[^>]*aria-describedby="studio-scroll-hint"/);
+  expect(html).toContain('id="studio-scroll-hint" class="studio-visually-hidden"');
+  expect(css).toMatch(/\.cc-herald-side\s*\{[^}]*overflow:\s*auto/);
+  expect(css).toContain('scrollbar-gutter: stable');
+  expect(css).toMatch(/\.cc-herald-field\s*\{[^}]*padding:\s*var\(--space-16\) var\(--space-24\) var\(--space-14\)/);
+  expect(cards).toMatch(/\[data-current="true"\][^}]*background:\s*var\(--key\)/);
+});
+
 test('war-table proposals stay in dashed draft layers without claiming a tile or advancing the ladder', async () => {
   const queue = new ProposalQueue();
   const steward = new SimulatedSteward(queue);

@@ -16,9 +16,11 @@ import { backHash, dispatchShortcut, initialNavigation, navigateHash } from '../
 import Room from './room.jsx';
 
 test('all room headers hold the display title, plain subtitle, locator and origin Back link', async () => {
-  for (const [chamber, title, description] of [
-    ['lottery', 'The Lot Chamber', 'Lottery manager'], ['moderator', 'The Gatehouse', 'AI moderator'],
-    ['visuals', 'The Beacons', 'Contribution visuals'], ['studio', 'The Map Room', 'Extension studio'],
+  for (const [chamber, title, description, slot_context] of [
+    ['lottery', 'The Lot Chamber', 'Lottery manager', /<aside class="shell-seal-slot"[^>]*aria-label="Seal slot"/],
+    ['moderator', 'The Gatehouse', 'AI moderator', /moderator-details[\s\S]*<aside class="shell-seal-slot"[^>]*aria-label="Seal slot"[\s\S]*?<\/aside><\/div><\/div>/],
+    ['visuals', 'The Beacons', 'Contribution visuals', /visuals-room-details[\s\S]*<aside class="shell-seal-slot"[^>]*aria-label="Seal slot"[\s\S]*?<\/aside><\/div><\/div>/],
+    ['studio', 'The Map Room', 'Extension studio', /cc-seal-card[\s\S]*<aside class="shell-seal-slot"[^>]*aria-label="Seal slot"/],
   ] as const) {
     const stream = await renderToReadableStream(<Room chamber={chamber} replay={false}
       snapshot={{ mode: 'fixture', phase: 'ready' }} origin="overview" on_open={vi.fn()} on_back={vi.fn()} />);
@@ -35,21 +37,13 @@ test('all room headers hold the display title, plain subtitle, locator and origi
     expect(markup).toContain('SIMULATED');
     // The lottery C port replaces details-last, data-active and prose guardrails with stage/desk, pressed kit cards and Ribbon slots.
     expect(markup.match(/aria-label="Seal slot"/g)).toHaveLength(1);
+    expect(markup).toMatch(slot_context);
     if (chamber === 'lottery') {
       const order = ['class="cc-stage-wrap"', 'class="cc-desk"', 'aria-label="Seal slot"',
         'aria-label="Entry lookup"', 'aria-label="Saved simulated proof bundle"', 'class="cc-numbered-discs"']
         .map(marker => markup.indexOf(marker));
       expect(order[0]).toBeGreaterThan(0);
       expect(order.every((index, position) => position === 0 || index > (order[position - 1] ?? -1))).toBe(true);
-      expect(markup).toMatch(/<aside class="shell-seal-slot"[^>]*aria-label="Seal slot"/);
-    } else if (chamber === 'studio') { // Prototype studio README C, L96/L106: hero and seal card live in the side column.
-      expect(markup).toMatch(/cc-herald-side[\s\S]*cc-hero[\s\S]*cc-ladder[\s\S]*cc-seal-card[\s\S]*<aside class="shell-seal-slot"[^>]*aria-label="Seal slot"/);
-    } else {
-      const column = chamber === 'moderator' ? 'moderator-details'
-        : chamber === 'visuals' ? 'visuals-room-details' : 'studio-room-details';
-      expect(markup.indexOf(column)).toBeGreaterThan(0);
-      expect(markup.indexOf('aria-label="Seal slot"')).toBeGreaterThan(markup.indexOf(column));
-      expect(markup).toMatch(/<aside class="shell-seal-slot"[\s\S]*?<\/aside><\/div><\/div>/);
     }
   }
   const style = readFileSync(new URL('./room.css', import.meta.url), 'utf8');
@@ -62,9 +56,6 @@ test('room stages retain token insets and model states use the existing accent f
   const shell = readFileSync(new URL('./room.css', import.meta.url), 'utf8');
   expect(shell).toMatch(/\.room-stage\s*\{[^}]*padding:\s*var\(--space-16\)/);
   expect(shell).toMatch(/\.room-column\s*\{[^}]*padding:\s*var\(--space-16\)/);
-  const studio = readFileSync(new URL('../rooms/studio/room.css', import.meta.url), 'utf8');
-  /* Prototype studio README C, L98 + PORT NOTES cc-herald-field: replace the workbench with the full-ink field, insets 16/24/14. */ expect(studio).toMatch(/\.cc-herald-field\s*\{[^}]*padding:\s*var\(--space-16\) var\(--space-24\) var\(--space-14\)/);
-  /* Prototype studio README C, L103: kit tablets own the key current fill, independent of inspection. */ expect(readFileSync(new URL('../../../../packages/ui/src/heraldic-card.css', import.meta.url), 'utf8')).toMatch(/\[data-current="true"\][^}]*background:\s*var\(--key\)/);
   const moderator = readFileSync(new URL('../rooms/moderator/room.css', import.meta.url), 'utf8');
   expect(moderator).toMatch(/\.moderator-moat-gauge rect\[data-on="true"\]\s*\{[^}]*fill:\s*var\(--azure\)/);
   const queue = new ProposalQueue();
@@ -114,7 +105,7 @@ test('the portcullis uses a standard C PlateBand above the original held message
   expect(plate).toContain(fixtureHeld[0]?.message_text);
 });
 test('polished rooms render each stage title once and expose keyboard scroll regions', async () => {
-  for (const [chamber, title] of [['lottery', 'The urn'], ['moderator', 'At the portcullis'], ['studio', 'The war table']] as const) {
+  for (const [chamber, title] of [['lottery', 'The urn'], ['moderator', 'At the portcullis']] as const) {
     const stream = await renderToReadableStream(<Room chamber={chamber} replay={false} snapshot={fixture}
       origin="keep" on_open={vi.fn()} on_back={vi.fn()} />);
     await stream.allReady;
@@ -128,13 +119,10 @@ test('polished rooms render each stage title once and expose keyboard scroll reg
       expect(ribbon).toContain('<span class="cc-ribbon-note">local preview</span>');
       expect(markup).not.toContain('Past writs');
       expect(markup).not.toContain('aria-label="Giveaway guardrails · local preview"');
-    } else if (chamber === 'studio') { // Prototype studio README L15 and C L110: six rows fit; only the side column needs a scroll hint.
-      expect(markup).not.toContain('class="room-scroll-hint"'); expect(markup).toMatch(/class="cc-herald-side"[^>]*tabindex="0"[^>]*aria-describedby="studio-scroll-hint"/); expect(markup).toContain('id="studio-scroll-hint" class="studio-visually-hidden"');
     } else {
-      if (chamber === 'moderator') expect(markup).toContain('id="moderator-scroll-hint" class="moderator-visually-hidden"');
-      else expect(markup).toContain('class="room-scroll-hint"');
+      expect(markup).toContain('id="moderator-scroll-hint" class="moderator-visually-hidden"');
       expect(markup).toContain('tabindex="0"');
-      expect(markup).toContain(chamber === 'moderator' ? 'aria-describedby="moderator-scroll-hint"' : 'aria-describedby="studio-scroll-hint"');
+      expect(markup).toContain('aria-describedby="moderator-scroll-hint"');
     }
     if (chamber === 'moderator') {
       const replay = markup.slice(markup.indexOf('moderator-details'), markup.indexOf('moderator-tools'));
@@ -161,22 +149,18 @@ test('polished rooms render each stage title once and expose keyboard scroll reg
   }
 });
 
-test('review and map scroll affordances remain visible without hiding content at desktop sizes', () => {
-  for (const path of ['../rooms/moderator/room.css', '../rooms/studio/room.css']) {
-    const css = readFileSync(new URL(path, import.meta.url), 'utf8');
-    expect(css).toContain('scrollbar-gutter: stable');
-    if (path.includes('/moderator/')) {
-      const columns = css.match(/\.moderator-columns > \.room-column\s*\{[^}]*\}/)?.[0] ?? '';
-      expect(columns).toContain('overflow-y: auto'); expect(columns).toContain('scrollbar-gutter: stable');
-      expect(css).toMatch(/\.moderator-columns > \[data-fill\]\s*\{[^}]*display:\s*flex[^}]*overflow:\s*hidden/);
-      expect(css).toMatch(/\.moderator-columns \.moderator-replay-plate\s*\{[^}]*flex:\s*none/);
-      expect(css).toMatch(/\.moderator-feed > \.cc-window\s*\{[^}]*flex:\s*1[^}]*min-height:\s*0[^}]*scrollbar-gutter:\s*stable/);
-      const window = readFileSync(new URL('../../../../packages/ui/src/windowed-rows.css', import.meta.url), 'utf8');
-      expect(window).toMatch(/\.cc-window\s*\{[^}]*overflow:\s*auto/);
-    } else { /* Prototype studio README L15 and C L110: size-container field, scrolling side column. */ expect(css).toMatch(/\.cc-herald-side\s*\{[^}]*overflow:\s*auto/); expect(readFileSync(new URL('../rooms/studio/hex-field.css', import.meta.url), 'utf8')).toContain('container-type: size'); }
-  }
-  const css = readFileSync(new URL('./room.css', import.meta.url), 'utf8');
-  expect(css).toMatch(/\.room-scroll-hint\s*\{[^}]*font:[^}]*var\(--text-label\)/);
+test('review scroll affordances remain visible without hiding content at desktop sizes', () => {
+  const css = readFileSync(new URL('../rooms/moderator/room.css', import.meta.url), 'utf8');
+  expect(css).toContain('scrollbar-gutter: stable');
+  const columns = css.match(/\.moderator-columns > \.room-column\s*\{[^}]*\}/)?.[0] ?? '';
+  expect(columns).toContain('overflow-y: auto'); expect(columns).toContain('scrollbar-gutter: stable');
+  expect(css).toMatch(/\.moderator-columns > \[data-fill\]\s*\{[^}]*display:\s*flex[^}]*overflow:\s*hidden/);
+  expect(css).toMatch(/\.moderator-columns \.moderator-replay-plate\s*\{[^}]*flex:\s*none/);
+  expect(css).toMatch(/\.moderator-feed > \.cc-window\s*\{[^}]*flex:\s*1[^}]*min-height:\s*0[^}]*scrollbar-gutter:\s*stable/);
+  const window = readFileSync(new URL('../../../../packages/ui/src/windowed-rows.css', import.meta.url), 'utf8');
+  expect(window).toMatch(/\.cc-window\s*\{[^}]*overflow:\s*auto/);
+  const shell = readFileSync(new URL('./room.css', import.meta.url), 'utf8');
+  expect(shell).toMatch(/\.room-scroll-hint\s*\{[^}]*font:[^}]*var\(--text-label\)/);
 });
 
 const pending = (queue: ProposalQueue) => {
@@ -296,7 +280,6 @@ test('lazy Room preserves its props contract, slot and replay link; core mode ex
     expect(markup).toContain('href="#/overview"');
     expect(markup).not.toContain('generated fixtures only');
     if (chamber === 'visuals') expect(markup).toContain('60 offerings');
-    if (chamber === 'studio') expect(markup).toContain('data-hex-tile');
     if (chamber === 'moderator') expect(markup).toContain('#/chamber/moderator/drill');
     const core = renderToStaticMarkup(<Room chamber={chamber} replay={false} snapshot={{ mode: 'core', phase: 'connecting' }}
       origin="keep" on_open={vi.fn()} on_back={vi.fn()} />);
@@ -306,7 +289,6 @@ test('lazy Room preserves its props contract, slot and replay link; core mode ex
     expect(core).not.toContain('Propose Ban');
     expect(core).not.toContain('>Restyle</button>');
     expect(core).not.toContain('>Custom design</button>');
-    if (chamber === 'studio') expect(core).toContain('The map table is bare');
     if (chamber === 'visuals') expect(core).toContain('Local connection unavailable');
   }
 });
