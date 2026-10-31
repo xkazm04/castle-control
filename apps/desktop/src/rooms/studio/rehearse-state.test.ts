@@ -239,3 +239,13 @@ test('a size choice that carries a redrawn start is marked in the size compariso
   const compared = reduceRehearse(createRehearseState(), { type: 'compare_sizes', sizes: choices });
   expect(compared.sizes?.rows.map(row => [row.id, row.edited])).toEqual([['s', false], ['m', true], ['l', false]]);
 });
+
+test('choosing a brush pauses a round that is playing, and closing the palette leaves it as it is', () => {
+  const playing = apply(start, ...ticks(2));
+  expect(playing.playing).toBe(true);
+  const painting = reduceRehearse(playing, { type: 'brush', side: 'sable' });
+  expect(painting.playing).toBe(false); expect(painting.turn).toBe(2); expect(painting.run).toBe(playing.run);
+  const resumed = reduceRehearse(painting, { type: 'resume' });
+  expect(resumed.playing).toBe(true);
+  expect(reduceRehearse(resumed, { type: 'brush', side: null }).playing).toBe(true);
+});

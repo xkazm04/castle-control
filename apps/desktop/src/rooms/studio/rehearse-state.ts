@@ -173,7 +173,8 @@ export function reduceRehearse(state: RehearseState, action: RehearseAction): Re
     case 'clear_sizes': return { ...state, sizes: null };
     case 'compare_crowds': return compareCrowds(state, action.board);
     case 'clear_crowds': return { ...state, crowds: null };
-    case 'brush': return { ...state, brush: action.side };
+    // Picking a brush pauses a round that is playing, so the board does not move under the brush.
+    case 'brush': return { ...state, brush: action.side, playing: action.side === null ? state.playing : false };
     case 'paint': {
       if (state.brush === null) return state;
       const edits = paintEdits(state.edits, action.board, action.id, state.brush);
