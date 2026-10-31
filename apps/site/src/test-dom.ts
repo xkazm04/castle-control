@@ -16,6 +16,9 @@ export class FakeNode {
   textContent: string | null = null;
   id = ''; className = ''; type = ''; href = ''; tabIndex = 0; hidden = false; disabled = false;
   value = ''; scrollTop = 0; clientHeight = 0; scrollHeight = 0;
+  open = false;
+  parentElement: FakeNode | null = null;
+  readonly scrolls: ScrollIntoViewOptions[] = [];
   readonly ownerDocument: FakeDocument;
   readonly tagName: string;
   constructor(ownerDocument: FakeDocument, tagName: string) {
@@ -34,12 +37,23 @@ export class FakeNode {
     },
   };
 
-  append(...nodes: FakeNode[]): void { this.children.push(...nodes); }
+  append(...nodes: FakeNode[]): void {
+    for (const node of nodes) { node.remove(); node.parentElement = this; this.children.push(node); }
+  }
+  remove(): void {
+    if (this.parentElement) {
+      const index = this.parentElement.children.indexOf(this);
+      this.parentElement.children.splice(index, 1); this.parentElement = null;
+    }
+  }
+  scrollIntoView(options: ScrollIntoViewOptions): void { this.scrolls.push(options); }
   appendChild(node: FakeNode): FakeNode { this.append(node); return node; }
   get lastChild(): FakeNode | null { return this.children.at(-1) ?? null; }
   insertBefore(node: FakeNode, before: FakeNode | null): void {
+    node.remove();
     const index = before === null ? -1 : this.children.indexOf(before);
-    if (index < 0) this.append(node); else this.children.splice(index, 0, node);
+    if (index < 0) this.append(node);
+    else { node.parentElement = this; this.children.splice(index, 0, node); }
   }
   setAttribute(name: string, value: string): void {
     this.attrs.set(name, value);
@@ -70,7 +84,7 @@ export class FakeNode {
     const selectors = selector.split(',');
     return this.children.flatMap((child) => [
       ...(selectors.some((part) => part.startsWith('#') ? child.id === part.slice(1)
-        : child.classList.contains(part.slice(1))) ? [child] : []),
+        : part.startsWith('.') ? child.classList.contains(part.slice(1)) : child.tagName === part.toUpperCase()) ? [child] : []),
       ...child.querySelectorAll(selector),
     ]);
   }

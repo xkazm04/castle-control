@@ -6,12 +6,16 @@ import { artRoom, chamberIds } from './route.ts';
 import type { SiteRoom } from './route.ts';
 import type { Stage } from './stage.ts';
 import { buildToyDock } from './toy-dock.ts';
+import { buildStacked } from './stacked.ts';
+import type { Stacked } from './stacked.ts';
 
 const ink = { key: 'var(--ink)', gules: 'var(--gules)', azure: 'var(--azure)', or: 'var(--or)' } as const;
 const textInk = { key: 'var(--ink)', gules: 'var(--gules-text)', azure: 'var(--azure-text)', or: 'var(--or-text)' } as const;
 
 export function createView(nodes: Stage, reduced: () => boolean, seed?: string) {
   const dock = buildToyDock(nodes.toy, nodes.castle, reduced, seed);
+  let stacked: Stacked | undefined;
+  let isStacked = false;
   let previous: State = { phase: 'overview', room: null };
   let overviewRoom: SiteRoom | null = null;
   let focused: SiteRoom | null = null;
@@ -19,6 +23,7 @@ export function createView(nodes: Stage, reduced: () => boolean, seed?: string) 
   let origin: SiteRoom | null = null;
   let attention: SiteRoom | null | undefined;
   const overlays = nodes.castle.querySelectorAll<SVGElement>('.dim,.litglow');
+  const inkFilter = nodes.stage.querySelector<SVGElement>('.cc-inkedge-filter')!;
 
   function light(room: SiteRoom | null): void {
     nodes.castle.classList.toggle('focus', room !== null);
@@ -40,6 +45,7 @@ export function createView(nodes: Stage, reduced: () => boolean, seed?: string) 
   }
 
   function attend(): void {
+    if (isStacked) return;
     if (level(previous) > 0) return;
     light(overviewRoom);
     showHeadline(overviewRoom);
@@ -56,6 +62,7 @@ export function createView(nodes: Stage, reduced: () => boolean, seed?: string) 
   function reviewHover(room: SiteRoom | null): void { overviewRoom = room; attend(); }
 
   function focusFirst(): void {
+    if (isStacked) { stacked!.navigate({ phase: 'room', room: 'lots' }); return; }
     // Skip hands off keyboard focus without changing the printed attention.
     quietFocus = true;
     try { nodes.hits.get('lots')?.focus({ preventScroll: true }); }
@@ -66,6 +73,12 @@ export function createView(nodes: Stage, reduced: () => boolean, seed?: string) 
     const depth = level(state);
     const was = level(previous);
     const moved = state.room !== previous.room || depth !== was;
+    if (isStacked) {
+      dock.update(state);
+      if (moved) stacked!.navigate(state);
+      previous = state;
+      return;
+    }
     if (was === 0 && depth > 0) origin = state.room;
     nodes.stage.classList.toggle('intro', state.phase === 'intro');
     nodes.stage.classList.toggle('room-mode', depth > 0);
@@ -115,6 +128,27 @@ export function createView(nodes: Stage, reduced: () => boolean, seed?: string) 
     if (next) nodes.hits.get(next)?.focus({ preventScroll: true });
   }
 
-  return { update, hover, focus, focusFirst, reviewHover, moveFocus, liveHex: dock.liveHex,
+  function setStacked(on: boolean): void {
+    if (on === isStacked) return;
+    isStacked = on;
+    nodes.stage.ownerDocument.documentElement.classList.toggle('stacked', on);
+    nodes.stage.hidden = on;
+    if (on) {
+      stacked ??= buildStacked(nodes, reduced);
+      nodes.stage.ownerDocument.body.append(stacked.page);
+      // SVG resources must stay outside the display:none desktop stage.
+      stacked.page.append(inkFilter);
+      stacked.syncTheme();
+      dock.present(stacked.scenes, stacked.hosts);
+      dock.update(previous);
+      stacked.navigate(previous);
+    } else {
+      dock.present(); nodes.stage.insertBefore(inkFilter, nodes.mark.parentElement); stacked!.page.remove();
+      update(previous);
+      if (previous.room !== null) nodes.broadside.focus({ preventScroll: true });
+    }
+  }
+
+  return { update, setStacked, hover, focus, focusFirst, reviewHover, moveFocus, liveHex: dock.liveHex,
     claimHex: (): void => dock.claimHex(nodes.stage.ownerDocument.activeElement) };
 }

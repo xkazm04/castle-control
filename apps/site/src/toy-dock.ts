@@ -9,16 +9,19 @@ import { band, claimPaints, curve, cycleHex, draw, houses, initialClaims, readLi
 export function buildToyDock(host: HTMLElement, castle: HTMLElement, reduced: () => boolean, seed?: string) {
   const document = host.ownerDocument;
   host.dataset['role'] = 'toy';
-  const wheel = castle.querySelector<SVGElement>(`#${artHooks.lotWheel}`)!;
-  const flame = castle.querySelector<SVGElement>(`#${artHooks.altarFlame}`)!;
-  const hexGroup = castle.querySelector<SVGElement>(`#${artHooks.hexes}`)!;
-  const hexes = [...castle.querySelectorAll<SVGElement>(`.${artHooks.hex}`)];
+  let wheel = castle.querySelector<SVGElement>(`#${artHooks.lotWheel}`)!;
+  let flame = castle.querySelector<SVGElement>(`#${artHooks.altarFlame}`)!;
+  let hexGroup = castle.querySelector<SVGElement>(`#${artHooks.hexes}`)!;
+  let hexes = [...castle.querySelectorAll<SVGElement>(`.${artHooks.hex}`)];
+  let stacked = false;
   const claims = initialClaims();
   let room: State['room'] = null, rotation = 0;
   let timer: ReturnType<typeof setTimeout> | undefined;
   let pending: (() => void) | undefined;
   const history: string[] = [];
   const panels = new Map<ChamberId, HTMLElement>();
+  let mapControls: HTMLElement | undefined;
+  const mapButtons: HTMLButtonElement[] = [];
 
   function panel(id: ChamberId, title: string, note: string, simulated = false) {
     const node = element(document, 'div', { cls: 'toy-panel' }); node.hidden = true;
@@ -128,32 +131,65 @@ export function buildToyDock(host: HTMLElement, castle: HTMLElement, reduced: ()
   function paint(index: number): void {
     const hex = hexes[index]!, claim = claims[index]!;
     hex.style.fill = `var(--${claimPaints[claim]})`;
-    hex.setAttribute('aria-label', `Hex ${index + 1}: ${houses[claim]}`);
+    const label = `Hex ${index + 1}: ${houses[claim]}`;
+    if (!stacked) hex.setAttribute('aria-label', label);
+    const button = mapButtons[index];
+    if (button) {
+      button.setAttribute('aria-label', label);
+      button.textContent = `${index + 1}\n${['Open', 'Gules', 'Azure', 'Or'][claim]}`;
+      button.style.background = `var(--${claimPaints[claim]})`;
+    }
   }
+  function claimAt(index: number): void { claims[index] = cycleHex(claims[index]!); paint(index); tally(); }
   function claimHex(hex: Element | null): void {
-    if (room !== 'map') return;
+    if (stacked || room !== 'map') return;
     const index = hexes.findIndex((node) => node === hex);
     if (index < 0) return;
-    claims[index] = cycleHex(claims[index]!); paint(index); tally();
+    claimAt(index);
   }
   hexes.forEach((hex) => hex.addEventListener('click', () => claimHex(hex)));
   tally();
   function update(state: State): void {
     room = level(state) > 0 ? state.room : null;
-    host.hidden = room === null || room === 'steward';
+    host.hidden = stacked || room === null || room === 'steward';
     host.classList.toggle('on', !host.hidden);
-    for (const [id, node] of panels) node.hidden = id !== room;
-    hexGroup.classList.toggle('live', room === 'map');
+    for (const [id, node] of panels) node.hidden = !stacked && id !== room;
+    hexGroup.classList.toggle('live', !stacked && room === 'map');
     hexes.forEach((hex, index) => {
-      if (room === 'map') { hex.setAttribute('role', 'button'); hex.setAttribute('tabindex', '0'); paint(index); }
+      if (!stacked && room === 'map') { hex.setAttribute('role', 'button'); hex.setAttribute('tabindex', '0'); paint(index); }
       else { hex.removeAttribute('role'); hex.removeAttribute('tabindex'); hex.removeAttribute('aria-label'); }
     });
-    if (room === 'beacons') blaze();
+    if (stacked || room === 'beacons') blaze();
     if (reduced() && pending) { clearTimeout(timer); wheel.style.transition = 'none'; pending(); }
     if (seed !== undefined) {
-      if (room === 'lots') { lotForm.input.value = seed; startDraw(); }
+      if (stacked || room === 'lots') { lotForm.input.value = seed; startDraw(); }
       seed = undefined;
     }
   }
-  return { update, claimHex, liveHex: (): boolean => room === 'map' && hexes.some((hex) => hex === document.activeElement) };
+  function present(scenes?: ReadonlyMap<ChamberId, HTMLElement>, hosts?: ReadonlyMap<ChamberId, HTMLElement>): void {
+    stacked = scenes !== undefined;
+    const find = (id: ChamberId, hook: string): SVGElement => scenes
+      ? scenes.get(id)!.querySelector<SVGElement>(`#stacked-${id}-${hook}`)!
+      : castle.querySelector<SVGElement>(`#${hook}`)!;
+    const nextWheel = find('lots', artHooks.lotWheel);
+    nextWheel.style.transform = wheel.style.transform;
+    nextWheel.style.transition = reduced() ? 'none' : wheel.style.transition;
+    wheel = nextWheel; flame = find('beacons', artHooks.altarFlame); hexGroup = find('map', artHooks.hexes);
+    hexes = [...(scenes?.get('map') ?? castle).querySelectorAll<SVGElement>(`.${artHooks.hex}`)];
+    for (const [id, panel] of panels) (hosts?.get(id) ?? host).append(panel);
+    if (stacked) {
+      if (!mapControls) {
+        mapControls = element(document, 'div', { cls: 'stacked-hexes' });
+        mapControls.setAttribute('role', 'group'); mapControls.setAttribute('aria-label', 'Claim sample territory');
+        claims.forEach((_claim, index) => {
+          const button = element(document, 'button'); button.type = 'button';
+          button.addEventListener('click', () => claimAt(index)); mapButtons.push(button); mapControls!.append(button);
+        });
+      }
+      map.node.append(mapControls);
+    } else mapControls?.remove();
+    hexes.forEach((_hex, index) => paint(index));
+  }
+  return { update, present, claimHex,
+    liveHex: (): boolean => !stacked && room === 'map' && hexes.some((hex) => hex === document.activeElement) };
 }

@@ -1,6 +1,7 @@
 /* Winner landing layout, composed from the shared Cutaway roles and stage type scale. */
 * { box-sizing:border-box; }
-html, body { margin:0; height:100%; overflow:hidden; }
+html, body { margin:0; height:100%; }
+html:not(.stacked), html:not(.stacked) body { overflow:hidden; }
 body {
   background:var(--stage-paper); color:var(--ink); -webkit-font-smoothing:antialiased;
   background-image:var(--paper-grain),radial-gradient(120% 90% at 50% 30%,var(--body-top) 0%,var(--body-low) 100%);

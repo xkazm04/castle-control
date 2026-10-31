@@ -4,6 +4,7 @@ import '@castle-control/ui/stamp.css';
 import './site.css';
 import './broadside.css';
 import './toys.css';
+import './stacked.css';
 import { bindFit } from './fit.ts';
 import { createIntro } from './intro.ts';
 import { bindKeys } from './keymap.ts';
@@ -14,12 +15,15 @@ import { encode, parse, parseReview, writeRoute } from './route.ts';
 import { buildStage } from './stage.ts';
 import { toggleTheme } from './theme.ts';
 import { createView } from './view.ts';
+import { bindLayout, stackedQuery } from './layout.ts';
 
 const nodes = buildStage(document);
 const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
+const layout = window.matchMedia(stackedQuery);
 const review = parseReview(window.location.search);
-let state = initialState(motion.matches, parse(window.location.hash));
-const view = createView(nodes, () => motion.matches, state.room === 'lots' ? review.seed : undefined);
+let state = initialState(motion.matches || layout.matches, parse(window.location.hash));
+const view = createView(nodes, () => motion.matches, state.room === 'lots' || layout.matches ? review.seed : undefined);
+view.setStacked(layout.matches);
 view.update(state);
 view.reviewHover(review.hover ?? null);
 
@@ -74,3 +78,4 @@ window.addEventListener('hashchange', () => {
 bindKeys(document, () => ({ level: level(state), liveHex: view.liveHex() }), act,
   (key, target) => intro.key(key, target === nodes.skip));
 bindFit(window, nodes.stage);
+bindLayout(layout, (stacked) => { if (stacked) intro.reduce(); view.setStacked(stacked); });
