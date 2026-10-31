@@ -58,11 +58,15 @@ test('local Map Room journey: inspect tiles and banners, edit the map, inspect l
       await page.keyboard.press('Enter');
       await expect(control).toHaveAttribute('aria-pressed', 'true');
       await expect(room.locator('.cc-proclamation')).toContainText(`Requirements · ${stage}`);
+      if (stage === 'Muster') await expect(room.locator('.cc-proclamation')).toContainText(
+        'Locked. Hosted testing waits for Twitch’s answer on the Extension policy. No Extension is built or connected.');
+      await expect(room).not.toContainText('WP 4.0');
       await expect(room.locator('[data-rung="0"]')).toHaveAttribute('data-current', 'true');
       await expect(room.locator('[data-rung="1"]')).toHaveAttribute('data-locked', 'true');
       await expect(room.locator('[data-rung="2"]')).toHaveAttribute('data-locked', 'true');
     }
-    await expect(room).toContainText('WP 4.0 is pending');
+    await expect(room).toContainText('The room awaits Twitch’s answer on the Extension policy. It makes no network call and cannot advance the test stage.');
+    await expect(room).not.toContainText('WP 4.0');
     await auditStyles(page, desktopSurfaces);
     await auditFields(page);
     await room.getByRole('button', { name: 'Reset local design', exact: true }).click();
@@ -172,7 +176,8 @@ test('Map Room Spyglass: viewer sizes, isolated picks, current/draft review, sea
     await expect(frames).toHaveCount(1);
     await expect(frames.locator('[data-look-ink]')).toHaveAttribute('data-treatment', 'engraved');
     await expect(frames.locator('[data-look-ink]')).toHaveAttribute('data-density', 'quiet');
-    await expect(room).toContainText('WP 4.0 is pending');
+    await expect(room).toContainText('The room awaits Twitch’s answer on the Extension policy. It makes no network call and cannot advance the test stage.');
+    await expect(room).not.toContainText('WP 4.0');
     await auditStyles(page, desktopSurfaces); await auditFields(page);
   } finally { await page.goto('about:blank'); verify(); }
 });

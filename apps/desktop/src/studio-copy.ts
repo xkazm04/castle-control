@@ -27,7 +27,7 @@ export const studioCopy = {
   inspect_stage: (title: string) => `Inspect ${title} requirements`,
   local: 'Local only', locked: 'Locked',
   requirements: (title: string) => `Requirements · ${title}`,
-  pending: 'WP 4.0 is pending. The room makes no network call and cannot advance the test stage.',
+  pending: 'The room awaits Twitch’s answer on the Extension policy. It makes no network call and cannot advance the test stage.',
   bare: 'The map table is bare',
   unconfigured: 'No live studio is connected. Twitch policy clearance is pending; no Extension is available.',
   no_tile: 'No tile selected', no_tile_hint: 'Choose a hex on the current map to inspect its sample territory.',
@@ -61,6 +61,6 @@ export const studioCopy = {
 
 export const studioStages = [
   { title: 'Sand table', function: 'local test', detail: 'Local test, only you see it. Inspect sample tiles and drafts without changing a channel.' },
-  { title: 'Muster', function: 'hosted test', detail: 'Locked. Hosted testing waits for Twitch’s WP 4.0 policy answer. No Extension is built or connected.' },
+  { title: 'Muster', function: 'hosted test', detail: 'Locked. Hosted testing waits for Twitch’s answer on the Extension policy. No Extension is built or connected.' },
   { title: 'Proclaimed', function: 'released', detail: 'Locked. No release or submission is available. Twitch policy clearance and owner approval are required.' },
 ] as const;

@@ -13,7 +13,14 @@ test('fixture studio shows all 54 hexes and the local-only test ladder', () => {
   const html = renderToStaticMarkup(<Room snapshot={{ mode: 'fixture', phase: 'ready' }} />);
   expect(fixtureTiles).toHaveLength(54);
   expect(html.match(/data-hex-tile=/g)).toHaveLength(54);
-  for (const text of ['9 × 6', 'Sand table', 'Muster', 'Proclaimed', 'WP 4.0']) expect(html).toContain(text);
+  for (const text of ['9 × 6', 'Sand table', 'Muster', 'Proclaimed']) expect(html).toContain(text);
+  expect(html).toContain('The room awaits Twitch’s answer on the Extension policy. It makes no network call and cannot advance the test stage.');
+  expect(html).not.toContain('WP 4.0');
+  for (const selected of [0, 1, 2]) {
+    const ladder = renderToStaticMarkup(<TestLadder selected={selected} on_select={vi.fn()} />);
+    expect(ladder).not.toContain('WP 4.0');
+    if (selected === 1) expect(ladder).toContain('Locked. Hosted testing waits for Twitch’s answer on the Extension policy. No Extension is built or connected.');
+  }
   expect(html).not.toContain('studio-room-notice');
   expect(html).not.toContain('Hold to seal');
   expect(html).not.toContain('Approve the move');
@@ -163,7 +170,8 @@ test('default module loads lazily with no network or submission action', async (
     </Suspense>);
     await stream.allReady;
     const html = await new Response(stream).text();
-    expect(html).toContain('WP 4.0');
+    expect(html).toContain('The room awaits Twitch’s answer on the Extension policy. It makes no network call and cannot advance the test stage.');
+    expect(html).not.toContain('WP 4.0');
     expect(html).not.toContain('\u2014');
     expect(html).not.toContain('Submit');
     expect(network).not.toHaveBeenCalled();
