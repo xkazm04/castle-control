@@ -11,7 +11,7 @@ not establish live Twitch or OBS acceptance. Public release remains pending.
 | [Gatehouse](gatehouse.md) | Watching rules, consensus, recording imports and replay |
 | [Lot Chamber](lots.md) | Draw guardrails, seal/cast, fixture limits and proof download |
 | [Beacons](beacons.md) | Visual configuration, curves, simulation and overlay limits |
-| [Map Room](map-room.md) | Local war-table preview and locked Extension stages |
+| [Map Room](map-room.md) | Local war-table preview, a simulated Rehearse view and locked Extension stages |
 | [Verify a writ](verifier.md) | Offline CLI/web verification and independent quicknet trust |
 | [Extension service self-hosting](self-hosting.md) | Stub: M4 service is not built yet |
 | [Privacy notice](../privacy.md) | Local data, retention, erasure and optional provider calls |

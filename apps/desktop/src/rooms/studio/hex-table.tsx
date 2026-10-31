@@ -1,4 +1,4 @@
-import type { CSSProperties, KeyboardEvent } from 'react';
+import type { CSSProperties, KeyboardEvent, PointerEvent } from 'react';
 import type { DesignOutput } from '@castle-control/ui/design';
 import { EmptyState, HeroReadout, Pennant, Plate, PlateBand, PlateBody, SectionHeading } from '@castle-control/ui';
 import { studioCopy as copy } from '../../studio-copy.js';
@@ -27,34 +27,54 @@ function inspectNeighbour(event: KeyboardEvent<HTMLButtonElement>, tile: BoardTi
   event.currentTarget.parentElement?.querySelectorAll<HTMLButtonElement>('[data-hex-tile]')[index]?.focus();
 }
 
-export function HexTable({ selected, on_select, board = STUDIO_SAMPLE_BOARD, size = 'm', look }: {
+/** Tiles that changed owner this turn. `phase` alternates so the same tile can flip on consecutive turns. */
+export type TableFlip = Readonly<{
+  ids: ReadonlySet<string>; phase: 0 | 1; picked?: ReadonlySet<string>; flipped_label?: string;
+  /** Tiles marked as chokepoints, and the word a screen reader hears for them. */
+  marked?: ReadonlySet<string>; marked_label?: string;
+}>;
+
+export function HexTable({ selected, on_select, board = STUDIO_SAMPLE_BOARD, size = 'm', look, flip, gloss = copy.board_gloss, pennants = true, quiet = false, on_paint }: {
   selected: string; on_select: (id: string) => void; board?: StudioBoard; size?: MapSize; look?: DesignOutput['style'];
+  flip?: TableFlip; gloss?: string; pennants?: boolean; quiet?: boolean;
+  /** When set the table is in paint mode: pressing, activating by keyboard or dragging across a hex paints it,
+   * and the arrow keys still only move focus. Painting is idempotent, so a press and its click are harmless together. */
+  on_paint?: (id: string) => void;
 }) {
   const geometry = boardGeometry(board);
   const tab_stop = geometry.tiles.find(tile => tile.id === selected)?.id ?? geometry.tiles[0]?.id;
   const style: CSSProperties & Record<string, number> = { '--board-w': geometry.width, '--board-h': geometry.height,
     '--fit-w': geometry.fit_width, '--fit-h': geometry.fit_height };
   return <div className="cc-herald-field" role="region" aria-label={copy.board_label(geometry.columns, geometry.rows, board.title)}
-    data-look-ink={look?.ink} data-treatment={look?.treatment} data-density={look?.density}>
-    <SectionHeading variant="inline" level={2} title={copy.board_title(geometry.columns, geometry.rows, board.title)} gloss={copy.board_gloss} />
+    data-look-ink={look?.ink} data-treatment={look?.treatment} data-density={quiet ? 'quiet' : look?.density}>
+    <SectionHeading variant="inline" level={2} title={copy.board_title(geometry.columns, geometry.rows, board.title)} gloss={gloss} />
     <div className="cc-hexfield" data-map-size={size} style={style}><div className="cc-hexfield-plate" role="group" aria-label={copy.tiles_label(geometry.tiles.length)}>
       {geometry.tiles.map(tile => <button type="button" className="cc-hex" key={tile.id} data-hex-tile={tile.id}
         data-house={tile.side?.label ?? 'unclaimed'} data-ink={tile.side?.ink} data-unclaimed={!tile.side}
+        data-flipped={flip?.ids.has(tile.id) ? (flip.phase === 0 ? 'a' : 'b') : undefined}
+        data-picked={flip?.picked?.has(tile.id) ? (flip.phase === 0 ? 'a' : 'b') : undefined}
+        data-contested={flip?.marked?.has(tile.id) ? 'true' : undefined}
         style={hexPosition(tile.centre.x, tile.centre.y)}
-        aria-label={copy.tile_label(tile.id, tile.side?.short ?? copy.unclaimed, tile.side?.label)} aria-pressed={selected === tile.id}
+        aria-label={copy.tile_label(tile.id, tile.side?.short ?? copy.unclaimed, tile.side?.label)
+          + (flip?.marked?.has(tile.id) && flip.marked_label ? `, ${flip.marked_label}` : '')
+          + (flip?.ids.has(tile.id) && flip.flipped_label ? `, ${flip.flipped_label}` : '')} aria-pressed={selected === tile.id}
         tabIndex={tab_stop === tile.id ? 0 : -1}
-        onClick={() => on_select(tile.id)} onKeyDown={event => inspectNeighbour(event, tile, geometry.tiles, on_select)}>
+        onClick={() => (on_paint ?? on_select)(tile.id)}
+        {...(on_paint ? { onPointerDown: (event: PointerEvent<HTMLButtonElement>) => { if (event.buttons === 1) on_paint(tile.id); },
+          onPointerEnter: (event: PointerEvent<HTMLButtonElement>) => { if (event.buttons === 1) on_paint(tile.id); } } : {})}
+        onKeyDown={event => inspectNeighbour(event, tile, geometry.tiles, on_select)}>
         <span className="cc-hex-face" aria-hidden="true" />
         <span className="cc-hex-id">{tile.id}</span>
         <span className="cc-hex-house">{tile.side?.short ?? copy.unclaimed}</span>
+        {flip?.marked?.has(tile.id) && <span className="cc-hex-choke" aria-hidden="true" />}
       </button>)}
     </div></div>
-    <ul className="cc-pennants">{geometry.sides.map(side => <li key={side.id} data-house={side.label} data-ink={side.ink}>
+    {pennants && <ul className="cc-pennants">{geometry.sides.map(side => <li key={side.id} data-house={side.label} data-ink={side.ink}>
       <Pennant variant="standing" word={side.label} count={String(side.count)} style={{ '--cc-ink': 'var(--house)' }} />
     </li>)}<li data-house="unclaimed" data-unclaimed="true">
       <Pennant variant="standing" word={copy.unclaimed} count={String(geometry.unclaimed)}
         style={{ '--cc-ink': 'var(--house)', borderLeftColor: 'var(--hair)', borderLeftStyle: 'dashed' }} />
-    </li></ul>
+    </li></ul>}
   </div>;
 }
 
