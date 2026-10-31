@@ -1,3 +1,7 @@
+import { createElement } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
+import { ConnectedLotsRoom } from './rooms/lottery/core.jsx';
+import { lotsCopy as copy } from './lots-copy.js';
 import { afterEach, expect, test, vi } from 'vitest';
 import type { DrawCheckResult } from '@castle-control/contract';
 import { parseMethodResult } from '@castle-control/contract';
@@ -30,6 +34,33 @@ function harness() {
   return { port: createCoreLotsPort(launch, { rpc }), rpc, responses, fetch, socket };
 }
 afterEach(() => { vi.unstubAllGlobals(); vi.restoreAllMocks(); });
+
+test.each([
+  ['lots.cast', 'The announced round has not arrived yet. Wait, then Cast again.'],
+  ['lots.roll.seal', 'The seal missed its round; this attempt is used up. Reconcile in the core before sealing again.'],
+] as const)('lots-02 %s conflict has a specific remedy without upstream prose', async (method, notice) => {
+  const h = harness(); await h.port.load();
+  if (method === 'lots.cast') await h.port.seal();
+  h.rpc.mockImplementation(async (_endpoint, _session, name) => {
+    if (name === method) throw { code: 'conflict', message: 'simulated private upstream prose' };
+    return structuredClone(h.responses.get(name));
+  });
+  await (method === 'lots.cast' ? h.port.start() : h.port.seal());
+  expect(h.port.getSnapshot().notice).toBe(notice);
+});
+test('lots-02 a good cast with mismatched proof retains winners and names only the proof failure', async () => {
+  const h = harness(); await h.port.load(); await h.port.seal();
+  h.responses.set('lots.writ.get', { ...fixtureWrit, seal: '0'.repeat(64) }); await h.port.start();
+  expect(h.port.getSnapshot()).toMatchObject({ started: true, cast_result: cast });
+  expect(h.port.getSnapshot().writ).toBeUndefined();
+  expect(h.port.getSnapshot().notice).toBe('Cast received. The proof bundle could not be loaded; use Reload proof bundle.');
+  expect(h.port.getSnapshot().notice).not.toContain('Draw request failed');
+});
+test('lots-02 unparseable failures keep the generic fallback without echoing upstream prose', async () => {
+  const h = harness(); h.rpc.mockRejectedValueOnce({ code: 'unknown', message: 'simulated private upstream prose' });
+  await h.port.load();
+  expect(h.port.getSnapshot().notice).toBe('Draw request failed. The result is unavailable or invalid; no preview was substituted.');
+});
 
 test('loads and selects service draws, validates upsert, and notifies subscribers without browser networking', async () => {
   const h = harness(); const listener = vi.fn();
@@ -73,7 +104,7 @@ test('looks up a Twitch user ID, represents absence, and rejects handles before 
   await h.port.lookup('42'); expect(h.port.getSnapshot().lookup_result?.entry).toEqual(entry);
   const count = h.rpc.mock.calls.length;
   await h.port.lookup('@simulated'); expect(h.rpc).toHaveBeenCalledTimes(count);
-  expect(h.port.getSnapshot().notice).toContain('failed');
+  expect(h.port.getSnapshot().notice).toBe('Enter a numeric Twitch user ID.');
 });
 
 test('seal, cast and writ use only server authority and the documented request fields', async () => {
@@ -136,7 +167,7 @@ test('a cast for another run and a writ with different winners are never display
   await h.port.start();
   expect(h.port.getSnapshot().cast_result).toEqual(cast);
   expect(h.port.getSnapshot().writ).toBeUndefined();
-  expect(h.port.getSnapshot().notice).toContain('failed');
+  expect(h.port.getSnapshot().notice).toContain('proof bundle could not be loaded');
   h.responses.set('lots.writ.get', fixtureWrit); await h.port.recompute();
   expect(h.port.getSnapshot().writ).toEqual(fixtureWrit);
 });
@@ -207,4 +238,54 @@ test('seal-announced state precedes cast and no-prize creation needs only existi
   expect(h.port.getSnapshot().notice).toContain('Seal announced');
   expect(h.port.getSnapshot().cast_result).toBeUndefined();
   expect(h.rpc.mock.calls.some(call => call[2] === 'lots.cast')).toBe(false);
+});
+
+test('connected room renders source provenance and the announcement before any winners', async () => {
+  const draw = fixtureDraws[0];
+  if (!draw) throw new Error('Missing simulated draw');
+  const port = createCoreLotsPort({ mode: 'core', endpoint: 'http://127.0.0.1:3210/', session_token: 'a'.repeat(64) }, {
+    rpc: async (_endpoint, _session, method) => {
+      if (method === 'lots.draw.list') return { draws: [draw] };
+      if (method === 'lots.draw.check') return { result: 'ok', reasons: [] };
+      if (method === 'lots.roll.seal') return { draw_id: draw.draw_id, draw_run_id: '01ARZ3NDEKTSV4RRFFQ69G5FAV',
+        sealed: { roll: fixtureWrit.roll, seal: fixtureWrit.seal } };
+      throw new Error('Unexpected request in simulated room test');
+    },
+  });
+  await port.load(); await port.seal();
+  const markup = renderToStaticMarkup(createElement(ConnectedLotsRoom, { port, simulated: true }));
+  expect(markup).toContain('Recorded · simulated round source');
+  expect(markup).toContain('Seal announced');
+  expect(markup).not.toContain(copy.core.locked);
+  expect(markup).toContain('Cast the lots');
+  expect(markup).not.toContain('Winners ·');
+  expect(markup).not.toContain('Live-trusted');
+  expect(markup.indexOf('class="cc-stage-wrap"')).toBeLessThan(markup.indexOf('class="cc-desk"'));
+  expect(markup).toContain('data-scale="viewport"');
+  expect(markup).toContain('data-size="large"');
+  expect(markup).not.toContain(copy.illustration);
+});
+
+
+test('lots-02 seal policy and lookup failures have remedies and safe retry timing', async () => {
+  const h = harness(); await h.port.load();
+  h.rpc.mockImplementation(async (_endpoint, _session, method) => {
+    if (method === 'lots.roll.seal') throw { code: 'blocked_by_policy', message: 'simulated private detail', retry_after_ms: 1000 };
+    return structuredClone(h.responses.get(method));
+  });
+  await h.port.seal();
+  expect(h.port.getSnapshot().notice).toBe(`${copy.core.request_errors['lots.roll.seal'].blocked_by_policy} Retry after 1000 ms.`);
+  expect(h.port.getSnapshot().notice).not.toContain('simulated private detail');
+});
+test('lots-02 a transport failure loading proof keeps a successful cast, and proof reload recovers', async () => {
+  const h = harness(); await h.port.load(); await h.port.seal();
+  h.rpc.mockImplementation(async (_endpoint, _session, method) => {
+    if (method === 'lots.writ.get') throw { code: 'unavailable', message: 'simulated private detail' };
+    return structuredClone(h.responses.get(method));
+  });
+  await h.port.start(); expect(h.port.getSnapshot()).toMatchObject({ started: true, cast_result: cast });
+  expect(h.port.getSnapshot().notice).toBe(copy.core.proof_unavailable);
+  h.rpc.mockImplementation(async (_endpoint, _session, method) => structuredClone(h.responses.get(method)));
+  await h.port.recompute(); expect(h.port.getSnapshot().writ).toEqual(fixtureWrit);
+  expect(h.port.getSnapshot().notice).toContain('Proof bundle loaded');
 });

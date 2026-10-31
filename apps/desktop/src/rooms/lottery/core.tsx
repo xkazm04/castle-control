@@ -1,6 +1,6 @@
-﻿import { useEffect, useState, useSyncExternalStore } from 'react';
+﻿import { useEffect, useId, useState, useSyncExternalStore } from 'react';
 import type { ReactNode } from 'react';
-import { HeraldicCard, InkButton, SealButton, SectionHeading, WindowedRows } from '@castle-control/ui';
+import { FieldGroup, HeraldicCard, InkButton, SealButton, SectionHeading, WindowedRows } from '@castle-control/ui';
 import { coreLotsConnection } from '../../client.js';
 import { createCoreLotsPort, lotsRoundLabel } from '../../lots-core.js';
 import type { CoreLotsPort } from '../../lots-core.js';
@@ -23,6 +23,17 @@ export function ConnectedLotsRoom({ port, simulated, seal_slot }: { port: CoreLo
   const [user, setUser] = useState('');
   useEffect(() => { if (!port.getSnapshot().locked) void port.load(); }, [port]);
   const draw = state.draw;
+  const field_id = useId();
+  const [winner_draft, setWinnerDraft] = useState({ draw, value: String(draw?.rules.winner_count ?? '') });
+  const winner_value = winner_draft.draw === draw ? winner_draft.value : String(draw?.rules.winner_count ?? '');
+  if (winner_draft.draw !== draw) setWinnerDraft({ draw, value: winner_value });
+  const winner_count = Number(winner_value);
+  const invalid_winners = !winner_value.trim() || !Number.isInteger(winner_count) || winner_count < 1 || winner_count > 65535;
+  const commitWinners = () => {
+    if (draw && !state.busy && !state.locked && !invalid_winners && winner_count !== draw.rules.winner_count) {
+      void port.edit({ ...draw, rules: { ...draw.rules, winner_count } });
+    }
+  };
   const cap = draw?.rules.cohort_caps.find(item => item.cohort === 'raider');
   return <div className="lottery-room" aria-label={copy.core.title} aria-busy={state.busy}>
     <div className="cc-hall">
@@ -41,21 +52,26 @@ export function ConnectedLotsRoom({ port, simulated, seal_slot }: { port: CoreLo
         <SectionHeading variant="banner" level={2} title={copy.writ} gloss={copy.writ_gloss} ink="gules" />
         <HeraldicCard variant="raised">
           <h2 className="lottery-card-title">{copy.core.draws}</h2>
-          <p className="cc-aside" aria-label={copy.core.round_source}>{lotsRoundLabel(simulated, state.seal_result)}</p>
+          <p className="cc-aside">{lotsRoundLabel(simulated, state.seal_result)}</p>
           <InkButton size="room" disabled={state.busy || state.locked} onClick={() => { void port.load(); }}>{copy.core.refresh}</InkButton>
           {!state.draws.some(item => item.draw_id === 'questions') && <InkButton size="room" disabled={state.busy || state.locked}
             onClick={() => { void port.createQuestionDraw(); }}>{copy.core.create}</InkButton>}
           <div className="lottery-core-fields">
-            <label>{copy.core.draw}<select value={draw?.draw_id ?? ''} disabled={state.busy || state.locked}
+            <FieldGroup label={copy.core.draw} control_id={`${field_id}-draw`} variant="select">
+              <select id={`${field_id}-draw`} value={draw?.draw_id ?? ''} disabled={state.busy || state.locked}
               onChange={event => { void port.select(event.currentTarget.value); }}>
               {!draw && <option value="">{copy.core.no_draw}</option>}
               {state.draws.map(item => <option key={item.draw_id} value={item.draw_id}>{item.name}</option>)}
-            </select></label>
-            {draw && <label>{copy.core.winner_count}<input type="number" min={1} max={65535} value={draw.rules.winner_count}
-              disabled={state.busy || state.locked} onChange={event => {
-                const winner_count = event.currentTarget.valueAsNumber;
-                if (Number.isInteger(winner_count)) void port.edit({ ...draw, rules: { ...draw.rules, winner_count } });
-              }} /></label>}
+              </select>
+            </FieldGroup>
+            {draw && <FieldGroup label={copy.core.winner_count} control_id={`${field_id}-winners`}>
+              <input id={`${field_id}-winners`} type="number" min={1} max={65535} value={winner_value}
+                disabled={state.busy || state.locked} aria-invalid={invalid_winners}
+                aria-describedby={invalid_winners ? `${field_id}-winner-error` : undefined}
+                onChange={event => setWinnerDraft({ draw, value: event.currentTarget.value })}
+                onBlur={commitWinners} onKeyDown={event => { if (event.key === 'Enter') { event.preventDefault(); commitWinners(); } }} />
+              {invalid_winners && <p id={`${field_id}-winner-error`} className="cc-aside" role="alert">{copy.core.invalid_winners}</p>}
+            </FieldGroup>}
           </div>
           {draw && <>
             <p className="cc-aside">{copy.core.pool(draw.rules.pool.kind, draw.policy.content, draw.rules.cooldown_s)}</p>
@@ -63,6 +79,7 @@ export function ConnectedLotsRoom({ port, simulated, seal_slot }: { port: CoreLo
           </>}
         </HeraldicCard>
         {state.check && <PolicyRibbon result={state.check.result} core />}
+        {state.locked && !state.sealed && <p className="cc-aside" role="alert">{copy.core.locked}</p>}
         {state.check?.reasons.map(reason => <p className="cc-aside" key={reason}>{policyReason(reason)}</p>)}
         {draw && <HeraldicCard variant="raised" tone="seal" ink="gules">
           <p className="cc-aside">{copy.core.seal_notice}</p>

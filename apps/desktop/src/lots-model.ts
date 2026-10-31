@@ -17,7 +17,7 @@ export type LotsPort<State = LotsPreview> = {
   select: (id: string) => void; edit: (draw: LotsDraw) => void; lookup: (handle: string) => void;
   pause: () => void; seal: (entries?: readonly FixtureEntry[], prepared?: LotsSealedRoll) => Promise<void>; start: () => Promise<void>; shape: (shape: Shape) => void;
   nested: (show: boolean) => void; recompute: (reference?: boolean) => Promise<void>;
-};
+} & (State extends LotsPreview ? { reopen: () => void } : unknown);
 
 /** Fixture-only mirror of cc-lots::check_draw. Reasons use the strings documented
  * by cc-types::DrawCheckResult, not new wire identifiers. No live authority. */
@@ -62,15 +62,18 @@ export function createLotsPreview(count = 87, clock = rehearsalClock): LotsPort 
     shape: 'urn', lookup: '', nested: false, notice: copy.notice, recomputing: false, casting: false };
   const listeners = new Set<() => void>();
   const publish = (change: Partial<LotsPreview>) => { snapshot = { ...snapshot, ...change }; for (const listener of listeners) listener(); };
+  function reopen(draw: LotsDraw) {
+    const next = { ...snapshot }; delete next.simulated_winners; delete next.writ; delete next.sealed_roll; snapshot = next;
+    const accepted = freezeFixture(structuredClone(draw));
+    publish({ draw: accepted, entries: fixturePool(accepted, count), paused: false, sealed: false, started: false, nested: false,
+      casting: false, recomputing: false, notice: copy.selected });
+  }
   return {
+    reopen() { reopen(snapshot.draw); },
     getSnapshot: () => snapshot, subscribe(listener) { listeners.add(listener); return () => { listeners.delete(listener); }; },
     select(id) {
       const draw = fixtureDraws.find(draw => draw.draw_id === id);
-      if (draw) {
-        const next = { ...snapshot }; delete next.simulated_winners; delete next.writ; delete next.sealed_roll; snapshot = next;
-        publish({ draw, entries: fixturePool(draw, count), paused: false, sealed: false, started: false, nested: false,
-          casting: false, recomputing: false, notice: copy.selected });
-      }
+      if (draw) reopen(draw);
     },
     edit(draw) {
       if (snapshot.sealed) return;

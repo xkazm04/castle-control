@@ -85,7 +85,7 @@ export default function LotteryRoom({ snapshot, replay, queue = proposalQueue, s
           })}</ul>
         </div>}
         {proposal && <LotteryWrit proposal={proposal} weight_notice={fixtureWeightNotice(state)} />}
-        {state.started && <InkButton size="room" onClick={() => { port.select(state.draw.draw_id); draftRoll(queue); }}>{copy.draft_new}</InkButton>}
+        {state.started && <InkButton size="room" onClick={() => { port.reopen(); draftRoll(queue); }}>{copy.draft_new}</InkButton>}
         <DrawSetup port={port} on_edit={edit} on_preview={() => { discardPreview(); draftRoll(queue); }} />
         <DrawAppearance port={display} />
         <PolicyRibbon result={policy.result} />

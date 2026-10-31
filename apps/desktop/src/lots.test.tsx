@@ -1,4 +1,6 @@
 import { readFileSync } from 'node:fs';
+import { Children, isValidElement, useState } from 'react';
+import type { ChangeEvent, KeyboardEvent, ReactNode } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { expect, test, vi } from 'vitest';
 import { ProposalQueue, SimulatedSteward } from '@castle-control/ui/steward';
@@ -14,7 +16,88 @@ import { ConnectedLotsRoom } from './rooms/lottery/core.jsx';
 import { castWinners, sealOf, verifyWrit } from './lots-cast.js';
 import { createRevealClock } from './rooms/lottery/playback.js';
 import { prepareFixtureRoll, rehearsalClock, rehearsalSeed } from './rooms/lottery/simulation.js';
-
+type Control = { children?: ReactNode; type?: string; onClick?: () => void; onBlur?: () => void;
+  onKeyDown?: (event: KeyboardEvent<HTMLInputElement>) => void;
+  onChange?: (event: ChangeEvent<HTMLInputElement>) => void; value?: string | number };
+function controls(tree: ReactNode): Control[] {
+  const found: Control[] = [];
+  Children.forEach(tree, child => {
+    if (isValidElement<Control>(child)) found.push(child.props, ...controls(child.props.children));
+  });
+  return found;
+}
+async function coreRoom() {
+  const draw = fixtureDraws[0];
+  if (!draw) throw new Error('Missing simulated draw');
+  const rpc = vi.fn(async (_endpoint: string, _session: string, method: string, params: unknown): Promise<unknown> => {
+    if (method === 'lots.draw.list') return { draws: [draw] };
+    if (method === 'lots.draw.check') return { result: 'ok', reasons: [] };
+    if (method === 'lots.draw.upsert' && params && typeof params === 'object' && 'draw' in params) return params.draw;
+    throw new Error('Simulated seal failure');
+  });
+  const port = createCoreLotsPort({ mode: 'core', endpoint: 'http://127.0.0.1:3210/', session_token: 'a'.repeat(64) }, { rpc });
+  await port.load(); return { port, rpc };
+}
+test('lots-01 core controls have standalone labels with exact names', async () => {
+  const { port } = await coreRoom(); const markup = renderToStaticMarkup(<ConnectedLotsRoom port={port} />);
+  expect(markup.match(/<label[^>]*>[^<]*<(select|input)/g) ?? []).toHaveLength(0);
+  for (const name of ['Draw', 'Number of winners']) {
+    const labels = [...markup.matchAll(/<label for="([^"]+)">([^<]*)<\/label>/g)].filter(match => match[2] === name);
+    expect(labels).toHaveLength(1); expect(markup.split(`id="${labels[0]?.[1]}"`)).toHaveLength(2);
+  }
+});
+test('lots-01 round-source paragraph has no prohibited name', async () => {
+  const { port } = await coreRoom(); const markup = renderToStaticMarkup(<ConnectedLotsRoom port={port} />);
+  expect(markup).not.toMatch(/<p[^>]*aria-label="Round source"/);
+});
+test.each([['blur', '1'], ['Enter', '1'], ['blur', ''], ['blur', '0']] as const)(
+  'lots-01 commits only the final 12 on %s after typing %j', async (method, first) => {
+  const { port, rpc } = await coreRoom();
+  function Sequence() {
+    const [step, setStep] = useState(0); const tree = ConnectedLotsRoom({ port });
+    const input = controls(tree).find(control => control.type === 'number');
+    if (!input) throw new Error('Missing winner input');
+    if (step < 2) {
+      const value = step ? '12' : first;
+      input.onChange?.({ currentTarget: { value, valueAsNumber: Number(value) } } as ChangeEvent<HTMLInputElement>);
+      setStep(step + 1);
+    } else if (step === 2) {
+      expect(input.value).toBe('12'); expect(rpc.mock.calls.filter(call => call[2] === 'lots.draw.upsert')).toHaveLength(0);
+      if (method === 'blur') input.onBlur?.();
+      else input.onKeyDown?.({ key: 'Enter', preventDefault: vi.fn() } as Partial<KeyboardEvent<HTMLInputElement>> as KeyboardEvent<HTMLInputElement>);
+      input.onBlur?.(); setStep(3);
+    }
+    return tree;
+  }
+  renderToStaticMarkup(<Sequence />);
+  await vi.waitFor(() => expect(port.getSnapshot().busy).toBe(false));
+  const saves = rpc.mock.calls.filter(call => call[2] === 'lots.draw.upsert');
+  expect(saves).toHaveLength(1); expect(saves[0]?.[3]).toMatchObject({ draw: { rules: { winner_count: 12 } } });
+});
+test('lots-03 uncertain seal shows a persistent reconciliation alert despite its error notice', async () => {
+  const { port } = await coreRoom(); await port.seal();
+  expect(port.getSnapshot()).toMatchObject({ locked: true, sealed: false });
+  const markup = renderToStaticMarkup(<ConnectedLotsRoom port={port} />);
+  expect(markup).toMatch(/role="alert"[^>]*>[^<]*locked[^<]*reconciled in the core/);
+});
+test('lots-11 Draft a new roll preserves custom setup and template selection still resets it', async () => {
+  const queue = new ProposalQueue(); const { port } = lotterySession(queue); const draw = port.getSnapshot().draw;
+  port.edit({ ...draw, name: 'Custom roll', rules: { ...draw.rules, winner_count: 4, cohort_caps: [] } });
+  draftRoll(queue); await sealLotteryProposal(queue, current(queue)); await port.start();
+  function ClickDraft() {
+    const tree = LotteryRoom({ snapshot, replay: false, queue });
+    const button = controls(tree).find(control => control.children === copy.draft_new);
+    if (!button?.onClick) throw new Error('Missing new-roll button');
+    button.onClick(); return null;
+  }
+  renderToStaticMarkup(<ClickDraft />);
+  expect(port.getSnapshot()).toMatchObject({ draw: { name: 'Custom roll', rules: { winner_count: 4 } }, sealed: false });
+  expect(current(queue).title).toBe('Custom roll');
+  expect(port.getSnapshot().draw).toEqual({ ...draw, name: 'Custom roll', rules: { ...draw.rules, winner_count: 4, cohort_caps: [] } });
+  expect(port.getSnapshot()).toMatchObject({ paused: false, started: false, nested: false });
+  expect(port.getSnapshot().writ).toBeUndefined(); expect(port.getSnapshot().sealed_roll).toBeUndefined();
+  port.select(draw.draw_id); expect(port.getSnapshot().draw).toEqual(draw);
+});
 const snapshot = { mode: 'fixture', phase: 'ready' } as const;
 const html = (queue = new ProposalQueue()) => renderToStaticMarkup(<LotteryRoom snapshot={snapshot} replay={false} queue={queue} />);
 const current = (queue: ProposalQueue) => {
@@ -22,32 +105,6 @@ const current = (queue: ProposalQueue) => {
   if (!item) throw new Error('Missing roll proposal');
   return item;
 };
-
-test('connected room renders source provenance and the announcement before any winners', async () => {
-  const draw = fixtureDraws[0];
-  if (!draw) throw new Error('Missing simulated draw');
-  const port = createCoreLotsPort({ mode: 'core', endpoint: 'http://127.0.0.1:3210/', session_token: 'a'.repeat(64) }, {
-    rpc: async (_endpoint, _session, method) => {
-      if (method === 'lots.draw.list') return { draws: [draw] };
-      if (method === 'lots.draw.check') return { result: 'ok', reasons: [] };
-      if (method === 'lots.roll.seal') return { draw_id: draw.draw_id, draw_run_id: '01ARZ3NDEKTSV4RRFFQ69G5FAV',
-        sealed: { roll: fixtureWrit.roll, seal: fixtureWrit.seal } };
-      throw new Error('Unexpected request in simulated room test');
-    },
-  });
-  await port.load(); await port.seal();
-  const markup = renderToStaticMarkup(<ConnectedLotsRoom port={port} simulated />);
-  expect(markup).toContain('Recorded · simulated round source');
-  expect(markup).toContain('Seal announced');
-  expect(markup).toContain('Cast the lots');
-  expect(markup).not.toContain('Winners ·');
-  expect(markup).not.toContain('Live-trusted');
-  expect(markup.indexOf('class="cc-stage-wrap"')).toBeLessThan(markup.indexOf('class="cc-desk"'));
-  expect(markup).toContain('data-scale="viewport"');
-  expect(markup).toContain('data-size="large"');
-  expect(markup).not.toContain(copy.illustration);
-});
-
 test('fixture policy mirrors every giveaway-table row, uses cents, and omits absent age', () => {
   const source = fixtureDraws[1];
   if (!source) throw new Error('Missing generated prize');
@@ -66,8 +123,6 @@ test('fixture policy mirrors every giveaway-table row, uses cents, and omits abs
   const without_age = { ...base }; delete without_age.minimum_age;
   expect(checkFixturePolicy(without_age)).toEqual({ result: 'warn', reasons: ['missing_age'] });
 });
-
-
 test('writ amendments strike the old value in gules and re-ink the new revision without acting', async () => {
   const queue = new ProposalQueue();
   const steward = new SimulatedSteward(queue);
@@ -85,7 +140,6 @@ test('writ amendments strike the old value in gules and re-ink the new revision 
   expect(styles).toContain('@keyframes lottery-ink');
   expect(styles).toContain('.cc-writ-fields ins { animation: none; }');
 });
-
 test('room inks the pending writ and restores templates after it is torn up', async () => {
   const queue = new ProposalQueue();
   expect(html(queue)).toContain('Writ templates');
@@ -103,7 +157,6 @@ test('room inks the pending writ and restores templates after it is torn up', as
   queue.tearUp(current(queue).id);
   expect(html(queue)).toContain('Writ templates');
 });
-
 test('a pending writ takes the workbench even if an older sealed writ is selected', async () => {
   const queue = new ProposalQueue(); draftRoll(queue);
   const old = current(queue);
@@ -112,7 +165,6 @@ test('a pending writ takes the workbench even if an older sealed writ is selecte
   queue.select(old.id);
   expect(html(queue)).toContain('Proposal · not sealed');
 });
-
 test('offline hold completion freezes entry bytes and stores a recomputable SHA-256 wax seal', async () => {
   const network = vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('Offline only'));
   try {
@@ -145,7 +197,6 @@ test('offline hold completion freezes entry bytes and stores a recomputable SHA-
     expect(network).not.toHaveBeenCalled();
   } finally { network.mockRestore(); }
 });
-
 test.each([['official_rules', 'twitch_disclaimer'], ['twitch_disclaimer', 'official_rules']] as const)(
   'prize proposal requires both %s and %s; paid weight remains blocked', async (first, second) => {
     const queue = new ProposalQueue();
@@ -173,7 +224,6 @@ test.each([['official_rules', 'twitch_disclaimer'], ['twitch_disclaimer', 'offic
     expect(paid.getSnapshot().sealed).toBe(false);
     expect(paid.getSnapshot().started).toBe(false);
   });
-
 test('an amended prize, invalid count, concurrent amendment and torn draft cannot bypass the seal gate', async () => {
   const queue = new ProposalQueue();
   const steward = new SimulatedSteward(queue);
@@ -191,7 +241,6 @@ test('an amended prize, invalid count, concurrent amendment and torn draft canno
   await expect(sealLotteryProposal(queue, before)).rejects.toThrow('changed');
   expect(lotterySession(queue).port.getSnapshot().sealed).toBe(false);
 });
-
 test('no raiders amendment freezes only eligible lots; all fixture entries retain equal weight', async () => {
   const queue = new ProposalQueue(); draftRoll(queue);
   queue.amend(current(queue).id, [{ key: 'cap', value: 'raiders excluded' }]);
@@ -205,7 +254,6 @@ test('no raiders amendment freezes only eligible lots; all fixture entries retai
   expect(port.getSnapshot().writ?.winners).toHaveLength(3);
   expect(port.getSnapshot().writ?.winners.every(handle => roll?.entries.some(entry => entry.handle === handle && entry.cohort !== 'raider'))).toBe(true);
 });
-
 test('sealed v1 rehearsal is immutable, appears on this ticket, and recomputes this cast', async () => {
   const queue = new ProposalQueue(); draftRoll(queue);
   const session = lotterySession(queue); const { port } = session;
@@ -235,7 +283,6 @@ test('sealed v1 rehearsal is immutable, appears on this ticket, and recomputes t
   await port.recompute(); expect(port.getSnapshot().notice).toBe(copy.cast_match);
   await port.recompute(true); expect(port.getSnapshot().notice).toBe(copy.recomputed);
 });
-
 test('draft cap and prize come from the selected draw rather than fixture literals', () => {
   const queue = new ProposalQueue(); const { port } = lotterySession(queue);
   port.select('free-prize');
@@ -247,7 +294,6 @@ test('draft cap and prize come from the selected draw rather than fixture litera
   port.select('hall-questions'); draftRoll(queue);
   expect(current(queue).fields.find(field => field.key === 'prize')?.value).toBe('none');
 });
-
 test('urn marks exactly the revealed winners in SVG and keeps a windowed winner visible', () => {
   const entries = fixtureEntries(400); const first = entries[0]; const second = entries[1];
   if (!first || !second) throw new Error('Missing simulated marks');
@@ -263,7 +309,6 @@ test('urn marks exactly the revealed winners in SVG and keeps a windowed winner 
   expect(renderToStaticMarkup(<Urn entries={entries} winners={[last.handle]} revealed={1} />))
     .toContain(`data-revealed-winner="1"><b>1.</b> ${last.handle}`);
 });
-
 test('session reveal cursor resumes the same cast and resets for a new roll', async () => {
   const queue = new ProposalQueue(); draftRoll(queue);
   const { port } = lotterySession(queue); await sealLotteryProposal(queue, current(queue)); await port.start();
@@ -275,7 +320,6 @@ test('session reveal cursor resumes the same cast and resets for a new roll', as
   clock.tick(writ, 3101, false); expect(clock.getSnapshot()).toBe(3);
   clock.tick(undefined, 3200, false); expect(clock.getSnapshot()).toBe(0);
 });
-
 test('a v1 outcome exceeding a cohort cap is refused without resealing or rerolling', async () => {
   const port = createLotsPreview(); const before = port.getSnapshot();
   const sealed = await prepareFixtureRoll(before.draw, before.entries, rehearsalClock());
@@ -291,7 +335,6 @@ test('a v1 outcome exceeding a cohort cap is refused without resealing or reroll
   expect(port.getSnapshot().notice).toBe(copy.cast_cap);
   expect(port.getSnapshot().sealed_roll).toBe(roll);
 });
-
 test('selecting another draw cannot strip the guardrails from an earlier prize proposal', async () => {
   const queue = new ProposalQueue(); const { port } = lotterySession(queue);
   port.select('paid-prize'); draftRoll(queue);
@@ -301,7 +344,6 @@ test('selecting another draw cannot strip the guardrails from an earlier prize p
   expect(queue.byChamber('lottery')[0]?.state).toBe('drafted');
   expect(port.getSnapshot().sealed).toBe(false);
 });
-
 test('10,000 lots keep DOM marks bounded at both ends, while the default urn draws every entry', () => {
   expect(renderToStaticMarkup(<Urn entries={fixtureEntries()} />).match(/data-lot-dot=/g)).toHaveLength(87);
   for (const scroll_top of [0, 500 * 32]) {
@@ -313,7 +355,6 @@ test('10,000 lots keep DOM marks bounded at both ends, while the default urn dra
     expect(markup).not.toContain(scroll_top ? 'data-lot-dot="1"' : 'data-lot-dot="10000"');
   }
 });
-
 test('generated lookup, preview states, shapes and stores preserve their model semantics', () => {
   const port = createLotsPreview(); const untouched = createLotsPreview();
   expect(port.getSnapshot().entries).toHaveLength(87);
@@ -326,7 +367,6 @@ test('generated lookup, preview states, shapes and stores preserve their model s
   for (const shape of copy.shapes) { port.shape(shape.value); expect(port.getSnapshot().shape).toBe(shape.value); }
   expect(untouched.getSnapshot().shape).toBe('urn');
 });
-
 test('saved simulated writ recomputes the fixed seal, commitment and winners without transport', async () => {
   const network = vi.spyOn(globalThis, 'fetch');
   try {
@@ -340,7 +380,6 @@ test('saved simulated writ recomputes the fixed seal, commitment and winners wit
     expect(network).not.toHaveBeenCalled();
   } finally { network.mockRestore(); }
 });
-
 test('lottery boundary has no transport, product prototype copy or em dash copy', () => {
   for (const file of ['rooms/lottery/index.tsx', 'rooms/lottery/session.ts', 'lots-model.ts', 'lots-fixture.ts']) {
     const source = readFileSync(new URL(`./${file}`, import.meta.url), 'utf8');

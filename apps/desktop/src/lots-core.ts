@@ -1,10 +1,11 @@
 import { invokeMethod, parseError, parseMethodParams, parseMethodResult } from '@castle-control/contract';
 import { lotsDrawList, lotsDrawUpsert, lotsDrawCheck, lotsRollLookup, lotsRollSeal, lotsCast, lotsWritGet } from '@castle-control/contract/lots';
 import type { CastResult, DrawCheckResult, LotsDraw, LotsProofEntry, LotsWrit,
-  MethodContract, RollLookupResult, RollSealResult, RpcMethods } from '@castle-control/contract';
+  ErrorCode, MethodContract, RollLookupResult, RollSealResult, RpcMethods } from '@castle-control/contract';
 import { validateCoreLaunch } from './core-source.js';
 import type { CoreLaunch } from './core-source.js';
 import type { LotsPort, LotsPreview } from './lots-model.js';
+import { lotsCopy as copy } from './lots-copy.js';
 
 type LotsMethod = 'lots.draw.list' | 'lots.draw.upsert' | 'lots.draw.check' | 'lots.roll.lookup'
   | 'lots.roll.seal' | 'lots.cast' | 'lots.writ.get';
@@ -46,13 +47,15 @@ function freeze<T>(value: T): T {
   }
   return value;
 }
-function errorNotice(error: unknown): string {
+function errorNotice(error: unknown, method: LotsMethod | undefined): string {
   try {
     const envelope = parseError(JSON.stringify(error));
-    // Upstream prose can contain secrets. Display only validated codes and retry timing.
-    return `Draw request failed: ${envelope.code}.${envelope.retry_after_ms === undefined ? '' : ` Retry after ${envelope.retry_after_ms} ms.`}`;
+    // Upstream prose can contain secrets. Derive remedies only from method, code and retry timing.
+    const notices: Partial<Record<LotsMethod, Partial<Record<ErrorCode, string>>>> = copy.core.request_errors;
+    const notice = (method ? notices[method]?.[envelope.code] : undefined) ?? `Draw request failed: ${envelope.code}. ${copy.core.errors[envelope.code]}`;
+    return `${notice}${envelope.retry_after_ms === undefined ? '' : ` Retry after ${envelope.retry_after_ms} ms.`}`;
   } catch {
-    return 'Draw request failed. The result is unavailable or invalid; no preview was substituted.';
+    return copy.core.request_failed;
   }
 }
 
@@ -61,6 +64,7 @@ export function createCoreLotsPort(launch: CoreLaunch, transport?: LotsNetwork) 
   let snapshot: CoreLotsSnapshot = freeze({ draws: [], entries: [], paused: false, sealed: false, started: false,
     shape: 'urn', lookup: '', nested: false, notice: 'Load draws from the local core.', recomputing: false, busy: false, locked: false });
   const listeners = new Set<() => void>();
+  let active_method: LotsMethod | undefined;
   function publish(change: Partial<CoreLotsSnapshot>, omit: ('draw' | 'check' | 'lookup_result')[] = []) {
     const previous = { ...snapshot };
     for (const key of omit) delete previous[key];
@@ -68,7 +72,10 @@ export function createCoreLotsPort(launch: CoreLaunch, transport?: LotsNetwork) 
     for (const listener of listeners) listener();
   }
   async function call<M extends LotsMethod>(contract: MethodContract<M>, value: unknown): Promise<RpcMethods[M]['result']> {
-    const params = parseMethodParams(contract, value);
+    active_method = contract.method;
+    let params: RpcMethods[M]['params'];
+    try { params = parseMethodParams(contract, value); }
+    catch { throw { code: 'invalid', message: 'Invalid draw request parameters.' }; }
     if (!transport) return invokeMethod(base.href, launch.session_token, contract, params);
     const result = await transport.rpc(base.href, launch.session_token, contract.method, params);
     return parseMethodResult(contract, JSON.stringify(result));
@@ -76,13 +83,14 @@ export function createCoreLotsPort(launch: CoreLaunch, transport?: LotsNetwork) 
   async function perform(work: () => Promise<void>) {
     if (snapshot.busy) { publish({ notice: 'A draw request is in progress. Wait for its result.' }); return; }
     publish({ busy: true });
+    active_method = undefined;
     try { await work(); }
-    catch (error: unknown) { publish({ notice: errorNotice(error) }); }
+    catch (error: unknown) { publish({ notice: errorNotice(error, active_method) }); }
     finally { publish({ busy: false }); }
   }
   function editable() {
     if (!snapshot.locked) return true;
-    publish({ notice: 'The roll is locked. Its setup and entries cannot change; an uncertain seal must be reconciled in the core.' });
+    publish({ notice: copy.core.locked });
     return false;
   }
   function currentDraw() {
@@ -97,9 +105,11 @@ export function createCoreLotsPort(launch: CoreLaunch, transport?: LotsNetwork) 
   async function readWrit() {
     const cast = snapshot.cast_result;
     if (!cast) throw new Error('No cast available');
-    const writ = await call(lotsWritGet, { writ_id: cast.writ_id });
-    if (writ.seal !== cast.cast.seal || JSON.stringify(writ.winners) !== JSON.stringify(cast.cast.winners)) throw new Error('Writ does not match this cast');
-    publish({ writ, notice: 'Proof bundle loaded from the core. Use an independent verifier to check it.' });
+    try {
+      const writ = await call(lotsWritGet, { writ_id: cast.writ_id });
+      if (writ.seal !== cast.cast.seal || JSON.stringify(writ.winners) !== JSON.stringify(cast.cast.winners)) throw new Error('Writ does not match this cast');
+      publish({ writ, notice: 'Proof bundle loaded from the core. Use an independent verifier to check it.' });
+    } catch { publish({ notice: copy.core.proof_unavailable }); }
   }
   return {
     getSnapshot: () => snapshot,
