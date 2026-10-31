@@ -24,6 +24,8 @@ export function Drill({ result, origin = 'fixture', capture_hash, draft, delay_s
   const state_id = useId();
   const [selected, setSelected] = useState<string | undefined>();
   const [comparing, setComparing] = useState(false);
+  // Only a pick made on the strip scrolls the table; a pick made in the table stays where the reader is.
+  const [reveal, setReveal] = useState<{ key: string } | undefined>();
   const model = useMemo(() => buildMoat(result, delay_s && delay_s > 0 ? delay_s * 1000 : crossingMs), [result, delay_s]);
   const [filter, setFilter] = useState<DrillState | 'all'>('all');
   const states = Object.keys(result.summary.states) as DrillState[];
@@ -32,7 +34,7 @@ export function Drill({ result, origin = 'fixture', capture_hash, draft, delay_s
     {!capture_hash && <p>{copy.live_parity}</p>}
     <a href="#/chamber/moderator">{copy.back}</a><p>{origin === 'fixture' ? copy.replay_fixture_note : copy.replay_core_note}</p>
     {draft && <DraftPatternPreview result={draft} />}
-    {moat && <MoatPanel model={model} delay_s={delay_s} clock={clock} selected_id={selected} on_select={setSelected} rule_bench={rule_bench} report={{ source: result.source, instrument_hash: result.instrument_hash, origin }} />}
+    {moat && <MoatPanel model={model} delay_s={delay_s} clock={clock} selected_id={selected} on_select={id => { setSelected(id); setReveal(id === undefined ? undefined : { key: id }); }} rule_bench={rule_bench} report={{ source: result.source, instrument_hash: result.instrument_hash, origin }} />}
     {moat && compare && <><InkButton type="button" size="small" className="moat-compare-toggle" aria-pressed={comparing} onClick={() => { setComparing(!comparing); }}>{moatCopy.compare.toggle}</InkButton>
       {comparing && <MoatCompare diff={compare} note={moatCopy.compare.note_fixture} delay_s={delay_s} clock={clock} />}</>}
     <div className="moderator-drill-columns"><div className="room-column"><h3>{copy.instrument_source}</h3><p>{result.source}</p>
@@ -50,7 +52,7 @@ export function Drill({ result, origin = 'fixture', capture_hash, draft, delay_s
         const value = event.currentTarget.value;
         if (value === 'all' || states.some(state => state === value)) setFilter(value as DrillState | 'all');
       }}><option value="all">{copy.outcomes_all}</option>{states.map(state => <option key={state} value={state}>{state.replaceAll('_', ' ')}</option>)}</select></div>
-      <WindowedRows rows={outcomes} label={copy.outcomes_label} row_key={item => item.message_id} row_height={rowHeight * 3}>
+      <WindowedRows rows={outcomes} label={copy.outcomes_label} row_key={item => item.message_id} row_height={rowHeight * 3} reveal={reveal}>
         {item => <div className="moat-row" data-selected={selected === item.message_id}><b><button type="button" className="moat-row-id" aria-pressed={selected === item.message_id}
           aria-label={moatCopy.table_inspect(item.message_id)} onClick={() => { setSelected(item.message_id); }}>{item.message_id}</button></b><p>{item.state.replaceAll('_', ' ')} · {item.source}{item.rule_id && <> · {moatCopy.rule_line(item.rule_id)}</>}{item.action && <> · {actionWords[item.action]}</>}</p>
           {item.verdict ? <VerdictChip verdict={item.verdict} /> : <span>{copy.not_evaluable}</span>}</div>}</WindowedRows>

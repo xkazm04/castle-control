@@ -94,6 +94,7 @@ export function MoatScene({ model, playhead_ms, window, selected, on_select, del
           {marker.fate === 'unresolved' && phase === 'unresolved'
             ? <rect className="moat-dot" x={x - g.dot} y={y - g.dot} width={g.dot * 2} height={g.dot * 2} transform={`rotate(45 ${x} ${y})`} />
             : <circle className="moat-dot" cx={x} cy={y} r={g.dot} />}
+          {on_select && <circle className="moat-hit" cx={x} cy={y} r={g.dot * 2} />}
           <title>{copy.dot_name(marker)}</title>
         </g>;
       })}

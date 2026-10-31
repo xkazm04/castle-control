@@ -37,10 +37,39 @@ test('a stamp opens its inspector, and the inspector opens the rule bench on tha
     await expect(inspector).toContainText('Time out');
     await expect(inspector).toContainText('repeats');
     await expect(inspector).toContainText('No message text is stored or shown');
+    // The table scrolls the same message into its window and marks it.
+    const row = page.locator('.moat-row[data-selected="true"]');
+    await expect(row).toHaveCount(1);
+    await expect(row).toContainText('simulated-message-17');
+    await expect.poll(() => row.evaluate(element => {
+      const box = element.closest('.cc-window')?.getBoundingClientRect();
+      const at = element.getBoundingClientRect();
+      return !!box && at.top >= box.top - 1 && at.bottom <= box.bottom + 1;
+    })).toBe(true);
     await inspector.getByRole('link', { name: 'Open rule repeats in the rule bench', exact: true }).click();
     await expect(page).toHaveURL(/#\/chamber\/moderator$/);
     const bench = page.getByRole('region', { name: 'Rule bench', exact: true });
     await expect(bench.getByRole('combobox', { name: 'Watching rule' })).toHaveValue('repeats');
+  } finally { verify(); }
+});
+
+test('Next and Previous stop walk the stamps in order and select each one', async ({ page }) => {
+  const verify = await guardPage(page);
+  try {
+    await page.goto(drill);
+    const inspector = page.getByRole('complementary', { name: 'Selected message', exact: true });
+    await page.getByRole('slider', { name: 'Replay position', exact: true }).fill('0');
+    await expect(page.getByRole('button', { name: 'Previous stop', exact: true })).toBeDisabled();
+    const next = page.getByRole('button', { name: 'Next stop', exact: true });
+    for (const id of ['simulated-message-7', 'simulated-message-17', 'simulated-message-18']) {
+      await next.click();
+      await expect(inspector).toContainText(id);
+      await expect(page.getByRole('button', { name: new RegExp(`${id}, rule`) })).toHaveAttribute('aria-pressed', 'true');
+    }
+    await expect(next).toBeDisabled();
+    await page.getByRole('button', { name: 'Previous stop', exact: true }).click();
+    await expect(inspector).toContainText('simulated-message-17');
+    await expect(page.getByRole('status').filter({ hasText: 'Held 2 of 40' })).toHaveCount(1);
   } finally { verify(); }
 });
 

@@ -126,3 +126,6 @@
 .moat-compare-table dt { color: var(--muted); }
 .moat-compare-table dd { font-weight: 700; overflow-wrap: anywhere; }
 .moat-compare-toggle { justify-self: start; }
+.moat-inspector dd small { display: block; font-weight: 500; color: var(--ink-2); }
+.moat-hit { fill: transparent; stroke: none; }
+.moat-stops { display: flex; gap: var(--space-4); }

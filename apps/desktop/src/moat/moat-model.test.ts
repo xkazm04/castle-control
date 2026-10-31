@@ -1,7 +1,7 @@
 import { expect, test } from 'vitest';
 import { simulatedDrill } from '../drill-fixture.js';
 import type { MoatOutcome, MoatSource } from './moat-model.js';
-import { buildMoat, fateOf, heldCount, markerProgress, replayedCount, scrubTicks, stampLevels, visibleMarkers, windowFor } from './moat-model.js';
+import { buildMoat, fateOf, heldCount, markerProgress, replayedCount, scrubTicks, stampLevels, stopNeighbour, visibleMarkers, windowFor } from './moat-model.js';
 
 const night = simulatedDrill();
 const model = buildMoat(night);
@@ -128,4 +128,23 @@ test('the scrubber ticks sit where the stops are', () => {
   expect(ticks.reduce((total, tick) => total + tick.held, 0)).toBe(3);
   expect(ticks.every(tick => tick.at > 0 && tick.at < 1)).toBe(true);
   expect(scrubTicks(buildMoat({ outcomes: [], gaps: [] }))).toEqual([]);
+});
+
+test('previous and next stop walk the stops in time order, stopping where each stamp drops', () => {
+  const arrivals = model.held_arrivals;
+  expect(stopNeighbour(model, 0, -1)).toBeUndefined();
+  const first = stopNeighbour(model, 0, 1);
+  expect(first?.marker.message_id).toBe(model.stops[0]?.message_id);
+  expect(first?.at_ms).toBe(arrivals[0]);
+  // From a stop's own arrival, next is the following stop and previous is the one before.
+  const second = stopNeighbour(model, arrivals[0] ?? 0, 1);
+  expect(second?.marker.message_id).toBe(model.stops[1]?.message_id);
+  expect(stopNeighbour(model, arrivals[1] ?? 0, -1)?.marker.message_id).toBe(model.stops[0]?.message_id);
+  expect(stopNeighbour(model, arrivals[2] ?? 0, 1)).toBeUndefined();
+  expect(stopNeighbour(model, model.run_ms, -1)?.marker.message_id).toBe(model.stops[2]?.message_id);
+  expect(stopNeighbour(buildMoat({ outcomes: [], gaps: [] }), 0, 1)).toBeUndefined();
+  // Walking forward visits every stop once.
+  const seen: string[] = []; let at = -1;
+  for (let step = 0; step < 10; step += 1) { const next = stopNeighbour(model, at, 1); if (!next) break; seen.push(next.marker.message_id); at = next.at_ms; }
+  expect(seen).toEqual(model.stops.map(marker => marker.message_id));
 });

@@ -104,6 +104,23 @@ test('controls call the player: play, pause, speed and a scrub that pauses', () 
   expect(calls.seek).toHaveBeenCalledWith(4500);
 });
 
+test('stop buttons appear with the panel, jump on press and disable at either end', () => {
+  const on_stop = vi.fn();
+  const state = { playhead_ms: 0, run_ms: 90000, playing: false, speed: 8 } as const;
+  const view = (can_stop: { previous: boolean; next: boolean }) => MoatControls({ state, ticks: [], position: 'replay', reduced: false, range_id: 'range',
+    on_play: vi.fn(), on_pause: vi.fn(), on_seek: vi.fn(), on_speed: vi.fn(), on_stop, can_stop });
+  const named = (tree: ReactNode, name: string) => find(tree, element => Children.toArray(element.props.children).join('') === name)[0];
+  named(view({ previous: false, next: true }), 'Next stop')?.props.onClick?.();
+  expect(on_stop).toHaveBeenCalledWith(1);
+  named(view({ previous: true, next: true }), 'Previous stop')?.props.onClick?.();
+  expect(on_stop).toHaveBeenLastCalledWith(-1);
+  expect(renderToStaticMarkup(view({ previous: false, next: true }))).toMatch(/<button[^>]*disabled=""[^>]*>Previous stop<\/button>/);
+  expect(renderToStaticMarkup(view({ previous: true, next: false }))).toMatch(/<button[^>]*disabled=""[^>]*>Next stop<\/button>/);
+  const html = panel(renderToStaticMarkup(<Drill result={fixtureReplay} delay_s={4} />));
+  expect(html).toContain('role="group" aria-label="Stopped messages"');
+  expect(html).toMatch(/<button[^>]*>Next stop<\/button>/);
+});
+
 test('the same panel renders for the core drill with no invented delay', () => {
   const html = renderToStaticMarkup(<Drill result={fixtureReplay} origin="core" />);
   const moat = panel(html);
@@ -197,6 +214,9 @@ test('a stamped rule opens the rule bench on that rule, and only when the bench 
   expect(link.can_open('links')).toBe(true);
   expect(link.can_open('unknown-rule')).toBe(false);
   expect(link.can_open('')).toBe(false);
+  expect(link.describe?.('links')).toBe('Links · watching, reports only');
+  expect(link.describe?.('nope')).toBeUndefined();
+  expect(renderToStaticMarkup(<MarkerInspector marker={first} bench={link} />)).toContain('<small> · Links · watching, reports only</small>');
   link.open('repeats');
   expect(bench.getSnapshot().selection).toBe('repeats');
   const html = renderToStaticMarkup(<MarkerInspector marker={first} bench={link} />);

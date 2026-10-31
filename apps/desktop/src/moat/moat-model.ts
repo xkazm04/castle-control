@@ -32,7 +32,8 @@ export type MoatModel = Readonly<{
   run_ms: number;
   markers: readonly MoatMarker[];
   gaps: readonly MoatGap[];
-  /** When each held marker reaches the gate, sorted. */
+  /** The stopped messages in time order, and when each reaches the gate (same order). */
+  stops: readonly MoatMarker[];
   held_arrivals: readonly number[];
   counts: MoatCounts;
 }>;
@@ -62,12 +63,13 @@ export function buildMoat(result: MoatSource, cross_ms = crossingMs): MoatModel 
     ...(outcome.rule_id ? { rule_id: outcome.rule_id } : {}), ...(outcome.passed === undefined ? {} : { passed: outcome.passed }),
   }));
   const span_ms = Math.max(end - start, 1);
+  const stops = markers.filter(marker => marker.fate === 'held');
   const counts = { total: result.outcomes.length, aired: 0, held: 0, unresolved: 0, undated: result.outcomes.length - dated.length };
   for (const marker of markers) counts[marker.fate] += 1;
   return {
     start_ms: start, cross_ms, span_ms, run_ms: span_ms + cross_ms, markers,
     gaps: gaps.map(({ gap, from, to }) => ({ from: gap.from, to: gap.to, from_ms: from - start, to_ms: to - start })),
-    held_arrivals: markers.filter(marker => marker.fate === 'held').map(marker => marker.offset_ms + cross_ms / 2),
+    stops, held_arrivals: stops.map(marker => marker.offset_ms + cross_ms / 2),
     counts,
   };
 }
@@ -101,6 +103,16 @@ export function heldCount(model: MoatModel, playhead_ms: number): number {
 /** Messages whose turn in chat has come. */
 export function replayedCount(model: MoatModel, playhead_ms: number): number {
   return firstReached(model.markers.length, index => offsetOf(model)(index) > playhead_ms);
+}
+
+/** The next stop after the playhead, or the last one before it. The moment is when its stamp drops. */
+export function stopNeighbour(model: MoatModel, playhead_ms: number, direction: 1 | -1): { marker: MoatMarker; at_ms: number } | undefined {
+  const slack = 1;
+  const upcoming = firstReached(model.held_arrivals.length, index => (model.held_arrivals[index] ?? 0) > playhead_ms + slack);
+  const position = direction === 1 ? upcoming
+    : firstReached(model.held_arrivals.length, index => (model.held_arrivals[index] ?? 0) >= playhead_ms - slack) - 1;
+  const marker = model.stops[position];
+  return marker && position >= 0 ? { marker, at_ms: model.held_arrivals[position] ?? 0 } : undefined;
 }
 
 export type MoatWindow = Readonly<{ from_ms: number; to_ms: number; paged: boolean }>;

@@ -3,7 +3,7 @@ import type { ChangeEvent } from 'react';
 import { InkButton, Notice, StatusChip, VerdictChip } from '@castle-control/ui';
 import { clockText } from '../../moat/clock.js';
 import { actionWords, fateWords, moatCopy as copy } from '../../moat/moat-copy.js';
-import { heldCount, replayedCount, scrubTicks, windowFor } from '../../moat/moat-model.js';
+import { heldCount, replayedCount, scrubTicks, stopNeighbour, windowFor } from '../../moat/moat-model.js';
 import type { MoatMarker, MoatModel, ScrubTick } from '../../moat/moat-model.js';
 import { moatSpeeds } from '../../moat/moat-player.js';
 import type { MoatClock, MoatPlayerState, MoatSpeed } from '../../moat/moat-player.js';
@@ -14,7 +14,11 @@ import { useMoatPlayer } from '../../moat/use-moat-player.js';
 import { ClockTime } from './presentation.jsx';
 
 /** Where a stamped rule can be taken for editing. Only rules the bench can edit are offered. */
-export type RuleBenchLink = { can_open: (rule_id: string) => boolean; open: (rule_id: string) => void };
+export type RuleBenchLink = {
+  can_open: (rule_id: string) => boolean; open: (rule_id: string) => void;
+  /** The rule as the room lists it now: its name and whether it only watches or acts. */
+  describe?: (rule_id: string) => string | undefined;
+};
 
 export function MarkerInspector({ marker, bench }: { marker: MoatMarker | undefined; bench?: RuleBenchLink | undefined }) {
   return <aside className="moat-inspector" aria-label={copy.inspector} data-empty={!marker}>
@@ -24,7 +28,7 @@ export function MarkerInspector({ marker, bench }: { marker: MoatMarker | undefi
       <dt>{copy.state}</dt><dd>{marker.state.replaceAll('_', ' ')}</dd>
       <dt>{copy.verdict}</dt><dd>{marker.verdict ? <VerdictChip verdict={marker.verdict} /> : copy.none}</dd>
       <dt>{copy.action}</dt><dd>{marker.action ? actionWords[marker.action] : copy.none}</dd>
-      <dt>{copy.rule}</dt><dd>{marker.rule_id ? <code>{marker.rule_id}</code> : copy.none}</dd>
+      <dt>{copy.rule}</dt><dd>{marker.rule_id ? <><code>{marker.rule_id}</code>{bench?.describe?.(marker.rule_id) && <small> · {bench.describe(marker.rule_id)}</small>}</> : copy.none}</dd>
       <dt>{copy.evaluation}</dt><dd>{copy.evaluation_words[marker.passed === undefined ? 'none' : marker.passed ? 'true' : 'false']}</dd>
       <dt>{copy.source}</dt><dd>{marker.source}</dd>
       <dt>{copy.at}</dt><dd><ClockTime at={marker.at} /></dd>
@@ -47,15 +51,20 @@ function Legend() {
 export type MoatControlsProps = {
   state: MoatPlayerState; ticks: readonly ScrubTick[]; position: string; reduced: boolean; range_id: string;
   on_play: () => void; on_pause: () => void; on_seek: (playhead_ms: number) => void; on_speed: (speed: MoatSpeed) => void;
+  /** Jump to the previous or next stop. Absent when there is none to offer. */
+  on_stop?: ((direction: 1 | -1) => void) | undefined; can_stop?: { previous: boolean; next: boolean } | undefined;
 };
 /** Plain buttons and a range input only: Space belongs to the seal key in the shared keymap. */
-export function MoatControls({ state, ticks, position, reduced, range_id, on_play, on_pause, on_seek, on_speed }: MoatControlsProps) {
+export function MoatControls({ state, ticks, position, reduced, range_id, on_play, on_pause, on_seek, on_speed, on_stop, can_stop }: MoatControlsProps) {
   return <div className="moat-controls">
     <InkButton type="button" size="small" variant={state.playing ? 'primary' : 'outline'} disabled={reduced}
       onClick={state.playing ? on_pause : on_play}>{state.playing ? copy.pause : copy.play}</InkButton>
     <div className="moat-speeds" role="group" aria-label={copy.speed}>
       {moatSpeeds.map(speed => <InkButton key={speed} type="button" size="small" aria-pressed={state.speed === speed}
         onClick={() => { on_speed(speed); }}>{copy.speed_label(speed)}</InkButton>)}</div>
+    {on_stop && <div className="moat-stops" role="group" aria-label={copy.stops}>
+      <InkButton type="button" size="small" disabled={!can_stop?.previous} onClick={() => { on_stop(-1); }}>{copy.previous_stop}</InkButton>
+      <InkButton type="button" size="small" disabled={!can_stop?.next} onClick={() => { on_stop(1); }}>{copy.next_stop}</InkButton></div>}
     <div className="moat-scrub"><label htmlFor={range_id} className="moat-sr">{copy.position}</label>
       <input id={range_id} type="range" min={0} max={state.run_ms} step={Math.max(Math.round(state.run_ms / 200), 100)} value={state.playhead_ms}
         aria-valuetext={position} onChange={(event: ChangeEvent<HTMLInputElement>) => { on_seek(Number(event.currentTarget.value)); }} />
@@ -93,7 +102,13 @@ export function MoatPanel({ model, delay_s, clock, selected_id, on_select, rule_
       {report && <InkButton type="button" size="small" variant="ghost" onClick={() => { setPrinting(true); }}>{copy.print}</InkButton>}</header>
     {report && printing && <MoatReportPortal model={model} info={report} delay_s={delay_s} uid={uid} />}
     <MoatControls state={state} ticks={ticks} position={position} reduced={reduced} range_id={range_id} on_play={player.play}
-      on_pause={player.pause} on_speed={player.setSpeed} on_seek={playhead_ms => { player.pause(); player.seek(playhead_ms); }} />
+      on_pause={player.pause} on_speed={player.setSpeed} on_seek={playhead_ms => { player.pause(); player.seek(playhead_ms); }}
+      on_stop={direction => {
+        const stop = stopNeighbour(model, state.playhead_ms, direction);
+        if (!stop) return;
+        player.pause(); player.seek(stop.at_ms); on_select(stop.marker.message_id);
+      }}
+      can_stop={{ previous: !!stopNeighbour(model, state.playhead_ms, -1), next: !!stopNeighbour(model, state.playhead_ms, 1) }} />
     {reduced && <p className="moat-small">{copy.reduced}</p>}
     <div className="moat-body">
       <div className="moat-scroll" role="group" aria-label={copy.region}>
