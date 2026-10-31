@@ -5,6 +5,8 @@ import { isPending, proposalQueue } from '@castle-control/ui/steward';
 import type { Snapshot } from '../model.js';
 import { keepReadModel } from './read-model.js';
 import { ChamberArt } from './art.jsx';
+import { MoatHeartbeat } from '../moat/heartbeat.jsx';
+import { fixtureReplay } from '../moderation-fixture.js';
 import './keep.css';
 
 export type KeepProps = { snapshot?: Snapshot; on_open: (id: ModuleId) => void; on_enter: () => void; on_demo?: () => void; on_stream?: () => void };
@@ -50,7 +52,9 @@ export function Keep({ snapshot = { mode: 'fixture', phase: 'ready' }, on_open, 
         </span>) : <span>Consensus unknown</span>}
         <small>{snapshot.mode === 'fixture' ? 'Sample room reading · never an action' : 'Awaiting chamber data'}</small>
       </button>
-      <div className="keep-moat"><span>The moat</span>Chat delay · {read.delay}<span aria-hidden="true">≈ ≈ ≈ ≈ ≈ ≈ ≈</span></div>
+      <div className="keep-moat"><span>The moat</span>Chat delay · {read.delay}
+        {snapshot.mode === 'fixture' ? <><MoatHeartbeat source={fixtureReplay} delay_s={read.delay_s} />
+          <a className="keep-moat-link" href="#/chamber/moderator/drill">Watch the full replay</a></> : <span aria-hidden="true">≈ ≈ ≈ ≈ ≈ ≈ ≈</span>}</div>
     </div>
   </section>;
 }

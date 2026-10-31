@@ -7,6 +7,8 @@ import type { BenchMessage, BenchResult, RuleBenchPort } from '../../moderation-
 import type { CoreGatehousePort } from '../../gatehouse-core.js';
 import { moderationCopy as copy } from '../../moderation-copy.js';
 import { WatchingRuleEditor } from './watching-rule.jsx';
+import type { RuleBenchLink } from './moat-panel.jsx';
+import { moatCopy } from '../../moat/moat-copy.js';
 
 export function BenchFeedback({ result }: { result: BenchResult }) {
   return <div className="moderator-bench-feedback">
@@ -45,6 +47,18 @@ export function RuleBench({ rules, messages, bench, queue, core }: {
       </>}
     </WatchingRuleEditor>
   </section>;
+}
+
+/** The bench edits watching pattern rules only, so only those are offered from the moat. */
+export function ruleBenchLink(rules: readonly Rule[], bench: RuleBenchPort): RuleBenchLink {
+  return {
+    can_open: rule_id => rules.some(rule => rule.rule_id === rule_id && rule.mode === 'shadow' && rule.rule_class === 'pattern'),
+    open: rule_id => { bench.select(rule_id); },
+    describe: rule_id => {
+      const rule = rules.find(item => item.rule_id === rule_id);
+      return rule && `${rule.name} · ${moatCopy.rule_mode[rule.mode]}`;
+    },
+  };
 }
 
 export function DraftPatternPreview({ result }: { result: BenchResult }) {
