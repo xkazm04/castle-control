@@ -1,3 +1,4 @@
+import { useId } from 'react';
 import { HeraldicCard, SectionHeading } from '@castle-control/ui';
 import { studioCopy as copy, studioStages } from '../../studio-copy.js';
 
@@ -11,15 +12,16 @@ function StageIcon({ locked }: { locked: boolean }) {
 }
 
 export function TestLadder({ selected, on_select }: { selected: number; on_select: (index: number) => void }) {
+  const state_id = useId();
   return <section className="cc-ladder" aria-label={copy.ladder_label}>
     <SectionHeading variant="ruled" title={copy.ladder} count={copy.current} />
     <p className="cc-side-lede">{copy.ladder_hint}</p>
     <div className="cc-tablets" role="group" aria-label={copy.stages_label}>
       {ladderRungs.map((rung, index) => <HeraldicCard variant="tablet" key={rung.title} selected={selected === index}
         current={index === 0} locked={index !== 0} data-rung={index}
-        aria-label={copy.inspect_stage(rung.title)} on_select={() => on_select(index)}>
+        aria-label={copy.inspect_stage(rung.title)} aria-describedby={`${state_id}-${index}`} on_select={() => on_select(index)}>
         <span className="cc-tablet-no">{index + 1}</span><b>{rung.title}</b><i>{rung.function}</i>
-        <span className="cc-tablet-state"><StageIcon locked={index !== 0} />{index === 0 ? copy.local : copy.locked}</span>
+        <span className="cc-tablet-state" id={`${state_id}-${index}`}><StageIcon locked={index !== 0} />{index === 0 ? copy.local : copy.locked}</span>
       </HeraldicCard>)}
     </div>
     <div className="cc-proclamation" role="status" aria-live="polite">
