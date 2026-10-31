@@ -1,4 +1,4 @@
-import { InkButton, WindowedRows } from '@castle-control/ui';
+import { entranceStyle, InkButton, rowHeight, Stamp, WindowedRows } from '@castle-control/ui';
 import type { LotsPort } from '../../lots-model.js';
 import { lotsCopy as copy } from '../../lots-copy.js';
 import type { DrawDisplay } from './display.js';
@@ -9,8 +9,9 @@ const drawScale = { S: 0.75, M: 1, L: 1.5 } as const;
 
 export function FixtureCast({ port, hash, display }: { port: LotsPort; hash: string; display: DrawDisplay }) {
   const state = port.getSnapshot();
+  const winners = state.simulated_winners ?? [];
   const proof_id = `lots-${state.draw.draw_id}-current-proof`;
-  return <Ticket label={copy.sealed}>
+  return <Ticket label={copy.sealed} entrance={7}>
     <p className="cc-hash">{copy.seal_hash} · {hash}</p>
     <p className="cc-aside">{copy.sealed_notice}</p>
     {!state.started && <div className="cc-group">
@@ -21,9 +22,11 @@ export function FixtureCast({ port, hash, display }: { port: LotsPort; hash: str
     {state.started && <section aria-label={copy.journey.cast_title}>
       <h3 className="lottery-card-title">{copy.journey.cast_title}</h3>
       <p>{copy.cast_notice}</p>
-      <div className="lottery-current-winners" style={revealStyle(display.reveal_ms)}>
-        <WindowedRows rows={state.simulated_winners ?? []} label={copy.core.winner_list} row_key={winner => winner}>
-          {winner => <p data-current-winner="true">{winner}</p>}
+      <div className="lottery-current-winners reveal" style={revealStyle(display.reveal_ms)}>
+        <div className="lottery-reveal-seal"><Stamp kind="sealed" word={copy.sealed_stamp} land /></div>
+        <WindowedRows rows={winners} label={copy.core.winner_list} row_key={winner => winner} row_height={rowHeight * 2}>
+          {winner => <p className="ticket cc-print-in" data-role="lot-ticket" data-current-winner="true"
+            style={entranceStyle(winners.indexOf(winner))}>{winner}</p>}
         </WindowedRows>
       </div>
       {state.writ && <>

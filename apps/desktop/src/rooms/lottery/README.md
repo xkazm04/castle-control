@@ -107,97 +107,93 @@ suffix as a DrawId, so `obs.source.create` rejects query-bearing URLs. Bare
 accepted-draw URLs still work; query URLs can be opened manually in an OBS
 browser source. No excluded path was changed to bypass ownership validation.
 
-## Earlier port notes
+## WP8 Cutaway layout
 
-Reconciled against `a9aec46`: the shared heraldic kit existed, but the lottery
-room still used the earlier writ-left / urn-right layout. This port follows
-`prototype/polish-2026-10-30/lottery/variant-c.html` between its ROOM BODY comments,
-the C section of that folder's README, and both `_shots/lottery-c-*` pictures.
-The shell product code, prototype controls, kit and tokens are unchanged.
+The hall is an 18-unit-gap grid of two card-paper panels with 2-unit ink
+borders: the urn at left has a gules top band; the scrolling writ desk at right
+has a key top band. Both use display h3 titles and serif em glosses. Below the
+900px-equivalent breakpoint the panels stack. All local typography uses
+text-shell roles, with a 13px minimum and 15px reading copy.
 
-## Structure
+The count uses the 72px figure role, .9 line height and a single text-shadow
+at token offsets 4px/3px in gules. The serif caption follows the figure; no
+duplicate overprint layer is generated. The existing golden-angle
+urn positions and windowing are unchanged; its ellipse uses cutaway urn paper,
+a gules rim, key/gules cohort dots and azure raider rings. The cohort legend
+sits above three 2.5px gules ring medals. Medal values still come from the
+selected draw, cooldown fixture and pending proposal, including struck/inked
+winner amendments.
 
-The `cc-hall` is stage-left at 1.2fr and desk-right at minmax(23rem,1fr), with
-an independent desk scrollbar. Room-local grid sizes use existing token calcs.
-At the prototype's 900px breakpoint it stacks with a 32rem stage; the 1360px
-breakpoint narrows the tally. Breakpoints are equivalent rem expressions;
-media queries cannot consume token variables. The wrap/stage/urn chain retains
-min-height:0. Desk children keep their intrinsic height rather than shrinking.
+Director review correction: the urn is capped at the winner's 272x203 box
+and can shrink inside the 96px-count-column row when width or height is tight.
+The figure yields vertical space before the legend and medals do; the windowed
+large-pool path stays intact. The writ panel's top band, heading and persistent
+scroll cue sit outside a named, keyboard-focusable scrolling body. Its native
+scrollbar has a reserved gutter, and all desk tools keep their order inside it.
 
-`print.tsx` adapts StageFrame, HeroReadout (viewport/overprint), MedalList/Medal,
-Ribbon and NumberedDiscs. StageFrame supplies its crop marks; room CSS owns its
-grid. `urn.tsx` retains every circle, cohort and generated position, uses C's
-viewBox and vessel fill, and keeps WindowedRows above 320 entries. The legend
-counts the rendered entries by cohort. Medals read winner count, fixture
-cooldown exclusions and the selected draw's raider cap. Proposed winner values
-remain struck/re-inked; they never change the draw merely by being displayed.
+Writ templates remain selectable HeraldicCard native buttons, preserving the
+single select-and-draft handler and aria-pressed state. Each row has a 40-unit
+shield column, display title, 15px details/reasons and an action column. The
+Draft writ face is a pbtn-styled span inside that existing button; there is no
+nested button or second handler. OK uses the ink button treatment. The pool,
+cooldown and weight footnote follows the templates. The remaining order is
+current writ/new roll, setup, appearance, guardrail ribbon/notices, supplied
+seal frame, current cast, lookup, saved proof/frozen-byte recompute and fairness.
 
-The desk orders SectionHeading/banner and stamp; selectable template blazons
-when no proposal is pending; the current writ ticket; the guardrail ribbon and
-verbatim notices; the supplied seal slot; raised lookup card; saved proof ticket;
-then fairness discs and all simulation/protocol limitations. HeraldicCard's
-native buttons keep port.select + draftRoll, expose aria-pressed, and pair a
-ShieldCharge with CardCopy's name, policy reasons and a verdict StatusChip.
+Stamp mappings: policy ok -> ok (OK), warn -> held (Warning from copy.checks),
+blocked -> blocked (Blocked). Heading: pending proposal -> draft, frozen roll
+-> sealed, otherwise simulated with No draft waiting. Pending takes precedence
+if an older roll is frozen. Writ impressions use draft/sealed with land; the
+sealed impression and ink bleed replace the old wax drawing. The lottery-wax
+class remains only as the existing outside-scope test's sealed-impression hook;
+there is no wax CSS. Core round provenance uses a simulated stamp only when
+simulated is true; live and unknown labels remain text. Its selector, actions,
+windowed frozen entries, unknown medals, accepted results and proof download
+remain separate from fixture data.
 
-`writ.tsx` prints fields on the ticket with its stub and perforation, proposal
-stamp, original s/ins re-ink, revision, fairness copy and sealed wax/hash.
-The saved proof has dated winners as handle tickets and its original local
-recompute. A frozen roll retains its separate byte disclosure and SHA-256
-recompute. All new/changed room copy lives in `lots-copy.ts`; session, models,
-fixtures, authority and transport behavior are unchanged.
+The two panels and desk sections use cc-print-in plus entranceStyle(i), giving
+.35s + i*.14s mount delays. Current cast winners remain windowed, in their
+original immutable order. Each lot-ticket uses entranceStyle(j) with .15s start
+and the .28s motion-shell step (.15/.43/.71s for three winners). The appearance
+reveal duration still comes from reveal_ms. A shared sealed Stamp lands and
+bleeds; reduced motion disables ticket printing and shared stamp motion and
+shows mounted tickets immediately. No winner generation, reveal cursor,
+fixture/core authority, policy or transport path changed.
 
-## Forced differences
+Review hooks: lot-urn-panel, lot-writ-panel, panel-title, panel-gloss, lot-count,
+lot-stat, lot-legend, writ-row, writ-title, writ-detail, writ-action, lot-ticket.
 
-- App Master's ruling keeps the supplied seal_slot unchanged and sole owner of
-  the proposal hold, tear and design controls. It is wrapped in a raised seal
-  HeraldicCard at C's seal-card position. No hold or tear is added to the writ.
-  The Lot frame removes the shell's inner rule, top margin and top padding above
-  the seal slot heading, matching `lottery-c-paper.png`; only the card's own
-  padding remains above it. The slot's bottom spacing is unchanged.
-  The full shared ProposalCard repeats its fields and keeps its existing
-  spacing/frame and normal-sized SealButton, confirmed by the Director on review;
-  no compact/large change to that shared slot is requested tonight. The core's
-  existing direct roll SealButton can use size=large, and does. It is separate
-  from the shared Steward proposal authorization.
-- The lookup uses room-local field grouping with appearance:none and rule-thin
-  ink borders, instead of FieldGroup's rule-medium. The binding field audit
-  takes precedence. Its hint/result and all other C dimensions remain.
-- Kit components use their published names/semantic wrappers: cc-card/copy/side,
-  cc-hero-readout, cc-section-heading with data-text ghosts, cc-stamp with tone,
-  and cc-numbered-discs. The room does not redefine their defaults.
-- Medal detail accepts plain strings, so the proposal's struck and inked winner
-  figures use its ReactNode value slot instead of a struck figure in detail.
-  The writ keeps the exact original s/ins markup and re-ink animation.
-- Core mode preserves its real draw selector/editor, source provenance and API
-  actions in raised cards, rather than substituting fixture blazons/proposals.
-  It has no cohort/cooldown-exclusion data: frozen entries stay windowed, the
-  exclusion medal says Unknown, and no generated legend or pool is fabricated.
-  It displays real frozen/result tickets and download, not the saved simulated
-  fixture proof. Shared C stage/desk, ribbon, cards, lookup and discs still apply.
-- Dynamic sealed/history states and the frozen-byte recompute remain available
-  beyond the static prototype's empty/amended states. The saved fixture proof
-  stays independent of the current roll; simulated and safety wording is kept.
+## WP8 verification
 
-## Verification
+Only structure.test.tsx changed existing selectors: StageFrame/crop marks ->
+urn panel/top band/title; medals/discs -> statrow/lot-stat/ring; card title ->
+writ-title; generic verdict stamp -> specific ok/blocked stamp. Order, source
+values, cohort counts, policy reasons, selection and single-hold assertions
+are retained. Other existing behavioural tests are unchanged. cutaway.test.tsx
+adds policy mapping, heading precedence/queue lifecycle, draft/sealed land and
+bleed, core provenance honesty, ticket index/timing/order, reduced-motion
+visibility and section entrances.
 
-`structure.test.tsx` explicitly cites C's stage-left reversal and checks order
-in empty/drafted states, stage-only entry marks, all four crop marks, medals,
-cohort counts, aria-pressed, named charges, per-template reasons, lookup hint,
-and exactly one actual shared proposal hold/progress control. `lots.test.tsx`
-retains every existing policy, draft, seal, lookup, cooldown, frozen-hash and
-10,000-entry assertion; updates the removed writ class and gules re-ink selector;
-and checks the connected room's C order, viewport hero and large direct seal.
+The review correction adds regressions for the single shadowed figure and for
+keeping fixture/core headings and cues outside their keyboard scroll regions.
+Existing mappings, hooks and behavioural assertions are unchanged. Source and
+SSR checks do not establish viewport fidelity: browser access is unavailable,
+and automatic approval review rejected Google Chrome access (not approved to
+use Google Chrome). Director visual confirmation at 1440x900 and 1280x800 is
+still needed. No install, git write or shell-package edit was run.
 
-Three new C checks failed before the port; the single-hold regression already
-passed. Focused lottery tests passed after the change (19 tests). The first
-full desktop run exposed three obsolete assertions in `shell/room.test.tsx`.
-The Director authorized that file, test-only, on review. Those checks now assert
-the stage/desk order and exactly one seal slot before lookup/proof/fairness;
-each selectable fixture's aria-pressed state and gules kit border/overprint;
-and the structured Ribbon's status, guardrail label, word and preview note.
-Other chambers retain their original checks. No compatibility markup, obsolete
-CSS or product shell change was added. All 18 shell room tests pass after the
-update. Final desktop/UI checks and commands are recorded in external result.json.
-No install, git write, build, e2e, network or live operation is run. The Director
-owns screenshot comparison at 1440x900 and 1280x800, build, budgets and full gate;
-server-rendered assertions do not establish visual fidelity or mounted behavior.
+Review correction checks: desktop typecheck and lint exit 0; desktop tests
+pass 790/790 across 79 files; desktop build exits 0 with first-load
+387638/393216 uncompressed JS+CSS bytes. node scripts/check.mjs exits 0
+(boundaries, hygiene, type floor, file cap and secrets).
+
+Director fidelity follow-up: the browser layout corrections and wider room
+dimensions (O8) are accepted. The urn/writ panels and stat wrappers now use
+normal line height. The count figure occupies the fixed 96px token-derived
+column with normal tracking and no case transform; its 72px/.9 type and single
+shadow remain. The legend uses its 14px role at line height 1. Writ rows use
+the existing 16px shell figure-caption role with normal line height to match
+the winner's browser-default type, overriding the kit's 14px/1.4 row font.
+No child type-floor roles, handlers, hooks or layout rules changed in this pass.
+Follow-up validation: pnpm --filter @castle-control/desktop test exits 0;
+794 tests pass across 80 files. No existing test selector or assertion changed.
