@@ -48,6 +48,7 @@
 .moat-marker[data-fate="held"] .moat-track { stroke: var(--or); stroke-opacity: .8; stroke-width: 1.6; }
 .moat-marker[data-fate="unresolved"] .moat-dot { fill: var(--card); stroke: var(--ink-2); stroke-width: 1.6; stroke-dasharray: 3 2; }
 .moat-marker[data-fate="unresolved"][data-phase="waiting"] .moat-dot { stroke-dasharray: none; stroke: var(--muted); }
+.moat-scene:not([data-compact="true"]) .moat-marker:hover .moat-dot { stroke: var(--ink); stroke-width: 2.4; }
 .moat-ring { fill: none; stroke: var(--ink); stroke-width: 2; }
 /* A stop lands: one ring leaves the dot. It runs once when the marker reaches the gate. */
 .moat-thud { fill: none; stroke: var(--or); stroke-width: 2.2; pointer-events: none; transform-box: fill-box; transform-origin: center; animation: moat-thud var(--motion-shell) var(--ease) both; }
