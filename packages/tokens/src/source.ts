@@ -209,6 +209,8 @@ export const cutawayTokens = {
   "stage-label-scrim": "rgba(251,249,243,.9)", "toy-scrim": "rgba(251,249,243,.96)",
   "shell-label-scrim": "rgba(251,249,243,.88)", "draft-wash": "rgba(242,178,51,.09)",
   "reveal-scrim": "rgba(247,241,226,.78)",
+  // input-ink: text a person types into a form field.
+  "input-ink": "#000000",
 } as const;
 
 // Dark papers follow the existing stock palette; fixed on-dark inks retain their paper values.
@@ -232,6 +234,7 @@ export const stockCutawayTokens = {
   "stage-label-scrim": "rgba(29,32,39,.9)", "toy-scrim": "rgba(29,32,39,.96)",
   "shell-label-scrim": "rgba(29,32,39,.88)", "draft-wash": "rgba(242,178,51,.09)",
   "reveal-scrim": "rgba(18,19,23,.78)",
+  "input-ink": themeTokens.stock.ink,
 } as const satisfies Record<keyof typeof cutawayTokens, string>;
 
 // Shared press grammar, ordered ink plates, and ambient loops; unchanged in stock.

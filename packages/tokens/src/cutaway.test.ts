@@ -31,9 +31,10 @@ test('new groups render their exact values in both existing blocks and the typed
   expect(tokens.stock_cutaway).toEqual(stockCutawayTokens);
   expect(tokens.motion).toEqual(motionTokens);
   expect(tokens.type).toEqual(typeTokens);
-  expect(names).toHaveLength(163);
+  expect(names).toHaveLength(164);
   expect(names).toContain('stamp-seal-text');
   expect(names).toContain('stamp-act-ground');
+  expect(names).toContain('input-ink');
 });
 
 test('no custom property occurs twice across groups or declarations in one block', () => {
@@ -68,10 +69,11 @@ test('all keep-art motion references are admitted byte-equal, with only CSS whit
 });
 
 test('paper paints and press motion retain the exact winner literals', () => {
-  const { 'stamp-seal-text': sealText, 'stamp-act-ground': actGround, ...winnerSurfaces } = cutawayTokens;
+  const { 'stamp-seal-text': sealText, 'stamp-act-ground': actGround, 'input-ink': inputInk, ...winnerSurfaces } = cutawayTokens;
   expect(winnerSurfaces).toEqual(winnerCutaway);
   expect(sealText).toBe(themeTokens.paper.or);
   expect(actGround).toBe(themeTokens.paper['gules-text']);
+  expect(inputInk).toBe('#000000');
   expect(motionTokens).toEqual(winnerMotion);
 });
 
@@ -84,7 +86,7 @@ test('every rejected candidate name is absent from generated CSS', () => {
 
 test('the WP2 admission ledger defines every winner role and records exact paper and stock values', () => {
   const ledger = [...read('../CUTAWAY.md').matchAll(/^\| `--([\w-]+)` \| `([^`]+)` \| `([^`]+)` \| ([^\n]+) \|$/gm)];
-  // WP4a's additional stamp roles are verified separately below.
+  // Additional stamp and input roles are verified separately below.
   const paper = { ...artTokens, ...winnerCutaway, ...motionTokens, ...typeTokens };
   const stock: Readonly<Record<string, string>> = { ...stockArtTokens, ...stockCutawayTokens, ...motionTokens, ...typeTokens };
   expect(ledger.map(row => row[1]).sort()).toEqual(Object.keys(paper).sort());
@@ -104,6 +106,12 @@ test('the added seal lettering role preserves or on paper and reads dark on the 
 test('O6 keeps acting stamp grounds dark in both themes for fixed light lettering', () => {
   expect(tokens.cutaway['stamp-act-ground']).toBe(themeTokens.paper['gules-text']);
   expect(tokens.stock_cutaway['stamp-act-ground']).toBe(tokens.cutaway['stamp-act-ground']);
+});
+
+test('typed field text uses browser black on paper and the existing light ink on stock', () => {
+  expect(tokens.cutaway['input-ink']).toBe('#000000');
+  expect(tokens.stock_cutaway['input-ink']).toBe('#F2EEE3');
+  expect(tokens.stock_cutaway['input-ink']).toBe(themeTokens.stock.ink);
 });
 
 test('stock surface values use the existing dark papers and retain fixed on-dark inks', () => {

@@ -162,7 +162,7 @@ export const tokens = {
     "topbar-scrim": "rgba(245,239,226,.86)", "footer-scrim": "rgba(245,239,226,.94)",
     "stage-label-scrim": "rgba(251,249,243,.9)", "toy-scrim": "rgba(251,249,243,.96)",
     "shell-label-scrim": "rgba(251,249,243,.88)", "draft-wash": "rgba(242,178,51,.09)",
-    "reveal-scrim": "rgba(247,241,226,.78)",
+    "reveal-scrim": "rgba(247,241,226,.78)", "input-ink": "#000000",
   },
   "stock_cutaway": {
     "stage-paper": "#121317", "body-top": "#1D2027",
@@ -183,7 +183,7 @@ export const tokens = {
     "topbar-scrim": "rgba(18,19,23,.86)", "footer-scrim": "rgba(18,19,23,.94)",
     "stage-label-scrim": "rgba(29,32,39,.9)", "toy-scrim": "rgba(29,32,39,.96)",
     "shell-label-scrim": "rgba(29,32,39,.88)", "draft-wash": "rgba(242,178,51,.09)",
-    "reveal-scrim": "rgba(18,19,23,.78)",
+    "reveal-scrim": "rgba(18,19,23,.78)", "input-ink": "#F2EEE3",
   },
   "motion": {
     "m-print": ".62s", "m-stamp": ".46s",

@@ -66,6 +66,9 @@ The room-mode footer retains WP5a's winner geometry.
 The toy stack and broadside default to `display:none` with no pointer events
 outside room mode. The stack itself stays pointer-inert even in the study;
 only the displayed dock receives input. Hiding preserves every mounted toy's state.
+Broadside actions and pager use the winner's line-height of 1. Toy text fields use
+`--input-ink` (`#000000`) on `--white` in paper; stock uses its light ink
+(`#F2EEE3`) on the existing `--card` (`#1D2027`) background to avoid white glare.
 
 The new `data-role` hooks are `broadside`, `broadside-eyebrow`, `broadside-title`,
 `broadside-fn`, `broadside-line`, `broadside-note`, `broadside-disc`,
@@ -78,7 +81,9 @@ WP5a's stage/header/headline/footer/room-tag hooks remain.
 - `pnpm --filter @castle-control/site typecheck`: exit 0; `[pnpm typecheck] walked 29 files`.
 - `pnpm --filter @castle-control/site lint`: exit 0; `[pnpm lint] walked 29 files`.
 - `pnpm --filter @castle-control/site test`: exit 0; `Test Files 10 passed (10)`; `Tests 80 passed (80)`.
-- `pnpm --filter @castle-control/site build`: exit 0; 43 modules; `[site first-load] 90898 / 184320 bytes (88.77 KiB)`; built inventory, destinations, offline posture and honesty checks PASS.
+- `pnpm --filter @castle-control/site build`: exit 0; 43 modules; `[site first-load] 91002 / 184320 bytes (88.87 KiB)`; built inventory, destinations, offline posture and honesty checks PASS.
+- `node packages/tokens/src/generate.ts`: exit 0; generated 2 files from the token source.
+- `pnpm --filter @castle-control/tokens test`: exit 0; `Test Files 4 passed (4)`; `Tests 19 passed (19)`, including generated-file drift and the new typed-input ink role.
 - `node scripts/check.mjs`: exit 0; boundaries, hygiene, type-floor, file-cap and secrets all pass.
 - `pnpm gate`: exit 1 at contract export, `Error: spawnSync cargo EPERM`; the preceding 35 tooling tests passed. No install was run, as required by this brief.
 - Browser verification is blocked: headless Chromium reports `spawn EPERM`;

@@ -10,10 +10,10 @@
 #broadside li b { color:var(--ink); }
 #broadside .n { width:28px; height:28px; border-radius:50%; display:grid; place-items:center; background:var(--bc,var(--ink)); color:var(--art-paper); font:800 var(--text-stage-step-number)/1 var(--font-display); }
 #broadside .acts { display:flex; gap:10px; margin:18px 0; flex-wrap:wrap; }
-#broadside .btn { display:inline-flex; align-items:center; min-height:42px; padding:0 16px; border:2px solid var(--ink); background:var(--card); cursor:pointer; font:700 var(--text-stage-action)/1.2 var(--font-ui); text-decoration:none; color:var(--ink); box-shadow:3px 3px 0 var(--ink); transition:transform .15s,box-shadow .15s; }
+#broadside .btn { display:inline-flex; align-items:center; min-height:42px; padding:0 16px; border:2px solid var(--ink); background:var(--card); cursor:pointer; font:700 var(--text-stage-action)/1 var(--font-ui); text-decoration:none; color:var(--ink); box-shadow:3px 3px 0 var(--ink); transition:transform .15s,box-shadow .15s; }
 #broadside .btn.primary { background:var(--ink); color:var(--press-paper); box-shadow:3px 3px 0 var(--bc,var(--or)); }
 #broadside .btn:hover { transform:translate(-2px,-2px); box-shadow:5px 5px 0 var(--ink); }
-#broadside .pager { margin-top:auto; display:flex; justify-content:space-between; align-items:center; gap:8px; padding-top:14px; border-top:2px solid var(--ink); font:600 var(--text-stage-navigation)/1.2 var(--font-ui); }
+#broadside .pager { margin-top:auto; display:flex; justify-content:space-between; align-items:center; gap:8px; padding-top:14px; border-top:2px solid var(--ink); font:600 var(--text-stage-navigation)/1 var(--font-ui); }
 #broadside .pager a { padding:6px 0; text-underline-offset:3px; }
 #broadside .pager span { flex:none; }
 #broadside .body { font:400 var(--text-stage-body)/1.55 var(--font-ui); color:var(--ink-2); margin:20px 0 14px; }
