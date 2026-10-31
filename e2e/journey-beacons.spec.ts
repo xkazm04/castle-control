@@ -51,7 +51,9 @@ test('Beacons streamer journey: tune, test fire, inspect and copy a simulated so
   await page.getByLabel('Size', { exact: true }).selectOption('L');
   await page.getByLabel('Anchor', { exact: true }).selectOption('bottom-right');
   await page.getByLabel('Colour', { exact: true }).selectOption('azure');
-  await page.getByLabel('Art style', { exact: true }).selectOption('pixel');
+  await page.getByLabel('Art style', { exact: true }).selectOption('preset-pixel-altar');
+  await page.getByRole('button', { name: 'Save visual style locally', exact: true }).click();
+  await expect(page.getByLabel('Art style', { exact: true })).toHaveValue('preset-pixel-altar');
   await page.getByLabel('Burst timing (ms)').fill('1200');
   await expect(preview).toHaveAttribute('data-size', 'L');
   await expect(preview).toHaveAttribute('data-anchor', 'bottom-right');

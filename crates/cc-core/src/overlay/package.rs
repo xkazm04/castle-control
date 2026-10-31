@@ -54,6 +54,50 @@ pub fn scripts(package: &DesignPackage) -> Vec<String> {
 }
 
 impl VerifiedPackage {
+    /// Native-only embedded image door. No scripts, loose files or claimed hash
+    /// are trusted: validate metadata and exact asset inventory, sniff, then hash.
+    pub(crate) fn from_embedded(
+        package: DesignPackage,
+        embedded: BTreeMap<String, &'static [u8]>,
+    ) -> Result<Self, ErrorEnvelope> {
+        let mut package: DesignPackage =
+            serde_json::from_value(serde_json::to_value(package).map_err(|_| invalid())?)
+                .map_err(|_| invalid())?;
+        if !scripts(&package).is_empty() || package.layers.len() > MAX_ASSETS {
+            return Err(invalid());
+        }
+        let mut assets = BTreeMap::new();
+        let mut remaining = MAX_BYTES;
+        for layer in &package.layers {
+            let DesignLayer::Image { asset, .. } = layer else {
+                return Err(invalid());
+            };
+            let path = String::from(asset.clone());
+            if assets.contains_key(&path) {
+                continue;
+            }
+            let bytes = *embedded.get(&path).ok_or_else(invalid)?;
+            if bytes.len() > remaining {
+                return Err(invalid());
+            }
+            remaining -= bytes.len();
+            assets.insert(
+                path,
+                Asset {
+                    bytes: bytes.into(),
+                    mime: image_mime(bytes).ok_or_else(invalid)?,
+                },
+            );
+        }
+        if assets.len() != embedded.len() {
+            return Err(invalid());
+        }
+        package.content_hash = package_hash(&package, &assets)?
+            .try_into()
+            .map_err(|_| invalid())?;
+        Ok(Self { package, assets })
+    }
+
     pub fn read(package: DesignPackage, root: &Path) -> Result<Self, ErrorEnvelope> {
         // Re-enter the contract door even for callers constructing public Rust fields.
         let package: DesignPackage =

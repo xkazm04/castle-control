@@ -191,3 +191,48 @@ No install, git write, build, browser, e2e, network or live action was run.
 The Director owns build/budgets/full gate and side-by-side browser comparison
 against both acceptance pictures at 1440x900 and 1280x800. Component tests are
 not a claim of browser fidelity, mounted focus, OBS delivery or live acceptance.
+
+## beacons-B: saved atlas presets reach the OBS host
+
+Reconciled at `2bb2423`, including beacons-A preview sessions and obs-A's page
+table. The existing Art style choice now saves the visual's `design_id` rather
+than a session-only `art_style` substitute. `demo/model.ts` remains the single
+desktop list of six styles. Each offers an altar and the provisional `frame2`
+camera frame. The picker also offers No design (neutral) and Custom design ID.
+Saving in core mode uses the existing `beacons.visual.upsert`; a custom ID still
+needs a verified native import before OBS can show it.
+
+The fixture uses the same picker and saves through its local Beacons port. The
+small `design` method in `beacons-model.ts` validates with the existing visual
+schema, replaces only the selected visual's design and publishes the fixture
+snapshot. `room.tsx` supplies that fixture port to the appearance component;
+`core.tsx` and `beacons-core.ts` are unchanged. Save visual style locally keeps
+the existing SIMULATED labels and sends nothing to OBS. Size, anchor, colour and
+burst timing remain session previews. End test fire preserves the saved design.
+
+Native core lazily installs only selected built-ins before a visual commit and
+reinstalls saved preset IDs at startup. `include_bytes!` reads the existing atlas
+WebPs; no image is extracted to disk and no binary asset is added. Embedded
+metadata re-enters the schema door; exact image inventory, MIME and byte limits
+are checked before hashing. Built-ins use the same consent/capacity/publication
+gate as imported packages and are never registered as paid-art destinations.
+Altar opacity runs 0.35–1 and scale 0.9–1.05; frames use opacity 0.25–1. Desktop
+art follows those same bindings, while non-preset IDs retain the existing SVG.
+
+`cargo test -p cc-core beacons_presets` covers native URL/hash/snapshot/image
+byte equality, unknown-design withholding, restart hash stability without loose
+WebPs, zero provider calls for preset art generation, and all twelve IDs, asset
+URLs and dimensions. Its parity test evaluates the real TypeScript catalog
+with the existing repo compiler, then compares it with native snapshots and
+WebP headers. Desktop tests cover saved/neutral/custom choices, the single
+style list, object labels, unchanged SVGs, fixture saves and unchanged accounting.
+The asset and artwork regressions were red on base before implementation.
+
+The Director-approved test updates change only the art-style journey step to
+save pixel: `journey.test.tsx` has 14→15 `expect` call sites (29→30 checks when
+its label loops are expanded); `e2e/journey-beacons.spec.ts` has 19→20. All other
+assertions, including every SIMULATED label check, remain. The Playwright run
+was attempted but stopped at `spawn EPERM` before workers/browser startup; it
+is not a browser pass. Exact final gate results are in external `result.json`.
+No live Twitch, OBS connection, provider call, dependency install or git write
+is part of this delivery.

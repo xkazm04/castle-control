@@ -1,8 +1,17 @@
 import type { CSSProperties } from 'react';
 import type { PreviewVisual } from '../../beacons-model.js';
+import { findPreset } from './presets.js';
 
 /** Chamber-specific illustration, driven only by the existing local model. */
 export function BeaconArtwork({ item, hero = false, label }: { item: PreviewVisual; hero?: boolean; label?: string }) {
+  const preset = findPreset(item.visual.design_id);
+  if (preset) return <div className={`visuals-room-art${hero ? ' visuals-room-art-hero' : ''}`}
+    style={{ '--room-blaze': item.intensity } as CSSProperties}>
+    <img src={preset.url} alt={label ?? `${item.visual.name} · simulated local preview`}
+      width={preset.width} height={preset.height} style={{ width: '100%', height: '100%', objectFit: 'contain',
+        opacity: preset.kind === 'object' ? 'calc(0.35 + var(--room-blaze) * 0.65)' : 'calc(0.25 + var(--room-blaze) * 0.75)',
+        ...(preset.kind === 'object' ? { transform: 'scale(calc(0.9 + var(--room-blaze) * 0.15))' } : {}) }} />
+  </div>;
   // Painted bounds: altar (90,31)–(270,237); frames (20,30)–(340,210),
   // including the glow stroke. Six units of margin on every side.
   const box = item.visual.design_id === 'altar'

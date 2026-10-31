@@ -10,10 +10,13 @@ test('fixture journey exposes editable points, decay and gift weighting', () => 
 });
 
 test('fixture journey exposes keyboard-accessible appearance controls and the six kept altar styles', () => {
-  const html = renderToStaticMarkup(<VisualsWork />);
+  const port = createBeaconsPreview();
+  port.design('preset-pixel-altar');
+  const html = renderToStaticMarkup(<VisualsWork port={port} />);
   for (const label of ['Size', 'Anchor', 'Colour', 'Art style', 'Burst timing (ms)', 'Beacon appearance preview',
     'Heraldic', 'Arcade', 'Neon', 'Storybook', 'Cel', 'Glass']) expect(html).toContain(label);
-  expect(html).toContain('/art/preset-heraldic-altar.webp');
+  expect(html).toContain('/art/preset-pixel-altar.webp');
+  expect(port.getSnapshot().visuals[0]?.visual.design_id).toBe('preset-pixel-altar');
   expect(html).toContain('Session preview only');
 });
 

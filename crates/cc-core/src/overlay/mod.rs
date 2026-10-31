@@ -157,6 +157,22 @@ impl RenderHost {
             return Err(invalid());
         }
         let verified = VerifiedPackage::read(package, root)?;
+        self.accept_verified(verified, consent)
+    }
+
+    /// Same consent/capacity/publication gate for verified native built-ins.
+    pub(crate) fn accept_verified(
+        &self,
+        verified: VerifiedPackage,
+        consent: bool,
+    ) -> Result<(), ErrorEnvelope> {
+        if serde_json::to_vec(&verified.package)
+            .map_err(|_| invalid())?
+            .len()
+            > 128 * 1024
+        {
+            return Err(invalid());
+        }
         let mut state = self.state.lock().map_err(|_| unavailable())?;
         let id = verified.package.design_id.clone();
         let previous = state

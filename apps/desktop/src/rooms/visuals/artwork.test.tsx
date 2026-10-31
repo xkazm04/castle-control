@@ -4,6 +4,7 @@ import { expect, test } from 'vitest';
 import { tokens } from '@castle-control/tokens';
 import { createBeaconsPreview } from '../../beacons-model.js';
 import { BeaconArtwork } from './artwork.jsx';
+import { BeaconPlates } from './plates.jsx';
 
 type Point = readonly [number, number];
 type Bounds = { left: number; top: number; right: number; bottom: number };
@@ -100,6 +101,21 @@ function drawnBounds(markup: string): Bounds {
 }
 
 const preview = createBeaconsPreview().getSnapshot();
+test('saved Glass altar uses atlas art and object label with package-equivalent bindings', () => {
+  const first = preview.visuals[0];
+  if (!first) throw new Error('Missing simulated visual');
+  const item = { ...first, intensity: 0.5, visual: { ...first.visual,
+    design_id: 'preset-glass-altar' as NonNullable<typeof first.visual.design_id> } };
+  const html = renderToStaticMarkup(<BeaconArtwork item={item} />);
+  expect(html).toContain('<img');
+  expect(html).toContain('src="/art/preset-glass-altar.webp"');
+  expect(html).toContain('--room-blaze:0.5');
+  expect(html).toContain('opacity:calc(0.35 + var(--room-blaze) * 0.65)');
+  expect(html).toContain('transform:scale(calc(0.9 + var(--room-blaze) * 0.15))');
+  expect(html).not.toContain('<svg');
+  const plate = renderToStaticMarkup(<BeaconPlates visuals={[item]} selected={item.visual.visual_id} on_select={() => undefined} />);
+  expect(plate).toContain('On-screen object');
+});
 const cases = [...preview.visuals, ...preview.visuals.slice(0, 1).map(item => ({ ...item,
   visual: { ...item.visual, design_id: 'other-border' as NonNullable<typeof item.visual.design_id> } })),
   ...preview.visuals.slice(0, 1).map(item => {

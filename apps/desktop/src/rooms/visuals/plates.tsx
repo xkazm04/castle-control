@@ -4,6 +4,7 @@ import { HeroReadout, Plate, PlateBand, StatusChip } from '@castle-control/ui';
 import { beaconsCopy as copy } from '../../beacons-copy.js';
 import { source_labels } from './contribution-input.js';
 import { BeaconArtwork } from './artwork.jsx';
+import { findPreset } from './presets.js';
 
 export type PlateVisual = { visual: Visual; total?: number; intensity?: number };
 
@@ -47,7 +48,9 @@ export function BeaconPlates<T extends PlateVisual>({ visuals, selected, on_sele
   return <div className="visuals-plates" role="radiogroup" aria-label={copy.visuals}>
     {visuals.map((item, index) => {
       const chosen = item.visual.visual_id === selected;
-      const kind = item.visual.design_id === 'altar' ? copy.object : item.visual.design_id === 'camera-frame' ? copy.camera : copy.border;
+      const preset = findPreset(item.visual.design_id);
+      const kind = preset ? preset.kind === 'object' ? copy.object : copy.camera
+        : item.visual.design_id === 'altar' ? copy.object : item.visual.design_id === 'camera-frame' ? copy.camera : copy.border;
       return <Plate key={item.visual.visual_id} selection="radio" variant="choice" ink="or" checked={chosen}
         className="visuals-plate" tabIndex={chosen ? 0 : -1} disabled={busy}
         aria-label={`${item.visual.name}, ${item.intensity === undefined ? copy.live_unavailable : `${Math.round(item.intensity * 100)}% ${copy.blaze}`}`}

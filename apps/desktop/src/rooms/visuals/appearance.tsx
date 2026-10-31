@@ -2,15 +2,17 @@ import { useSyncExternalStore } from 'react';
 import type { CSSProperties } from 'react';
 import { FieldGroup, StatusChip } from '@castle-control/ui';
 import type { Visual } from '@castle-control/contract';
-import { art, styles } from '../../demo/model.js';
 import { beaconsCopy as copy } from '../../beacons-copy.js';
 import { anchors, colours, initialAppearance, sizes } from './appearance-state.js';
 import type { AppearanceSession } from './appearance-state.js';
 import { BeaconArtwork } from './artwork.jsx';
+import { FixtureStylePicker } from './style-picker.jsx';
+import type { BeaconsPort } from '../../beacons-model.js';
 import './appearance.css';
 
-export function AppearanceControls({ session, visual, intensity, burst = 0 }: {
+export function AppearanceControls({ session, visual, intensity, burst = 0, design_port }: {
   session: AppearanceSession; visual: Visual; intensity?: number; burst?: number | string;
+  design_port?: Pick<BeaconsPort, 'design'>;
 }) {
   const state = useSyncExternalStore(session.subscribe, session.getSnapshot, session.getSnapshot);
   const value = state[visual.visual_id] ?? initialAppearance;
@@ -26,12 +28,11 @@ export function AppearanceControls({ session, visual, intensity, burst = 0 }: {
       data-size={value.size} data-anchor={value.anchor} data-colour={value.colour}
       data-burst-ms={value.burst_ms} data-intensity={intensity} style={style}>
       <div className="visuals-appearance-object" key={`${visual.visual_id}-${burst}`}>
-        {visual.design_id === 'altar' ? <img src={art(value.art_style, 'altar')}
-          alt={`${styles.find(item => item.id === value.art_style)?.label} altar · SIMULATED`} />
-          : <BeaconArtwork item={{ visual, intensity: intensity ?? 0, total: 0, gift_weight: 1 }} />}
+        <BeaconArtwork item={{ visual, intensity: intensity ?? 0, total: 0, gift_weight: 1 }} />
       </div>
       <StatusChip variant="dash">{`SIMULATED · ${intensity === undefined ? copy.live_unavailable : `${Math.round(intensity * 100)}% blaze`}`}</StatusChip>
     </section>
+    {design_port && <FixtureStylePicker visual={visual} port={design_port} />}
     <div className="visuals-appearance-fields">
       <FieldGroup label={copy.size} control_id="beacon-size" variant="select">
         <select id="beacon-size" value={value.size} onChange={event => session.change(visual.visual_id, 'size', event.currentTarget.value)}>
@@ -48,11 +49,6 @@ export function AppearanceControls({ session, visual, intensity, burst = 0 }: {
           {colours.map(colour => <option key={colour} value={colour}>{colour === 'key' ? 'Key' : colour === 'or' ? 'Gold' : colour === 'gules' ? 'Red' : 'Blue'}</option>)}
         </select>
       </FieldGroup>
-      {visual.design_id === 'altar' && <FieldGroup label={copy.art_style} control_id="beacon-art-style" variant="select">
-        <select id="beacon-art-style" value={value.art_style} onChange={event => session.change(visual.visual_id, 'art_style', event.currentTarget.value)}>
-          {styles.map(style => <option key={style.id} value={style.id}>{style.label}</option>)}
-        </select>
-      </FieldGroup>}
       <FieldGroup label={copy.burst_timing} control_id="beacon-burst-ms" variant="input">
         <input id="beacon-burst-ms" type="number" min="0" max="60000" step="1" value={value.burst_ms}
           onChange={event => session.change(visual.visual_id, 'burst_ms', event.currentTarget.valueAsNumber)} />

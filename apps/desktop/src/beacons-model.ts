@@ -1,4 +1,5 @@
 import { parseMethodParams, beaconsCurveSet } from '@castle-control/contract';
+import { beaconsVisualUpsert } from '@castle-control/contract/beacons';
 import type { ContributionSource, IntensityCurve, IntensityDecay, IntensityRange, Visual, VisualId } from '@castle-control/contract';
 import type { PreviewEvent } from './beacons-fixture.js';
 import { fixtureBurst, fixtureEvents, fixtureVisuals } from './beacons-fixture.js';
@@ -10,6 +11,7 @@ export type BeaconsPort = {
   getSnapshot: () => BeaconsPreview; subscribe: (listener: () => void) => () => void;
   select: (id: VisualId) => void; point: (index: number, point: IntensityRange) => void;
   input: (source: ContributionSource | '') => void;
+  design: (design_id: string) => void;
   decay: (decay: IntensityDecay) => void; weight: (weight: number) => void;
   curve: (curve: IntensityCurve) => void;
   fire: (source: 'gift' | 'subscribe', count: number) => void; advance: () => void; reset: () => void; end: () => void;
@@ -67,6 +69,17 @@ export function createBeaconsPreview(): BeaconsPort {
         delete visual.input;
         return { ...item, visual: { ...visual, ...(source ? { input: contributionInput(source) } : {}) } };
       }, 'Input changed locally · simulated configuration only. Test fires remain gifts/subs; live routing is a separate core step.');
+    },
+    design(design_id) {
+      const item = selected();
+      if (!item) return;
+      const visual = { ...item.visual };
+      delete visual.design_id;
+      const parsed = parseMethodParams(beaconsVisualUpsert, {
+        visual: { ...visual, ...(design_id ? { design_id } : {}) },
+      });
+      update(current => ({ ...current, visual: parsed.visual }),
+        'SIMULATED design saved locally · nothing sent to OBS.');
     },
     point(index, point) {
       const item = selected();

@@ -2,6 +2,7 @@
 mod art;
 mod art_assets;
 mod live;
+pub(crate) mod presets;
 mod preview;
 mod routing;
 pub use art_assets::{ArtCatalog, ArtDownload};
@@ -105,6 +106,7 @@ impl BeaconsModule {
                 catalog: service.art_catalog.clone(),
             });
             for visual in self.state.lock().map_err(|_| internal())?.visuals.values() {
+                service.ensure_beacons_preset(visual.design_id.as_ref())?;
                 service.accept_beacons_visual(visual.clone())?;
             }
         }
@@ -185,6 +187,7 @@ impl BeaconsModule {
         let mut visuals = state.visuals.clone();
         visuals.insert(visual.visual_id.clone(), visual.clone());
         if let Some(native) = self.native.as_ref().and_then(Weak::upgrade) {
+            native.ensure_beacons_preset(visual.design_id.as_ref())?;
             native.commit_beacons_visual(visual.clone(), || storage::save(&self.root, &visuals))?;
         } else {
             storage::save(&self.root, &visuals)?;

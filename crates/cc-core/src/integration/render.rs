@@ -3,6 +3,19 @@ use cc_types::{BeaconsIntensity, DesignPackage, ErrorEnvelope, Visual, VisualId}
 use std::path::Path;
 
 impl NativeServices {
+    /// Only catalog selections install embedded data. Unknown IDs stay withheld;
+    /// no filesystem import or ArtCatalog registration occurs for a preset.
+    pub(crate) fn ensure_beacons_preset(
+        &self,
+        id: Option<&cc_types::DesignId>,
+    ) -> Result<(), ErrorEnvelope> {
+        if let Some(id) = id
+            && let Some(verified) = crate::beacons::presets::embedded(id)?
+        {
+            self.render.accept_verified(verified, false)?;
+        }
+        Ok(())
+    }
     /// Separate Lots handoff; no draw is represented as a Beacons visual.
     pub(crate) fn lots_render_host(&self) -> std::sync::Arc<crate::overlay::RenderHost> {
         self.render.clone()

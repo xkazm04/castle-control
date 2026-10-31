@@ -39,7 +39,8 @@ export function VisualsWork({ queue, port, seal_slot }: { queue?: ProposalQueue;
         <BeaconBay title={copy.driven_by} gloss={copy.input_gloss}>
           <InputPicker source={selected.visual.input?.source ?? ''} busy={false} on_change={adapter.input} />
           <p className="visuals-note">{copy.fixture_input_note}</p>
-          <AppearanceControls session={appearance} visual={selected.visual} intensity={selected.intensity} burst={preview.events[0]?.id ?? 0} />
+          <AppearanceControls session={appearance} visual={selected.visual} design_port={adapter}
+            intensity={selected.intensity} burst={preview.events[0]?.id ?? 0} />
         </BeaconBay>
         <BeaconBay title={copy.curve} gloss={copy.curve_gloss}>
           <FixtureCurve key={preview.selected} item={selected} port={adapter} />

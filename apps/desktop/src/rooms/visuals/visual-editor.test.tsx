@@ -9,6 +9,9 @@ import { fixtureVisuals } from '../../beacons-fixture.js';
 import { ConnectedBeacons } from './core.jsx';
 import { VisualsWork } from './room.jsx';
 import { VisualEditor, VisualForm } from './visual-editor.jsx';
+import { StylePickerFields } from './style-picker.jsx';
+import { presets, styleChoice } from './presets.js';
+import { styles } from '../../demo/model.js';
 
 const launch = { mode: 'core', endpoint: 'http://127.0.0.1:3210/', session_token: 'a'.repeat(64) } as const;
 const synthetic = { visual_id: 'synthetic-picker', name: 'Synthetic visual', design_id: 'synthetic-design',
@@ -29,19 +32,19 @@ afterEach(() => vi.unstubAllGlobals());
 
 // Node has FormData but no DOM form. Populate native FormData with the values
 // the browser would collect; the real form handler and real port/schema run.
-function formData(source: ContributionSource | '', name: string = synthetic.name) {
+function formData(source: ContributionSource | '', name: string = synthetic.name, design: string = synthetic.design_id) {
   const NativeFormData = globalThis.FormData;
   vi.stubGlobal('FormData', class extends NativeFormData {
     constructor() {
       super();
       this.set('visual_id', synthetic.visual_id); this.set('name', name);
-      this.set('design_id', synthetic.design_id); this.set('input_source', source);
+      this.set('design_id', design); this.set('input_source', source);
     }
   });
 }
 
-async function save(h: Awaited<ReturnType<typeof harness>>, source: ContributionSource | '', name?: string) {
-  formData(source, name);
+async function save(h: Awaited<ReturnType<typeof harness>>, source: ContributionSource | '', name?: string, design?: string) {
+  formData(source, name, design);
   const form = VisualForm({ visual: h.visual, port: h.port, busy: false, source, on_source: () => undefined });
   const preventDefault = vi.fn();
   const nativeEvent = new Event('submit', { bubbles: true, cancelable: true });
@@ -63,6 +66,42 @@ test('choosing gift saves its native count pair through the contract and core tr
     visual: { ...h.visual, input: { source: 'gift', unit: 'count' } },
   });
   expect(h.port.getSnapshot().visuals[0]?.input).toEqual({ source: 'gift', unit: 'count' });
+});
+
+test('visual form offers neutral, twelve atlas designs, custom ID, and one saved art-style control', async () => {
+  const h = await harness();
+  const html = renderToStaticMarkup(<VisualEditor visual={h.visual} port={h.port} busy={false} />);
+  expect(html).toContain('No design (neutral)');
+  expect(html).toContain('Custom design ID...');
+  expect(html.match(/id="beacon-art-style"/g)).toHaveLength(1);
+  expect(presets).toHaveLength(12);
+  for (const style of styles) for (const kind of ['altar', 'frame']) {
+    expect(html).toContain(`value="preset-${style.id}-${kind}"`);
+    expect(html).toContain(`${style.label} ${kind}`);
+  }
+  expect(html).toContain('name="design_id" value="synthetic-design"');
+  expect(styleChoice(h.visual.design_id)).toBe('custom');
+});
+
+test.each(['preset-glass-altar', '', 'custom'])('picker %s saves exactly one schema-checked visual', async choice => {
+  const h = await harness();
+  const on_change = vi.fn();
+  const fields = StylePickerFields({ choice, custom_id: 'my-custom', busy: false, on_change });
+  const select = fields.props.children[0].props.children;
+  select.props.onChange({ currentTarget: { value: choice } });
+  expect(on_change).toHaveBeenCalledWith(choice);
+  const html = renderToStaticMarkup(fields);
+  const design = html.match(/name="design_id"[^>]*value="([^"]*)"/)?.[1];
+  expect(design).toBeDefined();
+  if (choice === 'custom') expect(html).toContain('id="beacon-design-id"');
+  else expect(html).not.toContain('id="beacon-design-id"');
+  if (choice === 'preset-glass-altar') expect(html).toContain('/art/preset-glass-altar.webp');
+  h.rpc.mockClear();
+  await save(h, '', undefined, design);
+  expect(h.rpc).toHaveBeenCalledOnce();
+  const saved = h.port.getSnapshot().visuals[0];
+  if (choice === '') expect(saved).not.toHaveProperty('design_id');
+  else expect(saved?.design_id).toBe(choice === 'custom' ? 'my-custom' : choice);
 });
 
 test('Not routed omits input entirely when removing an existing route', async () => {

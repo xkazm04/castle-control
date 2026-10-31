@@ -3,6 +3,7 @@ import type { ContributionSource, Visual, VisualId, DesignId } from '@castle-con
 import type { CoreBeaconsPort } from '../../beacons-core.js';
 import { contributionInput, contribution_sources } from './contribution-input.js';
 import { InputPicker } from './input-picker.jsx';
+import { StylePicker } from './style-picker.jsx';
 
 type EditorProps = { visual?: Visual; port: CoreBeaconsPort; busy: boolean };
 
@@ -26,7 +27,7 @@ export function VisualForm({ visual, port, busy, source, on_source }: EditorProp
     <h2>{visual ? 'Edit visual configuration' : 'Create a visual'}</h2>
     <label>Visual ID<input name="visual_id" defaultValue={visual?.visual_id ?? ''} readOnly={!!visual} disabled={busy} required /></label>
     <label>Visual name<input name="name" defaultValue={visual?.name ?? ''} disabled={busy} required /></label>
-    <label>Design ID (optional)<input name="design_id" defaultValue={visual?.design_id ?? ''} disabled={busy} /></label>
+    <StylePicker key={visual?.visual_id ?? 'new'} {...(visual?.design_id ? { design_id: visual.design_id } : {})} busy={busy} />
     <InputPicker source={source} busy={busy} on_change={on_source} />
     {!visual && <p>New curves start at 0 intensity for 0 units and 100% for 50 units, with no decay. Edit after saving.</p>}
     <button type="submit" disabled={busy}>Save visual to core</button>
