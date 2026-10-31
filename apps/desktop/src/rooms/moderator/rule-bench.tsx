@@ -10,8 +10,8 @@ import { WatchingRuleEditor } from './watching-rule.jsx';
 
 export function BenchFeedback({ result }: { result: BenchResult }) {
   return <div className="moderator-bench-feedback">
-    <p role="status" aria-live="polite"><output aria-label={copy.draft_hits} data-draft-hits={result.total_hits}>{copy.draft_hit_count(result.total_hits)}</output>
-      {' · '}<output aria-label={copy.newly_acting} data-newly-acting={result.newly_acting}>{copy.newly_acting_count(result.newly_acting)}</output></p>
+    <p role="status" aria-live="polite"><span aria-label={copy.draft_hits} data-draft-hits={result.total_hits}>{copy.draft_hit_count(result.total_hits)}</span>
+      {' · '}<span aria-label={copy.newly_acting} data-newly-acting={result.newly_acting}>{copy.newly_acting_count(result.newly_acting)}</span></p>
     {!result.ok && <p role="alert" data-pattern-refusal={result.refusal}>{copy[result.refusal]}</p>}
     {result.ok && <p className="moderator-small">{copy.draft_id}: <code>{result.rule.rule_id}</code></p>}
     {result.samples.length > 0 && <ul aria-label={copy.draft_samples}>{result.samples.map(item => <li key={item.message_id} title={item.message_text}>

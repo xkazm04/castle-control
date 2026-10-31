@@ -11,6 +11,55 @@ async function seal(page: Page) {
   await page.keyboard.up('Space');
 }
 
+test('Gatehouse actions identify targets and expose one notice and count region', async ({ page }) => {
+  const verify = await guardPage(page);
+  try {
+    await page.goto('/#/chamber/moderator');
+    const notice = page.locator('[data-review-feedback]');
+    const expectNotice = async (message: string) => {
+      await expect(notice).toHaveText(message);
+      await expect(page.getByRole('status').filter({ hasText: message })).toHaveCount(1);
+    };
+    await expectNotice('Nothing sent.');
+    const cards = page.locator('.moderator-rule-card');
+    await expect(cards).toHaveCount(3);
+    for (const card of await cards.all()) {
+      const rule_name = await card.locator('.moderator-rule-text b').innerText();
+      await expect(card.getByRole('button', { name: 'Propose Arm', exact: true })).toHaveAccessibleDescription(rule_name);
+    }
+    await cards.first().getByRole('button', { name: 'Propose Arm', exact: true }).click();
+    await seal(page);
+    await expect(cards.first().getByRole('button', { name: 'Propose Watch', exact: true })).toHaveAccessibleDescription('Links');
+    for (const name of ['Propose Ban', 'Propose Dismiss']) {
+      await expect(page.getByRole('button', { name, exact: true })).toHaveAccessibleDescription('simulated-message-26');
+    }
+    const entries = page.locator('.moderator-roll-entry');
+    await expect(entries).toHaveCount(3);
+    for (const [index, entry] of (await entries.all()).entries()) {
+      for (const button of await entry.getByRole('button').all()) {
+        await expect(button).toHaveAccessibleDescription(`simulated-message-${5003 + index}`);
+      }
+    }
+    await expect(page.locator('.moderator-roll-message[tabindex]')).toHaveCount(0);
+    const bench = page.getByRole('region', { name: 'Rule bench', exact: true });
+    await expect(bench.getByRole('status')).toHaveCount(1);
+    await expect(bench.getByRole('status')).toHaveAttribute('aria-live', 'polite');
+    await expect(bench.getByRole('status').locator('output, [role="status"], [aria-live]')).toHaveCount(0);
+    for (const label of ['Draft pattern hits', 'Would newly act on']) {
+      await expect(bench.getByLabel(label, { exact: true })).toHaveCount(1);
+    }
+    for (const action of ['Raise the drawbridge', 'Lower the drawbridge']) {
+      const shield = page.getByRole('button', { name: `${action} Shield Mode · fixture only`, exact: true });
+      await expect(shield).toHaveAccessibleName(`${action} Shield Mode · fixture only`);
+      await expect(shield).not.toHaveAttribute('aria-label');
+      await shield.click();
+      await seal(page);
+      await expectNotice('Awaiting fixture confirmation. Applied settings are unchanged.');
+      await expectNotice('Fixture confirmed. Nothing sent to Twitch.');
+    }
+  } finally { await page.goto('about:blank'); verify(); }
+});
+
 test('Gatehouse Rule bench previews a watching draft on chat and in the drill', async ({ page }) => {
   const verify = await guardPage(page);
   const requests: string[] = [];
@@ -48,9 +97,13 @@ test('Gatehouse shadow journey and transparent stream previews', async ({ page }
     await page.getByRole('combobox', { name: 'Propose chat delay', exact: true }).selectOption('6');
     await seal(page);
     await expect(page.locator('.moderator-moat .cc-hero-figure')).toHaveAttribute('data-text', '6');
-    await page.getByRole('button', { name: 'Play simulated chat', exact: true }).click();
+    const play = page.getByRole('button', { name: 'Play simulated chat', exact: true });
+    await expect(play).not.toHaveAttribute('aria-pressed');
+    await play.click();
     await expect(page.locator('[data-chat-arrivals]')).not.toHaveText('0 new simulated lines');
-    await page.getByRole('button', { name: 'Pause simulated chat', exact: true }).click();
+    const pause = page.getByRole('button', { name: 'Pause simulated chat', exact: true });
+    await expect(pause).not.toHaveAttribute('aria-pressed');
+    await pause.click();
     await expect(page.locator('.moderator-held')).toContainText('Held for review');
     await page.getByRole('button', { name: 'Propose Pass', exact: true }).click();
     await seal(page);

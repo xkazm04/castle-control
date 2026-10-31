@@ -24,7 +24,7 @@ export function HeldQueue({ state, queue }: Props) {
     <Plate ink="azure" offset="space-8" className="moderator-held-plate" aria-label={copy.held}
       band={<PlateBand title={copy.held} gloss={copy.held_gloss}
         count={<>{state.held.length}<CountLabel first={copy.held_unit} second={copy.fixture_only} /></>} />}>
-      <PlateBody><p role="status" data-review-feedback="true" className="moderator-small">{state.notice}</p>{state.held.length ? state.held.map(item => <article key={item.decision_id} data-verdict="hold" className="moderator-held">
+      <PlateBody>{state.held.length ? state.held.map(item => <article key={item.decision_id} data-verdict="hold" className="moderator-held">
         <ReviewMeta verdict="hold" id={item.message_id} status={state.phases.get(item.decision_id)?.kind === 'confirming' ? copy.held_pending : copy.held_state} />
         <blockquote className="moderator-plate-quote">{item.message_text ?? copy.original_unavailable}</blockquote>
         <p className="moderator-plate-reason"><b>{copy.held_reason}</b>{fixtureHoldReasons.get(item.message_id) ?? copy.hold_reason_unavailable}</p>
@@ -38,8 +38,10 @@ export function HeldQueue({ state, queue }: Props) {
           ? phaseLabel(state.phases.get(item.decision_id) ?? { kind: 'ban_pending' }) : copy.pending_ban} />
         <blockquote className="moderator-card-quote">{item.message_text ?? copy.original_unavailable}</blockquote>
         <p className="moderator-small">{copy.rule_label}: {state.rules.find(rule => rule.rule_id === item.rule_id)?.name ?? copy.unavailable}</p>
+        <span id={`moderator-ban-${item.decision_id}`} className="moderator-visually-hidden">{item.message_id}</span>
         <div className="moderator-card-actions">{(['ban', 'dismiss'] as const).map(kind => <InkButton key={kind} type="button"
           size="big" style={smallBig} variant={kind === 'ban' ? 'bar' : 'outline'}
+          aria-describedby={`moderator-ban-${item.decision_id}`}
           disabled={!available(state, item.decision_id).includes(kind)}
           onClick={() => proposeCommand(queue, { kind, decision_id: item.decision_id }, kind === 'ban' ? 'Ban · human review' : 'Dismiss ban')}>
           {kind === 'ban' ? copy.propose_ban : copy.propose_dismiss}</InkButton>)}</div>
@@ -71,11 +73,13 @@ export function GateControls({ state, queue }: Props) {
             const value = Number(event.currentTarget.value);
             if ([0, 2, 4, 6].includes(value)) proposeCommand(queue, { kind: 'delay', delay_s: value as ChatDelay }, `Set chat delay to ${value} s`);
           }}><option value={0}>{copy.delay_off}</option>{[2, 4, 6].map(value => <option key={value} value={value}>{copy.delay_seconds(value)}</option>)}</select></span>
-        <span className="moderator-status" role="status">{state.notice}</span>
       </div>
-      <InkButton type="button" size="big" variant="shield" aria-label={copy.shield_label} aria-pressed={state.shield.value} disabled={(state.shield.kind === 'confirming')}
-        onClick={() => proposeCommand(queue, { kind: 'shield' }, state.shield.value ? 'Lower the drawbridge' : 'Raise the drawbridge')}>
-        {state.shield.value ? copy.lower_bridge : copy.shield}<small>{copy.shield_label}</small></InkButton>
+      <p role="status" data-review-feedback="true" className="moderator-small">{state.notice}</p>
+      <div role="group" aria-label={copy.shield_label}>
+        <InkButton type="button" size="big" variant="shield" aria-pressed={state.shield.value} disabled={(state.shield.kind === 'confirming')}
+          onClick={() => proposeCommand(queue, { kind: 'shield' }, state.shield.value ? 'Lower the drawbridge' : 'Raise the drawbridge')}>
+          {state.shield.value ? copy.lower_bridge : copy.shield}<small>{copy.shield_label}</small></InkButton>
+      </div>
     </PlateBody>
   </Plate>;
 }
@@ -88,10 +92,10 @@ export function Rules({ state, queue }: Props) {
     {state.rules.map(rule => {
       const mode = state.preview_modes.get(rule.rule_id) ?? 'shadow';
       return <HeraldicCard className="moderator-rule-card" key={rule.rule_id}>
-        <div className="moderator-rule-text"><b>{rule.name}</b><span><code>{rule.pattern}</code> · {rule.action}</span></div>
+        <div className="moderator-rule-text"><b id={`moderator-rule-${rule.rule_id}`}>{rule.name}</b><span><code>{rule.pattern}</code> · {rule.action}</span></div>
         <div className="moderator-rule-side"><StatusChip variant="azure" stamp="mode" ink="azure" tone={mode === 'armed' ? 'solid' : 'neutral'}>
           {mode === 'armed' ? copy.armed : copy.watching}</StatusChip>
-          <button className="moderator-text-button" type="button" data-mode={mode} onClick={() => proposeCommand(queue,
+          <button className="moderator-text-button" type="button" data-mode={mode} aria-describedby={`moderator-rule-${rule.rule_id}`} onClick={() => proposeCommand(queue,
             { kind: 'mode', rule_id: rule.rule_id, mode: mode === 'shadow' ? 'armed' : 'shadow' }, `${mode === 'shadow' ? 'Arm' : 'Watch'} ${rule.name}`)}>
             {mode === 'armed' ? copy.propose_watch : copy.propose_arm}</button></div>
       </HeraldicCard>;

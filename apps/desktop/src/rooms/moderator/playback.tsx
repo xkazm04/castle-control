@@ -14,7 +14,7 @@ export function ChatPlayback({ port, state }: { port: ModerationPort; state: Mod
   const finished = state.replay_count >= state.messages.length;
   const latest = state.replay_count > 420 ? state.messages[state.replay_count - 1] : undefined;
   return <div className="moderator-playback">
-    <InkButton type="button" size="room" disabled={finished} aria-pressed={playing} onClick={() => setPlaying(!playing)}>
+    <InkButton type="button" size="room" disabled={finished} onClick={() => setPlaying(!playing)}>
       {playing ? copy.pause_chat : copy.play_chat}</InkButton>
     <output data-chat-arrivals="true" aria-live="off">{finished ? copy.chat_finished : copy.chat_arrivals(state.replay_count - 420)}</output>
     <p className="moderator-small">{copy.playback_note}</p>
