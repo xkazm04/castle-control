@@ -1,5 +1,5 @@
-import type { Rect } from './geometry.ts';
-import type { ArtNode } from './types.ts';
+import type { Rect } from './geometry.js';
+import type { ArtNode } from './types.js';
 
 export function rectAttrs(rect: Rect): Readonly<Record<string, string>> {
   return { x: String(rect.x), y: String(rect.y), width: String(rect.w), height: String(rect.h) };

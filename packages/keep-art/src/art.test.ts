@@ -1,11 +1,11 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { expect, test } from 'vitest';
-import { keepArt } from './art.ts';
-import { defs, overlays, sky, structure } from './art-shell.ts';
-import { keepRooms } from './geometry.ts';
-import { rectAttrs } from './shapes.ts';
-import type { ArtNode } from './types.ts';
+import { keepArt } from './art.js';
+import { defs, overlays, sky, structure } from './art-shell.js';
+import { keepRooms } from './geometry.js';
+import { rectAttrs } from './shapes.js';
+import type { ArtNode } from './types.js';
 
 function walk(node: ArtNode): ArtNode[] {
   return [node, ...(node.children ?? []).flatMap(walk)];

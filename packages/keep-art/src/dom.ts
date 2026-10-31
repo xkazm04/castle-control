@@ -1,5 +1,5 @@
-import { paintStyle } from './paint.ts';
-import type { ArtNode } from './types.ts';
+import { paintStyle } from './paint.js';
+import type { ArtNode } from './types.js';
 
 function createArt(document: Document, node: ArtNode): SVGElement {
   const element = document.createElementNS('http://www.w3.org/2000/svg', node.tag);

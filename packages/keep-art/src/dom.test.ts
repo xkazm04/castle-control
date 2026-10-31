@@ -1,8 +1,8 @@
 import { expect, test } from 'vitest';
-import { keepArt } from './art.ts';
-import { mountArt } from './dom.ts';
-import { paintStyle } from './paint.ts';
-import type { ArtNode } from './types.ts';
+import { keepArt } from './art.js';
+import { mountArt } from './dom.js';
+import { paintStyle } from './paint.js';
+import type { ArtNode } from './types.js';
 
 // A minimal, dependency-free document; only mountArt's DOM operations are implemented.
 class FakeElement {

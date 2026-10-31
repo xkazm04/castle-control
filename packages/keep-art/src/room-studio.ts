@@ -1,6 +1,6 @@
-import { artHooks } from './art-hooks.ts';
-import { hexPoints } from './shapes.ts';
-import type { ArtNode } from './types.ts';
+import { artHooks } from './art-hooks.js';
+import { hexPoints } from './shapes.js';
+import type { ArtNode } from './types.js';
 
 export const hexSeed = [
   0, 1, 1, 2, 0, 3, 3, 1, 2, 1, 0, 2, 2, 3, 1, 0, 3, 3, 2, 2, 0, 1, 1,

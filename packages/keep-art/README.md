@@ -13,6 +13,9 @@ namespace-aware element creation, then appends it once. A fake document tests
 the element count, IDs, attributes, text and identical `paintStyle` output.
 Consumers import the stylesheet through `@castle-control/keep-art/keep-art.css`;
 CSS remains marked as a side effect. The root entry has no DOM access.
+Relative source imports and re-exports use `.js` specifiers, matching the
+repo's NodeNext configuration. The package exports map still targets the
+TypeScript sources; consumers need no TypeScript-extension import override.
 
 `Rect` uses `{ x, y, w, h }` and `Point` uses `{ x, y }`, all in castle/stage
 coordinates. `keepViewBox` is the SVG tuple. Site camera constants start with
@@ -109,5 +112,18 @@ Director motion follow-up on 2026-10-31, after WP2 and package installation:
   `[pnpm lint] walked 23 files`; repository checks also pass.
 - `pnpm --filter @castle-control/keep-art test`: exit 0;
   `Tests 30 passed (30)`, `Test Files 6 passed (6)`.
+
+Director import follow-up on 2026-10-31:
+
+- Converted 61 relative import/export specifiers across 19 source files to
+  `.js` and removed `allowImportingTsExtensions`. The exports map still
+  points at the `.ts` entry files.
+- The same three filtered pnpm commands pass: typecheck and lint each report
+  `walked 23 files`; tests report `Tests 30 passed (30)` and
+  `Test Files 6 passed (6)`. Repository checks also pass through lint.
+- Initial runs stopped before the checks because pnpm attempted a reinstall
+  after the workspace structure changed. Successful runs used process-local
+  `pnpm_config_verify_deps_before_run=warn`, preserving the warning while
+  running installed tools without dependency changes.
 
 Follow-up changes are uncommitted and confined to this package. No live data is used.

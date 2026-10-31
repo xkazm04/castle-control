@@ -1,4 +1,4 @@
-import type { ArtNode, ArtPaint } from './types.ts';
+import type { ArtNode, ArtPaint } from './types.js';
 
 // Sample consensus from the winner; rounded percentages deliberately total 101.
 export const heraldSample = [

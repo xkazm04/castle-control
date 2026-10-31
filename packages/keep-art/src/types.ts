@@ -1,4 +1,4 @@
-import type { RoomId } from './geometry.ts';
+import type { RoomId } from './geometry.js';
 
 export type ArtTag =
   | 'svg' | 'g' | 'defs' | 'pattern' | 'radialGradient' | 'stop' | 'clipPath'

@@ -1,4 +1,4 @@
-import type { ArtNode, ArtPaint } from './types.ts';
+import type { ArtNode, ArtPaint } from './types.js';
 
 function cssPaint(value: ArtPaint): string {
   return value === 'none' || value.startsWith('url(#') ? value : `var(--${value})`;

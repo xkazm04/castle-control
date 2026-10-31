@@ -1,12 +1,12 @@
-import { defs, overlays, sky, structure } from './art-shell.ts';
-import { keepViewBox } from './geometry.ts';
-import { beaconsRoom } from './room-beacons.ts';
-import { gatehouseRoom } from './room-gatehouse.ts';
-import { heraldRoom } from './room-herald.ts';
-import { lotsRoom } from './room-lots.ts';
-import { stewardRoom } from './room-steward.ts';
-import { studioRoom } from './room-studio.ts';
-import type { ArtNode } from './types.ts';
+import { defs, overlays, sky, structure } from './art-shell.js';
+import { keepViewBox } from './geometry.js';
+import { beaconsRoom } from './room-beacons.js';
+import { gatehouseRoom } from './room-gatehouse.js';
+import { heraldRoom } from './room-herald.js';
+import { lotsRoom } from './room-lots.js';
+import { stewardRoom } from './room-steward.js';
+import { studioRoom } from './room-studio.js';
+import type { ArtNode } from './types.js';
 
 export function keepRoomsArt(): readonly ArtNode[] {
   return [

@@ -2,8 +2,8 @@ import { expect, test } from 'vitest';
 import {
   artHooks, beaconsRoom, gatehouseRoom, heraldRoom, heraldSample, hexPaints, hexSeed,
   keepArt, keepRoomsArt, lotHandles, lotsRoom, stewardRoom, studioRoom,
-} from './index.ts';
-import type { ArtNode } from './types.ts';
+} from './index.js';
+import type { ArtNode } from './types.js';
 
 function walk(node: ArtNode): ArtNode[] {
   return [node, ...(node.children ?? []).flatMap(walk)];

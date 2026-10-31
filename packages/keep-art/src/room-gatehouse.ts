@@ -1,5 +1,5 @@
-import { artHooks } from './art-hooks.ts';
-import type { ArtNode } from './types.ts';
+import { artHooks } from './art-hooks.js';
+import type { ArtNode } from './types.js';
 
 // Invented, simulated sample chat from the winner, used only to size ruled marks.
 const sampleLines = [

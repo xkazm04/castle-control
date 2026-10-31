@@ -1,5 +1,5 @@
-import { artHooks } from './art-hooks.ts';
-import type { ArtNode } from './types.ts';
+import { artHooks } from './art-hooks.js';
+import type { ArtNode } from './types.js';
 
 // Path formulas from .port/winner/keep-art.js flame(), including numeric formatting.
 export function flame(cx: number, base: number, h: number, w: number): readonly ArtNode[] {

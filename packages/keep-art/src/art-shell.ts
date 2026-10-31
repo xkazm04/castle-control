@@ -1,9 +1,9 @@
-import { keepRooms } from './geometry.ts';
-import type { Rect, RoomId } from './geometry.ts';
-import { merlons, rectAttrs, wavy } from './shapes.ts';
-import type { ArtNode, ArtPaint } from './types.ts';
+import { keepRooms } from './geometry.js';
+import type { Rect, RoomId } from './geometry.js';
+import { merlons, rectAttrs, wavy } from './shapes.js';
+import type { ArtNode, ArtPaint } from './types.js';
 
-export { defs } from './art-defs.ts';
+export { defs } from './art-defs.js';
 
 function rect(rect: Rect, fill: ArtPaint): ArtNode {
   return { tag: 'rect', attrs: rectAttrs(rect), paint: { fill } };

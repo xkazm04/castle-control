@@ -1,4 +1,4 @@
-import type { ArtNode, ArtPaint } from './types.ts';
+import type { ArtNode, ArtPaint } from './types.js';
 
 function dots(
   id: string, size: number, radius: number, fill: ArtPaint,

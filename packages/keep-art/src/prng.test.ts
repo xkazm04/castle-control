@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest';
-import { fnv1a, hex8 } from './prng.ts';
+import { fnv1a, hex8 } from './prng.js';
 
 // Constants captured once in Node by executing .port/winner/keep-art.js in a VM.
 test.each([

@@ -1,5 +1,5 @@
-import { artHooks } from './art-hooks.ts';
-import type { ArtNode, ArtPaint } from './types.ts';
+import { artHooks } from './art-hooks.js';
+import type { ArtNode, ArtPaint } from './types.js';
 
 // Invented sample handles from the winner; never real viewer fixtures.
 export const lotHandles = [

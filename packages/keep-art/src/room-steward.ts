@@ -1,4 +1,4 @@
-import type { ArtNode } from './types.ts';
+import type { ArtNode } from './types.js';
 
 // Geometry and plate order from .port/winner/keep-art.js stewardRoom().
 export function stewardRoom(): readonly ArtNode[] {

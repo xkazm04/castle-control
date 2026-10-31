@@ -2,8 +2,8 @@ import { expect, test } from 'vitest';
 import {
   appOverviewFrame, appOverviewTarget, appRoomTarget, frameTransform, keepRooms,
   keepViewBox, siteOverviewFrame, siteOverviewTarget, siteRoomTarget,
-} from './geometry.ts';
-import type { Rect } from './geometry.ts';
+} from './geometry.js';
+import type { Rect } from './geometry.js';
 
 test('room geometry preserves the winner numbers under product room ids', () => {
   const rows = Object.entries(keepRooms).map(([id, value]) => [
