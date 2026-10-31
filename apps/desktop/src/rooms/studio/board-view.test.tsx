@@ -1,8 +1,9 @@
+import { readFileSync } from 'node:fs';
 import { Children, isValidElement } from 'react';
 import type { ReactElement, ReactNode } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { expect, test, vi } from 'vitest';
-import { boardGeometry, parseStudioBoard } from './board.js';
+import { boardGeometry, parseStudioBoard, studioInks } from './board.js';
 import { HexTable, TileInspector } from './hex-table.jsx';
 import { StudioWork } from './room.jsx';
 import { createStudioSession, updateStudioSession } from './session.js';
@@ -17,6 +18,43 @@ const parsed = parseStudioBoard({ title: 'Northern marches', sides: [
 })) });
 if (!parsed.ok) throw new Error(parsed.error.message);
 const board = parsed.board;
+
+const hexCss = readFileSync(new URL('./hex-field.css', import.meta.url), 'utf8');
+function hexRule(selector: string): string {
+  const rules = Array.from(hexCss.matchAll(/([^{}]+)\{([^{}]*)\}/g));
+  const rule = rules.find(rule => rule[1]?.trim() === selector);
+  expect(rule, `Missing hex rule: ${selector}`).toBeDefined();
+  return rule?.[2] ?? '';
+}
+
+test('hex focus ring uses no house ink', () => {
+  const rules = hexCss.match(/[^{}]*:focus-visible[^{}]*\{[^{}]*\}/g) ?? [];
+  expect(rules.length).toBeGreaterThan(0);
+  const focus = rules.join('\n');
+  for (const ink of [...studioInks, 'house', 'look-ink']) expect(focus).not.toContain(`var(--${ink})`);
+  expect(focus).toContain('var(--ink)');
+  expect(focus).toContain('var(--paper)');
+});
+
+test('selected ring differs from a key-ink face', () => {
+  const html = renderToStaticMarkup(<HexTable selected="B1" board={board} on_select={vi.fn()} />);
+  expect(html).toMatch(/<button[^>]*data-hex-tile="B1"[^>]*data-ink="key"[^>]*aria-pressed="true"/);
+  // A paper polygon separates the outer ring (including a sealed look's ink) from the face.
+  const halo = hexRule('.studio-room .cc-hex:is([aria-pressed="true"], :focus-visible)::after');
+  expect(halo).toContain('background: var(--paper)');
+  expect(halo).toContain('inset: var(--space-2)');
+  expect(hexRule('.studio-room .cc-hex[aria-pressed="true"] .cc-hex-face')).toContain('inset: var(--space-4)');
+  expect(hexRule('.studio-room .cc-hex-face')).toContain('z-index: 1');
+});
+
+test('focus ring wins over sealed look ink on a selected tile', () => {
+  // Equal specificity with the look selector, ordered last; selection cannot recolour focus.
+  const focus = '.studio-room .cc-hex.cc-hex:focus-visible::before';
+  const selected = '.studio-room [data-look-ink] .cc-hex[aria-pressed="true"]::before';
+  expect(hexRule(focus)).toContain('background: var(--ink)');
+  expect(hexCss.indexOf(focus)).toBeGreaterThan(hexCss.indexOf(selected));
+  expect(hexRule('.studio-room .cc-hex.cc-hex:focus-visible')).toContain('z-index: 3');
+});
 
 type ButtonProps = {
   type?: string; children?: ReactNode; tabIndex?: number; disabled?: boolean; onClick?: () => void;
