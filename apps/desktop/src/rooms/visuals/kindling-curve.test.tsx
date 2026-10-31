@@ -7,6 +7,7 @@ import { createCoreBeaconsPort } from '../../beacons-core.js';
 import type { BeaconsNetwork } from '../../beacons-core.js';
 import { createCurveEditor } from './curve-editor.js';
 import { CurveControls } from './kindling-curve.jsx';
+import { ConnectedBeacons } from './core.jsx';
 
 const launch = { mode: 'core', endpoint: 'http://127.0.0.1:3210/', session_token: 'a'.repeat(64) } as const;
 // Synthetic configuration, never a viewer or a contribution recording.
@@ -34,7 +35,13 @@ function points(tree: ReactNode): ReactElement<SVGProps<SVGCircleElement>>[] {
   return found;
 }
 function point(editor: ReturnType<typeof createCurveEditor>, index = 1) {
-  const control = points(CurveControls({ editor, state: editor.getSnapshot(), busy: false }))[index];
+  const controls: ReactElement<SVGProps<SVGCircleElement>>[] = [];
+  function Probe() {
+    controls.push(...points(CurveControls({ editor, state: editor.getSnapshot(), busy: false })));
+    return null;
+  }
+  renderToStaticMarkup(<Probe />);
+  const control = controls[index];
   if (!control) throw new Error('Expected focusable curve point');
   return control;
 }
@@ -77,6 +84,20 @@ function pointer(clientX: number, clientY: number, pointerId = 7): PointerEvent<
 }
 const markup = (editor: ReturnType<typeof createCurveEditor>) => renderToStaticMarkup(
   <CurveControls editor={editor} state={editor.getSnapshot()} busy={false} />);
+
+test.each(['Decay', 'Input source'])('%s has an exact standalone label associated with its select', async label => {
+  const h = await harness();
+  const html = label === 'Decay' ? markup(h.editor) : renderToStaticMarkup(<ConnectedBeacons port={h.port} />);
+  const labels = [...html.matchAll(/<label\b[^>]*>[\s\S]*?<\/label>/g)].map(match => match[0]);
+  const id = labels.map(text => text.match(/<label\b[^>]*\bfor="([^"]+)"[^>]*>([^<]*)<\/label>/))
+    .find(match => match?.[2] === label)?.[1];
+  expect(id, `Expected a standalone label with text exactly ${label}`).toBeTruthy();
+  const select = [...html.matchAll(/<select\b[^>]*>/g)].map(match => match[0])
+    .find(tag => tag.includes(`id="${id}"`));
+  expect(select, 'Expected the select to reference the label target').toBeTruthy();
+  if (!select) throw new Error('Missing labelled select');
+  expect(labels.some(text => text.includes(select)), 'Select must not be nested inside a label').toBe(false);
+});
 
 test('pointer drag previews edited points and saves only on release with core acknowledgement', async () => {
   const h = await harness();

@@ -1,5 +1,13 @@
 # Beacons · C Plates (WP 3.3 polish, 2026-10-30)
 
+## L3 accessible select names, 2026-10-31
+
+Decay and the core simulation's Input source use standalone labels linked to
+React-generated select IDs. Their existing grid spacing and visible copy stay
+unchanged. Static-markup regression cases failed first for both controls, then
+passed with exact label text, matching select IDs and no label nesting. The
+unchanged Playwright journey remains the Director's browser accessibility proof.
+
 ## L3 streamer journey, 2026-10-31
 
 Open `#/chamber/visuals` without a native launch (fixture mode). Pick a plate

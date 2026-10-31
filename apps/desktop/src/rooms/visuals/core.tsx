@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useMemo, useState, useSyncExternalStore } from 'react';
+import { lazy, Suspense, useEffect, useId, useMemo, useState, useSyncExternalStore } from 'react';
 import type { ReactNode } from 'react';
 import { CardBody, CardHead, HeraldicCard, InkButton, WindowedRows, rowHeight } from '@castle-control/ui';
 import { coreBeaconsConnection } from '../../client.js';
@@ -22,6 +22,7 @@ import './core.css';
 const ArtSection = lazy(() => import('./art.jsx'));
 
 export function ConnectedBeacons({ port, seal_slot }: { port: CoreBeaconsPort; seal_slot?: ReactNode }) {
+  const source_id = useId();
   const state = useSyncExternalStore(port.subscribe, port.getSnapshot, port.getSnapshot);
   const source_copy = useMemo(() => createBrowserSourceCopy(port), [port]);
   const copy_state = useSyncExternalStore(source_copy.subscribe, source_copy.getSnapshot, source_copy.getSnapshot);
@@ -71,8 +72,9 @@ export function ConnectedBeacons({ port, seal_slot }: { port: CoreBeaconsPort; s
               const source = sources.find(item => item === form.get('source'));
               if (source) void port.simulate({ visual_id: visual.visual_id, burst: { source, amount: Number(form.get('amount')) } });
             }}>
-              <label>Input source<select name="source" disabled={state.busy}>{sources.map(source =>
-                <option key={source} value={source}>{source_labels[source]}</option>)}</select></label>
+              <div className="visuals-core-field"><label htmlFor={source_id}>Input source</label>
+                <select id={source_id} name="source" disabled={state.busy}>{sources.map(source =>
+                  <option key={source} value={source}>{source_labels[source]}</option>)}</select></div>
               <label>Amount (source units)<input name="amount" type="number" min="0" max="4294967295" step="1"
                 defaultValue={1} required disabled={state.busy} /></label>
               <InkButton size="wrap" type="submit" disabled={state.busy}>Simulate burst</InkButton>

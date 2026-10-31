@@ -1,5 +1,5 @@
 import type { PreviewVisual } from '../../beacons-model.js';
-import { useMemo, useSyncExternalStore } from 'react';
+import { useId, useMemo, useSyncExternalStore } from 'react';
 import type { KeyboardEvent, PointerEvent } from 'react';
 import type { Visual } from '@castle-control/contract';
 import type { CoreBeaconsPort } from '../../beacons-core.js';
@@ -61,6 +61,7 @@ function dragPoint(event: PointerEvent<SVGCircleElement>, editor: CurveEditor) {
 export function CurveControls({ editor, state, busy, local = false }: {
   editor: CurveEditor; state: ReturnType<CurveEditor['getSnapshot']>; busy: boolean; local?: boolean;
 }) {
+  const decay_id = useId();
   const { draft } = state;
   const disabled = busy || state.phase === 'saving';
   const maximum = Math.max(1, ...state.confirmed.ranges.map(point => point.total), ...draft.ranges.map(point => point.total));
@@ -101,11 +102,12 @@ export function CurveControls({ editor, state, busy, local = false }: {
         value={point.intensity * 100}
         onChange={event => editor.move(index, point.total, event.currentTarget.valueAsNumber / 100)} /></label>
     </fieldset>)}
-    <label>Decay<select name="decay" value={draft.decay.kind} disabled={disabled}
+    <div className="visuals-core-field"><label htmlFor={decay_id}>Decay</label>
+    <select id={decay_id} name="decay" value={draft.decay.kind} disabled={disabled}
       onChange={event => editor.setDecay(event.currentTarget.value === 'exponential'
         ? { kind: 'exponential', half_life_s: 300 } : { kind: 'none' })}>
       <option value="none">No decay</option><option value="exponential">Exponential</option>
-    </select></label>
+    </select></div>
     {draft.decay.kind === 'exponential' && <label>Half-life (seconds)<input name="half_life_s" type="number" min="1"
       max="4294967295" step="1" required disabled={disabled} value={draft.decay.half_life_s}
       onChange={event => editor.setDecay({ kind: 'exponential', half_life_s: event.currentTarget.valueAsNumber })} /></label>}
