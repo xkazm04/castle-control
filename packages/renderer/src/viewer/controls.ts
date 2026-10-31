@@ -1,4 +1,5 @@
 import { integer, list, record, text } from '../templates/validation.ts';
+import { tileLabel } from '../templates/war-table.ts';
 import { escapeMarkup, outputDimensions } from './markup.ts';
 
 /** Local UI intent only: no transport identifier, identity, tally or game outcome. */
@@ -106,10 +107,12 @@ export function renderViewerPanel(state: ViewerControlState, options: unknown = 
     `<button type="button" data-viewer-choice="${kind}" ${data} aria-pressed="${selected}" `
     + `style="font:inherit;color:var(--${selected ? 'paper' : 'ink'});background:var(--${selected ? 'ink' : 'paper'});`
     + 'border:var(--rule-thin) solid var(--ink);padding:var(--space-8);overflow-wrap:anywhere">'
-    + `${escapeMarkup(label)}${selected ? ' · ✓ Selected' : ''}</button>`;
+    + `${escapeMarkup(label)}${selected ? '<span aria-hidden="true"> · ✓ Selected</span>' : ''}</button>`;
   const votes = controls.options.map((label, index) => button('vote', label,
     state.selection.option_index === index, `data-option-index="${index}"`)).join('');
-  const tiles = controls.tiles.map(tile => button('pick_tile', `Tile ${tile.q},${tile.r}`,
+  const min_column = Math.min(...controls.tiles.map(tile => tile.q + Math.floor(tile.r / 2)));
+  const min_r = Math.min(...controls.tiles.map(tile => tile.r));
+  const tiles = controls.tiles.map(tile => button('pick_tile', `Tile ${tileLabel(tile, min_column, min_r)}`,
     state.selection.tile?.q === tile.q && state.selection.tile.r === tile.r,
     `data-q="${tile.q}" data-r="${tile.r}"`)).join('');
   const sides = controls.sides.map(side => button('join_side', side, state.selection.side === side,

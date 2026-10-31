@@ -1,6 +1,41 @@
 import { expect, it } from 'vitest';
 import * as viewer from './controls.ts';
 
+it('tile buttons use A1 labels', () => {
+  for (const [tiles, labels] of [
+    [[{ q: 0, r: 0 }, { q: 1, r: 0 }], ['A1', 'B1']],
+    [[{ q: 0, r: -1 }, { q: -1, r: 0 }], ['A1', 'A2']],
+    [[{ q: 0, r: 0 }, { q: 26, r: 0 }], ['A1', 'AA1']],
+  ] as const) {
+    const state = viewer.createViewerControls({ options: [], tiles, sides: [] });
+    const markup = viewer.renderViewerPanel(state);
+    const buttons = markup.match(/<button[^>]*data-viewer-choice="pick_tile"[^>]*>[\s\S]*?<\/button>/g) ?? [];
+    expect(buttons).toHaveLength(labels.length);
+    labels.forEach((label, index) => expect(buttons[index]).toContain(`>Tile ${label}</button>`));
+    expect(markup).not.toContain('Tile 0,0');
+    expect(markup).not.toMatch(/Tile -?\d+,-?\d+/);
+  }
+});
+
+it('selected mark is not part of the accessible name', () => {
+  const initial = viewer.createViewerControls({ options: ['Simulated choice'],
+    tiles: [{ q: 0, r: 0 }, { q: 1, r: 0 }], sides: ['Simulated north'] });
+  const selected = viewer.reduceViewerControls(viewer.reduceViewerControls(
+    viewer.reduceViewerControls(initial, { kind: 'vote', option_index: 0 }),
+    { kind: 'pick_tile', q: 1, r: 0 }), { kind: 'join_side', side: 'Simulated north' });
+  const markup = viewer.renderViewerPanel(selected);
+  const buttons = markup.match(/<button[^>]*aria-pressed="true"[^>]*>[\s\S]*?<\/button>/g) ?? [];
+  expect(buttons).toHaveLength(3);
+  for (const [index, label] of ['Simulated choice', 'Tile B1', 'Simulated north'].entries()) {
+    const button = buttons[index];
+    expect(button).toMatch(/<span aria-hidden="true">[^<]*✓ Selected<\/span>/);
+    const visibleName = button?.replace(/<span aria-hidden="true">[\s\S]*?<\/span>/g, '')
+      .replace(/<[^>]*>/g, '');
+    expect(visibleName).toBe(label);
+  }
+  expect(markup).toMatch(/aria-pressed="false"[^>]*>Tile A1<\/button>/);
+});
+
 it('renders free viewer choices at 318px and transparent video sizes with local selection feedback', () => {
   expect(typeof viewer.renderViewerPanel).toBe('function');
   const initial = viewer.createViewerControls({ options: ['Simulated <choice>'],
