@@ -38,12 +38,12 @@
 .lottery-eq-stack { display: flex; height: var(--space-16); border: var(--rule-thin) solid var(--ink); border-radius: var(--r-sm); overflow: hidden; background: var(--paper); }
 .lottery-eq-stack span { flex: var(--eq-share) 1 0; min-width: 0; background: var(--ink); transition: flex-grow calc(var(--motion-shell) * 2) var(--ease); }
 .lottery-eq-stack span + span { border-inline-start: var(--rule-thin) solid var(--paper); }
-.lottery-eq-stack [data-cohort="subscriber"] { background: var(--gules); }
+.lottery-eq-stack [data-cohort="subscriber"] { background: var(--or); }
 .lottery-eq-stack [data-cohort="raider"] { background: var(--azure); }
 .lottery-eq-cohorts { display: flex; flex-direction: column; gap: var(--space-4); margin: 0; padding: 0; list-style: none; font: var(--text-small)/1.4 var(--font-ui); }
 .lottery-eq-cohorts li { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-4) var(--space-8); }
 .lottery-eq-cohorts li::before { content: ""; width: var(--space-11); height: var(--space-11); border-radius: 50%; background: var(--ink); }
-.lottery-eq-cohorts [data-cohort="subscriber"]::before { background: var(--gules); }
+.lottery-eq-cohorts [data-cohort="subscriber"]::before { background: var(--or); box-shadow: inset 0 0 0 var(--rule-thin) var(--ink); }
 .lottery-eq-cohorts [data-cohort="raider"]::before { background: var(--azure); }
 .lottery-eq-cohorts b { font: 700 var(--text-small)/1.4 var(--font-ui); }
 .lottery-eq-cohorts span { color: var(--ink-2); font-family: var(--font-num); }

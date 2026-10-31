@@ -104,6 +104,10 @@ export function WeightEqualizer({ draw, entries, on_edit, disabled = false }: {
         <InkButton size="small" data-curve="concave" aria-pressed={curve.kind === 'concave'} disabled={!editable}
           onClick={() => { if (curve.kind !== 'concave') edit({ weight_curve: steppedCurve(curve, 0) }); }}>{copy.concave}</InkButton>
       </div>
+      <InkButton size="small" data-free-path aria-pressed={free} disabled={!editable} onClick={() => {
+        if (on_edit && !disabled) on_edit({ ...draw, rules: { ...rules, free_join_equal_odds: !free },
+          policy: { ...draw.policy, free_entry_equal_odds: !free } });
+      }}>{copy.free_toggle}</InkButton>
       <div className="lottery-eq-stepper" role="group" aria-label={copy.units_label}>
         <span className="lottery-eq-stepper-label">{copy.units_label}</span>
         <InkButton size="small" data-step="-1" aria-label={copy.fewer}

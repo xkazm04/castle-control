@@ -10,6 +10,7 @@ export const equalizerCopy = {
   curve_group: 'Weight curve',
   equal: 'Equal',
   concave: 'Concave',
+  free_toggle: 'Free !join · equal odds',
   stamp_equal: 'Equal odds',
   stamp_free: 'Free path · equal',
   stamp_concave: (max_units: number) => `Concave · cap ${max_units}`,
@@ -31,7 +32,7 @@ export const equalizerCopy = {
   headline_empty: 'No entries yet · the newcomer comparison appears once lots arrive.',
   heaviest_from_curve: 'Heaviest figure is the curve ceiling. The core publishes the frozen weight table after sealing.',
   heaviest_from_entries: 'Heaviest figure comes from the current simulated pool.',
-  free_forced: 'Free !join path is on: every entry gets equal odds, so the curve is flat.',
+  free_forced: 'Free !join path is on: every entry gets equal odds, so the curve is flat. Switch it off to let activity weigh in.',
   equal_note: 'Equal curve: every entry has weight 1, whatever their activity.',
   cohorts_title: 'Weight held by cohort',
   cohorts_label: (rows: readonly { cohort: EqualizerCohort; weight_share: number }[]) =>
