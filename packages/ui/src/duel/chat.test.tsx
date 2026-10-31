@@ -27,6 +27,8 @@ function expectTug(html: string, elapsed: number) {
 test('9000ms SAMPLE chat renders the ring, seconds, indexed tug, barred ballots and newest five SIMULATED events', () => {
   const session = stepChat(initial(), { kind: 'tick', ms: 9000, counted: tallyAt(window, 9000).counted });
   const html = render(session);
+  expect(html).toContain('ty-barrier');
+  expect(html.match(/class="ty-cone /g)).toHaveLength(2);
   const tally = expectTug(html, 9000);
   expect(tally.barred[0] + tally.barred[1]).toBeGreaterThan(0);
   for (const role of ['ring', 'secs', 'tug', 'tug-bar', 'tug-left', 'tug-right', 'tug-legend', 'barred', 'hatch', 'flipnote', 'ticker', 'closed-note']) {
@@ -95,6 +97,8 @@ test('tally close renders the flip note and winner copy, then advances after fou
 test('no source renders the plain board and never invents a ticker or ballots', () => {
   const html = renderToStaticMarkup(<Tiltyard lists={SAMPLE} words={words} label="Chat" initial_mode="chat" />);
   expect(html).toContain('No ballot source is connected.');
+  expect(html).not.toContain('ty-barrier');
+  expect(html).not.toContain('ty-cone');
   expect(html).not.toContain('data-role="ty-tug"');
   expect(html).not.toContain('data-role="ty-ticker"');
   expect(html).not.toContain('Window open.');
@@ -111,6 +115,8 @@ test('source pages are memoised per match key across ticks, undo, pause and rese
   expect(windows(session)).toBe(first);
   const html = render(session);
   expect(html).toContain('Vote window paused'); expect(html).toContain('Resume the window');
+  expect(html).not.toContain('ty-barrier');
+  expect(html).not.toContain('ty-cone');
   session = stepChat(session, { kind: 'enter', counted: [0, 0] });
   expect(session.elapsed).toBe(9000);
   session = stepChat(stepChat(session, { kind: 'pick', side: 0, counted: [0, 0] }), { kind: 'enter', counted: [0, 0] });
@@ -171,6 +177,8 @@ test('the final window reaches the champion and retains its cached source for th
   expect(windows(session)).toBe(last);
   const html = renderToStaticMarkup(<Chat session={session} window={last} words={words} on_event={noop} />);
   expect(html).toContain('data-role="ty-champion-card"');
+  expect(html).not.toContain('ty-barrier');
+  expect(html).not.toContain('ty-cone');
   expect(html).toContain('data-role="ty-ticker"');
 });
 

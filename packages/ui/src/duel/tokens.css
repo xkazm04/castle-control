@@ -87,4 +87,16 @@
   --ty-signal-barred:#FF8B72;
   --ty-signal-held:#FFD36B;
   --ty-ring-track:rgba(242,238,227,.18);
+  /* WP6 hill, suggestion queue and placement motion. */
+  --ty-hill-well:rgba(242,238,227,.06);
+  --ty-hill-range:rgba(242,178,51,.08);
+  --ty-hill-target:rgba(228,71,46,.18);
+  --ty-hill-slot-rule:rgba(242,238,227,.25);
+  --ty-log-rule:rgba(242,238,227,.3);
+  --ty-rung-text:13.5px;
+  --ty-rung-number:15px;
+  --ty-queue-text:13px;
+  --ty-preview-width:300px;
+  --ty-step-index:0;
+  --ty-step-delay:40ms;
 }

@@ -1,14 +1,14 @@
 import { useCallback, useEffect, useMemo, useReducer, useRef } from 'react';
 import type { DuelEvent } from '@castle-control/duel';
 import { tallyAt } from '@castle-control/duel/ballots';
-import { Arena } from './arena.jsx';
-import { Lineup } from './boards.jsx';
 import { nextDue, useSessionClock } from './clock.js';
 import { Chat, chatWindows } from './chat.jsx';
 import { duelKeyAction } from './keymap.js';
+import { Ladder, ladderAnnouncement } from './ladder.jsx';
 import { useReducedMotion } from './motion.js';
 import { duelModes, Pennants } from './pennants.jsx';
 import { createTiltyardState, tiltyardReducer } from './session.js';
+import type { StageAction, TiltyardState } from './session.js';
 import { Showdown } from './showdown.jsx';
 import type { DuelMode, TiltyardProps } from './types.js';
 import './tokens.css';
@@ -19,10 +19,17 @@ import './rail.css';
 import './champion.css';
 import './chat.css';
 import './ticker.css';
+import './hill.css';
+import './ladder.css';
 
 export function Tiltyard({ lists, words, initial_mode = 'show', label, ballots }: TiltyardProps) {
   const reduced = useReducedMotion();
-  const [state, dispatch] = useReducer(tiltyardReducer, null, () => createTiltyardState(lists, initial_mode, reduced, words));
+  const [state, dispatch] = useReducer((before: TiltyardState, action: StageAction): TiltyardState => {
+    const after = tiltyardReducer(before, action);
+    if (before.mode !== 'ladder' || action.kind !== 'event') return after;
+    const announcement = ladderAnnouncement(before.ladder, after.ladder, action.event, lists.ladder, words);
+    return announcement === null ? after : { ...after, announcement };
+  }, null, () => createTiltyardState(lists, initial_mode, reduced, words));
   const root = useRef<HTMLElement>(null);
   const session = state[state.mode];
   const windows = useMemo(() => chatWindows(ballots), [ballots]);
@@ -69,11 +76,7 @@ export function Tiltyard({ lists, words, initial_mode = 'show', label, ballots }
     </Pennants>
     {state.mode === 'show' ? <Showdown session={state.show} words={words} on_event={on_event} />
       : state.mode === 'chat' ? <Chat session={state.chat} window={window} words={words} on_event={on_event} />
-      : <Arena><div className="ty-board">
-        <h2 data-role="ty-board-title">{words.modes[state.mode].title}</h2>
-        <p data-role="ty-board-text">{lists.ladder.title}</p>
-        <Lineup list={lists.ladder.top} words={words} />
-      </div></Arena>}
+      : <Ladder session={state.ladder} list={lists.ladder} words={words} on_event={on_event} />}
     <span className="ty-announcement" aria-live="polite" aria-atomic="true">{connected ? state.announcement : ''}</span>
   </section>;
 }

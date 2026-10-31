@@ -1,10 +1,11 @@
-import type { Bracket, ChatVerdict, Counted, DuelItem, Side } from '@castle-control/duel';
+import type { Bracket, ChatVerdict, Counted, DuelItem, LadderLast, Side } from '@castle-control/duel';
 import type { WindowEvent } from '@castle-control/duel/ballots';
 import { totalRounds } from '@castle-control/duel';
 
 /** All stage copy, including accessible labels and outcome announcements. */
 export interface TiltyardWords {
   readonly chat: ChatWords;
+  readonly ladder: LadderWords;
   readonly modes: Readonly<Record<'show' | 'chat' | 'ladder', { number: string; title: string; detail: string }>>;
   readonly mode_label: string;
   readonly sample: string;
@@ -62,6 +63,36 @@ export interface TiltyardWords {
   new_announcement(round: string, a: DuelItem, b: DuelItem): string;
 }
 
+export interface LadderWords {
+  readonly hill: string; readonly below: string; readonly off: string; readonly challenged: string; readonly beaten: string;
+  readonly held: string; readonly new: string; readonly down: string; readonly falls: string;
+  readonly challenger: string; readonly challenger_wins: string; readonly climbs: string; readonly holds: string;
+  readonly climbs_hint: string; readonly holds_pick: string; readonly holds_verdict_pick: string;
+  readonly idle_title: string; readonly off_title: string; readonly empty_title: string; readonly empty_text: string;
+  readonly abandoned: string; readonly abandoned_announcement: string; readonly undone: string;
+  readonly start: string; readonly undo: string; readonly undo_last: string; readonly next: string; readonly reset: string;
+  readonly queue: string; readonly queue_detail: string; readonly log: string;
+  subtitle(title: string): string;
+  range(possible: { from: number; to: number; below: boolean }, endpoint: string): string;
+  challenger_tag(pick: number, max: number): string;
+  incumbent_tag(rung: number, verdict: boolean): string;
+  challenging(rung: number): string;
+  verdict(rung: number, side: Side): string;
+  holds_hint(rung: number): string;
+  verb(rung: number, side: Side): string;
+  incoming(index: number, total: number): string;
+  from(by: string): string;
+  search(title: string, max: number, spots: number): string;
+  placed(rung: number): string;
+  result(title: string, last: LadderLast): string;
+  fallen(title: string): string;
+  step(won: boolean, rung: number, title: string): string;
+  opened(title: string, rung: number, incumbent: string): string;
+  picked(title: string, rung: number, side: Side): string;
+  placement(last: LadderLast, fallen: string | undefined): string;
+  next_announcement(rung: number): string;
+}
+
 export interface ChatWords {
   readonly no_source_title: string; readonly no_source_text: string;
   readonly paused_title: string; readonly paused_before_enter: string; readonly paused_before_escape: string;
@@ -90,6 +121,39 @@ export interface ChatWords {
 
 /** Verbatim English from .port/winner/index.html (cc-t2-duel A/1). */
 export const tiltyardWords: TiltyardWords = {
+  ladder: {
+    hill: 'The hill', below: 'below the hill', off: 'off the hill', challenged: 'challenged', beaten: 'beaten', held: 'held',
+    new: 'new', down: '↓ steps down', falls: 'falls from the hill',
+    challenger: 'Challenger', challenger_wins: 'challenger wins', climbs: 'Climbs', holds: 'Holds',
+    climbs_hint: ' climbs · ', holds_pick: 'holds the rung', holds_verdict_pick: 'holds',
+    idle_title: 'A challenger arrives', off_title: 'Off the hill', empty_title: 'The queue is empty',
+    empty_text: 'Every simulated suggestion has climbed.',
+    abandoned: ' The last climb was abandoned; the list is unchanged.',
+    abandoned_announcement: 'Climb abandoned. The list is unchanged.', undone: 'Climb undone. The list is back as it was.',
+    start: 'Climb the hill', undo: 'Undo climb', undo_last: 'Undo last climb', next: 'Next suggestion', reset: 'Reset sample ladder',
+    queue: 'Suggestion queue', queue_detail: 'simulated chat suggestions · one climb each', log: 'This climb',
+    subtitle: title => `${title} · simulated · session only`,
+    range: (possible, endpoint) => `Still possible: #${possible.from}${possible.to > possible.from ? `–${possible.below ? endpoint : `#${possible.to}`}` : ''}`,
+    challenger_tag: (pick, max) => `Challenger · pick ${pick} of at most ${max}`,
+    incumbent_tag: (rung, verdict) => verdict ? `Incumbent #${rung}` : `Incumbent · #${rung}`,
+    challenging: rung => `Challenging #${rung}`,
+    verdict: (rung, side) => `${side === 0 ? 'Climbs past' : 'Holds the rung:'} #${rung}`,
+    holds_hint: rung => ` #${rung} holds`,
+    verb: (rung, side) => `${side === 0 ? 'climbs past' : 'holds'} #${rung}`,
+    incoming: (index, total) => `Incoming suggestion · ${index} of ${total}`,
+    from: by => `from ${by}`,
+    search: (title, max, spots) => `It challenges its way into ${title} by binary search: at most ${max} picks over ${spots} spots.`,
+    placed: rung => `Placed at #${rung}`,
+    result: (title, last) => `${title} ${last.made_it ? `took #${last.place + 1}` : 'lost every challenge and does not make the top 10'} in ${last.steps.length} pick${last.steps.length === 1 ? '' : 's'}: ${last.steps.map(step => `${step.won ? 'beat #' : 'lost to #'}${step.at + 1}`).join(' · ')}.`,
+    fallen: title => `${title} falls from the hill`,
+    step: (won, rung, title) => `${won ? '✓ beat' : '✗ lost to'} #${rung} ${title}`,
+    opened: (title, rung, incumbent) => `${title} climbs. Challenging number ${rung}, ${incumbent}.`,
+    picked: (title, rung, side) => side === 0 ? `${title} beats number ${rung}.` : `Number ${rung} holds.`,
+    placement: (last, fallen) => last.made_it
+      ? ` Placed at number ${last.place + 1} in ${last.steps.length} picks.${fallen ? ` ${fallen} falls from the hill.` : ''}`
+      : ' It does not make the top 10.',
+    next_announcement: rung => ` Challenging number ${rung}.`,
+  },
   chat: {
     no_source_title: 'No ballot source connected', no_source_text: 'No ballot source is connected.',
     paused_title: 'Vote window paused',

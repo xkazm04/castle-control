@@ -27,9 +27,9 @@ export function Showdown({ session, words, on_event }: {
       on_pick={() => on_event({ kind: 'pick', side })} />;
   };
   return <>
-    {session.phase === 'called_off' ? <Arena><ClosedBoard list={list} words={words}
+    {session.phase === 'called_off' ? <Arena bare><ClosedBoard list={list} words={words}
       on_reopen={() => on_event({ kind: 'enter' })} on_reset={reset} /></Arena>
-      : session.phase === 'done' ? <Arena><Champion bracket={bracket} list={list} words={words} on_undo={undo} on_reset={reset} /></Arena>
+      : session.phase === 'done' ? <Arena bare><Champion bracket={bracket} list={list} words={words} on_undo={undo} on_reset={reset} /></Arena>
         : <Arena live verdict={verdict?.side ?? null}>
           {card(0)}
           <Centre key={`${session.history.length}-${verdict ? 'verdict' : 'live'}`} words={words} verdict={verdict !== null}

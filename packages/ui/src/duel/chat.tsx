@@ -53,9 +53,9 @@ export function Chat({ session, window, words, on_event }: {
       result={verdict ? verdict.side === side ? 'won' : 'lost' : 'enter'} on_pick={() => on_event({ kind: 'pick', side })} />;
   }
   return <>
-    {!window ? <Arena><ChatBoard words={words} missing on_resume={resume} on_reset={reset} /></Arena>
-      : session.phase === 'called_off' ? <Arena><ChatBoard words={words} on_resume={resume} on_reset={reset} /></Arena>
-        : session.phase === 'done' ? <Arena><Champion bracket={bracket} list={list} words={words} on_undo={undo} on_reset={reset} /></Arena>
+    {!window ? <Arena bare><ChatBoard words={words} missing on_resume={resume} on_reset={reset} /></Arena>
+      : session.phase === 'called_off' ? <Arena bare><ChatBoard words={words} on_resume={resume} on_reset={reset} /></Arena>
+        : session.phase === 'done' ? <Arena bare><Champion bracket={bracket} list={list} words={words} on_undo={undo} on_reset={reset} /></Arena>
           : a && b && tally && <Arena live verdict={verdict?.side ?? null}>
             {card(a, 0)}
             <div className="ty-center">

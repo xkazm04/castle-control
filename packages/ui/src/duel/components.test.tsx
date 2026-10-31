@@ -14,6 +14,8 @@ test('Showdown opens on the SAMPLE first match, one seal and all seven programme
     'aria-modal="false"', 'tabindex="-1"', 'aria-live="polite"']) expect(html).toContain(value);
   expect(html.match(/data-role="ty-card"/g)).toHaveLength(2);
   expect(html.match(/data-role="ty-seal"/g)).toHaveLength(1);
+  expect(html).toContain('ty-barrier');
+  expect(html.match(/class="ty-cone /g)).toHaveLength(2);
   expect(html.match(/data-role="ty-match"/g)).toHaveLength(7);
   expect(html.match(/aria-current="step"/g)).toHaveLength(1);
   expect(html).toContain('<b><i>I</i>Showdown</b>');
@@ -32,6 +34,8 @@ test('seven recorded picks reach a champion with crown, Champion stamp and eight
   expect(finalOrder(session.bracket)).toHaveLength(8);
   const html = renderToStaticMarkup(<Showdown session={session} words={words} on_event={noop} />);
   expect(html).toContain('class="ty-crown"');
+  expect(html).not.toContain('ty-barrier');
+  expect(html).not.toContain('ty-cone');
   expect(html).toContain('data-role="ty-champion-card"');
   expect(html).toContain('data-role="ty-stamp" aria-hidden="true">Champion');
   expect(html.match(/data-role="ty-order-row"/g)).toHaveLength(8);
@@ -51,6 +55,8 @@ test('cancelled Showdown keeps the lineup in the room and can reopen or undo', (
   const cancelled = stepShow(picked, { kind: 'cancel' });
   const html = renderToStaticMarkup(<Showdown session={cancelled} words={words} on_event={noop} />);
   expect(html).toContain('The lists are closed'); expect(html).toContain('picks so far are kept.');
+  expect(html).not.toContain('ty-barrier');
+  expect(html).not.toContain('ty-cone');
   expect(html.match(/<figure>/g)).toHaveLength(8);
   expect(stepShow(cancelled, { kind: 'enter' }).phase).toBe('live');
   expect(stepShow(cancelled, { kind: 'undo' }).bracket).toBe(initial.bracket);

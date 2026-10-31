@@ -1,0 +1,25 @@
+/* Ported rule by rule from .port/winner/index.html, cc-t2-duel A/1, lines 144–167. */
+.ty-hill{position:relative;z-index:2;align-self:stretch;display:flex;flex-direction:column;gap:var(--space-3);padding:var(--space-8) var(--space-10);background:var(--ty-hill-well);border-left:var(--space-2) solid var(--ty-ring-track);color:var(--cream);overflow:auto;max-height:100%}
+.ty-hill h3{margin:0 0 var(--space-4);font:800 var(--text-body)/1.1 var(--font-display);letter-spacing:var(--track-heading);text-transform:uppercase;color:var(--or)}
+.ty-hill h3 small{display:block;font:var(--ty-text-number-small)/1.3 var(--font-ui);letter-spacing:0;text-transform:none;color:var(--muted)}
+.ty-rung{position:relative;display:grid;grid-template-columns:var(--space-30) var(--space-20) 1fr auto;gap:var(--space-6);align-items:center;padding:var(--space-4) var(--space-6);font:var(--ty-rung-text)/1.2 var(--font-ui);border:var(--rule-medium) solid transparent;transition:opacity .3s,background .3s,transform .45s var(--ease)}
+.ty-rung .ty-n{font:800 var(--ty-rung-number)/1 var(--font-num);color:var(--or)}
+.ty-rung svg{width:var(--ty-space-18);height:var(--space-22)}
+.ty-rung .ty-mk{font:700 var(--ty-text-number-small)/1 var(--font-ui);letter-spacing:var(--track-label);text-transform:uppercase}
+.ty-rung.ty-out{opacity:.32}
+.ty-rung.ty-range{background:var(--ty-hill-range)}
+.ty-rung.ty-target{border-color:var(--gules);background:var(--ty-hill-target)}
+.ty-rung.ty-target .ty-mk{color:var(--ty-signal-barred)}
+.ty-rung.ty-beat .ty-mk{color:var(--ok)}
+.ty-rung.ty-held .ty-mk{color:var(--ty-signal-barred)}
+.ty-rung.ty-new{background:var(--or);color:var(--ty-parchment-ink);animation:ty-land .6s var(--ease) both}
+.ty-rung.ty-new .ty-n{color:var(--ty-parchment-ink)}
+.ty-rung.ty-down{animation:ty-stepdown .5s var(--ease) both;animation-delay:calc(var(--ty-step-index) * var(--ty-step-delay))}
+.ty-rung.ty-fell{opacity:.6;text-decoration:line-through;border:var(--rule-medium) dashed var(--ty-stage-muted)}
+.ty-rung.ty-fell .ty-mk{color:var(--ty-signal-barred);text-decoration:none}
+.ty-rung.ty-slot{border:var(--rule-medium) dashed var(--ty-hill-slot-rule);color:var(--muted)}
+@keyframes ty-land{from{transform:translateX(calc(-1 * var(--space-40)));opacity:0}to{transform:none;opacity:1}}
+@keyframes ty-stepdown{from{transform:translateY(-100%)}to{transform:none}}
+.ty-range-cap{font:var(--ty-text-small)/1.3 var(--font-ui);color:var(--or);margin-top:var(--space-4)}
+.ty-stage[data-motion="reduced"] .ty-rung{animation:none!important}
+@media (prefers-reduced-motion:reduce){.ty-stage .ty-rung{animation:none!important}}

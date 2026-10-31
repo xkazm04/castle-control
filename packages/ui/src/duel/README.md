@@ -1,4 +1,4 @@
-# Tiltyard (WP4–WP5)
+# Tiltyard (WP4–WP6)
 
 `@castle-control/ui/duel` exports `Tiltyard`, its data/words props, the English
 `tiltyardWords`, the declared keymap, and the session clock helpers. Lists have
@@ -18,8 +18,8 @@ called by a live-duel Escape. Enter and Escape intentionally shadow the shell's
 `open` and `back` bindings when handled.
 
 The reducer keeps one session per mode and settles outgoing theatre on a mode
-change. Chat uses the supplied `key` (SAMPLE uses `mill`). Ladder has a lineup
-placeholder until WP6. `StageAction` accepts a counted pair for chat. Shared
+change. Chat uses the supplied `key` (SAMPLE uses `mill`). Ladder uses the supplied
+top list and suggestion queue. `StageAction` accepts a counted pair for chat. Shared
 `Arena`, `Card`, `Centre`, `Seal`, `Rail`, `Champion` and board components are
 available as local modules. `Rail` takes an optional right-hand slot for chat,
 so both modes use the same bracket drawing. The clock schedules one timeout at
@@ -206,4 +206,66 @@ was not run because this brief forbids downloads/network calls.
 | `--ty-signal-barred` | `#FF8B72` |
 | `--ty-signal-held` | `#FFD36B` |
 | `--ty-ring-track` | `rgba(242,238,227,.18)` |
+
+## WP6: King of the hill
+
+`Ladder` renders the engine's unchanged session through shared cards, centre,
+arena and static preview. The first challenge is index 5 (#6). A left pick at
+#6 narrows the inclusive placement range to #1–#6. The centre and hill use the
+same `stillPossible` wording, including “below the hill”. Beaten/held rows each
+have one `data-state` and retain the winner's dimmed appearance.
+
+The hill keeps its title subtitle inside the `h3`, ten rungs, the dashed below
+slot during a climb, placement/steps-down markers and the fallen old #10.
+The existing arena container query moves it below the cards at 980px. Placement
+stagger is 40ms; hill animations are disabled under both reduced-motion paths.
+The suggestion queue and climb log remain bounded by the input lists and the
+engine's four-pick limit. Winner announcements use the stage's single live
+region; settlement does not repeat the recorded result.
+
+After the third climb the placement board retains Undo climb and Reset sample
+ladder. The queue-empty board is the winner's defensive idle branch; normal
+Enter resets the exhausted sample. Engine files and existing shared CSS remain
+unchanged. No dependencies were installed and no network calls were made.
+
+### WP6 additions for T1
+
+| Property | Winner value/default |
+| --- | --- |
+| `--ty-hill-well` | `rgba(242,238,227,.06)` |
+| `--ty-hill-range` | `rgba(242,178,51,.08)` |
+| `--ty-hill-target` | `rgba(228,71,46,.18)` |
+| `--ty-hill-slot-rule` | `rgba(242,238,227,.25)` |
+| `--ty-log-rule` | `rgba(242,238,227,.3)` |
+| `--ty-rung-text` | `13.5px` |
+| `--ty-rung-number` | `15px` |
+| `--ty-queue-text` | `13px` |
+| `--ty-preview-width` | `300px` |
+| `--ty-step-index` | `0` (per-row placement distance) |
+| `--ty-step-delay` | `40ms` |
+
+### WP6 validation
+
+All prescribed package checks exited 0 without dependency installation:
+
+| Command | Relevant output |
+| --- | --- |
+| `pnpm --config.verify-deps-before-run=false --filter @castle-control/ui typecheck` | `[pnpm typecheck] walked 102 files` |
+| `pnpm --config.verify-deps-before-run=false --filter @castle-control/ui lint` | `[pnpm lint] walked 102 files`; no ESLint defects |
+| `pnpm --config.verify-deps-before-run=false --filter @castle-control/ui test` | `Test Files 26 passed (26)`; `Tests 396 passed (396)` |
+| `pnpm --config.verify-deps-before-run=false --filter @castle-control/ui exec vitest run src/duel --pool=threads --reporter=verbose --silent=false` | `Test Files 5 passed (5)`; `Tests 37 passed (37)`; `[duel CSS] walked 10 files` |
+| `node scripts/check.mjs` | boundaries, hygiene and file-cap each walked 912 files; secrets walked 1330 files; exit 0 |
+
+The 11 ladder cases cover idle/preview, first #6 challenge, left/right range
+narrowing, dimmed beaten/held rows, full placement/fall, off-hill outcome,
+third-climb placement versus exhausted idle, cancellation/undo, winner live
+copy and final verdict settlement at both 1050ms and 650ms. Existing Showdown
+and Chat tests pass, including the unchanged 125 <= 127 chat wakeup budget.
+
+Headless winner playback was attempted before coding and blocked at launch:
+`browserType.launch: spawn EPERM`. Browser interactions, container rendering,
+reduced-motion rendering, screenshots and style-contract deviation counts
+remain for the Director. No browser fidelity result is claimed. No Computer
+Use or desktop Chrome was used. The full root `pnpm gate` was not run because
+the brief forbids installs and network calls.
 
