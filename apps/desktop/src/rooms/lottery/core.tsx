@@ -68,7 +68,7 @@ export function ConnectedLotsRoom({ port, simulated, seal_slot }: { port: CoreLo
           content={draw?.policy.content ?? 'question'} sealed={state.sealed} seal={state.seal_result?.sealed.seal}
           clock={reveal} reveal_ms={appearance.reveal_ms} theatre={appearance.theatre} on_theatre={display.theatre} proof="core"
           sound={appearance.sound} on_sound={on => display.edit({ sound: on })}
-          by_hand={appearance.by_hand} on_by_hand={on => display.edit({ by_hand: on })}
+          by_hand={appearance.by_hand} on_by_hand={on => display.edit({ by_hand: on })} focus_weight={appearance.focus_weight}
           {...(state.writ ? { on_prove: () => { display.theatre(false); setProve(count => count + 1); } } : {})} />
       </PoolStage>
       <div className="cc-desk">
@@ -105,7 +105,7 @@ export function ConnectedLotsRoom({ port, simulated, seal_slot }: { port: CoreLo
         {draw && <UrnTierPreset draw={draw} shape={appearance.shape} on_edit={next => { void port.edit(next); }}
           on_shape={shape => display.edit({ shape })} disabled={state.busy || state.locked} />}
         {draw && <WeightEqualizer draw={draw} entries={undefined} on_edit={next => { void port.edit(next); }}
-          disabled={state.busy || state.locked} />}
+          disabled={state.busy || state.locked} on_focus_weight={weight => display.edit({ focus_weight: weight })} />}
         {state.entries.length > 0 && <details className="cc-disclosure"><summary>{copy.core.frozen_list} · {state.entries.length}</summary>
           <div className="lottery-urn-window">
             <WindowedRows rows={state.entries} label={copy.core.frozen_list} row_key={entry => entry.handle}>

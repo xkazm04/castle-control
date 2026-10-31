@@ -34,6 +34,8 @@
 .lottery-draw-stage[data-phase="open"] .lottery-draw-lots circle { animation: lottery-lot-breathe 2.6s var(--ease) infinite alternate; animation-delay: calc(var(--lot-i) * -110ms); }
 .lottery-draw-stage[data-phase="revealing"] .lottery-draw-lots circle:not([data-winner]),
 .lottery-draw-stage[data-phase="revealed"] .lottery-draw-lots circle:not([data-winner]) { opacity: .42; }
+.lottery-draw-stage[data-focusing] .lottery-draw-lots circle:not([data-focus]) { opacity: .16; }
+.lottery-draw-lots circle[data-focus] { r: calc(var(--lot-r) * 1.6); stroke: var(--ink); stroke-width: 1.2; }
 .lottery-draw-lots circle[data-winner] { fill: var(--or); stroke: var(--ink); stroke-width: 1; }
 
 .lottery-stage-medal-body { transform-box: fill-box; transform-origin: center; animation: lottery-medal-in calc(var(--draw-reveal) * .6) var(--ease) both; }

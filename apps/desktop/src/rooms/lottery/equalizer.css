@@ -58,3 +58,7 @@
   .lottery-eq-value, .lottery-eq-linear, .lottery-eq-dot, .lottery-eq-headline b { animation: none; }
   .lottery-eq-curve { animation: none; stroke-dashoffset: 0; }
 }
+.lottery-eq-chart [data-eq-bar] { cursor: crosshair; }
+.lottery-eq-chart [data-eq-bar]:hover .lottery-eq-bar { stroke: var(--ink); stroke-width: 2; }
+.lottery-eq-legend [data-eq-key="focus"] { flex-basis: 100%; font-style: italic; color: var(--ink-2); }
+.lottery-eq-legend [data-eq-key="focus"]::before { display: none; }

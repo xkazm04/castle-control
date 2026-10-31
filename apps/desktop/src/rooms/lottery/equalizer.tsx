@@ -18,7 +18,7 @@ function curveSignature(steps: readonly WeightStep[]): string {
 }
 
 /** Bars scale with transform so the change animates; labels re-ink on each new value. */
-function WeightChart({ steps, flat }: { steps: readonly WeightStep[]; flat: boolean }) {
+function WeightChart({ steps, flat, on_focus }: { steps: readonly WeightStep[]; flat: boolean; on_focus?: ((weight: number | undefined) => void) | undefined }) {
   const bars = chartBars(steps);
   const base = chart.height - chart.bottom;
   const plot = base - chart.top;
@@ -29,7 +29,9 @@ function WeightChart({ steps, flat }: { steps: readonly WeightStep[]; flat: bool
     <svg viewBox={`0 0 ${chart.width} ${chart.height}`} role="img" aria-label={copy.chart_label(steps)}>
       <line className="lottery-eq-axis" x1={chart.left} x2={chart.width - chart.right} y1={base} y2={base} />
       {bars.map((bar, index) => <g key={bar.step.units} data-eq-bar={bar.step.units}
-        data-eq-role={index === 0 ? 'newcomer' : bar === last ? 'heaviest' : undefined}>
+        data-eq-role={index === 0 ? 'newcomer' : bar === last ? 'heaviest' : undefined}
+        onPointerEnter={on_focus ? () => on_focus(bar.step.weight) : undefined}
+        onPointerLeave={on_focus ? () => on_focus(undefined) : undefined}>
         <rect className="lottery-eq-bar" x={bar.x} y={chart.top} width={bar.width} height={plot}
           style={levelStyle(bar.level)} />
         <text key={`${bar.step.units}-${bar.step.weight}`} className="lottery-eq-value" x={bar.cx} y={bar.top - 6}>
@@ -46,6 +48,7 @@ function WeightChart({ steps, flat }: { steps: readonly WeightStep[]; flat: bool
       <span data-eq-key="bar">{copy.legend_weight}</span>
       <span data-eq-key="curve">{copy.legend_curve}</span>
       {!flat && <span data-eq-key="linear">{copy.legend_linear}</span>}
+      {on_focus && <span data-eq-key="focus">{copy.focus_hint}</span>}
     </figcaption>
   </figure>;
 }
@@ -77,8 +80,10 @@ function CapMeter({ draw }: { draw: LotsDraw }) {
   </section>;
 }
 
-export function WeightEqualizer({ draw, entries, on_edit, disabled = false }: {
+export function WeightEqualizer({ draw, entries, on_edit, disabled = false, on_focus_weight }: {
   draw: LotsDraw; entries: readonly EqualizerEntry[] | undefined; on_edit?: (draw: LotsDraw) => void; disabled?: boolean;
+  /** Pointer over a bar: the stage highlights the lots holding that weight (presentation only). */
+  on_focus_weight?: (weight: number | undefined) => void;
 }) {
   const rules = draw.rules;
   const curve = rules.weight_curve;
@@ -135,7 +140,7 @@ export function WeightEqualizer({ draw, entries, on_edit, disabled = false }: {
       <p className="cc-aside">{copy.units_hint(max_units_range.min, max_units_range.max)}</p>
     </div>}
     {disabled && <p className="cc-status" role="status">{copy.locked}</p>}
-    <WeightChart steps={steps} flat={active.kind === 'equal'} />
+    <WeightChart steps={steps} flat={active.kind === 'equal'} on_focus={on_focus_weight} />
     {free ? <p className="lottery-eq-note" data-eq-note="free">{copy.free_forced}</p>
       : active.kind === 'equal' && <p className="lottery-eq-note">{copy.equal_note}</p>}
     <div className="lottery-eq-headline" role="status">

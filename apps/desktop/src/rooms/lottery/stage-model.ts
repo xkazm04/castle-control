@@ -5,7 +5,7 @@ import type { DrawArtworkLayer, DrawOutcome, DrawScene, DrawShape } from '@castl
 /** UI-local stage data. Never sent over RPC; outcome input is a verified cast only. */
 export type StageEntry = { readonly handle: LotsHandle; readonly weight: number; readonly cohort?: 'subscriber' | 'new_account' | 'raider' };
 export type StageMark = { readonly handle: LotsHandle; readonly x: number; readonly y: number; readonly r: number;
-  readonly cohort?: StageEntry['cohort']; readonly angle?: number };
+  readonly weight: number; readonly cohort?: StageEntry['cohort']; readonly angle?: number };
 export type StageCast = { readonly winners: readonly LotsHandle[]; readonly label: LotsCastLabel };
 
 export const draw_shapes: readonly DrawShape[] = ['urn', 'wheel', 'deck', 'ballot_box'];
@@ -75,7 +75,7 @@ export function layoutMarks(shape: DrawShape, entries: readonly StageEntry[]): r
   // Area proportional to weight (radius ∝ √weight), floored so the lightest lot stays visible.
   const radius = (weight: number) => Math.round(base * Math.max(0.35, Math.sqrt(weight / heaviest)) * 100) / 100;
   const at = (entry: StageEntry, x: number, y: number, angle?: number): StageMark => ({
-    handle: entry.handle, x: Math.round(x * 100) / 100, y: Math.round(y * 100) / 100, r: radius(entry.weight),
+    handle: entry.handle, x: Math.round(x * 100) / 100, y: Math.round(y * 100) / 100, r: radius(entry.weight), weight: entry.weight,
     ...(entry.cohort ? { cohort: entry.cohort } : {}), ...(angle === undefined ? {} : { angle }),
   });
   if (shape === 'wheel') {

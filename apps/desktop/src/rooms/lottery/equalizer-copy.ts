@@ -25,6 +25,7 @@ export const equalizerCopy = {
     `Weight by activity: ${rows.map(row => `${plural(row.units, 'unit', 'units')} ${row.weight}`).join(', ')}.`,
   chart_units: (units: number) => `${units}u`,
   legend_weight: 'Weight per entry',
+  focus_hint: 'Point at a bar to light those lots on the stage.',
   legend_curve: 'Curve',
   legend_linear: 'Linear reference · every unit worth the first',
   headline: (count: number, newcomer: number, heaviest: number) =>

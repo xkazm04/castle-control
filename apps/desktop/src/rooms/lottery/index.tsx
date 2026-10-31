@@ -76,7 +76,7 @@ export default function LotteryRoom({ snapshot, replay, queue = proposalQueue, s
           verified={writ_checked === true} content={state.draw.policy.content} sealed={state.sealed}
           seal={state.sealed_roll?.seal} clock={reveal} reveal_ms={appearance.reveal_ms}
           theatre={appearance.theatre} on_theatre={display.theatre} sound={appearance.sound} on_sound={on => display.edit({ sound: on })}
-          by_hand={appearance.by_hand} on_by_hand={on => display.edit({ by_hand: on })}
+          by_hand={appearance.by_hand} on_by_hand={on => display.edit({ by_hand: on })} focus_weight={appearance.focus_weight}
           on_prove={() => { display.theatre(false); setProve(count => count + 1); }} /></PoolStage>
       <div className="cc-desk">
         <SectionHeading variant="banner" level={2} title={copy.writ} gloss={copy.writ_gloss} ink="gules"
@@ -102,7 +102,8 @@ export default function LotteryRoom({ snapshot, replay, queue = proposalQueue, s
         <UrnTierPreset draw={state.draw} shape={appearance.shape} on_edit={edit} on_shape={shape => display.edit({ shape })}
           entry_count={state.entries.length} disabled={state.sealed} />
         <DrawSetup port={port} on_edit={edit} on_preview={() => { discardPreview(); draftRoll(queue); }} />
-        <WeightEqualizer draw={state.draw} entries={state.entries} on_edit={edit} disabled={state.sealed} />
+        <WeightEqualizer draw={state.draw} entries={state.entries} on_edit={edit} disabled={state.sealed}
+          on_focus_weight={weight => display.edit({ focus_weight: weight })} />
         <DrawAppearance port={display} />
         <PolicyRibbon result={policy.result} />
         {policy.reasons.map(reason => <p className="cc-aside" key={reason}>{policyReason(reason)}</p>)}

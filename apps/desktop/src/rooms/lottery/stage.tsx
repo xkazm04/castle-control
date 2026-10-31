@@ -39,9 +39,9 @@ export function ShapePicker({ shape, on_shape, disabled = false }: { shape: Draw
 const markStyle = (index: number, mark: StageMark): CSSProperties & { '--lot-i': number; '--lot-r': string; '--lot-x': string; '--lot-y': string } =>
   ({ '--lot-i': index % 24, '--lot-r': `${mark.r}px`, '--lot-x': `${mark.x}px`, '--lot-y': `${mark.y}px` });
 
-function Marks({ marks, order }: { marks: readonly StageMark[]; order: (handle: string) => number | undefined }) {
+function Marks({ marks, order, focus }: { marks: readonly StageMark[]; order: (handle: string) => number | undefined; focus: number | undefined }) {
   return <>{marks.map((mark, index) => <circle key={mark.handle} data-lot-dot={index + 1} data-cohort={mark.cohort}
-    data-winner={order(mark.handle)} cx={mark.x} cy={mark.y} r={mark.r}
+    data-winner={order(mark.handle)} data-focus={focus === mark.weight || undefined} cx={mark.x} cy={mark.y} r={mark.r}
     style={markStyle(index, mark)}><title>{mark.cohort ? `${mark.handle} · ${copy.cohorts[mark.cohort]}` : mark.handle}</title></circle>)}</>;
 }
 
@@ -116,11 +116,12 @@ function Verdict({ total, proof, on_prove }: { total: number; proof: 'local' | '
 }
 
 export function DrawStage({ shape, on_shape, entries, cast, content, sealed, seal, clock, reveal_ms, verified = true, theatre = false,
-  on_theatre, proof = 'local', on_prove, sound = false, on_sound, by_hand = false, on_by_hand }: {
+  on_theatre, proof = 'local', on_prove, sound = false, on_sound, by_hand = false, on_by_hand, focus_weight }: {
   shape: DrawShape; on_shape: (shape: DrawShape) => void; entries: readonly StageEntry[]; cast: StageCast | undefined;
   content: DrawContent; sealed: boolean; seal?: string | undefined; clock: RevealClock; reveal_ms: number; verified?: boolean;
   theatre?: boolean; on_theatre?: (theatre: boolean) => void; proof?: 'local' | 'core'; on_prove?: () => void;
   sound?: boolean; on_sound?: (sound: boolean) => void; by_hand?: boolean; on_by_hand?: (by_hand: boolean) => void;
+  focus_weight?: number | undefined;
 }) {
   const reduced = useReducedMotion();
   const playable = cast && verified ? cast : undefined;
@@ -160,8 +161,8 @@ export function DrawStage({ shape, on_shape, entries, cast, content, sealed, sea
   const latest = revealed.at(-1);
   const latest_mark = latest === undefined ? undefined : by_handle.get(latest);
   const limit = theatre ? rail_limit.theatre : rail_limit.desk;
-  const lots = <Marks marks={marks} order={order} />;
-  return <div ref={root} className="lottery-draw-stage" data-shape={shape} data-phase={phase} data-shuffling={fresh || undefined}
+  const lots = <Marks marks={marks} order={order} focus={focus_weight} />;
+  return <div ref={root} className="lottery-draw-stage" data-shape={shape} data-focusing={focus_weight === undefined ? undefined : true} data-phase={phase} data-shuffling={fresh || undefined}
     style={revealStyle(reveal_ms)}>
     <div className="lottery-stage-top">
       <ShapePicker shape={shape} on_shape={on_shape} />

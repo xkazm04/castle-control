@@ -168,6 +168,14 @@ test('a finished ceremony closes on its proof: a verdict card with the lab hando
   expect(render({ shape: 'wheel', clock: playing, cast, sealed: true, seal, theatre: true })).not.toContain(copy.stage.proof.local[0]);
 });
 
+test('pointing at an equalizer bar lights exactly the lots holding that weight', () => {
+  const weighted = entries.map((entry, index) => ({ ...entry, weight: index % 3 === 0 ? 4 : 11 }));
+  const html = render({ entries: weighted, focus_weight: 4 });
+  expect(html).toContain('data-focusing="true"');
+  expect(html.match(/data-focus="true"/g)).toHaveLength(29);
+  expect(render({ entries: weighted })).not.toContain('data-focus');
+});
+
 test('theatre toggle is exposed with its pressed state, and the sealed stage stamps its wax', () => {
   const html = render({ sealed: true, seal, theatre: true, on_theatre: () => undefined });
   expect(html).toContain('data-phase="sealed"'); expect(html).toContain('lottery-stage-wax');
