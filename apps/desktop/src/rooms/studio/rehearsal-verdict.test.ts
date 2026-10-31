@@ -4,8 +4,8 @@ import type { Rehearsal, RehearsalTurn, TilePicks } from './rehearsal.js';
 import { balanceReport } from './rehearsal-verdict.js';
 
 type Spec = Readonly<{ held: readonly [number, number, number]; changed?: readonly string[]; picks?: readonly TilePicks[] }>;
-const ids = ['quill', 'tallow', 'sable'] as const;
-const pick = (id: string, by: Partial<Record<(typeof ids)[number], number>>): TilePicks =>
+type HouseId = 'quill' | 'tallow' | 'sable';
+const pick = (id: string, by: Partial<Record<HouseId, number>>): TilePicks =>
   ({ id, q: 0, r: 0, by: { quill: by.quill ?? 0, tallow: by.tallow ?? 0, sable: by.sable ?? 0 } });
 
 /** Hand-built rounds over the sample board: the verdict reads only held counts, changes and picks. */

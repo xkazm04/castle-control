@@ -3,7 +3,6 @@ import type { ChangeEvent, ReactNode } from 'react';
 import { readFileSync } from 'node:fs';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { expect, test, vi } from 'vitest';
-import { ProposalQueue } from '@castle-control/ui/steward';
 import { StudioWork } from './room.jsx';
 import Room from './room.jsx';
 import { STUDIO_SAMPLE_BOARD } from './fixture.js';
@@ -93,7 +92,7 @@ test('Rehearse is the third view in the existing switch and the default stays th
   expect(buttons.map(button => button.replace(/<[^>]*>/g, ''))).toEqual(['Table', 'Spyglass', 'Rehearse']);
   expect(buttons.map(button => button.includes('aria-pressed="true"'))).toEqual([true, false, false]);
   expect(html.match(/data-hex-tile=/g)).toHaveLength(54);
-  expect(html).toContain('Tile inspector' === '' ? '' : 'cc-hero'); // the inspector still opens the side
+  expect(html).toContain('cc-hero'); // the tile inspector still opens the side
   // Core mode has no Rehearse at all: the room stays honestly bare.
   const core = renderToStaticMarkup(<Room snapshot={{ mode: 'core', phase: 'connecting' }} />);
   expect(core).not.toContain('Rehearse'); expect(core).not.toContain('SIMULATED REHEARSAL');
