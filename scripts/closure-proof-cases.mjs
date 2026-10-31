@@ -8,6 +8,17 @@ export function closureCases(proof, root) {
   const source = 'packages/proof/src/index.ts';
   const pkg = (mode) => ['$S/scripts/package-gate.mjs', mode];
   const cwd = { cwd: 'packages/proof' };
+  const siteLabels = [
+    'Stylised illustration', 'drawn, not captured', 'Sample data', 'Fictional channel',
+    'invented numbers', 'working name', 'Not affiliated with or endorsed by Twitch',
+    'In development', 'check releases', 'signing status',
+    'Public Extension availability awaits Twitch approval and review',
+  ];
+  proof('Site check: built JS exceeds byte budget', ['$R/apps/site/check.mjs', '$S/apps/site/dist'],
+    'exceed 180 KiB budget', {
+      'apps/site/dist/index.html': '<!doctype html><script type="module" src="./assets/site.js"></script>\n',
+      'apps/site/dist/assets/site.js': `// Simulated built-site budget fixture.\n// ${siteLabels.join(' · ')}\n${' '.repeat(180 * 1024 + 1)}`,
+    });
   proof('Version drift: bumped package manifest', ['$R/scripts/version-drift.mjs'],
     'package.json: expected 0.1.0, found 0.2.0', {
       'Cargo.toml': '[workspace]\nmembers = ["crates/*"]\n[workspace.package]\nversion = "0.1.0"\n',
@@ -86,13 +97,6 @@ export function closureCases(proof, root) {
   proof('Type floor: TSX literal below floor', ['$S/scripts/check.mjs', 'type-floor'], 'font size 12 is below the 13px floor', {
     'packages/ui/src/seed.tsx': '// Simulated type-floor proof.\nexport const seed = <svg><text fontSize={12}>Simulated</text></svg>;\n',
     [tokens]: ':root{--text-body:14px;}',
-  });
-  const siteFiles = Object.fromEntries(['check.mjs', 'index.html', 'site.css', 'site.js', 'art.svg']
-    .map((name) => [`apps/site/${name}`, readFileSync(join(root, 'apps/site', name), 'utf8')]));
-  siteFiles['apps/site/index.html'] = siteFiles['apps/site/index.html']
-    .replace(/<link\b[^>]*href="\.\.\/\.\.\/packages\/tokens\/src\/generated\.css"[^>]*>\s*/, '');
-  proof('Site check: missing token reference', ['$S/apps/site/check.mjs'], 'Use shared tokens directly', {
-    ...siteFiles, [tokens]: readFileSync(join(root, tokens), 'utf8'),
   });
   const schemaPath = join(root, 'packages/contract/src/generated/contract.schema.json');
   const readContract = (name) => readFileSync(join(root, 'packages/contract/scripts', name), 'utf8');

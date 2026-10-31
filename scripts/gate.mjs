@@ -14,5 +14,4 @@ for (const mode of ['fmt', 'clippy', 'test']) {
 run('pnpm', ['typecheck']);
 run('pnpm', ['lint']);
 run('pnpm', ['test']);
-run('node', ['apps/site/check.mjs']);
-run('node', ['--test', '--test-isolation=none', 'apps/site/site.test.mjs']);
+run('pnpm', ['--filter', '@castle-control/site', 'build']);
