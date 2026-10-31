@@ -1,6 +1,16 @@
-html, body { background: transparent; margin: 0; font-family: var(--font-ui); color: var(--ink); }
-main { margin: var(--space-16); padding: var(--space-24); background: var(--paper); border: var(--rule-strong) solid var(--gules); }
-h1, h2 { font-family: var(--font-display); }
-h1 { font-size: var(--text-chamber); }
-p, li { font-size: var(--text-body); }
+html, body { background: transparent; margin: 0; width: 100%; height: 100%; overflow: hidden; font-family: var(--font-ui); color: var(--ink); }
+body { box-sizing: border-box; display: grid; padding: var(--space-16); }
+/* Layout scaling keeps even 2x plates inside OBS at both broadcast sizes.
+   Long lists scroll within the accepted-result plate. No remote art requests. */
+main { box-sizing: border-box; width: min(100%, calc(var(--space-56) * 8 * var(--draw-scale))); max-width: 100%; max-height: 100%; min-width: 0; min-height: 0; overflow: auto; overflow-wrap: anywhere; padding: var(--space-24); background: var(--paper); border: var(--rule-strong) solid var(--gules); border-radius: var(--r-md); align-self: end; justify-self: end; }
+main[data-anchor="tl"] { align-self: start; justify-self: start; }
+main[data-anchor="tr"] { align-self: start; justify-self: end; }
+main[data-anchor="bl"] { align-self: end; justify-self: start; }
+main[data-anchor="center"] { align-self: center; justify-self: center; }
+h1, h2 { font-family: var(--font-display); margin: 0 0 var(--space-8); }
+h1 { font-size: clamp(var(--text-section), calc(var(--text-chamber) * var(--draw-scale)), var(--text-chamber)); }
+h2 { font-size: var(--text-section); }
+p, li { font-size: var(--text-body); line-height: 1.4; margin-block: var(--space-8); }
+ol { padding-inline-start: var(--space-24); }
 .seal { font-family: var(--font-num); overflow-wrap: anywhere; }
+.simulated { font-weight: 800; color: var(--gules-text); }

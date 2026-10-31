@@ -1,5 +1,12 @@
 ﻿# AI-5: offline Lot Chamber room
 
+L1 update, 2026-10-31: fixtures now include editable setup, generated pool/weight
+previews, session-only urn appearance and a fixed-seed SIMULATED cast after
+sealing. The current writ is explicitly not a cc-verify proof; the saved fixture
+proof stays separate. See [the room README](rooms/lottery/README.md) for the
+current journey, evidence and unresolved fixture-to-OBS handoff. The historical
+implementation notes below describe the earlier cut.
+
 Open `#/chamber/lottery` in the desktop browser preview. This replaces the
 stacked panels with the Lit Keep's nested writ-and-urn room. `shell/room.tsx`
 keeps its existing props contract, loads the room lazily and mounts the same

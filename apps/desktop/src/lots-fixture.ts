@@ -9,6 +9,25 @@ export function fixtureEntries(count = 87): readonly FixtureEntry[] {
     cohort: index % 7 === 0 ? 'raider' : index % 3 === 0 ? 'subscriber' : 'new_account', weight: 1,
   }));
 }
+
+/** Generated facts for rehearsal: all pass moderation; none comes from Twitch.
+ * Every third message is a free !join; others say !question. Activity is not money.
+ * Weight formula mirrors cc-lots::WeightCurve, including the free-path override. */
+export function fixturePool(draw: LotsDraw, count = 87): readonly FixtureEntry[] {
+  const { pool, weight_curve, free_join_equal_odds } = draw.rules;
+  return fixtureEntries(count).filter(entry => {
+    const free_join = entry.number % 3 === 0;
+    const eligible = pool.kind === 'chatters' || pool.kind === 'followers' && entry.number % 2 === 0
+      || pool.kind === 'subscribers' && entry.cohort === 'subscriber'
+      || pool.kind === 'redeemers' && entry.number % 5 === 0
+      || pool.kind === 'keyword' && pool.keyword.toLowerCase() === (free_join ? '!join' : '!question');
+    return eligible || free_join_equal_odds && free_join;
+  }).map(entry => {
+    if (free_join_equal_odds || weight_curve.kind === 'equal') return entry;
+    const c = weight_curve.max_units; const n = Math.min(entry.number % 5, c);
+    return { ...entry, weight: c + n * (2 * c - n + 1) / 2 };
+  });
+}
 // Slugs are minted here for trusted, in-process fixtures only. No unparsed wire data.
 const question: LotsDraw = {
   draw_id: 'hall-questions' as DrawId, name: copy.question_name,

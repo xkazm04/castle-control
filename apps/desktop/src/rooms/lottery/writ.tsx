@@ -3,7 +3,7 @@ import type { Proposal } from '@castle-control/ui/steward';
 import { lotsCopy as copy } from '../../lots-copy.js';
 import { Ticket } from './print.jsx';
 
-export function LotteryWrit({ proposal }: { proposal: Proposal }) {
+export function LotteryWrit({ proposal, weight_notice = copy.equal }: { proposal: Proposal; weight_notice?: string }) {
   return <Ticket writ state={proposal.state} label={copy.writ_label(proposal.title)} stub={copy.writ_stub_revision(proposal.revision)}>
     <StatusChip variant="gules" stamp="label" tone="spot"
       style={{ '--cc-stamp-rotation': 'calc(var(--air-rotation) * -1.5)' }}>
@@ -18,6 +18,6 @@ export function LotteryWrit({ proposal }: { proposal: Proposal }) {
     {proposal.seal_hash && <><div className="lottery-wax">{copy.wax[0]}<br />{copy.wax[1]}</div>
       <p className="cc-hash">{copy.seal_hash} · {proposal.seal_hash}</p></>}
     <div className="cc-writ-fair"><p className="cc-kicker">{copy.fairness_always}</p>
-      <p>{copy.equal}</p><p>{copy.fairness_seal}</p></div>
+      <p>{weight_notice}</p><p>{copy.fairness_seal}</p></div>
   </Ticket>;
 }

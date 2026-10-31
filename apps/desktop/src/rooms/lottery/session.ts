@@ -4,13 +4,16 @@ import { checkFixturePolicy, createLotsPreview } from '../../lots-model.js';
 import type { LotsPort } from '../../lots-model.js';
 import type { FixtureEntry } from '../../lots-fixture.js';
 import type { LotsDraw } from '@castle-control/contract';
+import { createDrawDisplay } from './display.js';
+import type { DrawDisplayPort } from './display.js';
+import { simulateCast } from './simulation.js';
 
 type FrozenRoll = { entries: readonly FixtureEntry[]; bytes: string; hash: string };
-type Session = { port: LotsPort; rolls: Map<string, FrozenRoll>; drafts: Map<string, LotsDraw> };
+type Session = { port: LotsPort; display: DrawDisplayPort; rolls: Map<string, FrozenRoll>; drafts: Map<string, LotsDraw> };
 const sessions = new WeakMap<ProposalQueue, Session>();
 export function lotterySession(queue: ProposalQueue): Session {
   let session = sessions.get(queue);
-  if (!session) { session = { port: createLotsPreview(), rolls: new Map(), drafts: new Map() }; sessions.set(queue, session); }
+  if (!session) { session = { port: createLotsPreview(), display: createDrawDisplay(), rolls: new Map(), drafts: new Map() }; sessions.set(queue, session); }
   return session;
 }
 
@@ -20,7 +23,7 @@ export function draftRoll(queue: ProposalQueue, port = lotterySession(queue).por
   while (queue.getSnapshot().proposals.some(item => item.id === id)) id += '-next';
   queue.addOrUpdate({ id, chamber: 'lottery', kind: 'seal', title: draw.name, revision: 1, state: 'drafted', fields: [
     { key: 'winners', label: 'Winners', value: draw.rules.winner_count, struck: [] },
-    { key: 'cap', label: 'Raid cohort cap', value: '1/3 of winners', struck: [] },
+    { key: 'cap', label: 'Raid cohort cap', value: `${draw.rules.cohort_caps[0]?.numerator ?? 0}/${draw.rules.cohort_caps[0]?.denominator ?? 1} of winners`, struck: [] },
     { key: 'cooldown', label: 'Cooldown', value: `${draw.rules.cooldown_s} seconds`, struck: [] },
     { key: 'prize', label: 'Prize', value: draw.policy.content === 'prize' ? 'Prize example' : 'none', struck: [] },
   ] });
@@ -53,6 +56,8 @@ export async function sealLotteryProposal(queue: ProposalQueue, proposal: Propos
   const entries = Object.freeze(before.entries.filter(entry => !excluded || entry.cohort !== 'raider')
     .map(entry => Object.freeze({ ...entry })));
   if (winners > entries.length) throw new Error('Winner count exceeds the frozen eligible roll.');
+  // Prove a rehearsal can respect the frozen cap before changing the queue.
+  simulateCast(draw, entries);
   // Explicit field order and UTF-8 JSON are published beside the seal for recomputation.
   const bytes = JSON.stringify(entries.map(({ handle, weight }) => ({ handle, weight })));
   const hash = await entryHash(bytes);
@@ -62,5 +67,5 @@ export async function sealLotteryProposal(queue: ProposalQueue, proposal: Propos
   if (!result.ok) throw new Error(result.reason);
   rolls.set(proposal.id, { entries, bytes, hash });
   port.edit(draw);
-  port.seal();
+  port.seal(entries);
 }

@@ -1,17 +1,19 @@
 import type { DrawCheckResult, LotsDraw, LotsDrawPolicy, LotsHandle } from '@castle-control/contract';
-import { fixtureCooldown, fixtureDraws, fixtureEntries, fixtureWrit } from './lots-fixture.js';
+import { fixtureCooldown, fixtureDraws, fixturePool, fixtureWrit } from './lots-fixture.js';
 import type { FixtureEntry } from './lots-fixture.js';
 import { lotsCopy as copy } from './lots-copy.js';
+import { freezeFixture, simulateCast } from './rooms/lottery/simulation.js';
 
 export type Shape = typeof copy.shapes[number]['value'];
 export type LotsPreview = {
   draw: LotsDraw; entries: readonly FixtureEntry[]; paused: boolean; sealed: boolean; started: boolean;
   shape: Shape; lookup: string; nested: boolean; notice: string; recomputing: boolean;
+  simulated_winners?: readonly LotsHandle[];
 };
 export type LotsPort<State = LotsPreview> = {
   getSnapshot: () => State; subscribe: (listener: () => void) => () => void;
   select: (id: string) => void; edit: (draw: LotsDraw) => void; lookup: (handle: string) => void;
-  pause: () => void; seal: () => void; start: () => void; shape: (shape: Shape) => void;
+  pause: () => void; seal: (entries?: readonly FixtureEntry[]) => void; start: () => void; shape: (shape: Shape) => void;
   nested: (show: boolean) => void; recompute: () => Promise<void>;
 };
 
@@ -36,6 +38,12 @@ export function lookupFixture(snapshot: LotsPreview): string {
   const entry = snapshot.entries.find(entry => entry.handle === handle);
   return entry ? `${copy.lookup_found} ${entry.number} · ${copy.cohorts[entry.cohort]}` : copy.lookup_missing;
 }
+export function fixtureWeightNotice(snapshot: LotsPreview): string {
+  const curve = snapshot.draw.rules.weight_curve;
+  if (snapshot.draw.rules.free_join_equal_odds || curve.kind === 'equal') return copy.equal;
+  const heaviest = Math.max(0, ...snapshot.entries.map(entry => entry.weight));
+  return copy.journey.weight_summary(curve.max_units, heaviest);
+}
 function validDraw(draw: LotsDraw, count: number): boolean {
   const cap = draw.rules.cohort_caps[0];
   return Boolean(draw.name.trim()) && Number.isInteger(draw.rules.winner_count) && draw.rules.winner_count >= 1
@@ -48,20 +56,42 @@ function validDraw(draw: LotsDraw, count: number): boolean {
 export function createLotsPreview(count = 87): LotsPort {
   const first = fixtureDraws[0];
   if (!first) throw new Error(copy.empty);
-  let snapshot: LotsPreview = { draw: first, entries: fixtureEntries(count), paused: false, sealed: false, started: false,
+  let snapshot: LotsPreview = { draw: first, entries: fixturePool(first, count), paused: false, sealed: false, started: false,
     shape: 'urn', lookup: '', nested: false, notice: copy.notice, recomputing: false };
   const listeners = new Set<() => void>();
   const publish = (change: Partial<LotsPreview>) => { snapshot = { ...snapshot, ...change }; for (const listener of listeners) listener(); };
   return {
     getSnapshot: () => snapshot, subscribe(listener) { listeners.add(listener); return () => { listeners.delete(listener); }; },
-    select(id) { const draw = fixtureDraws.find(draw => draw.draw_id === id); if (draw) publish({ draw, paused: false, sealed: false, started: false, notice: copy.selected }); },
-    edit(draw) { if (!snapshot.sealed && validDraw(draw, snapshot.entries.length)) publish({ draw, notice: copy.changed }); },
+    select(id) {
+      const draw = fixtureDraws.find(draw => draw.draw_id === id);
+      if (draw) {
+        const next = { ...snapshot }; delete next.simulated_winners; snapshot = next;
+        publish({ draw, entries: fixturePool(draw, count), paused: false, sealed: false, started: false, nested: false, notice: copy.selected });
+      }
+    },
+    edit(draw) {
+      if (snapshot.sealed) return;
+      if (!validDraw(draw, count)) { publish({ notice: copy.invalid_setup }); return; }
+      const accepted = freezeFixture(structuredClone(draw));
+      publish({ draw: accepted, entries: fixturePool(accepted, count), notice: copy.changed });
+    },
     lookup(lookup) { publish({ lookup }); },
     pause() { if (!snapshot.sealed) publish({ paused: !snapshot.paused }); },
-    seal() { if (!snapshot.sealed && snapshot.entries.length && checkFixturePolicy(snapshot.draw.policy).result !== 'blocked') publish({ sealed: true, paused: true, notice: copy.sealed_notice }); },
+    seal(entries = snapshot.entries) {
+      if (snapshot.sealed) return;
+      if (!entries.length) { publish({ notice: copy.empty }); return; }
+      if (checkFixturePolicy(snapshot.draw.policy).result === 'blocked') { publish({ notice: copy.frozen }); return; }
+      try { simulateCast(snapshot.draw, entries); }
+      catch { publish({ notice: copy.insufficient }); return; }
+      publish({ draw: freezeFixture(structuredClone(snapshot.draw)), entries: freezeFixture(entries.map(entry => ({ ...entry }))),
+        sealed: true, paused: true, notice: copy.sealed_notice });
+    },
     start() {
-      if (!snapshot.sealed || snapshot.started || checkFixturePolicy(snapshot.draw.policy).result === 'blocked') { publish({ notice: copy.frozen }); return; }
-      publish({ started: true, notice: copy.started });
+      if (snapshot.started) return;
+      if (!snapshot.entries.length) { publish({ notice: copy.empty }); return; }
+      if (!snapshot.sealed || checkFixturePolicy(snapshot.draw.policy).result === 'blocked') { publish({ notice: copy.frozen }); return; }
+      try { publish({ started: true, simulated_winners: simulateCast(snapshot.draw, snapshot.entries), notice: copy.cast_notice }); }
+      catch { publish({ notice: copy.insufficient }); }
     },
     shape(shape) { publish({ shape }); }, nested(nested) { publish({ nested }); },
     async recompute() {

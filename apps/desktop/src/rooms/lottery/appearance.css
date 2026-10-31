@@ -1,0 +1,25 @@
+.lottery-settings { border: 0; padding: 0; margin: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-12); min-width: 0; }
+/* Room audit owns rule-thin fields; the kit still owns labels and field chrome. */
+.lottery-room .lottery-settings .cc-field[data-field] input,
+.lottery-room .lottery-settings .cc-field[data-field] select { appearance: none; border: var(--rule-thin) solid var(--ink); }
+.lottery-room .lottery-settings .cc-field[data-field] input[type="checkbox"] { appearance: auto; width: var(--space-20); height: var(--space-20); padding: 0; accent-color: var(--gules); }
+.lottery-settings :disabled { cursor: default; }
+.lottery-shape-preview { --urn-colour: var(--gules); position: relative; margin: var(--space-12) 0; height: calc(var(--space-56) * 4); border: var(--rule-thin) dashed var(--urn-colour); background: color-mix(in srgb, var(--urn-colour) 12%, var(--paper)); overflow: hidden; }
+.lottery-shape-preview[data-colour="azure"] { --urn-colour: var(--azure); }
+.lottery-shape-preview[data-colour="or"] { --urn-colour: var(--or); }
+.lottery-shape-preview[data-colour="key"] { --urn-colour: var(--ink); }
+.lottery-preview-object { position: absolute; width: 40%; height: 65%; right: var(--space-8); bottom: var(--space-28); border: var(--rule-medium) solid var(--urn-colour); border-radius: var(--r-md); background: color-mix(in srgb, var(--urn-colour) 20%, transparent); animation: lottery-preview-reveal var(--draw-reveal) var(--ease); }
+.lottery-shape-preview[data-size="S"] .lottery-preview-object { width: 25%; height: 40%; }
+.lottery-shape-preview[data-size="L"] .lottery-preview-object { width: 55%; height: 80%; }
+.lottery-shape-preview[data-anchor="tl"] .lottery-preview-object { top: var(--space-8); left: var(--space-8); bottom: auto; right: auto; }
+.lottery-shape-preview[data-anchor="tr"] .lottery-preview-object { top: var(--space-8); bottom: auto; }
+.lottery-shape-preview[data-anchor="bl"] .lottery-preview-object { left: var(--space-8); right: auto; }
+.lottery-shape-preview[data-anchor="center"] .lottery-preview-object { top: 50%; left: 50%; bottom: auto; right: auto; transform: translate(-50%, -50%); }
+.lottery-preview-object img, .lottery-preview-object svg { width: 100%; height: 100%; object-fit: contain; display: block; }
+.lottery-preview-object svg { fill: var(--urn-colour); stroke: var(--ink); stroke-width: 2; }
+.lottery-shape-preview figcaption { position: absolute; bottom: 0; inset-inline: 0; padding: var(--space-4); font: var(--text-small)/1.3 var(--font-ui); background: var(--paper); color: var(--ink); }
+.lottery-current-winners { display: flex; flex-wrap: wrap; gap: var(--space-8); list-style: none; padding: 0; }
+.lottery-current-winners [data-current-winner] { padding: var(--space-6); border: var(--rule-thin) solid var(--gules); animation: lottery-reveal var(--draw-reveal) var(--ease) both; }
+@keyframes lottery-reveal { from { opacity: 0; transform: translateY(var(--space-8)); } to { opacity: 1; transform: translateY(0); } }
+@keyframes lottery-preview-reveal { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .lottery-preview-object, .lottery-current-winners [data-current-winner] { animation: none; } }

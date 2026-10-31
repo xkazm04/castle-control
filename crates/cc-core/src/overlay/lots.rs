@@ -1,8 +1,8 @@
 //! A draw is a seal plus its verified cast, never a contribution visual.
 use super::{RenderHost, unavailable};
 use axum::{
-    extract::{Path, State},
-    http::StatusCode,
+    extract::{Path, Query, State},
+    http::{StatusCode, Uri},
     response::{Html, IntoResponse, Response},
 };
 use cc_types::{
@@ -84,7 +84,42 @@ impl RenderHost {
     }
 }
 
-pub(super) async fn page(State(host): State<Arc<RenderHost>>, Path(id): Path<String>) -> Response {
+struct DisplayParams {
+    scale: f64,
+    anchor: &'static str,
+}
+
+/// The only presentation-query door. Unknown keys are ignored; missing, invalid
+/// or repeated known keys use their defaults. Nothing here affects the cast.
+fn display_params(uri: &Uri) -> DisplayParams {
+    let pairs = Query::<Vec<(String, String)>>::try_from_uri(uri)
+        .map(|Query(pairs)| pairs)
+        .unwrap_or_default();
+    let single = |key: &str| {
+        let mut values = pairs.iter().filter(|(name, _)| name == key);
+        let value = values.next().map(|(_, value)| value.as_str());
+        if values.next().is_some() { None } else { value }
+    };
+    let scale = single("scale")
+        .and_then(|value| value.parse::<f64>().ok())
+        .filter(|value| value.is_finite() && (0.5..=2.0).contains(value))
+        .unwrap_or(1.0);
+    let anchor = match single("anchor") {
+        Some("tl") => "tl",
+        Some("tr") => "tr",
+        Some("bl") => "bl",
+        Some("center") => "center",
+        _ => "br",
+    };
+    DisplayParams { scale, anchor }
+}
+
+pub(super) async fn page(
+    State(host): State<Arc<RenderHost>>,
+    Path(id): Path<String>,
+    uri: Uri,
+) -> Response {
+    let display = display_params(&uri);
     let Ok(id) = DrawId::try_from(id) else {
         return StatusCode::NOT_FOUND.into_response();
     };
@@ -122,7 +157,12 @@ pub(super) async fn page(State(host): State<Arc<RenderHost>>, Path(id): Path<Str
             })
             .unwrap_or_else(|| "<p>Waiting for the announced round and verified cast.</p>".into());
         format!(
-            "<h1>Lot Chamber · draw on stream</h1><p>{}</p><h2>Seal announced</h2><p class=\"seal\">{}</p><p>Sealed at · {}</p><p>{} frozen entries</p>{winners}",
+            "<h1>Lot Chamber · draw on stream</h1>{}<p>{}</p><h2>Seal announced</h2><p class=\"seal\">{}</p><p>Sealed at · {}</p><p>{} frozen entries</p>{winners}",
+            if scene.simulated {
+                "<p class=\"simulated\">SIMULATED</p>"
+            } else {
+                ""
+            },
             escape(&source),
             String::from(seal.seal.clone()),
             String::from(seal.roll.sealed_at.clone()),
@@ -133,8 +173,8 @@ pub(super) async fn page(State(host): State<Arc<RenderHost>>, Path(id): Path<Str
     };
     // Server-render typed values instead of introducing a second JSON parser or
     // event schema in OBS. Refreshing also clears a revoked scene on next read.
-    Html(format!("<!doctype html><html lang=\"en\"><meta charset=\"utf-8\"><meta http-equiv=\"refresh\" content=\"1\"><title>Castle Control draw</title><style>{}\n{}</style><main>{body}</main></html>",
-        include_str!("../../../../packages/tokens/src/generated.css"), include_str!("lots.css"))).into_response()
+    Html(format!("<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><meta http-equiv=\"refresh\" content=\"1\"><title>Castle Control draw</title><style>{}\n{}</style></head><body><main data-anchor=\"{}\" style=\"--draw-scale:{}\">{body}</main></body></html>",
+        include_str!("../../../../packages/tokens/src/generated.css"), include_str!("lots.css"), display.anchor, display.scale)).into_response()
 }
 
 fn escape(text: &str) -> String {
