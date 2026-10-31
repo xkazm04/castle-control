@@ -25,8 +25,15 @@ current writ (weight, handle, seed, plan, winner order) and walks canonical
 serialization, SHA-256 seal, randomness commitment and rejection-sampling
 derivation; a failed step blocks the rest. drand BLS authentication stays with
 cc-verify and the offline verifier, so step 3 reads UNVERIFIED for beacon writs.
-Core mode never shows the simulated-art "On stream" card. Evidence:
-`stage.test.tsx`, `equalizer.test.tsx`, `lab.test.tsx`, `result.test.tsx`,
+A finished ceremony closes on its proof (theatre: a verdict card naming a
+local recompute or a core-verified cast, with "Prove it in the Writ Lab", which
+returns to the desk, restores the canonical writ and replays the walk; desk: a
+verdict chip). The lab's proof strip and verdict sit beside the tamper bench so
+a catch is visible without scrolling. Core mode adds `core-setup.tsx`, the full
+rule set as a local draft: one save sends one `lots.draw.upsert` (then the
+core check), never one per keystroke; winner count keeps its commit-on-blur
+field. Core mode never shows the simulated-art "On stream" card. Evidence:
+`stage.test.tsx`, `equalizer.test.tsx`, `lab.test.tsx`, `core-setup.test.tsx`, `result.test.tsx`,
 renderer `draw/host.test.ts`, cc-obs `tests/pages.rs` and cc-core
 `tests/lots_overlay_page.rs`.
 

@@ -131,6 +131,11 @@ export const lotsCopy = {
     },
     prove: 'Prove it in the Writ Lab',
   },
+  core_setup: {
+    title: 'Draw rules', save: 'Save rules to the core', discard: 'Discard changes',
+    hint: 'Edit the whole rule set here. Nothing reaches the core until you save; one save sends one update and re-runs the policy check.',
+    dirty: 'Unsaved changes · the core still holds the previous rules.', clean: 'These rules match the core.',
+  },
   tier: {
     title: 'Overlord urn · room tier', sizes: { s: 'S', m: 'M', l: 'L' },
     rooms: { s: 'Hearth', m: 'Hall', l: 'Courtyard' }, count: (count: number) => `${count} winners`,
