@@ -4,6 +4,8 @@ import './heraldic-buttons.css';
 import './heraldic-stamp.css';
 export { ThemeFrame, Mark, InkButton, ThemeToggle, EmptyState } from './primitives.jsx';
 export type { ModuleId, InkButtonProps, ButtonVariant } from './primitives.jsx';
+export { Notice, outcomeTone } from './notice.jsx';
+export type { NoticeProps, NoticeTone } from './notice.jsx';
 export { StatusChip, VerdictChip, GatehouseChip, ConnectionMark, chipVariants, verdicts } from './chips.jsx';
 export type { ChipVariant, Verdict, ConnectionState } from './chips.jsx';
 export { Rampart, ChambersColumn, KitShell, chambers, keymap } from './shell.jsx';

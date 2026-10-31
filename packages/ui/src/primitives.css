@@ -14,6 +14,7 @@
 }
 .cc-frame *, .cc-frame *::before, .cc-frame *::after { box-sizing: border-box; }
 .cc-frame h1, .cc-frame h2, .cc-frame p { margin: 0; }
+.cc-notice-region:empty { margin: 0; padding: 0; }
 .cc-frame a { color: inherit; }
 .cc-frame :focus-visible { outline: var(--rule-strong) solid var(--ink); outline-offset: var(--focus-offset); }
 .cc-frame[data-theme="stock"] :focus-visible { outline-color: var(--or); }
