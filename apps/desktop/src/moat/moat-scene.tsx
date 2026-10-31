@@ -18,6 +18,8 @@ export const compactGeometry: MoatGeometry = { width: 360, height: 44, chat_y: 5
 const maxLevels = 3;
 const stampLift = 16;
 
+/** A stamp near either edge slides inward; its pin, the dot below it, stays where the message was. */
+const stampX = (x: number, g: MoatGeometry) => Math.min(Math.max(x, g.stamp_w / 2), g.width - g.stamp_w / 2);
 const yOf = (lift: number, g: MoatGeometry) => lift <= 0.5 ? g.chat_y + (g.gate_y - g.chat_y) * (lift / 0.5)
   : g.gate_y + (g.stream_y - g.gate_y) * ((lift - 0.5) / 0.5);
 
@@ -39,7 +41,7 @@ export function MoatScene({ model, playhead_ms, window, selected, on_select, del
   const xOf = (offset_ms: number) => g.gutter + Math.min(Math.max((offset_ms - window.from_ms) / range, 0), 1) * inner;
   const drawable = visibleMarkers(model, window);
   const stops = drawable.markers.filter(marker => marker.fate === 'held');
-  const stacked = compact ? { levels: [], overflow: 0 } : stampLevels(stops.map(marker => xOf(marker.offset_ms)), g.stamp_w, maxLevels);
+  const stacked = compact ? { levels: [], overflow: 0 } : stampLevels(stops.map(marker => stampX(xOf(marker.offset_ms), g)), g.stamp_w, maxLevels);
   const level_of = new Map(stops.map((marker, position) => [marker.index, stacked.levels[position] ?? -1]));
   const gaps = model.gaps.filter(gap => gap.to_ms >= window.from_ms && gap.from_ms <= window.to_ms);
   const ticks = compact ? [] : [0, 0.2, 0.4, 0.6, 0.8, 1].map(share => window.from_ms + range * share);
@@ -88,7 +90,7 @@ export function MoatScene({ model, playhead_ms, window, selected, on_select, del
     {!compact && stops.map(marker => {
       const level = level_of.get(marker.index) ?? -1;
       if (level < 0 || markerProgress(marker, playhead_ms, model.cross_ms).phase !== 'stopped') return null;
-      const left = xOf(marker.offset_ms) / g.width * 100;
+      const left = stampX(xOf(marker.offset_ms), g) / g.width * 100;
       const top = (g.gate_y - stampLift - level * g.stamp_step) / g.height * 100;
       return <button key={marker.index} type="button" className="moat-stamp" data-selected={selected === marker.index} data-level={level}
         aria-pressed={selected === marker.index} aria-label={copy.stamp_name(marker)}
@@ -106,6 +108,6 @@ export function sceneNotes(model: MoatModel, window: MoatWindow): MoatSceneNotes
   const drawable = visibleMarkers(model, window);
   const range = Math.max(window.to_ms - window.from_ms, 1);
   const xs = drawable.markers.filter(marker => marker.fate === 'held')
-    .map(marker => fullGeometry.gutter + (marker.offset_ms - window.from_ms) / range * (fullGeometry.width - fullGeometry.gutter * 2));
+    .map(marker => stampX(fullGeometry.gutter + (marker.offset_ms - window.from_ms) / range * (fullGeometry.width - fullGeometry.gutter * 2), fullGeometry));
   return { thinned: drawable.thinned, overflow: stampLevels(xs, fullGeometry.stamp_w, maxLevels).overflow };
 }

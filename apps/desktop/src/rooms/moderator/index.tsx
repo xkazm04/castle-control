@@ -12,6 +12,7 @@ import { MessageList } from './messages.jsx';
 import { GateLog } from './log.jsx';
 import { Drill } from './drill.jsx';
 import { moderationSession } from './session.js';
+import { ruleBenchLink } from './rule-bench.jsx';
 import { ChatPlayback } from './playback.jsx';
 import { OutputPreview } from './output.jsx';
 import { RuleBench } from './rule-bench.jsx';
@@ -35,7 +36,8 @@ function FixtureModeratorRoom({ snapshot, replay, queue = proposalQueue, seal_sl
   const result = evaluateDraft(input, state.rules, messages, original);
   if (snapshot.mode !== 'fixture') return <p>{copy.no_controls}</p>;
   return <div className="moderator-room">
-    {replay ? <div className="moderator-drill-room"><Drill result={fixtureReplay} delay_s={fixtureDelay.delay_s} draft={draft.draft ? result : undefined} />{seal_slot}</div> : <div className="cc-keep moderator-columns moderator-fixture-columns">
+    {replay ? <div className="moderator-drill-room"><Drill result={fixtureReplay} delay_s={fixtureDelay.delay_s} draft={draft.draft ? result : undefined}
+      rule_bench={ruleBenchLink(state.rules, bench)} />{seal_slot}</div> : <div className="cc-keep moderator-columns moderator-fixture-columns">
       <div className="room-column moderator-workbench" role="region" aria-label="Held messages and ban review" tabIndex={0}
         aria-describedby="moderator-scroll-hint">
         <p id="moderator-scroll-hint" className="moderator-visually-hidden">{copy.scroll_hint}</p>

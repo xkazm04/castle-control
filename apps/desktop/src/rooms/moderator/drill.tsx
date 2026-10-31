@@ -6,14 +6,15 @@ import type { BenchResult } from '../../moderation-bench.js';
 import { DraftPatternPreview } from './rule-bench.jsx';
 import { ClockTime } from './presentation.jsx';
 import { MoatPanel } from './moat-panel.jsx';
+import type { RuleBenchLink } from './moat-panel.jsx';
 import { buildMoat, crossingMs } from '../../moat/moat-model.js';
 import type { MoatClock } from '../../moat/moat-player.js';
 import { moatCopy } from '../../moat/moat-copy.js';
 
-export function Drill({ result, origin = 'fixture', capture_hash, draft, delay_s, clock }: {
+export function Drill({ result, origin = 'fixture', capture_hash, draft, delay_s, clock, rule_bench }: {
   result: DrillRunResult; origin?: 'fixture' | 'core'; capture_hash?: string | undefined; draft?: BenchResult | undefined;
   /** The applied chat delay, when the source knows it. The moat never invents one. */
-  delay_s?: number | undefined; clock?: MoatClock | undefined;
+  delay_s?: number | undefined; clock?: MoatClock | undefined; rule_bench?: RuleBenchLink | undefined;
 }) {
   const state_id = useId();
   const [selected, setSelected] = useState<string | undefined>();
@@ -25,7 +26,7 @@ export function Drill({ result, origin = 'fixture', capture_hash, draft, delay_s
     {!capture_hash && <p>{copy.live_parity}</p>}
     <a href="#/chamber/moderator">{copy.back}</a><p>{origin === 'fixture' ? copy.replay_fixture_note : copy.replay_core_note}</p>
     {draft && <DraftPatternPreview result={draft} />}
-    <MoatPanel model={model} delay_s={delay_s} clock={clock} selected_id={selected} on_select={setSelected} />
+    <MoatPanel model={model} delay_s={delay_s} clock={clock} selected_id={selected} on_select={setSelected} rule_bench={rule_bench} />
     <div className="moderator-drill-columns"><div className="room-column"><h3>{copy.instrument_source}</h3><p>{result.source}</p>
       {capture_hash && <><p>{copy.capture_hash}</p><code className="room-hash">{capture_hash}</code>
         <p role="status">{capture_hash === result.instrument_hash ? copy.capture_match : copy.capture_mismatch}</p>

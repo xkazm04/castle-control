@@ -11,7 +11,10 @@ import { MoatScene, sceneNotes } from '../../moat/moat-scene.jsx';
 import { useMoatPlayer } from '../../moat/use-moat-player.js';
 import { ClockTime } from './presentation.jsx';
 
-export function MarkerInspector({ marker }: { marker: MoatMarker | undefined }) {
+/** Where a stamped rule can be taken for editing. Only rules the bench can edit are offered. */
+export type RuleBenchLink = { can_open: (rule_id: string) => boolean; open: (rule_id: string) => void };
+
+export function MarkerInspector({ marker, bench }: { marker: MoatMarker | undefined; bench?: RuleBenchLink | undefined }) {
   return <aside className="moat-inspector" aria-label={copy.inspector} data-empty={!marker}>
     <h4>{marker ? marker.message_id : copy.inspect_none}</h4>
     {marker ? <dl>
@@ -24,6 +27,8 @@ export function MarkerInspector({ marker }: { marker: MoatMarker | undefined }) 
       <dt>{copy.source}</dt><dd>{marker.source}</dd>
       <dt>{copy.at}</dt><dd><ClockTime at={marker.at} /></dd>
     </dl> : <p>{copy.inspect_empty}</p>}
+    {marker?.rule_id && bench?.can_open(marker.rule_id) && <a className="moat-open-rule" href="#/chamber/moderator" data-rule={marker.rule_id}
+      onClick={() => { if (marker.rule_id) bench.open(marker.rule_id); }}>{copy.open_rule(marker.rule_id)}</a>}
     <p className="moat-small">{copy.no_text}</p>
   </aside>;
 }
@@ -59,11 +64,11 @@ export function MoatControls({ state, ticks, position, reduced, range_id, on_pla
 
 export type MoatPanelProps = {
   model: MoatModel; delay_s?: number | undefined; clock?: MoatClock | undefined;
-  selected_id?: string | undefined; on_select: (message_id: string | undefined) => void;
+  selected_id?: string | undefined; on_select: (message_id: string | undefined) => void; rule_bench?: RuleBenchLink | undefined;
 };
 
 /** Play, scrubber, strip and inspector over one replay. The table below the panel stays the text equivalent. */
-export function MoatPanel({ model, delay_s, clock, selected_id, on_select }: MoatPanelProps) {
+export function MoatPanel({ model, delay_s, clock, selected_id, on_select, rule_bench }: MoatPanelProps) {
   const heading_id = useId(); const range_id = useId();
   const { player, state, reduced } = useMoatPlayer(model.run_ms, clock ? { clock } : {});
   const selected = useMemo(() => selected_id === undefined ? undefined : model.markers.find(marker => marker.message_id === selected_id), [model, selected_id]);
@@ -91,7 +96,7 @@ export function MoatPanel({ model, delay_s, clock, selected_id, on_select }: Moa
         {notes.thinned > 0 && <p className="moat-small">{copy.thinned(notes.thinned)}</p>}
         {notes.overflow > 0 && <p className="moat-small">{copy.overflow(notes.overflow)}</p>}
       </div>
-      <MarkerInspector marker={selected} />
+      <MarkerInspector marker={selected} bench={rule_bench} />
     </div>
   </section>;
 }

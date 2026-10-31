@@ -32,6 +32,8 @@ export const moatCopy = {
   page: 'Showing part of the night; the view turns with the playhead.',
   inspector: 'Selected message', inspect_empty: 'Select a stamp, a dot or a table row to see its state, action and rule.',
   inspect_none: 'Nothing selected',
+  open_rule: (rule_id: string) => `Open rule ${rule_id} in the rule bench`,
+  open_rule_note: 'The bench previews pattern hits only. It never arms a rule.',
   no_text: 'No message text is stored or shown. Nothing was sent to Twitch.',
   state: 'State', action: 'Action', rule: 'Rule', verdict: 'Verdict', source: 'Source', at: 'At', evaluation: 'Evaluation', outcome: 'Outcome',
   none: 'none recorded',

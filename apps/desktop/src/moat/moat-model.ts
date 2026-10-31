@@ -105,7 +105,7 @@ export function replayedCount(model: MoatModel, playhead_ms: number): number {
 
 export type MoatWindow = Readonly<{ from_ms: number; to_ms: number; paged: boolean }>;
 /** The x range on screen. A short night fits whole; a long one is shown in pages of about `capacity` messages. */
-export function windowFor(model: MoatModel, playhead_ms: number, capacity = 240): MoatWindow {
+export function windowFor(model: MoatModel, playhead_ms: number, capacity = 150): MoatWindow {
   if (model.markers.length <= capacity) return { from_ms: 0, to_ms: model.span_ms, paged: false };
   const page = Math.max(model.span_ms * capacity / model.markers.length, model.cross_ms * 2);
   const pages = Math.ceil(model.span_ms / page);

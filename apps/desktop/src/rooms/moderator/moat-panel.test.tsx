@@ -5,7 +5,9 @@ import { expect, test, vi } from 'vitest';
 import { tokens } from '@castle-control/tokens';
 import { readFileSync } from 'node:fs';
 import { simulatedDrill } from '../../drill-fixture.js';
-import { fixtureReplay } from '../../moderation-fixture.js';
+import { fixtureReplay, fixtureRules } from '../../moderation-fixture.js';
+import { createRuleBench } from '../../moderation-bench.js';
+import { ruleBenchLink } from './rule-bench.jsx';
 import { MoatHeartbeat } from '../../moat/heartbeat.jsx';
 import { buildMoat, windowFor } from '../../moat/moat-model.js';
 import { MoatScene } from '../../moat/moat-scene.jsx';
@@ -179,4 +181,22 @@ test('moat styles use declared tokens, no raw colours and no pixel sizes', () =>
   for (const [, name] of css.matchAll(/var\(--([\w-]+)/g)) expect(declared.has(name ?? ''), name).toBe(true);
   expect(css).not.toMatch(/#[\da-f]{3,8}\b|\brgba?\(|\bhsla?\(|\b\d+(?:\.\d+)?px\b/i);
   expect(css).toContain('prefers-reduced-motion: reduce');
+});
+
+test('a stamped rule opens the rule bench on that rule, and only when the bench can edit it', () => {
+  const bench = createRuleBench();
+  const link = ruleBenchLink(fixtureRules.rules, bench);
+  expect(link.can_open('links')).toBe(true);
+  expect(link.can_open('unknown-rule')).toBe(false);
+  expect(link.can_open('')).toBe(false);
+  link.open('repeats');
+  expect(bench.getSnapshot().selection).toBe('repeats');
+  const html = renderToStaticMarkup(<MarkerInspector marker={first} bench={link} />);
+  expect(html).toMatch(/<a class="moat-open-rule" href="#\/chamber\/moderator" data-rule="links">Open rule links in the rule bench<\/a>/);
+  const open = vi.fn();
+  const [anchor] = find(MarkerInspector({ marker: first, bench: { can_open: () => true, open } }), element => (element as { type: unknown }).type === 'a');
+  anchor?.props.onClick?.();
+  expect(open).toHaveBeenCalledWith('links');
+  expect(renderToStaticMarkup(<MarkerInspector marker={first} />)).not.toContain('moat-open-rule');
+  expect(renderToStaticMarkup(<MarkerInspector marker={first} bench={{ can_open: () => false, open }} />)).not.toContain('moat-open-rule');
 });
