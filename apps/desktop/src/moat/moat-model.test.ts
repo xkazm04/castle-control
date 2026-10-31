@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest';
-import { simulatedDrill } from '../drill-fixture.js';
+import { busyNight, simulatedDrill } from '../drill-fixture.js';
 import type { MoatOutcome, MoatSource } from './moat-model.js';
 import { buildMoat, fateOf, heldCount, markerProgress, replayedCount, ruleTally, scrubTicks, spotlightStops, stampLevels, stopNeighbour, visibleMarkers, windowFor } from './moat-model.js';
 
@@ -166,4 +166,15 @@ test('the rule tally counts each named rule once per stop, most first, and the s
   expect(stopNeighbour(links, next?.at_ms ?? 0, 1)).toBeUndefined();
   expect(spotlightStops(busy, 'no-such-rule').stops).toEqual([]);
   expect(stopNeighbour(spotlightStops(busy, 'no-such-rule'), 0, 1)).toBeUndefined();
+});
+
+test('the busy night is a seeded two thousand lines with a gap that fits the page, and the same every time', () => {
+  const night = busyNight();
+  expect(busyNight()).toEqual(night);
+  const busy = buildMoat(night);
+  expect(busy.counts).toMatchObject({ total: 2000, held: 150, unresolved: 60, undated: 0 });
+  expect(busy.gaps).toHaveLength(1);
+  expect(((busy.gaps[0]?.to_ms ?? 0) - (busy.gaps[0]?.from_ms ?? 0)) / 1000).toBe(240);
+  expect(windowFor(busy, 0).paged).toBe(true);
+  expect(ruleTally(busy).reduce((total, item) => total + item.held, 0)).toBe(150);
 });

@@ -90,5 +90,5 @@ export const fixtureCharts = [fixtureConsensus({ kind: 'all' }), fixtureConsensu
   fixtureConsensus({ kind: 'text' }), fixtureConsensus({ kind: 'emote', emote: 'Kappa' })];
 
 // The drill result is a seeded simulated night: see drill-fixture.ts.
-export { fixtureCandidate, fixtureReplay } from './drill-fixture.js';
+export { busyNight, fixtureCandidate, fixtureReplay } from './drill-fixture.js';
 

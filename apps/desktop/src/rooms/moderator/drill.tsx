@@ -12,7 +12,7 @@ import { buildMoat, crossingMs } from '../../moat/moat-model.js';
 import type { MoatClock } from '../../moat/moat-player.js';
 import { actionWords, moatCopy } from '../../moat/moat-copy.js';
 
-export function Drill({ result, origin = 'fixture', capture_hash, draft, delay_s, clock, rule_bench, compare, moat = true }: {
+export function Drill({ result: given, origin = 'fixture', capture_hash, draft, delay_s, clock, rule_bench, compare, moat = true, busy_night }: {
   result: DrillRunResult; origin?: 'fixture' | 'core'; capture_hash?: string | undefined; draft?: BenchResult | undefined;
   /** The applied chat delay, when the source knows it. The moat never invents one. */
   delay_s?: number | undefined; clock?: MoatClock | undefined; rule_bench?: RuleBenchLink | undefined;
@@ -20,8 +20,12 @@ export function Drill({ result, origin = 'fixture', capture_hash, draft, delay_s
   compare?: DrillDiffResult | undefined;
   /** False when a comparison above already draws this run's moat. */
   moat?: boolean;
+  /** Draws a much longer simulated night on demand. Only the fixture room has one. */
+  busy_night?: (() => DrillRunResult) | undefined;
 }) {
   const state_id = useId();
+  const [busy, setBusy] = useState<DrillRunResult | undefined>();
+  const result = busy ?? given;
   const [selected, setSelected] = useState<string | undefined>();
   const [comparing, setComparing] = useState(false);
   // Only a pick made on the strip scrolls the table; a pick made in the table stays where the reader is.
@@ -35,8 +39,14 @@ export function Drill({ result, origin = 'fixture', capture_hash, draft, delay_s
     <a href="#/chamber/moderator">{copy.back}</a><p>{origin === 'fixture' ? copy.replay_fixture_note : copy.replay_core_note}</p>
     {draft && <DraftPatternPreview result={draft} />}
     {moat && <MoatPanel model={model} delay_s={delay_s} clock={clock} selected_id={selected} on_select={id => { setSelected(id); setReveal(id === undefined ? undefined : { key: id }); }} rule_bench={rule_bench} report={{ source: result.source, instrument_hash: result.instrument_hash, origin }} />}
-    {moat && compare && <><InkButton type="button" size="small" className="moat-compare-toggle" aria-pressed={comparing} onClick={() => { setComparing(!comparing); }}>{moatCopy.compare.toggle}</InkButton>
-      {comparing && <MoatCompare diff={compare} note={moatCopy.compare.note_fixture} delay_s={delay_s} clock={clock} />}</>}
+    {moat && (compare || busy_night) && <div className="moat-extras">
+      {compare && !busy && <InkButton type="button" size="small" className="moat-compare-toggle" aria-pressed={comparing} onClick={() => { setComparing(!comparing); }}>{moatCopy.compare.toggle}</InkButton>}
+      {busy_night && <InkButton type="button" size="small" aria-pressed={!!busy} onClick={() => {
+        // Message ids repeat from night to night, so nothing picked on one night carries to the next.
+        setBusy(busy ? undefined : busy_night()); setSelected(undefined); setReveal(undefined); setComparing(false); setFilter('all');
+      }}>{moatCopy.busy.toggle}</InkButton>}
+      {busy && <p className="moat-small">{moatCopy.busy.note(busy.outcomes.length)}</p>}</div>}
+    {moat && compare && !busy && comparing && <MoatCompare diff={compare} note={moatCopy.compare.note_fixture} delay_s={delay_s} clock={clock} />}
     <div className="moderator-drill-columns"><div className="room-column"><h3>{copy.instrument_source}</h3><p>{result.source}</p>
       {capture_hash && <><p>{copy.capture_hash}</p><code className="room-hash">{capture_hash}</code>
         <p role="status">{capture_hash === result.instrument_hash ? copy.capture_match : copy.capture_mismatch}</p>

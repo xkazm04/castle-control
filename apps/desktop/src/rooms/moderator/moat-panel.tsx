@@ -133,7 +133,7 @@ export function MoatPanel({ model, delay_s, clock, selected_id, on_select, rule_
         <p className="moat-small">{copy.honesty}</p>
         {view.paged && <p className="moat-small">{copy.page}</p>}
         {notes.thinned > 0 && <p className="moat-small">{copy.thinned(notes.thinned)}</p>}
-        {notes.overflow > 0 && <p className="moat-small">{copy.overflow(notes.overflow)}</p>}
+        {notes.overflow > 0 && <p className="moat-small">{copy.overflow(notes.overflow, spotlight !== undefined)}</p>}
       </div>
       <MarkerInspector marker={selected} bench={rule_bench} />
     </div>

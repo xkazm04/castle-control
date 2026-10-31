@@ -25,8 +25,19 @@ replayed". Everything is drawn from `DrillOutcome` (time, state, verdict, action
   "Open rule ... in the rule bench" for rules the bench can edit.
 - **Table**: unchanged and still the accessible equivalent; each row id is a button that selects the
   message, and each row now names its rule and action.
+- **Spotlight** (`ruleTally`, `spotlightStops`): when two or more rules stopped something, a row of
+  toggle buttons picks one. Only its stamps are drawn (plus the picked message's), the other stops
+  dim, and Previous and Next stop walk that rule. This is the answer to a dense night: stamps from
+  one rule stack far less than all of them. The live count stays about the whole night.
+- **Busy night** (fixture only): a toggle swaps in `busyNight()`, a seeded 2,000-line simulated night
+  with a four minute gap, so the paging, thinning and overflow note can be seen. It hides the
+  baseline-versus-candidate comparison, which belongs to the short night, and clears the pick.
+- **Landing**: a stop gives one expanding ring at the gate (`moat-thud`), off under reduced motion.
 - **Keep heartbeat** (`moat/heartbeat.tsx`): the Keep's moat bar loops a small, labelled sample of the
-  same model in fixture mode only. A core room shows no loop, because it has no sample.
+  same model in fixture mode only, with a link to the full replay. A core room shows no loop or
+  link, because it has no sample.
+- **Judge field**: `DrillOutcome.passed` is the judge's observation about a bank case, not the
+  message's verdict, so the inspector labels it "Judge: passed its case / failed its case".
 - **Fixture**: `fixtureReplay` is a seeded generator (`src/drill-fixture.ts`), not a literal: forty
   simulated lines, three stops, two unevaluated, one gap. Summary counts are derived from the
   outcomes. `simulatedDrill({ seed, count })` draws any size for tests.

@@ -76,6 +76,9 @@ export function simulatedDrill({ seed = 'castle-night', count = 40, gap_s = 20 }
   return parseMethodResult(gatehouseDrillRun, JSON.stringify(runBody(outcomes, [{ from: iso(gap.from + shift), to: iso(gap.to + shift) }])));
 }
 
+/** A long simulated night, drawn only when asked for: it shows the strip paging and thinning. */
+export const busyNight = (): DrillRunResult => simulatedDrill({ seed: 'castle-busy-night', count: 2000, gap_s: 240 });
+
 type Line = { message_id: string; at: string; source: string; state: DrillState; verdict?: string; action?: string; rule_id?: string; passed?: boolean };
 /** A run body whose summary is counted from its outcomes, so the two can never disagree. */
 function runBody(outcomes: readonly Line[], gaps: readonly { from: string; to: string }[]) {

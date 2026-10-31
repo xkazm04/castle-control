@@ -114,6 +114,29 @@ test('spotlighting a rule keeps its stamp, dims the rest, and Next stop walks on
   } finally { verify(); }
 });
 
+test('a busy night of 2,000 simulated messages pages the strip, says what it merged, and goes back', async ({ page }) => {
+  const verify = await guardPage(page);
+  try {
+    await page.goto(drill);
+    const busy = page.getByRole('button', { name: 'Replay a busy night · 2,000 simulated messages', exact: true });
+    const compare = page.getByRole('button', { name: 'Compare with a simulated candidate', exact: true });
+    await expect(busy).toHaveAttribute('aria-pressed', 'false');
+    await busy.click();
+    await expect(busy).toHaveAttribute('aria-pressed', 'true');
+    await expect(compare).toHaveCount(0);
+    await expect(page.getByRole('status').filter({ hasText: 'Held 150 of 2,000 · simulated' })).toHaveCount(1);
+    await expect(page.getByText('Showing part of the night; the view turns with the playhead.')).toBeVisible();
+    // The stamps on screen stay a readable handful, however long the night is.
+    const moat = page.getByRole('group', { name: 'Moat timeline, simulated replay', exact: true });
+    expect(await moat.getByRole('button', { name: /Held, not on air/ }).count()).toBeLessThanOrEqual(9);
+    await expect(page.getByRole('group', { name: 'Spotlight a rule', exact: true }).getByRole('button')).toHaveCount(3);
+    await auditStyles(page, desktopSurfaces);
+    await busy.click();
+    await expect(page.getByRole('status').filter({ hasText: held })).toHaveCount(1);
+    await expect(compare).toBeVisible();
+  } finally { verify(); }
+});
+
 test('a simulated candidate is drawn under the baseline on one playhead, and a ringed dot shows what changed', async ({ page }) => {
   const verify = await guardPage(page);
   try {

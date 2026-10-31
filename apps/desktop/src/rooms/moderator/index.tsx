@@ -4,7 +4,7 @@ import { proposalQueue } from '@castle-control/ui/steward';
 import { HeraldicCard, SectionHeading } from '@castle-control/ui';
 import type { ProposalQueue } from '@castle-control/ui/steward';
 import type { Snapshot } from '../../model.js';
-import { fixtureCandidate, fixtureCharts, fixtureDelay, fixtureReplay } from '../../moderation-fixture.js';
+import { busyNight, fixtureCandidate, fixtureCharts, fixtureDelay, fixtureReplay } from '../../moderation-fixture.js';
 import { moderationCopy as copy } from '../../moderation-copy.js';
 import { Consensus } from './consensus.jsx';
 import { HeldQueue, GateControls, Rules } from './controls.jsx';
@@ -37,7 +37,7 @@ function FixtureModeratorRoom({ snapshot, replay, queue = proposalQueue, seal_sl
   if (snapshot.mode !== 'fixture') return <p>{copy.no_controls}</p>;
   return <div className="moderator-room">
     {replay ? <div className="moderator-drill-room"><Drill result={fixtureReplay} delay_s={fixtureDelay.delay_s} draft={draft.draft ? result : undefined}
-      rule_bench={ruleBenchLink(state.rules, bench)} compare={fixtureCandidate} />{seal_slot}</div> : <div className="cc-keep moderator-columns moderator-fixture-columns">
+      rule_bench={ruleBenchLink(state.rules, bench)} compare={fixtureCandidate} busy_night={busyNight} />{seal_slot}</div> : <div className="cc-keep moderator-columns moderator-fixture-columns">
       <div className="room-column moderator-workbench" role="region" aria-label="Held messages and ban review" tabIndex={0}
         aria-describedby="moderator-scroll-hint">
         <p id="moderator-scroll-hint" className="moderator-visually-hidden">{copy.scroll_hint}</p>

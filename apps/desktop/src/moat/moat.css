@@ -136,3 +136,6 @@
 .moat-inspector dd small { display: block; font-weight: 500; color: var(--ink-2); }
 .moat-hit { fill: transparent; stroke: none; }
 .moat-stops { display: flex; gap: var(--space-4); }
+
+.moat-extras { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-4) var(--space-12); }
+.moat-extras .moat-small { flex: 1 1 calc(var(--space-56) * 4); }

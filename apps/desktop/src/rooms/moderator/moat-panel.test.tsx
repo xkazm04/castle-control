@@ -224,7 +224,7 @@ test('a night of ten thousand renders one page of it and says what it merged', (
   expect(html).toContain('Showing part of the night');
   expect((html.match(/class="moat-marker"/g) ?? []).length).toBeLessThanOrEqual(360);
   expect((html.match(/<button type="button" class="moat-stamp"/g) ?? []).length).toBeLessThanOrEqual(24);
-  expect(text(html)).toMatch(/Held \d+ of 10000 · simulated/);
+  expect(text(html)).toMatch(/Held [\d,]+ of 10,000 · simulated/);
 });
 
 test('the Keep heartbeat is a labelled loop of the same model, with nothing to press', () => {
