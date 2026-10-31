@@ -37,7 +37,7 @@ export function PromotedGallery() {
     </NumberedPanel>
     <NumberedPanel number="0.7" title="Windowed rows" gloss="10,000 generated entries">
       <WindowedRows rows={entries} label="Generated kit entries" row_key={row => row.id}>
-        {row => <div className="cc-kit-entry" role="cell">{row.label}</div>}
+        {row => <div className="cc-kit-entry">{row.label}</div>}
       </WindowedRows>
     </NumberedPanel>
     <NumberedPanel number="0.8" title="Consensus chart" gloss="read-only filters and direction selection">

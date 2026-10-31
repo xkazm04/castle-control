@@ -2,4 +2,4 @@
 .visuals-event-feed .cc-feed { min-width: 0; }
 .visuals-event-feed .cc-feed-detail > span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .visuals-event-row { height: 100%; min-width: 0; }
-.visuals-event-feed .cc-window-row:has(> .visuals-event-row) { border-bottom: 0; }
+.visuals-event-feed .cc-window-row:has(> .cc-window-cell > .visuals-event-row) { border-bottom: 0; }

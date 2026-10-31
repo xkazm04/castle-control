@@ -1,13 +1,42 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { expect, test } from 'vitest';
-import { ConsensusChart, InkButton, ReplaySummary, ReviewRow, RoomStatusHero, ThemeFrame, WindowedRows, rowHeight, rowWindow } from './index.js';
+import { ConsensusChart, InkButton, ReplaySummary, ReviewRow, RoomStatusHero, RuledRow, ThemeFrame, WindowedRows, rowHeight, rowWindow } from './index.js';
 import { PromotedGallery } from './kit-promoted.jsx';
+
+test('WindowedRows with plain children renders exactly one cell per row', () => {
+  const rows = ['Simulated entry', 'Simulated second entry'];
+  const html = renderToStaticMarkup(<WindowedRows rows={rows} label="Generated plain entries" row_key={String}>
+    {label => <><b>{label}</b><span>Generated detail</span></>}
+  </WindowedRows>);
+  const rendered = [...html.matchAll(/role="row"[\s\S]*?(?=role="row"|$)/g)];
+  expect(rendered).toHaveLength(rows.length);
+  for (const [row] of rendered) {
+    expect(row.match(/role="cell"/g)).toHaveLength(1);
+    expect(row).toMatch(/class="cc-window-row"[^>]*><div role="cell"/);
+  }
+});
+
+test('ruled and review rows render once inside a single window cell without nested cells', () => {
+  const rows = ['Simulated entry'];
+  for (const child of [
+    <RuledRow mark="Pass" trailing="12:00" detail="Generated detail" actions={<InkButton>Inspect</InkButton>}>Generated text</RuledRow>,
+    <ReviewRow heading="Generated review" quote="Generated quote" detail="Generated detail" actions={<InkButton>Inspect</InkButton>} />,
+  ]) {
+    const html = renderToStaticMarkup(<WindowedRows rows={rows} label="Generated structured entries" row_key={String}>
+      {() => child}
+    </WindowedRows>);
+    expect(html.match(/role="row"/g)).toHaveLength(1);
+    expect(html.match(/role="cell"/g)).toHaveLength(1);
+    expect(html.match(/Generated detail/g)).toHaveLength(1);
+    expect(html.match(/>Inspect<\/button>/g)).toHaveLength(1);
+  }
+});
 
 test('10,000 rows keep a bounded DOM window at the start, middle and end', () => {
   const rows = Array.from({ length: 10000 }, (_, id) => ({ id: `simulated-${id}` }));
   for (const scroll_top of [0, 5000 * rowHeight, 10000 * rowHeight]) {
     const html = renderToStaticMarkup(<WindowedRows rows={rows} label="Generated entries" row_key={row => row.id} scroll_top={scroll_top}>
-      {row => <span role="cell">{row.id}</span>}
+      {row => <span>{row.id}</span>}
     </WindowedRows>);
     expect(html).toContain('aria-rowcount="10000"');
     expect(html.match(/role="row"/g)).toHaveLength(16);
@@ -49,7 +78,7 @@ test('consensus chart renders caller copy, series, filters and the empty state',
 test('review row preserves original quote, status and explicit action slots', () => {
   const html = renderToStaticMarkup(<ReviewRow heading={<b>Generated review</b>} quote="Original simulated message"
     detail="Rule supplied by caller" actions={<InkButton disabled>Approve</InkButton>} />);
-  for (const text of ['role="cell"', '<blockquote tabindex="0">Original simulated message', 'Generated review', 'Rule supplied by caller', 'disabled=""', '>Approve</button>']) expect(html).toContain(text);
+  for (const text of ['class="cc-review-row"', '<blockquote tabindex="0">Original simulated message', 'Generated review', 'Rule supplied by caller', 'disabled=""', '>Approve</button>']) expect(html).toContain(text);
   const ledger = renderToStaticMarkup(<ReviewRow heading="Recorded decision" detail="Observed only" />);
   expect(ledger).not.toContain('<blockquote');
 });
@@ -70,4 +99,5 @@ test.each(['paper', 'stock'] as const)('gallery renders each promoted component 
   expect(html).toContain('aria-rowcount="10000"');
   expect(html).not.toContain('Generated entry 10000');
   expect(html).toContain('No consensus history available.');
+  expect(html.match(/role="cell"/g)?.length).toBe(html.match(/role="row"/g)?.length);
 });

@@ -18,7 +18,7 @@ export type WindowedRowsProps<T> = {
   row_height?: number; scroll_top?: number; empty_state?: ReactNode;
 };
 
-/** Fixed token-sized rows and spacers bound DOM work independently of the input size. */
+/** Owns row and cell semantics; children supply content inside the full-height cell. */
 export function WindowedRows<T>({ rows, label, row_key, children, row_height = rowHeight, scroll_top = 0, empty_state }: WindowedRowsProps<T>) {
   const [position, setPosition] = useState(scroll_top);
   const range = rowWindow(rows.length, position, row_height);
@@ -27,7 +27,7 @@ export function WindowedRows<T>({ rows, label, row_key, children, row_height = r
     <div aria-hidden="true" style={{ height: range.before }} />
     {rows.slice(range.start, range.end).map((row, index) => <div key={row_key(row)} role="row"
       aria-rowindex={range.start + index + 1} className="cc-window-row" style={{ height: row_height }}>
-      {children(row)}
+      <div role="cell" className="cc-window-cell">{children(row)}</div>
     </div>)}
     <div aria-hidden="true" style={{ height: range.after }} />
     {rows.length === 0 && empty_state !== undefined && <p role="status">{empty_state}</p>}

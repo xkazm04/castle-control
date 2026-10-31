@@ -6,7 +6,7 @@ export type ReviewRowProps = {
 };
 
 export function ReviewRow({ heading, quote, detail, actions, children }: ReviewRowProps) {
-  return <div role="cell" className="cc-review-row">
+  return <div className="cc-review-row">
     {heading !== undefined && <div>{heading}</div>}
     {quote !== undefined && <blockquote tabIndex={0}>{quote}</blockquote>}
     {detail !== undefined && <span>{detail}</span>}
