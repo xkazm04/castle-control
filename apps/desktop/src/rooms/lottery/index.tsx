@@ -1,4 +1,4 @@
-﻿import { useState, useSyncExternalStore } from 'react';
+﻿import { useMemo, useState, useSyncExternalStore } from 'react';
 import type { ReactNode } from 'react';
 import { CardCopy, CardSide, HeraldicCard, InkButton, SectionHeading, ShieldCharge, StatusChip } from '@castle-control/ui';
 import { isPending, proposalQueue } from '@castle-control/ui/steward';
@@ -8,14 +8,18 @@ import { checkFixturePolicy, fixtureWeightNotice, lookupFixture } from '../../lo
 import { fixtureCooldown, fixtureDraws, fixtureWrit } from '../../lots-fixture.js';
 import { lotsCopy as copy } from '../../lots-copy.js';
 import { draftRoll, entryHash, lotterySession } from './session.js';
-import { Urn } from './urn.jsx';
 import { FairnessSteps, PolicyRibbon, PoolStage, Ticket, policyReason } from './print.jsx';
 import { LotteryWrit } from './writ.jsx';
 import type { LotsDraw } from '@castle-control/contract';
 import { DrawSetup } from './setup.jsx';
 import { DrawAppearance } from './appearance.jsx';
 import { FixtureCast } from './result.jsx';
-import { useReveal } from './playback.js';
+import { useWritCheck } from './playback.js';
+import { DrawStage } from './stage.jsx';
+import type { StageCast } from './stage-model.js';
+import { WeightEqualizer } from './equalizer.jsx';
+import { WritLab } from './lab.jsx';
+import { verifyWrit } from '../../lots-cast.js';
 import './room.css';
 
 export { LotteryWrit } from './writ.jsx';
@@ -26,7 +30,9 @@ export default function LotteryRoom({ snapshot, replay, queue = proposalQueue, s
   const { port, rolls, display, reveal } = lotterySession(queue);
   const state = useSyncExternalStore(port.subscribe, port.getSnapshot, port.getSnapshot);
   const appearance = useSyncExternalStore(display.subscribe, display.getSnapshot, display.getSnapshot);
-  const revealed = useReveal(reveal, state.writ);
+  const writ_checked = useWritCheck(state.writ, verifyWrit);
+  const cast = useMemo<StageCast | undefined>(() => state.writ
+    ? { winners: state.writ.winners, label: 'streamer-controlled' } : undefined, [state.writ]);
   const proposals = useSyncExternalStore(queue.subscribe, queue.getSnapshot, queue.getSnapshot);
   const [verification, setVerification] = useState('');
   if (snapshot.mode !== 'fixture') return <p>{copy.no_live_controls}</p>;
@@ -64,7 +70,9 @@ export default function LotteryRoom({ snapshot, replay, queue = proposalQueue, s
           <ul className="cc-legend" aria-label={copy.dots}>{(['new_account', 'subscriber', 'raider'] as const).map(cohort =>
             <li key={cohort} data-cohort={cohort}>{copy.cohorts[cohort]} <b>{entries.filter(entry => entry.cohort === cohort).length}</b></li>)}</ul>
           <p>{copy.core.pool(state.draw.rules.pool.kind, state.draw.policy.content, state.draw.rules.cooldown_s)} · {fixtureCooldown.length} {copy.cooldown} · {fixtureWeightNotice(state)}</p>
-        </>}><Urn entries={state.entries} winners={state.simulated_winners ?? []} revealed={revealed} /></PoolStage>
+        </>}><DrawStage shape={appearance.shape} on_shape={shape => display.edit({ shape })} entries={entries} cast={cast}
+          verified={writ_checked === true} content={state.draw.policy.content} sealed={state.sealed}
+          seal={state.sealed_roll?.seal} clock={reveal} reveal_ms={appearance.reveal_ms} /></PoolStage>
       <div className="cc-desk">
         <SectionHeading variant="banner" level={2} title={copy.writ} gloss={copy.writ_gloss} ink="gules"
           count={<StatusChip variant="gules" stamp="label" {...(pending.length ? { tone: 'spot' as const } : {})}>
@@ -87,6 +95,7 @@ export default function LotteryRoom({ snapshot, replay, queue = proposalQueue, s
         {proposal && <LotteryWrit proposal={proposal} weight_notice={fixtureWeightNotice(state)} />}
         {state.started && <InkButton size="room" onClick={() => { port.reopen(); draftRoll(queue); }}>{copy.draft_new}</InkButton>}
         <DrawSetup port={port} on_edit={edit} on_preview={() => { discardPreview(); draftRoll(queue); }} />
+        <WeightEqualizer draw={state.draw} entries={state.entries} on_edit={edit} disabled={state.sealed} />
         <DrawAppearance port={display} />
         <PolicyRibbon result={policy.result} />
         {policy.reasons.map(reason => <p className="cc-aside" key={reason}>{policyReason(reason)}</p>)}
@@ -94,6 +103,7 @@ export default function LotteryRoom({ snapshot, replay, queue = proposalQueue, s
         {state.draw.policy.official_rules && <p className="cc-aside">{copy.template_text}</p>}
         <div className="lottery-seal-frame"><HeraldicCard variant="raised" tone="seal" ink="gules">{seal_slot}</HeraldicCard></div>
         {state.sealed && roll && <FixtureCast port={port} hash={roll.hash} display={appearance} />}
+        <WritLab writ={state.writ ?? fixtureWrit} simulated />
         <HeraldicCard variant="raised" aria-label={copy.lookup_title}>
           <div className="lottery-lookup">
             <label htmlFor="lottery-lookup">{copy.lookup}</label>

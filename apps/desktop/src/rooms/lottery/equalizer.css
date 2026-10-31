@@ -1,0 +1,60 @@
+/* Weight & cap equalizer: room-local chart chrome. Tokens only; SVG geometry lives in user units. */
+.lottery-equalizer { display: flex; flex-direction: column; gap: var(--space-12); }
+.lottery-eq-head { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: var(--space-8) var(--space-12); }
+.lottery-eq-head .cc-aside { margin: var(--space-2) 0 0; }
+.lottery-eq-controls { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-10); }
+.lottery-eq-segment { display: inline-flex; flex-wrap: wrap; gap: var(--space-6); }
+.lottery-eq-segment [aria-pressed="true"] { background: var(--gules); border-color: var(--gules); color: var(--press); }
+.lottery-eq-stepper { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-8); }
+.lottery-eq-stepper-label { font: 800 var(--text-label)/1.3 var(--font-ui); letter-spacing: var(--track-heading); text-transform: uppercase; }
+.lottery-eq-stepper output { min-width: calc(var(--space-40) * 2); text-align: center; font: 700 var(--text-number)/1 var(--font-num); color: var(--gules-text); }
+/* Same field audit as the setup card: rule-thin and appearance:none. */
+.lottery-room .lottery-eq-controls .cc-field[data-field] select { appearance: none; border: var(--rule-thin) solid var(--ink); }
+.lottery-eq-chart { margin: 0; display: flex; flex-direction: column; gap: var(--space-6); }
+.lottery-eq-chart svg { display: block; width: 100%; height: auto; overflow: visible; }
+.lottery-eq-axis { stroke: var(--ink); stroke-width: 1.5; }
+.lottery-eq-bar { fill: color-mix(in srgb, var(--gules) 52%, var(--paper)); stroke: var(--gules); stroke-width: 1; transform-box: fill-box; transform-origin: 50% 100%; transform: scaleY(var(--eq-level)); transition: transform calc(var(--motion-shell) * 2) var(--ease); }
+[data-eq-role="newcomer"] .lottery-eq-bar { fill: var(--ink); stroke: var(--ink); }
+[data-eq-role="heaviest"] .lottery-eq-bar { fill: var(--gules); }
+.lottery-eq-chart[data-flat="true"] .lottery-eq-bar { fill: color-mix(in srgb, var(--ink) 22%, var(--paper)); stroke: var(--ink); }
+.lottery-eq-chart[data-flat="true"] [data-eq-role="newcomer"] .lottery-eq-bar { fill: var(--ink); }
+.lottery-eq-value { fill: var(--ink); text-anchor: middle; font: 700 var(--text-small)/1 var(--font-num); animation: lottery-eq-ink var(--motion-shell) var(--ease) both; }
+.lottery-eq-units { fill: var(--ink-2); text-anchor: middle; font: 600 var(--text-small)/1 var(--font-num); }
+.lottery-eq-gain { fill: var(--gules-text); text-anchor: middle; font: 600 calc(var(--text-small) * .85)/1 var(--font-num); }
+.lottery-eq-linear { fill: none; stroke: var(--muted); stroke-width: 1.5; stroke-dasharray: 5 4; animation: lottery-eq-ink calc(var(--motion-shell) * 2) var(--ease) both; }
+.lottery-eq-curve { fill: none; stroke: var(--ink); stroke-width: 2.5; stroke-linejoin: round; stroke-linecap: round; stroke-dasharray: 1; stroke-dashoffset: 1; animation: lottery-eq-draw calc(var(--motion-shell) * 3) var(--ease) forwards; }
+.lottery-eq-dot { fill: var(--paper); stroke: var(--ink); stroke-width: 2; animation: lottery-eq-ink calc(var(--motion-shell) * 2) var(--ease) both; }
+.lottery-eq-legend { display: flex; flex-wrap: wrap; gap: var(--space-4) var(--space-14); font: 600 var(--text-small)/1.4 var(--font-ui); color: var(--ink-2); }
+.lottery-eq-legend span { display: inline-flex; align-items: center; gap: var(--space-6); }
+.lottery-eq-legend span::before { content: ""; width: var(--space-14); height: var(--space-10); background: color-mix(in srgb, var(--gules) 52%, var(--paper)); border: var(--rule-thin) solid var(--gules); }
+.lottery-eq-legend [data-eq-key="curve"]::before { height: 0; border: 0; border-top: var(--rule-strong) solid var(--ink); background: none; }
+.lottery-eq-legend [data-eq-key="linear"]::before { height: 0; border: 0; border-top: var(--rule-medium) dashed var(--muted); background: none; }
+.lottery-eq-note { margin: 0; padding: var(--space-8) var(--space-10); border-inline-start: var(--rule-strong) solid var(--gules); background: color-mix(in srgb, var(--gules) 8%, var(--paper)); font: 600 var(--text-small)/1.45 var(--font-ui); }
+.lottery-eq-headline { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: var(--space-12); padding: var(--space-10) var(--space-14); border: var(--rule-medium) solid var(--ink); border-radius: var(--r-sm); background: color-mix(in srgb, var(--gules) 10%, var(--paper)); }
+.lottery-eq-headline b { font: 800 var(--text-chamber-number)/1 var(--font-display); color: var(--gules-text); animation: lottery-eq-ink var(--motion-shell) var(--ease) both; }
+.lottery-eq-headline p { grid-column: 2; margin: 0; font: 700 var(--text-section)/1.3 var(--font-ui); overflow-wrap: anywhere; }
+.lottery-eq-headline p:only-child { grid-column: 1 / -1; font: italic var(--text-aside)/1.4 var(--font-serif); color: var(--ink-2); }
+.lottery-eq-section { display: flex; flex-direction: column; gap: var(--space-8); }
+.lottery-eq-stack { display: flex; height: var(--space-16); border: var(--rule-thin) solid var(--ink); border-radius: var(--r-sm); overflow: hidden; background: var(--paper); }
+.lottery-eq-stack span { flex: var(--eq-share) 1 0; min-width: 0; background: var(--ink); transition: flex-grow calc(var(--motion-shell) * 2) var(--ease); }
+.lottery-eq-stack span + span { border-inline-start: var(--rule-thin) solid var(--paper); }
+.lottery-eq-stack [data-cohort="subscriber"] { background: var(--gules); }
+.lottery-eq-stack [data-cohort="raider"] { background: var(--azure); }
+.lottery-eq-cohorts { display: flex; flex-direction: column; gap: var(--space-4); margin: 0; padding: 0; list-style: none; font: var(--text-small)/1.4 var(--font-ui); }
+.lottery-eq-cohorts li { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-4) var(--space-8); }
+.lottery-eq-cohorts li::before { content: ""; width: var(--space-11); height: var(--space-11); border-radius: 50%; background: var(--ink); }
+.lottery-eq-cohorts [data-cohort="subscriber"]::before { background: var(--gules); }
+.lottery-eq-cohorts [data-cohort="raider"]::before { background: var(--azure); }
+.lottery-eq-cohorts b { font: 700 var(--text-small)/1.4 var(--font-ui); }
+.lottery-eq-cohorts span { color: var(--ink-2); font-family: var(--font-num); }
+.lottery-eq-cap-text { margin: 0; font: 600 var(--text-body)/1.4 var(--font-ui); }
+.lottery-eq-pips { display: flex; flex-wrap: wrap; gap: var(--space-4); margin: 0; padding: 0; list-style: none; }
+.lottery-eq-pips li { width: var(--space-14); height: var(--space-14); border: var(--rule-medium) solid var(--ink); border-radius: 50%; background: var(--paper); transition: background var(--motion-shell) var(--ease); }
+.lottery-eq-pips [data-open="true"] { border-color: var(--azure); background: var(--azure); }
+@keyframes lottery-eq-draw { to { stroke-dashoffset: 0; } }
+@keyframes lottery-eq-ink { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  .lottery-eq-bar, .lottery-eq-stack span, .lottery-eq-pips li { transition: none; }
+  .lottery-eq-value, .lottery-eq-linear, .lottery-eq-dot, .lottery-eq-headline b { animation: none; }
+  .lottery-eq-curve { animation: none; stroke-dashoffset: 0; }
+}

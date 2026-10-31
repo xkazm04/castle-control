@@ -4,6 +4,7 @@ import { art, styles } from '../../demo/model.js';
 import { lotsCopy as copy } from '../../lots-copy.js';
 import type { DrawDisplay, DrawDisplayPort } from './display.js';
 import { revealStyle } from './display.js';
+import { isDrawShape } from './stage-model.js';
 import './appearance.css';
 
 export function DrawPreview({ display }: { display: DrawDisplay }) {
@@ -28,6 +29,11 @@ export function DrawAppearance({ port }: { port: DrawDisplayPort }) {
   return <HeraldicCard variant="raised" aria-label={copy.stream}>
     <h2 className="lottery-card-title">{copy.stream}</h2>
     <div className="lottery-settings">
+      <FieldGroup label={copy.shape} control_id="lots-shape" variant="select">
+        <select id="lots-shape" value={display.shape} onChange={event => {
+          const shape = event.currentTarget.value; if (isDrawShape(shape)) port.edit({ shape });
+        }}>{copy.shapes.map(item => <option key={item.value} value={item.value}>{item.label}</option>)}</select>
+      </FieldGroup>
       <FieldGroup label={copy.journey.size} control_id="lots-size" variant="select">
         <select id="lots-size" value={display.size} onChange={event => {
           const size = copy.journey.sizes.find(value => value === event.currentTarget.value); if (size) port.edit({ size });

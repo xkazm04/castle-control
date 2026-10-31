@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@castle-control/contract": "workspace:*",
+    "@castle-control/renderer": "workspace:*",
     "@castle-control/tokens": "workspace:*",
     "@castle-control/ui": "workspace:*",
     "react": "catalog:",

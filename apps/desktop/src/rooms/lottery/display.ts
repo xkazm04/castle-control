@@ -1,13 +1,14 @@
 import type { DemoStyle } from '../../demo/model.js';
 import type { CSSProperties } from 'react';
+import type { DrawShape } from '@castle-control/renderer';
 
 /** Presentation only: LotsDraw has no display payload. Never sent to RPC. */
 export type DrawDisplay = {
   size: 'S' | 'M' | 'L'; anchor: 'tl' | 'tr' | 'bl' | 'br' | 'center';
-  colour: 'gules' | 'azure' | 'or' | 'key'; art_style: DemoStyle; reveal_ms: number;
+  colour: 'gules' | 'azure' | 'or' | 'key'; art_style: DemoStyle; reveal_ms: number; shape: DrawShape;
 };
 export function createDrawDisplay() {
-  let state: DrawDisplay = { size: 'M', anchor: 'br', colour: 'gules', art_style: 'heraldic', reveal_ms: 1500 };
+  let state: DrawDisplay = { size: 'M', anchor: 'br', colour: 'gules', art_style: 'heraldic', reveal_ms: 1500, shape: 'urn' };
   const listeners = new Set<() => void>();
   const edit = (change: Partial<DrawDisplay>) => {
     const value = change.reveal_ms ?? state.reveal_ms;

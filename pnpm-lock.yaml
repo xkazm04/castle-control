@@ -59,6 +59,9 @@ importers:
       '@castle-control/contract':
         specifier: workspace:*
         version: link:../../packages/contract
+      '@castle-control/renderer':
+        specifier: workspace:*
+        version: link:../../packages/renderer
       '@castle-control/tokens':
         specifier: workspace:*
         version: link:../../packages/tokens
