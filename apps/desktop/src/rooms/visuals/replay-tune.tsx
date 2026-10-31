@@ -3,11 +3,18 @@ import type { PreviewVisual } from '../../beacons-model.js';
 import type { ReplayTrace, TracePoint } from '../../beacons-replay.js';
 import { clockLabel, replayDomain, timeSpent } from '../../beacons-replay.js';
 import type { CurveEditor } from './curve-editor.js';
-import { CurvePoints } from './kindling-curve.jsx';
+import { CurvePoints, curveMaximum } from './kindling-curve.jsx';
 import { BeaconArtwork } from './artwork.jsx';
 import { curveText } from './replay-proposal.js';
 
 const cells = 24;
+/** Round weighted-sub marks for the curve's x-axis: about four steps of 1, 2 or 5 × a power of ten. */
+export function axisMarks(maximum: number): number[] {
+  const raw = maximum / 4;
+  const power = 10 ** Math.floor(Math.log10(raw));
+  const step = [1, 2, 5, 10].map(scale => scale * power).find(value => value >= raw) ?? raw;
+  return Array.from({ length: Math.floor(maximum / step + 1e-9) + 1 }, (_, index) => index * step);
+}
 const kinds = { points: 'channel points', bits: 'bits', sub: 'sub', gift: 'gift subs', hype_train: 'Hype Train level' } as const;
 
 /** The same editor as the bench, drawn over where the night spends its minutes. */
@@ -16,12 +23,14 @@ export function ReplayCurve({ item, editor, state, trace, now, help_id }: {
   trace: ReplayTrace; now: TracePoint; help_id: string;
 }) {
   const top = item.visual.curve.ranges.at(-1)?.total ?? 0;
+  const domain = replayDomain(trace);
+  const maximum = curveMaximum(state, domain);
   return <section className="visuals-replay-curve" aria-label="Tune the curve against the night">
     <h3>Kindling curve <span>· weighted subs → blaze</span></h3>
     <p id={help_id} className="visuals-note">Drag a point, or Tab to it and use the arrows (Shift = 10). The whole night re-runs on every move.</p>
     <div className="visuals-curve-editor visuals-replay-points">
       <CurvePoints editor={editor} state={state} disabled={state.phase === 'saving'} described_by={help_id}
-        domain={replayDomain(trace)} label={`Editable curve for ${item.visual.name}, replayed against the night`}
+        domain={domain} label={`Editable curve for ${item.visual.name}, replayed against the night`}
         underlay={(x, maximum) => {
           const spent = timeSpent(trace, maximum, cells);
           const most = Math.max(1, ...spent);
@@ -35,6 +44,8 @@ export function ReplayCurve({ item, editor, state, trace, now, help_id }: {
             <circle className="visuals-replay-now" cx={Math.min(600, x(now.total))} cy={140 - now.intensity * 140} r="6" />
           </g>;
         }} />
+      <div className="visuals-replay-axis" aria-hidden="true">{axisMarks(maximum).map(mark =>
+        <span key={mark} style={{ left: `${(12 + mark / maximum * 600) / 624 * 100}%` }}>{mark}</span>)}</div>
     </div>
     <p className="visuals-note">{curveText(item.visual.curve)} · bars show where the night spends its minutes; shaded past the top point means pinned.</p>
   </section>;

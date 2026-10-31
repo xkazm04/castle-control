@@ -52,6 +52,9 @@ export function TraceFigure({ trace, before, offerings, counted, position, lit_i
   position: number; lit_intensity: number; label: string; on_seek?: (seconds: number) => void; now_intensity?: number;
 }) {
   const share = position / trace.duration_s;
+  const lit_at = trace.first_lit_s === undefined ? undefined
+    : trace.points.find(point => point.t === trace.first_lit_s && point.total >= trace.lit_total);
+  const lit_share = lit_at ? lit_at.t / trace.duration_s : 0;
   const marks = Array.from({ length: Math.floor(trace.duration_s / 360) + 1 }, (_, index) => index * 360);
   return <figure className="visuals-replay-figure">
     <div className="visuals-replay-plot" data-scrub={on_seek ? 'pointer' : undefined}
@@ -70,6 +73,10 @@ export function TraceFigure({ trace, before, offerings, counted, position, lit_i
       {now_intensity !== undefined && <span className="visuals-replay-now-label" aria-hidden="true"
         style={{ left: `${share * 100}%`, top: `${y(now_intensity) / 140 * 100}%` }}
         data-edge={share > 0.92 ? 'end' : share < 0.04 ? 'start' : undefined}>{`${Math.round(now_intensity * 100)}%`}</span>}
+      {lit_at && <span className="visuals-replay-first-lit" aria-hidden="true" data-first-lit={lit_at.t}
+        style={{ left: `${lit_share * 100}%`, top: `${y(lit_at.intensity) / 140 * 100}%` }}
+        data-edge={lit_share > 0.85 ? 'end' : undefined}>{`first lit · ${clockLabel(lit_at.t)}`}</span>}
+      <span className="visuals-replay-axis-lit" aria-hidden="true" style={{ top: `${y(lit_intensity) / 140 * 100}%` }}>lit</span>
       <span className="visuals-replay-axis-top" aria-hidden="true">100%</span>
       <span className="visuals-replay-axis-zero" aria-hidden="true">0%</span>
     </div>

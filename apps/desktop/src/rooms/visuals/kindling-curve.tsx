@@ -59,13 +59,18 @@ function dragPoint(event: PointerEvent<SVGCircleElement>, editor: CurveEditor) {
 }
 
 /** The draggable point surface. One editor can drive it from the bench and from the night replay. */
+/** The x-axis reach of the curve figure: the drag domain, or the furthest confirmed or draft point. */
+export function curveMaximum(state: ReturnType<CurveEditor['getSnapshot']>, domain = 0): number {
+  return Math.max(1, domain, ...state.confirmed.ranges.map(point => point.total), ...state.draft.ranges.map(point => point.total));
+}
+
 export function CurvePoints({ editor, state, disabled, described_by = 'visuals-curve-help',
   label = 'Editable contribution to intensity curve', underlay, domain = 0 }: {
   editor: CurveEditor; state: ReturnType<CurveEditor['getSnapshot']>; disabled: boolean; described_by?: string;
   label?: string; underlay?: (x: (total: number) => number, maximum: number) => ReactNode; domain?: number;
 }) {
   const { draft } = state;
-  const maximum = Math.max(1, domain, ...state.confirmed.ranges.map(point => point.total), ...draft.ranges.map(point => point.total));
+  const maximum = curveMaximum(state, domain);
   const x = (total: number) => total / maximum * 600;
   return <svg viewBox="-12 -12 624 164" preserveAspectRatio="none" role="group" aria-label={label}>
       {underlay?.(x, maximum)}

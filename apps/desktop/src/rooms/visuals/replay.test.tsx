@@ -5,10 +5,12 @@ import { tokens } from '@castle-control/tokens';
 import { ProposalQueue } from '@castle-control/ui/steward';
 import { fixtureOfferings } from '../../beacons-fixture.js';
 import { createBeaconsPreview } from '../../beacons-model.js';
-import { nightBursts, replayTrace } from '../../beacons-replay.js';
+import { clockLabel, nightBursts, replayTrace } from '../../beacons-replay.js';
+import { sampleNight } from '../../beacons-nights.js';
 import { createFixtureCurveEditor } from './fixture-curve.jsx';
 import { NightReplay } from './replay.jsx';
 import { scrubSeconds } from './replay-trace.jsx';
+import { axisMarks } from './replay-tune.jsx';
 import { openCurveDraft, proposeCurve, sealedCurve } from './replay-proposal.js';
 import { VisualsWork } from './room.jsx';
 
@@ -148,4 +150,31 @@ test('tonight across your beacons: every beacon against the same night, the sele
   expect(html).toMatch(/pinned \d+ min · lit \d+ of 48 min/);
   expect(renderToStaticMarkup(<NightReplay item={item} editor={editor} queue={new ProposalQueue()} />))
     .not.toContain('visuals-replay-compare');
+});
+
+test('the replay curve prints round weighted-sub marks across its whole reach', () => {
+  expect(axisMarks(200)).toEqual([0, 50, 100, 150, 200]);
+  expect(axisMarks(15)).toEqual([0, 5, 10, 15]);
+  expect(axisMarks(1)).toEqual([0, 0.5, 1]);
+  const html = renderToStaticMarkup(<VisualsWork />);
+  expect(html).toContain('class="visuals-replay-axis" aria-hidden="true"><span style="left:1.92307');
+});
+
+test('the trace names the lit threshold and flags the minute it first lights, never on a night that stays cold', () => {
+  const port = createBeaconsPreview();
+  const editor = createFixtureCurveEditor(port);
+  const item = port.getSnapshot().visuals[0];
+  if (!item) throw new Error('Missing generated altar');
+  const render = (night: 'raid_spike' | 'sub_train') => renderToStaticMarkup(<NightReplay item={item} editor={editor}
+    queue={new ProposalQueue()} initial_night={night} />);
+  const raid = render('raid_spike');
+  const first = replayTrace(item.visual.curve, item.gift_weight, nightBursts(sampleNight('raid_spike').offerings)).first_lit_s;
+  expect(first).toBeDefined();
+  expect(raid).toContain(`data-first-lit="${first}"`);
+  expect(raid).toContain(`first lit · ${clockLabel(first ?? 0)}`);
+  expect(raid).toContain('class="visuals-replay-axis-lit"');
+  const cold = render('sub_train');
+  expect(cold).not.toContain('data-first-lit=');
+  expect(cold).toContain('class="visuals-replay-axis-lit"');
+  expect(cold).toContain('data-tone="never_lit"');
 });
