@@ -1,7 +1,7 @@
-import { ChamberStrip, ProgramMonitor, SealButton } from '@castle-control/ui';
+import { ChamberStrip, ProgramMonitor, SealButton, chambers } from '@castle-control/ui';
 import type { ChamberLayerState, ModuleId } from '@castle-control/ui';
 import { isPending, proposalQueue } from '@castle-control/ui/steward';
-import { useEffect, useState, useSyncExternalStore } from 'react';
+import { useEffect, useId, useState, useSyncExternalStore } from 'react';
 import type { ReactNode } from 'react';
 import type { Snapshot } from '../model.js';
 import type { StewardConnection } from '../client.js';
@@ -27,6 +27,8 @@ export function Overview({ snapshot, selected, on_select, on_open, steward, conn
   const [sealing, setSealing] = useState(false);
   const read = keepReadModel(snapshot);
   const candidate = programCandidate(selected);
+  const proclaimCaptionId = useId();
+  const candidateChamber = chambers.find(chamber => chamber.id === candidate?.chamber)?.name;
   const pending = queue.proposals.filter(isPending);
   useEffect(() => {
     if (queue.selected_proposal_id && queue.proposals.some(item => item.id === queue.selected_proposal_id && isPending(item))) setTab('inspector');
@@ -64,7 +66,10 @@ export function Overview({ snapshot, selected, on_select, on_open, steward, conn
     </div>
     <aside className="overview-sidebar">
       <ProgramMonitor><StreamScene mode="program" proposals={program} sample={snapshot.mode === 'fixture'} /></ProgramMonitor>
-      <div className="overview-proclaim">
+      <div className="overview-proclaim" role="group" aria-describedby={proclaimCaptionId}>
+        <p id={proclaimCaptionId} className="overview-proclaim-caption">{candidate
+          ? `Next to proclaim: ${candidate.title} · rev ${candidate.revision} (${candidateChamber ?? candidate.chamber})`
+          : 'Nothing to proclaim: ask the Steward to draft one'}</p>
         <SealButton key={`${candidate?.id}-${candidate?.revision}-${candidate?.state}`} variant="proclaim" disabled={!candidate || sealing}
           on_seal={() => { void proclaim(); }} />
         <p role="status">{notice}</p>

@@ -13,6 +13,7 @@
 .overview-proclaim { padding-block: var(--space-8); }
 .overview-proclaim .cc-seal-button { width: 100%; }
 .overview-proclaim p { font-size: var(--text-small); margin-block: var(--space-6); }
+.overview-proclaim-caption { font-weight: 600; overflow-wrap: anywhere; }
 .overview-tabs { display: flex; border-bottom: var(--rule-medium) solid var(--ink); }
 .overview-tabs button { flex: 1; font: 700 var(--text-body)/1.4 var(--font-ui); background: var(--paper); color: var(--ink); border: 0; padding: var(--space-10); cursor: pointer; }
 .overview-tabs [aria-selected="true"] { background: var(--ink); color: var(--paper); }
