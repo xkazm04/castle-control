@@ -30,16 +30,16 @@ function inspectNeighbour(event: KeyboardEvent<HTMLButtonElement>, tile: BoardTi
 /** Tiles that changed owner this turn. `phase` alternates so the same tile can flip on consecutive turns. */
 export type TableFlip = Readonly<{ ids: ReadonlySet<string>; phase: 0 | 1 }>;
 
-export function HexTable({ selected, on_select, board = STUDIO_SAMPLE_BOARD, size = 'm', look, flip, gloss = copy.board_gloss, pennants = true }: {
+export function HexTable({ selected, on_select, board = STUDIO_SAMPLE_BOARD, size = 'm', look, flip, gloss = copy.board_gloss, pennants = true, quiet = false }: {
   selected: string; on_select: (id: string) => void; board?: StudioBoard; size?: MapSize; look?: DesignOutput['style'];
-  flip?: TableFlip; gloss?: string; pennants?: boolean;
+  flip?: TableFlip; gloss?: string; pennants?: boolean; quiet?: boolean;
 }) {
   const geometry = boardGeometry(board);
   const tab_stop = geometry.tiles.find(tile => tile.id === selected)?.id ?? geometry.tiles[0]?.id;
   const style: CSSProperties & Record<string, number> = { '--board-w': geometry.width, '--board-h': geometry.height,
     '--fit-w': geometry.fit_width, '--fit-h': geometry.fit_height };
   return <div className="cc-herald-field" role="region" aria-label={copy.board_label(geometry.columns, geometry.rows, board.title)}
-    data-look-ink={look?.ink} data-treatment={look?.treatment} data-density={look?.density}>
+    data-look-ink={look?.ink} data-treatment={look?.treatment} data-density={quiet ? 'quiet' : look?.density}>
     <SectionHeading variant="inline" level={2} title={copy.board_title(geometry.columns, geometry.rows, board.title)} gloss={gloss} />
     <div className="cc-hexfield" data-map-size={size} style={style}><div className="cc-hexfield-plate" role="group" aria-label={copy.tiles_label(geometry.tiles.length)}>
       {geometry.tiles.map(tile => <button type="button" className="cc-hex" key={tile.id} data-hex-tile={tile.id}

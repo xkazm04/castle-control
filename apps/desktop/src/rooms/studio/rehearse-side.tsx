@@ -19,7 +19,7 @@ export function MiniBoard({ board, label }: { board: StudioBoard; label: string 
   </svg>;
 }
 
-export function TurnLog({ state }: { state: RehearseState }) {
+export function TurnLog({ state, board }: { state: RehearseState; board: StudioBoard }) {
   const run = state.run;
   const played = run ? run.turns.slice(0, state.turn) : [];
   return <section className="studio-turn-log" aria-label={copy.log_label}>
@@ -33,6 +33,7 @@ export function TurnLog({ state }: { state: RehearseState }) {
           </div>)}
       </RuledFeed>
     </div>
+    <TileHistory state={state} board={board} />
   </section>;
 }
 
@@ -93,7 +94,7 @@ export function VerdictBlock({ state, view, handlers }: { state: RehearseState; 
     <p className="studio-reading">{report.reading}</p>
     <div className="studio-verdict-actions">
       <InkButton size="small" onClick={handlers.replay}>{`${copy.replay} ${state.run.setup.seed}`}</InkButton>
-      <InkButton variant="primary" size="small" onClick={handlers.again}>{copy.again}</InkButton>
+      <InkButton variant="plate" size="small" onClick={handlers.again}>{copy.again}</InkButton>
     </div>
   </section>;
 }
@@ -101,8 +102,7 @@ export function VerdictBlock({ state, view, handlers }: { state: RehearseState; 
 export function RehearseSide({ state, view, handlers }: { state: RehearseState; view: RehearseView; handlers: RehearseHandlers }) {
   return <div className="studio-rehearse-side">
     <VerdictBlock state={state} view={view} handlers={handlers} />
-    <TurnLog state={state} />
-    <TileHistory state={state} board={view.shown} />
+    <TurnLog state={state} board={view.shown} />
     <BalanceTable view={view} />
     <ComparePast past={state.past} on_clear={handlers.clear_past} />
   </div>;

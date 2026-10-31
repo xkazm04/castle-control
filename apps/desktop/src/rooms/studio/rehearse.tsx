@@ -13,6 +13,9 @@ import type { RehearseHandlers } from './use-rehearse.js';
 import type { MapSize } from './session.js';
 import './rehearse.css';
 
+/** Above this many tiles the hexes drop their house words; ink, ribbon and log carry the story. */
+export const denseTiles = 60;
+
 export type RehearseProps = Readonly<{
   state: RehearseState; view: RehearseView; handlers: RehearseHandlers; board: StudioBoard; size: MapSize;
   look?: DesignOutput['style'];
@@ -49,6 +52,8 @@ export function RehearseControls({ state, view, handlers }: Pick<RehearseProps, 
   const { viewers, turns } = rehearsalLimits;
   const submit = (event: FormEvent) => { event.preventDefault(); handlers.start(); };
   return <form className="studio-rehearse-controls" aria-label={copy.controls} onSubmit={submit} noValidate>
+    {/* Three fields block implicit submission, so Enter in a field needs this default button to play the round. */}
+    <button type="submit" className="studio-visually-hidden" tabIndex={-1} aria-hidden="true">{copy.play}</button>
     <div className="studio-rehearse-fields">
       <FieldGroup control_id="studio-rehearse-viewers" label={copy.viewers} hint={copy.viewers_hint(viewers.min, viewers.max)}>
         <input type="number" title={copy.viewers_hint(viewers.min, viewers.max)} inputMode="numeric" min={viewers.min} max={viewers.max} step={1} {...fieldProps('viewers', state)}
@@ -65,10 +70,10 @@ export function RehearseControls({ state, view, handlers }: Pick<RehearseProps, 
     </div>
     {state.error && <p id="studio-rehearse-error" className="studio-rehearse-error" role="alert">{state.error.message}</p>}
     <div className="studio-rehearse-actions">
-      {finished ? <InkButton variant="primary" size="small" onClick={handlers.again}>{copy.again}</InkButton>
-        : playing ? <InkButton variant="primary" size="small" onClick={handlers.pause}>{copy.pause}</InkButton>
-          : run ? <InkButton variant="primary" size="small" onClick={handlers.resume}>{copy.resume}</InkButton>
-            : <InkButton variant="primary" size="small" onClick={handlers.start}>{copy.play}</InkButton>}
+      {finished ? <InkButton variant="plate" size="small" onClick={handlers.again}>{copy.again}</InkButton>
+        : playing ? <InkButton variant="plate" size="small" onClick={handlers.pause}>{copy.pause}</InkButton>
+          : run ? <InkButton variant="plate" size="small" onClick={handlers.resume}>{copy.resume}</InkButton>
+            : <InkButton variant="plate" size="small" onClick={handlers.start}>{copy.play}</InkButton>}
       <InkButton size="small" onClick={handlers.step} disabled={finished}>{copy.step}</InkButton>
       <InkButton size="small" onClick={handlers.reset} disabled={run === null}>{copy.reset}</InkButton>
       {run && <span className="studio-rehearse-progress">{copy.progress(state.turn, view.of)}</span>}
@@ -91,7 +96,7 @@ export function RehearseWork({ state, view, handlers, board, size, look }: Rehea
     <RehearseControls state={state} view={view} handlers={handlers} />
     <HexTable board={view.shown} selected={state.selected} on_select={handlers.select} size={size}
       {...(look ? { look } : {})} flip={{ ids: view.flipped, phase: view.phase }}
-      gloss={copy.board_gloss(turn, view.of)} pennants={false} />
+      gloss={copy.board_gloss(turn, view.of)} pennants={false} quiet={start.tiles.length > denseTiles} />
     <div className="studio-rehearse-now">
       <Notice message={message} label={copy.log_label} className="studio-rehearse-line" />
       {last && <p className="studio-rehearse-turn">{copy.this_turn(last.changes.length)} {copy.only_picked}</p>}

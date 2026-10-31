@@ -4,7 +4,11 @@
   font: 800 var(--text-label)/1.4 var(--font-ui); letter-spacing: var(--track-label); text-transform: uppercase;
 }
 .studio-room .studio-rehearse { display: flex; flex-direction: column; flex: 1; min-height: 0; min-width: 0; }
-.studio-room .studio-rehearse > .cc-herald-field { flex: 1; }
+.studio-room .studio-rehearse > .cc-herald-field { flex: 1; padding-top: var(--space-8); padding-bottom: 0; gap: var(--space-4); }
+/* The board's own heading stays for screen readers; the turn counter and ribbon say the same thing in less room. */
+.studio-room .studio-rehearse > .cc-herald-field > .cc-section-heading {
+  position: absolute; width: var(--space-1); height: var(--space-1); overflow: hidden; clip-path: inset(50%); white-space: nowrap;
+}
 .studio-room .studio-rehearse-controls { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--space-8) var(--space-14); padding: var(--space-10) var(--space-24) 0; }
 .studio-room .studio-rehearse-fields { display: grid; flex: 1 1 calc(var(--space-56) * 5); grid-template-columns: 1.2fr 1fr .8fr; gap: var(--space-10); }
 .studio-room .studio-rehearse-fields .cc-field { position: relative; }
@@ -16,11 +20,11 @@
 .studio-room .studio-rehearse-error { flex-basis: 100%; order: 3; color: var(--danger); font: 600 var(--text-small)/1.4 var(--font-ui); }
 .studio-room .studio-rehearse-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-8); padding-bottom: var(--space-2); }
 .studio-room .studio-rehearse-progress { font: 700 var(--text-label)/1 var(--font-num); color: var(--ink-2); }
-.studio-room .studio-rehearse-now { display: grid; gap: var(--space-1); padding: var(--space-4) var(--space-24) 0; }
-.studio-room .studio-rehearse-line { margin: 0; font: italic var(--text-wordmark)/1.3 var(--font-serif); }
+.studio-room .studio-rehearse-now { display: grid; gap: 0; padding: var(--space-2) var(--space-24) 0; }
+.studio-room .studio-rehearse-line { margin: 0; font: italic var(--text-body)/1.3 var(--font-serif); }
 .studio-room .studio-rehearse-turn, .studio-room .studio-rehearse-replay { font: var(--text-small)/1.4 var(--font-ui); color: var(--ink-2); }
 .studio-room .studio-rehearse-replay { font-weight: 700; }
-.studio-room .studio-ribbon-block { display: grid; padding: var(--space-8) var(--space-24) var(--space-12); }
+.studio-room .studio-ribbon-block { display: grid; padding: var(--space-6) var(--space-24) var(--space-10); }
 .studio-room .studio-ribbon-title { font: 800 var(--text-label)/1.4 var(--font-ui); letter-spacing: var(--track-air); text-transform: uppercase; color: var(--muted); }
 .studio-room .studio-ribbon { display: flex; margin: 0; padding: 0; list-style: none; min-height: var(--space-26); border: var(--rule-medium) solid var(--rule); }
 .studio-room .studio-ribbon > li {
