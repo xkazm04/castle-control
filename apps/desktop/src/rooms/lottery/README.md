@@ -33,9 +33,21 @@ a catch is visible without scrolling. Core mode adds `core-setup.tsx`, the full
 rule set as a local draft: one save sends one `lots.draw.upsert` (then the
 core check), never one per keystroke; winner count keeps its commit-on-blur
 field. Core mode never shows the simulated-art "On stream" card. Evidence:
-`stage.test.tsx`, `equalizer.test.tsx`, `lab.test.tsx`, `core-setup.test.tsx`, `result.test.tsx`,
+`stage.test.tsx`, `equalizer.test.tsx`, `lab.test.tsx`, `core-setup.test.tsx`, `sound.test.ts`, `result.test.tsx`,
 renderer `draw/host.test.ts`, cc-obs `tests/pages.rs` and cc-core
 `tests/lots_overlay_page.rs`.
+
+### Ceremony options and choreography
+
+Each called lot lifts out of its shape (`lift_path`: urn mouth, wheel pointer,
+dealt off the deck, up through the ballot slot), and the proclamation states
+the winner's share of the pool's weight. Dot area is proportional to weight and
+eases when the curve changes. Two session-only options sit beside the shape
+picker. **Reveal by hand** holds the renderer's cursor just before each onset
+until the streamer calls the next lot (`createRevealClock().callNext`). Only the
+timing changes; winners and order never do. **Ceremony sound** (`sound.ts`) is
+Web Audio synthesis with no assets, off until switched on. The *On stream*
+preview draws the renderer artwork the OBS page paints for the chosen shape.
 
 ## Stabilize lots-06–10, 2026-10-31
 
