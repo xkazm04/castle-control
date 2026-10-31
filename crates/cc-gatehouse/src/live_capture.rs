@@ -9,7 +9,7 @@ use cc_types::{
     BridgeGap, DecisionId, DrillConfiguration, ErrorCode, GatehouseLiveCapture,
     GatehouseLiveRunGapReason, GatehouseText, RuleClass,
 };
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 /// Clear the transient capture even when screening is cancelled at an await.
 struct CaptureScope<'a>(&'a mut Gatehouse);
@@ -127,6 +127,17 @@ fn validate_snapshot(capture: &GatehouseLiveCapture) -> Result<()> {
 }
 
 impl Gatehouse {
+    /// Rebuild at each screening boundary so forget/purge remain authoritative.
+    pub(crate) fn care_users(&self) -> Result<BTreeSet<String>> {
+        Ok(self
+            .records()?
+            .into_iter()
+            .filter(|r| r.care)
+            .filter_map(|r| r.user_id)
+            .map(|id| id.as_str().to_owned())
+            .collect())
+    }
+
     /// Same seam used by the live host and generated, labelled offline tests.
     /// Snapshot before screening; the existing audit chokepoint writes it before
     /// the ledger commits. No separate cache row or post-commit update is needed.
@@ -138,6 +149,7 @@ impl Gatehouse {
     ) -> Result<ScreenedMessage> {
         self.require_shadow();
         self.reap_live_recordings()?;
+        let care = self.care_users()?;
         let configuration = DrillConfiguration {
             rules: self
                 .config
@@ -159,7 +171,7 @@ impl Gatehouse {
         {
             Some(GatehouseLiveRunGapReason::ClassifierNotReplayable)
         } else if message.privileged()
-            || self.caring(&message.user_id)?
+            || care.contains(message.user_id.as_str())
             || !self.gate_available
             || message.text.trim().is_empty()
             || configuration.rules.iter().any(|rule| {
@@ -191,7 +203,16 @@ impl Gatehouse {
         };
         let scope = CaptureScope(self);
         scope.0.live_capture = Some(capture);
-        let mut screened = scope.0.screen_batch(vec![message], classifier).await?;
+        let mut screened = scope
+            .0
+            .screen_batch_with_care(
+                vec![message],
+                classifier,
+                crate::gate::HoldBudget::default(),
+                care,
+            )
+            .await?
+            .messages;
         let screened = screened
             .pop()
             .ok_or_else(|| internal("no screened message"))?;

@@ -31,6 +31,11 @@ pub(crate) struct ManagedRule {
 
 pub(crate) type Config = BTreeMap<RuleId, ManagedRule>;
 
+#[cfg(test)]
+thread_local! {
+    pub(crate) static RECORD_READS: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
+}
+
 pub(crate) fn rail() -> Rule {
     Rule {
         rule_id: RuleId::try_from("crisis-care".to_owned()).expect("static slug"),
@@ -153,6 +158,8 @@ impl Record {
 
 impl Gatehouse {
     pub(crate) fn records(&self) -> Result<Vec<Record>> {
+        #[cfg(test)]
+        RECORD_READS.with(|reads| reads.set(reads.get() + 1));
         let committed: BTreeMap<_, _> = self
             .store
             .read_ledger(LedgerKind::Decisions)

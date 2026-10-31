@@ -10,7 +10,14 @@ use cc_types::{
     Action, Decision, DecisionId, DecisionKind, Operator, Rule, RuleClass, RuleMode, Verdict,
 };
 use serde::{Deserialize, Serialize};
-use std::time::{Duration, Instant};
+use std::{
+    collections::BTreeSet,
+    time::{Duration, Instant},
+};
+
+#[cfg(test)]
+#[path = "lane_tests.rs"]
+mod tests;
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -110,15 +117,29 @@ impl Gatehouse {
         scheduling_wait: Duration,
         admission: Duration,
     ) -> Result<MeasuredBatch> {
-        let mut budgets = vec![
+        let care = self.care_users()?;
+        self.screen_batch_with_care(
+            messages,
+            classifier,
             HoldBudget {
                 twitch_delay,
                 scheduling_wait,
                 admission,
                 ..HoldBudget::default()
-            };
-            messages.len()
-        ];
+            },
+            care,
+        )
+        .await
+    }
+
+    pub(crate) async fn screen_batch_with_care(
+        &mut self,
+        messages: Vec<IngestedMessage>,
+        classifier: &dyn Classifier,
+        budget: HoldBudget,
+        mut care: BTreeSet<String>,
+    ) -> Result<MeasuredBatch> {
+        let mut budgets = vec![budget; messages.len()];
         let mut output = vec![None; messages.len()];
         let mut pending = Vec::new();
         let plain: Vec<_> = self
@@ -129,7 +150,7 @@ impl Gatehouse {
             .collect();
         for (index, msg) in messages.into_iter().enumerate() {
             let rules_start = Instant::now();
-            let candidate = if rules::disclosure(&msg.text) || self.caring(&msg.user_id)? {
+            let candidate = if rules::disclosure(&msg.text) || care.contains(msg.user_id.as_str()) {
                 Some(Candidate::Care)
             } else {
                 let mut hit = None;
@@ -158,7 +179,7 @@ impl Gatehouse {
             budgets[index].rules = rules_start.elapsed();
             if let Some(candidate) = candidate {
                 let gate_start = Instant::now();
-                output[index] = Some(self.gate(msg, candidate)?);
+                output[index] = Some(self.gate(msg, candidate, &mut care)?);
                 budgets[index].gate = gate_start.elapsed();
             } else {
                 pending.push((index, msg));
@@ -197,7 +218,7 @@ impl Gatehouse {
                     },
                 };
                 let gate_start = Instant::now();
-                output[*index] = Some(self.gate(msg.clone(), candidate)?);
+                output[*index] = Some(self.gate(msg.clone(), candidate, &mut care)?);
                 budgets[*index].gate = gate_start.elapsed();
             }
         }
@@ -208,9 +229,14 @@ impl Gatehouse {
         Ok(MeasuredBatch { messages, budgets })
     }
 
-    fn gate(&mut self, msg: IngestedMessage, candidate: Candidate) -> Result<ScreenedMessage> {
+    fn gate(
+        &mut self,
+        msg: IngestedMessage,
+        candidate: Candidate,
+        caring: &mut BTreeSet<String>,
+    ) -> Result<ScreenedMessage> {
         let at = self.now()?;
-        let care = matches!(candidate, Candidate::Care) || self.caring(&msg.user_id)?;
+        let care = matches!(candidate, Candidate::Care) || caring.contains(msg.user_id.as_str());
         let mut decision = Decision {
             decision_id: DecisionId::mint(),
             message_id: msg.message_id.clone(),
@@ -304,6 +330,9 @@ impl Gatehouse {
         };
         decision.reason_codes.push(path.label().into());
         let decision = self.record(decision, Some(&msg), path, None, intent.clone(), care)?;
+        if care {
+            caring.insert(msg.user_id.as_str().to_owned());
+        }
         Ok(ScreenedMessage {
             reaches_streamer: decision.verdict == Verdict::Hold,
             message: msg,
