@@ -30,6 +30,9 @@ O2 replaces the stacked mobile layout with the winner's 1440×900 stage, scaled
 at every width. O3 replaces the no-build static folder with a workspace package.
 The existing hashes and `/features` suffix remain. Intro handover is 2700 ms;
 Skip/native activation, origin focus, hover, keys and reduced motion are tested.
+Overview attention follows the latest hover/focus event: pointer leave restores
+the whole keep even while a hit has focus. Skip moves keyboard focus without
+lighting a room; a later Tab or arrow focus lights its new room.
 
 ## Broadside and working toys
 
@@ -60,6 +63,9 @@ the tooltip. The dock keeps its 874px width and bottom edge at stage y=842, grow
 upward from a 142px minimum to fit all output. The illustration label moves with
 it. DRAWN and HELD/PASS land in a top-right `.stampslot`, with unclipped ink bleed.
 The room-mode footer retains WP5a's winner geometry.
+The toy stack and broadside default to `display:none` with no pointer events
+outside room mode. The stack itself stays pointer-inert even in the study;
+only the displayed dock receives input. Hiding preserves every mounted toy's state.
 
 The new `data-role` hooks are `broadside`, `broadside-eyebrow`, `broadside-title`,
 `broadside-fn`, `broadside-line`, `broadside-note`, `broadside-disc`,
@@ -71,20 +77,25 @@ WP5a's stage/header/headline/footer/room-tag hooks remain.
 
 - `pnpm --filter @castle-control/site typecheck`: exit 0; `[pnpm typecheck] walked 29 files`.
 - `pnpm --filter @castle-control/site lint`: exit 0; `[pnpm lint] walked 29 files`.
-- `pnpm --filter @castle-control/site test`: exit 0; `Test Files 10 passed (10)`; `Tests 76 passed (76)`.
-- `pnpm --filter @castle-control/site build`: exit 0; 43 modules; `[site first-load] 90762 / 184320 bytes (88.63 KiB)`; built inventory, destinations, offline posture and honesty checks PASS.
+- `pnpm --filter @castle-control/site test`: exit 0; `Test Files 10 passed (10)`; `Tests 80 passed (80)`.
+- `pnpm --filter @castle-control/site build`: exit 0; 43 modules; `[site first-load] 90879 / 184320 bytes (88.75 KiB)`; built inventory, destinations, offline posture and honesty checks PASS.
 - `node scripts/check.mjs`: exit 0; boundaries, hygiene, type-floor, file-cap and secrets all pass.
 - `pnpm gate`: exit 1 at contract export, `Error: spawnSync cargo EPERM`; the preceding 35 tooling tests passed. No install was run, as required by this brief.
 - Browser verification is blocked: headless Chromium reports `spawn EPERM`;
   automatic approval review rejected native Chrome access with “Computer Use was
   not approved to use Google Chrome”. No rendered-layout verification is claimed.
 
-The 76 Vitest cases include pure rules and DOM contracts. `broadside.test.ts`
+The 80 Vitest cases include pure rules and DOM contracts. `broadside.test.ts`
 checks all four room/features sheets against copy, six principles and the extra
 notices, stable DOM inventory, focus and print behavior. `toy-dock.test.ts` checks
 cross-room persistence, timed/reduced-motion draws, one-time seed handling,
 three-entry history, stamps, SVG paints and scoped keymap activation. The existing
 intro/navigation/theme/geometry tests and built honesty checks still pass.
+The attention regressions cover Skip → hover → leave, Tab focus lighting, and
+pointer leave after keyboard focus, including a later arrow focus and re-render.
+The overview hit-test regression checks the production CSS display/pointer rules
+for both the toy stack and broadside, together with intro, Skip and return-from-room
+visibility and stable mounted toy nodes. The recent `view.ts` attention fix is unchanged.
 
 Golden draw: `lanterns` → `cindergate44`, index 8, proof
 `FNV-1a("lanterns") = 7e90abd4 → lot 09 of 12`. Blank seed →

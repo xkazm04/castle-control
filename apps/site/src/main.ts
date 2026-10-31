@@ -29,7 +29,7 @@ const intro = createIntro({
   handover: (event) => { state = transition(state, event); view.update(state); },
   showSkip: (show) => { nodes.skip.hidden = !show; },
   skipFocused: () => document.activeElement === nodes.skip,
-  focusFirst: () => nodes.hits.get('lots')?.focus({ preventScroll: true }),
+  focusFirst: view.focusFirst,
 }, state.phase === 'intro');
 
 function dispatch(event: Event): void {

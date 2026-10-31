@@ -13,9 +13,9 @@ const textInk = { key: 'var(--ink)', gules: 'var(--gules-text)', azure: 'var(--a
 export function createView(nodes: Stage, reduced: () => boolean, seed?: string) {
   const dock = buildToyDock(nodes.toy, nodes.castle, reduced, seed);
   let previous: State = { phase: 'overview', room: null };
-  let pointer: SiteRoom | null = null;
+  let overviewRoom: SiteRoom | null = null;
   let focused: SiteRoom | null = null;
-  let review: SiteRoom | null = null;
+  let quietFocus = false;
   let origin: SiteRoom | null = null;
   let attention: SiteRoom | null | undefined;
   const overlays = nodes.castle.querySelectorAll<SVGElement>('.dim,.litglow');
@@ -41,18 +41,26 @@ export function createView(nodes: Stage, reduced: () => boolean, seed?: string) 
 
   function attend(): void {
     if (level(previous) > 0) return;
-    const room = pointer ?? focused ?? review;
-    light(room);
-    showHeadline(room);
+    light(overviewRoom);
+    showHeadline(overviewRoom);
   }
 
-  function hover(room: SiteRoom | null): void { review = null; pointer = room; attend(); }
+  // Attention follows the last interaction, never a fallback to a still-focused hit.
+  function hover(room: SiteRoom | null): void { overviewRoom = room; attend(); }
   function focus(room: SiteRoom | null): void {
-    review = null; focused = room;
-    if (room !== null) pointer = null;
+    focused = room;
+    if (quietFocus) return;
+    overviewRoom = room;
     attend();
   }
-  function reviewHover(room: SiteRoom | null): void { review = room; attend(); }
+  function reviewHover(room: SiteRoom | null): void { overviewRoom = room; attend(); }
+
+  function focusFirst(): void {
+    // Skip hands off keyboard focus without changing the printed attention.
+    quietFocus = true;
+    try { nodes.hits.get('lots')?.focus({ preventScroll: true }); }
+    finally { quietFocus = false; }
+  }
 
   function update(state: State): void {
     const depth = level(state);
@@ -91,7 +99,7 @@ export function createView(nodes: Stage, reduced: () => boolean, seed?: string) 
     dock.update(state);
     previous = state;
     if (state.room !== null) {
-      pointer = null; focused = null; review = null;
+      overviewRoom = null; focused = null;
       light(state.room);
       if (moved) nodes.broadside.focus({ preventScroll: true });
     } else {
@@ -101,12 +109,12 @@ export function createView(nodes: Stage, reduced: () => boolean, seed?: string) 
   }
 
   function moveFocus(direction: -1 | 1): void {
-    const current = focused ?? pointer ?? review;
+    const current = focused ?? overviewRoom;
     const index = chamberIds.findIndex((room) => room === current);
     const next = chamberIds[index < 0 ? 0 : (index + direction + chamberIds.length) % chamberIds.length];
     if (next) nodes.hits.get(next)?.focus({ preventScroll: true });
   }
 
-  return { update, hover, focus, reviewHover, moveFocus, liveHex: dock.liveHex,
+  return { update, hover, focus, focusFirst, reviewHover, moveFocus, liveHex: dock.liveHex,
     claimHex: (): void => dock.claimHex(nodes.stage.ownerDocument.activeElement) };
 }
