@@ -13,6 +13,7 @@ import { DrawStage } from './stage.jsx';
 import type { StageCast } from './stage-model.js';
 import { WeightEqualizer } from './equalizer.jsx';
 import { WritLab } from './lab.jsx';
+import { UrnTierPreset } from './tier.jsx';
 import './room.css';
 
 /** Presentation state per core port: shape, appearance and reveal cursor never reach RPC. */
@@ -95,6 +96,8 @@ export function ConnectedLotsRoom({ port, simulated, seal_slot }: { port: CoreLo
             <InkButton size="room" disabled={state.busy} onClick={() => { void port.check(); }}>{copy.core.check}</InkButton>
           </>}
         </HeraldicCard>
+        {draw && <UrnTierPreset draw={draw} shape={appearance.shape} on_edit={next => { void port.edit(next); }}
+          on_shape={shape => display.edit({ shape })} disabled={state.busy || state.locked} />}
         {draw && <WeightEqualizer draw={draw} entries={undefined} on_edit={next => { void port.edit(next); }}
           disabled={state.busy || state.locked} />}
         {state.entries.length > 0 && <details className="cc-disclosure"><summary>{copy.core.frozen_list} · {state.entries.length}</summary>

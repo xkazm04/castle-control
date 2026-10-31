@@ -19,6 +19,7 @@ import { DrawStage } from './stage.jsx';
 import type { StageCast } from './stage-model.js';
 import { WeightEqualizer } from './equalizer.jsx';
 import { WritLab } from './lab.jsx';
+import { UrnTierPreset } from './tier.jsx';
 import { verifyWrit } from '../../lots-cast.js';
 import './room.css';
 
@@ -95,6 +96,8 @@ export default function LotteryRoom({ snapshot, replay, queue = proposalQueue, s
         </div>}
         {proposal && <LotteryWrit proposal={proposal} weight_notice={fixtureWeightNotice(state)} />}
         {state.started && <InkButton size="room" onClick={() => { port.reopen(); draftRoll(queue); }}>{copy.draft_new}</InkButton>}
+        <UrnTierPreset draw={state.draw} shape={appearance.shape} on_edit={edit} on_shape={shape => display.edit({ shape })}
+          entry_count={state.entries.length} disabled={state.sealed} />
         <DrawSetup port={port} on_edit={edit} on_preview={() => { discardPreview(); draftRoll(queue); }} />
         <WeightEqualizer draw={state.draw} entries={state.entries} on_edit={edit} disabled={state.sealed} />
         <DrawAppearance port={display} />

@@ -125,6 +125,11 @@ export const lotsCopy = {
     sampled: (shown: number, total: number) => `${shown} of ${total} lots drawn · every winner always shown`,
     unverified: 'This cast did not recompute against its writ, so the ceremony will not play it.',
   },
+  tier: {
+    title: 'Overlord urn · room tier', sizes: { s: 'S', m: 'M', l: 'L' },
+    rooms: { s: 'Hearth', m: 'Hall', l: 'Courtyard' }, count: (count: number) => `${count} winners`,
+    hint: 'One click sets the urn and the plan’s winner count for your room size. It configures the draw before sealing and never changes a cast.',
+  },
   core: {
     title: 'Core Lot Chamber', workbench: 'Core draw workbench', draws: 'Draws in your core',
     refresh: 'Refresh draws', create: 'Create no-prize question draw', draw: 'Draw',
