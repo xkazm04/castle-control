@@ -121,6 +121,7 @@ export const lotsCopy = {
     replay: 'Replay the ceremony', theatre: 'Full stage', desk: 'Back to the desk', rail: 'Winners in cast order', more: (count: number) => `+${count} more in the writ`,
     announce: (order: number, total: number, handle: string) => `Winner ${order} of ${total}: ${handle}`,
     winner_of: (order: number, total: number) => `Winner ${order} of ${total}`,
+    share: (percent: number) => `Held ${percent}% of the pool's weight`,
     labels: { 'streamer-controlled': 'Streamer-controlled seed', 'drand-quicknet': 'Public drand quicknet round' },
     sampled: (shown: number, total: number) => `${shown} of ${total} lots drawn · every winner always shown`,
     unverified: 'This cast did not recompute against its writ, so the ceremony will not play it.',

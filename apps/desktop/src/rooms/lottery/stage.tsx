@@ -7,7 +7,7 @@ import { lotsCopy as copy } from '../../lots-copy.js';
 import { revealStyle } from './display.js';
 import type { RevealClock } from './playback.js';
 import { useReducedMotion, useReveal } from './playback.js';
-import { artworkOf, call_origin, confetti, draw_shapes, layoutMarks, sampleEntries, stage_view_box, stageScene } from './stage-model.js';
+import { artworkOf, call_origin, confetti, draw_shapes, layoutMarks, lift_path, sampleEntries, stage_view_box, stageScene, weightShare } from './stage-model.js';
 import type { StageCast, StageEntry, StageMark } from './stage-model.js';
 import './stage.css';
 
@@ -59,10 +59,29 @@ function useFlourish(scene: DrawScene, fresh: boolean) {
   return group;
 }
 
-function Proclamation({ handle, order, total, cohort }: { handle: string; order: number; total: number; cohort: StageEntry['cohort'] }) {
+function Proclamation({ handle, order, total, cohort, share }: {
+  handle: string; order: number; total: number; cohort: StageEntry['cohort']; share: number | undefined;
+}) {
   return <p className="lottery-stage-proclaim" aria-hidden="true">
     <small>{copy.stage.winner_of(order, total)}</small><b>{handle}</b>{cohort && <span>{copy.cohorts[cohort]}</span>}
+    {share !== undefined && <em>{copy.stage.share(share)}</em>}
   </p>;
+}
+
+type Lift = CSSProperties & { '--lx1': string; '--ly1': string; '--lx2': string; '--ly2': string; '--lturn': string };
+/** The called lot physically leaves its shape: out of the urn mouth, up to the wheel's pointer,
+ * dealt off the deck, or up through the ballot slot. Rendered only for the latest reveal. */
+function LiftToken({ shape, mark }: { shape: DrawShape; mark: StageMark }) {
+  const path = lift_path[shape];
+  const style: Lift = { '--lx1': `${path.via.x - mark.x}px`, '--ly1': `${path.via.y - mark.y}px`,
+    '--lx2': `${path.out.x - mark.x}px`, '--ly2': `${path.out.y - mark.y}px`, '--lturn': `${path.turn}deg` };
+  return <g transform={`translate(${mark.x} ${mark.y})`} aria-hidden="true">
+    <g className="lottery-stage-lift" data-lift={shape} style={style}>
+      {shape === 'deck' ? <rect x={-6} y={-8.5} width={12} height={17} rx={1.5} />
+        : shape === 'ballot_box' ? <><rect x={-9} y={-6} width={18} height={12} rx={1} /><path d="M-4 0l2.5 2.5L4-3" /></>
+          : <circle r={Math.max(4, mark.r * 1.8)} />}
+    </g>
+  </g>;
 }
 
 /** Closes the ceremony with the proof that let it play: a locally recomputed writ or a core-verified cast. */
@@ -93,6 +112,9 @@ export function DrawStage({ shape, on_shape, entries, cast, content, sealed, sea
   const marks = useMemo(() => layoutMarks(shape, drawn), [shape, drawn]);
   const by_handle = useMemo(() => new Map(marks.map(mark => [mark.handle, mark])), [marks]);
   const cohorts = useMemo(() => new Map(entries.map(entry => [entry.handle, entry.cohort])), [entries]);
+  const weights = useMemo(() => new Map(entries.map(entry => [entry.handle, entry.weight])), [entries]);
+  const pool_weight = useMemo(() => entries.reduce((sum, entry) => sum + entry.weight, 0), [entries]);
+  const share = (handle: string) => { const weight = weights.get(handle); return weight === undefined ? undefined : weightShare(weight, pool_weight); };
   const revealed = state.revealed;
   const order = (handle: string) => { const index = revealed.indexOf(handle); return index < 0 ? undefined : index + 1; };
   const fresh = Boolean(playable) && revealed.length === 0 && !reduced;
@@ -103,6 +125,7 @@ export function DrawStage({ shape, on_shape, entries, cast, content, sealed, sea
     : state.finished && revealed.length === winners.length ? 'revealed' : 'revealing';
   const disclaimer = scene.layers.find(layer => layer.kind === 'disclaimer');
   const latest = revealed.at(-1);
+  const latest_mark = latest === undefined ? undefined : by_handle.get(latest);
   const limit = theatre ? rail_limit.theatre : rail_limit.desk;
   const lots = <Marks marks={marks} order={order} />;
   return <div className="lottery-draw-stage" data-shape={shape} data-phase={phase} data-shuffling={fresh || undefined}
@@ -121,6 +144,7 @@ export function DrawStage({ shape, on_shape, entries, cast, content, sealed, sea
           return mark ? <line key={`ray-${handle}`} className="lottery-stage-ray" data-latest={index === revealed.length - 1}
             x1={origin.x} y1={origin.y} x2={mark.x} y2={mark.y} pathLength={1} /> : null;
         })}
+        {phase === 'revealing' && !reduced && latest_mark && <LiftToken key={`lift-${latest_mark.handle}`} shape={shape} mark={latest_mark} />}
         {revealed.map((handle, index) => {
           const mark = by_handle.get(handle);
           return mark ? <g key={handle} className="lottery-stage-medal" data-medal={index + 1} transform={`translate(${mark.x} ${mark.y})`}>
@@ -134,7 +158,7 @@ export function DrawStage({ shape, on_shape, entries, cast, content, sealed, sea
         <b>{copy.stage.wax[0]}</b><span>{copy.stage.wax[1]}</span></div>}
       {revealed.length > 0 && <div className="lottery-stage-rail">
         {phase === 'revealing' && latest && <Proclamation key={latest} handle={latest} order={revealed.length}
-          total={winners.length} cohort={cohorts.get(latest)} />}
+          total={winners.length} cohort={cohorts.get(latest)} share={share(latest)} />}
         {phase === 'revealed' && theatre && <Verdict total={winners.length} proof={proof} on_prove={on_prove} />}
         <ol aria-label={copy.stage.rail}>
           {revealed.slice(0, limit).map((handle, index) => {

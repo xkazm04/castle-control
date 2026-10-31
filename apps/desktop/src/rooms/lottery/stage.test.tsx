@@ -7,7 +7,7 @@ import { fixtureEntries } from '../../lots-fixture.js';
 import { lotsCopy as copy } from '../../lots-copy.js';
 import { createRevealClock } from './playback.js';
 import { DrawStage } from './stage.jsx';
-import { draw_shapes, isDrawShape, layoutMarks, sampleEntries, stageScene } from './stage-model.js';
+import { draw_shapes, isDrawShape, layoutMarks, lift_path, sampleEntries, stageScene, weightShare } from './stage-model.js';
 import type { StageCast } from './stage-model.js';
 import { draftRoll, lotterySession, sealLotteryProposal } from './session.js';
 
@@ -93,6 +93,21 @@ test('a revealed ceremony shows medals and scoreboard in cast order; an unverifi
   const refused = render({ clock: createRevealClock(), cast, sealed: true, seal, verified: false });
   expect(refused).toContain('data-phase="casting"'); expect(refused).toContain(copy.stage.unverified);
   expect(refused).not.toContain('data-medal=');
+});
+
+test('mid-ceremony, the latest winner lifts out of its shape and the proclamation shows its weight share', () => {
+  const weighted = entries.map((entry, index) => ({ ...entry, weight: index === 13 ? 10 : 1 }));
+  for (const shape of draw_shapes) {
+    const clock = createRevealClock();
+    const scene = stageScene(shape, cast, 'question', false);
+    clock.tick(scene, `${seal}:${shape}:0`, 0); clock.tick(scene, `${seal}:${shape}:0`, 1300);
+    const html = render({ shape, entries: weighted, clock, cast, sealed: true, seal });
+    expect(html).toContain('data-phase="revealing"');
+    expect(html.match(/data-lift=/g)).toHaveLength(1); expect(html).toContain(`data-lift="${shape}"`);
+    expect(html).toContain(copy.stage.share(weightShare(10, 96)).replace("'", '&#x27;'));
+  }
+  expect(weightShare(10, 96)).toBe(10.4); expect(weightShare(3, 0)).toBe(0);
+  for (const shape of draw_shapes) expect(lift_path[shape].out.y).toBeLessThan(lift_path[shape].via.y);
 });
 
 test('a finished ceremony closes on its proof: a verdict card with the lab handoff in theatre, a chip at the desk', () => {

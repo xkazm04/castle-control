@@ -43,6 +43,20 @@ export const call_origin: Readonly<Record<DrawShape, { x: number; y: number }>> 
   urn: { x: 160, y: 50 }, wheel: { x: 160, y: 116 }, deck: { x: 162, y: 28 }, ballot_box: { x: 169, y: 87 },
 };
 
+/** How a called lot leaves its shape, in artwork space: through `via` (urn mouth, wheel pointer, top of the
+ * deck, ballot slot) and out at `out`, turning `turn` degrees. Decorative only; it replays a fixed winner. */
+export const lift_path: Readonly<Record<DrawShape, { via: { x: number; y: number }; out: { x: number; y: number }; turn: number }>> = {
+  urn: { via: { x: 160, y: 48 }, out: { x: 160, y: -8 }, turn: 0 },
+  wheel: { via: { x: 160, y: 30 }, out: { x: 160, y: -12 }, turn: 0 },
+  deck: { via: { x: 214, y: 36 }, out: { x: 304, y: 6 }, turn: 28 },
+  ballot_box: { via: { x: 169, y: 86 }, out: { x: 169, y: 2 }, turn: -8 },
+};
+
+/** A winner's share of the pool's total weight, in percent with one decimal. */
+export function weightShare(weight: number, total: number): number {
+  return total > 0 ? Math.round(weight / total * 1000) / 10 : 0;
+}
+
 /** Deterministic confetti flight targets (percent of the theatre) for the finished ceremony. */
 export function confetti(count = 28): readonly { x: number; y: number; turn: number; delay: number }[] {
   return Array.from({ length: count }, (_, index) => {
