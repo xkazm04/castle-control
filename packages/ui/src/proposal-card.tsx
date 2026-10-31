@@ -26,7 +26,7 @@ export function ProposalCard({ proposal, focused = false, on_focus, on_seal, on_
     {pending && <div className="cc-proposal-actions">
       {seal_at_monitor ? <p>Use the hold under Program to seal and proclaim.</p>
         : <SealButton key={`${proposal.id}:${proposal.revision}`} on_seal={on_seal} variant={proposal.kind} disabled={busy} />}
-      <button type="button" data-tear-proposal onClick={on_tear}>Tear it up</button>
+      <button type="button" data-tear-proposal disabled={busy} onClick={on_tear}>Tear it up</button>
     </div>}
   </article>;
 }

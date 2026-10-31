@@ -37,3 +37,25 @@ test('a busy proposal disables its seal and a revised proposal remounts the hold
   const revised = ProposalCard({ ...props, proposal: { ...proposal, revision: 2 } }).props.children.at(-1).props.children[0];
   expect(revised.key).not.toBe(hold.key);
 });
+
+test('a busy pending card renders Tear it up disabled', async () => {
+  const queue = new ProposalQueue(); const steward = new SimulatedSteward(queue);
+  await steward.ask('draft a question draw', { surface: 'room' });
+  const proposal = queue.pending()[0];
+  if (!proposal) throw new Error('Missing proposal');
+  const html = renderToStaticMarkup(<ProposalCard proposal={proposal} busy on_seal={vi.fn()} on_tear={vi.fn()} />);
+  const tear = html.match(/<button[^>]*data-tear-proposal[^>]*>Tear it up<\/button>/)?.[0];
+  expect(tear).toBeDefined();
+  expect(tear).toContain('disabled=""');
+});
+
+test('a non-busy pending card renders Tear it up enabled', async () => {
+  const queue = new ProposalQueue(); const steward = new SimulatedSteward(queue);
+  await steward.ask('draft a question draw', { surface: 'room' });
+  const proposal = queue.pending()[0];
+  if (!proposal) throw new Error('Missing proposal');
+  const html = renderToStaticMarkup(<ProposalCard proposal={proposal} on_seal={vi.fn()} on_tear={vi.fn()} />);
+  const tear = html.match(/<button[^>]*data-tear-proposal[^>]*>Tear it up<\/button>/)?.[0];
+  expect(tear).toBeDefined();
+  expect(tear).not.toContain('disabled');
+});
