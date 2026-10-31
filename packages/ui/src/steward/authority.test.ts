@@ -44,6 +44,35 @@ test('an unconfirmed live seal fails without falling back locally or retrying', 
   expect(local).not.toHaveBeenCalled();
 });
 
+test.each(([
+  { action: 'seal', method: 'seal', refusal: 'The proposal could not be sealed.' },
+  { action: 'tear', method: 'tearUp', refusal: 'The proposal could not be torn up.' },
+] as const).flatMap(route => [
+  { failure: 'thrown Error', cause: new Error('Synthetic live failure'), rejects: false },
+  { failure: 'rejected Error', cause: new Error('Synthetic live failure'), rejects: true },
+  { failure: 'thrown non-Error', cause: 'Synthetic live failure', rejects: false },
+  { failure: 'rejected non-Error', cause: 'Synthetic live failure', rejects: true },
+].map(failure => ({ ...route, ...failure }))))(
+  'a live $action refuses a $failure without changing the pending queue or falling back locally',
+  async ({ action, method, refusal, cause, rejects }) => {
+    const { queue, live, proposal, local, authority } = await setup();
+    const operation = vi.spyOn(live, method).mockImplementationOnce(() => {
+      if (rejects) return Promise.reject(cause);
+      throw cause;
+    });
+    const before = queue.getSnapshot();
+    expect(authority.owner(proposal)).toBe('live');
+    await expect(authority[action](proposal)).resolves.toEqual({
+      ok: false, reply: cause instanceof Error ? cause.message : refusal,
+    });
+    expect(operation).toHaveBeenCalledExactlyOnceWith(proposal.id);
+    expect(queue.getSnapshot()).toBe(before);
+    expect(queue.pending()).toEqual([proposal]);
+    expect(queue.getSnapshot().proposals[0]).toMatchObject({ state: 'drafted', revision: proposal.revision });
+    expect(local).not.toHaveBeenCalled();
+  },
+);
+
 test('a simulated draft calls the injected room sealer exactly once', async () => {
   const { queue, transport, authority, local } = await setup();
   queue.select();

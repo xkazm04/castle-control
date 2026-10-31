@@ -28,8 +28,8 @@ export function createSealAuthority({ queue, live, local }: {
     owner,
     async seal(proposal) {
       if (!current(proposal)) return unavailable;
-      if (owner(proposal) === 'live' && live) return outcome(await live.seal(proposal.id), proposal, false);
       try {
+        if (owner(proposal) === 'live' && live) return outcome(await live.seal(proposal.id), proposal, false);
         await local(queue, proposal);
         const sealed = queue.getSnapshot().proposals.find(item => item.id === proposal.id);
         return sealed && sealed.revision === proposal.revision && (sealed.state === 'sealed' || sealed.state === 'proclaimed')
@@ -40,7 +40,13 @@ export function createSealAuthority({ queue, live, local }: {
     },
     async tear(proposal) {
       if (!current(proposal)) return unavailable;
-      if (owner(proposal) === 'live' && live) return outcome(await live.tearUp(proposal.id), proposal, true);
+      if (owner(proposal) === 'live' && live) {
+        try {
+          return outcome(await live.tearUp(proposal.id), proposal, true);
+        } catch (cause) {
+          return { ok: false, reply: cause instanceof Error ? cause.message : 'The proposal could not be torn up.' };
+        }
+      }
       const result = queue.tearUp(proposal.id);
       return result.ok ? { ok: true, reply: 'Torn up. This proposal will not act.' } : { ok: false, reply: result.reason };
     },
