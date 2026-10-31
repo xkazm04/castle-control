@@ -10,8 +10,9 @@ import type { StewardTransport } from '@castle-control/ui/steward';
 import type { StewardConnection } from '../client.js';
 import { fixtureDraws } from '../lots-fixture.js';
 import { sampleProgram } from '../overview/program.js';
+import { Talkback } from '../overview/inspector.jsx';
 import { shellStewardPort } from './core-steward.js';
-import { ShellSteward, stewardConversation } from './steward.jsx';
+import { createStewardConversation, ShellSteward, stewardConversation } from './steward.jsx';
 import { StewardSealSlot } from './steward-slot.jsx';
 
 beforeEach(() => { for (const proposal of proposalQueue.pending()) proposalQueue.tearUp(proposal.id); proposalQueue.select(); });
@@ -127,4 +128,23 @@ test('no opt-in or absent/unreachable capability preserves the simulated shell; 
   }
   expect((await live.ask('Draft questions', context)).proposals).toEqual([]);
   expect(transport.ask).not.toHaveBeenCalled();
+});
+
+test('a reply from a LiveSteward engine is stored live and Talkback captions it Steward · live', async () => {
+  const simulated = new SimulatedSteward();
+  const conversation = createStewardConversation(simulated);
+  vi.spyOn(stewardConversation, 'getSnapshot').mockImplementation(conversation.getSnapshot);
+  const greeting = renderToStaticMarkup(<Talkback />);
+  const live = new LiveSteward({ ask: vi.fn(async () => JSON.stringify({ writ: { ...writ, writ_id: '01ARZ3NDEKTSV4RRFFQ69G5FAZ' } })),
+    seal: vi.fn(), tear: vi.fn() });
+  await conversation.ask('Synthetic draw', context, live);
+  expect(renderToStaticMarkup(<Talkback />)).toContain('<b>Steward · live</b>');
+  expect(conversation.getSnapshot().at(-1)).toMatchObject({ who: 'Steward', live: true });
+  expect(greeting).toContain('<b>Steward</b>');
+  expect(greeting).not.toContain('Steward · simulated');
+  await conversation.ask('draft a question draw', context, simulated);
+  expect(conversation.getSnapshot().at(-1)).toMatchObject({ who: 'Steward', live: false });
+  const mixed = renderToStaticMarkup(<Talkback />);
+  expect(mixed).toContain('<b>Steward · live</b>');
+  expect(mixed).toContain('<b>Steward · simulated</b>');
 });

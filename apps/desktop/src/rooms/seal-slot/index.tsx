@@ -1,7 +1,7 @@
 import { lazy, Suspense, useState, useSyncExternalStore } from 'react';
 import { ProposalCard } from '@castle-control/ui';
 import { createSealAuthority, proposalQueue } from '@castle-control/ui/steward';
-import type { ChamberId, Proposal, ProposalQueue, SealAuthority } from '@castle-control/ui/steward';
+import type { ChamberId, Proposal, ProposalQueue, SealAuthority, SealOutcome } from '@castle-control/ui/steward';
 import { isDesignProposal } from '../../overview/design-proposal.js';
 import { RoomDesignActions, roomArtifact, roomProposals, selectRoomDesign } from '../design/actions.jsx';
 import type { RoomDesignSelection } from '../design/actions.jsx';
@@ -29,21 +29,26 @@ export default function SealSlot({ chamber, enabled = true, queue = proposalQueu
 }) {
   const state = useSyncExternalStore(queue.subscribe, queue.getSnapshot, queue.getSnapshot);
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState('');
+  const [notice, setNotice] = useState<{ outcome: SealOutcome; proposals: readonly Proposal[] }>();
   const [design, setDesign] = useState<RoomDesignSelection>();
-  const proposals = enabled ? roomProposals(queue, chamber) : [];
+  const currentProposals = () => enabled ? roomProposals(queue, chamber) : [];
+  const proposals = currentProposals();
+  const outcome = notice && notice.proposals.length === proposals.length
+    && notice.proposals.every((proposal, index) => proposal === proposals[index]) ? notice.outcome : undefined;
+  if (notice && !outcome) setNotice(undefined);
   const openDesign = (selection: RoomDesignSelection, proposal_id?: string) => {
     selectRoomDesign(queue, selection, proposal_id); setDesign(selection);
   };
   const selected = proposals.some(item => item.id === state.selected_proposal_id) ? state.selected_proposal_id : proposals.at(-1)?.id;
   const resolve = async (proposal: Proposal, seal: boolean) => {
     if (busy) return;
-    setBusy(true); setError('');
+    setBusy(true); setNotice(undefined);
     try {
       const outcome = await (seal ? authority.seal(proposal) : authority.tear(proposal));
-      if (!outcome.ok) setError(outcome.reply);
+      setNotice({ outcome, proposals: currentProposals() });
     }
-    catch (cause) { setError(cause instanceof Error ? cause.message : 'The proposal could not be sealed.'); }
+    catch (cause) { setNotice({ outcome: { ok: false,
+      reply: cause instanceof Error ? cause.message : 'The proposal could not be sealed.' }, proposals: currentProposals() }); }
     finally { setBusy(false); }
   };
   return <aside className="shell-seal-slot" aria-label="Seal slot" aria-busy={busy}>
@@ -62,6 +67,6 @@ export default function SealSlot({ chamber, enabled = true, queue = proposalQueu
     {enabled && design && <Suspense fallback={<p role="status">Opening simulated design...</p>}>
       <RoomDesignDialog selection={design} on_close={() => setDesign(undefined)} />
     </Suspense>}
-    {error && <p role="alert">{error}</p>}
+    {outcome && <p role={outcome.ok ? 'status' : 'alert'}>{outcome.reply}</p>}
   </aside>;
 }

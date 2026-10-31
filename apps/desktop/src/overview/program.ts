@@ -20,12 +20,12 @@ export function programCandidate(chamber: Proposal['chamber']): Proposal | undef
   return candidates.find(item => item.id === proposalQueue.getSnapshot().selected_proposal_id) ?? candidates.at(-1);
 }
 
-/** The completed hold routes through the owner; only fixture proposals project locally. */
+/** Pending live holds route through the owner; already-sealed writs need only a presentation snapshot. */
 export async function proclaimToSampleProgram(id: string, authority: SealAuthority = localAuthority): Promise<string> {
   const before = proposalQueue.getSnapshot().proposals.find(item => item.id === id);
   if (before && isDesignProposal(before)) return 'Open the design focus. Preview there, then hold to seal and proclaim.';
   if (!before || (!isPending(before) && before.state !== 'sealed')) return 'This proposal is no longer available.';
-  if (authority.owner(before) === 'live') return (await authority.seal(before)).reply;
+  if (isPending(before) && authority.owner(before) === 'live') return (await authority.seal(before)).reply;
   if (isPending(before)) {
     const outcome = await authority.seal(before);
     if (!outcome.ok) {

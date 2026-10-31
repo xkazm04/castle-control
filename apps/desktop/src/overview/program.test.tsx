@@ -2,6 +2,7 @@ import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { createSealAuthority, LiveSteward, proposalQueue, SimulatedSteward } from '@castle-control/ui/steward';
 import * as sealSlot from '../rooms/seal-slot/index.jsx';
 import { entryHash, lotterySession } from '../rooms/lottery/session.js';
+import { fixtureDraws } from '../lots-fixture.js';
 import { programCandidate, proclaimToSampleProgram, sampleProgram } from './program.js';
 
 beforeEach(() => { for (const proposal of proposalQueue.pending()) proposalQueue.tearUp(proposal.id); proposalQueue.select(); });
@@ -100,4 +101,28 @@ test('a fixture proclamation retains its exact simulated Program notice', async 
   const draft = (await new SimulatedSteward().ask('test fire 50 gifts', { surface: 'overview' })).proposals[0];
   if (!draft) throw new Error('Missing simulated visuals draft');
   expect(await proclaimToSampleProgram(draft.id)).toBe('Sealed and proclaimed to simulated Program. No live output or viewer action.');
+});
+
+test.each([true, false])('a live writ sealed in its room projects on proclaim without a second seal: %s', async inRoom => {
+  const writ = { writ_id: inRoom ? '01ARZ3NDEKTSV4RRFFQ69G5FA0' : '01ARZ3NDEKTSV4RRFFQ69G5FA1',
+    chamber: 'lots', status: 'proposed', created_at: '2026-10-27T00:00:00Z', updated_at: '2026-10-27T00:00:01Z',
+    proposal: { method: 'lots.draw.upsert', diff: { after: { draw: fixtureDraws[0] } } } };
+  const transport = { ask: vi.fn(async () => JSON.stringify({ writ })),
+    seal: vi.fn(async () => JSON.stringify({ writ: { ...writ, status: 'sealed' } })), tear: vi.fn() };
+  const live = new LiveSteward(transport);
+  const draft = (await live.ask('Synthetic draw', { surface: 'room', chamber: 'lottery' })).proposals[0];
+  if (!draft) throw new Error('Missing live draft');
+  const authority = createSealAuthority({ queue: proposalQueue, live, local: vi.fn() });
+  const before = sampleProgram.getSnapshot();
+  if (inRoom) await authority.seal(draft);
+  expect(programCandidate('lottery')?.id).toBe(draft.id);
+  const notice = await proclaimToSampleProgram(draft.id, authority);
+  expect(transport.seal).toHaveBeenCalledExactlyOnceWith({ writ_id: draft.id });
+  if (inRoom) {
+    expect(notice).toContain('Sealed and proclaimed to simulated Program');
+    expect(sampleProgram.getSnapshot()).toContainEqual(expect.objectContaining({ id: draft.id, state: 'sealed' }));
+  } else {
+    expect(notice).toBe('The core confirmed your sealed configuration.');
+    expect(sampleProgram.getSnapshot()).toBe(before);
+  }
 });

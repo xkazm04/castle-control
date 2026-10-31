@@ -204,3 +204,35 @@ test('default and fixture-backed live turns never touch global fetch or WebSocke
   expect(transport.calls.map(call => call.method)).toEqual(['steward.ask', 'steward.ask', 'steward.writ.tear']);
   expect(network).not.toHaveBeenCalled();
 });
+
+test('after an unconfirmed seal, a second seal and a tear reply with the unknown-outcome sentence, never No authorization was given', async () => {
+  const queue = new ProposalQueue();
+  const transport = new RecordedStewardTransport([reply(draw)]);
+  const seal = vi.spyOn(transport, 'seal').mockRejectedValue(new Error('Simulated timeout'));
+  const tear = vi.spyOn(transport, 'tear');
+  const steward = new LiveSteward(transport, queue);
+  await steward.ask('Synthetic draw', context);
+  const unknown = await steward.seal(draw.writ_id);
+  const before = queue.getSnapshot();
+  expect(unknown.reply).toContain('Reconcile its outcome with the core');
+  for (const turn of [await steward.seal(draw.writ_id), await steward.tearUp(draw.writ_id),
+    await steward.amend(draw.writ_id, 'Synthetic amendment', context),
+    await steward.ask('Synthetic amendment', { ...context, selected_proposal_id: draw.writ_id })]) {
+    expect(turn.reply).toBe(unknown.reply);
+    expect(turn.reply).not.toContain('No authorization was given');
+  }
+  expect(queue.getSnapshot()).toBe(before);
+  expect(seal).toHaveBeenCalledTimes(1);
+  expect(tear).not.toHaveBeenCalled();
+});
+
+test.each([true, false])('uncertain(id) is true after a rejected seal reply and false for a confirmed one: %s', async confirmed => {
+  const transport = new RecordedStewardTransport([reply(draw)]);
+  vi.spyOn(transport, 'seal').mockResolvedValue(reply({ ...draw, status: confirmed ? 'sealed' : 'proposed' }));
+  const steward = new LiveSteward(transport, new ProposalQueue());
+  await steward.ask('Synthetic draw', context);
+  expect(steward.uncertain(draw.writ_id)).toBe(false);
+  expect(steward.uncertain('missing')).toBe(false);
+  await steward.seal(draw.writ_id);
+  expect(steward.uncertain(draw.writ_id)).toBe(!confirmed);
+});

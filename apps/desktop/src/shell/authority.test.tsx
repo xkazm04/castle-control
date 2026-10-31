@@ -1,11 +1,12 @@
 import { Children, isValidElement } from 'react';
+import * as React from 'react';
 import type { ReactElement, ReactNode } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { invoke } from '@castle-control/contract';
 import { ProposalCard, WindowedRows } from '@castle-control/ui';
 import type { ProposalCardProps, WindowedRowsProps } from '@castle-control/ui';
-import { LiveSteward, proposalQueue } from '@castle-control/ui/steward';
+import { createSealAuthority, LiveSteward, proposalQueue, SimulatedSteward } from '@castle-control/ui/steward';
 import type { Proposal, SealAuthority } from '@castle-control/ui/steward';
 import { Inspector } from '../overview/inspector.jsx';
 import { Overview } from '../overview/overview.jsx';
@@ -15,6 +16,9 @@ import { DesktopView } from '../view.jsx';
 import Room from './room.jsx';
 import { shellSealAuthority, shellStewardPort } from './core-steward.js';
 import { StewardSealSlot } from './steward-slot.jsx';
+import SealSlot, { sealRoomProposal } from '../rooms/seal-slot/index.jsx';
+
+vi.mock('react', async importOriginal => ({ ...await importOriginal<typeof React>() }));
 
 beforeEach(() => { for (const proposal of proposalQueue.pending()) proposalQueue.tearUp(proposal.id); proposalQueue.select(); });
 afterEach(() => { vi.restoreAllMocks(); vi.unstubAllGlobals(); });
@@ -28,12 +32,13 @@ const writ = { writ_id: '01ARZ3NDEKTSV4RRFFQ69G5FAV', chamber: 'beacons', status
   } } } } };
 
 let sequence = 0;
+const syntheticWrit = () => ({ ...writ, writ_id: `${writ.writ_id.slice(0, -2)}${String(++sequence).padStart(2, '0')}` });
 function setup() {
-  const synthetic = { ...writ, writ_id: `${writ.writ_id.slice(0, -1)}${++sequence}` };
+  const synthetic = syntheticWrit();
   const transport = { ask: vi.fn(async () => JSON.stringify({ writ: synthetic })), seal: vi.fn(), tear: vi.fn() };
   const connection = { launch: { mode: 'core', endpoint: 'http://127.0.0.1:3210/', session_token: 'a'.repeat(64) } as const,
     live: true, reachable: () => true, transport };
-  return { transport, connection };
+  return { transport, connection, synthetic };
 }
 
 function find<P>(node: ReactNode, predicate: (element: ReactElement<P>) => boolean): ReactElement<P> | undefined {
@@ -125,4 +130,122 @@ test.each([true, false])('a disconnected connection retains live ownership, incl
   expect((await authority.seal(proposal)).ok).toBe(false);
   expect(proposalQueue.pending('visuals')).toContain(proposal);
   expect(transport.seal).not.toHaveBeenCalled();
+});
+
+// Keep the slot's state across static renders, without mounting a DOM or changing leaf components.
+function slotHarness(slot: () => ReactElement) {
+  const cells: unknown[] = [];
+  return () => {
+    let cursor = 0;
+    let tree: ReactElement | undefined;
+    const state = vi.spyOn(React, 'useState').mockImplementation((<T,>(initial: T | (() => T)) => {
+      const index = cursor++;
+      if (!(index in cells)) cells[index] = typeof initial === 'function' ? (initial as () => T)() : initial;
+      return [cells[index] as T, (next: React.SetStateAction<T>) => {
+        cells[index] = typeof next === 'function' ? (next as (value: T) => T)(cells[index] as T) : next;
+      }];
+    }) as typeof React.useState);
+    try {
+      function Probe() { tree = slot(); return null; }
+      renderToStaticMarkup(<Probe />);
+    } finally { state.mockRestore(); }
+    if (!tree) throw new Error('Missing slot tree');
+    return { html: renderToStaticMarkup(tree), card: find<ProposalCardProps>(tree, element => element.type === ProposalCard)?.props };
+  };
+}
+
+test('the live seal slot renders SEAL OUTCOME UNKNOWN and no enabled Hold to seal or Tear it up for an uncertain writ', async () => {
+  const { connection, transport } = setup();
+  const port = shellStewardPort(connection);
+  if (!(port instanceof LiveSteward)) throw new Error('Missing live port');
+  const draft = (await port.ask('Synthetic frame', { surface: 'room', chamber: 'visuals' })).proposals[0];
+  if (!draft) throw new Error('Missing live draft');
+  transport.seal.mockRejectedValue(new Error('Synthetic timeout'));
+  await port.seal(draft.id);
+  const html = renderToStaticMarkup(<StewardSealSlot chamber="visuals" port={port} />);
+  expect(html).toContain('SEAL OUTCOME UNKNOWN');
+  expect(html).toContain('check the core before acting');
+  expect(html).not.toMatch(/Hold to (seal|proclaim)|Tear it up|AWAITING YOUR SEAL/);
+});
+
+test.each(['seal', 'tear'] as const)('fixture seal slot shows a status line after a successful local %s', async operation => {
+  const draft = (await new SimulatedSteward().ask('draft a question draw', { surface: 'overview' })).proposals[0];
+  if (!draft) throw new Error('Missing fixture proposal');
+  const render = slotHarness(() => SealSlot({ chamber: 'lottery' }));
+  const card = render().card;
+  if (!card) throw new Error('Missing fixture card');
+  if (operation === 'seal') card.on_seal(); else card.on_tear();
+  await vi.waitFor(() => expect(proposalQueue.pending('lottery')).toHaveLength(0));
+  const html = render().html;
+  expect(html).toContain(`<p role="status">${operation === 'seal' ? 'Sealed.' : 'Torn up. This proposal will not act.'}</p>`);
+  expect(html).not.toContain('role="alert"');
+});
+
+test('live seal slot renders a refused seal reply with role=alert, not role=status', async () => {
+  const { connection, transport } = setup();
+  const port = shellStewardPort(connection);
+  if (!(port instanceof LiveSteward)) throw new Error('Missing live port');
+  await port.ask('Synthetic frame', { surface: 'room', chamber: 'visuals' });
+  transport.seal.mockRejectedValue(new Error('Synthetic timeout'));
+  const render = slotHarness(() => StewardSealSlot({ chamber: 'visuals', port }));
+  const card = render().card;
+  if (!card) throw new Error('Missing live card');
+  card.on_seal();
+  await vi.waitFor(() => expect(render().html).toContain('<p role="alert">The Steward could not confirm the seal.'));
+  expect(render().html).not.toContain('role="status"');
+});
+
+test.each(['live', 'fixture'] as const)('the %s slot clears its previous outcome when a new proposal arrives', async mode => {
+  const port = mode === 'live' ? new LiveSteward({
+    ask: vi.fn(async () => JSON.stringify({ writ: syntheticWrit() })),
+    seal: vi.fn(), tear: vi.fn(),
+  }) : new SimulatedSteward();
+  const context = { surface: 'room', chamber: 'visuals' } as const;
+  await port.ask(mode === 'live' ? 'Synthetic frame' : 'test fire 50 gifts', context);
+  const authority = createSealAuthority({ queue: proposalQueue,
+    ...(port instanceof LiveSteward ? { live: port } : {}), local: sealRoomProposal });
+  vi.spyOn(authority, 'seal').mockResolvedValue({ ok: false, reply: 'Synthetic refusal' });
+  const render = slotHarness(() => port instanceof LiveSteward
+    ? StewardSealSlot({ chamber: 'visuals', port, authority }) : SealSlot({ chamber: 'visuals', authority }));
+  const card = render().card;
+  if (!card) throw new Error('Missing proposal');
+  card.on_seal();
+  await vi.waitFor(() => expect(render().html).toContain('Synthetic refusal'));
+  await port.ask(mode === 'live' ? 'Another synthetic frame' : 'test fire 50 gifts', context);
+  expect(proposalQueue.pending('visuals')).toHaveLength(2);
+  expect(render().html).not.toContain('Synthetic refusal');
+  // Returning to the old proposal set must not resurrect a cleared refusal.
+  const newest = proposalQueue.pending('visuals').at(-1);
+  if (!newest) throw new Error('Missing new proposal');
+  proposalQueue.tearUp(newest.id);
+  expect(render().html).not.toContain('Synthetic refusal');
+});
+
+test.each(['seal', 'tear'] as const)('live seal slot announces a confirmed %s as status', async operation => {
+  const { connection, transport, synthetic } = setup();
+  const port = shellStewardPort(connection);
+  if (!(port instanceof LiveSteward)) throw new Error('Missing live port');
+  await port.ask('Synthetic frame', { surface: 'room', chamber: 'visuals' });
+  transport[operation].mockResolvedValue(JSON.stringify({ writ: { ...synthetic, status: operation === 'seal' ? 'sealed' : 'torn' } }));
+  const render = slotHarness(() => StewardSealSlot({ chamber: 'visuals', port }));
+  const card = render().card;
+  if (!card) throw new Error('Missing live card');
+  if (operation === 'seal') card.on_seal(); else card.on_tear();
+  await vi.waitFor(() => expect(proposalQueue.pending('visuals')).toHaveLength(0));
+  expect(render().html).toContain(`<p role="status">${operation === 'seal'
+    ? 'The core confirmed your sealed configuration.' : 'Torn up. This proposal will not act.'}</p>`);
+  expect(render().html).not.toContain('role="alert"');
+});
+
+test('fixture seal slot announces a guardrail refusal as alert', async () => {
+  const steward = new SimulatedSteward();
+  await steward.ask('draft a question draw', { surface: 'overview' });
+  await steward.ask('prize is a signed print', { surface: 'overview' });
+  const render = slotHarness(() => SealSlot({ chamber: 'lottery' }));
+  const card = render().card;
+  if (!card) throw new Error('Missing fixture card');
+  card.on_seal();
+  await vi.waitFor(() => expect(render().html).toContain('<p role="alert">Giveaway guardrails block this roll.</p>'));
+  expect(proposalQueue.pending('lottery')).toHaveLength(1);
+  expect(render().html).not.toContain('role="status"');
 });

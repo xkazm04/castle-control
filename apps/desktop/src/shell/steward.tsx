@@ -9,7 +9,7 @@ import type { StewardConnection } from '../client.js';
 import { shellStewardPort } from './core-steward.js';
 import './surfaces.css';
 
-export type TalkbackLine = { id: number; who: 'You' | 'Steward'; text: string };
+export type TalkbackLine = { id: number; who: 'You' | 'Steward'; text: string; live?: boolean };
 const greeting = 'Good evening. Draft in the preview, amend in ink, then hold to seal. Nothing acts on a spoken request.';
 
 /** Conversation is shared across mounts; all proposals live only in proposalQueue. */
@@ -17,8 +17,8 @@ export function createStewardConversation(port: StewardPort) {
   let snapshot: readonly TalkbackLine[] = [{ id: 0, who: 'Steward', text: greeting }];
   let sequence = 0;
   const listeners = new Set<() => void>();
-  const append = (who: TalkbackLine['who'], text: string) => {
-    snapshot = [...snapshot, { id: ++sequence, who, text }];
+  const append = (who: TalkbackLine['who'], text: string, live?: boolean) => {
+    snapshot = [...snapshot, { id: ++sequence, who, text, ...(live === undefined ? {} : { live }) }];
     for (const listener of listeners) listener();
   };
   return {
@@ -31,11 +31,11 @@ export function createStewardConversation(port: StewardPort) {
         for (const proposal of turn.proposals) {
           if (isPending(proposal)) proposalQueue.addOrUpdate(proposal);
         }
-        append('Steward', turn.reply);
+        append('Steward', turn.reply, engine instanceof LiveSteward);
         return turn;
       } catch {
         const reply = 'The Steward could not finish. No authorization was given. Try again.';
-        append('Steward', reply);
+        append('Steward', reply, engine instanceof LiveSteward);
         return { reply, proposals: [], focus: null };
       }
     },

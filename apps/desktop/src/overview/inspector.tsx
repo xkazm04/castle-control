@@ -51,6 +51,7 @@ export function Inspector({ selected, proposals, on_open, active = true, authori
 export function Talkback() {
   const lines = useSyncExternalStore(stewardConversation.subscribe, stewardConversation.getSnapshot, stewardConversation.getSnapshot);
   return <WindowedRows rows={lines} label="Steward conversation" row_key={line => String(line.id)} row_height={96}>
-    {line => <div className="overview-talkback-line"><b>{line.who === 'Steward' ? 'Steward · simulated' : line.who}</b><p>{line.text}</p></div>}
+    {line => <div className="overview-talkback-line"><b>{line.who === 'Steward' && line.live !== undefined
+      ? `Steward · ${line.live ? 'live' : 'simulated'}` : line.who}</b><p>{line.text}</p></div>}
   </WindowedRows>;
 }

@@ -27,6 +27,10 @@ const failure: StewardTurn = Object.freeze({
   reply: 'The Steward could not confirm this draft. No authorization was given. The proposal queue is unchanged.',
   proposals: Object.freeze([]), focus: null,
 });
+const unknownSeal: StewardTurn = Object.freeze({
+  reply: 'The Steward could not confirm the seal. Reconcile its outcome with the core before trying again.',
+  proposals: Object.freeze([]), focus: null,
+});
 
 /** Stable display text retains the complete typed snapshot, including optional fields. */
 function snapshotText(value: unknown): string {
@@ -85,6 +89,7 @@ export class LiveSteward implements StewardPort {
   }
 
   owns(id: string): boolean { return this.#writs.has(id); }
+  uncertain(id: string): boolean { return this.#uncertain.has(id); }
 
   #turn(result: ProposalResult, reply: string): StewardTurn {
     if (!result.ok) return failure;
@@ -123,6 +128,7 @@ export class LiveSteward implements StewardPort {
 
   async ask(text: string, context: StewardContext): Promise<StewardTurn> {
     const id = context.selected_proposal_id;
+    if (id !== undefined && this.uncertain(id)) return unknownSeal;
     const previous = id === undefined ? undefined : this.#current(id);
     if (id !== undefined && !previous) return failure;
     const chamber = context.chamber === undefined ? previous?.chamber : wireChambers[context.chamber];
@@ -131,12 +137,14 @@ export class LiveSteward implements StewardPort {
   }
 
   async amend(proposalId: string, text: string, context: StewardContext): Promise<StewardTurn> {
+    if (this.uncertain(proposalId)) return unknownSeal;
     const previous = this.#current(proposalId);
     if (!previous || (context.chamber !== undefined && wireChambers[context.chamber] !== previous.chamber)) return failure;
     return this.#ask(text, previous.chamber, previous);
   }
 
   async tearUp(proposalId: string): Promise<StewardTurn> {
+    if (this.uncertain(proposalId)) return unknownSeal;
     if (this.#requests) return failure;
     const previous = this.#current(proposalId);
     if (!previous) return failure;
@@ -160,6 +168,7 @@ export class LiveSteward implements StewardPort {
 
   /** Called only after a human hold; ask/amend/tear never call it. No automatic retry. */
   async seal(proposalId: string): Promise<StewardTurn> {
+    if (this.uncertain(proposalId)) return unknownSeal;
     const previous = this.#current(proposalId);
     if (!previous || this.#requests) return failure;
     const before = this.#queue.getSnapshot();
@@ -167,20 +176,18 @@ export class LiveSteward implements StewardPort {
     if (!proposal) return failure;
     this.#requests++;
     this.#uncertain.add(proposalId);
-    const unknown: StewardTurn = { reply: 'The Steward could not confirm the seal. Reconcile its outcome with the core before trying again.',
-      proposals: [], focus: null };
     try {
       const params = parseWritSealParams(JSON.stringify({ writ_id: proposalId }));
       const { writ } = parseWritSealResult(await this.#transport.seal(params));
       if (this.#queue.getSnapshot() !== before || writ.status !== 'sealed' || writ.error !== undefined
-        || !matches(writ, previous) || snapshotText(writ.proposal) !== snapshotText(previous.proposal)) return unknown;
+        || !matches(writ, previous) || snapshotText(writ.proposal) !== snapshotText(previous.proposal)) return unknownSeal;
       const result = proposal.kind === 'proclaim' ? this.#queue.proclaim(proposalId) : this.#queue.seal(proposalId);
-      if (!result.ok) return unknown;
+      if (!result.ok) return unknownSeal;
       this.#writs.set(proposalId, writ);
       this.#uncertain.delete(proposalId);
       return this.#turn(result, 'The core confirmed your sealed configuration.');
     } catch {
-      return unknown;
+      return unknownSeal;
     } finally {
       this.#requests--;
     }
