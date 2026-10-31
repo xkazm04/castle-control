@@ -1,4 +1,5 @@
 ﻿import type { ChatDelay, Decision } from '@castle-control/contract';
+import { useId } from 'react';
 import { HeraldicCard, HeroReadout, InkButton, Plate, PlateActions, PlateBand, PlateBody, SectionHeading, StatusChip } from '@castle-control/ui';
 import type { ProposalQueue } from '@castle-control/ui/steward';
 import type { ModerationPreview } from '../../moderation-model.js';
@@ -49,6 +50,7 @@ export function HeldQueue({ state, queue }: Props) {
 }
 
 export function GateControls({ state, queue }: Props) {
+  const delay_id = useId();
   return <Plate ink="azure" offset="space-8" className="moderator-moat" aria-label={copy.moat_title}
     band={<PlateBand title={copy.moat_title} gloss={copy.moat_gloss} count={<CountLabel first={copy.simulated} />} />}>
     <PlateBody>
@@ -63,11 +65,12 @@ export function GateControls({ state, queue }: Props) {
         <span aria-current={state.delay.value === 2 ? 'true' : undefined}>{copy.delay_seconds(2)}</span></span>
         {[4, 6].map(value => <span key={value} aria-current={state.delay.value === value ? 'true' : undefined}>{copy.delay_seconds(value)}</span>)}</div>
       <div className="moderator-moat-row" aria-busy={(state.delay.kind === 'confirming') || (state.shield.kind === 'confirming')}>
-        <label>{copy.propose_delay} <select aria-label={copy.delay_applied} value={state.delay.value} disabled={(state.delay.kind === 'confirming')}
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 'var(--space-8)' }}>
+          <label htmlFor={delay_id}>{copy.propose_delay}</label><select id={delay_id} value={state.delay.value} disabled={(state.delay.kind === 'confirming')}
           onChange={event => {
             const value = Number(event.currentTarget.value);
             if ([0, 2, 4, 6].includes(value)) proposeCommand(queue, { kind: 'delay', delay_s: value as ChatDelay }, `Set chat delay to ${value} s`);
-          }}><option value={0}>{copy.delay_off}</option>{[2, 4, 6].map(value => <option key={value} value={value}>{copy.delay_seconds(value)}</option>)}</select></label>
+          }}><option value={0}>{copy.delay_off}</option>{[2, 4, 6].map(value => <option key={value} value={value}>{copy.delay_seconds(value)}</option>)}</select></span>
         <span className="moderator-status" role="status">{state.notice}</span>
       </div>
       <InkButton type="button" size="big" variant="shield" aria-label={copy.shield_label} aria-pressed={state.shield.value} disabled={(state.shield.kind === 'confirming')}

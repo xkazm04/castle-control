@@ -45,7 +45,7 @@ test('Gatehouse shadow journey and transparent stream previews', async ({ page }
     await page.getByRole('button', { name: 'Propose watching rule', exact: true }).click();
     await seal(page);
     await expect(page.locator('.moderator-orders')).toContainText('Links for review');
-    await page.getByRole('combobox', { name: 'Applied chat delay', exact: true }).selectOption('6');
+    await page.getByRole('combobox', { name: 'Propose chat delay', exact: true }).selectOption('6');
     await seal(page);
     await expect(page.locator('.moderator-moat .cc-hero-figure')).toHaveAttribute('data-text', '6');
     await page.getByRole('button', { name: 'Play simulated chat', exact: true }).click();

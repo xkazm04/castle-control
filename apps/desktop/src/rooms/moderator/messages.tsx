@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import type { ReactNode } from 'react';
+import { cloneElement, useId } from 'react';
+import type { InputHTMLAttributes, ReactElement, ReactNode } from 'react';
 import type { Decision, Verdict } from '@castle-control/contract';
 import { Plate, PlateBand, PlateBody, RuledFeed, RuledRow, WindowedRows } from '@castle-control/ui';
 import { moderationCopy as copy } from '../../moderation-copy.js';
@@ -13,6 +14,14 @@ export type ReplayProps = {
 };
 type Filter = Verdict | 'all' | 'draft';
 type Selection = { filter: Filter; query: string; on_filter: (filter: Filter) => void; on_query: (query: string) => void };
+
+function ReplaySearch({ label, count, children }: {
+  label: string; count: number; children: ReactElement<InputHTMLAttributes<HTMLInputElement>>;
+}) {
+  const search_id = useId();
+  return <div className="moderator-search"><label htmlFor={search_id}>{label}</label>
+    {cloneElement(children, { id: search_id })}<output>{copy.matching(count)}</output></div>;
+}
 
 export function MessageList(props: ReplayProps) {
   const [query, setQuery] = useState('');
@@ -31,17 +40,21 @@ export function ReplayPanel({ messages, scroll_top = 0, core = false, notes, foo
         count={<>{messages.length.toLocaleString('en-US')}<CountLabel first={copy.lines} second={core ? copy.core_label : copy.simulated} /></>} />}>
       <PlateBody>
         <div className="moderator-banners" role="group" aria-label={core ? copy.core_verdict_filter : copy.verdict_filter}>
-          {(['all', 'pass', 'hold', 'bar'] as const).map(value => <button type="button" className="moderator-banner" key={value}
+          {(['all', 'pass', 'hold', 'bar'] as const).map(value => {
+            const count = (value === 'all' ? messages.length : messages.filter(message => message.verdict === value).length).toLocaleString('en-US');
+            return <button type="button" className="moderator-banner" key={value} aria-label={`${verdictWords[value]} · ${count} ${copy.lines}`}
             data-verdict-pick={value} aria-pressed={filter === value} onClick={() => on_filter(value)}>
             <span><VerdictIcon verdict={value} />{verdictWords[value]}</span>
-            <b>{(value === 'all' ? messages.length : messages.filter(message => message.verdict === value).length).toLocaleString('en-US')}</b>
-          </button>)}
-          {marked && <button type="button" className="moderator-banner" aria-pressed={filter === 'draft'} onClick={() => on_filter('draft')}>
+            <b>{count}</b>
+          </button>; })}
+          {marked && <button type="button" className="moderator-banner"
+            aria-label={`${copy.draft_filter} · ${messages.filter(message => marked.has(message.message_id)).length.toLocaleString('en-US')} ${copy.lines}`}
+            aria-pressed={filter === 'draft'} onClick={() => on_filter('draft')}>
             <span>{copy.draft_filter}</span><b>{messages.filter(message => marked.has(message.message_id)).length}</b></button>}
         </div>
-        <label className="moderator-search">{core ? copy.core_search : copy.search}
+        <ReplaySearch label={core ? copy.core_search : copy.search} count={filtered.length}>
           <input type="search" value={query} onChange={event => on_query(event.currentTarget.value)} />
-          <output>{copy.matching(filtered.length)}</output></label>
+        </ReplaySearch>
         {notes && <div className="moderator-core-notes">{notes}</div>}
         <span className="moderator-visually-hidden">{copy.replay_total(messages.length)} · {core ? copy.core_label : copy.simulated_caps}</span>
       </PlateBody>

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useId } from 'react';
 import type { DrillRunResult, DrillState } from '@castle-control/contract';
 import { VerdictChip, WindowedRows, rowHeight } from '@castle-control/ui';
 import { moderationCopy as copy } from '../../moderation-copy.js';
@@ -8,6 +9,7 @@ import { DraftPatternPreview } from './rule-bench.jsx';
 export function Drill({ result, origin = 'fixture', capture_hash, draft }: {
   result: DrillRunResult; origin?: 'fixture' | 'core'; capture_hash?: string | undefined; draft?: BenchResult | undefined;
 }) {
+  const state_id = useId();
   const [filter, setFilter] = useState<DrillState | 'all'>('all');
   const states = Object.keys(result.summary.states) as DrillState[];
   const outcomes = result.outcomes.filter(item => filter === 'all' || item.state === filter);
@@ -26,10 +28,10 @@ export function Drill({ result, origin = 'fixture', capture_hash, draft }: {
       {states.map(state => <p key={state}>{state.replaceAll('_', ' ')}: {result.summary.states[state]}</p>)}
       {result.gaps.map(gap => <p key={gap.from}>{copy.recording_gap}: <time>{gap.from}</time> → <time>{gap.to}</time></p>)}
     </div><div className="room-column"><h3>{copy.replay_outcomes_title}</h3>
-      <label>{copy.evaluation_state} <select value={filter} onChange={event => {
+      <div><label htmlFor={state_id}>{copy.evaluation_state}</label>{' '}<select id={state_id} value={filter} onChange={event => {
         const value = event.currentTarget.value;
         if (value === 'all' || states.some(state => state === value)) setFilter(value as DrillState | 'all');
-      }}><option value="all">{copy.outcomes_all}</option>{states.map(state => <option key={state} value={state}>{state.replaceAll('_', ' ')}</option>)}</select></label>
+      }}><option value="all">{copy.outcomes_all}</option>{states.map(state => <option key={state} value={state}>{state.replaceAll('_', ' ')}</option>)}</select></div>
       <WindowedRows rows={outcomes} label={copy.outcomes_label} row_key={item => item.message_id} row_height={rowHeight * 3}>
         {item => <div><b>{item.message_id}</b><p>{item.state.replaceAll('_', ' ')} · {item.source}</p>
           {item.verdict ? <VerdictChip verdict={item.verdict} /> : <span>{copy.not_evaluable}</span>}</div>}</WindowedRows>

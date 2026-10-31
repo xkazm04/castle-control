@@ -1,5 +1,5 @@
 ﻿import { Children, isValidElement } from 'react';
-import type { ChangeEvent, ReactNode, ReactElement, ButtonHTMLAttributes, SelectHTMLAttributes } from 'react';
+import type { ChangeEvent, ReactNode, ReactElement, ButtonHTMLAttributes, LabelHTMLAttributes, SelectHTMLAttributes } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, expect, test, vi } from 'vitest';
 import { ProposalQueue, SimulatedSteward } from '@castle-control/ui/steward';
@@ -28,6 +28,21 @@ function find<T>(tree: ReactNode, predicate: (props: T) => boolean): ReactElemen
 }
 const state = (queue: ProposalQueue) => moderationSession(queue).port.getSnapshot();
 const controls = (queue: ProposalQueue) => renderToStaticMarkup(<GateControls state={state(queue)} queue={queue} />);
+function delaySelect(queue: ProposalQueue) {
+  let tree: ReactNode;
+  function Probe() {
+    tree = GateControls({ state: state(queue), queue });
+    return tree;
+  }
+  renderToStaticMarkup(<Probe />);
+  const label = find<LabelHTMLAttributes<HTMLLabelElement>>(tree, props => props.children === copy.propose_delay);
+  expect(label.props.children).toBe('Propose chat delay');
+  expect(label.props.htmlFor).toBeTruthy();
+  const select = find<SelectHTMLAttributes<HTMLSelectElement>>(tree, props => props.id === label.props.htmlFor);
+  expect(select.props['aria-label']).toBeUndefined();
+  expect(select.props['aria-labelledby']).toBeUndefined();
+  return select;
+}
 const heldQueue = (queue: ProposalQueue) => renderToStaticMarkup(<HeldQueue state={state(queue)} queue={queue} />);
 function seal(queue: ProposalQueue) {
   const proposal = queue.pending('moderator').at(-1);
@@ -46,7 +61,7 @@ test('gate handles validate only public requests and the four ChatDelay choices'
 test('delay select drafts only; applied value waits for a seal and then fixture confirmation', () => {
   vi.useFakeTimers(); const queue = new ProposalQueue();
   expect([...controls(queue).matchAll(/<option value="(\d+)"/g)].map(match => match[1])).toEqual(['0', '2', '4', '6']);
-  const select = find<SelectHTMLAttributes<HTMLSelectElement>>(GateControls({ state: state(queue), queue }), props => props['aria-label'] === copy.delay_applied);
+  const select = delaySelect(queue);
   select.props.onChange?.({ currentTarget: { value: '3' } } as ChangeEvent<HTMLSelectElement>);
   expect(queue.pending()).toHaveLength(0);
   select.props.onChange?.({ currentTarget: { value: '6' } } as ChangeEvent<HTMLSelectElement>);
@@ -58,7 +73,7 @@ test('delay select drafts only; applied value waits for a seal and then fixture 
   expect(controls(queue)).toContain(copy.gate_pending);
   expect(controls(queue)).not.toContain('generated fixtures only');
   expect(controls(queue)).toContain('aria-busy="true"');
-  expect(find<SelectHTMLAttributes<HTMLSelectElement>>(GateControls({ state: state(queue), queue }), props => props['aria-label'] === copy.delay_applied).props.disabled).toBe(true);
+  expect(delaySelect(queue).props.disabled).toBe(true);
   vi.advanceTimersByTime(fixtureConfirmationMs - 1); expect(state(queue).delay.value).toBe(4);
   vi.advanceTimersByTime(1); expect(state(queue).delay.value).toBe(6);
   expect(controls(queue)).toContain('value="6" selected=""');
