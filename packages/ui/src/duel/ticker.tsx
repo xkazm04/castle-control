@@ -2,13 +2,14 @@ import { memo } from 'react';
 import { recentEvents } from '@castle-control/duel/ballots';
 import type { IndexedWindow } from '@castle-control/duel/ballots';
 import type { TiltyardWords } from './words.js';
+import { chatLabel } from './provenance.js';
 
 export const Ticker = memo(function Ticker({ window, seen, words }: {
   window: IndexedWindow; seen: number; second: number; words: TiltyardWords;
 }) {
   const events = recentEvents(window, window.events[seen - 1]?.t_ms ?? -1);
   return <div className="ty-ticker" data-role="ty-ticker" data-provenance={window.provenance}
-    aria-label={`${words.chat.simulated} · ${words.chat.ticker_label}`}>
+    aria-label={window.provenance === 'simulated' ? `${words.chat.simulated} · ${words.chat.ticker_label}` : chatLabel(words, window.provenance)}>
     {events.map((event, index) => <div className="ty-tick" data-role="ty-tick" data-status={event.status}
       key={`${seen - index}`}>
       <time>{(event.t_ms / 1000).toFixed(1)}s</time>

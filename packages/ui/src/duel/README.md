@@ -269,3 +269,29 @@ remain for the Director. No browser fidelity result is claimed. No Computer
 Use or desktop Chrome was used. The full root `pnpm gate` was not run because
 the brief forbids installs and network calls.
 
+### WP10: live ballot subscriptions
+
+`TiltyardProps.ballot_feed` is an optional alternative to `ballots`. The host
+receives `{match_key, opened_at, window_ms}` and an accumulated-ballot callback,
+and returns its unsubscribe function. The subscription uses a real UTC wall
+clock timestamp on entering a live chat window. Verdict, cancellation, mode
+change, replacement window and unmount clean it up; late deliveries are ignored.
+Re-entering live chat subscribes again with a fresh wall-clock opening.
+
+Each delivery runs classifyWindow + indexWindow once. Clock ticks only query
+the index, including already-known future arrivals via nextDue. Re-arming the
+clock for an incoming delivery preserves the monotonic session anchor. New
+matches show an empty tally before the new subscription effect commits; closed
+windows retain their indexed result. The simulated source and epoch stay intact.
+
+Copy follows indexed provenance: simulated copy is unchanged; live windows say
+“Live chat · Gatehouse verdicts” and display plain viewer ids; mixed windows
+label both sources and format each row independently. Contestant SAMPLE labels
+remain separate from chat provenance. No shared component or CSS was restyled.
+
+Five Node-only lifecycle/component tests retain hook state, commit effects and
+render the real Chat component: two deliveries change the tug from 1–0 to 2–1;
+verdict unsubscribes; mode/cancel/undo/reset/unmount clean up; mixed and future
+arrivals remain indexed; new matches never show the preceding tally; delivery
+re-arming preserves 550ms of elapsed time rather than restarting the clock.
+

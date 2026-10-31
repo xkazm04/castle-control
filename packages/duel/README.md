@@ -52,3 +52,28 @@ Tests enumerate all 128 eight-seed outcomes, all 11 binary climb paths over ten
 rungs and all 91 phase/event pairs. They also cover smaller brackets, list
 validation, source-matched arms/randomness, timing, cancellation, undo, reset,
 chat calls/ties and ladder queue exhaustion.
+
+## WP10: event-driven ballot feed
+
+`createBallotFeed` (public `.` entry) reads already-validated
+`GatehouseChatResult` pages through injected `read` and `timers` functions.
+`ballotsFromResult` (`./ballots`) maps those objects; `parseBallotPage` still
+validates text once at the existing contract door before using that mapper.
+
+`BALLOT_FEED_TRANSITIONS` declares idle, reading, reading_dirty and closed.
+Open starts a cycle; only `gatehouse.verdict` signals another. In-flight signals
+coalesce into one dirty follow-up. Each cycle follows at most 20 pages by
+default and merges by message_id. Refetches resend the last cursor actually
+sent, including no cursor for a single-page tail. A capped cycle saves the
+server's continuation for its next cycle. No cursor is synthesized.
+
+One injected timer starts a quiet retry after 15000ms by default; signals
+cancel it and a completed cycle re-arms it. Errors retain the tail and appear
+in `status().last_error` plus optional `on_error`; the backstop retries.
+Close cancels the timer, ignores signals and discards outstanding replies.
+
+Nine feed tests print work counts: ten coalesced signals produce two reads;
+45000ms quiet produces four reads; a signal at 10000ms delays the backstop
+until 25000ms; tailing produces four unique messages in five reads; closing
+discards the sole late result; four other event kinds add zero reads; a failure
+retries on the backstop; a two-page cap continues on its next cycle.

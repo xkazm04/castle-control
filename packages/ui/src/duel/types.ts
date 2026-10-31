@@ -1,4 +1,5 @@
 import type { DuelList } from '@castle-control/duel';
+import type { Ballot } from '@castle-control/duel/ballots';
 import type { TiltyardWords } from './words.js';
 
 export type DuelMode = 'show' | 'chat' | 'ladder';
@@ -14,6 +15,8 @@ export interface TiltyardProps {
   readonly words: TiltyardWords;
   readonly initial_mode?: DuelMode;
   readonly ballots?: (match_key: string, window_ms: number, opened_at: string) => readonly string[];
+  readonly ballot_feed?: (window: { match_key: string; opened_at: string; window_ms: number },
+    on_ballots: (ballots: readonly Ballot[]) => void) => () => void;
   readonly on_close?: () => void;
   readonly label: string;
 }

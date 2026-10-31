@@ -5,6 +5,7 @@ import type { ProposalQueue } from '@castle-control/ui/steward';
 import { designSession } from '@castle-control/ui/design';
 import type { DesignSession } from '@castle-control/ui/design';
 import type { Snapshot } from '../../model.js';
+import { coreGatehouseConnection } from '../../client.js';
 import { studioCopy as copy } from '../../studio-copy.js';
 import { ProposalLayers } from '../visuals/proposal-layers.jsx';
 import { HexTable, TileInspector } from './hex-table.jsx';
@@ -85,8 +86,13 @@ export function StudioWork({ queue, seal_slot, board, design_session = designSes
 }
 
 export default function StudioRoom({ snapshot, seal_slot }: { snapshot: Snapshot; seal_slot?: ReactNode }) {
-  if (snapshot.mode !== 'fixture') return <section className="studio-room studio-core">
-    <EmptyState title={copy.bare} description={copy.unconfigured} />{seal_slot}
-  </section>;
+  if (snapshot.mode !== 'fixture') {
+    const connection = coreGatehouseConnection(snapshot);
+    return <section className="studio-room studio-core" data-view="tiltyard">
+      {connection ? <Suspense fallback={<p role="status">{copy.tiltyard}</p>}>
+        <TiltyardView connection={connection} />
+      </Suspense> : <EmptyState title={copy.bare} description={copy.unconfigured} />}{seal_slot}
+    </section>;
+  }
   return <StudioWork seal_slot={seal_slot} />;
 }

@@ -76,7 +76,7 @@ export function createCoreSource(launch: CoreLaunch, transport: Network = networ
             const event = parseEvent(message.data);
             if (event.kind !== 'resync' && event.seq <= since_seq) return;
             since_seq = event.seq;
-            invalidate();
+            invalidate(event);
           } catch {
             interrupt();
             current.close();

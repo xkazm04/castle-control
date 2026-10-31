@@ -10,15 +10,14 @@ export function nextDue(session: ShowSession | ChatSession | LadderSession, wind
 }
 
 /** One wakeup, measured against a monotonic clock rather than the requested delay. */
-export function useSessionClock(due_ms: number | null, on_tick: (ms: number) => void): () => number {
-  const started_at = useRef<number | null>(null);
-  const elapsed = useCallback(() => started_at.current === null ? 0 : performance.now() - started_at.current, []);
+export function useSessionClock(due_ms: number | null, on_tick: (ms: number) => void, session: object = on_tick): () => number {
+  const anchor = useRef({ session, at: performance.now() });
+  if (anchor.current.session !== session) anchor.current = { session, at: performance.now() };
+  const elapsed = useCallback(() => performance.now() - anchor.current.at, []);
   useEffect(() => {
-    started_at.current = null;
     if (due_ms === null) return;
-    started_at.current = performance.now();
-    const timer = setTimeout(() => on_tick(elapsed()), Math.max(0, Math.ceil(due_ms)));
-    return () => { clearTimeout(timer); started_at.current = null; };
-  }, [due_ms, on_tick, elapsed]);
+    const timer = setTimeout(() => on_tick(elapsed()), Math.max(0, Math.ceil(due_ms - elapsed())));
+    return () => { clearTimeout(timer); };
+  }, [due_ms, on_tick, elapsed, session]);
   return elapsed;
 }

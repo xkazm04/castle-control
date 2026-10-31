@@ -6,6 +6,8 @@ import { Chat, chatWindows } from './chat.jsx';
 import { duelKeyAction } from './keymap.js';
 import { Ladder, ladderAnnouncement } from './ladder.jsx';
 import { useReducedMotion } from './motion.js';
+import { useLiveBallots } from './live-ballots.js';
+import { chatWordsFor } from './provenance.js';
 import { duelModes, Pennants } from './pennants.jsx';
 import { createTiltyardState, tiltyardReducer } from './session.js';
 import type { StageAction, TiltyardState } from './session.js';
@@ -22,7 +24,7 @@ import './ticker.css';
 import './hill.css';
 import './ladder.css';
 
-export function Tiltyard({ lists, words, initial_mode = 'show', label, ballots }: TiltyardProps) {
+export function Tiltyard({ lists, words, initial_mode = 'show', label, ballots, ballot_feed }: TiltyardProps) {
   const reduced = useReducedMotion();
   const [state, dispatch] = useReducer((before: TiltyardState, action: StageAction): TiltyardState => {
     const after = tiltyardReducer(before, action);
@@ -33,8 +35,10 @@ export function Tiltyard({ lists, words, initial_mode = 'show', label, ballots }
   const root = useRef<HTMLElement>(null);
   const session = state[state.mode];
   const windows = useMemo(() => chatWindows(ballots), [ballots]);
-  const window = state.mode === 'chat' ? windows(state.chat) : undefined;
-  const connected = state.mode !== 'chat' || ballots !== undefined;
+  const live_window = useLiveBallots(ballot_feed, state.chat, state.mode === 'chat');
+  const window = state.mode === 'chat' ? ballot_feed ? live_window : windows(state.chat) : undefined;
+  const display_words = chatWordsFor(words, window?.provenance ?? (ballot_feed ? 'live' : 'simulated'));
+  const connected = state.mode !== 'chat' || ballots !== undefined || ballot_feed !== undefined;
   const live = connected && (session.phase === 'live' || session.phase === 'verdict');
   const send = useCallback((event: DuelEvent, elapsed_ms = 0) => {
     if (!connected) return;
@@ -43,7 +47,7 @@ export function Tiltyard({ lists, words, initial_mode = 'show', label, ballots }
     dispatch({ kind: 'event', event, words, elapsed_ms, ...(counted ? { counted } : {}) });
   }, [connected, window, state.chat, words]);
   const on_tick = useCallback((ms: number) => send({ kind: 'tick', ms }), [send, session]);
-  const elapsed = useSessionClock(connected ? nextDue(session, window) : null, on_tick);
+  const elapsed = useSessionClock(connected ? nextDue(session, window) : null, on_tick, session);
   const on_event = useCallback((event: DuelEvent) => send(event, state.mode === 'chat' ? elapsed() : 0), [send, elapsed, state.mode]);
   const on_mode = useCallback((mode: DuelMode) => {
     if (state.mode === 'chat' && live) on_tick(elapsed());
@@ -66,7 +70,7 @@ export function Tiltyard({ lists, words, initial_mode = 'show', label, ballots }
       } else if (action === 'pick_left' || action === 'pick_right') on_event({ kind: 'pick', side: action === 'pick_left' ? 0 : 1 });
       else on_event({ kind: action === 'cancel' ? 'cancel' : action === 'undo' ? 'undo' : 'enter' });
     }}>
-    <Pennants mode={state.mode} words={words} on_mode={on_mode}>
+    <Pennants mode={state.mode} words={display_words} on_mode={on_mode}>
       <div className="ty-yard-keys" data-role="ty-keys">
         <span><kbd>{words.keys.left}</kbd><kbd>{words.keys.right}</kbd>{words.pick}</span>
         <span><kbd>{words.keys.escape}</kbd>{live ? words.cancel : words.back}</span>

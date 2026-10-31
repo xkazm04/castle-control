@@ -60,6 +60,8 @@ export const studioCopy = {
   tiltyard: 'Tiltyard',
   tiltyard_note: 'The duel component · hosted as a Map Room view',
   tiltyard_sample: 'Sample items · simulated chat',
+  tiltyard_live: 'SAMPLE contestants · Gatehouse verdicts',
+  tiltyard_unavailable: 'Live chat unavailable. Retrying on Gatehouse verdicts or the slow backstop.',
 } as const;
 
 export const studioStages = [

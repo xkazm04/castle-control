@@ -16,7 +16,8 @@ type LotsConnection = { launch: CoreLaunch; transport?: LotsNetwork; port?: Core
 const lotsConnections = new WeakMap<Snapshot, LotsConnection>();
 /** In-memory only, per client. Keep capabilities out of snapshots and preserve lazy rooms. */
 export function coreLotsConnection(snapshot: Snapshot) { return lotsConnections.get(snapshot); }
-type GatehouseConnection = { launch: CoreLaunch; transport?: GatehouseNetwork; port?: CoreGatehousePort };
+export type GatehouseConnection = { launch: CoreLaunch; transport?: GatehouseNetwork; port?: CoreGatehousePort;
+  subscribeEvents: ReturnType<typeof createReadModel>['subscribeEvents'] };
 const gatehouseConnections = new WeakMap<Snapshot, GatehouseConnection>();
 export function coreGatehouseConnection(snapshot: Snapshot) { return gatehouseConnections.get(snapshot); }
 
@@ -57,7 +58,8 @@ export function createDesktopClient(value: unknown, transport?: Network, lots_tr
   const client = createReadModel(launch.mode === 'fixture' ? createSimulatedSource() : createCoreSource(launch, transport));
   if (launch.mode === 'fixture') return client;
   const connection: LotsConnection = { launch, ...(lots_transport ? { transport: lots_transport } : {}) };
-  const gatehouse: GatehouseConnection = { launch, ...(gatehouse_transport ? { transport: gatehouse_transport } : {}) };
+  const gatehouse: GatehouseConnection = { launch, subscribeEvents: client.subscribeEvents,
+    ...(gatehouse_transport ? { transport: gatehouse_transport } : {}) };
   const beacons: BeaconsConnection = { launch };
   const stream: StreamConnection = { launch };
   const steward: StewardConnection = { launch, live: launch.steward === 'live',

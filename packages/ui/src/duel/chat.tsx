@@ -12,6 +12,7 @@ import { Ticker } from './ticker.jsx';
 import { Tug } from './tug.jsx';
 import type { TiltyardProps } from './types.js';
 import type { TiltyardWords } from './words.js';
+import { chatWordsFor } from './provenance.js';
 
 /** One ingestion per match key for this source, including undo and New vote. */
 export function chatWindows(source: TiltyardProps['ballots']): (session: ChatSession) => IndexedWindow | undefined {
@@ -32,9 +33,10 @@ export function chatWindows(source: TiltyardProps['ballots']): (session: ChatSes
   };
 }
 
-export function Chat({ session, window, words, on_event }: {
+export function Chat({ session, window, words: source_words, on_event }: {
   session: ChatSession; window?: IndexedWindow | undefined; words: TiltyardWords; on_event: (event: DuelEvent) => void;
 }) {
+  const words = chatWordsFor(source_words, window?.provenance ?? 'simulated');
   const { bracket, list, verdict } = session;
   const current = currentMatch(bracket);
   const match = verdict ?? current?.match;

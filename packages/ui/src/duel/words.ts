@@ -103,7 +103,7 @@ export interface ChatWords {
   readonly tally_label: string; readonly counted_for: string; readonly one_per_viewer: string;
   readonly barred: string; readonly held: string; readonly repeats: string; readonly bits: string;
   readonly excluded: string; readonly ticker_title: string; readonly ticker_detail: string;
-  readonly ticker_label: string; readonly simulated: string; readonly waiting: string; readonly bits_ignored: string;
+  readonly ticker_label: string; readonly simulated: string; readonly live: string; readonly waiting: string; readonly bits_ignored: string;
   readonly status: Readonly<Record<'counted' | 'barred' | 'held' | 'repeat' | 'chatter', string>>;
   readonly closed_before: string; readonly closed_after: string;
   readonly tally_enter: string; readonly now: string;
@@ -155,6 +155,7 @@ export const tiltyardWords: TiltyardWords = {
     next_announcement: rung => ` Challenging number ${rung}.`,
   },
   chat: {
+    live: 'Live chat · Gatehouse verdicts',
     no_source_title: 'No ballot source connected', no_source_text: 'No ballot source is connected.',
     paused_title: 'Vote window paused',
     paused_before_enter: 'The duel was called off, so the simulated chat window stopped where it was. You are still in the room. ',
