@@ -1,5 +1,72 @@
 # Gatehouse shadow journey (lane L2, 2026-10-31)
 
+## Stabilize findings 05, 07, 09 and 10 (2026-10-31)
+
+Re-anchored every finding against HEAD `4d936e1`, including the changed
+`log.tsx`, `watching-rule.tsx` and 395-line `gatehouse-core.test.ts`. All four
+still reproduced; none was declined. The new tests first failed against the
+unchanged product, then passed after the fixes:
+
+- **05 - `output.test.tsx`:** a size edit restarted the two timing players
+  (four starts instead of two), and completion left zero visible layers.
+  A press now captures an immutable timing snapshot. Settings edits and each
+  timing keystroke leave that run alone. Once both players finish, both
+  preview frames return to visible and announce **Timing replay finished**.
+  A second press replaces the run; replacement/unmount cancels its timers.
+- **07 - `clock-time.test.tsx`:** ClockTime was absent, all 4,200 messages
+  shared one timestamp, and drill gap text contained raw ISO dates. One
+  local-clock component now covers chat, ledger, history, drill gaps,
+  consensus refresh times and capture intervals. The complete UTC value
+  stays in dateTime/title. A Prague host-zone formatter probe proves
+  `2026-10-26T12:15:00Z` displays `13:15:00`; no fixed zone is set by product
+  code. Generated fixture messages advance deterministically by two seconds
+  and end at the existing fixture window end; consensus retains its own times.
+- **09 - `core-kit.test.tsx`:** raw core buttons and wrapped-label fields
+  failed the kit/association assertions. Core reads, Herald filters, manual
+  drill, capture selection/configuration and editable rule names now use
+  InkButton/FieldGroup with useId associations. Core chat's filter buttons
+  also use the kit; fixture banners retain their design. Textareas receive
+  co-located token styles. Tests audit each button and exact label/control
+  association, including conditional emote and classifier-name fields.
+- **10 - `core-inputs.test.tsx`:** the real transport received ` Kappa `,
+  and clearing an imported recording name refilled it. Herald now sends
+  `Kappa` and refuses blank submissions. An untouched recording name can
+  follow a late import, while an explicit empty edit stays empty and disables
+  Run, baseline and comparison. New cases live beside the components;
+  `gatehouse-core.test.ts` remains unchanged at 395 lines.
+
+The Node component probe renders components through JSX/React, captures their
+real event handlers and retains hook slots between probes. Its effect flush
+uses dependency identity and real fake-clock timers. No hook-bearing leaf is
+called as a plain function, and no DOM package was installed.
+
+Validation commands (all pnpm commands use
+`--config.verify-deps-before-run=false`; install is forbidden over the junction):
+
+- Whole desktop suite: `--filter @castle-control/desktop test` - **659 tests
+  / 65 files pass**. Final narrowed replay, clock, kit, inputs, core and
+  journey run - **41 tests / 6 files pass**.
+- Desktop typecheck and lint pass over **179 source files**. Boundary,
+  hygiene and file-cap checks cover **801 files**, secrets **1,077 files**.
+  No file exceeds 400 lines.
+- Desktop production build passes: **364,654 / 393,216 bytes** for the
+  first-load budget. Rust format, full-workspace Clippy and full-workspace
+  tests (including doc-tests, with default live-test ignores) pass.
+- `pnpm gate` exits 1 after 24 tooling tests, workspace inventory and Cargo
+  fetch pass: unchanged contract export cannot spawn Cargo
+  (`spawnSync cargo EPERM`). Recursive typecheck and lint separately exit 1
+  with `spawn EPERM` before package checks run.
+- `pnpm e2e e2e/journey-gatehouse.spec.ts --output <external-run>/e2e-results`
+  exits 1 with `spawn EPERM` after route/style inventories, before browser
+  tests execute. This is **not** an e2e pass. No e2e file was edited.
+- `git diff HEAD -- scripts packages/contract/scripts crates e2e` is empty:
+  the failing runners and Rust contract input match the base. No install,
+  git write, prohibited source edit or contract change was performed.
+
+Full gate and browser verification remain for App Master in its permitted
+environment; this delivery must not be described as fully verified.
+
+
 ## Stabilize findings 04, 06, 08 and 11 (2026-10-31)
 
 Re-anchored at `d1df7eb`, including `83afe49`, `c7d7b75` and `39bf3b6`.

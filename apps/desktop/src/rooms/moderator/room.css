@@ -139,8 +139,13 @@
 .moderator-core-read-row { width: 100%; min-width: 0; overflow: auto; font-size: var(--text-body); }
 .moderator-core-read-row p { margin-block: var(--space-4); overflow-wrap: anywhere; }
 .moderator-core-read-row time { font-family: var(--font-num); }
-.moderator-core-drill label, .moderator-core-drill textarea { display: block; width: 100%; }
-.moderator-core-drill textarea { min-height: var(--space-40); }
+.moderator-core-drill .moderator-card { display: grid; gap: var(--space-12); }
+.moderator-core-drill .cc-field textarea {
+  box-sizing: border-box; width: 100%; min-width: 0; min-height: calc(var(--space-40) * 2);
+  padding: var(--space-10) var(--space-12); border: var(--rule-medium) solid var(--ink);
+  border-radius: var(--r-sm); background: var(--paper); color: var(--ink);
+  font: 500 var(--text-body)/1.4 var(--font-num); resize: vertical;
+}
 .moderator-core-drill input, .moderator-rule input { width: 100%; min-width: 0; }
 .moderator-rule { display: grid; gap: var(--space-6); }
 .moderator-rule-editor, .moderator-rule-form, .moderator-bench-feedback { display: grid; gap: var(--space-10); min-width: 0; }
@@ -155,6 +160,7 @@
 .moderator-core-rules .cc-window { margin-top: var(--space-10); }
 .moderator-core-rules .cc-window-row { overflow: auto; }
 .moderator-core-consensus .moderator-print { margin-top: var(--space-12); }
+.moderator-core-consensus > form { display: grid; gap: var(--space-10); }
 /* Media conditions cannot resolve custom properties; retain the prototype breakpoints in rem. */
 @media (max-width: 85rem) {
   .moderator-columns > .room-column { padding-inline: var(--space-14) calc(var(--space-12) + var(--space-8)); }

@@ -2,9 +2,9 @@ import { useState } from 'react';
 import { cloneElement, useId } from 'react';
 import type { InputHTMLAttributes, ReactElement, ReactNode } from 'react';
 import type { Decision, Verdict } from '@castle-control/contract';
-import { Plate, PlateBand, PlateBody, RuledFeed, RuledRow, WindowedRows } from '@castle-control/ui';
+import { InkButton, Plate, PlateBand, PlateBody, RuledFeed, RuledRow, WindowedRows } from '@castle-control/ui';
 import { moderationCopy as copy } from '../../moderation-copy.js';
-import { CountLabel, VerdictIcon, VerdictMark, verdictWords } from './presentation.jsx';
+import { ClockTime, CountLabel, VerdictIcon, VerdictMark, verdictWords } from './presentation.jsx';
 export { rowWindow as messageWindow } from '@castle-control/ui';
 
 type ReplayDecision = Pick<Decision, 'decision_id' | 'message_id' | 'message_text' | 'at' | 'verdict'>;
@@ -32,6 +32,8 @@ export function MessageList(props: ReplayProps) {
 /** Controlled body shared by the fixture replay and retained core intake. */
 export function ReplayPanel({ messages, scroll_top = 0, core = false, notes, footer, provenance, marked,
   filter, query, on_filter, on_query }: ReplayProps & Selection) {
+  const FilterButton = core ? InkButton : 'button';
+  const filterProps = core ? { size: 'room' as const } : {};
   const filtered = messages.filter(message => (filter === 'all' || filter === 'draft' && marked?.has(message.message_id) || message.verdict === filter)
     && `${message.message_id} ${message.message_text ?? ''}`.toLowerCase().includes(query.trim().toLowerCase()));
   return <section className="moderator-messages">
@@ -42,15 +44,15 @@ export function ReplayPanel({ messages, scroll_top = 0, core = false, notes, foo
         <div className="moderator-banners" role="group" aria-label={core ? copy.core_verdict_filter : copy.verdict_filter}>
           {(['all', 'pass', 'hold', 'bar'] as const).map(value => {
             const count = (value === 'all' ? messages.length : messages.filter(message => message.verdict === value).length).toLocaleString('en-US');
-            return <button type="button" className="moderator-banner" key={value} aria-label={`${verdictWords[value]} · ${count} ${copy.lines}`}
+            return <FilterButton {...filterProps} type="button" className="moderator-banner" key={value} aria-label={`${verdictWords[value]} · ${count} ${copy.lines}`}
             data-verdict-pick={value} aria-pressed={filter === value} onClick={() => on_filter(value)}>
             <span><VerdictIcon verdict={value} />{verdictWords[value]}</span>
             <b>{count}</b>
-          </button>; })}
-          {marked && <button type="button" className="moderator-banner"
+          </FilterButton>; })}
+          {marked && <FilterButton {...filterProps} type="button" className="moderator-banner"
             aria-label={`${copy.draft_filter} · ${messages.filter(message => marked.has(message.message_id)).length.toLocaleString('en-US')} ${copy.lines}`}
             aria-pressed={filter === 'draft'} onClick={() => on_filter('draft')}>
-            <span>{copy.draft_filter}</span><b>{messages.filter(message => marked.has(message.message_id)).length}</b></button>}
+            <span>{copy.draft_filter}</span><b>{messages.filter(message => marked.has(message.message_id)).length}</b></FilterButton>}
         </div>
         <ReplaySearch label={core ? copy.core_search : copy.search} count={filtered.length}>
           <input type="search" value={query} onChange={event => on_query(event.currentTarget.value)} />
@@ -63,7 +65,7 @@ export function ReplayPanel({ messages, scroll_top = 0, core = false, notes, foo
       <WindowedRows empty_state={core ? copy.core_chat_empty : copy.empty} key={`${filter}:${query}`} rows={filtered}
         label={core ? copy.core_chat_label : copy.chat_label} scroll_top={scroll_top} row_key={row => core ? row.decision_id : row.message_id}>
         {message => <RuledRow mark={<VerdictMark verdict={message.verdict} />}
-          trailing={<time dateTime={message.at} title={message.at}>{message.at.slice(11, 19)}</time>}>
+          trailing={<ClockTime at={message.at} />}>
           <span data-message-row={message.message_id} data-verdict={message.verdict}
             data-draft-match={marked?.has(message.message_id) ? 'true' : undefined}
             data-provenance={provenance?.get(message.decision_id)}

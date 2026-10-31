@@ -1,7 +1,7 @@
-import { useEffect, useSyncExternalStore } from 'react';
+import { useId, useEffect, useSyncExternalStore } from 'react';
 import type { ReactNode } from 'react';
 import type { Rule } from '@castle-control/contract';
-import { HeraldicCard, InkButton, Plate, PlateBand, PlateBody, SectionHeading, StatusChip, WindowedRows, rowHeight } from '@castle-control/ui';
+import { FieldGroup, HeraldicCard, InkButton, Plate, PlateBand, PlateBody, SectionHeading, StatusChip, WindowedRows, rowHeight } from '@castle-control/ui';
 import { coreGatehouseConnection } from '../../client.js';
 import { createCoreGatehousePort } from '../../gatehouse-core.js';
 import type { CoreGatehousePort } from '../../gatehouse-core.js';
@@ -17,6 +17,7 @@ import { benchInput, evaluateDraft } from '../../moderation-bench.js';
 import './room.css';
 
 function CoreRule({ rule, busy, port }: { rule: Rule; busy: boolean; port: CoreGatehousePort }) {
+  const name_id = useId();
   const editable = rule.mode === 'shadow' && rule.rule_class === 'classifier';
   return <HeraldicCard><form className="moderator-rule" onSubmit={event => {
     event.preventDefault();
@@ -29,7 +30,7 @@ function CoreRule({ rule, busy, port }: { rule: Rule; busy: boolean; port: CoreG
     <div className="moderator-rule-card"><div className="moderator-rule-text"><b>{rule.name}</b><span>{rule.rule_class} · {rule.action}</span></div>
       <StatusChip variant="azure" stamp="mode" ink="azure" tone={rule.mode === 'armed' ? 'solid' : 'neutral'}>
         {rule.mode === 'armed' ? copy.armed : copy.watching}</StatusChip></div>
-    {editable && <label>{copy.rule_name}<input name="name" defaultValue={rule.name} disabled={busy} required /></label>}
+    {editable && <FieldGroup label={copy.rule_name} control_id={name_id}><input id={name_id} name="name" defaultValue={rule.name} disabled={busy} required /></FieldGroup>}
     {editable && <InkButton type="submit" size="room" disabled={busy}>{copy.save_watching}</InkButton>}
     {!editable && <p>{rule.rule_class === 'rail' ? copy.rail_fixed : rule.mode === 'shadow' ? copy.bench_edit_here : copy.edit_shadow}</p>}
   </form></HeraldicCard>;

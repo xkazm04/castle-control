@@ -6,6 +6,7 @@ import { fixtureTwitchActions } from '../../moderation-fixture.js';
 import { available, initialPhase, phaseLabel } from '../../moderation-lifecycle.js';
 import { moderationCopy as copy } from '../../moderation-copy.js';
 import { proposeCommand } from './session.js';
+import { ClockTime } from './presentation.jsx';
 
 export function GateLog({ state, queue }: { state: ModerationPreview; queue: ProposalQueue }) {
   const target_id = useId();
@@ -19,7 +20,7 @@ export function GateLog({ state, queue }: { state: ModerationPreview; queue: Pro
           return <article className="moderator-roll-entry">
           <div className="moderator-roll-entry-head"><VerdictChip verdict={item.verdict} />
             <b>{state.rules.find(rule => rule.rule_id === item.rule_id)?.name ?? copy.rule_unavailable}</b>
-            <time dateTime={item.at}>{item.at.slice(11, 19)}</time></div>
+            <ClockTime at={item.at} /></div>
           <p className="moderator-roll-message">{item.message_text ?? copy.text_unavailable}</p>
           <span id={`${target_id}-${item.decision_id}`} className="moderator-visually-hidden">{item.message_id}</span>
           <p className="moderator-small">{phaseLabel(phase)} · {item.reason_codes.map(copy.decision_reason).join(', ')} · {fixtureTwitchActions.has(item.decision_id) ? copy.twitch_human : copy.local_human}</p>

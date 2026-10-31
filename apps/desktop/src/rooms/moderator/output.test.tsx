@@ -1,11 +1,40 @@
+import { componentProbe } from './component-probe.jsx';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, expect, test, vi } from 'vitest';
 import { ProposalQueue } from '@castle-control/ui/steward';
 import { styles, art } from '../../demo/model.js';
 import { fixtureCharts, fixtureMessages } from '../../moderation-fixture.js';
 import { createOutputPreview, playOutputTiming } from './output-model.js';
-import { OutputFrame, OutputSettings } from './output.jsx';
+import { OutputFrame, OutputPreview, OutputSettings } from './output.jsx';
 import { moderationSession } from './session.js';
+import * as timing from './output-model.js';
+
+vi.mock('./output-model.js', async original => ({ ...await original<typeof timing>() }));
+
+test('one timing replay per press ignores size edits and each timing keystroke', () => {
+  vi.useFakeTimers(); const play = vi.spyOn(timing, 'playOutputTiming'); const port = createOutputPreview();
+  port.update('chat', 'show_ms', '100'); port.update('vote', 'show_ms', '100');
+  const h = componentProbe(() => <OutputPreview port={port} messages={[]} directions={[]} />);
+  h.render(); h.click('Replay output timing'); h.render();
+  expect(play).toHaveBeenCalledTimes(2);
+  h.change('Vote bar size', 'L'); h.render();
+  for (const value of ['2', '20', '200', '2000']) { h.change('Chat overlay show after (ms)', value); h.render(); }
+  expect(play).toHaveBeenCalledTimes(2);
+  vi.advanceTimersByTime(100); expect(h.render().match(/data-phase="visible"/g)).toHaveLength(4);
+  h.click('Replay output timing'); h.render(); expect(play).toHaveBeenCalledTimes(4);
+  h.dispose(); expect(vi.getTimerCount()).toBe(0);
+});
+
+test('completed timing restores both layers in both frames and reports finished', () => {
+  vi.useFakeTimers(); const port = createOutputPreview();
+  const h = componentProbe(() => <OutputPreview port={port} messages={[]} directions={[]} />);
+  h.render(); h.click('Replay output timing'); h.render();
+  vi.advanceTimersByTime(10000); const html = h.render();
+  expect(html.match(/visibility="visible"/g)).toHaveLength(4);
+  expect(html).toContain('Timing replay finished');
+  h.change('Vote bar size', 'L'); expect(h.render().match(/visibility="visible"/g)).toHaveLength(4);
+  h.dispose(); expect(vi.getTimerCount()).toBe(0);
+});
 
 afterEach(() => { vi.useRealTimers(); vi.restoreAllMocks(); });
 

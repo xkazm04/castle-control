@@ -17,9 +17,11 @@ export const fixtureRules: RulesListResult = parseMethodResult(gatehouseRulesLis
 ] }));
 
 function decision(index: number, kind: Decision['kind'], verdict: Decision['verdict'], message_text: string, rule_id = 'links'): Decision {
+  // Held/ban copies retain their message's time. Ledger-only indexes reuse the
+  // same fixed window; fixture generation never depends on the wall clock.
   return parseMethodResult(gatehouseBanConfirm, JSON.stringify({
     decision_id: `01ARZ3NDEKTSV4RRFF${String(index).padStart(8, '0')}`,
-    message_id: `simulated-message-${index}`, at, kind, verdict, rule_id,
+    message_id: `simulated-message-${index}`, at: new Date(Date.parse(at) - (4199 - index % 4200) * 2000).toISOString(), kind, verdict, rule_id,
     message_text, operator: 'human', simulated: true, reason_codes: ['simulated_pattern_match'],
   }));
 }

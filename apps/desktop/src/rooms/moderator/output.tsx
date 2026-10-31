@@ -84,20 +84,27 @@ export function OutputFrame({ width, settings, messages, directions, phases }: {
 
 export function OutputPreview({ port, messages, directions }: { port: OutputPort; messages: readonly Decision[]; directions: readonly ConsensusDirection[] }) {
   const settings = useSyncExternalStore(port.subscribe, port.getSnapshot, port.getSnapshot);
-  const [run, setRun] = useState(0);
+  const [run, setRun] = useState<OutputSnapshot>();
+  const [finished, setFinished] = useState(false);
   const [phases, setPhases] = useState<Record<OutputLayer, OutputPhase>>({ chat: 'visible', vote: 'visible' });
   useEffect(() => {
     if (!run) return;
-    const stops = (['chat', 'vote'] as const).map(layer => playOutputTiming(settings[layer], phase => setPhases(previous => ({ ...previous, [layer]: phase }))));
+    const completed = new Set<OutputLayer>();
+    const stops = (['chat', 'vote'] as const).map(layer => playOutputTiming(run[layer], phase => {
+      if (phase === 'hidden') completed.add(layer);
+      if (completed.size === 2) {
+        setPhases({ chat: 'visible', vote: 'visible' }); setFinished(true);
+      } else setPhases(previous => ({ ...previous, [layer]: phase }));
+    }));
     return () => stops.forEach(stop => stop());
-  }, [run, settings]);
+  }, [run]);
   return <section className="moderator-block moderator-output" aria-label={copy.output_title}>
     <SectionHeading title={copy.output_title} gloss={copy.simulated_caps} />
     <p className="moderator-small">{copy.output_scope}</p><p className="moderator-small">{copy.output_note}</p>
     {(['chat', 'vote'] as const).map(layer => <OutputSettings key={layer} layer={layer} value={settings[layer]} port={port} />)}
     <p className="moderator-small">{copy.output_limits}</p>
-    <InkButton type="button" size="room" onClick={() => setRun(value => value + 1)}>{copy.output_timing}</InkButton>
-    <p role="status">Chat overlay: {phaseNames[phases.chat]} · Vote bar: {phaseNames[phases.vote]}</p>
+    <InkButton type="button" size="room" onClick={() => { setFinished(false); setRun({ ...settings }); }}>{copy.output_timing}</InkButton>
+    <p role="status">{finished ? 'Timing replay finished' : <>Chat overlay: {phaseNames[phases.chat]} · Vote bar: {phaseNames[phases.vote]}</>}</p>
     {([1920, 1280] as const).map(width => <OutputFrame key={width} width={width} settings={settings} messages={messages} directions={directions} phases={phases} />)}
   </section>;
 }

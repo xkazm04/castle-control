@@ -1,6 +1,7 @@
-import { useState } from 'react';
-import { WindowedRows, rowHeight } from '@castle-control/ui';
+import { useId, useState } from 'react';
+import { FieldGroup, InkButton, WindowedRows, rowHeight } from '@castle-control/ui';
 import type { CoreGatehousePort, CoreGatehouseSnapshot } from '../../gatehouse-core.js';
+import { ClockTime } from './presentation.jsx';
 import { captureCanReplay } from '../../gatehouse-core.js';
 import { moderationCopy as copy } from '../../moderation-copy.js';
 
@@ -19,21 +20,22 @@ export function CaptureList({ state, port, scroll_top = 0 }: {
         return <div className="moderator-capture-row" data-capture-id={item.decision_id}>
           <p>{item.decision_id}{item.coverage === 'retained' && <> · {item.provenance}</>}</p>
           {item.coverage === 'retained' && <>
-            <p>{item.capture.recording} · <time>{item.capture.from}</time> → <time>{item.capture.to}</time></p>
+            <p>{item.capture.recording} · <ClockTime at={item.capture.from} /> → <ClockTime at={item.capture.to} /></p>
             <p>{copy.capture_hash}</p><code className="room-hash">{item.capture.instrument_hash}</code>
           </>}
           {reason && <p>{copy.capture_gap}: {copy.capture_gaps[reason]}</p>}
-          <button type="button" disabled={state.busy || !captureCanReplay(item)}
-            onClick={() => { port.selectCapture(item.decision_id); }}>{copy.capture_select}</button>
+          <InkButton size="room" type="button" disabled={state.busy || !captureCanReplay(item)}
+            onClick={() => { port.selectCapture(item.decision_id); }}>{copy.capture_select}</InkButton>
         </div>;
       }}
     </WindowedRows>
-    <button type="button" disabled={state.busy} onClick={() => { void port.loadLiveRuns(); }}>{copy.captures_load}</button>
-    <button type="button" disabled={state.busy || !page?.next_cursor} onClick={() => { void port.moreLiveRuns(); }}>{copy.captures_more}</button>
+    <InkButton size="room" type="button" disabled={state.busy} onClick={() => { void port.loadLiveRuns(); }}>{copy.captures_load}</InkButton>
+    <InkButton size="room" type="button" disabled={state.busy || !page?.next_cursor} onClick={() => { void port.moreLiveRuns(); }}>{copy.captures_more}</InkButton>
   </section>;
 }
 
 export function CaptureConfiguration({ state, port }: { state: CoreGatehouseSnapshot; port: CoreGatehousePort }) {
+  const field_id = useId();
   const capture = state.selected_capture?.capture;
   const [bank, setBank] = useState(capture?.configuration.bank ?? '');
   const [judge, setJudge] = useState(capture?.configuration.judge ?? '');
@@ -41,18 +43,18 @@ export function CaptureConfiguration({ state, port }: { state: CoreGatehouseSnap
   if (!capture) return null;
   return <section className="moderator-card"><h3>{copy.configuration_title}</h3>
     <p>{capture.recording} · {state.selected_capture?.provenance}</p>
-    <p>{copy.capture_interval}: <time>{capture.from}</time> → <time>{capture.to}</time></p>
+    <p>{copy.capture_interval}: <ClockTime at={capture.from} /> → <ClockTime at={capture.to} /></p>
     <p>{copy.capture_hash}</p><code className="room-hash">{capture.instrument_hash}</code>
     <p>{copy.capture_configuration_note}</p>
-    <label>{copy.bank}<input value={bank} disabled={state.busy} onChange={event => setBank(event.currentTarget.value)} /></label>
-    <label>{copy.judge}<input value={judge} disabled={state.busy} onChange={event => setJudge(event.currentTarget.value)} /></label>
-    <label>{copy.prompts}<textarea value={prompts} disabled={state.busy} onChange={event => setPrompts(event.currentTarget.value)} /></label>
+    <FieldGroup label={copy.bank} control_id={`${field_id}-bank`}><input id={`${field_id}-bank`} value={bank} disabled={state.busy} onChange={event => setBank(event.currentTarget.value)} /></FieldGroup>
+    <FieldGroup label={copy.judge} control_id={`${field_id}-judge`}><input id={`${field_id}-judge`} value={judge} disabled={state.busy} onChange={event => setJudge(event.currentTarget.value)} /></FieldGroup>
+    <FieldGroup label={copy.prompts} control_id={`${field_id}-prompts`}><textarea id={`${field_id}-prompts`} value={prompts} disabled={state.busy} onChange={event => setPrompts(event.currentTarget.value)} /></FieldGroup>
     <div className="moderator-actions">
-      <button type="button" disabled={state.busy} onClick={() => { void port.runCapture(); }}>{copy.run_replay}</button>
-      <button type="button" disabled={state.busy || !bank.trim() || !judge.trim()} onClick={() => {
+      <InkButton size="room" type="button" disabled={state.busy} onClick={() => { void port.runCapture(); }}>{copy.run_replay}</InkButton>
+      <InkButton size="room" type="button" disabled={state.busy || !bank.trim() || !judge.trim()} onClick={() => {
         void port.compareCapture({ rules: [...state.rules], bank, judge, prompts: prompts.split('\n').filter(text => text.trim()) });
-      }}>{copy.compare}</button>
-      <button type="button" disabled={state.busy} onClick={() => { port.selectCapture(); }}>{copy.manual_select}</button>
+      }}>{copy.compare}</InkButton>
+      <InkButton size="room" type="button" disabled={state.busy} onClick={() => { port.selectCapture(); }}>{copy.manual_select}</InkButton>
     </div>
   </section>;
 }

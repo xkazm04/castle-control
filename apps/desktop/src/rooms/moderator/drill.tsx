@@ -5,6 +5,7 @@ import { VerdictChip, WindowedRows, rowHeight } from '@castle-control/ui';
 import { moderationCopy as copy } from '../../moderation-copy.js';
 import type { BenchResult } from '../../moderation-bench.js';
 import { DraftPatternPreview } from './rule-bench.jsx';
+import { ClockTime } from './presentation.jsx';
 
 export function Drill({ result, origin = 'fixture', capture_hash, draft }: {
   result: DrillRunResult; origin?: 'fixture' | 'core'; capture_hash?: string | undefined; draft?: BenchResult | undefined;
@@ -26,7 +27,7 @@ export function Drill({ result, origin = 'fixture', capture_hash, draft }: {
       <p>{copy.observed_passes}: <b>{result.summary.passes}</b></p>
       <p>{copy.over_moderation}: <b>{result.summary.over_moderation.false_positives} / {result.summary.over_moderation.evaluated}</b> {copy.evaluated}.</p>
       {states.map(state => <p key={state}>{state.replaceAll('_', ' ')}: {result.summary.states[state]}</p>)}
-      {result.gaps.map(gap => <p key={gap.from}>{copy.recording_gap}: <time>{gap.from}</time> → <time>{gap.to}</time></p>)}
+      {result.gaps.map(gap => <p key={gap.from}>{copy.recording_gap}: <ClockTime at={gap.from} /> → <ClockTime at={gap.to} /></p>)}
     </div><div className="room-column"><h3>{copy.replay_outcomes_title}</h3>
       <div><label htmlFor={state_id}>{copy.evaluation_state}</label>{' '}<select id={state_id} value={filter} onChange={event => {
         const value = event.currentTarget.value;
