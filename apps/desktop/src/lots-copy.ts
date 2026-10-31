@@ -131,6 +131,7 @@ export const lotsCopy = {
       core: ['Core verified', 'The core checked this cast against its seal and randomness before the ceremony.'],
     },
     prove: 'Prove it in the Writ Lab',
+    sound: '♪ Ceremony sound', sound_hint: 'Synthesized in this window: a flourish, a bell per winner, a fanfare at the close. Off until you turn it on.',
   },
   core_setup: {
     title: 'Draw rules', save: 'Save rules to the core', discard: 'Discard changes',

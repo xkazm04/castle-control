@@ -67,6 +67,7 @@ export function ConnectedLotsRoom({ port, simulated, seal_slot }: { port: CoreLo
         <DrawStage shape={appearance.shape} on_shape={shape => display.edit({ shape })} entries={state.entries} cast={cast}
           content={draw?.policy.content ?? 'question'} sealed={state.sealed} seal={state.seal_result?.sealed.seal}
           clock={reveal} reveal_ms={appearance.reveal_ms} theatre={appearance.theatre} on_theatre={display.theatre} proof="core"
+          sound={appearance.sound} on_sound={on => display.edit({ sound: on })}
           {...(state.writ ? { on_prove: () => { display.theatre(false); setProve(count => count + 1); } } : {})} />
       </PoolStage>
       <div className="cc-desk">

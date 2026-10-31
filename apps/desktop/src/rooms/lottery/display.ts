@@ -8,9 +8,11 @@ export type DrawDisplay = {
   colour: 'gules' | 'azure' | 'or' | 'key'; art_style: DemoStyle; reveal_ms: number; shape: DrawShape;
   /** Full-chamber stage for the broadcast moment; the desk returns with one click. */
   theatre: boolean;
+  /** Opt-in synthesized ceremony sound; off until the streamer turns it on. */
+  sound: boolean;
 };
 export function createDrawDisplay() {
-  let state: DrawDisplay = { size: 'M', anchor: 'br', colour: 'gules', art_style: 'heraldic', reveal_ms: 1500, shape: 'urn', theatre: false };
+  let state: DrawDisplay = { size: 'M', anchor: 'br', colour: 'gules', art_style: 'heraldic', reveal_ms: 1500, shape: 'urn', theatre: false, sound: false };
   const listeners = new Set<() => void>();
   const edit = (change: Partial<DrawDisplay>) => {
     const value = change.reveal_ms ?? state.reveal_ms;

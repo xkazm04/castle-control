@@ -66,6 +66,7 @@
 .lottery-stage-foot { position: relative; display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-4) var(--space-12); }
 .lottery-stage-foot .cc-aside { flex: 1 1 calc(var(--space-56) * 3); font-size: var(--text-small); }
 .lottery-stage-foot .cc-stamp { transform: none; }
+.lottery-stage-foot .lottery-stage-sound[aria-pressed="true"] { border-color: var(--gules); background: color-mix(in srgb, var(--gules) 18%, var(--paper)); color: var(--gules-text); }
 /* Visually hidden live region: the proclamation already shows each winner on screen. */
 .lottery-stage-announce { position: absolute; width: var(--space-1); height: var(--space-1); margin: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .lottery-room .cc-legend [data-cohort="subscriber"]::before { background: var(--or); box-shadow: inset 0 0 0 var(--rule-thin) var(--ink); }

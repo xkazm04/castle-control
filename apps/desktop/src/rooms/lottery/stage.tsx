@@ -9,6 +9,7 @@ import type { RevealClock } from './playback.js';
 import { useReducedMotion, useReveal } from './playback.js';
 import { artworkOf, call_origin, confetti, draw_shapes, layoutMarks, lift_path, sampleEntries, stage_view_box, stageScene, weightShare } from './stage-model.js';
 import type { StageCast, StageEntry, StageMark } from './stage-model.js';
+import { ceremonySound } from './sound.js';
 import './stage.css';
 
 /** Scoreboard size: the theatre has room for eight placards, the desk view for four. */
@@ -61,6 +62,21 @@ function useFlourish(scene: DrawScene, fresh: boolean) {
   return group;
 }
 
+/** Follows the reveal cursor: flourish texture on a fresh cast, a bell per winner, a fanfare at the close.
+ * While sound is off the cursor is still tracked, so turning it on never replays a backlog. */
+function useCeremonySound(on: boolean, shape: DrawShape, scene: DrawScene, key: string | undefined, fresh: boolean, count: number, done: boolean) {
+  const heard = useRef<{ key: string | undefined; count: number; done: boolean }>({ key: undefined, count: 0, done: false });
+  useEffect(() => {
+    const last = heard.current;
+    heard.current = { key, count, done };
+    const sound = on && key !== undefined ? ceremonySound() : undefined;
+    if (!sound) return;
+    if (last.key !== key) { if (fresh && count === 0) sound.flourish(shape, scene.events[0]?.at_ms ?? 1200); return; }
+    if (count > last.count) sound.chime(count);
+    if (done && !last.done) sound.fanfare();
+  }, [on, shape, scene, key, fresh, count, done]);
+}
+
 function Proclamation({ handle, order, total, cohort, share }: {
   handle: string; order: number; total: number; cohort: StageEntry['cohort']; share: number | undefined;
 }) {
@@ -98,10 +114,11 @@ function Verdict({ total, proof, on_prove }: { total: number; proof: 'local' | '
 }
 
 export function DrawStage({ shape, on_shape, entries, cast, content, sealed, seal, clock, reveal_ms, verified = true, theatre = false,
-  on_theatre, proof = 'local', on_prove }: {
+  on_theatre, proof = 'local', on_prove, sound = false, on_sound }: {
   shape: DrawShape; on_shape: (shape: DrawShape) => void; entries: readonly StageEntry[]; cast: StageCast | undefined;
   content: DrawContent; sealed: boolean; seal?: string | undefined; clock: RevealClock; reveal_ms: number; verified?: boolean;
   theatre?: boolean; on_theatre?: (theatre: boolean) => void; proof?: 'local' | 'core'; on_prove?: () => void;
+  sound?: boolean; on_sound?: (sound: boolean) => void;
 }) {
   const reduced = useReducedMotion();
   const playable = cast && verified ? cast : undefined;
@@ -126,6 +143,7 @@ export function DrawStage({ shape, on_shape, entries, cast, content, sealed, sea
   const phase = !sealed && !playable ? 'open' : !cast ? 'sealed' : !verified ? 'casting'
     : state.finished && revealed.length === winners.length ? 'revealed' : 'revealing';
   const disclaimer = scene.layers.find(layer => layer.kind === 'disclaimer');
+  useCeremonySound(sound, shape, scene, key, fresh, revealed.length, phase === 'revealed');
   const latest = revealed.at(-1);
   const latest_mark = latest === undefined ? undefined : by_handle.get(latest);
   const limit = theatre ? rail_limit.theatre : rail_limit.desk;
@@ -181,6 +199,8 @@ export function DrawStage({ shape, on_shape, entries, cast, content, sealed, sea
       {phase === 'revealed' && !theatre && <StatusChip variant="ok" stamp="verdict" tone="ok">{copy.stage.proof[proof][0]}</StatusChip>}
       <p className="cc-aside">{cast && !verified ? copy.stage.unverified : copy.stage.note}
         {drawn.length < entries.length ? ` ${copy.stage.sampled(drawn.length, entries.length)}` : ''}</p>
+      {on_sound && <InkButton size="room" className="lottery-stage-sound" aria-pressed={sound} title={copy.stage.sound_hint}
+        onClick={() => { if (!sound) ceremonySound(); on_sound(!sound); }}>{copy.stage.sound}</InkButton>}
       {playable && <InkButton size="room" disabled={!state.finished} onClick={() => clock.replay()}>{copy.stage.replay}</InkButton>}
       {on_theatre && <InkButton size="room" aria-pressed={theatre} onClick={() => on_theatre(!theatre)}>
         {theatre ? copy.stage.desk : copy.stage.theatre}</InkButton>}
