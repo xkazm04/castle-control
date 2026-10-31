@@ -94,18 +94,7 @@ pub fn seal_roll(
     if at.timestamp_subsec_nanos() != 0 {
         return Err(Error::Invalid("seal time must use whole UTC seconds"));
     }
-    let entries = roll
-        .weight_table(at)
-        .rows
-        .into_iter()
-        .map(|row| {
-            Ok(cc_verify::Entry {
-                handle: row.user_id.as_str().to_owned(),
-                weight: u32::try_from(row.weight)
-                    .map_err(|_| Error::Invalid("proof weight exceeds u32"))?,
-            })
-        })
-        .collect::<Result<Vec<_>>>()?;
+    let entries = proof_entries(&roll, at)?;
     let entry_count =
         u32::try_from(entries.len()).map_err(|_| Error::Invalid("entry count exceeds u32"))?;
     let count = u32::from(roll.winner_count());
@@ -226,13 +215,7 @@ fn finish(
     if at < sealed.sealed_at {
         return Err(Error::Invalid("cast predates seal"));
     }
-    let verified = verify_writ_json(&writ.to_json()?, chain)?;
-    let winners = verified
-        .winners()
-        .iter()
-        .map(|id| TwitchUserId::parse(id))
-        .collect::<cc_store::Result<Vec<_>>>()?;
-    sealed.roll.validate_winners(&winners, at)?;
+    let (verified, winners) = verified_winners(&sealed.roll, &writ, chain, at)?;
     // A different store or a full purge cannot create an unaudited cast.
     if !store
         .read_ledger(LedgerKind::Draws)?
@@ -258,4 +241,37 @@ fn finish(
         roll: sealed.roll,
         draw_run_id: sealed.draw_run_id,
     })
+}
+
+/// Pure eligibility-to-proof mapping, shared with generated-input tests.
+pub(super) fn proof_entries(roll: &Roll, at: DateTime<Utc>) -> Result<Vec<cc_verify::Entry>> {
+    roll.weight_table(at)
+        .rows
+        .into_iter()
+        .map(|row| {
+            Ok(cc_verify::Entry {
+                handle: row.user_id.as_str().to_owned(),
+                weight: u32::try_from(row.weight)
+                    .map_err(|_| Error::Invalid("proof weight exceeds u32"))?,
+            })
+        })
+        .collect()
+}
+
+/// Verify and validate without publishing or recording a result. The caller
+/// must still check the seal audit and durably append before returning a cast.
+pub(super) fn verified_winners(
+    roll: &Roll,
+    writ: &Writ,
+    chain: Option<&QuicknetChain>,
+    at: DateTime<Utc>,
+) -> Result<(VerifiedCast, Vec<TwitchUserId>)> {
+    let verified = verify_writ_json(&writ.to_json()?, chain)?;
+    let winners = verified
+        .winners()
+        .iter()
+        .map(|id| TwitchUserId::parse(id))
+        .collect::<cc_store::Result<Vec<_>>>()?;
+    roll.validate_winners(&winners, at)?;
+    Ok((verified, winners))
 }
