@@ -4,13 +4,14 @@ import { chamberIds, counted, routeInventory, routes, source, tokenInventory } f
 import { loopback } from './network.ts';
 import { simulatedSnapshots, snapshotEvent, startOverlay, visualId } from './overlay-server.ts';
 
-test('real navigation yields canonical routes including every chamber and nested drill', () => {
+test('real navigation yields canonical routes including every chamber, OBS setup and nested drill', () => {
   const ids = chamberIds(source('packages/ui/src/shell.tsx'));
-  assert.equal(routes.length, ids.length + 4);
+  assert.equal(routes.length, ids.length + 5);
   for (const id of ids) assert.ok(routes.includes(`#/chamber/${id}`));
   assert.ok(routes.includes('#/keep'));
   assert.ok(routes.includes('#/overview'));
   assert.ok(routes.includes('#/demo'));
+  assert.ok(routes.includes('#/stream'));
   assert.ok(routes.includes('#/chamber/moderator/drill'));
   assert.ok(!routes.includes('#/moderator/drill'));
 });

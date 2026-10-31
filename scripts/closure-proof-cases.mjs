@@ -4,6 +4,19 @@ import { pathToFileURL } from 'node:url';
 import ts from 'typescript';
 
 export function closureCases(proof, root) {
+  const harnessRunners = Object.fromEntries(['gate', 'e2e-harness-test', 'files', 'run']
+    .map((name) => [`scripts/${name}.mjs`, readFileSync(join(root, 'scripts', `${name}.mjs`), 'utf8')]));
+  for (const name of ['harness', 'styles']) {
+    const simulatedTest = (file) => `import { test } from 'node:test';\ntest('simulated ${file} proof', () => { ${file === name ? `throw new Error('simulated ${file} gate failure');` : '/* Simulated passing peer. */'} });\n`;
+    proof(`E2E harness: failing ${name} through root gate`, ['$S/scripts/gate.mjs'],
+      `simulated ${name} gate failure`, {
+        ...harnessRunners,
+        'e2e/harness.test.ts': simulatedTest('harness'),
+        'e2e/styles.test.ts': simulatedTest('styles'),
+      });
+  }
+  proof('Empty E2E harness tests', ['$R/scripts/e2e-harness-test.mjs'],
+    'e2e harness tests: refused empty inventory', {}, { empty: true });
   const rust = 'crates/proof/src/lib.rs';
   const source = 'packages/proof/src/index.ts';
   const pkg = (mode) => ['$S/scripts/package-gate.mjs', mode];

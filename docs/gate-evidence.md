@@ -141,6 +141,69 @@ Signing/updater keys and release publishing remain owner steps. `pnpm install`
 was not run, and no junction, git metadata, protected manifest or other worktree
 was modified.
 
+## FU-1 harness tests and root-gate wiring
+
+2026-10-31, Windows, base `5b41abd`. The initial acceptance command
+`node --test e2e/harness.test.ts e2e/styles.test.ts` exited 1: 11 passed and
+2 failed. Both failures were in `harness.test.ts`: the route count and native
+CSP parity. The style-policy tests themselves were already passing.
+
+The ninth canonical route is the legitimate OBS setup page `#/stream`.
+Commit `2ebd543` added it to `canonicalHash` and `routeFromHash`; the desktop
+still renders it. The test now names it explicitly and requires exactly four
+chamber routes plus Keep, overview, demo, stream setup and the nested drill.
+The inventory and alias deduplication are unchanged.
+
+Commit `dd93ea4` added `/gatehouse/current` on the isolated overlay origin and
+the vote bar's `EventSource('/push/gatehouse')`. Its native CSP already allows
+that exact localhost address alongside `/push/beacons`. The simulated server
+was stale: its CSP now includes `http://localhost:<own-port>/push/gatehouse`.
+The native policy and full-string parity assertion are unchanged; no wildcard,
+additional origin, core RPC access or general same-origin connection permission
+was introduced.
+
+`scripts/gate.mjs` now starts with `scripts/e2e-harness-test.mjs`. It counts
+the Node `e2e/*.test.ts` inventory, refuses zero files and runs both files
+in-process. Browser `.spec.ts` files remain in the separate Playwright lane.
+
+The three new `closure-proof-cases.mjs` registrations were executed through a
+temporary-fixture callback, without rerunning unrelated closure cases. The two
+root-gate fixtures copied the actual `gate.mjs`, `e2e-harness-test.mjs`,
+`files.mjs` and `run.mjs` byte for byte, and supplied two simulated Node tests:
+one failing test and one passing peer, swapping the failing file for the second
+case. Each actual child exit and diagnostic was asserted. All seeds and the
+`scripts/.fu1-gate-proof/case-N` directories were removed in `finally`; no real
+test or product source was seeded. These cases also run in `pnpm gate:proofs`.
+
+| Gate / seed | Actual child command and cwd | Exit | Inventory | Verified diagnostic |
+| --- | --- | --- | --- | --- |
+| Root gate: harness assertion throws | `node scripts/gate.mjs`, cwd: disposable case 1 | 1 | `[e2e harness tests] walked 2 files` | `simulated harness gate failure`; `Error: node scripts/e2e-harness-test.mjs exited 1` |
+| Root gate: styles assertion throws | `node scripts/gate.mjs`, cwd: disposable case 2 | 1 | `[e2e harness tests] walked 2 files` | `simulated styles gate failure`; `Error: node scripts/e2e-harness-test.mjs exited 1` |
+| Empty harness inventory | `node <repo>/scripts/e2e-harness-test.mjs`, cwd: disposable case 3 | 1 | `[e2e harness tests] walked 0 files` | `Error: e2e harness tests: refused empty inventory` |
+
+Final validation:
+
+| Command | Observed outcome |
+| --- | --- |
+| `pnpm install --frozen-lockfile` | Exit 0; all 10 workspace projects already up to date; no dependency junction was replaced. |
+| `node --test e2e/harness.test.ts e2e/styles.test.ts` | Exit 0; 13/13 passed, including nine-route inventory and exact native CSP parity. |
+| `pnpm gate` | Exit 1 after the new gate walked 2 files and passed 13/13, version drift walked 23 files, tooling tests passed 35/35, workspace checks walked 9 manifests / 598 TypeScript files, and Cargo fetch walked 342 files. The unchanged contract exporter then failed with `Error: spawnSync cargo EPERM`. |
+| `node node_modules/typescript/bin/tsc -p e2e/tsconfig.json` | Exit 0, using the real installed Playwright declarations. |
+| `node node_modules/eslint/bin/eslint.js e2e scripts/e2e-harness-test.mjs scripts/gate.mjs scripts/closure-proof-cases.mjs --max-warnings 0` | Exit 0. |
+| `node scripts/check.mjs` | Exit 0 after proof cleanup; boundaries, hygiene and file cap each walked 1104 code files, type floor walked 245 files, secrets walked 1430 files. |
+
+`pnpm exec tsc` and `pnpm exec eslint` could not resolve their command shims;
+the explicit installed Node entry points above both passed. An initial repo
+scan overlapped disposable proof cleanup and hit `ENOENT`; the final scan ran
+after cleanup and passed. No sandbox restriction was bypassed.
+
+The full gate could not complete: contract drift failed to launch Cargo, so
+method/event parity, Rust fmt/Clippy/tests, recursive package
+typecheck/lint/tests and site/desktop/UI builds were not reached. Browser
+`pnpm e2e` and the complete historical proof suite were not run; the three new
+proofs were run directly as described above. No full gate or browser pass is
+claimed.
+
 <!-- current red-once proofs -->
 
 | Gate / seed | Standalone command | Exit | Inventory | First relevant diagnostic |

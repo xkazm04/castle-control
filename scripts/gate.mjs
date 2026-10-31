@@ -1,5 +1,6 @@
 import { run } from './run.mjs';
 
+run('node', ['scripts/e2e-harness-test.mjs']);
 run('node', ['scripts/version-drift.mjs']);
 run('node', ['scripts/tooling-test.mjs']);
 run('node', ['scripts/workspaces.mjs']);

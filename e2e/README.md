@@ -3,8 +3,8 @@
 The Director's first run on main `71fd803` reported 58 failures, including
 default serif leakage and the overlay's missing token styles. This polish
 delivery addresses those sources and scopes the OBS transparency policy below.
-It has not rerun Chrome or claimed new screenshots. This lane is not part of
-`pnpm gate` or CI yet.
+It has not rerun Chrome or claimed new screenshots. The browser lane is not part
+of `pnpm gate` or CI yet; its Node harness and style-policy tests run in `pnpm gate`.
 
 Main now declares **`@playwright/test@1.64.1`** as an exact root devDependency;
 the config enforces that exact runtime version. This polish delivery changes no
@@ -32,13 +32,14 @@ No core, Twitch viewer, credential or paid call is involved.
 `inventory.ts` reads the actual `chambers` declaration in the UI shell, walks the
 `canonicalHash` AST for literals and ID templates, and runs that function in an
 isolated VM to deduplicate aliases into canonical routes. It currently finds
-eight routes, including `#/demo`. Unknown template syntax fails rather than silently losing a route.
+nine routes, including `#/demo` and the OBS setup page `#/stream` (added in
+`2ebd543`). Unknown template syntax fails rather than silently losing a route.
 Empty ID, route, token and rendered-element inventories fail loudly. CSS custom
 property names come from declarations in `packages/tokens/src/generated.css`
 (currently 122 unique names), with no maintained token list.
 
 Every route runs in paper and stock, with the Steward resting and open: currently
-32 desktop cases per project. The Steward is already mounted in the current
+36 desktop cases per project. The Steward is already mounted in the current
 shell; “open” focuses its real input via the rampart button and selects Overview's
 Talkback tab where present. It submits no request. Routes wait for fixture and
 lazy content, and assert that navigation stayed on the intended canonical hash.
@@ -90,6 +91,13 @@ full-page capture, disabled animations and hidden carets. Both screenshots and
 by real runs. This is a style smoke lane, not a pixel-diff baseline suite.
 
 ## Checks without Playwright
+
+`pnpm gate` starts with `scripts/e2e-harness-test.mjs`, which counts the Node
+`e2e/*.test.ts` inventory and refuses an empty one. It runs both `harness.test.ts`
+and `styles.test.ts` before Cargo or browser builds. The harness CSP matches the
+native isolated overlay policy, including exactly `/push/beacons` and
+`/push/gatehouse` on its own localhost port; the vote bar added in `dd93ea4`
+subscribes to the latter. Native CSP and its strict parity assertion stay intact.
 
 ```powershell
 node --test --test-isolation=none e2e/harness.test.ts e2e/styles.test.ts
