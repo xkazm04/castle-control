@@ -225,14 +225,15 @@ test.describe('with motion allowed', () => {
       await page.getByRole('button', { name: 'Play', exact: true }).click();
       const spoken = page.getByRole('status').filter({ hasText: 'Held' });
       const chip = page.locator('.moat-live');
-      const heard = new Set<string>(); const seen = new Set<string>();
+      const heard = new Set<string>(); const seen = new Set<string>(); const began = Date.now();
       for (let sample = 0; sample < 40; sample += 1) {
         heard.add((await spoken.textContent()) ?? ''); seen.add((await chip.textContent()) ?? '');
         await page.waitForTimeout(100);
       }
-      // Four seconds of a 60x replay of 150 stops: the chip follows the replay, the live region does not chase it.
+      // A 60x replay of 150 stops: the chip follows the replay, and the live region moves at most once per two seconds
+      // (measured against the clock, so a slow machine cannot make the budget too tight).
       expect(seen.size).toBeGreaterThan(heard.size);
-      expect(heard.size).toBeLessThanOrEqual(4);
+      expect(heard.size).toBeLessThanOrEqual(Math.ceil((Date.now() - began) / 2000) + 2);
       await page.getByRole('button', { name: 'Pause', exact: true }).click();
       await expect.poll(async () => (await spoken.textContent()) === (await chip.textContent())).toBe(true);
     } finally { verify(); }
