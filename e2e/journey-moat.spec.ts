@@ -80,6 +80,8 @@ test('the Keep moat bar loops a labelled sample and leads to the full replay', a
     const bar = page.locator('.keep-moat');
     await expect(bar.getByRole('img', { name: 'Sample replay loop · simulated', exact: true })).toBeVisible();
     await expect(bar).toContainText('Sample replay · simulated');
+    // A loop that starts by itself can be stopped (reduced motion, which this lane runs under, never starts it).
+    await expect(bar.getByRole('button', { name: /sample loop/ })).toHaveCount(0);
     await auditStyles(page, desktopSurfaces);
     await bar.getByRole('link', { name: 'Watch the full replay', exact: true }).click();
     await expect(page).toHaveURL(/#\/chamber\/moderator\/drill$/);
@@ -236,6 +238,27 @@ test.describe('with motion allowed', () => {
       expect(heard.size).toBeLessThanOrEqual(Math.ceil((Date.now() - began) / 2000) + 2);
       await page.getByRole('button', { name: 'Pause', exact: true }).click();
       await expect.poll(async () => (await spoken.textContent()) === (await chip.textContent())).toBe(true);
+    } finally { verify(); }
+  });
+
+  test('the Keep sample loop plays by itself and its button stops it', async ({ page }) => {
+    const verify = await guardPage(page);
+    try {
+      await page.goto('/#/keep');
+      const bar = page.locator('.keep-moat');
+      const pause = bar.getByRole('button', { name: 'Pause the sample loop', exact: true });
+      await expect(pause).toHaveAttribute('aria-pressed', 'false');
+      const at = () => bar.locator('.moat-playhead').first().getAttribute('x1');
+      const before = await at();
+      await expect.poll(at).not.toBe(before);
+      await pause.click();
+      const play = bar.getByRole('button', { name: 'Play the sample loop', exact: true });
+      await expect(play).toHaveAttribute('aria-pressed', 'true');
+      const frozen = await at();
+      await page.waitForTimeout(500);
+      expect(await at()).toBe(frozen);
+      await play.click();
+      await expect.poll(at).not.toBe(frozen);
     } finally { verify(); }
   });
 

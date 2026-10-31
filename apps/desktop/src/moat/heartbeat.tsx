@@ -23,6 +23,7 @@ export function MoatHeartbeat({ source, delay_s, clock }: { source: MoatSource; 
     <small>{copy.heartbeat_label}</small>
     <span className="moat-heartbeat-strip" role="img" aria-label={copy.heartbeat} title={copy.heartbeat}>
       <MoatScene model={model} playhead_ms={state.playhead_ms} window={windowFor(model, state.playhead_ms)} compact uid={uid} /></span>
-    {!reduced && <InkButton type="button" size="small" variant="ghost" aria-pressed={paused} onClick={() => { setPaused(!paused); }}>{paused ? copy.loop_play : copy.loop_pause}</InkButton>}
+    {!reduced && <InkButton type="button" size="small" variant="ghost" aria-pressed={paused} aria-label={paused ? copy.loop_play : copy.loop_pause}
+      onClick={() => { setPaused(!paused); }}>{paused ? copy.play : copy.pause}</InkButton>}
   </span>;
 }

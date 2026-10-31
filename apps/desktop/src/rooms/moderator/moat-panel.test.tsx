@@ -249,7 +249,7 @@ test('the Keep heartbeat is a labelled loop of the same model, with one button t
   expect(html).toContain('data-compact="true"');
   // A loop that starts by itself can be paused. Nothing else in it is pressable.
   expect(html.match(/<button/g)).toHaveLength(1);
-  expect(html).toMatch(/<button[^>]*aria-pressed="false"[^>]*>Pause the sample loop<\/button>/);
+  expect(html).toMatch(/<button[^>]*aria-pressed="false"[^>]*aria-label="Pause the sample loop"[^>]*>Pause<\/button>/);
   expect(html).not.toContain('HELD');
   expect(html).toContain('<small>Sample replay · simulated</small>');
 });
