@@ -115,9 +115,10 @@ test('fixture draw rehearsal seals, casts, reveals in the urn and recomputes thi
   const result = page.getByRole('region', { name: 'Current SIMULATED cast', exact: true });
   await expect(result.locator('[data-current-winner]')).toHaveCount(3);
   // This lane uses reduced motion, so every winner is revealed immediately.
-  for (const order of [1, 2, 3]) await expect(page.locator(`.cc-urn [data-winner="${order}"]`)).toHaveCount(1);
+  for (const order of [1, 2, 3]) await expect(page.locator(`.lottery-draw-lots [data-winner="${order}"]`)).toHaveCount(1);
   const winners = await result.locator('[data-current-winner]').allTextContents();
-  for (const [index, winner] of winners.entries()) await expect(page.locator(`.lottery-winner-badge[aria-label="${index + 1}. ${winner}"]`)).toHaveCount(1);
+  // The stage's scoreboard lists the same winners in cast order.
+  for (const [index, winner] of winners.entries()) await expect(page.locator(`[data-stage-winner="${index + 1}"]`)).toContainText(winner);
   await result.getByRole('button', { name: 'Read current simulated writ', exact: true }).click();
   const writ = page.getByRole('region', { name: 'Current simulated writ', exact: true });
   await expect(writ).toContainText('Not a cc-verify proof');

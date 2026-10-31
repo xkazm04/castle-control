@@ -1,0 +1,148 @@
+/* The moat: chat bank above, the gate across, the stream bank below. Tokens only, so both themes follow. */
+.moat-panel { display: grid; gap: var(--space-10); margin: var(--space-12) 0 var(--space-16); padding: var(--space-12) var(--space-14); border: var(--rule-strong) solid var(--azure); background: var(--card); color: var(--ink); }
+.moat-head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-4) var(--space-12); }
+.moat-head h3 { margin: 0; font: 800 var(--text-chamber)/1 var(--font-display); text-transform: uppercase; letter-spacing: var(--track-heading); color: var(--azure-text); }
+.moat-live { margin: 0; }
+.moat-head .moat-breakdown { margin: 0 0 0 auto; }
+.moat-small { margin: 0; font: var(--text-small)/1.4 var(--font-ui); color: var(--muted); }
+.moat-sr { position: absolute; width: var(--space-1); height: var(--space-1); overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+.moat-controls { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-8) var(--space-12); }
+.moat-speeds { display: flex; gap: var(--space-4); }
+.moat-scrub { position: relative; flex: 1 1 calc(var(--space-56) * 4); min-width: 0; padding-bottom: var(--space-12); }
+.moat-scrub input[type="range"] { width: 100%; margin: 0; accent-color: var(--azure); }
+.moat-scrub input[type="range"]:focus-visible { outline: var(--rule-strong) solid var(--azure); outline-offset: var(--focus-offset); }
+.moat-ticks { position: absolute; inset: auto var(--space-8) 0; height: var(--space-8); pointer-events: none; }
+.moat-ticks i { position: absolute; bottom: 0; width: var(--rule-strong); height: var(--space-8); margin-left: calc(-0.5 * var(--rule-strong)); background: var(--or); }
+.moat-ticks i[data-many="true"] { height: var(--space-12); background: var(--gules); }
+.moat-readout { font: 600 var(--text-small)/1 var(--font-num); color: var(--ink-2); white-space: nowrap; }
+
+.moat-body { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, calc(var(--space-56) * 4)); gap: var(--space-14); align-items: start; }
+.moat-scroll { min-width: 0; overflow-x: auto; display: grid; gap: var(--space-6); }
+.moat-scene { position: relative; width: 100%; min-width: calc(var(--space-56) * 14); }
+.moat-scene[data-compact="true"] { min-width: 0; }
+.moat-scene svg { display: block; width: 100%; height: 100%; overflow: visible; }
+/* The strip scales as a whole, so its HTML stamps scale with it: wider than a 1280 window, one percent of the strip is the type size. */
+.moat-scene:not([data-compact="true"]) { container-type: inline-size; }
+
+.moat-bank { fill: var(--paper-2); stroke: var(--hair); stroke-width: 1; }
+.moat-water { fill: var(--azure); fill-opacity: .1; }
+.moat-wave { fill: none; stroke: var(--azure); stroke-opacity: .32; stroke-width: 1.2; }
+.moat-label, .moat-tick text { fill: var(--muted); font-family: var(--font-ui); font-weight: 700; letter-spacing: var(--track-label); paint-order: stroke; stroke: var(--paper-2); stroke-width: 4; }
+.moat-tick text { font-weight: 500; letter-spacing: 0; font-family: var(--font-num); }
+.moat-tick line { stroke: var(--muted); stroke-width: 1; }
+.moat-gate { fill: var(--ink); }
+.moat-gate-label { fill: var(--paper); font-family: var(--font-ui); font-weight: 800; letter-spacing: var(--track-heading); }
+.moat-gap-base { fill: var(--paper); }
+.moat-hatch-line { stroke: var(--muted); stroke-width: 2.2; stroke-opacity: .7; }
+.moat-gap-label { fill: var(--ink); font-family: var(--font-ui); font-weight: 800; letter-spacing: var(--track-label); paint-order: stroke; stroke: var(--paper); stroke-width: 5; }
+.moat-gap-note { fill: var(--ink-2); font-family: var(--font-serif); font-style: italic; paint-order: stroke; stroke: var(--paper); stroke-width: 5; }
+.moat-playhead { stroke: var(--azure); stroke-width: 2; stroke-opacity: .85; pointer-events: none; }
+
+.moat-marker { cursor: pointer; }
+.moat-track { stroke: var(--azure); stroke-opacity: .28; stroke-width: 1; }
+.moat-dot { fill: var(--azure); stroke: var(--paper); stroke-width: 1.2; }
+.moat-marker[data-phase="waiting"] .moat-dot { fill: var(--card); stroke: var(--muted); stroke-width: 1.4; }
+.moat-marker[data-fate="held"] .moat-dot { fill: var(--or); stroke: var(--ink); stroke-width: 1.4; }
+.moat-marker[data-fate="held"][data-verdict="bar"] .moat-dot { fill: var(--gules); }
+.moat-marker[data-fate="held"] .moat-track { stroke: var(--or); stroke-opacity: .8; stroke-width: 1.6; }
+.moat-marker[data-fate="unresolved"] .moat-dot { fill: var(--card); stroke: var(--ink-2); stroke-width: 1.6; stroke-dasharray: 3 2; }
+.moat-marker[data-fate="unresolved"][data-phase="waiting"] .moat-dot { stroke-dasharray: none; stroke: var(--muted); }
+.moat-scene:not([data-compact="true"]) .moat-marker:hover .moat-dot { stroke: var(--ink); stroke-width: 2.4; }
+.moat-ring { fill: none; stroke: var(--ink); stroke-width: 2; }
+/* A stop lands: one ring leaves the dot. It runs once when the marker reaches the gate. */
+.moat-thud { fill: none; stroke: var(--or); stroke-width: 2.2; pointer-events: none; transform-box: fill-box; transform-origin: center; animation: moat-thud var(--motion-shell) var(--ease) both; }
+.moat-marker[data-verdict="bar"] .moat-thud { stroke: var(--gules); }
+@keyframes moat-thud { from { opacity: .9; transform: scale(1); } to { opacity: 0; transform: scale(3.6); } }
+.moat-marker[data-dim="true"] { opacity: .3; }
+.moat-spotlight { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-4) var(--space-8); margin: 0; padding: 0; border: 0; }
+.moat-spotlight legend { float: left; margin-right: var(--space-8); padding: 0; font: 700 var(--text-small)/1.4 var(--font-ui); color: var(--ink-2); }
+
+.moat-stamp { position: absolute; transform: translate(-50%, -100%); display: grid; justify-items: center; gap: var(--space-2); margin: 0; padding: 0; border: 0; background: none; color: var(--ink); font: inherit; cursor: pointer; animation: moat-stamp-down var(--motion-fast) var(--ease) both; }
+.moat-stamp .cc-chip.cc-stamp { background: var(--card); font-size: max(var(--text-small), 1cqw); }
+.moat-stamp[data-selected="true"] .cc-chip.cc-stamp { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.moat-stamp:focus-visible { outline: var(--rule-strong) solid var(--azure); outline-offset: var(--focus-offset); }
+.moat-stamp-rule { padding-inline: var(--space-4); background: var(--card); font: 700 max(var(--text-small), 1cqw)/1.2 var(--font-num); color: var(--ink-2); }
+@keyframes moat-stamp-down { from { opacity: 0; transform: translate(-50%, -100%) scale(1.5); } to { opacity: 1; transform: translate(-50%, -100%) scale(1); } }
+
+.moat-legend { display: flex; flex-wrap: wrap; gap: var(--space-4) var(--space-14); margin: 0; padding: 0; list-style: none; font: var(--text-small)/1.2 var(--font-ui); color: var(--ink-2); }
+.moat-legend li { display: inline-flex; align-items: center; gap: var(--space-5); }
+.moat-legend-dot { width: var(--space-12); height: var(--space-12); stroke-width: 1.4; }
+.moat-legend-dot[data-kind="aired"] { fill: var(--azure); stroke: var(--paper); }
+.moat-legend-dot[data-kind="stopped"] { fill: var(--or); stroke: var(--ink); }
+.moat-legend-dot[data-kind="unresolved"] { fill: var(--card); stroke: var(--ink-2); stroke-dasharray: 2 1.5; }
+.moat-legend-dot[data-kind="waiting"] { fill: var(--card); stroke: var(--muted); }
+.moat-legend-dot[data-kind="gap"] { fill: var(--paper); stroke: var(--muted); stroke-dasharray: 2 1.5; }
+
+.moat-inspector { display: grid; gap: var(--space-6); padding: var(--space-10) var(--space-12); border: var(--rule-strong) solid var(--azure); background: var(--paper); }
+.moat-inspector[data-empty="true"] { border-style: dashed; border-color: var(--hair); }
+.moat-inspector h4 { margin: 0; font: 800 var(--text-body)/1.2 var(--font-num); overflow-wrap: anywhere; }
+.moat-inspector p { margin: 0; font: var(--text-small)/1.4 var(--font-ui); }
+.moat-inspector dl { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--space-3) var(--space-10); margin: 0; font: var(--text-small)/1.3 var(--font-ui); }
+.moat-inspector dt { color: var(--muted); }
+.moat-inspector dd { margin: 0; font-weight: 700; overflow-wrap: anywhere; }
+.moat-inspector code { font: 700 var(--text-small)/1.2 var(--font-num); }
+
+.moat-row-id { padding: 0; border: 0; background: none; color: var(--azure-text); font: 800 var(--text-small)/1.3 var(--font-num); text-decoration: underline; text-underline-offset: var(--space-3); cursor: pointer; }
+.moat-row-id:focus-visible { outline: var(--rule-strong) solid var(--azure); outline-offset: var(--focus-offset); }
+.moat-row[data-selected="true"] { background: var(--tint-2); box-shadow: inset var(--space-4) 0 0 var(--azure); }
+
+@media (max-width: 68.75rem) { .moat-body { grid-template-columns: minmax(0, 1fr); } }
+@media (prefers-reduced-motion: reduce) { .moat-stamp, .moat-thud { animation: none; } .moat-thud { display: none; } }
+
+/* The Keep heartbeat sits in the moat bar: a small sample loop, not a live reading. */
+.moat-heartbeat { display: flex; align-items: center; gap: var(--space-10); flex: 0 1 calc(var(--space-56) * 10); min-width: 0; line-height: 0; }
+.moat-heartbeat small { flex: none; font: 700 var(--text-label)/1.1 var(--font-ui); letter-spacing: var(--track-label); text-transform: uppercase; }
+.moat-heartbeat .moat-scene { flex: 1 1 auto; }
+.moat-heartbeat-strip { display: block; flex: 1 1 calc(var(--space-56) * 4); min-width: calc(var(--space-56) * 3); }
+.moat-heartbeat .cc-button { flex: none; line-height: 1.2; }
+.moat-heartbeat .moat-bank { stroke-width: .6; }
+.moat-heartbeat .moat-track { stroke-width: .6; }
+.moat-heartbeat .moat-dot { stroke-width: .5; }
+.moat-heartbeat .moat-water { fill: var(--paper-2); fill-opacity: .7; }
+.moat-heartbeat .moat-water-waves, .moat-heartbeat .moat-playhead { display: none; }
+.moat-open-rule { justify-self: start; color: var(--azure-text); font: 800 var(--text-small)/1.3 var(--font-ui); text-decoration: underline; text-underline-offset: var(--space-3); overflow-wrap: anywhere; }
+.moat-open-rule:focus-visible { outline: var(--rule-strong) solid var(--azure); outline-offset: var(--focus-offset); }
+
+/* The printable night report: hidden on screen, the only thing on the sheet when printing. */
+[data-moat-report] { display: none; }
+.moat-report { display: grid; gap: var(--space-10); padding: var(--space-16); background: var(--paper); color: var(--ink); font: var(--text-body)/1.4 var(--font-ui); }
+.moat-report h2 { margin: 0; font: 800 var(--text-title)/1 var(--font-display); text-transform: uppercase; letter-spacing: var(--track-heading); }
+.moat-report h3 { margin: var(--space-8) 0 0; font: 800 var(--text-section)/1.2 var(--font-display); text-transform: uppercase; letter-spacing: var(--track-heading); }
+.moat-report p, .moat-report ul { margin: 0; }
+.moat-report header p, .moat-report footer p { font: italic var(--text-small)/1.4 var(--font-serif); color: var(--ink-2); }
+.moat-report-facts { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--space-2) var(--space-12); margin: 0; font: var(--text-small)/1.4 var(--font-ui); }
+.moat-report-facts dt { color: var(--muted); }
+.moat-report-facts dd { margin: 0; overflow-wrap: anywhere; }
+.moat-report-figure { font-size: var(--text-section); }
+.moat-report table { width: 100%; border-collapse: collapse; font: var(--text-small)/1.3 var(--font-ui); }
+.moat-report th { text-align: left; border-bottom: var(--rule-strong) solid var(--ink); padding: var(--space-3) var(--space-6); text-transform: uppercase; letter-spacing: var(--track-label); }
+.moat-report td { border-bottom: var(--rule-thin) solid var(--hair); padding: var(--space-3) var(--space-6); overflow-wrap: anywhere; }
+.moat-report .moat-scene { min-width: 0; }
+@media print {
+  @page { margin: 12mm; }
+  body > *:not([data-moat-report]) { display: none !important; }
+  [data-moat-report] { display: block; }
+  .moat-report { padding: 0; break-inside: avoid-page; }
+  .moat-report tr { break-inside: avoid; }
+}
+.moat-report .moat-playhead { display: none; }
+
+/* The comparison: two strips on one playhead, with the outcomes a candidate changes ringed. */
+.moat-changed { fill: none; stroke: var(--azure-text); stroke-width: 1.6; stroke-dasharray: 3 2; }
+.moat-stamp[data-changed="true"] .cc-chip.cc-stamp { border-style: dashed; }
+.moat-compare-strips { display: grid; gap: var(--space-6); }
+.moat-compare-table { display: grid; grid-template-columns: auto minmax(0, 1fr) minmax(0, 1fr); gap: var(--space-3) var(--space-10); margin: 0; font: var(--text-small)/1.3 var(--font-ui); }
+.moat-compare-table dt, .moat-compare-table dd { margin: 0; }
+.moat-compare-table [data-head] { font-weight: 800; text-transform: uppercase; letter-spacing: var(--track-label); color: var(--azure-text); }
+.moat-compare-table dt { color: var(--muted); }
+.moat-compare-table dd { font-weight: 700; overflow-wrap: anywhere; }
+.moat-compare-toggle { justify-self: start; }
+.moat-inspector dd small { display: block; font-weight: 500; color: var(--ink-2); }
+.moat-hit { fill: transparent; stroke: none; }
+.moat-stops { display: flex; gap: var(--space-4); }
+
+.moat-extras { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-4) var(--space-12); }
+.moat-extras .moat-small { flex: 1 1 calc(var(--space-56) * 4); }
+
+.moat-stops .cc-button[aria-disabled="true"] { opacity: var(--disabled-opacity); cursor: not-allowed; }

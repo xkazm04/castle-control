@@ -1,11 +1,10 @@
-import { parseMethodParams, parseMethodResult, gatehouseRulesList, gatehouseBanConfirm, gatehouseConsensusGet, gatehouseDrillRun,
+import { parseMethodParams, parseMethodResult, gatehouseRulesList, gatehouseBanConfirm, gatehouseConsensusGet,
   gatehouseDelaySet, gatehouseShieldSet, gatehouseHeldResolve } from '@castle-control/contract';
-import type { ChatDelay, ConsensusFilter, ConsensusGetResult, Decision, DrillRunResult, HeldOutcome, RulesListResult } from '@castle-control/contract';
+import type { ChatDelay, ConsensusFilter, ConsensusGetResult, Decision, HeldOutcome, RulesListResult } from '@castle-control/contract';
 import { moderationCopy as copy } from './moderation-copy.js';
 
 export const fixtureLabel = 'simulated';
 const at = '2026-10-26T12:15:00Z';
-const source = 'simulated-generated-room';
 const heldText = copy.fixture_held_text;
 const banText = 'Simulated original message: simulated-blocked, quoted for human review.';
 
@@ -90,16 +89,6 @@ export function fixtureConsensus(filter: ConsensusFilter): ConsensusGetResult {
 export const fixtureCharts = [fixtureConsensus({ kind: 'all' }), fixtureConsensus({ kind: 'emotes' }),
   fixtureConsensus({ kind: 'text' }), fixtureConsensus({ kind: 'emote', emote: 'Kappa' })];
 
-// Hashes are illustrative fixture identifiers, never presented as a computed live instrument.
-const hash = 'a'.repeat(64);
-export const fixtureReplay: DrillRunResult = parseMethodResult(gatehouseDrillRun, JSON.stringify({
-  label: fixtureLabel, source, instrument_hash: hash,
-  instrument: { rules_hash: hash, bank_hash: hash, judge_hash: hash, prompts_hash: hash },
-  outcomes: fixtureMessages.slice(0, 60).map((message, index) => ({
-    at: message.at, message_id: message.message_id, source, state: index < 10 ? 'acted' : 'not_provoked',
-    verdict: index < 10 ? 'hold' : 'pass', passed: index >= 10,
-  })),
-  summary: { passes: 50, states: { acted: 10, not_provoked: 50, not_evaluable: 0, judge_pending: 0, judge_void: 0, engine_failed: 0 },
-    over_moderation: { evaluated: 20, false_positives: 1 } },
-  gaps: [{ from: '2026-10-26T12:05:00Z', to: '2026-10-26T12:05:10Z' }],
-}));
+// The drill result is a seeded simulated night: see drill-fixture.ts.
+export { busyNight, fixtureCandidate, fixtureReplay } from './drill-fixture.js';
+

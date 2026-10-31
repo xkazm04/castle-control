@@ -124,6 +124,8 @@ pub(super) struct DisplayParams {
     pub(super) anchor: &'static str,
     pub(super) colour: &'static str,
     pub(super) timing_ms: u32,
+    /// One of the renderer's four draw shapes; artwork only, never the outcome.
+    pub(super) shape: &'static str,
 }
 
 /// The only presentation-query door. Unknown keys are ignored; missing, invalid
@@ -171,11 +173,18 @@ fn display_params(uri: &Uri, saved: Option<&Display>) -> DisplayParams {
         Some("br") => "br",
         _ => default_anchor,
     };
+    let shape = match single("shape") {
+        Some("wheel") => "wheel",
+        Some("deck") => "deck",
+        Some("ballot_box") => "ballot_box",
+        _ => "urn",
+    };
     DisplayParams {
         scale,
         anchor,
         colour,
         timing_ms,
+        shape,
     }
 }
 

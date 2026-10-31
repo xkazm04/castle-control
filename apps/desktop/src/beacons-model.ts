@@ -29,6 +29,16 @@ export function curveIntensity(curve: IntensityCurve, total: number): number {
   return previous.intensity;
 }
 
+/** The one weighting rule for test fires and replays: gift subs use the gift-sub weighting, subs count once. */
+export function weightedAmount(source: 'gift' | 'subscribe', count: number, gift_weight: number): number {
+  return count * (source === 'gift' ? gift_weight : 1);
+}
+
+/** The one decay rule for the simulated clock and replays, applied to the running total before the curve. */
+export function decayedTotal(total: number, seconds: number, decay: IntensityDecay): number {
+  return decay.kind === 'none' ? total : total * 2 ** (-seconds / decay.half_life_s);
+}
+
 /** UI-only sandbox. The historical feed and initial totals are illustrative,
  * not reconstructed live accounting. No RPC, identities, ledger or OBS adapter. */
 export function createBeaconsPreview(): BeaconsPort {
@@ -99,7 +109,7 @@ export function createBeaconsPreview(): BeaconsPort {
       const events: PreviewEvent[] = Array.from({ length: count }, () => ({ id: `simulated-event-${serial++}`,
         at: new Date(Date.UTC(2026, 9, 26, 12, 0, snapshot.elapsed_s)).toISOString(),
         visual_id: snapshot.selected, burst, label: 'simulated' }));
-      const total = item.total + count * (source === 'gift' ? item.gift_weight : 1);
+      const total = item.total + weightedAmount(source, count, item.gift_weight);
       publish({ ...snapshot, events: [...events, ...snapshot.events],
         visuals: snapshot.visuals.map(old => old === item ? { ...old, total, intensity: curveIntensity(old.visual.curve, total) } : old),
         notice: `Simulated ${count} ${source} event${count === 1 ? '' : 's'} added locally. Nothing sent.`,
@@ -108,8 +118,7 @@ export function createBeaconsPreview(): BeaconsPort {
     advance() {
       publish({ ...snapshot, elapsed_s: snapshot.elapsed_s + 60, notice: 'Simulated clock advanced 60 s · decay applied locally.',
         visuals: snapshot.visuals.map(item => {
-          const decay = item.visual.curve.decay;
-          const total = item.total * (decay.kind === 'none' ? 1 : 2 ** (-60 / decay.half_life_s));
+          const total = decayedTotal(item.total, 60, item.visual.curve.decay);
           return { ...item, total, intensity: curveIntensity(item.visual.curve, total) };
         }),
       });

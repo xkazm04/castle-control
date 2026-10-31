@@ -174,3 +174,16 @@ it('handles unavailable OBS storage and disposal without losing the fixed result
   doc.advance(1200); expect(winners(root)).toEqual(['sim_second']);
   dispose?.(); expect(doc.callbacks.size).toBe(0);
 });
+
+it('paints the streamer-selected shape from the page attribute and falls back to the urn', () => {
+  for (const [attribute, shape] of [['wheel', 'wheel'], ['deck', 'deck'], ['ballot_box', 'ballot_box'],
+    ['urn', 'urn'], ['spinner', 'urn'], [undefined, 'urn']] as const) {
+    const { root, mount } = setup();
+    if (attribute !== undefined) root.dataset['shape'] = attribute;
+    const dispose = mount();
+    const art = descendants(root).find((node) => node.tagName === 'svg');
+    expect(art?.attributes['aria-label']).toBe(`${shape} draw artwork`);
+    expect(winners(root)).toEqual([]);
+    dispose?.();
+  }
+});

@@ -3,6 +3,10 @@ import type { DrillConfiguration } from '@castle-control/contract';
 import { FieldGroup, InkButton, WindowedRows } from '@castle-control/ui';
 import type { CoreGatehousePort, CoreGatehouseSnapshot } from '../../gatehouse-core.js';
 import { Drill } from './drill.jsx';
+import { MoatCompare } from './moat-compare.jsx';
+import { moatCopy } from '../../moat/moat-copy.js';
+import { ruleBenchLink } from './rule-bench.jsx';
+import { coreRuleBench } from './session.js';
 import { CaptureList, CaptureConfiguration } from './capture-drill.jsx';
 import { moderationCopy as copy } from '../../moderation-copy.js';
 
@@ -44,15 +48,16 @@ export function CoreDrill({ state, port }: { state: CoreGatehouseSnapshot; port:
         }}>{copy.compare}</InkButton>
       </div><p>{baseline ? copy.baseline_saved : copy.baseline_empty}</p>
     </section></>}
-    {state.drill && <Drill result={state.drill} origin="core" capture_hash={state.replay_capture?.instrument_hash} />}
+    {state.drill && <Drill result={state.drill} origin="core" capture_hash={state.replay_capture?.instrument_hash} rule_bench={ruleBenchLink(state.rules, coreRuleBench(port))} />}
     {state.diff && <section className="moderator-card" aria-label={copy.comparison_label}><h3>{copy.comparison_title}</h3>
       <p>{copy.comparison_note}</p>
+      <MoatCompare key={`${state.diff.baseline.instrument_hash}/${state.diff.candidate.instrument_hash}`} diff={state.diff} note={moatCopy.compare.note_core} />
       <WindowedRows rows={state.diff.changes} label={copy.changes_label} row_key={change => change.message_id}
         empty_state={copy.changes_empty}>
         {change => <p>{change.message_id}: {change.before.replaceAll('_', ' ')} → {change.after.replaceAll('_', ' ')}</p>}
       </WindowedRows>
-      <h3>{copy.baseline}</h3><Drill result={state.diff.baseline} origin="core" capture_hash={state.replay_capture?.instrument_hash} />
-      <h3>{copy.candidate}</h3><Drill result={state.diff.candidate} origin="core" capture_hash={state.replay_capture?.instrument_hash} />
+      <h3>{copy.baseline}</h3><Drill result={state.diff.baseline} origin="core" capture_hash={state.replay_capture?.instrument_hash} moat={false} />
+      <h3>{copy.candidate}</h3><Drill result={state.diff.candidate} origin="core" capture_hash={state.replay_capture?.instrument_hash} moat={false} />
     </section>}
     {!state.drill && !state.diff && <p role="status">{copy.replay_empty}</p>}
   </section>;

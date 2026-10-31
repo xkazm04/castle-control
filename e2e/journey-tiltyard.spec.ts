@@ -11,7 +11,7 @@ test('Map Room Tiltyard: champion, cancellation, simulated tally, streamer call 
     await expect(room.locator('[data-hex-tile]')).toHaveCount(54);
     const inspector = room.getByLabel('Selected tile', { exact: true });
     const inspection = await inspector.textContent();
-    await expect(views.getByRole('button')).toHaveCount(3);
+    await expect(views.getByRole('button')).toHaveCount(4);
     await room.getByRole('button', { name: 'Spyglass', exact: true }).click();
     await expect(room.locator('[data-viewer-frame]')).toHaveCount(1);
     await room.getByRole('button', { name: 'Tiltyard', exact: true }).click();

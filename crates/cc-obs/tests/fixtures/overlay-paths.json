@@ -3,6 +3,7 @@
   { "target": "/gatehouse/current?scale=2&anchor=tr", "kind": "vote_bar", "canonical": "/gatehouse/current" },
   { "target": "/gatehouse/current?scale=bad&anchor=", "kind": "vote_bar", "canonical": "/gatehouse/current" },
   { "target": "/gatehouse/current?scale=1&scale=2", "kind": "vote_bar", "canonical": "/gatehouse/current" },
+  { "target": "/gatehouse/current?scale=2&anchor=tr&shape=wheel", "kind": null, "canonical": null },
   { "target": "/gatehouse/unknown", "kind": null, "canonical": null },
   { "target": "/gatehouse/123", "kind": null, "canonical": null },
   { "target": "/gatehouse/current/extra", "kind": null, "canonical": null },
@@ -231,6 +232,21 @@
   },
   {
     "target": "/assets/x/y/z",
+    "kind": null,
+    "canonical": null
+  },
+  {
+    "target": "/lots/simulated-draw?scale=2&anchor=tl&shape=wheel",
+    "kind": "lots",
+    "canonical": "/lots/simulated-draw"
+  },
+  {
+    "target": "/lots/simulated-draw?shape=&shape=spinner",
+    "kind": "lots",
+    "canonical": "/lots/simulated-draw"
+  },
+  {
+    "target": "/beacons/simulated-frame?shape=wheel",
     "kind": null,
     "canonical": null
   }

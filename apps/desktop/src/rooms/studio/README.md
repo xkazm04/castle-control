@@ -347,6 +347,85 @@ tree, alternative spawn path, install, gate-tooling change or git write was used
 to bypass that refusal. Screenshot/browser verification was not run; sample
 placement fidelity is established numerically against the original C geometry.
 
+## Rehearse a round (2026-10-31)
+
+A third view beside Table and Spyglass plays a deterministic, simulated round on
+the room's own parsed board. It answers "will my board make a good round at 30
+or 300 viewers?" locally, while the Muster and Proclaimed rungs stay locked. It
+adds no wire identifier, dependency, network call or stage transition.
+
+| File | Job |
+| --- | --- |
+| `rehearsal.ts` | Pure simulation and the setup door `parseRehearsalSetup` (seed 1-24 chars, viewers 10-1000, turns 2-24). |
+| `rehearsal-verdict.ts` | `balanceReport`: spread of shares, leader margin, chokepoints, turn of last change, lead changes and the verdict words. |
+| `rehearse-state.ts` | Pure reducer: start, step, tick, pause, resume, reset, again, replay, compare sizes, compare crowds, brush, paint, restore, comparison list. |
+| `rehearse-paint.ts` | Redraw start: the edit overlay (`paintEdits`) and the board it makes (`startBoard`, re-parsed by `parseStudioBoard`). |
+| `rehearse-tools.tsx` | The What if row (Compare sizes, Compare crowds, Redraw start) and the brush palette. |
+| `rehearse-strip.tsx` | Territory by turn: one stacked column per turn, legend, tooltips and a table for screen readers. |
+| `use-rehearse.ts` | The only hooks: the clock tick, the reduced-motion flag, the redrawn start board and the reset when the base board changes. |
+| `rehearse.tsx`, `rehearse-side.tsx` | Hook-free views (the same split as Spyglass), so tests render them directly. |
+| `rehearse-copy.ts`, `rehearse.css` | Copy and token-only styles. |
+
+**The model.** Each turn every generated viewer emits `join_side` then
+`pick_tile`, the renderer's closed viewer-action shapes mirrored by value (the
+desktop does not import the renderer). Join odds come from a per-house pull drawn
+from the seed, a small per-turn jitter and a mild bandwagon on held share. A
+viewer attacks (a tile beside the house's holdings, unclaimed or enemy) or
+defends (one of its own border tiles). Per tile the highest count wins; a held
+tile starts with a garrison of 2 plus 1 per two friendly neighbours; ties are a
+seeded coin; a house with no land musters on unclaimed tiles. Only tiles picked
+in a turn can change owner, and tests prove it on S, M and L boards. The
+generator is mulberry32 over an FNV-1a hash of the seed text; nothing reads a
+clock or `Math.random` (a test scans the sources).
+
+**Tuning.** The first naive version (72% attack, no garrison, strong bandwagon)
+ended in a 100% conquest within four turns on every board. The constants now give
+rounds that vary with the seed and with the crowd: on the M board 30 viewers
+mostly stall, 120 mix runaways, tight races and contested rounds, and 300 mostly
+run away. A test pins that variety so a later tweak cannot make the room boring.
+
+**Copy law.** The band "SIMULATED REHEARSAL · no viewers, no identities, no
+Extension state · sample territory" is rendered unconditionally at the top of the
+view. Tests assert its exact words in every state, that it is the section's first
+child, that the source does not gate it, and that the CSS cannot hide it. Tile
+history, comparison boards and the Spyglass note all say simulated.
+
+**Behaviour.** Flips ink in from the left over the hexagon (the room's print-in
+wipe, with an a/b alternation so a tile can flip on consecutive turns) and are
+outlined for the turn. The turn log is a `RuledFeed`; each turn goes to a polite
+`Notice`, and the finish announces the verdict. Reduced motion skips straight to
+the end state. Enter in a field plays; there is no key listener. Changing Map size
+ends the round on screen and keeps finished runs in Compare runs (last three).
+Compare sizes is offered only when the room owns the S/M/L boards.
+
+**Layout.** The board needs height, so the verdict, replay, report and log sit in
+the side column and the table's own heading is kept for screen readers only.
+Boards over 60 tiles drop the house words from the hexes.
+
+**What if.** One row of tools sits between the run controls and the board. *Redraw start* is a toggle that keeps its
+place; while it is on, a brush palette (one brush per house, plus Unclaimed, and a Restore button that carries the
+count) stands where the compare buttons were, so painting never costs the board a line. Pressing a hex, pressing Enter on a focused hex, or dragging across hexes repaints
+the rehearsal's starting territory. The edits are an overlay of tile id to house id on one base board, so painting a
+tile back to what it was removes the edit; the board that is played is rebuilt through `parseStudioBoard` and never
+mutated. The Table and Spyglass views keep the untouched sample, a size change drops the edits, and a painted tile is
+announced in the polite notice. Painting ends the round on screen and voids a crowd table made on the old start;
+finished runs stay in Compare runs, marked "redrawn start". Arrow keys still only move focus in paint mode.
+*Compare crowds* plays the same board, seed and turns at 30, 120 and 300 simulated viewers (each through the
+setup door) and shows verdict rows with a Use button that puts that crowd in the form. Both comparison tables also
+say how twelve seeds ended ("Across 12 seeds: 9 stalemate, 3 tight", `rehearsal-sweep.ts`), because one seed can mislead:
+on the sample board 30 viewers mostly stall and 300 mostly run away. *Compare sizes* plays the
+redrawn start for the current size and the stock layouts for the others, and says so in the row.
+
+**Reading the round.** Chokepoints (tiles that changed hands twice) carry a black diamond on the board as soon as
+they qualify, so the contested ground can be found and redrawn; the count in the report uses the same function.
+Territory by turn is a stacked column per turn in the house inks. The inks are the repo's locked tokens: the
+colour-blind separation passes, but the gold is pale on paper (1.83:1), so segments carry an inked edge, the
+legend names each house, each segment has a tooltip and the same numbers are a table for screen readers.
+
+**Kit note.** The kit's `primary` button variant hides its label on hover in the
+paper theme (hover text and fill are both `--press`); this view uses `plate`.
+The kit is another package, so it is reported here, not changed.
+
 ## WP7: Tiltyard host (2026-10-31)
 
 Fixture mode adds Tiltyard after Table and Spyglass as a third native pressed
@@ -393,3 +472,5 @@ Validation from the worktree root, with no install or browser launch:
   cases in one file, without starting a server or browser.
 - The UI keymap suite passes all three cases and reports zero conflicts,
   including live/verdict Escape consumption and idle/done Escape fallthrough.
+
+The merged Map view switch is Table, Spyglass, Rehearse, Tiltyard, in that order.

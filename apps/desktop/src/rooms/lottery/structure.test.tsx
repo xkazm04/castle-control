@@ -95,7 +95,7 @@ test('C puts the urn stage before the independently scrolling desk and its order
     const stage = markup.slice(stageStart, deskStart);
     const desk = markup.slice(deskStart);
     expect(stage).toContain('class="cc-stage ');
-    expect(stage).toContain('class="cc-urn"');
+    expect(stage).toContain('class="lottery-draw-svg"');
     expect(stage).toContain('class="cc-medals"');
     expect(stage.match(/data-corner=/g)).toHaveLength(4);
     expect(stage.match(/data-lot-dot=/g)).toHaveLength(lotterySession(queue).port.getSnapshot().entries.length);

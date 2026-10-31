@@ -18,14 +18,14 @@ test('the hosted Tiltyard shows SAMPLE contestants and the visible simulated-cha
   } finally { network.mockRestore(); }
 });
 
-test.each(['table', 'spyglass', 'tiltyard'] as const)('the %s switch has three native buttons and exactly one pressed', view => {
+test.each(['table', 'spyglass', 'rehearse', 'tiltyard'] as const)('the %s switch has four native buttons and exactly one pressed', view => {
   const row = renderToStaticMarkup(<StudioViewSwitch view={view} on_view={vi.fn()} />);
   const buttons = row.match(/<button[^>]*>[\s\S]*?<\/button>/g) ?? [];
-  expect(buttons).toHaveLength(3);
+  expect(buttons).toHaveLength(4);
   expect(buttons.every(button => button.includes('type="button"') && button.includes('aria-pressed='))).toBe(true);
   expect(buttons.filter(button => button.includes('aria-pressed="true"'))).toHaveLength(1);
-  expect(buttons.map(button => button.replace(/<[^>]*>/g, ''))).toEqual(['Table', 'Spyglass', 'Tiltyard']);
-  expect(buttons[['table', 'spyglass', 'tiltyard'].indexOf(view)]).toContain('aria-pressed="true"');
+  expect(buttons.map(button => button.replace(/<[^>]*>/g, ''))).toEqual(['Table', 'Spyglass', 'Rehearse', 'Tiltyard']);
+  expect(buttons[['table', 'spyglass', 'rehearse', 'tiltyard'].indexOf(view)]).toContain('aria-pressed="true"');
 });
 
 test('the default table and core fallback retain their contents; the stage has a separate lazy door', () => {
