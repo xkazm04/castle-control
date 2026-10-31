@@ -1,0 +1,9 @@
+/* Overlord urn room-tier preset: three printed tier buttons, token-only. */
+.lottery-tier-buttons { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-8); margin: var(--space-8) 0; }
+.lottery-room .lottery-tier-buttons .cc-button { display: grid; justify-items: center; gap: var(--space-2); height: auto; min-height: calc(var(--button-h) * 1.8); padding: var(--space-6) var(--space-4); border: var(--rule-medium) solid var(--ink); border-radius: 0; background: var(--paper); color: var(--ink); box-shadow: var(--space-2) var(--space-2) 0 var(--hair-2); }
+.lottery-tier-buttons b { font: 800 var(--text-shell-panel-title)/1 var(--font-display); }
+.lottery-tier-buttons span { font: 700 var(--text-shell-label)/1.1 var(--font-ui); letter-spacing: var(--track-label); text-transform: uppercase; }
+.lottery-tier-buttons small { font: 600 var(--text-shell-label)/1.1 var(--font-num); color: var(--muted); }
+.lottery-room .lottery-tier-buttons .cc-button:hover:not(:disabled) { background: color-mix(in srgb, var(--gules) 12%, var(--paper)); color: var(--ink); }
+.lottery-room .lottery-tier-buttons .cc-button[aria-pressed="true"] { background: var(--stamp-act-ground); color: var(--press-paper); box-shadow: var(--space-2) var(--space-2) 0 var(--ink); }
+.lottery-room .lottery-tier-buttons .cc-button[aria-pressed="true"] small { color: var(--press-paper); }

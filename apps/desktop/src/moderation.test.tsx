@@ -189,7 +189,7 @@ test('drill deep link retains shell context and opens simulated provenance, gaps
   for (const text of ['Back to the Gatehouse', 'aria-label="Breadcrumb"', 'Twitch simulated', 'Gatehouse simulated', 'Proposal · awaiting your seal']) expect(html).toContain(text);
   expect(html).not.toContain('data-message-row');
   const drill = renderToStaticMarkup(<Drill result={fixtureReplay} />);
-  for (const text of ['simulated-generated-room', fixtureReplay.instrument_hash, 'judge pending', 'engine failed', 'Recording gap', '1 / 20']) expect(drill).toContain(text);
+  for (const text of ['simulated-generated-room', fixtureReplay.instrument_hash, 'judge pending', 'engine failed', 'Recording gap', `${fixtureReplay.summary.over_moderation.false_positives} / ${fixtureReplay.summary.over_moderation.evaluated}`]) expect(drill).toContain(text);
   expect(drill).toContain('#/chamber/moderator');
   expect(drill).not.toContain('Apply to');
   expect(drill).toContain('live parity: pending capture evidence');

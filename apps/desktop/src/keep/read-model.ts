@@ -18,6 +18,6 @@ export function keepReadModel(snapshot: Snapshot) {
     studio: { word: fixture ? 'Sand table' : 'Unknown', line: fixture ? 'Illustrative war table · local test only' : 'Extension status unavailable',
       ...(fixture ? { stamp: { kind: 'sample' as const, word: 'Local test' } } : {}) },
   };
-  return { states, delay: fixture ? `${fixtureDelay.delay_s} s` : 'unknown',
+  return { states, delay: fixture ? `${fixtureDelay.delay_s} s` : 'unknown', ...(fixture ? { delay_s: fixtureDelay.delay_s } : {}),
     consensus: fixture ? fixtureCharts[0]?.directions ?? [] : [] };
 }

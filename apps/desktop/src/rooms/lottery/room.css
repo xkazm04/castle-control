@@ -4,8 +4,13 @@
 .lottery-room .cc-stage-wrap, .lottery-room .cc-desk { min-width: 0; min-height: 0; display: flex; }
 .lottery-room .panel, .lottery-room .cc-card.cc-card.panel { position: relative; min-width: 0; min-height: 0; padding: var(--space-14) var(--space-16); border: var(--rule-strong) solid var(--ink); border-radius: 0; background: var(--card); box-shadow: none; }
 .lottery-room [data-role="lot-urn-panel"], .lottery-room [data-role="lot-writ-panel"] { line-height: normal; }
-.lottery-room .cc-stage-wrap > .panel { display: flex; flex-direction: column; width: 100%; overflow: hidden; }
-.lottery-room .cc-stage-wrap > .panel > :not(.lottery-stage) { flex-shrink: 0; }
+.lottery-room .cc-stage-wrap > .panel { container: lot-pool / size; box-sizing: border-box; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; gap: var(--space-4); width: 100%; height: 100%; padding: var(--space-10); padding-top: var(--space-14); overflow: visible; }
+.lottery-room [data-role="lot-urn-panel"] > .topline { position: absolute; top: 0; left: 0; right: 0; margin: 0; }
+.lottery-pool-heading { display: flex; align-items: center; justify-content: space-between; gap: var(--space-8); min-width: 0; }
+.lottery-pool-heading > h3 { flex: 1; min-width: 0; }
+.lottery-room .lottery-pool-heading [data-role="panel-title"] { gap: var(--space-2) var(--space-6); }
+.lottery-room .lottery-pool-heading [data-role="panel-gloss"] { font-size: var(--text-shell-label); }
+.lottery-pool-readings { display: flex; flex-direction: column; gap: var(--space-3); min-width: 0; }
 .lottery-room .lottery-desk-panel { display: flex; flex-direction: column; gap: var(--space-12); width: 100%; overflow: hidden; }
 .lottery-room .lottery-desk-panel > :not(.lottery-desk-body) { flex-shrink: 0; }
 .lottery-room .lottery-desk-body { display: flex; flex-direction: column; flex: 1 1 0; gap: var(--space-12); min-height: 0; min-width: 0; overflow: auto; scrollbar-gutter: stable; padding: var(--space-3) var(--space-4) var(--space-6) 0; }
@@ -18,11 +23,11 @@
 .lottery-room [data-role="panel-gloss"] { color: var(--muted); font: italic var(--text-shell-aside)/1.2 var(--font-serif); letter-spacing: 0; text-transform: none; }
 .lottery-heading-stamp { margin-inline-start: auto; }
 .lottery-room .body15 { margin: 0; color: var(--ink-2); font: 400 var(--text-shell-body)/1.45 var(--font-ui); }
-.lottery-stage { display: grid; flex: 0 1 auto; min-height: 0; grid-template-columns: calc(var(--space-56) + var(--space-40)) minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto; grid-template-areas: "tally urn" "foot foot"; align-items: start; gap: var(--space-6); margin: var(--space-6) 0 0; }
-.lottery-room .cc-tally { grid-area: tally; display: flex; flex-direction: column; gap: var(--space-6); padding-top: var(--space-6); }
-.lottery-room .num .cc-hero-readout { --cc-figure-size: var(--text-shell-figure); --cc-ghost-offset: var(--space-4); }
-.lottery-room [data-role="lot-count"] .cc-hero-readout .cc-hero-figure { display: block; width: calc(var(--space-56) + var(--space-40)); font: 700 var(--text-shell-figure)/.9 var(--font-display); letter-spacing: normal; text-transform: none; white-space: nowrap; text-shadow: var(--space-4) var(--space-3) 0 var(--gules); }
-.lottery-room .num .cc-hero-caption { font: italic var(--text-shell-figure-caption)/1.2 var(--font-serif); }
+.lottery-stage { display: flex; min-height: 0; min-width: 0; margin: 0; }
+.lottery-room .cc-tally { flex: none; }
+.lottery-room .num .cc-hero-readout { --cc-ghost-offset: var(--space-1); flex-direction: row; align-items: center; gap: var(--space-6); }
+.lottery-room [data-role="lot-count"] .cc-hero-readout .cc-hero-figure { width: auto; font: 700 var(--text-shell-panel-title-large)/1 var(--font-display); letter-spacing: normal; text-transform: none; white-space: nowrap; text-shadow: var(--space-1) var(--space-1) 0 var(--gules); }
+.lottery-room .num .cc-hero-caption { max-width: var(--space-56); font: italic var(--text-shell-label)/1.1 var(--font-serif); }
 .lottery-room .cc-urn { grid-area: urn; display: block; width: 100%; max-width: var(--lot-urn-width); height: var(--lot-urn-height); max-height: 100%; min-height: 0; }
 .lottery-room .cc-urn ellipse { fill: var(--art-paper); stroke: var(--gules); stroke-width: var(--space-3); }
 .lottery-room .cc-urn circle { fill: var(--art-key); }
@@ -38,18 +43,18 @@
 .lottery-marks [data-cohort="subscriber"] { color: var(--gules); }
 .lottery-marks [data-cohort="raider"]:not([data-revealed-dot]) { color: transparent; width: var(--space-10); height: var(--space-10); align-self: center; border: var(--rule-strong) solid var(--azure); border-radius: 50%; }
 .lottery-marks [data-cohort="raider"][data-revealed-dot] { color: var(--azure-text); }
-.lottery-room .cc-stage-foot { grid-area: foot; margin-top: var(--space-8); }
-.lottery-room .cc-stage-foot p { margin: 0; color: var(--ink-2); font: var(--text-shell-body)/1.45 var(--font-ui); }
-.lottery-room .legend { display: flex; flex-wrap: wrap; gap: var(--space-8) var(--space-14); padding: 0; margin: 0; list-style: none; font: 600 var(--text-shell-legend)/1 var(--font-ui); }
+.lottery-room .cc-stage-foot { min-width: 0; margin: 0; }
+.lottery-room .cc-stage-foot p { margin: 0; color: var(--ink-2); font: var(--text-shell-label)/1.2 var(--font-ui); }
+.lottery-room .legend { display: flex; flex-wrap: wrap; gap: var(--space-3) var(--space-10); padding: 0; margin: 0; list-style: none; font: 600 var(--text-shell-label)/1.2 var(--font-ui); }
 .lottery-room .legend li { display: inline-flex; align-items: center; gap: var(--space-5); }
 .lottery-room .legend li::before { content: ""; width: var(--space-10); height: var(--space-10); border-radius: 50%; background: var(--key); }
 .lottery-room .legend [data-cohort="subscriber"]::before { background: var(--gules); }
 .lottery-room .legend [data-cohort="raider"]::before { background: transparent; border: var(--rule-strong) solid var(--azure); }
-.lottery-room .statrow { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--space-10); margin: var(--space-10) 0 0; padding: 0; list-style: none; }
-.lottery-room .stat { display: flex; align-items: center; gap: var(--space-7); line-height: normal; }
-.lottery-room .ring { display: flex; align-items: center; justify-content: center; flex: none; min-width: var(--space-32); height: var(--space-32); padding-inline: var(--space-3); border: var(--title-ghost) solid var(--gules); border-radius: var(--space-32); font: 700 var(--text-shell-stat-number)/1 var(--font-display); }
+.lottery-room .statrow { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--space-2) var(--space-6); margin: 0; padding: 0; list-style: none; }
+.lottery-room .stat { display: flex; align-items: center; gap: var(--space-4); line-height: normal; }
+.lottery-room .ring { display: flex; align-items: center; justify-content: center; flex: none; min-width: var(--space-20); height: var(--space-20); padding-inline: var(--space-3); border: var(--title-ghost) solid var(--gules); border-radius: var(--space-32); font: 700 var(--text-shell-label)/1 var(--font-display); }
 .lottery-room .stat:last-child .ring { font-size: var(--text-shell-stat-fraction); }
-.lottery-room .stat b { display: block; font: 700 var(--text-shell-stat-title)/1.1 var(--font-ui); }
+.lottery-room .stat b { display: block; font: 700 var(--text-shell-label)/1.1 var(--font-ui); }
 .lottery-room .stat small { display: block; color: var(--muted); font: var(--text-shell-stat-label)/1.1 var(--font-ui); }
 .lottery-room .ring ins { text-decoration: none; }
 .lottery-room .ring s { margin-inline-end: var(--space-2); color: var(--gules-text); }
@@ -128,10 +133,17 @@
 @media (max-width: 56.25rem) {
   .lottery-room, .lottery-room .cc-hall { height: auto; }
   .lottery-room .cc-hall { grid-template-columns: minmax(0, 1fr); }
-  .lottery-room .cc-stage-wrap > .panel { overflow: visible; }
+  .lottery-room .cc-stage-wrap > .panel { height: calc(var(--space-56) * 10); }
   .lottery-room .lottery-desk-body { flex-basis: auto; max-height: calc(var(--space-56) * 8); }
 }
 @media (prefers-reduced-motion: reduce) {
   .lottery-room .cc-writ-fields ins { animation: none; }
   .lottery-room .cc-disclosure > summary::before, .lottery-room .pbtn, .lottery-room .cc-button { transition: none; }
+}
+
+@container lot-pool (height < 26rem) {
+  .lottery-room .stat small { position: absolute; width: var(--space-1); height: var(--space-1); overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+}
+@container lot-pool (height >= 26rem) {
+  .lottery-pool-readings { gap: var(--space-6); }
 }

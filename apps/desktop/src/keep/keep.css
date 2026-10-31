@@ -3,7 +3,7 @@
 /* The winner's 1060 by 698 plane scales to fit. Sizes use max(design token,
    floor token * inverse effective scale), preserving 13px labels and 15px reading
    copy. The castle's inverse includes its camera scale; the headline uses stage scale. */
-.keep-home { display: grid; grid-template-rows: auto minmax(0, 1fr); height: 100%; min-height: 0; font: var(--text-shell-body)/1.4 var(--font-ui); }
+.keep-home { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; height: 100%; min-height: 0; font: var(--text-shell-body)/1.4 var(--font-ui); }
 .keep-heading { display: flex; justify-content: flex-end; align-items: center; flex-wrap: wrap; gap: var(--space-12); padding-block: var(--space-8); }
 .keep-heading .cc-button { height: var(--space-36); padding: 0 var(--space-14); border: var(--rule-strong) solid var(--ink); border-radius: 0; background: var(--plaque-paper); color: var(--ink); font: 700 var(--text-shell-panel-action)/1 var(--font-ui); letter-spacing: .06em; box-shadow: var(--space-3) var(--space-3) 0 var(--ink); transition: transform var(--motion-fast), box-shadow var(--motion-fast); }
 .keep-heading .cc-button[data-variant="primary"] { background: var(--ink); color: var(--paper); box-shadow: var(--space-3) var(--space-3) 0 var(--or); }
@@ -57,8 +57,6 @@
 .keep-plaque > .cc-stamp { --stamp-size: var(--keep-label-size); position: absolute; right: calc(-1 * var(--space-14)); top: calc(-1 * var(--space-16)); background: var(--plaque-paper); }
 .keep-plaque.drafted { outline: var(--space-3) dashed var(--or); outline-offset: var(--space-6); }
 .keep-plaque .pin { position: absolute; left: calc(-1 * var(--space-10)); bottom: calc(-1 * var(--space-34)); font: 800 var(--keep-label-size, var(--text-shell-draft-label))/1 var(--font-display); letter-spacing: .12em; color: var(--or-text); background: var(--draft-paper); border: var(--rule-strong) dashed var(--or); padding: var(--space-4) var(--space-7); white-space: nowrap; }
-.keep-moatlab { position: absolute; left: calc(var(--space-1) * 520); top: calc(var(--space-1) * 596); z-index: 3; font: 700 var(--keep-line-size, var(--text-shell-moat-state))/1 var(--font-ui); background: var(--azure); color: var(--white); padding: var(--space-6) var(--space-12); border: var(--rule-strong) solid var(--ink); box-shadow: var(--space-3) var(--space-3) 0 var(--ink); pointer-events: none; letter-spacing: .02em; white-space: nowrap; }
-.keep-moatlab small { font: 600 var(--keep-label-size, var(--text-shell-label))/1 var(--font-ui); opacity: .85; margin-left: var(--space-8); }
 .keep-home.room-mode .keep-dio { height: calc(var(--space-1) * 250); border-bottom: var(--space-3) solid var(--ink); }
 .keep-home.room-mode .keep-khead, .keep-home.room-mode .keep-vlab { display: none; }
 .keep-home.room-mode .keep-plaque, .keep-home.room-mode .keep-moatlab { opacity: 0; }
@@ -71,3 +69,12 @@
   .keep-khead .slip { animation: none; }
   .keep-castle, .keep-dio, .keep-plaque, .keep-castle .dim, .keep-castle .litglow { transition: none; }
 }
+
+/* The replay is an unscaled moat band below the art, outside plaque and hit geometry. */
+.keep-moat { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-8) var(--space-12); padding: var(--space-8) var(--space-12); border: var(--rule-strong) solid var(--ink); background: var(--plaque-paper); box-shadow: inset 0 var(--space-4) 0 var(--azure); }
+.keep-moatlab { font: 700 var(--text-shell-moat-state)/1.2 var(--font-ui); color: var(--azure-text); }
+.keep-moat .moat-heartbeat { flex: 1 1 calc(var(--space-56) * 6); flex-wrap: wrap; gap: var(--space-6); }
+.keep-moat .moat-heartbeat small { font: 700 var(--text-shell-label)/1.2 var(--font-ui); color: var(--ink-2); }
+.keep-moat .moat-heartbeat-strip { min-width: calc(var(--space-56) * 2); }
+.keep-moat-link { color: var(--azure-text); font: 700 var(--text-shell-panel-action)/1.2 var(--font-ui); text-decoration: underline; text-underline-offset: var(--space-3); }
+.keep-moat-link:focus-visible { outline: var(--rule-strong) solid var(--azure); outline-offset: var(--focus-offset); }

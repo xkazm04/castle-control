@@ -87,7 +87,7 @@ test('Gatehouse shadow journey and transparent stream previews', async ({ page }
   const verify = await guardPage(page);
   try {
     await page.goto('/#/chamber/moderator');
-    await expect(page.locator('.cc-sample')).toHaveText('Simulated');
+    await expect(page.locator('.cc-rampart > [data-stamp="simulated"]')).toHaveText('Simulated');
     await expect(page.locator('.moderator-room')).toContainText('SIMULATED');
     await page.getByRole('textbox', { name: 'Watching rule name' }).fill('Links for review');
     await page.getByRole('textbox', { name: 'Watching match pattern' }).fill('https?://');

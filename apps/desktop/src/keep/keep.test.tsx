@@ -142,3 +142,15 @@ test('the retired room drawing has no remaining production importer', () => {
     expect(readFileSync(join(path.parentPath, path.name), 'utf8'), path.name).not.toContain(retired);
   }
 });
+
+test('the moat bar carries a labelled sample heartbeat in the fixture and none from a core room', () => {
+  const fixture = renderToStaticMarkup(<Keep snapshot={{ mode: 'fixture', phase: 'ready', ...simulatedRead(1) }} on_open={vi.fn()} on_enter={vi.fn()} />);
+  const bar = fixture.slice(fixture.indexOf('class="keep-moat"'));
+  expect(bar).toContain('The moat · chat delay 4 s');
+  expect(bar).toContain('role="img" aria-label="Sample replay loop · simulated"');
+  expect(bar).toContain('<a class="keep-moat-link" href="#/chamber/moderator/drill">Watch the full replay</a>');
+  const core = renderToStaticMarkup(<Keep snapshot={{ mode: 'core', phase: 'ready', ...simulatedRead(1) }} on_open={vi.fn()} on_enter={vi.fn()} />);
+  expect(core).toContain('The moat · chat delay unknown');
+  expect(core).not.toContain('moat-heartbeat');
+  expect(core).not.toContain('keep-moat-link');
+});

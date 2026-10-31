@@ -46,7 +46,7 @@ export function FixtureCast({ port, hash, display }: { port: LotsPort; hash: str
       </section>
       <h3 className="lottery-card-title">{copy.journey.overlay}</h3>
       <p className="cc-aside">{copy.journey.overlay_gap}</p>
-      <code className="cc-hash">{`/lots/${state.draw.draw_id}?scale=${drawScale[display.size]}&anchor=${display.anchor}`}</code>
+      <code className="cc-hash">{`/lots/${state.draw.draw_id}?scale=${drawScale[display.size]}&anchor=${display.anchor}&shape=${display.shape}`}</code>
       <p className="cc-aside">{copy.journey.overlay_art_gap}</p>
     </section>}
   </Ticket>;

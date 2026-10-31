@@ -12,7 +12,7 @@ export type { RampartProps, ChamberLink } from './shell.jsx';
 export { PageHeader, NumberedPanel } from './panels.jsx';
 export { RuleTable } from './rule-table.jsx';
 export type { RuleRow } from './rule-table.jsx';
-export { WindowedRows, rowWindow, rowHeight } from './windowed-rows.jsx';
+export { WindowedRows, revealTop, rowWindow, rowHeight } from './windowed-rows.jsx';
 export type { WindowedRowsProps } from './windowed-rows.jsx';
 export { ConsensusChart } from './consensus-chart.jsx';
 export type { ConsensusChartProps, ConsensusResult, ConsensusDirection } from './consensus-chart.jsx';

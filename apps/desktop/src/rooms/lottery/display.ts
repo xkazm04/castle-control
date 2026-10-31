@@ -1,14 +1,23 @@
 import type { DemoStyle } from '../../demo/model.js';
 import type { CSSProperties } from 'react';
 import type { Display } from '@castle-control/contract';
+import type { DrawShape } from '@castle-control/renderer';
 
 /** Local control state; core mode adapts it to the existing upsert display. */
 export type DrawDisplay = {
   size: 'S' | 'M' | 'L'; anchor: 'tl' | 'tr' | 'bl' | 'br' | 'center';
-  colour: 'gules' | 'azure' | 'or' | 'key'; art_style: DemoStyle; reveal_ms: number;
+  colour: 'gules' | 'azure' | 'or' | 'key'; art_style: DemoStyle; reveal_ms: number; shape: DrawShape;
+  /** Full-chamber stage for the broadcast moment; the desk returns with one click. */
+  theatre: boolean;
+  /** Opt-in synthesized ceremony sound; off until the streamer turns it on. */
+  sound: boolean;
+  /** Pace: after the flourish each winner waits for the streamer's call. Timing only; order is fixed. */
+  by_hand: boolean;
+  /** Weight under the pointer in the equalizer; the stage highlights lots holding it. */
+  focus_weight?: number | undefined;
 };
 export function createDrawDisplay() {
-  let state: DrawDisplay = { size: 'M', anchor: 'br', colour: 'gules', art_style: 'heraldic', reveal_ms: 1500 };
+  let state: DrawDisplay = { size: 'M', anchor: 'br', colour: 'gules', art_style: 'heraldic', reveal_ms: 1500, shape: 'urn', theatre: false, sound: false, by_hand: false };
   const listeners = new Set<() => void>();
   const edit = (change: Partial<DrawDisplay>) => {
     const value = change.reveal_ms ?? state.reveal_ms;
@@ -20,6 +29,7 @@ export function createDrawDisplay() {
     getSnapshot: () => state,
     subscribe(listener: () => void) { listeners.add(listener); return () => { listeners.delete(listener); }; },
     edit,
+    theatre(theatre: boolean) { if (state.theatre !== theatre) edit({ theatre }); },
     commitReveal(value: string) {
       edit({ reveal_ms: value.trim() === '' ? Number.NaN : Number(value) });
     },

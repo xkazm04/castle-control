@@ -1,5 +1,62 @@
 ﻿# Lot Chamber C · Herald, 2026-10-30
 
+## Theatrical draw stage and Writ Lab, 2026-10-31
+
+The room now depends on `@castle-control/renderer`. `stage.tsx` builds the
+renderer's own `DrawScene` (`buildDrawScene`) for the selected shape (urn, wheel,
+deck, ballot box) and drives reveals with its `createDrawPlayback` timeline,
+sleeping until `next_at_ms`; the hand-synced `reveal.ts` mirror and the static
+`urn.tsx` are gone. The artwork group plays the scene's motion exactly as
+`paintDraw` maps it. Lots are drawn per shape in the artwork's 320×240 space
+(dot area follows weight, at most 240 marks with every winner kept). A fresh
+ceremony enters theatre mode (full chamber, one click back to the desk); the
+latest winner is proclaimed beside the art, earlier winners settle into a
+scoreboard, and decorative rays and confetti never encode the outcome. The
+fixture stage plays a cast only after `verifyWrit` recomputes it; core casts are
+the core's verified `LotsVerifiedCast`. Shape and theatre live in the
+session-only `DrawDisplay` (no wire field); the OBS URL appends `&shape=`, which
+the Rust page resolves to `data-shape` for `host.ts`.
+
+`equalizer.tsx` plots the cc-lots concave weight table and the contract's
+`LotsWeightTable` summary (`newcomers_to_outweigh_heaviest`), with Equal/Concave,
+activity cap, free !join and raider-cap controls (core edits go through
+`lots.draw.upsert`). `lab.tsx` (Writ Lab) tampers with an in-memory copy of the
+current writ (weight, handle, seed, plan, winner order) and walks canonical
+serialization, SHA-256 seal, randomness commitment and rejection-sampling
+derivation; a failed step blocks the rest. For beacon writs, step 3 also runs
+verifier-web's `verifyDecodedWrit` (round schedule and BLS signature) against a
+compiled-in anchor (`beacon-anchors.ts`: the public quicknet key; fixture mode
+adds verifier-web's simulated chain key for its specimen). A chain without an
+anchor reads UNVERIFIED. "Forge the beacon" (a made-up signature with its
+matching hash) is caught by BLS alone. "Open a writ file…" parses a JSON writ with
+the contract's `lots.writ.get` schema (`writ-file.ts`, at most 2 MiB) and puts it
+on the bench as a third specimen, checked against the room's own anchors.
+A finished ceremony closes on its proof (theatre: a verdict card naming a
+local recompute or a core-verified cast, with "Prove it in the Writ Lab", which
+returns to the desk, restores the canonical writ and replays the walk; desk: a
+verdict chip). The lab's proof strip and verdict sit beside the tamper bench so
+a catch is visible without scrolling. Core mode adds `core-setup.tsx`, the full
+rule set as a local draft: one save sends one `lots.draw.upsert` (then the
+core check), never one per keystroke; winner count keeps its commit-on-blur
+field. Core mode never shows the simulated-art "On stream" card. Evidence:
+`stage.test.tsx`, `equalizer.test.tsx`, `lab.test.tsx`, `core-setup.test.tsx`, `sound.test.ts`, `result.test.tsx`,
+renderer `draw/host.test.ts`, cc-obs `tests/pages.rs` and cc-core
+`tests/lots_overlay_page.rs`.
+
+### Ceremony options and choreography
+
+Each called lot lifts out of its shape (`lift_path`: urn mouth, wheel pointer,
+dealt off the deck, up through the ballot slot), and the proclamation states
+the winner's share of the pool's weight. Dot area follows weight (radius ∝
+√weight, floored at 35% so the lightest lot stays visible) and eases when the
+curve changes; pointing at an equalizer bar lights the lots holding that weight. Two session-only options sit beside the shape
+picker. **Reveal by hand** holds the renderer's cursor just before each onset
+until the streamer calls the next lot (`createRevealClock().callNext`). Only the
+timing changes; winners and order never do. The hold applies to this window
+only: the OBS draw page keeps its own cadence. **Ceremony sound** (`sound.ts`) is
+Web Audio synthesis with no assets, off until switched on. The *On stream*
+preview draws the renderer artwork the OBS page paints for the chosen shape.
+
 ## Stabilize lots-06–10, 2026-10-31
 
 Eligible pool owns subscriber/points eligibility. Prize checkboxes display its
@@ -197,3 +254,82 @@ the winner's browser-default type, overriding the kit's 14px/1.4 row font.
 No child type-floor roles, handlers, hooks or layout rules changed in this pass.
 Follow-up validation: pnpm --filter @castle-control/desktop test exits 0;
 794 tests pass across 80 files. No existing test selector or assertion changed.
+
+
+## WP13: Cutaway and hackathon merge, 2026-10-31
+
+The room band and title card remain in the shell. The urn panel keeps its top
+band, heading, count, cohort legend and three statistics. Its artwork child is
+now e3's DrawStage, replacing the retired Urn import; urn.tsx stays deleted.
+The four shape buttons, hand/automatic reveal, opt-in synthesized sound,
+weighted lot marks, lift/ray/confetti choreography, winner rail and replay all
+stay in that panel. Full stage expands the same panel; Back to desk restores
+the two columns. The stage's sealed impression and desk proof verdict use the
+shared Stamp. Small numbered SVG medal texture is now a check mark; the winner
+rail and accessible announcement retain each winner's number and order.
+
+The independently scrolling writ panel keeps its templates, shield rows,
+proposal heading, policy ribbon, seal slot, lookup, saved proof and fairness.
+It also holds the tier preset, setup, weight/cap equalizer, appearance/OBS shape
+preview, current cast and Writ Lab. The equalizer retains all controls and
+weight-hover highlighting. The lab retains file/specimen selection, beacon
+BLS/anchor verification, all tampers, byte comparison, four-step proof strip,
+trace and download. Prove it exits theatre, restores the canonical writ and
+focuses the lab. Core mode retains the real core port, separate public anchor,
+unknown data handling and presentation-only shape state. No authority or wire
+identifier changed.
+
+New panel styles use Cutaway paper, key rules, squared control faces and shell
+type roles. Stage, lab and moat verdicts use the one Stamp API; informational
+weight/cast labels use plain StatusChip. The type-floor gate is unchanged.
+Existing route-level lazy imports keep first load at 388278/393216 bytes, versus
+the port baseline of 388181; the first resolved measurement and final build are
+both 388278, so the conditional extra split was unnecessary. No budget changed.
+
+Final WP13 verification: desktop typecheck/lint pass; 1014 tests in 103 files
+pass; desktop build passes. UI: 441 tests, kit 234236/262144 bytes. Renderer:
+206 tests. Tokens: 20 tests. Site: 91001/184320 bytes. Repository boundaries,
+hygiene, type floor, file cap and secrets pass; no conflict markers remain.
+Contract parity and pnpm gate stop at the sandbox's spawnSync cargo EPERM.
+The browser runner stops at spawn EPERM; browser access host is unavailable,
+and automatic approval review rejected Chrome access (not approved to use
+Google Chrome). Visual confirmation at 1440x900 and 1280x800 remains a Director
+step; no screenshot or browser interaction pass is claimed.
+
+
+## WP13 Director correction: fitted centrepiece
+
+The Director's browser review found that the fixed draw-stage minimum and the
+large count above it pushed the drawing below the urn panel's fold. The urn
+panel now uses three bounded rows: heading/count, a flexible drawing frame,
+and compact cohort/stat readings. The drawing is the frame's first child and
+precedes all three stats in both fixture and core markup. The writ panel keeps
+its separate scrolling body and cue. The shell band/title card and Keep moat
+are unchanged.
+
+The panel is a size container. Its stage and canvas tracks use minmax(0, 1fr)
+and min-height: 0, with no fixed canvas minimum. Only the SVG geometry scales;
+all lettering remains HTML at existing text tokens, at least 13. The four
+shape choices, Reveal by hand, Ceremony sound, notes disclosure and labelled
+full-stage control share one compact row. The numeric count sits beside the
+panel heading, with the legend and three stats in a compact strip below the
+stage. On short panels, stat details remain in accessible text and native
+hover titles. The notes disclosure retains the full explanation and sampled
+lot notice. Full-stage/replay icon controls retain their original accessible
+names and native titles.
+
+The canvas uses separate grid tracks for phase, drawing, result rail and prize
+disclaimer; results no longer overlap an absolutely positioned drawing. Long
+winner/proof content has its own keyboard-focusable scrolling rail, leaving
+the drawing in place. Theatre still expands the same panel across the room;
+returning restores both columns. All display state and ceremony behavior are
+unchanged.
+
+structure.test.tsx now pins the drawing as the frame's first child, before the
+readings/stats, in fixture and core rooms. The connected-room presentation
+assertion uses numeric count sizing; its provenance and announcement checks
+are unchanged. journey-lots-stage.spec.ts adds six viewport/theme cases
+(1280x800, 1440x900, 1920x1080; paper and stock), checking all four shapes,
+control-row containment, the type floor, an unscrolled urn panel and theatre
+enter/return. Browser execution is blocked by spawn EPERM before assertions,
+including a direct headless launch; no browser layout pass is claimed.

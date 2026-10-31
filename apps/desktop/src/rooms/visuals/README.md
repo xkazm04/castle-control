@@ -1,5 +1,41 @@
 # Beacons · C Plates (WP 3.3 polish, 2026-10-30)
 
+
+## Night replay (hackathon B10, 2026-10-31)
+
+`replay.tsx` adds **Replay a night** between the plates and the bench. It
+replays a generated 48-minute night through the preview model's own rules:
+`weightedAmount` and `decayedTotal` were extracted from `fire()` and
+`advance()` without behaviour change, and `beacons-replay.ts` combines them with
+`curveIntensity`. No second intensity engine exists; a test proves a replay
+equals the port's own fire/advance numbers. Only gift and sub offerings count,
+because the fixture model measures weighted subs; other kinds stay as muted
+ticks. The trace is exact at every offering, and pinned spans end at the
+analytic decay crossing of the top point.
+
+`replay-clock.ts` is deterministic: time arrives only through `tick()`, which
+`replay-driver.ts` feeds from animation frames (bounded steps) and which reduced
+motion never starts. The room lifts one curve editor per selected visual so the
+replay surface and the bench drag the same draft. `CurvePoints` was extracted
+from `CurveControls` and is inlined there as a hook-free leaf, so the bench's
+native tree is unchanged. A replay draws headroom past the night's busiest
+total so a top point can be dragged right, and prints round weighted-sub marks
+(`axisMarks`) on the same reach as the points (`curveMaximum`). The trace names
+its dashed **lit** line and flags the first-lit moment from the trace's own
+`first_lit_s`; a night that never lights reads cold (azure verdict and a
+"Never lit tonight" stamp on the preview). A climbing night is offered a fit only
+under a 90% peak (`fit_offer_below`). Space on the focused scrubber plays or
+pauses. A mouse over the trace shows a ghost readout (`traceAt`, the same exact
+lookup as the playhead) without moving the clock; a climbing night names its
+peak at the plot's foot, and the blaze meter carries the lit notch.
+
+`beacons-nights.ts` builds four seeded, fictional nights (sample, gift wave,
+raid spike, sub train). `replay-proposal.ts` drafts a `visuals` proposal in the
+shared Steward queue; re-sending amends the same open draft and the existing
+seal slot seals it. The last sealed curve becomes the dashed baseline. Nothing
+reaches OBS or the core. Tests: `beacons-replay.test.ts`,
+`beacons-nights.test.ts`, `replay.test.tsx`.
+
 ## Stabilize beacons-01/02/03/09, 2026-10-31
 
 Re-anchored at `4d936e1`, after `d1df7eb`, `4f8f45a` and `14d2e78`.

@@ -30,22 +30,24 @@ export function PoolStage({ count, winners, winner_detail, held_out, cap, illust
 }) {
   return <div className="cc-stage-wrap"><section className="panel cc-print-in" data-role="lot-urn-panel" style={entranceStyle(0)} aria-label={copy.pool_title}>
     <div className="topline" />
-    <PanelTitle title={title} gloss={illustration} />
-    <figure className="lottery-stage">
+    <div className="lottery-pool-heading">
+      <PanelTitle title={title} gloss={illustration} />
       <div className="cc-tally">
         <div className="num" data-role="lot-count"><HeroReadout value={String(count)} caption={caption}
-          ink="gules" scale="viewport" ghost="shadow" /></div>
+          ink="gules" scale="numeric" ghost="shadow" /></div>
       </div>
-      {children}
-      <figcaption className="cc-stage-foot">{foot}</figcaption>
-    </figure>
-    <ul className="statrow">{[
-      { value: winners, label: copy.winners, detail: winner_detail },
-      { value: held_out, label: copy.held_out, detail: copy.by_cooldown },
-      { value: cap, label: copy.raider_cap, detail: copy.of_winners },
-    ].map(stat => <li className="stat" data-role="lot-stat" key={stat.label}>
-      <span className="ring">{stat.value}</span><span><b>{stat.label}</b><small>{stat.detail}</small></span>
-    </li>)}</ul>
+    </div>
+    <div className="lottery-stage">{children}</div>
+    <div className="lottery-pool-readings">
+      <div className="cc-stage-foot">{foot}</div>
+      <ul className="statrow">{[
+        { value: winners, label: copy.winners, detail: winner_detail },
+        { value: held_out, label: copy.held_out, detail: copy.by_cooldown },
+        { value: cap, label: copy.raider_cap, detail: copy.of_winners },
+      ].map(stat => <li className="stat" data-role="lot-stat" key={stat.label}>
+        <span className="ring">{stat.value}</span><span title={stat.detail}><b>{stat.label}</b><small>{stat.detail}</small></span>
+      </li>)}</ul>
+    </div>
   </section></div>;
 }
 

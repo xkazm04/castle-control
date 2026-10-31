@@ -53,3 +53,16 @@ export const fixtureWrit: LotsWrit = {
   proof: { source: 'streamer_commit', seed: 'b40711a88c7039756fb8a73827eabe2c0fe5a0346ca7e0a104adc0fc764f528d' },
   winners: ['simulated_01', 'simulated_00'],
 };
+
+/** SIMULATED beacon specimen for the Writ Lab: case 40 of packages/verifier-web/src/simulated-writs.json.
+ * drand quicknet format on the simulated chain 818a…, not the public quicknet chain; nothing is fetched. */
+export const fixtureBeaconWrit: LotsWrit = {
+  roll: { version: 1, entries: [{ handle: 'simulated_00', weight: 36 }, { handle: 'simulated_01', weight: 43 },
+    { handle: 'simulated_02', weight: 50 }, { handle: 'simulated_03', weight: 57 }, { handle: 'simulated_04', weight: 64 },
+    { handle: 'simulated_05', weight: 71 }], winner_count: 5, sealed_at: '2026-10-25T12:00:00Z', margin_s: 6,
+    randomness: { source: 'drand_quicknet', chain_hash: '818a3dcb4cd43a33d1b78de80805a0a677b0579be02d540310fb1f91a094cdc2', round: '14404' } },
+  seal: '22fe93ac924e36b4fc359b56c81c03c467c6dc5d110a7da12fbcc0647926fbb4',
+  proof: { source: 'drand_quicknet', signature: '85e5ca28024c9f26cd2cf67444002dd1972ed3d553da3f6b1cb711bd443219a806f5a8bb3d6f258436ee78bca6b5b6b8',
+    randomness: 'b298123ecb5990eb7446eaff091968cb541780ef6fed396d29373839c80531dd' },
+  winners: ['simulated_05', 'simulated_02', 'simulated_03', 'simulated_04', 'simulated_00'],
+};

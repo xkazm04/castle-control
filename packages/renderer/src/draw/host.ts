@@ -1,8 +1,15 @@
 import { parseJson } from '@castle-control/contract/door';
 import { lotsCast, lotsRollSeal } from '@castle-control/contract/lots';
 import type { DrawContent } from '@castle-control/contract';
+import type { DrawShape } from './model.ts';
 import { buildDrawScene, createDrawPlayback } from './scenes.ts';
 import { paintDraw } from './paint.ts';
+
+/** Rust resolves ?shape= once and writes one of the four shapes on <main>; anything else is the urn. */
+function shapeOf(root: HTMLElement): DrawShape {
+  const shape = root.dataset['shape'];
+  return shape === 'wheel' || shape === 'deck' || shape === 'ballot_box' ? shape : 'urn';
+}
 
 function contentOf(root: HTMLElement): DrawContent {
   const content = root.dataset['content'];
@@ -41,8 +48,8 @@ export function mountDraw(root: HTMLElement, draw_id: string): (() => void) | un
       }
     };
     const reduced_motion = storage() || win.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    // LotsDraw/RollSealResult carries no shape: use the plan's default urn.
-    const scene = buildDrawScene('urn', cast.cast, { content, disclaimer: content === 'prize', reduced_motion });
+    // LotsDraw/RollSealResult carries no shape: the streamer's display choice arrives as a page attribute.
+    const scene = buildDrawScene(shapeOf(root), cast.cast, { content, disclaimer: content === 'prize', reduced_motion });
     const player = createDrawPlayback(scene);
     const paint = paintDraw(root, scene);
     const fallback = root.querySelector<HTMLElement>('[data-draw-fallback]');

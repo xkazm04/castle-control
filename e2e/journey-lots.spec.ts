@@ -7,7 +7,7 @@ import { buildCoreLauncher, startCore } from './core-launch.ts';
 // The desktop fixture journey stays independent of the real-core OBS proof.
 async function configureAndCast(page: Page) {
   await page.goto('/#/chamber/lottery');
-  await expect(page.locator('.cc-sample')).toHaveText('Simulated');
+  await expect(page.locator('.cc-rampart > [data-stamp="simulated"]')).toHaveText('Simulated');
   await page.getByRole('textbox', { name: 'Draw name', exact: true }).fill('SIMULATED audience questions');
   await page.getByRole('combobox', { name: 'Eligible pool', exact: true }).selectOption('keyword');
   await page.getByRole('textbox', { name: 'Keyword', exact: true }).fill('!join');

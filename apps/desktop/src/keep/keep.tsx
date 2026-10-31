@@ -6,6 +6,9 @@ import { isPending, proposalQueue } from '@castle-control/ui/steward';
 import { appOverviewFrame, appOverviewTarget, appRoomTarget, frameTransform, keepRooms } from '@castle-control/keep-art';
 import type { Snapshot } from '../model.js';
 import { keepReadModel } from './read-model.js';
+import { MoatHeartbeat } from '../moat/heartbeat.jsx';
+import { fixtureReplay } from '../moderation-fixture.js';
+import './keep.css';
 import { KeepArt } from './keep-art.jsx';
 import { LintelPlaque } from './plaque.jsx';
 import { useDiorama, useKeepCamera } from './camera.js';
@@ -73,8 +76,6 @@ export function Keep({ snapshot = { mode: 'fixture', phase: 'ready' }, on_open, 
             <KeepArt />
             {chambers.map(item => <LintelPlaque key={item.id} chamber={item} state={read.states[item.id]}
               drafted={queue.proposals.some(proposal => proposal.chamber === item.id && isPending(proposal))} />)}
-            <div className="keep-moatlab" data-role="moat-label">The moat · chat delay {read.delay}
-              {snapshot.mode === 'fixture' && <small>simulated</small>}</div>
             {chambers.map(item => {
               const hit = keepRooms[item.id].hit;
               const reading = read.states[item.id];
@@ -87,6 +88,11 @@ export function Keep({ snapshot = { mode: 'fixture', phase: 'ready' }, on_open, 
           </div>
         </div>
       </div>
+    </div>
+    <div className="keep-moat" data-role="moat-label">
+      <span className="keep-moatlab">The moat · chat delay {read.delay}</span>
+      {snapshot.mode === 'fixture' && <><MoatHeartbeat source={fixtureReplay} delay_s={read.delay_s} />
+        <a className="keep-moat-link" href="#/chamber/moderator/drill">Watch the full replay</a></>}
     </div>
   </section>;
 }

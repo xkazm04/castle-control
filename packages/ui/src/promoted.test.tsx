@@ -1,6 +1,6 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { expect, test } from 'vitest';
-import { ConsensusChart, InkButton, ReplaySummary, ReviewRow, RoomStatusHero, RuledRow, ThemeFrame, WindowedRows, rowHeight, rowWindow } from './index.js';
+import { ConsensusChart, InkButton, ReplaySummary, ReviewRow, RoomStatusHero, RuledRow, ThemeFrame, WindowedRows, revealTop, rowHeight, rowWindow } from './index.js';
 import { PromotedGallery } from './kit-promoted.jsx';
 
 test('WindowedRows with plain children renders exactly one cell per row', () => {
@@ -100,4 +100,16 @@ test.each(['paper', 'stock'] as const)('gallery renders each promoted component 
   expect(html).not.toContain('Generated entry 10000');
   expect(html).toContain('No consensus history available.');
   expect(html.match(/role="cell"/g)?.length).toBe(html.match(/role="row"/g)?.length);
+});
+
+test('revealTop centres a row in the window and never scrolls before the first row', () => {
+  expect(revealTop(0, 96, 320)).toBe(0);
+  expect(revealTop(1, 96, 320)).toBe(0);
+  expect(revealTop(10, 96, 320)).toBe(960 - 112);
+  expect(revealTop(10, 32, 320)).toBe(320 - 144);
+  const html = renderToStaticMarkup(<WindowedRows rows={Array.from({ length: 50 }, (_, index) => `row-${index}`)} label="Revealed rows" row_key={String}
+    reveal={{ key: 'row-40' }}>{row => <span>{row}</span>}</WindowedRows>);
+  // The first render is unchanged; scrolling is an effect that runs in the browser.
+  expect(html).toContain('aria-rowcount="50"');
+  expect(html).toContain('row-0');
 });
