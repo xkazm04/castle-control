@@ -52,7 +52,7 @@ export const lotsCopy = {
   writ_fields: { version: 'Version', at: 'Sealed at', seal: 'Seal · SHA-256', entries: 'Entries', count: 'Winner count', margin: 'Margin in seconds', source: 'Randomness source', commitment: 'Seed commitment', seed: 'Revealed seed', winners: 'Recorded winners' },
   recompute: 'Recompute fixture cast', computing: 'Recomputing locally.', recomputed: 'Fixture seal, commitment and winners match. Streamer-controlled; compare the original announcement for a real draw.',
   recompute_failed: 'Fixture recomputation failed. No verified result is available.',
-  fixture_only: 'This recompute accepts only the built-in simulated proof. It is not an imported-writ verifier.',
+  fixture_only: 'This recompute accepts only the built-in simulated proof. To check another writ, open it in the Writ Lab.',
   selected: 'Fixture draw selected.', changed: 'Setup changed locally.', frozen: 'Seal the roll before starting. Blocked settings must be resolved.',
   sealed_notice: 'Entry list and setup frozen locally. Nothing was published.', empty: 'No generated entries in this pool.',
   question_name: 'Questions for the hall', prize_name: 'Free-entry prize example', paid_name: 'Paid-weight blocked example',
