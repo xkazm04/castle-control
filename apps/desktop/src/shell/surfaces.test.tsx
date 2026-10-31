@@ -1,11 +1,12 @@
 import type { KeyboardEvent } from 'react';
+import * as React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { ChamberStrip, ProposalCard, SealControl, createSealHold, sealHoldDurationMs, chambers } from '@castle-control/ui';
 import type { ModuleId } from '@castle-control/ui';
 import { proposalQueue, SimulatedSteward } from '@castle-control/ui/steward';
-import { dispatchShortcut } from '../navigation.js';
-import { tearFocusedProposal } from '../app.jsx';
+import { dispatchShortcut, initialNavigation } from '../navigation.js';
+import { DesktopApp } from '../app.jsx';
 import { simulatedRead } from '../simulated.js';
 import { Keep } from '../keep/keep.jsx';
 import { Overview } from '../overview/overview.jsx';
@@ -13,11 +14,13 @@ import { StreamScene } from '../overview/scene.jsx';
 import { programCandidate, proclaimToSampleProgram, sampleProgram } from '../overview/program.js';
 import { createStewardConversation, routeStewardTurn, ShellSteward, stewardContext, StewardProposal } from './steward.jsx';
 
+vi.mock('react', async importOriginal => ({ ...await importOriginal<typeof React>() }));
+
 const snapshot = { mode: 'fixture', phase: 'ready', ...simulatedRead(1) } as const;
 const overview = () => renderToStaticMarkup(<Overview snapshot={snapshot} selected="lottery" on_select={() => undefined} on_open={() => undefined} />);
 const program = () => renderToStaticMarkup(<StreamScene mode="program" proposals={sampleProgram.getSnapshot()} sample />);
 beforeEach(() => { for (const proposal of proposalQueue.pending()) proposalQueue.tearUp(proposal.id); proposalQueue.select(); });
-afterEach(() => { vi.useRealTimers(); });
+afterEach(() => { vi.useRealTimers(); vi.restoreAllMocks(); vi.unstubAllGlobals(); });
 
 test('Steward bar shows only the newest pending queue proposal and removes empty chrome after tear-up', async () => {
   const steward = new SimulatedSteward();
@@ -103,7 +106,7 @@ test('Steward asks and amendments use one queue proposal, visible in the draft l
   } finally { network.mockRestore(); }
 });
 
-test('0 and 1-4 navigate; strip Enter opens selected room; slash focuses the one input; Delete tears the focused proposal', async () => {
+test('0 and 1-4 navigate; strip Enter opens selected room; slash focuses the one input', () => {
   const open = vi.fn(); const enter = vi.fn(); const focus = vi.fn();
   let selected: ModuleId = 'lottery';
   const state = { line: 'Sample', on_air: false, preview: true, draft: true };
@@ -122,16 +125,6 @@ test('0 and 1-4 navigate; strip Enter opens selected room; slash focuses the one
   dispatchShortcut({ key: '0', preventDefault: vi.fn() }, false, open, focus, { overview: enter });
   dispatchShortcut({ key: '/', preventDefault: vi.fn() }, false, open, focus);
   expect(enter).toHaveBeenCalledOnce(); expect(focus).toHaveBeenCalledOnce();
-  await new SimulatedSteward().ask('draft a question draw', { surface: 'overview' });
-  const proposal = proposalQueue.pending()[0];
-  if (!proposal) throw new Error('Missing proposal');
-  const card = ProposalCard({ proposal, focused: true, on_seal: vi.fn(), on_tear: () => { proposalQueue.tearUp(proposal.id); } });
-  const root = { querySelector: vi.fn() };
-  root.querySelector.mockReturnValue({ click: card.props.children.at(-1).props.children[1].props.onClick });
-  dispatchShortcut({ key: 'Delete', preventDefault: vi.fn() }, false, open, focus, { tear: () => tearFocusedProposal(root) });
-  expect(root.querySelector).toHaveBeenCalledWith('[data-proposal-focused="true"] [data-tear-proposal]');
-  expect(proposalQueue.pending()).toHaveLength(0);
-  expect(program()).not.toContain('Question draw');
 });
 
 test('Steward focus selects a layer in Overview, opens a room from Keep, and general asks enter Overview', () => {
@@ -143,6 +136,81 @@ test('Steward focus selects a layer in Overview, opens a room from Keep, and gen
   expect(open).toHaveBeenCalledWith('lottery');
   routeStewardTurn({ ...turn, focus: null }, 'keep', select, open, overview);
   expect(overview).toHaveBeenCalledOnce();
+});
+
+// Node-only shell tests supply DOM lookups while driving DesktopApp's real onKeyDown.
+class ShortcutElement {
+  querySelector = vi.fn<Element['querySelector']>();
+  closest = vi.fn<Element['closest']>();
+}
+
+const domTarget = (target: Partial<Element>) => target as Element;
+
+function shellDelete(root: ShortcutElement, target: ShortcutElement) {
+  vi.stubGlobal('HTMLElement', ShortcutElement);
+  vi.spyOn(React, 'useSyncExternalStore').mockReturnValue(snapshot);
+  vi.spyOn(React, 'useState').mockReturnValue([initialNavigation('#/overview'), vi.fn()]);
+  vi.spyOn(React, 'useRef').mockReturnValue({ current: root });
+  vi.spyOn(React, 'useEffect').mockImplementation(() => undefined);
+  const tree = DesktopApp({ client: { getSnapshot: () => snapshot, subscribe: vi.fn(), start: () => vi.fn() } });
+  tree.props.onKeyDown(Object.assign({} as KeyboardEvent<HTMLDivElement>, {
+    key: 'Delete', target, nativeEvent: { isComposing: false }, preventDefault: vi.fn(),
+  }));
+}
+
+async function deleteFixture() {
+  await new SimulatedSteward().ask('draft a question draw', { surface: 'room', chamber: 'lottery' });
+  const proposal = proposalQueue.pending()[0];
+  if (!proposal) throw new Error('Missing proposal');
+  proposalQueue.select(); // The seal slot still marks its fallback card selected.
+  const seal = vi.fn();
+  const card = ProposalCard({ proposal, focused: true, on_seal: seal, on_tear: () => { proposalQueue.tearUp(proposal.id); } });
+  expect(renderToStaticMarkup(card)).toContain('data-proposal-focused="true"');
+  const click = vi.fn<() => void>(() => { card.props.children.at(-1).props.children[1].props.onClick(); });
+  const button: Partial<HTMLElement> = { click };
+  const root = new ShortcutElement();
+  root.querySelector.mockReturnValue(domTarget(button)); // The old global lookup finds the fallback card.
+  const article = new ShortcutElement();
+  article.querySelector.mockReturnValue(domTarget(button));
+  article.closest.mockImplementation(selector => selector === 'article[data-proposal-focused="true"]' ? domTarget(article) : null);
+  return { proposal, root, article, click, seal };
+}
+
+test.each(['root', 'chamber tile'] as const)('Delete with focus on the %s does not tear the fallback-focused proposal', async targetKind => {
+  const { root, click, seal } = await deleteFixture();
+  const target = targetKind === 'root' ? root : new ShortcutElement();
+  target.closest.mockImplementation(selector => selector === '[data-room-tile]' && targetKind === 'chamber tile' ? domTarget(target) : null);
+  shellDelete(root, target);
+  expect(proposalQueue.pending()).toHaveLength(1);
+  expect(click).not.toHaveBeenCalled();
+  expect(seal).not.toHaveBeenCalled();
+});
+
+test.each(['article', 'child button'] as const)('Delete inside the focused proposal on its %s tears exactly that proposal', async targetKind => {
+  const { root, article, proposal, click, seal } = await deleteFixture();
+  await new SimulatedSteward().ask('raise the drawbridge', { surface: 'overview' });
+  const sibling = proposalQueue.pending().at(-1);
+  const target = targetKind === 'article' ? article : new ShortcutElement();
+  target.closest.mockImplementation(selector => selector === 'article[data-proposal-focused="true"]' ? domTarget(article) : null);
+  shellDelete(root, target);
+  expect(proposalQueue.pending()).toEqual([sibling]);
+  expect(proposalQueue.getSnapshot().proposals.find(item => item.id === proposal.id)?.state).toBe('torn');
+  expect(click).toHaveBeenCalledOnce();
+  expect(seal).not.toHaveBeenCalled();
+});
+
+test.each(['other button', 'unselected article', 'input inside selected article'] as const)('Delete on an %s never tears', async targetKind => {
+  const { root, article, click, seal } = await deleteFixture();
+  const target = new ShortcutElement();
+  target.closest.mockImplementation(selector => {
+    if (targetKind !== 'input inside selected article') return null;
+    return selector === 'article[data-proposal-focused="true"]' ? domTarget(article)
+      : selector.startsWith('input,') ? domTarget(target) : null;
+  });
+  shellDelete(root, target);
+  expect(proposalQueue.pending()).toHaveLength(1);
+  expect(click).not.toHaveBeenCalled();
+  expect(seal).not.toHaveBeenCalled();
 });
 
 test('Program is unchanged by a click or short Space; a full held Space seals the frozen sample roll and proclaims it', async () => {

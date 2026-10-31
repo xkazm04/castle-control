@@ -6,8 +6,8 @@ import type { DesktopClient } from './model.js';
 import { backHash, canonicalHash, dispatchShortcut, initialNavigation, navigateHash } from './navigation.js';
 import { DesktopView } from './view.jsx';
 
-export function tearFocusedProposal(root: Pick<ParentNode, 'querySelector'> | null) {
-  root?.querySelector<HTMLElement>('[data-proposal-focused="true"] [data-tear-proposal]')?.click();
+export function tearFocusedProposal(target: Pick<Element, 'closest'> | null) {
+  target?.closest('article[data-proposal-focused="true"]')?.querySelector<HTMLElement>('[data-tear-proposal]')?.click();
 }
 
 export function DesktopApp({ client }: { client: DesktopClient }) {
@@ -64,7 +64,7 @@ export function DesktopApp({ client }: { client: DesktopClient }) {
       back: () => go(backHash(navigation)),
       ...(navigation.current === 'overview' && (tile || event.target === root.current) ? { open: () => navigate(selected) } : {}),
       // Only the focused shared-queue proposal may own Delete.
-      tear: () => tearFocusedProposal(root.current),
+      tear: () => tearFocusedProposal(event.target instanceof HTMLElement ? event.target : null),
     });
   }
   return <div className="desktop-root" ref={root} tabIndex={-1} onKeyDown={keyboard}>
