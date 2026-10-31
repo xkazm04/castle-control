@@ -151,6 +151,7 @@ async fn assert_native_data_directory_and_shadow_diagnostics(logs: &Arc<Mutex<Ve
                 client_id: String::new(),
                 test_channel: "simulated".into(),
                 obs_port: 0,
+                overlay_port: 0,
                 obs_password_label: "simulated-unused".into(),
             }),
             login: false,
@@ -282,4 +283,80 @@ fn native_permissions_and_network_policy_are_minimal() {
     assert_eq!(config["build"]["frontendDist"], "../dist");
     assert_eq!(config["build"]["devUrl"], "http://127.0.0.1:5173");
     assert_eq!(config["app"]["windows"], json!([]));
+}
+
+#[tokio::test(flavor = "current_thread")]
+async fn native_overlay_reuses_the_requested_port_across_restarts() {
+    let reservation = std::net::TcpListener::bind((std::net::Ipv4Addr::LOCALHOST, 0)).unwrap();
+    let port = reservation.local_addr().unwrap().port();
+    drop(reservation);
+    let root = std::env::temp_dir().join(format!(
+        "cc-overlay-host-{}-{}",
+        std::process::id(),
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_nanos()
+    ));
+    let client = reqwest::Client::builder().no_proxy().build().unwrap();
+    let options = || Options {
+        native: Some(crate::options::NativeOptions {
+            client_id: String::new(),
+            test_channel: "simulated".into(),
+            obs_port: 0,
+            overlay_port: port,
+            obs_password_label: "simulated-unused".into(),
+        }),
+        ..Options::default()
+    };
+    for _ in 0..2 {
+        let mut host = CoreHost::start(options(), &root).await.unwrap();
+        assert_eq!(
+            host._services.as_ref().unwrap().overlay_url(),
+            format!("http://localhost:{port}/")
+        );
+        let payload = serde_json::to_value(host.launch().unwrap()).unwrap();
+        assert_eq!(
+            payload
+                .as_object()
+                .unwrap()
+                .keys()
+                .map(String::as_str)
+                .collect::<Vec<_>>(),
+            ["endpoint", "mode", "session_token"]
+        );
+        let response = client
+            .get(format!("http://localhost:{port}/"))
+            .send()
+            .await
+            .unwrap();
+        assert_eq!(response.status(), 200);
+        assert_eq!(
+            CoreHost::start(options(), &root.join("occupied"))
+                .await
+                .err(),
+            Some("desktop native services unavailable")
+        );
+        host.shutdown();
+        tokio::time::timeout(std::time::Duration::from_secs(3), &mut host.server)
+            .await
+            .unwrap()
+            .unwrap()
+            .unwrap();
+        drop(host);
+        tokio::task::yield_now().await;
+    }
+    let resolved = root.canonicalize().unwrap();
+    assert_eq!(
+        resolved.parent().unwrap(),
+        std::env::temp_dir().canonicalize().unwrap()
+    );
+    assert!(
+        resolved
+            .file_name()
+            .unwrap()
+            .to_string_lossy()
+            .starts_with("cc-overlay-host-")
+    );
+    std::fs::remove_dir_all(resolved).unwrap();
 }

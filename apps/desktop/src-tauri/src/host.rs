@@ -36,7 +36,7 @@ impl CoreHost {
                             port: native.obs_port,
                             password_label: native.obs_password_label,
                         },
-                        overlay_port: 0,
+                        overlay_port: native.overlay_port,
                     },
                     store,
                     desktop_login_presenter(),

@@ -90,7 +90,7 @@ $lotData = Join-Path $env:APPDATA 'io.castlecontrol.desktop/store'
 New-Item -ItemType Directory -Path $lotData -Force | Out-Null
 # Public local opt-in, not a credential. Read once at native module startup.
 Set-Content -LiteralPath (Join-Path $lotData 'live-quicknet') -Value 'enable-live-quicknet' -Encoding ascii
-cargo run --locked -p cc-desktop --features custom-protocol -- --client-id YOURPUBLICCLIENTID --test-channel YOUR_OWN_TEST_CHANNEL --login
+cargo run --locked -p cc-desktop --features custom-protocol -- --client-id YOURPUBLICCLIENTID --test-channel YOUR_OWN_TEST_CHANNEL --overlay-port 17891 --login
 ```
 
 Use your actual **public** client ID/channel arguments. Supply credentials only
@@ -103,6 +103,11 @@ Malformed opt-in files refuse module startup. The chain hash, BLS public key,
 three-second schedule and genesis are compiled into `lots/live_beacon.rs`;
 HTTP responses cannot replace them.
 
+`--overlay-port 17891` pins the separate read-only overlay origin. Choose a free
+port from 1–65535 and reuse it on every launch; an occupied port prevents native
+startup. If you choose another port, use it in the Browser-source URL below.
+Without this flag the overlay keeps its existing ephemeral-port behavior.
+
 ### Pool, announcement, round and OBS
 
 1. Open the Lot Chamber. If `questions` is absent, click **Create no-prize question draw**.
@@ -113,25 +118,11 @@ HTTP responses cannot replace them.
    account's numeric Twitch ID. Capture eligible results and the Gatehouse
    decision evidence. Wait at least one second after the last message before
    sealing (the proof format records whole-second seal times).
-3. Find the separate, read-only draw origin while the native shell is running:
-
-   ```powershell
-   $lotProcess = Get-Process -Name cc-desktop | Select-Object -First 1
-   $lotSource = $null
-   foreach ($lotPort in (Get-NetTCPConnection -OwningProcess $lotProcess.Id -State Listen -LocalAddress 127.0.0.1).LocalPort) {
-     $candidate = "http://localhost:$lotPort/lots/questions"
-     try {
-       $page = Invoke-WebRequest -Uri $candidate -UseBasicParsing -TimeoutSec 2
-       if ($page.Content -like '*Castle Control draw*') { $lotSource = $candidate }
-     } catch { Write-Verbose 'This listener is not the read-only draw source.' }
-   }
-   if (-not $lotSource) { throw 'Draw source unavailable; check native launch.' }
-   $lotSource
-   ```
-
-   This probes local HTML only and uses no session token. In OBS, add a Browser
-   source using that URL, 1280×720; keep **Refresh browser when scene becomes
-   active** available. It initially says it is waiting for an accepted seal.
+3. With the native shell running on `--overlay-port 17891`, add an OBS Browser
+   source using `http://localhost:17891/lots/questions`, 1280×720. This is the
+   separate read-only draw origin and uses no session token. Keep **Refresh
+   browser when scene becomes active** available. It initially says it is
+   waiting for an accepted seal.
    The existing `obs.source.create` accepts the same owned URL after sealing;
    this runbook uses OBS's Browser-source dialog without exposing a capability.
 4. Start OBS recording **before** holding **Seal the roll**. A successful seal
@@ -151,8 +142,9 @@ HTTP responses cannot replace them.
 6. Capture OBS's winners with the seal. The HTML page refreshes once a second
    and renders only the core's verified `lots.cast` result; it never samples
    winners. This is a simple result plate, not the fixture urn animation. The
-   source port changes across launches. A restart cannot resume a sealed
-   attempt. Reconnect/authorization loss is not proof of an uninterrupted run.
+   source URL stays stable when every launch uses the same `--overlay-port`.
+   A restart cannot resume a sealed attempt. Reconnect/authorization loss is not
+   proof of an uninterrupted run.
 
 ### Writ and independent outputs
 

@@ -275,6 +275,17 @@ port 4455 and keychain account label `streamer` within service
 prepares OBS v5 and its keychain entry separately. Shell close calls core shutdown;
 it does not revoke Twitch authorization or purge recordings.
 
+To keep OBS Browser-source URLs stable across desktop restarts, opt into a
+chosen free overlay port with `--overlay-port 17891` alongside the public native
+arguments above. Reuse that port on every launch: overlay URLs then keep the
+origin `http://localhost:17891/` (for example, `/lots/questions`). This selects
+the separate read-only overlay listener, not obs-websocket's `--obs-port` or
+the core RPC port. The flag accepts ports 1–65535; zero, invalid values, missing
+values and repeated flags are rejected. If the port is already occupied, native
+startup fails with the existing fixed diagnostic; choose a free port rather
+than expecting a fallback. Without the flag, the overlay still requests port 0
+from the OS and receives an ephemeral port. No fixed default port is shipped.
+
 With an already-installed Rust Tauri CLI, `cargo tauri build --debug` from
 `apps/desktop` is another built-frontend path, after the frontend build above.
 Bundling is disabled for M0; from the repository root run
@@ -310,8 +321,12 @@ Verification evidence is split at the unchanged frontend boundary:
   injected core keys, loopback-only endpoints, origin-restricted navigation,
   empty native permissions, CSP, actual core CORS acceptance of the built origin,
   disconnected defaults, unavailable adapters, graceful shutdown, and captured
-  trace logs with no 64-hex capability. It contacts only an ephemeral loopback
-  core with no native services or account credentials.
+  trace logs with no 64-hex capability. The `overlay_port_*` options tests pin
+  default port 0, explicit ports and fixed rejection diagnostics. The host test
+  `native_overlay_reuses_the_requested_port_across_restarts` serves the requested
+  loopback port across two starts with simulated native settings and temporary
+  stores, refuses an occupied port with the existing fixed error, and keeps the
+  three-key launch payload unchanged. No owner-channel or live OBS test is claimed.
 - The existing frontend tests `rampart.test.tsx`, `events-view.test.tsx`,
   `navigation.test.tsx` and `client.test.ts` cover authoritative rampart summaries
   on all four routes, event-driven refetches, keys 1–4 and `/`, and visible fixture

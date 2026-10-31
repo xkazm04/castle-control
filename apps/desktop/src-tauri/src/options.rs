@@ -12,6 +12,7 @@ pub struct NativeOptions {
     pub client_id: String,
     pub test_channel: String,
     pub obs_port: u16,
+    pub overlay_port: u16,
     pub obs_password_label: String,
 }
 
@@ -34,6 +35,7 @@ impl Options {
                 "--client-id",
                 "--test-channel",
                 "--obs-port",
+                "--overlay-port",
                 "--obs-password-label",
             ]
             .contains(&key.as_str())
@@ -72,6 +74,15 @@ impl Options {
             .ok()
             .filter(|p| *p != 0)
             .ok_or("invalid OBS port")?;
+        let overlay_port = if let Some(value) = values.remove("--overlay-port") {
+            value
+                .parse::<u16>()
+                .ok()
+                .filter(|p| *p != 0)
+                .ok_or("invalid overlay port")?
+        } else {
+            0
+        };
         let obs_password_label = values
             .remove("--obs-password-label")
             .unwrap_or_else(|| "streamer".into());
@@ -83,6 +94,7 @@ impl Options {
                 client_id,
                 test_channel,
                 obs_port,
+                overlay_port,
                 obs_password_label,
             }),
             login,
@@ -97,6 +109,69 @@ mod tests {
 
     fn parse(args: &[&str]) -> Result<Options, &'static str> {
         Options::parse(args.iter().map(|s| (*s).into()))
+    }
+
+    fn parse_native(extra: &[&str]) -> Result<Options, &'static str> {
+        let mut args = vec![
+            "--client-id",
+            "simulatedPublicId",
+            "--test-channel",
+            "simulated_owner",
+        ];
+        args.extend_from_slice(extra);
+        parse(&args)
+    }
+
+    #[test]
+    fn overlay_port_accepts_an_explicit_native_port() {
+        for port in ["1", "17891", "65535"] {
+            let native = parse_native(&["--overlay-port", port])
+                .unwrap()
+                .native
+                .unwrap();
+            assert_eq!(native.overlay_port, port.parse::<u16>().unwrap());
+            assert_eq!(native.obs_port, 4455);
+        }
+        let native = parse_native(&["--obs-port", "4456", "--overlay-port", "17891"])
+            .unwrap()
+            .native
+            .unwrap();
+        assert_eq!((native.obs_port, native.overlay_port), (4456, 17891));
+    }
+
+    #[test]
+    fn overlay_port_defaults_to_ephemeral_when_absent() {
+        let native = parse_native(&[]).unwrap().native.unwrap();
+        assert_eq!(native.overlay_port, 0);
+        assert_eq!(native.obs_port, 4455);
+        assert!(parse(&[]).unwrap().native.is_none());
+    }
+
+    #[test]
+    fn overlay_port_rejects_invalid_values_with_fixed_diagnostics() {
+        let errors = ["0", "abc", "70000", "-1", ""]
+            .map(|value| parse_native(&["--overlay-port", value]).err());
+        assert_eq!(errors, [Some("invalid overlay port"); 5]);
+    }
+
+    #[test]
+    fn overlay_port_rejects_repeated_or_unpaired_flags() {
+        assert_eq!(
+            parse_native(&["--overlay-port", "17891", "--overlay-port", "17892"]).err(),
+            Some("invalid or repeated desktop option")
+        );
+        assert_eq!(
+            parse_native(&["--overlay-port"]).err(),
+            Some("desktop option requires a value")
+        );
+        assert_eq!(
+            parse_native(&["--overlay-port", "--login"]).err(),
+            Some("invalid or repeated desktop option")
+        );
+        assert_eq!(
+            parse(&["--overlay-port", "17891"]).err(),
+            Some("a public --client-id is required with native options")
+        );
     }
 
     #[test]
