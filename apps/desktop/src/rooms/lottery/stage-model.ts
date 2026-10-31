@@ -38,6 +38,20 @@ export function sampleEntries(entries: readonly StageEntry[], winners: readonly 
 
 const golden = Math.PI * (3 - Math.sqrt(5));
 
+/** Where each shape "calls" a lot from: urn mouth, wheel hub, deck top, ballot slot. Decorative only. */
+export const call_origin: Readonly<Record<DrawShape, { x: number; y: number }>> = {
+  urn: { x: 160, y: 50 }, wheel: { x: 160, y: 116 }, deck: { x: 162, y: 28 }, ballot_box: { x: 169, y: 87 },
+};
+
+/** Deterministic confetti flight targets (percent of the theatre) for the finished ceremony. */
+export function confetti(count = 28): readonly { x: number; y: number; turn: number; delay: number }[] {
+  return Array.from({ length: count }, (_, index) => {
+    const angle = index * golden; const reach = 0.55 + 0.45 * ((index * 7) % 11) / 10;
+    return { x: Math.round(50 + 46 * reach * Math.cos(angle)), y: Math.round(46 + 40 * reach * Math.sin(angle)),
+      turn: ((index * 137) % 720) - 360, delay: (index % 7) * 40 };
+  });
+}
+
 /** Per-shape positions in artwork space. Dot area follows weight, so concave odds are visible. */
 export function layoutMarks(shape: DrawShape, entries: readonly StageEntry[]): readonly StageMark[] {
   const count = entries.length;

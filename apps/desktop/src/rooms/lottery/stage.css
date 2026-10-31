@@ -68,6 +68,19 @@
 @keyframes lottery-wax-stamp { from { opacity: 0; transform: rotate(-24deg) scale(1.8); } to { opacity: 1; transform: rotate(-10deg) scale(1); } }
 @keyframes lottery-proclaim { 0% { opacity: 0; transform: translateY(var(--space-20)) scale(.6) rotate(-4deg); } 55% { opacity: 1; transform: translateY(calc(var(--space-2) * -1)) scale(1.08) rotate(1deg); } 100% { opacity: 1; transform: none; } }
 @keyframes lottery-placard { 0% { opacity: 0; transform: translateY(calc(var(--space-12) * -1)) scale(.9) rotate(-2deg); } 60% { opacity: 1; transform: translateY(var(--space-2)) scale(1.04) rotate(.5deg); } 100% { opacity: 1; transform: none; } }
+/* Choreography: lots rattle during the flourish, each winner is called by a ray from the shape's source, confetti at the end. */
+.lottery-draw-stage[data-shuffling] .lottery-draw-lots circle { animation: lottery-lot-rattle .16s steps(2, end) infinite alternate; animation-delay: calc(var(--lot-i) * -23ms); }
+.lottery-stage-ray { fill: none; stroke: var(--or); stroke-width: 1.6; stroke-linecap: round; stroke-dasharray: 1; stroke-dashoffset: 0; opacity: .35; animation: lottery-ray calc(var(--draw-reveal) * .45) var(--ease) both; }
+.lottery-stage-ray[data-latest="true"] { stroke: var(--ink); stroke-width: 2; opacity: 1; }
+.lottery-draw-stage[data-phase="revealed"] .lottery-stage-ray { stroke: var(--or); stroke-width: 1.4; opacity: .5; }
+.lottery-stage-confetti { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.lottery-stage-confetti i { position: absolute; left: var(--cx); top: var(--cy); width: var(--space-10); height: var(--space-5); border-radius: var(--r-sm); background: var(--gules); opacity: 0; animation: lottery-confetti calc(var(--motion-shell) * 6) var(--ease) var(--cd) both; }
+.lottery-stage-confetti i:nth-child(4n + 1) { background: var(--or); }
+.lottery-stage-confetti i:nth-child(4n + 2) { background: var(--azure); }
+.lottery-stage-confetti i:nth-child(4n + 3) { background: var(--paper); box-shadow: inset 0 0 0 var(--rule-thin) var(--ink); }
+@keyframes lottery-lot-rattle { from { transform: translate(-28%, 18%) scale(.9); } to { transform: translate(28%, -22%) scale(1.1); } }
+@keyframes lottery-ray { from { stroke-dashoffset: 1; opacity: 1; } to { stroke-dashoffset: 0; } }
+@keyframes lottery-confetti { 0% { left: 50%; top: 46%; opacity: 1; transform: rotate(0deg) scale(.3); } 70% { opacity: 1; } 100% { left: var(--cx); top: var(--cy); opacity: 0; transform: rotate(var(--cr)) scale(1); } }
 @media (prefers-reduced-motion: reduce) {
   .lottery-draw-stage *, .lottery-draw-stage *::before { animation: none !important; transition: none !important; }
 }

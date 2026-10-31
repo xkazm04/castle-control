@@ -7,11 +7,15 @@ import { lotsCopy as copy } from '../../lots-copy.js';
 import { revealStyle } from './display.js';
 import type { RevealClock } from './playback.js';
 import { useReducedMotion, useReveal } from './playback.js';
-import { artworkOf, draw_shapes, layoutMarks, sampleEntries, stage_view_box, stageScene } from './stage-model.js';
+import { artworkOf, call_origin, confetti, draw_shapes, layoutMarks, sampleEntries, stage_view_box, stageScene } from './stage-model.js';
 import type { StageCast, StageEntry, StageMark } from './stage-model.js';
 import './stage.css';
 
 const rail_limit = 8;
+const burst = confetti();
+type Burst = CSSProperties & { '--cx': string; '--cy': string; '--cr': string; '--cd': string };
+const burstStyle = (piece: typeof burst[number]): Burst => ({
+  '--cx': `${piece.x}%`, '--cy': `${piece.y}%`, '--cr': `${piece.turn}deg`, '--cd': `${piece.delay}ms` });
 const shapeLabel = (shape: DrawShape) => copy.shapes.find(item => item.value === shape)?.label ?? shape;
 
 function Artwork({ layer }: { layer: DrawArtworkLayer | undefined }) {
@@ -87,7 +91,8 @@ export function DrawStage({ shape, on_shape, entries, cast, content, sealed, sea
   const disclaimer = scene.layers.find(layer => layer.kind === 'disclaimer');
   const latest = revealed.at(-1);
   const lots = <Marks marks={marks} order={order} />;
-  return <div className="lottery-draw-stage" data-shape={shape} data-phase={phase} style={revealStyle(reveal_ms)}>
+  return <div className="lottery-draw-stage" data-shape={shape} data-phase={phase} data-shuffling={fresh || undefined}
+    style={revealStyle(reveal_ms)}>
     <ShapePicker shape={shape} on_shape={on_shape} />
     <div className="lottery-draw-theatre">
       <svg className="lottery-draw-svg" viewBox={stage_view_box} role="img" aria-label={copy.stage.label(shapeLabel(shape), entries.length)}>
@@ -96,6 +101,12 @@ export function DrawStage({ shape, on_shape, entries, cast, content, sealed, sea
           {shape === 'wheel' && <g className="lottery-draw-lots">{lots}</g>}
         </g>
         {shape !== 'wheel' && <g className="lottery-draw-lots">{lots}</g>}
+        {revealed.map((handle, index) => {
+          const mark = by_handle.get(handle);
+          const origin = call_origin[shape];
+          return mark ? <line key={`ray-${handle}`} className="lottery-stage-ray" data-latest={index === revealed.length - 1}
+            x1={origin.x} y1={origin.y} x2={mark.x} y2={mark.y} pathLength={1} /> : null;
+        })}
         {revealed.map((handle, index) => {
           const mark = by_handle.get(handle);
           return mark ? <g key={handle} className="lottery-stage-medal" data-medal={index + 1} transform={`translate(${mark.x} ${mark.y})`}>
@@ -120,6 +131,8 @@ export function DrawStage({ shape, on_shape, entries, cast, content, sealed, sea
         </ol>
       </div>}
       {disclaimer?.kind === 'disclaimer' && <p className="lottery-stage-disclaimer">{disclaimer.text}</p>}
+      {phase === 'revealed' && !reduced && <div key={state.key} className="lottery-stage-confetti" aria-hidden="true">
+        {burst.map((piece, index) => <i key={index} style={burstStyle(piece)} />)}</div>}
     </div>
     <div className="lottery-stage-foot">
       {playable && <StatusChip variant="gules" stamp="label" tone={phase === 'revealed' ? 'spot' : 'neutral'}>
