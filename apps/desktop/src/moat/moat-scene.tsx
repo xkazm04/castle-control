@@ -8,13 +8,13 @@ import './moat.css';
 /** Scene units, not pixels: the SVG scales as a whole and the stamps are placed by percentage. */
 export type MoatGeometry = Readonly<{
   width: number; height: number; chat_y: number; gate_y: number; stream_y: number;
-  chat_h: number; gate_top: number; gate_h: number; stream_top: number; dot: number; stamp_w: number; stamp_step: number;
+  chat_h: number; gate_top: number; gate_h: number; stream_top: number; dot: number; stamp_w: number; stamp_step: number; gutter: number;
 }>;
 export const fullGeometry: MoatGeometry = { width: 1200, height: 340, chat_y: 22, gate_y: 226, stream_y: 312,
-  chat_h: 40, gate_top: 236, gate_h: 18, stream_top: 282, dot: 5, stamp_w: 184, stamp_step: 58 };
-export const compactGeometry: MoatGeometry = { width: 1200, height: 84, chat_y: 8, gate_y: 44, stream_y: 74,
-  chat_h: 16, gate_top: 48, gate_h: 8, stream_top: 62, dot: 3, stamp_w: 0, stamp_step: 0 };
-const gutter = 24;
+  chat_h: 40, gate_top: 236, gate_h: 18, stream_top: 282, dot: 5, stamp_w: 184, stamp_step: 58, gutter: 24 };
+/** The Keep heartbeat: the same drawing at the size of a status bar, with no stamps or labels. */
+export const compactGeometry: MoatGeometry = { width: 360, height: 44, chat_y: 5, gate_y: 19, stream_y: 38,
+  chat_h: 10, gate_top: 22, gate_h: 4, stream_top: 32, dot: 2.2, stamp_w: 0, stamp_step: 0, gutter: 4 };
 const maxLevels = 3;
 const stampLift = 16;
 
@@ -34,9 +34,9 @@ function Waves({ id }: { id: string }) {
 export function MoatScene({ model, playhead_ms, window, selected, on_select, delay_s, compact = false }: MoatSceneProps) {
   const g = compact ? compactGeometry : fullGeometry;
   const id = compact ? 'moat-heart' : 'moat';
-  const inner = g.width - gutter * 2;
+  const inner = g.width - g.gutter * 2;
   const range = Math.max(window.to_ms - window.from_ms, 1);
-  const xOf = (offset_ms: number) => gutter + Math.min(Math.max((offset_ms - window.from_ms) / range, 0), 1) * inner;
+  const xOf = (offset_ms: number) => g.gutter + Math.min(Math.max((offset_ms - window.from_ms) / range, 0), 1) * inner;
   const drawable = visibleMarkers(model, window);
   const stops = drawable.markers.filter(marker => marker.fate === 'held');
   const stacked = compact ? { levels: [], overflow: 0 } : stampLevels(stops.map(marker => xOf(marker.offset_ms)), g.stamp_w, maxLevels);
@@ -106,6 +106,6 @@ export function sceneNotes(model: MoatModel, window: MoatWindow): MoatSceneNotes
   const drawable = visibleMarkers(model, window);
   const range = Math.max(window.to_ms - window.from_ms, 1);
   const xs = drawable.markers.filter(marker => marker.fate === 'held')
-    .map(marker => gutter + (marker.offset_ms - window.from_ms) / range * (fullGeometry.width - gutter * 2));
+    .map(marker => fullGeometry.gutter + (marker.offset_ms - window.from_ms) / range * (fullGeometry.width - fullGeometry.gutter * 2));
   return { thinned: drawable.thinned, overflow: stampLevels(xs, fullGeometry.stamp_w, maxLevels).overflow };
 }

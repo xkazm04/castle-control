@@ -4,9 +4,9 @@ import { InkButton, Notice, StatusChip, VerdictChip } from '@castle-control/ui';
 import { clockText } from '../../moat/clock.js';
 import { actionWords, fateWords, moatCopy as copy } from '../../moat/moat-copy.js';
 import { heldCount, replayedCount, scrubTicks, windowFor } from '../../moat/moat-model.js';
-import type { MoatMarker, MoatModel } from '../../moat/moat-model.js';
+import type { MoatMarker, MoatModel, ScrubTick } from '../../moat/moat-model.js';
 import { moatSpeeds } from '../../moat/moat-player.js';
-import type { MoatClock } from '../../moat/moat-player.js';
+import type { MoatClock, MoatPlayerState, MoatSpeed } from '../../moat/moat-player.js';
 import { MoatScene, sceneNotes } from '../../moat/moat-scene.jsx';
 import { useMoatPlayer } from '../../moat/use-moat-player.js';
 import { ClockTime } from './presentation.jsx';
@@ -37,6 +37,26 @@ function Legend() {
       <li key={kind}>{dot(kind)}{copy.legend[kind]}</li>)}</ul>;
 }
 
+export type MoatControlsProps = {
+  state: MoatPlayerState; ticks: readonly ScrubTick[]; position: string; reduced: boolean; range_id: string;
+  on_play: () => void; on_pause: () => void; on_seek: (playhead_ms: number) => void; on_speed: (speed: MoatSpeed) => void;
+};
+/** Plain buttons and a range input only: Space belongs to the seal key in the shared keymap. */
+export function MoatControls({ state, ticks, position, reduced, range_id, on_play, on_pause, on_seek, on_speed }: MoatControlsProps) {
+  return <div className="moat-controls">
+    <InkButton type="button" size="small" variant={state.playing ? 'primary' : 'outline'} disabled={reduced}
+      onClick={state.playing ? on_pause : on_play}>{state.playing ? copy.pause : copy.play}</InkButton>
+    <div className="moat-speeds" role="group" aria-label={copy.speed}>
+      {moatSpeeds.map(speed => <InkButton key={speed} type="button" size="small" aria-pressed={state.speed === speed}
+        onClick={() => { on_speed(speed); }}>{copy.speed_label(speed)}</InkButton>)}</div>
+    <div className="moat-scrub"><label htmlFor={range_id} className="moat-sr">{copy.position}</label>
+      <input id={range_id} type="range" min={0} max={state.run_ms} step={Math.max(Math.round(state.run_ms / 200), 100)} value={state.playhead_ms}
+        aria-valuetext={position} onChange={(event: ChangeEvent<HTMLInputElement>) => { on_seek(Number(event.currentTarget.value)); }} />
+      <div className="moat-ticks" aria-hidden="true">{ticks.map(tick => <i key={tick.at} style={{ left: `${tick.at * 100}%` }} data-many={tick.held > 1} />)}</div></div>
+    <output className="moat-readout" aria-live="off">{position}</output>
+  </div>;
+}
+
 export type MoatPanelProps = {
   model: MoatModel; delay_s?: number | undefined; clock?: MoatClock | undefined;
   selected_id?: string | undefined; on_select: (message_id: string | undefined) => void;
@@ -44,34 +64,22 @@ export type MoatPanelProps = {
 
 /** Play, scrubber, strip and inspector over one replay. The table below the panel stays the text equivalent. */
 export function MoatPanel({ model, delay_s, clock, selected_id, on_select }: MoatPanelProps) {
-  const range_id = useId(); const heading_id = useId();
+  const heading_id = useId(); const range_id = useId();
   const { player, state, reduced } = useMoatPlayer(model.run_ms, clock ? { clock } : {});
   const selected = useMemo(() => selected_id === undefined ? undefined : model.markers.find(marker => marker.message_id === selected_id), [model, selected_id]);
   const ticks = useMemo(() => scrubTicks(model), [model]);
   const window = windowFor(model, state.playhead_ms);
   const notes = useMemo(() => sceneNotes(model, window), [model, window.from_ms, window.to_ms]);
   const held = heldCount(model, state.playhead_ms);
-  const replayed = replayedCount(model, state.playhead_ms);
-  const position = copy.position_text(clockText(model.start_ms + Math.min(state.playhead_ms, model.span_ms)), replayed, model.counts.total);
-  const step = Math.max(Math.round(model.run_ms / 200), 100);
+  const position = copy.position_text(clockText(model.start_ms + Math.min(state.playhead_ms, model.span_ms)), replayedCount(model, state.playhead_ms), model.counts.total);
   if (model.markers.length === 0) return <section className="moat-panel" aria-labelledby={heading_id}>
     <h3 id={heading_id}>{copy.title}</h3><p>{copy.empty}</p></section>;
   return <section className="moat-panel" aria-labelledby={heading_id} data-playing={state.playing}>
     <header className="moat-head"><h3 id={heading_id}>{copy.title}</h3>
       <Notice className="moat-live" message={<StatusChip variant="azure">{copy.summary(held, model.counts.total)}</StatusChip>} />
       <p className="moat-small moat-breakdown">{copy.breakdown(model.counts)}</p></header>
-    <div className="moat-controls">
-      <InkButton type="button" size="small" variant={state.playing ? 'primary' : 'outline'} disabled={reduced}
-        onClick={() => { if (state.playing) player.pause(); else player.play(); }}>{state.playing ? copy.pause : copy.play}</InkButton>
-      <div className="moat-speeds" role="group" aria-label={copy.speed}>
-        {moatSpeeds.map(speed => <InkButton key={speed} type="button" size="small" aria-pressed={state.speed === speed}
-          onClick={() => { player.setSpeed(speed); }}>{copy.speed_label(speed)}</InkButton>)}</div>
-      <div className="moat-scrub"><label htmlFor={range_id} className="moat-sr">{copy.position}</label>
-        <input id={range_id} type="range" min={0} max={model.run_ms} step={step} value={state.playhead_ms} aria-valuetext={position}
-          onChange={(event: ChangeEvent<HTMLInputElement>) => { player.pause(); player.seek(Number(event.currentTarget.value)); }} />
-        <div className="moat-ticks" aria-hidden="true">{ticks.map(tick => <i key={tick.at} style={{ left: `${tick.at * 100}%` }} data-many={tick.held > 1} />)}</div></div>
-      <output className="moat-readout" aria-live="off">{position}</output>
-    </div>
+    <MoatControls state={state} ticks={ticks} position={position} reduced={reduced} range_id={range_id} on_play={player.play}
+      on_pause={player.pause} on_speed={player.setSpeed} on_seek={playhead_ms => { player.pause(); player.seek(playhead_ms); }} />
     {reduced && <p className="moat-small">{copy.reduced}</p>}
     <div className="moat-body">
       <div className="moat-scroll" role="group" aria-label={copy.region}>

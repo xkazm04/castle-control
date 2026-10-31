@@ -79,3 +79,12 @@
 
 @media (max-width: 68.75rem) { .moat-body { grid-template-columns: minmax(0, 1fr); } }
 @media (prefers-reduced-motion: reduce) { .moat-stamp { animation: none; } }
+
+/* The Keep heartbeat sits in the moat bar: a small sample loop, not a live reading. */
+.moat-heartbeat { display: block; flex: 0 1 calc(var(--space-56) * 6); min-width: 0; line-height: 0; }
+.moat-heartbeat .moat-scene { aspect-ratio: 360 / 44; }
+.moat-heartbeat .moat-bank { stroke-width: .6; }
+.moat-heartbeat .moat-track { stroke-width: .6; }
+.moat-heartbeat .moat-dot { stroke-width: .5; }
+.moat-heartbeat .moat-water { fill: var(--paper-2); fill-opacity: .7; }
+.moat-heartbeat .moat-water-waves, .moat-heartbeat .moat-playhead { display: none; }

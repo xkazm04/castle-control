@@ -18,9 +18,11 @@ export type UseMoatPlayer = { player: MoatPlayer; state: MoatPlayerState; reduce
 export function useMoatPlayer(run_ms: number, options: { clock?: MoatClock; start?: 'start' | 'end'; rest_ms?: number; speed?: MoatSpeed } = {}): UseMoatPlayer {
   const reduced = useReducedMotion();
   const { clock = browserClock, start, rest_ms, speed } = options;
+  // Reduced motion opens on the finished frame whatever the caller asked for.
+  const begin = reduced ? 'end' : start;
   const player = useMemo(() => createMoatPlayer(run_ms, clock, {
-    ...(start ? { start } : {}), ...(rest_ms === undefined ? {} : { loop: { rest_ms } }), ...(speed ? { speed } : {}),
-  }), [run_ms, clock, start, rest_ms, speed]);
+    ...(begin ? { start: begin } : {}), ...(rest_ms === undefined ? {} : { loop: { rest_ms } }), ...(speed ? { speed } : {}),
+  }), [run_ms, clock, begin, rest_ms, speed]);
   useEffect(() => () => { player.pause(); }, [player]);
   const state = useSyncExternalStore(player.subscribe, player.getSnapshot, player.getSnapshot);
   return { player, state, reduced };
