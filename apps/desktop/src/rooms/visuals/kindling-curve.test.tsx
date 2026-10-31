@@ -82,8 +82,28 @@ function pointer(clientX: number, clientY: number, pointerId = 7): PointerEvent<
   const native: Event = Object.assign(new Event('pointermove', { bubbles: true, cancelable: true }), fields);
   return { ...synthetic(target as SVGCircleElement, native as globalThis.PointerEvent), ...fields };
 }
-const markup = (editor: ReturnType<typeof createCurveEditor>) => renderToStaticMarkup(
-  <CurveControls editor={editor} state={editor.getSnapshot()} busy={false} />);
+const markup = (editor: ReturnType<typeof createCurveEditor>, local = false) => renderToStaticMarkup(
+  <CurveControls editor={editor} state={editor.getSnapshot()} busy={false} local={local} />);
+
+test('core curve help states that saved curves drive the OBS source', async () => {
+  const h = await harness();
+  const help = markup(h.editor).match(/<p id="visuals-curve-help">([\s\S]*?)<\/p>/)?.[1]?.replace(/&#x27;/g, "'");
+  expect(help).toBeDefined();
+  expect(help).not.toContain('OBS delivery is unavailable');
+  expect(help).toContain("Saved curves drive this visual's OBS browser source.");
+});
+
+test('local curve help and notice say Nothing reaches OBS exactly once', async () => {
+  const h = await harness();
+  const html = markup(h.editor, true);
+  const help = html.match(/<p id="visuals-curve-help">([\s\S]*?)<\/p>/)?.[1];
+  const notice = html.match(/<p role="status"[^>]*>([\s\S]*?)<\/p>/)?.[1];
+  expect(help).toContain('SIMULATED local preview.');
+  expect(help).not.toContain('OBS delivery is unavailable');
+  expect(help).not.toContain('Saved curves drive');
+  expect(notice).toContain('Nothing reaches OBS');
+  expect(`${help} ${notice}`.match(/Nothing reaches OBS/g)).toHaveLength(1);
+});
 
 test.each(['Decay', 'Input source'])('%s has an exact standalone label associated with its select', async label => {
   const h = await harness();

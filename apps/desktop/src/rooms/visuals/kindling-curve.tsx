@@ -71,7 +71,7 @@ export function CurveControls({ editor, state, busy, local = false }: {
     <h2>The kindling curve · contribution to intensity</h2>
     <p id="visuals-curve-help">{local ? 'SIMULATED local preview.' : 'Draft preview only.'} Drag a point and release to save. Tab to a point, then use arrows:
       left/right moves 1 contribution unit; up/down moves 1% intensity. Hold Shift for 10 units or 10%.
-      Enter saves; Escape cancels. Totals stay in order. OBS delivery is unavailable.</p>
+      Enter saves; Escape cancels. Totals stay in order.{!local && " Saved curves drive this visual's OBS browser source."}</p>
     <svg viewBox="-12 -12 624 164" preserveAspectRatio="none" role="group" aria-label="Editable contribution to intensity curve">
       <polyline points={draft.ranges.map(point => `${x(point.total)},${140 - point.intensity * 140}`).join(' ')}
         className="visuals-room-curve-line" />
