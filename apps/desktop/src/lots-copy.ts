@@ -95,7 +95,7 @@ export const lotsCopy = {
     cast_title: 'Current SIMULATED cast', read: 'Read current simulated writ', close: 'Close current simulated writ',
     proof_title: 'Current simulated writ', proof_notice: 'Not a cc-verify proof of a live draw. Uses v1 bytes for a fixed-seed rehearsal of this frozen roll; no public randomness, publication or OBS delivery.',
     overlay: 'OBS draw page', overlay_gap: 'This simulated rehearsal stays in the app. To display an accepted draw in OBS, use the connected desktop app and its browser-source URL after sealing.',
-    overlay_art_gap: 'The OBS draw page uses the house colours. Sample artwork is available only in this preview.',
+    overlay_art_gap: 'The OBS draw page paints the same draw shape in the house colours. Sample artwork is available only in this preview.',
     frozen: 'Setup is frozen. Start the simulated draw below, or draft a new roll.',
     weight_table: 'Generated weight table', weight_summary: (minimum: number, maximum: number) =>
       `Newcomer weight ${minimum}; heaviest ${maximum}. ${Math.floor(maximum / minimum) + 1} newcomers outweigh the heaviest entrant.`,

@@ -1,5 +1,35 @@
 ﻿# Lot Chamber C · Herald, 2026-10-30
 
+## Theatrical draw stage and Writ Lab, 2026-10-31
+
+The room now depends on `@castle-control/renderer`. `stage.tsx` builds the
+renderer's own `DrawScene` (`buildDrawScene`) for the selected shape (urn, wheel,
+deck, ballot box) and drives reveals with its `createDrawPlayback` timeline,
+sleeping until `next_at_ms`; the hand-synced `reveal.ts` mirror and the static
+`urn.tsx` are gone. The artwork group plays the scene's motion exactly as
+`paintDraw` maps it. Lots are drawn per shape in the artwork's 320×240 space
+(dot area follows weight, at most 240 marks with every winner kept). A fresh
+ceremony enters theatre mode (full chamber, one click back to the desk); the
+latest winner is proclaimed beside the art, earlier winners settle into a
+scoreboard, and decorative rays and confetti never encode the outcome. The
+fixture stage plays a cast only after `verifyWrit` recomputes it; core casts are
+the core's verified `LotsVerifiedCast`. Shape and theatre live in the
+session-only `DrawDisplay` (no wire field); the OBS URL appends `&shape=`, which
+the Rust page resolves to `data-shape` for `host.ts`.
+
+`equalizer.tsx` plots the cc-lots concave weight table and the contract's
+`LotsWeightTable` summary (`newcomers_to_outweigh_heaviest`), with Equal/Concave,
+activity cap, free !join and raider-cap controls (core edits go through
+`lots.draw.upsert`). `lab.tsx` (Writ Lab) tampers with an in-memory copy of the
+current writ (weight, handle, seed, plan, winner order) and walks canonical
+serialization, SHA-256 seal, randomness commitment and rejection-sampling
+derivation; a failed step blocks the rest. drand BLS authentication stays with
+cc-verify and the offline verifier, so step 3 reads UNVERIFIED for beacon writs.
+Core mode never shows the simulated-art "On stream" card. Evidence:
+`stage.test.tsx`, `equalizer.test.tsx`, `lab.test.tsx`, `result.test.tsx`,
+renderer `draw/host.test.ts`, cc-obs `tests/pages.rs` and cc-core
+`tests/lots_overlay_page.rs`.
+
 ## Stabilize lots-06–10, 2026-10-31
 
 Eligible pool owns subscriber/points eligibility. Prize checkboxes display its

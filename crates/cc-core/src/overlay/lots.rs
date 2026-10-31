@@ -89,6 +89,8 @@ impl RenderHost {
 pub(super) struct DisplayParams {
     pub(super) scale: f64,
     pub(super) anchor: &'static str,
+    /// One of the renderer's four draw shapes; artwork only, never the outcome.
+    pub(super) shape: &'static str,
 }
 
 /// The only presentation-query door. Unknown keys are ignored; missing, invalid
@@ -113,7 +115,17 @@ fn display_params(uri: &Uri) -> DisplayParams {
         Some("center") => "center",
         _ => "br",
     };
-    DisplayParams { scale, anchor }
+    let shape = match single("shape") {
+        Some("wheel") => "wheel",
+        Some("deck") => "deck",
+        Some("ballot_box") => "ballot_box",
+        _ => "urn",
+    };
+    DisplayParams {
+        scale,
+        anchor,
+        shape,
+    }
 }
 
 pub(super) async fn page(

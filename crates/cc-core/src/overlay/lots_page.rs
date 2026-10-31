@@ -50,11 +50,12 @@ pub(super) fn render(
     // Deliberately replace the former no-JSON-in-OBS approach: the existing
     // contract validators admit these two values, with no new event schema.
     Ok(format!(
-        "<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><meta http-equiv=\"refresh\" content=\"{}\"><title>Castle Control draw</title><style>{}\n{}</style></head><body><main id=\"draw\" data-content=\"{content}\" data-simulated=\"{simulated}\" data-anchor=\"{}\" style=\"--draw-scale:{}\"><section data-draw-fallback>{body}</section>{islands}</main><script type=\"module\" src=\"/bundle.js\"></script></body></html>",
+        "<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><meta http-equiv=\"refresh\" content=\"{}\"><title>Castle Control draw</title><style>{}\n{}</style></head><body><main id=\"draw\" data-content=\"{content}\" data-simulated=\"{simulated}\" data-anchor=\"{}\" data-shape=\"{}\" style=\"--draw-scale:{}\"><section data-draw-fallback>{body}</section>{islands}</main><script type=\"module\" src=\"/bundle.js\"></script></body></html>",
         refresh_seconds(scene),
         include_str!("../../../../packages/tokens/src/generated.css"),
         include_str!("lots.css"),
         display.anchor,
+        display.shape,
         display.scale,
     ))
 }

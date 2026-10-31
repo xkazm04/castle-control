@@ -92,6 +92,36 @@ async fn display_query_is_parsed_once_with_safe_defaults_and_no_markup_injection
 }
 
 #[tokio::test]
+async fn shape_query_selects_one_of_four_draw_shapes_and_defaults_to_the_urn() {
+    let host = Arc::new(RenderHost::default());
+    let server = cc_obs::Overlay::start_with_routes(0, host.routes())
+        .await
+        .unwrap();
+    let client = reqwest::Client::new();
+    for (query, shape) in [
+        ("", "urn"),
+        ("?shape=wheel", "wheel"),
+        ("?scale=2&shape=deck", "deck"),
+        ("?anchor=tl&shape=ballot_box", "ballot_box"),
+        ("?shape=urn", "urn"),
+        ("?shape=spinner", "urn"),
+        ("?shape=", "urn"),
+        ("?shape=wheel&shape=deck", "urn"),
+        ("?shape=%22%3E%3Cscript%3E", "urn"),
+    ] {
+        let response = client
+            .get(format!("{}lots/simulated-draw{query}", server.url()))
+            .send()
+            .await
+            .unwrap();
+        assert_eq!(response.status(), 200, "{query}");
+        let html = response.text().await.unwrap();
+        assert!(html.contains(&format!("data-shape=\"{shape}\"")), "{query}");
+        assert!(!html.contains("<script>"), "{query}");
+    }
+}
+
+#[tokio::test]
 async fn page_shows_only_accepted_seal_then_fixed_simulated_winners_and_no_write_door() {
     for (content, winner_count) in [("question", 2), ("prize", 40)] {
         let root = tempfile::tempdir().unwrap();

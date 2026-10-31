@@ -223,5 +223,20 @@
     "target": "/assets/x/y/z",
     "kind": null,
     "canonical": null
+  },
+  {
+    "target": "/lots/simulated-draw?scale=2&anchor=tl&shape=wheel",
+    "kind": "lots",
+    "canonical": "/lots/simulated-draw"
+  },
+  {
+    "target": "/lots/simulated-draw?shape=&shape=spinner",
+    "kind": "lots",
+    "canonical": "/lots/simulated-draw"
+  },
+  {
+    "target": "/beacons/simulated-frame?shape=wheel",
+    "kind": null,
+    "canonical": null
   }
 ]

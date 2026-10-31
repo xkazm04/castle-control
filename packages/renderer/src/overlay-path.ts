@@ -12,7 +12,7 @@ export function parseOverlayPath(pathname: string, search = ''): OverlayPage | u
     if (!search.startsWith('?')) return undefined;
     for (const part of search.slice(1).split('&')) {
       const key = part.split('=')[0];
-      if (key === 'scale' || key === 'anchor') continue;
+      if (key === 'scale' || key === 'anchor' || (key === 'shape' && match[1] === 'lots')) continue;
       if (match[1] !== 'beacons' || package_hash !== undefined || !/^package_hash=[a-f0-9]{64}$(?![\s\S])/.test(part)) return undefined;
       package_hash = part.slice('package_hash='.length);
     }
