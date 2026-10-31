@@ -346,3 +346,59 @@ gates did not run. Full-gate verification remains for the Director. No second
 tree, alternative spawn path, install, gate-tooling change or git write was used
 to bypass that refusal. Screenshot/browser verification was not run; sample
 placement fidelity is established numerically against the original C geometry.
+
+## Rehearse a round (2026-10-31)
+
+A third view beside Table and Spyglass plays a deterministic, simulated round on
+the room's own parsed board. It answers "will my board make a good round at 30
+or 300 viewers?" locally, while the Muster and Proclaimed rungs stay locked. It
+adds no wire identifier, dependency, network call or stage transition.
+
+| File | Job |
+| --- | --- |
+| `rehearsal.ts` | Pure simulation and the setup door `parseRehearsalSetup` (seed 1-24 chars, viewers 10-1000, turns 2-24). |
+| `rehearsal-verdict.ts` | `balanceReport`: spread of shares, leader margin, chokepoints, turn of last change, lead changes and the verdict words. |
+| `rehearse-state.ts` | Pure reducer: start, step, tick, pause, resume, reset, again, replay, compare sizes, comparison list. |
+| `use-rehearse.ts` | The only hooks: the clock tick, the reduced-motion flag and the reset when the board changes. |
+| `rehearse.tsx`, `rehearse-side.tsx` | Hook-free views (the same split as Spyglass), so tests render them directly. |
+| `rehearse-copy.ts`, `rehearse.css` | Copy and token-only styles. |
+
+**The model.** Each turn every generated viewer emits `join_side` then
+`pick_tile`, the renderer's closed viewer-action shapes mirrored by value (the
+desktop does not import the renderer). Join odds come from a per-house pull drawn
+from the seed, a small per-turn jitter and a mild bandwagon on held share. A
+viewer attacks (a tile beside the house's holdings, unclaimed or enemy) or
+defends (one of its own border tiles). Per tile the highest count wins; a held
+tile starts with a garrison of 2 plus 1 per two friendly neighbours; ties are a
+seeded coin; a house with no land musters on unclaimed tiles. Only tiles picked
+in a turn can change owner, and tests prove it on S, M and L boards. The
+generator is mulberry32 over an FNV-1a hash of the seed text; nothing reads a
+clock or `Math.random` (a test scans the sources).
+
+**Tuning.** The first naive version (72% attack, no garrison, strong bandwagon)
+ended in a 100% conquest within four turns on every board. The constants now give
+rounds that vary with the seed and with the crowd: on the M board 30 viewers
+mostly stall, 120 mix runaways, tight races and contested rounds, and 300 mostly
+run away. A test pins that variety so a later tweak cannot make the room boring.
+
+**Copy law.** The band "SIMULATED REHEARSAL · no viewers, no identities, no
+Extension state · sample territory" is rendered unconditionally at the top of the
+view. Tests assert its exact words in every state, that it is the section's first
+child, that the source does not gate it, and that the CSS cannot hide it. Tile
+history, comparison boards and the Spyglass note all say simulated.
+
+**Behaviour.** Flips ink in from the left over the hexagon (the room's print-in
+wipe, with an a/b alternation so a tile can flip on consecutive turns) and are
+outlined for the turn. The turn log is a `RuledFeed`; each turn goes to a polite
+`Notice`, and the finish announces the verdict. Reduced motion skips straight to
+the end state. Enter in a field plays; there is no key listener. Changing Map size
+ends the round on screen and keeps finished runs in Compare runs (last three).
+Compare sizes is offered only when the room owns the S/M/L boards.
+
+**Layout.** The board needs height, so the verdict, replay, report and log sit in
+the side column and the table's own heading is kept for screen readers only.
+Boards over 60 tiles drop the house words from the hexes.
+
+**Kit note.** The kit's `primary` button variant hides its label on hover in the
+paper theme (hover text and fill are both `--press`); this view uses `plate`.
+The kit is another package, so it is reported here, not changed.

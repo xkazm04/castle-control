@@ -22,6 +22,28 @@ not operate an Extension. A simulated design hold changes only the sample look.
 Sources: [test ladder](../../apps/desktop/src/rooms/studio/README.md),
 [design preview/seal](../../apps/desktop/src/rooms/README.md#design-focus-ai-14).
 
+## Rehearse a round
+
+The third view, **Rehearse**, plays an invented round on the room's own board so
+you can see how a layout might play before any Extension exists. It is a
+simulation: no viewers, no identities, no votes and no Extension state, and a
+black band says so in every state of the view. Set the simulated viewers (10 to
+1000), a seed and the number of turns (2 to 24), then press **Play round**. Each
+turn the generated viewers join a house and pick tiles; tiles flip to the house
+with the most picks, ties go to a seeded coin, and only picked tiles can change
+owner. The held-tile ribbon, the turn log and the balance report follow along,
+and the round ends with a plain verdict such as "House Tallow holds 56%,
+runaway" or "Stalemate by turn 4".
+
+The same board, seed and viewer count always replay the same round. **Replay
+seed** re-runs it and says whether every turn matched; **Rehearse again** draws a
+fresh seed. **Compare sizes** plays the S, M and L boards with the same settings,
+and finished runs stay under **Compare runs** while you change Map size in the
+local design. The Spyglass shows the end state of a finished rehearsal. Nothing
+is saved or sent, reduced motion jumps straight to the end state, and core mode
+still shows the unconfigured state. Source:
+[Rehearse notes](../../apps/desktop/src/rooms/studio/README.md#rehearse-a-round-2026-10-31).
+
 ## Planned, not currently available
 
 The M4 plan calls for a bundled data-driven Extension shell, viewer controls,
