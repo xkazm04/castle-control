@@ -1,4 +1,5 @@
 import { useEffect, useId, useMemo, useRef, useState, useSyncExternalStore } from 'react';
+import type { CSSProperties } from 'react';
 import { keymap } from './shell.jsx';
 import './seal-button.css';
 import './heraldic-shadow.css';
@@ -48,7 +49,9 @@ export function SealControl({ hold, progress, variant = 'seal', disabled = false
   description_id?: string; released?: boolean;
 }) {
   const label = variant === 'proclaim' ? 'Hold to seal and proclaim' : 'Hold to seal';
+  const fill_style: CSSProperties & { '--cc-seal-progress': string } = { '--cc-seal-progress': `${progress * 100}%` };
   return <button type="button" className={size === 'large' ? 'cc-seal-button cc-offset-shadow' : 'cc-seal-button'} data-size={size} disabled={disabled} aria-label={label}
+    style={fill_style}
     aria-describedby={description_id ? `${description_id}-instruction ${description_id}-released` : undefined}
     onPointerDown={event => {
       if (disabled || event.button !== 0) return;
@@ -71,6 +74,9 @@ export function SealControl({ hold, progress, variant = 'seal', disabled = false
       Press and hold <kbd>{sealKey === ' ' ? 'Space' : sealKey}</kbd> for {sealHoldDurationMs / 1000} second
     </span>
     <span id={description_id ? `${description_id}-released` : undefined} className="cc-seal-release" aria-live="polite" aria-atomic="true">{released ? 'Released, not sealed' : ''}</span>
+    <span className="cc-seal-fill-copy" aria-hidden="true"><span>{label}</span><small>
+      Press and hold <kbd>{sealKey === ' ' ? 'Space' : sealKey}</kbd> for {sealHoldDurationMs / 1000} second
+    </small></span>
   </button>;
 }
 

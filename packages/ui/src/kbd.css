@@ -1,0 +1,7 @@
+.cc-kbd {
+  box-sizing: border-box; display: inline-grid; place-items: center; flex: none;
+  min-width: var(--space-22); height: var(--space-22); padding-inline: var(--space-3);
+  border: var(--rule-medium) solid var(--ink); border-bottom-width: var(--space-3);
+  border-radius: var(--r-sm); background: var(--card); color: var(--ink);
+  font: 700 var(--text-shell-shortcut)/1 var(--font-num); letter-spacing: normal; text-transform: none;
+}

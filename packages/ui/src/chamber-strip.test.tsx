@@ -64,3 +64,29 @@ test('strip tiles describe their lit lamps and visible state line', () => {
   }
   expect(ids.size).toBe(8);
 });
+
+test('current marks the open room independently of the selected room and Keep is opt-in', () => {
+  const state = { line: 'Simulated layer', on_air: false, preview: true, draft: false };
+  const props: ChamberStripProps = { selected: 'lottery', states: { lottery: state, moderator: state, visuals: state, studio: state },
+    on_select: vi.fn(), on_open: vi.fn() };
+  const original = renderToStaticMarkup(<ChamberStrip {...props} />);
+  expect(original.match(/<button/g)).toHaveLength(4);
+  expect(original).not.toContain('aria-current');
+  expect(original).not.toContain('data-room-tile="keep"');
+  const current = renderToStaticMarkup(<ChamberStrip {...props} current="visuals" />);
+  expect(current.match(/aria-current="page"/g)).toHaveLength(1);
+  expect(current).toMatch(/data-room-tile="visuals"[^>]*aria-pressed="false"[^>]*aria-current="page"/);
+  expect(current).toMatch(/data-room-tile="lottery"[^>]*aria-pressed="true"/);
+  const back = vi.fn();
+  const tree = ChamberStrip({ ...props, current: 'keep', on_keep: back });
+  tree.props.children[0]?.props.onClick();
+  expect(back).toHaveBeenCalledOnce();
+  expect(props.on_select).not.toHaveBeenCalled();
+  expect(props.on_open).not.toHaveBeenCalled();
+  const keep = renderToStaticMarkup(tree);
+  expect(keep.match(/<button/g)).toHaveLength(5);
+  expect(keep.match(/aria-current="page"/g)).toHaveLength(1);
+  expect(keep).toMatch(/data-room-tile="keep" aria-current="page"/);
+  expect(keep).toContain('<kbd class="cc-kbd">0</kbd>');
+  expect(keep).toContain('The Keep');
+});

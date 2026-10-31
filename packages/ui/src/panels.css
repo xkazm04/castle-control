@@ -9,9 +9,10 @@
 [data-module="studio"] .cc-title-row h1::after { color: var(--azure); }
 .cc-title-row p { max-width: var(--copy-width); padding-bottom: var(--space-3); font: italic var(--text-aside)/1.35 var(--font-serif); color: var(--ink-2); }
 .cc-page-actions { margin-left: auto; display: flex; gap: var(--space-8); align-items: center; justify-content: flex-end; flex-wrap: wrap; }
-.cc-panel { border-top: var(--rule-strong) solid var(--rule); padding-top: var(--space-8); min-width: 0; }
+.cc-panel { position: relative; min-width: 0; min-height: 0; border: var(--rule-strong) solid var(--ink); background: var(--card); padding: var(--space-14) var(--space-16); }
+.cc-panel::before { content: ''; position: absolute; inset: 0 0 auto; border-top: var(--space-6) solid var(--plate); }
 .cc-panel-heading { display: flex; align-items: baseline; gap: var(--space-10); min-height: var(--space-20); margin-bottom: var(--space-8); }
-.cc-panel-heading h2 { font: 800 var(--text-section)/1.1 var(--font-display); font-stretch: 75%; text-transform: uppercase; letter-spacing: var(--track-heading); }
-.cc-panel-number { font: 700 var(--text-label)/1 var(--font-num); color: var(--plate-text); border: var(--rule-medium) solid var(--plate-text); border-radius: var(--space-2); padding: var(--space-2) var(--space-4); }
-.cc-panel-gloss { color: var(--muted); font: italic var(--text-small)/1 var(--font-serif); }
-.cc-panel-meta { margin-left: auto; color: var(--muted); font: 600 var(--text-label)/1.2 var(--font-ui); }
+.cc-panel-heading h2 { font: 700 var(--text-shell-panel-title)/1 var(--font-display); text-transform: uppercase; letter-spacing: .08em; }
+.cc-panel-number { font: 700 var(--text-shell-label)/1 var(--font-num); color: var(--plate-text); border: var(--rule-medium) solid var(--plate-text); border-radius: var(--space-2); padding: var(--space-2) var(--space-4); }
+.cc-panel-gloss { color: var(--muted); font: italic var(--text-shell-aside)/1 var(--font-serif); }
+.cc-panel-meta { margin-left: auto; color: var(--muted); font: 600 var(--text-shell-label)/1.2 var(--font-ui); }

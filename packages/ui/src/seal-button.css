@@ -1,11 +1,25 @@
-.cc-seal-button { display: inline-flex; flex-direction: column; gap: var(--space-8); min-height: var(--space-56); border: var(--rule-strong) solid var(--gules); border-radius: var(--r-sm); background: var(--gules); color: var(--press); padding: var(--space-10) var(--space-16); font: 800 var(--text-body)/1.3 var(--font-ui); cursor: pointer; touch-action: none; user-select: none; }
-.cc-seal-button:disabled { border-color: var(--muted); background: var(--card); color: var(--muted); cursor: default; }
-.cc-seal-button progress { width: 100%; height: var(--space-6); border: 0; background: var(--paper); accent-color: var(--press); }
-.cc-seal-button progress::-webkit-progress-bar { background: var(--paper); }
-.cc-seal-button progress::-webkit-progress-value { background: var(--press); }
-.cc-seal-button progress::-moz-progress-bar { background: var(--press); }
-.cc-seal-button[data-size="large"] { --cc-shadow-offset: var(--space-4); --cc-shadow-ink: var(--ink); display: inline-grid; min-width: calc(var(--space-56) * 3.5); padding: var(--space-12) var(--space-16) var(--space-10); border-radius: var(--r-md); font: 800 var(--text-wordmark)/1 var(--font-display); letter-spacing: var(--track-chamber); text-transform: uppercase; text-align: start; }
-.cc-seal-button[data-size="large"] progress { appearance: none; }
-.cc-seal-instruction, .cc-seal-release { font: 400 var(--text-body)/1.4 var(--font-ui); letter-spacing: normal; text-transform: none; }
-.cc-seal-instruction kbd { font-family: var(--font-num); }
+.cc-seal-button {
+  --cc-seal-progress: 0%;
+  position: relative; isolation: isolate; display: inline-flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: var(--space-5); height: calc(var(--space-56) + var(--space-2)); flex: none; margin-top: var(--space-4);
+  border: var(--space-3) solid var(--ink); border-radius: 0; background: var(--card); color: var(--ink);
+  padding: var(--space-5) var(--space-16); box-shadow: var(--space-4) var(--space-4) 0 var(--ink);
+  font: 800 var(--text-shell-seal)/1 var(--font-display); letter-spacing: .12em; text-transform: uppercase;
+  cursor: pointer; overflow: hidden; touch-action: none; user-select: none;
+}
+.cc-seal-button > span { position: relative; z-index: 1; }
+.cc-seal-button:disabled { border-color: var(--muted); background: var(--card); color: var(--muted); cursor: not-allowed; box-shadow: none; }
+.cc-seal-button progress { position: absolute; inset: 0; z-index: 0; appearance: none; width: 100%; height: 100%; border: 0; border-radius: 0; background: transparent; color: var(--or); accent-color: var(--or); pointer-events: none; }
+.cc-seal-button progress::-webkit-progress-bar { background: transparent; }
+.cc-seal-button progress::-webkit-progress-value { background: var(--or); }
+.cc-seal-button progress::-moz-progress-bar { background: var(--or); }
+.cc-seal-button[data-size="large"] { --cc-shadow-offset: var(--space-4); --cc-shadow-ink: var(--ink); min-width: calc(var(--space-56) * 3.5); }
+.cc-seal-button .cc-seal-instruction, .cc-seal-release { font: 600 var(--text-shell-hint)/1 var(--font-ui); letter-spacing: .04em; text-transform: none; color: var(--ink-2); }
+.cc-seal-button:disabled .cc-seal-instruction { color: var(--muted); }
+.cc-seal-instruction kbd { font: inherit; font-family: var(--font-num); }
+.cc-seal-button .cc-seal-release { position: absolute; inset-inline: 0; bottom: var(--space-5); text-align: center; }
+.cc-seal-button:has(.cc-seal-release:not(:empty)) .cc-seal-instruction { visibility: hidden; }
 .cc-seal-release:empty { display: none; }
+.cc-seal-button .cc-seal-fill-copy { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--space-5); padding: var(--space-5) var(--space-16); color: var(--press); clip-path: inset(0 calc(100% - var(--cc-seal-progress, 0%)) 0 0); pointer-events: none; }
+.cc-seal-fill-copy small { color: var(--press-2); font: 600 var(--text-shell-hint)/1 var(--font-ui); letter-spacing: .04em; text-transform: none; }
+.cc-seal-fill-copy kbd { font: inherit; font-family: var(--font-num); }

@@ -35,7 +35,7 @@ export type RampartProps = {
 export function Rampart(props: RampartProps) {
   return <header className="cc-rampart">
     <a className="cc-brand" href={props.home_href} aria-label="Castle Control, the whole keep">
-      <Mark /><span className="cc-wordmark" data-text={'Castle\nControl'}>Castle<br />Control</span>
+      <Mark /><span className="cc-wordmark">Castle Control</span>
     </a>
     <div className="cc-live-group">
       <span className="cc-air" data-live={props.on_air}><i />{props.on_air ? 'On air' : 'Offline'}</span>
