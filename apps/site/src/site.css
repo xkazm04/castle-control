@@ -12,6 +12,7 @@ a { color:inherit; }
 :focus-visible { outline:var(--space-3) solid var(--azure); outline-offset:var(--space-3); border-radius:var(--space-2); }
 #stage {
   --stamp-size:var(--text-stage-stamp);
+  line-height:normal;
   position:absolute; left:50%; top:50%; width:var(--kit-w); height:var(--kit-h);
   transform:translate(-50%,-50%) scale(var(--fit,1)); transform-origin:50% 50%; overflow:hidden;
   background:var(--paper-grain),linear-gradient(180deg,var(--stage-top) 0%,var(--stage-mid) 62%,var(--stage-low) 100%);
@@ -80,7 +81,7 @@ kbd {
 .hit:focus-visible { outline:var(--space-4) solid var(--azure); outline-offset:calc(-1 * var(--space-4)); }
 .tag {
   position:absolute; width:var(--space-30); height:var(--space-30); display:grid; place-items:center;
-  font:800 var(--text-stage-room-number)/1 var(--font-display); color:var(--stamp-paper); pointer-events:none;
+  font:800 var(--text-stage-room-number)/1 var(--font-display); color:var(--press-paper); pointer-events:none;
   border:var(--rule-strong) solid var(--ink); box-shadow:var(--space-3) var(--space-3) 0 var(--ink); transition:opacity var(--m-slip);
 }
 .room-mode .tag { opacity:0; }

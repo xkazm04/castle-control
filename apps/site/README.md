@@ -78,7 +78,7 @@ WP5a's stage/header/headline/footer/room-tag hooks remain.
 - `pnpm --filter @castle-control/site typecheck`: exit 0; `[pnpm typecheck] walked 29 files`.
 - `pnpm --filter @castle-control/site lint`: exit 0; `[pnpm lint] walked 29 files`.
 - `pnpm --filter @castle-control/site test`: exit 0; `Test Files 10 passed (10)`; `Tests 80 passed (80)`.
-- `pnpm --filter @castle-control/site build`: exit 0; 43 modules; `[site first-load] 90879 / 184320 bytes (88.75 KiB)`; built inventory, destinations, offline posture and honesty checks PASS.
+- `pnpm --filter @castle-control/site build`: exit 0; 43 modules; `[site first-load] 90898 / 184320 bytes (88.77 KiB)`; built inventory, destinations, offline posture and honesty checks PASS.
 - `node scripts/check.mjs`: exit 0; boundaries, hygiene, type-floor, file-cap and secrets all pass.
 - `pnpm gate`: exit 1 at contract export, `Error: spawnSync cargo EPERM`; the preceding 35 tooling tests passed. No install was run, as required by this brief.
 - Browser verification is blocked: headless Chromium reports `spawn EPERM`;
