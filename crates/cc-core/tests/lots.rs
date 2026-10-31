@@ -1,3 +1,5 @@
+#[path = "lots_support/display.rs"]
+mod display;
 mod lots_support;
 use cc_core::{
     Registry,

@@ -1,11 +1,12 @@
 import { invokeMethod, parseError, parseMethodParams, parseMethodResult } from '@castle-control/contract';
 import { lotsDrawList, lotsDrawUpsert, lotsDrawCheck, lotsRollLookup, lotsRollSeal, lotsCast, lotsWritGet } from '@castle-control/contract/lots';
-import type { CastResult, DrawCheckResult, LotsDraw, LotsProofEntry, LotsWrit,
+import type { CastResult, Display, DrawCheckResult, LotsDraw, LotsProofEntry, LotsWrit,
   ErrorCode, MethodContract, RollLookupResult, RollSealResult, RpcMethods } from '@castle-control/contract';
 import { validateCoreLaunch } from './core-source.js';
 import type { CoreLaunch } from './core-source.js';
 import type { LotsPort, LotsPreview } from './lots-model.js';
 import { lotsCopy as copy } from './lots-copy.js';
+import { createDrawDisplay, drawDisplayParams } from './rooms/lottery/display.js';
 
 type LotsMethod = 'lots.draw.list' | 'lots.draw.upsert' | 'lots.draw.check' | 'lots.roll.lookup'
   | 'lots.roll.seal' | 'lots.cast' | 'lots.writ.get';
@@ -64,6 +65,12 @@ export function createCoreLotsPort(launch: CoreLaunch, transport?: LotsNetwork) 
   let snapshot: CoreLotsSnapshot = freeze({ draws: [], entries: [], paused: false, sealed: false, started: false,
     shape: 'urn', lookup: '', nested: false, notice: 'Load draws from the local core.', recomputing: false, busy: false, locked: false });
   const listeners = new Set<() => void>();
+  const appearances = new Map<string, ReturnType<typeof createDrawDisplay>>();
+  function appearance(id: string) {
+    let port = appearances.get(id);
+    if (!port) { port = createDrawDisplay(); appearances.set(id, port); }
+    return port;
+  }
   let active_method: LotsMethod | undefined;
   function publish(change: Partial<CoreLotsSnapshot>, omit: ('draw' | 'check' | 'lookup_result')[] = []) {
     const previous = { ...snapshot };
@@ -111,7 +118,22 @@ export function createCoreLotsPort(launch: CoreLaunch, transport?: LotsNetwork) 
       publish({ writ, notice: 'Proof bundle loaded from the core. Use an independent verifier to check it.' });
     } catch { publish({ notice: copy.core.proof_unavailable }); }
   }
+  async function edit(draw: LotsDraw, display?: Display) {
+    if (!editable()) return;
+    const proposed = structuredClone(draw);
+    await perform(async () => {
+      const saved = await call(lotsDrawUpsert, { draw: proposed, ...(display ? { display } : {}) });
+      const draws = [...snapshot.draws.filter(item => item.draw_id !== saved.draw_id), saved];
+      publish({ draw: saved, draws }, ['check', 'lookup_result']);
+      await check(saved);
+    });
+  }
   return {
+    appearance,
+    async saveDisplay() {
+      const draw = snapshot.draw;
+      if (draw) await edit(draw, drawDisplayParams(appearance(draw.draw_id).getSnapshot()));
+    },
     getSnapshot: () => snapshot,
     subscribe(listener: () => void) { listeners.add(listener); return () => { listeners.delete(listener); }; },
     async load() {
@@ -133,16 +155,7 @@ export function createCoreLotsPort(launch: CoreLaunch, transport?: LotsNetwork) 
         await check(draw);
       });
     },
-    async edit(draw: LotsDraw) {
-      if (!editable()) return;
-      const proposed = structuredClone(draw);
-      await perform(async () => {
-        const saved = await call(lotsDrawUpsert, { draw: proposed });
-        const draws = [...snapshot.draws.filter(item => item.draw_id !== saved.draw_id), saved];
-        publish({ draw: saved, draws }, ['check', 'lookup_result']);
-        await check(saved);
-      });
-    },
+    edit,
     async createQuestionDraw() {
       // The same schema door as every other configuration. No fixture is used.
       const { draw } = parseMethodParams(lotsDrawUpsert, { draw: questionDraw });
@@ -191,6 +204,7 @@ export function createCoreLotsPort(launch: CoreLaunch, transport?: LotsNetwork) 
         finally { publish({ recomputing: false }); }
       });
     },
-  } satisfies LotsPort<CoreLotsSnapshot> & { load: () => Promise<void>; check: () => Promise<void>; createQuestionDraw: () => Promise<void> };
+  } satisfies LotsPort<CoreLotsSnapshot> & { load: () => Promise<void>; check: () => Promise<void>; createQuestionDraw: () => Promise<void>;
+    appearance: typeof appearance; saveDisplay: () => Promise<void> };
 }
 export type CoreLotsPort = ReturnType<typeof createCoreLotsPort>;

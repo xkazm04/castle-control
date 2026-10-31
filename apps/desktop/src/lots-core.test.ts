@@ -1,4 +1,5 @@
-import { createElement } from 'react';
+import { Children, createElement, isValidElement } from 'react';
+import type { ChangeEvent, ReactNode, SelectHTMLAttributes } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { ConnectedLotsRoom } from './rooms/lottery/core.jsx';
 import { lotsCopy as copy } from './lots-copy.js';
@@ -9,6 +10,7 @@ import { lotsRollSeal } from '@castle-control/contract/lots';
 import { createCoreLotsPort, lotsRoundLabel } from './lots-core.js';
 import type { LotsNetwork } from './lots-core.js';
 import { fixtureDraws, fixtureWrit } from './lots-fixture.js';
+import { DrawAppearance } from './rooms/lottery/appearance.jsx';
 
 const launch = { mode: 'core', endpoint: 'http://127.0.0.1:3210/', session_token: 'a'.repeat(64) } as const;
 const run_id = '01ARZ3NDEKTSV4RRFFQ69G5FAV';
@@ -34,6 +36,35 @@ function harness() {
   return { port: createCoreLotsPort(launch, { rpc }), rpc, responses, fetch, socket };
 }
 afterEach(() => { vi.unstubAllGlobals(); vi.restoreAllMocks(); });
+
+test('core appearance controls save their chosen display through the validated upsert', async () => {
+  const h = harness(); await h.port.load();
+  const appearance = h.port.appearance(draw.draw_id);
+  let controls: ReactNode;
+  function Probe() { controls = DrawAppearance({ port: appearance, preview: false }); return null; }
+  renderToStaticMarkup(createElement(Probe));
+  const choose = (id: string, value: string) => {
+    let changed = false;
+    function visit(tree: ReactNode) {
+      Children.forEach(tree, child => {
+        if (!isValidElement<SelectHTMLAttributes<HTMLSelectElement>>(child)) return;
+        if (child.props.id === id) {
+          child.props.onChange?.({ currentTarget: { value } } as ChangeEvent<HTMLSelectElement>);
+          changed = true;
+        } else visit(child.props.children);
+      });
+    }
+    visit(controls); expect(changed).toBe(true);
+  };
+  choose('lots-size', 'L'); choose('lots-anchor', 'tl'); choose('lots-colour', 'azure'); choose('lots-art', 'pixel');
+  appearance.commitReveal('750');
+  await h.port.saveDisplay();
+  expect(h.rpc.mock.calls.findLast(call => call[2] === 'lots.draw.upsert')?.[3]).toEqual({ draw,
+    display: { size: 'L', anchor: 'top-left', colour_token: 'azure', art_style: 'pixel', timing_ms: 750 } });
+  const html = renderToStaticMarkup(createElement(ConnectedLotsRoom, { port: h.port }));
+  expect(html).toContain('Save draw appearance');
+  expect(html).toContain('Reloading the room cannot read saved appearance yet');
+});
 
 test.each([
   ['lots.cast', 'The announced round has not arrived yet. Wait, then Cast again.'],

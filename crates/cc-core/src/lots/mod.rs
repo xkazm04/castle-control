@@ -52,6 +52,7 @@ struct Pending {
 struct State {
     store: Store,
     draws: BTreeMap<DrawId, LotsDraw>,
+    displays: BTreeMap<DrawId, Display>,
     rolls: BTreeMap<DrawId, Roll>,
     pending: BTreeMap<DrawRunId, Pending>,
 }
@@ -91,7 +92,7 @@ impl LotsModule {
     ) -> Result<Self, ErrorEnvelope> {
         let root = root.as_ref().to_owned();
         let store = Store::open(root.join("store")).map_err(|_| internal())?;
-        let draws = storage::load_draws(&root)?;
+        let (draws, displays) = storage::load_settings(&root)?;
         let rolls = draws
             .iter()
             .map(|(id, draw)| Ok((id.clone(), storage::restored_roll(draw, &store)?)))
@@ -100,6 +101,7 @@ impl LotsModule {
             state: Mutex::new(State {
                 store,
                 draws,
+                displays,
                 rolls,
                 pending: BTreeMap::new(),
             }),
@@ -122,6 +124,14 @@ impl LotsModule {
 
     /// Trusted Rust composition only; the overlay exposes no mutation door.
     pub fn with_render_host(mut self, render: Arc<crate::overlay::RenderHost>) -> Self {
+        {
+            let state = self.state.lock().expect("new Lots state is not poisoned");
+            for (id, display) in &state.displays {
+                render
+                    .commit_lots_display_after(id, display.clone(), || Ok(()))
+                    .expect("render display restoration during trusted composition");
+            }
+        }
         self.render = Some(render);
         self
     }
@@ -257,8 +267,18 @@ impl LotsModule {
                 let roll = storage::restored_roll(draw, &state.store)?;
                 let mut draws = state.draws.clone();
                 draws.insert(draw.draw_id.clone(), draw.clone());
-                storage::save_draws(&self.root, &draws)?;
+                let mut displays = state.displays.clone();
+                if let Some(display) = &params.display {
+                    displays.insert(draw.draw_id.clone(), display.clone());
+                }
+                let commit = || storage::save_settings(&self.root, &draws, &displays);
+                if let (Some(render), Some(display)) = (&self.render, displays.get(&draw.draw_id)) {
+                    render.commit_lots_display_after(&draw.draw_id, display.clone(), commit)?;
+                } else {
+                    commit()?;
+                }
                 state.draws = draws;
+                state.displays = displays;
                 let weight_table = convert::table(roll.weight_table(self.now()))?;
                 state.rolls.insert(draw.draw_id.clone(), roll);
                 self.emit(

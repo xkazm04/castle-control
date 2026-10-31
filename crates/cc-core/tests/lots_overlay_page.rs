@@ -36,6 +36,99 @@ async fn call(module: &LotsModule, method: &str, params: Value) -> Value {
 }
 
 #[tokio::test]
+async fn saved_display_survives_restart_and_query_overrides_legacy_defaults() {
+    let root = tempfile::tempdir().unwrap();
+    let draw = json!({
+        "draw_id":"simulated-draw", "name":"SIMULATED display persistence",
+        "policy":{"content":"question","paid_entry":false,"paid_weight":false,"subscriber_only":false,
+            "channel_points":false,"free_entry_equal_odds":true,"regions":[],"prize_value_usd_cents":0,
+            "registration_confirmed":false,"official_rules":true,"twitch_disclaimer":true},
+        "rules":{"pool":{"kind":"chatters"},"winner_count":1,"cooldown_s":0,
+            "cohort_caps":[],"weight_curve":{"kind":"equal"},"free_join_equal_odds":true}
+    });
+    // Pre-display installations contain only the original array.
+    std::fs::write(root.path().join("draws.json"), json!([draw]).to_string()).unwrap();
+    let open = || {
+        LotsModule::open(
+            root.path(),
+            Arc::new(EventHub::new(32).unwrap()),
+            Arc::new(NoBeacon),
+            Arc::new(NoBeacon),
+            true,
+        )
+        .unwrap()
+    };
+    let module = open();
+    assert_eq!(
+        call(&module, "lots.draw.list", json!({})).await,
+        json!({"draws":[draw]})
+    );
+    let display = json!({"size":"L","anchor":"top-left","colour_token":"azure",
+        "art_style":"pixel","timing_ms":750});
+    call(
+        &module,
+        "lots.draw.upsert",
+        json!({"draw":draw,"display":display}),
+    )
+    .await;
+    let mut replacement = draw.clone();
+    replacement["name"] = json!("SIMULATED replacement");
+    // An older client must not erase the saved presentation.
+    call(&module, "lots.draw.upsert", json!({"draw":replacement})).await;
+    drop(module);
+    let host = Arc::new(RenderHost::default());
+    let module = open().with_render_host(host.clone());
+    assert_eq!(
+        call(&module, "lots.draw.list", json!({})).await,
+        json!({"draws":[replacement]})
+    );
+    let server = cc_obs::Overlay::start_with_routes(0, host.routes())
+        .await
+        .unwrap();
+    for (query, scale, anchor) in [
+        ("", "1.5", "tl"),
+        ("?scale=0.5&anchor=br", "0.5", "br"),
+        ("?scale=NaN&anchor=bad", "1.5", "tl"),
+        ("?scale=2&scale=1", "1.5", "tl"),
+    ] {
+        let html = reqwest::get(format!("{}lots/simulated-draw{query}", server.url()))
+            .await
+            .unwrap()
+            .text()
+            .await
+            .unwrap();
+        assert!(html.contains(&format!("--draw-scale:{scale}")), "{query}");
+        assert!(
+            html.contains(&format!("data-anchor=\"{anchor}\"")),
+            "{query}"
+        );
+        assert!(html.contains("data-colour=\"azure\""));
+        assert!(html.contains("--draw-reveal:750ms"));
+        assert!(html.contains("background: transparent"));
+    }
+    let saved: Value =
+        serde_json::from_slice(&std::fs::read(root.path().join("draw-settings.json")).unwrap())
+            .unwrap();
+    assert_eq!(saved["draws"][0]["draw"], replacement);
+    assert_eq!(saved["draws"][0]["display"], display);
+    call(
+        &module,
+        "lots.draw.upsert",
+        json!({"draw":replacement,"display":{}}),
+    )
+    .await;
+    let html = reqwest::get(format!("{}lots/simulated-draw", server.url()))
+        .await
+        .unwrap()
+        .text()
+        .await
+        .unwrap();
+    assert!(html.contains("--draw-scale:1"));
+    assert!(html.contains("data-anchor=\"br\""));
+    assert!(html.contains("data-colour=\"gules\""));
+}
+
+#[tokio::test]
 async fn display_query_is_parsed_once_with_safe_defaults_and_no_markup_injection() {
     let host = Arc::new(RenderHost::default());
     let server = cc_obs::Overlay::start_with_routes(0, host.routes())

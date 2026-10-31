@@ -8,6 +8,7 @@ import { lotsCopy as copy } from '../../lots-copy.js';
 import type { Snapshot } from '../../model.js';
 import { FairnessSteps, PolicyRibbon, PoolStage, Ticket, policyReason } from './print.jsx';
 import './room.css';
+import { DrawAppearance } from './appearance.jsx';
 
 function ProposalSealFrame({ seal_slot }: { seal_slot?: ReactNode }) {
   return seal_slot ? <div className="lottery-seal-frame">
@@ -79,6 +80,11 @@ export function ConnectedLotsRoom({ port, simulated, seal_slot }: { port: CoreLo
           </>}
         </HeraldicCard>
         {state.check && <PolicyRibbon result={state.check.result} core />}
+        {draw && <fieldset disabled={state.busy || state.locked}>
+          <DrawAppearance key={draw.draw_id} port={port.appearance(draw.draw_id)} preview={false}
+            hint="Save applies these settings to this draw's OBS page and resets open entries. Finish setup before viewers join. Reloading the room cannot read saved appearance yet; controls start at defaults. Art style is saved; OBS art style is unchanged." />
+          <InkButton size="room" disabled={state.busy || state.locked} onClick={() => { void port.saveDisplay(); }}>Save draw appearance</InkButton>
+        </fieldset>}
         {state.locked && !state.sealed && <p className="cc-aside" role="alert">{copy.core.locked}</p>}
         {state.check?.reasons.map(reason => <p className="cc-aside" key={reason}>{policyReason(reason)}</p>)}
         {draw && <HeraldicCard variant="raised" tone="seal" ink="gules">

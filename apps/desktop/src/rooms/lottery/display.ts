@@ -1,7 +1,8 @@
 import type { DemoStyle } from '../../demo/model.js';
 import type { CSSProperties } from 'react';
+import type { Display } from '@castle-control/contract';
 
-/** Presentation only: LotsDraw has no display payload. Never sent to RPC. */
+/** Local control state; core mode adapts it to the existing upsert display. */
 export type DrawDisplay = {
   size: 'S' | 'M' | 'L'; anchor: 'tl' | 'tr' | 'bl' | 'br' | 'center';
   colour: 'gules' | 'azure' | 'or' | 'key'; art_style: DemoStyle; reveal_ms: number;
@@ -25,6 +26,11 @@ export function createDrawDisplay() {
   };
 }
 export type DrawDisplayPort = ReturnType<typeof createDrawDisplay>;
+export function drawDisplayParams(display: DrawDisplay): Display {
+  const anchors = { tl: 'top-left', tr: 'top-right', bl: 'bottom-left', br: 'bottom-right', center: 'center' } as const;
+  return { size: display.size, anchor: anchors[display.anchor], colour_token: display.colour,
+    art_style: display.art_style, timing_ms: display.reveal_ms };
+}
 export function revealStyle(reveal_ms: number): CSSProperties & { '--draw-reveal': string } {
   return { '--draw-reveal': `${reveal_ms}ms` };
 }

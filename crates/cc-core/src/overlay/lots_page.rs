@@ -1,5 +1,5 @@
 //! Read-only shell and escaped fallback for the cast-only renderer host.
-use super::lots::{DisplayParams, DrawScene};
+use super::lots::{AcceptedDraw, DisplayParams};
 use cc_types::{DrawContent, LotsRandomnessPlan};
 use serde::Serialize;
 
@@ -9,10 +9,12 @@ const WINNER_PLATE_CAP: usize = 8;
 
 /// Waiting pages discover a seal/cast quickly. Completed pages still reload so
 /// revocation/purge clears the result, without interrupting a large winner reveal.
-fn refresh_seconds(scene: Option<&DrawScene>) -> usize {
+fn refresh_seconds(scene: Option<&AcceptedDraw>, timing_ms: u32) -> usize {
     scene
         .and_then(|scene| scene.cast.as_ref())
-        .map_or(1, |cast| 60.max(3 + cast.cast.winners.len()))
+        .map_or(1, |cast| {
+            60.max(3 + cast.cast.winners.len() + timing_ms.div_ceil(1000) as usize)
+        })
 }
 
 fn island(id: &str, value: &impl Serialize) -> Result<String, serde_json::Error> {
@@ -24,7 +26,7 @@ fn island(id: &str, value: &impl Serialize) -> Result<String, serde_json::Error>
 }
 
 pub(super) fn render(
-    scene: Option<&DrawScene>,
+    scene: Option<&AcceptedDraw>,
     display: &DisplayParams,
 ) -> Result<String, serde_json::Error> {
     let mut islands = String::new();
@@ -50,16 +52,18 @@ pub(super) fn render(
     // Deliberately replace the former no-JSON-in-OBS approach: the existing
     // contract validators admit these two values, with no new event schema.
     Ok(format!(
-        "<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><meta http-equiv=\"refresh\" content=\"{}\"><title>Castle Control draw</title><style>{}\n{}</style></head><body><main id=\"draw\" data-content=\"{content}\" data-simulated=\"{simulated}\" data-anchor=\"{}\" style=\"--draw-scale:{}\"><section data-draw-fallback>{body}</section>{islands}</main><script type=\"module\" src=\"/bundle.js\"></script></body></html>",
-        refresh_seconds(scene),
+        "<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><meta http-equiv=\"refresh\" content=\"{}\"><title>Castle Control draw</title><style>{}\n{}</style></head><body><main id=\"draw\" data-content=\"{content}\" data-simulated=\"{simulated}\" data-anchor=\"{}\" data-colour=\"{}\" style=\"--draw-scale:{};--draw-reveal:{}ms\"><section data-draw-fallback>{body}</section>{islands}</main><script type=\"module\" src=\"/bundle.js\"></script></body></html>",
+        refresh_seconds(scene, display.timing_ms),
         include_str!("../../../../packages/tokens/src/generated.css"),
         include_str!("lots.css"),
         display.anchor,
+        display.colour,
         display.scale,
+        display.timing_ms,
     ))
 }
 
-fn fallback(scene: &DrawScene) -> String {
+fn fallback(scene: &AcceptedDraw) -> String {
     let seal = &scene.seal.sealed;
     let source = match &seal.roll.randomness {
         LotsRandomnessPlan::Drand { round, .. } => format!(

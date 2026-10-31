@@ -6,11 +6,16 @@ use axum::{
     response::{Html, IntoResponse, Response},
 };
 use cc_types::{
-    CastResult, DrawContent, DrawId, ErrorCode, ErrorEnvelope, LotsEventPayload, RollSealResult,
+    CastResult, ColourToken, Display, DisplayAnchor, DisplaySize, DrawContent, DrawId, ErrorCode,
+    ErrorEnvelope, LotsEventPayload, RollSealResult,
 };
 use std::sync::Arc;
 
 pub(super) struct DrawScene {
+    pub(super) accepted: Option<AcceptedDraw>,
+    pub(super) display: Option<Display>,
+}
+pub(super) struct AcceptedDraw {
     pub(super) seal: RollSealResult,
     pub(super) cast: Option<CastResult>,
     pub(super) simulated: bool,
@@ -18,6 +23,24 @@ pub(super) struct DrawScene {
 }
 
 impl RenderHost {
+    /// Commit configuration before publishing defaults, under the same lock.
+    pub(crate) fn commit_lots_display_after(
+        &self,
+        id: &DrawId,
+        display: Display,
+        commit: impl FnOnce() -> Result<(), ErrorEnvelope>,
+    ) -> Result<(), ErrorEnvelope> {
+        let mut scenes = self.lots.lock().map_err(|_| unavailable())?;
+        commit()?;
+        scenes
+            .entry(id.clone())
+            .or_insert_with(|| DrawScene {
+                accepted: None,
+                display: None,
+            })
+            .display = Some(display);
+        Ok(())
+    }
     /// Only LotsModule calls this after sealing/cryptographic verification.
     /// There is no HTTP write endpoint and no independent winner selector.
     pub(crate) fn accept_lots(
@@ -30,22 +53,30 @@ impl RenderHost {
         match payload {
             LotsEventPayload::Roll(_) => {}
             LotsEventPayload::Sealed(seal) => {
-                if !scenes.contains_key(&seal.draw_id) && scenes.len() >= 128 {
+                if scenes
+                    .get(&seal.draw_id)
+                    .is_none_or(|s| s.accepted.is_none())
+                    && scenes.values().filter(|s| s.accepted.is_some()).count() >= 128
+                {
                     return Err(unavailable());
                 }
-                scenes.insert(
-                    seal.draw_id.clone(),
-                    DrawScene {
-                        seal: seal.clone(),
-                        cast: None,
-                        simulated,
-                        content: content.ok_or_else(unavailable)?,
-                    },
-                );
+                let scene = scenes
+                    .entry(seal.draw_id.clone())
+                    .or_insert_with(|| DrawScene {
+                        accepted: None,
+                        display: None,
+                    });
+                scene.accepted = Some(AcceptedDraw {
+                    seal: seal.clone(),
+                    cast: None,
+                    simulated,
+                    content: content.ok_or_else(unavailable)?,
+                });
             }
             LotsEventPayload::Cast(cast) => {
                 let scene = scenes
                     .values_mut()
+                    .filter_map(|scene| scene.accepted.as_mut())
                     .find(|scene| scene.seal.draw_run_id == cast.draw_run_id)
                     .ok_or_else(unavailable)?;
                 if cast.cast.seal != scene.seal.sealed.seal {
@@ -70,6 +101,7 @@ impl RenderHost {
             .lock()
             .map_err(|_| unavailable())?
             .get(id)
+            .and_then(|s| s.accepted.as_ref())
             .map(|s| s.seal.clone()))
     }
     pub fn lots_cast(&self, id: &DrawId) -> Result<Option<CastResult>, ErrorEnvelope> {
@@ -78,6 +110,7 @@ impl RenderHost {
             .lock()
             .map_err(|_| unavailable())?
             .get(id)
+            .and_then(|s| s.accepted.as_ref())
             .and_then(|s| s.cast.clone()))
     }
     pub(crate) fn clear_lots(&self) -> Result<(), ErrorEnvelope> {
@@ -89,11 +122,35 @@ impl RenderHost {
 pub(super) struct DisplayParams {
     pub(super) scale: f64,
     pub(super) anchor: &'static str,
+    pub(super) colour: &'static str,
+    pub(super) timing_ms: u32,
 }
 
 /// The only presentation-query door. Unknown keys are ignored; missing, invalid
 /// or repeated known keys use their defaults. Nothing here affects the cast.
-fn display_params(uri: &Uri) -> DisplayParams {
+fn display_params(uri: &Uri, saved: Option<&Display>) -> DisplayParams {
+    let default_scale = match saved.and_then(|d| d.size) {
+        Some(DisplaySize::S) => 0.75,
+        Some(DisplaySize::L) => 1.5,
+        _ => 1.0,
+    };
+    let default_anchor = match saved.and_then(|d| d.anchor) {
+        Some(DisplayAnchor::TopLeft) => "tl",
+        Some(DisplayAnchor::TopRight) => "tr",
+        Some(DisplayAnchor::BottomLeft) => "bl",
+        Some(DisplayAnchor::Center) => "center",
+        _ => "br",
+    };
+    let colour = match saved.and_then(|d| d.colour_token) {
+        Some(ColourToken::Azure) => "azure",
+        Some(ColourToken::Or) => "or",
+        Some(ColourToken::Key) => "key",
+        _ => "gules",
+    };
+    let timing_ms = saved
+        .and_then(|d| d.timing_ms)
+        .map(u32::from)
+        .unwrap_or(1500);
     let pairs = Query::<Vec<(String, String)>>::try_from_uri(uri)
         .map(|Query(pairs)| pairs)
         .unwrap_or_default();
@@ -105,15 +162,21 @@ fn display_params(uri: &Uri) -> DisplayParams {
     let scale = single("scale")
         .and_then(|value| value.parse::<f64>().ok())
         .filter(|value| value.is_finite() && (0.5..=2.0).contains(value))
-        .unwrap_or(1.0);
+        .unwrap_or(default_scale);
     let anchor = match single("anchor") {
         Some("tl") => "tl",
         Some("tr") => "tr",
         Some("bl") => "bl",
         Some("center") => "center",
-        _ => "br",
+        Some("br") => "br",
+        _ => default_anchor,
     };
-    DisplayParams { scale, anchor }
+    DisplayParams {
+        scale,
+        anchor,
+        colour,
+        timing_ms,
+    }
 }
 
 pub(super) async fn page(
@@ -121,14 +184,15 @@ pub(super) async fn page(
     Path(id): Path<String>,
     uri: Uri,
 ) -> Response {
-    let display = display_params(&uri);
     let Ok(id) = DrawId::try_from(id) else {
         return StatusCode::NOT_FOUND.into_response();
     };
     let Ok(scenes) = host.lots.lock() else {
         return StatusCode::SERVICE_UNAVAILABLE.into_response();
     };
-    match lots_page::render(scenes.get(&id), &display) {
+    let scene = scenes.get(&id);
+    let display = display_params(&uri, scene.and_then(|s| s.display.as_ref()));
+    match lots_page::render(scene.and_then(|s| s.accepted.as_ref()), &display) {
         Ok(html) => Html(html).into_response(),
         Err(_) => StatusCode::SERVICE_UNAVAILABLE.into_response(),
     }

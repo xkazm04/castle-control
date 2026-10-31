@@ -21,7 +21,9 @@ export function DrawPreview({ display }: { display: DrawDisplay }) {
   </figure>;
 }
 
-export function DrawAppearance({ port }: { port: DrawDisplayPort }) {
+export function DrawAppearance({ port, hint = copy.journey.display_hint, preview = true }: {
+  port: DrawDisplayPort; hint?: string; preview?: boolean;
+}) {
   const display = useSyncExternalStore(port.subscribe, port.getSnapshot, port.getSnapshot);
   const [revealDraft, setRevealDraft] = useState<string>();
   const commitReveal = (value: string) => { port.commitReveal(value); setRevealDraft(undefined); };
@@ -57,7 +59,7 @@ export function DrawAppearance({ port }: { port: DrawDisplayPort }) {
           }} />
       </FieldGroup>
     </div>
-    <DrawPreview key={`${display.art_style}-${display.reveal_ms}`} display={display} />
-    <p className="cc-aside">{copy.journey.display_hint}</p>
+    {preview && <DrawPreview key={`${display.art_style}-${display.reveal_ms}`} display={display} />}
+    <p className="cc-aside">{hint}</p>
   </HeraldicCard>;
 }

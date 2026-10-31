@@ -1,7 +1,7 @@
 use super::convert::{internal, roll};
 use cc_lots::Roll;
 use cc_store::{DataStore, LedgerEvent, LedgerKind, Store, StoredItem, Timestamp, TwitchUserId};
-use cc_types::{CastResult, DrawId, ErrorEnvelope, LotsDraw, LotsWrit};
+use cc_types::{CastResult, Display, DrawId, ErrorEnvelope, LotsDraw, LotsWrit};
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::{collections::BTreeMap, fs, io::Write, path::Path};
@@ -12,6 +12,51 @@ use std::{collections::BTreeMap, fs, io::Write, path::Path};
 pub(super) struct SavedCast {
     pub result: CastResult,
     pub writ: LotsWrit,
+}
+
+/// One atomic snapshot keeps draw replacements and presentation in step. The
+/// original draws.json is migration input only once this envelope exists.
+#[derive(Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct Settings {
+    draws: Vec<SavedDraw>,
+}
+#[derive(Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct SavedDraw {
+    draw: LotsDraw,
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        deserialize_with = "display_value"
+    )]
+    display: Option<Display>,
+}
+fn display_value<'de, D: serde::Deserializer<'de>>(d: D) -> Result<Option<Display>, D::Error> {
+    Display::deserialize(d).map(Some)
+}
+pub(super) type DrawSettings = (BTreeMap<DrawId, LotsDraw>, BTreeMap<DrawId, Display>);
+
+pub(super) fn load_settings(root: &Path) -> Result<DrawSettings, ErrorEnvelope> {
+    let bytes = match fs::read(root.join("draw-settings.json")) {
+        Ok(bytes) => bytes,
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => {
+            return Ok((load_draws(root)?, BTreeMap::new()));
+        }
+        Err(_) => return Err(internal()),
+    };
+    let settings: Settings = serde_json::from_slice(&bytes).map_err(|_| internal())?;
+    let (mut draws, mut displays) = (BTreeMap::new(), BTreeMap::new());
+    for saved in settings.draws {
+        let id = saved.draw.draw_id.clone();
+        if let Some(display) = saved.display {
+            displays.insert(id.clone(), display);
+        }
+        if draws.insert(id, saved.draw).is_some() {
+            return Err(internal());
+        }
+    }
+    Ok((draws, displays))
 }
 
 pub(super) fn load_draws(root: &Path) -> Result<BTreeMap<DrawId, LotsDraw>, ErrorEnvelope> {
@@ -30,17 +75,27 @@ pub(super) fn load_draws(root: &Path) -> Result<BTreeMap<DrawId, LotsDraw>, Erro
     Ok(draws)
 }
 
-pub(super) fn save_draws(
+pub(super) fn save_settings(
     root: &Path,
     draws: &BTreeMap<DrawId, LotsDraw>,
+    displays: &BTreeMap<DrawId, Display>,
 ) -> Result<(), ErrorEnvelope> {
-    let bytes = serde_json::to_vec(&draws.values().collect::<Vec<_>>()).map_err(|_| internal())?;
-    let temporary = root.join("draws.pending");
+    let settings = Settings {
+        draws: draws
+            .iter()
+            .map(|(id, draw)| SavedDraw {
+                draw: draw.clone(),
+                display: displays.get(id).cloned(),
+            })
+            .collect(),
+    };
+    let bytes = serde_json::to_vec(&settings).map_err(|_| internal())?;
+    let temporary = root.join("draw-settings.pending");
     let mut file = fs::File::create(&temporary).map_err(|_| internal())?;
     file.write_all(&bytes).map_err(|_| internal())?;
     file.sync_all().map_err(|_| internal())?;
     drop(file);
-    fs::rename(temporary, root.join("draws.json")).map_err(|_| internal())
+    fs::rename(temporary, root.join("draw-settings.json")).map_err(|_| internal())
 }
 
 pub(super) fn restored_roll(draw: &LotsDraw, store: &Store) -> Result<Roll, ErrorEnvelope> {

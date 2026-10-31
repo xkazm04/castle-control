@@ -23,3 +23,12 @@ main[data-draw-mounted] { height: min(100%, calc(55vmin * var(--draw-scale))); o
 .draw-winners li { font-size: calc(max(var(--text-body), 3vmin) * var(--draw-scale)); }
 .draw-disclaimer { grid-area: disclaimer; font-size: calc(max(var(--text-body), 2vmin) * var(--draw-scale)); }
 [hidden] { display: none; }
+main { --draw-colour: var(--gules); }
+main[data-colour="azure"] { --draw-colour: var(--azure); }
+main[data-colour="or"] { --draw-colour: var(--or); }
+main[data-colour="key"] { --draw-colour: var(--ink); }
+main h1, main h2 { color: var(--draw-colour); }
+.draw-artwork [fill="var(--gules)"] { fill: var(--draw-colour); }
+.draw-winners li { animation: draw-reveal var(--draw-reveal) var(--ease) both; }
+@keyframes draw-reveal { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .draw-winners li { animation: none; } }

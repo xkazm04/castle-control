@@ -27,6 +27,47 @@ the eligible roll; **Cast the lots** asks core for the derived winners. Open
 [connected controls](../../apps/desktop/src/rooms/lottery/core.tsx),
 [validated client](../../apps/desktop/src/lots-core.ts).
 
+### Saved draw appearance
+
+In core mode, choose size, screen anchor, ink, art style and reveal duration in
+the existing appearance controls, then click **Save draw appearance**. This uses
+`lots.draw.upsert` with its existing optional `display` block; it resets the open
+entry pool just like any other draw upsert. Finish appearance setup before viewers
+join. Sealed draws cannot be changed. Fixture controls remain session-only, with
+the existing simulated/sample-art labels.
+
+An upsert **without** `display` keeps that draw's saved block (Owner rulings 2
+and 5), so older clients and winner-count edits cannot erase it. A supplied block
+replaces the whole block; omitted fields use output defaults. An explicit `{}`
+resets to those defaults. Displays belong to draw IDs, not draw names or the
+currently selected room. No image upload is included.
+
+The private `draw-settings.json` envelope lives beside legacy `draws.json` under
+the Lots root. It contains both draw configurations and their optional display
+blocks, committed together with write, sync and atomic rename. Memory and overlay
+defaults update only after this succeeds. On first load, an installation without
+the envelope reads the original `draws.json` array; its first successful upsert
+writes the envelope. Thereafter the envelope is authoritative; the old file is
+left as migration input and is not a second writable source. A malformed envelope
+refuses startup rather than reverting to stale legacy data. Neither stores chat.
+
+The OBS `/lots/<draw-id>` page restores defaults even before sealing and after
+restart: S/M/L map to scale 0.75/1/1.5, anchors map to the existing corners/center,
+and colour uses the shared gules/azure/or/key ink tokens. Defaults are M,
+bottom-right, gules and 1500 ms. `timing_ms` sets each winner's CSS fade-in
+duration; the cast renderer retains its existing winner cadence and reduced
+motion disables the fade. The transparent viewport layout remains fluid for
+1920×1080 and 1280×720 sources. A valid explicit `scale` or `anchor` URL query
+wins; malformed or duplicate values fall back to the saved defaults. The URL
+parser and its existing allowed query keys are unchanged.
+
+Art style is saved, but the OBS urn has no style hook; only the sample-art preview
+uses it. Saved appearance cannot yet be read back into desktop controls after a
+room reload: `lots.draw.list` still returns `LotsDraw` with no display field.
+Controls therefore start at session defaults, with an explicit notice; changing
+winner count still preserves saved display. A later contract delivery must add
+readback before the room can truthfully show saved appearance after reload.
+
 The native shell launched with its public client ID and owned test channel uses
 system time and the shadow Gatehouse pipeline. Only committed Pass decisions
 admit chat to the pool. It does not seed viewers. **Create no-prize question
