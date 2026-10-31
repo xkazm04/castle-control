@@ -175,8 +175,11 @@ async fn missing_metadata_is_reported_and_empty_pages_can_continue() {
     let mut gate = Gatehouse::open(dir.path()).unwrap();
     let rule = serde_json::from_value(json!({"rule_id":"simulated-rule","name":"Simulated rule",
         "rule_class":"pattern","mode":"shadow","action":"delete","delivery":"streamer","pattern":"simulated"})).unwrap();
-    gate.rules_upsert(cc_types::RulesUpsertParams { rule })
-        .unwrap();
+    gate.rules_upsert(cc_types::RulesUpsertParams {
+        rule,
+        display: None,
+    })
+    .unwrap();
     gate.rules_set_mode(
         serde_json::from_value(json!({"rule_id":"simulated-rule","mode":"shadow"})).unwrap(),
     )

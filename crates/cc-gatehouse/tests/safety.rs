@@ -138,7 +138,10 @@ fn rails_cannot_be_disabled_reclassified_granted_or_replaced() {
         }
         assert!(
             f.gate
-                .rules_upsert(RulesUpsertParams { rule: changed })
+                .rules_upsert(RulesUpsertParams {
+                    rule: changed,
+                    display: None
+                })
                 .is_err()
         );
     }
@@ -156,7 +159,8 @@ fn rails_cannot_be_disabled_reclassified_granted_or_replaced() {
     assert_eq!(
         f.gate
             .rules_upsert(RulesUpsertParams {
-                rule: delivery.clone()
+                rule: delivery.clone(),
+                display: None,
             })
             .unwrap(),
         delivery
@@ -170,7 +174,10 @@ async fn upsert_is_not_arming_consent_and_edits_revoke_consent() {
     rule.mode = RuleMode::Armed;
     assert_eq!(
         f.gate
-            .rules_upsert(RulesUpsertParams { rule: rule.clone() })
+            .rules_upsert(RulesUpsertParams {
+                rule: rule.clone(),
+                display: None
+            })
             .unwrap_err()
             .code,
         ErrorCode::NeedsHuman
@@ -192,7 +199,10 @@ async fn upsert_is_not_arming_consent_and_edits_revoke_consent() {
     changed.pattern = Some("other".into());
     assert!(
         f.gate
-            .rules_upsert(RulesUpsertParams { rule: changed })
+            .rules_upsert(RulesUpsertParams {
+                rule: changed,
+                display: None
+            })
             .is_err()
     );
     f.upsert(rule);
@@ -213,7 +223,10 @@ fn invalid_regex_is_refused_at_upsert_and_does_not_replace_rule() {
     rule.pattern = Some("[".into());
     assert_eq!(
         f.gate
-            .rules_upsert(RulesUpsertParams { rule })
+            .rules_upsert(RulesUpsertParams {
+                rule,
+                display: None
+            })
             .unwrap_err()
             .code,
         ErrorCode::Invalid

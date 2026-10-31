@@ -20,10 +20,10 @@ fn version(root: &Path) -> u32 {
 }
 
 #[test]
-fn fresh_database_is_v2_and_engine_settings_round_trip_after_reopen() {
+fn fresh_database_is_v3_and_engine_settings_round_trip_after_reopen() {
     let dir = tempfile::tempdir().unwrap();
     let mut store = Store::open(dir.path()).unwrap();
-    assert_eq!(version(dir.path()), 2);
+    assert_eq!(version(dir.path()), 3);
     assert!(store.engine_settings().unwrap().values.is_empty());
     let path = dir.path().join("simulated-program.exe");
     let expected = settings(json!({
@@ -47,7 +47,7 @@ fn fresh_database_is_v2_and_engine_settings_round_trip_after_reopen() {
 }
 
 #[test]
-fn v1_migrates_to_v2_preserving_retention_viewer_data_and_ledger_bytes() {
+fn v1_migrates_to_v3_preserving_retention_viewer_data_and_ledger_bytes() {
     let dir = tempfile::tempdir().unwrap();
     // Frozen v1 schema: no v2 implementation is used to construct the fixture.
     let conn = Connection::open(dir.path().join("store.sqlite3")).unwrap();
@@ -89,7 +89,7 @@ fn v1_migrates_to_v2_preserving_retention_viewer_data_and_ledger_bytes() {
     let ledger = format!("{{\"digest\":\"{digest}\",{}\n", &unsigned[1..]);
     std::fs::write(dir.path().join("decisions.jsonl"), ledger.as_bytes()).unwrap();
     let mut store = Store::open(dir.path()).unwrap();
-    assert_eq!(version(dir.path()), 2);
+    assert_eq!(version(dir.path()), 3);
     assert_eq!(store.retention_s().unwrap(), MIN_RETENTION_S);
     assert_eq!(store.items(DataStore::Recordings).unwrap(), vec![item]);
     assert_eq!(

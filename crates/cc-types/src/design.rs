@@ -4,6 +4,20 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use std::num::NonZeroU32;
 
+/// Map-room configuration boundary only; other map-room methods stay pending.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct DesignUpsertParams {
+    pub design: DesignPackage,
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        deserialize_with = "crate::present"
+    )]
+    #[schemars(with = "crate::Display")]
+    pub display: Option<crate::Display>,
+}
+
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct DesignPackage {

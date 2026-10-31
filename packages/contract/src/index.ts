@@ -10,6 +10,7 @@ export { statusGet, bridgeStatusGet, obsStatusGet, obsSourceCreate, gatehouseRul
 export { beaconsVisualList, beaconsCurveSet, beaconsSimulate, beaconsSourceUrl,
   beaconsContributionList } from './generated/beacons-root-validation.js';
 export { lotsDrawList, lotsDrawUpsert, lotsDrawCheck, lotsRollLookup, lotsRollSeal, lotsCast, lotsWritGet } from './generated/validation.js';
+export { lotsImageUpload, maproomDesignUpsert } from './generated/validation.js';
 export { gatehouseHeldResolve, gatehouseDelaySet, gatehouseShieldSet, gatehouseLeaseEnd } from './generated/validation.js';
 export { stewardAsk, stewardWritSeal, stewardWritTear } from './generated/validation.js';
 export { stewardEventPayload } from './generated/validators.mjs';

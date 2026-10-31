@@ -83,6 +83,14 @@ pub struct LotsDraw {
     pub name: String,
     pub policy: LotsDrawPolicy,
     pub rules: LotsRollRules,
+    /// Reference to uploaded local bytes; never a URL or a filesystem path.
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        deserialize_with = "crate::present"
+    )]
+    #[schemars(with = "crate::LocalImageRef")]
+    pub image: Option<crate::LocalImageRef>,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
@@ -95,6 +103,13 @@ pub struct DrawListResult {
 #[serde(deny_unknown_fields)]
 pub struct DrawUpsertParams {
     pub draw: LotsDraw,
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        deserialize_with = "crate::present"
+    )]
+    #[schemars(with = "crate::Display")]
+    pub display: Option<crate::Display>,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]

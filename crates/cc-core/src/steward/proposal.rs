@@ -26,7 +26,10 @@ pub(super) async fn snapshot(
                     .draws
                     .into_iter()
                     .find(|draw| draw.draw_id == diff.after.draw.draw_id)
-                    .map(|draw| DrawUpsertParams { draw }),
+                    .map(|draw| DrawUpsertParams {
+                        draw,
+                        display: None,
+                    }),
                 after: diff.after.clone(),
             })
         }
@@ -37,7 +40,10 @@ pub(super) async fn snapshot(
                     .rules
                     .into_iter()
                     .find(|rule| rule.rule_id == diff.after.rule.rule_id)
-                    .map(|rule| RulesUpsertParams { rule }),
+                    .map(|rule| RulesUpsertParams {
+                        rule,
+                        display: None,
+                    }),
                 after: diff.after.clone(),
             })
         }
@@ -68,7 +74,10 @@ pub(super) async fn snapshot(
                     .visuals
                     .into_iter()
                     .find(|visual| visual.visual_id == diff.after.visual.visual_id)
-                    .map(|visual| VisualUpsertParams { visual }),
+                    .map(|visual| VisualUpsertParams {
+                        visual,
+                        display: None,
+                    }),
                 after: diff.after.clone(),
             })
         }

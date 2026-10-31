@@ -47,7 +47,7 @@ assert(files['gatehouse-validators.d.mts'], 'Gatehouse validators retain typed d
 assert(files['gatehouse-validation.ts'].includes("from './gatehouse-validators.mjs'"));
 assert(!files['gatehouse-validation.ts'].includes("from './validators.mjs'"));
 const lotsMethods = schema.methods.map((method, index) => ({ ...method, index })).filter(method => method.name.startsWith('lots.'));
-assert.equal(lotsMethods.length, 7);
+assert.equal(lotsMethods.length, 8);
 assert(files['lots-validators.mjs'], 'Lots validators have a separate generated module');
 assert(files['lots-validators.d.mts'], 'Lots validators retain typed declarations');
 assert(files['lots-validation.ts'].includes("from './lots-validators.mjs'"));

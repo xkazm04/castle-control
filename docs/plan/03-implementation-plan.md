@@ -710,6 +710,47 @@ These names are the wire contract. A package that needs a new one adds it to `cc
 
 `status.get` carries optional `stream` and `gatehouse` summaries, invalidated by `bridge.status` and `gatehouse.room` respectively; absent summaries mean unknown, never off.
 
+**Owner rulings 2 and 5: shared display and local images (2026-10-31).**
+
+This delivery changes only the wire contract and local asset storage. It registers
+no RPC handler and persists no room display configuration. Existing draw, visual
+and rule upserts without display remain valid. All records deny unknown fields;
+present optional keys reject null. Display itself must be an object, including
+when it is empty. New wire names and types are:
+
+| Method or type | Fields and constraints |
+| --- | --- |
+| `Display` | Optional `size: DisplaySize`, `anchor: DisplayAnchor`, `colour_token: ColourToken`, `art_style: ArtStyle`, `timing_ms: DisplayTimingMs`; one shared type for all four rooms |
+| `DisplaySize` | Exactly `S`, `M`, `L`, reusing the desktop Lot Chamber, Gatehouse and Beacons vocabulary |
+| `DisplayAnchor` | Exactly `top-left`, `top-right`, `center`, `bottom-left`, `bottom-right`, reusing Beacons' existing values; Map Room's local `centre`/underscore values require adaptation in its later delivery |
+| `ColourToken` | Exactly `gules`, `azure`, `or`, `key`, the existing shared ink tokens; no raw colour values |
+| `ArtStyle` | Exactly `heraldic`, `pixel`, `synthwave`, `watercolor`, `anime`, `glass`, reusing `apps/desktop/src/demo/model.ts` presets |
+| `DisplayTimingMs` | Integer milliseconds in 1..=60000; validated by Rust TryFrom and JSON Schema |
+| `DrawUpsertParams` | Existing `draw: LotsDraw`, optional `display: Display` |
+| `VisualUpsertParams` | Existing `visual: Visual`, optional `display: Display` |
+| `RulesUpsertParams` | Existing `rule: Rule`, optional sibling `display: Display`; display governs the room's on-stream output, never the individual rule |
+| `DesignUpsertParams` | `design: DesignPackage`, optional `display: Display`; replaces Pending parameters for `maproom.design.upsert` only; its result stays Pending |
+| `LotsDraw.image` | Optional `image: LocalImageRef`; old draw payloads and results without it still parse |
+| `LocalImageRef` | Exactly 64 lowercase hex SHA-256 characters identifying exact bytes in the app's local store, never a URL or path; existence is a future handler check |
+| `LocalImageContent` | Canonical lowercase hex string, at most 4194304 characters / 2097152 decoded bytes (2 MiB); signatures must identify PNG, JPEG or WebP |
+| `ImageUploadParams` | `content: LocalImageContent`; no MIME, URL, filename or path input |
+| `ImageUploadResult` | `image: LocalImageRef` |
+| `lots.image.upload` | `ImageUploadParams` -> `ImageUploadResult`; typed contract only, not registered or invoked by this delivery |
+
+PNG is identified by 89 50 4E 47 0D 0A 1A 0A, JPEG by FF D8 FF, and WebP by
+RIFF + four bytes + WEBP + VP8-space / VP8L / VP8X. Rust and JSON Schema enforce
+identical signature, lowercase hex, even length and byte cap checks. This identifies
+format, not full image validity: future hosts must decode with resource limits.
+`LOCAL_IMAGE_MAX_BYTES` is the Rust cap constant. Migration v3 stores the exact
+bytes in `image_assets` inside the app-data SQLite database, keyed by their digest;
+no upload opens a caller-controlled path. Forget-user keeps this viewer-free
+configuration; full/revoked purge deletes the blobs. See ADR 0003.
+
+`maproom.design.get`, `maproom.stage.get` and `maproom.turn.run` remain Pending.
+Steward proposals continue to reuse the three existing upsert parameter types;
+this does not add Map Room or upload authority to the Steward. Omitted display
+retains existing behavior; per-room persistence and output wiring are later work.
+
 **WP 1.1 typed payloads (offline contract delivery, 2026-10-25).**
 
 | Type | Fields and constraints |
@@ -719,7 +760,7 @@ These names are the wire contract. A package that needs a new one adds it to `cc
 | `AutoBanGrant` | `expires_at: Timestamp`, positive uint32 `max_bans_per_hour`, `breaker_tripped: bool`; scoped to the containing pattern rule only |
 | `ModeAcknowledgement` | `at: Timestamp`, nonblank `reason`; logged with the mode-change decision before arming |
 | `RulesListResult` | `rules: Rule[]` |
-| `RulesUpsertParams` | `rule: Rule` |
+| `RulesUpsertParams` | `rule: Rule`, optional room-level `display: Display` |
 | `RulesSetModeParams` | `rule_id: RuleId`, `mode: RuleMode`, optional `acknowledgement: ModeAcknowledgement`; acknowledgement required when mode is armed |
 | `DecisionParams` | `decision_id: DecisionId`; identifies the queued or original decision for confirm, dismiss or undo |
 | `PetitionResolveParams` | `decision_id: DecisionId`, `outcome: PetitionOutcome`; the outcome upholds or overturns the original decision |
@@ -1087,7 +1128,7 @@ cloud opt-in enforcement remain the engine's job. The CLI remains slow-lane only
 | --- | --- |
 | core | `status.get`, `settings.get`, `settings.set`, `auth.twitch.start`, `auth.twitch.status`, `auth.twitch.revoke`, `bridge.status.get`, `obs.status.get`, `obs.source.create`, `store.forgetUser`, `store.purgeAll` |
 | gatehouse | `gatehouse.rules.list`, `gatehouse.rules.upsert`, `gatehouse.rules.setMode`, `gatehouse.ban.confirm`, `gatehouse.ban.dismiss`, `gatehouse.decision.undo`, `gatehouse.petition.resolve`, `gatehouse.held.resolve`, `gatehouse.delay.set`, `gatehouse.shield.set`, `gatehouse.lease.end`, `gatehouse.consensus.get`, `gatehouse.drill.run`, `gatehouse.drill.diff`, `gatehouse.recording.import` |
-| lots | `lots.draw.list`, `lots.draw.upsert`, `lots.draw.check`, `lots.roll.lookup`, `lots.roll.seal`, `lots.cast`, `lots.writ.get` |
+| lots | `lots.draw.list`, `lots.draw.upsert`, `lots.image.upload`, `lots.draw.check`, `lots.roll.lookup`, `lots.roll.seal`, `lots.cast`, `lots.writ.get` |
 | beacons | `beacons.visual.list`, `beacons.contribution.list`, `beacons.visual.upsert`, `beacons.curve.set`, `beacons.simulate`, `beacons.source.url`, `beacons.art.status`, `beacons.art.generate` |
 | maproom | `maproom.design.get`, `maproom.design.upsert`, `maproom.stage.get`, `maproom.turn.run` |
 | steward | `steward.ask`, `steward.writ.seal`, `steward.writ.tear` |

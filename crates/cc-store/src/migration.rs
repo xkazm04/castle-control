@@ -7,10 +7,10 @@ pub(crate) fn migrate(conn: &mut Connection) -> Result<()> {
         "PRAGMA journal_mode=DELETE; PRAGMA synchronous=FULL; PRAGMA secure_delete=ON;",
     )?;
     let version: u32 = conn.query_row("PRAGMA user_version", [], |row| row.get(0))?;
-    if version > 2 {
+    if version > 3 {
         return Err(Error::NewerSchema);
     }
-    if version == 2 {
+    if version == 3 {
         return Ok(());
     }
     let tx = conn.transaction()?;
@@ -30,17 +30,27 @@ pub(crate) fn migrate(conn: &mut Connection) -> Result<()> {
     }
     // Preserve v1's INTEGER retention table and constraints exactly. Engine
     // settings have a separate closed key inventory and JSON data values.
-    let keys = crate::ENGINE_SETTING_KEYS
-        .iter()
-        .map(|key| format!("'{key}'"))
-        .collect::<Vec<_>>()
-        .join(",");
-    tx.execute_batch(&format!(
-        "CREATE TABLE engine_settings (
+    if version < 2 {
+        let keys = crate::ENGINE_SETTING_KEYS
+            .iter()
+            .map(|key| format!("'{key}'"))
+            .collect::<Vec<_>>()
+            .join(",");
+        tx.execute_batch(&format!(
+            "CREATE TABLE engine_settings (
          key TEXT PRIMARY KEY NOT NULL CHECK(key IN ({keys})),
          value TEXT NOT NULL CHECK(json_valid(value)));"
+        ))?;
+    }
+    // Uploaded images are viewer-free configuration. BLOBs avoid a second
+    // filesystem lifecycle and any caller-controlled path resolution.
+    tx.execute_batch(&format!(
+        "CREATE TABLE image_assets (
+         digest TEXT PRIMARY KEY NOT NULL CHECK(length(digest)=64 AND digest NOT GLOB '*[^0-9a-f]*'),
+         content BLOB NOT NULL CHECK(typeof(content)='blob' AND length(content) BETWEEN 3 AND {}));",
+        cc_types::LOCAL_IMAGE_MAX_BYTES
     ))?;
-    tx.pragma_update(None, "user_version", 2)?;
+    tx.pragma_update(None, "user_version", 3)?;
     tx.commit()?;
     Ok(())
 }

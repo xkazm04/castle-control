@@ -1,0 +1,256 @@
+{
+  "simulated": true,
+  "payloads": [
+    {
+      "method": "lots.draw.upsert",
+      "params": {
+        "draw": {
+          "draw_id": "simulated-draw",
+          "name": "Simulated draw",
+          "policy": {
+            "content": "question",
+            "paid_entry": false,
+            "paid_weight": false,
+            "subscriber_only": false,
+            "channel_points": false,
+            "free_entry_equal_odds": true,
+            "regions": [],
+            "prize_value_usd_cents": 0,
+            "registration_confirmed": false,
+            "official_rules": true,
+            "twitch_disclaimer": true
+          },
+          "rules": {
+            "pool": {
+              "kind": "chatters"
+            },
+            "winner_count": 1,
+            "cooldown_s": 0,
+            "cohort_caps": [],
+            "weight_curve": {
+              "kind": "equal"
+            },
+            "free_join_equal_odds": true
+          }
+        }
+      }
+    },
+    {
+      "method": "beacons.visual.upsert",
+      "params": {
+        "visual": {
+          "visual_id": "simulated-visual",
+          "name": "Simulated visual",
+          "curve": {
+            "ranges": [
+              {
+                "total": 0,
+                "intensity": 0.0
+              }
+            ],
+            "decay": {
+              "kind": "none"
+            }
+          }
+        }
+      }
+    },
+    {
+      "method": "gatehouse.rules.upsert",
+      "params": {
+        "rule": {
+          "rule_id": "simulated-links",
+          "name": "Simulated links",
+          "rule_class": "pattern",
+          "mode": "shadow",
+          "action": "delete",
+          "delivery": "review",
+          "pattern": "example"
+        }
+      }
+    },
+    {
+      "method": "maproom.design.upsert",
+      "params": {
+        "design": {
+          "design_id": "simulated-design",
+          "content_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "layers": [
+            {
+              "kind": "shape",
+              "shape": "rectangle",
+              "properties": {
+                "x": 0.0,
+                "y": 0.0,
+                "width": 1920,
+                "height": 1080,
+                "scale": 1.0,
+                "opacity": 1.0
+              },
+              "bindings": []
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "valid_displays": [
+    {},
+    {
+      "size": "M",
+      "anchor": "center",
+      "colour_token": "or",
+      "art_style": "heraldic",
+      "timing_ms": 300
+    },
+    {
+      "timing_ms": 1
+    },
+    {
+      "timing_ms": 60000
+    },
+    {
+      "size": "S"
+    },
+    {
+      "size": "M"
+    },
+    {
+      "size": "L"
+    },
+    {
+      "anchor": "top-left"
+    },
+    {
+      "anchor": "top-right"
+    },
+    {
+      "anchor": "center"
+    },
+    {
+      "anchor": "bottom-left"
+    },
+    {
+      "anchor": "bottom-right"
+    },
+    {
+      "colour_token": "gules"
+    },
+    {
+      "colour_token": "azure"
+    },
+    {
+      "colour_token": "or"
+    },
+    {
+      "colour_token": "key"
+    },
+    {
+      "art_style": "heraldic"
+    },
+    {
+      "art_style": "pixel"
+    },
+    {
+      "art_style": "synthwave"
+    },
+    {
+      "art_style": "watercolor"
+    },
+    {
+      "art_style": "anime"
+    },
+    {
+      "art_style": "glass"
+    }
+  ],
+  "invalid_displays": [
+    null,
+    false,
+    [],
+    {
+      "unknown": 1
+    },
+    {
+      "size": null
+    },
+    {
+      "anchor": null
+    },
+    {
+      "colour_token": null
+    },
+    {
+      "art_style": null
+    },
+    {
+      "timing_ms": null
+    },
+    {
+      "size": "XL"
+    },
+    {
+      "size": "m"
+    },
+    {
+      "size": 1
+    },
+    {
+      "anchor": "centre"
+    },
+    {
+      "anchor": "top_left"
+    },
+    {
+      "anchor": "url"
+    },
+    {
+      "colour_token": "#fff"
+    },
+    {
+      "art_style": "oil"
+    },
+    {
+      "timing_ms": 0
+    },
+    {
+      "timing_ms": -1
+    },
+    {
+      "timing_ms": 60001
+    },
+    {
+      "timing_ms": 1.5
+    },
+    {
+      "timing_ms": "300"
+    },
+    {
+      "timing_ms": true
+    }
+  ],
+  "valid_images": [
+    "89504e470d0a1a0a",
+    "ffd8ff00",
+    "52494646000000005745425056503820",
+    "5249464600000000574542505650384c",
+    "52494646000000005745425056503858"
+  ],
+  "invalid_images": [
+    "https://example.invalid/a.png",
+    "file:///C:/a.png",
+    "../image.png",
+    "474946383961",
+    "3c7376673e",
+    "ffd8",
+    "89504e470d0a1a",
+    "524946460000000057454250",
+    "5249464600000000574542504a554e4b",
+    "ffd8ff0",
+    "FFD8FF",
+    "ffd8ff\n",
+    null,
+    42,
+    []
+  ]
+}

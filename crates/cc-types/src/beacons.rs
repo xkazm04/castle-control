@@ -173,6 +173,13 @@ pub struct VisualListResult {
 #[serde(deny_unknown_fields)]
 pub struct VisualUpsertParams {
     pub visual: Visual,
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        deserialize_with = "crate::present"
+    )]
+    #[schemars(with = "crate::Display")]
+    pub display: Option<crate::Display>,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]

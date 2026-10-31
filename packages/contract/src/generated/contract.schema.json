@@ -941,6 +941,17 @@
             ],
             "type": "string"
           },
+          "ArtStyle": {
+            "enum": [
+              "heraldic",
+              "pixel",
+              "synthwave",
+              "watercolor",
+              "anime",
+              "glass"
+            ],
+            "type": "string"
+          },
           "AutoBanGrant": {
             "additionalProperties": false,
             "properties": {
@@ -962,6 +973,61 @@
               "breaker_tripped"
             ],
             "type": "object"
+          },
+          "ColourToken": {
+            "enum": [
+              "gules",
+              "azure",
+              "or",
+              "key"
+            ],
+            "type": "string"
+          },
+          "Display": {
+            "additionalProperties": false,
+            "description": "Reuses the rooms' existing S/M/L, corner/center, ink and demo-style values.",
+            "properties": {
+              "anchor": {
+                "$ref": "#/$defs/DisplayAnchor"
+              },
+              "art_style": {
+                "$ref": "#/$defs/ArtStyle"
+              },
+              "colour_token": {
+                "$ref": "#/$defs/ColourToken"
+              },
+              "size": {
+                "$ref": "#/$defs/DisplaySize"
+              },
+              "timing_ms": {
+                "$ref": "#/$defs/DisplayTimingMs"
+              }
+            },
+            "type": "object"
+          },
+          "DisplayAnchor": {
+            "enum": [
+              "top-left",
+              "top-right",
+              "center",
+              "bottom-left",
+              "bottom-right"
+            ],
+            "type": "string"
+          },
+          "DisplaySize": {
+            "enum": [
+              "S",
+              "M",
+              "L"
+            ],
+            "type": "string"
+          },
+          "DisplayTimingMs": {
+            "format": "uint32",
+            "maximum": 60000,
+            "minimum": 1,
+            "type": "integer"
           },
           "Rule": {
             "additionalProperties": false,
@@ -1208,6 +1274,10 @@
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
         "properties": {
+          "display": {
+            "$ref": "#/$defs/Display",
+            "description": "Governs the room's on-stream output, not the containing rule."
+          },
           "rule": {
             "$ref": "#/$defs/Rule"
           }
@@ -4359,6 +4429,10 @@
       },
       "result": {
         "$defs": {
+          "DesignContentHash": {
+            "pattern": "^[0-9a-f]{64}$(?![\\s\\S])",
+            "type": "string"
+          },
           "DrawContent": {
             "enum": [
               "prize",
@@ -4371,6 +4445,10 @@
           "DrawId": {
             "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$(?![\\s\\S])",
             "type": "string"
+          },
+          "LocalImageRef": {
+            "$ref": "#/$defs/DesignContentHash",
+            "description": "SHA-256 of the exact stored bytes. Resolves only in the app's local store."
           },
           "LotsCohortCap": {
             "additionalProperties": false,
@@ -4404,6 +4482,10 @@
             "properties": {
               "draw_id": {
                 "$ref": "#/$defs/DrawId"
+              },
+              "image": {
+                "$ref": "#/$defs/LocalImageRef",
+                "description": "Reference to uploaded local bytes; never a URL or a filesystem path."
               },
               "name": {
                 "pattern": "\\S",
@@ -4669,6 +4751,76 @@
       "owner": "WP 2.1",
       "params": {
         "$defs": {
+          "ArtStyle": {
+            "enum": [
+              "heraldic",
+              "pixel",
+              "synthwave",
+              "watercolor",
+              "anime",
+              "glass"
+            ],
+            "type": "string"
+          },
+          "ColourToken": {
+            "enum": [
+              "gules",
+              "azure",
+              "or",
+              "key"
+            ],
+            "type": "string"
+          },
+          "DesignContentHash": {
+            "pattern": "^[0-9a-f]{64}$(?![\\s\\S])",
+            "type": "string"
+          },
+          "Display": {
+            "additionalProperties": false,
+            "description": "Reuses the rooms' existing S/M/L, corner/center, ink and demo-style values.",
+            "properties": {
+              "anchor": {
+                "$ref": "#/$defs/DisplayAnchor"
+              },
+              "art_style": {
+                "$ref": "#/$defs/ArtStyle"
+              },
+              "colour_token": {
+                "$ref": "#/$defs/ColourToken"
+              },
+              "size": {
+                "$ref": "#/$defs/DisplaySize"
+              },
+              "timing_ms": {
+                "$ref": "#/$defs/DisplayTimingMs"
+              }
+            },
+            "type": "object"
+          },
+          "DisplayAnchor": {
+            "enum": [
+              "top-left",
+              "top-right",
+              "center",
+              "bottom-left",
+              "bottom-right"
+            ],
+            "type": "string"
+          },
+          "DisplaySize": {
+            "enum": [
+              "S",
+              "M",
+              "L"
+            ],
+            "type": "string"
+          },
+          "DisplayTimingMs": {
+            "format": "uint32",
+            "maximum": 60000,
+            "minimum": 1,
+            "type": "integer"
+          },
           "DrawContent": {
             "enum": [
               "prize",
@@ -4681,6 +4833,10 @@
           "DrawId": {
             "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$(?![\\s\\S])",
             "type": "string"
+          },
+          "LocalImageRef": {
+            "$ref": "#/$defs/DesignContentHash",
+            "description": "SHA-256 of the exact stored bytes. Resolves only in the app's local store."
           },
           "LotsCohortCap": {
             "additionalProperties": false,
@@ -4714,6 +4870,10 @@
             "properties": {
               "draw_id": {
                 "$ref": "#/$defs/DrawId"
+              },
+              "image": {
+                "$ref": "#/$defs/LocalImageRef",
+                "description": "Reference to uploaded local bytes; never a URL or a filesystem path."
               },
               "name": {
                 "pattern": "\\S",
@@ -4960,6 +5120,9 @@
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
         "properties": {
+          "display": {
+            "$ref": "#/$defs/Display"
+          },
           "draw": {
             "$ref": "#/$defs/LotsDraw"
           }
@@ -4972,6 +5135,10 @@
       },
       "result": {
         "$defs": {
+          "DesignContentHash": {
+            "pattern": "^[0-9a-f]{64}$(?![\\s\\S])",
+            "type": "string"
+          },
           "DrawContent": {
             "enum": [
               "prize",
@@ -4984,6 +5151,10 @@
           "DrawId": {
             "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$(?![\\s\\S])",
             "type": "string"
+          },
+          "LocalImageRef": {
+            "$ref": "#/$defs/DesignContentHash",
+            "description": "SHA-256 of the exact stored bytes. Resolves only in the app's local store."
           },
           "LotsCohortCap": {
             "additionalProperties": false,
@@ -5241,6 +5412,10 @@
           "draw_id": {
             "$ref": "#/$defs/DrawId"
           },
+          "image": {
+            "$ref": "#/$defs/LocalImageRef",
+            "description": "Reference to uploaded local bytes; never a URL or a filesystem path."
+          },
           "name": {
             "pattern": "\\S",
             "type": "string"
@@ -5259,6 +5434,56 @@
           "rules"
         ],
         "title": "LotsDraw",
+        "type": "object"
+      }
+    },
+    {
+      "name": "lots.image.upload",
+      "owner": "Owner rulings 2/5",
+      "params": {
+        "$defs": {
+          "LocalImageContent": {
+            "description": "Canonical lowercase hex bytes, capped at 2 MiB decoded (4 MiB on wire).\nBoth parsers sniff PNG's eight-byte signature, JPEG's FF D8 FF prefix,\nor RIFF....WEBP followed by VP8 /VP8L/VP8X. This is format identification,\nnot image decoding; consumers must still decode with resource limits.",
+            "maxLength": 4194304,
+            "pattern": "^(?:89504e470d0a1a0a|ffd8ff|52494646[0-9a-f]{8}57454250565038(?:20|4c|58))(?:[0-9a-f]{2})*$(?![\\s\\S])",
+            "type": "string"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "content": {
+            "$ref": "#/$defs/LocalImageContent"
+          }
+        },
+        "required": [
+          "content"
+        ],
+        "title": "ImageUploadParams",
+        "type": "object"
+      },
+      "result": {
+        "$defs": {
+          "DesignContentHash": {
+            "pattern": "^[0-9a-f]{64}$(?![\\s\\S])",
+            "type": "string"
+          },
+          "LocalImageRef": {
+            "$ref": "#/$defs/DesignContentHash",
+            "description": "SHA-256 of the exact stored bytes. Resolves only in the app's local store."
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "image": {
+            "$ref": "#/$defs/LocalImageRef"
+          }
+        },
+        "required": [
+          "image"
+        ],
+        "title": "ImageUploadResult",
         "type": "object"
       }
     },
@@ -6429,6 +6654,26 @@
       "owner": "WP 3.1",
       "params": {
         "$defs": {
+          "ArtStyle": {
+            "enum": [
+              "heraldic",
+              "pixel",
+              "synthwave",
+              "watercolor",
+              "anime",
+              "glass"
+            ],
+            "type": "string"
+          },
+          "ColourToken": {
+            "enum": [
+              "gules",
+              "azure",
+              "or",
+              "key"
+            ],
+            "type": "string"
+          },
           "ContributionSource": {
             "enum": [
               "cheer",
@@ -6447,6 +6692,52 @@
           "DesignId": {
             "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$(?![\\s\\S])",
             "type": "string"
+          },
+          "Display": {
+            "additionalProperties": false,
+            "description": "Reuses the rooms' existing S/M/L, corner/center, ink and demo-style values.",
+            "properties": {
+              "anchor": {
+                "$ref": "#/$defs/DisplayAnchor"
+              },
+              "art_style": {
+                "$ref": "#/$defs/ArtStyle"
+              },
+              "colour_token": {
+                "$ref": "#/$defs/ColourToken"
+              },
+              "size": {
+                "$ref": "#/$defs/DisplaySize"
+              },
+              "timing_ms": {
+                "$ref": "#/$defs/DisplayTimingMs"
+              }
+            },
+            "type": "object"
+          },
+          "DisplayAnchor": {
+            "enum": [
+              "top-left",
+              "top-right",
+              "center",
+              "bottom-left",
+              "bottom-right"
+            ],
+            "type": "string"
+          },
+          "DisplaySize": {
+            "enum": [
+              "S",
+              "M",
+              "L"
+            ],
+            "type": "string"
+          },
+          "DisplayTimingMs": {
+            "format": "uint32",
+            "maximum": 60000,
+            "minimum": 1,
+            "type": "integer"
           },
           "Intensity": {
             "description": "Finite fraction, not a percentage. Both schema and Rust reject nonfinite values.",
@@ -6686,6 +6977,9 @@
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
         "properties": {
+          "display": {
+            "$ref": "#/$defs/Display"
+          },
           "visual": {
             "$ref": "#/$defs/Visual"
           }
@@ -7759,10 +8053,475 @@
       "name": "maproom.design.upsert",
       "owner": "WP 4.3",
       "params": {
+        "$defs": {
+          "ArtStyle": {
+            "enum": [
+              "heraldic",
+              "pixel",
+              "synthwave",
+              "watercolor",
+              "anime",
+              "glass"
+            ],
+            "type": "string"
+          },
+          "BindingRange": {
+            "additionalProperties": false,
+            "description": "Fixed input is Intensity 0..1. Endpoints are outputs at 0 and 1, so descending\noutput ranges are valid. Binding evaluation is separate renderer work.",
+            "properties": {
+              "at_one": {
+                "$ref": "#/$defs/Intensity"
+              },
+              "at_zero": {
+                "$ref": "#/$defs/Intensity"
+              }
+            },
+            "required": [
+              "at_zero",
+              "at_one"
+            ],
+            "type": "object"
+          },
+          "BindingRange2": {
+            "additionalProperties": false,
+            "description": "Fixed input is Intensity 0..1. Endpoints are outputs at 0 and 1, so descending\noutput ranges are valid. Binding evaluation is separate renderer work.",
+            "properties": {
+              "at_one": {
+                "$ref": "#/$defs/DesignScale"
+              },
+              "at_zero": {
+                "$ref": "#/$defs/DesignScale"
+              }
+            },
+            "required": [
+              "at_zero",
+              "at_one"
+            ],
+            "type": "object"
+          },
+          "BindingRange3": {
+            "additionalProperties": false,
+            "description": "Fixed input is Intensity 0..1. Endpoints are outputs at 0 and 1, so descending\noutput ranges are valid. Binding evaluation is separate renderer work.",
+            "properties": {
+              "at_one": {
+                "format": "double",
+                "type": "number"
+              },
+              "at_zero": {
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "at_zero",
+              "at_one"
+            ],
+            "type": "object"
+          },
+          "ColourToken": {
+            "enum": [
+              "gules",
+              "azure",
+              "or",
+              "key"
+            ],
+            "type": "string"
+          },
+          "DesignContentHash": {
+            "pattern": "^[0-9a-f]{64}$(?![\\s\\S])",
+            "type": "string"
+          },
+          "DesignId": {
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$(?![\\s\\S])",
+            "type": "string"
+          },
+          "DesignLayer": {
+            "oneOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "asset": {
+                    "$ref": "#/$defs/LocalAssetPath"
+                  },
+                  "bindings": {
+                    "items": {
+                      "$ref": "#/$defs/IntensityBinding"
+                    },
+                    "type": "array"
+                  },
+                  "kind": {
+                    "const": "image",
+                    "type": "string"
+                  },
+                  "properties": {
+                    "$ref": "#/$defs/LayerProperties"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "asset",
+                  "properties",
+                  "bindings"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "bindings": {
+                    "items": {
+                      "$ref": "#/$defs/IntensityBinding"
+                    },
+                    "type": "array"
+                  },
+                  "kind": {
+                    "const": "shape",
+                    "type": "string"
+                  },
+                  "properties": {
+                    "$ref": "#/$defs/LayerProperties"
+                  },
+                  "shape": {
+                    "$ref": "#/$defs/ShapeKind"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "shape",
+                  "properties",
+                  "bindings"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "bindings": {
+                    "items": {
+                      "$ref": "#/$defs/IntensityBinding"
+                    },
+                    "type": "array"
+                  },
+                  "kind": {
+                    "const": "text",
+                    "type": "string"
+                  },
+                  "properties": {
+                    "$ref": "#/$defs/LayerProperties"
+                  },
+                  "text": {
+                    "pattern": "\\S",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "text",
+                  "properties",
+                  "bindings"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "bindings": {
+                    "items": {
+                      "$ref": "#/$defs/IntensityBinding"
+                    },
+                    "type": "array"
+                  },
+                  "kind": {
+                    "const": "particle_preset",
+                    "type": "string"
+                  },
+                  "preset": {
+                    "description": "A renderer-owned preset lookup name, never code or a resource URL.",
+                    "pattern": "\\S",
+                    "type": "string"
+                  },
+                  "properties": {
+                    "$ref": "#/$defs/LayerProperties"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "preset",
+                  "properties",
+                  "bindings"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "DesignPackage": {
+            "additionalProperties": false,
+            "properties": {
+              "content_hash": {
+                "$ref": "#/$defs/DesignContentHash",
+                "description": "Claimed SHA-256 content identity. The host must verify it before delivery;\na well-formed digest alone proves neither integrity nor permission."
+              },
+              "design_id": {
+                "$ref": "#/$defs/DesignId"
+              },
+              "layers": {
+                "description": "Back-to-front paint order, retained exactly by serialization.",
+                "items": {
+                  "$ref": "#/$defs/DesignLayer"
+                },
+                "minItems": 1,
+                "type": "array"
+              },
+              "privileges": {
+                "$ref": "#/$defs/DesignPrivileges",
+                "description": "Omission grants no script capability. Present null is never omission."
+              }
+            },
+            "required": [
+              "design_id",
+              "content_hash",
+              "layers"
+            ],
+            "type": "object"
+          },
+          "DesignPrivileges": {
+            "oneOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "kind": {
+                    "const": "data_only",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "description": "Explicit script entry points, relative to this package. This declaration\ndoes not authorize execution: the overlay host still checks consent.",
+                "properties": {
+                  "kind": {
+                    "const": "scripts",
+                    "type": "string"
+                  },
+                  "scripts": {
+                    "items": {
+                      "$ref": "#/$defs/LocalAssetPath"
+                    },
+                    "minItems": 1,
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "scripts"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "DesignScale": {
+            "format": "double",
+            "minimum": 0,
+            "type": "number"
+          },
+          "Display": {
+            "additionalProperties": false,
+            "description": "Reuses the rooms' existing S/M/L, corner/center, ink and demo-style values.",
+            "properties": {
+              "anchor": {
+                "$ref": "#/$defs/DisplayAnchor"
+              },
+              "art_style": {
+                "$ref": "#/$defs/ArtStyle"
+              },
+              "colour_token": {
+                "$ref": "#/$defs/ColourToken"
+              },
+              "size": {
+                "$ref": "#/$defs/DisplaySize"
+              },
+              "timing_ms": {
+                "$ref": "#/$defs/DisplayTimingMs"
+              }
+            },
+            "type": "object"
+          },
+          "DisplayAnchor": {
+            "enum": [
+              "top-left",
+              "top-right",
+              "center",
+              "bottom-left",
+              "bottom-right"
+            ],
+            "type": "string"
+          },
+          "DisplaySize": {
+            "enum": [
+              "S",
+              "M",
+              "L"
+            ],
+            "type": "string"
+          },
+          "DisplayTimingMs": {
+            "format": "uint32",
+            "maximum": 60000,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "Intensity": {
+            "description": "Finite fraction, not a percentage. Both schema and Rust reject nonfinite values.",
+            "format": "double",
+            "maximum": 1,
+            "minimum": 0,
+            "type": "number"
+          },
+          "IntensityBinding": {
+            "description": "The property tag also selects the output domain; opacity cannot exceed 1,\nscale cannot be negative, and positions must be finite. No arbitrary CSS.",
+            "oneOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "output_range": {
+                    "$ref": "#/$defs/BindingRange"
+                  },
+                  "property": {
+                    "const": "opacity",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "property",
+                  "output_range"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "output_range": {
+                    "$ref": "#/$defs/BindingRange2"
+                  },
+                  "property": {
+                    "const": "scale",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "property",
+                  "output_range"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "output_range": {
+                    "$ref": "#/$defs/BindingRange3"
+                  },
+                  "property": {
+                    "const": "x",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "property",
+                  "output_range"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "output_range": {
+                    "$ref": "#/$defs/BindingRange3"
+                  },
+                  "property": {
+                    "const": "y",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "property",
+                  "output_range"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "LayerProperties": {
+            "additionalProperties": false,
+            "description": "Base layout in logical pixels; scale is a nonnegative multiplier, opacity a\nfraction. Text is literal text, not HTML; no layer carries arbitrary CSS/JS.",
+            "properties": {
+              "height": {
+                "format": "uint32",
+                "minimum": 1,
+                "type": "integer"
+              },
+              "opacity": {
+                "$ref": "#/$defs/Intensity"
+              },
+              "scale": {
+                "$ref": "#/$defs/DesignScale"
+              },
+              "width": {
+                "format": "uint32",
+                "minimum": 1,
+                "type": "integer"
+              },
+              "x": {
+                "format": "double",
+                "type": "number"
+              },
+              "y": {
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "x",
+              "y",
+              "width",
+              "height",
+              "scale",
+              "opacity"
+            ],
+            "type": "object"
+          },
+          "LocalAssetPath": {
+            "description": "Canonical ASCII package-relative path. No scheme, authority, root, traversal,\npercent escapes, backslashes, query or fragment. The host must additionally\nconfine filesystem resolution (including symlinks) to its local asset root.",
+            "pattern": "^[A-Za-z0-9_-][A-Za-z0-9._-]*(/[A-Za-z0-9_-][A-Za-z0-9._-]*)*$(?![\\s\\S])",
+            "type": "string"
+          },
+          "ShapeKind": {
+            "enum": [
+              "rectangle",
+              "ellipse"
+            ],
+            "type": "string"
+          }
+        },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Deliberately unusable until its owning WP supplies request/result shapes.",
-        "not": {},
-        "title": "Pending"
+        "additionalProperties": false,
+        "description": "Map-room configuration boundary only; other map-room methods stay pending.",
+        "properties": {
+          "design": {
+            "$ref": "#/$defs/DesignPackage"
+          },
+          "display": {
+            "$ref": "#/$defs/Display"
+          }
+        },
+        "required": [
+          "design"
+        ],
+        "title": "DesignUpsertParams",
+        "type": "object"
       },
       "result": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -7856,6 +8615,17 @@
             ],
             "type": "string"
           },
+          "ArtStyle": {
+            "enum": [
+              "heraldic",
+              "pixel",
+              "synthwave",
+              "watercolor",
+              "anime",
+              "glass"
+            ],
+            "type": "string"
+          },
           "AutoBanGrant": {
             "additionalProperties": false,
             "properties": {
@@ -7877,6 +8647,15 @@
               "breaker_tripped"
             ],
             "type": "object"
+          },
+          "ColourToken": {
+            "enum": [
+              "gules",
+              "azure",
+              "or",
+              "key"
+            ],
+            "type": "string"
           },
           "ContributionSource": {
             "enum": [
@@ -7935,9 +8714,59 @@
             ],
             "description": "JSON data excluding null, recursively. Unknown/absent values are omitted."
           },
+          "DesignContentHash": {
+            "pattern": "^[0-9a-f]{64}$(?![\\s\\S])",
+            "type": "string"
+          },
           "DesignId": {
             "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$(?![\\s\\S])",
             "type": "string"
+          },
+          "Display": {
+            "additionalProperties": false,
+            "description": "Reuses the rooms' existing S/M/L, corner/center, ink and demo-style values.",
+            "properties": {
+              "anchor": {
+                "$ref": "#/$defs/DisplayAnchor"
+              },
+              "art_style": {
+                "$ref": "#/$defs/ArtStyle"
+              },
+              "colour_token": {
+                "$ref": "#/$defs/ColourToken"
+              },
+              "size": {
+                "$ref": "#/$defs/DisplaySize"
+              },
+              "timing_ms": {
+                "$ref": "#/$defs/DisplayTimingMs"
+              }
+            },
+            "type": "object"
+          },
+          "DisplayAnchor": {
+            "enum": [
+              "top-left",
+              "top-right",
+              "center",
+              "bottom-left",
+              "bottom-right"
+            ],
+            "type": "string"
+          },
+          "DisplaySize": {
+            "enum": [
+              "S",
+              "M",
+              "L"
+            ],
+            "type": "string"
+          },
+          "DisplayTimingMs": {
+            "format": "uint32",
+            "maximum": 60000,
+            "minimum": 1,
+            "type": "integer"
           },
           "DrawContent": {
             "enum": [
@@ -7955,6 +8784,9 @@
           "DrawUpsertParams": {
             "additionalProperties": false,
             "properties": {
+              "display": {
+                "$ref": "#/$defs/Display"
+              },
               "draw": {
                 "$ref": "#/$defs/LotsDraw"
               }
@@ -8085,6 +8917,10 @@
             ],
             "type": "object"
           },
+          "LocalImageRef": {
+            "$ref": "#/$defs/DesignContentHash",
+            "description": "SHA-256 of the exact stored bytes. Resolves only in the app's local store."
+          },
           "LotsCohortCap": {
             "additionalProperties": false,
             "properties": {
@@ -8117,6 +8953,10 @@
             "properties": {
               "draw_id": {
                 "$ref": "#/$defs/DrawId"
+              },
+              "image": {
+                "$ref": "#/$defs/LocalImageRef",
+                "description": "Reference to uploaded local bytes; never a URL or a filesystem path."
               },
               "name": {
                 "pattern": "\\S",
@@ -8595,6 +9435,10 @@
           "RulesUpsertParams": {
             "additionalProperties": false,
             "properties": {
+              "display": {
+                "$ref": "#/$defs/Display",
+                "description": "Governs the room's on-stream output, not the containing rule."
+              },
               "rule": {
                 "$ref": "#/$defs/Rule"
               }
@@ -8819,6 +9663,9 @@
           "VisualUpsertParams": {
             "additionalProperties": false,
             "properties": {
+              "display": {
+                "$ref": "#/$defs/Display"
+              },
               "visual": {
                 "$ref": "#/$defs/Visual"
               }
@@ -9179,6 +10026,17 @@
             ],
             "type": "string"
           },
+          "ArtStyle": {
+            "enum": [
+              "heraldic",
+              "pixel",
+              "synthwave",
+              "watercolor",
+              "anime",
+              "glass"
+            ],
+            "type": "string"
+          },
           "AutoBanGrant": {
             "additionalProperties": false,
             "properties": {
@@ -9200,6 +10058,15 @@
               "breaker_tripped"
             ],
             "type": "object"
+          },
+          "ColourToken": {
+            "enum": [
+              "gules",
+              "azure",
+              "or",
+              "key"
+            ],
+            "type": "string"
           },
           "ContributionSource": {
             "enum": [
@@ -9258,9 +10125,59 @@
             ],
             "description": "JSON data excluding null, recursively. Unknown/absent values are omitted."
           },
+          "DesignContentHash": {
+            "pattern": "^[0-9a-f]{64}$(?![\\s\\S])",
+            "type": "string"
+          },
           "DesignId": {
             "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$(?![\\s\\S])",
             "type": "string"
+          },
+          "Display": {
+            "additionalProperties": false,
+            "description": "Reuses the rooms' existing S/M/L, corner/center, ink and demo-style values.",
+            "properties": {
+              "anchor": {
+                "$ref": "#/$defs/DisplayAnchor"
+              },
+              "art_style": {
+                "$ref": "#/$defs/ArtStyle"
+              },
+              "colour_token": {
+                "$ref": "#/$defs/ColourToken"
+              },
+              "size": {
+                "$ref": "#/$defs/DisplaySize"
+              },
+              "timing_ms": {
+                "$ref": "#/$defs/DisplayTimingMs"
+              }
+            },
+            "type": "object"
+          },
+          "DisplayAnchor": {
+            "enum": [
+              "top-left",
+              "top-right",
+              "center",
+              "bottom-left",
+              "bottom-right"
+            ],
+            "type": "string"
+          },
+          "DisplaySize": {
+            "enum": [
+              "S",
+              "M",
+              "L"
+            ],
+            "type": "string"
+          },
+          "DisplayTimingMs": {
+            "format": "uint32",
+            "maximum": 60000,
+            "minimum": 1,
+            "type": "integer"
           },
           "DrawContent": {
             "enum": [
@@ -9278,6 +10195,9 @@
           "DrawUpsertParams": {
             "additionalProperties": false,
             "properties": {
+              "display": {
+                "$ref": "#/$defs/Display"
+              },
               "draw": {
                 "$ref": "#/$defs/LotsDraw"
               }
@@ -9408,6 +10328,10 @@
             ],
             "type": "object"
           },
+          "LocalImageRef": {
+            "$ref": "#/$defs/DesignContentHash",
+            "description": "SHA-256 of the exact stored bytes. Resolves only in the app's local store."
+          },
           "LotsCohortCap": {
             "additionalProperties": false,
             "properties": {
@@ -9440,6 +10364,10 @@
             "properties": {
               "draw_id": {
                 "$ref": "#/$defs/DrawId"
+              },
+              "image": {
+                "$ref": "#/$defs/LocalImageRef",
+                "description": "Reference to uploaded local bytes; never a URL or a filesystem path."
               },
               "name": {
                 "pattern": "\\S",
@@ -9918,6 +10846,10 @@
           "RulesUpsertParams": {
             "additionalProperties": false,
             "properties": {
+              "display": {
+                "$ref": "#/$defs/Display",
+                "description": "Governs the room's on-stream output, not the containing rule."
+              },
               "rule": {
                 "$ref": "#/$defs/Rule"
               }
@@ -10142,6 +11074,9 @@
           "VisualUpsertParams": {
             "additionalProperties": false,
             "properties": {
+              "display": {
+                "$ref": "#/$defs/Display"
+              },
               "visual": {
                 "$ref": "#/$defs/Visual"
               }
@@ -10502,6 +11437,17 @@
             ],
             "type": "string"
           },
+          "ArtStyle": {
+            "enum": [
+              "heraldic",
+              "pixel",
+              "synthwave",
+              "watercolor",
+              "anime",
+              "glass"
+            ],
+            "type": "string"
+          },
           "AutoBanGrant": {
             "additionalProperties": false,
             "properties": {
@@ -10523,6 +11469,15 @@
               "breaker_tripped"
             ],
             "type": "object"
+          },
+          "ColourToken": {
+            "enum": [
+              "gules",
+              "azure",
+              "or",
+              "key"
+            ],
+            "type": "string"
           },
           "ContributionSource": {
             "enum": [
@@ -10581,9 +11536,59 @@
             ],
             "description": "JSON data excluding null, recursively. Unknown/absent values are omitted."
           },
+          "DesignContentHash": {
+            "pattern": "^[0-9a-f]{64}$(?![\\s\\S])",
+            "type": "string"
+          },
           "DesignId": {
             "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$(?![\\s\\S])",
             "type": "string"
+          },
+          "Display": {
+            "additionalProperties": false,
+            "description": "Reuses the rooms' existing S/M/L, corner/center, ink and demo-style values.",
+            "properties": {
+              "anchor": {
+                "$ref": "#/$defs/DisplayAnchor"
+              },
+              "art_style": {
+                "$ref": "#/$defs/ArtStyle"
+              },
+              "colour_token": {
+                "$ref": "#/$defs/ColourToken"
+              },
+              "size": {
+                "$ref": "#/$defs/DisplaySize"
+              },
+              "timing_ms": {
+                "$ref": "#/$defs/DisplayTimingMs"
+              }
+            },
+            "type": "object"
+          },
+          "DisplayAnchor": {
+            "enum": [
+              "top-left",
+              "top-right",
+              "center",
+              "bottom-left",
+              "bottom-right"
+            ],
+            "type": "string"
+          },
+          "DisplaySize": {
+            "enum": [
+              "S",
+              "M",
+              "L"
+            ],
+            "type": "string"
+          },
+          "DisplayTimingMs": {
+            "format": "uint32",
+            "maximum": 60000,
+            "minimum": 1,
+            "type": "integer"
           },
           "DrawContent": {
             "enum": [
@@ -10601,6 +11606,9 @@
           "DrawUpsertParams": {
             "additionalProperties": false,
             "properties": {
+              "display": {
+                "$ref": "#/$defs/Display"
+              },
               "draw": {
                 "$ref": "#/$defs/LotsDraw"
               }
@@ -10731,6 +11739,10 @@
             ],
             "type": "object"
           },
+          "LocalImageRef": {
+            "$ref": "#/$defs/DesignContentHash",
+            "description": "SHA-256 of the exact stored bytes. Resolves only in the app's local store."
+          },
           "LotsCohortCap": {
             "additionalProperties": false,
             "properties": {
@@ -10763,6 +11775,10 @@
             "properties": {
               "draw_id": {
                 "$ref": "#/$defs/DrawId"
+              },
+              "image": {
+                "$ref": "#/$defs/LocalImageRef",
+                "description": "Reference to uploaded local bytes; never a URL or a filesystem path."
               },
               "name": {
                 "pattern": "\\S",
@@ -11241,6 +12257,10 @@
           "RulesUpsertParams": {
             "additionalProperties": false,
             "properties": {
+              "display": {
+                "$ref": "#/$defs/Display",
+                "description": "Governs the room's on-stream output, not the containing rule."
+              },
               "rule": {
                 "$ref": "#/$defs/Rule"
               }
@@ -11465,6 +12485,9 @@
           "VisualUpsertParams": {
             "additionalProperties": false,
             "properties": {
+              "display": {
+                "$ref": "#/$defs/Display"
+              },
               "visual": {
                 "$ref": "#/$defs/Visual"
               }
@@ -12904,6 +13927,19 @@
       "title": "Action",
       "type": "string"
     },
+    "ArtStyle": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "enum": [
+        "heraldic",
+        "pixel",
+        "synthwave",
+        "watercolor",
+        "anime",
+        "glass"
+      ],
+      "title": "ArtStyle",
+      "type": "string"
+    },
     "AskParams": {
       "$defs": {
         "WritChamber": {
@@ -12954,6 +13990,17 @@
           ],
           "type": "string"
         },
+        "ArtStyle": {
+          "enum": [
+            "heraldic",
+            "pixel",
+            "synthwave",
+            "watercolor",
+            "anime",
+            "glass"
+          ],
+          "type": "string"
+        },
         "AutoBanGrant": {
           "additionalProperties": false,
           "properties": {
@@ -12975,6 +14022,15 @@
             "breaker_tripped"
           ],
           "type": "object"
+        },
+        "ColourToken": {
+          "enum": [
+            "gules",
+            "azure",
+            "or",
+            "key"
+          ],
+          "type": "string"
         },
         "ContributionSource": {
           "enum": [
@@ -13033,9 +14089,59 @@
           ],
           "description": "JSON data excluding null, recursively. Unknown/absent values are omitted."
         },
+        "DesignContentHash": {
+          "pattern": "^[0-9a-f]{64}$(?![\\s\\S])",
+          "type": "string"
+        },
         "DesignId": {
           "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$(?![\\s\\S])",
           "type": "string"
+        },
+        "Display": {
+          "additionalProperties": false,
+          "description": "Reuses the rooms' existing S/M/L, corner/center, ink and demo-style values.",
+          "properties": {
+            "anchor": {
+              "$ref": "#/$defs/DisplayAnchor"
+            },
+            "art_style": {
+              "$ref": "#/$defs/ArtStyle"
+            },
+            "colour_token": {
+              "$ref": "#/$defs/ColourToken"
+            },
+            "size": {
+              "$ref": "#/$defs/DisplaySize"
+            },
+            "timing_ms": {
+              "$ref": "#/$defs/DisplayTimingMs"
+            }
+          },
+          "type": "object"
+        },
+        "DisplayAnchor": {
+          "enum": [
+            "top-left",
+            "top-right",
+            "center",
+            "bottom-left",
+            "bottom-right"
+          ],
+          "type": "string"
+        },
+        "DisplaySize": {
+          "enum": [
+            "S",
+            "M",
+            "L"
+          ],
+          "type": "string"
+        },
+        "DisplayTimingMs": {
+          "format": "uint32",
+          "maximum": 60000,
+          "minimum": 1,
+          "type": "integer"
         },
         "DrawContent": {
           "enum": [
@@ -13053,6 +14159,9 @@
         "DrawUpsertParams": {
           "additionalProperties": false,
           "properties": {
+            "display": {
+              "$ref": "#/$defs/Display"
+            },
             "draw": {
               "$ref": "#/$defs/LotsDraw"
             }
@@ -13183,6 +14292,10 @@
           ],
           "type": "object"
         },
+        "LocalImageRef": {
+          "$ref": "#/$defs/DesignContentHash",
+          "description": "SHA-256 of the exact stored bytes. Resolves only in the app's local store."
+        },
         "LotsCohortCap": {
           "additionalProperties": false,
           "properties": {
@@ -13215,6 +14328,10 @@
           "properties": {
             "draw_id": {
               "$ref": "#/$defs/DrawId"
+            },
+            "image": {
+              "$ref": "#/$defs/LocalImageRef",
+              "description": "Reference to uploaded local bytes; never a URL or a filesystem path."
             },
             "name": {
               "pattern": "\\S",
@@ -13693,6 +14810,10 @@
         "RulesUpsertParams": {
           "additionalProperties": false,
           "properties": {
+            "display": {
+              "$ref": "#/$defs/Display",
+              "description": "Governs the room's on-stream output, not the containing rule."
+            },
             "rule": {
               "$ref": "#/$defs/Rule"
             }
@@ -13917,6 +15038,9 @@
         "VisualUpsertParams": {
           "additionalProperties": false,
           "properties": {
+            "display": {
+              "$ref": "#/$defs/Display"
+            },
             "visual": {
               "$ref": "#/$defs/Visual"
             }
@@ -15107,6 +16231,17 @@
       "title": "CliProvider",
       "type": "string"
     },
+    "ColourToken": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "enum": [
+        "gules",
+        "azure",
+        "or",
+        "key"
+      ],
+      "title": "ColourToken",
+      "type": "string"
+    },
     "ConsensusEventPayload": {
       "$defs": {
         "ConsensusDelta": {
@@ -15800,6 +16935,577 @@
       "title": "DesignStage",
       "type": "string"
     },
+    "DesignUpsertParams": {
+      "$defs": {
+        "ArtStyle": {
+          "enum": [
+            "heraldic",
+            "pixel",
+            "synthwave",
+            "watercolor",
+            "anime",
+            "glass"
+          ],
+          "type": "string"
+        },
+        "BindingRange": {
+          "additionalProperties": false,
+          "description": "Fixed input is Intensity 0..1. Endpoints are outputs at 0 and 1, so descending\noutput ranges are valid. Binding evaluation is separate renderer work.",
+          "properties": {
+            "at_one": {
+              "$ref": "#/$defs/Intensity"
+            },
+            "at_zero": {
+              "$ref": "#/$defs/Intensity"
+            }
+          },
+          "required": [
+            "at_zero",
+            "at_one"
+          ],
+          "type": "object"
+        },
+        "BindingRange2": {
+          "additionalProperties": false,
+          "description": "Fixed input is Intensity 0..1. Endpoints are outputs at 0 and 1, so descending\noutput ranges are valid. Binding evaluation is separate renderer work.",
+          "properties": {
+            "at_one": {
+              "$ref": "#/$defs/DesignScale"
+            },
+            "at_zero": {
+              "$ref": "#/$defs/DesignScale"
+            }
+          },
+          "required": [
+            "at_zero",
+            "at_one"
+          ],
+          "type": "object"
+        },
+        "BindingRange3": {
+          "additionalProperties": false,
+          "description": "Fixed input is Intensity 0..1. Endpoints are outputs at 0 and 1, so descending\noutput ranges are valid. Binding evaluation is separate renderer work.",
+          "properties": {
+            "at_one": {
+              "format": "double",
+              "type": "number"
+            },
+            "at_zero": {
+              "format": "double",
+              "type": "number"
+            }
+          },
+          "required": [
+            "at_zero",
+            "at_one"
+          ],
+          "type": "object"
+        },
+        "ColourToken": {
+          "enum": [
+            "gules",
+            "azure",
+            "or",
+            "key"
+          ],
+          "type": "string"
+        },
+        "DesignContentHash": {
+          "pattern": "^[0-9a-f]{64}$(?![\\s\\S])",
+          "type": "string"
+        },
+        "DesignId": {
+          "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$(?![\\s\\S])",
+          "type": "string"
+        },
+        "DesignLayer": {
+          "oneOf": [
+            {
+              "additionalProperties": false,
+              "properties": {
+                "asset": {
+                  "$ref": "#/$defs/LocalAssetPath"
+                },
+                "bindings": {
+                  "items": {
+                    "$ref": "#/$defs/IntensityBinding"
+                  },
+                  "type": "array"
+                },
+                "kind": {
+                  "const": "image",
+                  "type": "string"
+                },
+                "properties": {
+                  "$ref": "#/$defs/LayerProperties"
+                }
+              },
+              "required": [
+                "kind",
+                "asset",
+                "properties",
+                "bindings"
+              ],
+              "type": "object"
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "bindings": {
+                  "items": {
+                    "$ref": "#/$defs/IntensityBinding"
+                  },
+                  "type": "array"
+                },
+                "kind": {
+                  "const": "shape",
+                  "type": "string"
+                },
+                "properties": {
+                  "$ref": "#/$defs/LayerProperties"
+                },
+                "shape": {
+                  "$ref": "#/$defs/ShapeKind"
+                }
+              },
+              "required": [
+                "kind",
+                "shape",
+                "properties",
+                "bindings"
+              ],
+              "type": "object"
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "bindings": {
+                  "items": {
+                    "$ref": "#/$defs/IntensityBinding"
+                  },
+                  "type": "array"
+                },
+                "kind": {
+                  "const": "text",
+                  "type": "string"
+                },
+                "properties": {
+                  "$ref": "#/$defs/LayerProperties"
+                },
+                "text": {
+                  "pattern": "\\S",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "kind",
+                "text",
+                "properties",
+                "bindings"
+              ],
+              "type": "object"
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "bindings": {
+                  "items": {
+                    "$ref": "#/$defs/IntensityBinding"
+                  },
+                  "type": "array"
+                },
+                "kind": {
+                  "const": "particle_preset",
+                  "type": "string"
+                },
+                "preset": {
+                  "description": "A renderer-owned preset lookup name, never code or a resource URL.",
+                  "pattern": "\\S",
+                  "type": "string"
+                },
+                "properties": {
+                  "$ref": "#/$defs/LayerProperties"
+                }
+              },
+              "required": [
+                "kind",
+                "preset",
+                "properties",
+                "bindings"
+              ],
+              "type": "object"
+            }
+          ]
+        },
+        "DesignPackage": {
+          "additionalProperties": false,
+          "properties": {
+            "content_hash": {
+              "$ref": "#/$defs/DesignContentHash",
+              "description": "Claimed SHA-256 content identity. The host must verify it before delivery;\na well-formed digest alone proves neither integrity nor permission."
+            },
+            "design_id": {
+              "$ref": "#/$defs/DesignId"
+            },
+            "layers": {
+              "description": "Back-to-front paint order, retained exactly by serialization.",
+              "items": {
+                "$ref": "#/$defs/DesignLayer"
+              },
+              "minItems": 1,
+              "type": "array"
+            },
+            "privileges": {
+              "$ref": "#/$defs/DesignPrivileges",
+              "description": "Omission grants no script capability. Present null is never omission."
+            }
+          },
+          "required": [
+            "design_id",
+            "content_hash",
+            "layers"
+          ],
+          "type": "object"
+        },
+        "DesignPrivileges": {
+          "oneOf": [
+            {
+              "additionalProperties": false,
+              "properties": {
+                "kind": {
+                  "const": "data_only",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "kind"
+              ],
+              "type": "object"
+            },
+            {
+              "additionalProperties": false,
+              "description": "Explicit script entry points, relative to this package. This declaration\ndoes not authorize execution: the overlay host still checks consent.",
+              "properties": {
+                "kind": {
+                  "const": "scripts",
+                  "type": "string"
+                },
+                "scripts": {
+                  "items": {
+                    "$ref": "#/$defs/LocalAssetPath"
+                  },
+                  "minItems": 1,
+                  "type": "array"
+                }
+              },
+              "required": [
+                "kind",
+                "scripts"
+              ],
+              "type": "object"
+            }
+          ]
+        },
+        "DesignScale": {
+          "format": "double",
+          "minimum": 0,
+          "type": "number"
+        },
+        "Display": {
+          "additionalProperties": false,
+          "description": "Reuses the rooms' existing S/M/L, corner/center, ink and demo-style values.",
+          "properties": {
+            "anchor": {
+              "$ref": "#/$defs/DisplayAnchor"
+            },
+            "art_style": {
+              "$ref": "#/$defs/ArtStyle"
+            },
+            "colour_token": {
+              "$ref": "#/$defs/ColourToken"
+            },
+            "size": {
+              "$ref": "#/$defs/DisplaySize"
+            },
+            "timing_ms": {
+              "$ref": "#/$defs/DisplayTimingMs"
+            }
+          },
+          "type": "object"
+        },
+        "DisplayAnchor": {
+          "enum": [
+            "top-left",
+            "top-right",
+            "center",
+            "bottom-left",
+            "bottom-right"
+          ],
+          "type": "string"
+        },
+        "DisplaySize": {
+          "enum": [
+            "S",
+            "M",
+            "L"
+          ],
+          "type": "string"
+        },
+        "DisplayTimingMs": {
+          "format": "uint32",
+          "maximum": 60000,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "Intensity": {
+          "description": "Finite fraction, not a percentage. Both schema and Rust reject nonfinite values.",
+          "format": "double",
+          "maximum": 1,
+          "minimum": 0,
+          "type": "number"
+        },
+        "IntensityBinding": {
+          "description": "The property tag also selects the output domain; opacity cannot exceed 1,\nscale cannot be negative, and positions must be finite. No arbitrary CSS.",
+          "oneOf": [
+            {
+              "additionalProperties": false,
+              "properties": {
+                "output_range": {
+                  "$ref": "#/$defs/BindingRange"
+                },
+                "property": {
+                  "const": "opacity",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "property",
+                "output_range"
+              ],
+              "type": "object"
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "output_range": {
+                  "$ref": "#/$defs/BindingRange2"
+                },
+                "property": {
+                  "const": "scale",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "property",
+                "output_range"
+              ],
+              "type": "object"
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "output_range": {
+                  "$ref": "#/$defs/BindingRange3"
+                },
+                "property": {
+                  "const": "x",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "property",
+                "output_range"
+              ],
+              "type": "object"
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "output_range": {
+                  "$ref": "#/$defs/BindingRange3"
+                },
+                "property": {
+                  "const": "y",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "property",
+                "output_range"
+              ],
+              "type": "object"
+            }
+          ]
+        },
+        "LayerProperties": {
+          "additionalProperties": false,
+          "description": "Base layout in logical pixels; scale is a nonnegative multiplier, opacity a\nfraction. Text is literal text, not HTML; no layer carries arbitrary CSS/JS.",
+          "properties": {
+            "height": {
+              "format": "uint32",
+              "minimum": 1,
+              "type": "integer"
+            },
+            "opacity": {
+              "$ref": "#/$defs/Intensity"
+            },
+            "scale": {
+              "$ref": "#/$defs/DesignScale"
+            },
+            "width": {
+              "format": "uint32",
+              "minimum": 1,
+              "type": "integer"
+            },
+            "x": {
+              "format": "double",
+              "type": "number"
+            },
+            "y": {
+              "format": "double",
+              "type": "number"
+            }
+          },
+          "required": [
+            "x",
+            "y",
+            "width",
+            "height",
+            "scale",
+            "opacity"
+          ],
+          "type": "object"
+        },
+        "LocalAssetPath": {
+          "description": "Canonical ASCII package-relative path. No scheme, authority, root, traversal,\npercent escapes, backslashes, query or fragment. The host must additionally\nconfine filesystem resolution (including symlinks) to its local asset root.",
+          "pattern": "^[A-Za-z0-9_-][A-Za-z0-9._-]*(/[A-Za-z0-9_-][A-Za-z0-9._-]*)*$(?![\\s\\S])",
+          "type": "string"
+        },
+        "ShapeKind": {
+          "enum": [
+            "rectangle",
+            "ellipse"
+          ],
+          "type": "string"
+        }
+      },
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "description": "Map-room configuration boundary only; other map-room methods stay pending.",
+      "properties": {
+        "design": {
+          "$ref": "#/$defs/DesignPackage"
+        },
+        "display": {
+          "$ref": "#/$defs/Display"
+        }
+      },
+      "required": [
+        "design"
+      ],
+      "title": "DesignUpsertParams",
+      "type": "object"
+    },
+    "Display": {
+      "$defs": {
+        "ArtStyle": {
+          "enum": [
+            "heraldic",
+            "pixel",
+            "synthwave",
+            "watercolor",
+            "anime",
+            "glass"
+          ],
+          "type": "string"
+        },
+        "ColourToken": {
+          "enum": [
+            "gules",
+            "azure",
+            "or",
+            "key"
+          ],
+          "type": "string"
+        },
+        "DisplayAnchor": {
+          "enum": [
+            "top-left",
+            "top-right",
+            "center",
+            "bottom-left",
+            "bottom-right"
+          ],
+          "type": "string"
+        },
+        "DisplaySize": {
+          "enum": [
+            "S",
+            "M",
+            "L"
+          ],
+          "type": "string"
+        },
+        "DisplayTimingMs": {
+          "format": "uint32",
+          "maximum": 60000,
+          "minimum": 1,
+          "type": "integer"
+        }
+      },
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "description": "Reuses the rooms' existing S/M/L, corner/center, ink and demo-style values.",
+      "properties": {
+        "anchor": {
+          "$ref": "#/$defs/DisplayAnchor"
+        },
+        "art_style": {
+          "$ref": "#/$defs/ArtStyle"
+        },
+        "colour_token": {
+          "$ref": "#/$defs/ColourToken"
+        },
+        "size": {
+          "$ref": "#/$defs/DisplaySize"
+        },
+        "timing_ms": {
+          "$ref": "#/$defs/DisplayTimingMs"
+        }
+      },
+      "title": "Display",
+      "type": "object"
+    },
+    "DisplayAnchor": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "enum": [
+        "top-left",
+        "top-right",
+        "center",
+        "bottom-left",
+        "bottom-right"
+      ],
+      "title": "DisplayAnchor",
+      "type": "string"
+    },
+    "DisplaySize": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "enum": [
+        "S",
+        "M",
+        "L"
+      ],
+      "title": "DisplaySize",
+      "type": "string"
+    },
+    "DisplayTimingMs": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "format": "uint32",
+      "maximum": 60000,
+      "minimum": 1,
+      "title": "DisplayTimingMs",
+      "type": "integer"
+    },
     "DrawContent": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "enum": [
@@ -15960,6 +17666,52 @@
       "title": "HeldResolveParams",
       "type": "object"
     },
+    "ImageUploadParams": {
+      "$defs": {
+        "LocalImageContent": {
+          "description": "Canonical lowercase hex bytes, capped at 2 MiB decoded (4 MiB on wire).\nBoth parsers sniff PNG's eight-byte signature, JPEG's FF D8 FF prefix,\nor RIFF....WEBP followed by VP8 /VP8L/VP8X. This is format identification,\nnot image decoding; consumers must still decode with resource limits.",
+          "maxLength": 4194304,
+          "pattern": "^(?:89504e470d0a1a0a|ffd8ff|52494646[0-9a-f]{8}57454250565038(?:20|4c|58))(?:[0-9a-f]{2})*$(?![\\s\\S])",
+          "type": "string"
+        }
+      },
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "content": {
+          "$ref": "#/$defs/LocalImageContent"
+        }
+      },
+      "required": [
+        "content"
+      ],
+      "title": "ImageUploadParams",
+      "type": "object"
+    },
+    "ImageUploadResult": {
+      "$defs": {
+        "DesignContentHash": {
+          "pattern": "^[0-9a-f]{64}$(?![\\s\\S])",
+          "type": "string"
+        },
+        "LocalImageRef": {
+          "$ref": "#/$defs/DesignContentHash",
+          "description": "SHA-256 of the exact stored bytes. Resolves only in the app's local store."
+        }
+      },
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "image": {
+          "$ref": "#/$defs/LocalImageRef"
+        }
+      },
+      "required": [
+        "image"
+      ],
+      "title": "ImageUploadResult",
+      "type": "object"
+    },
     "LeaseEndParams": {
       "$defs": {
         "LeaseId": {
@@ -15986,6 +17738,26 @@
       "pattern": "^[0-7][0-9A-HJKMNP-TV-Z]{25}$(?![\\s\\S])",
       "title": "LeaseId",
       "type": "string"
+    },
+    "LocalImageContent": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "description": "Canonical lowercase hex bytes, capped at 2 MiB decoded (4 MiB on wire).\nBoth parsers sniff PNG's eight-byte signature, JPEG's FF D8 FF prefix,\nor RIFF....WEBP followed by VP8 /VP8L/VP8X. This is format identification,\nnot image decoding; consumers must still decode with resource limits.",
+      "maxLength": 4194304,
+      "pattern": "^(?:89504e470d0a1a0a|ffd8ff|52494646[0-9a-f]{8}57454250565038(?:20|4c|58))(?:[0-9a-f]{2})*$(?![\\s\\S])",
+      "title": "LocalImageContent",
+      "type": "string"
+    },
+    "LocalImageRef": {
+      "$defs": {
+        "DesignContentHash": {
+          "pattern": "^[0-9a-f]{64}$(?![\\s\\S])",
+          "type": "string"
+        }
+      },
+      "$ref": "#/$defs/DesignContentHash",
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "description": "SHA-256 of the exact stored bytes. Resolves only in the app's local store.",
+      "title": "LocalImageRef"
     },
     "LotsEventPayload": {
       "$defs": {
@@ -16480,6 +18252,17 @@
           "minimum": 1,
           "type": "integer"
         },
+        "ArtStyle": {
+          "enum": [
+            "heraldic",
+            "pixel",
+            "synthwave",
+            "watercolor",
+            "anime",
+            "glass"
+          ],
+          "type": "string"
+        },
         "AskParams": {
           "additionalProperties": false,
           "properties": {
@@ -16539,6 +18322,59 @@
           ],
           "type": "object"
         },
+        "BindingRange": {
+          "additionalProperties": false,
+          "description": "Fixed input is Intensity 0..1. Endpoints are outputs at 0 and 1, so descending\noutput ranges are valid. Binding evaluation is separate renderer work.",
+          "properties": {
+            "at_one": {
+              "$ref": "#/$defs/Intensity"
+            },
+            "at_zero": {
+              "$ref": "#/$defs/Intensity"
+            }
+          },
+          "required": [
+            "at_zero",
+            "at_one"
+          ],
+          "type": "object"
+        },
+        "BindingRange2": {
+          "additionalProperties": false,
+          "description": "Fixed input is Intensity 0..1. Endpoints are outputs at 0 and 1, so descending\noutput ranges are valid. Binding evaluation is separate renderer work.",
+          "properties": {
+            "at_one": {
+              "$ref": "#/$defs/DesignScale"
+            },
+            "at_zero": {
+              "$ref": "#/$defs/DesignScale"
+            }
+          },
+          "required": [
+            "at_zero",
+            "at_one"
+          ],
+          "type": "object"
+        },
+        "BindingRange3": {
+          "additionalProperties": false,
+          "description": "Fixed input is Intensity 0..1. Endpoints are outputs at 0 and 1, so descending\noutput ranges are valid. Binding evaluation is separate renderer work.",
+          "properties": {
+            "at_one": {
+              "format": "double",
+              "type": "number"
+            },
+            "at_zero": {
+              "format": "double",
+              "type": "number"
+            }
+          },
+          "required": [
+            "at_zero",
+            "at_one"
+          ],
+          "type": "object"
+        },
         "BridgeGap": {
           "additionalProperties": false,
           "properties": {
@@ -16579,6 +18415,15 @@
           "maximum": 255,
           "minimum": 0,
           "type": "integer"
+        },
+        "ColourToken": {
+          "enum": [
+            "gules",
+            "azure",
+            "or",
+            "key"
+          ],
+          "type": "string"
         },
         "ConsensusFilter": {
           "oneOf": [
@@ -16764,9 +18609,268 @@
           ],
           "type": "object"
         },
+        "DesignContentHash": {
+          "pattern": "^[0-9a-f]{64}$(?![\\s\\S])",
+          "type": "string"
+        },
         "DesignId": {
           "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$(?![\\s\\S])",
           "type": "string"
+        },
+        "DesignLayer": {
+          "oneOf": [
+            {
+              "additionalProperties": false,
+              "properties": {
+                "asset": {
+                  "$ref": "#/$defs/LocalAssetPath"
+                },
+                "bindings": {
+                  "items": {
+                    "$ref": "#/$defs/IntensityBinding"
+                  },
+                  "type": "array"
+                },
+                "kind": {
+                  "const": "image",
+                  "type": "string"
+                },
+                "properties": {
+                  "$ref": "#/$defs/LayerProperties"
+                }
+              },
+              "required": [
+                "kind",
+                "asset",
+                "properties",
+                "bindings"
+              ],
+              "type": "object"
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "bindings": {
+                  "items": {
+                    "$ref": "#/$defs/IntensityBinding"
+                  },
+                  "type": "array"
+                },
+                "kind": {
+                  "const": "shape",
+                  "type": "string"
+                },
+                "properties": {
+                  "$ref": "#/$defs/LayerProperties"
+                },
+                "shape": {
+                  "$ref": "#/$defs/ShapeKind"
+                }
+              },
+              "required": [
+                "kind",
+                "shape",
+                "properties",
+                "bindings"
+              ],
+              "type": "object"
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "bindings": {
+                  "items": {
+                    "$ref": "#/$defs/IntensityBinding"
+                  },
+                  "type": "array"
+                },
+                "kind": {
+                  "const": "text",
+                  "type": "string"
+                },
+                "properties": {
+                  "$ref": "#/$defs/LayerProperties"
+                },
+                "text": {
+                  "pattern": "\\S",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "kind",
+                "text",
+                "properties",
+                "bindings"
+              ],
+              "type": "object"
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "bindings": {
+                  "items": {
+                    "$ref": "#/$defs/IntensityBinding"
+                  },
+                  "type": "array"
+                },
+                "kind": {
+                  "const": "particle_preset",
+                  "type": "string"
+                },
+                "preset": {
+                  "description": "A renderer-owned preset lookup name, never code or a resource URL.",
+                  "pattern": "\\S",
+                  "type": "string"
+                },
+                "properties": {
+                  "$ref": "#/$defs/LayerProperties"
+                }
+              },
+              "required": [
+                "kind",
+                "preset",
+                "properties",
+                "bindings"
+              ],
+              "type": "object"
+            }
+          ]
+        },
+        "DesignPackage": {
+          "additionalProperties": false,
+          "properties": {
+            "content_hash": {
+              "$ref": "#/$defs/DesignContentHash",
+              "description": "Claimed SHA-256 content identity. The host must verify it before delivery;\na well-formed digest alone proves neither integrity nor permission."
+            },
+            "design_id": {
+              "$ref": "#/$defs/DesignId"
+            },
+            "layers": {
+              "description": "Back-to-front paint order, retained exactly by serialization.",
+              "items": {
+                "$ref": "#/$defs/DesignLayer"
+              },
+              "minItems": 1,
+              "type": "array"
+            },
+            "privileges": {
+              "$ref": "#/$defs/DesignPrivileges",
+              "description": "Omission grants no script capability. Present null is never omission."
+            }
+          },
+          "required": [
+            "design_id",
+            "content_hash",
+            "layers"
+          ],
+          "type": "object"
+        },
+        "DesignPrivileges": {
+          "oneOf": [
+            {
+              "additionalProperties": false,
+              "properties": {
+                "kind": {
+                  "const": "data_only",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "kind"
+              ],
+              "type": "object"
+            },
+            {
+              "additionalProperties": false,
+              "description": "Explicit script entry points, relative to this package. This declaration\ndoes not authorize execution: the overlay host still checks consent.",
+              "properties": {
+                "kind": {
+                  "const": "scripts",
+                  "type": "string"
+                },
+                "scripts": {
+                  "items": {
+                    "$ref": "#/$defs/LocalAssetPath"
+                  },
+                  "minItems": 1,
+                  "type": "array"
+                }
+              },
+              "required": [
+                "kind",
+                "scripts"
+              ],
+              "type": "object"
+            }
+          ]
+        },
+        "DesignScale": {
+          "format": "double",
+          "minimum": 0,
+          "type": "number"
+        },
+        "DesignUpsertParams": {
+          "additionalProperties": false,
+          "description": "Map-room configuration boundary only; other map-room methods stay pending.",
+          "properties": {
+            "design": {
+              "$ref": "#/$defs/DesignPackage"
+            },
+            "display": {
+              "$ref": "#/$defs/Display"
+            }
+          },
+          "required": [
+            "design"
+          ],
+          "type": "object"
+        },
+        "Display": {
+          "additionalProperties": false,
+          "description": "Reuses the rooms' existing S/M/L, corner/center, ink and demo-style values.",
+          "properties": {
+            "anchor": {
+              "$ref": "#/$defs/DisplayAnchor"
+            },
+            "art_style": {
+              "$ref": "#/$defs/ArtStyle"
+            },
+            "colour_token": {
+              "$ref": "#/$defs/ColourToken"
+            },
+            "size": {
+              "$ref": "#/$defs/DisplaySize"
+            },
+            "timing_ms": {
+              "$ref": "#/$defs/DisplayTimingMs"
+            }
+          },
+          "type": "object"
+        },
+        "DisplayAnchor": {
+          "enum": [
+            "top-left",
+            "top-right",
+            "center",
+            "bottom-left",
+            "bottom-right"
+          ],
+          "type": "string"
+        },
+        "DisplaySize": {
+          "enum": [
+            "S",
+            "M",
+            "L"
+          ],
+          "type": "string"
+        },
+        "DisplayTimingMs": {
+          "format": "uint32",
+          "maximum": 60000,
+          "minimum": 1,
+          "type": "integer"
         },
         "DrawCheckParams": {
           "additionalProperties": false,
@@ -16800,6 +18904,9 @@
         "DrawUpsertParams": {
           "additionalProperties": false,
           "properties": {
+            "display": {
+              "$ref": "#/$defs/Display"
+            },
             "draw": {
               "$ref": "#/$defs/LotsDraw"
             }
@@ -16953,12 +19060,97 @@
           ],
           "type": "object"
         },
+        "ImageUploadParams": {
+          "additionalProperties": false,
+          "properties": {
+            "content": {
+              "$ref": "#/$defs/LocalImageContent"
+            }
+          },
+          "required": [
+            "content"
+          ],
+          "type": "object"
+        },
         "Intensity": {
           "description": "Finite fraction, not a percentage. Both schema and Rust reject nonfinite values.",
           "format": "double",
           "maximum": 1,
           "minimum": 0,
           "type": "number"
+        },
+        "IntensityBinding": {
+          "description": "The property tag also selects the output domain; opacity cannot exceed 1,\nscale cannot be negative, and positions must be finite. No arbitrary CSS.",
+          "oneOf": [
+            {
+              "additionalProperties": false,
+              "properties": {
+                "output_range": {
+                  "$ref": "#/$defs/BindingRange"
+                },
+                "property": {
+                  "const": "opacity",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "property",
+                "output_range"
+              ],
+              "type": "object"
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "output_range": {
+                  "$ref": "#/$defs/BindingRange2"
+                },
+                "property": {
+                  "const": "scale",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "property",
+                "output_range"
+              ],
+              "type": "object"
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "output_range": {
+                  "$ref": "#/$defs/BindingRange3"
+                },
+                "property": {
+                  "const": "x",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "property",
+                "output_range"
+              ],
+              "type": "object"
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "output_range": {
+                  "$ref": "#/$defs/BindingRange3"
+                },
+                "property": {
+                  "const": "y",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "property",
+                "output_range"
+              ],
+              "type": "object"
+            }
+          ]
         },
         "IntensityCurve": {
           "additionalProperties": false,
@@ -17035,6 +19227,45 @@
           ],
           "type": "object"
         },
+        "LayerProperties": {
+          "additionalProperties": false,
+          "description": "Base layout in logical pixels; scale is a nonnegative multiplier, opacity a\nfraction. Text is literal text, not HTML; no layer carries arbitrary CSS/JS.",
+          "properties": {
+            "height": {
+              "format": "uint32",
+              "minimum": 1,
+              "type": "integer"
+            },
+            "opacity": {
+              "$ref": "#/$defs/Intensity"
+            },
+            "scale": {
+              "$ref": "#/$defs/DesignScale"
+            },
+            "width": {
+              "format": "uint32",
+              "minimum": 1,
+              "type": "integer"
+            },
+            "x": {
+              "format": "double",
+              "type": "number"
+            },
+            "y": {
+              "format": "double",
+              "type": "number"
+            }
+          },
+          "required": [
+            "x",
+            "y",
+            "width",
+            "height",
+            "scale",
+            "opacity"
+          ],
+          "type": "object"
+        },
         "LeaseEndParams": {
           "additionalProperties": false,
           "properties": {
@@ -17056,6 +19287,16 @@
           "description": "Canonical ASCII package-relative path. No scheme, authority, root, traversal,\npercent escapes, backslashes, query or fragment. The host must additionally\nconfine filesystem resolution (including symlinks) to its local asset root.",
           "pattern": "^[A-Za-z0-9_-][A-Za-z0-9._-]*(/[A-Za-z0-9_-][A-Za-z0-9._-]*)*$(?![\\s\\S])",
           "type": "string"
+        },
+        "LocalImageContent": {
+          "description": "Canonical lowercase hex bytes, capped at 2 MiB decoded (4 MiB on wire).\nBoth parsers sniff PNG's eight-byte signature, JPEG's FF D8 FF prefix,\nor RIFF....WEBP followed by VP8 /VP8L/VP8X. This is format identification,\nnot image decoding; consumers must still decode with resource limits.",
+          "maxLength": 4194304,
+          "pattern": "^(?:89504e470d0a1a0a|ffd8ff|52494646[0-9a-f]{8}57454250565038(?:20|4c|58))(?:[0-9a-f]{2})*$(?![\\s\\S])",
+          "type": "string"
+        },
+        "LocalImageRef": {
+          "$ref": "#/$defs/DesignContentHash",
+          "description": "SHA-256 of the exact stored bytes. Resolves only in the app's local store."
         },
         "LotsCohortCap": {
           "additionalProperties": false,
@@ -17089,6 +19330,10 @@
           "properties": {
             "draw_id": {
               "$ref": "#/$defs/DrawId"
+            },
+            "image": {
+              "$ref": "#/$defs/LocalImageRef",
+              "description": "Reference to uploaded local bytes; never a URL or a filesystem path."
             },
             "name": {
               "pattern": "\\S",
@@ -17739,6 +19984,10 @@
         "RulesUpsertParams": {
           "additionalProperties": false,
           "properties": {
+            "display": {
+              "$ref": "#/$defs/Display",
+              "description": "Governs the room's on-stream output, not the containing rule."
+            },
             "rule": {
               "$ref": "#/$defs/Rule"
             }
@@ -17762,6 +20011,13 @@
             "values"
           ],
           "type": "object"
+        },
+        "ShapeKind": {
+          "enum": [
+            "rectangle",
+            "ellipse"
+          ],
+          "type": "string"
         },
         "ShieldSetParams": {
           "additionalProperties": false,
@@ -18025,6 +20281,9 @@
         "VisualUpsertParams": {
           "additionalProperties": false,
           "properties": {
+            "display": {
+              "$ref": "#/$defs/Display"
+            },
             "visual": {
               "$ref": "#/$defs/Visual"
             }
@@ -18566,6 +20825,23 @@
           "additionalProperties": false,
           "properties": {
             "method": {
+              "const": "lots.image.upload",
+              "type": "string"
+            },
+            "params": {
+              "$ref": "#/$defs/ImageUploadParams"
+            }
+          },
+          "required": [
+            "method",
+            "params"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "method": {
               "const": "lots.draw.check",
               "type": "string"
             },
@@ -18808,7 +21084,7 @@
               "type": "string"
             },
             "params": {
-              "$ref": "#/$defs/Pending"
+              "$ref": "#/$defs/DesignUpsertParams"
             }
           },
           "required": [
@@ -19021,6 +21297,17 @@
           ],
           "type": "string"
         },
+        "ArtStyle": {
+          "enum": [
+            "heraldic",
+            "pixel",
+            "synthwave",
+            "watercolor",
+            "anime",
+            "glass"
+          ],
+          "type": "string"
+        },
         "AutoBanGrant": {
           "additionalProperties": false,
           "properties": {
@@ -19042,6 +21329,15 @@
             "breaker_tripped"
           ],
           "type": "object"
+        },
+        "ColourToken": {
+          "enum": [
+            "gules",
+            "azure",
+            "or",
+            "key"
+          ],
+          "type": "string"
         },
         "ContributionSource": {
           "enum": [
@@ -19100,9 +21396,59 @@
           ],
           "description": "JSON data excluding null, recursively. Unknown/absent values are omitted."
         },
+        "DesignContentHash": {
+          "pattern": "^[0-9a-f]{64}$(?![\\s\\S])",
+          "type": "string"
+        },
         "DesignId": {
           "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$(?![\\s\\S])",
           "type": "string"
+        },
+        "Display": {
+          "additionalProperties": false,
+          "description": "Reuses the rooms' existing S/M/L, corner/center, ink and demo-style values.",
+          "properties": {
+            "anchor": {
+              "$ref": "#/$defs/DisplayAnchor"
+            },
+            "art_style": {
+              "$ref": "#/$defs/ArtStyle"
+            },
+            "colour_token": {
+              "$ref": "#/$defs/ColourToken"
+            },
+            "size": {
+              "$ref": "#/$defs/DisplaySize"
+            },
+            "timing_ms": {
+              "$ref": "#/$defs/DisplayTimingMs"
+            }
+          },
+          "type": "object"
+        },
+        "DisplayAnchor": {
+          "enum": [
+            "top-left",
+            "top-right",
+            "center",
+            "bottom-left",
+            "bottom-right"
+          ],
+          "type": "string"
+        },
+        "DisplaySize": {
+          "enum": [
+            "S",
+            "M",
+            "L"
+          ],
+          "type": "string"
+        },
+        "DisplayTimingMs": {
+          "format": "uint32",
+          "maximum": 60000,
+          "minimum": 1,
+          "type": "integer"
         },
         "DrawContent": {
           "enum": [
@@ -19120,6 +21466,9 @@
         "DrawUpsertParams": {
           "additionalProperties": false,
           "properties": {
+            "display": {
+              "$ref": "#/$defs/Display"
+            },
             "draw": {
               "$ref": "#/$defs/LotsDraw"
             }
@@ -19250,6 +21599,10 @@
           ],
           "type": "object"
         },
+        "LocalImageRef": {
+          "$ref": "#/$defs/DesignContentHash",
+          "description": "SHA-256 of the exact stored bytes. Resolves only in the app's local store."
+        },
         "LotsCohortCap": {
           "additionalProperties": false,
           "properties": {
@@ -19282,6 +21635,10 @@
           "properties": {
             "draw_id": {
               "$ref": "#/$defs/DrawId"
+            },
+            "image": {
+              "$ref": "#/$defs/LocalImageRef",
+              "description": "Reference to uploaded local bytes; never a URL or a filesystem path."
             },
             "name": {
               "pattern": "\\S",
@@ -19760,6 +22117,10 @@
         "RulesUpsertParams": {
           "additionalProperties": false,
           "properties": {
+            "display": {
+              "$ref": "#/$defs/Display",
+              "description": "Governs the room's on-stream output, not the containing rule."
+            },
             "rule": {
               "$ref": "#/$defs/Rule"
             }
@@ -19984,6 +22345,9 @@
         "VisualUpsertParams": {
           "additionalProperties": false,
           "properties": {
+            "display": {
+              "$ref": "#/$defs/Display"
+            },
             "visual": {
               "$ref": "#/$defs/Visual"
             }
@@ -20479,6 +22843,17 @@
           ],
           "type": "string"
         },
+        "ArtStyle": {
+          "enum": [
+            "heraldic",
+            "pixel",
+            "synthwave",
+            "watercolor",
+            "anime",
+            "glass"
+          ],
+          "type": "string"
+        },
         "AutoBanGrant": {
           "additionalProperties": false,
           "properties": {
@@ -20500,6 +22875,15 @@
             "breaker_tripped"
           ],
           "type": "object"
+        },
+        "ColourToken": {
+          "enum": [
+            "gules",
+            "azure",
+            "or",
+            "key"
+          ],
+          "type": "string"
         },
         "ContributionSource": {
           "enum": [
@@ -20558,9 +22942,59 @@
           ],
           "description": "JSON data excluding null, recursively. Unknown/absent values are omitted."
         },
+        "DesignContentHash": {
+          "pattern": "^[0-9a-f]{64}$(?![\\s\\S])",
+          "type": "string"
+        },
         "DesignId": {
           "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$(?![\\s\\S])",
           "type": "string"
+        },
+        "Display": {
+          "additionalProperties": false,
+          "description": "Reuses the rooms' existing S/M/L, corner/center, ink and demo-style values.",
+          "properties": {
+            "anchor": {
+              "$ref": "#/$defs/DisplayAnchor"
+            },
+            "art_style": {
+              "$ref": "#/$defs/ArtStyle"
+            },
+            "colour_token": {
+              "$ref": "#/$defs/ColourToken"
+            },
+            "size": {
+              "$ref": "#/$defs/DisplaySize"
+            },
+            "timing_ms": {
+              "$ref": "#/$defs/DisplayTimingMs"
+            }
+          },
+          "type": "object"
+        },
+        "DisplayAnchor": {
+          "enum": [
+            "top-left",
+            "top-right",
+            "center",
+            "bottom-left",
+            "bottom-right"
+          ],
+          "type": "string"
+        },
+        "DisplaySize": {
+          "enum": [
+            "S",
+            "M",
+            "L"
+          ],
+          "type": "string"
+        },
+        "DisplayTimingMs": {
+          "format": "uint32",
+          "maximum": 60000,
+          "minimum": 1,
+          "type": "integer"
         },
         "DrawContent": {
           "enum": [
@@ -20578,6 +23012,9 @@
         "DrawUpsertParams": {
           "additionalProperties": false,
           "properties": {
+            "display": {
+              "$ref": "#/$defs/Display"
+            },
             "draw": {
               "$ref": "#/$defs/LotsDraw"
             }
@@ -20708,6 +23145,10 @@
           ],
           "type": "object"
         },
+        "LocalImageRef": {
+          "$ref": "#/$defs/DesignContentHash",
+          "description": "SHA-256 of the exact stored bytes. Resolves only in the app's local store."
+        },
         "LotsCohortCap": {
           "additionalProperties": false,
           "properties": {
@@ -20740,6 +23181,10 @@
           "properties": {
             "draw_id": {
               "$ref": "#/$defs/DrawId"
+            },
+            "image": {
+              "$ref": "#/$defs/LocalImageRef",
+              "description": "Reference to uploaded local bytes; never a URL or a filesystem path."
             },
             "name": {
               "pattern": "\\S",
@@ -21218,6 +23663,10 @@
         "RulesUpsertParams": {
           "additionalProperties": false,
           "properties": {
+            "display": {
+              "$ref": "#/$defs/Display",
+              "description": "Governs the room's on-stream output, not the containing rule."
+            },
             "rule": {
               "$ref": "#/$defs/Rule"
             }
@@ -21442,6 +23891,9 @@
         "VisualUpsertParams": {
           "additionalProperties": false,
           "properties": {
+            "display": {
+              "$ref": "#/$defs/Display"
+            },
             "visual": {
               "$ref": "#/$defs/Visual"
             }
@@ -21792,6 +24244,17 @@
           ],
           "type": "string"
         },
+        "ArtStyle": {
+          "enum": [
+            "heraldic",
+            "pixel",
+            "synthwave",
+            "watercolor",
+            "anime",
+            "glass"
+          ],
+          "type": "string"
+        },
         "AutoBanGrant": {
           "additionalProperties": false,
           "properties": {
@@ -21813,6 +24276,15 @@
             "breaker_tripped"
           ],
           "type": "object"
+        },
+        "ColourToken": {
+          "enum": [
+            "gules",
+            "azure",
+            "or",
+            "key"
+          ],
+          "type": "string"
         },
         "ContributionSource": {
           "enum": [
@@ -21871,9 +24343,59 @@
           ],
           "description": "JSON data excluding null, recursively. Unknown/absent values are omitted."
         },
+        "DesignContentHash": {
+          "pattern": "^[0-9a-f]{64}$(?![\\s\\S])",
+          "type": "string"
+        },
         "DesignId": {
           "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$(?![\\s\\S])",
           "type": "string"
+        },
+        "Display": {
+          "additionalProperties": false,
+          "description": "Reuses the rooms' existing S/M/L, corner/center, ink and demo-style values.",
+          "properties": {
+            "anchor": {
+              "$ref": "#/$defs/DisplayAnchor"
+            },
+            "art_style": {
+              "$ref": "#/$defs/ArtStyle"
+            },
+            "colour_token": {
+              "$ref": "#/$defs/ColourToken"
+            },
+            "size": {
+              "$ref": "#/$defs/DisplaySize"
+            },
+            "timing_ms": {
+              "$ref": "#/$defs/DisplayTimingMs"
+            }
+          },
+          "type": "object"
+        },
+        "DisplayAnchor": {
+          "enum": [
+            "top-left",
+            "top-right",
+            "center",
+            "bottom-left",
+            "bottom-right"
+          ],
+          "type": "string"
+        },
+        "DisplaySize": {
+          "enum": [
+            "S",
+            "M",
+            "L"
+          ],
+          "type": "string"
+        },
+        "DisplayTimingMs": {
+          "format": "uint32",
+          "maximum": 60000,
+          "minimum": 1,
+          "type": "integer"
         },
         "DrawContent": {
           "enum": [
@@ -21891,6 +24413,9 @@
         "DrawUpsertParams": {
           "additionalProperties": false,
           "properties": {
+            "display": {
+              "$ref": "#/$defs/Display"
+            },
             "draw": {
               "$ref": "#/$defs/LotsDraw"
             }
@@ -22021,6 +24546,10 @@
           ],
           "type": "object"
         },
+        "LocalImageRef": {
+          "$ref": "#/$defs/DesignContentHash",
+          "description": "SHA-256 of the exact stored bytes. Resolves only in the app's local store."
+        },
         "LotsCohortCap": {
           "additionalProperties": false,
           "properties": {
@@ -22053,6 +24582,10 @@
           "properties": {
             "draw_id": {
               "$ref": "#/$defs/DrawId"
+            },
+            "image": {
+              "$ref": "#/$defs/LocalImageRef",
+              "description": "Reference to uploaded local bytes; never a URL or a filesystem path."
             },
             "name": {
               "pattern": "\\S",
@@ -22531,6 +25064,10 @@
         "RulesUpsertParams": {
           "additionalProperties": false,
           "properties": {
+            "display": {
+              "$ref": "#/$defs/Display",
+              "description": "Governs the room's on-stream output, not the containing rule."
+            },
             "rule": {
               "$ref": "#/$defs/Rule"
             }
@@ -22755,6 +25292,9 @@
         "VisualUpsertParams": {
           "additionalProperties": false,
           "properties": {
+            "display": {
+              "$ref": "#/$defs/Display"
+            },
             "visual": {
               "$ref": "#/$defs/Visual"
             }
@@ -23111,6 +25651,17 @@
           ],
           "type": "string"
         },
+        "ArtStyle": {
+          "enum": [
+            "heraldic",
+            "pixel",
+            "synthwave",
+            "watercolor",
+            "anime",
+            "glass"
+          ],
+          "type": "string"
+        },
         "AutoBanGrant": {
           "additionalProperties": false,
           "properties": {
@@ -23132,6 +25683,15 @@
             "breaker_tripped"
           ],
           "type": "object"
+        },
+        "ColourToken": {
+          "enum": [
+            "gules",
+            "azure",
+            "or",
+            "key"
+          ],
+          "type": "string"
         },
         "ContributionSource": {
           "enum": [
@@ -23190,9 +25750,59 @@
           ],
           "description": "JSON data excluding null, recursively. Unknown/absent values are omitted."
         },
+        "DesignContentHash": {
+          "pattern": "^[0-9a-f]{64}$(?![\\s\\S])",
+          "type": "string"
+        },
         "DesignId": {
           "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$(?![\\s\\S])",
           "type": "string"
+        },
+        "Display": {
+          "additionalProperties": false,
+          "description": "Reuses the rooms' existing S/M/L, corner/center, ink and demo-style values.",
+          "properties": {
+            "anchor": {
+              "$ref": "#/$defs/DisplayAnchor"
+            },
+            "art_style": {
+              "$ref": "#/$defs/ArtStyle"
+            },
+            "colour_token": {
+              "$ref": "#/$defs/ColourToken"
+            },
+            "size": {
+              "$ref": "#/$defs/DisplaySize"
+            },
+            "timing_ms": {
+              "$ref": "#/$defs/DisplayTimingMs"
+            }
+          },
+          "type": "object"
+        },
+        "DisplayAnchor": {
+          "enum": [
+            "top-left",
+            "top-right",
+            "center",
+            "bottom-left",
+            "bottom-right"
+          ],
+          "type": "string"
+        },
+        "DisplaySize": {
+          "enum": [
+            "S",
+            "M",
+            "L"
+          ],
+          "type": "string"
+        },
+        "DisplayTimingMs": {
+          "format": "uint32",
+          "maximum": 60000,
+          "minimum": 1,
+          "type": "integer"
         },
         "DrawContent": {
           "enum": [
@@ -23210,6 +25820,9 @@
         "DrawUpsertParams": {
           "additionalProperties": false,
           "properties": {
+            "display": {
+              "$ref": "#/$defs/Display"
+            },
             "draw": {
               "$ref": "#/$defs/LotsDraw"
             }
@@ -23340,6 +25953,10 @@
           ],
           "type": "object"
         },
+        "LocalImageRef": {
+          "$ref": "#/$defs/DesignContentHash",
+          "description": "SHA-256 of the exact stored bytes. Resolves only in the app's local store."
+        },
         "LotsCohortCap": {
           "additionalProperties": false,
           "properties": {
@@ -23372,6 +25989,10 @@
           "properties": {
             "draw_id": {
               "$ref": "#/$defs/DrawId"
+            },
+            "image": {
+              "$ref": "#/$defs/LocalImageRef",
+              "description": "Reference to uploaded local bytes; never a URL or a filesystem path."
             },
             "name": {
               "pattern": "\\S",
@@ -23850,6 +26471,10 @@
         "RulesUpsertParams": {
           "additionalProperties": false,
           "properties": {
+            "display": {
+              "$ref": "#/$defs/Display",
+              "description": "Governs the room's on-stream output, not the containing rule."
+            },
             "rule": {
               "$ref": "#/$defs/Rule"
             }
@@ -24074,6 +26699,9 @@
         "VisualUpsertParams": {
           "additionalProperties": false,
           "properties": {
+            "display": {
+              "$ref": "#/$defs/Display"
+            },
             "visual": {
               "$ref": "#/$defs/Visual"
             }

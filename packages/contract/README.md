@@ -10,6 +10,29 @@ Numeric counters are safe JS integers; Twitch IDs, seeds and rounds stay strings
 
 `./steward` lazily exports `stewardAsk`, `stewardWritSeal`, `stewardWritTear` (params/results) and `stewardEventPayload` (`steward.writ`), matching the root validators.
 
+## Shared display and local images (owner rulings 2/5, 2026-10-31)
+
+`DrawUpsertParams`, `VisualUpsertParams`, `RulesUpsertParams` and the newly typed
+`DesignUpsertParams` accept the same optional `display: Display`. Its optional
+fields reuse the desktop's size, anchor, ink-token and art-style vocabularies;
+`timing_ms` is an integer from 1 through 60000. The Gatehouse display is a sibling
+of `rule` and governs the room output. Omitted display preserves old payloads;
+explicit null, nonobjects, unknown keys and values outside the bounds fail.
+
+`LotsDraw.image` optionally references uploaded local bytes by SHA-256. The new
+`lots.image.upload` boundary accepts `ImageUploadParams { content }` and returns
+`ImageUploadResult { image }`. Content is lowercase hex of sniffed PNG/JPEG/WebP,
+at most 2 MiB decoded; references are digests, never URLs or filesystem paths.
+The store migration and ADR 0003 describe local SQLite blob storage. There is no
+new handler, room persistence or rendering in this delivery; Map Room reads and
+turns remain Pending, as does its upsert result.
+
+`src/display-images.test.ts` and Rust's `tests/display_images.rs` consume the same
+simulated `display_images.json` cases for old payloads, every vocabulary value,
+bounds, optional nulls, wrong types, signatures and remote references. Both test
+the exact byte cap and Steward wrappers. `cc-store/tests/images.rs` verifies
+migration, reopening, deduplication, traversal refusal, corruption and full purge.
+
 ## Beacons render snapshot boundary (WP 3.2 contract delivery, 2026-10-27)
 
 The overlay SSE event **`beacons.render.snapshot`** carries a
@@ -175,8 +198,9 @@ records reject unknown fields and explicit null; absent optional keys stay absen
 `WritProposal` is tagged by the existing mutation method and reuses draw upsert,
 rule upsert/setMode, visual upsert and curve-set parameters. `WritDiff<T>` carries
 an optional before snapshot and required after snapshot. Chamber/method mismatches
-fail in Rust and the generated validator. Map Room remains deferred: its methods
-are Pending and rendering `DesignPackage` data does not define a studio mutation.
+fail in Rust and the generated validator. Map Room Steward proposals remain
+deferred. Owner rulings 2/5 type `maproom.design.upsert` parameters separately;
+its result and the other Map Room methods remain Pending.
 The shared `WritId` minting door and existing event name are reused. No state
 transition, consent, guardrail application or executable action is supplied here.
 Future handlers must validate authoritative state and apply only sealed proposals.

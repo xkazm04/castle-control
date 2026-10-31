@@ -3,7 +3,7 @@
 Standalone Rust library for Castle Control's local viewer data, audit ledgers and
 retention. No network or bridge dependency; an internal `cc-types` path dependency
 reuses the validated art credit and call-ID types. SQLite uses bundled
-rusqlite 0.38. `Store::open(directory)` migrates the database (`user_version = 2`),
+rusqlite 0.38. `Store::open(directory)` migrates the database (`user_version = 3`),
 checks the inventory and ledgers, and holds an exclusive OS file lock until drop.
 Share one `Store` through a mutex; a second writer to the directory is refused.
 
@@ -24,6 +24,7 @@ tests deliberately introduce both an extra table and an extra file.
 | viewer_mappings | SQLite login → Twitch ID | Delete every alias for the ID | Delete all rows |
 | settings | SQLite retention setting | Preserve | Delete; default applies again |
 | engine_settings | SQLite allowlisted engine overrides, JSON values | Preserve (no viewer data) | Delete all overrides; defaults apply again |
+| image_assets | SQLite content-addressed image blobs | Preserve viewer-free streamer assets | Delete all blobs |
 | decisions.jsonl, draws.jsonl, engine.jsonl | Typed audit records | Preserve byte for byte | Truncate and sync |
 | purge_state | SQLite recovery marker | Preserve | Clear after successful erasure |
 | store.sqlite3, store.sqlite3-journal, writer.lock | Database container, transient rollback journal, empty lock | Keep containers | Keep containers |
@@ -239,6 +240,19 @@ or real chat fixtures are used. Every test uses generated, labelled simulated
 data in a temporary directory.
 
 ## Verification
+
+### Local draw images (owner rulings 2 and 5)
+
+`store_image(&LocalImageContent)` hashes the exact PNG/JPEG/WebP bytes and returns
+a `LocalImageRef`. `load_image(reference)` validates the digest reference, verifies
+the stored bytes against it, and rechecks format and the 2 MiB cap. Unknown digests
+return None; URLs and traversal paths fail before any lookup. No input ever names
+a file. Blobs live in the app-data database, deduplicate across draws, and follow
+the inventory's full-purge policy. Migration v3 preserves existing v1/v2 data;
+`tests/images.rs` covers reopen, deduplication, migration, traversal, corruption,
+byte caps and purge. ADR 0003 documents the storage and wire encoding choice.
+
+### Commands
 
 Run inside `crates/cc-store`:
 

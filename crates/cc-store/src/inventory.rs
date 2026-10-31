@@ -127,6 +127,14 @@ pub const STORE_INVENTORY: &[StoreSpec] = &[
         purge_all: DeleteRows,
     },
     StoreSpec {
+        name: "image_assets",
+        storage: SqliteTable,
+        // Uploaded streamer configuration has no viewer association. Full
+        // purge, including authorization revocation, deletes the actual bytes.
+        forget_user: Keep,
+        purge_all: DeleteRows,
+    },
+    StoreSpec {
         name: "purge_state",
         storage: SqliteTable,
         forget_user: Keep,

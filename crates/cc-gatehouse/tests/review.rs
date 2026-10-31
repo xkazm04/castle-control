@@ -253,7 +253,14 @@ async fn expired_or_tripped_grant_and_classifier_bans_require_human_click() {
     let mut f = Fixture::new();
     let mut rule = plain(Action::Ban);
     rule.auto_ban_grant = Some(grant("2026-10-25T13:00:00Z", 10));
-    assert!(f.gate.rules_upsert(RulesUpsertParams { rule }).is_err());
+    assert!(
+        f.gate
+            .rules_upsert(RulesUpsertParams {
+                rule,
+                display: None
+            })
+            .is_err()
+    );
     f.upsert(plain(Action::Ban));
     f.arm("classifier");
     let fake = Fake::new(r#"[{"msg_id":"m1","rule_id":"classifier","verdict":"bar"}]"#);

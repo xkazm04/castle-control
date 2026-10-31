@@ -12,6 +12,14 @@ pub struct RulesListResult {
 #[serde(deny_unknown_fields)]
 pub struct RulesUpsertParams {
     pub rule: Rule,
+    /// Governs the room's on-stream output, not the containing rule.
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        deserialize_with = "crate::present"
+    )]
+    #[schemars(with = "crate::Display")]
+    pub display: Option<crate::Display>,
 }
 
 /// References the durable decision being confirmed, dismissed or undone.

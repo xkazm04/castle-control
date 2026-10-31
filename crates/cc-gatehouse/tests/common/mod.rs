@@ -44,7 +44,12 @@ impl Fixture {
         Self { gate, root, clock }
     }
     pub fn upsert(&mut self, rule: Rule) {
-        self.gate.rules_upsert(RulesUpsertParams { rule }).unwrap();
+        self.gate
+            .rules_upsert(RulesUpsertParams {
+                rule,
+                display: None,
+            })
+            .unwrap();
     }
     pub fn arm(&mut self, id: &str) {
         self.gate
