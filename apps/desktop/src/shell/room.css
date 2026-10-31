@@ -4,7 +4,7 @@
 .shell-room[data-chamber="moderator"] { --room-ink: var(--azure-text); }
 .shell-room[data-chamber="visuals"] { --room-ink: var(--or-text); }
 .shell-room-header { position: relative; flex: none; height: calc(var(--space-1) * 250); border-bottom: var(--space-3) solid var(--ink); }
-.shell-room-band { position: absolute; inset: 0; overflow: hidden; background: var(--paper-grain), linear-gradient(180deg, var(--stage-top), var(--stage-low)); }
+.shell-room-band { position: absolute; inset: 0; overflow: hidden; font-size: var(--text-number); line-height: normal; background: none; }
 .shell-room-plane { position: absolute; left: 50%; top: 0; width: calc(var(--space-1) * 1060); height: 100%; transform: translateX(-50%); }
 .shell-room-camera { position: absolute; left: 0; top: 0; width: calc(var(--space-1) * 1200); height: calc(var(--space-1) * 640); transform-origin: 0 0; animation: room-dolly var(--m-dolly) var(--ease-dolly) both; }
 .shell-room-camera > svg { display: block; width: 100%; height: 100%; overflow: visible; }
