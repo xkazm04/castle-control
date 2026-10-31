@@ -21,7 +21,7 @@
 .ty-champ-slot{border:var(--rule-strong) dashed var(--ty-champion-rule);padding:var(--space-8);text-align:center;font:800 var(--text-body)/1.2 var(--font-display);text-transform:uppercase;color:var(--or)}
 .ty-champ-slot.ty-set{border-style:solid;background:var(--or);color:var(--ty-parchment-ink)}
 .ty-rail .ty-btns{display:flex;gap:var(--space-8);flex-wrap:wrap;margin-top:var(--space-8)}
-.ty-yb{border:var(--rule-medium) solid var(--cream);background:transparent;color:var(--cream);padding:var(--space-7) var(--space-12);font:700 var(--ty-text-detail)/1 var(--font-ui);letter-spacing:var(--track-label);text-transform:uppercase;cursor:pointer;display:inline-flex;gap:var(--space-8);align-items:center}
+.ty-stage .ty-yb{border:var(--rule-medium) solid var(--cream);background:transparent;color:var(--cream);padding:var(--space-7) var(--space-12);font:700 var(--ty-text-detail)/1 var(--font-ui);letter-spacing:var(--track-label);text-transform:uppercase;cursor:pointer;display:inline-flex;gap:var(--space-8);align-items:center}
 .ty-yb:hover{background:var(--cream);color:var(--ty-parchment-ink)}
 .ty-yb.ty-primary{background:var(--or);border-color:var(--or);color:var(--ty-parchment-ink)}
 .ty-yb:disabled{opacity:.4;cursor:not-allowed}

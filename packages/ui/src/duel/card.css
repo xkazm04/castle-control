@@ -1,6 +1,6 @@
 /* Ported rule by rule from .port/winner/index.html, cc-t2-duel A/1. */
 .ty-shield [data-ink="vert"]{fill:var(--ty-arms-vert)}
-.ty-card{position:relative;z-index:2;display:grid;justify-items:center;align-content:start;gap:var(--space-5);width:min(100%,var(--ty-card-width));justify-self:center;padding:var(--space-14) var(--space-16) var(--space-14);border:0;cursor:pointer;
+.ty-stage .ty-card{position:relative;z-index:2;display:grid;justify-items:center;align-content:start;gap:var(--space-5);width:min(100%,var(--ty-card-width));justify-self:center;padding:var(--space-14) var(--space-16) var(--space-14);border:0;cursor:pointer;
   background:linear-gradient(var(--ty-parchment-top),var(--ty-parchment-bottom));color:var(--ty-parchment-ink);border-top:var(--space-10) solid var(--ty-side-ink);box-shadow:0 var(--space-22) var(--space-40) var(--ty-card-shadow),var(--space-6) var(--space-6) 0 var(--ty-side-ink);
   transition:transform .32s var(--ease),filter .32s var(--ease),opacity .32s var(--ease),box-shadow .32s var(--ease);text-align:center}
 .ty-card[data-side="0"]{--ty-side-ink:var(--azure)}
@@ -29,4 +29,4 @@
 @keyframes ty-shake{0%,100%{transform:none}20%{transform:translate(calc(-1 * var(--space-5)),var(--space-2))}40%{transform:translate(var(--space-4),calc(-1 * var(--space-2)))}60%{transform:translate(calc(-1 * var(--space-3)),var(--space-1))}80%{transform:translate(var(--space-2),0)}}
 
 @container ty-stage (max-width:980px){.ty-card .ty-cnote{display:none}}
-@container ty-stage (max-width:620px){.ty-card{width:100%}}
+@container ty-stage (max-width:620px){.ty-stage .ty-card{width:100%}}
