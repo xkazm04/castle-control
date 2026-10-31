@@ -39,13 +39,10 @@ export function balanceReport(rehearsal: Rehearsal, through = rehearsal.turns.le
     const sole = tops.length === 1 ? tops[0]?.[0] : undefined;
     if (sole !== undefined && sole !== lead) { lead_changes += lead === undefined ? 0 : 1; lead = sole; }
   }
-  const fights = new Map<string, number>();
-  for (const turn of seen) {
-    for (const pick of turn.picks) {
-      if (Object.values(pick.by).filter(count => count > 0).length > 1) fights.set(pick.id, (fights.get(pick.id) ?? 0) + 1);
-    }
-  }
-  const chokepoints = [...fights.values()].filter(count => count >= 2).length;
+  // A chokepoint is ground that keeps swapping hands: a tile that changed owner in two or more turns.
+  const swaps = new Map<string, number>();
+  for (const turn of seen) for (const change of turn.changes) swaps.set(change.id, (swaps.get(change.id) ?? 0) + 1);
+  const chokepoints = [...swaps.values()].filter(count => count >= 2).length;
   const quiet = through - last_change;
   const kind: VerdictKind = leader.percent >= 55 || margin >= 30 ? 'runaway'
     : quiet >= 2 ? 'stalemate' : margin <= 8 ? 'tight' : 'contested';

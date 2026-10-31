@@ -35,13 +35,15 @@ export function StudioWork({ queue, seal_slot, board, design_session = designSes
   const size_choices = board ? undefined : sizeChoices;
   const rehearse = useRehearse(current_board, size_choices);
   const end_board = rehearse.view.done ? rehearse.state.run?.turns.at(-1)?.board : undefined;
+  // Leaving Rehearse pauses the round, so a hidden view never plays on or announces turns.
+  const open = (next: StudioView) => { if (view === 'rehearse' && next !== 'rehearse') rehearse.handlers.pause(); setView(next); };
   const change = (field: SessionField, value?: string) => setSession(state => updateStudioSession(state, field, value, board));
   return <section className="studio-room cc-herald" aria-label={copy.work}>
     <div className="studio-table-work">
       <div className="studio-view-switch" role="group" aria-label={copy.view}>
-        <button type="button" aria-pressed={view === 'table'} onClick={() => setView('table')}>{copy.table}</button>
-        <button type="button" aria-pressed={view === 'spyglass'} onClick={() => setView('spyglass')}>{copy.spyglass}</button>
-        <button type="button" aria-pressed={view === 'rehearse'} onClick={() => setView('rehearse')}>{rehearseCopy.view}</button>
+        <button type="button" aria-pressed={view === 'table'} onClick={() => open('table')}>{copy.table}</button>
+        <button type="button" aria-pressed={view === 'spyglass'} onClick={() => open('spyglass')}>{copy.spyglass}</button>
+        <button type="button" aria-pressed={view === 'rehearse'} onClick={() => open('rehearse')}>{rehearseCopy.view}</button>
       </div>
       {view === 'rehearse' ? <RehearseWork {...rehearse} board={current_board} size={session.design.size} look={looks.map.output.style}
         {...(size_choices ? { sizes: size_choices } : {})} />

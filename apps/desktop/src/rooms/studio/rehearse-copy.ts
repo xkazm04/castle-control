@@ -53,7 +53,7 @@ export const rehearseCopy = {
     `${percents.join(' · ')}${unclaimed > 0 ? ` · ${unclaimed}% unclaimed` : ''}`,
   margin_value: (points: number) => `${points} ${points === 1 ? 'point' : 'points'}`,
   chokepoints_value: (count: number) => `${count} ${count === 1 ? 'tile' : 'tiles'}`,
-  chokepoints_hint: 'Chokepoints are tiles picked by two or more houses in two or more turns.',
+  chokepoints_hint: 'Chokepoints are tiles that changed hands two or more times.',
   report_hint: 'Plain words, computed from the simulation only.',
   none: 'none',
   replay_ok: (seed: string, of: number) => `Seed ${seed} replayed: all ${of} turns matched.`,

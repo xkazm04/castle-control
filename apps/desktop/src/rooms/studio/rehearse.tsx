@@ -77,7 +77,6 @@ export function RehearseControls({ state, view, handlers, can_compare = false }:
       <InkButton size="small" onClick={handlers.step} disabled={finished}>{copy.step}</InkButton>
       <InkButton size="small" onClick={handlers.reset} disabled={run === null}>{copy.reset}</InkButton>
       {can_compare && <InkButton size="small" onClick={handlers.compare}>{copy.compare_sizes}</InkButton>}
-      {run && <span className="studio-rehearse-progress">{copy.progress(state.turn, view.of)}</span>}
     </div>
   </form>;
 }
@@ -100,7 +99,8 @@ export function RehearseWork({ state, view, handlers, board, size, look, sizes }
       gloss={copy.board_gloss(turn, view.of)} pennants={false} quiet={start.tiles.length > denseTiles} />
     <div className="studio-rehearse-now">
       <Notice message={message} label={copy.log_label} className="studio-rehearse-line" />
-      {last && <p className="studio-rehearse-turn">{copy.this_turn(last.changes.length)} {copy.only_picked}</p>}
+      {run && <p className="studio-rehearse-turn"><span className="studio-rehearse-progress">{copy.progress(state.turn, view.of)}</span>
+        {last && <> · {copy.this_turn(last.changes.length)} {copy.only_picked}</>}</p>}
       {state.replay && <p className="studio-rehearse-replay" role="status">{state.replay.matched === state.replay.of
         ? copy.replay_ok(state.replay.seed, state.replay.of)
         : copy.replay_bad(state.replay.seed, state.replay.matched, state.replay.of)}</p>}

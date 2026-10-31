@@ -65,14 +65,14 @@ test('lead changes count only a new sole leader, and ties never count as a chang
   expect(report.lead_changes).toBe(2); // sable -> quill -> (tie, ignored) -> sable
 });
 
-test('chokepoints are tiles picked by two houses in two or more turns', () => {
-  const fight = pick('D4', { sable: 2, quill: 2 });
+test('chokepoints are tiles that changed hands in two or more turns, however hard they were fought over', () => {
   const report = balanceReport(round([
-    { held: [14, 14, 15], changed: ['A1'], picks: [fight, pick('A1', { quill: 3 })] },
-    { held: [14, 14, 16], changed: ['A2'], picks: [fight, pick('E2', { sable: 1, tallow: 1 })] },
-    { held: [14, 14, 16], picks: [pick('E2', { tallow: 2 }), pick('D4', { sable: 1 })] },
+    { held: [14, 14, 15], changed: ['A1', 'D4'], picks: [pick('D4', { sable: 2, quill: 2 })] },
+    { held: [14, 14, 16], changed: ['A2', 'D4'], picks: [pick('D4', { sable: 2, quill: 1 }), pick('E2', { sable: 1, tallow: 1 })] },
+    { held: [14, 14, 16], changed: ['A1'], picks: [pick('E2', { tallow: 2 })] },
+    { held: [14, 14, 16], picks: [pick('E2', { tallow: 2, sable: 2 })] },
   ]));
-  expect(report.chokepoints).toBe(1);
+  expect(report.chokepoints).toBe(2); // D4 (turns 1 and 2) and A1 (turns 1 and 3); E2 was fought over but never changed hands
 });
 
 test('a partial report reads only the turns shown, and turn zero is the starting territory', () => {
