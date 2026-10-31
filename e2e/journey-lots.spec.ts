@@ -52,7 +52,14 @@ test('lottery configure, preview, seal, simulated cast and writ journey', async 
   const verify = await guardPage(page);
   try {
     await configureAndCast(page);
-  } finally { await page.goto('about:blank'); verify(); }
+  } catch (error) {
+    await page.goto('about:blank').catch(cleanupError => {
+      console.error('Failed to navigate away after the Lots journey error:', cleanupError);
+    });
+    throw error;
+  }
+  await page.goto('about:blank');
+  verify();
 });
 
 test.describe('lottery CORE simulated cast OBS journey', () => {
@@ -86,11 +93,18 @@ test.describe('lottery CORE simulated cast OBS journey', () => {
         const sealed = await core.invoke(contract.lotsRollSeal,
           { draw_id: draw.draw_id, source: 'drand_quicknet', margin_s: 1 });
         expect(sealed.sealed.roll.entries).toHaveLength(12);
+        // Winners are proof handles (Twitch user ids), not logins.
+        const generated = Array.from({ length: 12 }, (_, i) => String(100 + i));
+        const handles = sealed.sealed.roll.entries.map(e => e.handle);
+        expect([...handles].sort()).toEqual([...generated].sort());
         const cast = await core.invoke(contract.lotsCast, { draw_run_id: sealed.draw_run_id });
         expect(cast.cast.seal).toBe(sealed.sealed.seal);
         expect(cast.cast.winners).toHaveLength(3);
         expect(new Set(cast.cast.winners).size).toBe(3);
-        for (const winner of cast.cast.winners) expect(winner).toMatch(/^simulated_viewer_10[0-9]$|^simulated_viewer_11[01]$/);
+        for (const winner of cast.cast.winners) {
+          expect(generated).toContain(winner);
+          expect(handles).toContain(winner);
+        }
         // Both configured projects exercise this page at their actual viewport.
         await page.goto(`${core.overlayOrigin}/lots/${draw.draw_id}?scale=1&anchor=tl`);
         await expect(page.locator('main')).toHaveAttribute('data-simulated', 'true');
@@ -101,7 +115,15 @@ test.describe('lottery CORE simulated cast OBS journey', () => {
         expect(contract.parseMethodResult(contract.lotsCast, island)).toEqual(cast);
         await auditStyles(page, [{ name: 'draw plate', selector: 'main' }], { canvas: 'obs-transparent' });
         expect(await page.evaluate(() => document.documentElement.scrollHeight <= innerHeight)).toBe(true);
-      } finally { await page.goto('about:blank'); verify(); }
+      } catch (error) {
+        await page.goto('about:blank').catch(cleanupError => {
+          console.error('Failed to navigate away after the Lots core journey error:', cleanupError);
+        });
+        throw error;
+      }
+      await page.goto('about:blank');
+      // The overlay document and its same-origin /bundle.js must both be walked.
+      expect(verify()).toBeGreaterThanOrEqual(2);
     } finally { await core.close(); }
   });
 });

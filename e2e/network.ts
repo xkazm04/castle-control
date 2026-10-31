@@ -8,7 +8,7 @@ export function loopback(url: string): boolean {
 }
 
 /** Install before navigation: HTTP/SSE and WebSockets have separate doors. */
-export async function guardPage(page: Page, coreOrigin?: string): Promise<() => void> {
+export async function guardPage(page: Page, coreOrigin?: string): Promise<() => number> {
   if (coreOrigin && (!loopback(coreOrigin) || new URL(coreOrigin).origin !== coreOrigin)) {
     throw new Error('Expected the exact launched loopback core origin');
   }
@@ -37,5 +37,6 @@ export async function guardPage(page: Page, coreOrigin?: string): Promise<() => 
     console.log(`[e2e diagnostics] walked ${requests} requests, 1 console listener, 1 page-error listener`);
     assert.ok(requests > 0, 'Network guard refused empty request inventory');
     assert.deepEqual({ blocked, consoleErrors, pageErrors }, { blocked: [], consoleErrors: [], pageErrors: [] });
+    return requests;
   };
 }
