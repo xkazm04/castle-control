@@ -1,7 +1,10 @@
 import { readFileSync, statSync } from 'node:fs';
+import { resolve, sep } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { checkTokenDefinitions } from '@castle-control/tokens/check-build';
 
-const directory = new URL('../dist/', import.meta.url);
+const directory = process.argv[2] === undefined
+  ? new URL('../dist/', import.meta.url) : pathToFileURL(resolve(process.argv[2]) + sep);
 const html = readFileSync(new URL('index.html', directory), 'utf8');
 const paths = new Set([...html.matchAll(/(?:src|href)="([^"]+\.(?:js|css))"/g)].map(match => match[1]));
 if (!paths.size) throw new Error('Desktop budget refuses empty assets');

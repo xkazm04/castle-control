@@ -19,6 +19,19 @@ export function closureCases(proof, root) {
       'apps/site/dist/index.html': '<!doctype html><script type="module" src="./assets/site.js"></script>\n',
       'apps/site/dist/assets/site.js': `// Simulated built-site budget fixture.\n// ${siteLabels.join(' · ')}\n${' '.repeat(180 * 1024 + 1)}`,
     });
+  const tokenCss = readFileSync(join(root, 'packages/tokens/src/generated.css'), 'utf8');
+  for (const [label, packagePath, limit] of [
+    ['Desktop', 'apps/desktop', 384 * 1024],
+    ['Kit', 'packages/ui', 256 * 1024],
+  ]) {
+    const dist = `${packagePath}/dist`;
+    proof(`${label} budget: first load over budget`, [`$R/${packagePath}/src/check-build.ts`, `$S/${dist}`],
+      `${label} first-load budget exceeded`, {
+        [`${dist}/index.html`]: '<!doctype html><script type="module" src="/assets/initial.js"></script><link rel="stylesheet" href="/assets/initial.css">\n',
+        [`${dist}/assets/initial.js`]: '// Simulated oversized first-load JS fixture.\n'.padEnd(limit + 1, ' '),
+        [`${dist}/assets/initial.css`]: tokenCss,
+      });
+  }
   proof('Version drift: bumped package manifest', ['$R/scripts/version-drift.mjs'],
     'package.json: expected 0.1.0, found 0.2.0', {
       'Cargo.toml': '[workspace]\nmembers = ["crates/*"]\n[workspace.package]\nversion = "0.1.0"\n',
