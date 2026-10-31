@@ -165,7 +165,18 @@ export function DrawStage({ shape, on_shape, entries, cast, content, sealed, sea
   const fresh = Boolean(playable) && revealed.length === 0 && !reduced;
   const flourish = useFlourish(scene, fresh, shape === 'wheel');
   // A fresh ceremony takes the whole chamber; the streamer returns to the desk when ready.
-  useEffect(() => { if (fresh && on_theatre) on_theatre(true); }, [fresh, key, on_theatre]);
+  useEffect(() => {
+    if (!fresh || !on_theatre) return undefined;
+    on_theatre(true);
+    // The cast button that started this sits in the desk, which theatre hides: keep keyboard users on the stage.
+    const frame = requestAnimationFrame(() => {
+      const active = document.activeElement;
+      if (!(active instanceof HTMLElement) || active === document.body || active.offsetParent === null) {
+        root.current?.querySelector<HTMLButtonElement>('[data-theatre-toggle]')?.focus({ preventScroll: true });
+      }
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [fresh, key, on_theatre]);
   const phase = !sealed && !playable ? 'open' : !cast ? 'sealed' : !verified ? 'casting'
     : state.finished && revealed.length === winners.length ? 'revealed' : 'revealing';
   const disclaimer = scene.layers.find(layer => layer.kind === 'disclaimer');
@@ -244,7 +255,7 @@ export function DrawStage({ shape, on_shape, entries, cast, content, sealed, sea
       <p className="cc-aside">{cast && !verified ? copy.stage.unverified : copy.stage.note}
         {drawn.length < entries.length ? ` ${copy.stage.sampled(drawn.length, entries.length)}` : ''}</p>
       {playable && <InkButton size="room" disabled={!state.finished} onClick={() => clock.replay()}>{copy.stage.replay}</InkButton>}
-      {on_theatre && <InkButton size="room" aria-pressed={theatre} onClick={() => on_theatre(!theatre)}>
+      {on_theatre && <InkButton size="room" data-theatre-toggle aria-pressed={theatre} onClick={() => on_theatre(!theatre)}>
         {theatre ? copy.stage.desk : copy.stage.theatre}</InkButton>}
       <p className="lottery-stage-announce" role="status">{latest ? copy.stage.announce(revealed.length, winners.length, latest) : ''}</p>
     </div>
