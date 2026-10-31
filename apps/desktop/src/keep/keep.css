@@ -25,4 +25,7 @@
 .keep-direction > span { grid-column: 1 / -1; }
 .keep-direction meter { width: 100%; min-width: 0; accent-color: var(--azure); height: var(--space-16); }
 .keep-moat { grid-column: 1 / -1; padding: var(--space-8) var(--space-16); display: flex; justify-content: space-between; gap: var(--space-12); background: var(--azure); color: var(--press); border-top: var(--rule-strong) solid var(--ink); font-weight: 700; }
+.keep-moat > span:first-child { flex: none; }
+.keep-moat-link { flex: none; align-self: center; color: inherit; font: 800 var(--text-small)/1.2 var(--font-ui); text-transform: uppercase; letter-spacing: var(--track-label); text-decoration: underline; text-underline-offset: var(--space-3); }
+.keep-moat-link:focus-visible { outline: var(--rule-strong) solid var(--press); outline-offset: var(--focus-offset); }
 @media (max-width: 68.75rem) { .keep-home { height: auto; min-height: 100%; } .keep-cross-section { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: auto; } .keep-room[data-module], .keep-herald { grid-column: auto; grid-row: auto; margin-top: var(--space-16); } .keep-herald { grid-column: 1 / -1; } .keep-room-art { height: var(--space-56); } }

@@ -69,7 +69,9 @@ test('the moat bar carries a labelled sample heartbeat in the fixture and none f
   const bar = fixture.slice(fixture.indexOf('class="keep-moat"'));
   expect(bar).toContain('Chat delay · 4 s');
   expect(bar).toContain('role="img" aria-label="Sample replay loop · simulated"');
+  expect(bar).toContain('<a class="keep-moat-link" href="#/chamber/moderator/drill">Watch the full replay</a>');
   const core = renderToStaticMarkup(<Keep snapshot={{ mode: 'core', phase: 'ready', ...simulatedRead(1) }} on_open={vi.fn()} on_enter={vi.fn()} />);
   expect(core).toContain('Chat delay · unknown');
   expect(core).not.toContain('moat-heartbeat');
+  expect(core).not.toContain('keep-moat-link');
 });

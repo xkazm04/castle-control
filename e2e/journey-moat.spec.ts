@@ -73,6 +73,20 @@ test('Next and Previous stop walk the stamps in order and select each one', asyn
   } finally { verify(); }
 });
 
+test('the Keep moat bar loops a labelled sample and leads to the full replay', async ({ page }) => {
+  const verify = await guardPage(page);
+  try {
+    await page.goto('/#/keep');
+    const bar = page.locator('.keep-moat');
+    await expect(bar.getByRole('img', { name: 'Sample replay loop · simulated', exact: true })).toBeVisible();
+    await expect(bar).toContainText('Sample replay · simulated');
+    await auditStyles(page, desktopSurfaces);
+    await bar.getByRole('link', { name: 'Watch the full replay', exact: true }).click();
+    await expect(page).toHaveURL(/#\/chamber\/moderator\/drill$/);
+    await expect(page.getByRole('status').filter({ hasText: held })).toHaveCount(1);
+  } finally { verify(); }
+});
+
 test('spotlighting a rule keeps its stamp, dims the rest, and Next stop walks only that rule', async ({ page }) => {
   const verify = await guardPage(page);
   try {

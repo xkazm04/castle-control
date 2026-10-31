@@ -53,7 +53,8 @@ export function Keep({ snapshot = { mode: 'fixture', phase: 'ready' }, on_open, 
         <small>{snapshot.mode === 'fixture' ? 'Sample room reading · never an action' : 'Awaiting chamber data'}</small>
       </button>
       <div className="keep-moat"><span>The moat</span>Chat delay · {read.delay}
-        {snapshot.mode === 'fixture' ? <MoatHeartbeat source={fixtureReplay} delay_s={read.delay_s} /> : <span aria-hidden="true">≈ ≈ ≈ ≈ ≈ ≈ ≈</span>}</div>
+        {snapshot.mode === 'fixture' ? <><MoatHeartbeat source={fixtureReplay} delay_s={read.delay_s} />
+          <a className="keep-moat-link" href="#/chamber/moderator/drill">Watch the full replay</a></> : <span aria-hidden="true">≈ ≈ ≈ ≈ ≈ ≈ ≈</span>}</div>
     </div>
   </section>;
 }
