@@ -1,14 +1,14 @@
 .cc-chamber-strip {
   display: flex; align-items: stretch; width: 100%; min-height: calc(var(--space-40) + var(--space-6));
   border-bottom: var(--rule-strong) solid var(--ink); background: var(--strip-paper);
+  font-size: var(--text-number); line-height: normal;
 }
 .cc-chamber-tile {
   --chamber-ink: var(--ink); position: relative; min-width: 0; flex: 1;
-  display: grid; grid-template-columns: auto auto minmax(0, 1fr); align-content: center; align-items: center;
-  column-gap: var(--space-10); row-gap: var(--space-5); text-align: left;
-  padding: var(--space-12) var(--space-14) var(--space-6); border: 0; border-right: var(--rule-medium) solid var(--hair);
+  display: flex; align-items: center; gap: var(--space-10); text-align: left;
+  padding: 0 var(--space-14); border: 0; border-right: var(--rule-medium) solid var(--hair);
   background: transparent; color: var(--ink); cursor: pointer;
-  font: 500 var(--text-shell-state)/1 var(--font-ui);
+  font: 400 var(--text-number)/normal var(--font-ui);
 }
 .cc-chamber-tile::before {
   --cc-stripe-motion: .2s;
@@ -22,8 +22,8 @@
 .cc-chamber-tile:is([aria-pressed="true"], [aria-current="page"])::before { height: var(--nav-stripe-active); }
 .cc-chamber-tile:hover { background: var(--strip-hover); }
 .cc-chamber-tile-title { font: 700 var(--text-shell-strip-word)/1 var(--font-display); letter-spacing: .05em; text-transform: uppercase; white-space: nowrap; }
-.cc-chamber-state { color: var(--ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.cc-layer-lamps { grid-column: 1 / -1; display: flex; gap: var(--space-8); flex-wrap: wrap; color: var(--muted); }
+.cc-chamber-state { flex: 0 1 auto; min-width: 0; color: var(--ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 500 var(--text-shell-state)/1 var(--font-ui); }
+.cc-layer-lamps { display: flex; gap: var(--space-8); flex-wrap: wrap; color: var(--muted); font: 500 var(--text-shell-state)/1 var(--font-ui); }
 .cc-layer-lamps [data-lit="true"] { color: var(--ink-2); font-weight: 700; }
 .cc-layer-lamps [data-lit]::before { content: ''; display: inline-block; width: var(--space-6); height: var(--space-6); margin-right: var(--space-4); border: var(--rule-thin) solid currentColor; border-radius: 50%; }
 .cc-layer-lamps [data-lit="true"]::before { background: var(--chamber-ink); border-color: var(--ink); }

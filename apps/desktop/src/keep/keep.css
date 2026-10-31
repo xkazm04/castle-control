@@ -27,7 +27,7 @@
 .keep-khead .eyebrow { display: block; margin-bottom: var(--space-6); font: 700 var(--keep-eyebrow-size, var(--text-shell-eyebrow))/1 var(--font-ui); letter-spacing: .14em; text-transform: uppercase; color: var(--ink-2); }
 .keep-khead .display { font-family: var(--font-display); font-weight: 700; font-stretch: condensed; letter-spacing: .005em; line-height: .86; text-transform: uppercase; }
 .keep-khead h1 { margin: 0; font-size: var(--keep-headline-size, var(--text-shell-headline)); text-shadow: var(--space-4) var(--space-3) 0 var(--gules); }
-.keep-khead .sub { display: block; margin-top: var(--space-6); max-width: calc(var(--space-1) * 990); font: italic var(--keep-sub-size, var(--text-shell-tagline))/1.2 var(--font-serif); color: var(--ink-2); }
+.keep-khead .sub { display: block; margin-top: var(--space-6); font: italic var(--keep-sub-size, var(--text-shell-tagline))/1.2 var(--font-serif); color: var(--ink-2); }
 .keep-khead .slip { animation: keep-registration-slip var(--m-slip) var(--ease-press) both; }
 .keep-vlab { position: absolute; right: var(--space-16); top: var(--space-12); z-index: 12; font: 600 var(--keep-label-size, var(--text-shell-label))/1 var(--font-ui); color: var(--ink-2); background: var(--shell-label-scrim); padding: var(--space-4) var(--space-7); pointer-events: none; }
 .keep-castle { position: absolute; left: 0; top: 0; width: calc(var(--space-1) * 1200); height: calc(var(--space-1) * 640); transform-origin: 0 0; transition: transform var(--m-dolly) var(--ease-dolly); }
@@ -45,7 +45,7 @@
 [data-room="visuals"] { --keep-ink: var(--or); --keep-text: var(--or-text); }
 [data-room="studio"] { --keep-ink: var(--ink); --keep-text: var(--ink); }
 .keep-khead [data-room] { color: var(--keep-text); }
-.keep-plaque { box-sizing: border-box; position: absolute; z-index: 3; background: var(--plaque-paper); border: var(--title-ghost) solid var(--ink); border-left: var(--space-10) solid var(--keep-ink, var(--ink)); padding: var(--space-7) var(--space-12) var(--space-8); box-shadow: var(--space-4) var(--space-4) 0 var(--plaque-shadow); pointer-events: none; min-width: calc(var(--space-1) * 200); max-width: calc(var(--space-1) * 340); transition: opacity var(--m-slip); }
+.keep-plaque { box-sizing: border-box; position: absolute; z-index: 3; background: var(--plaque-paper); border: var(--title-ghost) solid var(--ink); border-left: var(--space-10) solid var(--keep-ink, var(--ink)); padding: var(--space-7) var(--space-12) var(--space-8); box-shadow: var(--space-4) var(--space-4) 0 var(--plaque-shadow); pointer-events: none; min-width: calc(var(--space-1) * 200); line-height: normal; transition: opacity var(--m-slip); }
 .keep-plaque .nm { font: 700 var(--keep-name-size, var(--text-shell-plaque-name))/1 var(--font-ui); letter-spacing: .1em; text-transform: uppercase; color: var(--ink-2); display: flex; gap: var(--space-8); align-items: center; }
 .keep-plaque .wd { font: 700 var(--keep-word-size, var(--text-shell-plaque-word))/1 var(--font-display); text-transform: uppercase; letter-spacing: .02em; margin-top: var(--space-5); color: var(--keep-text, var(--ink)); }
 .keep-plaque .ln { font: 500 var(--keep-line-size, var(--text-shell-plaque-state))/1.25 var(--font-ui); color: var(--ink-2); margin-top: var(--space-4); }

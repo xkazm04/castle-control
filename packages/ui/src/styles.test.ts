@@ -53,18 +53,48 @@ function luminance(hex: string) {
   return 0.2126 * channel(1) + 0.7152 * channel(3) + 0.0722 * channel(5);
 }
 
-test('disabled seals use muted ink on a neutral card with AA contrast in both themes', () => {
+test('disabled seals retain ink lettering and rules with the winner half-opacity treatment', () => {
   const styles = readFileSync(new URL('./seal-button.css', import.meta.url), 'utf8');
+  const seal = styles.match(/\.cc-seal-button\s*\{([^}]+)\}/)?.[1] ?? '';
   const disabled = styles.match(/\.cc-seal-button:disabled\s*\{([^}]+)\}/)?.[1] ?? '';
-  expect(disabled).toContain('color: var(--muted)');
-  expect(disabled).toContain('background: var(--card)');
-  expect(disabled).toContain('border-color: var(--muted)');
-  expect(disabled).not.toContain('opacity:');
+  expect(seal).toContain('color: var(--ink)');
+  expect(seal).toContain('background: var(--card)');
+  expect(seal).toContain('border: var(--space-3) solid var(--ink)');
+  expect(seal).toContain('padding: var(--space-1) var(--space-6)');
+  expect(disabled).toContain('opacity: .5');
+  expect(disabled).toContain('cursor: not-allowed');
+  expect(disabled).toContain('box-shadow: none');
+  expect(disabled).not.toMatch(/(?:color|background|border)[\w-]*\s*:/);
   for (const theme of ['paper', 'stock'] as const) {
-    const { muted, card } = tokens.theme[theme];
-    const values = [luminance(muted), luminance(card)];
+    const ink = { ...tokens.theme.paper, ...tokens.theme[theme] }.ink;
+    const { card } = tokens.theme[theme];
+    const values = [luminance(ink), luminance(card)];
     const ratio = (Math.max(...values) + 0.05) / (Math.min(...values) + 0.05);
-    console.log(`[disabled seal ${theme}] contrast ${ratio.toFixed(2)}:1`);
+    console.log(`[seal ink before disabled opacity ${theme}] contrast ${ratio.toFixed(2)}:1`);
     expect(ratio).toBeGreaterThanOrEqual(4.5);
   }
+});
+
+test('shell containers and strip tiles explicitly preserve the winner defaults and intrinsic state width', () => {
+  const shell = readFileSync(new URL('./shell.css', import.meta.url), 'utf8');
+  const strip = readFileSync(new URL('./chamber-strip.css', import.meta.url), 'utf8');
+  for (const rule of [shell.match(/\.cc-rampart\s*\{([^}]+)\}/)?.[1], strip.match(/\.cc-chamber-strip\s*\{([^}]+)\}/)?.[1]]) {
+    expect(rule).toContain('font-size: var(--text-number)');
+    expect(rule).toContain('line-height: normal');
+  }
+  const tile = strip.match(/\.cc-chamber-tile\s*\{([^}]+)\}/)?.[1] ?? '';
+  for (const declaration of ['display: flex', 'align-items: center', 'padding: 0 var(--space-14)',
+    'font: 400 var(--text-number)/normal var(--font-ui)']) expect(tile).toContain(declaration);
+  const state = strip.match(/\.cc-chamber-state\s*\{([^}]+)\}/)?.[1] ?? '';
+  for (const declaration of ['flex: 0 1 auto', 'min-width: 0', 'overflow: hidden', 'text-overflow: ellipsis',
+    'white-space: nowrap', 'font: 500 var(--text-shell-state)/1 var(--font-ui)']) expect(state).toContain(declaration);
+  expect(state).not.toMatch(/(?:^|;)\s*width\s*:/);
+});
+
+test('shell keycaps use a fixed unpadded box and monitor frames inherit normal line height', () => {
+  const kbd = readFileSync(new URL('./kbd.css', import.meta.url), 'utf8');
+  for (const declaration of ['width: var(--space-22)', 'height: var(--space-22)', 'padding: 0']) expect(kbd).toContain(declaration);
+  expect(kbd).not.toContain('padding-inline:');
+  const monitor = readFileSync(new URL('./program-monitor.css', import.meta.url), 'utf8');
+  expect(monitor).toContain('font: 400 var(--text-shell-body)/normal var(--font-ui)');
 });
