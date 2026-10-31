@@ -134,6 +134,36 @@ registration; this delivery adds no live contribution intake. Native engines
 can hand over subsequent `BeaconsIntensity` values through
 `accept_beacons_intensity`. `beacons.simulate` remains isolated.
 
+### Test-fire lifecycle (beacons-A)
+
+`beacons.simulate` keeps its parameters and empty-state result. On the native
+host it also starts or replaces that visual's isolated preview session. A weak
+state owner drives a one-second ticker even without live intake; only changed
+preview intensities are handed to the renderer. Live decay ticks cannot clear
+an active test fire. The ticker stops when no sessions remain and does not keep
+the module or its store alive.
+
+Owner-visible behaviour is fixed by **PREVIEW_HOLD_S = 30** (hold no-decay
+visuals for 30 seconds) and **PREVIEW_MAX_S = 600** (cap every session at 600
+seconds), defined in `cc-beacons::preview`. A session also ends as soon as its
+intensity is within 0.005 of the curve's first range. Ending calls
+`NativeServices::end_beacons_simulation` / `RenderHost::clear_simulation` to
+restore the accepted live intensity, publish `simulated=false`, and remove
+the legacy `: SIMULATED` SSE comment. The OBS badge clears by itself. A
+successful visual save (including curve changes), a matching live contribution,
+or purge/revocation cancels the session; unrelated visuals stay untouched.
+Simulation never writes retained contributions, live totals or the engine
+ledger. No RPC, event, wire field or store schema was added.
+
+Acceptance is in `beacons/simulate_overlay.rs`, under `#[cfg(test)]`, using native
+services and loopback SSE without live intake. Paused Tokio time proves 1.0 at
+t=0, 0.5 at t=60 seconds, restoration of an accepted 0.2 live value at the floor,
+no subsequent simulated pushes, replacement/hold expiry, cancellation and ticker
+shutdown, unchanged contribution reads/retention/engine ledger, and no pushes to
+another visual. Only the existing Tokio dependency's dev-only `test-util`
+feature was enabled; no package or lockfile change is needed. Run
+`cargo test -p cc-core beacons --locked` and the repository's `pnpm gate`.
+
 `accept_beacons_package(package, root, consent)` is a trusted native import door,
 not a new RPC. It parses the merged schema, verifies local assets/content hash,
 checks initial or widened script privileges, then atomically updates affected

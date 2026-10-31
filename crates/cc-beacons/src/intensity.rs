@@ -25,7 +25,7 @@ pub fn validate_curve(curve: &IntensityCurve) -> Result<(), &'static str> {
     Ok(())
 }
 
-fn interpolate(curve: &IntensityCurve, total: f64) -> Result<Intensity, &'static str> {
+pub(crate) fn interpolate(curve: &IntensityCurve, total: f64) -> Result<Intensity, &'static str> {
     // All callers validate once at their configuration boundary.
     let first = curve.ranges.first().ok_or("expected intensity range")?;
     let mut previous = first;
@@ -43,6 +43,22 @@ fn interpolate(curve: &IntensityCurve, total: f64) -> Result<Intensity, &'static
         previous = next;
     }
     Ok(previous.intensity.clone())
+}
+
+// One decay calculation for live totals and isolated preview sessions.
+pub(crate) fn decayed_at(
+    total: f64,
+    updated_at: Duration,
+    now: Duration,
+    decay: &IntensityDecay,
+) -> Result<f64, &'static str> {
+    let elapsed = now.checked_sub(updated_at).ok_or("clock moved backwards")?;
+    Ok(match decay {
+        IntensityDecay::None {} => total,
+        IntensityDecay::Exponential { half_life_s } => {
+            total * 2.0_f64.powf(-elapsed.as_secs_f64() / f64::from(half_life_s.get()))
+        }
+    })
 }
 
 /// One broadcaster and visual per engine. Decay applies to the running weighted
@@ -78,15 +94,7 @@ impl<C: Clock> IntensityEngine<C> {
     }
 
     fn decayed_at(&self, now: Duration) -> Result<f64, &'static str> {
-        let elapsed = now
-            .checked_sub(self.updated_at)
-            .ok_or("clock moved backwards")?;
-        Ok(match &self.visual.curve.decay {
-            IntensityDecay::None {} => self.total,
-            IntensityDecay::Exponential { half_life_s } => {
-                self.total * 2.0_f64.powf(-elapsed.as_secs_f64() / f64::from(half_life_s.get()))
-            }
-        })
+        decayed_at(self.total, self.updated_at, now, &self.visual.curve.decay)
     }
 
     pub fn contribute(&mut self, input: &Contribution) -> Result<BeaconsIntensity, &'static str> {

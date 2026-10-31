@@ -41,6 +41,26 @@ immediately after a synthetic burst. It returns BeaconsSimulateResult with
 dedupe keys or change live totals. With the test curve (0 -> 0, 100 -> 1),
 `{ source: gift, amount: 50 }` produces 0.5 at unit weight, or 1.0 at weight 2.
 
+`preview::PreviewSession<C: Clock>` gives that isolated burst a lifecycle. It
+starts from the same weighted empty total as `simulate`, then uses the same
+private decay calculation as the live engine before curve interpolation.
+Snapshots return `Some(BeaconsIntensity)` until the first observation within
+0.005 of the first range's intensity, then permanently return `None`.
+The owner-visible constants **PREVIEW_HOLD_S = 30** and **PREVIEW_MAX_S = 600**
+hold a no-decay test fire for 30 seconds and cap every test fire at 600 seconds,
+whichever end condition comes first. These are fixed behaviour, not settings.
+The native host ticks these sessions independently of live Twitch intake, so
+a test fire plays its decay on OBS and automatically returns to the accepted
+live state, clearing the SIMULATED badge. Saving the visual, a matching live
+contribution, or a purge also ends its session. No preview writes live totals,
+retained contributions or the engine ledger; repeated bursts each start empty.
+
+`tests/preview.rs` uses generated bursts and a fake clock: a 50-gift burst on
+the (0 -> 0, 50 -> 1) curve is exactly 1.0 at t=0 and 0.5 at t=60 seconds for
+a 60-second half-life, matching the live engine on repeated runs. It checks the
+first floor tick (459 seconds), irreversible ending, both duration caps and
+unchanged `simulate` results. Run `cargo test -p cc-beacons --locked`.
+
 Acceptance evidence is in `tests/engine.rs` (generated, simulated inputs only)
 and `tests/dependency_direction.rs`. The latter checks resolved transitive
 dependency trees in both directions, including build/dev/target dependencies,

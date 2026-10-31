@@ -132,6 +132,9 @@ impl BeaconsModule {
     pub(crate) fn purge_live_data(&self) -> Result<(), ErrorEnvelope> {
         let mut state = self.state.lock().map_err(|_| internal())?;
         state.revoked = true;
+        for id in state.previews.keys().cloned().collect::<Vec<_>>() {
+            self.cancel_preview(&mut state, &id)?;
+        }
         state.engines.clear();
         state
             ._store

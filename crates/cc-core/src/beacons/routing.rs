@@ -7,7 +7,12 @@ use cc_beacons::{
 use cc_types::{BeaconsIntensity, Contribution, ErrorEnvelope, TwitchUserId, Visual};
 use std::{collections::btree_map::Entry, sync::Weak, time::Duration};
 
-struct HostClock(tokio::time::Instant);
+pub(super) struct HostClock(tokio::time::Instant);
+impl Default for HostClock {
+    fn default() -> Self {
+        Self(tokio::time::Instant::now())
+    }
+}
 impl Clock for HostClock {
     fn now(&self) -> Duration {
         self.0.elapsed()
@@ -49,31 +54,57 @@ impl BeaconsModule {
             .visuals
             .values()
             .filter(|visual| visual.input.is_some())
+            .cloned()
+            .collect::<Vec<_>>()
         {
+            let selected = visual.input.as_ref().is_some_and(|input| {
+                input.source == contribution.source
+                    || matches!(
+                        (input.source, contribution.source),
+                        (
+                            cc_types::ContributionSource::Cheer,
+                            cc_types::ContributionSource::BitsUse
+                        ) | (
+                            cc_types::ContributionSource::BitsUse,
+                            cc_types::ContributionSource::Cheer
+                        )
+                    )
+            });
+            if selected {
+                // Clear even if the next live value equals the last one.
+                super::preview::cancel(state, &visual.visual_id, self.native.as_ref())?;
+            }
             let live = match state.engines.entry(visual.visual_id.clone()) {
                 Entry::Vacant(slot) => slot.insert(LiveEngine::new(
-                    visual,
+                    &visual,
                     contribution.broadcaster_id.clone(),
                 )?),
                 Entry::Occupied(slot) => slot.into_mut(),
             };
             if live.broadcaster != contribution.broadcaster_id {
-                *live = LiveEngine::new(visual, contribution.broadcaster_id.clone())?;
+                *live = LiveEngine::new(&visual, contribution.broadcaster_id.clone())?;
             }
             let intensity = live
                 .engine
                 .contribute(contribution)
                 .map_err(|_| internal())?;
-            self.handoff_changed(live, intensity)?;
+            if !state.previews.contains_key(&visual.visual_id) {
+                self.handoff_changed(live, intensity)?;
+            }
         }
         Ok(())
     }
 
     pub(super) fn snapshot_live(&self) -> Result<(), ErrorEnvelope> {
         let mut state = self.state.lock().map_err(|_| internal())?;
-        for live in state.engines.values_mut() {
+        let State {
+            engines, previews, ..
+        } = &mut *state;
+        for (id, live) in engines.iter_mut() {
             let intensity = live.engine.snapshot().map_err(|_| internal())?;
-            self.handoff_changed(live, intensity)?;
+            if !previews.contains_key(id) {
+                self.handoff_changed(live, intensity)?;
+            }
         }
         Ok(())
     }

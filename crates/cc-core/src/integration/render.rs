@@ -48,4 +48,8 @@ impl NativeServices {
     pub(crate) fn beacons_source_url(&self, id: &VisualId) -> Result<String, ErrorEnvelope> {
         self.render.source_url(&self.overlay_url(), id)
     }
+    /// End only this visual's test fire and restore its accepted live value.
+    pub(crate) fn end_beacons_simulation(&self, id: &VisualId) -> Result<(), ErrorEnvelope> {
+        self.render.clear_simulation(id)
+    }
 }

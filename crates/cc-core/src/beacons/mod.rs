@@ -2,6 +2,7 @@
 mod art;
 mod art_assets;
 mod live;
+mod preview;
 mod routing;
 pub use art_assets::{ArtCatalog, ArtDownload};
 #[cfg(test)]
@@ -25,7 +26,7 @@ use serde_json::Value;
 use std::{
     collections::BTreeMap,
     path::{Path, PathBuf},
-    sync::{Mutex, Weak},
+    sync::{Arc, Mutex, Weak},
 };
 
 struct State {
@@ -33,13 +34,15 @@ struct State {
     _store: Store,
     visuals: BTreeMap<VisualId, Visual>,
     engines: BTreeMap<VisualId, routing::LiveEngine>,
+    previews: BTreeMap<VisualId, preview::Preview>,
+    preview_task: Option<tokio::task::JoinHandle<Result<(), ErrorEnvelope>>>,
     revoked: bool,
 }
 
 pub struct BeaconsModule {
     art: Option<art::ArtRuntime>,
     art_serial: tokio::sync::Mutex<()>,
-    state: Mutex<State>,
+    state: Arc<Mutex<State>>,
     root: PathBuf,
     overlay_origin: Option<String>,
     native: Option<Weak<crate::NativeServices>>,
@@ -66,12 +69,14 @@ impl BeaconsModule {
         Ok(Self {
             art: None,
             art_serial: tokio::sync::Mutex::new(()),
-            state: Mutex::new(State {
+            state: Arc::new(Mutex::new(State {
                 _store: store,
                 visuals,
                 engines: BTreeMap::new(),
+                previews: BTreeMap::new(),
+                preview_task: None,
                 revoked: false,
-            }),
+            })),
             root,
             overlay_origin: None,
             native: None,
@@ -141,7 +146,15 @@ impl BeaconsModule {
                     InputSelection::new(vec![(params.burst.source, 1)]).map_err(invalid)?;
                 let preview = simulate(visual, &inputs, &params.burst).map_err(invalid)?;
                 if let Some(native) = self.native.as_ref().and_then(Weak::upgrade) {
+                    let session = cc_beacons::preview::PreviewSession::new(
+                        visual,
+                        &inputs,
+                        &params.burst,
+                        routing::HostClock::default(),
+                    )
+                    .map_err(invalid)?;
                     native.accept_beacons_simulation(preview.intensity.clone())?;
+                    self.start_preview(&mut state, session, preview.intensity.clone());
                 }
                 encode(preview)
             }
@@ -177,6 +190,7 @@ impl BeaconsModule {
             storage::save(&self.root, &visuals)?;
         }
         state.visuals = visuals;
+        self.cancel_preview(state, &visual.visual_id)?;
         self.reset_live_visual(state, &visual)?;
         Ok(())
     }

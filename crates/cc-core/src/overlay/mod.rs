@@ -136,6 +136,15 @@ impl RenderHost {
         publish(&state, &id)
     }
 
+    /// Restore the accepted live intensity and remove simulated provenance.
+    pub(crate) fn clear_simulation(&self, id: &VisualId) -> Result<(), ErrorEnvelope> {
+        let mut state = self.state.lock().map_err(|_| unavailable())?;
+        if state.previews.remove(id).is_some() {
+            publish(&state, id)?;
+        }
+        Ok(())
+    }
+
     /// Hash/asset verification happens before consent and publication. `consent`
     /// is a trusted native decision; no overlay route accepts it or a package.
     pub fn accept_package(

@@ -36,6 +36,7 @@ tempfile = "3.22"
 reqwest.workspace = true
 
 [dev-dependencies]
+tokio = { workspace = true, features = ["test-util"] }
 tokio-tungstenite = "0.28.0"
 tracing = "0.1.41"
 tracing-subscriber = { version = "0.3.20", features = ["fmt"] }
