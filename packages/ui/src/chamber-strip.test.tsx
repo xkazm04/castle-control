@@ -90,3 +90,14 @@ test('current marks the open room independently of the selected room and Keep is
   expect(keep).toContain('<kbd class="cc-kbd">0</kbd>');
   expect(keep).toContain('The Keep');
 });
+
+test('an optional short word replaces the visible line and its accessible description, with line fallback', () => {
+  const state = { line: '87 sample lots · waiting for a writ', on_air: false, preview: true, draft: false };
+  const markup = renderToStaticMarkup(<ChamberStrip selected="lottery" states={{
+    lottery: { ...state, word: 'No draw' }, moderator: { ...state, word: '1 held' },
+    visuals: { ...state, word: 'Offering Altar' }, studio: state,
+  }} on_select={vi.fn()} on_open={vi.fn()} />);
+  const lines = [...markup.matchAll(/class="cc-chamber-state" id="([^"]+)"[^>]*>([^<]*)/g)];
+  expect(lines.map(line => line[2])).toEqual(['No draw', '1 held', 'Offering Altar', state.line]);
+  for (const line of lines) expect(markup).toContain(`aria-describedby="${line[1]?.replace('-state', '-lamps')} ${line[1]}"`);
+});

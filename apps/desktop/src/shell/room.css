@@ -1,21 +1,25 @@
-.desktop-surface:has(> .shell-room) { display: flex; flex-direction: column; overflow: hidden; padding: 0 var(--space-16) var(--space-12); }
-.shell-room { --room-ink: var(--ink); position: relative; flex: 1; min-height: 0; display: flex; flex-direction: column; margin-top: var(--space-16); border: var(--rule-strong) solid var(--ink); background: var(--paper); box-shadow: var(--space-10) var(--space-10) 0 var(--hair-2); font: var(--text-body)/1.5 var(--font-ui); }
+.desktop-surface:has(> .shell-room) { display: flex; flex-direction: column; overflow: hidden; padding: 0; }
+.shell-room { --room-ink: var(--ink); position: relative; flex: 1; min-height: 0; min-width: 0; display: flex; flex-direction: column; background: var(--paper); font: var(--text-body)/1.5 var(--font-ui); }
 .shell-room[data-chamber="lottery"] { --room-ink: var(--gules-text); }
 .shell-room[data-chamber="moderator"] { --room-ink: var(--azure-text); }
 .shell-room[data-chamber="visuals"] { --room-ink: var(--or-text); }
-.shell-room-header { display: flex; align-items: center; gap: var(--space-16); padding: var(--space-12) var(--space-20); border-bottom: var(--rule-medium) solid var(--line); }
-.shell-room-heading { flex: 1; min-width: 0; }
-.shell-room .cc-room-locator { display: flex; align-items: center; gap: var(--space-4); font-size: var(--text-small); }
-.shell-room .cc-room-locator > span { margin-inline-end: var(--space-4); color: var(--muted); }
-.shell-room .cc-room-locator a { min-width: var(--space-30); padding: var(--space-4); border: var(--rule-thin) solid var(--ink); background: var(--card); color: var(--ink); font-family: var(--font-num); text-align: center; text-decoration: none; }
-.shell-room .cc-room-locator a[aria-current] { color: var(--paper); background: var(--ink); }
-.shell-room-heading nav { font: 600 var(--text-label)/1.3 var(--font-ui); color: var(--muted); }
-.shell-room-title { display: flex; align-items: baseline; flex-wrap: wrap; gap: var(--space-8) var(--space-24); }
-.shell-room-header h1 { margin: 0; font: 800 var(--text-chamber-number)/1 var(--font-display); text-transform: uppercase; text-shadow: var(--wordmark-ghost) var(--wordmark-ghost) 0 var(--room-ink); }
-.shell-room-title p { margin: 0; font: italic var(--text-wordmark)/1.3 var(--font-serif); }
-.shell-room-simulated { color: var(--muted); font: 700 var(--text-label)/1.4 var(--font-ui); letter-spacing: var(--track-label); }
-.shell-room .shell-room-back { flex-shrink: 0; padding: var(--space-8) var(--space-14); border: var(--rule-medium) solid var(--ink); color: var(--ink); text-decoration: none; font-weight: 700; }
-.shell-room-back kbd { font: var(--text-small)/1.4 var(--font-num); margin-inline-start: var(--space-8); }
+.shell-room-header { position: relative; flex: none; height: calc(var(--space-1) * 250); border-bottom: var(--space-3) solid var(--ink); }
+.shell-room-band { position: absolute; inset: 0; overflow: hidden; background: var(--paper-grain), linear-gradient(180deg, var(--stage-top), var(--stage-low)); }
+.shell-room-plane { position: absolute; left: 50%; top: 0; width: calc(var(--space-1) * 1060); height: 100%; transform: translateX(-50%); }
+.shell-room-camera { position: absolute; left: 0; top: 0; width: calc(var(--space-1) * 1200); height: calc(var(--space-1) * 640); transform-origin: 0 0; animation: room-dolly var(--m-dolly) var(--ease-dolly) both; }
+.shell-room-camera > svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.shell-room-camera .dim { opacity: 0; fill: var(--art-night); mix-blend-mode: multiply; }
+.shell-room-camera .dim.on { opacity: .55; }
+.shell-room-camera .litglow { opacity: 0; }
+.shell-room-camera .litglow.on { opacity: 1; }
+.shell-room-header .cc-room-title { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
+.shell-room-header .cc-room-title-card { position: absolute; left: var(--space-20); top: calc(var(--space-1) * 96); max-width: min(calc(var(--space-1) * 720), calc(100% - var(--space-40))); box-sizing: border-box; pointer-events: auto; }
+.shell-room-header .cc-room-back { position: absolute; right: var(--space-16); bottom: var(--space-16); pointer-events: auto; }
+.shell-room-header :where(.cc-room-crumb button, .cc-room-back) { font: inherit; }
+.shell-room-header .cc-room-back { font: 700 var(--text-shell-action)/1 var(--font-ui); }
+.shell-room-header .cc-room-crumb button { padding: 0; border: 0; background: transparent; font: inherit; }
+@keyframes room-dolly { from { transform: var(--room-camera-from); } }
+@media (prefers-reduced-motion: reduce) { .shell-room-camera { animation: none; } }
 .shell-room .shell-room-work { display: block; flex: 1; min-height: 0; padding: 0; overflow: hidden; }
 .shell-room .shell-room-content { min-width: 0; height: 100%; overflow: auto; }
 .shell-room .shell-seal-slot { min-width: 0; padding: var(--space-16) 0; border: 0; border-top: var(--rule-medium) solid var(--line); background: transparent; margin-top: var(--space-20); }
@@ -35,8 +39,6 @@
 .room-now { font: 600 var(--text-section)/1.4 var(--font-ui); }
 .shell-room a { color: var(--azure-text); }
 @media (max-width: 900px) {
-  .shell-room-header { flex-wrap: wrap; }
-  .shell-room-heading { flex-basis: 100%; }
   .shell-room .shell-room-content { overflow: auto; }
   .room-column { overflow: visible; border-inline-end: 0; }
 }

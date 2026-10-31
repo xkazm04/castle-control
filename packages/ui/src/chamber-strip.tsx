@@ -3,7 +3,7 @@ import type { ModuleId } from './primitives.jsx';
 import { Kbd } from './kbd.jsx';
 import './chamber-strip.css';
 
-export type ChamberLayerState = { line: string; on_air: boolean; preview: boolean; draft: boolean; pending_count?: number };
+export type ChamberLayerState = { line: string; word?: string; on_air: boolean; preview: boolean; draft: boolean; pending_count?: number };
 export type ChamberStripProps = {
   selected: ModuleId; states: Readonly<Record<ModuleId, ChamberLayerState>>;
   on_select: (id: ModuleId) => void; on_open: (id: ModuleId) => void;
@@ -25,7 +25,7 @@ export function ChamberStrip({ selected, states, on_select, on_open, current, on
       aria-current={current === chamber.id ? 'page' : undefined}
       aria-describedby={`${lamps_id} ${state_id}`} onClick={() => on_select(chamber.id)} onDoubleClick={() => on_open(chamber.id)}>
       <Kbd>{chamber.number}</Kbd><b className="cc-chamber-tile-title">{chamber.name}</b>
-      <span className="cc-chamber-state" id={state_id}>{state.line}</span>
+      <span className="cc-chamber-state" id={state_id}>{state.word ?? state.line}</span>
       <span className="cc-layer-lamps">{([
         ['On air', state.on_air], ['Preview', state.preview], ['Draft', state.draft],
       ] as const).map(([label, on]) => <span key={label} data-lit={on} aria-hidden="true">{label}</span>)}
