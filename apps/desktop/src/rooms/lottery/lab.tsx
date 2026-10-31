@@ -6,6 +6,7 @@ import { byteWindow, defaultTamperIndex, inspectWrit } from './lab-model.js';
 import type { LabReport, LabStep, StepStatus, Tamper, TamperKind, TracePick } from './lab-model.js';
 import { labCopy as copy } from './lab-copy.js';
 import type { BeaconAnchor } from './beacon-anchors.js';
+import { readWritFile, writ_file_limit } from './writ-file.js';
 import { useReducedMotion } from './playback.js';
 import './lab.css';
 
@@ -112,12 +113,34 @@ function Trace({ trace }: { trace: readonly TracePick[] }) {
   </details>;
 }
 
-type Specimen = 'cast' | 'beacon';
+type Specimen = 'cast' | 'beacon' | 'file';
+export type SpecimenControls = Readonly<{
+  specimen: Specimen; on_specimen: (specimen: Specimen) => void; beacon: boolean;
+  opened?: string | undefined; open_failed: boolean; on_open: (file: File) => void;
+}>;
 
-export function WritLabView({ writ, simulated, tamper, report, failed = false, run = 0, on_tamper, section, specimen, on_specimen }: {
+/** Which writ is on the bench: the current one, the simulated beacon specimen, or a file the streamer opened. */
+function Specimens({ controls }: { controls: SpecimenControls }) {
+  const input = useRef<HTMLInputElement>(null);
+  const { specimen, on_specimen, beacon, opened, open_failed, on_open } = controls;
+  const options: readonly Specimen[] = ['cast', ...(beacon ? ['beacon' as const] : []), ...(opened ? ['file' as const] : [])];
+  return <div className="lottery-lab-specimens" role="group" aria-label={copy.specimen}>
+    <p className="lottery-lab-kicker">{copy.specimen}</p>
+    {options.map(value => <InkButton key={value} size="small" aria-pressed={specimen === value} onClick={() => on_specimen(value)}>
+      {value === 'file' ? copy.opened(opened ?? '') : copy.specimens[value]}</InkButton>)}
+    <InkButton size="small" onClick={() => input.current?.click()}>{copy.open}</InkButton>
+    <input ref={input} type="file" accept="application/json,.json" hidden aria-label={copy.open} onChange={event => {
+      const file = event.currentTarget.files?.[0]; event.currentTarget.value = ''; if (file) on_open(file);
+    }} />
+    {specimen === 'beacon' && <p className="lottery-lab-aside">{copy.beacon_hint}</p>}
+    {specimen === 'file' && <p className="lottery-lab-aside">{copy.file_hint}</p>}
+    <p className="lottery-lab-aside" aria-live="polite">{open_failed ? copy.open_failed : ''}</p>
+  </div>;
+}
+
+export function WritLabView({ writ, simulated, tamper, report, failed = false, run = 0, on_tamper, section, specimens }: {
   writ: LotsWrit; simulated: boolean; tamper?: Tamper; report?: LabReport; failed?: boolean; run?: number;
-  on_tamper: (tamper: Tamper | undefined) => void; section?: Ref<HTMLElement>;
-  specimen?: Specimen; on_specimen?: (specimen: Specimen) => void;
+  on_tamper: (tamper: Tamper | undefined) => void; section?: Ref<HTMLElement>; specimens?: SpecimenControls;
 }) {
   const index = defaultTamperIndex(writ);
   const target = writ.roll.entries[index]?.handle ?? '';
@@ -127,12 +150,7 @@ export function WritLabView({ writ, simulated, tamper, report, failed = false, r
     <SectionHeading variant="banner" level={2} title={copy.title} gloss={copy.gloss} ink="gules"
       count={simulated ? <StatusChip variant="gules" stamp="label">{copy.simulated}</StatusChip> : undefined} />
     <p className="lottery-lab-intro">{copy.intro}</p>
-    {on_specimen && <div className="lottery-lab-specimens" role="group" aria-label={copy.specimen}>
-      <p className="lottery-lab-kicker">{copy.specimen}</p>
-      {(['cast', 'beacon'] as const).map(value => <InkButton key={value} size="small" aria-pressed={(specimen ?? 'cast') === value}
-        onClick={() => on_specimen(value)}>{copy.specimens[value]}</InkButton>)}
-      {specimen === 'beacon' && <p className="lottery-lab-aside">{copy.beacon_hint}</p>}
-    </div>}
+    {specimens && <Specimens controls={specimens} />}
     <div className="lottery-lab-grid">
       <div className="lottery-lab-bench">
         <p className="lottery-lab-kicker">{copy.tamper_title}</p>
@@ -175,7 +193,17 @@ export function WritLab({ writ: cast_writ, simulated, prove = 0, beacon, anchors
   anchors?: readonly BeaconAnchor[];
 }) {
   const [specimen, setSpecimen] = useState<Specimen>('cast');
-  const writ = specimen === 'beacon' && beacon ? beacon : cast_writ;
+  const [opened, setOpened] = useState<{ name: string; writ: LotsWrit }>();
+  const [open_failed, setOpenFailed] = useState(false);
+  const writ = specimen === 'beacon' && beacon ? beacon : specimen === 'file' && opened ? opened.writ : cast_writ;
+  const open = (file: File) => {
+    if (file.size > writ_file_limit) { setOpenFailed(true); return; }
+    file.text().then(text => {
+      const parsed = readWritFile(text);
+      setOpenFailed(!parsed);
+      if (parsed) { setOpened({ name: file.name, writ: parsed }); setSpecimen('file'); }
+    }, () => setOpenFailed(true));
+  };
   const [selection, setSelection] = useState<{ writ: LotsWrit; tamper?: Tamper }>({ writ });
   const section = useRef<HTMLElement>(null);
   const reduced = useReducedMotion();
@@ -202,5 +230,5 @@ export function WritLab({ writ: cast_writ, simulated, prove = 0, beacon, anchors
   const current = result && result.writ === writ && result.tamper === tamper ? result : undefined;
   return <WritLabView section={section} writ={writ} simulated={simulated} run={run} on_tamper={next => setSelection(next ? { writ, tamper: next } : { writ })}
     {...(tamper ? { tamper } : {})} {...(current?.report ? { report: current.report } : {})} failed={current?.failed ?? false}
-    {...(beacon ? { specimen, on_specimen: setSpecimen } : {})} />;
+    specimens={{ specimen, on_specimen: setSpecimen, beacon: Boolean(beacon), opened: opened?.name, open_failed, on_open: open }} />;
 }

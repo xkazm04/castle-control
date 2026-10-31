@@ -9,6 +9,7 @@ import type { LabReport } from './lab-model.js';
 import { labVerdict, WritLab, WritLabView } from './lab.jsx';
 import { labCopy } from './lab-copy.js';
 import { quicknet_anchor, simulated_anchor } from './beacon-anchors.js';
+import { readWritFile } from './writ-file.js';
 
 const statuses = (report: LabReport) => report.steps.map(step => step.status);
 // Generated, labelled-simulated values only: no real seed, signature or chat.
@@ -175,8 +176,8 @@ test('the simulated beacon specimen is verifier-web case 40, and the lab walks t
 });
 
 test('the specimen switch shows which writ is on the bench and explains the beacon limits', () => {
-  const html = renderToStaticMarkup(<WritLabView writ={fixtureBeaconWrit} simulated specimen="beacon" on_specimen={() => undefined}
-    on_tamper={() => undefined} />);
+  const specimens = { specimen: 'beacon' as const, on_specimen: () => undefined, beacon: true, open_failed: false, on_open: () => undefined };
+  const html = renderToStaticMarkup(<WritLabView writ={fixtureBeaconWrit} simulated specimens={specimens} on_tamper={() => undefined} />);
   expect(html).toMatch(/aria-pressed="true"[^>]*>Simulated beacon writ</);
   expect(html).toMatch(/aria-pressed="false"[^>]*>Current writ</);
   expect(html).toContain('the BLS signature against the simulated chain key');
@@ -215,4 +216,30 @@ test('a recorded official quicknet beacon verifies against the public key in the
   const report = await inspectWrit(writ, undefined, [quicknet_anchor]);
   expect(statuses(report)).toEqual(['pass', 'pass', 'pass', 'pass']);
   expect(report.anchor).toBe('public');
+});
+
+test('a writ file is parsed by the contract schema; a hand-edited one parses but the seal catches it', async () => {
+  expect(readWritFile(JSON.stringify(fixtureWrit))).toEqual(fixtureWrit);
+  expect(readWritFile('{}')).toBeUndefined();
+  expect(readWritFile('not json')).toBeUndefined();
+  const edited = JSON.parse(JSON.stringify(fixtureWrit)) as LotsWrit;
+  const first = edited.roll.entries[0];
+  if (first) first.weight += 1;
+  const parsed = readWritFile(JSON.stringify(edited));
+  if (!parsed) throw new Error('A schema-valid edit must parse');
+  expect(statuses(await inspectWrit(parsed))).toEqual(['pass', 'fail', 'blocked', 'blocked']);
+  const official = corpus('public-writs.json').cases[1]?.writ;
+  const opened = readWritFile(JSON.stringify(official));
+  if (!opened) throw new Error('Missing public writ vector');
+  expect(statuses(await inspectWrit(opened, undefined, [quicknet_anchor]))).toEqual(['pass', 'pass', 'pass', 'pass']);
+});
+
+test('an opened file joins the specimen switch with its own hint', () => {
+  const specimens = { specimen: 'file' as const, on_specimen: () => undefined, beacon: false, opened: 'castle-control-writ.json',
+    open_failed: false, on_open: () => undefined };
+  const html = renderToStaticMarkup(<WritLabView writ={fixtureWrit} simulated={false} specimens={specimens} on_tamper={() => undefined} />);
+  expect(html).toMatch(/aria-pressed="true"[^>]*>File · castle-control-writ.json</);
+  expect(html).toContain('>Open a writ file…</button>');
+  expect(html).toContain('parsed by the contract schema');
+  expect(html).not.toContain('Simulated beacon writ');
 });
