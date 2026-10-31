@@ -82,7 +82,8 @@
   --stage-top:#F5EFE2; --stage-mid:#EFE8D8;
   --stage-low:#E7DEC8; --night:#1E2C4A;
   --glow:#FFF3D1; --press-paper:#FBF6EA;
-  --stamp-paper:#FFF8EC; --rampart-paper:#F5EFE2;
+  --stamp-paper:#FFF8EC; --stamp-seal-text:#F2B233;
+  --stamp-act-ground:#B3321B; --rampart-paper:#F5EFE2;
   --rampart-background:#16181D; --strip-paper:#EFE7D5;
   --strip-hover:#F7F1E3; --column-paper:#E9E1CD;
   --plaque-paper:#FBF9F3; --panel-paper:#FFFDF7;
@@ -177,7 +178,8 @@
   --stage-top:#1D2027; --stage-mid:#1A1C22;
   --stage-low:#121317; --night:#1E2C4A;
   --glow:#FFD36B; --press-paper:#121317;
-  --stamp-paper:#FFF8EC; --rampart-paper:#F5EFE2;
+  --stamp-paper:#FFF8EC; --stamp-seal-text:#121317;
+  --stamp-act-ground:#B3321B; --rampart-paper:#F5EFE2;
   --rampart-background:#16181D; --strip-paper:#1A1C22;
   --strip-hover:#1D2027; --column-paper:#1A1C22;
   --plaque-paper:#1D2027; --panel-paper:#1D2027;

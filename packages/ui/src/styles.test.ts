@@ -2,16 +2,27 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { tokens } from '@castle-control/tokens';
 import { expect, test } from 'vitest';
 
+function cssFiles(folder: URL): URL[] {
+  return readdirSync(folder, { withFileTypes: true }).flatMap(entry => {
+    if (entry.isSymbolicLink()) return [];
+    const path = new URL(entry.name + (entry.isDirectory() ? '/' : ''), folder);
+    return entry.isDirectory() ? cssFiles(path) : entry.name.endsWith('.css') ? [path] : [];
+  });
+}
+
 test('component styles use declared shared tokens, not raw colors or pixel sizes', () => {
   const directory = new URL('.', import.meta.url);
-  const files = [directory, new URL('../kit/', directory)].flatMap(folder => readdirSync(folder)
-    .filter(path => path.endsWith('.css')).map(path => new URL(path, folder)));
+  const files = [directory, new URL('../kit/', directory)].flatMap(cssFiles);
   expect(files.length).toBeGreaterThan(0);
+  expect(files.some(path => path.pathname.endsWith('/stamp/stamp.css'))).toBe(true);
+  expect(files.some(path => path.pathname.endsWith('/design/focus.css'))).toBe(true);
   console.log(`[component CSS] walked ${files.length} files`);
-  const styles = files.map(path => readFileSync(path, 'utf8')).join('\n');
+  // Design provenance comments may record the original colours; declarations stay token-only.
+  const styles = files.map(path => readFileSync(path, 'utf8')).join('\n').replaceAll(/\/\*[\s\S]*?\*\//g, '');
   const declarations = new Set([...styles.matchAll(/--([\w-]+)\s*:/g)].map(match => match[1]));
-  const known = new Set([...Object.keys(tokens.theme.paper), ...Object.keys(tokens.layout), ...declarations]);
-  for (const [, name] of styles.matchAll(/var\(--([\w-]+)/g)) expect(known.has(name ?? '')).toBe(true);
+  const shared = [tokens.theme.paper, tokens.layout, tokens.art, tokens.cutaway, tokens.motion, tokens.type];
+  const known = new Set([...shared.flatMap(group => Object.keys(group)), ...declarations]);
+  for (const [, name] of styles.matchAll(/var\(--([\w-]+)/g)) expect(known.has(name ?? ''), name).toBe(true);
   expect(styles).not.toMatch(/#[\da-f]{3,8}\b|\brgba?\(|\bhsla?\(/i);
   // Media queries cannot consume CSS custom properties. This is the measured prototype breakpoint.
   const declarationsOnly = styles.replaceAll('@media (max-width: 1420px)', '@media (max-width: breakpoint)')

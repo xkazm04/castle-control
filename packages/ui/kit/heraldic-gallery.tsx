@@ -15,6 +15,7 @@ import { ProposalCard } from '../src/proposal-card.jsx';
 import { chambers } from '../src/shell.jsx';
 import { WindowedRows, rowHeight } from '../src/windowed-rows.jsx';
 import type { PrintInk } from '../src/heraldic-options.js';
+import Stamps from './stamps.jsx';
 import './heraldic-gallery.css';
 import '../src/heraldic-buttons.css';
 import '../src/heraldic-stamp.css';
@@ -100,6 +101,7 @@ function InkSheet({ ink }: { ink: typeof inks[number] }) {
 export default function HeraldicGallery({ theme }: { theme: Theme }) {
   return <section id={`heraldic-${theme}`} aria-label={`${theme} heraldic kit`}>
     <h2>Heraldic kit · {theme} · simulated</h2>
+    <Stamps />
     <div className="cc-heraldic-gallery">{inks.map(ink => <InkSheet ink={ink} key={ink} />)}</div>
   </section>;
 }

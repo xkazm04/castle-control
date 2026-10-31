@@ -53,3 +53,7 @@ export { FieldGroup } from './heraldic-field.jsx';
 export { printStyle } from './heraldic-options.js';
 export type { PrintInk, PrintSize, PrintStyle, PrintOptions } from './heraldic-options.js';
 export type { StatusChipProps } from './chips.jsx';
+export { Stamp, InkEdgeFilter } from './stamp/stamp.jsx';
+export type { StampProps } from './stamp/stamp.jsx';
+export { stampKinds } from './stamp/table.js';
+export type { StampKind } from './stamp/table.js';

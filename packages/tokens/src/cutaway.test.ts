@@ -31,7 +31,9 @@ test('new groups render their exact values in both existing blocks and the typed
   expect(tokens.stock_cutaway).toEqual(stockCutawayTokens);
   expect(tokens.motion).toEqual(motionTokens);
   expect(tokens.type).toEqual(typeTokens);
-  expect(names).toHaveLength(161);
+  expect(names).toHaveLength(163);
+  expect(names).toContain('stamp-seal-text');
+  expect(names).toContain('stamp-act-ground');
 });
 
 test('no custom property occurs twice across groups or declarations in one block', () => {
@@ -52,19 +54,24 @@ test('D10 defines exactly the printed art paints, identical in both themes', () 
   expect(stockArtTokens).toEqual(artTokens);
 });
 
-test('all keep-art motion fallbacks are admitted byte-equal, with only CSS whitespace ignored for easing', () => {
+test('all keep-art motion references are admitted byte-equal, with only CSS whitespace ignored for easing', () => {
   const art = read('../../keep-art/src/keep-art.css');
-  const fallbacks = [...art.matchAll(/var\(--((?:m-|ease-)[\w-]+),\s*(cubic-bezier\([^)]*\)|[^)]+)\)/g)];
-  expect(new Set(fallbacks.map(match => match[1])).size).toBe(17);
-  for (const [, name, fallback] of fallbacks) {
-    if (!name || !fallback) throw new Error('Incomplete motion fallback');
+  const references = [...art.matchAll(/var\(--((?:m-|ease-)[\w-]+)(?:,\s*(cubic-bezier\([^)]*\)|[^)]+))?\)/g)];
+  expect(new Set(references.map(match => match[1])).size).toBe(17);
+  for (const [, name, fallback] of references) {
+    if (!name) throw new Error('Incomplete motion reference');
     const value = (motionTokens as Readonly<Record<string, string>>)[name];
-    expect(value?.replaceAll(' ', '')).toBe(fallback.trim().replaceAll(' ', ''));
+    expect(value).toBeDefined();
+    expect(value).toBe((winnerMotion as Readonly<Record<string, string>>)[name]);
+    if (fallback) expect(value?.replaceAll(' ', '')).toBe(fallback.trim().replaceAll(' ', ''));
   }
 });
 
 test('paper paints and press motion retain the exact winner literals', () => {
-  expect(cutawayTokens).toEqual(winnerCutaway);
+  const { 'stamp-seal-text': sealText, 'stamp-act-ground': actGround, ...winnerSurfaces } = cutawayTokens;
+  expect(winnerSurfaces).toEqual(winnerCutaway);
+  expect(sealText).toBe(themeTokens.paper.or);
+  expect(actGround).toBe(themeTokens.paper['gules-text']);
   expect(motionTokens).toEqual(winnerMotion);
 });
 
@@ -75,10 +82,11 @@ test('every rejected candidate name is absent from generated CSS', () => {
   for (const name of rejected) expect(css).not.toContain(`--${name}`);
 });
 
-test('the admission ledger defines every new role and records exact paper and stock values', () => {
+test('the WP2 admission ledger defines every winner role and records exact paper and stock values', () => {
   const ledger = [...read('../CUTAWAY.md').matchAll(/^\| `--([\w-]+)` \| `([^`]+)` \| `([^`]+)` \| ([^\n]+) \|$/gm)];
-  const paper = { ...artTokens, ...cutawayTokens, ...motionTokens, ...typeTokens };
-  const stock = { ...stockArtTokens, ...stockCutawayTokens, ...motionTokens, ...typeTokens };
+  // WP4a's additional stamp roles are verified separately below.
+  const paper = { ...artTokens, ...winnerCutaway, ...motionTokens, ...typeTokens };
+  const stock: Readonly<Record<string, string>> = { ...stockArtTokens, ...stockCutawayTokens, ...motionTokens, ...typeTokens };
   expect(ledger.map(row => row[1]).sort()).toEqual(Object.keys(paper).sort());
   for (const [, name, paperValue, stockValue, definition] of ledger) {
     if (!name) throw new Error('Missing admission name');
@@ -86,6 +94,16 @@ test('the admission ledger defines every new role and records exact paper and st
     expect(stockValue).toBe((stock as Readonly<Record<string, string>>)[name]);
     expect(definition?.length).toBeGreaterThan(20);
   }
+});
+
+test('the added seal lettering role preserves or on paper and reads dark on the stock ink ground', () => {
+  expect(tokens.cutaway['stamp-seal-text']).toBe(themeTokens.paper.or);
+  expect(tokens.stock_cutaway['stamp-seal-text']).toBe(themeTokens.stock.paper);
+});
+
+test('O6 keeps acting stamp grounds dark in both themes for fixed light lettering', () => {
+  expect(tokens.cutaway['stamp-act-ground']).toBe(themeTokens.paper['gules-text']);
+  expect(tokens.stock_cutaway['stamp-act-ground']).toBe(tokens.cutaway['stamp-act-ground']);
 });
 
 test('stock surface values use the existing dark papers and retain fixed on-dark inks', () => {
