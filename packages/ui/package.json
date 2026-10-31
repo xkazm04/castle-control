@@ -7,7 +7,9 @@
     ".": "./src/index.ts",
     "./steward": "./src/steward/index.ts",
     "./design": "./src/design/index.ts",
-    "./duel": "./src/duel/index.ts"
+    "./duel": "./src/duel/index.ts",
+    "./stamp": "./src/stamp/table.ts",
+    "./stamp.css": "./src/stamp/stamp.css"
   },
   "sideEffects": [
     "./src/kit.tsx",

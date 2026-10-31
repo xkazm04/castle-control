@@ -54,7 +54,7 @@ export function StudioWork({ queue, seal_slot, board, design_session = designSes
   const open = (next: StudioView) => { if (view === 'rehearse' && next !== 'rehearse') rehearse.handlers.pause(); setView(next); };
   const change = (field: SessionField, value?: string) => setSession(state => updateStudioSession(state, field, value, board));
   return <section className="studio-room cc-herald" aria-label={copy.work} data-view={view}>
-    <div className="studio-table-work">
+    <div className="studio-table-work" data-studio-view={view}>
       <StudioViewSwitch view={view} on_view={open} />
       {view === 'tiltyard' ? <Suspense fallback={<p className="studio-tiltyard-note" role="status">{copy.tiltyard}</p>}>
         <TiltyardView />

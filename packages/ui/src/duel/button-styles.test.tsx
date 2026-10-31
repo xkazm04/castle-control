@@ -103,7 +103,7 @@ test('every rendered duel button outranks host button styles in either styleshee
     for (const button of buttons) {
       expect(winner(ordered, button, 'max-width')?.declarations.get('max-width')).toBe('none');
       expect(winner(ordered, button, 'font')?.declarations.get('font')).toBe(button.includes('ty-yb')
-        ? '700 var(--ty-text-detail)/1 var(--font-ui)' : 'inherit');
+        ? '700 var(--text-small)/1 var(--font-ui)' : 'inherit');
       // The shorthand decides weight, size, family and line-height; no longhand may let the host back in.
       for (const property of ['font-weight', 'font-size', 'font-family', 'line-height']) {
         const longhand = winner(ordered, button, property);

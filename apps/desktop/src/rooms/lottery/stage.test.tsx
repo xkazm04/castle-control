@@ -181,7 +181,7 @@ test('a finished ceremony closes on its proof: a verdict card with the lab hando
   expect(core).toContain(copy.stage.proof.core[0]); expect(core).not.toContain(copy.stage.prove);
   const desk = render({ shape: 'wheel', clock, cast, sealed: true, seal, on_prove: () => undefined });
   expect(desk).not.toContain('lottery-stage-verdict');
-  expect(desk).toMatch(new RegExp(`data-variant="ok"[^>]*>${copy.stage.proof.local[0]}<`));
+  expect(desk).toMatch(new RegExp(`data-stamp="ok"[^>]*>[\\s\\S]*?${copy.stage.proof.local[0]}<`));
   const playing = createRevealClock(); playing.tick(scene, `${seal}:wheel:0`, 0);
   expect(render({ shape: 'wheel', clock: playing, cast, sealed: true, seal, theatre: true })).not.toContain(copy.stage.proof.local[0]);
 });
@@ -203,7 +203,8 @@ test('the chat line names winners in cast order, carries the seal and labels any
 test('theatre toggle is exposed with its pressed state, and the sealed stage stamps its wax', () => {
   const html = render({ sealed: true, seal, theatre: true, on_theatre: () => undefined });
   expect(html).toContain('data-phase="sealed"'); expect(html).toContain('lottery-stage-wax');
-  expect(html).toMatch(new RegExp(`aria-pressed="true"[^>]*>${copy.stage.desk}<`));
+  expect(html).toMatch(new RegExp(`data-theatre-toggle="true" aria-pressed="true"[^>]*aria-label="${copy.stage.desk}"`));
+  expect(html).toContain(`title="${copy.stage.desk}"`);
 });
 
 test('the fixture room stage animates only the frozen roll it sealed', async () => {

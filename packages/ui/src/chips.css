@@ -16,22 +16,13 @@
 .cc-chip[data-variant="bad"] { color: var(--danger); border-color: var(--danger); }
 .cc-chip[data-variant="warn"] { color: var(--or-text); border-color: var(--warn); }
 .cc-chip[data-variant="dash"] { border-style: dashed; color: var(--muted); border-color: var(--hair); }
-.cc-verdict { display: inline-flex; align-items: center; gap: var(--space-5); font: italic 700 var(--text-small)/1 var(--font-serif); }
-.cc-verdict svg { width: var(--icon-sm); height: var(--icon-sm); fill: none; stroke: currentColor; stroke-width: 1.7; }
-.cc-verdict[data-verdict="pass"] { color: var(--azure-text); }
-.cc-verdict[data-verdict="hold"] { color: var(--or-text); }
-.cc-verdict[data-verdict="bar"] { color: var(--gules-text); }
+.cc-verdict { display: inline-flex; align-items: center; }
 .cc-gatehouse {
-  display: inline-flex; align-items: stretch; height: var(--button-h); flex: none; text-decoration: none;
+  display: inline-flex; align-items: center; gap: var(--space-6); flex: none; text-decoration: none;
   font: 800 var(--text-label)/1 var(--font-ui); letter-spacing: var(--track-heading); text-transform: uppercase;
-  border-radius: var(--r-sm); overflow: hidden; white-space: nowrap;
+  border-radius: var(--r-sm); white-space: nowrap;
 }
-.cc-gatehouse > span { display: flex; align-items: center; gap: var(--space-6); padding-inline: var(--space-9); border: var(--rule-medium) solid var(--azure); }
-.cc-gatehouse b { font: 800 var(--text-body)/1 var(--font-num); letter-spacing: 0; }
-.cc-gatehouse-armed { background: var(--azure); color: var(--press); }
-.cc-gatehouse .cc-gatehouse-watching { border-style: dashed; color: var(--azure-text); }
-.cc-gatehouse-armed + .cc-gatehouse-watching { border-left: 0; }
-.cc-gatehouse .cc-gatehouse-shield { background: var(--danger); color: var(--white); border-color: var(--danger); }
+.cc-gatehouse .cc-gatehouse-shield { padding: var(--space-6); background: var(--danger); color: var(--white); border: var(--rule-medium) solid var(--danger); }
 .cc-connection { display: flex; align-items: center; gap: var(--space-7); padding-inline: var(--space-4); height: var(--space-36); white-space: nowrap; }
 .cc-connection svg { width: var(--icon-md); height: var(--icon-md); color: var(--ok); fill: none; stroke: currentColor; stroke-width: 1.6; }
 .cc-connection circle { fill: currentColor; }

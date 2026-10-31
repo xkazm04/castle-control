@@ -86,7 +86,7 @@ test('contribution feed reuses the named, tabbable native scroll window without 
   const port = createBeaconsPreview();
   const feed = ContributionFeed({ events: port.getSnapshot().events, origin: 'Local preview' });
   // C cards put the unchanged scroll window inside CardBody and RuledFeed.
-  const window = feed.props.children[1].props.children[1].props.children;
+  const window = feed.props.children[2].props.children[1].props.children;
   expect(window.type).toBe(WindowedRows);
   expect(window.props.label).toBe('Simulated Beacons contribution events');
   const html = renderToStaticMarkup(window);

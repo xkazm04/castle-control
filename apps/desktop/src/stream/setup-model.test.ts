@@ -52,6 +52,9 @@ test('fixture rows and add are simulated, with no network or capability use', as
   const model = createStreamSetup({ mode: 'fixture', transport });
   const state = model.getSnapshot();
   expect(state.obs).toBe('simulated');
+  const html = renderToStaticMarkup(StreamSetupContent({ model, state, on_back: vi.fn() }));
+  expect(html).toContain('data-stamp="simulated" role="img" aria-label="Simulated: SIMULATED"');
+  expect(html).toContain('>SIMULATED</span>');
   expect(state.rows.filter(row => row.visual_id).map(row => row.visual_id)).toEqual(fixtureVisuals.map(row => row.visual_id));
   expect(state.rows.find(row => !row.visual_id)).toMatchObject({ phase: 'unavailable', href: '#/chamber/lottery' });
   await model.refresh();

@@ -14,7 +14,8 @@
     "typecheck": "pnpm -r typecheck",
     "lint": "node scripts/tooling-lint.mjs && pnpm -r lint",
     "test": "pnpm -r test",
-    "e2e": "playwright test -c e2e/playwright.config.ts"
+    "e2e": "node e2e/run.mjs",
+    "e2e:site": "pnpm --config.verify-deps-before-run=false --filter @castle-control/site build && playwright test -c e2e/site.config.ts"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",

@@ -1,10 +1,10 @@
 /* Ported rule by rule from .port/winner/index.html, cc-t2-duel A/1. */
-.ty-ticker{display:flex;flex-direction:column;gap:var(--space-2);font:var(--ty-text-detail)/1.25 var(--font-ui);min-height:var(--ty-ticker-height)}
+.ty-ticker{display:flex;flex-direction:column;gap:var(--space-2);font:var(--text-small)/1.25 var(--font-ui);min-height:var(--ty-ticker-height)}
 .ty-tick{display:grid;grid-template-columns:var(--space-40) minmax(0,var(--ty-match-width)) minmax(0,1fr) auto;gap:var(--space-8);align-items:center;padding:var(--space-2) var(--space-4);animation:ty-tick-in .3s var(--ease) both}
-.ty-tick time{font:var(--ty-text-number-small)/1 var(--font-num);color:var(--muted)}
-.ty-tick .ty-u{font:var(--ty-text-seed)/1 var(--font-num);color:var(--ty-stage-text-dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ty-tick time{font:var(--text-label)/1 var(--font-num);color:var(--muted)}
+.ty-tick .ty-u{font:var(--text-label)/1 var(--font-num);color:var(--ty-stage-text-dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ty-tick .ty-m{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.ty-tick .ty-status{font:700 var(--ty-text-column)/1 var(--font-ui);letter-spacing:var(--track-label);text-transform:uppercase;padding:var(--space-3) var(--space-5);border:var(--rule-thin) solid}
+.ty-tick .ty-status{font:700 var(--text-label)/1 var(--font-ui);letter-spacing:var(--track-label);text-transform:uppercase;padding:var(--space-3) var(--space-5);border:var(--rule-thin) solid}
 .ty-tick[data-status="counted"] .ty-status{color:var(--ty-signal-counted)}
 .ty-tick[data-status="barred"]{opacity:.7}
 .ty-tick[data-status="barred"] .ty-m{text-decoration:line-through}
@@ -12,5 +12,5 @@
 .ty-tick[data-status="held"] .ty-status{color:var(--ty-signal-held)}
 .ty-tick[data-status="repeat"] .ty-status,.ty-tick[data-status="chatter"] .ty-status{color:var(--ty-stage-muted)}
 @keyframes ty-tick-in{from{transform:translateY(var(--space-6));opacity:0}to{transform:none;opacity:1}}
-.ty-closed{font:var(--ty-text-seed)/1.35 var(--font-num);color:var(--ty-stage-text-dim);margin-top:var(--space-6)}
+.ty-closed{font:var(--text-label)/1.35 var(--font-num);color:var(--ty-stage-text-dim);margin-top:var(--space-6)}
 .ty-closed code{color:var(--ty-signal-counted)}

@@ -1,9 +1,9 @@
 /* Writ Lab: a printed proof instrument. Token-only: no raw colour or pixel values. */
-.lottery-lab { container-type: inline-size; display: flex; flex-direction: column; gap: var(--space-14); padding: var(--space-16) var(--space-20) var(--space-20); border: var(--rule-strong) solid var(--ink); border-radius: var(--r-md); background: var(--card); box-shadow: var(--space-5) var(--space-5) 0 var(--hair-2); }
-.lottery-lab-intro { margin: 0; font: 500 var(--text-body)/1.45 var(--font-ui); color: var(--ink-2); }
-.lottery-lab-kicker { margin: 0; font: 800 var(--text-label)/1.3 var(--font-ui); letter-spacing: var(--track-heading); text-transform: uppercase; color: var(--gules-text); }
-.lottery-lab-aside { margin: 0; font: italic var(--text-aside)/1.4 var(--font-serif); color: var(--ink-2); }
-.lottery-lab-aside a { color: var(--gules-text); font: 700 var(--text-small)/1.4 var(--font-ui); font-style: normal; }
+.lottery-lab { container-type: inline-size; display: flex; flex-direction: column; gap: var(--space-14); padding: var(--space-16) var(--space-20) var(--space-20); border: var(--rule-strong) solid var(--ink); border-radius: 0; background: var(--card); box-shadow: var(--space-5) var(--space-5) 0 var(--hair-2); }
+.lottery-lab-intro { margin: 0; font: 500 var(--text-shell-body)/1.45 var(--font-ui); color: var(--ink-2); }
+.lottery-lab-kicker { margin: 0; font: 800 var(--text-shell-label)/1.3 var(--font-ui); letter-spacing: var(--track-heading); text-transform: uppercase; color: var(--gules-text); }
+.lottery-lab-aside { margin: 0; font: italic var(--text-shell-aside)/1.4 var(--font-serif); color: var(--ink-2); }
+.lottery-lab-aside a { color: var(--gules-text); font: 700 var(--text-shell-label)/1.4 var(--font-ui); font-style: normal; }
 .lottery-lab-specimens { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-6) var(--space-8); }
 .lottery-lab-specimens .cc-button[aria-pressed="true"] { border-color: var(--ink); background: var(--ink); color: var(--paper); }
 .lottery-lab-specimens .lottery-lab-aside { flex-basis: 100%; }
@@ -14,52 +14,52 @@
 .lottery-lab-tampers .cc-button[aria-pressed="true"] { border-color: var(--gules); background: color-mix(in srgb, var(--gules) 18%, var(--paper)); color: var(--gules-text); }
 
 /* Frozen roll: canonical JSON lines and the hex excerpt of the sealed preimage. */
-.lottery-lab-bytes { display: flex; flex-direction: column; gap: var(--space-8); padding: var(--space-10) var(--space-12); border: var(--rule-medium) dashed var(--ink); border-radius: var(--r-sm); background: var(--paper); }
-.lottery-lab-roll { margin: 0; padding-inline-start: var(--space-32); font: 500 var(--text-small)/1.6 var(--font-num); color: var(--ink); overflow-wrap: anywhere; }
+.lottery-lab-bytes { display: flex; flex-direction: column; gap: var(--space-8); padding: var(--space-10) var(--space-12); border: var(--rule-medium) dashed var(--ink); border-radius: 0; background: var(--paper); }
+.lottery-lab-roll { margin: 0; padding-inline-start: var(--space-32); font: 500 var(--text-shell-label)/1.6 var(--font-num); color: var(--ink); overflow-wrap: anywhere; }
 .lottery-lab-roll li::marker { color: var(--muted); }
 .lottery-lab-roll [data-tampered="true"] { background: color-mix(in srgb, var(--gules) 22%, transparent); color: var(--gules-text); font-weight: 700; animation: lottery-lab-flash var(--motion-shell) var(--ease) 2; }
 .lottery-lab-hex-frame { margin: 0; display: flex; flex-direction: column; gap: var(--space-6); }
-.lottery-lab-hex-frame figcaption { font: 600 var(--text-small)/1.4 var(--font-num); color: var(--ink-2); }
+.lottery-lab-hex-frame figcaption { font: 600 var(--text-shell-label)/1.4 var(--font-num); color: var(--ink-2); }
 .lottery-lab-hex-frame figcaption b { color: var(--gules-text); }
-.lottery-lab-hex { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: var(--space-2) var(--space-4); font: 600 var(--text-small)/1.5 var(--font-num); color: var(--ink-2); }
-.lottery-lab-hex span { text-align: center; border-radius: var(--r-sm); }
-.lottery-lab-hex [data-changed="true"] { background: var(--gules); color: var(--press); animation: lottery-lab-flash var(--motion-shell) var(--ease) 3; }
+.lottery-lab-hex { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: var(--space-2) var(--space-4); font: 600 var(--text-shell-label)/1.5 var(--font-num); color: var(--ink-2); }
+.lottery-lab-hex span { text-align: center; border-radius: 0; }
+.lottery-lab-hex [data-changed="true"] { background: var(--stamp-act-ground); color: var(--press-paper); animation: lottery-lab-flash var(--motion-shell) var(--ease) 3; }
 
 /* Four step cards: each stamps in sequence after every recompute. */
 .lottery-lab-steps { display: flex; flex-direction: column; gap: var(--space-8); margin: 0; padding: 0; list-style: none; }
-.lottery-lab-step { position: relative; display: grid; grid-template-columns: var(--space-32) minmax(0, 1fr) auto; align-items: start; gap: var(--space-10); padding: var(--space-10) var(--space-12); border: var(--rule-medium) solid var(--ink); border-radius: var(--r-sm); background: var(--paper); animation: lottery-lab-rise var(--motion-shell) var(--ease) both; animation-delay: calc(var(--lab-step) * var(--motion-shell)); }
+.lottery-lab-step { position: relative; display: grid; grid-template-columns: var(--space-32) minmax(0, 1fr) auto; align-items: start; gap: var(--space-10); padding: var(--space-10) var(--space-12); border: var(--rule-medium) solid var(--ink); border-radius: 0; background: var(--paper); animation: lottery-lab-rise var(--motion-shell) var(--ease) both; animation-delay: calc(var(--lab-step) * var(--motion-shell)); }
 .lottery-lab-step[data-status="pass"] { border-color: var(--ok); }
 .lottery-lab-step[data-status="fail"] { border-color: var(--danger); border-width: var(--rule-strong); background: color-mix(in srgb, var(--danger) 8%, var(--paper)); }
 .lottery-lab-step[data-status="blocked"] { border-style: dashed; border-color: var(--hair); color: var(--muted); }
 .lottery-lab-step[data-status="blocked"] .lottery-lab-step-number { background: var(--hair); color: var(--ink-2); }
 .lottery-lab-step[data-status="unverified"] { border-color: var(--warn); }
 .lottery-lab-step[data-status="pending"] { border-style: dashed; border-color: var(--hair); }
-.lottery-lab-step-number { display: grid; place-content: center; width: var(--space-32); aspect-ratio: 1; border-radius: 50%; background: var(--ink); color: var(--paper); font: 800 var(--text-body)/1 var(--font-num); }
+.lottery-lab-step-number { display: grid; place-content: center; width: var(--space-32); aspect-ratio: 1; border-radius: 50%; background: var(--ink); color: var(--paper); font: 800 var(--text-shell-body)/1 var(--font-num); }
 .lottery-lab-step[data-status="fail"] .lottery-lab-step-number { background: var(--danger); color: var(--press); }
 .lottery-lab-step[data-status="pass"] .lottery-lab-step-number { background: var(--ok); color: var(--press); }
 .lottery-lab-step-body { display: flex; flex-direction: column; gap: var(--space-4); min-width: 0; }
-.lottery-lab-step h4 { margin: 0; font: 800 var(--text-body)/1.25 var(--font-display); letter-spacing: var(--track-heading); text-transform: uppercase; }
-.lottery-lab-fact { margin: 0; font: 600 var(--text-small)/1.4 var(--font-num); color: var(--ink); }
-.lottery-lab-reason { margin: 0; font: 600 var(--text-small)/1.4 var(--font-ui); color: var(--ink-2); }
+.lottery-lab-step h4 { margin: 0; font: 800 var(--text-shell-body)/1.25 var(--font-display); letter-spacing: var(--track-heading); text-transform: uppercase; }
+.lottery-lab-fact { margin: 0; font: 600 var(--text-shell-label)/1.4 var(--font-num); color: var(--ink); }
+.lottery-lab-reason { margin: 0; font: 600 var(--text-shell-label)/1.4 var(--font-ui); color: var(--ink-2); }
 .lottery-lab-step[data-status="fail"] .lottery-lab-reason { color: var(--danger); }
 .lottery-lab-compare { display: grid; gap: var(--space-2); margin: 0; }
 .lottery-lab-compare > div { display: grid; grid-template-columns: minmax(calc(var(--space-56) + var(--space-24)), auto) minmax(0, 1fr); gap: var(--space-8); align-items: baseline; }
-.lottery-lab-compare dt { font: 700 var(--text-label)/1.3 var(--font-ui); letter-spacing: var(--track-label); text-transform: uppercase; color: var(--muted); }
-.lottery-lab-compare dd { margin: 0; font: 600 var(--text-small)/1.4 var(--font-num); overflow-wrap: anywhere; }
+.lottery-lab-compare dt { font: 700 var(--text-shell-label)/1.3 var(--font-ui); letter-spacing: var(--track-label); text-transform: uppercase; color: var(--muted); }
+.lottery-lab-compare dd { margin: 0; font: 600 var(--text-shell-label)/1.4 var(--font-num); overflow-wrap: anywhere; }
 .lottery-lab-compare[data-match="false"] > div:last-child dd { color: var(--danger); text-decoration: underline wavy var(--danger); text-underline-offset: var(--space-3); }
 .lottery-lab-step .cc-stamp { align-self: center; animation: lottery-lab-stamp var(--motion-shell) var(--ease) both; animation-delay: calc(var(--lab-step) * var(--motion-shell) + var(--motion-fast)); }
 .lottery-lab-step[data-status="fail"] .cc-stamp { background: var(--paper); }
 
-.lottery-lab-verdict { margin: 0; padding: var(--space-8) var(--space-12); border-inline-start: var(--space-5) solid var(--ink); background: var(--paper); font: 700 var(--text-body)/1.4 var(--font-ui); }
+.lottery-lab-verdict { margin: 0; padding: var(--space-8) var(--space-12); border-inline-start: var(--space-5) solid var(--ink); background: var(--paper); font: 700 var(--text-shell-body)/1.4 var(--font-ui); }
 .lottery-lab-verdict[data-verdict="verified"] { border-color: var(--ok); }
 .lottery-lab-verdict[data-verdict="unverified"] { border-color: var(--warn); }
 .lottery-lab-verdict[data-verdict="caught"], .lottery-lab-verdict[data-verdict="failed"] { border-color: var(--danger); color: var(--danger); }
 .lottery-lab[data-verdict="caught"] { border-color: var(--danger); }
 
-.lottery-lab-trace > summary { cursor: pointer; font: 700 var(--text-small)/1.4 var(--font-ui); }
+.lottery-lab-trace > summary { cursor: pointer; font: 700 var(--text-shell-label)/1.4 var(--font-ui); }
 .lottery-lab-trace[open] > summary { margin-bottom: var(--space-6); }
 .lottery-lab-picks { display: flex; flex-direction: column; gap: var(--space-2); margin: var(--space-6) 0 0; padding: 0; list-style: none; }
-.lottery-lab-pick { margin: 0; font: 500 var(--text-small)/1.5 var(--font-num); overflow-wrap: anywhere; }
+.lottery-lab-pick { margin: 0; font: 500 var(--text-shell-label)/1.5 var(--font-num); overflow-wrap: anywhere; }
 .lottery-lab-pick code { color: var(--ink-2); }
 .lottery-lab-pick[data-accepted="false"] span { color: var(--muted); text-decoration: line-through; }
 .lottery-lab-pick[data-accepted="true"] span { color: var(--gules-text); font-weight: 700; }
@@ -67,10 +67,10 @@
 /* Proof strip: the four verdicts in one row, stamped in sequence; a caught step shakes once.
    Narrow labs only: a wide lab shows the full walk beside the bench. */
 .lottery-lab-strip { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-4); margin: 0; padding: 0; list-style: none; }
-.lottery-lab-strip li { display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-rows: auto auto; align-items: center; column-gap: var(--space-6); padding: var(--space-6) var(--space-8); border: var(--rule-medium) solid var(--ink); border-radius: var(--r-sm); background: var(--paper); animation: lottery-lab-rise var(--motion-shell) var(--ease) both; animation-delay: calc(var(--lab-step) * var(--motion-fast)); }
-.lottery-lab-strip b { grid-row: span 2; display: grid; place-content: center; width: var(--space-24); aspect-ratio: 1; border-radius: 50%; background: var(--ink); color: var(--paper); font: 800 var(--text-small)/1 var(--font-num); }
-.lottery-lab-strip span { font: 800 var(--text-label)/1.2 var(--font-ui); letter-spacing: var(--track-label); text-transform: uppercase; }
-.lottery-lab-strip i { font: 700 var(--text-label)/1.2 var(--font-num); font-style: normal; color: var(--muted); }
+.lottery-lab-strip li { display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-rows: auto auto; align-items: center; column-gap: var(--space-6); padding: var(--space-6) var(--space-8); border: var(--rule-medium) solid var(--ink); border-radius: 0; background: var(--paper); animation: lottery-lab-rise var(--motion-shell) var(--ease) both; animation-delay: calc(var(--lab-step) * var(--motion-fast)); }
+.lottery-lab-strip b { grid-row: span 2; display: grid; place-content: center; width: var(--space-24); aspect-ratio: 1; border-radius: 50%; background: var(--ink); color: var(--paper); font: 800 var(--text-shell-label)/1 var(--font-num); }
+.lottery-lab-strip span { font: 800 var(--text-shell-label)/1.2 var(--font-ui); letter-spacing: var(--track-label); text-transform: uppercase; }
+.lottery-lab-strip i { font: 700 var(--text-shell-label)/1.2 var(--font-num); font-style: normal; color: var(--muted); }
 .lottery-lab-strip [data-strip="pass"] { border-color: var(--ok); }
 .lottery-lab-strip [data-strip="pass"] b { background: var(--ok); color: var(--press); }
 .lottery-lab-strip [data-strip="pass"] i { color: var(--ok); }
@@ -83,7 +83,7 @@
 .lottery-lab-strip [data-strip="pending"] { border-style: dashed; border-color: var(--hair); }
 @keyframes lottery-lab-shake { 20%, 60% { transform: translateX(calc(var(--space-4) * -1)); } 40%, 80% { transform: translateX(var(--space-4)); } }
 @keyframes lottery-lab-rise { from { opacity: 0; transform: translateY(var(--space-6)); } to { opacity: 1; transform: translateY(0); } }
-@keyframes lottery-lab-stamp { from { opacity: 0; transform: scale(1.8) rotate(calc(var(--air-rotation) * 4)); } to { opacity: 1; transform: rotate(var(--cc-stamp-rotation, var(--air-rotation))); } }
+@keyframes lottery-lab-stamp { from { opacity: 0; transform: scale(1.8) rotate(calc(var(--stamp-tilt) * 4)); } to { opacity: 1; transform: rotate(var(--stamp-tilt)); } }
 @keyframes lottery-lab-flash { 50% { background: color-mix(in srgb, var(--gules) 45%, transparent); } }
 @media (prefers-reduced-motion: reduce) {
   .lottery-lab-step, .lottery-lab-strip li, .lottery-lab-step .cc-stamp, .lottery-lab-roll [data-tampered="true"], .lottery-lab-hex [data-changed="true"] { animation: none; }

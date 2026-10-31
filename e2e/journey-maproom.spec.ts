@@ -6,7 +6,7 @@ test('local Map Room journey: inspect tiles and banners, edit the map, inspect l
   const verify = await guardPage(page);
   try {
     await page.goto('/#/chamber/studio');
-    await expect(page.locator('.cc-sample')).toHaveText('Simulated');
+    await expect(page.locator('.cc-rampart > [data-stamp="simulated"]')).toHaveText('Simulated');
     const room = page.getByRole('region', { name: 'Map Room work', exact: true });
     await expect(room).toBeVisible();
     const tile = room.locator('[data-hex-tile="D4"]');
@@ -26,7 +26,14 @@ test('local Map Room journey: inspect tiles and banners, edit the map, inspect l
     const size = room.getByLabel('Map size', { exact: true });
     await size.selectOption('l');
     await expect(room.locator('[data-hex-tile]')).toHaveCount(96);
-    await room.locator('[data-hex-tile="L8"]').click();
+    const edge = room.locator('[data-hex-tile="L8"]');
+    if (page.viewportSize()?.height === 800) {
+      const bounds = await edge.boundingBox();
+      expect(bounds?.width).toBeGreaterThanOrEqual(44);
+      expect(bounds?.height).toBeGreaterThanOrEqual(44);
+    }
+    await edge.click();
+    await expect(edge).toHaveAttribute('aria-pressed', 'true');
     await size.selectOption('s');
     await expect(room.locator('[data-hex-tile]')).toHaveCount(24);
     await expect(room.locator('[data-hex-tile="A1"]')).toHaveAttribute('aria-pressed', 'true');

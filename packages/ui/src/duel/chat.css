@@ -3,15 +3,15 @@
 .ty-arena:has(.ty-tug) .ty-card .ty-arms{width:var(--ty-chat-arms-width)}
 .ty-tug{grid-column:1/4;margin:var(--space-14) auto 0;width:min(100%,var(--ty-tug-width));display:grid;gap:var(--space-6);color:var(--cream);position:relative;z-index:2}
 .ty-tug-bar{position:relative;height:var(--space-30);display:flex;border:var(--rule-strong) solid var(--cream);background:var(--ty-tug-well);overflow:hidden}
-.ty-tug-bar .ty-l,.ty-tug-bar .ty-r{transition:flex-grow .5s var(--ease);display:flex;align-items:center;padding:0 var(--space-10);font:800 var(--ty-tug-text)/1 var(--font-num);color:var(--white);white-space:nowrap;min-width:0}
+.ty-tug-bar .ty-l,.ty-tug-bar .ty-r{transition:flex-grow .5s var(--ease);display:flex;align-items:center;padding:0 var(--space-10);font:800 var(--text-aside)/1 var(--font-num);color:var(--white);white-space:nowrap;min-width:0}
 .ty-tug-bar .ty-l{background:var(--azure)}
 .ty-tug-bar .ty-r{background:var(--gules);justify-content:flex-end}
 .ty-tug-bar .ty-mid{position:absolute;left:50%;top:calc(-1 * var(--space-4));bottom:calc(-1 * var(--space-4));width:var(--space-2);background:var(--cream);opacity:.6}
-.ty-tug-legend{display:flex;justify-content:space-between;gap:var(--space-10);font:var(--ty-text-detail)/1.3 var(--font-ui);color:var(--ty-stage-text-dim);flex-wrap:wrap}
+.ty-tug-legend{display:flex;justify-content:space-between;gap:var(--space-10);font:var(--text-small)/1.3 var(--font-ui);color:var(--ty-stage-text-dim);flex-wrap:wrap}
 .ty-tug-legend b{color:var(--cream);font-family:var(--font-num)}
-.ty-barred-strip{display:flex;align-items:center;gap:var(--space-10);font:var(--ty-text-detail)/1.3 var(--font-ui);color:var(--ty-stage-text-dim);flex-wrap:wrap}
+.ty-barred-strip{display:flex;align-items:center;gap:var(--space-10);font:var(--text-small)/1.3 var(--font-ui);color:var(--ty-stage-text-dim);flex-wrap:wrap}
 .ty-barred-strip .ty-hatch{height:var(--space-12);min-width:var(--space-2);background:repeating-linear-gradient(-45deg,var(--ty-stage-muted) 0 var(--space-3),transparent var(--space-3) var(--space-6));border:var(--rule-thin) solid var(--ty-stage-muted);transition:width .4s var(--ease)}
-.ty-barred-strip strong{color:var(--ty-signal-barred);letter-spacing:var(--track-label);text-transform:uppercase;font-size:var(--ty-text-seed)}
+.ty-barred-strip strong{color:var(--ty-signal-barred);letter-spacing:var(--track-label);text-transform:uppercase;font-size:var(--text-label)}
 .ty-flipnote{font:italic var(--text-body)/1.35 var(--font-serif);color:var(--or)}
 .ty-seal .ty-ring circle:first-of-type{stroke:var(--ty-ring-track)}
 .ty-ring-progress{stroke:var(--or);animation:ty-countdown linear both}

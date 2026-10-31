@@ -15,6 +15,7 @@ const Overview = lazy(() => import('./shell/overview.jsx'));
 const Demo = lazy(() => import('./demo/demo.jsx'));
 const Stream = lazy(() => import('./stream/setup.jsx'));
 const Room = lazy(() => import('./shell/room.jsx'));
+const PersistentStrip = lazy(() => import('./shell/strip.jsx').then(module => ({ default: module.PersistentStrip })));
 const Steward = lazy(() => import('./shell/steward.jsx').then(module => ({ default: module.ShellSteward })));
 
 export type ViewProps = {
@@ -30,6 +31,7 @@ export type ViewProps = {
 export function DesktopView(props: ViewProps) {
   const navigation = props.navigation ?? { current: props.current ?? 'keep', replay: props.replay ?? false, origin: 'keep' };
   const { current } = navigation;
+  const cutaway = current === 'keep' || current === 'lottery' || current === 'moderator' || current === 'visuals' || current === 'studio';
   // A disconnected read drops its capability lookup, not the pending writ's owner.
   // The retained adapter still checks reachability before every core operation.
   const previous = useRef<StewardConnection | undefined>(undefined);
@@ -42,15 +44,20 @@ export function DesktopView(props: ViewProps) {
   </Suspense>;
   const stream_connection = coreStreamConnection(props.snapshot);
   return <ThemeFrame theme={props.theme} {...(current === 'keep' || current === 'overview' || current === 'demo' || current === 'stream' ? {} : { module: current })}>
-    <div className="desktop-shell">
+    <div className={`desktop-shell${cutaway ? ' desktop-cutaway' : ''}`}>
       <DesktopRampart snapshot={props.snapshot} theme={props.theme} on_theme_change={props.on_theme_change}
         on_steward={() => { if (props.steward_ref && 'current' in props.steward_ref) props.steward_ref.current?.focus(); }} />
+      {cutaway &&
+        <Suspense fallback={<div className="shell-strip-loading" role="status">Opening the chambers...</div>}>
+          <PersistentStrip snapshot={props.snapshot} current={current} on_open={props.on_navigate} on_keep={() => props.on_surface?.('keep')} />
+        </Suspense>}
       <main className="desktop-surface">
         {props.snapshot.phase !== 'ready' && <p className="desktop-notice" role="status">
           {props.snapshot.mode === 'fixture' ? 'Loading simulated snapshot.' : props.snapshot.message ?? 'Connecting to the core; status is unknown.'}
         </p>}
         <Suspense fallback={<p role="status">Opening the keep...</p>}>
           {current === 'keep' ? <Keep snapshot={props.snapshot} on_open={props.on_navigate} on_enter={() => props.on_surface?.('overview')}
+            selected={props.selected ?? 'lottery'} {...steward_connection}
             on_demo={() => props.on_surface?.('demo')} on_stream={() => props.on_surface?.('stream')} />
             : current === 'overview' ? <Overview snapshot={props.snapshot} selected={props.selected ?? 'lottery'} on_select={props.on_select ?? (() => undefined)} on_open={props.on_navigate} steward={steward} {...steward_connection} />
             : current === 'demo' ? <Demo on_back={props.on_back ?? (() => props.on_surface?.('keep'))} />
@@ -58,7 +65,7 @@ export function DesktopView(props: ViewProps) {
               on_back={props.on_back ?? (() => props.on_surface?.('keep'))} />
             : <Room chamber={current} replay={navigation.replay} snapshot={props.snapshot} origin={navigation.origin}
               {...steward_connection}
-              on_open={props.on_navigate} on_back={props.on_back ?? (() => undefined)} />}
+              on_open={props.on_navigate} on_back={props.on_back ?? (() => undefined)} on_keep={() => props.on_surface?.('keep')} />}
         </Suspense>
       </main>
       {current !== 'overview' && steward}

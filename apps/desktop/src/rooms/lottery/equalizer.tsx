@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react';
-import { FieldGroup, HeraldicCard, InkButton, StatusChip } from '@castle-control/ui';
+import { entranceStyle, FieldGroup, HeraldicCard, InkButton, StatusChip } from '@castle-control/ui';
 import type { LotsDraw } from '@castle-control/contract';
 import { equalizerCopy as copy } from './equalizer-copy.js';
 import { capLimit, chart, chartBars, cohortShares, effectiveCurve, max_units_range, steppedCurve, weightSummary, weightTable } from './equalizer-model.js';
@@ -96,10 +96,10 @@ export function WeightEqualizer({ draw, entries, on_edit, disabled = false, on_f
   const cap = rules.cohort_caps.find(item => item.cohort === 'raider');
   const edit = (change: Partial<LotsDraw['rules']>) => { if (on_edit && !disabled) on_edit({ ...draw, rules: { ...rules, ...change } }); };
   const stamp = free ? copy.stamp_free : active.kind === 'concave' ? copy.stamp_concave(active.max_units) : copy.stamp_equal;
-  return <HeraldicCard variant="raised" className="lottery-equalizer" aria-label={copy.title}>
+  return <HeraldicCard variant="raised" className="lottery-equalizer panel cc-print-in" style={{ ...entranceStyle(3) }} aria-label={copy.title}>
     <header className="lottery-eq-head">
       <div><h2 className="lottery-card-title">{copy.title}</h2><p className="cc-aside">{copy.gloss}</p></div>
-      <StatusChip variant="gules" stamp="label" tone={active.kind === 'concave' ? 'spot' : 'neutral'}>{stamp}</StatusChip>
+      <StatusChip variant="gules">{stamp}</StatusChip>
     </header>
     <p className="cc-aside">{copy.hint}</p>
     {on_edit && <div className="lottery-eq-controls">

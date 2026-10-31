@@ -1,4 +1,4 @@
-import { StatusChip } from '@castle-control/ui';
+import { Stamp } from '@castle-control/ui';
 import { clockText } from './clock.js';
 import { moatCopy as copy } from './moat-copy.js';
 import { markerProgress, stampLevels, visibleMarkers } from './moat-model.js';
@@ -121,7 +121,7 @@ export function MoatScene({ model, playhead_ms, window, selected, on_select, del
       const top = (g.gate_y - stampLift - level * g.stamp_step) / g.height * 100;
       const place = { left: `${left}%`, top: `${top}%` };
       const chip = <>
-        <StatusChip variant={marker.verdict === 'bar' ? 'gules' : 'or'} stamp="verdict" tone={marker.verdict === 'bar' ? 'blocked' : 'warn'}>{copy.stamp}</StatusChip>
+        <Stamp kind={marker.verdict === 'bar' ? 'blocked' : 'held'} word={copy.stamp} />
         <span className="moat-stamp-rule">{copy.rule_line(marker.rule_id)}</span></>;
       // Without a handler (the printed report) a stamp is a plain mark, not a button.
       return on_select ? <button key={marker.index} type="button" className="moat-stamp" data-selected={selected === marker.index} data-level={level}

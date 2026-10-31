@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { cloneElement, useId } from 'react';
 import type { InputHTMLAttributes, ReactElement, ReactNode } from 'react';
 import type { Decision, Verdict } from '@castle-control/contract';
-import { InkButton, Plate, PlateBand, PlateBody, RuledFeed, RuledRow, WindowedRows } from '@castle-control/ui';
+import { InkButton, Plate, PlateBand, PlateBody, RuledFeed, RuledRow, Stamp, WindowedRows } from '@castle-control/ui';
 import { moderationCopy as copy } from '../../moderation-copy.js';
 import { ClockTime, CountLabel, VerdictIcon, VerdictMark, verdictWords } from './presentation.jsx';
 export { rowWindow as messageWindow } from '@castle-control/ui';
@@ -39,7 +39,7 @@ export function ReplayPanel({ messages, scroll_top = 0, core = false, notes, foo
   return <section className="moderator-messages">
     <Plate ink="azure" offset="space-8" className="moderator-replay-plate" aria-label={copy.live}
       band={<PlateBand title={copy.live} gloss={core ? copy.core_chat_gloss : copy.replay_header}
-        count={<>{messages.length.toLocaleString('en-US')}<CountLabel first={copy.lines} second={core ? copy.core_label : copy.simulated} /></>} />}>
+        count={<>{messages.length.toLocaleString('en-US')}<CountLabel first={copy.lines} second={core ? copy.core_label : <Stamp kind="simulated" word={copy.simulated} />} /></>} />}>
       <PlateBody>
         <div className="moderator-banners" role="group" aria-label={core ? copy.core_verdict_filter : copy.verdict_filter}>
           {(['all', 'pass', 'hold', 'bar'] as const).map(value => {

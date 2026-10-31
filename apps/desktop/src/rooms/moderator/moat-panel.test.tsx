@@ -52,7 +52,8 @@ test('the drill opens on the moat: three stamps, a gap, a live summary, and the 
   const stamps = moat.match(/<button type="button" class="moat-stamp"[\s\S]*?<\/button>/g) ?? [];
   expect(stamps).toHaveLength(3);
   for (const stamp of stamps) {
-    expect(stamp).toContain('class="cc-chip cc-stamp"');
+    expect(stamp).toContain('class="cc-stamp"');
+    expect(stamp).toMatch(/data-stamp="(?:held|blocked)"/);
     expect(stamp).toContain('HELD · NOT ON AIR');
     expect(stamp).toMatch(/rule · (links|repeats|blocked-terms)/);
     expect(stamp).toMatch(/aria-label="Held, not on air: simulated-message-\d+, rule [a-z-]+\. Inspect\."/);

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { CSSProperties, Ref } from 'react';
-import { InkButton, SectionHeading, StatusChip, WindowedRows } from '@castle-control/ui';
+import { InkButton, Stamp, WindowedRows } from '@castle-control/ui';
 import type { LotsWrit } from '@castle-control/contract';
 import { byteWindow, defaultTamperIndex, inspectWrit } from './lab-model.js';
 import type { LabReport, LabStep, StepStatus, Tamper, TamperKind, TracePick } from './lab-model.js';
@@ -8,16 +8,14 @@ import { labCopy as copy } from './lab-copy.js';
 import type { BeaconAnchor } from './beacon-anchors.js';
 import { readWritFile, writ_file_limit } from './writ-file.js';
 import { useReducedMotion } from './playback.js';
+import { PanelTitle } from './print.jsx';
 import './lab.css';
 
 const kinds: readonly TamperKind[] = ['weight', 'handle', 'seed', 'plan', 'winners'];
 /** Forging only means something for a beacon writ: there is no signature to forge on a streamer seed. */
 const kindsFor = (writ: LotsWrit): readonly TamperKind[] => writ.proof.source === 'drand_quicknet' ? [...kinds, 'forge'] : kinds;
 const stepOrder = ['serialization', 'seal', 'randomness', 'derivation'] as const;
-const stamp: Record<StepStatus, { variant: 'ok' | 'bad' | 'dash' | 'warn'; tone: 'ok' | 'blocked' | 'neutral' | 'warn' }> = {
-  pass: { variant: 'ok', tone: 'ok' }, fail: { variant: 'bad', tone: 'blocked' },
-  blocked: { variant: 'dash', tone: 'neutral' }, unverified: { variant: 'warn', tone: 'warn' },
-};
+const stamp = { pass: 'ok', fail: 'blocked', blocked: 'held', unverified: 'held' } as const satisfies Record<StepStatus, string>;
 const hex2 = (value: number | undefined) => value === undefined ? '··' : value.toString(16).padStart(2, '0');
 const short = (value: string) => value.length > 20 ? `${value.slice(0, 10)}…${value.slice(-6)}` : value;
 const stepStyle = (index: number): CSSProperties & { '--lab-step': number } => ({ '--lab-step': index });
@@ -78,7 +76,7 @@ function StepCard({ step, index, report }: { step: LabStep | undefined; index: n
       </dl>}
       {step?.reason && <p className="lottery-lab-reason">{copy.reasons[step.reason]}</p>}
     </div>
-    {status && <StatusChip variant={stamp[status].variant} stamp="verdict" tone={stamp[status].tone}>{copy.stamps[status]}</StatusChip>}
+    {status && <Stamp kind={stamp[status]} word={copy.stamps[status]} />}
   </li>;
 }
 
@@ -145,10 +143,11 @@ export function WritLabView({ writ, simulated, tamper, report, failed = false, r
   const index = defaultTamperIndex(writ);
   const target = writ.roll.entries[index]?.handle ?? '';
   const hint = (kind: TamperKind) => copy.tamper_hints[kind](kind === 'weight' || kind === 'handle' ? target : writ.proof.source);
-  return <section ref={section} className="lottery-lab" aria-label={copy.title}
+  return <section ref={section} className="lottery-lab panel" aria-label={copy.title}
     data-verdict={failed ? 'failed' : report?.verdict ?? 'pending'}>
-    <SectionHeading variant="banner" level={2} title={copy.title} gloss={copy.gloss} ink="gules"
-      count={simulated ? <StatusChip variant="gules" stamp="label">{copy.simulated}</StatusChip> : undefined} />
+    <PanelTitle title={copy.title} gloss={copy.gloss}>
+      {simulated && <Stamp kind="simulated" word={copy.simulated} />}
+    </PanelTitle>
     <p className="lottery-lab-intro">{copy.intro}</p>
     {specimens && <Specimens controls={specimens} />}
     <div className="lottery-lab-grid">

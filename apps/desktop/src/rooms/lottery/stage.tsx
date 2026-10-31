@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties } from 'react';
-import { InkButton, StatusChip } from '@castle-control/ui';
+import { InkButton, Stamp, StatusChip } from '@castle-control/ui';
 import type { DrawContent } from '@castle-control/contract';
 import type { DrawArtworkLayer, DrawScene, DrawShape } from '@castle-control/renderer';
 import { lotsCopy as copy } from '../../lots-copy.js';
@@ -201,6 +201,14 @@ export function DrawStage({ shape, on_shape, entries, cast, content, sealed, sea
         {on_sound && <InkButton size="room" className="lottery-stage-toggle" aria-pressed={sound} title={copy.stage.sound_hint}
           onClick={() => { if (!sound) ceremonySound(); on_sound(!sound); }}>{copy.stage.sound}</InkButton>}
       </div>}
+      <details className="lottery-stage-notes">
+        <summary aria-label={copy.stage.title} title={copy.stage.title}><span aria-hidden="true">i</span></summary>
+        <p className="cc-aside">{cast && !verified ? copy.stage.unverified : copy.stage.note}
+          {drawn.length < entries.length ? ` ${copy.stage.sampled(drawn.length, entries.length)}` : ''}</p>
+      </details>
+      {on_theatre && <InkButton size="room" className="lottery-stage-expand" data-theatre-toggle aria-pressed={theatre}
+        aria-label={theatre ? copy.stage.desk : copy.stage.theatre} title={theatre ? copy.stage.desk : copy.stage.theatre}
+        onClick={() => on_theatre(!theatre)}><span aria-hidden="true">{theatre ? '\u21a9' : '\u26f6'}</span></InkButton>}
     </div>
     <div className="lottery-draw-theatre">
       <svg className="lottery-draw-svg" viewBox={stage_view_box} role="img" aria-label={copy.stage.label(shapeLabel(shape), entries.length)}>
@@ -219,14 +227,14 @@ export function DrawStage({ shape, on_shape, entries, cast, content, sealed, sea
           const mark = by_handle.get(handle);
           return mark ? <g key={handle} className="lottery-stage-medal" data-medal={index + 1} transform={`translate(${mark.x} ${mark.y})`}>
             <g className="lottery-stage-medal-body"><circle className="lottery-stage-pulse" r={9} /><circle r={6.5} />
-              <text fontSize={7.5}>{index + 1}</text></g>
+              <path d="M-2 0l1.5 1.5L2-2" /></g>
           </g> : null;
         })}
       </svg>
       <p className="lottery-stage-phase">{state.waiting ? copy.stage.held : copy.stage[phase]}{seal ? <small>{copy.stage.seal(seal)}</small> : null}</p>
       {sealed && !playable && seal && <div className="lottery-stage-wax" aria-hidden="true">
-        <b>{copy.stage.wax[0]}</b><span>{copy.stage.wax[1]}</span></div>}
-      {(revealed.length > 0 || state.waiting) && <div className="lottery-stage-rail">
+        <Stamp kind="sealed" word={copy.stage.wax.join(" ")} land /></div>}
+      {(revealed.length > 0 || state.waiting) && <div className="lottery-stage-rail" role="region" aria-label={copy.stage.rail} tabIndex={0}>
         {phase === 'revealing' && latest && <Proclamation key={latest} handle={latest} order={revealed.length}
           total={winners.length} cohort={cohorts.get(latest)} share={share(latest)} />}
         {phase === 'revealed' && theatre && <Verdict total={winners.length} proof={proof} on_prove={on_prove}
@@ -248,16 +256,12 @@ export function DrawStage({ shape, on_shape, entries, cast, content, sealed, sea
       {phase === 'revealed' && !reduced && <div key={state.key} className="lottery-stage-confetti" aria-hidden="true">
         {burst.map((piece, index) => <i key={index} style={burstStyle(piece)} />)}</div>}
     </div>
-    <div className="lottery-stage-foot">
-      {playable && <StatusChip variant="gules" stamp="label" tone={phase === 'revealed' ? 'spot' : 'neutral'}>
-        {copy.stage.labels[playable.label]}</StatusChip>}
-      {phase === 'revealed' && !theatre && <StatusChip variant="ok" stamp="verdict" tone="ok">{copy.stage.proof[proof][0]}</StatusChip>}
-      <p className="cc-aside">{cast && !verified ? copy.stage.unverified : copy.stage.note}
-        {drawn.length < entries.length ? ` ${copy.stage.sampled(drawn.length, entries.length)}` : ''}</p>
-      {playable && <InkButton size="room" disabled={!state.finished} onClick={() => clock.replay()}>{copy.stage.replay}</InkButton>}
-      {on_theatre && <InkButton size="room" data-theatre-toggle aria-pressed={theatre} onClick={() => on_theatre(!theatre)}>
-        {theatre ? copy.stage.desk : copy.stage.theatre}</InkButton>}
-      <p className="lottery-stage-announce" role="status">{latest ? copy.stage.announce(revealed.length, winners.length, latest) : ''}</p>
-    </div>
+    {playable && <div className="lottery-stage-foot">
+      <StatusChip variant="gules">{copy.stage.labels[playable.label]}</StatusChip>
+      {phase === 'revealed' && !theatre && <Stamp kind="ok" word={copy.stage.proof[proof][0]} />}
+      <InkButton size="room" className="lottery-stage-replay" disabled={!state.finished} aria-label={copy.stage.replay}
+        title={copy.stage.replay} onClick={() => clock.replay()}><span aria-hidden="true">{'\u21bb'}</span></InkButton>
+    </div>}
+    <p className="lottery-stage-announce" role="status">{latest ? copy.stage.announce(revealed.length, winners.length, latest) : ''}</p>
   </div>;
 }

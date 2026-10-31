@@ -15,7 +15,7 @@ import { fixtureDraws } from '../lots-fixture.js';
 import { backHash, dispatchShortcut, initialNavigation, navigateHash } from '../navigation.js';
 import Room from './room.jsx';
 
-test('all room headers hold the display title, plain subtitle, locator and origin Back link', async () => {
+test('all room headers hold the shared title card, function, strip replacement and origin Back button', async () => {
   for (const [chamber, title, description, slot_context] of [
     ['lottery', 'The Lot Chamber', 'Lottery manager', /<aside class="shell-seal-slot"[^>]*aria-label="Seal slot"/],
     ['moderator', 'The Gatehouse', 'AI moderator', /moderator-details[\s\S]*<aside class="shell-seal-slot"[^>]*aria-label="Seal slot"[\s\S]*?<\/aside><\/div><\/div>/],
@@ -26,20 +26,21 @@ test('all room headers hold the display title, plain subtitle, locator and origi
       snapshot={{ mode: 'fixture', phase: 'ready' }} origin="overview" on_open={vi.fn()} on_back={vi.fn()} />);
     await stream.allReady;
     const markup = await new Response(stream).text();
-    const header = markup.match(/<header class="shell-room-header"[\s\S]*?<\/header>/)?.[0]?.replace(/<!--.*?-->/g, '') ?? '';
-    expect(header).toContain(`<h1>${title}</h1>`);
+    const header = markup.match(/<header class="cc-room-title"[\s\S]*?<\/header>/)?.[0]?.replace(/<!--.*?-->/g, '') ?? '';
+    expect(header).toContain(`data-role="room-title-name">${title}</h1>`);
     expect(header).toContain(description);
-    expect(header).toContain('Chamber locator');
-    expect(header).toContain('<span>Chambers</span>');
-    expect(header.match(/aria-label="[1-4]: /g)).toHaveLength(4);
+    expect(header).toContain('aria-label="Breadcrumb"');
+    expect(header).toContain('· chamber');
+    expect(markup).not.toContain('Chamber locator');
     expect(header).toContain('Back to the overview');
-    expect(header).toContain('href="#/overview"');
-    expect(markup).toContain('SIMULATED');
+    expect(header).toContain('data-role="room-back"');
+    expect(header).toContain('data-stamp="simulated"');
+    expect(markup).toContain('data-role="room-band"');
     // The lottery C port replaces details-last, data-active and prose guardrails with stage/desk, pressed kit cards and Ribbon slots.
     expect(markup.match(/aria-label="Seal slot"/g)).toHaveLength(1);
     expect(markup).toMatch(slot_context);
     if (chamber === 'lottery') {
-      const order = ['class="cc-stage-wrap"', 'class="cc-desk"', 'aria-label="Seal slot"',
+      const order = ['cc-stage-wrap', 'cc-desk', 'aria-label="Seal slot"',
         'aria-label="Entry lookup"', 'aria-label="Saved simulated proof bundle"', 'class="cc-numbered-discs"']
         .map(marker => markup.indexOf(marker));
       expect(order[0]).toBeGreaterThan(0);
@@ -47,7 +48,7 @@ test('all room headers hold the display title, plain subtitle, locator and origi
     }
   }
   const style = readFileSync(new URL('./room.css', import.meta.url), 'utf8');
-  expect(style).toMatch(/\.shell-room-header h1\s*\{[^}]*var\(--font-display\)/);
+  expect(style).toContain('.shell-room-header .cc-room-title-card');
   expect(style).toMatch(/\.shell-room \.shell-room-work\s*\{[^}]*display:\s*block/);
   expect(style).toMatch(/\.shell-room \.shell-seal-slot\s*\{[^}]*border-top:/);
 });
@@ -130,7 +131,9 @@ test('polished rooms render each stage title once and expose keyboard scroll reg
       expect(replay).toContain('data-fill="true"');
       const plate = replay.match(/<section[^>]*moderator-replay-plate[\s\S]*?<\/section>/)?.[0] ?? '';
       expect(plate).toContain('<h2 class="cc-plate-title">The live room</h2>');
-      expect(plate).toContain('<span class="cc-plate-count">420<small class="moderator-count-label"><span>lines</span><span>simulated</span>');
+      expect(plate).toContain('<span class="cc-plate-count">420');
+      expect(plate).toContain('moderator-count-label');
+      expect(plate).toContain('data-stamp="simulated"');
       expect(plate).toContain('class="moderator-banners" role="group" aria-label="Verdict"');
       for (const [verdict, count] of [['all', 420], ['pass', 332], ['hold', 33], ['bar', 55]]) {
         expect(plate).toMatch(new RegExp(`data-verdict-pick="${verdict}"[^>]*>.*?</span><b>${count}</b>`));
@@ -139,7 +142,8 @@ test('polished rooms render each stage title once and expose keyboard scroll reg
       expect(replay.indexOf('</section>')).toBeLessThan(replay.indexOf('class="cc-feed moderator-feed"'));
       const tools = markup.slice(markup.indexOf('moderator-tools'));
       expect(tools).toContain('Garrison orders');
-      expect(tools).toContain('<div class="moderator-figures"><span><b>0</b>Armed</span><span><b>3</b>Watching</span>');
+      expect(tools).toContain('<div class="moderator-figures"><span><b>0</b><span class="cc-stamp" data-stamp="armed" role="img" aria-label="Armed: can act on viewers"><span aria-hidden="true">Armed</span>');
+      expect(tools).toContain('<span><b>3</b><span class="cc-stamp" data-stamp="shadow" role="img" aria-label="Shadow: watching, takes no action: Watching"><span aria-hidden="true">Watching</span>');
       const moat = tools.match(/<section[^>]*moderator-moat[\s\S]*?<\/section>/)?.[0] ?? '';
       expect(moat).toContain('class="cc-hero-figure" data-text="4">4<small>s</small>');
       expect([...moat.matchAll(/<rect[^>]*data-on="([^"]+)"/g)].map(rect => rect[1])).toEqual(['true', 'true', 'false']);
@@ -277,7 +281,7 @@ test('lazy Room preserves its props contract, slot and replay link; core mode ex
     await stream.allReady;
     const markup = await new Response(stream).text();
     expect(markup).toContain('aria-label="Seal slot"');
-    expect(markup).toContain('href="#/overview"');
+    expect(markup).toContain('Back to the overview');
     expect(markup).not.toContain('generated fixtures only');
     if (chamber === 'visuals') expect(markup).toContain('60 offerings');
     if (chamber === 'moderator') expect(markup).toContain('#/chamber/moderator/drill');

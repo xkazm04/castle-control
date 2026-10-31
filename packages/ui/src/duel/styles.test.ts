@@ -13,7 +13,7 @@ export function checkDuelStyles(files: readonly StyleFile[]): string[] {
   const clean = files.map(file => ({ path: file.path.replaceAll('\\', '/'), text: file.text.replaceAll(comments, '') }));
   const joined = clean.map(file => file.text).join('\n');
   const declarations = new Set([...joined.matchAll(/--(ty-[\w-]+)\s*:/g)].map(match => match[1]!));
-  const known = new Set([...Object.keys(tokens.theme.paper), ...Object.keys(tokens.layout), ...declarations]);
+  const known = new Set([...Object.keys(tokens.theme.paper), ...Object.keys(tokens.layout), ...Object.keys(tokens.type), ...declarations]);
   const uses = new Set([...joined.matchAll(/var\(\s*--([\w-]+)/g)].map(match => match[1]!));
   for (const file of clean) {
     if (file.path.split('/').at(-1) === 'tokens.css') {

@@ -46,7 +46,7 @@ test('main deletes the launch global and the lazy shell still receives the live 
   for (const surface of ['#/keep', '#/overview', '#/chamber/studio']) {
     const html = await markup(client, surface);
     expect(html).toContain('LIVE STEWARD');
-    expect(html).not.toContain('SIMULATED STEWARD');
+    expect(html).not.toContain('cc-steward-state">simulated co-pilot · sample data');
     expect(html).not.toContain(launch.session_token);
   }
 });
@@ -57,12 +57,12 @@ test.each([undefined, 'simulated'] as const)('core launch with opt-in %s leaves 
     ...(steward ? { steward } : {}) }, transport);
   stops.push(client.start());
   await vi.waitFor(() => { expect(client.getSnapshot().phase).toBe('ready'); });
-  expect(await markup(client)).toContain('SIMULATED STEWARD · SAMPLE DATA');
+  expect(await markup(client)).toContain('<span class="cc-steward-state">simulated co-pilot · sample data</span><span class="cc-stamp" data-stamp="simulated" role="img" aria-label="Simulated"><span aria-hidden="true">Simulated</span>');
 });
 
 test('fixture and unconnected live launches keep the simulated label', async () => {
   network();
   const fixture = createDesktopClient({ mode: 'fixture' });
   const core = createDesktopClient({ mode: 'core', endpoint: 'http://127.0.0.1:3210/', session_token: 'a'.repeat(64), steward: 'live' });
-  for (const client of [fixture, core]) expect(await markup(client)).toContain('SIMULATED STEWARD · SAMPLE DATA');
+  for (const client of [fixture, core]) expect(await markup(client)).toContain('<span class="cc-steward-state">simulated co-pilot · sample data</span><span class="cc-stamp" data-stamp="simulated" role="img" aria-label="Simulated"><span aria-hidden="true">Simulated</span>');
 });

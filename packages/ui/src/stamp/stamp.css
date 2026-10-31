@@ -1,0 +1,74 @@
+/* The legacy StatusChip stamp path coexists until WP4b moves its callers. */
+.cc-stamp:where(:not(.cc-chip)) {
+  --stamp-ink: var(--ink); --stamp-tilt: 0deg; --stamp-rule: solid;
+  box-sizing: border-box; display: inline-flex; align-items: center; gap: var(--space-6); position: relative;
+  border: var(--rule-strong) solid var(--stamp-ink); border-radius: var(--r-sm);
+  padding: var(--space-5) var(--space-8) var(--space-4);
+  font-family: var(--font-display); font-weight: 800; line-height: 1;
+  font-size: var(--stamp-size, var(--text-shell-stamp));
+  letter-spacing: var(--track-air); text-transform: uppercase; white-space: nowrap;
+  transform: rotate(var(--stamp-tilt)); filter: url(#inkedge);
+  background: transparent; color: var(--stamp-ink); vertical-align: middle;
+}
+.cc-stamp:where(:not(.cc-chip))::before {
+  content: ""; position: absolute; inset: var(--space-2); pointer-events: none;
+  border: var(--rule-thin) var(--stamp-rule) var(--stamp-ink); opacity: .45; border-radius: var(--space-1);
+}
+:is(.cc-stamp, .cc-stamp-bleed)[data-stamp="sample"] { --stamp-ink: var(--ink); --stamp-tilt: -2deg; }
+:is(.cc-stamp, .cc-stamp-bleed)[data-stamp="simulated"] { --stamp-ink: var(--ink); --stamp-tilt: 1.5deg; --stamp-rule: dashed; }
+:is(.cc-stamp, .cc-stamp-bleed)[data-stamp="shadow"] { --stamp-ink: var(--azure-text); --stamp-tilt: -1deg; }
+/* winner: #FFF8EC on #E4472E is 3.8:1; ground darkened for AA, owner decision O6 */
+:is(.cc-stamp, .cc-stamp-bleed)[data-stamp="armed"] { --stamp-ink: var(--stamp-act-ground); --stamp-tilt: 2deg; }
+:is(.cc-stamp, .cc-stamp-bleed)[data-stamp="on-air"] { --stamp-ink: var(--stamp-act-ground); --stamp-tilt: -1.5deg; }
+:is(.cc-stamp, .cc-stamp-bleed)[data-stamp="off-air"] { --stamp-ink: var(--gules-text); --stamp-tilt: -1.5deg; }
+:is(.cc-stamp, .cc-stamp-bleed)[data-stamp="sealed"] { --stamp-ink: var(--ink); --stamp-tilt: -4deg; }
+:is(.cc-stamp, .cc-stamp-bleed)[data-stamp="draft"] { --stamp-ink: var(--or-text); --stamp-tilt: 1deg; --stamp-rule: dashed; }
+:is(.cc-stamp, .cc-stamp-bleed)[data-stamp="held"] { --stamp-ink: var(--gules-text); --stamp-tilt: -2.5deg; }
+:is(.cc-stamp, .cc-stamp-bleed)[data-stamp="pass"] { --stamp-ink: var(--azure-text); --stamp-tilt: 1deg; }
+:is(.cc-stamp, .cc-stamp-bleed)[data-stamp="blocked"] { --stamp-ink: var(--gules-text); --stamp-tilt: 2.5deg; }
+:is(.cc-stamp, .cc-stamp-bleed)[data-stamp="ok"] { --stamp-ink: var(--ink); --stamp-tilt: -1deg; }
+.cc-stamp:is([data-stamp="armed"], [data-stamp="on-air"], [data-stamp="sealed"]) {
+  background: var(--stamp-ink);
+}
+.cc-stamp:is([data-stamp="armed"], [data-stamp="on-air"]) { color: var(--stamp-paper); }
+.cc-stamp[data-stamp="sealed"] { color: var(--stamp-seal-text); }
+.cc-stamp[data-stamp="draft"]::before { opacity: .9; }
+.cc-stamp-dot {
+  box-sizing: border-box; flex: none; width: var(--space-8); height: var(--space-8);
+  border-radius: 50%; display: inline-block; font-style: normal;
+}
+.cc-stamp-dot[data-dot="lamp"] {
+  background: var(--stamp-paper);
+  box-shadow: 0 0 0 var(--rule-strong) color-mix(in srgb, var(--stamp-paper) 35%, transparent);
+}
+.cc-stamp-dot[data-dot="ring"] {
+  background: transparent; border: var(--rule-strong) solid var(--stamp-ink);
+  width: var(--space-9); height: var(--space-9);
+}
+.cc-stamp-dot[data-dot="seal"] {
+  background: var(--or); width: var(--space-10); height: var(--space-10);
+  box-shadow: 0 0 0 var(--rule-strong) var(--ink), 0 0 0 var(--space-3) var(--or);
+}
+.cc-inkedge-filter { position: absolute; overflow: hidden; pointer-events: none; }
+.cc-stamp-impression { display: inline-flex; position: relative; isolation: isolate; vertical-align: middle; }
+.cc-stamp-impression > .cc-stamp { z-index: 1; }
+.cc-stamp[data-land] { animation: stamp-land var(--m-stamp) var(--ease-stamp) both; }
+.cc-stamp-bleed {
+  position: absolute; inset: calc(-1 * var(--space-10)); border-radius: 50%; pointer-events: none;
+  background: radial-gradient(closest-side, var(--stamp-ink, var(--ink)) 0%, transparent 100%);
+  animation: ink-bleed var(--m-bleed) ease-out both; mix-blend-mode: multiply;
+}
+@keyframes stamp-land {
+  0% { opacity: 0; transform: rotate(var(--stamp-tilt)) scale(2.1); }
+  55% { opacity: 1; transform: rotate(var(--stamp-tilt)) scale(.9); }
+  78% { transform: rotate(var(--stamp-tilt)) scale(1.04); }
+  100% { opacity: 1; transform: rotate(var(--stamp-tilt)) scale(1); }
+}
+@keyframes ink-bleed {
+  0% { opacity: .55; transform: scale(.6); filter: blur(0); }
+  100% { opacity: 0; transform: scale(1.9); filter: blur(var(--space-6)); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cc-stamp[data-land], .cc-stamp-bleed { animation: none; }
+  .cc-stamp-bleed { display: none; }
+}

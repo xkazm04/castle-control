@@ -5,7 +5,8 @@ import type { Proposal } from '@castle-control/ui/steward';
 import type { ReactNode } from 'react';
 import { lazy, Suspense } from 'react';
 import type { ArtifactId } from '@castle-control/ui/design';
-import { ChamberArt } from '../keep/art.jsx';
+import { keepRooms } from '@castle-control/keep-art';
+import { KeepArt } from '../keep/keep-art.jsx';
 import { isDesignProposal } from './design-proposal.js';
 import { illustrativeSceneLabel, illustrativeTiles, sceneChat, sceneConsensus } from './fixture.js';
 import './scene.css';
@@ -68,7 +69,7 @@ export function StreamScene({ mode, proposals, sample, on_select }: {
     <CryptBackdrop />
     <span className="overview-scene-label">{sample ? illustrativeSceneLabel : 'Illustrative preview · live chamber data unavailable'}</span>
     <Present artifact="draw" mode={mode} visible={preview || Boolean(draw)}><Layer chamber="lottery" title={draw?.title ?? 'Urn and writ'} {...(draw ? { proposal: draw } : {})} {...selection}>
-      <Look artifact="draw" mode={mode}><ChamberArt chamber="lottery" /></Look>{!draw && <span>No draw on screen</span>}
+      <Look artifact="draw" mode={mode}><KeepArt frame={keepRooms.lottery.frame} className="overview-room-art" /></Look>{!draw && <span>No draw on screen</span>}
     </Layer></Present>
     <Present artifact="overlay" mode={mode} visible={sample || Boolean(chat)}><Layer chamber="moderator" title={chat?.title ?? 'Chat and Herald'} {...(chat ? { proposal: chat } : {})} {...selection}>
       <Look artifact="overlay" mode={mode}>{sample && <div className="overview-chat">{sceneChat.filter(line => preview || line.verdict === 'pass').map(line =>
@@ -77,7 +78,7 @@ export function StreamScene({ mode, proposals, sample, on_select }: {
       {sample && <div className="overview-vote">{sceneConsensus.map(direction => <span key={direction.key}>{direction.label} {Math.round(direction.share * 100)}%</span>)}</div>}
     </Layer></Present>
     <Present artifact="beacon" mode={mode} visible={sample || Boolean(beacon)}><Layer chamber="visuals" title={beacon?.title ?? 'Altar, frame and border'} {...(beacon ? { proposal: beacon } : {})} {...selection}>
-      <Look artifact="beacon" mode={mode}><ChamberArt chamber="visuals" /><span className="overview-camera">Camera frame · sample</span></Look>
+      <Look artifact="beacon" mode={mode}><KeepArt frame={keepRooms.visuals.frame} className="overview-room-art" /><span className="overview-camera">Camera frame · sample</span></Look>
     </Layer></Present>
     <Present artifact="map" mode={mode} visible={preview || Boolean(map)}><Layer chamber="studio" title={map?.title ?? 'War table'} {...(map ? { proposal: map } : {})} {...selection}>
       <Look artifact="map" mode={mode}>{preview && !map ? <DraftFrame><MapPanel /><span>Illustrative layout</span></DraftFrame> : <MapPanel />}</Look>

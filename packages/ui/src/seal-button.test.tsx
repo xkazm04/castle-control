@@ -24,6 +24,14 @@ test('SealButton renders both labels and visible progress, with no click-to-seal
   }
 });
 
+test('the gold fill reuses hold progress and its contrast lettering stays hidden from accessibility', () => {
+  const hold = createSealHold(vi.fn(), vi.fn());
+  const html = renderToStaticMarkup(SealControl({ hold, progress: .5 }));
+  expect(html).toContain('style="--cc-seal-progress:50%"');
+  expect(html).toMatch(/<progress[^>]*aria-label="Seal hold progress"[^>]*value="0.5"/);
+  expect(html).toContain('class="cc-seal-fill-copy" aria-hidden="true"');
+});
+
 test('real pointer handlers cancel an early release and seal exactly once after a continuous full hold', () => {
   vi.useFakeTimers();
   const seal = vi.fn(); const progress = vi.fn();

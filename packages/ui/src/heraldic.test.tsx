@@ -3,7 +3,7 @@ import { renderToStaticMarkup as render } from 'react-dom/server';
 import { expect, test } from 'vitest';
 import { Plate, PlateBand, PlateBody, PlateActions, StageFrame, HeraldicCard, CardHead, CardBody,
   HeroReadout, Medal, MedalList, NumberedDiscs, RuledFeed, RuledRow, SectionHeading, Pennant, Ribbon,
-  ShieldCharge, FieldGroup, InkButton, StatusChip, ProposalCard, SealButton, NumberedPanel,
+  ShieldCharge, FieldGroup, InkButton, Stamp, StatusChip, stampKinds, ProposalCard, SealButton, NumberedPanel,
   WindowedRows, rowHeight } from './index.js';
 import { ThemeFrame } from './primitives.jsx';
 import HeraldicGallery from '../kit/heraldic-gallery.jsx';
@@ -42,9 +42,10 @@ test('readouts, discs and section headings render caller figures and ghosts', ()
 });
 
 test('stamps, pennants, ribbons and shield charges retain words and decorative marks', () => {
-  for (const stamp of ['label', 'mode', 'verdict', 'draft'] as const) {
-    const html = render(<StatusChip variant="azure" stamp={stamp} ink="azure">Watching</StatusChip>);
-    expect(html).toContain('cc-stamp'); expect(html).toContain('Watching');
+  for (const kind of stampKinds) {
+    const html = render(<Stamp kind={kind} word="Watching" />);
+    expect(html).toContain(`data-stamp="${kind}"`); expect(html).toContain('Watching');
+    expect(html).toContain('role="img" aria-label=');
   }
   for (const variant of ['flag', 'standing'] as const) {
     const html = render(<Pennant word="Sample group" variant={variant} ink="gules" count="8" />);
@@ -56,7 +57,7 @@ test('stamps, pennants, ribbons and shield charges retain words and decorative m
     expect(html).toContain('cc-shield'); expect(html).toContain('aria-hidden="true"');
   }
   expect(() => render(<Pennant word=" " />)).toThrow('word');
-  expect(() => render(<StatusChip variant="dash" stamp="label"> </StatusChip>)).toThrow('word');
+  expect(() => render(<Stamp kind="sample" word=" " />)).toThrow('word');
 });
 
 test('fixed ruled feed rows fit a bounded window without nesting table rows', () => {
@@ -115,6 +116,10 @@ test.each(['paper', 'stock'] as const)('deferred gallery shows every primitive i
   const html = render(<ThemeFrame theme={theme}><HeraldicGallery theme={theme} /></ThemeFrame>);
   expect(html).toContain(`id="heraldic-${theme}"`);
   for (const ink of ['gules', 'azure', 'or', 'key']) expect(html).toContain(`aria-label="${ink} primitives"`);
+  expect(html).not.toContain('cc-chip cc-stamp');
+  for (const kind of stampKinds) expect(html).toContain(`data-stamp="${kind}"`);
+  expect(html).toContain('aria-label="Shadow: watching, takes no action: Watching"');
+  expect(html).toContain('aria-label="Armed: can act on viewers"');
   for (const name of ['cc-plate', 'cc-stage', 'cc-card', 'cc-card-head', 'cc-card-body', 'cc-card-copy', 'cc-card-side', 'cc-stamp', 'cc-hero-readout', 'cc-medal', 'cc-numbered-discs',
     'cc-feed', 'cc-section-heading', 'cc-pennant', 'cc-ribbon', 'cc-shield', 'cc-field', 'cc-proposal-card']) expect(html).toContain(name);
 });

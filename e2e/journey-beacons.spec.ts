@@ -20,7 +20,7 @@ test.afterEach(async ({ page }) => {
 
 test('Beacons streamer journey: tune, test fire, inspect and copy a simulated source', async ({ page }) => {
   await page.goto('/#/chamber/visuals');
-  await expect(page.locator('.cc-sample')).toHaveText('Simulated');
+  await expect(page.locator('.cc-rampart > [data-stamp="simulated"]')).toHaveText('Simulated');
   const plates = page.getByRole('radiogroup', { name: 'Beacon visuals' });
   await plates.getByRole('radio').first().focus();
   await page.keyboard.press('ArrowRight');

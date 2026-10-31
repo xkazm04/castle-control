@@ -1,0 +1,12 @@
+.shell-keep-workspace { display: grid; flex: 1; grid-template-columns: minmax(0, 1fr) calc(var(--space-1) * 380); grid-template-rows: minmax(0, 1fr); min-height: 0; min-width: 0; overflow: hidden; }
+.shell-program-column { min-height: 0; overflow-y: auto; overflow-x: hidden; box-sizing: border-box; }
+.shell-program-column > * { flex-shrink: 0; }
+.shell-program-column:focus-visible { outline: var(--rule-strong) solid var(--azure); outline-offset: calc(-1 * var(--rule-strong)); }
+.shell-program-column .cc-monitor-picture { box-sizing: border-box; }
+.shell-program-column .cc-program-monitor > .cc-colnote { display: none; }
+.shell-program-column .cc-draft-frame { box-sizing: border-box; height: 100%; overflow: auto; }
+.shell-program-draft { display: flex; flex-direction: column; gap: var(--space-4); padding: var(--space-12); overflow-wrap: anywhere; font: var(--text-shell-body)/1.4 var(--font-ui); }
+.shell-program-proclaim p, .shell-program-status { margin: 0 0 var(--space-6); overflow-wrap: anywhere; font: var(--text-shell-label)/1.4 var(--font-ui); }
+.shell-program-column .cc-seal-button { width: 100%; }
+.shell-program-note { margin: 0; font: var(--text-shell-body)/1.4 var(--font-ui); color: var(--ink-2); }
+.shell-program-status { color: var(--muted); }

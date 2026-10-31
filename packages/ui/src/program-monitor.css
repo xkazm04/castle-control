@@ -1,6 +1,24 @@
-.cc-program-monitor { color: var(--ink); font: var(--text-small)/1.3 var(--font-ui); }
-.cc-program-monitor header { display: flex; justify-content: space-between; align-items: baseline; gap: var(--space-8); margin-bottom: var(--space-6); }
-.cc-program-monitor header strong { font: 800 var(--text-chamber)/1 var(--font-display); text-transform: uppercase; }
-.cc-program-monitor header span { color: var(--gules-text); font-weight: 800; }
-.cc-program-picture { aspect-ratio: 16 / 9; position: relative; border: var(--rule-strong) solid var(--ink); background: var(--paper-2); overflow: hidden; }
-.cc-program-monitor p { margin-block: var(--space-6); }
+.cc-monitor-column {
+  display: flex; flex-direction: column; gap: var(--space-8); min-width: 0;
+  padding: var(--space-12) var(--space-16) var(--space-10); border-left: var(--space-3) solid var(--ink);
+  background: var(--column-paper); background-image: var(--paper-grain);
+}
+.cc-program-monitor, .cc-preview-monitor { min-width: 0; color: var(--ink); font: 400 var(--text-shell-body)/normal var(--font-ui); }
+.cc-monitor-label {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--space-8); margin-bottom: var(--space-8);
+  font: 700 var(--text-shell-monitor-label)/1 var(--font-display); letter-spacing: .1em; text-transform: uppercase;
+}
+.cc-monitor-label strong { display: inline-flex; align-items: center; font: inherit; }
+.cc-monitor-label .cc-stamp { letter-spacing: var(--track-label); }
+.cc-monitor-lamp { display: inline-block; flex: none; width: var(--space-11); height: var(--space-11); margin-right: var(--space-7); border: var(--rule-strong) solid var(--ink); border-radius: 50%; background: transparent; }
+.cc-monitor-lamp[data-on-air="true"] { background: var(--gules); }
+.cc-preview-lamp { background: var(--or); }
+.cc-monitor-picture { aspect-ratio: 348 / 178; position: relative; width: 100%; border: var(--space-3) solid var(--ink); background: var(--monitor-paper); overflow: hidden; flex: none; }
+.cc-monitor-picture .cc-monitor-empty { position: absolute; inset: 0; display: grid; place-items: center; margin: 0; padding: var(--space-20); text-align: center; font: italic var(--text-shell-empty)/1.35 var(--font-serif); color: var(--muted); }
+.cc-colnote { margin-block: var(--space-6); color: var(--ink-2); font: 400 var(--text-shell-body)/1.4 var(--font-ui); }
+.cc-fair { margin-top: auto; border: var(--rule-strong) solid var(--ink); padding: var(--space-9) var(--space-12); background: var(--card); color: var(--ink-2); font: 400 var(--text-shell-body)/1.4 var(--font-ui); }
+.cc-fair b { display: block; margin-bottom: var(--space-5); color: var(--ink); font: 700 var(--text-shell-label)/1 var(--font-ui); letter-spacing: .12em; text-transform: uppercase; }
+.cc-monitor-reveal { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: var(--space-6); background: var(--reveal-scrim); }
+.cc-monitor-reveal > .cc-stamp { position: absolute; right: var(--space-8); top: var(--space-8); }
+.cc-monitor-reveal-title { font: 700 var(--text-shell-reveal-title)/1 var(--font-display); letter-spacing: .1em; text-transform: uppercase; }
+.cc-monitor-ticket { font: 700 var(--text-shell-ticket)/1 var(--font-num); background: var(--ticket-paper); border: var(--rule-strong) solid var(--ink); padding: var(--space-6) var(--space-14); box-shadow: var(--space-3) var(--space-3) 0 var(--gules); }

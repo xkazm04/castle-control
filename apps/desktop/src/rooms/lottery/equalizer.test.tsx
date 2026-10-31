@@ -122,7 +122,7 @@ test('renders the headline, ladder, cohort split and cap meter; core mode stays 
 test('equalizer CSS is token-only: no raw colour or px, and every var is a token or a local --eq- value', () => {
   const css = readFileSync(new URL('./equalizer.css', import.meta.url), 'utf8');
   expect(css).not.toMatch(/#[\da-f]{3,8}\b|\brgba?\(|\bhsla?\(|\b\d+(?:\.\d+)?px\b/i);
-  const known = new Set([...Object.keys(tokens.layout), ...Object.keys(tokens.theme.paper)]);
+  const known = new Set([...Object.keys(tokens.layout), ...Object.keys(tokens.theme.paper), ...Object.keys(tokens.type), ...Object.keys(tokens.cutaway)]);
   for (const [, token] of css.matchAll(/var\(--([\w-]+)/g)) {
     expect(known.has(token ?? '') || (token ?? '').startsWith('eq-')).toBe(true);
   }

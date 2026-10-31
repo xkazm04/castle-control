@@ -1,0 +1,19 @@
+.cc-print-in {
+  --cc-entrance-index: 0; --cc-entrance-start: .35s; --cc-entrance-step: .14s;
+  animation: print-in var(--m-print) var(--ease-press) both;
+  animation-delay: calc(var(--cc-entrance-start) + var(--cc-entrance-index, 0) * var(--cc-entrance-step));
+}
+.cc-slip { animation: registration-slip var(--m-slip) var(--ease-press) both; }
+@keyframes print-in {
+  0% { opacity: 0; clip-path: inset(0 0 100% 0); transform: translate(var(--space-4), calc(-1 * var(--space-3))); }
+  70% { opacity: 1; clip-path: inset(0); transform: translate(var(--space-4), calc(-1 * var(--space-3))); }
+  100% { opacity: 1; clip-path: inset(0); transform: none; }
+}
+@keyframes registration-slip {
+  0% { transform: translate(calc(-1 * var(--space-14)), 0); text-shadow: var(--space-12) var(--space-8) 0 var(--ghost, var(--gules)); }
+  60% { transform: translate(0, 0); text-shadow: var(--space-9) var(--space-6) 0 var(--ghost, var(--gules)); }
+  100% { transform: none; text-shadow: var(--gx, var(--space-5)) var(--gy, var(--space-4)) 0 var(--ghost, var(--gules)); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cc-print-in, .cc-slip { animation: none; }
+}

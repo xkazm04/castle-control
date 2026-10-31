@@ -1,5 +1,6 @@
 import type { ModuleId } from './primitives.jsx';
 import { chambers } from './shell.jsx';
+import { Kbd } from './kbd.jsx';
 import './breadcrumb.css';
 
 export type BreadcrumbProps = {
@@ -26,6 +27,6 @@ export function Breadcrumb({ chamber, detail, back_href, on_back, on_navigate }:
     </nav>
     <a href={back_href} onClick={event => {
       if (on_back && !event.ctrlKey && !event.metaKey && !event.altKey && !event.shiftKey) { event.preventDefault(); on_back(); }
-    }}>Back <kbd>Esc</kbd></a>
+    }} className="cc-room-back">Back <Kbd>Esc</Kbd></a>
   </header>;
 }

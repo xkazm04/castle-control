@@ -1,26 +1,26 @@
 /* Ported rule by rule from .port/winner/index.html, cc-t2-duel A/1. */
 .ty-board{grid-column:1/-1;display:grid;justify-items:center;gap:var(--space-14);text-align:center;color:var(--cream);padding:var(--space-10);z-index:2}
-.ty-board h2{margin:0;font:900 var(--ty-board-title-size)/1 var(--font-display);text-transform:uppercase;letter-spacing:var(--track-title)}
+.ty-board h2{margin:0;font:900 var(--ty-board-title-size,var(--text-subtitle))/1 var(--font-display);text-transform:uppercase;letter-spacing:var(--track-title)}
 .ty-board p{margin:0;font:italic var(--text-section)/1.4 var(--font-serif);color:var(--ty-stage-text-dim);max-width:56ch}
 .ty-board .ty-lineup{display:flex;gap:var(--space-14);flex-wrap:wrap;justify-content:center}
-.ty-board .ty-lineup figure{margin:0;display:grid;justify-items:center;gap:var(--space-4);width:var(--ty-lineup-width);font:var(--ty-text-detail)/1.2 var(--font-ui)}
+.ty-board .ty-lineup figure{margin:0;display:grid;justify-items:center;gap:var(--space-4);width:var(--ty-lineup-width);font:var(--text-small)/1.2 var(--font-ui)}
 .ty-board .ty-lineup svg{width:var(--ty-lineup-shield-width);height:var(--ty-lineup-shield-height)}
-.ty-board .ty-lineup b{font:700 var(--ty-text-number-small)/1 var(--font-num);color:var(--or)}
+.ty-board .ty-lineup b{font:700 var(--text-label)/1 var(--font-num);color:var(--or)}
 .ty-champ{display:grid;grid-template-columns:auto minmax(var(--ty-order-min),var(--ty-order-max));gap:var(--ty-champion-gap);align-items:center;grid-column:1/-1;justify-content:center;z-index:2;color:var(--cream)}
 .ty-rays{position:absolute;inset:-40%;background:repeating-conic-gradient(from 0deg,var(--ty-rays-ink) 0 6deg,transparent 6deg 18deg);animation:ty-spin 40s linear infinite;z-index:0;pointer-events:none}
 @keyframes ty-spin{to{transform:rotate(1turn)}}
 .ty-champ .ty-card{cursor:default;animation:ty-rise .8s var(--ease) both;border-top-color:var(--or);box-shadow:0 var(--space-30) var(--ty-champion-shadow-spread) var(--ty-champion-shadow),var(--space-8) var(--space-8) 0 var(--or)}
-.ty-champ .ty-card .ty-stamp{opacity:1;color:var(--or-text);border-color:var(--or-text);font-size:var(--ty-champion-stamp-size);top:30%}
+.ty-champ .ty-card .ty-stamp{opacity:1;color:var(--or-text);border-color:var(--or-text);font-size:var(--ty-champion-stamp-size,var(--text-brand));top:30%}
 .ty-champ .ty-card .ty-crown{position:absolute;top:calc(-1 * var(--space-34));left:50%;translate:-50% 0;width:var(--ty-crown-width)}
 @keyframes ty-rise{from{transform:translateY(var(--ty-ride-distance)) scale(.9);opacity:0}to{transform:none;opacity:1}}
 .ty-order{list-style:none;margin:0;padding:0;display:grid;gap:var(--space-4);text-align:left}
 .ty-order li{display:grid;grid-template-columns:var(--space-30) var(--space-22) 1fr auto;gap:var(--space-8);align-items:center;padding:var(--space-5) var(--space-8);border-bottom:var(--rule-thin) solid var(--ty-order-rule);font:var(--text-body)/1.25 var(--font-ui);animation:ty-tkin .4s var(--ease) both}
 .ty-order li .ty-n{font:800 var(--text-number)/1 var(--font-num);color:var(--or)}
 .ty-order li svg{width:var(--space-20);height:var(--space-24)}
-.ty-order li small{color:var(--muted);font-size:var(--ty-text-small)}
+.ty-order li small{color:var(--muted);font-size:var(--text-small)}
 .ty-order h3{margin:0 0 var(--space-6);font:800 var(--text-aside)/1 var(--font-display);letter-spacing:var(--track-heading);text-transform:uppercase;color:var(--or)}
 @keyframes ty-tkin{from{transform:translateY(var(--space-6));opacity:0}to{transform:none;opacity:1}}
-.ty-closed{font:var(--ty-text-seed)/1.35 var(--font-num);color:var(--ty-stage-text-dim);margin-top:var(--space-6)}
+.ty-closed{font:var(--text-label)/1.35 var(--font-num);color:var(--ty-stage-text-dim);margin-top:var(--space-6)}
 
 .ty-order ol{list-style:none;margin:0;padding:0;display:grid;gap:var(--space-4)}
 .ty-order li{animation-delay:calc(var(--ty-order-delay-start) + var(--ty-order-index) * var(--ty-order-delay-step))}

@@ -87,3 +87,19 @@
   position: absolute; width: var(--space-1); height: var(--space-1); overflow: hidden;
   clip-path: inset(50%); white-space: nowrap;
 }
+/* A minimum alone leaves the size-contained field with an indefinite flex basis.
+   Bound the active view, then give the Table/Rehearse query container a definite,
+   non-shrinking height: the token radius keeps sample hex widths above tap size.
+   The room scrollport handles the extra height; Spyglass keeps its source sizes. */
+@media (max-height: 50rem) {
+  .studio-room > [data-studio-view]:not([data-studio-view="tiltyard"]) {
+    height: calc(var(--space-56) * 10); min-height: calc(var(--space-56) * 10);
+  }
+  .studio-room > [data-studio-view="table"] > .cc-herald-field,
+  .studio-room .studio-rehearse > .cc-herald-field { flex: none; }
+  .studio-room > [data-studio-view="table"] > .cc-herald-field > .cc-hexfield,
+  .studio-room .studio-rehearse > .cc-herald-field > .cc-hexfield {
+    flex: none; height: calc(var(--fit-h) * var(--space-28) + var(--space-6));
+  }
+  .studio-room > [data-studio-view="spyglass"] > .studio-spyglass { flex: 1; }
+}

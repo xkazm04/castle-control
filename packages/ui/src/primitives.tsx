@@ -2,6 +2,7 @@ import type { ButtonHTMLAttributes, ReactNode } from 'react';
 import type { Theme } from '@castle-control/tokens';
 import { printStyle } from './heraldic-options.js';
 import type { PrintOptions, PrintStyle } from './heraldic-options.js';
+import { InkEdgeFilter } from './stamp/stamp.jsx';
 import './primitives.css';
 
 export type ModuleId = 'lottery' | 'moderator' | 'visuals' | 'studio';
@@ -9,7 +10,7 @@ export type ModuleId = 'lottery' | 'moderator' | 'visuals' | 'studio';
 export function ThemeFrame({ theme, module = 'moderator', children }: {
   theme: Theme; module?: ModuleId; children: ReactNode;
 }) {
-  return <div className="cc-frame" data-theme={theme} data-module={module}>{children}</div>;
+  return <div className="cc-frame" data-theme={theme} data-module={module}><InkEdgeFilter />{children}</div>;
 }
 
 export function Mark({ label = 'Castle Control mark: a chat bubble topped with battlements, its gate lit' }: { label?: string }) {

@@ -1,5 +1,5 @@
 import { useMemo, useState, useSyncExternalStore } from 'react';
-import { FieldGroup, HeraldicCard } from '@castle-control/ui';
+import { entranceStyle, FieldGroup, HeraldicCard } from '@castle-control/ui';
 import { art, styles } from '../../demo/model.js';
 import { lotsCopy as copy } from '../../lots-copy.js';
 import type { DrawDisplay, DrawDisplayPort } from './display.js';
@@ -36,7 +36,7 @@ export function DrawAppearance({ port, hint = copy.journey.display_hint, preview
   const display = useSyncExternalStore(port.subscribe, port.getSnapshot, port.getSnapshot);
   const [revealDraft, setRevealDraft] = useState<string>();
   const commitReveal = (value: string) => { port.commitReveal(value); setRevealDraft(undefined); };
-  return <HeraldicCard variant="raised" aria-label={copy.stream}>
+  return <HeraldicCard variant="raised" className="panel cc-print-in" style={{ ...entranceStyle(4) }} aria-label={copy.stream}>
     <h2 className="lottery-card-title">{copy.stream}</h2>
     <div className="lottery-settings">
       <FieldGroup label={copy.shape} control_id="lots-shape" variant="select">

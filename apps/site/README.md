@@ -1,183 +1,208 @@
-# Castle Control landing site (WP 6.2)
+# Castle Control landing: Cutaway Keep (WP5a + WP5b + WP12)
 
-This is a static HTML/CSS/JS site. It has no build step, package manifest,
-workspace membership, dependency, analytics, app bridge or live data connection.
-Serve the **repository root**, then visit `/apps/site/index.html`. For example,
-run `python -m http.server 8080 --bind 127.0.0.1` from the repository root.
-Direct `file:` viewing is not the delivery target: browsers can refuse external
-SVG fragments on that scheme. No new hosted service is required.
-
-## Tokens, artwork and fonts
-
-`index.html` references `../../packages/tokens/src/generated.css` directly.
-That file remains the single source; no token copy or second palette exists.
-Static deployment must include it at the same relative location. `check.mjs`
-checks this reference and refuses raw colors or pixel literals in site styles.
-The site is not an independently deployable copy of just this directory.
-
-`art.svg` holds extracted vector design assets: lettering, chamber illustrations
-and the keep's five plates from `prototype/index.html`, `landing.js` lettering
-data and `mark.js` geometry. The variable illustrative fields (stone stipple,
-ticket arrangement, sample chat/chart and map) are static compositions here.
-No prototype runtime, event handlers, CSS or sample-data loader is used.
-`site.css` and `site.js` are new implementations of the design and interactions.
-The brand mark is defined once in the HTML and reused by SVG reference.
-
-The follow-up rebuilds the missing textures as static vector geometry in
-`art.svg`, not prototype runtime code. `beacon-glow` contains 713 gold dots in
-fading rings around the two flames, including the flame over the wordmark's O.
-The rings leave the flame cores and tower faces clear. `moat-tone` contains 697
-blue dots on a diagonal grid, growing denser toward the moat's lower edge behind
-the waves. Both inherit the existing `--or` / `--azure` shared tokens and the
-plate's theme blend. Neither adds an asset, palette, script, continuous animation
-or layout box. Reduced motion retains both as calm, static print textures.
-The page uses the generated system-font stacks unchanged. No remote font or
-font service is used; absent platform faces fall through the shared stack.
-
-### Wordmark defect and fix
-
-The prototype desktop wordmark applies `wmMask`: its lower 38% dissolves into
-halftone holes. The L foot is in the bottom 24% of the glyph, so the mask removes
-the distinguishing stroke. The name can read "CASTIE CONTROI". The mobile
-wordmark does not apply that mask and keeps the feet.
-
-Both site wordmarks use the same complete condensed vector outlines and an
-offset gules print. No knockout mask crosses the letter feet. The L outline is
-`M0 0H24V76H50V100H0Z`; the horizontal stroke remains present at full opacity.
-`check.mjs` asserts that outline and the absence of the dissolving mask. Inspect
-both L letters at the desktop screenshot sizes before approving visual fidelity.
-
-## Behavior and honest availability
-
-The home print uses a 1600 by 1000 composition, warm paper, three heraldic inks,
-key ink, halftone, registration marks and the tagline card. Narrow/portrait
-viewports use stacked lettering and four illustrated strips. The masthead and
-five-link banner stay fixed. Chamber views use full-bleed print illustrations,
-numbered ruled notes and a further feature view with Back.
-
-Native links and buttons support Tab and Enter. The single keymap implements
-1 through 4, Escape (one level back), and left/right between open chambers.
-Returning home restores focus to the originating link. Hashes are validated
-against four known chambers and an optional `/features` suffix. Invalid hashes
-show home. Without JS the page has no intro; all chamber content remains
-available in document order. The theme toggle lasts for the current visit and
-uses the shared paper/stock definitions; it does not write desktop app settings.
-
-Navigation is enabled from the outset. For normal motion the five plates
-register in sequence, then the drawbridge drops. The visual handover timer is
-2,800 ms, shortened to the remaining time before 4,000 ms from navigation start
-if script startup is delayed. Navigation stays enabled throughout. A chamber
-shortcut or pointer input outside Skip intro ends printing immediately.
-The named, native Skip intro button is second in document tab order, directly
-after Skip to content. Tab keeps it visible; Enter, Space and pointer activation
-reach its native click handler before it is hidden. Skip moves focus to the
-first chamber link, as does automatic handover if the skip button has focus.
-Reduced motion starts at the complete composition, schedules no intro, and
-disables all animations and transitions. There is no ambient autoplay motion.
-
-Honesty labels present in the page:
-
-- Stylised illustration, drawn rather than captured.
-- Sample data from a fictional channel, with invented numbers.
-- Castle Control is a working name.
-- Not affiliated with or endorsed by Twitch.
-- In development; check releases for shipped features, artifacts and signing.
-- Public Extension availability awaits Twitch policy approval and review.
-
-The exact repository URL was read from this worktree's `git remote -v`:
-`https://github.com/xkazm04/castle-control`. Downloads and Get the app point
-to its `/releases` page, Docs to `/tree/main/docs`, and Source to the repository.
-No download artifact, signed build or approved Extension is claimed.
-
-## Reproducible checks
-
-Run from the repository root, without installing anything:
+A typed, framework-free Vite workspace member using the shared drawing, tokens
+and stamp table. From the repository root:
 
 ```powershell
+pnpm --filter @castle-control/site dev
+pnpm --filter @castle-control/site typecheck
+pnpm --filter @castle-control/site lint
+pnpm --filter @castle-control/site test
+pnpm --filter @castle-control/site build
 node apps/site/check.mjs
-node --test --test-isolation=none apps/site/site.test.mjs
-node node_modules/eslint/bin/eslint.js apps/site --max-warnings 0
-node scripts/check.mjs
+pnpm exec playwright test -c e2e/site.config.ts
 ```
 
-The static check counts its inventory and checks every local href/src and SVG
-target, unique IDs, direct token consumption, wordmark strokes, policy labels,
-copy hygiene, no remote scripts/fonts, the 400-line cap and a **180 KiB** total
-uncompressed first-load budget (HTML, CSS, JS, SVG and shared tokens). The finite
-four-chamber marketing content has no growing live lists to virtualise.
+`build` produces a self-contained `dist/` with relative assets and checks its
+180 KiB uncompressed first-load budget, offline posture and honesty labels.
+`pnpm gate` builds/checks the site after recursive tests. The checker also accepts
+an optional dist directory: `node apps/site/check.mjs <dist-directory>`.
+Vite preserves workspace links, avoiding the Windows network-drive probe.
 
-The nine behavior tests execute the actual `site.js` in a small DOM adapter
-with a controlled monotonic clock, including `performance.now`, `setTimeout`
-and `clearTimeout`. They never sleep. The unattended intro is still printing at
-2,799 ms and hands over at exactly **2,800 ms**, with no timer left. A simulated
-2,500 ms script startup shortens printing and hands over at exactly **4,000 ms**
-from navigation start. Reduced motion hands over at **0 ms** with no timer;
-switching the preference at 800 ms also cancels the pending timer.
+The page uses system fonts and local assets, with no app bridge, analytics,
+storage or live-audience connection. Outbound links point to this repository;
+the app CTAs open releases. The single poster footer matches the winner, while
+project notices, release/signing status, Extension availability, Docs and Source
+appear below the six principles at `#steward`. The stock-theme control lives in
+the topbar. Every app action links honestly to releases as “Get the app”.
 
-The tests assert a named native button before header links, uncancelled Tab and
-Enter/Space, survival through pointerdown until click, focus return, cancelled
-timers, shortcuts, nested views, route validation, hover and both themes.
-Five new regression cases failed against the previous implementation before
-its handlers were fixed. Native event dispatch and keyboard traversal still
-need browser verification; the adapter checks the actual handlers and markup.
-The first-load inventory after restoring both textures is **152,814 bytes**.
+The revised O2 (2026-10-31) uses a stacked layout below 1280px. At 1280px and
+above the winner's 1440×900 stage still uses the original desktop `fit()`.
+O3 replaces the no-build static folder with a workspace package.
+The existing hashes and `/features` suffix remain. Intro handover is 2700 ms;
+Skip/native activation, origin focus, hover, keys and reduced motion are tested.
+Overview attention follows the latest hover/focus event: pointer leave restores
+the whole keep even while a hit has focus. Skip moves keyboard focus without
+lighting a room; a later Tab or arrow focus lights its new room.
 
-## Required Director browser proof
+## Broadside and working toys
 
-**No screenshot was taken and no rendered layout assertion was run here.**
-The browser automation interface reports no available browsers in this build
-session. Static checks and DOM-adapter tests cannot establish pixel fidelity,
-horizontal overflow or the full browser time to control. Run this procedure on
-a machine that permits a browser, saving proof outside the worktree:
+`broadside.ts` builds the sheet once. Room, features and Steward views replace
+text and toggle the existing nodes from `copy.ts`. Inside/Back/pager anchors use
+the public hashes, retaining the features depth when cycling. Focus and print-in
+run on opening/changing the sheet, never on an unchanged render. The winner's
+476×760 sheet keeps registration corners and the room-ink offset shadow. In the
+Steward study, the heading/lead and bottom pager stay fixed. Only the principles
+and honesty fine print scroll, in a Tab-reachable region with a token-based bottom
+fade and “More below” cue; the cue changes at the end of the region.
 
-1. Serve the repository root as above. Open `/prototype/index.html` and
-   `/apps/site/index.html`. In DevTools device emulation set the viewport to
-   **1920x1080**, then **1280x800**, then **390x844**, with scale 100% and DPR 1.
-   Do not substitute the outer browser window dimensions for the viewport.
-2. At each size, capture the home print in paper and dark stock, and all four
-   chamber views. Compare retained paper, ink, type, ruled notes, masthead,
-   desktop composition and mobile strips. The deliberate wordmark-mask fix
-   should leave both L feet solid. Check the gold dotted halo behind the flame
-   over the O and the blue dotted moat behind its waves in both themes.
-   Check no clipping, banner/masthead overlap,
-   horizontal page overflow, or body text below 13 CSS pixels. The 390 viewport
-   should show four vertical strips and a banner with a release link.
-3. Reload without interacting. After the print settles, record
-   `document.body.dataset.navigationReadyMs` and
-   `document.body.dataset.controlReadyMs`. Both are milliseconds from browser
-   navigation start. The second, conservative visual-handover measurement must
-   be at or below **4000**; navigation must already work before it. Capture the result.
-   A slow page load or a blocked browser main thread can delay browser timers;
-   the controlled-clock test proves the script deadline, not a paint guarantee.
-4. Reload, press Tab twice during the print, and confirm Skip intro receives
-   focus and remains visible. Activate it with Enter, then repeat using Space
-   and a pointer click. Printing stops and focus moves to the first chamber link.
-   Tab/Enter through all four strips/banner links, open Full feature list, then return with Escape and
-   each Back link. Confirm origin focus returns; drive 1 through 4 and left/right.
-   Check hover ghosting and the chamber name printed above the keep.
-5. In DevTools Rendering, emulate `prefers-reduced-motion: reduce` and reload.
-   The complete composition should appear with no autoplay motion, no visible
-   Skip intro control and no running animation. Record
-   `document.getAnimations().filter(a => a.playState === 'running').length`
-   (expected zero). Check all navigation and theme switching again.
-6. At each viewport check `document.documentElement.scrollWidth <= innerWidth`,
-   document order and visible focus, then inspect the console/network panel for
-   broken resources or CSP errors. Only local page assets should load; outbound
-   navigation happens only through the explicit GitHub links. Re-run with JS
-   disabled to verify the ordinary anchor fallback.
+`toys.ts` has no DOM. `toy-dock.ts` mounts four persistent panels and binds the
+shared art hooks once. Inputs, verdicts, intensity, claims and the last three
+draws survive room changes and features navigation. The lot decision and proof
+precede the 2200ms wheel transition; reduced motion settles immediately, including
+when enabled during a pending draw. `?seed=lanterns#lots` draws exactly once.
+The sample line rules run links → blocked terms → shouting (at least 70% capitals
+and six letters) → repeated characters. An empty line is held with a prompt.
+Hexes expose buttons only in Map Room; Enter/Space use the one keymap subscription.
 
-Follow-up validation, 2026-10-28: `check.mjs`, all nine behavior tests, direct
-site ESLint and `node scripts/check.mjs` passed. The latter walked 556 code
-files for boundaries, hygiene and the file cap, and 690 files for secrets.
-Both texture groups parse as SVG and every new dot stays inside the existing
-1600 by 1000 viewBox. No CSS or layout dimensions changed.
+All toys carry the shared SAMPLE/SIMULATED stamps; Drawn/HELD/PASS also use
+`stampParts` through the site's DOM adapter. Nothing is sent or broadcast.
+`broadside.css` and `toys.css` use the stage type roles: reading copy is at least
+17 stage pixels and labels at least 15. Proof/history state lines use the 15px
+history role; the draw proof stays on one line with ellipsis and its full text in
+the tooltip. The dock keeps its 874px width and bottom edge at stage y=842, growing
+upward from a 142px minimum to fit all output. The illustration label moves with
+it. DRAWN and HELD/PASS land in a top-right `.stampslot`, with unclipped ink bleed.
+The room-mode footer retains WP5a's winner geometry.
+The toy stack and broadside default to `display:none` with no pointer events
+outside room mode. The stack itself stays pointer-inert even in the study;
+only the displayed dock receives input. Hiding preserves every mounted toy's state.
+Broadside actions and pager use the winner's line-height of 1. Toy text fields use
+`--input-ink` (`#000000`) on `--white` in paper; stock uses its light ink
+(`#F2EEE3`) on the existing `--card` (`#1D2027`) background to avoid white glare.
 
-Recursive pnpm typecheck and lint failed at lifecycle startup with `spawn EPERM`.
-`pnpm --config.verify-deps-before-run=false gate` passed 14 tooling tests and the
-workspace inventory, then failed at the contract exporter with `spawnSync cargo
-EPERM`. Those commands did not pass; their runners are unchanged from HEAD.
-App Master must rerun the normal full gate, recursive typecheck/lint, workspace
-tests and desktop build during review, plus the separate site checks above.
-Browser screenshots, native skip activation and horizontal-overflow assertions
-at all three sizes remain required. No install was run and the existing
-`node_modules` junction was not modified.
+The new `data-role` hooks are `broadside`, `broadside-eyebrow`, `broadside-title`,
+`broadside-fn`, `broadside-line`, `broadside-note`, `broadside-disc`,
+`broadside-action`, `broadside-pager`, `principle`, `toy`, `toy-title`, `toy-note`,
+`toy-input`, `toy-go`, `toy-result`, `toy-proof`, `toy-claim`, `toy-history`.
+WP5a's stage/header/headline/footer/room-tag hooks remain.
+
+## Acceptance evidence (2026-10-31)
+
+- `pnpm --filter @castle-control/site typecheck`: exit 0; `[pnpm typecheck] walked 29 files`.
+- `pnpm --filter @castle-control/site lint`: exit 0; `[pnpm lint] walked 29 files`.
+- `pnpm --filter @castle-control/site test`: exit 0; `Test Files 10 passed (10)`; `Tests 80 passed (80)`.
+- `pnpm --filter @castle-control/site build`: exit 0; 43 modules; `[site first-load] 91002 / 184320 bytes (88.87 KiB)`; built inventory, destinations, offline posture and honesty checks PASS.
+- `node packages/tokens/src/generate.ts`: exit 0; generated 2 files from the token source.
+- `pnpm --filter @castle-control/tokens test`: exit 0; `Test Files 4 passed (4)`; `Tests 19 passed (19)`, including generated-file drift and the new typed-input ink role.
+- `node scripts/check.mjs`: exit 0; boundaries, hygiene, type-floor, file-cap and secrets all pass.
+- `pnpm gate`: exit 1 at contract export, `Error: spawnSync cargo EPERM`; the preceding 35 tooling tests passed. No install was run, as required by this brief.
+- Browser verification is blocked: headless Chromium reports `spawn EPERM`;
+  automatic approval review rejected native Chrome access with “Computer Use was
+  not approved to use Google Chrome”. No rendered-layout verification is claimed.
+
+The 80 Vitest cases include pure rules and DOM contracts. `broadside.test.ts`
+checks all four room/features sheets against copy, six principles and the extra
+notices, stable DOM inventory, focus and print behavior. `toy-dock.test.ts` checks
+cross-room persistence, timed/reduced-motion draws, one-time seed handling,
+three-entry history, stamps, SVG paints and scoped keymap activation. The existing
+intro/navigation/theme/geometry tests and built honesty checks still pass.
+The attention regressions cover Skip → hover → leave, Tab focus lighting, and
+pointer leave after keyboard focus, including a later arrow focus and re-render.
+The overview hit-test regression checks the production CSS display/pointer rules
+for both the toy stack and broadside, together with intro, Skip and return-from-room
+visibility and stable mounted toy nodes. The recent `view.ts` attention fix is unchanged.
+
+Golden draw: `lanterns` → `cindergate44`, index 8, proof
+`FNV-1a("lanterns") = 7e90abd4 → lot 09 of 12`. Blank seed →
+`Type a seed word first.` Curve/band cases: 0→0%, 10→25%, 18→39%, 30→60%,
+100→100%, 120→100%. Hex cycle: 0→1→2→3→0; sample tally
+`[0,1,1,2,3,3,3]` → Gules 2 / Azure 1 / Or 3. The initial claims use exactly
+`[0,2,3,1][hexSeed[i]]`; paints are paper / gules / azure / or.
+
+Director review correction: opened `port-site-room1b.png`,
+`winner-site-room1b.png` and `port-site-steward.png` under `.port/shots/review`.
+The timed-draw test asserts the wheel transform changes to `rotate(1185deg)` with
+`transform 2200ms cubic-bezier(.12,.62,.16,1)`; 1185 mod 360 = 105, equal to
+`-(8*30+15)` mod 360. A second draw has the same final ticket alignment. The
+Steward DOM test verifies the fixed heading/pager outside the focusable inner
+region and the scroll cue at both ends. A system-Chrome rerun still fails with
+`browserType.launch: spawn EPERM`; the corrected 1440×900/1280×800 layout requires
+Director browser verification.
+
+## WP12: stacked landing (owner ruling O2 revised, 2026-10-31)
+
+`layout.ts` defines the sole width breakpoint, `stackedQuery = '(max-width: 1279px)'`.
+Its live `matchMedia` subscription selects the root `.stacked` class; the stacked
+stylesheet follows that class without duplicating the width condition. Desktop
+still builds the original stage and uses `fit()` at 1280px and above. Mobile
+scenes are created only on the first stacked visit and detached on return to the
+stage. The original desktop stage/header/headline/broadside DOM and hooks remain;
+the existing toy panels and shared stamp filter move back to their original places.
+The stage-only overflow lock is released for normal vertical page scrolling.
+
+`stacked.ts` provides a compact header, skip link, one h1, the full keep overview,
+then lots → gate → beacons → map, the six-principle study and footer. Each room
+has its real heading/function/notes from `copy.ts`, a crop using the public
+`keepRooms[artRoom[id]].frame`, its original toy and SAMPLE/SIMULATED stamp, and
+an inline features disclosure. The art comes entirely from `keepArt()`; repeated
+SVG IDs and paint references are namespaced per scene. No missing keep-art API
+or package change was needed. The Herald remains illustration only.
+
+The four existing `toy-dock.ts` panels use the unchanged `toys.ts` decisions.
+Seed text, winner/proof, the last three draws, a pending draw, line text/verdict,
+gift value/flame intensity, and all hex claims survive resizing in both directions.
+The cached inline disclosures also retain their open state. Mobile honours a
+validated `?seed=` even on the overview, drawing once. The mobile hex grid uses
+native labelled buttons with 44px minimum targets, with the same claim cycle,
+tallies and scene paints as desktop; Enter/Space retain native button activation.
+The drawing's small hexes remain texture rather than undersized controls.
+
+All stacked type sizes use existing `--text-*` roles (minimum 13px); text is never
+scaled. Header controls, links, disclosures, forms and hex buttons have at least
+44px targets. Visible HTML carries the room information independently of the art.
+The header, main, footer, one h1, ordered h2s and principle h3s provide landmarks
+and heading order. Theme controls share the existing visit-only theme state.
+Room/study hashes scroll and focus their section, and `/features` opens its inline
+copy. Reduced motion uses instant scrolling and immediate wheel results, with no
+print-in, dolly, smooth scroll or ambient animations. CSP and offline posture stay
+unchanged.
+
+WP12 acceptance results (2026-10-31):
+
+- `pnpm --filter @castle-control/site test`: PASS, 11 files / 93 tests.
+- `pnpm --filter @castle-control/site typecheck`: PASS, 32 files.
+- `pnpm --filter @castle-control/site lint`: PASS, 32 files; repo checks green.
+- `pnpm --filter @castle-control/site build`: PASS, 46 modules;
+  `[site first-load] 101829 / 184320 bytes (99.44 KiB)`.
+- `node scripts/check.mjs`: PASS, including boundaries, hygiene, type-floor,
+  file-cap and secrets.
+- `pnpm --config.verify-deps-before-run=false exec playwright test -c e2e/site.config.ts`:
+  BLOCKED, exit 1, `Error: spawn EPERM`. Debug output identifies Playwright's
+  attempt to start the Vite preview web server as the blocked subprocess;
+  no browser or test starts.
+- Additional static validation: e2e TypeScript and ESLint both PASS.
+- `pnpm gate`: BLOCKED at contract export, `Error: spawnSync cargo EPERM`,
+  after all 35 tooling tests passed. No dependency install was run.
+
+The 13 new Vitest cases cover the media switch, stacked landmarks/copy/stamps,
+namespaced art references and public crops, overlays at rest and wheel paints,
+every room/study/features route,
+desktop/mobile node and state retention (including a draw in flight), pure toy
+parity, seeded drawing, and reduced motion. The existing 80 tests still pass.
+The browser lane adds 390×844 and 768×1024 cases for all rooms and toys, route
+landing, minimum computed text size, touch targets, overflow (also at 360, 1024
+and 1279px), reduced motion, external-request/page-error checks, and room screenshot
+attachments. It also adds a 1279↔1280 resize case. The desktop cases are unchanged;
+the former 390px scaled-stage expectation is replaced by the new stacked cases.
+Browser assertions, screenshots and pixel equivalence still require Director
+verification outside this sandbox. No installs or git writes were performed.
+
+WP12 Director review correction: the stacked drawings now have their own
+`.dim` and `.litglow` rest rules. Both overlays have opacity 0, and the dim paint
+uses `--night` with multiply blending, matching the desktop overview at rest.
+This correction only adds `.stacked-art` selectors; desktop rules are unchanged.
+The new Vitest regression failed before the correction and passes after it,
+checking every stacked drawing's overlay rules and the retained wheel paints.
+The two mobile e2e cases now assert computed overlay opacity/display and a
+visible, non-black painted wheel interior in both themes. The wheel hook itself
+is a group, so the paint assertion checks its explicitly painted descendants.
+The DRAWN stamp expectation accepts the shared accessible name ending in
+`Drawn`, preserving the Stamp grammar `Sealed by the streamer: Drawn`.
+
+After this correction, site test/typecheck/lint/build and `node scripts/check.mjs`
+all pass, as do e2e TypeScript and ESLint. The budget and test count above reflect
+this rerun. The browser lane was retried and remains blocked at preview-server
+startup with `Error: spawn EPERM`; the new computed-style assertions need the
+Director's browser rerun. The Director's preceding review reported no horizontal
+overflow at 360/390/768px and a minimum visible text size of 13px.

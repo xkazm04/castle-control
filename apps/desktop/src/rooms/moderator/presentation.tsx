@@ -1,5 +1,6 @@
 import type { Verdict } from '@castle-control/contract';
-import { Pennant, VerdictChip } from '@castle-control/ui';
+import type { ReactNode } from 'react';
+import { Stamp, VerdictChip } from '@castle-control/ui';
 import { moderationCopy as copy } from '../../moderation-copy.js';
 
 export const verdictWords = { all: copy.all, pass: copy.pass, hold: copy.hold, bar: copy.bar } as const;
@@ -17,12 +18,10 @@ export function VerdictIcon({ verdict }: { verdict: Verdict | 'all' }) {
   </svg>;
 }
 
-/** The kit pennant owns the word; the icon remains decorative beside it. */
+/** Fixed verdict badges share the stamp table; actions keep their decorative icons. */
 export function VerdictMark({ verdict }: { verdict: Verdict }) {
   return <span className="moderator-verdict-mark" data-verdict={verdict}>
-    <Pennant word={verdictWords[verdict]} ink={verdict === 'bar' ? 'gules' : 'or'}
-      {...(verdict === 'pass' ? { style: { '--cc-ink': 'transparent' } } : {})} />
-    <VerdictIcon verdict={verdict} />
+    <Stamp kind={verdict === 'pass' ? 'pass' : verdict === 'hold' ? 'held' : 'blocked'} word={verdictWords[verdict]} />
   </span>;
 }
 
@@ -30,6 +29,6 @@ export function ReviewMeta({ verdict, id, status }: { verdict: Verdict; id: stri
   return <div className="moderator-review-meta"><VerdictChip verdict={verdict} /><code>{id}</code><em>{status}</em></div>;
 }
 
-export function CountLabel({ first, second }: { first: string; second?: string }) {
+export function CountLabel({ first, second }: { first: ReactNode; second?: ReactNode }) {
   return <small className="moderator-count-label"><span>{first}</span>{second && <span>{second}</span>}</small>;
 }

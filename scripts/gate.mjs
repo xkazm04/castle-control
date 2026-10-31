@@ -14,3 +14,6 @@ for (const mode of ['fmt', 'clippy', 'test']) {
 run('pnpm', ['typecheck']);
 run('pnpm', ['lint']);
 run('pnpm', ['test']);
+run('pnpm', ['--filter', '@castle-control/site', 'build']);
+run('pnpm', ['--filter', '@castle-control/desktop', 'build']);
+run('pnpm', ['--filter', '@castle-control/ui', 'build']);

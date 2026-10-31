@@ -1,6 +1,6 @@
 ﻿import type { ChatDelay, Decision } from '@castle-control/contract';
 import { useId } from 'react';
-import { HeraldicCard, HeroReadout, InkButton, Plate, PlateActions, PlateBand, PlateBody, SectionHeading, StatusChip } from '@castle-control/ui';
+import { HeraldicCard, HeroReadout, InkButton, Plate, PlateActions, PlateBand, PlateBody, SectionHeading, Stamp } from '@castle-control/ui';
 import type { ProposalQueue } from '@castle-control/ui/steward';
 import type { ModerationPreview } from '../../moderation-model.js';
 import { fixtureHoldReasons } from '../../moderation-fixture.js';
@@ -54,7 +54,7 @@ export function HeldQueue({ state, queue }: Props) {
 export function GateControls({ state, queue }: Props) {
   const delay_id = useId();
   return <Plate ink="azure" offset="space-8" className="moderator-moat" aria-label={copy.moat_title}
-    band={<PlateBand title={copy.moat_title} gloss={copy.moat_gloss} count={<CountLabel first={copy.simulated} />} />}>
+    band={<PlateBand title={copy.moat_title} gloss={copy.moat_gloss} count={<Stamp kind="simulated" word={copy.simulated} />} />}>
     <PlateBody>
       <div className="moderator-moat-top"><HeroReadout value={String(state.delay.value)} unit={copy.seconds_unit} ghost="none" caption_style="label" caption={copy.delay_applied} />
         <div className="moderator-bridge"><svg viewBox="0 0 56 34" aria-hidden="true"><path d="M3 33V7h4V3h5v4h4V3h5v4h4v26M9 33V23a5 5 0 0 1 10 0v10M25 32h29M21 10l31 21" /></svg>
@@ -86,15 +86,14 @@ export function GateControls({ state, queue }: Props) {
 
 export function Rules({ state, queue }: Props) {
   const armed = state.rules.filter(rule => state.preview_modes.get(rule.rule_id) === 'armed').length;
-  return <section className="moderator-block moderator-orders"><SectionHeading title={copy.orders_title} gloss={copy.orders_gloss} count={copy.simulated} />
-    <div className="moderator-figures"><span><b>{armed}</b>{copy.armed}</span><span><b>{state.rules.length - armed}</b>{copy.watching}</span></div>
+  return <section className="moderator-block moderator-orders"><SectionHeading title={copy.orders_title} gloss={copy.orders_gloss} count={<Stamp kind="simulated" word={copy.simulated} />} />
+    <div className="moderator-figures"><span><b>{armed}</b><Stamp kind="armed" word={copy.armed} /></span><span><b>{state.rules.length - armed}</b><Stamp kind="shadow" word={copy.watching} /></span></div>
     <p className="moderator-note">{copy.modes}</p>
     {state.rules.map(rule => {
       const mode = state.preview_modes.get(rule.rule_id) ?? 'shadow';
       return <HeraldicCard className="moderator-rule-card" key={rule.rule_id}>
         <div className="moderator-rule-text"><b id={`moderator-rule-${rule.rule_id}`}>{rule.name}</b><span><code>{rule.pattern}</code> · {rule.action}</span></div>
-        <div className="moderator-rule-side"><StatusChip variant="azure" stamp="mode" ink="azure" tone={mode === 'armed' ? 'solid' : 'neutral'}>
-          {mode === 'armed' ? copy.armed : copy.watching}</StatusChip>
+        <div className="moderator-rule-side"><Stamp kind={mode} word={mode === 'armed' ? copy.armed : copy.watching} />
           <button className="moderator-text-button" type="button" data-mode={mode} aria-describedby={`moderator-rule-${rule.rule_id}`} onClick={() => proposeCommand(queue,
             { kind: 'mode', rule_id: rule.rule_id, mode: mode === 'shadow' ? 'armed' : 'shadow' }, `${mode === 'shadow' ? 'Arm' : 'Watch'} ${rule.name}`)}>
             {mode === 'armed' ? copy.propose_watch : copy.propose_arm}</button></div>

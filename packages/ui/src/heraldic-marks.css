@@ -12,6 +12,6 @@
 .cc-shield { width: var(--space-40); height: calc(var(--space-40) + var(--space-6)); }
 .cc-shield path:first-child { fill: var(--tint-2); stroke: var(--ink); stroke-width: 1.5; }
 .cc-shield-charge { fill: none; stroke: var(--ink); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-.cc-shield text { fill: var(--ink); font: 800 var(--space-20)/1 var(--font-display); text-anchor: middle; }
+.cc-shield text { fill: var(--ink); font: 800 var(--text-heraldic-title)/1 var(--font-display); text-anchor: middle; }
 .cc-card[data-card="selectable"][data-selected="true"] .cc-shield path:first-child { fill: var(--cc-ink, var(--ink)); stroke: var(--cc-ink, var(--ink)); }
 .cc-card[data-card="selectable"][data-selected="true"] .cc-shield text { fill: var(--press); }

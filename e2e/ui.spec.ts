@@ -54,7 +54,7 @@ for (const route of routes) for (const theme of themes) for (const steward of st
   test(`desktop-${slug(route)}-${theme}-steward-${steward}`, async ({ page }) => {
     // main.tsx defaults to fixtures when no native launch is injected.
     await page.goto(`/${route}`);
-    await expect(page.locator('.cc-sample')).toHaveText('Simulated');
+    await expect(page.locator('.cc-rampart > [data-stamp="simulated"]')).toHaveText('Simulated');
     await expect(page.locator('.keep-home, .overview-workspace, .shell-room, .demo-workspace, .stream-workspace')).toBeVisible();
     await expect(page.getByText('Opening the room...', { exact: true })).toHaveCount(0);
     await expect(page.locator('.cc-steward-bar')).toBeVisible();
@@ -96,12 +96,12 @@ test('overlay-simulated-connected', async ({ page }) => {
     { name: 'overlay canvas', selector: '#scene' },
     { name: 'simulated rendered layer', selector: '#scene > div' },
     { name: 'simulated provenance badge', selector: '[data-simulated-badge]' },
-  ], { canvas: 'obs-transparent' });
+  ], { canvas: 'obs-transparent', tokenSheet: 'overlay-base' });
 });
 
 test('fixture draw rehearsal seals, casts, reveals in the urn and recomputes this cast', async ({ page }) => {
   await page.goto('/#/chamber/lottery');
-  await expect(page.locator('.cc-sample')).toHaveText('Simulated');
+  await expect(page.locator('.cc-rampart > [data-stamp="simulated"]')).toHaveText('Simulated');
   await page.getByRole('button', { name: 'Preview this draw', exact: true }).click();
   await expect(page.getByText('Proposal · not sealed', { exact: true })).toBeVisible();
   const hold = page.getByRole('button', { name: 'Hold to seal', exact: true });

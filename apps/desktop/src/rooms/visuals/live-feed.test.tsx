@@ -26,8 +26,8 @@ test('connected room separates live core rows from the unchanged simulated feed'
   expect(html).toContain('Contribution feed · live from core');
   // C uses a boxed amount and separate source cell.
   expect(html).toContain('>123</b>'); expect(html).toContain('class="cc-feed-text">Bits cheer</span>'); expect(html).toContain('user ID 200');
-  // C puts the simulated qualifier in CardHead's gloss.
-  expect(html).toContain('<h2>Contribution feed</h2><span>simulated</span>');
+  // The simulated qualifier uses the shared Stamp beside the feed heading.
+  expect(html).toContain('<h2>Contribution feed</h2></header><span class="cc-stamp" data-stamp="simulated" role="img" aria-label="Simulated: simulated"><span aria-hidden="true">simulated</span>');
   expect(html).toContain('0 simulated events · Core simulation');
   expect(html.match(/data-live-contribution-row=/g)).toHaveLength(1);
   expect(html).not.toContain('data-contribution-row=');
@@ -76,8 +76,8 @@ test('failed and malformed live reads show unavailable, clear old rows and never
     expect(html).toContain('Live contribution feed unavailable');
     expect(html).not.toContain('data-live-contribution-row=');
     expect(html).not.toContain('Private upstream prose');
-    // C puts the simulated qualifier in CardHead's gloss.
-    expect(html).toContain('<h2>Contribution feed</h2><span>simulated</span>');
+    // The simulated qualifier uses the shared Stamp beside the feed heading.
+    expect(html).toContain('<h2>Contribution feed</h2></header><span class="cc-stamp" data-stamp="simulated" role="img" aria-label="Simulated: simulated"><span aria-hidden="true">simulated</span>');
   }
 });
 
@@ -115,8 +115,8 @@ test('fixture mode keeps the simulated label and issues no contribution RPC or o
     const room = Room({ snapshot: client.getSnapshot() });
     expect(room.type).toBe(VisualsWork);
     const html = renderToStaticMarkup(room);
-    // C puts the simulated qualifier in CardHead's gloss.
-    expect(html).toContain('<h2>Contribution feed</h2><span>simulated</span>');
+    // The simulated qualifier uses the shared Stamp beside the feed heading.
+    expect(html).toContain('<h2>Contribution feed</h2></header><span class="cc-stamp" data-stamp="simulated" role="img" aria-label="Simulated: simulated"><span aria-hidden="true">simulated</span>');
     expect(html).not.toContain('Contribution feed · live from core');
     expect(network).not.toHaveBeenCalled();
   } finally { stop(); }

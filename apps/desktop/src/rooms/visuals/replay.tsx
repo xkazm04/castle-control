@@ -1,5 +1,5 @@
 import { useId, useMemo, useState, useSyncExternalStore } from 'react';
-import { CardBody, CardHead, HeraldicCard, InkButton, StatusChip } from '@castle-control/ui';
+import { CardBody, CardHead, HeraldicCard, InkButton, Stamp } from '@castle-control/ui';
 import { proposalQueue } from '@castle-control/ui/steward';
 import type { ProposalQueue } from '@castle-control/ui/steward';
 import type { VisualId } from '@castle-control/contract';
@@ -84,7 +84,7 @@ export function NightReplay({ item, editor, queue = proposalQueue, initial_night
           onClick={() => clock.setSpeed(speed)}>{`${speed}×`}</InkButton>)}</span>
       <p className="visuals-replay-clock"><b>{night.name} · {clockLabel(time.position_s)} / {clockLabel(night_duration_s)}</b>
         <span>{time.speed}× · {Math.round(night_duration_s / time.speed)} s for the whole night</span></p>
-      <StatusChip variant="dash">SIMULATED</StatusChip>
+      <Stamp kind="simulated" />
     </div>
     {reduced && <p className="visuals-note">Reduced motion: the whole night is drawn at once and nothing animates. Scrub to inspect any minute.</p>}
     <label className="visuals-replay-scrub"><span>Scrub the night{!reduced && <small> · Space plays or pauses</small>}</span>
@@ -119,8 +119,8 @@ export function NightReplay({ item, editor, queue = proposalQueue, initial_night
     </div>
     <div className="visuals-replay-handoff">
       <InkButton size="wrap" variant="offset" ink="or" onClick={send}>{draft ? 'Update the Steward proposal' : 'Send curve to the Steward'}</InkButton>
-      {draft ? <StatusChip variant="dash" stamp="draft">{`Draft · revision ${draft.revision} · not on air`}</StatusChip>
-        : matches_seal && <StatusChip variant="ok">{sealed_here ? 'Sealed · this is the curve' : 'Sample curve · unchanged'}</StatusChip>}
+      {draft ? <Stamp kind="draft" word={`Draft · revision ${draft.revision} · not on air`} />
+        : matches_seal && <Stamp kind={sealed_here ? 'sealed' : 'sample'} word={sealed_here ? 'Sealed · this is the curve' : 'Sample curve · unchanged'} />}
       <p className="visuals-note">Never a direct write: the Steward holds a proposal and nothing changes on air until you hold to seal. Money affects visuals only. SIMULATED.</p>
       {notice.key === notice_key && <p className="visuals-note" role="status">{notice.text}</p>}
     </div>

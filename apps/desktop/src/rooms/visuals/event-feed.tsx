@@ -1,4 +1,4 @@
-import { CardBody, CardHead, HeraldicCard, RuledFeed, RuledRow, WindowedRows, rowHeight } from '@castle-control/ui';
+import { CardBody, CardHead, HeraldicCard, RuledFeed, RuledRow, Stamp, WindowedRows, rowHeight } from '@castle-control/ui';
 import { beaconsCopy as copy } from '../../beacons-copy.js';
 import type { PreviewEvent } from '../../beacons-fixture.js';
 import { source_labels } from './contribution-input.js';
@@ -9,7 +9,7 @@ export function ContributionFeed({ events, origin, scroll_top = 0 }: {
   events: readonly PreviewEvent[]; origin: 'Local preview' | 'Core simulation'; scroll_top?: number;
 }) {
   return <HeraldicCard variant="panel" className="visuals-event-feed" aria-label={copy.feed}>
-    <CardHead title={copy.feed} gloss={copy.simulated} />
+    <CardHead title={copy.feed} /><Stamp kind="simulated" word={copy.simulated} />
     <CardBody>
       <p>{copy.feed_notice(events.length, origin)}</p>
       <RuledFeed><WindowedRows rows={events} label={copy.simulated_events} row_key={event => event.id}

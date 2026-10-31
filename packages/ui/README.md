@@ -4,6 +4,73 @@ The public entry is `@castle-control/ui`. Components own their co-located CSS,
 use generated tokens, and accept caller data and copy without importing a
 desktop fixture, contract or command port.
 
+## WP4a: fixed state stamps
+
+`Stamp`, `StampProps`, `InkEdgeFilter`, `stampKinds` and `StampKind` are exported
+from `@castle-control/ui`. `Stamp` accepts `kind`, optional `word` and optional
+`land`. Meanings, default words, accessible descriptions, inks, fills, inner rules,
+tilts and dots live together in `src/stamp/table.ts`. A different custom word is
+appended to the accessible description; empty or whitespace-only words throw.
+The word and dot are decorative children of the labelled `role="img"` stamp.
+
+Framework-free consumers import `stampTable`, `stampParts` and `inkEdgeFilter`
+from `@castle-control/ui/stamp`, plus `@castle-control/ui/stamp.css`. Render the
+parts' class, `data-stamp`, accessible label and word; a non-`none` dot uses
+`cc-stamp-dot`, `data-dot` and `aria-hidden="true"`. Install the data-defined SVG
+filter once. React's `ThemeFrame` already installs it once per frame.
+
+Shell stamps use `--text-shell-stamp` (13px). A stage ancestor sets
+`--stamp-size: var(--text-stage-stamp)` (15px). Other shared roles are `--ink`,
+`--stamp-act-ground`, `--azure-text`, `--gules-text`, `--or-text`, `--or`, `--stamp-paper`,
+`--stamp-seal-text`, `--font-display`, `--track-air`, `--r-sm`, `--rule-thin`, `--rule-strong`,
+`--space-1/2/3/4/5/6/8/9/10`, `--m-stamp`, `--m-bleed` and `--ease-stamp`.
+All requested spacing has exact tokens; no substitution was needed.
+
+`land` adds `data-land` and a decorative bleed sibling, bounded by
+`cc-stamp-impression`. Reduced motion disables both animations and hides the
+bleed while retaining the labelled stamp. The deferred heraldic gallery shows
+each kind once at each size, in both themes, with simulated example labels.
+The legacy `StatusChip stamp=` path is preserved for WP4b; the new base and inner
+rule exclude `cc-chip` so those callers keep their existing styles.
+
+Initial WP4a validation: UI typecheck/lint/test pass (24 test files, 394 tests); desktop
+typecheck/test pass (72 test files, 728 tests); `node scripts/check.mjs` passes,
+including type-floor, boundaries/cycles, hygiene, file cap and secrets. The CSS
+test now walks 33 stylesheets recursively, including `stamp/` and the existing
+`design/`; no pre-existing CSS violation was exposed. Token checks include WP2's
+cutaway, motion and type groups.
+
+Initial build evidence: `pnpm --filter @castle-control/ui build` bundles
+successfully and finds 296/296 token definitions, then fails the existing 262,144
+byte kit budget at 282,611 bytes. A Vite comparison using unchanged HEAD
+primitives/gallery sources in memory, with current WP2 tokens, measures 275,980
+bytes (also over budget); WP4a adds 6,631 bytes. The budget is unchanged. A
+Chromium computed-style smoke check could not launch (`spawn EPERM`); browser
+rendering is not claimed. No install or git write was performed.
+
+Director-review lettering correction: ARMED and ON AIR text, lamp and lamp ring
+use `--stamp-paper` (`#FFF8EC` in both themes). SEALED uses the added
+`--stamp-seal-text`: `#F2B233` on paper, `#121317` on stock. The generated-token
+contrast tests measure SEALED at 9.4641:1 on paper and 16.0129:1 on stock.
+Owner decision O6 darkens ARMED/ON AIR's fill and border to `--stamp-act-ground`
+(`#B3321B` in both themes), retaining the gules meaning. This raises contrast
+with `--stamp-paper` from the winner's 3.7962:1 to 5.8694:1 in both themes.
+Stock's light `--gules-text` cannot provide that contrast, so the new fixed dark
+role is required. Token inventory tests admit the added stamp roles separately
+from WP2's immutable winner extraction and admission ledger. The motion reference
+test also accepts keep-art's current fallback-free token references, while still
+checking all 17 referenced roles against the winner values.
+
+O6 validation: UI typecheck/lint/test pass (25 test files, 402 tests); token
+typecheck/lint/test pass (4 test files, 18 tests).
+`node scripts/check.mjs type-floor` passes and walks 170 files. Both lint wrappers also pass the full
+repository boundary, hygiene, type-floor, file-cap and secrets checks; no
+outside-file failure occurred in this run.
+
+Package commands use
+`--config.verify-deps-before-run=false` to prevent pnpm from attempting an
+automatic install while other work changes workspace manifests.
+
 Design focus includes six display-only art-style previews, labelled SAMPLE ART and AI-generated, at `/art/preset-<style>-<asset>.webp`; unavailable images show a plain fallback, and proposals stay unchanged.
 
 The WP 1.7 promotion adds:
@@ -68,7 +135,7 @@ deep-import internal modules from other packages. No dependency or token changes
 | `Plate`, `PlateBand`, `PlateBody`, `PlateActions` | `cc-plate`, `cc-plate-band/title/gloss/count/body/actions`. Static section/article/div, or `selection="radio" checked={boolean}` for a native button with `role=radio`. `variant="choice"` supplies the selected chief/shadow treatment. Radio groups, roving focus and selection state belong to the caller. Band variants: standard, chief, hero, bench, seal. A radio uses the chief's phrasing markup; do not nest controls inside it. |
 | `StageFrame` | `cc-stage`, four `cc-crop[data-corner]`; `variant="stage"` or `"print"`. Keeps flex:1 and min-height:0. The caller supplies the content grid and keeps min-height:0 on every ancestor and image/content area. |
 | `HeraldicCard`, `CardHead`, `CardBody`, `CardCopy`, `CardSide` | `cc-card` with `data-card=plain/raised/selectable/tablet/panel`, `data-tone=neutral/seal/bar`. `on_select` produces a native pressed button; `selected`, `current` and `locked` are separate states. `CardCopy` owns title/meta/reason; `CardSide` owns side/action. **Existing `cc-panel`/NumberedPanel is unchanged**: the C carded panel is `cc-card[data-card=panel]`, not a redefinition. |
-| `StatusChip` | Existing `cc-chip` is unchanged without `stamp`. `stamp="label"/"mode"/"verdict"/"draft"` adds `cc-stamp`; `tone=spot/solid/ok/warn/blocked` selects treatment. Stamp copy is required and rejects blank words. Use the same component for tags; no duplicate Stamp component. |
+| `StatusChip` | Existing `cc-chip` is unchanged without `stamp`. The legacy `stamp="label"/"mode"/"verdict"/"draft"` path remains for WP4b migration; use the fixed-vocabulary `Stamp` below for new state stamps. |
 | `HeroReadout` | `cc-hero-readout`, `cc-hero-figure/caption`; `scale=display/viewport/numeric`, `ghost=shadow/overprint/none`, `caption_style=serif/label`, `unit` and `figure_size` token. Figures are caller-formatted strings. |
 | `MedalList`, `Medal`, `NumberedDiscs` | `cc-medals`, `cc-medal/disc/copy`, `cc-numbered-discs`. Medal value accepts struck/re-inked content; numbered items have stable ids, title and description. |
 | shared offset | `cc-offset-shadow`; a single `--cc-offset-shadow` expression driven by `--cc-shadow-ink` and `--cc-shadow-offset`. Plate, raised/selected card, offset InkButton and large SealButton all use it. No blur or softened shadow. |

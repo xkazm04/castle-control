@@ -2,12 +2,15 @@ import { resolve, relative, extname } from 'node:path';
 import { counted, productCode, text, walk } from './files.mjs';
 import { hygiene } from './hygiene.mjs';
 import { boundaries } from './boundaries.mjs';
+import { typeFloor } from './type-floor.mjs';
 
 const root = resolve(process.argv[3] ?? '.');
-const code = productCode(root);
+// Port snapshots are reference material, like prototype/; secrets still scans them.
+const code = productCode(root).filter((file) => !relative(root, file).replaceAll('\\', '/').startsWith('.port/'));
 const gates = {
   boundaries: () => boundaries(code, root),
   hygiene: () => hygiene(code),
+  'type-floor': () => typeFloor(root),
   'file-cap': () => code.flatMap((file) => {
     const lines = text(file).replace(/\r\n/g, '\n').replace(/\n$/, '').split('\n').length;
     return lines > 400 ? [`${relative(root, file)}: ${lines} lines exceeds 400`] : [];
@@ -29,7 +32,7 @@ const gates = {
 const selected = process.argv[2] ? [process.argv[2]] : Object.keys(gates);
 for (const gate of selected) {
   if (!Object.hasOwn(gates, gate)) throw new Error(`Unknown gate ${gate}`);
-  if (gate !== 'secrets') counted(gate, code);
+  if (!['secrets', 'type-floor'].includes(gate)) counted(gate, code);
   const defects = gates[gate]();
   if (defects.length) {
     console.error(defects.join('\n'));

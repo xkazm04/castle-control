@@ -1,6 +1,6 @@
 import { useEffect, useState, useSyncExternalStore } from 'react';
 import type { ConsensusGetResult, Decision } from '@castle-control/contract';
-import { FieldGroup, HeraldicCard, InkButton, SectionHeading, StageFrame, printStyle } from '@castle-control/ui';
+import { FieldGroup, HeraldicCard, InkButton, SectionHeading, Stamp, StageFrame, printStyle } from '@castle-control/ui';
 import { art, styles } from '../../demo/model.js';
 import { moderationCopy as copy } from '../../moderation-copy.js';
 import { anchors, colours, playOutputTiming, sizes } from './output-model.js';
@@ -99,7 +99,7 @@ export function OutputPreview({ port, messages, directions }: { port: OutputPort
     return () => stops.forEach(stop => stop());
   }, [run]);
   return <section className="moderator-block moderator-output" aria-label={copy.output_title}>
-    <SectionHeading title={copy.output_title} gloss={copy.simulated_caps} />
+    <SectionHeading title={copy.output_title} count={<Stamp kind="simulated" word={copy.simulated_caps} />} />
     <p className="moderator-small">{copy.output_scope}</p><p className="moderator-small">{copy.output_note}</p>
     {(['chat', 'vote'] as const).map(layer => <OutputSettings key={layer} layer={layer} value={settings[layer]} port={port} />)}
     <p className="moderator-small">{copy.output_limits}</p>

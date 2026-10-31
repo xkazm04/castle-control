@@ -1,4 +1,4 @@
-import { HeraldicCard, InkButton } from '@castle-control/ui';
+import { entranceStyle, HeraldicCard, InkButton } from '@castle-control/ui';
 import type { LotsDraw } from '@castle-control/contract';
 import { OVERLORD_URN_TEMPLATE } from '@castle-control/renderer';
 import type { DrawShape } from '@castle-control/renderer';
@@ -14,7 +14,7 @@ export function UrnTierPreset({ draw, shape, on_edit, on_shape, entry_count, dis
   entry_count?: number; disabled?: boolean;
 }) {
   const counts = OVERLORD_URN_TEMPLATE.winner_count_by_tier;
-  return <HeraldicCard variant="raised" aria-label={copy.tier.title}>
+  return <HeraldicCard variant="raised" className="panel cc-print-in" style={{ ...entranceStyle(2) }} aria-label={copy.tier.title}>
     <h2 className="lottery-card-title">{copy.tier.title}</h2>
     <div className="lottery-tier-buttons" role="group" aria-label={copy.tier.title}>
       {tiers.map(tier => {

@@ -1,6 +1,6 @@
 import { useId, useMemo, useState } from 'react';
 import type { DrillDiffResult, DrillRunResult, DrillState } from '@castle-control/contract';
-import { InkButton, VerdictChip, WindowedRows, rowHeight } from '@castle-control/ui';
+import { InkButton, Stamp, VerdictChip, WindowedRows, rowHeight } from '@castle-control/ui';
 import { moderationCopy as copy } from '../../moderation-copy.js';
 import type { BenchResult } from '../../moderation-bench.js';
 import { DraftPatternPreview } from './rule-bench.jsx';
@@ -39,7 +39,7 @@ export function Drill({ result: given, origin = 'fixture', capture_hash, draft, 
   const drawn = useMemo(() => new Set(model.markers.map(marker => marker.message_id)), [model]);
   const states = Object.keys(result.summary.states) as DrillState[];
   const outcomes = result.outcomes.filter(item => filter === 'all' || item.state === filter);
-  return <section className="moderator-drill"><h2>{copy.replay} · {copy.replay_simulated}</h2>
+  return <section className="moderator-drill"><h2>{copy.replay} · <Stamp kind="simulated" word={copy.replay_simulated} /></h2>
     {!capture_hash && <p>{copy.live_parity}</p>}
     <a href="#/chamber/moderator">{copy.back}</a><p>{origin === 'fixture' ? copy.replay_fixture_note : copy.replay_core_note}</p>
     {draft && <DraftPatternPreview result={draft} />}

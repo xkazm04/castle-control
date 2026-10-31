@@ -40,8 +40,9 @@ Cargo embeds this output in the native host so a clean checkout can compile and
 serve it without an npm install or a build-time subprocess.
 
 The HTML has one external same-origin module and no inline script. The module
-embeds the unchanged token sheet and renderer styles, so text uses the UI font
-and token ink while the canvas stays transparent for OBS composition. No extra
+embeds `packages/tokens/src/generated-base.css` and renderer styles, keeping its
+theme and layout tokens while omitting unused Cutaway, motion and type-scale
+groups to stay within the bundle budget. No extra
 stylesheet route or CSP permission is needed. The module
 connects only to `/push/beacons?visual_id=<slug>` and consumes the approved lazy
 contract parser. Asset URLs name the visual, verified package hash and a declared

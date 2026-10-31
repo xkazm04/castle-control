@@ -14,16 +14,16 @@
 .cc-hero-caption { font: italic var(--text-wordmark)/1.2 var(--font-serif); color: var(--ink); }
 .cc-hero-readout[data-caption="label"] { gap: 0; }
 .cc-hero-readout[data-caption="label"] .cc-hero-caption { margin-top: var(--space-6); font: 700 var(--text-label)/1.2 var(--font-ui); text-transform: uppercase; letter-spacing: var(--track-wide); color: var(--muted); }
-.cc-hero-readout[data-scale="viewport"] { --cc-figure-size: clamp(calc(var(--space-36) * 2), 11.5vh, calc(var(--space-56) + var(--space-24) * 2)); --cc-ghost-offset: var(--space-4); }
+.cc-hero-readout[data-scale="viewport"] { --cc-figure-size: clamp(var(--text-figure-min), 11.5vh, var(--text-figure-max)); --cc-ghost-offset: var(--space-4); }
 .cc-hero-readout[data-scale="viewport"] .cc-hero-figure {
-  font-size: var(--cc-figure-size);
+  font-size: var(--cc-figure-size, clamp(var(--text-figure-min), 11.5vh, var(--text-figure-max)));
   line-height: .8; letter-spacing: var(--track-number);
 }
-.cc-hero-readout[data-scale="numeric"] { --cc-figure-size: calc(var(--text-chamber) * 1.9); gap: var(--space-2); }
+.cc-hero-readout[data-scale="numeric"] { --cc-figure-size: var(--text-tagline); gap: var(--space-2); }
 .cc-hero-readout[data-scale="numeric"] .cc-hero-figure {
-  font: 700 var(--cc-figure-size, calc(var(--text-chamber) * 1.9))/.9 var(--font-num); letter-spacing: var(--track-number);
+  font: 700 var(--cc-figure-size, var(--text-tagline))/.9 var(--font-num); letter-spacing: var(--track-number);
 }
-.cc-hero-readout[data-scale="numeric"] .cc-hero-figure small { font-size: .45em; color: var(--cc-caption-ink, var(--or-text)); }
+.cc-hero-readout[data-scale="numeric"] .cc-hero-figure small { font-size: var(--text-wordmark); color: var(--cc-caption-ink, var(--or-text)); }
 .cc-hero-readout[data-scale="numeric"] .cc-hero-caption { font: 600 var(--text-label)/1.25 var(--font-ui); color: var(--muted); }
 .cc-medals { display: flex; flex-direction: column; gap: var(--space-10); margin: 0; padding: var(--space-12) 0 0; list-style: none; border-top: var(--rule-medium) solid var(--rule); }
 .cc-medal { --cc-medal-text: var(--gules-text); display: grid; grid-template-columns: var(--space-40) minmax(0, 1fr); gap: var(--space-12); align-items: center; }
