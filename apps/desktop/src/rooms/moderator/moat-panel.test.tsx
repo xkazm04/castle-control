@@ -180,6 +180,7 @@ test('the Keep heartbeat is a labelled loop of the same model, with nothing to p
   expect(html).toContain('data-compact="true"');
   expect(html).not.toContain('<button');
   expect(html).not.toContain('HELD');
+  expect(html).toContain('<small>Sample replay · simulated</small>');
 });
 
 test('moat styles use declared tokens, no raw colours and no pixel sizes', () => {

@@ -80,3 +80,18 @@ test('the heartbeat rests at the end, then runs again', () => {
   clock.advance(50);
   expect(player.getSnapshot().playhead_ms).toBe(400);
 });
+
+test('a throttled player publishes less often but covers the same time', () => {
+  const clock = manualClock();
+  const player = createMoatPlayer(100000, clock, { start: 'start', speed: 1, min_frame_ms: 50 });
+  const heard = vi.fn();
+  player.subscribe(heard);
+  player.play();
+  heard.mockClear();
+  for (let frame = 0; frame < 10; frame += 1) clock.advance(16);
+  expect(heard.mock.calls.length).toBeLessThanOrEqual(4);
+  expect(heard.mock.calls.length).toBeGreaterThanOrEqual(2);
+  clock.advance(100);
+  expect(player.getSnapshot().playhead_ms).toBeGreaterThanOrEqual(240);
+  expect(player.getSnapshot().playhead_ms).toBeLessThanOrEqual(260);
+});

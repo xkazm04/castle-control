@@ -40,7 +40,7 @@ export const moatCopy = {
   evaluation_words: { true: 'passed', false: 'did not pass', none: 'no valid answer' },
   stamp_name: (marker: MoatMarker) => `Held, not on air: ${marker.message_id}${marker.rule_id ? `, rule ${marker.rule_id}` : ''}. Inspect.`,
   dot_name: (marker: MoatMarker) => `${marker.message_id}: ${fateWords[marker.fate]}`,
-  heartbeat: 'Sample replay loop · simulated',
+  heartbeat: 'Sample replay loop · simulated', heartbeat_label: 'Sample replay · simulated',
   print: 'Print night report',
   compare: {
     title: 'Moat comparison · simulated', toggle: 'Compare with a simulated candidate', region: 'Baseline and candidate moats, simulated replay',

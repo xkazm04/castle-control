@@ -33,6 +33,8 @@ export type MoatPlayerOptions = {
   /** Heartbeat mode: wait `rest_ms` at the end, then run again. */
   loop?: { rest_ms: number };
   speed?: MoatSpeed;
+  /** Publish at most this often. A status-bar loop does not need sixty frames a second. */
+  min_frame_ms?: number;
 };
 // A frame after a stalled tab must not jump the playhead.
 const longestFrame = 250;
@@ -41,14 +43,17 @@ export function createMoatPlayer(run_ms: number, clock: MoatClock, options: Moat
   let state: MoatPlayerState = { playhead_ms: options.start === 'start' ? 0 : run_ms, run_ms, playing: false, speed: options.speed ?? 8 };
   const listeners = new Set<() => void>();
   let stop: (() => void) | undefined;
-  let last = 0; let rested = 0;
+  let last = 0; let rested = 0; let owed = 0;
   const publish = (next: MoatPlayerState) => { state = next; for (const listener of [...listeners]) listener(); };
   const halt = () => { stop?.(); stop = undefined; };
 
   function tick() {
     const now = clock.now();
-    const delta = Math.min(Math.max(now - last, 0), longestFrame);
+    owed += Math.min(Math.max(now - last, 0), longestFrame);
     last = now;
+    if (owed < (options.min_frame_ms ?? 0)) return;
+    const delta = owed;
+    owed = 0;
     if (state.playhead_ms >= run_ms) {
       rested += delta;
       if (options.loop && rested >= options.loop.rest_ms) { rested = 0; publish({ ...state, playhead_ms: 0 }); }
@@ -61,7 +66,7 @@ export function createMoatPlayer(run_ms: number, clock: MoatClock, options: Moat
   function play() {
     if (stop) return;
     if (state.playhead_ms >= run_ms) state = { ...state, playhead_ms: 0 };
-    last = clock.now(); rested = 0;
+    last = clock.now(); rested = 0; owed = 0;
     stop = clock.frames(tick);
     publish({ ...state, playing: true });
   }

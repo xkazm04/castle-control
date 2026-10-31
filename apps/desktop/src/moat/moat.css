@@ -81,7 +81,9 @@
 @media (prefers-reduced-motion: reduce) { .moat-stamp { animation: none; } }
 
 /* The Keep heartbeat sits in the moat bar: a small sample loop, not a live reading. */
-.moat-heartbeat { display: block; flex: 0 1 calc(var(--space-56) * 6); min-width: 0; line-height: 0; }
+.moat-heartbeat { display: flex; align-items: center; gap: var(--space-10); flex: 0 1 calc(var(--space-56) * 9); min-width: 0; line-height: 0; }
+.moat-heartbeat small { flex: none; font: 700 var(--text-label)/1.1 var(--font-ui); letter-spacing: var(--track-label); text-transform: uppercase; }
+.moat-heartbeat .moat-scene { flex: 1 1 auto; }
 .moat-heartbeat .moat-bank { stroke-width: .6; }
 .moat-heartbeat .moat-track { stroke-width: .6; }
 .moat-heartbeat .moat-dot { stroke-width: .5; }
