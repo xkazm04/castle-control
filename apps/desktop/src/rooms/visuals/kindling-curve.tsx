@@ -60,15 +60,15 @@ function dragPoint(event: PointerEvent<SVGCircleElement>, editor: CurveEditor) {
 
 /** The draggable point surface. One editor can drive it from the bench and from the night replay. */
 export function CurvePoints({ editor, state, disabled, described_by = 'visuals-curve-help',
-  label = 'Editable contribution to intensity curve', underlay }: {
+  label = 'Editable contribution to intensity curve', underlay, domain = 0 }: {
   editor: CurveEditor; state: ReturnType<CurveEditor['getSnapshot']>; disabled: boolean; described_by?: string;
-  label?: string; underlay?: (x: (total: number) => number) => ReactNode;
+  label?: string; underlay?: (x: (total: number) => number, maximum: number) => ReactNode; domain?: number;
 }) {
   const { draft } = state;
-  const maximum = Math.max(1, ...state.confirmed.ranges.map(point => point.total), ...draft.ranges.map(point => point.total));
+  const maximum = Math.max(1, domain, ...state.confirmed.ranges.map(point => point.total), ...draft.ranges.map(point => point.total));
   const x = (total: number) => total / maximum * 600;
   return <svg viewBox="-12 -12 624 164" preserveAspectRatio="none" role="group" aria-label={label}>
-      {underlay?.(x)}
+      {underlay?.(x, maximum)}
       <polyline points={draft.ranges.map(point => `${x(point.total)},${140 - point.intensity * 140}`).join(' ')}
         className="visuals-room-curve-line" />
       {draft.ranges.map((point, index) => <circle key={index} cx={x(point.total)} cy={140 - point.intensity * 140} r="8"
@@ -76,7 +76,7 @@ export function CurvePoints({ editor, state, disabled, described_by = 'visuals-c
         aria-label={`Control point ${index + 1}: ${point.total} contribution units, ${Math.round(point.intensity * 10000) / 100}% intensity`}
         onKeyDown={event => editKey(event, editor, index)}
         onPointerDown={event => {
-          if (event.button !== 0 || !editor.begin(index, event.pointerId)) return;
+          if (event.button !== 0 || !editor.begin(index, event.pointerId, domain)) return;
           event.preventDefault(); event.currentTarget.focus(); event.currentTarget.setPointerCapture(event.pointerId);
         }}
         onPointerMove={event => dragPoint(event, editor)}

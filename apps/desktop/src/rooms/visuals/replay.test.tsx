@@ -96,7 +96,7 @@ test('the replay draws the last sealed curve dashed once the draft differs', () 
   if (!item) throw new Error('Missing generated altar');
   const html = renderToStaticMarkup(<NightReplay item={item} editor={editor} queue={queue} />);
   expect(html).toContain('data-trace="before"');
-  expect(html).toContain('dashed line: the last sealed curve');
+  expect(html).toContain('dashed: the last sealed curve');
 });
 
 test('replay styles stay token-only', () => {

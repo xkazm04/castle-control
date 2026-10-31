@@ -42,8 +42,30 @@
 .visuals-replay-points svg { height: calc(var(--space-56) * 2.6); }
 .visuals-curve-editor .visuals-replay-now { fill: var(--gules); stroke: var(--paper); stroke-width: var(--rule-medium); cursor: default; pointer-events: none; }
 .visuals-replay-art { position: relative; height: calc(var(--space-56) * 2.6); background: var(--paper-2); border: var(--rule-thin) solid var(--line); }
-.visuals-replay-art .visuals-room-art { position: absolute; inset: var(--space-8); }
+.visuals-replay-art .visuals-room-art { position: absolute; inset: var(--space-8) var(--space-8) var(--space-8) var(--space-24); }
 .visuals-replay-art .visuals-room-art svg { width: 100%; height: 100%; }
 .visuals-replay-handoff { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-8) var(--space-16); padding-top: var(--space-12); border-top: var(--rule-thin) solid var(--line); }
 .visuals-replay-handoff .visuals-note { flex: 1 1 calc(var(--space-56) * 5); }
+/* Night picker, time-spent bars, pinned stamp, blaze meter, ticker and a burst flare that respects reduced motion. */
+.visuals-replay-nights { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-6); }
+.visuals-replay-nights [aria-pressed="true"], .visuals-replay-speeds [aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+.visuals-replay-nights .visuals-note { flex: 1 1 calc(var(--space-56) * 4); margin-left: var(--space-6); }
+.visuals-replay-spent { fill: var(--or); opacity: .55; }
+.visuals-replay-spent-pinned { fill: var(--gules); opacity: .55; }
+.visuals-replay-past-top { fill: var(--gules); opacity: .08; }
+.visuals-replay-legend { color: var(--muted); }
+.visuals-replay-art[data-pinned="true"] { border-color: var(--gules); box-shadow: inset 0 0 0 var(--rule-medium) var(--gules); }
+.visuals-replay-flare { position: absolute; inset: 0; animation: visuals-replay-flare var(--motion-shell) var(--ease); }
+.visuals-replay-stamp { position: absolute; top: var(--space-8); right: var(--space-8); padding: var(--space-2) var(--space-8); border: var(--rule-medium) solid var(--gules); background: var(--paper); color: var(--gules-text); font: 800 var(--text-label)/1.3 var(--font-ui); letter-spacing: var(--track-wide); text-transform: uppercase; transform: rotate(-3deg); }
+.visuals-replay-meter { position: absolute; top: var(--space-8); bottom: var(--space-8); left: var(--space-8); width: var(--space-6); border: var(--rule-thin) solid var(--ink); background: var(--card); }
+.visuals-replay-meter i { position: absolute; left: 0; right: 0; bottom: 0; background: var(--or); }
+.visuals-replay-art[data-pinned="true"] .visuals-replay-meter i { background: var(--gules); }
+.visuals-replay-ticker { display: grid; gap: var(--space-2); margin: 0; padding: 0; list-style: none; font: var(--text-label)/1.4 var(--font-num); }
+.visuals-replay-ticker li { display: flex; gap: var(--space-6); align-items: baseline; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--muted); }
+.visuals-replay-ticker li:first-child { color: var(--ink); font-weight: 700; }
+.visuals-replay-ticker li span { color: var(--ink-2); }
+.visuals-replay-ticker em { margin-left: auto; font-style: normal; text-transform: uppercase; letter-spacing: var(--track-wide); }
+.visuals-replay-ticker li[data-counted="true"] em { color: var(--or-text); }
+@keyframes visuals-replay-flare { from { filter: brightness(1.7); transform: scale(1.04); } to { filter: brightness(1); transform: none; } }
+@media (prefers-reduced-motion: reduce) { .visuals-replay-flare { animation: none; } }
 @media (max-width: 68.75rem) { .visuals-replay-tune { grid-template-columns: minmax(0, 1fr); } }

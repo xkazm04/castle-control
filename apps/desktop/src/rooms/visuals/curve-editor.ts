@@ -66,9 +66,10 @@ export function createCurveEditor(visual: Visual, port: {
         || decay.half_life_s < 1 || decay.half_life_s > uint32_max))) return;
       publish({ draft: frozen({ ...state.draft, decay }), phase: 'editing', notice: 'Draft preview only. Commit to save to core.' });
     },
-    begin(index: number, pointer_id: number) {
+    /** `domain` widens the drag scale when a surface draws extra headroom past the top point. */
+    begin(index: number, pointer_id: number, domain = 0) {
       if (busy() || drag || !state.draft.ranges[index]) return false;
-      drag = { index, pointer_id, maximum: Math.max(1, ...state.confirmed.ranges.map(point => point.total),
+      drag = { index, pointer_id, maximum: Math.max(1, domain, ...state.confirmed.ranges.map(point => point.total),
         ...state.draft.ranges.map(point => point.total)) };
       return true;
     },

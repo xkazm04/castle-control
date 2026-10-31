@@ -12,11 +12,12 @@ export type ReplayTrace = Readonly<{
   /** Spans where the running total sits at or past the top point, so more offerings change nothing. */
   pinned: readonly ReplayBand[]; pinned_s: number;
   lit_total: number; first_lit_s?: number;
-  peak: TracePoint;
+  peak: TracePoint; max_total: number;
 }>;
 
 export const night_duration_s = 2880;
 export const replay_step_s = 10;
+export const pinned_merge_s = 30;
 
 /** Only the kinds the preview model accepts count. Bits, points and Hype Train marks stay on the timeline. */
 export function nightBursts(offerings: readonly Offering[]): readonly ReplayBurst[] {
@@ -52,13 +53,15 @@ export function replayTrace(curve: IntensityCurve, gift_weight: number, bursts: 
     points.push(next);
     return next;
   };
-  let total = 0; let at = 0; let first_lit_s: number | undefined;
+  let total = 0; let at = 0; let first_lit_s: number | undefined; let pinned_s = 0; let max_total = 0;
   let peak = point(0, 0);
   const pin = (from: number, to: number) => {
     const until = pinnedUntil(total, top, from, to, curve);
     if (until <= from) return;
+    pinned_s += until - from;
+    // Dips shorter than the merge gap read as one pinned span; the minutes stay exact.
     const last = pinned.at(-1);
-    if (last && last.to >= from) last.to = Math.max(last.to, until);
+    if (last && last.to >= from - pinned_merge_s) last.to = Math.max(last.to, until);
     else pinned.push({ from, to: until });
   };
   const advance = (t: number) => {
@@ -76,6 +79,7 @@ export function replayTrace(curve: IntensityCurve, gift_weight: number, bursts: 
       point(burst.t, total);
       total += weightedAmount(burst.source, burst.count, gift_weight);
       const after = point(burst.t, total);
+      max_total = Math.max(max_total, total);
       if (first_lit_s === undefined && total >= lit_total && lit_total > 0) first_lit_s = burst.t;
       if (after.intensity > peak.intensity || (after.intensity === peak.intensity && after.total > peak.total)) peak = after;
     }
@@ -83,9 +87,8 @@ export function replayTrace(curve: IntensityCurve, gift_weight: number, bursts: 
     point(t, total);
     if (t >= duration_s) break;
   }
-  const pinned_s = pinned.reduce((sum, band) => sum + band.to - band.from, 0);
   return Object.freeze({ duration_s, points: Object.freeze(points), pinned: Object.freeze(pinned.map(band => Object.freeze(band))),
-    pinned_s, lit_total, peak, ...(first_lit_s === undefined ? {} : { first_lit_s }) });
+    pinned_s, lit_total, peak, max_total, ...(first_lit_s === undefined ? {} : { first_lit_s }) });
 }
 
 /** The exact running total at any playhead: the last recorded point, decayed to the playhead. */
@@ -101,6 +104,25 @@ export function traceAt(trace: ReplayTrace, curve: IntensityCurve, t: number): T
   return { t: at, total, intensity: curveIntensity(curve, total) };
 }
 
+/** Seconds the night spends in each total bucket across [0, maximum]; anything past maximum lands in the last cell. */
+export function timeSpent(trace: ReplayTrace, maximum: number, cells: number): readonly number[] {
+  const spent = Array.from({ length: cells }, () => 0);
+  trace.points.forEach((point, index) => {
+    const next = trace.points[index + 1];
+    if (!next || next.t <= point.t) return;
+    const cell = Math.min(cells - 1, Math.max(0, Math.floor(point.total / Math.max(maximum, 1e-9) * cells)));
+    spent[cell] = (spent[cell] ?? 0) + next.t - point.t;
+  });
+  return spent;
+}
+
+/** Drag headroom past the busiest moment, on a round number so the scale never moves mid-drag. */
+export function replayDomain(trace: ReplayTrace): number {
+  const want = Math.max(10, trace.max_total * 1.15);
+  const step = 10 ** Math.floor(Math.log10(want)) / 2;
+  return Math.ceil(want / step) * step;
+}
+
 export const minute = (seconds: number) => Math.floor(seconds / 60);
 export const clockLabel = (seconds: number) =>
   `${String(Math.floor(seconds / 60)).padStart(2, '0')}:${String(Math.floor(seconds % 60)).padStart(2, '0')}`;
@@ -111,7 +133,7 @@ export type ReplayVerdict = Readonly<{ tone: 'pinned' | 'never_lit' | 'balanced'
 export function replayVerdict(trace: ReplayTrace): ReplayVerdict {
   const peak = `${Math.round(trace.peak.intensity * 100)}% at minute ${minute(trace.peak.t)}`;
   if (trace.first_lit_s === undefined) return { tone: 'never_lit',
-    text: `Never lit · the night peaks at ${trace.peak.total.toFixed(1)} weighted subs (${peak}), under the first threshold of ${trace.lit_total}` };
+    text: `Never lit · the night peaks at ${trace.peak.total.toFixed(1)} weighted subs at minute ${minute(trace.peak.t)}, under the first threshold of ${trace.lit_total}` };
   if (trace.pinned_s > 0) {
     const pinned_min = Math.max(1, Math.round(trace.pinned_s / 60));
     return { tone: 'pinned', text: `Pinned at max for ${pinned_min} of ${minute(trace.duration_s)} minutes · first pinned at minute ${minute(trace.pinned[0]?.from ?? 0)} · offerings there change nothing` };
