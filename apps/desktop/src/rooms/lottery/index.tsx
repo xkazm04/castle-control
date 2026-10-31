@@ -76,6 +76,7 @@ export default function LotteryRoom({ snapshot, replay, queue = proposalQueue, s
           verified={writ_checked === true} content={state.draw.policy.content} sealed={state.sealed}
           seal={state.sealed_roll?.seal} clock={reveal} reveal_ms={appearance.reveal_ms}
           theatre={appearance.theatre} on_theatre={display.theatre} sound={appearance.sound} on_sound={on => display.edit({ sound: on })}
+          by_hand={appearance.by_hand} on_by_hand={on => display.edit({ by_hand: on })}
           on_prove={() => { display.theatre(false); setProve(count => count + 1); }} /></PoolStage>
       <div className="cc-desk">
         <SectionHeading variant="banner" level={2} title={copy.writ} gloss={copy.writ_gloss} ink="gules"

@@ -32,6 +32,34 @@ test('the reveal cursor follows the renderer scene events, resumes one key and r
   clock.replay(); expect(clock.getSnapshot().take).toBe(1);
 });
 
+test('by hand, the flourish plays, then each call reveals exactly the next winner in the renderer order', () => {
+  const scene = stageScene('wheel', cast, 'question', false);
+  const first = scene.events[0]?.at_ms ?? 0;
+  const clock = createRevealClock(); clock.pace(true);
+  expect(clock.by_hand).toBe(true);
+  expect(clock.tick(scene, 'h', 0)).toBe(first - 1);
+  expect(clock.tick(scene, 'h', 9000)).toBeUndefined();
+  expect(clock.getSnapshot()).toMatchObject({ revealed: [], waiting: true, finished: false });
+  clock.callNext(9001);
+  expect(clock.getSnapshot()).toMatchObject({ revealed: [cast.winners[0]], waiting: true });
+  // Held again at once: a quick second call is never lost to an in-between tick.
+  expect(clock.tick(scene, 'h', 9002)).toBeUndefined();
+  clock.callNext(9003); clock.callNext(9004);
+  expect(clock.getSnapshot()).toMatchObject({ revealed: cast.winners, waiting: false, finished: true });
+  clock.callNext(9005); expect(clock.getSnapshot().revealed).toEqual(cast.winners);
+});
+
+test('switching back to auto releases a held ceremony from where it stopped', () => {
+  const scene = stageScene('urn', cast, 'question', false);
+  const [, second, third] = scene.events.map(event => event.at_ms);
+  const clock = createRevealClock(); clock.pace(true);
+  clock.tick(scene, 'a', 0); clock.tick(scene, 'a', 4000); clock.callNext(4000);
+  clock.pace(false);
+  expect(clock.getSnapshot()).toMatchObject({ revealed: [cast.winners[0]], waiting: false });
+  expect(clock.tick(scene, 'a', 4001)).toBe((third ?? 0) - (second ?? 0));
+  expect(clock.getSnapshot().revealed).toEqual(cast.winners.slice(0, 2));
+});
+
 test('reduced motion reveals every winner at once and drops the flourish', () => {
   const scene = stageScene('deck', cast, 'question', true);
   expect(scene.motions).toEqual([]);
@@ -108,6 +136,18 @@ test('mid-ceremony, the latest winner lifts out of its shape and the proclamatio
   }
   expect(weightShare(10, 96)).toBe(10.4); expect(weightShare(3, 0)).toBe(0);
   for (const shape of draw_shapes) expect(lift_path[shape].out.y).toBeLessThan(lift_path[shape].via.y);
+});
+
+test('a held ceremony says so and offers the next call', () => {
+  const clock = createRevealClock(); clock.pace(true);
+  const scene = stageScene('deck', cast, 'question', false);
+  clock.tick(scene, `${seal}:deck:0`, 0); clock.tick(scene, `${seal}:deck:0`, 5000);
+  const held = render({ shape: 'deck', clock, cast, sealed: true, seal, theatre: true, by_hand: true, on_by_hand: () => undefined });
+  expect(held).toContain(copy.stage.held); expect(held).toContain(`>${copy.stage.call_first}</button>`);
+  expect(held).toMatch(new RegExp(`aria-pressed="true"[^>]*>${copy.stage.by_hand}<`));
+  clock.callNext(5001);
+  const next = render({ shape: 'deck', clock, cast, sealed: true, seal, theatre: true, by_hand: true });
+  expect(next).toContain(`>${copy.stage.call_next(2, 3)}</button>`); expect(next.match(/data-medal=/g)).toHaveLength(1);
 });
 
 test('a finished ceremony closes on its proof: a verdict card with the lab handoff in theatre, a chip at the desk', () => {

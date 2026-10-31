@@ -10,9 +10,11 @@ export type DrawDisplay = {
   theatre: boolean;
   /** Opt-in synthesized ceremony sound; off until the streamer turns it on. */
   sound: boolean;
+  /** Pace: after the flourish each winner waits for the streamer's call. Timing only; order is fixed. */
+  by_hand: boolean;
 };
 export function createDrawDisplay() {
-  let state: DrawDisplay = { size: 'M', anchor: 'br', colour: 'gules', art_style: 'heraldic', reveal_ms: 1500, shape: 'urn', theatre: false, sound: false };
+  let state: DrawDisplay = { size: 'M', anchor: 'br', colour: 'gules', art_style: 'heraldic', reveal_ms: 1500, shape: 'urn', theatre: false, sound: false, by_hand: false };
   const listeners = new Set<() => void>();
   const edit = (change: Partial<DrawDisplay>) => {
     const value = change.reveal_ms ?? state.reveal_ms;

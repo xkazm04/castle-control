@@ -114,18 +114,23 @@ function Verdict({ total, proof, on_prove }: { total: number; proof: 'local' | '
 }
 
 export function DrawStage({ shape, on_shape, entries, cast, content, sealed, seal, clock, reveal_ms, verified = true, theatre = false,
-  on_theatre, proof = 'local', on_prove, sound = false, on_sound }: {
+  on_theatre, proof = 'local', on_prove, sound = false, on_sound, by_hand = false, on_by_hand }: {
   shape: DrawShape; on_shape: (shape: DrawShape) => void; entries: readonly StageEntry[]; cast: StageCast | undefined;
   content: DrawContent; sealed: boolean; seal?: string | undefined; clock: RevealClock; reveal_ms: number; verified?: boolean;
   theatre?: boolean; on_theatre?: (theatre: boolean) => void; proof?: 'local' | 'core'; on_prove?: () => void;
-  sound?: boolean; on_sound?: (sound: boolean) => void;
+  sound?: boolean; on_sound?: (sound: boolean) => void; by_hand?: boolean; on_by_hand?: (by_hand: boolean) => void;
 }) {
   const reduced = useReducedMotion();
   const playable = cast && verified ? cast : undefined;
   const scene = useMemo(() => stageScene(shape, playable, content, reduced), [shape, playable, content, reduced]);
   const take = clock.getSnapshot().take;
   const key = playable ? `${seal ?? 'cast'}:${shape}:${take}` : undefined;
+  useEffect(() => { clock.pace(by_hand); }, [clock, by_hand]);
   const state = useReveal(clock, playable ? scene : undefined, key);
+  const call = useRef<HTMLSpanElement>(null);
+  const root = useRef<HTMLDivElement>(null);
+  // Held for the streamer's call: the call button takes focus, so Space calls each winner in turn.
+  useEffect(() => { if (state.waiting) call.current?.querySelector('button')?.focus({ preventScroll: true }); }, [state.waiting, state.revealed.length]);
   const winners = playable?.winners ?? [];
   const drawn = useMemo(() => sampleEntries(entries, winners), [entries, winners]);
   const marks = useMemo(() => layoutMarks(shape, drawn), [shape, drawn]);
@@ -144,13 +149,27 @@ export function DrawStage({ shape, on_shape, entries, cast, content, sealed, sea
     : state.finished && revealed.length === winners.length ? 'revealed' : 'revealing';
   const disclaimer = scene.layers.find(layer => layer.kind === 'disclaimer');
   useCeremonySound(sound, shape, scene, key, fresh, revealed.length, phase === 'revealed');
+  // The last call removes its button; hand focus to the verdict's proof button instead of the page.
+  useEffect(() => {
+    if (phase === 'revealed' && by_hand && typeof document !== 'undefined' && document.activeElement === document.body) {
+      root.current?.querySelector<HTMLButtonElement>('.lottery-stage-verdict button')?.focus({ preventScroll: true });
+    }
+  }, [phase, by_hand]);
   const latest = revealed.at(-1);
   const latest_mark = latest === undefined ? undefined : by_handle.get(latest);
   const limit = theatre ? rail_limit.theatre : rail_limit.desk;
   const lots = <Marks marks={marks} order={order} />;
-  return <div className="lottery-draw-stage" data-shape={shape} data-phase={phase} data-shuffling={fresh || undefined}
+  return <div ref={root} className="lottery-draw-stage" data-shape={shape} data-phase={phase} data-shuffling={fresh || undefined}
     style={revealStyle(reveal_ms)}>
-    <ShapePicker shape={shape} on_shape={on_shape} />
+    <div className="lottery-stage-top">
+      <ShapePicker shape={shape} on_shape={on_shape} />
+      {(on_by_hand || on_sound) && <div className="lottery-stage-options" role="group" aria-label={copy.stage.options}>
+        {on_by_hand && <InkButton size="room" className="lottery-stage-toggle" aria-pressed={by_hand} title={copy.stage.by_hand_hint}
+          onClick={() => on_by_hand(!by_hand)}>{copy.stage.by_hand}</InkButton>}
+        {on_sound && <InkButton size="room" className="lottery-stage-toggle" aria-pressed={sound} title={copy.stage.sound_hint}
+          onClick={() => { if (!sound) ceremonySound(); on_sound(!sound); }}>{copy.stage.sound}</InkButton>}
+      </div>}
+    </div>
     <div className="lottery-draw-theatre">
       <svg className="lottery-draw-svg" viewBox={stage_view_box} role="img" aria-label={copy.stage.label(shapeLabel(shape), entries.length)}>
         <g className="lottery-draw-motion" ref={group}>
@@ -173,21 +192,24 @@ export function DrawStage({ shape, on_shape, entries, cast, content, sealed, sea
           </g> : null;
         })}
       </svg>
-      <p className="lottery-stage-phase">{copy.stage[phase]}{seal ? <small>{copy.stage.seal(seal)}</small> : null}</p>
+      <p className="lottery-stage-phase">{state.waiting ? copy.stage.held : copy.stage[phase]}{seal ? <small>{copy.stage.seal(seal)}</small> : null}</p>
       {sealed && !playable && seal && <div className="lottery-stage-wax" aria-hidden="true">
         <b>{copy.stage.wax[0]}</b><span>{copy.stage.wax[1]}</span></div>}
-      {revealed.length > 0 && <div className="lottery-stage-rail">
+      {(revealed.length > 0 || state.waiting) && <div className="lottery-stage-rail">
         {phase === 'revealing' && latest && <Proclamation key={latest} handle={latest} order={revealed.length}
           total={winners.length} cohort={cohorts.get(latest)} share={share(latest)} />}
         {phase === 'revealed' && theatre && <Verdict total={winners.length} proof={proof} on_prove={on_prove} />}
-        <ol aria-label={copy.stage.rail}>
+        {state.waiting && <span ref={call} className="lottery-stage-call"><InkButton size="room" variant="primary"
+          onClick={() => clock.callNext(performance.now())}>
+          {revealed.length ? copy.stage.call_next(revealed.length + 1, winners.length) : copy.stage.call_first}</InkButton></span>}
+        {revealed.length > 0 && <ol aria-label={copy.stage.rail}>
           {revealed.slice(0, limit).map((handle, index) => {
             const cohort = cohorts.get(handle);
             return <li key={handle} data-stage-winner={index + 1} data-cohort={cohort}
               title={cohort ? copy.cohorts[cohort] : undefined}><b>{index + 1}</b><span>{handle}</span></li>;
           })}
           {revealed.length > limit && <li className="lottery-stage-more">{copy.stage.more(revealed.length - limit)}</li>}
-        </ol>
+        </ol>}
       </div>}
       {disclaimer?.kind === 'disclaimer' && <p className="lottery-stage-disclaimer">{disclaimer.text}</p>}
       {phase === 'revealed' && !reduced && <div key={state.key} className="lottery-stage-confetti" aria-hidden="true">
@@ -199,8 +221,6 @@ export function DrawStage({ shape, on_shape, entries, cast, content, sealed, sea
       {phase === 'revealed' && !theatre && <StatusChip variant="ok" stamp="verdict" tone="ok">{copy.stage.proof[proof][0]}</StatusChip>}
       <p className="cc-aside">{cast && !verified ? copy.stage.unverified : copy.stage.note}
         {drawn.length < entries.length ? ` ${copy.stage.sampled(drawn.length, entries.length)}` : ''}</p>
-      {on_sound && <InkButton size="room" className="lottery-stage-sound" aria-pressed={sound} title={copy.stage.sound_hint}
-        onClick={() => { if (!sound) ceremonySound(); on_sound(!sound); }}>{copy.stage.sound}</InkButton>}
       {playable && <InkButton size="room" disabled={!state.finished} onClick={() => clock.replay()}>{copy.stage.replay}</InkButton>}
       {on_theatre && <InkButton size="room" aria-pressed={theatre} onClick={() => on_theatre(!theatre)}>
         {theatre ? copy.stage.desk : copy.stage.theatre}</InkButton>}
