@@ -39,7 +39,7 @@ export function StudioWork({ queue, seal_slot, board, design_session = designSes
   const open = (next: StudioView) => { if (view === 'rehearse' && next !== 'rehearse') rehearse.handlers.pause(); setView(next); };
   const change = (field: SessionField, value?: string) => setSession(state => updateStudioSession(state, field, value, board));
   return <section className="studio-room cc-herald" aria-label={copy.work}>
-    <div className="studio-table-work">
+    <div className="studio-table-work" data-studio-view={view}>
       <div className="studio-view-switch" role="group" aria-label={copy.view}>
         <button type="button" aria-pressed={view === 'table'} onClick={() => open('table')}>{copy.table}</button>
         <button type="button" aria-pressed={view === 'spyglass'} onClick={() => open('spyglass')}>{copy.spyglass}</button>

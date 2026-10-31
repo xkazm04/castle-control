@@ -96,7 +96,7 @@ test('overlay-simulated-connected', async ({ page }) => {
     { name: 'overlay canvas', selector: '#scene' },
     { name: 'simulated rendered layer', selector: '#scene > div' },
     { name: 'simulated provenance badge', selector: '[data-simulated-badge]' },
-  ], { canvas: 'obs-transparent' });
+  ], { canvas: 'obs-transparent', tokenSheet: 'overlay-base' });
 });
 
 test('fixture draw rehearsal seals, casts, reveals in the urn and recomputes this cast', async ({ page }) => {

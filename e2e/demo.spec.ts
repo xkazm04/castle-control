@@ -44,9 +44,10 @@ test('atlas switchers keep visible plates and provenance across all 36 states', 
           await page.getByRole('button', { name: shotLabel, exact: true }).click();
           await page.waitForFunction(() => [...document.querySelectorAll('.demo-page img')].every(image =>
             image instanceof HTMLImageElement && image.complete && image.naturalWidth > 0));
-          await expect(page.locator('.demo-page .sim')).toBeVisible();
-          await expect(page.locator('.demo-page .sim')).toHaveText('SIMULATED · SAMPLE ART · AI-generated');
-          await expect(page.locator('.demo-page .live')).toBeVisible();
+          const provenance = page.locator('.demo-page [data-stamp="simulated"]');
+          await expect(provenance).toBeVisible();
+          await expect(provenance).toHaveText('SIMULATED · SAMPLE ART · AI-generated');
+          await expect(page.locator('.demo-page [data-stamp="off-air"]')).toBeVisible();
           await expect(page.locator('.demo-page .bg')).toHaveAttribute('src', `/art/${layout === 'Game + cam'
             ? 'scene-warmap' : shot === 'malakor-facecam' ? 'malakor-lair-wide' : shot}.webp`);
           if (layout === 'Game + cam') await expect(page.locator('.demo-page .cam')).toBeVisible();
@@ -55,7 +56,7 @@ test('atlas switchers keep visible plates and provenance across all 36 states', 
           // CSS visibility alone misses stage overflow; all four plates must fit.
           const clipped = await page.locator('.demo-page .stage').evaluate(stage => {
             const bounds = stage.getBoundingClientRect();
-            return [...stage.querySelectorAll('.ov .plate, .sim, .live')].filter(label => {
+            return [...stage.querySelectorAll('.ov .plate, [data-stamp="simulated"], [data-stamp="off-air"]')].filter(label => {
               const rect = label.getBoundingClientRect();
               return rect.left < bounds.left || rect.top < bounds.top || rect.right > bounds.right || rect.bottom > bounds.bottom;
             }).map(label => label.textContent);
