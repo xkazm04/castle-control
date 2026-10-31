@@ -1,6 +1,22 @@
 import { expect, it } from 'vitest';
 import * as viewer from './controls.ts';
 
+it.each(['min-height', 'min-width'])('keeps a token-based touch %s on every viewer button at 318 × 500', (dimension) => {
+  const initial = viewer.createViewerControls({ options: ['A'],
+    tiles: [{ q: 0, r: 0 }, { q: 1, r: 0 }], sides: ['N'] });
+  const selected = viewer.reduceViewerControls(viewer.reduceViewerControls(
+    viewer.reduceViewerControls(initial, { kind: 'vote', option_index: 0 }),
+    { kind: 'pick_tile', q: 1, r: 0 }), { kind: 'join_side', side: 'N' });
+  for (const state of [initial, selected]) {
+    const markup = viewer.renderViewerPanel(state, { width: 318, height: 500 });
+    const buttons = markup.match(/<button\b[^>]*>/g) ?? [];
+    expect(buttons).toHaveLength(4);
+    for (const button of buttons) {
+      expect(button).toContain(`${dimension}:calc(var(--space-40) + var(--space-4))`);
+    }
+  }
+});
+
 it('tile buttons use A1 labels', () => {
   for (const [tiles, labels] of [
     [[{ q: 0, r: 0 }, { q: 1, r: 0 }], ['A1', 'B1']],

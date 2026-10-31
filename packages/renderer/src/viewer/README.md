@@ -88,6 +88,7 @@ choices carry aria-pressed, inverted token colours and a visible Selected mark.
 Empty choices show No viewer controls configured. Width/height default to 318;
 the transparent viewport scrolls internally and wraps long labels. Hosts supply
 the existing token CSS. Labels and attributes are escaped as literal text.
+Buttons keep a 44 px minimum (space-40 + space-4) for touch viewports.
 
 The new output APIs validate viewport dimensions (whole numbers, 32–16384) and
 reject unknown options. They neither render executable data nor load images,

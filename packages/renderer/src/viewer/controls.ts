@@ -106,7 +106,8 @@ export function renderViewerPanel(state: ViewerControlState, options: unknown = 
   const button = (kind: string, label: string, selected: boolean, data: string) =>
     `<button type="button" data-viewer-choice="${kind}" ${data} aria-pressed="${selected}" `
     + `style="font:inherit;color:var(--${selected ? 'paper' : 'ink'});background:var(--${selected ? 'ink' : 'paper'});`
-    + 'border:var(--rule-thin) solid var(--ink);padding:var(--space-8);overflow-wrap:anywhere">'
+    + 'border:var(--rule-thin) solid var(--ink);padding:var(--space-8);overflow-wrap:anywhere;'
+    + 'min-height:calc(var(--space-40) + var(--space-4));min-width:calc(var(--space-40) + var(--space-4))">'
     + `${escapeMarkup(label)}${selected ? '<span aria-hidden="true"> · ✓ Selected</span>' : ''}</button>`;
   const votes = controls.options.map((label, index) => button('vote', label,
     state.selection.option_index === index, `data-option-index="${index}"`)).join('');
