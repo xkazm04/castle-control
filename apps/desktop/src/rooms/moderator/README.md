@@ -1,3 +1,68 @@
+# Gatehouse shadow journey (lane L2, 2026-10-31)
+
+Open `#/chamber/moderator` without a native core launch. In Garrison orders,
+edit an existing Watching pattern rule's name/match, then **Propose watching
+rule**. The existing seal slot shows its validated upsert payload; hold Space
+on **Hold to seal** to apply it to this simulated session. Invalid/blank
+patterns show an error. Nothing saves or arms on an edit or ordinary click.
+The editor preserves the original action and cannot edit rails or armed rules.
+The existing preview-only mode controls and their safety notice are retained.
+
+The moat still proposes one of Off/2/4/6 seconds through the same seal and
+400 ms fixture confirmation. Applied delay remains unchanged until confirmed.
+**Play simulated chat** advances the generated bank once a second from 420 to
+4,200 lines; Pause or leaving the room cancels its interval. The latest arrival
+and verdict are visible above the historical, windowed feed. These are recorded
+verdicts, not a re-evaluation of edited rules. Resolve a held message through
+Propose Pass/Bar and a seal: the original stays visible and buttons disabled
+until confirmation; the empty queue then announces Released/Removed and its
+verdict. Undo/petition notices also appear at this review surface. Consensus
+and the drill keep illustrative/simulated labels, gaps and pending-parity copy.
+
+**Stream output preview**, below consensus, has separate kit fields for chat
+and vote-bar size S/M/L, four corner anchors, the existing azure/gules/or/key
+token colours, and all six read-only styles from `demo/model.ts`. Vote art
+uses `art(style, 'votebar')`; chat uses the selected typography/treatment.
+Show delay is clamped to 0–10000 ms; hide duration, measured after showing,
+to 250–60000 ms. Invalid/nonfinite input preserves the last effective value.
+Keyboard edits retain a temporary input buffer; blur shows the clamped value.
+**Replay output timing** runs Waiting → Visible → Hidden independently for
+each layer. Changing a setting restarts an active timing rehearsal. Leaving
+the room cancels both timers. The persistent provenance captions never hide.
+
+Both transparent SVG canvases render in existing StageFrames, one with a
+1920×1080 viewBox, one 1280×720. Passed chat only and illustrative consensus
+shares are shown. Long sample chat is shortened with its full text in a title.
+The canvas is transparent; the individual content plates use theme tokens.
+No OBS browser source, overlay host, route, event, network or storage was added.
+These preferences live in the existing per-ProposalQueue room session and
+survive drill/room navigation, but reset on reload. No existing Gatehouse
+payload has size/anchor/colour/art_style/show_ms/hide_ms output fields: those
+and a future source URL/route and render-event contract are Director questions.
+
+## Journey verification
+
+`e2e/journey-gatehouse.spec.ts` was written before implementation. It uses the
+unchanged network/style audits, edits and seals a shadow rule, seals a delay,
+plays/pauses chat, resolves a hold, undoes a timeout, selects consensus, reads
+the drill, and edits both output layers before inspecting both frames. Expected
+red on base: Watching rule editor, playback/arrival feedback, review feedback,
+and output fields/frames. Browser execution is reserved for the Director;
+this builder did not run a browser or claim screenshots/visual acceptance.
+
+The first four `journey.test.tsx` assertions failed on base (editor/playback,
+resolve feedback, undo feedback, output parameters); the additional latest-row
+assertion also failed before its fix. Output tests first failed on the absent
+output model; rule tests caught the split upsert-validator import before it
+was corrected. New tests cover seal-before-edit, malformed rules, bounded
+playback/cancellation, per-session output isolation, finite clamping, timed
+visibility/cancellation, all six art mappings, passed-only output, empty
+output and provenance. Existing test files, including `moderation-gate.test.tsx`,
+are unchanged. Desktop and e2e TypeScript pass. Desktop lint passes all shared
+boundary/hygiene/400-line/secrets inventories. The final narrowed run and its
+exact counts are recorded in the external result, along with Director asks.
+No install ran over the node_modules junction; no git writes were attempted.
+
 # Gatehouse C · Herald (WP 1.7 polish, 2026-10-30)
 
 Reconciled against `a9aec46`: the shared heraldic kit existed, but no C room

@@ -1,0 +1,20 @@
+.moderator-output-settings, .moderator-rule-editor { display: grid; gap: var(--space-8); margin-top: var(--space-12); }
+.moderator-output-settings h4, .moderator-rule-editor h4 { margin: 0; font: 700 var(--text-label)/1.4 var(--font-ui); }
+.moderator-rule-form { display: grid; gap: var(--space-8); }
+.moderator-rule-editor :is(select, input), .moderator-output-settings :is(select, input) { min-width: 0; width: 100%; }
+.moderator-room :is(.moderator-rule-editor, .moderator-output-settings) .cc-field[data-field] :is(input, select) { border: var(--rule-thin) solid var(--ink); }
+.moderator-output { display: grid; gap: var(--space-10); }
+.moderator-output-frame { margin: 0; min-width: 0; }
+.moderator-output-frame > svg { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; background: transparent; overflow: hidden; }
+.moderator-output-frame figcaption { font: var(--text-small)/1.4 var(--font-num); color: var(--muted); }
+.moderator-output-backplate { fill: var(--paper); fill-opacity: .94; stroke: var(--cc-ink); stroke-width: 4; }
+.moderator-output-frame text { fill: var(--ink); font: 600 var(--text-chamber)/1.4 var(--font-ui); }
+.moderator-output-frame [data-art-style="pixel"] text { font-family: var(--font-num); }
+.moderator-output-frame [data-art-style="watercolor"] text { font-family: var(--font-serif); }
+.moderator-output-frame [data-art-style="glass"] rect { fill-opacity: .65; }
+.moderator-output-frame [data-art-style="synthwave"] rect { stroke-dasharray: 12 4; }
+.moderator-output-frame [data-art-style="anime"] rect { stroke-width: 8; }
+.moderator-playback { display: flex; flex-wrap: wrap; gap: var(--space-8); padding-bottom: var(--space-8); align-items: center; }
+.moderator-playback output { font: var(--text-small)/1.4 var(--font-num); color: var(--ink-2); }
+.moderator-latest-arrival { display: flex; align-items: baseline; gap: var(--space-6); width: 100%; font: var(--text-small)/1.4 var(--font-ui); }
+.moderator-latest-arrival > span { min-width: 0; overflow-wrap: anywhere; }

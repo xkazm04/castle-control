@@ -3,12 +3,14 @@ import type { Proposal, ProposalField, ProposalQueue } from '@castle-control/ui/
 import { createModerationPreview } from '../../moderation-model.js';
 import type { ModerationPort, PreviewCommand } from '../../moderation-model.js';
 import { fixtureRules } from '../../moderation-fixture.js';
+import { createOutputPreview } from './output-model.js';
+import type { OutputPort } from './output-model.js';
 
-type Session = { port: ModerationPort; commands: Map<string, PreviewCommand> };
+type Session = { port: ModerationPort; commands: Map<string, PreviewCommand>; output: OutputPort };
 const sessions = new WeakMap<ProposalQueue, Session>();
 export function moderationSession(queue: ProposalQueue): Session {
   let session = sessions.get(queue);
-  if (!session) { session = { port: createModerationPreview(), commands: new Map() }; sessions.set(queue, session); }
+  if (!session) { session = { port: createModerationPreview(), commands: new Map(), output: createOutputPreview() }; sessions.set(queue, session); }
   return session;
 }
 
@@ -19,7 +21,8 @@ export function proposeCommand(queue: ProposalQueue, command: PreviewCommand, ti
   if ('decision_id' in command && !target?.message_text) return;
   let id = `moderation-${queue.getSnapshot().proposals.length + 1}`;
   while (queue.getSnapshot().proposals.some(item => item.id === id)) id += '-next';
-  const fields: ProposalField[] = Object.entries(command).map(([key, value]) => ({ key, label: key.replaceAll('_', ' '), value, struck: [] }));
+  const fields: ProposalField[] = Object.entries(command).map(([key, value]) => ({ key, label: key.replaceAll('_', ' '),
+    value: typeof value === 'object' ? JSON.stringify(value) : value, struck: [] }));
   if (command.kind === 'shield') fields.push({ key: 'enabled', label: 'Shield Mode after sealing', value: !state.shield, struck: [] });
   if (target?.message_text) fields.push({ key: 'original', label: 'Original message', value: target.message_text, struck: [] });
   queue.addOrUpdate({ id, chamber: 'moderator', kind: 'seal', title, revision: 1, state: 'drafted', fields });
@@ -59,6 +62,7 @@ export function sealModerationProposal(queue: ProposalQueue, proposal: Proposal)
       throw new Error('Wait for fixture confirmation before drafting another setting change.');
     }
     if (item.kind === 'mode' && !fixtureRules.rules.some(rule => rule.rule_id === item.rule_id)) throw new Error('Rule no longer exists.');
+    if (item.kind === 'rule' && (item.rule.mode !== 'shadow' || item.rule.rule_class !== 'pattern')) throw new Error('Only watching pattern rules may be edited.');
     if ('decision_id' in item) {
       const choices = item.kind === 'release' || item.kind === 'remove' ? snapshot.held
         : item.kind === 'ban' || item.kind === 'dismiss' ? snapshot.bans : snapshot.ledger;

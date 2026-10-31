@@ -12,6 +12,8 @@ import { MessageList } from './messages.jsx';
 import { GateLog } from './log.jsx';
 import { Drill } from './drill.jsx';
 import { moderationSession } from './session.js';
+import { ChatPlayback } from './playback.jsx';
+import { OutputPreview } from './output.jsx';
 import './room.css';
 
 const CoreModeratorRoom = lazy(() => import('./core.jsx'));
@@ -23,7 +25,7 @@ export default function ModeratorRoom(props: Props) {
 }
 
 function FixtureModeratorRoom({ snapshot, replay, queue = proposalQueue, seal_slot }: Props) {
-  const { port } = moderationSession(queue);
+  const { port, output } = moderationSession(queue);
   const state = useSyncExternalStore(port.subscribe, port.getSnapshot, port.getSnapshot);
   if (snapshot.mode !== 'fixture') return <p>{copy.no_controls}</p>;
   return <div className="moderator-room">
@@ -31,9 +33,10 @@ function FixtureModeratorRoom({ snapshot, replay, queue = proposalQueue, seal_sl
       <div className="room-column moderator-workbench" role="region" aria-label="Held messages and ban review" tabIndex={0}
         aria-describedby="moderator-scroll-hint">
         <p id="moderator-scroll-hint" className="moderator-visually-hidden">{copy.scroll_hint}</p>
-        <HeldQueue state={state} queue={queue} /><Consensus results={fixtureCharts} /></div>
+        <HeldQueue state={state} queue={queue} /><Consensus results={fixtureCharts} />
+        <OutputPreview port={output} messages={state.messages.slice(0, state.replay_count)} directions={fixtureCharts[0]?.directions ?? []} /></div>
       <div className="room-column moderator-details moderator-replay" role="region" aria-label={copy.live} tabIndex={0} data-fill="true">
-        <MessageList messages={state.messages.slice(0, 420)} />
+        <ChatPlayback port={port} state={state} /><MessageList messages={state.messages.slice(0, state.replay_count)} />
       </div>
       <div className="room-column moderator-tools" role="region" aria-label="Gatehouse tools and seal slot" tabIndex={0}>
         <GateControls state={state} queue={queue} /><Rules state={state} queue={queue} />

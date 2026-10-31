@@ -6,6 +6,7 @@ import { fixtureHoldReasons, fixtureRules } from '../../moderation-fixture.js';
 import { moderationCopy as copy } from '../../moderation-copy.js';
 import { CountLabel, ReviewMeta, VerdictIcon } from './presentation.jsx';
 import { proposeCommand } from './session.js';
+import { WatchingRuleEditor } from './watching-rule.jsx';
 
 type Props = { state: ModerationPreview; queue: ProposalQueue };
 const smallBig = { minHeight: 'var(--button-h)', fontSize: 'var(--text-label)' };
@@ -21,7 +22,7 @@ export function HeldQueue({ state, queue }: Props) {
     <Plate ink="azure" offset="space-8" className="moderator-held-plate" aria-label={copy.held}
       band={<PlateBand title={copy.held} gloss={copy.held_gloss}
         count={<>{state.held.length}<CountLabel first={copy.held_unit} second={copy.fixture_only} /></>} />}>
-      <PlateBody>{state.held.length ? state.held.map(item => <article key={item.decision_id} data-verdict="hold" className="moderator-held">
+      <PlateBody><p role="status" data-review-feedback="true" className="moderator-small">{state.notice}</p>{state.held.length ? state.held.map(item => <article key={item.decision_id} data-verdict="hold" className="moderator-held">
         <ReviewMeta verdict="hold" id={item.message_id} status={state.held_pending.has(item.decision_id) ? copy.held_pending : copy.held_state} />
         <blockquote className="moderator-plate-quote">{item.message_text ?? copy.original_unavailable}</blockquote>
         <p className="moderator-plate-reason"><b>{copy.held_reason}</b>{fixtureHoldReasons.get(item.message_id) ?? copy.hold_reason_unavailable}</p>
@@ -75,11 +76,11 @@ export function GateControls({ state, queue }: Props) {
 }
 
 export function Rules({ state, queue }: Props) {
-  const armed = fixtureRules.rules.filter(rule => state.preview_modes.get(rule.rule_id) === 'armed').length;
+  const armed = state.rules.filter(rule => state.preview_modes.get(rule.rule_id) === 'armed').length;
   return <section className="moderator-block moderator-orders"><SectionHeading title={copy.orders_title} gloss={copy.orders_gloss} count={copy.simulated} />
-    <div className="moderator-figures"><span><b>{armed}</b>{copy.armed}</span><span><b>{fixtureRules.rules.length - armed}</b>{copy.watching}</span></div>
+    <div className="moderator-figures"><span><b>{armed}</b>{copy.armed}</span><span><b>{state.rules.length - armed}</b>{copy.watching}</span></div>
     <p className="moderator-note">{copy.modes}</p>
-    {fixtureRules.rules.map(rule => {
+    {state.rules.map(rule => {
       const mode = state.preview_modes.get(rule.rule_id) ?? 'shadow';
       return <HeraldicCard className="moderator-rule-card" key={rule.rule_id}>
         <div className="moderator-rule-text"><b>{rule.name}</b><span><code>{rule.pattern}</code> · {rule.action}</span></div>
@@ -89,6 +90,6 @@ export function Rules({ state, queue }: Props) {
             { kind: 'mode', rule_id: rule.rule_id, mode: mode === 'shadow' ? 'armed' : 'shadow' }, `${mode === 'shadow' ? 'Arm' : 'Watch'} ${rule.name}`)}>
             {mode === 'armed' ? copy.propose_watch : copy.propose_arm}</button></div>
       </HeraldicCard>;
-    })}
+    })}<WatchingRuleEditor rules={state.rules} queue={queue} />
   </section>;
 }
