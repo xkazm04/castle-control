@@ -36,7 +36,7 @@ export function StudioDesignControls({ session, on_change, board }: {
   return <Plate className="studio-design" border_ink="rule" aria-label={copy.design}>
     <PlateBody>
       <SectionHeading variant="ruled" title={copy.design} />
-      <p className="cc-side-fine" role="status" aria-label={copy.design_status}>{copy.session_only}</p>
+      <p className="cc-side-fine">{copy.session_only}</p>
       <div className="studio-design-fields">
         <FieldGroup control_id="studio-map-size" label={copy.size} variant="select">
           <select id="studio-map-size" value={design.size} disabled={!!board} onChange={event => on_change('size', event.currentTarget.value)}>

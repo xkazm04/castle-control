@@ -144,3 +144,12 @@ test('sample inspector reads D4 coordinates from geometry and supports multi-let
   expect(inspector).toContain('Column <strong>AB</strong> · Row <strong>1</strong>');
   expect(inspector).toContain('28 of 28 tiles');
 });
+
+test('tile inspection announces only the Now line', () => {
+  const html = renderToStaticMarkup(<TileInspector selected="D4" />);
+  const root = html.match(/^<section[^>]*>/)?.[0];
+  expect(root).toBeDefined();
+  expect(root).not.toContain('aria-live');
+  expect(html.match(/role="status"/g) ?? []).toHaveLength(1);
+  expect(html).toMatch(/<p class="cc-hero-now" role="status">Now: inspecting D4 · simulated<\/p>/);
+});

@@ -25,7 +25,7 @@ export function TestLadder({ selected, on_select }: { selected: number; on_selec
         </HeraldicCard>;
       })}
     </div>
-    <div className="cc-proclamation" role="status" aria-live="polite">
+    <div className="cc-proclamation" role="status">
       <p className="cc-proclamation-label">{copy.requirements(ladderRungs[selected]?.title ?? ladderRungs[0].title)}</p>
       <p>{ladderRungs[selected]?.detail}</p>
     </div>

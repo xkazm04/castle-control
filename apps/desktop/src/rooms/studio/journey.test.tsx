@@ -6,7 +6,7 @@ import { TileInspector } from './hex-table.jsx';
 test('local studio exposes labelled session-only map fields, art preview and banner inspection', () => {
   const html = renderToStaticMarkup(<Room snapshot={{ mode: 'fixture', phase: 'ready' }} />);
   for (const label of ['Map size', 'Map anchor', 'Preset colour', 'Art style', 'Reveal timing (ms)',
-    'Session-only map preview', 'Map design status', 'Inspect House Tallow banner',
+    'Session-only map preview', 'Inspect House Tallow banner',
     'Replay local reveal', 'Reset local design']) expect(html).toContain(label);
   expect(html).toContain('SIMULATED');
   expect(html).toContain('/art/preset-heraldic-hexmap.webp');

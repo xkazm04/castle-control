@@ -14,6 +14,8 @@ test('local Map Room journey: inspect tiles and banners, edit the map, inspect l
     await page.keyboard.press('Enter');
     await expect(tile).toHaveAttribute('aria-pressed', 'true');
     await expect(room.getByLabel('Selected tile', { exact: true })).toContainText('Now: inspecting D4');
+    await page.keyboard.press('ArrowRight');
+    await expect(room.getByRole('status').filter({ hasText: 'Now: inspecting E4' })).toBeVisible();
     const banner = room.getByRole('button', { name: 'Inspect House Tallow banner', exact: true });
     await banner.focus();
     await page.keyboard.press('Space');
@@ -41,7 +43,7 @@ test('local Map Room journey: inspect tiles and banners, edit the map, inspect l
     await expect(preview).toHaveAttribute('data-reveal-ms', '850');
     await expect(preview.locator('img')).toHaveAttribute('src', '/art/preset-pixel-hexmap.webp');
     await expect(preview).toContainText('SIMULATED');
-    await expect(room.getByRole('status', { name: 'Map design status' })).toContainText('Session only');
+    await expect(room.getByText('Session only', { exact: false })).toBeVisible();
     await room.getByLabel('Reveal timing (ms)', { exact: true }).fill('-1');
     await expect(room.getByRole('alert')).toContainText('whole number from 0 to 60000');
     await expect(preview).toHaveAttribute('data-reveal-ms', '850');

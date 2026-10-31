@@ -9,6 +9,7 @@ import { boardForSize, createStudioSession, tilesForSize, updateStudioSession } 
 import { parseStudioBoard } from './board.js';
 import type { SessionField } from './session.js';
 import { studioCopy as copy } from '../../studio-copy.js';
+import { TestLadder } from './test-ladder.jsx';
 
 type ControlProps = {
   children?: ReactNode; id?: string; disabled?: boolean; 'aria-label'?: string;
@@ -139,4 +140,17 @@ test('preview-only controls say so', () => {
     const hint = html.match(new RegExp(`<p[^>]*id="studio-map-${field}-hint"[^>]*>([^<]+)</p>`))?.[1] ?? '';
     expect(hint.toLowerCase()).toContain('preview');
   }
+});
+
+test('the static session note is plain text rather than a status', () => {
+  const html = renderToStaticMarkup(StudioDesignControls({ session: createStudioSession(), on_change: vi.fn() }));
+  expect(html).toContain(copy.session_only);
+  expect(html.match(/role="status"/g) ?? []).toHaveLength(0);
+  expect(html).not.toContain(`aria-label="${copy.design_status}"`);
+});
+
+test('the test ladder uses the implicit status live region', () => {
+  const html = renderToStaticMarkup(TestLadder({ selected: 0, on_select: vi.fn() }));
+  expect(html.match(/role="status"/g) ?? []).toHaveLength(1);
+  expect(html).not.toContain('aria-live');
 });

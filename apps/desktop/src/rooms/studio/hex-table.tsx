@@ -65,7 +65,7 @@ export function TileInspector({ selected, board = STUDIO_SAMPLE_BOARD }: { selec
   const house = tile.side?.label ?? copy.unclaimed;
   const share = tile.side ? geometry.sides.find(side => side.id === tile.side?.id)?.count ?? 0 : geometry.unclaimed;
   return <Plate className="cc-hero" data-house={tile.side?.label ?? 'unclaimed'} data-ink={tile.side?.ink} data-unclaimed={!tile.side} border_ink="rule"
-    aria-label={copy.selected_tile} aria-live="polite" offset="space-6"
+    aria-label={copy.selected_tile} offset="space-6"
     style={{ '--cc-ink': 'var(--house)', '--cc-band-text': 'var(--house-press)', '--cc-shadow-ink': 'var(--house-shadow)' }}
     band={<PlateBand variant="hero" title={house} count={copy.sample} />}>
     <PlateBody className="cc-hero-body" style={{ '--cc-body-padding': 'var(--space-14)' }}>
@@ -77,7 +77,7 @@ export function TileInspector({ selected, board = STUDIO_SAMPLE_BOARD }: { selec
         <span className="cc-hero-sub"><span>{copy.column} <strong>{tile.column_label}</strong> · {copy.row} <strong>{tile.row + 1}</strong></span>
           <span>{copy.share(share, geometry.tiles.length)}</span></span>
       </div>
-      <p className="cc-hero-now">{copy.now(tile.id)}</p>
+      <p className="cc-hero-now" role="status">{copy.now(tile.id)}</p>
       <p className="cc-hero-house">{copy.territory(house)}</p>
       <p className="cc-hero-note">{copy.steward_note}</p>
       <p className="cc-hero-hint">{copy.hint}</p>
