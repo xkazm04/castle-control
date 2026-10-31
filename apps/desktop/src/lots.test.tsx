@@ -5,15 +5,15 @@ import { expect, test, vi } from 'vitest';
 import { ProposalQueue, SimulatedSteward } from '@castle-control/ui/steward';
 import type { CheckResult, LotsDrawPolicy } from '@castle-control/contract';
 import LotteryRoom, { LotteryWrit } from './rooms/lottery/index.jsx';
-import { Urn } from './rooms/lottery/urn.jsx';
 import { draftRoll, entryHash, lotterySession, sealLotteryProposal } from './rooms/lottery/session.js';
 import { checkFixturePolicy, createLotsPreview, lookupFixture, recomputeFixture } from './lots-model.js';
 import { fixtureDraws, fixtureEntries, fixtureWrit } from './lots-fixture.js';
 import { lotsCopy as copy } from './lots-copy.js';
 import { createCoreLotsPort } from './lots-core.js';
 import { ConnectedLotsRoom } from './rooms/lottery/core.jsx';
-import { castWinners, sealOf, verifyWrit } from './lots-cast.js';
+import { DrawStage } from './rooms/lottery/stage.jsx';
 import { createRevealClock } from './rooms/lottery/playback.js';
+import { castWinners, sealOf, verifyWrit } from './lots-cast.js';
 import { prepareFixtureRoll, rehearsalClock, rehearsalSeed } from './rooms/lottery/simulation.js';
 type Control = { children?: ReactNode; type?: string; onClick?: () => void; onBlur?: () => void;
   onKeyDown?: (event: KeyboardEvent<HTMLInputElement>) => void;
@@ -293,32 +293,6 @@ test('draft cap and prize come from the selected draw rather than fixture litera
   port.select('hall-questions'); draftRoll(queue);
   expect(current(queue).fields.find(field => field.key === 'prize')?.value).toBe('none');
 });
-test('urn marks exactly the revealed winners in SVG and keeps a windowed winner visible', () => {
-  const entries = fixtureEntries(400); const first = entries[0]; const second = entries[1];
-  if (!first || !second) throw new Error('Missing simulated marks');
-  const markup = renderToStaticMarkup(<Urn entries={entries.slice(0, 87)} winners={[first.handle, second.handle]} revealed={1} />);
-  expect(markup.match(/data-winner="1"/g)).toHaveLength(1);
-  expect(markup).not.toContain('data-winner="2"');
-  expect(markup).toContain('lottery-winner-badge');
-  const windowed = renderToStaticMarkup(<Urn entries={entries} winners={[first.handle, second.handle]} revealed={1} />);
-  expect(windowed).toContain('lottery-urn-window'); expect(windowed).toContain('data-winner="1"');
-  expect(windowed).not.toContain('data-winner="2"');
-  const last = entries.at(-1);
-  if (!last) throw new Error('Missing offscreen simulated winner');
-  expect(renderToStaticMarkup(<Urn entries={entries} winners={[last.handle]} revealed={1} />))
-    .toContain(`data-revealed-winner="1"><b>1.</b> ${last.handle}`);
-});
-test('session reveal cursor resumes the same cast and resets for a new roll', async () => {
-  const queue = new ProposalQueue(); draftRoll(queue);
-  const { port } = lotterySession(queue); await sealLotteryProposal(queue, current(queue)); await port.start();
-  const clock = createRevealClock(); const writ = port.getSnapshot().writ;
-  clock.tick(writ, 100, false); expect(clock.getSnapshot()).toBe(0);
-  clock.tick(writ, 1300, false); expect(clock.getSnapshot()).toBe(1);
-  clock.tick(writ, 2200, false); expect(clock.getSnapshot()).toBe(2);
-  clock.tick(writ, 3100, true); expect(clock.getSnapshot()).toBe(3);
-  clock.tick(writ, 3101, false); expect(clock.getSnapshot()).toBe(3);
-  clock.tick(undefined, 3200, false); expect(clock.getSnapshot()).toBe(0);
-});
 test('a v1 outcome exceeding a cohort cap is refused without resealing or rerolling', async () => {
   const port = createLotsPreview(); const before = port.getSnapshot();
   const sealed = await prepareFixtureRoll(before.draw, before.entries, rehearsalClock());
@@ -343,16 +317,18 @@ test('selecting another draw cannot strip the guardrails from an earlier prize p
   expect(queue.byChamber('lottery')[0]?.state).toBe('drafted');
   expect(port.getSnapshot().sealed).toBe(false);
 });
-test('10,000 lots keep DOM marks bounded at both ends, while the default urn draws every entry', () => {
-  expect(renderToStaticMarkup(<Urn entries={fixtureEntries()} />).match(/data-lot-dot=/g)).toHaveLength(87);
-  for (const scroll_top of [0, 500 * 32]) {
-    const markup = renderToStaticMarkup(<Urn entries={fixtureEntries(10000)} scroll_top={scroll_top} />);
-    expect(markup).toContain('aria-rowcount="500"');
-    expect(markup.match(/data-lot-dot=/g)?.length).toBeLessThanOrEqual(320);
-    expect(markup.match(/<\w/g)?.length).toBeLessThan(400);
-    expect(markup).toContain(scroll_top ? 'data-lot-dot="10000"' : 'data-lot-dot="1"');
-    expect(markup).not.toContain(scroll_top ? 'data-lot-dot="1"' : 'data-lot-dot="10000"');
-  }
+test('10,000 lots keep stage marks bounded and every winner drawn, while the default stage draws every entry', () => {
+  const stage = (entries: ReturnType<typeof fixtureEntries>, winners: readonly string[] = []) => renderToStaticMarkup(
+    <DrawStage shape="urn" on_shape={() => undefined} entries={entries} content="question" sealed={false} clock={createRevealClock()}
+      reveal_ms={1500} cast={winners.length ? { winners, label: 'streamer-controlled' } : undefined} />);
+  expect(stage(fixtureEntries()).match(/data-lot-dot=/g)).toHaveLength(87);
+  const many = fixtureEntries(10000); const last = many.at(-1);
+  if (!last) throw new Error('Missing simulated entry');
+  const markup = stage(many, [last.handle]);
+  expect(markup.match(/data-lot-dot=/g)?.length).toBeLessThanOrEqual(240);
+  expect(markup).toContain(`<title>${last.handle}`);
+  // Each mark is a circle plus its title; the total stays bounded whatever the pool size.
+  expect(markup.match(/<\w/g)?.length).toBeLessThan(600);
 });
 test('lots-07 paused intake is visible, pressed and holds entries until resumed', async () => {
   const queue = new ProposalQueue(); const { port } = lotterySession(queue); const before = port.getSnapshot().entries;

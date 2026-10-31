@@ -11,17 +11,18 @@ it('routes lots through the shared page grammar without parsing query values in 
   vi.stubGlobal('document', { createElement: () => ({ textContent: '' }), head: { append: vi.fn() },
     getElementById: (id: string) => id === 'draw' ? draw : null });
   vi.stubGlobal('__CC_OVERLAY_STYLES__', '');
-  for (const search of ['', '?scale=2&anchor=tl', '?scale=bogus&anchor=wrong']) {
+  // shape is display-only like scale/anchor: Rust resolves it to data-shape, the host never reads the query.
+  for (const search of ['', '?scale=2&anchor=tl', '?scale=bogus&anchor=wrong', '?shape=wheel', '?scale=1&shape=bogus']) {
     vi.stubGlobal('location', { pathname: '/lots/simulated-draw', search });
     await import('../overlay-entry.ts');
     expect(mountDraw).toHaveBeenLastCalledWith(draw, 'simulated-draw');
     vi.resetModules();
   }
-  expect(mountDraw).toHaveBeenCalledTimes(3);
+  expect(mountDraw).toHaveBeenCalledTimes(5);
   expect(connectOverlay).not.toHaveBeenCalled();
 });
 
-it.each(['?shape=wheel', '?motion=reduced', '?chrome=card', '?unknown=1'])(
+it.each(['?motion=reduced', '?chrome=card', '?unknown=1', '?shape=wheel&winner=1'])(
   'refuses extra lots query keys before mounting: %s', async (search) => {
     vi.stubGlobal('document', { createElement: () => ({ textContent: '' }), head: { append: vi.fn() },
       getElementById: () => ({}) });

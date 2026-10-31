@@ -347,10 +347,13 @@ seconds, allowing even a long reveal to finish while still clearing a revoked
 scene on the next read. Content is captured at seal time, so a prize scene always
 has the canonical disclaimer and cast label, including after configuration edits.
 
-The current draw contract has no shape field, so OBS uses **urn**. The four shape
-builders remain available to typed hosts. `/lots` admits only `scale` and `anchor`;
-Rust resolves them to `--draw-scale` and `data-anchor` on `<main>`. JavaScript
-never reparses their values. Layout uses vmin and transparent, bare chrome, with
+The draw contract has no shape field, so the shape is display-only: `/lots` admits
+`scale`, `anchor` and `shape` (`urn`, `wheel`, `deck` or `ballot_box`; anything else,
+empty or repeated is the **urn**). Rust resolves them once to `--draw-scale`,
+`data-anchor` and `data-shape` on `<main>`; `host.ts` only maps a known
+`data-shape` to its builder. The shape changes artwork and flourish, never the
+cast. The desktop Lot Chamber renders the same scenes (`buildDrawScene`,
+`createDrawPlayback`) in its stage and appends `&shape=` to its OBS URL. Layout uses vmin and transparent, bare chrome, with
 no image request. Motion follows `prefers-reduced-motion`: all winners at time
 zero when reduced, otherwise 1200 ms flourish then one reveal every 900 ms.
 Only the artwork group animates; the disclaimer, label and SIMULATED badge stay

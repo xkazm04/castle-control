@@ -12,8 +12,10 @@
   },
   "dependencies": {
     "@castle-control/contract": "workspace:*",
+    "@castle-control/renderer": "workspace:*",
     "@castle-control/tokens": "workspace:*",
     "@castle-control/ui": "workspace:*",
+    "@castle-control/verifier-web": "workspace:*",
     "react": "catalog:",
     "react-dom": "catalog:"
   },

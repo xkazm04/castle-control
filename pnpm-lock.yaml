@@ -59,12 +59,18 @@ importers:
       '@castle-control/contract':
         specifier: workspace:*
         version: link:../../packages/contract
+      '@castle-control/renderer':
+        specifier: workspace:*
+        version: link:../../packages/renderer
       '@castle-control/tokens':
         specifier: workspace:*
         version: link:../../packages/tokens
       '@castle-control/ui':
         specifier: workspace:*
         version: link:../../packages/ui
+      '@castle-control/verifier-web':
+        specifier: workspace:*
+        version: link:../../packages/verifier-web
       react:
         specifier: 'catalog:'
         version: 19.3.1

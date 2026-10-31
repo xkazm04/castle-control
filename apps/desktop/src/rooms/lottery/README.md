@@ -1,5 +1,62 @@
 ﻿# Lot Chamber C · Herald, 2026-10-30
 
+## Theatrical draw stage and Writ Lab, 2026-10-31
+
+The room now depends on `@castle-control/renderer`. `stage.tsx` builds the
+renderer's own `DrawScene` (`buildDrawScene`) for the selected shape (urn, wheel,
+deck, ballot box) and drives reveals with its `createDrawPlayback` timeline,
+sleeping until `next_at_ms`; the hand-synced `reveal.ts` mirror and the static
+`urn.tsx` are gone. The artwork group plays the scene's motion exactly as
+`paintDraw` maps it. Lots are drawn per shape in the artwork's 320×240 space
+(dot area follows weight, at most 240 marks with every winner kept). A fresh
+ceremony enters theatre mode (full chamber, one click back to the desk); the
+latest winner is proclaimed beside the art, earlier winners settle into a
+scoreboard, and decorative rays and confetti never encode the outcome. The
+fixture stage plays a cast only after `verifyWrit` recomputes it; core casts are
+the core's verified `LotsVerifiedCast`. Shape and theatre live in the
+session-only `DrawDisplay` (no wire field); the OBS URL appends `&shape=`, which
+the Rust page resolves to `data-shape` for `host.ts`.
+
+`equalizer.tsx` plots the cc-lots concave weight table and the contract's
+`LotsWeightTable` summary (`newcomers_to_outweigh_heaviest`), with Equal/Concave,
+activity cap, free !join and raider-cap controls (core edits go through
+`lots.draw.upsert`). `lab.tsx` (Writ Lab) tampers with an in-memory copy of the
+current writ (weight, handle, seed, plan, winner order) and walks canonical
+serialization, SHA-256 seal, randomness commitment and rejection-sampling
+derivation; a failed step blocks the rest. For beacon writs, step 3 also runs
+verifier-web's `verifyDecodedWrit` (round schedule and BLS signature) against a
+compiled-in anchor (`beacon-anchors.ts`: the public quicknet key; fixture mode
+adds verifier-web's simulated chain key for its specimen). A chain without an
+anchor reads UNVERIFIED. "Forge the beacon" (a made-up signature with its
+matching hash) is caught by BLS alone. "Open a writ file…" parses a JSON writ with
+the contract's `lots.writ.get` schema (`writ-file.ts`, at most 2 MiB) and puts it
+on the bench as a third specimen, checked against the room's own anchors.
+A finished ceremony closes on its proof (theatre: a verdict card naming a
+local recompute or a core-verified cast, with "Prove it in the Writ Lab", which
+returns to the desk, restores the canonical writ and replays the walk; desk: a
+verdict chip). The lab's proof strip and verdict sit beside the tamper bench so
+a catch is visible without scrolling. Core mode adds `core-setup.tsx`, the full
+rule set as a local draft: one save sends one `lots.draw.upsert` (then the
+core check), never one per keystroke; winner count keeps its commit-on-blur
+field. Core mode never shows the simulated-art "On stream" card. Evidence:
+`stage.test.tsx`, `equalizer.test.tsx`, `lab.test.tsx`, `core-setup.test.tsx`, `sound.test.ts`, `result.test.tsx`,
+renderer `draw/host.test.ts`, cc-obs `tests/pages.rs` and cc-core
+`tests/lots_overlay_page.rs`.
+
+### Ceremony options and choreography
+
+Each called lot lifts out of its shape (`lift_path`: urn mouth, wheel pointer,
+dealt off the deck, up through the ballot slot), and the proclamation states
+the winner's share of the pool's weight. Dot area follows weight (radius ∝
+√weight, floored at 35% so the lightest lot stays visible) and eases when the
+curve changes; pointing at an equalizer bar lights the lots holding that weight. Two session-only options sit beside the shape
+picker. **Reveal by hand** holds the renderer's cursor just before each onset
+until the streamer calls the next lot (`createRevealClock().callNext`). Only the
+timing changes; winners and order never do. The hold applies to this window
+only: the OBS draw page keeps its own cadence. **Ceremony sound** (`sound.ts`) is
+Web Audio synthesis with no assets, off until switched on. The *On stream*
+preview draws the renderer artwork the OBS page paints for the chosen shape.
+
 ## Stabilize lots-06–10, 2026-10-31
 
 Eligible pool owns subscriber/points eligibility. Prize checkboxes display its

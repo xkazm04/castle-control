@@ -5,7 +5,6 @@ import { lotsWritGet } from '@castle-control/contract/lots';
 import { parseJson } from '@castle-control/contract/door';
 import { castWinners, commitmentOf, sealOf, verifyWrit } from './lots-cast.js';
 import { fixtureEntries, fixtureWrit } from './lots-fixture.js';
-import { revealedAt } from './rooms/lottery/reveal.js';
 
 test('cc-verify v1 Rust corpus pins all 900 streamer-controlled desktop casts', async () => {
   const fixture = parseJson(readFileSync(new URL('../../../packages/verifier-web/src/simulated-writs.json', import.meta.url), 'utf8'));
@@ -40,11 +39,4 @@ test('87-entry fixed-seed casts are deterministic, distinct, eligible and recomp
   expect(winners.every(winner => roll.entries.some(entry => entry.handle === winner))).toBe(true);
   const writ: LotsWrit = { roll, seal, proof: { source: 'streamer_commit', seed }, winners: [...winners] };
   expect(await verifyWrit(writ)).toEqual(winners);
-});
-
-test('reveal clock mirrors renderer flourish and cadence, with immediate reduced motion', () => {
-  expect([0, 1199, 1200, 2100, 3000, 9000].map(time => revealedAt(time, 3, { reduced_motion: false })))
-    .toEqual([0, 0, 1, 2, 3, 3]);
-  expect(revealedAt(0, 3, { reduced_motion: true })).toBe(3);
-  expect(revealedAt(0, 0, { reduced_motion: true })).toBe(0);
 });
