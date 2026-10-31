@@ -86,7 +86,6 @@ export function TileHistory({ state, board }: { state: RehearseState; board: Stu
 
 export function VerdictBlock({ state, view, handlers }: { state: RehearseState; view: RehearseView; handlers: RehearseHandlers }) {
   const { report, done } = view;
-  const replay = state.replay;
   if (!done || !report || !state.run) return null;
   return <section className="studio-verdict-block" aria-label={copy.verdict_label}>
     <SectionHeading variant="ruled" title={copy.verdict} count={copy.summary(state.run.setup.viewers, state.run.setup.turns, state.run.setup.seed)} />
@@ -96,8 +95,6 @@ export function VerdictBlock({ state, view, handlers }: { state: RehearseState; 
       <InkButton size="small" onClick={handlers.replay}>{`${copy.replay} ${state.run.setup.seed}`}</InkButton>
       <InkButton variant="primary" size="small" onClick={handlers.again}>{copy.again}</InkButton>
     </div>
-    {replay && <p className="studio-rehearse-replay" role="status">{replay.matched === replay.of
-      ? copy.replay_ok(replay.seed, replay.of) : copy.replay_bad(replay.seed, replay.matched, replay.of)}</p>}
   </section>;
 }
 

@@ -95,6 +95,9 @@ export function RehearseWork({ state, view, handlers, board, size, look }: Rehea
     <div className="studio-rehearse-now">
       <Notice message={message} label={copy.log_label} className="studio-rehearse-line" />
       {last && <p className="studio-rehearse-turn">{copy.this_turn(last.changes.length)} {copy.only_picked}</p>}
+      {state.replay && <p className="studio-rehearse-replay" role="status">{state.replay.matched === state.replay.of
+        ? copy.replay_ok(state.replay.seed, state.replay.of)
+        : copy.replay_bad(state.replay.seed, state.replay.matched, state.replay.of)}</p>}
     </div>
     <HeldRibbon facts={facts} unclaimed={unclaimed} total={start.tiles.length} percent={view.done} />
   </section>;
