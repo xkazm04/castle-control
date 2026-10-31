@@ -1,0 +1,22 @@
+{
+  "name": "@castle-control/keep-art",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./dom": "./src/dom.ts",
+    "./keep-art.css": "./src/keep-art.css"
+  },
+  "sideEffects": ["**/*.css"],
+  "scripts": {
+    "typecheck": "node ../../scripts/package-gate.mjs typecheck",
+    "lint": "node ../../scripts/package-gate.mjs lint",
+    "test": "node ../../scripts/package-gate.mjs test"
+  },
+  "devDependencies": {
+    "@types/node": "24.10.0",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}
