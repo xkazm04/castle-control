@@ -8,6 +8,7 @@ import { createBeaconsPreview } from '../../beacons-model.js';
 import { nightBursts, replayTrace } from '../../beacons-replay.js';
 import { createFixtureCurveEditor } from './fixture-curve.jsx';
 import { NightReplay } from './replay.jsx';
+import { scrubSeconds } from './replay-trace.jsx';
 import { openCurveDraft, proposeCurve, sealedCurve } from './replay-proposal.js';
 import { VisualsWork } from './room.jsx';
 
@@ -104,4 +105,29 @@ test('replay styles stay token-only', () => {
   const known = new Set([...Object.keys(tokens.layout), ...Object.keys(tokens.theme.paper)]);
   for (const [, token] of css.matchAll(/var\(--([\w-]+)/g)) expect(known.has(token ?? '')).toBe(true);
   expect(css).not.toMatch(/#[\da-f]{3,8}\b|\brgba?\(|\bhsla?\(|\b\d+(?:\.\d+)?px\b/i);
+});
+
+test('pressing on the trace scrubs to that moment on the range steps, clamped to the night', () => {
+  const rect = { left: 100, width: 400 };
+  expect(scrubSeconds(150, rect, 2880)).toBe(360);
+  expect(scrubSeconds(301, rect, 2880)).toBe(1450);
+  expect(scrubSeconds(40, rect, 2880)).toBe(0);
+  expect(scrubSeconds(900, rect, 2880)).toBe(2880);
+  expect(scrubSeconds(150, { left: 0, width: 0 }, 2880)).toBeUndefined();
+});
+
+test('a pinned night offers one fit, and the fit button never writes by itself', () => {
+  const queue = new ProposalQueue();
+  const port = createBeaconsPreview();
+  const editor = createFixtureCurveEditor(port);
+  const item = port.getSnapshot().visuals[0];
+  if (!item) throw new Error('Missing generated altar');
+  const html = renderToStaticMarkup(<NightReplay item={item} editor={editor} queue={queue} initial_night="gift_wave" />);
+  expect(html).toContain('Gift wave · 00:00 / 48:00');
+  expect(html).toContain('Saturates');
+  expect(html).toMatch(/Fit the top point to this night&#x27;s peak · move it to \d+/);
+  expect(html.match(/class="visuals-replay-pinned"/g)?.length).toBeGreaterThan(0);
+  expect(html).toContain('pinned at max');
+  expect(queue.getSnapshot().proposals).toHaveLength(0);
+  expect(port.getSnapshot().visuals[0]).toBe(item);
 });

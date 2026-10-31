@@ -35,9 +35,14 @@ const TraceLayers = memo(function TraceLayers({ trace, before, offerings, counte
   </>;
 });
 
+/** Pointer x on the plot to a night second, on the same 10 s steps as the range. */
+export function scrubSeconds(client_x: number, rect: { left: number; width: number }, duration: number): number | undefined {
+  if (!(rect.width > 0)) return undefined;
+  return Math.max(0, Math.min(duration, Math.round((client_x - rect.left) / rect.width * duration / 10) * 10));
+}
 function seekFrom(event: PointerEvent<HTMLDivElement>, duration: number, seek: (seconds: number) => void) {
-  const rect = event.currentTarget.getBoundingClientRect();
-  if (rect.width > 0) seek(Math.round((event.clientX - rect.left) / rect.width * duration / 10) * 10);
+  const seconds = scrubSeconds(event.clientX, event.currentTarget.getBoundingClientRect(), duration);
+  if (seconds !== undefined) seek(seconds);
 }
 
 /** The night as one figure: pinned bands, the lit threshold, the before/after traces and every offering tick.

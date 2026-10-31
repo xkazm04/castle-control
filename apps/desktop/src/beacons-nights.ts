@@ -37,36 +37,40 @@ function chatter(add: (t: number, kind: Offering['kind'], amount: number) => voi
   }
 }
 
-const gift_wave = night(31, (add, random) => {
-  chatter(add, random, 150);
-  for (let t = 90; t < 2860; t += 200 + random() * 160) add(t, 'sub', 1);
-  add(12 * 60 + 5, 'gift', 20);
-  // The wave: gift bombs from minute 26 to 36, densest around minute 31.
-  for (let t = 26 * 60; t < 36 * 60; t += 9 + Math.abs(t - 31 * 60) / 9 + random() * 8) {
-    add(t, 'gift', [5, 10, 10, 20, 25][Math.floor(random() * 5)] ?? 5);
-  }
-});
+/** Builds every generated night from its fixed seed; calling it twice returns equal nights. */
+export function generateNights(): readonly SampleNight[] {
+  const gift_wave = night(31, (add, random) => {
+    chatter(add, random, 150);
+    for (let t = 90; t < 2860; t += 200 + random() * 160) add(t, 'sub', 1);
+    add(12 * 60 + 5, 'gift', 20);
+    // The wave: gift bombs from minute 26 to 36, densest around minute 31.
+    for (let t = 26 * 60; t < 36 * 60; t += 9 + Math.abs(t - 31 * 60) / 9 + random() * 8) {
+      add(t, 'gift', [5, 10, 10, 20, 25][Math.floor(random() * 5)] ?? 5);
+    }
+  });
 
-const raid_spike = night(47, (add, random) => {
-  chatter(add, random, 120);
-  for (let t = 150; t < 2860; t += 300 + random() * 240) add(t, 'sub', 1);
-  // A raid lands at minute 20: a rush of new subs and two gift bombs inside two minutes.
-  for (let index = 0; index < 28; index++) add(20 * 60 + index * 4 + random() * 3, 'sub', 1);
-  add(20 * 60 + 40, 'gift', 20); add(21 * 60 + 15, 'gift', 10);
-});
+  const raid_spike = night(47, (add, random) => {
+    chatter(add, random, 120);
+    for (let t = 150; t < 2860; t += 300 + random() * 240) add(t, 'sub', 1);
+    // A raid lands at minute 20: a rush of new subs and two gift bombs inside two minutes.
+    for (let index = 0; index < 28; index++) add(20 * 60 + index * 4 + random() * 3, 'sub', 1);
+    add(20 * 60 + 40, 'gift', 20); add(21 * 60 + 15, 'gift', 10);
+  });
 
-const sub_train = night(59, (add, random) => {
-  chatter(add, random, 240);
-  // A steady train: one sub every 40-60 s, all night.
-  for (let t = 30; t < 2860; t += 40 + random() * 20) add(t, 'sub', 1);
-});
+  const sub_train = night(59, (add, random) => {
+    chatter(add, random, 240);
+    // A steady train: one sub every 40-60 s, all night.
+    for (let t = 30; t < 2860; t += 40 + random() * 20) add(t, 'sub', 1);
+  });
+  return Object.freeze([
+    { id: 'sample', name: 'Sample night', gloss: 'the illustrative timeline below, replayed', offerings: fixtureOfferings },
+    { id: 'gift_wave', name: 'Gift wave', gloss: 'a 20-gift bomb at minute 12, then a gift wave from minute 26 to 36', offerings: gift_wave },
+    { id: 'raid_spike', name: 'Raid spike', gloss: 'quiet, then a raid rush of subs at minute 20', offerings: raid_spike },
+    { id: 'sub_train', name: 'Sub train', gloss: 'one sub every 40–60 s, all night', offerings: sub_train },
+  ]);
+}
 
-export const sampleNights: readonly SampleNight[] = Object.freeze([
-  { id: 'sample', name: 'Sample night', gloss: 'the illustrative timeline below, replayed', offerings: fixtureOfferings },
-  { id: 'gift_wave', name: 'Gift wave', gloss: 'a 20-gift bomb at minute 12, then a gift wave from minute 26 to 36', offerings: gift_wave },
-  { id: 'raid_spike', name: 'Raid spike', gloss: 'quiet, then a raid rush of subs at minute 20', offerings: raid_spike },
-  { id: 'sub_train', name: 'Sub train', gloss: 'one sub every 40–60 s, all night', offerings: sub_train },
-]);
+export const sampleNights = generateNights();
 
 export function sampleNight(id: NightId): SampleNight {
   const found = sampleNights.find(item => item.id === id) ?? sampleNights[0];

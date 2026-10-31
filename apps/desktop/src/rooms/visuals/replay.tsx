@@ -6,7 +6,7 @@ import type { PreviewVisual } from '../../beacons-model.js';
 import { curveIntensity } from '../../beacons-model.js';
 import { sampleNight, sampleNights } from '../../beacons-nights.js';
 import type { NightId } from '../../beacons-nights.js';
-import { clockLabel, night_duration_s, nightBursts, replayTrace, replayVerdict, traceAt } from '../../beacons-replay.js';
+import { clockLabel, fitSuggestion, night_duration_s, nightBursts, replayTrace, replayVerdict, traceAt } from '../../beacons-replay.js';
 import type { CurveEditor } from './curve-editor.js';
 import { createReplayClock, replay_speeds } from './replay-clock.js';
 import { useReducedMotion, useReplayDriver } from './replay-driver.js';
@@ -39,6 +39,13 @@ export function NightReplay({ item, editor, queue = proposalQueue, initial_night
   const before = useMemo(() => sealed && !sameCurve(sealed, curve) ? replayTrace(sealed, item.gift_weight, bursts) : undefined,
     [sealed, curve, item.gift_weight, bursts]);
   const verdict = replayVerdict(trace);
+  const fit = fitSuggestion(trace, curve);
+  const applyFit = () => {
+    const point = fit && editing.draft.ranges[fit.index];
+    if (!fit || !point) return;
+    editor.move(fit.index, fit.total, point.intensity);
+    void editor.save();
+  };
   const now = traceAt(trace, curve, time.position_s);
   const top = curve.ranges.at(-1)?.total ?? 0;
   const draft = openCurveDraft(item.visual.visual_id, queue);
@@ -80,9 +87,11 @@ export function NightReplay({ item, editor, queue = proposalQueue, initial_night
     <TraceFigure trace={trace} before={before} offerings={night.offerings} counted={counted} position={time.position_s}
       lit_intensity={curveIntensity(curve, trace.lit_total)} on_seek={clock.seek}
       label={`${item.visual.name} intensity across the simulated 48-minute ${night.name.toLowerCase()} · ${verdict.text}`} />
-    <p className="visuals-replay-verdict" data-tone={verdict.tone} role="status" aria-live="polite">
-      <b>{verdict_words[verdict.tone]}</b> {verdict.text}
-      {before && <span className="visuals-replay-legend"> · dashed: the last sealed curve</span>}</p>
+    <div className="visuals-replay-verdict" data-tone={verdict.tone}>
+      <p role="status" aria-live="polite"><b>{verdict_words[verdict.tone]}</b> {verdict.text}
+        {before && <span className="visuals-replay-legend"> · dashed: the last sealed curve</span>}</p>
+      {fit && <InkButton size="small" disabled={editing.phase === 'saving'} onClick={applyFit}>{fit.label}</InkButton>}
+    </div>
     <div className="visuals-replay-tune">
       <ReplayCurve item={item} editor={editor} state={editing} trace={trace} now={now} help_id={help_id} />
       <ReplayBeacon item={item} now={now} position={time.position_s} offerings={night.offerings} counted={counted}

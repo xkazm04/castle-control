@@ -123,6 +123,26 @@ export function replayDomain(trace: ReplayTrace): number {
   return Math.ceil(want / step) * step;
 }
 
+export type FitSuggestion = Readonly<{ index: number; total: number; label: string }>;
+
+/** One draft point move, derived from the trace. It goes through the same editor and still needs a seal. */
+export function fitSuggestion(trace: ReplayTrace, curve: IntensityCurve): FitSuggestion | undefined {
+  const ranges = curve.ranges;
+  const top = ranges.length - 1;
+  const busiest = trace.max_total;
+  if (top < 1 || busiest <= 0) return undefined;
+  if (trace.first_lit_s === undefined && top >= 2) {
+    const floor = (ranges[0]?.total ?? 0) + 1;
+    const total = Math.max(floor, Math.floor(busiest * 0.75));
+    return total < (ranges[1]?.total ?? 0) ? { index: 1, total, label: `Light it at this night's peak · move point 2 to ${total}` } : undefined;
+  }
+  const total = Math.ceil(busiest) + 1;
+  const current = ranges[top]?.total ?? 0;
+  if (total === current || total <= (ranges[top - 1]?.total ?? 0)) return undefined;
+  return { index: top, total, label: trace.pinned_s > 0 ? `Fit the top point to this night's peak · move it to ${total}`
+    : `Reach full blaze at this night's peak · move the top point to ${total}` };
+}
+
 export const minute = (seconds: number) => Math.floor(seconds / 60);
 export const clockLabel = (seconds: number) =>
   `${String(Math.floor(seconds / 60)).padStart(2, '0')}:${String(Math.floor(seconds % 60)).padStart(2, '0')}`;

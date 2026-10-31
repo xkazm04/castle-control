@@ -28,7 +28,8 @@
 .visuals-replay-time span:first-child { transform: none; }
 .visuals-replay-time span:last-child { transform: translateX(-100%); }
 .visuals-replay-figure { margin-left: calc(var(--space-28) + var(--space-4)); }
-.visuals-replay-verdict { margin: 0; padding: var(--space-8) var(--space-12); border: var(--rule-medium) solid var(--ink); border-left-width: calc(var(--rule-strong) * 2); background: var(--paper); font: var(--text-body)/1.45 var(--font-ui); }
+.visuals-replay-verdict { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-8) var(--space-16); margin: 0; padding: var(--space-8) var(--space-12); border: var(--rule-medium) solid var(--ink); border-left-width: calc(var(--rule-strong) * 2); background: var(--paper); font: var(--text-body)/1.45 var(--font-ui); }
+.visuals-replay-verdict p { margin: 0; }
 .visuals-replay-verdict b { margin-right: var(--space-6); text-transform: uppercase; letter-spacing: var(--track-wide); }
 .visuals-replay-verdict[data-tone="pinned"] { border-left-color: var(--gules); }
 .visuals-replay-verdict[data-tone="pinned"] b { color: var(--gules-text); }
