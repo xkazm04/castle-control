@@ -8,7 +8,7 @@ import { rehearsalLimits } from './rehearsal.js';
 import type { RehearsalField } from './rehearsal.js';
 import { rehearseCopy as copy } from './rehearse-copy.js';
 import { turnLine } from './rehearse-state.js';
-import type { RehearseState, RehearseView } from './rehearse-state.js';
+import type { RehearseState, RehearseView, SizeChoice } from './rehearse-state.js';
 import type { RehearseHandlers } from './use-rehearse.js';
 import type { MapSize } from './session.js';
 import './rehearse.css';
@@ -18,7 +18,7 @@ export const denseTiles = 60;
 
 export type RehearseProps = Readonly<{
   state: RehearseState; view: RehearseView; handlers: RehearseHandlers; board: StudioBoard; size: MapSize;
-  look?: DesignOutput['style'];
+  look?: DesignOutput['style']; sizes?: readonly SizeChoice[]; on_size?: (id: string) => void;
 }>;
 
 /** The loud label. It is rendered unconditionally by every state of the Rehearse view. */
@@ -47,7 +47,7 @@ const fieldProps = (id: RehearsalField, state: RehearseState) => ({
   'aria-describedby': `studio-rehearse-${id}-hint${state.error?.field === id ? ' studio-rehearse-error' : ''}`,
 });
 
-export function RehearseControls({ state, view, handlers }: Pick<RehearseProps, 'state' | 'view' | 'handlers'>) {
+export function RehearseControls({ state, view, handlers, can_compare = false }: Pick<RehearseProps, 'state' | 'view' | 'handlers'> & { can_compare?: boolean }) {
   const { run, playing } = state; const finished = run !== null && view.done;
   const { viewers, turns } = rehearsalLimits;
   const submit = (event: FormEvent) => { event.preventDefault(); handlers.start(); };
@@ -76,12 +76,13 @@ export function RehearseControls({ state, view, handlers }: Pick<RehearseProps, 
             : <InkButton variant="plate" size="small" onClick={handlers.start}>{copy.play}</InkButton>}
       <InkButton size="small" onClick={handlers.step} disabled={finished}>{copy.step}</InkButton>
       <InkButton size="small" onClick={handlers.reset} disabled={run === null}>{copy.reset}</InkButton>
+      {can_compare && <InkButton size="small" onClick={handlers.compare}>{copy.compare_sizes}</InkButton>}
       {run && <span className="studio-rehearse-progress">{copy.progress(state.turn, view.of)}</span>}
     </div>
   </form>;
 }
 
-export function RehearseWork({ state, view, handlers, board, size, look }: RehearseProps) {
+export function RehearseWork({ state, view, handlers, board, size, look, sizes }: RehearseProps) {
   const { run, turn } = state;
   const start = boardGeometry(run?.start ?? board);
   const facts: Fact[] = start.sides.map(side => ({ short: side.short, label: side.label, ink: side.ink,
@@ -93,7 +94,7 @@ export function RehearseWork({ state, view, handlers, board, size, look }: Rehea
     : view.done && view.report ? copy.announce_done(line, view.report.verdict) : line;
   return <section className="studio-rehearse" aria-label={copy.work} data-turn={turn} data-playing={state.playing}>
     <SimulatedBand />
-    <RehearseControls state={state} view={view} handlers={handlers} />
+    <RehearseControls state={state} view={view} handlers={handlers} can_compare={!!sizes?.length} />
     <HexTable board={view.shown} selected={state.selected} on_select={handlers.select} size={size}
       {...(look ? { look } : {})} flip={{ ids: view.flipped, phase: view.phase }}
       gloss={copy.board_gloss(turn, view.of)} pennants={false} quiet={start.tiles.length > denseTiles} />

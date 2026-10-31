@@ -57,6 +57,7 @@
 .studio-room .studio-turn-row[data-current="true"] { background: var(--tint); font-weight: 700; }
 .studio-room .studio-turn-row .cc-ruled-row { --cc-feed-mark-width: var(--space-56); }
 .studio-room .studio-turn-empty { padding: var(--space-8) var(--space-10); font: italic var(--text-small)/1.4 var(--font-serif); color: var(--muted); }
+.studio-room .studio-compare { display: grid; }
 .studio-room .studio-past-list { display: grid; gap: var(--space-10); margin: var(--space-8) 0 var(--space-10); padding: 0; list-style: none; }
 .studio-room .studio-past { display: grid; gap: var(--space-4); padding: var(--space-8) var(--space-10); border: var(--rule-medium) solid var(--rule); background: var(--card); }
 .studio-room .studio-past > b { font: 800 var(--text-label)/1.3 var(--font-ui); letter-spacing: var(--track-label); text-transform: uppercase; }
@@ -64,6 +65,21 @@
 .studio-room .studio-mini { width: 100%; max-height: calc(var(--space-56) * 2); }
 .studio-room .studio-mini polygon { fill: var(--house); stroke: var(--rule); stroke-width: .06; }
 .studio-room .studio-mini polygon[data-unclaimed="true"] { fill: var(--paper-2); stroke: var(--hair); }
+.studio-room .studio-sizes { display: grid; gap: var(--space-8); }
+.studio-room .studio-sizes table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+.studio-room .studio-sizes th[scope="col"] { padding: var(--space-4) 0; border-bottom: var(--rule-medium) solid var(--rule); text-align: left; font: 800 var(--text-label)/1.3 var(--font-ui); letter-spacing: var(--track-label); text-transform: uppercase; color: var(--muted); }
+.studio-room .studio-sizes th[scope="col"]:first-child, .studio-room .studio-sizes th[scope="row"] { width: 38%; }
+.studio-room .studio-sizes tr { border-bottom: var(--rule-thin) solid var(--line); }
+.studio-room .studio-sizes th[scope="row"], .studio-room .studio-sizes td { padding: var(--space-8) var(--space-6) var(--space-8) 0; vertical-align: top; text-align: left; }
+.studio-room .studio-sizes th[scope="row"] { display: table-cell; font: 800 var(--text-label)/1.3 var(--font-ui); }
+.studio-room .studio-sizes th[scope="row"] > span, .studio-room .studio-sizes small { display: block; font: var(--text-small)/1.35 var(--font-ui); color: var(--ink-2); }
+.studio-room .studio-sizes th[scope="row"] > span { font-weight: 800; color: var(--ink); }
+.studio-room .studio-sizes td b { display: block; font: 800 var(--text-body)/1.2 var(--font-display); text-transform: uppercase; }
+.studio-room .studio-sizes td > .cc-button, .studio-room .studio-sizes td > em { margin-top: var(--space-6); }
+.studio-room .studio-sizes td > em { display: block; font: italic var(--text-small)/1.3 var(--font-serif); color: var(--muted); }
+.studio-room .studio-sizes tr[data-current="true"] { background: var(--tint); }
+.studio-room :is(.studio-sizes, .studio-compare) > .cc-button { justify-self: start; }
+.studio-room .studio-sizes .studio-mini { max-height: calc(var(--space-56) * 1); margin-bottom: var(--space-4); }
 .studio-room .studio-spyglass-note { padding: var(--space-8) var(--space-24) 0; font: italic var(--text-small)/1.4 var(--font-serif); color: var(--ink-2); }
 /* Tiles that changed owner this turn: outlined like a chosen tile, inked in from the left. */
 .studio-room .cc-hex[data-flipped]::before { background: var(--key); }

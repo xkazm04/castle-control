@@ -18,6 +18,7 @@ import { RehearseWork } from './rehearse.jsx';
 import { RehearseSide } from './rehearse-side.jsx';
 import { rehearseCopy } from './rehearse-copy.js';
 import { useRehearse } from './use-rehearse.js';
+import { sizeChoices } from './rehearse-state.js';
 import './room.css';
 import './hex-field.css';
 
@@ -31,7 +32,8 @@ export function StudioWork({ queue, seal_slot, board, design_session = designSes
   const [rung, setRung] = useState(0);
   const [view, setView] = useState<StudioView>('table');
   const current_board = board ?? boardForSize(session.design.size);
-  const rehearse = useRehearse(current_board);
+  const size_choices = board ? undefined : sizeChoices;
+  const rehearse = useRehearse(current_board, size_choices);
   const end_board = rehearse.view.done ? rehearse.state.run?.turns.at(-1)?.board : undefined;
   const change = (field: SessionField, value?: string) => setSession(state => updateStudioSession(state, field, value, board));
   return <section className="studio-room cc-herald" aria-label={copy.work}>
@@ -41,7 +43,8 @@ export function StudioWork({ queue, seal_slot, board, design_session = designSes
         <button type="button" aria-pressed={view === 'spyglass'} onClick={() => setView('spyglass')}>{copy.spyglass}</button>
         <button type="button" aria-pressed={view === 'rehearse'} onClick={() => setView('rehearse')}>{rehearseCopy.view}</button>
       </div>
-      {view === 'rehearse' ? <RehearseWork {...rehearse} board={current_board} size={session.design.size} look={looks.map.output.style} />
+      {view === 'rehearse' ? <RehearseWork {...rehearse} board={current_board} size={session.design.size} look={looks.map.output.style}
+        {...(size_choices ? { sizes: size_choices } : {})} />
         : view === 'spyglass' ? <>
           {end_board && <p className="studio-spyglass-note" role="status">{rehearseCopy.spyglass_note(rehearse.state.run?.setup.seed ?? '')}</p>}
           <Spyglass board={end_board ?? current_board} size={session.design.size} session={design_session} />
@@ -50,7 +53,8 @@ export function StudioWork({ queue, seal_slot, board, design_session = designSes
     </div>
     <div className="cc-herald-side" role="region" aria-label={copy.side_label} tabIndex={0} aria-describedby="studio-scroll-hint">
       <p id="studio-scroll-hint" className="studio-visually-hidden">{copy.side_hint}</p>
-      {view === 'rehearse' ? <RehearseSide {...rehearse} /> : <>
+      {view === 'rehearse' ? <RehearseSide {...rehearse} size={session.design.size}
+        {...(size_choices ? { on_size: (id: string) => change('size', id) } : {})} /> : <>
         <TileInspector selected={session.selected} board={current_board} />
         <BannerInspector selected={session.selected} board={current_board} on_select={side => change('banner', side)} />
       </>}

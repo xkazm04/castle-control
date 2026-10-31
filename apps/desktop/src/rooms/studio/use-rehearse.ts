@@ -2,15 +2,17 @@ import { useEffect, useMemo, useReducer } from 'react';
 import type { StudioBoard } from './board.js';
 import type { RehearsalField } from './rehearsal.js';
 import { createRehearseState, reduceRehearse, rehearseView } from './rehearse-state.js';
-import type { RehearseState, RehearseView } from './rehearse-state.js';
+import type { RehearseState, RehearseView, SizeChoice } from './rehearse-state.js';
 
 /** One simulated turn lasts this long on screen; reduced motion skips straight to the end state. */
 export const turnMs = 1100;
+const noSizes: readonly SizeChoice[] = Object.freeze([]);
 
 export type RehearseHandlers = Readonly<{
   input: (field: RehearsalField, value: string) => void;
   start: () => void; again: () => void; replay: () => void; step: () => void;
   pause: () => void; resume: () => void; reset: () => void; select: (id: string) => void; clear_past: () => void;
+  compare: () => void; clear_sizes: () => void;
 }>;
 
 function reducedMotion(): boolean {
@@ -20,7 +22,7 @@ function reducedMotion(): boolean {
 
 /** Session-only driver for the Rehearse view. The pure reducer owns every decision; this
  * hook only supplies the clock tick, the reduced-motion flag and the reset when the board changes. */
-export function useRehearse(board: StudioBoard): Readonly<{ state: RehearseState; view: RehearseView; handlers: RehearseHandlers }> {
+export function useRehearse(board: StudioBoard, sizes: readonly SizeChoice[] = noSizes): Readonly<{ state: RehearseState; view: RehearseView; handlers: RehearseHandlers }> {
   const [state, dispatch] = useReducer(reduceRehearse, undefined, createRehearseState);
   const stale = state.run !== null && state.run.start !== board;
   useEffect(() => {
@@ -39,7 +41,8 @@ export function useRehearse(board: StudioBoard): Readonly<{ state: RehearseState
     pause: () => dispatch({ type: 'pause' }), resume: () => dispatch({ type: 'resume' }),
     reset: () => dispatch({ type: 'reset' }), select: id => dispatch({ type: 'select', id }),
     clear_past: () => dispatch({ type: 'clear_past' }),
-  }), [board]);
+    compare: () => dispatch({ type: 'compare_sizes', sizes }), clear_sizes: () => dispatch({ type: 'clear_sizes' }),
+  }), [board, sizes]);
   const shown = stale ? { ...state, run: null, turn: 0, playing: false } : state;
   return { state: shown, view: rehearseView(shown, board), handlers };
 }

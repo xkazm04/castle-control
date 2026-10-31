@@ -3,7 +3,7 @@ import { boardGeometry } from './board.js';
 import type { StudioBoard } from './board.js';
 import { rehearseCopy as copy } from './rehearse-copy.js';
 import { turnLine } from './rehearse-state.js';
-import type { PastRun, RehearseState, RehearseView } from './rehearse-state.js';
+import type { PastRun, RehearseState, RehearseView, SizeCompare } from './rehearse-state.js';
 import type { RehearseHandlers } from './use-rehearse.js';
 
 const ROOT3 = Math.sqrt(3);
@@ -99,10 +99,34 @@ export function VerdictBlock({ state, view, handlers }: { state: RehearseState; 
   </section>;
 }
 
-export function RehearseSide({ state, view, handlers }: { state: RehearseState; view: RehearseView; handlers: RehearseHandlers }) {
+export function SizeTable({ sizes, current, on_size, on_clear }: {
+  sizes: SizeCompare; current: string; on_size?: (id: string) => void; on_clear: () => void;
+}) {
+  return <section className="studio-sizes" aria-label={copy.sizes_label}>
+    <SectionHeading variant="ruled" title={copy.compare_sizes} count={copy.summary(sizes.viewers, sizes.turns, sizes.seed)} />
+    <table>
+      <caption className="studio-visually-hidden">{copy.sizes_label}</caption>
+      <thead><tr><th scope="col">{copy.size_col}</th><th scope="col">{copy.result_col}</th></tr></thead>
+      <tbody>{sizes.rows.map(row => <tr key={row.id} data-verdict={row.kind} data-current={row.id === current}>
+        <th scope="row"><MiniBoard board={row.board} label={copy.mini_label(row.verdict, row.columns, row.rows)} />
+          <span>{row.label}</span><small>{copy.size_tiles(row.tiles)}</small></th>
+        <td><b>{row.verdict}</b><small>{copy.size_last(row.last_change)}</small>
+          {on_size && (row.id === current ? <em>{copy.size_current}</em>
+            : <InkButton size="small" aria-label={copy.size_use(row.label)} onClick={() => on_size(row.id)}>{copy.size_use_word}</InkButton>)}
+        </td>
+      </tr>)}</tbody>
+    </table>
+    <InkButton size="small" onClick={on_clear}>{copy.clear}</InkButton>
+  </section>;
+}
+
+export function RehearseSide({ state, view, handlers, size = '', on_size }: {
+  state: RehearseState; view: RehearseView; handlers: RehearseHandlers; size?: string; on_size?: (id: string) => void;
+}) {
   return <div className="studio-rehearse-side">
     <VerdictBlock state={state} view={view} handlers={handlers} />
     <TurnLog state={state} board={view.shown} />
+    {state.sizes && <SizeTable sizes={state.sizes} current={size} {...(on_size ? { on_size } : {})} on_clear={handlers.clear_sizes} />}
     <BalanceTable view={view} />
     <ComparePast past={state.past} on_clear={handlers.clear_past} />
   </div>;

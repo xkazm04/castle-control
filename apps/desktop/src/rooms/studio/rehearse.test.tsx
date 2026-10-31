@@ -8,11 +8,11 @@ import Room from './room.jsx';
 import { STUDIO_SAMPLE_BOARD } from './fixture.js';
 import { parseStudioBoard } from './board.js';
 import { boardForSize } from './session.js';
-import { createRehearseState, reduceRehearse, rehearseView } from './rehearse-state.js';
+import { createRehearseState, reduceRehearse, rehearseView, sizeChoices } from './rehearse-state.js';
 import type { RehearseAction, RehearseState } from './rehearse-state.js';
 import { rehearseCopy as copy } from './rehearse-copy.js';
 import { RehearseControls, RehearseWork, SimulatedBand } from './rehearse.jsx';
-import { RehearseSide } from './rehearse-side.jsx';
+import { RehearseSide, SizeTable } from './rehearse-side.jsx';
 import type { RehearseHandlers } from './use-rehearse.js';
 
 const BAND = 'SIMULATED REHEARSAL · no viewers, no identities, no Extension state · sample territory';
@@ -21,7 +21,7 @@ const apply = (...actions: RehearseAction[]): RehearseState => actions.reduce(re
 const ticks = (count: number): RehearseAction[] => Array.from({ length: count }, () => ({ type: 'tick' }));
 const start: RehearseAction = { type: 'start', board, reduced_motion: false };
 const handlers = (): RehearseHandlers => ({ input: vi.fn(), start: vi.fn(), again: vi.fn(), replay: vi.fn(), step: vi.fn(),
-  pause: vi.fn(), resume: vi.fn(), reset: vi.fn(), select: vi.fn(), clear_past: vi.fn() });
+  pause: vi.fn(), resume: vi.fn(), reset: vi.fn(), select: vi.fn(), clear_past: vi.fn(), compare: vi.fn(), clear_sizes: vi.fn() });
 function work(state: RehearseState, on = board, h = handlers()) {
   return <RehearseWork state={state} view={rehearseView(state, on)} handlers={h} board={on} size="m" />;
 }
@@ -226,4 +226,33 @@ test('rehearse.css is token-only, flips ink in from the left and goes still for 
   expect(css).toMatch(/studio-hex-ink-a \{\s*from \{[^}]*clip-path: polygon\(0 25%/);
   expect(css).toMatch(/prefers-reduced-motion: reduce\) \{[\s\S]*data-flipped\][\s\S]*animation: none/);
   expect(css).toMatch(/\.studio-verdict[^}]*animation: studio-ink/);
+});
+
+test('Compare sizes shows one row per map size with its verdict, and a way to put that size on the table', () => {
+  const compared = reduceRehearse(createRehearseState(), { type: 'compare_sizes', sizes: sizeChoices });
+  const chosen: string[] = [];
+  const html = renderToStaticMarkup(<SizeTable sizes={compared.sizes ?? { seed: '', viewers: 0, turns: 0, rows: [] }} current="m"
+    on_size={id => chosen.push(id)} on_clear={vi.fn()} />);
+  expect(html.match(/<tr data-verdict=/g)).toHaveLength(3);
+  for (const label of ['S · 6 × 4', 'M · 9 × 6', 'L · 12 × 8']) expect(html).toContain(label);
+  for (const row of compared.sizes?.rows ?? []) expect(html).toContain(row.verdict);
+  expect(html).toContain('120 viewers · 8 turns · seed 2041');
+  expect(html).toContain('aria-label="Use map size S · 6 × 4"'); expect(html).toContain('aria-label="Use map size L · 12 × 8"');
+  expect(html).not.toContain('aria-label="Use map size M · 9 × 6"'); expect(html).toContain('On the table');
+  expect(html.match(/<svg class="studio-mini"/g)).toHaveLength(3);
+  const tree = collect(SizeTable({ sizes: compared.sizes ?? { seed: '', viewers: 0, turns: 0, rows: [] }, current: 'm', on_size: id => chosen.push(id), on_clear: vi.fn() }));
+  tree.filter(control => control.onClick).forEach(control => control.onClick?.());
+  expect(chosen).toEqual(['s', 'l']);
+  // No size handler, no Use buttons: an injected board owns its own shape.
+  expect(renderToStaticMarkup(<SizeTable sizes={compared.sizes ?? { seed: '', viewers: 0, turns: 0, rows: [] }} current="m" on_clear={vi.fn()} />)).not.toContain('Use map size');
+});
+
+test('the Compare sizes button exists only where the room owns the sizes, and the side shows the table once compared', () => {
+  const controls = (can_compare: boolean) => collect(RehearseControls({ state: createRehearseState(), view: rehearseView(createRehearseState(), board),
+    handlers: handlers(), can_compare })).filter(control => control.onClick).map(textOf);
+  expect(controls(true)).toEqual(['Play round', 'Step', 'Reset', 'Compare sizes']);
+  expect(controls(false)).toEqual(['Play round', 'Step', 'Reset']);
+  const state = reduceRehearse(createRehearseState(), { type: 'compare_sizes', sizes: sizeChoices });
+  expect(renderToStaticMarkup(side(state))).toContain('Simulated comparison across map sizes');
+  expect(renderToStaticMarkup(side(createRehearseState()))).not.toContain('studio-sizes');
 });

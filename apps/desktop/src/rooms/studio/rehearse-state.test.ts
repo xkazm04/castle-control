@@ -1,7 +1,10 @@
 import { expect, test } from 'vitest';
 import { STUDIO_SAMPLE_BOARD } from './fixture.js';
 import { boardForSize } from './session.js';
-import { createRehearseState, maxPastRuns, reduceRehearse, rehearseView, turnLine } from './rehearse-state.js';
+import { parseStudioBoard } from './board.js';
+import { rehearsalDefaults, runRehearsal } from './rehearsal.js';
+import { balanceReport } from './rehearsal-verdict.js';
+import { createRehearseState, maxPastRuns, reduceRehearse, rehearseView, sizeChoices, turnLine } from './rehearse-state.js';
 import type { RehearseAction, RehearseState } from './rehearse-state.js';
 
 const board = STUDIO_SAMPLE_BOARD;
@@ -125,4 +128,37 @@ test('selecting a tile is only inspection: it never touches the round', () => {
   const state = apply({ type: 'start', board, reduced_motion: true });
   const chosen = reduceRehearse(state, { type: 'select', id: 'C3' });
   expect(chosen.selected).toBe('C3'); expect(chosen.run).toBe(state.run); expect(chosen.turn).toBe(state.turn);
+});
+
+test('Compare sizes plays S, M and L with the same seed, crowd and turns, and matches a lone run of each', () => {
+  const compared = reduceRehearse(createRehearseState(), { type: 'compare_sizes', sizes: sizeChoices });
+  expect(compared.sizes?.rows.map(row => [row.id, row.columns, row.rows, row.tiles])).toEqual([['s', 6, 4, 24], ['m', 9, 6, 54], ['l', 12, 8, 96]]);
+  expect(compared.sizes).toMatchObject({ seed: '2041', viewers: 120, turns: 8 });
+  for (const row of compared.sizes?.rows ?? []) {
+    const choice = sizeChoices.find(item => item.id === row.id);
+    const lone = choice && runRehearsal(choice.board, rehearsalDefaults);
+    if (!lone || !lone.ok) throw new Error('lone run failed');
+    const report = balanceReport(lone.rehearsal);
+    expect(row).toMatchObject({ verdict: report.verdict, kind: report.kind, percent: report.leader.percent, last_change: report.last_change,
+      lead_changes: report.lead_changes, leader: report.leader.short });
+    expect(row.board).toEqual(lone.rehearsal.turns.at(-1)?.board);
+    expect(row.board.tiles).toHaveLength(row.tiles);
+  }
+  // The comparison is its own thing: it never starts, ends or records a round.
+  expect(compared.run).toBeNull(); expect(compared.past).toEqual([]); expect(compared.playing).toBe(false);
+  expect(reduceRehearse(compared, { type: 'reset' }).sizes).toBe(compared.sizes);
+  expect(reduceRehearse(compared, { type: 'clear_sizes' }).sizes).toBeNull();
+  expect(reduceRehearse(createRehearseState(), { type: 'compare_sizes', sizes: sizeChoices }).sizes?.rows.map(row => row.verdict))
+    .toEqual(compared.sizes?.rows.map(row => row.verdict));
+});
+
+test('Compare sizes follows the settings, and bad settings never compare', () => {
+  const crowd = reduceRehearse(apply({ type: 'input', field: 'viewers', value: '30' }), { type: 'compare_sizes', sizes: sizeChoices });
+  expect(crowd.sizes?.viewers).toBe(30);
+  const bad = reduceRehearse(apply({ type: 'input', field: 'turns', value: '0' }), { type: 'compare_sizes', sizes: sizeChoices });
+  expect(bad.sizes).toBeNull(); expect(bad.error?.field).toBe('turns');
+  const solo = parseStudioBoard({ title: 'Solo', sides: board.sides.slice(0, 1), tiles: [{ q: 0, r: 0 }] });
+  if (!solo.ok) throw new Error(solo.error.message);
+  const refused = reduceRehearse(createRehearseState(), { type: 'compare_sizes', sizes: [{ id: 'x', label: 'X', board: solo.board }] });
+  expect(refused.sizes).toBeNull(); expect(refused.error?.message).toMatch(/at least two houses/);
 });

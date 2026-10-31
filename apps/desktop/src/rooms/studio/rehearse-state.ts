@@ -5,32 +5,44 @@ import type { Rehearsal, RehearsalField, RehearsalTurn } from './rehearsal.js';
 import { balanceReport } from './rehearsal-verdict.js';
 import type { BalanceReport } from './rehearsal-verdict.js';
 import { rehearseCopy as copy } from './rehearse-copy.js';
+import { boardForSize, mapSizes } from './session.js';
 
 export type RehearseInputs = Readonly<Record<RehearsalField, string>>;
 export type PastRun = Readonly<{
   id: number; seed: string; viewers: number; turns: number; verdict: string; kind: BalanceReport['kind'];
   columns: number; rows: number; tiles: number; board: StudioBoard;
 }>;
+export type SizeChoice = Readonly<{ id: string; label: string; board: StudioBoard }>;
+export type SizeRow = Readonly<{
+  id: string; label: string; columns: number; rows: number; tiles: number; verdict: string; kind: BalanceReport['kind'];
+  leader: string; percent: number; last_change: number; lead_changes: number; board: StudioBoard;
+}>;
+export type SizeCompare = Readonly<{ seed: string; viewers: number; turns: number; rows: readonly SizeRow[] }>;
+/** The room's own S / M / L boards, in order, for the one-press size comparison. */
+export const sizeChoices: readonly SizeChoice[] = Object.freeze(mapSizes.map(item => Object.freeze({
+  id: item.id, label: item.label, board: boardForSize(item.id) })));
+
 /** Session-only state of the Rehearse view. Nothing here is stored, sent or counted. */
 export type RehearseState = Readonly<{
   inputs: RehearseInputs; error: Readonly<{ field: RehearsalField; message: string }> | null;
   run: Rehearsal | null; run_id: number; turn: number; playing: boolean;
   replay: Readonly<{ seed: string; matched: number; of: number }> | null;
-  past: readonly PastRun[]; selected: string;
+  past: readonly PastRun[]; selected: string; sizes: SizeCompare | null;
 }>;
 export type RehearseAction =
   | { type: 'input'; field: RehearsalField; value: string }
   | { type: 'start' | 'again'; board: StudioBoard; reduced_motion: boolean }
   | { type: 'step'; board: StudioBoard }
   | { type: 'replay'; reduced_motion: boolean }
-  | { type: 'tick' | 'pause' | 'resume' | 'reset' | 'clear_past' }
+  | { type: 'tick' | 'pause' | 'resume' | 'reset' | 'clear_past' | 'clear_sizes' }
+  | { type: 'compare_sizes'; sizes: readonly SizeChoice[] }
   | { type: 'select'; id: string };
 
 export const maxPastRuns = 3;
 export function createRehearseState(): RehearseState {
   const { seed, viewers, turns } = rehearsalDefaults;
   return { inputs: { seed, viewers: String(viewers), turns: String(turns) }, error: null, run: null, run_id: 0,
-    turn: 0, playing: false, replay: null, past: [], selected: '' };
+    turn: 0, playing: false, replay: null, past: [], selected: '', sizes: null };
 }
 
 /** Records a finished run once, so replaying a seed never adds a duplicate comparison. */
@@ -52,6 +64,25 @@ function begin(state: RehearseState, board: StudioBoard, reduced_motion: boolean
   const last = run.rehearsal.turns.length;
   return settle({ ...state, inputs, error: null, run: run.rehearsal, run_id: state.run_id + 1, replay: null, selected: '',
     turn: reduced_motion ? last : 0, playing: !reduced_motion });
+}
+
+/** Same seed, crowd and turns on every size: the only difference is the board the session produced. */
+function compareSizes(state: RehearseState, choices: readonly SizeChoice[]): RehearseState {
+  const parsed = parseRehearsalSetup(state.inputs);
+  if (!parsed.ok) return { ...state, error: { field: parsed.error.field, message: parsed.error.message } };
+  const rows: SizeRow[] = [];
+  for (const choice of choices) {
+    const run = runRehearsal(choice.board, parsed.setup);
+    if (!run.ok) return { ...state, error: { field: run.error.field, message: run.error.message } };
+    const report = balanceReport(run.rehearsal);
+    const geometry = boardGeometry(choice.board);
+    rows.push(Object.freeze({ id: choice.id, label: choice.label, columns: geometry.columns, rows: geometry.rows,
+      tiles: geometry.tiles.length, verdict: report.verdict, kind: report.kind, leader: report.leader.short,
+      percent: report.leader.percent, last_change: report.last_change, lead_changes: report.lead_changes,
+      board: run.rehearsal.turns.at(-1)?.board ?? choice.board }));
+  }
+  const { seed, viewers, turns } = parsed.setup;
+  return { ...state, error: null, sizes: Object.freeze({ seed, viewers, turns, rows: Object.freeze(rows) }) };
 }
 
 export function reduceRehearse(state: RehearseState, action: RehearseAction): RehearseState {
@@ -83,6 +114,8 @@ export function reduceRehearse(state: RehearseState, action: RehearseAction): Re
         replay: { seed: first.setup.seed, matched: matchedTurns(first, again.rehearsal), of: first.turns.length },
         turn: action.reduced_motion ? last : 0, playing: !action.reduced_motion });
     }
+    case 'compare_sizes': return compareSizes(state, action.sizes);
+    case 'clear_sizes': return { ...state, sizes: null };
     case 'select': return { ...state, selected: action.id };
     case 'clear_past': return { ...state, past: [] };
   }
