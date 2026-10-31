@@ -49,6 +49,7 @@ export class OverlayScene {
     this.display = { ...display };
     this.badge = root.ownerDocument.createElement('div');
     this.badge.dataset['simulatedBadge'] = '';
+    this.badge.dataset['anchor'] = this.display.anchor;
     this.badge.textContent = 'SIMULATED';
     this.badge.hidden = true;
     // Scene-owned chrome stays outside the package's replaceable layer list.
@@ -60,6 +61,16 @@ export class OverlayScene {
     if (this.viewport.width === width && this.viewport.height === height) return;
     this.viewport = { width, height };
     this.fit();
+  }
+
+  clear(): void {
+    this.root.replaceChildren();
+    this.bindings = [];
+    this.identity = undefined;
+    delete this.root.dataset['packageHash'];
+    delete this.root.dataset['intensity'];
+    delete this.root.dataset['simulated'];
+    this.badge.hidden = true;
   }
 
   private fit(): void {
@@ -102,7 +113,11 @@ export class OverlayScene {
           node.style.setProperty('background', 'currentColor');
           if (layer.shape === 'ellipse') node.style.setProperty('border-radius', '50%');
         }
-        if (layer.kind === 'image') node.setAttribute('src', assetUrl(snapshot, layer.asset));
+        if (layer.kind === 'image') {
+          node.setAttribute('alt', '');
+          node.addEventListener('error', () => { node.hidden = true; });
+          node.setAttribute('src', assetUrl(snapshot, layer.asset));
+        }
         if (layer.kind === 'particle_preset' && layer.preset === 'embers') {
           // Renderer-owned, fixed artwork; a preset name is never code or a URL.
           node.textContent = '·  ˙  ·  ˙  ·';
@@ -150,9 +165,34 @@ export function connectOverlay(root: HTMLElement, visual_id: string, display?: O
   const resize = () => scene.resize(window.innerWidth, window.innerHeight);
   resize();
   window.addEventListener('resize', resize);
-  const stream = new EventSource(`/push/beacons?visual_id=${encodeURIComponent(visual_id)}`);
-  stream.addEventListener(BEACONS_RENDER_SNAPSHOT_EVENT, (event: MessageEvent<string>) => {
-    receiveSnapshot(event.data, visual_id, (snapshot) => scene.apply(snapshot));
-  });
-  return () => { window.removeEventListener('resize', resize); stream.close(); };
+  let disposed = false;
+  let stream: EventSource;
+  let retry: ReturnType<typeof setTimeout> | undefined;
+  let backoff = 2000;
+  const connect = () => {
+    const source = new EventSource(`/push/beacons?visual_id=${encodeURIComponent(visual_id)}`);
+    stream = source;
+    const active = () => !disposed && stream === source && retry === undefined;
+    source.addEventListener('open', () => { if (active()) backoff = 2000; });
+    source.addEventListener(BEACONS_RENDER_SNAPSHOT_EVENT, (event: MessageEvent<string>) => {
+      if (active()) receiveSnapshot(event.data, visual_id, (snapshot) => scene.apply(snapshot));
+    });
+    source.addEventListener('error', () => {
+      if (!active()) return;
+      scene.clear();
+      // CONNECTING keeps the browser's native retry. HTTP refusals close it.
+      if (source.readyState !== EventSource.CLOSED) return;
+      source.close();
+      retry = setTimeout(() => { retry = undefined; connect(); }, backoff);
+      backoff = Math.min(backoff * 2, 30000);
+    });
+  };
+  connect();
+  return () => {
+    disposed = true;
+    if (retry !== undefined) clearTimeout(retry);
+    window.removeEventListener('resize', resize);
+    stream.close();
+    scene.clear();
+  };
 }

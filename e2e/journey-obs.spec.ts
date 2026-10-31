@@ -52,6 +52,12 @@ for (const viewport of [{ width: 1920, height: 1080 }, { width: 1280, height: 72
         expect(box?.height).toBeCloseTo(40);
         expect(box?.x).toBeCloseTo(anchor === 'center' ? (viewport.width - 180) / 2 : anchor.endsWith('l') ? 0 : viewport.width - 180);
         expect(box?.y).toBeCloseTo(anchor === 'center' ? (viewport.height - 40) / 2 : anchor.startsWith('t') ? 0 : viewport.height - 40);
+        const badge = page.locator('[data-simulated-badge]');
+        await expect(badge).toBeVisible();
+        const badgeBox = await badge.boundingBox();
+        if (!box || !badgeBox) throw new Error('Missing simulated art or provenance badge');
+        expect(badgeBox.x + badgeBox.width <= box.x || box.x + box.width <= badgeBox.x
+          || badgeBox.y + badgeBox.height <= box.y || box.y + box.height <= badgeBox.y).toBe(true);
         await assertCanvas(page);
       }
       for (const query of ['', '?scale=2&anchor=br', '?scale=3&anchor=nope', '?scale=NaN', '?scale=0.5&scale=2&anchor=tl&anchor=br']) {

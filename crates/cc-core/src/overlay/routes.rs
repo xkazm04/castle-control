@@ -123,6 +123,10 @@ async fn push(State(host): State<Arc<RenderHost>>, Query(query): Query<PushQuery
                         event = event.comment("SIMULATED");
                     }
                     return Some((Ok::<_, Infallible>(event), (receiver, false, permit)));
+                } else if !first {
+                    // Invalidate an already-painted scene through the stream
+                    // lifecycle. A fresh unverified subscription still waits.
+                    return None;
                 }
             }
         },

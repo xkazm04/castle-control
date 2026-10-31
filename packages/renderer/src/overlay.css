@@ -26,3 +26,7 @@ html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; }
   letter-spacing: var(--track-label);
   pointer-events: none;
 }
+[data-simulated-badge][data-anchor="bl"],
+[data-simulated-badge][data-anchor="br"] { top: var(--space-12); bottom: auto; }
+[data-simulated-badge][data-anchor="tr"],
+[data-simulated-badge][data-anchor="br"] { left: var(--space-12); right: auto; }

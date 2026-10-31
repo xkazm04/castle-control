@@ -161,6 +161,7 @@ it('fits and anchors the whole binding envelope at both OBS sizes and after resi
 it('applies display scale and corner anchor without mutating snapshots', () => {
   const { root } = createScene();
   const scene = new OverlayScene(root, { scale: 0.5, anchor: 'br' });
+  expect((root.nextElementSibling as HTMLElement).dataset['anchor']).toBe('br');
   scene.resize(1280, 720);
   const snapshot = parseBeaconsRenderSnapshot(text());
   const before = JSON.stringify(snapshot);

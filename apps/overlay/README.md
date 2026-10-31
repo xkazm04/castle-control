@@ -58,7 +58,10 @@ envelope inside the viewport: `min(scale, viewport_width / envelope_width,
 viewport_height / envelope_height)`. It never stretches the aspect ratio or
 forces an oversized visual outside the frame. The anchor places that envelope
 at the chosen corner or centre. Default scale does not enlarge small artwork.
-The SIMULATED badge stays in the viewport corner, outside the transformed art.
+The SIMULATED badge stays outside the transformed art's layer list. For corner
+anchors it uses the diagonally opposite viewport corner (`br` puts it top-left);
+for `center` it uses bottom-right. This avoids covering corner-anchored artwork
+smaller than half the viewport; full-frame artwork can still reach the badge.
 
 `parseOverlayDisplay` in the entry is the sole value parser. No RPC method,
 event or contract field is added, and `beacons.source.url` is unchanged.
@@ -67,6 +70,21 @@ Beacons URL; it forwards them verbatim while requiring the current verified
 package hash. Unknown keys, foreign origins and stale hashes remain refused.
 All page, module, asset and push responses retain `Cache-Control: no-store`;
 package changes still arrive over the existing snapshot stream with no refresh.
+
+## Stream lifecycle and asset failures
+
+An open push stream ends when its accepted design becomes unverified. On any
+stream error the renderer clears its layers, bindings, diagnostics and SIMULATED
+badge, so a disconnected source cannot freeze old art on air. A fresh stream
+waits silently until a verified package is available; its next accepted snapshot
+rebuilds the scene, even if it has the same hash as the cleared package.
+
+CONNECTING streams keep EventSource's native reconnect. CLOSED streams (including
+HTTP 404/503 refusals) get one retry timer: 2, 4, 8, 16, then at most 30 seconds
+between attempts. Opening a stream resets that delay. Disposal cancels retries
+and ignores callbacks from disposed or superseded streams. No wire event or
+contract field was added. Decorative image layers use an empty alternative and
+hide on load failure, leaving transparent space rather than a broken-image glyph.
 
 ## Verification
 
@@ -102,3 +120,37 @@ The Chrome journey could not launch (`spawn EPERM`), so its browser red/green
 remains unobserved. The root gate stops at the unchanged contract exporter
 (`spawnSync cargo EPERM`), and recursive pnpm checks stop at lifecycle
 `spawn EPERM`, also recorded in base `docs/PLAN.md`; no full pnpm pass is claimed.
+
+### Stabilize renderer chain (obs-03, obs-06, obs-07, obs-08)
+
+Rechecked all four premises at `ff5ca52`; none was already fixed. Failing-first
+evidence from this worktree on 2026-10-31:
+
+| Item | Before the fix | After the fix |
+| --- | --- | --- |
+| obs-03 | `cargo test -p cc-core --test overlay_clear --locked` timed out waiting for stream EOF; two renderer error-state cases retained one child | Native EOF/reconnect test passes; both CONNECTING/CLOSED cases clear layers and badge, and the same package rebuilds |
+| obs-06 | Retry test created no second EventSource; cancellation test found no timer | Retries follow 2/4/8/16/30/30 seconds, reset on open, render on recovery, and cancel on disposal; CONNECTING keeps native retry |
+| obs-07 | `overlay.test.ts` found no badge `data-anchor` | Parsed anchor reaches the badge; CSS uses the opposite corner; synthetic live snapshots still hide it |
+| obs-08 | Image alternative was absent; a dispatched image error left `hidden=false` | Empty alternative and hidden failed image; replacement package creates a fresh visible image |
+
+Renderer cases ran with `pnpm --config.verify-deps-before-run=false --filter
+@castle-control/renderer exec vitest run src/overlay.test.ts
+src/overlay-chain.test.ts --pool=threads --cache=false`. Final full renderer
+verification passes 184 tests in 22 files, including the bundle fingerprint;
+the bundle was rebuilt once with the command above. The required whole desktop
+test command passes 594 tests in 62 files. Scoped renderer/e2e typecheck and lint,
+import boundaries, hygiene, file cap and secret scan pass. Desktop and kit builds
+pass their token and first-load budgets. `cargo fmt --all -- --check`,
+`cargo clippy --workspace --all-targets -- -D warnings` and
+`cargo test --workspace --locked` pass, including the whole cc-core suite,
+`overlay_clear`, the four existing `overlay_host` tests and doc-tests. Existing
+owner-only live tests remain ignored; no live Twitch/OBS validation is claimed.
+
+The added browser box-intersection assertion covers all five anchors at both OBS
+sizes, but its red/green result could not be observed: both the focused pre-fix
+run and final `pnpm --config.verify-deps-before-run=false e2e journey-obs.spec.ts`
+stop at `spawn EPERM` before running browser assertions. The root `pnpm gate`
+stops at the unchanged contract exporter (`spawnSync cargo EPERM`); recursive
+pnpm typecheck/lint/test stop at lifecycle `spawn EPERM`. These subprocess restrictions
+are also documented at base HEAD in `docs/PLAN.md`; those launchers are unchanged.
+Director validation is still required; no full gate or browser pass is claimed.
