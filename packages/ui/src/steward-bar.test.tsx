@@ -12,8 +12,8 @@ test.each(['paper', 'stock'] as const)('Steward identity leaves stamp ink and si
     on_change={vi.fn()} on_tell={vi.fn()} on_suggest={vi.fn()}
     identity={{ name: 'The Steward', state: 'Watching', figure: <Stamp kind="shadow" word="Watching" /> }} /></ThemeFrame>);
   expect(html).toContain('data-stamp="shadow" role="img" aria-label="Shadow: watching, takes no action: Watching"');
-  expect(html).toContain('data-stamp="simulated" role="img" aria-label="Simulated: SIMULATED STEWARD · SAMPLE DATA"');
-  expect(html).toContain('<span class="cc-steward-state">Watching</span>');
+  expect(html).toContain('data-stamp="simulated" role="img" aria-label="Simulated"');
+  expect(html).toContain('<span class="cc-steward-state">Watching · sample data</span>');
   const css = readFileSync(new URL('./steward-bar.css', import.meta.url), 'utf8');
   const identityTextRules = [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].filter(([, selector, body]) =>
     /cc-steward-(?:identity|name|state|mode)/.test(selector ?? '')
@@ -39,14 +39,16 @@ test('StewardBar renders one honest input, last message and suggestions without 
   const props = { message: 'No changes made.', value: '', suggestions: ['Catch me up'],
     on_change: vi.fn(), on_tell: vi.fn(), on_suggest: vi.fn() };
   const html = renderToStaticMarkup(<StewardBar {...props} />);
-  for (const text of ['SIMULATED STEWARD · SAMPLE DATA', 'Talk to the Steward...', 'No changes made.', 'Tell', 'Catch me up']) expect(html).toContain(text);
+  for (const text of ['Simulated', 'sample data', 'Talk to the Steward...', 'No changes made.', 'Tell', 'Catch me up']) expect(html).toContain(text);
   expect(html).not.toContain('Hold to speak');
   expect(html.match(/<input/g)).toHaveLength(1);
   expect(html).toContain('disabled=""');
   expect(html).toContain('aria-label="Steward identity"');
   expect(html).toContain('<svg');
-  expect(html).toContain('Simulated co-pilot');
-  expect(html).toContain('data-stamp="simulated" role="img" aria-label="Simulated: SIMULATED STEWARD · SAMPLE DATA"');
+  expect(html).toContain('<span class="cc-steward-state">simulated co-pilot · sample data</span>');
+  expect(html).toContain(renderToStaticMarkup(<Stamp kind="simulated" />));
+  expect(html).not.toContain('SIMULATED STEWARD');
+  expect(html).toContain('data-stamp="simulated" role="img" aria-label="Simulated"');
   expect(html).not.toContain('aria-label="Steward proposal"');
 });
 
@@ -73,7 +75,7 @@ test('StewardBar accepts an owner-supplied identity and proposal without owning 
   const html = renderToStaticMarkup(<StewardBar {...props}
     identity={{ name: 'The Steward', state: 'Awaiting your seal', figure: <svg aria-hidden="true" data-owner-figure /> }}
     proposal={<article aria-label="Question draw proposal"><p>PROPOSAL · AWAITING YOUR SEAL</p><button type="button">Review in the room</button></article>} />);
-  for (const text of ['Awaiting your seal', 'data-owner-figure', 'SIMULATED STEWARD · SAMPLE DATA',
+  for (const text of ['Awaiting your seal', 'data-owner-figure', 'Simulated', 'sample data',
     'aria-label="Steward proposal"', 'Question draw proposal', 'Review in the room']) expect(html).toContain(text);
   expect(html.match(/<input/g)).toHaveLength(1);
   expect(props.on_tell).not.toHaveBeenCalled();

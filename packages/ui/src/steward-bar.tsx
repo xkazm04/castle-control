@@ -28,12 +28,13 @@ function StewardFigure() {
 export function StewardBar(props: StewardBarProps) {
   const live = props.mode === 'live';
   const identity = props.identity ?? { name: 'The Steward', state: live ? 'Live co-pilot' : 'Simulated co-pilot' };
+  const state = live ? identity.state : `${identity.state === 'Simulated co-pilot' ? 'simulated co-pilot' : identity.state} · sample data`;
   const has_proposal = props.proposal !== undefined && props.proposal !== null && props.proposal !== false;
   return <section className={`cc-steward-bar${has_proposal ? ' cc-steward-with-proposal' : ''}`} aria-label="The Steward">
     <div className="cc-steward-identity" role="group" aria-label="Steward identity">
       {identity.figure ?? <StewardFigure />}
-      <strong className="cc-steward-name">{identity.name}</strong><span className="cc-steward-state">{identity.state}</span>
-      {live ? <b className="cc-steward-mode">LIVE STEWARD</b> : <Stamp kind="simulated" word="SIMULATED STEWARD · SAMPLE DATA" />}
+      <strong className="cc-steward-name">{identity.name}</strong><span className="cc-steward-state">{state}</span>
+      {live ? <b className="cc-steward-mode">LIVE STEWARD</b> : <Stamp kind="simulated" />}
     </div>
     <div className="cc-steward-controls" role="group" aria-label="Steward conversation controls">
       <div className="cc-steward-message"><p role="status">{props.message}</p></div>
