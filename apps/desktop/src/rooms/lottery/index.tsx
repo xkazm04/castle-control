@@ -5,7 +5,7 @@ import { isPending, proposalQueue } from '@castle-control/ui/steward';
 import type { ProposalQueue } from '@castle-control/ui/steward';
 import type { Snapshot } from '../../model.js';
 import { checkFixturePolicy, fixtureWeightNotice, lookupFixture } from '../../lots-model.js';
-import { fixtureCooldown, fixtureDraws, fixtureWrit } from '../../lots-fixture.js';
+import { fixtureBeaconWrit, fixtureCooldown, fixtureDraws, fixtureWrit } from '../../lots-fixture.js';
 import { lotsCopy as copy } from '../../lots-copy.js';
 import { draftRoll, entryHash, lotterySession } from './session.js';
 import { FairnessSteps, PolicyRibbon, PoolStage, Ticket, policyReason } from './print.jsx';
@@ -110,7 +110,7 @@ export default function LotteryRoom({ snapshot, replay, queue = proposalQueue, s
         {state.draw.policy.official_rules && <p className="cc-aside">{copy.template_text}</p>}
         <div className="lottery-seal-frame"><HeraldicCard variant="raised" tone="seal" ink="gules">{seal_slot}</HeraldicCard></div>
         {state.sealed && roll && <FixtureCast port={port} hash={roll.hash} display={appearance} />}
-        <WritLab writ={state.writ ?? fixtureWrit} simulated prove={prove} />
+        <WritLab writ={state.writ ?? fixtureWrit} simulated prove={prove} beacon={fixtureBeaconWrit} />
         <HeraldicCard variant="raised" aria-label={copy.lookup_title}>
           <div className="lottery-lookup">
             <label htmlFor="lottery-lookup">{copy.lookup}</label>

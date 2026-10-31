@@ -1,10 +1,15 @@
 import type { LabReason, PreimageField, StepId, StepStatus, TamperKind } from './lab-model.js';
 
 // Writ Lab display copy. Castle vocabulary is copy only; identifiers stay plain.
+/** The public drand quicknet chain hash (as in lots-core's round label). */
+const quicknet_chain = '52db9ba70e0cc0f6eaf7803dd07447a1f5477735fd3f661792ba94600c84e971';
+
 export const labCopy = {
   title: 'Writ Lab',
   gloss: 'tamper and verify',
   simulated: 'Simulated',
+  specimen: 'Specimen', specimens: { cast: 'Current writ', beacon: 'Simulated beacon writ' },
+  beacon_hint: 'drand quicknet format on a simulated chain. Here the seal, the round and SHA-256(signature) = randomness are checked; the BLS signature itself is checked by cc-verify and the offline verifier.',
   intro: 'Alter one thing in an in-memory copy of this writ and watch the proof refuse it. The frozen roll itself never changes.',
   bytes_title: 'Frozen roll · canonical bytes',
   bytes_hint: 'The seal is SHA-256 over these exact bytes: domain tag, entry count, each handle and weight, winner count, seal time, margin and the randomness plan.',
@@ -61,7 +66,9 @@ export const labCopy = {
     blocked_by_earlier_step: 'Halted: an earlier step failed, so the lab refuses to certify this writ.',
   } satisfies Record<LabReason, string>,
   recorded: 'Recorded', recomputed: 'Recomputed',
-  label: (source: string) => source === 'drand_quicknet' ? 'Public beacon · drand quicknet' : 'Streamer-controlled · commit and reveal',
+  /** Only the public quicknet chain hash earns 'Public beacon'; any other chain is named for what it is. */
+  label: (source: string, chain?: string) => source !== 'drand_quicknet' ? 'Streamer-controlled · commit and reveal'
+    : chain === quicknet_chain ? 'Public beacon · drand quicknet' : 'Simulated chain · drand quicknet format',
   round: (round: string) => `Round ${round}`,
   trace_title: 'Rejection sampling trace',
   trace_hint: 'Each draw takes 64 bits of SHA-256 output. Draws above the largest multiple of the pool weight are thrown away, so no lot is favoured.',

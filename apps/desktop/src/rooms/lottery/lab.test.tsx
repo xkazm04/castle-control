@@ -3,10 +3,11 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { expect, test } from 'vitest';
 import type { LotsProofRoll, LotsWrit } from '@castle-control/contract';
 import { castWinners, commitmentOf, sealOf } from '../../lots-cast.js';
-import { fixtureEntries, fixtureWrit } from '../../lots-fixture.js';
+import { fixtureBeaconWrit, fixtureEntries, fixtureWrit } from '../../lots-fixture.js';
 import { applyTamper, defaultTamperIndex, hexBytes, inspectWrit, sealOfRoll, sealPreimage, toHex, traceCast } from './lab-model.js';
 import type { LabReport } from './lab-model.js';
 import { labVerdict, WritLab, WritLabView } from './lab.jsx';
+import { labCopy } from './lab-copy.js';
 
 const statuses = (report: LabReport) => report.steps.map(step => step.status);
 // Generated, labelled-simulated values only: no real seed, signature or chat.
@@ -159,4 +160,27 @@ test('lab styles stay token-only and respect reduced motion', () => {
   expect(css).not.toMatch(/#[\da-f]{3,8}\b|\brgba?\(|\bhsla?\(|\b\d+(?:\.\d+)?px\b/i);
   expect(css).toContain('prefers-reduced-motion: reduce');
   expect(css).toContain('@keyframes lottery-lab-stamp');
+});
+
+test('the simulated beacon specimen is verifier-web case 40, and the lab walks the beacon path honestly', async () => {
+  const corpus = JSON.parse(readFileSync(new URL('../../../../../packages/verifier-web/src/simulated-writs.json', import.meta.url), 'utf8')) as
+    { cases: { writ: unknown }[] };
+  expect(fixtureBeaconWrit).toEqual(corpus.cases[40]?.writ);
+  const canonical = await inspectWrit(fixtureBeaconWrit);
+  expect(statuses(canonical)).toEqual(['pass', 'pass', 'unverified', 'pass']);
+  expect(canonical.steps[2]?.reason).toBe('signature_not_authenticated');
+  expect(statuses(await inspectWrit(fixtureBeaconWrit, { kind: 'seed' }))).toEqual(['pass', 'pass', 'fail', 'blocked']);
+  expect(statuses(await inspectWrit(fixtureBeaconWrit, { kind: 'plan' }))).toEqual(['pass', 'fail', 'blocked', 'blocked']);
+});
+
+test('the specimen switch shows which writ is on the bench and explains the beacon limits', () => {
+  const html = renderToStaticMarkup(<WritLabView writ={fixtureBeaconWrit} simulated specimen="beacon" on_specimen={() => undefined}
+    on_tamper={() => undefined} />);
+  expect(html).toMatch(/aria-pressed="true"[^>]*>Simulated beacon writ</);
+  expect(html).toMatch(/aria-pressed="false"[^>]*>Current writ</);
+  expect(html).toContain('the BLS signature itself is checked by cc-verify');
+  expect(labCopy.label('drand_quicknet', fixtureBeaconWrit.roll.randomness.source === 'drand_quicknet' ? fixtureBeaconWrit.roll.randomness.chain_hash : ''))
+    .toBe('Simulated chain · drand quicknet format');
+  expect(labCopy.label('drand_quicknet', '52db9ba70e0cc0f6eaf7803dd07447a1f5477735fd3f661792ba94600c84e971')).toBe('Public beacon · drand quicknet');
+  expect(renderToStaticMarkup(<WritLabView writ={fixtureWrit} simulated on_tamper={() => undefined} />)).not.toContain('Specimen');
 });

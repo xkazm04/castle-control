@@ -66,7 +66,7 @@ function StepCard({ step, index, report }: { step: LabStep | undefined; index: n
       <h4>{`${index + 1}. ${title}`}</h4>
       <p className="lottery-lab-aside">{description}</p>
       {id === 'serialization' && report && <p className="lottery-lab-fact">{copy.entries_shown(report.entry_count, report.entry_count)} · {copy.byte_count(report.byte_length)}</p>}
-      {id === 'randomness' && report && <p className="lottery-lab-fact">{copy.label(report.source)}{report.round ? ` · ${copy.round(report.round)}` : ''}</p>}
+      {id === 'randomness' && report && <p className="lottery-lab-fact">{copy.label(report.source, report.writ.roll.randomness.source === 'drand_quicknet' ? report.writ.roll.randomness.chain_hash : undefined)}{report.round ? ` · ${copy.round(report.round)}` : ''}</p>}
       {step?.recorded !== undefined && <dl className="lottery-lab-compare" data-match={step.recorded === step.recomputed}>
         <div><dt>{copy.recorded}</dt><dd title={step.recorded}>{detail(step.recorded)}</dd></div>
         <div><dt>{copy.recomputed}</dt><dd title={step.recomputed}>{detail(step.recomputed ?? '')}</dd></div>
@@ -108,9 +108,12 @@ function Trace({ trace }: { trace: readonly TracePick[] }) {
   </details>;
 }
 
-export function WritLabView({ writ, simulated, tamper, report, failed = false, run = 0, on_tamper, section }: {
+type Specimen = 'cast' | 'beacon';
+
+export function WritLabView({ writ, simulated, tamper, report, failed = false, run = 0, on_tamper, section, specimen, on_specimen }: {
   writ: LotsWrit; simulated: boolean; tamper?: Tamper; report?: LabReport; failed?: boolean; run?: number;
   on_tamper: (tamper: Tamper | undefined) => void; section?: Ref<HTMLElement>;
+  specimen?: Specimen; on_specimen?: (specimen: Specimen) => void;
 }) {
   const index = defaultTamperIndex(writ);
   const target = writ.roll.entries[index]?.handle ?? '';
@@ -120,6 +123,12 @@ export function WritLabView({ writ, simulated, tamper, report, failed = false, r
     <SectionHeading variant="banner" level={2} title={copy.title} gloss={copy.gloss} ink="gules"
       count={simulated ? <StatusChip variant="gules" stamp="label">{copy.simulated}</StatusChip> : undefined} />
     <p className="lottery-lab-intro">{copy.intro}</p>
+    {on_specimen && <div className="lottery-lab-specimens" role="group" aria-label={copy.specimen}>
+      <p className="lottery-lab-kicker">{copy.specimen}</p>
+      {(['cast', 'beacon'] as const).map(value => <InkButton key={value} size="small" aria-pressed={(specimen ?? 'cast') === value}
+        onClick={() => on_specimen(value)}>{copy.specimens[value]}</InkButton>)}
+      {specimen === 'beacon' && <p className="lottery-lab-aside">{copy.beacon_hint}</p>}
+    </div>}
     <div className="lottery-lab-grid">
       <div className="lottery-lab-bench">
         <p className="lottery-lab-kicker">{copy.tamper_title}</p>
@@ -154,7 +163,9 @@ type Result = { writ: LotsWrit; tamper: Tamper | undefined; report?: LabReport; 
 /** In-room tamper-and-verify lab. Newer tamper selections always win over older recomputes.
  * Each new `prove` request (from the stage) restores the canonical writ, brings the lab into
  * view and replays the four-step walk. */
-export function WritLab({ writ, simulated, prove = 0 }: { writ: LotsWrit; simulated: boolean; prove?: number }) {
+export function WritLab({ writ: cast_writ, simulated, prove = 0, beacon }: { writ: LotsWrit; simulated: boolean; prove?: number; beacon?: LotsWrit }) {
+  const [specimen, setSpecimen] = useState<Specimen>('cast');
+  const writ = specimen === 'beacon' && beacon ? beacon : cast_writ;
   const [selection, setSelection] = useState<{ writ: LotsWrit; tamper?: Tamper }>({ writ });
   const section = useRef<HTMLElement>(null);
   const reduced = useReducedMotion();
@@ -164,7 +175,7 @@ export function WritLab({ writ, simulated, prove = 0 }: { writ: LotsWrit; simula
   // Only a new prove request acts; a new writ alone keeps the streamer's place.
   useEffect(() => {
     if (!prove) return;
-    setSelection({ writ }); setRun(count => count + 1);
+    setSpecimen('cast'); setSelection({ writ: cast_writ }); setRun(count => count + 1);
     const node = section.current;
     node?.scrollIntoView?.({ behavior: reduced ? 'auto' : 'smooth', block: 'start' });
     // Keyboard users land on the first tamper control, ready to try the proof.
@@ -180,5 +191,6 @@ export function WritLab({ writ, simulated, prove = 0 }: { writ: LotsWrit; simula
   }, [writ, tamper]);
   const current = result && result.writ === writ && result.tamper === tamper ? result : undefined;
   return <WritLabView section={section} writ={writ} simulated={simulated} run={run} on_tamper={next => setSelection(next ? { writ, tamper: next } : { writ })}
-    {...(tamper ? { tamper } : {})} {...(current?.report ? { report: current.report } : {})} failed={current?.failed ?? false} />;
+    {...(tamper ? { tamper } : {})} {...(current?.report ? { report: current.report } : {})} failed={current?.failed ?? false}
+    {...(beacon ? { specimen, on_specimen: setSpecimen } : {})} />;
 }
