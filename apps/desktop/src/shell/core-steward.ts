@@ -1,11 +1,26 @@
-import { createSteward } from '@castle-control/ui/steward';
-import type { StewardTransport } from '@castle-control/ui/steward';
+import { createSealAuthority, createSteward, LiveSteward, proposalQueue } from '@castle-control/ui/steward';
+import type { SealAuthority, StewardTransport } from '@castle-control/ui/steward';
 import type { StewardConnection } from '../client.js';
 import { validateCoreLaunch } from '../core-source.js';
+import { sealRoomProposal } from '../rooms/seal-slot/index.jsx';
+import { localAuthority } from '../overview/program.js';
 
 const simulated = createSteward();
 type Port = ReturnType<typeof createSteward>;
 const ports = new WeakMap<StewardConnection, Port>();
+const authorities = new WeakMap<StewardConnection, SealAuthority>();
+
+/** Preserve ownership on disconnect; the adapter still refuses unreachable calls. */
+export function shellSealAuthority(connection?: StewardConnection): SealAuthority {
+  if (!connection) return localAuthority;
+  const existing = authorities.get(connection);
+  if (existing) return existing;
+  const port = ports.get(connection) ?? shellStewardPort(connection);
+  if (!(port instanceof LiveSteward)) return localAuthority;
+  const authority = createSealAuthority({ queue: proposalQueue, live: port, local: sealRoomProposal });
+  authorities.set(connection, authority);
+  return authority;
+}
 type StewardMethod = 'steward.ask' | 'steward.writ.seal' | 'steward.writ.tear';
 type StewardParams = {
   'steward.ask': Parameters<StewardTransport['ask']>[0];

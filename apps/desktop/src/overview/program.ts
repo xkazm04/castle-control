@@ -1,7 +1,9 @@
-import { isPending, proposalQueue } from '@castle-control/ui/steward';
-import type { Proposal } from '@castle-control/ui/steward';
+import { createSealAuthority, isPending, proposalQueue } from '@castle-control/ui/steward';
+import type { Proposal, SealAuthority } from '@castle-control/ui/steward';
 import { sealRoomProposal } from '../rooms/seal-slot/index.jsx';
 import { isDesignProposal } from './design-proposal.js';
+
+export const localAuthority = createSealAuthority({ queue: proposalQueue, local: (queue, proposal) => sealRoomProposal(queue, proposal) });
 
 // Presentation snapshots only. This is neither a proposal queue nor OBS delivery.
 let snapshot: readonly Proposal[] = [];
@@ -18,18 +20,19 @@ export function programCandidate(chamber: Proposal['chamber']): Proposal | undef
   return candidates.find(item => item.id === proposalQueue.getSnapshot().selected_proposal_id) ?? candidates.at(-1);
 }
 
-/** Only the Overview monitor's completed hold calls this local projection. */
-export async function proclaimToSampleProgram(id: string): Promise<string> {
+/** The completed hold routes through the owner; only fixture proposals project locally. */
+export async function proclaimToSampleProgram(id: string, authority: SealAuthority = localAuthority): Promise<string> {
   const before = proposalQueue.getSnapshot().proposals.find(item => item.id === id);
   if (before && isDesignProposal(before)) return 'Open the design focus. Preview there, then hold to seal and proclaim.';
   if (!before || (!isPending(before) && before.state !== 'sealed')) return 'This proposal is no longer available.';
+  if (authority.owner(before) === 'live') return (await authority.seal(before)).reply;
   if (isPending(before)) {
-    try { await sealRoomProposal(proposalQueue, before); }
-    catch (cause) {
+    const outcome = await authority.seal(before);
+    if (!outcome.ok) {
       // An amendment or tear during hashing invalidates this authorization.
       const current = proposalQueue.getSnapshot().proposals.find(item => item.id === id);
       if (current !== before) return 'The proposal changed. Review it and hold again.';
-      return cause instanceof Error ? cause.message : 'The proposal could not be sealed.';
+      return outcome.reply;
     }
   }
   const authorized = proposalQueue.getSnapshot().proposals.find(item => item.id === id);

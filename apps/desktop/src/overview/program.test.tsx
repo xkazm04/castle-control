@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
-import { proposalQueue, SimulatedSteward } from '@castle-control/ui/steward';
+import { createSealAuthority, LiveSteward, proposalQueue, SimulatedSteward } from '@castle-control/ui/steward';
 import * as sealSlot from '../rooms/seal-slot/index.jsx';
 import { entryHash, lotterySession } from '../rooms/lottery/session.js';
 import { programCandidate, proclaimToSampleProgram, sampleProgram } from './program.js';
@@ -68,4 +68,36 @@ test('Overview hold calls the room seal path and projects its frozen weighted ro
   const aired = sampleProgram.getSnapshot().find(item => item.id === draft.id);
   expect(aired?.seal_hash).toBe(await entryHash(roll.bytes));
   expect(aired?.state).toBe('sealed');
+});
+
+test.each([true, false])('Overview routes a live visuals writ to the core without projecting sample Program: %s', async succeeds => {
+  const writ = { writ_id: succeeds ? '01ARZ3NDEKTSV4RRFFQ69G5FAX' : '01ARZ3NDEKTSV4RRFFQ69G5FAY', chamber: 'beacons', status: 'proposed',
+    created_at: '2026-10-27T00:00:00Z', updated_at: '2026-10-27T00:00:01Z',
+    proposal: { method: 'beacons.visual.upsert', diff: { after: { visual: {
+      visual_id: 'simulated-frame', name: 'Synthetic transport frame', curve: {
+        ranges: [{ total: 0, intensity: 0 }, { total: 50, intensity: 1 }], decay: { kind: 'exponential', half_life_s: 300 },
+      },
+    } } } } };
+  const transport = { ask: vi.fn(async () => JSON.stringify({ writ })),
+    seal: vi.fn(async () => { if (!succeeds) throw new Error('Synthetic failure'); return JSON.stringify({ writ: { ...writ, status: 'sealed' } }); }),
+    tear: vi.fn() };
+  const live = new LiveSteward(transport);
+  const proposal = (await live.ask('Synthetic frame', { surface: 'room', chamber: 'visuals' })).proposals[0];
+  if (!proposal) throw new Error('Missing live visuals draft');
+  const local = vi.fn(sealSlot.sealRoomProposal);
+  const authority = createSealAuthority({ queue: proposalQueue, live, local });
+  const before = sampleProgram.getSnapshot();
+  const notice = await proclaimToSampleProgram(proposal.id, authority);
+  expect(transport.seal).toHaveBeenCalledExactlyOnceWith({ writ_id: proposal.id });
+  expect(local).not.toHaveBeenCalled();
+  expect(sampleProgram.getSnapshot()).toBe(before);
+  expect(notice).not.toContain('simulated Program');
+  expect(notice).toContain(succeeds ? 'core confirmed' : 'could not confirm the seal');
+  expect(proposalQueue.byChamber('visuals').find(item => item.id === proposal.id)?.state).toBe(succeeds ? 'proclaimed' : 'drafted');
+});
+
+test('a fixture proclamation retains its exact simulated Program notice', async () => {
+  const draft = (await new SimulatedSteward().ask('test fire 50 gifts', { surface: 'overview' })).proposals[0];
+  if (!draft) throw new Error('Missing simulated visuals draft');
+  expect(await proclaimToSampleProgram(draft.id)).toBe('Sealed and proclaimed to simulated Program. No live output or viewer action.');
 });

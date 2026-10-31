@@ -1,20 +1,24 @@
 import { useRef, useState, useSyncExternalStore } from 'react';
 import { ProposalCard } from '@castle-control/ui';
-import { LiveSteward, proposalQueue } from '@castle-control/ui/steward';
-import type { ChamberId, Proposal } from '@castle-control/ui/steward';
+import { createSealAuthority, LiveSteward, proposalQueue } from '@castle-control/ui/steward';
+import type { ChamberId, Proposal, SealAuthority } from '@castle-control/ui/steward';
+import { sealRoomProposal } from '../rooms/seal-slot/index.jsx';
 
 /** Reuse the human hold and the existing Writ presentation, without chamber mapping. */
-export function StewardSealSlot({ chamber, port }: { chamber: ChamberId; port: LiveSteward }) {
+export function StewardSealSlot({ chamber, port,
+  authority = createSealAuthority({ queue: proposalQueue, live: port, local: sealRoomProposal }) }: {
+  chamber: ChamberId; port: LiveSteward; authority?: SealAuthority;
+}) {
   const state = useSyncExternalStore(proposalQueue.subscribe, proposalQueue.getSnapshot, proposalQueue.getSnapshot);
   const [busy, setBusy] = useState(false);
   const active = useRef(false);
   const [notice, setNotice] = useState('');
-  const proposals = proposalQueue.pending(chamber).filter(proposal => port.owns(proposal.id));
+  const proposals = proposalQueue.pending(chamber).filter(proposal => authority.owner(proposal) === 'live');
   async function resolve(proposal: Proposal, seal: boolean) {
     if (active.current || proposalQueue.getSnapshot().proposals.find(item => item.id === proposal.id) !== proposal) return;
     active.current = true; setBusy(true);
     try {
-      const turn = await (seal ? port.seal(proposal.id) : port.tearUp(proposal.id));
+      const turn = await (seal ? authority.seal(proposal) : authority.tear(proposal));
       setNotice(turn.reply);
     } finally { active.current = false; setBusy(false); }
   }

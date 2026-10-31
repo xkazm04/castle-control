@@ -1,7 +1,7 @@
 import { lazy, Suspense, useState, useSyncExternalStore } from 'react';
 import { ProposalCard } from '@castle-control/ui';
-import { proposalQueue } from '@castle-control/ui/steward';
-import type { ChamberId, Proposal, ProposalQueue } from '@castle-control/ui/steward';
+import { createSealAuthority, proposalQueue } from '@castle-control/ui/steward';
+import type { ChamberId, Proposal, ProposalQueue, SealAuthority } from '@castle-control/ui/steward';
 import { isDesignProposal } from '../../overview/design-proposal.js';
 import { RoomDesignActions, roomArtifact, roomProposals, selectRoomDesign } from '../design/actions.jsx';
 import type { RoomDesignSelection } from '../design/actions.jsx';
@@ -23,8 +23,9 @@ export async function sealRoomProposal(queue: ProposalQueue, proposal: Proposal)
   }
 }
 
-export default function SealSlot({ chamber, enabled = true, queue = proposalQueue }: {
-  chamber: ChamberId; enabled?: boolean; queue?: ProposalQueue;
+export default function SealSlot({ chamber, enabled = true, queue = proposalQueue,
+  authority = createSealAuthority({ queue, local: sealRoomProposal }) }: {
+  chamber: ChamberId; enabled?: boolean; queue?: ProposalQueue; authority?: SealAuthority;
 }) {
   const state = useSyncExternalStore(queue.subscribe, queue.getSnapshot, queue.getSnapshot);
   const [busy, setBusy] = useState(false);
@@ -35,10 +36,13 @@ export default function SealSlot({ chamber, enabled = true, queue = proposalQueu
     selectRoomDesign(queue, selection, proposal_id); setDesign(selection);
   };
   const selected = proposals.some(item => item.id === state.selected_proposal_id) ? state.selected_proposal_id : proposals.at(-1)?.id;
-  const seal = async (proposal: Proposal) => {
+  const resolve = async (proposal: Proposal, seal: boolean) => {
     if (busy) return;
     setBusy(true); setError('');
-    try { await sealRoomProposal(queue, proposal); }
+    try {
+      const outcome = await (seal ? authority.seal(proposal) : authority.tear(proposal));
+      if (!outcome.ok) setError(outcome.reply);
+    }
     catch (cause) { setError(cause instanceof Error ? cause.message : 'The proposal could not be sealed.'); }
     finally { setBusy(false); }
   };
@@ -53,7 +57,7 @@ export default function SealSlot({ chamber, enabled = true, queue = proposalQueu
           on_open={() => openDesign({ artifact, action: 'restyle' }, proposal.id)} />
       </Suspense> : <ProposalCard key={proposal.id} proposal={proposal}
         focused={proposal.id === selected} busy={busy} on_focus={() => queue.select(proposal.id)}
-        on_tear={() => queue.tearUp(proposal.id)} on_seal={() => { void seal(proposal); }} />;
+        on_tear={() => { void resolve(proposal, false); }} on_seal={() => { void resolve(proposal, true); }} />;
     })}
     {enabled && design && <Suspense fallback={<p role="status">Opening simulated design...</p>}>
       <RoomDesignDialog selection={design} on_close={() => setDesign(undefined)} />

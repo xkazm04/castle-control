@@ -10,3 +10,5 @@ export { SimulatedSteward, sampleStewardFacts } from './simulated.js';
 export type { StewardFacts } from './simulated.js';
 export { createSteward, LiveSteward } from './live.js';
 export type { StewardOptions, StewardTransport } from './live.js';
+export { createSealAuthority } from './authority.js';
+export type { SealAuthority, SealOutcome } from './authority.js';

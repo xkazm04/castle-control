@@ -1,8 +1,9 @@
 import { ProposalCard, WindowedRows } from '@castle-control/ui';
 import type { ModuleId } from '@castle-control/ui';
 import { isPending, proposalQueue } from '@castle-control/ui/steward';
-import type { Proposal } from '@castle-control/ui/steward';
-import { lazy, Suspense, useSyncExternalStore } from 'react';
+import type { Proposal, SealAuthority } from '@castle-control/ui/steward';
+import { lazy, Suspense, useRef, useState, useSyncExternalStore } from 'react';
+import { localAuthority } from './program.js';
 import { stewardConversation } from '../shell/steward.jsx';
 import { isDesignProposal } from './design-proposal.js';
 import './inspector.css';
@@ -18,19 +19,30 @@ export function FairnessBox() {
   </aside>;
 }
 
-export function Inspector({ selected, proposals, on_open, active = true }: {
+export function Inspector({ selected, proposals, on_open, active = true, authority = localAuthority }: {
   selected: ModuleId; proposals: readonly Proposal[]; on_open: (chamber: ModuleId) => void; active?: boolean;
+  authority?: SealAuthority;
 }) {
   const queue = useSyncExternalStore(proposalQueue.subscribe, proposalQueue.getSnapshot, proposalQueue.getSnapshot);
+  const working = useRef(false);
+  const [busy, setBusy] = useState(false);
+  const [notice, setNotice] = useState('');
+  async function tear(proposal: Proposal) {
+    if (working.current) return;
+    working.current = true; setBusy(true);
+    try { setNotice((await authority.tear(proposal)).reply); }
+    finally { working.current = false; setBusy(false); }
+  }
   const items = proposals.filter(item => item.chamber === selected && isPending(item) && !isDesignProposal(item));
   return <section className="overview-inspector" aria-label="Selected layer inspector">
     {active && <Suspense fallback={<p>Loading simulated design controls…</p>}><DesignInspector selected={selected} /></Suspense>}
     {items.length > 0 && <WindowedRows rows={items} label="Layer proposals" row_key={proposal => proposal.id} row_height={480}>
-      {proposal => <ProposalCard proposal={proposal} focused={active && queue.selected_proposal_id === proposal.id}
+      {proposal => <ProposalCard proposal={proposal} busy={busy} focused={active && queue.selected_proposal_id === proposal.id}
         on_focus={() => { if (proposalQueue.getSnapshot().selected_proposal_id !== proposal.id) proposalQueue.select(proposal.id); }}
-        seal_at_monitor on_seal={() => undefined} on_tear={() => { proposalQueue.tearUp(proposal.id); }} />}
+        seal_at_monitor on_seal={() => undefined} on_tear={() => { void tear(proposal); }} />}
     </WindowedRows>}
     {!items.length && <p>No open proposal for this layer. Ask the Steward to draft one.</p>}
+    {notice && <p role="status">{notice}</p>}
     {selected === 'lottery' && <FairnessBox />}
     <a href={`#/chamber/${selected}`} onClick={event => { event.preventDefault(); on_open(selected); }}>Open the room →</a>
   </section>;

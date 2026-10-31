@@ -53,12 +53,32 @@ selection, and focus untouched. There are no automatic retries or rollbacks of
 transport effects; an injected production transport still needs the core's
 authorization and guardrails.
 
-The desktop bar and room slot share the same per-connection adapter. The slot
-uses the existing hold-to-seal control, displays only that adapter's pending
-proposals, and calls the core for seal or tear. A seal response must match the
-draft and confirm sealed status before the local queue changes; an uncertain
-seal is never automatically retried. No local sample program is applied.
+The desktop bar, Overview and room slot share the same per-connection adapter.
+`createSealAuthority({ queue, live?, local })` is the seal/tear routing door:
+`owner(proposal)` reports `live` when the adapter owns its ID, otherwise `local`.
+`seal(proposal)` and `tear(proposal)` resolve `{ ok, reply }`. Stale or terminal
+proposals are refused. Live operations go only through the adapter; a failed or
+uncertain core confirmation never falls back to the local sealer or queue tear.
+Local seals use the injected existing room sealer (including its lottery and
+moderation guardrails); local tears use the queue's existing lifecycle.
+
+The desktop's `shellSealAuthority(connection)` memoizes that authority alongside
+the adapter. Overview's hold and Inspector tear, the fixture slot and the live
+slot use it. The shell retains the established connection during interrupted
+reads; the adapter checks reachability before every call. A seal response must
+match the draft and confirm sealed status before the local queue changes; an
+uncertain seal is never automatically retried. Live-owned writs never project
+into sample Program, and notices use the core adapter's reply. Fixture holds
+retain their simulated Program projection and exact notice. Sealed/proclaimed
+states remain terminal; this adds no undo, RPC, contract identifier or OBS action.
 The Map Room remains unsupported until its Writ contract exists.
+
+`authority.test.ts` covers delayed core confirmation, failed seal/tear without
+local fallback, injected local sealing, and stale/terminal refusal. Desktop
+`shell/authority.test.tsx` checks Inspector routing, shared authority identity
+and disconnected ownership; `overview/program.test.tsx` checks live visuals
+isolation from sample Program and the unchanged fixture notice. All transports
+and data in these tests are synthetic.
 
 `fixtures/recorded.ts` contains synthetic recorded-format Writs for all five
 supported mutations and a scripted in-memory transport. No real chat or service
@@ -124,3 +144,28 @@ adapting their imports. None of the nine modified paths changed between
   in contract export. A separate live parity check hit the same spawn error.
   Rust format, Clippy and tests were not reached. No git writes were run;
   App Master commits the uncommitted delivery under the sandbox exception.
+
+## shell-A verification (2026-10-31)
+
+All nine scout premise anchors still hold at base `5d4f83e`, including after
+`34b13d3`, `2d1cf4e`, `a6f305f` and the Map Room follow-up. Their room changes
+do not close the Overview fixture-seal or Inspector local-tear paths. Existing
+lottery/moderation sealer signatures are unchanged by this delivery.
+
+- Red first: the authority unit suite failed on its missing module; the desktop
+  acceptance additions failed on the missing authority exports. Green after
+  routing: all 20 UI suites / 324 tests and 49 desktop suites / 381 tests pass.
+  The existing program, surfaces, room, Steward and view tests remain green.
+- UI and desktop package typecheck/lint pass. Boundary, hygiene, 400-line and
+  secrets scans pass (750 code files / 1,020 secret-scan files).
+- Desktop build passes at 364,480 / 393,216 initial bytes; kit build passes at
+  261,338 / 262,144. The overlay build passes with its output redirected to the
+  external run directory; no overlay source or tracked output was changed.
+- `pnpm --config.verify-deps-before-run=false gate` passes 24 tooling tests and
+  inventories, then fails at unchanged contract export: `spawnSync cargo EPERM`.
+  Rust checks and later stages were not reached. Recursive typecheck and lint
+  each fail at pnpm's `spawn EPERM`; individual package checks above pass.
+  Gate scripts, contract sources/exporter, cc-types and lockfiles have zero diff
+  against the base, consistent with the previously recorded sandbox failures.
+  App Master must rerun the full gate outside this subprocess restriction.
+- No install, git write, credential access, live service or OBS action was run.

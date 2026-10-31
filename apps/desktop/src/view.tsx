@@ -2,11 +2,12 @@ import { ThemeFrame } from '@castle-control/ui';
 import type { ModuleId } from '@castle-control/ui';
 import type { Theme } from '@castle-control/tokens';
 import type { Ref } from 'react';
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useRef } from 'react';
 import type { Snapshot } from './model.js';
 import type { Navigation, Surface } from './navigation.js';
 import { DesktopRampart } from './rampart.jsx';
 import { coreStewardConnection } from './client.js';
+import type { StewardConnection } from './client.js';
 import './view.css';
 
 const Keep = lazy(() => import('./shell/keep.jsx'));
@@ -28,7 +29,11 @@ export type ViewProps = {
 export function DesktopView(props: ViewProps) {
   const navigation = props.navigation ?? { current: props.current ?? 'keep', replay: props.replay ?? false, origin: 'keep' };
   const { current } = navigation;
-  const connection = coreStewardConnection(props.snapshot);
+  // A disconnected read drops its capability lookup, not the pending writ's owner.
+  // The retained adapter still checks reachability before every core operation.
+  const previous = useRef<StewardConnection | undefined>(undefined);
+  const connection = coreStewardConnection(props.snapshot) ?? (props.snapshot.mode === 'core' ? previous.current : undefined);
+  previous.current = connection;
   const steward_connection = connection ? { connection } : {};
   const steward = <Suspense fallback={<p role="status">Opening the Steward...</p>}>
     <Steward context={current} {...steward_connection} {...(props.steward_ref ? { input_ref: props.steward_ref } : {})}
@@ -45,7 +50,7 @@ export function DesktopView(props: ViewProps) {
         <Suspense fallback={<p role="status">Opening the keep...</p>}>
           {current === 'keep' ? <Keep snapshot={props.snapshot} on_open={props.on_navigate} on_enter={() => props.on_surface?.('overview')}
             on_demo={() => props.on_surface?.('demo')} />
-            : current === 'overview' ? <Overview snapshot={props.snapshot} selected={props.selected ?? 'lottery'} on_select={props.on_select ?? (() => undefined)} on_open={props.on_navigate} steward={steward} />
+            : current === 'overview' ? <Overview snapshot={props.snapshot} selected={props.selected ?? 'lottery'} on_select={props.on_select ?? (() => undefined)} on_open={props.on_navigate} steward={steward} {...steward_connection} />
             : current === 'demo' ? <Demo on_back={props.on_back ?? (() => props.on_surface?.('keep'))} />
             : <Room chamber={current} replay={navigation.replay} snapshot={props.snapshot} origin={navigation.origin}
               {...steward_connection}

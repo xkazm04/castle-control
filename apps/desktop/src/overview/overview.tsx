@@ -4,6 +4,8 @@ import { isPending, proposalQueue } from '@castle-control/ui/steward';
 import { useEffect, useState, useSyncExternalStore } from 'react';
 import type { ReactNode } from 'react';
 import type { Snapshot } from '../model.js';
+import type { StewardConnection } from '../client.js';
+import { shellSealAuthority } from '../shell/core-steward.js';
 import { keepReadModel } from '../keep/read-model.js';
 import { StreamScene } from './scene.jsx';
 import { Inspector, Talkback } from './inspector.jsx';
@@ -13,9 +15,11 @@ import './overview.css';
 export type OverviewProps = {
   snapshot: Snapshot; selected: ModuleId; on_select: (id: ModuleId) => void;
   on_open: (id: ModuleId) => void; steward?: ReactNode;
+  connection?: StewardConnection;
 };
 
-export function Overview({ snapshot, selected, on_select, on_open, steward }: OverviewProps) {
+export function Overview({ snapshot, selected, on_select, on_open, steward, connection }: OverviewProps) {
+  const authority = shellSealAuthority(connection);
   const queue = useSyncExternalStore(proposalQueue.subscribe, proposalQueue.getSnapshot, proposalQueue.getSnapshot);
   const program = useSyncExternalStore(sampleProgram.subscribe, sampleProgram.getSnapshot, sampleProgram.getSnapshot);
   const [tab, setTab] = useState<'talkback' | 'inspector'>('inspector');
@@ -44,7 +48,7 @@ export function Overview({ snapshot, selected, on_select, on_open, steward }: Ov
   async function proclaim() {
     if (!candidate || sealing) return;
     setSealing(true);
-    try { setNotice(await proclaimToSampleProgram(candidate.id)); }
+    try { setNotice(await proclaimToSampleProgram(candidate.id, authority)); }
     catch { setNotice('The sample seal could not be computed. Program was unchanged.'); }
     finally { setSealing(false); }
   }
@@ -71,7 +75,7 @@ export function Overview({ snapshot, selected, on_select, on_open, steward }: Ov
       </div>
       <div className="overview-pane" id="overview-talkback" role="tabpanel" aria-labelledby="overview-talkback-tab" hidden={tab !== 'talkback'}><Talkback /></div>
       <div className="overview-pane" id="overview-inspector" role="tabpanel" aria-labelledby="overview-inspector-tab" hidden={tab !== 'inspector'}>
-        <Inspector selected={selected} proposals={queue.proposals} on_open={on_open} active={tab === 'inspector'} />
+        <Inspector selected={selected} proposals={queue.proposals} on_open={on_open} active={tab === 'inspector'} authority={authority} />
       </div>
     </aside>
   </section>;
