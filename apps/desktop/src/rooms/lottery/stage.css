@@ -141,3 +141,40 @@
 @container lot-pool (width >= 40rem) { .lottery-shape-picker button svg { display: block; } }
 
 .lottery-stage-medal-body path { fill: none; stroke: var(--art-key); stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; }
+
+.lottery-room:not([data-theatre="true"]) .lottery-draw-theatre:has(.lottery-stage-rail) { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); }
+
+/* The compact desk shares the panel grid; result text never takes drawing height or width. */
+@media (width > 56.25rem) {
+  @container lot-room (height < 32rem) {
+    .lottery-room:not([data-theatre="true"]) :is(.lottery-stage, .lottery-draw-stage, .lottery-draw-theatre) { display: contents; }
+    .lottery-room:not([data-theatre="true"]) .lottery-draw-theatre::before { content: none; }
+    .lottery-room:not([data-theatre="true"]) .lottery-stage-top { grid-area: controls; display: grid; grid-template-columns: minmax(0, 1fr) var(--space-24) var(--space-28); }
+    .lottery-room:not([data-theatre="true"]) .lottery-shape-picker { grid-column: 1 / -1; }
+    .lottery-room:not([data-theatre="true"]) .lottery-shape-picker button svg { display: none; }
+    .lottery-room:not([data-theatre="true"]) .lottery-stage-options { grid-column: 1; grid-row: 2; }
+    .lottery-room:not([data-theatre="true"]) .lottery-stage-notes { grid-column: 2; grid-row: 2; }
+    .lottery-room:not([data-theatre="true"]) .lottery-stage-expand { grid-column: 3; grid-row: 2; }
+    .lottery-room:not([data-theatre="true"]) .lottery-draw-svg {
+      grid-area: art; border: var(--rule-medium) solid var(--ink);
+      outline: var(--rule-thin) dashed var(--hair); outline-offset: calc(var(--space-5) * -1);
+      background: radial-gradient(ellipse at 50% 46%, color-mix(in srgb, var(--or) 30%, var(--paper)) 0, color-mix(in srgb, var(--or) 8%, var(--paper)) 48%, var(--paper) 72%);
+    }
+    .lottery-room:not([data-theatre="true"]) .lottery-stage-phase { grid-area: phase; }
+    .lottery-room:not([data-theatre="true"]) .lottery-stage-state { width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+    .lottery-room:not([data-theatre="true"]) .lottery-draw-stage[data-phase="sealed"] .lottery-draw-svg { border-style: double; border-width: var(--rule-strong); }
+    .lottery-room:not([data-theatre="true"]) .lottery-stage-rail { grid-area: rail; padding: var(--space-1); }
+    .lottery-room:not([data-theatre="true"]) [data-role="lot-urn-panel"]:has(.lottery-stage-call) .lottery-stage-phase small { position: absolute; width: var(--space-1); height: var(--space-1); overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+    .lottery-room:not([data-theatre="true"]) .lottery-stage-call { order: -1; flex-shrink: 0; }
+    .lottery-room:not([data-theatre="true"]) .lottery-stage-call small { display: none; }
+    .lottery-room:not([data-theatre="true"]) .lottery-stage-rail ol { justify-content: flex-start; }
+    .lottery-room:not([data-theatre="true"]) .lottery-stage-rail li { max-width: 100%; overflow-wrap: anywhere; }
+    .lottery-room:not([data-theatre="true"]) .lottery-stage-foot { grid-area: foot; display: grid; grid-template-columns: minmax(0, 1fr) auto var(--space-28); }
+    .lottery-room:not([data-theatre="true"]) .lottery-stage-foot .cc-chip { grid-column: 1; grid-row: 1; display: block; min-width: 0; height: auto; overflow: hidden; text-overflow: ellipsis; letter-spacing: normal; text-transform: none; }
+    .lottery-room:not([data-theatre="true"]) .lottery-stage-foot .cc-stamp { grid-column: 2; grid-row: 1; }
+    .lottery-room:not([data-theatre="true"]) .lottery-stage-foot .lottery-stage-replay { grid-column: 3; grid-row: 1; }
+    .lottery-room:not([data-theatre="true"]) .lottery-stage-wax { position: static; grid-area: art; justify-self: end; align-self: start; margin: var(--space-8); }
+    .lottery-room:not([data-theatre="true"]) .lottery-stage-disclaimer { grid-area: art; align-self: end; z-index: 1; margin: var(--space-4); }
+    .lottery-room:not([data-theatre="true"]) .lottery-stage-confetti { position: relative; grid-area: art; }
+  }
+}

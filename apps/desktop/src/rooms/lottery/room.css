@@ -147,3 +147,30 @@
 @container lot-pool (height >= 26rem) {
   .lottery-pool-readings { gap: var(--space-6); }
 }
+
+/* Short desktop rooms spend height on the ceremony, with readings beside it. */
+@media (width > 56.25rem) {
+  .lottery-room { container: lot-room / size; }
+  @container lot-room (height < 32rem) {
+    .lottery-room:not([data-theatre="true"]) .cc-hall { grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); }
+    .lottery-room:not([data-theatre="true"]) .cc-stage-wrap > .panel {
+      grid-template-columns: calc(var(--space-36) * 8) minmax(0, 1fr);
+      grid-template-rows: auto auto auto auto minmax(0, 1fr) auto;
+      grid-template-areas: "heading art" "controls art" "phase art" "readings art" "rail art" "foot art";
+      column-gap: var(--space-8);
+      padding-block: var(--space-8);
+    }
+    .lottery-room:not([data-theatre="true"]) .lottery-pool-heading { grid-area: heading; gap: var(--space-4); }
+    .lottery-room:not([data-theatre="true"]) .lottery-pool-heading [data-role="panel-title"] { display: block; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+    .lottery-room:not([data-theatre="true"]) .lottery-pool-heading [data-role="panel-gloss"] { position: absolute; width: var(--space-1); height: var(--space-1); overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+    .lottery-room:not([data-theatre="true"]) .num .cc-hero-caption { max-width: none; }
+    .lottery-room:not([data-theatre="true"]) .lottery-pool-readings { grid-area: readings; gap: var(--space-6); }
+    .lottery-room:not([data-theatre="true"]) .legend { gap: var(--space-3) var(--space-6); }
+    .lottery-room:not([data-theatre="true"]) .statrow { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: start; }
+    .lottery-room:not([data-theatre="true"]) .stat { flex-direction: column; align-items: flex-start; min-width: 0; gap: var(--space-2); }
+    .lottery-room:not([data-theatre="true"]) .stat small { position: absolute; width: var(--space-1); height: var(--space-1); overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  }
+}
+@media (width > 56.25rem) and (height <= 56.25rem) {
+  .lottery-room:not([data-theatre="true"]) { padding-block: 0; }
+}

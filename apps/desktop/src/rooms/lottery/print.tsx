@@ -30,7 +30,7 @@ export function PoolStage({ count, winners, winner_detail, held_out, cap, illust
 }) {
   return <div className="cc-stage-wrap"><section className="panel cc-print-in" data-role="lot-urn-panel" style={entranceStyle(0)} aria-label={copy.pool_title}>
     <div className="topline" />
-    <div className="lottery-pool-heading">
+    <div className="lottery-pool-heading" title={title}>
       <PanelTitle title={title} gloss={illustration} />
       <div className="cc-tally">
         <div className="num" data-role="lot-count"><HeroReadout value={String(count)} caption={caption}

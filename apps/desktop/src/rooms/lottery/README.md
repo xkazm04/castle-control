@@ -344,3 +344,48 @@ The Keep's moat-label hook is back on the label span. Its azure, white, bold
 700 print face, .02em tracking, space-6/space-12 padding, key rule and offset
 shadow match the pre-merge treatment; only the old absolute art coordinates
 are omitted so the accepted heartbeat/footer stays in normal flow.
+
+## FU-2: readable desk ceremony at 1280x800
+
+Desktop rooms shorter than 32rem use a wider urn column and a shared panel
+grid. The heading/count, compact controls, phase, cohort legend, narrow
+three-stat strip and scrollable winner rail sit beside the drawing. The four
+shape choices share one row; ceremony options, notes and theatre share the
+next. Ceremony results no longer split the drawing's width in this layout.
+At window heights through 900px, local vertical padding drops to zero; panel
+horizontal padding remains 16px. All text keeps the existing token
+roles and the 13px floor. The ellipsised heading retains its full accessible
+text and a native hover title; phase and seed labels also retain full text and
+hover titles. Stat details retain their accessible text and native titles.
+Manual calls stay first in the result rail with their Space shortcut; the seal
+hash stays in accessible text while a call waits. Taller desk views give the
+drawing the larger share of the existing drawing/result split. Theatre retains
+its original layout; timing,
+reduced motion, winner order, sound, keys and authority paths are unchanged.
+
+`e2e/journey-lots-stage.spec.ts` now requires at least 260px of rendered drawing
+height, using the SVG viewBox and screen transform rather than only a frame's
+bounding box. It covers all four shapes at 1280x800, 1440x900 and 1920x1080 on
+paper and stock, retains panel/type/control containment checks, adds horizontal
+overflow checks, enters/returns from theatre with Enter, then seals with Space
+and checks the completed cast. Winner results must remain in view. A dedicated
+1280x800 reduced-motion journey calls all three lots with Space and checks the
+focused call button is fully in view. Each viewport case prints its measured
+drawing height for the Director's verification record.
+
+Validation in this sandbox: frozen install, 1,031 desktop unit tests, desktop
+typecheck/lint/build and e2e typecheck/lint pass. The desktop build remains
+within its first-load budget. `pnpm gate` passes the 13 harness and 35 tooling
+tests, then stops at contract export with `spawnSync cargo EPERM`. Both Lots
+browser journeys stop before running with `spawn EPERM`. Browser host access
+is unavailable; automatic approval review also rejected Chrome access because
+Google Chrome use was not approved.
+
+| Window | Before | After |
+| --- | --- | --- |
+| 1280x800 | About 130px, reported by the owner; not measured here | 260px minimum pinned in e2e; browser measurement pending |
+| 1440x900 | Browser measurement unavailable | 260px minimum pinned in e2e; browser measurement pending |
+
+No measured before/after values or browser layout pass are claimed. The
+Director must run the two Lots journeys with browser access to close visual
+acceptance. No external result path was supplied in the FU-2 brief.

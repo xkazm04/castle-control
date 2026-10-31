@@ -179,6 +179,7 @@ export function DrawStage({ shape, on_shape, entries, cast, content, sealed, sea
   }, [fresh, key, on_theatre]);
   const phase = !sealed && !playable ? 'open' : !cast ? 'sealed' : !verified ? 'casting'
     : state.finished && revealed.length === winners.length ? 'revealed' : 'revealing';
+  const phase_label = state.waiting ? copy.stage.held : copy.stage[phase];
   const disclaimer = scene.layers.find(layer => layer.kind === 'disclaimer');
   useCeremonySound(sound, shape, scene, key, fresh, revealed.length, phase === 'revealed');
   // The last call removes its button; hand focus to the verdict's proof button instead of the page.
@@ -231,7 +232,7 @@ export function DrawStage({ shape, on_shape, entries, cast, content, sealed, sea
           </g> : null;
         })}
       </svg>
-      <p className="lottery-stage-phase">{state.waiting ? copy.stage.held : copy.stage[phase]}{seal ? <small>{copy.stage.seal(seal)}</small> : null}</p>
+      <p className="lottery-stage-phase" title={phase_label}><span className="lottery-stage-state">{phase_label}</span>{seal ? <small>{copy.stage.seal(seal)}</small> : null}</p>
       {sealed && !playable && seal && <div className="lottery-stage-wax" aria-hidden="true">
         <Stamp kind="sealed" word={copy.stage.wax.join(" ")} land /></div>}
       {(revealed.length > 0 || state.waiting) && <div className="lottery-stage-rail" role="region" aria-label={copy.stage.rail} tabIndex={0}>
@@ -256,7 +257,7 @@ export function DrawStage({ shape, on_shape, entries, cast, content, sealed, sea
       {phase === 'revealed' && !reduced && <div key={state.key} className="lottery-stage-confetti" aria-hidden="true">
         {burst.map((piece, index) => <i key={index} style={burstStyle(piece)} />)}</div>}
     </div>
-    {playable && <div className="lottery-stage-foot">
+    {playable && <div className="lottery-stage-foot" title={copy.stage.labels[playable.label]}>
       <StatusChip variant="gules">{copy.stage.labels[playable.label]}</StatusChip>
       {phase === 'revealed' && !theatre && <Stamp kind="ok" word={copy.stage.proof[proof][0]} />}
       <InkButton size="room" className="lottery-stage-replay" disabled={!state.finished} aria-label={copy.stage.replay}
