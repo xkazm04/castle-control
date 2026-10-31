@@ -3,181 +3,302 @@
 Main Codex thread ID for Devpost: `01a1741c-c7ad-7f32-9992-27f322adeb5c`.
 Builder model: `gpt-6.1-sol`; reasoning effort: `high`.
 
-Assembled from the Director journal on 2026-10-30; the Director verifies before publication.
+Assembled from the Director journal on 2026-10-31; the Director verifies before publication.
 
 **Pending Director verification.** This is offline construction evidence, not
 a live milestone exit, a gate verdict or submission approval.
 
-Snapshot: 2026-10-30T12:55:51Z. Local main checked at `e8807a2029f5`.
+Snapshot: 2026-10-31T11:11:51.031Z. Local main checked at `b77df13da1d1231594e34a3d29051ea041304173`.
 The journal can change after this snapshot, including this assembly run.
 
 ## Merged runs on main
 
-One row per journal run in state `merged`, retained only after both git checks
-below succeeded in the assigned worktree. Subjects come from the commit object,
-not private task text. Rows are ordered by settlement time (UTC). The work-package
-cell preserves the WP label in the public subject and is blank when none is
-present; no package assignment is inferred. Resume counts are journal entries
-with matching `runId` and `mode = resume`; they are not review-pass counts.
+One row per merged journal run whose merge SHA passed both git checks in the
+assigned worktree, against the recorded snapshot revision and local main.
+Rows are ordered by settlement time (UTC). Only identifiers and dates are
+copied from the journal; commit subjects and task text are excluded.
 
-| Work package | Commit subject | Short SHA | Codex thread ID | Resumes | Settled date (UTC) |
-| --- | --- | --- | --- | --- | --- |
-| WP 0.1 | WP 0.1: establish workspaces and counted Windows gates with verified failure proofs | `5a9e4dc11626` | `01a17441-a345-78e0-98c4-d70d6501fb94` | 0 | 2026-10-25T18:22:07.481Z |
-| WP 0.3 | WP 0.3: Add local storage, canonical audit ledgers and previewable retention purges | `d9e6ff22adad` | `01a17441-b313-70a3-a7b6-905d7853b9f6` | 0 | 2026-10-25T18:23:03.217Z |
-| WP 0.6 | WP 0.6: port Twitch bridge with brokered credentials and reconnect recovery | `3e325fb899eb` | `01a17427-8913-7d63-a8fb-c5872f6001f3` | 1 | 2026-10-25T18:24:08.443Z |
-| WP 0.4 | WP 0.4: add prototype inventory, generated tokens and controlled React component kit | `55978d1c77c3` | `01a1744f-775d-7002-9f2d-b4ee46ee0b02` | 1 | 2026-10-25T18:54:41.320Z |
-| WP 0.2 | WP 0.2: establish schema-generated contracts and authenticated resumable core service | `cd62f5ca900d` | `01a1744f-6782-7ec0-8eee-380672650f76` | 1 | 2026-10-25T18:57:19.220Z |
-| WP 0.2 | WP 0.2: declare bridge and rampart status reads to unblock M0 consumers | `713a85401571` | `01a17473-423e-7bf1-a73f-2b2cc4990eb9` | 0 | 2026-10-25T19:09:15.912Z |
-| WP 0.6 | WP 0.6: add opt-in non-revoking EventSub socket faults and retain recovery gaps | `3e5150f8fbbc` | `01a17473-55c8-7b50-acd5-90fcb6709f80` | 0 | 2026-10-25T19:11:59.165Z |
-| WP 0.5 | WP 0.5: add desktop frontend routes and isolated core/fixture shell | `93d64157b5e8` | `01a1746f-33ca-76a2-941b-5185f78485bd` | 1 | 2026-10-25T19:23:48.132Z |
-| WP 0.7 | WP 0.7: add OBS transport and wire native services for the owner live spike | `cf75bb7e0ab7` | `01a1746f-2194-7a43-a339-4470be74db05` | 1 | 2026-10-25T19:24:43.717Z |
-| WP 0.5 | WP 0.5 prerequisite: allow exact-origin RPC CORS for Tauri webviews | `22edc959526d` | `01a1748a-d830-7bb1-ae33-dd54555f98f3` | 0 | 2026-10-25T19:36:02.448Z |
-| WP 0.5 | WP 0.5: add Tauri shell with in-memory core launch and isolated Vite fixtures | `e9fbb4c34394` | `01a17487-d980-7702-a0d8-1050dd0910c5` | 1 | 2026-10-25T19:45:35.416Z |
-| WP 0.5 | WP 0.5: use JSX specifier so the kit entry passes import-boundary checks | `394ffe3c318a` | `01a1749f-af7d-7e71-969c-aaf39d7a602b` | 1 | 2026-10-25T20:01:20.317Z |
-| WP 1.1 | WP 1.1 contract: type Gatehouse payloads and centralize engine settings parsing | `44530c11db89` | `01a174dc-fc71-7a22-ac75-4cfa47efda41` | 0 | 2026-10-25T21:12:00.440Z |
-| WP 1.1/1.4/2.1/2.2 | WP 1.1/1.4/2.1/2.2 prerequisite: scaffold cc-gatehouse, cc-engine, cc-lots and cc-verify | `021a1be47921` | `01a174dd-0bfc-7fa3-8cf6-b55f5cd63247` | 1 | 2026-10-25T21:15:01.878Z |
-| WP 1.4/2.1 | WP 1.4/2.1 prerequisite: add typed engine and draw risk audit events | `e1ff68b2049c` | `01a174f2-7eea-71a0-8a12-06a7dc876268` | 1 | 2026-10-25T21:38:25.472Z |
-| WP 1.1 | WP 1.1 prerequisite: complete Rule evaluation settings and strike-policy contract | `2862f6c79f0f` | `01a174f2-66de-7032-94ff-b991b5c1d9bc` | 1 | 2026-10-25T21:56:02.395Z |
-| WP 2.1 | WP 2.1: enforce offline draw eligibility and audited giveaway guardrails | `3dbcf4b1dcb9` | `01a174ee-3a9e-7650-8b69-7020d78bfeba` | 1 | 2026-10-25T21:56:56.485Z |
-| WP 2.2 | WP 2.2: finish browser BLS verification and quicknet conformance | `9c34d419f9d8` | `01a174ee-4d71-7fe2-82be-799ce33410b6` | 1 | 2026-10-25T21:58:05.397Z |
-| WP 1.4 | WP 1.4: add isolated engine routing, classifier admission and CLI custody | `f129a5e14bbb` | `01a174ee-2b4c-7170-8dc7-157ea751d00a` | 1 | 2026-10-25T22:09:45.288Z |
-| WP 1.1 | WP 1.1: add offline verdict pipeline and durable deterministic action gate | `6c286b191972` | `01a174ee-1b02-7903-99a2-f9c093457299` | 1 | 2026-10-25T22:28:55.571Z |
-|  | Lots contract: type draw RPCs and event payloads using the existing verifier writ format | `27f3a5b1680a` | `01a17522-9075-7603-ac38-5bb7a22a7850` | 0 | 2026-10-25T22:42:40.614Z |
-| WP 3.1 | WP 3.1 prerequisite: scaffold cc-beacons with contribution dependency isolation | `938e4b7ece51` | `01a17522-bacb-7650-b4eb-3b8de7ffc879` | 0 | 2026-10-25T22:44:39.783Z |
-| WP 2.2 | WP 2.2: connect lots to immutable offline seal and cast proofs | `3380ffcc41b0` | `01a17522-a9d6-70b2-b4b5-1c052c9b77df` | 0 | 2026-10-25T22:46:37.462Z |
-| WP 1.5/1.6 | WP 1.5/1.6: type consensus, drill and recording payloads | `fe8409f08aca` | `01a1753f-4c9d-7ef3-ba41-a4da3b2f5c31` | 0 | 2026-10-25T23:00:27.314Z |
-| WP 1.1/1.4 | WP 1.1/1.4: connect Gatehouse classifier to the audited live engine lane | `93caf5968586` | `01a1753f-3519-7101-9117-d19f0e40dcae` | 0 | 2026-10-25T23:02:40.450Z |
-| WP 3.1/3.2 | WP 3.1/3.2: type Beacons contracts to unblock intake and rendering | `984e8a77359b` | `01a1754e-f50d-72f2-93ee-12864330f957` | 0 | 2026-10-25T23:23:25.639Z |
-| WP 2.2 | WP 2.2: Audit sealed draws before casting so every cast has a seal line | `ac5174276d0d` | `01a1754f-08a7-7583-8cf7-bd402abe4b13` | 0 | 2026-10-25T23:27:24.917Z |
-|  | Accept declared workspace export subpaths while preserving private import checks | `dbd6f8c40c1a` | `01a1754e-df00-75d2-a856-a609c31c3ebe` | 0 | 2026-10-25T23:31:35.364Z |
-| WP 1.7 | WP 1.7: build fixture-only Gatehouse review and replay UI | `5073b63e19c1` | `01a1754f-1b35-7571-989f-0c57a887cbbc` | 0 | 2026-10-25T23:37:36.999Z |
-|  | Fix workspace-script proof to blank tokens test and reject no-op seeds | `532306c4e215` | `01a17572-155c-7fb0-9f45-3c728047967d` | 0 | 2026-10-25T23:58:42.458Z |
-| WP 2.2 | WP 2.2: share JSON decoder and restore offline writ file verification | `71d125f34fbd` | `01a1753f-6087-7492-9f58-77d7b55b9508` | 1 | 2026-10-26T00:06:05.081Z |
-| WP 3.2 | WP 3.2: add dependency-free renderer core and memoized CSS intensity binding | `b461d34360bc` | `01a17571-f758-7421-a50a-e0ca16fcba50` | 0 | 2026-10-26T00:15:23.579Z |
-|  | Restore desktop budget by sharing and tree-shaking contract validators | `80ec8c9bb7b7` | `01a17571-b17e-7f32-b824-32b61eac833a` | 0 | 2026-10-26T00:35:28.810Z |
-| WP 1.5/1.6 | WP 1.5/1.6: add offline consensus, retained recordings and isolated replay | `146728b8f825` | `01a17571-c93e-7b52-8428-a607c5bae38d` | 0 | 2026-10-26T00:45:36.717Z |
-| WP 3.1 | WP 3.1: normalize contributions and compute deterministic beacon intensity | `998c49508a7d` | `01a17571-e581-7a70-9ffe-55f1a3d1f028` | 0 | 2026-10-26T00:50:44.553Z |
-| WP 1.7 | WP 1.7: promote reusable moderation components into the shared UI kit | `d09bec696905` | `01a175ae-d7bf-7a51-9fd6-cb52021b2554` | 0 | 2026-10-26T01:10:58.080Z |
-| WP 3.2 | WP 3.2: define local design-package contracts for renderer integration | `567fa51d561d` | `01a175ae-c2af-73f1-9617-72515cdf6b73` | 0 | 2026-10-26T01:22:16.707Z |
-| WP 3.2 | WP 3.2: evaluate renderer intensity bindings and ignore simulated beacon fingerprints | `7495123a3e91` | `01a175cf-66e1-7071-b273-43356e9b4e91` | 0 | 2026-10-26T01:36:26.706Z |
-| WP 5.1 | WP 5.1: Define typed Steward writ contracts before RPC implementation | `befdf884230e` | `01a175cf-77c5-7e10-a0ae-c3b950284be0` | 0 | 2026-10-26T01:41:26.644Z |
-| WP 3.3 | WP 3.3 prerequisite: export beacons method handles from the contract root | `c86462b54741` | `01a175e0-fdf4-7491-814f-fb6e3579dbf6` | 0 | 2026-10-26T01:56:15.719Z |
-| WP 3.3 | WP 3.3: add fixture-only Beacons designer with windowed events and lazy loading | `b039e79435a4` | `01a175cf-51df-7640-9fb4-d21f07749980` | 1 | 2026-10-26T02:08:15.985Z |
-| WP 2.3 | WP 2.3: add cast-faithful draw scenes, prize disclaimer and urn template | `e37bfeb61719` | `01a175f9-8b30-7db0-8f0f-5995faf52003` | 0 | 2026-10-26T02:20:41.786Z |
-| WP 1.3 | WP 1.3: add offline governor with hysteresis and expiring room leases | `9a27a6402cbc` | `01a175e1-1185-7142-9c64-141f587d12ac` | 0 | 2026-10-26T02:25:28.377Z |
-| WP 2.3 | WP 2.3 prerequisite: export lots method handles from the contract root | `df09a300700a` | `01a175f9-9ec4-7b22-b292-6c68b8793db0` | 0 | 2026-10-26T02:30:01.323Z |
-| WP 2.3 | WP 2.3: add fixture-only Lot Chamber page with prize guardrails and nested proof preview | `9925769186ec` | `01a175f9-77d8-7060-96c8-eb464a8ea4fc` | 0 | 2026-10-26T02:34:30.537Z |
-| WP 1.2/1.3 | WP 1.2/1.3 contract: type gate payloads and guard lease-end against premature RPC registration | `48418f2c718a` | `01a17611-a835-7380-adb0-f6f73b2f7209` | 1 | 2026-10-26T02:52:39.766Z |
-| WP 1.2 | WP 1.2: add offline Twitch moderation calls and typed EventSub validation | `cffdd1a30777` | `01a17611-b783-7422-8f07-ae86dcc1c78c` | 0 | 2026-10-26T03:03:13.826Z |
-| WP 1.7 | WP 1.7: confirm fixture gate controls before displaying applied state | `eba4fefed40b` | `01a1762c-1062-79c1-8bd9-ad552360a0b7` | 0 | 2026-10-26T03:23:22.711Z |
-| WP 1.2 | WP 1.2: add offline Gatehouse gate domain with durable human review | `0181ffd985cb` | `01a1762b-f71e-7762-b7b2-df3df3e2f8fc` | 0 | 2026-10-26T03:31:24.924Z |
-|  | docs(submission): draft timed floor demo and evidence-backed hackathon package | `33ff4bbe4b74` | `01a17645-f0b4-7863-8c0e-41be31a37f42` | 0 | 2026-10-26T03:45:40.059Z |
-| WP 5.1 | WP 5.1 prerequisite: add shared fake CLI Steward writ scenarios | `a7157f8b2368` | `01a17652-306a-7de3-a60e-d618766cb869` | 0 | 2026-10-26T03:57:42.956Z |
-| WP 4.1 | WP 4.1: add validated Map Room data templates and pure renderer scenes | `b7f4e6e33a61` | `01a17661-6b51-7050-99f6-e9416024d2f1` | 0 | 2026-10-26T04:21:10.545Z |
-| WP 3.4 | WP 3.4: add private Leonardo image client with offline fixtures and cost receipts | `f8a456676a6c` | `01a17672-db91-7ea0-bfe5-77b54d7c1cc9` | 0 | 2026-10-26T04:42:44.860Z |
-|  | docs: record Steward config-store exception and delivery order | `5bdcbbddacc4` | `01a1772f-8304-77f3-ab31-d961e0ee7eea` | 0 | 2026-10-26T07:59:23.546Z |
-|  | test(obs): pair wire assumptions with guarded live checks | `e514f4201913` | `01a1772f-64e0-78b2-bdc1-748442daafa1` | 0 | 2026-10-26T08:13:43.998Z |
-| WP 1.4 | WP 1.4: document floor wire assumptions and pair fixtures with guarded live probes | `ace427b6fa9d` | `01a1772f-741b-7042-8a27-43fe4677f0de` | 0 | 2026-10-26T08:18:27.013Z |
-| WP 1.2 | WP 1.2: pair Twitch schema fixtures with guarded owner live observations | `70346502feb4` | `01a1772f-499e-7322-bb2c-b4a3f8d44f52` | 1 | 2026-10-26T08:24:43.604Z |
-| WP 0.7 | WP 0.7: consolidate owner spike preparation and live-check evidence | `c7acd0eacd5c` | `01a17752-4c74-7a61-b0da-c20d56e1346f` | 0 | 2026-10-26T08:38:52.882Z |
-| WP 2.3 | WP 2.3: stretch Lot Chamber dot viewport to close the hero gap | `cdf9f187352e` | `01a17752-3926-7a52-a15d-9ba4ca3a5f64` | 0 | 2026-10-26T08:45:06.734Z |
-| WP 0.5 | WP 0.5: label fixture rampart and draw preview honestly | `b118bb64c838` | `01a17752-0ae5-76c1-9622-fa377d411b68` | 1 | 2026-10-26T09:02:51.298Z |
-| WP 1.7 | WP 1.7: remove duplicate Shield toggle and give held header a clean second line | `388c569ab2be` | `01a17752-2787-7fe3-a906-f6ac4e1d60ba` | 1 | 2026-10-26T09:14:56.370Z |
-| WP 0.5 | WP 0.5: preserve rampart status gaps and reclaim compact wordmark space | `59d63ad510a2` | `01a1778a-6b76-7e81-803a-ec556fb71cff` | 0 | 2026-10-26T09:40:48.570Z |
-| WP 2.1/2.2 | WP 2.1/2.2: add unregistered lots RPC module with persistent proofs and offline acceptance tests | `ba188d2987a5` | `01a1778a-5677-7821-bbb3-b0eebfb33cda` | 1 | 2026-10-26T09:48:03.031Z |
-| WP 1.1 | WP 1.1: add offline Gatehouse RPC module without production registration | `95c432a7a50d` | `01a177a6-1f2e-76a1-9fad-1b29d044eb98` | 0 | 2026-10-26T10:16:21.240Z |
-| WP 0.2 | WP 0.2: reject non-object RPC params to match exported schemas | `3afe0a47cb42` | `01a177bd-5c9b-7580-bf96-713e2ed67eb4` | 0 | 2026-10-26T10:37:38.991Z |
-| WP 1.2/1.3 | WP 1.2/1.3: complete offline gate service seams for later RPC wiring | `75c51a87b44d` | `01a177cb-bd34-70c0-b84f-747925251cfa` | 0 | 2026-10-26T11:02:40.152Z |
-|  | Add fixture Lot Chamber stage with focused views and restylable designs | `3938c1a85432` | `01a179cd-7d97-7d63-8eb1-8340d73a0384` | 0 | 2026-10-26T20:17:04.385Z |
-|  | docs: define two-layer chambers and sealed custom-design flow | `fd88e4e13eb3` | `01a179cd-6926-7b21-a039-2bc30af3fdbe` | 0 | 2026-10-26T20:20:17.668Z |
-|  | AI-1: add deterministic Steward port, guarded proposal lifecycle and shared queue | `06a21b4166c1` | `01a17a26-29cf-7043-ab9b-7b4362d9c039` | 0 | 2026-10-26T21:49:42.709Z |
-|  | AI-2: add Keep and overview shell, remove rejected stage | `cabd3b3b5e0f` | `01a17a26-3e71-7ff2-8bda-f0e1cf2b48dc` | 0 | 2026-10-26T21:57:47.142Z |
-|  | AI-6: Add standalone Beacons and Map Room work surfaces with safe local previews | `ce68b8dc36ea` | `01a17a3e-6e39-7203-9810-d101abae5244` | 0 | 2026-10-26T22:18:52.521Z |
-|  | AI-5: rebuild Lot Chamber and Gatehouse rooms with held proposal seals | `931791247f8a` | `01a17a3e-56a3-7980-b66d-e7997b734c05` | 0 | 2026-10-26T22:25:43.516Z |
-|  | AI-3/AI-4: rebuild Keep and Overview around shared Steward proposals | `5d73e7af141d` | `01a17a3e-42e5-72d1-b7ef-4521f83d483b` | 0 | 2026-10-26T22:31:29.136Z |
-|  | Wave 2b A: constrain Keep layout, show fixture-backed state words and remove duplicate banners | `2911abeb646a` | `01a17a5b-19f8-7822-a54a-5be385587783` | 0 | 2026-10-26T22:52:02.743Z |
-|  | AI-6: assert mounted Beacons and studio room content in navigation test | `45e8e765a919` | `01a17a5b-2cca-7a02-bbff-529654ecb2e9` | 1 | 2026-10-26T22:55:47.970Z |
-|  | AI-10: add simulated preset and custom design previews through the shared Steward queue | `6ea0fe81bce7` | `01a17c9b-731c-7c92-a24e-4bbc1f241423` | 0 | 2026-10-27T09:27:57.328Z |
-|  | AI-7: register fixture-only Lots and Gatehouse with offline guards | `a379e35a7f57` | `01a17c9b-2a38-76a3-bfd0-fd53d241a9db` | 0 | 2026-10-27T09:31:33.074Z |
-|  | AI-9: compose nested chamber rooms and inset the Beacons stage | `3477072b182a` | `01a17c9b-595c-74e0-8dff-31c72500ea80` | 1 | 2026-10-27T09:38:32.197Z |
-|  | AI-9b: clarify room stages and expose scrollable review content | `08274f43e7bc` | `01a17cdf-a47d-7ff3-a93b-0693fbb84ca2` | 0 | 2026-10-27T10:31:27.634Z |
-|  | AI-13: mount Overview design focus through the shared preview and seal session | `a10ad3689231` | `01a17cdf-b4e0-7f82-bc76-2d7a869e62d5` | 0 | 2026-10-27T10:40:13.443Z |
-|  | polish: correct proposal counts and accessible chamber tile names | `0890b6821990` | `01a17d07-a6ce-7323-bd1e-9a37ec12c253` | 1 | 2026-10-27T11:15:29.728Z |
-|  | AI-14: mount shared room design focus with preview-gated seals | `fece7d840520` | `01a17d07-92fb-7373-aafb-c35161faa96b` | 0 | 2026-10-27T11:21:45.223Z |
-| WP 0.1 | WP 0.1: fetch locked dependencies before gates and record failure proofs | `a3cc44aeb58f` | `01a17d23-9f77-7323-a7fb-3f3a6c0a7294` | 0 | 2026-10-27T11:53:04.713Z |
-| WP 2.2 | WP 2.2: expose verified quicknet beacon behind explicit opt-in | `c1a68577fe92` | `01a17d46-4e5b-78e0-98a1-aeeb8c9a0768` | 0 | 2026-10-27T12:23:54.753Z |
-| WP 2.3 | WP 2.3: regenerate the standalone verifier after the Lots contract export | `e058bd26fbf9` | `01a17d46-5fa9-7e22-b2c5-ce9b6656bc94` | 1 | 2026-10-27T13:03:05.113Z |
-| WP 1.5/1.6 | WP 1.5/1.6: expose rules-only Gatehouse replay and consensus through core | `7fec8b392ec2` | `01a17d95-1570-74c0-842e-08810e856fa8` | 0 | 2026-10-27T13:54:53.246Z |
-| WP 3.1 | WP 3.1: register persistent offline Beacons configuration and simulation | `87afb3f4210a` | `01a17d95-24ea-78e0-a7bc-e3046d574107` | 1 | 2026-10-27T14:20:31.008Z |
-| WP 0.7 | WP 0.7: fix OBS overlay CSP to allow injected styles and transparency | `bbdf58da4c08` | `01a17dce-e095-73b1-a295-c23ec9fd2813` | 0 | 2026-10-27T14:52:39.141Z |
-| WP 1.7 | WP 1.7: connect Gatehouse to core with lazy contract validators | `5c04da4067b2` | `01a17dce-f354-7ec0-bba6-75d60ac4f80a` | 1 | 2026-10-27T15:03:01.759Z |
-| WP 0.7 | WP 0.7: make the OBS spike plate visible and report scene mismatches | `77c8320a0e48` | `01a17deb-422f-7342-bd53-e254ad1ff863` | 0 | 2026-10-27T15:23:47.111Z |
-| WP 3.2 | WP 3.2: return Beacons source URLs from the isolated native overlay | `43c687f48d8e` | `01a17e11-5af1-7142-9078-1c7b0d44cd6d` | 1 | 2026-10-27T16:14:58.769Z |
-| WP 0.7 | WP 0.7: reuse valid stored Twitch login before requesting device login | `1684515c5450` | `01a17e30-d172-78b3-b8d6-15d42077c297` | 0 | 2026-10-27T16:41:49.901Z |
-| WP 3.3 | WP 3.3: virtualise simulated Beacons feeds; live beacons.contribution intake remains follow-up | `fe9185013ca3` | `01a17ecb-2b9c-78c0-963c-af856292c260` | 0 | 2026-10-27T19:27:43.615Z |
-| WP 0.7 | WP 0.7: detach scene items before OBS live cleanup; no production removal path; re-run O4 and O8 live | `2a8c68f73999` | `01a17ecb-1569-7110-8c3a-31b0cce1d439` | 0 | 2026-10-27T19:30:40.224Z |
-| WP 3.3 | WP 3.3: add accessible desktop curve editing with confirmed saves and rollback | `daa70585fa92` | `01a17f2f-5636-79d0-ad89-e220131fd12c` | 1 | 2026-10-27T21:21:45.149Z |
-| WP 1.3 | WP 1.3: Compose the governor service and audit room lease lifecycles | `d16ad23d1d96` | `01a17f2c-095b-7242-abbf-6f866e7de6e3` | 0 | 2026-10-27T21:27:42.327Z |
-| WP 3.2 | ADR 0002: overlay host CSP for WP 3.2 | `1c9d85ab0613` | `01a17f3f-860f-7770-879a-911a5a60582e` | 0 | 2026-10-27T21:33:43.131Z |
-| WP 3.4 | WP 3.4: define private art contracts before desktop wiring | `93885a0bddc0` | `01a17f51-4cc8-7123-9f98-b94441c9e8a4` | 0 | 2026-10-27T22:04:24.922Z |
-| WP 3.2 | WP 3.2: define accepted render snapshots before overlay SSE wiring | `ed44da8379af` | `01a17f67-77dc-7413-af79-9572bc1504bb` | 0 | 2026-10-27T22:24:43.078Z |
-| WP 6.2 | WP 6.2: add static landing with shared tokens and a legible wordmark | `3a112825b2a1` | `01a17f7b-823e-7221-83f2-9e374c70b8f2` | 0 | 2026-10-27T22:47:42.465Z |
-| WP 3.2 | WP 3.2: serve verified Beacons snapshots on the isolated overlay origin | `cc1197c8b2b3` | `01a17f81-81ed-7040-9344-9006ea4f47f7` | 0 | 2026-10-27T23:09:29.764Z |
-| WP 6.2 | WP 6.2: restore landing print textures and prove accessible intro handover | `f5a7f2350046` | `01a17f97-9b98-7823-9a07-6a6b476eeb83` | 0 | 2026-10-27T23:16:55.252Z |
-| WP 6.1 | WP 6.1: enforce workspace version parity and configure unsigned Windows NSIS packaging | `c3dea03c84af` | `01a17f97-87a4-7a40-8bca-dbcc01180bc6` | 0 | 2026-10-27T23:25:03.925Z |
-| WP 6.3 | WP 6.3: document privacy, user workflows and Director overlay probe evidence | `05922b4f71db` | `01a17fbe-5fdd-7c41-a87e-9a882a7818f3` | 0 | 2026-10-27T23:57:21.465Z |
-| WP 1.2 | WP 1.2: feed native draws only from shared shadow Gatehouse verdicts | `c1265627cc7e` | `01a17fc0-6b1d-7262-975b-9b311c74000e` | 0 | 2026-10-28T00:13:01.621Z |
-| WP 5.1 | WP 5.1: bind Steward RPC methods to existing typed contracts | `032d83aae6fd` | `01a18161-b8a7-7b20-be51-700b6874f498` | 0 | 2026-10-28T07:37:14.315Z |
-| WP 3.4 | WP 3.4: audit image-provider credits with shared validated art types | `e63050fa1d54` | `01a1817c-9aa1-7a62-9ab2-066b13b99b57` | 0 | 2026-10-28T08:12:21.020Z |
-| WP 3.1 | WP 3.1: persist native EventSub contributions without changing visual contracts | `9a120c422338` | `01a18189-9728-78c1-b37d-1d686ada44e3` | 0 | 2026-10-28T08:29:41.575Z |
-| WP 3.4 | WP 3.4: wire credit-only Leonardo art RPCs and audit exact receipts | `32ca0ff9d351` | `01a181a9-2c9b-7b32-949a-927ad0562555` | 0 | 2026-10-28T09:07:53.419Z |
-|  | Polish Beacons room spacing with shared tokens and consistent section gaps | `6db28db67ba1` | `01a181d6-ce13-7a02-b591-89e0c8531fc5` | 0 | 2026-10-28T09:44:31.973Z |
-|  | Bring Lot Chamber and Gatehouse room composition closer to A/1 | `508384955acb` | `01a181d6-ed12-7b21-873e-5e174ff62d23` | 0 | 2026-10-28T09:57:15.996Z |
-|  | Gatehouse: target rule buttons 3-&gt;2 lines at 1440/1280 (visual check pending); soften portcullis stripes from hair-2 to | `c33ee237c022` | `01a181f3-2c41-7d80-9a78-2c684e801744` | 0 | 2026-10-28T10:11:44.315Z |
-| WP 2.3/3.3 | WP 2.3/3.3: remove six-space-56 minima from lottery stage and Beacons hero to close short-content bands; drop replay res | `25385be866f3` | `01a18200-278e-76e1-bbde-0e2fbb180ce7` | 0 | 2026-10-28T10:44:14.383Z |
-| WP 5.1 | WP 5.1: expose lazy Steward validators and refresh the offline verifier fingerprint | `ade92020fd4a` | `01a181ea-0a20-77d0-9ea7-c29b17e461b7` | 0 | 2026-10-28T10:54:51.040Z |
-|  | Line 4: size Beacons SVG at 360:240 and move proof/fairness below writ to close empty bands | `4006044b5229` | `01a1821f-082f-7d43-9092-4c265efd04f0` | 0 | 2026-10-28T11:03:36.080Z |
-| WP 5.1/5.2 | WP 5.1/5.2: wire live Steward bar and seal slot with lazy validators to preserve the bundle cap | `21d113e01a60` | `01a18229-862b-7a60-898d-c05054cef503` | 0 | 2026-10-28T11:15:09.701Z |
-|  | Fix Beacons hero band with measured SVG bounds and full-height flames | `b30cd2388530` | `01a18230-1965-73c2-9730-90fce7c3ccfa` | 0 | 2026-10-28T11:30:08.689Z |
-|  | Fix Beacons hero blaze scaling and cap artwork height | `b52648717470` | `01a18248-8461-7273-810e-64cc9e0bb505` | 0 | 2026-10-28T11:54:34.287Z |
-|  | Fix contract parity false positive on the tracked overlay bundle | `edd0a59330c4` | `01a18254-5744-7f93-8337-e17bf1b0a4e5` | 0 | 2026-10-28T12:05:35.039Z |
-| WP 4.1 | WP 4.1: add bounded viewer config and payment-free control reducers | `58672fb521b5` | `01a182eb-7ceb-7da1-814c-6959d8c5172b` | 0 | 2026-10-28T14:48:40.799Z |
-|  | Support dollar-only image cost amounts while preserving legacy receipts | `0567e74d15e0` | `01a182dd-9986-7fe2-ac52-144d24ad9b1a` | 0 | 2026-10-28T15:16:50.370Z |
-|  | Add bounded Gatehouse chat and history reads through the existing Store | `58909253b8ab` | `01a18304-c01d-75c0-879a-60cddad65a85` | 0 | 2026-10-28T15:26:05.044Z |
-|  | Allow viewer-free Steward writs only in the allowlisted Writs config store | `c99dc1c29dbd` | `01a1831a-3907-72c0-a33f-9444bd06e467` | 0 | 2026-10-29T12:09:16.073Z |
-|  | Enable credit-honest background removal for Beacons art | `ce488e185c16` | `01a1831a-8823-7992-bcf8-bac3cd65c8fc` | 0 | 2026-10-29T12:15:52.813Z |
-| WP 1.7 | WP 1.7: update shell integration test for Gatehouse chat and history reads | `b6184b5649e9` | `01a18796-f933-78f2-8933-ed14a2bd4490` | 1 | 2026-10-29T12:41:20.421Z |
-| WP 2.1-2.3 | WP 2.1-2.3: enable opt-in trusted live draws with OBS and writ verification | `0ea0d04a80b7` | `01a1879a-6eee-77d1-8bba-18bb564d701c` | 0 | 2026-10-29T12:48:44.171Z |
-|  | M1b: retain live capture instruments and expose bounded Gatehouse replay evidence | `617e094d1d87` | `01a18797-2c82-7700-b580-27431a8e6808` | 0 | 2026-10-29T12:56:23.447Z |
-| WP 6.3 | WP 6.3: record M1a and M2 merges in the floor checklist and shot list | `91e498ce30de` | `01a187b9-dfc5-7d51-9d2b-0f25a2a7d05b` | 0 | 2026-10-29T13:02:38.081Z |
-| WP 1.7 | WP 1.7: replay retained Gatehouse captures against their stored instruments | `c7892791f151` | `01a187c4-308d-7073-8ee4-80acf2c95435` | 0 | 2026-10-29T13:25:42.237Z |
-| WP 5.1 | WP 5.1: serve Steward writ protocol through host engine seam and inventoried storage | `2a080c1cb856` | `01a187c4-484f-76c2-80a9-eb06444d4ed0` | 1 | 2026-10-29T13:49:09.766Z |
-| WP 3.1 | WP 3.1: refresh offline verifier artifact after contract metadata change | `798bb8f97a3a` | `01a187c4-1d06-7810-8674-2f1e33cc3dfe` | 1 | 2026-10-29T16:43:55.784Z |
-| WP 3.1 | WP 3.1: add the per-visual contribution input picker to the Visuals room (ruling 4 step 3) | `b6c4e9b4cbe2` | `01a188aa-123e-7ce0-b8b2-c53e4fb42aba` | 0 | 2026-10-29T17:32:12.542Z |
-| WP 3.1 | WP 3.1: register beacons.contribution.list and route live contributions to visual curves (ruling 4 step 2) | `6cd46e63db0f` | `01a188a9-fd47-7d01-a1ee-cf10bc215377` | 0 | 2026-10-29T17:40:32.885Z |
-| WP 3.3 | WP 3.3: prepare M3 owner runbook and track ruling 4 code evidence | `f909fc5faf7f` | `01a188db-165c-7031-9261-679a612e58d4` | 0 | 2026-10-29T18:21:39.815Z |
-|  | Show live core contributions in Beacons beside the simulated feed | `97d8dd4d6bc5` | `01a188db-00f9-7ec0-b456-26029926d9ea` | 1 | 2026-10-29T18:27:55.799Z |
-| WP 6.3 | WP 6.3: sync Beacons runbook and demo drafts with merged feed and spike evidence | `2e95dfc2340f` | `01a18903-d6b0-7900-9a6b-2aae2aeb59e3` | 0 | 2026-10-29T19:07:42.640Z |
-| WP 3.4 | WP 3.4: connect opt-in Leonardo art controls in Beacons | `6179f99c739e` | `01a189af-0ca8-7142-88fc-d3e19784ed64` | 0 | 2026-10-29T22:26:43.743Z |
-| WP 1.4 | WP 1.4: add optional Steward engine settings for later live wiring | `9bdfea589dd6` | `01a189ae-eb79-7612-8de1-3bdab58cebac` | 0 | 2026-10-29T22:31:58.224Z |
-|  | Route simulated Beacons bursts to OBS without changing live totals | `d707e23f3d93` | `01a189ae-fc1b-74f1-ae41-2f2006af2507` | 0 | 2026-10-29T22:36:30.182Z |
-|  | docs: reconcile merged Beacons simulation and Leonardo deliveries | `b419b676301e` | `01a189da-cb49-74f0-b0f4-380ff71bf7f3` | 0 | 2026-10-29T23:05:39.080Z |
-| WP 5.2 | WP 5.2: prove simulated chamber writ lifecycles and guardrail refusals | `18ba532f2708` | `01a189da-bb15-7e63-9751-71975fecda1f` | 1 | 2026-10-29T23:09:37.113Z |
-| WP 5.2 | docs: record WP 5.2 Steward chamber writs in the submission checklist | `fdf8c16145d6` | `01a189f4-79c8-7103-92ba-db79b30d2eca` | 0 | 2026-10-29T23:31:33.833Z |
-|  | fix: preserve production token CSS and reject incomplete desktop and kit builds | `4473c0c388ea` | `01a18bd2-7040-76f2-9e29-e2bc467f2f4d` | 0 | 2026-10-30T08:20:48.173Z |
-|  | test: add fixture-only desktop and overlay Playwright lane | `7e528f4e1b4d` | `01a18bd2-8595-74c0-b136-8d3fc9a2acb5` | 0 | 2026-10-30T08:31:00.793Z |
-| WP 0.5 | WP 0.5: apply token base styles, preserve OBS transparency and compact chamber chrome | `61eb3f4d2357` | `01a18bfe-0ee7-7453-bfb7-1ca8a1394cb9` | 0 | 2026-10-30T09:07:34.430Z |
-| WP 1.4 | WP 1.4: persist engine settings and register authenticated settings RPCs | `f55d2f49451d` | `01a18c04-4ab3-7831-bd56-dcea1e48e26e` | 0 | 2026-10-30T09:20:25.353Z |
-| WP 1.4 | WP 1.4: construct engine from selected provider settings without requiring unrelated lanes | `4c40ee0279ae` | `01a18c04-5fed-79a1-998f-75b85ba5a342` | 0 | 2026-10-30T09:25:42.197Z |
-| WP 3.1 | WP 3.1: require simulated provenance in Beacons render snapshots | `57bd1d2a78c1` | `01a18c2a-6b84-7d13-bc73-d8626900aa14` | 0 | 2026-10-30T09:53:21.339Z |
-| WP 3.1 | WP 3.1: label simulated OBS snapshots with a persistent token-styled badge | `409801a9509e` | `01a18c42-bab4-7773-8993-9e81fedfca77` | 0 | 2026-10-30T10:17:24.671Z |
-| WP 1.4 | WP 1.4: wire native Steward to persisted engine settings with NoKeychain | `5d78d893d22d` | `01a18c36-4f08-70d3-bf6d-e41bbd6472d1` | 0 | 2026-10-30T11:08:25.050Z |
-| WP 1.4 | docs: reconcile WP 1.4 Steward settings, the SIMULATED badge and the e2e lane | `d45d78b3f51c` | `01a18c98-844b-70c2-a229-14229c5273c6` | 0 | 2026-10-30T11:59:24.867Z |
-| WP 0.5 | WP 0.5: share token field styles and guard desktop control chrome | `e8807a2029f5` | `01a18c98-6fba-7af3-96c1-58785c9e880b` | 0 | 2026-10-30T12:29:32.883Z |
+| Run ID | Codex thread ID | Merge SHA | Started date (UTC) | Settled date (UTC) |
+| --- | --- | --- | --- | --- |
+| `7470efae-67b4-4eea-8d3b-d76036af662e` | `01a17441-a345-78e0-98c4-d70d6501fb94` | `5a9e4dc116267b14bb748c41ec80fdcf56fc7ee6` | 2026-10-25T18:10:21.706Z | 2026-10-25T18:22:07.481Z |
+| `7b5c9bcb-3a20-4746-b553-afd761a26be3` | `01a17441-b313-70a3-a7b6-905d7853b9f6` | `d9e6ff22adaddc7f2176abf38ee2fa031d1f3d0d` | 2026-10-25T18:10:26.091Z | 2026-10-25T18:23:03.217Z |
+| `8a05d331-c9eb-44d6-9286-5f1d07f4289d` | `01a17427-8913-7d63-a8fb-c5872f6001f3` | `3e325fb899ebedb467de4a514e6801b9c8f1e9d4` | 2026-10-25T18:06:41.647Z | 2026-10-25T18:24:08.443Z |
+| `1bd84e93-e503-4095-b627-acca85231b3f` | `01a1744f-775d-7002-9f2d-b4ee46ee0b02` | `55978d1c77c36bd8df008fba3442a57b0f7fd72f` | 2026-10-25T18:30:35.628Z | 2026-10-25T18:54:41.320Z |
+| `b5eba0a6-5aa8-4054-b2e5-0c01a683dda5` | `01a1744f-6782-7ec0-8eee-380672650f76` | `cd62f5ca900d09c8a167d6ebb513c1477c11a48c` | 2026-10-25T18:32:28.605Z | 2026-10-25T18:57:19.220Z |
+| `baf68501-18c0-43b9-9531-e39212a96df2` | `01a17473-423e-7bf1-a73f-2b2cc4990eb9` | `713a85401571f9cd1f815b81e9f77f9ada665511` | 2026-10-25T19:04:34.753Z | 2026-10-25T19:09:15.912Z |
+| `eb1abff4-817c-42a8-b71d-571eadb0a5e5` | `01a17473-55c8-7b50-acd5-90fcb6709f80` | `3e5150f8fbbc7fdf063f835826ba3e30e417c339` | 2026-10-25T19:04:38.702Z | 2026-10-25T19:11:59.165Z |
+| `e154a45d-ab2e-49a7-a4e1-ea58b9331730` | `01a1746f-33ca-76a2-941b-5185f78485bd` | `93d64157b5e8edcf1d56e038f9de41a1936944eb` | 2026-10-25T19:12:21.557Z | 2026-10-25T19:23:48.132Z |
+| `bf10b0b9-8f36-411f-aa9b-b1f19faeaf83` | `01a1746f-2194-7a43-a339-4470be74db05` | `cf75bb7e0ab7972b9eda0e39af88d187a7437d72` | 2026-10-25T19:12:20.135Z | 2026-10-25T19:24:43.717Z |
+| `3a126b60-e827-4c4f-9968-40f53d3d5e3e` | `01a1748a-d830-7bb1-ae33-dd54555f98f3` | `22edc959526df1abe0f404de50248bdfef832ac1` | 2026-10-25T19:30:19.357Z | 2026-10-25T19:36:02.448Z |
+| `59d3e5c7-3bfb-44f0-b4c8-451aad65e54e` | `01a17487-d980-7702-a0d8-1050dd0910c5` | `e9fbb4c343942a8b0099a927af7c5874d62beae0` | 2026-10-25T19:36:19.843Z | 2026-10-25T19:45:35.416Z |
+| `e8f07a88-9ac4-4002-ad6a-dee7765042bb` | `01a1749f-af7d-7e71-969c-aaf39d7a602b` | `394ffe3c318a542df7b5e3a3b9033acfdc1a172b` | 2026-10-25T20:00:03.000Z | 2026-10-25T20:01:20.317Z |
+| `aba57e63-9f69-4fa0-af40-f4468d89bdb3` | `01a174dc-fc71-7a22-ac75-4cfa47efda41` | `44530c11db8967c6e08c66d79f0959868b586008` | 2026-10-25T21:00:02.360Z | 2026-10-25T21:12:00.440Z |
+| `0f89b172-5a30-4790-8be4-3d6ec4b4ee20` | `01a174dd-0bfc-7fa3-8cf6-b55f5cd63247` | `021a1be479214c8ccaa540bdfbddbd34d0397b3c` | 2026-10-25T21:10:21.249Z | 2026-10-25T21:15:01.878Z |
+| `5eadf21c-d883-4971-a8ec-a58e4f747a99` | `01a174f2-7eea-71a0-8a12-06a7dc876268` | `e1ff68b2049c0623b0bb9b73cde6ea36df7d40bc` | 2026-10-25T21:24:29.059Z | 2026-10-25T21:38:25.472Z |
+| `e3e8be8a-3813-4e8b-b616-ddd7711d1a79` | `01a174f2-66de-7032-94ff-b991b5c1d9bc` | `2862f6c79f0f37b23b74192e434e64847f3ed7c0` | 2026-10-25T21:37:27.160Z | 2026-10-25T21:56:02.395Z |
+| `c67dd92a-0eb6-49b7-985e-595ada44b034` | `01a174ee-3a9e-7650-8b69-7020d78bfeba` | `3dbcf4b1dcb9052e7094259dc9ac9d911023de58` | 2026-10-25T21:38:51.318Z | 2026-10-25T21:56:56.485Z |
+| `f0e11350-b276-49e2-93bd-102486cce150` | `01a174ee-4d71-7fe2-82be-799ce33410b6` | `9c34d419f9d87d8166e70917fadfe600f240a9c6` | 2026-10-25T21:40:31.630Z | 2026-10-25T21:58:05.397Z |
+| `0a4cf46d-5a9f-41e3-bdcf-17cba98bbd41` | `01a174ee-2b4c-7170-8dc7-157ea751d00a` | `f129a5e14bbbb9f600a448c197259d57257a234b` | 2026-10-25T21:38:47.548Z | 2026-10-25T22:09:45.288Z |
+| `1ce61016-959c-461a-aa7c-29de514ec6a5` | `01a174ee-1b02-7903-99a2-f9c093457299` | `6c286b1919725737a0fb9e1b9ff006edb8fbfa8d` | 2026-10-25T21:58:23.211Z | 2026-10-25T22:28:55.571Z |
+| `5eadcbcb-6a33-4019-bfcf-630d6ee73757` | `01a17522-9075-7603-ac38-5bb7a22a7850` | `27f3a5b1680a29a1208fb3353ab73dc1e649cbe1` | 2026-10-25T22:16:02.847Z | 2026-10-25T22:42:40.614Z |
+| `91096350-6e43-493f-839d-8f3f7698e40b` | `01a17522-bacb-7650-b4eb-3b8de7ffc879` | `938e4b7ece51f82ed889f014965cbda713b15d97` | 2026-10-25T22:16:13.168Z | 2026-10-25T22:44:39.783Z |
+| `b2cb9bda-a0b6-4fb5-b908-fb240f3df749` | `01a17522-a9d6-70b2-b4b5-1c052c9b77df` | `3380ffcc41b05b0a81f40ea3f9bd138d4d2cd681` | 2026-10-25T22:16:09.219Z | 2026-10-25T22:46:37.462Z |
+| `36997f28-01d5-451c-a12a-9bbdbf9768a8` | `01a1753f-4c9d-7ef3-ba41-a4da3b2f5c31` | `fe8409f08acab73beb540e440e75b78090361677` | 2026-10-25T22:47:25.978Z | 2026-10-25T23:00:27.314Z |
+| `bc3faf24-e8d5-4043-ace5-5c68984bf2f2` | `01a1753f-3519-7101-9117-d19f0e40dcae` | `93caf5968586adbaf151e9c0a3ca9b9183b696c3` | 2026-10-25T22:47:20.088Z | 2026-10-25T23:02:40.450Z |
+| `3f12c1ba-ba8d-4c40-a1b7-2675efb25eea` | `01a1754e-f50d-72f2-93ee-12864330f957` | `984e8a77359bee8f62325a2d3d25aca991a0c493` | 2026-10-25T23:04:32.182Z | 2026-10-25T23:23:25.639Z |
+| `465463b6-e2eb-4588-8d31-31f988e5840b` | `01a1754f-08a7-7583-8cf7-bd402abe4b13` | `ac5174276d0d181d2a0a414b37d4f2152cdf635f` | 2026-10-25T23:04:36.742Z | 2026-10-25T23:27:24.917Z |
+| `a3c5de06-bb55-4032-9726-1f38e8d4d2cb` | `01a1754e-df00-75d2-a856-a609c31c3ebe` | `dbd6f8c40c1a54ff552e2ba79632b2c3c360f0f1` | 2026-10-25T23:04:26.588Z | 2026-10-25T23:31:35.364Z |
+| `6eb2e36c-2473-43a0-aeba-6aa3157ba0ac` | `01a1754f-1b35-7571-989f-0c57a887cbbc` | `5073b63e19c1344230ce66f8159006440217b30c` | 2026-10-25T23:04:41.728Z | 2026-10-25T23:37:36.999Z |
+| `c7ba768c-6939-4b50-8ea2-6c52a880db24` | `01a17572-155c-7fb0-9f45-3c728047967d` | `532306c4e215de3b8b27ea37e4ceed99601a163c` | 2026-10-25T23:42:55.453Z | 2026-10-25T23:58:42.458Z |
+| `b63a23bc-1df4-48e2-9b11-609f7fba71c9` | `01a1753f-6087-7492-9f58-77d7b55b9508` | `71d125f34fbdf179557b4a8d695374a862edd625` | 2026-10-25T23:32:29.232Z | 2026-10-26T00:06:05.081Z |
+| `744b807b-5f52-4f51-9893-750e86a80cef` | `01a17571-f758-7421-a50a-e0ca16fcba50` | `b461d34360bc4e40714b54ac5ffe963e487e3554` | 2026-10-25T23:42:46.709Z | 2026-10-26T00:15:23.579Z |
+| `d97f22dd-e2e3-4b31-ad2d-a7831df814c5` | `01a17571-b17e-7f32-b824-32b61eac833a` | `80ec8c9bb7b7b111d4c05b0c5e93ac742d92a47f` | 2026-10-25T23:42:30.024Z | 2026-10-26T00:35:28.810Z |
+| `229f149e-a99f-4652-8e33-eb8772f0286b` | `01a17571-c93e-7b52-8428-a607c5bae38d` | `146728b8f825fc46c4263253094e3356d5a4e34c` | 2026-10-25T23:42:34.528Z | 2026-10-26T00:45:36.717Z |
+| `00a7525a-c689-41a8-ab87-feec1d1058b0` | `01a17571-e581-7a70-9ffe-55f1a3d1f028` | `998c49508a7d417d28fea05089d5d682f00eb08d` | 2026-10-25T23:42:41.602Z | 2026-10-26T00:50:44.553Z |
+| `f34f11e8-ca3e-47dd-bdbe-43255cf035c3` | `01a175ae-d7bf-7a51-9fd6-cb52021b2554` | `d09bec696905e7c12df6be651d33a7209ce11a31` | 2026-10-26T00:49:15.886Z | 2026-10-26T01:10:58.080Z |
+| `663aef1a-5ee3-4571-a3a4-abba75eb5991` | `01a175ae-c2af-73f1-9617-72515cdf6b73` | `567fa51d561dab2458975c8f82f7c7fd631951ae` | 2026-10-26T00:49:11.590Z | 2026-10-26T01:22:16.707Z |
+| `2d6071b3-47ce-43dd-9c77-616e5e9937fe` | `01a175cf-66e1-7071-b273-43356e9b4e91` | `7495123a3e9175ee09c33afcd48373212636dbcb` | 2026-10-26T01:24:49.305Z | 2026-10-26T01:36:26.706Z |
+| `6b928be6-3310-43ca-9ad9-aad4bbf402f1` | `01a175cf-77c5-7e10-a0ae-c3b950284be0` | `befdf884230ec38861ebd4b04f20441b7b2bc69d` | 2026-10-26T01:24:53.939Z | 2026-10-26T01:41:26.644Z |
+| `7eaccc78-7ba3-4417-ad90-b85aa79cc6e4` | `01a175e0-fdf4-7491-814f-fb6e3579dbf6` | `c86462b54741afddd78f6d89c2d891ec8ebe32fb` | 2026-10-26T01:44:03.016Z | 2026-10-26T01:56:15.719Z |
+| `ed4666e9-c7ef-4edf-a1c2-643cbcbc6df8` | `01a175cf-51df-7640-9fb4-d21f07749980` | `b039e79435a45820387d221e80ef5520cf55e3d3` | 2026-10-26T01:58:57.974Z | 2026-10-26T02:08:15.985Z |
+| `5b10adb4-d425-4547-b945-14010122b59a` | `01a175f9-8b30-7db0-8f0f-5995faf52003` | `e37bfeb61719c71e4626fe61961f8de3619ad01b` | 2026-10-26T02:10:51.395Z | 2026-10-26T02:20:41.786Z |
+| `4196d12c-d088-4d5d-b040-3ec434ecbc21` | `01a175e1-1185-7142-9c64-141f587d12ac` | `9a27a6402cbc5175e8b70aed6e86d8a408b9d490` | 2026-10-26T01:44:07.320Z | 2026-10-26T02:25:28.377Z |
+| `0a9da8fc-16e1-4c00-8f39-22edac384a0a` | `01a175f9-9ec4-7b22-b292-6c68b8793db0` | `df09a300700aebcd017a6883d8ce006b4a0e918c` | 2026-10-26T02:10:57.376Z | 2026-10-26T02:30:01.323Z |
+| `b9fc6a44-1598-4325-8318-93fce3edb052` | `01a175f9-77d8-7060-96c8-eb464a8ea4fc` | `9925769186ec0411aee3fc2f90cc58f636cc0cd2` | 2026-10-26T02:10:47.248Z | 2026-10-26T02:34:30.537Z |
+| `6df04bce-d169-492b-bc93-3900e1f027aa` | `01a17611-a835-7380-adb0-f6f73b2f7209` | `48418f2c718a234931e34f2b3a72d549ffbca9f2` | 2026-10-26T02:46:26.358Z | 2026-10-26T02:52:39.766Z |
+| `c36beaa6-4ef7-41b2-a45f-d5d713255273` | `01a17611-b783-7422-8f07-ae86dcc1c78c` | `cffdd1a30777c9df558dafaa96d5ef5686d543ea` | 2026-10-26T02:37:15.618Z | 2026-10-26T03:03:13.826Z |
+| `b47d9a19-eeab-4b52-abc8-1da96794d91b` | `01a1762c-1062-79c1-8bd9-ad552360a0b7` | `eba4fefed40bc26aa1d77ad251540e0a6f2d463c` | 2026-10-26T03:06:02.308Z | 2026-10-26T03:23:22.711Z |
+| `bbfe8729-9b1f-4ec5-aa0c-91d94c6a6245` | `01a1762b-f71e-7762-b7b2-df3df3e2f8fc` | `0181ffd985cb627b73b2290b1d3abcb8b83bacd2` | 2026-10-26T03:05:57.954Z | 2026-10-26T03:31:24.924Z |
+| `35bb8a31-54a5-47be-8b1c-e821539abd08` | `01a17645-f0b4-7863-8c0e-41be31a37f42` | `33ff4bbe4b7428c27eb67fd4e432c31a72b64eea` | 2026-10-26T03:34:18.225Z | 2026-10-26T03:45:40.059Z |
+| `e280a672-ca50-4524-9f47-8362024fe92c` | `01a17652-306a-7de3-a60e-d618766cb869` | `a7157f8b2368bd4e19ebc0f86025acb05d701a18` | 2026-10-26T03:47:40.841Z | 2026-10-26T03:57:42.956Z |
+| `d44b82da-f2da-4e43-97f6-1b93d02159f1` | `01a17661-6b51-7050-99f6-e9416024d2f1` | `b7f4e6e33a6157d3f9473a00192eac1eb877e5d9` | 2026-10-26T04:04:18.790Z | 2026-10-26T04:21:10.545Z |
+| `66eb3f48-1503-4512-bd1d-263b88a651c3` | `01a17672-db91-7ea0-bfe5-77b54d7c1cc9` | `f8a456676a6c76517a9bf703312b7f69a8dbdbc8` | 2026-10-26T04:23:21.872Z | 2026-10-26T04:42:44.860Z |
+| `0ba4cefc-8465-4425-a8fb-9d8cd2799efe` | `01a1772f-8304-77f3-ab31-d961e0ee7eea` | `5bdcbbddacc4eae6a0c3180d58d449cda6f0cab0` | 2026-10-26T07:49:25.463Z | 2026-10-26T07:59:23.546Z |
+| `7d8c4ef7-b88c-43f2-8d78-61288acbcd0a` | `01a1772f-64e0-78b2-bdc1-748442daafa1` | `e514f42019139770de3ee3143bf9bbb769412d24` | 2026-10-26T07:49:17.440Z | 2026-10-26T08:13:43.998Z |
+| `d5c6d47d-38d2-4824-b6fd-51303d8ede90` | `01a1772f-741b-7042-8a27-43fe4677f0de` | `ace427b6fa9de7f02be863f5cd5818b79bb07681` | 2026-10-26T07:49:21.354Z | 2026-10-26T08:18:27.013Z |
+| `4dee35da-6015-41c5-8bbb-b8fd183f36de` | `01a1772f-499e-7322-bb2c-b4a3f8d44f52` | `70346502feb45ed9d6d52383d860aaa91d19bb23` | 2026-10-26T07:52:07.075Z | 2026-10-26T08:24:43.604Z |
+| `895802c7-0907-4913-ada7-4ba85fbec8e8` | `01a17752-4c74-7a61-b0da-c20d56e1346f` | `c7acd0eacd5c3c2eff47b4c4c09f3798c73b0c9f` | 2026-10-26T08:27:25.368Z | 2026-10-26T08:38:52.882Z |
+| `e6ef50b2-22cb-42de-b0ef-3b209b3d6b1c` | `01a17752-3926-7a52-a15d-9ba4ca3a5f64` | `cdf9f187352e59f6edd4867b7ade8d79aead2356` | 2026-10-26T08:27:20.420Z | 2026-10-26T08:45:06.734Z |
+| `8ffa0a62-2e6c-4537-9a09-99573f5c1c50` | `01a17752-0ae5-76c1-9622-fa377d411b68` | `b118bb64c83801f9917d21fff8cd54807760df2f` | 2026-10-26T08:48:59.214Z | 2026-10-26T09:02:51.298Z |
+| `30e495fb-7852-4ba3-af26-548e17c4850a` | `01a17752-2787-7fe3-a906-f6ac4e1d60ba` | `388c569ab2be0989d5389d9ba0058780abc000f8` | 2026-10-26T09:03:16.113Z | 2026-10-26T09:14:56.370Z |
+| `fa859339-ecd6-4feb-ac58-3d65baacc2ed` | `01a1778a-6b76-7e81-803a-ec556fb71cff` | `59d63ad510a2214fc400e049bd28f2f67087cfb0` | 2026-10-26T09:28:43.589Z | 2026-10-26T09:40:48.570Z |
+| `9f5ae727-6a9d-4695-8b64-d9587c1c1bb8` | `01a1778a-5677-7821-bbb3-b0eebfb33cda` | `ba188d2987a50828207cf9d88dabf75850b6fbd3` | 2026-10-26T09:29:52.665Z | 2026-10-26T09:48:03.031Z |
+| `c67e291c-f15c-4b4a-91c7-3195f984960a` | `01a177a6-1f2e-76a1-9fad-1b29d044eb98` | `95c432a7a50d811a1d54953147a7b1642a9221b4` | 2026-10-26T09:59:02.649Z | 2026-10-26T10:16:21.240Z |
+| `c1078f44-7830-4dd9-8140-76ddfb77819c` | `01a177bd-5c9b-7580-bf96-713e2ed67eb4` | `3afe0a47cb429b56112f701e85cb0e4f382aae8e` | 2026-10-26T10:24:22.657Z | 2026-10-26T10:37:38.991Z |
+| `33d66868-8de7-44fe-afef-b16529eac444` | `01a177cb-bd34-70c0-b84f-747925251cfa` | `75c51a87b44dc2db4487bc89dd35bfd97090a03e` | 2026-10-26T10:40:03.989Z | 2026-10-26T11:02:40.152Z |
+| `36b764c4-9f01-45b9-9bb1-f16fd0142a57` | `01a179cd-7d97-7d63-8eb1-8340d73a0384` | `3938c1a85432ddccb898a835b1d86576975d4ff4` | 2026-10-26T20:01:13.364Z | 2026-10-26T20:17:04.385Z |
+| `a7835c95-e933-460e-8f05-466c18775635` | `01a179cd-6926-7b21-a039-2bc30af3fdbe` | `fd88e4e13eb35d7c8e1a59dc3c3959a39ce20c4b` | 2026-10-26T20:01:08.728Z | 2026-10-26T20:20:17.668Z |
+| `50c4acba-d135-44cc-8de3-c7da87a2de1c` | `01a17a26-29cf-7043-ab9b-7b4362d9c039` | `06a21b4166c1577ed053ad340e342435265741c1` | 2026-10-26T21:38:05.558Z | 2026-10-26T21:49:42.709Z |
+| `d5851bdb-6629-456d-b630-049dc225f144` | `01a17a26-3e71-7ff2-8bda-f0e1cf2b48dc` | `cabd3b3b5e0fcfee6d0ddd3bacbdddb53d5db4d3` | 2026-10-26T21:38:09.716Z | 2026-10-26T21:57:47.142Z |
+| `a3021590-20f2-4804-8668-f8f16e7b9824` | `01a17a3e-6e39-7203-9810-d101abae5244` | `ce68b8dc36ea9446304a0cd07eb59a0d65505396` | 2026-10-26T22:04:35.656Z | 2026-10-26T22:18:52.521Z |
+| `c25dbc88-af03-4cfd-ae11-9bbd0ecbecda` | `01a17a3e-56a3-7980-b66d-e7997b734c05` | `931791247f8a64d589f20a65f50a67a7dbeb0ece` | 2026-10-26T22:04:29.083Z | 2026-10-26T22:25:43.516Z |
+| `2187ed4a-2715-4a2c-b793-d7467a23ffe4` | `01a17a3e-42e5-72d1-b7ef-4521f83d483b` | `5d73e7af141de452786aba264be39c95e5226747` | 2026-10-26T22:04:24.553Z | 2026-10-26T22:31:29.136Z |
+| `4d84da47-01d4-4dcc-a4ff-3d6cbaa11c6d` | `01a17a5b-19f8-7822-a54a-5be385587783` | `2911abeb646a2d3c90ded586a8fb9aa7c1515040` | 2026-10-26T22:35:54.171Z | 2026-10-26T22:52:02.743Z |
+| `531fc3be-806a-4f51-9bb5-a1ba9ffe8817` | `01a17a5b-2cca-7a02-bbff-529654ecb2e9` | `45e8e765a91955c660bbe40bac740043c10690a3` | 2026-10-26T22:52:25.815Z | 2026-10-26T22:55:47.970Z |
+| `226c7920-0b15-443c-8c5c-49f7ef570c78` | `01a17c9b-731c-7c92-a24e-4bbc1f241423` | `6ea0fe81bce733930a578687a43b36e120148e72` | 2026-10-27T09:05:25.563Z | 2026-10-27T09:27:57.328Z |
+| `f940b919-6ee3-47a9-a179-745ceb88649b` | `01a17c9b-2a38-76a3-bfd0-fd53d241a9db` | `a379e35a7f579e7637122015b56ab24fce115a24` | 2026-10-27T09:05:08.997Z | 2026-10-27T09:31:33.074Z |
+| `47ba2083-5425-48cf-9af9-b829213ab4c7` | `01a17c9b-595c-74e0-8dff-31c72500ea80` | `3477072b182a8341c8f4f9004f655f0a35e233ee` | 2026-10-27T09:09:47.823Z | 2026-10-27T09:38:32.197Z |
+| `3b329209-c706-407a-9d40-3bbb9b6da1d1` | `01a17cdf-a47d-7ff3-a93b-0693fbb84ca2` | `08274f43e7bcba0ec82a7ae4e0f903f966b2afd1` | 2026-10-27T10:19:54.455Z | 2026-10-27T10:31:27.634Z |
+| `591d1747-4314-43bb-b21c-4bdcf430ae23` | `01a17cdf-b4e0-7f82-bc76-2d7a869e62d5` | `a10ad368923143eaaeb10b648471fda6a1d1a17f` | 2026-10-27T10:19:58.659Z | 2026-10-27T10:40:13.443Z |
+| `507574c9-43f4-4882-a4ab-c121da634e6c` | `01a17d07-a6ce-7323-bd1e-9a37ec12c253` | `0890b6821990d20b0677d52056344f3aa8e65a90` | 2026-10-27T11:05:59.470Z | 2026-10-27T11:15:29.728Z |
+| `8411a951-9ac0-477f-9672-bc1979f441ca` | `01a17d07-92fb-7373-aafb-c35161faa96b` | `fece7d840520aa353f1efdfc997fd958e5c31309` | 2026-10-27T11:03:31.691Z | 2026-10-27T11:21:45.223Z |
+| `b492c603-f6c6-43ba-b21c-85fa43bf6d50` | `01a17d23-9f77-7323-a7fb-3f3a6c0a7294` | `a3cc44aeb58f414d5e4f028efdf3761268abd5ff` | 2026-10-27T11:34:09.859Z | 2026-10-27T11:53:04.713Z |
+| `f33530a0-f59f-4140-a220-0cc61d5013af` | `01a17d46-4e5b-78e0-98a1-aeeb8c9a0768` | `c1a68577fe92a7e546a60c7b925bd6257eb57c69` | 2026-10-27T12:12:02.559Z | 2026-10-27T12:23:54.753Z |
+| `82e19139-d0ec-4056-96e8-2e9c39785550` | `01a17d46-5fa9-7e22-b2c5-ce9b6656bc94` | `e058bd26fbf9d28b68fef27692794ac4977a8893` | 2026-10-27T12:57:30.781Z | 2026-10-27T13:03:05.113Z |
+| `7f97f81c-4665-4145-be43-4e8444c1b785` | `01a17d95-1570-74c0-842e-08810e856fa8` | `7fec8b392ec2f3770b989bfefd6744bdc7009630` | 2026-10-27T13:38:05.166Z | 2026-10-27T13:54:53.246Z |
+| `2c6910ff-8613-4062-83e1-7c6c3d9c3081` | `01a17d95-24ea-78e0-a7bc-e3046d574107` | `87afb3f4210a6ae0fe8c4c8138194fcaa4c46039` | 2026-10-27T14:14:30.981Z | 2026-10-27T14:20:31.008Z |
+| `f2a310c4-c050-41b3-92c8-71c60a1a0c1a` | `01a17dce-e095-73b1-a295-c23ec9fd2813` | `bbdf58da4c0837e1c19e30086fb45a0af94fb819` | 2026-10-27T14:41:12.994Z | 2026-10-27T14:52:39.141Z |
+| `985cfc6c-d588-42fd-9a05-1e1efb9a2800` | `01a17dce-f354-7ec0-bba6-75d60ac4f80a` | `5c04da4067b2a19a2842d5140869c38d2b2c11ff` | 2026-10-27T14:45:50.939Z | 2026-10-27T15:03:01.759Z |
+| `05d9ee75-4ff5-49f2-91e2-fce79ed1de64` | `01a17deb-422f-7342-bd53-e254ad1ff863` | `77c8320a0e489cff15f0455151ec49c4b98d7965` | 2026-10-27T15:12:13.140Z | 2026-10-27T15:23:47.111Z |
+| `648ca004-afa9-4132-b180-aa3b99514c2c` | `01a17e11-5af1-7142-9078-1c7b0d44cd6d` | `43c687f48d8ec7516b4bc1f939d0a3b73aac9003` | 2026-10-27T15:56:37.092Z | 2026-10-27T16:14:58.769Z |
+| `aa853be3-5cbc-46ea-a2ca-c6bcdd362a1c` | `01a17e30-d172-78b3-b8d6-15d42077c297` | `1684515c545034dc4f18c7d1c6607886d7842934` | 2026-10-27T16:28:11.870Z | 2026-10-27T16:41:49.901Z |
+| `177743d2-4f8b-47a3-8f77-0e647db15962` | `01a17ecb-2b9c-78c0-963c-af856292c260` | `fe9185013ca3857ea70abd751267d20457495b5e` | 2026-10-27T19:16:47.606Z | 2026-10-27T19:27:43.615Z |
+| `6319c954-0757-41e8-aada-0b9e6e7756be` | `01a17ecb-1569-7110-8c3a-31b0cce1d439` | `2a8c68f73999984dbedd06179f342dca7fbaf677` | 2026-10-27T19:16:42.433Z | 2026-10-27T19:30:40.224Z |
+| `606cb4d3-f087-476d-8868-1edc5f4b5718` | `01a17f2f-5636-79d0-ad89-e220131fd12c` | `daa70585fa92604cfc9aee47b2f4ffc7b694b453` | 2026-10-27T21:11:34.657Z | 2026-10-27T21:21:45.149Z |
+| `2f0aa5ac-344b-47fa-b802-9e1f99644fb5` | `01a17f2c-095b-7242-abbf-6f866e7de6e3` | `d16ad23d1d96d789c787aca1b806e0a3394cd08e` | 2026-10-27T21:02:36.535Z | 2026-10-27T21:27:42.327Z |
+| `536eb726-31d1-4fda-9cbe-1ce95a1fadd9` | `01a17f3f-860f-7770-879a-911a5a60582e` | `1c9d85ab06132bcbffe3a1b4da685dae494e83e9` | 2026-10-27T21:23:53.283Z | 2026-10-27T21:33:43.131Z |
+| `57ba45ac-2d55-4860-83a9-c9e4cdfd6acc` | `01a17f51-4cc8-7123-9f98-b94441c9e8a4` | `93885a0bddc061d848921b28cc37f3065fab2018` | 2026-10-27T21:43:17.639Z | 2026-10-27T22:04:24.922Z |
+| `3d84e96c-bd98-4413-9b5b-4ed1ecee4735` | `01a17f67-77dc-7413-af79-9572bc1504bb` | `ed44da8379af39d2997dc36145b864a9014f8e23` | 2026-10-27T22:07:32.539Z | 2026-10-27T22:24:43.078Z |
+| `2b46bf9e-4b63-44d3-88d7-472a7fa12712` | `01a17f7b-823e-7221-83f2-9e374c70b8f2` | `3a112825b2a1f9fc7e12a1c9b71051c8af70e485` | 2026-10-27T22:29:24.892Z | 2026-10-27T22:47:42.465Z |
+| `4da6eb84-2a43-4b06-8f80-57a435c06008` | `01a17f81-81ed-7040-9344-9006ea4f47f7` | `cc1197c8b2b32cd880287662abfec39aaa2ee8ea` | 2026-10-27T22:35:56.884Z | 2026-10-27T23:09:29.764Z |
+| `6e8b0ca7-f262-4685-9c32-ebb791d57532` | `01a17f97-9b98-7823-9a07-6a6b476eeb83` | `f5a7f23500467952d821599397f64ad4b7f2e2d7` | 2026-10-27T23:00:05.654Z | 2026-10-27T23:16:55.252Z |
+| `850be0fc-d1d1-4564-948d-b3dc80773872` | `01a17f97-87a4-7a40-8bca-dbcc01180bc6` | `c3dea03c84afe6833c677cf2949ff58263d9802a` | 2026-10-27T23:00:00.558Z | 2026-10-27T23:25:03.925Z |
+| `5f94ccd5-2d98-4c9f-81b5-effcadffea42` | `01a17fbe-5fdd-7c41-a87e-9a882a7818f3` | `05922b4f71dbd8397cb67275a690761de64c6553` | 2026-10-27T23:42:25.936Z | 2026-10-27T23:57:21.465Z |
+| `1a7f1b95-999b-4640-aef0-4202067edf03` | `01a17fc0-6b1d-7262-975b-9b311c74000e` | `c1265627cc7e5528199a14272f9c333f7c5a5bfc` | 2026-10-27T23:44:39.820Z | 2026-10-28T00:13:01.621Z |
+| `be125120-3d80-47eb-8e41-498c59ab830d` | `01a18161-b8a7-7b20-be51-700b6874f498` | `032d83aae6fdf11b6c337d0a728c0f0faaf422ac` | 2026-10-28T07:20:28.694Z | 2026-10-28T07:37:14.315Z |
+| `86a5cbe8-2870-4142-998d-fb8827277c50` | `01a1817c-9aa1-7a62-9ab2-066b13b99b57` | `e63050fa1d5441a8a92b1a3453c4a99f43575c73` | 2026-10-28T07:49:50.476Z | 2026-10-28T08:12:21.020Z |
+| `54991607-7091-4c7a-bd57-def3a2e76238` | `01a18189-9728-78c1-b37d-1d686ada44e3` | `9a120c42233880d410535a405a5bbd2a421c36f0` | 2026-10-28T08:04:01.808Z | 2026-10-28T08:29:41.575Z |
+| `0e8d395b-52ce-419e-9157-98018cdeff98` | `01a181a9-2c9b-7b32-949a-927ad0562555` | `32ca0ff9d351e1008e1734ae440a68a1319d59a4` | 2026-10-28T08:38:32.984Z | 2026-10-28T09:07:53.419Z |
+| `5b52aa9d-853f-4a08-bd6c-edc5916851a8` | `01a181d6-ce13-7a02-b591-89e0c8531fc5` | `6db28db67ba19f6637220fa308fbf2fa64c3bf22` | 2026-10-28T09:28:23.662Z | 2026-10-28T09:44:31.973Z |
+| `2f43015c-7188-448e-9731-7fd2fc580a5c` | `01a181d6-ed12-7b21-873e-5e174ff62d23` | `508384955acb8b694ac0b71b7dc36400a57c5f56` | 2026-10-28T09:28:29.737Z | 2026-10-28T09:57:15.996Z |
+| `fc2b27ae-e5d3-4cd9-b376-95ccb5edb498` | `01a181f3-2c41-7d80-9a78-2c684e801744` | `c33ee237c022362779aa460ebc3b0d448876aa6e` | 2026-10-28T09:59:20.601Z | 2026-10-28T10:11:44.315Z |
+| `3ec97cdc-916a-4754-9858-a9795bb6926d` | `01a18200-278e-76e1-bbde-0e2fbb180ce7` | `25385be866f35a6fc52b42d75d7e6a3e964c12ad` | 2026-10-28T10:13:32.125Z | 2026-10-28T10:44:14.383Z |
+| `1d8d88f8-3dde-4410-8df7-946fb11a538b` | `01a181ea-0a20-77d0-9ea7-c29b17e461b7` | `ade92020fd4aaa921bfc2f3fbc9ee36d213d8e1f` | 2026-10-28T09:49:22.865Z | 2026-10-28T10:54:51.040Z |
+| `52b6d05a-a905-42ca-97f8-f8220aeb4cda` | `01a1821f-082f-7d43-9092-4c265efd04f0` | `4006044b52291fcfcc9afd257cd524987d0151dc` | 2026-10-28T10:47:15.917Z | 2026-10-28T11:03:36.080Z |
+| `9aaa8346-5d73-4044-adaa-998ba065fe25` | `01a18229-862b-7a60-898d-c05054cef503` | `21d113e01a605526c6e8f58ecad3ebc1a3815932` | 2026-10-28T10:58:43.530Z | 2026-10-28T11:15:09.701Z |
+| `b21fde7d-546c-4d09-b2f7-91255999ded8` | `01a18230-1965-73c2-9730-90fce7c3ccfa` | `b30cd238853077b98859eb9b1d10abb5d5126d56` | 2026-10-28T11:05:55.110Z | 2026-10-28T11:30:08.689Z |
+| `66cf7874-1d34-459c-84d6-b571fe76183a` | `01a18248-8461-7273-810e-64cc9e0bb505` | `b52648717470934120b6000a5f1bd8d50a897b74` | 2026-10-28T11:32:34.879Z | 2026-10-28T11:54:34.287Z |
+| `6e14995f-40b7-4f8a-b993-7dfaa9a3513e` | `01a18254-5744-7f93-8337-e17bf1b0a4e5` | `edd0a59330c42061a688d8bb72c0d2855f0aadd6` | 2026-10-28T11:45:31.247Z | 2026-10-28T12:05:35.039Z |
+| `e9b28099-0b71-44c8-b365-571c9de2ba3d` | `01a182eb-7ceb-7da1-814c-6959d8c5172b` | `58672fb521b546c0a6a72d35c5654eee16fe1a67` | 2026-10-28T14:30:34.522Z | 2026-10-28T14:48:40.799Z |
+| `a856962d-afb0-4e83-9d79-8aeefd54c4ba` | `01a182dd-9986-7fe2-ac52-144d24ad9b1a` | `0567e74d15e08837b7cade46a80805353669e492` | 2026-10-28T14:15:24.810Z | 2026-10-28T15:16:50.370Z |
+| `2cfbddab-7807-4afe-8973-fa482d771e50` | `01a18304-c01d-75c0-879a-60cddad65a85` | `58909253b8abe2045e490f392bea96deffa6f0af` | 2026-10-28T14:58:11.903Z | 2026-10-28T15:26:05.044Z |
+| `761e4c0e-67ec-424c-953f-72de4b22813e` | `01a1831a-3907-72c0-a33f-9444bd06e467` | `c99dc1c29dbd6edc57ae12b88f94e2c10ebac7ec` | 2026-10-28T15:21:34.278Z | 2026-10-29T12:09:16.073Z |
+| `9f722a15-6d2f-407d-8771-11a97de68a2f` | `01a1831a-8823-7992-bcf8-bac3cd65c8fc` | `ce488e185c1627f833290cb1b15de47ad7800ada` | 2026-10-28T15:22:01.322Z | 2026-10-29T12:15:52.813Z |
+| `a713911c-7d73-4b2a-aa51-ae19bc6c120e` | `01a18796-f933-78f2-8933-ed14a2bd4490` | `b6184b5649e9929d113fb97dd97c6316b0f75a19` | 2026-10-29T12:36:00.533Z | 2026-10-29T12:41:20.421Z |
+| `91c3edb9-9f69-41d2-928c-4bd2890b3468` | `01a1879a-6eee-77d1-8bba-18bb564d701c` | `0ea0d04a80b7c0e4b72db781d618e81382377598` | 2026-10-29T12:20:08.198Z | 2026-10-29T12:48:44.171Z |
+| `460912e9-1a41-4301-914f-a779ae53a7bd` | `01a18797-2c82-7700-b580-27431a8e6808` | `617e094d1d87a10b18576d2b6112e982c7387d7e` | 2026-10-29T12:16:36.287Z | 2026-10-29T12:56:23.447Z |
+| `408a23a4-403b-4cf2-b42b-365a800bd8ba` | `01a187b9-dfc5-7d51-9d2b-0f25a2a7d05b` | `91e498ce30de5a496d38c8b2bcbc667360eb71a4` | 2026-10-29T12:54:28.986Z | 2026-10-29T13:02:38.081Z |
+| `235c00d3-9dc9-482a-b09f-497bacadfff5` | `01a187c4-308d-7073-8ee4-80acf2c95435` | `c7892791f1516954eb7f4a63fecc5ef89af3f2ae` | 2026-10-29T13:05:45.431Z | 2026-10-29T13:25:42.237Z |
+| `ddfd0cb2-69e0-4f2f-9912-84fccc1bb3b9` | `01a187c4-484f-76c2-80a9-eb06444d4ed0` | `2a080c1cb85666ecca8f4b64c78d34ac4147c03d` | 2026-10-29T13:35:32.955Z | 2026-10-29T13:49:09.766Z |
+| `fd9d9c50-a61e-4ea2-bd92-e1ba29547e5c` | `01a187c4-1d06-7810-8674-2f1e33cc3dfe` | `798bb8f97a3af382ce96da7f33fbd097473532db` | 2026-10-29T14:38:53.930Z | 2026-10-29T16:43:55.784Z |
+| `cbdccbc3-bdbc-44a1-97e9-bf36771d3506` | `01a188aa-123e-7ce0-b8b2-c53e4fb42aba` | `b6c4e9b4cbe2a14dd420046b6c1ed5e00961ad60` | 2026-10-29T17:16:50.270Z | 2026-10-29T17:32:12.542Z |
+| `33c0168f-7468-4a2c-aa28-9afc81c23be9` | `01a188a9-fd47-7d01-a1ee-cf10bc215377` | `6cd46e63db0ff3155c572328708bfc8b378b9687` | 2026-10-29T17:16:45.814Z | 2026-10-29T17:40:32.885Z |
+| `855aeaa8-a6ed-4d30-840e-db7d907ae446` | `01a188db-165c-7031-9261-679a612e58d4` | `f909fc5faf7f4d464ef42e8a4537e2baa35a5222` | 2026-10-29T18:10:22.177Z | 2026-10-29T18:21:39.815Z |
+| `2780b92a-0eb5-4975-8e88-cc3f075a7a03` | `01a188db-00f9-7ec0-b456-26029926d9ea` | `97d8dd4d6bc5adf0ba2b0c4e2f29aa8336832f04` | 2026-10-29T18:11:40.561Z | 2026-10-29T18:27:55.799Z |
+| `929437c3-8517-4fa9-8535-8b1d387aaaa8` | `01a18903-d6b0-7900-9a6b-2aae2aeb59e3` | `2e95dfc2340fd213b3281e5037cb5785584eb2ef` | 2026-10-29T18:54:54.196Z | 2026-10-29T19:07:42.640Z |
+| `57bf2083-7f42-4e86-a155-6a290f183db3` | `01a189af-0ca8-7142-88fc-d3e19784ed64` | `6179f99c739ebf080946953a490a889a3444de59` | 2026-10-29T22:01:53.303Z | 2026-10-29T22:26:43.743Z |
+| `27fa5c2d-7db8-403c-8bdc-c070f559d47f` | `01a189ae-eb79-7612-8de1-3bdab58cebac` | `9bdfea589dd690b782bfddd285ab2e514aaa8a0f` | 2026-10-29T22:01:45.113Z | 2026-10-29T22:31:58.224Z |
+| `97b52c9c-af07-44f2-9f2f-ebe0cfcd89ef` | `01a189ae-fc1b-74f1-ae41-2f2006af2507` | `d707e23f3d93d38197e697ffd4b6d44cfb8b12c9` | 2026-10-29T22:01:49.198Z | 2026-10-29T22:36:30.182Z |
+| `5d40fb4a-4467-4c2a-b02d-a22713d7a571` | `01a189da-cb49-74f0-b0f4-380ff71bf7f3` | `b419b676301e2fd512c0070f6d32132aea889bab` | 2026-10-29T22:49:40.269Z | 2026-10-29T23:05:39.080Z |
+| `756db81c-e148-467a-9152-cd1c43ed470b` | `01a189da-bb15-7e63-9751-71975fecda1f` | `18ba532f270845893437726de3fbe71a0ddddadb` | 2026-10-29T22:51:52.739Z | 2026-10-29T23:09:37.113Z |
+| `3b034cea-474a-4bea-88d2-d14dfac995e8` | `01a189f4-79c8-7103-92ba-db79b30d2eca` | `fdf8c16145d61840717ef5eb692349ff9ca81596` | 2026-10-29T23:17:44.427Z | 2026-10-29T23:31:33.833Z |
+| `7573927f-5764-4bae-b933-cf39485f82ef` | `01a18bd2-7040-76f2-9e29-e2bc467f2f4d` | `4473c0c388eafc7ec44e2e33210590852ad3be0f` | 2026-10-30T07:59:48.572Z | 2026-10-30T08:20:48.173Z |
+| `83a015e4-da8b-4f08-a605-1402785cfe08` | `01a18bd2-8595-74c0-b136-8d3fc9a2acb5` | `7e528f4e1b4d56ac01c116ebda25fb8aead3e372` | 2026-10-30T07:59:52.439Z | 2026-10-30T08:31:00.793Z |
+| `b254f24b-732b-42e0-9026-27150e01878f` | `01a18bfe-0ee7-7453-bfb7-1ca8a1394cb9` | `61eb3f4d2357d59ba295ab0d4597392ad5014621` | 2026-10-30T08:47:30.799Z | 2026-10-30T09:07:34.430Z |
+| `4f23b721-003c-421e-80ce-12ff093fbbd4` | `01a18c04-4ab3-7831-bd56-dcea1e48e26e` | `f55d2f49451d2253a4e96da40714005f198b2f03` | 2026-10-30T08:54:14.562Z | 2026-10-30T09:20:25.353Z |
+| `0085cf8d-f87e-49d4-b1e5-967e8ba407f8` | `01a18c04-5fed-79a1-998f-75b85ba5a342` | `4c40ee0279aeed83589c0d4b29b9914b6080c0b1` | 2026-10-30T08:54:19.997Z | 2026-10-30T09:25:42.197Z |
+| `d146f702-42d9-4c4d-b2d1-d5bf2db57fb0` | `01a18c2a-6b84-7d13-bc73-d8626900aa14` | `57bd1d2a78c1b4aa5c1a5a9c9da97a198b2afb92` | 2026-10-30T09:35:52.949Z | 2026-10-30T09:53:21.339Z |
+| `e27b7217-bcc7-4b22-94c5-cec6b69bbcb9` | `01a18c42-bab4-7773-8993-9e81fedfca77` | `409801a9509ec659f71fe12272b008af72cf7afb` | 2026-10-30T10:02:26.198Z | 2026-10-30T10:17:24.671Z |
+| `eee5a621-fe97-443c-8694-2d9a613c347d` | `01a18c36-4f08-70d3-bf6d-e41bbd6472d1` | `5d78d893d22d38baf66885c07d60ed62661e9ef3` | 2026-10-30T09:48:52.298Z | 2026-10-30T11:08:25.050Z |
+| `ec7fcbe3-27b1-4c0e-8292-f542b954028b` | `01a18c98-844b-70c2-a229-14229c5273c6` | `d45d78b3f51ce720624012101b4d3bf959a9b968` | 2026-10-30T11:36:08.253Z | 2026-10-30T11:59:24.867Z |
+| `09fce029-d221-4566-a38d-9924c1f43188` | `01a18c98-6fba-7af3-96c1-58785c9e880b` | `e8807a2029f555f819ce63cbf277ba7f2ca2d652` | 2026-10-30T11:36:04.400Z | 2026-10-30T12:29:32.883Z |
+| `42ad5960-0680-47b1-8792-39346d82ea41` | `01a18ce0-1e2b-7c83-a190-30fdcca0e171` | `4801df471aacfec3f74a1cd41e0553f68c2620b4` | 2026-10-30T12:54:22.249Z | 2026-10-30T13:07:00.749Z |
+| `3c036d19-99be-4f53-95f7-51bbe8d263a3` | `01a18ce0-4415-7a42-8c98-400c85f9ed46` | `43a8a7ecf18a2ee04d5c2c5b44879d90f803580e` | 2026-10-30T12:54:30.481Z | 2026-10-30T13:13:59.339Z |
+| `bb90baae-f7e0-4a04-92c8-9fb3d0e0334e` | `01a18db9-a695-79f0-8f7f-740b1fdc502f` | `a9aec46efa464d1d5e7a4f1cff40e4a690a9857c` | 2026-10-30T16:51:58.656Z | 2026-10-30T17:23:09.043Z |
+| `12caabee-594b-42af-abc9-0932e6a58824` | `01a18ddf-ad1c-79b1-8003-6438495cc15f` | `c261d3dd1cc22a3e5982690f3a51a3174ac6c18b` | 2026-10-30T17:44:16.882Z | 2026-10-30T17:53:24.250Z |
+| `e8032460-f764-4891-9bb2-4c6b937d4915` | `01a18ddf-bf06-7651-8c6d-29438cfc46e9` | `683b0f626038b6d3037fd61641b09ea788b99501` | 2026-10-30T18:01:22.151Z | 2026-10-30T18:09:23.713Z |
+| `e4d30bb4-467f-4b93-b5d9-b02b93055d11` | `01a18e0b-5ebc-7ee2-81fe-aa13f2d93668` | `62faaa51f6f64e3d5c760255e0af77e7ed7c8d63` | 2026-10-30T18:21:12.597Z | 2026-10-30T18:39:59.820Z |
+| `07be5c94-a7ee-4614-abb8-0fec795988e0` | `01a18e0b-47fe-7ba1-98c0-b8a9fa9b48ad` | `27f9f4391d3fac35c119adfc98ba1536707d6453` | 2026-10-30T18:21:08.335Z | 2026-10-30T18:48:38.726Z |
+| `0a6b513f-ab8d-4d0e-8b84-dd84d3c8be74` | `01a18e2c-de1a-7bc0-8602-ffb9c18c4290` | `2b2ea6b00d98479e0a46815da49f373f26a374da` | 2026-10-30T18:57:49.377Z | 2026-10-30T19:08:15.450Z |
+| `6ec2d6c7-d794-408a-b056-c8415e0c8093` | `01a18f13-c921-7aa2-97ff-26f32ae71ac1` | `d9a606dceed45d3d0adf008282d3428e9f97e526` | 2026-10-30T23:11:54.286Z | 2026-10-30T23:27:34.678Z |
+| `2cd13863-5cc0-4b7d-a633-72ea56acba5f` | `01a18f13-de42-7871-973f-475f7a556c3a` | `58c7b8431e152ac9275f708f3314daff38facc73` | 2026-10-30T23:21:18.639Z | 2026-10-30T23:33:33.339Z |
+| `20d25db1-c8d5-477c-a50a-18110980667a` | `01a18f50-6da1-7900-9b16-d8f75ac8fc5e` | `a5a1a635b1c2b48d1f4dafd87f6608a96da35acc` | 2026-10-31T00:16:17.093Z | 2026-10-31T00:25:44.402Z |
+| `8eb26ead-97f8-43c5-afb8-34a0361a072d` | `01a18f98-9c0b-7270-9354-b17ed0b98b96` | `34b13d3af3febf27462b9b9ff3e1fb9f928771ad` | 2026-10-31T01:35:06.096Z | 2026-10-31T01:53:46.969Z |
+| `4accbdc8-522e-428b-9e3e-4488139c2cee` | `01a18f98-8abc-7602-9b34-76334c812526` | `2d1cf4e1a49c4e927aa7c7cb70e2cf94effe33d0` | 2026-10-31T01:35:01.635Z | 2026-10-31T02:01:36.004Z |
+| `4eca9571-b24c-44b4-b6c9-3d47aa2e5b53` | `01a18f98-746a-72a2-ab2d-77bc1db155c1` | `a6f305fea210fd42df0a30e738940058959886df` | 2026-10-31T01:34:57.328Z | 2026-10-31T02:05:44.601Z |
+| `9ce92406-8347-43ef-88c9-8104f1bc59a8` | `01a18f98-ac72-7be1-9cb4-d4893c2e4a71` | `5d4f83eba031678ead3112a321a632e9cc627e34` | 2026-10-31T01:36:39.856Z | 2026-10-31T02:13:15.416Z |
+| `1f35588e-c061-43ba-ab4e-17241007dfb1` | `01a18f98-bd2a-7513-9399-5e943e30a557` | `c3c847ecf17b99f4fe615e13c51ecbe27b068659` | 2026-10-31T01:35:14.758Z | 2026-10-31T02:17:58.381Z |
+| `fecb6d6c-5c7c-4402-98b5-21844382c6b3` | `01a18fbd-1460-7302-8b63-2d6b85e14f5c` | `6cc8455e6e33b27907f74de1dacee622e2aae402` | 2026-10-31T02:16:15.267Z | 2026-10-31T02:26:13.467Z |
+| `38db1746-532e-4bc6-808c-c1e6153452c6` | `01a18fbd-2d40-7e70-8f4b-9c3b9ba498c1` | `35da9f3f7b4ddfaa03bd954f118553e130ea6ee3` | 2026-10-31T02:15:02.578Z | 2026-10-31T02:33:37.010Z |
+| `0590d731-1223-4270-bd06-ef7ebdc98157` | `01a18fbd-3e69-7b52-b851-9e987d358ab5` | `d0ffe6413917978704532208f2ddee4d8a8125db` | 2026-10-31T02:15:06.992Z | 2026-10-31T02:42:00.785Z |
+| `25d027f7-e7fe-431a-b112-703b8c8acf6e` | `01a18fca-f328-7840-9854-1e3cd563af85` | `3304f2ce72ca7cc98e275105fdfde6f2cf31b923` | 2026-10-31T02:30:05.083Z | 2026-10-31T02:49:11.792Z |
+| `b56b14ba-b2c1-4e75-bc90-1d5c46b846d1` | `01a18fca-d170-7950-995f-04faa5f3c8f2` | `436274a325e50f980cf851e0e3a0a2ecbb4dbe47` | 2026-10-31T02:29:56.876Z | 2026-10-31T02:56:33.634Z |
+| `685f4735-5dd7-4986-abdd-7642aaf628ea` | `01a18fdc-82b0-70e3-a0ca-7085dd3d185f` | `d99478f1233d5a7b157973905e198d8315a0d2b4` | 2026-10-31T02:49:15.926Z | 2026-10-31T03:04:56.036Z |
+| `67b3d107-d651-4e6b-95b9-1533677f1d41` | `01a18fdc-6091-7812-85bd-93d38d8aee6f` | `c5f78fa773370a3c9685ab27fe1c3435176f18a9` | 2026-10-31T02:49:07.345Z | 2026-10-31T03:11:01.581Z |
+| `b497ae1b-72b5-4821-9fda-d1715d717418` | `01a18fed-7535-7fc0-b210-42fea01fa9dc` | `dd1447486a5d994d7963080b8dc4e6416e265312` | 2026-10-31T03:07:47.086Z | 2026-10-31T03:23:09.025Z |
+| `ace19f98-3dce-4e11-914e-0574b2f6f05e` | `01a18fca-e318-73b3-a939-ac38f5cff8bc` | `7e0d51d5ee6aa5700a671ac196cc94e95d7b7a2a` | 2026-10-31T02:43:00.699Z | 2026-10-31T03:27:00.346Z |
+| `d6e6be28-efd2-4cb6-975a-499cad89246f` | `01a18fdc-718c-7313-b833-853af84d6d06` | `bd89a8aa75214492b70977c6fca7771e5158eede` | 2026-10-31T02:49:11.696Z | 2026-10-31T03:35:00.254Z |
+| `fa703c84-ac0e-44f7-8563-d673c436b52f` | `01a19007-9c28-7ff2-b231-6c79b21ec454` | `f9518fc91af3a4ec8a33da092ec706d04812471a` | 2026-10-31T03:36:20.662Z | 2026-10-31T03:48:34.621Z |
+| `032e6e2f-4393-4f70-9526-b0f475cbfb23` | `01a19007-7c6f-7e81-a42a-90bf68d301c6` | `4a18e8d63b1fdb142fe55ed55137c819b8655178` | 2026-10-31T03:36:12.394Z | 2026-10-31T03:56:29.821Z |
+| `e17a5b46-ee42-4dfe-afb3-9f333a310f44` | `01a19007-573c-79c1-9c65-ee9e44e4ca25` | `689e1bbda7732bc9fe60bfcb12f5817cc546967d` | 2026-10-31T03:36:04.432Z | 2026-10-31T04:00:59.052Z |
+| `42e96938-6957-4c77-b1e4-469841cf4731` | `01a19007-6cc3-7692-a429-6e16c3aa1b1a` | `96acdc21548276220609f2fb0325a44ce7cf4594` | 2026-10-31T03:36:08.391Z | 2026-10-31T04:06:51.624Z |
+| `138aae6e-ed0c-4c15-8551-120df959ebac` | `01a19007-8c16-7211-83aa-3f7431b228e8` | `041fa7222e479b92073648ae64580340bb39a8c8` | 2026-10-31T03:37:54.723Z | 2026-10-31T04:14:46.249Z |
+| `79e223a9-0017-4054-b4a5-c89154ae12d8` | `01a19020-9f26-7fb3-bb26-624ba6a810dd` | `d990c30958cf230ee6def42e8756830b7693bb98` | 2026-10-31T04:03:39.818Z | 2026-10-31T04:23:18.370Z |
+| `40740208-e00b-4679-881e-e943a791c992` | `01a1901b-26f2-76d2-9efb-9544dc3818f0` | `fa2229f4f23da766f0a0b94bb857c22c04873cbd` | 2026-10-31T03:57:41.852Z | 2026-10-31T04:30:26.351Z |
+| `c84274ed-ab3b-4585-b8a1-887d81964168` | `01a1902e-7130-75c3-8fb7-06f119bb8dbb` | `27b41098ad63d25da295797cba2800fae1cb34df` | 2026-10-31T04:18:45.541Z | 2026-10-31T04:38:05.932Z |
+| `81c3a080-1238-4bfa-856d-a7875046aa5d` | `01a1902e-9343-76a0-be84-53521416525c` | `3aa7929a80012f8ad77239aa86563d13eb2db82b` | 2026-10-31T04:18:54.277Z | 2026-10-31T04:52:36.324Z |
+| `4fa6d80a-c957-4bd3-a311-9adaf0e36a01` | `01a1902e-8264-75f0-ad5b-005a2c8a803c` | `0aa3bc251374426f32d191c081c75a3d5e0f27f1` | 2026-10-31T04:18:49.936Z | 2026-10-31T04:59:42.986Z |
+| `6e21fae4-db3d-42e6-937c-34f05bf48b46` | `01a19042-b4bd-7840-8285-fa53e0812afc` | `ac03d422007e4d717fc8bc6d9dc3def4ccd71a29` | 2026-10-31T04:40:53.538Z | 2026-10-31T05:06:49.062Z |
+| `a0063eb3-8ab6-4aaa-a72d-98fd3a98050b` | `01a19020-8f1c-7ee0-b7cb-5b1f813ab54b` | `c383e50ac3013bca29de99c712969e906738b7c3` | 2026-10-31T04:15:12.936Z | 2026-10-31T05:11:48.324Z |
+| `57561543-fe81-4b5a-9828-23a5ef9dd285` | `01a1904d-126b-79a2-8aed-377ec079ca47` | `2bb242318a069e886d9dfee0ca095cfa5429b9ec` | 2026-10-31T04:52:12.951Z | 2026-10-31T05:19:48.177Z |
+| `4d414489-2c79-471b-a765-9a7187b9bd57` | `01a1902e-a610-71a3-89ec-ff997218ebb4` | `c7d7b7593d9892b6ae6cb916c05101180072b386` | 2026-10-31T04:45:52.643Z | 2026-10-31T05:25:12.013Z |
+| `35654569-c9ed-47ca-84cb-b2906f45d51d` | `01a1904d-341e-7e92-979e-292bc1db4dba` | `ec19c0b809fae330a1af607c5c75e30e79178a3e` | 2026-10-31T04:52:21.541Z | 2026-10-31T05:42:50.434Z |
+| `5f10c290-196a-4403-8371-7fc78091a75a` | `01a1906a-e88e-7be0-bc18-9ad4a14a0e4d` | `4f8f45ab9a1f17d4c806de4fb005c6ec22a998da` | 2026-10-31T05:31:26.155Z | 2026-10-31T05:55:43.964Z |
+| `4a60d88b-f419-40d1-a320-c2aa2235c249` | `01a1906a-fdf5-7f32-aa8d-03bd55cb72e2` | `ff5ca52a132aa7eb85471ee3be01193b8b172465` | 2026-10-31T05:24:53.605Z | 2026-10-31T06:00:38.249Z |
+| `20f1150f-2c52-4581-a78e-47282995543c` | `01a1906b-0db8-7723-8de0-e0530b9d3cc7` | `faa8de2aca7bbbdc4bd23bf6a2689c569f212f2c` | 2026-10-31T05:26:04.043Z | 2026-10-31T06:07:15.733Z |
+| `bdd5b883-a809-44e1-9994-1b9afe77af1f` | `01a1904d-2371-70c2-80ca-44b2d1291869` | `1263d43478f7959a896dc6b4179bb198a526e61d` | 2026-10-31T05:34:39.751Z | 2026-10-31T06:14:07.662Z |
+| `054461ce-a064-429e-9673-4992c4187d3c` | `01a1908e-ab90-7ed2-abb5-9de2263e2eea` | `39bf3b687ce24fb8ca875553ffd43a96c5e0650f` | 2026-10-31T06:07:13.445Z | 2026-10-31T06:21:28.437Z |
+| `deb5cff7-8192-4181-b42c-ed5316d16d65` | `01a1908e-c1df-78f0-be11-23e138be6941` | `d1df7eb7a3f06b6d32cb81f38493e055a151029b` | 2026-10-31T06:03:57.668Z | 2026-10-31T06:27:56.283Z |
+| `a8ab6601-8996-416c-9064-349800c17fbe` | `01a1908e-d357-72b0-a650-c2ae6f5558ff` | `14d2e780e6836e8a54d41ab11fb45b454e55ddbf` | 2026-10-31T06:04:02.081Z | 2026-10-31T06:35:45.024Z |
+| `c0eb64a8-d482-4897-a5e3-2ed617ee53f8` | `01a190aa-2eb3-72e1-a5c1-2622d6e62ca2` | `b7042ee93e11b83c287a40a53591a03885e516ba` | 2026-10-31T06:33:55.006Z | 2026-10-31T06:49:08.674Z |
+| `c618e200-2d6a-4735-85b4-2ff9277fa352` | `01a190aa-03fd-7241-a03d-89bd58ec714e` | `e9521db8394ee6a6443ea62d16594185c7efd1a8` | 2026-10-31T06:33:45.570Z | 2026-10-31T06:57:04.979Z |
+| `5c7d04ea-dadd-430d-9a2d-17f63e621446` | `01a190aa-1d9a-7a33-bc0a-492a2421bb5e` | `4d936e19a73bb0efe3376fc5edcae1fcd7e21a2f` | 2026-10-31T06:33:50.624Z | 2026-10-31T07:04:53.259Z |
+| `f3c69f97-72ad-4261-8d64-a8d29964a59e` | `01a190aa-3faa-7963-84e9-d5b9c8d407f3` | `68a61479e669810788eea0321c0a4b2c41fd6ba5` | 2026-10-31T06:43:58.863Z | 2026-10-31T07:09:57.287Z |
+| `e53a69e4-2180-4977-8d4f-2ef100bb067c` | `01a190c9-8315-7a30-89f9-c31f3b95a26a` | `196551e4e1d99ab2ca41e2ef7f1a3d6081298a0f` | 2026-10-31T07:08:10.684Z | 2026-10-31T07:27:58.932Z |
+| `4dadfb89-acde-4843-b83f-873e8936f89e` | `01a190d5-2fc6-74e3-8a79-16a04378335c` | `4de25a8749768d12081ba72789e4f258a638559a` | 2026-10-31T07:20:53.370Z | 2026-10-31T07:35:03.698Z |
+| `418c3dc8-f1f3-4c25-a2b4-ef9036c5131f` | `01a190d5-1539-76a3-8f6f-16891105ff3c` | `ea461dc2f8f281146c36468db32ba6b6e97f7084` | 2026-10-31T07:20:48.033Z | 2026-10-31T07:43:13.502Z |
+| `5fef3e8b-10b3-457e-ad07-7bcd97af27b5` | `01a190c9-9d33-7620-b4ef-e027892bf365` | `c957a18f6b96fcbbc02cd575d4c6827d6d1764b4` | 2026-10-31T07:08:14.740Z | 2026-10-31T07:48:12.241Z |
+| `f7957c1e-6fcc-4826-8272-2522535f5e67` | `01a190c9-ad2c-7e20-a95c-931293eb9127` | `22250be196900eff855e006adb2477c708c2b37c` | 2026-10-31T07:09:46.174Z | 2026-10-31T07:53:58.460Z |
+| `97c0c53b-5cbb-44cb-83eb-0cffe49e7e87` | `01a190ec-3f09-7180-a204-ff708153b928` | `95ca68e5226cdfa30fd9865c2f10cf8c2a2dbd27` | 2026-10-31T07:46:05.807Z | 2026-10-31T08:02:08.843Z |
+| `bea346d3-693e-4767-9059-4ab4844f34a6` | `01a190ec-5417-7553-8550-d23ed56642ab` | `df54100c797b5cfc0faed3e3c879f2c720efa914` | 2026-10-31T07:46:09.958Z | 2026-10-31T08:10:44.651Z |
+| `d040bbfb-ccf3-448e-944b-411cb31ef022` | `01a190f7-edc0-78a3-8a52-331e027195be` | `7f27262cc36b3b30725d6768d887a8cb825d6a31` | 2026-10-31T07:58:51.672Z | 2026-10-31T08:18:19.335Z |
+| `f88dedb9-457a-4d56-89f5-3e6558d931b5` | `01a19110-e372-7a33-b854-dd05c49c6fc0` | `3d56ed0c99bd858ae67f6415eb54912e2e045bfe` | 2026-10-31T08:26:05.793Z | 2026-10-31T08:38:33.807Z |
+| `6f6b6d4b-a7f2-49e5-9a05-59aacc32f036` | `01a19110-c3f9-7f11-9e36-42e76f11ed0b` | `917c47a65d06db264db40760def4f1dbd0ca29dc` | 2026-10-31T08:25:57.738Z | 2026-10-31T08:43:48.572Z |
+| `54e578be-8c36-4164-ba05-327e2223795b` | `01a19110-d3ba-7652-bcd9-f7075c3668fe` | `7e6baf3fb7600056e45a5d46950bff090f74909a` | 2026-10-31T08:26:01.764Z | 2026-10-31T08:47:31.695Z |
+| `b874816a-499e-49de-a3b9-04d9e2b46ebb` | `01a19110-aeef-7eb0-9661-4c81b295572f` | `2ebd5436e8a9d010fa9cb52845992fcb36ad9268` | 2026-10-31T08:48:05.568Z | 2026-10-31T08:51:43.296Z |
+| `18582bde-f257-4f3f-a60b-861592c01837` | `01a19131-5065-7f22-b8e5-a01c40225138` | `fa20598e378bf8e4518ae96b45eee9e833de9f79` | 2026-10-31T09:01:30.850Z | 2026-10-31T09:10:24.775Z |
+| `c5dbd4c2-9441-4b4a-9108-7b73ce90f8f2` | `01a19131-40a6-7103-9785-0ffb8f9aebb6` | `8f22501ce11f1015d606cebde26ddce524afba84` | 2026-10-31T09:01:26.816Z | 2026-10-31T09:16:06.104Z |
+| `7f636fa7-5be3-48a9-a307-82500623ee43` | `01a19131-20eb-7be0-ab00-18a1888bb8f2` | `b70cacd3b919fd3dcee7a4d093e36d5e3ef2e021` | 2026-10-31T09:01:18.779Z | 2026-10-31T09:22:55.611Z |
+| `493a4106-672d-4316-8e12-45921f77a758` | `01a19131-30e5-7591-a149-bf6c1014ef71` | `3e30aac35e2add30ee4bd20a091504fb0863d04f` | 2026-10-31T09:01:22.775Z | 2026-10-31T09:28:55.645Z |
+| `5f9fc72d-aabd-402b-a099-1a785839be13` | `01a19147-d3c6-7920-9369-d2ca441fd8e4` | `5934c508c1160f5dd2a0619b2be012ba81561e4d` | 2026-10-31T09:26:06.361Z | 2026-10-31T09:35:57.209Z |
+| `1248d06d-8917-4092-8a34-7adbe29446b1` | `01a19147-c1aa-7370-9059-169119fc65fa` | `5d536177d8b4ba0f5d85edc4b56e4ffa36eea8d5` | 2026-10-31T09:26:01.689Z | 2026-10-31T09:42:00.057Z |
+| `caa7acf2-d2e0-441b-8995-7dd9f0a7d7aa` | `01a19147-a661-76d1-99f4-7fef0eb2a4be` | `b77df13da1d1231594e34a3d29051ea041304173` | 2026-10-31T09:25:56.949Z | 2026-10-31T09:48:38.184Z |
 
 ## Not on main
 
-None. All 152 merged runs passed both git checks.
+These runs have no journal merge SHA verified on snapshot main. Blank cells
+mean no such verified merge SHA or settlement date is recorded; no commit or
+outcome is inferred. Invocation records for these runs are included below.
+
+| Run ID | Codex thread ID | Verified merge SHA | Started date (UTC) | Settled date (UTC) |
+| --- | --- | --- | --- | --- |
+| `0e3a467b-2782-4972-a049-83bceaf8295d` | `01a17427-7974-7912-9abe-620ec515d6fe` |  | 2026-10-25T17:41:47.093Z | 2026-10-25T17:42:51.453Z |
+| `05716f85-7583-499a-9018-6a473544d7fa` | `01a17645-d87e-7632-8162-a697d9db9a02` |  | 2026-10-26T03:34:13.513Z | 2026-10-26T03:35:44.729Z |
+| `206edb63-f2a3-465e-820d-3fe6d96c243f` | `01a1765d-c44e-7f73-9edd-75449f13674c` |  | 2026-10-26T04:00:20.892Z | 2026-10-26T04:01:58.593Z |
+| `80b53d4b-33e7-4cc6-9eaf-524ab0909218` | `01a17c9b-45fe-7190-bcb5-25f620427e69` |  | 2026-10-27T09:05:13.899Z | 2026-10-27T09:06:26.326Z |
+| `480cce03-2d9b-4b5a-8213-d0f1aa02bed8` | `01a17cb2-2cad-7942-a6ad-feb8c16afe7b` |  | 2026-10-27T09:30:16.137Z | 2026-10-27T09:53:56.750Z |
+| `84f48bda-3f27-478e-80b5-d275284f1d25` | `01a17cdf-77bd-7113-8dbe-8a6ac23c10ea` |  | 2026-10-27T10:19:44.286Z | 2026-10-27T10:21:09.813Z |
+| `8d1d67d5-1021-480b-8b7d-ca8d8a62dbde` | `01a17cdf-8ea8-7e23-b838-3e51982d448c` |  | 2026-10-27T10:19:50.268Z | 2026-10-27T10:21:42.563Z |
+| `5060dca3-c74d-4dd7-af75-2d0f6f4d6511` | `01a17ce4-c15f-7f82-81fa-adf382849cef` |  | 2026-10-27T10:25:29.451Z | 2026-10-27T10:45:04.821Z |
+| `25396193-c9de-4e43-9510-5a3d0a63680b` | `01a17deb-5503-7021-99a2-1f00b6683ca7` |  | 2026-10-27T15:12:17.497Z | 2026-10-27T15:31:14.911Z |
+| `36727f33-0bcf-4a29-9815-ace5d7d52b83` | `01a17e30-e4f6-7130-af95-5e4fac329eb4` |  | 2026-10-27T16:30:02.973Z | 2026-10-27T17:29:21.534Z |
+| `3fa4c197-187d-4c52-a0f1-9a538e06e14e` | `01a17f2c-1efa-7f10-8449-660d161ecafb` |  | 2026-10-27T21:02:40.767Z | 2026-10-27T21:03:36.817Z |
+| `4dd85f4d-6cb5-4b50-93d1-c9f810328828` | `01a17f51-3785-7a92-8d46-45bb3bf7791e` |  | 2026-10-27T21:43:13.162Z | 2026-10-27T21:44:28.263Z |
+| `7fe3fdcb-bad6-4ef8-9e05-9d8a5951b6b9` | `01a17f67-9d54-77d2-8d51-fb191219bb2b` |  | 2026-10-27T22:07:40.395Z | 2026-10-27T22:08:55.588Z |
+| `34700a09-ab74-407d-975c-0ec778269fc7` | `01a17f7b-5471-7b62-9204-c391963a8501` |  | 2026-10-27T22:29:14.382Z | 2026-10-27T22:30:18.732Z |
+| `43b1602e-4d7f-4668-a45a-8564e2e8a352` | `01a17fbe-4a61-7440-b0bf-53e752c1a9ad` |  | 2026-10-27T23:42:21.162Z | 2026-10-27T23:43:51.801Z |
+| `bb613b49-8ab5-4625-b5f8-21c226bfe39b` | `01a18161-9e2c-7a13-89e4-61fd5e1b6690` |  | 2026-10-28T07:20:21.843Z | 2026-10-28T07:23:01.587Z |
+| `2810f3b9-5db8-4f3c-afae-440cc000f36c` | `01a18161-73ed-7ca2-8d6d-3a63d841a73e` |  | 2026-10-28T07:20:14.484Z | 2026-10-28T07:21:39.744Z |
+| `d5e0b015-81fa-42bf-b9d3-2b000a942dc8` | `01a18173-f393-7992-a32e-adb29718a2f9` |  | 2026-10-28T07:40:25.130Z | 2026-10-28T07:41:30.964Z |
+| `3c991adb-4a8f-40b7-8bd3-f3ba7b03a1b0` | `01a18174-0f37-7183-8eb2-d1cdc0768b98` |  | 2026-10-28T07:40:29.732Z | 2026-10-28T07:41:42.724Z |
+| `ea4635f3-67e8-4bf7-bd4c-561d889f0b1e` | `01a18174-22e3-7a31-b616-eca5ebf70f0c` |  | 2026-10-28T07:40:35.433Z | 2026-10-28T07:42:23.145Z |
+| `5102986b-a641-46f2-b1f7-d7fe153bf1dd` | `01a18178-812a-7790-ad6f-f848a17f7c34` |  | 2026-10-28T07:45:21.696Z | 2026-10-28T07:59:35.178Z |
+| `6ab7abb9-5b8c-4616-ba58-f0c51ef31a70` | `01a18178-9c76-7ca3-9b28-d6c346c709ea` |  | 2026-10-28T07:45:28.508Z | 2026-10-28T07:46:38.880Z |
+| `66bf4baa-1fed-4ada-8ad4-1c403f2b15ce` | `01a18178-afdf-7f53-804a-3e587717e344` |  | 2026-10-28T07:45:33.372Z | 2026-10-28T07:47:45.288Z |
+| `1cdfbec9-ddd6-4b55-b54d-d932018bc592` | `01a1817c-862f-7e60-98dd-a2d96854d9d0` |  | 2026-10-28T07:49:45.177Z | 2026-10-28T07:52:34.965Z |
+| `084a13f6-fadf-412c-b4a6-87f0fe37c4eb` | `01a18193-38d8-75c0-a0f8-d6172dcbf12a` |  | 2026-10-28T08:14:33.291Z | 2026-10-28T08:15:48.212Z |
+| `0fff279e-3b9b-439a-bf28-ceb26f95d3ac` | `01a18196-2914-7783-9096-975c600da0de` |  | 2026-10-28T08:17:47.969Z | 2026-10-28T09:30:57.505Z |
+| `3410ba48-440c-40da-9e8d-a5699a33fdb3` | `01a181a4-8272-7271-b782-8cdc4e21d40d` |  | 2026-10-28T08:33:29.391Z | 2026-10-28T08:35:49.022Z |
+| `b6a02052-7ae0-45e9-8f92-d5f22e8c727d` | `01a181f3-418e-7a00-b86c-030d7928c669` |  | 2026-10-28T09:59:26.506Z | 2026-10-28T10:03:42.761Z |
+| `b4bd1e79-97c8-4877-96d7-760f863101c3` | `01a18286-ca20-76d0-b22c-86b61cad09f0` |  | 2026-10-28T12:40:35.665Z | 2026-10-28T12:45:04.322Z |
+| `4db49ec6-4c87-4623-94d8-0f910d7f712c` | `01a1828d-087f-7a52-b4f7-a1cd726d07a8` |  | 2026-10-28T12:47:24.341Z | 2026-10-28T12:49:24.876Z |
+| `5838d7e0-90aa-44fb-9566-40b930a9dcc5` | `01a182dd-b138-7830-872e-2b96eec23f76` |  | 2026-10-28T14:15:31.764Z | 2026-10-28T14:17:39.820Z |
+| `cd7e9fe0-8c86-4459-afe4-a50c66a37b31` | `01a182dd-ca35-7bb1-b12a-45f637cd8364` |  | 2026-10-28T14:15:36.377Z | 2026-10-28T14:18:01.192Z |
+| `9fd984df-725a-4d57-a6b9-4ffc2c3e2270` | `01a182eb-56e7-7322-ad24-98e37731eecd` |  | 2026-10-28T14:30:27.159Z | 2026-10-28T14:54:49.088Z |
+| `7eda5440-3887-4e2d-a15f-da7c48e4a8bb` | `01a18791-3606-7452-a890-44dc868c1a8f` |  | 2026-10-29T12:10:05.120Z | 2026-10-29T12:12:09.845Z |
+| `b9655760-2ed3-4174-a484-a2ebcc360cf1` | `01a18791-4f0e-7152-8e37-a0ca93b01512` |  | 2026-10-29T12:10:10.360Z | 2026-10-29T12:12:46.424Z |
+| `3f0e2dbf-22af-49a8-9cb9-d2a240e99468` | `01a187ee-f0f5-7cb0-88ec-2e3fb947aee3` |  | 2026-10-29T13:52:27.612Z | 2026-10-29T13:54:31.103Z |
+| `72dc2010-e0aa-450d-90c6-b198d6fca888` | `01a18929-2321-7d13-a187-ec959f15a815` |  | 2026-10-29T19:35:38.279Z | 2026-10-29T19:37:08.989Z |
+| `6ad6c0b5-de7d-4177-b52a-bf31b2157fea` | `01a189da-a35e-7cf1-b3ea-8df2ce8b84b4` |  | 2026-10-29T22:49:31.950Z | 2026-10-29T22:50:43.179Z |
+| `ca59062c-f63a-492a-b5c2-e20abaff3ea5` | `01a18bfe-3a82-72a3-ace3-13a1501a57ab` |  | 2026-10-30T08:47:37.147Z | 2026-10-30T08:51:10.967Z |
+| `2622dbf4-fe77-4c25-86a4-ecffef9f244f` | `01a18c2a-5678-70e2-afb8-75b128f0889c` |  | 2026-10-30T09:35:49.103Z | 2026-10-30T09:37:13.199Z |
+| `1c63e5e4-c883-49c8-a8a4-7761a4381de5` | `01a18ce0-33d6-76a2-b852-2e6e7f62ce26` |  | 2026-10-30T12:54:26.351Z | 2026-10-30T12:56:18.096Z |
+| `c0b027ae-1cfc-4dac-9626-65848f8441c6` | `01a19042-9c33-7781-be49-8af1c7876b11` |  | 2026-10-31T04:40:49.039Z | 2026-10-31T04:43:50.144Z |
+| `ddf2a0a3-6051-4197-9dc1-a6c4ef81f756` | `01a191a4-c498-7041-9e58-608e5296b4a6` |  | 2026-10-31T11:07:39.011Z |  |
+| `c469bd19-43f4-431f-987a-960ab87b58f0` | `01a191a4-db52-7660-a00f-31964f2bd0f2` |  | 2026-10-31T11:07:43.050Z |  |
+| `2208477f-dbc7-447d-986c-c3a96c6aa089` | `01a191a4-ebad-7ba0-b463-c52cc2abd1bc` |  | 2026-10-31T11:11:37.399Z |  |
+| `7ed8b78a-f1fd-48f4-8b4a-d9aa1f2c8136` | `01a191a4-fbc4-7242-81bb-0ad44d52332e` |  | 2026-10-31T11:07:51.498Z |  |
+| `f77f9779-5db1-4d44-8d86-611a37acf239` | `01a191a5-0c88-7e63-ac06-a5f6c8779289` |  | 2026-10-31T11:07:55.795Z |  |
 
 ## Counts and sources
 
@@ -187,41 +308,370 @@ not a new thread or proof of a successful review.
 
 | Count | Value | Source and rule |
 | --- | --- | --- |
-| Threads forked from the main thread | 195 | Unique threadId values in codex-threads.jsonl with mode = fork and parent = the main ID above (195 fork records). |
-| Resumes | 35 | codex-threads.jsonl records with mode = resume, across all runs/states. |
-| Thread journal entries | 230 | Non-empty codex-threads.jsonl records: 195 forks + 35 resumes. |
-| Runs: merged | 152 | runs/&lt;runId&gt;/run.json, counted once per run by state. |
-| Runs: held | 0 | runs/&lt;runId&gt;/run.json, counted once per run by state. |
-| Runs: failed | 35 | runs/&lt;runId&gt;/run.json, counted once per run by state. |
-| Runs: released | 5 | runs/&lt;runId&gt;/run.json, counted once per run by state. |
-| Runs: running | 3 | runs/&lt;runId&gt;/run.json, counted once per run by state. |
-| Runs total | 195 | All available runs/&lt;runId&gt;/run.json state records in the snapshot. |
-| Merged rows verified on main | 152 | Merged run records passing git cat-file and merge-base checks. |
-| Merged runs not on main | 0 | Merged run records failing either git check; only short run IDs are listed above. |
+| Threads forked from the main thread | 270 | Unique fork thread IDs with the main thread as parent. |
+| Fork records | 270 | Invocation journal. |
+| Resumes | 53 | Invocation journal. |
+| Thread journal entries | 323 | All non-empty invocation records. |
+| Runs covered by the invocation journal | 270 | Unique invocation run IDs. |
+| Runs: merged | 223 | Run metadata state, counted once per run. |
+| Runs: held | 0 | Run metadata state, counted once per run. |
+| Runs: failed | 36 | Run metadata state, counted once per run. |
+| Runs: released | 6 | Run metadata state, counted once per run. |
+| Runs: running | 5 | Run metadata state, counted once per run. |
+| Runs total | 270 | All available run metadata records. |
+| Merged rows verified on main | 223 | Merge SHAs passing git object and ancestry checks. |
+| Merged runs not on main | 0 | Only run and thread IDs are published above if git checks fail. |
+| Runs without a recorded merge SHA | 47 | No merge commit is inferred. |
 
-The main ID, model and effort come from `codex.json`. Table thread IDs and
-resume counts come from `codex-threads.jsonl`; settlement dates and commit
-references come from the permitted `run.json` metadata. Commit subjects are
-read from git so only public commit text is included. No prompts, briefs,
-private transcripts, credentials or chat are included. Journal state `merged`
-does not independently prove acceptance or a green gate; the Director must
-verify that separately before publication.
+The main ID, model and effort come from `codex.json`. Thread IDs, parent IDs
+and invocation dates come from `codex-threads.jsonl`; merge SHAs and run dates
+come from `runs/<runId>/run.json`. No brief, prompt, transcript, reason or other
+journal prose is copied. Journal state does not independently prove acceptance
+or a green gate; the Director must verify that separately before publication.
+
+Every invocation is listed below, in journal order, including resumed and
+unmerged runs. Repeated run and thread IDs are retained rather than collapsed.
+
+| Run ID | Codex thread ID | Parent thread ID | Invocation date (UTC) |
+| --- | --- | --- | --- |
+| `0e3a467b-2782-4972-a049-83bceaf8295d` | `01a17427-7974-7912-9abe-620ec515d6fe` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-25T17:41:47.093Z |
+| `8a05d331-c9eb-44d6-9286-5f1d07f4289d` | `01a17427-8913-7d63-a8fb-c5872f6001f3` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-25T17:41:51.026Z |
+| `8a05d331-c9eb-44d6-9286-5f1d07f4289d` | `01a17427-8913-7d63-a8fb-c5872f6001f3` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-25T18:06:41.647Z |
+| `7470efae-67b4-4eea-8d3b-d76036af662e` | `01a17441-a345-78e0-98c4-d70d6501fb94` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-25T18:10:21.706Z |
+| `7b5c9bcb-3a20-4746-b553-afd761a26be3` | `01a17441-b313-70a3-a7b6-905d7853b9f6` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-25T18:10:26.091Z |
+| `b5eba0a6-5aa8-4054-b2e5-0c01a683dda5` | `01a1744f-6782-7ec0-8eee-380672650f76` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-25T18:25:23.850Z |
+| `1bd84e93-e503-4095-b627-acca85231b3f` | `01a1744f-775d-7002-9f2d-b4ee46ee0b02` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-25T18:25:27.959Z |
+| `1bd84e93-e503-4095-b627-acca85231b3f` | `01a1744f-775d-7002-9f2d-b4ee46ee0b02` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-25T18:30:35.628Z |
+| `b5eba0a6-5aa8-4054-b2e5-0c01a683dda5` | `01a1744f-6782-7ec0-8eee-380672650f76` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-25T18:32:28.605Z |
+| `bf10b0b9-8f36-411f-aa9b-b1f19faeaf83` | `01a1746f-2194-7a43-a339-4470be74db05` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-25T19:00:03.910Z |
+| `e154a45d-ab2e-49a7-a4e1-ea58b9331730` | `01a1746f-33ca-76a2-941b-5185f78485bd` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-25T19:00:07.706Z |
+| `baf68501-18c0-43b9-9531-e39212a96df2` | `01a17473-423e-7bf1-a73f-2b2cc4990eb9` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-25T19:04:34.753Z |
+| `eb1abff4-817c-42a8-b71d-571eadb0a5e5` | `01a17473-55c8-7b50-acd5-90fcb6709f80` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-25T19:04:38.702Z |
+| `bf10b0b9-8f36-411f-aa9b-b1f19faeaf83` | `01a1746f-2194-7a43-a339-4470be74db05` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-25T19:12:20.135Z |
+| `e154a45d-ab2e-49a7-a4e1-ea58b9331730` | `01a1746f-33ca-76a2-941b-5185f78485bd` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-25T19:12:21.557Z |
+| `59d3e5c7-3bfb-44f0-b4c8-451aad65e54e` | `01a17487-d980-7702-a0d8-1050dd0910c5` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-25T19:27:03.013Z |
+| `3a126b60-e827-4c4f-9968-40f53d3d5e3e` | `01a1748a-d830-7bb1-ae33-dd54555f98f3` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-25T19:30:19.357Z |
+| `59d3e5c7-3bfb-44f0-b4c8-451aad65e54e` | `01a17487-d980-7702-a0d8-1050dd0910c5` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-25T19:36:19.843Z |
+| `e8f07a88-9ac4-4002-ad6a-dee7765042bb` | `01a1749f-af7d-7e71-969c-aaf39d7a602b` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-25T19:53:05.574Z |
+| `e8f07a88-9ac4-4002-ad6a-dee7765042bb` | `01a1749f-af7d-7e71-969c-aaf39d7a602b` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-25T20:00:03.000Z |
+| `aba57e63-9f69-4fa0-af40-f4468d89bdb3` | `01a174dc-fc71-7a22-ac75-4cfa47efda41` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-25T21:00:02.360Z |
+| `0f89b172-5a30-4790-8be4-3d6ec4b4ee20` | `01a174dd-0bfc-7fa3-8cf6-b55f5cd63247` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-25T21:00:06.539Z |
+| `0f89b172-5a30-4790-8be4-3d6ec4b4ee20` | `01a174dd-0bfc-7fa3-8cf6-b55f5cd63247` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-25T21:10:21.249Z |
+| `1ce61016-959c-461a-aa7c-29de514ec6a5` | `01a174ee-1b02-7903-99a2-f9c093457299` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-25T21:18:44.531Z |
+| `0a4cf46d-5a9f-41e3-bdcf-17cba98bbd41` | `01a174ee-2b4c-7170-8dc7-157ea751d00a` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-25T21:18:48.706Z |
+| `c67dd92a-0eb6-49b7-985e-595ada44b034` | `01a174ee-3a9e-7650-8b69-7020d78bfeba` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-25T21:18:52.823Z |
+| `f0e11350-b276-49e2-93bd-102486cce150` | `01a174ee-4d71-7fe2-82be-799ce33410b6` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-25T21:18:58.271Z |
+| `e3e8be8a-3813-4e8b-b616-ddd7711d1a79` | `01a174f2-66de-7032-94ff-b991b5c1d9bc` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-25T21:23:26.898Z |
+| `5eadf21c-d883-4971-a8ec-a58e4f747a99` | `01a174f2-7eea-71a0-8a12-06a7dc876268` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-25T21:23:33.153Z |
+| `5eadf21c-d883-4971-a8ec-a58e4f747a99` | `01a174f2-7eea-71a0-8a12-06a7dc876268` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-25T21:24:29.059Z |
+| `e3e8be8a-3813-4e8b-b616-ddd7711d1a79` | `01a174f2-66de-7032-94ff-b991b5c1d9bc` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-25T21:37:27.160Z |
+| `0a4cf46d-5a9f-41e3-bdcf-17cba98bbd41` | `01a174ee-2b4c-7170-8dc7-157ea751d00a` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-25T21:38:47.548Z |
+| `c67dd92a-0eb6-49b7-985e-595ada44b034` | `01a174ee-3a9e-7650-8b69-7020d78bfeba` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-25T21:38:51.318Z |
+| `f0e11350-b276-49e2-93bd-102486cce150` | `01a174ee-4d71-7fe2-82be-799ce33410b6` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-25T21:40:31.630Z |
+| `1ce61016-959c-461a-aa7c-29de514ec6a5` | `01a174ee-1b02-7903-99a2-f9c093457299` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-25T21:58:23.211Z |
+| `5eadcbcb-6a33-4019-bfcf-630d6ee73757` | `01a17522-9075-7603-ac38-5bb7a22a7850` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-25T22:16:02.847Z |
+| `b2cb9bda-a0b6-4fb5-b908-fb240f3df749` | `01a17522-a9d6-70b2-b4b5-1c052c9b77df` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-25T22:16:09.219Z |
+| `91096350-6e43-493f-839d-8f3f7698e40b` | `01a17522-bacb-7650-b4eb-3b8de7ffc879` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-25T22:16:13.168Z |
+| `bc3faf24-e8d5-4043-ace5-5c68984bf2f2` | `01a1753f-3519-7101-9117-d19f0e40dcae` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-25T22:47:20.088Z |
+| `36997f28-01d5-451c-a12a-9bbdbf9768a8` | `01a1753f-4c9d-7ef3-ba41-a4da3b2f5c31` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-25T22:47:25.978Z |
+| `b63a23bc-1df4-48e2-9b11-609f7fba71c9` | `01a1753f-6087-7492-9f58-77d7b55b9508` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-25T22:47:31.247Z |
+| `a3c5de06-bb55-4032-9726-1f38e8d4d2cb` | `01a1754e-df00-75d2-a856-a609c31c3ebe` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-25T23:04:26.588Z |
+| `3f12c1ba-ba8d-4c40-a1b7-2675efb25eea` | `01a1754e-f50d-72f2-93ee-12864330f957` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-25T23:04:32.182Z |
+| `465463b6-e2eb-4588-8d31-31f988e5840b` | `01a1754f-08a7-7583-8cf7-bd402abe4b13` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-25T23:04:36.742Z |
+| `6eb2e36c-2473-43a0-aeba-6aa3157ba0ac` | `01a1754f-1b35-7571-989f-0c57a887cbbc` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-25T23:04:41.728Z |
+| `b63a23bc-1df4-48e2-9b11-609f7fba71c9` | `01a1753f-6087-7492-9f58-77d7b55b9508` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-25T23:32:29.232Z |
+| `d97f22dd-e2e3-4b31-ad2d-a7831df814c5` | `01a17571-b17e-7f32-b824-32b61eac833a` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-25T23:42:30.024Z |
+| `229f149e-a99f-4652-8e33-eb8772f0286b` | `01a17571-c93e-7b52-8428-a607c5bae38d` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-25T23:42:34.528Z |
+| `00a7525a-c689-41a8-ab87-feec1d1058b0` | `01a17571-e581-7a70-9ffe-55f1a3d1f028` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-25T23:42:41.602Z |
+| `744b807b-5f52-4f51-9893-750e86a80cef` | `01a17571-f758-7421-a50a-e0ca16fcba50` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-25T23:42:46.709Z |
+| `c7ba768c-6939-4b50-8ea2-6c52a880db24` | `01a17572-155c-7fb0-9f45-3c728047967d` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-25T23:42:55.453Z |
+| `663aef1a-5ee3-4571-a3a4-abba75eb5991` | `01a175ae-c2af-73f1-9617-72515cdf6b73` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-26T00:49:11.590Z |
+| `f34f11e8-ca3e-47dd-bdbe-43255cf035c3` | `01a175ae-d7bf-7a51-9fd6-cb52021b2554` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-26T00:49:15.886Z |
+| `ed4666e9-c7ef-4edf-a1c2-643cbcbc6df8` | `01a175cf-51df-7640-9fb4-d21f07749980` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-26T01:24:45.061Z |
+| `2d6071b3-47ce-43dd-9c77-616e5e9937fe` | `01a175cf-66e1-7071-b273-43356e9b4e91` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-26T01:24:49.305Z |
+| `6b928be6-3310-43ca-9ad9-aad4bbf402f1` | `01a175cf-77c5-7e10-a0ae-c3b950284be0` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-26T01:24:53.939Z |
+| `7eaccc78-7ba3-4417-ad90-b85aa79cc6e4` | `01a175e0-fdf4-7491-814f-fb6e3579dbf6` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-26T01:44:03.016Z |
+| `4196d12c-d088-4d5d-b040-3ec434ecbc21` | `01a175e1-1185-7142-9c64-141f587d12ac` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-26T01:44:07.320Z |
+| `ed4666e9-c7ef-4edf-a1c2-643cbcbc6df8` | `01a175cf-51df-7640-9fb4-d21f07749980` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-26T01:57:05.526Z |
+| `b9fc6a44-1598-4325-8318-93fce3edb052` | `01a175f9-77d8-7060-96c8-eb464a8ea4fc` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-26T02:10:47.248Z |
+| `5b10adb4-d425-4547-b945-14010122b59a` | `01a175f9-8b30-7db0-8f0f-5995faf52003` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-26T02:10:51.395Z |
+| `0a9da8fc-16e1-4c00-8f39-22edac384a0a` | `01a175f9-9ec4-7b22-b292-6c68b8793db0` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-26T02:10:57.376Z |
+| `6df04bce-d169-492b-bc93-3900e1f027aa` | `01a17611-a835-7380-adb0-f6f73b2f7209` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-26T02:37:11.496Z |
+| `c36beaa6-4ef7-41b2-a45f-d5d713255273` | `01a17611-b783-7422-8f07-ae86dcc1c78c` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-26T02:37:15.618Z |
+| `6df04bce-d169-492b-bc93-3900e1f027aa` | `01a17611-a835-7380-adb0-f6f73b2f7209` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-26T02:46:26.358Z |
+| `bbfe8729-9b1f-4ec5-aa0c-91d94c6a6245` | `01a1762b-f71e-7762-b7b2-df3df3e2f8fc` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-26T03:05:57.954Z |
+| `b47d9a19-eeab-4b52-abc8-1da96794d91b` | `01a1762c-1062-79c1-8bd9-ad552360a0b7` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-26T03:06:02.308Z |
+| `05716f85-7583-499a-9018-6a473544d7fa` | `01a17645-d87e-7632-8162-a697d9db9a02` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-26T03:34:13.513Z |
+| `35bb8a31-54a5-47be-8b1c-e821539abd08` | `01a17645-f0b4-7863-8c0e-41be31a37f42` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-26T03:34:18.225Z |
+| `e280a672-ca50-4524-9f47-8362024fe92c` | `01a17652-306a-7de3-a60e-d618766cb869` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-26T03:47:40.841Z |
+| `206edb63-f2a3-465e-820d-3fe6d96c243f` | `01a1765d-c44e-7f73-9edd-75449f13674c` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-26T04:00:20.892Z |
+| `d44b82da-f2da-4e43-97f6-1b93d02159f1` | `01a17661-6b51-7050-99f6-e9416024d2f1` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-26T04:04:18.790Z |
+| `66eb3f48-1503-4512-bd1d-263b88a651c3` | `01a17672-db91-7ea0-bfe5-77b54d7c1cc9` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-26T04:23:21.872Z |
+| `4dee35da-6015-41c5-8bbb-b8fd183f36de` | `01a1772f-499e-7322-bb2c-b4a3f8d44f52` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-26T07:49:12.261Z |
+| `7d8c4ef7-b88c-43f2-8d78-61288acbcd0a` | `01a1772f-64e0-78b2-bdc1-748442daafa1` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-26T07:49:17.440Z |
+| `d5c6d47d-38d2-4824-b6fd-51303d8ede90` | `01a1772f-741b-7042-8a27-43fe4677f0de` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-26T07:49:21.354Z |
+| `0ba4cefc-8465-4425-a8fb-9d8cd2799efe` | `01a1772f-8304-77f3-ab31-d961e0ee7eea` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-26T07:49:25.463Z |
+| `4dee35da-6015-41c5-8bbb-b8fd183f36de` | `01a1772f-499e-7322-bb2c-b4a3f8d44f52` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-26T07:52:07.075Z |
+| `8ffa0a62-2e6c-4537-9a09-99573f5c1c50` | `01a17752-0ae5-76c1-9622-fa377d411b68` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-26T08:27:10.137Z |
+| `30e495fb-7852-4ba3-af26-548e17c4850a` | `01a17752-2787-7fe3-a906-f6ac4e1d60ba` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-26T08:27:15.666Z |
+| `e6ef50b2-22cb-42de-b0ef-3b209b3d6b1c` | `01a17752-3926-7a52-a15d-9ba4ca3a5f64` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-26T08:27:20.420Z |
+| `895802c7-0907-4913-ada7-4ba85fbec8e8` | `01a17752-4c74-7a61-b0da-c20d56e1346f` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-26T08:27:25.368Z |
+| `8ffa0a62-2e6c-4537-9a09-99573f5c1c50` | `01a17752-0ae5-76c1-9622-fa377d411b68` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-26T08:48:59.214Z |
+| `30e495fb-7852-4ba3-af26-548e17c4850a` | `01a17752-2787-7fe3-a906-f6ac4e1d60ba` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-26T09:03:16.113Z |
+| `9f5ae727-6a9d-4695-8b64-d9587c1c1bb8` | `01a1778a-5677-7821-bbb3-b0eebfb33cda` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-26T09:28:38.930Z |
+| `fa859339-ecd6-4feb-ac58-3d65baacc2ed` | `01a1778a-6b76-7e81-803a-ec556fb71cff` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-26T09:28:43.589Z |
+| `9f5ae727-6a9d-4695-8b64-d9587c1c1bb8` | `01a1778a-5677-7821-bbb3-b0eebfb33cda` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-26T09:29:52.665Z |
+| `c67e291c-f15c-4b4a-91c7-3195f984960a` | `01a177a6-1f2e-76a1-9fad-1b29d044eb98` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-26T09:59:02.649Z |
+| `c1078f44-7830-4dd9-8140-76ddfb77819c` | `01a177bd-5c9b-7580-bf96-713e2ed67eb4` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-26T10:24:22.657Z |
+| `33d66868-8de7-44fe-afef-b16529eac444` | `01a177cb-bd34-70c0-b84f-747925251cfa` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-26T10:40:03.989Z |
+| `a7835c95-e933-460e-8f05-466c18775635` | `01a179cd-6926-7b21-a039-2bc30af3fdbe` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-26T20:01:08.728Z |
+| `36b764c4-9f01-45b9-9bb1-f16fd0142a57` | `01a179cd-7d97-7d63-8eb1-8340d73a0384` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-26T20:01:13.364Z |
+| `50c4acba-d135-44cc-8de3-c7da87a2de1c` | `01a17a26-29cf-7043-ab9b-7b4362d9c039` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-26T21:38:05.558Z |
+| `d5851bdb-6629-456d-b630-049dc225f144` | `01a17a26-3e71-7ff2-8bda-f0e1cf2b48dc` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-26T21:38:09.716Z |
+| `2187ed4a-2715-4a2c-b793-d7467a23ffe4` | `01a17a3e-42e5-72d1-b7ef-4521f83d483b` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-26T22:04:24.553Z |
+| `c25dbc88-af03-4cfd-ae11-9bbd0ecbecda` | `01a17a3e-56a3-7980-b66d-e7997b734c05` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-26T22:04:29.083Z |
+| `a3021590-20f2-4804-8668-f8f16e7b9824` | `01a17a3e-6e39-7203-9810-d101abae5244` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-26T22:04:35.656Z |
+| `4d84da47-01d4-4dcc-a4ff-3d6cbaa11c6d` | `01a17a5b-19f8-7822-a54a-5be385587783` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-26T22:35:54.171Z |
+| `531fc3be-806a-4f51-9bb5-a1ba9ffe8817` | `01a17a5b-2cca-7a02-bbff-529654ecb2e9` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-26T22:35:59.702Z |
+| `531fc3be-806a-4f51-9bb5-a1ba9ffe8817` | `01a17a5b-2cca-7a02-bbff-529654ecb2e9` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-26T22:52:25.815Z |
+| `f940b919-6ee3-47a9-a179-745ceb88649b` | `01a17c9b-2a38-76a3-bfd0-fd53d241a9db` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-27T09:05:08.997Z |
+| `80b53d4b-33e7-4cc6-9eaf-524ab0909218` | `01a17c9b-45fe-7190-bcb5-25f620427e69` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-27T09:05:13.899Z |
+| `47ba2083-5425-48cf-9af9-b829213ab4c7` | `01a17c9b-595c-74e0-8dff-31c72500ea80` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-27T09:05:19.280Z |
+| `226c7920-0b15-443c-8c5c-49f7ef570c78` | `01a17c9b-731c-7c92-a24e-4bbc1f241423` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-27T09:05:25.563Z |
+| `47ba2083-5425-48cf-9af9-b829213ab4c7` | `01a17c9b-595c-74e0-8dff-31c72500ea80` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-27T09:09:47.823Z |
+| `480cce03-2d9b-4b5a-8213-d0f1aa02bed8` | `01a17cb2-2cad-7942-a6ad-feb8c16afe7b` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-27T09:30:16.137Z |
+| `84f48bda-3f27-478e-80b5-d275284f1d25` | `01a17cdf-77bd-7113-8dbe-8a6ac23c10ea` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-27T10:19:44.286Z |
+| `8d1d67d5-1021-480b-8b7d-ca8d8a62dbde` | `01a17cdf-8ea8-7e23-b838-3e51982d448c` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-27T10:19:50.268Z |
+| `3b329209-c706-407a-9d40-3bbb9b6da1d1` | `01a17cdf-a47d-7ff3-a93b-0693fbb84ca2` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-27T10:19:54.455Z |
+| `591d1747-4314-43bb-b21c-4bdcf430ae23` | `01a17cdf-b4e0-7f82-bc76-2d7a869e62d5` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-27T10:19:58.659Z |
+| `5060dca3-c74d-4dd7-af75-2d0f6f4d6511` | `01a17ce4-c15f-7f82-81fa-adf382849cef` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-27T10:25:29.451Z |
+| `8411a951-9ac0-477f-9672-bc1979f441ca` | `01a17d07-92fb-7373-aafb-c35161faa96b` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-27T11:03:31.691Z |
+| `507574c9-43f4-4882-a4ab-c121da634e6c` | `01a17d07-a6ce-7323-bd1e-9a37ec12c253` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-27T11:03:36.602Z |
+| `507574c9-43f4-4882-a4ab-c121da634e6c` | `01a17d07-a6ce-7323-bd1e-9a37ec12c253` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-27T11:05:59.470Z |
+| `b492c603-f6c6-43ba-b21c-85fa43bf6d50` | `01a17d23-9f77-7323-a7fb-3f3a6c0a7294` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-27T11:34:09.859Z |
+| `f33530a0-f59f-4140-a220-0cc61d5013af` | `01a17d46-4e5b-78e0-98a1-aeeb8c9a0768` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-27T12:12:02.559Z |
+| `82e19139-d0ec-4056-96e8-2e9c39785550` | `01a17d46-5fa9-7e22-b2c5-ce9b6656bc94` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-27T12:12:07.345Z |
+| `82e19139-d0ec-4056-96e8-2e9c39785550` | `01a17d46-5fa9-7e22-b2c5-ce9b6656bc94` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-27T12:14:02.210Z |
+| `7f97f81c-4665-4145-be43-4e8444c1b785` | `01a17d95-1570-74c0-842e-08810e856fa8` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-27T13:38:05.166Z |
+| `2c6910ff-8613-4062-83e1-7c6c3d9c3081` | `01a17d95-24ea-78e0-a7bc-e3046d574107` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-27T13:38:09.032Z |
+| `2c6910ff-8613-4062-83e1-7c6c3d9c3081` | `01a17d95-24ea-78e0-a7bc-e3046d574107` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-27T14:06:26.146Z |
+| `f2a310c4-c050-41b3-92c8-71c60a1a0c1a` | `01a17dce-e095-73b1-a295-c23ec9fd2813` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-27T14:41:12.994Z |
+| `985cfc6c-d588-42fd-9a05-1e1efb9a2800` | `01a17dce-f354-7ec0-bba6-75d60ac4f80a` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-27T14:41:18.367Z |
+| `985cfc6c-d588-42fd-9a05-1e1efb9a2800` | `01a17dce-f354-7ec0-bba6-75d60ac4f80a` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-27T14:42:40.639Z |
+| `05d9ee75-4ff5-49f2-91e2-fce79ed1de64` | `01a17deb-422f-7342-bd53-e254ad1ff863` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-27T15:12:13.140Z |
+| `25396193-c9de-4e43-9510-5a3d0a63680b` | `01a17deb-5503-7021-99a2-1f00b6683ca7` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-27T15:12:17.497Z |
+| `648ca004-afa9-4132-b180-aa3b99514c2c` | `01a17e11-5af1-7142-9078-1c7b0d44cd6d` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-27T15:53:51.788Z |
+| `648ca004-afa9-4132-b180-aa3b99514c2c` | `01a17e11-5af1-7142-9078-1c7b0d44cd6d` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-27T15:56:37.092Z |
+| `aa853be3-5cbc-46ea-a2ca-c6bcdd362a1c` | `01a17e30-d172-78b3-b8d6-15d42077c297` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-27T16:28:11.870Z |
+| `36727f33-0bcf-4a29-9815-ace5d7d52b83` | `01a17e30-e4f6-7130-af95-5e4fac329eb4` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-27T16:28:16.358Z |
+| `36727f33-0bcf-4a29-9815-ace5d7d52b83` | `01a17e30-e4f6-7130-af95-5e4fac329eb4` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-27T16:30:02.973Z |
+| `6319c954-0757-41e8-aada-0b9e6e7756be` | `01a17ecb-1569-7110-8c3a-31b0cce1d439` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-27T19:16:42.433Z |
+| `177743d2-4f8b-47a3-8f77-0e647db15962` | `01a17ecb-2b9c-78c0-963c-af856292c260` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-27T19:16:47.606Z |
+| `2f0aa5ac-344b-47fa-b802-9e1f99644fb5` | `01a17f2c-095b-7242-abbf-6f866e7de6e3` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-27T21:02:36.535Z |
+| `3fa4c197-187d-4c52-a0f1-9a538e06e14e` | `01a17f2c-1efa-7f10-8449-660d161ecafb` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-27T21:02:40.767Z |
+| `606cb4d3-f087-476d-8868-1edc5f4b5718` | `01a17f2f-5636-79d0-ad89-e220131fd12c` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-27T21:06:12.255Z |
+| `606cb4d3-f087-476d-8868-1edc5f4b5718` | `01a17f2f-5636-79d0-ad89-e220131fd12c` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-27T21:11:34.657Z |
+| `536eb726-31d1-4fda-9cbe-1ce95a1fadd9` | `01a17f3f-860f-7770-879a-911a5a60582e` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-27T21:23:53.283Z |
+| `4dd85f4d-6cb5-4b50-93d1-c9f810328828` | `01a17f51-3785-7a92-8d46-45bb3bf7791e` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-27T21:43:13.162Z |
+| `57ba45ac-2d55-4860-83a9-c9e4cdfd6acc` | `01a17f51-4cc8-7123-9f98-b94441c9e8a4` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-27T21:43:17.639Z |
+| `3d84e96c-bd98-4413-9b5b-4ed1ecee4735` | `01a17f67-77dc-7413-af79-9572bc1504bb` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-27T22:07:32.539Z |
+| `7fe3fdcb-bad6-4ef8-9e05-9d8a5951b6b9` | `01a17f67-9d54-77d2-8d51-fb191219bb2b` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-27T22:07:40.395Z |
+| `34700a09-ab74-407d-975c-0ec778269fc7` | `01a17f7b-5471-7b62-9204-c391963a8501` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-27T22:29:14.382Z |
+| `2b46bf9e-4b63-44d3-88d7-472a7fa12712` | `01a17f7b-823e-7221-83f2-9e374c70b8f2` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-27T22:29:24.892Z |
+| `4da6eb84-2a43-4b06-8f80-57a435c06008` | `01a17f81-81ed-7040-9344-9006ea4f47f7` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-27T22:35:56.884Z |
+| `850be0fc-d1d1-4564-948d-b3dc80773872` | `01a17f97-87a4-7a40-8bca-dbcc01180bc6` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-27T23:00:00.558Z |
+| `6e8b0ca7-f262-4685-9c32-ebb791d57532` | `01a17f97-9b98-7823-9a07-6a6b476eeb83` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-27T23:00:05.654Z |
+| `43b1602e-4d7f-4668-a45a-8564e2e8a352` | `01a17fbe-4a61-7440-b0bf-53e752c1a9ad` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-27T23:42:21.162Z |
+| `5f94ccd5-2d98-4c9f-81b5-effcadffea42` | `01a17fbe-5fdd-7c41-a87e-9a882a7818f3` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-27T23:42:25.936Z |
+| `1a7f1b95-999b-4640-aef0-4202067edf03` | `01a17fc0-6b1d-7262-975b-9b311c74000e` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-27T23:44:39.820Z |
+| `2810f3b9-5db8-4f3c-afae-440cc000f36c` | `01a18161-73ed-7ca2-8d6d-3a63d841a73e` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-28T07:20:14.484Z |
+| `bb613b49-8ab5-4625-b5f8-21c226bfe39b` | `01a18161-9e2c-7a13-89e4-61fd5e1b6690` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-28T07:20:21.843Z |
+| `be125120-3d80-47eb-8e41-498c59ab830d` | `01a18161-b8a7-7b20-be51-700b6874f498` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-28T07:20:28.694Z |
+| `d5e0b015-81fa-42bf-b9d3-2b000a942dc8` | `01a18173-f393-7992-a32e-adb29718a2f9` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-28T07:40:25.130Z |
+| `3c991adb-4a8f-40b7-8bd3-f3ba7b03a1b0` | `01a18174-0f37-7183-8eb2-d1cdc0768b98` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-28T07:40:29.732Z |
+| `ea4635f3-67e8-4bf7-bd4c-561d889f0b1e` | `01a18174-22e3-7a31-b616-eca5ebf70f0c` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-28T07:40:35.433Z |
+| `5102986b-a641-46f2-b1f7-d7fe153bf1dd` | `01a18178-812a-7790-ad6f-f848a17f7c34` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-28T07:45:21.696Z |
+| `6ab7abb9-5b8c-4616-ba58-f0c51ef31a70` | `01a18178-9c76-7ca3-9b28-d6c346c709ea` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-28T07:45:28.508Z |
+| `66bf4baa-1fed-4ada-8ad4-1c403f2b15ce` | `01a18178-afdf-7f53-804a-3e587717e344` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-28T07:45:33.372Z |
+| `1cdfbec9-ddd6-4b55-b54d-d932018bc592` | `01a1817c-862f-7e60-98dd-a2d96854d9d0` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-28T07:49:45.177Z |
+| `86a5cbe8-2870-4142-998d-fb8827277c50` | `01a1817c-9aa1-7a62-9ab2-066b13b99b57` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-28T07:49:50.476Z |
+| `54991607-7091-4c7a-bd57-def3a2e76238` | `01a18189-9728-78c1-b37d-1d686ada44e3` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-28T08:04:01.808Z |
+| `084a13f6-fadf-412c-b4a6-87f0fe37c4eb` | `01a18193-38d8-75c0-a0f8-d6172dcbf12a` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-28T08:14:33.291Z |
+| `0fff279e-3b9b-439a-bf28-ceb26f95d3ac` | `01a18196-2914-7783-9096-975c600da0de` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-28T08:17:47.969Z |
+| `3410ba48-440c-40da-9e8d-a5699a33fdb3` | `01a181a4-8272-7271-b782-8cdc4e21d40d` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-28T08:33:29.391Z |
+| `0e8d395b-52ce-419e-9157-98018cdeff98` | `01a181a9-2c9b-7b32-949a-927ad0562555` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-28T08:38:32.984Z |
+| `5b52aa9d-853f-4a08-bd6c-edc5916851a8` | `01a181d6-ce13-7a02-b591-89e0c8531fc5` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-28T09:28:23.662Z |
+| `2f43015c-7188-448e-9731-7fd2fc580a5c` | `01a181d6-ed12-7b21-873e-5e174ff62d23` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-28T09:28:29.737Z |
+| `1d8d88f8-3dde-4410-8df7-946fb11a538b` | `01a181ea-0a20-77d0-9ea7-c29b17e461b7` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-28T09:49:22.865Z |
+| `fc2b27ae-e5d3-4cd9-b376-95ccb5edb498` | `01a181f3-2c41-7d80-9a78-2c684e801744` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-28T09:59:20.601Z |
+| `b6a02052-7ae0-45e9-8f92-d5f22e8c727d` | `01a181f3-418e-7a00-b86c-030d7928c669` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-28T09:59:26.506Z |
+| `3ec97cdc-916a-4754-9858-a9795bb6926d` | `01a18200-278e-76e1-bbde-0e2fbb180ce7` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-28T10:13:32.125Z |
+| `52b6d05a-a905-42ca-97f8-f8220aeb4cda` | `01a1821f-082f-7d43-9092-4c265efd04f0` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-28T10:47:15.917Z |
+| `9aaa8346-5d73-4044-adaa-998ba065fe25` | `01a18229-862b-7a60-898d-c05054cef503` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-28T10:58:43.530Z |
+| `b21fde7d-546c-4d09-b2f7-91255999ded8` | `01a18230-1965-73c2-9730-90fce7c3ccfa` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-28T11:05:55.110Z |
+| `66cf7874-1d34-459c-84d6-b571fe76183a` | `01a18248-8461-7273-810e-64cc9e0bb505` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-28T11:32:34.879Z |
+| `6e14995f-40b7-4f8a-b993-7dfaa9a3513e` | `01a18254-5744-7f93-8337-e17bf1b0a4e5` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-28T11:45:31.247Z |
+| `b4bd1e79-97c8-4877-96d7-760f863101c3` | `01a18286-ca20-76d0-b22c-86b61cad09f0` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-28T12:40:35.665Z |
+| `4db49ec6-4c87-4623-94d8-0f910d7f712c` | `01a1828d-087f-7a52-b4f7-a1cd726d07a8` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-28T12:47:24.341Z |
+| `a856962d-afb0-4e83-9d79-8aeefd54c4ba` | `01a182dd-9986-7fe2-ac52-144d24ad9b1a` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-28T14:15:24.810Z |
+| `5838d7e0-90aa-44fb-9566-40b930a9dcc5` | `01a182dd-b138-7830-872e-2b96eec23f76` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-28T14:15:31.764Z |
+| `cd7e9fe0-8c86-4459-afe4-a50c66a37b31` | `01a182dd-ca35-7bb1-b12a-45f637cd8364` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-28T14:15:36.377Z |
+| `9fd984df-725a-4d57-a6b9-4ffc2c3e2270` | `01a182eb-56e7-7322-ad24-98e37731eecd` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-28T14:30:27.159Z |
+| `e9b28099-0b71-44c8-b365-571c9de2ba3d` | `01a182eb-7ceb-7da1-814c-6959d8c5172b` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-28T14:30:34.522Z |
+| `2cfbddab-7807-4afe-8973-fa482d771e50` | `01a18304-c01d-75c0-879a-60cddad65a85` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-28T14:58:11.903Z |
+| `761e4c0e-67ec-424c-953f-72de4b22813e` | `01a1831a-3907-72c0-a33f-9444bd06e467` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-28T15:21:34.278Z |
+| `9f722a15-6d2f-407d-8771-11a97de68a2f` | `01a1831a-8823-7992-bcf8-bac3cd65c8fc` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-28T15:22:01.322Z |
+| `7eda5440-3887-4e2d-a15f-da7c48e4a8bb` | `01a18791-3606-7452-a890-44dc868c1a8f` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-29T12:10:05.120Z |
+| `b9655760-2ed3-4174-a484-a2ebcc360cf1` | `01a18791-4f0e-7152-8e37-a0ca93b01512` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-29T12:10:10.360Z |
+| `a713911c-7d73-4b2a-aa51-ae19bc6c120e` | `01a18796-f933-78f2-8933-ed14a2bd4490` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-29T12:16:22.026Z |
+| `460912e9-1a41-4301-914f-a779ae53a7bd` | `01a18797-2c82-7700-b580-27431a8e6808` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-29T12:16:36.287Z |
+| `91c3edb9-9f69-41d2-928c-4bd2890b3468` | `01a1879a-6eee-77d1-8bba-18bb564d701c` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-29T12:20:08.198Z |
+| `a713911c-7d73-4b2a-aa51-ae19bc6c120e` | `01a18796-f933-78f2-8933-ed14a2bd4490` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-29T12:36:00.533Z |
+| `408a23a4-403b-4cf2-b42b-365a800bd8ba` | `01a187b9-dfc5-7d51-9d2b-0f25a2a7d05b` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-29T12:54:28.986Z |
+| `fd9d9c50-a61e-4ea2-bd92-e1ba29547e5c` | `01a187c4-1d06-7810-8674-2f1e33cc3dfe` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-29T13:05:40.069Z |
+| `235c00d3-9dc9-482a-b09f-497bacadfff5` | `01a187c4-308d-7073-8ee4-80acf2c95435` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-29T13:05:45.431Z |
+| `ddfd0cb2-69e0-4f2f-9912-84fccc1bb3b9` | `01a187c4-484f-76c2-80a9-eb06444d4ed0` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-29T13:05:52.213Z |
+| `fd9d9c50-a61e-4ea2-bd92-e1ba29547e5c` | `01a187c4-1d06-7810-8674-2f1e33cc3dfe` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-29T13:35:31.497Z |
+| `ddfd0cb2-69e0-4f2f-9912-84fccc1bb3b9` | `01a187c4-484f-76c2-80a9-eb06444d4ed0` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-29T13:35:32.955Z |
+| `3f0e2dbf-22af-49a8-9cb9-d2a240e99468` | `01a187ee-f0f5-7cb0-88ec-2e3fb947aee3` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-29T13:52:27.612Z |
+| `33c0168f-7468-4a2c-aa28-9afc81c23be9` | `01a188a9-fd47-7d01-a1ee-cf10bc215377` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-29T17:16:45.814Z |
+| `cbdccbc3-bdbc-44a1-97e9-bf36771d3506` | `01a188aa-123e-7ce0-b8b2-c53e4fb42aba` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-29T17:16:50.270Z |
+| `2780b92a-0eb5-4975-8e88-cc3f075a7a03` | `01a188db-00f9-7ec0-b456-26029926d9ea` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-29T18:10:17.875Z |
+| `855aeaa8-a6ed-4d30-840e-db7d907ae446` | `01a188db-165c-7031-9261-679a612e58d4` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-29T18:10:22.177Z |
+| `2780b92a-0eb5-4975-8e88-cc3f075a7a03` | `01a188db-00f9-7ec0-b456-26029926d9ea` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-29T18:11:40.561Z |
+| `929437c3-8517-4fa9-8535-8b1d387aaaa8` | `01a18903-d6b0-7900-9a6b-2aae2aeb59e3` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-29T18:54:54.196Z |
+| `72dc2010-e0aa-450d-90c6-b198d6fca888` | `01a18929-2321-7d13-a187-ec959f15a815` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-29T19:35:38.279Z |
+| `27fa5c2d-7db8-403c-8bdc-c070f559d47f` | `01a189ae-eb79-7612-8de1-3bdab58cebac` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-29T22:01:45.113Z |
+| `97b52c9c-af07-44f2-9f2f-ebe0cfcd89ef` | `01a189ae-fc1b-74f1-ae41-2f2006af2507` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-29T22:01:49.198Z |
+| `57bf2083-7f42-4e86-a155-6a290f183db3` | `01a189af-0ca8-7142-88fc-d3e19784ed64` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-29T22:01:53.303Z |
+| `6ad6c0b5-de7d-4177-b52a-bf31b2157fea` | `01a189da-a35e-7cf1-b3ea-8df2ce8b84b4` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-29T22:49:31.950Z |
+| `756db81c-e148-467a-9152-cd1c43ed470b` | `01a189da-bb15-7e63-9751-71975fecda1f` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-29T22:49:36.086Z |
+| `5d40fb4a-4467-4c2a-b02d-a22713d7a571` | `01a189da-cb49-74f0-b0f4-380ff71bf7f3` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-29T22:49:40.269Z |
+| `756db81c-e148-467a-9152-cd1c43ed470b` | `01a189da-bb15-7e63-9751-71975fecda1f` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-29T22:51:52.739Z |
+| `3b034cea-474a-4bea-88d2-d14dfac995e8` | `01a189f4-79c8-7103-92ba-db79b30d2eca` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-29T23:17:44.427Z |
+| `7573927f-5764-4bae-b933-cf39485f82ef` | `01a18bd2-7040-76f2-9e29-e2bc467f2f4d` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-30T07:59:48.572Z |
+| `83a015e4-da8b-4f08-a605-1402785cfe08` | `01a18bd2-8595-74c0-b136-8d3fc9a2acb5` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-30T07:59:52.439Z |
+| `ca59062c-f63a-492a-b5c2-e20abaff3ea5` | `01a18bfe-3a82-72a3-ace3-13a1501a57ab` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-30T08:47:37.147Z |
+| `4f23b721-003c-421e-80ce-12ff093fbbd4` | `01a18c04-4ab3-7831-bd56-dcea1e48e26e` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-30T08:54:14.562Z |
+| `0085cf8d-f87e-49d4-b1e5-967e8ba407f8` | `01a18c04-5fed-79a1-998f-75b85ba5a342` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-30T08:54:19.997Z |
+| `b254f24b-732b-42e0-9026-27150e01878f` | `01a18bfe-0ee7-7453-bfb7-1ca8a1394cb9` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-30T08:47:30.799Z |
+| `2622dbf4-fe77-4c25-86a4-ecffef9f244f` | `01a18c2a-5678-70e2-afb8-75b128f0889c` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-30T09:35:49.103Z |
+| `d146f702-42d9-4c4d-b2d1-d5bf2db57fb0` | `01a18c2a-6b84-7d13-bc73-d8626900aa14` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-30T09:35:52.949Z |
+| `eee5a621-fe97-443c-8694-2d9a613c347d` | `01a18c36-4f08-70d3-bf6d-e41bbd6472d1` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-30T09:48:52.298Z |
+| `e27b7217-bcc7-4b22-94c5-cec6b69bbcb9` | `01a18c42-bab4-7773-8993-9e81fedfca77` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-30T10:02:26.198Z |
+| `09fce029-d221-4566-a38d-9924c1f43188` | `01a18c98-6fba-7af3-96c1-58785c9e880b` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-30T11:36:04.400Z |
+| `ec7fcbe3-27b1-4c0e-8292-f542b954028b` | `01a18c98-844b-70c2-a229-14229c5273c6` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-30T11:36:08.253Z |
+| `42ad5960-0680-47b1-8792-39346d82ea41` | `01a18ce0-1e2b-7c83-a190-30fdcca0e171` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-30T12:54:22.249Z |
+| `1c63e5e4-c883-49c8-a8a4-7761a4381de5` | `01a18ce0-33d6-76a2-b852-2e6e7f62ce26` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-30T12:54:26.351Z |
+| `3c036d19-99be-4f53-95f7-51bbe8d263a3` | `01a18ce0-4415-7a42-8c98-400c85f9ed46` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-30T12:54:30.481Z |
+| `bb90baae-f7e0-4a04-92c8-9fb3d0e0334e` | `01a18db9-a695-79f0-8f7f-740b1fdc502f` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-30T16:51:58.656Z |
+| `12caabee-594b-42af-abc9-0932e6a58824` | `01a18ddf-ad1c-79b1-8003-6438495cc15f` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-30T17:33:29.570Z |
+| `e8032460-f764-4891-9bb2-4c6b937d4915` | `01a18ddf-bf06-7651-8c6d-29438cfc46e9` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-30T17:33:33.551Z |
+| `12caabee-594b-42af-abc9-0932e6a58824` | `01a18ddf-ad1c-79b1-8003-6438495cc15f` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-30T17:44:16.882Z |
+| `e8032460-f764-4891-9bb2-4c6b937d4915` | `01a18ddf-bf06-7651-8c6d-29438cfc46e9` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-30T18:01:22.151Z |
+| `07be5c94-a7ee-4614-abb8-0fec795988e0` | `01a18e0b-47fe-7ba1-98c0-b8a9fa9b48ad` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-30T18:21:08.335Z |
+| `e4d30bb4-467f-4b93-b5d9-b02b93055d11` | `01a18e0b-5ebc-7ee2-81fe-aa13f2d93668` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-30T18:21:12.597Z |
+| `0a6b513f-ab8d-4d0e-8b84-dd84d3c8be74` | `01a18e2c-de1a-7bc0-8602-ffb9c18c4290` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-30T18:57:49.377Z |
+| `6ec2d6c7-d794-408a-b056-c8415e0c8093` | `01a18f13-c921-7aa2-97ff-26f32ae71ac1` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-30T23:10:02.710Z |
+| `2cd13863-5cc0-4b7d-a633-72ea56acba5f` | `01a18f13-de42-7871-973f-475f7a556c3a` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-30T23:10:06.649Z |
+| `6ec2d6c7-d794-408a-b056-c8415e0c8093` | `01a18f13-c921-7aa2-97ff-26f32ae71ac1` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-30T23:11:54.286Z |
+| `2cd13863-5cc0-4b7d-a633-72ea56acba5f` | `01a18f13-de42-7871-973f-475f7a556c3a` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-30T23:21:18.639Z |
+| `20d25db1-c8d5-477c-a50a-18110980667a` | `01a18f50-6da1-7900-9b16-d8f75ac8fc5e` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-31T00:16:17.093Z |
+| `4eca9571-b24c-44b4-b6c9-3d47aa2e5b53` | `01a18f98-746a-72a2-ab2d-77bc1db155c1` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-31T01:34:57.328Z |
+| `4accbdc8-522e-428b-9e3e-4488139c2cee` | `01a18f98-8abc-7602-9b34-76334c812526` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-31T01:35:01.635Z |
+| `8eb26ead-97f8-43c5-afb8-34a0361a072d` | `01a18f98-9c0b-7270-9354-b17ed0b98b96` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-31T01:35:06.096Z |
+| `9ce92406-8347-43ef-88c9-8104f1bc59a8` | `01a18f98-ac72-7be1-9cb4-d4893c2e4a71` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-31T01:35:10.328Z |
+| `1f35588e-c061-43ba-ab4e-17241007dfb1` | `01a18f98-bd2a-7513-9399-5e943e30a557` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-31T01:35:14.758Z |
+| `9ce92406-8347-43ef-88c9-8104f1bc59a8` | `01a18f98-ac72-7be1-9cb4-d4893c2e4a71` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-31T01:36:39.856Z |
+| `fecb6d6c-5c7c-4402-98b5-21844382c6b3` | `01a18fbd-1460-7302-8b63-2d6b85e14f5c` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-31T02:14:58.321Z |
+| `38db1746-532e-4bc6-808c-c1e6153452c6` | `01a18fbd-2d40-7e70-8f4b-9c3b9ba498c1` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-31T02:15:02.578Z |
+| `0590d731-1223-4270-bd06-ef7ebdc98157` | `01a18fbd-3e69-7b52-b851-9e987d358ab5` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-31T02:15:06.992Z |
+| `fecb6d6c-5c7c-4402-98b5-21844382c6b3` | `01a18fbd-1460-7302-8b63-2d6b85e14f5c` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-31T02:16:15.267Z |
+| `b56b14ba-b2c1-4e75-bc90-1d5c46b846d1` | `01a18fca-d170-7950-995f-04faa5f3c8f2` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-31T02:29:56.876Z |
+| `ace19f98-3dce-4e11-914e-0574b2f6f05e` | `01a18fca-e318-73b3-a939-ac38f5cff8bc` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-31T02:30:00.958Z |
+| `25d027f7-e7fe-431a-b112-703b8c8acf6e` | `01a18fca-f328-7840-9854-1e3cd563af85` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-31T02:30:05.083Z |
+| `ace19f98-3dce-4e11-914e-0574b2f6f05e` | `01a18fca-e318-73b3-a939-ac38f5cff8bc` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-31T02:43:00.699Z |
+| `67b3d107-d651-4e6b-95b9-1533677f1d41` | `01a18fdc-6091-7812-85bd-93d38d8aee6f` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-31T02:49:07.345Z |
+| `d6e6be28-efd2-4cb6-975a-499cad89246f` | `01a18fdc-718c-7313-b833-853af84d6d06` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-31T02:49:11.696Z |
+| `685f4735-5dd7-4986-abdd-7642aaf628ea` | `01a18fdc-82b0-70e3-a0ca-7085dd3d185f` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-31T02:49:15.926Z |
+| `b497ae1b-72b5-4821-9fda-d1715d717418` | `01a18fed-7535-7fc0-b210-42fea01fa9dc` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-31T03:07:47.086Z |
+| `e17a5b46-ee42-4dfe-afb3-9f333a310f44` | `01a19007-573c-79c1-9c65-ee9e44e4ca25` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-31T03:36:04.432Z |
+| `42e96938-6957-4c77-b1e4-469841cf4731` | `01a19007-6cc3-7692-a429-6e16c3aa1b1a` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-31T03:36:08.391Z |
+| `032e6e2f-4393-4f70-9526-b0f475cbfb23` | `01a19007-7c6f-7e81-a42a-90bf68d301c6` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-31T03:36:12.394Z |
+| `138aae6e-ed0c-4c15-8551-120df959ebac` | `01a19007-8c16-7211-83aa-3f7431b228e8` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-31T03:36:16.394Z |
+| `fa703c84-ac0e-44f7-8563-d673c436b52f` | `01a19007-9c28-7ff2-b231-6c79b21ec454` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-31T03:36:20.662Z |
+| `138aae6e-ed0c-4c15-8551-120df959ebac` | `01a19007-8c16-7211-83aa-3f7431b228e8` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-31T03:37:54.723Z |
+| `40740208-e00b-4679-881e-e943a791c992` | `01a1901b-26f2-76d2-9efb-9544dc3818f0` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-31T03:57:41.852Z |
+| `a0063eb3-8ab6-4aaa-a72d-98fd3a98050b` | `01a19020-8f1c-7ee0-b7cb-5b1f813ab54b` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-31T04:03:35.650Z |
+| `79e223a9-0017-4054-b4a5-c89154ae12d8` | `01a19020-9f26-7fb3-bb26-624ba6a810dd` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-31T04:03:39.818Z |
+| `a0063eb3-8ab6-4aaa-a72d-98fd3a98050b` | `01a19020-8f1c-7ee0-b7cb-5b1f813ab54b` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-31T04:15:12.936Z |
+| `c84274ed-ab3b-4585-b8a1-887d81964168` | `01a1902e-7130-75c3-8fb7-06f119bb8dbb` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-31T04:18:45.541Z |
+| `4fa6d80a-c957-4bd3-a311-9adaf0e36a01` | `01a1902e-8264-75f0-ad5b-005a2c8a803c` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-31T04:18:49.936Z |
+| `81c3a080-1238-4bfa-856d-a7875046aa5d` | `01a1902e-9343-76a0-be84-53521416525c` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-31T04:18:54.277Z |
+| `4d414489-2c79-471b-a765-9a7187b9bd57` | `01a1902e-a610-71a3-89ec-ff997218ebb4` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-31T04:18:59.048Z |
+| `c0b027ae-1cfc-4dac-9626-65848f8441c6` | `01a19042-9c33-7781-be49-8af1c7876b11` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-31T04:40:49.039Z |
+| `6e21fae4-db3d-42e6-937c-34f05bf48b46` | `01a19042-b4bd-7840-8285-fa53e0812afc` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-31T04:40:53.538Z |
+| `4d414489-2c79-471b-a765-9a7187b9bd57` | `01a1902e-a610-71a3-89ec-ff997218ebb4` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-31T04:45:52.643Z |
+| `57561543-fe81-4b5a-9828-23a5ef9dd285` | `01a1904d-126b-79a2-8aed-377ec079ca47` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-31T04:52:12.951Z |
+| `bdd5b883-a809-44e1-9994-1b9afe77af1f` | `01a1904d-2371-70c2-80ca-44b2d1291869` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-31T04:52:17.275Z |
+| `35654569-c9ed-47ca-84cb-b2906f45d51d` | `01a1904d-341e-7e92-979e-292bc1db4dba` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-31T04:52:21.541Z |
+| `5f10c290-196a-4403-8371-7fc78091a75a` | `01a1906a-e88e-7be0-bc18-9ad4a14a0e4d` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-31T05:24:49.599Z |
+| `4a60d88b-f419-40d1-a320-c2aa2235c249` | `01a1906a-fdf5-7f32-aa8d-03bd55cb72e2` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-31T05:24:53.605Z |
+| `20f1150f-2c52-4581-a78e-47282995543c` | `01a1906b-0db8-7723-8de0-e0530b9d3cc7` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-31T05:24:57.786Z |
+| `20f1150f-2c52-4581-a78e-47282995543c` | `01a1906b-0db8-7723-8de0-e0530b9d3cc7` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-31T05:26:04.043Z |
+| `5f10c290-196a-4403-8371-7fc78091a75a` | `01a1906a-e88e-7be0-bc18-9ad4a14a0e4d` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-31T05:31:26.155Z |
+| `bdd5b883-a809-44e1-9994-1b9afe77af1f` | `01a1904d-2371-70c2-80ca-44b2d1291869` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-31T05:34:39.751Z |
+| `054461ce-a064-429e-9673-4992c4187d3c` | `01a1908e-ab90-7ed2-abb5-9de2263e2eea` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-31T06:03:53.402Z |
+| `deb5cff7-8192-4181-b42c-ed5316d16d65` | `01a1908e-c1df-78f0-be11-23e138be6941` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-31T06:03:57.668Z |
+| `a8ab6601-8996-416c-9064-349800c17fbe` | `01a1908e-d357-72b0-a650-c2ae6f5558ff` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-31T06:04:02.081Z |
+| `054461ce-a064-429e-9673-4992c4187d3c` | `01a1908e-ab90-7ed2-abb5-9de2263e2eea` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-31T06:07:13.445Z |
+| `c618e200-2d6a-4735-85b4-2ff9277fa352` | `01a190aa-03fd-7241-a03d-89bd58ec714e` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-31T06:33:45.570Z |
+| `5c7d04ea-dadd-430d-9a2d-17f63e621446` | `01a190aa-1d9a-7a33-bc0a-492a2421bb5e` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-31T06:33:50.624Z |
+| `c0eb64a8-d482-4897-a5e3-2ed617ee53f8` | `01a190aa-2eb3-72e1-a5c1-2622d6e62ca2` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-31T06:33:55.006Z |
+| `f3c69f97-72ad-4261-8d64-a8d29964a59e` | `01a190aa-3faa-7963-84e9-d5b9c8d407f3` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-31T06:33:59.319Z |
+| `f3c69f97-72ad-4261-8d64-a8d29964a59e` | `01a190aa-3faa-7963-84e9-d5b9c8d407f3` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-31T06:43:58.863Z |
+| `e53a69e4-2180-4977-8d4f-2ef100bb067c` | `01a190c9-8315-7a30-89f9-c31f3b95a26a` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-31T07:08:10.684Z |
+| `5fef3e8b-10b3-457e-ad07-7bcd97af27b5` | `01a190c9-9d33-7620-b4ef-e027892bf365` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-31T07:08:14.740Z |
+| `f7957c1e-6fcc-4826-8272-2522535f5e67` | `01a190c9-ad2c-7e20-a95c-931293eb9127` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-31T07:08:18.848Z |
+| `f7957c1e-6fcc-4826-8272-2522535f5e67` | `01a190c9-ad2c-7e20-a95c-931293eb9127` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-31T07:09:46.174Z |
+| `418c3dc8-f1f3-4c25-a2b4-ef9036c5131f` | `01a190d5-1539-76a3-8f6f-16891105ff3c` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-31T07:20:48.033Z |
+| `4dadfb89-acde-4843-b83f-873e8936f89e` | `01a190d5-2fc6-74e3-8a79-16a04378335c` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-31T07:20:53.370Z |
+| `97c0c53b-5cbb-44cb-83eb-0cffe49e7e87` | `01a190ec-3f09-7180-a204-ff708153b928` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-31T07:46:05.807Z |
+| `bea346d3-693e-4767-9059-4ab4844f34a6` | `01a190ec-5417-7553-8550-d23ed56642ab` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-31T07:46:09.958Z |
+| `d040bbfb-ccf3-448e-944b-411cb31ef022` | `01a190f7-edc0-78a3-8a52-331e027195be` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-31T07:58:51.672Z |
+| `b874816a-499e-49de-a3b9-04d9e2b46ebb` | `01a19110-aeef-7eb0-9661-4c81b295572f` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-31T08:25:53.781Z |
+| `6f6b6d4b-a7f2-49e5-9a05-59aacc32f036` | `01a19110-c3f9-7f11-9e36-42e76f11ed0b` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-31T08:25:57.738Z |
+| `54e578be-8c36-4164-ba05-327e2223795b` | `01a19110-d3ba-7652-bcd9-f7075c3668fe` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-31T08:26:01.764Z |
+| `f88dedb9-457a-4d56-89f5-3e6558d931b5` | `01a19110-e372-7a33-b854-dd05c49c6fc0` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-31T08:26:05.793Z |
+| `b874816a-499e-49de-a3b9-04d9e2b46ebb` | `01a19110-aeef-7eb0-9661-4c81b295572f` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-31T08:48:05.568Z |
+| `7f636fa7-5be3-48a9-a307-82500623ee43` | `01a19131-20eb-7be0-ab00-18a1888bb8f2` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-31T09:01:18.779Z |
+| `493a4106-672d-4316-8e12-45921f77a758` | `01a19131-30e5-7591-a149-bf6c1014ef71` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-31T09:01:22.775Z |
+| `c5dbd4c2-9441-4b4a-9108-7b73ce90f8f2` | `01a19131-40a6-7103-9785-0ffb8f9aebb6` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-31T09:01:26.816Z |
+| `18582bde-f257-4f3f-a60b-861592c01837` | `01a19131-5065-7f22-b8e5-a01c40225138` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-31T09:01:30.850Z |
+| `caa7acf2-d2e0-441b-8995-7dd9f0a7d7aa` | `01a19147-a661-76d1-99f4-7fef0eb2a4be` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-31T09:25:56.949Z |
+| `1248d06d-8917-4092-8a34-7adbe29446b1` | `01a19147-c1aa-7370-9059-169119fc65fa` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-31T09:26:01.689Z |
+| `5f9fc72d-aabd-402b-a099-1a785839be13` | `01a19147-d3c6-7920-9369-d2ca441fd8e4` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-31T09:26:06.361Z |
+| `ddf2a0a3-6051-4197-9dc1-a6c4ef81f756` | `01a191a4-c498-7041-9e58-608e5296b4a6` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-31T11:07:39.011Z |
+| `c469bd19-43f4-431f-987a-960ab87b58f0` | `01a191a4-db52-7660-a00f-31964f2bd0f2` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-31T11:07:43.050Z |
+| `2208477f-dbc7-447d-986c-c3a96c6aa089` | `01a191a4-ebad-7ba0-b463-c52cc2abd1bc` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-31T11:07:47.234Z |
+| `7ed8b78a-f1fd-48f4-8b4a-d9aa1f2c8136` | `01a191a4-fbc4-7242-81bb-0ad44d52332e` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-31T11:07:51.498Z |
+| `f77f9779-5db1-4d44-8d86-611a37acf239` | `01a191a5-0c88-7e63-ac06-a5f6c8779289` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-31T11:07:55.795Z |
+| `2208477f-dbc7-447d-986c-c3a96c6aa089` | `01a191a4-ebad-7ba0-b463-c52cc2abd1bc` | `01a1741c-c7ad-7f32-9992-27f322adeb5c` | 2026-10-31T11:11:37.399Z |
 
 ## How to verify
 
-From a checkout with the project's local `main` ref, substitute any row's short
-SHA and run these read-only PowerShell commands:
+From the assigned worktree with the local `main` ref, substitute any listed
+merge SHA and the snapshot main SHA in these read-only PowerShell commands:
 
-```powershell
-$sha = '<short SHA from the row>'
+~~~powershell
+$sha = '<merge SHA from the row>'
+$snapshotMain = '<snapshot main SHA above>'
 git cat-file -e "${sha}^{commit}"
+git merge-base --is-ancestor $sha $snapshotMain
 git merge-base --is-ancestor $sha main
-git show -s --format="%h %s" $sha
-```
+~~~
 
-Both checks must exit 0; compare the displayed subject with the table. If main
-has changed, use the recorded main revision above for the snapshot ancestry
-check as well. Git verifies the delivered commit and its ancestry; it cannot
-verify a Codex thread ID, resume count, settlement time or journal state. Those
-require the Director to compare the permitted metadata in the private journal
-against this snapshot. Do not publish private journal files.
+Every check must exit 0. Git verifies the delivered commit and its ancestry;
+it cannot verify thread IDs, parent IDs, invocation dates or journal state.
+The Director compares those fields and counts with the permitted private
+metadata. Do not publish the private journal files.
