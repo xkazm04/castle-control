@@ -110,3 +110,40 @@ src/static-safety.test.ts` (21 cases, six files). Run the normal renderer
 typecheck and lint runners as well. No renderer index, scene or overlay file,
 dependency, manifest or lockfile is modified. Desktop's local art preview stays
 separate, as explicitly required by the Director's scope revision.
+
+## maproom-01 side inks and selection
+
+The static war-table SVG assigns sides, in first-appearance order across tiles
+then pieces, the token inks `var(--gules)`, `var(--azure)`, `var(--or)` and
+`var(--key)`. The four-ink palette cycles on larger boards. Pieces use their
+own side's ink, regardless of the tile they occupy; items without a side use
+`var(--paper-2)`. These are renderer-local defaults, not streamer-set palette
+data or new contract fields.
+
+Selection reserves `var(--green)` at stroke width 4, outside the side palette.
+Using `var(--ink)` would collide with `var(--key)` in both paper and stock
+themes. Only the matching tile carries `data-selected="true"`; the SVG has no
+`aria-pressed` because this output is an image, not a collection of buttons.
+The root image's accessible name states the distinct side count and selected
+tile label, or explicitly says no tile is selected (also for off-map coordinates).
+
+`tileLabel(tile, min_column, min_r)` is exported for renderer-local reuse.
+Compute `min_column` as the minimum `q + floor(r / 2)` over the map and `min_r`
+as the minimum axial row. Labels use offset columns A..Z, AA.. and rows starting
+at 1, matching the desktop table. The sample vector is `(0,-1) → A1`,
+`(1,-1) → B1`, `(-1,0) → A2`, `(0,0) → B2`, `(1,0) → C2`,
+`(-1,1) → A3`, `(0,1) → B3`.
+
+Red-first evidence: before the renderer change, all four named regressions in
+`templates/war-table.test.ts` failed: distinct side fills, pieces using side ink,
+selection markup/outline, and the accessible selection name. The existing
+fit/anchor/escape cases and unchanged static-safety tests passed in that run.
+No regression case was dropped.
+
+Validation, 2026-10-31: renderer tests passed 157 cases in 19 files; renderer
+typecheck and lint passed. The final narrowed war-table/static-safety run passed
+17 cases in two files. `pnpm gate` exited 1 in contract codegen at
+`spawnSync cargo EPERM`, before Rust and recursive package validation. The gate,
+runner and contract-check/codegen scripts are unchanged from base `7e0d51d`;
+this failure occurs before any changed renderer code runs. The App Master must
+complete that gate in its permitted environment; no sandbox workaround was used.

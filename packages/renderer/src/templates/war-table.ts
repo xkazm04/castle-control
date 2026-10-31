@@ -139,23 +139,47 @@ export function layoutWarTableOutput(value: unknown, options: unknown = {}): War
   });
 }
 
+/** Offset-column label, relative to the map's minimum q+floor(r/2) and r. */
+export function tileLabel(tile: HexTile, min_column: number, min_r: number): string {
+  let column = '';
+  for (let value = tile.q + Math.floor(tile.r / 2) - min_column + 1; value > 0;
+    value = Math.floor((value - 1) / 26)) {
+    column = String.fromCharCode(65 + (value - 1) % 26) + column;
+  }
+  return `${column}${tile.r - min_r + 1}`;
+}
+
 /** Static local preview, no executable design data, remote loads or authoritative actions. */
 export function renderWarTableSvg(value: unknown, options: unknown = {}): string {
   const settings = outputOptions(options);
   const scene = layoutWarTableOutput(value, options);
+  const palette = ['var(--gules)', 'var(--azure)', 'var(--or)', 'var(--key)'] as const;
+  const side_inks = new Map<string, string>();
+  for (const item of [...scene.tiles, ...scene.pieces]) {
+    if (item.side !== undefined && !side_inks.has(item.side)) {
+      side_inks.set(item.side, palette[side_inks.size % palette.length] ?? palette[0]);
+    }
+  }
+  const ink = (side: string | undefined) => side === undefined ? 'var(--paper-2)'
+    : side_inks.get(side) ?? 'var(--paper-2)';
+  const min_column = Math.min(...scene.tiles.map(tile => tile.q + Math.floor(tile.r / 2)));
+  const min_r = Math.min(...scene.tiles.map(tile => tile.r));
+  const selected_tile = scene.tiles.find(tile => settings.selected?.q === tile.q && settings.selected.r === tile.r);
+  const selection = selected_tile ? `selected ${tileLabel(selected_tile, min_column, min_r)}` : 'no tile selected';
+  const name = `SIMULATED war-table preview · ${side_inks.size} ${side_inks.size === 1 ? 'side' : 'sides'} · ${selection}`;
   const tiles = scene.tiles.map(tile => {
-    const selected = settings.selected?.q === tile.q && settings.selected.r === tile.r;
+    const selected = tile === selected_tile;
     const points = tile.corners.map(p => `${p.x},${p.y}`).join(' ');
-    const label = escapeMarkup(`Tile ${tile.q},${tile.r}${tile.side ? ` · ${tile.side}` : ''}`);
-    return `<g data-tile="${tile.q},${tile.r}" aria-pressed="${selected}"><title>${label}</title>`
-      + `<polygon points="${points}" fill="var(--${tile.side ? 'azure' : 'paper-2'})" `
-      + `stroke="var(--${selected ? 'gules' : 'ink'})" stroke-width="${selected ? 3 : 1}"/></g>`;
+    const label = escapeMarkup(`Tile ${tileLabel(tile, min_column, min_r)}${tile.side ? ` · ${tile.side}` : ''}`);
+    return `<g data-tile="${tile.q},${tile.r}" data-selected="${selected}"><title>${label}</title>`
+      + `<polygon points="${points}" fill="${ink(tile.side)}" `
+      + `stroke="var(--${selected ? 'green' : 'ink'})" stroke-width="${selected ? 4 : 1}"/></g>`;
   }).join('');
   const pieces = scene.pieces.map(piece => `<g data-piece="${escapeMarkup(piece.id)}"><title>${escapeMarkup(piece.id)}</title>`
-    + `<circle cx="${piece.centre.x}" cy="${piece.centre.y}" r="${scene.hex_size * .25}" fill="var(--or)"/></g>`).join('');
+    + `<circle cx="${piece.centre.x}" cy="${piece.centre.y}" r="${scene.hex_size * .25}" fill="${ink(piece.side)}"/></g>`).join('');
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${scene.width}" height="${scene.height}" `
-    + `viewBox="0 0 ${scene.width} ${scene.height}" role="img" aria-label="SIMULATED war-table preview" `
+    + `viewBox="0 0 ${scene.width} ${scene.height}" role="img" aria-label="${escapeMarkup(name)}" `
     + 'style="background:transparent;max-width:100%;font-family:var(--font-ui);color:var(--ink)">'
     + `<title>SIMULATED · local war table</title>${tiles}${pieces}`
-    + '<text x="12" y="16" fill="currentColor" style="font-size:var(--text-small)">SIMULATED</text></svg>';
+    + '<text x="12" y="16" fill="var(--ink)" style="font-size:var(--text-small)">SIMULATED</text></svg>';
 }
