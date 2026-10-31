@@ -6,10 +6,34 @@ import ts from 'typescript';
 // @ts-expect-error Build configuration is native JavaScript, outside the TS product tree.
 import { overlayInputs } from '../vite-overlay.config.mjs';
 
+const OVERLAY_BUNDLE_BUDGET = 114_688;
+
+function assertOverlayBundleBudget(actualBytes: number): void {
+  if (actualBytes > OVERLAY_BUNDLE_BUDGET) {
+    throw new Error(
+      `apps/overlay/bundle.js is ${actualBytes} bytes; budget is ${OVERLAY_BUNDLE_BUDGET} bytes. `
+      + 'See apps/overlay/README.md and deliberately raise the budget in the same commit.',
+    );
+  }
+}
+
+it('accepts an overlay bundle exactly at the byte budget', () => {
+  expect(() => assertOverlayBundleBudget(OVERLAY_BUNDLE_BUDGET)).not.toThrow();
+});
+
+it('rejects an oversized overlay bundle with an actionable budget message', () => {
+  expect(() => assertOverlayBundleBudget(114_689)).toThrow(
+    'apps/overlay/bundle.js is 114689 bytes; budget is 114688 bytes. '
+    + 'See apps/overlay/README.md and deliberately raise the budget in the same commit.',
+  );
+});
+
 it('ships a local bundle rebuilt from this renderer and the lazy contract door', () => {
   const hash = createHash('sha256');
   for (const path of overlayInputs as readonly string[]) hash.update(readFileSync(new URL(path, new URL('../vite-overlay.config.mjs', import.meta.url)), 'utf8').replaceAll('\r\n', '\n'));
-  const bundle = readFileSync(new URL('../../../apps/overlay/bundle.js', import.meta.url), 'utf8');
+  const bundleBytes = readFileSync(new URL('../../../apps/overlay/bundle.js', import.meta.url));
+  assertOverlayBundleBudget(bundleBytes.byteLength);
+  const bundle = bundleBytes.toString('utf8');
   expect(bundle).toContain(`Castle Control overlay source SHA-256: ${hash.digest('hex')}`);
   expect(bundle).toContain('beacons.render.snapshot');
   expect(bundle).toContain('cc-cast');
