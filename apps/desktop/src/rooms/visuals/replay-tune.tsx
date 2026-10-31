@@ -60,20 +60,21 @@ function recent(offerings: readonly Offering[], position: number) {
 }
 
 /** The selected visual's art at the playhead, plus the last offerings to tick by. */
-export function ReplayBeacon({ item, now, position, offerings, counted, pinned }: {
+export function ReplayBeacon({ item, now, position, offerings, counted, pinned, never_lit = false }: {
   item: PreviewVisual; now: TracePoint; position: number; offerings: readonly Offering[];
-  counted: ReadonlySet<number>; pinned: boolean;
+  counted: ReadonlySet<number>; pinned: boolean; never_lit?: boolean;
 }) {
   const ticks = recent(offerings, position);
   const flare = ticks.find(index => counted.has(index));
   return <section className="visuals-replay-beacon" aria-label="Beacon preview at the playhead">
     <h3>Beacon preview <span>· {Math.round(now.intensity * 100)}% blaze</span></h3>
-    <div className="visuals-replay-art" data-intensity={now.intensity.toFixed(3)} data-pinned={pinned}>
+    <div className="visuals-replay-art" data-intensity={now.intensity.toFixed(3)} data-pinned={pinned} data-never-lit={never_lit}>
       <div className="visuals-replay-flare" key={flare ?? 'none'}>
         <BeaconArtwork item={{ ...item, total: now.total, intensity: now.intensity }}
           label={`${item.visual.name} at ${clockLabel(position)} · ${Math.round(now.intensity * 100)}% blaze · simulated`} />
       </div>
       {pinned && <span className="visuals-replay-stamp">Pinned at max</span>}
+      {never_lit && <span className="visuals-replay-stamp" data-tone="cold">Never lit tonight</span>}
       <span className="visuals-replay-meter" aria-hidden="true"><i style={{ height: `${now.intensity * 100}%` }} /></span>
     </div>
     <p className="visuals-readout"><b>{now.total.toFixed(1)} weighted subs at {clockLabel(position)}</b></p>

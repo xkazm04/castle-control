@@ -177,4 +177,9 @@ test('the trace names the lit threshold and flags the minute it first lights, ne
   expect(cold).not.toContain('data-first-lit=');
   expect(cold).toContain('class="visuals-replay-axis-lit"');
   expect(cold).toContain('data-tone="never_lit"');
+  // The beacon says why its flame is faint: a cold stamp on a night that never lights, never on one that does.
+  expect(cold).toContain('Never lit tonight');
+  expect(cold).toContain('data-never-lit="true"');
+  expect(raid).not.toContain('Never lit tonight');
+  expect(raid).toContain('Space plays or pauses');
 });

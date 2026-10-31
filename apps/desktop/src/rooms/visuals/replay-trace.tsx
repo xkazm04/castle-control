@@ -75,7 +75,7 @@ export function TraceFigure({ trace, before, offerings, counted, position, lit_i
         data-edge={share > 0.92 ? 'end' : share < 0.04 ? 'start' : undefined}>{`${Math.round(now_intensity * 100)}%`}</span>}
       {lit_at && <span className="visuals-replay-first-lit" aria-hidden="true" data-first-lit={lit_at.t}
         style={{ left: `${lit_share * 100}%`, top: `${y(lit_at.intensity) / 140 * 100}%` }}
-        data-edge={lit_share > 0.85 ? 'end' : undefined}>{`first lit · ${clockLabel(lit_at.t)}`}</span>}
+        data-edge={lit_share > 0.85 ? 'end' : undefined} data-place={lit_at.intensity > 0.8 ? 'below' : undefined}>{`first lit · ${clockLabel(lit_at.t)}`}</span>}
       <span className="visuals-replay-axis-lit" aria-hidden="true" style={{ top: `${y(lit_intensity) / 140 * 100}%` }}>lit</span>
       <span className="visuals-replay-axis-top" aria-hidden="true">100%</span>
       <span className="visuals-replay-axis-zero" aria-hidden="true">0%</span>

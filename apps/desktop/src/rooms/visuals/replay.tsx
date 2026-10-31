@@ -82,8 +82,12 @@ export function NightReplay({ item, editor, queue = proposalQueue, initial_night
       <StatusChip variant="dash">SIMULATED</StatusChip>
     </div>
     {reduced && <p className="visuals-note">Reduced motion: the whole night is drawn at once and nothing animates. Scrub to inspect any minute.</p>}
-    <label className="visuals-replay-scrub">Scrub the night
+    <label className="visuals-replay-scrub"><span>Scrub the night{!reduced && <small> · Space plays or pauses</small>}</span>
       <input type="range" min="0" max={night_duration_s} step="10" value={Math.round(time.position_s)}
+        onKeyDown={event => {
+          if (reduced || event.key !== ' ' || event.repeat || event.altKey || event.ctrlKey || event.metaKey) return;
+          event.preventDefault(); clock.toggle();
+        }}
         aria-valuetext={`${clockLabel(time.position_s)} · ${Math.round(now.intensity * 100)}% blaze`}
         onChange={event => clock.seek(event.currentTarget.valueAsNumber)} />
     </label>
@@ -100,7 +104,7 @@ export function NightReplay({ item, editor, queue = proposalQueue, initial_night
     <div className="visuals-replay-tune">
       <ReplayCurve item={item} editor={editor} state={editing} trace={trace} now={now} help_id={help_id} />
       <ReplayBeacon item={item} now={now} position={time.position_s} offerings={night.offerings} counted={counted}
-        pinned={now.total >= top && trace.pinned_s > 0} />
+        pinned={now.total >= top && trace.pinned_s > 0} never_lit={trace.first_lit_s === undefined} />
     </div>
     <div className="visuals-replay-handoff">
       <InkButton size="wrap" variant="offset" ink="or" onClick={send}>{draft ? 'Update the Steward proposal' : 'Send curve to the Steward'}</InkButton>

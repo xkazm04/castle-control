@@ -19,7 +19,13 @@ motion never starts. The room lifts one curve editor per selected visual so the
 replay surface and the bench drag the same draft. `CurvePoints` was extracted
 from `CurveControls` and is inlined there as a hook-free leaf, so the bench's
 native tree is unchanged. A replay draws headroom past the night's busiest
-total so a top point can be dragged right.
+total so a top point can be dragged right, and prints round weighted-sub marks
+(`axisMarks`) on the same reach as the points (`curveMaximum`). The trace names
+its dashed **lit** line and flags the first-lit moment from the trace's own
+`first_lit_s`; a night that never lights reads cold (azure verdict and a
+"Never lit tonight" stamp on the preview). A climbing night is offered a fit only
+under a 90% peak (`fit_offer_below`). Space on the focused scrubber plays or
+pauses.
 
 `beacons-nights.ts` builds four seeded, fictional nights (sample, gift wave,
 raid spike, sub train). `replay-proposal.ts` drafts a `visuals` proposal in the
