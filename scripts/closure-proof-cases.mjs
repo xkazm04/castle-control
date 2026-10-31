@@ -87,15 +87,19 @@ export function closureCases(proof, root) {
   proof('Event parity: missing mirror', ['$R/packages/contract/scripts/parity.mjs', '--schema', '$S/schema.json', '--registry', '$S/registry.json'], 'missing mirrored event: simulated.event', {
     'schema.json': JSON.stringify(events), 'registry.json': JSON.stringify(schema.methods.map((method) => method.name)),
   });
+  const outputsMatch = readContract('parity.mjs').match(/const trackedBuildOutputs = \[([^\]]*)\]/);
+  const outputs = outputsMatch ? [...outputsMatch[1].matchAll(/'([^']+)'/g)].map((match) => match[1]) : [];
+  if (!outputs.length) throw new Error('Contract usage proof requires the trackedBuildOutputs list');
+  const outputFiles = Object.fromEntries(outputs.map((output) => [output, "export const compiled = JSON.parse('{}');\n"]));
   proof('Contract usage: source parse rejected and named build output excluded', ['$S/usage.mjs'],
     '[proof verified] source JSON.parse rejected; named build output excluded', {
-      'apps/overlay/bundle.js': "export const compiled = JSON.parse('{}');\n",
+      ...outputFiles,
       'apps/overlay/source.js': "export const source = JSON.parse('{}');\n",
       'usage.mjs': `import assert from 'node:assert/strict';
 import { join } from 'node:path';
 import { usages } from ${JSON.stringify(moduleUrl('scripts/parity.mjs'))};
 const usage = usages(import.meta.dirname);
-assert(!usage.files.includes(join(import.meta.dirname, 'apps/overlay/bundle.js')));
+for (const output of ${JSON.stringify(outputs)}) assert(!usage.files.includes(join(import.meta.dirname, output)));
 assert(usage.files.includes(join(import.meta.dirname, 'apps/overlay/source.js')));
 assert.deepEqual(usage.defects, [join(import.meta.dirname, 'apps/overlay/source.js') + ': JSON parsing outside the contract door']);
 console.log('[proof verified] source JSON.parse rejected; named build output excluded');
@@ -103,7 +107,8 @@ throw new Error(usage.defects[0]);
 `,
     });
   proof('Contract usage: stale build output exclusion', ['$S/usage.mjs'],
-    'Missing listed build output: apps/overlay/bundle.js', {
+    'Missing listed build output: ' + outputs.at(-1), {
+      ...Object.fromEntries(outputs.slice(0, -1).map((output) => [output, outputFiles[output]])),
       'usage.mjs': `import { usages } from ${JSON.stringify(moduleUrl('scripts/parity.mjs'))};\nusages(import.meta.dirname);\n`,
     });
   proof('Tooling node tests: failing assertion', ['$S/scripts/tooling-test.mjs'], 'simulated node failure', {
