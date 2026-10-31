@@ -19,12 +19,13 @@ export function KeepEntrance({ on_enter, on_demo, on_stream }: { on_enter: () =>
 export function KeepRoomTile({ chamber, word, line, on_open }: {
   chamber: (typeof chambers)[number]; word: string; line: string; on_open: (id: ModuleId) => void;
 }) {
+  const state_id = `keep-room-${chamber.id}-state`;
   return <button className="keep-room" type="button" data-module={chamber.id}
-    data-room-tile={chamber.id} onClick={() => on_open(chamber.id)} aria-label={`Open ${chamber.name}`}>
+    data-room-tile={chamber.id} onClick={() => on_open(chamber.id)} aria-label={`Open ${chamber.name}`} aria-describedby={state_id}>
     <span className="keep-room-heading"><b>{chamber.name}</b><kbd>{chamber.number}</kbd></span>
     <span className="keep-room-function">{chamber.description}</span>
     <span className="keep-room-art"><ChamberArt chamber={chamber.id} /></span>
-    <strong className="keep-room-word">{word}</strong><span className="keep-room-line">{line}</span>
+    <strong className="keep-room-word">{word}</strong><span className="keep-room-line" id={state_id}>{line}</span>
   </button>;
 }
 

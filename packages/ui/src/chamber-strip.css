@@ -9,5 +9,6 @@
 .cc-chamber-tile kbd { font: var(--text-small)/1.3 var(--font-num); }
 .cc-chamber-state { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .cc-layer-lamps { display: flex; gap: var(--space-8); flex-wrap: wrap; }
-.cc-layer-lamps span::before { content: ''; display: inline-block; width: var(--space-6); height: var(--space-6); margin-right: var(--space-4); border: var(--rule-thin) solid var(--muted); border-radius: 50%; }
+.cc-layer-lamps [data-lit]::before { content: ''; display: inline-block; width: var(--space-6); height: var(--space-6); margin-right: var(--space-4); border: var(--rule-thin) solid var(--muted); border-radius: 50%; }
 .cc-layer-lamps [data-lit="true"]::before { background: var(--chamber-ink); border-color: var(--chamber-ink); }
+.cc-chamber-lamp-summary { position: absolute; width: var(--space-1); height: var(--space-1); overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
