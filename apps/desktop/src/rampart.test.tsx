@@ -64,9 +64,11 @@ test.each([
   }
 });
 
-test('the keep replaces the sidebar with four room tiles without repeated sample stamps', () => {
+test('the Keep offers four room hits and honest lintel stamps', () => {
   const html = renderToStaticMarkup(<Keep on_open={() => undefined} on_enter={() => undefined} />);
   for (const id of ['lottery', 'moderator', 'visuals', 'studio']) expect(html).toContain(`data-room-tile="${id}"`);
+  expect(html.match(/data-role="plaque"/g)).toHaveLength(4);
+  expect(html).toContain('data-stamp="sample"');
   expect(html).not.toContain('Room preview · sample data');
   expect(html).not.toContain('ILLUSTRATIVE SAMPLE DATA');
   expect(html).toContain('Enter the keep');

@@ -53,12 +53,19 @@ export function DesktopApp({ client }: { client: DesktopClient }) {
     setSelected(id);
     go(`#/chamber/${id}`);
   }
+  function openShortcut(id: ModuleId) {
+    if (navigation.current === 'keep') {
+      root.current?.querySelector<HTMLButtonElement>(`.keep-home button[data-room-tile="${id}"]`)?.click();
+      return;
+    }
+    navigate(id);
+  }
   function keyboard(event: KeyboardEvent<HTMLDivElement>) {
     const editable = event.target instanceof HTMLElement && Boolean(event.target.closest('input, textarea, select, [contenteditable]:not([contenteditable="false"])'));
     const tile = event.target instanceof HTMLElement && event.target.closest('[data-room-tile]');
     dispatchShortcut({ key: event.key, ctrlKey: event.ctrlKey, metaKey: event.metaKey, altKey: event.altKey,
       isComposing: event.nativeEvent.isComposing, defaultPrevented: event.defaultPrevented, repeat: event.repeat,
-      preventDefault: () => { event.preventDefault(); } }, editable, navigate, () => { stewardInput.current?.focus(); },
+      preventDefault: () => { event.preventDefault(); } }, editable, openShortcut, () => { stewardInput.current?.focus(); },
     {
       overview: () => go('#/overview'),
       back: () => go(backHash(navigation)),

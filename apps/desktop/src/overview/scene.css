@@ -9,11 +9,12 @@
 .overview-layer[data-layer="moderator"] { top: 5%; right: 3%; width: 29%; }
 .overview-layer[data-layer="visuals"] { right: 3%; bottom: 9%; width: 22%; }
 .overview-layer[data-layer="studio"] { top: 5%; left: 3%; width: 27%; }
-.overview-layer .keep-chamber-art { height: calc(var(--space-56) * 1.4); width: 100%; }
+.overview-layer .overview-room-art { height: calc(var(--space-56) * 1.4); width: 100%; overflow: hidden; }
+.overview-room-art :is(.dim, .litglow) { opacity: 0; pointer-events: none; }
 .overview-layer-fields { display: flex; flex-direction: column; gap: var(--space-2); }
 .overview-layer-fields s { margin-right: var(--space-4); color: var(--gules-text); }
 .overview-layer-fields strong { color: var(--gules-text); }
-.overview-layer svg:not(.keep-chamber-art) { display: block; max-height: calc(var(--space-56) * 1.5); width: 100%; }
+.overview-layer svg:not(.overview-room-art) { display: block; max-height: calc(var(--space-56) * 1.5); width: 100%; }
 .overview-chat { max-height: calc(var(--space-56) * 2); overflow: hidden; }
 .overview-chat p { margin: var(--space-5) 0; border-top: var(--rule-thin) solid var(--line); padding-top: var(--space-3); }
 .overview-chat [data-held="true"] { color: var(--muted); text-decoration: line-through; background: var(--paper-2); }
@@ -27,4 +28,4 @@
 .overview-scene[data-scene="program"] .overview-layer[data-layer="visuals"] { right: 3%; bottom: 8%; width: 40%; }
 .overview-scene[data-scene="program"] .overview-chat { max-height: calc(var(--space-14) * 3); }
 .overview-scene[data-scene="program"] .overview-chat p:not(:first-child), .overview-scene[data-scene="program"] .overview-vote, .overview-scene[data-scene="program"] .overview-camera, .overview-scene[data-scene="program"] .overview-scene-label, .overview-scene[data-scene="program"] .overview-layer-fields { display: none; }
-.overview-scene[data-scene="program"] .keep-chamber-art { height: var(--space-40); }
+.overview-scene[data-scene="program"] .overview-room-art { height: var(--space-40); }
