@@ -11,7 +11,8 @@ import { artworkOf, call_origin, confetti, draw_shapes, layoutMarks, sampleEntri
 import type { StageCast, StageEntry, StageMark } from './stage-model.js';
 import './stage.css';
 
-const rail_limit = 8;
+/** Scoreboard size: the theatre has room for eight placards, the desk view for four. */
+const rail_limit = { theatre: 8, desk: 4 };
 const burst = confetti();
 type Burst = CSSProperties & { '--cx': string; '--cy': string; '--cr': string; '--cd': string };
 const burstStyle = (piece: typeof burst[number]): Burst => ({
@@ -102,6 +103,7 @@ export function DrawStage({ shape, on_shape, entries, cast, content, sealed, sea
     : state.finished && revealed.length === winners.length ? 'revealed' : 'revealing';
   const disclaimer = scene.layers.find(layer => layer.kind === 'disclaimer');
   const latest = revealed.at(-1);
+  const limit = theatre ? rail_limit.theatre : rail_limit.desk;
   const lots = <Marks marks={marks} order={order} />;
   return <div className="lottery-draw-stage" data-shape={shape} data-phase={phase} data-shuffling={fresh || undefined}
     style={revealStyle(reveal_ms)}>
@@ -135,12 +137,12 @@ export function DrawStage({ shape, on_shape, entries, cast, content, sealed, sea
           total={winners.length} cohort={cohorts.get(latest)} />}
         {phase === 'revealed' && theatre && <Verdict total={winners.length} proof={proof} on_prove={on_prove} />}
         <ol aria-label={copy.stage.rail}>
-          {revealed.slice(0, rail_limit).map((handle, index) => {
+          {revealed.slice(0, limit).map((handle, index) => {
             const cohort = cohorts.get(handle);
             return <li key={handle} data-stage-winner={index + 1} data-cohort={cohort}
               title={cohort ? copy.cohorts[cohort] : undefined}><b>{index + 1}</b><span>{handle}</span></li>;
           })}
-          {revealed.length > rail_limit && <li className="lottery-stage-more">{copy.stage.more(revealed.length - rail_limit)}</li>}
+          {revealed.length > limit && <li className="lottery-stage-more">{copy.stage.more(revealed.length - limit)}</li>}
         </ol>
       </div>}
       {disclaimer?.kind === 'disclaimer' && <p className="lottery-stage-disclaimer">{disclaimer.text}</p>}
