@@ -8,7 +8,13 @@ export function loopback(url: string): boolean {
 }
 
 /** Install before navigation: HTTP/SSE and WebSockets have separate doors. */
-export async function guardPage(page: Page): Promise<() => void> {
+export async function guardPage(page: Page, coreOrigin?: string): Promise<() => void> {
+  if (coreOrigin && (!loopback(coreOrigin) || new URL(coreOrigin).origin !== coreOrigin)) {
+    throw new Error('Expected the exact launched loopback core origin');
+  }
+  // CORE mode admits only its launched read-only origin. Existing fixture
+  // journeys keep their loopback policy; no new host/port wildcard is added.
+  const permitted = (url: string) => coreOrigin ? new URL(url).origin === coreOrigin : loopback(url);
   const blocked: string[] = [];
   const consoleErrors: string[] = [];
   const pageErrors: string[] = [];
@@ -20,11 +26,11 @@ export async function guardPage(page: Page): Promise<() => void> {
   await page.context().route('**/*', async route => {
     requests++;
     const url = route.request().url();
-    if (loopback(url)) await route.continue();
+    if (permitted(url)) await route.continue();
     else { blocked.push(url); await route.abort('blockedbyclient'); }
   });
   await page.context().routeWebSocket('**/*', socket => {
-    if (loopback(socket.url())) socket.connectToServer();
+    if (permitted(socket.url())) socket.connectToServer();
     else { blocked.push(socket.url()); socket.close({ code: 1008, reason: 'Loopback fixtures only' }); }
   });
   return () => {

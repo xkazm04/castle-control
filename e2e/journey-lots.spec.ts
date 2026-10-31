@@ -2,8 +2,9 @@ import { test, expect } from '@playwright/test';
 import type { Page } from '@playwright/test';
 import { guardPage } from './network.ts';
 import { auditFields, auditStyles, desktopSurfaces } from './styles.ts';
+import { buildCoreLauncher, startCore } from './core-launch.ts';
 
-// Both journeys use the same asserted simulated configuration and cast.
+// The desktop fixture journey stays independent of the real-core OBS proof.
 async function configureAndCast(page: Page) {
   await page.goto('/#/chamber/lottery');
   await expect(page.locator('.cc-sample')).toHaveText('Simulated');
@@ -54,25 +55,53 @@ test('lottery configure, preview, seal, simulated cast and writ journey', async 
   } finally { await page.goto('about:blank'); verify(); }
 });
 
-test('lottery simulated cast OBS journey', async ({ page }) => {
-  test.fixme(true, 'fixture has no accepted-core transport; parked for the owner: fixture-to-core handoff');
-  const verify = await guardPage(page);
-  try {
-    const result = await configureAndCast(page);
-    // The native Rust page is covered separately by lots_overlay_page.rs.
-    const overlay = page.getByRole('link', { name: 'Open draw in OBS', exact: true });
-    await expect(overlay).toBeVisible();
-    const url = await overlay.getAttribute('href');
-    expect(url).toMatch(/\/lots\/hall-questions\?scale=/);
-    if (!url) throw new Error('Missing accepted core OBS URL');
-    const winners = await result.locator('[data-current-winner]').allTextContents();
-    await page.setViewportSize({ width: 1920, height: 1080 });
-    await page.goto(url);
-    for (const winner of winners) await expect(page.locator('main')).toContainText(winner);
-    for (const viewport of [{ width: 1920, height: 1080 }, { width: 1280, height: 720 }]) {
-      await page.setViewportSize(viewport);
-      await auditStyles(page, [{ name: 'draw plate', selector: 'main' }], { canvas: 'obs-transparent' });
-      expect(await page.evaluate(() => document.documentElement.scrollHeight <= innerHeight)).toBe(true);
-    }
-  } finally { await page.goto('about:blank'); verify(); }
+test.describe('lottery CORE simulated cast OBS journey', () => {
+  test.beforeAll(async () => {
+    test.setTimeout(600_000); // A cold Cargo build happens before browser assertions.
+    await buildCoreLauncher();
+  });
+  test('accepted seal and cast render the real core winners', async ({ page }) => {
+    const core = await startCore();
+    try {
+      const verify = await guardPage(page, core.overlayOrigin);
+      try {
+        // Node carries the capability through invokeMethod. Vite/browser origins
+        // remain untrusted and receive neither RPC access nor a session token.
+        const contract = core.contract;
+        const draw = await core.invoke(contract.lotsDrawUpsert, { draw: {
+          draw_id: 'simulated-core-draw', name: 'SIMULATED audience questions',
+          policy: { content: 'question', paid_entry: false, paid_weight: false,
+            subscriber_only: false, channel_points: false, free_entry_equal_odds: true,
+            regions: [], prize_value_usd_cents: 0, registration_confirmed: false,
+            official_rules: true, twitch_disclaimer: true },
+          rules: { pool: { kind: 'chatters' }, winner_count: 3, cooldown_s: 0,
+            cohort_caps: [], weight_curve: { kind: 'equal' }, free_join_equal_odds: true },
+        } });
+        expect(await core.invoke(contract.lotsDrawCheck, { policy: draw.policy }))
+          .toEqual({ result: 'ok', reasons: [] });
+        // The last generated participant proves the Rust intake finished before
+        // sealing; no fixture endpoint can create or replace an entry.
+        await expect.poll(async () => (await core.invoke(contract.lotsRollLookup,
+          { draw_id: draw.draw_id, user_id: '111' })).entry?.user_id).toBe('111');
+        const sealed = await core.invoke(contract.lotsRollSeal,
+          { draw_id: draw.draw_id, source: 'drand_quicknet', margin_s: 1 });
+        expect(sealed.sealed.roll.entries).toHaveLength(12);
+        const cast = await core.invoke(contract.lotsCast, { draw_run_id: sealed.draw_run_id });
+        expect(cast.cast.seal).toBe(sealed.sealed.seal);
+        expect(cast.cast.winners).toHaveLength(3);
+        expect(new Set(cast.cast.winners).size).toBe(3);
+        for (const winner of cast.cast.winners) expect(winner).toMatch(/^simulated_viewer_10[0-9]$|^simulated_viewer_11[01]$/);
+        // Both configured projects exercise this page at their actual viewport.
+        await page.goto(`${core.overlayOrigin}/lots/${draw.draw_id}?scale=1&anchor=tl`);
+        await expect(page.locator('main')).toHaveAttribute('data-simulated', 'true');
+        await expect(page.locator('.draw-scene .simulated')).toHaveText('SIMULATED');
+        await expect(page.locator('[data-draw-winner]')).toHaveText(cast.cast.winners);
+        const island = await page.locator('#cc-cast').textContent();
+        if (!island) throw new Error('Missing accepted cast on the real core page');
+        expect(contract.parseMethodResult(contract.lotsCast, island)).toEqual(cast);
+        await auditStyles(page, [{ name: 'draw plate', selector: 'main' }], { canvas: 'obs-transparent' });
+        expect(await page.evaluate(() => document.documentElement.scrollHeight <= innerHeight)).toBe(true);
+      } finally { await page.goto('about:blank'); verify(); }
+    } finally { await core.close(); }
+  });
 });
