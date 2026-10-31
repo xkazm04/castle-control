@@ -10,6 +10,20 @@ struct Case {
 }
 
 #[test]
+fn vote_bar_accepts_only_current_room_and_presentation_keys() {
+    assert!(pages::parse("/gatehouse/current", None).is_some());
+    assert!(pages::parse("/gatehouse/current", Some("scale=bad&anchor=tr")).is_some());
+    for target in [
+        "/gatehouse/unknown",
+        "/gatehouse/current/extra",
+        "/gatehouse/123",
+    ] {
+        assert!(pages::parse(target, None).is_none());
+    }
+    assert!(pages::parse("/gatehouse/current", Some("text=private")).is_none());
+}
+
+#[test]
 fn shared_paths_pin_identity_and_presentation_query_semantics() {
     let cases: Vec<Case> =
         serde_json::from_str(include_str!("fixtures/overlay-paths.json")).unwrap();
@@ -24,6 +38,7 @@ fn shared_paths_pin_identity_and_presentation_query_semantics() {
         let page = pages::parse(path, query);
         let kind = page.map(|page| match page {
             OverlayPage::Spike => "spike",
+            OverlayPage::VoteBar => "vote_bar",
             OverlayPage::Beacons { .. } => "beacons",
             OverlayPage::Lots { .. } => "lots",
         });

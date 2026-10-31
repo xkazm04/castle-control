@@ -13,6 +13,20 @@ import { StreamSetupContent, StreamSetupRow } from './setup.jsx';
 const launch = { mode: 'core', endpoint: 'http://127.0.0.1:4820', session_token: 'e'.repeat(64) } as const;
 const visual = { ...fixtureVisuals[0]!, visual_id: 'hearth', name: 'Hearth' };
 const url = 'http://localhost:4821/beacons/hearth';
+
+test('OBS setup offers vote-bar copy only in core mode, without chat or viewer identity', async () => {
+  const rpc = vi.fn<ObsNetwork['rpc']>(async () => ({ url: 'http://localhost:4821/gatehouse/current' }));
+  const model = createStreamSetup({ mode: 'core', launch, transport: { rpc } });
+  const row = model.getSnapshot().rows.find(row => row.vote_bar);
+  expect(row).toBeDefined();
+  if (!row) throw new Error('Missing core vote bar');
+  expect(renderToStaticMarkup(StreamSetupRow({ row, state: model.getSnapshot(), model }))).toContain('Copy browser-source URL');
+  const write = vi.fn<(url: string) => Promise<void>>(async () => undefined);
+  await model.copy(row.id, write);
+  expect(rpc.mock.calls[0]?.slice(2)).toEqual(['gatehouse.source.url', {}]);
+  expect(write).toHaveBeenCalledWith('http://localhost:4821/gatehouse/current');
+  expect(createStreamSetup({ mode: 'fixture' }).getSnapshot().rows.some(row => row.vote_bar)).toBe(false);
+});
 function network() {
   const rpc = vi.fn<ObsNetwork['rpc']>(async (_endpoint, _session, method) => {
     if (method === 'beacons.visual.list') return { visuals: [visual] };
@@ -186,7 +200,7 @@ test('output inventory at ten times the fixture volume is virtualized, including
   transport.rpc.mockImplementation(async (_endpoint, _session, method) => method === 'obs.status.get' ? { connected: true } : { visuals });
   const { model } = await core(transport);
   const html = renderToStaticMarkup(createElement(StreamSetupContent, { model, state: model.getSnapshot(), on_back: () => undefined }));
-  expect(html).toContain('aria-rowcount="31"');
-  expect(html.match(/role="row"/g)?.length).toBeLessThan(31);
+  expect(html).toContain('aria-rowcount="32"');
+  expect(html.match(/role="row"/g)?.length).toBeLessThan(32);
   expect(model.getSnapshot().rows.at(-1)?.href).toBe('#/chamber/lottery');
 });

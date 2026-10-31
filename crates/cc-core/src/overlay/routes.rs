@@ -22,6 +22,7 @@ pub(super) fn router(host: Arc<RenderHost>) -> Router {
     Router::new()
         .route(pages::BEACONS_ROUTE, get(page))
         .route(pages::LOTS_ROUTE, get(super::lots::page))
+        .route(pages::VOTE_BAR_ROUTE, get(super::vote_bar::page))
         .route_layer(middleware::from_fn(
             |request: Request<Body>, next: Next| async move {
                 // Preserve the read-only router's 405 for unsupported methods.
@@ -45,6 +46,16 @@ pub(super) fn router(host: Arc<RenderHost>) -> Router {
         )
         .route("/assets/{visual_id}/{hash}/{*path}", get(asset))
         .route("/push/beacons", get(push))
+        .route("/push/gatehouse", get(super::vote_bar::push))
+        .route(
+            "/vote-bar.js",
+            get(|| async {
+                (
+                    [(header::CONTENT_TYPE, "text/javascript; charset=utf-8")],
+                    include_str!("../../../../apps/overlay/vote-bar.js"),
+                )
+            }),
+        )
         .with_state(host)
 }
 async fn page(Path(id): Path<String>) -> Response {

@@ -14,7 +14,9 @@ mod governor;
 mod live;
 mod read_store;
 mod reads;
+mod vote_bar;
 use governor::Service;
+pub use vote_bar::VoteBarModule;
 
 pub struct GatehouseModule {
     state: Arc<Mutex<Service>>,
@@ -38,6 +40,7 @@ impl GatehouseModule {
         "gatehouse.chat.list",
         "gatehouse.history.list",
         "gatehouse.liveRun.get",
+        "gatehouse.source.url",
     ];
 
     /// The caller owns the persistence root and clock. No live adapter is started;

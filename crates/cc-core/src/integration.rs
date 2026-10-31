@@ -130,6 +130,9 @@ impl NativeServices {
     pub fn overlay_url(&self) -> String {
         self.overlay.url()
     }
+    pub(crate) fn vote_bar_host(&self) -> Arc<crate::overlay::RenderHost> {
+        self.render.clone()
+    }
     pub fn subscribe_chat(&self) -> broadcast::Receiver<crate::ChatIngress> {
         self.chat.subscribe()
     }

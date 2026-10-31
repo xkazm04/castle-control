@@ -23,6 +23,19 @@ struct Case {
 async fn page_router_and_ownership_follow_the_shared_grammar() {
     let directory = tempfile::tempdir().unwrap();
     let host = Arc::new(RenderHost::default());
+    let consensus: Arc<dyn cc_core::Module> = Arc::new(
+        cc_core::gatehouse::GatehouseModule::open(
+            directory.path().join("gatehouse"),
+            Arc::new(cc_store::SystemClock),
+        )
+        .unwrap(),
+    );
+    host.bind_vote_bar(Arc::new(cc_core::gatehouse::VoteBarModule::new(
+        Arc::downgrade(&consensus),
+        None,
+        true,
+    )))
+    .unwrap();
     host.commit_visual(visual(true)).unwrap();
     let package = seal(package("Simulated page"), &Default::default());
     let hash = String::from(package.content_hash.clone());

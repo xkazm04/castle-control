@@ -13,3 +13,4 @@ export const gatehouseRecordingImport = { method: "gatehouse.recording.import" a
 export const gatehouseChatList = { method: "gatehouse.chat.list" as const, params: compiled.p49, result: compiled.r49 };
 export const gatehouseHistoryList = { method: "gatehouse.history.list" as const, params: compiled.p50, result: compiled.r50 };
 export const gatehouseLiveRunGet = { method: "gatehouse.liveRun.get" as const, params: compiled.p51, result: compiled.r51 };
+export const gatehouseSourceUrl = { method: "gatehouse.source.url" as const, params: compiled.p52, result: compiled.r52 };

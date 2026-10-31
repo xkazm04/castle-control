@@ -5,7 +5,8 @@
     "types": [],
     "paths": {
       "@castle-control/contract": ["../contract/src/index.ts"],
-      "@castle-control/contract/beacons-render": ["../contract/src/generated/beacons-render-validation.ts"]
+      "@castle-control/contract/beacons-render": ["../contract/src/generated/beacons-render-validation.ts"],
+      "@castle-control/contract/vote-bar": ["../contract/src/generated/vote-bar-validation.ts"]
     }
   },
   "include": ["src/**/*.ts"]

@@ -28,6 +28,7 @@ mod rule;
 mod steward;
 mod strike;
 mod value;
+mod vote_bar;
 
 pub use beacons::*;
 pub use beacons_art::*;
@@ -58,6 +59,7 @@ pub use rule::*;
 pub use steward::*;
 pub use strike::*;
 pub use value::*;
+pub use vote_bar::*;
 
 /// Present optional keys must contain a value, never JSON null.
 pub(crate) fn present<'de, D, T>(deserializer: D) -> Result<Option<T>, D::Error>

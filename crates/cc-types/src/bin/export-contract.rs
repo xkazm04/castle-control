@@ -59,6 +59,9 @@ fn main() {
         ConsensusEventPayload,
         BeaconsEventPayload,
         BeaconsRenderSnapshot,
+        VoteBarDirection,
+        VoteBarSnapshot,
+        VoteBarSourceResult,
         AskParams,
         AskResult,
         Writ,
@@ -70,7 +73,8 @@ fn main() {
         RpcRequest
     );
     let doc: Value = json!({"methods": method_schemas(), "types": types,
-        "overlay_push_events": {BEACONS_RENDER_SNAPSHOT_EVENT: "BeaconsRenderSnapshot"},
+        "overlay_push_events": {BEACONS_RENDER_SNAPSHOT_EVENT: "BeaconsRenderSnapshot",
+            VOTE_BAR_SNAPSHOT_EVENT: "VoteBarSnapshot"},
         "event_kinds": EventKind::NAMES, "error_codes": ErrorCode::VALUES});
     println!(
         "{}",

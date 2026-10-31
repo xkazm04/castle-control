@@ -13909,10 +13909,35 @@
         "title": "GatehouseLiveRunResult",
         "type": "object"
       }
+    },
+    {
+      "name": "gatehouse.source.url",
+      "owner": "Owner ruling 3",
+      "params": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "title": "Empty",
+        "type": "object"
+      },
+      "result": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "url": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "url"
+        ],
+        "title": "VoteBarSourceResult",
+        "type": "object"
+      }
     }
   ],
   "overlay_push_events": {
-    "beacons.render.snapshot": "BeaconsRenderSnapshot"
+    "beacons.render.snapshot": "BeaconsRenderSnapshot",
+    "gatehouse.render.snapshot": "VoteBarSnapshot"
   },
   "types": {
     "Action": {
@@ -21228,6 +21253,23 @@
             "params"
           ],
           "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "method": {
+              "const": "gatehouse.source.url",
+              "type": "string"
+            },
+            "params": {
+              "$ref": "#/$defs/Empty"
+            }
+          },
+          "required": [
+            "method",
+            "params"
+          ],
+          "type": "object"
         }
       ],
       "title": "RpcRequest"
@@ -22830,6 +22872,93 @@
       "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$(?![\\s\\S])",
       "title": "VisualId",
       "type": "string"
+    },
+    "VoteBarDirection": {
+      "$defs": {
+        "ConsensusShare": {
+          "format": "double",
+          "maximum": 1,
+          "minimum": 0,
+          "type": "number"
+        }
+      },
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "share": {
+          "$ref": "#/$defs/ConsensusShare"
+        }
+      },
+      "required": [
+        "share"
+      ],
+      "title": "VoteBarDirection",
+      "type": "object"
+    },
+    "VoteBarSnapshot": {
+      "$defs": {
+        "ConsensusShare": {
+          "format": "double",
+          "maximum": 1,
+          "minimum": 0,
+          "type": "number"
+        },
+        "Timestamp": {
+          "format": "date-time",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?Z$(?![\\s\\S])",
+          "type": "string"
+        },
+        "VoteBarDirection": {
+          "additionalProperties": false,
+          "properties": {
+            "share": {
+              "$ref": "#/$defs/ConsensusShare"
+            }
+          },
+          "required": [
+            "share"
+          ],
+          "type": "object"
+        }
+      },
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "description": "Full replacement in consensus direction order. No chat or viewer data.",
+      "properties": {
+        "at": {
+          "$ref": "#/$defs/Timestamp"
+        },
+        "directions": {
+          "items": {
+            "$ref": "#/$defs/VoteBarDirection"
+          },
+          "type": "array"
+        },
+        "simulated": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "directions",
+        "simulated",
+        "at"
+      ],
+      "title": "VoteBarSnapshot",
+      "type": "object"
+    },
+    "VoteBarSourceResult": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "url": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "url"
+      ],
+      "title": "VoteBarSourceResult",
+      "type": "object"
     },
     "Writ": {
       "$defs": {

@@ -3,6 +3,7 @@ mod lots;
 mod lots_page;
 pub mod package;
 mod routes;
+mod vote_bar;
 
 use cc_obs::pages::{self, OverlayPage};
 use cc_types::{
@@ -13,7 +14,7 @@ use package::{VerifiedPackage, invalid, scripts};
 use std::{
     collections::BTreeMap,
     path::Path,
-    sync::{Arc, Mutex},
+    sync::{Arc, Mutex, OnceLock},
 };
 use tokio::sync::{Semaphore, watch};
 
@@ -39,6 +40,7 @@ struct State {
 }
 
 pub struct RenderHost {
+    vote_bar: OnceLock<Arc<crate::gatehouse::VoteBarModule>>,
     state: Mutex<State>,
     lots: Mutex<BTreeMap<cc_types::DrawId, lots::DrawScene>>,
     clients: Arc<Semaphore>,
@@ -46,6 +48,7 @@ pub struct RenderHost {
 impl Default for RenderHost {
     fn default() -> Self {
         Self {
+            vote_bar: OnceLock::new(),
             state: Mutex::new(State::default()),
             lots: Mutex::new(BTreeMap::new()),
             clients: Arc::new(Semaphore::new(128)),
@@ -53,6 +56,13 @@ impl Default for RenderHost {
     }
 }
 impl RenderHost {
+    /// Native composition only; no HTTP endpoint accepts snapshots or providers.
+    pub fn bind_vote_bar(
+        &self,
+        source: Arc<crate::gatehouse::VoteBarModule>,
+    ) -> Result<(), ErrorEnvelope> {
+        self.vote_bar.set(source).map_err(|_| unavailable())
+    }
     pub fn routes(self: &Arc<Self>) -> axum::Router {
         routes::router(self.clone())
     }
@@ -240,6 +250,7 @@ impl RenderHost {
         };
         match page {
             OverlayPage::Spike => true,
+            OverlayPage::VoteBar => self.vote_bar.get().is_some(),
             OverlayPage::Lots { draw } => cc_types::DrawId::try_from(draw.to_owned())
                 .is_ok_and(|id| self.lots_seal(&id).is_ok_and(|seal| seal.is_some())),
             OverlayPage::Beacons { visual, .. } => {

@@ -193,7 +193,7 @@ impl Registry {
         registry
             .register(Arc::new(StatusModule {
                 started: Instant::now(),
-                services,
+                services: services.clone(),
             }))
             .expect("built-in method is declared and unique");
         // Gatehouse's read methods follow the same lazy module registration as
@@ -203,6 +203,37 @@ impl Registry {
                 .register(Arc::new(module))
                 .expect("offline methods are declared and unique");
         }
+        let consensus = registry
+            .handlers
+            .get("gatehouse.consensus.get")
+            .expect("consensus registered");
+        let make_vote_bar = |origin| {
+            Arc::new(crate::gatehouse::VoteBarModule::new(
+                Arc::downgrade(consensus),
+                origin,
+                services.is_none() || offline.settings_root().is_none(),
+            ))
+        };
+        let mut vote_bar = make_vote_bar(services.as_ref().map(|service| service.overlay_url()));
+        if let Some(services) = &services
+            && services
+                .vote_bar_host()
+                .bind_vote_bar(vote_bar.clone())
+                .is_err()
+        {
+            // Registry constructors also support disconnected secondary views.
+            // Never replace another registry's authoritative overlay provider.
+            vote_bar = make_vote_bar(None);
+        }
+        // The public Gatehouse inventory owns this read. Replace its standalone
+        // unavailable fallback with the isolated-host projection adapter.
+        registry
+            .handlers
+            .remove("gatehouse.source.url")
+            .expect("Gatehouse source declared");
+        registry
+            .register(vote_bar)
+            .expect("vote bar method declared and unique");
         registry
             .register(Arc::new(steward.unwrap_or_default()))
             .expect("Steward methods are declared and unique");

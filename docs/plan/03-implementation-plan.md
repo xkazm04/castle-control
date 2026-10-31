@@ -706,6 +706,18 @@ elsewhere in the snapshot. It does not authorize public release or submission.
 
 ## Contract identifiers
 
+### Owner ruling 3: aggregate vote bar (2026-10-31)
+
+| Identifier | Contract |
+| --- | --- |
+| `/gatehouse/{channel_id}` | Read-only OBS page on the isolated overlay origin. The single-room consensus read has no channel selector: the only accepted local channel alias is `current`. Display-only query keys `scale` and `anchor` use safe defaults, with no rendering authority. |
+| `gatehouse.source.url` | Empty params -> `VoteBarSourceResult { url: string }`, the owned `/gatehouse/current` URL. No viewer or channel identity is requested. |
+| `gatehouse.render.snapshot` | Overlay-host SSE full replacement, separate from control `/events`. `VoteBarSnapshot { directions: VoteBarDirection[], simulated: boolean, at: Timestamp }`. Each direction has only `share: ConsensusShare` (0..1), in the existing consensus read's order. No labels, keys, chat text, quotes, logins or user IDs cross this boundary. |
+
+New types are aggregate-only; no existing contract struct changes. The page shows
+generic numbered directions, not untrusted direction labels. Local/fixture
+provenance stays explicit. The only on-stream Gatehouse output is this vote bar.
+
 These names are the wire contract. A package that needs a new one adds it to `cc-types` in its own PR before building against it. Castle words never appear in identifiers.
 
 `status.get` carries optional `stream` and `gatehouse` summaries, invalidated by `bridge.status` and `gatehouse.room` respectively; absent summaries mean unknown, never off.
@@ -1133,6 +1145,7 @@ cloud opt-in enforcement remain the engine's job. The CLI remains slow-lane only
 | maproom | `maproom.design.get`, `maproom.design.upsert`, `maproom.stage.get`, `maproom.turn.run` |
 | steward | `steward.ask`, `steward.writ.seal`, `steward.writ.tear` |
 | gatehouse (read additions) | `gatehouse.chat.list`, `gatehouse.history.list`, `gatehouse.liveRun.get` |
+| gatehouse (OBS source) | `gatehouse.source.url` |
 
 **Stream events on `/events`.** Every event carries `seq`, `at` and `kind`:
 

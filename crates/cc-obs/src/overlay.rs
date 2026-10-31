@@ -95,7 +95,7 @@ async fn secure(request: Request<Body>, next: Next, port: u16) -> Response {
     // native asset router separately enforces verification and script consent.
     response.headers_mut().insert(
         header::CONTENT_SECURITY_POLICY,
-        format!("default-src 'none'; script-src 'self'; connect-src http://localhost:{port}/push/beacons; img-src 'self' data:; style-src 'unsafe-inline'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'")
+        format!("default-src 'none'; script-src 'self'; connect-src http://localhost:{port}/push/beacons http://localhost:{port}/push/gatehouse; img-src 'self' data:; style-src 'unsafe-inline'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'")
         .parse()
         .expect("static CSP"),
     );

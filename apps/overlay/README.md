@@ -1,5 +1,29 @@
 # Static overlay output
 
+## Aggregate-only Gatehouse vote bar
+
+Owner ruling 3 adds `/gatehouse/current` on the same isolated read-only origin.
+The core's consensus read owns one local room, so this alias needs no channel or
+viewer ID. The page carries only ordered shares, `simulated` and `at`, with generic
+numbered direction labels. It contains no chat, quotes, logins, keys or user IDs.
+`gatehouse.source.url` returns its browser-source URL; core-mode Gatehouse and
+`#/stream` both offer copy actions. Fixture UI keeps SAMPLE/SIMULATED labels.
+
+The core page's transparent responsive shell parses scale/anchor once. Its
+dedicated `vote-bar.js` consumes `gatehouse.render.snapshot` full replacements
+from `/push/gatehouse`; invalid snapshots and stream errors clear stale shares.
+This source loads no draw or Beacons renderer. Its 16 KiB budget is independent
+of the unchanged 114,688-byte shared overlay budget. Both scripts have source
+fingerprint tests. Rebuild both after changes to contract artifacts:
+
+```powershell
+pnpm --config.verify-deps-before-run=false --filter @castle-control/desktop exec vite build --config ../../packages/renderer/vite-overlay.config.mjs --configLoader native
+pnpm --config.verify-deps-before-run=false --filter @castle-control/desktop exec vite build --config ../../packages/renderer/vite-vote-bar.config.mjs --configLoader native
+```
+
+The vote-bar route and both exact push URLs share the existing same-origin CSP.
+Neither browser runtime receives a core session token or an RPC capability.
+
 `index.html` and `bundle.js` are served by the isolated native overlay listener,
 not the control service. This directory is deliberately not a pnpm workspace:
 it has no package manifest, dependencies, install step or generated lockfile.

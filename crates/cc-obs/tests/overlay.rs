@@ -80,13 +80,15 @@ async fn simulated_overlay_csp_matches_adr_exactly() {
     assert_eq!(
         policy,
         format!(
-            "default-src 'none'; script-src 'self'; connect-src http://localhost:{port}/push/beacons; img-src 'self' data:; style-src 'unsafe-inline'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'"
+            "default-src 'none'; script-src 'self'; connect-src http://localhost:{port}/push/beacons http://localhost:{port}/push/gatehouse; img-src 'self' data:; style-src 'unsafe-inline'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'"
         )
     );
     let mut directives: Vec<_> = policy.split(';').map(str::trim).collect();
     directives.sort_unstable();
     // Exact directive/source sets reject remote styles, overrides and duplicates.
-    let connect = format!("connect-src http://localhost:{port}/push/beacons");
+    let connect = format!(
+        "connect-src http://localhost:{port}/push/beacons http://localhost:{port}/push/gatehouse"
+    );
     assert_eq!(
         directives,
         [

@@ -169,7 +169,7 @@ function validators(schema) {
   const stewardNames = new Set(['steward.ask', 'steward.writ.seal', 'steward.writ.tear']);
   const beaconsNames = new Set(['visual.list', 'contribution.list', 'visual.upsert', 'curve.set', 'simulate', 'source.url', 'art.status', 'art.generate'].map(name => `beacons.${name}`));
   const gatehouseNames = new Set(['rules.list', 'rules.upsert', 'ban.confirm', 'ban.dismiss', 'decision.undo',
-    'petition.resolve', 'recording.import', 'drill.run', 'drill.diff', 'consensus.get', 'chat.list', 'history.list', 'liveRun.get'].map(name => `gatehouse.${name}`));
+    'petition.resolve', 'recording.import', 'drill.run', 'drill.diff', 'consensus.get', 'chat.list', 'history.list', 'liveRun.get', 'source.url'].map(name => `gatehouse.${name}`));
   const shared = sharedSchemas(schema);
   const declarations = [banner, "import type { ValidateFunction } from 'ajv';",
     "import type { RpcMethods, StreamEvent, LotsEventPayload, ConsensusEventPayload, BeaconsEventPayload, DesignPackage, ErrorEnvelope, AskParams, AskResult, Writ, WritSealParams, WritSealResult, WritTearParams, WritTearResult, StewardEventPayload } from './types.js';"];
@@ -225,6 +225,10 @@ function validators(schema) {
     .find(([, type]) => type === 'BeaconsRenderSnapshot')?.[0];
   if (!renderEvent) throw new Error('Missing overlay render snapshot identifier');
   const renderExports = { shape: shared.reference(schema.types.BeaconsRenderSnapshot) };
+  const voteEvent = Object.entries(schema.overlay_push_events ?? {})
+    .find(([, type]) => type === 'VoteBarSnapshot')?.[0];
+  if (!voteEvent) throw new Error('Missing vote bar snapshot identifier');
+  const voteExports = { shape: shared.reference(schema.types.VoteBarSnapshot) };
   ajv.addSchema(shared.document());
   const map = (prefix) => schema.methods.map((m, i) => `[${JSON.stringify(m.name)}, compiled.${prefix}${i}]`).join(',');
   const methods = [], lotsMethods = [], gatehouseMethods = [], beaconsMethods = [], stewardMethods = [];
@@ -238,6 +242,17 @@ function validators(schema) {
     if (stewardNames.has(m.name)) stewardMethods.push(declaration);
   });
   return {
+    'vote-bar-validators.mjs': compileValidators(ajv, voteExports, formatSource),
+    'vote-bar-validators.d.mts': `${banner}import type { ValidateFunction } from 'ajv';\n`
+      + `import type { VoteBarSnapshot } from './types.js';\nexport const shape: ValidateFunction<VoteBarSnapshot>;\n`,
+    'vote-bar-validation.ts': `${banner}import { parseJson } from '../door.mjs';\n`
+      + `import { shape } from './vote-bar-validators.mjs';\n`
+      + `import type { VoteBarSnapshot } from './types.js';\n`
+      + `export type { VoteBarSnapshot } from './types.js';\n`
+      + `export const VOTE_BAR_SNAPSHOT_EVENT = ${JSON.stringify(voteEvent)} as const;\n`
+      + `export function parseVoteBarSnapshot(text: string): VoteBarSnapshot {\n`
+      + `  const value = parseJson(text);\n`
+      + `  if (!shape(value)) throw new Error('Invalid vote bar snapshot');\n  return value;\n}\n`,
     'beacons-render-validators.mjs': compileValidators(ajv, renderExports, formatSource),
     'beacons-render-validators.d.mts': `${banner}import type { ValidateFunction } from 'ajv';\n`
       + `import type { BeaconsRenderSnapshot } from './types.js';\n`

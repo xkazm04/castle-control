@@ -13,7 +13,7 @@ const schema = parseJson(readFileSync(join(output, 'contract.schema.json'), 'utf
 delete schema.$comment;
 const files = artifacts(schema);
 assert.deepEqual(files, artifacts(schema), 'generation must be byte deterministic');
-assert.equal(Object.keys(files).length, 23);
+assert.equal(Object.keys(files).length, 26);
 const stewardNames = ['steward.ask', 'steward.writ.seal', 'steward.writ.tear'];
 const stewardMethods = schema.methods.map((method, index) => ({ ...method, index })).filter(method => stewardNames.includes(method.name));
 assert.equal(stewardMethods.length, 3);
@@ -39,9 +39,9 @@ assert(!files['beacons-validation.ts'].includes("from './validators.mjs'"));
 assert.equal(files['beacons-root-validation.ts'], files['beacons-validation.ts'],
   'root barrel handles share the independent validators without importing the lazy method module');
 const gatehouseNames = ['rules.list', 'rules.upsert', 'ban.confirm', 'ban.dismiss', 'decision.undo',
-  'petition.resolve', 'recording.import', 'drill.run', 'drill.diff', 'consensus.get', 'chat.list', 'history.list', 'liveRun.get'].map(name => `gatehouse.${name}`);
+  'petition.resolve', 'recording.import', 'drill.run', 'drill.diff', 'consensus.get', 'chat.list', 'history.list', 'liveRun.get', 'source.url'].map(name => `gatehouse.${name}`);
 const gatehouseMethods = schema.methods.map((method, index) => ({ ...method, index })).filter(method => gatehouseNames.includes(method.name));
-assert.equal(gatehouseMethods.length, 13);
+assert.equal(gatehouseMethods.length, 14);
 assert(files['gatehouse-validators.mjs'], 'Gatehouse validators have a separate generated module');
 assert(files['gatehouse-validators.d.mts'], 'Gatehouse validators retain typed declarations');
 assert(files['gatehouse-validation.ts'].includes("from './gatehouse-validators.mjs'"));
@@ -83,10 +83,12 @@ try {
   mkdirSync(authored, { recursive: true });
   mkdirSync(overlay, { recursive: true });
   writeFileSync(join(overlay, 'bundle.js'), "export const compiled = JSON.parse('{}');\n");
+  writeFileSync(join(overlay, 'vote-bar.js'), "export const compiled = JSON.parse('{}');\n");
   writeFileSync(join(authored, 'main.ts'), "export const authored = JSON.parse('null');\n");
   const usage = usages(scratch);
   assert.equal(usage.files.length, 1);
   assert(!usage.files.includes(join(overlay, 'bundle.js')), 'only the named tracked build output is excluded');
+  assert(!usage.files.includes(join(overlay, 'vote-bar.js')), 'dedicated vote-bar output is also fingerprinted');
   assert.equal(usage.defects.length, 1, 'authored JSON parsing outside the door is still rejected');
   writeFileSync(join(overlay, 'source.js'), "export const source = JSON.parse('{}');\n");
   const neighbor = usages(scratch);
@@ -95,7 +97,7 @@ try {
   unlinkSync(join(overlay, 'bundle.js'));
   assert.throws(() => usages(scratch), /Missing listed build output: apps\/overlay\/bundle.js/, 'stale exclusions must fail');
 } finally {
-  for (const file of [join(authored, 'main.ts'), join(bundled, 'index.js'), join(overlay, 'bundle.js'), join(overlay, 'source.js')]) if (existsSync(file)) unlinkSync(file);
+  for (const file of [join(authored, 'main.ts'), join(bundled, 'index.js'), join(overlay, 'bundle.js'), join(overlay, 'vote-bar.js'), join(overlay, 'source.js')]) if (existsSync(file)) unlinkSync(file);
   for (const directory of [authored, bundled, overlay, join(scratch, 'apps/desktop/dist'), join(scratch, 'apps/desktop'), join(scratch, 'apps')]) {
     if (existsSync(directory)) rmdirSync(directory);
   }
@@ -194,6 +196,7 @@ const replay = { label: 'simulated', source: 'simulated-recording', instrument_h
   summary: { passes: 0, states: { acted: 0, not_provoked: 0, not_evaluable: 0, judge_pending: 0, judge_void: 0, engine_failed: 0 },
     over_moderation: { evaluated: 0, false_positives: 0 } } };
 const positive = new Map([
+  ['gatehouse.source.url', [{}, { url: 'http://localhost:4312/gatehouse/current' }]],
   ['gatehouse.chat.list', [{ limit: 100 }, { items: [], unavailable_count: 0 }]],
   ['gatehouse.history.list', [{ limit: 100 }, { items: [], unavailable_count: 0 }]],
   ['gatehouse.liveRun.get', [{ limit: 100 }, { items: [], unavailable_count: 0 }]],

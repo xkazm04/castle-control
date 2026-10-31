@@ -17,7 +17,7 @@ export function StreamSetupRow({ row, state, model }: { row: StreamRow; state: S
   const size = streamPresets[state.preset];
   return <HeraldicCard className="stream-output" variant="raised" aria-label={row.name}>
     <header><h2>{row.name}</h2><StatusChip variant="dash">{row.phase}</StatusChip></header>
-    {row.visual_id ? <>
+    {row.visual_id || row.vote_bar ? <>
       <p>{size.width} × {size.height} · Scene: {state.scene_name}</p>
       <div className="stream-output-actions">
         <InkButton disabled={state.busy} onClick={() => { void model.copy(row.id); }}>Copy browser-source URL</InkButton>
@@ -51,7 +51,7 @@ export function StreamSetupContent({ model, state, on_back }: { model: StreamSet
       </div>
       <p id="stream-scene-error" role="status">{state.scene_error ?? state.preset_error ?? state.notice}</p>
     </HeraldicCard>
-    <p>Beacons visuals use the size above. Lot plates become available after a sealed draw.
+    <p>Beacons visuals and the aggregate-only Gatehouse vote bar use the size above. Lot plates become available after a sealed draw.
       {' '}<a href="#/chamber/visuals">Configure visuals in Beacons</a>.</p>
     <WindowedRows rows={state.rows} row_key={row => row.id} label="OBS outputs" row_height={rowHeight}>
       {row => <StreamSetupRow row={row} state={state} model={model} />}

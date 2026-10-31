@@ -1,5 +1,59 @@
 # Local core service
 
+## Gatehouse vote-bar source (owner ruling 3)
+
+Current inventory: **53 declared methods, 43 registered**, with the ten existing
+unimplemented surfaces still unavailable. The control stream keeps its 16 event
+kinds. `gatehouse.source.url` is the new registered read; its empty params return
+the isolated overlay origin's `/gatehouse/current` URL. The consensus service is
+single-channel, so `current` is its only local channel alias; numeric viewer or
+channel identifiers are neither required nor embedded in the snapshot.
+
+The shared `cc-obs::pages` grammar admits this page and only `scale`/`anchor`
+presentation keys. The CreateInput guard, route middleware and ownership check
+use that grammar. Unknown pages, private query keys, RPC and control-event paths
+stay refused. Display parameters are parsed once with finite, bounded defaults.
+The page fits a transparent 1920×1080 or 1280×720 OBS canvas, with a numbered
+aggregate direction bar. No chat overlay is delivered.
+
+`gatehouse.render.snapshot` is an isolated `/push/gatehouse` SSE full replacement,
+not a new control-stream kind. Its only top-level data is `directions`, `simulated`
+and `at`; each direction contains only its existing consensus share. Keys and
+labels are deliberately omitted because they are unrestricted configured text.
+The provider calls the existing all-message, 900-second consensus read, and never
+receives raw chat. Each client coalesces reads to one per second. Failed/revoked
+reads end the stream and clear stale output. The provider holds a weak reference
+to its handler, avoiding a render-host/module ownership cycle.
+
+The page loads only `/vote-bar.js` (under 16 KiB), with generated contract parsing
+and an independent source fingerprint. It loads no draw or Beacons runtime. CSP
+permits only the two exact local push endpoints, and the overlay still has no RPC
+route or desktop session token. Fixture composition marks every snapshot
+SIMULATED; the desktop's real source-copy action appears only in core mode, also
+on `#/stream`. Fixture SAMPLE/SIMULATED presentation stays intact.
+
+Tests: `gatehouse_vote_bar` covers projection privacy, native registration,
+revocation/EOF, transparency, query defaults and unknown-route refusal.
+`overlay_pages` and cc-obs's shared path fixtures pin guard/router parity.
+The optional isolated Chrome geometry probe exercises both actual OBS sizes:
+`cargo test -p cc-core --test gatehouse_vote_bar vote_bar_browser --locked -- --ignored --nocapture`.
+It uses generated simulated shares and no Twitch/OBS connection.
+
+Builder verification, 2026-10-31: cc-types and cc-obs crate suites pass. The
+cc-core run exposed secondary-registry binding and public-method-inventory
+regressions; both were fixed in the owned paths and their failing tests passed
+in isolation. The remaining integration binaries and doc test then passed,
+without repeating the workspace suite. The new vote-bar route/projection tests
+pass; the optional Chrome geometry probe remains ignored for the Director.
+Contract generation/drift checks pass using the supported schema-file input
+exported directly by Cargo (the default Node-to-Cargo exporter hit spawn EPERM).
+Parity reports 53 declared / 43 registered methods and 16 event kinds. All 171
+contract tests pass, plus the final generator assertions. The whole desktop
+suite passes 727 tests in 72 files; all 200 renderer tests and the verifier HTML
+fingerprint check pass. Scoped typechecks, ESLint, boundaries, hygiene, file cap
+and secret scanning pass. `pnpm gate` and workspace Rust checks are deliberately
+left to the Director, as directed for this run. No live Twitch/OBS test is claimed.
+
 ## Native Steward and engine settings (WP 1.4)
 
 The desktop's `--steward-live` opts its native composition into the Steward.

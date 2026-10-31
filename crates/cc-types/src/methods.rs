@@ -81,7 +81,8 @@ methods! {
     WritTear => ("steward.writ.tear", WritTearParams, WritTearResult, "WP 5.1"),
     ChatList => ("gatehouse.chat.list", GatehouseReadParams, GatehouseChatResult, "Gatehouse live reads"),
     HistoryList => ("gatehouse.history.list", GatehouseReadParams, GatehouseHistoryResult, "Gatehouse live reads"),
-    LiveRunGet => ("gatehouse.liveRun.get", GatehouseReadParams, GatehouseLiveRunResult, "Gatehouse live capture")
+    LiveRunGet => ("gatehouse.liveRun.get", GatehouseReadParams, GatehouseLiveRunResult, "Gatehouse live capture"),
+    VoteBarSourceUrl => ("gatehouse.source.url", Empty, VoteBarSourceResult, "Owner ruling 3")
 }
 
 /// Single parse door for requests, including unknown-method and shape errors.

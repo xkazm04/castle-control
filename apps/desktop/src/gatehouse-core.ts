@@ -2,7 +2,7 @@ import { invokeMethod, parseError, parseMethodParams, parseMethodResult } from '
 import { parseJson } from '@castle-control/contract/door';
 import { gatehouseRulesList, gatehouseRulesUpsert, gatehouseBanConfirm, gatehouseBanDismiss,
   gatehouseDecisionUndo, gatehousePetitionResolve, gatehouseRecordingImport, gatehouseDrillRun,
-  gatehouseDrillDiff, gatehouseConsensusGet, gatehouseChatList, gatehouseHistoryList, gatehouseLiveRunGet } from '@castle-control/contract/gatehouse';
+  gatehouseDrillDiff, gatehouseConsensusGet, gatehouseChatList, gatehouseHistoryList, gatehouseLiveRunGet, gatehouseSourceUrl } from '@castle-control/contract/gatehouse';
 import type { ConsensusGetParams, ConsensusGetResult, Decision, DecisionParams, DrillDiffParams, DrillDiffResult,
   DrillConfiguration, DrillRunParams, DrillRunResult, MethodContract, PetitionResolveParams, RecordingImportResult, Rule,
   GatehouseChatResult, GatehouseHistoryResult, GatehouseLiveCapture, GatehouseLiveRunItem, GatehouseLiveRunResult,
@@ -14,7 +14,7 @@ import type { CoreLaunch } from './core-source.js';
 type GatehouseMethod = 'gatehouse.rules.list' | 'gatehouse.rules.upsert' | 'gatehouse.ban.confirm'
   | 'gatehouse.ban.dismiss' | 'gatehouse.decision.undo' | 'gatehouse.petition.resolve'
   | 'gatehouse.recording.import' | 'gatehouse.drill.run' | 'gatehouse.drill.diff' | 'gatehouse.consensus.get'
-  | 'gatehouse.chat.list' | 'gatehouse.history.list' | 'gatehouse.liveRun.get';
+  | 'gatehouse.chat.list' | 'gatehouse.history.list' | 'gatehouse.liveRun.get' | 'gatehouse.source.url';
 /** Test seam restricted to existing core methods; capabilities never enter read snapshots. */
 export type GatehouseNetwork = {
   rpc: <M extends GatehouseMethod>(endpoint: string, session: string, method: M, params: RpcMethods[M]['params']) => Promise<unknown>;
@@ -106,6 +106,14 @@ export function createCoreGatehousePort(launch: CoreLaunch, transport?: Gatehous
   }
   return {
     getSnapshot: () => snapshot,
+    async copyVoteBarSource(write: (url: string) => Promise<void> = url => navigator.clipboard.writeText(url)) {
+      await perform(async () => {
+        const { url } = await call(gatehouseSourceUrl, {});
+        try { await write(url); }
+        catch { publish({ notice: 'Clipboard unavailable. Allow clipboard access and try again.' }); return false; }
+        publish({ notice: 'Vote-bar browser source URL copied. Use a transparent 1920 × 1080 or 1280 × 720 source in OBS.' });
+      });
+    },
     subscribe(listener: () => void) { listeners.add(listener); return () => { listeners.delete(listener); }; },
     async loadLiveRuns() {
       await perform(async () => {

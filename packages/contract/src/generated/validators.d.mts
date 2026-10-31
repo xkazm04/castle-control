@@ -106,6 +106,8 @@ export const p50: ValidateFunction<RpcMethods["gatehouse.history.list"]['params'
 export const r50: ValidateFunction<RpcMethods["gatehouse.history.list"]['result']>;
 export const p51: ValidateFunction<RpcMethods["gatehouse.liveRun.get"]['params']>;
 export const r51: ValidateFunction<RpcMethods["gatehouse.liveRun.get"]['result']>;
+export const p52: ValidateFunction<RpcMethods["gatehouse.source.url"]['params']>;
+export const r52: ValidateFunction<RpcMethods["gatehouse.source.url"]['result']>;
 export const event: ValidateFunction<StreamEvent>;
 export const lotsEvent: ValidateFunction<LotsEventPayload>;
 export const consensusEvent: ValidateFunction<ConsensusEventPayload>;

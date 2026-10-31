@@ -1,10 +1,15 @@
 /** Page identity only. Display values are interpreted by parseOverlayDisplay. */
 export type OverlayPage = { kind: 'spike' }
+  | { kind: 'vote_bar' }
   | { kind: 'beacons'; visual: string; package_hash?: string }
   | { kind: 'lots'; draw: string };
 
 export function parseOverlayPath(pathname: string, search = ''): OverlayPage | undefined {
   if (pathname === '/') return search === '' ? { kind: 'spike' } : undefined;
+  if (pathname === '/gatehouse/current') {
+    return search === '' || search.startsWith('?') && search.slice(1).split('&')
+      .every(part => ['scale', 'anchor'].includes(part.split('=')[0] ?? '')) ? { kind: 'vote_bar' } : undefined;
+  }
   const match = /^\/(beacons|lots)\/([a-z0-9]+(?:-[a-z0-9]+)*)$(?![\s\S])/.exec(pathname);
   if (!match?.[2]) return undefined;
   let package_hash: string | undefined;

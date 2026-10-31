@@ -18,7 +18,7 @@ for (const row of cases) {
     const page = parseOverlayPath(mark < 0 ? target : target.slice(0, mark), mark < 0 ? '' : target.slice(mark));
     expect(page?.kind ?? null).toBe(kind);
     if (page) {
-      const actual = page.kind === 'spike' ? '/' : page.kind === 'lots' ? `/lots/${page.draw}`
+      const actual = page.kind === 'vote_bar' ? '/gatehouse/current' : page.kind === 'spike' ? '/' : page.kind === 'lots' ? `/lots/${page.draw}`
         : `/beacons/${page.visual}${page.package_hash === undefined ? '' : `?package_hash=${page.package_hash}`}`;
       expect(actual).toBe(canonical);
     }

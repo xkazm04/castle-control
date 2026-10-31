@@ -11,7 +11,7 @@ export const streamPresets = Object.freeze({
 });
 type Preset = keyof typeof streamPresets;
 export type StreamRow = Readonly<{
-  id: string; name: string; visual_id?: VisualId; href?: string; notice?: string;
+  id: string; name: string; visual_id?: VisualId; vote_bar?: true; href?: string; notice?: string;
   phase: 'idle' | 'unavailable' | 'resolving' | 'ready' | 'adding' | 'added' | 'refused';
 }>;
 export type StreamState = Readonly<{
@@ -47,7 +47,9 @@ function refusal(error: unknown): string {
 }
 const lotRow: StreamRow = Object.freeze({ id: 'lot:plate', name: 'Lot plate', phase: 'unavailable',
   notice: 'Available after a sealed draw. Open the Lot Chamber for its on-stream plate.', href: '#/chamber/lottery' });
-const rowsFor = (visuals: readonly Visual[]): readonly StreamRow[] => [
+const voteRow: StreamRow = Object.freeze({ id: 'vote:bar', name: 'Gatehouse vote bar', vote_bar: true, phase: 'idle' });
+const rowsFor = (visuals: readonly Visual[], core = false): readonly StreamRow[] => [
+  ...(core ? [voteRow] : []),
   ...visuals.map(visual => Object.freeze({ id: visual.visual_id, visual_id: visual.visual_id, name: visual.name, phase: 'idle' as const })), lotRow,
 ];
 
@@ -56,7 +58,7 @@ export function createStreamSetup(options: SetupOptions) {
   const simulated = options.mode === 'fixture';
   const port = options.mode === 'core' && options.launch ? createObsPort(options.launch, options.transport) : undefined;
   let state: StreamState = Object.freeze({ obs: simulated ? 'simulated' : 'unknown', preset: '1080p', scene_name: 'Scene',
-    rows: Object.freeze(simulated ? rowsFor(fixtureVisuals) : [lotRow]), busy: false,
+    rows: Object.freeze(simulated ? rowsFor(fixtureVisuals) : [voteRow, lotRow]), busy: false,
     notice: simulated ? 'Simulated setup · no OBS source will be created.' : 'Refresh to check OBS and load your visuals.' });
   const listeners = new Set<() => void>();
   function publish(change: Partial<StreamState>, clear: ('scene_error' | 'preset_error')[] = []) {
@@ -73,10 +75,14 @@ export function createStreamSetup(options: SetupOptions) {
       return Object.freeze({ ...next, ...(notice ? { notice } : {}) });
     })) });
   }
-  const find = (id: string) => state.rows.find(row => row.id === id && row.visual_id);
+  const find = (id: string) => state.rows.find(row => row.id === id && (row.visual_id || row.vote_bar));
   const canAdd = (id: string) => Boolean(find(id) && !state.busy && !state.scene_error && !state.preset_error
     && (state.obs === 'connected' || state.obs === 'simulated') && find(id)?.phase !== 'added');
   async function source(row: StreamRow) {
+    if (row.vote_bar) {
+      if (!port || simulated) throw new Error('Core unavailable');
+      return (await port.voteBarSource()).url;
+    }
     if (!row.visual_id) throw new Error('Not a visual');
     if (simulated) return fixtureSourceUrl(row.visual_id);
     if (!port) throw new Error('Core unavailable');
@@ -105,9 +111,9 @@ export function createStreamSetup(options: SetupOptions) {
       await Promise.all([
         port.status().then(({ connected }) => publish({ obs: connected ? 'connected' : 'down' }),
           () => publish({ obs: 'unknown' })),
-        port.visuals().then(({ visuals }) => publish({ rows: Object.freeze(rowsFor(visuals)), notice:
+        port.visuals().then(({ visuals }) => publish({ rows: Object.freeze(rowsFor(visuals, true)), notice:
           visuals.length ? 'Choose the scene and source size, then hold to add an output.' : 'No visuals configured. Open Beacons to create one.' }),
-        error => publish({ rows: Object.freeze([lotRow]), notice: refusal(error) })),
+        error => publish({ rows: Object.freeze([voteRow, lotRow]), notice: refusal(error) })),
       ]);
       publish({ busy: false });
     },

@@ -15,6 +15,7 @@ import { coreRuleBench } from './session.js';
 import { RuleBench } from './rule-bench.jsx';
 import { benchInput, evaluateDraft } from '../../moderation-bench.js';
 import './room.css';
+import { VoteBarSourceAction } from './vote-source.jsx';
 
 function CoreRule({ rule, busy, port }: { rule: Rule; busy: boolean; port: CoreGatehousePort }) {
   const name_id = useId();
@@ -55,6 +56,7 @@ export function ConnectedGatehouse({ port, replay, seal_slot }: { port: CoreGate
             <PlateBody><p>{copy.core_queues_unavailable}</p><p>{copy.core_review_notice}</p></PlateBody>
           </Plate>
           <CoreConsensus state={state} port={port} />
+          <VoteBarSourceAction mode="core" busy={state.busy} on_copy={() => { void port.copyVoteBarSource(); }} />
         </div>
         <div className="room-column moderator-details moderator-replay" role="region" aria-label={copy.live} tabIndex={0} data-fill="true">
           <CoreChat state={state} port={port} marked={draft.draft ? result.hit_ids : undefined} />

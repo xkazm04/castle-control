@@ -3,10 +3,12 @@
 pub const SPIKE_ROUTE: &str = "/";
 pub const BEACONS_ROUTE: &str = "/beacons/{visual_id}";
 pub const LOTS_ROUTE: &str = "/lots/{draw_id}";
+pub const VOTE_BAR_ROUTE: &str = "/gatehouse/{channel_id}";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum OverlayPage<'a> {
     Spike,
+    VoteBar,
     Beacons {
         visual: &'a str,
         package_hash: Option<&'a str>,
@@ -22,6 +24,7 @@ impl OverlayPage<'_> {
     pub fn path_and_query(&self) -> String {
         match self {
             Self::Spike => SPIKE_ROUTE.to_owned(),
+            Self::VoteBar => "/gatehouse/current".to_owned(),
             Self::Beacons {
                 visual,
                 package_hash,
@@ -44,6 +47,16 @@ impl OverlayPage<'_> {
 pub fn parse<'a>(path: &'a str, query: Option<&'a str>) -> Option<OverlayPage<'a>> {
     if path == SPIKE_ROUTE {
         return query.is_none().then_some(OverlayPage::Spike);
+    }
+    // Consensus is scoped to the one locally selected channel, with no viewer ID.
+    if path == "/gatehouse/current" {
+        return query
+            .is_none_or(|query| {
+                query
+                    .split('&')
+                    .all(|part| matches!(part.split('=').next(), Some("scale" | "anchor")))
+            })
+            .then_some(OverlayPage::VoteBar);
     }
     let (beacons, id) = if let Some(id) = path.strip_prefix("/beacons/") {
         (true, id)
@@ -86,4 +99,28 @@ pub fn parse<'a>(path: &'a str, query: Option<&'a str>) -> Option<OverlayPage<'a
     } else {
         OverlayPage::Lots { draw: id }
     })
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn create_input_guard_uses_exactly_the_shared_page_table() {
+        let cases: serde_json::Value =
+            serde_json::from_str(include_str!("../tests/fixtures/overlay-paths.json")).unwrap();
+        for case in cases.as_array().unwrap() {
+            let target = case["target"].as_str().unwrap();
+            let source = crate::BrowserSource {
+                scene_name: "Simulated scene".into(),
+                source_name: "Simulated source".into(),
+                url: format!("http://localhost:3001{target}"),
+                width: 1920,
+                height: 1080,
+            };
+            assert_eq!(
+                source.request().is_ok(),
+                !case["kind"].is_null(),
+                "{target}"
+            );
+        }
+    }
 }

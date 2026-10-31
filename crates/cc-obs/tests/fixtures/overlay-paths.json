@@ -1,4 +1,14 @@
 [
+  { "target": "/gatehouse/current", "kind": "vote_bar", "canonical": "/gatehouse/current" },
+  { "target": "/gatehouse/current?scale=2&anchor=tr", "kind": "vote_bar", "canonical": "/gatehouse/current" },
+  { "target": "/gatehouse/current?scale=bad&anchor=", "kind": "vote_bar", "canonical": "/gatehouse/current" },
+  { "target": "/gatehouse/current?scale=1&scale=2", "kind": "vote_bar", "canonical": "/gatehouse/current" },
+  { "target": "/gatehouse/unknown", "kind": null, "canonical": null },
+  { "target": "/gatehouse/123", "kind": null, "canonical": null },
+  { "target": "/gatehouse/current/extra", "kind": null, "canonical": null },
+  { "target": "/gatehouse/current?text=private", "kind": null, "canonical": null },
+  { "target": "/gatehouse/current?", "kind": null, "canonical": null },
+  { "target": "/gatehouse/current?scale=1&", "kind": null, "canonical": null },
   {
     "target": "/",
     "kind": "spike",
