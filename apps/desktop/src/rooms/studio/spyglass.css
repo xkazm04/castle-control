@@ -1,0 +1,40 @@
+.studio-room .studio-table-work { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
+.studio-room .studio-table-work > .cc-herald-field { flex: 1; }
+.studio-room .studio-view-switch, .studio-room .studio-frame-picker { display: flex; flex-wrap: wrap; gap: var(--space-8); }
+.studio-room .studio-view-switch { padding: var(--space-12) var(--space-24) 0; }
+.studio-room :is(.studio-view-switch, .studio-frame-picker) button {
+  border: var(--rule-thin) solid var(--rule); background: var(--card); color: var(--ink);
+  padding: var(--space-6) var(--space-10); font: 700 var(--text-label)/1.3 var(--font-ui); cursor: pointer;
+}
+.studio-room :is(.studio-view-switch, .studio-frame-picker) button[aria-pressed="true"] { background: var(--key); color: var(--paper); }
+.studio-room :is(.studio-view-switch, .studio-frame-picker) button:focus-visible {
+  outline: var(--rule-strong) solid var(--azure); outline-offset: var(--focus-offset);
+}
+.studio-room .studio-spyglass {
+  min-height: 0; overflow: auto; scrollbar-gutter: stable; padding: var(--space-16) var(--space-24);
+  display: flex; flex-direction: column; gap: var(--space-12);
+}
+.studio-room .studio-spyglass-hint, .studio-room .studio-viewer figcaption p, .studio-room .studio-frame-readout {
+  font: 400 var(--text-small)/1.4 var(--font-ui); color: var(--ink-2);
+}
+.studio-room .studio-viewer-comparison { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-16); }
+.studio-room .studio-viewer:only-child { grid-column: 1 / -1; }
+.studio-room .studio-viewer { margin: 0; min-width: 0; display: flex; flex-direction: column; gap: var(--space-10); }
+.studio-room .studio-viewer h3 { font: 800 var(--text-section)/1.3 var(--font-display); }
+.studio-room .studio-viewer strong { color: var(--danger); }
+.studio-room .studio-viewer-frame {
+  width: min(100%, calc(var(--frame-width) * var(--space-1))); aspect-ratio: var(--frame-width) / var(--frame-height);
+  position: relative; container-type: inline-size; align-self: center; flex: none; overflow: hidden;
+  outline: var(--rule-thin) solid var(--hair); background: var(--paper-2);
+}
+/* Render at source dimensions, then shrink the whole canvas, including labels.
+   All custom properties are unitless preset data; only token lengths enter CSS. */
+.studio-room .studio-viewer-canvas {
+  position: absolute; top: 0; left: 0;
+  width: calc(var(--frame-width) * var(--space-1)); height: calc(var(--frame-height) * var(--space-1));
+  transform-origin: top left; transform: scale(min(1, calc(100cqw / (var(--frame-width) * var(--space-1)))));
+}
+.studio-room .studio-viewer-canvas > .cc-herald-field { width: 100%; height: 100%; padding: 0; gap: 0; }
+.studio-room .studio-viewer-canvas .cc-herald-field > :not(.cc-hexfield) { display: none; }
+.studio-room .studio-viewer-canvas .cc-hexfield-plate { --s: min(calc(100cqw / var(--fit-w)), calc(100cqh / var(--fit-h))); }
+.studio-room .studio-viewer-pick { font: 600 var(--text-body)/1.4 var(--font-ui); }

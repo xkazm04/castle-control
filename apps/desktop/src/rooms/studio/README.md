@@ -1,5 +1,75 @@
 # Map Room C · Herald
 
+## Challenge maproom-B · Spyglass (2026-10-31)
+
+Re-verified at `d99478f`, including maproom-A (`3304f2c`). The Spyglass is a
+**simulated viewer preview, not an Extension**. Table / Spyglass are native
+pressed-state buttons; both views consume the room's actual parsed board,
+including S/M/L or an injected board. There is no OBS map source, live viewer
+submission, network call, new wire identifier or renderer dependency here.
+The existing test ladder and WP 4.0/no-Extension copy remain unchanged.
+
+`frames.ts` owns four deeply frozen local presets: Panel 318×500, Mobile
+360×640, Video overlay 1280×720 and OBS 1080p 1920×1080. Unknown frame ids keep
+the previous frame. Each frame uses the same HexTable at its source dimensions;
+the entire canvas, including labels, scales down to fit the available column.
+The readout describes source size, not the reduced desktop thumbnail. It uses
+`boardGeometry(board).fit_width` and `fit_height`, which already include the
+horizontal sqrt(3), without a SAMPLE_EXTENT or a second geometry model. The
+framed canvas uses its full fit bounds; the main table retains its token gutter.
+
+For the default M board, fit_width=16.46 and fit_height=9.52. Radius scale is
+`min(frame.width / fit_width, frame.height / fit_height)`; hex width is
+`floor(scale * sqrt(3))`. This gives **33 / 37 / 130 / 196 px**, respectively.
+Panel and Mobile fail the 44px tap-target floor; the two display canvases have
+no touch-target requirement. Labels use a conservative 44px source-width floor
+for the two-line id/house stack, so OBS 1080p reports labels legible. Small
+frames explicitly warn about overlapping labels rather than hiding the limit.
+
+Spyglass reads the injectable shared `DesignSession` without changing it. It
+shows Current alone until a map proposal has been previewed, then Current and
+Draft · NOT ON AIR side by side. The selected map preview takes precedence,
+otherwise the most recent remaining map preview is shown. `canSeal` supplies
+the STALE mark; previews for other artifacts are ignored. Review, Preview,
+hold-to-Seal and Tear it up stay in the existing shared design path. A sealed
+map look now reaches the **Map Room table** as well as the Spyglass. Ink affects
+the plate and selection accent; engraved/halftone affect face texture; quiet
+hides house words and bold enlarges ids. Look attributes use `data-look-ink`,
+never the territories' `data-ink`; house ownership and colours remain intact.
+The separate session-only art controls retain their existing meaning.
+
+Viewer picks are component-local. Enter/Space on a native hex button updates
+only Your pick, never the streamer inspector, proposal queue, board ownership
+or stage. No second Seal control is added to the Spyglass.
+
+Evidence: the two new unit suites first failed on missing frames/spyglass
+modules. They now cover frozen presets, unknown ids, actual fit readouts at
+all sizes, one/two frames, stale/re-preview/seal/tear, non-map filtering,
+native activation with a pending proposal, inspector/queue/board isolation,
+no fetch, look-versus-side inks, and token-only CSS. The existing studio tests
+and the untouched 400-line shell/room.test.tsx remain green. Desktop typecheck
+and lint pass (159 source files; 761 boundary/hygiene/file-cap files and 1031
+secret-scan files). The card's full desktop test command passes **515 tests in
+54 files**. The new Spyglass block in the existing `e2e/journey-maproom.spec.ts`
+keeps the original journey intact; it checks all four sizes, real canvas fit,
+keyboard pick isolation, S/M/L, Current/Draft, Seal/STALE/Tear, and saves a
+screenshot under the Playwright test output directory. The e2e TypeScript
+check passes. Browser execution/screenshots are **Director-run and pending**.
+The final narrowed studio plus shell/room test run passes 55 tests in 10 files.
+E2e journey ESLint passes. The desktop production build passes with 122/122
+tokens and 364480/393216 bytes in the all-route first-load budget.
+
+The required `pnpm --config.verify-deps-before-run=false gate` was attempted
+without an install or a change to the shared node_modules junction. It passes
+version drift, all 24 tooling tests, workspace inventories and Cargo fetch,
+then fails in `packages/contract/scripts/codegen.mjs:26` with
+`spawnSync cargo EPERM` while exporting the contract. The gate, run helper,
+Rust wrapper, exporter and contract check are unchanged from `d99478f`
+(`git diff d99478f --` those paths is empty). Later full-gate checks did not
+run; this is not a green `pnpm gate`. No alternate spawn path, second tree,
+tooling edit or sandbox workaround was used. Director full-gate verification
+remains required in an environment that permits that Cargo subprocess.
+
 Binding design: `prototype/polish-2026-10-30/studio/variant-c.html`, its PORT
 NOTES, the C section of its README and `_shots/studio-c-{paper,stock}.png`.
 Reconciled at base `683b0f6`: studio was still the earlier room; no C port

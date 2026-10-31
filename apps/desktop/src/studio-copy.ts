@@ -43,6 +43,18 @@ export const studioCopy = {
   replay: 'Replay local reveal', reset: 'Reset local design', preview: 'Session-only map preview',
   art_alt: 'Illustrative hex-map art; the inspectable territory map is alongside',
   simulated_art: 'SIMULATED · SAMPLE ART · AI-generated',
+  table: 'Table', spyglass: 'Spyglass', view: 'Map view', frame_picker: 'Viewer frame size',
+  frame_panel: 'Panel', frame_mobile: 'Mobile', frame_video: 'Video overlay', frame_obs: 'OBS 1080p',
+  frame_hint: 'Source dimensions below; large canvases are scaled down to fit. Picks here affect only this simulated viewer.',
+  frame_dimensions: (width: number, height: number) => `${width} × ${height} source pixels`,
+  simulated_viewer: 'SIMULATED VIEWER PREVIEW · no Extension is built',
+  look_current: 'Current', look_draft: 'Draft · NOT ON AIR', stale: 'STALE',
+  hex_size: (size: number) => `${size} px hexes`,
+  tap_ok: 'Meets the 44 px tap target', tap_small: 'below the 44 px tap target',
+  tap_na: 'Display canvas · no touch target required',
+  labels_ok: 'Labels legible at source size', labels_small: 'Labels may overlap at source size',
+  viewer_pick: 'Simulated viewer pick', pick: (id: string) => `Your pick: ${id} · simulated viewer`,
+  pick_hint: 'Choose a hex as a simulated viewer. The streamer inspector stays unchanged.',
 } as const;
 
 export const studioStages = [
