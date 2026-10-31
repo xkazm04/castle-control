@@ -96,6 +96,12 @@ test('existing component defaults keep their exact markup vocabulary', () => {
   expect(render(<FieldGroup label="Find" control_id="sample" hint="Generated hint"><input id="sample" /></FieldGroup>)).toContain('for="sample"');
 });
 
+test('hint carries an id derived from control_id', () => {
+  const html = render(<FieldGroup label="Find" control_id="sample" hint="h"><input id="sample" aria-describedby="sample-hint" /></FieldGroup>);
+  expect(html).toMatch(/<p[^>]*id="sample-hint"[^>]*>h<\/p>/);
+  expect(render(<FieldGroup label="Find" control_id="plain"><input id="plain" /></FieldGroup>)).not.toContain('plain-hint');
+});
+
 test('heraldic sources stay generic and opt-in button rules outrank the shell default', () => {
   const names = readdirSync(new URL('.', import.meta.url)).filter(name => name.startsWith('heraldic') && !name.endsWith('.test.tsx'));
   expect(names.length).toBeGreaterThan(0);

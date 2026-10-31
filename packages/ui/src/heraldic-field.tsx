@@ -8,7 +8,7 @@ export function FieldGroup({ label, control_id, hint, result, children, variant 
 }) {
   return <div className="cc-field" data-field={variant} style={style}>
     <label htmlFor={control_id}>{label}</label>{children}
-    {hint !== undefined && <p className="cc-field-hint">{hint}</p>}
+    {hint !== undefined && <p className="cc-field-hint" id={`${control_id}-hint`}>{hint}</p>}
     {result !== undefined && <p className="cc-field-result" role="status">{result}</p>}
   </div>;
 }

@@ -1,5 +1,66 @@
 # Map Room C · Herald
 
+## Stabilize maproom-03, maproom-05 and maproom-06 (2026-10-31)
+
+Re-anchored at `14d2e78`: `hex-table.tsx` still rendered every tile in the Tab
+order with no arrow handler, its faces used Free while names used unclaimed,
+and the design controls did not describe their hints. The existing focus and
+selection rings from `2bb2423` remain unchanged, as do the ladder and session.
+
+Each board now has one Tab stop: its selected tile, or its first tile when no
+valid selection exists (including the initially unpicked Spyglass). Arrow keys
+move inspection and focus by offset row/column from `boardGeometry`; Home/End
+choose the current row's ends. Edges and gaps do not wrap or jump. Only these
+unmodified navigation keys are consumed; shell shortcuts, Tab, Enter and Space
+retain their native paths. The handler uses no hooks, global listener or class.
+Inspection does not change board ownership. The same HexTable serves the main
+table and simulated viewer previews.
+
+Every tile's accessible name contains its visible id and short house text
+together, followed by the full house name when different. Unclaimed is the one
+display word on faces, banners, pennants and the inspector; lowercase data-house
+markers remain machine values. Existing House Tallow banner names are retained.
+
+FieldGroup hints receive `${control_id}-hint` ids. Anchor, colour, art style and
+reveal controls reference their hints with aria-describedby; invalid reveal
+timing includes both hint and error ids. All four hints explicitly scope the
+setting to the local art preview. Map size still changes the inspectable board.
+
+Red-first evidence at this base: the focused desktop run (keyboard, design,
+board-view) failed 10 cases and passed 11; the heraldic run failed the new hint-id
+case and passed 11. Every named FAILS-today case failed. After implementation,
+all 21 focused desktop cases and all 12 heraldic cases pass. Additional coverage
+checks S/M/L Tab stops, empty/stale selections, focus destinations, all sample
+right/down neighbours, sparse custom boards, Home/End, shortcut propagation,
+custom short labels, and descriptions both with and without a reveal error.
+
+The Director approved only the line-105 assertion change in board-view.test.tsx:
+it now expects index zero to have tabIndex 0 and the others -1. Its assertion
+count is **54 expect calls before and 54 after**; the custom activation case
+still executes 74 assertions over 12 tiles. All activation, ownership and
+non-mutation checks are retained. No other line of that file changes.
+
+The whole desktop suite passes **614 tests in 62 files**; the whole UI suite
+passes **333 tests in 20 files**. Both packages pass typecheck and lint, including
+boundaries, hygiene, file-cap and secrets checks. Root tooling lint, Rust format,
+workspace Clippy and `cargo test --workspace --locked` (including doc-tests)
+also pass; existing owner-attended/live tests remain ignored. Desktop, overlay
+and kit builds pass; rebuilding the overlay leaves its tracked bundle unchanged.
+Desktop token parity is 122/122 and first-load size is 364654/393216 bytes; kit
+token parity is 122/122 and first-load size is 261338/262144 bytes.
+
+Required validation limits: `pnpm --config.verify-deps-before-run=false gate`
+passes version drift, 24 tooling tests, inventories and fetch, then exits at the
+unchanged contract exporter's `spawnSync cargo EPERM`. Recursive workspace
+typecheck/lint also exit at lifecycle `spawn EPERM`. These launchers are unchanged
+from base, whose docs/PLAN.md already records both failures. The required
+`pnpm --config.verify-deps-before-run=false e2e journey-maproom.spec.ts` attempt
+(with output directed outside the worktree) exits at `spawn EPERM` before browser
+assertions. No browser pass or green full gate is claimed; Director verification
+is still required in a process environment that permits these launches. The e2e
+sources and all other prohibited paths are unchanged. No install or git write
+was run.
+
 ## Challenge maproom-B · Spyglass (2026-10-31)
 
 Re-verified at `d99478f`, including maproom-A (`3304f2c`). The Spyglass is a

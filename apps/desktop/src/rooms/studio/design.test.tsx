@@ -8,6 +8,7 @@ import { HexTable, TileInspector } from './hex-table.jsx';
 import { boardForSize, createStudioSession, tilesForSize, updateStudioSession } from './session.js';
 import { parseStudioBoard } from './board.js';
 import type { SessionField } from './session.js';
+import { studioCopy as copy } from '../../studio-copy.js';
 
 type ControlProps = {
   children?: ReactNode; id?: string; disabled?: boolean; 'aria-label'?: string;
@@ -85,5 +86,57 @@ test('all three map sizes render matching geometry, accessible tile inventory an
     const inspector = renderToStaticMarkup(<TileInspector selected="F1" board={boardForSize(size)} />);
     const share = tiles.filter(tile => tile.owner === 'House Tallow').length;
     expect(inspector).toContain(`${share} of ${tiles.length} tiles`);
+  }
+});
+
+test('every hex name contains its visible text', () => {
+  const custom = parseStudioBoard({ title: 'Simulated names', sides: [{ id: 'north', label: 'Northern reach', short: 'N', ink: 'azure' }],
+    tiles: [{ q: 0, r: 0, side: 'north' }, { q: 1, r: 0 }] });
+  if (!custom.ok) throw new Error(custom.error.message);
+  for (const board of [...(['s', 'm', 'l'] as const).map(boardForSize), custom.board]) {
+    const html = renderToStaticMarkup(<HexTable selected="D4" board={board} on_select={vi.fn()} />);
+    const tiles = html.match(/<button[^>]*>[\s\S]*?<\/button>/g) ?? [];
+    expect(tiles).toHaveLength(board.tiles.length);
+    for (const tile of tiles) {
+      const name = tile.match(/aria-label="([^"]+)"/)?.[1]?.toLowerCase() ?? '';
+      const id = tile.match(/class="cc-hex-id">([^<]+)</)?.[1]?.toLowerCase() ?? '';
+      const house = tile.match(/class="cc-hex-house">([^<]+)</)?.[1]?.toLowerCase() ?? '';
+      expect(id).not.toBe(''); expect(house).not.toBe('');
+      expect(name).toContain(id); expect(name).toContain(house);
+      expect(name).toContain(`${id} ${house}`);
+    }
+  }
+});
+
+test('one word for unclaimed', () => {
+  const html = renderToStaticMarkup(<HexTable selected="E1" on_select={vi.fn()} />);
+  expect(html.includes('Free')).toBe(false);
+  expect(html).toContain(`class="cc-hex-house">${copy.unclaimed}<`);
+  const banners = renderToStaticMarkup(<BannerInspector selected="E1" on_select={vi.fn()} />);
+  expect(banners).toContain(`aria-label="Inspect ${copy.unclaimed} banner"`);
+});
+
+test('design controls are described', () => {
+  for (const session of [createStudioSession(), updateStudioSession(createStudioSession(), 'reveal_ms', '-1')]) {
+    const html = renderToStaticMarkup(<StudioDesignControls session={session} on_change={vi.fn()} />);
+    for (const field of ['anchor', 'colour', 'style', 'reveal']) {
+      const id = `studio-map-${field}`;
+      const control = html.match(new RegExp(`<(?:select|input)[^>]*id="${id}"[^>]*>`))?.[0] ?? '';
+      const descriptions = control.match(/aria-describedby="([^"]+)"/)?.[1]?.split(' ') ?? [];
+      expect(descriptions).toContain(`${id}-hint`);
+      expect(html).toContain(`id="${id}-hint"`);
+      if (field === 'reveal') {
+        expect(descriptions.includes('studio-reveal-error')).toBe(!!session.error);
+        expect(descriptions).toHaveLength(session.error ? 2 : 1);
+      }
+    }
+  }
+});
+
+test('preview-only controls say so', () => {
+  const html = renderToStaticMarkup(<StudioDesignControls session={createStudioSession()} on_change={vi.fn()} />);
+  for (const field of ['anchor', 'colour', 'style', 'reveal']) {
+    const hint = html.match(new RegExp(`<p[^>]*id="studio-map-${field}-hint"[^>]*>([^<]+)</p>`))?.[1] ?? '';
+    expect(hint.toLowerCase()).toContain('preview');
   }
 });

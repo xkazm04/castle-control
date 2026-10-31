@@ -19,7 +19,7 @@ export function BannerInspector({ board = STUDIO_SAMPLE_BOARD, selected, on_sele
     <SectionHeading variant="inline" title={copy.banners} />
     <div role="group" aria-label={copy.banner_choices}>
       {banners.map(side => <InkButton key={side.id} size="small"
-        aria-label={copy.inspect_banner(side.id ? side.label : 'unclaimed')} aria-pressed={!!current && (current.side?.id ?? '') === side.id}
+        aria-label={copy.inspect_banner(side.label)} aria-pressed={!!current && (current.side?.id ?? '') === side.id}
         disabled={side.count === 0} onClick={() => on_select(side.id)}>
         {side.label}
       </InkButton>)}
@@ -44,24 +44,24 @@ export function StudioDesignControls({ session, on_change, board }: {
               : mapSizes.map(item => <option key={item.id} value={item.id}>{item.label}</option>)}
           </select>
         </FieldGroup>
-        <FieldGroup control_id="studio-map-anchor" label={copy.anchor} variant="select">
-          <select id="studio-map-anchor" value={design.anchor} onChange={event => on_change('anchor', event.currentTarget.value)}>
+        <FieldGroup control_id="studio-map-anchor" label={copy.anchor} variant="select" hint={copy.anchor_hint}>
+          <select id="studio-map-anchor" aria-describedby="studio-map-anchor-hint" value={design.anchor} onChange={event => on_change('anchor', event.currentTarget.value)}>
             {mapAnchors.map(item => <option key={item.id} value={item.id}>{item.label}</option>)}
           </select>
         </FieldGroup>
         <FieldGroup control_id="studio-map-colour" label={copy.colour} variant="select" hint={copy.colour_hint}>
-          <select id="studio-map-colour" value={design.colour} onChange={event => on_change('colour', event.currentTarget.value)}>
+          <select id="studio-map-colour" aria-describedby="studio-map-colour-hint" value={design.colour} onChange={event => on_change('colour', event.currentTarget.value)}>
             {mapColours.map(item => <option key={item.id} value={item.id}>{item.label}</option>)}
           </select>
         </FieldGroup>
-        <FieldGroup control_id="studio-map-style" label={copy.art_style} variant="select">
-          <select id="studio-map-style" value={design.art_style} onChange={event => on_change('art_style', event.currentTarget.value)}>
+        <FieldGroup control_id="studio-map-style" label={copy.art_style} variant="select" hint={copy.art_style_hint}>
+          <select id="studio-map-style" aria-describedby="studio-map-style-hint" value={design.art_style} onChange={event => on_change('art_style', event.currentTarget.value)}>
             {styles.map(item => <option key={item.id} value={item.id}>{item.label}</option>)}
           </select>
         </FieldGroup>
         <FieldGroup control_id="studio-map-reveal" label={copy.reveal} hint={copy.reveal_hint}>
           <input id="studio-map-reveal" type="number" min={0} max={60000} step={1} value={session.reveal_input}
-            aria-invalid={!!session.error} aria-describedby={session.error ? 'studio-reveal-error' : undefined}
+            aria-invalid={!!session.error} aria-describedby={`studio-map-reveal-hint${session.error ? ' studio-reveal-error' : ''}`}
             onChange={event => on_change('reveal_ms', event.currentTarget.value)} />
         </FieldGroup>
       </div>

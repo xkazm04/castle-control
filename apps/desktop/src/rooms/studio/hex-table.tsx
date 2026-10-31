@@ -1,19 +1,37 @@
-import type { CSSProperties } from 'react';
+import type { CSSProperties, KeyboardEvent } from 'react';
 import type { DesignOutput } from '@castle-control/ui/design';
 import { EmptyState, HeroReadout, Pennant, Plate, PlateBand, PlateBody, SectionHeading } from '@castle-control/ui';
 import { studioCopy as copy } from '../../studio-copy.js';
 import { STUDIO_SAMPLE_BOARD } from './fixture.js';
 import { boardGeometry } from './board.js';
-import type { StudioBoard } from './board.js';
+import type { BoardTile, StudioBoard } from './board.js';
 import type { MapSize } from './session.js';
 
 type HexPosition = CSSProperties & { '--x': number; '--y': number };
 const hexPosition = (x: number, y: number): HexPosition => ({ '--x': x, '--y': y });
 
+/** Inspection follows display rows/columns; ownership and shell shortcuts are untouched. */
+function inspectNeighbour(event: KeyboardEvent<HTMLButtonElement>, tile: BoardTile,
+  tiles: readonly BoardTile[], on_select: (id: string) => void) {
+  if (event.ctrlKey || event.metaKey || event.altKey || event.nativeEvent.isComposing) return;
+  if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End'].includes(event.key)) return;
+  event.preventDefault(); event.stopPropagation();
+  const row = tiles.filter(item => item.row === tile.row).sort((a, b) => a.column - b.column);
+  const column = tile.column + (event.key === 'ArrowRight' ? 1 : event.key === 'ArrowLeft' ? -1 : 0);
+  const row_number = tile.row + (event.key === 'ArrowDown' ? 1 : event.key === 'ArrowUp' ? -1 : 0);
+  const next = event.key === 'Home' ? row[0] : event.key === 'End' ? row.at(-1)
+    : tiles.find(item => item.column === column && item.row === row_number);
+  if (!next || next.id === tile.id) return;
+  on_select(next.id);
+  const index = tiles.indexOf(next);
+  event.currentTarget.parentElement?.querySelectorAll<HTMLButtonElement>('[data-hex-tile]')[index]?.focus();
+}
+
 export function HexTable({ selected, on_select, board = STUDIO_SAMPLE_BOARD, size = 'm', look }: {
   selected: string; on_select: (id: string) => void; board?: StudioBoard; size?: MapSize; look?: DesignOutput['style'];
 }) {
   const geometry = boardGeometry(board);
+  const tab_stop = geometry.tiles.find(tile => tile.id === selected)?.id ?? geometry.tiles[0]?.id;
   const style: CSSProperties & Record<string, number> = { '--board-w': geometry.width, '--board-h': geometry.height,
     '--fit-w': geometry.fit_width, '--fit-h': geometry.fit_height };
   return <div className="cc-herald-field" role="region" aria-label={copy.board_label(geometry.columns, geometry.rows, board.title)}
@@ -23,11 +41,12 @@ export function HexTable({ selected, on_select, board = STUDIO_SAMPLE_BOARD, siz
       {geometry.tiles.map(tile => <button type="button" className="cc-hex" key={tile.id} data-hex-tile={tile.id}
         data-house={tile.side?.label ?? 'unclaimed'} data-ink={tile.side?.ink} data-unclaimed={!tile.side}
         style={hexPosition(tile.centre.x, tile.centre.y)}
-        aria-label={copy.tile_label(tile.id, tile.side?.label ?? 'unclaimed')} aria-pressed={selected === tile.id}
-        onClick={() => on_select(tile.id)}>
+        aria-label={copy.tile_label(tile.id, tile.side?.short ?? copy.unclaimed, tile.side?.label)} aria-pressed={selected === tile.id}
+        tabIndex={tab_stop === tile.id ? 0 : -1}
+        onClick={() => on_select(tile.id)} onKeyDown={event => inspectNeighbour(event, tile, geometry.tiles, on_select)}>
         <span className="cc-hex-face" aria-hidden="true" />
         <span className="cc-hex-id">{tile.id}</span>
-        <span className="cc-hex-house">{tile.side?.short ?? copy.free}</span>
+        <span className="cc-hex-house">{tile.side?.short ?? copy.unclaimed}</span>
       </button>)}
     </div></div>
     <ul className="cc-pennants">{geometry.sides.map(side => <li key={side.id} data-house={side.label} data-ink={side.ink}>

@@ -102,7 +102,7 @@ test('all custom tiles activate as native keyboard buttons and inspect the board
   const geometry = boardGeometry(board);
   for (const [index, button] of buttons.entries()) {
     expect(button.props.type).toBe('button');
-    expect(button.props.tabIndex).not.toBe(-1); expect(button.props.disabled).not.toBe(true);
+    expect(button.props.tabIndex).toBe(index === 0 ? 0 : -1); expect(button.props.disabled).not.toBe(true);
     // Enter and Space on a native button use this activation callback.
     button.props.onClick?.();
     expect(session.selected).toBe(geometry.tiles[index]?.id);
