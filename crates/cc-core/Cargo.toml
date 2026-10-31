@@ -46,4 +46,8 @@ keyring = { version = "3.6.3", default-features = false, features = ["sync-secre
 [dev-dependencies]
 tokio = { workspace = true, features = ["test-util"] }
 tokio-tungstenite = "0.28.0"
+# e2e-night example: obs-websocket v5 authentication in its test-only relay.
+base64 = "0.22.1"
+sha2 = "0.10.9"
+zeroize = "1.8.2"
 tracing-subscriber = { version = "0.3.20", features = ["fmt"] }
