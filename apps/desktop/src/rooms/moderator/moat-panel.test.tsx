@@ -11,6 +11,7 @@ import { ruleBenchLink } from './rule-bench.jsx';
 import { MoatHeartbeat } from '../../moat/heartbeat.jsx';
 import { buildMoat, windowFor } from '../../moat/moat-model.js';
 import { MoatScene } from '../../moat/moat-scene.jsx';
+import { MoatReport } from '../../moat/moat-report.jsx';
 import { Drill } from './drill.jsx';
 import { MarkerInspector, MoatControls, MoatPanel } from './moat-panel.jsx';
 
@@ -53,6 +54,12 @@ test('the drill opens on the moat: three stamps, a gap, a live summary, and the 
     expect(stamp).toMatch(/rule · (links|repeats|blocked-terms)/);
     expect(stamp).toMatch(/aria-label="Held, not on air: simulated-message-\d+, rule [a-z-]+\. Inspect\."/);
   }
+});
+
+test('the table rows name the rule and action, so the table says what the strip shows', () => {
+  const html = renderToStaticMarkup(<Drill result={fixtureReplay} delay_s={4} />);
+  expect(text(html)).toContain('rule · links · Delete message');
+  expect(html).toContain('aria-label="Inspect simulated-message-7"');
 });
 
 test('the moat draws ids, times and rule words only: no message text exists in the replay', () => {
@@ -107,7 +114,7 @@ test('the same panel renders for the core drill with no invented delay', () => {
 
 test('stamps drop only when a held message reaches the gate, and stack when they would overlap', () => {
   const at = (playhead_ms: number, selected?: number) => renderToStaticMarkup(<MoatScene model={model} playhead_ms={playhead_ms}
-    window={windowFor(model, playhead_ms)} selected={selected} on_select={() => undefined} />);
+    window={windowFor(model, playhead_ms)} selected={selected} on_select={() => undefined} uid="test" />);
   expect(at(0).match(/class="moat-stamp"/g)).toBeNull();
   expect(at(first.offset_ms + model.cross_ms / 2 - 1).match(/class="moat-stamp"/g)).toBeNull();
   expect(at(first.offset_ms + model.cross_ms / 2).match(/class="moat-stamp"/g)).toHaveLength(1);
@@ -126,7 +133,7 @@ test('stamps drop only when a held message reaches the gate, and stack when they
 
 test('clicking a stamp or a dot selects that message', () => {
   const on_select = vi.fn();
-  const tree = MoatScene({ model, playhead_ms: model.run_ms, window: windowFor(model, model.run_ms), on_select });
+  const tree = MoatScene({ model, playhead_ms: model.run_ms, window: windowFor(model, model.run_ms), on_select, uid: 'test' });
   const [stamp] = find(tree, element => element.props.onClick !== undefined && (element as { type: unknown }).type === 'button');
   stamp?.props.onClick?.();
   expect(on_select).toHaveBeenCalledWith(first.index);
@@ -200,3 +207,32 @@ test('a stamped rule opens the rule bench on that rule, and only when the bench 
   expect(renderToStaticMarkup(<MarkerInspector marker={first} />)).not.toContain('moat-open-rule');
   expect(renderToStaticMarkup(<MarkerInspector marker={first} bench={{ can_open: () => false, open }} />)).not.toContain('moat-open-rule');
 });
+
+test('the night report is one sheet of the finished moat, the gaps and every stop, in paper tokens', () => {
+  const html = renderToStaticMarkup(<MoatReport model={model} uid="sheet"
+    info={{ source: fixtureReplay.source, instrument_hash: fixtureReplay.instrument_hash, origin: 'fixture' }} delay_s={4} />);
+  expect(html).toContain('data-theme="paper"');
+  expect(text(html)).toContain('Gatehouse night report');
+  expect(text(html)).toContain('Held 3 of 40 · simulated');
+  expect(text(html)).toContain('missing, not replayed');
+  expect(text(html)).toContain('illustrative fixture value');
+  expect(html.match(/<tr>/g)).toHaveLength(4);
+  expect(html.match(/<span class="moat-stamp"/g)).toHaveLength(3);
+  expect(html).not.toContain('<button');
+  for (const row of [first, second, third]) expect(html).toContain(`<td>${row.message_id}</td>`);
+  expect(text(html)).not.toMatch(/Simulated (viewer|question|repeated)/);
+  const none = renderToStaticMarkup(<MoatReport model={buildMoat({ outcomes: [fixtureReplay.outcomes[0] ?? never()], gaps: [] })} uid="x"
+    info={{ source: 's', instrument_hash: 'h', origin: 'core' }} />);
+  expect(text(none)).toContain('Nothing was stopped at the gate.');
+  expect(text(none)).toContain('No recording gaps.');
+  expect(text(none)).toContain('reported by core');
+});
+
+test('the print button belongs to the panel, and the report waits until it is pressed', () => {
+  const html = renderToStaticMarkup(<Drill result={fixtureReplay} delay_s={4} />);
+  expect(html).toContain('>Print night report</button>');
+  expect(html).not.toContain('data-moat-report');
+  expect(html).not.toContain('Gatehouse night report');
+});
+
+function never(): never { throw new Error('Expected an outcome'); }

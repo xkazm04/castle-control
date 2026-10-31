@@ -9,7 +9,7 @@ import { MoatPanel } from './moat-panel.jsx';
 import type { RuleBenchLink } from './moat-panel.jsx';
 import { buildMoat, crossingMs } from '../../moat/moat-model.js';
 import type { MoatClock } from '../../moat/moat-player.js';
-import { moatCopy } from '../../moat/moat-copy.js';
+import { actionWords, moatCopy } from '../../moat/moat-copy.js';
 
 export function Drill({ result, origin = 'fixture', capture_hash, draft, delay_s, clock, rule_bench }: {
   result: DrillRunResult; origin?: 'fixture' | 'core'; capture_hash?: string | undefined; draft?: BenchResult | undefined;
@@ -26,7 +26,7 @@ export function Drill({ result, origin = 'fixture', capture_hash, draft, delay_s
     {!capture_hash && <p>{copy.live_parity}</p>}
     <a href="#/chamber/moderator">{copy.back}</a><p>{origin === 'fixture' ? copy.replay_fixture_note : copy.replay_core_note}</p>
     {draft && <DraftPatternPreview result={draft} />}
-    <MoatPanel model={model} delay_s={delay_s} clock={clock} selected_id={selected} on_select={setSelected} rule_bench={rule_bench} />
+    <MoatPanel model={model} delay_s={delay_s} clock={clock} selected_id={selected} on_select={setSelected} rule_bench={rule_bench} report={{ source: result.source, instrument_hash: result.instrument_hash, origin }} />
     <div className="moderator-drill-columns"><div className="room-column"><h3>{copy.instrument_source}</h3><p>{result.source}</p>
       {capture_hash && <><p>{copy.capture_hash}</p><code className="room-hash">{capture_hash}</code>
         <p role="status">{capture_hash === result.instrument_hash ? copy.capture_match : copy.capture_mismatch}</p>
@@ -44,7 +44,7 @@ export function Drill({ result, origin = 'fixture', capture_hash, draft, delay_s
       }}><option value="all">{copy.outcomes_all}</option>{states.map(state => <option key={state} value={state}>{state.replaceAll('_', ' ')}</option>)}</select></div>
       <WindowedRows rows={outcomes} label={copy.outcomes_label} row_key={item => item.message_id} row_height={rowHeight * 3}>
         {item => <div className="moat-row" data-selected={selected === item.message_id}><b><button type="button" className="moat-row-id" aria-pressed={selected === item.message_id}
-          aria-label={moatCopy.table_inspect(item.message_id)} onClick={() => { setSelected(item.message_id); }}>{item.message_id}</button></b><p>{item.state.replaceAll('_', ' ')} · {item.source}</p>
+          aria-label={moatCopy.table_inspect(item.message_id)} onClick={() => { setSelected(item.message_id); }}>{item.message_id}</button></b><p>{item.state.replaceAll('_', ' ')} · {item.source}{item.rule_id && <> · {moatCopy.rule_line(item.rule_id)}</>}{item.action && <> · {actionWords[item.action]}</>}</p>
           {item.verdict ? <VerdictChip verdict={item.verdict} /> : <span>{copy.not_evaluable}</span>}</div>}</WindowedRows>
     </div></div>
   </section>;

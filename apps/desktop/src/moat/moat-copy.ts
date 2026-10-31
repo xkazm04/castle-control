@@ -41,5 +41,15 @@ export const moatCopy = {
   stamp_name: (marker: MoatMarker) => `Held, not on air: ${marker.message_id}${marker.rule_id ? `, rule ${marker.rule_id}` : ''}. Inspect.`,
   dot_name: (marker: MoatMarker) => `${marker.message_id}: ${fateWords[marker.fate]}`,
   heartbeat: 'Sample replay loop · simulated',
+  print: 'Print night report',
+  report: {
+    title: 'Gatehouse night report', kicker: 'Simulated replay · no live ledger was invoked · nothing was sent to Twitch',
+    source: 'Source', from: 'From', to: 'To', hash: 'Instrument hash', hash_fixture: 'illustrative fixture value', hash_core: 'reported by core',
+    gaps: 'Recording gaps', no_gaps: 'No recording gaps.', gap_line: (from: string, to: string) => `${from} to ${to}: missing, not replayed`,
+    stopped: 'Stopped at the gate', none_stopped: 'Nothing was stopped at the gate.',
+    more: (count: number) => `${count.toLocaleString('en-US')} more stopped messages are listed in the drill table.`,
+    time: 'Time', message: 'Message', verdict: 'Verdict', rule: 'Rule', action: 'Action', evaluation: 'Evaluation',
+    note: 'Drawn from outcome time, state, verdict, action and rule id only. The contract carries no message text, so none is printed.',
+  },
   table_inspect: (id: string) => `Inspect ${id}`,
 } as const;

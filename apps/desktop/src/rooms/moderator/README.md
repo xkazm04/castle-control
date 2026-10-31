@@ -1,3 +1,36 @@
+# The moat: watch what never airs (2026-10-31)
+
+The drill opens on a moat timeline over the same outcomes the table lists. Chat is the bank
+above, the gate runs across, the stream is the bank below. Each replayed message crosses from
+chat; aired ones land on the stream, held ones stop at the gate under a HELD · NOT ON AIR
+stamp (`StatusChip`) with the rule id. A recording gap is a hatched span labelled "missing, not
+replayed". Everything is drawn from `DrillOutcome` (time, state, verdict, action, rule id) and
+`DrillRunResult.gaps`; the contract carries no message text, so none is shown.
+
+- **Model** (`src/moat/moat-model.ts`, pure): sorts outcomes, maps each to a fate (`aired`, `held`,
+  `unresolved`), gaps to spans, and answers "where is this marker at playhead t". Only a verdict, or
+  `not_provoked`, can say a line aired; `judge_pending`, `engine_failed` and the other
+  unevaluated states stop at the gate as dashed diamonds and are counted separately.
+- **Player** (`moat-player.ts`): an external store over an injected clock (`manualClock()` in tests,
+  `browserClock` in the app). It opens finished, so the first frame, the reduced-motion frame and the
+  static test frame show every stamp. Play from the end restarts. 1x, 2x, 8x and 60x speeds.
+- **Scene** (`moat-scene.tsx`): SVG in scene units plus HTML stamps placed by percentage. Stamps that
+  would overlap stack up to three levels; any beyond are counted in a note and stay reachable in the table.
+- **Windowing**: a night of up to 150 outcomes fits whole; longer ones show pages of about 150
+  outcomes that turn with the playhead. Visible markers are found by bisection, so ten thousand
+  outcomes cost the same as forty. Aired dots thin past 360 per view; stopped ones never do.
+- **Panel** (`moat-panel.tsx`): plain buttons and one range input only, because Space is the seal key in
+  the shared keymap. The live count ("Held 3 of 40 · simulated") is the shared `Notice`; reduced motion
+  disables Play and keeps the scrubber. The inspector shows state, action, rule and verdict, and offers
+  "Open rule ... in the rule bench" for rules the bench can edit.
+- **Table**: unchanged and still the accessible equivalent; each row id is a button that selects the
+  message, and each row now names its rule and action.
+- **Keep heartbeat** (`moat/heartbeat.tsx`): the Keep's moat bar loops a small, labelled sample of the
+  same model in fixture mode only. A core room shows no loop, because it has no sample.
+- **Fixture**: `fixtureReplay` is a seeded generator (`src/drill-fixture.ts`), not a literal: forty
+  simulated lines, three stops, two unevaluated, one gap. Summary counts are derived from the
+  outcomes. `simulatedDrill({ seed, count })` draws any size for tests.
+
 # Gatehouse shadow journey (lane L2, 2026-10-31)
 
 ## Stabilize findings 05, 07, 09 and 10 (2026-10-31)

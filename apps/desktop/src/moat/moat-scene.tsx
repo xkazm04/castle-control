@@ -26,6 +26,8 @@ const yOf = (lift: number, g: MoatGeometry) => lift <= 0.5 ? g.chat_y + (g.gate_
 export type MoatSceneProps = {
   model: MoatModel; playhead_ms: number; window: MoatWindow; selected?: number | undefined;
   on_select?: ((index: number) => void) | undefined; delay_s?: number | undefined; compact?: boolean;
+  /** Unique per scene on the page: SVG patterns are referenced by id. */
+  uid: string;
 };
 
 function Waves({ id }: { id: string }) {
@@ -33,9 +35,9 @@ function Waves({ id }: { id: string }) {
     <path className="moat-wave" d="M0 8q7-7 14 0t14 0" /></pattern>;
 }
 
-export function MoatScene({ model, playhead_ms, window, selected, on_select, delay_s, compact = false }: MoatSceneProps) {
+export function MoatScene({ model, playhead_ms, window, selected, on_select, delay_s, compact = false, uid }: MoatSceneProps) {
   const g = compact ? compactGeometry : fullGeometry;
-  const id = compact ? 'moat-heart' : 'moat';
+  const id = `moat-${uid}`;
   const inner = g.width - g.gutter * 2;
   const range = Math.max(window.to_ms - window.from_ms, 1);
   const xOf = (offset_ms: number) => g.gutter + Math.min(Math.max((offset_ms - window.from_ms) / range, 0), 1) * inner;
@@ -92,12 +94,14 @@ export function MoatScene({ model, playhead_ms, window, selected, on_select, del
       if (level < 0 || markerProgress(marker, playhead_ms, model.cross_ms).phase !== 'stopped') return null;
       const left = stampX(xOf(marker.offset_ms), g) / g.width * 100;
       const top = (g.gate_y - stampLift - level * g.stamp_step) / g.height * 100;
-      return <button key={marker.index} type="button" className="moat-stamp" data-selected={selected === marker.index} data-level={level}
-        aria-pressed={selected === marker.index} aria-label={copy.stamp_name(marker)}
-        style={{ left: `${left}%`, top: `${top}%` }} onClick={() => on_select?.(marker.index)}>
+      const place = { left: `${left}%`, top: `${top}%` };
+      const chip = <>
         <StatusChip variant={marker.verdict === 'bar' ? 'gules' : 'or'} stamp="verdict" tone={marker.verdict === 'bar' ? 'blocked' : 'warn'}>{copy.stamp}</StatusChip>
-        <span className="moat-stamp-rule">{copy.rule_line(marker.rule_id)}</span>
-      </button>;
+        <span className="moat-stamp-rule">{copy.rule_line(marker.rule_id)}</span></>;
+      // Without a handler (the printed report) a stamp is a plain mark, not a button.
+      return on_select ? <button key={marker.index} type="button" className="moat-stamp" data-selected={selected === marker.index} data-level={level}
+        aria-pressed={selected === marker.index} aria-label={copy.stamp_name(marker)} style={place} onClick={() => on_select(marker.index)}>{chip}</button>
+        : <span key={marker.index} className="moat-stamp" data-level={level} style={place}>{chip}</span>;
     })}
   </div>;
 }
