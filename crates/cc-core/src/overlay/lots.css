@@ -1,24 +1,25 @@
 html, body { background: transparent; margin: 0; width: 100%; height: 100%; overflow: hidden; font-family: var(--font-ui); color: var(--ink); }
 body { box-sizing: border-box; display: grid; padding: var(--space-16); }
 /* Rust owns --draw-scale and anchor. Bare chrome, fitted to any OBS viewport. */
-main { box-sizing: border-box; width: min(100%, calc(70vmin * var(--draw-scale))); max-width: 100%; max-height: 100%; min-width: 0; min-height: 0; overflow: auto; overflow-wrap: anywhere; background: transparent; align-self: end; justify-self: end; }
+main { box-sizing: border-box; width: min(100%, calc(70vmin * var(--draw-scale))); max-width: 100%; max-height: 100%; min-width: 0; min-height: 0; overflow: hidden; overflow-wrap: anywhere; background: transparent; align-self: end; justify-self: end; }
 main[data-anchor="tl"] { align-self: start; justify-self: start; }
 main[data-anchor="tr"] { align-self: start; justify-self: end; }
 main[data-anchor="bl"] { align-self: end; justify-self: start; }
 main[data-anchor="center"] { align-self: center; justify-self: center; }
 h1, h2 { font-family: var(--font-display); margin: 0 0 var(--space-8); }
-h1 { font-size: clamp(var(--text-section), calc(4vmin * var(--draw-scale)), var(--text-chamber)); }
-h2 { font-size: var(--text-section); }
-p, li { font-size: var(--text-body); line-height: 1.4; margin-block: var(--space-8); }
+h1 { font-size: clamp(calc(var(--text-section) * var(--draw-scale)), calc(4vmin * var(--draw-scale)), calc(var(--text-chamber) * var(--draw-scale))); }
+h2 { font-size: calc(var(--text-section) * var(--draw-scale)); }
+p, li { font-size: calc(var(--text-body) * var(--draw-scale)); line-height: 1.4; margin-block: var(--space-8); }
+footer { font-size: calc(var(--text-body) * var(--draw-scale)); }
 ol { padding-inline-start: var(--space-24); }
 .seal { font-family: var(--font-num); overflow-wrap: anywhere; }
 .simulated { font-weight: 800; color: var(--gules-text); }
 main[data-draw-mounted] { height: min(100%, calc(55vmin * var(--draw-scale))); overflow: hidden; }
 .draw-scene { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) auto; grid-template-areas: "badge label" "art winners" "disclaimer disclaimer"; gap: var(--space-8); height: 100%; min-height: 0; background: transparent; }
 .draw-scene .simulated { grid-area: badge; margin: 0; }
-.draw-label { grid-area: label; font-size: max(var(--text-body), 2vmin); font-family: var(--font-num); }
+.draw-label { grid-area: label; font-size: calc(max(var(--text-body), 2vmin) * var(--draw-scale)); font-family: var(--font-num); }
 .draw-artwork { grid-area: art; width: 100%; height: 100%; min-height: 0; }
-.draw-winners { grid-area: winners; margin: 0; overflow: auto; min-height: 0; }
-.draw-winners li { font-size: max(var(--text-body), 3vmin); }
-.draw-disclaimer { grid-area: disclaimer; font-size: max(var(--text-body), 2vmin); }
+.draw-winners { grid-area: winners; margin: 0; overflow: hidden; min-height: 0; }
+.draw-winners li { font-size: calc(max(var(--text-body), 3vmin) * var(--draw-scale)); }
+.draw-disclaimer { grid-area: disclaimer; font-size: calc(max(var(--text-body), 2vmin) * var(--draw-scale)); }
 [hidden] { display: none; }

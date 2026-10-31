@@ -1,5 +1,44 @@
 ﻿# Lot Chamber C · Herald, 2026-10-30
 
+## Stabilize lots-06–10, 2026-10-31
+
+Eligible pool owns subscriber/points eligibility. Prize checkboxes display its
+derived values as disabled controls; the free !join path remains in effect.
+Pause intake exposes its pressed state and an explicit status. Edits while
+paused retain the current entries. Eligibility/weight changes require resuming
+before sealing; resume regenerates the pool from the current setup.
+
+The OBS URL maps S/M/L to scale 0.75/1/1.5 and preserves the anchor. Both current
+writ and core proof controls expose expanded state and a stable controlled
+section; core proof stays disabled until its writ is available. Generic hall
+and desk containers carry no ineffective accessible names.
+
+The Rust draw page scales titles, body and mounted winner typography with its
+validated scale. Both winner hosts clip rather than scroll. Its no-JS fallback
+shows the first eight names and an escaped +M more line; the complete immutable
+seal/cast JSON islands and validators remain unchanged. Regression evidence is
+in controls.test.tsx, structure.test.tsx, result.test.tsx, ../../lots.test.tsx
+and crates/cc-core/tests/lots_overlay_page.rs. intake.test.ts also checks the
+shared proposal cannot seal ahead of a paused roll with pending changes.
+
+Failing-first evidence against HEAD 4d936e1: the four targeted desktop files
+reported 6 failed / 40 passed before product edits (lots-06, lots-07, S/L URL
+cases, and both lots-09 assertions). The served-page suite reported 0 passed /
+3 failed before Rust edits (scaled typography, scrollbars and 40-winner cap).
+The added shared-seal regression then failed with a resolved promise instead
+of the required resume hint, and passed after the proposal path used the same
+pending-intake guard. No fixture or wire schema was changed.
+
+Validation: `cargo test -p cc-core` and `cargo test --workspace` pass, as do all 659 desktop tests across
+64 files, desktop typecheck/lint/build, workspace Rust format/Clippy, and the
+boundary, hygiene, file-cap and secret checks. Browser validation was attempted
+with `pnpm e2e e2e/journey-lots.spec.ts e2e/journey-obs.spec.ts`; Playwright exits
+with `spawn EPERM` before running a journey. `pnpm gate` exits in the unchanged
+contract exporter with `spawnSync cargo EPERM`. Recursive pnpm typecheck/lint
+also exit with `spawn EPERM`. These runner failures are not green checks; the
+Director must rerun them in its verification environment. No install was run
+over the worktree's node_modules junction.
+
 ## L1 streamer journey, 2026-10-31
 
 In Vite fixture mode open `#/chamber/lottery`. **Next draw setup** now edits

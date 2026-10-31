@@ -80,7 +80,7 @@ async fn display_query_is_parsed_once_with_safe_defaults_and_no_markup_injection
         );
         assert!(html.contains("background: transparent"));
         assert!(html.contains("max-height: 100%"));
-        assert!(html.contains("overflow: auto"));
+        assert!(!html.contains("overflow: auto"));
     }
     let rejected = format!("{}lots/simulated-draw?other=ignored", server.url());
     assert_eq!(
@@ -93,7 +93,7 @@ async fn display_query_is_parsed_once_with_safe_defaults_and_no_markup_injection
 
 #[tokio::test]
 async fn page_shows_only_accepted_seal_then_fixed_simulated_winners_and_no_write_door() {
-    for content in ["question", "prize"] {
+    for (content, winner_count) in [("question", 2), ("prize", 40)] {
         let root = tempfile::tempdir().unwrap();
         let host = Arc::new(RenderHost::default());
         let module = LotsModule::open(
@@ -110,11 +110,11 @@ async fn page_shows_only_accepted_seal_then_fixed_simulated_winners_and_no_write
         "policy":{"content":content,"paid_entry":false,"paid_weight":false,"subscriber_only":false,
             "channel_points":false,"free_entry_equal_odds":true,"regions":[],"prize_value_usd_cents":0,
             "registration_confirmed":false,"official_rules":true,"twitch_disclaimer":true},
-        "rules":{"pool":{"kind":"chatters"},"winner_count":2,"cooldown_s":0,
+        "rules":{"pool":{"kind":"chatters"},"winner_count":winner_count,"cooldown_s":0,
             "cohort_caps":[],"weight_curve":{"kind":"equal"},"free_join_equal_odds":true}
     }})).await;
-        for user_id in ["42", "43"] {
-            let user = cc_store::TwitchUserId::parse(user_id).unwrap();
+        for user_id in 42..42 + winner_count {
+            let user = cc_store::TwitchUserId::parse(&user_id.to_string()).unwrap();
             module
                 .map_user(user.clone(), &format!("simulated_viewer_{user_id}"))
                 .unwrap();
@@ -199,9 +199,16 @@ async fn page_shows_only_accepted_seal_then_fixed_simulated_winners_and_no_write
             .as_array()
             .unwrap()
             .iter()
+            .take(8)
             .map(|winner| format!("<li>{}</li>", winner.as_str().unwrap()))
             .collect::<String>();
         assert!(html.contains(&format!("<ol>{expected}</ol>")));
+        assert_eq!(html.matches("<li>").count(), winner_count.min(8));
+        if winner_count > 8 {
+            assert!(html.contains("<p class=\"draw-more\">+32 more</p>"));
+        } else {
+            assert!(!html.contains("class=\"draw-more\""));
+        }
         assert!(html.contains("data-anchor=\"tl\""));
         assert!(html.contains("--draw-scale:2"));
         let client = reqwest::Client::new();
@@ -215,6 +222,38 @@ async fn page_shows_only_accepted_seal_then_fixed_simulated_winners_and_no_write
                 .status(),
             404
         );
+    }
+}
+
+#[tokio::test]
+async fn lots_10_served_typography_scales_and_both_winner_hosts_refuse_scrollbars() {
+    let host = Arc::new(RenderHost::default());
+    let server = cc_obs::Overlay::start_with_routes(0, host.routes())
+        .await
+        .unwrap();
+    for scale in [0.5, 1.0, 2.0] {
+        let html = reqwest::get(format!("{}lots/simulated-draw?scale={scale}", server.url()))
+            .await
+            .unwrap()
+            .text()
+            .await
+            .unwrap();
+        let rule = |selector: &str| {
+            html.split_once(&format!("\n{selector} {{"))
+                .unwrap()
+                .1
+                .split_once('}')
+                .unwrap()
+                .0
+        };
+        assert!(rule("p, li").contains("font-size: calc(var(--text-body) * var(--draw-scale))"));
+        assert!(rule("h2").contains("font-size: calc(var(--text-section) * var(--draw-scale))"));
+        assert!(rule("h1").contains("calc(var(--text-chamber) * var(--draw-scale))"));
+        assert!(rule(".draw-winners li").contains("var(--draw-scale)"));
+        for selector in ["main", ".draw-winners"] {
+            assert!(rule(selector).contains("overflow: hidden"));
+            assert!(!rule(selector).contains("overflow: auto"));
+        }
     }
 }
 

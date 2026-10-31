@@ -1,6 +1,6 @@
 import { isPending } from '@castle-control/ui/steward';
 import type { Proposal, ProposalQueue } from '@castle-control/ui/steward';
-import { checkFixturePolicy, createLotsPreview } from '../../lots-model.js';
+import { checkFixturePolicy, createLotsPreview, intakeResumeHint } from '../../lots-model.js';
 import type { LotsPort } from '../../lots-model.js';
 import type { FixtureEntry } from '../../lots-fixture.js';
 import type { LotsDraw, LotsSealedRoll } from '@castle-control/contract';
@@ -45,6 +45,7 @@ export async function entryHash(bytes: string): Promise<string> {
 export async function sealLotteryProposal(queue: ProposalQueue, proposal: Proposal): Promise<void> {
   const { port, rolls, drafts, clock } = lotterySession(queue);
   const before = port.getSnapshot();
+  if (before.intake_pending) throw new Error(intakeResumeHint);
   const planned = drafts.get(proposal.id);
   const source = planned && planned.draw_id !== before.draw.draw_id ? planned : before.draw;
   if (!isPending(proposal) || proposal.kind !== 'seal') throw new Error('Choose an open roll proposal.');

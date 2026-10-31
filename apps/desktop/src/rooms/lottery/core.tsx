@@ -35,7 +35,7 @@ export function ConnectedLotsRoom({ port, simulated, seal_slot }: { port: CoreLo
     }
   };
   const cap = draw?.rules.cohort_caps.find(item => item.cohort === 'raider');
-  return <div className="lottery-room" aria-label={copy.core.title} aria-busy={state.busy}>
+  return <div className="lottery-room" role="region" aria-label={copy.core.title} aria-busy={state.busy}>
     <div className="cc-hall">
       <PoolStage count={state.entries.length} winners={draw?.rules.winner_count ?? copy.not_available}
         winner_detail={copy.selected_draw} held_out={copy.not_available}
@@ -48,7 +48,7 @@ export function ConnectedLotsRoom({ port, simulated, seal_slot }: { port: CoreLo
           </WindowedRows>
         </div>
       </PoolStage>
-      <div className="cc-desk" aria-label={copy.core.workbench}>
+      <div className="cc-desk">
         <SectionHeading variant="banner" level={2} title={copy.writ} gloss={copy.writ_gloss} ink="gules" />
         <HeraldicCard variant="raised">
           <h2 className="lottery-card-title">{copy.core.draws}</h2>
@@ -109,12 +109,13 @@ export function ConnectedLotsRoom({ port, simulated, seal_slot }: { port: CoreLo
           <WindowedRows rows={state.cast_result.cast.winners} label={copy.core.winner_list} row_key={winner => winner}>
             {winner => <p>{winner}</p>}
           </WindowedRows>
-          <InkButton size="room" disabled={state.busy} onClick={() => { port.nested(!state.nested); }}>{copy.core.proof}</InkButton>
+          <InkButton size="room" disabled={state.busy || !state.writ} aria-expanded={state.nested && Boolean(state.writ)}
+            aria-controls={`${field_id}-proof`} onClick={() => { port.nested(!state.nested); }}>{copy.core.proof}</InkButton>
           <InkButton size="room" disabled={state.busy} onClick={() => { void port.recompute(); }}>{copy.core.reload}</InkButton>
-          {state.nested && state.writ && <section aria-label={copy.core.proof_title}>
+          <section id={`${field_id}-proof`} hidden={!state.nested || !state.writ} aria-label={copy.core.proof_title}>
             <p className="cc-aside">{copy.core.proof_notice}</p>
-            <a download="castle-control-writ.json" href={`data:application/json;charset=utf-8,${encodeURIComponent(JSON.stringify(state.writ))}`}>{copy.core.download}</a>
-          </section>}
+            {state.writ && <a download="castle-control-writ.json" href={`data:application/json;charset=utf-8,${encodeURIComponent(JSON.stringify(state.writ))}`}>{copy.core.download}</a>}
+          </section>
         </Ticket>}
         <p className="cc-status" role="status">{state.notice}</p>
         <FairnessSteps />

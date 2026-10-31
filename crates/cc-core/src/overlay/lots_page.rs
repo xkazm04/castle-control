@@ -3,6 +3,10 @@ use super::lots::{DisplayParams, DrawScene};
 use cc_types::{DrawContent, LotsRandomnessPlan};
 use serde::Serialize;
 
+// The OBS fallback is a plate, not an interactive scroll surface. The complete
+// immutable cast remains in cc-cast for validators and the renderer.
+const WINNER_PLATE_CAP: usize = 8;
+
 /// Waiting pages discover a seal/cast quickly. Completed pages still reload so
 /// revocation/purge clears the result, without interrupting a large winner reveal.
 fn refresh_seconds(scene: Option<&DrawScene>) -> usize {
@@ -80,9 +84,19 @@ fn fallback(scene: &DrawScene) -> String {
                 .cast
                 .winners
                 .iter()
+                .take(WINNER_PLATE_CAP)
                 .map(|winner| format!("<li>{}</li>", escape(&String::from(winner.clone()))))
                 .collect::<String>();
-            format!("<h2>Winners</h2><ol>{entries}</ol>")
+            let remaining = cast.cast.winners.len().saturating_sub(WINNER_PLATE_CAP);
+            let more = if remaining > 0 {
+                format!(
+                    "<p class=\"draw-more\">{}</p>",
+                    escape(&format!("+{remaining} more"))
+                )
+            } else {
+                String::new()
+            };
+            format!("<h2>Winners</h2><ol>{entries}</ol>{more}")
         })
         .unwrap_or_else(|| "<p>Waiting for the announced round and verified cast.</p>".into());
     let disclaimer = if scene.content == DrawContent::Prize {
@@ -114,6 +128,14 @@ fn escape(text: &str) -> String {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn fallback_text_escapes_markup_and_quotes() {
+        assert_eq!(
+            super::escape("<simulated>&\"'"),
+            "&lt;simulated&gt;&amp;&quot;&#39;"
+        );
+    }
+
     #[test]
     fn island_escapes_raw_text_end_tags_without_changing_the_value() {
         let winner = "simulated</script><script>alert(1)</script>";

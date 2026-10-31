@@ -6,11 +6,13 @@ import { freezeFixture, prepareFixtureRoll, rehearsalClock, rehearsalSeed, respe
 import { castWinners, verifyWrit } from './lots-cast.js';
 
 export type Shape = typeof copy.shapes[number]['value'];
+export const intakeResumeHint = `${copy.paused}. Resume intake to apply eligibility and weight changes before sealing.`;
 export type LotsPreview = {
   draw: LotsDraw; entries: readonly FixtureEntry[]; paused: boolean; sealed: boolean; started: boolean;
   shape: Shape; lookup: string; nested: boolean; notice: string; recomputing: boolean;
   simulated_winners?: readonly LotsHandle[];
   sealed_roll?: LotsSealedRoll; writ?: LotsWrit; casting?: boolean;
+  intake_pending?: boolean;
 };
 export type LotsPort<State = LotsPreview> = {
   getSnapshot: () => State; subscribe: (listener: () => void) => () => void;
@@ -66,7 +68,7 @@ export function createLotsPreview(count = 87, clock = rehearsalClock): LotsPort 
     const next = { ...snapshot }; delete next.simulated_winners; delete next.writ; delete next.sealed_roll; snapshot = next;
     const accepted = freezeFixture(structuredClone(draw));
     publish({ draw: accepted, entries: fixturePool(accepted, count), paused: false, sealed: false, started: false, nested: false,
-      casting: false, recomputing: false, notice: copy.selected });
+      casting: false, recomputing: false, intake_pending: false, notice: copy.selected });
   }
   return {
     reopen() { reopen(snapshot.draw); },
@@ -79,12 +81,23 @@ export function createLotsPreview(count = 87, clock = rehearsalClock): LotsPort 
       if (snapshot.sealed) return;
       if (!validDraw(draw, count)) { publish({ notice: copy.invalid_setup }); return; }
       const accepted = freezeFixture(structuredClone(draw));
-      publish({ draw: accepted, entries: fixturePool(accepted, count), notice: copy.changed });
+      const entries = fixturePool(accepted, count);
+      const intake_pending = snapshot.paused && (entries.length !== snapshot.entries.length || entries.some((entry, index) => {
+        const before = snapshot.entries[index];
+        return entry.handle !== before?.handle || entry.weight !== before.weight;
+      }));
+      publish({ draw: accepted, entries: snapshot.paused ? snapshot.entries : entries, intake_pending,
+        notice: intake_pending ? intakeResumeHint : copy.changed });
     },
     lookup(lookup) { publish({ lookup }); },
-    pause() { if (!snapshot.sealed) publish({ paused: !snapshot.paused }); },
+    pause() {
+      if (snapshot.sealed) return;
+      const paused = !snapshot.paused;
+      publish({ paused, intake_pending: false, entries: paused ? snapshot.entries : fixturePool(snapshot.draw, count), notice: paused ? copy.paused : copy.open });
+    },
     async seal(entries = snapshot.entries, prepared) {
       if (snapshot.sealed) return;
+      if (snapshot.intake_pending) { publish({ notice: intakeResumeHint }); return; }
       if (!entries.length) { publish({ notice: copy.empty }); return; }
       if (checkFixturePolicy(snapshot.draw.policy).result === 'blocked') { publish({ notice: copy.frozen }); return; }
       try { simulateCast(snapshot.draw, entries); }

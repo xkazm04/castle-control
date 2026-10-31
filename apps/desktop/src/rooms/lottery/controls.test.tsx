@@ -11,7 +11,7 @@ import { lotsCopy as copy } from '../../lots-copy.js';
 import type { LotsPort } from '../../lots-model.js';
 
 type FieldProps = { id?: string; children?: ReactNode; disabled?: boolean; value?: string | number;
-  control_id?: string; result?: ReactNode; onBlur?: () => void;
+  control_id?: string; result?: ReactNode; checked?: boolean; readOnly?: boolean; onBlur?: () => void;
   onChange?: (event: ChangeEvent<HTMLInputElement & HTMLSelectElement>) => void };
 function fields(tree: ReactNode): ReactElement<FieldProps>[] {
   const found: ReactElement<FieldProps>[] = [];
@@ -56,6 +56,25 @@ test('native pool selector keeps prize policy aligned with restricted eligibilit
   }]);
   expect(port.getSnapshot().draw.policy.subscriber_only).toBe(true);
   expect(checkFixturePolicy(port.getSnapshot().draw.policy).reasons).toContain('subscriber_only');
+});
+
+test('lots-06 eligibility checkboxes are derived from the pool across every control transition', () => {
+  const port = createLotsPreview(); port.select('free-prize');
+  for (const from of copy.pool_options) for (const to of copy.pool_options) {
+    setupSequence(port, [tree => change(tree, 'lots-pool', from.value)]);
+    setupSequence(port, [tree => {
+      for (const [key, kind] of [['subscriber_only', 'subscribers'], ['channel_points', 'redeemers']] as const) {
+        const control = field(tree, `lots-${key}`);
+        expect(control.disabled || control.readOnly).toBe(true);
+        expect(control.checked).toBe(from.value === kind);
+      }
+      change(tree, 'lots-pool', to.value);
+    }]);
+    const draw = port.getSnapshot().draw;
+    expect(draw.rules.pool.kind).toBe(to.value);
+    expect(draw.policy.subscriber_only).toBe(to.value === 'subscribers');
+    expect(draw.policy.channel_points).toBe(to.value === 'redeemers');
+  }
 });
 
 test('region draft keeps commas and spaces until a multi-region edit commits', () => {

@@ -57,7 +57,7 @@ export default function LotteryRoom({ snapshot, replay, queue = proposalQueue, s
     if (port.getSnapshot().draw !== before) discardPreview();
   };
   return <div className="lottery-room" data-replay={replay}>
-    <div className="cc-hall" aria-label={copy.title}>
+    <div className="cc-hall">
       <PoolStage count={entries.length} winners={winners} winner_detail={pending.length ? copy.proposed : copy.selected_draw}
         held_out={fixtureCooldown.length} cap={cap ? `${cap.numerator}/${cap.denominator}` : copy.no_cap}
         illustration={copy.illustration} foot={<>
@@ -65,7 +65,7 @@ export default function LotteryRoom({ snapshot, replay, queue = proposalQueue, s
             <li key={cohort} data-cohort={cohort}>{copy.cohorts[cohort]} <b>{entries.filter(entry => entry.cohort === cohort).length}</b></li>)}</ul>
           <p>{copy.core.pool(state.draw.rules.pool.kind, state.draw.policy.content, state.draw.rules.cooldown_s)} · {fixtureCooldown.length} {copy.cooldown} · {fixtureWeightNotice(state)}</p>
         </>}><Urn entries={state.entries} winners={state.simulated_winners ?? []} revealed={revealed} /></PoolStage>
-      <div className="cc-desk" aria-label={copy.workbench}>
+      <div className="cc-desk">
         <SectionHeading variant="banner" level={2} title={copy.writ} gloss={copy.writ_gloss} ink="gules"
           count={<StatusChip variant="gules" stamp="label" {...(pending.length ? { tone: 'spot' as const } : {})}>
             {pending.length ? copy.awaiting : state.sealed ? copy.frozen_stamp : copy.waiting}

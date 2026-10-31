@@ -1,6 +1,5 @@
 import { readFileSync } from 'node:fs';
-import { Children, isValidElement, useState } from 'react';
-import type { ChangeEvent, KeyboardEvent, ReactNode } from 'react';
+import { Children, isValidElement, useState, type ChangeEvent, type KeyboardEvent, type ReactNode } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { expect, test, vi } from 'vitest';
 import { ProposalQueue, SimulatedSteward } from '@castle-control/ui/steward';
@@ -354,6 +353,17 @@ test('10,000 lots keep DOM marks bounded at both ends, while the default urn dra
     expect(markup).toContain(scroll_top ? 'data-lot-dot="10000"' : 'data-lot-dot="1"');
     expect(markup).not.toContain(scroll_top ? 'data-lot-dot="1"' : 'data-lot-dot="10000"');
   }
+});
+test('lots-07 paused intake is visible, pressed and holds entries until resumed', async () => {
+  const queue = new ProposalQueue(); const { port } = lotterySession(queue); const before = port.getSnapshot().entries;
+  port.pause(); const markup = html(queue); expect(markup).toContain(copy.paused);
+  const toggle = markup.match(/<button\b[^>]*>[\s\S]*?<\/button>/g)?.find(button => button.includes(copy.resume));
+  expect(toggle).toContain('aria-pressed="true"'); const draw = port.getSnapshot().draw;
+  port.edit({ ...draw, rules: { ...draw.rules, pool: { kind: 'subscribers' } } }); expect(port.getSnapshot().entries).toBe(before);
+  expect(port.getSnapshot().entries).toHaveLength(before.length); expect(port.getSnapshot().notice).toContain('Resume intake');
+  await port.seal(); expect(port.getSnapshot().sealed).toBe(false); port.pause();
+  expect(port.getSnapshot().entries.length).toBeLessThan(before.length); expect(html(queue)).toContain(copy.open);
+  expect(html(queue)).toMatch(/<button[^>]*aria-pressed="false"[^>]*>Pause intake/); await port.seal(); expect(port.getSnapshot().sealed).toBe(true);
 });
 test('generated lookup, preview states, shapes and stores preserve their model semantics', () => {
   const port = createLotsPreview(); const untouched = createLotsPreview();

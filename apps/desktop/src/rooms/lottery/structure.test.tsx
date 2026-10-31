@@ -5,12 +5,71 @@ import { ProposalQueue } from '@castle-control/ui/steward';
 import LotteryRoom from './index.jsx';
 import SealSlot from '../seal-slot/index.jsx';
 import { draftRoll, lotterySession } from './session.js';
-import { fixtureCooldown, fixtureDraws } from '../../lots-fixture.js';
+import { fixtureCooldown, fixtureDraws, fixtureWrit } from '../../lots-fixture.js';
 import { lotsCopy as copy } from '../../lots-copy.js';
+import { createLotsPreview } from '../../lots-model.js';
+import { createCoreLotsPort } from '../../lots-core.js';
+import { ConnectedLotsRoom } from './core.jsx';
+import { FixtureCast } from './result.jsx';
+import { createDrawDisplay } from './display.js';
 
 const snapshot = { mode: 'fixture', phase: 'ready' } as const;
 const render = (queue: ProposalQueue) => renderToStaticMarkup(<LotteryRoom snapshot={snapshot}
   replay={false} queue={queue} seal_slot={<SealSlot chamber="lottery" queue={queue} />} />);
+
+test('lots-09 current writ exposes disclosure state and its controlled section', async () => {
+  const port = createLotsPreview(); await port.seal(); await port.start();
+  const display = createDrawDisplay().getSnapshot();
+  for (const expanded of [false, true, false]) {
+    port.nested(expanded);
+    const html = renderToStaticMarkup(<FixtureCast port={port} hash="simulated-seal" display={display} />);
+    const toggle = html.match(/<button\b[^>]*>[\s\S]*?<\/button>/g)?.find(button =>
+      button.includes(expanded ? copy.journey.close : copy.journey.read));
+    expect(toggle).toContain(`aria-expanded="${expanded}"`);
+    const id = toggle?.match(/aria-controls="([^"]+)"/)?.[1];
+    expect(id).toBeTruthy();
+    expect(html).toContain(`<section id="${id}"`);
+    expect(html).toContain(`<section id="${id}"${expanded ? '' : ' hidden=""'}`);
+  }
+});
+
+test('lots-09 fixture and connected rooms have no names on generic divs', () => {
+  const port = createCoreLotsPort({ mode: 'core', endpoint: 'http://127.0.0.1:3210/', session_token: 'a'.repeat(64) });
+  for (const html of [render(new ProposalQueue()), renderToStaticMarkup(<ConnectedLotsRoom port={port} />)]) {
+    const divs = html.match(/<div\b[^>]*>/g) ?? [];
+    expect(divs.filter(div => div.includes('aria-label=') && !div.includes('role='))).toEqual([]);
+  }
+});
+
+test('lots-09 core proof toggle controls a stable section and waits for an available writ', async () => {
+  const draw = fixtureDraws[0];
+  if (!draw) throw new Error('Missing simulated draw');
+  const run_id = '01ARZ3NDEKTSV4RRFFQ69G5FAV';
+  const responses = new Map<string, unknown>([
+    ['lots.draw.list', { draws: [draw] }], ['lots.draw.check', { result: 'ok', reasons: [] }],
+    ['lots.roll.seal', { draw_id: draw.draw_id, draw_run_id: run_id, sealed: { roll: fixtureWrit.roll, seal: fixtureWrit.seal } }],
+    ['lots.cast', { draw_run_id: run_id, writ_id: '01ARZ3NDEKTSV4RRFFQ69G5FAW',
+      cast: { seal: fixtureWrit.seal, winners: fixtureWrit.winners, label: 'streamer-controlled' } }],
+  ]);
+  const port = createCoreLotsPort({ mode: 'core', endpoint: 'http://127.0.0.1:3210/', session_token: 'a'.repeat(64) },
+    { rpc: async (_endpoint, _session, method) => responses.get(method) });
+  await port.load(); await port.seal(); await port.start();
+  const render = () => renderToStaticMarkup(<ConnectedLotsRoom port={port} />);
+  const toggle = (html: string) => html.match(/<button\b[^>]*>[\s\S]*?<\/button>/g)?.find(button => button.endsWith(`>${copy.core.proof}</button>`));
+  expect(toggle(render())).toContain('disabled=""');
+  responses.set('lots.writ.get', fixtureWrit); await port.recompute();
+  let controlled_id: string | undefined;
+  for (const expanded of [false, true, false]) {
+    port.nested(expanded);
+    const html = render(); const button = toggle(html);
+    expect(button).toContain(`aria-expanded="${expanded}"`);
+    expect(button).not.toContain('disabled=""');
+    const id = button?.match(/aria-controls="([^"]+)"/)?.[1];
+    expect(id).toBeTruthy(); controlled_id ??= id;
+    expect(id).toBe(controlled_id);
+    expect(html).toContain(`<section id="${id}"${expanded ? '' : ' hidden=""'}`);
+  }
+});
 
 test('the seal frame removes only the shell slot top rule and spacing', () => {
   const css = readFileSync(new URL('./room.css', import.meta.url), 'utf8');

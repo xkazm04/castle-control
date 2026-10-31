@@ -103,8 +103,11 @@ export function DrawSetup({ port, on_edit, on_preview }: {
           ['subscriber_only', copy.restrictions[1].label], ['channel_points', copy.pool_options[3].label],
           ['official_rules', copy.template], ['twitch_disclaimer', copy.disclaimer], ['registration_confirmed', copy.registration],
         ] as const).map(([key, label]) => <FieldGroup key={key} label={label} control_id={`lots-${key}`}>
-          <input id={`lots-${key}`} type="checkbox" checked={draw.policy[key]} onChange={event => policy({ [key]: event.currentTarget.checked })} />
+          <input id={`lots-${key}`} type="checkbox" checked={draw.policy[key]}
+            disabled={key === 'subscriber_only' || key === 'channel_points'}
+            onChange={event => policy({ [key]: event.currentTarget.checked })} />
         </FieldGroup>)}
+        <p className="cc-aside">Eligibility is set by Eligible pool. The free !join path still applies.</p>
         <FieldGroup label={copy.prize_value} control_id="lots-prize">
           <input id="lots-prize" type="number" min={0} step="0.01" value={draw.policy.prize_value_usd_cents / 100}
             onChange={event => policy({ prize_value_usd_cents: Math.round(event.currentTarget.valueAsNumber * 100) })} />
@@ -132,7 +135,10 @@ export function DrawSetup({ port, on_edit, on_preview }: {
       </WindowedRows>
     </details>
     <InkButton size="room" disabled={state.sealed || blocked} onClick={on_preview}>{copy.journey.preview}</InkButton>
-    {!state.sealed && <InkButton size="room" onClick={() => port.pause()}>{state.paused ? copy.resume : copy.pause}</InkButton>}
+    {!state.sealed && <>
+      <InkButton size="room" aria-pressed={state.paused} onClick={() => port.pause()}>{state.paused ? copy.resume : copy.pause}</InkButton>
+      <p className="cc-status" role="status">{state.paused ? copy.paused : copy.open}</p>
+    </>}
     <p className="cc-status" role="status">{state.sealed ? copy.journey.frozen : state.notice}</p>
     <p className="cc-aside">{copy.journey.draft_hint}</p>
   </HeraldicCard>;
