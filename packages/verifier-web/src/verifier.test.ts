@@ -5,7 +5,7 @@ import fixture from './simulated-writs.json' with { type: 'json' };
 import { animationCast, sample, verifyDecodedWrit } from './index.ts';
 import { checkWrit, roundNumber, timestamp } from './schema.ts';
 import { checkGeneratedWrits } from './parity-check.ts';
-import { checkFileImports, checkHtml } from './html-check.ts';
+import { checkFileImports, checkHtml, checkImportAnchorIndependence } from './html-check.ts';
 import { sourceFingerprint } from './artifact.ts';
 import * as beacon from './beacon.ts';
 import * as verifier from './index.ts';
@@ -141,4 +141,8 @@ test('self_contained_html_verifies_all_bundled_writs_and_rejects_bad_bls', async
 
 test('offline_file_control_validates_imports_and_never_passes_bad_or_stale_files', async () => {
   await checkFileImports(readFileSync(new URL('../index.html', import.meta.url), 'utf8'));
+});
+
+test('imported official writs verify against the named official chain, whatever the sample order', async () => {
+  await checkImportAnchorIndependence(readFileSync(new URL('../index.html', import.meta.url), 'utf8'));
 });

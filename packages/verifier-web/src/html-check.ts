@@ -1,11 +1,12 @@
 import { Script, createContext } from 'node:vm';
+import { parseJson } from '@castle-control/contract/door';
 import { strict as assert } from 'node:assert';
 import publicWrits from './public-writs.json' with { type: 'json' };
 import fixture from './simulated-writs.json' with { type: 'json' };
 
 type WritFile = { size: number; text: () => Promise<string> };
 type Element = {
-  textContent: string; files?: readonly WritFile[]; click?: () => void; change?: () => void;
+  textContent: string; value?: string; files?: readonly WritFile[]; click?: () => void; change?: () => void;
   addEventListener: (kind: string, fn: () => void) => void;
 };
 function load(source: string): Map<string, Element> {
@@ -77,7 +78,10 @@ export async function checkFileImports(html: string): Promise<void> {
   async function choose(text: string, size = new TextEncoder().encode(text).byteLength): Promise<void> {
     if (!input?.change) throw new Error('Missing file import control');
     input.files = [{ size, text: async () => text }];
+    input.value = 'C:\\fakepath\\writ.json';
     input.change();
+    // A browser fires no change event when the same path is chosen again unless the value is cleared.
+    assert.equal(input.value, '', 'The file control must reset so the same file can be re-selected');
     await settled(elements);
   }
   for (const [writ, expected] of [[fallback, 'streamer-controlled'], [official, 'drand-quicknet']] as const) {
@@ -126,4 +130,29 @@ export async function checkFileImports(html: string): Promise<void> {
   release(JSON.stringify(fallback));
   await new Promise<void>((resolve) => setTimeout(resolve, 100));
   assert.equal(elements.get('output')?.textContent, 'REJECTED');
+}
+
+/** Put a simulated-chain sample where the official one used to sit. */
+function swapped(samples: unknown[]): unknown[] {
+  const copy = [...samples];
+  [copy[0], copy[2]] = [copy[2], copy[0]];
+  return copy;
+}
+
+/** An imported writ must verify against the named official chain, not whichever sample sits at a magic index. */
+export async function checkImportAnchorIndependence(html: string): Promise<void> {
+  const code = /<script type="module">([\s\S]*?)<\/script>/.exec(html)?.[1];
+  const match = code ? /const bundledSamples = (\[[\s\S]*?\]);\n/.exec(code) : null;
+  if (!code || !match?.[1]) throw new Error('Missing embedded verifier samples');
+  const reordered = code.replace(match[1], JSON.stringify(swapped(parseJson(match[1]) as unknown[])));
+  assert.notEqual(reordered, code);
+  const elements = load(reordered);
+  const input = elements.get('#writ-file');
+  const official = publicWrits.cases[0]?.writ;
+  if (!input?.change || !official) throw new Error('Missing import control');
+  const text = JSON.stringify(official);
+  input.files = [{ size: new TextEncoder().encode(text).byteLength, text: async () => text }];
+  input.change();
+  await settled(elements);
+  assert.equal(elements.get('output')?.textContent, 'VERIFIED \u00b7 drand-quicknet');
 }

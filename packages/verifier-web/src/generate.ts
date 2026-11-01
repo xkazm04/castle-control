@@ -60,6 +60,7 @@ const html = `<!doctype html>
 ${licenses} -->
 <script type="module">
 const bundledSamples = ${literal};
+const officialChain = ${JSON.stringify(publicWrits.chain).replaceAll('<', '\\u003c')};
 ${chunk.code.replaceAll('</script', '<\\/script')}
 </script></html>
 `;
