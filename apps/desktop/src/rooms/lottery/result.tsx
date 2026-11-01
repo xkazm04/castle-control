@@ -15,7 +15,6 @@ export function FixtureCast({ port, hash, display }: { port: LotsPort; hash: str
     <p className="cc-aside">{copy.sealed_notice}</p>
     {!state.started && <div className="cc-group">
       <InkButton size="room" disabled={state.casting} onClick={() => { void port.start(); }}>{copy.cast_rehearsal}</InkButton>
-      <InkButton size="room" disabled={state.casting} onClick={() => { void port.start(); }}>{copy.start}</InkButton>
     </div>}
     <p className="cc-status" role="status">{state.notice}</p>
     {state.started && <section aria-label={copy.journey.cast_title}>

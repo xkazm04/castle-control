@@ -265,6 +265,8 @@ test('sealed v1 rehearsal is immutable, appears on this ticket, and recomputes t
   expect(frozen.roll.sealed_at).toBe('2026-10-31T12:00:00Z');
   expect(await sealOf(frozen.roll)).toBe(frozen.seal);
   expect(html(queue)).toContain('Cast the lots · rehearsal');
+  expect(html(queue).split('Cast the lots · rehearsal')).toHaveLength(2);
+  expect(html(queue)).not.toContain('Start simulated draw');
   expect(html(queue)).not.toContain('Draft a new roll');
   await Promise.all([port.start(), port.start()]);
   const writ = port.getSnapshot().writ;
