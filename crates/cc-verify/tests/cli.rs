@@ -2,6 +2,26 @@ use cc_verify::{Entry, SealedRoll};
 use std::{fs, process::Command};
 
 #[test]
+fn cli_separates_usage_and_input_errors_from_verification_failure() {
+    let usage = Command::new(env!("CARGO_BIN_EXE_cc-verify"))
+        .output()
+        .unwrap();
+    let stderr = String::from_utf8(usage.stderr).unwrap();
+    assert_eq!(usage.status.code(), Some(64));
+    assert!(stderr.starts_with("Usage:"), "{stderr}");
+    assert!(!stderr.contains("Unverified"), "{stderr}");
+    let missing = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("no-such-writ.json");
+    let unreadable = Command::new(env!("CARGO_BIN_EXE_cc-verify"))
+        .arg(missing)
+        .output()
+        .unwrap();
+    let stderr = String::from_utf8(unreadable.stderr).unwrap();
+    assert_eq!(unreadable.status.code(), Some(66));
+    assert!(stderr.starts_with("Unreadable input:"), "{stderr}");
+    assert!(!stderr.contains("Unverified"), "{stderr}");
+}
+
+#[test]
 fn cli_accepts_offline_writ_and_rejects_tampering() {
     let seed = [11; 32];
     let sealed = SealedRoll::streamer(
