@@ -54,6 +54,23 @@ struct OAuthError {
     message: String,
 }
 
+/// Refresh failure body; Twitch has used both `error` and `message` for the code.
+#[derive(Deserialize)]
+struct RefreshFailure {
+    error: Option<String>,
+    message: Option<String>,
+}
+
+/// Parsed in one place; an unparseable body is never definitive.
+fn is_invalid_grant(body: &[u8]) -> bool {
+    serde_json::from_slice::<RefreshFailure>(body).is_ok_and(|failure| {
+        [failure.error, failure.message]
+            .into_iter()
+            .flatten()
+            .any(|code| code.trim().eq_ignore_ascii_case("invalid_grant"))
+    })
+}
+
 impl Vault {
     pub async fn request_device(&self) -> Result<DeviceCode, BridgeError> {
         let response = self
@@ -175,6 +192,16 @@ impl Vault {
         persisted
     }
 
+    /// Stop using the login and signal workers, but leave the stored credential untouched.
+    fn require_reauth_locked(&self, state: &mut State) {
+        state.credential = None;
+        state.refresh_at = None;
+        state.revoked = true;
+        state.generation += 1;
+        tracing::warn!("Twitch login needs re-authentication; stored credential kept");
+        self.revoked.send_replace(true);
+    }
+
     pub(super) async fn refresh_locked(&self, state: &mut State) -> Result<(), BridgeError> {
         let credential = state.credential.as_ref().ok_or(BridgeError::Unauthorized)?;
         let response = self
@@ -190,7 +217,14 @@ impl Vault {
             .map_err(|_| BridgeError::Unavailable("refresh transport failed"))?;
         let status = response.status();
         if matches!(status.as_u16(), 400 | 401) {
-            self.invalidate_locked(state).await?;
+            // Only a definitive invalid_grant destroys the stored login. Anything else
+            // (unknown 400, unparseable body) keeps it and asks the owner to re-authenticate.
+            let bytes = response.bytes().await.unwrap_or_default();
+            if is_invalid_grant(&bytes) {
+                self.invalidate_locked(state).await?;
+            } else {
+                self.require_reauth_locked(state);
+            }
             return Err(BridgeError::Unauthorized);
         }
         if !status.is_success() {
@@ -241,12 +275,18 @@ impl Vault {
             if identity.client_id != self.client_id
                 || identity.user_id.is_empty()
                 || identity.login.is_empty()
-                || self
-                    .scopes
-                    .split_whitespace()
-                    .any(|scope| !identity.scopes.iter().any(|granted| granted == scope))
             {
                 self.retire(false).await?;
+                return Err(BridgeError::Unauthorized);
+            }
+            if self
+                .scopes
+                .split_whitespace()
+                .any(|scope| !identity.scopes.iter().any(|granted| granted == scope))
+            {
+                // A scope shortfall is fixed by re-authorizing, not by deleting the login.
+                let mut state = self.state.lock().await;
+                self.require_reauth_locked(&mut state);
                 return Err(BridgeError::Unauthorized);
             }
             let mut state = self.state.lock().await;

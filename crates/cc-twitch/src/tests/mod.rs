@@ -14,6 +14,7 @@ mod moderation;
 mod moderation_actions;
 mod moderation_fixtures;
 mod moderation_notifications;
+mod reauth;
 mod safety;
 mod spike_checks;
 mod spike_fixtures;

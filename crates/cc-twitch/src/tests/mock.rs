@@ -162,7 +162,10 @@ pub(super) async fn handle(
                     "expires_in": if m.short_grant.load(Ordering::SeqCst) { 1 } else { 14400 }}),
                 )
             } else {
-                reply(400, json!({"message": "simulated invalid refresh"}))
+                reply(
+                    400,
+                    json!({"status": 400, "error": "invalid_grant", "message": "simulated invalid refresh"}),
+                )
             }
         }
         ("GET", "/oauth2/validate") => {
