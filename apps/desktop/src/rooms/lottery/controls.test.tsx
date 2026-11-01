@@ -145,6 +145,23 @@ test('winner drafts retain raw numbers, explain rejected counts and reset on ext
   ]);
 });
 
+test('cooldown and prize value can be cleared and retyped without committing an empty value', () => {
+  const port = createLotsPreview(); port.select('free-prize');
+  const cooldown = port.getSnapshot().draw.rules.cooldown_s;
+  const cents = port.getSnapshot().draw.policy.prize_value_usd_cents;
+  setupSequence(port, [
+    tree => { change(tree, 'lots-cooldown', ''); },
+    tree => { expect(field(tree, 'lots-cooldown').value).toBe('');
+      expect(port.getSnapshot().draw.rules.cooldown_s).toBe(cooldown); change(tree, 'lots-cooldown', '45'); },
+    tree => { expect(field(tree, 'lots-cooldown').value).toBe('45');
+      expect(port.getSnapshot().draw.rules.cooldown_s).toBe(45); change(tree, 'lots-prize', ''); },
+    tree => { expect(field(tree, 'lots-prize').value).toBe('');
+      expect(port.getSnapshot().draw.policy.prize_value_usd_cents).toBe(cents); change(tree, 'lots-prize', '12.5'); },
+    tree => { expect(field(tree, 'lots-prize').value).toBe('12.5');
+      expect(port.getSnapshot().draw.policy.prize_value_usd_cents).toBe(1250); },
+  ]);
+});
+
 test('all style presets and every anchor/size/colour render from session parameters', () => {
   const display = createDrawDisplay();
   for (const style of styles) for (const size of ['S', 'M', 'L'] as const)
