@@ -15,7 +15,7 @@ pub enum Pool {
 
 /// Supplied by the future post-verdict adapter; membership/cohorts must come
 /// from verified metadata, never claims in message text. No monetary units.
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct MessageFacts {
     pub message_id: MessageId,
     pub user_id: TwitchUserId,
@@ -28,9 +28,31 @@ pub struct MessageFacts {
     pub cohorts: BTreeSet<String>,
 }
 
+/// Shape only: chat text and cohort names never reach logs through `{:?}`.
+impl std::fmt::Debug for MessageFacts {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("MessageFacts")
+            .field("message_id", &self.message_id)
+            .field("user_id", &self.user_id)
+            .field("at", &self.at)
+            .field("text_chars", &self.text.chars().count())
+            .field("follower", &self.follower)
+            .field("subscriber", &self.subscriber)
+            .field("redeemed", &self.redeemed)
+            .field("activity_units", &self.activity_units)
+            .field("cohorts", &self.cohorts.len())
+            .finish()
+    }
+}
+
 /// Private payload; there is no constructor that skips the verdict check.
-#[derive(Debug)]
 pub struct PassedMessage(MessageFacts);
+
+impl std::fmt::Debug for PassedMessage {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_tuple("PassedMessage").field(&self.0).finish()
+    }
+}
 
 impl PassedMessage {
     pub fn from_verdict(message: MessageFacts, verdict: Verdict) -> Result<Self> {
