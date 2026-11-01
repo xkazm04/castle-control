@@ -308,3 +308,33 @@ fn fixture_root_refuses_previously_armed_user_rules() {
     let result = Registry::with_fixture_root(root.path(), Arc::new(EventHub::new(64).unwrap()));
     assert_eq!(result.err().unwrap().code, ErrorCode::BlockedByPolicy);
 }
+
+#[tokio::test]
+async fn offline_registration_lets_the_armed_rail_change_only_its_delivery() {
+    let app = AppState::new(Registry::with_status(), 64).unwrap();
+    let rules = rpc(&app.registry, "gatehouse.rules.list", json!({})).await;
+    let mut rail = rules["rules"][0].clone();
+    assert_eq!(rail["rule_class"], "rail");
+    rail["delivery"] = json!("simulated-moderators");
+    let saved = rpc(
+        &app.registry,
+        "gatehouse.rules.upsert",
+        json!({"rule": rail}),
+    )
+    .await;
+    assert_eq!(saved["delivery"], "simulated-moderators");
+    // Any other armed upsert stays refused offline.
+    let mut other = rail.clone();
+    other["rule_id"] = json!("armed-pattern");
+    other["rule_class"] = json!("pattern");
+    other["pattern"] = json!("simulated");
+    assert_eq!(
+        error(
+            &app.registry,
+            "gatehouse.rules.upsert",
+            json!({"rule": other})
+        )
+        .await,
+        ErrorCode::BlockedByPolicy
+    );
+}

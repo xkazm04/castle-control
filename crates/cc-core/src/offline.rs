@@ -221,7 +221,12 @@ impl Module for OfflineModule {
             // The standalone domain service retains its existing testable semantics.
             let arming = match request {
                 RpcRequest::RulesSetMode(params) => params.mode == RuleMode::Armed,
-                RpcRequest::RulesUpsert(params) => params.rule.mode == RuleMode::Armed,
+                // The rail is always armed and only its delivery is configurable, so
+                // the domain service alone decides whether an upsert may change it.
+                RpcRequest::RulesUpsert(params) => {
+                    params.rule.mode == RuleMode::Armed
+                        && params.rule.rule_class != cc_types::RuleClass::Rail
+                }
                 _ => false,
             };
             if arming {
