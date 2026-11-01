@@ -116,10 +116,14 @@ impl Store {
     pub fn map_user(&mut self, user_id: TwitchUserId, login: &str) -> Result<()> {
         self.ready()?;
         let login = crate::types::login(login)?;
-        // Keep prior login aliases until forget_user, so old recordings remain findable.
+        // Owner history: a reassigned login keeps the previous owner's row, so
+        // that user's data stays reachable (forget_user_id). The newest row
+        // for a login is its current owner.
         self.conn.execute(
-            "INSERT INTO viewer_mappings (user_id,login) VALUES (?1,?2)
-            ON CONFLICT(login) DO UPDATE SET user_id=excluded.user_id",
+            "INSERT INTO viewer_mappings (seq,user_id,login)
+            VALUES ((SELECT COALESCE(MAX(seq),0)+1 FROM viewer_mappings),?1,?2)
+            ON CONFLICT(user_id,login) DO UPDATE SET
+              seq=(SELECT MAX(seq)+1 FROM viewer_mappings)",
             params![user_id.as_str(), login],
         )?;
         Ok(())
@@ -131,7 +135,7 @@ impl Store {
         let raw: Option<String> = self
             .conn
             .query_row(
-                "SELECT user_id FROM viewer_mappings WHERE login=?1",
+                "SELECT user_id FROM viewer_mappings WHERE login=?1 ORDER BY seq DESC LIMIT 1",
                 [login],
                 |row| row.get(0),
             )

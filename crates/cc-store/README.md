@@ -3,7 +3,7 @@
 Standalone Rust library for Castle Control's local viewer data, audit ledgers and
 retention. No network or bridge dependency; an internal `cc-types` path dependency
 reuses the validated art credit and call-ID types. SQLite uses bundled
-rusqlite 0.38. `Store::open(directory)` migrates the database (`user_version = 3`),
+rusqlite 0.38. `Store::open(directory)` migrates the database (`user_version = 4`),
 checks the inventory and ledgers, and holds an exclusive OS file lock until drop.
 Share one `Store` through a mutex; a second writer to the directory is refused.
 
@@ -34,7 +34,7 @@ All five viewer-data stores accept `StoredItem`: ULID `id`, UTC `at`, nonempty
 `map_user` first; unmapped IDs and empty associations are refused. Pass **every**
 viewer represented by a shared item in `user_ids`: forgetting any one of them
 deletes the entire item, including its content. Login lookup is case insensitive.
-Renames retain old aliases; reassignment of a login replaces that alias's ID.
+Renames retain old aliases. Reassigning a login to another user keeps the previous owner's row (schema v4); the newest owner is the login's current owner. `forget_user(login)` erases only that current owner; `forget_user_id` erases a user whose every login moved on.
 An unknown login has zero matches. `items(DataStore)` reads validated viewer
 items only, preserving existing Lot Chamber proof readers.
 
