@@ -77,6 +77,7 @@ impl ShadowPipeline {
                                 return Err(error);
                             }
                             tracing::warn!(code = ?error.code, "live chat item skipped");
+                            continue;
                         }
                         gap = None;
                         // Overflow may have happened while the model waited.
@@ -142,6 +143,12 @@ impl ShadowPipeline {
             },
         )?;
         Ok(())
+    }
+
+    /// True from revoke until restart: the lane refuses chat and the stores stay
+    /// purged, so callers must not present the session as usable.
+    pub(crate) fn is_revoked(&self) -> bool {
+        self.revoked.load(Ordering::Acquire)
     }
 
     pub(crate) async fn revoke(&self) -> Result<(), ErrorEnvelope> {

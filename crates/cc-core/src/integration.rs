@@ -1,6 +1,7 @@
 use crate::{
     AppState, EventHub, LoginPresenter, Module, Registry, bridge_status, forward_bridge_event,
 };
+mod auth;
 pub(crate) mod intake;
 mod obs_probe;
 mod render;
@@ -296,18 +297,12 @@ impl NativeServices {
         result.map_err(obs_error)
     }
     fn auth_status(&self) -> TwitchAuthStatus {
-        let state = self.bridge.status().state;
-        let connected = state == BridgeState::Connected;
-        TwitchAuthStatus {
-            connected,
-            pending: state == BridgeState::Connecting,
-            user_id: None,
-            scopes: if connected {
-                self.scopes.clone()
-            } else {
-                vec![]
-            },
-        }
+        let locked = self
+            .pipeline
+            .get()
+            .and_then(Weak::upgrade)
+            .is_some_and(|pipeline| pipeline.is_revoked());
+        auth::auth_status_for(self.bridge.status().state, &self.scopes, locked)
     }
 }
 impl Module for NativeServices {
