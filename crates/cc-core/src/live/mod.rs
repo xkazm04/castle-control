@@ -10,6 +10,7 @@ use std::sync::{
 };
 use tokio::{sync::broadcast, task::JoinHandle};
 mod beacon;
+mod erase;
 pub(crate) use beacon::NoBeacon;
 
 /// No configured local model: the fast lane never constructs a CLI backend or
@@ -156,9 +157,14 @@ impl ShadowPipeline {
         // Wait for the current verdict before erasure; queued messages cannot
         // race a purge and repopulate the stores afterwards.
         let _serial = self.serial.lock().await;
-        self.gatehouse.purge_live_data().await?;
-        self.lots.purge_live_data()?;
-        self.beacons.purge_live_data()
+        // Every purge step runs even if an earlier one failed, so viewer data
+        // cannot survive a revoke; failures are reported together by step name.
+        let gatehouse = self.gatehouse.purge_live_data().await;
+        erase::collect(vec![
+            ("gatehouse", gatehouse),
+            ("lots", self.lots.purge_live_data()),
+            ("beacons", self.beacons.purge_live_data()),
+        ])
     }
 }
 
