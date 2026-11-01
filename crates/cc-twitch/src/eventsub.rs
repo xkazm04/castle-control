@@ -184,7 +184,8 @@ impl TwitchBridge {
             Ok::<(), BridgeError>(())
         };
         let mut last_seen = crate::now();
-        let mut deadline = Instant::now() + self.ep.time_unit * (keepalive_s as u32 + 5);
+        let mut deadline =
+            Instant::now() + self.ep.time_unit * (u32::try_from(keepalive_s).unwrap_or(600) + 5);
         tokio::pin!(subscriptions);
         loop {
             tokio::select! {
@@ -193,7 +194,7 @@ impl TwitchBridge {
                     let frame = result?;
                     self.deliver(frame, topics).await?;
                     last_seen = crate::now();
-                    deadline = Instant::now() + self.ep.time_unit * (keepalive_s as u32 + 5);
+                    deadline = Instant::now() + self.ep.time_unit * (u32::try_from(keepalive_s).unwrap_or(600) + 5);
                 }
             }
         }
@@ -220,7 +221,8 @@ impl TwitchBridge {
             match result {
                 Ok(()) => {
                     last_seen = crate::now();
-                    deadline = Instant::now() + self.ep.time_unit * (keepalive_s as u32 + 5);
+                    deadline = Instant::now()
+                        + self.ep.time_unit * (u32::try_from(keepalive_s).unwrap_or(600) + 5);
                 }
                 Err(error) => {
                     *from = Some(last_seen);
@@ -313,10 +315,13 @@ impl TwitchBridge {
             Frame::Revocation(status) => {
                 if status == "authorization_revoked" {
                     self.vault.retire(false).await?;
+                    Err(BridgeError::Unauthorized)
+                } else {
+                    // The login stays valid: only this subscription went away.
+                    Err(BridgeError::Invalid("EventSub subscription revoked"))
                 }
-                Err(BridgeError::Unauthorized)
             }
-            Frame::Keepalive => Ok(()),
+            Frame::Keepalive | Frame::Quarantined => Ok(()),
             _ => Err(BridgeError::Unavailable(
                 "unexpected EventSub session frame",
             )),

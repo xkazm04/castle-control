@@ -18,3 +18,4 @@ mod spike_checks;
 mod spike_fixtures;
 mod spike_live;
 mod spike_session;
+mod wire_hardening;

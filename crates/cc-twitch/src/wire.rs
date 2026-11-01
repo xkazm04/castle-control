@@ -21,6 +21,8 @@ pub(crate) enum Frame {
         event: Value,
     },
     Revocation(String),
+    /// A moderation notification that failed its typed schema; dropped alone.
+    Quarantined,
 }
 
 #[derive(Deserialize)]
@@ -88,7 +90,7 @@ pub(crate) fn parse_frame(text: &str) -> Result<Frame, BridgeError> {
                         .session
                         .keepalive_timeout_seconds
                         .unwrap_or(10)
-                        .max(1),
+                        .clamp(1, 600),
                 })
             }
         }
@@ -98,11 +100,12 @@ pub(crate) fn parse_frame(text: &str) -> Result<Frame, BridgeError> {
                 serde_json::from_value(env.payload).map_err(|_| invalid())?;
             let kind = env.metadata.subscription_type.ok_or_else(invalid)?;
             let event = Value::Object(payload.event);
-            crate::moderation::parse_notification(
-                &kind,
-                env.metadata.subscription_version.as_deref(),
-                &event,
-            )?;
+            let version = env.metadata.subscription_version.as_deref();
+            if crate::moderation::parse_notification(&kind, version, &event).is_err() {
+                // Kind and version only: the payload may carry viewer text.
+                tracing::warn!(kind = %kind, version = ?version, "Quarantined unparseable moderation notification");
+                return Ok(Frame::Quarantined);
+            }
             Ok(Frame::Notification {
                 id: env.metadata.message_id,
                 at: env

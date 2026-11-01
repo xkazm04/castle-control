@@ -129,6 +129,10 @@ async fn wire_boundary_delivers_typed_notifications_without_a_live_gate() {
         assert!(notification.moderation().expect("typed view").is_some());
         assert!(notification.chat.is_none());
         wire["metadata"]["subscription_version"] = json!("future");
-        assert!(parse_frame(&wire.to_string()).is_err());
+        // Schema drift is quarantined as one dropped frame, never delivered.
+        let drifted = parse_frame(&wire.to_string()).expect("quarantined frame");
+        assert!(matches!(drifted, crate::wire::Frame::Quarantined));
+        p.deliver(drifted, &topics).await.expect("quarantine");
+        assert!(rx.try_recv().is_err());
     }
 }
