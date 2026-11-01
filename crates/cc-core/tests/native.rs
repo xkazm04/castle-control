@@ -145,6 +145,14 @@ async fn native_registry_serves_reads_and_revoke_purges_the_real_store() {
     let request = parse_request(br#"{"method":"settings.get","params":{}}"#).unwrap();
     assert_eq!(app.registry.dispatch(&request).await.unwrap(), settings);
     assert!(app.registry.methods().contains(&"beacons.source.url"));
+    for method in [
+        "obs.connect",
+        "obs.scene.ensure",
+        "obs.rehearsal.clear",
+        "lots.source.url",
+    ] {
+        assert!(app.registry.methods().contains(&method));
+    }
     let request = parse_request(br#"{"method":"lots.draw.list","params":{}}"#).unwrap();
     assert_eq!(
         app.registry.dispatch(&request).await.unwrap(),

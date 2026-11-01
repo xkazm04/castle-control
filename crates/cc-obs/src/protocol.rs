@@ -36,9 +36,45 @@ pub(crate) struct Response {
     pub request_type: String,
     pub request_id: String,
     pub request_status: RequestStatus,
-    #[serde(default)]
+    #[serde(default = "empty_response")]
     pub response_data: Value,
 }
+fn empty_response() -> Value {
+    json!({})
+}
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CreatedInput {
+    pub input_uuid: String,
+    pub scene_item_id: i64,
+}
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CreatedScene {
+    pub scene_uuid: String,
+}
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Scene {
+    pub scene_name: String,
+}
+#[derive(Debug, Deserialize)]
+pub struct SceneList {
+    pub scenes: Vec<Scene>,
+}
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SceneItem {
+    pub scene_item_id: i64,
+    pub source_name: String,
+}
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SceneItems {
+    pub scene_items: Vec<SceneItem>,
+}
+#[derive(Debug, Deserialize)]
+pub struct EmptyResponse {}
 #[derive(Deserialize)]
 pub(crate) struct RequestStatus {
     pub result: bool,

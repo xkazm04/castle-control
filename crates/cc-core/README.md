@@ -626,3 +626,46 @@ Validation on the approved delivery scope:
 ## WP 3.4 art
 
 Credit-priced Leonardo calls use the existing ArtCredits ledger; the receipt-shape decision is parked for the owner: A, ImageProviderCost amount becomes a Credits-or-MicroUsd enum with a read-compatible migration; B, a second ledger variant for dollar-only receipts; C, keep remove-bg out of the product; remove-bg returns Unavailable until the owner rules.
+
+## D3a OBS rehearsal adapters
+
+Native services register exactly four additional existing contract methods:
+`obs.connect`, `obs.scene.ensure`, `obs.rehearsal.clear` and `lots.source.url`.
+Source creation now captures OBS's input UUID and scene item ID. The overlay URL
+uses `OverlayPage::Lots` and the isolated owned overlay listener. All four methods
+refuse socket-free/fixture registries with the existing native-adapters error.
+No `cc-types`, contract mirror or identifier changed.
+
+The native OBS mutex owns connection/reconnect state and the ownership ledger.
+A successful `obs.connect` probes GetVersion before replacing the old connection;
+a failed attempt leaves the previous target intact. `remember: false` never calls
+the injected password writer. `remember: true` writes only the configured label in
+`castlecontrol-obs` after authentication/probe success. Host validation accepts
+loopback, RFC 1918, IPv6 unique-local and link-local literals (including bracketed
+IPv6), or an ASCII DNS hostname. Schemes, paths, userinfo, public address literals,
+numeric resolver shorthand and zero ports fail with the existing Invalid code.
+
+The ledger is `<data-root>/obs/ownership.json`, outside cc-store's closed native
+file inventory. Writes follow the existing atomic JSON settings pattern. Records
+are scoped to a canonical endpoint, preventing another OBS server from receiving
+cleanup for this server. Passwords stay in `Zeroizing<String>` in memory; diagnostic
+and event payloads never contain connection data. On restart the keychain is the
+credential source; ephemeral credentials require re-entry.
+
+The D3a review correction copies the borrowed RPC password directly into an
+already-zeroizing buffer before awaiting the OBS mutex. `Connection::configure`
+consumes that `Zeroizing<String>` buffer without a plain String duplicate.
+`zeroize` is now a normal core dependency; its existing locked version is unchanged.
+
+`tests/obs_rehearsal.rs` adds generated simulated acceptance cases for authenticated
+memory connect/reconnect; password exclusion from serialized status/events/errors,
+Debug and captured logs; the configured keychain label and zero writes without
+remember; invalid endpoint errors; failed-connect state preservation; UUID ledger
+persistence under the native root; scene ensure/clear RPC wiring; Lots URLs and
+fixture refusals. `tests/native.rs` checks the added inventory and
+`tests/steward.rs` updates the declared/registered count. Adapter ownership tests
+in cc-obs cover restart and foreign/missing-item cleanup.
+
+Per the brief, the builder did not run Cargo, browsers or the Cargo-backed pnpm
+gate. The Director must run `cargo test -p cc-obs -p cc-core`, frozen install and
+`pnpm gate`. No owner OBS connection, scene change or visual sign-off is claimed.

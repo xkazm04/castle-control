@@ -81,7 +81,14 @@ async fn simulated_scene_is_caller_supplied() {
         for scene in ["Scene", "simulated-alternative-scene"] {
             let request = frame(&mut socket).await;
             assert_eq!(request["d"]["requestData"]["sceneName"], scene);
-            send(&mut socket, response(&request, json!({"sceneItemId":1}))).await;
+            send(
+                &mut socket,
+                response(
+                    &request,
+                    json!({"sceneItemId":1,"inputUuid":"simulated-input-uuid"}),
+                ),
+            )
+            .await;
         }
     });
     for scene in ["Scene", "simulated-alternative-scene"] {
@@ -103,14 +110,17 @@ async fn simulated_status_codes() {
         let mut socket = peer.await.unwrap();
         for (result, code) in statuses {
             let request = frame(&mut socket).await;
-            let mut reply = response(&request, json!({}));
+            let mut reply = response(
+                &request,
+                json!({"sceneItemId":1,"inputUuid":"simulated-input-uuid"}),
+            );
             reply["d"]["requestStatus"] = json!({"result":result,"code":code});
             send(&mut socket, reply).await;
         }
     });
     for (result, code) in statuses {
         assert_eq!(
-            client.create_browser_source(&source()).await,
+            client.create_browser_source(&source()).await.map(|_| ()),
             if result && code == 100 {
                 Ok(())
             } else {

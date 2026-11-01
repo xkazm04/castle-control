@@ -1,3 +1,4 @@
+use crate::protocol::{CreatedInput, CreatedScene, EmptyResponse, SceneItems, SceneList};
 use crate::protocol::{Frame, Hello, Response, authentication};
 use crate::{BrowserSource, Error, Version};
 use futures::{SinkExt, StreamExt};
@@ -16,13 +17,24 @@ pub struct Config {
 pub trait PasswordReader: Send + Sync {
     fn read(&self, label: &str) -> Result<Zeroizing<String>, Error>;
 }
-struct Keychain;
+pub trait PasswordStore: PasswordReader {
+    fn write(&self, label: &str, password: &str) -> Result<(), Error>;
+}
+pub struct Keychain;
 impl PasswordReader for Keychain {
     fn read(&self, label: &str) -> Result<Zeroizing<String>, Error> {
         keyring::Entry::new("castlecontrol-obs", label)
             .map_err(|_| Error::Keychain)?
             .get_password()
             .map(Zeroizing::new)
+            .map_err(|_| Error::Keychain)
+    }
+}
+impl PasswordStore for Keychain {
+    fn write(&self, label: &str, password: &str) -> Result<(), Error> {
+        keyring::Entry::new("castlecontrol-obs", label)
+            .map_err(|_| Error::Keychain)?
+            .set_password(password)
             .map_err(|_| Error::Keychain)
     }
 }
@@ -42,14 +54,21 @@ impl Client {
         config: &Config,
         reader: &dyn PasswordReader,
     ) -> Result<Self, Error> {
+        Self::connect_at_with_reader("127.0.0.1", config, reader).await
+    }
+    pub async fn connect_at_with_reader(
+        host: &str,
+        config: &Config,
+        reader: &dyn PasswordReader,
+    ) -> Result<Self, Error> {
+        let endpoint = crate::connection::endpoint(host, config.port)?;
         if config.port == 0 || config.password_label.trim().is_empty() {
             return Err(Error::Invalid);
         }
         tokio::time::timeout(BUDGET, async {
-            let (socket, _) =
-                tokio_tungstenite::connect_async(format!("ws://127.0.0.1:{}", config.port))
-                    .await
-                    .map_err(|_| Error::Transport)?;
+            let (socket, _) = tokio_tungstenite::connect_async(endpoint)
+                .await
+                .map_err(|_| Error::Transport)?;
             let mut client = Self {
                 socket,
                 sequence: 0,
@@ -91,11 +110,49 @@ impl Client {
         }
         Ok(version)
     }
-    pub async fn create_browser_source(&mut self, source: &BrowserSource) -> Result<(), Error> {
-        self.request("CreateInput", source.request()?).await?;
-        Ok(())
+    pub async fn create_browser_source(
+        &mut self,
+        source: &BrowserSource,
+    ) -> Result<CreatedInput, Error> {
+        self.typed("CreateInput", source.request()?, false).await
+    }
+    pub async fn get_scene_list(&mut self) -> Result<SceneList, Error> {
+        self.typed("GetSceneList", json!({}), false).await
+    }
+    pub async fn create_scene(&mut self, name: &str) -> Result<CreatedScene, Error> {
+        self.typed("CreateScene", json!({"sceneName": name}), false)
+            .await
+    }
+    pub async fn remove_input(&mut self, uuid: &str) -> Result<EmptyResponse, Error> {
+        self.typed("RemoveInput", json!({"inputUuid": uuid}), true)
+            .await
+    }
+    pub async fn remove_scene(&mut self, name: &str) -> Result<EmptyResponse, Error> {
+        self.typed("RemoveScene", json!({"sceneName": name}), true)
+            .await
+    }
+    pub async fn get_scene_item_list(&mut self, name: &str) -> Result<SceneItems, Error> {
+        self.typed("GetSceneItemList", json!({"sceneName": name}), true)
+            .await
+    }
+    async fn typed<T: serde::de::DeserializeOwned>(
+        &mut self,
+        kind: &str,
+        data: Value,
+        missing: bool,
+    ) -> Result<T, Error> {
+        let value = self.request_inner(kind, data, missing).await?;
+        serde_json::from_value(value).map_err(|_| Error::Protocol)
     }
     async fn request(&mut self, kind: &str, data: Value) -> Result<Value, Error> {
+        self.request_inner(kind, data, false).await
+    }
+    async fn request_inner(
+        &mut self,
+        kind: &str,
+        data: Value,
+        missing: bool,
+    ) -> Result<Value, Error> {
         // Exclusive &mut access serializes requests; both ID and type must correlate.
         self.sequence = self.sequence.checked_add(1).ok_or(Error::Protocol)?;
         let id = format!("cc-{}", self.sequence);
@@ -121,6 +178,12 @@ impl Client {
                     return Err(Error::Protocol);
                 }
                 if !response.request_status.result || response.request_status.code != 100 {
+                    if missing
+                        && !response.request_status.result
+                        && response.request_status.code == 600
+                    {
+                        return Err(Error::Missing);
+                    }
                     return Err(Error::Rejected);
                 }
                 return Ok(response.response_data);

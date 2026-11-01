@@ -2,9 +2,10 @@ use crate::{
     AppState, EventHub, LoginPresenter, Module, Registry, bridge_status, forward_bridge_event,
 };
 pub(crate) mod intake;
+mod obs;
 mod obs_probe;
 mod render;
-use cc_obs::{BrowserSource, Client, Config as ObsConfig, Overlay};
+use cc_obs::{Config as ObsConfig, Overlay};
 use cc_store::Store;
 use cc_twitch::{BridgeError, BridgeState, RevocationHandler, TwitchBridge, TwitchConfig};
 use cc_types::{
@@ -34,8 +35,8 @@ pub struct NativeServices {
     pub(crate) art_catalog: Arc<crate::beacons::ArtCatalog>,
     pub bridge: Arc<TwitchBridge>,
     pub store: Arc<Mutex<Store>>,
-    obs: AsyncMutex<Option<Client>>,
-    obs_config: ObsConfig,
+    obs: AsyncMutex<obs::State>,
+    obs_root: OnceLock<std::path::PathBuf>,
     overlay: Overlay,
     render: Arc<crate::overlay::RenderHost>,
     presenter: LoginPresenter,
@@ -82,12 +83,26 @@ impl NativeServices {
         "auth.twitch.revoke",
         "obs.status.get",
         "obs.source.create",
+        "obs.connect",
+        "obs.scene.ensure",
+        "obs.rehearsal.clear",
+        "lots.source.url",
     ];
     /// No Twitch/OBS connection until attach/login/probe; overlay is a separate origin.
     pub async fn new(
         config: NativeConfig,
         store: Store,
         presenter: LoginPresenter,
+    ) -> Result<Arc<Self>, ErrorEnvelope> {
+        Self::new_with_obs_password_store(config, store, presenter, Arc::new(cc_obs::Keychain))
+            .await
+    }
+    /// Injectable credential door; simulated peers never touch the OS keychain.
+    pub async fn new_with_obs_password_store(
+        config: NativeConfig,
+        store: Store,
+        presenter: LoginPresenter,
+        passwords: Arc<dyn cc_obs::PasswordStore>,
     ) -> Result<Arc<Self>, ErrorEnvelope> {
         let scopes = cc_twitch::scopes::MODULE_SCOPES
             .iter()
@@ -117,8 +132,8 @@ impl NativeServices {
             render,
             presenter,
             scopes,
-            obs_config: config.obs,
-            obs: AsyncMutex::new(None),
+            obs: AsyncMutex::new(obs::State::new(config.obs, passwords)),
+            obs_root: OnceLock::new(),
             started: Instant::now(),
             chat: broadcast::channel(256).0,
             workers: Mutex::new(Vec::new()),
@@ -172,6 +187,11 @@ impl NativeServices {
                 "bridge already attached",
             ));
         }
+        if let Some(root) = root {
+            self.obs_root
+                .set(root.join("obs"))
+                .map_err(|_| internal())?;
+        }
         let events = Arc::new(EventHub::new(capacity)?);
         let registry = match root {
             Some(root) => {
@@ -220,60 +240,6 @@ impl NativeServices {
                 .await
                 .map_err(bridge_error)?,
         )
-    }
-    pub async fn obs_status(&self) -> Result<bool, ErrorEnvelope> {
-        let result = self.probe_obs().await;
-        self.observe_obs(result.is_ok())?;
-        result
-    }
-    fn observe_obs(&self, connected: bool) -> Result<(), ErrorEnvelope> {
-        if self.obs_connected.swap(connected, Ordering::Relaxed) != connected
-            && let Some(events) = self.events.get().and_then(Weak::upgrade)
-        {
-            events.publish(EventKind::ObsStatus)?;
-        }
-        Ok(())
-    }
-    async fn probe_obs(&self) -> Result<bool, ErrorEnvelope> {
-        let mut client = self.obs.lock().await;
-        if client.is_none() {
-            *client = Some(Client::connect(&self.obs_config).await.map_err(obs_error)?);
-        }
-        let result = client.as_mut().ok_or_else(internal)?.get_version().await;
-        if result.is_err() {
-            *client = None;
-            self.observe_obs(false)?;
-        }
-        result.map(|_| true).map_err(obs_error)
-    }
-    pub async fn create_source(
-        &self,
-        params: &cc_types::ObsSourceParams,
-    ) -> Result<(), ErrorEnvelope> {
-        if !self.render.owns_source(&self.overlay_url(), &params.url) {
-            return Err(ErrorEnvelope::new(
-                ErrorCode::Invalid,
-                "source must use the owned overlay origin",
-            ));
-        }
-        self.obs_status().await?;
-        let mut client = self.obs.lock().await;
-        let result = client
-            .as_mut()
-            .ok_or_else(internal)?
-            .create_browser_source(&BrowserSource {
-                scene_name: params.scene_name.clone(),
-                source_name: params.source_name.clone(),
-                url: params.url.clone(),
-                width: params.width,
-                height: params.height,
-            })
-            .await;
-        if result.is_err() {
-            *client = None;
-        }
-        self.observe_obs(result.is_ok())?;
-        result.map_err(obs_error)
     }
     fn auth_status(&self) -> TwitchAuthStatus {
         let state = self.bridge.status().state;
@@ -325,6 +291,28 @@ impl Module for NativeServices {
                 }
                 RpcRequest::ObsStatusGet(_) => encode(ObsStatus {
                     connected: self.obs_status().await.unwrap_or(false),
+                }),
+                RpcRequest::ObsConnect(params) => {
+                    self.connect_obs(params).await?;
+                    encode(ObsStatus { connected: true })
+                }
+                RpcRequest::ObsSceneEnsure(params) => encode(cc_types::ObsSceneEnsureResult {
+                    created: self.ensure_obs_scene(&params.scene_name).await?,
+                }),
+                RpcRequest::ObsRehearsalClear(_) => encode(cc_types::ObsRehearsalClearResult {
+                    removed: self.clear_obs_rehearsal().await?,
+                }),
+                RpcRequest::LotsSourceUrl(params) => encode(cc_types::SourceUrlResult {
+                    url: format!(
+                        "{}{}",
+                        self.overlay_url().trim_end_matches('/'),
+                        cc_obs::pages::OverlayPage::Lots {
+                            draw: params.draw_id.as_str()
+                        }
+                        .path_and_query()
+                    )
+                    .try_into()
+                    .map_err(|_| internal())?,
                 }),
                 RpcRequest::ObsSourceCreate(params) => {
                     self.create_source(params).await?;

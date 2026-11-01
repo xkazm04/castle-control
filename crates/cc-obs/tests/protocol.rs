@@ -108,7 +108,14 @@ async fn beacons_create_input_preserves_display_url_hash_and_both_obs_sizes() {
             assert_eq!(settings["url"], expected_url);
             assert_eq!(settings["width"], width);
             assert_eq!(settings["height"], height);
-            send(&mut socket, response(&request, json!({"sceneItemId":1}))).await;
+            send(
+                &mut socket,
+                response(
+                    &request,
+                    json!({"sceneItemId":1,"inputUuid":"simulated-input-uuid"}),
+                ),
+            )
+            .await;
         }
     });
     for suffix in ["&remote=bad", "&package_hash=bad"] {
@@ -149,7 +156,14 @@ async fn lots_create_input_preserves_the_path_and_presentation_query() {
                 request["d"]["requestData"]["inputSettings"]["url"],
                 format!("http://localhost:43210/lots/simulated-draw{suffix}")
             );
-            send(&mut socket, response(&request, json!({"sceneItemId":1}))).await;
+            send(
+                &mut socket,
+                response(
+                    &request,
+                    json!({"sceneItemId":1,"inputUuid":"simulated-input-uuid"}),
+                ),
+            )
+            .await;
         }
     });
     for suffix in [
