@@ -669,3 +669,41 @@ in cc-obs cover restart and foreign/missing-item cleanup.
 Per the brief, the builder did not run Cargo, browsers or the Cargo-backed pnpm
 gate. The Director must run `cargo test -p cc-obs -p cc-core`, frozen install and
 `pnpm gate`. No owner OBS connection, scene change or visual sign-off is claimed.
+
+## D3c rehearsal vote directions
+
+`app_rehearsal` selects `OfflineModules::rehearsal_at`, which supplies exactly
+three in-memory Herald seeds through the Rust-only
+`Gatehouse::with_clock_and_directions` constructor: `Sample: Castle`,
+`Sample: Forest` and `Sample: Sea`. Ordinary native and offline constructors
+still supply no seeds. This adds no settings, persisted direction configuration
+or contract fields. The desktop host continues to own the separate `rehearsal/`
+data root.
+
+`vote_round` sends 30 generated, SIMULATED ballots through the existing shadow
+pipeline and post-verdict Herald classifier. Castle receives 14..16 ballots,
+Forest 8..10 and Sea the remaining 4..8; arrival order is shuffled each round.
+Shares come from observed ballots, with no direct overlay snapshot injection.
+
+`tests/rehearsal_vote.rs` exercises the registered `app_rehearsal` scenario,
+checks the three labels and bounded counts in consensus, and parses the actual
+vote-bar page snapshot to require three nonzero shares summing to one and
+`simulated: true`. Native regression cases send those same sample keywords
+through a real shadow consumer and require only Other, both on a fresh native
+root and after reopening the rehearsal root as native (proving seeds were not
+persisted).
+
+The night rehearsal flow waits for all 30 vote ballots, then verifies that
+`/gatehouse/current` displays exactly three rows numbered Direction 1, Direction 2
+and Direction 3, each with a nonzero percentage, plus the visible SIMULATED
+badge. It runs this check before Lots and duel chat can add Other. Per the
+Director's decision, the existing shares-only snapshot and numbered page labels
+remain unchanged; sample names stay in consensus. No overlay or renderer change
+has been made as part of this seed injection.
+
+Builder validation: frozen-lockfile install, direct Rust formatting, e2e
+TypeScript checking, all 18 e2e harness tests, and repository boundaries, hygiene,
+type-floor, file-cap and secrets checks pass. Cargo tests, the night browser
+scenario and the Cargo-backed `pnpm gate` were not run, per the brief's Cargo
+restriction. The Director must run `cargo test --locked -p cc-core --test
+rehearsal_vote` and the full gate before accepting the Rust change.

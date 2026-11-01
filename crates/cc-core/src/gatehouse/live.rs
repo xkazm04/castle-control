@@ -1,12 +1,25 @@
 //! Live observation has no moderation executor or bridge reference.
 use super::{GatehouseModule, internal};
-use cc_gatehouse::{Classifier, IngestedMessage, ScreenedMessage};
+use cc_gatehouse::{
+    Classifier, Gatehouse, IngestedMessage, ScreenedMessage, herald::DirectionSeed,
+};
 use cc_types::{BridgeGap, ErrorEnvelope};
 use std::{path::Path, sync::Arc};
 
 impl GatehouseModule {
     pub(crate) fn open_shadow(root: impl AsRef<Path>) -> Result<Self, ErrorEnvelope> {
-        let module = Self::open(root, Arc::new(cc_store::SystemClock))?;
+        Self::open_shadow_with_directions(root, Vec::new())
+    }
+
+    pub(crate) fn open_shadow_with_directions(
+        root: impl AsRef<Path>,
+        seeds: Vec<DirectionSeed>,
+    ) -> Result<Self, ErrorEnvelope> {
+        let module = Self::with_gate(Gatehouse::with_clock_and_directions(
+            root,
+            Arc::new(cc_store::SystemClock),
+            seeds,
+        )?);
         module
             .state
             .try_lock()

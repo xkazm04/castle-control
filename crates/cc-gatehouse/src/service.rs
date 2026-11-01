@@ -42,13 +42,24 @@ impl Gatehouse {
     }
 
     pub fn with_clock(root: impl AsRef<Path>, clock: Arc<dyn Clock>) -> Result<Self> {
+        Self::with_clock_and_directions(root, clock, Vec::new())
+    }
+
+    /// Rust-only composition input. Seeds remain in memory; ordinary constructors
+    /// supply none and never read or write direction settings.
+    pub fn with_clock_and_directions(
+        root: impl AsRef<Path>,
+        clock: Arc<dyn Clock>,
+        seeds: Vec<crate::herald::DirectionSeed>,
+    ) -> Result<Self> {
         let store = Store::open(root.as_ref().join("store")).map_err(internal)?;
         let config_path = root.as_ref().join("rules.json");
         let config = store::load(&config_path)?;
         store::save(&config_path, &config)?;
         Ok(Self {
-            analysis: crate::analysis::Analysis::new(
+            analysis: crate::analysis::Analysis::with_directions(
                 Timestamp::try_from(clock.now().as_rfc3339()).map_err(internal)?,
+                seeds,
             )?,
             store,
             config,

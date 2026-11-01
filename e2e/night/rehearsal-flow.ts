@@ -11,6 +11,28 @@ export const rehearsalVisual = 'simulated-rehearsal-beacon';
 export const rehearsalScene = 'Castle Control · Rehearsal';
 export const rehearsalSourceNames = ['Castle Control · Lot plate', 'Castle Control · Gatehouse vote bar', 'Castle Control · SIMULATED rehearsal beacon'];
 
+async function assertRehearsalVote(page: Page, core: NightCore) {
+  const browser = page.context().browser();
+  if (!browser) throw new Error('Overlay verification requires the night browser');
+  const overlay = await browser.newPage();
+  const verify = await guardPage(overlay, core.overlayOrigin);
+  try {
+    await overlay.goto(`${core.overlayOrigin}/gatehouse/current`);
+    const bar = overlay.getByRole('main', { name: 'Consensus vote bar', exact: true });
+    await expect(bar.locator(':scope > p')).toHaveText('SIMULATED');
+    await expect(bar.locator(':scope > p')).toBeVisible();
+    const rows = bar.locator('.vote-direction');
+    await expect(rows).toHaveCount(3);
+    for (const row of await rows.all()) await expect(row).toBeVisible();
+    await expect(bar.locator('.vote-direction > span')).toHaveText([
+      /^Direction 1 · [1-9]\d?%$/,
+      /^Direction 2 · [1-9]\d?%$/,
+      /^Direction 3 · [1-9]\d?%$/,
+    ]);
+    await overlay.goto('about:blank'); verify();
+  } finally { await overlay.close(); }
+}
+
 /** Leave a populated scene for optional OBS screenshots, then remove through the UI hold. */
 export async function dressRehearsalInUi(page: Page, core: NightCore, beforeClear?: () => Promise<void>) {
   const kinds = new Set<string>();
@@ -43,16 +65,21 @@ export async function dressRehearsalInUi(page: Page, core: NightCore, beforeClea
   const scene = workspace.getByRole('article', { name: 'Rehearsal scene', exact: true });
   await scene.getByRole('button', { name: 'Set up rehearsal scene', exact: true }).click();
   await expect(scene.getByRole('status')).toHaveText('Rehearsal scene is ready.');
+  // Check the vote before Lots/duel chat can add the valid Other direction.
+  await workspace.getByRole('button', { name: 'Run a vote', exact: true }).click();
+  await eventually(() => core.invoke(core.contract.gatehouseConsensusGet, { window_s: 900, filter: { kind: 'all' } }),
+    result => result.directions.length === 3 && result.directions.every(direction => direction.share > 0)
+      && result.directions.reduce((total, direction) => total + direction.messages, 0) === 30);
+  await assertRehearsalVote(page, core);
   await workspace.getByRole('button', { name: 'Fill a Lot', exact: true }).click();
   const draw = await eventually(async () => {
     const list = await core.invoke(core.contract.lotsDrawList, {});
     return list.draws.find(item => item.draw_id.startsWith('simulated-rehearsal-'));
   }, draw => Boolean(draw));
   if (!draw) throw new Error('Missing SIMULATED rehearsal draw');
-  // Fill runs asynchronously. With crowd off, its twentieth generated viewer
-  // proves the complete burst reached Lots before we freeze the roll.
-  await eventually(() => core.invoke(core.contract.lotsRollLookup, { draw_id: draw.draw_id, user_id: '20' }), result => Boolean(result.entry));
-  await workspace.getByRole('button', { name: 'Run a vote', exact: true }).click();
+  // With crowd off, the 30 vote viewers precede the 20 Lot viewers. Viewer 50
+  // proves the complete Fill burst reached Lots before we freeze the roll.
+  await eventually(() => core.invoke(core.contract.lotsRollLookup, { draw_id: draw.draw_id, user_id: '50' }), result => Boolean(result.entry));
   await workspace.getByRole('button', { name: 'Run a duel round', exact: true }).click();
   await workspace.getByRole('combobox', { name: 'Beacon visual', exact: true }).selectOption(rehearsalVisual);
   await workspace.getByRole('button', { name: 'Fire beacon', exact: true }).click();

@@ -1,4 +1,5 @@
 //! Private generated-chat door. No RPC accepts text or caller-supplied identities.
+pub(crate) mod directions;
 mod scenarios;
 #[cfg(test)]
 mod tests;

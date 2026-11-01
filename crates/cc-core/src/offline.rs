@@ -161,7 +161,14 @@ impl OfflineModules {
                             Arc::new(crate::lots::SystemLotsClock),
                             false,
                         )?,
-                        GatehouseModule::open_shadow(root.join("gatehouse"))?,
+                        if self.rehearsal {
+                            GatehouseModule::open_shadow_with_directions(
+                                root.join("gatehouse"),
+                                crate::rehearsal::directions::seeds(),
+                            )?
+                        } else {
+                            GatehouseModule::open_shadow(root.join("gatehouse"))?
+                        },
                     )
                 } else {
                     let recorded = Arc::new(crate::lots::recorded::RecordedBeacon);

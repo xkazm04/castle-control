@@ -2,7 +2,7 @@
 use crate::{Classifier, ClassifierError, Gatehouse, Result, error, recorder::Recorder};
 use crate::{
     drill::{Drill, ExpectedJudge, JudgeIdentity},
-    herald::{HashedWords, Herald, PassedMessage},
+    herald::{DirectionSeed, HashedWords, Herald, PassedMessage},
     simulation::near_miss_bank,
 };
 use cc_types::{
@@ -19,6 +19,10 @@ pub(crate) struct Analysis {
 
 impl Analysis {
     pub(crate) fn new(at: Timestamp) -> Result<Self> {
+        Self::with_directions(at, Vec::new())
+    }
+
+    pub(crate) fn with_directions(at: Timestamp, seeds: Vec<DirectionSeed>) -> Result<Self> {
         let mut drill = Drill::new("rules-only".into());
         drill.register_bank(near_miss_bank())?;
         drill.register_judge(
@@ -33,10 +37,9 @@ impl Analysis {
         )?;
         Ok(Self {
             drill,
-            // No streamer seeds or emote meanings are invented. Until configured,
-            // actually ingested messages can only populate the Other direction.
+            // Directions are supplied by the Rust composition, never persisted.
             herald: Herald::new(
-                Vec::new(),
+                seeds,
                 BTreeMap::new(),
                 Box::new(HashedWords),
                 900.try_into().expect("nonzero history"),

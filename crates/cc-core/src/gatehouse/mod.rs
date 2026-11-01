@@ -46,14 +46,18 @@ impl GatehouseModule {
     /// The caller owns the persistence root and clock. No live adapter is started;
     /// decisions and rule configuration remain owned by the Gatehouse service.
     pub fn open(root: impl AsRef<Path>, clock: Arc<dyn Clock>) -> Result<Self, ErrorEnvelope> {
-        Ok(Self {
+        Ok(Self::with_gate(Gatehouse::with_clock(root, clock)?))
+    }
+
+    fn with_gate(gate: Gatehouse) -> Self {
+        Self {
             state: Arc::new(Mutex::new(Service {
-                gate: Gatehouse::with_clock(root, clock)?,
+                gate,
                 governor: None,
                 failure: None,
             })),
             ticker: None,
-        })
+        }
     }
 
     pub(crate) fn open_offline(root: impl AsRef<Path>) -> Result<Self, ErrorEnvelope> {

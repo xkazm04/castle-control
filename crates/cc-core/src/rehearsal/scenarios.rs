@@ -31,14 +31,12 @@ impl Actions {
                 return Ok(());
             }
         };
+        let ballots =
+            (params.scenario == RehearsalScenario::VoteRound).then(super::directions::ballots);
         for index in 0..count {
             let body = match params.scenario {
                 RehearsalScenario::LotsFill => entry.as_deref().ok_or_else(unavailable)?,
-                // Herald currently ships no configured seeds: these land in Other
-                // through its real post-verdict classifier, rather than invented shares.
-                RehearsalScenario::VoteRound => {
-                    ["vote left", "vote right", "vote forward"][index % 3]
-                }
+                RehearsalScenario::VoteRound => ballots.as_ref().ok_or_else(unavailable)?[index],
                 RehearsalScenario::DuelRound if index % 3 == 2 => "duel ballot right",
                 RehearsalScenario::DuelRound => "duel ballot left",
                 RehearsalScenario::BeaconFire => return Err(unavailable()),
