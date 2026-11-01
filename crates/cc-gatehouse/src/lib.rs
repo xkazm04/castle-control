@@ -10,6 +10,7 @@ mod drill_evaluate;
 mod drill_report;
 mod engine_classifier;
 pub mod gate;
+mod gate_path;
 pub mod governor;
 pub mod herald;
 mod herald_features;
@@ -29,7 +30,8 @@ mod store;
 
 pub use classifier::{Classifier, ClassifierError};
 pub use engine_classifier::EngineClassifier;
-pub use lane::{ActionIntent, GatePath, ScreenedMessage};
+pub use gate_path::GatePath;
+pub use lane::{ActionIntent, ScreenedMessage};
 pub use service::Gatehouse;
 
 impl ScreenedMessage {

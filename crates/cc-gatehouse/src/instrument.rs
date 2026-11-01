@@ -115,6 +115,7 @@ pub(crate) fn inputs(
                 ("rules.rs", include_str!("rules.rs")),
                 ("classifier.rs", include_str!("classifier.rs")),
                 ("lane.rs", include_str!("lane.rs")),
+                ("gate_path.rs", include_str!("gate_path.rs")),
                 ("live_capture.rs", include_str!("live_capture.rs")),
                 ("store.rs", include_str!("store.rs")),
             ]
