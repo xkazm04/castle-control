@@ -76,6 +76,7 @@ impl Gatehouse {
                 Some(&m.rule) == queued.rule_snapshot.as_ref() && m.rule.mode == RuleMode::Armed
             });
         let allowed = self.gate_available
+            && !self.shadow_only
             && (0..REVIEW_TIMEOUT_S).contains(&age)
             && unchanged
             && !original.privileged()
