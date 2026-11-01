@@ -37,5 +37,13 @@ fn intake_deserializations_for_the_next_row_after_history_is_measured() {
     eprintln!(
         "intake_cost: rows={HISTORY} deserializations_for_next_intake={reads} elapsed={elapsed:?}"
     );
+    // Cost is independent of history: the seen set is seeded once from the store.
+    assert_eq!(reads, 0, "intake must not re-read retained history");
+    assert!(!module.intake(row(0)).unwrap(), "duplicates stay refused");
     assert_eq!(module.contributions().unwrap().len(), HISTORY + 1);
+    // A privacy purge clears the set: a fresh module on the purged store holds
+    // no keys, so only the revoked gate refuses further intake.
+    module.purge_live_data().unwrap();
+    assert!(module.state.lock().unwrap().seen.is_none());
+    assert!(module.intake(row(HISTORY + 1)).is_err());
 }

@@ -30,21 +30,31 @@ impl BeaconsModule {
                 "live authorization revoked",
             ));
         }
+        // Taken out of state: any early error leaves None, so the next intake
+        // rebuilds from the store and an unsuccessful write never consumes a key.
+        let cached = state.seen.take();
         let store = &mut state._store;
-        store
+        let purged = store
             .purge_expired(Timestamp::now())
             .map_err(|_| internal())?;
         // Retained rows are the dedupe authority, including across restarts.
-        // Rebuild before inserting: an unsuccessful write never consumes a key.
-        let mut intake = Intake::default();
-        for contribution in read(store)? {
-            intake.accept(&contribution).map_err(|_| internal())?;
-        }
+        // Expiry frees keys, so the set is rebuilt after rows were removed.
+        let mut intake = match cached {
+            Some(intake) if purged.counts.values().all(|count| *count == 0) => intake,
+            _ => {
+                let mut intake = Intake::default();
+                for contribution in read(store)? {
+                    intake.accept(&contribution).map_err(|_| internal())?;
+                }
+                intake
+            }
+        };
         if intake
             .accept(&input.contribution)
             .map_err(|_| internal())?
             .is_none()
         {
+            state.seen = Some(intake);
             return Ok(false);
         }
         let broadcaster =
@@ -83,6 +93,7 @@ impl BeaconsModule {
                 },
             )
             .map_err(|_| internal())?;
+        state.seen = Some(intake);
         // The store accepted this key. Duplicates return before routing, even
         // after a configuration reset or restart clears the engine's state.
         self.route_contribution(&mut state, &input.contribution)?;
@@ -136,6 +147,7 @@ impl BeaconsModule {
             self.cancel_preview(&mut state, &id)?;
         }
         state.engines.clear();
+        state.seen = None;
         state
             ._store
             .purge_all(Timestamp::now())
