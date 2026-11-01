@@ -78,3 +78,17 @@
 {"at":"2026-11-01T20:17:26.524Z","batch":8,"lane":"B","card":"RuleTable re-implements the windowing rule with a different clamp than WindowedR","verdict":"better","note":"instrument before/after + seeded control by worker; combined gates green"}
 {"at":"2026-11-01T20:17:26.524Z","batch":8,"lane":"B","card":"Overlay server task failure is never observed","verdict":"premise-false"}
 {"at":"2026-11-01T20:17:26.524Z","batch":8,"lane":"B","card":"Core Beacons port created by render-phase mutation with swallowed error","verdict":"premise-false"}
+{"at":"2026-11-01T21:05:55.302Z","batch":9,"lane":"C-approved","card":"A definitive seal refusal (blocked_by_policy, invalid, rate_limited) locks the L","verdict":"better"}
+{"at":"2026-11-01T21:05:55.302Z","batch":9,"lane":"C-approved","card":"A single unparseable event makes the event socket reconnect forever and pins the","verdict":"better"}
+{"at":"2026-11-01T21:05:55.302Z","batch":9,"lane":"C-approved","card":"Fixture cast ticket shows two buttons that run the same action","verdict":"better"}
+{"at":"2026-11-01T21:05:55.302Z","batch":9,"lane":"C-approved","card":"Resized sample boards leave a quarter of new tiles unclaimed via modulo 4 over 3","verdict":"better"}
+{"at":"2026-11-01T21:05:55.302Z","batch":9,"lane":"C-approved","card":"Art failure copy does not warn that credits may already be spent","verdict":"better"}
+{"at":"2026-11-01T21:05:55.302Z","batch":9,"lane":"C-approved","card":"Scripted packages stop working after any stream error because module scripts do ","verdict":"better"}
+{"at":"2026-11-01T21:05:55.302Z","batch":9,"lane":"C-approved","card":"A ledger fault blocks forget_user and retention expiry, which never touch the le","verdict":"better"}
+{"at":"2026-11-01T21:05:55.302Z","batch":9,"lane":"C-approved","card":"map_user overwrites a login's owner, orphaning the previous user's data from for","verdict":"better"}
+{"at":"2026-11-01T21:05:55.302Z","batch":9,"lane":"C-approved","card":"Retention is keyed on caller-supplied item.at with no bound at insert","verdict":"better"}
+{"at":"2026-11-01T21:05:55.302Z","batch":9,"lane":"C-approved","card":"Live seal reports permanent unknown outcome when an unrelated queue publish land","verdict":"better"}
+{"at":"2026-11-01T21:05:55.302Z","batch":9,"lane":"C-approved","card":"Unconfirmed tear leaves core writ torn while local proposal stays pending and se","verdict":"better"}
+{"at":"2026-11-01T21:05:55.302Z","batch":9,"lane":"C-approved","card":"Every Restyle/Custom click creates a new pending design proposal; drafts pile up","verdict":"better"}
+{"at":"2026-11-01T21:05:55.302Z","batch":9,"lane":"C-approved","card":"Hold to speak never ends if the pointer is released outside the button; no keybo","verdict":"better"}
+{"at":"2026-11-01T21:05:55.302Z","batch":9,"lane":"C-approved","card":"Breadcrumb hard-codes hash routes while taking back_href as a prop","verdict":"better"}
