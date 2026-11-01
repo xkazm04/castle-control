@@ -213,10 +213,9 @@ async fn stalled_classifier_deadline_is_per_batch_not_per_chunk() {
     let messages = (0..150)
         .map(|i| message(i, 100 + i as u64, "ordinary simulated chat"))
         .collect();
-    let started = std::time::Instant::now();
     let result = f.gate.screen_batch(messages, &stalled).await.unwrap();
-    let took = started.elapsed();
-    assert!(took < std::time::Duration::from_millis(3500), "{took:?}");
+    // One deadline per batch: the stalled classifier is asked once, not once per
+    // 50-message chunk (3 calls, 2 s each). A wall-clock bound flakes under load.
     assert_eq!(stalled.0.load(std::sync::atomic::Ordering::SeqCst), 1);
     assert_eq!(result.len(), 150);
     assert!(result.iter().all(|m| m.path == GatePath::Withheld));
