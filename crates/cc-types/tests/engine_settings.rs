@@ -305,3 +305,68 @@ fn live_endpoint_refuses_non_canonical_numeric_hosts() {
         assert_eq!(parsed.unwrap().live_endpoint, url);
     }
 }
+
+/// Drift guard: (key, a valid value that differs from the default, an invalid value).
+fn key_table() -> Vec<(&'static str, Value, Value)> {
+    vec![
+        ("engine.cli_provider", json!("codex_cli"), json!("nope")),
+        (
+            "engine.live_endpoint",
+            json!("https://example.test/v1"),
+            json!("ftp://x"),
+        ),
+        ("engine.cloud_opt_in", json!(true), json!("yes")),
+        (
+            "engine.claude_exe_path",
+            json!("/opt/claude"),
+            json!("relative/claude"),
+        ),
+        (
+            "engine.codex_exe_path",
+            json!("/opt/codex"),
+            json!("relative/codex"),
+        ),
+        (
+            "engine.posture_helper_path",
+            json!("/opt/posture"),
+            json!("relative/posture"),
+        ),
+        (
+            "engine.model_local",
+            json!("local-model"),
+            json!("has space"),
+        ),
+        (
+            "engine.model_claude",
+            json!("claude-model"),
+            json!("has space"),
+        ),
+        (
+            "engine.model_codex",
+            json!("codex-model"),
+            json!("has space"),
+        ),
+    ]
+}
+
+#[test]
+fn engine_setting_keys_and_parser_cannot_drift() {
+    let table = key_table();
+    let listed: std::collections::BTreeSet<&str> = ENGINE_SETTING_KEYS.iter().copied().collect();
+    let known: std::collections::BTreeSet<&str> = table.iter().map(|row| row.0).collect();
+    assert_eq!(
+        listed.len(),
+        ENGINE_SETTING_KEYS.len(),
+        "duplicate key in list"
+    );
+    assert_eq!(listed, known, "list and parser table disagree");
+    let default = EngineSettings::default();
+    for (key, valid, invalid) in table {
+        let parsed = parse_engine_settings(&settings(json!({ key: valid }))).unwrap();
+        assert_ne!(parsed, default, "parser ignores listed key {key}");
+        assert!(
+            parse_engine_settings(&settings(json!({ key: invalid }))).is_err(),
+            "parser accepts invalid value for {key}"
+        );
+    }
+}
