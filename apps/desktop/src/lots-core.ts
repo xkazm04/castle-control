@@ -20,15 +20,20 @@ export type CoreLotsSnapshot = Omit<LotsPreview, 'draw' | 'entries'> & {
   cast_result?: CastResult; writ?: LotsWrit; busy: boolean; locked: boolean;
 };
 
+/** Copies of crates/cc-core/src/lots/recorded.rs (the fixed recorded clock) and live_beacon.rs (the pinned
+ * quicknet chain); lots-core.test.ts reads those files and fails if either copy drifts. */
+export const recordedSealedAt = '2023-08-23T15:09:28Z';
+export const quicknetChainHash = '52db9ba70e0cc0f6eaf7803dd07447a1f5477735fd3f661792ba94600c84e971';
+
 /** Labels use the existing core status and accepted seal; no launch flag is
  * treated as proof that a live source exists. Verification remains in core. */
 export function lotsRoundLabel(simulated: boolean | undefined, sealed: RollSealResult | undefined): string {
-  if (simulated === true || sealed?.sealed.roll.sealed_at === '2023-08-23T15:09:28Z') return 'Recorded · simulated round source';
+  if (simulated === true || sealed?.sealed.roll.sealed_at === recordedSealedAt) return 'Recorded · simulated round source';
   if (simulated === undefined) return 'Round source unknown · wait for core status';
   if (!sealed) return 'Live mode · trusted quicknet needs the local opt-in; no round selected';
   const plan = sealed.sealed.roll.randomness;
   if (plan.source === 'streamer_commit') return 'Streamer-controlled · commit/reveal';
-  if (plan.chain_hash !== '52db9ba70e0cc0f6eaf7803dd07447a1f5477735fd3f661792ba94600c84e971') return 'Round source unknown · unexpected chain';
+  if (plan.chain_hash !== quicknetChainHash) return 'Round source unknown · unexpected chain';
   return `Live-trusted quicknet · target round ${plan.round}`;
 }
 

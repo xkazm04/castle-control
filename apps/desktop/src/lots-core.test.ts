@@ -3,11 +3,12 @@ import type { ChangeEvent, ReactNode, SelectHTMLAttributes } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { ConnectedLotsRoom } from './rooms/lottery/core.jsx';
 import { lotsCopy as copy } from './lots-copy.js';
+import { readFileSync } from 'node:fs';
 import { afterEach, expect, test, vi } from 'vitest';
 import type { DrawCheckResult } from '@castle-control/contract';
 import { parseMethodResult } from '@castle-control/contract';
 import { lotsRollSeal } from '@castle-control/contract/lots';
-import { createCoreLotsPort, lotsRoundLabel } from './lots-core.js';
+import { createCoreLotsPort, lotsRoundLabel, quicknetChainHash, recordedSealedAt } from './lots-core.js';
 import type { LotsNetwork } from './lots-core.js';
 import { fixtureDraws, fixtureWrit } from './lots-fixture.js';
 import { DrawAppearance } from './rooms/lottery/appearance.jsx';
@@ -257,6 +258,16 @@ test('source labels distinguish recorded simulated rounds, unknown native source
   expect(lotsRoundLabel(false, accepted(sealed))).toContain('Streamer-controlled');
   const recorded = { ...live, sealed: { ...live.sealed, roll: { ...live.sealed.roll, sealed_at: '2023-08-23T15:09:28Z' } } };
   expect(lotsRoundLabel(false, accepted(recorded))).toContain('Recorded · simulated');
+});
+
+test('the recorded-round sentinel and quicknet chain hash match the Rust sources they copy', () => {
+  const rust = (name: string) => readFileSync(new URL(`../../../crates/cc-core/src/lots/${name}`, import.meta.url), 'utf8');
+  const recorded = rust('recorded.rs'); const live = rust('live_beacon.rs');
+  // The recorded clock is the one timestamp parsed inside `impl LotsClock for RecordedBeacon`.
+  const clock = /impl LotsClock for RecordedBeacon[\s\S]*?"(\d{4}-\d\d-\d\dT[\d:]+Z)"/.exec(recorded);
+  expect(clock?.[1]).toBe(recordedSealedAt);
+  expect(recorded).toContain(`"${quicknetChainHash}"`);
+  expect(live).toContain(`"${quicknetChainHash}"`);
 });
 
 test('seal-announced state precedes cast and no-prize creation needs only existing upsert', async () => {
