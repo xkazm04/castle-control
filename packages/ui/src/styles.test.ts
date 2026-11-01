@@ -14,8 +14,10 @@ test('component styles use declared shared tokens, not raw colors or pixel sizes
   const directory = new URL('.', import.meta.url);
   // Duel's counted styles.test.ts checks its local token sheet and container breakpoints.
   const duel = new URL('./duel/', directory);
+  // The fused direction sheets carry structural px from the design; fused-styles.test.ts checks them.
+  const fused = new URL('./fused/', directory);
   const files = [directory, new URL('../kit/', directory)].flatMap(cssFiles)
-    .filter(path => !path.href.startsWith(duel.href));
+    .filter(path => !path.href.startsWith(duel.href) && !path.href.startsWith(fused.href));
   expect(files.length).toBeGreaterThan(0);
   expect(files.some(path => path.pathname.endsWith('/stamp/stamp.css'))).toBe(true);
   expect(files.some(path => path.pathname.endsWith('/design/focus.css'))).toBe(true);

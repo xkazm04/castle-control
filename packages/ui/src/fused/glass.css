@@ -1,0 +1,113 @@
+/* =============================================================================
+   CASTLE CONTROL · FUSED DIRECTION · STAINED GLASS                   glass.css
+   App port: .cc-window -> .cc-glass-window, .cc-card -> .cc-glass-card,
+   .cc-shield -> .cc-glass-shield (the app already owns those names).
+   =============================================================================
+   Direction sheet: STAINED GLASS (family C). Pages: landing, keep, overview,
+   demo, lottery. Load after tokens.css and shell.css. Reads tokens only.
+
+   Thesis: the keep's chapel windows. Frames are leaded glass lit from behind;
+   the chamber inks are glasses; lead came is the grid; light pools on stone.
+   Reading surfaces stay calm: glass is spent on frames, heroes and readouts.
+
+   COMPONENTS
+     .cc-glass          any HTML pane of glass (--g --g-lit --g-deep; default --ch*)
+     .cc-beads          bead strip of small panes (--chapel: four-hue strip)
+     .cc-banderole      calm pale scroll for a label that must sit on glass
+     .cc-bays > .cc-bay (+__head __mark __title __rule)  numbered page sections:
+                        a roman roundel on a lead rail (the glass counterpart of
+                        folio's .cc-section)
+     .cc-glass-window (+__glass)  leaded-glass frame for heroes and readouts
+     .cc-pool           light pool thrown on stone (blur + blend; --pool-*)
+     .cc-readout--jewel + .cc-jewel (--wide)  figure in a glass rose ring
+     .cc-glass-card (--blocked; [data-selected])  selectable row with a glass charge
+     .cc-glass-shield         inline SVG glass shield slot (44x50) used in .cc-glass-card
+                        (the folio heraldic shield is .cc-folio-shield)
+     keyframes          cc-dawn (glass brightening), cc-ignite (a pane lighting),
+                        cc-pool-in. (cc-flicker / .cc-flame live in shell.css:
+                        the Steward's candle is part of the shell.)
+
+   RULES OF THE GLASS
+   1. Body text never sits on glass. Labels on glass use .cc-banderole.
+   2. Glass carries meaning: a chamber's glass = that chamber; emerald = pass;
+      amethyst = the Steward; clear grisaille = neutral/unlit.
+   3. One lit moment per page. Complete at rest; reduced motion removes motion.
+   4. Corners are cut, not rounded (--r 2px); circles only for roses/roundels.
+   5. Night: glass gets brighter tokens plus --glow-on halos.
+   6. Inline SVG glass: stop-color:var(--gules) etc. gradients, stroke
+      var(--lead) 2-3px, feTurbulence mottle with mix-blend-mode: overlay.
+   ============================================================================= */
+
+/* Any HTML pane of glass: set --g, --g-lit, --g-deep (defaults to the chamber). */
+.cc-glass {
+  --g: var(--ch); --g-lit: var(--ch-lit); --g-deep: var(--ch-deep);
+  background:
+    var(--tex-glass),
+    radial-gradient(130% 110% at 28% 18%, var(--g-lit) 0%, var(--g) 48%, var(--g-deep) 100%);
+  background-size: 180px 180px, 100% 100%;
+  background-blend-mode: overlay, normal;
+  box-shadow: inset 0 0 0 var(--came) var(--lead), 0 0 calc(var(--glow-on) * 18px) calc(var(--glow-on) * 1px) var(--ch-glow);
+}
+
+/* bead border: a strip of small alternating panes (used on caps and frames) */
+.cc-beads {
+  height: 10px; border-block: var(--came) solid var(--lead);
+  background:
+    repeating-linear-gradient(90deg, var(--lead) 0 2px, transparent 2px 18px),
+    repeating-linear-gradient(90deg, var(--ch) 0 9px, var(--ch-lit) 9px 18px);
+  box-shadow: 0 0 calc(var(--glow-on) * 12px) var(--ch-glow);
+}
+.cc-beads--chapel { background:
+    repeating-linear-gradient(90deg, var(--lead) 0 2px, transparent 2px 20px),
+    repeating-linear-gradient(90deg, var(--gules) 0 20px, var(--or) 20px 40px, var(--azure) 40px 60px, var(--or) 60px 80px); }
+/* calm label on glass: a pale scroll */
+.cc-banderole {
+  display: inline-block; padding: 2px 10px; background: var(--banderole); color: var(--banderole-ink);
+  font: 700 var(--text-t-label)/1.25 var(--font-label); letter-spacing: .06em; text-transform: lowercase;
+  box-shadow: inset 0 0 0 var(--came) var(--lead);
+  clip-path: polygon(0 0, 100% 0, calc(100% - 7px) 50%, 100% 100%, 0 100%, 7px 50%);
+  padding-inline: 14px;
+}
+
+/* ===================================================== BAYS (page sections) */
+.cc-bays { padding: 32px var(--gutter) 40px; display: grid; gap: 36px; }
+.cc-bay { display: grid; gap: var(--gap); }
+.cc-bay__head { display: flex; align-items: center; gap: 14px; }
+.cc-bay__mark { --g: var(--ch); width: 34px; height: 34px; font: 800 var(--text-t-small)/1 var(--font-aside); letter-spacing: .02em; }
+.cc-bay__title { font: 600 var(--text-t-h2)/1 var(--font-display); color: var(--ink); }
+.cc-bay__rule { flex: 1; height: var(--came); background: var(--lead); opacity: .55; }
+
+/* Window: leaded-glass frame for a hero or a readout. Children may be glass. */
+.cc-glass-window {
+  position: relative; background: var(--lead); padding: 6px;
+  box-shadow: inset 0 0 0 1px var(--lead-hi), 0 0 0 4px var(--stone-3), 0 0 0 6px var(--lead), var(--shadow);
+}
+.cc-glass-window__glass { position: relative; overflow: hidden; background: var(--clear); }
+
+/* Light pool: tinted light thrown onto stone. Place under a window. */
+.cc-pool { pointer-events: none; mix-blend-mode: var(--pool-blend); opacity: calc(.55 + var(--glow-on) * .45); filter: blur(18px); }
+
+/* jewel: a glass ring with a calm centre that carries the figure */
+.cc-readout--jewel { grid-template-columns: auto 1fr; column-gap: 12px; align-items: center; }
+.cc-jewel {
+  --g: var(--ch); --g-lit: var(--ch-lit); --g-deep: var(--ch-deep);
+  grid-row: 1 / span 2; position: relative; display: grid; place-items: center; width: 58px; height: 58px; border-radius: 50%;
+  background:
+    radial-gradient(circle, var(--surface) 0 19px, var(--lead) 19px 21px, transparent 21px),
+    repeating-conic-gradient(from 11.25deg, var(--lead) 0 2.5deg, transparent 2.5deg 45deg),
+    conic-gradient(from 0deg, var(--g-lit), var(--g), var(--g-deep), var(--g), var(--g-lit), var(--g), var(--g-deep), var(--g), var(--g-lit));
+  box-shadow: 0 0 0 2px var(--lead), 0 0 0 4px var(--stone-3), 0 0 calc(var(--glow-on) * 16px) var(--ch-glow);
+  font: 600 var(--text-t-h4)/1 var(--font-display); color: var(--ink);
+}
+.cc-jewel--wide { font-size: var(--text-px-18); letter-spacing: -.02em; }
+
+/* card row (selectable): calm card with a glass charge on the left */
+.cc-glass-card { display: grid; grid-template-columns: 48px 1fr auto; gap: 14px; align-items: center; padding: 14px 16px;
+  background: var(--surface); border: 1.5px solid var(--hair); border-left: 5px solid var(--ch); border-radius: var(--r); }
+.cc-glass-card[aria-current="true"], .cc-glass-card[data-selected="true"] { border-color: var(--lead); border-left-color: var(--ch); box-shadow: 0 0 0 1px var(--lead), 0 0 calc(var(--glow-on) * 16px) var(--ch-glow); }
+.cc-glass-card--blocked { border-left-color: var(--faint); background: var(--surface-2); }
+.cc-glass-shield { width: 44px; height: 50px; }
+
+@keyframes cc-dawn { from { filter: brightness(.38) saturate(.55); } to { filter: none; } }
+@keyframes cc-ignite { 0% { opacity: .18; } 60% { opacity: 1; filter: brightness(1.5); } 100% { opacity: 1; filter: none; } }
+@keyframes cc-pool-in { from { opacity: 0; } to { opacity: 1; } }

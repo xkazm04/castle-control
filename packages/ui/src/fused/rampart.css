@@ -1,0 +1,99 @@
+/* =============================================================================
+   FUSED FIRST PAINT                                                   rampart.css
+   The only fused rules on the desktop first load: the frame ground, focus ring and
+   the rampart (lead bar). It re-skins the existing rampart markup (Stamp, StatusChip,
+   ConnectionMark, GatehouseChip, InkButton) into the fused look, so the e2e and unit
+   contracts on that markup hold. Everything else is in shell.css, loaded with the
+   first lazily opened surface. Selectors lead with .cc-frame to outrank the legacy
+   component sheets whatever their load order.
+   ============================================================================= */
+html, body { background: var(--stone); }
+.cc-frame {
+  background: var(--stone); color: var(--ink);
+  font: 400 var(--text-t-body)/1.45 var(--font-text);
+  font-variant-numeric: lining-nums tabular-nums; -webkit-font-smoothing: antialiased;
+}
+.cc-frame::before { opacity: 1; mix-blend-mode: normal; background-image: none; }
+.cc-frame :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; box-shadow: 0 0 0 2px var(--focus-inner); }
+.cc-frame[data-theme] :focus-visible { outline-color: var(--focus); }
+.cc-frame ::selection { background: var(--or-lit); color: var(--lead-lo); }
+
+/* ---- rampart: the lead bar */
+.cc-frame .cc-rampart {
+  height: var(--rampart-h); gap: 16px; padding: 0 18px 0 16px; border-bottom: 0; z-index: 30;
+  background: linear-gradient(180deg, var(--lead-2), var(--lead) 60%, var(--lead-lo));
+  color: var(--on-lead); box-shadow: inset 0 1px 0 var(--lead-hi), inset 0 -1px 0 var(--lead-hi);
+  font: 500 var(--text-t-small)/1 var(--font-text);
+}
+.cc-frame .cc-rampart .cc-brand { gap: 10px; margin-right: 0; color: var(--on-lead); }
+.cc-frame .cc-rampart .cc-mark { width: 32px; height: 30px; filter: drop-shadow(0 0 calc(var(--glow-on) * 6px) var(--gules-glow)); }
+.cc-frame .cc-rampart .cc-wordmark { font: 600 var(--text-px-25)/1 var(--font-display); letter-spacing: .01em; text-transform: none; }
+.cc-frame .cc-rampart .cc-live-group { gap: 16px; }
+.cc-frame .cc-rampart .cc-figure { display: grid; gap: 3px; line-height: 1; white-space: nowrap; }
+.cc-frame .cc-rampart .cc-figure b { font: 700 var(--text-px-15)/1 var(--font-text); color: var(--on-lead); }
+.cc-frame .cc-rampart .cc-figure small { font: 700 var(--text-px-13)/1 var(--font-label); letter-spacing: .1em; color: var(--on-lead-muted); text-transform: lowercase; }
+.cc-frame .cc-rampart .cc-separator { width: 2px; height: auto; align-self: stretch; margin-block: 10px; background: var(--lead-hi); opacity: .7; }
+.cc-frame .cc-rampart .cc-link-group { display: flex; gap: 8px; }
+.cc-frame .cc-rampart .cc-separator { display: block; }
+.cc-frame .cc-rampart a { text-decoration: none; }
+
+/* every rampart stamp is an etched registration chip: dashed came, small caps */
+.cc-frame .cc-rampart .cc-stamp[data-stamp], .cc-frame .cc-rampart .cc-chip[data-variant="dash"] {
+  --stamp-ink: var(--on-lead); --stamp-tilt: 0deg;
+  display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 10px; transform: none; filter: none;
+  border: 1.5px dashed var(--on-lead-muted); border-radius: 0; color: var(--on-lead); background: var(--tex-etch-lead);
+  font: 700 var(--text-t-label)/1 var(--font-label); letter-spacing: .08em; text-transform: lowercase; white-space: nowrap;
+  box-shadow: none; text-shadow: none;
+}
+.cc-frame .cc-rampart .cc-stamp[data-stamp]::before { content: ''; position: static; inset: auto; width: 7px; height: 7px; flex: none;
+  transform: rotate(45deg); border: 0; border-radius: 0; opacity: 1;
+  background: linear-gradient(135deg, var(--clear-lit), var(--clear) 70%); box-shadow: 0 0 0 1.5px var(--lead-hi); }
+.cc-frame .cc-rampart a:hover > .cc-stamp, .cc-frame .cc-rampart a:hover > .cc-chip { border-style: solid; }
+.cc-frame .cc-rampart a[href="#/stream"] > .cc-stamp::before { background: linear-gradient(135deg, var(--key-lit), var(--key) 70%); }
+.cc-frame .cc-rampart a[href="#/chamber/moderator"] > .cc-stamp::before,
+.cc-frame .cc-rampart .cc-stamp:is([data-stamp="shadow"], [data-stamp="pass"])::before { background: linear-gradient(135deg, var(--azure-lit), var(--azure) 70%); }
+.cc-frame .cc-rampart .cc-stamp:is([data-stamp="armed"], [data-stamp="held"], [data-stamp="blocked"])::before { background: linear-gradient(135deg, var(--gules-lit), var(--gules) 70%); }
+
+/* on air: a lamp cabochon and a plain small-caps word, no box */
+.cc-frame .cc-rampart .cc-stamp:is([data-stamp="on-air"], [data-stamp="off-air"]) {
+  gap: 8px; height: auto; padding: 0; border: 0; background: none; letter-spacing: .1em; font-weight: 800;
+}
+.cc-frame .cc-rampart .cc-stamp:is([data-stamp="on-air"], [data-stamp="off-air"])::before { display: none; }
+.cc-frame .cc-rampart .cc-stamp-dot {
+  width: 14px; height: 14px; border: 0; border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, var(--gules-lit), var(--gules) 55%, var(--gules-deep));
+  box-shadow: inset 0 0 0 1.5px var(--lead-lo), 0 0 0 1.5px var(--lead-hi), 0 0 12px 2px var(--gules-glow);
+}
+.cc-frame .cc-rampart .cc-stamp-dot[data-dot="ring"] {
+  background: radial-gradient(circle at 35% 30%, var(--lead-hi), var(--gules-deep) 70%);
+  box-shadow: inset 0 0 0 1.5px var(--lead-lo), 0 0 0 1.5px var(--lead-hi);
+}
+
+/* SIMULATED: the acid-etched pane on lead, always visible */
+.cc-frame .cc-rampart > .cc-stamp[data-stamp="simulated"] { height: 24px; padding: 0 9px; letter-spacing: .12em; font-weight: 800; border-color: var(--on-lead-muted); }
+.cc-frame .cc-rampart > .cc-stamp[data-stamp="simulated"]::before { background: none; border: 1.5px solid currentColor; box-shadow: none; }
+
+/* live connection marks and the Gatehouse chip read on lead */
+.cc-frame .cc-rampart .cc-connection b { font: 700 var(--text-t-label)/1 var(--font-label); letter-spacing: .08em; text-transform: lowercase; color: var(--on-lead); }
+.cc-frame .cc-rampart .cc-connection small { color: var(--on-lead-muted); }
+.cc-frame .cc-rampart .cc-connection svg > path { stroke: var(--on-lead); }
+.cc-frame .cc-rampart .cc-connection svg .cc-connection-cross { stroke: var(--lead); }
+.cc-frame .cc-rampart .cc-gatehouse { font-family: var(--font-label); text-transform: lowercase; }
+
+/* buttons: the theme toggle is a round lead jewel; Steward is the amethyst rampart button */
+.cc-frame .cc-rampart .cc-button:not(.cc-heraldic-button) {
+  height: 34px; padding: 0 16px; border: 2px solid var(--lead-hi); border-radius: 2px;
+  background: transparent; color: var(--on-lead); box-shadow: inset 0 -3px 0 var(--amethyst);
+  font: 800 var(--text-px-14-5)/1 var(--font-label); letter-spacing: .07em; text-transform: lowercase;
+}
+.cc-frame .cc-rampart .cc-button:not(.cc-heraldic-button):hover { background: var(--lead-2); color: var(--on-lead); box-shadow: inset 0 -5px 0 var(--amethyst-lit); }
+.cc-frame .cc-rampart .cc-button:not(.cc-heraldic-button)[data-size="icon"] { width: 34px; padding: 0; border-radius: 50%; box-shadow: none; }
+.cc-frame .cc-rampart .cc-button:not(.cc-heraldic-button)[data-size="icon"][aria-pressed="true"] { background: var(--lead-2); box-shadow: 0 0 0 1px var(--amethyst-lit); }
+.cc-frame .cc-rampart .cc-button:not(.cc-heraldic-button) svg { width: 18px; height: 18px; }
+.cc-frame .cc-rampart :focus-visible { outline-color: var(--focus); }
+
+@media (max-width: 1380px) {
+  .cc-frame .cc-rampart { gap: 12px; }
+  .cc-frame .cc-rampart .cc-wordmark { font-size: var(--text-px-22); }
+  .cc-frame .cc-rampart .cc-live-group { gap: 12px; }
+}

@@ -36,8 +36,8 @@ export function InkButton({ variant = 'outline', size = 'normal', className = ''
 }
 
 export function ThemeToggle({ theme, onChange }: { theme: Theme; onChange: (theme: Theme) => void }) {
-  return <InkButton size="icon" aria-label="Toggle paper and dark stock" title="Paper / dark stock"
-    aria-pressed={theme === 'stock'} onClick={() => onChange(theme === 'stock' ? 'paper' : 'stock')}>
+  return <InkButton size="icon" aria-label="Toggle day and night" title="Day / night"
+    aria-pressed={theme === 'night'} onClick={() => onChange(theme === 'night' ? 'day' : 'night')}>
     <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2a8 8 0 1 0 0 16V2Zm0 0a8 8 0 0 1 0 16" /></svg>
   </InkButton>;
 }

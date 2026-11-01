@@ -92,7 +92,7 @@ test('room hero and replay summary render plain caller values and actions', () =
   for (const text of ['<b>50</b>', 'Observed passes', '<b>0</b>', 'Pending']) expect(summary).toContain(text);
 });
 
-test.each(['paper', 'stock'] as const)('gallery renders each promoted component in %s', theme => {
+test.each(['day', 'night'] as const)('gallery renders each promoted component in %s', theme => {
   const html = renderToStaticMarkup(<ThemeFrame theme={theme}><PromotedGallery /></ThemeFrame>);
   expect(html).toContain(`data-theme="${theme}"`);
   for (const name of ['cc-room-status', 'cc-window', 'cc-consensus-chart', 'cc-review-row', 'cc-replay-summary']) expect(html).toContain(name);

@@ -10,7 +10,7 @@ import { visibleRange } from './rule-table.jsx';
 const noop = () => undefined;
 const rampart: RampartProps = {
   on_air: true, viewers: '214', uptime: '02:14:37', twitch: 'connected', obs: 'connected',
-  armed: 0, watching: 3, shield: false, home_href: '#home', gatehouse_href: '#moderator', theme: 'paper', on_theme_change: noop,
+  armed: 0, watching: 3, shield: false, home_href: '#home', gatehouse_href: '#moderator', theme: 'day', on_theme_change: noop,
 };
 const click = (element: ReactElement<InkButtonProps>) => element.props.onClick?.({} as MouseEvent<HTMLButtonElement>);
 
@@ -32,7 +32,7 @@ test('rampart status groups retain their wide gaps and compact within their own 
   expect(compact).toMatch(/\.cc-rampart \.cc-brand\s*\{[^}]*gap:\s*var\(--space-6\)[^}]*margin-right:\s*0\s*;/);
 });
 
-describe.each(['paper', 'stock'] as const)('%s theme', theme => {
+describe.each(['day', 'night'] as const)('%s theme', theme => {
   const render = (node: ReactNode) => renderToStaticMarkup(<ThemeFrame theme={theme}>{node}</ThemeFrame>);
 
   test('real shell preserves navigation, labels and section semantics', () => {
@@ -141,9 +141,9 @@ describe.each(['paper', 'stock'] as const)('%s theme', theme => {
   test('theme toggle calls the owner without changing external state', () => {
     const changes: string[] = [];
     const element = ThemeToggle({ theme, onChange: value => changes.push(value) });
-    expect(element.props['aria-pressed']).toBe(theme === 'stock');
+    expect(element.props['aria-pressed']).toBe(theme === 'night');
     click(element);
-    expect(changes).toEqual([theme === 'stock' ? 'paper' : 'stock']);
+    expect(changes).toEqual([theme === 'night' ? 'day' : 'night']);
   });
 
   test('mark and empty states are accessible; optional actions remain usable', () => {

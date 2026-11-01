@@ -7,7 +7,7 @@ import { ThemeFrame } from './primitives.jsx';
 import { Stamp } from './stamp/stamp.jsx';
 import { stampTable } from './stamp/table.js';
 
-test.each(['paper', 'stock'] as const)('Steward identity leaves stamp ink and size to the stamp table on %s', theme => {
+test.each(['day', 'night'] as const)('Steward identity leaves stamp ink and size to the stamp table on %s', theme => {
   const html = renderToStaticMarkup(<ThemeFrame theme={theme}><StewardBar message="Simulated example." value="" suggestions={[]}
     on_change={vi.fn()} on_tell={vi.fn()} on_suggest={vi.fn()}
     identity={{ name: 'The Steward', state: 'Watching', figure: <Stamp kind="shadow" word="Watching" /> }} /></ThemeFrame>);

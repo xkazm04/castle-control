@@ -8,5 +8,5 @@ const KitTheme = lazy(() => import('../kit/theme.jsx'));
 const root = document.getElementById('root');
 if (!root) throw new Error('Kit root missing');
 createRoot(root).render(<div id="kit"><Suspense fallback={<p>Loading simulated component kit…</p>}>
-  <KitTheme initial_theme="paper" /><KitTheme initial_theme="stock" />
+  <KitTheme initial_theme="day" /><KitTheme initial_theme="night" />
 </Suspense></div>);

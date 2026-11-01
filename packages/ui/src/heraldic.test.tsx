@@ -112,7 +112,7 @@ test('heraldic sources stay generic and opt-in button rules outrank the shell de
   for (const property of ['font:', 'border:', 'background:', 'color:', 'padding:']) expect(css).toContain(property);
 });
 
-test.each(['paper', 'stock'] as const)('deferred gallery shows every primitive in four inks on %s', theme => {
+test.each(['day', 'night'] as const)('deferred gallery shows every primitive in four inks on %s', theme => {
   const html = render(<ThemeFrame theme={theme}><HeraldicGallery theme={theme} /></ThemeFrame>);
   expect(html).toContain(`id="heraldic-${theme}"`);
   for (const ink of ['gules', 'azure', 'or', 'key']) expect(html).toContain(`aria-label="${ink} primitives"`);
