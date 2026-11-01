@@ -94,7 +94,7 @@ test('one core snapshot supplies the identical memoized authority to Overview an
     let received: SealAuthority | undefined;
     function Probe() {
       const view = DesktopView({ snapshot, navigation: { current: 'overview', origin: 'keep', replay: false },
-        theme: 'paper', on_navigate: vi.fn(), on_theme_change: vi.fn() });
+        theme: 'day', on_navigate: vi.fn(), on_theme_change: vi.fn() });
       const overview = find<Parameters<typeof Overview>[0]>(view, element => 'selected' in element.props && 'snapshot' in element.props);
       expect(overview?.props.connection).toBe(actual);
       if (!overview) throw new Error('Missing Overview');

@@ -7,6 +7,7 @@ import type { Snapshot } from '../model.js';
 import { sampleProgram } from '../overview/program.js';
 import { stripStates } from './strip-states.js';
 import { shellRoles } from './roles.jsx';
+import '@castle-control/ui/fused/surface.css';
 
 type StripProps = Pick<ChamberStripProps, 'states' | 'on_open'> & { current: NonNullable<ChamberStripProps['current']>; on_keep: () => void };
 

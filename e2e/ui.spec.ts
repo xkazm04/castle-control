@@ -60,7 +60,7 @@ for (const route of routes) for (const theme of themes) for (const steward of st
     await expect(page.locator('.cc-steward-bar')).toBeVisible();
     if (route.endsWith('/drill')) await expect(page.locator('.moderator-drill')).toBeVisible();
     await expect(page).toHaveURL(new RegExp(`${route.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`));
-    if (theme === 'stock') await page.getByRole('button', { name: 'Toggle paper and dark stock' }).click();
+    if (theme === 'night') await page.getByRole('button', { name: 'Toggle day and night' }).click();
     await expect(page.locator('.cc-frame')).toHaveAttribute('data-theme', theme);
     if (steward === 'open') {
       // Steward is a persistent panel in this shell. Open means focused controls;

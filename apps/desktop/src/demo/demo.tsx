@@ -4,6 +4,8 @@ import { art, background, frames, initialDemoState, layouts, shots, styles } fro
 import type { DemoState } from './model.js';
 import { copy } from './copy.js';
 import './demo.css';
+import '@castle-control/ui/fused/surface.css';
+import '@castle-control/ui/fused/glass.css';
 
 export function DemoControls({ state, on_change }: { state: DemoState; on_change: (next: DemoState) => void }) {
   return <div className="demo-controls">
@@ -19,7 +21,7 @@ export function DemoControls({ state, on_change }: { state: DemoState; on_change
 // Reconstructed React markup from the atlas stage specification at 7270e60.
 // All values are illustrative: no live intake, requests or chamber mutations.
 export function DemoPreview({ state }: { state: DemoState }) {
-  return <div className="demo-page" data-theme="stock">
+  return <div className="demo-page" data-theme="night">
     <div className={`stage${state.layout === 'chat' ? ' chatting' : ''}`}>
       <img className="bg" src={background(state)} alt="" />
       <div className="demo-air"><Stamp kind="off-air" word="On air · simulated" /></div>

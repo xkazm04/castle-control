@@ -27,7 +27,7 @@ function network() {
 
 async function markup(client: DesktopClient, surface = '#/keep') {
   const stream = await renderToReadableStream(<DesktopView snapshot={client.getSnapshot()} navigation={initialNavigation(surface)}
-    theme="paper" on_navigate={vi.fn()} on_theme_change={vi.fn()} />);
+    theme="day" on_navigate={vi.fn()} on_theme_change={vi.fn()} />);
   await stream.allReady;
   return new Response(stream).text();
 }

@@ -8,6 +8,8 @@ import type { RehearsalConnection } from './rehearsal-core.js';
 import { rehearsalCopy as copy } from './rehearsal-copy.js';
 import { rehearsalShell } from './rehearsal-shell.js';
 import './rehearsal.css';
+import '@castle-control/ui/fused/surface.css';
+import '@castle-control/ui/fused/folio.css';
 
 /** The masked field is uncontrolled, cleared before any asynchronous work, and never a read-model field. */
 export function submitConnection(fields: { host: string; port: string; password: { value: string }; remember: boolean }, model: RehearsalModel) {

@@ -26,7 +26,7 @@ test('opening a Keep hit then Escape returns focus to that hit, with the persist
     const effects: EffectCallback[] = [];
     vi.spyOn(React, 'useSyncExternalStore').mockReturnValue(snapshot);
     vi.spyOn(React, 'useState').mockReturnValueOnce([initialNavigation(location.hash), vi.fn()])
-      .mockReturnValueOnce(['paper', vi.fn()]).mockReturnValueOnce(['lottery', vi.fn()]);
+      .mockReturnValueOnce(['day', vi.fn()]).mockReturnValueOnce(['lottery', vi.fn()]);
     vi.spyOn(React, 'useRef').mockReturnValueOnce({ current: root }).mockReturnValueOnce({ current: null })
       .mockReturnValueOnce(tileOrigin).mockReturnValueOnce({ current: false });
     vi.spyOn(React, 'useEffect').mockImplementation(effect => { effects.push(effect); });

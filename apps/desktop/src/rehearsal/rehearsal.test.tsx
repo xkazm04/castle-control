@@ -97,7 +97,7 @@ test('canonical route, Keep entry, lazy non-chamber view, Back and Escape all re
   entrance.props.onClick?.();
   expect(backHash(navigation)).toBe('#/keep');
   const stream = await renderToReadableStream(<DesktopView navigation={navigation} snapshot={{ mode: 'fixture', phase: 'ready' }}
-    theme="paper" on_navigate={vi.fn()} on_theme_change={vi.fn()} />);
+    theme="day" on_navigate={vi.fn()} on_theme_change={vi.fn()} />);
   await stream.allReady;
   const html = await new Response(stream).text();
   expect(html).toContain('rehearsal-workspace'); expect(html).not.toContain('data-module="rehearsal"'); expect(html).not.toContain('shell-room');

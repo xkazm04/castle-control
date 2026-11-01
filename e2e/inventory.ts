@@ -76,6 +76,6 @@ export const routes = routeInventory(source('apps/desktop/src/navigation.ts'), c
 export const tokens = tokenInventory(source('packages/tokens/src/generated.css'));
 // The isolated renderer embeds this generated subset (vite-overlay.config.mjs).
 export const overlayTokens = tokenInventory(source('packages/tokens/src/generated-base.css'));
-export const themes = ['paper', 'stock'] as const;
+export const themes = ['day', 'night'] as const;
 export const stewardStates = ['resting', 'open'] as const;
 export const slug = (text: string): string => text.replace(/^#\//, '').replace(/[^a-z0-9-]+/gi, '-').replace(/-$/, '');

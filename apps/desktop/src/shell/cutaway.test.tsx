@@ -32,7 +32,7 @@ async function html(node: ReactNode) {
 test.each(['keep', ...chambers.map(item => `chamber/${item.id}`), 'overview', 'demo', 'stream'])(
   'persistent strip belongs only to Keep and room surfaces: %s', async route => {
     const markup = await html(<DesktopView navigation={initialNavigation(`#/${route}`)} snapshot={snapshot}
-      theme="paper" on_navigate={noop} on_theme_change={noop} />);
+      theme="day" on_navigate={noop} on_theme_change={noop} />);
     const persistent = route === 'keep' || route.startsWith('chamber/');
     expect(markup.match(/data-role="strip"/g) ?? []).toHaveLength(persistent ? 1 : 0);
     if (persistent) {

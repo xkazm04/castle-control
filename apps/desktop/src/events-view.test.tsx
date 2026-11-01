@@ -24,7 +24,7 @@ async function withUpdatedFixture(check: (snapshot: Snapshot) => Promise<void>) 
 // imports must not accumulate across four chambers and Keep/Overview in one test.
 test.each(chambers)('validated simulated events update rampart chips on $name route', async ({ id, name }) => {
   await withUpdatedFixture(async snapshot => {
-    const stream = await renderToReadableStream(<DesktopView current={id} snapshot={snapshot} theme="paper"
+    const stream = await renderToReadableStream(<DesktopView current={id} snapshot={snapshot} theme="day"
       on_navigate={() => undefined} on_theme_change={() => undefined} search="" on_search={() => undefined} />);
     await stream.allReady;
     const html = await new Response(stream).text();
@@ -40,7 +40,7 @@ test.each(chambers)('validated simulated events update rampart chips on $name ro
 test.each(['keep', 'overview'])('validated simulated events update rampart chips on #/%s', async surface => {
   await withUpdatedFixture(async snapshot => {
     const stream = await renderToReadableStream(<DesktopView navigation={initialNavigation(`#/${surface}`)}
-      snapshot={snapshot} theme="paper" on_navigate={() => undefined} on_theme_change={() => undefined} />);
+      snapshot={snapshot} theme="day" on_navigate={() => undefined} on_theme_change={() => undefined} />);
     await stream.allReady;
     const html = await new Response(stream).text();
     expect(html).toContain('Armed 0');

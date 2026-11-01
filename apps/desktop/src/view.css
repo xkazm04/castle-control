@@ -1,16 +1,16 @@
-body { margin: 0; font-family: var(--font-ui); color: var(--ink); background: var(--paper); }
-.desktop-root { font-family: var(--font-ui); color: var(--ink); background: var(--paper); }
+body { margin: 0; font-family: var(--font-text); color: var(--ink); background: var(--stone); }
+.desktop-root { font-family: var(--font-text); color: var(--ink); background: var(--stone); }
 .desktop-root:focus { outline: none; }
-.desktop-shell { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: var(--mh) minmax(0, 1fr) auto; min-width: 0; height: 100dvh; overflow: hidden; }
-.desktop-shell.desktop-cutaway { grid-template-rows: var(--mh) auto minmax(0, 1fr) auto; }
+.desktop-shell { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: var(--rampart-h) minmax(0, 1fr) auto; min-width: 0; height: 100dvh; overflow: hidden; }
+.desktop-shell.desktop-cutaway { grid-template-rows: var(--rampart-h) auto minmax(0, 1fr) auto; }
 .desktop-cutaway > .desktop-surface { display: flex; flex-direction: column; padding: 0; min-width: 0; overflow: hidden; }
 .desktop-cutaway > .cc-chamber-strip { min-width: 0; }
 .desktop-cutaway .cc-layer-lamps { position: absolute; width: var(--space-1); height: var(--space-1); overflow: hidden; clip-path: inset(50%); }
 .desktop-cutaway .cc-keep-tile .cc-chamber-tile-title { white-space: normal; }
-.desktop-surface { min-height: 0; overflow: auto; padding: 0 var(--space-24) var(--space-24); background: var(--paper); }
+.desktop-surface { min-height: 0; overflow: auto; padding: 0 var(--space-24) var(--space-24); background: var(--stone); }
 .desktop-notice { font-size: var(--text-small); line-height: 1.5; color: var(--muted); border-inline-start: var(--rule-strong) solid var(--warn); padding-inline-start: var(--space-12); }
 .desktop-shell > .cc-rampart { grid-column: auto; }
-.desktop-shell:has(.overview-workspace) { grid-template-rows: var(--mh) minmax(0, 1fr); }
+.desktop-shell:has(.overview-workspace) { grid-template-rows: var(--rampart-h) minmax(0, 1fr); }
 .desktop-shell:has(.overview-workspace) .desktop-surface { display: flex; flex-direction: column; padding-bottom: var(--space-8); }
 .desktop-shell > .cc-steward-bar { gap: var(--space-12); padding: var(--space-8) var(--space-24); }
 .desktop-shell > .cc-steward-bar .cc-steward-identity > svg { display: none; }

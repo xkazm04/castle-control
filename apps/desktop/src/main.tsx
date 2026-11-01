@@ -1,5 +1,6 @@
 import { createRoot } from 'react-dom/client';
 import '@castle-control/tokens';
+import '@castle-control/tokens/fused.css';
 import { DesktopApp } from './app.jsx';
 import { createDesktopClient } from './client.js';
 

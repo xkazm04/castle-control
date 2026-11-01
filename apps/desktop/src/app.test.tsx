@@ -36,7 +36,7 @@ function shortcutApp(hash: string, reduced = false) {
   const selected = vi.fn(); const opening = vi.fn();
   vi.spyOn(React, 'useState')
     .mockReturnValueOnce([initialNavigation(hash), vi.fn()])
-    .mockReturnValueOnce(['paper', vi.fn()]).mockReturnValueOnce(['lottery', selected])
+    .mockReturnValueOnce(['day', vi.fn()]).mockReturnValueOnce(['lottery', selected])
     .mockReturnValueOnce([undefined, vi.fn()]).mockReturnValueOnce([undefined, vi.fn()])
     .mockReturnValueOnce([1, vi.fn()]).mockReturnValueOnce([undefined, opening]);
   const refs = vi.spyOn(React, 'useRef').mockImplementation(value => ({ current: value }));

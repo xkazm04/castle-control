@@ -17,7 +17,10 @@ for (const path of paths) {
 }
 checkTokenDefinitions(css, 'Desktop');
 // Includes React DOM and the contract's generated, standalone schema validators.
-const limit = 384 * 1024;
+// Night UX (W0a): +32 KiB for the fused design system's first paint: the fused token sheet
+// (day/night), the self-hosted @font-face rules and the rampart skin (about 20 KB measured).
+// Font files, textures, the shell primitives and the glass/folio sheets load lazily and stay outside.
+const limit = 416 * 1024;
 console.log(`[desktop first-load budget, all four routes] walked ${paths.size} files; ${bytes}/${limit} uncompressed JS+CSS bytes`);
 if (bytes > limit) throw new Error('Desktop first-load budget exceeded');
 
