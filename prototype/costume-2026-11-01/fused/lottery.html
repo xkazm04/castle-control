@@ -1,0 +1,571 @@
+<!doctype html>
+<html lang="en" data-theme="day">
+<!-- PORT NOTES
+Page: lottery (route #/chamber/lottery). Family C · Stained Glass. Shell, header and components come from shell.css + glass.css.
+Introduces:
+  .lot-hall: the two-panel hall. Urn panel = PoolStage + DrawStage (rooms/lottery/print.tsx, stage.tsx, stage.css); writ panel = .lottery-desk-panel.
+  .urn-rose: the urn draw stage as a rose window, one pane per lot (87), coloured by cohort, ignition order = entry order.
+    Replaces the urn/dot-field art in stage.tsx; the Wheel/Deck/Ballot box shapes keep the same frame (.urn-stage) and swap the SVG.
+  .cc-card + .cc-shield: writ templates. Replaces HeraldicCard variant="selectable" + ShieldCharge (packages/ui/heraldic-card.*).
+  .cc-bay: Setup / Seal / Proof / Fairness sections that today scroll inside .cc-desk (DeskBody). The page scrolls instead; the shell stays sticky.
+  .tier-tiles: UrnTierPreset (tier.tsx, tier.css). .eq-*: WeightEqualizer (equalizer.tsx, equalizer.css), bars are glass lancets.
+  .lab-*: WritLab (lab.tsx, lab.css); .lab-quarries is the 4-step pass strip; .cc-steps the proof walk.
+  .lot-ticket: Ticket / saved simulated proof bundle (print.tsx). .fair-lights: FairnessSteps (print.tsx).
+  Seal slot (rooms/seal-slot/index.tsx) -> .seal-slot panel; its hold control is .cc-seal (packages/ui/seal-button.*), shown disabled with no proposal.
+Header: .cc-chamber-head replaces RoomHeader (shell/room-header.tsx) + RoomTitle (packages/ui/room-title.*); Back carries data-back for Esc.
+-->
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lot Chamber · Castle Control</title>
+<script>(function(){try{var t=new URLSearchParams(location.search).get('theme');if(t==='night'||t==='day')document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Grenze+Gotisch:wght@500;600;700;800&family=Alegreya+Sans:ital,wght@0,400;0,500;0,700;0,800;1,400&family=Alegreya+Sans+SC:wght@500;700;800&family=Alegreya:ital,wght@0,400;0,500;0,700;0,800;1,400;1,500&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="shell.css">
+<link rel="stylesheet" href="glass.css">
+<style>
+
+/* ---- lot chamber page --------------------------------------------------- */
+.lot { padding: 26px var(--gutter) 44px; display: grid; gap: 40px; }
+.lot-hall { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: var(--gap); align-items: stretch; }
+/* urn panel */
+.urn-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.urn-tools .cc-seg { width: 100%; display: grid; grid-auto-flow: column; }
+.urn-tools .cc-btn { flex: 1; }
+.urn-stage { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 30px; align-items: center; }
+.urn-frame { position: relative; width: 384px; aspect-ratio: 1; --urn-light: var(--sun); }
+[data-theme="night"] .urn-frame { --urn-light: var(--moon); }
+.urn-frame::before { content: ''; position: absolute; inset: 6% 4% -10%; border-radius: 50%; background: radial-gradient(closest-side, var(--gules-lit), transparent);
+  mix-blend-mode: var(--pool-blend); opacity: calc(.18 + var(--glow-on) * .35); filter: blur(22px); transform: translateY(14%); pointer-events: none; }
+.urn-rose { position: relative; width: 100%; height: 100%; overflow: visible; }
+.lotp--new { fill: url(#g-new); } .lotp--sub { fill: url(#g-sub); } .lotp--raid { fill: url(#g-raid); }
+.lotp { stroke: var(--lead); stroke-width: 2.6; stroke-linejoin: round; animation: cc-ignite .7s var(--ease-light) backwards; animation-delay: calc(var(--i) * 24ms + .35s); transition: filter var(--m-fast); }
+.lotp:hover { filter: brightness(1.3); }
+.urn-mottle { mix-blend-mode: overlay; pointer-events: none; }
+.urn-light { mix-blend-mode: soft-light; pointer-events: none; }
+[data-theme="night"] .urn-light { mix-blend-mode: screen; opacity: .35; }
+[data-theme="night"] .urn-panes { filter: drop-shadow(0 0 6px rgba(255, 106, 85, .35)); }
+.urn-fig { font: 600 64px/1 var(--font-display); fill: var(--ink); }
+.urn-cap { font: 800 13.5px/1 var(--font-label); letter-spacing: .1em; fill: var(--ink-2); }
+.urn-side { display: grid; gap: 18px; align-content: center; }
+.urn-status { display: flex; align-items: center; gap: 10px; font: 800 var(--t-label)/1.25 var(--font-label); letter-spacing: .1em; color: var(--or-ink); }
+.urn-status .cc-lozenge { --ch: var(--or); --ch-lit: var(--or-lit); --ch-glow: var(--or-glow); animation: lot-pulse 1.8s ease-in-out infinite; }
+@keyframes lot-pulse { 50% { opacity: .45; } }
+.urn-legend { display: grid; gap: 0; }
+.urn-legend li { display: grid; grid-template-columns: 16px 1fr auto; gap: 12px; align-items: center; padding: 6px 0; border-top: 1px solid var(--hair); font: 500 15.5px/1.2 var(--font-text); color: var(--ink-2); }
+.urn-legend li:first-child { border-top: 0; }
+.urn-legend b { font: 600 26px/1 var(--font-display); color: var(--ink); }
+.urn-figs { display: grid; grid-template-columns: repeat(3, auto); justify-content: space-between; gap: 10px; padding-top: 14px; border-top: 1px solid var(--hair); }
+.urn-figs .cc-readout--jewel { grid-template-columns: auto; justify-items: center; text-align: center; row-gap: 3px; }
+.urn-figs .cc-jewel { grid-row: auto; margin-bottom: 6px; }
+.urn-caption { font: italic 400 15px/1.3 var(--font-aside); color: var(--muted); }
+/* writ panel */
+.writ-templates { display: grid; gap: 10px; }
+.lot-reason { color: var(--danger-ink); }
+.cc-card--blocked .cc-shield { filter: saturate(.55); }
+.sh-q { font: 800 22px/1 var(--font-text); fill: var(--on-glass); }
+.sh-c { font: 800 12px/1 var(--font-text); fill: var(--lead); }
+.lot-pool { padding: 12px 14px; background: var(--surface-2); border-left: 3px solid var(--ch); font: 400 14.5px/1.5 var(--font-text); color: var(--ink-2); }
+/* bays */
+.lot-setup { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); }
+.lot-col { display: grid; gap: var(--gap); align-content: start; }
+.tier-tiles { display: grid; grid-template-columns: repeat(3, 1fr); }
+.tier-tiles > button { display: grid; gap: 4px; justify-items: center; padding: 12px 8px; }
+.tier-tiles b { font: 800 26px/1 var(--font-text); }
+.tier-tiles span { font: 800 13.5px/1.1 var(--font-label); letter-spacing: .1em; text-transform: lowercase; }
+.tier-tiles small { font: 500 13.5px/1.1 var(--font-text); }
+.cc-etched { padding: 10px 12px; background: var(--tex-etch), var(--surface-2); border: 1.5px dashed var(--ink-2); border-radius: var(--r); font: 500 14px/1.45 var(--font-text); color: var(--ink); }
+.form-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.lot-open { display: flex; align-items: center; gap: 10px; font: 800 14px/1.2 var(--font-label); letter-spacing: .08em; text-transform: lowercase; color: var(--or-ink); }
+.lot-open .cc-lozenge { --ch: var(--or); --ch-lit: var(--or-lit); }
+/* equalizer */
+.eq-top { display: grid; grid-template-columns: 1fr auto; gap: 16px; align-items: end; }
+.eq-chart { position: relative; display: grid; grid-template-columns: repeat(5, 1fr); gap: 18px; padding: 16px 22px 10px; background: var(--surface-2); border: 1.5px solid var(--hair); }
+.eq-col { display: grid; justify-items: center; gap: 6px; height: 190px; grid-template-rows: auto 1fr auto auto; outline-offset: 4px; }
+.eq-w { font: 600 22px/1 var(--font-display); color: var(--ink); }
+.eq-bar { align-self: end; width: 46px; height: var(--h); border-radius: 23px 23px 2px 2px; box-shadow: inset 0 0 0 2px var(--lead), 0 0 calc(var(--glow-on) * 14px) var(--ch-glow);
+  background: var(--tex-glass), linear-gradient(90deg, var(--lead) 0 2px, transparent 2px), linear-gradient(180deg, var(--ch-lit), var(--ch) 45%, var(--ch-deep));
+  background-size: 180px 180px, 100% 26px, 100% 100%; background-blend-mode: overlay, normal, normal; }
+.eq-col:hover .eq-bar, .eq-col:focus-visible .eq-bar { filter: brightness(1.25); }
+.eq-u { font: 700 14px/1 var(--font-text); letter-spacing: .06em; color: var(--ink-2); }
+.eq-d { font: 500 13.5px/1 var(--font-text); color: var(--muted); }
+.eq-curve { position: absolute; left: 22px; right: 22px; top: 44px; height: 2px; border-top: 2.5px dashed var(--ink); pointer-events: none; }
+.eq-key { display: flex; gap: 18px; align-items: center; flex-wrap: wrap; }
+.eq-key span { display: inline-flex; align-items: center; gap: 8px; font: 500 14px/1.2 var(--font-text); color: var(--ink-2); }
+.eq-key .k-bar { width: 12px; height: 16px; border-radius: 6px 6px 1px 1px; background: var(--ch); box-shadow: 0 0 0 1.5px var(--lead); }
+.eq-key .k-line { width: 22px; border-top: 2.5px dashed var(--ink); }
+.eq-proof { display: grid; grid-template-columns: auto 1fr; gap: 6px 16px; align-items: center; padding: 14px; background: var(--surface-2); }
+.eq-proof .cc-jewel { width: 64px; height: 64px; font-size: 26px; }
+.cohort { display: grid; grid-template-columns: 16px 140px 1fr; gap: 6px 12px; align-items: center; padding: 10px 0; border-top: 1px solid var(--hair); }
+.cohort:first-of-type { border-top: 0; }
+.cohort b { font: 800 15px/1.2 var(--font-label); letter-spacing: .06em; text-transform: lowercase; }
+.cohort .cc-row__detail { grid-column: 2 / span 2; }
+/* on stream */
+.stream-grid { display: grid; grid-template-columns: minmax(0, 1fr) 260px; gap: 22px; align-items: start; }
+.stream-fields { display: grid; gap: 14px; }
+.stream-preview { display: grid; gap: 8px; min-width: 0; margin: 0; }
+.stream-preview .cc-sim { white-space: normal; height: auto; padding-block: 4px; line-height: 1.3; }
+.stream-preview .cc-window__glass { aspect-ratio: 1; background: var(--surface-2); }
+.stream-preview img { width: 100%; height: 100%; object-fit: contain; }
+.seg-colours > button::before { content: ''; width: 10px; height: 10px; transform: rotate(45deg); box-shadow: 0 0 0 1.5px var(--lead); background: var(--c); }
+/* seal bay */
+.lot-seal { grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); }
+.guard { display: grid; grid-template-columns: auto 1fr; gap: 14px; align-items: center; padding: 18px var(--pad); }
+.guard .cc-jewel { --ch: var(--emerald); --ch-lit: var(--emerald-lit); --ch-deep: var(--emerald-deep); --ch-glow: var(--emerald-glow); width: 64px; height: 64px; font: 800 16px/1 var(--font-label); letter-spacing: .08em; color: var(--emerald-ink); }
+.seal-slot .cc-panel__body { grid-template-columns: minmax(0, 1fr) 330px; align-items: start; column-gap: 26px; }
+.seal-slot .cc-empty { justify-items: start; text-align: left; padding: 6px 0 0; grid-template-columns: auto 1fr; align-items: center; }
+/* proof bay */
+.lab-grid { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr) minmax(0, 1.15fr); }
+.lab-grid > section { display: grid; gap: 12px; align-content: start; padding: 4px var(--pad) 20px; border-left: 1px solid var(--hair); }
+.lab-grid > section:first-child { border-left: 0; }
+.lab-tamper { display: flex; flex-wrap: wrap; gap: 8px; }
+.lab-quarries { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; border: var(--came) solid var(--lead); background: var(--lead); gap: var(--came); }
+.lab-quarries > li { display: grid; justify-items: center; gap: 4px; padding: 10px 4px 9px; background: var(--surface); text-align: center; }
+.lab-quarries .cc-roundel { --ch: var(--emerald); --ch-lit: var(--emerald-lit); --ch-deep: var(--emerald-deep); --ch-glow: var(--emerald-glow); width: 30px; height: 30px; }
+.lab-quarries b { font: 800 13px/1.1 var(--font-label); letter-spacing: .08em; text-transform: lowercase; }
+.lab-quarries small { font: 700 13px/1 var(--font-text); color: var(--emerald-ink); }
+.lab-meta { display: flex; justify-content: space-between; gap: 10px; font: 500 13.5px/1.2 var(--font-text); color: var(--muted); }
+.rec { display: grid; grid-template-columns: auto 1fr; gap: 3px 10px; margin-top: 6px; font: 400 13px/1.35 var(--font-mono); }
+.rec dt { font: 800 12.5px/1.35 var(--font-label); letter-spacing: .08em; text-transform: lowercase; color: var(--muted); }
+.rec dd { margin: 0; color: var(--ink); overflow-wrap: anywhere; }
+.cc-step .cc-stamp { margin-top: 2px; }
+.cc-step p { font: 400 14px/1.4 var(--font-text); color: var(--ink-2); margin-top: 3px; }
+.lot-proof2 { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+.lot-ticket { display: grid; grid-template-columns: 120px 1fr; }
+.lot-ticket__stub { display: grid; justify-items: center; align-content: center; gap: 10px; padding: 18px 10px; border-right: 2px dashed var(--hair); background: var(--surface-2); }
+.lot-ticket__stub .cc-roundel { width: 56px; height: 56px; font: 600 15px/1 var(--font-display); }
+.lot-ticket__stub b { font: 800 14px/1 var(--font-label); letter-spacing: .12em; text-transform: lowercase; }
+.handles { display: flex; flex-wrap: wrap; gap: 8px; }
+.handles li { padding: 5px 10px; background: var(--surface-2); border: 1.5px solid var(--lead); font: 500 14px/1 var(--font-mono); }
+/* fairness */
+.fair { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; }
+.fair li { position: relative; display: grid; justify-items: center; gap: 10px; padding: 0 18px; text-align: center; }
+.fair li + li::before { content: ''; position: absolute; top: 46px; left: -18%; width: 36%; height: 0; border-top: 3px solid var(--lead); }
+.fair-light { width: 64px; height: 92px; }
+.fair b { font: 800 15px/1.2 var(--font-label); letter-spacing: .08em; text-transform: lowercase; color: var(--ink); }
+.fair p { font: 400 14.5px/1.4 var(--font-text); color: var(--ink-2); max-width: 26ch; }
+@media (max-width: 1380px) {
+  .urn-frame { width: 340px; } .urn-figs { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .urn-stage { gap: 22px; }
+  .lab-grid > section { padding-inline: 14px; }
+  .stream-grid { grid-template-columns: minmax(0, 1fr) 220px; }
+  .seal-slot .cc-panel__body { grid-template-columns: minmax(0, 1fr) 290px; }
+}
+
+</style>
+</head>
+<body class="cc-body">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <radialGradient id="sh-g" cx=".35" cy=".25" r=".9"><stop offset="0" style="stop-color:var(--gules-lit)"/><stop offset=".6" style="stop-color:var(--gules)"/><stop offset="1" style="stop-color:var(--gules-deep)"/></radialGradient>
+    <linearGradient id="fl-gules" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--gules-lit)"/><stop offset=".5" style="stop-color:var(--gules)"/><stop offset="1" style="stop-color:var(--gules-deep)"/></linearGradient><linearGradient id="fl-azure" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--azure-lit)"/><stop offset=".5" style="stop-color:var(--azure)"/><stop offset="1" style="stop-color:var(--azure-deep)"/></linearGradient><linearGradient id="fl-or" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--or-lit)"/><stop offset=".5" style="stop-color:var(--or)"/><stop offset="1" style="stop-color:var(--or-deep)"/></linearGradient><linearGradient id="fl-emerald" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--emerald-lit)"/><stop offset=".5" style="stop-color:var(--emerald)"/><stop offset="1" style="stop-color:var(--emerald-deep)"/></linearGradient>
+  </defs>
+</svg>
+<div class="cc-shell" data-chamber="lottery">
+  <header class="cc-rampart">
+    <a class="cc-brand" href="keep.html" aria-label="Castle Control, the whole keep"><svg class="cc-mark" viewBox="0 0 32 32" aria-hidden="true">
+  <path d="M3 9V4h4v3h3V4h4v3h4V4h3v3h3V4h5v5c0 0 0 0 0 0v12a3 3 0 0 1-3 3H14l-6 5v-5H6a3 3 0 0 1-3-3Z" fill="var(--gules)" stroke="var(--on-lead)" stroke-width="1.4" stroke-linejoin="round"/>
+  <path d="M5 11h22" stroke="var(--lead)" stroke-width="1.2" opacity=".6"/>
+  <path d="M12.5 22v-5.5a3.5 3.5 0 0 1 7 0V22Z" fill="var(--or-lit)" stroke="var(--lead)" stroke-width="1.3"/>
+  <path d="M16 13v9M12.5 18.5h7" stroke="var(--lead)" stroke-width="1"/>
+</svg><span class="cc-wordmark">Castle Control</span></a>
+    <span class="cc-came-v" aria-hidden="true"></span>
+    <div class="cc-live" aria-label="Stream status">
+      <span class="cc-onair"><i class="cc-lamp" data-live="false" aria-hidden="true"></i>On air · simulated</span>
+      <span class="cc-figure"><b>Unknown</b><small>viewers</small></span>
+      <span class="cc-figure"><b>Unknown</b><small>uptime</small></span>
+    </div>
+    <span class="cc-came-v" aria-hidden="true"></span>
+    <div class="cc-links">
+      <span class="cc-chip">Twitch simulated</span>
+      <a href="setup.html" title="Set up OBS"><span class="cc-chip">OBS simulated</span></a>
+      <a href="gatehouse.html"><span class="cc-chip" data-module="moderator"><i class="cc-lozenge" aria-hidden="true"></i>Gatehouse simulated</span></a>
+    </div>
+    <span class="cc-spacer"></span>
+    <span class="cc-sim cc-sim--on-lead">Simulated</span>
+    <button class="cc-iconbtn" type="button" data-theme-toggle aria-label="Switch between day and night glass" title="Theme">
+      <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7.5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M10 2.5a7.5 7.5 0 0 1 0 15Z" fill="currentColor"/></svg>
+    </button>
+    <a class="cc-btn cc-btn--rampart" href="#steward-input" title="Talk to the Steward (/)">Steward <kbd class="cc-kbd">/</kbd></a>
+  </header>
+  <nav class="cc-tabs" aria-label="Chamber strip">
+    <a class="cc-tab" data-module="keep" href="keep.html"><span class="cc-tab__light" aria-hidden="true"></span><kbd class="cc-kbd">0</kbd><b class="cc-tab__name">The Keep</b></a>
+    <a class="cc-tab" data-module="lottery" href="lottery.html" aria-current="page" aria-label="Lot Chamber, No draw, Preview, no proposals"><span class="cc-tab__light" aria-hidden="true"></span><kbd class="cc-kbd">1</kbd><b class="cc-tab__name">Lot Chamber</b><span class="cc-tab__row"><span class="cc-tab__figure">No draw</span><span class="cc-lamps" aria-hidden="true"><i data-lit="false" title="On air · off">On air</i><i data-lit="true" title="Preview">Preview</i><i data-lit="false" title="Draft · off">Draft</i></span></span></a>
+    <a class="cc-tab" data-module="moderator" href="gatehouse.html" aria-label="Gatehouse, 1 held, On air, preview, no proposals"><span class="cc-tab__light" aria-hidden="true"></span><kbd class="cc-kbd">2</kbd><b class="cc-tab__name">Gatehouse</b><span class="cc-tab__row"><span class="cc-tab__figure">1 held</span><span class="cc-lamps" aria-hidden="true"><i data-lit="true" title="On air">On air</i><i data-lit="true" title="Preview">Preview</i><i data-lit="false" title="Draft · off">Draft</i></span></span></a>
+    <a class="cc-tab" data-module="visuals" href="beacons.html" aria-label="Beacons, Offering altar, On air, preview, no proposals"><span class="cc-tab__light" aria-hidden="true"></span><kbd class="cc-kbd">3</kbd><b class="cc-tab__name">Beacons</b><span class="cc-tab__row"><span class="cc-tab__figure">Offering altar</span><span class="cc-lamps" aria-hidden="true"><i data-lit="true" title="On air">On air</i><i data-lit="true" title="Preview">Preview</i><i data-lit="false" title="Draft · off">Draft</i></span></span></a>
+    <a class="cc-tab" data-module="studio" href="maproom.html" aria-label="Map Room, Sand table, Preview, no proposals"><span class="cc-tab__light" aria-hidden="true"></span><kbd class="cc-kbd">4</kbd><b class="cc-tab__name">Map Room</b><span class="cc-tab__row"><span class="cc-tab__figure">Sand table</span><span class="cc-lamps" aria-hidden="true"><i data-lit="false" title="On air · off">On air</i><i data-lit="true" title="Preview">Preview</i><i data-lit="false" title="Draft · off">Draft</i></span></span></a>
+  </nav>
+  <main class="cc-main" aria-label="Lot Chamber">
+    <header class="cc-chamber-head">
+      <div>
+        <nav class="cc-crumbs" aria-label="Breadcrumb"><a href="keep.html">The keep</a><span class="cc-crumbs__sep" aria-hidden="true">›</span><b aria-current="page">Lot Chamber</b><span>· chamber 1 of 4</span></nav>
+        <h1 class="cc-title">The Lot Chamber</h1>
+        <p class="cc-subtitle">Lottery manager <span class="cc-sim">Simulated</span></p>
+      </div>
+      <div class="cc-back"><a class="cc-btn" href="overview.html" data-back>Back to the overview <kbd class="cc-kbd">Esc</kbd></a></div>
+    </header>
+
+    <div class="lot">
+      <div class="lot-hall">
+        <section class="cc-panel" aria-labelledby="urn-t">
+          <div class="cc-panel__head"><h2 class="cc-panel__title" id="urn-t">The urn · every lot drawn as a mark</h2><span class="cc-panel__end cc-actions"><button class="cc-iconbtn" type="button" aria-label="About this stage">i</button><button class="cc-iconbtn" type="button" aria-label="Theatre view">⛶</button></span></div>
+          <div class="cc-panel__body">
+            <div class="urn-stage">
+              <div class="urn-frame"><svg class="urn-rose" viewBox="-212 -212 424 424" role="img" aria-labelledby="urn-rose-t">
+          <title id="urn-rose-t">Urn draw stage · 87 lots, each a pane of the rose: 50 new accounts, 24 subscribers, 13 raiders. Lots arriving, the roll is still open. Simulated.</title>
+          <defs>
+            <radialGradient id="g-new" cx=".35" cy=".3" r=".9"><stop offset="0" style="stop-color:var(--key-lit)"/><stop offset=".55" style="stop-color:var(--key)"/><stop offset="1" style="stop-color:var(--key-deep)"/></radialGradient>
+            <radialGradient id="g-sub" cx=".35" cy=".3" r=".9"><stop offset="0" style="stop-color:var(--gules-lit)"/><stop offset=".5" style="stop-color:var(--gules)"/><stop offset="1" style="stop-color:var(--gules-deep)"/></radialGradient>
+            <radialGradient id="g-raid" cx=".35" cy=".3" r=".9"><stop offset="0" style="stop-color:var(--azure-lit)"/><stop offset=".5" style="stop-color:var(--azure)"/><stop offset="1" style="stop-color:var(--azure-deep)"/></radialGradient>
+            <radialGradient id="g-light" cx=".5" cy=".5" r=".5"><stop offset=".3" style="stop-color:var(--urn-light)" stop-opacity=".9"/><stop offset="1" style="stop-color:var(--urn-light)" stop-opacity="0"/></radialGradient>
+            <filter id="urn-mottle" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency=".02 .07" numOctaves="3" seed="9"/><feColorMatrix values="1 0 0 0 0  1 0 0 0 0  1 0 0 0 0  0 0 0 0 .5"/></filter>
+            <clipPath id="urn-clip"><circle r="192"/></clipPath>
+          </defs>
+          <path d="M0 -200A27 27 0 0 1 51.76 -193.19A27 27 0 0 1 100 -173.21A27 27 0 0 1 141.42 -141.42A27 27 0 0 1 173.21 -100A27 27 0 0 1 193.19 -51.76A27 27 0 0 1 200 0A27 27 0 0 1 193.19 51.76A27 27 0 0 1 173.21 100A27 27 0 0 1 141.42 141.42A27 27 0 0 1 100 173.21A27 27 0 0 1 51.76 193.19A27 27 0 0 1 0 200A27 27 0 0 1 -51.76 193.19A27 27 0 0 1 -100 173.21A27 27 0 0 1 -141.42 141.42A27 27 0 0 1 -173.21 100A27 27 0 0 1 -193.19 51.76A27 27 0 0 1 -200 0A27 27 0 0 1 -193.19 -51.76A27 27 0 0 1 -173.21 -100A27 27 0 0 1 -141.42 -141.42A27 27 0 0 1 -100 -173.21A27 27 0 0 1 -51.76 -193.19A27 27 0 0 1 0 -200Z" fill="var(--stone-3)" stroke="var(--lead)" stroke-width="2"/>
+          <circle r="196" fill="var(--lead)"/>
+          <g class="urn-panes"><path class="lotp lotp--raid" style="--i:0" d="M0 -112A112 112 0 0 1 45.55 -102.32L30.91 -69.43A76 76 0 0 0 0 -76Z"><title>simulated_00001 · raider</title></path><path class="lotp lotp--new" style="--i:1" d="M45.55 -102.32A112 112 0 0 1 83.23 -74.94L56.48 -50.85A76 76 0 0 0 30.91 -69.43Z"><title>simulated_00002 · new account</title></path><path class="lotp lotp--new" style="--i:2" d="M83.23 -74.94A112 112 0 0 1 106.52 -34.61L72.28 -23.49A76 76 0 0 0 56.48 -50.85Z"><title>simulated_00003 · new account</title></path><path class="lotp lotp--sub" style="--i:3" d="M106.52 -34.61A112 112 0 0 1 111.39 11.71L75.58 7.94A76 76 0 0 0 72.28 -23.49Z"><title>simulated_00004 · subscriber</title></path><path class="lotp lotp--new" style="--i:4" d="M111.39 11.71A112 112 0 0 1 96.99 56L65.82 38A76 76 0 0 0 75.58 7.94Z"><title>simulated_00005 · new account</title></path><path class="lotp lotp--new" style="--i:5" d="M96.99 56A112 112 0 0 1 65.83 90.61L44.67 61.49A76 76 0 0 0 65.82 38Z"><title>simulated_00006 · new account</title></path><path class="lotp lotp--sub" style="--i:6" d="M65.83 90.61A112 112 0 0 1 23.29 109.55L15.8 74.34A76 76 0 0 0 44.67 61.49Z"><title>simulated_00007 · subscriber</title></path><path class="lotp lotp--raid" style="--i:7" d="M23.29 109.55A112 112 0 0 1 -23.29 109.55L-15.8 74.34A76 76 0 0 0 15.8 74.34Z"><title>simulated_00008 · raider</title></path><path class="lotp lotp--new" style="--i:8" d="M-23.29 109.55A112 112 0 0 1 -65.83 90.61L-44.67 61.49A76 76 0 0 0 -15.8 74.34Z"><title>simulated_00009 · new account</title></path><path class="lotp lotp--sub" style="--i:9" d="M-65.83 90.61A112 112 0 0 1 -96.99 56L-65.82 38A76 76 0 0 0 -44.67 61.49Z"><title>simulated_00010 · subscriber</title></path><path class="lotp lotp--new" style="--i:10" d="M-96.99 56A112 112 0 0 1 -111.39 11.71L-75.58 7.94A76 76 0 0 0 -65.82 38Z"><title>simulated_00011 · new account</title></path><path class="lotp lotp--new" style="--i:11" d="M-111.39 11.71A112 112 0 0 1 -106.52 -34.61L-72.28 -23.49A76 76 0 0 0 -75.58 7.94Z"><title>simulated_00012 · new account</title></path><path class="lotp lotp--sub" style="--i:12" d="M-106.52 -34.61A112 112 0 0 1 -83.23 -74.94L-56.48 -50.85A76 76 0 0 0 -72.28 -23.49Z"><title>simulated_00013 · subscriber</title></path><path class="lotp lotp--new" style="--i:13" d="M-83.23 -74.94A112 112 0 0 1 -45.55 -102.32L-30.91 -69.43A76 76 0 0 0 -56.48 -50.85Z"><title>simulated_00014 · new account</title></path><path class="lotp lotp--raid" style="--i:14" d="M-45.55 -102.32A112 112 0 0 1 0 -112L0 -76A76 76 0 0 0 -30.91 -69.43Z"><title>simulated_00015 · raider</title></path><path class="lotp lotp--sub" style="--i:15" d="M16.1 -153.16A154 154 0 0 1 47.59 -146.46L34.61 -106.52A112 112 0 0 0 11.71 -111.39Z"><title>simulated_00016 · subscriber</title></path><path class="lotp lotp--new" style="--i:16" d="M47.59 -146.46A154 154 0 0 1 77 -133.37L56 -96.99A112 112 0 0 0 34.61 -106.52Z"><title>simulated_00017 · new account</title></path><path class="lotp lotp--new" style="--i:17" d="M77 -133.37A154 154 0 0 1 103.05 -114.44L74.94 -83.23A112 112 0 0 0 56 -96.99Z"><title>simulated_00018 · new account</title></path><path class="lotp lotp--sub" style="--i:18" d="M103.05 -114.44A154 154 0 0 1 124.59 -90.52L90.61 -65.83A112 112 0 0 0 74.94 -83.23Z"><title>simulated_00019 · subscriber</title></path><path class="lotp lotp--new" style="--i:19" d="M124.59 -90.52A154 154 0 0 1 140.69 -62.64L102.32 -45.55A112 112 0 0 0 90.61 -65.83Z"><title>simulated_00020 · new account</title></path><path class="lotp lotp--new" style="--i:20" d="M140.69 -62.64A154 154 0 0 1 150.63 -32.02L109.55 -23.29A112 112 0 0 0 102.32 -45.55Z"><title>simulated_00021 · new account</title></path><path class="lotp lotp--raid" style="--i:21" d="M150.63 -32.02A154 154 0 0 1 154 0L112 0A112 112 0 0 0 109.55 -23.29Z"><title>simulated_00022 · raider</title></path><path class="lotp lotp--new" style="--i:22" d="M154 0A154 154 0 0 1 150.63 32.02L109.55 23.29A112 112 0 0 0 112 0Z"><title>simulated_00023 · new account</title></path><path class="lotp lotp--new" style="--i:23" d="M150.63 32.02A154 154 0 0 1 140.69 62.64L102.32 45.55A112 112 0 0 0 109.55 23.29Z"><title>simulated_00024 · new account</title></path><path class="lotp lotp--sub" style="--i:24" d="M140.69 62.64A154 154 0 0 1 124.59 90.52L90.61 65.83A112 112 0 0 0 102.32 45.55Z"><title>simulated_00025 · subscriber</title></path><path class="lotp lotp--new" style="--i:25" d="M124.59 90.52A154 154 0 0 1 103.05 114.44L74.94 83.23A112 112 0 0 0 90.61 65.83Z"><title>simulated_00026 · new account</title></path><path class="lotp lotp--new" style="--i:26" d="M103.05 114.44A154 154 0 0 1 77 133.37L56 96.99A112 112 0 0 0 74.94 83.23Z"><title>simulated_00027 · new account</title></path><path class="lotp lotp--sub" style="--i:27" d="M77 133.37A154 154 0 0 1 47.59 146.46L34.61 106.52A112 112 0 0 0 56 96.99Z"><title>simulated_00028 · subscriber</title></path><path class="lotp lotp--raid" style="--i:28" d="M47.59 146.46A154 154 0 0 1 16.1 153.16L11.71 111.39A112 112 0 0 0 34.61 106.52Z"><title>simulated_00029 · raider</title></path><path class="lotp lotp--new" style="--i:29" d="M16.1 153.16A154 154 0 0 1 -16.1 153.16L-11.71 111.39A112 112 0 0 0 11.71 111.39Z"><title>simulated_00030 · new account</title></path><path class="lotp lotp--sub" style="--i:30" d="M-16.1 153.16A154 154 0 0 1 -47.59 146.46L-34.61 106.52A112 112 0 0 0 -11.71 111.39Z"><title>simulated_00031 · subscriber</title></path><path class="lotp lotp--new" style="--i:31" d="M-47.59 146.46A154 154 0 0 1 -77 133.37L-56 96.99A112 112 0 0 0 -34.61 106.52Z"><title>simulated_00032 · new account</title></path><path class="lotp lotp--new" style="--i:32" d="M-77 133.37A154 154 0 0 1 -103.05 114.44L-74.94 83.23A112 112 0 0 0 -56 96.99Z"><title>simulated_00033 · new account</title></path><path class="lotp lotp--sub" style="--i:33" d="M-103.05 114.44A154 154 0 0 1 -124.59 90.52L-90.61 65.83A112 112 0 0 0 -74.94 83.23Z"><title>simulated_00034 · subscriber</title></path><path class="lotp lotp--new" style="--i:34" d="M-124.59 90.52A154 154 0 0 1 -140.69 62.64L-102.32 45.55A112 112 0 0 0 -90.61 65.83Z"><title>simulated_00035 · new account</title></path><path class="lotp lotp--raid" style="--i:35" d="M-140.69 62.64A154 154 0 0 1 -150.63 32.02L-109.55 23.29A112 112 0 0 0 -102.32 45.55Z"><title>simulated_00036 · raider</title></path><path class="lotp lotp--sub" style="--i:36" d="M-150.63 32.02A154 154 0 0 1 -154 0L-112 0A112 112 0 0 0 -109.55 23.29Z"><title>simulated_00037 · subscriber</title></path><path class="lotp lotp--new" style="--i:37" d="M-154 0A154 154 0 0 1 -150.63 -32.02L-109.55 -23.29A112 112 0 0 0 -112 0Z"><title>simulated_00038 · new account</title></path><path class="lotp lotp--new" style="--i:38" d="M-150.63 -32.02A154 154 0 0 1 -140.69 -62.64L-102.32 -45.55A112 112 0 0 0 -109.55 -23.29Z"><title>simulated_00039 · new account</title></path><path class="lotp lotp--sub" style="--i:39" d="M-140.69 -62.64A154 154 0 0 1 -124.59 -90.52L-90.61 -65.83A112 112 0 0 0 -102.32 -45.55Z"><title>simulated_00040 · subscriber</title></path><path class="lotp lotp--new" style="--i:40" d="M-124.59 -90.52A154 154 0 0 1 -103.05 -114.44L-74.94 -83.23A112 112 0 0 0 -90.61 -65.83Z"><title>simulated_00041 · new account</title></path><path class="lotp lotp--new" style="--i:41" d="M-103.05 -114.44A154 154 0 0 1 -77 -133.37L-56 -96.99A112 112 0 0 0 -74.94 -83.23Z"><title>simulated_00042 · new account</title></path><path class="lotp lotp--raid" style="--i:42" d="M-77 -133.37A154 154 0 0 1 -47.59 -146.46L-34.61 -106.52A112 112 0 0 0 -56 -96.99Z"><title>simulated_00043 · raider</title></path><path class="lotp lotp--new" style="--i:43" d="M-47.59 -146.46A154 154 0 0 1 -16.1 -153.16L-11.71 -111.39A112 112 0 0 0 -34.61 -106.52Z"><title>simulated_00044 · new account</title></path><path class="lotp lotp--new" style="--i:44" d="M-16.1 -153.16A154 154 0 0 1 16.1 -153.16L11.71 -111.39A112 112 0 0 0 -11.71 -111.39Z"><title>simulated_00045 · new account</title></path><path class="lotp lotp--sub" style="--i:45" d="M7.18 -191.87A192 192 0 0 1 35.7 -188.65L28.63 -151.32A154 154 0 0 0 5.76 -153.89Z"><title>simulated_00046 · subscriber</title></path><path class="lotp lotp--new" style="--i:46" d="M35.7 -188.65A192 192 0 0 1 63.41 -181.23L50.86 -145.36A154 154 0 0 0 28.63 -151.32Z"><title>simulated_00047 · new account</title></path><path class="lotp lotp--new" style="--i:47" d="M63.41 -181.23A192 192 0 0 1 89.72 -169.75L71.96 -136.15A154 154 0 0 0 50.86 -145.36Z"><title>simulated_00048 · new account</title></path><path class="lotp lotp--sub" style="--i:48" d="M89.72 -169.75A192 192 0 0 1 114.01 -154.48L91.45 -123.91A154 154 0 0 0 71.96 -136.15Z"><title>simulated_00049 · subscriber</title></path><path class="lotp lotp--raid" style="--i:49" d="M114.01 -154.48A192 192 0 0 1 135.76 -135.76L108.89 -108.89A154 154 0 0 0 91.45 -123.91Z"><title>simulated_00050 · raider</title></path><path class="lotp lotp--new" style="--i:50" d="M135.76 -135.76A192 192 0 0 1 154.48 -114.01L123.91 -91.45A154 154 0 0 0 108.89 -108.89Z"><title>simulated_00051 · new account</title></path><path class="lotp lotp--sub" style="--i:51" d="M154.48 -114.01A192 192 0 0 1 169.75 -89.72L136.15 -71.96A154 154 0 0 0 123.91 -91.45Z"><title>simulated_00052 · subscriber</title></path><path class="lotp lotp--new" style="--i:52" d="M169.75 -89.72A192 192 0 0 1 181.23 -63.41L145.36 -50.86A154 154 0 0 0 136.15 -71.96Z"><title>simulated_00053 · new account</title></path><path class="lotp lotp--new" style="--i:53" d="M181.23 -63.41A192 192 0 0 1 188.65 -35.7L151.32 -28.63A154 154 0 0 0 145.36 -50.86Z"><title>simulated_00054 · new account</title></path><path class="lotp lotp--sub" style="--i:54" d="M188.65 -35.7A192 192 0 0 1 191.87 -7.18L153.89 -5.76A154 154 0 0 0 151.32 -28.63Z"><title>simulated_00055 · subscriber</title></path><path class="lotp lotp--new" style="--i:55" d="M191.87 -7.18A192 192 0 0 1 190.79 21.5L153.03 17.24A154 154 0 0 0 153.89 -5.76Z"><title>simulated_00056 · new account</title></path><path class="lotp lotp--raid" style="--i:56" d="M190.79 21.5A192 192 0 0 1 185.46 49.69L148.75 39.86A154 154 0 0 0 153.03 17.24Z"><title>simulated_00057 · raider</title></path><path class="lotp lotp--sub" style="--i:57" d="M185.46 49.69A192 192 0 0 1 175.98 76.78L141.15 61.58A154 154 0 0 0 148.75 39.86Z"><title>simulated_00058 · subscriber</title></path><path class="lotp lotp--new" style="--i:58" d="M175.98 76.78A192 192 0 0 1 162.57 102.15L130.4 81.93A154 154 0 0 0 141.15 61.58Z"><title>simulated_00059 · new account</title></path><path class="lotp lotp--new" style="--i:59" d="M162.57 102.15A192 192 0 0 1 145.53 125.24L116.73 100.45A154 154 0 0 0 130.4 81.93Z"><title>simulated_00060 · new account</title></path><path class="lotp lotp--sub" style="--i:60" d="M145.53 125.24A192 192 0 0 1 125.24 145.53L100.45 116.73A154 154 0 0 0 116.73 100.45Z"><title>simulated_00061 · subscriber</title></path><path class="lotp lotp--new" style="--i:61" d="M125.24 145.53A192 192 0 0 1 102.15 162.57L81.93 130.4A154 154 0 0 0 100.45 116.73Z"><title>simulated_00062 · new account</title></path><path class="lotp lotp--new" style="--i:62" d="M102.15 162.57A192 192 0 0 1 76.78 175.98L61.58 141.15A154 154 0 0 0 81.93 130.4Z"><title>simulated_00063 · new account</title></path><path class="lotp lotp--raid" style="--i:63" d="M76.78 175.98A192 192 0 0 1 49.69 185.46L39.86 148.75A154 154 0 0 0 61.58 141.15Z"><title>simulated_00064 · raider</title></path><path class="lotp lotp--new" style="--i:64" d="M49.69 185.46A192 192 0 0 1 21.5 190.79L17.24 153.03A154 154 0 0 0 39.86 148.75Z"><title>simulated_00065 · new account</title></path><path class="lotp lotp--new" style="--i:65" d="M21.5 190.79A192 192 0 0 1 -7.18 191.87L-5.76 153.89A154 154 0 0 0 17.24 153.03Z"><title>simulated_00066 · new account</title></path><path class="lotp lotp--sub" style="--i:66" d="M-7.18 191.87A192 192 0 0 1 -35.7 188.65L-28.63 151.32A154 154 0 0 0 -5.76 153.89Z"><title>simulated_00067 · subscriber</title></path><path class="lotp lotp--new" style="--i:67" d="M-35.7 188.65A192 192 0 0 1 -63.41 181.23L-50.86 145.36A154 154 0 0 0 -28.63 151.32Z"><title>simulated_00068 · new account</title></path><path class="lotp lotp--new" style="--i:68" d="M-63.41 181.23A192 192 0 0 1 -89.72 169.75L-71.96 136.15A154 154 0 0 0 -50.86 145.36Z"><title>simulated_00069 · new account</title></path><path class="lotp lotp--sub" style="--i:69" d="M-89.72 169.75A192 192 0 0 1 -114.01 154.48L-91.45 123.91A154 154 0 0 0 -71.96 136.15Z"><title>simulated_00070 · subscriber</title></path><path class="lotp lotp--raid" style="--i:70" d="M-114.01 154.48A192 192 0 0 1 -135.76 135.76L-108.89 108.89A154 154 0 0 0 -91.45 123.91Z"><title>simulated_00071 · raider</title></path><path class="lotp lotp--new" style="--i:71" d="M-135.76 135.76A192 192 0 0 1 -154.48 114.01L-123.91 91.45A154 154 0 0 0 -108.89 108.89Z"><title>simulated_00072 · new account</title></path><path class="lotp lotp--sub" style="--i:72" d="M-154.48 114.01A192 192 0 0 1 -169.75 89.72L-136.15 71.96A154 154 0 0 0 -123.91 91.45Z"><title>simulated_00073 · subscriber</title></path><path class="lotp lotp--new" style="--i:73" d="M-169.75 89.72A192 192 0 0 1 -181.23 63.41L-145.36 50.86A154 154 0 0 0 -136.15 71.96Z"><title>simulated_00074 · new account</title></path><path class="lotp lotp--new" style="--i:74" d="M-181.23 63.41A192 192 0 0 1 -188.65 35.7L-151.32 28.63A154 154 0 0 0 -145.36 50.86Z"><title>simulated_00075 · new account</title></path><path class="lotp lotp--sub" style="--i:75" d="M-188.65 35.7A192 192 0 0 1 -191.87 7.18L-153.89 5.76A154 154 0 0 0 -151.32 28.63Z"><title>simulated_00076 · subscriber</title></path><path class="lotp lotp--new" style="--i:76" d="M-191.87 7.18A192 192 0 0 1 -190.79 -21.5L-153.03 -17.24A154 154 0 0 0 -153.89 5.76Z"><title>simulated_00077 · new account</title></path><path class="lotp lotp--raid" style="--i:77" d="M-190.79 -21.5A192 192 0 0 1 -185.46 -49.69L-148.75 -39.86A154 154 0 0 0 -153.03 -17.24Z"><title>simulated_00078 · raider</title></path><path class="lotp lotp--sub" style="--i:78" d="M-185.46 -49.69A192 192 0 0 1 -175.98 -76.78L-141.15 -61.58A154 154 0 0 0 -148.75 -39.86Z"><title>simulated_00079 · subscriber</title></path><path class="lotp lotp--new" style="--i:79" d="M-175.98 -76.78A192 192 0 0 1 -162.57 -102.15L-130.4 -81.93A154 154 0 0 0 -141.15 -61.58Z"><title>simulated_00080 · new account</title></path><path class="lotp lotp--new" style="--i:80" d="M-162.57 -102.15A192 192 0 0 1 -145.53 -125.24L-116.73 -100.45A154 154 0 0 0 -130.4 -81.93Z"><title>simulated_00081 · new account</title></path><path class="lotp lotp--sub" style="--i:81" d="M-145.53 -125.24A192 192 0 0 1 -125.24 -145.53L-100.45 -116.73A154 154 0 0 0 -116.73 -100.45Z"><title>simulated_00082 · subscriber</title></path><path class="lotp lotp--new" style="--i:82" d="M-125.24 -145.53A192 192 0 0 1 -102.15 -162.57L-81.93 -130.4A154 154 0 0 0 -100.45 -116.73Z"><title>simulated_00083 · new account</title></path><path class="lotp lotp--new" style="--i:83" d="M-102.15 -162.57A192 192 0 0 1 -76.78 -175.98L-61.58 -141.15A154 154 0 0 0 -81.93 -130.4Z"><title>simulated_00084 · new account</title></path><path class="lotp lotp--raid" style="--i:84" d="M-76.78 -175.98A192 192 0 0 1 -49.69 -185.46L-39.86 -148.75A154 154 0 0 0 -61.58 -141.15Z"><title>simulated_00085 · raider</title></path><path class="lotp lotp--new" style="--i:85" d="M-49.69 -185.46A192 192 0 0 1 -21.5 -190.79L-17.24 -153.03A154 154 0 0 0 -39.86 -148.75Z"><title>simulated_00086 · new account</title></path><path class="lotp lotp--new" style="--i:86" d="M-21.5 -190.79A192 192 0 0 1 7.18 -191.87L5.76 -153.89A154 154 0 0 0 -17.24 -153.03Z"><title>simulated_00087 · new account</title></path></g>
+          <circle r="112" fill="none" stroke="var(--lead)" stroke-width="4"/><circle r="154" fill="none" stroke="var(--lead)" stroke-width="4"/><circle r="192" fill="none" stroke="var(--lead)" stroke-width="4"/>
+          <rect x="-192" y="-192" width="384" height="384" filter="url(#urn-mottle)" clip-path="url(#urn-clip)" class="urn-mottle"/>
+          <circle r="192" fill="url(#g-light)" class="urn-light"/>
+          <path d="M0 -76A76 76 0 0 1 19.67 -73.41L17.08 -63.75A66 66 0 0 0 0 -66Z" fill="var(--or-lit)" stroke="var(--lead)" stroke-width="1.6"/><path d="M19.67 -73.41A76 76 0 0 1 38 -65.82L33 -57.16A66 66 0 0 0 17.08 -63.75Z" fill="var(--or)" stroke="var(--lead)" stroke-width="1.6"/><path d="M38 -65.82A76 76 0 0 1 53.74 -53.74L46.67 -46.67A66 66 0 0 0 33 -57.16Z" fill="var(--or-lit)" stroke="var(--lead)" stroke-width="1.6"/><path d="M53.74 -53.74A76 76 0 0 1 65.82 -38L57.16 -33A66 66 0 0 0 46.67 -46.67Z" fill="var(--or)" stroke="var(--lead)" stroke-width="1.6"/><path d="M65.82 -38A76 76 0 0 1 73.41 -19.67L63.75 -17.08A66 66 0 0 0 57.16 -33Z" fill="var(--or-lit)" stroke="var(--lead)" stroke-width="1.6"/><path d="M73.41 -19.67A76 76 0 0 1 76 0L66 0A66 66 0 0 0 63.75 -17.08Z" fill="var(--or)" stroke="var(--lead)" stroke-width="1.6"/><path d="M76 0A76 76 0 0 1 73.41 19.67L63.75 17.08A66 66 0 0 0 66 0Z" fill="var(--or-lit)" stroke="var(--lead)" stroke-width="1.6"/><path d="M73.41 19.67A76 76 0 0 1 65.82 38L57.16 33A66 66 0 0 0 63.75 17.08Z" fill="var(--or)" stroke="var(--lead)" stroke-width="1.6"/><path d="M65.82 38A76 76 0 0 1 53.74 53.74L46.67 46.67A66 66 0 0 0 57.16 33Z" fill="var(--or-lit)" stroke="var(--lead)" stroke-width="1.6"/><path d="M53.74 53.74A76 76 0 0 1 38 65.82L33 57.16A66 66 0 0 0 46.67 46.67Z" fill="var(--or)" stroke="var(--lead)" stroke-width="1.6"/><path d="M38 65.82A76 76 0 0 1 19.67 73.41L17.08 63.75A66 66 0 0 0 33 57.16Z" fill="var(--or-lit)" stroke="var(--lead)" stroke-width="1.6"/><path d="M19.67 73.41A76 76 0 0 1 0 76L0 66A66 66 0 0 0 17.08 63.75Z" fill="var(--or)" stroke="var(--lead)" stroke-width="1.6"/><path d="M0 76A76 76 0 0 1 -19.67 73.41L-17.08 63.75A66 66 0 0 0 0 66Z" fill="var(--or-lit)" stroke="var(--lead)" stroke-width="1.6"/><path d="M-19.67 73.41A76 76 0 0 1 -38 65.82L-33 57.16A66 66 0 0 0 -17.08 63.75Z" fill="var(--or)" stroke="var(--lead)" stroke-width="1.6"/><path d="M-38 65.82A76 76 0 0 1 -53.74 53.74L-46.67 46.67A66 66 0 0 0 -33 57.16Z" fill="var(--or-lit)" stroke="var(--lead)" stroke-width="1.6"/><path d="M-53.74 53.74A76 76 0 0 1 -65.82 38L-57.16 33A66 66 0 0 0 -46.67 46.67Z" fill="var(--or)" stroke="var(--lead)" stroke-width="1.6"/><path d="M-65.82 38A76 76 0 0 1 -73.41 19.67L-63.75 17.08A66 66 0 0 0 -57.16 33Z" fill="var(--or-lit)" stroke="var(--lead)" stroke-width="1.6"/><path d="M-73.41 19.67A76 76 0 0 1 -76 0L-66 0A66 66 0 0 0 -63.75 17.08Z" fill="var(--or)" stroke="var(--lead)" stroke-width="1.6"/><path d="M-76 0A76 76 0 0 1 -73.41 -19.67L-63.75 -17.08A66 66 0 0 0 -66 0Z" fill="var(--or-lit)" stroke="var(--lead)" stroke-width="1.6"/><path d="M-73.41 -19.67A76 76 0 0 1 -65.82 -38L-57.16 -33A66 66 0 0 0 -63.75 -17.08Z" fill="var(--or)" stroke="var(--lead)" stroke-width="1.6"/><path d="M-65.82 -38A76 76 0 0 1 -53.74 -53.74L-46.67 -46.67A66 66 0 0 0 -57.16 -33Z" fill="var(--or-lit)" stroke="var(--lead)" stroke-width="1.6"/><path d="M-53.74 -53.74A76 76 0 0 1 -38 -65.82L-33 -57.16A66 66 0 0 0 -46.67 -46.67Z" fill="var(--or)" stroke="var(--lead)" stroke-width="1.6"/><path d="M-38 -65.82A76 76 0 0 1 -19.67 -73.41L-17.08 -63.75A66 66 0 0 0 -33 -57.16Z" fill="var(--or-lit)" stroke="var(--lead)" stroke-width="1.6"/><path d="M-19.67 -73.41A76 76 0 0 1 0 -76L0 -66A66 66 0 0 0 -17.08 -63.75Z" fill="var(--or)" stroke="var(--lead)" stroke-width="1.6"/>
+          <circle r="66" fill="var(--surface)" stroke="var(--lead)" stroke-width="3"/>
+          <circle r="60" fill="none" stroke="var(--hair)" stroke-width="1"/>
+          <text class="urn-fig" y="16" text-anchor="middle">87</text>
+          <text class="urn-cap" y="38" text-anchor="middle">lots · eligible</text>
+        </svg></div>
+              <div class="urn-side">
+                <div class="urn-tools">
+                  <div class="cc-seg" role="group" aria-label="Draw shape"><button type="button" aria-pressed="true">Urn</button><button type="button" aria-pressed="false">Wheel</button><button type="button" aria-pressed="false">Deck</button><button type="button" aria-pressed="false">Ballot box</button></div>
+              <button class="cc-btn cc-btn--sm" type="button" aria-pressed="false">Reveal by hand</button>
+              <button class="cc-btn cc-btn--sm" type="button" aria-pressed="false">♪ Ceremony sound</button>
+                </div>
+                <p class="urn-status"><i class="cc-lozenge" aria-hidden="true"></i>Lots arriving · the roll is still open</p>
+                <ul class="urn-legend" aria-label="Lots coloured by cohort">
+                  <li style="--g:var(--key);--g-lit:var(--key-lit);--g-deep:var(--key-deep)"><i class="cc-swatch"></i>New accounts <b>50</b></li>
+                  <li style="--g:var(--gules);--g-lit:var(--gules-lit);--g-deep:var(--gules-deep)"><i class="cc-swatch"></i>Subscribers <b>24</b></li>
+                  <li style="--g:var(--azure);--g-lit:var(--azure-lit);--g-deep:var(--azure-deep)"><i class="cc-swatch"></i>Raiders <b>13</b></li>
+                </ul>
+                <div class="urn-figs" role="group" aria-label="Headline figures">
+                  <div class="cc-readout cc-readout--jewel"><span class="cc-jewel">3</span><span class="cc-readout__label">Winners</span><span class="cc-readout__sub">selected draw</span></div>
+                  <div class="cc-readout cc-readout--jewel"><span class="cc-jewel">5</span><span class="cc-readout__label">Held out</span><span class="cc-readout__sub">by cooldown</span></div>
+                  <div class="cc-readout cc-readout--jewel"><span class="cc-jewel cc-jewel--wide">1/3</span><span class="cc-readout__label">Raider cap</span><span class="cc-readout__sub">of winners</span></div>
+                </div>
+                <p class="urn-caption">every lot drawn as a mark</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="cc-panel" aria-labelledby="writ-t">
+          <div class="cc-panel__head"><h2 class="cc-panel__title" id="writ-t">The writ</h2><span class="cc-panel__aside">drafted in ink, sealed by you</span><span class="cc-stamp cc-stamp--waiting">No draft waiting</span></div>
+          <div class="cc-panel__body">
+            <div><p class="cc-kicker">Writ templates</p><p class="cc-aside">Tell the Steward which draw. Its proposal will ink in here.</p></div>
+            <ul class="writ-templates" aria-label="Writ templates">
+        <li class="cc-card" data-selected="true">
+          <svg class="cc-shield" viewBox="0 0 44 50" aria-hidden="true">
+            <path d="M3 3h38v20c0 14-9 21-19 26C12 44 3 37 3 23Z" fill="url(#sh-g)" stroke="var(--lead)" stroke-width="2.4" stroke-linejoin="round"/>
+            <path d="M3 3h38v20c0 14-9 21-19 26C12 44 3 37 3 23Z" fill="none" stroke="var(--or-lit)" stroke-width="1.2" transform="translate(22 25) scale(.84) translate(-22 -25)" opacity=".85"/>
+            <text x="22" y="32" text-anchor="middle" class="sh-q">?</text>
+          </svg>
+          <span><b class="cc-row__title">Questions for the hall</b><span class="cc-row__detail">No prize · proposal only</span></span>
+          <span class="cc-row__end"><span class="cc-stamp cc-stamp--ok">OK</span><button class="cc-btn cc-btn--sm cc-btn--primary" type="button">Draft writ</button></span>
+        </li>
+        <li class="cc-card cc-card--blocked">
+          <svg class="cc-shield" viewBox="0 0 44 50" aria-hidden="true">
+            <path d="M3 3h38v20c0 14-9 21-19 26C12 44 3 37 3 23Z" fill="url(#sh-g)" stroke="var(--lead)" stroke-width="2.4" stroke-linejoin="round"/>
+            <path d="M3 3h38v20c0 14-9 21-19 26C12 44 3 37 3 23Z" fill="none" stroke="var(--or-lit)" stroke-width="1.2" transform="translate(22 25) scale(.84) translate(-22 -25)" opacity=".85"/>
+            <path d="M14 13h16v5c0 6-4 9-8 9s-8-3-8-9Zm8 14v6m-5 3h10" fill="var(--or-lit)" stroke="var(--lead)" stroke-width="1.6" stroke-linejoin="round"/>
+          </svg>
+          <span><b class="cc-row__title">Free-entry prize example</b><span class="cc-row__detail">Prize · proposal only</span><span class="cc-row__detail lot-reason">Attach an official-rules template before starting a prize draw.</span><span class="cc-row__detail lot-reason">Acknowledge the Twitch disclaimer before starting a prize draw.</span></span>
+          <span class="cc-row__end"><span class="cc-stamp cc-stamp--blocked">Blocked</span><button class="cc-btn cc-btn--sm" type="button">Draft writ</button></span>
+        </li>
+        <li class="cc-card cc-card--blocked">
+          <svg class="cc-shield" viewBox="0 0 44 50" aria-hidden="true">
+            <path d="M3 3h38v20c0 14-9 21-19 26C12 44 3 37 3 23Z" fill="url(#sh-g)" stroke="var(--lead)" stroke-width="2.4" stroke-linejoin="round"/>
+            <path d="M3 3h38v20c0 14-9 21-19 26C12 44 3 37 3 23Z" fill="none" stroke="var(--or-lit)" stroke-width="1.2" transform="translate(22 25) scale(.84) translate(-22 -25)" opacity=".85"/>
+            <circle cx="22" cy="23" r="9" fill="var(--or-lit)" stroke="var(--lead)" stroke-width="1.6"/><text x="22" y="27.5" text-anchor="middle" class="sh-c">$</text><path d="M11 34 33 12" stroke="var(--lead)" stroke-width="4"/><path d="M11 34 33 12" stroke="var(--clear-lit)" stroke-width="1.6"/>
+          </svg>
+          <span><b class="cc-row__title">Paid-weight blocked example</b><span class="cc-row__detail">Prize · proposal only</span><span class="cc-row__detail lot-reason">Paid weight on a prize draw is blocked.</span></span>
+          <span class="cc-row__end"><span class="cc-stamp cc-stamp--blocked">Blocked</span><button class="cc-btn cc-btn--sm" type="button">Draft writ</button></span>
+        </li>
+            </ul>
+            <p class="lot-pool">Pool: chatters · question · 600 second cooldown · 5 held out by cooldown · Weight table: every generated entry has weight 1. Two newcomers outweigh the heaviest entrant.</p>
+          </div>
+        </section>
+      </div>
+
+      <section class="cc-bay" aria-labelledby="bay-I">
+      <div class="cc-bay__head"><span class="cc-roundel cc-bay__mark" aria-hidden="true">I</span><h2 class="cc-bay__title" id="bay-I">Setup</h2><span class="cc-bay__rule" aria-hidden="true"></span></div>
+      <div class="cc-grid lot-setup">
+        <div class="lot-col">
+          <section class="cc-panel" aria-labelledby="tier-t">
+            <div class="cc-panel__head"><h3 class="cc-panel__title" id="tier-t">Overlord urn · room tier</h3></div>
+            <div class="cc-panel__body">
+              <div class="cc-seg cc-seg--block tier-tiles" role="group" aria-label="Overlord urn · room tier">
+                <button type="button" aria-pressed="true"><b>S</b><span>Hearth</span><small>3 winners</small></button>
+                <button type="button" aria-pressed="false"><b>M</b><span>Hall</span><small>7 winners</small></button>
+                <button type="button" aria-pressed="false"><b>L</b><span>Courtyard</span><small>15 winners</small></button>
+              </div>
+              <p class="cc-aside">One click sets the urn and the plan’s winner count for your room size. It configures the draw before sealing and never changes a cast.</p>
+            </div>
+          </section>
+          <section class="cc-panel" aria-labelledby="setup-t">
+            <div class="cc-panel__head"><h3 class="cc-panel__title" id="setup-t">Next draw setup</h3></div>
+            <div class="cc-panel__body">
+              <p class="cc-etched">SIMULATED: generated messages are !join (every third entry) or !question. Every second entry follows; every fifth has redeemed. No Twitch data.</p>
+              <label class="cc-field"><span class="cc-field__label">Draw name</span><input class="cc-input" value="Questions for the hall"></label>
+              <div class="cc-field"><span class="cc-field__label" id="ct-l">Content type</span><div class="cc-seg cc-seg--sm" role="group" aria-labelledby="ct-l"><button type="button" aria-pressed="true">Question</button><button type="button" aria-pressed="false">Idea</button><button type="button" aria-pressed="false">Prize</button><button type="button" aria-pressed="false">Jury seat</button></div></div>
+              <div class="cc-field"><span class="cc-field__label" id="ep-l">Eligible pool</span><div class="cc-seg cc-seg--sm" role="group" aria-labelledby="ep-l"><button type="button" aria-pressed="true">Chatters</button><button type="button" aria-pressed="false">Followers</button><button type="button" aria-pressed="false">Subscribers</button><button type="button" aria-pressed="false">Channel-point redeemers</button><button type="button" aria-pressed="false">Keyword typists</button></div></div>
+              <div class="form-2">
+                <label class="cc-field"><span class="cc-field__label">Winners</span><input class="cc-input cc-input--num" type="number" value="3" min="1"></label>
+                <label class="cc-field"><span class="cc-field__label">Cooldown in seconds</span><input class="cc-input cc-input--num" type="number" value="600" min="0"></label>
+              </div>
+              <div class="cc-field"><span class="cc-field__label" id="rc-l">Raider cohort cap</span><div class="cc-seg cc-seg--sm" role="group" aria-labelledby="rc-l"><button type="button" aria-pressed="true">1 / 3</button><button type="button" aria-pressed="false">2 / 3</button><button type="button" aria-pressed="false">3 / 3</button></div></div>
+              <fieldset class="cc-field" style="border:0;padding:0;margin:0"><legend class="cc-field__label" style="margin-bottom:8px">Weights</legend>
+                <div style="display:grid;gap:8px">
+                  <label class="cc-choice cc-choice--block"><input type="radio" name="w" checked> Equal odds · 1× for every lot</label>
+                  <label class="cc-choice cc-choice--block"><input type="radio" name="w"> Concave activity weights</label>
+                </div>
+              </fieldset>
+              <p class="cc-note">Activity units are generated from 0 to 4. Free !join forces equal odds across the entire pool.</p>
+              <label class="cc-choice"><input type="checkbox" checked> <span class="cc-strong">Free !join path with equal odds</span></label>
+              <p class="cc-note">Newcomer weight 1; heaviest 1. 2 newcomers outweigh the heaviest entrant.</p>
+              <details class="cc-disclosure"><summary>Generated weight table</summary><div class="cc-disclosure__body">
+                <table class="cc-table"><thead><tr><th>Activity units</th><th class="cc-num">Weight</th></tr></thead><tbody><tr><td>0u</td><td class="cc-num">1</td></tr><tr><td>1u</td><td class="cc-num">1</td></tr><tr><td>2u</td><td class="cc-num">1</td></tr><tr><td>3u</td><td class="cc-num">1</td></tr><tr><td>4u</td><td class="cc-num">1</td></tr></tbody></table>
+              </div></details>
+              <div class="cc-actions"><button class="cc-btn cc-btn--primary" type="button">Preview this draw</button><button class="cc-btn" type="button">Pause intake</button></div>
+              <p class="lot-open"><i class="cc-lozenge" aria-hidden="true"></i>Open · lots arriving</p>
+              <p class="cc-text" role="status">No draw changes yet.</p>
+              <p class="cc-note">Review the writ below, then hold to seal in the seal slot. Editing setup discards its previous preview.</p>
+            </div>
+          </section>
+        </div>
+        <div class="lot-col">
+          <section class="cc-panel" aria-labelledby="eq-t">
+            <div class="cc-panel__head"><h3 class="cc-panel__title" id="eq-t">Weight &amp; cap equalizer</h3><span class="cc-panel__aside">How much activity can tilt the odds</span><span class="cc-stamp cc-stamp--ok">Free path · equal</span></div>
+            <div class="cc-panel__body">
+              <p class="cc-text">Chat activity can add weight, but each extra unit adds less. Money never adds weight.</p>
+              <div class="cc-seg" role="group" aria-label="Weight curve"><button type="button" aria-pressed="false">Equal</button><button type="button" aria-pressed="false">Concave</button><button type="button" aria-pressed="true">Free !join · equal odds</button></div>
+              <div class="form-2">
+                <div class="cc-field"><span class="cc-field__label">Activity cap</span><span class="cc-stepper"><button type="button" disabled aria-label="Lower activity cap">−</button><output>—</output><button type="button" disabled aria-label="Raise activity cap">+</button></span></div>
+                <div class="cc-field"><span class="cc-field__label" id="rc2-l">Raider cohort cap</span><div class="cc-seg cc-seg--sm" role="group" aria-labelledby="rc2-l"><button type="button" aria-pressed="false">0 / 3 · raiders excluded</button><button type="button" aria-pressed="true">1 / 3</button><button type="button" aria-pressed="false">2 / 3</button><button type="button" aria-pressed="false">3 / 3</button></div></div>
+              </div>
+              <p class="cc-note">Cap 1–8 units here. Simulated pool activity runs 0–4 units.</p>
+              <div class="eq-chart" role="group" aria-label="Weight per entry by activity units">
+                <span class="eq-curve" aria-hidden="true"></span>
+                <div class="eq-col" tabindex="0" aria-label="0 activity units: weight 1"><span class="eq-w">1</span><span class="eq-bar cc-glass" style="--h:100%"></span><span class="eq-u">0u</span><span class="eq-d">&nbsp;</span></div><div class="eq-col" tabindex="0" aria-label="1 activity units: weight 1, +0"><span class="eq-w">1</span><span class="eq-bar cc-glass" style="--h:100%"></span><span class="eq-u">1u</span><span class="eq-d">+0</span></div><div class="eq-col" tabindex="0" aria-label="2 activity units: weight 1, +0"><span class="eq-w">1</span><span class="eq-bar cc-glass" style="--h:100%"></span><span class="eq-u">2u</span><span class="eq-d">+0</span></div><div class="eq-col" tabindex="0" aria-label="3 activity units: weight 1, +0"><span class="eq-w">1</span><span class="eq-bar cc-glass" style="--h:100%"></span><span class="eq-u">3u</span><span class="eq-d">+0</span></div><div class="eq-col" tabindex="0" aria-label="4 activity units: weight 1, +0"><span class="eq-w">1</span><span class="eq-bar cc-glass" style="--h:100%"></span><span class="eq-u">4u</span><span class="eq-d">+0</span></div>
+              </div>
+              <div class="eq-key"><span><i class="k-bar"></i>Weight per entry</span><span><i class="k-line"></i>Curve</span><span class="cc-aside">Point at a bar to light those lots on the stage.</span></div>
+              <p class="cc-note">Free !join path is on: every entry gets equal odds, so the curve is flat. Switch it off to let activity weigh in.</p>
+              <div class="eq-proof"><span class="cc-jewel" style="grid-row:span 2">2</span><p class="cc-text">2 newcomers (2 × 1 = 2) outweigh the heaviest entrant (1).</p><p class="cc-note">Heaviest figure comes from the current simulated pool.</p></div>
+              <div class="cc-sub">
+                <p class="cc-sub__title">Weight held by cohort</p>
+                <div class="cohort" style="--g:var(--key);--g-lit:var(--key-lit);--g-deep:var(--key-deep)"><i class="cc-swatch"></i><b>New accounts</b><span class="cc-meter"><i style="--v:57%"></i></span><span class="cc-row__detail">50 lots · 57% of heads · 57% of weight</span></div><div class="cohort" style="--g:var(--gules);--g-lit:var(--gules-lit);--g-deep:var(--gules-deep)"><i class="cc-swatch"></i><b>Subscribers</b><span class="cc-meter"><i style="--v:28%"></i></span><span class="cc-row__detail">24 lots · 28% of heads · 28% of weight</span></div><div class="cohort" style="--g:var(--azure);--g-lit:var(--azure-lit);--g-deep:var(--azure-deep)"><i class="cc-swatch"></i><b>Raiders</b><span class="cc-meter"><i style="--v:15%"></i></span><span class="cc-row__detail">13 lots · 15% of heads · 15% of weight</span></div>
+              </div>
+              <div class="cc-sub"><p class="cc-sub__title">Raider cap</p><p class="cc-text">Raiders can take at most 1 of 3 winners.</p></div>
+            </div>
+          </section>
+          <section class="cc-panel" aria-labelledby="st-t">
+            <div class="cc-panel__head"><h3 class="cc-panel__title" id="st-t">On stream</h3></div>
+            <div class="cc-panel__body stream-grid">
+              <div class="stream-fields">
+                <div class="cc-field"><span class="cc-field__label">Draw shape</span><div class="cc-seg cc-seg--sm" role="group"><button type="button" aria-pressed="true">Urn</button><button type="button" aria-pressed="false">Wheel</button><button type="button" aria-pressed="false">Deck</button><button type="button" aria-pressed="false">Ballot box</button></div></div>
+                <div class="form-2">
+                  <div class="cc-field"><span class="cc-field__label">Urn size</span><div class="cc-seg cc-seg--sm" role="group"><button type="button" aria-pressed="false">S</button><button type="button" aria-pressed="true">M</button><button type="button" aria-pressed="false">L</button></div></div>
+                  <label class="cc-field"><span class="cc-field__label">Reveal timing in ms</span><input class="cc-input cc-input--num" type="number" value="1500" min="100" max="10000"></label>
+                </div>
+                <div class="cc-field"><span class="cc-field__label">Screen anchor</span><div class="cc-seg cc-seg--sm" role="group"><button type="button" aria-pressed="false">Top left</button><button type="button" aria-pressed="false">Top right</button><button type="button" aria-pressed="false">Bottom left</button><button type="button" aria-pressed="true">Bottom right</button><button type="button" aria-pressed="false">Center</button></div></div>
+                <div class="cc-field"><span class="cc-field__label">Urn colour</span><div class="cc-seg cc-seg--sm seg-colours" role="group"><button type="button" aria-pressed="true" style="--c:var(--gules)">Gules · red</button><button type="button" aria-pressed="false" style="--c:var(--azure)">Azure · blue</button><button type="button" aria-pressed="false" style="--c:var(--or)">Or · gold</button><button type="button" aria-pressed="false" style="--c:var(--key)">Key · ink</button></div></div>
+                <div class="cc-field"><span class="cc-field__label">Art style</span><div class="cc-seg cc-seg--sm" role="group"><button type="button" aria-pressed="true">Heraldic</button><button type="button" aria-pressed="false">Arcade</button><button type="button" aria-pressed="false">Neon</button><button type="button" aria-pressed="false">Storybook</button><button type="button" aria-pressed="false">Cel</button><button type="button" aria-pressed="false">Glass</button></div></div>
+                <p class="cc-note">Appearance stays in this session and is not saved with the draw. Reveal timing: 100–10000 ms.</p>
+              </div>
+              <figure class="stream-preview">
+                <div class="cc-window"><div class="cc-window__glass"><img src="../_assets/preset-heraldic-urn.webp" alt="Sample art: the urn in the heraldic style"></div></div>
+                <figcaption class="cc-note">Urn · as the OBS draw page paints it · <span class="cc-sim cc-sim--plain">Simulated · sample art · AI-generated</span></figcaption>
+              </figure>
+            </div>
+          </section>
+        </div>
+      </div>
+    </section>
+
+      <section class="cc-bay" aria-labelledby="bay-II">
+      <div class="cc-bay__head"><span class="cc-roundel cc-bay__mark" aria-hidden="true">II</span><h2 class="cc-bay__title" id="bay-II">Seal</h2><span class="cc-bay__rule" aria-hidden="true"></span></div>
+      <div class="cc-grid lot-seal">
+        <section class="cc-panel" aria-labelledby="gr-t" data-chamber="lottery">
+          <div class="guard"><span class="cc-jewel">OK</span><div><h3 class="cc-panel__title" id="gr-t">Giveaway guardrails</h3><p class="cc-aside">local preview</p></div></div>
+        </section>
+        <section class="cc-panel seal-slot" aria-labelledby="ss-t">
+          <div class="cc-panel__head"><h3 class="cc-panel__title" id="ss-t">Proposal · awaiting your seal</h3><span class="cc-sim">Simulated · data-only designs</span></div>
+          <div class="cc-panel__body">
+            <div style="display:grid;gap:12px">
+              <p class="cc-text">Nothing acts until you hold to seal.</p>
+              <div class="cc-actions"><button class="cc-btn cc-btn--sm" type="button">Draw shapes</button><button class="cc-btn cc-btn--sm" type="button">Restyle</button><button class="cc-btn cc-btn--sm" type="button">Custom design</button></div>
+              <div class="cc-empty"><svg class="cc-empty__glyph" viewBox="0 0 28 40" aria-hidden="true"><path d="M2 39V14C2 7 8 2 14 1c6 1 12 6 12 13v25Z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M2 22h24M14 1v38" stroke="currentColor" stroke-width="1.2" opacity=".7"/></svg><p class="cc-empty__text">No proposals. Ask the Steward to draft one.</p></div>
+            </div>
+            <button class="cc-seal" type="button" disabled aria-label="Hold to seal" aria-describedby="ls-hint">
+              <span class="cc-seal__rose" aria-hidden="true"></span>
+              <span><span class="cc-seal__label">Hold to seal</span><span class="cc-seal__hint" id="ls-hint">Press and hold Space for 1 second</span></span>
+            </button>
+          </div>
+        </section>
+      </div>
+    </section>
+
+      <section class="cc-bay" aria-labelledby="bay-III">
+      <div class="cc-bay__head"><span class="cc-roundel cc-bay__mark" aria-hidden="true">III</span><h2 class="cc-bay__title" id="bay-III">Proof</h2><span class="cc-bay__rule" aria-hidden="true"></span></div>
+      <section class="cc-panel" aria-labelledby="lab-t">
+        <div class="cc-panel__head"><h3 class="cc-panel__title" id="lab-t">Writ Lab</h3><span class="cc-panel__aside">tamper and verify</span><span class="cc-sim">Simulated</span></div>
+        <div class="cc-panel__body" style="padding-inline:0">
+          <p class="cc-text" style="padding-inline:var(--pad)">Alter one thing in an in-memory copy of this writ and watch the proof refuse it. The frozen roll itself never changes.</p>
+          <div class="lab-grid">
+            <section aria-label="Specimen and tamper">
+              <p class="cc-kicker">Specimen</p>
+              <div class="cc-seg cc-seg--sm" role="group" aria-label="Specimen"><button type="button" aria-pressed="true">Current writ</button><button type="button" aria-pressed="false">Simulated beacon writ</button></div>
+              <button class="cc-btn cc-btn--sm" type="button" style="justify-self:start">Open a writ file…</button>
+              <p class="cc-kicker" style="margin-top:6px">Tamper with a copy</p>
+              <div class="lab-tamper"><button class="cc-btn cc-btn--sm" type="button">Weight +1</button><button class="cc-btn cc-btn--sm" type="button">Alter a handle</button><button class="cc-btn cc-btn--sm" type="button">Flip a seed bit</button><button class="cc-btn cc-btn--sm" type="button">Move the round</button><button class="cc-btn cc-btn--sm" type="button">Swap two winners</button></div>
+              <p class="cc-note" role="status">Canonical writ restored.</p>
+              <ol class="lab-quarries" aria-label="Proof steps"><li><span class="cc-roundel" aria-hidden="true">1</span><b>Roll</b><small>Pass</small></li><li><span class="cc-roundel" aria-hidden="true">2</span><b>Seal</b><small>Pass</small></li><li><span class="cc-roundel" aria-hidden="true">3</span><b>Seed</b><small>Pass</small></li><li><span class="cc-roundel" aria-hidden="true">4</span><b>Winners</b><small>Pass</small></li></ol>
+              <p class="cc-verdict"><span class="cc-lozenge" style="--ch:var(--emerald);--ch-lit:var(--emerald-lit)" aria-hidden="true"></span>Writ verified · every step passes.</p>
+              <button class="cc-btn cc-btn--sm" type="button" style="justify-self:start">Restore canonical writ</button>
+            </section>
+            <section aria-label="Frozen roll">
+              <p class="cc-kicker">Frozen roll · canonical bytes</p>
+              <p class="cc-note">The seal is SHA-256 over these exact bytes: domain tag, entry count, each handle and weight, winner count, seal time, margin and the randomness plan.</p>
+              <code class="cc-hash cc-hash--block">{"handle":"simulated_00","weight":14}
+{"handle":"simulated_01","weight":21}
+{"handle":"simulated_02","weight":28}</code>
+              <p class="lab-meta"><span>3 entries · 148 bytes</span><span>Byte 0</span></p>
+              <div class="cc-bytes" aria-label="First 16 bytes"><span>63</span><span>61</span><span>73</span><span>74</span><span>6c</span><span>65</span><span>2d</span><span>63</span><span>6f</span><span>6e</span><span>74</span><span>72</span><span>6f</span><span>6c</span><span>2f</span><span>73</span></div>
+              <p class="cc-note"><a class="cc-link" href="#" onclick="return false">Download writ JSON</a> · The download is always the untampered writ.</p>
+            </section>
+            <section aria-label="Proof walk">
+              <p class="cc-kicker">Proof walk · four steps</p>
+              <ol class="cc-steps"><li class="cc-step"><span class="cc-roundel cc-step__num" aria-hidden="true">1</span><div><p class="cc-step__title">1. Canonical roll</p><p>Handles ascend, weights are whole, the winner count fits.</p><p class="cc-note">3 entries · 148 bytes</p></div><span class="cc-stamp cc-stamp--ok">Pass</span></li><li class="cc-step"><span class="cc-roundel cc-step__num" aria-hidden="true">2</span><div><p class="cc-step__title">2. SHA-256 seal</p><p>Recompute the hash of the frozen bytes and compare it with the announced seal.</p><dl class="rec"><dt>Recorded</dt><dd>7a3df29d60…ae403a</dd><dt>Recomputed</dt><dd>7a3df29d60…ae403a</dd></dl></div><span class="cc-stamp cc-stamp--ok">Pass</span></li><li class="cc-step"><span class="cc-roundel cc-step__num" aria-hidden="true">3</span><div><p class="cc-step__title">3. Randomness commitment</p><p>Check the revealed seed or beacon against what the roll committed to.</p><p class="cc-note">Streamer-controlled · commit and reveal</p><dl class="rec"><dt>Recorded</dt><dd>22cc2224d3…a90d32</dd><dt>Recomputed</dt><dd>22cc2224d3…a90d32</dd></dl></div><span class="cc-stamp cc-stamp--ok">Pass</span></li><li class="cc-step"><span class="cc-roundel cc-step__num" aria-hidden="true">4</span><div><p class="cc-step__title">4. Winner derivation</p><p>Re-run rejection sampling from the seed and compare winners in order.</p><dl class="rec"><dt>Recorded</dt><dd>simulated_01, simulated_00</dd><dt>Recomputed</dt><dd>simulated_01, simulated_00</dd></dl></div><span class="cc-stamp cc-stamp--ok">Pass</span></li></ol>
+              <details class="cc-disclosure"><summary>Rejection sampling trace · 2 draws · 0 rejected</summary><div class="cc-disclosure__body"><p class="cc-note">Draw 1 · simulated_01 accepted. Draw 2 · simulated_00 accepted.</p></div></details>
+              <p class="cc-note">Simulated proof. Recomputed offline in this window; nothing is published or fetched.</p>
+            </section>
+          </div>
+        </div>
+      </section>
+      <div class="cc-grid lot-proof2">
+        <section class="cc-panel" aria-labelledby="lk-t">
+          <div class="cc-panel__head"><h3 class="cc-panel__title" id="lk-t">Find a handle in the roll</h3></div>
+          <div class="cc-panel__body">
+            <label class="cc-field"><span class="cc-sr">Find a handle in the roll</span><input class="cc-input" type="search" placeholder="simulated_00001" autocomplete="off"></label>
+            <p class="cc-note">Try simulated_00001 or simulated_cooldown.</p>
+            <p class="cc-text" role="status">Enter a generated handle to check this pool.</p>
+          </div>
+        </section>
+        <section class="cc-panel lot-ticket" aria-label="Saved simulated proof bundle">
+          <div class="lot-ticket__stub" data-chamber="lottery"><svg viewBox="0 0 56 56" width="56" height="56" aria-hidden="true"><circle cx="28" cy="28" r="25" fill="url(#sh-g)" stroke="var(--lead)" stroke-width="2.4"/><circle cx="28" cy="28" r="17" fill="none" stroke="var(--or-lit)" stroke-width="1.4"/><path d="M28 16l3.5 8 8.5.6-6.5 5.5 2 8.4L28 34l-7.5 4.5 2-8.4L16 24.6l8.5-.6Z" fill="var(--or-lit)" stroke="var(--lead)" stroke-width="1.4" stroke-linejoin="round"/></svg><b>Writ</b></div>
+          <div>
+            <div class="cc-panel__head"><h3 class="cc-panel__title">Saved simulated proof bundle</h3><time class="cc-panel__end cc-mono" datetime="2026-10-25T12:00:00Z">2026-10-25</time></div>
+            <div class="cc-panel__body">
+              <p class="cc-sub__title">Recorded winners</p>
+              <ul class="handles"><li>simulated_01</li><li>simulated_00</li></ul>
+              <details class="cc-disclosure"><summary>The writ</summary><div class="cc-disclosure__body">
+                <p class="cc-sub__title">Reference vector · saved simulated proof</p>
+                <p class="cc-aside">Saved simulated proof bundle · independent of the current setup and roll. Streamer-controlled seed, not public randomness.</p>
+                <code class="cc-hash cc-hash--block">7a3df29d6035aa8ede203967174adfeaad804e9421fc46e2d5cd5f9c40ae403a</code>
+                <button class="cc-btn cc-btn--sm" type="button" style="justify-self:start">Recompute fixture cast</button>
+              </div></details>
+            </div>
+          </div>
+        </section>
+      </div>
+    </section>
+
+      <section class="cc-bay" aria-labelledby="bay-IV">
+      <div class="cc-bay__head"><span class="cc-roundel cc-bay__mark" aria-hidden="true">IV</span><h2 class="cc-bay__title" id="bay-IV">Fairness</h2><span class="cc-bay__rule" aria-hidden="true"></span></div>
+      <section class="cc-panel" aria-labelledby="fair-t">
+        <div class="cc-panel__head"><h3 class="cc-panel__title" id="fair-t">Fairness you can verify</h3></div>
+        <div class="cc-panel__body" style="gap:22px">
+          <ol class="fair">
+            <li><svg class="fair-light" viewBox="0 0 64 92" aria-hidden="true" data-module="gules">
+          <path d="M3 90V30C3 14 16 4 32 1c16 3 29 13 29 29v60Z" fill="var(--stone-3)" stroke="var(--lead)" stroke-width="2"/>
+          <path d="M9 86V31C9 18 19 10 32 7c13 3 23 11 23 24v55Z" fill="url(#fl-gules)" stroke="var(--lead)" stroke-width="2.4"/>
+          <path d="M9 50h46M32 7v79" stroke="var(--lead)" stroke-width="1.4" opacity=".7"/>
+          <circle cx="32" cy="38" r="11" fill="var(--or-lit)" stroke="var(--lead)" stroke-width="2"/><path d="M27 38h10M32 33v10" stroke="var(--lead)" stroke-width="2"/>
+        </svg><b>Seal</b><p>Freeze the entry list and publish its hash.</p></li>
+            <li><svg class="fair-light" viewBox="0 0 64 92" aria-hidden="true" data-module="azure">
+          <path d="M3 90V30C3 14 16 4 32 1c16 3 29 13 29 29v60Z" fill="var(--stone-3)" stroke="var(--lead)" stroke-width="2"/>
+          <path d="M9 86V31C9 18 19 10 32 7c13 3 23 11 23 24v55Z" fill="url(#fl-azure)" stroke="var(--lead)" stroke-width="2.4"/>
+          <path d="M9 50h46M32 7v79" stroke="var(--lead)" stroke-width="1.4" opacity=".7"/>
+          <circle cx="32" cy="36" r="12" fill="none" stroke="var(--or-lit)" stroke-width="3"/><path d="M32 28v8l5 4" stroke="var(--or-lit)" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+        </svg><b>Public round announced</b><p>Choose a future public round after the seal.</p></li>
+            <li><svg class="fair-light" viewBox="0 0 64 92" aria-hidden="true" data-module="or">
+          <path d="M3 90V30C3 14 16 4 32 1c16 3 29 13 29 29v60Z" fill="var(--stone-3)" stroke="var(--lead)" stroke-width="2"/>
+          <path d="M9 86V31C9 18 19 10 32 7c13 3 23 11 23 24v55Z" fill="url(#fl-or)" stroke="var(--lead)" stroke-width="2.4"/>
+          <path d="M9 50h46M32 7v79" stroke="var(--lead)" stroke-width="1.4" opacity=".7"/>
+          <path d="M32 22 41 38 32 54 23 38Z" fill="var(--azure-lit)" stroke="var(--lead)" stroke-width="2"/>
+        </svg><b>Round arrives</b><p>Authenticate the public round before deriving winners.</p></li>
+            <li><svg class="fair-light" viewBox="0 0 64 92" aria-hidden="true" data-module="emerald">
+          <path d="M3 90V30C3 14 16 4 32 1c16 3 29 13 29 29v60Z" fill="var(--stone-3)" stroke="var(--lead)" stroke-width="2"/>
+          <path d="M9 86V31C9 18 19 10 32 7c13 3 23 11 23 24v55Z" fill="url(#fl-emerald)" stroke="var(--lead)" stroke-width="2.4"/>
+          <path d="M9 50h46M32 7v79" stroke="var(--lead)" stroke-width="1.4" opacity=".7"/>
+          <path d="M22 38l7 8 13-16" fill="none" stroke="var(--clear-lit)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg><b>Cast</b><p>Derive winners, then show the fixed result.</p></li>
+          </ol>
+          <div class="cc-sub" style="grid-template-columns:1fr 1fr;column-gap:24px">
+            <p class="cc-note">Test mode only. These steps describe the live protocol. This page neither publishes a seal nor fetches a round.</p>
+            <p class="cc-note">This recompute accepts only the built-in simulated proof. To check another writ, open it in the Writ Lab.</p>
+          </div>
+        </div>
+      </section>
+    </section>
+    </div>
+  </main>
+  <footer class="cc-dock" data-chamber="keep" aria-label="The Steward">
+    <div class="cc-steward"><svg class="cc-steward__niche" viewBox="0 0 44 62" aria-hidden="true">
+  <path d="M3 61V24C3 12 12 4 22 1c10 3 19 11 19 23v37Z" fill="var(--stone-3)" stroke="var(--lead)" stroke-width="2"/>
+  <path d="M8 58V26c0-9 6-15 14-18 8 3 14 9 14 18v32Z" fill="var(--amethyst-deep)" stroke="var(--lead)" stroke-width="2"/>
+  <path d="M8 40h28M22 8v50" stroke="var(--lead)" stroke-width="1.2" opacity=".55"/>
+  <ellipse cx="22" cy="31" rx="11" ry="14" fill="var(--or-lit)" opacity=".28"/>
+  <rect x="18.5" y="34" width="7" height="16" fill="var(--clear-lit)" stroke="var(--lead)" stroke-width="1.4"/>
+  <path class="cc-flame" d="M22 21c4 5 5 9 0 12-5-3-4-7 0-12Z" fill="var(--or-lit)" stroke="var(--lead)" stroke-width="1.2"/>
+  <path d="M12 52h20" stroke="var(--lead)" stroke-width="2.5"/>
+</svg>
+      <b class="cc-steward__name">The Steward</b>
+      <span class="cc-steward__role">simulated co-pilot · sample data</span>
+      <span class="cc-sim">Simulated</span>
+    </div>
+    <form class="cc-talk" onsubmit="return false">
+      <p class="cc-talk__msg">Good evening. Draft in the preview, amend in ink, then hold to seal. Nothing acts on a spoken request.</p>
+      <div class="cc-talk__row">
+        <label class="cc-sr" for="steward-input">Talk to the Steward</label>
+        <input class="cc-input" id="steward-input" placeholder="Talk to the Steward..." autocomplete="off">
+        <button class="cc-btn" type="submit" disabled>Tell</button>
+        <span class="cc-suggest">
+          <button class="cc-btn cc-btn--quiet" type="button">Catch me up</button>
+          <button class="cc-btn cc-btn--quiet" type="button">Draft a question draw</button>
+          <button class="cc-btn cc-btn--quiet" type="button">What does chat want?</button>
+        </span>
+      </div>
+    </form>
+  </footer>
+</div>
+<button class="cc-proto-toggle" type="button" data-theme-toggle title="Prototype only: not part of the design">◐ proto</button>
+<script>
+(function(){
+  var root=document.documentElement;
+  function flip(){var n=root.getAttribute('data-theme')==='night'?'day':'night';root.setAttribute('data-theme',n);try{var u=new URL(location.href);u.searchParams.set('theme',n);history.replaceState(null,'',u);}catch(e){}}
+  document.querySelectorAll('[data-theme-toggle]').forEach(function(b){b.addEventListener('click',flip);});
+  var go={'0':'keep.html','1':'lottery.html','2':'gatehouse.html','3':'beacons.html','4':'maproom.html'};
+  document.addEventListener('keydown',function(e){
+    var t=e.target; if(e.metaKey||e.ctrlKey||e.altKey)return;
+    if(t&&(t.isContentEditable||/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)))return;
+    if(e.key==='/'){e.preventDefault();var i=document.getElementById('steward-input');if(i)i.focus();return;}
+    if(e.key==='Escape'){var b=document.querySelector('[data-back]');if(b){location.href=b.getAttribute('href');}return;}
+    if(go[e.key]){var q=location.search;location.href=go[e.key]+q;}
+  });
+})();
+</script>
+<script>
+// Segmented panes are single-choice: pressing one releases its siblings (static prototype behaviour).
+document.querySelectorAll('.cc-seg[role="group"]').forEach(function(g){g.addEventListener('click',function(e){var b=e.target.closest('button');if(!b||b.disabled)return;g.querySelectorAll('button').forEach(function(x){x.setAttribute('aria-pressed',x===b);});});});
+document.querySelectorAll('.urn-tools > .cc-btn[aria-pressed]').forEach(function(b){b.addEventListener('click',function(){b.setAttribute('aria-pressed',b.getAttribute('aria-pressed')!=='true');});});
+</script>
+</body>
+</html>

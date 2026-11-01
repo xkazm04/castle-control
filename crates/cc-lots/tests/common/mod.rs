@@ -44,6 +44,7 @@ pub fn rules() -> RollRules {
 
 pub fn simulated_message(n: u64, seconds: i64) -> MessageFacts {
     MessageFacts {
+        simulated: true,
         message_id: MessageId::try_from(format!("simulated-{n}-{seconds}")).unwrap(),
         user_id: user(n),
         at: at(seconds),

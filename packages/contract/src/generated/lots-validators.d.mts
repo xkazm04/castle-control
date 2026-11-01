@@ -18,4 +18,6 @@ export const p32: ValidateFunction<RpcMethods["lots.cast"]['params']>;
 export const r32: ValidateFunction<RpcMethods["lots.cast"]['result']>;
 export const p33: ValidateFunction<RpcMethods["lots.writ.get"]['params']>;
 export const r33: ValidateFunction<RpcMethods["lots.writ.get"]['result']>;
+export const p56: ValidateFunction<RpcMethods["lots.source.url"]['params']>;
+export const r56: ValidateFunction<RpcMethods["lots.source.url"]['result']>;
 export const lotsEvent: ValidateFunction<LotsEventPayload>;

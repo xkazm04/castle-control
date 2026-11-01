@@ -173,7 +173,7 @@ function validators(schema) {
   const gatehouseNames = byPrefix('gatehouse.');
   const shared = sharedSchemas(schema);
   const declarations = [banner, "import type { ValidateFunction } from 'ajv';",
-    "import type { RpcMethods, StreamEvent, LotsEventPayload, ConsensusEventPayload, BeaconsEventPayload, DesignPackage, ErrorEnvelope, AskParams, AskResult, Writ, WritSealParams, WritSealResult, WritTearParams, WritTearResult, StewardEventPayload } from './types.js';"];
+    "import type { RpcMethods, StreamEvent, LotsEventPayload, ConsensusEventPayload, BeaconsEventPayload, RehearsalEventPayload, DesignPackage, ErrorEnvelope, AskParams, AskResult, Writ, WritSealParams, WritSealResult, WritTearParams, WritTearResult, StewardEventPayload } from './types.js';"];
   const lotsDeclarations = [banner, "import type { ValidateFunction } from 'ajv';",
     "import type { RpcMethods, LotsEventPayload } from './types.js';"];
   const gatehouseDeclarations = [banner, "import type { ValidateFunction } from 'ajv';",
@@ -213,6 +213,7 @@ function validators(schema) {
   entry('lotsEvent', schema.types.LotsEventPayload, 'LotsEventPayload', true);
   entry('consensusEvent', schema.types.ConsensusEventPayload, 'ConsensusEventPayload');
   entry('beaconsEvent', schema.types.BeaconsEventPayload, 'BeaconsEventPayload');
+  entry('rehearsalEvent', schema.types.RehearsalEventPayload, 'RehearsalEventPayload');
   entry('designPackage', schema.types.DesignPackage, 'DesignPackage');
   for (const name of ['AskParams', 'AskResult', 'Writ', 'WritSealParams', 'WritSealResult',
     'WritTearParams', 'WritTearResult', 'StewardEventPayload']) {
@@ -230,6 +231,10 @@ function validators(schema) {
     .find(([, type]) => type === 'VoteBarSnapshot')?.[0];
   if (!voteEvent) throw new Error('Missing vote bar snapshot identifier');
   const voteExports = { shape: shared.reference(schema.types.VoteBarSnapshot) };
+  const tiltyardEvent = Object.entries(schema.overlay_push_events ?? {})
+    .find(([, type]) => type === 'TiltyardRenderSnapshot')?.[0];
+  if (!tiltyardEvent) throw new Error('Missing tiltyard snapshot identifier');
+  const tiltyardExports = { shape: shared.reference(schema.types.TiltyardRenderSnapshot) };
   ajv.addSchema(shared.document());
   const map = (prefix) => schema.methods.map((m, i) => `[${JSON.stringify(m.name)}, compiled.${prefix}${i}]`).join(',');
   const methods = [], lotsMethods = [], gatehouseMethods = [], beaconsMethods = [], stewardMethods = [];
@@ -243,6 +248,17 @@ function validators(schema) {
     if (stewardNames.has(m.name)) stewardMethods.push(declaration);
   });
   return {
+    'tiltyard-render-validators.mjs': compileValidators(ajv, tiltyardExports, formatSource),
+    'tiltyard-render-validators.d.mts': `${banner}import type { ValidateFunction } from 'ajv';\n`
+      + `import type { TiltyardRenderSnapshot } from './types.js';\nexport const shape: ValidateFunction<TiltyardRenderSnapshot>;\n`,
+    'tiltyard-render-validation.ts': `${banner}import { parseJson } from '../door.mjs';\n`
+      + `import { shape } from './tiltyard-render-validators.mjs';\n`
+      + `import type { TiltyardRenderSnapshot } from './types.js';\n`
+      + `export type { TiltyardRenderSnapshot, TiltyardSide, TiltyardVerdict } from './types.js';\n`
+      + `export const TILTYARD_RENDER_SNAPSHOT_EVENT = ${JSON.stringify(tiltyardEvent)} as const;\n`
+      + `export function parseTiltyardRenderSnapshot(text: string): TiltyardRenderSnapshot {\n`
+      + `  const value = parseJson(text);\n`
+      + `  if (!shape(value)) throw new Error('Invalid tiltyard snapshot');\n  return value;\n}\n`,
     'vote-bar-validators.mjs': compileValidators(ajv, voteExports, formatSource),
     'vote-bar-validators.d.mts': `${banner}import type { ValidateFunction } from 'ajv';\n`
       + `import type { VoteBarSnapshot } from './types.js';\nexport const shape: ValidateFunction<VoteBarSnapshot>;\n`,

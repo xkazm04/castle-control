@@ -1125,6 +1125,47 @@ hosts, optional ports and paths/queries; credentials, fragments, whitespace,
 non-ASCII input and malformed escapes are refused. Endpoint authorization and
 cloud opt-in enforcement remain the engine's job. The CLI remains slow-lane only.
 
+**Dress rehearsal contract identifiers (D2, WP R.1), 2026-11-01.**
+
+All entries below are **Declared / Pending implementation**. This delivery adds
+only types, parsing and mirrors; it registers no handler and changes no behavior.
+The existing registry permits declared-but-unregistered methods, as with Map Room.
+
+| Method | Params -> result | Status |
+| --- | --- | --- |
+| `obs.connect` (WP R.1) | `ObsConnectParams { host: String, port: u16, password: String, remember: bool }` -> existing `ObsStatus { connected: bool }` | Declared / Pending implementation |
+| `obs.scene.ensure` (WP R.1) | `ObsSceneEnsureParams { scene_name: String }` (1..256 Unicode characters) -> `ObsSceneEnsureResult { created: bool }` | Declared / Pending implementation |
+| `obs.rehearsal.clear` (WP R.1) | `Empty` -> `ObsRehearsalClearResult { removed: u32 }` | Declared / Pending implementation |
+| `lots.source.url` (WP R.1) | `LotsSourceUrlParams { draw_id: DrawId }` -> existing `SourceUrlResult { url: LoopbackSourceUrl }` | Declared / Pending implementation |
+| `rehearsal.start` (WP R.1) | `Empty` -> `RehearsalStatus` | Declared / Pending implementation |
+| `rehearsal.stop` (WP R.1) | `Empty` -> `RehearsalStatus` | Declared / Pending implementation |
+| `rehearsal.scenario.run` (WP R.1) | `RehearsalScenarioParams { scenario: RehearsalScenario, visual_id?: VisualId }` -> `RehearsalScenarioResult { accepted: bool }`; visual_id is meaningful only for beacon_fire | Declared / Pending implementation |
+| `rehearsal.crowd.set` (WP R.1) | `RehearsalCrowdParams { per_minute: u16 }` (0..=600, rejected outside range) -> `RehearsalStatus` | Declared / Pending implementation |
+| `tiltyard.source.url` (WP R.1) | `Empty` -> existing `SourceUrlResult { url: LoopbackSourceUrl }` | Declared / Pending implementation |
+
+| Event or type | Payload, fields or constraints | Status |
+| --- | --- | --- |
+| `rehearsal.status` (WP R.1) | Control invalidation kind, with separate `RehearsalEventPayload { kind: "rehearsal.status", payload: RehearsalStatus }` binding; shared StreamEvent stays seq/at/kind only | Declared / Pending implementation |
+| `tiltyard.render.snapshot` (WP R.1) | Overlay-host SSE full replacement carrying `TiltyardRenderSnapshot`, separate from control /events, following Beacons and the vote bar | Declared / Pending implementation |
+| `RehearsalStatus` | `active: bool`, `crowd_per_minute: u16`, existing `obs: ObsStatus`, optional `scene_name: String`, `at: Timestamp`; everything Rehearsal makes is implicitly SIMULATED, so there is no simulated field | Declared / Pending implementation |
+| `RehearsalScenario` | Exactly `lots_fill`, `vote_round`, `beacon_fire`, `duel_round`; optional VisualId reuses Beacons' slug type | Declared / Pending implementation |
+| `TiltyardRenderSnapshot` | `left: TiltyardSide`, `right: TiltyardSide`, `ballots: u32`, optional `verdict: TiltyardVerdict`, required `simulated: bool`, `at: Timestamp` | Declared / Pending implementation |
+| `TiltyardSide` | `label: String`, `count: u32` | Declared / Pending implementation |
+| `TiltyardVerdict` | Exactly `left`, `right`, `tie` | Declared / Pending implementation |
+
+All new records deny unknown fields. Optional keys are omitted when absent and
+reject explicit null. Timestamps use the existing UTC parser. OBS passwords are
+redacted from Debug, including enclosing RpcRequest Debug; parsing errors never
+echo input. No Display or logging implementation exposes them. The two new source
+URL methods reuse Beacons' canonical loopback URL result. Scene length validation
+belongs to the new ensure params; existing ObsSourceParams is unchanged.
+
+The TS overlay door is `@castle-control/contract/tiltyard-render`, exporting
+`parseTiltyardRenderSnapshot` and `TILTYARD_RENDER_SNAPSHOT_EVENT`; it compiles
+independently of the eager RPC validators. `parseRehearsalEvent` parses the separate
+typed status binding. Shared generated, simulated fixtures live in
+`crates/cc-types/tests/fixtures/rehearsal.json`.
+
 **Conventions:**
 
 - **Method names** are `<module>.<noun>.<verb>`, in lower camel case.
@@ -1146,6 +1187,10 @@ cloud opt-in enforcement remain the engine's job. The CLI remains slow-lane only
 | steward | `steward.ask`, `steward.writ.seal`, `steward.writ.tear` |
 | gatehouse (read additions) | `gatehouse.chat.list`, `gatehouse.history.list`, `gatehouse.liveRun.get` |
 | gatehouse (OBS source) | `gatehouse.source.url` |
+| obs (WP R.1; Declared / Pending implementation) | `obs.connect`, `obs.scene.ensure`, `obs.rehearsal.clear` |
+| lots (WP R.1; Declared / Pending implementation) | `lots.source.url` |
+| rehearsal (WP R.1; Declared / Pending implementation) | `rehearsal.start`, `rehearsal.stop`, `rehearsal.scenario.run`, `rehearsal.crowd.set` |
+| tiltyard (WP R.1; Declared / Pending implementation) | `tiltyard.source.url` |
 
 **Stream events on `/events`.** Every event carries `seq`, `at` and `kind`:
 
@@ -1155,6 +1200,7 @@ cloud opt-in enforcement remain the engine's job. The CLI remains slow-lane only
 - **beacons:** `beacons.contribution`, `beacons.intensity`;
 - **maproom:** `maproom.turn`;
 - **steward:** `steward.writ`;
+- **rehearsal (WP R.1; Declared / Pending implementation):** `rehearsal.status`;
 - **resync:** `resync`, sent when the client's `since_seq` is older than the buffer.
 
 **Enums:**

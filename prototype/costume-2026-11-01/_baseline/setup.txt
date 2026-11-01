@@ -1,0 +1,85 @@
+CASTLE CONTROL
+ON AIR · SIMULATED
+Unknown
+VIEWERS
+Unknown
+UPTIME
+TWITCH SIMULATED
+OBS SIMULATED
+GATEHOUSE SIMULATED
+SIMULATED
+STEWARD
+BACK TO THE KEEP
+ON STREAM Set up OBS
+SIMULATED
+REFRESH OBS AND OUTPUTS
+
+Choose an existing scene in OBS. Hold to add a transparent browser source, then inspect its placement in OBS.
+
+Scene name
+Source size
+1080p · 1920 × 1080
+720p · 1280 × 720
+vertical · 1080 × 1920
+1920 × 1080
+
+Simulated setup · no OBS source will be created.
+
+Beacons visuals and the aggregate-only Gatehouse vote bar use the size above. Lot plates become available after a sealed draw. Configure visuals in Beacons.
+
+Offering altar
+IDLE
+
+1920 × 1080 · Scene: Scene
+
+COPY BROWSER-SOURCE URL
+HOLD TO SEAL AND PROCLAIM
+Press and hold Space for 1 second
+HOLD TO SEAL AND PROCLAIM
+Press and hold Space for 1 second
+
+Hold to add this visual as a browser source in OBS.
+
+Gilded camera frame
+IDLE
+
+1920 × 1080 · Scene: Scene
+
+COPY BROWSER-SOURCE URL
+HOLD TO SEAL AND PROCLAIM
+Press and hold Space for 1 second
+HOLD TO SEAL AND PROCLAIM
+Press and hold Space for 1 second
+
+Hold to add this visual as a browser source in OBS.
+
+Hype border
+IDLE
+
+1920 × 1080 · Scene: Scene
+
+COPY BROWSER-SOURCE URL
+HOLD TO SEAL AND PROCLAIM
+Press and hold Space for 1 second
+HOLD TO SEAL AND PROCLAIM
+Press and hold Space for 1 second
+
+Hold to add this visual as a browser source in OBS.
+
+Lot plate
+UNAVAILABLE
+Open the Lot Chamber
+
+Available after a sealed draw. Open the Lot Chamber for its on-stream plate.
+
+THE STEWARD
+simulated co-pilot · sample data
+SIMULATED
+
+Good evening. Draft in the preview, amend in ink, then hold to seal. Nothing acts on a spoken request.
+
+Talk to the Steward...
+Tell
+Catch me up
+Draft a question draw
+What does chat want?

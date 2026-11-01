@@ -1,0 +1,5 @@
+.cc-kit-stamps { display: grid; gap: var(--space-20); padding-block: var(--space-16); }
+.cc-kit-stamps h3, .cc-kit-stamps h4 { margin: 0; font: 700 var(--text-shell-label)/1.4 var(--font-ui); }
+.cc-kit-stamps [data-size="shell"] { --stamp-size: var(--text-shell-stamp); }
+.cc-kit-stamps [data-size="stage"] { --stamp-size: var(--text-stage-stamp); }
+.cc-kit-stamps section > div { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-20); padding-block: var(--space-12); }

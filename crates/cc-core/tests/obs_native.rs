@@ -143,7 +143,7 @@ async fn native_obs_rpc_reads_live_status_creates_owned_source_and_invalidates_c
                 json!({"obsVersion":"simulated","obsWebSocketVersion":"5-simulated","rpcVersion":1,"availableRequests":["GetVersion","CreateInput"]})
             } else {
                 assert_eq!(request["d"]["requestType"], "CreateInput");
-                json!({"sceneItemId":1})
+                json!({"sceneItemId":1,"inputUuid":format!("simulated-input-{}", requests.lock().unwrap().len())})
             };
             requests.lock().unwrap().push(request.clone());
             socket.send(tokio_tungstenite::tungstenite::Message::Text(json!({"op":7,"d":{

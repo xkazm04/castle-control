@@ -76,7 +76,7 @@ test('the shell uses the typed core RPC boundary, with no simulation metadata on
   const html = renderToStaticMarkup(<ShellSteward context="lottery" connection={conn}
     on_select={vi.fn()} on_open={vi.fn()} on_overview={vi.fn()} />);
   expect(html).toContain('LIVE STEWARD');
-  expect(html).not.toMatch(/simulated co-pilot|SIMULATED STEWARD/);
+  expect(html).not.toMatch(/simulated co-pilot|sample data/);
   const card = captureCard(port);
   vi.useFakeTimers();
   const button = nativeSeal(card.on_seal);
@@ -124,7 +124,7 @@ test('no opt-in or absent/unreachable capability preserves the simulated shell; 
   for (const candidate of [undefined, { ...conn, live: false }, conn]) {
     expect(shellStewardPort(candidate)).toBeInstanceOf(SimulatedSteward);
     expect(renderToStaticMarkup(<ShellSteward context="keep" {...(candidate ? { connection: candidate } : {})}
-      on_select={vi.fn()} on_open={vi.fn()} on_overview={vi.fn()} />)).toContain('SIMULATED STEWARD · SAMPLE DATA');
+      on_select={vi.fn()} on_open={vi.fn()} on_overview={vi.fn()} />)).toContain('<span class="cc-steward-state">simulated co-pilot · sample data</span><span class="cc-stamp" data-stamp="simulated" role="img" aria-label="Simulated"><span aria-hidden="true">Simulated</span>');
   }
   expect((await live.ask('Draft questions', context)).proposals).toEqual([]);
   expect(transport.ask).not.toHaveBeenCalled();
@@ -146,5 +146,5 @@ test('a reply from a LiveSteward engine is stored live and Talkback captions it 
   expect(conversation.getSnapshot().at(-1)).toMatchObject({ who: 'Steward', live: false });
   const mixed = renderToStaticMarkup(<Talkback />);
   expect(mixed).toContain('<b>Steward · live</b>');
-  expect(mixed).toContain('<b>Steward · simulated</b>');
+  expect(mixed).toContain('data-stamp="simulated" role="img" aria-label="Simulated: Steward · simulated"><span aria-hidden="true">Steward · simulated</span>');
 });

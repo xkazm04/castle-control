@@ -3,10 +3,11 @@ import { Children, isValidElement } from 'react';
 import type { ReactElement, ReactNode } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { expect, test, vi } from 'vitest';
+import { tokens } from '@castle-control/tokens';
 import { boardGeometry, parseStudioBoard, studioInks } from './board.js';
 import { HexTable, TileInspector } from './hex-table.jsx';
 import { StudioWork } from './room.jsx';
-import { createStudioSession, updateStudioSession } from './session.js';
+import { boardForSize, createStudioSession, updateStudioSession } from './session.js';
 import { BannerInspector } from './design.jsx';
 
 const parsed = parseStudioBoard({ title: 'Northern marches', sides: [
@@ -26,6 +27,37 @@ function hexRule(selector: string): string {
   expect(rule, `Missing hex rule: ${selector}`).toBeDefined();
   return rule?.[2] ?? '';
 }
+
+test('compact sizing binds the rendered active view and the Table/Rehearse query containers', () => {
+  const html = renderToStaticMarkup(<StudioWork />);
+  expect(html).toContain('<div class="studio-table-work" data-studio-view="table">');
+  const source = readFileSync(new URL('./room.tsx', import.meta.url), 'utf8');
+  expect(source).toContain('data-studio-view={view}');
+  const css = readFileSync(new URL('./room.css', import.meta.url), 'utf8');
+  const compact = css.slice(css.indexOf('@media (max-height: 50rem)'));
+  expect(compact).toContain('height: calc(var(--space-56) * 10); min-height: calc(var(--space-56) * 10)');
+  const field = compact.match(/([^{}]+)\{\s*flex: none; height: calc\(var\(--fit-h\)[^}]+\}/);
+  expect(field?.[1]).toContain('.studio-room > [data-studio-view="table"] > .cc-herald-field > .cc-hexfield');
+  expect(field?.[1]).toContain('.studio-room .studio-rehearse > .cc-herald-field > .cc-hexfield');
+  expect(field?.[0]).toContain('height: calc(var(--fit-h) * var(--space-28) + var(--space-6))');
+  expect(compact).toContain('[data-studio-view="spyglass"] > .studio-spyglass { flex: 1; }');
+  expect(compact).not.toContain('studio-viewer-canvas');
+});
+
+test('the compact field height fits every sample size above the tap floor without relying on flex growth', () => {
+  const radius = Number.parseFloat(tokens.layout['space-28']);
+  const inset = Number.parseFloat(tokens.layout['space-6']);
+  // A conservative field width within the 1280 desktop's left column. This is
+  // geometry coverage; the desktop e2e journey still checks actual browser boxes.
+  const width = 640;
+  for (const size of ['s', 'm', 'l'] as const) {
+    const geometry = boardGeometry(boardForSize(size));
+    const height = geometry.fit_height * radius + inset;
+    const fitted = Math.min((width - inset) / geometry.fit_width, (height - inset) / geometry.fit_height);
+    expect(fitted * 1.7320508, size).toBeGreaterThanOrEqual(44);
+    expect(fitted * 2, size).toBeGreaterThanOrEqual(44);
+  }
+});
 
 test('hex focus ring uses no house ink', () => {
   const rules = hexCss.match(/[^{}]*:focus-visible[^{}]*\{[^{}]*\}/g) ?? [];

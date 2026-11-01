@@ -12,6 +12,10 @@ use std::{
     num::NonZeroU32,
 };
 
+#[cfg(test)]
+#[path = "herald_tests.rs"]
+mod tests;
+
 /// Implementations must be local and deterministic; no transport is supplied.
 pub trait LocalEmbedding: Send + Sync {
     fn embed(&self, text: &str) -> Vec<f64>;
@@ -28,11 +32,13 @@ pub struct DirectionSeed {
 pub struct PassedMessage {
     pub(crate) at: Timestamp,
     pub(crate) text: String,
+    pub(crate) simulated: bool,
 }
 
 struct Entry {
     at: DateTime<FixedOffset>,
     features: Features,
+    simulated: bool,
 }
 #[derive(Default)]
 struct Shed {
@@ -124,7 +130,11 @@ impl Herald {
             self.embedding.as_ref(),
         );
         if self.entries.len() < self.capacity {
-            self.entries.push_back(Entry { at, features });
+            self.entries.push_back(Entry {
+                at,
+                features,
+                simulated: message.simulated,
+            });
         } else {
             let shed = self.shed.entry(at).or_default();
             shed.all = shed.all.saturating_add(1);
@@ -170,6 +180,19 @@ impl Herald {
             }
         }
         counts
+    }
+
+    /// Rust-only provenance of the entries counted in this exact chart window.
+    /// Shed messages and historical series points do not contribute to it.
+    pub fn simulated_in_window(&self, params: &ConsensusGetParams, at: &Timestamp) -> Result<bool> {
+        let end = date(at)?;
+        let window = TimeDelta::seconds(i64::from(params.window_s.get()));
+        Ok(self.entries.iter().any(|entry| {
+            entry.simulated
+                && entry.at > end - window
+                && entry.at <= end
+                && Self::key(&entry.features, &params.filter).is_some()
+        }))
     }
 
     pub fn get(&mut self, params: ConsensusGetParams, at: Timestamp) -> Result<ConsensusGetResult> {

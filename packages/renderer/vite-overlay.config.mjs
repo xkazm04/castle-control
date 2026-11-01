@@ -4,7 +4,7 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 export const overlayInputs = [
   './src/overlay-entry.ts', './src/overlay-path.ts', './src/overlay.ts', './src/bindings.ts',
-  '../tokens/src/generated.css', './src/overlay.css',
+  '../tokens/src/generated-base.css', './src/overlay.css',
   '../contract/src/generated/beacons-render-validation.ts',
   '../contract/src/generated/beacons-render-validators.mjs', '../contract/src/door.mjs',
   '../contract/src/generated/lots-validation.ts', '../contract/src/generated/lots-validators.mjs',
@@ -22,7 +22,7 @@ export default {
   // Embed CSS because the native host intentionally serves only index + bundle.
   // Reading build inputs adds no runtime package or cross-package source import.
   define: { __CC_OVERLAY_STYLES__: JSON.stringify(
-    readFileSync(new URL('../tokens/src/generated.css', import.meta.url), 'utf8')
+    readFileSync(new URL('../tokens/src/generated-base.css', import.meta.url), 'utf8')
       .replaceAll('\r\n', '\n') + '\n' + readFileSync(new URL('./src/overlay.css', import.meta.url), 'utf8').replaceAll('\r\n', '\n')) },
   plugins: [{ name: 'overlay-source-inventory', generateBundle(_options, bundle) {
     for (const output of Object.values(bundle)) {

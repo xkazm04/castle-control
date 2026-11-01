@@ -19,6 +19,7 @@ const NOT_FINGERPRINTED: &[&str] = &[
     "governor_lease.rs",
     "herald.rs",
     "herald_features.rs",
+    "herald_tests.rs",
     "instrument.rs",
     "lane_tests.rs",
     "live_capture_tests.rs",

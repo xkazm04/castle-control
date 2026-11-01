@@ -8,3 +8,4 @@ export const lotsRollLookup = { method: "lots.roll.lookup" as const, params: com
 export const lotsRollSeal = { method: "lots.roll.seal" as const, params: compiled.p31, result: compiled.r31 };
 export const lotsCast = { method: "lots.cast" as const, params: compiled.p32, result: compiled.r32 };
 export const lotsWritGet = { method: "lots.writ.get" as const, params: compiled.p33, result: compiled.r33 };
+export const lotsSourceUrl = { method: "lots.source.url" as const, params: compiled.p56, result: compiled.r56 };

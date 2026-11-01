@@ -14,3 +14,6 @@ export { lotsImageUpload, maproomDesignUpsert } from './generated/validation.js'
 export { gatehouseHeldResolve, gatehouseDelaySet, gatehouseShieldSet, gatehouseLeaseEnd } from './generated/validation.js';
 export { stewardAsk, stewardWritSeal, stewardWritTear } from './generated/validation.js';
 export { stewardEventPayload } from './generated/validators.mjs';
+export { parseRehearsalEvent } from './validate.js';
+export { obsConnect, obsSceneEnsure, obsRehearsalClear, lotsSourceUrl, rehearsalStart,
+  rehearsalStop, rehearsalScenarioRun, rehearsalCrowdSet, tiltyardSourceUrl } from './generated/validation.js';

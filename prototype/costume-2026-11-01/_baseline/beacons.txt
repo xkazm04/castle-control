@@ -1,0 +1,379 @@
+CASTLE CONTROL
+ON AIR · SIMULATED
+Unknown
+VIEWERS
+Unknown
+UPTIME
+TWITCH SIMULATED
+OBS SIMULATED
+GATEHOUSE SIMULATED
+SIMULATED
+STEWARD
+0
+THE KEEP
+1
+LOT CHAMBER
+No draw
+On air
+Preview
+Draft
+Preview
+2
+GATEHOUSE
+1 held
+On air
+Preview
+Draft
+On air, preview
+3
+BEACONS
+Offering altar
+On air
+Preview
+Draft
+On air, preview
+4
+MAP ROOM
+Sand table
+On air
+Preview
+Draft
+Preview
+37
+27
+21
+16
+THE HERALD · SAMPLE
+HELD
+SAND TABLE · 9 × 5 HEX
+DRAFT
+THE STEWARD’S STUDY
+The keep
+›
+Beacons
+· chamber 3 of 4
+THE BEACONS
+Contribution visuals
+SIMULATED
+Back to the overview
+Esc
+BEACON I · ON-SCREEN OBJECT
+TUNING BELOW
+OFFERING ALTAR
+39%
+blaze
+0–10
+0→25%
+10–30
+25→60%
+30–100
+60→100%
+100+
+100%
+18.0 weighted subs · gifts + subs · simulated
+CHANNEL POINTS
+HALVES EVERY 5 MIN
+BEACON II · CAMERA FRAME
+SELECT TO TUNE
+GILDED CAMERA FRAME
+60%
+blaze
+0–10
+0→35%
+10–30
+35→70%
+30–100
+70→100%
+100+
+100%
+24.0 weighted subs · gifts + subs · simulated
+GIFT SUBSCRIPTIONS
+HALVES EVERY 2 MIN
+BEACON III · SCREEN BORDER
+SELECT TO TUNE
+HYPE BORDER
+50%
+blaze
+0–10
+0→20%
+10–30
+20→50%
+30–100
+50→100%
+100+
+100%
+30.0 weighted subs · gifts + subs · simulated
+HYPE TRAIN LEVEL
+HALVES EVERY 15 MIN
+REPLAY A NIGHT · OFFERING ALTAR
+tune against time, not single events
+SAMPLE NIGHT
+GIFT WAVE
+RAID SPIKE
+SUB TRAIN
+the illustrative timeline below, replayed · 60 fictional offerings; 15 gifts or subs count, gift subs ×1
+Offering altar
+CLIMBS
+peak 74% · lit 12 of 48 min
+Gilded camera frame
+CLIMBS
+peak 79% · lit 4 of 48 min
+Hype border
+CLIMBS
+peak 77% · lit 31 of 48 min
+PLAY
+1×
+10×
+30×
+
+Sample night · 00:00 / 48:00
+30× · 96 s for the whole night
+
+SIMULATED
+SCRUB THE NIGHT · Space plays or pauses
+0%
+first lit · 16:21
+peak 74% · 47:19
+lit
+100%
+0%
+0 min
+6 min
+12 min
+18 min
+24 min
+30 min
+36 min
+42 min
+48 min
+
+CLIMBS Peak 74% at minute 47 · never pinned · first lit at minute 16
+
+LET THIS NIGHT'S PEAK REACH THE TOP · MOVE THE TOP POINT TO 55
+KINDLING CURVE · weighted subs → blaze
+
+Drag a point, or Tab to it and use the arrows (Shift = 10). The whole night re-runs on every move.
+
+0
+50
+100
+
+0→0% · 10→25% · 30→60% · 100→100% · bars show where the night spends its minutes; shaded past the top point means pinned.
+
+BEACON PREVIEW · 0% blaze
+
+0.0 weighted subs at 00:00
+
+No offerings yet · press Play
+SEND CURVE TO THE STEWARD
+SAMPLE CURVE · UNCHANGED
+
+Never a direct write: the Steward holds a proposal and nothing changes on air until you hold to seal. Money affects visuals only. SIMULATED.
+
+OFFERING ALTAR
+Simulated snapshot · no live input.
+DRIVEN BY
+input source
+DRIVEN BY
+Not routed
+gift subscriptions
+subscriptions
+resubscriptions
+Bits cheer
+Bits use
+Hype Train level
+channel points
+charity minor currency units
+goal minor currency units
+power-ups
+NATIVE UNIT
+points
+
+Simulated configuration only. Test fires use gifts/subs independently; live routing is a separate core step.
+
+Size and anchor travel in the copied URL (simulated examples stay simulated). Session preview only: colour and burst timing. Appearance choices are not saved to the core. Choose and save art style in the visual configuration.
+
+SIMULATED · 39% BLAZE
+ART STYLE
+No design (neutral)
+Heraldic altar
+Heraldic frame
+Arcade altar
+Arcade frame
+Neon altar
+Neon frame
+Storybook altar
+Storybook frame
+Cel altar
+Cel frame
+Glass altar
+Glass frame
+Custom design ID...
+DESIGN ID
+SAVE VISUAL STYLE LOCALLY
+
+SIMULATED design configuration · saved locally only, not sent to OBS. Frame art is provisional.
+
+SIZE
+S
+M
+L
+ANCHOR
+top-left
+top-right
+center
+bottom-left
+bottom-right
+COLOUR
+Gold
+Red
+Blue
+Key
+BURST TIMING (MS)
+THE KINDLING CURVE
+contribution to blaze
+39%
+0
+10
+30
+100
+18.0 weighted subs · 39% blaze · simulated
+Edit control points
+
+SIMULATED local preview. Drag a point and release to save. Tab to a point, then use arrows: left/right moves 1 contribution unit; up/down moves 1% intensity. Hold Shift for 10 units or 10%. Enter saves; Escape cancels. Totals stay in order.
+
+SIMULATED local curve. Drag or use arrows to update the preview; save keeps it for this room session. Escape cancels edits. Nothing reaches OBS.
+
+Control point 1
+Contribution total
+Intensity (%)
+Control point 2
+Contribution total
+Intensity (%)
+Control point 3
+Contribution total
+Intensity (%)
+Control point 4
+Contribution total
+Intensity (%)
+Decay
+No decay
+Exponential
+Half-life (seconds)
+Save curve locally
+Cancel curve edits
+GIFT-SUB WEIGHTING
+1×
+2×
+3×
+4×
+5×
+6×
+TEST FIRE
+local preview only
+TEST FIRE: 50 GIFTS
+TEST FIRE: 1 SUB
+ADVANCE SIMULATED CLOCK 60 S
+END TEST FIRE
+39% blaze · 18.0 weighted subs
+
+Nothing reaches the stream. A viewer-facing change requires the shared hold to seal and proclaim. Money changes looks only. This room has no OBS connection.
+
+SIMULATED example · not a live browser source. Copying this URL does not connect OBS.
+
+Copy browser-source URL
+
+60 OFFERINGS
+illustrative timeline
+0 min
+48 min · sample end
+INSPECT AN OFFERING
+
+Offering 60 of 60 · 47 min 19 s
+rookscribe69 · 50 gift · illustrative
+
+Bits, gifts, subscriptions, points and Hype Train marks are fictional. This timeline does not feed live accounting.
+
+CONTRIBUTION FEED
+SIMULATED
+
+600 simulated events · Local preview. These inputs are not live accounting.
+
+1
+subscriptions
+12:00:00 UTC
+offering-altar · simulated · Local preview
+1
+gift subscriptions
+11:59:59 UTC
+gilded-frame · simulated · Local preview
+1
+subscriptions
+11:59:58 UTC
+hype-border · simulated · Local preview
+1
+gift subscriptions
+11:59:57 UTC
+offering-altar · simulated · Local preview
+1
+subscriptions
+11:59:56 UTC
+gilded-frame · simulated · Local preview
+1
+gift subscriptions
+11:59:55 UTC
+hype-border · simulated · Local preview
+1
+subscriptions
+11:59:54 UTC
+offering-altar · simulated · Local preview
+1
+gift subscriptions
+11:59:53 UTC
+gilded-frame · simulated · Local preview
+1
+subscriptions
+11:59:52 UTC
+hype-border · simulated · Local preview
+1
+gift subscriptions
+11:59:51 UTC
+offering-altar · simulated · Local preview
+1
+subscriptions
+11:59:50 UTC
+gilded-frame · simulated · Local preview
+1
+gift subscriptions
+11:59:49 UTC
+hype-border · simulated · Local preview
+1
+subscriptions
+11:59:48 UTC
+offering-altar · simulated · Local preview
+PROPOSAL · AWAITING YOUR SEAL
+
+Nothing acts until you hold to seal.
+
+SIMULATED · DATA-ONLY DESIGNS
+
+Beacon visuals
+Restyle
+Custom design
+Chat overlay and vote bar
+Restyle
+Custom design
+
+No proposals. Ask the Steward to draft one.
+
+THE STEWARD
+simulated co-pilot · sample data
+SIMULATED
+
+Good evening. Draft in the preview, amend in ink, then hold to seal. Nothing acts on a spoken request.
+
+Talk to the Steward...
+Tell
+Catch me up
+Draft a question draw
+What does chat want?

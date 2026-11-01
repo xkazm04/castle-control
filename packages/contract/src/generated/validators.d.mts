@@ -1,7 +1,7 @@
 // GENERATED from cc-types by pnpm -C packages/contract generate. Do not edit.
 
 import type { ValidateFunction } from 'ajv';
-import type { RpcMethods, StreamEvent, LotsEventPayload, ConsensusEventPayload, BeaconsEventPayload, DesignPackage, ErrorEnvelope, AskParams, AskResult, Writ, WritSealParams, WritSealResult, WritTearParams, WritTearResult, StewardEventPayload } from './types.js';
+import type { RpcMethods, StreamEvent, LotsEventPayload, ConsensusEventPayload, BeaconsEventPayload, RehearsalEventPayload, DesignPackage, ErrorEnvelope, AskParams, AskResult, Writ, WritSealParams, WritSealResult, WritTearParams, WritTearResult, StewardEventPayload } from './types.js';
 export const p0: ValidateFunction<RpcMethods["status.get"]['params']>;
 export const r0: ValidateFunction<RpcMethods["status.get"]['result']>;
 export const p1: ValidateFunction<RpcMethods["settings.get"]['params']>;
@@ -108,10 +108,29 @@ export const p51: ValidateFunction<RpcMethods["gatehouse.liveRun.get"]['params']
 export const r51: ValidateFunction<RpcMethods["gatehouse.liveRun.get"]['result']>;
 export const p52: ValidateFunction<RpcMethods["gatehouse.source.url"]['params']>;
 export const r52: ValidateFunction<RpcMethods["gatehouse.source.url"]['result']>;
+export const p53: ValidateFunction<RpcMethods["obs.connect"]['params']>;
+export const r53: ValidateFunction<RpcMethods["obs.connect"]['result']>;
+export const p54: ValidateFunction<RpcMethods["obs.scene.ensure"]['params']>;
+export const r54: ValidateFunction<RpcMethods["obs.scene.ensure"]['result']>;
+export const p55: ValidateFunction<RpcMethods["obs.rehearsal.clear"]['params']>;
+export const r55: ValidateFunction<RpcMethods["obs.rehearsal.clear"]['result']>;
+export const p56: ValidateFunction<RpcMethods["lots.source.url"]['params']>;
+export const r56: ValidateFunction<RpcMethods["lots.source.url"]['result']>;
+export const p57: ValidateFunction<RpcMethods["rehearsal.start"]['params']>;
+export const r57: ValidateFunction<RpcMethods["rehearsal.start"]['result']>;
+export const p58: ValidateFunction<RpcMethods["rehearsal.stop"]['params']>;
+export const r58: ValidateFunction<RpcMethods["rehearsal.stop"]['result']>;
+export const p59: ValidateFunction<RpcMethods["rehearsal.scenario.run"]['params']>;
+export const r59: ValidateFunction<RpcMethods["rehearsal.scenario.run"]['result']>;
+export const p60: ValidateFunction<RpcMethods["rehearsal.crowd.set"]['params']>;
+export const r60: ValidateFunction<RpcMethods["rehearsal.crowd.set"]['result']>;
+export const p61: ValidateFunction<RpcMethods["tiltyard.source.url"]['params']>;
+export const r61: ValidateFunction<RpcMethods["tiltyard.source.url"]['result']>;
 export const event: ValidateFunction<StreamEvent>;
 export const lotsEvent: ValidateFunction<LotsEventPayload>;
 export const consensusEvent: ValidateFunction<ConsensusEventPayload>;
 export const beaconsEvent: ValidateFunction<BeaconsEventPayload>;
+export const rehearsalEvent: ValidateFunction<RehearsalEventPayload>;
 export const designPackage: ValidateFunction<DesignPackage>;
 export const askParams: ValidateFunction<AskParams>;
 export const askResult: ValidateFunction<AskResult>;

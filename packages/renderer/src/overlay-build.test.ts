@@ -28,18 +28,30 @@ it('rejects an oversized overlay bundle with an actionable budget message', () =
   );
 });
 
+it('defines every overlay CSS token in the base sheet', () => {
+  const tokens = readFileSync(new URL('../../tokens/src/generated-base.css', import.meta.url), 'utf8');
+  const styles = readFileSync(new URL('./overlay.css', import.meta.url), 'utf8');
+  const definitions = new Set([...tokens.matchAll(/(?:^|[;{])\s*(--[\w-]+)\s*:/g)].map(match => match[1]));
+  const references = new Set([...styles.matchAll(/var\(\s*(--[\w-]+)/g)].map(match => match[1]));
+  // OverlayScene sets these layout properties at runtime; they are not theme tokens.
+  const runtime = new Set(['--scene-width', '--scene-height', '--scene-x', '--scene-y', '--scene-scale']);
+  expect(definitions.size).toBeGreaterThan(0);
+  expect(references.size).toBeGreaterThan(runtime.size);
+  expect([...references].filter(name => !definitions.has(name) && !runtime.has(name ?? ''))).toEqual([]);
+});
+
 it('ships a local bundle rebuilt from this renderer and the lazy contract door', () => {
   const hash = createHash('sha256');
   for (const path of overlayInputs as readonly string[]) hash.update(readFileSync(new URL(path, new URL('../vite-overlay.config.mjs', import.meta.url)), 'utf8').replaceAll('\r\n', '\n'));
   const bundleBytes = readFileSync(new URL('../../../apps/overlay/bundle.js', import.meta.url));
   assertOverlayBundleBudget(bundleBytes.byteLength);
   const bundle = bundleBytes.toString('utf8');
-  expect(hash.digest('hex')).toBe('38c3322a68321c27d75926b32b339f3c8821913a876cc8ee218b182866943006'); expect(bundle).toContain('Castle Control overlay source SHA-256: 38c3322a68321c27d75926b32b339f3c8821913a876cc8ee218b182866943006');
+  expect(hash.digest('hex')).toBe('696877b448a091c6b707003e7236c5625befb300277e958a293b11c2c80ab908'); expect(bundle).toContain('Castle Control overlay source SHA-256: 696877b448a091c6b707003e7236c5625befb300277e958a293b11c2c80ab908');
   expect(bundle).toContain('beacons.render.snapshot');
   expect(bundle).toContain('cc-cast');
   expect(bundle).toContain('lots');
   expect(bundle).toContain('cc-lots-played:');
-  const tokens = readFileSync(new URL('../../tokens/src/generated.css', import.meta.url), 'utf8');
+  const tokens = readFileSync(new URL('../../tokens/src/generated-base.css', import.meta.url), 'utf8');
   const styles = readFileSync(new URL('./overlay.css', import.meta.url), 'utf8');
   // Inspect the static CSS literal without executing any bundle code.
   const embedded: string[] = [];

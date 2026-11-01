@@ -1,7 +1,7 @@
 import { useState, useSyncExternalStore } from 'react';
 import { DraftFrame } from '../draft-frame.jsx';
 import { SealButton } from '../seal-button.jsx';
-import { StatusChip } from '../chips.jsx';
+import { Stamp } from '../stamp/stamp.jsx';
 import { isPending } from '../steward/queue.js';
 import type { ArtifactId } from './catalog.js';
 import { artPreviewsFor, defaultPreset, presetsFor } from './catalog.js';
@@ -40,7 +40,7 @@ export function DesignFocusView({ artifact, proposal_id, session, snapshot }: {
   const pending = proposal !== undefined && isPending(proposal);
   const ready = preview !== undefined && session.canSeal(preview);
   return <section className="cc-design-focus" aria-label={`${artifact} design focus`}>
-    <header><h2>Design · {artifact}</h2><strong>SIMULATED · SAMPLE DATA</strong></header>
+    <header><h2>Design · {artifact}</h2><Stamp kind="simulated" word="SIMULATED · SAMPLE DATA" /></header>
     <p>Fixture preview only. Generation and preview leave the current look intact.</p>
     <div className="cc-design-comparison">
       <section aria-label="Current look"><h3>Current look · rev {snapshot.looks[artifact].revision}</h3>
@@ -70,13 +70,13 @@ export function DesignFocusView({ artifact, proposal_id, session, snapshot }: {
 
 function ArtStyleGallery({ artifact }: { artifact: ArtifactId }) {
   return <section className="cc-design-art" aria-label="Art styles">
-    <header><h3>Art styles</h3><StatusChip variant="dash">SIMULATED</StatusChip></header>
+    <header><h3>Art styles</h3><Stamp kind="simulated" word="SIMULATED" /></header>
     <p>Sample previews only. These art styles do not change a design or its proposal.</p>
     <div className="cc-design-art-grid">
       {artPreviewsFor(artifact).map(preview => <figure key={preview.src}>
         <div className="cc-design-art-image"><ArtPreviewImage src={preview.src} alt={preview.alt} /></div>
         <figcaption><h4>{preview.label}</h4><p>{preview.thesis}</p>
-          <div className="cc-design-art-labels"><StatusChip variant="dash">SAMPLE ART</StatusChip><span>AI-generated</span></div>
+          <div className="cc-design-art-labels"><Stamp kind="sample" word="SAMPLE ART" /><span>AI-generated</span></div>
         </figcaption>
       </figure>)}
     </div>

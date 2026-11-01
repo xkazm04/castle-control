@@ -21,6 +21,7 @@ pub struct MessageFacts {
     pub user_id: TwitchUserId,
     pub at: DateTime<Utc>,
     pub text: String,
+    pub simulated: bool,
     pub follower: bool,
     pub subscriber: bool,
     pub redeemed: bool,
@@ -104,6 +105,7 @@ pub struct RollRules {
 pub struct Entry {
     pub user_id: TwitchUserId,
     pub source_message_id: MessageId,
+    pub simulated: bool,
     pub entered_at: DateTime<Utc>,
     pub cohorts: BTreeSet<String>,
     pub weight: u64,
@@ -195,6 +197,7 @@ impl Roll {
             weight: self.curve().weight(message.activity_units),
             user_id: message.user_id,
             source_message_id: message.message_id,
+            simulated: message.simulated,
             entered_at: message.at,
             cohorts: message.cohorts,
         };
@@ -232,6 +235,13 @@ impl Roll {
 
     pub(crate) fn winner_count(&self) -> u16 {
         self.rules.winner_count
+    }
+
+    /// Provenance of the eligible entries that would be frozen at this time.
+    pub fn simulated(&self, at: DateTime<Utc>) -> bool {
+        self.entries
+            .values()
+            .any(|entry| entry.simulated && self.lookup(&entry.user_id, at).is_some())
     }
 
     /// Check a complete result derived by the proof core. Sampling and proof

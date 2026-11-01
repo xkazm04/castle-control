@@ -12,10 +12,14 @@
   },
   "dependencies": {
     "@castle-control/contract": "workspace:*",
+    "@castle-control/keep-art": "workspace:*",
+    "@castle-control/renderer": "workspace:*",
     "@castle-control/tokens": "workspace:*",
     "@castle-control/ui": "workspace:*",
+    "@castle-control/verifier-web": "workspace:*",
     "react": "catalog:",
-    "react-dom": "catalog:"
+    "react-dom": "catalog:",
+    "@castle-control/duel": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "24.10.0",

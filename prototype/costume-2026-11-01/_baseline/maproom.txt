@@ -1,0 +1,301 @@
+CASTLE CONTROL
+ON AIR · SIMULATED
+Unknown
+VIEWERS
+Unknown
+UPTIME
+TWITCH SIMULATED
+OBS SIMULATED
+GATEHOUSE SIMULATED
+SIMULATED
+STEWARD
+0
+THE KEEP
+1
+LOT CHAMBER
+No draw
+On air
+Preview
+Draft
+Preview
+2
+GATEHOUSE
+1 held
+On air
+Preview
+Draft
+On air, preview
+3
+BEACONS
+Offering altar
+On air
+Preview
+Draft
+On air, preview
+4
+MAP ROOM
+Sand table
+On air
+Preview
+Draft
+Preview
+37
+27
+21
+16
+THE HERALD · SAMPLE
+HELD
+SAND TABLE · 9 × 5 HEX
+DRAFT
+THE STEWARD’S STUDY
+The keep
+›
+Map Room
+· chamber 4 of 4
+THE MAP ROOM
+Extension studio
+SIMULATED
+Back to the overview
+Esc
+Table
+Spyglass
+Rehearse
+Tiltyard
+THE WAR TABLE · 9 × 6 HEXES
+Illustrative territory · no live turn
+A1
+Quill
+B1
+Quill
+C1
+Quill
+D1
+Quill
+E1
+Unclaimed
+F1
+Tallow
+G1
+Tallow
+H1
+Tallow
+I1
+Tallow
+A2
+Quill
+B2
+Quill
+C2
+Quill
+D2
+Quill
+E2
+Unclaimed
+F2
+Tallow
+G2
+Tallow
+H2
+Tallow
+I2
+Tallow
+A3
+Quill
+B3
+Quill
+C3
+Quill
+D3
+Unclaimed
+E3
+Unclaimed
+F3
+Unclaimed
+G3
+Tallow
+H3
+Tallow
+I3
+Tallow
+A4
+Quill
+B4
+Quill
+C4
+Unclaimed
+D4
+Sable
+E4
+Sable
+F4
+Sable
+G4
+Unclaimed
+H4
+Tallow
+I4
+Tallow
+A5
+Quill
+B5
+Unclaimed
+C5
+Sable
+D5
+Sable
+E5
+Sable
+F5
+Sable
+G5
+Sable
+H5
+Unclaimed
+I5
+Tallow
+A6
+Unclaimed
+B6
+Sable
+C6
+Sable
+D6
+Sable
+E6
+Sable
+F6
+Sable
+G6
+Sable
+H6
+Sable
+I6
+Unclaimed
+14
+HOUSE QUILL
+14
+HOUSE TALLOW
+15
+HOUSE SABLE
+11
+UNCLAIMED
+
+Scroll for test requirements, panel drafts and the shared seal slot.
+
+HOUSE QUILL
+SAMPLE TERRITORY
+
+THIS TURN · LOCAL SAND TABLE
+
+A1
+Tile A1
+Column A · Row 1
+14 of 54 tiles
+
+Now: inspecting A1 · simulated
+
+House Quill · illustrative sample territory
+
+The Steward can propose a war-table panel change. A proposal never claims a tile here.
+
+Choose any hex to inspect it. Calls and ownership here are illustrative; selecting a tile changes only the inspector.
+
+INSPECT BANNERS
+HOUSE QUILL
+HOUSE TALLOW
+HOUSE SABLE
+UNCLAIMED
+
+A banner inspects its first visible territory. It never claims a tile or joins a side.
+
+LOCAL MAP DESIGN
+
+Session only · resets when you leave this room or reload. No design is saved or sent to a channel.
+
+MAP SIZE
+S · 6 × 4
+M · 9 × 6
+L · 12 × 8
+MAP ANCHOR
+Top left
+Top right
+Centre
+Bottom left
+Bottom right
+
+Preview only: positions the sample art inside its frame; the territory table stays in place.
+
+PRESET COLOUR
+Gules · red
+Azure · blue
+Or · gold
+Key · black
+
+Preview only: frame ink. Sample territories keep their house colours.
+
+ART STYLE
+Heraldic
+Arcade
+Neon
+Storybook
+Cel
+Glass
+
+Preview only: changes the sample art; the territory table keeps its style.
+
+REVEAL TIMING (MS)
+
+Preview only: 0–60000 ms. Reduced motion shows the final art immediately.
+
+SIMULATED · SAMPLE ART · AI-generated · 9 × 6 · 300 ms
+REPLAY LOCAL REVEAL
+RESET LOCAL DESIGN
+TEST LADDER
+Current stage: Sand table
+
+Inspect a stage below. These controls show requirements only.
+
+1
+Sand table
+local test
+Local only
+2
+Muster
+hosted test
+Locked
+3
+Proclaimed
+released
+Locked
+
+REQUIREMENTS · SAND TABLE
+
+Local test, only you see it. Inspect sample tiles and drafts without changing a channel.
+
+The room awaits Twitch’s answer on the Extension policy. It makes no network call and cannot advance the test stage.
+
+Human operator · AI proposes, the human approves in the shared seal slot.
+
+PROPOSAL · AWAITING YOUR SEAL
+
+Nothing acts until you hold to seal.
+
+SIMULATED · DATA-ONLY DESIGNS
+
+War-table panel
+Restyle
+Custom design
+
+No proposals. Ask the Steward to draft one.
+
+THE STEWARD
+simulated co-pilot · sample data
+SIMULATED
+
+Good evening. Draft in the preview, amend in ink, then hold to seal. Nothing acts on a spoken request.
+
+Talk to the Steward...
+Tell
+Catch me up
+Draft a question draw
+What does chat want?

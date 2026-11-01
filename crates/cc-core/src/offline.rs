@@ -85,6 +85,10 @@ impl OfflineModules {
         Ok(self.load()?.lots.clone())
     }
 
+    pub(crate) fn gatehouse(&self) -> Result<Arc<GatehouseModule>, ErrorEnvelope> {
+        Ok(self.load()?.gatehouse.clone())
+    }
+
     pub(crate) fn beacons(&self) -> Result<Arc<BeaconsModule>, ErrorEnvelope> {
         Ok(self.load()?.beacons.clone())
     }

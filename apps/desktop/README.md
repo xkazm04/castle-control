@@ -309,8 +309,8 @@ for `devUrl` and `frontendDist` behavior.
 The shell installs its guarded, main-frame initialization script before the
 frontend entry point. Only its configured origin can navigate in the window;
 new windows and external navigation are denied. The existing fetch/WebSocket
-transport is unchanged. The main window has no native IPC permissions, no shell,
-filesystem or HTTP plugin. CSP permits scripts from the frontend's own origin
+transport is unchanged. The main window exposes the two application rehearsal
+commands described below; it has no shell, filesystem or HTTP plugin. CSP permits scripts from the frontend's own origin
 and network connections only to HTTP/WS `127.0.0.1` ports; it loads no remote
 script. No frontend output is committed. Default `cargo test --workspace` uses
 the configured dev URL at compile time, so it needs no `dist` directory or Node.
@@ -349,3 +349,87 @@ version was removed. pnpm-recursive gates: **ran outside: merge gate**; they wer
 not executed by this builder. The built-frontend WebView2 run, keyboard smoke
 check and owner-attended Twitch/OBS spike remain operator checks using the
 commands above, not recorded live results.
+
+## Dress rehearsal host (D3b)
+
+With the built frontend, launch `cc-desktop --rehearsal` without a Twitch client
+ID or test channel. Optional `--obs-port`, `--obs-password-label` and
+`--overlay-port` have the same validation/defaults as native mode. The title is
+**Castle Control · SIMULATED · Dress rehearsal**. This is the real native core:
+Lots, Gatehouse, Beacons, the separate read-only overlay listener, render host,
+and D3a's OBS connection/scene/ownership methods. The launch injection remains
+the core's existing three-key object; `status.get.simulated` is true.
+
+Rehearsal state lives under `store/rehearsal`, separate from the owner's native
+rules, recordings, settings, draws, OBS ownership ledger and beacon opt-in.
+NativeServices always receives an empty Twitch client ID/channel in this mode,
+even if public native arguments were retained for leaving rehearsal. The bridge
+starts no Twitch session. The registry rejects `auth.twitch.start` and
+`auth.twitch.revoke` with `blocked_by_policy` before the native adapter; auth
+status stays disconnected. `--login` and `--steward-live` are rejected together
+with `--rehearsal`.
+
+D4 can invoke these **Tauri commands**, with no arguments:
+
+- `enter_rehearsal`: relaunch the installed app with `--rehearsal`.
+- `leave_rehearsal`: relaunch without `--rehearsal`. If entry retained paired
+  public native settings, those resume native mode; otherwise the app returns
+  to its default disconnected core. Device login and live Steward opt-in are
+  never replayed by either command.
+
+These commands are available only in the main built-frontend window. Invoking
+the current mode is a no-op; a second pending relaunch is refused. Entry/exit
+mint and inject a fresh core session capability in the new process. Public OBS
+configuration and a chosen overlay port are retained. The internal `--relaunch`
+marker enables up to 50 startup attempts, spaced 100 ms apart, to allow the old
+process to release stores and listeners; ordinary launches still fail promptly
+on an occupied port. A persistent startup failure uses the existing fixed error.
+
+**Composition choice: option (b).** CoreHost shutdown signals the RPC/event
+server, but NativeServices only aborts its native workers on Drop, and the
+current APIs do not join all overlay, bridge, OBS-probe and module workers.
+Switching composition inside the same process would therefore lack a proven
+port/store release boundary. The process relaunch also discards any in-memory
+OBS password; reconnect through D3a, or use its explicit keychain remember door.
+
+After entry, D4 connects to the owner's OBS with `obs.connect`, ensures
+`Castle Control · Rehearsal` with `obs.scene.ensure`, and calls `rehearsal.start`.
+Start/stop are idempotent and emit `rehearsal.status` invalidations; the module
+also publishes the typed RehearsalStatus binding to Rust subscribers. Calling
+start again reads current OBS/scene status without resetting the active session.
+The scene name is omitted until the peer reports that scene. Stop preserves
+configuration and OBS sources; D3a's explicit `obs.rehearsal.clear` owns cleanup.
+
+`rehearsal.crowd.set` selects 0..600 messages/minute with bounded interval jitter;
+nonzero crowd requires an active session. Stop cancels and joins the crowd,
+scenario and generated-chat consumer tasks and clears Beacon test-fire previews.
+The private generated-chat sender feeds ShadowPipeline with RulesOnly; every
+message is SIMULATED, has a `simulated_viewer_<n>` login and a
+`simulated-rehearsal-` message ID. No RPC accepts chat text or identities.
+
+Scenarios spawn and return `{accepted:true}` immediately, or `{accepted:false}`
+while inactive. `lots_fill` reuses an open rehearsal keyword draw (creating one
+when needed), sending 20 distinct simulated viewers over about four seconds.
+New draws appear in `lots.draw.list` as **SIMULATED rehearsal questions**, with
+IDs beginning `simulated-rehearsal-`; use their IDs for `lots.source.url`.
+`vote_round` sends 30 opinions over about five seconds. `duel_round` sends 30
+`SIMULATED duel ballot left|right` messages, in a 20/10 split, for the existing
+desktop ballot feed. `beacon_fire` requires `visual_id` and uses the existing
+`beacons.simulate` path with a generated 100-bit burst; a missing ID is `invalid`.
+Background scenario failures emit a fixed diagnostic without message bodies.
+
+**Open scope issue:** the production Herald currently has no direction seeds
+(`cc-gatehouse/src/analysis.rs`), so real consensus ingestion populates **Other**.
+D3b verifies a nonempty, SIMULATED vote-bar snapshot; distinct direction shares
+require a separately assigned Herald configuration change. No direction schema,
+seed configuration or Tiltyard Rust tally/page is introduced here.
+
+Director verification: `cargo test -p cc-core -p cc-desktop`, followed by
+`pnpm install --frozen-lockfile` and `pnpm gate`. Added tests cover idempotent
+status/events, crowd rate/provenance/cancellation, asynchronous vote/duel bursts,
+the real vote-bar page, a sealed Lots page using the existing recorded beacon,
+Beacon simulation/stop, OBS scene status, inert Twitch/auth refusals, host
+registration, isolated storage, public relaunch arguments and overlay-port
+handover. Test roots use PID plus an AtomicU64 counter and best-effort Drop.
+The builder ran standalone rustfmt and source gates only; Cargo, the full gate,
+the installed-app relaunch and the owner's OBS smoke test remain for the Director.

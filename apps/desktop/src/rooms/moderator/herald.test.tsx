@@ -62,27 +62,29 @@ test('C banners select exactly one verdict; counts and rowcount derive from the 
   expect(searched).toContain('data-verdict-pick="all" aria-pressed="true"');
 });
 
-test('every pennant carries its verdict word and only the Pass flag is transparent', () => {
+test('every verdict badge carries its word and shared stamp meaning', () => {
   for (const verdict of ['pass', 'hold', 'bar'] as const) {
     const html = renderToStaticMarkup(<VerdictMark verdict={verdict} />);
     expect(html).toContain(`data-verdict="${verdict}"`);
-    expect(html).toMatch(new RegExp(`data-pennant="flag"[^>]*><i aria-hidden="true"></i><span>${verdict[0]?.toUpperCase()}${verdict.slice(1)}</span>`));
-    expect(html).toContain(`--cc-ink:${verdict === 'pass' ? 'transparent' : `var(--${verdict === 'hold' ? 'or' : 'gules'})`}`);
-    expect(html).not.toContain('aria-label=');
+    expect(html).toContain(`data-stamp="${{ pass: 'pass', hold: 'held', bar: 'blocked' }[verdict]}"`);
+    expect(html).toContain(`>${verdict[0]?.toUpperCase()}${verdict.slice(1)}</span>`);
+    expect(html).toContain('role="img" aria-label=');
+    expect(html).toContain({ pass: 'aria-label="Pass"', hold: 'aria-label="Held for review, not on air: Hold"', bar: 'aria-label="Blocked: Bar"' }[verdict]);
   }
 });
 
 test('rules separate Watching/Armed stamps from proposals and keep the shadow safety notice', () => {
   const port = createModerationPreview(); const queue = new ProposalQueue();
   let html = renderToStaticMarkup(<Rules state={port.getSnapshot()} queue={queue} />);
-  expect(html.match(/data-stamp="mode"/g)).toHaveLength(3);
-  expect(html.match(/data-stamp="mode"[^>]*>Watching<\/span>/g)).toHaveLength(3);
+  const rules = html.slice(html.indexOf('moderator-rule-card'));
+  expect(rules.match(/data-stamp="shadow"/g)).toHaveLength(3);
+  expect(rules.match(/aria-label="Shadow: watching, takes no action: Watching"><span aria-hidden="true">Watching<\/span>/g)).toHaveLength(3);
   expect(html).toContain('Propose Arm'); expect(html).toContain(copy.modes);
   const rule = fixtureRules.rules[0];
   if (!rule) throw new Error('Missing generated rule');
   port.send({ kind: 'mode', rule_id: rule.rule_id, mode: 'armed' });
   html = renderToStaticMarkup(<Rules state={port.getSnapshot()} queue={queue} />);
-  expect(html).toContain('data-tone="solid"'); expect(html).toContain('>Armed</span>');
+  expect(html).toContain('data-stamp="armed" role="img" aria-label="Armed: can act on viewers"'); expect(html).toContain('>Armed</span>');
   expect(html).toContain('Propose Watch'); expect(html).toContain(copy.modes);
 });
 

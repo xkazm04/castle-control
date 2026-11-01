@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { runInNewContext } from 'node:vm';
-import { fieldStyleErrors, measureStyles } from './styles.ts';
+import { fieldStyleErrors, measureFields, measureStyles, strongBorderFields, styleTokenNames } from './styles.ts';
+import { source, tokenInventory, tokens } from './inventory.ts';
 
 // Only the CSS audit's DOM surface is simulated. This is policy coverage,
 // not computed-browser-style or screenshot evidence.
@@ -15,9 +16,9 @@ class Element {
 }
 
 function measure({ canvas = 'opaque', background = 'transparent', font = 'Segoe UI',
-  ink = 'rgb(22, 24, 29)', missing = false, unresolved = false, overflow = false }:
+  ink = 'rgb(22, 24, 29)', missing = false, unresolved = false, overflow = false, names = ['--font-ui', '--ink'] }:
   { canvas?: 'opaque' | 'obs-transparent'; background?: string; font?: string;
-    ink?: string; missing?: boolean; unresolved?: boolean; overflow?: boolean } = {}) {
+    ink?: string; missing?: boolean; unresolved?: boolean; overflow?: boolean; names?: string[] } = {}) {
   const layer = new Element();
   const body = { append() { /* Measurement probes only. */ }, querySelectorAll: () => [layer] };
   const document = {
@@ -37,7 +38,7 @@ function measure({ canvas = 'opaque', background = 'transparent', font = 'Segoe 
   // Playwright likewise serializes this closure-free function into its page.
   return runInNewContext(`(${measureStyles.toString()})(input)`, {
     document, getComputedStyle, HTMLElement: Element, innerWidth: 800, innerHeight: 600,
-    input: { names: ['--font-ui', '--ink'], surfaces: [{ name: 'simulated layer', selector: '#scene > div' }], policy: { canvas } },
+    input: { names, surfaces: [{ name: 'simulated layer', selector: '#scene > div' }], policy: { canvas } },
   }) as ReturnType<typeof measureStyles>;
 }
 
@@ -58,6 +59,22 @@ test('transparent overlay still rejects non-token fonts, ink, unresolved tokens 
   assert.match(measure({ canvas, unresolved: true }).errors.join('\n'), /Root tokens unresolved/);
   assert.match(measure({ canvas, missing: true }).errors.join('\n'), /Missing visible simulated layer/);
   assert.match(measure({ canvas, overflow: true }).errors.join('\n'), /Horizontal overflow/);
+});
+
+test('only the explicit overlay base scope audits the renderer subset; every shipped token remains required', () => {
+  const canvas = 'obs-transparent';
+  assert.deepEqual(styleTokenNames({ canvas: 'opaque' }), tokens);
+  assert.deepEqual(styleTokenNames({ canvas: 'opaque', tokenSheet: 'overlay-base' }), tokens);
+  assert.deepEqual(styleTokenNames({ canvas }), tokens);
+  const base = styleTokenNames({ canvas, tokenSheet: 'overlay-base' });
+  assert.deepEqual(base, tokenInventory(source('packages/tokens/src/generated-base.css')));
+  assert.ok(base.length > 0 && base.length < tokens.length);
+  assert.ok(base.every(name => tokens.includes(name)));
+  for (const names of [tokens, base]) {
+    const report = measure({ canvas, names, unresolved: true });
+    assert.equal(report.tokenCount, names.length);
+    assert.equal(report.errors[0], `Root tokens unresolved: ${names.join(', ')}`);
+  }
 });
 
 const fieldBorder = { color: 'rgb(22, 24, 29)', style: 'solid', width: '1px' };
@@ -86,4 +103,44 @@ test('field policy accepts kit fields in paper and stock and checks every border
     assert.match(fieldStyleErrors({ appearance: 'none', borders }, fieldBorder).join('\n'), new RegExp(`Field border ${side}:`));
   }
   assert.match(fieldStyleErrors({ appearance: 'none', borders: [] }, fieldBorder).join('\n'), /Missing field border sides/);
+});
+
+test('only the named Steward prompt resolves the strong token under its own theme', () => {
+  assert.deepEqual(strongBorderFields.map(field => field.name), ['Steward bar prompt']);
+  const selector = strongBorderFields[0]?.selector;
+  assert.equal(selector, '.cc-steward-bar input[aria-label="Talk to the Steward..."]');
+  for (const color of [fieldBorder.color, 'rgb(242, 238, 227)']) {
+    for (const isSteward of [false, true]) {
+      class Field {
+        tagName = 'INPUT';
+        style = { border: '' };
+        hidden = false;
+        parentElement = { append() { /* Theme-local token probe only. */ } };
+        matches(value: string) { assert.equal(value, selector); return isSteward; }
+        checkVisibility() { return true; }
+        getAttribute() { return isSteward ? 'Talk to the Steward...' : 'Draw name'; }
+        remove() { /* Probe has no persistent DOM. */ }
+      }
+      const document = { querySelectorAll: () => [new Field()], createElement: () => new Field() };
+      const measured = runInNewContext(`(${measureFields.toString()})(exceptions)`, {
+        document, HTMLElement: Field, exceptions: strongBorderFields,
+        getComputedStyle: (field: Field) => ({ borderTopColor: color, borderTopStyle: 'solid',
+          borderTopWidth: field.style.border.includes('--rule-strong') ? '2px' : '1px' }),
+      }) as ReturnType<typeof measureFields>;
+      const expected = measured[0]?.expected;
+      assert.ok(expected);
+      assert.equal(expected.color, color);
+      assert.equal(expected.width, isSteward ? '2px' : '1px');
+      const borders = Array.from({ length: 4 }, () => ({ ...expected }));
+      assert.deepEqual(fieldStyleErrors({ appearance: 'none', borders }, expected), []);
+      assert.match(fieldStyleErrors({ appearance: 'auto', borders }, expected).join('\n'), /Browser-default field appearance/);
+      assert.match(fieldStyleErrors({ appearance: 'none', borders: borders.slice(1) }, expected).join('\n'), /Missing field border sides/);
+      for (const side of [0, 1, 2, 3]) for (const replacement of [
+        { width: isSteward ? '1px' : '2px' }, { width: '3px' }, { style: 'dashed' }, { color: 'rgb(1, 2, 3)' },
+      ]) {
+        const changed = borders.map((border, index) => index === side ? { ...border, ...replacement } : border);
+        assert.match(fieldStyleErrors({ appearance: 'none', borders: changed }, expected).join('\n'), new RegExp(`Field border ${side}:`));
+      }
+    }
+  }
 });

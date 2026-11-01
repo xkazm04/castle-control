@@ -1,0 +1,74 @@
+/* Ink registration and ambient motion from the winner's cc.css, on SVG internals only. */
+@keyframes plate-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes reg-snap {
+  from { transform: translate(var(--rx), var(--ry)); }
+  to { transform: translate(0, 0); }
+}
+
+.ink-k { --rx: 0px; --ry: 0px; }
+.ink-g { --rx: 4px; --ry: -3px; }
+.ink-a { --rx: -4px; --ry: 3px; }
+.ink-o { --rx: 3px; --ry: 4px; }
+
+.intro .ink-k {
+  animation: plate-in var(--m-plate-key) ease-out var(--m-plate-key-delay) both;
+}
+.intro .ink-g {
+  animation: plate-in var(--m-plate-colour) ease-out var(--m-plate-gules-delay) both,
+    reg-snap var(--m-register) var(--ease-stamp) var(--m-register-delay) both;
+}
+.intro .ink-a {
+  animation: plate-in var(--m-plate-colour) ease-out var(--m-plate-azure-delay) both,
+    reg-snap var(--m-register) var(--ease-stamp) var(--m-register-delay) both;
+}
+.intro .ink-o {
+  animation: plate-in var(--m-plate-colour) ease-out var(--m-plate-or-delay) both,
+    reg-snap var(--m-register) var(--ease-stamp) var(--m-register-delay) both;
+}
+
+@keyframes drift {
+  from { transform: translateX(-60px); }
+  to { transform: translateX(60px); }
+}
+@keyframes flicker {
+  0%, 100% { transform: scale(1, 1) skewX(0); }
+  25% { transform: scale(1.04, .95) skewX(2deg); }
+  50% { transform: scale(.97, 1.07) skewX(-1.5deg); }
+  75% { transform: scale(1.02, .98) skewX(1deg); }
+}
+@keyframes rise {
+  0% { transform: translate(0, 0); opacity: 0; }
+  15% { opacity: .9; }
+  100% { transform: translate(var(--dx, 10px), -150px); opacity: 0; }
+}
+@keyframes roll {
+  from { transform: translateY(0); }
+  to { transform: translateY(-120px); }
+}
+@keyframes wave {
+  from { transform: translateX(0); }
+  to { transform: translateX(-40px); }
+}
+
+.cloud { animation: drift var(--m-cloud) ease-in-out infinite alternate; }
+.cloud.c2 { animation-duration: var(--m-cloud-2); animation-direction: alternate-reverse; }
+.flame {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: flicker var(--m-flame) ease-in-out infinite;
+}
+.flame.f2 { animation-duration: var(--m-flame-2); animation-delay: var(--m-flame-2-delay); }
+.ember { animation: rise var(--m-ember) ease-out infinite; }
+.chatroll { animation: roll var(--m-chatroll) linear infinite; }
+.wave { animation: wave var(--m-wave) linear infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .intro .ink-k, .intro .ink-g, .intro .ink-a, .intro .ink-o,
+  .cloud, .flame, .ember, .chatroll, .wave { animation: none !important; }
+  .ember { opacity: 0; }
+}
+

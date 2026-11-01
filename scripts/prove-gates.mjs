@@ -18,7 +18,7 @@ const write = (path, value) => {
   mkdirSync(dirname(path), { recursive: true });
   writeFileSync(path, value);
 };
-const scripts = ['rust-gate', 'package-gate', 'tooling-lint', 'tooling-test', 'workspaces', 'check', 'files', 'run', 'hygiene', 'boundaries'];
+const scripts = ['rust-gate', 'package-gate', 'tooling-lint', 'tooling-test', 'workspaces', 'check', 'files', 'run', 'hygiene', 'boundaries', 'type-floor'];
 const baseConfig = ts.parseConfigFileTextToJson('tsconfig.base.json', readFileSync(join(root, 'tsconfig.base.json'), 'utf8')).config;
 const pathKey = Object.keys(process.env).find((key) => key.toLowerCase() === 'path') ?? 'PATH';
 
@@ -37,6 +37,7 @@ function proof(name, command, diagnostic, files = {}, options = {}) {
       put('packages/proof/package.json', '{"name":"simulated-proof-package","type":"module","scripts":{"typecheck":"tsc","lint":"eslint","test":"vitest"}}\n');
       put('packages/proof/tsconfig.json', JSON.stringify({ ...baseConfig, include: ['src'] }));
       put('packages/proof/src/index.ts', 'export const value = 1;\n');
+      put('packages/tokens/src/generated.css', ':root{--text-body:14px;}\n');
       for (const script of scripts) {
         const destination = join(fixture, 'scripts', `${script}.mjs`);
         mkdirSync(dirname(destination), { recursive: true });

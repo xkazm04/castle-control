@@ -23,6 +23,8 @@ test('session parameters stay per visual while artwork follows the saved preset,
     for (const fragment of ['data-size="L"', 'data-anchor="bottom-right"', 'data-colour="azure"',
       'data-burst-ms="1200"', 'data-intensity="0.8"', '--beacon-scale:1', '--beacon-colour:var(--azure)',
       '--beacon-burst-duration:1200ms', preset.url, 'SIMULATED']) expect(html).toContain(fragment);
+    expect(html).toContain('data-stamp="simulated" role="img" aria-label="Simulated: SIMULATED · 80% blaze"');
+    expect(html).toContain('>SIMULATED · 80% blaze</span>');
     expect(html).not.toContain('id="beacon-art-style"');
   }
   expect(visual).toEqual(original);

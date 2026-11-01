@@ -24,6 +24,7 @@ test.each(['draw', 'urn', 'beacon', 'map', 'overlay'] as const)('%s focus render
   }
   expect(html).not.toContain('\u2014');
   expect(html).not.toContain('iframe');
+  expect(html).toContain('data-stamp="simulated" role="img" aria-label="Simulated: SIMULATED · SAMPLE DATA"');
   session.dispose();
 });
 
@@ -39,6 +40,7 @@ test.each(['draw', 'urn', 'beacon', 'map', 'overlay'] as const)('%s art gallery 
   for (const [index, preview] of artPreviewsFor(artifact).entries()) {
     const figure = figures[index] ?? '';
     expect(figure).toContain('SAMPLE ART');
+    expect(figure).toContain('data-stamp="sample" role="img" aria-label="Sample data: SAMPLE ART"');
     expect(figure).toContain('AI-generated');
     expect(figure).toContain(`src="${preview.src}"`);
     expect(figure).toContain(`alt="${preview.alt}"`);

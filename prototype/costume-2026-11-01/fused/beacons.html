@@ -1,0 +1,695 @@
+<!doctype html>
+<html lang="en" data-theme="day">
+<!-- PORT NOTES
+Page: beacons (route #/chamber/visuals). Direction: Illuminated (folio.css) on the fused shell (shell.css).
+Ported from round-1/a/beacons.html by FUSION.md "How to port an A page"; gatehouse.html is the reference port.
+Shell: rampart, chamber tabs, dock, head bootstrap, proto toggle and keymap script are copied verbatim from keep.html
+  (only aria-current on the Beacons tab and data-chamber="visuals" on .cc-shell change). Round 1's leather binding,
+  herald's-roll tabs and margin dock are gone.
+Header: shell .cc-chamber-head (crumbs, h1.cc-title.cc-title--incipit with the folio .cc-versal, p.cc-subtitle + .cc-sim,
+  .cc-back > a.cc-btn[data-back] + Esc), in the desk column so the kindling plate stands full height on the left.
+Layout: .bc grid: .bc-plate (sticky shell .cc-panel: the kindling curve in a folio .cc-mini) and .bc-desk
+  (.cc-chamber-head, then a .cc-folio sheet holding .cc-contents and eight folio .cc-section blocks).
+  Sticky geometry: top calc(var(--top-h) + 18px), height calc(100vh - var(--top-h) - var(--dock-h) - 36px), using the
+  fused shell's 114 px top and 100 px dock (round 1 was 112 / 116).
+Components (page-local, lift to room CSS):
+  .bc-kindle (inline SVG, .kc-*) replaces kindling-curve.tsx/.css AND replay-tune.tsx's curve: one curve editor. Points
+    are g.kc-pt[role=slider]; the flame fill under the curve is clipped at the current blaze; the night's minutes are
+    the ink bars under the axis; x past 100 is hatched (pinned).
+  .bc-beacons > .bc-beacon replaces plates.tsx beacon cards (arched art window .bc-win, .bc-ranges replaces the
+    FixtureCurve mini chart; input + decay tags are shell .cc-stamp--waiting, the input one ringed in --ch).
+  .bc-nightart (inline SVG, .nt-* trace, .nr-* offerings rug) replaces replay.tsx + replay-trace.tsx + timeline.tsx;
+    .bc-climbs replaces replay-compare.tsx; .bc-inspect replaces the "Inspect an offering" card.
+  .bc-points replaces visual-editor.tsx control-point fieldsets; .bc-preview replaces the replay beacon preview.
+  Source uses shell .cc-select (input-picker.tsx). Appearance uses shell .cc-seg--sm/.cc-select/.cc-field
+    (appearance.tsx, style-picker.tsx). Test fire uses .cc-seg/.cc-btn (test-fire.tsx, test-controls.tsx,
+    source-copy.tsx). .bc-feed replaces event-feed.tsx/.css. Seal slot: shell .cc-panel + .cc-seal + folio
+    .cc-seal--wax with an empty .cc-seal-slot (seal-slot/index.tsx).
+  Folio pieces used: .cc-folio, .cc-contents, .cc-section, .cc-versal, .cc-mini, .cc-rubric--ch, .cc-gloss-note,
+    .cc-stamp--inked, .cc-btn--chamber (round 1's .cc-btn--or), .cc-status, .cc-droll--candle/--skull, .cc-orn.
+  Shared candidate kept inline: .bc .cc-seg > [aria-pressed] uses --ch-deep glass so white text holds AA on or.
+Motion: the beacon is kindled. The gilt curve inks itself from 0 to 100, the fire rises under it to today's 39%,
+  and the brazier on the curve catches with sparks and keeps a small flicker. Reduced motion: drawn and lit at rest.
+-->
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Beacons · Castle Control</title>
+<script>(function(){try{var t=new URLSearchParams(location.search).get('theme');if(t==='night'||t==='day')document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Grenze+Gotisch:wght@500;600;700;800&family=Alegreya+Sans:ital,wght@0,400;0,500;0,700;0,800;1,400&family=Alegreya+Sans+SC:wght@500;700;800&family=Alegreya:ital,wght@0,400;0,500;0,700;0,800;1,400;1,500&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="shell.css">
+<link rel="stylesheet" href="folio.css">
+<style>
+/* ---- beacons page --------------------------------------------------------- */
+.bc { display: grid; grid-template-columns: 540px minmax(0, 1fr); gap: 28px; padding: 18px var(--gutter) 34px; align-items: start; }
+
+/* the plate: the kindling curve (a shell panel; its glass cap is the Beacons' or) */
+.bc-plate {
+  position: sticky; top: calc(var(--top-h) + 18px); height: calc(100vh - var(--top-h) - var(--dock-h) - 36px); min-height: 520px;
+  display: flex; flex-direction: column;
+}
+.bc-plate__head { display: grid; grid-template-columns: 1fr auto; align-items: end; gap: 12px; padding: 12px 18px 10px; }
+.bc-plate__head .cc-eyebrow { display: block; margin-bottom: 5px; }
+.bc-plate__head .cc-eyebrow b { color: var(--ch-ink); }
+.bc-plate__head .cc-panel__title { color: var(--ch-ink); }
+.bc-plate__head .cc-panel__aside { display: block; margin-top: 3px; font-size: var(--t-small); }
+.bc-blaze { display: flex; align-items: baseline; gap: 8px; }
+.bc-blaze b { font: 600 var(--t-figure-lg)/.8 var(--font-display); font-variant-numeric: var(--num); color: var(--ch-ink); text-shadow: 0 0 calc(var(--glow-on) * 18px) var(--ch-glow); }
+.bc-blaze span { font: italic 400 var(--t-small)/1.1 var(--font-book); color: var(--ink-2); }
+.bc-kwrap { flex: 1 1 auto; min-height: 0; padding: 6px 22px 0; display: flex; }
+.bc-kwrap .cc-mini { flex: 1; }
+.bc-kwrap .cc-mini__field { display: grid; place-items: center; background-color: var(--vellum); background-image: var(--tex-vellum-grain); }
+.bc-kindle { position: relative; width: 100%; height: 100%; display: block; }
+.bc-plate__foot { padding: 14px 18px 14px; display: grid; gap: 6px; }
+.bc-plate__foot .cc-field__hint { font-size: var(--t-label); line-height: 1.35; }
+.bc-plate__row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.bc-plate__row .cc-status { margin-right: auto; }
+
+/* kindling curve art */
+.bc-kindle path { fill: none; }
+.bc-kindle .kc-grid { stroke: var(--gules); stroke-width: .8; opacity: .3; }
+.bc-kindle .kc-axis { stroke: var(--ink-2); stroke-width: 1.4; }
+.bc-kindle .kc-lab { font: 500 14px/1 var(--font-text); fill: var(--ink-2); font-variant-numeric: var(--num); }
+.bc-kindle .kc-labc { font: 800 12.5px/1 var(--font-label); letter-spacing: .1em; fill: var(--muted); }
+.bc-kindle .kc-pin { fill: url(#kcHatch); }
+.bc-kindle .kc-hatch { stroke: var(--faint); stroke-width: 1.2; }
+.bc-kindle .kc-wash { fill: var(--ch-wash); }
+.bc-kindle .kc-fire { fill: url(#kcFire); }
+.bc-kindle .kc-level { stroke: var(--gules); stroke-width: 1.2; stroke-dasharray: 2 4; }
+.bc-kindle .kc-case { fill: none; stroke: var(--lead); stroke-width: 7; stroke-linejoin: round; stroke-linecap: round; }
+.bc-kindle .kc-gold { fill: none; stroke: url(#kcGilt); stroke-width: 4.2; stroke-linejoin: round; stroke-linecap: round; }
+.bc-kindle .kc-pt { cursor: grab; outline: none; }
+.bc-kindle .kc-pt circle { fill: var(--surface); stroke: var(--ink); stroke-width: 1.6; }
+.bc-kindle .kc-pt .kc-pt__in { fill: var(--ch); stroke: none; }
+.bc-kindle .kc-pt text { font: 800 9.5px/1 var(--font-label); fill: var(--lead-lo); text-anchor: middle; }
+.bc-kindle .kc-pt:focus-visible circle:first-child { stroke: var(--focus); stroke-width: 3.5; }
+.bc-kindle .kc-ptlab { font: 700 13px/1 var(--font-text); fill: var(--ink); font-variant-numeric: var(--num); }
+.bc-kindle .kc-ptlab--bg { stroke: var(--vellum); stroke-width: 4; stroke-linejoin: round; }
+.bc-kindle .kc-lead { stroke: var(--gules); stroke-width: 1.2; stroke-dasharray: 1.5 3; }
+.bc-kindle .kc-glow { fill: url(#kcGlow); }
+.bc-kindle .kc-sparks circle { fill: var(--gilt-mid); }
+.bc-kindle .kc-bowl { fill: var(--art-shade); stroke: var(--gilt-mid); stroke-width: 1.2; }
+.bc-kindle .kc-flame { fill: var(--art-flame); }
+.bc-kindle .kc-flame2 { fill: var(--gilt-hi); }
+.bc-kindle .kc-note { font: italic 500 14px/1 var(--font-book); fill: var(--gules-ink); }
+.bc-kindle .kc-bar { fill: var(--ink-2); opacity: .55; }
+.bc-kindle .kc-bat { fill: var(--muted); }
+
+/* the desk: chamber head on stone, then the folio */
+.bc-desk { min-width: 0; display: grid; gap: 22px; }
+.bc-desk > .cc-chamber-head { padding-inline: 0; }
+.bc-desk > .cc-chamber-head .cc-title { margin-top: 10px; }
+.bc-head__droll { position: absolute; right: 290px; bottom: 34px; color: var(--muted); opacity: .75; }
+.bc-folio .cc-contents { margin: 0; }
+.bc-codex { padding: 4px 30px 18px 22px; background-image: linear-gradient(90deg, transparent 69px, var(--ch-wash) 69px, var(--ch-wash) 70px, transparent 70px); }
+.bc-codex .cc-section { scroll-margin-top: calc(var(--top-h) + 60px); }
+.bc-codex .cc-section__no { margin-left: 2px; }
+.bc-sm { font-size: var(--t-small); color: var(--ink-2); }
+.bc-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 22px; }
+.bc-span2 { grid-column: 1 / -1; }
+.bc-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+/* or glass is light: the pressed pane and the solid chamber button keep AA with deeper ink */
+.bc .cc-seg > [aria-pressed="true"] { background: var(--tex-glass), radial-gradient(140% 120% at 30% 10%, color-mix(in srgb, var(--ch) 35%, var(--ch-deep)), var(--ch-deep) 75%); background-size: 180px 180px, 100% 100%; background-blend-mode: soft-light, normal; }
+.bc .cc-btn--chamber:hover { background: var(--ch-lit); color: var(--lead-lo); }
+.bc-tag--ch { color: var(--ch-ink); box-shadow: inset 0 0 0 1.5px var(--ch); }
+
+/* I · the beacons */
+.bc-beacons { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.bc-beacon { display: grid; grid-template-columns: 104px minmax(0, 1fr) 128px; gap: 18px; align-items: stretch; padding: 12px 16px 12px 12px; background: var(--surface); border: 1px solid var(--hair); box-shadow: var(--shadow); }
+.bc-beacon[aria-current="true"] { border-color: var(--ch); box-shadow: inset 4px 0 0 var(--ch), var(--shadow), 0 0 calc(var(--glow-on) * 14px) var(--ch-glow); }
+.bc-win { position: relative; overflow: hidden; background: var(--art-shade); clip-path: path("M0 132V40C0 18 28 3 52 0 76 3 104 18 104 40V132Z"); height: 132px; }
+.bc-win img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.bc-win--altar img { object-fit: contain; object-position: 50% 80%; transform: scale(1.05); }
+.bc-win--altar::after { content: ""; position: absolute; inset: 0; background: radial-gradient(50% 40% at 50% 62%, var(--art-flame), transparent 70%); opacity: var(--blaze); mix-blend-mode: screen; }
+.bc-win--frame img.bc-face { inset: 16% 12%; width: 76%; height: 68%; }
+.bc-win svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.bc-win::before { content: ""; position: absolute; inset: 0; z-index: 2; box-shadow: inset 0 0 0 2px var(--gilt-mid), inset 0 0 0 3px var(--lead); clip-path: inherit; pointer-events: none; }
+.bc-beacon__body { display: grid; gap: 6px; align-content: start; min-width: 0; }
+.bc-beacon__label { display: flex; gap: 6px; align-items: center; font: 800 var(--t-label)/1 var(--font-label); letter-spacing: var(--track-wide); text-transform: lowercase; color: var(--ink-2); }
+.bc-beacon__label i { font-style: normal; color: var(--ch-ink); }
+.bc-beacon__name { margin: 0; font: 800 19px/1.1 var(--font-label); letter-spacing: .05em; text-transform: lowercase; color: var(--ink); }
+.bc-ranges { list-style: none; margin: 2px 0 0; padding: 0; display: grid; grid-template-columns: repeat(4, 1fr); border-top: 1.5px solid var(--ink-2); }
+.bc-ranges li { padding: 4px 6px 3px; display: grid; gap: 1px; border-left: 1px solid var(--hair); font: 400 var(--t-label)/1.2 var(--font-mono); color: var(--muted); }
+.bc-ranges li:first-child { border-left: 0; padding-left: 0; }
+.bc-ranges li b { font: 500 var(--t-label)/1.2 var(--font-mono); color: var(--ink); }
+.bc-ranges li[aria-current] { background: var(--ch-wash); box-shadow: inset 0 -2px 0 var(--ch); }
+.bc-ranges li[aria-current]:first-child { padding-left: 6px; }
+.bc-ranges li[aria-current] b { color: var(--ch-ink); font-weight: 700; }
+.bc-chips { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.bc-beacon__blaze { display: grid; align-content: space-between; justify-items: end; text-align: right; gap: 8px; }
+.bc-beacon__blaze b { font: 600 var(--t-figure)/.85 var(--font-display); font-variant-numeric: var(--num); color: var(--ch-ink); }
+.bc-beacon__blaze b small { font-size: .45em; }
+.bc-beacon__blaze > span { font: italic 400 var(--t-small)/1 var(--font-book); color: var(--ink-2); }
+.bc-beacon__blaze .cc-meter { width: 100%; height: 10px; }
+
+/* II · replay a night */
+.bc-climbs { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.bc-climbs li { padding: 10px 12px; background: var(--surface); border: 1px solid var(--hair); border-top: 3px solid var(--ch); display: grid; gap: 6px; }
+.bc-climbs li[aria-current] { box-shadow: inset 0 0 0 1px var(--ch); }
+.bc-climbs b { font: 800 var(--t-small)/1.15 var(--font-label); letter-spacing: .05em; text-transform: lowercase; color: var(--ink); }
+.bc-climbs .cc-stamp { justify-self: start; }
+.bc-climbs small { font: italic 400 var(--t-small)/1.25 var(--font-book); color: var(--ink-2); }
+.bc-transport { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 10px 14px; background: var(--vellum-2); border: 1px solid var(--hair); }
+.bc-transport__time { display: grid; gap: 3px; margin-right: auto; }
+.bc-transport__time b { font: 500 var(--t-mono)/1 var(--font-mono); color: var(--ink); }
+.bc-transport__time small { font: italic 400 var(--t-small)/1.1 var(--font-book); color: var(--ink-2); }
+.bc-night { gap: 6px; padding-top: 12px; }
+.bc-night__bar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.bc-night__bar .cc-kicker { margin-right: auto; }
+.bc-nightart { display: block; width: 100%; height: auto; outline: none; }
+.bc-nightart:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.bc-nightart .nt-grid { stroke: var(--hair); stroke-width: 1; }
+.bc-nightart .nt-base { stroke: var(--ink-2); stroke-width: 1.4; }
+.bc-nightart .nt-lit { stroke: var(--gules); stroke-width: 1.2; stroke-dasharray: 3 3; }
+.bc-nightart .nt-area { fill: url(#ntFire); }
+.bc-nightart .nt-line { fill: none; stroke: var(--ch-ink); stroke-width: 2; stroke-linejoin: round; }
+.bc-nightart .nt-lab { font: 500 13px/1 var(--font-text); fill: var(--muted); font-variant-numeric: var(--num); }
+.bc-nightart .nt-labc { font: 800 13px/1 var(--font-label); letter-spacing: .08em; fill: var(--ink-2); }
+.bc-nightart .nt-note { font: italic 500 14px/1 var(--font-book); fill: var(--gules-ink); }
+.bc-nightart .nt-mark { fill: var(--gules); stroke: var(--surface); stroke-width: 1.5; }
+.bc-nightart .nt-head { stroke: var(--ink); stroke-width: 2; }
+.bc-nightart .nt-knob { fill: var(--ink); }
+.bc-nightart .nr-tick { stroke: var(--faint); stroke-width: 1.6; }
+.bc-nightart .nr-count { stroke: var(--gules); stroke-width: 2.4; }
+.bc-nightart .nr-sel { stroke: var(--ink); stroke-width: 3; }
+.bc-nightart .nr-ring { fill: none; stroke: var(--ink); stroke-width: 1.4; }
+.bc-nightart .nr-base { stroke: var(--ink-2); stroke-width: 1; }
+.bc-inspect { display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; align-items: center; padding: 10px 14px; background: var(--surface); border: 1px solid var(--hair); border-left: 3px solid var(--gules); }
+.bc-inspect .cc-kicker { grid-column: 1 / -1; }
+.bc-inspect b { font: 600 var(--t-figure-sm)/1 var(--font-display); color: var(--gules-ink); grid-row: 2 / 4; }
+.bc-inspect p { font-size: var(--t-small); color: var(--ink); }
+.bc-inspect p + p { color: var(--ink-2); font-family: var(--font-mono); font-size: var(--t-mono); }
+
+/* III · tune the curve */
+.bc-points { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+.bc-points fieldset { margin: 0; padding: 10px 12px 12px; border: 1px solid var(--hair); background: var(--surface); display: grid; grid-template-columns: 1fr 1fr; column-gap: 12px; row-gap: 8px; min-width: 0; }
+.bc-points legend { grid-column: 1 / -1; padding: 0 6px; margin-left: -6px; display: flex; align-items: center; gap: 8px; font: 800 var(--t-label)/1 var(--font-label); letter-spacing: var(--track-wide); text-transform: lowercase; color: var(--ink); }
+.bc-points legend i { width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; font: 800 11px/1 var(--font-label); font-style: normal; background: var(--ch); color: var(--lead-lo); box-shadow: 0 0 0 1.5px var(--lead); }
+.bc-tune { display: grid; grid-template-columns: minmax(0, 1fr) 220px; gap: 18px; align-items: start; }
+.bc-tune__ask { display: grid; gap: 12px; }
+.bc-preview { margin: 0; display: grid; gap: 6px; padding: 10px; background: var(--surface); border: 1px solid var(--hair); }
+.bc-preview__art { position: relative; aspect-ratio: 4 / 3; background: var(--art-shade); overflow: hidden; box-shadow: 0 0 0 1.5px var(--lead); }
+.bc-preview__art img { position: absolute; inset: 6% 0 0; width: 100%; height: 94%; object-fit: contain; filter: grayscale(.85) brightness(.55); }
+.bc-preview__art .cc-sim { position: absolute; left: 6px; top: 6px; }
+.bc-preview b { font: 800 var(--t-label)/1.2 var(--font-label); letter-spacing: var(--track-wide); text-transform: lowercase; color: var(--ink); }
+.bc-preview p { font: italic 400 var(--t-small)/1.3 var(--font-book); color: var(--ink-2); }
+
+/* IV · driven by, V · appearance */
+.bc-source { grid-template-columns: 1fr 1fr; gap: 14px 22px; }
+.bc-unit { display: flex; align-items: baseline; gap: 10px; padding: 8px 12px; background: var(--surface-2); border-left: 3px solid var(--ch); }
+.bc-unit b { font: 700 var(--t-lead)/1 var(--font-book); color: var(--ink); }
+.bc-look { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 20px; align-items: start; }
+.bc-look__art { margin: 0; display: grid; gap: 8px; }
+.bc-look__frame { aspect-ratio: 3 / 4; padding: 6px; background: var(--gilt); box-shadow: 0 0 0 1px var(--gilt-lo), 0 0 0 3px var(--surface), 0 0 0 4.5px var(--lead), var(--shadow); }
+.bc-look__frame div { position: relative; height: 100%; background: radial-gradient(70% 50% at 50% 65%, color-mix(in srgb, var(--art-flame) 35%, transparent), transparent 70%), var(--art-shade); box-shadow: 0 0 0 1.5px var(--lead); overflow: hidden; }
+.bc-look__frame img { position: absolute; inset: 4% 4% 0; width: 92%; height: 96%; object-fit: contain; object-position: 50% 100%; }
+.bc-look__frame .cc-sim { position: absolute; left: 6px; top: 6px; z-index: 1; }
+.bc-look__art figcaption { font: italic 400 var(--t-small)/1.3 var(--font-book); color: var(--ink-2); }
+.bc-look__ctl { display: grid; gap: 14px; min-width: 0; }
+.bc-swatch { width: 11px; height: 11px; border-radius: 50%; display: inline-block; vertical-align: -1px; box-shadow: 0 0 0 1.5px var(--lead); }
+
+/* VI · test fire */
+.bc-fire { display: grid; grid-template-columns: repeat(4, auto); gap: 8px; justify-content: start; }
+.bc-firestat { display: flex; align-items: baseline; gap: 12px; padding: 10px 14px; background: var(--surface-2); border-left: 3px solid var(--ch); }
+.bc-firestat b { font: 600 var(--t-figure-sm)/1 var(--font-display); font-variant-numeric: var(--num); color: var(--ch-ink); }
+.bc-url { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px 14px; align-items: center; padding: 12px 14px; background: var(--surface); border: 1.5px dashed var(--muted); }
+
+/* VII · feed */
+.bc-feed { list-style: none; margin: 0; padding: 0; border-top: 2px solid var(--ch); background: var(--surface); box-shadow: inset 0 0 0 1px var(--hair); }
+.bc-feed li { display: grid; grid-template-columns: 52px minmax(0, 1fr) auto; gap: 14px; align-items: center; padding: 5px 14px 5px 0; border-bottom: 1px solid var(--hair-2); }
+.bc-feed li:nth-child(odd) { background: var(--tint); }
+.bc-feed li > b { justify-self: end; font: 600 22px/1 var(--font-display); font-variant-numeric: var(--num); color: var(--ch-ink); }
+.bc-feed li > span { display: grid; gap: 1px; min-width: 0; }
+.bc-feed li > span strong { font: 800 var(--t-small)/1.2 var(--font-label); letter-spacing: .05em; text-transform: lowercase; color: var(--ink); }
+.bc-feed li > span small { font: italic 400 var(--t-label)/1.25 var(--font-book); color: var(--ink-2); }
+.bc-feed time { font: 400 var(--t-label)/1 var(--font-mono); color: var(--muted); }
+
+/* VIII · seal */
+.bc-sealslot .cc-empty { padding: 12px; border: 1px dashed var(--hair); background: var(--surface-2); }
+.bc-sealslot .cc-empty .cc-droll { width: 30px; height: 30px; color: var(--muted); }
+
+/* responsive: 1280 */
+@media (max-width: 1380px) {
+  .bc { grid-template-columns: 450px minmax(0, 1fr); gap: 22px; }
+  .bc-head__droll { display: none; }
+  .bc-beacon { grid-template-columns: 88px minmax(0, 1fr) 104px; gap: 14px; }
+  .bc-win { clip-path: path("M0 120V36C0 16 24 3 44 0 64 3 88 16 88 36V120Z"); height: 120px; }
+  .bc-tune { grid-template-columns: minmax(0, 1fr) 190px; }
+  .bc-look { grid-template-columns: 170px minmax(0, 1fr); }
+  .bc-climbs { grid-template-columns: 1fr; }
+  .bc-fire { grid-template-columns: repeat(2, auto); }
+  .bc-codex { padding-right: 20px; }
+  .cc-contents a { padding: 5px 5px; letter-spacing: .02em; }
+}
+@media (max-height: 820px) {
+  .bc-plate__head { padding: 8px 16px 6px; }
+  .bc-blaze b { font-size: var(--t-figure); }
+  .bc-plate__foot { padding: 10px 16px 10px; gap: 4px; }
+  .bc-plate__foot .bc-hint-long { display: none; }
+}
+
+/* motion: the beacon is kindled */
+@media (prefers-reduced-motion: no-preference) {
+  .bc-kindle .kc-gold, .bc-kindle .kc-case { stroke-dasharray: 620; animation: bc-ink 1.5s var(--ease-light) .35s both; }
+  .bc-kindle .kc-fire { animation: bc-rise 1.1s var(--ease) 1.55s both; transform-box: fill-box; transform-origin: 50% 100%; }
+  .bc-kindle .kc-brazier { animation: bc-catch .5s var(--ease-stamp) 2.4s both; transform-box: fill-box; transform-origin: 50% 100%; }
+  .bc-kindle .kc-flame, .bc-kindle .kc-flame2 { animation: bc-flick 1.6s ease-in-out 2.9s infinite alternate; transform-box: fill-box; transform-origin: 50% 100%; }
+  .bc-kindle .kc-glow { animation: bc-catch .9s ease-out 2.3s both; transform-box: fill-box; transform-origin: 50% 50%; }
+  .bc-kindle .kc-sparks circle { animation: bc-spark 2.2s ease-out infinite; transform-box: fill-box; }
+  .bc-kindle .kc-sparks circle:nth-child(2) { animation-delay: .5s; } .bc-kindle .kc-sparks circle:nth-child(3) { animation-delay: 1s; } .bc-kindle .kc-sparks circle:nth-child(4) { animation-delay: 1.4s; } .bc-kindle .kc-sparks circle:nth-child(5) { animation-delay: 1.8s; }
+  .bc-win--altar::after { animation: bc-glow 2.6s ease-in-out infinite alternate; }
+}
+@keyframes bc-ink { from { stroke-dashoffset: 620; } to { stroke-dashoffset: 0; } }
+@keyframes bc-rise { from { transform: scaleY(0); } to { transform: none; } }
+@keyframes bc-catch { from { transform: scale(.2); } to { transform: none; } }
+@keyframes bc-flick { to { transform: scaleY(.84) skewX(-5deg); } }
+@keyframes bc-spark { 0% { transform: translateY(10px); opacity: 0; } 30% { opacity: 1; } 100% { transform: translateY(-16px); opacity: .2; } }
+@keyframes bc-glow { to { opacity: calc(var(--blaze) * .7); } }
+</style>
+</head>
+<body class="cc-body">
+<div class="cc-shell" data-chamber="visuals">
+  <header class="cc-rampart">
+    <a class="cc-brand" href="keep.html" aria-label="Castle Control, the whole keep"><svg class="cc-mark" viewBox="0 0 32 32" aria-hidden="true">
+  <path d="M3 9V4h4v3h3V4h4v3h4V4h3v3h3V4h5v5c0 0 0 0 0 0v12a3 3 0 0 1-3 3H14l-6 5v-5H6a3 3 0 0 1-3-3Z" fill="var(--gules)" stroke="var(--on-lead)" stroke-width="1.4" stroke-linejoin="round"/>
+  <path d="M5 11h22" stroke="var(--lead)" stroke-width="1.2" opacity=".6"/>
+  <path d="M12.5 22v-5.5a3.5 3.5 0 0 1 7 0V22Z" fill="var(--or-lit)" stroke="var(--lead)" stroke-width="1.3"/>
+  <path d="M16 13v9M12.5 18.5h7" stroke="var(--lead)" stroke-width="1"/>
+</svg><span class="cc-wordmark">Castle Control</span></a>
+    <span class="cc-came-v" aria-hidden="true"></span>
+    <div class="cc-live" aria-label="Stream status">
+      <span class="cc-onair"><i class="cc-lamp" data-live="false" aria-hidden="true"></i>On air · simulated</span>
+      <span class="cc-figure"><b>Unknown</b><small>viewers</small></span>
+      <span class="cc-figure"><b>Unknown</b><small>uptime</small></span>
+    </div>
+    <span class="cc-came-v" aria-hidden="true"></span>
+    <div class="cc-links">
+      <span class="cc-chip">Twitch simulated</span>
+      <a href="setup.html" title="Set up OBS"><span class="cc-chip">OBS simulated</span></a>
+      <a href="gatehouse.html"><span class="cc-chip" data-module="moderator"><i class="cc-lozenge" aria-hidden="true"></i>Gatehouse simulated</span></a>
+    </div>
+    <span class="cc-spacer"></span>
+    <span class="cc-sim cc-sim--on-lead">Simulated</span>
+    <button class="cc-iconbtn" type="button" data-theme-toggle aria-label="Switch between day and night glass" title="Theme">
+      <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7.5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M10 2.5a7.5 7.5 0 0 1 0 15Z" fill="currentColor"/></svg>
+    </button>
+    <a class="cc-btn cc-btn--rampart" href="#steward-input" title="Talk to the Steward (/)">Steward <kbd class="cc-kbd">/</kbd></a>
+  </header>
+  <nav class="cc-tabs" aria-label="Chamber strip">
+    <a class="cc-tab" data-module="keep" href="keep.html"><span class="cc-tab__light" aria-hidden="true"></span><kbd class="cc-kbd">0</kbd><b class="cc-tab__name">The Keep</b></a>
+    <a class="cc-tab" data-module="lottery" href="lottery.html" aria-label="Lot Chamber, No draw, Preview, no proposals"><span class="cc-tab__light" aria-hidden="true"></span><kbd class="cc-kbd">1</kbd><b class="cc-tab__name">Lot Chamber</b><span class="cc-tab__row"><span class="cc-tab__figure">No draw</span><span class="cc-lamps" aria-hidden="true"><i data-lit="false" title="On air · off">On air</i><i data-lit="true" title="Preview">Preview</i><i data-lit="false" title="Draft · off">Draft</i></span></span></a>
+    <a class="cc-tab" data-module="moderator" href="gatehouse.html" aria-label="Gatehouse, 1 held, On air, preview, no proposals"><span class="cc-tab__light" aria-hidden="true"></span><kbd class="cc-kbd">2</kbd><b class="cc-tab__name">Gatehouse</b><span class="cc-tab__row"><span class="cc-tab__figure">1 held</span><span class="cc-lamps" aria-hidden="true"><i data-lit="true" title="On air">On air</i><i data-lit="true" title="Preview">Preview</i><i data-lit="false" title="Draft · off">Draft</i></span></span></a>
+    <a class="cc-tab" data-module="visuals" href="beacons.html" aria-current="page" aria-label="Beacons, Offering altar, On air, preview, no proposals"><span class="cc-tab__light" aria-hidden="true"></span><kbd class="cc-kbd">3</kbd><b class="cc-tab__name">Beacons</b><span class="cc-tab__row"><span class="cc-tab__figure">Offering altar</span><span class="cc-lamps" aria-hidden="true"><i data-lit="true" title="On air">On air</i><i data-lit="true" title="Preview">Preview</i><i data-lit="false" title="Draft · off">Draft</i></span></span></a>
+    <a class="cc-tab" data-module="studio" href="maproom.html" aria-label="Map Room, Sand table, Preview, no proposals"><span class="cc-tab__light" aria-hidden="true"></span><kbd class="cc-kbd">4</kbd><b class="cc-tab__name">Map Room</b><span class="cc-tab__row"><span class="cc-tab__figure">Sand table</span><span class="cc-lamps" aria-hidden="true"><i data-lit="false" title="On air · off">On air</i><i data-lit="true" title="Preview">Preview</i><i data-lit="false" title="Draft · off">Draft</i></span></span></a>
+  </nav>
+  <main class="cc-main" aria-label="Beacons">
+    <div class="bc">
+    <aside class="cc-panel bc-plate" aria-label="The kindling curve">
+      <div class="bc-plate__head">
+        <div><span class="cc-eyebrow">Beacon <b>I</b> · Offering altar · tuning below</span><h2 class="cc-panel__title">The kindling curve</h2><span class="cc-panel__aside">contribution to blaze · weighted subs → blaze</span></div>
+        <div class="bc-blaze"><b>39%</b><span>blaze</span></div>
+      </div>
+      <div class="bc-kwrap">
+        <div class="cc-mini"><div class="cc-mini__field"><svg class="bc-kindle" viewBox="0 0 520 414" preserveAspectRatio="xMidYMid meet" role="group" aria-label="Kindling curve for the Offering altar. Weighted subs on the across axis, blaze on the up axis. Control points 0→0%, 10→25%, 30→60%, 100→100%. Now 18.0 weighted subs gives 39% blaze. Simulated.">
+  <defs>
+    <linearGradient id="kcFire" x1="0" y1="1" x2="0" y2="0"><stop offset="0" style="stop-color: var(--gules-deep)"/><stop offset=".35" style="stop-color: var(--gules)"/><stop offset=".7" style="stop-color: var(--art-flame)"/><stop offset="1" style="stop-color: var(--gilt-hi)"/></linearGradient>
+    <linearGradient id="kcGilt" x1="0" y1="1" x2="1" y2="0"><stop offset="0" style="stop-color: var(--gilt-lo)"/><stop offset=".2" style="stop-color: var(--gilt-hi)"/><stop offset=".42" style="stop-color: var(--gilt-mid)"/><stop offset=".6" style="stop-color: var(--gilt-lo)"/><stop offset=".8" style="stop-color: var(--gilt-hi)"/><stop offset="1" style="stop-color: var(--gilt-mid)"/></linearGradient>
+    <pattern id="kcHatch" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><path class="kc-hatch" d="M0 0V7"/></pattern>
+    <radialGradient id="kcGlow"><stop offset="0" style="stop-color: var(--art-flame); stop-opacity: .55"/><stop offset=".5" style="stop-color: var(--gilt-hi); stop-opacity: .25"/><stop offset="1" style="stop-color: var(--gilt-hi); stop-opacity: 0"/></radialGradient>
+    <clipPath id="kcLit"><rect x="60" y="30" width="72" height="310"/></clipPath>
+  </defs>
+  <!-- ruling: red ink, like a scribe's grid -->
+  <path class="kc-grid" d="M60 40V340M100 40V340M180 40V340M260 40V340M460 40V340M60 40H500M60 115H500M60 190H500M60 265H500"/>
+  <rect class="kc-pin" x="460" y="40" width="40" height="300"/>
+  <text class="kc-labc" x="484" y="190" transform="rotate(-90 484 190)" text-anchor="middle">pinned past the top point</text>
+  <!-- the curve's pale wash, then the fire up to today's blaze -->
+  <path class="kc-wash" d="M60 340L100 265 180 160 460 40 500 40V340Z"/>
+  <g clip-path="url(#kcLit)"><path class="kc-fire" d="M60 340L100 265 180 160 460 40 500 40V340Z"/></g>
+  <path class="kc-level" d="M60 223H132"/>
+  <text class="kc-note" x="150" y="236">the altar burns here · 39%</text>
+  <path class="kc-axis" d="M60 36V340H500"/>
+  <!-- axis labels -->
+  <text class="kc-lab" x="52" y="344" text-anchor="end">0%</text><text class="kc-lab" x="52" y="269" text-anchor="end">25</text><text class="kc-lab" x="52" y="194" text-anchor="end">50</text><text class="kc-lab" x="52" y="119" text-anchor="end">75</text><text class="kc-lab" x="52" y="44" text-anchor="end">100%</text>
+  <text class="kc-labc" x="14" y="190" transform="rotate(-90 14 190)" text-anchor="middle">blaze</text>
+  <!-- the night's minutes, as ink bars under the axis -->
+  <rect class="kc-bar" x="62" y="358.0" width="16" height="34.0"/><rect class="kc-bar" x="82" y="369.1" width="16" height="22.9"/><rect class="kc-bar" x="102" y="386.1" width="16" height="5.9"/><rect class="kc-bar" x="122" y="385.2" width="16" height="6.8"/><rect class="kc-bar" x="142" y="386.8" width="16" height="5.2"/><rect class="kc-bar" x="242" y="390.0" width="16" height="2.0"/><rect class="kc-bar" x="262" y="390.0" width="16" height="2.0"/>
+  <path class="kc-axis" d="M60 392H500" style="stroke-width: 1"/>
+  <text class="kc-lab" x="60" y="408" text-anchor="middle">0</text><text class="kc-lab" x="100" y="408" text-anchor="middle">10</text><text class="kc-lab" x="180" y="408" text-anchor="middle">30</text><text class="kc-lab" x="260" y="408" text-anchor="middle">50</text><text class="kc-lab" x="460" y="408" text-anchor="middle">100</text>
+  <text class="kc-labc" x="360" y="408" text-anchor="middle">weighted subs</text>
+  <text class="kc-labc" x="226" y="372">the night’s minutes</text>
+  <!-- the gilt curve -->
+  <path class="kc-case" d="M60 340L100 265 180 160 460 40 500 40"/>
+  <path class="kc-gold" d="M60 340L100 265 180 160 460 40 500 40"/>
+  <!-- today: 18.0 weighted subs → 39% -->
+  <path class="kc-lead" d="M132 223V340"/>
+  <circle class="kc-glow" cx="132" cy="205" r="58"/>
+  <g class="kc-sparks"><circle cx="126" cy="176" r="1.8"/><circle cx="139" cy="166" r="1.5"/><circle cx="130" cy="156" r="1.3"/><circle cx="142" cy="146" r="1.1"/><circle cx="122" cy="140" r="1"/></g>
+  <g class="kc-brazier">
+    <path class="kc-flame" d="M132 186c6 9 10 13 10 21a10 10 0 0 1-20 0c0-8 5-12 10-21Z"/>
+    <path class="kc-flame2" d="M132 199c3 5 5 7 5 10.5a5 5 0 0 1-10 0c0-3.5 2-5.5 5-10.5Z"/>
+    <path class="kc-bowl" d="M119 214h26c-1 7-6 11-13 11s-12-4-13-11Z"/>
+  </g>
+  <text class="kc-ptlab kc-ptlab--bg" x="138" y="336">18.0</text><text class="kc-ptlab" x="138" y="336">18.0</text>
+  <!-- control points (sliders) -->
+  <g class="kc-pt" tabindex="0" role="slider" aria-label="Control point 1" aria-valuetext="0 weighted subs, 0% blaze" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"><circle cx="60" cy="340" r="9.5"/><circle class="kc-pt__in" cx="60" cy="340" r="6"/><text x="60" y="343.5">i</text></g>
+  <g class="kc-pt" tabindex="0" role="slider" aria-label="Control point 2" aria-valuetext="10 weighted subs, 25% blaze" aria-valuenow="10" aria-valuemin="0" aria-valuemax="100"><circle cx="100" cy="265" r="9.5"/><circle class="kc-pt__in" cx="100" cy="265" r="6"/><text x="100" y="268.5">ii</text></g>
+  <g class="kc-pt" tabindex="0" role="slider" aria-label="Control point 3" aria-valuetext="30 weighted subs, 60% blaze" aria-valuenow="30" aria-valuemin="0" aria-valuemax="100"><circle cx="180" cy="160" r="9.5"/><circle class="kc-pt__in" cx="180" cy="160" r="6"/><text x="180" y="163.5">iii</text></g>
+  <g class="kc-pt" tabindex="0" role="slider" aria-label="Control point 4" aria-valuetext="100 weighted subs, 100% blaze" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"><circle cx="460" cy="40" r="9.5"/><circle class="kc-pt__in" cx="460" cy="40" r="6"/><text x="460" y="43.5">iv</text></g>
+  <text class="kc-ptlab kc-ptlab--bg" x="74" y="331">0→0%</text><text class="kc-ptlab" x="74" y="331">0→0%</text>
+  <text class="kc-ptlab kc-ptlab--bg" x="110" y="283">10→25%</text><text class="kc-ptlab" x="110" y="283">10→25%</text>
+  <text class="kc-ptlab kc-ptlab--bg" x="168" y="148" text-anchor="end">30→60%</text><text class="kc-ptlab" x="168" y="148" text-anchor="end">30→60%</text>
+  <text class="kc-ptlab kc-ptlab--bg" x="448" y="62" text-anchor="end">100→100%</text><text class="kc-ptlab" x="448" y="62" text-anchor="end">100→100%</text>
+  <!-- a bat roosts on the pinned margin -->
+  <path class="kc-bat" d="M470 8c4-4 8-4 11 0 1-2 2-4 4-4s3 2 4 4c3-4 7-4 11 0-3 0-6 2-7 6-2-2-4-2-6 0l-2 3-2-3c-2-2-4-2-6 0-1-4-4-6-7-6Z" transform="translate(-196 -2)"/>
+</svg></div></div>
+      </div>
+      <div class="bc-plate__foot">
+        <p class="cc-field__hint">0→0% · 10→25% · 30→60% · 100→100% · bars show where the night spends its minutes; shaded past the top point means pinned.</p>
+        <p class="cc-field__hint bc-hint-long">Drag a point, or Tab to it and use the arrows (Shift = 10). The whole night re-runs on every move.</p>
+        <div class="bc-plate__row"><span class="cc-status">18.0 weighted subs · 39% blaze · simulated</span><a class="cc-btn cc-btn--sm" href="#s-tune">Edit control points</a></div>
+      </div>
+    </aside>
+
+    <div class="bc-desk">
+      <header class="cc-chamber-head">
+        <div>
+          <nav class="cc-crumbs" aria-label="Breadcrumb"><a href="keep.html">The keep</a><span class="cc-crumbs__sep" aria-hidden="true">›</span><b aria-current="page">Beacons</b><span>· chamber 3 of 4</span></nav>
+          <h1 class="cc-title cc-title--incipit"><span class="cc-versal" aria-hidden="true"><span>T</span></span><span class="cc-sr">T</span>he Beacons</h1>
+          <p class="cc-subtitle">Contribution visuals <span class="cc-sim">Simulated</span></p>
+        </div>
+        <div class="cc-back"><a class="cc-btn" href="overview.html" data-back>Back to the overview <kbd class="cc-kbd">Esc</kbd></a></div>
+        <span class="cc-droll cc-droll--candle bc-head__droll" aria-hidden="true"></span>
+      </header>
+
+      <div class="cc-folio bc-folio">
+      <nav class="cc-contents" aria-label="Rubrics of this chamber"><a href="#s-beacons" aria-current="true"><i>I</i>Beacons</a><a href="#s-night"><i>II</i>Replay a night</a><a href="#s-tune"><i>III</i>Curve</a><a href="#s-source"><i>IV</i>Driven by</a><a href="#s-look"><i>V</i>Appearance</a><a href="#s-fire"><i>VI</i>Test fire</a><a href="#s-feed"><i>VII</i>Feed</a><a href="#s-seal"><i>VIII</i>Seal</a></nav>
+
+      <div class="bc-codex">
+
+        <section class="cc-section" id="s-beacons" aria-labelledby="h-beacons">
+          <span class="cc-section__no">I</span>
+          <div class="cc-section__head"><h2 class="cc-section__title" id="h-beacons">The beacons<em>select to tune</em></h2><span class="cc-sim">Simulated</span></div>
+          <div class="cc-section__body">
+            <ul class="bc-beacons">
+              <li class="bc-beacon" aria-current="true">
+                <div class="bc-win bc-win--altar" style="--blaze: .39"><img src="../_assets/preset-heraldic-altar.webp" alt="Offering altar, heraldic sample art"></div>
+                <div class="bc-beacon__body">
+                  <span class="bc-beacon__label"><i>Beacon I</i>· On-screen object</span>
+                  <h3 class="bc-beacon__name">Offering altar</h3>
+                  <ol class="bc-ranges" aria-label="Kindling ranges"><li><b>0–10</b>0→25%</li><li aria-current="true"><b>10–30</b>25→60%</li><li><b>30–100</b>60→100%</li><li><b>100+</b>100%</li></ol>
+                  <p class="bc-sm">18.0 weighted subs · gifts + subs · simulated</p>
+                  <div class="bc-chips"><span class="cc-stamp cc-stamp--waiting bc-tag--ch">Channel points</span><span class="cc-stamp cc-stamp--waiting">Halves every 5 min</span></div>
+                </div>
+                <div class="bc-beacon__blaze"><span class="cc-stamp cc-stamp--draft cc-stamp--inked">Tuning below</span><b>39<small>%</small></b><span>blaze</span><span class="cc-meter"><i style="--v: 39%"></i></span></div>
+              </li>
+              <li class="bc-beacon">
+                <div class="bc-win bc-win--frame"><img class="bc-face" src="../_assets/malakor-facecam.webp" alt=""><img src="../_assets/preset-heraldic-frame2.webp" alt="Gilded camera frame, heraldic sample art around a sample facecam"></div>
+                <div class="bc-beacon__body">
+                  <span class="bc-beacon__label"><i>Beacon II</i>· Camera frame</span>
+                  <h3 class="bc-beacon__name">Gilded camera frame</h3>
+                  <ol class="bc-ranges" aria-label="Kindling ranges"><li><b>0–10</b>0→35%</li><li aria-current="true"><b>10–30</b>35→70%</li><li><b>30–100</b>70→100%</li><li><b>100+</b>100%</li></ol>
+                  <p class="bc-sm">24.0 weighted subs · gifts + subs · simulated</p>
+                  <div class="bc-chips"><span class="cc-stamp cc-stamp--waiting bc-tag--ch">Gift subscriptions</span><span class="cc-stamp cc-stamp--waiting">Halves every 2 min</span></div>
+                </div>
+                <div class="bc-beacon__blaze"><button class="cc-btn cc-btn--sm" type="button">Select to tune</button><b>60<small>%</small></b><span>blaze</span><span class="cc-meter"><i style="--v: 60%"></i></span></div>
+              </li>
+              <li class="bc-beacon">
+                <div class="bc-win bc-win--border"><svg viewBox="0 0 104 132" aria-hidden="true">
+                  <rect x="0" y="0" width="104" height="132" style="fill: var(--art-shade)"/>
+                  <rect x="18" y="40" width="68" height="76" style="fill: var(--art-sky)"/>
+                  <path d="M24 108l12-22 9 12 10-18 14 28Z" style="fill: var(--art-stone-2)"/>
+                  <path d="M18 40h68v76H18Z" style="fill: none; stroke: var(--or); stroke-width: 5"/>
+                  <path d="M14 116c2-6 4-7 4-12 2 4 4 5 4 12M30 116c2-5 3-8 3-12 3 5 5 7 4 12M50 116c2-7 4-9 3-15 4 6 6 9 5 15M72 116c2-5 3-7 3-11 3 4 4 6 4 11M86 116c1-5 3-6 3-10 2 4 3 6 3 10" style="fill: var(--art-flame)"/>
+                  <path d="M86 52c4 2 6 5 6 9-2-2-4-3-6-3M86 76c4 3 6 6 5 10-2-3-3-4-5-4M18 60c-4 2-6 5-6 9 2-2 4-3 6-3M18 86c-4 3-5 6-5 10 2-3 3-4 5-4" style="fill: var(--art-flame)"/>
+                </svg></div>
+                <div class="bc-beacon__body">
+                  <span class="bc-beacon__label"><i>Beacon III</i>· Screen border</span>
+                  <h3 class="bc-beacon__name">Hype border</h3>
+                  <ol class="bc-ranges" aria-label="Kindling ranges"><li><b>0–10</b>0→20%</li><li><b>10–30</b>20→50%</li><li aria-current="true"><b>30–100</b>50→100%</li><li><b>100+</b>100%</li></ol>
+                  <p class="bc-sm">30.0 weighted subs · gifts + subs · simulated</p>
+                  <div class="bc-chips"><span class="cc-stamp cc-stamp--waiting bc-tag--ch">Hype Train level</span><span class="cc-stamp cc-stamp--waiting">Halves every 15 min</span></div>
+                </div>
+                <div class="bc-beacon__blaze"><button class="cc-btn cc-btn--sm" type="button">Select to tune</button><b>50<small>%</small></b><span>blaze</span><span class="cc-meter"><i style="--v: 50%"></i></span></div>
+              </li>
+            </ul>
+          </div>
+        </section>
+
+        <section class="cc-section" id="s-night" aria-labelledby="h-night">
+          <span class="cc-section__no">II</span>
+          <div class="cc-section__head"><h2 class="cc-section__title" id="h-night">Replay a night · Offering altar<em>tune against time, not single events</em></h2><span class="cc-stamp cc-stamp--draft cc-stamp--inked">Sample night</span></div>
+          <div class="cc-section__body">
+            <div class="cc-seg" role="group" aria-label="Night"><button type="button" aria-pressed="true">Sample night</button><button type="button" aria-pressed="false">Gift wave</button><button type="button" aria-pressed="false">Raid spike</button><button type="button" aria-pressed="false">Sub train</button></div>
+            <p class="cc-field__hint">the illustrative timeline below, replayed · 60 fictional offerings; 15 gifts or subs count, gift subs ×1</p>
+            <ul class="bc-climbs" aria-label="How each beacon climbs">
+              <li aria-current="true"><b>Offering altar</b><span class="cc-stamp cc-stamp--draft cc-stamp--inked">Climbs</span><small>peak 74% · lit 12 of 48 min</small></li>
+              <li><b>Gilded camera frame</b><span class="cc-stamp cc-stamp--draft cc-stamp--inked">Climbs</span><small>peak 79% · lit 4 of 48 min</small></li>
+              <li><b>Hype border</b><span class="cc-stamp cc-stamp--draft cc-stamp--inked">Climbs</span><small>peak 77% · lit 31 of 48 min</small></li>
+            </ul>
+            <div class="bc-transport">
+              <button class="cc-btn cc-btn--primary" type="button">▶ Play</button>
+              <div class="cc-seg cc-seg--sm" role="group" aria-label="Replay speed"><button type="button" aria-pressed="false">1×</button><button type="button" aria-pressed="false">10×</button><button type="button" aria-pressed="true">30×</button></div>
+              <span class="bc-transport__time"><b>Sample night · 00:00 / 48:00</b><small>30× · 96 s for the whole night</small></span>
+              <span class="cc-sim">Simulated</span>
+            </div>
+            <div class="cc-panel"><div class="cc-panel__body bc-night">
+              <div class="bc-night__bar"><p class="cc-kicker">Scrub the night · Space plays or pauses</p><span class="cc-field__hint">60 offerings · illustrative timeline</span></div>
+              <svg class="bc-nightart" viewBox="-14 0 694 234" tabindex="0" role="slider" aria-label="Scrub the night" aria-valuemin="0" aria-valuemax="48" aria-valuenow="0" aria-valuetext="00:00 of 48:00, 0% blaze">
+                <defs><linearGradient id="ntFire" x1="0" y1="1" x2="0" y2="0"><stop offset="0" style="stop-color: var(--gules); stop-opacity: .5"/><stop offset=".6" style="stop-color: var(--art-flame); stop-opacity: .55"/><stop offset="1" style="stop-color: var(--gilt-hi); stop-opacity: .8"/></linearGradient></defs>
+                <path class="nt-grid" d="M30 25H650M30 97.5H650M107.5 25V170M185 25V170M262.5 25V170M340 25V170M417.5 25V170M495 25V170M572.5 25V170"/>
+                <path class="nt-area" d="M30 170 L32.2 170 L34.3 170 L36.5 170 L38.6 170 L40.8 170 L42.9 170 L45.1 170 L47.2 170 L49.4 170 L51.5 170 L53.7 170 L55.8 170 L58 170 L60.1 170 L62.3 170 L64.4 170 L66.6 170 L68.8 166.4 L70.9 166.5 L73.1 166.6 L75.2 166.6 L77.4 166.7 L79.5 166.8 L81.7 166.9 L83.8 166.9 L86 163.4 L88.1 163.6 L90.3 163.7 L92.4 163.9 L94.6 164 L96.7 164.1 L98.9 164.3 L101 164.4 L103.2 164.5 L105.3 164.7 L107.5 164.8 L109.7 164.9 L111.8 165 L114 165.1 L116.1 165.2 L118.3 165.4 L120.4 165.5 L122.6 165.6 L124.7 162.1 L126.9 162.3 L129 162.5 L131.2 162.6 L133.3 162.8 L135.5 163 L137.6 163.1 L139.8 163.3 L141.9 163.4 L144.1 163.6 L146.3 163.7 L148.4 163.9 L150.6 164 L152.7 164.1 L154.9 164.3 L157 164.4 L159.2 164.5 L161.3 164.7 L163.5 164.8 L165.6 164.9 L167.8 165 L169.9 165.1 L172.1 165.2 L174.2 165.4 L176.4 165.5 L178.5 165.6 L180.7 162.1 L182.8 162.3 L185 162.5 L187.2 162.6 L189.3 162.8 L191.5 163 L193.6 163.1 L195.8 163.3 L197.9 163.4 L200.1 163.6 L202.2 163.7 L204.4 163.9 L206.5 164 L208.7 164.1 L210.8 164.3 L213 164.4 L215.1 164.5 L217.3 164.7 L219.4 164.8 L221.6 164.9 L223.8 165 L225.9 165.1 L228.1 165.2 L230.2 165.4 L232.4 165.5 L234.5 165.6 L236.7 165.7 L238.8 165.8 L241 165.9 L243.1 131.4 L245.3 132.1 L247.4 132.7 L249.6 133.3 L251.7 133.9 L253.9 134.8 L256 135.6 L258.2 136.4 L260.3 137.1 L262.5 137.9 L264.7 138.6 L266.8 139.3 L269 140 L271.1 140.7 L273.3 141.4 L275.4 138.5 L277.6 139.2 L279.7 139.9 L281.9 140.6 L284 141.3 L286.2 141.9 L288.3 142.6 L290.5 143.2 L292.6 143.8 L294.8 144.4 L296.9 145 L299.1 145.6 L301.3 146.1 L303.4 146.7 L305.6 147.2 L307.7 147.7 L309.9 148.2 L312 148.7 L314.2 149.2 L316.3 149.7 L318.5 150.1 L320.6 150.6 L322.8 151 L324.9 151.5 L327.1 151.9 L329.2 96.2 L331.4 97.7 L333.5 99.1 L335.7 100.4 L337.8 101.8 L340 103.1 L342.2 104.4 L344.3 105.6 L346.5 106.8 L348.6 108 L350.8 109.2 L352.9 110.3 L355.1 108.9 L357.2 110.1 L359.4 111.2 L361.5 112.3 L363.7 113.4 L365.8 114.4 L368 115.4 L370.1 116.4 L372.3 117.4 L374.4 118.4 L376.6 119.3 L378.8 120.2 L380.9 95.9 L383.1 97.3 L385.2 98.7 L387.4 100.1 L389.5 101.5 L391.7 102.8 L393.8 104.1 L396 105.3 L398.1 106.6 L400.3 107.8 L402.4 108.9 L404.6 110.1 L406.7 111.2 L408.9 112.3 L411 113.4 L413.2 114.4 L415.3 115.4 L417.5 116.4 L419.7 117.4 L421.8 118.4 L424 119.3 L426.1 120.2 L428.3 121.1 L430.4 122 L432.6 122.8 L434.7 123.6 L436.9 124.4 L439 125.2 L441.2 126 L443.3 126.8 L445.5 127.5 L447.6 128.2 L449.8 128.9 L451.9 129.6 L454.1 130.3 L456.3 131 L458.4 131.6 L460.6 132.2 L462.7 132.8 L464.9 133.4 L467 134.2 L469.2 135 L471.3 135.8 L473.5 136.6 L475.6 137.3 L477.8 138.1 L479.9 138.8 L482.1 139.5 L484.2 140.2 L486.4 140.9 L488.5 141.5 L490.7 142.2 L492.8 142.8 L495 143.5 L497.2 144.1 L499.3 144.7 L501.5 145.2 L503.6 145.8 L505.8 146.3 L507.9 143.3 L510.1 143.9 L512.2 144.5 L514.4 145.1 L516.5 145.6 L518.7 146.2 L520.8 146.7 L523 147.3 L525.1 144.2 L527.3 144.8 L529.4 145.4 L531.6 146 L533.8 146.5 L535.9 147 L538.1 147.6 L540.2 148.1 L542.4 148.6 L544.5 149.1 L546.7 149.5 L548.8 150 L551 150.5 L553.1 150.9 L555.3 151.4 L557.4 151.8 L559.6 152.2 L561.7 152.6 L563.9 153 L566 153.4 L568.2 150.2 L570.3 150.6 L572.5 151.1 L574.7 151.5 L576.8 151.9 L579 152.3 L581.1 152.7 L583.3 153.1 L585.4 149.9 L587.6 150.4 L589.7 150.8 L591.9 151.3 L594 151.7 L596.2 152.1 L598.3 152.5 L600.5 152.9 L602.6 153.3 L604.8 153.7 L606.9 154.1 L609.1 154.4 L611.3 154.8 L613.4 155.1 L615.6 155.5 L617.7 152.3 L619.9 152.7 L622 153.1 L624.2 153.4 L626.3 153.8 L628.5 154.2 L630.6 154.5 L632.8 154.9 L634.9 155.2 L637.1 155.6 L639.2 155.9 L641.4 63.4 L643.5 64.4 L645.7 65.4 L647.8 66.4 L650 67.3 L650 170 L30 170 Z"/>
+                <path class="nt-line" d="M30 170 L32.2 170 L34.3 170 L36.5 170 L38.6 170 L40.8 170 L42.9 170 L45.1 170 L47.2 170 L49.4 170 L51.5 170 L53.7 170 L55.8 170 L58 170 L60.1 170 L62.3 170 L64.4 170 L66.6 170 L68.8 166.4 L70.9 166.5 L73.1 166.6 L75.2 166.6 L77.4 166.7 L79.5 166.8 L81.7 166.9 L83.8 166.9 L86 163.4 L88.1 163.6 L90.3 163.7 L92.4 163.9 L94.6 164 L96.7 164.1 L98.9 164.3 L101 164.4 L103.2 164.5 L105.3 164.7 L107.5 164.8 L109.7 164.9 L111.8 165 L114 165.1 L116.1 165.2 L118.3 165.4 L120.4 165.5 L122.6 165.6 L124.7 162.1 L126.9 162.3 L129 162.5 L131.2 162.6 L133.3 162.8 L135.5 163 L137.6 163.1 L139.8 163.3 L141.9 163.4 L144.1 163.6 L146.3 163.7 L148.4 163.9 L150.6 164 L152.7 164.1 L154.9 164.3 L157 164.4 L159.2 164.5 L161.3 164.7 L163.5 164.8 L165.6 164.9 L167.8 165 L169.9 165.1 L172.1 165.2 L174.2 165.4 L176.4 165.5 L178.5 165.6 L180.7 162.1 L182.8 162.3 L185 162.5 L187.2 162.6 L189.3 162.8 L191.5 163 L193.6 163.1 L195.8 163.3 L197.9 163.4 L200.1 163.6 L202.2 163.7 L204.4 163.9 L206.5 164 L208.7 164.1 L210.8 164.3 L213 164.4 L215.1 164.5 L217.3 164.7 L219.4 164.8 L221.6 164.9 L223.8 165 L225.9 165.1 L228.1 165.2 L230.2 165.4 L232.4 165.5 L234.5 165.6 L236.7 165.7 L238.8 165.8 L241 165.9 L243.1 131.4 L245.3 132.1 L247.4 132.7 L249.6 133.3 L251.7 133.9 L253.9 134.8 L256 135.6 L258.2 136.4 L260.3 137.1 L262.5 137.9 L264.7 138.6 L266.8 139.3 L269 140 L271.1 140.7 L273.3 141.4 L275.4 138.5 L277.6 139.2 L279.7 139.9 L281.9 140.6 L284 141.3 L286.2 141.9 L288.3 142.6 L290.5 143.2 L292.6 143.8 L294.8 144.4 L296.9 145 L299.1 145.6 L301.3 146.1 L303.4 146.7 L305.6 147.2 L307.7 147.7 L309.9 148.2 L312 148.7 L314.2 149.2 L316.3 149.7 L318.5 150.1 L320.6 150.6 L322.8 151 L324.9 151.5 L327.1 151.9 L329.2 96.2 L331.4 97.7 L333.5 99.1 L335.7 100.4 L337.8 101.8 L340 103.1 L342.2 104.4 L344.3 105.6 L346.5 106.8 L348.6 108 L350.8 109.2 L352.9 110.3 L355.1 108.9 L357.2 110.1 L359.4 111.2 L361.5 112.3 L363.7 113.4 L365.8 114.4 L368 115.4 L370.1 116.4 L372.3 117.4 L374.4 118.4 L376.6 119.3 L378.8 120.2 L380.9 95.9 L383.1 97.3 L385.2 98.7 L387.4 100.1 L389.5 101.5 L391.7 102.8 L393.8 104.1 L396 105.3 L398.1 106.6 L400.3 107.8 L402.4 108.9 L404.6 110.1 L406.7 111.2 L408.9 112.3 L411 113.4 L413.2 114.4 L415.3 115.4 L417.5 116.4 L419.7 117.4 L421.8 118.4 L424 119.3 L426.1 120.2 L428.3 121.1 L430.4 122 L432.6 122.8 L434.7 123.6 L436.9 124.4 L439 125.2 L441.2 126 L443.3 126.8 L445.5 127.5 L447.6 128.2 L449.8 128.9 L451.9 129.6 L454.1 130.3 L456.3 131 L458.4 131.6 L460.6 132.2 L462.7 132.8 L464.9 133.4 L467 134.2 L469.2 135 L471.3 135.8 L473.5 136.6 L475.6 137.3 L477.8 138.1 L479.9 138.8 L482.1 139.5 L484.2 140.2 L486.4 140.9 L488.5 141.5 L490.7 142.2 L492.8 142.8 L495 143.5 L497.2 144.1 L499.3 144.7 L501.5 145.2 L503.6 145.8 L505.8 146.3 L507.9 143.3 L510.1 143.9 L512.2 144.5 L514.4 145.1 L516.5 145.6 L518.7 146.2 L520.8 146.7 L523 147.3 L525.1 144.2 L527.3 144.8 L529.4 145.4 L531.6 146 L533.8 146.5 L535.9 147 L538.1 147.6 L540.2 148.1 L542.4 148.6 L544.5 149.1 L546.7 149.5 L548.8 150 L551 150.5 L553.1 150.9 L555.3 151.4 L557.4 151.8 L559.6 152.2 L561.7 152.6 L563.9 153 L566 153.4 L568.2 150.2 L570.3 150.6 L572.5 151.1 L574.7 151.5 L576.8 151.9 L579 152.3 L581.1 152.7 L583.3 153.1 L585.4 149.9 L587.6 150.4 L589.7 150.8 L591.9 151.3 L594 151.7 L596.2 152.1 L598.3 152.5 L600.5 152.9 L602.6 153.3 L604.8 153.7 L606.9 154.1 L609.1 154.4 L611.3 154.8 L613.4 155.1 L615.6 155.5 L617.7 152.3 L619.9 152.7 L622 153.1 L624.2 153.4 L626.3 153.8 L628.5 154.2 L630.6 154.5 L632.8 154.9 L634.9 155.2 L637.1 155.6 L639.2 155.9 L641.4 63.4 L643.5 64.4 L645.7 65.4 L647.8 66.4 L650 67.3"/>
+                <path class="nt-lit" d="M30 133.8H650"/>
+                <path class="nt-base" d="M30 170H650"/>
+                <text class="nt-lab" x="24" y="174" text-anchor="end">0%</text><text class="nt-lab" x="24" y="29" text-anchor="end">100%</text><text class="nt-labc" x="24" y="137" text-anchor="end">lit</text>
+                <circle class="nt-mark" cx="241.2" cy="131.4" r="4.5"/><text class="nt-note" x="236" y="122" text-anchor="end">first lit · 16:21</text>
+                <circle class="nt-mark" cx="641.2" cy="63.4" r="4.5"/><text class="nt-note" x="632" y="58" text-anchor="end">peak 74% · 47:19</text>
+                <path class="nt-head" d="M30 20V200"/><path class="nt-knob" d="M24 14h12l-6 8Z"/>
+                <path class="nr-base" d="M30 196H650"/>
+                <path class="nr-tick" d="M36.7 196V191.0"/><path class="nr-tick" d="M43.1 196V191.0"/><path class="nr-tick" d="M55.6 196V191.0"/><path class="nr-count" d="M67.9 196V187.0"/><path class="nr-count" d="M84.9 196V187.0"/><path class="nr-tick" d="M87 196V191.0"/><path class="nr-tick" d="M96.1 196V191.0"/><path class="nr-tick" d="M103 196V191.0"/><path class="nr-tick" d="M118.5 196V191.0"/><path class="nr-count" d="M123.2 196V187.0"/><path class="nr-tick" d="M138.1 196V191.0"/><path class="nr-tick" d="M140.2 196V191.0"/><path class="nr-tick" d="M156.2 196V191.0"/><path class="nr-tick" d="M169.5 196V191.0"/><path class="nr-count" d="M179.2 196V187.0"/><path class="nr-tick" d="M194.9 196V191.0"/><path class="nr-tick" d="M208.3 196V191.0"/><path class="nr-tick" d="M215.8 196V191.0"/><path class="nr-tick" d="M232.4 196V191.0"/><path class="nr-count" d="M241.2 196V187.5"/><path class="nr-tick" d="M254.8 196V191.0"/><path class="nr-count" d="M273.5 196V187.0"/><path class="nr-tick" d="M283.8 196V191.0"/><path class="nr-tick" d="M300.6 196V191.0"/><path class="nr-tick" d="M315.2 196V191.0"/><path class="nr-tick" d="M326.2 196V191.0"/><path class="nr-count" d="M328.8 196V185.0"/><path class="nr-tick" d="M345.8 196V191.0"/><path class="nr-tick" d="M347.1 196V191.0"/><path class="nr-count" d="M354.4 196V187.0"/><path class="nr-tick" d="M367.3 196V191.0"/><path class="nr-count" d="M380.3 196V187.5"/><path class="nr-tick" d="M384.3 196V191.0"/><path class="nr-tick" d="M385.9 196V191.0"/><path class="nr-tick" d="M396.8 196V191.0"/><path class="nr-tick" d="M412.8 196V191.0"/><path class="nr-tick" d="M426.5 196V191.0"/><path class="nr-tick" d="M440.5 196V191.0"/><path class="nr-tick" d="M448.9 196V191.0"/><path class="nr-tick" d="M467 196V191.0"/><path class="nr-tick" d="M474.3 196V191.0"/><path class="nr-tick" d="M485.3 196V191.0"/><path class="nr-tick" d="M498.9 196V191.0"/><path class="nr-count" d="M507.7 196V187.0"/><path class="nr-tick" d="M509.9 196V191.0"/><path class="nr-count" d="M523.2 196V187.0"/><path class="nr-tick" d="M536.5 196V191.0"/><path class="nr-tick" d="M544.5 196V191.0"/><path class="nr-tick" d="M560.2 196V191.0"/><path class="nr-count" d="M567.5 196V187.0"/><path class="nr-tick" d="M580.9 196V191.0"/><path class="nr-count" d="M584.3 196V187.0"/><path class="nr-tick" d="M598.1 196V191.0"/><path class="nr-tick" d="M608.5 196V191.0"/><path class="nr-tick" d="M610.4 196V191.0"/><path class="nr-count" d="M616 196V187.0"/><path class="nr-tick" d="M619.4 196V191.0"/><path class="nr-tick" d="M624.4 196V191.0"/><path class="nr-tick" d="M634.5 196V191.0"/><path class="nr-count nr-sel" d="M641.2 196V178.0"/>
+                <circle class="nr-ring" cx="640.9" cy="186" r="9"/>
+                <text class="nt-lab" x="30" y="216" text-anchor="middle">0 min</text><text class="nt-lab" x="107.5" y="216" text-anchor="middle">6 min</text><text class="nt-lab" x="185" y="216" text-anchor="middle">12 min</text><text class="nt-lab" x="262.5" y="216" text-anchor="middle">18 min</text><text class="nt-lab" x="340" y="216" text-anchor="middle">24 min</text><text class="nt-lab" x="417.5" y="216" text-anchor="middle">30 min</text><text class="nt-lab" x="495" y="216" text-anchor="middle">36 min</text><text class="nt-lab" x="572.5" y="216" text-anchor="middle">42 min</text><text class="nt-lab" x="650" y="216" text-anchor="middle">48 min</text><text class="nt-labc" x="664" y="231" text-anchor="end">· sample end</text>
+              </svg>
+              <p class="cc-status"><span class="cc-stamp cc-stamp--draft cc-stamp--inked">Climbs</span>Peak 74% at minute 47 · never pinned · first lit at minute 16</p>
+            </div></div>
+            <div class="bc-inspect" aria-live="polite">
+              <p class="cc-kicker">Inspect an offering</p>
+              <b>lx</b>
+              <p>Offering 60 of 60 · 47 min 19 s</p>
+              <p>rookscribe69 · 50 gift · illustrative</p>
+            </div>
+            <p class="cc-gloss-note">Bits, gifts, subscriptions, points and Hype Train marks are fictional. This timeline does not feed live accounting.</p>
+          </div>
+        </section>
+
+        <section class="cc-section" id="s-tune" aria-labelledby="h-tune">
+          <span class="cc-section__no">III</span>
+          <div class="cc-section__head"><h2 class="cc-section__title" id="h-tune">Edit control points<em>the kindling curve, in figures</em></h2><span class="cc-stamp cc-stamp--draft cc-stamp--inked">Sample curve · unchanged</span></div>
+          <div class="cc-section__body">
+            <p class="bc-sm">SIMULATED local preview. Drag a point and release to save. Tab to a point, then use arrows: left/right moves 1 contribution unit; up/down moves 1% intensity. Hold Shift for 10 units or 10%. Enter saves; Escape cancels. Totals stay in order.</p>
+            <div class="bc-points">
+              <fieldset><legend><i>i</i>Control point 1</legend><div class="cc-field"><label for="cp1t">Contribution total</label><input id="cp1t" class="cc-input" type="number" value="0" min="0"></div><div class="cc-field"><label for="cp1i">Intensity (%)</label><input id="cp1i" class="cc-input" type="number" value="0" min="0" max="100"></div></fieldset>
+              <fieldset><legend><i>ii</i>Control point 2</legend><div class="cc-field"><label for="cp2t">Contribution total</label><input id="cp2t" class="cc-input" type="number" value="10" min="0"></div><div class="cc-field"><label for="cp2i">Intensity (%)</label><input id="cp2i" class="cc-input" type="number" value="25" min="0" max="100"></div></fieldset>
+              <fieldset><legend><i>iii</i>Control point 3</legend><div class="cc-field"><label for="cp3t">Contribution total</label><input id="cp3t" class="cc-input" type="number" value="30" min="0"></div><div class="cc-field"><label for="cp3i">Intensity (%)</label><input id="cp3i" class="cc-input" type="number" value="60" min="0" max="100"></div></fieldset>
+              <fieldset><legend><i>iv</i>Control point 4</legend><div class="cc-field"><label for="cp4t">Contribution total</label><input id="cp4t" class="cc-input" type="number" value="100" min="0"></div><div class="cc-field"><label for="cp4i">Intensity (%)</label><input id="cp4i" class="cc-input" type="number" value="100" min="0" max="100"></div></fieldset>
+            </div>
+            <div class="bc-grid2" style="align-items: end">
+              <div class="cc-field"><span class="cc-field__label">Decay</span><div class="cc-seg cc-seg--block" role="group" aria-label="Decay"><button type="button" aria-pressed="false">No decay</button><button type="button" aria-pressed="true">Exponential</button></div></div>
+              <div class="cc-field"><label for="halflife">Half-life (seconds)</label><input id="halflife" class="cc-input" type="number" value="300" min="1"></div>
+            </div>
+            <div class="bc-actions"><button class="cc-btn cc-btn--primary" type="button">Save curve locally</button><button class="cc-btn" type="button">Cancel curve edits</button></div>
+            <p class="cc-gloss-note">SIMULATED local curve. Drag or use arrows to update the preview; save keeps it for this room session. Escape cancels edits. Nothing reaches OBS.</p>
+            <div class="bc-tune">
+              <div class="bc-tune__ask">
+                <p class="cc-kicker">Tune against the night</p>
+                <div class="bc-actions"><button class="cc-btn cc-btn--chamber" type="button">Let this night's peak reach the top · move the top point to 55</button></div>
+                <div class="bc-actions"><button class="cc-btn cc-btn--primary" type="button">Send curve to the Steward</button><span class="cc-stamp cc-stamp--draft cc-stamp--inked">Sample curve · unchanged</span></div>
+                <p class="cc-gloss-note">Never a direct write: the Steward holds a proposal and nothing changes on air until you hold to seal. Money affects visuals only. SIMULATED.</p>
+              </div>
+              <figure class="bc-preview">
+                <div class="bc-preview__art"><img src="../_assets/preset-heraldic-altar.webp" alt="Offering altar, unlit"><span class="cc-sim">Simulated</span></div>
+                <b>Beacon preview · 0% blaze</b>
+                <p>0.0 weighted subs at 00:00</p>
+                <p>No offerings yet · press Play</p>
+              </figure>
+            </div>
+          </div>
+        </section>
+
+        <section class="cc-section" id="s-source" aria-labelledby="h-source">
+          <span class="cc-section__no">IV</span>
+          <div class="cc-section__head"><h2 class="cc-section__title" id="h-source">Driven by<em>input source</em></h2><span class="cc-sim">Simulated</span></div>
+          <div class="cc-section__body">
+            <div class="cc-panel"><div class="cc-panel__body bc-source">
+              <div class="bc-span2"><p class="cc-kicker">Offering altar</p><p class="cc-field__hint">Simulated snapshot · no live input.</p></div>
+              <div class="cc-field"><label for="driven">Driven by</label><select id="driven" class="cc-select"><option>Not routed</option><option>gift subscriptions</option><option>subscriptions</option><option>resubscriptions</option><option>Bits cheer</option><option>Bits use</option><option>Hype Train level</option><option selected>channel points</option><option>charity minor currency units</option><option>goal minor currency units</option><option>power-ups</option></select></div>
+              <div class="cc-field"><span class="cc-field__label">Native unit</span><div class="bc-unit"><b>points</b><span class="cc-field__hint">channel points</span></div></div>
+              <p class="cc-gloss-note bc-span2">Simulated configuration only. Test fires use gifts/subs independently; live routing is a separate core step.</p>
+            </div></div>
+          </div>
+        </section>
+
+        <section class="cc-section" id="s-look" aria-labelledby="h-look">
+          <span class="cc-section__no">V</span>
+          <div class="cc-section__head"><h2 class="cc-section__title" id="h-look">Appearance</h2><span class="cc-sim">Simulated · 39% blaze</span></div>
+          <div class="cc-section__body">
+            <p class="bc-sm">Size and anchor travel in the copied URL (simulated examples stay simulated). Session preview only: colour and burst timing. Appearance choices are not saved to the core. Choose and save art style in the visual configuration.</p>
+            <div class="bc-look">
+              <figure class="bc-look__art">
+                <div class="bc-look__frame"><div><span class="cc-sim">Simulated</span><img src="../_assets/preset-heraldic-altar.webp" alt="Offering altar at 39% blaze, heraldic sample art"></div></div>
+                <figcaption>SIMULATED · 39% BLAZE · Heraldic altar · sample art · AI-generated.</figcaption>
+              </figure>
+              <div class="bc-look__ctl">
+                <div class="bc-grid2" style="align-items: end">
+                  <div class="cc-field"><label for="artstyle">Art style</label><select id="artstyle" class="cc-select"><option>No design (neutral)</option><option selected>Heraldic altar</option><option>Heraldic frame</option><option>Arcade altar</option><option>Arcade frame</option><option>Neon altar</option><option>Neon frame</option><option>Storybook altar</option><option>Storybook frame</option><option>Cel altar</option><option>Cel frame</option><option>Glass altar</option><option>Glass frame</option><option>Custom design ID...</option></select></div>
+                  <div class="cc-field"><label for="designid">Design ID</label><input id="designid" class="cc-input" value="altar" spellcheck="false"></div>
+                </div>
+                <div class="bc-actions"><button class="cc-btn cc-btn--primary" type="button">Save visual style locally</button></div>
+                <p class="cc-field__hint">SIMULATED design configuration · saved locally only, not sent to OBS. Frame art is provisional.</p>
+                <div class="cc-field"><span class="cc-field__label">Size</span><div class="cc-seg cc-seg--sm" role="group" aria-label="Size"><button type="button" aria-pressed="false">S</button><button type="button" aria-pressed="true">M</button><button type="button" aria-pressed="false">L</button></div></div>
+                <div class="cc-field"><span class="cc-field__label">Anchor</span><div class="cc-seg cc-seg--sm" role="group" aria-label="Anchor"><button type="button" aria-pressed="false">top-left</button><button type="button" aria-pressed="false">top-right</button><button type="button" aria-pressed="false">center</button><button type="button" aria-pressed="true">bottom-left</button><button type="button" aria-pressed="false">bottom-right</button></div></div>
+                <div class="cc-field"><span class="cc-field__label">Colour</span><div class="cc-seg cc-seg--sm" role="group" aria-label="Colour"><button type="button" aria-pressed="true"><span class="bc-swatch" style="background: var(--or)"></span>Gold</button><button type="button" aria-pressed="false"><span class="bc-swatch" style="background: var(--gules)"></span>Red</button><button type="button" aria-pressed="false"><span class="bc-swatch" style="background: var(--azure)"></span>Blue</button><button type="button" aria-pressed="false"><span class="bc-swatch" style="background: var(--key)"></span>Key</button></div></div>
+                <div class="cc-field" style="max-width: 240px"><label for="burst">Burst timing (ms)</label><input id="burst" class="cc-input" type="number" value="600" min="0" max="60000"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="cc-section" id="s-fire" aria-labelledby="h-fire">
+          <span class="cc-section__no">VI</span>
+          <div class="cc-section__head"><h2 class="cc-section__title" id="h-fire">Test fire<em>local preview only</em></h2><span class="cc-sim">Simulated</span></div>
+          <div class="cc-section__body">
+            <div class="cc-field"><span class="cc-field__label">Gift-sub weighting</span><div class="cc-seg" role="group" aria-label="Gift-sub weighting"><button type="button" aria-pressed="true">1×</button><button type="button" aria-pressed="false">2×</button><button type="button" aria-pressed="false">3×</button><button type="button" aria-pressed="false">4×</button><button type="button" aria-pressed="false">5×</button><button type="button" aria-pressed="false">6×</button></div></div>
+            <div class="bc-fire">
+              <button class="cc-btn cc-btn--chamber" type="button">Test fire: 50 gifts</button>
+              <button class="cc-btn cc-btn--chamber" type="button">Test fire: 1 sub</button>
+              <button class="cc-btn" type="button">Advance simulated clock 60 s</button>
+              <button class="cc-btn" type="button">End test fire</button>
+            </div>
+            <div class="bc-firestat" role="status"><b>39%</b><span class="bc-sm">blaze · 18.0 weighted subs</span></div>
+            <p class="cc-gloss-note">Nothing reaches the stream. A viewer-facing change requires the shared hold to seal and proclaim. Money changes looks only. This room has no OBS connection.</p>
+            <div class="bc-url">
+              <p class="bc-sm">SIMULATED example · not a live browser source. Copying this URL does not connect OBS.</p>
+              <button class="cc-btn" type="button">Copy browser-source URL</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="cc-section" id="s-feed" aria-labelledby="h-feed">
+          <span class="cc-section__no">VII</span>
+          <div class="cc-section__head"><h2 class="cc-section__title" id="h-feed">Contribution feed</h2><span class="cc-sim">Simulated</span></div>
+          <div class="cc-section__body">
+            <p class="bc-sm">600 simulated events · Local preview. These inputs are not live accounting.</p>
+            <ol class="bc-feed" aria-label="Contribution feed, newest first">
+              <li><b>1</b><span><strong>subscriptions</strong><small>offering-altar · simulated · Local preview</small></span><time>12:00:00 UTC</time></li>
+              <li><b>1</b><span><strong>gift subscriptions</strong><small>gilded-frame · simulated · Local preview</small></span><time>11:59:59 UTC</time></li>
+              <li><b>1</b><span><strong>subscriptions</strong><small>hype-border · simulated · Local preview</small></span><time>11:59:58 UTC</time></li>
+              <li><b>1</b><span><strong>gift subscriptions</strong><small>offering-altar · simulated · Local preview</small></span><time>11:59:57 UTC</time></li>
+              <li><b>1</b><span><strong>subscriptions</strong><small>gilded-frame · simulated · Local preview</small></span><time>11:59:56 UTC</time></li>
+              <li><b>1</b><span><strong>gift subscriptions</strong><small>hype-border · simulated · Local preview</small></span><time>11:59:55 UTC</time></li>
+              <li><b>1</b><span><strong>subscriptions</strong><small>offering-altar · simulated · Local preview</small></span><time>11:59:54 UTC</time></li>
+              <li><b>1</b><span><strong>gift subscriptions</strong><small>gilded-frame · simulated · Local preview</small></span><time>11:59:53 UTC</time></li>
+              <li><b>1</b><span><strong>subscriptions</strong><small>hype-border · simulated · Local preview</small></span><time>11:59:52 UTC</time></li>
+              <li><b>1</b><span><strong>gift subscriptions</strong><small>offering-altar · simulated · Local preview</small></span><time>11:59:51 UTC</time></li>
+              <li><b>1</b><span><strong>subscriptions</strong><small>gilded-frame · simulated · Local preview</small></span><time>11:59:50 UTC</time></li>
+              <li><b>1</b><span><strong>gift subscriptions</strong><small>hype-border · simulated · Local preview</small></span><time>11:59:49 UTC</time></li>
+              <li><b>1</b><span><strong>subscriptions</strong><small>offering-altar · simulated · Local preview</small></span><time>11:59:48 UTC</time></li>
+            </ol>
+            <p class="cc-field__hint">600 simulated events · newest 13 shown, the feed continues</p>
+          </div>
+        </section>
+
+        <section class="cc-section" id="s-seal" aria-labelledby="h-seal">
+          <span class="cc-section__no">VIII</span>
+          <div class="cc-section__head"><h2 class="cc-section__title" id="h-seal">The seal slot</h2></div>
+          <div class="cc-section__body">
+            <div class="cc-panel"><div class="cc-panel__body bc-sealslot">
+              <div style="display: flex; align-items: center; gap: 10px"><h3 class="cc-rubric cc-rubric--ch">Proposal · awaiting your seal</h3><span class="cc-sim" style="margin-left: auto">Simulated · data-only designs</span></div>
+              <p class="bc-sm">Nothing acts until you hold to seal.</p>
+              <div class="bc-grid2">
+                <div class="cc-field"><span class="cc-field__label">Beacon visuals</span><div class="cc-seg" role="group" aria-label="Beacon visuals proposals"><button type="button" aria-pressed="true">Restyle</button><button type="button" aria-pressed="false">Custom design</button></div></div>
+                <div class="cc-field"><span class="cc-field__label">Chat overlay and vote bar</span><div class="cc-seg" role="group" aria-label="Chat overlay and vote bar proposals"><button type="button" aria-pressed="true">Restyle</button><button type="button" aria-pressed="false">Custom design</button></div></div>
+              </div>
+              <div class="cc-empty"><span class="cc-droll cc-droll--skull" aria-hidden="true"></span><p class="cc-empty__text">No proposals. Ask the Steward to draft one.</p></div>
+              <button class="cc-seal cc-seal--wax" type="button" disabled aria-describedby="seal-hint">
+                <span class="cc-seal-slot" aria-hidden="true"></span>
+                <span><span class="cc-seal__label">Hold to seal</span><span class="cc-seal__hint" id="seal-hint">Press and hold Space for 1 second · nothing to seal yet</span></span>
+              </button>
+            </div></div>
+          </div>
+        </section>
+        <div class="cc-orn" aria-hidden="true"><i></i></div>
+      </div>
+      </div>
+    </div>
+    </div>
+  </main>
+  <footer class="cc-dock" data-chamber="keep" aria-label="The Steward">
+    <div class="cc-steward"><svg class="cc-steward__niche" viewBox="0 0 44 62" aria-hidden="true">
+  <path d="M3 61V24C3 12 12 4 22 1c10 3 19 11 19 23v37Z" fill="var(--stone-3)" stroke="var(--lead)" stroke-width="2"/>
+  <path d="M8 58V26c0-9 6-15 14-18 8 3 14 9 14 18v32Z" fill="var(--amethyst-deep)" stroke="var(--lead)" stroke-width="2"/>
+  <path d="M8 40h28M22 8v50" stroke="var(--lead)" stroke-width="1.2" opacity=".55"/>
+  <ellipse cx="22" cy="31" rx="11" ry="14" fill="var(--or-lit)" opacity=".28"/>
+  <rect x="18.5" y="34" width="7" height="16" fill="var(--clear-lit)" stroke="var(--lead)" stroke-width="1.4"/>
+  <path class="cc-flame" d="M22 21c4 5 5 9 0 12-5-3-4-7 0-12Z" fill="var(--or-lit)" stroke="var(--lead)" stroke-width="1.2"/>
+  <path d="M12 52h20" stroke="var(--lead)" stroke-width="2.5"/>
+</svg>
+      <b class="cc-steward__name">The Steward</b>
+      <span class="cc-steward__role">simulated co-pilot · sample data</span>
+      <span class="cc-sim">Simulated</span>
+    </div>
+    <form class="cc-talk" onsubmit="return false">
+      <p class="cc-talk__msg">Good evening. Draft in the preview, amend in ink, then hold to seal. Nothing acts on a spoken request.</p>
+      <div class="cc-talk__row">
+        <label class="cc-sr" for="steward-input">Talk to the Steward</label>
+        <input class="cc-input" id="steward-input" placeholder="Talk to the Steward..." autocomplete="off">
+        <button class="cc-btn" type="submit" disabled>Tell</button>
+        <span class="cc-suggest">
+          <button class="cc-btn cc-btn--quiet" type="button">Catch me up</button>
+          <button class="cc-btn cc-btn--quiet" type="button">Draft a question draw</button>
+          <button class="cc-btn cc-btn--quiet" type="button">What does chat want?</button>
+        </span>
+      </div>
+    </form>
+  </footer>
+</div>
+<button class="cc-proto-toggle" type="button" data-theme-toggle title="Prototype only: not part of the design">◐ proto</button>
+<script>
+(function(){
+  var root=document.documentElement;
+  function flip(){var n=root.getAttribute('data-theme')==='night'?'day':'night';root.setAttribute('data-theme',n);try{var u=new URL(location.href);u.searchParams.set('theme',n);history.replaceState(null,'',u);}catch(e){}}
+  document.querySelectorAll('[data-theme-toggle]').forEach(function(b){b.addEventListener('click',flip);});
+  var go={'0':'keep.html','1':'lottery.html','2':'gatehouse.html','3':'beacons.html','4':'maproom.html'};
+  document.addEventListener('keydown',function(e){
+    var t=e.target; if(e.metaKey||e.ctrlKey||e.altKey)return;
+    if(t&&(t.isContentEditable||/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)))return;
+    if(e.key==='/'){e.preventDefault();var i=document.getElementById('steward-input');if(i)i.focus();return;}
+    if(e.key==='Escape'){var b=document.querySelector('[data-back]');if(b){location.href=b.getAttribute('href');}return;}
+    if(go[e.key]){var q=location.search;location.href=go[e.key]+q;}
+  });
+})();
+</script>
+<script>
+// Hold to seal (shell .cc-seal): pointer or Space held for 1 s fills --cc-seal-progress; release early cancels.
+document.querySelectorAll('.cc-seal').forEach(function(btn){
+  var raf,start;
+  function stop(){cancelAnimationFrame(raf);if(btn.dataset.sealed!=='true')btn.style.setProperty('--cc-seal-progress','0%');}
+  function tick(t){if(!start)start=t;var p=Math.min(1,(t-start)/1000);btn.style.setProperty('--cc-seal-progress',(p*100)+'%');if(p<1)raf=requestAnimationFrame(tick);else btn.dataset.sealed='true';}
+  function go(){if(btn.disabled)return;start=0;raf=requestAnimationFrame(tick);}
+  btn.addEventListener('pointerdown',go);btn.addEventListener('pointerup',stop);btn.addEventListener('pointerleave',stop);
+  btn.addEventListener('keydown',function(e){if(e.code==='Space'&&!e.repeat){e.preventDefault();go();}});
+  btn.addEventListener('keyup',function(e){if(e.code==='Space')stop();});
+});
+// Segmented panes are single-choice unless data-multi (static prototype behaviour).
+document.querySelectorAll('.cc-seg[role="group"]').forEach(function(g){g.addEventListener('click',function(e){var b=e.target.closest('button');if(!b||b.disabled||g.dataset.multi)return;g.querySelectorAll('button').forEach(function(x){x.setAttribute('aria-pressed',x===b);});});});
+(function(){
+  // running contents: mark the rubric in view
+  var links=document.querySelectorAll('.cc-contents a');
+  var secs=[].map.call(links,function(a){return document.querySelector(a.getAttribute('href'));});
+  function spy(){var y=innerHeight*.35,cur=0;secs.forEach(function(s,i){if(s.getBoundingClientRect().top<y)cur=i;});links.forEach(function(a,i){if(i===cur)a.setAttribute('aria-current','true');else a.removeAttribute('aria-current');});}
+  addEventListener('scroll',spy,{passive:true});spy();
+})();
+</script>
+</body>
+</html>

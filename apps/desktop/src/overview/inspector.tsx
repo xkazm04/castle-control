@@ -1,4 +1,4 @@
-import { ProposalCard, WindowedRows } from '@castle-control/ui';
+import { ProposalCard, Stamp, WindowedRows } from '@castle-control/ui';
 import type { ModuleId } from '@castle-control/ui';
 import { isPending, proposalQueue } from '@castle-control/ui/steward';
 import type { Proposal, SealAuthority } from '@castle-control/ui/steward';
@@ -52,6 +52,6 @@ export function Talkback() {
   const lines = useSyncExternalStore(stewardConversation.subscribe, stewardConversation.getSnapshot, stewardConversation.getSnapshot);
   return <WindowedRows rows={lines} label="Steward conversation" row_key={line => String(line.id)} row_height={96}>
     {line => <div className="overview-talkback-line"><b>{line.who === 'Steward' && line.live !== undefined
-      ? `Steward · ${line.live ? 'live' : 'simulated'}` : line.who}</b><p>{line.text}</p></div>}
+      ? line.live ? 'Steward · live' : <Stamp kind="simulated" word="Steward · simulated" /> : line.who}</b><p>{line.text}</p></div>}
   </WindowedRows>;
 }

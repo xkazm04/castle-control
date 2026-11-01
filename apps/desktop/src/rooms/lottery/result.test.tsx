@@ -15,3 +15,13 @@ test.each([['S', 0.75], ['M', 1], ['L', 1.5]] as const)(
       expect(html).toContain(`/lots/hall-questions?scale=${scale}&amp;anchor=${anchor}`);
     }
   });
+
+test('the OBS URL carries the selected draw shape for the renderer page', async () => {
+  const port = createLotsPreview(); await port.seal(); await port.start();
+  const display = createDrawDisplay();
+  for (const shape of ['urn', 'wheel', 'deck', 'ballot_box'] as const) {
+    display.edit({ shape });
+    const html = renderToStaticMarkup(<FixtureCast port={port} hash="simulated-seal" display={display.getSnapshot()} />);
+    expect(html).toContain(`/lots/hall-questions?scale=1&amp;anchor=br&amp;shape=${shape}`);
+  }
+});

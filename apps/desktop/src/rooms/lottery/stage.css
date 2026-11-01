@@ -1,0 +1,180 @@
+/* Lot Chamber draw stage: renderer artwork + lots + reveals. Token-only; SVG geometry lives in logical viewBox units. */
+.lottery-draw-stage { display: grid; flex: 1; grid-template-rows: auto minmax(0, 1fr) auto; gap: var(--space-4); min-width: 0; min-height: 0; }
+.lottery-stage-top { position: relative; z-index: 2; display: flex; flex-wrap: nowrap; align-items: stretch; gap: var(--space-4); min-width: 0; }
+.lottery-stage-top .lottery-shape-picker { flex: 1 1 auto; min-width: 0; }
+.lottery-stage-options { display: flex; flex: none; align-items: stretch; gap: var(--space-2); }
+.lottery-shape-picker { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-1); padding: var(--space-1); border: var(--rule-thin) solid var(--ink); border-radius: 0; background: var(--paper); }
+.lottery-shape-picker button { appearance: none; display: flex; align-items: center; justify-content: center; gap: var(--space-2); min-width: 0; min-height: var(--space-28); padding: var(--space-2); border: var(--rule-thin) solid transparent; border-radius: 0; background: transparent; color: var(--ink); font: 700 var(--text-shell-label)/1.05 var(--font-ui); cursor: pointer; transition: background var(--motion-fast) var(--ease); }
+.lottery-shape-picker button:hover:not(:disabled) { background: color-mix(in srgb, var(--gules) 12%, var(--paper)); }
+.lottery-shape-picker button:active:not(:disabled) { transform: translateY(var(--space-1)); }
+.lottery-shape-picker button span { white-space: normal; }
+.lottery-shape-picker button svg { display: none; width: var(--space-20); height: var(--space-16); background: var(--paper); }
+.lottery-shape-picker button[aria-pressed="true"] { border-color: var(--ink); background: var(--stamp-act-ground); color: var(--press-paper); box-shadow: var(--space-2) var(--space-2) 0 var(--ink); }
+.lottery-shape-picker button:focus-visible { outline: var(--rule-medium) solid var(--azure); outline-offset: var(--focus-offset); }
+.lottery-shape-picker button:disabled { cursor: default; opacity: var(--disabled-opacity); }
+.lottery-room path[data-ink="key"] { fill: var(--key); }
+.lottery-room path[data-ink="gules"] { fill: var(--gules); }
+.lottery-room path[data-ink="or"] { fill: var(--or); }
+.lottery-room path[data-ink="paper"] { fill: var(--paper); }
+
+.lottery-draw-theatre { position: relative; display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) auto; grid-template-areas: "phase" "art" "disclaimer"; gap: var(--space-2); min-height: 0; min-width: 0; padding: var(--space-4); border: var(--rule-medium) solid var(--ink); border-radius: 0; background: radial-gradient(ellipse at 50% 46%, color-mix(in srgb, var(--or) 30%, var(--paper)) 0, color-mix(in srgb, var(--or) 8%, var(--paper)) 48%, var(--paper) 72%); }
+.lottery-draw-theatre::before { content: ""; position: absolute; inset: var(--space-5); border: var(--rule-thin) dashed var(--hair); border-radius: 0; pointer-events: none; }
+.lottery-draw-stage[data-phase="sealed"] .lottery-draw-theatre { border-style: double; border-width: var(--rule-strong); }
+.lottery-draw-svg { grid-area: art; display: block; width: 100%; height: 100%; min-width: 0; min-height: 0; overflow: visible; }
+.lottery-draw-motion { transform-box: fill-box; transform-origin: center; }
+.lottery-draw-stage[data-phase="open"][data-shape="wheel"] .lottery-draw-motion,
+.lottery-draw-stage[data-phase="open"][data-shape="wheel"] .lottery-draw-lots { animation: lottery-wheel-idle 40s linear infinite; }
+
+.lottery-draw-lots circle { cx: var(--lot-x); cy: var(--lot-y); r: var(--lot-r); fill: var(--ink); stroke: var(--paper); stroke-width: .5; transform-box: fill-box; transform-origin: center; transition: opacity var(--motion-shell) var(--ease), fill var(--motion-fast) var(--ease), r calc(var(--motion-shell) * 2) var(--ease), cx calc(var(--motion-shell) * 3) var(--ease) calc(var(--lot-i) * 14ms), cy calc(var(--motion-shell) * 3) var(--ease) calc(var(--lot-i) * 14ms); }
+.lottery-draw-lots circle[data-cohort="subscriber"] { fill: var(--or); stroke: var(--ink); }
+.lottery-draw-lots circle[data-cohort="raider"] { fill: var(--paper); stroke: var(--azure); stroke-width: 1.2; }
+/* Lots arrive (radius and opacity only, backwards fill, so transforms and the radius easing stay free), then breathe. */
+.lottery-draw-stage[data-phase="open"] .lottery-draw-lots circle { animation: lottery-lot-arrive calc(var(--motion-shell) * 3) var(--ease) backwards, lottery-lot-breathe 2.6s var(--ease) infinite alternate; animation-delay: calc(var(--lot-i) * 35ms), calc(var(--lot-i) * -110ms); }
+.lottery-draw-stage[data-phase="revealing"] .lottery-draw-lots circle:not([data-winner]),
+.lottery-draw-stage[data-phase="revealed"] .lottery-draw-lots circle:not([data-winner]) { opacity: .42; }
+.lottery-draw-stage[data-focusing] .lottery-draw-lots circle:not([data-focus]) { opacity: .16; }
+.lottery-draw-lots circle[data-focus] { r: calc(var(--lot-r) * 1.6); stroke: var(--ink); stroke-width: 1.2; }
+.lottery-draw-lots circle[data-winner] { fill: var(--or); stroke: var(--ink); stroke-width: 1; }
+
+.lottery-stage-medal-body { transform-box: fill-box; transform-origin: center; animation: lottery-medal-in calc(var(--draw-reveal) * .6) var(--ease) both; }
+.lottery-stage-medal-body circle { fill: var(--paper); stroke: var(--gules); stroke-width: 1.6; }
+.lottery-stage-medal-body .lottery-stage-pulse { fill: none; stroke: var(--or); stroke-width: 2.4; transform-box: fill-box; transform-origin: center; animation: lottery-pulse var(--draw-reveal) var(--ease) both; }
+.lottery-stage-medal-body text { fill: var(--ink); text-anchor: middle; dominant-baseline: central; font-family: var(--font-num); font-weight: 800; }
+
+.lottery-stage-wax { position: absolute; top: var(--space-30); right: var(--space-12); animation: lottery-wax-stamp var(--m-stamp) var(--ease-stamp) both; }
+.lottery-stage-wax b { font: 800 var(--text-shell-panel-title)/1 var(--font-display); text-transform: uppercase; }
+.lottery-stage-wax span { font: 700 var(--text-shell-label)/1.2 var(--font-ui); letter-spacing: var(--track-air); text-transform: uppercase; }
+
+.lottery-stage-phase { grid-area: phase; display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-2) var(--space-6); margin: 0; font: 800 var(--text-shell-label)/1.1 var(--font-ui); letter-spacing: var(--track-label); text-transform: uppercase; color: var(--gules-text); }
+.lottery-stage-phase small { font: 600 var(--text-shell-label)/1.3 var(--font-num); letter-spacing: 0; text-transform: none; color: var(--muted); }
+.lottery-stage-rail { grid-area: rail; display: flex; flex-direction: column; align-items: stretch; gap: var(--space-4); min-height: 0; min-width: 0; overflow: auto; scrollbar-gutter: stable; padding: var(--space-3); }
+.lottery-stage-rail ol { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--space-4) var(--space-6); margin: 0; padding: 0; list-style: none; }
+.lottery-stage-rail li { display: inline-flex; align-items: center; gap: var(--space-6); padding: var(--space-2) var(--space-8) var(--space-2) var(--space-2); border: var(--rule-thin) solid var(--ink); border-radius: 0; background: var(--card); box-shadow: var(--space-2) var(--space-2) 0 var(--gules); font: 700 var(--text-shell-label)/1.2 var(--font-num); animation: lottery-placard var(--draw-reveal) var(--ease) both; }
+.lottery-stage-rail li b { display: inline-grid; place-content: center; min-width: var(--space-20); height: var(--space-20); border-radius: 50%; background: var(--stamp-act-ground); color: var(--press-paper); font: 800 var(--text-shell-label)/1 var(--font-num); }
+.lottery-stage-rail li[data-cohort="subscriber"] b { background: var(--or); color: var(--ink); }
+.lottery-stage-rail li[data-cohort="raider"] b { background: var(--paper); color: var(--azure-text); box-shadow: inset 0 0 0 var(--rule-medium) var(--azure); }
+.lottery-stage-proclaim { display: grid; justify-items: center; gap: var(--space-2); max-width: 100%; margin: 0; padding: var(--space-8) var(--space-20) var(--space-10); border: var(--rule-strong) solid var(--ink); border-radius: 0; background: var(--stamp-act-ground); color: var(--press-paper); box-shadow: var(--space-4) var(--space-4) 0 var(--ink); text-align: center; animation: lottery-proclaim calc(var(--draw-reveal) * .7) var(--ease) both; }
+.lottery-stage-proclaim small { font: 800 var(--text-shell-label)/1.1 var(--font-ui); letter-spacing: var(--track-air); text-transform: uppercase; }
+.lottery-stage-proclaim b { font: 800 clamp(var(--text-shell-panel-title), 3.2vw, var(--text-shell-plaque-word))/1 var(--font-display); letter-spacing: var(--track-heading); overflow-wrap: anywhere; }
+.lottery-stage-proclaim span { font: 700 var(--text-shell-label)/1.1 var(--font-ui); letter-spacing: var(--track-label); text-transform: uppercase; color: var(--or); }
+.lottery-stage-verdict { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: var(--space-12); max-width: 100%; padding: var(--space-10) var(--space-16) var(--space-12) var(--space-12); border: var(--rule-strong) solid var(--ok); border-radius: 0; background: var(--card); box-shadow: var(--space-4) var(--space-4) 0 var(--ink); animation: lottery-proclaim calc(var(--draw-reveal) * .5) var(--ease) both; }
+.lottery-stage-verdict > div { display: grid; justify-items: start; gap: var(--space-2); min-width: 0; }
+.lottery-stage-verdict small { font: 800 var(--text-shell-label)/1.1 var(--font-ui); letter-spacing: var(--track-air); text-transform: uppercase; color: var(--gules-text); }
+.lottery-stage-verdict b { font: 800 var(--text-shell-panel-title)/1 var(--font-display); letter-spacing: var(--track-heading); text-transform: uppercase; color: var(--ok); }
+.lottery-stage-verdict p { margin: 0; font: italic var(--text-shell-aside)/1.35 var(--font-serif); color: var(--ink-2); }
+.lottery-stage-verdict-actions { display: flex; flex-wrap: wrap; gap: var(--space-6); margin-top: var(--space-4); }
+.lottery-stage-verdict .lottery-stage-copied { min-height: 1lh; color: var(--ok); letter-spacing: var(--track-label); }
+.lottery-stage-verdict-seal { width: var(--space-56); height: var(--space-56); overflow: visible; transform: rotate(-8deg); animation: lottery-wax-stamp var(--motion-shell) var(--ease) calc(var(--draw-reveal) * .3) both; }
+.lottery-stage-verdict-seal circle { fill: var(--ok); stroke: var(--ink); stroke-width: 1.2; }
+.lottery-stage-verdict-seal path { fill: none; stroke: var(--press); stroke-width: 2.8; stroke-linecap: round; stroke-linejoin: round; }
+.lottery-stage-rail .lottery-stage-more { border-style: dashed; box-shadow: none; font: italic var(--text-shell-aside)/1.2 var(--font-serif); color: var(--ink-2); }
+.lottery-stage-disclaimer { grid-area: disclaimer; margin: 0; padding: var(--space-2); border-top: var(--rule-thin) solid var(--ink); background: var(--paper); text-align: center; font: 700 var(--text-shell-label)/1.1 var(--font-ui); letter-spacing: var(--track-label); text-transform: uppercase; }
+.lottery-stage-foot { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3) var(--space-6); min-width: 0; }
+.lottery-stage-foot .cc-aside { flex: 1 1 calc(var(--space-56) * 3); font-size: var(--text-shell-label); }
+.lottery-stage-foot .cc-stamp { transform: none; }
+.lottery-stage-options .lottery-stage-toggle[aria-pressed="true"] { border-color: var(--gules); background: color-mix(in srgb, var(--gules) 18%, var(--paper)); color: var(--gules-text); }
+.lottery-stage-call { display: grid; justify-items: center; gap: var(--space-4); }
+.lottery-stage-call small { font: 700 var(--text-shell-label)/1.2 var(--font-ui); letter-spacing: var(--track-label); text-transform: uppercase; color: var(--muted); }
+.lottery-stage-call .cc-button { padding-inline: var(--space-24); box-shadow: var(--space-3) var(--space-3) 0 var(--ink); animation: lottery-call 1.4s var(--ease) infinite; }
+.lottery-stage-call .cc-button:focus-visible { outline: var(--rule-medium) solid var(--azure); outline-offset: var(--focus-offset); }
+@keyframes lottery-call { 50% { transform: translateY(calc(var(--space-2) * -1)); box-shadow: var(--space-4) var(--space-5) 0 var(--ink); } }
+/* Visually hidden live region: the proclamation already shows each winner on screen. */
+.lottery-stage-announce { position: absolute; width: var(--space-1); height: var(--space-1); margin: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.lottery-room .cc-legend [data-cohort="subscriber"]::before { background: var(--or); box-shadow: inset 0 0 0 var(--rule-thin) var(--ink); }
+
+@keyframes lottery-lot-arrive { from { opacity: 0; r: 0; } }
+@keyframes lottery-lot-breathe { from { transform: scale(.82); } to { transform: scale(1.12); } }
+@keyframes lottery-wheel-idle { to { transform: rotate(360deg); } }
+@keyframes lottery-medal-in { 0% { transform: scale(0); } 65% { transform: scale(1.35); } 100% { transform: scale(1); } }
+@keyframes lottery-pulse { from { opacity: 1; transform: scale(.5); } to { opacity: 0; transform: scale(2.6); } }
+@keyframes lottery-wax-stamp { from { opacity: 0; transform: rotate(-24deg) scale(1.8); } to { opacity: 1; transform: rotate(-10deg) scale(1); } }
+@keyframes lottery-proclaim { 0% { opacity: 0; transform: translateY(var(--space-20)) scale(.6) rotate(-4deg); } 55% { opacity: 1; transform: translateY(calc(var(--space-2) * -1)) scale(1.08) rotate(1deg); } 100% { opacity: 1; transform: none; } }
+@keyframes lottery-placard { 0% { opacity: 0; transform: translateY(calc(var(--space-12) * -1)) scale(.9) rotate(-2deg); } 60% { opacity: 1; transform: translateY(var(--space-2)) scale(1.04) rotate(.5deg); } 100% { opacity: 1; transform: none; } }
+/* Choreography: lots rattle during the flourish, each winner is called by a ray from the shape's source, confetti at the end. */
+.lottery-draw-stage[data-shuffling] .lottery-draw-lots circle { animation: lottery-lot-rattle .16s steps(2, end) infinite alternate; animation-delay: calc(var(--lot-i) * -23ms); }
+.lottery-stage-ray { fill: none; stroke: var(--or); stroke-width: 1.6; stroke-linecap: round; stroke-dasharray: 1; stroke-dashoffset: 0; opacity: .35; animation: lottery-ray calc(var(--draw-reveal) * .45) var(--ease) both; }
+.lottery-stage-ray[data-latest="true"] { stroke: var(--ink); stroke-width: 2; opacity: 1; }
+.lottery-draw-stage[data-phase="revealed"] .lottery-stage-ray { stroke: var(--or); stroke-width: 1.4; opacity: .5; }
+.lottery-stage-confetti { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.lottery-stage-confetti i { position: absolute; left: var(--cx); top: var(--cy); width: var(--space-10); height: var(--space-5); border-radius: 0; background: var(--gules); opacity: 0; animation: lottery-confetti calc(var(--motion-shell) * 6) var(--ease) var(--cd) both; }
+.lottery-stage-confetti i:nth-child(4n + 1) { background: var(--or); }
+.lottery-stage-confetti i:nth-child(4n + 2) { background: var(--azure); }
+.lottery-stage-confetti i:nth-child(4n + 3) { background: var(--paper); box-shadow: inset 0 0 0 var(--rule-thin) var(--ink); }
+.lottery-stage-lift { transform-box: fill-box; transform-origin: center; animation: lottery-lift calc(var(--draw-reveal) * .62) var(--ease) both; }
+.lottery-stage-lift circle { fill: var(--or); stroke: var(--ink); stroke-width: 1.4; }
+.lottery-stage-lift rect { fill: var(--paper); stroke: var(--gules); stroke-width: 1.4; }
+.lottery-stage-lift[data-lift="ballot_box"] rect { stroke: var(--ink); }
+.lottery-stage-lift path { fill: none; stroke: var(--ink); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.lottery-stage-proclaim em { font: italic var(--text-shell-aside)/1.2 var(--font-serif); color: var(--paper); opacity: .9; }
+@keyframes lottery-lift { 0% { opacity: 0; transform: translate(0, 0) scale(.5); } 14% { opacity: 1; transform: translate(0, 0) scale(1.35); } 52% { opacity: 1; transform: translate(var(--lx1), var(--ly1)) scale(1.6) rotate(calc(var(--lturn) * .4)); } 100% { opacity: 0; transform: translate(var(--lx2), var(--ly2)) scale(2.4) rotate(var(--lturn)); } }
+@keyframes lottery-lot-rattle { from { transform: translate(-28%, 18%) scale(.9); } to { transform: translate(28%, -22%) scale(1.1); } }
+@keyframes lottery-ray { from { stroke-dashoffset: 1; opacity: 1; } to { stroke-dashoffset: 0; } }
+@keyframes lottery-confetti { 0% { left: 50%; top: 46%; opacity: 1; transform: rotate(0deg) scale(.3); } 70% { opacity: 1; } 100% { left: var(--cx); top: var(--cy); opacity: 0; transform: rotate(var(--cr)) scale(1); } }
+@media (prefers-reduced-motion: reduce) {
+  .lottery-draw-stage *, .lottery-draw-stage *::before { animation: none !important; transition: none !important; }
+}
+/* Both modes fit the panel. Only the drawing scales; phase, controls and results remain HTML text. */
+.lottery-draw-stage:not(:has(> .lottery-stage-foot)) { grid-template-rows: auto minmax(0, 1fr); }
+.lottery-draw-theatre:has(.lottery-stage-rail) { grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); grid-template-areas: "phase phase" "art rail" "disclaimer disclaimer"; }
+.lottery-room[data-theatre="true"] .cc-hall { grid-template-columns: minmax(0, 1fr); }
+.lottery-room[data-theatre="true"] .cc-desk { display: none; }
+.lottery-room[data-theatre="true"] .lottery-stage-proclaim b { font-size: clamp(var(--text-shell-panel-title), 2.6vw, var(--text-shell-title)); }
+.lottery-room[data-theatre="true"] .lottery-stage-rail { justify-content: safe center; }
+.lottery-room:not([data-theatre="true"]) .lottery-stage-proclaim { padding: var(--space-4); }
+.lottery-room:not([data-theatre="true"]) .lottery-stage-proclaim b { font-size: var(--text-shell-panel-title); }
+.lottery-room:not([data-theatre="true"]) .lottery-stage-rail ol { gap: var(--space-3); }
+.lottery-room:not([data-theatre="true"]) .lottery-stage-rail li { gap: var(--space-4); padding: var(--space-1) var(--space-4); box-shadow: none; }
+.lottery-stage-rail:focus-visible { outline: var(--rule-thin) solid var(--azure); outline-offset: calc(var(--space-1) * -1); }
+.lottery-room .lottery-stage-top .cc-button.cc-heraldic-button[data-size],
+.lottery-room .lottery-stage-foot .cc-button.cc-heraldic-button[data-size] { min-height: var(--space-28); height: auto; padding: var(--space-2) var(--space-4); align-self: stretch; box-shadow: none; font: 700 var(--text-shell-label)/1.05 var(--font-ui); letter-spacing: normal; text-transform: none; }
+.lottery-room .lottery-stage-options .cc-button.cc-heraldic-button[data-size] { width: calc(var(--space-40) * 2); }
+.lottery-room .lottery-stage-options .cc-button.cc-heraldic-button[data-size]:last-child { width: calc(var(--space-40) * 2 + var(--space-8)); }
+.lottery-room .lottery-stage-top .lottery-stage-expand.cc-button[data-size],
+.lottery-room .lottery-stage-foot .lottery-stage-replay.cc-button[data-size] { flex: none; width: var(--space-28); padding: var(--space-2); font-size: var(--text-shell-panel-title); }
+.lottery-stage-foot .cc-chip { padding: var(--space-2) var(--space-4); font-size: var(--text-shell-label); }
+.lottery-stage-foot .cc-stamp { padding: var(--space-3) var(--space-4); }
+.lottery-stage-notes { position: relative; flex: none; }
+.lottery-stage-notes > summary { display: grid; place-items: center; list-style: none; width: var(--space-24); height: 100%; min-height: var(--space-28); border: var(--rule-thin) solid var(--ink); font: 800 var(--text-shell-label)/1 var(--font-serif); background: var(--card); cursor: pointer; }
+.lottery-stage-notes > summary::-webkit-details-marker { display: none; }
+.lottery-stage-notes > summary:focus-visible { outline: var(--rule-strong) solid var(--azure); outline-offset: var(--space-1); }
+.lottery-room .lottery-stage-notes > .cc-aside { position: absolute; top: calc(100% + var(--space-4)); right: 0; z-index: 3; width: min(calc(var(--space-56) * 6), calc(100cqw - var(--space-24))); max-height: 65cqh; overflow: auto; padding: var(--space-8); border: var(--rule-strong) solid var(--ink); background: var(--card); box-shadow: var(--space-3) var(--space-3) 0 var(--ink); font-size: var(--text-shell-body); }
+@container lot-pool (width >= 40rem) { .lottery-shape-picker button svg { display: block; } }
+
+.lottery-stage-medal-body path { fill: none; stroke: var(--art-key); stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; }
+
+.lottery-room:not([data-theatre="true"]) .lottery-draw-theatre:has(.lottery-stage-rail) { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); }
+
+/* The compact desk shares the panel grid; result text never takes drawing height or width. */
+@media (width > 56.25rem) {
+  @container lot-room (height < 32rem) {
+    .lottery-room:not([data-theatre="true"]) :is(.lottery-stage, .lottery-draw-stage, .lottery-draw-theatre) { display: contents; }
+    .lottery-room:not([data-theatre="true"]) .lottery-draw-theatre::before { content: none; }
+    .lottery-room:not([data-theatre="true"]) .lottery-stage-top { grid-area: controls; display: grid; grid-template-columns: minmax(0, 1fr) var(--space-24) var(--space-28); }
+    .lottery-room:not([data-theatre="true"]) .lottery-shape-picker { grid-column: 1 / -1; }
+    .lottery-room:not([data-theatre="true"]) .lottery-shape-picker button svg { display: none; }
+    .lottery-room:not([data-theatre="true"]) .lottery-stage-options { grid-column: 1; grid-row: 2; }
+    .lottery-room:not([data-theatre="true"]) .lottery-stage-notes { grid-column: 2; grid-row: 2; }
+    .lottery-room:not([data-theatre="true"]) .lottery-stage-expand { grid-column: 3; grid-row: 2; }
+    .lottery-room:not([data-theatre="true"]) .lottery-draw-svg {
+      grid-area: art; border: var(--rule-medium) solid var(--ink);
+      outline: var(--rule-thin) dashed var(--hair); outline-offset: calc(var(--space-5) * -1);
+      background: radial-gradient(ellipse at 50% 46%, color-mix(in srgb, var(--or) 30%, var(--paper)) 0, color-mix(in srgb, var(--or) 8%, var(--paper)) 48%, var(--paper) 72%);
+    }
+    .lottery-room:not([data-theatre="true"]) .lottery-stage-phase { grid-area: phase; }
+    .lottery-room:not([data-theatre="true"]) .lottery-stage-state { width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+    .lottery-room:not([data-theatre="true"]) .lottery-draw-stage[data-phase="sealed"] .lottery-draw-svg { border-style: double; border-width: var(--rule-strong); }
+    .lottery-room:not([data-theatre="true"]) .lottery-stage-rail { grid-area: rail; padding: var(--space-1); }
+    .lottery-room:not([data-theatre="true"]) [data-role="lot-urn-panel"]:has(.lottery-stage-call) .lottery-stage-phase small { position: absolute; width: var(--space-1); height: var(--space-1); overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+    .lottery-room:not([data-theatre="true"]) .lottery-stage-call { order: -1; flex-shrink: 0; }
+    .lottery-room:not([data-theatre="true"]) .lottery-stage-call small { display: none; }
+    .lottery-room:not([data-theatre="true"]) .lottery-stage-rail ol { justify-content: flex-start; }
+    .lottery-room:not([data-theatre="true"]) .lottery-stage-rail li { max-width: 100%; overflow-wrap: anywhere; }
+    .lottery-room:not([data-theatre="true"]) .lottery-stage-foot { grid-area: foot; display: grid; grid-template-columns: minmax(0, 1fr) auto var(--space-28); }
+    .lottery-room:not([data-theatre="true"]) .lottery-stage-foot .cc-chip { grid-column: 1; grid-row: 1; display: block; min-width: 0; height: auto; overflow: hidden; text-overflow: ellipsis; letter-spacing: normal; text-transform: none; }
+    .lottery-room:not([data-theatre="true"]) .lottery-stage-foot .cc-stamp { grid-column: 2; grid-row: 1; }
+    .lottery-room:not([data-theatre="true"]) .lottery-stage-foot .lottery-stage-replay { grid-column: 3; grid-row: 1; }
+    .lottery-room:not([data-theatre="true"]) .lottery-stage-wax { position: static; grid-area: art; justify-self: end; align-self: start; margin: var(--space-8); }
+    .lottery-room:not([data-theatre="true"]) .lottery-stage-disclaimer { grid-area: art; align-self: end; z-index: 1; margin: var(--space-4); }
+    .lottery-room:not([data-theatre="true"]) .lottery-stage-confetti { position: relative; grid-area: art; }
+  }
+}

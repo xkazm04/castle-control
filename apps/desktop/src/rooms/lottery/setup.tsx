@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { FieldGroup, HeraldicCard, InkButton, WindowedRows } from '@castle-control/ui';
+import { entranceStyle, FieldGroup, HeraldicCard, InkButton, WindowedRows } from '@castle-control/ui';
 import type { LotsDraw, LotsDrawPolicy } from '@castle-control/contract';
 import type { LotsPort } from '../../lots-model.js';
 import { checkFixturePolicy } from '../../lots-model.js';
@@ -35,7 +35,7 @@ export function DrawSetup({ port, on_edit, on_preview }: {
     || invalid_name || invalid_keyword || invalid_winners;
   const newcomer = rules.free_join_equal_odds || rules.weight_curve.kind === 'equal' ? 1 : rules.weight_curve.max_units;
   const heaviest = Math.max(0, ...state.entries.map(entry => entry.weight));
-  return <HeraldicCard variant="raised" aria-label={copy.setup}>
+  return <HeraldicCard variant="raised" className="panel cc-print-in" style={{ ...entranceStyle(3) }} aria-label={copy.setup}>
     <h2 className="lottery-card-title">{copy.setup}</h2>
     <p className="cc-aside">{copy.journey.setup_hint}</p>
     <fieldset className="lottery-settings" disabled={state.sealed}>

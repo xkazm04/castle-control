@@ -1,5 +1,6 @@
 import { run } from './run.mjs';
 
+run('node', ['scripts/e2e-harness-test.mjs']);
 run('node', ['scripts/version-drift.mjs']);
 run('node', ['scripts/tooling-test.mjs']);
 run('node', ['scripts/workspaces.mjs']);
@@ -14,3 +15,6 @@ for (const mode of ['fmt', 'clippy', 'test']) {
 run('pnpm', ['typecheck']);
 run('pnpm', ['lint']);
 run('pnpm', ['test']);
+run('pnpm', ['--filter', '@castle-control/site', 'build']);
+run('pnpm', ['--filter', '@castle-control/desktop', 'build']);
+run('pnpm', ['--filter', '@castle-control/ui', 'build']);

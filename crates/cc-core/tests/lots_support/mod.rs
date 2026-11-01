@@ -72,6 +72,7 @@ pub fn draw() -> Value {
 }
 pub fn facts(user: &str, at: DateTime<Utc>) -> MessageFacts {
     MessageFacts {
+        simulated: true,
         message_id: format!("simulated-{user}").try_into().unwrap(),
         user_id: cc_store::TwitchUserId::parse(user).unwrap(),
         at,

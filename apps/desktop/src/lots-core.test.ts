@@ -58,6 +58,8 @@ test('core appearance controls save their chosen display through the validated u
     visit(controls); expect(changed).toBe(true);
   };
   choose('lots-size', 'L'); choose('lots-anchor', 'tl'); choose('lots-colour', 'azure'); choose('lots-art', 'pixel');
+  choose('lots-shape', 'wheel');
+  appearance.edit({ theatre: true, sound: true, by_hand: true, focus_weight: 4 });
   appearance.commitReveal('750');
   await h.port.saveDisplay();
   expect(h.rpc.mock.calls.findLast(call => call[2] === 'lots.draw.upsert')?.[3]).toEqual({ draw,
@@ -303,7 +305,7 @@ test('connected room renders source provenance and the announcement before any w
   expect(markup).not.toContain('Winners ·');
   expect(markup).not.toContain('Live-trusted');
   expect(markup.indexOf('class="cc-stage-wrap"')).toBeLessThan(markup.indexOf('class="cc-desk"'));
-  expect(markup).toContain('data-scale="viewport"');
+  expect(markup).toContain('data-scale="numeric"');
   expect(markup).toContain('data-size="large"');
   expect(markup).not.toContain(copy.illustration);
 });

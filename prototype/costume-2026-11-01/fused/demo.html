@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="en" data-theme="day">
+<!-- PORT NOTES
+Page: demo (route #/demo, "On stream"). Family C · Stained Glass.
+Introduces (page-local, kit naming):
+  .ds-head        compact .cc-chamber-head variant (title and subtitle on one line) so the broadcast sits high on the page.
+  .ds-screen      the chancel screen: a leaded frame (.cc-window language) around the broadcast. Its top transom holds the
+                  three option groups (.cc-seg panes; Style panes carry a thumbnail of that style's urn).
+                  Replaces .demo-controls / .demo-seg (InkButton aria-pressed) and the .demo-page border.
+  .ds-stage       the 16:9 broadcast (cqw units, same geometry as demo.css .stage, .ov, .cam, .plate). Plates become lead
+                  plates (.ds-plate) with amber figures; ON AIR and provenance use .cc-sim--on-lead.
+  .ds-chat        calm chat column (replaces .demo-chat): names in chamber ink, system lines as lozenge rows.
+  .ds-panels      Twitch panel row as three lancet cards (replaces .demo-panel-row / .demo-ext).
+Moment: re-glazing. On load and on every Style change a pane of light sweeps across the broadcast and the transom
+lights run left to right (.ds-glint, cc-ignite). prefers-reduced-motion removes both; the art swaps instantly.
+Art: ../_assets/scene-warmap.webp, malakor-*.webp, preset-<style>-<asset>.webp (same mapping as demo/model.ts).
+Shell: copied verbatim from keep.html (.cc-rampart, .cc-tabs, .cc-dock, theme bootstrap, keymap script); see shell.css + glass.css header.
+-->
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>On stream · Castle Control</title>
+<script>(function(){try{var t=new URLSearchParams(location.search).get('theme');if(t==='night'||t==='day')document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Grenze+Gotisch:wght@500;600;700;800&family=Alegreya+Sans:ital,wght@0,400;0,500;0,700;0,800;1,400&family=Alegreya+Sans+SC:wght@500;700;800&family=Alegreya:ital,wght@0,400;0,500;0,700;0,800;1,400;1,500&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="shell.css">
+<link rel="stylesheet" href="glass.css">
+<style>
+[hidden] { display: none !important; }
+.cc-shell { --pool-x: 50%; }
+.ds { padding: 0 var(--gutter) 30px; display: grid; gap: 16px; }
+.ds-head { grid-template-columns: 1fr auto; padding-top: 12px; padding-bottom: 14px; margin: 0 calc(-1 * var(--gutter)); }
+.ds-head .cc-title { display: inline; margin: 0; font-size: 52px; color: var(--ink); text-shadow: 0 0 calc(var(--glow-on) * 22px) var(--amethyst-glow); }
+.ds-head__line { display: flex; align-items: baseline; gap: 18px; flex-wrap: wrap; margin-top: 4px; }
+.ds-head .cc-subtitle { margin: 0; font-size: 19px; }
+/* the chancel screen */
+.ds-screen { margin-top: 12px; background: var(--lead); padding: 0 7px 7px; box-shadow: inset 0 0 0 1px var(--lead-hi), 0 0 0 4px var(--stone-3), 0 0 0 6px var(--lead), var(--shadow), 0 0 calc(var(--glow-on) * 40px) rgba(150,170,230,.18); }
+.ds-transom { position: relative; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 26px; padding: 22px 10px 12px; color: var(--on-lead); }
+.ds-lights { position: absolute; left: -7px; right: -7px; top: 0; height: 12px; display: grid; grid-template-columns: repeat(24, 1fr); gap: 2px; padding-bottom: 2px; background: var(--lead); }
+.ds-lights i { clip-path: polygon(0 100%, 0 45%, 50% 0, 100% 45%, 100% 100%); background: var(--tex-glass), linear-gradient(180deg, var(--g-lit), var(--g)); background-size: 120px 120px, auto; background-blend-mode: overlay, normal; animation: cc-ignite .6s var(--ease-light) backwards; animation-delay: calc(var(--i) * 40ms + var(--t, 0s)); box-shadow: 0 0 calc(var(--glow-on) * 8px) var(--g); }
+.ds-group { display: flex; align-items: center; gap: 10px; }
+.ds-group > .cc-label { color: var(--on-lead-muted); }
+.ds-group .cc-seg > button { background: var(--lead-2); color: var(--on-lead); border-color: var(--lead-hi); font-size: 14px; min-height: 36px; }
+.ds-group .cc-seg > button:hover { background: color-mix(in srgb, var(--lead-2) 70%, var(--lead-hi)); }
+.ds-group .cc-seg > [aria-pressed="true"] { border-color: var(--lead-lo); color: var(--on-glass); text-shadow: 0 1px 1px rgba(0,0,0,.5);
+  background: var(--tex-glass), radial-gradient(140% 120% at 30% 10%, var(--ch-lit), var(--ch) 45%, var(--ch-deep) 90%); background-size: 180px 180px, 100% 100%; background-blend-mode: soft-light, normal;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.3), 0 0 calc(6px + var(--glow-on) * 12px) var(--ch-glow); }
+.ds-seg-style > button { padding-left: 6px; }
+.ds-seg-style img { width: 26px; height: 26px; object-fit: contain; filter: drop-shadow(0 1px 1px rgba(0,0,0,.6)); }
+.ds-transom .ds-group--style { --ch: var(--amethyst); --ch-lit: var(--amethyst-lit); --ch-deep: var(--amethyst-deep); --ch-glow: var(--amethyst-glow); }
+.ds-transom .ds-group--layout { --ch: var(--azure); --ch-lit: var(--azure-lit); --ch-deep: var(--azure-deep); --ch-glow: var(--azure-glow); }
+.ds-transom .ds-group--shot { --ch: var(--gules); --ch-lit: var(--gules-lit); --ch-deep: var(--gules-deep); --ch-glow: var(--gules-glow); }
+.ds-page { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 7px; }
+/* broadcast */
+.ds-stage { position: relative; aspect-ratio: 16 / 9; overflow: hidden; container-type: inline-size; background: #07080D; }
+.ds-stage .bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.ds-ov { position: absolute; display: grid; justify-items: center; gap: .4cqw; }
+.ds-ov img { width: 100%; height: auto; display: block; filter: drop-shadow(0 .4cqw .8cqw rgba(0,0,0,.6)); }
+.ds-plate { font: 800 max(12px, 1.2cqw)/1 var(--font-label); letter-spacing: .09em; text-transform: lowercase; color: #F1ECE2; white-space: nowrap;
+  background: linear-gradient(180deg, rgba(36,34,44,.92), rgba(5,5,8,.92)); border: .14cqw solid rgba(241,236,226,.45); box-shadow: inset 0 -.25cqw 0 var(--or); padding: .5cqw .85cqw .6cqw; border-radius: 2px; }
+.ds-plate em { font: 700 max(12px, 1.15cqw)/1 var(--font-mono); font-style: normal; color: #FFD45E; }
+.ds-o-vote { top: 2.5%; left: 27%; width: 46%; }
+.ds-o-altar { left: 1.5%; top: 12%; width: 16%; }
+.ds-o-urn { left: 1.5%; bottom: 3%; width: 14%; }
+.ds-o-map { right: 2%; top: 2.5%; width: 21%; }
+.ds-o-altar img { height: 24cqw; width: auto; max-width: 100%; object-fit: contain; }
+.ds-o-urn img { max-height: 15cqw; width: auto; max-width: 100%; object-fit: contain; }
+.ds-o-map img { max-height: 17cqw; width: auto; max-width: 100%; object-fit: contain; }
+.ds-cam { position: absolute; right: 3.2%; bottom: 5.5%; width: 29%; aspect-ratio: 16/9; }
+.ds-cam .shot { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 30%; }
+.ds-cam .frame { position: absolute; left: -4%; top: -6%; width: 108%; height: 112%; max-width: none; object-fit: fill; pointer-events: none; }
+.ds-cam .ds-plate { position: absolute; left: 50%; bottom: -3.2cqw; transform: translateX(-50%); }
+.ds-stage.chatting .ds-cam { display: none; }
+.ds-air { position: absolute; left: 1.2%; top: 2.2%; z-index: 2; }
+.ds-prov { position: absolute; left: 18%; bottom: 1.6%; z-index: 2; }
+.ds-stage .cc-sim--on-lead { background: var(--tex-etch-lead), rgba(5,5,8,.86); color: #F1ECE2; border-color: rgba(241,236,226,.6); }
+.ds-air .cc-lamp { width: 11px; height: 11px; }
+/* the moment: a pane of light crosses the broadcast */
+.ds-glint { position: absolute; inset: 0; z-index: 3; pointer-events: none; opacity: 0;
+  background: linear-gradient(105deg, transparent 30%, rgba(255,246,218,.0) 38%, rgba(255,246,218,.34) 46%, rgba(220,230,250,.22) 50%, transparent 58%);
+  background-size: 260% 100%; mix-blend-mode: screen; }
+.ds-glint.run { animation: ds-glint 1.5s var(--ease-light) both; }
+@keyframes ds-glint { 0% { opacity: 1; background-position: 120% 0; } 100% { opacity: 1; background-position: -60% 0; } }
+/* chat */
+.ds-chat { display: flex; flex-direction: column; min-width: 0; background: var(--surface); }
+.ds-chat__head { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 12px; border-bottom: var(--came) solid var(--lead); background: var(--surface-3); }
+.ds-chat__head b { font: 800 14px/1 var(--font-label); letter-spacing: .1em; text-transform: lowercase; color: var(--ink); }
+.ds-chat ol { flex: 1; display: grid; align-content: end; gap: 7px; padding: 12px 14px; overflow: auto; }
+.ds-chat li { font: 400 15px/1.35 var(--font-text); color: var(--ink); }
+.ds-chat .n { font: 800 15px/1 var(--font-text); }
+.ds-chat [data-tone="gules"] { color: var(--gules-ink); } .ds-chat [data-tone="azure"] { color: var(--azure-ink); }
+.ds-chat [data-tone="or"] { color: var(--or-ink); } .ds-chat [data-tone="emerald"] { color: var(--emerald-ink); }
+.ds-chat .sys { display: flex; gap: 8px; align-items: baseline; padding: 5px 8px; background: var(--surface-2); box-shadow: inset 3px 0 0 var(--ch); font: 400 13.5px/1.35 var(--font-mono); color: var(--ink-2); }
+.ds-chat .sys .cc-lozenge { width: 8px; height: 8px; flex: none; transform: translateY(-1px) rotate(45deg); }
+/* panels */
+.ds-panels { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; }
+.ds-ext { display: grid; grid-template-columns: 120px 1fr; gap: 14px; align-items: center; padding: 12px 14px; background: var(--surface); position: relative; }
+.ds-ext::before { content: ''; position: absolute; inset: 0 0 auto; height: 6px; border-bottom: var(--came) solid var(--lead); background: linear-gradient(90deg, var(--ch-deep), var(--ch) 20%, var(--ch-lit) 50%, var(--ch) 80%, var(--ch-deep)); box-shadow: 0 0 calc(var(--glow-on) * 10px) var(--ch-glow); }
+.ds-ext__art { width: 120px; height: 104px; margin-top: 6px; display: grid; place-items: center; background: radial-gradient(circle at 50% 40%, color-mix(in srgb, var(--ch) 20%, var(--surface-3)), var(--surface-3)); box-shadow: inset 0 0 0 1.5px var(--lead);
+  clip-path: polygon(0 100%, 0 28%, 18% 8%, 50% 0, 82% 8%, 100% 28%, 100% 100%); }
+.ds-ext__art img { width: 92%; height: 92%; object-fit: contain; }
+.ds-ext__cap { display: block; margin-top: 6px; font: 800 15px/1.15 var(--font-label); letter-spacing: .08em; text-transform: lowercase; color: var(--ch-ink); }
+.ds-ext p { margin-top: 4px; font: 400 var(--t-body)/1.4 var(--font-text); color: var(--ink-2); }
+@media (max-width: 1380px) {
+  .ds-page { grid-template-columns: minmax(0, 1fr) 272px; }
+  .ds-transom { gap: 10px 18px; } .ds-group .cc-seg > button { padding: 4px 9px; font-size: 13.5px; }
+  .ds-seg-style img { width: 22px; height: 22px; }
+  .ds-ext { grid-template-columns: 92px 1fr; } .ds-ext__art { width: 92px; height: 84px; }
+  .ds-chat li, .ds-chat .n { font-size: 14px; }
+}
+@media (prefers-reduced-motion: reduce) { .ds-glint { display: none; } }
+</style>
+</head>
+<body class="cc-body">
+<div class="cc-shell" data-chamber="keep">
+  <header class="cc-rampart">
+    <a class="cc-brand" href="keep.html" aria-label="Castle Control, the whole keep"><svg class="cc-mark" viewBox="0 0 32 32" aria-hidden="true">
+  <path d="M3 9V4h4v3h3V4h4v3h4V4h3v3h3V4h5v5c0 0 0 0 0 0v12a3 3 0 0 1-3 3H14l-6 5v-5H6a3 3 0 0 1-3-3Z" fill="var(--gules)" stroke="var(--on-lead)" stroke-width="1.4" stroke-linejoin="round"/>
+  <path d="M5 11h22" stroke="var(--lead)" stroke-width="1.2" opacity=".6"/>
+  <path d="M12.5 22v-5.5a3.5 3.5 0 0 1 7 0V22Z" fill="var(--or-lit)" stroke="var(--lead)" stroke-width="1.3"/>
+  <path d="M16 13v9M12.5 18.5h7" stroke="var(--lead)" stroke-width="1"/>
+</svg><span class="cc-wordmark">Castle Control</span></a>
+    <span class="cc-came-v" aria-hidden="true"></span>
+    <div class="cc-live" aria-label="Stream status">
+      <span class="cc-onair"><i class="cc-lamp" data-live="false" aria-hidden="true"></i>On air · simulated</span>
+      <span class="cc-figure"><b>Unknown</b><small>viewers</small></span>
+      <span class="cc-figure"><b>Unknown</b><small>uptime</small></span>
+    </div>
+    <span class="cc-came-v" aria-hidden="true"></span>
+    <div class="cc-links">
+      <span class="cc-chip">Twitch simulated</span>
+      <a href="setup.html" title="Set up OBS"><span class="cc-chip">OBS simulated</span></a>
+      <a href="gatehouse.html"><span class="cc-chip" data-module="moderator"><i class="cc-lozenge" aria-hidden="true"></i>Gatehouse simulated</span></a>
+    </div>
+    <span class="cc-spacer"></span>
+    <span class="cc-sim cc-sim--on-lead">Simulated</span>
+    <button class="cc-iconbtn" type="button" data-theme-toggle aria-label="Switch between day and night glass" title="Theme">
+      <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7.5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M10 2.5a7.5 7.5 0 0 1 0 15Z" fill="currentColor"/></svg>
+    </button>
+    <a class="cc-btn cc-btn--rampart" href="#steward-input" title="Talk to the Steward (/)">Steward <kbd class="cc-kbd">/</kbd></a>
+  </header>
+  <nav class="cc-tabs" aria-label="Chamber strip">
+    <a class="cc-tab" data-module="keep" href="keep.html"><span class="cc-tab__light" aria-hidden="true"></span><kbd class="cc-kbd">0</kbd><b class="cc-tab__name">The Keep</b></a>
+    <a class="cc-tab" data-module="lottery" href="lottery.html" aria-label="Lot Chamber, No draw, Preview, no proposals"><span class="cc-tab__light" aria-hidden="true"></span><kbd class="cc-kbd">1</kbd><b class="cc-tab__name">Lot Chamber</b><span class="cc-tab__row"><span class="cc-tab__figure">No draw</span><span class="cc-lamps" aria-hidden="true"><i data-lit="false" title="On air · off">On air</i><i data-lit="true" title="Preview">Preview</i><i data-lit="false" title="Draft · off">Draft</i></span></span></a>
+    <a class="cc-tab" data-module="moderator" href="gatehouse.html" aria-label="Gatehouse, 1 held, On air, preview, no proposals"><span class="cc-tab__light" aria-hidden="true"></span><kbd class="cc-kbd">2</kbd><b class="cc-tab__name">Gatehouse</b><span class="cc-tab__row"><span class="cc-tab__figure">1 held</span><span class="cc-lamps" aria-hidden="true"><i data-lit="true" title="On air">On air</i><i data-lit="true" title="Preview">Preview</i><i data-lit="false" title="Draft · off">Draft</i></span></span></a>
+    <a class="cc-tab" data-module="visuals" href="beacons.html" aria-label="Beacons, Offering altar, On air, preview, no proposals"><span class="cc-tab__light" aria-hidden="true"></span><kbd class="cc-kbd">3</kbd><b class="cc-tab__name">Beacons</b><span class="cc-tab__row"><span class="cc-tab__figure">Offering altar</span><span class="cc-lamps" aria-hidden="true"><i data-lit="true" title="On air">On air</i><i data-lit="true" title="Preview">Preview</i><i data-lit="false" title="Draft · off">Draft</i></span></span></a>
+    <a class="cc-tab" data-module="studio" href="maproom.html" aria-label="Map Room, Sand table, Preview, no proposals"><span class="cc-tab__light" aria-hidden="true"></span><kbd class="cc-kbd">4</kbd><b class="cc-tab__name">Map Room</b><span class="cc-tab__row"><span class="cc-tab__figure">Sand table</span><span class="cc-lamps" aria-hidden="true"><i data-lit="false" title="On air · off">On air</i><i data-lit="true" title="Preview">Preview</i><i data-lit="false" title="Draft · off">Draft</i></span></span></a>
+  </nav>
+  <main class="cc-main ds" aria-labelledby="ds-title">
+    <header class="cc-chamber-head ds-head">
+      <div>
+        <nav class="cc-crumbs" aria-label="Breadcrumb"><a href="keep.html">The keep</a><span class="cc-crumbs__sep" aria-hidden="true">›</span><b aria-current="page">On stream</b><span>· see it as viewers do</span></nav>
+        <div class="ds-head__line"><h1 class="cc-title" id="ds-title">On stream</h1><p class="cc-subtitle">How one style looks as a whole broadcast. All overlays and chat are simulated. <span class="cc-sim">Simulated</span></p></div>
+      </div>
+      <div class="cc-back"><a class="cc-btn" href="keep.html" data-back>Back to the keep <kbd class="cc-kbd">Esc</kbd></a></div>
+    </header>
+
+    <section class="ds-screen" aria-label="Simulated broadcast">
+      <div class="ds-transom">
+        <div class="ds-lights" aria-hidden="true"><i style="--i:0;--g:var(--gules);--g-lit:var(--gules-lit)"></i><i style="--i:1;--g:var(--or);--g-lit:var(--or-lit)"></i><i style="--i:2;--g:var(--azure);--g-lit:var(--azure-lit)"></i><i style="--i:3;--g:var(--or);--g-lit:var(--or-lit)"></i><i style="--i:4;--g:var(--key);--g-lit:var(--key-lit)"></i><i style="--i:5;--g:var(--amethyst);--g-lit:var(--amethyst-lit)"></i><i style="--i:6;--g:var(--gules);--g-lit:var(--gules-lit)"></i><i style="--i:7;--g:var(--or);--g-lit:var(--or-lit)"></i><i style="--i:8;--g:var(--azure);--g-lit:var(--azure-lit)"></i><i style="--i:9;--g:var(--or);--g-lit:var(--or-lit)"></i><i style="--i:10;--g:var(--key);--g-lit:var(--key-lit)"></i><i style="--i:11;--g:var(--amethyst);--g-lit:var(--amethyst-lit)"></i><i style="--i:12;--g:var(--gules);--g-lit:var(--gules-lit)"></i><i style="--i:13;--g:var(--or);--g-lit:var(--or-lit)"></i><i style="--i:14;--g:var(--azure);--g-lit:var(--azure-lit)"></i><i style="--i:15;--g:var(--or);--g-lit:var(--or-lit)"></i><i style="--i:16;--g:var(--key);--g-lit:var(--key-lit)"></i><i style="--i:17;--g:var(--amethyst);--g-lit:var(--amethyst-lit)"></i><i style="--i:18;--g:var(--gules);--g-lit:var(--gules-lit)"></i><i style="--i:19;--g:var(--or);--g-lit:var(--or-lit)"></i><i style="--i:20;--g:var(--azure);--g-lit:var(--azure-lit)"></i><i style="--i:21;--g:var(--or);--g-lit:var(--or-lit)"></i><i style="--i:22;--g:var(--key);--g-lit:var(--key-lit)"></i><i style="--i:23;--g:var(--amethyst);--g-lit:var(--amethyst-lit)"></i></div>
+        <div class="ds-group ds-group--style"><span class="cc-label" id="ds-l-style">Style</span>
+          <div class="cc-seg cc-seg--sm ds-seg-style" role="group" aria-labelledby="ds-l-style"><button type="button" data-style="heraldic" aria-pressed="true"><img src="../_assets/preset-heraldic-urn.webp" alt="">Heraldic</button><button type="button" data-style="pixel" aria-pressed="false"><img src="../_assets/preset-pixel-urn.webp" alt="">Arcade</button><button type="button" data-style="synthwave" aria-pressed="false"><img src="../_assets/preset-synthwave-urn.webp" alt="">Neon</button><button type="button" data-style="watercolor" aria-pressed="false"><img src="../_assets/preset-watercolor-urn.webp" alt="">Storybook</button><button type="button" data-style="anime" aria-pressed="false"><img src="../_assets/preset-anime-urn.webp" alt="">Cel</button><button type="button" data-style="glass" aria-pressed="false"><img src="../_assets/preset-glass-urn.webp" alt="">Glass</button></div></div>
+        <div class="ds-group ds-group--layout"><span class="cc-label" id="ds-l-layout">Layout</span>
+          <div class="cc-seg cc-seg--sm" role="group" aria-labelledby="ds-l-layout"><button type="button" data-layout="game" aria-pressed="true">Game + cam</button><button type="button" data-layout="chat" aria-pressed="false">Just chatting</button></div></div>
+        <div class="ds-group ds-group--shot"><span class="cc-label" id="ds-l-shot">Malakor</span>
+          <div class="cc-seg cc-seg--sm" role="group" aria-labelledby="ds-l-shot"><button type="button" data-shot="malakor-facecam" aria-pressed="true">Facecam</button><button type="button" data-shot="malakor-lair-wide" aria-pressed="false">Lair</button><button type="button" data-shot="malakor-laugh" aria-pressed="false">Laugh</button></div></div>
+      </div>
+      <div class="ds-page">
+        <div class="ds-stage" id="ds-stage">
+          <img class="bg" id="ds-bg" src="../_assets/scene-warmap.webp" alt="">
+          <div class="ds-air"><span class="cc-sim cc-sim--on-lead cc-sim--plain"><i class="cc-lamp" data-live="false" aria-hidden="true"></i>On air · simulated</span></div>
+          <div class="ds-prov"><span class="cc-sim cc-sim--on-lead">Simulated · sample art · AI-generated</span></div>
+          <div class="ds-ov ds-o-vote"><img data-art="votebar" src="../_assets/preset-heraldic-votebar.webp" alt="Vote bar"><span class="ds-plate">Gatehouse vote · Raze the mill <em>62%</em> · Spare it <em>38%</em> · <em>0:41</em></span></div>
+          <div class="ds-ov ds-o-altar"><img data-art="altar" src="../_assets/preset-heraldic-altar.webp" alt="Hype altar"><span class="ds-plate">Beacons · blaze <em>54%</em></span></div>
+          <div class="ds-ov ds-o-urn"><img data-art="urn" src="../_assets/preset-heraldic-urn.webp" alt="Draw urn"><span class="ds-plate">Lot draw · <em>128</em> tickets</span></div>
+          <div class="ds-ov ds-o-map"><img data-art="hexmap" src="../_assets/preset-heraldic-hexmap.webp" alt="Realm map"><span class="ds-plate">Map Room · <em>7</em> of 31 held</span></div>
+          <div class="ds-cam" id="ds-cam">
+            <img class="shot" id="ds-shot" src="../_assets/malakor-facecam.webp" alt="Malakor on camera">
+            <img class="frame" id="ds-frame" src="../_assets/preset-heraldic-frame2.webp" alt="">
+            <span class="ds-plate">Arch-Lich Malakor</span>
+          </div>
+          <div class="ds-glint run" id="ds-glint" aria-hidden="true"></div>
+        </div>
+        <aside class="ds-chat" aria-label="Simulated chat">
+          <div class="ds-chat__head"><b>Chat · simulated</b><span class="cc-sim">Simulated</span></div>
+          <ol><li><span class="n" data-tone="gules">bonepile_77</span> RAZE IT</li><li><span class="n" data-tone="azure">quillwright</span> the mill has done nothing wrong</li><li class="sys" data-module="visuals"><i class="cc-lozenge" aria-hidden="true"></i><span>Beacons · 50 gift subs from ledger_goblin (simulated)</span></li><li><span class="n" data-tone="or">ledger_goblin</span> tribute paid, my lord</li><li><span class="n" data-tone="emerald">mossy_minion</span> can I be a bone-clerk</li><li class="sys" data-module="lottery"><i class="cc-lozenge" aria-hidden="true"></i><span>Lot Chamber · draw opens in 2:00</span></li><li><span class="n" data-tone="azure">quillwright</span> spare the mill 🌾</li><li><span class="n" data-tone="gules">bonepile_77</span> the audit demands it</li><li class="sys" data-module="moderator"><i class="cc-lozenge" aria-hidden="true"></i><span>Gatehouse · 1 message held for review</span></li></ol>
+        </aside>
+        <div class="ds-panels" aria-label="Simulated Twitch panels">
+          <div class="ds-ext" data-module="studio"><span class="ds-ext__art"><img data-art="hexmap" src="../_assets/preset-heraldic-hexmap.webp" alt="Realm map panel"></span><div><span class="ds-ext__cap">Map Room extension</span><p>Viewers claim hexes for the realm.</p></div></div>
+          <div class="ds-ext" data-module="lottery"><span class="ds-ext__art"><img data-art="urn" src="../_assets/preset-heraldic-urn.webp" alt="Draw urn panel"></span><div><span class="ds-ext__cap">Lot Chamber</span><p>Enter the draw with channel points.</p></div></div>
+          <div class="ds-ext" data-module="visuals"><span class="ds-ext__art"><img data-art="altar" src="../_assets/preset-heraldic-altar.webp" alt="Hype altar panel"></span><div><span class="ds-ext__cap">Beacons</span><p>Every cheer and sub feeds the blaze.</p></div></div>
+        </div>
+      </div>
+    </section>
+  </main>
+  <footer class="cc-dock" data-chamber="keep" aria-label="The Steward">
+    <div class="cc-steward"><svg class="cc-steward__niche" viewBox="0 0 44 62" aria-hidden="true">
+  <path d="M3 61V24C3 12 12 4 22 1c10 3 19 11 19 23v37Z" fill="var(--stone-3)" stroke="var(--lead)" stroke-width="2"/>
+  <path d="M8 58V26c0-9 6-15 14-18 8 3 14 9 14 18v32Z" fill="var(--amethyst-deep)" stroke="var(--lead)" stroke-width="2"/>
+  <path d="M8 40h28M22 8v50" stroke="var(--lead)" stroke-width="1.2" opacity=".55"/>
+  <ellipse cx="22" cy="31" rx="11" ry="14" fill="var(--or-lit)" opacity=".28"/>
+  <rect x="18.5" y="34" width="7" height="16" fill="var(--clear-lit)" stroke="var(--lead)" stroke-width="1.4"/>
+  <path class="cc-flame" d="M22 21c4 5 5 9 0 12-5-3-4-7 0-12Z" fill="var(--or-lit)" stroke="var(--lead)" stroke-width="1.2"/>
+  <path d="M12 52h20" stroke="var(--lead)" stroke-width="2.5"/>
+</svg>
+      <b class="cc-steward__name">The Steward</b>
+      <span class="cc-steward__role">simulated co-pilot · sample data</span>
+      <span class="cc-sim">Simulated</span>
+    </div>
+    <form class="cc-talk" onsubmit="return false">
+      <p class="cc-talk__msg">Good evening. Draft in the preview, amend in ink, then hold to seal. Nothing acts on a spoken request.</p>
+      <div class="cc-talk__row">
+        <label class="cc-sr" for="steward-input">Talk to the Steward</label>
+        <input class="cc-input" id="steward-input" placeholder="Talk to the Steward..." autocomplete="off">
+        <button class="cc-btn" type="submit" disabled>Tell</button>
+        <span class="cc-suggest">
+          <button class="cc-btn cc-btn--quiet" type="button">Catch me up</button>
+          <button class="cc-btn cc-btn--quiet" type="button">Draft a question draw</button>
+          <button class="cc-btn cc-btn--quiet" type="button">What does chat want?</button>
+        </span>
+      </div>
+    </form>
+  </footer>
+</div>
+<button class="cc-proto-toggle" type="button" data-theme-toggle title="Prototype only: not part of the design">◐ proto</button>
+<script>
+(function(){
+  var root=document.documentElement;
+  function flip(){var n=root.getAttribute('data-theme')==='night'?'day':'night';root.setAttribute('data-theme',n);try{var u=new URL(location.href);u.searchParams.set('theme',n);history.replaceState(null,'',u);}catch(e){}}
+  document.querySelectorAll('[data-theme-toggle]').forEach(function(b){b.addEventListener('click',flip);});
+  var go={'0':'keep.html','1':'lottery.html','2':'gatehouse.html','3':'beacons.html','4':'maproom.html'};
+  document.addEventListener('keydown',function(e){
+    var t=e.target; if(e.metaKey||e.ctrlKey||e.altKey)return;
+    if(t&&(t.isContentEditable||/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)))return;
+    if(e.key==='/'){e.preventDefault();var i=document.getElementById('steward-input');if(i)i.focus();return;}
+    if(e.key==='Escape'){var b=document.querySelector('[data-back]');if(b){location.href=b.getAttribute('href');}return;}
+    if(go[e.key]){var q=location.search;location.href=go[e.key]+q;}
+  });
+})();
+</script>
+<script>
+(function(){
+  var A='../_assets/', st={style:'heraldic',layout:'game',shot:'malakor-facecam'};
+  var stage=document.getElementById('ds-stage'), glint=document.getElementById('ds-glint');
+  function render(restyled){
+    document.querySelectorAll('[data-art]').forEach(function(im){im.src=A+'preset-'+st.style+'-'+im.getAttribute('data-art')+'.webp';});
+    document.getElementById('ds-frame').src=A+'preset-'+st.style+'-frame2.webp';
+    document.getElementById('ds-shot').src=A+st.shot+'.webp';
+    document.getElementById('ds-bg').src=A+(st.layout==='game'?'scene-warmap':(st.shot==='malakor-facecam'?'malakor-lair-wide':st.shot))+'.webp';
+    stage.classList.toggle('chatting',st.layout==='chat');
+    document.getElementById('ds-cam').hidden=st.layout==='chat';
+    if(restyled){glint.classList.remove('run');void glint.offsetWidth;glint.classList.add('run');
+      document.querySelectorAll('.ds-lights i').forEach(function(i){i.style.animation='none';void i.offsetWidth;i.style.animation='';});}
+  }
+  function bind(attr,key){document.querySelectorAll('['+attr+']').forEach(function(b){b.addEventListener('click',function(){
+    document.querySelectorAll('['+attr+']').forEach(function(x){x.setAttribute('aria-pressed',x===b);});
+    st[key]=b.getAttribute(attr); render(key==='style');});});}
+  bind('data-style','style'); bind('data-layout','layout'); bind('data-shot','shot');
+  var m=/[?&]style=(\w+)/.exec(location.search); if(m){var b=document.querySelector('[data-style="'+m[1]+'"]'); if(b)b.click();}
+  var l=/[?&]layout=(\w+)/.exec(location.search); if(l){var c=document.querySelector('[data-layout="'+l[1]+'"]'); if(c)c.click();}
+})();
+</script>
+</body>
+</html>

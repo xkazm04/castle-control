@@ -137,14 +137,7 @@ async fn bound_core_injection_has_exact_keys_accepted_origin_and_no_capability_i
 }
 
 async fn assert_native_data_directory_and_shadow_diagnostics(logs: &Arc<Mutex<Vec<u8>>>) {
-    let root = std::env::temp_dir().join(format!(
-        "cc-shadow-host-{}-{}",
-        std::process::id(),
-        std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .unwrap()
-            .as_nanos()
-    ));
+    let root = host_test_root::Root::new("cc-shadow-host");
     let host = CoreHost::start(
         Options {
             native: Some(crate::options::NativeOptions {
@@ -156,6 +149,8 @@ async fn assert_native_data_directory_and_shadow_diagnostics(logs: &Arc<Mutex<Ve
             }),
             login: false,
             steward_live: true,
+            rehearsal: false,
+            relaunch: false,
         },
         &root,
     )
@@ -177,6 +172,7 @@ async fn assert_native_data_directory_and_shadow_diagnostics(logs: &Arc<Mutex<Ve
         .unwrap();
     let body = "simulated-private-shadow-body";
     let raw = cc_core::ChatIngress {
+        simulated: true,
         login: "simulated_viewer".into(),
         message: cc_twitch::ChatMessage {
             id: "simulated-shadow-message".into(),
@@ -231,7 +227,6 @@ async fn assert_native_data_directory_and_shadow_diagnostics(logs: &Arc<Mutex<Ve
             .to_string_lossy()
             .starts_with("cc-shadow-host-")
     );
-    std::fs::remove_dir_all(resolved).unwrap();
 }
 
 async fn assert_steward_flag_round_trips_as_metadata_without_native_services_or_secrets() {
@@ -290,14 +285,7 @@ async fn native_overlay_reuses_the_requested_port_across_restarts() {
     let reservation = std::net::TcpListener::bind((std::net::Ipv4Addr::LOCALHOST, 0)).unwrap();
     let port = reservation.local_addr().unwrap().port();
     drop(reservation);
-    let root = std::env::temp_dir().join(format!(
-        "cc-overlay-host-{}-{}",
-        std::process::id(),
-        std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .unwrap()
-            .as_nanos()
-    ));
+    let root = host_test_root::Root::new("cc-overlay-host");
     let client = reqwest::Client::builder().no_proxy().build().unwrap();
     let options = || Options {
         native: Some(crate::options::NativeOptions {
@@ -358,5 +346,4 @@ async fn native_overlay_reuses_the_requested_port_across_restarts() {
             .to_string_lossy()
             .starts_with("cc-overlay-host-")
     );
-    std::fs::remove_dir_all(resolved).unwrap();
 }

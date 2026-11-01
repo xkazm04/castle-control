@@ -29,9 +29,12 @@ test('both layouts retain the provenance labels, atlas captions, nine chat lines
   for (const { id: layout } of layouts) {
     const markup = html({ ...initialDemoState, layout });
     const text = markup.replace(/<[^>]+>/g, '');
-    for (const label of ['SIMULATED', 'SAMPLE ART', 'AI-generated', 'LIVE', 'Chat · simulated',
+    for (const label of ['SIMULATED', 'SAMPLE ART', 'AI-generated', 'On air · simulated', 'Chat · simulated',
       'Gatehouse vote · Raze the mill 62% · Spare it 38% · 0:41', 'Beacons · blaze 54%',
       'Lot draw · 128 tickets', 'Map Room · 7 of 31 held', 'Arch-Lich Malakor']) expect(text).toContain(label);
+    expect(markup).toContain('data-stamp="off-air" role="img" aria-label="On air is simulated: nothing is broadcast"');
+    expect(markup).toContain(`data-stamp="simulated" role="img" aria-label="Simulated: ${copy.provenance}"`);
+    expect(markup).not.toContain('data-stamp="on-air"');
     expect(markup.match(/<li[ >]/g)).toHaveLength(9);
     for (const line of copy.chat) expect(text).toContain(`${line.name ? `${line.name} ` : ''}${line.text}`);
     for (const panel of copy.panels) { expect(text).toContain(panel.title); expect(text).toContain(panel.text); }

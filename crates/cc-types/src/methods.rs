@@ -82,7 +82,16 @@ methods! {
     ChatList => ("gatehouse.chat.list", GatehouseReadParams, GatehouseChatResult, "Gatehouse live reads"),
     HistoryList => ("gatehouse.history.list", GatehouseReadParams, GatehouseHistoryResult, "Gatehouse live reads"),
     LiveRunGet => ("gatehouse.liveRun.get", GatehouseReadParams, GatehouseLiveRunResult, "Gatehouse live capture"),
-    VoteBarSourceUrl => ("gatehouse.source.url", Empty, VoteBarSourceResult, "Owner ruling 3")
+    VoteBarSourceUrl => ("gatehouse.source.url", Empty, VoteBarSourceResult, "Owner ruling 3"),
+    ObsConnect => ("obs.connect", ObsConnectParams, ObsStatus, "WP R.1"),
+    ObsSceneEnsure => ("obs.scene.ensure", ObsSceneEnsureParams, ObsSceneEnsureResult, "WP R.1"),
+    ObsRehearsalClear => ("obs.rehearsal.clear", Empty, ObsRehearsalClearResult, "WP R.1"),
+    LotsSourceUrl => ("lots.source.url", LotsSourceUrlParams, SourceUrlResult, "WP R.1"),
+    RehearsalStart => ("rehearsal.start", Empty, RehearsalStatus, "WP R.1"),
+    RehearsalStop => ("rehearsal.stop", Empty, RehearsalStatus, "WP R.1"),
+    RehearsalScenarioRun => ("rehearsal.scenario.run", RehearsalScenarioParams, RehearsalScenarioResult, "WP R.1"),
+    RehearsalCrowdSet => ("rehearsal.crowd.set", RehearsalCrowdParams, RehearsalStatus, "WP R.1"),
+    TiltyardSourceUrl => ("tiltyard.source.url", Empty, SourceUrlResult, "WP R.1")
 }
 
 /// Single parse door for requests, including unknown-method and shape errors.

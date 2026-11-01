@@ -145,6 +145,7 @@ fn step_reports_are_pasteable_timestamped_and_payload_free() {
 #[test]
 fn target_matching_uses_verified_login_never_the_display_name_and_rejects_mods() {
     let mut ingress = cc_core::ChatIngress {
+        simulated: true,
         login: "other_login".into(),
         message: cc_twitch::ChatMessage {
             id: "simulated-message".into(),

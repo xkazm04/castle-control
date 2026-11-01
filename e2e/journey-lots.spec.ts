@@ -7,7 +7,7 @@ import { buildCoreLauncher, startCore } from './core-launch.ts';
 // The desktop fixture journey stays independent of the real-core OBS proof.
 async function configureAndCast(page: Page) {
   await page.goto('/#/chamber/lottery');
-  await expect(page.locator('.cc-sample')).toHaveText('Simulated');
+  await expect(page.locator('.cc-rampart > [data-stamp="simulated"]')).toHaveText('Simulated');
   await page.getByRole('textbox', { name: 'Draw name', exact: true }).fill('SIMULATED audience questions');
   await page.getByRole('combobox', { name: 'Eligible pool', exact: true }).selectOption('keyword');
   await page.getByRole('textbox', { name: 'Keyword', exact: true }).fill('!join');
@@ -15,7 +15,8 @@ async function configureAndCast(page: Page) {
   await page.getByRole('combobox', { name: 'Weights', exact: true }).selectOption('concave');
   await page.getByRole('checkbox', { name: 'Free !join path with equal odds', exact: true }).uncheck();
   await page.getByRole('combobox', { name: 'Content type', exact: true }).selectOption('prize');
-  await expect(page.locator('.cc-desk > p').filter({ hasText: /^Attach an official-rules template before starting a prize draw\.$/ })).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Writ desk contents', exact: true }).locator('p')
+    .filter({ hasText: /^Attach an official-rules template before starting a prize draw\.$/ })).toBeVisible();
   await page.getByRole('checkbox', { name: 'Attach official-rules template', exact: true }).check();
   await page.getByRole('checkbox', { name: 'Acknowledge Twitch disclaimer', exact: true }).check();
   await page.getByRole('checkbox', { name: 'Paid entry', exact: true }).check();

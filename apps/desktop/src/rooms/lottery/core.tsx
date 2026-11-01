@@ -1,18 +1,38 @@
-﻿import { useEffect, useId, useState, useSyncExternalStore } from 'react';
+﻿import { useEffect, useId, useMemo, useState, useSyncExternalStore } from 'react';
 import type { ReactNode } from 'react';
-import { FieldGroup, HeraldicCard, InkButton, SealButton, SectionHeading, WindowedRows } from '@castle-control/ui';
+import { entranceStyle, FieldGroup, HeraldicCard, InkButton, SealButton, Stamp, WindowedRows } from '@castle-control/ui';
 import { coreLotsConnection } from '../../client.js';
 import { createCoreLotsPort, lotsRoundLabel } from '../../lots-core.js';
 import type { CoreLotsPort } from '../../lots-core.js';
 import { lotsCopy as copy } from '../../lots-copy.js';
 import type { Snapshot } from '../../model.js';
-import { FairnessSteps, PolicyRibbon, PoolStage, Ticket, policyReason } from './print.jsx';
+import { DeskBody, FairnessSteps, PanelTitle, PolicyRibbon, PoolStage, Ticket, policyReason } from './print.jsx';
+import { createDrawDisplay } from './display.js';
+import { createRevealClock } from './playback.js';
+import { DrawStage } from './stage.jsx';
+import type { StageCast } from './stage-model.js';
+import { WeightEqualizer } from './equalizer.jsx';
+import { WritLab } from './lab.jsx';
+import { UrnTierPreset } from './tier.jsx';
+import { CoreDrawSetup } from './core-setup.jsx';
+import { quicknet_anchor } from './beacon-anchors.js';
 import './room.css';
 import { DrawAppearance } from './appearance.jsx';
 
+/** Core mode authenticates real draws against the public quicknet key only, never a simulated chain. */
+const core_anchors = [quicknet_anchor] as const;
+
+/** Presentation state per core port: shape, appearance and reveal cursor never reach RPC. */
+const stages = new WeakMap<CoreLotsPort, { display: ReturnType<typeof createDrawDisplay>; reveal: ReturnType<typeof createRevealClock> }>();
+function coreStage(port: CoreLotsPort) {
+  let stage = stages.get(port);
+  if (!stage) { stage = { display: createDrawDisplay(), reveal: createRevealClock() }; stages.set(port, stage); }
+  return stage;
+}
+
 function ProposalSealFrame({ seal_slot }: { seal_slot?: ReactNode }) {
   return seal_slot ? <div className="lottery-seal-frame">
-    <HeraldicCard variant="raised" tone="seal" ink="gules">
+    <HeraldicCard variant="raised" tone="seal" ink="gules" className="panel cc-print-in" style={{ ...entranceStyle(6) }}>
       <h2 className="lottery-card-title">{copy.core.proposal_seal}</h2>
       {seal_slot}
     </HeraldicCard>
@@ -21,7 +41,13 @@ function ProposalSealFrame({ seal_slot }: { seal_slot?: ReactNode }) {
 
 export function ConnectedLotsRoom({ port, simulated, seal_slot }: { port: CoreLotsPort; simulated?: boolean; seal_slot?: ReactNode }) {
   const state = useSyncExternalStore(port.subscribe, port.getSnapshot, port.getSnapshot);
+  const { display, reveal } = coreStage(port);
+  const appearance = useSyncExternalStore(display.subscribe, display.getSnapshot, display.getSnapshot);
+  // The core verified this cast against its seal and round before returning it.
+  const cast = useMemo<StageCast | undefined>(() => state.cast_result
+    ? { winners: state.cast_result.cast.winners, label: state.cast_result.cast.label } : undefined, [state.cast_result]);
   const [user, setUser] = useState('');
+  const [prove, setProve] = useState(0);
   useEffect(() => { if (!port.getSnapshot().locked) void port.load(); }, [port]);
   const draw = state.draw;
   const field_id = useId();
@@ -36,24 +62,29 @@ export function ConnectedLotsRoom({ port, simulated, seal_slot }: { port: CoreLo
     }
   };
   const cap = draw?.rules.cohort_caps.find(item => item.cohort === 'raider');
-  return <div className="lottery-room" role="region" aria-label={copy.core.title} aria-busy={state.busy}>
+  const round_label = simulated ? <Stamp kind="simulated" word={lotsRoundLabel(simulated, state.seal_result)} />
+    : lotsRoundLabel(simulated, state.seal_result);
+  return <div className="lottery-room" role="region" aria-label={copy.core.title} aria-busy={state.busy} data-theatre={appearance.theatre}>
     <div className="cc-hall">
       <PoolStage count={state.entries.length} winners={draw?.rules.winner_count ?? copy.not_available}
         winner_detail={copy.selected_draw} held_out={copy.not_available}
         cap={cap ? `${cap.numerator}/${cap.denominator}` : copy.no_cap}
-        illustration={lotsRoundLabel(simulated, state.seal_result)} caption={copy.core.caption} title={copy.core.frozen_roll}
+        illustration={round_label} caption={copy.core.caption} title={copy.core.frozen_roll}
         foot={<p>{state.sealed ? copy.core.frozen_notice : copy.core.roll_notice}</p>}>
-        <div className="lottery-urn-window">
-          <WindowedRows rows={state.entries} label={copy.core.frozen_list} row_key={entry => entry.handle}>
-            {entry => <p>{copy.core.entry(entry.handle, entry.weight)}</p>}
-          </WindowedRows>
-        </div>
+        <DrawStage shape={appearance.shape} on_shape={shape => display.edit({ shape })} entries={state.entries} cast={cast}
+          content={draw?.policy.content ?? 'question'} sealed={state.sealed} seal={state.seal_result?.sealed.seal}
+          clock={reveal} reveal_ms={appearance.reveal_ms} theatre={appearance.theatre} on_theatre={display.theatre} proof="core"
+          sound={appearance.sound} on_sound={on => display.edit({ sound: on })} live={simulated === false}
+          by_hand={appearance.by_hand} on_by_hand={on => display.edit({ by_hand: on })} focus_weight={appearance.focus_weight}
+          {...(state.writ ? { on_prove: () => { display.theatre(false); setProve(count => count + 1); } } : {})} />
       </PoolStage>
-      <div className="cc-desk">
-        <SectionHeading variant="banner" level={2} title={copy.writ} gloss={copy.writ_gloss} ink="gules" />
-        <HeraldicCard variant="raised">
+      <div className="cc-desk"><section className="lottery-desk-panel panel cc-print-in" data-role="lot-writ-panel" style={{ ...entranceStyle(1) }}>
+        <div className="topline" />
+        <PanelTitle title={copy.writ} gloss={copy.writ_gloss} />
+        <DeskBody>
+        <HeraldicCard variant="raised" className="panel cc-print-in" style={{ ...entranceStyle(2) }}>
           <h2 className="lottery-card-title">{copy.core.draws}</h2>
-          <p className="cc-aside">{lotsRoundLabel(simulated, state.seal_result)}</p>
+          <p className="cc-aside">{round_label}</p>
           <InkButton size="room" disabled={state.busy || state.locked} onClick={() => { void port.load(); }}>{copy.core.refresh}</InkButton>
           {!state.draws.some(item => item.draw_id === 'questions') && <InkButton size="room" disabled={state.busy || state.locked}
             onClick={() => { void port.createQuestionDraw(); }}>{copy.core.create}</InkButton>}
@@ -79,6 +110,17 @@ export function ConnectedLotsRoom({ port, simulated, seal_slot }: { port: CoreLo
             <InkButton size="room" disabled={state.busy} onClick={() => { void port.check(); }}>{copy.core.check}</InkButton>
           </>}
         </HeraldicCard>
+        {draw && <CoreDrawSetup draw={draw} disabled={state.busy || state.locked} on_save={next => { void port.edit(next); }} />}
+        {draw && <UrnTierPreset draw={draw} shape={appearance.shape} on_edit={next => { void port.edit(next); }}
+          on_shape={shape => display.edit({ shape })} disabled={state.busy || state.locked} />}
+        {draw && <WeightEqualizer draw={draw} entries={undefined} on_edit={next => { void port.edit(next); }}
+          disabled={state.busy || state.locked} on_focus_weight={weight => display.edit({ focus_weight: weight })} />}
+        {state.entries.length > 0 && <details className="cc-disclosure"><summary>{copy.core.frozen_list} · {state.entries.length}</summary>
+          <div className="lottery-urn-window">
+            <WindowedRows rows={state.entries} label={copy.core.frozen_list} row_key={entry => entry.handle}>
+              {entry => <p>{copy.core.entry(entry.handle, entry.weight)}</p>}
+            </WindowedRows>
+          </div></details>}
         {state.check && <PolicyRibbon result={state.check.result} core />}
         {draw && <fieldset disabled={state.busy || state.locked}>
           <DrawAppearance key={draw.draw_id} port={port.appearance(draw.draw_id)} preview={false}
@@ -87,13 +129,13 @@ export function ConnectedLotsRoom({ port, simulated, seal_slot }: { port: CoreLo
         </fieldset>}
         {state.locked && !state.sealed && <p className="cc-aside" role="alert">{copy.core.locked}</p>}
         {state.check?.reasons.map(reason => <p className="cc-aside" key={reason}>{policyReason(reason)}</p>)}
-        {draw && <HeraldicCard variant="raised" tone="seal" ink="gules">
+        {draw && <HeraldicCard variant="raised" tone="seal" ink="gules" className="panel cc-print-in" style={{ ...entranceStyle(5) }}>
           <p className="cc-aside">{copy.core.seal_notice}</p>
           <SealButton size="large" disabled={state.busy || state.locked || !state.check || state.check.result === 'blocked'}
             on_seal={() => { void port.seal(); }} />
         </HeraldicCard>}
         <ProposalSealFrame seal_slot={seal_slot} />
-        <HeraldicCard variant="raised" aria-label={copy.lookup_title}>
+        <HeraldicCard variant="raised" className="panel cc-print-in" style={{ ...entranceStyle(7) }} aria-label={copy.lookup_title}>
           <h2 className="lottery-card-title">{copy.lookup_title}</h2><p className="cc-aside">{copy.core.lookup_hint}</p>
           <div className="lottery-lookup"><label htmlFor="lottery-core-lookup">{copy.core.user_id}</label>
             <input id="lottery-core-lookup" inputMode="numeric" value={user} onChange={event => setUser(event.currentTarget.value)} />
@@ -102,7 +144,8 @@ export function ConnectedLotsRoom({ port, simulated, seal_slot }: { port: CoreLo
           {state.lookup_result && <p className="lottery-lookup-result" role="status">
             {state.lookup_result.entry ? copy.core.eligible(state.lookup_result.entry.weight) : copy.core.ineligible}</p>}
         </HeraldicCard>
-        {state.seal_result && <Ticket label={copy.core.frozen_roll}>
+        {state.seal_result && <Ticket label={copy.core.frozen_roll} entrance={8}>
+          <Stamp kind="sealed" land />
           <p className="cc-kicker">{copy.core.announced}</p>
           <p className="cc-hash">{copy.writ_fields.seal} · {state.seal_result.sealed.seal}</p>
           <p className="cc-aside">{copy.core.frozen_entries(state.entries.length, state.seal_result.sealed.roll.randomness.source)}</p>
@@ -110,7 +153,7 @@ export function ConnectedLotsRoom({ port, simulated, seal_slot }: { port: CoreLo
             {copy.core.target_round(state.seal_result.sealed.roll.randomness.round)}</p>}
           <InkButton size="room" disabled={state.busy || state.started} onClick={() => { void port.start(); }}>{copy.core.cast}</InkButton>
         </Ticket>}
-        {state.cast_result && <Ticket label={copy.core.result}>
+        {state.cast_result && <Ticket label={copy.core.result} entrance={9}>
           <h3 className="lottery-card-title">{copy.core.winners(state.cast_result.cast.label)}</h3>
           <WindowedRows rows={state.cast_result.cast.winners} label={copy.core.winner_list} row_key={winner => winner}>
             {winner => <p>{winner}</p>}
@@ -123,9 +166,11 @@ export function ConnectedLotsRoom({ port, simulated, seal_slot }: { port: CoreLo
             {state.writ && <a download="castle-control-writ.json" href={`data:application/json;charset=utf-8,${encodeURIComponent(JSON.stringify(state.writ))}`}>{copy.core.download}</a>}
           </section>
         </Ticket>}
+        {state.writ && <WritLab writ={state.writ} simulated={simulated ?? false} prove={prove} anchors={core_anchors} />}
         <p className="cc-status" role="status">{state.notice}</p>
         <FairnessSteps />
-      </div>
+        </DeskBody>
+      </section></div>
     </div>
   </div>;
 }

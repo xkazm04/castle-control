@@ -4,6 +4,7 @@ import type { IntensityCurve } from '@castle-control/contract';
 import type { BeaconsPort, PreviewVisual } from '../../beacons-model.js';
 import { beaconsCopy as copy } from '../../beacons-copy.js';
 import { createCurveEditor } from './curve-editor.js';
+import type { CurveEditor } from './curve-editor.js';
 import { CurveControls, KindlingCurve } from './kindling-curve.jsx';
 
 export function createFixtureCurveEditor(port: BeaconsPort) {
@@ -23,8 +24,8 @@ export function createFixtureCurveEditor(port: BeaconsPort) {
   }, preview);
 }
 
-export function FixtureCurve({ item, port }: { item: PreviewVisual; port: BeaconsPort }) {
-  const editor = useMemo(() => createFixtureCurveEditor(port), [port]);
+export function FixtureCurve({ item, port, editor: shared }: { item: PreviewVisual; port: BeaconsPort; editor?: CurveEditor }) {
+  const editor = useMemo(() => shared ?? createFixtureCurveEditor(port), [shared, port]);
   const state = useSyncExternalStore(editor.subscribe, editor.getSnapshot, editor.getSnapshot);
   return <>
     <KindlingCurve item={item} />

@@ -14,15 +14,22 @@ const rampart: RampartProps = {
 };
 const click = (element: ReactElement<InkButtonProps>) => element.props.onClick?.({} as MouseEvent<HTMLButtonElement>);
 
-test('rampart status groups retain their gaps and reclaim unused brand width at the compact breakpoint', () => {
+test('Rampart wordmark has a real space on one line and matching ghost text', () => {
+  const html = renderToStaticMarkup(<Rampart {...rampart} />);
+  const wordmark = /<span class="cc-wordmark" data-text="([^"]*)">([^<]*)<\/span>/.exec(html);
+  expect(wordmark?.[2]).toBe('Castle Control');
+  expect(wordmark?.[1]).toBe('Castle Control');
+});
+
+test('rampart status groups retain their wide gaps and compact within their own container', () => {
   const css = readFileSync(new URL('./shell.css', import.meta.url), 'utf8');
   const groups = css.match(/\.cc-live-group, \.cc-link-group\s*\{([^}]+)\}/)?.[1];
   expect(groups).toMatch(/gap:\s*var\(--space-12\)/);
   // A shrinking group lets its non-wrapping contents paint into the next group.
   expect(groups).toMatch(/flex:\s*none\s*;/);
-  const compact = css.slice(css.indexOf('@media (max-width: 1420px)'));
-  expect(compact).toMatch(/\.cc-rampart\s*\{[^}]*gap:\s*var\(--space-11\)/);
-  expect(compact).toMatch(/\.cc-brand\s*\{[^}]*width:\s*auto\s*;/);
+  const compact = css.slice(css.indexOf('@container cc-rampart'));
+  expect(compact).toMatch(/\.cc-rampart \.cc-live-group\s*\{[^}]*gap:\s*var\(--space-6\)/);
+  expect(compact).toMatch(/\.cc-rampart \.cc-brand\s*\{[^}]*gap:\s*var\(--space-6\)[^}]*margin-right:\s*0\s*;/);
 });
 
 describe.each(['paper', 'stock'] as const)('%s theme', theme => {
@@ -53,10 +60,13 @@ describe.each(['paper', 'stock'] as const)('%s theme', theme => {
     expect(html).toContain('Signal');
   });
 
-  test.each(verdicts)('verdict %s includes readable outcome and decorative icon', verdict => {
+  test.each(verdicts)('verdict %s includes its readable outcome and shared stamp', verdict => {
     const html = render(<VerdictChip verdict={verdict} />);
     expect(html).toContain(`data-verdict="${verdict}"`);
     expect(html).toContain({ pass: 'Released', hold: 'Held for review', bar: 'Removed' }[verdict]);
+    expect(html).toContain(`data-stamp="${{ pass: 'pass', hold: 'held', bar: 'blocked' }[verdict]}"`);
+    expect(html).toContain(`>${{ pass: 'Pass', hold: 'Hold', bar: 'Bar' }[verdict]}</span>`);
+    expect(html).toContain('role="img" aria-label=');
     expect(html).toContain('aria-hidden="true"');
   });
 
@@ -73,15 +83,45 @@ describe.each(['paper', 'stock'] as const)('%s theme', theme => {
     expect(offline).not.toContain('214');
     expect(offline).not.toContain('02:14:37');
     expect(offline).toContain('Sample data');
-    expect(render(<Rampart {...rampart} />)).not.toContain('cc-sample');
+    expect(render(<Rampart {...rampart} />)).not.toContain('data-stamp="sample"');
     expect(render(<Rampart {...rampart} data_kind="simulated" />)).toContain('Simulated');
+  });
+
+  test.each([undefined, 'sample', 'simulated'] as const)('Rampart stamps distinguish live, offline and %s provenance', data_kind => {
+    const provenance = data_kind === undefined ? {} : { data_kind };
+    for (const on_air of [false, true]) {
+      const html = render(<Rampart {...rampart} {...provenance} on_air={on_air} />);
+      const group = html.match(/<div class="cc-live-group">([\s\S]*?)<\/div>/)?.[1] ?? '';
+      const kind = on_air && data_kind === undefined ? 'on-air' : 'off-air';
+      const word = on_air ? data_kind === undefined ? 'On air' : 'On air · simulated' : 'Offline';
+      expect(group).toContain(`data-stamp="${kind}" role="img" aria-label=`);
+      expect(group).toContain(`<span aria-hidden="true">${word}</span>`);
+      expect(group).toContain(`data-dot="${kind === 'on-air' ? 'lamp' : 'ring'}"`);
+      if (on_air && data_kind !== undefined) {
+        expect(group).toContain('aria-label="On air is simulated: nothing is broadcast"');
+        expect(html).not.toContain('data-stamp="on-air"');
+      }
+      if (data_kind !== undefined) {
+        const label = data_kind === 'sample' ? 'Sample data' : 'Simulated';
+        const aria_label = data_kind === 'sample' ? 'Sample data: Sample data' : label;
+        expect(html).toContain(`data-stamp="${data_kind}" role="img" aria-label="${aria_label}"><span aria-hidden="true">${label}</span>`);
+      }
+    }
   });
 
   test.each([[0, 0], [0, 3], [2, 0], [2, 3]])('moderation counts %i/%i with and without Shield Mode', (armed, watching) => {
     for (const shield of [false, true]) {
       const html = render(<GatehouseChip armed={armed} watching={watching} shield={shield} href="#moderator" />);
-      expect(html.includes('cc-gatehouse-armed')).toBe(armed > 0);
-      expect(html.includes('cc-gatehouse-watching')).toBe(watching > 0 || armed === 0);
+      expect(html.includes('data-stamp="armed"')).toBe(armed > 0);
+      expect(html.includes('data-stamp="shadow"')).toBe(watching > 0 || armed === 0);
+      if (armed > 0) {
+        expect(html).toContain(`>Armed ${armed}</span>`);
+        expect(html).toContain(`aria-label="Armed: can act on viewers: Armed ${armed}"`);
+      }
+      if (watching > 0 || armed === 0) {
+        expect(html).toContain(`>Watching ${watching}</span>`);
+        expect(html).toContain(`aria-label="Shadow: watching, takes no action: Watching ${watching}"`);
+      }
       expect(html.includes('cc-gatehouse-shield')).toBe(shield);
       expect(html).toContain(`${armed} rules armed`);
       expect(html).toContain(`${watching} watching`);

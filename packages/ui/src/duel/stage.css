@@ -1,0 +1,37 @@
+/* Ported rule by rule from .port/winner/index.html, cc-t2-duel A/1. */
+.ty-stage,.ty-stage *,.ty-stage *::before,.ty-stage *::after{box-sizing:border-box}
+.ty-stage{font:var(--text-body)/1.45 var(--font-ui)}
+/* Outrank host button defaults; component rules below retain their own chrome. */
+.ty-stage button{font:inherit;color:inherit;max-width:none}
+.ty-stage kbd{font:700 var(--text-small)/1 var(--font-num);border:var(--rule-medium) solid currentColor;border-bottom-width:var(--space-3);border-radius:var(--space-4);padding:var(--space-3) var(--space-6);display:inline-block;min-width:var(--space-22);text-align:center}
+.ty-stage{container-type:inline-size;container-name:ty-stage;position:relative;flex:none;margin:0 var(--ty-space-18) var(--space-12);display:grid;grid-template-rows:auto auto auto;background:
+  radial-gradient(70% 55% at 50% 30%,var(--ty-night-glow) 0,var(--ty-night) 70%),var(--ty-night);color:var(--ink);border:var(--rule-strong) solid var(--ty-stage-rule);overflow:hidden;isolation:isolate}
+.ty-stage::before{content:"";position:absolute;inset:0;background:var(--paper-grain);opacity:.18;mix-blend-mode:screen;pointer-events:none;z-index:0}
+.ty-stage>*{position:relative;z-index:1}
+.ty-stage:focus{outline:none}
+.ty-stage:focus-visible{outline:var(--space-3) solid var(--or);outline-offset:calc(-1 * var(--space-3))}
+
+.ty-pennants{display:flex;gap:var(--space-6);padding:var(--space-12) var(--space-16) 0;align-items:flex-start;flex-wrap:wrap}
+.ty-stage .ty-pennant{position:relative;cursor:pointer;border:0;background:var(--ty-pennant-idle);color:var(--ink-2);padding:var(--space-9) var(--space-22) var(--ty-pennant-tail) var(--space-14);text-align:left;clip-path:polygon(0 0,100% 0,100% 100%,50% calc(100% - var(--space-8)),0 100%);transition:transform var(--motion-fast) var(--ease),background var(--motion-fast)}
+.ty-pennant b{display:block;font:800 var(--text-aside)/1.1 var(--font-display);letter-spacing:var(--track-chamber);text-transform:uppercase;color:var(--ink)}
+.ty-pennant span{display:block;font:var(--text-small)/1.3 var(--font-ui);color:var(--muted)}
+.ty-pennant i{font:700 var(--text-label)/1 var(--font-num);color:var(--muted);font-style:normal;margin-right:var(--space-6)}
+.ty-pennant:hover{transform:translateY(var(--space-2))}
+.ty-pennant[aria-pressed="true"]{background:var(--or);transform:translateY(var(--space-4))}
+.ty-pennant[aria-pressed="true"] b,.ty-pennant[aria-pressed="true"] span,.ty-pennant[aria-pressed="true"] i{color:var(--ty-parchment-ink)}
+.ty-pennant[data-mode="chat"][aria-pressed="true"]{background:var(--azure)}
+.ty-pennant[data-mode="ladder"][aria-pressed="true"]{background:var(--gules)}
+.ty-pennant[data-mode="chat"][aria-pressed="true"] b,.ty-pennant[data-mode="chat"][aria-pressed="true"] span,.ty-pennant[data-mode="chat"][aria-pressed="true"] i,
+.ty-pennant[data-mode="ladder"][aria-pressed="true"] b,.ty-pennant[data-mode="ladder"][aria-pressed="true"] span,.ty-pennant[data-mode="ladder"][aria-pressed="true"] i{color:var(--white)}
+.ty-yard-keys{margin-left:auto;display:flex;gap:var(--space-12);align-items:center;color:var(--ty-stage-text-dim);font-size:var(--text-small);flex-wrap:wrap;padding-top:var(--space-6)}
+.ty-yard-keys kbd{color:var(--ink-2);margin-right:var(--space-3)}
+.ty-announcement{position:absolute;width:var(--space-1);height:var(--space-1);padding:0;margin:calc(-1 * var(--space-1));overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}
+
+.ty-stage[data-motion="reduced"] *, .ty-stage[data-motion="reduced"] *::before, .ty-stage[data-motion="reduced"] *::after{animation-duration:var(--ty-reduced-duration)!important;animation-iteration-count:1!important;transition-duration:var(--ty-reduced-duration)!important;animation-delay:0ms!important}
+.ty-stage[data-motion="reduced"] .ty-rays{display:none}
+.ty-stage[data-motion="reduced"] .ty-card.ty-won,.ty-stage[data-motion="reduced"] .ty-card.ty-lost{transform:none}
+@media (prefers-reduced-motion:reduce){
+.ty-stage *, .ty-stage *::before, .ty-stage *::after{animation-duration:var(--ty-reduced-duration)!important;animation-iteration-count:1!important;transition-duration:var(--ty-reduced-duration)!important;animation-delay:0ms!important}
+.ty-stage .ty-rays{display:none}
+.ty-stage .ty-card.ty-won,.ty-stage .ty-card.ty-lost{transform:none}
+}

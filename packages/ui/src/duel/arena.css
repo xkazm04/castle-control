@@ -1,0 +1,37 @@
+/* Ported rule by rule from .port/winner/index.html, cc-t2-duel A/1. */
+.ty-arena{position:relative;min-height:var(--ty-arena-height);display:grid;grid-template-columns:minmax(0,1fr) var(--ty-center-width) minmax(0,1fr);align-items:center;gap:0 var(--space-8);padding:var(--space-8) var(--ty-arena-gutter) var(--space-6);min-height:0}
+.ty-arena.ty-with-hill{grid-template-columns:minmax(0,1fr) var(--ty-hill-center-width) minmax(0,1fr) var(--ty-hill-width)}
+/* tilt barrier behind the cards */
+.ty-barrier{position:absolute;left:0;right:0;top:64%;height:var(--space-16);background:repeating-linear-gradient(-45deg,var(--gules) 0 var(--ty-space-18),var(--cream) var(--ty-space-18) var(--space-36));opacity:.28;box-shadow:0 var(--space-8) 0 var(--ty-barrier-shadow);z-index:0}
+.ty-cone{position:absolute;top:calc(-1 * var(--space-10));width:44%;height:115%;pointer-events:none;z-index:0;filter:blur(var(--space-14));opacity:.0;transition:opacity .45s var(--ease)}
+.ty-cone i{position:absolute;inset:0;clip-path:polygon(42% 0,58% 0,100% 100%,0 100%);background:linear-gradient(var(--ty-beam-top),var(--ty-beam-bottom) 70%,transparent)}
+.ty-cone.ty-l{left:2%}.ty-cone.ty-r{right:2%}
+.ty-with-hill .ty-cone.ty-r{right:24%}
+.ty-arena[data-live="1"] .ty-cone{opacity:.85}
+.ty-arena[data-verdict="0"] .ty-cone.ty-r,.ty-arena[data-verdict="1"] .ty-cone.ty-l{opacity:.1}
+.ty-arena[data-verdict="0"] .ty-cone.ty-l,.ty-arena[data-verdict="1"] .ty-cone.ty-r{opacity:1}
+.ty-center{position:relative;z-index:2;display:grid;justify-items:center;gap:var(--space-8);text-align:center;color:var(--cream)}
+.ty-center .ty-round{font:800 var(--text-label)/1.15 var(--font-display);letter-spacing:var(--track-air);text-transform:uppercase;color:var(--or)}
+.ty-center .ty-of{font:var(--text-small)/1.3 var(--font-ui);color:var(--ty-stage-text-dim)}
+.ty-seal{position:relative;width:var(--ty-seal-size);aspect-ratio:1;display:grid;place-items:center}
+.ty-seal svg{position:absolute;inset:0;width:100%;height:100%}
+.ty-seal circle:first-of-type{stroke:var(--ty-seal-ring)}
+.ty-seal b{position:relative;font:900 var(--ty-vs-size,var(--text-subtitle))/1 var(--font-display);color:var(--or);letter-spacing:var(--ty-vs-tracking);text-shadow:0 var(--space-2) 0 var(--ty-seal-shadow)}
+.ty-seal.ty-pop{animation:ty-vspop .6s cubic-bezier(.2,1.5,.4,1) both}
+@keyframes ty-vspop{from{transform:scale(2.2) rotate(-20deg);opacity:0}to{transform:none;opacity:1}}
+.ty-seal .ty-ring{position:absolute;inset:calc(-1 * var(--space-10));width:calc(100% + var(--space-20));height:calc(100% + var(--space-20))}
+.ty-seal .ty-secs{position:relative;display:grid;line-height:1}
+.ty-seal .ty-secs b{font-size:var(--ty-seconds-size,var(--text-scene-aside))}
+.ty-seal .ty-secs small{font:700 var(--text-label)/1 var(--font-ui);letter-spacing:var(--track-air);color:var(--cream);text-transform:uppercase;margin-top:var(--space-2)}
+.ty-center .ty-hint{font:var(--text-small)/1.4 var(--font-ui);color:var(--ty-stage-text-dim);max-width:20ch}
+.ty-center .ty-hint kbd{color:var(--cream)}
+.ty-center .ty-tie{font:700 var(--text-small)/1.2 var(--font-ui);color:var(--or);letter-spacing:var(--track-label);text-transform:uppercase}
+
+@container ty-stage (max-width:980px){
+.ty-arena,.ty-arena.ty-with-hill{grid-template-columns:minmax(0,1fr) var(--ty-compact-center) minmax(0,1fr)}
+.ty-arena.ty-with-hill .ty-hill{grid-column:1/-1;max-height:none;margin-top:var(--space-12)}
+}
+@container ty-stage (max-width:620px){
+.ty-arena,.ty-arena.ty-with-hill{grid-template-columns:1fr;gap:var(--space-10)}
+.ty-center{order:-1}
+}

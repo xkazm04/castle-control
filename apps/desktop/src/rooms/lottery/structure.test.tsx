@@ -1,4 +1,4 @@
-﻿import { renderToStaticMarkup } from 'react-dom/server';
+import { renderToStaticMarkup } from 'react-dom/server';
 import { expect, test } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { ProposalQueue } from '@castle-control/ui/steward';
@@ -81,9 +81,7 @@ test('the seal frame removes only the shell slot top rule and spacing', () => {
   expect(rule).not.toMatch(/(?:^|;)\s*(?:border|margin|padding|padding-bottom)\s*:/);
 });
 
-test('C puts the urn stage before the independently scrolling desk and its ordered tools', () => {
-  // lottery/README.md, C · Herald: “The stage moves to the left ... reverses
-  // today's writ-left, urn-right order.” This deliberately replaces the old order.
+test('Cutaway panels keep the urn before the independently scrolling desk and its ordered tools', () => {
   for (const drafted of [false, true]) {
     const queue = new ProposalQueue();
     if (drafted) draftRoll(queue);
@@ -94,10 +92,12 @@ test('C puts the urn stage before the independently scrolling desk and its order
     expect(deskStart).toBeGreaterThan(stageStart);
     const stage = markup.slice(stageStart, deskStart);
     const desk = markup.slice(deskStart);
-    expect(stage).toContain('class="cc-stage ');
-    expect(stage).toContain('class="cc-urn"');
-    expect(stage).toContain('class="cc-medals"');
-    expect(stage.match(/data-corner=/g)).toHaveLength(4);
+    expect(stage).toContain('data-role="lot-urn-panel"');
+    expect(stage).toContain('class="lottery-draw-svg"');
+    expect(stage).toContain('class="statrow"');
+    expect(stage.match(/data-role="lot-stat"/g)).toHaveLength(3);
+    expect(stage.match(/class="topline"/g)).toHaveLength(1);
+    expect(stage).toContain(`<h3 data-role="panel-title">${copy.stage.titles.urn}<em data-role="panel-gloss">`);
     expect(stage.match(/data-lot-dot=/g)).toHaveLength(lotterySession(queue).port.getSnapshot().entries.length);
     expect(stage).not.toContain('aria-label="Seal slot"');
     const sections = [drafted ? 'cc-ticket cc-writ' : 'class="cc-blazons"', 'class="cc-ribbon"',
@@ -118,9 +118,9 @@ test('blazons expose pressed selection, named shield charges and per-template ve
   cards.forEach((card, index) => {
     const draw = fixtureDraws[index];
     expect(card).toContain('class="cc-shield"');
-    expect(card).toContain(`class="cc-card-title">${draw?.name}</b>`);
+    expect(card).toContain(`data-role="writ-title">${draw?.name}</b>`);
     expect(card).toContain(`aria-pressed="${draw?.draw_id === 'free-prize'}"`);
-    expect(card).toContain('data-stamp="verdict"');
+    expect(card).toContain(`data-stamp="${index === 0 ? 'ok' : 'blocked'}"`);
   });
   expect(cards[0]).toContain('>?</text>');
   expect(cards[1]).toContain(copy.reasons.missing_rules);
@@ -134,11 +134,11 @@ test('stage medal values and cohort legend come from the selected fixture and am
   const state = lotterySession(queue).port.getSnapshot();
   const markup = render(queue);
   expect(markup).toContain(`class="cc-hero-figure" data-text="${state.entries.length}"`);
-  const medals = markup.match(/class="cc-medal-disc">([\s\S]*?)<\/span>/g) ?? [];
+  const medals = markup.match(/class="ring">([\s\S]*?)<\/span>/g) ?? [];
   expect(medals).toEqual([
-    `class="cc-medal-disc">${state.draw.rules.winner_count}</span>`,
-    `class="cc-medal-disc">${fixtureCooldown.length}</span>`,
-    'class="cc-medal-disc">1/3</span>',
+    `class="ring">${state.draw.rules.winner_count}</span>`,
+    `class="ring">${fixtureCooldown.length}</span>`,
+    'class="ring">1/3</span>',
   ]);
   for (const cohort of ['new_account', 'subscriber', 'raider'] as const) {
     expect(markup).toContain(`<li data-cohort="${cohort}">${copy.cohorts[cohort]} <b>${state.entries.filter(entry => entry.cohort === cohort).length}</b>`);
@@ -147,7 +147,7 @@ test('stage medal values and cohort legend come from the selected fixture and am
   const proposal = queue.pending('lottery')[0];
   if (!proposal) throw new Error('Missing generated proposal');
   queue.amend(proposal.id, [{ key: 'winners', value: 5 }]);
-  expect(render(queue)).toContain('class="cc-medal-disc"><s>3</s><ins>5</ins>');
+  expect(render(queue)).toContain('class="ring"><s>3</s><ins>5</ins>');
 });
 
 test('a drafted writ has exactly one shared hold control and no ticket authorization control', () => {
@@ -156,4 +156,23 @@ test('a drafted writ has exactly one shared hold control and no ticket authoriza
   expect(markup.match(/aria-label="Hold to seal"/g)).toHaveLength(1);
   expect(markup.match(/aria-label="Seal hold progress"/g)).toHaveLength(1);
   expect(markup.slice(markup.indexOf('cc-ticket cc-writ'), markup.indexOf('class="cc-ribbon"'))).not.toContain('cc-seal-button');
+});
+
+
+test('fixture and core put the fitted draw stage before the compact legend and statistics', () => {
+  const port = createCoreLotsPort({ mode: 'core', endpoint: 'http://127.0.0.1:3210/', session_token: 'a'.repeat(64) });
+  const rooms = [render(new ProposalQueue()), renderToStaticMarkup(<ConnectedLotsRoom port={port} />)];
+  for (const markup of rooms) {
+    const pool = markup.slice(markup.indexOf('data-role="lot-urn-panel"'), markup.indexOf('class="cc-desk"'));
+    // The drawing is the flexible frame's first content, never below a large count block.
+    expect(pool).toMatch(/class="lottery-stage"><div class="lottery-draw-stage"/);
+    const drawing = pool.indexOf('class="lottery-draw-stage"');
+    const readings = pool.indexOf('class="lottery-pool-readings"');
+    const stats = pool.indexOf('class="statrow"');
+    expect(drawing).toBeGreaterThan(0);
+    expect(readings).toBeGreaterThan(drawing);
+    expect(stats).toBeGreaterThan(readings);
+    expect(pool.slice(drawing, readings)).not.toContain('class="cc-tally"');
+    expect(pool.match(/data-role="lot-stat"/g)).toHaveLength(3);
+  }
 });

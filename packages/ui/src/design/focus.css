@@ -2,7 +2,6 @@
 .cc-design-focus header { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: var(--space-12); }
 .cc-design-focus h2 { margin: 0; font: 800 var(--text-chamber)/1.2 var(--font-display); }
 .cc-design-focus h3 { margin: 0 0 var(--space-12); font: 700 var(--text-section)/1.3 var(--font-ui); }
-.cc-design-focus header strong { color: var(--or-text); font-size: var(--text-label); }
 .cc-design-focus p { font-size: var(--text-body); }
 .cc-design-comparison { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-16); }
 .cc-design-comparison > section { min-width: 0; padding: var(--space-12); border-top: var(--rule-thin) solid var(--line); }

@@ -3,8 +3,8 @@
 The Director's first run on main `71fd803` reported 58 failures, including
 default serif leakage and the overlay's missing token styles. This polish
 delivery addresses those sources and scopes the OBS transparency policy below.
-It has not rerun Chrome or claimed new screenshots. This lane is not part of
-`pnpm gate` or CI yet.
+It has not rerun Chrome or claimed new screenshots. The browser lane is not part
+of `pnpm gate` or CI yet; its Node harness and style-policy tests run in `pnpm gate`.
 
 Main now declares **`@playwright/test@1.64.1`** as an exact root devDependency;
 the config enforces that exact runtime version. This polish delivery changes no
@@ -18,7 +18,8 @@ repo root:
 pnpm --config.verify-deps-before-run=false e2e
 ```
 
-The expanded command is `playwright test -c e2e/playwright.config.ts`.
+`pnpm e2e` runs the desktop/overlay lane, then `pnpm e2e:site`, which builds the site before running `e2e/site.config.ts` against its preview server on 5175; either lane failing makes the command fail.
+Extra arguments in `pnpm e2e --headed` go only to the desktop lane; use `pnpm e2e:site --headed` for site arguments.
 Optional `--headed` is for manual review; **headless is the default**. The two
 projects use system `channel: 'chrome'` at 1440×900 and 1280×800. No bundled
 browser download is needed. The server command is the desktop workspace's Vite
@@ -31,13 +32,14 @@ No core, Twitch viewer, credential or paid call is involved.
 `inventory.ts` reads the actual `chambers` declaration in the UI shell, walks the
 `canonicalHash` AST for literals and ID templates, and runs that function in an
 isolated VM to deduplicate aliases into canonical routes. It currently finds
-eight routes, including `#/demo`. Unknown template syntax fails rather than silently losing a route.
+nine routes, including `#/demo` and the OBS setup page `#/stream` (added in
+`2ebd543`). Unknown template syntax fails rather than silently losing a route.
 Empty ID, route, token and rendered-element inventories fail loudly. CSS custom
 property names come from declarations in `packages/tokens/src/generated.css`
 (currently 122 unique names), with no maintained token list.
 
 Every route runs in paper and stock, with the Steward resting and open: currently
-32 desktop cases per project. The Steward is already mounted in the current
+36 desktop cases per project. The Steward is already mounted in the current
 shell; “open” focuses its real input via the rampart button and selects Overview's
 Talkback tab where present. It submits no request. Routes wait for fixture and
 lazy content, and assert that navigation stayed on the intended canonical hash.
@@ -53,6 +55,12 @@ fail, and the rendered simulated layer must use the token UI font and ink.
 Every desktop route retains the opaque canvas policy and all other checks.
 The kit's `.cc-frame` base styles own select and text-like input chrome in every room.
 Every desktop case audits visible fields for `appearance: none` and all four token borders (hidden, checkbox, radio and range inputs are excluded).
+Fields require `--rule-thin`, except the named `strongBorderFields` list in
+`styles.ts`: the Cutaway Steward prompt requires exactly `--rule-strong`.
+Both paths require solid ink on all four sides, resolved under the field's theme.
+The isolated Beacons overlay explicitly audits every declaration in its embedded
+`generated-base.css` (135 tokens); desktop pages still require the full
+`generated.css` inventory (299 tokens). Transparency alone never selects the subset.
 The current chamber navigation appears as the keep cross-section, chamber strip
 or room locator rather than the old vertical column; all are audited under that
 surface role, alongside the frame, rampart and room body. Each surface counts its
@@ -84,6 +92,13 @@ by real runs. This is a style smoke lane, not a pixel-diff baseline suite.
 
 ## Checks without Playwright
 
+`pnpm gate` starts with `scripts/e2e-harness-test.mjs`, which counts the Node
+`e2e/*.test.ts` inventory and refuses an empty one. It runs both `harness.test.ts`
+and `styles.test.ts` before Cargo or browser builds. The harness CSP matches the
+native isolated overlay policy, including exactly `/push/beacons` and
+`/push/gatehouse` on its own localhost port; the vote bar added in `dd93ea4`
+subscribes to the latter. Native CSP and its strict parity assertion stay intact.
+
 ```powershell
 node --test --test-isolation=none e2e/harness.test.ts e2e/styles.test.ts
 pnpm --config.verify-deps-before-run=false exec tsc -p e2e/tsconfig.offline.json
@@ -94,6 +109,8 @@ The Node tests exercise live source discovery, synthetic route additions,
 negative/empty inventories, loopback URL policy, and the real contract-parser
 and static/SSE server. Policy tests also keep desktop canvas checks strict and
 reject missing/non-token overlay text styles under the transparency exception.
+They cover both field widths, every border side, both themes, rejected native
+chrome, and missing tokens under both the full and explicitly scoped base sheets.
 They require no browser or Playwright runtime.
 `--test-isolation=none` runs them in-process because this headless Windows
 environment can deny the default test runner's child-process spawn.
@@ -120,3 +137,27 @@ green full gate. The attempted browser command stopped with `unknown command
 'test'`; `import.meta.resolve('@playwright/test')` reports `ERR_MODULE_NOT_FOUND`.
 The root manifest therefore adds only the requested script, leaving dependencies
 and `pnpm-lock.yaml` unchanged for the Director's installation.
+
+## WP15 merged Cutaway reconciliation (2026-10-31)
+
+The initial Director run recorded 66 passes and 96 failures; the first WP15
+rerun reached 160/162, leaving only the two Map Room journeys at 1280×800.
+No browser ran in the builder sandbox. The compact-height follow-up still
+requires the Director's desktop lane rerun at both viewports.
+
+| Failure | Cause and change |
+| --- | --- |
+| 89 field audits | The Steward prompt's fidelity border is intentionally strong. One named selector exception resolves that token; ordinary fields still require thin ink borders. Pure policy tests exercise acceptance and rejection on every side in paper and stock. No kit CSS changed. |
+| Demo provenance, both sizes | The marks still render as shared Stamps. Assertions now use `data-stamp="simulated"` and `data-stamp="off-air"`, including the clipping check, in every one of the 36 states. |
+| Lot policy warning, both sizes | The failure snapshot contains the desk's own warning paragraph as well as template-card copy. The locator now requires the exact warning paragraph inside `Writ desk contents`, rather than a direct child of `.cc-desk`. No Lot UI changed. |
+| Map Room journeys, 1280×800 | The first compact fix left the size-contained field at 0×0. A wrapper minimum did not give its flex descendants a definite height. The rendered wrapper now has an active-view hook and a definite compact height. Table and Rehearse receive non-shrinking query-container heights derived from board geometry and the space-28 radius; Spyglass fills a bounded scroll area and retains its source-sized previews. All overrides are restricted to heights up to 50rem. The original 44px target and selection assertions remain. Browser confirmation is pending. |
+| Isolated Beacons overlay, both sizes | The only reported errors are desktop-only token names absent from the renderer's deliberately embedded base sheet. Only this test opts into the base-sheet inventory; it still checks every shipped token, font, ink, surface, canvas and overflow rule. Desktop and other callers retain the full inventory. No overlay product CSS or bundle changed. |
+
+Validation: desktop typecheck/lint and 1,019 tests in 103 files pass, including
+the rendered active-view hook and compact sample-board geometry regressions. UI
+typecheck/lint and 441 tests in 30 files pass. The real Playwright-declaration e2e
+typecheck, e2e ESLint, six in-process style-policy tests and `node scripts/check.mjs`
+pass. The combined harness retains exactly the two Director-identified main
+failures: nine routes versus eight expected, and the native/harness overlay CSP
+disagreement. Those tests and the harness policy are unchanged. No installs, git
+writes, live calls or browser runs were performed.

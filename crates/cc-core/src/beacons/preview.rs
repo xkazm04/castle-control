@@ -14,6 +14,15 @@ pub(super) struct Preview {
 }
 
 impl BeaconsModule {
+    pub(crate) fn stop_simulations(&self) -> Result<(), ErrorEnvelope> {
+        let mut state = self.state.lock().map_err(|_| internal())?;
+        let ids: Vec<_> = state.previews.keys().cloned().collect();
+        for id in ids {
+            cancel(&mut state, &id, self.native.as_ref())?;
+        }
+        Ok(())
+    }
+
     pub(super) fn start_preview(
         &self,
         state: &mut State,

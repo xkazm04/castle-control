@@ -29,6 +29,7 @@ fn participants(module: &LotsModule) -> LauncherResult {
             .map_err(core_error)?;
         let passed = PassedMessage::from_verdict(
             MessageFacts {
+                simulated: true,
                 message_id: format!("simulated-message-{id}").try_into()?,
                 user_id,
                 at: recorded::RecordedBeacon.now(),

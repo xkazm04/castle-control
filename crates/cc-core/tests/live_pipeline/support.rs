@@ -52,6 +52,7 @@ pub async fn rpc(app: &AppState, method: &str, params: Value) -> Value {
 }
 pub fn chat(user: u32, text: &str) -> ChatIngress {
     ChatIngress {
+        simulated: true,
         login: format!("simulated_{user}"),
         message: cc_twitch::ChatMessage {
             id: format!("simulated-{user}"),

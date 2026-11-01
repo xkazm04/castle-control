@@ -1,9 +1,13 @@
 import assert from 'node:assert/strict';
 import type { Page } from '@playwright/test';
-import { counted, tokens } from './inventory.ts';
+import { counted, overlayTokens, tokens } from './inventory.ts';
 
 export type Surface = { name: string; selector: string };
-type StylePolicy = { canvas: 'opaque' | 'obs-transparent' };
+type StylePolicy = { canvas: 'opaque' | 'obs-transparent'; tokenSheet?: 'overlay-base' };
+
+export function styleTokenNames(policy: StylePolicy): string[] {
+  return policy.canvas === 'obs-transparent' && policy.tokenSheet === 'overlay-base' ? overlayTokens : tokens;
+}
 export const desktopSurfaces: Surface[] = [
   { name: 'frame', selector: '.cc-frame' },
   { name: 'rampart', selector: '.cc-rampart' },
@@ -14,6 +18,12 @@ export const desktopSurfaces: Surface[] = [
 
 type FieldBorder = { color: string; style: string; width: string };
 type FieldStyle = { appearance: string; borders: FieldBorder[] };
+type StrongBorderField = { name: string; selector: string; reason: string };
+
+export const strongBorderFields: readonly StrongBorderField[] = [
+  { name: 'Steward bar prompt', selector: '.cc-steward-bar input[aria-label="Talk to the Steward..."]',
+    reason: 'The Cutaway fidelity contract prints the Steward prompt with --rule-strong.' },
+];
 
 /** Pure policy: removing native chrome alone does not establish kit borders. */
 export function fieldStyleErrors(actual: FieldStyle, expected: FieldBorder): string[] {
@@ -29,14 +39,15 @@ export function fieldStyleErrors(actual: FieldStyle, expected: FieldBorder): str
 }
 
 /** Runs in the page, resolving tokens under each field's own theme scope. */
-export function measureFields() {
+export function measureFields(strongFields: readonly StrongBorderField[]) {
   const selector = 'select, input:not([type="hidden"], [type="checkbox"], [type="radio"], [type="range"])';
   const fields = [...document.querySelectorAll(selector)].filter((node): node is HTMLElement =>
     node instanceof HTMLElement && node.checkVisibility({ checkOpacity: true, checkVisibilityCSS: true }));
   return fields.map(field => {
     const probe = document.createElement('span');
     probe.hidden = true;
-    probe.style.border = 'var(--rule-thin) solid var(--ink)';
+    const strong = strongFields.find(exception => field.matches(exception.selector));
+    probe.style.border = `var(${strong ? '--rule-strong' : '--rule-thin'}) solid var(--ink)`;
     if (!field.parentElement) throw new Error('Cannot resolve field theme tokens');
     field.parentElement.append(probe);
     const token = getComputedStyle(probe);
@@ -54,7 +65,7 @@ export function measureFields() {
 }
 
 export async function auditFields(page: Page): Promise<void> {
-  const fields = await page.evaluate(measureFields);
+  const fields = await page.evaluate(measureFields, strongBorderFields);
   counted('visible desktop fields', fields.length);
   const errors = fields.flatMap(field => fieldStyleErrors(field.actual, field.expected).map(error => `${field.name}: ${error}`));
   console.log(`[e2e field inventory] ${JSON.stringify(fields)}`);
@@ -136,7 +147,8 @@ export function measureStyles({ names, surfaces, policy }: { names: string[]; su
 
 /** No injected product CSS: compare rendered styles to a fresh browser document. */
 export async function auditStyles(page: Page, surfaces: Surface[], policy: StylePolicy = { canvas: 'opaque' }): Promise<void> {
-  const report = await page.evaluate(measureStyles, { names: tokens, surfaces, policy });
+  const names = styleTokenNames(policy);
+  const report = await page.evaluate(measureStyles, { names, surfaces, policy });
   counted('resolved-token checks', report.tokenCount);
   counted('surface groups', report.walkedSurfaces.length);
   counted('visible elements', report.visibleCount);

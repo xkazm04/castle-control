@@ -42,8 +42,9 @@ impl OverlayPage<'_> {
 }
 
 /// Keep raw keys exact, as in the L5 guard: no decoding, duplicate identity,
-/// unknown key or empty query segment. Scale/anchor values are presentation-only
-/// and may be empty, repeated or invalid; each renderer owns their defaults.
+/// unknown key or empty query segment. Scale/anchor (and, on draw pages, shape)
+/// values are presentation-only and may be empty, repeated or invalid; each
+/// renderer owns their defaults.
 pub fn parse<'a>(path: &'a str, query: Option<&'a str>) -> Option<OverlayPage<'a>> {
     if path == SPIKE_ROUTE {
         return query.is_none().then_some(OverlayPage::Spike);
@@ -74,7 +75,8 @@ pub fn parse<'a>(path: &'a str, query: Option<&'a str>) -> Option<OverlayPage<'a
     let mut package_hash = None;
     if let Some(query) = query {
         for part in query.split('&') {
-            if matches!(part.split('=').next(), Some("scale" | "anchor")) {
+            let key = part.split('=').next();
+            if matches!(key, Some("scale" | "anchor")) || (!beacons && key == Some("shape")) {
                 continue;
             }
             if !beacons || package_hash.is_some() {

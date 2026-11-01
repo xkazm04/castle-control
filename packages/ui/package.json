@@ -6,7 +6,10 @@
   "exports": {
     ".": "./src/index.ts",
     "./steward": "./src/steward/index.ts",
-    "./design": "./src/design/index.ts"
+    "./design": "./src/design/index.ts",
+    "./duel": "./src/duel/index.ts",
+    "./stamp": "./src/stamp/table.ts",
+    "./stamp.css": "./src/stamp/stamp.css"
   },
   "sideEffects": [
     "./src/kit.tsx",
@@ -23,7 +26,8 @@
     "@castle-control/contract": "workspace:*",
     "@castle-control/tokens": "workspace:*",
     "react": "catalog:",
-    "react-dom": "catalog:"
+    "react-dom": "catalog:",
+    "@castle-control/duel": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "24.10.0",

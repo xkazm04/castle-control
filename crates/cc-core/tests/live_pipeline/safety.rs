@@ -56,7 +56,7 @@ async fn saved_armed_rule_is_would_act_and_shadow_lane_has_no_moderation_client(
     let record: serde_json::Value = serde_json::from_str(&records[0].content).unwrap();
     assert!(record.get("intent").is_none());
     assert_eq!(record["rule_snapshot"]["mode"], "armed");
-    assert_eq!(record["simulated"], false);
+    assert_eq!(record["simulated"], true);
     // Architectural regression guard: the consumer's entire source has only
     // domain capabilities, never a bridge/client/vault/executor to invoke.
     for source in [
@@ -152,6 +152,7 @@ async fn held_and_denied_tokens_are_rejected_at_the_lots_boundary() {
             metadata: None,
         };
         let facts = cc_lots::MessageFacts {
+            simulated: true,
             message_id: message.message_id.clone(),
             user_id: message.user_id.clone(),
             at: String::from(message.at.clone()).parse().unwrap(),

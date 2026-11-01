@@ -1,4 +1,4 @@
-import { useState, useSyncExternalStore } from 'react';
+import { useMemo, useState, useSyncExternalStore } from 'react';
 import type { ProposalQueue } from '@castle-control/ui/steward';
 import type { ReactNode } from 'react';
 import type { Snapshot } from '../../model.js';
@@ -8,7 +8,8 @@ import { beaconsCopy as copy } from '../../beacons-copy.js';
 import { ProposalLayers } from './proposal-layers.jsx';
 import { Offerings } from './timeline.jsx';
 import { TestFire } from './test-fire.jsx';
-import { FixtureCurve } from './fixture-curve.jsx';
+import { createFixtureCurveEditor, FixtureCurve } from './fixture-curve.jsx';
+import { NightReplay } from './replay.jsx';
 import { FixtureSourceCopy } from './source-copy.jsx';
 import { createAppearanceSession } from './appearance-state.js';
 import { AppearanceControls } from './appearance.jsx';
@@ -30,11 +31,15 @@ export function VisualsWork({ queue, port, seal_slot }: { queue?: ProposalQueue;
   const [appearance] = useState(createAppearanceSession);
   const preview = useSyncExternalStore(adapter.subscribe, adapter.getSnapshot, adapter.getSnapshot);
   const selected = preview.visuals.find(item => item.visual.visual_id === preview.selected);
-  if (!selected) return <p role="status">{copy.no_visual}</p>;
+  // One editor per selected visual: the night replay and the bench drag the same draft.
+  const editor = useMemo(() => preview.visuals.some(item => item.visual.visual_id === preview.selected)
+    ? createFixtureCurveEditor(adapter) : undefined, [adapter, preview.selected]);
+  if (!selected || !editor) return <p role="status">{copy.no_visual}</p>;
   return <section className="visuals-room" aria-label={copy.work}>
     <div className="visuals-board">
       <VisualSelector visuals={preview.visuals} selected={preview.selected} on_select={item => adapter.select(item.visual.visual_id)}
         draft={<ProposalLayers chamber="visuals" {...(queue ? { queue } : {})} />} />
+      <NightReplay item={selected} editor={editor} visuals={preview.visuals} on_select={adapter.select} {...(queue ? { queue } : {})} />
       <BeaconBench name={selected.visual.name} notice={preview.notice}>
         <BeaconBay title={copy.driven_by} gloss={copy.input_gloss}>
           <InputPicker source={selected.visual.input?.source ?? ''} busy={false} on_change={adapter.input} />
@@ -43,7 +48,7 @@ export function VisualsWork({ queue, port, seal_slot }: { queue?: ProposalQueue;
             intensity={selected.intensity} burst={preview.events[0]?.id ?? 0} />
         </BeaconBay>
         <BeaconBay title={copy.curve} gloss={copy.curve_gloss}>
-          <FixtureCurve key={preview.selected} item={selected} port={adapter} />
+          <FixtureCurve key={preview.selected} item={selected} port={adapter} editor={editor} />
         </BeaconBay>
         <BeaconBay title={copy.test_fire} gloss={copy.test_gloss}>
           <TestFire port={adapter} selected={selected} on_end={adapter.end} />

@@ -2,9 +2,10 @@ import type { ValidateFunction } from 'ajv';
 import { parseJson } from './door.mjs';
 import { params, results, event, error } from './generated/validation.js';
 import { designPackage, askParams, askResult, writ, writSealParams, writSealResult,
-  writTearParams, writTearResult, stewardEventPayload } from './generated/validators.mjs';
+  writTearParams, writTearResult, stewardEventPayload, rehearsalEvent } from './generated/validators.mjs';
 import type { DesignPackage, ErrorEnvelope, RpcMethods, StreamEvent, AskParams, AskResult,
-  Writ, WritSealParams, WritSealResult, WritTearParams, WritTearResult, StewardEventPayload } from './generated/types.js';
+  Writ, WritSealParams, WritSealResult, WritTearParams, WritTearResult, StewardEventPayload,
+  RehearsalEventPayload } from './generated/types.js';
 
 export type RpcMethod = keyof RpcMethods;
 export type RpcParams<M extends RpcMethod> = RpcMethods[M]['params'];
@@ -31,6 +32,7 @@ export function parseWritSealResult(text: string): WritSealResult { return check
 export function parseWritTearParams(text: string): WritTearParams { return checked(writTearParams, parseJson(text)); }
 export function parseWritTearResult(text: string): WritTearResult { return checked(writTearResult, parseJson(text)); }
 export function parseStewardEvent(text: string): StewardEventPayload { return checked(stewardEventPayload, parseJson(text)); }
+export function parseRehearsalEvent(text: string): RehearsalEventPayload { return checked(rehearsalEvent, parseJson(text)); }
 export function parseParams<M extends RpcMethod>(method: M, value: unknown): RpcParams<M> {
   return checked(params.get(method), value);
 }

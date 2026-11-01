@@ -40,6 +40,7 @@ impl LotsModule {
             .now()
             .with_nanosecond(0)
             .expect("zero nanoseconds is valid");
+        let simulated = self.simulated || roll.simulated(at);
         let sealed = seal_roll(
             roll,
             &guarded,
@@ -70,7 +71,11 @@ impl LotsModule {
                 "seal announcement missed the target round; attempt consumed",
             ));
         }
-        self.emit(LotsEventPayload::Sealed(published.clone()), Some(content))?;
+        self.emit(
+            LotsEventPayload::Sealed(published.clone()),
+            Some(content),
+            simulated,
+        )?;
         // Publication is synchronous. Do not accept a late announcement even if
         // store/event work exhausted the margin; it can never be cast.
         if self
@@ -91,6 +96,7 @@ impl LotsModule {
                 published: published.clone(),
                 seed,
                 chain,
+                simulated,
             },
         );
         encode(published)
@@ -156,9 +162,13 @@ impl LotsModule {
             writ: serde_json::from_str(&result.writ().to_json().map_err(|_| internal())?)
                 .map_err(|_| internal())?,
         };
-        storage::save_cast(&mut state.store, &saved, at, self.simulated)?;
+        storage::save_cast(&mut state.store, &saved, at, pending.simulated)?;
         state.rolls.insert(pending.draw_id, result.into_next_roll());
-        self.emit(LotsEventPayload::Cast(saved.result.clone()), None)?;
+        self.emit(
+            LotsEventPayload::Cast(saved.result.clone()),
+            None,
+            pending.simulated,
+        )?;
         encode(saved.result)
     }
 }

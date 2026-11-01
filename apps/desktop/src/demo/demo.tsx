@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { InkButton } from '@castle-control/ui';
+import { InkButton, Stamp } from '@castle-control/ui';
 import { art, background, frames, initialDemoState, layouts, shots, styles } from './model.js';
 import type { DemoState } from './model.js';
 import { copy } from './copy.js';
@@ -22,7 +22,8 @@ export function DemoPreview({ state }: { state: DemoState }) {
   return <div className="demo-page" data-theme="stock">
     <div className={`stage${state.layout === 'chat' ? ' chatting' : ''}`}>
       <img className="bg" src={background(state)} alt="" />
-      <span className="live">LIVE</span><span className="sim">{copy.provenance}</span>
+      <div className="demo-air"><Stamp kind="off-air" word="On air · simulated" /></div>
+      <div className="demo-provenance"><Stamp kind="simulated" word={copy.provenance} /></div>
       <div className="ov o-vote"><img src={art(state.style, 'votebar')} alt="Vote bar" />
         <span className="plate">Gatehouse vote · Raze the mill <em>62%</em> · Spare it <em>38%</em> · <em>0:41</em></span></div>
       <div className="ov o-altar"><img src={art(state.style, 'altar')} alt="Hype altar" />

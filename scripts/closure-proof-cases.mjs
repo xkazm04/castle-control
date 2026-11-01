@@ -1,13 +1,50 @@
 import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import ts from 'typescript';
 
 export function closureCases(proof, root) {
+  const harnessRunners = Object.fromEntries(['gate', 'e2e-harness-test', 'files', 'run']
+    .map((name) => [`scripts/${name}.mjs`, readFileSync(join(root, 'scripts', `${name}.mjs`), 'utf8')]));
+  for (const name of ['harness', 'styles']) {
+    const simulatedTest = (file) => `import { test } from 'node:test';\ntest('simulated ${file} proof', () => { ${file === name ? `throw new Error('simulated ${file} gate failure');` : '/* Simulated passing peer. */'} });\n`;
+    proof(`E2E harness: failing ${name} through root gate`, ['$S/scripts/gate.mjs'],
+      `simulated ${name} gate failure`, {
+        ...harnessRunners,
+        'e2e/harness.test.ts': simulatedTest('harness'),
+        'e2e/styles.test.ts': simulatedTest('styles'),
+      });
+  }
+  proof('Empty E2E harness tests', ['$R/scripts/e2e-harness-test.mjs'],
+    'e2e harness tests: refused empty inventory', {}, { empty: true });
   const rust = 'crates/proof/src/lib.rs';
   const source = 'packages/proof/src/index.ts';
   const pkg = (mode) => ['$S/scripts/package-gate.mjs', mode];
   const cwd = { cwd: 'packages/proof' };
+  const siteLabels = [
+    'Stylised illustration', 'drawn, not captured', 'Sample data', 'Fictional channel',
+    'invented numbers', 'working name', 'Not affiliated with or endorsed by Twitch',
+    'In development', 'check releases', 'signing status',
+    'Public Extension availability awaits Twitch approval and review',
+  ];
+  proof('Site check: built JS exceeds byte budget', ['$R/apps/site/check.mjs', '$S/apps/site/dist'],
+    'exceed 180 KiB budget', {
+      'apps/site/dist/index.html': '<!doctype html><script type="module" src="./assets/site.js"></script>\n',
+      'apps/site/dist/assets/site.js': `// Simulated built-site budget fixture.\n// ${siteLabels.join(' · ')}\n${' '.repeat(180 * 1024 + 1)}`,
+    });
+  const tokenCss = readFileSync(join(root, 'packages/tokens/src/generated.css'), 'utf8');
+  for (const [label, packagePath, limit] of [
+    ['Desktop', 'apps/desktop', 384 * 1024],
+    ['Kit', 'packages/ui', 256 * 1024],
+  ]) {
+    const dist = `${packagePath}/dist`;
+    proof(`${label} budget: first load over budget`, [`$R/${packagePath}/src/check-build.ts`, `$S/${dist}`],
+      `${label} first-load budget exceeded`, {
+        [`${dist}/index.html`]: '<!doctype html><script type="module" src="/assets/initial.js"></script><link rel="stylesheet" href="/assets/initial.css">\n',
+        [`${dist}/assets/initial.js`]: '// Simulated oversized first-load JS fixture.\n'.padEnd(limit + 1, ' '),
+        [`${dist}/assets/initial.css`]: tokenCss,
+      });
+  }
   proof('Version drift: bumped package manifest', ['$R/scripts/version-drift.mjs'],
     'package.json: expected 0.1.0, found 0.2.0', {
       'Cargo.toml': '[workspace]\nmembers = ["crates/*"]\n[workspace.package]\nversion = "0.1.0"\n',
@@ -78,6 +115,21 @@ export function closureCases(proof, root) {
   proof('Workspace scripts: blank test script', ['$S/scripts/workspaces.mjs'], 'missing test script', {
     'packages/proof/package.json': '{"scripts":{"typecheck":"tsc","lint":"eslint","test":""}}\n',
   });
+  const tokens = 'packages/tokens/src/generated.css';
+  proof('Type floor: raw px font size', ['$S/scripts/check.mjs', 'type-floor'], 'font size must use a --text-* token', {
+    'packages/ui/src/seed.css': '.x{font-size:12px}',
+    [tokens]: ':root{--text-body:14px;}',
+  });
+  proof('Type floor: token below floor', ['$S/scripts/check.mjs', 'type-floor'], 'below the 13px floor', {
+    [tokens]: ':root{--text-tiny:12px;}',
+  });
+  proof('Type floor: stage token below stage floor', ['$S/scripts/check.mjs', 'type-floor'], 'below the 15px floor', {
+    [tokens]: ':root{--text-stage-x:14px;}',
+  });
+  proof('Type floor: TSX literal below floor', ['$S/scripts/check.mjs', 'type-floor'], 'font size 12 is below the 13px floor', {
+    'packages/ui/src/seed.tsx': '// Simulated type-floor proof.\nexport const seed = <svg><text fontSize={12}>Simulated</text></svg>;\n',
+    [tokens]: ':root{--text-body:14px;}',
+  });
   const schemaPath = join(root, 'packages/contract/src/generated/contract.schema.json');
   const readContract = (name) => readFileSync(join(root, 'packages/contract/scripts', name), 'utf8');
   const moduleUrl = (local) => pathToFileURL(join(root, 'packages/contract', local)).href;
@@ -133,7 +185,7 @@ throw new Error(usage.defects[0]);
     'generator/codegen.mjs': readContract('codegen.mjs'),
     'generator/parity.mjs': readContract('parity.mjs'),
   });
-  for (const gate of ['boundaries', 'hygiene', 'file-cap', 'secrets']) {
+  for (const gate of ['boundaries', 'hygiene', 'file-cap', 'secrets', 'type-floor']) {
     proof(`Empty ${gate}`, ['$R/scripts/check.mjs', gate, '$S'], 'refused empty inventory', {}, { empty: true });
   }
   for (const gate of ['fetch', 'fmt', 'clippy', 'test']) {
@@ -157,4 +209,14 @@ throw new Error(usage.defects[0]);
   proof('Empty contract usage', ['$S/empty.mjs'], 'Refused empty usage inventory', {
     'empty.mjs': `import { usages } from ${JSON.stringify(moduleUrl('scripts/parity.mjs'))};\nusages(import.meta.dirname);\n`,
   }, { empty: true });
+  const duelPath = join(root, 'packages/duel/tsconfig.json');
+  const duel = ts.parseConfigFileTextToJson(duelPath, readFileSync(duelPath, 'utf8')).config;
+  const duelBasePath = resolve(dirname(duelPath), duel.extends);
+  const duelBase = ts.parseConfigFileTextToJson(duelBasePath, readFileSync(duelBasePath, 'utf8')).config;
+  proof('Duel engine: DOM reference without DOM lib', pkg('typecheck'), "Cannot find name 'document'", {
+    'packages/proof/tsconfig.json': JSON.stringify({
+      compilerOptions: { ...duelBase.compilerOptions, ...duel.compilerOptions }, include: ['src'],
+    }),
+    [source]: 'export const title = document.title;\n',
+  }, cwd);
 }

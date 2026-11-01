@@ -89,6 +89,15 @@ impl Gatehouse {
         let at = self.now()?;
         self.analysis.herald.get(params, at)
     }
+
+    /// Rust-only projection; the consensus RPC result stays unchanged.
+    pub fn consensus_simulated_in_window(
+        &self,
+        params: &ConsensusGetParams,
+        at: &Timestamp,
+    ) -> Result<bool> {
+        self.analysis.herald.simulated_in_window(params, at)
+    }
 }
 
 fn rules_only(config: &DrillConfiguration) -> Result<()> {

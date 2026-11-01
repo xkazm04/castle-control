@@ -1,6 +1,7 @@
 import type { Proposal } from './steward/port.js';
 import { isPending } from './steward/queue.js';
 import { SealButton } from './seal-button.jsx';
+import { Stamp } from './stamp/stamp.jsx';
 import './proposal-card.css';
 
 export type ProposalCardProps = {
@@ -16,7 +17,8 @@ export function ProposalCard({ proposal, focused = false, on_focus, on_seal, on_
   const pending = isPending(proposal);
   return <article className="cc-proposal-card" data-module={proposal.chamber} data-proposal-focused={focused}
     tabIndex={0} onFocus={on_focus} aria-label={`${proposal.title} proposal`} data-compact={compact || undefined}>
-    <p className="cc-proposal-stamp">{pending ? 'PROPOSAL · AWAITING YOUR SEAL' : `PROPOSAL · ${proposal.state.toUpperCase()}`}</p>
+    <p className="cc-proposal-stamp">{pending ? <Stamp kind="draft" word="PROPOSAL · AWAITING YOUR SEAL" />
+      : proposal.state === 'sealed' ? <Stamp kind="sealed" word="PROPOSAL · SEALED" /> : `PROPOSAL · ${proposal.state.toUpperCase()}`}</p>
     <h3>{proposal.title}</h3><p className="cc-proposal-revision">Rev {proposal.revision} · {proposal.state}</p>
     {!compact && <dl>{proposal.fields.map(field => <div className="cc-proposal-field" key={field.key}>
       <dt>{field.label}</dt><dd>{field.struck.map((old, index) => <s key={index}>{String(old)}</s>)}

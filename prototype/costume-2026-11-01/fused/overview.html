@@ -1,0 +1,359 @@
+<!doctype html>
+<html lang="en" data-theme="day">
+<!-- PORT NOTES
+Page: overview (route #/overview, "Preview and Proclaim"). Family C · Stained Glass.
+Introduces (page-local, kit naming):
+  .ov-scene (+--program)  one scene markup at two sizes; replaces StreamScene + CryptBackdrop (overview/scene.tsx, scene.css):
+                          the crypt is redrawn as a nave with two lancet windows and Malakor's skull; .ov-scene__label is a .cc-banderole.
+  .ov-layer (+--map --chat --urn --altar)  calm layer card with a chamber glass cap; aria-pressed = selected layer.
+                          Replaces .overview-layer / .overview-layer-select; .ov-draft replaces DraftFrame (dashed or frame + .cc-stamp--draft).
+  .ov-med                 small jewelled medallion with a chamber's keep icon; replaces KeepArt crops (.overview-room-art).
+  .ov-predella            the four layers as a row of selectable panes under the window (an altarpiece predella).
+                          Replaces ChamberStrip on the overview (packages/ui chamber-strip, .cc-chamber-tile, layer lamps).
+  .ov-side                sticky program column: .cc-monitor (ProgramMonitor), .cc-seal (SealButton proclaim), .ov-tabs
+                          (Talkback/Inspector tablist, replaces .overview-tabs), .ov-artifact (ArtifactActions), .ov-fair (FairnessBox).
+Moment: the layers ignite in chamber order (Lot, Gatehouse, Beacons, Map Room) and the predella lights with them.
+The Steward dock replaces the bench's inline StewardBar.
+Shell: copied verbatim from keep.html (.cc-rampart, .cc-tabs, .cc-dock, theme bootstrap, keymap script); see shell.css + glass.css header.
+-->
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Preview and Proclaim · Castle Control</title>
+<script>(function(){try{var t=new URLSearchParams(location.search).get('theme');if(t==='night'||t==='day')document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Grenze+Gotisch:wght@500;600;700;800&family=Alegreya+Sans:ital,wght@0,400;0,500;0,700;0,800;1,400&family=Alegreya+Sans+SC:wght@500;700;800&family=Alegreya:ital,wght@0,400;0,500;0,700;0,800;1,400;1,500&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="shell.css">
+<link rel="stylesheet" href="glass.css">
+<style>
+[hidden] { display: none !important; }
+/* ---- overview: Preview and Proclaim -------------------------------------- */
+.cc-shell { --pool-x: 50%; }
+.ov { --ov-side: 440px; display: grid; grid-template-columns: minmax(0, 1fr) var(--ov-side); gap: 24px; padding: 18px var(--gutter) 26px; align-items: start; }
+.ov-bench { display: grid; gap: 12px; min-width: 0; }
+.ov-head { display: flex; align-items: flex-end; gap: 16px; }
+.ov-head h1 { font: 600 50px/.9 var(--font-display); color: var(--ink); text-shadow: 0 0 calc(var(--glow-on) * 20px) var(--amethyst-glow); }
+.ov-head p { font: italic 400 20px/1.2 var(--font-aside); color: var(--ink-2); margin-bottom: 3px; }
+.ov-head .cc-stamp { margin-left: auto; margin-bottom: 6px; }
+/* the preview window */
+.ov-window { --w: min(100%, max(800px, calc((100vh - var(--rampart-h) - var(--tabs-h) - var(--dock-h) - 44px - 50px - 24px - 96px - 16px) * 16 / 9 + 16px)));
+  width: var(--w); justify-self: center; }
+.ov-window__bar { position: absolute; left: 50%; top: -12px; transform: translateX(-50%); z-index: 3; display: flex; gap: 8px; align-items: center; }
+/* the scene: one markup at two sizes (preview, program) */
+.ov-scene { --ov-wall: var(--stone-2); --ov-nave: color-mix(in srgb, var(--stone-3) 75%, var(--lead)); --ov-nave-2: var(--stone-3);
+  --ov-rib: color-mix(in srgb, var(--stone-3) 50%, var(--lead)); --ov-pillar: var(--stone-2); --ov-floor: var(--stone-3); --ov-bone: var(--banderole);
+  position: relative; aspect-ratio: 16 / 9; overflow: hidden; container-type: inline-size; background: var(--ov-wall); }
+[data-theme="night"] .ov-scene { --ov-wall: #07080D; --ov-nave: #10121B; --ov-nave-2: #161927; --ov-rib: #242838; --ov-pillar: #1A1D2A; --ov-floor: #131622; --ov-bone: #CFC8B4; }
+.ov-crypt { position: absolute; inset: 0; width: 100%; height: 100%; }
+.ov-crypt-glass { filter: saturate(.9); }
+.ov-crypt-pool { mix-blend-mode: var(--pool-blend); }
+[data-theme="night"] .ov-crypt-glass { filter: drop-shadow(0 0 22px rgba(160,140,255,.45)); }
+[data-theme="night"] .ov-socket { fill: var(--gules-lit); filter: drop-shadow(0 0 8px var(--gules-lit)); }
+.ov-scene__label { position: absolute; left: 50%; bottom: 2.4%; transform: translateX(-50%); z-index: 2; white-space: nowrap; }
+/* layers: calm cards with a chamber glass cap; selectable */
+.ov-layer { position: absolute; z-index: 2; display: grid; gap: 7px; align-content: start; padding: 0 12px 11px; text-align: left; cursor: pointer;
+  background: var(--surface); color: var(--ink); border: var(--came) solid var(--lead); border-radius: var(--r);
+  box-shadow: 0 10px 22px -12px rgba(0,0,0,.6); font: 400 14px/1.3 var(--font-text); transition: box-shadow var(--m-fast), transform var(--m-fast);
+  animation: cc-ignite .8s var(--ease-light) backwards; animation-delay: var(--d, 0s); }
+.ov-layer::before { content: ''; display: block; height: 7px; margin: 0 -12px 2px; border-bottom: var(--came) solid var(--lead);
+  background: repeating-linear-gradient(90deg, var(--lead) 0 2px, transparent 2px 24px), linear-gradient(90deg, var(--ch-deep), var(--ch) 20%, var(--ch-lit) 50%, var(--ch) 80%, var(--ch-deep)); }
+.ov-layer:hover { transform: translateY(-2px); }
+.ov-layer[aria-pressed="true"] { box-shadow: 0 0 0 3px var(--ch), 0 0 calc(12px + var(--glow-on) * 16px) var(--ch-glow), 0 10px 22px -12px rgba(0,0,0,.6); }
+.ov-layer__title { font: 800 14px/1.15 var(--font-label); letter-spacing: .07em; text-transform: lowercase; color: var(--ink); }
+.ov-layer__note { font: 500 13.5px/1.25 var(--font-text); color: var(--ink-2); }
+.ov-layer--map { left: 2.6%; top: 4%; width: 25%; }
+.ov-layer--chat { right: 2.6%; top: 4%; width: 31%; }
+.ov-layer--urn { left: 2.6%; bottom: 11%; width: 23%; }
+.ov-layer--altar { right: 2.6%; bottom: 11%; width: 25%; }
+.ov-art { display: grid; grid-template-columns: 64px 1fr; gap: 10px; align-items: center; }
+.ov-med { width: 64px; height: 64px; }
+.ov-draft { display: grid; gap: 6px; padding: 7px; border: 2px dashed var(--or-ink); background: color-mix(in srgb, var(--or) 8%, var(--surface)); }
+.ov-draft svg { width: 100%; height: auto; }
+.ov-draft .cc-stamp { justify-self: start; }
+.ov-cam { display: inline-block; padding: 4px 8px; border: 2px dashed var(--or-ink); font: 500 13.5px/1.2 var(--font-text); color: var(--ink-2); }
+.ov-chat { display: grid; gap: 3px; }
+.ov-chat li { font: 400 13.5px/1.3 var(--font-text); color: var(--ink-2); padding: 2px 0; border-top: 1px solid var(--hair-2); }
+.ov-chat li:first-child { border-top: 0; }
+.ov-chat li[data-held] { padding: 5px 7px; background: var(--surface-2); box-shadow: inset 3px 0 0 var(--azure); color: var(--muted); }
+.ov-chat li[data-held] .cc-stamp { height: 20px; padding: 0 7px; margin-right: 4px; vertical-align: 1px; }
+.ov-chat li[data-held] s { text-decoration-thickness: 1.5px; }
+.ov-vote { display: grid; grid-template-columns: auto 1fr; gap: 4px 10px; align-items: center; padding-top: 4px; border-top: var(--came) solid var(--lead); font: 700 13.5px/1.1 var(--font-text); color: var(--ink); }
+.ov-vote .cc-meter { height: 10px; }
+/* program size */
+.ov-scene--program .ov-layer { padding: 0 8px 7px; gap: 4px; font-size: 13px; animation: none; cursor: default; }
+.ov-scene--program .ov-layer::before { height: 5px; margin: 0 -8px 1px; }
+.ov-scene--program .ov-layer__title { font-size: 13px; }
+.ov-scene--program .ov-layer--chat { width: 46%; top: 5%; }
+.ov-scene--program .ov-layer--altar { width: 40%; bottom: 7%; }
+.ov-scene--program .ov-med { width: 40px; height: 40px; }
+.ov-scene--program .ov-art { grid-template-columns: 40px; }
+.ov-scene--program .ov-chat li { font-size: 13px; }
+/* predella: the four layers as selectable panes */
+.ov-predella { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; border: var(--came) solid var(--lead); background: var(--lead); box-shadow: var(--shadow); }
+.ov-pane { position: relative; display: grid; min-width: 0; background: var(--stone-2); border-right: var(--came) solid var(--lead); }
+.ov-pane:last-child { border-right: 0; }
+.ov-pane__select { display: grid; grid-template-columns: auto 1fr; column-gap: 10px; row-gap: 3px; align-content: start; padding: 14px 12px 10px; border: 0; text-align: left; cursor: pointer; background: transparent; color: var(--ink); }
+.ov-pane__select::before { content: ''; position: absolute; inset: 0 0 auto; height: 7px; box-shadow: inset 0 -2px 0 var(--lead);
+  background: linear-gradient(90deg, var(--ch-deep), var(--ch) 30%, var(--ch) 70%, var(--ch-deep)); filter: saturate(.55) brightness(.92); animation: cc-ignite .8s var(--ease-light) backwards; animation-delay: var(--d, 0s); }
+.ov-pane__select > .cc-kbd { grid-row: span 3; align-self: start; min-width: 24px; height: 28px; color: var(--on-glass); border-color: var(--lead);
+  background: radial-gradient(circle at 40% 25%, var(--ch-lit), var(--ch) 50%, var(--ch-deep)); border-radius: 12px 12px 2px 2px; text-shadow: 0 1px 1px rgba(0,0,0,.5); }
+.ov-pane[data-module="visuals"] .cc-kbd { color: var(--lead-lo); text-shadow: none; }
+.ov-pane__name { font: 800 15px/1.1 var(--font-label); letter-spacing: .07em; text-transform: lowercase; padding-right: 44px; }
+.ov-pane__fig { font: 400 13.5px/1.25 var(--font-text); color: var(--ink-2); }
+.ov-pane .cc-lamps { margin: 2px 0 0; flex-wrap: wrap; }
+.ov-pane .cc-lamps i { font-size: 12.5px; gap: 5px; } .ov-pane .cc-lamps i[data-lit="false"] { color: var(--muted); }
+.ov-pane__select:hover { background: color-mix(in srgb, var(--surface) 55%, transparent); }
+.ov-pane__select[aria-pressed="true"] { background: var(--surface); }
+.ov-pane__select[aria-pressed="true"]::before { height: 9px; filter: none; background: linear-gradient(90deg, var(--ch), var(--ch-lit) 50%, var(--ch)); box-shadow: inset 0 -2px 0 var(--lead), 0 3px calc(8px + var(--glow-on) * 12px) var(--ch-glow); }
+.ov-pane__select[aria-pressed="true"] .ov-pane__name { color: var(--ch-ink); }
+.ov-pane__open { position: absolute; right: 10px; top: 13px; font: 800 13px/1 var(--font-label); letter-spacing: .08em; text-transform: lowercase; color: var(--ch-ink); text-underline-offset: 3px; }
+/* side: program, proclaim, tabs, inspector */
+.ov-side { display: grid; gap: 12px; padding: 16px; background: var(--surface);
+  border: var(--came) solid var(--lead); box-shadow: var(--shadow); }
+.ov-side .cc-monitor__screen { border-width: 3px; }
+.ov-side .cc-monitor__screen::after { content: ''; position: absolute; inset: 0; pointer-events: none; box-shadow: inset 0 0 0 2px var(--gules), inset 0 0 calc(10px + var(--glow-on) * 14px) var(--gules-glow); z-index: 3; }
+.ov-side .cc-monitor .cc-lozenge { --ch: var(--gules); --ch-lit: var(--gules-lit); --ch-glow: var(--gules-glow); }
+.ov-proclaim { display: grid; gap: 8px; padding-top: 12px; border-top: 1px solid var(--hair); }
+.ov-proclaim__cap { font: 700 var(--t-small)/1.3 var(--font-text); color: var(--ink); }
+.ov-tabs { display: grid; grid-template-columns: 1fr 1fr; padding: var(--came) 0 0 var(--came); }
+.ov-tabs > button { min-height: 36px; border: var(--came) solid var(--lead); margin: calc(-1 * var(--came)) 0 0 calc(-1 * var(--came)); background: var(--surface-2); color: var(--ink); cursor: pointer;
+  font: 800 14px/1 var(--font-label); letter-spacing: .08em; text-transform: lowercase; }
+.ov-tabs > [aria-selected="true"] { color: var(--on-glass); text-shadow: 0 1px 1px rgba(0,0,0,.45); background: var(--tex-glass), radial-gradient(140% 120% at 30% 10%, var(--amethyst), var(--amethyst-deep) 80%);
+  background-size: 180px 180px, 100% 100%; background-blend-mode: soft-light, normal; box-shadow: 0 0 calc(var(--glow-on) * 12px) var(--amethyst-glow); position: relative; z-index: 1; }
+[data-theme="night"] .ov-tabs > button { border-color: var(--came-ui); }
+.ov-pane-tab { display: grid; gap: 12px; }
+.ov-artifact { display: grid; grid-template-columns: 74px 1fr; column-gap: 12px; row-gap: 2px; align-items: center; padding: 10px 12px; background: var(--surface-2); box-shadow: inset 0 0 0 1px var(--hair), inset 4px 0 0 var(--ch); }
+.ov-artifact svg { grid-row: span 3; width: 74px; height: 46px; fill: none; stroke: var(--ch-ink); stroke-width: 4; stroke-linejoin: round; }
+.ov-artifact b { font: 800 14px/1.2 var(--font-label); letter-spacing: .08em; text-transform: lowercase; }
+.ov-artifact span { font: 400 var(--t-small)/1.2 var(--font-text); color: var(--muted); }
+.ov-artifact .cc-actions { margin-top: 6px; gap: 8px; }
+.ov-fair { padding: 10px 12px 11px 14px; background: var(--surface-2); box-shadow: inset 4px 0 0 var(--emerald), inset 0 0 0 1px var(--hair); display: grid; gap: 4px; }
+.ov-fair b { font: 800 13px/1.2 var(--font-label); letter-spacing: .1em; text-transform: lowercase; color: var(--emerald-ink); }
+.ov-fair p { font: 400 13.5px/1.38 var(--font-text); color: var(--ink-2); }
+.ov-talk { display: grid; gap: 6px; padding: 10px 12px; background: var(--surface-2); box-shadow: inset 4px 0 0 var(--amethyst); }
+.ov-talk p { font: 400 var(--t-small)/1.4 var(--font-text); color: var(--ink-2); }
+@media (max-width: 1380px) {
+  .ov { --ov-side: 392px; }
+  .ov-head h1 { font-size: 44px; } .ov-head p { font-size: 18px; }
+  .ov-layer { font-size: 13.5px; } .ov-layer--chat { width: 34%; } .ov-layer--map { width: 27%; } .ov-layer--urn, .ov-layer--altar { width: 27%; }
+
+}
+</style>
+</head>
+<body class="cc-body">
+<div class="cc-shell" data-chamber="keep">
+  <header class="cc-rampart">
+    <a class="cc-brand" href="keep.html" aria-label="Castle Control, the whole keep"><svg class="cc-mark" viewBox="0 0 32 32" aria-hidden="true">
+  <path d="M3 9V4h4v3h3V4h4v3h4V4h3v3h3V4h5v5c0 0 0 0 0 0v12a3 3 0 0 1-3 3H14l-6 5v-5H6a3 3 0 0 1-3-3Z" fill="var(--gules)" stroke="var(--on-lead)" stroke-width="1.4" stroke-linejoin="round"/>
+  <path d="M5 11h22" stroke="var(--lead)" stroke-width="1.2" opacity=".6"/>
+  <path d="M12.5 22v-5.5a3.5 3.5 0 0 1 7 0V22Z" fill="var(--or-lit)" stroke="var(--lead)" stroke-width="1.3"/>
+  <path d="M16 13v9M12.5 18.5h7" stroke="var(--lead)" stroke-width="1"/>
+</svg><span class="cc-wordmark">Castle Control</span></a>
+    <span class="cc-came-v" aria-hidden="true"></span>
+    <div class="cc-live" aria-label="Stream status">
+      <span class="cc-onair"><i class="cc-lamp" data-live="false" aria-hidden="true"></i>On air · simulated</span>
+      <span class="cc-figure"><b>Unknown</b><small>viewers</small></span>
+      <span class="cc-figure"><b>Unknown</b><small>uptime</small></span>
+    </div>
+    <span class="cc-came-v" aria-hidden="true"></span>
+    <div class="cc-links">
+      <span class="cc-chip">Twitch simulated</span>
+      <a href="setup.html" title="Set up OBS"><span class="cc-chip">OBS simulated</span></a>
+      <a href="gatehouse.html"><span class="cc-chip" data-module="moderator"><i class="cc-lozenge" aria-hidden="true"></i>Gatehouse simulated</span></a>
+    </div>
+    <span class="cc-spacer"></span>
+    <span class="cc-sim cc-sim--on-lead">Simulated</span>
+    <button class="cc-iconbtn" type="button" data-theme-toggle aria-label="Switch between day and night glass" title="Theme">
+      <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7.5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M10 2.5a7.5 7.5 0 0 1 0 15Z" fill="currentColor"/></svg>
+    </button>
+    <a class="cc-btn cc-btn--rampart" href="#steward-input" title="Talk to the Steward (/)">Steward <kbd class="cc-kbd">/</kbd></a>
+  </header>
+  <nav class="cc-tabs" aria-label="Chamber strip">
+    <a class="cc-tab" data-module="keep" href="keep.html"><span class="cc-tab__light" aria-hidden="true"></span><kbd class="cc-kbd">0</kbd><b class="cc-tab__name">The Keep</b></a>
+    <a class="cc-tab" data-module="lottery" href="lottery.html" aria-label="Lot Chamber, No draw, Preview, no proposals"><span class="cc-tab__light" aria-hidden="true"></span><kbd class="cc-kbd">1</kbd><b class="cc-tab__name">Lot Chamber</b><span class="cc-tab__row"><span class="cc-tab__figure">No draw</span><span class="cc-lamps" aria-hidden="true"><i data-lit="false" title="On air · off">On air</i><i data-lit="true" title="Preview">Preview</i><i data-lit="false" title="Draft · off">Draft</i></span></span></a>
+    <a class="cc-tab" data-module="moderator" href="gatehouse.html" aria-label="Gatehouse, 1 held, On air, preview, no proposals"><span class="cc-tab__light" aria-hidden="true"></span><kbd class="cc-kbd">2</kbd><b class="cc-tab__name">Gatehouse</b><span class="cc-tab__row"><span class="cc-tab__figure">1 held</span><span class="cc-lamps" aria-hidden="true"><i data-lit="true" title="On air">On air</i><i data-lit="true" title="Preview">Preview</i><i data-lit="false" title="Draft · off">Draft</i></span></span></a>
+    <a class="cc-tab" data-module="visuals" href="beacons.html" aria-label="Beacons, Offering altar, On air, preview, no proposals"><span class="cc-tab__light" aria-hidden="true"></span><kbd class="cc-kbd">3</kbd><b class="cc-tab__name">Beacons</b><span class="cc-tab__row"><span class="cc-tab__figure">Offering altar</span><span class="cc-lamps" aria-hidden="true"><i data-lit="true" title="On air">On air</i><i data-lit="true" title="Preview">Preview</i><i data-lit="false" title="Draft · off">Draft</i></span></span></a>
+    <a class="cc-tab" data-module="studio" href="maproom.html" aria-label="Map Room, Sand table, Preview, no proposals"><span class="cc-tab__light" aria-hidden="true"></span><kbd class="cc-kbd">4</kbd><b class="cc-tab__name">Map Room</b><span class="cc-tab__row"><span class="cc-tab__figure">Sand table</span><span class="cc-lamps" aria-hidden="true"><i data-lit="false" title="On air · off">On air</i><i data-lit="true" title="Preview">Preview</i><i data-lit="false" title="Draft · off">Draft</i></span></span></a>
+  </nav>
+  <main class="cc-main ov" aria-label="Overview">
+    <section class="ov-bench" aria-labelledby="ov-title">
+      <header class="ov-head"><div><h1 id="ov-title">Preview and Proclaim</h1></div><p>The whole keep, in one picture.</p><span class="cc-stamp cc-stamp--waiting">0 proposals</span></header>
+      <div class="cc-window ov-window">
+        <div class="cc-window__glass" aria-label="Stream preview" role="group"><div class="ov-scene " data-scene="preview"><svg class="ov-crypt" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">
+<defs><radialGradient id="pvrg-gules" cx=".38" cy=".32" r=".75"><stop offset="0" style="stop-color:var(--gules-lit)"/><stop offset=".6" style="stop-color:var(--gules)"/><stop offset="1" style="stop-color:var(--gules-deep)"/></radialGradient><radialGradient id="pvrg-azure" cx=".38" cy=".32" r=".75"><stop offset="0" style="stop-color:var(--azure-lit)"/><stop offset=".6" style="stop-color:var(--azure)"/><stop offset="1" style="stop-color:var(--azure-deep)"/></radialGradient><radialGradient id="pvrg-or" cx=".38" cy=".32" r=".75"><stop offset="0" style="stop-color:var(--or-lit)"/><stop offset=".6" style="stop-color:var(--or)"/><stop offset="1" style="stop-color:var(--or-deep)"/></radialGradient><radialGradient id="pvrg-key" cx=".38" cy=".32" r=".75"><stop offset="0" style="stop-color:var(--key-lit)"/><stop offset=".6" style="stop-color:var(--key)"/><stop offset="1" style="stop-color:var(--key-deep)"/></radialGradient><radialGradient id="pvrg-amethyst" cx=".38" cy=".32" r=".75"><stop offset="0" style="stop-color:var(--amethyst-lit)"/><stop offset=".6" style="stop-color:var(--amethyst)"/><stop offset="1" style="stop-color:var(--amethyst-deep)"/></radialGradient><radialGradient id="pvrg-emerald" cx=".38" cy=".32" r=".75"><stop offset="0" style="stop-color:var(--emerald-lit)"/><stop offset=".6" style="stop-color:var(--emerald)"/><stop offset="1" style="stop-color:var(--emerald-deep)"/></radialGradient><radialGradient id="pvmed" cx=".4" cy=".3" r=".8"><stop offset="0" style="stop-color:var(--clear-lit)"/><stop offset="1" style="stop-color:var(--clear)"/></radialGradient><linearGradient id="pvlg-amethyst" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--amethyst-lit)"/><stop offset=".5" style="stop-color:var(--amethyst)"/><stop offset="1" style="stop-color:var(--amethyst-deep)"/></linearGradient><linearGradient id="pvlg-azure" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--azure-lit)"/><stop offset=".5" style="stop-color:var(--azure)"/><stop offset="1" style="stop-color:var(--azure-deep)"/></linearGradient>
+<pattern id="pvqy" width="40" height="54" patternUnits="userSpaceOnUse"><path d="M0 0 20 27 0 54M40 0 20 27 40 54" fill="none" stroke="var(--lead)" stroke-width="3" opacity=".7"/></pattern>
+<linearGradient id="pvnave" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--lead-2)"/><stop offset=".55" style="stop-color:var(--ov-nave)"/><stop offset="1" style="stop-color:var(--ov-nave-2)"/></linearGradient>
+<radialGradient id="pvpool" cx=".5" cy=".5" r=".5"><stop offset="0" style="stop-color:var(--or-lit)" stop-opacity=".55"/><stop offset="1" style="stop-color:var(--or-lit)" stop-opacity="0"/></radialGradient>
+</defs>
+<rect width="1600" height="900" fill="var(--ov-wall)"/>
+<path d="M120 820V250Q140 40 800-30Q1460 40 1480 250V820Z" fill="url(#pvnave)" stroke="var(--lead)" stroke-width="8"/>
+<path d="M800-30V140M420 120 800 140 1180 120M240 210Q520 120 800 140Q1080 120 1360 210" fill="none" stroke="var(--ov-rib)" stroke-width="10"/>
+<rect x="164" y="90" width="52" height="700" fill="var(--ov-pillar)" stroke="var(--lead)" stroke-width="4"/><path d="M150 110h80M150 770h80" stroke="var(--lead)" stroke-width="12"/><rect x="442" y="90" width="52" height="700" fill="var(--ov-pillar)" stroke="var(--lead)" stroke-width="4"/><path d="M428 110h80M428 770h80" stroke="var(--lead)" stroke-width="12"/><rect x="1106" y="90" width="52" height="700" fill="var(--ov-pillar)" stroke="var(--lead)" stroke-width="4"/><path d="M1092 110h80M1092 770h80" stroke="var(--lead)" stroke-width="12"/><rect x="1384" y="90" width="52" height="700" fill="var(--ov-pillar)" stroke="var(--lead)" stroke-width="4"/><path d="M1370 110h80M1370 770h80" stroke="var(--lead)" stroke-width="12"/>
+<path d="M548 700V428.2Q548 369.92 610 360Q672 369.92 672 428.2V700Z" fill="var(--stone-3)" stroke="var(--lead)" stroke-width="6" transform="translate(610 530) scale(1.12 1.06) translate(-610 -530)"/><clipPath id="pvwl"><path d="M548 700V428.2Q548 369.92 610 360Q672 369.92 672 428.2V700Z"/></clipPath><g clip-path="url(#pvwl)" class="ov-crypt-glass"><path d="M548 700V428.2Q548 369.92 610 360Q672 369.92 672 428.2V700Z" fill="url(#pvlg-amethyst)"/><rect x="548" y="360" width="124" height="340" fill="url(#pvqy)"/><circle cx="610" cy="513" r="34.720000000000006" fill="url(#pvrg-or)" stroke="var(--lead)" stroke-width="5"/><circle cx="610" cy="513" r="14.879999999999999" fill="var(--clear-lit)" stroke="var(--lead)" stroke-width="4"/><path d="M548 625.2H672" stroke="var(--lead)" stroke-width="5"/></g><path d="M548 700V428.2Q548 369.92 610 360Q672 369.92 672 428.2V700Z" fill="none" stroke="var(--lead)" stroke-width="7"/><path d="M928 700V428.2Q928 369.92 990 360Q1052 369.92 1052 428.2V700Z" fill="var(--stone-3)" stroke="var(--lead)" stroke-width="6" transform="translate(990 530) scale(1.12 1.06) translate(-990 -530)"/><clipPath id="pvwr"><path d="M928 700V428.2Q928 369.92 990 360Q1052 369.92 1052 428.2V700Z"/></clipPath><g clip-path="url(#pvwr)" class="ov-crypt-glass"><path d="M928 700V428.2Q928 369.92 990 360Q1052 369.92 1052 428.2V700Z" fill="url(#pvlg-azure)"/><rect x="928" y="360" width="124" height="340" fill="url(#pvqy)"/><circle cx="990" cy="513" r="34.720000000000006" fill="url(#pvrg-or)" stroke="var(--lead)" stroke-width="5"/><circle cx="990" cy="513" r="14.879999999999999" fill="var(--clear-lit)" stroke="var(--lead)" stroke-width="4"/><path d="M928 625.2H1052" stroke="var(--lead)" stroke-width="5"/></g><path d="M928 700V428.2Q928 369.92 990 360Q1052 369.92 1052 428.2V700Z" fill="none" stroke="var(--lead)" stroke-width="7"/>
+<path d="M0 900 500 730H1100L1600 900Z" fill="var(--ov-floor)" stroke="var(--lead)" stroke-width="4"/>
+<path d="M650 730 560 900M800 730V900M950 730 1040 900M300 800H1300" stroke="var(--lead)" stroke-width="2" opacity=".45"/>
+<ellipse class="ov-crypt-pool" cx="610" cy="790" rx="150" ry="40" fill="url(#pvpool)"/><ellipse class="ov-crypt-pool" cx="990" cy="790" rx="150" ry="40" fill="url(#pvpool)"/>
+<g class="ov-skull" transform="translate(800 214) scale(.82)">
+  <path d="M-92-34-120-112-64-70-40-128-12-74 0-140 12-74 40-128 64-70 120-112 92-34Z" fill="url(#pvrg-or)" stroke="var(--lead)" stroke-width="6" stroke-linejoin="round"/>
+  <path d="M-86-30C-96 30-70 64-50 74V104H50V74C70 64 96 30 86-30C70-66-70-66-86-30Z" fill="var(--ov-bone)" stroke="var(--lead)" stroke-width="7"/>
+  <path class="ov-socket" d="M-62 0C-62-22-24-26-18 0-16 22-62 26-62 0ZM62 0C62-22 24-26 18 0 16 22 62 26 62 0Z" fill="var(--lead-lo)"/>
+  <path d="M-8 34 0 18 8 34Z" fill="var(--lead-lo)"/>
+  <path d="M-40 104V84M-20 104V84M0 104V84M20 104V84M40 104V84" stroke="var(--lead)" stroke-width="5"/>
+</g>
+</svg><span class="cc-banderole ov-scene__label">Malakor’s crypt · illustrative sample scene</span><button class="ov-layer ov-layer--urn" type="button" data-module="lottery" data-layer="lottery" aria-pressed="true" aria-label="Select Urn and writ" style="--d:0.2s"><span class="ov-layer__title">Urn and writ</span><span class="ov-art"><svg class="ov-med" viewBox="0 0 120 120" aria-hidden="true" focusable="false"><defs><radialGradient id="pvurg-gules" cx=".38" cy=".32" r=".75"><stop offset="0" style="stop-color:var(--gules-lit)"/><stop offset=".6" style="stop-color:var(--gules)"/><stop offset="1" style="stop-color:var(--gules-deep)"/></radialGradient><radialGradient id="pvurg-azure" cx=".38" cy=".32" r=".75"><stop offset="0" style="stop-color:var(--azure-lit)"/><stop offset=".6" style="stop-color:var(--azure)"/><stop offset="1" style="stop-color:var(--azure-deep)"/></radialGradient><radialGradient id="pvurg-or" cx=".38" cy=".32" r=".75"><stop offset="0" style="stop-color:var(--or-lit)"/><stop offset=".6" style="stop-color:var(--or)"/><stop offset="1" style="stop-color:var(--or-deep)"/></radialGradient><radialGradient id="pvurg-key" cx=".38" cy=".32" r=".75"><stop offset="0" style="stop-color:var(--key-lit)"/><stop offset=".6" style="stop-color:var(--key)"/><stop offset="1" style="stop-color:var(--key-deep)"/></radialGradient><radialGradient id="pvurg-amethyst" cx=".38" cy=".32" r=".75"><stop offset="0" style="stop-color:var(--amethyst-lit)"/><stop offset=".6" style="stop-color:var(--amethyst)"/><stop offset="1" style="stop-color:var(--amethyst-deep)"/></radialGradient><radialGradient id="pvurg-emerald" cx=".38" cy=".32" r=".75"><stop offset="0" style="stop-color:var(--emerald-lit)"/><stop offset=".6" style="stop-color:var(--emerald)"/><stop offset="1" style="stop-color:var(--emerald-deep)"/></radialGradient><radialGradient id="pvumed" cx=".4" cy=".3" r=".8"><stop offset="0" style="stop-color:var(--clear-lit)"/><stop offset="1" style="stop-color:var(--clear)"/></radialGradient></defs><circle cx="60" cy="60" r="59" fill="var(--stone-3)" stroke="var(--lead)" stroke-width="1.6"/><circle cx="60" cy="60" r="55" fill="url(#pvurg-gules)" stroke="var(--lead)" stroke-width="2.2"/><path d="M104 60L115 60" stroke="var(--lead)" stroke-width="1.6"/><circle cx="107.08" cy="75.3" r="3.4" fill="var(--gules-lit)" stroke="var(--lead)" stroke-width="1.2"/><path d="M95.6 85.86L104.5 92.33" stroke="var(--lead)" stroke-width="1.6"/><circle cx="89.1" cy="100.05" r="3.4" fill="var(--clear-lit)" stroke="var(--lead)" stroke-width="1.2"/><path d="M73.6 101.85L77 112.31" stroke="var(--lead)" stroke-width="1.6"/><circle cx="60" cy="109.5" r="3.4" fill="var(--gules-lit)" stroke="var(--lead)" stroke-width="1.2"/><path d="M46.4 101.85L43 112.31" stroke="var(--lead)" stroke-width="1.6"/><circle cx="30.9" cy="100.05" r="3.4" fill="var(--clear-lit)" stroke="var(--lead)" stroke-width="1.2"/><path d="M24.4 85.86L15.5 92.33" stroke="var(--lead)" stroke-width="1.6"/><circle cx="12.92" cy="75.3" r="3.4" fill="var(--gules-lit)" stroke="var(--lead)" stroke-width="1.2"/><path d="M16 60L5 60" stroke="var(--lead)" stroke-width="1.6"/><circle cx="12.92" cy="44.7" r="3.4" fill="var(--clear-lit)" stroke="var(--lead)" stroke-width="1.2"/><path d="M24.4 34.14L15.5 27.67" stroke="var(--lead)" stroke-width="1.6"/><circle cx="30.9" cy="19.95" r="3.4" fill="var(--gules-lit)" stroke="var(--lead)" stroke-width="1.2"/><path d="M46.4 18.15L43 7.69" stroke="var(--lead)" stroke-width="1.6"/><circle cx="60" cy="10.5" r="3.4" fill="var(--clear-lit)" stroke="var(--lead)" stroke-width="1.2"/><path d="M73.6 18.15L77 7.69" stroke="var(--lead)" stroke-width="1.6"/><circle cx="89.1" cy="19.95" r="3.4" fill="var(--gules-lit)" stroke="var(--lead)" stroke-width="1.2"/><path d="M95.6 34.14L104.5 27.67" stroke="var(--lead)" stroke-width="1.6"/><circle cx="107.08" cy="44.7" r="3.4" fill="var(--clear-lit)" stroke="var(--lead)" stroke-width="1.2"/><circle cx="60" cy="60" r="44" fill="url(#pvumed)" stroke="var(--lead)" stroke-width="2.2"/><clipPath id="pvumc-lottery"><circle cx="115.5" cy="382" r="52.44"/></clipPath><g clip-path="url(#pvumc-lottery)" transform="translate(60 60) scale(0.82) translate(-115.5 -382)"><path d="M98.5 360H132.5L128.5 369C149.5 374 148.5 404 130.5 409L132.5 416H98.5L100.5 409C82.5 404 81.5 374 102.5 369Z" fill="url(#pvurg-or)" stroke="var(--lead)" stroke-width="2.4" stroke-linejoin="round"/>
+      <path d="M87.5 387H143.5M101.5 409H129.5" stroke="var(--lead)" stroke-width="2"/>
+      <rect x="110.5" y="375" width="10" height="10" transform="rotate(45 115.5 380)" fill="url(#pvurg-gules)" stroke="var(--lead)" stroke-width="1.6"/>
+      <circle cx="104.5" cy="352" r="5.2" fill="url(#pvurg-gules)" stroke="var(--lead)" stroke-width="1.5"/><circle cx="116.5" cy="347" r="5.2" fill="url(#pvurg-azure)" stroke="var(--lead)" stroke-width="1.5"/><circle cx="127.5" cy="353" r="5.2" fill="url(#pvurg-key)" stroke="var(--lead)" stroke-width="1.5"/><circle cx="113.5" cy="355" r="5.2" fill="url(#pvurg-gules)" stroke="var(--lead)" stroke-width="1.5"/><circle cx="108.5" cy="342" r="5.2" fill="url(#pvurg-azure)" stroke="var(--lead)" stroke-width="1.5"/><circle cx="123.5" cy="341" r="5.2" fill="url(#pvurg-gules)" stroke="var(--lead)" stroke-width="1.5"/></g></svg><span class="ov-layer__note">No draw on screen</span></span></button><button class="ov-layer ov-layer--chat" type="button" data-module="moderator" data-layer="moderator" aria-pressed="false" aria-label="Select Chat and Herald" style="--d:0.45s"><span class="ov-layer__title">Chat and Herald</span><ol class="ov-chat"><li data-held><span class="cc-stamp cc-stamp--held">Held · not on air</span> <s>Simulated original held message: can I post my guide?</s></li><li>Simulated viewer 1: go left!</li><li>Simulated viewer 2: go right!</li><li>Simulated viewer 3: go left!</li><li>Simulated viewer 4: go right!</li></ol>
+       <span class="ov-vote"><span>Go left 37%</span><span class="cc-meter" data-module="moderator"><i style="--v:37%"></i></span><span>Hype 27%</span><span class="cc-meter" data-module="visuals"><i style="--v:27%"></i></span></span></button><button class="ov-layer ov-layer--altar" type="button" data-module="visuals" data-layer="visuals" aria-pressed="false" aria-label="Select Altar, frame and border" style="--d:0.7s"><span class="ov-layer__title">Altar, frame and border</span><span class="ov-art"><svg class="ov-med" viewBox="0 0 120 120" aria-hidden="true" focusable="false"><defs><radialGradient id="pvarg-gules" cx=".38" cy=".32" r=".75"><stop offset="0" style="stop-color:var(--gules-lit)"/><stop offset=".6" style="stop-color:var(--gules)"/><stop offset="1" style="stop-color:var(--gules-deep)"/></radialGradient><radialGradient id="pvarg-azure" cx=".38" cy=".32" r=".75"><stop offset="0" style="stop-color:var(--azure-lit)"/><stop offset=".6" style="stop-color:var(--azure)"/><stop offset="1" style="stop-color:var(--azure-deep)"/></radialGradient><radialGradient id="pvarg-or" cx=".38" cy=".32" r=".75"><stop offset="0" style="stop-color:var(--or-lit)"/><stop offset=".6" style="stop-color:var(--or)"/><stop offset="1" style="stop-color:var(--or-deep)"/></radialGradient><radialGradient id="pvarg-key" cx=".38" cy=".32" r=".75"><stop offset="0" style="stop-color:var(--key-lit)"/><stop offset=".6" style="stop-color:var(--key)"/><stop offset="1" style="stop-color:var(--key-deep)"/></radialGradient><radialGradient id="pvarg-amethyst" cx=".38" cy=".32" r=".75"><stop offset="0" style="stop-color:var(--amethyst-lit)"/><stop offset=".6" style="stop-color:var(--amethyst)"/><stop offset="1" style="stop-color:var(--amethyst-deep)"/></radialGradient><radialGradient id="pvarg-emerald" cx=".38" cy=".32" r=".75"><stop offset="0" style="stop-color:var(--emerald-lit)"/><stop offset=".6" style="stop-color:var(--emerald)"/><stop offset="1" style="stop-color:var(--emerald-deep)"/></radialGradient><radialGradient id="pvamed" cx=".4" cy=".3" r=".8"><stop offset="0" style="stop-color:var(--clear-lit)"/><stop offset="1" style="stop-color:var(--clear)"/></radialGradient></defs><circle cx="60" cy="60" r="59" fill="var(--stone-3)" stroke="var(--lead)" stroke-width="1.6"/><circle cx="60" cy="60" r="55" fill="url(#pvarg-or)" stroke="var(--lead)" stroke-width="2.2"/><path d="M104 60L115 60" stroke="var(--lead)" stroke-width="1.6"/><circle cx="107.08" cy="75.3" r="3.4" fill="var(--or-lit)" stroke="var(--lead)" stroke-width="1.2"/><path d="M95.6 85.86L104.5 92.33" stroke="var(--lead)" stroke-width="1.6"/><circle cx="89.1" cy="100.05" r="3.4" fill="var(--clear-lit)" stroke="var(--lead)" stroke-width="1.2"/><path d="M73.6 101.85L77 112.31" stroke="var(--lead)" stroke-width="1.6"/><circle cx="60" cy="109.5" r="3.4" fill="var(--or-lit)" stroke="var(--lead)" stroke-width="1.2"/><path d="M46.4 101.85L43 112.31" stroke="var(--lead)" stroke-width="1.6"/><circle cx="30.9" cy="100.05" r="3.4" fill="var(--clear-lit)" stroke="var(--lead)" stroke-width="1.2"/><path d="M24.4 85.86L15.5 92.33" stroke="var(--lead)" stroke-width="1.6"/><circle cx="12.92" cy="75.3" r="3.4" fill="var(--or-lit)" stroke="var(--lead)" stroke-width="1.2"/><path d="M16 60L5 60" stroke="var(--lead)" stroke-width="1.6"/><circle cx="12.92" cy="44.7" r="3.4" fill="var(--clear-lit)" stroke="var(--lead)" stroke-width="1.2"/><path d="M24.4 34.14L15.5 27.67" stroke="var(--lead)" stroke-width="1.6"/><circle cx="30.9" cy="19.95" r="3.4" fill="var(--or-lit)" stroke="var(--lead)" stroke-width="1.2"/><path d="M46.4 18.15L43 7.69" stroke="var(--lead)" stroke-width="1.6"/><circle cx="60" cy="10.5" r="3.4" fill="var(--clear-lit)" stroke="var(--lead)" stroke-width="1.2"/><path d="M73.6 18.15L77 7.69" stroke="var(--lead)" stroke-width="1.6"/><circle cx="89.1" cy="19.95" r="3.4" fill="var(--or-lit)" stroke="var(--lead)" stroke-width="1.2"/><path d="M95.6 34.14L104.5 27.67" stroke="var(--lead)" stroke-width="1.6"/><circle cx="107.08" cy="44.7" r="3.4" fill="var(--clear-lit)" stroke="var(--lead)" stroke-width="1.2"/><circle cx="60" cy="60" r="44" fill="url(#pvamed)" stroke="var(--lead)" stroke-width="2.2"/><clipPath id="pvamc-visuals"><circle cx="441.5" cy="382" r="52.44"/></clipPath><g clip-path="url(#pvamc-visuals)" transform="translate(60 60) scale(0.82) translate(-441.5 -382)"><path d="M415.5 386H467.5C465.5 400 454.5 406 441.5 406C428.5 406 417.5 400 415.5 386Z" fill="url(#pvarg-key)" stroke="var(--lead)" stroke-width="2.2"/>
+      <path d="M441.5 406V422M426.5 422H456.5M431.5 406L425.5 422M451.5 406L457.5 422" stroke="var(--lead)" stroke-width="3"/>
+      <g class="kw-fire"><path d="M441.5 340C452.5 355 465.5 364 460.5 379C457.5 386 449.5 386 441.5 385C433.5 386 424.5 386 422.5 379C418.5 364 430.5 357 441.5 340Z" fill="url(#pvarg-gules)" stroke="var(--lead)" stroke-width="2"/>
+      <path d="M441.5 355C448.5 365 453.5 372 450.5 380C447.5 384 435.5 384 432.5 380C429.5 372 435.5 365 441.5 355Z" fill="url(#pvarg-or)" stroke="var(--lead)" stroke-width="1.6"/></g></g></svg><span class="ov-cam">Camera frame · sample</span></span></button><button class="ov-layer ov-layer--map" type="button" data-module="studio" data-layer="studio" aria-pressed="false" aria-label="Select War table" style="--d:0.95s"><span class="ov-layer__title">War table</span><span class="ov-draft"><svg viewBox="0 0 185 110" aria-hidden="true"><path d="M12 12l8-4 8 4v9l-8 4-8-4Z" fill="var(--clear-lit)" stroke="var(--lead)" stroke-width="1.2"/><path d="M30 12l8-4 8 4v9l-8 4-8-4Z" fill="var(--azure)" stroke="var(--lead)" stroke-width="1.2"/><path d="M48 12l8-4 8 4v9l-8 4-8-4Z" fill="var(--gules)" stroke="var(--lead)" stroke-width="1.2"/><path d="M66 12l8-4 8 4v9l-8 4-8-4Z" fill="var(--or)" stroke="var(--lead)" stroke-width="1.2"/><path d="M84 12l8-4 8 4v9l-8 4-8-4Z" fill="var(--clear-lit)" stroke="var(--lead)" stroke-width="1.2"/><path d="M102 12l8-4 8 4v9l-8 4-8-4Z" fill="var(--azure)" stroke="var(--lead)" stroke-width="1.2"/><path d="M120 12l8-4 8 4v9l-8 4-8-4Z" fill="var(--gules)" stroke="var(--lead)" stroke-width="1.2"/><path d="M138 12l8-4 8 4v9l-8 4-8-4Z" fill="var(--or)" stroke="var(--lead)" stroke-width="1.2"/><path d="M156 12l8-4 8 4v9l-8 4-8-4Z" fill="var(--clear-lit)" stroke="var(--lead)" stroke-width="1.2"/><path d="M21 28l8-4 8 4v9l-8 4-8-4Z" fill="var(--azure)" stroke="var(--lead)" stroke-width="1.2"/><path d="M39 28l8-4 8 4v9l-8 4-8-4Z" fill="var(--gules)" stroke="var(--lead)" stroke-width="1.2"/><path d="M57 28l8-4 8 4v9l-8 4-8-4Z" fill="var(--or)" stroke="var(--lead)" stroke-width="1.2"/><path d="M75 28l8-4 8 4v9l-8 4-8-4Z" fill="var(--clear-lit)" stroke="var(--lead)" stroke-width="1.2"/><path d="M93 28l8-4 8 4v9l-8 4-8-4Z" fill="var(--azure)" stroke="var(--lead)" stroke-width="1.2"/><path d="M111 28l8-4 8 4v9l-8 4-8-4Z" fill="var(--gules)" stroke="var(--lead)" stroke-width="1.2"/><path d="M129 28l8-4 8 4v9l-8 4-8-4Z" fill="var(--or)" stroke="var(--lead)" stroke-width="1.2"/><path d="M147 28l8-4 8 4v9l-8 4-8-4Z" fill="var(--clear-lit)" stroke="var(--lead)" stroke-width="1.2"/><path d="M165 28l8-4 8 4v9l-8 4-8-4Z" fill="var(--azure)" stroke="var(--lead)" stroke-width="1.2"/><path d="M12 44l8-4 8 4v9l-8 4-8-4Z" fill="var(--gules)" stroke="var(--lead)" stroke-width="1.2"/><path d="M30 44l8-4 8 4v9l-8 4-8-4Z" fill="var(--or)" stroke="var(--lead)" stroke-width="1.2"/><path d="M48 44l8-4 8 4v9l-8 4-8-4Z" fill="var(--clear-lit)" stroke="var(--lead)" stroke-width="1.2"/><path d="M66 44l8-4 8 4v9l-8 4-8-4Z" fill="var(--azure)" stroke="var(--lead)" stroke-width="1.2"/><path d="M84 44l8-4 8 4v9l-8 4-8-4Z" fill="var(--gules)" stroke="var(--lead)" stroke-width="1.2"/><path d="M102 44l8-4 8 4v9l-8 4-8-4Z" fill="var(--or)" stroke="var(--lead)" stroke-width="1.2"/><path d="M120 44l8-4 8 4v9l-8 4-8-4Z" fill="var(--clear-lit)" stroke="var(--lead)" stroke-width="1.2"/><path d="M138 44l8-4 8 4v9l-8 4-8-4Z" fill="var(--azure)" stroke="var(--lead)" stroke-width="1.2"/><path d="M156 44l8-4 8 4v9l-8 4-8-4Z" fill="var(--gules)" stroke="var(--lead)" stroke-width="1.2"/><path d="M21 60l8-4 8 4v9l-8 4-8-4Z" fill="var(--or)" stroke="var(--lead)" stroke-width="1.2"/><path d="M39 60l8-4 8 4v9l-8 4-8-4Z" fill="var(--clear-lit)" stroke="var(--lead)" stroke-width="1.2"/><path d="M57 60l8-4 8 4v9l-8 4-8-4Z" fill="var(--azure)" stroke="var(--lead)" stroke-width="1.2"/><path d="M75 60l8-4 8 4v9l-8 4-8-4Z" fill="var(--gules)" stroke="var(--lead)" stroke-width="1.2"/><path d="M93 60l8-4 8 4v9l-8 4-8-4Z" fill="var(--or)" stroke="var(--lead)" stroke-width="1.2"/><path d="M111 60l8-4 8 4v9l-8 4-8-4Z" fill="var(--clear-lit)" stroke="var(--lead)" stroke-width="1.2"/><path d="M129 60l8-4 8 4v9l-8 4-8-4Z" fill="var(--azure)" stroke="var(--lead)" stroke-width="1.2"/><path d="M147 60l8-4 8 4v9l-8 4-8-4Z" fill="var(--gules)" stroke="var(--lead)" stroke-width="1.2"/><path d="M165 60l8-4 8 4v9l-8 4-8-4Z" fill="var(--or)" stroke="var(--lead)" stroke-width="1.2"/><path d="M12 76l8-4 8 4v9l-8 4-8-4Z" fill="var(--clear-lit)" stroke="var(--lead)" stroke-width="1.2"/><path d="M30 76l8-4 8 4v9l-8 4-8-4Z" fill="var(--azure)" stroke="var(--lead)" stroke-width="1.2"/><path d="M48 76l8-4 8 4v9l-8 4-8-4Z" fill="var(--gules)" stroke="var(--lead)" stroke-width="1.2"/><path d="M66 76l8-4 8 4v9l-8 4-8-4Z" fill="var(--or)" stroke="var(--lead)" stroke-width="1.2"/><path d="M84 76l8-4 8 4v9l-8 4-8-4Z" fill="var(--clear-lit)" stroke="var(--lead)" stroke-width="1.2"/><path d="M102 76l8-4 8 4v9l-8 4-8-4Z" fill="var(--azure)" stroke="var(--lead)" stroke-width="1.2"/><path d="M120 76l8-4 8 4v9l-8 4-8-4Z" fill="var(--gules)" stroke="var(--lead)" stroke-width="1.2"/><path d="M138 76l8-4 8 4v9l-8 4-8-4Z" fill="var(--or)" stroke="var(--lead)" stroke-width="1.2"/><path d="M156 76l8-4 8 4v9l-8 4-8-4Z" fill="var(--clear-lit)" stroke="var(--lead)" stroke-width="1.2"/><path d="M21 92l8-4 8 4v9l-8 4-8-4Z" fill="var(--azure)" stroke="var(--lead)" stroke-width="1.2"/><path d="M39 92l8-4 8 4v9l-8 4-8-4Z" fill="var(--gules)" stroke="var(--lead)" stroke-width="1.2"/><path d="M57 92l8-4 8 4v9l-8 4-8-4Z" fill="var(--or)" stroke="var(--lead)" stroke-width="1.2"/><path d="M75 92l8-4 8 4v9l-8 4-8-4Z" fill="var(--clear-lit)" stroke="var(--lead)" stroke-width="1.2"/><path d="M93 92l8-4 8 4v9l-8 4-8-4Z" fill="var(--azure)" stroke="var(--lead)" stroke-width="1.2"/><path d="M111 92l8-4 8 4v9l-8 4-8-4Z" fill="var(--gules)" stroke="var(--lead)" stroke-width="1.2"/><path d="M129 92l8-4 8 4v9l-8 4-8-4Z" fill="var(--or)" stroke="var(--lead)" stroke-width="1.2"/><path d="M147 92l8-4 8 4v9l-8 4-8-4Z" fill="var(--clear-lit)" stroke="var(--lead)" stroke-width="1.2"/><path d="M165 92l8-4 8 4v9l-8 4-8-4Z" fill="var(--azure)" stroke="var(--lead)" stroke-width="1.2"/></svg><span class="ov-layer__note">Illustrative layout</span><span class="cc-stamp cc-stamp--draft">Draft · not on air</span></span></button></div></div>
+      </div>
+      <nav class="ov-predella" aria-label="Layers in the picture">
+<div class="ov-pane" data-module="lottery">
+  <button class="ov-pane__select" type="button" data-layer="lottery" aria-pressed="true" aria-label="Select Lot Chamber: 87 sample lots · waiting for a writ. Preview, no proposals" style="--d:0.2s"><kbd class="cc-kbd">1</kbd><b class="ov-pane__name">Lot Chamber</b><span class="ov-pane__fig">87 sample lots · waiting for a writ</span><span class="cc-lamps" aria-hidden="true"><i data-lit="false">On air</i><i data-lit="true">Preview</i><i data-lit="false">Draft</i></span></button>
+  <a class="ov-pane__open" href="lottery.html" aria-label="Open the Lot Chamber">Open ›</a></div>
+<div class="ov-pane" data-module="moderator">
+  <button class="ov-pane__select" type="button" data-layer="moderator" aria-pressed="false" aria-label="Select Gatehouse: Armed 0 · Watching 3. On air, preview, no proposals" style="--d:0.45s"><kbd class="cc-kbd">2</kbd><b class="ov-pane__name">Gatehouse</b><span class="ov-pane__fig">Armed 0 · Watching 3</span><span class="cc-lamps" aria-hidden="true"><i data-lit="true">On air</i><i data-lit="true">Preview</i><i data-lit="false">Draft</i></span></button>
+  <a class="ov-pane__open" href="gatehouse.html" aria-label="Open the Gatehouse">Open ›</a></div>
+<div class="ov-pane" data-module="visuals">
+  <button class="ov-pane__select" type="button" data-layer="visuals" aria-pressed="false" aria-label="Select Beacons: 3 sample visuals · contribution-driven. On air, preview, no proposals" style="--d:0.7s"><kbd class="cc-kbd">3</kbd><b class="ov-pane__name">Beacons</b><span class="ov-pane__fig">3 sample visuals · contribution-driven</span><span class="cc-lamps" aria-hidden="true"><i data-lit="true">On air</i><i data-lit="true">Preview</i><i data-lit="false">Draft</i></span></button>
+  <a class="ov-pane__open" href="beacons.html" aria-label="Open the Beacons">Open ›</a></div>
+<div class="ov-pane" data-module="studio">
+  <button class="ov-pane__select" type="button" data-layer="studio" aria-pressed="false" aria-label="Select Map Room: Illustrative war table · local test only. Preview, no proposals" style="--d:0.95s"><kbd class="cc-kbd">4</kbd><b class="ov-pane__name">Map Room</b><span class="ov-pane__fig">Illustrative war table · local test only</span><span class="cc-lamps" aria-hidden="true"><i data-lit="false">On air</i><i data-lit="true">Preview</i><i data-lit="false">Draft</i></span></button>
+  <a class="ov-pane__open" href="maproom.html" aria-label="Open the Map Room">Open ›</a></div>
+      </nav>
+    </section>
+
+    <aside class="ov-side" aria-label="Program and inspector" data-chamber="lottery" id="ov-side">
+      <section class="cc-monitor" aria-label="Program">
+        <div class="cc-monitor__head"><span class="cc-monitor__name"><i class="cc-lozenge" aria-hidden="true"></i>Program</span><span class="cc-sim">Simulated program</span></div>
+        <div class="cc-monitor__screen"><div class="ov-scene ov-scene--program" data-scene="program"><svg class="ov-crypt" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">
+<defs><radialGradient id="pgrg-gules" cx=".38" cy=".32" r=".75"><stop offset="0" style="stop-color:var(--gules-lit)"/><stop offset=".6" style="stop-color:var(--gules)"/><stop offset="1" style="stop-color:var(--gules-deep)"/></radialGradient><radialGradient id="pgrg-azure" cx=".38" cy=".32" r=".75"><stop offset="0" style="stop-color:var(--azure-lit)"/><stop offset=".6" style="stop-color:var(--azure)"/><stop offset="1" style="stop-color:var(--azure-deep)"/></radialGradient><radialGradient id="pgrg-or" cx=".38" cy=".32" r=".75"><stop offset="0" style="stop-color:var(--or-lit)"/><stop offset=".6" style="stop-color:var(--or)"/><stop offset="1" style="stop-color:var(--or-deep)"/></radialGradient><radialGradient id="pgrg-key" cx=".38" cy=".32" r=".75"><stop offset="0" style="stop-color:var(--key-lit)"/><stop offset=".6" style="stop-color:var(--key)"/><stop offset="1" style="stop-color:var(--key-deep)"/></radialGradient><radialGradient id="pgrg-amethyst" cx=".38" cy=".32" r=".75"><stop offset="0" style="stop-color:var(--amethyst-lit)"/><stop offset=".6" style="stop-color:var(--amethyst)"/><stop offset="1" style="stop-color:var(--amethyst-deep)"/></radialGradient><radialGradient id="pgrg-emerald" cx=".38" cy=".32" r=".75"><stop offset="0" style="stop-color:var(--emerald-lit)"/><stop offset=".6" style="stop-color:var(--emerald)"/><stop offset="1" style="stop-color:var(--emerald-deep)"/></radialGradient><radialGradient id="pgmed" cx=".4" cy=".3" r=".8"><stop offset="0" style="stop-color:var(--clear-lit)"/><stop offset="1" style="stop-color:var(--clear)"/></radialGradient><linearGradient id="pglg-amethyst" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--amethyst-lit)"/><stop offset=".5" style="stop-color:var(--amethyst)"/><stop offset="1" style="stop-color:var(--amethyst-deep)"/></linearGradient><linearGradient id="pglg-azure" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--azure-lit)"/><stop offset=".5" style="stop-color:var(--azure)"/><stop offset="1" style="stop-color:var(--azure-deep)"/></linearGradient>
+<pattern id="pgqy" width="40" height="54" patternUnits="userSpaceOnUse"><path d="M0 0 20 27 0 54M40 0 20 27 40 54" fill="none" stroke="var(--lead)" stroke-width="3" opacity=".7"/></pattern>
+<linearGradient id="pgnave" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--lead-2)"/><stop offset=".55" style="stop-color:var(--ov-nave)"/><stop offset="1" style="stop-color:var(--ov-nave-2)"/></linearGradient>
+<radialGradient id="pgpool" cx=".5" cy=".5" r=".5"><stop offset="0" style="stop-color:var(--or-lit)" stop-opacity=".55"/><stop offset="1" style="stop-color:var(--or-lit)" stop-opacity="0"/></radialGradient>
+</defs>
+<rect width="1600" height="900" fill="var(--ov-wall)"/>
+<path d="M120 820V250Q140 40 800-30Q1460 40 1480 250V820Z" fill="url(#pgnave)" stroke="var(--lead)" stroke-width="8"/>
+<path d="M800-30V140M420 120 800 140 1180 120M240 210Q520 120 800 140Q1080 120 1360 210" fill="none" stroke="var(--ov-rib)" stroke-width="10"/>
+<rect x="164" y="90" width="52" height="700" fill="var(--ov-pillar)" stroke="var(--lead)" stroke-width="4"/><path d="M150 110h80M150 770h80" stroke="var(--lead)" stroke-width="12"/><rect x="442" y="90" width="52" height="700" fill="var(--ov-pillar)" stroke="var(--lead)" stroke-width="4"/><path d="M428 110h80M428 770h80" stroke="var(--lead)" stroke-width="12"/><rect x="1106" y="90" width="52" height="700" fill="var(--ov-pillar)" stroke="var(--lead)" stroke-width="4"/><path d="M1092 110h80M1092 770h80" stroke="var(--lead)" stroke-width="12"/><rect x="1384" y="90" width="52" height="700" fill="var(--ov-pillar)" stroke="var(--lead)" stroke-width="4"/><path d="M1370 110h80M1370 770h80" stroke="var(--lead)" stroke-width="12"/>
+<path d="M548 700V428.2Q548 369.92 610 360Q672 369.92 672 428.2V700Z" fill="var(--stone-3)" stroke="var(--lead)" stroke-width="6" transform="translate(610 530) scale(1.12 1.06) translate(-610 -530)"/><clipPath id="pgwl"><path d="M548 700V428.2Q548 369.92 610 360Q672 369.92 672 428.2V700Z"/></clipPath><g clip-path="url(#pgwl)" class="ov-crypt-glass"><path d="M548 700V428.2Q548 369.92 610 360Q672 369.92 672 428.2V700Z" fill="url(#pglg-amethyst)"/><rect x="548" y="360" width="124" height="340" fill="url(#pgqy)"/><circle cx="610" cy="513" r="34.720000000000006" fill="url(#pgrg-or)" stroke="var(--lead)" stroke-width="5"/><circle cx="610" cy="513" r="14.879999999999999" fill="var(--clear-lit)" stroke="var(--lead)" stroke-width="4"/><path d="M548 625.2H672" stroke="var(--lead)" stroke-width="5"/></g><path d="M548 700V428.2Q548 369.92 610 360Q672 369.92 672 428.2V700Z" fill="none" stroke="var(--lead)" stroke-width="7"/><path d="M928 700V428.2Q928 369.92 990 360Q1052 369.92 1052 428.2V700Z" fill="var(--stone-3)" stroke="var(--lead)" stroke-width="6" transform="translate(990 530) scale(1.12 1.06) translate(-990 -530)"/><clipPath id="pgwr"><path d="M928 700V428.2Q928 369.92 990 360Q1052 369.92 1052 428.2V700Z"/></clipPath><g clip-path="url(#pgwr)" class="ov-crypt-glass"><path d="M928 700V428.2Q928 369.92 990 360Q1052 369.92 1052 428.2V700Z" fill="url(#pglg-azure)"/><rect x="928" y="360" width="124" height="340" fill="url(#pgqy)"/><circle cx="990" cy="513" r="34.720000000000006" fill="url(#pgrg-or)" stroke="var(--lead)" stroke-width="5"/><circle cx="990" cy="513" r="14.879999999999999" fill="var(--clear-lit)" stroke="var(--lead)" stroke-width="4"/><path d="M928 625.2H1052" stroke="var(--lead)" stroke-width="5"/></g><path d="M928 700V428.2Q928 369.92 990 360Q1052 369.92 1052 428.2V700Z" fill="none" stroke="var(--lead)" stroke-width="7"/>
+<path d="M0 900 500 730H1100L1600 900Z" fill="var(--ov-floor)" stroke="var(--lead)" stroke-width="4"/>
+<path d="M650 730 560 900M800 730V900M950 730 1040 900M300 800H1300" stroke="var(--lead)" stroke-width="2" opacity=".45"/>
+<ellipse class="ov-crypt-pool" cx="610" cy="790" rx="150" ry="40" fill="url(#pgpool)"/><ellipse class="ov-crypt-pool" cx="990" cy="790" rx="150" ry="40" fill="url(#pgpool)"/>
+<g class="ov-skull" transform="translate(800 214) scale(.82)">
+  <path d="M-92-34-120-112-64-70-40-128-12-74 0-140 12-74 40-128 64-70 120-112 92-34Z" fill="url(#pgrg-or)" stroke="var(--lead)" stroke-width="6" stroke-linejoin="round"/>
+  <path d="M-86-30C-96 30-70 64-50 74V104H50V74C70 64 96 30 86-30C70-66-70-66-86-30Z" fill="var(--ov-bone)" stroke="var(--lead)" stroke-width="7"/>
+  <path class="ov-socket" d="M-62 0C-62-22-24-26-18 0-16 22-62 26-62 0ZM62 0C62-22 24-26 18 0 16 22 62 26 62 0Z" fill="var(--lead-lo)"/>
+  <path d="M-8 34 0 18 8 34Z" fill="var(--lead-lo)"/>
+  <path d="M-40 104V84M-20 104V84M0 104V84M20 104V84M40 104V84" stroke="var(--lead)" stroke-width="5"/>
+</g>
+</svg><div class="ov-layer ov-layer--chat" data-module="moderator"><span class="ov-layer__title">Chat and Herald</span><ol class="ov-chat"><li>Simulated viewer 1: go left!</li></ol></div><div class="ov-layer ov-layer--altar" data-module="visuals"><span class="ov-layer__title">Altar, frame and border</span><span class="ov-art"><svg class="ov-med" viewBox="0 0 120 120" aria-hidden="true" focusable="false"><defs><radialGradient id="pgarg-gules" cx=".38" cy=".32" r=".75"><stop offset="0" style="stop-color:var(--gules-lit)"/><stop offset=".6" style="stop-color:var(--gules)"/><stop offset="1" style="stop-color:var(--gules-deep)"/></radialGradient><radialGradient id="pgarg-azure" cx=".38" cy=".32" r=".75"><stop offset="0" style="stop-color:var(--azure-lit)"/><stop offset=".6" style="stop-color:var(--azure)"/><stop offset="1" style="stop-color:var(--azure-deep)"/></radialGradient><radialGradient id="pgarg-or" cx=".38" cy=".32" r=".75"><stop offset="0" style="stop-color:var(--or-lit)"/><stop offset=".6" style="stop-color:var(--or)"/><stop offset="1" style="stop-color:var(--or-deep)"/></radialGradient><radialGradient id="pgarg-key" cx=".38" cy=".32" r=".75"><stop offset="0" style="stop-color:var(--key-lit)"/><stop offset=".6" style="stop-color:var(--key)"/><stop offset="1" style="stop-color:var(--key-deep)"/></radialGradient><radialGradient id="pgarg-amethyst" cx=".38" cy=".32" r=".75"><stop offset="0" style="stop-color:var(--amethyst-lit)"/><stop offset=".6" style="stop-color:var(--amethyst)"/><stop offset="1" style="stop-color:var(--amethyst-deep)"/></radialGradient><radialGradient id="pgarg-emerald" cx=".38" cy=".32" r=".75"><stop offset="0" style="stop-color:var(--emerald-lit)"/><stop offset=".6" style="stop-color:var(--emerald)"/><stop offset="1" style="stop-color:var(--emerald-deep)"/></radialGradient><radialGradient id="pgamed" cx=".4" cy=".3" r=".8"><stop offset="0" style="stop-color:var(--clear-lit)"/><stop offset="1" style="stop-color:var(--clear)"/></radialGradient></defs><circle cx="60" cy="60" r="59" fill="var(--stone-3)" stroke="var(--lead)" stroke-width="1.6"/><circle cx="60" cy="60" r="55" fill="url(#pgarg-or)" stroke="var(--lead)" stroke-width="2.2"/><path d="M104 60L115 60" stroke="var(--lead)" stroke-width="1.6"/><circle cx="107.08" cy="75.3" r="3.4" fill="var(--or-lit)" stroke="var(--lead)" stroke-width="1.2"/><path d="M95.6 85.86L104.5 92.33" stroke="var(--lead)" stroke-width="1.6"/><circle cx="89.1" cy="100.05" r="3.4" fill="var(--clear-lit)" stroke="var(--lead)" stroke-width="1.2"/><path d="M73.6 101.85L77 112.31" stroke="var(--lead)" stroke-width="1.6"/><circle cx="60" cy="109.5" r="3.4" fill="var(--or-lit)" stroke="var(--lead)" stroke-width="1.2"/><path d="M46.4 101.85L43 112.31" stroke="var(--lead)" stroke-width="1.6"/><circle cx="30.9" cy="100.05" r="3.4" fill="var(--clear-lit)" stroke="var(--lead)" stroke-width="1.2"/><path d="M24.4 85.86L15.5 92.33" stroke="var(--lead)" stroke-width="1.6"/><circle cx="12.92" cy="75.3" r="3.4" fill="var(--or-lit)" stroke="var(--lead)" stroke-width="1.2"/><path d="M16 60L5 60" stroke="var(--lead)" stroke-width="1.6"/><circle cx="12.92" cy="44.7" r="3.4" fill="var(--clear-lit)" stroke="var(--lead)" stroke-width="1.2"/><path d="M24.4 34.14L15.5 27.67" stroke="var(--lead)" stroke-width="1.6"/><circle cx="30.9" cy="19.95" r="3.4" fill="var(--or-lit)" stroke="var(--lead)" stroke-width="1.2"/><path d="M46.4 18.15L43 7.69" stroke="var(--lead)" stroke-width="1.6"/><circle cx="60" cy="10.5" r="3.4" fill="var(--clear-lit)" stroke="var(--lead)" stroke-width="1.2"/><path d="M73.6 18.15L77 7.69" stroke="var(--lead)" stroke-width="1.6"/><circle cx="89.1" cy="19.95" r="3.4" fill="var(--or-lit)" stroke="var(--lead)" stroke-width="1.2"/><path d="M95.6 34.14L104.5 27.67" stroke="var(--lead)" stroke-width="1.6"/><circle cx="107.08" cy="44.7" r="3.4" fill="var(--clear-lit)" stroke="var(--lead)" stroke-width="1.2"/><circle cx="60" cy="60" r="44" fill="url(#pgamed)" stroke="var(--lead)" stroke-width="2.2"/><clipPath id="pgamc-visuals"><circle cx="441.5" cy="382" r="52.44"/></clipPath><g clip-path="url(#pgamc-visuals)" transform="translate(60 60) scale(0.82) translate(-441.5 -382)"><path d="M415.5 386H467.5C465.5 400 454.5 406 441.5 406C428.5 406 417.5 400 415.5 386Z" fill="url(#pgarg-key)" stroke="var(--lead)" stroke-width="2.2"/>
+      <path d="M441.5 406V422M426.5 422H456.5M431.5 406L425.5 422M451.5 406L457.5 422" stroke="var(--lead)" stroke-width="3"/>
+      <g class="kw-fire"><path d="M441.5 340C452.5 355 465.5 364 460.5 379C457.5 386 449.5 386 441.5 385C433.5 386 424.5 386 422.5 379C418.5 364 430.5 357 441.5 340Z" fill="url(#pgarg-gules)" stroke="var(--lead)" stroke-width="2"/>
+      <path d="M441.5 355C448.5 365 453.5 372 450.5 380C447.5 384 435.5 384 432.5 380C429.5 372 435.5 365 441.5 355Z" fill="url(#pgarg-or)" stroke="var(--lead)" stroke-width="1.6"/></g></g></svg></span></div></div></div>
+        <p class="cc-note">Sample picture only · nothing is sent to OBS</p>
+      </section>
+      <div class="ov-proclaim" role="group" aria-describedby="ov-cap">
+        <p class="ov-proclaim__cap" id="ov-cap">Nothing to proclaim: ask the Steward to draft one</p>
+        <button class="cc-seal" type="button" disabled aria-label="Hold to seal and proclaim" aria-describedby="ov-cap ov-seal-hint">
+          <span class="cc-seal__rose" aria-hidden="true"></span>
+          <span><span class="cc-seal__label">Hold to seal and proclaim</span><span class="cc-seal__hint" id="ov-seal-hint">Press and hold Space for 1 second</span></span>
+        </button>
+        <p class="cc-note" role="status">Drafts stay in Preview until your hold. No live output.</p>
+      </div>
+      <div class="ov-tabs" role="tablist" aria-label="Steward and layer details">
+        <button type="button" role="tab" id="ov-talkback-tab" aria-controls="ov-talkback" aria-selected="false" tabindex="-1">Talkback</button>
+        <button type="button" role="tab" id="ov-inspector-tab" aria-controls="ov-inspector" aria-selected="true">Inspector</button>
+      </div>
+      <div class="ov-pane-tab" id="ov-talkback" role="tabpanel" aria-labelledby="ov-talkback-tab" hidden>
+        <div class="ov-talk"><span class="cc-sim">Steward · simulated</span><p>Good evening. Draft in the preview, amend in ink, then hold to seal. Nothing acts on a spoken request.</p></div>
+      </div>
+      <div class="ov-pane-tab" id="ov-inspector" role="tabpanel" aria-labelledby="ov-inspector-tab">
+        <section aria-label="Visual artifact designs" style="display:grid;gap:10px">
+          <span class="cc-sim" style="justify-self:start">Simulated · data-only designs</span>
+          <div id="ov-artifacts"><div class="ov-artifact" role="group" aria-label="Draw shape design"><svg viewBox="0 0 160 100" aria-hidden="true"><path d="M55 12h50l-7 18q35 50-18 56Q27 80 62 30Z M50 90h60"/></svg><b>Draw shape</b><span>Preset: Urn</span><span class="cc-actions"><button class="cc-btn cc-btn--sm" type="button">Restyle</button><button class="cc-btn cc-btn--sm" type="button">Custom design</button></span></div></div>
+        </section>
+        <p class="cc-note">No open proposal for this layer. Ask the Steward to draft one.</p>
+        <aside class="ov-fair" id="ov-fair" aria-label="Draw fairness">
+          <b>Fairness stays in the room</b>
+          <p>Free entry · equal odds. Paid entry and paid weight on prize draws are blocked by default.</p>
+          <p>Seal the roll → announce a public round → cast → publish the writ.</p>
+          <p>This preview uses generated sample entries. Its SHA-256 is not a verified draw or a live beacon.</p>
+        </aside>
+        <a class="cc-link" id="ov-open" href="lottery.html">Open the room →</a>
+      </div>
+    </aside>
+  </main>
+  <footer class="cc-dock" data-chamber="keep" aria-label="The Steward">
+    <div class="cc-steward"><svg class="cc-steward__niche" viewBox="0 0 44 62" aria-hidden="true">
+  <path d="M3 61V24C3 12 12 4 22 1c10 3 19 11 19 23v37Z" fill="var(--stone-3)" stroke="var(--lead)" stroke-width="2"/>
+  <path d="M8 58V26c0-9 6-15 14-18 8 3 14 9 14 18v32Z" fill="var(--amethyst-deep)" stroke="var(--lead)" stroke-width="2"/>
+  <path d="M8 40h28M22 8v50" stroke="var(--lead)" stroke-width="1.2" opacity=".55"/>
+  <ellipse cx="22" cy="31" rx="11" ry="14" fill="var(--or-lit)" opacity=".28"/>
+  <rect x="18.5" y="34" width="7" height="16" fill="var(--clear-lit)" stroke="var(--lead)" stroke-width="1.4"/>
+  <path class="cc-flame" d="M22 21c4 5 5 9 0 12-5-3-4-7 0-12Z" fill="var(--or-lit)" stroke="var(--lead)" stroke-width="1.2"/>
+  <path d="M12 52h20" stroke="var(--lead)" stroke-width="2.5"/>
+</svg>
+      <b class="cc-steward__name">The Steward</b>
+      <span class="cc-steward__role">simulated co-pilot · sample data</span>
+      <span class="cc-sim">Simulated</span>
+    </div>
+    <form class="cc-talk" onsubmit="return false">
+      <p class="cc-talk__msg">Good evening. Draft in the preview, amend in ink, then hold to seal. Nothing acts on a spoken request.</p>
+      <div class="cc-talk__row">
+        <label class="cc-sr" for="steward-input">Talk to the Steward</label>
+        <input class="cc-input" id="steward-input" placeholder="Talk to the Steward..." autocomplete="off">
+        <button class="cc-btn" type="submit" disabled>Tell</button>
+        <span class="cc-suggest">
+          <button class="cc-btn cc-btn--quiet" type="button">Catch me up</button>
+          <button class="cc-btn cc-btn--quiet" type="button">Draft a question draw</button>
+          <button class="cc-btn cc-btn--quiet" type="button">What does chat want?</button>
+        </span>
+      </div>
+    </form>
+  </footer>
+</div>
+<button class="cc-proto-toggle" type="button" data-theme-toggle title="Prototype only: not part of the design">◐ proto</button>
+<script>
+(function(){
+  var root=document.documentElement;
+  function flip(){var n=root.getAttribute('data-theme')==='night'?'day':'night';root.setAttribute('data-theme',n);try{var u=new URL(location.href);u.searchParams.set('theme',n);history.replaceState(null,'',u);}catch(e){}}
+  document.querySelectorAll('[data-theme-toggle]').forEach(function(b){b.addEventListener('click',flip);});
+  var go={'0':'keep.html','1':'lottery.html','2':'gatehouse.html','3':'beacons.html','4':'maproom.html'};
+  document.addEventListener('keydown',function(e){
+    var t=e.target; if(e.metaKey||e.ctrlKey||e.altKey)return;
+    if(t&&(t.isContentEditable||/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)))return;
+    if(e.key==='/'){e.preventDefault();var i=document.getElementById('steward-input');if(i)i.focus();return;}
+    if(e.key==='Escape'){var b=document.querySelector('[data-back]');if(b){location.href=b.getAttribute('href');}return;}
+    if(go[e.key]){var q=location.search;location.href=go[e.key]+q;}
+  });
+})();
+</script>
+<script>
+(function(){
+  // Selecting a layer (in the picture or the predella) focuses the inspector on that chamber, as Overview.select() does.
+  var pics={urn:'<path d="M55 12h50l-7 18q35 50-18 56Q27 80 62 30Z M50 90h60"/>',chat:'<path d="M15 10h130v65H65L40 95V75H15Zm15 20h100M30 45h85M30 60h95"/>',altar:'<path d="M35 80h90v12H35Zm15-12h60v12H50ZM80 10q-30 30 0 50 30-20 0-50Z"/>',hex:'<path d="m30 20 20-10 20 10v25l-20 10-20-10Zm0 40 20-10 20 10v25l-20 10-20-10Zm35-40 20-10 20 10v25l-20 10-20-10Zm0 40 20-10 20 10v25l-20 10-20-10Zm35-40 20-10 20 10v25l-20 10-20-10Zm0 40 20-10 20 10v25l-20 10-20-10Z"/>'};
+  var arts={lottery:[['Draw shape','Urn','urn']],moderator:[['Overlay','Chat overlay','chat']],visuals:[['Beacon visuals','Offering altar','altar'],['Overlay','Chat overlay','chat']],studio:[['War-table panel','Hex map','hex']]};
+  var rooms={lottery:'lottery.html',moderator:'gatehouse.html',visuals:'beacons.html',studio:'maproom.html'};
+  var side=document.getElementById('ov-side'), box=document.getElementById('ov-artifacts');
+  function select(id){
+    document.querySelectorAll('[data-layer]').forEach(function(b){b.setAttribute('aria-pressed',b.getAttribute('data-layer')===id);});
+    side.setAttribute('data-chamber',id);
+    box.innerHTML=arts[id].map(function(a){return '<div class="ov-artifact" role="group" aria-label="'+a[0]+' design"><svg viewBox="0 0 160 100" aria-hidden="true">'+pics[a[2]]+'</svg><b>'+a[0]+'</b><span>Preset: '+a[1]+'</span><span class="cc-actions"><button class="cc-btn cc-btn--sm" type="button">Restyle</button><button class="cc-btn cc-btn--sm" type="button">Custom design</button></span></div>';}).join('');
+    document.getElementById('ov-fair').hidden=id!=='lottery';
+    document.getElementById('ov-open').href=rooms[id];
+    tab('inspector');
+  }
+  document.querySelectorAll('[data-layer]').forEach(function(b){b.addEventListener('click',function(){select(b.getAttribute('data-layer'));});});
+  function tab(which){
+    ['talkback','inspector'].forEach(function(t){var on=t===which;var b=document.getElementById('ov-'+t+'-tab');b.setAttribute('aria-selected',on);b.tabIndex=on?0:-1;document.getElementById('ov-'+t).hidden=!on;});
+  }
+  document.getElementById('ov-talkback-tab').addEventListener('click',function(){tab('talkback');});
+  document.getElementById('ov-inspector-tab').addEventListener('click',function(){tab('inspector');});
+  document.querySelector('.ov-tabs').addEventListener('keydown',function(e){if(e.key==='ArrowLeft'||e.key==='ArrowRight'){var next=document.getElementById('ov-talkback-tab').getAttribute('aria-selected')==='true'?'inspector':'talkback';tab(next);document.getElementById('ov-'+next+'-tab').focus();}});
+})();
+</script>
+</body>
+</html>

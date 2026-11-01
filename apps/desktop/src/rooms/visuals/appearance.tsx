@@ -1,6 +1,6 @@
 import { useState, useSyncExternalStore } from 'react';
 import type { CSSProperties } from 'react';
-import { FieldGroup, StatusChip } from '@castle-control/ui';
+import { FieldGroup, Stamp } from '@castle-control/ui';
 import type { Visual } from '@castle-control/contract';
 import { beaconsCopy as copy } from '../../beacons-copy.js';
 import { anchors, colours, initialAppearance, sizes } from './appearance-state.js';
@@ -41,7 +41,7 @@ export function AppearanceControls({ session, visual, intensity, burst = 0, desi
       <div className="visuals-appearance-object" key={`${visual.visual_id}-${burst}`}>
         <BeaconArtwork item={{ visual, intensity: intensity ?? 0, total: 0, gift_weight: 1 }} />
       </div>
-      <StatusChip variant="dash">{`SIMULATED · ${intensity === undefined ? copy.live_unavailable : `${Math.round(intensity * 100)}% blaze`}`}</StatusChip>
+      <Stamp kind="simulated" word={`SIMULATED · ${intensity === undefined ? copy.live_unavailable : `${Math.round(intensity * 100)}% blaze`}`} />
     </section>
     {design_port && <FixtureStylePicker visual={visual} port={design_port} />}
     <div className="visuals-appearance-fields">

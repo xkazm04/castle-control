@@ -86,7 +86,7 @@ export function createCoreSource(launch: CoreLaunch, transport: Network = networ
             const event = parseEvent(message.data);
             if (event.kind !== 'resync' && event.seq <= since_seq) return;
             since_seq = event.seq;
-            invalidate();
+            invalidate(event);
           } catch {
             const poison = rejectedSeq(message.data);
             if (poison !== undefined && poison > since_seq) { since_seq = poison; invalidate(); }

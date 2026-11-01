@@ -9,8 +9,11 @@
   `negotiatedRpcVersion: 1`. Unknown Hello fields are ignored. No-auth Hello
   omits authentication, and the client never reads the keychain in that case.
 - **Authentication:** `base64(SHA256(base64(SHA256(password + salt)) + challenge))`,
-  using UTF-8 bytes and standard padded base64. Only the existing OS keychain
-  service `castlecontrol-obs`, account `local-obs`, supplies live passwords.
+  using UTF-8 bytes and standard padded base64. The OS keychain service is
+  `castlecontrol-obs`; the native configured label defaults to `streamer`, while
+  the guarded live-test label remains `local-obs`. D3a also accepts an authenticated
+  RPC password into zeroized in-memory reconnect state; `remember` additionally
+  writes that configured keychain entry, only after a successful probe.
   The simulated independent vector lives in `tests/simulated/mod.rs`.
 - **GetVersion / correlation:** requests are op `6` with `requestType`,
   `requestId` (`cc-1`, `cc-2`, ...), and `requestData`. Responses are op `7`;
@@ -22,31 +25,38 @@
   `is_local_file: false`, `shutdown: false`. The URL must be an HTTP
   `localhost:<nonzero-port>/` spike root, or a canonical
   `/beacons/<visual-slug>` with an optional exact `package_hash=<64 lowercase hex>`
-  query, plus the optional display-only `scale` and `anchor` keys, without
+  query, plus the optional display-only `scale` and `anchor` keys (and, on
+  `/lots/<draw-slug>` pages only, `shape`), without
   credentials. Their values are forwarded unchanged and interpreted only by
   the overlay entry (including invalid-value fallback); unknown query keys and
   duplicate package hashes are refused. NativeServices additionally checks the owned
   origin and current accepted visual/hash; syntax alone grants no source. Dimensions are
   1..8192 and names must be nonblank. The expected OBS response data contains
-  `sceneItemId` and `inputUuid`. **The client currently ignores response data:**
-  successful correlated status alone acknowledges creation. The live twin
+  `sceneItemId` and `inputUuid`, both parsed into `CreatedInput`. Native creation
+  records them together with scene/source names in the ownership ledger. The live twin
   reads back the production-created input, then independently recreates it to
   inspect the actual response fields and matching scene item.
 - **Scene:** the spike defaults to an existing scene named exactly `Scene`.
   The cc-obs live twins accept `CC_LIVE_OBS_SCENE` to select another existing
-  scene. cc-obs does not create scenes and forwards caller-supplied names.
+  scene. The original source API still forwards caller-supplied scene names.
+  D3a's explicit ensure operation lists scenes, creates only an absent scene and
+  records only scenes it created. It never changes the program scene.
 - **Status / errors:** success requires BOTH `result: true` AND `code: 100`.
   Every other status becomes fixed `Error::Rejected`; peer comments are never
   surfaced. Malformed/mismatched protocol becomes `Protocol`, socket closure or
   IO failure `Transport`, unavailable password `Keychain`, invalid config/source
   `Invalid`, elapsed five-second handshake/request budget `Timeout`. Specific
-  OBS failure codes are not mapped to separate product errors. Fixtures use
+  OBS failure codes introduce no separate product errors. Cleanup alone maps
+  ItemNotFound (600) to adapter `Missing`; all other rejections are unchanged. Fixtures use
   synthetic 500/600 rejection examples, not a claim about a live server's code.
 - **Reconnect:** no automatic reconnect, retry, input replay, or background
   resubscribe exists. After socket failure the caller must construct a fresh
   client, repeat Hello/Identify and issue a new request. The fixture closes the
   peer; the live twin closes only its own connection and opens a fresh one,
-  without restarting OBS or disrupting another client's socket.
+  without restarting OBS or disrupting another client's socket. D3a's native
+  `Connection` wrapper retains the successful RPC endpoint and zeroized credential
+  for subsequent probes and source calls; it reconnects after a failed operation
+  without replaying mutations.
 - **Overlay:** the spike's separate page is `http://localhost:17891/`, bound to
   IPv4 loopback. Only the exact `localhost:<port>` Host is allowed (else 403).
   Root is GET/HEAD only (POST 405); `/rpc` and `/events` are absent (GET/POST
@@ -218,3 +228,43 @@ Live tests have not been enabled or run. This is not owner live-spike evidence.
   over the shared `node_modules` junction.
 - Scene mismatch reporting is compiled, not claimed live-verified. No live
   checks ran, no OBS scene was switched, and no visual sign-off is claimed.
+
+## D3a rehearsal ownership
+
+`Ownership` keeps an atomic `ownership.json` snapshot (write, sync, rename) under
+`<core-data-root>/obs`, beside the native/settings and module stores. Its private
+schema contains endpoint keys, created scene names and created inputs' scene name,
+source name, input UUID and scene item ID. It rejects malformed snapshots and
+unknown fields. No password, keychain label, RPC session token or overlay URL is
+stored. The legacy native `app()`/registry constructor without a data root uses an
+in-memory ledger; the production `app_with_data_dir` path persists it.
+
+`obs.rehearsal.clear` addresses inputs by recorded UUID, never by source name.
+After each acknowledged removal or ItemNotFound response it saves the reduced
+ledger. Other failures preserve the remaining records for retry. It then inspects
+only owned scenes and removes only those with no items. A nonempty owned scene
+remains recorded for a later clear; preexisting scenes are never claimed. Records
+for another endpoint are untouched. The empty check and removal are separate OBS
+requests; OBS does not provide a conditional RemoveScene transaction, so an owner
+must avoid adding items during clear.
+
+Added simulated evidence (written here; Director execution pending):
+
+| Acceptance | Evidence |
+| --- | --- |
+| Ensure creates once; existing scene stays unowned | `tests/ownership.rs::ensure_creates_once_and_never_claims_an_existing_scene` |
+| CreateInput UUID/item ID capture, restart, UUID-only cleanup, foreign input/nonempty scene retained | `capture_survives_restart_and_clear_preserves_foreign_items_and_nonempty_scene` |
+| Missing inputs/scenes dropped; other rejection retained | `missing_inputs_and_scenes_are_dropped_but_other_rejections_retain_ownership`, `scene_deleted_between_empty_check_and_removal_is_skipped` |
+| Local endpoint validation | `src/connection.rs::tests::endpoint_accepts_local_addresses_and_plain_hostnames_only` |
+
+D3a builder validation: direct `rustfmt`, static inventory/secret checks and
+`git diff --check` only. No Cargo command or browser was run, per the delivery
+brief. The Director owns `cargo test -p cc-obs -p cc-core` and `pnpm gate`; these
+new tests are not claimed green or live evidence.
+
+D3a review follow-up: the Director reported the Cargo tests green except for
+parallel ownership-test temp-directory collisions on Windows. `Root` now includes
+a process-wide atomic counter alongside PID/time and ignores removal errors in
+Drop. A regression check creates roots in parallel and removes one before Drop.
+The other new D3a helpers use `tempfile::tempdir()` or no filesystem paths; none
+share this pattern. The builder has not rerun Cargo after this correction.

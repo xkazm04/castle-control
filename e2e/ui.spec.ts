@@ -54,7 +54,7 @@ for (const route of routes) for (const theme of themes) for (const steward of st
   test(`desktop-${slug(route)}-${theme}-steward-${steward}`, async ({ page }) => {
     // main.tsx defaults to fixtures when no native launch is injected.
     await page.goto(`/${route}`);
-    await expect(page.locator('.cc-sample')).toHaveText('Simulated');
+    await expect(page.locator('.cc-rampart > [data-stamp="simulated"]')).toHaveText('Simulated');
     await expect(page.locator('.keep-home, .overview-workspace, .shell-room, .demo-workspace, .stream-workspace')).toBeVisible();
     await expect(page.getByText('Opening the room...', { exact: true })).toHaveCount(0);
     await expect(page.locator('.cc-steward-bar')).toBeVisible();
@@ -96,12 +96,12 @@ test('overlay-simulated-connected', async ({ page }) => {
     { name: 'overlay canvas', selector: '#scene' },
     { name: 'simulated rendered layer', selector: '#scene > div' },
     { name: 'simulated provenance badge', selector: '[data-simulated-badge]' },
-  ], { canvas: 'obs-transparent' });
+  ], { canvas: 'obs-transparent', tokenSheet: 'overlay-base' });
 });
 
 test('fixture draw rehearsal seals, casts, reveals in the urn and recomputes this cast', async ({ page }) => {
   await page.goto('/#/chamber/lottery');
-  await expect(page.locator('.cc-sample')).toHaveText('Simulated');
+  await expect(page.locator('.cc-rampart > [data-stamp="simulated"]')).toHaveText('Simulated');
   await page.getByRole('button', { name: 'Preview this draw', exact: true }).click();
   await expect(page.getByText('Proposal · not sealed', { exact: true })).toBeVisible();
   const hold = page.getByRole('button', { name: 'Hold to seal', exact: true });
@@ -115,9 +115,10 @@ test('fixture draw rehearsal seals, casts, reveals in the urn and recomputes thi
   const result = page.getByRole('region', { name: 'Current SIMULATED cast', exact: true });
   await expect(result.locator('[data-current-winner]')).toHaveCount(3);
   // This lane uses reduced motion, so every winner is revealed immediately.
-  for (const order of [1, 2, 3]) await expect(page.locator(`.cc-urn [data-winner="${order}"]`)).toHaveCount(1);
+  for (const order of [1, 2, 3]) await expect(page.locator(`.lottery-draw-lots [data-winner="${order}"]`)).toHaveCount(1);
   const winners = await result.locator('[data-current-winner]').allTextContents();
-  for (const [index, winner] of winners.entries()) await expect(page.locator(`.lottery-winner-badge[aria-label="${index + 1}. ${winner}"]`)).toHaveCount(1);
+  // The stage's scoreboard lists the same winners in cast order.
+  for (const [index, winner] of winners.entries()) await expect(page.locator(`[data-stage-winner="${index + 1}"]`)).toContainText(winner);
   await result.getByRole('button', { name: 'Read current simulated writ', exact: true }).click();
   const writ = page.getByRole('region', { name: 'Current simulated writ', exact: true });
   await expect(writ).toContainText('Not a cc-verify proof');

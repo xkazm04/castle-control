@@ -57,6 +57,11 @@ export const studioCopy = {
   labels_ok: 'Labels legible at source size', labels_small: 'Labels may overlap at source size',
   viewer_pick: 'Simulated viewer pick', pick: (id: string) => `Your pick: ${id} · simulated viewer`,
   pick_hint: 'Choose a hex as a simulated viewer. The streamer inspector stays unchanged.',
+  tiltyard: 'Tiltyard',
+  tiltyard_note: 'The duel component · hosted as a Map Room view',
+  tiltyard_sample: 'Sample items · simulated chat',
+  tiltyard_live: 'SAMPLE contestants · Gatehouse verdicts',
+  tiltyard_unavailable: 'Live chat unavailable. Retrying on Gatehouse verdicts or the slow backstop.',
 } as const;
 
 export const studioStages = [

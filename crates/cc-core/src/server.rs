@@ -44,6 +44,7 @@ impl AppState {
         self.token.as_str()
     }
     pub fn shutdown(&self) {
+        self.registry.stop_rehearsal();
         self.shutdown.send_replace(true);
     }
 }

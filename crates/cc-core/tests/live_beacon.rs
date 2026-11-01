@@ -188,6 +188,7 @@ async fn live_beacon_network_failure_is_typed_without_cast_and_streamer_commit_s
                 &"simulated-draw".to_owned().try_into().unwrap(),
                 PassedMessage::from_verdict(
                     MessageFacts {
+                        simulated: true,
                         message_id: "simulated-message".to_owned().try_into().unwrap(),
                         user_id: user,
                         at: "2023-08-23T15:09:28Z".parse().unwrap(),

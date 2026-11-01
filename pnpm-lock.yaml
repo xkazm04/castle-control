@@ -59,12 +59,24 @@ importers:
       '@castle-control/contract':
         specifier: workspace:*
         version: link:../../packages/contract
+      '@castle-control/duel':
+        specifier: workspace:*
+        version: link:../../packages/duel
+      '@castle-control/keep-art':
+        specifier: workspace:*
+        version: link:../../packages/keep-art
+      '@castle-control/renderer':
+        specifier: workspace:*
+        version: link:../../packages/renderer
       '@castle-control/tokens':
         specifier: workspace:*
         version: link:../../packages/tokens
       '@castle-control/ui':
         specifier: workspace:*
         version: link:../../packages/ui
+      '@castle-control/verifier-web':
+        specifier: workspace:*
+        version: link:../../packages/verifier-web
       react:
         specifier: 'catalog:'
         version: 19.3.1
@@ -91,11 +103,64 @@ importers:
         specifier: 'catalog:'
         version: 5.0.5(@types/node@24.10.0)(vite@8.3.5(@types/node@24.10.0))
 
+  apps/site:
+    dependencies:
+      '@castle-control/keep-art':
+        specifier: workspace:*
+        version: link:../../packages/keep-art
+      '@castle-control/tokens':
+        specifier: workspace:*
+        version: link:../../packages/tokens
+      '@castle-control/ui':
+        specifier: workspace:*
+        version: link:../../packages/ui
+    devDependencies:
+      '@types/node':
+        specifier: 24.10.0
+        version: 24.10.0
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.3
+      vite:
+        specifier: 'catalog:'
+        version: 8.3.5(@types/node@24.10.0)
+      vitest:
+        specifier: 'catalog:'
+        version: 5.0.5(@types/node@24.10.0)(vite@8.3.5(@types/node@24.10.0))
+
   packages/contract:
     dependencies:
       ajv:
         specifier: 'catalog:'
         version: 8.17.1
+    devDependencies:
+      '@types/node':
+        specifier: 24.10.0
+        version: 24.10.0
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.3
+      vitest:
+        specifier: 'catalog:'
+        version: 5.0.5(@types/node@24.10.0)(vite@8.3.5(@types/node@24.10.0))
+
+  packages/duel:
+    dependencies:
+      '@castle-control/contract':
+        specifier: workspace:*
+        version: link:../contract
+    devDependencies:
+      '@types/node':
+        specifier: 24.10.0
+        version: 24.10.0
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.3
+      vitest:
+        specifier: 'catalog:'
+        version: 5.0.5(@types/node@24.10.0)(vite@8.3.5(@types/node@24.10.0))
+
+  packages/keep-art:
     devDependencies:
       '@types/node':
         specifier: 24.10.0
@@ -140,6 +205,9 @@ importers:
       '@castle-control/contract':
         specifier: workspace:*
         version: link:../contract
+      '@castle-control/duel':
+        specifier: workspace:*
+        version: link:../duel
       '@castle-control/tokens':
         specifier: workspace:*
         version: link:../tokens

@@ -61,17 +61,17 @@ test('Steward proposal review selects and opens the existing guarded room withou
   expect(proposalQueue.pending().at(-1)).toBe(proposal);
 });
 
-test('Keep is a cross-section with live rule summaries, the Herald, moat and numbered room paths', () => {
+test('Keep is the shared cutaway with rule summaries, the Herald, moat and numbered room paths', () => {
   const html = renderToStaticMarkup(<Keep snapshot={snapshot} on_open={() => undefined} on_enter={() => undefined} />);
-  for (const text of ['The Herald', 'Chat consensus', 'Chat delay', '4 s', 'Armed 0', 'Watching 3', 'Enter the keep']) expect(html).toContain(text);
+  for (const text of ['THE HERALD', 'chat delay', '4 s', 'Armed 0', 'Watching 3', 'Enter the keep']) expect(html).toContain(text);
   expect(html).not.toContain('The lit keep');
-  expect(html).not.toContain('<h1');
+  expect(html).toContain('data-role="keep-name">The Keep</h1>');
   for (const { id, number } of chambers) {
     expect(html).toContain(`data-room-tile="${id}"`);
-    expect(html).toContain(`<kbd>${number}</kbd>`);
+    expect(html).toContain(`Open chamber ${number},`);
   }
   const core = renderToStaticMarkup(<Keep snapshot={{ mode: 'core', phase: 'ready' }} on_open={() => undefined} on_enter={() => undefined} />);
-  expect(core).toContain('Consensus unknown');
+  expect(core).toContain('Moderation status unknown');
   expect(core).toContain('Draw status unavailable');
   expect(core).not.toContain('sample lots');
 });
@@ -81,7 +81,7 @@ test('Overview has four preview layers, simulated Program, tabs, fairness and he
   for (const text of ['Stream preview', 'Program monitor', 'Talkback', 'Inspector', 'Draw fairness', 'Open the room', 'Chamber strip', 'DRAFT · NOT ON AIR']) expect(html).toContain(text);
   for (const id of ['lottery', 'moderator', 'visuals', 'studio']) expect(html).toContain(`data-layer="${id}"`);
   expect(html).toContain('HELD · NOT ON AIR');
-  expect(program()).not.toContain('HELD');
+  expect(program()).not.toContain('HELD · NOT ON AIR');
   expect(program()).not.toContain('data-held="true"');
 });
 
@@ -233,6 +233,6 @@ test('Program is unchanged by a click or short Space; a full held Space seals th
   expect(proposalQueue.getSnapshot().proposals.find(item => item.id === proposal.id)?.seal_hash).toMatch(/^[a-f0-9]{64}$/);
   expect(sampleProgram.getSnapshot().some(item => item.id === proposal.id)).toBe(true);
   expect(program()).toContain('Question draw');
-  expect(program()).not.toContain('HELD');
+  expect(program()).not.toContain('HELD · NOT ON AIR');
   expect(programCandidate('lottery')).toBeUndefined();
 });

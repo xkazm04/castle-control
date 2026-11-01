@@ -141,53 +141,211 @@ Signing/updater keys and release publishing remain owner steps. `pnpm install`
 was not run, and no junction, git metadata, protected manifest or other worktree
 was modified.
 
+## FU-1 harness tests and root-gate wiring
+
+2026-10-31, Windows, base `5b41abd`. The initial acceptance command
+`node --test e2e/harness.test.ts e2e/styles.test.ts` exited 1: 11 passed and
+2 failed. Both failures were in `harness.test.ts`: the route count and native
+CSP parity. The style-policy tests themselves were already passing.
+
+The ninth canonical route is the legitimate OBS setup page `#/stream`.
+Commit `2ebd543` added it to `canonicalHash` and `routeFromHash`; the desktop
+still renders it. The test now names it explicitly and requires exactly four
+chamber routes plus Keep, overview, demo, stream setup and the nested drill.
+The inventory and alias deduplication are unchanged.
+
+Commit `dd93ea4` added `/gatehouse/current` on the isolated overlay origin and
+the vote bar's `EventSource('/push/gatehouse')`. Its native CSP already allows
+that exact localhost address alongside `/push/beacons`. The simulated server
+was stale: its CSP now includes `http://localhost:<own-port>/push/gatehouse`.
+The native policy and full-string parity assertion are unchanged; no wildcard,
+additional origin, core RPC access or general same-origin connection permission
+was introduced.
+
+`scripts/gate.mjs` now starts with `scripts/e2e-harness-test.mjs`. It counts
+the Node `e2e/*.test.ts` inventory, refuses zero files and runs both files
+in-process. Browser `.spec.ts` files remain in the separate Playwright lane.
+
+The three new `closure-proof-cases.mjs` registrations were executed through a
+temporary-fixture callback, without rerunning unrelated closure cases. The two
+root-gate fixtures copied the actual `gate.mjs`, `e2e-harness-test.mjs`,
+`files.mjs` and `run.mjs` byte for byte, and supplied two simulated Node tests:
+one failing test and one passing peer, swapping the failing file for the second
+case. Each actual child exit and diagnostic was asserted. All seeds and the
+`scripts/.fu1-gate-proof/case-N` directories were removed in `finally`; no real
+test or product source was seeded. These cases also run in `pnpm gate:proofs`.
+
+| Gate / seed | Actual child command and cwd | Exit | Inventory | Verified diagnostic |
+| --- | --- | --- | --- | --- |
+| Root gate: harness assertion throws | `node scripts/gate.mjs`, cwd: disposable case 1 | 1 | `[e2e harness tests] walked 2 files` | `simulated harness gate failure`; `Error: node scripts/e2e-harness-test.mjs exited 1` |
+| Root gate: styles assertion throws | `node scripts/gate.mjs`, cwd: disposable case 2 | 1 | `[e2e harness tests] walked 2 files` | `simulated styles gate failure`; `Error: node scripts/e2e-harness-test.mjs exited 1` |
+| Empty harness inventory | `node <repo>/scripts/e2e-harness-test.mjs`, cwd: disposable case 3 | 1 | `[e2e harness tests] walked 0 files` | `Error: e2e harness tests: refused empty inventory` |
+
+Final validation:
+
+| Command | Observed outcome |
+| --- | --- |
+| `pnpm install --frozen-lockfile` | Exit 0; all 10 workspace projects already up to date; no dependency junction was replaced. |
+| `node --test e2e/harness.test.ts e2e/styles.test.ts` | Exit 0; 13/13 passed, including nine-route inventory and exact native CSP parity. |
+| `pnpm gate` | Exit 1 after the new gate walked 2 files and passed 13/13, version drift walked 23 files, tooling tests passed 35/35, workspace checks walked 9 manifests / 598 TypeScript files, and Cargo fetch walked 342 files. The unchanged contract exporter then failed with `Error: spawnSync cargo EPERM`. |
+| `node node_modules/typescript/bin/tsc -p e2e/tsconfig.json` | Exit 0, using the real installed Playwright declarations. |
+| `node node_modules/eslint/bin/eslint.js e2e scripts/e2e-harness-test.mjs scripts/gate.mjs scripts/closure-proof-cases.mjs --max-warnings 0` | Exit 0. |
+| `node scripts/check.mjs` | Exit 0 after proof cleanup; boundaries, hygiene and file cap each walked 1104 code files, type floor walked 245 files, secrets walked 1430 files. |
+
+`pnpm exec tsc` and `pnpm exec eslint` could not resolve their command shims;
+the explicit installed Node entry points above both passed. An initial repo
+scan overlapped disposable proof cleanup and hit `ENOENT`; the final scan ran
+after cleanup and passed. No sandbox restriction was bypassed.
+
+The full gate could not complete: contract drift failed to launch Cargo, so
+method/event parity, Rust fmt/Clippy/tests, recursive package
+typecheck/lint/tests and site/desktop/UI builds were not reached. Browser
+`pnpm e2e` and the complete historical proof suite were not run; the three new
+proofs were run directly as described above. No full gate or browser pass is
+claimed.
+
 <!-- current red-once proofs -->
 
 | Gate / seed | Standalone command | Exit | Inventory | First relevant diagnostic |
 | --- | --- | --- | --- | --- |
-| Rust format: unformatted function | `node <repo>/scripts/.gate-proof/case-1/scripts/rust-gate.mjs fmt`<br>cwd: `<repo>/scripts/.gate-proof/case-1` | 1 | `[cargo fmt] walked 1 files` | `Diff in //?/<repo>/scripts/.gate-proof/case-1/crates/proof/src/lib.rs:1:` |
-| Rust Clippy: identity operation | `node <repo>/scripts/.gate-proof/case-2/scripts/rust-gate.mjs clippy`<br>cwd: `<repo>/scripts/.gate-proof/case-2` | 1 | `[cargo clippy] walked 1 files` | `error: this operation has no effect` |
-| Rust tests: false assertion | `node <repo>/scripts/.gate-proof/case-3/scripts/rust-gate.mjs test`<br>cwd: `<repo>/scripts/.gate-proof/case-3` | 1 | `[cargo test] walked 1 files` | `simulated seeded failure` |
-| Cargo fetch: stale lockfile | `node <repo>/scripts/.gate-proof/case-4/scripts/rust-gate.mjs fetch`<br>cwd: `<repo>/scripts/.gate-proof/case-4` | 1 | `[cargo fetch] walked 1 files` | `error: cannot update the lock file <repo>/scripts/.gate-proof/case-4/Cargo.lock because --locked was passed to prevent this` |
-| TypeScript: number assigned to string | `node <repo>/scripts/.gate-proof/case-5/scripts/package-gate.mjs typecheck`<br>cwd: `<repo>/scripts/.gate-proof/case-5/packages/proof` | 1 | `[pnpm typecheck] walked 1 files` | `src/index.ts(1,14): error TS2322: Type 'number' is not assignable to type 'string'.` |
-| TypeScript strict: disabled | `node <repo>/scripts/.gate-proof/case-6/scripts/package-gate.mjs typecheck`<br>cwd: `<repo>/scripts/.gate-proof/case-6/packages/proof` | 1 | `[pnpm typecheck] walked 1 files` | `Error: Required TypeScript option: strict=true` |
-| TypeScript noUncheckedIndexedAccess: disabled | `node <repo>/scripts/.gate-proof/case-7/scripts/package-gate.mjs typecheck`<br>cwd: `<repo>/scripts/.gate-proof/case-7/packages/proof` | 1 | `[pnpm typecheck] walked 1 files` | `Error: Required TypeScript option: noUncheckedIndexedAccess=true` |
-| TypeScript exactOptionalPropertyTypes: disabled | `node <repo>/scripts/.gate-proof/case-8/scripts/package-gate.mjs typecheck`<br>cwd: `<repo>/scripts/.gate-proof/case-8/packages/proof` | 1 | `[pnpm typecheck] walked 1 files` | `Error: Required TypeScript option: exactOptionalPropertyTypes=true` |
-| TypeScript verbatimModuleSyntax: disabled | `node <repo>/scripts/.gate-proof/case-9/scripts/package-gate.mjs typecheck`<br>cwd: `<repo>/scripts/.gate-proof/case-9/packages/proof` | 1 | `[pnpm typecheck] walked 1 files` | `Error: Required TypeScript option: verbatimModuleSyntax=true` |
-| TypeScript erasableSyntaxOnly: disabled | `node <repo>/scripts/.gate-proof/case-10/scripts/package-gate.mjs typecheck`<br>cwd: `<repo>/scripts/.gate-proof/case-10/packages/proof` | 1 | `[pnpm typecheck] walked 1 files` | `Error: Required TypeScript option: erasableSyntaxOnly=true` |
-| Package ESLint: unused variable | `node <repo>/scripts/.gate-proof/case-11/scripts/package-gate.mjs lint`<br>cwd: `<repo>/scripts/.gate-proof/case-11/packages/proof` | 1 | `[pnpm lint] walked 1 files`<br>`[boundaries] walked 13 files`<br>`[hygiene] walked 13 files`<br>`[file-cap] walked 13 files`<br>`[secrets] walked 20 files` | `  1:7  error  'unusedProof' is assigned a value but never used  @typescript-eslint/no-unused-vars` |
-| Tooling ESLint: unused variable | `node <repo>/scripts/.gate-proof/case-12/scripts/tooling-lint.mjs`<br>cwd: `<repo>/scripts/.gate-proof/case-12` | 1 | `[tooling eslint] walked 11 files`<br>`[workspace manifests] walked 1 files`<br>`[workspace TypeScript] walked 1 files`<br>`[boundaries] walked 14 files`<br>`[hygiene] walked 14 files`<br>`[file-cap] walked 14 files`<br>`[secrets] walked 21 files` | `  1:7  error  'unusedProof' is assigned a value but never used  @typescript-eslint/no-unused-vars` |
-| Vitest: false expectation | `node <repo>/scripts/.gate-proof/case-13/scripts/package-gate.mjs test`<br>cwd: `<repo>/scripts/.gate-proof/case-13/packages/proof` | 1 | `[pnpm test] walked 2 files`<br>`[pnpm test cases] walked 1 files` | `AssertionError: expected false to be true // Object.is equality` |
-| Import boundary: cross-package relative import | `node <repo>/scripts/.gate-proof/case-14/scripts/check.mjs boundaries`<br>cwd: `<repo>/scripts/.gate-proof/case-14` | 1 | `[boundaries] walked 13 files` | `<repo>/scripts/.gate-proof/case-14/packages/proof/src/index.ts: cross-package relative import ../../../scripts/files.mjs` |
-| Import boundary: private workspace subpath | `node <repo>/scripts/.gate-proof/case-15/scripts/check.mjs boundaries`<br>cwd: `<repo>/scripts/.gate-proof/case-15` | 1 | `[boundaries] walked 13 files` | `<repo>/scripts/.gate-proof/case-15/packages/proof/src/index.ts: workspace deep import simulated-proof-package/private` |
-| Import cycle: mutual imports | `node <repo>/scripts/.gate-proof/case-16/scripts/check.mjs boundaries`<br>cwd: `<repo>/scripts/.gate-proof/case-16` | 1 | `[boundaries] walked 14 files` | `import cycle: <repo>/scripts/.gate-proof/case-16/packages/proof/src/index.ts` |
-| No any | `node <repo>/scripts/.gate-proof/case-17/scripts/check.mjs hygiene`<br>cwd: `<repo>/scripts/.gate-proof/case-17` | 1 | `[hygiene] walked 13 files` | `<repo>/scripts/.gate-proof/case-17/packages/proof/src/index.ts:1: no any` |
-| No double assertion | `node <repo>/scripts/.gate-proof/case-18/scripts/check.mjs hygiene`<br>cwd: `<repo>/scripts/.gate-proof/case-18` | 1 | `[hygiene] walked 13 files` | `<repo>/scripts/.gate-proof/case-18/packages/proof/src/index.ts:1: no as unknown as` |
-| No raw keydown | `node <repo>/scripts/.gate-proof/case-19/scripts/check.mjs hygiene`<br>cwd: `<repo>/scripts/.gate-proof/case-19` | 1 | `[hygiene] walked 13 files` | `<repo>/scripts/.gate-proof/case-19/packages/proof/src/index.ts:1: use the keymap registry` |
-| No swallowed catch | `node <repo>/scripts/.gate-proof/case-20/scripts/check.mjs hygiene`<br>cwd: `<repo>/scripts/.gate-proof/case-20` | 1 | `[hygiene] walked 13 files` | `<repo>/scripts/.gate-proof/case-20/packages/proof/src/index.ts:1: no swallowed catch` |
-| 400-line cap: 401 comment lines | `node <repo>/scripts/.gate-proof/case-21/scripts/check.mjs file-cap`<br>cwd: `<repo>/scripts/.gate-proof/case-21` | 1 | `[file-cap] walked 13 files` | `packages/proof/src/index.ts: 401 lines exceeds 400` |
-| Secrets: synthetic provider-token shape (value omitted) | `node <repo>/scripts/.gate-proof/case-22/scripts/check.mjs secrets`<br>cwd: `<repo>/scripts/.gate-proof/case-22` | 1 | `[secrets] walked 21 files` | `simulated-secret.txt: potential secret (value redacted)` |
-| Workspace scripts: blank test script | `node <repo>/scripts/.gate-proof/case-23/scripts/workspaces.mjs`<br>cwd: `<repo>/scripts/.gate-proof/case-23` | 1 | `[workspace manifests] walked 1 files` | `Error: packages/proof/package.json: missing test script` |
-| Contract codegen: stale schema | `node <repo>/packages/contract/scripts/check.mjs --schema <repo>/scripts/.gate-proof/case-24/schema.json`<br>cwd: `<repo>/scripts/.gate-proof/case-24` | 1 | `[contract generated] walked 7 files`<br>`[contract committed] walked 7 files` | `Error: Contract drift: stale contract.schema.json, stale schemas.ts. Run pnpm -C packages/contract generate` |
-| Method parity: undeclared registration | `node <repo>/packages/contract/scripts/parity.mjs --schema <repo>/packages/contract/src/generated/contract.schema.json --registry <repo>/scripts/.gate-proof/case-25/registry.json`<br>cwd: `<repo>/scripts/.gate-proof/case-25` | 1 | `[contract usage] walked 288 files`<br>`[method parity] walked 288 files`<br>`[event parity] walked 288 files` | `Error: registered but undeclared: simulated.unregistered` |
-| Event parity: missing mirror | `node <repo>/packages/contract/scripts/parity.mjs --schema <repo>/scripts/.gate-proof/case-26/schema.json --registry <repo>/scripts/.gate-proof/case-26/registry.json`<br>cwd: `<repo>/scripts/.gate-proof/case-26` | 1 | `[contract usage] walked 288 files`<br>`[method parity] walked 288 files`<br>`[event parity] walked 288 files` | `Error: missing mirrored event: simulated.event` |
-| Tooling node tests: failing assertion | `node <repo>/scripts/.gate-proof/case-27/scripts/tooling-test.mjs`<br>cwd: `<repo>/scripts/.gate-proof/case-27` | 1 | `[tooling tests] walked 1 files` | `  Error: simulated node failure` |
-| Generator node assertions: wrong artifact count | `node <repo>/scripts/.gate-proof/case-28/generator/test-codegen.mjs`<br>cwd: `<repo>/scripts/.gate-proof/case-28` | 1 | `[contract generator tests] walked 3 files` | `7 !== 8` |
-| Empty boundaries | `node <repo>/scripts/check.mjs boundaries <repo>/scripts/.gate-proof/case-29`<br>cwd: `<repo>/scripts/.gate-proof/case-29` | 1 | `[boundaries] walked 0 files` | `Error: boundaries: refused empty inventory` |
-| Empty hygiene | `node <repo>/scripts/check.mjs hygiene <repo>/scripts/.gate-proof/case-30`<br>cwd: `<repo>/scripts/.gate-proof/case-30` | 1 | `[hygiene] walked 0 files` | `Error: hygiene: refused empty inventory` |
-| Empty file-cap | `node <repo>/scripts/check.mjs file-cap <repo>/scripts/.gate-proof/case-31`<br>cwd: `<repo>/scripts/.gate-proof/case-31` | 1 | `[file-cap] walked 0 files` | `Error: file-cap: refused empty inventory` |
-| Empty secrets | `node <repo>/scripts/check.mjs secrets <repo>/scripts/.gate-proof/case-32`<br>cwd: `<repo>/scripts/.gate-proof/case-32` | 1 | `[secrets] walked 0 files` | `Error: secrets: refused empty inventory` |
-| Empty Rust fetch | `node <repo>/scripts/rust-gate.mjs fetch`<br>cwd: `<repo>/scripts/.gate-proof/case-33` | 1 | `[cargo fetch] walked 0 files` | `Error: cargo fetch: refused empty inventory` |
-| Empty Rust fmt | `node <repo>/scripts/rust-gate.mjs fmt`<br>cwd: `<repo>/scripts/.gate-proof/case-34` | 1 | `[cargo fmt] walked 0 files` | `Error: cargo fmt: refused empty inventory` |
-| Empty Rust clippy | `node <repo>/scripts/rust-gate.mjs clippy`<br>cwd: `<repo>/scripts/.gate-proof/case-35` | 1 | `[cargo clippy] walked 0 files` | `Error: cargo clippy: refused empty inventory` |
-| Empty Rust test | `node <repo>/scripts/rust-gate.mjs test`<br>cwd: `<repo>/scripts/.gate-proof/case-36` | 1 | `[cargo test] walked 0 files` | `Error: cargo test: refused empty inventory` |
-| Empty package typecheck | `node <repo>/scripts/package-gate.mjs typecheck`<br>cwd: `<repo>/scripts/.gate-proof/case-37` | 1 | `[pnpm typecheck] walked 0 files` | `Error: pnpm typecheck: refused empty inventory` |
-| Empty package lint | `node <repo>/scripts/package-gate.mjs lint`<br>cwd: `<repo>/scripts/.gate-proof/case-38` | 1 | `[pnpm lint] walked 0 files` | `Error: pnpm lint: refused empty inventory` |
-| Empty package test | `node <repo>/scripts/package-gate.mjs test`<br>cwd: `<repo>/scripts/.gate-proof/case-39` | 1 | `[pnpm test] walked 0 files` | `Error: pnpm test: refused empty inventory` |
-| Empty package test cases | `node <repo>/scripts/package-gate.mjs test`<br>cwd: `<repo>/scripts/.gate-proof/case-40` | 1 | `[pnpm test] walked 1 files`<br>`[pnpm test cases] walked 0 files` | `Error: pnpm test cases: refused empty inventory` |
-| Empty tooling ESLint | `node <repo>/scripts/tooling-lint.mjs`<br>cwd: `<repo>/scripts/.gate-proof/case-41` | 1 | `[tooling eslint] walked 0 files` | `Error: tooling eslint: refused empty inventory` |
-| Empty tooling node tests | `node <repo>/scripts/tooling-test.mjs`<br>cwd: `<repo>/scripts/.gate-proof/case-42` | 1 | `[tooling tests] walked 0 files` | `Error: tooling tests: refused empty inventory` |
-| Empty workspace manifests | `node <repo>/scripts/workspaces.mjs`<br>cwd: `<repo>/scripts/.gate-proof/case-43` | 1 | `[workspace manifests] walked 0 files` | `Error: workspace manifests: refused empty inventory` |
-| Empty workspace TypeScript | `node <repo>/scripts/workspaces.mjs`<br>cwd: `<repo>/scripts/.gate-proof/case-44` | 1 | `[workspace manifests] walked 1 files`<br>`[workspace TypeScript] walked 0 files` | `Error: workspace TypeScript: refused empty inventory` |
-| Empty contract artifacts | `node <repo>/scripts/.gate-proof/case-45/empty.mjs`<br>cwd: `<repo>/scripts/.gate-proof/case-45` | 1 | `[contract generated] walked 0 files` | `Error: Refused empty generated inventory` |
-| Empty contract usage | `node <repo>/scripts/.gate-proof/case-46/empty.mjs`<br>cwd: `<repo>/scripts/.gate-proof/case-46` | 1 | `[contract usage] walked 0 files` | `Error: Refused empty usage inventory` |
+| Site check: built JS exceeds byte budget | `node <repo>/apps/site/check.mjs <repo>/scripts/.gate-proof/case-1/apps/site/dist`<br>cwd: `<repo>/scripts/.gate-proof/case-1` | 1 | `[site built] walked 2 files` | `Error: Site first-load bytes 184717 exceed 180 KiB budget (184320 bytes)` |
+| Desktop budget: first load over budget | `node <repo>/apps/desktop/src/check-build.ts <repo>/scripts/.gate-proof/case-2/apps/desktop/dist`<br>cwd: `<repo>/scripts/.gate-proof/case-2` | 1 | `[desktop first-load budget, all four routes] walked 2 files; 406236/393216 uncompressed JS+CSS bytes` | `Error: Desktop first-load budget exceeded` |
+| Kit budget: first load over budget | `node <repo>/packages/ui/src/check-build.ts <repo>/scripts/.gate-proof/case-3/packages/ui/dist`<br>cwd: `<repo>/scripts/.gate-proof/case-3` | 1 | `[kit first-load budget] walked 2 files; 275164/262144 uncompressed JS+CSS bytes` | `Error: Kit first-load budget exceeded` |
+| Version drift: bumped package manifest | `node <repo>/scripts/version-drift.mjs`<br>cwd: `<repo>/scripts/.gate-proof/case-4` | 1 | `[version drift] walked 6 files` | `package.json: expected 0.1.0, found 0.2.0` |
+| Empty version drift | `node <repo>/scripts/version-drift.mjs`<br>cwd: `<repo>/scripts/.gate-proof/case-5` | 1 | `[version drift] walked 0 files` | `version drift: refused empty inventory` |
+| Rust format: unformatted function | `node <repo>/scripts/.gate-proof/case-6/scripts/rust-gate.mjs fmt`<br>cwd: `<repo>/scripts/.gate-proof/case-6` | 1 | `[cargo fmt] walked 1 files` | `Diff in //?/<repo>/scripts/.gate-proof/case-6/crates/proof/src/lib.rs:1:` |
+| Rust Clippy: identity operation | `node <repo>/scripts/.gate-proof/case-7/scripts/rust-gate.mjs clippy`<br>cwd: `<repo>/scripts/.gate-proof/case-7` | 1 | `[cargo clippy] walked 1 files` | `error: this operation has no effect` |
+| Rust tests: false assertion | `node <repo>/scripts/.gate-proof/case-8/scripts/rust-gate.mjs test`<br>cwd: `<repo>/scripts/.gate-proof/case-8` | 1 | `[cargo test] walked 1 files` | `simulated seeded failure` |
+| Cargo fetch: stale lockfile | `node <repo>/scripts/.gate-proof/case-9/scripts/rust-gate.mjs fetch`<br>cwd: `<repo>/scripts/.gate-proof/case-9` | 1 | `[cargo fetch] walked 1 files` | `error: cannot update the lock file <repo>/scripts/.gate-proof/case-9/Cargo.lock because --locked was passed to prevent this` |
+| TypeScript: number assigned to string | `node <repo>/scripts/.gate-proof/case-10/scripts/package-gate.mjs typecheck`<br>cwd: `<repo>/scripts/.gate-proof/case-10/packages/proof` | 1 | `[pnpm typecheck] walked 1 files` | `src/index.ts(1,14): error TS2322: Type 'number' is not assignable to type 'string'.` |
+| TypeScript strict: disabled | `node <repo>/scripts/.gate-proof/case-11/scripts/package-gate.mjs typecheck`<br>cwd: `<repo>/scripts/.gate-proof/case-11/packages/proof` | 1 | `[pnpm typecheck] walked 1 files` | `Error: Required TypeScript option: strict=true` |
+| TypeScript noUncheckedIndexedAccess: disabled | `node <repo>/scripts/.gate-proof/case-12/scripts/package-gate.mjs typecheck`<br>cwd: `<repo>/scripts/.gate-proof/case-12/packages/proof` | 1 | `[pnpm typecheck] walked 1 files` | `Error: Required TypeScript option: noUncheckedIndexedAccess=true` |
+| TypeScript exactOptionalPropertyTypes: disabled | `node <repo>/scripts/.gate-proof/case-13/scripts/package-gate.mjs typecheck`<br>cwd: `<repo>/scripts/.gate-proof/case-13/packages/proof` | 1 | `[pnpm typecheck] walked 1 files` | `Error: Required TypeScript option: exactOptionalPropertyTypes=true` |
+| TypeScript verbatimModuleSyntax: disabled | `node <repo>/scripts/.gate-proof/case-14/scripts/package-gate.mjs typecheck`<br>cwd: `<repo>/scripts/.gate-proof/case-14/packages/proof` | 1 | `[pnpm typecheck] walked 1 files` | `Error: Required TypeScript option: verbatimModuleSyntax=true` |
+| TypeScript erasableSyntaxOnly: disabled | `node <repo>/scripts/.gate-proof/case-15/scripts/package-gate.mjs typecheck`<br>cwd: `<repo>/scripts/.gate-proof/case-15/packages/proof` | 1 | `[pnpm typecheck] walked 1 files` | `Error: Required TypeScript option: erasableSyntaxOnly=true` |
+| Package ESLint: unused variable | `node <repo>/scripts/.gate-proof/case-16/scripts/package-gate.mjs lint`<br>cwd: `<repo>/scripts/.gate-proof/case-16/packages/proof` | 1 | `[pnpm lint] walked 1 files`<br>`[boundaries] walked 15 files`<br>`[hygiene] walked 15 files`<br>`[type-floor] walked 1 files`<br>`[file-cap] walked 15 files`<br>`[secrets] walked 22 files` | `  1:7  error  'unusedProof' is assigned a value but never used  @typescript-eslint/no-unused-vars` |
+| Tooling ESLint: unused variable | `node <repo>/scripts/.gate-proof/case-17/scripts/tooling-lint.mjs`<br>cwd: `<repo>/scripts/.gate-proof/case-17` | 1 | `[tooling eslint] walked 12 files`<br>`[workspace manifests] walked 1 files`<br>`[workspace TypeScript] walked 1 files`<br>`[boundaries] walked 16 files`<br>`[hygiene] walked 16 files`<br>`[type-floor] walked 1 files`<br>`[file-cap] walked 16 files`<br>`[secrets] walked 23 files` | `  1:7  error  'unusedProof' is assigned a value but never used  @typescript-eslint/no-unused-vars` |
+| Vitest: false expectation | `node <repo>/scripts/.gate-proof/case-18/scripts/package-gate.mjs test`<br>cwd: `<repo>/scripts/.gate-proof/case-18/packages/proof` | 1 | `[pnpm test] walked 2 files`<br>`[pnpm test cases] walked 1 files` | `AssertionError: expected false to be true // Object.is equality` |
+| Import boundary: cross-package relative import | `node <repo>/scripts/.gate-proof/case-19/scripts/check.mjs boundaries`<br>cwd: `<repo>/scripts/.gate-proof/case-19` | 1 | `[boundaries] walked 15 files` | `<repo>/scripts/.gate-proof/case-19/packages/proof/src/index.ts: cross-package relative import ../../../scripts/files.mjs` |
+| Import boundary: private workspace subpath | `node <repo>/scripts/.gate-proof/case-20/scripts/check.mjs boundaries`<br>cwd: `<repo>/scripts/.gate-proof/case-20` | 1 | `[boundaries] walked 15 files` | `<repo>/scripts/.gate-proof/case-20/packages/proof/src/index.ts: workspace deep import simulated-proof-package/private` |
+| Import cycle: mutual imports | `node <repo>/scripts/.gate-proof/case-21/scripts/check.mjs boundaries`<br>cwd: `<repo>/scripts/.gate-proof/case-21` | 1 | `[boundaries] walked 16 files` | `import cycle: <repo>/scripts/.gate-proof/case-21/packages/proof/src/index.ts` |
+| No any | `node <repo>/scripts/.gate-proof/case-22/scripts/check.mjs hygiene`<br>cwd: `<repo>/scripts/.gate-proof/case-22` | 1 | `[hygiene] walked 15 files` | `<repo>/scripts/.gate-proof/case-22/packages/proof/src/index.ts:1: no any` |
+| No double assertion | `node <repo>/scripts/.gate-proof/case-23/scripts/check.mjs hygiene`<br>cwd: `<repo>/scripts/.gate-proof/case-23` | 1 | `[hygiene] walked 15 files` | `<repo>/scripts/.gate-proof/case-23/packages/proof/src/index.ts:1: no as unknown as` |
+| No raw keydown | `node <repo>/scripts/.gate-proof/case-24/scripts/check.mjs hygiene`<br>cwd: `<repo>/scripts/.gate-proof/case-24` | 1 | `[hygiene] walked 15 files` | `<repo>/scripts/.gate-proof/case-24/packages/proof/src/index.ts:1: use the keymap registry` |
+| No swallowed catch | `node <repo>/scripts/.gate-proof/case-25/scripts/check.mjs hygiene`<br>cwd: `<repo>/scripts/.gate-proof/case-25` | 1 | `[hygiene] walked 15 files` | `<repo>/scripts/.gate-proof/case-25/packages/proof/src/index.ts:1: no swallowed catch` |
+| 400-line cap: 401 comment lines | `node <repo>/scripts/.gate-proof/case-26/scripts/check.mjs file-cap`<br>cwd: `<repo>/scripts/.gate-proof/case-26` | 1 | `[file-cap] walked 15 files` | `packages/proof/src/index.ts: 401 lines exceeds 400` |
+| Secrets: synthetic provider-token shape (value omitted) | `node <repo>/scripts/.gate-proof/case-27/scripts/check.mjs secrets`<br>cwd: `<repo>/scripts/.gate-proof/case-27` | 1 | `[secrets] walked 23 files` | `simulated-secret.txt: potential secret (value redacted)` |
+| Workspace scripts: blank test script | `node <repo>/scripts/.gate-proof/case-28/scripts/workspaces.mjs`<br>cwd: `<repo>/scripts/.gate-proof/case-28` | 1 | `[workspace manifests] walked 1 files` | `Error: packages/proof/package.json: missing test script` |
+| Type floor: raw px font size | `node <repo>/scripts/.gate-proof/case-29/scripts/check.mjs type-floor`<br>cwd: `<repo>/scripts/.gate-proof/case-29` | 1 | `[type-floor] walked 2 files` | `packages/ui/src/seed.css:1: font size must use a --text-* token` |
+| Type floor: token below floor | `node <repo>/scripts/.gate-proof/case-30/scripts/check.mjs type-floor`<br>cwd: `<repo>/scripts/.gate-proof/case-30` | 1 | `[type-floor] walked 1 files` | `generated.css: --text-tiny is 12px, below the 13px floor` |
+| Type floor: stage token below stage floor | `node <repo>/scripts/.gate-proof/case-31/scripts/check.mjs type-floor`<br>cwd: `<repo>/scripts/.gate-proof/case-31` | 1 | `[type-floor] walked 1 files` | `generated.css: --text-stage-x is 14px, below the 15px floor` |
+| Type floor: TSX literal below floor | `node <repo>/scripts/.gate-proof/case-32/scripts/check.mjs type-floor`<br>cwd: `<repo>/scripts/.gate-proof/case-32` | 1 | `[type-floor] walked 2 files` | `packages/ui/src/seed.tsx:2: font size 12 is below the 13px floor` |
+| Contract codegen: stale schema | `node <repo>/packages/contract/scripts/check.mjs --schema <repo>/scripts/.gate-proof/case-33/schema.json`<br>cwd: `<repo>/scripts/.gate-proof/case-33` | 1 | `[contract generated] walked 26 files`<br>`[contract committed] walked 26 files` | `Error: Contract drift: stale contract.schema.json, stale schemas.ts. Run pnpm -C packages/contract generate` |
+| Method parity: undeclared registration | `node <repo>/packages/contract/scripts/parity.mjs --schema <repo>/packages/contract/src/generated/contract.schema.json --registry <repo>/scripts/.gate-proof/case-34/registry.json`<br>cwd: `<repo>/scripts/.gate-proof/case-34` | 1 | `[contract usage] walked 488 files`<br>`[method parity] walked 488 files`<br>`[event parity] walked 488 files` | `Error: registered but undeclared: simulated.unregistered` |
+| Event parity: missing mirror | `node <repo>/packages/contract/scripts/parity.mjs --schema <repo>/scripts/.gate-proof/case-35/schema.json --registry <repo>/scripts/.gate-proof/case-35/registry.json`<br>cwd: `<repo>/scripts/.gate-proof/case-35` | 1 | `[contract usage] walked 488 files`<br>`[method parity] walked 488 files`<br>`[event parity] walked 488 files` | `Error: missing mirrored event: simulated.event` |
+| Contract usage: source parse rejected and named build output excluded | `node <repo>/scripts/.gate-proof/case-36/usage.mjs`<br>cwd: `<repo>/scripts/.gate-proof/case-36` | 1 | `[contract usage] walked 3 files` | `[proof verified] source JSON.parse rejected; named build output excluded` |
+| Contract usage: stale build output exclusion | `node <repo>/scripts/.gate-proof/case-37/usage.mjs`<br>cwd: `<repo>/scripts/.gate-proof/case-37` | 1 | `[contract usage] walked 2 files` | `Error: Missing listed build output: apps/overlay/vote-bar.js` |
+| Tooling node tests: failing assertion | `node <repo>/scripts/.gate-proof/case-38/scripts/tooling-test.mjs`<br>cwd: `<repo>/scripts/.gate-proof/case-38` | 1 | `[tooling tests] walked 1 files` | `  Error: simulated node failure` |
+| Generator node assertions: wrong artifact count | `node <repo>/scripts/.gate-proof/case-39/generator/test-codegen.mjs`<br>cwd: `<repo>/scripts/.gate-proof/case-39` | 1 | `[contract generator tests] walked 3 files` | `26 !== 27` |
+| Empty boundaries | `node <repo>/scripts/check.mjs boundaries <repo>/scripts/.gate-proof/case-40`<br>cwd: `<repo>/scripts/.gate-proof/case-40` | 1 | `[boundaries] walked 0 files` | `Error: boundaries: refused empty inventory` |
+| Empty hygiene | `node <repo>/scripts/check.mjs hygiene <repo>/scripts/.gate-proof/case-41`<br>cwd: `<repo>/scripts/.gate-proof/case-41` | 1 | `[hygiene] walked 0 files` | `Error: hygiene: refused empty inventory` |
+| Empty file-cap | `node <repo>/scripts/check.mjs file-cap <repo>/scripts/.gate-proof/case-42`<br>cwd: `<repo>/scripts/.gate-proof/case-42` | 1 | `[file-cap] walked 0 files` | `Error: file-cap: refused empty inventory` |
+| Empty secrets | `node <repo>/scripts/check.mjs secrets <repo>/scripts/.gate-proof/case-43`<br>cwd: `<repo>/scripts/.gate-proof/case-43` | 1 | `[secrets] walked 0 files` | `Error: secrets: refused empty inventory` |
+| Empty type-floor | `node <repo>/scripts/check.mjs type-floor <repo>/scripts/.gate-proof/case-44`<br>cwd: `<repo>/scripts/.gate-proof/case-44` | 1 | `[type-floor] walked 0 files` | `Error: type-floor: refused empty inventory` |
+| Empty Rust fetch | `node <repo>/scripts/rust-gate.mjs fetch`<br>cwd: `<repo>/scripts/.gate-proof/case-45` | 1 | `[cargo fetch] walked 0 files` | `Error: cargo fetch: refused empty inventory` |
+| Empty Rust fmt | `node <repo>/scripts/rust-gate.mjs fmt`<br>cwd: `<repo>/scripts/.gate-proof/case-46` | 1 | `[cargo fmt] walked 0 files` | `Error: cargo fmt: refused empty inventory` |
+| Empty Rust clippy | `node <repo>/scripts/rust-gate.mjs clippy`<br>cwd: `<repo>/scripts/.gate-proof/case-47` | 1 | `[cargo clippy] walked 0 files` | `Error: cargo clippy: refused empty inventory` |
+| Empty Rust test | `node <repo>/scripts/rust-gate.mjs test`<br>cwd: `<repo>/scripts/.gate-proof/case-48` | 1 | `[cargo test] walked 0 files` | `Error: cargo test: refused empty inventory` |
+| Empty package typecheck | `node <repo>/scripts/package-gate.mjs typecheck`<br>cwd: `<repo>/scripts/.gate-proof/case-49` | 1 | `[pnpm typecheck] walked 0 files` | `Error: pnpm typecheck: refused empty inventory` |
+| Empty package lint | `node <repo>/scripts/package-gate.mjs lint`<br>cwd: `<repo>/scripts/.gate-proof/case-50` | 1 | `[pnpm lint] walked 0 files` | `Error: pnpm lint: refused empty inventory` |
+| Empty package test | `node <repo>/scripts/package-gate.mjs test`<br>cwd: `<repo>/scripts/.gate-proof/case-51` | 1 | `[pnpm test] walked 0 files` | `Error: pnpm test: refused empty inventory` |
+| Empty package test cases | `node <repo>/scripts/package-gate.mjs test`<br>cwd: `<repo>/scripts/.gate-proof/case-52` | 1 | `[pnpm test] walked 1 files`<br>`[pnpm test cases] walked 0 files` | `Error: pnpm test cases: refused empty inventory` |
+| Empty tooling ESLint | `node <repo>/scripts/tooling-lint.mjs`<br>cwd: `<repo>/scripts/.gate-proof/case-53` | 1 | `[tooling eslint] walked 0 files` | `Error: tooling eslint: refused empty inventory` |
+| Empty tooling node tests | `node <repo>/scripts/tooling-test.mjs`<br>cwd: `<repo>/scripts/.gate-proof/case-54` | 1 | `[tooling tests] walked 0 files` | `Error: tooling tests: refused empty inventory` |
+| Empty workspace manifests | `node <repo>/scripts/workspaces.mjs`<br>cwd: `<repo>/scripts/.gate-proof/case-55` | 1 | `[workspace manifests] walked 0 files` | `Error: workspace manifests: refused empty inventory` |
+| Empty workspace TypeScript | `node <repo>/scripts/workspaces.mjs`<br>cwd: `<repo>/scripts/.gate-proof/case-56` | 1 | `[workspace manifests] walked 1 files`<br>`[workspace TypeScript] walked 0 files` | `Error: workspace TypeScript: refused empty inventory` |
+| Empty contract artifacts | `node <repo>/scripts/.gate-proof/case-57/empty.mjs`<br>cwd: `<repo>/scripts/.gate-proof/case-57` | 1 | `[contract generated] walked 0 files` | `Error: Refused empty generated inventory` |
+| Empty contract usage | `node <repo>/scripts/.gate-proof/case-58/empty.mjs`<br>cwd: `<repo>/scripts/.gate-proof/case-58` | 1 | `[contract usage] walked 0 files` | `Error: Refused empty usage inventory` |
+| Duel engine: DOM reference without DOM lib | `node <repo>/scripts/.gate-proof/case-59/scripts/package-gate.mjs typecheck`<br>cwd: `<repo>/scripts/.gate-proof/case-59/packages/proof` | 1 | `[pnpm typecheck] walked 1 files` | `src/index.ts(1,22): error TS2584: Cannot find name 'document'. Do you need to change your target library? Try changing the 'lib' compiler option to include 'dom'.` |
+
+## T1 Cutaway Keep / T2 Tiltyard merge resolution
+
+2026-10-31, Windows, T2 merge HEAD `9d4b734` on `origin/main` `1562c64`,
+with the T1 merge in progress. Files were edited without changing the Git index.
+The proof table retains T1's cases 1–58 and T2's unique DOM-free engine proof as
+case 59, matching the merged `closureCases` registration order. Historical
+proofs were preserved, not rerun or presented as new results.
+
+- Map Room retains Table, Spyglass, Rehearse and the lazy Tiltyard view, T1's
+  room styling, and `data-studio-view` for the compact hex-table height fix.
+  The compact fixed height excludes Tiltyard, preserving its content height
+  and keeping the inspector below the complete duel stage.
+  The desktop tests cover the four-button switch, compact field geometry,
+  core-mode studio routing and live `/events` ballot intake.
+- The build checker retains T1's 393,216-byte first-load budget, token-definition
+  check and optional build directory, plus T2's 98,304-byte duel chunk budget.
+  Simulated temporary fixtures passed at 13,053 first-load / 55 duel bytes;
+  separate oversized fixtures failed with `Desktop first-load budget exceeded`
+  (406,236 bytes) and `Duel chunk budget exceeded` (98,334 bytes), respectively.
+  Fixtures were removed. These are checker proofs, not production build sizes.
+- UI exports include `./duel`, `./stamp` and `./stamp.css`; both sides' package
+  scripts and dependencies remain. `src/index.ts` already retains T1's Stamp,
+  RoomTitle, Kbd and entrance exports and every T2 root export. T2 introduced no
+  root-index exports; its public duel entry remains the lazy `./duel` subpath.
+  No T2 caller uses removed StatusChip props or `--text-width`.
+- Duel CSS now uses T1 text tokens. Local responsive size inputs use shared
+  text values and the floor gate's supported text-token fallbacks. Original
+  responsive bounds remain 22–36, 24–40, 30–48, 34–52, 30–58 and 24–38 px.
+  Existing 13, 13.5 and 15 px roles remain exact. The shared CSS test leaves
+  duel's local palette and container breakpoints to its dedicated counted CSS
+  checker; that checker recognizes T1's shared type-token group. The button
+  cascade test now expects the migrated text token.
+
+| Former duel role | Before | After |
+| --- | ---: | ---: |
+| `--ty-text-countdown` | 10 px | 13 px |
+| `--ty-text-column` | 10.5 px | 13 px |
+| `--ty-text-number-small` | 11 px | 13 px |
+| `--ty-text-seed` | 11.5 px | 13 px |
+| `--ty-text-small` | 12 px | 13 px |
+| `--ty-text-detail` | 12.5 px | 13 px |
+
+Validation used existing dependencies; no modules directory or junction was
+replaced. `pnpm install --frozen-lockfile` and plain `pnpm gate` aborted with
+`ERR_PNPM_ABORTED_REMOVE_MODULES_DIR_NO_TTY`. The lockfile is the complete T2
+side, byte-for-byte, with no hand merge. **The Director must run `pnpm install`
+to regenerate it for both ports before the canonical gates.**
+
+`pnpm --config.verify-deps-before-run=false gate` passed version drift, 35
+tooling tests, workspace inventory (9 manifests / 598 TS files) and Cargo fetch
+(342 Rust files), then failed at the unchanged contract exporter with
+`spawnSync cargo EPERM`. Contract parity, Rust fmt/Clippy/tests, recursive gates
+and production builds were not reached. Recursive `typecheck` and `test` with
+the same pnpm option each failed at lifecycle creation with `spawn EPERM`.
+Direct unaliased UI/duel checks also exposed the incomplete installation's
+missing duel/contract links and local Node types. No canonical gate pass is
+claimed; browser E2E and production builds were not run.
+
+Supplemental checks ran via inline `node --input-type=module` scripts. The
+TypeScript compiler API and Vitest `startVitest` received exact absolute aliases
+from the workspace manifests' string exports; TypeScript also received the
+existing `packages/ui/node_modules/@types` as its type root. All inherited
+strict flags, `skipLibCheck: false`, package libraries and test assertions were
+retained. No resolver configuration was written. Vitest used the threads pool.
+
+| Package | Strict typecheck inventory / diagnostics | Unit test files / passed |
+| --- | --- | --- |
+| `packages/duel` | 33 / 0 | 13 / 381 |
+| `packages/ui` | 116 / 0 | 37 / 486 |
+| `apps/desktop` | 280 / 0 | 106 / 1,031 |
+| `packages/tokens` | 12 / 0 | 4 / 20 |
+
+All 1,918 supplemental unit tests passed without skips or unhandled errors.
+The initial UI run exposed the shared CSS inventory collision and the old
+button font-token expectation; the final UI rerun passed after those fixes.
+`node scripts/check.mjs` passed boundaries, hygiene, type-floor, file-cap and
+secrets checks; direct ESLint of all five edited TS/TSX files and
+`git diff --check` passed. After excluding Tiltyard from the compact fixed
+height, the board-view and Tiltyard-view suites passed again (16/16), followed
+by the complete source checks. No conflict markers remain in files; the
+Director still owns staging and the merge commit.

@@ -1,6 +1,6 @@
 import type { PreviewVisual } from '../../beacons-model.js';
 import { useId, useMemo, useRef, useState, useSyncExternalStore } from 'react';
-import type { KeyboardEvent, PointerEvent } from 'react';
+import type { KeyboardEvent, PointerEvent, ReactNode } from 'react';
 import type { Visual } from '@castle-control/contract';
 import type { CoreBeaconsPort } from '../../beacons-core.js';
 import { createCurveEditor } from './curve-editor.js';
@@ -58,6 +58,42 @@ function dragPoint(event: PointerEvent<SVGCircleElement>, editor: CurveEditor) {
     (event.clientY - rect.top) / rect.height * 164 - 12);
 }
 
+/** The draggable point surface. One editor can drive it from the bench and from the night replay. */
+/** The x-axis reach of the curve figure: the drag domain, or the furthest confirmed or draft point. */
+export function curveMaximum(state: ReturnType<CurveEditor['getSnapshot']>, domain = 0): number {
+  return Math.max(1, domain, ...state.confirmed.ranges.map(point => point.total), ...state.draft.ranges.map(point => point.total));
+}
+
+export function CurvePoints({ editor, state, disabled, described_by = 'visuals-curve-help',
+  label = 'Editable contribution to intensity curve', underlay, domain = 0 }: {
+  editor: CurveEditor; state: ReturnType<CurveEditor['getSnapshot']>; disabled: boolean; described_by?: string;
+  label?: string; underlay?: (x: (total: number) => number, maximum: number) => ReactNode; domain?: number;
+}) {
+  const { draft } = state;
+  const maximum = curveMaximum(state, domain);
+  const x = (total: number) => total / maximum * 600;
+  return <svg viewBox="-12 -12 624 164" preserveAspectRatio="none" role="group" aria-label={label}>
+      {underlay?.(x, maximum)}
+      <polyline points={draft.ranges.map(point => `${x(point.total)},${140 - point.intensity * 140}`).join(' ')}
+        className="visuals-room-curve-line" />
+      {draft.ranges.map((point, index) => <circle key={index} cx={x(point.total)} cy={140 - point.intensity * 140} r="8"
+        role="button" tabIndex={disabled ? -1 : 0} aria-disabled={disabled} aria-describedby={described_by}
+        aria-label={`Control point ${index + 1}: ${point.total} contribution units, ${Math.round(point.intensity * 10000) / 100}% intensity`}
+        onKeyDown={event => editKey(event, editor, index)}
+        onPointerDown={event => {
+          if (event.button !== 0 || !editor.begin(index, event.pointerId, domain)) return;
+          event.preventDefault(); event.currentTarget.focus(); event.currentTarget.setPointerCapture(event.pointerId);
+        }}
+        onPointerMove={event => dragPoint(event, editor)}
+        onPointerUp={event => {
+          dragPoint(event, editor); void editor.release(event.pointerId);
+          if (event.currentTarget.hasPointerCapture?.(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
+        }}
+        onPointerCancel={event => editor.cancelPointer(event.pointerId)}
+        onLostPointerCapture={event => editor.cancelPointer(event.pointerId)} />)}
+    </svg>;
+}
+
 export function CurveControls({ editor, state, busy, local = false }: {
   editor: CurveEditor; state: ReturnType<CurveEditor['getSnapshot']>; busy: boolean; local?: boolean;
 }) {
@@ -74,33 +110,14 @@ export function CurveControls({ editor, state, busy, local = false }: {
   });
   const { draft } = state;
   const disabled = busy || state.phase === 'saving';
-  const maximum = Math.max(1, ...state.confirmed.ranges.map(point => point.total), ...draft.ranges.map(point => point.total));
-  const x = (total: number) => total / maximum * 600;
   return <form className="visuals-core-form visuals-curve-editor" aria-label="Kindling curve editor"
     onSubmit={event => { event.preventDefault(); void editor.save(); }}>
     <h4>Edit control points</h4>
     <p id="visuals-curve-help">{local ? 'SIMULATED local preview.' : 'Draft preview only.'} Drag a point and release to save. Tab to a point, then use arrows:
       left/right moves 1 contribution unit; up/down moves 1% intensity. Hold Shift for 10 units or 10%.
       Enter saves; Escape cancels. Totals stay in order.{!local && " Saved curves drive this visual's OBS browser source."}</p>
-    <svg viewBox="-12 -12 624 164" preserveAspectRatio="none" role="group" aria-label="Editable contribution to intensity curve">
-      <polyline points={draft.ranges.map(point => `${x(point.total)},${140 - point.intensity * 140}`).join(' ')}
-        className="visuals-room-curve-line" />
-      {draft.ranges.map((point, index) => <circle key={index} cx={x(point.total)} cy={140 - point.intensity * 140} r="8"
-        role="button" tabIndex={disabled ? -1 : 0} aria-disabled={disabled} aria-describedby="visuals-curve-help"
-        aria-label={`Control point ${index + 1}: ${point.total} contribution units, ${Math.round(point.intensity * 10000) / 100}% intensity`}
-        onKeyDown={event => editKey(event, editor, index)}
-        onPointerDown={event => {
-          if (event.button !== 0 || !editor.begin(index, event.pointerId)) return;
-          event.preventDefault(); event.currentTarget.focus(); event.currentTarget.setPointerCapture(event.pointerId);
-        }}
-        onPointerMove={event => dragPoint(event, editor)}
-        onPointerUp={event => {
-          dragPoint(event, editor); void editor.release(event.pointerId);
-          if (event.currentTarget.hasPointerCapture?.(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
-        }}
-        onPointerCancel={event => editor.cancelPointer(event.pointerId)}
-        onLostPointerCapture={event => editor.cancelPointer(event.pointerId)} />)}
-    </svg>
+    {/* Hook-free leaf, inlined so the bench keeps its exact native tree. */}
+    {CurvePoints({ editor, state, disabled })}
     <p role={state.phase === 'error' ? 'alert' : 'status'} aria-live={state.phase === 'error' ? 'assertive' : 'polite'}
       aria-atomic="true">{local ? copy.local_curve_notice : state.notice}</p>
     {draft.ranges.map((point, index) => <fieldset key={index} disabled={disabled}>

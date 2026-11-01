@@ -37,6 +37,7 @@ pub struct ChatIngress {
     /// Twitch's verified login, distinct from a potentially localized display name.
     pub login: String,
     pub message: cc_twitch::ChatMessage,
+    pub simulated: bool,
 }
 // Error diagnostics (including broadcast SendError) must never echo chat.
 impl std::fmt::Debug for ChatIngress {
@@ -64,6 +65,7 @@ pub(crate) fn chat_ingress(notification: cc_twitch::Notification) -> Option<Chat
     Some(ChatIngress {
         login: identity.chatter_user_login.to_ascii_lowercase(),
         message,
+        simulated: false,
     })
 }
 
@@ -107,4 +109,36 @@ pub fn forward_bridge_event(hub: &EventHub, event: &BridgeEvent) -> Result<(), E
         _ => {}
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn twitch_chat_is_real_provenance_even_when_text_claims_simulation() {
+        let ingress = chat_ingress(cc_twitch::Notification {
+            id: "simulated-notification".into(),
+            at: "2026-10-25T12:00:00Z".into(),
+            subscription_type: "channel.chat.message".into(),
+            event: serde_json::json!({
+                "chatter_user_login":"Simulated_1", "chatter_user_id":"1"
+            }),
+            chat: Some(cc_twitch::ChatMessage {
+                id: "simulated-message".into(),
+                at: "2026-10-25T12:00:00Z".into(),
+                text: "SIMULATED ballot".into(),
+                viewer: cc_twitch::Viewer {
+                    id: "1".into(),
+                    name: "Simulated fixture".into(),
+                    is_mod: false,
+                    sub_tier: None,
+                },
+            }),
+        })
+        .unwrap();
+        assert!(!ingress.simulated);
+        assert_eq!(ingress.login, "simulated_1");
+        assert_eq!(format!("{ingress:?}"), "ChatIngress { .. }");
+    }
 }

@@ -11,6 +11,7 @@ pub mod lots;
 mod offline;
 pub mod overlay;
 mod registry;
+pub mod rehearsal;
 mod server;
 mod settings;
 pub mod spike;

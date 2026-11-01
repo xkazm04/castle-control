@@ -1,28 +1,99 @@
-.keep-home { display: grid; grid-template-rows: auto minmax(0, 1fr); height: 100%; min-height: 0; font: var(--text-body)/1.4 var(--font-ui); }
-.keep-heading { display: flex; justify-content: flex-end; align-items: center; flex-wrap: wrap; gap: var(--space-12); padding-block: clamp(var(--space-8), 1.5vh, var(--space-14)); }
-.keep-heading kbd { margin-left: var(--space-12); font: var(--text-small)/1 var(--font-num); }
-.keep-cross-section { position: relative; isolation: isolate; display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1.65fr) minmax(0, .85fr) minmax(0, .65fr); grid-template-rows: minmax(0, .9fr) minmax(0, 1.1fr) auto; gap: clamp(var(--space-16), 2vh, var(--space-20)); min-height: 0; padding: var(--space-28) var(--space-24) 0; }
-.keep-stone { position: absolute; inset: var(--space-16) 0 var(--space-30); z-index: -1; background: radial-gradient(var(--hair) 18%, transparent 22%) 0 0 / var(--space-6) var(--space-6), var(--paper-2); clip-path: polygon(0 25%, 24% 25%, 24% 0, 63% 0, 63% 12%, 83% 12%, 83% 30%, 100% 30%, 100% 100%, 0 100%); }
-.keep-room { --room-color: var(--ink); --room-text: var(--ink); min-height: 0; min-width: 0; position: relative; display: grid; grid-template-rows: auto auto minmax(0, 1fr) auto auto; gap: var(--space-6); text-align: left; background: var(--card); color: var(--ink); border: var(--rule-strong) solid var(--room-color); box-shadow: inset 0 0 0 var(--space-6) var(--paper-2); padding: clamp(var(--space-12), 1.6vh, var(--space-16)); cursor: pointer; font: inherit; }
-.keep-room::before, .keep-herald::before { content: ''; position: absolute; bottom: 100%; left: calc(0% - var(--rule-strong)); right: calc(0% - var(--rule-strong)); height: var(--space-16); background: var(--room-color, var(--ink)); clip-path: polygon(0 0, 12% 0, 12% 50%, 24% 50%, 24% 0, 36% 0, 36% 50%, 48% 50%, 48% 0, 60% 0, 60% 50%, 72% 50%, 72% 0, 84% 0, 84% 50%, 92% 50%, 92% 0, 100% 0, 100% 100%, 0 100%); }
-.keep-room:hover { background: var(--paper); transform: translateY(calc(-1 * var(--space-3))); }
-.keep-room[data-module="moderator"] { --room-color: var(--azure); --room-text: var(--azure-text); grid-column: 1; grid-row: 1 / 3; margin-top: clamp(var(--space-28), 6vh, var(--space-56)); }
-.keep-room[data-module="lottery"] { --room-color: var(--gules); --room-text: var(--gules-text); grid-column: 2; grid-row: 2; }
-.keep-room[data-module="visuals"] { --room-color: var(--or); --room-text: var(--or-text); grid-column: 3; grid-row: 1 / 3; }
-.keep-room[data-module="studio"] { grid-column: 2; grid-row: 1; }
-.keep-room-heading { display: flex; justify-content: space-between; gap: var(--space-8); align-items: start; color: var(--room-text); }
-.keep-room-heading b { font: 800 var(--text-chamber)/1 var(--font-display); text-transform: uppercase; }
-.keep-room-heading kbd { border: var(--rule-thin) solid var(--room-color); padding: var(--space-3) var(--space-6); font: var(--text-small)/1 var(--font-num); }
-.keep-room-function { font: italic var(--text-aside)/1.2 var(--font-serif); color: var(--ink-2); }
-.keep-room-art { min-height: 0; min-width: 0; display: flex; justify-content: center; }
-.keep-room-word { color: var(--room-text); font: 800 clamp(var(--text-chamber), 3.2vw, var(--text-chamber-number))/.95 var(--font-display); text-transform: uppercase; overflow-wrap: anywhere; }
-.keep-room-line { font-size: var(--text-small); }
-.keep-herald { position: relative; min-height: 0; min-width: 0; grid-column: 4; grid-row: 1 / 3; align-self: stretch; margin-top: clamp(var(--space-40), 12vh, calc(var(--space-56) * 2)); display: flex; flex-direction: column; gap: var(--space-10); border: var(--rule-strong) solid var(--ink); background: var(--card); padding: var(--space-12); color: var(--ink); text-align: left; cursor: pointer; font: var(--text-small)/1.3 var(--font-ui); }
-.keep-herald > b { font: 800 var(--text-chamber)/1 var(--font-display); text-transform: uppercase; }
-.keep-herald em { font-family: var(--font-serif); }
-.keep-herald small { font-size: var(--text-small); margin-top: auto; color: var(--muted); }
-.keep-direction { display: grid; grid-template-columns: 1fr auto; gap: var(--space-2); }
-.keep-direction > span { grid-column: 1 / -1; }
-.keep-direction meter { width: 100%; min-width: 0; accent-color: var(--azure); height: var(--space-16); }
-.keep-moat { grid-column: 1 / -1; padding: var(--space-8) var(--space-16); display: flex; justify-content: space-between; gap: var(--space-12); background: var(--azure); color: var(--press); border-top: var(--rule-strong) solid var(--ink); font-weight: 700; }
-@media (max-width: 68.75rem) { .keep-home { height: auto; min-height: 100%; } .keep-cross-section { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: auto; } .keep-room[data-module], .keep-herald { grid-column: auto; grid-row: auto; margin-top: var(--space-16); } .keep-herald { grid-column: 1 / -1; } .keep-room-art { height: var(--space-56); } }
+@import '@castle-control/keep-art/keep-art.css';
+
+/* The winner's 1060 by 698 plane scales to fit. Sizes use max(design token,
+   floor token * inverse effective scale), preserving 13px labels and 15px reading
+   copy. The castle's inverse includes its camera scale; the headline uses stage scale. */
+.keep-home { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; height: 100%; min-height: 0; font: var(--text-shell-body)/1.4 var(--font-ui); }
+.keep-heading { display: flex; justify-content: flex-end; align-items: center; flex-wrap: wrap; gap: var(--space-12); padding-block: var(--space-8); }
+.keep-heading .cc-button { height: var(--space-36); padding: 0 var(--space-14); border: var(--rule-strong) solid var(--ink); border-radius: 0; background: var(--plaque-paper); color: var(--ink); font: 700 var(--text-shell-panel-action)/1 var(--font-ui); letter-spacing: .06em; box-shadow: var(--space-3) var(--space-3) 0 var(--ink); transition: transform var(--motion-fast), box-shadow var(--motion-fast); }
+.keep-heading .cc-button[data-variant="primary"] { background: var(--ink); color: var(--paper); box-shadow: var(--space-3) var(--space-3) 0 var(--or); }
+.keep-heading .cc-button:hover:not(:disabled) { transform: translate(calc(-1 * var(--space-1)), calc(-1 * var(--space-1))); box-shadow: var(--space-4) var(--space-4) 0 var(--ink); }
+.keep-heading .cc-button:active:not(:disabled) { transform: translate(var(--space-2), var(--space-2)); box-shadow: var(--space-1) var(--space-1) 0 var(--ink); }
+.keep-heading kbd { margin-left: var(--space-12); font: var(--text-shell-shortcut)/1 var(--font-num); }
+.keep-viewport { container: keep-surface / inline-size; position: relative; min-height: 0; overflow: hidden; background: var(--paper-grain), linear-gradient(180deg, var(--stage-top), var(--stage-mid) 62%, var(--stage-low)); }
+.keep-diorama { position: absolute; left: 50%; top: 50%; width: calc(var(--space-1) * 1060); height: calc(var(--space-1) * 698); transform: translate(-50%, -50%) scale(var(--keep-scale)); transform-origin: 50% 50%; }
+.keep-diorama, .keep-castle {
+  --keep-label-size: max(var(--text-shell-label), calc(var(--text-shell-label) * var(--keep-inverse)));
+  --keep-eyebrow-size: max(var(--text-shell-eyebrow), calc(var(--text-shell-label) * var(--keep-inverse)));
+  --keep-name-size: max(var(--text-shell-plaque-name), calc(var(--text-shell-label) * var(--keep-inverse)));
+  --keep-line-size: max(var(--text-shell-plaque-state), calc(var(--text-shell-body) * var(--keep-inverse)));
+  --keep-art-size: max(var(--text-shell-strip-word), calc(var(--text-shell-label) * var(--keep-inverse)));
+  --keep-headline-size: max(var(--text-shell-headline), calc(var(--text-shell-label) * var(--keep-inverse)));
+  --keep-sub-size: max(var(--text-shell-tagline), calc(var(--text-shell-body) * var(--keep-inverse)));
+  --keep-word-size: max(var(--text-shell-plaque-word), calc(var(--text-shell-label) * var(--keep-inverse)));
+}
+.keep-dio { position: absolute; inset: 0; overflow: hidden; transition: height var(--m-dolly) var(--ease-dolly); height: 100%; }
+.keep-khead { position: absolute; left: var(--space-24); right: var(--space-16); top: var(--space-10); z-index: 12; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 32%); grid-template-areas: "eyebrow illustration" "name name" "sub sub"; align-items: start; column-gap: var(--space-12); pointer-events: none; }
+.keep-khead .eyebrow { grid-area: eyebrow; min-width: 0; overflow-wrap: anywhere; display: block; margin-bottom: var(--space-6); font: 700 var(--keep-eyebrow-size, var(--text-shell-eyebrow))/1 var(--font-ui); letter-spacing: .14em; text-transform: uppercase; color: var(--ink-2); }
+.keep-khead .display { font-family: var(--font-display); font-weight: 700; font-stretch: condensed; letter-spacing: .005em; line-height: .86; text-transform: uppercase; }
+.keep-khead h1 { grid-area: name; margin: 0; font-size: var(--keep-headline-size, var(--text-shell-headline)); text-shadow: var(--space-4) var(--space-3) 0 var(--gules); }
+.keep-khead .sub { grid-area: sub; display: block; margin-top: var(--space-6); font: italic var(--keep-sub-size, var(--text-shell-tagline))/1.2 var(--font-serif); color: var(--ink-2); }
+.keep-khead .slip { animation: keep-registration-slip var(--m-slip) var(--ease-press) both; }
+.keep-vlab { grid-area: illustration; box-sizing: border-box; justify-self: end; max-width: none; min-width: 0; white-space: normal; overflow-wrap: anywhere; text-align: right; font: 600 var(--keep-label-size, var(--text-shell-label))/1 var(--font-ui); color: var(--ink-2); background: var(--shell-label-scrim); padding: var(--space-4) var(--space-7); pointer-events: none; }
+.keep-castle { position: absolute; left: 0; top: 0; width: calc(var(--space-1) * 1200); height: calc(var(--space-1) * 640); transform-origin: 0 0; transition: transform var(--m-dolly) var(--ease-dolly); }
+.keep-castle > svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.keep-castle > svg text { font-size: var(--keep-art-size, var(--text-shell-label)); }
+.keep-castle .dim { fill: var(--art-night); opacity: 0; mix-blend-mode: multiply; transition: opacity var(--m-stamp) ease; pointer-events: none; }
+.keep-castle.focus .dim { opacity: .55; }
+.keep-castle.focus .dim.on { opacity: 0; }
+.keep-castle .litglow { opacity: 0; transition: opacity var(--m-stamp) ease; pointer-events: none; }
+.keep-castle .litglow.on { opacity: 1; }
+.keep-hit { position: absolute; background: transparent; border: 0; cursor: pointer; padding: 0; border-radius: var(--space-2); }
+.keep-hit:focus-visible { outline: var(--space-4) solid var(--azure); outline-offset: calc(-1 * var(--space-4)); }
+[data-room="lottery"] { --keep-ink: var(--gules); --keep-text: var(--gules-text); }
+[data-room="moderator"] { --keep-ink: var(--azure); --keep-text: var(--azure-text); }
+[data-room="visuals"] { --keep-ink: var(--or); --keep-text: var(--or-text); }
+[data-room="studio"] { --keep-ink: var(--ink); --keep-text: var(--ink); }
+.keep-khead [data-room] { color: var(--keep-text); }
+.keep-plaque { box-sizing: border-box; position: absolute; z-index: 3; background: var(--plaque-paper); border: var(--title-ghost) solid var(--ink); border-left: var(--space-10) solid var(--keep-ink, var(--ink)); padding: var(--space-7) var(--space-12) var(--space-8); box-shadow: var(--space-4) var(--space-4) 0 var(--plaque-shadow); pointer-events: none; min-width: calc(var(--space-1) * 200); line-height: normal; transition: opacity var(--m-slip); }
+/* Below the winner's 1060-unit host (66.25rem), fit scale is necessarily < 1.
+   Keep the reference size uncapped; reserve the smaller plaques' column gutters. */
+@container keep-surface (width < 66.25rem) {
+  .keep-plaque { max-width: calc(var(--space-56) * 5); }
+}
+.keep-plaque .nm { font: 700 var(--keep-name-size, var(--text-shell-plaque-name))/1 var(--font-ui); letter-spacing: .1em; text-transform: uppercase; color: var(--ink-2); display: flex; gap: var(--space-8); align-items: center; white-space: nowrap; }
+.keep-plaque .wd { font: 700 var(--keep-word-size, var(--text-shell-plaque-word))/1 var(--font-display); text-transform: uppercase; letter-spacing: .02em; margin-top: var(--space-5); color: var(--keep-text, var(--ink)); }
+.keep-plaque .ln { font: 500 var(--keep-line-size, var(--text-shell-plaque-state))/1.25 var(--font-ui); color: var(--ink-2); margin-top: var(--space-4); }
+.keep-plaque > .cc-stamp { --stamp-size: var(--keep-label-size); position: absolute; right: calc(-1 * var(--space-14)); top: calc(-1 * var(--space-16)); background: var(--plaque-paper); }
+.keep-plaque.drafted { outline: var(--space-3) dashed var(--or); outline-offset: var(--space-6); }
+.keep-plaque .pin { position: absolute; left: calc(-1 * var(--space-10)); bottom: calc(-1 * var(--space-34)); font: 800 var(--keep-label-size, var(--text-shell-draft-label))/1 var(--font-display); letter-spacing: .12em; color: var(--or-text); background: var(--draft-paper); border: var(--rule-strong) dashed var(--or); padding: var(--space-4) var(--space-7); white-space: nowrap; }
+.keep-home.room-mode .keep-dio { height: calc(var(--space-1) * 250); border-bottom: var(--space-3) solid var(--ink); }
+.keep-home.room-mode .keep-khead, .keep-home.room-mode .keep-vlab { display: none; }
+.keep-home.room-mode .keep-plaque, .keep-home.room-mode .keep-moatlab { opacity: 0; }
+@keyframes keep-registration-slip {
+  0% { transform: translate(calc(-1 * var(--space-14)), 0); text-shadow: var(--space-12) var(--space-8) 0 var(--gules); }
+  60% { transform: translate(0, 0); text-shadow: var(--space-9) var(--space-6) 0 var(--gules); }
+  100% { transform: none; text-shadow: var(--space-4) var(--space-3) 0 var(--gules); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .keep-khead .slip { animation: none; }
+  .keep-castle, .keep-dio, .keep-plaque, .keep-castle .dim, .keep-castle .litglow { transition: none; }
+}
+
+/* The replay is an unscaled moat band below the art, outside plaque and hit geometry. */
+.keep-moat { display: flex; min-width: 0; flex-wrap: nowrap; align-items: center; justify-content: space-between; gap: var(--space-8) var(--space-12); padding: var(--space-8) var(--space-12); border: var(--rule-strong) solid var(--ink); background: var(--plaque-paper); box-shadow: inset 0 var(--space-4) 0 var(--azure); }
+/* Keep the pre-merge label's print treatment in the unscaled footer flow. */
+.keep-moatlab { font: 700 var(--keep-line-size, var(--text-shell-moat-state))/1 var(--font-ui); background: var(--azure); color: var(--white); padding: var(--space-6) var(--space-12); border: var(--rule-strong) solid var(--ink); box-shadow: var(--space-3) var(--space-3) 0 var(--ink); pointer-events: none; letter-spacing: .02em; white-space: nowrap; }
+.keep-moatlab small { font: 600 var(--keep-label-size, var(--text-shell-label))/1 var(--font-ui); opacity: .85; margin-left: var(--space-8); }
+.keep-moat .moat-heartbeat { flex: 1 1 0; min-width: 0; flex-wrap: nowrap; gap: var(--space-6); }
+.keep-moat .moat-heartbeat small { flex: none; white-space: nowrap; font: 700 var(--text-shell-label)/1.2 var(--font-ui); color: var(--ink-2); }
+.keep-moat .moat-heartbeat-strip { flex: 1 1 0; min-width: 0; height: var(--space-28); }
+.keep-moat .moat-heartbeat .moat-scene { height: 100%; }
+.keep-moatlab, .keep-moat-link, .keep-moat .moat-heartbeat .cc-button { flex: none; white-space: nowrap; }
+.keep-moat-link { color: var(--azure-text); font: 700 var(--text-shell-panel-action)/1.2 var(--font-ui); text-decoration: underline; text-underline-offset: var(--space-3); }
+.keep-moat-link:focus-visible { outline: var(--rule-strong) solid var(--azure); outline-offset: var(--focus-offset); }
+
+/* Smaller windows may stack controls; desktop Keep widths reserve one moat row. */
+@media (width < 80rem) {
+  .keep-moat, .keep-moat .moat-heartbeat { flex-wrap: wrap; }
+  .keep-moat .moat-heartbeat { flex-basis: calc(var(--space-56) * 6); }
+}
+
+/* Keep the verified small-window grid; wider windows use the winner's shared
+   intrinsic headline width instead of stretching its three block elements. */
+@media (width < 90rem) {
+  .keep-vlab { max-width: 100%; }
+}
+@media (width >= 90rem) {
+  .keep-khead { grid-template-columns: fit-content(68%) minmax(0, 1fr); grid-template-areas: "eyebrow illustration" "name ." "sub ."; }
+}

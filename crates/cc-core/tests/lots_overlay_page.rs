@@ -85,11 +85,15 @@ async fn saved_display_survives_restart_and_query_overrides_legacy_defaults() {
     let server = cc_obs::Overlay::start_with_routes(0, host.routes())
         .await
         .unwrap();
-    for (query, scale, anchor) in [
-        ("", "1.5", "tl"),
-        ("?scale=0.5&anchor=br", "0.5", "br"),
-        ("?scale=NaN&anchor=bad", "1.5", "tl"),
-        ("?scale=2&scale=1", "1.5", "tl"),
+    for (query, scale, anchor, shape) in [
+        ("", "1.5", "tl", "urn"),
+        ("?scale=0.5&anchor=br", "0.5", "br", "urn"),
+        ("?scale=NaN&anchor=bad", "1.5", "tl", "urn"),
+        ("?scale=2&scale=1", "1.5", "tl", "urn"),
+        ("?shape=wheel", "1.5", "tl", "wheel"),
+        ("?scale=0.5&anchor=br&shape=deck", "0.5", "br", "deck"),
+        ("?scale=NaN&shape=ballot_box", "1.5", "tl", "ballot_box"),
+        ("?shape=wheel&shape=deck", "1.5", "tl", "urn"),
     ] {
         let html = reqwest::get(format!("{}lots/simulated-draw{query}", server.url()))
             .await
@@ -103,6 +107,7 @@ async fn saved_display_survives_restart_and_query_overrides_legacy_defaults() {
             "{query}"
         );
         assert!(html.contains("data-colour=\"azure\""));
+        assert!(html.contains(&format!("data-shape=\"{shape}\"")), "{query}");
         assert!(html.contains("--draw-reveal:750ms"));
         assert!(html.contains("background: transparent"));
     }
@@ -185,6 +190,36 @@ async fn display_query_is_parsed_once_with_safe_defaults_and_no_markup_injection
 }
 
 #[tokio::test]
+async fn shape_query_selects_one_of_four_draw_shapes_and_defaults_to_the_urn() {
+    let host = Arc::new(RenderHost::default());
+    let server = cc_obs::Overlay::start_with_routes(0, host.routes())
+        .await
+        .unwrap();
+    let client = reqwest::Client::new();
+    for (query, shape) in [
+        ("", "urn"),
+        ("?shape=wheel", "wheel"),
+        ("?scale=2&shape=deck", "deck"),
+        ("?anchor=tl&shape=ballot_box", "ballot_box"),
+        ("?shape=urn", "urn"),
+        ("?shape=spinner", "urn"),
+        ("?shape=", "urn"),
+        ("?shape=wheel&shape=deck", "urn"),
+        ("?shape=%22%3E%3Cscript%3E", "urn"),
+    ] {
+        let response = client
+            .get(format!("{}lots/simulated-draw{query}", server.url()))
+            .send()
+            .await
+            .unwrap();
+        assert_eq!(response.status(), 200, "{query}");
+        let html = response.text().await.unwrap();
+        assert!(html.contains(&format!("data-shape=\"{shape}\"")), "{query}");
+        assert!(!html.contains("<script>"), "{query}");
+    }
+}
+
+#[tokio::test]
 async fn page_shows_only_accepted_seal_then_fixed_simulated_winners_and_no_write_door() {
     for (content, winner_count) in [("question", 2), ("prize", 40)] {
         let root = tempfile::tempdir().unwrap();
@@ -216,6 +251,7 @@ async fn page_shows_only_accepted_seal_then_fixed_simulated_winners_and_no_write
                     &"simulated-draw".to_owned().try_into().unwrap(),
                     cc_lots::PassedMessage::from_verdict(
                         cc_lots::MessageFacts {
+                            simulated: true,
                             message_id: format!("simulated-message-{user_id}").try_into().unwrap(),
                             user_id: user,
                             at: "2026-10-25T12:00:00Z".parse().unwrap(),

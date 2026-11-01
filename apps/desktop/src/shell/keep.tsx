@@ -1,1 +1,14 @@
-export { Keep as default } from '../keep/keep.jsx';
+import type { ModuleId } from '@castle-control/ui';
+import type { StewardConnection } from '../client.js';
+import { Keep } from '../keep/keep.jsx';
+import type { KeepProps } from '../keep/keep.jsx';
+import { ProgramColumn } from './program-column.jsx';
+
+export default function KeepWorkspace({ selected = 'lottery', connection, ...props }: KeepProps & {
+  selected?: ModuleId; connection?: StewardConnection;
+}) {
+  return <div className="shell-keep-workspace"><Keep {...props} />
+    <ProgramColumn snapshot={props.snapshot ?? { mode: 'fixture', phase: 'ready' }} selected={selected}
+      {...(connection ? { connection } : {})} />
+  </div>;
+}

@@ -7,6 +7,7 @@ import type { ArtifactId, DesignSnapshot } from '@castle-control/ui/design';
 import { ProposalQueue } from '@castle-control/ui/steward';
 import type { Proposal } from '@castle-control/ui/steward';
 import { RoomDesignProposalView } from './focus.jsx';
+import { RoomDesignActions } from './actions.jsx';
 
 function draft(session: DesignSession, artifact: ArtifactId): Proposal {
   const result = session.draft({ action: 'custom', artifact, prompt: 'simulated quiet engraved' });
@@ -52,6 +53,20 @@ function viewAt(views: readonly View[], index = 0): View {
 }
 
 const alerts = (html: string) => html.match(/role="alert"/g) ?? [];
+
+test('room design actions and proposal review use simulated stamps and keep their words', () => {
+  const actions = renderToStaticMarkup(<RoomDesignActions chamber="visuals" on_open={vi.fn()} />);
+  expect(actions).toContain('data-stamp="simulated" role="img" aria-label="Simulated: SIMULATED · DATA-ONLY DESIGNS"');
+  expect(actions).toContain('>SIMULATED · DATA-ONLY DESIGNS</span>');
+  const session = new DesignSession(new ProposalQueue());
+  try {
+    const proposal = draft(session, 'beacon');
+    const review = renderViews(session, [[proposal, 'beacon']]);
+    expect(review).toContain('data-stamp="simulated" role="img" aria-label="Simulated: SIMULATED"');
+    expect(review).toContain('>SIMULATED</span>');
+    expect(review).toContain('Beacon visuals · Preview required');
+  } finally { session.dispose(); }
+});
 
 test('a session error is not repeated per proposal', () => {
   const session = new DesignSession(new ProposalQueue());

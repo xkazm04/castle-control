@@ -172,7 +172,7 @@ async fn native_opt_in_is_explicit_and_uses_real_time_not_recorded_round_two() {
                 .text()
                 .await
                 .unwrap();
-            assert!(page.contains("Live-trusted quicknet"));
+            assert!(page.contains("SIMULATED"));
             assert!(page.contains(seal["sealed"]["seal"].as_str().unwrap()));
             let round = seal["sealed"]["roll"]["randomness"]["round"]
                 .as_str()

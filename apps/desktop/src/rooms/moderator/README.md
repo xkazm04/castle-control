@@ -1,3 +1,47 @@
+# The moat: watch what never airs (2026-10-31)
+
+The drill opens on a moat timeline over the same outcomes the table lists. Chat is the bank
+above, the gate runs across, the stream is the bank below. Each replayed message crosses from
+chat; aired ones land on the stream, held ones stop at the gate under a HELD · NOT ON AIR
+stamp (`Stamp`) with the rule id. A recording gap is a hatched span labelled "missing, not
+replayed". Everything is drawn from `DrillOutcome` (time, state, verdict, action, rule id) and
+`DrillRunResult.gaps`; the contract carries no message text, so none is shown.
+
+- **Model** (`src/moat/moat-model.ts`, pure): sorts outcomes, maps each to a fate (`aired`, `held`,
+  `unresolved`), gaps to spans, and answers "where is this marker at playhead t". Only a verdict, or
+  `not_provoked`, can say a line aired; `judge_pending`, `engine_failed` and the other
+  unevaluated states stop at the gate as dashed diamonds and are counted separately.
+- **Player** (`moat-player.ts`): an external store over an injected clock (`manualClock()` in tests,
+  `browserClock` in the app). It opens finished, so the first frame, the reduced-motion frame and the
+  static test frame show every stamp. Play from the end restarts. 1x, 2x, 8x and 60x speeds.
+- **Scene** (`moat-scene.tsx`): SVG in scene units plus HTML stamps placed by percentage. Stamps that
+  would overlap stack up to three levels; any beyond are counted in a note and stay reachable in the table.
+- **Windowing**: a night of up to 150 outcomes fits whole; longer ones show pages of about 150
+  outcomes that turn with the playhead. Visible markers are found by bisection, so ten thousand
+  outcomes cost the same as forty. Aired dots thin past 360 per view; stopped ones never do.
+- **Panel** (`moat-panel.tsx`): plain buttons and one range input only, because Space is the seal key in
+  the shared keymap. The live count ("Held 3 of 40 · simulated") is the shared `Notice`; reduced motion
+  disables Play and keeps the scrubber. The inspector shows state, action, rule and verdict, and offers
+  "Open rule ... in the rule bench" for rules the bench can edit.
+- **Table**: unchanged and still the accessible equivalent; each row id is a button that selects the
+  message, and each row now names its rule and action.
+- **Spotlight** (`ruleTally`, `spotlightStops`): when two or more rules stopped something, a row of
+  toggle buttons picks one. Only its stamps are drawn (plus the picked message's), the other stops
+  dim, and Previous and Next stop walk that rule. This is the answer to a dense night: stamps from
+  one rule stack far less than all of them. The live count stays about the whole night.
+- **Busy night** (fixture only): a toggle swaps in `busyNight()`, a seeded 2,000-line simulated night
+  with a four minute gap, so the paging, thinning and overflow note can be seen. It hides the
+  baseline-versus-candidate comparison, which belongs to the short night, and clears the pick.
+- **Landing**: a stop gives one expanding ring at the gate (`moat-thud`), off under reduced motion.
+- **Keep heartbeat** (`moat/heartbeat.tsx`): the Keep's moat bar loops a small, labelled sample of the
+  same model in fixture mode only, with a link to the full replay. A core room shows no loop or
+  link, because it has no sample.
+- **Judge field**: `DrillOutcome.passed` is the judge's observation about a bank case, not the
+  message's verdict, so the inspector labels it "Judge: passed its case / failed its case".
+- **Fixture**: `fixtureReplay` is a seeded generator (`src/drill-fixture.ts`), not a literal: forty
+  simulated lines, three stops, two unevaluated, one gap. Summary counts are derived from the
+  outcomes. `simulatedDrill({ seed, count })` draws any size for tests.
+
 # Gatehouse shadow journey (lane L2, 2026-10-31)
 
 ## Stabilize findings 05, 07, 09 and 10 (2026-10-31)
@@ -263,7 +307,7 @@ spacers and `aria-rowcount`; line height remains `row-h` for 4,200-line intake.
 | cc-print/crops | kit StageFrame print; illustrative SVG remains fixture-only |
 | cc-chip-toggles/tiles/legend | room-local ConsensusSelection, ConsensusTiles, moderator-legend |
 | cc-moat-figure/gauge/bridge/stops | kit HeroReadout (54, no ghost, label caption), room-local SVG and labels |
-| cc-figures/note/rule-card/side/stamp | room-local counts/rule layout and kit StatusChip mode stamp |
+| cc-figures/note/rule-card/side/stamp | room-local counts/rule layout and kit Stamp kind shadow/armed |
 | cc-roll-entry | room-local ruled moderator-roll-entry in windowed ledger |
 | cc-drill | kit HeraldicCard and a native drill-route link |
 
@@ -483,3 +527,66 @@ build passed. First-load JS+CSS: 382,467/393,216 bytes. Final narrowed Vitest
 run: 108 tests in 15 files passed (`lots`, `moderation`, `moderation-gate`,
 `navigation`, `shell/room` and `src/rooms/`). Both new structure tests were
 proven red before the layout change. No install, git write or live test ran.
+
+
+## WP4b shared state stamps
+
+Rule rows and rule totals in both fixture and core views use `Stamp` with the
+shadow/armed kinds and the existing Watching/Armed words. The stamp table owns
+the inks, including gules for armed rules. The rampart retains the rule counts
+inside the shared stamps and preserves the link's complete safety description.
+VerdictMark and the shared VerdictChip use pass/held/blocked stamps while
+retaining the Pass/Hold/Bar words. Review actions and verdict filter buttons
+retain their action semantics and decorative icons.
+
+The moat, orders, fixture chat, drill and output headings use simulated stamps.
+Provenance notices, hidden totals, SVG descriptions and output figcaptions stay
+text. No moderation state, RPC, proposal, seal or action-gate behavior changes.
+Tests cover stamp kinds, words, accessible labels and the production-source ban
+on the old scoped badge paths. No install, git write or live test is performed.
+
+
+## WP13: Keep moat and Cutaway merge, 2026-10-31
+
+The Keep retains the shared cutaway art, camera, room hits and lintel plaques.
+Its moat is an unscaled footer row below the art viewport, with the same chat
+delay reading. Only fixture mode adds the Sample replay loop (simulated), its
+existing play/pause control and Watch the full replay link to
+#/chamber/moderator/drill. Core mode renders neither the loop nor the link.
+The separate grid row reserves layout space instead of overlaying the art or
+plaques. Colours, type, rules and focus treatment use Cutaway tokens.
+
+The drill retains the diff/comparison, synchronized timeline/table selection,
+filters, busy-night toggle, report and rule-bench handoff. The simulated heading
+and each stopped-message verdict now use the shared Stamp; all timeline hook
+classes and controls remain. The Keep regression checks the Cutaway moat DOM
+and the fixture/core distinction. Existing e2e provenance assertions now target
+the shared simulated Stamp in the rampart, replacing the retired cc-sample
+class; their simulated-data requirement is unchanged.
+
+
+### WP13 Keep footer correction
+
+At desktop widths (1280 and up), the footer and its nested heartbeat are
+non-wrapping flex rows. The strip takes the flexible width with min-width: 0;
+its height is bounded by space-28, while honesty text, Pause and the replay
+link keep their widths. The azure moat label retains its restored treatment
+and moat-label hook. Below 1280 the footer may wrap.
+
+The Keep heading is a bounded grid: eyebrow and illustration caption occupy
+separate cells and wrap within their columns; the name and subtitle span both
+columns below. The caption is no longer an independent absolute overlay.
+Plaque names stay on one line. Structural regressions pin the heading tracks
+and shrinking, non-wrapping desktop moat. The browser regression covers
+1280x800, 1440x900 and 1920x1080 in paper and stock with the real autoplay/Pause
+control present, checking footer height, contained controls, separated heading
+labels and an unwrapped Lot Chamber name.
+
+
+At 1440 and wider, all three headline blocks share one fit-content grid track,
+restoring the winner's common intrinsic width rather than stretching each
+block across the cell or both columns. The fit-content cap leaves a separate
+caption cell available for long chamber readings. No fixed headline width or
+type change is introduced. The caption's computed max-width is none there;
+max-width: 100% applies only below 1440, retaining the verified 1280 grid and
+wrapping behavior. Footer, heartbeat and plaque rules are unchanged.

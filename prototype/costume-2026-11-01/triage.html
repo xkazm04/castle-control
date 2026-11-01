@@ -1,0 +1,402 @@
+<title>Castle Control Costume Parade</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IM+Fell+English+SC&family=Archivo:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: a darkroom contact sheet. One row per page: the baseline proof on the left,
+   three costume proofs to its right, a wax seal on the winner. Dark-only by design,
+   so the proofs (light and dark) all read against the same neutral ground. */
+:root {
+  color-scheme: dark;
+  --ground: #121014;
+  --ground-2: #1a171d;
+  --sheet: #221e26;
+  --edge: #3a3440;
+  --edge-2: #554d5c;
+  --text: #ece6dc;
+  --text-2: #b9b0a4;
+  --text-3: #8d8479;
+  --wax: #c8402c;
+  --wax-hi: #e86a4f;
+  --gold: #e3b450;
+  --a: #e3b450;   /* Illuminated: gold leaf */
+  --b: #7fb2ff;   /* Haunted: will-o'-wisp */
+  --c: #d36ae0;   /* Stained glass: violet pane */
+  --base: #8d8479;
+  --font-display: "IM Fell English SC", "Iowan Old Style", Palatino, Georgia, serif;
+  --font-ui: "Archivo", "Segoe UI", system-ui, sans-serif;
+  --font-num: "JetBrains Mono", ui-monospace, Consolas, monospace;
+}
+* { box-sizing: border-box; }
+html { background: var(--ground); }
+body {
+  background: var(--ground); color: var(--text); font: 15px/1.5 var(--font-ui);
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 0 64px;
+}
+button, a { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+.wrap { max-width: 1480px; margin: 0 auto; }
+
+/* Masthead */
+.mast { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 24px; align-items: end; padding-block: 40px 28px; border-bottom: 1px solid var(--edge); }
+.eyebrow { font: 600 12px/1 var(--font-ui); letter-spacing: .16em; text-transform: uppercase; color: var(--text-3); }
+.mast h1 { margin: 10px 0 6px; font: 400 clamp(38px, 5vw, 64px)/0.95 var(--font-display); letter-spacing: .01em; text-wrap: balance; }
+.mast h1 em { font-style: normal; color: var(--wax-hi); }
+.mast p { margin: 0; color: var(--text-2); max-width: 64ch; }
+.tally { text-align: right; display: grid; gap: 10px; justify-items: end; }
+.tally-num { font: 600 44px/1 var(--font-num); font-variant-numeric: tabular-nums; }
+.tally-num small { font-size: 18px; color: var(--text-3); }
+.tally-row { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+.btn { appearance: none; border: 1px solid var(--edge-2); background: var(--sheet); border-radius: 4px; padding: 7px 12px; font-size: 13px; font-weight: 600; cursor: pointer; letter-spacing: .02em; }
+.btn:hover { border-color: var(--text-2); }
+.btn[disabled] { opacity: .45; cursor: default; }
+.status { font-size: 12.5px; color: var(--text-3); min-height: 1.5em; }
+.status.warn { color: var(--gold); }
+
+/* Families legend */
+.families { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; padding-block: 24px; border-bottom: 1px solid var(--edge); }
+.fam { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 14px; align-content: start; }
+.fam-letter { grid-row: span 3; width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; font: 400 26px/1 var(--font-display); color: var(--ground); background: var(--fam); }
+.fam h2 { margin: 0; font: 700 16px/1.2 var(--font-ui); letter-spacing: .02em; }
+.fam p { margin: 0; color: var(--text-2); font-size: 13.5px; }
+.fam .btn { justify-self: start; margin-top: 6px; font-size: 12px; padding: 5px 10px; }
+
+/* Page rows */
+.page { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 24px; padding-block: 28px; border-bottom: 1px solid var(--edge); }
+.page-head { display: grid; align-content: start; gap: 6px; }
+.page-head h3 { margin: 0; font: 400 28px/1 var(--font-display); }
+.route { font: 400 12px/1.3 var(--font-num); color: var(--text-3); }
+.page-head .verdict { margin-top: 8px; font-size: 13px; color: var(--text-2); }
+.verdict b { color: var(--text); }
+.base-card { margin-top: 12px; }
+.proofs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
+
+.card { position: relative; display: grid; gap: 10px; }
+.thumb { position: relative; display: block; width: 100%; aspect-ratio: 16 / 10; border-radius: 3px; overflow: hidden; background: var(--sheet); border: 1px solid var(--edge); cursor: zoom-in; padding: 0; }
+.thumb img { width: 100%; height: 100%; object-fit: cover; object-position: top center; display: block; transition: transform .5s cubic-bezier(.2,.8,.2,1); }
+.thumb:hover img { transform: scale(1.03); }
+.thumb .missing { position: absolute; inset: 0; display: grid; place-items: center; color: var(--text-3); font-size: 13px; text-align: center; padding: 16px; }
+.card[data-fam="a"] { --fam: var(--a); } .card[data-fam="b"] { --fam: var(--b); } .card[data-fam="c"] { --fam: var(--c); } .card[data-fam="base"] { --fam: var(--base); }
+.card .thumb::after { content: ""; position: absolute; inset: 0; border-top: 3px solid var(--fam); pointer-events: none; }
+.card-foot { display: flex; align-items: center; gap: 10px; }
+.tag { font: 700 12px/1 var(--font-ui); letter-spacing: .1em; text-transform: uppercase; color: var(--fam); }
+.tag span { color: var(--text-3); font-weight: 500; letter-spacing: .04em; text-transform: none; margin-left: 6px; }
+.pick { margin-left: auto; appearance: none; border: 1px solid var(--edge-2); background: transparent; border-radius: 999px; padding: 6px 14px; font-weight: 700; font-size: 12.5px; letter-spacing: .06em; text-transform: uppercase; cursor: pointer; color: var(--text-2); }
+.pick:hover { border-color: var(--fam); color: var(--text); }
+.card.won .pick { background: var(--wax); border-color: var(--wax); color: #fff; }
+.card.won .thumb { border-color: var(--wax); box-shadow: 0 0 0 2px var(--wax), 0 18px 40px -18px rgba(200, 64, 44, .7); }
+.card.lost .thumb img { filter: grayscale(.85) brightness(.6); }
+
+/* Wax seal on the winner */
+.seal { position: absolute; top: -14px; right: -12px; width: 74px; height: 74px; display: none; pointer-events: none; filter: drop-shadow(0 6px 10px rgba(0,0,0,.5)); }
+.card.won .seal { display: block; animation: stamp .45s cubic-bezier(.2,1.6,.4,1) both; }
+@keyframes stamp { from { transform: scale(1.6) rotate(-30deg); opacity: 0; } to { transform: scale(1) rotate(-12deg); opacity: 1; } }
+
+/* Lightbox */
+.lb { position: fixed; inset: 0; z-index: 50; background: rgba(8, 7, 9, .96); display: grid; grid-template-rows: auto minmax(0, 1fr) auto; padding: calc(env(safe-area-inset-top, 0px) + 12px) max(16px, env(safe-area-inset-right, 0px)) calc(env(safe-area-inset-bottom, 0px) + 12px) max(16px, env(safe-area-inset-left, 0px)); gap: 12px; }
+.lb-bar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.lb-title { font: 400 24px/1 var(--font-display); }
+.lb-title .tag { margin-left: 10px; font-size: 13px; }
+.lb-bar .grow { flex: 1; }
+.seg { display: inline-flex; border: 1px solid var(--edge-2); border-radius: 4px; overflow: hidden; }
+.seg button { appearance: none; border: 0; background: transparent; padding: 6px 12px; font-weight: 700; font-size: 13px; cursor: pointer; color: var(--text-2); }
+.seg button[aria-pressed="true"] { background: var(--text); color: var(--ground); }
+.lb-stage { position: relative; display: grid; place-items: center; min-height: 0; }
+.frame-box { position: relative; width: calc(1440px * var(--s, .5)); height: calc(900px * var(--s, .5)); border-radius: 4px; overflow: hidden; box-shadow: 0 30px 80px -20px rgba(0,0,0,.8), 0 0 0 1px var(--edge); background: var(--sheet); }
+.frame-box iframe, .frame-box img { position: absolute; top: 0; left: 0; width: 1440px; height: 900px; border: 0; transform: scale(var(--s, .5)); transform-origin: 0 0; background: #fff; }
+.frame-box img { object-fit: cover; object-position: top; }
+.lb-help { display: flex; gap: 18px; flex-wrap: wrap; justify-content: center; color: var(--text-3); font-size: 12.5px; }
+kbd { font: 600 11px/1 var(--font-num); border: 1px solid var(--edge-2); border-bottom-width: 2px; border-radius: 3px; padding: 2px 5px; color: var(--text-2); }
+.lb .pick { margin: 0; padding: 8px 18px; }
+.lb .pick.on { background: var(--wax); border-color: var(--wax); color: #fff; }
+
+@media (max-width: 1000px) {
+  .page { grid-template-columns: minmax(0, 1fr); }
+  .base-card { max-width: 360px; }
+}
+@media (max-width: 720px) {
+  .mast { grid-template-columns: minmax(0, 1fr); }
+  .tally { text-align: left; justify-items: start; }
+  .tally-row { justify-content: flex-start; }
+  .families, .proofs { grid-template-columns: minmax(0, 1fr); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .thumb img, .card.won .seal { transition: none; animation: none; }
+}
+</style>
+
+<div class="wrap">
+  <header class="mast">
+    <div>
+      <div class="eyebrow" id="eyebrow">Kiroween · Costume Contest · evolutionary rounds</div>
+      <h1 id="round-title">Costume Parade, <em>Round 2</em></h1>
+      <p id="round-lede">The baseline is the fused set of Round 1 winners: Stained Glass shell and pages, Illuminated folio pages, one token system. Each page gets three evolutions: A refine, B push, C cross. Seal one winner per page.</p>
+    </div>
+    <div class="tally">
+      <div class="tally-num"><span id="count">0</span><small> / <span id="total">9</span> sealed</small></div>
+      <div class="tally-row">
+        <button class="btn" id="copy" type="button">Copy picks</button>
+      </div>
+      <div class="status" id="status" role="status">Connecting to the picks store…</div>
+    </div>
+  </header>
+
+  <section class="families" id="families" aria-label="Costume families"></section>
+  <main id="pages"></main>
+</div>
+
+<div class="lb" id="lb" hidden role="dialog" aria-modal="true" aria-labelledby="lb-title">
+  <div class="lb-bar">
+    <div class="lb-title" id="lb-title"></div>
+    <div class="grow"></div>
+    <div class="seg" id="lb-seg" role="group" aria-label="Variant"></div>
+    <a class="btn" id="lb-open" target="_blank" rel="noopener">Open alone</a>
+    <button class="pick" id="lb-pick" type="button">Seal winner</button>
+    <button class="btn" id="lb-close" type="button">Close</button>
+  </div>
+  <div class="lb-stage" id="lb-stage"><div class="frame-box" id="frame-box"></div></div>
+  <div class="lb-help"><span><kbd>←</kbd> <kbd>→</kbd> variant</span><span><kbd>↑</kbd> <kbd>↓</kbd> page</span><span><kbd>P</kbd> seal winner</span><span><kbd>Esc</kbd> close</span><span>Proof is live: hover, click and scroll inside it</span></div>
+</div>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="seal" viewBox="0 0 100 100">
+      <path fill="#a8321f" d="M50 3c6 0 8 5 13 6s10-3 14 1 1 9 4 13 9 4 10 10-4 8-3 13 5 9 2 14-9 4-12 8-1 10-6 12-9-2-14 0-7 7-13 6-7-6-12-7-10 3-14-1-1-9-5-12-9-4-10-10 4-8 3-13-5-9-2-14 9-4 12-8 1-10 6-12 9 2 14 0 7-7 12-7z"/>
+      <circle cx="50" cy="50" r="31" fill="#c8402c" stroke="#7d2416" stroke-width="2"/>
+      <circle cx="50" cy="50" r="25" fill="none" stroke="#e86a4f" stroke-width="1.2" stroke-dasharray="2 3"/>
+      <path fill="#7d2416" d="M33 56h34v8H33zM35 40h6v6h4v-6h4v6h4v-6h4v6h4v-6h6v16H35z"/>
+      <path fill="#f3b9a8" opacity=".55" d="M28 34c6-9 16-14 27-13-9 3-17 8-22 17z"/>
+    </symbol>
+  </defs>
+</svg>
+
+<script>
+/* ---- Round data (edited by Claude each round) ---- */
+const ROUND = 2;
+const FAMILIES = {
+  a: { name: 'Refine', thesis: 'Keep each winner’s direction and raise the craft: fix what the round-1 notes flagged, tighten spacing, type and states.' },
+  b: { name: 'Push', thesis: 'Amplify what made each winner win: bolder hero moments, more atmosphere, the spooky costume taken further.' },
+  c: { name: 'Cross', thesis: 'Bring in the best idea from a losing round-1 variant, or one new twist, inside the fused token system.' },
+};
+const PAGES = [
+  { id: 'landing', name: 'Landing', route: 'site /' },
+  { id: 'keep', name: 'The Keep', route: '#/keep' },
+  { id: 'overview', name: 'Overview', route: '#/overview' },
+  { id: 'demo', name: 'On Stream', route: '#/demo' },
+  { id: 'setup', name: 'Set up OBS', route: '#/stream' },
+  { id: 'lottery', name: 'Lot Chamber', route: '#/chamber/lottery' },
+  { id: 'gatehouse', name: 'Gatehouse', route: '#/chamber/moderator' },
+  { id: 'beacons', name: 'Beacons', route: '#/chamber/visuals' },
+  { id: 'maproom', name: 'Map Room', route: '#/chamber/studio' },
+];
+/* Which proofs exist this round, and where the baseline of each page comes from. */
+const READY = { a: [], b: [], c: [] };
+const BASELINE = (id) => ({ img: `fused/thumbs/${id}-day.webp`, label: 'Round 1 winner' });
+const proof = (fam, id) => ({ img: `round-${ROUND}/_thumbs/${fam}-${id}.webp`, url: `round-${ROUND}/${fam}/${id}.html` });
+
+/* ---- State ---- */
+const picks = {};           // pageId -> 'a' | 'b' | 'c' | 'base'
+let store = null;           // db namespace or null
+const STORE_PATH = `rounds/round-${ROUND}/picks`;
+const LOCAL_KEY = `cc-costume-picks-r${ROUND}`;
+const $ = (s, el = document) => el.querySelector(s);
+const statusEl = $('#status');
+const setStatus = (t, warn) => { statusEl.textContent = t; statusEl.classList.toggle('warn', !!warn); };
+
+/* ---- Render ---- */
+function famLabel(f) { return f === 'base' ? 'Baseline' : `${f.toUpperCase()} · ${FAMILIES[f].name}`; }
+
+function renderFamilies() {
+  $('#families').innerHTML = Object.entries(FAMILIES).map(([k, f]) => `
+    <article class="fam" style="--fam: var(--${k})">
+      <div class="fam-letter" aria-hidden="true">${k.toUpperCase()}</div>
+      <h2>${f.name}</h2>
+      <p>${f.thesis}</p>
+      <button class="btn" type="button" data-all="${k}">Seal ${k.toUpperCase()} for every page</button>
+    </article>`).join('');
+}
+
+function cardHTML(page, fam) {
+  const isBase = fam === 'base';
+  const ready = isBase || READY[fam].includes(page.id);
+  const src = isBase ? BASELINE(page.id).img : proof(fam, page.id).img;
+  const tagText = isBase ? `Baseline<span>${BASELINE(page.id).label}</span>` : `${fam.toUpperCase()}<span>${FAMILIES[fam].name}</span>`;
+  return `
+    <div class="card" data-fam="${fam}" data-page="${page.id}">
+      <button class="thumb" type="button" data-open="${page.id}:${fam}" aria-label="Open ${page.name}, ${famLabel(fam)}" ${ready ? '' : 'disabled'}>
+        ${ready ? `<img src="${src}" alt="" loading="lazy">` : `<span class="missing">Still being drawn…</span>`}
+      </button>
+      <svg class="seal" aria-hidden="true"><use href="#seal"/></svg>
+      <div class="card-foot">
+        <span class="tag">${tagText}</span>
+        <button class="pick" type="button" data-pick="${page.id}:${fam}" ${ready ? '' : 'disabled'}>${isBase ? 'Keep' : 'Seal'}</button>
+      </div>
+    </div>`;
+}
+
+function renderPages() {
+  $('#pages').innerHTML = PAGES.map(p => `
+    <section class="page" id="page-${p.id}" aria-labelledby="h-${p.id}">
+      <div class="page-head">
+        <h3 id="h-${p.id}">${p.name}</h3>
+        <div class="route">${p.route}</div>
+        <div class="verdict" data-verdict="${p.id}"></div>
+        <div class="base-card">${cardHTML(p, 'base')}</div>
+      </div>
+      <div class="proofs">${['a', 'b', 'c'].map(f => cardHTML(p, f)).join('')}</div>
+    </section>`).join('');
+  applyPicks();
+}
+
+function applyPicks() {
+  let n = 0;
+  for (const p of PAGES) {
+    const won = picks[p.id];
+    if (won) n++;
+    document.querySelectorAll(`.card[data-page="${p.id}"]`).forEach(c => {
+      c.classList.toggle('won', c.dataset.fam === won);
+      c.classList.toggle('lost', !!won && c.dataset.fam !== won);
+      const b = $('.pick', c);
+      if (b) b.textContent = c.dataset.fam === won ? 'Sealed' : (c.dataset.fam === 'base' ? 'Keep' : 'Seal');
+    });
+    const v = document.querySelector(`[data-verdict="${p.id}"]`);
+    if (v) v.innerHTML = won ? `Winner: <b>${famLabel(won)}</b>` : 'No winner yet';
+  }
+  $('#count').textContent = n;
+  $('#total').textContent = PAGES.length;
+  syncLightboxPick();
+}
+
+/* ---- Persistence ---- */
+function saveLocal() { try { localStorage.setItem(LOCAL_KEY, JSON.stringify(picks)); } catch (e) { /* storage blocked: picks stay for this visit */ } }
+function loadLocal() { try { Object.assign(picks, JSON.parse(localStorage.getItem(LOCAL_KEY) || '{}')); } catch (e) { /* storage blocked */ } }
+
+async function setPick(pageId, fam) {
+  const next = picks[pageId] === fam ? null : fam;
+  if (next) picks[pageId] = next; else delete picks[pageId];
+  applyPicks();
+  saveLocal();
+  if (!store) return;
+  const ref = store.doc(`${STORE_PATH}/${pageId}`);
+  try {
+    if (next) await ref.set({ pick: next, page: pageId, round: ROUND, at: new Date().toISOString() });
+    else await ref.delete();
+    setStatus('Picks saved. Claude reads them from here.');
+  } catch (e) {
+    setStatus(e && e.code === 'invalid_argument' ? 'Read-only for you: picks stay in this browser.' : 'Could not save that pick. Use Copy picks and paste them in chat.', true);
+  }
+}
+
+async function connect() {
+  loadLocal(); applyPicks();
+  const c = window.claude;
+  const db = c && typeof c.use === 'function' ? await c.use('db').catch(() => null) : null;
+  if (!db) { setStatus('Picks are kept in this browser only. Use Copy picks and paste them in chat.', true); return; }
+  store = db;
+  const timer = setTimeout(() => setStatus('The picks store has not answered yet; your picks may not be saved.', true), 10000);
+  db.collection(STORE_PATH).onSnapshot(snap => {
+    clearTimeout(timer);
+    for (const k of Object.keys(picks)) delete picks[k];
+    snap.docs.forEach(d => { const v = d.data(); if (v && v.pick) picks[d.id] = v.pick; });
+    applyPicks(); saveLocal();
+    setStatus(snap.size ? 'Picks saved. Claude reads them from here.' : 'Seal one winner per page. Picks save automatically.');
+  }, err => {
+    clearTimeout(timer);
+    store = null;
+    setStatus('The picks store is unavailable: picks stay in this browser. Use Copy picks.', true);
+  });
+}
+
+/* ---- Lightbox ---- */
+let lb = null; // { page, fam }
+const order = ['base', 'a', 'b', 'c'];
+function available(pageId) { return order.filter(f => f === 'base' || READY[f].includes(pageId)); }
+
+function fit() {
+  const stage = $('#lb-stage');
+  const s = Math.min(stage.clientWidth / 1440, stage.clientHeight / 900, 1);
+  $('#frame-box').style.setProperty('--s', s.toFixed(4));
+}
+function openLb(pageId, fam) {
+  lb = { page: pageId, fam };
+  $('#lb').hidden = false;
+  document.body.style.overflow = 'hidden';
+  drawLb();
+  $('#lb-close').focus();
+}
+function closeLb() {
+  if (!lb) return;
+  const back = document.querySelector(`[data-open="${lb.page}:${lb.fam}"]`);
+  lb = null; $('#lb').hidden = true; $('#frame-box').innerHTML = ''; document.body.style.overflow = '';
+  if (back) back.focus();
+}
+function drawLb() {
+  const page = PAGES.find(p => p.id === lb.page);
+  $('#lb-title').innerHTML = `${page.name}<span class="tag" style="--fam: var(--${lb.fam})">${famLabel(lb.fam)}</span>`;
+  $('#lb-seg').innerHTML = available(page.id).map(f => `<button type="button" aria-pressed="${f === lb.fam}" data-seg="${f}">${f === 'base' ? 'Today' : f.toUpperCase()}</button>`).join('');
+  const box = $('#frame-box');
+  if (lb.fam === 'base') {
+    box.innerHTML = `<img src="${BASELINE(page.id).img}" alt="${page.name} as the app looks today">`;
+    $('#lb-open').hidden = true;
+  } else {
+    const url = proof(lb.fam, page.id).url;
+    box.innerHTML = `<iframe src="${url}" title="${page.name}, ${famLabel(lb.fam)}"></iframe>`;
+    $('#lb-open').hidden = false; $('#lb-open').href = url;
+  }
+  syncLightboxPick();
+  fit();
+}
+function syncLightboxPick() {
+  if (!lb) return;
+  const b = $('#lb-pick'); const on = picks[lb.page] === lb.fam;
+  b.classList.toggle('on', on);
+  b.textContent = on ? 'Sealed winner' : (lb.fam === 'base' ? 'Keep today’s page' : 'Seal winner');
+}
+function step(dx, dy) {
+  if (dx) { const av = available(lb.page); lb.fam = av[(av.indexOf(lb.fam) + dx + av.length) % av.length]; }
+  if (dy) {
+    const i = PAGES.findIndex(p => p.id === lb.page);
+    lb.page = PAGES[(i + dy + PAGES.length) % PAGES.length].id;
+    if (!available(lb.page).includes(lb.fam)) lb.fam = 'base';
+  }
+  drawLb();
+}
+
+/* ---- Events ---- */
+document.addEventListener('click', e => {
+  const t = e.target.closest('[data-open],[data-pick],[data-all],[data-seg]');
+  if (!t) return;
+  if (t.dataset.open) { const [p, f] = t.dataset.open.split(':'); openLb(p, f); }
+  else if (t.dataset.pick) { const [p, f] = t.dataset.pick.split(':'); setPick(p, f); }
+  else if (t.dataset.seg) { lb.fam = t.dataset.seg; drawLb(); }
+  else if (t.dataset.all) {
+    const f = t.dataset.all;
+    PAGES.filter(p => READY[f].includes(p.id) && picks[p.id] !== f).forEach(p => setPick(p.id, f));
+  }
+});
+$('#lb-close').addEventListener('click', closeLb);
+$('#lb-pick').addEventListener('click', () => lb && setPick(lb.page, lb.fam));
+document.addEventListener('keydown', e => {
+  if (!lb) return;
+  if (e.key === 'Escape') closeLb();
+  else if (e.key === 'ArrowRight') step(1, 0);
+  else if (e.key === 'ArrowLeft') step(-1, 0);
+  else if (e.key === 'ArrowDown') { e.preventDefault(); step(0, 1); }
+  else if (e.key === 'ArrowUp') { e.preventDefault(); step(0, -1); }
+  else if (e.key === 'p' || e.key === 'P' || e.key === 'Enter') setPick(lb.page, lb.fam);
+  else return;
+});
+window.addEventListener('resize', () => lb && fit());
+
+$('#copy').addEventListener('click', async () => {
+  const text = `Round ${ROUND} picks: ` + PAGES.map(p => `${p.id}=${picks[p.id] ? (picks[p.id] === 'base' ? 'baseline' : picks[p.id].toUpperCase()) : '-'}`).join(', ');
+  try { await navigator.clipboard.writeText(text); setStatus('Copied. Paste it in chat if the store is unavailable.'); }
+  catch (e) { setStatus(text); }
+});
+
+renderFamilies();
+renderPages();
+connect();
+</script>

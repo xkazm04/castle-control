@@ -1,0 +1,122 @@
+CASTLE CONTROL
+ON AIR · SIMULATED
+Unknown
+VIEWERS
+Unknown
+UPTIME
+TWITCH SIMULATED
+OBS SIMULATED
+GATEHOUSE SIMULATED
+SIMULATED
+STEWARD
+0
+THE KEEP
+1
+LOT CHAMBER
+No draw
+On air
+Preview
+Draft
+Preview
+2
+GATEHOUSE
+1 held
+On air
+Preview
+Draft
+On air, preview
+3
+BEACONS
+Offering altar
+On air
+Preview
+Draft
+On air, preview
+4
+MAP ROOM
+Sand table
+On air
+Preview
+Draft
+Preview
+ENTER THE KEEP
+0
+SEE IT ON STREAM
+SET UP OBS
+THE KEEP · FIXTURE MODE · SAMPLE EVENING
+THE KEEP
+Point at a room, or press 1 to 4.
+Stylised illustration · drawn, not captured
+37
+27
+21
+16
+THE HERALD · SAMPLE
+HELD
+SAND TABLE · 9 × 5 HEX
+DRAFT
+THE STEWARD’S STUDY
+1 · LOT CHAMBER
+NO DRAW
+87 sample lots · waiting for a writ
+SIMULATED
+2 · GATEHOUSE
+1 HELD
+Armed 0 · Watching 3
+SHADOW · 3
+3 · BEACONS
+OFFERING ALTAR
+3 sample visuals · contribution-driven
+SIMULATED
+4 · MAP ROOM
+SAND TABLE
+Illustrative war table · local test only
+LOCAL TEST
+The moat · chat delay 4 s
+SAMPLE REPLAY · SIMULATED
+PAUSE
+Watch the full replay
+PREVIEW
+DRAFTS ONLY
+
+Nothing in Preview. Ask the Steward to draft one.
+
+PROGRAM
+SIMULATED PROGRAM
+Chat and Herald
+
+Simulated viewer 1: go left!
+
+Altar, frame and border
+37
+27
+21
+16
+THE HERALD · SAMPLE
+HELD
+SAND TABLE · 9 × 5 HEX
+DRAFT
+THE STEWARD’S STUDY
+
+Nothing to proclaim: ask the Steward to draft one
+
+HOLD TO SEAL AND PROCLAIM
+Press and hold Space for 1 second
+HOLD TO SEAL AND PROCLAIM
+Press and hold Space for 1 second
+
+Drafts stay in Preview until your hold. Sample picture only · nothing is sent to OBS.
+
+FAIRNESS STAYS IN THE ROOM
+Free entry · equal odds. Paid entry and paid weight on prize draws are blocked by default. A barred message never counts toward a draw.
+THE STEWARD
+simulated co-pilot · sample data
+SIMULATED
+
+Good evening. Draft in the preview, amend in ink, then hold to seal. Nothing acts on a spoken request.
+
+Talk to the Steward...
+Tell
+Catch me up
+Draft a question draw
+What does chat want?

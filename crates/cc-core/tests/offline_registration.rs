@@ -45,6 +45,11 @@ fn exporter_lists_the_native_inventory_without_starting_services() {
                 "maproom.design.upsert",
                 "maproom.stage.get",
                 "maproom.turn.run",
+                "rehearsal.crowd.set",
+                "rehearsal.scenario.run",
+                "rehearsal.start",
+                "rehearsal.stop",
+                "tiltyard.source.url",
             ]
             .contains(name)
         })

@@ -1,0 +1,405 @@
+CASTLE CONTROL
+ON AIR · SIMULATED
+Unknown
+VIEWERS
+Unknown
+UPTIME
+TWITCH SIMULATED
+OBS SIMULATED
+GATEHOUSE SIMULATED
+SIMULATED
+STEWARD
+0
+THE KEEP
+1
+LOT CHAMBER
+No draw
+On air
+Preview
+Draft
+Preview
+2
+GATEHOUSE
+1 held
+On air
+Preview
+Draft
+On air, preview
+3
+BEACONS
+Offering altar
+On air
+Preview
+Draft
+On air, preview
+4
+MAP ROOM
+Sand table
+On air
+Preview
+Draft
+Preview
+37
+27
+21
+16
+THE HERALD · SAMPLE
+HELD
+SAND TABLE · 9 × 5 HEX
+DRAFT
+THE STEWARD’S STUDY
+The keep
+›
+Gatehouse
+· chamber 2 of 4
+THE GATEHOUSE
+AI moderator
+SIMULATED
+Back to the overview
+Esc
+
+Scroll for the full held queue, ban review and consensus
+
+AT THE PORTCULLIS
+held for human review · AutoMod held queue
+1
+HELD
+FIXTURE ONLY
+
+Nothing sent.
+
+HOLD
+simulated-message-0
+HELD FOR REVIEW
+Simulated original held message: can I post my guide?
+
+HOLD REASONAutoMod · simulated link requires moderator review
+
+PROPOSE PASS
+PROPOSE BAR
+BAN QUEUE
+human review
+1 pending ban
+HOLD
+simulated-message-26
+PENDING BAN
+Simulated original message: simulated-blocked, quoted for human review.
+
+Rule: Blocked terms
+
+simulated-message-26
+PROPOSE BAN
+PROPOSE DISMISS
+THE HERALD’S CHART
+consensus · describes the room, never acts on anyone
+illustrative
+
+15 minutes of sample consensus.
+
+min 0
+min 15
+
+min 0 → min 15 · Go left 36.7% · illustrative
+
+Go left
+Hype
+Skip the boss
+Go right
+All messages
+Emotes only
+Text only
+Kappa
+GO LEFT
+36.7%
+-2.6 pp / 3 min
+HYPE
+26.8%
+0.7 pp / 3 min
+SKIP THE BOSS
+20.7%
+1.8 pp / 3 min
+GO RIGHT
+15.8%
+0.2 pp / 3 min
+
+17 messages shed · barred messages excluded · simulated
+
+STREAM OUTPUT PREVIEW
+SIMULATED
+
+SIMULATED · SAMPLE · AI-generated sample art · Session only. No OBS source is connected.
+
+Chat shows passed messages only. Vote shares are illustrative; these controls never affect moderation.
+
+Chat overlay
+CHAT OVERLAY SIZE
+S
+M
+L
+CHAT OVERLAY ANCHOR
+top left
+top right
+bottom left
+bottom right
+CHAT OVERLAY COLOUR
+azure
+gules
+or
+Key ink
+CHAT OVERLAY ART STYLE
+Heraldic
+Arcade
+Neon
+Storybook
+Cel
+Glass
+CHAT OVERLAY SHOW AFTER (MS)
+CHAT OVERLAY HIDE AFTER (MS)
+Vote bar
+VOTE BAR SIZE
+S
+M
+L
+VOTE BAR ANCHOR
+top left
+top right
+bottom left
+bottom right
+VOTE BAR COLOUR
+azure
+gules
+or
+Key ink
+VOTE BAR ART STYLE
+Heraldic
+Arcade
+Neon
+Storybook
+Cel
+Glass
+VOTE BAR SHOW AFTER (MS)
+VOTE BAR HIDE AFTER (MS)
+
+Show delay: 0–10000 ms. Hide after showing: 250–60000 ms. Values are clamped.
+
+REPLAY OUTPUT TIMING
+
+Chat overlay: Visible · Vote bar: Visible
+
+SAMPLE passed chat · Heraldic
+Simulated viewer 417: go left!
+Simulated viewer 418: go right!
+Simulated viewer 419: go left!
+SAMPLE vote bar · illustrative
+Go left · 36.7%
+Hype · 26.8%
+Skip the boss · 20.7%
+Go right · 15.8%
+1920×1080 · SIMULATED · transparent canvas
+SAMPLE passed chat · Heraldic
+Simulated viewer 417: go left!
+Simulated viewer 418: go right!
+Simulated viewer 419: go left!
+SAMPLE vote bar · illustrative
+Go left · 36.7%
+Hype · 26.8%
+Skip the boss · 20.7%
+Go right · 15.8%
+1280×720 · SIMULATED · transparent canvas
+PLAY SIMULATED CHAT
+0 new simulated lines
+
+Generated recording · recorded verdicts, not a test of edited rules. Nothing sent to Twitch.
+
+THE LIVE ROOM
+sample chat replay
+420
+LINES
+SIMULATED
+ALL
+420
+PASS
+332
+HOLD
+33
+BAR
+55
+Search the room
+420 matching
+420 lines · SIMULATED
+HOLD
+Simulated original held message: can I post my guide?
+09:55:02
+PASS
+Simulated viewer 1: go left!
+09:55:04
+PASS
+Simulated viewer 2: go right!
+09:55:06
+PASS
+Simulated viewer 3: go left!
+09:55:08
+PASS
+Simulated viewer 4: go right!
+09:55:10
+PASS
+Simulated viewer 5: go left!
+09:55:12
+PASS
+Simulated viewer 6: go right!
+09:55:14
+BAR
+Simulated repeated message 7
+09:55:16
+PASS
+Simulated viewer 8: go right!
+09:55:18
+PASS
+Simulated viewer 9: go left!
+09:55:20
+PASS
+Simulated viewer 10: go right!
+09:55:22
+PASS
+Simulated viewer 11: go left!
+09:55:24
+PASS
+Simulated viewer 12: go right!
+09:55:26
+HOLD
+Simulated question 13: may I share a link?
+09:55:28
+BAR
+Simulated repeated message 14
+09:55:30
+PASS
+Simulated viewer 15: go left!
+09:55:32
+RULE BENCH
+
+Draft a new watching rule or edit an existing one. Counts update over the loaded replay as you type.
+
+WATCHING RULE
+New watching rule
+Links
+Repeated messages
+Blocked terms
+WATCHING RULE NAME
+WATCHING MATCH PATTERN
+
+Mode fixed to Watching (shadow) · Delete message
+
+PROPOSE WATCHING RULE
+
+0 draft pattern hits · 0 would newly act on (currently Pass)
+
+Watching rule id: links
+
+Pattern preview only. The care detector runs first in the real pipeline; the action gate runs before any action. Nothing here arms or acts.
+
+THE MOAT
+chat delay · drawbridge
+SIMULATED
+4S
+APPLIED CHAT DELAY
+BRIDGE DOWN
+SHIELD MODE OFF
+Off
+2 s
+4 s
+6 s
+Propose chat delay
+Off
+2 s
+4 s
+6 s
+RAISE THE DRAWBRIDGE
+Shield Mode · fixture only
+GARRISON ORDERS
+gate rules
+SIMULATED
+0
+ARMED
+3
+WATCHING
+
+Armed / Watching preview only. Actual rules stay Watching; arming is unavailable before the live spike.
+
+LINKS
+https?:// · delete
+WATCHING
+Propose Arm
+REPEATED MESSAGES
+repeat · timeout
+WATCHING
+Propose Arm
+BLOCKED TERMS
+simulated-blocked · ban
+WATCHING
+Propose Arm
+THE DRILL
+Replay simulator · generated recording
+Sample recording ready · simulated
+RUN THE DRILL
+THE GATE ROLL
+gate log
+3 decisions · simulated
+BAR
+Repeated messages
+10:21:48
+
+Simulated repeated message before a timeout.
+
+simulated-message-5003
+
+Viewer timed out · Simulated pattern match · Human · local preview · simulated
+
+Propose Undo
+Propose Petition
+HOLD
+Links
+10:21:50
+
+Simulated link awaiting review.
+
+simulated-message-5004
+
+Shadow observation recorded · Simulated pattern match · Human · local preview · simulated
+
+No action was taken
+Propose Petition
+BAR
+Repeated messages
+10:21:52
+
+Simulated moderator removed a repeated message in Twitch’s UI.
+
+simulated-message-5005
+
+Message removed · Simulated pattern match · Human · from Twitch · simulated
+
+No undo on Twitch
+Propose Petition
+PROPOSAL · AWAITING YOUR SEAL
+
+Nothing acts until you hold to seal.
+
+SIMULATED · DATA-ONLY DESIGNS
+
+Chat overlay and vote bar
+Restyle
+Custom design
+
+No proposals. Ask the Steward to draft one.
+
+THE STEWARD
+simulated co-pilot · sample data
+SIMULATED
+
+Good evening. Draft in the preview, amend in ink, then hold to seal. Nothing acts on a spoken request.
+
+Talk to the Steward...
+Tell
+Catch me up
+Draft a question draw
+What does chat want?

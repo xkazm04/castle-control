@@ -23,10 +23,13 @@ mod lots;
 mod lots_proof;
 mod lots_value;
 mod methods;
+mod obs;
 mod recording;
+mod rehearsal;
 mod rule;
 mod steward;
 mod strike;
+mod tiltyard;
 mod value;
 mod vote_bar;
 
@@ -54,10 +57,13 @@ pub use lots::*;
 pub use lots_proof::*;
 pub use lots_value::*;
 pub use methods::*;
+pub use obs::*;
 pub use recording::*;
+pub use rehearsal::*;
 pub use rule::*;
 pub use steward::*;
 pub use strike::*;
+pub use tiltyard::*;
 pub use value::*;
 pub use vote_bar::*;
 

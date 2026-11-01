@@ -1,93 +1,176 @@
-﻿/* Lot Chamber C: room geometry and artwork; shared heraldic primitives own their chrome. */
-.lottery-room { --room-ink: var(--gules-text); height: 100%; min-height: 0; }
-.lottery-room .cc-hall { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(calc(var(--space-40) * 9 + var(--space-8)), 1fr); height: 100%; min-height: 0; }
-.lottery-room .cc-stage-wrap { display: flex; min-width: 0; min-height: 0; padding: var(--space-22) var(--space-24) var(--space-20); }
-.lottery-stage { display: grid; grid-template-columns: minmax(calc(var(--space-56) * 3), calc(var(--space-56) * 4)) minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) auto; grid-template-areas: "kicker kicker" "tally urn" "foot foot"; gap: var(--space-14) var(--space-20); }
-.lottery-room .cc-stage-kicker { grid-area: kicker; display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: var(--space-4) var(--space-16); }
-.lottery-room .cc-stage-kicker h2 { margin: 0; font: 800 var(--text-label)/1.3 var(--font-ui); letter-spacing: var(--track-air); text-transform: uppercase; color: var(--gules-text); }
-.lottery-room .cc-stage-kicker p { margin: 0; font: italic var(--text-aside)/1.3 var(--font-serif); color: var(--ink-2); }
-.lottery-room .cc-tally { grid-area: tally; display: flex; flex-direction: column; gap: var(--space-14); min-height: 0; }
-.lottery-room .cc-tally ins { text-decoration: none; }
-.lottery-room .cc-urn { grid-area: urn; display: block; width: 100%; height: 100%; min-height: 0; }
-.lottery-room .cc-urn ellipse { fill: var(--paper); stroke: var(--gules); stroke-width: 3; }
-.lottery-room .cc-urn circle { fill: var(--ink); }
-.lottery-room .cc-urn circle[data-cohort="subscriber"] { fill: var(--gules); mix-blend-mode: var(--blend); }
-.lottery-room .cc-urn circle[data-cohort="raider"] { fill: var(--paper); stroke: var(--azure); stroke-width: 3; }
-.lottery-urn-window { grid-area: urn; min-width: 0; min-height: 0; overflow: auto; }
+/* Cutaway Lot Chamber: local layout and print roles; shared controls retain authority. */
+.lottery-room { --room-ink: var(--gules-text); --lot-urn-width: calc(var(--space-56) * 4 + var(--space-24) * 2); --lot-urn-height: calc(var(--space-40) * 5 + var(--space-3)); height: 100%; min-height: 0; padding: var(--space-20); color: var(--ink); font: var(--text-shell-body)/1.45 var(--font-ui); }
+.lottery-room .cc-hall { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.45fr); gap: calc(var(--space-20) - var(--space-2)); height: 100%; min-height: 0; }
+.lottery-room .cc-stage-wrap, .lottery-room .cc-desk { min-width: 0; min-height: 0; display: flex; }
+.lottery-room .panel, .lottery-room .cc-card.cc-card.panel { position: relative; min-width: 0; min-height: 0; padding: var(--space-14) var(--space-16); border: var(--rule-strong) solid var(--ink); border-radius: 0; background: var(--card); box-shadow: none; }
+.lottery-room [data-role="lot-urn-panel"], .lottery-room [data-role="lot-writ-panel"] { line-height: normal; }
+.lottery-room .cc-stage-wrap > .panel { container: lot-pool / size; box-sizing: border-box; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; gap: var(--space-4); width: 100%; height: 100%; padding: var(--space-10) var(--space-16); padding-top: var(--space-14); overflow: visible; }
+.lottery-room [data-role="lot-urn-panel"] > .topline { position: absolute; top: 0; left: 0; right: 0; margin: 0; }
+.lottery-pool-heading { display: flex; align-items: center; justify-content: space-between; gap: var(--space-8); min-width: 0; }
+.lottery-pool-heading > h3 { flex: 1; min-width: 0; }
+.lottery-room .lottery-pool-heading [data-role="panel-title"] { gap: var(--space-2) var(--space-6); }
+.lottery-room .lottery-pool-heading [data-role="panel-gloss"] { font-size: var(--text-shell-label); }
+.lottery-pool-readings { display: flex; flex-direction: column; gap: var(--space-3); min-width: 0; }
+.lottery-room .lottery-desk-panel { display: flex; flex-direction: column; gap: var(--space-12); width: 100%; overflow: hidden; }
+.lottery-room .lottery-desk-panel > :not(.lottery-desk-body) { flex-shrink: 0; }
+.lottery-room .lottery-desk-body { display: flex; flex-direction: column; flex: 1 1 0; gap: var(--space-12); min-height: 0; min-width: 0; overflow: auto; scrollbar-gutter: stable; padding: var(--space-3) var(--space-4) var(--space-6) 0; }
+.lottery-room .lottery-desk-body > * { flex-shrink: 0; }
+.lottery-room .lottery-scroll-cue { display: flex; align-items: center; justify-content: space-between; gap: var(--space-8); margin: 0; padding-top: var(--space-6); border-top: var(--rule-thin) solid var(--line); color: var(--muted); font: 600 var(--text-shell-hint)/1.3 var(--font-ui); }
+.lottery-room .lottery-desk-body:focus-visible { outline: var(--rule-strong) solid var(--azure); outline-offset: var(--space-2); }
+.lottery-room .topline { border-top: var(--space-6) solid var(--key); margin: calc(-1 * var(--space-14)) calc(-1 * var(--space-16)) var(--space-12); }
+.lottery-room [data-role="lot-urn-panel"] > .topline { border-color: var(--gules); }
+.lottery-room [data-role="panel-title"] { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-10); margin: 0; font: 700 var(--text-shell-panel-title)/1 var(--font-display); letter-spacing: var(--track-heading); text-transform: uppercase; }
+.lottery-room [data-role="panel-gloss"] { color: var(--muted); font: italic var(--text-shell-aside)/1.2 var(--font-serif); letter-spacing: 0; text-transform: none; }
+.lottery-heading-stamp { margin-inline-start: auto; }
+.lottery-room .body15 { margin: 0; color: var(--ink-2); font: 400 var(--text-shell-body)/1.45 var(--font-ui); }
+.lottery-stage { display: flex; min-height: 0; min-width: 0; margin: 0; }
+.lottery-room .cc-tally { flex: none; }
+.lottery-room .num .cc-hero-readout { --cc-ghost-offset: var(--space-1); flex-direction: row; align-items: center; gap: var(--space-6); }
+.lottery-room [data-role="lot-count"] .cc-hero-readout .cc-hero-figure { width: auto; font: 700 var(--text-shell-panel-title-large)/1 var(--font-display); letter-spacing: normal; text-transform: none; white-space: nowrap; text-shadow: var(--space-1) var(--space-1) 0 var(--gules); }
+.lottery-room .num .cc-hero-caption { max-width: var(--space-56); font: italic var(--text-shell-label)/1.1 var(--font-serif); }
+.lottery-room .cc-urn { grid-area: urn; display: block; width: 100%; max-width: var(--lot-urn-width); height: var(--lot-urn-height); max-height: 100%; min-height: 0; }
+.lottery-room .cc-urn ellipse { fill: var(--art-paper); stroke: var(--gules); stroke-width: var(--space-3); }
+.lottery-room .cc-urn circle { fill: var(--art-key); }
+.lottery-room .cc-urn circle[data-cohort="subscriber"] { fill: var(--gules); }
+.lottery-room .cc-urn circle[data-cohort="raider"] { fill: none; stroke: var(--azure); stroke-width: calc(var(--space-3) * .8); }
+.lottery-urn-window { grid-area: urn; min-width: 0; min-height: 0; max-height: var(--lot-urn-height); overflow: auto; }
 .lottery-marks { display: grid; grid-template-columns: repeat(var(--urn-columns), 1fr); gap: var(--space-2); width: 100%; }
-.lottery-room .cc-urn .lottery-winner-badge circle { fill: var(--paper); stroke: var(--gules); stroke-width: 2; }
-.lottery-winner-badge text { fill: var(--ink); text-anchor: middle; dominant-baseline: central; font: 700 var(--text-small)/1 var(--font-num); }
+.lottery-room .cc-urn .lottery-winner-badge circle { fill: var(--art-paper); stroke: var(--gules); stroke-width: var(--rule-strong); }
+.lottery-winner-badge text { fill: var(--art-key); text-anchor: middle; dominant-baseline: central; font: 700 var(--text-shell-label)/1 var(--font-num); }
 .lottery-marks [data-revealed-dot] { border: var(--rule-medium) solid var(--gules); border-radius: 50%; text-align: center; color: var(--gules-text); }
-.lottery-revealed { margin: 0; padding: var(--space-4); font: 600 var(--text-body)/1.5 var(--font-num); }
+.lottery-revealed { margin: 0; padding: var(--space-4); font: 600 var(--text-shell-body)/1.5 var(--font-num); }
 .lottery-revealed b { color: var(--gules-text); }
-.lottery-marks [data-cohort="subscriber"] { color: var(--gules-text); }
-.lottery-marks [data-cohort="raider"] { color: var(--azure-text); }
-.lottery-room .cc-stage-foot { grid-area: foot; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-6) var(--space-20); padding-top: var(--space-10); border-top: var(--rule-medium) dashed var(--hair); }
-.lottery-room .cc-legend { display: flex; flex-wrap: wrap; gap: var(--space-4) var(--space-16); margin: 0; padding: 0; list-style: none; font: 600 var(--text-small)/1.4 var(--font-ui); }
-.lottery-room .cc-legend li { display: inline-flex; align-items: center; gap: var(--space-6); }
-.lottery-room .cc-legend li::before { content: ""; width: var(--space-11); height: var(--space-11); border-radius: 50%; background: var(--ink); }
-.lottery-room .cc-legend [data-cohort="subscriber"]::before { background: var(--gules); }
-.lottery-room .cc-legend [data-cohort="raider"]::before { background: var(--paper); box-shadow: inset 0 0 0 var(--space-3) var(--azure); }
-.lottery-room .cc-legend b { font: 700 var(--text-small)/1 var(--font-num); }
-.lottery-room .cc-stage-foot p { margin: 0; font: var(--text-small)/1.4 var(--font-ui); color: var(--ink-2); }
-.lottery-room .cc-desk { display: flex; flex-direction: column; gap: var(--space-16); min-width: 0; min-height: 0; overflow: auto; padding: var(--space-20) var(--space-24) var(--space-28) var(--space-20); border-inline-start: var(--rule-thin) solid var(--line); }
-/* Kit cards allow min-height:0; desk items must keep their printed height while scrolling. */
-.lottery-room .cc-desk > * { flex-shrink: 0; }
-.lottery-room .lottery-seal-frame .shell-seal-slot { border-top: 0; margin-top: 0; padding-top: 0; }
-.lottery-room .cc-kicker { margin: 0; font: 800 var(--text-label)/1.3 var(--font-ui); letter-spacing: var(--track-heading); text-transform: uppercase; }
-.lottery-room .cc-aside { margin: 0; font: italic var(--text-aside)/1.4 var(--font-serif); color: var(--ink-2); }
+.lottery-marks [data-cohort="subscriber"] { color: var(--gules); }
+.lottery-marks [data-cohort="raider"]:not([data-revealed-dot]) { color: transparent; width: var(--space-10); height: var(--space-10); align-self: center; border: var(--rule-strong) solid var(--azure); border-radius: 50%; }
+.lottery-marks [data-cohort="raider"][data-revealed-dot] { color: var(--azure-text); }
+.lottery-room .cc-stage-foot { min-width: 0; margin: 0; }
+.lottery-room .cc-stage-foot p { margin: 0; color: var(--ink-2); font: var(--text-shell-label)/1.2 var(--font-ui); }
+.lottery-room .legend { display: flex; flex-wrap: wrap; gap: var(--space-3) var(--space-10); padding: 0; margin: 0; list-style: none; font: 600 var(--text-shell-legend)/1 var(--font-ui); }
+.lottery-room .legend li { display: inline-flex; align-items: center; gap: var(--space-5); }
+.lottery-room .legend li::before { content: ""; width: var(--space-10); height: var(--space-10); border-radius: 50%; background: var(--key); }
+.lottery-room .legend [data-cohort="subscriber"]::before { background: var(--gules); }
+.lottery-room .legend [data-cohort="raider"]::before { background: transparent; border: var(--rule-strong) solid var(--azure); }
+.lottery-room .statrow { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--space-2) var(--space-6); margin: 0; padding: 0; list-style: none; }
+.lottery-room .stat { display: flex; align-items: center; gap: var(--space-4); line-height: normal; }
+.lottery-room .ring { display: flex; align-items: center; justify-content: center; flex: none; min-width: var(--space-20); height: var(--space-20); padding-inline: var(--space-3); border: var(--title-ghost) solid var(--gules); border-radius: var(--space-32); font: 700 var(--text-shell-label)/1 var(--font-display); }
+.lottery-room .stat:last-child .ring { font-size: var(--text-shell-stat-fraction); }
+.lottery-room .stat b { display: block; font: 700 var(--text-shell-label)/1.1 var(--font-ui); }
+.lottery-room .stat small { display: block; color: var(--muted); font: var(--text-shell-stat-label)/1.1 var(--font-ui); }
+.lottery-room .ring ins { text-decoration: none; }
+.lottery-room .ring s { margin-inline-end: var(--space-2); color: var(--gules-text); }
 .lottery-room .cc-group { display: flex; flex-direction: column; gap: var(--space-10); }
-.lottery-room .cc-blazons { display: flex; flex-direction: column; gap: var(--space-12); margin: 0; padding: 0; list-style: none; }
-.lottery-room .cc-caption { margin: 0; font: 700 var(--text-label)/1.3 var(--font-ui); letter-spacing: var(--track-label); text-transform: uppercase; color: var(--muted); }
+.lottery-room .cc-kicker { margin: 0; font: 800 var(--text-shell-label)/1.3 var(--font-ui); letter-spacing: var(--track-heading); text-transform: uppercase; }
+.lottery-room .cc-aside { margin: 0; font: italic var(--text-shell-body)/1.4 var(--font-serif); color: var(--ink-2); }
+.lottery-room .cc-blazons { display: flex; flex-direction: column; gap: var(--space-8); margin: 0; padding: 0; list-style: none; }
+.lottery-room .cc-card.writ { display: grid; grid-template-columns: var(--space-40) minmax(0, 1fr) auto; gap: var(--space-14); align-items: center; padding: var(--space-8) var(--space-14); border: var(--rule-strong) solid var(--ink); border-radius: 0; background: var(--panel-paper); box-shadow: none; }
+.lottery-room .cc-card[data-card="selectable"][data-role="writ-row"] { font: var(--text-shell-figure-caption)/normal var(--font-ui); }
+.lottery-room .writ .cc-shield { width: var(--space-36); height: var(--space-40); }
+.lottery-room .writ .cc-shield path:first-child { fill: none; stroke: var(--ink); stroke-width: var(--rule-strong); }
+.lottery-room .writ[data-selected="true"] .cc-shield path:first-child { fill: var(--gules); stroke: var(--ink); }
+.lottery-room .writ .cc-shield text { font-size: var(--text-shell-graphic-label); }
+.lottery-room [data-role="writ-title"] { display: block; font: 700 var(--text-shell-panel-title)/1.1 var(--font-display); letter-spacing: var(--track-label); text-transform: uppercase; overflow-wrap: anywhere; }
+.lottery-room [data-role="writ-detail"] { display: block; margin-top: var(--space-3); color: var(--ink-2); font: 400 var(--text-shell-body)/1.35 var(--font-ui); }
+.lottery-room [data-role="writ-action"] { display: flex; flex-direction: column; align-items: flex-end; gap: var(--space-8); }
+.lottery-room .pbtn, .lottery-room .cc-button.cc-heraldic-button[data-size] { display: inline-flex; align-items: center; justify-content: center; align-self: flex-start; gap: var(--space-6); height: auto; min-height: var(--space-36); padding: var(--space-6) var(--space-14); border: var(--rule-strong) solid var(--ink); border-radius: 0; background: var(--card); color: var(--ink); box-shadow: var(--space-3) var(--space-3) 0 var(--ink); font: 700 var(--text-shell-panel-action)/1.2 var(--font-ui); letter-spacing: var(--track-label); text-transform: uppercase; white-space: normal; cursor: pointer; transition: transform var(--motion-fast), box-shadow var(--motion-fast); }
+.lottery-room .pbtn.ink, .lottery-room .cc-button.pbtn[data-variant="primary"] { background: var(--ink); color: var(--press-paper); box-shadow: var(--space-3) var(--space-3) 0 var(--or); }
+.lottery-room .writ .pbtn { align-self: flex-end; white-space: nowrap; }
+.lottery-room .cc-button.cc-heraldic-button[data-size]:hover:not(:disabled), .lottery-room .writ:hover .pbtn { transform: translate(calc(-1 * var(--space-1)), calc(-1 * var(--space-1))); box-shadow: var(--space-4) var(--space-4) 0 var(--ink); }
+.lottery-room .cc-button.cc-heraldic-button[data-size]:active:not(:disabled), .lottery-room .writ:active .pbtn { transform: translate(var(--space-2), var(--space-2)); box-shadow: var(--space-1) var(--space-1) 0 var(--ink); }
+.lottery-room .cc-button.cc-heraldic-button[data-size]:disabled { opacity: var(--disabled-opacity); box-shadow: none; }
+.lottery-room .writ:hover { transform: none; }
+.lottery-room .lottery-policy { padding: var(--space-8) var(--space-10); }
+.lottery-room .cc-ribbon { clip-path: none; padding: var(--space-8); }
+.lottery-room .cc-ribbon-label, .lottery-room .cc-ribbon-note { font-size: var(--text-shell-label); }
+.lottery-room .cc-ribbon-word { font-size: var(--text-shell-panel-title); }
+.lottery-room .cc-caption { margin: 0; color: var(--muted); font: 700 var(--text-shell-label)/1.3 var(--font-ui); letter-spacing: var(--track-label); text-transform: uppercase; }
 .lottery-lookup { display: flex; flex-direction: column; gap: var(--space-6); min-width: 0; }
-.lottery-lookup > label { font: 800 var(--text-label)/1.3 var(--font-ui); letter-spacing: var(--track-heading); text-transform: uppercase; }
-/* Keep frame field chrome: the Director's audit requires rule-thin and appearance:none. */
-.lottery-room .lottery-lookup input { appearance: none; width: 100%; min-width: 0; height: calc(var(--button-h) + var(--space-4)); padding: 0 var(--space-12); border: var(--rule-thin) solid var(--ink); border-radius: var(--r-sm); background: var(--paper); color: var(--ink); font: 500 var(--text-body)/1 var(--font-num); }
+.lottery-lookup > label { font: 800 var(--text-shell-label)/1.3 var(--font-ui); letter-spacing: var(--track-heading); text-transform: uppercase; }
+/* Retain the room's audited native fields and rule-thin border. */
+.lottery-room .lottery-lookup input { appearance: none; width: 100%; min-width: 0; height: var(--space-36); padding: 0 var(--space-12); border: var(--rule-thin) solid var(--ink); border-radius: var(--r-sm); background: var(--paper); color: var(--ink); font: 500 var(--text-shell-input)/1 var(--font-num); }
 .lottery-lookup input::placeholder { color: var(--muted); }
-.lottery-room .lottery-lookup-hint { margin: 0; font: var(--text-small)/1.4 var(--font-ui); color: var(--muted); }
-.lottery-room .lottery-lookup-result { margin: 0; font: 600 var(--text-body)/1.4 var(--font-ui); }
-.lottery-room .cc-ticket { position: relative; display: grid; grid-template-columns: var(--space-40) minmax(0, 1fr); border: var(--rule-strong) solid var(--ink); border-radius: var(--r-md); background: var(--card); box-shadow: var(--space-5) var(--space-5) 0 var(--hair-2); }
-.lottery-room .cc-ticket-stub { display: flex; align-items: center; justify-content: center; border-inline-end: var(--rule-strong) dashed var(--ink); border-radius: var(--r-md) 0 0 var(--r-md); background: color-mix(in srgb, var(--gules) 28%, var(--card)); }
-.lottery-room .cc-ticket-stub b { writing-mode: vertical-rl; transform: rotate(180deg); font: 800 var(--text-section)/1 var(--font-display); letter-spacing: var(--track-air); text-transform: uppercase; white-space: nowrap; }
+.lottery-room .lottery-lookup-hint { margin: 0; font: var(--text-shell-body)/1.4 var(--font-ui); color: var(--muted); }
+.lottery-room .lottery-lookup-result { margin: 0; font: 600 var(--text-shell-body)/1.4 var(--font-ui); }
+.lottery-room .lottery-seal-frame .shell-seal-slot { border-top: 0; margin-top: 0; padding-top: 0; }
+.lottery-room .cc-ticket { position: relative; display: grid; grid-template-columns: var(--space-40) minmax(0, 1fr); padding: 0; }
+.lottery-room .cc-ticket-stub { display: flex; align-items: center; justify-content: center; border-inline-end: var(--rule-strong) dashed var(--ink); background: var(--paper-2); }
+.lottery-room .cc-ticket-stub b { writing-mode: vertical-rl; transform: rotate(180deg); font: 800 var(--text-shell-panel-title)/1 var(--font-display); letter-spacing: var(--track-air); text-transform: uppercase; white-space: nowrap; }
 .lottery-room .cc-ticket-body { display: flex; flex-direction: column; gap: var(--space-8); min-width: 0; padding: var(--space-12) var(--space-16) var(--space-14); }
 .lottery-room .cc-ticket-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: var(--space-4) var(--space-12); }
-.lottery-room .cc-ticket-head time { font: 600 var(--text-small)/1.3 var(--font-num); color: var(--muted); }
+.lottery-room .cc-ticket-head time { font: 600 var(--text-shell-time)/1.3 var(--font-num); color: var(--muted); }
 .lottery-room .cc-handles { display: flex; flex-wrap: wrap; gap: var(--space-6); margin: 0; padding: 0; list-style: none; }
-.lottery-room .cc-handle { padding: var(--space-2) var(--space-7); border: var(--rule-thin) solid var(--ink); border-radius: var(--r-sm); background: var(--paper); font: 600 var(--text-body)/1.4 var(--font-num); }
-.lottery-room .cc-disclosure > summary { display: inline-flex; align-items: center; gap: var(--space-8); list-style: none; cursor: pointer; font: 700 var(--text-body)/1.4 var(--font-ui); }
+.lottery-room .cc-handle { padding: var(--space-2) var(--space-7); border: var(--rule-thin) solid var(--ink); background: var(--ticket-paper); font: 600 var(--text-shell-body)/1.4 var(--font-num); }
+.lottery-room .cc-disclosure > summary { display: inline-flex; align-items: center; gap: var(--space-8); list-style: none; cursor: pointer; font: 700 var(--text-shell-body)/1.4 var(--font-ui); }
 .lottery-room .cc-disclosure > summary::-webkit-details-marker { display: none; }
 .lottery-room .cc-disclosure > summary::before { content: ""; width: 0; height: 0; border-block: var(--space-5) solid transparent; border-inline-start: var(--space-7) solid var(--gules); transition: transform var(--motion-fast) var(--ease); }
 .lottery-room .cc-disclosure[open] > summary::before { transform: rotate(90deg); }
 .lottery-room .cc-disclosure-body { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-10); padding-top: var(--space-10); }
-.lottery-room .cc-hash { margin: 0; font: var(--text-small)/1.5 var(--font-num); color: var(--ink-2); overflow-wrap: anywhere; word-break: break-all; white-space: pre-wrap; }
-.lottery-room .cc-status { margin: 0; font: var(--text-small)/1.4 var(--font-ui); color: var(--muted); }
-.lottery-room .cc-writ .cc-ticket-body { gap: var(--space-6); padding: var(--space-16) var(--space-20) var(--space-26); }
-.lottery-room .cc-writ .cc-stamp { position: absolute; bottom: calc(-1 * var(--space-12)); right: var(--space-16); background: var(--card); }
-.lottery-room .cc-writ-title { margin: 0; font: 800 var(--space-30)/1.02 var(--font-display); text-transform: uppercase; overflow-wrap: anywhere; }
-.lottery-room .cc-writ-rev { margin: 0; font: 600 var(--text-small)/1.4 var(--font-num); color: var(--muted); }
+.lottery-room .cc-hash { margin: 0; font: var(--text-shell-body)/1.5 var(--font-num); color: var(--ink-2); overflow-wrap: anywhere; word-break: break-all; white-space: pre-wrap; }
+.lottery-room .cc-status { margin: 0; font: var(--text-shell-body)/1.4 var(--font-ui); color: var(--muted); }
+.lottery-room .cc-writ-title { margin: 0; font: 700 var(--text-shell-panel-title-large)/1.05 var(--font-display); text-transform: uppercase; overflow-wrap: anywhere; }
+.lottery-room .cc-writ-rev { margin: 0; font: 600 var(--text-shell-label)/1.4 var(--font-num); color: var(--muted); }
+.lottery-room .lottery-writ-impression { align-self: flex-end; }
+.lottery-room .lottery-writ-impression .cc-stamp-bleed[data-stamp="sealed"] { --stamp-ink: var(--or); }
 .lottery-room .cc-writ-fields { margin: var(--space-8) 0 0; }
 .lottery-room .cc-writ-fields > div { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1fr); gap: var(--space-12); align-items: baseline; padding-block: var(--space-8); border-top: var(--rule-thin) solid var(--line); }
-.lottery-room .cc-writ-fields dt { font: 700 var(--text-label)/1.3 var(--font-ui); letter-spacing: var(--track-label); text-transform: uppercase; color: var(--muted); }
-.lottery-room .cc-writ-fields dd { margin: 0; font: 500 calc(var(--space-16) + var(--space-2))/1.35 var(--font-ui); overflow-wrap: anywhere; }
+.lottery-room .cc-writ-fields dt { font: 700 var(--text-shell-label)/1.3 var(--font-ui); letter-spacing: var(--track-label); text-transform: uppercase; color: var(--muted); }
+.lottery-room .cc-writ-fields dd { margin: 0; font: 500 var(--text-shell-body)/1.35 var(--font-ui); overflow-wrap: anywhere; }
 .lottery-room .cc-writ-fields s { color: var(--gules-text); margin-inline-end: var(--space-8); text-decoration-thickness: var(--rule-strong); }
 .lottery-room .cc-writ-fields ins { color: var(--ink); text-decoration: none; animation: lottery-ink var(--motion-shell) var(--ease) both; }
 .lottery-room .cc-writ-fields s + ins { padding-inline: var(--space-3); background: linear-gradient(transparent 58%, color-mix(in srgb, var(--gules) 26%, transparent) 58%); }
-.lottery-room .cc-writ-fair { margin-top: var(--space-8); padding: var(--space-10) var(--space-12); border: var(--rule-medium) solid var(--ink); border-radius: var(--r-sm); background: var(--paper); }
-.lottery-room .cc-writ-fair p:not(.cc-kicker) { margin: var(--space-4) 0 0; font: var(--text-small)/1.45 var(--font-ui); color: var(--ink-2); }
-.lottery-wax { width: calc(var(--space-56) * 2); aspect-ratio: 1; border-radius: 50%; background: var(--gules); color: var(--press); display: grid; place-content: center; text-align: center; font: 800 var(--text-section)/1.1 var(--font-display); transform: rotate(-8deg); box-shadow: inset 0 0 0 var(--space-6) var(--hair-2); margin: var(--space-12); }
-.lottery-card-title { margin: 0; font: 800 var(--text-section)/1.2 var(--font-display); letter-spacing: var(--track-heading); text-transform: uppercase; }
+.lottery-room .cc-writ-fair { margin-top: var(--space-8); padding: var(--space-10) var(--space-12); border: var(--rule-strong) solid var(--ink); background: var(--paper); }
+.lottery-room .cc-writ-fair p:not(.cc-kicker) { margin: var(--space-4) 0 0; font: var(--text-shell-body)/1.45 var(--font-ui); color: var(--ink-2); }
+.lottery-card-title { margin: 0; font: 700 var(--text-shell-panel-title)/1.2 var(--font-display); letter-spacing: var(--track-heading); text-transform: uppercase; }
 .lottery-core-fields { display: flex; flex-direction: column; gap: var(--space-10); }
 .lottery-core-fields label { display: flex; flex-direction: column; gap: var(--space-6); }
+.lottery-room .cc-field[data-field] > label { font-size: var(--text-shell-label); }
+.lottery-room .cc-field[data-field] input, .lottery-room .cc-field[data-field] select { font-size: var(--text-shell-input); }
+.lottery-room .cc-field-hint, .lottery-room .cc-field-result, .lottery-room .cc-numbered-discs span { font-size: var(--text-shell-body); }
+.lottery-room .cc-numbered-discs { --cc-disc-columns: 2; }
+.lottery-room .cc-numbered-discs b { font-size: var(--text-shell-body); }
+.lottery-room .cc-numbered-discs li::before { font-size: var(--text-shell-stat-number); }
+.lottery-room .cc-window p { margin: 0; }
 @keyframes lottery-ink { from { opacity: 0; clip-path: inset(0 100% 0 0); } to { opacity: 1; clip-path: inset(0); } }
-@media (max-width: 85rem) { .lottery-stage { grid-template-columns: minmax(calc(var(--space-40) * 3 + var(--space-32)), calc(var(--space-24) * 8)) minmax(0, 1fr); } }
 @media (max-width: 56.25rem) {
   .lottery-room, .lottery-room .cc-hall { height: auto; }
   .lottery-room .cc-hall { grid-template-columns: minmax(0, 1fr); }
-  .lottery-room .cc-stage-wrap { height: calc(var(--space-32) * 16); }
-  .lottery-room .cc-desk { overflow: visible; border-inline-start: 0; }
-  .lottery-room .cc-numbered-discs { --cc-disc-columns: 2; }
+  .lottery-room .cc-stage-wrap > .panel { height: calc(var(--space-56) * 10); }
+  .lottery-room .lottery-desk-body { flex-basis: auto; max-height: calc(var(--space-56) * 8); }
 }
 @media (prefers-reduced-motion: reduce) {
   .lottery-room .cc-writ-fields ins { animation: none; }
-  .lottery-room .cc-disclosure > summary::before { transition: none; }
+  .lottery-room .cc-disclosure > summary::before, .lottery-room .pbtn, .lottery-room .cc-button { transition: none; }
+}
+
+@container lot-pool (height < 26rem) {
+  .lottery-room .stat small { position: absolute; width: var(--space-1); height: var(--space-1); overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+}
+@container lot-pool (height >= 26rem) {
+  .lottery-pool-readings { gap: var(--space-6); }
+}
+
+/* Short desktop rooms spend height on the ceremony, with readings beside it. */
+@media (width > 56.25rem) {
+  .lottery-room { container: lot-room / size; }
+  @container lot-room (height < 32rem) {
+    .lottery-room:not([data-theatre="true"]) .cc-hall { grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); }
+    .lottery-room:not([data-theatre="true"]) .cc-stage-wrap > .panel {
+      grid-template-columns: calc(var(--space-36) * 8) minmax(0, 1fr);
+      grid-template-rows: auto auto auto auto minmax(0, 1fr) auto;
+      grid-template-areas: "heading art" "controls art" "phase art" "readings art" "rail art" "foot art";
+      column-gap: var(--space-8);
+      padding-block: var(--space-8);
+    }
+    .lottery-room:not([data-theatre="true"]) .lottery-pool-heading { grid-area: heading; gap: var(--space-4); }
+    .lottery-room:not([data-theatre="true"]) .lottery-pool-heading [data-role="panel-title"] { display: block; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+    .lottery-room:not([data-theatre="true"]) .lottery-pool-heading [data-role="panel-gloss"] { position: absolute; width: var(--space-1); height: var(--space-1); overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+    .lottery-room:not([data-theatre="true"]) .num .cc-hero-caption { max-width: none; }
+    .lottery-room:not([data-theatre="true"]) .lottery-pool-readings { grid-area: readings; gap: var(--space-6); }
+    .lottery-room:not([data-theatre="true"]) .legend { gap: var(--space-3) var(--space-6); }
+    .lottery-room:not([data-theatre="true"]) .statrow { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: start; }
+    .lottery-room:not([data-theatre="true"]) .stat { flex-direction: column; align-items: flex-start; min-width: 0; gap: var(--space-2); }
+    .lottery-room:not([data-theatre="true"]) .stat small { position: absolute; width: var(--space-1); height: var(--space-1); overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  }
+}
+@media (width > 56.25rem) and (height <= 56.25rem) {
+  .lottery-room:not([data-theatre="true"]) { padding-block: 0; }
 }
