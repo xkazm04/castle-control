@@ -6,6 +6,8 @@ use serde_json::json;
 use std::{sync::Arc, time::Duration};
 use tokio::sync::broadcast;
 
+#[path = "preview_strand.rs"]
+mod preview_strand;
 #[path = "simulate_overlay.rs"]
 mod simulate_overlay;
 
