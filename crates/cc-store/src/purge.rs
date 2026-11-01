@@ -124,9 +124,7 @@ impl Plan {
 
 impl Store {
     pub fn preview(&self, request: Purge, as_of: Timestamp) -> Result<PurgePreview> {
-        if request != Purge::All {
-            self.ready()?;
-        }
+        self.erasure_ready(&request)?;
         self.verify_inventory()?;
         let tx = self.conn.unchecked_transaction()?;
         let mut plan = Plan::new(&tx, request, as_of)?;
@@ -136,9 +134,7 @@ impl Store {
     }
 
     fn execute_purge(&mut self, request: Purge, as_of: Timestamp) -> Result<PurgePreview> {
-        if request != Purge::All {
-            self.ready()?;
-        }
+        self.erasure_ready(&request)?;
         self.verify_inventory()?;
         let tx = self
             .conn

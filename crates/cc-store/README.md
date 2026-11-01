@@ -176,7 +176,10 @@ general-purpose JSON canonicalization protocol.
 Readers and startup check the schema version, ledger kind, exact canonical bytes,
 digest and complete newline termination. A malformed or partial record fails
 closed and is never silently repaired. Failed writes or detected corruption
-block normal operations; full purge remains available on an already-open store.
+block normal operations; erasure stays available on an already-open store: full
+purge, `forget_user` and retention expiry never touch the ledgers, so a latched
+ledger fault does not refuse them (only an unfinished full purge does) and the
+fault stays latched for everything else.
 Dry-run/full-purge ledger counts count frames, including an incomplete tail, so
 corruption cannot prevent erasure. Corrupt ledgers without a pending purge cause
 open to fail and require operator recovery of the directory. The digest detects

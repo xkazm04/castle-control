@@ -71,6 +71,16 @@ impl Store {
         Ok(())
     }
 
+    /// Erasure of SQLite rows never touches a ledger, so a latched ledger fault
+    /// must not block it; only an unfinished full purge does. Full purge itself
+    /// finishes any pending purge first.
+    pub(crate) fn erasure_ready(&self, request: &crate::Purge) -> Result<()> {
+        if *request != crate::Purge::All && self.purge_pending()? {
+            return Err(Error::PurgeIncomplete);
+        }
+        Ok(())
+    }
+
     pub(crate) fn purge_pending(&self) -> Result<bool> {
         Ok(self
             .conn

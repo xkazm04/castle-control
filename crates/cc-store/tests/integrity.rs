@@ -173,3 +173,33 @@ fn full_purge_remains_available_after_detected_ledger_corruption() {
     store.append_ledger(at(1), at(2), decision(1)).unwrap();
     assert_eq!(store.read_ledger(LedgerKind::Decisions).unwrap().len(), 1);
 }
+
+#[test]
+fn forget_and_expiry_proceed_while_the_ledger_is_faulted() {
+    let dir = tempfile::tempdir().unwrap();
+    let mut store = populated(dir.path());
+    fs::write(dir.path().join("decisions.jsonl"), b"{simulated_partial").unwrap();
+    assert!(store.read_ledger(LedgerKind::Decisions).is_err());
+    // The fault stays latched for everything else.
+    assert!(matches!(
+        store.append_ledger(at(3), at(4), decision(2)),
+        Err(Error::LedgerIntegrity)
+    ));
+    assert!(matches!(
+        store.lookup_user("simulated_login"),
+        Err(Error::LedgerIntegrity)
+    ));
+    let before = store.erasure_generation().unwrap();
+    let forgotten = store.forget_user("simulated_login", at(1)).unwrap();
+    assert_eq!(forgotten.counts["viewer_mappings"], 1);
+    let after_forget = store.erasure_generation().unwrap();
+    assert_ne!(after_forget, before);
+    let far = Timestamp::parse("2027-10-25T00:00:00Z").unwrap();
+    let expired = store.purge_expired(far).unwrap();
+    assert!(expired.counts["recordings"] > 0);
+    assert_ne!(store.erasure_generation().unwrap(), after_forget);
+    assert!(matches!(
+        store.append_ledger(at(3), at(4), decision(2)),
+        Err(Error::LedgerIntegrity)
+    ));
+}
