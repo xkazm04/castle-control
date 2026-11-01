@@ -5,7 +5,14 @@ use cc_types::{Action, ErrorCode, Rule, RuleId, Timestamp};
 use regex::{Regex, RegexBuilder};
 use std::collections::{BTreeMap, VecDeque};
 
+#[cfg(test)]
+thread_local! {
+    pub(crate) static COMPILES: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
+}
+
 pub(crate) fn compile(pattern: &str) -> Result<Regex> {
+    #[cfg(test)]
+    COMPILES.with(|compiles| compiles.set(compiles.get() + 1));
     RegexBuilder::new(pattern)
         .case_insensitive(true)
         .size_limit(1 << 20)
@@ -147,5 +154,68 @@ impl Strikes {
         } else {
             (rule.action, rule.timeout_s)
         })
+    }
+}
+
+#[cfg(test)]
+mod compile_count_tests {
+    use super::COMPILES;
+    use crate::{Classifier, ClassifierError, Gatehouse, IngestedMessage};
+    use async_trait::async_trait;
+    use cc_store::TwitchUserId;
+    use cc_types::{Action, Rule, RuleClass, RuleId, RuleMode, RulesUpsertParams, Timestamp};
+
+    struct NoClassifier;
+    #[async_trait]
+    impl Classifier for NoClassifier {
+        async fn classify(&self, _: &str, _: &str) -> Result<String, ClassifierError> {
+            panic!("pattern-only messages must not call the classifier")
+        }
+    }
+
+    fn pattern(id: &str, pattern: &str) -> Rule {
+        Rule {
+            rule_id: RuleId::try_from(id.to_owned()).unwrap(),
+            name: "Simulated rule".into(),
+            rule_class: RuleClass::Pattern,
+            mode: RuleMode::Shadow,
+            action: Action::Delete,
+            delivery: "streamer".into(),
+            pattern: Some(pattern.into()),
+            text: None,
+            timeout_s: None,
+            strikes: None,
+            auto_ban_grant: None,
+        }
+    }
+
+    fn message(index: usize) -> IngestedMessage {
+        IngestedMessage {
+            message_id: format!("simulated-{index}").try_into().unwrap(),
+            user_id: TwitchUserId::parse(&(100 + index).to_string()).unwrap(),
+            login: format!("simulated_{index}"),
+            text: "Ordinary simulated chat".into(),
+            at: Timestamp::now(),
+            simulated: true,
+            metadata: None,
+        }
+    }
+
+    #[tokio::test]
+    async fn rule_patterns_compile_once_per_rule_not_per_message() {
+        let root = tempfile::tempdir().unwrap();
+        let mut gate = Gatehouse::open(root.path()).unwrap();
+        for (id, text) in [("p1", "zzz1"), ("p2", "zzz2"), ("p3", "zzz3")] {
+            gate.rules_upsert(RulesUpsertParams {
+                rule: pattern(id, text),
+                display: None,
+            })
+            .unwrap();
+        }
+        COMPILES.set(0);
+        gate.screen_batch((0..50).map(message).collect(), &NoClassifier)
+            .await
+            .unwrap();
+        assert!(COMPILES.get() <= 3, "compiled {} times", COMPILES.get());
     }
 }
