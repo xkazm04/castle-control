@@ -16,6 +16,20 @@ async fn both_providers_probe_installed_version_and_login_through_spawn_door() {
         assert_eq!(probe.version.as_deref(), Some("1.2.3"));
     }
 }
+#[tokio::test]
+async fn probe_propagates_keychain_failure_instead_of_reporting_not_installed() {
+    let dir = tempfile::tempdir().unwrap();
+    let cli = common::cli(dir.path());
+    // NoKeychain rejects every label: custody failure, not a missing executable.
+    let result = cli
+        .probe(
+            cc_types::CliProvider::ClaudeCli,
+            Some("simulated-label"),
+            &NoKeychain,
+        )
+        .await;
+    assert_eq!(result.unwrap_err(), Failure::Auth);
+}
 #[test]
 fn startup_sweeps_stale_owned_markers_and_refuses_second_owner() {
     let root = tempfile::tempdir().unwrap();
