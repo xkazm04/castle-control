@@ -65,7 +65,7 @@ function failedTests(jsonFile) {
     const walk = (s, trail) => {
       for (const sp of s.specs ?? []) for (const t of sp.tests ?? []) {
         const last = t.results?.[t.results.length - 1];
-        if (last && !['passed', 'skipped'].includes(last.status)) bad.push(`${t.projectName} â€ş ${[...trail, sp.title].join(' â€ş ')}`);
+        if (last && !['passed', 'skipped'].includes(last.status)) bad.push(`${t.projectName} > ${[...trail, sp.title].join(' > ')}`);
       }
       for (const c of s.suites ?? []) walk(c, [...trail, c.title]);
     };
@@ -94,6 +94,9 @@ for (const name of wanted) {
     if (first.code === 0) rec.outcome = skippedByLane ? 'skipped' : 'pass';
     else {
       rec.failedFirst = firstFail.bad;
+      // Copy failure traces now: a Playwright rerun clears e2e/test-results.
+      const traces = path.join(lane.cwd, 'e2e', 'test-results');
+      if (fs.existsSync(traces)) fs.cpSync(traces, path.join(dir, 'test-results'), { recursive: true });
       let still = first.code, attempt = 0, lastBad = firstFail.bad;
       while (still !== 0 && attempt < RERUNS) {
         attempt++;
@@ -105,10 +108,6 @@ for (const name of wanted) {
       rec.reruns = attempt;
       rec.outcome = still === 0 ? 'flaky' : 'broken';
       rec.failedFinal = still === 0 ? [] : lastBad;
-      // Keep traces and screenshots of failures only.
-      for (const src of [path.join(lane.cwd, 'e2e', 'test-results')]) {
-        if (fs.existsSync(src)) fs.cpSync(src, path.join(dir, 'test-results'), { recursive: true });
-      }
     }
     if (rec.outcome === 'pass' && fs.existsSync(path.join(dir, 'html'))) fs.rmSync(path.join(dir, 'html'), { recursive: true, force: true });
   }
@@ -118,6 +117,10 @@ for (const name of wanted) {
   writeMorning();
   console.log(`[night] iter ${iter} ${name}: ${rec.outcome}${rec.ms ? ` in ${Math.round(rec.ms / 1000)} s` : ''}${rec.reason ? ` (${rec.reason})` : ''}`);
 }
+
+// Early records carry a mis-encoded separator; show them like new ones.
+const MISENCODED = String.fromCharCode(0xe2, 0x20ac, 0x15f);
+const clean = (t) => t.split(MISENCODED).join('>');
 
 function writeMorning() {
   const all = fs.readFileSync(path.join(OUT, 'runs.jsonl'), 'utf8').trim().split('\n').filter(Boolean).map((l) => JSON.parse(l));
@@ -130,8 +133,8 @@ function writeMorning() {
   });
   const flaky = new Map(), broken = new Map();
   for (const r of all) {
-    if (r.outcome === 'flaky') for (const t of r.failedFirst ?? [`(${r.lane} lane)`]) flaky.set(t, (flaky.get(t) ?? 0) + 1);
-    if (r.outcome === 'broken') for (const t of r.failedFinal ?? [`(${r.lane} lane)`]) broken.set(`${r.lane}: ${t}`, `iter ${r.iter}`);
+    if (r.outcome === 'flaky') for (const t of (r.failedFirst ?? [`(${r.lane} lane)`]).map(clean)) flaky.set(t, (flaky.get(t) ?? 0) + 1);
+    if (r.outcome === 'broken') for (const t of (r.failedFinal ?? [`(${r.lane} lane)`]).map(clean)) broken.set(`${r.lane}: ${t}`, `iter ${r.iter}`);
   }
   const head = git(['log', '--oneline', '-1']);
   const md = [
