@@ -5,8 +5,8 @@ import ts from 'typescript';
 import { parseJson } from '../src/door.mjs';
 import { exportSchema, root } from './codegen.mjs';
 
-// packages/renderer/src/overlay-build.test.ts ties bundle.js to its source fingerprint.
-const trackedBuildOutputs = ['apps/overlay/bundle.js', 'apps/overlay/vote-bar.js'];
+// packages/renderer/src/*-build.test.ts tie these outputs to their source fingerprints.
+const trackedBuildOutputs = ['apps/overlay/bundle.js', 'apps/overlay/vote-bar.js', 'apps/overlay/tiltyard.js'];
 
 export function exportRegistry() {
   const option = process.argv.indexOf('--registry');

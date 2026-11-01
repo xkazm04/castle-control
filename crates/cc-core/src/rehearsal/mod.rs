@@ -29,6 +29,9 @@ struct Door {
 }
 impl Door {
     fn send(&self, body: &str) -> Result<(), ErrorEnvelope> {
+        self.send_text(&format!("SIMULATED {body}"))
+    }
+    fn send_text(&self, text: &str) -> Result<(), ErrorEnvelope> {
         let sequence = self.sequence.fetch_add(1, Ordering::Relaxed);
         let viewer = sequence;
         let login = format!("simulated_viewer_{viewer}");
@@ -45,7 +48,7 @@ impl Door {
                         is_mod: false,
                         sub_tier: None,
                     },
-                    text: format!("SIMULATED {body}"),
+                    text: text.to_owned(),
                 },
             })
             .map_err(|_| unavailable())?;
@@ -116,6 +119,7 @@ impl RehearsalModule {
             actions: scenarios::Actions {
                 lots: registry.simulated_lots()?,
                 beacons: registry.beacons()?,
+                tiltyard: registry.tiltyard()?,
                 configuration: registry.configuration.clone(),
             },
         })

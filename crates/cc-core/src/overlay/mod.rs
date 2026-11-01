@@ -3,6 +3,9 @@ mod lots;
 mod lots_page;
 pub mod package;
 mod routes;
+mod tiltyard;
+#[cfg(test)]
+mod tiltyard_tests;
 mod vote_bar;
 
 use cc_obs::pages::{self, OverlayPage};
@@ -40,6 +43,7 @@ struct State {
 }
 
 pub struct RenderHost {
+    tiltyard: OnceLock<std::sync::Weak<crate::tiltyard::TiltyardModule>>,
     vote_bar: OnceLock<Arc<crate::gatehouse::VoteBarModule>>,
     state: Mutex<State>,
     lots: Mutex<BTreeMap<cc_types::DrawId, lots::DrawScene>>,
@@ -49,6 +53,7 @@ impl Default for RenderHost {
     fn default() -> Self {
         Self {
             vote_bar: OnceLock::new(),
+            tiltyard: OnceLock::new(),
             state: Mutex::new(State::default()),
             lots: Mutex::new(BTreeMap::new()),
             clients: Arc::new(Semaphore::new(128)),
@@ -62,6 +67,14 @@ impl RenderHost {
         source: Arc<crate::gatehouse::VoteBarModule>,
     ) -> Result<(), ErrorEnvelope> {
         self.vote_bar.set(source).map_err(|_| unavailable())
+    }
+    pub(crate) fn bind_tiltyard(
+        &self,
+        source: Arc<crate::tiltyard::TiltyardModule>,
+    ) -> Result<(), ErrorEnvelope> {
+        self.tiltyard
+            .set(Arc::downgrade(&source))
+            .map_err(|_| unavailable())
     }
     pub fn routes(self: &Arc<Self>) -> axum::Router {
         routes::router(self.clone())
@@ -250,6 +263,11 @@ impl RenderHost {
         };
         match page {
             OverlayPage::Spike => true,
+            OverlayPage::Tiltyard => self
+                .tiltyard
+                .get()
+                .and_then(|source| source.upgrade())
+                .is_some(),
             OverlayPage::VoteBar => self.vote_bar.get().is_some(),
             OverlayPage::Lots { draw } => cc_types::DrawId::try_from(draw.to_owned())
                 .is_ok_and(|id| self.lots_seal(&id).is_ok_and(|seal| seal.is_some())),

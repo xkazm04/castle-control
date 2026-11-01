@@ -59,7 +59,7 @@ test('OBS: Dress rehearsal creates its own scene, renders SIMULATED overlays and
   test.setTimeout(240_000);
   await withObs({ rehearsal: true, lotsBeacon: 'off', obs: { port, password } }, async (core, obs) => {
     try {
-      const verify = await guardNight(page, core, ['tiltyard.source.url:unavailable', 'lots.cast:conflict']);
+      const verify = await guardNight(page, core, ['lots.cast:conflict']);
       await dressRehearsalInUi(page, core, async () => {
         const folder = join(nightOut(), 'obs-rehearsal-screenshots');
         await mkdir(folder, { recursive: true });

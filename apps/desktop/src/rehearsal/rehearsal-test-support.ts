@@ -21,7 +21,7 @@ export function simulatedRehearsal() {
   const emit = (kind: EventKind) => { for (const listener of listeners) listener(kind); };
   const status: RehearsalStatus = { active: true, crowd_per_minute: 0, obs: { connected: true }, at: '2026-11-01T12:00:00Z' };
   let filled = false;
-  let duel = false;
+  let duel = true;
   const rpc = vi.fn<RehearsalNetwork['rpc']>(async (_endpoint, _session, method, params) => {
     switch (method) {
       case 'rehearsal.start': emit('rehearsal.status'); return structuredClone(status);

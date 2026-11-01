@@ -98,9 +98,10 @@ for (const name of wanted) {
     if (first.code === 0) rec.outcome = skippedByLane ? 'skipped' : 'pass';
     else {
       rec.failedFirst = firstFail.bad;
-      // Copy failure traces now: a Playwright rerun clears e2e/test-results.
-      const traces = path.join(lane.cwd, 'e2e', 'test-results');
-      if (fs.existsSync(traces)) fs.cpSync(traces, path.join(dir, 'test-results'), { recursive: true });
+      // Preserve the first failure before a rerun clears Playwright's output.
+      const nightResults = path.join(dir, 'test-results');
+      const traces = fs.existsSync(nightResults) ? nightResults : path.join(lane.cwd, 'e2e', 'test-results');
+      if (fs.existsSync(traces)) fs.cpSync(traces, path.join(dir, 'first-failure'), { recursive: true });
       let still = first.code, attempt = 0, lastBad = firstFail.bad;
       while (still !== 0 && attempt < RERUNS) {
         attempt++;

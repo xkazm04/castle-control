@@ -18,6 +18,7 @@ pub mod spike;
 #[cfg(feature = "spike")]
 mod spike_run;
 pub mod steward;
+pub mod tiltyard;
 #[cfg(feature = "spike")]
 pub use spike_run::run as run_spike;
 

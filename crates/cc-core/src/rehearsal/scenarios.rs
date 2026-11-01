@@ -7,6 +7,7 @@ use std::time::Duration;
 #[derive(Clone)]
 pub(super) struct Actions {
     pub lots: Arc<LotsModule>,
+    pub tiltyard: Arc<crate::tiltyard::TiltyardModule>,
     pub beacons: Arc<BeaconsModule>,
     pub configuration: Arc<tokio::sync::Mutex<()>>,
 }
@@ -16,6 +17,9 @@ impl Actions {
         params: RehearsalScenarioParams,
         door: Arc<Door>,
     ) -> Result<(), ErrorEnvelope> {
+        if params.scenario == RehearsalScenario::DuelRound {
+            self.duel().await?;
+        }
         let (count, entry) = match params.scenario {
             RehearsalScenario::LotsFill => (20, Some(self.draw().await?)),
             RehearsalScenario::VoteRound | RehearsalScenario::DuelRound => (30, None),
@@ -37,13 +41,72 @@ impl Actions {
             let body = match params.scenario {
                 RehearsalScenario::LotsFill => entry.as_deref().ok_or_else(unavailable)?,
                 RehearsalScenario::VoteRound => ballots.as_ref().ok_or_else(unavailable)?[index],
-                RehearsalScenario::DuelRound if index % 3 == 2 => "duel ballot right",
-                RehearsalScenario::DuelRound => "duel ballot left",
+                RehearsalScenario::DuelRound if index % 3 == 2 => "2! SIMULATED",
+                RehearsalScenario::DuelRound => "1 SIMULATED",
                 RehearsalScenario::BeaconFire => return Err(unavailable()),
             };
-            door.send(body)?;
+            if params.scenario == RehearsalScenario::DuelRound {
+                door.send_text(body)?;
+            } else {
+                door.send(body)?;
+            }
             tokio::time::sleep(Duration::from_millis(180)).await;
         }
+        Ok(())
+    }
+
+    async fn duel(&self) -> Result<(), ErrorEnvelope> {
+        if self
+            .tiltyard
+            .stage()
+            .await?
+            .session
+            .is_some_and(|s| s.phase == TiltyardSessionPhase::Live)
+        {
+            return Ok(());
+        }
+        let items = ["Castle", "Forest", "Sea", "Sky"]
+            .iter()
+            .enumerate()
+            .map(|(index, name)| {
+                Ok(TiltyardContestant {
+                    id: format!("sample-{}", name.to_lowercase())
+                        .try_into()
+                        .map_err(|_| unavailable())?,
+                    title: format!("Sample: {name}")
+                        .try_into()
+                        .map_err(|_| unavailable())?,
+                    by: "SIMULATED rehearsal"
+                        .to_owned()
+                        .try_into()
+                        .map_err(|_| unavailable())?,
+                    seed: index.to_string().try_into().map_err(|_| unavailable())?,
+                    note: Some(
+                        "Generated SIMULATED sample data"
+                            .to_owned()
+                            .try_into()
+                            .map_err(|_| unavailable())?,
+                    ),
+                })
+            })
+            .collect::<Result<Vec<_>, ErrorEnvelope>>()?;
+        self.tiltyard
+            .start_sample(
+                TiltyardList {
+                    title: "Sample: SIMULATED tournament"
+                        .to_owned()
+                        .try_into()
+                        .map_err(|_| unavailable())?,
+                    prompt: None,
+                    items,
+                },
+                "sample-rehearsal"
+                    .to_owned()
+                    .try_into()
+                    .map_err(|_| unavailable())?,
+                60_000.try_into().map_err(|_| unavailable())?,
+            )
+            .await?;
         Ok(())
     }
 

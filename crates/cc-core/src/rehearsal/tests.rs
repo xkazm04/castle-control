@@ -83,7 +83,7 @@ fn provenance(chat: &ChatIngress) {
     assert!(chat.simulated);
     assert!(chat.login.starts_with("simulated_viewer_"));
     assert!(chat.message.id.starts_with("simulated-rehearsal-"));
-    assert!(chat.message.text.starts_with("SIMULATED"));
+    assert!(chat.message.text.contains("SIMULATED"));
     assert_eq!(chat.message.viewer.name, chat.login);
     assert!(chat.message.viewer.id.bytes().all(|b| b.is_ascii_digit()));
 }
@@ -291,16 +291,65 @@ async fn vote_and_duel_scenarios_use_the_real_chat_consumer_and_simulated_vote_b
     assert_eq!(
         messages
             .iter()
-            .filter(|m| m.message.text == "SIMULATED duel ballot left")
+            .filter(|m| m.message.text == "1 SIMULATED")
             .count(),
         20
     );
     assert_eq!(
         messages
             .iter()
-            .filter(|m| m.message.text == "SIMULATED duel ballot right")
+            .filter(|m| m.message.text == "2! SIMULATED")
             .count(),
         10
     );
+    settle(&h.app.events, 60).await;
+    let stage = h
+        .app
+        .registry
+        .tiltyard()
+        .unwrap()
+        .stage()
+        .await
+        .unwrap()
+        .session
+        .unwrap();
+    assert_eq!(stage.phase, cc_types::TiltyardSessionPhase::Live);
+    assert_eq!(
+        stage.counted,
+        cc_types::TiltyardCounted {
+            left: 20,
+            right: 10
+        }
+    );
+    assert!(stage.simulated);
+    let snapshot = h
+        .app
+        .registry
+        .tiltyard()
+        .unwrap()
+        .snapshot()
+        .await
+        .unwrap()
+        .unwrap();
+    assert_eq!(
+        snapshot.left.label,
+        "Sample: Castle".to_owned().try_into().unwrap()
+    );
+    assert_eq!(
+        snapshot.right.label,
+        "Sample: Sky".to_owned().try_into().unwrap()
+    );
+    assert_eq!(snapshot.ballots, 30);
+    assert!(snapshot.simulated);
+    tokio::time::sleep(Duration::from_millis(5)).await;
+    let tiltyard = h.app.registry.tiltyard().unwrap();
+    tiltyard
+        .turn(&cc_types::TiltyardAction::Reset {})
+        .await
+        .unwrap();
+    let fresh = tiltyard.snapshot().await.unwrap().unwrap();
+    assert_eq!(fresh.ballots, 0);
+    assert!(fresh.simulated, "sample contestants remain generated data");
+    drop(tiltyard);
     h.close().await;
 }

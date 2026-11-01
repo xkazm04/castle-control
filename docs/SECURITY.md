@@ -39,7 +39,8 @@ The OBS overlay has a separate IPv4 loopback listener, exact `localhost:<port>`
 Host check, router and origin. Every response, including failures, carries
 nosniff and no-store. Its CSP is the exact policy in
 [ADR 0002](adr/0002-overlay-host-csp.md), with the actual overlay port in the
-single `/push/beacons` connection source. The root spike plate remains static;
+explicit `/push/beacons`, `/push/gatehouse` and `/push/tiltyard` connection
+sources. The root spike plate remains static;
 Beacons pages load only the bundled local renderer. There is no RPC, control
 events, proxy, redirect or core session capability in overlay resources or SSE.
 The control service grants this origin no CORS or Origin permission, even when

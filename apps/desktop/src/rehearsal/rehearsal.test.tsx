@@ -51,7 +51,7 @@ test('workspace retains provenance, masked uncontrolled password, defaults and a
   expect(input(card, 'port')).toMatchObject({ defaultValue: '4455' });
   expect(input(card, 'remember')).toMatchObject({ type: 'checkbox', defaultChecked: false });
   expect(html).toContain('Tools › WebSocket Server Settings › Show Connect Info');
-  expect(html).toContain('Fill a Lot first'); expect(html).toContain('Duel overlay coming');
+  expect(html).toContain('Fill a Lot first'); expect(html).toContain('Duel'); expect(html).not.toContain('Duel overlay coming');
   expect(html.match(/source size"/g)).toHaveLength(4);
   for (const text of ['Fill a Lot', 'Run a vote', 'Fire beacon', 'Run a duel round', 'min="0" max="600"']) expect(html).toContain(text);
 });

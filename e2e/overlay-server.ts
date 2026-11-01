@@ -79,7 +79,7 @@ export async function startOverlay(): Promise<{
   const address = server.address();
   if (!address || typeof address === 'string') throw new Error('Overlay did not bind loopback');
   // Keep the native host's template; harness.test.ts checks parity with Rust.
-  const csp = `default-src 'none'; script-src 'self'; connect-src http://localhost:${address.port}/push/beacons http://localhost:${address.port}/push/gatehouse; img-src 'self' data:; style-src 'unsafe-inline'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'`;
+  const csp = `default-src 'none'; script-src 'self'; connect-src http://localhost:${address.port}/push/beacons http://localhost:${address.port}/push/gatehouse http://localhost:${address.port}/push/tiltyard; img-src 'self' data:; style-src 'unsafe-inline'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'`;
   return {
     url: `http://localhost:${address.port}`,
     pushes: () => pushes,

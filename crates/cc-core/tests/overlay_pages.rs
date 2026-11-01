@@ -97,31 +97,55 @@ async fn page_router_and_ownership_follow_the_shared_grammar() {
     assert!(!host.owns_source(&origin, &wrong));
     assert!(!host.owns_source(&origin, &format!("{origin}lots/unsealed?scale=&anchor=")));
     let client = client();
-    let cases: Vec<Case> = serde_json::from_str(include_str!(
+    let mut cases: Vec<Case> = serde_json::from_str(include_str!(
         "../../cc-obs/tests/fixtures/overlay-paths.json"
     ))
     .unwrap();
+    let tiltyard: Vec<Case> = serde_json::from_str(include_str!(
+        "../../cc-obs/tests/fixtures/tiltyard-paths.json"
+    ))
+    .unwrap();
+    assert!(!tiltyard.is_empty());
+    cases.extend(tiltyard);
     for case in cases {
         // These are resource URLs, deliberately excluded from page capabilities.
-        if ["/bundle.js", "/push/beacons"].contains(&case.target.as_str()) {
+        if [
+            "/bundle.js",
+            "/push/beacons",
+            "/push/tiltyard",
+            "/tiltyard.js",
+        ]
+        .contains(&case.target.as_str())
+        {
+            assert!(!host.owns_source(
+                &origin,
+                &format!(
+                    "{}{target}",
+                    origin.trim_end_matches('/'),
+                    target = case.target
+                )
+            ));
             continue;
         }
         let target = case.target.replace(&"a".repeat(64), &hash);
         let url = format!("{}{target}", origin.trim_end_matches('/'));
+        let uri: axum::http::Uri = url.parse().unwrap();
+        let page = pages::parse(uri.path(), uri.query());
+        let (status, owned) = match page {
+            Some(OverlayPage::Spike | OverlayPage::VoteBar | OverlayPage::Lots { .. }) => {
+                (200, true)
+            }
+            Some(OverlayPage::Beacons { package_hash, .. }) => (200, package_hash.is_some()),
+            // This manually composed host has no Tiltyard provider. Its page
+            // exists, but must neither render nor grant source ownership.
+            Some(OverlayPage::Tiltyard) => (503, false),
+            None => (404, false),
+        };
+        assert_eq!(page.is_some(), case.kind.is_some(), "{target}");
         let response = client.get(&url).send().await.unwrap();
-        assert_eq!(
-            response.status().as_u16(),
-            if case.kind.is_some() { 200 } else { 404 },
-            "{target}"
-        );
+        assert_eq!(response.status().as_u16(), status, "{target}");
         assert_eq!(response.headers()["cache-control"], "no-store");
-        if case.kind.is_some() {
-            // A hashless Beacons URL is routable, but this visual needs its current hash.
-            let owned = case.kind.as_deref() != Some("beacons") || target.contains("package_hash=");
-            assert_eq!(host.owns_source(&origin, &url), owned, "{target}");
-        } else {
-            assert!(!host.owns_source(&origin, &url), "{target}");
-        }
+        assert_eq!(host.owns_source(&origin, &url), owned, "{target}");
     }
     assert!(!host.owns_source(&origin, &format!("{source}&other=1")));
     assert!(!host.owns_source(&origin, &source.replace("localhost:", "127.0.0.1:")));

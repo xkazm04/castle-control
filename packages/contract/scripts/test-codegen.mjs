@@ -100,11 +100,13 @@ try {
   mkdirSync(overlay, { recursive: true });
   writeFileSync(join(overlay, 'bundle.js'), "export const compiled = JSON.parse('{}');\n");
   writeFileSync(join(overlay, 'vote-bar.js'), "export const compiled = JSON.parse('{}');\n");
+  writeFileSync(join(overlay, 'tiltyard.js'), "export const compiled = JSON.parse('{}');\n");
   writeFileSync(join(authored, 'main.ts'), "export const authored = JSON.parse('null');\n");
   const usage = usages(scratch);
   assert.equal(usage.files.length, 1);
   assert(!usage.files.includes(join(overlay, 'bundle.js')), 'only the named tracked build output is excluded');
   assert(!usage.files.includes(join(overlay, 'vote-bar.js')), 'dedicated vote-bar output is also fingerprinted');
+  assert(!usage.files.includes(join(overlay, 'tiltyard.js')), 'dedicated tiltyard output is also fingerprinted');
   assert.equal(usage.defects.length, 1, 'authored JSON parsing outside the door is still rejected');
   // Exercise the real native shell against the unchanged core-RPC scanner.
   writeFileSync(join(authored, 'main.ts'), readFileSync(join(root, 'apps/desktop/src/rehearsal/rehearsal-shell.ts'), 'utf8'));
@@ -123,7 +125,7 @@ try {
   unlinkSync(join(overlay, 'bundle.js'));
   assert.throws(() => usages(scratch), /Missing listed build output: apps\/overlay\/bundle.js/, 'stale exclusions must fail');
 } finally {
-  for (const file of [join(authored, 'main.ts'), join(bundled, 'index.js'), join(overlay, 'bundle.js'), join(overlay, 'vote-bar.js'), join(overlay, 'source.js')]) if (existsSync(file)) unlinkSync(file);
+  for (const file of [join(authored, 'main.ts'), join(bundled, 'index.js'), join(overlay, 'bundle.js'), join(overlay, 'vote-bar.js'), join(overlay, 'tiltyard.js'), join(overlay, 'source.js')]) if (existsSync(file)) unlinkSync(file);
   for (const directory of [authored, bundled, overlay, join(scratch, 'apps/desktop/dist'), join(scratch, 'apps/desktop'), join(scratch, 'apps')]) {
     if (existsSync(directory)) rmdirSync(directory);
   }

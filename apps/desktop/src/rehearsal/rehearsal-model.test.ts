@@ -48,7 +48,7 @@ test('rows use the real rehearsal draw ID, individual sizes, owned source names 
   const { model, rpc, fill, duel } = simulatedRehearsal();
   await model.refresh();
   expect(model.getSnapshot().rows.find(row => row.kind === 'lot')?.notice).toBe('Fill a Lot first');
-  expect(model.getSnapshot().rows.find(row => row.kind === 'duel')?.phase).toBe('coming');
+  expect(model.getSnapshot().rows.find(row => row.kind === 'duel')?.phase).toBe('idle');
   expect(model.canAdd('vote')).toBe(false);
   fill(); duel(); await model.refresh(); await model.ensureScene();
   expect(model.setPreset('lot', '720p')).toBe(true);

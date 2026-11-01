@@ -164,6 +164,13 @@ impl Registry {
         Self::native_offline(services, OfflineModules::default(), None)
     }
 
+    pub(crate) fn tiltyard(&self) -> Result<Arc<crate::tiltyard::TiltyardModule>, ErrorEnvelope> {
+        self.offline
+            .as_ref()
+            .ok_or_else(|| ErrorEnvelope::new(ErrorCode::Unavailable, "tournament unavailable"))?
+            .tiltyard()
+    }
+
     pub(crate) fn beacons(&self) -> Result<Arc<crate::beacons::BeaconsModule>, ErrorEnvelope> {
         self.offline
             .as_ref()

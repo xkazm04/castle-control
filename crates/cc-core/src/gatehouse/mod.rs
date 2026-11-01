@@ -79,6 +79,15 @@ impl GatehouseModule {
         Ok(module)
     }
 
+    /// In-process view of the very same post-verdict ledger door as ChatList.
+    pub(crate) async fn tiltyard_ballots(
+        &self,
+    ) -> Result<Vec<cc_types::GatehouseChatItem>, ErrorEnvelope> {
+        let service = self.state.lock().await;
+        service.ready()?;
+        reads::tiltyard_ballots(service.gate.store())
+    }
+
     async fn handle(&self, request: &RpcRequest) -> Result<Value, ErrorEnvelope> {
         let mut service = self.state.lock().await;
         service.ready()?;

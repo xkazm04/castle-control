@@ -125,6 +125,7 @@ async fn native_registry_serves_reads_and_revoke_purges_the_real_store() {
     expected.extend(cc_core::lots::LotsModule::METHODS);
     expected.extend(cc_core::gatehouse::GatehouseModule::METHODS);
     expected.extend(cc_core::beacons::BeaconsModule::METHODS);
+    expected.extend(cc_core::tiltyard::TiltyardModule::METHODS);
     expected.extend(["steward.ask", "steward.writ.seal", "steward.writ.tear"]);
     expected.sort();
     assert_eq!(app.registry.methods(), expected);

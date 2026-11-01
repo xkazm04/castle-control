@@ -1,5 +1,5 @@
 // Generated SIMULATED scenarios only. Shared by the fake-peer and isolated OBS lanes.
-import { expect } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
 import type { NightCore } from './launch.ts';
 import { SHELL_ORIGIN } from './launch.ts';
@@ -9,7 +9,7 @@ import { guardPage } from '../network.ts';
 
 export const rehearsalVisual = 'simulated-rehearsal-beacon';
 export const rehearsalScene = 'Castle Control · Rehearsal';
-export const rehearsalSourceNames = ['Castle Control · Lot plate', 'Castle Control · Gatehouse vote bar', 'Castle Control · SIMULATED rehearsal beacon'];
+export const rehearsalSourceNames = ['Castle Control · Lot plate', 'Castle Control · Gatehouse vote bar', 'Castle Control · SIMULATED rehearsal beacon', 'Castle Control · Duel'];
 
 async function assertRehearsalVote(page: Page, core: NightCore) {
   const browser = page.context().browser();
@@ -30,6 +30,27 @@ async function assertRehearsalVote(page: Page, core: NightCore) {
       /^Direction 3 · [1-9]\d?%$/,
     ]);
     await overlay.goto('about:blank'); verify();
+  } finally { await overlay.close(); }
+}
+
+async function assertRehearsalDuel(page: Page, core: NightCore) {
+  const browser = page.context().browser();
+  if (!browser) throw new Error('Overlay verification requires the night browser');
+  const overlay = await browser.newPage();
+  const verify = await guardPage(overlay, core.overlayOrigin);
+  try {
+    await overlay.goto(`${core.overlayOrigin}/tiltyard/current`);
+    const duel = overlay.getByRole('main', { name: 'Tiltyard duel', exact: true });
+    await expect(duel.locator('.simulated')).toHaveText('SIMULATED');
+    await expect(duel.locator('.simulated')).toBeVisible();
+    await expect(duel.locator('.tiltyard-side')).toHaveCount(2);
+    await expect(duel.locator('.tiltyard-side').first()).toContainText('Sample: Castle');
+    await expect(duel.locator('.tiltyard-side').last()).toContainText('Sample: Sky');
+    await overlay.goto('about:blank'); verify();
+  } catch (error) {
+    // This separate overlay context is outside the test's automatic screenshot.
+    await test.info().attach('tiltyard-failure', { body: await overlay.screenshot(), contentType: 'image/png' });
+    throw error;
   } finally { await overlay.close(); }
 }
 
@@ -81,6 +102,9 @@ export async function dressRehearsalInUi(page: Page, core: NightCore, beforeClea
   // proves the complete Fill burst reached Lots before we freeze the roll.
   await eventually(() => core.invoke(core.contract.lotsRollLookup, { draw_id: draw.draw_id, user_id: '50' }), result => Boolean(result.entry));
   await workspace.getByRole('button', { name: 'Run a duel round', exact: true }).click();
+  await eventually(() => core.invoke(core.contract.maproomStageGet, {}), result => Boolean(result.session?.simulated
+    && result.session.counted.left + result.session.counted.right > 0));
+  await assertRehearsalDuel(page, core);
   await workspace.getByRole('combobox', { name: 'Beacon visual', exact: true }).selectOption(rehearsalVisual);
   await workspace.getByRole('button', { name: 'Fire beacon', exact: true }).click();
 
@@ -101,7 +125,7 @@ export async function dressRehearsalInUi(page: Page, core: NightCore, beforeClea
   }).toPass({ timeout: 60_000, intervals: [3_000] });
   await expect(lots.locator('p.cc-status[role="status"]').last()).toHaveText('Proof bundle loaded from the core. Use an independent verifier to check it.');
   expect(invalidFrames, 'Invalid rehearsal control frames').toBe(0);
-  for (const kind of ['rehearsal.status', 'lots.sealed', 'lots.cast']) {
+  for (const kind of ['rehearsal.status', 'lots.sealed', 'lots.cast', 'maproom.turn']) {
     await expect.poll(() => kinds.has(kind), { message: `Missing ${kind} control invalidation` }).toBe(true);
   }
   // The native OBS probe is asynchronous; require observed reconnection rather
@@ -113,7 +137,7 @@ export async function dressRehearsalInUi(page: Page, core: NightCore, beforeClea
   await page.goto(`${SHELL_ORIGIN}/#/rehearsal`);
   await expect(workspace.locator('[data-stamp="simulated"]')).toHaveText('SIMULATED');
 
-  for (const row of ['Lot plate', 'Gatehouse vote bar', 'SIMULATED rehearsal beacon']) {
+  for (const row of ['Lot plate', 'Gatehouse vote bar', 'SIMULATED rehearsal beacon', 'Duel']) {
     const card = page.getByRole('article', { name: row, exact: true });
     await card.getByRole('combobox', { name: `${row} source size`, exact: true }).selectOption('720p');
     await expect(await addStreamOutput(page, row)).toHaveText('Added to the rehearsal scene. Inspect its placement in OBS.');
@@ -121,11 +145,16 @@ export async function dressRehearsalInUi(page: Page, core: NightCore, beforeClea
   await auditStyles(page, desktopSurfaces); await auditFields(page);
   // Renew the test fire after the seal/UI checks so its temporary badge is live.
   await workspace.getByRole('button', { name: 'Fire beacon', exact: true }).click();
+  await workspace.getByRole('button', { name: 'Run a duel round', exact: true }).click();
+  await eventually(() => core.invoke(core.contract.maproomStageGet, {}), result => Boolean(result.session?.simulated
+    && result.session.counted.left + result.session.counted.right > 0));
   const outputs = [
     { url: (await core.invoke(core.contract.lotsSourceUrl, { draw_id: draw.draw_id })).url,
       badge: '#draw[data-draw-mounted="true"] > .draw-scene > .simulated', content: '#draw .draw-winners li' },
     { url: (await core.invoke(core.contract.beaconsSourceUrl, { visual_id: rehearsalVisual })).url,
       badge: '[data-simulated-badge]', content: '#scene' },
+    { url: (await core.invoke(core.contract.tiltyardSourceUrl, {})).url,
+      badge: '#tiltyard > .simulated', content: '#tiltyard .tiltyard-side' },
     // gatehouseSourceUrl is exported from the contract's separate public door.
     { url: `${core.overlayOrigin}/gatehouse/current`, badge: '#vote-bar > p', content: '#vote-bar .vote-direction' },
   ];

@@ -25,8 +25,12 @@ fn vote_bar_accepts_only_current_room_and_presentation_keys() {
 
 #[test]
 fn shared_paths_pin_identity_and_presentation_query_semantics() {
-    let cases: Vec<Case> =
+    let mut cases: Vec<Case> =
         serde_json::from_str(include_str!("fixtures/overlay-paths.json")).unwrap();
+    let tiltyard: Vec<Case> =
+        serde_json::from_str(include_str!("fixtures/tiltyard-paths.json")).unwrap();
+    assert!(!tiltyard.is_empty());
+    cases.extend(tiltyard);
     assert!(!cases.is_empty());
     for case in cases {
         let (path, query) = case
@@ -39,6 +43,7 @@ fn shared_paths_pin_identity_and_presentation_query_semantics() {
         let kind = page.map(|page| match page {
             OverlayPage::Spike => "spike",
             OverlayPage::VoteBar => "vote_bar",
+            OverlayPage::Tiltyard => "tiltyard",
             OverlayPage::Beacons { .. } => "beacons",
             OverlayPage::Lots { .. } => "lots",
         });

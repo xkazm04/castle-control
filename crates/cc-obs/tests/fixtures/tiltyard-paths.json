@@ -1,0 +1,15 @@
+[
+  { "target": "/tiltyard/current", "kind": "tiltyard", "canonical": "/tiltyard/current" },
+  { "target": "/tiltyard/current?scale=2", "kind": null, "canonical": null },
+  { "target": "/tiltyard/current?anchor=tr", "kind": null, "canonical": null },
+  { "target": "/tiltyard/current?shape=wheel", "kind": null, "canonical": null },
+  { "target": "/tiltyard/current?package_hash=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "kind": null, "canonical": null },
+  { "target": "/tiltyard/current?text=private", "kind": null, "canonical": null },
+  { "target": "/tiltyard/current?", "kind": null, "canonical": null },
+  { "target": "/tiltyard/current/extra", "kind": null, "canonical": null },
+  { "target": "/tiltyard/other", "kind": null, "canonical": null },
+  { "target": "/tiltyard/Current", "kind": null, "canonical": null },
+  { "target": "/tiltyard/%63urrent", "kind": null, "canonical": null },
+  { "target": "/push/tiltyard", "kind": null, "canonical": null },
+  { "target": "/tiltyard.js", "kind": null, "canonical": null }
+]

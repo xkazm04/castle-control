@@ -9,6 +9,7 @@ pub const VOTE_BAR_ROUTE: &str = "/gatehouse/{channel_id}";
 pub enum OverlayPage<'a> {
     Spike,
     VoteBar,
+    Tiltyard,
     Beacons {
         visual: &'a str,
         package_hash: Option<&'a str>,
@@ -24,6 +25,7 @@ impl OverlayPage<'_> {
     pub fn path_and_query(&self) -> String {
         match self {
             Self::Spike => SPIKE_ROUTE.to_owned(),
+            Self::Tiltyard => "/tiltyard/current".to_owned(),
             Self::VoteBar => "/gatehouse/current".to_owned(),
             Self::Beacons {
                 visual,
@@ -44,10 +46,13 @@ impl OverlayPage<'_> {
 /// Keep raw keys exact, as in the L5 guard: no decoding, duplicate identity,
 /// unknown key or empty query segment. Scale/anchor (and, on draw pages, shape)
 /// values are presentation-only and may be empty, repeated or invalid; each
-/// renderer owns their defaults.
+/// renderer owns their defaults. Tiltyard's dedicated page accepts no query.
 pub fn parse<'a>(path: &'a str, query: Option<&'a str>) -> Option<OverlayPage<'a>> {
     if path == SPIKE_ROUTE {
         return query.is_none().then_some(OverlayPage::Spike);
+    }
+    if path == "/tiltyard/current" {
+        return query.is_none().then_some(OverlayPage::Tiltyard);
     }
     // Consensus is scoped to the one locally selected channel, with no viewer ID.
     if path == "/gatehouse/current" {
@@ -106,9 +111,33 @@ pub fn parse<'a>(path: &'a str, query: Option<&'a str>) -> Option<OverlayPage<'a
 #[cfg(test)]
 mod tests {
     #[test]
+    fn tiltyard_is_a_single_owned_page_without_write_or_push_capabilities() {
+        use super::*;
+        assert_eq!(
+            parse("/tiltyard/current", None),
+            Some(OverlayPage::Tiltyard)
+        );
+        assert_eq!(OverlayPage::Tiltyard.path_and_query(), "/tiltyard/current");
+        for (path, query) in [
+            ("/tiltyard/current", Some("text=private")),
+            ("/push/tiltyard", None),
+            ("/tiltyard/current/extra", None),
+            ("/tiltyard/other", None),
+        ] {
+            assert!(parse(path, query).is_none());
+        }
+    }
+    #[test]
     fn create_input_guard_uses_exactly_the_shared_page_table() {
-        let cases: serde_json::Value =
+        let mut cases: serde_json::Value =
             serde_json::from_str(include_str!("../tests/fixtures/overlay-paths.json")).unwrap();
+        let tiltyard: serde_json::Value =
+            serde_json::from_str(include_str!("../tests/fixtures/tiltyard-paths.json")).unwrap();
+        assert!(!tiltyard.as_array().unwrap().is_empty());
+        cases
+            .as_array_mut()
+            .unwrap()
+            .extend(tiltyard.as_array().unwrap().iter().cloned());
         for case in cases.as_array().unwrap() {
             let target = case["target"].as_str().unwrap();
             let source = crate::BrowserSource {

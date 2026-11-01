@@ -32,6 +32,13 @@ async fn lots_fill_opens_a_real_keyword_draw_and_seals_a_simulated_page_offline(
     );
     let gatehouse = Arc::new(GatehouseModule::open_shadow(root.0.join("gatehouse")).unwrap());
     let beacons = Arc::new(crate::beacons::BeaconsModule::open(root.0.join("beacons")).unwrap());
+    let tiltyard = crate::tiltyard::TiltyardModule::open(
+        root.0.join("tiltyard"),
+        gatehouse.clone(),
+        events.clone(),
+        None,
+    )
+    .unwrap();
     let pipeline = Arc::new(ShadowPipeline::new(
         gatehouse,
         lots.clone(),
@@ -53,6 +60,7 @@ async fn lots_fill_opens_a_real_keyword_draw_and_seals_a_simulated_page_offline(
         actions: scenarios::Actions {
             lots: lots.clone(),
             beacons,
+            tiltyard,
             configuration: Arc::new(tokio::sync::Mutex::new(())),
         },
     };

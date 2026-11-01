@@ -27,11 +27,13 @@ for (const row of cases) {
 
 vi.mock('./overlay.ts', () => ({ connectOverlay: vi.fn() }));
 afterEach(() => { vi.unstubAllGlobals(); vi.resetModules(); vi.clearAllMocks(); });
-it('connects Beacons only, never Lots, spike or a rejected page/query', async () => {
+it('connects Beacons only, leaving the dedicated Tiltyard page to its own runtime', async () => {
+  expect(parseOverlayPath('/tiltyard/current')).toBeUndefined();
   const { connectOverlay } = await import('./overlay.ts');
   const root = {};
   for (const [pathname, search] of [
     ['/lots/simulated-draw', '?scale=2&anchor=tl'], ['/', ''],
+    ['/tiltyard/current', ''],
     ['/beacons/Upper', ''], ['/beacons/simulated-frame', '?other=1'],
     ['/beacons/simulated-frame', '?scale=0.5&anchor=br'],
   ]) {

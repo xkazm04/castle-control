@@ -18,8 +18,8 @@ export type RehearsalState = Readonly<{
 }>;
 type Options = { mode: 'fixture' | 'core'; connection?: RehearsalConnection; shell?: RehearsalShell };
 const initialRow = (id: string, name: string, kind: RehearsalRow['kind']): RehearsalRow => ({
-  id, name, kind, preset: '1080p', phase: kind === 'lot' ? 'unavailable' : kind === 'duel' ? 'coming' : 'idle',
-  notice: kind === 'lot' ? copy.fill_first : kind === 'duel' ? copy.duel_coming : copy.hold,
+  id, name, kind, preset: '1080p', phase: kind === 'lot' ? 'unavailable' : 'idle',
+  notice: kind === 'lot' ? copy.fill_first : copy.hold,
 });
 function message(error: unknown): string {
   try { return parseError(JSON.stringify(error)).message; }
@@ -70,7 +70,7 @@ export function createRehearsalModel(options: Options) {
       initialRow('vote', copy.vote_bar, 'vote'),
       ...visuals.map(visual => ({ ...initialRow(`beacon:${visual.visual_id}`, visual.name, 'beacon'), visual_id: visual.visual_id })),
       { ...initialRow('duel', copy.duel_output, 'duel'), ...(duel.status === 'fulfilled' ? { phase: 'idle', notice: copy.hold } as const
-        : !unavailable(duel.reason) ? { phase: 'unavailable', notice: message(duel.reason) } as const : {}) },
+        : { phase: 'unavailable', notice: message(duel.reason) } as const) },
     ];
     const rows = next.map<RehearsalRow>(row => {
       const prior = state.rows.find(item => item.id === row.id);

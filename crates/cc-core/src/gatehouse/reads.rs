@@ -167,3 +167,31 @@ pub(super) fn chat(
         unavailable_count,
     })
 }
+
+/// One ledger/message materialization per aggregate read, under the service lock.
+/// Reuse chat()'s projection so retention gaps never fabricate votes/provenance.
+pub(super) fn tiltyard_ballots(store: &Store) -> Result<Vec<GatehouseChatItem>, ErrorEnvelope> {
+    let read = ReadStore::load(store)?;
+    let messages = ReadMessages::load(store)?;
+    let mut items = Vec::new();
+    for line in &read.ledger {
+        let LedgerEvent::Decision { decision_id, .. } = &line.event else {
+            return Err(internal());
+        };
+        let Some(audit) = read.audit.get(&decision_id.to_string()) else {
+            continue;
+        };
+        if !audit.is_chat_intake() {
+            continue;
+        }
+        let Some(message) = messages.get(audit) else {
+            continue;
+        };
+        items.push(GatehouseChatItem {
+            message,
+            decision: audit.decision(),
+            provenance: audit.provenance(),
+        });
+    }
+    Ok(items)
+}

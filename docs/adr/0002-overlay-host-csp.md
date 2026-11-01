@@ -60,11 +60,12 @@ syntactically valid loopback URL would weaken the boundary.
 
 ## Decision
 
-Widen only the overlay host policy needed for WP 3.2. For a bound overlay port
+Widen only the overlay host policy needed for WP 3.2 and its read-only Gatehouse
+and Tiltyard pages. For a bound overlay port
 `<port>`, the intended header is this single string, substituting the actual port:
 
 ```text
-default-src 'none'; script-src 'self'; connect-src http://localhost:<port>/push/beacons; img-src 'self' data:; style-src 'unsafe-inline'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'
+default-src 'none'; script-src 'self'; connect-src http://localhost:<port>/push/beacons http://localhost:<port>/push/gatehouse http://localhost:<port>/push/tiltyard; img-src 'self' data:; style-src 'unsafe-inline'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'
 ```
 
 - `script-src 'self'` permits the locally served overlay bundle. Do not add inline
@@ -83,10 +84,13 @@ default-src 'none'; script-src 'self'; connect-src http://localhost:<port>/push/
 - Choose server-sent events (SSE), using `EventSource`, for one-way visual
   updates. The overlay has no command traffic to send, so a bidirectional
   WebSocket is unnecessary. Permit only the absolute HTTP URL of the same-origin
-  `/push/beacons` endpoint in `connect-src`, with the actual bound port; do not
+  `/push/beacons`, `/push/gatehouse` and `/push/tiltyard` endpoints in
+  `connect-src`, with the actual bound port; do not
   permit all of `'self'`, a port wildcard, another host or a WebSocket scheme.
-  `/push/beacons` is a proposed private read-only transport path, not an RPC
-  method. Serve it directly, with no redirects or proxy facility.
+  These are private read-only transport paths, not RPC methods. Serve them
+  directly, with no redirects or proxy facility. Tiltyard's endpoint must be
+  permitted even though the initial card is server-rendered: a blocked SSE
+  connection clears that card through the renderer's disconnect handler.
 - Keep `style-src 'unsafe-inline'` for OBS's nonce-less injected style and the
   renderer's inline styles. Keep `default-src 'none'`, `frame-ancestors 'none'`,
   `base-uri 'none'`, `form-action 'none'`, `nosniff`, `no-store` and the exact Host

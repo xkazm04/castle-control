@@ -25,6 +25,7 @@ pub(crate) struct OfflineModules {
 struct Loaded {
     // Other modules close before Lots releases the shared temporary fixture root.
     gatehouse: Arc<GatehouseModule>,
+    tiltyard: Arc<crate::tiltyard::TiltyardModule>,
     beacons: Arc<BeaconsModule>,
     lots: Arc<LotsModule>,
 }
@@ -99,6 +100,10 @@ impl OfflineModules {
         Ok(self.load()?.gatehouse.clone())
     }
 
+    pub(crate) fn tiltyard(&self) -> Result<Arc<crate::tiltyard::TiltyardModule>, ErrorEnvelope> {
+        Ok(self.load()?.tiltyard.clone())
+    }
+
     pub(crate) fn beacons(&self) -> Result<Arc<BeaconsModule>, ErrorEnvelope> {
         Ok(self.load()?.beacons.clone())
     }
@@ -150,7 +155,7 @@ impl OfflineModules {
                     (
                         LotsModule::open(
                             root.join("lots"),
-                            events,
+                            events.clone(),
                             if self.rehearsal {
                                 Arc::new(crate::lots::live_beacon::LiveBeacon::new(
                                     crate::lots::live_beacon::official_chain(),
@@ -175,7 +180,7 @@ impl OfflineModules {
                     (
                         LotsModule::open(
                             root.join("lots"),
-                            events,
+                            events.clone(),
                             recorded.clone(),
                             recorded,
                             true,
@@ -191,9 +196,20 @@ impl OfflineModules {
                 let beacons = BeaconsModule::open(root.join("beacons"))?
                     .with_overlay_origin(self.overlay_origin.clone())
                     .with_native(self.native.clone())?;
+                let gatehouse = Arc::new(gatehouse);
+                let tiltyard = crate::tiltyard::TiltyardModule::open(
+                    root.join("tiltyard"),
+                    gatehouse.clone(),
+                    events,
+                    self.overlay_origin.clone(),
+                )?;
+                if let Some(native) = self.native.as_ref().and_then(Weak::upgrade) {
+                    native.lots_render_host().bind_tiltyard(tiltyard.clone())?;
+                }
                 lots.temporary_root = temporary_root;
                 Ok(Loaded {
-                    gatehouse: Arc::new(gatehouse),
+                    gatehouse,
+                    tiltyard,
                     beacons: Arc::new(beacons),
                     lots: Arc::new(lots),
                 })
@@ -212,11 +228,12 @@ enum OfflineKind {
     Lots,
     Gatehouse,
     Beacons,
+    Tiltyard,
 }
 
 impl OfflineModule {
     // Preserve the registry's existing factory entry point as modules are added.
-    pub fn pair(shared: Arc<OfflineModules>) -> [Self; 3] {
+    pub fn pair(shared: Arc<OfflineModules>) -> [Self; 4] {
         [
             Self {
                 shared: shared.clone(),
@@ -227,8 +244,12 @@ impl OfflineModule {
                 kind: OfflineKind::Gatehouse,
             },
             Self {
-                shared,
+                shared: shared.clone(),
                 kind: OfflineKind::Beacons,
+            },
+            Self {
+                shared,
+                kind: OfflineKind::Tiltyard,
             },
         ]
     }
@@ -240,6 +261,7 @@ impl Module for OfflineModule {
             OfflineKind::Lots => LotsModule::METHODS,
             OfflineKind::Gatehouse => GatehouseModule::METHODS,
             OfflineKind::Beacons => BeaconsModule::METHODS,
+            OfflineKind::Tiltyard => crate::tiltyard::TiltyardModule::METHODS,
         }
     }
 
@@ -271,6 +293,7 @@ impl Module for OfflineModule {
                 }
                 OfflineKind::Gatehouse => loaded.gatehouse.call(request).await,
                 OfflineKind::Beacons => loaded.beacons.call(request).await,
+                OfflineKind::Tiltyard => loaded.tiltyard.call(request).await,
             }
         })
     }
