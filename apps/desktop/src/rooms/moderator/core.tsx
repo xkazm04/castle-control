@@ -1,4 +1,4 @@
-import { useId, useEffect, useSyncExternalStore } from 'react';
+import { useId, useEffect, useMemo, useSyncExternalStore } from 'react';
 import type { ReactNode } from 'react';
 import type { Rule } from '@castle-control/contract';
 import { FieldGroup, HeraldicCard, InkButton, Plate, PlateBand, PlateBody, SectionHeading, StatusChip, WindowedRows, rowHeight } from '@castle-control/ui';
@@ -41,9 +41,13 @@ export function ConnectedGatehouse({ port, replay, seal_slot }: { port: CoreGate
   const state = useSyncExternalStore(port.subscribe, port.getSnapshot, port.getSnapshot);
   const bench = coreRuleBench(port);
   const draft = useSyncExternalStore(bench.subscribe, bench.getSnapshot, bench.getSnapshot);
-  const messages = state.chat?.items.map(item => ({ ...item.decision, message_text: item.message.text })) ?? [];
-  const { input, original } = benchInput(draft, state.rules);
-  const result = evaluateDraft(input, state.rules, messages, original);
+  // Snapshot publishes (busy flips, notices) and unrelated renders must not rebuild the accumulated chat
+  // or re-run the pattern over it; only a new chat page, rule list or bench edit does.
+  const messages = useMemo(() => state.chat?.items.map(item => ({ ...item.decision, message_text: item.message.text })) ?? [], [state.chat]);
+  const result = useMemo(() => {
+    const { input, original } = benchInput(draft, state.rules);
+    return evaluateDraft(input, state.rules, messages, original);
+  }, [draft, state.rules, messages]);
   useEffect(() => { void port.load(); }, [port]);
   return <div className="moderator-room" aria-label="Core Gatehouse" aria-busy={state.busy}>
     <div className="moderator-core-status"><p role="status">{state.notice}</p>
