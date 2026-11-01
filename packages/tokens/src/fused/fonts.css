@@ -1,0 +1,22 @@
+/* Self-hosted fused type (all SIL OFL 1.1, via pinned @fontsource packages; latin subset only).
+   The desktop CSP is font-src 'self': never link a font CDN. Weights match the fused sheets. */
+@import '@fontsource/grenze-gotisch/latin-500.css';
+@import '@fontsource/grenze-gotisch/latin-600.css';
+@import '@fontsource/grenze-gotisch/latin-700.css';
+@import '@fontsource/grenze-gotisch/latin-800.css';
+@import '@fontsource/alegreya-sans/latin-400.css';
+@import '@fontsource/alegreya-sans/latin-400-italic.css';
+@import '@fontsource/alegreya-sans/latin-500.css';
+@import '@fontsource/alegreya-sans/latin-700.css';
+@import '@fontsource/alegreya-sans/latin-800.css';
+@import '@fontsource/alegreya-sans-sc/latin-500.css';
+@import '@fontsource/alegreya-sans-sc/latin-700.css';
+@import '@fontsource/alegreya-sans-sc/latin-800.css';
+@import '@fontsource/alegreya/latin-400.css';
+@import '@fontsource/alegreya/latin-400-italic.css';
+@import '@fontsource/alegreya/latin-500.css';
+@import '@fontsource/alegreya/latin-500-italic.css';
+@import '@fontsource/alegreya/latin-700.css';
+@import '@fontsource/alegreya/latin-800.css';
+@import '@fontsource/ibm-plex-mono/latin-400.css';
+@import '@fontsource/ibm-plex-mono/latin-500.css';
