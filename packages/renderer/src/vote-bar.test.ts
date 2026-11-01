@@ -46,3 +46,41 @@ test('renders only aggregate shares, replaces snapshots and clears stale output 
   stream.push(snapshot); expect(children()).toHaveLength(3);
   dispose(); expect(stream.close).toHaveBeenCalledOnce(); expect(children()).toHaveLength(0);
 });
+
+class RefusableStream extends EventTarget {
+  static instances: RefusableStream[] = [];
+  readyState = 0;
+  onerror: (() => void) | undefined;
+  close = vi.fn(() => { this.readyState = 2; });
+  constructor(readonly url: string) { super(); RefusableStream.instances.push(this); }
+  fail(state: number) { this.readyState = state; this.onerror?.(); }
+  push(value: unknown) { this.dispatchEvent(new MessageEvent('gatehouse.render.snapshot', { data: JSON.stringify(value) })); }
+}
+
+test('an HTTP refusal (CLOSED) reconnects with 2 then 4 second backoff, resets on open, and stops on dispose', () => {
+  vi.useFakeTimers();
+  RefusableStream.instances = [];
+  vi.stubGlobal('document', { createElement: () => new Element(), getElementById: () => null });
+  vi.stubGlobal('EventSource', RefusableStream);
+  const root = document.createElement('main');
+  const dispose = mountVoteBar(root);
+  const streams = RefusableStream.instances;
+  streams[0]?.fail(0); // CONNECTING keeps native retry
+  vi.advanceTimersByTime(60_000);
+  expect(streams).toHaveLength(1);
+  streams[0]?.fail(2);
+  vi.advanceTimersByTime(1_999); expect(streams).toHaveLength(1);
+  vi.advanceTimersByTime(1); expect(streams).toHaveLength(2);
+  streams[1]?.fail(2);
+  vi.advanceTimersByTime(3_999); expect(streams).toHaveLength(2);
+  vi.advanceTimersByTime(1); expect(streams).toHaveLength(3);
+  streams[2]?.dispatchEvent(new Event('open'));
+  streams[2]?.fail(2);
+  vi.advanceTimersByTime(2_000); expect(streams).toHaveLength(4);
+  streams[3]?.push(snapshot); expect(root.children).toHaveLength(3);
+  streams[3]?.fail(2);
+  dispose();
+  vi.advanceTimersByTime(60_000);
+  expect(streams).toHaveLength(4);
+  vi.useRealTimers();
+});
