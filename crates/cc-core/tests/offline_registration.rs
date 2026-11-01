@@ -28,6 +28,29 @@ fn exporter_lists_the_native_inventory_without_starting_services() {
     expected.extend(BeaconsModule::METHODS);
     expected.extend(["steward.ask", "steward.writ.seal", "steward.writ.tear"]);
     expected.sort();
+    // Independent of the module constants: every declared name except the
+    // explicitly named, deliberately unregistered ones.
+    let mut declared: Vec<&str> = cc_types::RpcRequest::NAMES
+        .iter()
+        .copied()
+        .filter(|name| {
+            ![
+                "store.forgetUser",
+                "store.purgeAll",
+                "gatehouse.held.resolve",
+                "gatehouse.delay.set",
+                "gatehouse.shield.set",
+                "lots.image.upload",
+                "maproom.design.get",
+                "maproom.design.upsert",
+                "maproom.stage.get",
+                "maproom.turn.run",
+            ]
+            .contains(name)
+        })
+        .collect();
+    declared.sort();
+    assert_eq!(expected, declared);
     assert_eq!(methods, expected);
     assert_eq!(Registry::with_status().methods(), expected);
     assert!(methods.iter().any(|name| name == "beacons.source.url"));
