@@ -39,7 +39,9 @@ export function DesignFocusView({ artifact, proposal_id, session, snapshot }: {
         <DesignScene output={snapshot.looks[artifact].output} /></section>
       <section aria-label="Draft look"><DraftFrame>
         <h3>Draft look{proposal ? ` · rev ${proposal.revision}` : ''}</h3>
-        {preview && pending ? <DesignScene output={preview.output} /> : <p>Choose Restyle or Custom design, then preview the draft.</p>}
+        {preview && pending ? <DesignScene output={preview.output} />
+          : pending ? <p>Preview the draft to enable the hold.</p>
+          : <p>Choose Restyle or Custom design, then preview the draft.</p>}
         {preview && pending && !ready && <p role="status">Stale draft · preview again.</p>}
         {proposal && !pending && <p role="status">Proposal {proposal.state}.</p>}
       </DraftFrame></section>
