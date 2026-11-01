@@ -74,6 +74,10 @@ function failedTests(jsonFile) {
   } catch { return { bad: null, stats: null }; }
 }
 
+// Early records carry a mis-encoded separator; show them like new ones.
+const MISENCODED = String.fromCharCode(0xe2, 0x20ac, 0x15f);
+const clean = (t) => t.split(MISENCODED).join('>');
+
 const results = [];
 for (const name of wanted) {
   const lane = LANES[name];
@@ -117,10 +121,6 @@ for (const name of wanted) {
   writeMorning();
   console.log(`[night] iter ${iter} ${name}: ${rec.outcome}${rec.ms ? ` in ${Math.round(rec.ms / 1000)} s` : ''}${rec.reason ? ` (${rec.reason})` : ''}`);
 }
-
-// Early records carry a mis-encoded separator; show them like new ones.
-const MISENCODED = String.fromCharCode(0xe2, 0x20ac, 0x15f);
-const clean = (t) => t.split(MISENCODED).join('>');
 
 function writeMorning() {
   const all = fs.readFileSync(path.join(OUT, 'runs.jsonl'), 'utf8').trim().split('\n').filter(Boolean).map((l) => JSON.parse(l));
