@@ -235,6 +235,7 @@ impl StewardConfig {
         writ.created_at = Timestamp::now();
         writ.updated_at = writ.created_at.clone();
         writ.error = None;
+        proposal::emittable(&writ.proposal)?;
         let _configuration = registry.configuration.lock().await;
         writ.proposal = proposal::snapshot(&writ.proposal, registry).await?;
         storage::append(store, &writ, self.simulated)?;

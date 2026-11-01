@@ -12,6 +12,20 @@ pub(super) fn mutation(proposal: &WritProposal) -> RpcRequest {
     }
 }
 
+/// Steward does not emit or store `gatehouse.rules.setMode` proposals. Owner
+/// decision: until cc-types gains the identifier (a separate, later delivery),
+/// the stored writ would drop the arming acknowledgement and no longer parse,
+/// poisoning the writ store. Callers surface the skip as an `Invalid` error.
+pub(super) fn emittable(proposal: &WritProposal) -> Result<(), ErrorEnvelope> {
+    match proposal {
+        WritProposal::RulesSetMode(_) => Err(ErrorEnvelope::new(
+            ErrorCode::Invalid,
+            "Steward does not propose rule mode changes yet",
+        )),
+        _ => Ok(()),
+    }
+}
+
 /// Read whole typed snapshots through the same registry as the desktop. Never
 /// trust the model's before value, and never create a second configuration store.
 pub(super) async fn snapshot(
