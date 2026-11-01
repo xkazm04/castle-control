@@ -13,7 +13,7 @@ const schema = parseJson(readFileSync(join(output, 'contract.schema.json'), 'utf
 delete schema.$comment;
 const files = artifacts(schema);
 assert.deepEqual(files, artifacts(schema), 'generation must be byte deterministic');
-assert.equal(Object.keys(files).length, 26);
+assert.equal(Object.keys(files).length, 29);
 const stewardNames = ['steward.ask', 'steward.writ.seal', 'steward.writ.tear'];
 const stewardMethods = schema.methods.map((method, index) => ({ ...method, index })).filter(method => stewardNames.includes(method.name));
 assert.equal(stewardMethods.length, 3);
@@ -47,7 +47,7 @@ assert(files['gatehouse-validators.d.mts'], 'Gatehouse validators retain typed d
 assert(files['gatehouse-validation.ts'].includes("from './gatehouse-validators.mjs'"));
 assert(!files['gatehouse-validation.ts'].includes("from './validators.mjs'"));
 const lotsMethods = schema.methods.map((method, index) => ({ ...method, index })).filter(method => method.name.startsWith('lots.'));
-assert.equal(lotsMethods.length, 8);
+assert.equal(lotsMethods.length, 9);
 assert(files['lots-validators.mjs'], 'Lots validators have a separate generated module');
 assert(files['lots-validators.d.mts'], 'Lots validators retain typed declarations');
 assert(files['lots-validation.ts'].includes("from './lots-validators.mjs'"));
@@ -58,6 +58,10 @@ assert.equal(manifest.exports['./lots'], './src/generated/lots-validation.ts', '
 assert.equal(manifest.exports['./gatehouse'], './src/generated/gatehouse-validation.ts');
 assert.equal(manifest.exports['./beacons'], './src/generated/beacons-validation.ts');
 assert.equal(manifest.exports['./beacons-render'], './src/generated/beacons-render-validation.ts');
+assert.equal(manifest.exports['./tiltyard-render'], './src/generated/tiltyard-render-validation.ts');
+assert.equal(schema.overlay_push_events['tiltyard.render.snapshot'], 'TiltyardRenderSnapshot');
+assert(files['tiltyard-render-validation.ts'].includes("from './tiltyard-render-validators.mjs'"));
+assert(!files['validators.d.mts'].includes('TiltyardRenderSnapshot'), 'overlay root stays out of eager registry');
 assert.equal(manifest.exports['./steward'], './src/generated/steward-validation.ts');
 assert(!/\brequire\s*\(/.test(files['validators.mjs']), 'standalone validators must run as browser ESM');
 assert.deepEqual(differences(files), []);

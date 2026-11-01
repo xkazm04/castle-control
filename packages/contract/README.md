@@ -290,6 +290,41 @@ data. Add a method shape in `cc-types`, regenerate, then implement/register its
 module. Events invalidate authoritative reads; even after replay, consumers
 refetch. A `resync` requires refetch of every subscribed read.
 
+## Dress rehearsal declarations (D2, WP R.1)
+
+Nine typed methods are declared without registration: `obs.connect`,
+`obs.scene.ensure`, `obs.rehearsal.clear`, `lots.source.url`, `rehearsal.start`,
+`rehearsal.stop`, `rehearsal.scenario.run`, `rehearsal.crowd.set` and
+`tiltyard.source.url`. They use the same generated method handles and generic
+parsers as existing methods; Lots also exposes its source handle at `./lots`.
+Registry parity permits declared-but-unregistered names, just as for Map Room;
+this delivery adds no handlers or runtime behavior.
+
+`rehearsal.status` joins the control invalidation inventory. Its separate typed
+binding is parsed by `parseRehearsalEvent`; control envelopes still carry only
+seq/at/kind. The independent `./tiltyard-render` subpath exports
+`parseTiltyardRenderSnapshot` and `TILTYARD_RENDER_SNAPSHOT_EVENT` for the
+overlay-only `tiltyard.render.snapshot` full replacement. Overlay snapshots do
+not join the control event-kind list or eager RPC validator registry.
+
+All new records reject unknown fields, optional values reject null and remain
+omitted, scene ensure names have 1..256 Unicode characters, and crowd params
+accept integers 0..600. Source URL results reuse Beacons' canonical loopback
+type. Rehearsal status implies simulation and has no separate simulated key;
+Tiltyard snapshots require one. OBS connection Debug redacts its password,
+including through enclosing Rust requests; validation errors do not echo inputs.
+Rust and TS tests share `crates/cc-types/tests/fixtures/rehearsal.json`, containing
+generated simulated data only.
+
+Builder checks (2026-11-01): contract typecheck and all 179 contract tests pass,
+as do generator determinism/drift assertions and repository boundary, hygiene,
+file-cap and secrets checks. Frozen-lockfile install failed with ECONNREFUSED;
+checks used local copies of existing tool dependencies without following junctions.
+Cargo and the full gate were not run, as required by the brief. The generated
+mirror was rebuilt through the existing schema-input harness from a locally
+prepared schema; comparison against a fresh Rust export remains for the Director,
+along with Rust tests, registry parity and the full merge gate.
+
 ## Design package boundary (WP 3.2 contract delivery)
 
 `parseDesignPackage(text)` validates local design data through the same JSON

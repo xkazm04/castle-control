@@ -11,6 +11,7 @@
     "./beacons": "./src/generated/beacons-validation.ts",
     "./beacons-render": "./src/generated/beacons-render-validation.ts",
     "./vote-bar": "./src/generated/vote-bar-validation.ts",
+    "./tiltyard-render": "./src/generated/tiltyard-render-validation.ts",
     "./steward": "./src/generated/steward-validation.ts",
     "./door": {
       "types": "./src/door.d.mts",

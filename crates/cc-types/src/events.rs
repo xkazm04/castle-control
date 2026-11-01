@@ -14,7 +14,19 @@ event_kinds! {
     ChatMessage => "chat.message", Verdict => "gatehouse.verdict", Decision => "gatehouse.decision",
     Room => "gatehouse.room", Consensus => "gatehouse.consensus", Roll => "lots.roll",
     Sealed => "lots.sealed", Cast => "lots.cast", Contribution => "beacons.contribution",
-    Intensity => "beacons.intensity", Turn => "maproom.turn", Writ => "steward.writ", Resync => "resync"
+    Intensity => "beacons.intensity", Turn => "maproom.turn", Writ => "steward.writ",
+    RehearsalStatus => "rehearsal.status", Resync => "resync"
+}
+
+/// Overlay-host SSE only, separate from the control invalidation stream.
+pub const TILTYARD_RENDER_SNAPSHOT_EVENT: &str = "tiltyard.render.snapshot";
+
+/// Typed status binding; StreamEvent remains an invalidation-only envelope.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(tag = "kind", content = "payload", deny_unknown_fields)]
+pub enum RehearsalEventPayload {
+    #[serde(rename = "rehearsal.status")]
+    Status(crate::RehearsalStatus),
 }
 
 /// Invalidation only: refetch authoritative reads after these events, including resync.

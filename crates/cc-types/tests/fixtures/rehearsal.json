@@ -1,0 +1,61 @@
+{
+  "simulated": true,
+  "methods": [
+    {
+      "method": "obs.connect",
+      "params": { "host": "localhost", "port": 4455, "password": "simulated", "remember": false },
+      "result": { "connected": false }
+    },
+    {
+      "method": "obs.scene.ensure",
+      "params": { "scene_name": "Simulated rehearsal" },
+      "result": { "created": true }
+    },
+    {
+      "method": "obs.rehearsal.clear",
+      "params": {},
+      "result": { "removed": 2 }
+    },
+    {
+      "method": "lots.source.url",
+      "params": { "draw_id": "simulated-draw" },
+      "result": { "url": "http://localhost:4312/lots/simulated-draw" }
+    },
+    {
+      "method": "rehearsal.start",
+      "params": {},
+      "result": { "active": true, "crowd_per_minute": 60, "obs": { "connected": false }, "at": "2026-11-01T12:00:00Z" }
+    },
+    {
+      "method": "rehearsal.stop",
+      "params": {},
+      "result": { "active": false, "crowd_per_minute": 0, "obs": { "connected": false }, "at": "2026-11-01T12:00:00Z" }
+    },
+    {
+      "method": "rehearsal.scenario.run",
+      "params": { "scenario": "beacon_fire", "visual_id": "simulated-visual" },
+      "result": { "accepted": true }
+    },
+    {
+      "method": "rehearsal.crowd.set",
+      "params": { "per_minute": 600 },
+      "result": { "active": true, "crowd_per_minute": 600, "obs": { "connected": true }, "scene_name": "Simulated rehearsal", "at": "2026-11-01T12:00:00Z" }
+    },
+    {
+      "method": "tiltyard.source.url",
+      "params": {},
+      "result": { "url": "http://localhost:4312/tiltyard/current" }
+    }
+  ],
+  "status_event": {
+    "kind": "rehearsal.status",
+    "payload": { "active": true, "crowd_per_minute": 60, "obs": { "connected": false }, "at": "2026-11-01T12:00:00Z" }
+  },
+  "snapshot": {
+    "left": { "label": "Simulated left", "count": 3 },
+    "right": { "label": "Simulated right", "count": 2 },
+    "ballots": 5,
+    "simulated": true,
+    "at": "2026-11-01T12:00:00Z"
+  }
+}

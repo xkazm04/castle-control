@@ -9,6 +9,12 @@ use std::num::{NonZeroU16, NonZeroU32};
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
+pub struct LotsSourceUrlParams {
+    pub draw_id: DrawId,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
 pub struct LotsDrawPolicy {
     pub content: DrawContent,
     pub paid_entry: bool,

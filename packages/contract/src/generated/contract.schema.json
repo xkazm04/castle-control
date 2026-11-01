@@ -28,6 +28,7 @@
     "beacons.intensity",
     "maproom.turn",
     "steward.writ",
+    "rehearsal.status",
     "resync"
   ],
   "methods": [
@@ -13933,11 +13934,440 @@
         "title": "VoteBarSourceResult",
         "type": "object"
       }
+    },
+    {
+      "name": "obs.connect",
+      "owner": "WP R.1",
+      "params": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "host": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          },
+          "port": {
+            "format": "uint32",
+            "maximum": 65535,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "remember": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "host",
+          "port",
+          "password",
+          "remember"
+        ],
+        "title": "ObsConnectParams",
+        "type": "object"
+      },
+      "result": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "connected": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "connected"
+        ],
+        "title": "ObsStatus",
+        "type": "object"
+      }
+    },
+    {
+      "name": "obs.scene.ensure",
+      "owner": "WP R.1",
+      "params": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "scene_name": {
+            "maxLength": 256,
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "scene_name"
+        ],
+        "title": "ObsSceneEnsureParams",
+        "type": "object"
+      },
+      "result": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "created": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "created"
+        ],
+        "title": "ObsSceneEnsureResult",
+        "type": "object"
+      }
+    },
+    {
+      "name": "obs.rehearsal.clear",
+      "owner": "WP R.1",
+      "params": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "title": "Empty",
+        "type": "object"
+      },
+      "result": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "removed": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "removed"
+        ],
+        "title": "ObsRehearsalClearResult",
+        "type": "object"
+      }
+    },
+    {
+      "name": "lots.source.url",
+      "owner": "WP R.1",
+      "params": {
+        "$defs": {
+          "DrawId": {
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$(?![\\s\\S])",
+            "type": "string"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "draw_id": {
+            "$ref": "#/$defs/DrawId"
+          }
+        },
+        "required": [
+          "draw_id"
+        ],
+        "title": "LotsSourceUrlParams",
+        "type": "object"
+      },
+      "result": {
+        "$defs": {
+          "LoopbackSourceUrl": {
+            "description": "Canonical HTTP overlay URL: exact loopback host, explicit port, ASCII path/query.\nWP 3.2 supplies this from its isolated read-only origin, never the RPC origin.",
+            "pattern": "^http://(?:localhost|127\\.0\\.0\\.1|\\[::1\\]):(?:[1-9][0-9]{0,3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])/(?:[A-Za-z0-9_~./?&=+-]|%[0-9A-Fa-f]{2})*$(?![\\s\\S])",
+            "type": "string"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "url": {
+            "$ref": "#/$defs/LoopbackSourceUrl"
+          }
+        },
+        "required": [
+          "url"
+        ],
+        "title": "SourceUrlResult",
+        "type": "object"
+      }
+    },
+    {
+      "name": "rehearsal.start",
+      "owner": "WP R.1",
+      "params": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "title": "Empty",
+        "type": "object"
+      },
+      "result": {
+        "$defs": {
+          "ObsStatus": {
+            "additionalProperties": false,
+            "properties": {
+              "connected": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "connected"
+            ],
+            "type": "object"
+          },
+          "Timestamp": {
+            "format": "date-time",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?Z$(?![\\s\\S])",
+            "type": "string"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "active": {
+            "type": "boolean"
+          },
+          "at": {
+            "$ref": "#/$defs/Timestamp"
+          },
+          "crowd_per_minute": {
+            "format": "uint32",
+            "maximum": 65535,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "obs": {
+            "$ref": "#/$defs/ObsStatus"
+          },
+          "scene_name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "active",
+          "crowd_per_minute",
+          "obs",
+          "at"
+        ],
+        "title": "RehearsalStatus",
+        "type": "object"
+      }
+    },
+    {
+      "name": "rehearsal.stop",
+      "owner": "WP R.1",
+      "params": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "title": "Empty",
+        "type": "object"
+      },
+      "result": {
+        "$defs": {
+          "ObsStatus": {
+            "additionalProperties": false,
+            "properties": {
+              "connected": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "connected"
+            ],
+            "type": "object"
+          },
+          "Timestamp": {
+            "format": "date-time",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?Z$(?![\\s\\S])",
+            "type": "string"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "active": {
+            "type": "boolean"
+          },
+          "at": {
+            "$ref": "#/$defs/Timestamp"
+          },
+          "crowd_per_minute": {
+            "format": "uint32",
+            "maximum": 65535,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "obs": {
+            "$ref": "#/$defs/ObsStatus"
+          },
+          "scene_name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "active",
+          "crowd_per_minute",
+          "obs",
+          "at"
+        ],
+        "title": "RehearsalStatus",
+        "type": "object"
+      }
+    },
+    {
+      "name": "rehearsal.scenario.run",
+      "owner": "WP R.1",
+      "params": {
+        "$defs": {
+          "RehearsalScenario": {
+            "enum": [
+              "lots_fill",
+              "vote_round",
+              "beacon_fire",
+              "duel_round"
+            ],
+            "type": "string"
+          },
+          "VisualId": {
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$(?![\\s\\S])",
+            "type": "string"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "scenario": {
+            "$ref": "#/$defs/RehearsalScenario"
+          },
+          "visual_id": {
+            "$ref": "#/$defs/VisualId",
+            "description": "Meaningful only for beacon_fire; no execution semantics are declared here."
+          }
+        },
+        "required": [
+          "scenario"
+        ],
+        "title": "RehearsalScenarioParams",
+        "type": "object"
+      },
+      "result": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "accepted": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "accepted"
+        ],
+        "title": "RehearsalScenarioResult",
+        "type": "object"
+      }
+    },
+    {
+      "name": "rehearsal.crowd.set",
+      "owner": "WP R.1",
+      "params": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "per_minute": {
+            "format": "uint32",
+            "maximum": 600,
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "per_minute"
+        ],
+        "title": "RehearsalCrowdParams",
+        "type": "object"
+      },
+      "result": {
+        "$defs": {
+          "ObsStatus": {
+            "additionalProperties": false,
+            "properties": {
+              "connected": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "connected"
+            ],
+            "type": "object"
+          },
+          "Timestamp": {
+            "format": "date-time",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?Z$(?![\\s\\S])",
+            "type": "string"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "active": {
+            "type": "boolean"
+          },
+          "at": {
+            "$ref": "#/$defs/Timestamp"
+          },
+          "crowd_per_minute": {
+            "format": "uint32",
+            "maximum": 65535,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "obs": {
+            "$ref": "#/$defs/ObsStatus"
+          },
+          "scene_name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "active",
+          "crowd_per_minute",
+          "obs",
+          "at"
+        ],
+        "title": "RehearsalStatus",
+        "type": "object"
+      }
+    },
+    {
+      "name": "tiltyard.source.url",
+      "owner": "WP R.1",
+      "params": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "title": "Empty",
+        "type": "object"
+      },
+      "result": {
+        "$defs": {
+          "LoopbackSourceUrl": {
+            "description": "Canonical HTTP overlay URL: exact loopback host, explicit port, ASCII path/query.\nWP 3.2 supplies this from its isolated read-only origin, never the RPC origin.",
+            "pattern": "^http://(?:localhost|127\\.0\\.0\\.1|\\[::1\\]):(?:[1-9][0-9]{0,3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])/(?:[A-Za-z0-9_~./?&=+-]|%[0-9A-Fa-f]{2})*$(?![\\s\\S])",
+            "type": "string"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "url": {
+            "$ref": "#/$defs/LoopbackSourceUrl"
+          }
+        },
+        "required": [
+          "url"
+        ],
+        "title": "SourceUrlResult",
+        "type": "object"
+      }
     }
   ],
   "overlay_push_events": {
     "beacons.render.snapshot": "BeaconsRenderSnapshot",
-    "gatehouse.render.snapshot": "VoteBarSnapshot"
+    "gatehouse.render.snapshot": "VoteBarSnapshot",
+    "tiltyard.render.snapshot": "TiltyardRenderSnapshot"
   },
   "types": {
     "Action": {
@@ -18141,11 +18571,106 @@
       ],
       "title": "LotsEventPayload"
     },
+    "LotsSourceUrlParams": {
+      "$defs": {
+        "DrawId": {
+          "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$(?![\\s\\S])",
+          "type": "string"
+        }
+      },
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "draw_id": {
+          "$ref": "#/$defs/DrawId"
+        }
+      },
+      "required": [
+        "draw_id"
+      ],
+      "title": "LotsSourceUrlParams",
+      "type": "object"
+    },
     "MessageId": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "pattern": "^[A-Za-z0-9_-]+$(?![\\s\\S])",
       "title": "MessageId",
       "type": "string"
+    },
+    "ObsConnectParams": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "host": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        },
+        "port": {
+          "format": "uint32",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "remember": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "host",
+        "port",
+        "password",
+        "remember"
+      ],
+      "title": "ObsConnectParams",
+      "type": "object"
+    },
+    "ObsRehearsalClearResult": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "removed": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "removed"
+      ],
+      "title": "ObsRehearsalClearResult",
+      "type": "object"
+    },
+    "ObsSceneEnsureParams": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "scene_name": {
+          "maxLength": 256,
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "scene_name"
+      ],
+      "title": "ObsSceneEnsureParams",
+      "type": "object"
+    },
+    "ObsSceneEnsureResult": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "created": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "created"
+      ],
+      "title": "ObsSceneEnsureResult",
+      "type": "object"
     },
     "Operator": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -18174,6 +18699,205 @@
       ],
       "title": "RandomnessSource",
       "type": "string"
+    },
+    "RehearsalCrowdParams": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "per_minute": {
+          "format": "uint32",
+          "maximum": 600,
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "per_minute"
+      ],
+      "title": "RehearsalCrowdParams",
+      "type": "object"
+    },
+    "RehearsalEventPayload": {
+      "$defs": {
+        "ObsStatus": {
+          "additionalProperties": false,
+          "properties": {
+            "connected": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "connected"
+          ],
+          "type": "object"
+        },
+        "RehearsalStatus": {
+          "additionalProperties": false,
+          "properties": {
+            "active": {
+              "type": "boolean"
+            },
+            "at": {
+              "$ref": "#/$defs/Timestamp"
+            },
+            "crowd_per_minute": {
+              "format": "uint32",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "obs": {
+              "$ref": "#/$defs/ObsStatus"
+            },
+            "scene_name": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "active",
+            "crowd_per_minute",
+            "obs",
+            "at"
+          ],
+          "type": "object"
+        },
+        "Timestamp": {
+          "format": "date-time",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?Z$(?![\\s\\S])",
+          "type": "string"
+        }
+      },
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "description": "Typed status binding; StreamEvent remains an invalidation-only envelope.",
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "rehearsal.status",
+              "type": "string"
+            },
+            "payload": {
+              "$ref": "#/$defs/RehearsalStatus"
+            }
+          },
+          "required": [
+            "kind",
+            "payload"
+          ],
+          "type": "object"
+        }
+      ],
+      "title": "RehearsalEventPayload"
+    },
+    "RehearsalScenario": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "enum": [
+        "lots_fill",
+        "vote_round",
+        "beacon_fire",
+        "duel_round"
+      ],
+      "title": "RehearsalScenario",
+      "type": "string"
+    },
+    "RehearsalScenarioParams": {
+      "$defs": {
+        "RehearsalScenario": {
+          "enum": [
+            "lots_fill",
+            "vote_round",
+            "beacon_fire",
+            "duel_round"
+          ],
+          "type": "string"
+        },
+        "VisualId": {
+          "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$(?![\\s\\S])",
+          "type": "string"
+        }
+      },
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "scenario": {
+          "$ref": "#/$defs/RehearsalScenario"
+        },
+        "visual_id": {
+          "$ref": "#/$defs/VisualId",
+          "description": "Meaningful only for beacon_fire; no execution semantics are declared here."
+        }
+      },
+      "required": [
+        "scenario"
+      ],
+      "title": "RehearsalScenarioParams",
+      "type": "object"
+    },
+    "RehearsalScenarioResult": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "accepted": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "accepted"
+      ],
+      "title": "RehearsalScenarioResult",
+      "type": "object"
+    },
+    "RehearsalStatus": {
+      "$defs": {
+        "ObsStatus": {
+          "additionalProperties": false,
+          "properties": {
+            "connected": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "connected"
+          ],
+          "type": "object"
+        },
+        "Timestamp": {
+          "format": "date-time",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?Z$(?![\\s\\S])",
+          "type": "string"
+        }
+      },
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "active": {
+          "type": "boolean"
+        },
+        "at": {
+          "$ref": "#/$defs/Timestamp"
+        },
+        "crowd_per_minute": {
+          "format": "uint32",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "obs": {
+          "$ref": "#/$defs/ObsStatus"
+        },
+        "scene_name": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "active",
+        "crowd_per_minute",
+        "obs",
+        "at"
+      ],
+      "title": "RehearsalStatus",
+      "type": "object"
     },
     "RoomMode": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -19557,6 +20281,18 @@
           ],
           "type": "object"
         },
+        "LotsSourceUrlParams": {
+          "additionalProperties": false,
+          "properties": {
+            "draw_id": {
+              "$ref": "#/$defs/DrawId"
+            }
+          },
+          "required": [
+            "draw_id"
+          ],
+          "type": "object"
+        },
         "LotsUnsigned": {
           "description": "Integer cents/counts must survive JavaScript's number representation exactly.",
           "format": "uint64",
@@ -19619,6 +20355,47 @@
           "required": [
             "at",
             "reason"
+          ],
+          "type": "object"
+        },
+        "ObsConnectParams": {
+          "additionalProperties": false,
+          "properties": {
+            "host": {
+              "type": "string"
+            },
+            "password": {
+              "type": "string"
+            },
+            "port": {
+              "format": "uint32",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "remember": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "host",
+            "port",
+            "password",
+            "remember"
+          ],
+          "type": "object"
+        },
+        "ObsSceneEnsureParams": {
+          "additionalProperties": false,
+          "properties": {
+            "scene_name": {
+              "maxLength": 256,
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          "required": [
+            "scene_name"
           ],
           "type": "object"
         },
@@ -19749,6 +20526,46 @@
             "source",
             "messages",
             "gaps"
+          ],
+          "type": "object"
+        },
+        "RehearsalCrowdParams": {
+          "additionalProperties": false,
+          "properties": {
+            "per_minute": {
+              "format": "uint32",
+              "maximum": 600,
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          "required": [
+            "per_minute"
+          ],
+          "type": "object"
+        },
+        "RehearsalScenario": {
+          "enum": [
+            "lots_fill",
+            "vote_round",
+            "beacon_fire",
+            "duel_round"
+          ],
+          "type": "string"
+        },
+        "RehearsalScenarioParams": {
+          "additionalProperties": false,
+          "properties": {
+            "scenario": {
+              "$ref": "#/$defs/RehearsalScenario"
+            },
+            "visual_id": {
+              "$ref": "#/$defs/VisualId",
+              "description": "Meaningful only for beacon_fire; no execution semantics are declared here."
+            }
+          },
+          "required": [
+            "scenario"
           ],
           "type": "object"
         },
@@ -21270,6 +22087,159 @@
             "params"
           ],
           "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "method": {
+              "const": "obs.connect",
+              "type": "string"
+            },
+            "params": {
+              "$ref": "#/$defs/ObsConnectParams"
+            }
+          },
+          "required": [
+            "method",
+            "params"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "method": {
+              "const": "obs.scene.ensure",
+              "type": "string"
+            },
+            "params": {
+              "$ref": "#/$defs/ObsSceneEnsureParams"
+            }
+          },
+          "required": [
+            "method",
+            "params"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "method": {
+              "const": "obs.rehearsal.clear",
+              "type": "string"
+            },
+            "params": {
+              "$ref": "#/$defs/Empty"
+            }
+          },
+          "required": [
+            "method",
+            "params"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "method": {
+              "const": "lots.source.url",
+              "type": "string"
+            },
+            "params": {
+              "$ref": "#/$defs/LotsSourceUrlParams"
+            }
+          },
+          "required": [
+            "method",
+            "params"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "method": {
+              "const": "rehearsal.start",
+              "type": "string"
+            },
+            "params": {
+              "$ref": "#/$defs/Empty"
+            }
+          },
+          "required": [
+            "method",
+            "params"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "method": {
+              "const": "rehearsal.stop",
+              "type": "string"
+            },
+            "params": {
+              "$ref": "#/$defs/Empty"
+            }
+          },
+          "required": [
+            "method",
+            "params"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "method": {
+              "const": "rehearsal.scenario.run",
+              "type": "string"
+            },
+            "params": {
+              "$ref": "#/$defs/RehearsalScenarioParams"
+            }
+          },
+          "required": [
+            "method",
+            "params"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "method": {
+              "const": "rehearsal.crowd.set",
+              "type": "string"
+            },
+            "params": {
+              "$ref": "#/$defs/RehearsalCrowdParams"
+            }
+          },
+          "required": [
+            "method",
+            "params"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "method": {
+              "const": "tiltyard.source.url",
+              "type": "string"
+            },
+            "params": {
+              "$ref": "#/$defs/Empty"
+            }
+          },
+          "required": [
+            "method",
+            "params"
+          ],
+          "type": "object"
         }
       ],
       "title": "RpcRequest"
@@ -22743,6 +23713,7 @@
             "beacons.intensity",
             "maproom.turn",
             "steward.writ",
+            "rehearsal.status",
             "resync"
           ],
           "type": "string"
@@ -22855,6 +23826,104 @@
         "xl"
       ],
       "title": "Tier",
+      "type": "string"
+    },
+    "TiltyardRenderSnapshot": {
+      "$defs": {
+        "TiltyardSide": {
+          "additionalProperties": false,
+          "properties": {
+            "count": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "label": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "label",
+            "count"
+          ],
+          "type": "object"
+        },
+        "TiltyardVerdict": {
+          "enum": [
+            "left",
+            "right",
+            "tie"
+          ],
+          "type": "string"
+        },
+        "Timestamp": {
+          "format": "date-time",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?Z$(?![\\s\\S])",
+          "type": "string"
+        }
+      },
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "at": {
+          "$ref": "#/$defs/Timestamp"
+        },
+        "ballots": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "left": {
+          "$ref": "#/$defs/TiltyardSide"
+        },
+        "right": {
+          "$ref": "#/$defs/TiltyardSide"
+        },
+        "simulated": {
+          "type": "boolean"
+        },
+        "verdict": {
+          "$ref": "#/$defs/TiltyardVerdict"
+        }
+      },
+      "required": [
+        "left",
+        "right",
+        "ballots",
+        "simulated",
+        "at"
+      ],
+      "title": "TiltyardRenderSnapshot",
+      "type": "object"
+    },
+    "TiltyardSide": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "count": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "label": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "label",
+        "count"
+      ],
+      "title": "TiltyardSide",
+      "type": "object"
+    },
+    "TiltyardVerdict": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "enum": [
+        "left",
+        "right",
+        "tie"
+      ],
+      "title": "TiltyardVerdict",
       "type": "string"
     },
     "Verdict": {
