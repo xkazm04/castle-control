@@ -31,7 +31,7 @@ pub(crate) fn migrate(conn: &mut Connection) -> Result<()> {
     // Preserve v1's INTEGER retention table and constraints exactly. Engine
     // settings have a separate closed key inventory and JSON data values.
     if version < 2 {
-        let keys = crate::ENGINE_SETTING_KEYS
+        let keys = cc_types::ENGINE_SETTING_KEYS
             .iter()
             .map(|key| format!("'{key}'"))
             .collect::<Vec<_>>()

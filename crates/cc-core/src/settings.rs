@@ -1,7 +1,7 @@
 //! Authenticated engine configuration only. Never spawns or contacts an engine.
 use crate::Module;
-use cc_store::{ENGINE_SETTING_KEYS, Store};
-use cc_types::{ErrorCode, ErrorEnvelope, RpcRequest, parse_engine_settings};
+use cc_store::Store;
+use cc_types::{ENGINE_SETTING_KEYS, ErrorCode, ErrorEnvelope, RpcRequest, parse_engine_settings};
 use futures::future::BoxFuture;
 use serde_json::Value;
 use std::{
