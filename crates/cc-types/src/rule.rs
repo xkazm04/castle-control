@@ -43,26 +43,26 @@ pub struct Rule {
 #[serde(deny_unknown_fields)]
 struct RuleFields {
     rule_id: RuleId,
-    #[schemars(extend("pattern" = r"\S"))]
+    #[schemars(extend("pattern" = r"[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200B\u2028\u2029\u202F\u205F\u3000\uFEFF]"))]
     name: String,
     rule_class: RuleClass,
     mode: RuleMode,
     action: Action,
-    #[schemars(extend("pattern" = r"\S"))]
+    #[schemars(extend("pattern" = r"[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200B\u2028\u2029\u202F\u205F\u3000\uFEFF]"))]
     delivery: String,
     #[serde(
         default,
         skip_serializing_if = "Option::is_none",
         deserialize_with = "crate::present"
     )]
-    #[schemars(with = "String", extend("pattern" = r"\S"))]
+    #[schemars(with = "String", extend("pattern" = r"[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200B\u2028\u2029\u202F\u205F\u3000\uFEFF]"))]
     pattern: Option<String>,
     #[serde(
         default,
         skip_serializing_if = "Option::is_none",
         deserialize_with = "crate::present"
     )]
-    #[schemars(with = "String", length(max = 500), extend("pattern" = r"\S"))]
+    #[schemars(with = "String", length(max = 500), extend("pattern" = r"[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200B\u2028\u2029\u202F\u205F\u3000\uFEFF]"))]
     text: Option<String>,
     #[serde(
         default,
@@ -90,7 +90,7 @@ struct RuleFields {
 impl TryFrom<RuleFields> for Rule {
     type Error = &'static str;
     fn try_from(value: RuleFields) -> Result<Self, Self::Error> {
-        if value.name.trim().is_empty() || value.delivery.trim().is_empty() {
+        if is_blank(&value.name) || is_blank(&value.delivery) {
             return Err("rule name and delivery must be nonblank");
         }
         if value.rule_class == RuleClass::Rail && value.mode != RuleMode::Armed {
@@ -101,8 +101,7 @@ impl TryFrom<RuleFields> for Rule {
         }
         match value.rule_class {
             RuleClass::Pattern
-                if value.pattern.as_deref().is_none_or(|p| p.trim().is_empty())
-                    || value.text.is_some() =>
+                if value.pattern.as_deref().is_none_or(is_blank) || value.text.is_some() =>
             {
                 return Err("pattern rules require only pattern");
             }
@@ -110,7 +109,7 @@ impl TryFrom<RuleFields> for Rule {
                 if value
                     .text
                     .as_deref()
-                    .is_none_or(|t| t.trim().is_empty() || t.chars().count() > 500)
+                    .is_none_or(|t| is_blank(t) || t.chars().count() > 500)
                     || value.pattern.is_some() =>
             {
                 return Err("classifier rules require only text of 1..=500 characters");
@@ -171,15 +170,32 @@ fn rule_schema(schema: &mut Schema) {
 pub struct ModeAcknowledgement {
     pub at: Timestamp,
     #[serde(deserialize_with = "nonblank")]
-    #[schemars(extend("pattern" = r"\S"))]
+    #[schemars(extend("pattern" = r"[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200B\u2028\u2029\u202F\u205F\u3000\uFEFF]"))]
     pub reason: String,
+}
+
+/// The one blank set for contract text, shared with the JSON schema pattern
+/// `[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200B\u2028\u2029\u202F\u205F\u3000\uFEFF]`
+/// (text must contain at least one character outside it). It is the union of Rust
+/// `char::is_whitespace` and JavaScript `\s` (they disagree on U+0085 and U+FEFF) plus
+/// the zero-width space U+200B, so nothing visually empty passes on either side.
+pub(crate) fn is_blank_char(c: char) -> bool {
+    matches!(c,
+        '\u{0009}'..='\u{000D}' | '\u{0020}' | '\u{0085}' | '\u{00A0}' | '\u{1680}'
+        | '\u{2000}'..='\u{200B}' | '\u{2028}' | '\u{2029}' | '\u{202F}' | '\u{205F}'
+        | '\u{3000}' | '\u{FEFF}')
+}
+
+/// True when the text is empty or made only of [`is_blank_char`] characters.
+pub(crate) fn is_blank(text: &str) -> bool {
+    text.chars().all(is_blank_char)
 }
 
 pub(crate) fn nonblank<'de, D: serde::Deserializer<'de>>(
     deserializer: D,
 ) -> Result<String, D::Error> {
     let value = String::deserialize(deserializer)?;
-    if value.trim().is_empty() {
+    if is_blank(&value) {
         Err(serde::de::Error::custom("expected nonblank text"))
     } else {
         Ok(value)
