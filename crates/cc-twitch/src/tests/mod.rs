@@ -3,6 +3,7 @@
 //! Every identity, chat line and credential in these local-server tests is simulated.
 mod auth;
 mod contributions;
+mod debug_privacy;
 mod eventsub;
 mod fault;
 mod fixtures;

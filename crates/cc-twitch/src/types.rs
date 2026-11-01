@@ -82,13 +82,25 @@ pub enum BridgeEvent {
     Notification(Notification),
 }
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct Notification {
     pub id: String,
     pub at: String,
     pub subscription_type: String,
     pub event: serde_json::Value,
     pub chat: Option<ChatMessage>,
+}
+
+/// Shape only: the event payload and chat may carry viewer text.
+impl std::fmt::Debug for Notification {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Notification")
+            .field("id", &self.id)
+            .field("at", &self.at)
+            .field("subscription_type", &self.subscription_type)
+            .field("has_chat", &self.chat.is_some())
+            .finish_non_exhaustive()
+    }
 }
 
 impl Notification {
@@ -121,12 +133,24 @@ pub struct Viewer {
     pub sub_tier: Option<u8>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ChatMessage {
     pub id: String,
     pub at: String,
     pub viewer: Viewer,
     pub text: String,
+}
+
+/// Ids and length only: never the viewer's text.
+impl std::fmt::Debug for ChatMessage {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("ChatMessage")
+            .field("id", &self.id)
+            .field("at", &self.at)
+            .field("viewer_id", &self.viewer.id)
+            .field("text_chars", &self.text.chars().count())
+            .finish_non_exhaustive()
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
