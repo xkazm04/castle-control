@@ -1,5 +1,7 @@
 // Adapted from Shadowrunr OS @ 7e4b6f8,
 // crates/shadowrunr-daemon/src/platform/twitch/auth.rs.
+use std::time::Duration;
+
 use serde::Deserialize;
 use tokio::time::Instant;
 
@@ -84,8 +86,10 @@ impl Vault {
     pub async fn poll_device(&self, device: DeviceCode) -> Result<(), BridgeError> {
         let deadline = Instant::now() + self.ep.time_unit * device.expires_in;
         let mut interval = device.interval.max(1);
+        let mut hint = Duration::ZERO;
         loop {
-            tokio::time::sleep(self.ep.time_unit * interval).await;
+            tokio::time::sleep((self.ep.time_unit * interval).max(hint)).await;
+            hint = Duration::ZERO;
             if Instant::now() >= deadline {
                 return Err(BridgeError::Invalid("Twitch device code expired"));
             }
@@ -113,16 +117,35 @@ impl Vault {
                     .await
                     .map_err(|_| BridgeError::Invalid("unreadable token response"))?;
                 let mut state = self.state.lock().await;
-                self.install(&mut state, grant)?;
+                let prior = (state.credential.clone(), state.refresh_at);
+                if let Err(error) = self.install(&mut state, grant) {
+                    // The new pair never reached the store: do not keep it live.
+                    (state.credential, state.refresh_at) = prior;
+                    state.generation += 1;
+                    return Err(error);
+                }
                 state.revoked = false;
                 state.purged = false;
                 self.revoked.send_replace(false);
                 return Ok(());
             }
-            let error: OAuthError = response
-                .json()
-                .await
-                .map_err(|_| BridgeError::Invalid("unreadable OAuth error"))?;
+            let status = response.status();
+            let retry_after = response
+                .headers()
+                .get(reqwest::header::RETRY_AFTER)
+                .and_then(|value| value.to_str().ok())
+                .and_then(|value| value.trim().parse::<u32>().ok());
+            // Gateway trouble and rate limits are not an answer: keep polling to the deadline.
+            let error = match response.json::<OAuthError>().await {
+                Ok(error) if !(status.is_server_error() || status.as_u16() == 429) => error,
+                _ => {
+                    tracing::warn!(status = status.as_u16(), "Twitch device poll unreadable");
+                    if let Some(seconds) = retry_after {
+                        hint = self.ep.time_unit * seconds.min(60);
+                    }
+                    continue;
+                }
+            };
             match error.message.as_str() {
                 "authorization_pending" => {}
                 "slow_down" => interval = interval.saturating_add(5),
