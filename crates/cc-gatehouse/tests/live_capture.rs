@@ -4,6 +4,8 @@ use cc_gatehouse::{
     Classifier, ClassifierError, Gatehouse, IngestedMessage, live_capture::captures,
 };
 use cc_store::{DataStore, TwitchUserId};
+mod common;
+use cc_gatehouse::GatePath;
 use cc_types::{DrillConfiguration, DrillRunParams, ErrorCode, Timestamp};
 use serde_json::{Value, json};
 use std::time::Duration;
@@ -52,6 +54,12 @@ async fn cancelled_screening_cannot_attach_a_capture_to_a_later_decision() {
         .is_err()
     );
     assert!(captures(gate.store()).unwrap().is_empty());
+    assert!(
+        gate.store()
+            .items(DataStore::Recordings)
+            .unwrap()
+            .is_empty()
+    );
     gate.screen_batch(vec![message], &RulesOnly).await.unwrap();
     assert!(captures(gate.store()).unwrap().is_empty());
     let caches = gate.store().items(DataStore::Caches).unwrap();
@@ -85,4 +93,57 @@ async fn legacy_live_source_labels_cannot_supply_capture_authority() {
         .code,
         ErrorCode::Unavailable
     );
+}
+
+#[tokio::test]
+async fn a_future_event_time_cannot_skip_the_care_rail() {
+    let mut f = common::Fixture::new();
+    let mut m = common::message(1, 321, "[simulated] I want to die");
+    m.at = common::at("2026-10-25T12:00:05Z");
+    let screened = f
+        .gate
+        .capture_live_shadow(m, &RulesOnly, vec![])
+        .await
+        .unwrap();
+    assert_eq!(screened.path, GatePath::Care);
+    assert!(screened.reaches_streamer);
+    // The recording is refused (future), so the capture reports a gap, not content.
+    assert!(
+        f.gate
+            .store()
+            .items(DataStore::Recordings)
+            .unwrap()
+            .is_empty()
+    );
+    assert!(
+        !captures(f.gate.store())
+            .unwrap()
+            .values()
+            .any(|c| c.recording_available)
+    );
+}
+
+#[tokio::test]
+async fn a_wall_clock_step_back_does_not_fail_a_committed_screening() {
+    let mut f = common::Fixture::new();
+    f.clock.set("2026-10-25T12:00:10Z");
+    let first = f
+        .gate
+        .screen_batch(
+            vec![common::message(1, 11, "[simulated] hello")],
+            &RulesOnly,
+        )
+        .await
+        .unwrap();
+    f.gate.consensus_ingest_live(&first[0]).unwrap();
+    f.clock.set("2026-10-25T12:00:05Z");
+    let second = f
+        .gate
+        .screen_batch(
+            vec![common::message(2, 12, "[simulated] hello")],
+            &RulesOnly,
+        )
+        .await
+        .unwrap();
+    f.gate.consensus_ingest_live(&second[0]).unwrap();
 }

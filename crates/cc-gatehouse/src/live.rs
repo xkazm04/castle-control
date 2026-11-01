@@ -1,5 +1,9 @@
 //! Storage lifecycle for the shadow host, through existing cc-store APIs.
 use crate::{Gatehouse, Result, internal};
+use cc_types::ErrorCode;
+
+/// The chart's refusal of a rewound clock (herald.rs `advance`).
+const CHART_REWOUND: &str = "chart time must be monotonic";
 
 impl Gatehouse {
     /// Live chart reads and ingestion share the host clock. Twitch event time
@@ -8,7 +12,12 @@ impl Gatehouse {
     pub fn consensus_ingest_live(&mut self, screened: &crate::ScreenedMessage) -> Result<()> {
         if let Some(mut passed) = screened.for_consensus() {
             passed.at = self.now()?;
-            self.consensus_ingest(passed)?;
+            match self.consensus_ingest(passed) {
+                Ok(()) => {}
+                // A wall-clock step back is a chart gap; the verdict is committed.
+                Err(e) if e.code == ErrorCode::Invalid && e.message == CHART_REWOUND => {}
+                Err(e) => return Err(e),
+            }
         }
         Ok(())
     }

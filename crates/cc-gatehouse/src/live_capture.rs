@@ -188,21 +188,27 @@ impl Gatehouse {
         };
         let (configuration, instrument, instrument_hash, inputs) =
             self.analysis.drill.snapshot(configuration)?;
-        let recording = Recorder::for_import(&mut self.store, self.clock.as_ref())?
-            .record_shadow(&message, gaps.clone())?;
+        // The reference is minted now but the text is written only after the
+        // screening commits: an error or cancel leaves no unscreened raw text,
+        // and a refused recording (clock skew, retention) is a coverage gap that
+        // can never stop the care rail.
+        let recording_id = ulid::Ulid::new();
         let capture = GatehouseLiveCapture {
-            recording: recording.recording,
+            recording: format!("recording-{recording_id}")
+                .try_into()
+                .map_err(internal)?,
             from: message.at.clone(),
             to: message.at.clone(),
             configuration,
             instrument,
             instrument_hash,
             inputs,
-            gaps,
+            gaps: gaps.clone(),
             replay_gap,
         };
         let scope = CaptureScope(self);
         scope.0.live_capture = Some(capture);
+        let recorded = message.clone();
         let mut screened = scope
             .0
             .screen_batch_with_care(
@@ -216,6 +222,11 @@ impl Gatehouse {
         let screened = screened
             .pop()
             .ok_or_else(|| internal("no screened message"))?;
+        drop(scope);
+        // A refusal leaves the decision's capture reference without a recording;
+        // `captures` reports that as `recording_available: false`, never as content.
+        let _coverage_gap = Recorder::for_import(&mut self.store, self.clock.as_ref())
+            .and_then(|mut recorder| recorder.record_shadow(recording_id, &recorded, gaps));
         Ok(screened)
     }
 
