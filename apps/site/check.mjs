@@ -24,7 +24,7 @@ assert.ok(tokens.includes('--paper:#F4F0E6') && tokens.includes('--gules:#E4472E
 assert.ok(!/#(?:[0-9a-f]{3}){1,2}\b|\b\d+(?:\.\d+)?px\b/i.test(css), 'No raw colors or px in component styles');
 assert.ok(!/https?:|@import|@font-face/.test(css), 'No remote fonts or CSS');
 assert.ok(!/\b(?:fetch|XMLHttpRequest|WebSocket|eval)\s*\(|JSON\.parse/.test(js), 'No app, data, or network connection');
-assert.ok(!/[\u2014?]/.test(html), 'No em dash or encoding replacement in copy');
+assert.ok(!/[\u2014\uFFFD]/.test(html), 'No em dash or encoding replacement in copy');
 assert.ok(!/\son\w+=|<script(?![^>]*\bsrc=)/i.test(html), 'No inline handlers or scripts');
 const ids = [...html.matchAll(/\bid="([^"]+)"/g)].map((match) => match[1]);
 assert.equal(new Set(ids).size, ids.length, 'Unique HTML ids');
