@@ -104,6 +104,21 @@ impl Harness {
     }
 
     pub fn configured(&self, modules: Vec<String>, capacity: usize) -> Arc<TwitchBridge> {
+        self.configured_with(
+            modules,
+            capacity,
+            Duration::from_secs(3600),
+            self.store.clone(),
+        )
+    }
+
+    pub fn configured_with(
+        &self,
+        modules: Vec<String>,
+        capacity: usize,
+        validate_every: Duration,
+        store: Arc<dyn CredentialStore>,
+    ) -> Arc<TwitchBridge> {
         let bridge = TwitchBridge::with_endpoints(
             TwitchConfig {
                 client_id: "cid".into(),
@@ -115,9 +130,9 @@ impl Harness {
                 helix_base: format!("{}/helix", self.http),
                 eventsub_url: self.ws_url.clone(),
                 time_unit: Duration::from_millis(100),
-                validate_every: Duration::from_secs(3600),
+                validate_every,
             },
-            self.store.clone(),
+            store,
             self.purge.clone(),
             capacity,
         )

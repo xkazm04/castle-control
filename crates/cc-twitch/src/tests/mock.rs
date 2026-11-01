@@ -51,6 +51,16 @@ pub(super) struct Mock {
     pub expire_device: AtomicBool,
     pub short_grant: AtomicBool,
     pub malformed_subscription: AtomicBool,
+    pub validate_503: AtomicU32,
+    pub users_429: AtomicU32,
+    pub plain_poll_502: AtomicU32,
+}
+
+/// Consume one pending simulated fault, if any remain.
+fn take(counter: &AtomicU32) -> bool {
+    counter
+        .fetch_update(Ordering::SeqCst, Ordering::SeqCst, |n| n.checked_sub(1))
+        .is_ok()
 }
 
 impl Mock {
@@ -121,6 +131,9 @@ pub(super) async fn handle(
             let grant = get(&form, "grant_type");
             if grant == Some("urn:ietf:params:oauth:grant-type:device_code") {
                 let poll = m.device_polls.fetch_add(1, Ordering::SeqCst);
+                if take(&m.plain_poll_502) {
+                    return (StatusCode::BAD_GATEWAY, "simulated bad gateway").into_response();
+                }
                 if m.deny_device.load(Ordering::SeqCst) {
                     return reply(400, json!({"message": "access_denied"}));
                 }
@@ -151,6 +164,9 @@ pub(super) async fn handle(
             }
         }
         ("GET", "/oauth2/validate") => {
+            if take(&m.validate_503) {
+                return reply(503, json!({"message": "simulated outage"}));
+            }
             if !matches!(call.auth.strip_prefix("OAuth "), Some(ACCESS | ACCESS2)) {
                 return reply(401, json!({"message": "simulated invalid access"}));
             }
@@ -175,6 +191,9 @@ pub(super) async fn handle(
             }
             if m.echo_403.load(Ordering::SeqCst) {
                 return reply(403, json!({"message": format!("simulated echo {token}")}));
+            }
+            if path == "/helix/users" && take(&m.users_429) {
+                return reply(429, json!({}));
             }
             if m.rate_limit.load(Ordering::SeqCst) {
                 let mut response = reply(429, json!({}));

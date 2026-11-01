@@ -195,3 +195,43 @@ fn refresh_ahead_jitter_is_bounded_and_not_constant() {
     assert_eq!(early, Duration::from_secs(2880));
     assert_eq!(late, Duration::from_secs(3240));
 }
+
+#[tokio::test]
+async fn a_transient_validate_outage_does_not_kill_the_bridge() {
+    let mut h = harness().await;
+    h.store_login();
+    let p = h.configured_with(vec![], 300, Duration::from_millis(50), h.store.clone());
+    let (tx, mut rx) = mpsc::channel(16);
+    p.start(tx);
+    let mut ws = h.accept().await;
+    send(&mut ws, welcome("S1")).await;
+    until(|| p.status().state == BridgeState::Connected).await;
+    let before = h.mock.calls_to("GET", "/oauth2/validate").len();
+    h.mock.validate_503.store(1, Ordering::SeqCst);
+    // The failed validation and its retry both reach the server.
+    until(|| h.mock.calls_to("GET", "/oauth2/validate").len() >= before + 3).await;
+    assert_eq!(p.status().state, BridgeState::Connected);
+    let event = chat_event(
+        "42",
+        "Viewer",
+        "m1",
+        "simulated after outage",
+        serde_json::json!([]),
+    );
+    send(&mut ws, notification("simulated-after-outage", event)).await;
+    assert_eq!(chat(&mut rx).await.text, "simulated after outage");
+}
+
+#[tokio::test]
+async fn a_rate_limited_startup_user_lookup_still_connects() {
+    let mut h = harness().await;
+    h.store_login();
+    h.mock.users_429.store(1, Ordering::SeqCst);
+    let p = h.platform();
+    let (tx, _rx) = mpsc::channel(16);
+    p.start(tx);
+    let mut ws = h.accept().await;
+    send(&mut ws, welcome("S1")).await;
+    until(|| p.status().state == BridgeState::Connected).await;
+    assert!(h.mock.calls_to("GET", "/helix/users").len() >= 2);
+}

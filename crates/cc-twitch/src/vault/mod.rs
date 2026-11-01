@@ -161,6 +161,7 @@ impl Vault {
 
     pub async fn maintain(&self) -> Result<(), BridgeError> {
         let mut validate_at = Instant::now() + self.ep.validate_every;
+        let mut backoff = 1;
         loop {
             let refresh_at = self
                 .state
@@ -169,16 +170,54 @@ impl Vault {
                 .refresh_at
                 .ok_or(BridgeError::Unauthorized)?;
             tokio::time::sleep_until(refresh_at.min(validate_at)).await;
-            self.authorized().await?;
-            if Instant::now() >= validate_at {
-                self.validate().await?;
-                validate_at = Instant::now() + self.ep.validate_every;
+            match self.maintain_step(validate_at).await {
+                Ok(true) => {
+                    validate_at = Instant::now() + self.ep.validate_every;
+                    backoff = 1;
+                }
+                Ok(false) => backoff = 1,
+                // A blip must not drop the sockets; the due work simply runs again.
+                Err(error) if is_transient(&error) => {
+                    tracing::warn!(%error, "Twitch maintenance retry");
+                    tokio::time::sleep(transient_delay(&error, self.ep.time_unit, backoff)).await;
+                    backoff = (backoff * 2).min(60);
+                }
+                Err(error) => return Err(error),
             }
         }
     }
 
+    /// Whether a validation ran.
+    async fn maintain_step(&self, validate_at: Instant) -> Result<bool, BridgeError> {
+        self.authorized().await?;
+        if Instant::now() < validate_at {
+            return Ok(false);
+        }
+        self.validate().await?;
+        Ok(true)
+    }
+
     pub async fn rate_limit(&self) -> RateLimit {
         self.rate.lock().await.clone()
+    }
+}
+
+/// Errors a retry can cure; Unauthorized and Invalid stay fatal.
+pub(crate) fn is_transient(error: &BridgeError) -> bool {
+    matches!(
+        error,
+        BridgeError::Unavailable(_) | BridgeError::Upstream(_) | BridgeError::RateLimited { .. }
+    )
+}
+
+/// Exponential backoff in time units, stretched to a rate-limit hint but bounded.
+pub(crate) fn transient_delay(error: &BridgeError, unit: Duration, backoff: u32) -> Duration {
+    let backoff = unit * backoff;
+    match error {
+        BridgeError::RateLimited { retry_after_ms } => {
+            backoff.max(Duration::from_millis(*retry_after_ms).min(unit * 60))
+        }
+        _ => backoff,
     }
 }
 
