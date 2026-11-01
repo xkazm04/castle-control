@@ -108,14 +108,16 @@ export function createStreamSetup(options: SetupOptions) {
       if (simulated || state.busy) return;
       if (!port) { publish({ obs: 'unknown', notice: 'Local core unavailable. Reopen the desktop app.' }); return; }
       publish({ busy: true, obs: 'unknown', notice: 'Checking OBS and loading outputs…' });
+      let status_failure: { error: unknown } | undefined;
       await Promise.all([
         port.status().then(({ connected }) => publish({ obs: connected ? 'connected' : 'down' }),
-          () => publish({ obs: 'unknown' })),
+          error => { status_failure = { error }; publish({ obs: 'unknown' }); }),
         port.visuals().then(({ visuals }) => publish({ rows: Object.freeze(rowsFor(visuals, true)), notice:
           visuals.length ? 'Choose the scene and source size, then hold to add an output.' : 'No visuals configured. Open Beacons to create one.' }),
         error => publish({ rows: Object.freeze([voteRow, lotRow]), notice: refusal(error) })),
       ]);
-      publish({ busy: false });
+      // The status cause outlives the visuals notice, which may have settled after it.
+      publish({ busy: false, ...(status_failure ? { notice: refusal(status_failure.error) } : {}) });
     },
     async add(id: string) {
       const row = find(id);
