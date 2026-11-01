@@ -5,9 +5,10 @@ import { buildNightCore, startNightCore } from './launch.ts';
 import type { NightCore, NightCoreOptions } from './launch.ts';
 import { castQuestionsDrawInUi } from './lots-flow.ts';
 import { ObsSocket, visibleShare } from './obs-ws.ts';
-import { addStreamOutput, createVisualInUi, guardNight, nightOut, viteOrigin } from './support.ts';
+import { addStreamOutput, createVisualInUi, guardNight, nightOut } from './support.ts';
 import { dressRehearsalInUi, rehearsalScene, rehearsalSourceNames } from './rehearsal-flow.ts';
 import { confirmObsCleanup, waitForObs } from './obs-ready.ts';
+import { withProgramScene } from './obs-capture.ts';
 
 // OBS lane. Run only by scripts/night/obs.mjs, which launches a separate,
 // isolated OBS (--multi, profile and collection CastleControl-Test, websocket
@@ -35,7 +36,8 @@ async function clearRehearsal(core: NightCore) {
   // Reconnect independently: the screenshot socket may have died with OBS.
   const observer = await readyObs();
   try {
-    await core.invoke(core.contract.obsRehearsalClear, {});
+    const { removed } = await core.invoke(core.contract.obsRehearsalClear, {});
+    console.info('[OBS rehearsal clear]', JSON.stringify({ removed }));
     const after = await confirmObsCleanup(observer, rehearsalScene, rehearsalSourceNames);
     // A pre-existing, unowned scene may legally survive the core's clear. In
     // this isolated lane, remove the empty test scene before the sibling test.
@@ -57,20 +59,31 @@ test.beforeAll(async () => {
 
 test('OBS: Dress rehearsal creates its own scene, renders SIMULATED overlays and removes owned inputs', async ({ page }) => {
   test.setTimeout(240_000);
+  // No native opt-in file: app_rehearsal explicitly uses real quicknet anyway.
   await withObs({ rehearsal: true, lotsBeacon: 'off', obs: { port, password } }, async (core, obs) => {
     try {
       const verify = await guardNight(page, core, ['lots.cast:conflict']);
-      await dressRehearsalInUi(page, core, async () => {
+      await dressRehearsalInUi(page, core, async lot_url => {
         const folder = join(nightOut(), 'obs-rehearsal-screenshots');
         await mkdir(folder, { recursive: true });
         const inputs = await obs.request('GetSceneItemList', { sceneName: rehearsalScene });
         const names = Array.isArray(inputs.sceneItems) ? inputs.sceneItems.map(item => String(Object(item).sourceName)) : [];
         expect(names.sort()).toEqual([...rehearsalSourceNames].sort());
-        for (const name of rehearsalSourceNames) {
-          const file = join(folder, `${name.replace(/[^A-Za-z0-9]+/g, '-')}.png`);
-          expect(await screenshot(obs, name, file), `${name} rendered nothing in isolated OBS`).toBeGreaterThan(0.002);
-          await test.info().attach(name, { path: file, contentType: 'image/png' });
-        }
+        const lot = await obs.request('GetInputSettings', { inputName: 'Castle Control · Lot plate' });
+        const settings = lot.inputSettings;
+        // Compare only this browser URL, never print arbitrary input settings.
+        expect(Boolean(settings && typeof settings === 'object' && 'url' in settings && settings.url === lot_url),
+          'OBS Lot input must use the exact sealed/cast page verified in the browser').toBe(true);
+        // The newly created scene is not Program. A screenshot briefly toggles
+        // source showing, which does not give asynchronous CEF a continuous
+        // paint cycle. Activate only this isolated test scene, then restore it.
+        await withProgramScene(obs, rehearsalScene, rehearsalSourceNames, async () => {
+          for (const name of rehearsalSourceNames) {
+            const file = join(folder, `${name.replace(/[^A-Za-z0-9]+/g, '-')}.png`);
+            expect(await screenshot(obs, name, file), `${name} rendered nothing in isolated OBS`).toBeGreaterThan(0.002);
+            await test.info().attach(name, { path: file, contentType: 'image/png' });
+          }
+        });
       });
       // The UI hold returned removed > 0. Prove actual absence through our own
       // websocket, in both the scene list and global input inventory.

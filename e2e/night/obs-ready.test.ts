@@ -1,6 +1,6 @@
 // Generated SIMULATED peers only; no real OBS, passwords or browser.
 import assert from 'node:assert/strict';
-import { test } from 'node:test';
+import { mock, test } from 'node:test';
 import { confirmObsCleanup, waitForObs } from './obs-ready.ts';
 
 test('OBS readiness retries handshake and RPC outages, closing each failed peer', async () => {
@@ -46,4 +46,31 @@ test('cleanup fails on orphaned global inputs or remaining owned scene items', a
 
 test('cleanup refuses missing inventory fields rather than treating them as empty', async () => {
   await assert.rejects(confirmObsCleanup({ close() {}, request: async () => ({}) }, scene, [source]), /Invalid isolated OBS inputs response/);
+});
+
+test('cleanup timeout logs only remaining identities, including UUIDs and item IDs', async () => {
+  const log = mock.method(console, 'error', () => undefined);
+  const obs = { close() {}, async request(method: string) {
+    if (method === 'GetInputList') return { inputs: [{ inputName: source, inputUuid: 'simulated-input-uuid',
+      inputSettings: { private: 'SIMULATED withheld settings' } }] };
+    if (method === 'GetSceneList') return { scenes: [{ sceneName: scene }] };
+    if (method === 'GetSceneItemList') return { sceneItems: [{ sourceName: source,
+      sourceUuid: 'simulated-input-uuid', sceneItemId: 17, private: 'SIMULATED withheld settings' }] };
+    throw new Error('Unexpected SIMULATED OBS request');
+  } };
+  try {
+    await assert.rejects(confirmObsCleanup(obs, scene, [source], 0), error => {
+      assert.ok(error instanceof Error);
+      assert.ok(error.message.includes('simulated-input-uuid'));
+      assert.ok(error.message.includes('"scene_item_id":17'));
+      assert.ok(!error.message.includes('withheld settings'));
+      return true;
+    });
+    const record = log.mock.calls[0]?.arguments.join(' ') ?? '';
+    assert.ok(record.includes('remaining_inputs'));
+    assert.ok(record.includes(source));
+    assert.ok(record.includes('simulated-input-uuid'));
+    assert.ok(record.includes('"scene_item_id":17'));
+    assert.ok(!record.includes('withheld settings'));
+  } finally { log.mock.restore(); }
 });

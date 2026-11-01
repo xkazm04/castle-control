@@ -1,6 +1,7 @@
 //! Generated simulated inputs only; no owner session, live chat or public network.
 mod beacons;
 mod lots;
+mod pacing;
 use super::*;
 use crate::{AppState, NativeConfig};
 use cc_types::parse_request;
@@ -33,6 +34,9 @@ struct Harness {
 }
 impl Harness {
     async fn new() -> Self {
+        Self::with_message_delay(Duration::ZERO).await
+    }
+    async fn with_message_delay(message_delay: Duration) -> Self {
         let root = Root::new();
         let services = NativeServices::new(
             NativeConfig {
@@ -49,10 +53,11 @@ impl Harness {
         .await
         .unwrap();
         let app = services.app_with_data_dir(4096, &root.0).unwrap();
-        let module = Arc::new(
+        let mut module =
             RehearsalModule::new(&app.registry, Arc::downgrade(&services), app.events.clone())
-                .unwrap(),
-        );
+                .unwrap();
+        module.actions.message_delay = message_delay;
+        let module = Arc::new(module);
         Self {
             module,
             app,
@@ -102,6 +107,12 @@ async fn collect(
     })
     .await
     .unwrap()
+}
+async fn finish_scenarios(module: &RehearsalModule) {
+    let tasks = std::mem::take(&mut module.session.lock().unwrap().scenarios);
+    for task in tasks {
+        task.await.unwrap();
+    }
 }
 async fn settle(events: &EventHub, count: usize) {
     tokio::time::timeout(Duration::from_secs(3), async {
@@ -251,6 +262,7 @@ async fn vote_and_duel_scenarios_use_the_real_chat_consumer_and_simulated_vote_b
     .await
     .unwrap();
     assert_eq!(accepted, json!({"accepted":true}));
+    finish_scenarios(&h.module).await;
     let messages = collect(&mut receiver, 30).await;
     assert_eq!(
         messages
@@ -287,6 +299,7 @@ async fn vote_and_duel_scenarios_use_the_real_chat_consumer_and_simulated_vote_b
         json!({"scenario":"duel_round"}),
     )
     .await;
+    finish_scenarios(&h.module).await;
     let messages = collect(&mut receiver, 30).await;
     assert_eq!(
         messages

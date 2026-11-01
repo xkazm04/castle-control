@@ -67,11 +67,22 @@ pub struct SceneList {
 pub struct SceneItem {
     pub scene_item_id: i64,
     pub source_name: String,
+    pub source_uuid: String,
 }
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SceneItems {
     pub scene_items: Vec<SceneItem>,
+}
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Input {
+    pub input_name: String,
+    pub input_uuid: String,
+}
+#[derive(Debug, Deserialize)]
+pub struct InputList {
+    pub inputs: Vec<Input>,
 }
 #[derive(Debug, Deserialize)]
 pub struct EmptyResponse {}

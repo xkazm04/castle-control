@@ -82,6 +82,9 @@ async fn app_rehearsal_vote_round_has_three_nonzero_sample_directions() {
     let services = services(root.path()).await;
     let app = services.app_rehearsal(4096, root.path()).unwrap();
     assert!(consensus(&app, 0).await.directions.is_empty());
+    // Exercise the registered producer's real pacing with virtual time. Resume
+    // before HTTP so socket readiness never drives the virtual clock.
+    tokio::time::pause();
     rpc(&app, "rehearsal.start", json!({})).await;
     assert_eq!(
         rpc(
@@ -92,7 +95,13 @@ async fn app_rehearsal_vote_round_has_three_nonzero_sample_directions() {
         .await,
         json!({"accepted":true})
     );
+    for _ in 0..30 {
+        tokio::task::yield_now().await;
+        tokio::time::advance(Duration::from_millis(180)).await;
+        tokio::task::yield_now().await;
+    }
     let result = consensus(&app, 30).await;
+    tokio::time::resume();
     assert_eq!(result.shed_count, 0);
     assert_eq!(result.directions.len(), 3);
     for (direction, (key, label, counts)) in result.directions.iter().zip([

@@ -34,17 +34,42 @@ function names(response: Record<string, unknown>, key: string, field: string): s
   });
 }
 
+/** Project only identity fields, never OBS settings or arbitrary peer data. */
+function identities(response: Record<string, unknown>, key: string, name: string, uuid: string) {
+  const values = names(response, key, name);
+  const items = response[key];
+  if (!Array.isArray(items)) throw new Error(`Invalid isolated OBS ${key} response`);
+  return values.map((name, index) => {
+    const item: unknown = items[index];
+    if (!item || typeof item !== 'object') throw new Error(`Invalid isolated OBS ${key} item`);
+    const id: unknown = Reflect.get(item, uuid);
+    const scene_item_id: unknown = Reflect.get(item, 'sceneItemId');
+    if (id !== undefined && typeof id !== 'string') throw new Error(`Invalid isolated OBS ${uuid}`);
+    if (scene_item_id !== undefined && (typeof scene_item_id !== 'number' || !Number.isInteger(scene_item_id))) {
+      throw new Error('Invalid isolated OBS sceneItemId');
+    }
+    return { name, ...(typeof id === 'string' ? { uuid: id } : {}),
+      ...(typeof scene_item_id === 'number' ? { scene_item_id } : {}) };
+  });
+}
+
 /** Independent of the core ledger/count: inspect both global inputs and scene items. */
 export async function confirmObsCleanup(peer: Peer, scene: string, owned: readonly string[], timeoutMs = 10_000) {
   const deadline = Date.now() + timeoutMs;
   for (;;) {
-    const remaining = names(await peer.request('GetInputList'), 'inputs', 'inputName');
+    const inputs = identities(await peer.request('GetInputList'), 'inputs', 'inputName', 'inputUuid');
     const scenes = names(await peer.request('GetSceneList'), 'scenes', 'sceneName');
     const scene_exists = scenes.includes(scene);
-    const scene_items = scene_exists
-      ? names(await peer.request('GetSceneItemList', { sceneName: scene }), 'sceneItems', 'sourceName') : [];
-    if (!owned.some(name => remaining.includes(name) || scene_items.includes(name))) return { scene_exists, scene_items };
-    if (Date.now() >= deadline) throw new Error('Isolated OBS cleanup failed: rehearsal inputs or scene items remain');
+    const items = scene_exists
+      ? identities(await peer.request('GetSceneItemList', { sceneName: scene }), 'sceneItems', 'sourceName', 'sourceUuid') : [];
+    const scene_items = items.map(item => item.name);
+    const remaining = inputs.filter(input => owned.includes(input.name));
+    if (!remaining.length && !owned.some(name => scene_items.includes(name))) return { scene_exists, scene_items };
+    if (Date.now() >= deadline) {
+      const detail = JSON.stringify({ scene, scene_exists, remaining_inputs: remaining, scene_items: items });
+      console.error('[OBS cleanup timeout]', detail);
+      throw new Error(`Isolated OBS cleanup failed: rehearsal inputs or scene items remain; ${detail}`);
+    }
     await sleep(Math.min(200, deadline - Date.now()));
   }
 }

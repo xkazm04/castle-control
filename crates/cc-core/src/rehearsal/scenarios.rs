@@ -10,6 +10,7 @@ pub(super) struct Actions {
     pub tiltyard: Arc<crate::tiltyard::TiltyardModule>,
     pub beacons: Arc<BeaconsModule>,
     pub configuration: Arc<tokio::sync::Mutex<()>>,
+    pub message_delay: Duration,
 }
 impl Actions {
     pub async fn run(
@@ -50,7 +51,13 @@ impl Actions {
             } else {
                 door.send(body)?;
             }
-            tokio::time::sleep(Duration::from_millis(180)).await;
+            if self.message_delay.is_zero() {
+                // Tests can drive a complete burst without wall-clock pacing;
+                // still let the consumer run and cancellation take effect.
+                tokio::task::yield_now().await;
+            } else {
+                tokio::time::sleep(self.message_delay).await;
+            }
         }
         Ok(())
     }

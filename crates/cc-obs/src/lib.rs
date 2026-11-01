@@ -11,8 +11,8 @@ pub use connection::Connection;
 pub use overlay::{Overlay, content_digest};
 pub use ownership::Ownership;
 pub use protocol::{
-    BrowserSource, CreatedInput, CreatedScene, EmptyResponse, Scene, SceneItem, SceneItems,
-    SceneList, Version,
+    BrowserSource, CreatedInput, CreatedScene, EmptyResponse, Input, InputList, Scene, SceneItem,
+    SceneItems, SceneList, Version,
 };
 
 /// Only fixed diagnostics cross the transport door; peer frames are never logged.

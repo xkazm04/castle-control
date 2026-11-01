@@ -1,4 +1,5 @@
 //! Private persisted ownership, scoped to the OBS endpoint. No credential fields.
+mod cleanup;
 use crate::{BrowserSource, Client, CreatedInput, Error};
 use serde::{Deserialize, Serialize};
 use std::{
@@ -19,7 +20,7 @@ struct Owned {
     scenes: Vec<String>,
     inputs: Vec<Input>,
 }
-#[derive(Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct Input {
     scene_name: String,
@@ -117,22 +118,20 @@ impl Ownership {
         Ok(created)
     }
 
-    /// Persist each acknowledged removal so a partial failure can safely resume.
-    /// Only ItemNotFound (600) proves absence; other rejections retain ownership.
+    /// Persist each verified removal so a partial failure can safely resume.
+    /// A status acknowledgement never replaces inventory verification.
     pub async fn clear(&mut self, client: &mut Client, endpoint: &str) -> Result<u32, Error> {
         let mut removed = 0u32;
         loop {
-            let uuid = self
+            let input = self
                 .ledger
                 .endpoints
                 .get(endpoint)
                 .and_then(|owned| owned.inputs.first())
-                .map(|input| input.input_uuid.clone());
-            let Some(uuid) = uuid else { break };
-            match client.remove_input(&uuid).await {
-                Ok(_) => removed = removed.checked_add(1).ok_or(Error::Protocol)?,
-                Err(Error::Missing) => {}
-                Err(error) => return Err(error),
+                .cloned();
+            let Some(input) = input else { break };
+            if cleanup::remove(client, &input).await? {
+                removed = removed.checked_add(1).ok_or(Error::Protocol)?;
             }
             self.ledger
                 .endpoints
@@ -149,14 +148,8 @@ impl Ownership {
             .map(|owned| owned.scenes.clone())
             .unwrap_or_default();
         for scene in scenes {
-            match client.get_scene_item_list(&scene).await {
-                Ok(items) if !items.scene_items.is_empty() => continue,
-                Ok(_) => match client.remove_scene(&scene).await {
-                    Ok(_) | Err(Error::Missing) => {}
-                    Err(error) => return Err(error),
-                },
-                Err(Error::Missing) => {}
-                Err(error) => return Err(error),
+            if !cleanup::remove_scene(client, &scene).await? {
+                continue;
             }
             self.ledger
                 .endpoints

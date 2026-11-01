@@ -240,10 +240,17 @@ stored. The legacy native `app()`/registry constructor without a data root uses 
 in-memory ledger; the production `app_with_data_dir` path persists it.
 
 `obs.rehearsal.clear` addresses inputs by recorded UUID, never by source name.
-After each acknowledged removal or ItemNotFound response it saves the reduced
-ledger. Other failures preserve the remaining records for retry. It then inspects
+It first reads the global input inventory and detaches placements in the recorded
+scene whose `sourceUuid` matches that owned UUID, using `RemoveSceneItem`. Then
+it requests `RemoveInput` by `inputUuid` and verifies absence from both global
+inputs and that scene's items, polling for up to three seconds. Only verified
+absence drops the record; only a previously observed input/placement contributes
+to `removed`. If the last placement releases the input before `RemoveInput`, its
+600 reply is accepted and verified; a previously missing input contributes zero.
+Timeouts and other failures preserve cleanup authority for retry. It then inspects
 only owned scenes and removes only those with no items. A nonempty owned scene
-remains recorded for a later clear; preexisting scenes are never claimed. Records
+remains recorded for a later clear; an empty removed scene is dropped only after
+the scene inventory confirms absence. Preexisting scenes are never claimed. Records
 for another endpoint are untouched. The empty check and removal are separate OBS
 requests; OBS does not provide a conditional RemoveScene transaction, so an owner
 must avoid adding items during clear.
@@ -268,3 +275,26 @@ a process-wide atomic counter alongside PID/time and ignores removal errors in
 Drop. A regression check creates roots in parallel and removes one before Drop.
 The other new D3a helpers use `tempfile::tempdir()` or no filesystem paths; none
 share this pattern. The builder has not rerun Cargo after this correction.
+
+The later isolated OBS 33.0.1 / obs-websocket 5.7.6 review exposed a second defect:
+the old clear treated status 100 as actual removal, discarded the input UUID and
+then left its still-nonempty off-air scene behind. The fake peer had synchronously
+deleted inputs and placements, masking this. The real
+[`RemoveInput` handler](https://github.com/obsproject/obs-websocket/blob/5.7.6/src/requesthandler/RequestHandler_Inputs.cpp#L196-L208)
+calls `obs_source_remove`, which marks removal; associated scene items are pruned
+by [`scene_video_render`](https://github.com/obsproject/obs-studio/blob/33.0.1/libobs/obs-scene.c#L940-L1000).
+An off-air scene need not render. Explicit placement detachment removes that
+dependency. No program-scene switch is used.
+
+`tests/ownership_removal.rs` and its stateful retained-item peer reproduce a
+successful RemoveInput acknowledgement with indefinitely retained placements,
+last-placement input release, false-success timeout with ledger preservation,
+restart/retry, and a foreign replacement reusing the source name and item ID.
+The night core's fake now retains off-air placements too; its unit test requires
+explicit detachment. Existing inputs rejected by CreateInput (601) are never
+adopted. Already-lost ledger entries from the old bug are not reclaimed by name.
+
+This correction adds no RPC identifiers, contract edits or ledger format change.
+Rust tests and real OBS reruns remain Director work. Node harness tests (21),
+e2e TypeScript checking, changed-file ESLint, direct Rust formatting and repository
+static checks pass in the builder; no Cargo command or browser was run.

@@ -121,6 +121,7 @@ impl RehearsalModule {
                 beacons: registry.beacons()?,
                 tiltyard: registry.tiltyard()?,
                 configuration: registry.configuration.clone(),
+                message_delay: std::time::Duration::from_millis(180),
             },
         })
     }

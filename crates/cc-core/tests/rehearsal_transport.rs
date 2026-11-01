@@ -80,6 +80,9 @@ async fn rehearsal_http_status_events_and_quicknet_seal_work_without_native_opt_
         .await
         .unwrap();
     assert!(status.simulated && status.obs_connected && !status.twitch_connected);
+    // Only generation uses virtual time; HTTP/WS and the UTC seal cutoff below
+    // keep their normal clocks.
+    tokio::time::pause();
     rpc(
         &app,
         "rehearsal.scenario.run",
@@ -110,6 +113,7 @@ async fn rehearsal_http_status_events_and_quicknet_seal_work_without_native_opt_
     })
     .await
     .unwrap();
+    tokio::time::resume();
     // Include the first admitted viewer before the domain's whole-second cutoff.
     tokio::time::sleep(Duration::from_millis(1100)).await;
     let sealed = rpc(

@@ -55,7 +55,7 @@ async function assertRehearsalDuel(page: Page, core: NightCore) {
 }
 
 /** Leave a populated scene for optional OBS screenshots, then remove through the UI hold. */
-export async function dressRehearsalInUi(page: Page, core: NightCore, beforeClear?: () => Promise<void>) {
+export async function dressRehearsalInUi(page: Page, core: NightCore, beforeClear?: (lot_url: string) => Promise<void>) {
   const kinds = new Set<string>();
   let invalidFrames = 0;
   page.on('websocket', socket => {
@@ -148,8 +148,11 @@ export async function dressRehearsalInUi(page: Page, core: NightCore, beforeClea
   await workspace.getByRole('button', { name: 'Run a duel round', exact: true }).click();
   await eventually(() => core.invoke(core.contract.maproomStageGet, {}), result => Boolean(result.session?.simulated
     && result.session.counted.left + result.session.counted.right > 0));
+  const lot_url = (await core.invoke(core.contract.lotsSourceUrl, { draw_id: draw.draw_id })).url;
+  expect(new URL(lot_url).pathname).toBe(`/lots/${draw.draw_id}`);
+  expect(new URL(lot_url).search).toBe('');
   const outputs = [
-    { url: (await core.invoke(core.contract.lotsSourceUrl, { draw_id: draw.draw_id })).url,
+    { url: lot_url,
       badge: '#draw[data-draw-mounted="true"] > .draw-scene > .simulated', content: '#draw .draw-winners li' },
     { url: (await core.invoke(core.contract.beaconsSourceUrl, { visual_id: rehearsalVisual })).url,
       badge: '[data-simulated-badge]', content: '#scene' },
@@ -175,7 +178,9 @@ export async function dressRehearsalInUi(page: Page, core: NightCore, beforeClea
       await overlay.goto('about:blank'); verify();
     } finally { await overlay.close(); }
   }
-  await beforeClear?.();
+  // The callback receives the exact URL whose cast and visible SIMULATED badge
+  // were just checked, after the UI seal, verified cast and durable writ.
+  await beforeClear?.(lot_url);
   const cleanup = scene.getByRole('group', { name: 'Remove rehearsal sources', exact: true }).getByRole('button', { name: 'Hold to seal', exact: true });
   // A click cannot authorize source removal.
   await cleanup.click();

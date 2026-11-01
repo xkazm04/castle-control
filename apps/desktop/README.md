@@ -557,6 +557,30 @@ have separate tests with the unchanged timeout. Keep actions retain their
 existing callback assertions, and the password test inspects the input element's
 mask, autocomplete and uncontrolled props independently of HTML attribute order.
 
+The final isolated OBS review found a capture-lifecycle defect in the night test:
+the new rehearsal scene remained outside Program, while the passing native test
+used the active `Scene`. In obs-websocket 5.7.6, `GetSourceScreenshot` only holds
+showing around a single render call; CEF visibility/painting is asynchronous
+([upstream implementation](https://github.com/obsproject/obs-websocket/blob/5.7.6/src/requesthandler/RequestHandler_Sources.cpp)).
+The isolated capture now selects the rehearsal scene, waits up to 15 seconds for
+Program and every input's active/showing state, then uses the existing unchanged
+45-second pixel-readiness poll. A `finally` restores the prior Program scene
+before owned-source cleanup, including on capture failure. No product scene
+switch was added. The test also compares OBS's Lot input URL with the exact
+sealed/cast page already verified in Chrome: `/lots/<draw-id>` with no query.
+Seal, verified quicknet cast and durable writ all precede source creation and
+capture; `lotsBeacon: 'off'` still cannot disable rehearsal's real beacon.
+Ten generated-peer capture/readiness/cleanup tests pass, and the e2e TypeScript
+compiler API check passes across 49 files. The real-OBS rerun remains Director-run.
+
+The final gate's event-render timeout is covered by six separate cases (four
+chambers, Keep and Overview), each retaining the default five-second deadline
+and all prior assertions. The complete 900-cast parity corpus stays in one test
+with a documented 15-second CPU/crypto budget. Two full Node Vitest API runs each
+passed 1,073 tests in 109 files, with no failures, skips or unhandled errors.
+The slowest event-route cases took 875.08 / 736.90 ms; the 900-cast test took
+1,303.53 / 6,081.52 ms in runs one / two respectively.
+
 ## D5c: Tiltyard on the core tournament
 
 In CORE mode the Map Room opens the core-owned Chat tournament. Start submits

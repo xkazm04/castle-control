@@ -65,24 +65,7 @@ async fn beacon_fire_reuses_simulate_and_stop_clears_its_preview() {
         .await,
         json!({"accepted":true})
     );
-    tokio::time::timeout(Duration::from_secs(3), async {
-        loop {
-            let finished = h
-                .module
-                .session
-                .lock()
-                .unwrap()
-                .scenarios
-                .iter()
-                .all(|t| t.is_finished());
-            if finished {
-                break;
-            }
-            tokio::task::yield_now().await;
-        }
-    })
-    .await
-    .unwrap();
+    finish_scenarios(&h.module).await;
     let fired = snapshot(&h).await;
     assert!(fired.simulated);
     assert_eq!(f64::from(fired.intensity.intensity), 1.0);

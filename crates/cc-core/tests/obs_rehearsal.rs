@@ -315,3 +315,57 @@ async fn failed_connect_retains_previous_target_and_never_remembers_rejected_cre
     assert_eq!(refused.seen.requests.lock().unwrap().len(), 1);
     assert_eq!(passwords.reads.load(Ordering::SeqCst), 0);
 }
+
+#[tokio::test]
+async fn rehearsal_composition_records_ui_source_path_and_clears_the_configured_endpoint() {
+    let root = tempfile::tempdir().unwrap();
+    let peer = Peer::start().await;
+    let service = service(root.path(), Arc::new(Passwords::default())).await;
+    let app = service.app_rehearsal(64, root.path()).unwrap();
+    app.registry
+        .dispatch(&connect(peer.port, false))
+        .await
+        .unwrap();
+    rpc(
+        &app,
+        "obs.scene.ensure",
+        json!({"scene_name":"simulated-scene"}),
+    )
+    .await
+    .unwrap();
+    rpc(&app, "obs.source.create", source(service.overlay_url()))
+        .await
+        .unwrap();
+    // OBS rejects an existing input. That must neither adopt a foreign input
+    // nor lose the record of our preceding successful creation.
+    assert!(
+        rpc(&app, "obs.source.create", source(service.overlay_url()))
+            .await
+            .is_err()
+    );
+    let path = root.path().join("obs/ownership.json");
+    let ledger: Value = serde_json::from_slice(&std::fs::read(&path).unwrap()).unwrap();
+    let endpoint = format!("ws://127.0.0.1:{}", peer.port);
+    assert_eq!(ledger["endpoints"].as_object().unwrap().len(), 1);
+    assert_eq!(
+        ledger["endpoints"][&endpoint]["inputs"]
+            .as_array()
+            .unwrap()
+            .len(),
+        1
+    );
+    assert_eq!(
+        rpc(&app, "obs.rehearsal.clear", json!({})).await.unwrap(),
+        json!({"removed":1})
+    );
+    let ledger: Value = serde_json::from_slice(&std::fs::read(&path).unwrap()).unwrap();
+    assert_eq!(
+        ledger["endpoints"][&endpoint],
+        json!({"inputs":[],"scenes":[]})
+    );
+    assert_eq!(
+        rpc(&app, "obs.rehearsal.clear", json!({})).await.unwrap(),
+        json!({"removed":0})
+    );
+    app.shutdown();
+}

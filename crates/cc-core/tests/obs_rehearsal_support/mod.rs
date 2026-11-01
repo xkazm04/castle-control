@@ -44,6 +44,8 @@ pub struct Seen {
     pub fail_version: AtomicBool,
     pub requests: Mutex<Vec<Value>>,
     scenes: Mutex<Vec<String>>,
+    has_input: AtomicBool,
+    has_item: AtomicBool,
 }
 pub struct Peer {
     pub port: u16,
@@ -79,6 +81,8 @@ impl Peer {
                                 let data = &request["d"]["requestData"];
                                 let failed = (kind == "CreateInput" && state.fail_source.swap(false, Ordering::SeqCst))
                                     || (kind == "GetVersion" && state.fail_version.swap(false, Ordering::SeqCst));
+                                let exists = kind == "CreateInput" && state.has_input.load(Ordering::SeqCst);
+                                let mut missing = false;
                                 let reply = match kind {
                                     "GetVersion" => json!({"obsVersion":SENTINEL,"obsWebSocketVersion":"5-simulated","rpcVersion":1,"availableRequests":[]}),
                                     "GetSceneList" => json!({"scenes":state.scenes.lock().unwrap().iter().map(|name| json!({"sceneName":name})).collect::<Vec<_>>()}),
@@ -86,15 +90,43 @@ impl Peer {
                                         state.scenes.lock().unwrap().push(data["sceneName"].as_str().unwrap().into());
                                         json!({"sceneUuid":"simulated-scene-uuid"})
                                     }
-                                    "CreateInput" => json!({"inputUuid":"simulated-input-uuid","sceneItemId":17}),
-                                    "GetSceneItemList" => json!({"sceneItems":[]}),
-                                    "RemoveInput" | "RemoveScene" => json!({}),
+                                    "CreateInput" => {
+                                        if !failed && !exists {
+                                            state.has_input.store(true, Ordering::SeqCst);
+                                            state.has_item.store(true, Ordering::SeqCst);
+                                        }
+                                        json!({"inputUuid":"simulated-input-uuid","sceneItemId":17})
+                                    }
+                                    "GetInputList" => json!({"inputs":if state.has_input.load(Ordering::SeqCst) {
+                                        vec![json!({"inputName":"simulated-source","inputUuid":"simulated-input-uuid"})]
+                                    } else {vec![]}}),
+                                    "GetSceneItemList" => json!({"sceneItems":if state.has_item.load(Ordering::SeqCst) {
+                                        vec![json!({"sceneItemId":17,"sourceName":"simulated-source","sourceUuid":"simulated-input-uuid"})]
+                                    } else {vec![]}}),
+                                    "RemoveSceneItem" => {
+                                        assert_eq!(data["sceneItemId"], 17);
+                                        state.has_item.store(false, Ordering::SeqCst);
+                                        state.has_input.store(false, Ordering::SeqCst);
+                                        json!({})
+                                    }
+                                    "RemoveInput" => {
+                                        assert_eq!(data["inputUuid"], "simulated-input-uuid");
+                                        missing = !state.has_input.load(Ordering::SeqCst);
+                                        // OBS 33 retains off-air scene items after this acknowledgement.
+                                        if !state.has_item.load(Ordering::SeqCst) { state.has_input.store(false, Ordering::SeqCst); }
+                                        json!({})
+                                    }
+                                    "RemoveScene" => {
+                                        assert!(!state.has_item.load(Ordering::SeqCst));
+                                        state.scenes.lock().unwrap().retain(|scene| data["sceneName"] != scene.as_str());
+                                        json!({})
+                                    }
                                     _ => panic!("unexpected simulated OBS request"),
                                 };
                                 state.requests.lock().unwrap().push(request.clone());
                                 if socket.send(Message::Text(json!({"op":7,"d":{
                                     "requestType":kind,"requestId":request["d"]["requestId"],
-                                    "requestStatus":{"result":!failed,"code":if failed {400} else {100},"comment":SENTINEL},
+                                    "requestStatus":{"result":!failed && !missing && !exists,"code":if failed {400} else if missing {600} else if exists {601} else {100},"comment":SENTINEL},
                                     "responseData":reply}}).to_string().into())).await.is_err() { break; }
                             }
                         });

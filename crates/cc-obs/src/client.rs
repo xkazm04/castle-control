@@ -1,4 +1,6 @@
-use crate::protocol::{CreatedInput, CreatedScene, EmptyResponse, SceneItems, SceneList};
+use crate::protocol::{
+    CreatedInput, CreatedScene, EmptyResponse, InputList, SceneItems, SceneList,
+};
 use crate::protocol::{Frame, Hello, Response, authentication};
 use crate::{BrowserSource, Error, Version};
 use futures::{SinkExt, StreamExt};
@@ -126,6 +128,21 @@ impl Client {
     pub async fn remove_input(&mut self, uuid: &str) -> Result<EmptyResponse, Error> {
         self.typed("RemoveInput", json!({"inputUuid": uuid}), true)
             .await
+    }
+    pub async fn get_input_list(&mut self) -> Result<InputList, Error> {
+        self.typed("GetInputList", json!({}), false).await
+    }
+    pub async fn remove_scene_item(
+        &mut self,
+        scene: &str,
+        id: i64,
+    ) -> Result<EmptyResponse, Error> {
+        self.typed(
+            "RemoveSceneItem",
+            json!({"sceneName": scene, "sceneItemId": id}),
+            true,
+        )
+        .await
     }
     pub async fn remove_scene(&mut self, name: &str) -> Result<EmptyResponse, Error> {
         self.typed("RemoveScene", json!({"sceneName": name}), true)

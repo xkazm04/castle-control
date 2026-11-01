@@ -62,6 +62,7 @@ async fn lots_fill_opens_a_real_keyword_draw_and_seals_a_simulated_page_offline(
             beacons,
             tiltyard,
             configuration: Arc::new(tokio::sync::Mutex::new(())),
+            message_delay: Duration::ZERO,
         },
     };
     let overlay = cc_obs::Overlay::start_with_routes(0, render.routes())
@@ -75,6 +76,7 @@ async fn lots_fill_opens_a_real_keyword_draw_and_seals_a_simulated_page_offline(
         json!({"scenario":"lots_fill"}),
     )
     .await;
+    finish_scenarios(&module).await;
     let messages = collect(&mut receiver, 20).await;
     assert!(messages.iter().all(|m| m.message.text == "SIMULATED !join"));
     assert_eq!(
@@ -120,6 +122,7 @@ async fn lots_fill_opens_a_real_keyword_draw_and_seals_a_simulated_page_offline(
         json!({"scenario":"lots_fill"}),
     )
     .await;
+    finish_scenarios(&module).await;
     collect(&mut receiver, 1).await;
     let list = lots.handle(&request("lots.draw.list", json!({}))).unwrap();
     assert_eq!(list["draws"].as_array().unwrap().len(), 2);

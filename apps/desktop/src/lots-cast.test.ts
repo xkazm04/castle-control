@@ -6,6 +6,9 @@ import { parseJson } from '@castle-control/contract/door';
 import { castWinners, commitmentOf, sealOf, verifyWrit } from './lots-cast.js';
 import { fixtureEntries, fixtureWrit } from './lots-fixture.js';
 
+// All 900 cases recompute seals, commitments and winner selection with thousands
+// of real SHA-256 operations. Allow CPU/crypto contention in the parallel gate;
+// this is one complete parity corpus, with no lazy imports in the test body.
 test('cc-verify v1 Rust corpus pins all 900 streamer-controlled desktop casts', async () => {
   const fixture = parseJson(readFileSync(new URL('../../../packages/verifier-web/src/simulated-writs.json', import.meta.url), 'utf8'));
   if (!fixture || typeof fixture !== 'object' || !('label' in fixture) || fixture.label !== 'simulated'
@@ -18,7 +21,7 @@ test('cc-verify v1 Rust corpus pins all 900 streamer-controlled desktop casts', 
   }).filter(item => item.writ.proof.source === 'streamer_commit');
   expect(cases).toHaveLength(900);
   for (const item of cases) await expect(verifyWrit(item.writ)).resolves.toEqual(item.winners);
-});
+}, 15_000);
 
 test('cc-verify v1 reference vector pins seal, commitment and winner parity', async () => {
   expect(await verifyWrit(fixtureWrit)).toEqual(['simulated_01', 'simulated_00']);

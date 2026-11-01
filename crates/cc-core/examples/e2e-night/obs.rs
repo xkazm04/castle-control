@@ -125,7 +125,7 @@ fn fake_response(kind: &str, data: &Value, peer: &mut FakeObs) -> (Value, Value)
         "GetVersion" => ok(
             json!({"obsVersion":"31.0.0-simulated","obsWebSocketVersion":"5.5.0-simulated",
             "rpcVersion":1,"availableRequests":["GetVersion","CreateInput","GetSceneList","CreateScene",
-            "GetSceneItemList","RemoveInput","RemoveScene"],"supportedImageFormats":["png"],
+            "GetInputList","GetSceneItemList","RemoveSceneItem","RemoveInput","RemoveScene"],"supportedImageFormats":["png"],
             "platform":"simulated","platformDescription":"SIMULATED OBS peer"}),
         ),
         "GetSceneList" => ok(
@@ -144,6 +144,23 @@ fn fake_response(kind: &str, data: &Value, peer: &mut FakeObs) -> (Value, Value)
             .filter(|(_,input)| input.scene == scene).map(|(name,input)|
                 json!({"sourceName":name,"sourceUuid":input.uuid,"sceneItemId":input.item})).collect::<Vec<_>>()}))
         }
+        "GetInputList" => ok(json!({"inputs":peer.inputs.iter().map(|(name,input)|
+            json!({"inputName":name,"inputUuid":input.uuid})).collect::<Vec<_>>()})),
+        "RemoveSceneItem" => {
+            let name = peer
+                .inputs
+                .iter()
+                .find(|(_, input)| input.scene == scene && data["sceneItemId"] == input.item)
+                .map(|(name, _)| name.clone());
+            match name {
+                Some(name) => {
+                    peer.inputs.remove(&name);
+                    ok(json!({}))
+                }
+                None => refused(600),
+            }
+        }
+        "RemoveScene" if peer.inputs.values().any(|input| input.scene == scene) => refused(604),
         "RemoveScene" if peer.scenes.remove(scene).is_some() => ok(json!({})),
         "CreateInput" if !peer.scenes.contains_key(scene) => refused(600),
         "CreateInput" => {
@@ -170,10 +187,9 @@ fn fake_response(kind: &str, data: &Value, peer: &mut FakeObs) -> (Value, Value)
                 .find(|(_, input)| data["inputUuid"] == input.uuid)
                 .map(|(name, _)| name.clone());
             match name {
-                Some(name) => {
-                    peer.inputs.remove(&name);
-                    ok(json!({}))
-                }
+                // OBS 33's source_remove acknowledgement does not synchronously
+                // unlink an off-air scene item. Keep it until RemoveSceneItem.
+                Some(_) => ok(json!({})),
                 None => refused(600),
             }
         }
@@ -305,6 +321,16 @@ mod tests {
             &mut peer,
         );
         assert_eq!(status["result"], true);
+        let (_, list) = fake_response("GetSceneItemList", &json!({"sceneName":scene}), &mut peer);
+        assert_eq!(list["sceneItems"].as_array().unwrap().len(), 1);
+        let (status, _) = fake_response(
+            "RemoveSceneItem",
+            &json!({"sceneName":scene,"sceneItemId":created["sceneItemId"]}),
+            &mut peer,
+        );
+        assert_eq!(status["result"], true);
+        let (_, list) = fake_response("GetInputList", &json!({}), &mut peer);
+        assert!(list["inputs"].as_array().unwrap().is_empty());
         let (_, list) = fake_response("GetSceneItemList", &json!({"sceneName":scene}), &mut peer);
         assert!(list["sceneItems"].as_array().unwrap().is_empty());
         let (status, _) = fake_response("RemoveScene", &json!({"sceneName":scene}), &mut peer);

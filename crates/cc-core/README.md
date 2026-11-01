@@ -666,6 +666,25 @@ fixture refusals. `tests/native.rs` checks the added inventory and
 `tests/steward.rs` updates the declared/registered count. Adapter ownership tests
 in cc-obs cover restart and foreign/missing-item cleanup.
 
+The isolated-OBS cleanup review traced the D4 path through the native
+`obs.source.create` handler to the same locked connection and Ownership instance
+used by clear. The night launcher initially probes its relay, but the rehearsal
+UI connects to the handoff's upstream port; subsequent creation and clear use
+that successful normalized endpoint. `app_rehearsal` passes its data root to
+attach, which sets `obs_root` before handlers run. The new
+`rehearsal_composition_records_ui_source_path_and_clears_the_configured_endpoint`
+test checks the persisted endpoint record, a rejected re-add (no ownership
+adoption), verified cleanup and idempotent retry in that composition.
+
+The root cause was acknowledging RemoveInput before its off-air scene's items
+were actually removed, then dropping the ledger entry. The OBS adapter now
+detaches UUID-matched placements and confirms inventories before counting removal
+or dropping ownership. The native handler and endpoint/credential routing remain
+unchanged. `e2e/night/obs.spec.ts::clearRehearsal` logs only `{ removed }`;
+`confirmObsCleanup` logs remaining names/UUIDs and scene item IDs on timeout,
+excluding arbitrary OBS settings, credentials and connection details. Its Node
+test checks those diagnostic fields and exclusion of unrelated peer data.
+
 Per the brief, the builder did not run Cargo, browsers or the Cargo-backed pnpm
 gate. The Director must run `cargo test -p cc-obs -p cc-core`, frozen install and
 `pnpm gate`. No owner OBS connection, scene change or visual sign-off is claimed.
