@@ -305,7 +305,10 @@ async fn shadow_only_gate_never_confirms_a_queued_ban_into_an_intent() {
     f.arm("bad");
     let result = f
         .gate
-        .screen_batch(vec![message(1, 100, "tagged [simulated]")], &Fake::new("[]"))
+        .screen_batch(
+            vec![message(1, 100, "tagged [simulated]")],
+            &Fake::new("[]"),
+        )
         .await
         .unwrap();
     assert_eq!(result[0].decision.kind, DecisionKind::BanPending);
