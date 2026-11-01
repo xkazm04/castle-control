@@ -5,7 +5,7 @@ plus the uncommitted WP 0.1 gate changes in this delivery. Historical foundation
 proofs already exist in `docs/PLAN.md`; the brief's claim that none existed was
 incorrect. This table refreshes them against the current runners.
 
-Run `node scripts/closure-proofs.mjs` (exit 0: 46 verified non-zero results).
+Run `pnpm gate:proofs` (exit 0: 46 verified non-zero results).
 `<repo>` means this worktree. Fixtures under `scripts/.gate-proof/case-N` contain
 byte-for-byte copies of the runners and minimal simulated inputs; all seeds and
 fixtures are removed in `finally`. Generator-test imports are rebased to the real
@@ -96,7 +96,7 @@ callback (without rerunning unrelated closure cases): the drift fixture walked
 restoration it walked 6 files and exited 0. The empty fixture walked 0 files,
 printed `version drift: refused empty inventory`, and exited 1. All fixtures were
 removed in `finally`. The reusable full proof entry point remains
-`node scripts/closure-proofs.mjs`; its historical table below was not regenerated.
+`pnpm gate:proofs`; its historical table below was not regenerated.
 
 Final real-tree command `node scripts/version-drift.mjs` exited 0:
 
@@ -134,7 +134,7 @@ the historical M0 bundling-disabled note in the desktop README.
 
 Director follow-up: rerun `pnpm --config.verify-deps-before-run=false gate` in the
 authorized verification environment, including Rust and recursive package gates;
-run `node scripts/closure-proofs.mjs` to refresh the full proof table if needed.
+run `pnpm gate:proofs` to refresh the full proof table if needed.
 With an already-installed Tauri 2 CLI and sufficient build budget, follow
 `release/packaging.md` to build and inspect the unsigned Windows NSIS installer.
 Signing/updater keys and release publishing remain owner steps. `pnpm install`

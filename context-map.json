@@ -724,7 +724,6 @@
       "scripts/check.mjs",
       "scripts/ci-shape.test.mjs",
       "scripts/closure-proof-cases.mjs",
-      "scripts/closure-proofs.mjs",
       "scripts/files.mjs",
       "scripts/gate.mjs",
       "scripts/hygiene.mjs",
