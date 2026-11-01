@@ -34,7 +34,7 @@ it('ships a local bundle rebuilt from this renderer and the lazy contract door',
   const bundleBytes = readFileSync(new URL('../../../apps/overlay/bundle.js', import.meta.url));
   assertOverlayBundleBudget(bundleBytes.byteLength);
   const bundle = bundleBytes.toString('utf8');
-  expect(hash.digest('hex')).toBe('82d1012b8a9c948521e09811ff5f907f538e70a61241251dbebc8b55a561472b'); expect(bundle).toContain('Castle Control overlay source SHA-256: 82d1012b8a9c948521e09811ff5f907f538e70a61241251dbebc8b55a561472b');
+  expect(hash.digest('hex')).toBe('38c3322a68321c27d75926b32b339f3c8821913a876cc8ee218b182866943006'); expect(bundle).toContain('Castle Control overlay source SHA-256: 38c3322a68321c27d75926b32b339f3c8821913a876cc8ee218b182866943006');
   expect(bundle).toContain('beacons.render.snapshot');
   expect(bundle).toContain('cc-cast');
   expect(bundle).toContain('lots');

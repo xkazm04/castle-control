@@ -175,6 +175,8 @@ const RELOAD_BASE_MS = 2000, RELOAD_CAP_MS = 30000, RELOAD_QUIET_MS = 60000;
 const RELOAD_KEY = 'cc-overlay-reload';
 
 function sessionReloadStore(): NonNullable<ReloadOptions['store']> {
+  // Held in memory too, so unavailable storage still counts attempts within this document.
+  let fallback: { n: number; at: number } | undefined;
   return {
     read() {
       try {
@@ -182,11 +184,11 @@ function sessionReloadStore(): NonNullable<ReloadOptions['store']> {
         if (typeof parsed !== 'object' || parsed === null) return undefined;
         const { n, at } = parsed as { n?: unknown; at?: unknown };
         return typeof n === 'number' && typeof at === 'number' ? { n, at } : undefined;
-      } catch { return undefined; } // Storage unavailable or corrupt: treated as a first attempt.
+      } catch { return fallback; } // Storage unavailable or corrupt: use this document's own count.
     },
     write(value) {
       try { window.sessionStorage.setItem(RELOAD_KEY, JSON.stringify(value)); }
-      catch { /* Storage unavailable: the delay still applies per document. */ }
+      catch { fallback = value; }
     },
   };
 }
