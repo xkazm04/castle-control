@@ -60,6 +60,18 @@ assert.equal(manifest.exports['./beacons'], './src/generated/beacons-validation.
 assert.equal(manifest.exports['./beacons-render'], './src/generated/beacons-render-validation.ts');
 assert.equal(manifest.exports['./tiltyard-render'], './src/generated/tiltyard-render-validation.ts');
 assert.equal(schema.overlay_push_events['tiltyard.render.snapshot'], 'TiltyardRenderSnapshot');
+assert.equal(schema.overlay_routes.tiltyard_current, '/tiltyard/current');
+assert.equal(schema.overlay_routes.tiltyard_push, '/push/tiltyard');
+assert(files['tiltyard-render-validation.ts'].includes('TILTYARD_CURRENT_ROUTE = "/tiltyard/current"'));
+assert(files['tiltyard-render-validation.ts'].includes('TILTYARD_PUSH_ROUTE = "/push/tiltyard"'));
+for (const name of ['maproom.stage.get', 'maproom.turn.run']) {
+  const method = schema.methods.find(method => method.name === name);
+  assert.equal(method.owner, 'D5a');
+  assert.notEqual(method.params.title, 'Pending');
+  assert.equal(method.result.title, 'TiltyardStageResult');
+}
+assert.equal(schema.methods.length, 62, 'filling existing placeholders adds no method registrations');
+assert.throws(() => artifacts({ ...schema, overlay_routes: {} }), /route identifiers/);
 assert(files['tiltyard-render-validation.ts'].includes("from './tiltyard-render-validators.mjs'"));
 assert(!files['validators.d.mts'].includes('TiltyardRenderSnapshot'), 'overlay root stays out of eager registry');
 assert.equal(manifest.exports['./steward'], './src/generated/steward-validation.ts');

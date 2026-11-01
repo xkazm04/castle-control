@@ -30,7 +30,9 @@ pub enum RehearsalEventPayload {
 }
 
 /// Invalidation only: refetch authoritative reads after these events, including resync.
-/// Payloads beyond seq/at/kind belong to their module WPs, not this transport.
+/// maproom.turn also uses this envelope: refetch maproom.stage.get. The existing
+/// seq orders invalidations; no tournament state or extra revision is carried.
+/// OBS consumes tiltyard.render.snapshot separately on /push/tiltyard.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct StreamEvent {

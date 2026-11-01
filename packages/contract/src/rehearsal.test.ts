@@ -140,7 +140,7 @@ test('tiltyard overlay full replacements round-trip without an absent verdict', 
   expect(EVENT_KINDS).not.toContain(TILTYARD_RENDER_SNAPSHOT_EVENT);
   expect(parseTiltyardRenderSnapshot(JSON.stringify(snapshot))).toEqual(snapshot);
   expect(parseTiltyardRenderSnapshot(JSON.stringify(snapshot))).not.toHaveProperty('verdict');
-  for (const verdict of ['left', 'right', 'tie']) {
+  for (const verdict of [{ side: 'left', how: 'tally' }, { side: 'right', how: 'call' }, { side: 'left', how: 'tie' }]) {
     const value = { ...snapshot, verdict };
     expect(parseTiltyardRenderSnapshot(JSON.stringify(value))).toEqual(value);
   }

@@ -69,7 +69,7 @@ export function artifacts(schema) {
   }
   for (const shape of Object.values(schema.types)) add(shape);
   for (const method of schema.methods) { add(method.params); add(method.result); }
-  const brands = new Set(['MessageId', 'DecisionId', 'LeaseId', 'ArtCallId', 'WritId', 'DrawRunId', 'RuleId', 'DrawId', 'VisualId', 'DesignId', 'TwitchUserId']);
+  const brands = new Set(['MessageId', 'DecisionId', 'LeaseId', 'ArtCallId', 'WritId', 'DrawRunId', 'RuleId', 'DrawId', 'VisualId', 'DesignId', 'TwitchUserId', 'TiltyardId']);
   const types = [...definitions].sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0).map(([name, shape]) =>
     `export type ${name} = ${tsType(shape)}${brands.has(name) ? ` & { readonly __brand: ${JSON.stringify(name)} }` : ''};`);
   const nameOf = (shape) => shape.title ?? tsType(shape);
@@ -233,6 +233,9 @@ function validators(schema) {
   const tiltyardEvent = Object.entries(schema.overlay_push_events ?? {})
     .find(([, type]) => type === 'TiltyardRenderSnapshot')?.[0];
   if (!tiltyardEvent) throw new Error('Missing tiltyard snapshot identifier');
+  if (!schema.overlay_routes?.tiltyard_current || !schema.overlay_routes?.tiltyard_push) {
+    throw new Error('Missing tiltyard route identifiers');
+  }
   const tiltyardExports = { shape: shared.reference(schema.types.TiltyardRenderSnapshot) };
   ajv.addSchema(shared.document());
   const map = (prefix) => schema.methods.map((m, i) => `[${JSON.stringify(m.name)}, compiled.${prefix}${i}]`).join(',');
@@ -253,8 +256,10 @@ function validators(schema) {
     'tiltyard-render-validation.ts': `${banner}import { parseJson } from '../door.mjs';\n`
       + `import { shape } from './tiltyard-render-validators.mjs';\n`
       + `import type { TiltyardRenderSnapshot } from './types.js';\n`
-      + `export type { TiltyardRenderSnapshot, TiltyardSide, TiltyardVerdict } from './types.js';\n`
+      + `export type { TiltyardRenderSnapshot, TiltyardSide, TiltyardVerdict, TiltyardWinner, TiltyardDecision, TiltyardRenderPhase } from './types.js';\n`
       + `export const TILTYARD_RENDER_SNAPSHOT_EVENT = ${JSON.stringify(tiltyardEvent)} as const;\n`
+      + `export const TILTYARD_CURRENT_ROUTE = ${JSON.stringify(schema.overlay_routes?.tiltyard_current)} as const;\n`
+      + `export const TILTYARD_PUSH_ROUTE = ${JSON.stringify(schema.overlay_routes?.tiltyard_push)} as const;\n`
       + `export function parseTiltyardRenderSnapshot(text: string): TiltyardRenderSnapshot {\n`
       + `  const value = parseJson(text);\n`
       + `  if (!shape(value)) throw new Error('Invalid tiltyard snapshot');\n  return value;\n}\n`,

@@ -55,6 +55,9 @@
     "left": { "label": "Simulated left", "count": 3 },
     "right": { "label": "Simulated right", "count": 2 },
     "ballots": 5,
+    "phase": "open",
+    "round_label": "Simulated final",
+    "match_label": "Simulated match 1",
     "simulated": true,
     "at": "2026-11-01T12:00:00Z"
   }

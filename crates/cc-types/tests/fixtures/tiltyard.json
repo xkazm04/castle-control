@@ -1,0 +1,4726 @@
+{
+  "simulated": true,
+  "actions": [
+    {
+      "kind": "start",
+      "list": {
+        "title": "Simulated tournament",
+        "prompt": "SIMULATED: choose 1 or 2",
+        "items": [
+          {
+            "id": "simulated-a",
+            "title": "Simulated <left> & contestant",
+            "by": "simulated_streamer",
+            "seed": "0",
+            "note": "Generated SIMULATED fixture"
+          },
+          {
+            "id": "simulated-b",
+            "title": "Simulated right",
+            "by": "simulated_streamer",
+            "seed": "1"
+          }
+        ]
+      },
+      "key": "simulated",
+      "window_ms": 15000
+    },
+    {
+      "kind": "pick",
+      "side": "left"
+    },
+    {
+      "kind": "pick",
+      "side": "right"
+    },
+    {
+      "kind": "tick",
+      "ms": 1000
+    },
+    {
+      "kind": "enter"
+    },
+    {
+      "kind": "cancel"
+    },
+    {
+      "kind": "undo"
+    },
+    {
+      "kind": "reset"
+    },
+    {
+      "kind": "speed"
+    }
+  ],
+  "stages": [
+    {
+      "at": "2026-11-01T12:00:00Z"
+    },
+    {
+      "session": {
+        "phase": "live",
+        "list": {
+          "title": "Simulated tournament",
+          "prompt": "SIMULATED: choose 1 or 2",
+          "items": [
+            {
+              "id": "simulated-a",
+              "title": "Simulated <left> & contestant",
+              "by": "simulated_streamer",
+              "seed": "0",
+              "note": "Generated SIMULATED fixture"
+            },
+            {
+              "id": "simulated-b",
+              "title": "Simulated right",
+              "by": "simulated_streamer",
+              "seed": "1"
+            }
+          ]
+        },
+        "bracket": {
+          "seeds": [
+            "simulated-a",
+            "simulated-b"
+          ],
+          "rounds": [
+            [
+              {
+                "a": "simulated-a",
+                "b": "simulated-b"
+              }
+            ]
+          ]
+        },
+        "history": [],
+        "window_ms": 15000,
+        "key": "simulated",
+        "elapsed_ms": 0,
+        "match_key": "simulated:0:0",
+        "speed": 1,
+        "calls": [],
+        "remaining_ms": 0,
+        "counted": {
+          "left": 0,
+          "right": 0
+        },
+        "simulated": false,
+        "window_ends_at": "2026-11-01T12:00:15Z"
+      },
+      "at": "2026-11-01T12:00:00Z"
+    },
+    {
+      "session": {
+        "phase": "verdict",
+        "list": {
+          "title": "Simulated tournament",
+          "prompt": "SIMULATED: choose 1 or 2",
+          "items": [
+            {
+              "id": "simulated-a",
+              "title": "Simulated <left> & contestant",
+              "by": "simulated_streamer",
+              "seed": "0",
+              "note": "Generated SIMULATED fixture"
+            },
+            {
+              "id": "simulated-b",
+              "title": "Simulated right",
+              "by": "simulated_streamer",
+              "seed": "1"
+            }
+          ]
+        },
+        "bracket": {
+          "seeds": [
+            "simulated-a",
+            "simulated-b"
+          ],
+          "rounds": [
+            [
+              {
+                "a": "simulated-a",
+                "b": "simulated-b",
+                "winner": "simulated-a"
+              }
+            ]
+          ]
+        },
+        "history": [
+          {
+            "seeds": [
+              "simulated-a",
+              "simulated-b"
+            ],
+            "rounds": [
+              [
+                {
+                  "a": "simulated-a",
+                  "b": "simulated-b"
+                }
+              ]
+            ]
+          }
+        ],
+        "window_ms": 15000,
+        "key": "simulated",
+        "elapsed_ms": 15000,
+        "match_key": "simulated:0:0",
+        "speed": 1,
+        "calls": [],
+        "remaining_ms": 4000,
+        "counted": {
+          "left": 9,
+          "right": 2
+        },
+        "simulated": true,
+        "verdict": {
+          "a": "simulated-a",
+          "b": "simulated-b",
+          "verdict": {
+            "side": "left",
+            "how": "tally"
+          },
+          "counted": {
+            "left": 9,
+            "right": 2
+          },
+          "elapsed_ms": 15000,
+          "round": "0",
+          "index": 0,
+          "match_key": "simulated:0:0"
+        }
+      },
+      "at": "2026-11-01T12:00:00Z"
+    },
+    {
+      "session": {
+        "phase": "verdict",
+        "list": {
+          "title": "Simulated tournament",
+          "prompt": "SIMULATED: choose 1 or 2",
+          "items": [
+            {
+              "id": "simulated-a",
+              "title": "Simulated <left> & contestant",
+              "by": "simulated_streamer",
+              "seed": "0",
+              "note": "Generated SIMULATED fixture"
+            },
+            {
+              "id": "simulated-b",
+              "title": "Simulated right",
+              "by": "simulated_streamer",
+              "seed": "1"
+            }
+          ]
+        },
+        "bracket": {
+          "seeds": [
+            "simulated-a",
+            "simulated-b"
+          ],
+          "rounds": [
+            [
+              {
+                "a": "simulated-a",
+                "b": "simulated-b",
+                "winner": "simulated-a"
+              }
+            ]
+          ]
+        },
+        "history": [
+          {
+            "seeds": [
+              "simulated-a",
+              "simulated-b"
+            ],
+            "rounds": [
+              [
+                {
+                  "a": "simulated-a",
+                  "b": "simulated-b"
+                }
+              ]
+            ]
+          }
+        ],
+        "window_ms": 15000,
+        "key": "simulated",
+        "elapsed_ms": 15000,
+        "match_key": "simulated:0:0",
+        "speed": 1,
+        "calls": [],
+        "remaining_ms": 4000,
+        "counted": {
+          "left": 3,
+          "right": 3
+        },
+        "simulated": true,
+        "verdict": {
+          "a": "simulated-a",
+          "b": "simulated-b",
+          "verdict": {
+            "side": "left",
+            "how": "tie"
+          },
+          "counted": {
+            "left": 3,
+            "right": 3
+          },
+          "elapsed_ms": 15000,
+          "round": "0",
+          "index": 0,
+          "match_key": "simulated:0:0"
+        }
+      },
+      "at": "2026-11-01T12:00:00Z"
+    },
+    {
+      "session": {
+        "phase": "verdict",
+        "list": {
+          "title": "Simulated tournament",
+          "prompt": "SIMULATED: choose 1 or 2",
+          "items": [
+            {
+              "id": "simulated-a",
+              "title": "Simulated <left> & contestant",
+              "by": "simulated_streamer",
+              "seed": "0",
+              "note": "Generated SIMULATED fixture"
+            },
+            {
+              "id": "simulated-b",
+              "title": "Simulated right",
+              "by": "simulated_streamer",
+              "seed": "1"
+            },
+            {
+              "id": "simulated-c",
+              "title": "Simulated third",
+              "by": "simulated_streamer",
+              "seed": "2"
+            },
+            {
+              "id": "simulated-d",
+              "title": "Simulated fourth",
+              "by": "simulated_streamer",
+              "seed": "3"
+            }
+          ]
+        },
+        "bracket": {
+          "seeds": [
+            "simulated-a",
+            "simulated-b",
+            "simulated-c",
+            "simulated-d"
+          ],
+          "rounds": [
+            [
+              {
+                "a": "simulated-a",
+                "b": "simulated-d",
+                "winner": "simulated-d"
+              },
+              {
+                "a": "simulated-b",
+                "b": "simulated-c",
+                "winner": "simulated-b"
+              }
+            ],
+            [
+              {
+                "a": "simulated-d",
+                "b": "simulated-b",
+                "winner": "simulated-b"
+              }
+            ]
+          ]
+        },
+        "history": [
+          {
+            "seeds": [
+              "simulated-a",
+              "simulated-b",
+              "simulated-c",
+              "simulated-d"
+            ],
+            "rounds": [
+              [
+                {
+                  "a": "simulated-a",
+                  "b": "simulated-d"
+                },
+                {
+                  "a": "simulated-b",
+                  "b": "simulated-c"
+                }
+              ]
+            ]
+          },
+          {
+            "seeds": [
+              "simulated-a",
+              "simulated-b",
+              "simulated-c",
+              "simulated-d"
+            ],
+            "rounds": [
+              [
+                {
+                  "a": "simulated-a",
+                  "b": "simulated-d",
+                  "winner": "simulated-d"
+                },
+                {
+                  "a": "simulated-b",
+                  "b": "simulated-c"
+                }
+              ]
+            ]
+          },
+          {
+            "seeds": [
+              "simulated-a",
+              "simulated-b",
+              "simulated-c",
+              "simulated-d"
+            ],
+            "rounds": [
+              [
+                {
+                  "a": "simulated-a",
+                  "b": "simulated-d",
+                  "winner": "simulated-d"
+                },
+                {
+                  "a": "simulated-b",
+                  "b": "simulated-c",
+                  "winner": "simulated-b"
+                }
+              ],
+              [
+                {
+                  "a": "simulated-d",
+                  "b": "simulated-b"
+                }
+              ]
+            ]
+          }
+        ],
+        "window_ms": 15000,
+        "key": "simulated",
+        "elapsed_ms": 15000,
+        "match_key": "simulated:1:0",
+        "speed": 1,
+        "calls": [],
+        "remaining_ms": 4000,
+        "counted": {
+          "left": 3,
+          "right": 3
+        },
+        "simulated": true,
+        "verdict": {
+          "a": "simulated-d",
+          "b": "simulated-b",
+          "verdict": {
+            "side": "right",
+            "how": "tie"
+          },
+          "counted": {
+            "left": 3,
+            "right": 3
+          },
+          "elapsed_ms": 15000,
+          "round": "1",
+          "index": 0,
+          "match_key": "simulated:1:0"
+        }
+      },
+      "at": "2026-11-01T12:00:00Z"
+    },
+    {
+      "session": {
+        "phase": "verdict",
+        "list": {
+          "title": "Simulated tournament",
+          "prompt": "SIMULATED: choose 1 or 2",
+          "items": [
+            {
+              "id": "simulated-a",
+              "title": "Simulated <left> & contestant",
+              "by": "simulated_streamer",
+              "seed": "0",
+              "note": "Generated SIMULATED fixture"
+            },
+            {
+              "id": "simulated-b",
+              "title": "Simulated right",
+              "by": "simulated_streamer",
+              "seed": "1"
+            }
+          ]
+        },
+        "bracket": {
+          "seeds": [
+            "simulated-a",
+            "simulated-b"
+          ],
+          "rounds": [
+            [
+              {
+                "a": "simulated-a",
+                "b": "simulated-b",
+                "winner": "simulated-b"
+              }
+            ]
+          ]
+        },
+        "history": [
+          {
+            "seeds": [
+              "simulated-a",
+              "simulated-b"
+            ],
+            "rounds": [
+              [
+                {
+                  "a": "simulated-a",
+                  "b": "simulated-b"
+                }
+              ]
+            ]
+          }
+        ],
+        "window_ms": 15000,
+        "key": "simulated",
+        "elapsed_ms": 15000,
+        "match_key": "simulated:0:0",
+        "speed": 1,
+        "calls": [
+          {
+            "winner": "simulated-b",
+            "counted": {
+              "left": 20,
+              "right": 1
+            }
+          }
+        ],
+        "remaining_ms": 3000,
+        "counted": {
+          "left": 20,
+          "right": 1
+        },
+        "simulated": true,
+        "verdict": {
+          "a": "simulated-a",
+          "b": "simulated-b",
+          "verdict": {
+            "side": "right",
+            "how": "call"
+          },
+          "counted": {
+            "left": 20,
+            "right": 1
+          },
+          "elapsed_ms": 15000,
+          "round": "0",
+          "index": 0,
+          "match_key": "simulated:0:0"
+        }
+      },
+      "at": "2026-11-01T12:00:00Z"
+    },
+    {
+      "session": {
+        "phase": "verdict",
+        "list": {
+          "title": "Simulated tournament",
+          "prompt": "SIMULATED: choose 1 or 2",
+          "items": [
+            {
+              "id": "simulated-a",
+              "title": "Simulated <left> & contestant",
+              "by": "simulated_streamer",
+              "seed": "0",
+              "note": "Generated SIMULATED fixture"
+            },
+            {
+              "id": "simulated-b",
+              "title": "Simulated right",
+              "by": "simulated_streamer",
+              "seed": "0"
+            }
+          ]
+        },
+        "bracket": {
+          "seeds": [
+            "simulated-a",
+            "simulated-b"
+          ],
+          "rounds": [
+            [
+              {
+                "a": "simulated-a",
+                "b": "simulated-b",
+                "winner": "simulated-a"
+              }
+            ]
+          ]
+        },
+        "history": [
+          {
+            "seeds": [
+              "simulated-a",
+              "simulated-b"
+            ],
+            "rounds": [
+              [
+                {
+                  "a": "simulated-a",
+                  "b": "simulated-b"
+                }
+              ]
+            ]
+          }
+        ],
+        "window_ms": 15000,
+        "key": "simulated",
+        "elapsed_ms": 15000,
+        "match_key": "simulated:0:0",
+        "speed": 1,
+        "calls": [],
+        "remaining_ms": 4000,
+        "counted": {
+          "left": 3,
+          "right": 3
+        },
+        "simulated": true,
+        "verdict": {
+          "a": "simulated-a",
+          "b": "simulated-b",
+          "verdict": {
+            "side": "left",
+            "how": "tie"
+          },
+          "counted": {
+            "left": 3,
+            "right": 3
+          },
+          "elapsed_ms": 15000,
+          "round": "0",
+          "index": 0,
+          "match_key": "simulated:0:0"
+        }
+      },
+      "at": "2026-11-01T12:00:00Z"
+    },
+    {
+      "session": {
+        "phase": "called_off",
+        "list": {
+          "title": "Simulated tournament",
+          "prompt": "SIMULATED: choose 1 or 2",
+          "items": [
+            {
+              "id": "simulated-a",
+              "title": "Simulated <left> & contestant",
+              "by": "simulated_streamer",
+              "seed": "0",
+              "note": "Generated SIMULATED fixture"
+            },
+            {
+              "id": "simulated-b",
+              "title": "Simulated right",
+              "by": "simulated_streamer",
+              "seed": "1"
+            }
+          ]
+        },
+        "bracket": {
+          "seeds": [
+            "simulated-a",
+            "simulated-b"
+          ],
+          "rounds": [
+            [
+              {
+                "a": "simulated-a",
+                "b": "simulated-b"
+              }
+            ]
+          ]
+        },
+        "history": [],
+        "window_ms": 15000,
+        "key": "simulated",
+        "elapsed_ms": 3412,
+        "match_key": "simulated:0:0",
+        "speed": 1,
+        "calls": [],
+        "remaining_ms": 0,
+        "counted": {
+          "left": 0,
+          "right": 0
+        },
+        "simulated": false
+      },
+      "at": "2026-11-01T12:00:00Z"
+    },
+    {
+      "session": {
+        "phase": "live",
+        "list": {
+          "title": "Simulated tournament",
+          "prompt": "SIMULATED: choose 1 or 2",
+          "items": [
+            {
+              "id": "simulated-a",
+              "title": "Simulated <left> & contestant",
+              "by": "simulated_streamer",
+              "seed": "0",
+              "note": "Generated SIMULATED fixture"
+            },
+            {
+              "id": "simulated-b",
+              "title": "Simulated right",
+              "by": "simulated_streamer",
+              "seed": "1"
+            }
+          ]
+        },
+        "bracket": {
+          "seeds": [
+            "simulated-a",
+            "simulated-b"
+          ],
+          "rounds": [
+            [
+              {
+                "a": "simulated-a",
+                "b": "simulated-b"
+              }
+            ]
+          ]
+        },
+        "history": [],
+        "window_ms": 15000,
+        "key": "simulated",
+        "elapsed_ms": 0,
+        "match_key": "simulated:0:0",
+        "speed": 1,
+        "calls": [
+          {
+            "winner": "simulated-b",
+            "counted": {
+              "left": 20,
+              "right": 1
+            }
+          }
+        ],
+        "remaining_ms": 0,
+        "counted": {
+          "left": 0,
+          "right": 0
+        },
+        "simulated": false,
+        "window_ends_at": "2026-11-01T12:00:15Z"
+      },
+      "at": "2026-11-01T12:00:00Z"
+    },
+    {
+      "session": {
+        "phase": "done",
+        "list": {
+          "title": "Simulated tournament",
+          "prompt": "SIMULATED: choose 1 or 2",
+          "items": [
+            {
+              "id": "simulated-a",
+              "title": "Simulated <left> & contestant",
+              "by": "simulated_streamer",
+              "seed": "0",
+              "note": "Generated SIMULATED fixture"
+            },
+            {
+              "id": "simulated-b",
+              "title": "Simulated right",
+              "by": "simulated_streamer",
+              "seed": "1"
+            }
+          ]
+        },
+        "bracket": {
+          "seeds": [
+            "simulated-a",
+            "simulated-b"
+          ],
+          "rounds": [
+            [
+              {
+                "a": "simulated-a",
+                "b": "simulated-b",
+                "winner": "simulated-b"
+              }
+            ]
+          ]
+        },
+        "history": [
+          {
+            "seeds": [
+              "simulated-a",
+              "simulated-b"
+            ],
+            "rounds": [
+              [
+                {
+                  "a": "simulated-a",
+                  "b": "simulated-b"
+                }
+              ]
+            ]
+          }
+        ],
+        "window_ms": 15000,
+        "key": "simulated",
+        "elapsed_ms": 0,
+        "speed": 1,
+        "calls": [
+          {
+            "winner": "simulated-b",
+            "counted": {
+              "left": 20,
+              "right": 1
+            }
+          }
+        ],
+        "remaining_ms": 0,
+        "counted": {
+          "left": 20,
+          "right": 1
+        },
+        "simulated": true,
+        "champion": "simulated-b"
+      },
+      "at": "2026-11-01T12:00:00Z"
+    }
+  ],
+  "snapshots": [
+    {
+      "left": {
+        "label": "Simulated <left> & contestant",
+        "count": 0
+      },
+      "right": {
+        "label": "Simulated right",
+        "count": 0
+      },
+      "ballots": 0,
+      "phase": "open",
+      "round_label": "Simulated final",
+      "match_label": "Simulated match 1",
+      "window_ends_at": "2026-11-01T12:00:15Z",
+      "simulated": false,
+      "at": "2026-11-01T12:00:00Z"
+    },
+    {
+      "left": {
+        "label": "Simulated <left> & contestant",
+        "count": 9
+      },
+      "right": {
+        "label": "Simulated right",
+        "count": 2
+      },
+      "ballots": 11,
+      "phase": "closed",
+      "round_label": "Simulated final",
+      "match_label": "Simulated match 1",
+      "simulated": true,
+      "at": "2026-11-01T12:00:00Z",
+      "verdict": {
+        "side": "left",
+        "how": "tally"
+      }
+    },
+    {
+      "left": {
+        "label": "Simulated <left> & contestant",
+        "count": 3
+      },
+      "right": {
+        "label": "Simulated right",
+        "count": 3
+      },
+      "ballots": 6,
+      "phase": "closed",
+      "round_label": "Simulated final",
+      "match_label": "Simulated match 1",
+      "simulated": true,
+      "at": "2026-11-01T12:00:00Z",
+      "verdict": {
+        "side": "left",
+        "how": "tie"
+      }
+    },
+    {
+      "left": {
+        "label": "Simulated fourth",
+        "count": 3
+      },
+      "right": {
+        "label": "Simulated right",
+        "count": 3
+      },
+      "ballots": 6,
+      "phase": "closed",
+      "round_label": "Simulated final",
+      "match_label": "Simulated match 1",
+      "simulated": true,
+      "at": "2026-11-01T12:00:00Z",
+      "verdict": {
+        "side": "right",
+        "how": "tie"
+      }
+    },
+    {
+      "left": {
+        "label": "Simulated <left> & contestant",
+        "count": 20
+      },
+      "right": {
+        "label": "Simulated right",
+        "count": 1
+      },
+      "ballots": 21,
+      "phase": "called",
+      "round_label": "Simulated final",
+      "match_label": "Simulated match 1",
+      "simulated": true,
+      "at": "2026-11-01T12:00:00Z",
+      "verdict": {
+        "side": "right",
+        "how": "call"
+      }
+    },
+    {
+      "left": {
+        "label": "Simulated <left> & contestant",
+        "count": 0
+      },
+      "right": {
+        "label": "Simulated right",
+        "count": 0
+      },
+      "ballots": 0,
+      "phase": "cancelled",
+      "round_label": "Simulated final",
+      "match_label": "Simulated match 1",
+      "simulated": false,
+      "at": "2026-11-01T12:00:00Z",
+      "window_remaining_ms": 11588
+    },
+    {
+      "left": {
+        "label": "Simulated <left> & contestant",
+        "count": 20
+      },
+      "right": {
+        "label": "Simulated right",
+        "count": 1
+      },
+      "ballots": 21,
+      "phase": "finished",
+      "round_label": "Simulated final",
+      "match_label": "Simulated match 1",
+      "simulated": true,
+      "at": "2026-11-01T12:00:00Z",
+      "champion": {
+        "id": "simulated-b",
+        "title": "Simulated right",
+        "by": "simulated_streamer",
+        "seed": "1"
+      }
+    }
+  ],
+  "control_event": {
+    "seq": 7,
+    "kind": "maproom.turn",
+    "at": "2026-11-01T12:00:00Z"
+  },
+  "invalid": [
+    {
+      "door": "params",
+      "value": {
+        "action": {
+          "kind": "unknown",
+          "list": {
+            "title": "Simulated tournament",
+            "prompt": "SIMULATED: choose 1 or 2",
+            "items": [
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-b",
+                "title": "Simulated right",
+                "by": "simulated_streamer",
+                "seed": "1"
+              }
+            ]
+          },
+          "key": "simulated",
+          "window_ms": 15000
+        }
+      }
+    },
+    {
+      "door": "params",
+      "value": {
+        "action": {
+          "kind": null,
+          "list": {
+            "title": "Simulated tournament",
+            "prompt": "SIMULATED: choose 1 or 2",
+            "items": [
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-b",
+                "title": "Simulated right",
+                "by": "simulated_streamer",
+                "seed": "1"
+              }
+            ]
+          },
+          "key": "simulated",
+          "window_ms": 15000
+        }
+      }
+    },
+    {
+      "door": "params",
+      "value": {
+        "action": {
+          "kind": "start",
+          "list": {
+            "title": "Simulated tournament",
+            "prompt": "SIMULATED: choose 1 or 2",
+            "items": [
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-b",
+                "title": "Simulated right",
+                "by": "simulated_streamer",
+                "seed": "1"
+              }
+            ]
+          },
+          "key": "simulated",
+          "window_ms": 0
+        }
+      }
+    },
+    {
+      "door": "params",
+      "value": {
+        "action": {
+          "kind": "start",
+          "list": {
+            "title": "Simulated tournament",
+            "prompt": "SIMULATED: choose 1 or 2",
+            "items": [
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-b",
+                "title": "Simulated right",
+                "by": "simulated_streamer",
+                "seed": "1"
+              }
+            ]
+          },
+          "key": "simulated",
+          "window_ms": -1
+        }
+      }
+    },
+    {
+      "door": "params",
+      "value": {
+        "action": {
+          "kind": "start",
+          "list": {
+            "title": "Simulated tournament",
+            "prompt": "SIMULATED: choose 1 or 2",
+            "items": [
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-b",
+                "title": "Simulated right",
+                "by": "simulated_streamer",
+                "seed": "1"
+              }
+            ]
+          },
+          "key": "simulated",
+          "window_ms": 1.5
+        }
+      }
+    },
+    {
+      "door": "params",
+      "value": {
+        "action": {
+          "kind": "start",
+          "list": {
+            "title": "Simulated tournament",
+            "prompt": "SIMULATED: choose 1 or 2",
+            "items": [
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-b",
+                "title": "Simulated right",
+                "by": "simulated_streamer",
+                "seed": "1"
+              }
+            ]
+          },
+          "key": "simulated",
+          "window_ms": 4294967296
+        }
+      }
+    },
+    {
+      "door": "params",
+      "value": {
+        "action": {
+          "kind": "start",
+          "list": {
+            "title": "Simulated tournament",
+            "prompt": "SIMULATED: choose 1 or 2",
+            "items": [
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-b",
+                "title": "Simulated right",
+                "by": "simulated_streamer",
+                "seed": "1"
+              }
+            ]
+          },
+          "key": "simulated",
+          "window_ms": "15000"
+        }
+      }
+    },
+    {
+      "door": "params",
+      "value": {
+        "action": {
+          "kind": "start",
+          "list": {
+            "title": "Simulated tournament",
+            "prompt": "SIMULATED: choose 1 or 2",
+            "items": [
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-b",
+                "title": "Simulated right",
+                "by": "simulated_streamer",
+                "seed": "1"
+              }
+            ]
+          },
+          "key": "simulated",
+          "window_ms": null
+        }
+      }
+    },
+    {
+      "door": "params",
+      "value": {
+        "action": {
+          "kind": "start",
+          "list": {
+            "title": "Simulated tournament",
+            "prompt": "SIMULATED: choose 1 or 2",
+            "items": []
+          },
+          "key": "simulated",
+          "window_ms": 15000
+        }
+      }
+    },
+    {
+      "door": "params",
+      "value": {
+        "action": {
+          "kind": "start",
+          "list": {
+            "title": "Simulated tournament",
+            "prompt": "SIMULATED: choose 1 or 2",
+            "items": [
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              }
+            ]
+          },
+          "key": "simulated",
+          "window_ms": 15000
+        }
+      }
+    },
+    {
+      "door": "params",
+      "value": {
+        "action": {
+          "kind": "start",
+          "list": {
+            "title": "Simulated tournament",
+            "prompt": "SIMULATED: choose 1 or 2",
+            "items": [
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              }
+            ]
+          },
+          "key": "simulated",
+          "window_ms": 15000
+        }
+      }
+    },
+    {
+      "door": "params",
+      "value": {
+        "action": {
+          "kind": "start",
+          "list": {
+            "title": "Simulated tournament",
+            "prompt": "SIMULATED: choose 1 or 2",
+            "items": [
+              {
+                "id": "simulated-a",
+                "title": "",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-b",
+                "title": "Simulated right",
+                "by": "simulated_streamer",
+                "seed": "1"
+              }
+            ]
+          },
+          "key": "simulated",
+          "window_ms": 15000
+        }
+      }
+    },
+    {
+      "door": "params",
+      "value": {
+        "action": {
+          "kind": "start",
+          "list": {
+            "title": "Simulated tournament",
+            "prompt": "SIMULATED: choose 1 or 2",
+            "items": [
+              {
+                "id": "simulated-a",
+                "title": "     ",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-b",
+                "title": "Simulated right",
+                "by": "simulated_streamer",
+                "seed": "1"
+              }
+            ]
+          },
+          "key": "simulated",
+          "window_ms": 15000
+        }
+      }
+    },
+    {
+      "door": "params",
+      "value": {
+        "action": {
+          "kind": "start",
+          "list": {
+            "title": "Simulated tournament",
+            "prompt": "SIMULATED: choose 1 or 2",
+            "items": [
+              {
+                "id": "simulated-a",
+                "title": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-b",
+                "title": "Simulated right",
+                "by": "simulated_streamer",
+                "seed": "1"
+              }
+            ]
+          },
+          "key": "simulated",
+          "window_ms": 15000
+        }
+      }
+    },
+    {
+      "door": "params",
+      "value": {
+        "action": {
+          "kind": "start",
+          "list": {
+            "title": "Simulated tournament",
+            "prompt": "SIMULATED: choose 1 or 2",
+            "items": [
+              {
+                "id": "simulated-a",
+                "title": null,
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-b",
+                "title": "Simulated right",
+                "by": "simulated_streamer",
+                "seed": "1"
+              }
+            ]
+          },
+          "key": "simulated",
+          "window_ms": 15000
+        }
+      }
+    },
+    {
+      "door": "params",
+      "value": {
+        "action": {
+          "kind": "start",
+          "list": {
+            "title": "Simulated tournament",
+            "prompt": "SIMULATED: choose 1 or 2",
+            "items": [
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": 0,
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-b",
+                "title": "Simulated right",
+                "by": "simulated_streamer",
+                "seed": "1"
+              }
+            ]
+          },
+          "key": "simulated",
+          "window_ms": 15000
+        }
+      }
+    },
+    {
+      "door": "params",
+      "value": {
+        "action": {
+          "kind": "start",
+          "list": {
+            "title": "Simulated tournament",
+            "prompt": "SIMULATED: choose 1 or 2",
+            "items": [
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "01",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-b",
+                "title": "Simulated right",
+                "by": "simulated_streamer",
+                "seed": "1"
+              }
+            ]
+          },
+          "key": "simulated",
+          "window_ms": 15000
+        }
+      }
+    },
+    {
+      "door": "params",
+      "value": {
+        "action": {
+          "kind": "start",
+          "list": {
+            "title": "Simulated tournament",
+            "prompt": "SIMULATED: choose 1 or 2",
+            "items": [
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "-1",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-b",
+                "title": "Simulated right",
+                "by": "simulated_streamer",
+                "seed": "1"
+              }
+            ]
+          },
+          "key": "simulated",
+          "window_ms": 15000
+        }
+      }
+    },
+    {
+      "door": "params",
+      "value": {
+        "action": {
+          "kind": "start",
+          "list": {
+            "title": "Simulated tournament",
+            "prompt": "SIMULATED: choose 1 or 2",
+            "items": [
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-b",
+                "title": "Simulated right",
+                "by": "simulated_streamer",
+                "seed": "1"
+              }
+            ]
+          },
+          "key": "simulated",
+          "window_ms": 15000
+        }
+      }
+    },
+    {
+      "door": "params",
+      "value": {
+        "action": {
+          "kind": "start",
+          "list": {
+            "title": "Simulated tournament",
+            "prompt": "SIMULATED: choose 1 or 2",
+            "items": [
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": null,
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-b",
+                "title": "Simulated right",
+                "by": "simulated_streamer",
+                "seed": "1"
+              }
+            ]
+          },
+          "key": "simulated",
+          "window_ms": 15000
+        }
+      }
+    },
+    {
+      "door": "params",
+      "value": {
+        "action": {
+          "kind": "start",
+          "list": {
+            "title": "Simulated tournament",
+            "prompt": "SIMULATED: choose 1 or 2",
+            "items": [
+              {
+                "id": "Bad",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-b",
+                "title": "Simulated right",
+                "by": "simulated_streamer",
+                "seed": "1"
+              }
+            ]
+          },
+          "key": "simulated",
+          "window_ms": 15000
+        }
+      }
+    },
+    {
+      "door": "params",
+      "value": {
+        "action": {
+          "kind": "start",
+          "list": {
+            "title": "Simulated tournament",
+            "prompt": "SIMULATED: choose 1 or 2",
+            "items": [
+              {
+                "id": "bad--id",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-b",
+                "title": "Simulated right",
+                "by": "simulated_streamer",
+                "seed": "1"
+              }
+            ]
+          },
+          "key": "simulated",
+          "window_ms": 15000
+        }
+      }
+    },
+    {
+      "door": "params",
+      "value": {
+        "action": {
+          "kind": "start",
+          "list": {
+            "title": "Simulated tournament",
+            "prompt": "SIMULATED: choose 1 or 2",
+            "items": [
+              {
+                "id": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-b",
+                "title": "Simulated right",
+                "by": "simulated_streamer",
+                "seed": "1"
+              }
+            ]
+          },
+          "key": "simulated",
+          "window_ms": 15000
+        }
+      }
+    },
+    {
+      "door": "params",
+      "value": {
+        "action": {
+          "kind": "start",
+          "list": {
+            "title": "Simulated tournament",
+            "prompt": "SIMULATED: choose 1 or 2",
+            "items": [
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-b",
+                "title": "Simulated right",
+                "by": "simulated_streamer",
+                "seed": "1"
+              }
+            ]
+          },
+          "key": "bad:key",
+          "window_ms": 15000
+        }
+      }
+    },
+    {
+      "door": "params",
+      "value": {
+        "action": {
+          "kind": "start",
+          "list": {
+            "title": "Simulated tournament",
+            "prompt": "SIMULATED: choose 1 or 2",
+            "items": [
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-b",
+                "title": "Simulated right",
+                "by": "simulated_streamer",
+                "seed": "1"
+              }
+            ]
+          },
+          "key": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+          "window_ms": 15000
+        }
+      }
+    },
+    {
+      "door": "params",
+      "value": {
+        "action": {
+          "kind": "enter",
+          "extra": true
+        }
+      }
+    },
+    {
+      "door": "params",
+      "value": {
+        "action": {
+          "kind": "cancel",
+          "extra": true
+        }
+      }
+    },
+    {
+      "door": "params",
+      "value": {
+        "action": {
+          "kind": "undo",
+          "extra": true
+        }
+      }
+    },
+    {
+      "door": "params",
+      "value": {
+        "action": {
+          "kind": "reset",
+          "extra": true
+        }
+      }
+    },
+    {
+      "door": "params",
+      "value": {
+        "action": {
+          "kind": "speed",
+          "extra": true
+        }
+      }
+    },
+    {
+      "door": "params",
+      "value": {
+        "action": {
+          "kind": "pick",
+          "side": "tie"
+        }
+      }
+    },
+    {
+      "door": "params",
+      "value": {
+        "action": {
+          "kind": "pick",
+          "side": 0
+        }
+      }
+    },
+    {
+      "door": "params",
+      "value": {
+        "action": {
+          "kind": "tick",
+          "ms": -1
+        }
+      }
+    },
+    {
+      "door": "params",
+      "value": {
+        "action": {
+          "kind": "tick",
+          "ms": 1.5
+        }
+      }
+    },
+    {
+      "door": "params",
+      "value": {
+        "action": {
+          "kind": "enter",
+          "counted": {
+            "left": 999,
+            "right": 0
+          }
+        }
+      }
+    },
+    {
+      "door": "result",
+      "value": {
+        "session": null,
+        "at": "2026-11-01T12:00:00Z"
+      }
+    },
+    {
+      "door": "result",
+      "value": {
+        "session": {
+          "phase": "live",
+          "list": {
+            "title": "Simulated tournament",
+            "prompt": "SIMULATED: choose 1 or 2",
+            "items": [
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-b",
+                "title": "Simulated right",
+                "by": "simulated_streamer",
+                "seed": "1"
+              }
+            ]
+          },
+          "bracket": {
+            "seeds": [
+              "simulated-a",
+              "simulated-b"
+            ],
+            "rounds": [
+              [
+                {
+                  "a": "simulated-a",
+                  "b": "simulated-b"
+                }
+              ]
+            ]
+          },
+          "history": [],
+          "window_ms": 15000,
+          "key": "simulated",
+          "elapsed_ms": 0,
+          "match_key": "simulated:0:0",
+          "speed": 0,
+          "calls": [],
+          "remaining_ms": 0,
+          "counted": {
+            "left": 0,
+            "right": 0
+          },
+          "simulated": false,
+          "window_ends_at": "2026-11-01T12:00:15Z"
+        },
+        "at": "2026-11-01T12:00:00Z"
+      }
+    },
+    {
+      "door": "result",
+      "value": {
+        "session": {
+          "phase": "live",
+          "list": {
+            "title": "Simulated tournament",
+            "prompt": "SIMULATED: choose 1 or 2",
+            "items": [
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-b",
+                "title": "Simulated right",
+                "by": "simulated_streamer",
+                "seed": "1"
+              }
+            ]
+          },
+          "bracket": {
+            "seeds": [
+              "simulated-a",
+              "simulated-b"
+            ],
+            "rounds": [
+              [
+                {
+                  "a": "simulated-a",
+                  "b": "simulated-b"
+                }
+              ]
+            ]
+          },
+          "history": [],
+          "window_ms": 15000,
+          "key": "simulated",
+          "elapsed_ms": 0,
+          "match_key": "simulated:0:0",
+          "speed": 2,
+          "calls": [],
+          "remaining_ms": 0,
+          "counted": {
+            "left": 0,
+            "right": 0
+          },
+          "simulated": false,
+          "window_ends_at": "2026-11-01T12:00:15Z"
+        },
+        "at": "2026-11-01T12:00:00Z"
+      }
+    },
+    {
+      "door": "result",
+      "value": {
+        "session": {
+          "phase": "live",
+          "list": {
+            "title": "Simulated tournament",
+            "prompt": "SIMULATED: choose 1 or 2",
+            "items": [
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-b",
+                "title": "Simulated right",
+                "by": "simulated_streamer",
+                "seed": "1"
+              }
+            ]
+          },
+          "bracket": {
+            "seeds": [
+              "simulated-a",
+              "simulated-b"
+            ],
+            "rounds": [
+              [
+                {
+                  "a": "simulated-a",
+                  "b": "simulated-b"
+                }
+              ]
+            ]
+          },
+          "history": [],
+          "window_ms": 15000,
+          "key": "simulated",
+          "elapsed_ms": 0,
+          "match_key": "simulated:0:0",
+          "speed": "1",
+          "calls": [],
+          "remaining_ms": 0,
+          "counted": {
+            "left": 0,
+            "right": 0
+          },
+          "simulated": false,
+          "window_ends_at": "2026-11-01T12:00:15Z"
+        },
+        "at": "2026-11-01T12:00:00Z"
+      }
+    },
+    {
+      "door": "result",
+      "value": {
+        "session": {
+          "phase": "open",
+          "list": {
+            "title": "Simulated tournament",
+            "prompt": "SIMULATED: choose 1 or 2",
+            "items": [
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-b",
+                "title": "Simulated right",
+                "by": "simulated_streamer",
+                "seed": "1"
+              }
+            ]
+          },
+          "bracket": {
+            "seeds": [
+              "simulated-a",
+              "simulated-b"
+            ],
+            "rounds": [
+              [
+                {
+                  "a": "simulated-a",
+                  "b": "simulated-b"
+                }
+              ]
+            ]
+          },
+          "history": [],
+          "window_ms": 15000,
+          "key": "simulated",
+          "elapsed_ms": 0,
+          "match_key": "simulated:0:0",
+          "speed": 1,
+          "calls": [],
+          "remaining_ms": 0,
+          "counted": {
+            "left": 0,
+            "right": 0
+          },
+          "simulated": false,
+          "window_ends_at": "2026-11-01T12:00:15Z"
+        },
+        "at": "2026-11-01T12:00:00Z"
+      }
+    },
+    {
+      "door": "result",
+      "value": {
+        "session": {
+          "phase": "live",
+          "list": {
+            "title": "Simulated tournament",
+            "prompt": "SIMULATED: choose 1 or 2",
+            "items": [
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-b",
+                "title": "Simulated right",
+                "by": "simulated_streamer",
+                "seed": "1"
+              }
+            ]
+          },
+          "bracket": {
+            "seeds": [
+              "simulated-a",
+              "simulated-b"
+            ],
+            "rounds": [
+              [
+                {
+                  "a": "simulated-a",
+                  "b": "simulated-b"
+                }
+              ]
+            ]
+          },
+          "history": [],
+          "window_ms": 15000,
+          "key": "simulated",
+          "elapsed_ms": 0,
+          "match_key": null,
+          "speed": 1,
+          "calls": [],
+          "remaining_ms": 0,
+          "counted": {
+            "left": 0,
+            "right": 0
+          },
+          "simulated": false,
+          "window_ends_at": "2026-11-01T12:00:15Z"
+        },
+        "at": "2026-11-01T12:00:00Z"
+      }
+    },
+    {
+      "door": "result",
+      "value": {
+        "session": {
+          "phase": "live",
+          "list": {
+            "title": "Simulated tournament",
+            "prompt": "SIMULATED: choose 1 or 2",
+            "items": [
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-b",
+                "title": "Simulated right",
+                "by": "simulated_streamer",
+                "seed": "1"
+              }
+            ]
+          },
+          "bracket": {
+            "seeds": [
+              "simulated-a",
+              "simulated-b"
+            ],
+            "rounds": [
+              [
+                {
+                  "a": "simulated-a",
+                  "b": "simulated-b"
+                }
+              ]
+            ]
+          },
+          "history": [],
+          "window_ms": 15000,
+          "key": "simulated",
+          "elapsed_ms": 0,
+          "match_key": "simulated:3:0",
+          "speed": 1,
+          "calls": [],
+          "remaining_ms": 0,
+          "counted": {
+            "left": 0,
+            "right": 0
+          },
+          "simulated": false,
+          "window_ends_at": "2026-11-01T12:00:15Z"
+        },
+        "at": "2026-11-01T12:00:00Z"
+      }
+    },
+    {
+      "door": "result",
+      "value": {
+        "session": {
+          "phase": "live",
+          "list": {
+            "title": "Simulated tournament",
+            "prompt": "SIMULATED: choose 1 or 2",
+            "items": [
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-b",
+                "title": "Simulated right",
+                "by": "simulated_streamer",
+                "seed": "1"
+              }
+            ]
+          },
+          "bracket": {
+            "seeds": [
+              "simulated-a",
+              "simulated-b"
+            ],
+            "rounds": [
+              [
+                {
+                  "a": "simulated-a",
+                  "b": "simulated-b"
+                }
+              ]
+            ]
+          },
+          "history": [],
+          "window_ms": 15000,
+          "key": "simulated",
+          "elapsed_ms": 0,
+          "match_key": "simulated:0:4",
+          "speed": 1,
+          "calls": [],
+          "remaining_ms": 0,
+          "counted": {
+            "left": 0,
+            "right": 0
+          },
+          "simulated": false,
+          "window_ends_at": "2026-11-01T12:00:15Z"
+        },
+        "at": "2026-11-01T12:00:00Z"
+      }
+    },
+    {
+      "door": "result",
+      "value": {
+        "session": {
+          "phase": "live",
+          "list": {
+            "title": "Simulated tournament",
+            "prompt": "SIMULATED: choose 1 or 2",
+            "items": [
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-b",
+                "title": "Simulated right",
+                "by": "simulated_streamer",
+                "seed": "1"
+              }
+            ]
+          },
+          "bracket": {
+            "seeds": [],
+            "rounds": [
+              [
+                {
+                  "a": "simulated-a",
+                  "b": "simulated-b"
+                }
+              ]
+            ]
+          },
+          "history": [],
+          "window_ms": 15000,
+          "key": "simulated",
+          "elapsed_ms": 0,
+          "match_key": "simulated:0:0",
+          "speed": 1,
+          "calls": [],
+          "remaining_ms": 0,
+          "counted": {
+            "left": 0,
+            "right": 0
+          },
+          "simulated": false,
+          "window_ends_at": "2026-11-01T12:00:15Z"
+        },
+        "at": "2026-11-01T12:00:00Z"
+      }
+    },
+    {
+      "door": "result",
+      "value": {
+        "session": {
+          "phase": "live",
+          "list": {
+            "title": "Simulated tournament",
+            "prompt": "SIMULATED: choose 1 or 2",
+            "items": [
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-b",
+                "title": "Simulated right",
+                "by": "simulated_streamer",
+                "seed": "1"
+              }
+            ]
+          },
+          "bracket": {
+            "seeds": [
+              "simulated-a",
+              "simulated-a",
+              "simulated-a",
+              "simulated-a",
+              "simulated-a",
+              "simulated-a",
+              "simulated-a",
+              "simulated-a",
+              "simulated-a"
+            ],
+            "rounds": [
+              [
+                {
+                  "a": "simulated-a",
+                  "b": "simulated-b"
+                }
+              ]
+            ]
+          },
+          "history": [],
+          "window_ms": 15000,
+          "key": "simulated",
+          "elapsed_ms": 0,
+          "match_key": "simulated:0:0",
+          "speed": 1,
+          "calls": [],
+          "remaining_ms": 0,
+          "counted": {
+            "left": 0,
+            "right": 0
+          },
+          "simulated": false,
+          "window_ends_at": "2026-11-01T12:00:15Z"
+        },
+        "at": "2026-11-01T12:00:00Z"
+      }
+    },
+    {
+      "door": "result",
+      "value": {
+        "session": {
+          "phase": "live",
+          "list": {
+            "title": "Simulated tournament",
+            "prompt": "SIMULATED: choose 1 or 2",
+            "items": [
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-b",
+                "title": "Simulated right",
+                "by": "simulated_streamer",
+                "seed": "1"
+              }
+            ]
+          },
+          "bracket": {
+            "seeds": [
+              "simulated-a",
+              "simulated-b"
+            ],
+            "rounds": []
+          },
+          "history": [],
+          "window_ms": 15000,
+          "key": "simulated",
+          "elapsed_ms": 0,
+          "match_key": "simulated:0:0",
+          "speed": 1,
+          "calls": [],
+          "remaining_ms": 0,
+          "counted": {
+            "left": 0,
+            "right": 0
+          },
+          "simulated": false,
+          "window_ends_at": "2026-11-01T12:00:15Z"
+        },
+        "at": "2026-11-01T12:00:00Z"
+      }
+    },
+    {
+      "door": "result",
+      "value": {
+        "session": {
+          "phase": "live",
+          "list": {
+            "title": "Simulated tournament",
+            "prompt": "SIMULATED: choose 1 or 2",
+            "items": [
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-b",
+                "title": "Simulated right",
+                "by": "simulated_streamer",
+                "seed": "1"
+              }
+            ]
+          },
+          "bracket": {
+            "seeds": [
+              "simulated-a",
+              "simulated-b"
+            ],
+            "rounds": [
+              []
+            ]
+          },
+          "history": [],
+          "window_ms": 15000,
+          "key": "simulated",
+          "elapsed_ms": 0,
+          "match_key": "simulated:0:0",
+          "speed": 1,
+          "calls": [],
+          "remaining_ms": 0,
+          "counted": {
+            "left": 0,
+            "right": 0
+          },
+          "simulated": false,
+          "window_ends_at": "2026-11-01T12:00:15Z"
+        },
+        "at": "2026-11-01T12:00:00Z"
+      }
+    },
+    {
+      "door": "result",
+      "value": {
+        "session": {
+          "phase": "live",
+          "list": {
+            "title": "Simulated tournament",
+            "prompt": "SIMULATED: choose 1 or 2",
+            "items": [
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-b",
+                "title": "Simulated right",
+                "by": "simulated_streamer",
+                "seed": "1"
+              }
+            ]
+          },
+          "bracket": {
+            "seeds": [
+              "simulated-a",
+              "simulated-b"
+            ],
+            "rounds": [
+              [
+                {
+                  "a": "simulated-a",
+                  "b": "simulated-b"
+                }
+              ],
+              [
+                {
+                  "a": "simulated-a",
+                  "b": "simulated-b"
+                }
+              ],
+              [
+                {
+                  "a": "simulated-a",
+                  "b": "simulated-b"
+                }
+              ],
+              [
+                {
+                  "a": "simulated-a",
+                  "b": "simulated-b"
+                }
+              ]
+            ]
+          },
+          "history": [],
+          "window_ms": 15000,
+          "key": "simulated",
+          "elapsed_ms": 0,
+          "match_key": "simulated:0:0",
+          "speed": 1,
+          "calls": [],
+          "remaining_ms": 0,
+          "counted": {
+            "left": 0,
+            "right": 0
+          },
+          "simulated": false,
+          "window_ends_at": "2026-11-01T12:00:15Z"
+        },
+        "at": "2026-11-01T12:00:00Z"
+      }
+    },
+    {
+      "door": "result",
+      "value": {
+        "session": {
+          "phase": "live",
+          "list": {
+            "title": "Simulated tournament",
+            "prompt": "SIMULATED: choose 1 or 2",
+            "items": [
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-b",
+                "title": "Simulated right",
+                "by": "simulated_streamer",
+                "seed": "1"
+              }
+            ]
+          },
+          "bracket": {
+            "seeds": [
+              "simulated-a",
+              "simulated-b"
+            ],
+            "rounds": [
+              [
+                {
+                  "a": "simulated-a",
+                  "b": "simulated-b"
+                }
+              ]
+            ]
+          },
+          "history": [
+            {
+              "seeds": [
+                "simulated-a",
+                "simulated-b"
+              ],
+              "rounds": [
+                [
+                  {
+                    "a": "simulated-a",
+                    "b": "simulated-b"
+                  }
+                ]
+              ]
+            },
+            {
+              "seeds": [
+                "simulated-a",
+                "simulated-b"
+              ],
+              "rounds": [
+                [
+                  {
+                    "a": "simulated-a",
+                    "b": "simulated-b"
+                  }
+                ]
+              ]
+            },
+            {
+              "seeds": [
+                "simulated-a",
+                "simulated-b"
+              ],
+              "rounds": [
+                [
+                  {
+                    "a": "simulated-a",
+                    "b": "simulated-b"
+                  }
+                ]
+              ]
+            },
+            {
+              "seeds": [
+                "simulated-a",
+                "simulated-b"
+              ],
+              "rounds": [
+                [
+                  {
+                    "a": "simulated-a",
+                    "b": "simulated-b"
+                  }
+                ]
+              ]
+            },
+            {
+              "seeds": [
+                "simulated-a",
+                "simulated-b"
+              ],
+              "rounds": [
+                [
+                  {
+                    "a": "simulated-a",
+                    "b": "simulated-b"
+                  }
+                ]
+              ]
+            },
+            {
+              "seeds": [
+                "simulated-a",
+                "simulated-b"
+              ],
+              "rounds": [
+                [
+                  {
+                    "a": "simulated-a",
+                    "b": "simulated-b"
+                  }
+                ]
+              ]
+            },
+            {
+              "seeds": [
+                "simulated-a",
+                "simulated-b"
+              ],
+              "rounds": [
+                [
+                  {
+                    "a": "simulated-a",
+                    "b": "simulated-b"
+                  }
+                ]
+              ]
+            },
+            {
+              "seeds": [
+                "simulated-a",
+                "simulated-b"
+              ],
+              "rounds": [
+                [
+                  {
+                    "a": "simulated-a",
+                    "b": "simulated-b"
+                  }
+                ]
+              ]
+            }
+          ],
+          "window_ms": 15000,
+          "key": "simulated",
+          "elapsed_ms": 0,
+          "match_key": "simulated:0:0",
+          "speed": 1,
+          "calls": [],
+          "remaining_ms": 0,
+          "counted": {
+            "left": 0,
+            "right": 0
+          },
+          "simulated": false,
+          "window_ends_at": "2026-11-01T12:00:15Z"
+        },
+        "at": "2026-11-01T12:00:00Z"
+      }
+    },
+    {
+      "door": "result",
+      "value": {
+        "session": {
+          "phase": "live",
+          "list": {
+            "title": "Simulated tournament",
+            "prompt": "SIMULATED: choose 1 or 2",
+            "items": [
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-b",
+                "title": "Simulated right",
+                "by": "simulated_streamer",
+                "seed": "1"
+              }
+            ]
+          },
+          "bracket": {
+            "seeds": [
+              "simulated-a",
+              "simulated-b"
+            ],
+            "rounds": [
+              [
+                {
+                  "a": "simulated-a",
+                  "b": "simulated-b"
+                }
+              ]
+            ]
+          },
+          "history": [],
+          "window_ms": 15000,
+          "key": "simulated",
+          "elapsed_ms": 0,
+          "match_key": "simulated:0:0",
+          "speed": 1,
+          "calls": [],
+          "remaining_ms": 0,
+          "counted": {
+            "left": -1,
+            "right": 0
+          },
+          "simulated": false,
+          "window_ends_at": "2026-11-01T12:00:15Z"
+        },
+        "at": "2026-11-01T12:00:00Z"
+      }
+    },
+    {
+      "door": "result",
+      "value": {
+        "session": {
+          "phase": "live",
+          "list": {
+            "title": "Simulated tournament",
+            "prompt": "SIMULATED: choose 1 or 2",
+            "items": [
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-b",
+                "title": "Simulated right",
+                "by": "simulated_streamer",
+                "seed": "1"
+              }
+            ]
+          },
+          "bracket": {
+            "seeds": [
+              "simulated-a",
+              "simulated-b"
+            ],
+            "rounds": [
+              [
+                {
+                  "a": "simulated-a",
+                  "b": "simulated-b"
+                }
+              ]
+            ]
+          },
+          "history": [],
+          "window_ms": 15000,
+          "key": "simulated",
+          "elapsed_ms": 0,
+          "match_key": "simulated:0:0",
+          "speed": 1,
+          "calls": [],
+          "remaining_ms": 0,
+          "counted": {
+            "left": 4294967296,
+            "right": 0
+          },
+          "simulated": false,
+          "window_ends_at": "2026-11-01T12:00:15Z"
+        },
+        "at": "2026-11-01T12:00:00Z"
+      }
+    },
+    {
+      "door": "result",
+      "value": {
+        "session": {
+          "phase": "live",
+          "list": {
+            "title": "Simulated tournament",
+            "prompt": "SIMULATED: choose 1 or 2",
+            "items": [
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-b",
+                "title": "Simulated right",
+                "by": "simulated_streamer",
+                "seed": "1"
+              }
+            ]
+          },
+          "bracket": {
+            "seeds": [
+              "simulated-a",
+              "simulated-b"
+            ],
+            "rounds": [
+              [
+                {
+                  "a": "simulated-a",
+                  "b": "simulated-b"
+                }
+              ]
+            ]
+          },
+          "history": [],
+          "window_ms": 15000,
+          "key": "simulated",
+          "elapsed_ms": 1.5,
+          "match_key": "simulated:0:0",
+          "speed": 1,
+          "calls": [],
+          "remaining_ms": 0,
+          "counted": {
+            "left": 0,
+            "right": 0
+          },
+          "simulated": false,
+          "window_ends_at": "2026-11-01T12:00:15Z"
+        },
+        "at": "2026-11-01T12:00:00Z"
+      }
+    },
+    {
+      "door": "result",
+      "value": {
+        "session": {
+          "phase": "live",
+          "list": {
+            "title": "Simulated tournament",
+            "prompt": "SIMULATED: choose 1 or 2",
+            "items": [
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-b",
+                "title": "Simulated right",
+                "by": "simulated_streamer",
+                "seed": "1"
+              }
+            ]
+          },
+          "bracket": {
+            "seeds": [
+              "simulated-a",
+              "simulated-b"
+            ],
+            "rounds": [
+              [
+                {
+                  "a": "simulated-a",
+                  "b": "simulated-b"
+                }
+              ]
+            ]
+          },
+          "history": [],
+          "window_ms": 15000,
+          "key": "simulated",
+          "elapsed_ms": 0,
+          "match_key": "simulated:0:0",
+          "speed": 1,
+          "calls": [],
+          "remaining_ms": 0,
+          "counted": {
+            "left": 0,
+            "right": 0
+          },
+          "simulated": false,
+          "window_ends_at": "2026-11-01T12:00:15Z"
+        },
+        "at": "2026-02-30T12:00:00Z"
+      }
+    },
+    {
+      "door": "result",
+      "value": {
+        "session": {
+          "phase": "verdict",
+          "list": {
+            "title": "Simulated tournament",
+            "prompt": "SIMULATED: choose 1 or 2",
+            "items": [
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-b",
+                "title": "Simulated right",
+                "by": "simulated_streamer",
+                "seed": "1"
+              }
+            ]
+          },
+          "bracket": {
+            "seeds": [
+              "simulated-a",
+              "simulated-b"
+            ],
+            "rounds": [
+              [
+                {
+                  "a": "simulated-a",
+                  "b": "simulated-b",
+                  "winner": "simulated-a"
+                }
+              ]
+            ]
+          },
+          "history": [
+            {
+              "seeds": [
+                "simulated-a",
+                "simulated-b"
+              ],
+              "rounds": [
+                [
+                  {
+                    "a": "simulated-a",
+                    "b": "simulated-b"
+                  }
+                ]
+              ]
+            }
+          ],
+          "window_ms": 15000,
+          "key": "simulated",
+          "elapsed_ms": 15000,
+          "match_key": "simulated:0:0",
+          "speed": 1,
+          "calls": [],
+          "remaining_ms": 4000,
+          "counted": {
+            "left": 9,
+            "right": 2
+          },
+          "simulated": true,
+          "verdict": {
+            "a": "simulated-a",
+            "b": "simulated-b",
+            "verdict": {
+              "side": "left",
+              "how": "tally"
+            },
+            "counted": {
+              "left": 9,
+              "right": 2
+            },
+            "elapsed_ms": 15000,
+            "round": 0,
+            "index": 0,
+            "match_key": "simulated:0:0"
+          }
+        },
+        "at": "2026-11-01T12:00:00Z"
+      }
+    },
+    {
+      "door": "result",
+      "value": {
+        "session": {
+          "phase": "verdict",
+          "list": {
+            "title": "Simulated tournament",
+            "prompt": "SIMULATED: choose 1 or 2",
+            "items": [
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-b",
+                "title": "Simulated right",
+                "by": "simulated_streamer",
+                "seed": "1"
+              }
+            ]
+          },
+          "bracket": {
+            "seeds": [
+              "simulated-a",
+              "simulated-b"
+            ],
+            "rounds": [
+              [
+                {
+                  "a": "simulated-a",
+                  "b": "simulated-b",
+                  "winner": "simulated-a"
+                }
+              ]
+            ]
+          },
+          "history": [
+            {
+              "seeds": [
+                "simulated-a",
+                "simulated-b"
+              ],
+              "rounds": [
+                [
+                  {
+                    "a": "simulated-a",
+                    "b": "simulated-b"
+                  }
+                ]
+              ]
+            }
+          ],
+          "window_ms": 15000,
+          "key": "simulated",
+          "elapsed_ms": 15000,
+          "match_key": "simulated:0:0",
+          "speed": 1,
+          "calls": [],
+          "remaining_ms": 4000,
+          "counted": {
+            "left": 9,
+            "right": 2
+          },
+          "simulated": true,
+          "verdict": {
+            "a": "simulated-a",
+            "b": "simulated-b",
+            "verdict": {
+              "side": "left",
+              "how": "tally"
+            },
+            "counted": {
+              "left": 9,
+              "right": 2
+            },
+            "elapsed_ms": 15000,
+            "round": "3",
+            "index": 0,
+            "match_key": "simulated:0:0"
+          }
+        },
+        "at": "2026-11-01T12:00:00Z"
+      }
+    },
+    {
+      "door": "result",
+      "value": {
+        "session": {
+          "phase": "verdict",
+          "list": {
+            "title": "Simulated tournament",
+            "prompt": "SIMULATED: choose 1 or 2",
+            "items": [
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-b",
+                "title": "Simulated right",
+                "by": "simulated_streamer",
+                "seed": "1"
+              }
+            ]
+          },
+          "bracket": {
+            "seeds": [
+              "simulated-a",
+              "simulated-b"
+            ],
+            "rounds": [
+              [
+                {
+                  "a": "simulated-a",
+                  "b": "simulated-b",
+                  "winner": "simulated-a"
+                }
+              ]
+            ]
+          },
+          "history": [
+            {
+              "seeds": [
+                "simulated-a",
+                "simulated-b"
+              ],
+              "rounds": [
+                [
+                  {
+                    "a": "simulated-a",
+                    "b": "simulated-b"
+                  }
+                ]
+              ]
+            }
+          ],
+          "window_ms": 15000,
+          "key": "simulated",
+          "elapsed_ms": 15000,
+          "match_key": "simulated:0:0",
+          "speed": 1,
+          "calls": [],
+          "remaining_ms": 4000,
+          "counted": {
+            "left": 9,
+            "right": 2
+          },
+          "simulated": true,
+          "verdict": {
+            "a": "simulated-a",
+            "b": "simulated-b",
+            "verdict": {
+              "side": "left",
+              "how": "tally"
+            },
+            "counted": {
+              "left": 9,
+              "right": 2
+            },
+            "elapsed_ms": 15000,
+            "round": "0",
+            "index": -1,
+            "match_key": "simulated:0:0"
+          }
+        },
+        "at": "2026-11-01T12:00:00Z"
+      }
+    },
+    {
+      "door": "result",
+      "value": {
+        "session": {
+          "phase": "verdict",
+          "list": {
+            "title": "Simulated tournament",
+            "prompt": "SIMULATED: choose 1 or 2",
+            "items": [
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-b",
+                "title": "Simulated right",
+                "by": "simulated_streamer",
+                "seed": "1"
+              }
+            ]
+          },
+          "bracket": {
+            "seeds": [
+              "simulated-a",
+              "simulated-b"
+            ],
+            "rounds": [
+              [
+                {
+                  "a": "simulated-a",
+                  "b": "simulated-b",
+                  "winner": "simulated-a"
+                }
+              ]
+            ]
+          },
+          "history": [
+            {
+              "seeds": [
+                "simulated-a",
+                "simulated-b"
+              ],
+              "rounds": [
+                [
+                  {
+                    "a": "simulated-a",
+                    "b": "simulated-b"
+                  }
+                ]
+              ]
+            }
+          ],
+          "window_ms": 15000,
+          "key": "simulated",
+          "elapsed_ms": 15000,
+          "match_key": "simulated:0:0",
+          "speed": 1,
+          "calls": [],
+          "remaining_ms": 4000,
+          "counted": {
+            "left": 9,
+            "right": 2
+          },
+          "simulated": true,
+          "verdict": {
+            "a": "simulated-a",
+            "b": "simulated-b",
+            "verdict": {
+              "side": "left",
+              "how": "tally"
+            },
+            "counted": {
+              "left": 9,
+              "right": 2
+            },
+            "elapsed_ms": 15000,
+            "round": "0",
+            "index": 4,
+            "match_key": "simulated:0:0"
+          }
+        },
+        "at": "2026-11-01T12:00:00Z"
+      }
+    },
+    {
+      "door": "result",
+      "value": {
+        "session": {
+          "phase": "verdict",
+          "list": {
+            "title": "Simulated tournament",
+            "prompt": "SIMULATED: choose 1 or 2",
+            "items": [
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-b",
+                "title": "Simulated right",
+                "by": "simulated_streamer",
+                "seed": "1"
+              }
+            ]
+          },
+          "bracket": {
+            "seeds": [
+              "simulated-a",
+              "simulated-b"
+            ],
+            "rounds": [
+              [
+                {
+                  "a": "simulated-a",
+                  "b": "simulated-b",
+                  "winner": "simulated-a"
+                }
+              ]
+            ]
+          },
+          "history": [
+            {
+              "seeds": [
+                "simulated-a",
+                "simulated-b"
+              ],
+              "rounds": [
+                [
+                  {
+                    "a": "simulated-a",
+                    "b": "simulated-b"
+                  }
+                ]
+              ]
+            }
+          ],
+          "window_ms": 15000,
+          "key": "simulated",
+          "elapsed_ms": 15000,
+          "match_key": "simulated:0:0",
+          "speed": 1,
+          "calls": [],
+          "remaining_ms": 4000,
+          "counted": {
+            "left": 9,
+            "right": 2
+          },
+          "simulated": true,
+          "verdict": {
+            "a": "simulated-a",
+            "b": "simulated-b",
+            "verdict": {
+              "side": "tie",
+              "how": "tally"
+            },
+            "counted": {
+              "left": 9,
+              "right": 2
+            },
+            "elapsed_ms": 15000,
+            "round": "0",
+            "index": 0,
+            "match_key": "simulated:0:0"
+          }
+        },
+        "at": "2026-11-01T12:00:00Z"
+      }
+    },
+    {
+      "door": "result",
+      "value": {
+        "session": {
+          "phase": "verdict",
+          "list": {
+            "title": "Simulated tournament",
+            "prompt": "SIMULATED: choose 1 or 2",
+            "items": [
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-b",
+                "title": "Simulated right",
+                "by": "simulated_streamer",
+                "seed": "1"
+              }
+            ]
+          },
+          "bracket": {
+            "seeds": [
+              "simulated-a",
+              "simulated-b"
+            ],
+            "rounds": [
+              [
+                {
+                  "a": "simulated-a",
+                  "b": "simulated-b",
+                  "winner": "simulated-a"
+                }
+              ]
+            ]
+          },
+          "history": [
+            {
+              "seeds": [
+                "simulated-a",
+                "simulated-b"
+              ],
+              "rounds": [
+                [
+                  {
+                    "a": "simulated-a",
+                    "b": "simulated-b"
+                  }
+                ]
+              ]
+            }
+          ],
+          "window_ms": 15000,
+          "key": "simulated",
+          "elapsed_ms": 15000,
+          "match_key": "simulated:0:0",
+          "speed": 1,
+          "calls": [],
+          "remaining_ms": 4000,
+          "counted": {
+            "left": 9,
+            "right": -1
+          },
+          "simulated": true,
+          "verdict": {
+            "a": "simulated-a",
+            "b": "simulated-b",
+            "verdict": {
+              "side": "left",
+              "how": "tally"
+            },
+            "counted": {
+              "left": 9,
+              "right": -1
+            },
+            "elapsed_ms": 15000,
+            "round": "0",
+            "index": 0,
+            "match_key": "simulated:0:0"
+          }
+        },
+        "at": "2026-11-01T12:00:00Z"
+      }
+    },
+    {
+      "door": "snapshot",
+      "value": {
+        "left": {
+          "label": "Simulated <left> & contestant",
+          "count": 0
+        },
+        "right": {
+          "label": "Simulated right",
+          "count": 0
+        },
+        "ballots": 0,
+        "phase": "live",
+        "round_label": "Simulated final",
+        "match_label": "Simulated match 1",
+        "window_ends_at": "2026-11-01T12:00:15Z",
+        "simulated": false,
+        "at": "2026-11-01T12:00:00Z"
+      }
+    },
+    {
+      "door": "snapshot",
+      "value": {
+        "left": {
+          "label": "Simulated <left> & contestant",
+          "count": 0
+        },
+        "right": {
+          "label": "Simulated right",
+          "count": 0
+        },
+        "ballots": 0,
+        "phase": null,
+        "round_label": "Simulated final",
+        "match_label": "Simulated match 1",
+        "window_ends_at": "2026-11-01T12:00:15Z",
+        "simulated": false,
+        "at": "2026-11-01T12:00:00Z"
+      }
+    },
+    {
+      "door": "snapshot",
+      "value": {
+        "left": {
+          "label": "Simulated <left> & contestant",
+          "count": 0
+        },
+        "right": {
+          "label": "Simulated right",
+          "count": 0
+        },
+        "ballots": 0,
+        "phase": "open",
+        "round_label": "",
+        "match_label": "Simulated match 1",
+        "window_ends_at": "2026-11-01T12:00:15Z",
+        "simulated": false,
+        "at": "2026-11-01T12:00:00Z"
+      }
+    },
+    {
+      "door": "snapshot",
+      "value": {
+        "left": {
+          "label": "Simulated <left> & contestant",
+          "count": 0
+        },
+        "right": {
+          "label": "Simulated right",
+          "count": 0
+        },
+        "ballots": 0,
+        "phase": "open",
+        "round_label": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "match_label": "Simulated match 1",
+        "window_ends_at": "2026-11-01T12:00:15Z",
+        "simulated": false,
+        "at": "2026-11-01T12:00:00Z"
+      }
+    },
+    {
+      "door": "snapshot",
+      "value": {
+        "left": {
+          "label": "",
+          "count": 0
+        },
+        "right": {
+          "label": "Simulated right",
+          "count": 0
+        },
+        "ballots": 0,
+        "phase": "open",
+        "round_label": "Simulated final",
+        "match_label": "Simulated match 1",
+        "window_ends_at": "2026-11-01T12:00:15Z",
+        "simulated": false,
+        "at": "2026-11-01T12:00:00Z"
+      }
+    },
+    {
+      "door": "snapshot",
+      "value": {
+        "left": {
+          "label": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+          "count": 0
+        },
+        "right": {
+          "label": "Simulated right",
+          "count": 0
+        },
+        "ballots": 0,
+        "phase": "open",
+        "round_label": "Simulated final",
+        "match_label": "Simulated match 1",
+        "window_ends_at": "2026-11-01T12:00:15Z",
+        "simulated": false,
+        "at": "2026-11-01T12:00:00Z"
+      }
+    },
+    {
+      "door": "snapshot",
+      "value": {
+        "left": {
+          "label": "Simulated <left> & contestant",
+          "count": 0
+        },
+        "right": {
+          "label": "Simulated right",
+          "count": 0
+        },
+        "ballots": 0,
+        "phase": "open",
+        "round_label": "Simulated final",
+        "match_label": "Simulated match 1",
+        "window_ends_at": null,
+        "simulated": false,
+        "at": "2026-11-01T12:00:00Z"
+      }
+    },
+    {
+      "door": "snapshot",
+      "value": {
+        "left": {
+          "label": "Simulated <left> & contestant",
+          "count": 0
+        },
+        "right": {
+          "label": "Simulated right",
+          "count": 0
+        },
+        "ballots": 0,
+        "phase": "open",
+        "round_label": "Simulated final",
+        "match_label": "Simulated match 1",
+        "window_ends_at": "2026-02-30T12:00:00Z",
+        "simulated": false,
+        "at": "2026-11-01T12:00:00Z"
+      }
+    },
+    {
+      "door": "snapshot",
+      "value": {
+        "left": {
+          "label": "Simulated <left> & contestant",
+          "count": 0
+        },
+        "right": {
+          "label": "Simulated right",
+          "count": 0
+        },
+        "ballots": 0,
+        "phase": "open",
+        "round_label": "Simulated final",
+        "match_label": "Simulated match 1",
+        "window_ends_at": "2026-11-01T12:00:15Z",
+        "simulated": false,
+        "at": "2026-11-01T12:00:00Z",
+        "window_remaining_ms": null
+      }
+    },
+    {
+      "door": "snapshot",
+      "value": {
+        "left": {
+          "label": "Simulated <left> & contestant",
+          "count": 0
+        },
+        "right": {
+          "label": "Simulated right",
+          "count": 0
+        },
+        "ballots": 0,
+        "phase": "open",
+        "round_label": "Simulated final",
+        "match_label": "Simulated match 1",
+        "window_ends_at": "2026-11-01T12:00:15Z",
+        "simulated": false,
+        "at": "2026-11-01T12:00:00Z",
+        "window_remaining_ms": -1
+      }
+    },
+    {
+      "door": "snapshot",
+      "value": {
+        "left": {
+          "label": "Simulated <left> & contestant",
+          "count": 0
+        },
+        "right": {
+          "label": "Simulated right",
+          "count": 0
+        },
+        "ballots": 0,
+        "phase": "open",
+        "round_label": "Simulated final",
+        "match_label": "Simulated match 1",
+        "window_ends_at": "2026-11-01T12:00:15Z",
+        "simulated": false,
+        "at": "2026-11-01T12:00:00Z",
+        "window_remaining_ms": 4294967296
+      }
+    },
+    {
+      "door": "snapshot",
+      "value": {
+        "left": {
+          "label": "Simulated <left> & contestant",
+          "count": 0
+        },
+        "right": {
+          "label": "Simulated right",
+          "count": 0
+        },
+        "ballots": 0,
+        "phase": "open",
+        "round_label": "Simulated final",
+        "match_label": "Simulated match 1",
+        "window_ends_at": "2026-11-01T12:00:15Z",
+        "simulated": "mixed",
+        "at": "2026-11-01T12:00:00Z"
+      }
+    },
+    {
+      "door": "snapshot",
+      "value": {
+        "left": {
+          "label": "Simulated <left> & contestant",
+          "count": 0
+        },
+        "right": {
+          "label": "Simulated right",
+          "count": 0
+        },
+        "ballots": 0,
+        "phase": "open",
+        "round_label": "Simulated final",
+        "match_label": "Simulated match 1",
+        "window_ends_at": "2026-11-01T12:00:15Z",
+        "simulated": null,
+        "at": "2026-11-01T12:00:00Z"
+      }
+    },
+    {
+      "door": "snapshot",
+      "value": {
+        "left": {
+          "label": "Simulated <left> & contestant",
+          "count": 0
+        },
+        "right": {
+          "label": "Simulated right",
+          "count": 0
+        },
+        "ballots": 0,
+        "phase": "open",
+        "round_label": "Simulated final",
+        "match_label": "Simulated match 1",
+        "window_ends_at": "2026-11-01T12:00:15Z",
+        "simulated": false,
+        "at": "2026-11-01T12:00:00Z",
+        "verdict": null
+      }
+    },
+    {
+      "door": "snapshot",
+      "value": {
+        "left": {
+          "label": "Simulated <left> & contestant",
+          "count": 0
+        },
+        "right": {
+          "label": "Simulated right",
+          "count": 0
+        },
+        "ballots": 0,
+        "phase": "open",
+        "round_label": "Simulated final",
+        "match_label": "Simulated match 1",
+        "window_ends_at": "2026-11-01T12:00:15Z",
+        "simulated": false,
+        "at": "2026-11-01T12:00:00Z",
+        "verdict": "tie"
+      }
+    },
+    {
+      "door": "snapshot",
+      "value": {
+        "left": {
+          "label": "Simulated <left> & contestant",
+          "count": 0
+        },
+        "right": {
+          "label": "Simulated right",
+          "count": 0
+        },
+        "ballots": 0,
+        "phase": "open",
+        "round_label": "Simulated final",
+        "match_label": "Simulated match 1",
+        "window_ends_at": "2026-11-01T12:00:15Z",
+        "simulated": false,
+        "at": "2026-11-01T12:00:00Z",
+        "verdict": {
+          "side": "tie",
+          "how": "tie"
+        }
+      }
+    },
+    {
+      "door": "snapshot",
+      "value": {
+        "left": {
+          "label": "Simulated <left> & contestant",
+          "count": 0
+        },
+        "right": {
+          "label": "Simulated right",
+          "count": 0
+        },
+        "ballots": 0,
+        "phase": "open",
+        "round_label": "Simulated final",
+        "match_label": "Simulated match 1",
+        "window_ends_at": "2026-11-01T12:00:15Z",
+        "simulated": false,
+        "at": "2026-11-01T12:00:00Z",
+        "verdict": {
+          "side": "left",
+          "how": "unknown"
+        }
+      }
+    },
+    {
+      "door": "snapshot",
+      "value": {
+        "left": {
+          "label": "Simulated <left> & contestant",
+          "count": 0
+        },
+        "right": {
+          "label": "Simulated right",
+          "count": 0
+        },
+        "ballots": 0,
+        "phase": "open",
+        "round_label": "Simulated final",
+        "match_label": "Simulated match 1",
+        "window_ends_at": "2026-11-01T12:00:15Z",
+        "simulated": false,
+        "at": "2026-11-01T12:00:00Z",
+        "verdict": {
+          "side": "left",
+          "how": "tie",
+          "extra": true
+        }
+      }
+    },
+    {
+      "door": "snapshot",
+      "value": {
+        "left": {
+          "label": "Simulated <left> & contestant",
+          "count": 0
+        },
+        "right": {
+          "label": "Simulated right",
+          "count": 0
+        },
+        "ballots": 0,
+        "phase": "open",
+        "round_label": "Simulated final",
+        "match_label": "Simulated match 1",
+        "window_ends_at": "2026-11-01T12:00:15Z",
+        "simulated": false,
+        "at": "2026-11-01T12:00:00Z",
+        "champion": null
+      }
+    },
+    {
+      "door": "params",
+      "value": {
+        "action": {
+          "kind": "start",
+          "list": {
+            "title": "Simulated tournament",
+            "prompt": "SIMULATED: choose 1 or 2",
+            "items": [
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-b",
+                "title": "Simulated right",
+                "by": "simulated_streamer",
+                "seed": "1"
+              }
+            ]
+          },
+          "key": "simulated",
+          "window_ms": 15000
+        },
+        "extra": true
+      }
+    },
+    {
+      "door": "params",
+      "value": {
+        "action": {
+          "kind": "start",
+          "list": {
+            "title": "Simulated tournament",
+            "prompt": "SIMULATED: choose 1 or 2",
+            "items": [
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-b",
+                "title": "Simulated right",
+                "by": "simulated_streamer",
+                "seed": "1"
+              }
+            ]
+          },
+          "key": "simulated",
+          "window_ms": 15000,
+          "extra": true
+        }
+      }
+    },
+    {
+      "door": "params",
+      "value": {
+        "action": {
+          "kind": "start",
+          "list": {
+            "title": "Simulated tournament",
+            "prompt": "SIMULATED: choose 1 or 2",
+            "items": [
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-b",
+                "title": "Simulated right",
+                "by": "simulated_streamer",
+                "seed": "1"
+              }
+            ],
+            "extra": true
+          },
+          "key": "simulated",
+          "window_ms": 15000
+        }
+      }
+    },
+    {
+      "door": "params",
+      "value": {
+        "action": {
+          "kind": "start",
+          "list": {
+            "title": "Simulated tournament",
+            "prompt": "SIMULATED: choose 1 or 2",
+            "items": [
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture",
+                "extra": true
+              },
+              {
+                "id": "simulated-b",
+                "title": "Simulated right",
+                "by": "simulated_streamer",
+                "seed": "1"
+              }
+            ]
+          },
+          "key": "simulated",
+          "window_ms": 15000
+        }
+      }
+    },
+    {
+      "door": "result",
+      "value": {
+        "session": {
+          "phase": "live",
+          "list": {
+            "title": "Simulated tournament",
+            "prompt": "SIMULATED: choose 1 or 2",
+            "items": [
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-b",
+                "title": "Simulated right",
+                "by": "simulated_streamer",
+                "seed": "1"
+              }
+            ]
+          },
+          "bracket": {
+            "seeds": [
+              "simulated-a",
+              "simulated-b"
+            ],
+            "rounds": [
+              [
+                {
+                  "a": "simulated-a",
+                  "b": "simulated-b"
+                }
+              ]
+            ]
+          },
+          "history": [],
+          "window_ms": 15000,
+          "key": "simulated",
+          "elapsed_ms": 0,
+          "match_key": "simulated:0:0",
+          "speed": 1,
+          "calls": [],
+          "remaining_ms": 0,
+          "counted": {
+            "left": 0,
+            "right": 0
+          },
+          "simulated": false,
+          "window_ends_at": "2026-11-01T12:00:15Z"
+        },
+        "at": "2026-11-01T12:00:00Z",
+        "extra": true
+      }
+    },
+    {
+      "door": "result",
+      "value": {
+        "session": {
+          "phase": "live",
+          "list": {
+            "title": "Simulated tournament",
+            "prompt": "SIMULATED: choose 1 or 2",
+            "items": [
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-b",
+                "title": "Simulated right",
+                "by": "simulated_streamer",
+                "seed": "1"
+              }
+            ]
+          },
+          "bracket": {
+            "seeds": [
+              "simulated-a",
+              "simulated-b"
+            ],
+            "rounds": [
+              [
+                {
+                  "a": "simulated-a",
+                  "b": "simulated-b"
+                }
+              ]
+            ]
+          },
+          "history": [],
+          "window_ms": 15000,
+          "key": "simulated",
+          "elapsed_ms": 0,
+          "match_key": "simulated:0:0",
+          "speed": 1,
+          "calls": [],
+          "remaining_ms": 0,
+          "counted": {
+            "left": 0,
+            "right": 0
+          },
+          "simulated": false,
+          "window_ends_at": "2026-11-01T12:00:15Z",
+          "extra": true
+        },
+        "at": "2026-11-01T12:00:00Z"
+      }
+    },
+    {
+      "door": "result",
+      "value": {
+        "session": {
+          "phase": "live",
+          "list": {
+            "title": "Simulated tournament",
+            "prompt": "SIMULATED: choose 1 or 2",
+            "items": [
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-b",
+                "title": "Simulated right",
+                "by": "simulated_streamer",
+                "seed": "1"
+              }
+            ]
+          },
+          "bracket": {
+            "seeds": [
+              "simulated-a",
+              "simulated-b"
+            ],
+            "rounds": [
+              [
+                {
+                  "a": "simulated-a",
+                  "b": "simulated-b"
+                }
+              ]
+            ],
+            "extra": true
+          },
+          "history": [],
+          "window_ms": 15000,
+          "key": "simulated",
+          "elapsed_ms": 0,
+          "match_key": "simulated:0:0",
+          "speed": 1,
+          "calls": [],
+          "remaining_ms": 0,
+          "counted": {
+            "left": 0,
+            "right": 0
+          },
+          "simulated": false,
+          "window_ends_at": "2026-11-01T12:00:15Z"
+        },
+        "at": "2026-11-01T12:00:00Z"
+      }
+    },
+    {
+      "door": "result",
+      "value": {
+        "session": {
+          "phase": "live",
+          "list": {
+            "title": "Simulated tournament",
+            "prompt": "SIMULATED: choose 1 or 2",
+            "items": [
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-b",
+                "title": "Simulated right",
+                "by": "simulated_streamer",
+                "seed": "1"
+              }
+            ]
+          },
+          "bracket": {
+            "seeds": [
+              "simulated-a",
+              "simulated-b"
+            ],
+            "rounds": [
+              [
+                {
+                  "a": "simulated-a",
+                  "b": "simulated-b",
+                  "extra": true
+                }
+              ]
+            ]
+          },
+          "history": [],
+          "window_ms": 15000,
+          "key": "simulated",
+          "elapsed_ms": 0,
+          "match_key": "simulated:0:0",
+          "speed": 1,
+          "calls": [],
+          "remaining_ms": 0,
+          "counted": {
+            "left": 0,
+            "right": 0
+          },
+          "simulated": false,
+          "window_ends_at": "2026-11-01T12:00:15Z"
+        },
+        "at": "2026-11-01T12:00:00Z"
+      }
+    },
+    {
+      "door": "result",
+      "value": {
+        "session": {
+          "phase": "live",
+          "list": {
+            "title": "Simulated tournament",
+            "prompt": "SIMULATED: choose 1 or 2",
+            "items": [
+              {
+                "id": "simulated-a",
+                "title": "Simulated <left> & contestant",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-b",
+                "title": "Simulated right",
+                "by": "simulated_streamer",
+                "seed": "1"
+              }
+            ]
+          },
+          "bracket": {
+            "seeds": [
+              "simulated-a",
+              "simulated-b"
+            ],
+            "rounds": [
+              [
+                {
+                  "a": "simulated-a",
+                  "b": "simulated-b"
+                }
+              ]
+            ]
+          },
+          "history": [],
+          "window_ms": 15000,
+          "key": "simulated",
+          "elapsed_ms": 0,
+          "match_key": "simulated:0:0",
+          "speed": 1,
+          "calls": [],
+          "remaining_ms": 0,
+          "counted": {
+            "left": 0,
+            "right": 0,
+            "extra": true
+          },
+          "simulated": false,
+          "window_ends_at": "2026-11-01T12:00:15Z"
+        },
+        "at": "2026-11-01T12:00:00Z"
+      }
+    },
+    {
+      "door": "snapshot",
+      "value": {
+        "left": {
+          "label": "Simulated <left> & contestant",
+          "count": 0
+        },
+        "right": {
+          "label": "Simulated right",
+          "count": 0
+        },
+        "ballots": 0,
+        "phase": "open",
+        "round_label": "Simulated final",
+        "match_label": "Simulated match 1",
+        "window_ends_at": "2026-11-01T12:00:15Z",
+        "simulated": false,
+        "at": "2026-11-01T12:00:00Z",
+        "extra": true
+      }
+    },
+    {
+      "door": "snapshot",
+      "value": {
+        "left": {
+          "label": "Simulated <left> & contestant",
+          "count": 0,
+          "extra": true
+        },
+        "right": {
+          "label": "Simulated right",
+          "count": 0
+        },
+        "ballots": 0,
+        "phase": "open",
+        "round_label": "Simulated final",
+        "match_label": "Simulated match 1",
+        "window_ends_at": "2026-11-01T12:00:15Z",
+        "simulated": false,
+        "at": "2026-11-01T12:00:00Z"
+      }
+    },
+    {
+      "door": "snapshot",
+      "value": {
+        "left": {
+          "label": "Simulated <left> & contestant",
+          "count": 0
+        },
+        "right": {
+          "label": "Simulated right",
+          "count": 0,
+          "extra": true
+        },
+        "ballots": 0,
+        "phase": "open",
+        "round_label": "Simulated final",
+        "match_label": "Simulated match 1",
+        "window_ends_at": "2026-11-01T12:00:15Z",
+        "simulated": false,
+        "at": "2026-11-01T12:00:00Z"
+      }
+    },
+    {
+      "door": "params",
+      "value": {
+        "action": {
+          "kind": "start",
+          "list": {
+            "title": "Simulated tournament",
+            "prompt": "SIMULATED: choose 1 or 2",
+            "items": [
+              {
+                "id": "simulated-a",
+                "title": "﻿",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-b",
+                "title": "Simulated right",
+                "by": "simulated_streamer",
+                "seed": "1"
+              }
+            ]
+          },
+          "key": "simulated",
+          "window_ms": 15000
+        }
+      }
+    },
+    {
+      "door": "params",
+      "value": {
+        "action": {
+          "kind": "start",
+          "list": {
+            "title": "Simulated tournament",
+            "prompt": "SIMULATED: choose 1 or 2",
+            "items": [
+              {
+                "id": "simulated-a",
+                "title": "   ﻿",
+                "by": "simulated_streamer",
+                "seed": "0",
+                "note": "Generated SIMULATED fixture"
+              },
+              {
+                "id": "simulated-b",
+                "title": "Simulated right",
+                "by": "simulated_streamer",
+                "seed": "1"
+              }
+            ]
+          },
+          "key": "simulated",
+          "window_ms": 15000
+        }
+      }
+    }
+  ]
+}

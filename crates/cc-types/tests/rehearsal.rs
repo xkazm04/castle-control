@@ -194,11 +194,15 @@ fn tiltyard_snapshot_is_a_strict_overlay_replacement_with_omitted_verdict() {
     let snapshot = fixtures()["snapshot"].clone();
     strict_round_trip::<TiltyardRenderSnapshot>(snapshot.clone());
     strict_round_trip::<TiltyardSide>(snapshot["left"].clone());
-    for verdict in ["left", "right", "tie"] {
-        let parsed: TiltyardVerdict = serde_json::from_value(json!(verdict)).unwrap();
-        assert_eq!(serde_json::to_value(parsed).unwrap(), json!(verdict));
+    for verdict in [
+        json!({"side":"left","how":"tally"}),
+        json!({"side":"right","how":"call"}),
+        json!({"side":"left","how":"tie"}),
+    ] {
+        let parsed: TiltyardVerdict = serde_json::from_value(verdict.clone()).unwrap();
+        assert_eq!(serde_json::to_value(parsed).unwrap(), verdict);
         let mut value = snapshot.clone();
-        value["verdict"] = json!(verdict);
+        value["verdict"] = verdict;
         strict_round_trip::<TiltyardRenderSnapshot>(value);
     }
     for (key, value) in [

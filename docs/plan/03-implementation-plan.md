@@ -758,7 +758,8 @@ bytes in `image_assets` inside the app-data SQLite database, keyed by their dige
 no upload opens a caller-controlled path. Forget-user keeps this viewer-free
 configuration; full/revoked purge deletes the blobs. See ADR 0003.
 
-`maproom.design.get`, `maproom.stage.get` and `maproom.turn.run` remain Pending.
+`maproom.design.get` and the `maproom.design.upsert` result remain Pending.
+`maproom.stage.get` and `maproom.turn.run` are Declared in D5a below.
 Steward proposals continue to reuse the three existing upsert parameter types;
 this does not add Map Room or upload authority to the Steward. Omitted display
 retains existing behavior; per-room persistence and output wiring are later work.
@@ -1149,9 +1150,9 @@ The existing registry permits declared-but-unregistered methods, as with Map Roo
 | `tiltyard.render.snapshot` (WP R.1) | Overlay-host SSE full replacement carrying `TiltyardRenderSnapshot`, separate from control /events, following Beacons and the vote bar | Declared / Pending implementation |
 | `RehearsalStatus` | `active: bool`, `crowd_per_minute: u16`, existing `obs: ObsStatus`, optional `scene_name: String`, `at: Timestamp`; everything Rehearsal makes is implicitly SIMULATED, so there is no simulated field | Declared / Pending implementation |
 | `RehearsalScenario` | Exactly `lots_fill`, `vote_round`, `beacon_fire`, `duel_round`; optional VisualId reuses Beacons' slug type | Declared / Pending implementation |
-| `TiltyardRenderSnapshot` | `left: TiltyardSide`, `right: TiltyardSide`, `ballots: u32`, optional `verdict: TiltyardVerdict`, required `simulated: bool`, `at: Timestamp` | Declared / Pending implementation |
-| `TiltyardSide` | `label: String`, `count: u32` | Declared / Pending implementation |
-| `TiltyardVerdict` | Exactly `left`, `right`, `tie` | Declared / Pending implementation |
+| `TiltyardRenderSnapshot` | Extended by D5a below with phase, labels, timing, explicit winning side/reason and champion | Declared / Pending implementation |
+| `TiltyardSide` | `label: TiltyardLabel`, `count: u32`; label is escaped text | Declared / Pending implementation |
+| `TiltyardVerdict` | D5a supersedes the original enum with `{ side: TiltyardWinner, how: TiltyardDecision }` | Declared / Pending implementation |
 
 All new records deny unknown fields. Optional keys are omitted when absent and
 reject explicit null. Timestamps use the existing UTC parser. OBS passwords are
@@ -1165,6 +1166,98 @@ The TS overlay door is `@castle-control/contract/tiltyard-render`, exporting
 independently of the eager RPC validators. `parseRehearsalEvent` parses the separate
 typed status binding. Shared generated, simulated fixtures live in
 `crates/cc-types/tests/fixtures/rehearsal.json`.
+
+**Tiltyard tournament contract (D5a), 2026-11-01.**
+
+The core owns the Chat tournament currently held in
+`packages/duel/src/session/chat.ts`: contestants, bracket/history, current match,
+timing, counted ballots, call log, pause, undo and champion. These declarations
+add no handler, clock, ballot producer or page. Showdown and Ladder are separate
+TS session families; this tournament contract does not introduce either mode.
+
+| Identifier | Params / result or meaning | Status |
+| --- | --- | --- |
+| `maproom.stage.get` | `Empty` -> `TiltyardStageResult`; missing session means no tournament has been started | Declared / Pending implementation |
+| `maproom.turn.run` | `TiltyardTurnParams { action: TiltyardAction }` -> `TiltyardStageResult`; the single tournament write door | Declared / Pending implementation |
+| `maproom.turn` | Existing invalidation-only `StreamEvent { seq, at, kind }`; refetch stage after this or resync, with seq supplying stream ordering; no extra payload/revision | Declared / Pending implementation |
+| `/tiltyard/current` | Isolated, read-only OBS page; returned by existing `tiltyard.source.url`. Rust/TS constant `TILTYARD_CURRENT_ROUTE` | Declared / Pending implementation |
+| `/push/tiltyard` | Overlay-origin SSE for full replacement `tiltyard.render.snapshot`, separate from control `/events`. Rust/TS constant `TILTYARD_PUSH_ROUTE` | Declared / Pending implementation |
+
+| Type | Fields / constraints |
+| --- | --- |
+| `TiltyardStageResult` | Optional `session: TiltyardSession`, required `at: Timestamp`; shared read/write result |
+| `TiltyardTurnParams` | Required `action: TiltyardAction`; no client ballot totals, provenance, timestamps or chosen champion |
+| `TiltyardAction` | Closed `kind` tag: `start { list, key, window_ms }`, `pick { side }`, `tick { ms: u32 }`, `enter`, `cancel`, `undo`, `reset`, `speed`. Empty actions have only kind |
+| `TiltyardSessionPhase` | Exactly `live`, `verdict`, `called_off`, `done`, matching Chat |
+| `TiltyardSession` | `phase`, `list`, `bracket`, `history: TiltyardBracket[]` (0..7), `window_ms`, `key`, `elapsed_ms: u32`, optional `match_key`, `speed`, `calls: TiltyardCall[]`, optional `verdict: TiltyardClosedMatch`, `remaining_ms: u32` (theatre), `counted`, `simulated: bool`, optional `window_ends_at: Timestamp`, optional `champion: TiltyardId` |
+| `TiltyardList` | `title: TiltyardLabel`, optional `prompt: TiltyardLabel`, `items: TiltyardContestant[]` (2..64) |
+| `TiltyardContestant` | `id: TiltyardId`, `title: TiltyardLabel`, `by: TiltyardLabel`, `seed: TiltyardSeed`, optional `note: TiltyardNote` |
+| `TiltyardLabel` | Nonblank text, 1..256 Unicode code points. Titles, attributions and render labels share this bound. Streamer-entered text must be escaped by the page; markup is never interpreted |
+| `TiltyardNote` | Text, 0..2048 Unicode code points |
+| `TiltyardId` | Lowercase alphanumeric/hyphen slug, 1..64 characters; also the required key prefix |
+| `TiltyardSeed` | Numeric seed rank as a canonical nonnegative decimal string (1..128 digits). Lower is better; equality favours left. Never convert to JS Number |
+| `TiltyardRound` | Zero-based string `0`, `1` or `2`, retaining the wire convention for rounds |
+| `TiltyardMatchKey` | `<key>:<round>:<index>`, 5..68 characters; round 0..2, index 0..3 |
+| `TiltyardWindowMs` | Positive uint32 milliseconds (1..4294967295); core clock owns elapsed time |
+| `TiltyardSpeed` | Integer 1 or 3, exactly the TS speed toggle |
+| `TiltyardBracket` | `seeds: TiltyardId[]` (2..8), `rounds: TiltyardMatches[]` (1..3). Seeds retains TS seed order |
+| `TiltyardMatches` | Array of 1..4 `TiltyardMatch` records |
+| `TiltyardMatch` | `a: TiltyardId`, `b: TiltyardId`, optional `winner: TiltyardId`. Missing winner replaces internal TS null |
+| `TiltyardCounted` | `left: u32`, `right: u32`, replacing the internal TS pair |
+| `TiltyardCall` | `winner: TiltyardId`, `counted: TiltyardCounted`; log retains actual counts even after undo |
+| `TiltyardClosedMatch` | `a`, `b`, `verdict: TiltyardVerdict`, `counted`, `elapsed_ms: u32`, `round: TiltyardRound`, `index: u32` (0..3), `match_key`. This is the recorded match; derive the next current match from bracket |
+| `TiltyardWinner` | Exactly `left`, `right`, replacing internal TS sides 0/1 |
+| `TiltyardDecision` | Exactly `tally`, `tie`, `call` |
+| `TiltyardVerdict` | Required `side: TiltyardWinner` and `how: TiltyardDecision`; a tie always includes its winning side, a call overrides counts |
+| `TiltyardRenderPhase` | Exactly `open`, `closed`, `called`, `cancelled`, `finished` |
+| `TiltyardRenderSnapshot` | Required `left`, `right`, `ballots: u32`, `phase`, `round_label: TiltyardLabel`, `match_label: TiltyardLabel`, `simulated: bool`, `at: Timestamp`; optional `window_ends_at: Timestamp`, `window_remaining_ms: u32`, `verdict: TiltyardVerdict`, `champion: TiltyardContestant` |
+| `TiltyardSide` | Required `label: TiltyardLabel`, `count: u32` |
+
+Action names deliberately retain the TS event vocabulary. `start` takes the
+contestant list in seed order; keep TS's first 8/4/2 entrants and pairing layout
+(8: 0/7, 3/4, 1/6, 2/5; 4: 0/3, 1/2; 2: 0/1). Supplied numeric seed ranks
+must agree with that order, permitting equal ranks. The future handler validates
+unique contestant IDs, seed ordering, bracket references, exact bracket size
+(2/4/8), valid round shape, phase/optional-field consistency and elapsed <= window.
+These state-dependent invariants are not claimed by the structural schemas.
+
+The transition contract is the TS `CHAT_TRANSITIONS` table, without a new state
+machine in this delivery:
+
+| Phase | Accepted event -> effect |
+| --- | --- |
+| live | pick -> call; enter -> close on core tally; tick -> advance clock/close at deadline; cancel -> pause; undo -> restore last bracket/fresh window; reset -> new bracket; speed -> toggle |
+| verdict | pick or enter -> settle/open next match or finish; tick -> theatre/settle; cancel -> settle then pause; undo -> restore/fresh window; reset -> new bracket; speed -> toggle |
+| called_off | enter -> resume same elapsed window, or reset after cancelled final; undo -> restore/fresh window; reset -> new bracket; speed -> toggle |
+| done | enter or reset -> new bracket; undo -> restore/fresh window; speed -> toggle |
+
+Unlisted phase/event pairs are no-ops, as are undo with empty history. A pick
+during verdict skips theatre; it never changes the recorded winner. Counts and
+bracket are frozen immediately on close: larger count wins; equal counts use
+the better numeric seed, left on equal seeds. Calls record the selected winner
+and actual counted snapshot, even against the tally. Theatre lasts 3000 ms for
+call, 4000 ms for tally/tie; speed scales live elapsed time only. Undo keeps the
+call log; reset clears it and restores speed 1. Cancel during theatre settles
+first, retaining the recorded result. The core obtains post-moderation ballots;
+clients never submit counted/simulated data. Tick represents the TS positive
+elapsed-time transition; native clock ownership and scheduling are later work.
+
+Render mapping: live -> open, verdict -> called for a call or closed otherwise,
+called_off -> cancelled, done -> finished. Closed cards show the recorded match,
+not the next bracket match; finished cards retain the final pair and publish the
+champion. Open window_ends_at is a wall-clock deadline reflecting speed 1/3;
+cancelled window_remaining_ms is frozen logical time. Omit inactive timing and
+absent verdict/champion. `simulated` is true iff any counted ballot in the
+displayed tally was simulated (including mixed live/simulated counted ballots);
+held/barred/repeat/chatter provenance alone cannot set it. Zero counted ballots
+means false. No viewer/chat text crosses the aggregate overlay boundary.
+
+All records deny unknown fields; absent values are omitted and present null is
+rejected. Field adaptations (side names, counted object, elapsed_ms, omitted
+nulls and the single fixed Chat mode) preserve session behavior. The two methods
+already existed: inventories remain 62 declared methods and 17 control event
+kinds, with no registrations added. Shared generated SIMULATED parse fixtures
+are `crates/cc-types/tests/fixtures/tiltyard.json`.
 
 **Conventions:**
 

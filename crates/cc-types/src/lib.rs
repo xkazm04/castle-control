@@ -30,6 +30,8 @@ mod rule;
 mod steward;
 mod strike;
 mod tiltyard;
+mod tiltyard_session;
+mod tiltyard_value;
 mod value;
 mod vote_bar;
 
@@ -64,6 +66,8 @@ pub use rule::*;
 pub use steward::*;
 pub use strike::*;
 pub use tiltyard::*;
+pub use tiltyard_session::*;
+pub use tiltyard_value::*;
 pub use value::*;
 pub use vote_bar::*;
 

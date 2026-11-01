@@ -1,5 +1,9 @@
 # Shared contract
 
+The D5a [Tiltyard tournament contract report](TILTYARD.md) lists the new schemas,
+session transition decisions, parse evidence, pending Rust checks and bundle
+fingerprint changes. The stage read and single turn write are declared only.
+
 `cc-types` owns the method table, Rust request dispatch, schemas, branded IDs,
 closed event names and ten error codes. Its `export-contract` binary drives
 this package's generated TypeScript types, metadata and Ajv standalone validators.
