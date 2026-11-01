@@ -8,7 +8,7 @@ use futures::{SinkExt, StreamExt};
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
 use std::{
-    collections::BTreeSet,
+    collections::BTreeMap,
     sync::{Arc, Mutex},
     time::Duration,
 };
@@ -44,28 +44,27 @@ fn report(value: Value) {
 }
 
 /// Generated SIMULATED OBS peer. Requires authentication like a real OBS, and
-/// refuses a CreateInput into any scene other than its single `Scene`.
+/// starts with `Scene` and supports the product's owned rehearsal scene cleanup.
 pub async fn fake_peer(password: Zeroizing<String>) -> Fallible<u16> {
     let listener = TcpListener::bind("127.0.0.1:0").await?;
     let port = listener.local_addr()?.port();
-    let inputs = Arc::new(Mutex::new(BTreeSet::<String>::new()));
+    let peer = Arc::new(Mutex::new(FakeObs {
+        scenes: BTreeMap::from([("Scene".into(), random_hex(16))]),
+        inputs: BTreeMap::new(),
+    }));
     let password = Arc::new(password);
     tokio::spawn(async move {
         while let Ok((stream, _)) = listener.accept().await {
-            let (inputs, password) = (inputs.clone(), password.clone());
+            let (peer, password) = (peer.clone(), password.clone());
             tokio::spawn(async move {
-                let _ = fake_session(stream, &password, &inputs).await;
+                let _ = fake_session(stream, &password, &peer).await;
             });
         }
     });
     Ok(port)
 }
 
-async fn fake_session(
-    stream: TcpStream,
-    password: &str,
-    inputs: &Mutex<BTreeSet<String>>,
-) -> Fallible<()> {
+async fn fake_session(stream: TcpStream, password: &str, peer: &Mutex<FakeObs>) -> Fallible<()> {
     let mut socket = accept_async(stream).await?;
     let (salt, challenge) = (random_hex(16), random_hex(16));
     let hello = json!({"op":0,"d":{"obsStudioVersion":"31.0.0-simulated",
@@ -90,36 +89,9 @@ async fn fake_session(
         }
         let kind = request["d"]["requestType"].as_str().unwrap_or_default();
         let data = &request["d"]["requestData"];
-        let (status, response) = match kind {
-            "GetVersion" => (
-                json!({"result":true,"code":100}),
-                json!({"obsVersion":"31.0.0-simulated","obsWebSocketVersion":"5.5.0-simulated",
-                    "rpcVersion":1,"availableRequests":["GetVersion","CreateInput"],
-                    "supportedImageFormats":["png"],"platform":"simulated",
-                    "platformDescription":"SIMULATED OBS peer"}),
-            ),
-            "CreateInput" if data["sceneName"] != "Scene" => (
-                json!({"result":false,"code":600,"comment":"SIMULATED: no scene by that name"}),
-                Value::Null,
-            ),
-            "CreateInput" => {
-                let name = data["inputName"].as_str().unwrap_or_default().to_owned();
-                if inputs.lock().map_err(|_| "inputs lock")?.insert(name) {
-                    (
-                        json!({"result":true,"code":100}),
-                        json!({"inputUuid":random_hex(16),"sceneItemId":1}),
-                    )
-                } else {
-                    (
-                        json!({"result":false,"code":601,"comment":"SIMULATED: input exists"}),
-                        Value::Null,
-                    )
-                }
-            }
-            _ => (
-                json!({"result":false,"code":204,"comment":"SIMULATED: unknown request"}),
-                Value::Null,
-            ),
+        let (status, response) = {
+            let mut peer = peer.lock().map_err(|_| "SIMULATED peer lock")?;
+            fake_response(kind, data, &mut peer)
         };
         let mut d = json!({"requestType":kind,"requestId":request["d"]["requestId"],
             "requestStatus":status});
@@ -128,6 +100,85 @@ async fn fake_session(
         }
         let frame = json!({"op":7,"d":d});
         socket.send(Message::Text(frame.to_string().into())).await?;
+    }
+}
+
+struct FakeInput {
+    uuid: String,
+    scene: String,
+    item: usize,
+}
+struct FakeObs {
+    scenes: BTreeMap<String, String>,
+    inputs: BTreeMap<String, FakeInput>,
+}
+fn fake_response(kind: &str, data: &Value, peer: &mut FakeObs) -> (Value, Value) {
+    let ok = |data| (json!({"result":true,"code":100}), data);
+    let refused = |code| {
+        (
+            json!({"result":false,"code":code,"comment":"SIMULATED refusal"}),
+            Value::Null,
+        )
+    };
+    let scene = data["sceneName"].as_str().unwrap_or_default();
+    match kind {
+        "GetVersion" => ok(
+            json!({"obsVersion":"31.0.0-simulated","obsWebSocketVersion":"5.5.0-simulated",
+            "rpcVersion":1,"availableRequests":["GetVersion","CreateInput","GetSceneList","CreateScene",
+            "GetSceneItemList","RemoveInput","RemoveScene"],"supportedImageFormats":["png"],
+            "platform":"simulated","platformDescription":"SIMULATED OBS peer"}),
+        ),
+        "GetSceneList" => ok(
+            json!({"currentProgramSceneName":"Scene","currentProgramSceneUuid":peer.scenes.get("Scene"),
+            "scenes":peer.scenes.iter().enumerate().map(|(index,(name,uuid))|
+                json!({"sceneIndex":index,"sceneName":name,"sceneUuid":uuid})).collect::<Vec<_>>()}),
+        ),
+        "CreateScene" if peer.scenes.contains_key(scene) => refused(601),
+        "CreateScene" => {
+            let uuid = random_hex(16);
+            peer.scenes.insert(scene.into(), uuid.clone());
+            ok(json!({"sceneUuid":uuid}))
+        }
+        "GetSceneItemList" if peer.scenes.contains_key(scene) => {
+            ok(json!({"sceneItems":peer.inputs.iter()
+            .filter(|(_,input)| input.scene == scene).map(|(name,input)|
+                json!({"sourceName":name,"sourceUuid":input.uuid,"sceneItemId":input.item})).collect::<Vec<_>>()}))
+        }
+        "RemoveScene" if peer.scenes.remove(scene).is_some() => ok(json!({})),
+        "CreateInput" if !peer.scenes.contains_key(scene) => refused(600),
+        "CreateInput" => {
+            let name = data["inputName"].as_str().unwrap_or_default();
+            if peer.inputs.contains_key(name) {
+                return refused(601);
+            }
+            let uuid = random_hex(16);
+            let item = peer.inputs.len() + 1;
+            peer.inputs.insert(
+                name.into(),
+                FakeInput {
+                    uuid: uuid.clone(),
+                    scene: scene.into(),
+                    item,
+                },
+            );
+            ok(json!({"inputUuid":uuid,"sceneItemId":item}))
+        }
+        "RemoveInput" => {
+            let name = peer
+                .inputs
+                .iter()
+                .find(|(_, input)| data["inputUuid"] == input.uuid)
+                .map(|(name, _)| name.clone());
+            match name {
+                Some(name) => {
+                    peer.inputs.remove(&name);
+                    ok(json!({}))
+                }
+                None => refused(600),
+            }
+        }
+        "GetSceneItemList" | "RemoveScene" => refused(600),
+        _ => refused(204),
     }
 }
 
@@ -222,4 +273,51 @@ async fn relay_session(stream: TcpStream, upstream: u16, password: &str) -> Fall
     };
     tokio::select! { _ = upward => {}, _ = downward => {} }
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn simulated_peer_tracks_scene_creation_input_uuids_and_cleanup() {
+        let mut peer = FakeObs {
+            scenes: BTreeMap::from([("Scene".into(), "simulated-scene".into())]),
+            inputs: BTreeMap::new(),
+        };
+        let scene = "Castle Control · Rehearsal";
+        let (status, _) = fake_response("CreateScene", &json!({"sceneName":scene}), &mut peer);
+        assert_eq!(status["result"], true);
+        let (_, list) = fake_response("GetSceneList", &json!({}), &mut peer);
+        assert_eq!(list["scenes"].as_array().unwrap().len(), 2);
+        let (status, created) = fake_response(
+            "CreateInput",
+            &json!({"sceneName":scene,
+            "inputName":"Castle Control · SIMULATED plate"}),
+            &mut peer,
+        );
+        assert_eq!(status["result"], true);
+        let (_, list) = fake_response("GetSceneItemList", &json!({"sceneName":scene}), &mut peer);
+        assert_eq!(list["sceneItems"].as_array().unwrap().len(), 1);
+        let (status, _) = fake_response(
+            "RemoveInput",
+            &json!({"inputUuid":created["inputUuid"]}),
+            &mut peer,
+        );
+        assert_eq!(status["result"], true);
+        let (_, list) = fake_response("GetSceneItemList", &json!({"sceneName":scene}), &mut peer);
+        assert!(list["sceneItems"].as_array().unwrap().is_empty());
+        let (status, _) = fake_response("RemoveScene", &json!({"sceneName":scene}), &mut peer);
+        assert_eq!(status["result"], true);
+        assert_eq!(
+            peer.scenes.keys().map(String::as_str).collect::<Vec<_>>(),
+            vec!["Scene"]
+        );
+        let (status, _) = fake_response(
+            "RemoveInput",
+            &json!({"inputUuid":created["inputUuid"]}),
+            &mut peer,
+        );
+        assert_eq!(status["code"], 600);
+    }
 }

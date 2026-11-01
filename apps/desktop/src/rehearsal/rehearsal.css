@@ -1,0 +1,23 @@
+.rehearsal-workspace { display: grid; gap: var(--space-16); padding-block: var(--space-20); min-width: 0; font: var(--text-body)/1.5 var(--font-ui); color: var(--ink); }
+.rehearsal-workspace > *, .rehearsal-columns > * { min-width: 0; margin: 0; }
+.rehearsal-heading, .rehearsal-actions, .rehearsal-output header { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-12); }
+.rehearsal-heading { position: sticky; top: 0; z-index: 2; padding: var(--space-8); background: var(--paper); border-bottom: var(--rule-thin) solid var(--ink); }
+.rehearsal-heading h1 { margin: 0; font: 800 var(--text-chamber)/1.2 var(--font-display); text-transform: uppercase; }
+.rehearsal-workspace :is(h2, h3) { margin: 0; font: 800 var(--text-section)/1.3 var(--font-display); }
+.rehearsal-workspace p { margin: 0; overflow-wrap: anywhere; }
+.rehearsal-columns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-16); }
+.rehearsal-workspace .cc-card { display: grid; align-content: start; gap: var(--space-12); }
+.rehearsal-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-12); }
+.rehearsal-fields p { grid-column: 1 / -1; }
+.rehearsal-workspace label { display: grid; gap: var(--space-4); min-width: 0; font-weight: 600; }
+.rehearsal-workspace :is(input, select) { box-sizing: border-box; width: 100%; min-width: 0; appearance: none; border: var(--rule-thin) solid var(--ink); border-radius: 0; background: var(--paper); color: var(--ink); padding: var(--space-8); font: var(--text-body)/1.4 var(--font-ui); }
+.rehearsal-fields .rehearsal-remember { display: flex; align-items: center; }
+.rehearsal-remember input { width: var(--space-16); height: var(--space-16); padding: 0; flex-shrink: 0; }
+.rehearsal-remember input:checked { background: var(--ink); box-shadow: inset 0 0 0 var(--space-3) var(--paper); }
+.rehearsal-workspace input[type="range"] { accent-color: var(--ink); appearance: auto; padding: 0; }
+.rehearsal-output { box-sizing: border-box; height: 100%; overflow: auto; }
+.rehearsal-output h3 { overflow-wrap: anywhere; }
+.rehearsal-workspace .cc-window { padding: var(--space-4) var(--space-8); }
+.rehearsal-workspace .cc-window-cell { padding-block: var(--space-8); }
+.rehearsal-workspace .cc-button { white-space: normal; }
+@media (max-width: 60rem) { .rehearsal-columns { grid-template-columns: minmax(0, 1fr); } }

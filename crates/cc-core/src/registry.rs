@@ -121,6 +121,17 @@ impl Registry {
     ) -> Self {
         Self::with_native_root_and_steward(services, root, events, false)
     }
+    pub(crate) fn with_rehearsal_root(
+        services: Arc<NativeServices>,
+        root: &std::path::Path,
+        events: Arc<crate::EventHub>,
+    ) -> Self {
+        Self::native_offline(
+            Some(services),
+            OfflineModules::rehearsal_at(root.to_owned(), events),
+            None,
+        )
+    }
     pub(crate) fn with_native_root_and_steward(
         services: Arc<NativeServices>,
         root: &std::path::Path,

@@ -200,7 +200,9 @@ impl NativeServices {
         let events = Arc::new(EventHub::new(capacity)?);
         let registry = match root {
             Some(root) => {
-                if steward_live {
+                if rehearsal {
+                    Registry::with_rehearsal_root(self.clone(), root, events.clone())
+                } else if steward_live {
                     Registry::with_native_root_and_steward(self.clone(), root, events.clone(), true)
                 } else {
                     Registry::with_native_root(self.clone(), root, events.clone())

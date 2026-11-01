@@ -53,7 +53,6 @@ test('initial and disconnected display do not invent OBS, Twitch or moderation s
 test.each([
   { mode: 'fixture', simulated: true },
   { mode: 'fixture', simulated: false },
-  { mode: 'core', simulated: true },
 ] as const)('$mode with simulated=$simulated never presents fixture summaries as live', ({ mode, simulated }) => {
   const data = simulatedRead(1);
   const html = renderToStaticMarkup(<DesktopRampart snapshot={{ ...data, mode, phase: 'ready',
@@ -81,16 +80,20 @@ test('the Keep offers four room hits and honest lintel stamps', () => {
   expect(html).toContain('Enter the keep');
 });
 
-test('a live core reporting simulated data retains rampart chips without the removed banner', () => {
-  const html = render({ mode: 'core', phase: 'ready', ...simulatedRead(1) });
+test('a rehearsal core retains SIMULATED provenance and actual OBS/bridge connection status', () => {
+  const html = render({ mode: 'core', phase: 'ready', ...simulatedRead(1), bridge: { state: 'disconnected' } });
   expect(html).toContain('data-stamp="off-air"');
   expect(html).toContain('>On air · simulated</span>');
-  for (const label of ['Twitch simulated', 'OBS simulated', 'Gatehouse simulated']) {
+  for (const label of ['Gatehouse simulated']) {
     expect(html).toContain(`data-stamp="simulated" role="img" aria-label="Simulated: ${label}"><span aria-hidden="true">${label}</span>`);
   }
   expect(html).not.toContain('desktop-simulated');
   expect(html).not.toContain('SIMULATED SOURCE');
   expect(html).not.toContain('Twitch: connected');
+  expect(html).toContain('OBS: connected');
+  expect(html).toContain('Twitch: disconnected');
+  expect(html).not.toContain('OBS simulated');
+  expect(html).toContain('data-stamp="simulated"');
 });
 
 test.each(['lottery', 'moderator', 'visuals', 'studio'] as const)('%s keeps an absent bridge UNKNOWN with a ready core', current => {

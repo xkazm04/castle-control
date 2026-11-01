@@ -13,6 +13,8 @@ const { render } = vi.hoisted(() => ({ render: vi.fn<(node: ReactNode) => void>(
 vi.mock('react-dom/client', () => ({ createRoot: () => ({ render }) }));
 const stops: (() => void)[] = [];
 afterEach(() => { for (const stop of stops.splice(0)) stop(); vi.unstubAllGlobals(); vi.restoreAllMocks(); });
+const launch = { mode: 'core', steward: 'live', endpoint: 'http://127.0.0.1:3210/', session_token: 'a'.repeat(64) };
+let mainClient: DesktopClient | undefined;
 
 function network() {
   const fetch = vi.fn(async (_url: string | URL | Request, init?: RequestInit) => new Response(JSON.stringify(
@@ -30,25 +32,40 @@ async function markup(client: DesktopClient, surface = '#/keep') {
   return new Response(stream).text();
 }
 
-test('main deletes the launch global and the lazy shell still receives the live opt-in and capability', async () => {
+/** Reuse main's actual client, including when a single route case runs alone. */
+async function readyMainClient() {
   network();
-  const launch = { mode: 'core', steward: 'live', endpoint: 'http://127.0.0.1:3210/', session_token: 'a'.repeat(64) };
-  vi.stubGlobal('window', { __CASTLE_CONTROL_LAUNCH__: launch });
-  vi.stubGlobal('document', { getElementById: () => ({ textContent: '' }) });
-  await import('./main.jsx');
-  expect(window).not.toHaveProperty('__CASTLE_CONTROL_LAUNCH__');
-  const node = render.mock.calls.at(-1)?.[0];
-  if (!isValidElement<{ client: DesktopClient }>(node)) throw new Error('Missing desktop client');
-  const client = node.props.client;
+  if (!mainClient) {
+    vi.stubGlobal('window', { __CASTLE_CONTROL_LAUNCH__: launch });
+    vi.stubGlobal('document', { getElementById: () => ({ textContent: '' }) });
+    await import('./main.jsx');
+    expect(window).not.toHaveProperty('__CASTLE_CONTROL_LAUNCH__');
+    const node = render.mock.calls.at(-1)?.[0];
+    if (!isValidElement<{ client: DesktopClient }>(node)) throw new Error('Missing desktop client');
+    mainClient = node.props.client;
+  }
+  const client = mainClient;
   stops.push(client.start());
   await vi.waitFor(() => { expect(client.getSnapshot().phase).toBe('ready'); });
+  return client;
+}
+
+test('main deletes the launch global and retains the live opt-in and capability', async () => {
+  const client = await readyMainClient();
+  expect(coreStewardConnection(client.getSnapshot())).toMatchObject({ live: true,
+    launch: { session_token: launch.session_token, steward: 'live' } });
+});
+
+// Cold imports for three complete surfaces used to share the bootstrap test's
+// five-second deadline. Keep real lazy imports, but test each route separately
+// so transformation under the parallel workspace gate cannot consume that sum.
+test.each(['#/keep', '#/overview', '#/chamber/studio'])('lazy %s receives main\'s live opt-in without exposing its capability', async surface => {
+  const client = await readyMainClient();
   expect(coreStewardConnection(client.getSnapshot())?.launch.session_token).toBe(launch.session_token);
-  for (const surface of ['#/keep', '#/overview', '#/chamber/studio']) {
-    const html = await markup(client, surface);
-    expect(html).toContain('LIVE STEWARD');
-    expect(html).not.toContain('cc-steward-state">simulated co-pilot · sample data');
-    expect(html).not.toContain(launch.session_token);
-  }
+  const html = await markup(client, surface);
+  expect(html).toContain('LIVE STEWARD');
+  expect(html).not.toContain('cc-steward-state">simulated co-pilot · sample data');
+  expect(html).not.toContain(launch.session_token);
 });
 
 test.each([undefined, 'simulated'] as const)('core launch with opt-in %s leaves the lazy shell simulated', async steward => {

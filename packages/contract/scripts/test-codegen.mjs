@@ -3,7 +3,7 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmdirSync, unlinkSync
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { parseJson } from '../src/door.mjs';
-import { artifacts, differences, output } from './codegen.mjs';
+import { artifacts, differences, output, root } from './codegen.mjs';
 import { eventParity, methodParity, usages } from './parity.mjs';
 
 const inputs = ['codegen.mjs', 'parity.mjs', 'test-codegen.mjs'].map((name) => join(import.meta.dirname, name));
@@ -94,6 +94,16 @@ try {
   assert(!usage.files.includes(join(overlay, 'bundle.js')), 'only the named tracked build output is excluded');
   assert(!usage.files.includes(join(overlay, 'vote-bar.js')), 'dedicated vote-bar output is also fingerprinted');
   assert.equal(usage.defects.length, 1, 'authored JSON parsing outside the door is still rejected');
+  // Exercise the real native shell against the unchanged core-RPC scanner.
+  writeFileSync(join(authored, 'main.ts'), readFileSync(join(root, 'apps/desktop/src/rehearsal/rehearsal-shell.ts'), 'utf8'));
+  const native = usages(scratch);
+  assert.deepEqual(native.defects, [], 'dynamic native IPC is a separate door');
+  assert.deepEqual(native.invoked, [], 'native relaunch commands are not core methods');
+  writeFileSync(join(authored, 'main.ts'), "import { invoke as coreInvoke } from '@castle-control/contract';\n"
+    + "coreInvoke(endpoint, session, 'status.get', {});\ncoreInvoke(endpoint, session, method, {});\n");
+  const rpc = usages(scratch);
+  assert.deepEqual(rpc.invoked, ['status.get']);
+  assert.equal(rpc.defects.length, 1, 'nonliteral core RPC aliases remain rejected');
   writeFileSync(join(overlay, 'source.js'), "export const source = JSON.parse('{}');\n");
   const neighbor = usages(scratch);
   assert.equal(neighbor.files.length, 2, 'neighboring overlay JavaScript stays in the inventory');

@@ -6,7 +6,7 @@ import { lazy, Suspense, useRef } from 'react';
 import type { Snapshot } from './model.js';
 import type { Navigation, ShellSurface } from './navigation.js';
 import { DesktopRampart } from './rampart.jsx';
-import { coreStewardConnection, coreStreamConnection } from './client.js';
+import { coreRehearsalConnection, coreStewardConnection, coreStreamConnection } from './client.js';
 import type { StewardConnection } from './client.js';
 import './view.css';
 
@@ -14,6 +14,8 @@ const Keep = lazy(() => import('./shell/keep.jsx'));
 const Overview = lazy(() => import('./shell/overview.jsx'));
 const Demo = lazy(() => import('./demo/demo.jsx'));
 const Stream = lazy(() => import('./stream/setup.jsx'));
+// Keep the rehearsal workspace, its styles and native shell outside first load.
+const Rehearsal = lazy(() => import('./rehearsal/rehearsal.jsx'));
 const Room = lazy(() => import('./shell/room.jsx'));
 const PersistentStrip = lazy(() => import('./shell/strip.jsx').then(module => ({ default: module.PersistentStrip })));
 const Steward = lazy(() => import('./shell/steward.jsx').then(module => ({ default: module.ShellSteward })));
@@ -39,11 +41,12 @@ export function DesktopView(props: ViewProps) {
   previous.current = connection;
   const steward_connection = connection ? { connection } : {};
   const steward = <Suspense fallback={<p role="status">Opening the Steward...</p>}>
-    <Steward context={current === 'stream' ? 'keep' : current} {...steward_connection} {...(props.steward_ref ? { input_ref: props.steward_ref } : {})}
+    <Steward context={current === 'stream' || current === 'rehearsal' ? 'keep' : current} {...steward_connection} {...(props.steward_ref ? { input_ref: props.steward_ref } : {})}
       on_select={props.on_select ?? (() => undefined)} on_open={props.on_navigate} on_overview={() => props.on_surface?.('overview')} />
   </Suspense>;
   const stream_connection = coreStreamConnection(props.snapshot);
-  return <ThemeFrame theme={props.theme} {...(current === 'keep' || current === 'overview' || current === 'demo' || current === 'stream' ? {} : { module: current })}>
+  const rehearsal_connection = props.snapshot.phase === 'ready' ? coreRehearsalConnection(props.snapshot) : undefined;
+  return <ThemeFrame theme={props.theme} {...(current === 'keep' || current === 'overview' || current === 'demo' || current === 'stream' || current === 'rehearsal' ? {} : { module: current })}>
     <div className={`desktop-shell${cutaway ? ' desktop-cutaway' : ''}`}>
       <DesktopRampart snapshot={props.snapshot} theme={props.theme} on_theme_change={props.on_theme_change}
         on_steward={() => { if (props.steward_ref && 'current' in props.steward_ref) props.steward_ref.current?.focus(); }} />
@@ -58,10 +61,12 @@ export function DesktopView(props: ViewProps) {
         <Suspense fallback={<p role="status">Opening the keep...</p>}>
           {current === 'keep' ? <Keep snapshot={props.snapshot} on_open={props.on_navigate} on_enter={() => props.on_surface?.('overview')}
             selected={props.selected ?? 'lottery'} {...steward_connection}
-            on_demo={() => props.on_surface?.('demo')} on_stream={() => props.on_surface?.('stream')} />
+            on_demo={() => props.on_surface?.('demo')} on_stream={() => props.on_surface?.('stream')} on_rehearsal={() => props.on_surface?.('rehearsal')} />
             : current === 'overview' ? <Overview snapshot={props.snapshot} selected={props.selected ?? 'lottery'} on_select={props.on_select ?? (() => undefined)} on_open={props.on_navigate} steward={steward} {...steward_connection} />
             : current === 'demo' ? <Demo on_back={props.on_back ?? (() => props.on_surface?.('keep'))} />
             : current === 'stream' ? <Stream mode={props.snapshot.mode} {...(stream_connection ? { connection: stream_connection } : {})}
+              on_back={props.on_back ?? (() => props.on_surface?.('keep'))} />
+            : current === 'rehearsal' ? <Rehearsal mode={props.snapshot.mode} {...(rehearsal_connection ? { connection: rehearsal_connection } : {})}
               on_back={props.on_back ?? (() => props.on_surface?.('keep'))} />
             : <Room chamber={current} replay={navigation.replay} snapshot={props.snapshot} origin={navigation.origin}
               {...steward_connection}

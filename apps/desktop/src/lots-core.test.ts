@@ -250,12 +250,12 @@ test('reuses strict launch validation before any network call', () => {
 test('source labels distinguish recorded simulated rounds, unknown native source and live-trusted seals', () => {
   const accepted = (value: unknown) => parseMethodResult(lotsRollSeal, JSON.stringify(value));
   expect(lotsRoundLabel(undefined, undefined)).toContain('unknown');
-  expect(lotsRoundLabel(true, undefined)).toContain('Recorded · simulated');
+  expect(lotsRoundLabel(true, undefined)).toContain('SIMULATED audience · no public round');
   expect(lotsRoundLabel(false, undefined)).toContain('opt-in');
   const live = { ...sealed, sealed: { ...sealed.sealed, roll: { ...sealed.sealed.roll,
     randomness: { source: 'drand_quicknet' as const, chain_hash: '52db9ba70e0cc0f6eaf7803dd07447a1f5477735fd3f661792ba94600c84e971', round: '33333333' } } } };
   expect(lotsRoundLabel(false, accepted(live))).toContain('Live-trusted quicknet');
-  expect(lotsRoundLabel(true, accepted(live))).toContain('Recorded · simulated');
+  expect(lotsRoundLabel(true, accepted(live))).toContain('Live-trusted quicknet · SIMULATED audience');
   expect(lotsRoundLabel(false, accepted(sealed))).toContain('Streamer-controlled');
   const recorded = { ...live, sealed: { ...live.sealed, roll: { ...live.sealed.roll, sealed_at: '2023-08-23T15:09:28Z' } } };
   expect(lotsRoundLabel(false, accepted(recorded))).toContain('Recorded · simulated');
@@ -287,7 +287,7 @@ test('connected room renders source provenance and the announcement before any w
   });
   await port.load(); await port.seal();
   const markup = renderToStaticMarkup(createElement(ConnectedLotsRoom, { port, simulated: true }));
-  expect(markup).toContain('Recorded · simulated round source');
+  expect(markup).toContain('Streamer-controlled · SIMULATED audience');
   expect(markup).toContain('Seal announced');
   expect(markup).not.toContain(copy.core.locked);
   expect(markup).toContain('Cast the lots');

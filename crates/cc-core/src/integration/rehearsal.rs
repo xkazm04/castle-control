@@ -2,6 +2,8 @@
 use super::*;
 
 impl NativeServices {
+    /// Explicit rehearsal entry opts generated Lots into real quicknet HTTPS at
+    /// cast time, independently of the owner's native live-beacon preference.
     pub fn app_rehearsal(
         self: &Arc<Self>,
         capacity: usize,

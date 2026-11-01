@@ -1,5 +1,6 @@
-import { parseMethodParams, parseMethodResult, gatehouseRulesList, gatehouseBanConfirm, gatehouseConsensusGet,
+import { parseMethodParams, parseMethodResult,
   gatehouseDelaySet, gatehouseShieldSet, gatehouseHeldResolve } from '@castle-control/contract';
+import { gatehouseRulesList, gatehouseBanConfirm, gatehouseConsensusGet } from '@castle-control/contract/gatehouse';
 import type { ChatDelay, ConsensusFilter, ConsensusGetResult, Decision, HeldOutcome, RulesListResult } from '@castle-control/contract';
 import { moderationCopy as copy } from './moderation-copy.js';
 
@@ -91,4 +92,3 @@ export const fixtureCharts = [fixtureConsensus({ kind: 'all' }), fixtureConsensu
 
 // The drill result is a seeded simulated night: see drill-fixture.ts.
 export { busyNight, fixtureCandidate, fixtureReplay } from './drill-fixture.js';
-

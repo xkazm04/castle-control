@@ -32,7 +32,8 @@ impl CoreHost {
 
     async fn start_once(options: Options, data_dir: &Path) -> Result<Self, &'static str> {
         // Rehearsal never reads the owner's persisted rules, recordings, engine
-        // configuration or live-beacon opt-in. OBS ownership also stays separate.
+        // configuration or live-beacon opt-in. app_rehearsal explicitly selects
+        // real quicknet for generated Lots. OBS ownership also stays separate.
         let rehearsal_root = data_dir.join("rehearsal");
         let data_dir = if options.rehearsal {
             rehearsal_root.as_path()

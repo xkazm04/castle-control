@@ -13,6 +13,9 @@
 //! - Lots randomness: `CC_NIGHT_LOTS_BEACON=live` (default) writes the product's
 //!   own `live-quicknet` opt-in into the temporary data root, so a seal uses the
 //!   public drand quicknet over HTTPS. `off` leaves the native NoBeacon.
+//! - `CC_NIGHT_REHEARSAL=1` selects app_rehearsal instead of the native app.
+//!   Its own generated-chat consumer owns the pipeline; stdin only keeps it alive.
+//!   It explicitly selects real quicknet regardless of the native opt-in file.
 //!
 //! No RPC method is added. stdout carries one capability handoff line for the
 //! Node owner, then only `{"obs":...}` metadata lines.
@@ -117,7 +120,9 @@ async fn obs_upstream() -> Result<(u16, Zeroizing<String>), Box<dyn std::error::
             Ok((port, password))
         }
         Err(_) => {
-            let password = Zeroizing::new(obs::random_hex(16));
+            let password = Zeroizing::new(
+                std::env::var("CC_NIGHT_OBS_PASSWORD").unwrap_or_else(|_| obs::random_hex(16)),
+            );
             let port = obs::fake_peer(password.clone()).await?;
             Ok((port, password))
         }
@@ -140,6 +145,7 @@ async fn main() -> LauncherResult {
     }
     let (upstream, password) = obs_upstream().await?;
     let relay = obs::relay(upstream, password).await?;
+    let rehearsal = std::env::var("CC_NIGHT_REHEARSAL").as_deref() == Ok("1");
 
     let services = NativeServices::new(
         NativeConfig {
@@ -162,18 +168,27 @@ async fn main() -> LauncherResult {
     )
     .await
     .map_err(|_| "native services unavailable")?;
-    let state: Arc<AppState> = services
-        .app_with_data_dir(1024, root)
-        .map_err(|_| "native app unavailable")?;
+    let state: Arc<AppState> = if rehearsal {
+        services.app_rehearsal(1024, root)
+    } else {
+        services.app_with_data_dir(1024, root)
+    }
+    .map_err(|_| "night app unavailable")?;
     let pipeline = state
         .registry
         .shadow_pipeline()
         .map_err(|_| "shadow pipeline unavailable")?
         .ok_or("native composition has no shadow pipeline")?;
     let (sender, receiver) = broadcast::channel(512);
-    let worker = pipeline
-        .start(Some(receiver), Arc::new(RulesOnly))
-        .ok_or("chat worker did not start")?;
+    let worker = if rehearsal {
+        None
+    } else {
+        Some(
+            pipeline
+                .start(Some(receiver), Arc::new(RulesOnly))
+                .ok_or("chat worker did not start")?,
+        )
+    };
 
     let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await?;
     let address = listener.local_addr()?;
@@ -195,6 +210,7 @@ async fn main() -> LauncherResult {
             "endpoint": format!("http://{address}/"),
             "token": state.session_token(),
             "overlay_origin": services.overlay_url().trim_end_matches('/'),
+            "obs_port": upstream,
         })
     );
     std::io::stdout().flush()?;
@@ -202,7 +218,9 @@ async fn main() -> LauncherResult {
     let result = drive_chat(sender).await;
     state.shutdown();
     let _ = stop.send(());
-    worker.abort();
+    if let Some(worker) = worker {
+        worker.abort();
+    }
     let _ = server.await;
     drop(state);
     drop(services);

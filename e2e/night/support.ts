@@ -64,8 +64,8 @@ export async function holdToSeal(page: Page, button: Locator, gone: Locator): Pr
   await expect(button).toBeEnabled();
   await button.focus();
   await page.keyboard.down('Space');
-  await expect(gone).toBeVisible({ timeout: 20_000 });
-  await page.keyboard.up('Space');
+  try { await expect(gone).toBeVisible({ timeout: 20_000 }); }
+  finally { await page.keyboard.up('Space'); }
 }
 
 /** Wait until the core's simulated chat has produced at least `count` matches of a probe. */

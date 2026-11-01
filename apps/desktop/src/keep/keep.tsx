@@ -13,7 +13,7 @@ import { KeepArt } from './keep-art.jsx';
 import { LintelPlaque } from './plaque.jsx';
 import { useDiorama, useKeepCamera } from './camera.js';
 
-export type KeepProps = { snapshot?: Snapshot; on_open: (id: ModuleId) => void; on_enter: () => void; on_demo?: () => void; on_stream?: () => void };
+export type KeepProps = { snapshot?: Snapshot; on_open: (id: ModuleId) => void; on_enter: () => void; on_demo?: () => void; on_stream?: () => void; on_rehearsal?: () => void };
 type KeepStyle = CSSProperties & { '--keep-scale'?: number; '--keep-inverse'?: number };
 
 const chamberLines: Record<ModuleId, string> = {
@@ -23,11 +23,12 @@ const chamberLines: Record<ModuleId, string> = {
   studio: 'A studio for interactive designs, expressed as data.',
 };
 
-export function KeepEntrance({ on_enter, on_demo, on_stream }: { on_enter: () => void; on_demo?: () => void; on_stream?: () => void }) {
+export function KeepEntrance({ on_enter, on_demo, on_stream, on_rehearsal }: Pick<KeepProps, 'on_enter' | 'on_demo' | 'on_stream' | 'on_rehearsal'>) {
   return <header className="keep-heading">
     <InkButton variant="primary" onClick={on_enter}>Enter the keep <kbd>0</kbd></InkButton>
-    <InkButton data-demo-entry onClick={on_demo}>See it on stream</InkButton>
-    <InkButton onClick={on_stream}>Set up OBS</InkButton></header>;
+    <InkButton data-demo-entry disabled={!on_demo} onClick={on_demo}>See it on stream</InkButton>
+    <InkButton disabled={!on_stream} onClick={on_stream}>Set up OBS</InkButton>
+    <InkButton disabled={!on_rehearsal} onClick={on_rehearsal}>Dress rehearsal</InkButton></header>;
 }
 
 // The art stays mounted; only these overlay classes change when a room is lit.
@@ -37,7 +38,7 @@ export function lightRoom(castle: HTMLDivElement | null, id?: ModuleId) {
   });
 }
 
-export function Keep({ snapshot = { mode: 'fixture', phase: 'ready' }, on_open, on_enter, on_demo, on_stream }: KeepProps) {
+export function Keep({ snapshot = { mode: 'fixture', phase: 'ready' }, on_open, on_enter, on_demo, on_stream, on_rehearsal }: KeepProps) {
   const queue = useSyncExternalStore(proposalQueue.subscribe, proposalQueue.getSnapshot, proposalQueue.getSnapshot);
   const read = keepReadModel(snapshot);
   const [hovered, setHovered] = useState<ModuleId | undefined>(undefined);
@@ -57,7 +58,7 @@ export function Keep({ snapshot = { mode: 'fixture', phase: 'ready' }, on_open, 
   };
   useEffect(() => { lightRoom(castle.current, active); }, [castle, active]);
   return <section className={`keep-home${opening ? ' room-mode' : ''}`} aria-label="The keep">
-    <KeepEntrance on_enter={on_enter} {...(on_demo ? { on_demo } : {})} {...(on_stream ? { on_stream } : {})} />
+    <KeepEntrance on_enter={on_enter} {...(on_demo ? { on_demo } : {})} {...(on_stream ? { on_stream } : {})} {...(on_rehearsal ? { on_rehearsal } : {})} />
     <div className="keep-viewport" ref={host}>
       <div className="keep-diorama" style={stageStyle}>
         <header className="keep-khead">

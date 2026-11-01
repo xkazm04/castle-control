@@ -100,7 +100,7 @@ test('Map Room Tiltyard: champion, cancellation, simulated tally, streamer call 
     // with the call (React flushes it on the discrete keydown). The call itself
     // never removes or adds ballots, and the tally is frozen once it lands.
     expect(after).toHaveLength(3);
-    after.forEach((n, i) => expect(n).toBeGreaterThanOrEqual(before[i]));
+    after.forEach((n, i) => expect(n).toBeGreaterThanOrEqual(before[i] ?? 0));
     expect(after.reduce((a, b) => a + b, 0) - before.reduce((a, b) => a + b, 0)).toBeLessThanOrEqual(3);
     await page.waitForTimeout(1_500);
     expect(await numbers()).toEqual(after);

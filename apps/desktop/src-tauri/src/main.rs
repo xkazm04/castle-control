@@ -1,6 +1,8 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 mod host;
+#[cfg(test)]
+mod ipc_tests;
 mod launch;
 mod options;
 mod rehearsal;

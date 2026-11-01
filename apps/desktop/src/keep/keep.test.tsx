@@ -20,10 +20,20 @@ beforeEach(() => { for (const proposal of proposalQueue.pending()) proposalQueue
 afterEach(() => { vi.unstubAllGlobals(); vi.useRealTimers(); });
 
 test('entrance actions keep their existing behaviour', () => {
-  const enter = vi.fn(); const demo = vi.fn(); const stream = vi.fn();
-  const entry = KeepEntrance({ on_enter: enter, on_demo: demo, on_stream: stream });
+  const enter = vi.fn(); const demo = vi.fn(); const stream = vi.fn(); const rehearsal = vi.fn();
+  const entry = KeepEntrance({ on_enter: enter, on_demo: demo, on_stream: stream, on_rehearsal: rehearsal });
   for (const button of entry.props.children) button.props.onClick();
   expect(enter).toHaveBeenCalledOnce(); expect(demo).toHaveBeenCalledOnce(); expect(stream).toHaveBeenCalledOnce();
+  expect(rehearsal).toHaveBeenCalledOnce();
+});
+
+test('optional entrance actions are consistently disabled without a navigation callback', () => {
+  const entry = KeepEntrance({ on_enter: vi.fn() });
+  expect(entry.props.children[0].props.disabled).not.toBe(true);
+  for (const button of entry.props.children.slice(1)) {
+    expect(button.props.disabled).toBe(true);
+    expect(button.props.onClick).toBeUndefined();
+  }
 });
 
 test('four hits and lintels carry the read model words, lines and chamber-aware names', () => {

@@ -265,21 +265,6 @@ async fn assert_steward_flag_round_trips_as_metadata_without_native_services_or_
     }
 }
 
-#[test]
-fn native_permissions_and_network_policy_are_minimal() {
-    let config: Value = serde_json::from_str(include_str!("../tauri.conf.json")).unwrap();
-    let capability: Value =
-        serde_json::from_str(include_str!("../capabilities/main-window.json")).unwrap();
-    assert_eq!(capability["permissions"], json!([]));
-    assert_eq!(capability["windows"], json!(["main"]));
-    let csp = &config["app"]["security"]["csp"];
-    assert_eq!(csp["connect-src"], "http://127.0.0.1:* ws://127.0.0.1:*");
-    assert_eq!(csp["script-src"], "'self'");
-    assert_eq!(config["build"]["frontendDist"], "../dist");
-    assert_eq!(config["build"]["devUrl"], "http://127.0.0.1:5173");
-    assert_eq!(config["app"]["windows"], json!([]));
-}
-
 #[tokio::test(flavor = "current_thread")]
 async fn native_overlay_reuses_the_requested_port_across_restarts() {
     let reservation = std::net::TcpListener::bind((std::net::Ipv4Addr::LOCALHOST, 0)).unwrap();

@@ -23,13 +23,14 @@ export type CoreLotsSnapshot = Omit<LotsPreview, 'draw' | 'entries'> & {
 /** Labels use the existing core status and accepted seal; no launch flag is
  * treated as proof that a live source exists. Verification remains in core. */
 export function lotsRoundLabel(simulated: boolean | undefined, sealed: RollSealResult | undefined): string {
-  if (simulated === true || sealed?.sealed.roll.sealed_at === '2023-08-23T15:09:28Z') return 'Recorded · simulated round source';
+  if (sealed?.sealed.roll.sealed_at === '2023-08-23T15:09:28Z') return 'Recorded · simulated round source';
   if (simulated === undefined) return 'Round source unknown · wait for core status';
-  if (!sealed) return 'Live mode · trusted quicknet needs the local opt-in; no round selected';
+  if (!sealed) return simulated ? 'SIMULATED audience · no public round selected'
+    : 'Live mode · trusted quicknet needs the local opt-in; no round selected';
   const plan = sealed.sealed.roll.randomness;
-  if (plan.source === 'streamer_commit') return 'Streamer-controlled · commit/reveal';
+  if (plan.source === 'streamer_commit') return `Streamer-controlled · ${simulated ? 'SIMULATED audience · ' : ''}commit/reveal`;
   if (plan.chain_hash !== '52db9ba70e0cc0f6eaf7803dd07447a1f5477735fd3f661792ba94600c84e971') return 'Round source unknown · unexpected chain';
-  return `Live-trusted quicknet · target round ${plan.round}`;
+  return `Live-trusted quicknet · ${simulated ? 'SIMULATED audience · ' : ''}target round ${plan.round}`;
 }
 
 const questionDraw = {

@@ -4,7 +4,7 @@ import type { ModuleId } from '@castle-control/ui';
 type Action = (typeof keymap)[number]['action'];
 export type Surface = 'keep' | 'overview' | 'demo';
 // Setup has no chamber or Steward context; its shell maps that context to the Keep.
-export type ShellSurface = Surface | 'stream';
+export type ShellSurface = Surface | 'stream' | 'rehearsal';
 export type Navigation = { current: ModuleId | ShellSurface; origin: Surface; replay: boolean };
 export function createKeymap(bindings: readonly { key: string; action: Action }[]) {
   const registry = new Map<string, Action>();
@@ -32,7 +32,7 @@ export function dispatchShortcut(event: Shortcut, editable: boolean, navigate: (
 }
 
 export function canonicalHash(hash: string): string {
-  if (hash === '#/keep' || hash === '#/overview' || hash === '#/demo' || hash === '#/stream') return hash;
+  if (hash === '#/keep' || hash === '#/overview' || hash === '#/demo' || hash === '#/stream' || hash === '#/rehearsal') return hash;
   if (hash === '#/moderator/drill' || hash === '#/chamber/moderator/drill') return '#/chamber/moderator/drill';
   for (const { id } of chambers) if (hash === `#/${id}` || hash === `#/chamber/${id}`) return `#/chamber/${id}`;
   return '#/keep';
@@ -42,6 +42,7 @@ export function routeFromHash(hash: string): ModuleId | ShellSurface {
   if (canonical === '#/overview') return 'overview';
   if (canonical === '#/demo') return 'demo';
   if (canonical === '#/stream') return 'stream';
+  if (canonical === '#/rehearsal') return 'rehearsal';
   return chambers.find(({ id }) => canonical === `#/chamber/${id}` || canonical === `#/chamber/${id}/drill`)?.id ?? 'keep';
 }
 export function initialNavigation(hash: string): Navigation {
@@ -52,5 +53,5 @@ export function navigateHash(previous: Navigation, hash: string): Navigation {
   return { ...next, origin: previous.current === 'keep' || previous.current === 'overview' ? previous.current : previous.origin };
 }
 export function backHash(state: Navigation): string {
-  return `#/${state.current === 'keep' || state.current === 'overview' || state.current === 'demo' || state.current === 'stream' ? 'keep' : state.origin}`;
+  return `#/${state.current === 'keep' || state.current === 'overview' || state.current === 'demo' || state.current === 'stream' || state.current === 'rehearsal' ? 'keep' : state.origin}`;
 }

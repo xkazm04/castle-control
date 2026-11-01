@@ -240,7 +240,8 @@ in `docs/ui/inventory.md`. No pixel-fidelity or screenshot claim is made.
 
 Windows is the M0 target and needs the Rust/MSVC desktop build tools, Windows SDK
 and WebView2 runtime. The shell crate is `cc-desktop`, a Cargo workspace member.
-Its version comes from the workspace package. No npm Tauri dependency is needed.
+Its version comes from the workspace package. D4 pins the official
+`@tauri-apps/api` client to 2.12.4 for the two rehearsal relaunch commands.
 
 **Built frontend / real core:** from the repository root, build the frontend,
 then run the native shell with the custom-protocol feature:
@@ -310,8 +311,8 @@ The shell installs its guarded, main-frame initialization script before the
 frontend entry point. Only its configured origin can navigate in the window;
 new windows and external navigation are denied. The existing fetch/WebSocket
 transport is unchanged. The main window exposes the two application rehearsal
-commands described below; it has no shell, filesystem or HTTP plugin. CSP permits scripts from the frontend's own origin
-and network connections only to HTTP/WS `127.0.0.1` ports; it loads no remote
+commands described below; it has no shell, filesystem or HTTP plugin. CSP permits scripts from the frontend's own origin,
+Tauri's `ipc:` / `http://ipc.localhost` bridge, and HTTP/WS `127.0.0.1` ports; it loads no remote
 script. No frontend output is committed. Default `cargo test --workspace` uses
 the configured dev URL at compile time, so it needs no `dist` directory or Node.
 
@@ -433,3 +434,125 @@ registration, isolated storage, public relaunch arguments and overlay-port
 handover. Test roots use PID plus an AtomicU64 counter and best-effort Drop.
 The builder ran standalone rustfmt and source gates only; Cargo, the full gate,
 the installed-app relaunch and the owner's OBS smoke test remain for the Director.
+
+## Dress rehearsal screen (D4)
+
+Open **Dress rehearsal** from the Keep or `#/rehearsal`; Back and Escape return
+to the Keep. This lazy surface has the Keep's Steward context and no chamber
+identity. Fixture preview explains the real core / own OBS / generated
+SIMULATED chat / no Twitch login workflow and disables Start with the kit's
+"needs the desktop app" Notice. No fixture RPC or native command runs.
+
+A schema-validated successful `rehearsal.start` establishes the workspace,
+including a sticky SIMULATED Stamp. Control invalidations refetch authoritative
+state. The model consumes the start method's own status echo to avoid a read
+loop, drains concurrent invalidations, ignores disposed reads, and protects
+connection mutations from stale status reads. Disconnection drops the shell's
+rehearsal connection instead of retaining actionable stale status.
+
+The OBS form defaults to 127.0.0.1:4455 and Remember off. Its uncontrolled,
+masked password has autocomplete disabled and is cleared before asynchronous
+submission; no password or resolved source URL enters a read snapshot. Parsed
+core errors show only their message. Scene setup uses **Castle Control ·
+Rehearsal**. Each virtualized output has its own existing 1080p / 720p / vertical
+preset and the shared proclaim hold. Lots uses the actual rehearsal draw ID
+from Lots state; until Fill a Lot creates it, the row says **Fill a Lot first**.
+An accepted seal in the existing Lot Chamber is needed for that plate's
+SIMULATED disclosure; filling itself does not seal. Entering rehearsal explicitly
+selects the real, pinned drand quicknet beacon with the system clock. Casting
+fetches and verifies a public round over HTTPS and needs internet access; the
+entry screen says so before Start. No native opt-in file is read or written and
+no recorded randomness is substituted. The Lot Chamber identifies a live-trusted
+public round separately from its SIMULATED audience. Duel stays **coming** while
+its declared source method is unavailable. Cleanup uses a separate shared hold
+and reports the core's removed count. Scenario buttons use the four existing
+identifiers; the crowd slider debounces 0–600/minute, keeps a pending change
+across busy operations, and cancels pending submission on unmount.
+
+Start/Leave dynamically load `invoke` from `@tauri-apps/api/core` on button press,
+pinned to 2.12.4 (matching
+the Rust crate; [official package metadata](https://github.com/tauri-apps/tauri/blob/dev/packages/api/package.json)).
+Only core mode inside Tauri receives the mockable shell door; Vite/fixture mode
+and the browser night harness keep the disabled Notice. The build's AppManifest
+enumerates only `enter_rehearsal` and `leave_rehearsal`; the main-window capability
+grants only their generated allow permissions. A Rust policy test checks the
+exact manifest, handler registration, capability and CSP inventories. See the
+[official ACL build API](https://docs.rs/tauri-build/latest/tauri_build/struct.AppManifest.html)
+and [IPC CSP policy](https://v2.tauri.app/security/csp/).
+
+Added evidence (authored, **not executed in this builder sandbox**): co-located
+Vitest model/rendering tests; fixture `e2e/dress-rehearsal.spec.ts`; the canonical
+route/theme/Steward style matrix; `e2e/night/rehearsal.spec.ts`; and the shared
+night journey exercised by the isolated OBS lane in `e2e/night/obs.spec.ts`.
+The latter saves Lot/vote-bar/Beacon screenshots before clearing and verifies
+owned inputs disappear. The generated OBS peer covers scene/input ownership
+operations and has a state/cleanup unit test. `CC_NIGHT_REHEARSAL=1` selects
+`app_rehearsal` in the existing example. The launcher passes a generated password
+in memory to the peer and masked UI field; night traces remain off and no
+password is printed or attached. The journey seals and casts the generated Lot
+through the existing UI, waits for its verified writ, checks parsed control
+events, and requires SIMULATED on all three overlay pages. Rehearsal lanes
+deliberately pass `lotsBeacon: 'off'`: that flag applies only to the native
+composition and cannot disable rehearsal's explicit public quicknet source.
+
+**D4 review correction:** the initial night lanes reached a disabled-beacon
+refusal at seal, leaving the UI's conservative uncertain-seal lock in place.
+`app_rehearsal` had used native Lots, whose missing opt-in selects NoBeacon;
+the earlier Rust scenario test injected RecordedBeacon and missed that path.
+The isolated desktop rehearsal directory also had no opt-in. This was not
+fixed by adding a fixture source: the composition now explicitly constructs
+the existing real LiveBeacon. `status.get` still follows the native handler,
+sets the existing simulated provenance bit, and validates its result. The
+rampart now shows actual core OBS/bridge connection state alongside SIMULATED
+provenance rather than hiding those adapters behind simulated chips. Unknown
+still means a missing read, never an invented disconnected state.
+
+`crates/cc-core/tests/rehearsal_transport.rs` exercises authenticated HTTP status,
+the browser's WebSocket subprotocol handshake, real control invalidations,
+native OBS status, a current-time quicknet seal, its future-round cast gate,
+and the SIMULATED plate with an intentionally unusable native opt-in. It makes
+no round fetch; both night lanes cover the real HTTPS cast. The updated night
+journey also rejects malformed event frames and checks the connected rampart
+before and after casting, so the reported interrupted-shell symptom is covered.
+The Director recorded the initial fixture route/journey matrix at **88/88**;
+that predates these review corrections and is not a new execution claim.
+
+The native shell uses a distinct `nativeInvoke` door with two literal commands.
+The unchanged parity scanner also recognizes named-import aliases, so the
+dynamic module namespace is destructured instead. A generator regression checks
+the actual shell source and proves that nonliteral core RPC aliases still fail.
+The SDK is absent until Start/Leave is pressed; the workspace and its stylesheet
+remain behind the same React lazy boundary as stream setup.
+
+The Director's round-two build counted **440,327 / 393,216** first-load bytes
+across eight HTML JS/CSS references. In that artifact, using the existing
+independent `/lots` and `/gatehouse` handles instead of root-barrel handles
+defers 70 validator declarations (99,855 bytes). The arithmetic projection is
+**340,472 bytes** before rebundling/name overhead; this is not a measured new
+build. The unchanged budget remains the acceptance check on the Director's build.
+
+The round-two failure screenshot already shows the cast plate's foreground
+SIMULATED badge. Lots intentionally hides its server fallback after the renderer
+mounts; the journey now selects `.draw-scene > .simulated` beside visible winners,
+the Beacon's `[data-simulated-badge]`, and the vote bar's own badge. No plate badge
+was hidden while its result was visible. The isolated OBS lane now retries
+Identify plus GetVersion for at most 30 seconds before starting each core relay.
+After the UI clear it independently lists global inputs, scenes and scene items;
+teardown repeats the core clear and the independent absence check. Missing or
+malformed inventories and remaining owned inputs fail the test. An empty retained
+test scene is removed before the sibling test; cleanup failures are never logged
+and ignored. Post-cast connection checks wait for the asynchronous native probe.
+
+The Director has verified Rust tests and 176/176 fixture e2e tests before these
+round-two corrections. Here, the five generated-peer Node readiness/cleanup tests,
+contract generator/parity regressions, desktop TypeScript compiler API check and
+static source checks pass. The SDK lazy-load Vitest assertions await the Director,
+along with `pnpm gate`, the production byte count, both night lanes, screenshots
+and installed-app relaunch.
+
+D4 round-four regression verification: the headless Node Vitest API passes all
+1,053 desktop tests in 109 files; the TypeScript compiler API reports no
+diagnostics across 289 files. Bootstrap and each real lazy Steward route now
+have separate tests with the unchanged timeout. Keep actions retain their
+existing callback assertions, and the password test inspects the input element's
+mask, autocomplete and uncontrolled props independently of HTML attribute order.

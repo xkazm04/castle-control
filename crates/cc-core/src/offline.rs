@@ -16,6 +16,7 @@ pub(crate) struct OfflineModules {
     overlay_origin: Option<String>,
     native: Option<Weak<crate::NativeServices>>,
     live: bool,
+    rehearsal: bool,
     events: OnceLock<Arc<EventHub>>,
     loaded: OnceLock<Result<Loaded, ErrorEnvelope>>,
     pipeline: OnceLock<Arc<crate::live::ShadowPipeline>>,
@@ -45,6 +46,7 @@ impl OfflineModules {
             overlay_origin: None,
             native: None,
             live: false,
+            rehearsal: false,
             events: OnceLock::from(events),
             loaded: OnceLock::new(),
             pipeline: OnceLock::new(),
@@ -55,6 +57,15 @@ impl OfflineModules {
         Self {
             live: true,
             ..Self::at(root, events)
+        }
+    }
+
+    /// Entering rehearsal explicitly selects the real public quicknet beacon.
+    /// Never read or write the owner's native opt-in, or substitute recorded time.
+    pub fn rehearsal_at(root: PathBuf, events: Arc<EventHub>) -> Self {
+        Self {
+            rehearsal: true,
+            ..Self::native_at(root, events)
         }
     }
 
@@ -140,7 +151,13 @@ impl OfflineModules {
                         LotsModule::open(
                             root.join("lots"),
                             events,
-                            crate::lots::live_beacon::configured(root)?,
+                            if self.rehearsal {
+                                Arc::new(crate::lots::live_beacon::LiveBeacon::new(
+                                    crate::lots::live_beacon::official_chain(),
+                                ))
+                            } else {
+                                crate::lots::live_beacon::configured(root)?
+                            },
                             Arc::new(crate::lots::SystemLotsClock),
                             false,
                         )?,

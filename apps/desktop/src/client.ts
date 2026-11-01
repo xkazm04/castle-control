@@ -8,6 +8,10 @@ import type { CoreGatehousePort, GatehouseNetwork } from './gatehouse-core.js';
 import type { CoreBeaconsPort, BeaconsNetwork } from './beacons-core.js';
 import type { StewardTransport } from '@castle-control/ui/steward';
 import type { StreamConnection } from './stream/obs-core.js';
+import type { RehearsalConnection } from './rehearsal/rehearsal-core.js';
+
+const rehearsalConnections = new WeakMap<Snapshot, RehearsalConnection>();
+export function coreRehearsalConnection(snapshot: Snapshot) { return rehearsalConnections.get(snapshot); }
 
 const streamConnections = new WeakMap<Snapshot, StreamConnection>();
 export function coreStreamConnection(snapshot: Snapshot) { return streamConnections.get(snapshot); }
@@ -62,6 +66,7 @@ export function createDesktopClient(value: unknown, transport?: Network, lots_tr
     ...(gatehouse_transport ? { transport: gatehouse_transport } : {}) };
   const beacons: BeaconsConnection = { launch };
   const stream: StreamConnection = { launch };
+  const rehearsal: RehearsalConnection = { launch, subscribeEvents: client.subscribeEvents };
   const steward: StewardConnection = { launch, live: launch.steward === 'live',
     reachable: () => client.getSnapshot().phase === 'ready',
     ...(steward_transport ? { transport: steward_transport } : {}) };
@@ -71,6 +76,7 @@ export function createDesktopClient(value: unknown, transport?: Network, lots_tr
     gatehouseConnections.set(snapshot, gatehouse);
     beaconsConnections.set(snapshot, beacons);
     streamConnections.set(snapshot, stream);
+    rehearsalConnections.set(snapshot, rehearsal);
     stewardConnections.set(snapshot, steward);
     return snapshot;
   } };

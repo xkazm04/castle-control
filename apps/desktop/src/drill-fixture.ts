@@ -1,5 +1,5 @@
-import { gatehouseDrillRun, parseMethodResult } from '@castle-control/contract';
-import { gatehouseDrillDiff } from '@castle-control/contract/gatehouse';
+import { parseMethodResult } from '@castle-control/contract';
+import { gatehouseDrillRun, gatehouseDrillDiff } from '@castle-control/contract/gatehouse';
 import type { DrillDiffResult, DrillRunResult, DrillState } from '@castle-control/contract';
 
 // Generated, never recorded chat. A string seed draws the same simulated night every run.

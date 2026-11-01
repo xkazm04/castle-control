@@ -17,10 +17,11 @@ export function DesktopRampart({ snapshot, theme, on_theme_change, on_steward }:
   snapshot: Snapshot; theme: Theme; on_theme_change: (theme: Theme) => void; on_steward?: () => void;
 }) {
   const { status, bridge } = snapshot;
-  const simulated = snapshot.mode === 'fixture' || status?.simulated === true;
+  const fixture = snapshot.mode === 'fixture';
+  const simulated = fixture || status?.simulated === true;
   const stream = simulated ? undefined : status?.stream;
   const gatehouse = simulated ? undefined : status?.gatehouse;
-  const twitch: ConnectionState | undefined = !simulated && bridge ? ({ connected: 'connected', connecting: 'reconnecting', disconnected: 'down', error: 'down' } as const)[bridge.state] : undefined;
+  const twitch: ConnectionState | undefined = !fixture && bridge ? ({ connected: 'connected', connecting: 'reconnecting', disconnected: 'down', error: 'down' } as const)[bridge.state] : undefined;
   return <header className="cc-rampart">
     <a className="cc-brand" href="#/keep" aria-label="Castle Control, the whole keep">
       <Mark /><span className="cc-wordmark" data-text="Castle Control">Castle Control</span>
@@ -34,7 +35,7 @@ export function DesktopRampart({ snapshot, theme, on_theme_change, on_steward }:
     <span className="cc-separator" />
     <div className="cc-link-group">
       {twitch ? <ConnectionMark name="Twitch" state={twitch} /> : simulated ? <Stamp kind="simulated" word="Twitch simulated" /> : <StatusChip variant="dash">Twitch unknown</StatusChip>}
-      <a href="#/stream" title="Set up OBS">{!simulated && status ? <ConnectionMark name="OBS" state={status.obs_connected ? 'connected' : 'down'} />
+      <a href="#/stream" title="Set up OBS">{!fixture && status ? <ConnectionMark name="OBS" state={status.obs_connected ? 'connected' : 'down'} />
         : simulated ? <Stamp kind="simulated" word="OBS simulated" /> : <StatusChip variant="dash">OBS unknown</StatusChip>}</a>
     </div>
     {gatehouse ? <GatehouseChip armed={gatehouse.armed_rules} watching={gatehouse.shadow_rules}
