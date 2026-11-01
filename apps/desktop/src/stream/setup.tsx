@@ -5,6 +5,8 @@ import { createStreamSetup, streamPresets } from './setup-model.js';
 import type { StreamRow, StreamSetupModel, StreamState } from './setup-model.js';
 import type { StreamConnection } from './obs-core.js';
 import './setup.css';
+import '@castle-control/ui/fused/surface.css';
+import '@castle-control/ui/fused/folio.css';
 
 const statusCopy: Record<StreamState['obs'], string> = {
   unknown: 'OBS status unknown · refresh to check', connected: 'OBS is listening',

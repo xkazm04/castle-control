@@ -22,7 +22,7 @@ test('OBS setup is a lazy non-chamber surface reached from the Keep with Back to
   entry.props.children[2].props.onClick();
   expect(open).toHaveBeenCalledOnce();
   const stream = await renderToReadableStream(<DesktopView navigation={initialNavigation('#/stream')}
-    snapshot={{ mode: 'fixture', phase: 'ready' }} theme="paper" on_navigate={() => undefined} on_theme_change={() => undefined} />);
+    snapshot={{ mode: 'fixture', phase: 'ready' }} theme="day" on_navigate={() => undefined} on_theme_change={() => undefined} />);
   await stream.allReady;
   const html = await new Response(stream).text();
   expect(html).toContain('stream-workspace');
@@ -42,7 +42,7 @@ test('keep demo entry, direct URL, Back and Escape use the canonical non-chamber
   expect(entry.props.children[1].props.children).toBe('See it on stream');
   entry.props.children[1].props.onClick?.();
   expect(state.current).toBe('demo');
-  const view = <DesktopView navigation={state} snapshot={{ mode: 'fixture', phase: 'ready' }} theme="paper"
+  const view = <DesktopView navigation={state} snapshot={{ mode: 'fixture', phase: 'ready' }} theme="day"
     on_navigate={() => undefined} on_theme_change={() => undefined} />;
   const stream = await renderToReadableStream(view);
   await stream.allReady;
@@ -117,7 +117,7 @@ test('lazy surfaces retain one Steward bar and the rampart, and rooms retain the
     ['#/chamber/visuals', 'aria-label="Beacons work"'], ['#/chamber/studio', 'aria-label="Map Room work"'],
     ['#/chamber/moderator/drill', 'The drill']]) {
     const stream = await renderToReadableStream(<DesktopView navigation={initialNavigation(hash ?? '')} snapshot={snapshot}
-      theme="paper" on_navigate={() => undefined} on_theme_change={() => undefined} />);
+      theme="day" on_navigate={() => undefined} on_theme_change={() => undefined} />);
     await stream.allReady;
     const html = await new Response(stream).text();
     expect(html).toContain('data-stamp="off-air" role="img" aria-label="On air is simulated: nothing is broadcast"');

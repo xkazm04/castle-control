@@ -11,6 +11,9 @@ import type { StewardConnection } from '../client.js';
 import { shellSealAuthority, shellStewardPort } from './core-steward.js';
 import { StewardSealSlot } from './steward-slot.jsx';
 import { RoomHeader } from './room-header.jsx';
+import '@castle-control/ui/fused/surface.css';
+import '@castle-control/ui/fused/glass.css';
+import '@castle-control/ui/fused/folio.css';
 
 const LotteryRoom = lazy(() => import('../rooms/lottery/index.jsx'));
 const CoreLotteryRoom = lazy(() => import('../rooms/lottery/core.jsx'));

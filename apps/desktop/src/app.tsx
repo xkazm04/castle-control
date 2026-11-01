@@ -13,7 +13,7 @@ export function tearFocusedProposal(target: Pick<Element, 'closest'> | null) {
 export function DesktopApp({ client }: { client: DesktopClient }) {
   const snapshot = useSyncExternalStore(client.subscribe, client.getSnapshot, client.getSnapshot);
   const [navigation, setNavigation] = useState(() => initialNavigation(window.location.hash));
-  const [theme, setTheme] = useState<Theme>('paper');
+  const [theme, setTheme] = useState<Theme>('day');
   const [selected, setSelected] = useState<ModuleId>('lottery');
   const root = useRef<HTMLDivElement>(null);
   const stewardInput = useRef<HTMLInputElement>(null);

@@ -243,6 +243,7 @@ export const tokens = {
     "text-shell-beacon-unit": "24px", "text-shell-scene-caption": "13px",
   },
 } as const;
-export type Theme = keyof typeof tokens.theme;
+/** App themes: fused day (default) and night; tokens.theme keeps the prototype paper/stock values. */
+export type Theme = 'day' | 'night';
 export type TokenName = keyof typeof tokens.theme.paper | keyof typeof tokens.layout
   | keyof typeof tokens.art | keyof typeof tokens.cutaway | keyof typeof tokens.motion | keyof typeof tokens.type;

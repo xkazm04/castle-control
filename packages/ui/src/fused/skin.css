@@ -1,0 +1,215 @@
+/* =============================================================================
+   FUSED SKIN FOR THE EXISTING SHELL COMPONENTS                          skin.css
+   Re-skins the shared kit's existing markup (chamber strip, room title, InkButton,
+   Stamp, Kbd, SealButton, Panel, EmptyState) into the fused shell look without
+   changing the markup its tests and e2e rely on. New code should use the fused
+   primitives in shell.css directly (.cc-tabs, .cc-chamber-head, .cc-btn, .cc-seal,
+   .cc-stamp--*, .cc-sim, .cc-panel__*, .cc-field, .cc-seg ...).
+   Selectors lead with .cc-frame so they outrank the legacy sheets in any load order.
+   ============================================================================= */
+
+/* ---- main: ashlar stone, the current chamber's light pooled under its tab */
+.cc-frame .desktop-surface, .cc-frame .shell-room {
+  background:
+    radial-gradient(48% 260px at var(--pool-x, 50%) 0, color-mix(in srgb, var(--ch-lit) calc(var(--pool-a) * 100%), transparent), transparent 100%),
+    var(--tex-ashlar), var(--tex-stone), var(--stone);
+  background-size: 100% 100%, 176px 96px, 240px 240px, auto;
+}
+.cc-frame .shell-room { font: 400 var(--text-t-body)/1.5 var(--font-text); }
+
+/* ---- chamber strip -> transom-light tabs */
+.cc-frame .cc-chamber-strip {
+  position: relative; z-index: 29; min-height: var(--tabs-h); height: var(--tabs-h);
+  background: var(--stone-2) var(--tex-stone); border-bottom: var(--came-heavy) solid var(--lead);
+  box-shadow: 0 8px 18px -12px var(--shade);
+}
+.cc-frame .cc-chamber-tile {
+  display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-rows: auto auto; align-content: center;
+  column-gap: 10px; row-gap: 4px; padding: 10px 14px 6px; border: 0; border-right: var(--came) solid var(--lead);
+  background: transparent; color: var(--ink); transition: background var(--m-fast) var(--ease);
+}
+.cc-frame .cc-chamber-tile:last-child { border-right: 0; }
+.cc-frame .cc-chamber-tile:hover { background: color-mix(in srgb, var(--surface) 55%, transparent); }
+.cc-frame .cc-chamber-tile:is([aria-pressed="true"], [aria-current="page"]) { background: var(--surface); }
+.cc-frame .cc-chamber-tile::before {
+  inset: 0 0 auto 0; height: 7px; box-shadow: inset 0 calc(-1 * var(--came)) 0 var(--lead);
+  background: var(--tex-glass), linear-gradient(90deg, var(--ch-deep), var(--ch) 30%, var(--ch) 70%, var(--ch-deep));
+  background-size: 180px 180px, 100% 100%; background-blend-mode: overlay, normal;
+  filter: saturate(.55) brightness(.92); transition: height var(--m-light) var(--ease), filter var(--m-light) var(--ease);
+}
+.cc-frame .cc-chamber-tile:is([aria-current="page"], [aria-pressed="true"])::before {
+  height: 10px; filter: none;
+  background: var(--tex-glass), linear-gradient(90deg, var(--ch), var(--ch-lit) 50%, var(--ch));
+  background-size: 180px 180px, 100% 100%; background-blend-mode: overlay, normal;
+  box-shadow: inset 0 calc(-1 * var(--came)) 0 var(--lead), 0 4px calc(8px + var(--glow-on) * 14px) var(--ch-glow);
+}
+.cc-frame .cc-chamber-tile:hover::before { filter: none; }
+.cc-frame .cc-keep-tile { flex: .62; }
+.cc-frame .cc-keep-tile::before { background: linear-gradient(90deg, var(--gules) 0 25%, var(--azure) 25% 50%, var(--or) 50% 75%, var(--key) 75%); }
+.cc-frame .cc-keep-tile[aria-current="page"]::before { background: linear-gradient(90deg, var(--gules-lit) 0 25%, var(--azure-lit) 25% 50%, var(--or-lit) 50% 75%, var(--key-lit) 75%); }
+.cc-frame .cc-chamber-tile > .cc-kbd {
+  grid-row: 1 / span 2; align-self: center; min-width: 24px; height: 28px; padding: 0 6px;
+  color: var(--on-glass); border: 1.5px solid var(--lead); border-radius: 12px 12px 2px 2px;
+  background: radial-gradient(circle at 40% 25%, var(--ch-lit), var(--ch) 50%, var(--ch-deep));
+  box-shadow: 0 0 calc(var(--glow-on) * 10px) var(--ch-glow); text-shadow: 0 1px 1px var(--glass-shade);
+  font: 800 var(--text-px-13)/1 var(--font-text);
+}
+.cc-frame .cc-chamber-tile[data-module="visuals"] > .cc-kbd { color: var(--lead-lo); text-shadow: none; background: radial-gradient(circle at 40% 25%, var(--or-lit), var(--or) 70%); }
+.cc-frame .cc-keep-tile > .cc-kbd { background: conic-gradient(from 45deg, var(--gules-deep) 0 25%, var(--azure-deep) 0 50%, var(--or-deep) 0 75%, var(--key-deep) 0); }
+.cc-frame .cc-chamber-tile-title {
+  font: 800 var(--text-px-16)/1 var(--font-label); letter-spacing: var(--track-tab); text-transform: lowercase;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.cc-frame .cc-keep-tile .cc-chamber-tile-title { grid-row: 1 / span 2; align-self: center; }
+.cc-frame .cc-chamber-tile[aria-current="page"]:not(.cc-keep-tile) .cc-chamber-tile-title { color: var(--ch-ink); }
+.cc-frame .cc-chamber-state { grid-column: 2; font: 500 var(--text-t-small)/1 var(--font-text); color: var(--ink-2); }
+.cc-frame .cc-layer-lamps { grid-column: 1 / -1; display: flex; gap: 10px; font: 700 var(--text-px-13)/1 var(--font-label); letter-spacing: .05em; text-transform: lowercase; color: var(--ink-2); }
+.cc-frame .cc-layer-lamps [data-lit]::before { width: 7px; height: 7px; margin-right: 5px; border: 0; border-radius: 0; transform: rotate(45deg); box-shadow: 0 0 0 1.5px var(--faint); background: transparent; }
+.cc-frame .cc-layer-lamps [data-lit="true"]::before { background: var(--ch-lit); box-shadow: 0 0 0 1.5px var(--lead), 0 0 calc(4px + var(--glow-on) * 6px) var(--ch-glow); }
+.cc-frame .cc-chamber-strip:has(.cc-layer-lamps:not(:only-child)) { height: auto; }
+.cc-frame .overview-workspace .cc-chamber-strip { height: auto; }
+
+/* ---- room title -> chamber head (crumbs, blackletter title, aside subtitle, Back) */
+.cc-frame .shell-room-header {
+  height: auto; flex: none; border-bottom: var(--came) solid var(--lead); margin-bottom: 14px;
+}
+.cc-frame .shell-room-header::after {
+  content: ''; position: absolute; left: 0; right: 0; bottom: -12px; height: 10px; border-bottom: var(--came) solid var(--lead);
+  background: var(--tex-glass), repeating-linear-gradient(90deg, var(--lead) 0 2px, transparent 2px 46px), linear-gradient(180deg, var(--ch-lit), var(--ch) 55%, var(--ch-deep));
+  background-size: 180px 180px, auto, auto; background-blend-mode: overlay, normal, normal;
+  box-shadow: 0 0 calc(var(--glow-on) * 14px) var(--ch-glow);
+}
+.cc-frame .shell-room-header .shell-room-band { display: none; }
+.cc-frame .shell-room-header .cc-room-title {
+  position: relative; inset: auto; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 24px;
+  padding: 16px var(--gutter) 18px; pointer-events: auto;
+}
+.cc-frame .cc-room-title-card, .cc-frame .shell-room-header .cc-room-title-card {
+  position: static; max-width: none; padding: 0; border: 0; background: none; box-shadow: none;
+}
+.cc-frame .cc-room-crumb { gap: 8px; font: 500 var(--text-t-small)/1.2 var(--font-text); color: var(--muted); }
+.cc-frame .cc-room-crumb button { color: var(--ink); font-weight: 700; }
+.cc-frame .cc-room-crumb b { color: var(--ink); }
+.cc-frame .cc-room-title-card h1 {
+  margin: 6px 0 0; font: 600 var(--text-t-title)/.9 var(--font-display); letter-spacing: .005em; text-transform: none;
+  color: var(--ch-ink); text-shadow: 0 0 calc(var(--glow-on) * 24px) var(--ch-glow); font-stretch: normal;
+  animation: none;   /* the legacy registration slip ends on an offset ghost; the fused title glows instead */
+}
+.cc-frame .cc-room-function { gap: 12px; margin-top: 6px; font: italic 400 var(--text-px-21)/1.2 var(--font-aside); color: var(--ink-2); }
+.cc-frame .shell-room-header .cc-room-back, .cc-frame .cc-room-back {
+  position: static; margin: 0; min-height: var(--control-h); gap: 10px; padding: 0 16px;
+  border: var(--came) solid var(--lead); border-radius: var(--r); background: var(--surface); color: var(--ink);
+  box-shadow: inset 0 -3px 0 var(--hair-2); font: 800 var(--text-px-14-5)/1 var(--font-label); letter-spacing: .07em; text-transform: lowercase;
+}
+.cc-frame .cc-room-back:hover { background: var(--surface-2); box-shadow: inset 0 -3px 0 var(--ch); }
+
+/* ---- key numeral jewel */
+.cc-frame .cc-kbd {
+  min-width: 22px; height: 24px; padding: 0 6px; font: 800 var(--text-px-13)/1 var(--font-text); color: var(--ink);
+  background: var(--surface); border: 1.5px solid var(--lead); border-radius: 11px 11px 2px 2px; box-shadow: inset 0 -2px 0 var(--hair);
+}
+
+/* ---- InkButton -> leaded button */
+.cc-frame .cc-button:not(.cc-heraldic-button) {
+  height: var(--control-h); gap: 10px; padding: 0 16px; border: var(--came) solid var(--lead); border-radius: var(--r);
+  background: var(--surface); color: var(--ink); box-shadow: inset 0 -3px 0 var(--hair-2);
+  font: 800 var(--text-px-14-5)/1 var(--font-label); letter-spacing: .07em; text-transform: lowercase;
+}
+.cc-frame .cc-button:not(.cc-heraldic-button):hover { background: var(--surface-2); color: var(--ink); box-shadow: inset 0 -3px 0 var(--ch, var(--hair)); }
+.cc-frame .cc-button:not(.cc-heraldic-button):is([data-variant="primary"], [data-variant="plate"]) {
+  background: var(--lead); color: var(--on-lead); border-color: var(--lead);
+  box-shadow: inset 0 -4px 0 var(--ch), inset 0 1px 0 var(--lead-hi), 0 0 calc(var(--glow-on) * 14px) var(--ch-glow);
+}
+.cc-frame .cc-button:not(.cc-heraldic-button)[data-variant="ghost"] { border-color: var(--hair); background: transparent; box-shadow: none; }
+.cc-frame .cc-button:not(.cc-heraldic-button)[data-variant="danger"] { color: var(--danger-ink); border-color: var(--danger); }
+.cc-frame .cc-button:not(.cc-heraldic-button)[aria-pressed="true"] { background: var(--surface-3); box-shadow: inset 0 -4px 0 var(--ch), inset 0 2px 3px var(--hair-2); }
+.cc-frame .cc-button:not(.cc-heraldic-button)[data-size="small"] { height: var(--control-h-sm); padding: 0 12px; font-size: var(--text-px-13-5); }
+.cc-frame .cc-button:not(.cc-heraldic-button)[data-size="icon"] { width: 34px; padding: 0; }
+
+/* ---- Stamp -> glass stamp (SIMULATED and SAMPLE -> the etched pane) */
+.cc-frame .cc-stamp[data-stamp] {
+  --st: var(--key); --st-deep: var(--key-deep); --st-glow: transparent;
+  transform: none; filter: none; height: 24px; padding: 0 10px; gap: 6px; border: 0; border-radius: var(--r);
+  font: 800 var(--text-t-label)/1 var(--font-label); letter-spacing: .1em; text-transform: lowercase; color: var(--on-glass);
+  background: var(--tex-glass), linear-gradient(180deg, color-mix(in srgb, var(--st) 55%, var(--st-deep)), var(--st-deep));
+  background-size: 180px 180px, 100% 100%; background-blend-mode: soft-light, normal;
+  box-shadow: inset 0 0 0 1.5px var(--lead), inset 0 1px 0 var(--glass-hi), 0 0 calc(var(--glow-on) * 10px) var(--st-glow);
+  text-shadow: 0 1px 0 var(--glass-shade);
+}
+.cc-frame .cc-stamp[data-stamp]::before { display: none; }
+.cc-frame .cc-stamp:is([data-stamp="armed"], [data-stamp="on-air"], [data-stamp="held"], [data-stamp="blocked"]) { --st: var(--gules); --st-deep: var(--gules-deep); --st-glow: var(--gules-glow); }
+.cc-frame .cc-stamp:is([data-stamp="shadow"], [data-stamp="pass"]) { --st: var(--azure); --st-deep: var(--azure-deep); --st-glow: var(--azure-glow); }
+.cc-frame .cc-stamp[data-stamp="ok"] { --st: var(--emerald); --st-deep: var(--emerald-deep); --st-glow: var(--emerald-glow); }
+.cc-frame .cc-stamp[data-stamp="sealed"] { --st: var(--amethyst); --st-deep: var(--amethyst-deep); --st-glow: var(--amethyst-glow); }
+.cc-frame .cc-stamp[data-stamp="draft"] { --st: var(--or-lit); --st-deep: var(--or); color: var(--lead-lo); text-shadow: none; }
+.cc-frame .cc-stamp:is([data-stamp="off-air"]) { color: var(--ink-2); background: var(--surface-2); box-shadow: inset 0 0 0 1.5px var(--ink-2); text-shadow: none; }
+.cc-frame .cc-stamp:is([data-stamp="simulated"], [data-stamp="sample"]) {
+  padding: 0 9px; letter-spacing: .12em; color: var(--ink-2); text-shadow: none;
+  border: 1.5px dashed currentColor; background: var(--tex-etch), var(--surface); box-shadow: none;
+}
+.cc-frame .cc-stamp:is([data-stamp="simulated"], [data-stamp="sample"])::before {
+  content: ''; display: block; position: static; inset: auto; width: 7px; height: 7px; flex: none;
+  transform: rotate(45deg); border: 1.5px solid currentColor; border-radius: 0; opacity: 1;
+}
+.cc-frame .cc-stamp-dot[data-dot="lamp"] { background: var(--gules-lit); box-shadow: 0 0 0 1.5px var(--lead); }
+.cc-frame .cc-stamp-bleed { display: none; }
+
+/* ---- SealButton -> hold-to-seal rose (fills clockwise with chamber glass) */
+.cc-frame .cc-seal-button {
+  display: grid; grid-template-columns: 44px minmax(0, 1fr); grid-template-rows: auto auto; column-gap: 14px; row-gap: 3px;
+  align-items: center; justify-items: start; height: auto; min-height: 66px; padding: 10px 16px 10px 12px; text-align: left;
+  border: var(--came) solid var(--lead); border-radius: var(--r); color: var(--ink);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--ch-lit) 30%, transparent) var(--cc-seal-progress), transparent var(--cc-seal-progress)), var(--surface);
+  box-shadow: inset 0 0 0 4px var(--surface), inset 0 0 0 5px var(--hair), var(--shadow);
+  font: 800 var(--text-px-17)/1.1 var(--font-label); letter-spacing: .08em; text-transform: lowercase;
+}
+.cc-frame .cc-seal-button::before {
+  content: ''; grid-row: 1 / span 2; width: 44px; height: 44px; border-radius: 50%;
+  background:
+    radial-gradient(circle, var(--lead) 0 5px, transparent 5.5px),
+    repeating-conic-gradient(from 0deg, var(--lead) 0 3deg, transparent 3deg 45deg),
+    radial-gradient(circle, transparent 0 13px, var(--lead) 13px 15px, transparent 15px),
+    conic-gradient(var(--ch-lit) 0 var(--cc-seal-progress), var(--ch) var(--cc-seal-progress) 100%);
+  box-shadow: 0 0 0 2.5px var(--lead), 0 0 0 4px var(--stone-3), 0 0 calc(6px + var(--glow-on) * 12px) var(--ch-glow);
+}
+.cc-frame .cc-seal-button > span:first-of-type { grid-column: 2; }
+.cc-frame .cc-seal-button progress { opacity: 0; }
+.cc-frame .cc-seal-button .cc-seal-instruction, .cc-frame .cc-seal-button .cc-seal-release {
+  grid-column: 2; font: 500 var(--text-t-small)/1.2 var(--font-text); letter-spacing: 0; text-transform: none; color: var(--muted);
+}
+.cc-frame .cc-seal-button .cc-seal-release { position: static; }
+.cc-frame .cc-seal-button .cc-seal-fill-copy { display: none; }
+.cc-frame .cc-seal-button:disabled { opacity: 1; color: var(--muted); background: var(--surface-2); }
+.cc-frame .cc-seal-button:disabled::before { background:
+    radial-gradient(circle, var(--lead) 0 5px, transparent 5.5px),
+    repeating-conic-gradient(from 0deg, var(--lead) 0 3deg, transparent 3deg 45deg),
+    radial-gradient(circle, transparent 0 13px, var(--lead) 13px 15px, transparent 15px),
+    radial-gradient(circle at 35% 30%, var(--clear-lit), var(--clear) 60%, var(--clear-deep));
+  box-shadow: 0 0 0 2.5px var(--lead), 0 0 0 4px var(--stone-3); }
+
+/* ---- Panel -> leaded panel with a jewelled glass cap */
+.cc-frame .cc-panel:not(:has(> .cc-panel__body)) {
+  padding: 22px var(--pad) var(--pad); border: var(--came) solid var(--lead); background: var(--surface);
+  box-shadow: var(--shadow); outline: 1px solid var(--hair-2); outline-offset: -6px;
+}
+.cc-frame .cc-panel:not(:has(> .cc-panel__body))::before {
+  inset: 0 0 auto; height: 8px; border: 0; border-bottom: var(--came) solid var(--lead);
+  background: repeating-linear-gradient(90deg, var(--lead) 0 2px, transparent 2px 26px),
+              linear-gradient(90deg, var(--ch-deep), var(--ch) 18%, var(--ch-lit) 50%, var(--ch) 82%, var(--ch-deep));
+  box-shadow: 0 0 calc(var(--glow-on) * 14px) var(--ch-glow);
+}
+.cc-frame .cc-panel-heading h2 { font: 800 var(--text-t-h3)/1.15 var(--font-label); letter-spacing: var(--track-label); text-transform: lowercase; }
+.cc-frame .cc-panel-gloss { font: italic 400 var(--text-t-body)/1.2 var(--font-aside); }
+
+/* ---- type that the legacy kit uppercased in a condensed face now reads in the fused roles */
+.cc-frame .cc-kicker { font: 700 var(--text-t-label)/1.2 var(--font-label); letter-spacing: var(--track-label); text-transform: lowercase; color: var(--ink-2); }
+.cc-frame .cc-empty b { font: 600 var(--text-px-22)/1.1 var(--font-display); letter-spacing: 0; text-transform: none; color: var(--ink-2); }
+.cc-frame .cc-empty p { font: italic 400 var(--text-px-16)/1.4 var(--font-aside); }
+.cc-frame .shell-room h2 { font-family: var(--font-display); font-weight: 600; letter-spacing: .005em; text-transform: none; }
+.cc-frame .shell-room :where(h3) { font: 800 var(--text-t-h3)/1.2 var(--font-label); letter-spacing: var(--track-label); text-transform: lowercase; }
+.cc-frame .room-caption { font: 800 var(--text-t-label)/1.4 var(--font-label); letter-spacing: .1em; text-transform: lowercase; }
+.cc-frame .shell-room :where(button:not(.cc-seal-button, .cc-btn, .cc-button, .cc-room-back)) {
+  border: 1.5px solid var(--lead); border-radius: var(--r); background: var(--surface); font-family: var(--font-text);
+}
+.cc-frame .shell-seal-slot { border: var(--came) dashed var(--ch); background: var(--surface); }
+.cc-frame .shell-seal-slot h2 { font: 600 var(--text-t-h4)/1.2 var(--font-display); color: var(--ch-ink); }

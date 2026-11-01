@@ -8,6 +8,7 @@ import type { Navigation, ShellSurface } from './navigation.js';
 import { DesktopRampart } from './rampart.jsx';
 import { coreRehearsalConnection, coreStewardConnection, coreStreamConnection } from './client.js';
 import type { StewardConnection } from './client.js';
+import '@castle-control/ui/fused/rampart.css';
 import './view.css';
 
 const Keep = lazy(() => import('./shell/keep.jsx'));
@@ -49,7 +50,8 @@ export function DesktopView(props: ViewProps) {
   const stream_connection = coreStreamConnection(props.snapshot);
   const rehearsal_connection = props.snapshot.phase === 'ready' ? coreRehearsalConnection(props.snapshot) : undefined;
   return <ThemeFrame theme={props.theme} {...(current === 'keep' || current === 'overview' || current === 'demo' || current === 'stream' || current === 'rehearsal' ? {} : { module: current })}>
-    <div className={`desktop-shell${cutaway ? ' desktop-cutaway' : ''}`}>
+    <div className={`desktop-shell${cutaway ? ' desktop-cutaway' : ''}`}
+      data-chamber={current === 'lottery' || current === 'moderator' || current === 'visuals' || current === 'studio' ? current : 'keep'}>
       <DesktopRampart snapshot={props.snapshot} theme={props.theme} on_theme_change={props.on_theme_change}
         on_steward={() => { if (props.steward_ref && 'current' in props.steward_ref) props.steward_ref.current?.focus(); }} />
       {cutaway &&

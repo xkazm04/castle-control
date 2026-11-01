@@ -40,7 +40,7 @@ test('ThemeFrame installs one zero-size ink-edge filter shared by every stamp', 
   expect(filter).toContain(`<filter id="${inkEdgeFilter.id}" x="-5%" y="-10%" width="110%" height="120%">`);
   expect(filter).toContain('<feTurbulence type="fractalNoise" baseFrequency=".85" numOctaves="2" seed="7">');
   expect(filter).toContain('<feDisplacementMap in="SourceGraphic" scale="1.8" xChannelSelector="R" yChannelSelector="G">');
-  for (const theme of ['paper', 'stock'] as const) {
+  for (const theme of ['day', 'night'] as const) {
     const html = render(<ThemeFrame theme={theme}>{stampKinds.map(kind => <Stamp kind={kind} key={kind} />)}</ThemeFrame>);
     expect(html.match(/id="inkedge"/g)).toHaveLength(1);
     expect(html).toContain(filter);

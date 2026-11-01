@@ -1,0 +1,15 @@
+/* The fused shell for every lazily opened surface (keep, overview, rooms, strip, stream,
+   demo, rehearsal): texture tokens, the shell + shared primitives and the kit skin.
+   The first paint carries only rampart.css; Vite dedupes this sheet into one shared chunk. */
+@import '@castle-control/tokens/fused-textures.css';
+@import './shell.css';
+@import './primitives.css';
+@import './skin.css';
+@import './caps.css';
+
+/* light pool x-position under the current tab (keep tab is .62 wide, the rest 1) */
+.desktop-shell[data-chamber="keep"] { --pool-x: 6.7%; }
+.desktop-shell[data-chamber="lottery"] { --pool-x: 24.2%; }
+.desktop-shell[data-chamber="moderator"] { --pool-x: 45.9%; }
+.desktop-shell[data-chamber="visuals"] { --pool-x: 67.5%; }
+.desktop-shell[data-chamber="studio"] { --pool-x: 89.2%; }

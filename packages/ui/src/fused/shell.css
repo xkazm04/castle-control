@@ -1,0 +1,323 @@
+/* =============================================================================
+   CASTLE CONTROL · FUSED SHELL + SHARED PRIMITIVES                    shell.css
+   Ported from the night-ux fused baseline (C:/t/ux/fused/shell.css). Reads the
+   fused tokens only (@castle-control/tokens/fused.css): no literal colours or fonts;
+   px values are structural geometry from the design. Minimum type 13 px.
+
+   SHELL  .cc-rampart (lead bar) · .cc-tabs > .cc-tab (transom lights) · .cc-main
+          .cc-chamber-head (+ .cc-crumbs .cc-title .cc-subtitle .cc-back)
+          Chamber binding: [data-chamber|data-module] = keep | lottery | moderator |
+          visuals | studio sets --ch --ch-lit --ch-deep --ch-ink --ch-wash --ch-glow.
+   PRIMITIVES (one definition each; glass.css and folio.css build on them)
+     type     .cc-display .cc-kicker .cc-eyebrow .cc-aside .cc-text .cc-note .cc-strong .cc-mono .cc-sr
+     glass    .cc-lozenge ([data-lit=false]) · .cc-roundel
+     surfaces .cc-panel (+__head __title __aside __body __foot; --flush --quiet --sunk)
+              .cc-sub (+__title) · .cc-grid · .cc-actions · .cc-monitor (+__head __name __screen)
+     actions  .cc-btn (--primary --glass --quiet --sm --lg --wide --rampart; [aria-pressed])
+              .cc-iconbtn · .cc-link · .cc-kbd
+     seal     .cc-seal (+__rose __label __hint; --cc-seal-progress 0-100%; [data-sealed]; :disabled)
+     marks    .cc-stamp (--ok --blocked --held --shadow --local --key --draft --waiting --onair)
+              .cc-sim (SIMULATED/SAMPLE etched pane; --on-lead --plain) · .cc-chip · .cc-lamp
+     fields   .cc-field (+__label or > label, __hint) · .cc-label · .cc-input (--num) · .cc-select
+              .cc-seg (--sm --block --stack) · .cc-choice (--block) · .cc-stepper · .cc-switch
+     readouts .cc-readout (+__fig __label __sub) · .cc-legend · .cc-swatch · .cc-meter (> i, --v)
+     data     .cc-list > .cc-row · .cc-table (.cc-num) · .cc-steps > .cc-step · .cc-verdict
+              .cc-hash (--block) · .cc-bytes · .cc-disclosure (+__body) · .cc-empty
+   ============================================================================= */
+/* At night the lead of UI controls catches the moonlight, or it would vanish into slate. */
+/* At night the lead of UI controls catches the moonlight (--came-ui), or it would vanish into slate. */
+[data-theme="night"] :is(.cc-btn:not(.cc-btn--primary):not(.cc-btn--rampart), .cc-input, .cc-select, .cc-seg > button, .cc-seg > label, .cc-stepper, .cc-panel, .cc-glass-card[data-selected="true"], .cc-kbd, .cc-iconbtn, .cc-choice input, .cc-switch input) { border-color: var(--came-ui); }
+[data-theme="night"] .cc-rampart .cc-iconbtn { border-color: var(--lead-hi); }
+[data-theme="night"] .cc-stepper { background: var(--came-ui); }
+
+/* light pool x-position under the current tab (keep tab is .62 wide, the rest 1) */
+.cc-shell[data-chamber="keep"] { --pool-x: 6.7%; }
+.cc-shell[data-chamber="lottery"] { --pool-x: 24.2%; }
+.cc-shell[data-chamber="moderator"] { --pool-x: 45.9%; }
+.cc-shell[data-chamber="visuals"] { --pool-x: 67.5%; }
+.cc-shell[data-chamber="studio"] { --pool-x: 89.2%; }
+
+/* --------------------------------------------------------------------- base
+   Scoped to the app frame: module bodies keep their own list and heading resets. */
+html { background: var(--stone); }
+.cc-frame { color: var(--ink); background: var(--stone);
+  font: 400 var(--text-t-body)/1.45 var(--font-text);
+  font-variant-numeric: lining-nums tabular-nums; -webkit-font-smoothing: antialiased; }
+.cc-frame :is(button, input, select, textarea) { font-family: inherit; }
+.cc-frame :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; box-shadow: 0 0 0 2px var(--focus-inner); }
+.cc-frame ::selection { background: var(--or-lit); color: var(--lead-lo); }
+.cc-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+/* type roles */
+.cc-display { font: 600 var(--text-t-title)/.92 var(--font-display); letter-spacing: .005em; }
+.cc-kicker { font: 700 var(--text-t-label)/1.2 var(--font-label); letter-spacing: var(--track-label); text-transform: lowercase; color: var(--ink-2); }
+.cc-eyebrow { font: 700 var(--text-t-label)/1.2 var(--font-label); letter-spacing: .11em; text-transform: lowercase; color: var(--muted); }
+.cc-aside { font: italic 400 var(--text-t-body)/1.4 var(--font-aside); color: var(--muted); }
+.cc-text { font: 400 var(--text-t-body)/1.5 var(--font-text); color: var(--ink-2); max-width: 66ch; }
+.cc-note { font: 400 var(--text-t-small)/1.45 var(--font-text); color: var(--muted); max-width: 70ch; }
+.cc-strong { font-weight: 700; color: var(--ink); }
+.cc-mono { font: 400 var(--text-t-mono)/1.5 var(--font-mono); }
+
+/* a small diamond quarry (lamps, legend swatches, checkboxes) */
+.cc-lozenge {
+  --g: var(--ch); --g-lit: var(--ch-lit);
+  display: inline-block; width: 10px; height: 10px; flex: none; transform: rotate(45deg);
+  background: linear-gradient(135deg, var(--g-lit), var(--g) 70%);
+  box-shadow: 0 0 0 1.5px var(--lead), 0 0 calc(var(--glow-on) * 10px) var(--ch-glow);
+}
+.cc-lozenge[data-lit="false"] { background: var(--surface-2); box-shadow: 0 0 0 1.5px var(--faint); }
+/* round cabochon (on-air lamp, roundel numerals) */
+.cc-roundel {
+  --g: var(--ch); --g-lit: var(--ch-lit); --g-deep: var(--ch-deep);
+  display: inline-grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; flex: none;
+  background: radial-gradient(circle at 35% 30%, var(--g-lit), var(--g) 55%, var(--g-deep));
+  box-shadow: inset 0 0 0 var(--came) var(--lead), 0 0 0 1px var(--lead-hi), 0 0 calc(var(--glow-on) * 14px) var(--ch-glow);
+  color: var(--on-glass); font: 800 var(--text-px-14)/1 var(--font-text);
+}
+
+/* ===================================================================== SHELL
+   The app frame keeps its own grid (apps/desktop view.css); these are the shell parts. */
+/* ---- rampart: the lead bar */
+.cc-rampart {
+  position: sticky; top: 0; z-index: 30; height: var(--rampart-h);
+  display: flex; align-items: center; gap: 18px; padding: 0 18px 0 16px;
+  background: linear-gradient(180deg, var(--lead-2), var(--lead) 60%, var(--lead-lo));
+  color: var(--on-lead); box-shadow: inset 0 1px 0 var(--lead-hi), inset 0 -1px 0 var(--lead-hi);
+  font: 500 var(--text-t-small)/1 var(--font-text);
+}
+.cc-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--on-lead); flex: none; }
+.cc-rampart .cc-mark { width: 32px; height: 32px; flex: none; filter: drop-shadow(0 0 calc(var(--glow-on) * 6px) var(--gules-glow)); }
+.cc-wordmark { font: 600 var(--text-px-25)/1 var(--font-display); letter-spacing: .01em; white-space: nowrap; }
+.cc-came-v { width: 2px; align-self: stretch; margin-block: 10px; background: var(--lead-hi); opacity: .7; flex: none; }
+.cc-live { display: flex; align-items: center; gap: 16px; }
+.cc-onair { display: inline-flex; align-items: center; gap: 8px; white-space: nowrap;
+  font: 800 var(--text-t-label)/1 var(--font-label); letter-spacing: .1em; text-transform: lowercase; color: var(--on-lead); }
+.cc-lamp { --g: var(--gules); --g-lit: var(--gules-lit); --g-deep: var(--gules-deep);
+  width: 14px; height: 14px; border-radius: 50%; flex: none;
+  background: radial-gradient(circle at 35% 30%, var(--g-lit), var(--g) 55%, var(--g-deep));
+  box-shadow: inset 0 0 0 1.5px var(--lead-lo), 0 0 0 1.5px var(--lead-hi), 0 0 12px 2px var(--gules-glow); }
+.cc-lamp[data-live="false"] { background: radial-gradient(circle at 35% 30%, var(--lead-hi), var(--gules-deep) 70%); box-shadow: inset 0 0 0 1.5px var(--lead-lo), 0 0 0 1.5px var(--lead-hi); }
+.cc-rampart .cc-figure { display: grid; gap: 3px; line-height: 1; white-space: nowrap; }
+.cc-rampart .cc-figure b { font: 700 var(--text-px-15)/1 var(--font-text); color: var(--on-lead); }
+.cc-rampart .cc-figure small { font: 700 var(--text-px-13)/1 var(--font-label); letter-spacing: .1em; color: var(--on-lead-muted); text-transform: lowercase; }
+.cc-links { display: flex; align-items: center; gap: 8px; }
+.cc-links a { text-decoration: none; }
+.cc-spacer { flex: 1; }
+.cc-rampart .cc-chip {
+  display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 10px; white-space: nowrap;
+  border: 1.5px dashed var(--on-lead-muted); color: var(--on-lead); background: var(--tex-etch-lead);
+  font: 700 var(--text-t-label)/1 var(--font-label); letter-spacing: .08em; text-transform: lowercase;
+}
+.cc-rampart .cc-chip .cc-lozenge { width: 8px; height: 8px; }
+a.cc-chip:hover, a:hover > .cc-chip { border-style: solid; }
+.cc-iconbtn {
+  display: inline-grid; place-items: center; width: 34px; height: 34px; padding: 0; cursor: pointer; flex: none;
+  border: var(--came) solid var(--ink-2); background: var(--surface); color: var(--ink); border-radius: var(--r);
+  font: 700 var(--text-px-15)/1 var(--font-text);
+}
+.cc-rampart .cc-iconbtn { border-color: var(--lead-hi); background: transparent; color: var(--on-lead); border-radius: 50%; }
+.cc-iconbtn svg { width: 18px; height: 18px; }
+
+/* ---- tabs: transom lights */
+.cc-tabs {
+  position: sticky; top: var(--rampart-h); z-index: 29; height: var(--tabs-h); display: flex;
+  background: var(--stone-2) var(--tex-stone); border-bottom: var(--came-heavy) solid var(--lead);
+  box-shadow: 0 8px 18px -12px var(--shade);
+}
+.cc-tab {
+  position: relative; flex: 1; min-width: 0; display: grid; align-content: center; column-gap: 10px; row-gap: 4px;
+  grid-template-columns: auto 1fr; grid-template-rows: auto auto; padding: 10px 14px 6px 14px;
+  text-decoration: none; color: var(--ink); border-right: var(--came) solid var(--lead); cursor: pointer;
+  transition: background var(--m-fast) var(--ease);
+}
+.cc-tab:last-child { border-right: 0; }
+.cc-tab[data-module="keep"] { flex: .62; }
+.cc-tab:hover { background: color-mix(in srgb, var(--surface) 55%, transparent); }
+.cc-tab[aria-current="page"] { background: var(--surface); }
+.cc-tab__light {
+  position: absolute; inset: 0 0 auto 0; height: 7px; box-shadow: inset 0 calc(-1 * var(--came)) 0 var(--lead);
+  background: var(--tex-glass), linear-gradient(90deg, var(--ch-deep), var(--ch) 30%, var(--ch) 70%, var(--ch-deep));
+  background-size: 180px 180px, 100% 100%; background-blend-mode: overlay, normal;
+  filter: saturate(.55) brightness(.92); transition: height var(--m-light) var(--ease), filter var(--m-light) var(--ease);
+}
+.cc-tab[data-module="keep"] .cc-tab__light { background:
+  linear-gradient(90deg, var(--gules) 0 25%, var(--azure) 25% 50%, var(--or) 50% 75%, var(--key) 75%); }
+.cc-tab[aria-current="page"] .cc-tab__light {
+  height: 10px; filter: none;
+  background: var(--tex-glass), linear-gradient(90deg, var(--ch), var(--ch-lit) 50%, var(--ch));
+  background-size: 180px 180px, 100% 100%; background-blend-mode: overlay, normal;
+  box-shadow: inset 0 calc(-1 * var(--came)) 0 var(--lead), 0 4px calc(8px + var(--glow-on) * 14px) var(--ch-glow);
+}
+.cc-tab[data-module="keep"][aria-current="page"] .cc-tab__light { background:
+  linear-gradient(90deg, var(--gules-lit) 0 25%, var(--azure-lit) 25% 50%, var(--or-lit) 50% 75%, var(--key-lit) 75%); }
+.cc-tab:hover .cc-tab__light { filter: none; }
+.cc-tab > .cc-kbd { grid-row: 1 / span 2; align-self: center; }
+.cc-tab[data-module="keep"] .cc-tab__name { grid-row: 1 / span 2; align-self: center; }
+.cc-tab__name { font: 800 var(--text-px-16)/1 var(--font-label); letter-spacing: var(--track-tab); text-transform: lowercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cc-tab[aria-current="page"] .cc-tab__name { color: var(--ch-ink); }
+.cc-tab[data-module="keep"][aria-current="page"] .cc-tab__name { color: var(--ink); }
+.cc-tab__row { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.cc-tab__figure { font: 500 var(--text-t-small)/1 var(--font-text); color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.cc-lamps { display: inline-flex; align-items: center; gap: 7px; margin-left: auto; flex: none; }
+.cc-lamps i { display: inline-flex; align-items: center; gap: 5px; font: 700 var(--text-px-13)/1 var(--font-label); letter-spacing: .05em; font-style: normal; color: var(--ink-2); text-transform: lowercase; }
+.cc-lamps i::before { content: ''; width: 7px; height: 7px; transform: rotate(45deg); box-shadow: 0 0 0 1.5px var(--faint); background: transparent; }
+.cc-lamps i[data-lit="true"]::before { background: var(--ch-lit); box-shadow: 0 0 0 1.5px var(--lead), 0 0 calc(4px + var(--glow-on) * 6px) var(--ch-glow); }
+.cc-lamps i[data-lit="false"] { gap: 0; width: 11px; overflow: hidden; white-space: nowrap; color: transparent; }           /* unlit lamps show the hollow quarry only; label stays in title/aria */
+
+/* key numeral jewel (also used inline: <kbd class="cc-kbd">Esc</kbd>) */
+.cc-kbd {
+  display: inline-grid; place-items: center; min-width: 22px; height: 24px; padding: 0 6px;
+  font: 800 var(--text-px-13)/1 var(--font-text); color: var(--ink); background: var(--surface);
+  border: 1.5px solid var(--lead); border-radius: 11px 11px 2px 2px; box-shadow: inset 0 -2px 0 var(--hair);
+}
+.cc-tab > .cc-kbd { min-width: 24px; height: 28px; color: var(--on-glass); border-color: var(--lead);
+  background: radial-gradient(circle at 40% 25%, var(--ch-lit), var(--ch) 50%, var(--ch-deep)); box-shadow: 0 0 calc(var(--glow-on) * 10px) var(--ch-glow);
+  border-radius: 12px 12px 2px 2px; text-shadow: 0 1px 1px var(--glass-shade); }
+.cc-tab[data-module="keep"] > .cc-kbd { background: conic-gradient(from 45deg, var(--gules-deep) 0 25%, var(--azure-deep) 0 50%, var(--or-deep) 0 75%, var(--key-deep) 0); }
+.cc-tab[data-module="visuals"] > .cc-kbd { color: var(--lead-lo); text-shadow: none; background: radial-gradient(circle at 40% 25%, var(--or-lit), var(--or) 70%); }
+
+/* ---- main */
+.cc-main {
+  position: relative; min-width: 0;
+  background:
+    radial-gradient(48% 260px at var(--pool-x, 50%) 0, color-mix(in srgb, var(--ch-lit) calc(var(--pool-a) * 100%), transparent), transparent 100%),
+    var(--tex-ashlar), var(--tex-stone), var(--stone);
+  background-size: 100% 100%, 176px 96px, 240px 240px, auto;
+}
+.cc-main--fit { height: calc(100vh - var(--rampart-h) - var(--tabs-h) - var(--dock-h)); min-height: 560px; overflow: hidden; }
+/* ---- dock: the Steward sill is owned by the Steward dock (packages/ui steward, apps/desktop shell/steward*). */
+
+/* ============================================================ CHAMBER HEADER */
+.cc-chamber-head {
+  position: relative; display: grid; grid-template-columns: 1fr auto; align-items: end; gap: 24px;
+  padding: 16px var(--gutter) 18px; border-bottom: var(--came) solid var(--lead);
+}
+.cc-chamber-head::after { content: ''; position: absolute; left: 0; right: 0; bottom: -12px; height: 10px; border-bottom: var(--came) solid var(--lead);
+  background: var(--tex-glass), repeating-linear-gradient(90deg, var(--lead) 0 2px, transparent 2px 46px), linear-gradient(180deg, var(--ch-lit), var(--ch) 55%, var(--ch-deep));
+  background-size: 180px 180px, auto, auto; background-blend-mode: overlay, normal, normal;
+  box-shadow: 0 0 calc(var(--glow-on) * 14px) var(--ch-glow); }
+.cc-crumbs { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font: 500 var(--text-t-small)/1.2 var(--font-text); color: var(--muted); }
+.cc-crumbs a { color: var(--ink); font-weight: 700; text-underline-offset: 3px; }
+.cc-crumbs b { color: var(--ink); }
+.cc-crumbs .cc-crumbs__sep { color: var(--faint); }
+.cc-title { margin-top: 6px; font: 600 var(--text-t-title)/.9 var(--font-display); color: var(--ch-ink);
+  text-shadow: 0 0 calc(var(--glow-on) * 24px) var(--ch-glow); }
+.cc-subtitle { display: flex; align-items: center; gap: 12px; margin-top: 6px; font: italic 400 var(--text-px-21)/1.2 var(--font-aside); color: var(--ink-2); }
+.cc-back { display: flex; align-items: center; gap: 10px; }
+
+.cc-grid { display: grid; gap: var(--gap); align-items: start; }
+
+/* ================================================================= PANELS */
+.cc-panel {
+  position: relative; min-width: 0; background: var(--surface); color: var(--ink);
+  border: var(--came) solid var(--lead); box-shadow: var(--shadow);
+  outline: 1px solid var(--hair-2); outline-offset: -6px;   /* inner line: the double rule of a frame */
+}
+.cc-panel::before {                                          /* jewelled glass cap */
+  content: ''; display: block; height: 8px; border-bottom: var(--came) solid var(--lead);
+  background: repeating-linear-gradient(90deg, var(--lead) 0 2px, transparent 2px 26px),
+              linear-gradient(90deg, var(--ch-deep), var(--ch) 18%, var(--ch-lit) 50%, var(--ch) 82%, var(--ch-deep));
+  box-shadow: 0 0 calc(var(--glow-on) * 14px) var(--ch-glow);
+}
+.cc-panel::before { grid-column: 1 / -1; }
+.cc-panel--quiet::before { height: 4px; background: var(--lead); box-shadow: none; }
+.cc-panel--sunk { background: var(--surface-2); box-shadow: var(--shadow-inset); }
+.cc-panel__head { display: flex; align-items: baseline; flex-wrap: wrap; gap: 6px 12px; padding: 16px var(--pad) 0; }
+.cc-panel__title { font: 800 var(--text-t-h3)/1.15 var(--font-label); letter-spacing: var(--track-label); text-transform: lowercase; color: var(--ink); }
+.cc-panel__aside { font: italic 400 var(--text-t-body)/1.2 var(--font-aside); color: var(--muted); }
+.cc-panel__head > .cc-stamp, .cc-panel__head > .cc-sim, .cc-panel__end { margin-left: auto; align-self: center; }
+.cc-panel__body { display: grid; gap: 14px; padding: 14px var(--pad) var(--pad); }
+.cc-panel__foot { padding: 12px var(--pad); border-top: 1px solid var(--hair); background: var(--surface-2); }
+.cc-panel--flush .cc-panel__body { padding: 0; }
+.cc-sub { display: grid; gap: 10px; padding-top: 14px; border-top: 1px solid var(--hair); }
+.cc-sub__title { font: 800 var(--text-t-label)/1.2 var(--font-label); letter-spacing: .1em; text-transform: lowercase; color: var(--ink-2); }
+
+/* ================================================================ BUTTONS */
+.cc-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 10px; height: var(--control-h); padding: 0 16px;
+  border: var(--came) solid var(--lead); border-radius: var(--r); background: var(--surface); color: var(--ink);
+  font: 800 var(--text-px-14-5)/1 var(--font-label); letter-spacing: .07em; text-transform: lowercase; text-decoration: none; white-space: nowrap; cursor: pointer;
+  box-shadow: inset 0 -3px 0 var(--hair-2); transition: box-shadow var(--m-fast) var(--ease), background var(--m-fast) var(--ease);
+}
+.cc-btn:hover { background: var(--surface-2); box-shadow: inset 0 -3px 0 var(--ch, var(--hair)); }
+.cc-btn:active { transform: translateY(1px); }
+.cc-btn:disabled, .cc-btn[aria-disabled="true"] { cursor: not-allowed; color: var(--muted); border-color: var(--faint); box-shadow: none; background: var(--surface-2); }
+.cc-btn--primary { background: var(--lead); color: var(--on-lead); border-color: var(--lead);
+  box-shadow: inset 0 -4px 0 var(--ch), inset 0 1px 0 var(--lead-hi), 0 0 calc(var(--glow-on) * 14px) var(--ch-glow); }
+.cc-btn--primary:hover { background: var(--lead-2); box-shadow: inset 0 -6px 0 var(--ch-lit), inset 0 1px 0 var(--lead-hi), 0 0 calc(var(--glow-on) * 18px) var(--ch-glow); }
+.cc-btn--primary .cc-kbd { background: transparent; color: var(--on-lead); border-color: var(--on-lead-muted); box-shadow: none; }
+.cc-btn--glass { color: var(--on-glass); border-color: var(--lead); text-shadow: 0 1px 1px var(--glass-shade);
+  background: radial-gradient(120% 140% at 30% 0, var(--ch), var(--ch-deep) 75%); box-shadow: inset 0 1px 0 var(--glass-hi), 0 0 calc(var(--glow-on) * 16px) var(--ch-glow); }
+.cc-btn--quiet { border-color: var(--hair); background: transparent; box-shadow: none; }
+.cc-btn--sm { height: var(--control-h-sm); padding: 0 12px; font-size: var(--text-px-13-5); }
+.cc-btn--lg { height: var(--control-h-lg); padding: 0 20px; font-size: var(--text-px-15-5); }
+.cc-btn--wide { width: 100%; }
+.cc-btn[aria-pressed="true"] { background: var(--surface-3); box-shadow: inset 0 -4px 0 var(--ch), inset 0 2px 3px var(--hair-2); }
+.cc-btn--rampart { height: 34px; background: transparent; color: var(--on-lead); border-color: var(--lead-hi);
+  box-shadow: inset 0 -3px 0 var(--amethyst); }
+.cc-btn--rampart:hover { background: var(--lead-2); box-shadow: inset 0 -5px 0 var(--amethyst-lit); }
+.cc-btn--rampart .cc-kbd { background: transparent; color: var(--on-lead); border-color: var(--on-lead-muted); box-shadow: none; height: 20px; min-width: 18px; }
+.cc-link { font: 700 var(--text-t-small)/1.2 var(--font-text); color: var(--ink); text-decoration: underline; text-decoration-color: var(--ch); text-decoration-thickness: 2px; text-underline-offset: 4px; }
+.cc-actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+
+/* ============================================================ HOLD TO SEAL */
+/* <button class="cc-seal" style="--cc-seal-progress:0%"> rose · label · hint.
+   Hold pointer or Space for 1 s: the rose fills clockwise with chamber glass and
+   a light wash crosses the pane. Release before 100% cancels. */
+.cc-seal {
+  --cc-seal-progress: 0%;
+  position: relative; display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 14px; width: 100%;
+  padding: 10px 16px 10px 12px; text-align: left; cursor: pointer; overflow: hidden;
+  border: var(--came) solid var(--lead); border-radius: var(--r); color: var(--ink);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--ch-lit) 30%, transparent) var(--cc-seal-progress), transparent var(--cc-seal-progress)), var(--surface);
+  box-shadow: inset 0 0 0 4px var(--surface), inset 0 0 0 5px var(--hair), var(--shadow);
+}
+.cc-seal__rose {
+  width: 44px; height: 44px; border-radius: 50%; flex: none;
+  background:
+    radial-gradient(circle, var(--lead) 0 5px, transparent 5.5px),
+    repeating-conic-gradient(from 0deg, var(--lead) 0 3deg, transparent 3deg 45deg),
+    radial-gradient(circle, transparent 0 13px, var(--lead) 13px 15px, transparent 15px),
+    conic-gradient(var(--ch-lit) 0 var(--cc-seal-progress), var(--ch) var(--cc-seal-progress) 100%);
+  box-shadow: 0 0 0 2.5px var(--lead), 0 0 0 4px var(--stone-3), 0 0 calc(6px + var(--glow-on) * 12px) var(--ch-glow);
+}
+.cc-seal__label { display: block; font: 800 var(--text-px-17)/1.1 var(--font-label); letter-spacing: .08em; text-transform: lowercase; }
+.cc-seal__hint { display: block; margin-top: 3px; font: 500 var(--text-t-small)/1.2 var(--font-text); color: var(--muted); }
+.cc-seal:disabled { cursor: not-allowed; color: var(--muted); background: var(--surface-2); }
+.cc-seal:disabled .cc-seal__rose { background:
+    radial-gradient(circle, var(--lead) 0 5px, transparent 5.5px),
+    repeating-conic-gradient(from 0deg, var(--lead) 0 3deg, transparent 3deg 45deg),
+    radial-gradient(circle, transparent 0 13px, var(--lead) 13px 15px, transparent 15px),
+    radial-gradient(circle at 35% 30%, var(--clear-lit), var(--clear) 60%, var(--clear-deep));
+  box-shadow: 0 0 0 2.5px var(--lead), 0 0 0 4px var(--stone-3); }
+.cc-seal[data-sealed="true"] .cc-seal__rose { --cc-seal-progress: 100%; }
+
+/* ========================================================== STAMPS & MARKS */
+.cc-stamp {
+  display: inline-flex; align-items: center; gap: 6px; height: 24px; padding: 0 10px; white-space: nowrap; flex: none;
+  font: 800 var(--text-t-label)/1 var(--font-label); letter-spacing: .1em; text-transform: lowercase;
+  color: var(--on-glass); border-radius: var(--r);
+  background: var(--tex-glass), linear-gradient(180deg, color-mix(in srgb, var(--st, var(--lead-2)) 55%, var(--st-deep, var(--lead))), var(--st-deep, var(--lead)));
+  background-size: 180px 180px, 100% 100%; background-blend-mode: soft-light, normal;
+  box-shadow: inset 0 0 0 1.5px var(--lead), inset 0 1px 0 var(--glass-hi), 0 0 calc(var(--glow-on) * 10px) var(--st-glow, transparent);
+  text-shadow: 0 1px 0 var(--glass-shade);
+}
+.cc-stamp--ok { --st-ink: var(--ok-ink); --st: var(--emerald); --st-deep: var(--emerald-deep); --st-glow: var(--emerald-glow); }
+.cc-stamp--blocked { --st-ink: var(--gules-ink); --st: var(--gules); --st-deep: var(--gules-deep); --st-glow: var(--gules-glow); }
+.cc-stamp--held { --st-ink: var(--azure-ink); --st: var(--azure); --st-deep: var(--azure-deep); --st-glow: var(--azure-glow); }
+.cc-stamp--shadow { --st-ink: var(--azure-ink); --st: var(--azure-deep); --st-deep: var(--lead); }
+.cc-stamp--local, .cc-stamp--key { --st-ink: var(--ink-2); --st: var(--key); --st-deep: var(--key-deep); }
+.cc-stamp--draft { --st-ink: var(--or-ink); --st: var(--or-lit); --st-deep: var(--or); --st-glow: var(--or-glow); color: var(--lead-lo); text-shadow: none; }
+.cc-stamp--waiting { color: var(--ink-2); background: var(--surface-2); box-shadow: inset 0 0 0 1.5px var(--ink-2); text-shadow: none; }
+.cc-stamp--onair { --st-ink: var(--gules-ink); --st: var(--gules); --st-deep: var(--gules-deep); --st-glow: var(--gules-glow); }
+
+/* SIMULATED / SAMPLE: an acid-etched pane. Always visible, never decorative. */
+.cc-sim {
+  display: inline-flex; align-items: center; gap: 6px; height: 24px; padding: 0 9px; white-space: nowrap; flex: none;
+  font: 800 var(--text-t-label)/1 var(--font-label); letter-spacing: .12em; text-transform: lowercase; color: var(--ink-2);
+  border: 1.5px dashed currentColor; border-radius: var(--r); background: var(--tex-etch), var(--surface);
+}
+.cc-sim::before { content: ''; width: 7px; height: 7px; transform: rotate(45deg); border: 1.5px solid currentColor; }
+.cc-sim--on-lead { color: var(--on-lead); background: var(--tex-etch-lead); border-color: var(--on-lead-muted); }
+.cc-sim--plain::before { display: none; }
+

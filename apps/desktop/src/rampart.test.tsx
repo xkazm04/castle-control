@@ -9,12 +9,12 @@ import Keep from './shell/keep.jsx';
 
 test('the hook-free fixture rampart links its OBS chip to setup', () => {
   const html = renderToStaticMarkup(DesktopRampart({ snapshot: { mode: 'fixture', phase: 'ready' },
-    theme: 'paper', on_theme_change: () => undefined }));
+    theme: 'day', on_theme_change: () => undefined }));
   expect(html).toMatch(/<a href="#\/stream"[^>]*><span[^>]*data-stamp="simulated"[^>]*aria-label="Simulated: OBS simulated"><span aria-hidden="true">OBS simulated<\/span><\/span><\/a>/);
 });
 
 function render(snapshot: Snapshot, current: ModuleId = 'lottery') {
-  return renderToStaticMarkup(<DesktopView current={current} snapshot={snapshot} theme="stock"
+  return renderToStaticMarkup(<DesktopView current={current} snapshot={snapshot} theme="night"
     on_navigate={() => undefined} on_theme_change={() => undefined} search="" on_search={() => undefined} />);
 }
 
@@ -57,7 +57,7 @@ test.each([
   const data = simulatedRead(1);
   const html = renderToStaticMarkup(<DesktopRampart snapshot={{ ...data, mode, phase: 'ready',
     status: { ...data.status, simulated, gatehouse: { armed_rules: 2, shadow_rules: 3, shield: true } } }}
-    theme="paper" on_theme_change={() => undefined} />);
+    theme="day" on_theme_change={() => undefined} />);
   expect(html).toContain('data-stamp="off-air" role="img" aria-label="On air is simulated: nothing is broadcast"');
   expect(html).toContain('>On air · simulated</span>');
   for (const label of ['Twitch simulated', 'OBS simulated', 'Gatehouse simulated']) {

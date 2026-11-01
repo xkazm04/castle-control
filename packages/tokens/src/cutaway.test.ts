@@ -16,7 +16,7 @@ const names: TokenName[] = groups.flatMap(group => Object.keys(group)) as AddedN
 const blocks = [...renderStylesheet().matchAll(/(?:^|\n)([^{}\n]+)\s*\{([^}]+)\}/g)];
 
 test('new groups render their exact values in both existing blocks and the typed mirror', () => {
-  expect(blocks.map(block => block[1]?.trim())).toEqual([':root, [data-theme="paper"]', '[data-theme="stock"]']);
+  expect(blocks.map(block => block[1]?.trim())).toEqual([':root, [data-theme="paper"], [data-theme="day"]', '[data-theme="stock"], [data-theme="night"]']);
   const themes = [groups, [stockArtTokens, stockCutawayTokens, motionTokens, typeTokens]];
   for (const [index, theme] of themes.entries()) {
     for (const group of theme) {

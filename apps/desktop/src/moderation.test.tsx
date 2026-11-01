@@ -183,7 +183,7 @@ test('review operations resolve only local queues and preserve the original text
 
 test('drill deep link retains shell context and opens simulated provenance, gaps and states', async () => {
   const stream = await renderToReadableStream(<DesktopView navigation={initialNavigation('#/chamber/moderator/drill')}
-    snapshot={{ mode: 'fixture', phase: 'ready', ...simulatedRead(1) }} theme="stock" on_navigate={() => undefined} on_theme_change={() => undefined} />);
+    snapshot={{ mode: 'fixture', phase: 'ready', ...simulatedRead(1) }} theme="night" on_navigate={() => undefined} on_theme_change={() => undefined} />);
   await stream.allReady;
   const html = await new Response(stream).text();
   for (const text of ['Back to the Gatehouse', 'aria-label="Breadcrumb"', 'Twitch simulated', 'Gatehouse simulated', 'Proposal · awaiting your seal']) expect(html).toContain(text);
@@ -198,7 +198,7 @@ test('drill deep link retains shell context and opens simulated provenance, gaps
 
 test('core mode never exposes fixture chat or action controls', () => {
   const html = renderToStaticMarkup(<DesktopView current="moderator" snapshot={{ mode: 'core', phase: 'connecting' }}
-    theme="paper" on_navigate={() => undefined} on_theme_change={() => undefined} />);
+    theme="day" on_navigate={() => undefined} on_theme_change={() => undefined} />);
   expect(html).not.toContain('data-message-row');
   expect(html).not.toContain('Propose Ban');
 });
