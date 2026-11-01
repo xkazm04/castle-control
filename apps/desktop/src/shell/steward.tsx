@@ -12,6 +12,8 @@ import './surfaces.css';
 export type TalkbackLine = { id: number; who: 'You' | 'Steward'; text: string; live?: boolean };
 const greeting = 'Good evening. Draft in the preview, amend in ink, then hold to seal. Nothing acts on a spoken request.';
 
+const stewardFailureReply = 'The Steward could not finish. No authorization was given. Try again.';
+
 /** Conversation is shared across mounts; all proposals live only in proposalQueue. */
 export function createStewardConversation(port: StewardPort) {
   let snapshot: readonly TalkbackLine[] = [{ id: 0, who: 'Steward', text: greeting }];
@@ -34,7 +36,7 @@ export function createStewardConversation(port: StewardPort) {
         append('Steward', turn.reply, engine instanceof LiveSteward);
         return turn;
       } catch {
-        const reply = 'The Steward could not finish. No authorization was given. Try again.';
+        const reply = stewardFailureReply;
         append('Steward', reply, engine instanceof LiveSteward);
         return { reply, proposals: [], focus: null };
       }
@@ -87,9 +89,15 @@ export function ShellSteward({ context, connection, input_ref, on_select, on_ope
     if (busy || !value.trim()) return;
     setBusy(true);
     const text = value.trim(); setValue('');
-    const turn = await stewardConversation.ask(text, stewardContext(context), port);
-    routeStewardTurn(turn, context, on_select, on_open, on_overview);
-    setBusy(false);
+    try {
+      const turn = await stewardConversation.ask(text, stewardContext(context), port);
+      if (turn.reply === stewardFailureReply) setValue(text);
+      routeStewardTurn(turn, context, on_select, on_open, on_overview);
+    } catch (error) {
+      // A failing navigation callback must not strand the bar; the operator keeps their words.
+      console.error('Steward routing failed', error);
+      setValue(text);
+    } finally { setBusy(false); }
   }
   return <StewardBar mode={live ? 'live' : 'simulated'} message={message} value={value}
     suggestions={['Catch me up', 'Draft a question draw', 'What does chat want?']}
