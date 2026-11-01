@@ -166,10 +166,11 @@ function validators(schema) {
     `${JSON.stringify(name)}: ${typeof format === 'function' ? format.toString()
       : `{ type: 'number', validate: ${format.validate.toString()} }`}`).join(',');
   const exports = {}, lotsExports = {}, gatehouseExports = {}, beaconsExports = {}, stewardExports = {};
-  const stewardNames = new Set(['steward.ask', 'steward.writ.seal', 'steward.writ.tear']);
-  const beaconsNames = new Set(['visual.list', 'contribution.list', 'visual.upsert', 'curve.set', 'simulate', 'source.url', 'art.status', 'art.generate'].map(name => `beacons.${name}`));
-  // Single source: every gatehouse.* method in the registry belongs to the subpath.
-  const gatehouseNames = new Set(schema.methods.map(m => m.name).filter(name => name.startsWith('gatehouse.')));
+  // Single source: every steward.*, beacons.* and gatehouse.* method in the registry belongs to its subpath.
+  const byPrefix = (prefix) => new Set(schema.methods.map(m => m.name).filter(name => name.startsWith(prefix)));
+  const stewardNames = byPrefix('steward.');
+  const beaconsNames = byPrefix('beacons.');
+  const gatehouseNames = byPrefix('gatehouse.');
   const shared = sharedSchemas(schema);
   const declarations = [banner, "import type { ValidateFunction } from 'ajv';",
     "import type { RpcMethods, StreamEvent, LotsEventPayload, ConsensusEventPayload, BeaconsEventPayload, DesignPackage, ErrorEnvelope, AskParams, AskResult, Writ, WritSealParams, WritSealResult, WritTearParams, WritTearResult, StewardEventPayload } from './types.js';"];

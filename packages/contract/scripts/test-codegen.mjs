@@ -36,6 +36,15 @@ assert(files['beacons-validators.mjs'], 'Beacons validators have a separate gene
 assert(files['beacons-validators.d.mts'], 'Beacons validators retain typed declarations');
 assert(files['beacons-validation.ts'].includes("from './beacons-validators.mjs'"));
 assert(!files['beacons-validation.ts'].includes("from './validators.mjs'"));
+// The beacons and steward doors derive from the registry prefix like gatehouse does.
+for (const [prefix, declarations] of [['beacons.', 'beacons-validators.d.mts'], ['steward.', 'steward-validators.d.mts']]) {
+  const template = schema.methods.find((method) => method.name.startsWith(prefix));
+  const grown = { ...schema, methods: [...schema.methods, { ...template, name: `${prefix}synthetic.added` }] };
+  const added = grown.methods.length - 1;
+  const grownFiles = artifacts(grown);
+  assert(grownFiles[declarations].includes(`export const p${added}:`), `${prefix} subpath omits a new ${prefix}* method`);
+  assert(grownFiles[declarations].includes(`export const r${added}:`), `${prefix} subpath omits a new ${prefix}* result`);
+}
 assert.equal(files['beacons-root-validation.ts'], files['beacons-validation.ts'],
   'root barrel handles share the independent validators without importing the lazy method module');
 const gatehouseNames = schema.methods.map(method => method.name).filter(name => name.startsWith('gatehouse.'));
