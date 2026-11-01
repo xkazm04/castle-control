@@ -1,12 +1,9 @@
 // Cross-language boundary vectors: crates/cc-types/tests/boundary_vectors.rs runs the same table.
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
 import * as validators from '../src/generated/validators.mjs';
+import vectors from '../vectors/boundary-vectors.json' with { type: 'json' };
+import schema from '../src/generated/contract.schema.json' with { type: 'json' };
 
-const read = (path) => JSON.parse(readFileSync(fileURLToPath(new URL(path, import.meta.url)), 'utf8'));
-const vectors = read('../vectors/boundary-vectors.json');
-const schema = read('../src/generated/contract.schema.json');
 const index = (name) => schema.methods.findIndex((method) => method.name === name);
 const authResult = validators[`r${index('auth.twitch.status')}`];
 const ruleParams = validators[`p${index('gatehouse.rules.upsert')}`];
