@@ -2,10 +2,15 @@
 import * as compiled from './gatehouse-validators.mjs';
 export const gatehouseRulesList = { method: "gatehouse.rules.list" as const, params: compiled.p11, result: compiled.r11 };
 export const gatehouseRulesUpsert = { method: "gatehouse.rules.upsert" as const, params: compiled.p12, result: compiled.r12 };
+export const gatehouseRulesSetMode = { method: "gatehouse.rules.setMode" as const, params: compiled.p13, result: compiled.r13 };
 export const gatehouseBanConfirm = { method: "gatehouse.ban.confirm" as const, params: compiled.p14, result: compiled.r14 };
 export const gatehouseBanDismiss = { method: "gatehouse.ban.dismiss" as const, params: compiled.p15, result: compiled.r15 };
 export const gatehouseDecisionUndo = { method: "gatehouse.decision.undo" as const, params: compiled.p16, result: compiled.r16 };
 export const gatehousePetitionResolve = { method: "gatehouse.petition.resolve" as const, params: compiled.p17, result: compiled.r17 };
+export const gatehouseHeldResolve = { method: "gatehouse.held.resolve" as const, params: compiled.p18, result: compiled.r18 };
+export const gatehouseDelaySet = { method: "gatehouse.delay.set" as const, params: compiled.p19, result: compiled.r19 };
+export const gatehouseShieldSet = { method: "gatehouse.shield.set" as const, params: compiled.p20, result: compiled.r20 };
+export const gatehouseLeaseEnd = { method: "gatehouse.lease.end" as const, params: compiled.p21, result: compiled.r21 };
 export const gatehouseConsensusGet = { method: "gatehouse.consensus.get" as const, params: compiled.p22, result: compiled.r22 };
 export const gatehouseDrillRun = { method: "gatehouse.drill.run" as const, params: compiled.p23, result: compiled.r23 };
 export const gatehouseDrillDiff = { method: "gatehouse.drill.diff" as const, params: compiled.p24, result: compiled.r24 };
