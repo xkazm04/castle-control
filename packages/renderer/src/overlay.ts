@@ -175,7 +175,11 @@ export function connectOverlay(root: HTMLElement, visual_id: string, display?: O
     const active = () => !disposed && stream === source && retry === undefined;
     source.addEventListener('open', () => { if (active()) backoff = 2000; });
     source.addEventListener(BEACONS_RENDER_SNAPSHOT_EVENT, (event: MessageEvent<string>) => {
-      if (active()) receiveSnapshot(event.data, visual_id, (snapshot) => scene.apply(snapshot));
+      if (!active()) return;
+      if (!receiveSnapshot(event.data, visual_id, (snapshot) => scene.apply(snapshot))) {
+        // A count only, never payload text: a contract mismatch shows up in the DOM.
+        root.dataset['snapshotRejected'] = String(Number(root.dataset['snapshotRejected'] ?? 0) + 1);
+      }
     });
     source.addEventListener('error', () => {
       if (!active()) return;

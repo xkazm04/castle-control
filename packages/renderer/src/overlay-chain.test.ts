@@ -158,3 +158,15 @@ it('hides a failed image layer and allows a replacement package to load a fresh 
   expect((root.children[0] as HTMLElement).hidden).toBe(false);
   dispose();
 });
+
+it('counts rejected push snapshots on the root without exposing payload text', () => {
+  const { root, stream } = connected();
+  expect(root.dataset['snapshotRejected']).toBeUndefined();
+  stream.snapshot('{"secret":"simulated payload"}');
+  stream.snapshot('not json');
+  expect(root.dataset['snapshotRejected']).toBe('2');
+  stream.snapshot();
+  expect(root.children).toHaveLength(1);
+  expect(root.dataset['snapshotRejected']).toBe('2');
+  expect(JSON.stringify(root.dataset)).not.toContain('simulated payload');
+});
