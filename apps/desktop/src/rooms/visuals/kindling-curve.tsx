@@ -1,5 +1,5 @@
 import type { PreviewVisual } from '../../beacons-model.js';
-import { useId, useMemo, useState, useSyncExternalStore } from 'react';
+import { useId, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import type { KeyboardEvent, PointerEvent } from 'react';
 import type { Visual } from '@castle-control/contract';
 import type { CoreBeaconsPort } from '../../beacons-core.js';
@@ -127,7 +127,17 @@ export function CurveControls({ editor, state, busy, local = false }: {
 }
 
 export function EditableKindlingCurve({ visual, port, busy }: { visual: Visual; port: CoreBeaconsPort; busy: boolean }) {
-  const editor = useMemo(() => createCurveEditor(visual, port), [visual, port]);
+  // Refresh Beacons reloads visuals as new objects. Keep the editor, and any unsaved draft in it, while the
+  // same visual's confirmed curve is unchanged; only a real change of that curve starts a fresh editor.
+  const held = useRef<{ editor: CurveEditor; visual_id: string; port: CoreBeaconsPort } | undefined>(undefined);
+  const editor = useMemo(() => {
+    const kept = held.current;
+    if (kept && kept.visual_id === visual.visual_id && kept.port === port
+      && JSON.stringify(kept.editor.getSnapshot().confirmed) === JSON.stringify(visual.curve)) return kept.editor;
+    const fresh = createCurveEditor(visual, port);
+    held.current = { editor: fresh, visual_id: visual.visual_id, port };
+    return fresh;
+  }, [visual, port]);
   const state = useSyncExternalStore(editor.subscribe, editor.getSnapshot, editor.getSnapshot);
   return <CurveControls editor={editor} state={state} busy={busy} />;
 }
