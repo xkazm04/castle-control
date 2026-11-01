@@ -44,6 +44,8 @@ export class OverlayScene {
   private readonly display: OverlayDisplay;
   private bounds: Bounds = { x: 0, y: 0, width: 1, height: 1 };
   private viewport = { width: 1, height: 1 };
+  /** True while a scripts package is applied; module scripts cannot be re-run in this document. */
+  hasScripts = false;
   constructor(root: HTMLElement, display: OverlayDisplay = { scale: 1, anchor: 'center' }) {
     this.root = root;
     this.display = { ...display };
@@ -67,6 +69,7 @@ export class OverlayScene {
     this.root.replaceChildren();
     this.bindings = [];
     this.identity = undefined;
+    this.hasScripts = false;
     delete this.root.dataset['packageHash'];
     delete this.root.dataset['intensity'];
     delete this.root.dataset['simulated'];
@@ -137,6 +140,7 @@ export class OverlayScene {
         }
       }
       this.root.replaceChildren(...nodes);
+      this.hasScripts = pkg?.privileges?.kind === 'scripts';
       this.bindings = bindings;
       this.identity = identity;
       this.bounds = packageBounds(snapshot);
@@ -160,7 +164,38 @@ function assetUrl(snapshot: BeaconsRenderSnapshot, path: string): string {
   return `/assets/${snapshot.visual.visual_id}/${pkg.content_hash}/${path}`;
 }
 
-export function connectOverlay(root: HTMLElement, visual_id: string, display?: OverlayDisplay): () => void {
+/** Reload attempts persist across document reloads so a failing stream cannot loop tightly. */
+export interface ReloadOptions {
+  reload?: () => void;
+  /** Attempt count and time of the last reload; default is sessionStorage. */
+  store?: { read(): { n: number; at: number } | undefined; write(value: { n: number; at: number }): void };
+  now?: () => number;
+}
+const RELOAD_BASE_MS = 2000, RELOAD_CAP_MS = 30000, RELOAD_QUIET_MS = 60000;
+const RELOAD_KEY = 'cc-overlay-reload';
+
+function sessionReloadStore(): NonNullable<ReloadOptions['store']> {
+  return {
+    read() {
+      try {
+        const parsed: unknown = JSON.parse(window.sessionStorage.getItem(RELOAD_KEY) ?? 'null');
+        if (typeof parsed !== 'object' || parsed === null) return undefined;
+        const { n, at } = parsed as { n?: unknown; at?: unknown };
+        return typeof n === 'number' && typeof at === 'number' ? { n, at } : undefined;
+      } catch { return undefined; } // Storage unavailable or corrupt: treated as a first attempt.
+    },
+    write(value) {
+      try { window.sessionStorage.setItem(RELOAD_KEY, JSON.stringify(value)); }
+      catch { /* Storage unavailable: the delay still applies per document. */ }
+    },
+  };
+}
+
+export function connectOverlay(root: HTMLElement, visual_id: string, display?: OverlayDisplay, options: ReloadOptions = {}): () => void {
+  const reload = options.reload ?? (() => { window.location.reload(); });
+  const store = options.store ?? sessionReloadStore();
+  const now = options.now ?? Date.now;
+  let reloadTimer: ReturnType<typeof setTimeout> | undefined;
   const scene = new OverlayScene(root, display);
   const resize = () => scene.resize(window.innerWidth, window.innerHeight);
   resize();
@@ -172,7 +207,7 @@ export function connectOverlay(root: HTMLElement, visual_id: string, display?: O
   const connect = () => {
     const source = new EventSource(`/push/beacons?visual_id=${encodeURIComponent(visual_id)}`);
     stream = source;
-    const active = () => !disposed && stream === source && retry === undefined;
+    const active = () => !disposed && stream === source && retry === undefined && reloadTimer === undefined;
     source.addEventListener('open', () => { if (active()) backoff = 2000; });
     source.addEventListener(BEACONS_RENDER_SNAPSHOT_EVENT, (event: MessageEvent<string>) => {
       if (!active()) return;
@@ -183,7 +218,18 @@ export function connectOverlay(root: HTMLElement, visual_id: string, display?: O
     });
     source.addEventListener('error', () => {
       if (!active()) return;
+      const scripted = scene.hasScripts;
       scene.clear();
+      if (scripted) {
+        // Module scripts evaluate once per document: only a fresh document re-runs them.
+        // Delay 2s, 4s, 8s, 16s, then 30s per attempt; the count resets after 60s without a reload.
+        source.close();
+        const last = store.read();
+        const n = last !== undefined && now() - last.at < RELOAD_QUIET_MS ? last.n : 0;
+        reloadTimer = setTimeout(() => { store.write({ n: n + 1, at: now() }); reload(); },
+          Math.min(RELOAD_BASE_MS * 2 ** n, RELOAD_CAP_MS));
+        return;
+      }
       // CONNECTING keeps the browser's native retry. HTTP refusals close it.
       if (source.readyState !== EventSource.CLOSED) return;
       source.close();
@@ -195,6 +241,7 @@ export function connectOverlay(root: HTMLElement, visual_id: string, display?: O
   return () => {
     disposed = true;
     if (retry !== undefined) clearTimeout(retry);
+    if (reloadTimer !== undefined) clearTimeout(reloadTimer);
     window.removeEventListener('resize', resize);
     stream.close();
     scene.clear();
