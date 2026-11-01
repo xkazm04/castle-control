@@ -21,7 +21,9 @@ test('component styles use declared shared tokens, not raw colors or pixel sizes
   expect(files.some(path => path.pathname.endsWith('/design/focus.css'))).toBe(true);
   console.log(`[component CSS] walked ${files.length} files`);
   // Design provenance comments may record the original colours; declarations stay token-only.
-  const styles = files.map(path => readFileSync(path, 'utf8')).join('\n').replaceAll(/\/\*[\s\S]*?\*\//g, '');
+  // The Steward dock reads fused tokens with fallbacks; steward-flow/styles.test.ts checks it.
+  const law = files.filter(path => !path.pathname.includes('/steward-flow/'));
+  const styles = law.map(path => readFileSync(path, 'utf8')).join('\n').replaceAll(/\/\*[\s\S]*?\*\//g, '');
   const declarations = new Set([...styles.matchAll(/--([\w-]+)\s*:/g)].map(match => match[1]));
   const shared = [tokens.theme.paper, tokens.layout, tokens.art, tokens.cutaway, tokens.motion, tokens.type];
   const known = new Set([...shared.flatMap(group => Object.keys(group)), ...declarations]);

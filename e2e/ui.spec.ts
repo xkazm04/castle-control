@@ -57,7 +57,7 @@ for (const route of routes) for (const theme of themes) for (const steward of st
     await expect(page.locator('.cc-rampart > [data-stamp="simulated"]')).toHaveText('Simulated');
     await expect(page.locator('.keep-home, .overview-workspace, .shell-room, .demo-workspace, .stream-workspace, .rehearsal-workspace')).toBeVisible();
     await expect(page.getByText('Opening the room...', { exact: true })).toHaveCount(0);
-    await expect(page.locator('.cc-steward-bar')).toBeVisible();
+    await expect(page.locator('.cc-steward-dock')).toBeVisible();
     if (route.endsWith('/drill')) await expect(page.locator('.moderator-drill')).toBeVisible();
     await expect(page).toHaveURL(new RegExp(`${route.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`));
     if (theme === 'stock') await page.getByRole('button', { name: 'Toggle paper and dark stock' }).click();

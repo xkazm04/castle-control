@@ -42,6 +42,8 @@ export function DesktopView(props: ViewProps) {
   const steward_connection = connection ? { connection } : {};
   const steward = <Suspense fallback={<p role="status">Opening the Steward...</p>}>
     <Steward context={current === 'stream' || current === 'rehearsal' ? 'keep' : current} {...steward_connection} {...(props.steward_ref ? { input_ref: props.steward_ref } : {})}
+      chamber={current === 'overview' || current === 'demo' ? 'keep' : current} snapshot={props.snapshot}
+      on_chamber={chamber => { if (chamber === 'keep' || chamber === 'stream' || chamber === 'rehearsal') props.on_surface?.(chamber); else props.on_navigate(chamber); }}
       on_select={props.on_select ?? (() => undefined)} on_open={props.on_navigate} on_overview={() => props.on_surface?.('overview')} />
   </Suspense>;
   const stream_connection = coreStreamConnection(props.snapshot);

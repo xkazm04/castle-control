@@ -75,7 +75,7 @@ test('the shell uses the typed core RPC boundary, with no simulation metadata on
   expect(sampleProgram.getSnapshot()).toBe(program);
   const html = renderToStaticMarkup(<ShellSteward context="lottery" connection={conn}
     on_select={vi.fn()} on_open={vi.fn()} on_overview={vi.fn()} />);
-  expect(html).toContain('LIVE STEWARD');
+  expect(html).toContain('Live Steward');
   expect(html).not.toMatch(/simulated co-pilot|sample data/);
   const card = captureCard(port);
   vi.useFakeTimers();
@@ -124,7 +124,7 @@ test('no opt-in or absent/unreachable capability preserves the simulated shell; 
   for (const candidate of [undefined, { ...conn, live: false }, conn]) {
     expect(shellStewardPort(candidate)).toBeInstanceOf(SimulatedSteward);
     expect(renderToStaticMarkup(<ShellSteward context="keep" {...(candidate ? { connection: candidate } : {})}
-      on_select={vi.fn()} on_open={vi.fn()} on_overview={vi.fn()} />)).toContain('<span class="cc-steward-state">simulated co-pilot · sample data</span><span class="cc-stamp" data-stamp="simulated" role="img" aria-label="Simulated"><span aria-hidden="true">Simulated</span>');
+      on_select={vi.fn()} on_open={vi.fn()} on_overview={vi.fn()} />)).toContain('<span class="cc-steward__role">simulated co-pilot · sample data</span><span class="cc-sim">Simulated</span>');
   }
   expect((await live.ask('Draft questions', context)).proposals).toEqual([]);
   expect(transport.ask).not.toHaveBeenCalled();

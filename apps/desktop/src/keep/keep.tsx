@@ -3,6 +3,7 @@ import type { ModuleId } from '@castle-control/ui';
 import { useEffect, useState, useSyncExternalStore } from 'react';
 import type { CSSProperties } from 'react';
 import { isPending, proposalQueue } from '@castle-control/ui/steward';
+import { useFlowDraft } from '@castle-control/ui/steward-flow';
 import { appOverviewFrame, appOverviewTarget, appRoomTarget, frameTransform, keepRooms } from '@castle-control/keep-art';
 import type { Snapshot } from '../model.js';
 import { keepReadModel } from './read-model.js';
@@ -12,6 +13,7 @@ import './keep.css';
 import { KeepArt } from './keep-art.jsx';
 import { LintelPlaque } from './plaque.jsx';
 import { useDiorama, useKeepCamera } from './camera.js';
+import { keepThemeFlow } from './steward-flows.js';
 
 export type KeepProps = { snapshot?: Snapshot; on_open: (id: ModuleId) => void; on_enter: () => void; on_demo?: () => void; on_stream?: () => void; on_rehearsal?: () => void };
 type KeepStyle = CSSProperties & { '--keep-scale'?: number; '--keep-inverse'?: number };
@@ -45,7 +47,9 @@ export function Keep({ snapshot = { mode: 'fixture', phase: 'ready' }, on_open, 
   const [focused, setFocused] = useState<ModuleId | undefined>(undefined);
   const { host, scale } = useDiorama();
   const { castle, opening, open, transitionEnd } = useKeepCamera(on_open);
-  const active = opening ?? hovered ?? focused;
+  // The Steward's open theme draft lights its room live, under any pointer or focus.
+  const drafted = useFlowDraft(keepThemeFlow)?.lead;
+  const active = opening ?? hovered ?? focused ?? drafted;
   const chamber = chambers.find(item => item.id === active);
   const state = chamber ? read.states[chamber.id] : undefined;
   const room = opening ? keepRooms[opening] : undefined;

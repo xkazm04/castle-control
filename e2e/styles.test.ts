@@ -108,7 +108,7 @@ test('field policy accepts kit fields in paper and stock and checks every border
 test('only the named Steward prompt resolves the strong token under its own theme', () => {
   assert.deepEqual(strongBorderFields.map(field => field.name), ['Steward bar prompt']);
   const selector = strongBorderFields[0]?.selector;
-  assert.equal(selector, '.cc-steward-bar input[aria-label="Talk to the Steward..."]');
+  assert.equal(selector, '.cc-steward-dock input[aria-label="Talk to the Steward..."]');
   for (const color of [fieldBorder.color, 'rgb(242, 238, 227)']) {
     for (const isSteward of [false, true]) {
       class Field {

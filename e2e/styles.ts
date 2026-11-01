@@ -21,7 +21,7 @@ type FieldStyle = { appearance: string; borders: FieldBorder[] };
 type StrongBorderField = { name: string; selector: string; reason: string };
 
 export const strongBorderFields: readonly StrongBorderField[] = [
-  { name: 'Steward bar prompt', selector: '.cc-steward-bar input[aria-label="Talk to the Steward..."]',
+  { name: 'Steward bar prompt', selector: '.cc-steward-dock input[aria-label="Talk to the Steward..."]',
     reason: 'The Cutaway fidelity contract prints the Steward prompt with --rule-strong.' },
 ];
 

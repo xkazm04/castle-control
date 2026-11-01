@@ -125,7 +125,7 @@ test('lazy surfaces retain one Steward bar and the rampart, and rooms retain the
     expect(html).not.toContain('desktop-simulated');
     expect(html).not.toContain('SIMULATED SOURCE');
     expect(html.match(/aria-label="Talk to the Steward\.\.\."/g)).toHaveLength(1);
-    expect(html).toContain('<span class="cc-steward-state">simulated co-pilot · sample data</span><span class="cc-stamp" data-stamp="simulated" role="img" aria-label="Simulated"><span aria-hidden="true">Simulated</span>');
+    expect(html).toContain('<span class="cc-steward__role">simulated co-pilot · sample data</span><span class="cc-sim">Simulated</span>');
     expect(html).not.toContain('cc-stage-frame');
   }
 });

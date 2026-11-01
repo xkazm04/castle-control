@@ -1,12 +1,16 @@
-import { useState, useSyncExternalStore } from 'react';
+import { useMemo, useSyncExternalStore } from 'react';
 import type { Ref } from 'react';
-import { InkButton, StewardBar } from '@castle-control/ui';
+import { InkButton } from '@castle-control/ui';
 import type { ModuleId } from '@castle-control/ui';
 import { isPending, LiveSteward, proposalQueue } from '@castle-control/ui/steward';
 import type { Proposal, StewardContext, StewardPort, StewardTurn } from '@castle-control/ui/steward';
 import type { Surface } from '../navigation.js';
 import type { StewardConnection } from '../client.js';
+import { StewardDock } from '@castle-control/ui/steward-flow';
+import type { FlowChamber, UnmatchedReply } from '@castle-control/ui/steward-flow';
+import type { Snapshot } from '../model.js';
 import { shellStewardPort } from './core-steward.js';
+import { flowChamber, stewardRegistry } from './steward-flows.js';
 import './surfaces.css';
 
 export type TalkbackLine = { id: number; who: 'You' | 'Steward'; text: string; live?: boolean };
@@ -70,34 +74,34 @@ export function StewardProposal({ proposal, on_open }: { proposal: Proposal; on_
   </article>;
 }
 
-export function ShellSteward({ context, connection, input_ref, on_select, on_open, on_overview }: {
+const sampleSnapshot: Snapshot = { mode: 'fixture', phase: 'ready' };
+
+export function ShellSteward({ context, chamber, snapshot = sampleSnapshot, connection, input_ref,
+  on_select, on_open, on_overview, on_chamber }: {
   context: ModuleId | Surface; input_ref?: Ref<HTMLInputElement>;
+  /** The flow chamber, when it differs from the engine context (stream, rehearsal). */
+  chamber?: FlowChamber; snapshot?: Snapshot;
   connection?: StewardConnection;
   on_select: (chamber: ModuleId) => void; on_open: (chamber: ModuleId) => void; on_overview: () => void;
+  on_chamber?: (chamber: FlowChamber) => void;
 }) {
   const port = shellStewardPort(connection);
   const live = port instanceof LiveSteward;
-  const [value, setValue] = useState('');
-  const [busy, setBusy] = useState(false);
-  const history = useSyncExternalStore(stewardConversation.subscribe, stewardConversation.getSnapshot, stewardConversation.getSnapshot);
   const queue = useSyncExternalStore(proposalQueue.subscribe, proposalQueue.getSnapshot, proposalQueue.getSnapshot);
   const proposal = queue.proposals.findLast(isPending);
-  const message = busy ? 'Drafting. Nothing acts until your hold to seal.' : history.at(-1)?.text ?? greeting;
-  async function tell() {
-    if (busy || !value.trim()) return;
-    setBusy(true);
-    const text = value.trim(); setValue('');
+  const registry = useMemo(() => stewardRegistry(snapshot), [snapshot]);
+  async function unmatched(text: string): Promise<UnmatchedReply> {
+    // The existing engine (live core, or the offline simulated one) answers what no flow matched.
     const turn = await stewardConversation.ask(text, stewardContext(context), port);
     routeStewardTurn(turn, context, on_select, on_open, on_overview);
-    setBusy(false);
+    return { reply: turn.reply, ...(live ? { live: true } : {}) };
   }
-  return <StewardBar mode={live ? 'live' : 'simulated'} message={message} value={value}
-    suggestions={['Catch me up', 'Draft a question draw', 'What does chat want?']}
-    identity={{ name: 'The Steward', state: busy ? 'Drafting' : live ? 'Live co-pilot' : 'Simulated co-pilot' }}
+  return <StewardDock chamber={chamber ?? flowChamber(context)} registry={registry} mode={live ? 'live' : 'simulated'}
+    on_unmatched={unmatched}
+    on_chamber={target => {
+      if (on_chamber) on_chamber(target);
+      else if (target !== 'keep' && target !== 'stream' && target !== 'rehearsal') on_open(target);
+    }}
     proposal={proposal ? <StewardProposal proposal={proposal} on_open={on_open} /> : null}
-    on_change={setValue} on_tell={() => { void tell(); }}
-    on_suggest={text => {
-      setValue(text);
-      if (input_ref && 'current' in input_ref) input_ref.current?.focus();
-    }} {...(input_ref ? { input_ref } : {})} />;
+    {...(input_ref ? { input_ref } : {})} />;
 }
