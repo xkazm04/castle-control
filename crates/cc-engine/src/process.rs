@@ -230,7 +230,12 @@ impl SpawnDoor {
                 Some(status) => status,
                 None => child.wait().await.map_err(|_| Failure::Unavailable)?,
             };
-            let mut answer = parser.finish(prices)?;
+            let mut answer = match parser.finish(prices) {
+                Ok(answer) => answer,
+                // A crashed child's empty output is its exit status's fault, not a parse fault.
+                Err(_) if !status.success() => return Err(Failure::Unavailable),
+                Err(error) => return Err(error),
+            };
             if !status.success() {
                 answer.failure = Some(Failure::Unavailable);
                 answer.model_served = None;

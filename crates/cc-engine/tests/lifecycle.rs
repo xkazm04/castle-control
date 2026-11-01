@@ -30,6 +30,32 @@ async fn probe_propagates_keychain_failure_instead_of_reporting_not_installed() 
         .await;
     assert_eq!(result.unwrap_err(), Failure::Auth);
 }
+#[tokio::test]
+async fn crashed_child_with_empty_stdout_is_unavailable_not_parse() {
+    let dir = tempfile::tempdir().unwrap();
+    let engine = common::engine("claude_cli", &dir.path().join("process"));
+    let mut store = Store::open(dir.path().join("store")).unwrap();
+    // No key is injected, so the fake child panics before printing anything.
+    let reply = engine
+        .complete(
+            Call {
+                class: EngineClass::Batch,
+                prompt: "simulated key witness",
+                rules_verdict: None,
+            },
+            &mut store,
+            &NoKeychain,
+            None,
+        )
+        .await
+        .unwrap();
+    assert!(matches!(
+        reply.outcome,
+        Outcome::Refused {
+            reason: Failure::Unavailable
+        }
+    ));
+}
 #[test]
 fn startup_sweeps_stale_owned_markers_and_refuses_second_owner() {
     let root = tempfile::tempdir().unwrap();
