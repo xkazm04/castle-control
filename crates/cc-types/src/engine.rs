@@ -75,9 +75,47 @@ fn optional_string(
     }
 }
 
+/// Executable path rule, identical on every host (it never consults the OS).
+///
+/// Both `/` and `\` are separators. Accepted: an absolute local path in POSIX
+/// form (`/x/y`) or Windows drive form (`C:\x\y`, `C:/x/y`). Refused: UNC
+/// (`\\host\..`, `//host/..`), device paths (`\\?\`, `\\.\`, `//?/`), a root
+/// without a drive (`\x`), drive-relative (`C:x`), relative paths, any `..`
+/// segment, a bare root with no file component, control characters, and empty.
 fn absolute_path(value: &str) -> bool {
-    // Native path rules: on Windows a root without a drive is not absolute.
-    std::path::Path::new(value).is_absolute() && !value.chars().any(char::is_control)
+    if value.chars().any(char::is_control) {
+        return false;
+    }
+    let is_sep = |c: char| c == '/' || c == '\\';
+    let bytes = value.as_bytes();
+    let rest = if bytes.first() == Some(&b'/') {
+        // A second separator after the leading `/` is UNC or a device path.
+        let tail = &value[1..];
+        if tail.starts_with(is_sep) {
+            return false;
+        }
+        tail
+    } else if bytes.len() >= 3
+        && bytes[0].is_ascii_alphabetic()
+        && bytes[1] == b':'
+        && (bytes[2] == b'/' || bytes[2] == b'\\')
+    {
+        let tail = &value[3..];
+        if tail.starts_with(is_sep) {
+            return false;
+        }
+        tail
+    } else {
+        return false;
+    };
+    let mut has_file = false;
+    for segment in rest.split(is_sep) {
+        if segment == ".." {
+            return false;
+        }
+        has_file |= !segment.is_empty();
+    }
+    has_file
 }
 
 fn model_id(value: &str) -> bool {

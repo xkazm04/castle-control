@@ -116,12 +116,7 @@ const MODEL_KEYS: [&str; 3] = [
 ];
 
 fn simulated_path(name: &str) -> String {
-    let root = if cfg!(windows) {
-        "C:/simulated"
-    } else {
-        "/simulated"
-    };
-    format!("{root}/{name}")
+    format!("/simulated/{name}")
 }
 
 #[test]
@@ -208,9 +203,47 @@ fn executable_paths_refuse_relative_empty_control_and_wrong_type_values() {
         ] {
             assert_invalid_setting(key, value);
         }
-        if cfg!(windows) {
-            // Rooted paths without a drive still depend on ambient process state.
-            assert_invalid_setting(key, json!("\\simulated\\cli.exe"));
+    }
+}
+
+#[test]
+fn executable_path_rule_is_identical_on_every_host() {
+    let accepted = [
+        "/simulated/cli.exe",
+        "/simulated/CLI tools/cli.exe",
+        "C:\\simulated\\cli.exe",
+        "C:/simulated/cli.exe",
+        "c:/simulated\\cli.exe",
+    ];
+    let refused = [
+        "\\\\simulated-host\\share\\cli.exe",
+        "//simulated-host/share/cli.exe",
+        "\\/simulated-host/share/cli.exe",
+        "/\\simulated-host/share/cli.exe",
+        "\\\\?\\C:\\simulated\\cli.exe",
+        "\\\\.\\C:\\simulated\\cli.exe",
+        "//?/C:/simulated/cli.exe",
+        "//./C:/simulated/cli.exe",
+        "\\simulated\\cli.exe",
+        "simulated/cli.exe",
+        "C:simulated/cli.exe",
+        "C:",
+        "C:\\",
+        "/",
+        "/simulated/../cli.exe",
+        "/simulated/..\\cli.exe",
+        "C:\\simulated\\..\\cli.exe",
+        "C:/simulated/../cli.exe",
+        "..",
+        "",
+    ];
+    for key in PATH_KEYS {
+        for value in accepted {
+            let source = settings(json!({key:value}));
+            assert!(parse_engine_settings(&source).is_ok(), "{key} {value}");
+        }
+        for value in refused {
+            assert_invalid_setting(key, json!(value));
         }
     }
 }
