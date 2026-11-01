@@ -32,6 +32,8 @@ fn main() {
         EngineLane,
         ErrorCode,
         DrawFailureReason,
+        EngineOutcome,
+        EngineFailureReason,
         MessageId,
         DecisionId,
         LeaseId,

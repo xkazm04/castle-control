@@ -45,6 +45,16 @@ wire_enum!(EngineLane { Live => "live", Batch => "batch" });
 wire_enum!(DrawFailureReason {
     BeaconUnavailable => "beacon_unavailable", CapUnsatisfiable => "cap_unsatisfiable",
     InvalidCast => "invalid_cast", SealMissing => "seal_missing", Abandoned => "abandoned"});
+// How an engine call ended, for the audit row; carries no model text.
+wire_enum!(EngineOutcome { Model => "model", RulesOnly => "rules_only", Refused => "refused" });
+// Coarse engine failure label beside a non-model outcome; mirrors the engine's
+// failure kinds without payloads.
+wire_enum!(EngineFailureReason {
+    Invalid => "invalid", MissingModel => "missing_model", Unavailable => "unavailable",
+    Timeout => "timeout", RateLimited => "rate_limited", Auth => "auth", Parse => "parse",
+    NotAdmitted => "not_admitted", CloudOptIn => "cloud_opt_in", CliOnLive => "cli_on_live",
+    Posture => "posture", Audit => "audit", Supervision => "supervision"
+});
 wire_enum!(ErrorCode {
     Invalid => "invalid", NotFound => "not_found", Conflict => "conflict",
     Unauthorized => "unauthorized", RateLimited => "rate_limited", Upstream => "upstream",

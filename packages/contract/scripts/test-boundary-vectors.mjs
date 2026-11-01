@@ -23,7 +23,7 @@ for (const field of ['name', 'delivery', 'pattern']) {
   for (const text of vectors.nonblank.nonblank) assert.equal(ruleAccepts(field, text), true, `${field} accepts ${JSON.stringify(text)}`);
 }
 const ajv = new Ajv({ strict: false });
-for (const [section, type] of [['draw_failure_reason', 'DrawFailureReason']]) {
+for (const [section, type] of [['draw_failure_reason', 'DrawFailureReason'], ['engine_outcome', 'EngineOutcome'], ['engine_failure_reason', 'EngineFailureReason']]) {
   assert.ok(schema.types[type], `schema is missing ${type}`);
   const { $schema, ...body } = schema.types[type];
   const check = ajv.compile(body);

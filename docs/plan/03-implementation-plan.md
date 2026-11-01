@@ -1179,6 +1179,8 @@ cloud opt-in enforcement remain the engine's job. The CLI remains slow-lane only
 | `Operator` | `human`, `ai`, `ai_proposes` |
 | `EngineLane` | `live`, `batch` |
 | `DrawFailureReason` | `beacon_unavailable`, `cap_unsatisfiable`, `invalid_cast`, `seal_missing`, `abandoned` (terminal marker for a sealed draw with no Draw row; coarse code only, no viewer or chat content; the ledger event that carries it is a later cc-store delivery) |
+| `EngineOutcome` | `model`, `rules_only`, `refused` (how an engine audit call ended; no model text; the `outcome` field on the engine ledger row is a later cc-store delivery) |
+| `EngineFailureReason` | `invalid`, `missing_model`, `unavailable`, `timeout`, `rate_limited`, `auth`, `parse`, `not_admitted`, `cloud_opt_in`, `cli_on_live`, `posture`, `audit`, `supervision` (coarse label beside a non-model outcome; no payloads) |
 | `ErrorCode` | `invalid`, `not_found`, `conflict`, `unauthorized`, `rate_limited`, `upstream`, `unavailable`, `blocked_by_policy`, `needs_human`, `internal` |
 
 The error envelope is `{code, message, retry_after_ms?, detail?}`. A consumer branches only on `code`.

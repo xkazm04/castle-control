@@ -76,5 +76,46 @@
       "failed",
       "drand down"
     ]
+  },
+  "engine_outcome": {
+    "accepted": [
+      "model",
+      "rules_only",
+      "refused"
+    ],
+    "refused": [
+      "",
+      "served",
+      "rules-only",
+      "Model",
+      "timeout",
+      "parse_failed"
+    ]
+  },
+  "engine_failure_reason": {
+    "accepted": [
+      "invalid",
+      "missing_model",
+      "unavailable",
+      "timeout",
+      "rate_limited",
+      "auth",
+      "parse",
+      "not_admitted",
+      "cloud_opt_in",
+      "cli_on_live",
+      "posture",
+      "audit",
+      "supervision"
+    ],
+    "refused": [
+      "",
+      "Timeout",
+      "parse_failed",
+      "rate-limited",
+      "missing_model: x",
+      "model",
+      "unknown"
+    ]
   }
 }

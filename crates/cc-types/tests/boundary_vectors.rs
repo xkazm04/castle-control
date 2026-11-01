@@ -73,6 +73,20 @@ fn draw_failure_reason_vectors_match_the_schema() {
 }
 
 #[test]
+fn engine_outcome_vectors_match_the_schema() {
+    check_enum::<EngineOutcome>("engine_outcome");
+    check_enum::<EngineFailureReason>("engine_failure_reason");
+    assert_eq!(
+        EngineOutcome::VALUES.to_vec(),
+        rows("engine_outcome", "accepted")
+    );
+    assert_eq!(
+        EngineFailureReason::VALUES.to_vec(),
+        rows("engine_failure_reason", "accepted")
+    );
+}
+
+#[test]
 fn nonblank_vectors_use_one_explicit_whitespace_set() {
     for field in ["name", "delivery", "pattern"] {
         for text in rows("nonblank", "blank") {

@@ -17566,6 +17566,26 @@
       "title": "DrawRunId",
       "type": "string"
     },
+    "EngineFailureReason": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "enum": [
+        "invalid",
+        "missing_model",
+        "unavailable",
+        "timeout",
+        "rate_limited",
+        "auth",
+        "parse",
+        "not_admitted",
+        "cloud_opt_in",
+        "cli_on_live",
+        "posture",
+        "audit",
+        "supervision"
+      ],
+      "title": "EngineFailureReason",
+      "type": "string"
+    },
     "EngineLane": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "enum": [
@@ -17573,6 +17593,16 @@
         "batch"
       ],
       "title": "EngineLane",
+      "type": "string"
+    },
+    "EngineOutcome": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "enum": [
+        "model",
+        "rules_only",
+        "refused"
+      ],
+      "title": "EngineOutcome",
       "type": "string"
     },
     "ErrorCode": {
