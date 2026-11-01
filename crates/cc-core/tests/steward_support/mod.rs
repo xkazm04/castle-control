@@ -69,6 +69,8 @@ impl Drop for Server {
 
 pub struct Harness {
     pub registry: Registry,
+    #[allow(dead_code)] // Used by the seal-ordering test only.
+    pub store: Arc<tokio::sync::Mutex<Store>>,
     _server: Server,
     _root: tempfile::TempDir,
 }
@@ -114,6 +116,7 @@ impl Harness {
             })
             .unwrap();
         let engine = Engine::new(&settings, routes, None).unwrap();
+        let store = Arc::new(tokio::sync::Mutex::new(store));
         let registry = Registry::with_fixture_root(
             root.path().join("modules"),
             Arc::new(EventHub::new(256).unwrap()),
@@ -121,12 +124,13 @@ impl Harness {
         .unwrap()
         .with_steward(StewardConfig::new(
             engine,
-            Arc::new(tokio::sync::Mutex::new(store)),
+            store.clone(),
             Arc::new(NoKeychain),
             true,
         ));
         Self {
             registry,
+            store,
             _server: server,
             _root: root,
         }
