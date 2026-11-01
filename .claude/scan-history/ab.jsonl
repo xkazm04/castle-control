@@ -28,3 +28,8 @@
 {"at":"2026-11-01T16:18:30.310Z","batch":3,"card":"fingerprint list","verdict":"better","note":"drift test; seeded red"}
 {"at":"2026-11-01T16:18:30.310Z","batch":3,"card":"topic stall","verdict":"better","note":"seeded red (director re-run)"}
 {"at":"2026-11-01T16:18:30.310Z","batch":3,"card":"Debug chat text","verdict":"better","note":"marker test"}
+{"at":"2026-11-01T17:42:10.311Z","batch":4,"lane":"C-approved","card":"erase all steps","verdict":"better","note":"seeded control red by worker; combined gates green"}
+{"at":"2026-11-01T17:42:10.312Z","batch":4,"lane":"C-approved","card":"setMode block","verdict":"better","note":"seeded control red by worker; combined gates green"}
+{"at":"2026-11-01T17:42:10.312Z","batch":4,"lane":"C-approved","card":"refresh purge invalid_grant","verdict":"better","note":"seeded control red by worker; combined gates green"}
+{"at":"2026-11-01T17:42:10.312Z","batch":4,"lane":"C-approved","card":"rpc status by code","verdict":"better","note":"seeded control red by worker; combined gates green"}
+{"at":"2026-11-01T17:42:10.313Z","batch":4,"lane":"C-approved","card":"exec path host-neutral","verdict":"better","note":"seeded control red by worker; combined gates green"}
