@@ -5,7 +5,7 @@ use crate::{
 use fs2::FileExt;
 use rusqlite::{Connection, OptionalExtension, params};
 use std::{
-    cell::Cell,
+    cell::{Cell, RefCell},
     collections::{BTreeMap, BTreeSet},
     fs::{self, File, OpenOptions},
     path::{Path, PathBuf},
@@ -16,6 +16,8 @@ pub struct Store {
     pub(crate) root: PathBuf,
     pub(crate) ledger_lengths: BTreeMap<LedgerKind, u64>,
     pub(crate) ledger_fault: Cell<bool>,
+    pub(crate) ledger_cache: RefCell<BTreeMap<LedgerKind, crate::ledger::CachedLedger>>,
+    pub(crate) ledger_stats: Cell<crate::ledger::LedgerReadStats>,
     _lock: File,
 }
 
@@ -39,6 +41,8 @@ impl Store {
             _lock: lock,
             ledger_lengths: BTreeMap::new(),
             ledger_fault: Cell::new(false),
+            ledger_cache: RefCell::new(BTreeMap::new()),
+            ledger_stats: Cell::new(Default::default()),
         };
         if store.purge_pending()? {
             store.finish_purge()?;
@@ -48,10 +52,10 @@ impl Store {
                 .append(true)
                 .create(true)
                 .open(store.root.join(kind.filename()))?;
-            store.read_ledger(kind)?;
             store
                 .ledger_lengths
                 .insert(kind, fs::metadata(store.root.join(kind.filename()))?.len());
+            store.read_ledger(kind)?;
         }
         store.verify_inventory()?;
         Ok(store)
