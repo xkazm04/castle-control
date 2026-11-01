@@ -35,3 +35,5 @@
 {"at":"2026-11-01T17:42:10.313Z","batch":4,"lane":"C-approved","card":"exec path host-neutral","verdict":"better","note":"seeded control red by worker; combined gates green"}
 {"at":"2026-11-01T18:01:34.477Z","batch":5,"lane":"C-approved","card":"user-id canonical rule","verdict":"better","note":"seeded red by worker; cargo+contract gates green; vitest/tsc not runnable here (env)"}
 {"at":"2026-11-01T18:01:34.478Z","batch":5,"lane":"C-approved","card":"nonblank blank set","verdict":"better","note":"seeded red by worker; cargo+contract gates green; vitest/tsc not runnable here (env)"}
+{"at":"2026-11-01T18:23:47.908Z","batch":6,"lane":"C-approved","card":"engine key constant","verdict":"better","note":"seeded red by worker; combined gates green"}
+{"at":"2026-11-01T18:23:47.909Z","batch":6,"lane":"C-approved","card":"care cache erasure generation","verdict":"better","note":"seeded red by worker; combined gates green"}
