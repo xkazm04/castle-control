@@ -192,7 +192,23 @@ async fn rpc_handler(
     };
     match state.registry.dispatch(&request).await {
         Ok(result) => Json(result).into_response(),
-        Err(e) => (StatusCode::BAD_REQUEST, Json(e)).into_response(),
+        Err(e) => (status_for(e.code), Json(e)).into_response(),
+    }
+}
+
+// The JSON envelope is the contract; the status only mirrors its code.
+fn status_for(code: ErrorCode) -> StatusCode {
+    match code {
+        ErrorCode::Invalid => StatusCode::BAD_REQUEST,
+        ErrorCode::NotFound => StatusCode::NOT_FOUND,
+        ErrorCode::Conflict => StatusCode::CONFLICT,
+        ErrorCode::Unauthorized => StatusCode::UNAUTHORIZED,
+        ErrorCode::RateLimited => StatusCode::TOO_MANY_REQUESTS,
+        ErrorCode::Upstream => StatusCode::BAD_GATEWAY,
+        ErrorCode::Unavailable => StatusCode::SERVICE_UNAVAILABLE,
+        ErrorCode::BlockedByPolicy => StatusCode::FORBIDDEN,
+        ErrorCode::NeedsHuman => StatusCode::PRECONDITION_REQUIRED,
+        ErrorCode::Internal => StatusCode::INTERNAL_SERVER_ERROR,
     }
 }
 
