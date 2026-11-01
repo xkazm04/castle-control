@@ -5,6 +5,19 @@ the film is **designed and timed, not built**. Read this first, then the
 working notes in [`film/README.md`](../../film/README.md), which say how the
 kit is used, the stage, the heroes, the honesty boundary and the capture plan.
 
+## Branch state: read before filming
+
+Designed against `origin/main` 1bf2233. On 2026-11-01 local `main` (4f40be6)
+had **diverged**: 42 local scan-sweep commits not on the remote, and 147
+remote commits not local. The film commits were cherry-picked onto local
+`main`. Local `main` does **not** yet have what the film's stage uses:
+`cc-desktop --rehearsal` (D3b), the OBS rehearsal adapters (D3a),
+`scripts/night/obs.mjs`, `e2e/night/obs-ws.ts` or the Cutaway shell. A
+trial merge conflicts in `crates/cc-core/src/registry.rs`,
+`crates/cc-core/tests/steward.rs` and the generated
+`packages/contract/src/generated/*-validators.mjs`. **Reconcile `main` with
+`origin/main` first**, then branch the film work from the result.
+
 ## The film in one paragraph
 
 A 3:14 (194000 ms) film with **no narration**. The only audio is the owner's
