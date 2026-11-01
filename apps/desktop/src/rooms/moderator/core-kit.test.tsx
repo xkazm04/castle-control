@@ -1,4 +1,7 @@
 import { componentProbe } from './component-probe.jsx';
+import { Children, isValidElement } from 'react';
+import type { ReactElement, ReactNode } from 'react';
+import { WindowedRows } from '@castle-control/ui';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, expect, test, vi } from 'vitest';
 import { CoreChat, CoreHistory } from './core-reads.jsx';
@@ -64,4 +67,31 @@ test('manual/capture fields use separate exact labels and unique associated cont
 test('the conditional emote field uses the same kit field association', async () => {
   const { port, state } = await seeded(); const h = componentProbe(() => <CoreConsensus state={state} port={port} />);
   h.render(); h.click(copy.one_emote); auditFields(h.render());
+});
+
+function findNode(node: ReactNode, predicate: (element: ReactElement<{ children?: ReactNode }>) => boolean): ReactElement<{ children?: ReactNode }> | undefined {
+  let match: ReactElement<{ children?: ReactNode }> | undefined;
+  Children.forEach(node, child => {
+    if (!isValidElement<{ children?: ReactNode }>(child) || match) return;
+    match = predicate(child) ? child : findNode(child.props.children, predicate);
+  });
+  return match;
+}
+
+test('core rule rows are keyed by rule id so saving a name keeps the row mounted', async () => {
+  const rulePort = createCoreGatehousePort({ mode: 'core', endpoint: 'http://127.0.0.1:3210/', session_token: 'b'.repeat(64) },
+    { rpc: async (_endpoint, _session, method) => method === 'gatehouse.rules.list' ? { rules: fixtureRules.rules } : Promise.reject({ code: 'unavailable', message: 'simulated unavailable read' }) });
+  await rulePort.load();
+  const rule = rulePort.getSnapshot().rules[0];
+  if (!rule) throw new Error('Missing synthetic rule');
+  let rowKey: ((row: typeof rule) => string) | undefined;
+  function Probe() {
+    const tree = ConnectedGatehouse({ port: rulePort, replay: false });
+    const rows = findNode(tree, element => element.type === WindowedRows && Reflect.get(element.props, 'label') === copy.core_rules_label);
+    rowKey = rows ? Reflect.get(rows.props, 'row_key') : undefined;
+    return null;
+  }
+  renderToStaticMarkup(<Probe />);
+  if (!rowKey) throw new Error('Missing rules window');
+  expect(rowKey({ ...rule, name: 'Renamed by the core' })).toBe(rowKey(rule));
 });

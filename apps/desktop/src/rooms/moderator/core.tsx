@@ -72,7 +72,7 @@ export function ConnectedGatehouse({ port, replay, seal_slot }: { port: CoreGate
               <span><b>{state.rules.filter(rule => rule.mode === 'shadow').length}</b>{copy.watching}</span></div>
             <p className="moderator-note">{copy.core_rules_notice}</p>
             <WindowedRows rows={state.rules} label={copy.core_rules_label} row_height={rowHeight * 10}
-              row_key={rule => JSON.stringify(rule)} empty_state={copy.core_rules_empty}>
+              row_key={rule => rule.rule_id} empty_state={copy.core_rules_empty}>
               {rule => <CoreRule rule={rule} busy={state.busy} port={port} />}
             </WindowedRows>
           </section>
