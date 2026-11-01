@@ -19,6 +19,11 @@ test('ClockTime uses the local Prague clock and retains the full ISO metadata', 
   } finally { vi.restoreAllMocks(); }
 });
 
+test('ClockTime shows an unparseable timestamp as its raw text instead of throwing', () => {
+  const ClockTime = Reflect.get(presentation, 'ClockTime') as (props: { at: string }) => React.ReactNode;
+  expect(renderToStaticMarkup(<ClockTime at="not-a-time" />)).toBe('<time dateTime="not-a-time" title="not-a-time">not-a-time</time>');
+});
+
 test('all 4200 simulated decisions have deterministic staggered timestamps', () => {
   expect(new Set(fixtureMessages.map(message => message.at)).size).toBe(4200);
   const times = fixtureMessages.map(message => Date.parse(message.at));
