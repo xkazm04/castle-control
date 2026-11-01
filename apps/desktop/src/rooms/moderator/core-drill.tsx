@@ -9,12 +9,15 @@ import { moderationCopy as copy } from '../../moderation-copy.js';
 export function CoreDrill({ state, port }: { state: CoreGatehouseSnapshot; port: CoreGatehousePort }) {
   const field_id = useId();
   const [importText, setImportText] = useState('');
-  const [recordingName, setRecordingName] = useState<string | undefined>(state.baseline_recording);
+  const [recordingName, setRecordingName] = useState<{ text: string; imported: string | undefined } | undefined>(
+    state.baseline_recording === undefined ? undefined : { text: state.baseline_recording, imported: state.recording?.recording });
   const [bank, setBank] = useState(state.baseline?.bank ?? '');
   const [judge, setJudge] = useState(state.baseline?.judge ?? '');
   const [prompts, setPrompts] = useState(state.baseline?.prompts.join('\n') ?? '');
   const baseline = state.baseline;
-  const recording = recordingName ?? state.recording?.recording ?? '';
+  // A typed name belongs to the recording current when it was typed; a later import replaces it.
+  const typed = recordingName && recordingName.imported === state.recording?.recording ? recordingName.text : undefined;
+  const recording = typed ?? state.recording?.recording ?? '';
   const configuration: DrillConfiguration = { rules: [...state.rules], bank, judge, prompts: prompts.split('\n').filter(text => text.trim()) };
   const ready = !state.busy && !!recording.trim() && !!bank.trim() && !!judge.trim();
   return <section className="moderator-core-drill"><h2>{copy.core_drill_title}</h2>
@@ -29,7 +32,7 @@ export function CoreDrill({ state, port }: { state: CoreGatehouseSnapshot; port:
       <p>{copy.recording_import_note}</p>
       <InkButton size="room" type="button" disabled={state.busy || !importText.trim()} onClick={() => { void port.importRecordingJson(importText); }}>{copy.recording_import}</InkButton>
       {state.recording && <p>{copy.recording_imported(state.recording.message_count, state.recording.source, state.recording.recording)}</p>}
-      <FieldGroup label={copy.recording_name} control_id={`${field_id}-recording`}><input id={`${field_id}-recording`} value={recording} disabled={state.busy} onChange={event => setRecordingName(event.currentTarget.value)} /></FieldGroup>
+      <FieldGroup label={copy.recording_name} control_id={`${field_id}-recording`}><input id={`${field_id}-recording`} value={recording} disabled={state.busy} onChange={event => setRecordingName({ text: event.currentTarget.value, imported: state.recording?.recording })} /></FieldGroup>
     </section>
     <section className="moderator-card"><h3>{copy.configuration_title}</h3>
       <p>{copy.configuration_note(state.rules.length)}</p>
