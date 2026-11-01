@@ -73,6 +73,23 @@ impl RevocationHandler for Eraser {
         .map_err(|_| BridgeError::Unavailable("store purge worker failed"))?
     }
 }
+/// Observe a worker's end so a dead lane is never silent. Only the error code
+/// is logged; chat text never reaches a log line.
+fn supervise(
+    lane: &'static str,
+    task: tokio::task::JoinHandle<Result<(), ErrorEnvelope>>,
+) -> AbortHandle {
+    let abort = task.abort_handle();
+    tokio::spawn(async move {
+        match task.await {
+            Ok(Ok(())) => tracing::info!(lane, "live worker ended"),
+            Ok(Err(error)) => tracing::warn!(lane, code = ?error.code, "live worker stopped"),
+            Err(join) if join.is_cancelled() => {}
+            Err(_) => tracing::warn!(lane, "live worker panicked"),
+        }
+    });
+    abort
+}
 impl NativeServices {
     pub const METHODS: &'static [&'static str] = &[
         "status.get",
@@ -199,12 +216,15 @@ impl NativeServices {
                     Arc::new(crate::live::RulesOnly),
                 )
                 .ok_or_else(internal)?;
-            workers.push(task.abort_handle());
+            workers.push(supervise("chat", task));
         }
         let contribution = if live {
             let module = app.registry.beacons()?;
             let (sender, receiver) = broadcast::channel(256);
-            workers.push(module.start_intake(receiver, events.clone()).abort_handle());
+            workers.push(supervise(
+                "contribution",
+                module.start_intake(receiver, events.clone()),
+            ));
             Some(sender)
         } else {
             None

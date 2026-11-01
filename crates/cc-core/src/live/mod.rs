@@ -67,12 +67,18 @@ impl ShadowPipeline {
                     Ok(chat) => {
                         let at = chat.message.at.clone();
                         if let Err(error) = pipeline
-                            .process(chat, classifier.as_ref(), gap.take().into_iter().collect())
+                            .process(chat, classifier.as_ref(), gap.clone().into_iter().collect())
                             .await
                         {
                             pipeline.events.publish(EventKind::BridgeGap)?;
-                            return Err(error);
+                            // Revocation ends the lane (pinned); any other
+                            // per-item failure is a gap, not the end of intake.
+                            if error.code == ErrorCode::Unauthorized {
+                                return Err(error);
+                            }
+                            tracing::warn!(code = ?error.code, "live chat item skipped");
                         }
+                        gap = None;
                         // Overflow may have happened while the model waited.
                         // Start the gap at the last observed event, not at the
                         // later completion time which could hide that loss.
