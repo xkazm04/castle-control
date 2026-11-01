@@ -8,6 +8,7 @@ import { artPreviewsFor, defaultPreset, presetsFor } from './catalog.js';
 import { DesignScene } from './scene.jsx';
 import { designSession } from './session.js';
 import type { DesignSession, DesignSnapshot } from './session.js';
+import type { DesignRequest } from './proposals.js';
 import './focus.css';
 
 export interface DesignFocusProps {
@@ -21,6 +22,13 @@ export function DesignFocus({ artifact, proposal_id, session = designSession }: 
   const snapshot = useSyncExternalStore(session.subscribe, session.getSnapshot, session.getSnapshot);
   return <DesignFocusView key={artifact} artifact={artifact} {...(proposal_id === undefined ? {} : { proposal_id })}
     session={session} snapshot={snapshot} />;
+}
+
+/** One open draft per artifact: amend the newest pending one when it exists, else draft a new one. */
+function draftOrAmend(session: DesignSession, artifact: ArtifactId, request: DesignRequest) {
+  const open = session.getSnapshot().queue.proposals.filter(item => isPending(item)
+    && item.fields.some(field => field.key === 'artifact' && field.value === artifact)).at(-1);
+  return open ? session.amend(open.id, request) : session.draft(request);
 }
 
 export function DesignFocusView({ artifact, proposal_id, session, snapshot }: {
@@ -47,8 +55,8 @@ export function DesignFocusView({ artifact, proposal_id, session, snapshot }: {
       </DraftFrame></section>
     </div>
     {snapshot.error && <p role="alert">{snapshot.error}</p>}
-    <DesignControls key={artifact} artifact={artifact} on_restyle={preset_id => session.draft({ action: 'restyle', artifact, preset_id })}
-      on_custom={prompt => session.draft({ action: 'custom', artifact, prompt })} />
+    <DesignControls key={artifact} artifact={artifact} on_restyle={preset_id => draftOrAmend(session, artifact, { action: 'restyle', artifact, preset_id })}
+      on_custom={prompt => draftOrAmend(session, artifact, { action: 'custom', artifact, prompt })} />
     <ArtStyleGallery artifact={artifact} />
     {pending && <div className="cc-design-actions">
       <button type="button" onClick={() => session.preview(proposal.id)}>Preview draft</button>
