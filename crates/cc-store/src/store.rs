@@ -1,6 +1,6 @@
 use crate::{
-    ConfigurationItem, DataStore, Error, LedgerKind, Result, STORE_INVENTORY, Storage, StoredItem,
-    Timestamp, TwitchUserId, types::StoredRecord,
+    Clock, ConfigurationItem, DataStore, Error, LedgerKind, Result, STORE_INVENTORY, Storage,
+    StoredItem, Timestamp, TwitchUserId, types::StoredRecord,
 };
 use fs2::FileExt;
 use rusqlite::{Connection, OptionalExtension, params};
@@ -9,7 +9,11 @@ use std::{
     collections::{BTreeMap, BTreeSet},
     fs::{self, File, OpenOptions},
     path::{Path, PathBuf},
+    sync::Arc,
 };
+
+/// How far past the insert clock an item's `at` may sit before it is clamped.
+const FUTURE_SKEW_S: i64 = 300;
 
 pub struct Store {
     pub(crate) conn: Connection,
@@ -18,6 +22,7 @@ pub struct Store {
     pub(crate) ledger_fault: Cell<bool>,
     pub(crate) ledger_cache: RefCell<BTreeMap<LedgerKind, crate::ledger::CachedLedger>>,
     pub(crate) ledger_stats: Cell<crate::ledger::LedgerReadStats>,
+    clock: Arc<dyn Clock>,
     _lock: File,
 }
 
@@ -43,6 +48,7 @@ impl Store {
             ledger_fault: Cell::new(false),
             ledger_cache: RefCell::new(BTreeMap::new()),
             ledger_stats: Cell::new(Default::default()),
+            clock: Arc::new(crate::SystemClock),
         };
         if store.purge_pending()? {
             store.finish_purge()?;
@@ -59,6 +65,24 @@ impl Store {
         }
         store.verify_inventory()?;
         Ok(store)
+    }
+
+    /// Replaces the insert clock (default: the system clock), for tests and hosts.
+    pub fn set_clock(&mut self, clock: Arc<dyn Clock>) {
+        self.clock = clock;
+    }
+
+    /// Retention keys on `at`, so a far-future `at` would outlive the cap. An `at`
+    /// beyond now plus FUTURE_SKEW_S is clamped to that bound (not rejected, so a
+    /// skewed upstream timestamp still stores its item); earlier values are kept.
+    fn bounded_at(&self, at: &Timestamp) -> Result<Timestamp> {
+        let now = chrono::DateTime::parse_from_rfc3339(&self.clock.now().as_rfc3339())
+            .map_err(|_| Error::Invalid("insert clock"))?;
+        let limit = now
+            .checked_add_signed(chrono::TimeDelta::seconds(FUTURE_SKEW_S))
+            .ok_or(Error::Invalid("insert clock"))?;
+        let limit = Timestamp::parse(&limit.to_utc().to_rfc3339())?;
+        Ok(if *at > limit { limit } else { at.clone() })
     }
 
     pub(crate) fn ready(&self) -> Result<()> {
@@ -128,7 +152,9 @@ impl Store {
                 return Err(Error::Invalid("unmapped viewer association"));
             }
         }
-        self.insert_row(store, item.id, &item.at, &item.user_ids, item)
+        let mut item = item.clone();
+        item.at = self.bounded_at(&item.at)?;
+        self.insert_row(store, item.id, &item.at, &item.user_ids, &item)
     }
 
     /// Only explicitly allowlisted stores accept viewer-free configuration.
@@ -140,7 +166,9 @@ impl Store {
     ) -> Result<()> {
         self.ready()?;
         store.require_configuration()?;
-        self.insert_row(store, item.id, &item.at, &[], item)
+        let mut item = item.clone();
+        item.at = self.bounded_at(&item.at)?;
+        self.insert_row(store, item.id, &item.at, &[], &item)
     }
 
     fn insert_row(
