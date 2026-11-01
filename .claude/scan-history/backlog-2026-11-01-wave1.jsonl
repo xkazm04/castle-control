@@ -1,7 +1,7 @@
 {"ctx":"rust-core","title":"Revocation erase stops at first purge error","anchor":"crates/cc-core/src/live/mod.rs:146","size":"S","lane":"C","note":"privacy; run all purge steps, collect errors","status":"open"}
 {"ctx":"rust-core","title":"One process() error kills live chat worker; JoinHandle result dropped","anchor":"crates/cc-core/src/live/mod.rs:69","size":"M","lane":"B","note":"supervise tasks, non-fatal per item","status":"open"}
 {"ctx":"rust-core","title":"Revoke then re-login leaves latches set; app reports connected but dead","anchor":"crates/cc-core/src/integration.rs:278","size":"M","lane":"B","note":"","status":"open"}
-{"ctx":"rust-core","title":"Transient drand failure consumes sealed draw","anchor":"crates/cc-core/src/lots/lifecycle.rs:123","size":"S","lane":"B","note":"fetch before removing pending","status":"open"}
+{"ctx":"rust-core","title":"Transient drand failure consumes sealed draw","anchor":"crates/cc-core/src/lots/lifecycle.rs:123","size":"S","lane":"C","note":"existing test live_beacon.rs:221 pins consumption; owner decision","status":"open"}
 {"ctx":"rust-core","title":"Preview ticker error strands previews","anchor":"crates/cc-core/src/beacons/preview.rs:89","size":"S","lane":"B","note":"","status":"open"}
 {"ctx":"rust-core","title":"Beacons intake re-parses every retained row per contribution","anchor":"crates/cc-core/src/beacons/live.rs:39","size":"M","lane":"B","note":"needs timing instrument","status":"open"}
 {"ctx":"rust-core","title":"Steward seal applies config before audit write, no rollback","anchor":"crates/cc-core/src/steward/mod.rs:126","size":"S","lane":"B","note":"","status":"open"}
@@ -20,8 +20,8 @@
 {"ctx":"rust-types","title":"gatehouse subpath validator list omits 5 methods","anchor":"packages/contract/scripts/codegen.mjs:171","size":"S","lane":"B","note":"","status":"open"}
 {"ctx":"rust-types","title":"Intensity curve ordering only enforced in cc-beacons","anchor":"crates/cc-types/src/beacons.rs:125","size":"S","lane":"C","note":"contract","status":"open"}
 {"ctx":"rust-types","title":"Engine settings key list duplicated across cc-store and cc-types","anchor":"crates/cc-store/src/settings.rs:7","size":"XS","lane":"B","note":"","status":"open"}
-{"ctx":"rust-gatehouse","title":"Recording rejection before screening kills live loop and skips crisis-care rail","anchor":"crates/cc-gatehouse/src/live_capture.rs:191","size":"S","lane":"B","note":"HIGH: care rail must run first","status":"open"}
-{"ctx":"rust-gatehouse","title":"Chart failure after audit commit aborts live intake","anchor":"crates/cc-gatehouse/src/live.rs:8","size":"S","lane":"B","note":"","status":"open"}
+{"ctx":"rust-gatehouse","title":"Recording rejection before screening kills live loop and skips crisis-care rail","anchor":"crates/cc-gatehouse/src/live_capture.rs:191","size":"S","lane":"B","note":"HIGH: care rail must run first","status":"built"}
+{"ctx":"rust-gatehouse","title":"Chart failure after audit commit aborts live intake","anchor":"crates/cc-gatehouse/src/live.rs:8","size":"S","lane":"B","note":"","status":"built"}
 {"ctx":"rust-gatehouse","title":"End intent for expired lease can never be confirmed","anchor":"crates/cc-gatehouse/src/gate/governor.rs:24","size":"S","lane":"B","note":"","status":"open"}
 {"ctx":"rust-gatehouse","title":"Classifier 2s ceiling is per 50-message chunk","anchor":"crates/cc-gatehouse/src/lane.rs:188","size":"S","lane":"B","note":"","status":"open"}
 {"ctx":"rust-gatehouse","title":"Rule regexes recompiled per message","anchor":"crates/cc-gatehouse/src/lane.rs:157","size":"S","lane":"B","note":"needs compile counter","status":"open"}
@@ -29,12 +29,12 @@
 {"ctx":"rust-gatehouse","title":"Chart sheds newest messages at capacity","anchor":"crates/cc-gatehouse/src/herald.rs:109","size":"M","lane":"C","note":"documented design","status":"open"}
 {"ctx":"rust-gatehouse","title":"Instrument fingerprint source list hand-maintained","anchor":"crates/cc-gatehouse/src/instrument.rs:111","size":"S","lane":"B","note":"","status":"open"}
 {"ctx":"rust-gatehouse","title":"lease_end Conflict after dispatch unaudited","anchor":"crates/cc-gatehouse/src/gate/leases.rs:54","size":"XS","lane":"B","note":"","status":"open"}
-{"ctx":"rust-gatehouse","title":"Orphan recording of unscreened text on cancel","anchor":"crates/cc-gatehouse/src/live_capture.rs:191","size":"XS","lane":"B","note":"privacy","status":"open"}
-{"ctx":"rust-twitch","title":"Transient refresh/validate errors permanently kill the bridge","anchor":"crates/cc-twitch/src/vault/mod.rs:172","size":"S","lane":"B","note":"HIGH","status":"open"}
-{"ctx":"rust-twitch","title":"Unparseable moderation frame tears down connection; no shared_chat_* actions","anchor":"crates/cc-twitch/src/wire.rs:101","size":"M","lane":"B","note":"","status":"open"}
-{"ctx":"rust-twitch","title":"Any EventSub revocation treated as login expired","anchor":"crates/cc-twitch/src/eventsub.rs:313","size":"S","lane":"B","note":"","status":"open"}
+{"ctx":"rust-gatehouse","title":"Orphan recording of unscreened text on cancel","anchor":"crates/cc-gatehouse/src/live_capture.rs:191","size":"XS","lane":"B","note":"privacy","status":"built"}
+{"ctx":"rust-twitch","title":"Transient refresh/validate errors permanently kill the bridge","anchor":"crates/cc-twitch/src/vault/mod.rs:172","size":"S","lane":"B","note":"HIGH","status":"built"}
+{"ctx":"rust-twitch","title":"Unparseable moderation frame tears down connection; no shared_chat_* actions","anchor":"crates/cc-twitch/src/wire.rs:101","size":"M","lane":"B","note":"","status":"built"}
+{"ctx":"rust-twitch","title":"Any EventSub revocation treated as login expired","anchor":"crates/cc-twitch/src/eventsub.rs:313","size":"S","lane":"B","note":"","status":"built"}
 {"ctx":"rust-twitch","title":"Permanently unsubscribable topic stalls whole group silently","anchor":"crates/cc-twitch/src/eventsub.rs:180","size":"M","lane":"B","note":"","status":"open"}
-{"ctx":"rust-twitch","title":"poll_device aborts on non-JSON error; failed keyring write leaves half grant","anchor":"crates/cc-twitch/src/vault/oauth.rs:122","size":"S","lane":"B","note":"","status":"open"}
+{"ctx":"rust-twitch","title":"poll_device aborts on non-JSON error; failed keyring write leaves half grant","anchor":"crates/cc-twitch/src/vault/oauth.rs:122","size":"S","lane":"B","note":"","status":"built"}
 {"ctx":"rust-twitch","title":"Debug on chat-carrying types echoes chat text","anchor":"crates/cc-twitch/src/types.rs:75","size":"XS","lane":"B","note":"privacy","status":"open"}
 {"ctx":"rust-twitch","title":"Scope shortfall or 400 on refresh triggers purge_all","anchor":"crates/cc-twitch/src/vault/oauth.rs:218","size":"M","lane":"C","note":"destructive purge","status":"open"}
-{"ctx":"rust-twitch","title":"keepalive_timeout_seconds uncapped, u32 cast overflow","anchor":"crates/cc-twitch/src/wire.rs:87","size":"XS","lane":"B","note":"clamp(1,600)","status":"open"}
+{"ctx":"rust-twitch","title":"keepalive_timeout_seconds uncapped, u32 cast overflow","anchor":"crates/cc-twitch/src/wire.rs:87","size":"XS","lane":"B","note":"clamp(1,600)","status":"built"}
