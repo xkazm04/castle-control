@@ -53,8 +53,10 @@ export function WatchingRuleEditor({ rules, queue, bench, result, busy = false, 
           else proposeCommand(queue, { kind: 'rule', rule: result.rule }, `New watching rule: ${result.rule.name}`);
           setNotice({ text: copy.rule_proposed, error: false });
         }
-      } catch {
-        if (revision === edit.current) setNotice({ text: copy.rule_invalid, error: true });
+      } catch (error) {
+        // Only the local proposal path throws our own validator messages; a save error stays generic.
+        const text = !on_save && error instanceof Error && error.message ? error.message : copy.rule_invalid;
+        if (revision === edit.current) setNotice({ text, error: true });
       } finally { pending.current = false; }
     }}>
       <FieldGroup label={copy.watching_name} control_id="watching-name"><input id="watching-name" value={input.name} required maxLength={120}
