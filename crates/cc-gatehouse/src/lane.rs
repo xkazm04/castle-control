@@ -185,19 +185,30 @@ impl Gatehouse {
                 pending.push((index, msg));
             }
         }
+        // One two-second deadline covers the whole batch; once it passes, later
+        // chunks are unavailable without another classifier call.
+        let deadline = tokio::time::Instant::now() + Duration::from_secs(2);
+        let mut expired = false;
         for chunk in pending.chunks(classifier::MAX_BATCH) {
             let batch: Vec<_> = chunk.iter().map(|(_, msg)| msg.clone()).collect();
             let prompt = classifier::prompt(&plain, &batch);
             let model_start = Instant::now();
-            let reply = tokio::time::timeout(
-                Duration::from_secs(2),
-                classifier.classify(classifier::SYSTEM, &prompt),
-            )
-            .await;
-            let parsed = match reply {
-                Ok(Ok(text)) => Ok(classifier::parse(&text, &plain, batch.len())),
-                Ok(Err(error)) => Err(error),
-                Err(_) => Err(ClassifierError::Unavailable),
+            let parsed = if expired {
+                Err(ClassifierError::Unavailable)
+            } else {
+                let reply = tokio::time::timeout_at(
+                    deadline,
+                    classifier.classify(classifier::SYSTEM, &prompt),
+                )
+                .await;
+                match reply {
+                    Ok(Ok(text)) => Ok(classifier::parse(&text, &plain, batch.len())),
+                    Ok(Err(error)) => Err(error),
+                    Err(_) => {
+                        expired = true;
+                        Err(ClassifierError::Unavailable)
+                    }
+                }
             };
             let model_elapsed = model_start.elapsed();
             for (i, (index, msg)) in chunk.iter().enumerate() {
