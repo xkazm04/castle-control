@@ -246,3 +246,29 @@ fn assert_invalid_setting(key: &str, value: Value) {
         "errors must identify only the key, never echo the refused input"
     );
 }
+
+#[test]
+fn live_endpoint_refuses_non_canonical_numeric_hosts() {
+    for host in [
+        "0x7f.0.0.1",
+        "0X7F.0.0.1",
+        "0x7f000001",
+        "127.0.0.0x1",
+        "0x7f.1",
+        "0177.0.0.1",
+        "2130706433",
+        "127.1",
+        "0x7f.0.0.1.",
+    ] {
+        assert_invalid_setting(
+            "engine.live_endpoint",
+            json!(format!("http://{host}:11434/v1")),
+        );
+    }
+    // Names that merely contain hex-looking text, and canonical quads, stay valid.
+    for host in ["127.0.0.1", "0xfoo.example.test", "x0x7f.test", "a0x7f"] {
+        let url = format!("http://{host}/v1");
+        let parsed = parse_engine_settings(&settings(json!({"engine.live_endpoint":url})));
+        assert_eq!(parsed.unwrap().live_endpoint, url);
+    }
+}

@@ -139,7 +139,20 @@ fn http_endpoint(url: &str) -> bool {
         if host.is_empty() || host.len() > 253 {
             return false;
         }
-        if host.bytes().all(|b| b.is_ascii_digit() || b == b'.') {
+        // A numeric-looking last label is an IPv4 spelling (decimal, octal or
+        // hex); only the canonical dotted quad is admitted.
+        let last = host
+            .strip_suffix('.')
+            .unwrap_or(host)
+            .rsplit('.')
+            .next()
+            .unwrap_or_default();
+        let numeric_last = last.bytes().all(|b| b.is_ascii_digit())
+            || last
+                .strip_prefix("0x")
+                .or_else(|| last.strip_prefix("0X"))
+                .is_some_and(|hex| hex.bytes().all(|b| b.is_ascii_hexdigit()));
+        if host.bytes().all(|b| b.is_ascii_digit() || b == b'.') || numeric_last {
             if host.parse::<std::net::Ipv4Addr>().is_err() {
                 return false;
             }
