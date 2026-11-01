@@ -1,13 +1,21 @@
 /// Public launch settings only. Credentials have no argument or file door here.
-#[derive(Default)]
+#[derive(Clone, Default)]
 pub struct Options {
     pub native: Option<NativeOptions>,
+    pub rehearsal: bool,
+    /// Internal relaunch marker: allow the exiting process to release stores/ports.
+    pub relaunch: bool,
     pub login: bool,
     /// Opt into the native Steward using persisted engine settings, without
     /// keychain access. Offline launches retain the unconfigured Steward.
     pub steward_live: bool,
 }
 
+#[cfg(test)]
+#[path = "options_rehearsal_tests.rs"]
+mod rehearsal_tests;
+
+#[derive(Clone)]
 pub struct NativeOptions {
     pub client_id: String,
     pub test_channel: String,
@@ -16,12 +24,26 @@ pub struct NativeOptions {
     pub obs_password_label: String,
 }
 
+impl Default for NativeOptions {
+    fn default() -> Self {
+        Self {
+            client_id: String::new(),
+            test_channel: String::new(),
+            obs_port: 4455,
+            overlay_port: 0,
+            obs_password_label: "streamer".into(),
+        }
+    }
+}
+
 impl Options {
     pub fn parse(args: impl IntoIterator<Item = String>) -> Result<Self, &'static str> {
         let mut args = args.into_iter();
         let mut values = std::collections::BTreeMap::new();
         let mut login = false;
         let mut steward_live = false;
+        let mut rehearsal = false;
+        let mut relaunch = false;
         while let Some(key) = args.next() {
             if key == "--login" && !login {
                 login = true;
@@ -29,6 +51,14 @@ impl Options {
             }
             if key == "--steward-live" && !steward_live {
                 steward_live = true;
+                continue;
+            }
+            if key == "--rehearsal" && !rehearsal {
+                rehearsal = true;
+                continue;
+            }
+            if key == "--relaunch" && !relaunch {
+                relaunch = true;
                 continue;
             }
             if ![
@@ -47,26 +77,41 @@ impl Options {
                 return Err("invalid or repeated desktop option");
             }
         }
-        if values.is_empty() && !login {
+        if rehearsal && (login || steward_live) {
+            return Err("rehearsal refuses login and live Steward options");
+        }
+        if values.is_empty() && !login && !rehearsal {
             return Ok(Self {
                 steward_live,
+                relaunch,
                 ..Self::default()
             });
         }
-        let client_id = values
-            .remove("--client-id")
-            .filter(|v| {
-                (1..=128).contains(&v.len()) && v.bytes().all(|b| b.is_ascii_alphanumeric())
-            })
-            .ok_or("a public --client-id is required with native options")?;
-        let test_channel = values
-            .remove("--test-channel")
-            .filter(|v| {
-                (1..=25).contains(&v.len())
-                    && v.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'_')
-            })
-            .ok_or("a valid owned --test-channel login is required")?
-            .to_ascii_lowercase();
+        let twitch_options = !rehearsal
+            || values.contains_key("--client-id")
+            || values.contains_key("--test-channel");
+        let client_id = if !twitch_options {
+            String::new()
+        } else {
+            values
+                .remove("--client-id")
+                .filter(|v| {
+                    (1..=128).contains(&v.len()) && v.bytes().all(|b| b.is_ascii_alphanumeric())
+                })
+                .ok_or("a public --client-id is required with native options")?
+        };
+        let test_channel = if !twitch_options {
+            String::new()
+        } else {
+            values
+                .remove("--test-channel")
+                .filter(|v| {
+                    (1..=25).contains(&v.len())
+                        && v.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'_')
+                })
+                .ok_or("a valid owned --test-channel login is required")?
+                .to_ascii_lowercase()
+        };
         let obs_port = values
             .remove("--obs-port")
             .unwrap_or_else(|| "4455".into())
@@ -99,6 +144,8 @@ impl Options {
             }),
             login,
             steward_live,
+            rehearsal,
+            relaunch,
         })
     }
 }

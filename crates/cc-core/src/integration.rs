@@ -4,6 +4,7 @@ use crate::{
 pub(crate) mod intake;
 mod obs;
 mod obs_probe;
+mod rehearsal;
 mod render;
 use cc_obs::{Config as ObsConfig, Overlay};
 use cc_store::Store;
@@ -34,6 +35,7 @@ pub struct NativeConfig {
 pub struct NativeServices {
     pub(crate) art_catalog: Arc<crate::beacons::ArtCatalog>,
     pub bridge: Arc<TwitchBridge>,
+    twitch_inert: bool,
     pub store: Arc<Mutex<Store>>,
     obs: AsyncMutex<obs::State>,
     obs_root: OnceLock<std::path::PathBuf>,
@@ -115,6 +117,7 @@ impl NativeServices {
             .collect();
         let store = Arc::new(Mutex::new(store));
         let pipeline = Arc::new(OnceLock::new());
+        let twitch_inert = config.twitch.client_id.is_empty();
         let bridge = TwitchBridge::new(
             config.twitch,
             Arc::new(Eraser(store.clone(), pipeline.clone())),
@@ -127,6 +130,7 @@ impl NativeServices {
         Ok(Arc::new(Self {
             art_catalog: Arc::new(crate::beacons::ArtCatalog::default()),
             bridge,
+            twitch_inert,
             store,
             overlay,
             render,
@@ -153,7 +157,7 @@ impl NativeServices {
     }
     /// Wires the real modules and bridge pump into the same event hub used by /events.
     pub fn app(self: &Arc<Self>, capacity: usize) -> Result<Arc<AppState>, ErrorEnvelope> {
-        self.attach(capacity, None, false)
+        self.attach(capacity, None, false, false)
     }
     /// Production host supplies its persistent data directory explicitly. The
     /// legacy app() entry point retains recorded-fixture/spike behavior.
@@ -172,13 +176,14 @@ impl NativeServices {
         root: &std::path::Path,
         steward_live: bool,
     ) -> Result<Arc<AppState>, ErrorEnvelope> {
-        self.attach(capacity, Some(root), steward_live)
+        self.attach(capacity, Some(root), steward_live, false)
     }
     fn attach(
         self: &Arc<Self>,
         capacity: usize,
         root: Option<&std::path::Path>,
         steward_live: bool,
+        rehearsal: bool,
     ) -> Result<Arc<AppState>, ErrorEnvelope> {
         let mut workers = self.workers.lock().map_err(|_| internal())?;
         if !workers.is_empty() {
@@ -202,6 +207,11 @@ impl NativeServices {
                 }
             }
             None => Registry::with_native(self.clone()),
+        };
+        let registry = if rehearsal {
+            registry.with_rehearsal(self, events.clone())?
+        } else {
+            registry
         };
         let pipeline = registry.shadow_pipeline()?;
         let live = pipeline.is_some();

@@ -19,7 +19,31 @@ pub struct CoreHost {
 
 impl CoreHost {
     pub async fn start(options: Options, data_dir: &Path) -> Result<Self, &'static str> {
-        let services = if let Some(native) = options.native {
+        let attempts = if options.relaunch { 50 } else { 1 };
+        for attempt in 0..attempts {
+            match Self::start_once(options.clone(), data_dir).await {
+                Ok(host) => return Ok(host),
+                Err(error) if attempt + 1 == attempts => return Err(error),
+                Err(_) => tokio::time::sleep(std::time::Duration::from_millis(100)).await,
+            }
+        }
+        Err("desktop core relaunch failed")
+    }
+
+    async fn start_once(options: Options, data_dir: &Path) -> Result<Self, &'static str> {
+        // Rehearsal never reads the owner's persisted rules, recordings, engine
+        // configuration or live-beacon opt-in. OBS ownership also stays separate.
+        let rehearsal_root = data_dir.join("rehearsal");
+        let data_dir = if options.rehearsal {
+            rehearsal_root.as_path()
+        } else {
+            data_dir
+        };
+        let services = if let Some(native) = options.native.or_else(|| {
+            options
+                .rehearsal
+                .then(crate::options::NativeOptions::default)
+        }) {
             // cc-store's inventory owns its directory exclusively. Module
             // stores are siblings under data_dir, never children of this store.
             let store = cc_store::Store::open(data_dir.join("native"))
@@ -27,10 +51,14 @@ impl CoreHost {
             Some(
                 NativeServices::new(
                     NativeConfig {
-                        twitch: cc_twitch::TwitchConfig {
-                            client_id: native.client_id,
-                            channel: native.test_channel,
-                            modules: vec!["gatehouse".into(), "beacons".into()],
+                        twitch: if options.rehearsal {
+                            cc_twitch::TwitchConfig::default()
+                        } else {
+                            cc_twitch::TwitchConfig {
+                                client_id: native.client_id,
+                                channel: native.test_channel,
+                                modules: vec!["gatehouse".into(), "beacons".into()],
+                            }
                         },
                         obs: cc_obs::Config {
                             port: native.obs_port,
@@ -49,7 +77,11 @@ impl CoreHost {
         };
         let state = match &services {
             Some(services) => {
-                services.app_with_steward(EVENT_CAPACITY, data_dir, options.steward_live)
+                if options.rehearsal {
+                    services.app_rehearsal(EVENT_CAPACITY, data_dir)
+                } else {
+                    services.app_with_steward(EVENT_CAPACITY, data_dir, options.steward_live)
+                }
             }
             None => AppState::new(Registry::with_status(), EVENT_CAPACITY),
         }
@@ -57,15 +89,18 @@ impl CoreHost {
         let (address, server) = bind(state.clone(), ([127, 0, 0, 1], 0).into())
             .await
             .map_err(|_| "desktop core bind failed")?;
-        let login = services.as_ref().filter(|_| options.login).map(|services| {
-            let services = services.clone();
-            tokio::spawn(async move {
-                if services.start_login().await.is_err() {
-                    // Fixed diagnostic only: never a challenge, token or upstream body.
-                    tracing::error!("desktop Twitch login unavailable");
-                }
-            })
-        });
+        let login = services
+            .as_ref()
+            .filter(|_| options.login && !options.rehearsal)
+            .map(|services| {
+                let services = services.clone();
+                tokio::spawn(async move {
+                    if services.start_login().await.is_err() {
+                        // Fixed diagnostic only: never a challenge, token or upstream body.
+                        tracing::error!("desktop Twitch login unavailable");
+                    }
+                })
+            });
         tracing::info!("desktop core ready");
         Ok(Self {
             state,
@@ -73,7 +108,7 @@ impl CoreHost {
             server: tokio::spawn(server),
             _services: services,
             login,
-            steward_live: options.steward_live,
+            steward_live: options.steward_live && !options.rehearsal,
         })
     }
 
@@ -96,6 +131,12 @@ impl Drop for CoreHost {
     }
 }
 
+#[cfg(test)]
+#[path = "host_rehearsal_tests.rs"]
+mod host_rehearsal_tests;
+#[cfg(test)]
+#[path = "host_test_root.rs"]
+mod host_test_root;
 #[cfg(test)]
 #[path = "host_tests.rs"]
 mod tests;

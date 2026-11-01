@@ -39,6 +39,32 @@ impl State {
 }
 
 impl NativeServices {
+    /// Read the peer, never infer scene existence from our ownership ledger.
+    pub(crate) async fn rehearsal_obs(&self) -> (cc_types::ObsStatus, Option<String>) {
+        let scene = crate::rehearsal::SCENE_NAME;
+        let mut state = self.obs.lock().await;
+        let result = match state.connection.client().await {
+            Ok(client) => client.get_scene_list().await,
+            Err(error) => Err(error),
+        };
+        let connected = result.is_ok();
+        let name = match result {
+            Ok(list) => list
+                .scenes
+                .into_iter()
+                .find(|s| s.scene_name == scene)
+                .map(|s| s.scene_name),
+            Err(_) => {
+                state.connection.disconnect();
+                None
+            }
+        };
+        if self.observe_obs(connected).is_err() {
+            tracing::error!("rehearsal OBS status invalidation unavailable");
+        }
+        (cc_types::ObsStatus { connected }, name)
+    }
+
     pub async fn obs_status(&self) -> Result<bool, ErrorEnvelope> {
         let mut state = self.obs.lock().await;
         let result = match state.connection.client().await {

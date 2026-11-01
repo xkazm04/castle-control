@@ -25,6 +25,7 @@ pub trait Module: Send + Sync {
 pub struct Registry {
     handlers: BTreeMap<&'static str, Arc<dyn Module>>,
     offline: Option<Arc<OfflineModules>>,
+    rehearsal: Option<Arc<crate::rehearsal::RehearsalModule>>,
     pub(crate) configuration: Arc<tokio::sync::Mutex<()>>,
 }
 
@@ -68,10 +69,25 @@ impl Registry {
         request: &'a RpcRequest,
     ) -> BoxFuture<'a, Result<Value, ErrorEnvelope>> {
         Box::pin(async move {
+            if self.rehearsal.is_some()
+                && matches!(
+                    request,
+                    RpcRequest::AuthTwitchStart(_) | RpcRequest::AuthTwitchRevoke(_)
+                )
+            {
+                return Err(ErrorEnvelope::new(
+                    ErrorCode::BlockedByPolicy,
+                    "dress rehearsal has no Twitch login",
+                ));
+            }
             let module = self.handlers.get(request.method()).ok_or_else(|| {
                 ErrorEnvelope::new(ErrorCode::Unavailable, "method is not registered yet")
             })?;
-            request.validate_result(module.call_in(request, self).await?)
+            let mut value = module.call_in(request, self).await?;
+            if self.rehearsal.is_some() && matches!(request, RpcRequest::StatusGet(_)) {
+                value["simulated"] = true.into();
+            }
+            request.validate_result(value)
         })
     }
 
@@ -144,6 +160,27 @@ impl Registry {
                 ErrorEnvelope::new(ErrorCode::Unavailable, "beacons module unavailable")
             })?
             .beacons()
+    }
+
+    pub(crate) fn with_rehearsal(
+        mut self,
+        services: &Arc<NativeServices>,
+        events: Arc<crate::EventHub>,
+    ) -> Result<Self, ErrorEnvelope> {
+        let module = Arc::new(crate::rehearsal::RehearsalModule::new(
+            &self,
+            Arc::downgrade(services),
+            events,
+        )?);
+        self.register(module.clone())?;
+        self.rehearsal = Some(module);
+        Ok(self)
+    }
+
+    pub(crate) fn stop_rehearsal(&self) {
+        if let Some(module) = &self.rehearsal {
+            module.shutdown();
+        }
     }
 
     /// Caller-owned simulated state, isolated from native credentials and chat.
