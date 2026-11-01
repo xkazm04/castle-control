@@ -1,5 +1,5 @@
 import type { PreviewVisual } from '../../beacons-model.js';
-import { useId, useMemo, useSyncExternalStore } from 'react';
+import { useId, useMemo, useState, useSyncExternalStore } from 'react';
 import type { KeyboardEvent, PointerEvent } from 'react';
 import type { Visual } from '@castle-control/contract';
 import type { CoreBeaconsPort } from '../../beacons-core.js';
@@ -62,6 +62,16 @@ export function CurveControls({ editor, state, busy, local = false }: {
   editor: CurveEditor; state: ReturnType<CurveEditor['getSnapshot']>; busy: boolean; local?: boolean;
 }) {
   const decay_id = useId();
+  // Typed text is kept per input so a field can be cleared and retyped; it yields to any other change of the value.
+  const [typed, setTyped] = useState<Readonly<Record<string, { text: string; source: number }>>>({});
+  const numberField = (name: string, value: number, show: (value: number) => string, commit: (text: string) => void) => ({
+    value: typed[name]?.source === value ? typed[name].text : show(value),
+    onChange: (event: { currentTarget: { value: string } }) => {
+      const text = event.currentTarget.value;
+      setTyped(before => ({ ...before, [name]: { text, source: value } }));
+      if (text.trim()) commit(text);
+    },
+  });
   const { draft } = state;
   const disabled = busy || state.phase === 'saving';
   const maximum = Math.max(1, ...state.confirmed.ranges.map(point => point.total), ...draft.ranges.map(point => point.total));
@@ -96,11 +106,11 @@ export function CurveControls({ editor, state, busy, local = false }: {
     {draft.ranges.map((point, index) => <fieldset key={index} disabled={disabled}>
       <legend>Control point {index + 1}</legend>
       <label>Contribution total<input name={`total-${index}`} type="number" min={draft.ranges[index - 1] ? (draft.ranges[index - 1]?.total ?? 0) + 1 : 0}
-        max={draft.ranges[index + 1] ? (draft.ranges[index + 1]?.total ?? 0) - 1 : 4294967295} step="1" required value={point.total}
-        onChange={event => editor.move(index, event.currentTarget.valueAsNumber, point.intensity)} /></label>
+        max={draft.ranges[index + 1] ? (draft.ranges[index + 1]?.total ?? 0) - 1 : 4294967295} step="1" required
+        {...numberField(`total-${index}`, point.total, String, text => editor.move(index, Number(text), point.intensity))} /></label>
       <label>Intensity (%)<input name={`intensity-${index}`} type="number" min="0" max="100" step="any" required
-        value={point.intensity * 100}
-        onChange={event => editor.move(index, point.total, event.currentTarget.valueAsNumber / 100)} /></label>
+        {...numberField(`intensity-${index}`, point.intensity, value => String(Math.round(value * 1e8) / 1e6),
+          text => editor.move(index, point.total, Number(text) / 100))} /></label>
     </fieldset>)}
     <div className="visuals-core-field"><label htmlFor={decay_id}>Decay</label>
     <select id={decay_id} name="decay" value={draft.decay.kind} disabled={disabled}
