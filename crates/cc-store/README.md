@@ -199,7 +199,7 @@ land at v2 in one transaction; existing v1 data and ledgers are preserved.
 `set_engine_settings(&Settings)` atomically replaces the whole engine subset.
 Omitted keys are reset to the sole parser's defaults; an empty map removes all
 overrides. Both APIs use `cc_types::parse_engine_settings` for value validation;
-`ENGINE_SETTING_KEYS` is the closed nine-key inventory from WP 1.4. Unknown keys
+`cc_types::ENGINE_SETTING_KEYS` is the closed nine-key inventory from WP 1.4. Unknown keys
 (including `retention_s`), malformed values and failed writes change nothing.
 Paths and endpoints are never logged. These APIs neither spawn nor contact engines.
 
