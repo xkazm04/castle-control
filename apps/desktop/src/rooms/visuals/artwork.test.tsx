@@ -174,13 +174,9 @@ test('hero flame retains the blaze transform at partial intensity', () => {
 });
 
 // C replaces the former standalone aspect-sized hero with three fixed-height plate viewports.
-test('C hero fits the token-sized plate without cropping any painted geometry', () => {
-  expect(style).toMatch(/\.visuals-plate-art\s*\{[^}]*height: calc\(var\(--space-56\) \* 2\)/);
-  const heroRule = style.match(/\.visuals-room-art-hero svg\s*\{([^}]+)\}/)?.[1];
-  expect(heroRule).toContain('width: 100%');
-  expect(heroRule).toContain('height: 100%');
-  expect(heroRule).toContain('max-width: 100%');
-  expect(heroRule).toContain('max-height: 100%');
+test('the picker screen keeps one stream ratio and never crops by clipping', () => {
+  // The picker cards draw each beacon on a small stream screen (stage.tsx); the SVG artwork stays for replay and appearance.
+  expect(style).toMatch(/\.visuals-thumb\s*\{[^}]*aspect-ratio: 5 \/ 2/);
   expect(style).not.toMatch(/object-fit:\s*cover|overflow:\s*clip/);
 });
 
