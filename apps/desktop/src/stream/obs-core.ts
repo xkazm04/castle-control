@@ -1,11 +1,11 @@
-import { beaconsSourceUrl, beaconsVisualList, invokeMethod, obsSourceCreate, obsStatusGet,
+import { beaconsSourceUrl, beaconsVisualList, invokeMethod, obsSourceCreate, obsStatusGet, tiltyardSourceUrl,
   parseMethodParams, parseMethodResult } from '@castle-control/contract';
 import type { MethodContract, ObsSourceParams, RpcMethods, VisualId } from '@castle-control/contract';
 import { validateCoreLaunch } from '../core-source.js';
 import { gatehouseSourceUrl } from '@castle-control/contract/gatehouse';
 import type { CoreLaunch } from '../core-source.js';
 
-type ObsMethod = 'obs.status.get' | 'obs.source.create' | 'beacons.visual.list' | 'beacons.source.url' | 'gatehouse.source.url';
+type ObsMethod = 'obs.status.get' | 'obs.source.create' | 'beacons.visual.list' | 'beacons.source.url' | 'gatehouse.source.url' | 'tiltyard.source.url';
 export type ObsNetwork = {
   rpc: <M extends ObsMethod>(endpoint: string, session: string, method: M, params: RpcMethods[M]['params']) => Promise<unknown>;
 };
@@ -25,6 +25,7 @@ export function createObsPort(launch: CoreLaunch, transport?: ObsNetwork) {
     visuals: () => call(beaconsVisualList, {}),
     source: (visual_id: VisualId) => call(beaconsSourceUrl, { visual_id }),
     voteBarSource: () => call(gatehouseSourceUrl, {}),
+    duelSource: () => call(tiltyardSourceUrl, {}),
     add: (params: ObsSourceParams) => call(obsSourceCreate, params),
   };
 }

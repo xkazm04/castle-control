@@ -14,6 +14,36 @@ const launch = { mode: 'core', endpoint: 'http://127.0.0.1:4820', session_token:
 const visual = { ...fixtureVisuals[0]!, visual_id: 'hearth', name: 'Hearth' };
 const url = 'http://localhost:4821/beacons/hearth';
 
+test('Duel is a core-only OBS output: resolve its owned URL, copy, then hold-driven add at the selected size', async () => {
+  const duel_url = 'http://localhost:4821/tiltyard/current';
+  const rpc = vi.fn<ObsNetwork['rpc']>(async (_endpoint, _session, method) => {
+    if (method === 'obs.status.get') return { connected: true };
+    if (method === 'beacons.visual.list') return { visuals: [] };
+    if (method === 'tiltyard.source.url') return { url: duel_url };
+    return { source_name: 'Castle Control · Duel' };
+  });
+  const model = createStreamSetup({ mode: 'core', launch, transport: { rpc } });
+  await model.refresh();
+  const row = model.getSnapshot().rows.find(row => row.duel);
+  if (!row) throw new Error('Missing core Duel row');
+  expect(renderToStaticMarkup(StreamSetupRow({ row, state: model.getSnapshot(), model }))).toContain('Copy browser-source URL');
+  const write = vi.fn(async () => undefined);
+  rpc.mockClear(); await model.copy(row.id, write);
+  expect(rpc.mock.calls.map(call => call.slice(2))).toEqual([['tiltyard.source.url', {}]]);
+  expect(write).toHaveBeenCalledWith(duel_url);
+  model.setPreset('720p'); model.setScene('Scene'); rpc.mockClear();
+  await model.add(row.id);
+  expect(rpc.mock.calls.map(call => call.slice(2))).toEqual([
+    ['tiltyard.source.url', {}], ['obs.source.create', { scene_name: 'Scene', source_name: 'Castle Control · Duel',
+      url: duel_url, width: 1280, height: 720 }],
+  ]);
+  expect(model.getSnapshot().rows.find(item => item.duel)?.phase).toBe('added');
+  expect(createStreamSetup({ mode: 'fixture' }).getSnapshot().rows.some(row => row.duel)).toBe(false);
+  rpc.mockRejectedValue({ code: 'unavailable', message: 'The duel overlay host is unavailable.' });
+  await model.copy(row.id, write);
+  expect(model.getSnapshot().rows.find(item => item.duel)?.notice).toBe('The duel overlay host is unavailable.');
+});
+
 test('OBS setup offers vote-bar copy only in core mode, without chat or viewer identity', async () => {
   const rpc = vi.fn<ObsNetwork['rpc']>(async () => ({ url: 'http://localhost:4821/gatehouse/current' }));
   const model = createStreamSetup({ mode: 'core', launch, transport: { rpc } });
@@ -203,7 +233,7 @@ test('output inventory at ten times the fixture volume is virtualized, including
   transport.rpc.mockImplementation(async (_endpoint, _session, method) => method === 'obs.status.get' ? { connected: true } : { visuals });
   const { model } = await core(transport);
   const html = renderToStaticMarkup(createElement(StreamSetupContent, { model, state: model.getSnapshot(), on_back: () => undefined }));
-  expect(html).toContain('aria-rowcount="32"');
-  expect(html.match(/role="row"/g)?.length).toBeLessThan(32);
+  expect(html).toContain('aria-rowcount="33"');
+  expect(html.match(/role="row"/g)?.length).toBeLessThan(33);
   expect(model.getSnapshot().rows.at(-1)?.href).toBe('#/chamber/lottery');
 });

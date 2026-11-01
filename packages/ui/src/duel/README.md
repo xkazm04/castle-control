@@ -295,3 +295,16 @@ verdict unsubscribes; mode/cancel/undo/reset/unmount clean up; mixed and future
 arrivals remain indexed; new matches never show the preceding tally; delivery
 re-arming preserves 550ms of elapsed time rather than restarting the clock.
 
+## Core-owned Chat (D5c)
+
+`Tiltyard.chat_control` supplies Chat's phase, rendered content, provenance flag
+and human-event callback. In this mode Chat has no local reducer transitions,
+ballot ingestion or clock; Showdown and Ladder retain their existing sessions.
+`CoreChat` is a presentation-only view of `TiltyardSession`: it shows the core's
+recorded closed pair, counts, verdict and champion, and emits wire actions.
+Its display calculations never decide a winner. Fixture consumers omit this
+prop and retain the original TS engine and ballot-source behavior.
+
+The D5c source tests are in `core-chat.test.tsx`. Round-three verification via
+the Node Vitest API passed the whole UI suite: 492 tests in 38 files, with no
+failures, skips or unhandled errors. Build and browser QA remain Director-run.

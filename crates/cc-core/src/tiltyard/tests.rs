@@ -1,6 +1,7 @@
 //! Generated SIMULATED parity fixtures; no real viewers or network.
 mod handlers;
 mod ledger;
+mod night;
 mod sample;
 use super::*;
 use serde_json::{Value, json};

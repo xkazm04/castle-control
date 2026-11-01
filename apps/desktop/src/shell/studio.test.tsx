@@ -1,6 +1,6 @@
 import { renderToReadableStream } from 'react-dom/server';
 import { expect, test, vi } from 'vitest';
-import { coreGatehouseConnection, createDesktopClient } from '../client.js';
+import { coreTiltyardConnection, createDesktopClient } from '../client.js';
 import type { Network } from '../core-source.js';
 import type { GatehouseNetwork } from '../gatehouse-core.js';
 import type { Snapshot } from '../model.js';
@@ -19,11 +19,11 @@ test('the shell routes a core studio connection through the lazy Tiltyard stage'
   const client = createDesktopClient({ mode: 'core', endpoint: 'http://127.0.0.1:3210/', session_token: 'a'.repeat(64) },
     network, undefined, gatehouse);
   const snapshot = client.getSnapshot();
-  expect(snapshot.mode).toBe('core'); expect(coreGatehouseConnection(snapshot)).toBeDefined();
+  expect(snapshot.mode).toBe('core'); expect(coreTiltyardConnection(snapshot)).toBeDefined();
   const html = await render(snapshot);
   expect(html).toContain('data-role="ty-stage"');
   expect(html).toContain('aria-label="The Tiltyard, duel stage"');
-  expect(html).toContain('SAMPLE contestants · Gatehouse verdicts');
+  expect(html).toContain('SAMPLE starter contestants · Gatehouse ballots counted by the core · Shared with OBS.');
   expect(html).toContain('aria-label="Seal slot"');
   expect(html).not.toContain('The map table is bare');
   expect(network.socket).not.toHaveBeenCalled(); expect(network.rpc).not.toHaveBeenCalled();
@@ -32,7 +32,7 @@ test('the shell routes a core studio connection through the lazy Tiltyard stage'
 
 test('the shell keeps the bare-map state when core studio has no connection', async () => {
   const snapshot = { mode: 'core', phase: 'ready' } as const;
-  expect(coreGatehouseConnection(snapshot)).toBeUndefined();
+  expect(coreTiltyardConnection(snapshot)).toBeUndefined();
   const html = await render(snapshot);
   expect(html).toContain('The map table is bare');
   expect(html).toContain('aria-label="Seal slot"');

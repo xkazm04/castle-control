@@ -6,10 +6,11 @@ import { spawn } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
 import type { ChildProcessWithoutNullStreams } from 'node:child_process';
 import { mkdir, mkdtemp, rm } from 'node:fs/promises';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 import { createInterface } from 'node:readline';
 import type { Page } from '@playwright/test';
 import { repo } from '../inventory.ts';
+import { recordCoreStderr } from './core-log.ts';
 
 type Contract = typeof import('../../packages/contract/src/index.ts');
 type Methods = import('../../packages/contract/src/index.ts').RpcMethods;
@@ -118,22 +119,28 @@ export async function startNightCore(options: NightCoreOptions = {}) {
   const reports: ObsReport[] = [];
   let child: ChildProcessWithoutNullStreams | undefined;
   let closed: Promise<void> | undefined;
+  let diagnostics: ReturnType<typeof recordCoreStderr> | undefined;
+  let requested_stop = false;
   const close = async () => {
-    if (child) {
-      child.stdin.end();
-      const exited = closed ?? Promise.resolve();
-      const timer = setTimeout(() => child?.kill(), 5_000);
-      await exited;
-      clearTimeout(timer);
+    requested_stop = true;
+    try {
+      if (child) {
+        child.stdin.end();
+        const timer = setTimeout(() => child?.kill(), 5_000);
+        try { await closed; } finally { clearTimeout(timer); }
+      }
+      diagnostics?.assertWritten();
+    } finally {
+      await rm(directory, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
     }
-    await rm(directory, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
   };
   try {
     child = spawn(executable, [directory], { cwd: repo, windowsHide: true, stdio: 'pipe', env });
     const running = child;
     closed = new Promise<void>(resolve => running.once('close', () => resolve()));
-    // Drain, but never publish runtime diagnostics.
-    running.stderr.resume();
+    // Only stderr reaches disk. stdout's capability handoff remains in memory.
+    diagnostics = recordCoreStderr(running, resolve(repo, process.env.NIGHT_OUT ?? 'e2e/night-results'), () => requested_stop);
+    closed = diagnostics.closed;
     const lines = createInterface({ input: running.stdout });
     const ready = await new Promise<Handoff>((resolve, reject) => {
       const timer = setTimeout(() => reject(new Error('Night core startup timed out')), 30_000);

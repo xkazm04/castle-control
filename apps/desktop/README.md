@@ -556,3 +556,30 @@ diagnostics across 289 files. Bootstrap and each real lazy Steward route now
 have separate tests with the unchanged timeout. Keep actions retain their
 existing callback assertions, and the password test inspects the input element's
 mask, autocomplete and uncontrolled props independently of HTML attribute order.
+
+## D5c: Tiltyard on the core tournament
+
+In CORE mode the Map Room opens the core-owned Chat tournament. Start submits
+the existing SAMPLE contestants with decimal-string seeds, `mill` key and a
+15-second window. Calls, close/next, pause/resume, undo, new vote and speed use
+`maproom.turn.run`; `maproom.turn`, resync and reconnect refetch
+`maproom.stage.get`. Live counts also refetch after moderation verdict events
+and through a one-second stage polling fallback. The returned snapshot supplies
+all counts and decisions.
+Showdown and Ladder remain labelled local demos. FIXTURE mode is unchanged.
+
+**Duel on stream** copies `tiltyard.source.url`; `#/stream` also offers a Duel
+row with the existing source-size controls and human hold. Core errors and
+disconnection appear beside the stage. Details and acceptance-test evidence
+are in [the studio delivery notes](src/rooms/studio/TILTYARD_LIVE.md).
+
+Round-three Node Vitest API verification passed the full desktop suite
+(1066 tests in 109 files), UI suite (492 in 38) and duel suite (382 in 14),
+with no failures or skips. The core view and shell test retain an explicit
+SAMPLE-starter / core-counted Gatehouse-ballot provenance disclosure.
+Round-four Node runs pass desktop 1068 tests, UI 492 and duel 382. The night
+driver now sends valid leading `1`/`2` ballot tokens; the prior driver sent
+chatter. Core stderr and exit metadata go to `NIGHT_OUT/core-stderr.log`, with
+stdout/handoff retained only in memory. Rust regressions cover calls, deadline
+close and advance. Their execution and the corrected browser lane remain
+Director-run; this builder did not run cargo, pnpm or browsers.

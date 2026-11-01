@@ -11,7 +11,7 @@ export interface TiltyardState {
   readonly announcement: string;
 }
 export type StageAction =
-  | { readonly kind: 'mode'; readonly mode: DuelMode; readonly words?: TiltyardWords }
+  | { readonly kind: 'mode'; readonly mode: DuelMode; readonly words?: TiltyardWords; readonly external_chat?: boolean }
   | { readonly kind: 'motion'; readonly reduced: boolean }
   | { readonly kind: 'event'; readonly event: DuelEvent; readonly words: TiltyardWords; readonly counted?: Counted; readonly elapsed_ms?: number };
 
@@ -77,11 +77,11 @@ export function tiltyardReducer(state: TiltyardState, action: StageAction): Tilt
   if (action.kind === 'mode') {
     // Mode changes skip the outgoing theatre, preserving every recorded pick.
     const event = { kind: 'enter' } as const;
-    const chat = state.chat.phase === 'verdict' ? stepChat(state.chat, { ...event, counted: [0, 0] }) : state.chat;
+    const chat = !action.external_chat && state.chat.phase === 'verdict' ? stepChat(state.chat, { ...event, counted: [0, 0] }) : state.chat;
     return { ...state, mode: action.mode,
       show: state.show.phase === 'verdict' ? stepShow(state.show, event) : state.show,
       chat,
-      announcement: action.mode === 'chat' && action.words ? chatAnnouncement(null, chat, action.words) ?? state.announcement : state.announcement,
+      announcement: action.external_chat ? '' : action.mode === 'chat' && action.words ? chatAnnouncement(null, chat, action.words) ?? state.announcement : state.announcement,
       ladder: state.ladder.phase === 'verdict' ? stepLadder(state.ladder, event) : state.ladder };
   }
   if (state.mode === 'show') {

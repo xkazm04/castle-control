@@ -3,7 +3,7 @@ import { Shield } from './shield.jsx';
 import type { TiltyardWords } from './words.js';
 
 export interface CardProps {
-  readonly item: DuelItem;
+  readonly item: Omit<DuelItem, 'id'> & { readonly id: string };
   readonly side: Side;
   readonly words: TiltyardWords;
   readonly tag: string;
@@ -14,6 +14,7 @@ export interface CardProps {
   readonly pick?: string;
   readonly stamp?: string;
   readonly on_pick?: () => void;
+  readonly disabled?: boolean;
 }
 export function Card(props: CardProps) {
   const { item, side, words, tag, note = item.note, use = 'duel', result, on_pick } = props;
@@ -37,7 +38,7 @@ export function Card(props: CardProps) {
   </>;
   return use === 'duel' ? <button type="button" className={className} data-role="ty-card" data-side={side}
     data-result={result === 'won' || result === 'lost' ? result : undefined}
-    aria-label={words.card_label(item.title, side, props.verb ?? words.wins)} onClick={on_pick}>{content}</button>
+    aria-label={words.card_label(item.title, side, props.verb ?? words.wins)} disabled={props.disabled} onClick={on_pick}>{content}</button>
     : <div className={className} data-role={use === 'champion' ? 'ty-champion-card' : 'ty-card'}
       data-side={side}>{content}</div>;
 }

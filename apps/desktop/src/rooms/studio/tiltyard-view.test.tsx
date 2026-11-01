@@ -14,6 +14,8 @@ test('the hosted Tiltyard shows SAMPLE contestants and the visible simulated-cha
     expect(stage).toContain('aria-label="The Tiltyard, duel stage"');
     expect(stage).toContain('data-provenance="sample"');
     expect(stage).toContain('The Ashen Warden');
+    expect(stage).not.toContain('Core Chat tournament');
+    expect(stage).not.toContain('Duel on stream');
     expect(network).not.toHaveBeenCalled();
   } finally { network.mockRestore(); }
 });

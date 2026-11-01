@@ -9,6 +9,10 @@ import type { CoreBeaconsPort, BeaconsNetwork } from './beacons-core.js';
 import type { StewardTransport } from '@castle-control/ui/steward';
 import type { StreamConnection } from './stream/obs-core.js';
 import type { RehearsalConnection } from './rehearsal/rehearsal-core.js';
+import type { TiltyardConnection, TiltyardNetwork } from './rooms/studio/tiltyard-core.js';
+
+const tiltyardConnections = new WeakMap<Snapshot, TiltyardConnection>();
+export function coreTiltyardConnection(snapshot: Snapshot) { return tiltyardConnections.get(snapshot); }
 
 const rehearsalConnections = new WeakMap<Snapshot, RehearsalConnection>();
 export function coreRehearsalConnection(snapshot: Snapshot) { return rehearsalConnections.get(snapshot); }
@@ -56,7 +60,7 @@ export function parseLaunch(value: unknown): Launch {
 }
 
 export function createDesktopClient(value: unknown, transport?: Network, lots_transport?: LotsNetwork,
-  gatehouse_transport?: GatehouseNetwork, steward_transport?: StewardTransport) {
+  gatehouse_transport?: GatehouseNetwork, steward_transport?: StewardTransport, tiltyard_transport?: TiltyardNetwork) {
   const launch = parseLaunch(value);
   // Fixture mode has no endpoint or network dependency, even at runtime.
   const client = createReadModel(launch.mode === 'fixture' ? createSimulatedSource() : createCoreSource(launch, transport));
@@ -67,6 +71,8 @@ export function createDesktopClient(value: unknown, transport?: Network, lots_tr
   const beacons: BeaconsConnection = { launch };
   const stream: StreamConnection = { launch };
   const rehearsal: RehearsalConnection = { launch, subscribeEvents: client.subscribeEvents };
+  const tiltyard: TiltyardConnection = { launch, subscribeEvents: client.subscribeEvents, subscribe: client.subscribe,
+    getPhase: () => client.getSnapshot().phase, ...(tiltyard_transport ? { transport: tiltyard_transport } : {}) };
   const steward: StewardConnection = { launch, live: launch.steward === 'live',
     reachable: () => client.getSnapshot().phase === 'ready',
     ...(steward_transport ? { transport: steward_transport } : {}) };
@@ -77,6 +83,7 @@ export function createDesktopClient(value: unknown, transport?: Network, lots_tr
     beaconsConnections.set(snapshot, beacons);
     streamConnections.set(snapshot, stream);
     rehearsalConnections.set(snapshot, rehearsal);
+    tiltyardConnections.set(snapshot, tiltyard);
     stewardConnections.set(snapshot, steward);
     return snapshot;
   } };

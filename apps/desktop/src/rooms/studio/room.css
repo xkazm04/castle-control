@@ -103,3 +103,5 @@
   }
   .studio-room > [data-studio-view="spyglass"] > .studio-spyglass { flex: 1; }
 }
+.studio-core-duel { border: 0; margin: 0; padding: 0; min-width: 0; }
+.studio-core-duel > legend { font-size: var(--text-small); color: var(--cream); padding: var(--space-8) var(--space-16); }

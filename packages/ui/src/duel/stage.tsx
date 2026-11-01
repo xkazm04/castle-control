@@ -24,42 +24,44 @@ import './ticker.css';
 import './hill.css';
 import './ladder.css';
 
-export function Tiltyard({ lists, words, initial_mode = 'show', label, ballots, ballot_feed }: TiltyardProps) {
+export function Tiltyard({ lists, words, initial_mode = 'show', label, ballots, ballot_feed, chat_control }: TiltyardProps) {
   const reduced = useReducedMotion();
   const [state, dispatch] = useReducer((before: TiltyardState, action: StageAction): TiltyardState => {
     const after = tiltyardReducer(before, action);
     if (before.mode !== 'ladder' || action.kind !== 'event') return after;
     const announcement = ladderAnnouncement(before.ladder, after.ladder, action.event, lists.ladder, words);
     return announcement === null ? after : { ...after, announcement };
-  }, null, () => createTiltyardState(lists, initial_mode, reduced, words));
+  }, null, () => createTiltyardState(lists, initial_mode, reduced, chat_control ? undefined : words));
   const root = useRef<HTMLElement>(null);
-  const session = state[state.mode];
+  const external_chat = state.mode === 'chat' ? chat_control : undefined;
+  const session = external_chat ?? state[state.mode];
   const windows = useMemo(() => chatWindows(ballots), [ballots]);
-  const live_window = useLiveBallots(ballot_feed, state.chat, state.mode === 'chat');
-  const window = state.mode === 'chat' ? ballot_feed ? live_window : windows(state.chat) : undefined;
-  const display_words = chatWordsFor(words, window?.provenance ?? (ballot_feed ? 'live' : 'simulated'));
-  const connected = state.mode !== 'chat' || ballots !== undefined || ballot_feed !== undefined;
+  const live_window = useLiveBallots(chat_control ? undefined : ballot_feed, state.chat, state.mode === 'chat');
+  const window = state.mode === 'chat' && !chat_control ? ballot_feed ? live_window : windows(state.chat) : undefined;
+  const display_words = external_chat ? words : chatWordsFor(words, window?.provenance ?? (ballot_feed ? 'live' : 'simulated'));
+  const connected = state.mode !== 'chat' || chat_control !== undefined || ballots !== undefined || ballot_feed !== undefined;
   const live = connected && (session.phase === 'live' || session.phase === 'verdict');
   const send = useCallback((event: DuelEvent, elapsed_ms = 0) => {
+    if (external_chat) { external_chat.on_event(event); return; }
     if (!connected) return;
     const ms = event.kind === 'tick' ? event.ms : elapsed_ms;
     const counted = window ? tallyAt(window, Math.min(state.chat.window_ms, state.chat.elapsed + ms * state.chat.speed)).counted : undefined;
     dispatch({ kind: 'event', event, words, elapsed_ms, ...(counted ? { counted } : {}) });
-  }, [connected, window, state.chat, words]);
+  }, [external_chat, connected, window, state.chat, words]);
   const on_tick = useCallback((ms: number) => send({ kind: 'tick', ms }), [send, session]);
-  const elapsed = useSessionClock(connected ? nextDue(session, window) : null, on_tick, session);
+  const elapsed = useSessionClock(connected && !external_chat ? nextDue(state[state.mode], window) : null, on_tick, session);
   const on_event = useCallback((event: DuelEvent) => send(event, state.mode === 'chat' ? elapsed() : 0), [send, elapsed, state.mode]);
   const on_mode = useCallback((mode: DuelMode) => {
-    if (state.mode === 'chat' && live) on_tick(elapsed());
-    dispatch({ kind: 'mode', mode, words });
-  }, [state.mode, live, on_tick, elapsed, words]);
+    if (state.mode === 'chat' && live && !chat_control) on_tick(elapsed());
+    dispatch({ kind: 'mode', mode, words, external_chat: chat_control !== undefined });
+  }, [state.mode, live, chat_control, on_tick, elapsed, words]);
   useEffect(() => { root.current?.focus({ preventScroll: true }); }, [state.mode]);
   useEffect(() => dispatch({ kind: 'motion', reduced }), [reduced]);
   const enter_hint = state.mode === 'show' ? words.enter_show : state.mode === 'ladder' ? words.enter_ladder
     : session.phase === 'live' ? words.enter_chat_live : words.enter_chat;
-  const sample = state.mode === 'show' ? lists.bracket.provenance : state.mode === 'chat' ? lists.chat.provenance : lists.ladder.provenance;
+  const sample = external_chat ? undefined : state.mode === 'show' ? lists.bracket.provenance : state.mode === 'chat' ? lists.chat.provenance : lists.ladder.provenance;
   return <section ref={root} className={`ty-stage${session.phase === 'verdict' && !reduced ? ' ty-shake' : ''}`}
-    data-role="ty-stage" data-provenance={sample} data-motion={reduced ? 'reduced' : 'full'} role="dialog" aria-modal="false" aria-label={label}
+    data-role="ty-stage" data-provenance={sample} data-simulated={external_chat?.simulated} data-motion={reduced ? 'reduced' : 'full'} role="dialog" aria-modal="false" aria-label={label}
     tabIndex={-1} onKeyDown={event => {
       const action = duelKeyAction(event, connected ? session : { phase: 'done' });
       if (action === null) return;
@@ -79,8 +81,8 @@ export function Tiltyard({ lists, words, initial_mode = 'show', label, ballots, 
       </div>
     </Pennants>
     {state.mode === 'show' ? <Showdown session={state.show} words={words} on_event={on_event} />
-      : state.mode === 'chat' ? <Chat session={state.chat} window={window} words={words} on_event={on_event} />
+      : state.mode === 'chat' ? external_chat?.content ?? <Chat session={state.chat} window={window} words={words} on_event={on_event} />
       : <Ladder session={state.ladder} list={lists.ladder} words={words} on_event={on_event} />}
-    <span className="ty-announcement" aria-live="polite" aria-atomic="true">{connected ? state.announcement : ''}</span>
+    <span className="ty-announcement" aria-live="polite" aria-atomic="true">{connected && !external_chat ? state.announcement : ''}</span>
   </section>;
 }

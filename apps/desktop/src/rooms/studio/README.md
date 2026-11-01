@@ -474,3 +474,11 @@ Validation from the worktree root, with no install or browser launch:
   including live/verdict Escape consumption and idle/done Escape fallthrough.
 
 The merged Map view switch is Table, Spyglass, Rehearse, Tiltyard, in that order.
+
+## D5c: core-owned Chat tournament
+
+Core-mode Tiltyard now uses the core stage and turn contracts; its Chat picture
+persists across room visits and matches the Duel browser source. Showdown and
+Ladder remain explicitly local demos; fixture mode retains the TS engine.
+See [TILTYARD_LIVE.md](TILTYARD_LIVE.md) for the adapter, action/source behavior,
+acceptance-test inventory and Director verification still required.

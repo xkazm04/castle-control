@@ -18,3 +18,5 @@
 @keyframes ty-countdown{from{stroke-dashoffset:0}to{stroke-dashoffset:351.9}}
 .ty-stage[data-motion="reduced"] .ty-ring-progress{animation-name:none!important}
 @media (prefers-reduced-motion:reduce){.ty-stage .ty-ring-progress{animation-name:none!important}}
+.ty-core-chat { color: var(--cream); }
+.ty-core-chat > p, .ty-core-chat > .ty-btns { margin: var(--space-10) var(--space-16); }

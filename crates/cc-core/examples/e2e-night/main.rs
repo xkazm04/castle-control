@@ -19,6 +19,7 @@
 //!
 //! No RPC method is added. stdout carries one capability handoff line for the
 //! Node owner, then only `{"obs":...}` metadata lines.
+mod ballots;
 mod obs;
 
 use axum::{
@@ -94,8 +95,7 @@ async fn drive_chat(sender: broadcast::Sender<ChatIngress>) -> LauncherResult {
             user += 1;
             let text = match command {
                 Some("join") => "SIMULATED !join".to_owned(),
-                Some("ballots") if index % 3 == 2 => "SIMULATED duel ballot right".to_owned(),
-                Some("ballots") => "SIMULATED duel ballot left".to_owned(),
+                Some("ballots") => ballots::text(index).to_owned(),
                 _ => break,
             };
             sender.send(chat(sequence, user, &text))?;

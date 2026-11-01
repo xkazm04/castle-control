@@ -11,7 +11,7 @@ export const streamPresets = Object.freeze({
 });
 type Preset = keyof typeof streamPresets;
 export type StreamRow = Readonly<{
-  id: string; name: string; visual_id?: VisualId; vote_bar?: true; href?: string; notice?: string;
+  id: string; name: string; visual_id?: VisualId; vote_bar?: true; duel?: true; href?: string; notice?: string;
   phase: 'idle' | 'unavailable' | 'resolving' | 'ready' | 'adding' | 'added' | 'refused';
 }>;
 export type StreamState = Readonly<{
@@ -41,15 +41,19 @@ const errorCopy: Record<ErrorCode, string> = {
   needs_human: 'Review the source in OBS before trying again.',
   internal: 'The source result could not be confirmed. Check OBS before trying again.',
 };
-function refusal(error: unknown): string {
-  try { return errorCopy[parseError(JSON.stringify(error)).code]; }
+function refusal(error: unknown, core_message = false): string {
+  try {
+    const parsed = parseError(JSON.stringify(error));
+    return core_message ? parsed.message : errorCopy[parsed.code];
+  }
   catch { return errorCopy.internal; }
 }
 const lotRow: StreamRow = Object.freeze({ id: 'lot:plate', name: 'Lot plate', phase: 'unavailable',
   notice: 'Available after a sealed draw. Open the Lot Chamber for its on-stream plate.', href: '#/chamber/lottery' });
 const voteRow: StreamRow = Object.freeze({ id: 'vote:bar', name: 'Gatehouse vote bar', vote_bar: true, phase: 'idle' });
+const duelRow: StreamRow = Object.freeze({ id: 'duel:stage', name: 'Duel', duel: true, phase: 'idle' });
 const rowsFor = (visuals: readonly Visual[], core = false): readonly StreamRow[] => [
-  ...(core ? [voteRow] : []),
+  ...(core ? [voteRow, duelRow] : []),
   ...visuals.map(visual => Object.freeze({ id: visual.visual_id, visual_id: visual.visual_id, name: visual.name, phase: 'idle' as const })), lotRow,
 ];
 
@@ -58,7 +62,7 @@ export function createStreamSetup(options: SetupOptions) {
   const simulated = options.mode === 'fixture';
   const port = options.mode === 'core' && options.launch ? createObsPort(options.launch, options.transport) : undefined;
   let state: StreamState = Object.freeze({ obs: simulated ? 'simulated' : 'unknown', preset: '1080p', scene_name: 'Scene',
-    rows: Object.freeze(simulated ? rowsFor(fixtureVisuals) : [voteRow, lotRow]), busy: false,
+    rows: Object.freeze(simulated ? rowsFor(fixtureVisuals) : [voteRow, duelRow, lotRow]), busy: false,
     notice: simulated ? 'Simulated setup · no OBS source will be created.' : 'Refresh to check OBS and load your visuals.' });
   const listeners = new Set<() => void>();
   function publish(change: Partial<StreamState>, clear: ('scene_error' | 'preset_error')[] = []) {
@@ -75,10 +79,14 @@ export function createStreamSetup(options: SetupOptions) {
       return Object.freeze({ ...next, ...(notice ? { notice } : {}) });
     })) });
   }
-  const find = (id: string) => state.rows.find(row => row.id === id && (row.visual_id || row.vote_bar));
+  const find = (id: string) => state.rows.find(row => row.id === id && (row.visual_id || row.vote_bar || row.duel));
   const canAdd = (id: string) => Boolean(find(id) && !state.busy && !state.scene_error && !state.preset_error
     && (state.obs === 'connected' || state.obs === 'simulated') && find(id)?.phase !== 'added');
   async function source(row: StreamRow) {
+    if (row.duel) {
+      if (!port || simulated) throw new Error('Core unavailable');
+      return (await port.duelSource()).url;
+    }
     if (row.vote_bar) {
       if (!port || simulated) throw new Error('Core unavailable');
       return (await port.voteBarSource()).url;
@@ -113,7 +121,7 @@ export function createStreamSetup(options: SetupOptions) {
           () => publish({ obs: 'unknown' })),
         port.visuals().then(({ visuals }) => publish({ rows: Object.freeze(rowsFor(visuals, true)), notice:
           visuals.length ? 'Choose the scene and source size, then hold to add an output.' : 'No visuals configured. Open Beacons to create one.' }),
-        error => publish({ rows: Object.freeze([voteRow, lotRow]), notice: refusal(error) })),
+        error => publish({ rows: Object.freeze([voteRow, duelRow, lotRow]), notice: refusal(error) })),
       ]);
       publish({ busy: false });
     },
@@ -133,7 +141,7 @@ export function createStreamSetup(options: SetupOptions) {
         }
         update(row, 'added', simulated ? 'Simulated · no OBS source was created'
           : `Added to OBS · ${scene_name} · ${size.width} × ${size.height}. Inspect the source in OBS.`);
-      } catch (error: unknown) { update(row, 'refused', refusal(error)); }
+      } catch (error: unknown) { update(row, 'refused', refusal(error, row.duel === true)); }
       finally { publish({ busy: false }); }
     },
     async copy(id: string, write: (url: string) => Promise<void> = url => navigator.clipboard.writeText(url)) {
@@ -147,7 +155,7 @@ export function createStreamSetup(options: SetupOptions) {
           await write(url);
           update(row, 'ready', simulated ? 'Simulated example URL copied · not a live source.' : 'Browser-source URL copied. Set its size in OBS.');
         } catch { update(row, 'refused', 'Clipboard unavailable. Allow clipboard access and try again.'); }
-      } catch (error: unknown) { update(row, 'refused', refusal(error)); }
+      } catch (error: unknown) { update(row, 'refused', refusal(error, row.duel === true)); }
       finally { publish({ busy: false }); }
     },
   };

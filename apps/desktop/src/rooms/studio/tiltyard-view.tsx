@@ -1,19 +1,14 @@
-import { useMemo, useState } from 'react';
+import { lazy, Suspense } from 'react';
 import { SAMPLE } from '@castle-control/duel';
 import { simulateChatPages } from '@castle-control/duel/ballots';
 import { Tiltyard, tiltyardWords } from '@castle-control/ui/duel';
-import type { GatehouseConnection } from '../../client.js';
-import { studioCopy as copy } from '../../studio-copy.js';
-import { coreBallotFeed } from './tiltyard-feed.js';
+import type { TiltyardConnection } from './tiltyard-core.js';
 
-/** SAMPLE contestants in both modes; only fixtures generate simulated ballots. */
-export default function TiltyardView({ connection }: { connection?: GatehouseConnection }) {
-  const [available, setAvailable] = useState(true);
-  const feed = useMemo(() => connection ? coreBallotFeed(connection, setAvailable) : undefined, [connection]);
-  return <>
-    {connection && <p className="studio-tiltyard-sample">{copy.tiltyard_live}</p>}
-    {!available && <p role="status">{copy.tiltyard_unavailable}</p>}
-    <Tiltyard lists={SAMPLE} {...(feed ? { ballot_feed: feed } : { ballots: simulateChatPages })}
-      words={tiltyardWords} label="The Tiltyard, duel stage" />
-  </>;
+const CoreTiltyardView = lazy(() => import('./tiltyard-core-view.jsx'));
+
+/** Fixture journeys retain the original TS engine; core Chat loads through its own lazy door. */
+export default function TiltyardView({ connection }: { connection?: TiltyardConnection }) {
+  return connection ? <Suspense fallback={<p role="status">Loading the core tournament…</p>}>
+    <CoreTiltyardView connection={connection} />
+  </Suspense> : <Tiltyard lists={SAMPLE} ballots={simulateChatPages} words={tiltyardWords} label="The Tiltyard, duel stage" />;
 }

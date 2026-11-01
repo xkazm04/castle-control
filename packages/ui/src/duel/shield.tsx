@@ -7,7 +7,7 @@ const inks: Readonly<Record<Ink, string>> = {
   gules: 'var(--gules)', azure: 'var(--azure)', or: 'var(--or)',
   sable: 'var(--ty-parchment-ink)', argent: 'var(--ty-parchment-top)', vert: 'var(--ty-arms-vert)',
 };
-export function Shield({ item, words }: { item: DuelItem; words: TiltyardWords }) {
+export function Shield({ item, words }: { item: Omit<DuelItem, 'id'> & { readonly id: string }; words: TiltyardWords }) {
   const suffix = useId();
   const clip_id = `ty-shield-${item.id}-${suffix}`;
   const data = arms(item.title);
