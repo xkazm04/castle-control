@@ -40,6 +40,11 @@ wire_enum!(RandomnessSource { DrandQuicknet => "drand_quicknet", StreamerCommit 
 wire_enum!(DesignStage { LocalTest => "local_test", HostedTest => "hosted_test", Released => "released" });
 wire_enum!(Operator { Human => "human", Ai => "ai", AiProposes => "ai_proposes" });
 wire_enum!(EngineLane { Live => "live", Batch => "batch" });
+// Terminal marker for a sealed draw that never produced a Draw row. Coarse codes
+// only: no viewer, entry or chat content.
+wire_enum!(DrawFailureReason {
+    BeaconUnavailable => "beacon_unavailable", CapUnsatisfiable => "cap_unsatisfiable",
+    InvalidCast => "invalid_cast", SealMissing => "seal_missing", Abandoned => "abandoned"});
 wire_enum!(ErrorCode {
     Invalid => "invalid", NotFound => "not_found", Conflict => "conflict",
     Unauthorized => "unauthorized", RateLimited => "rate_limited", Upstream => "upstream",

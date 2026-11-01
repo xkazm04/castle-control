@@ -1178,6 +1178,7 @@ cloud opt-in enforcement remain the engine's job. The CLI remains slow-lane only
 | `DesignStage` | `local_test`, `hosted_test`, `released` |
 | `Operator` | `human`, `ai`, `ai_proposes` |
 | `EngineLane` | `live`, `batch` |
+| `DrawFailureReason` | `beacon_unavailable`, `cap_unsatisfiable`, `invalid_cast`, `seal_missing`, `abandoned` (terminal marker for a sealed draw with no Draw row; coarse code only, no viewer or chat content; the ledger event that carries it is a later cc-store delivery) |
 | `ErrorCode` | `invalid`, `not_found`, `conflict`, `unauthorized`, `rate_limited`, `upstream`, `unavailable`, `blocked_by_policy`, `needs_human`, `internal` |
 
 The error envelope is `{code, message, retry_after_ms?, detail?}`. A consumer branches only on `code`.

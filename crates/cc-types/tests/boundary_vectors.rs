@@ -50,6 +50,28 @@ fn twitch_user_id_vectors_match_the_canonical_rule() {
     }
 }
 
+fn enum_accepts<T: serde::de::DeserializeOwned>(text: &str) -> bool {
+    serde_json::from_value::<T>(json!(text)).is_ok()
+}
+
+fn check_enum<T: serde::de::DeserializeOwned>(section: &str) {
+    for text in rows(section, "accepted") {
+        assert!(enum_accepts::<T>(&text), "{section} must accept {text:?}");
+    }
+    for text in rows(section, "refused") {
+        assert!(!enum_accepts::<T>(&text), "{section} must refuse {text:?}");
+    }
+}
+
+#[test]
+fn draw_failure_reason_vectors_match_the_schema() {
+    check_enum::<DrawFailureReason>("draw_failure_reason");
+    assert_eq!(
+        DrawFailureReason::VALUES.to_vec(),
+        rows("draw_failure_reason", "accepted")
+    );
+}
+
 #[test]
 fn nonblank_vectors_use_one_explicit_whitespace_set() {
     for field in ["name", "delivery", "pattern"] {

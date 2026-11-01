@@ -67,6 +67,7 @@ export type DisplayTimingMs = number;
 export type DrawCheckParams = { "policy": LotsDrawPolicy; };
 export type DrawCheckResult = { "reasons": Array<string>; "result": CheckResult; };
 export type DrawContent = "prize" | "question" | "idea" | "seat";
+export type DrawFailureReason = "beacon_unavailable" | "cap_unsatisfiable" | "invalid_cast" | "seal_missing" | "abandoned";
 export type DrawId = string & { readonly __brand: "DrawId" };
 export type DrawListResult = { "draws": Array<LotsDraw>; };
 export type DrawRunId = string & { readonly __brand: "DrawRunId" };

@@ -17542,6 +17542,18 @@
       "title": "DrawContent",
       "type": "string"
     },
+    "DrawFailureReason": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "enum": [
+        "beacon_unavailable",
+        "cap_unsatisfiable",
+        "invalid_cast",
+        "seal_missing",
+        "abandoned"
+      ],
+      "title": "DrawFailureReason",
+      "type": "string"
+    },
     "DrawId": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$(?![\\s\\S])",

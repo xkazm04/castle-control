@@ -57,5 +57,24 @@
       "\u00a0.\u00a0",
       "x\u2003y"
     ]
+  },
+  "draw_failure_reason": {
+    "accepted": [
+      "beacon_unavailable",
+      "cap_unsatisfiable",
+      "invalid_cast",
+      "seal_missing",
+      "abandoned"
+    ],
+    "refused": [
+      "",
+      "Abandoned",
+      "ABANDONED",
+      "abandoned ",
+      "beacon-unavailable",
+      "null",
+      "failed",
+      "drand down"
+    ]
   }
 }
