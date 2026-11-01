@@ -110,7 +110,7 @@ test('fixture draw rehearsal seals, casts, reveals in the urn and recomputes thi
   try { await expect(page.getByText('Entry list frozen · simulated', { exact: true })).toBeVisible(); }
   finally { await page.keyboard.up('Space'); }
   await expect(page.getByRole('button', { name: 'Draft a new roll', exact: true })).toHaveCount(0);
-  await expect(page.getByRole('button', { name: 'Start simulated draw', exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Cast the lots · rehearsal', exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Cast the lots · rehearsal', exact: true }).click();
   const result = page.getByRole('region', { name: 'Current SIMULATED cast', exact: true });
   await expect(result.locator('[data-current-winner]')).toHaveCount(3);

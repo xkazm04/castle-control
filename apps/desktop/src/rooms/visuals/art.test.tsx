@@ -149,3 +149,12 @@ test('invalid inputs, mismatched results and malformed receipts never render as 
     expect(h.html()).not.toContain('private label');
   }
 });
+
+test('only failures that can follow the paid call warn that credits may already be spent', async () => {
+  for (const [code, warned] of [['upstream', true], ['internal', true], ['invalid', false], ['unauthorized', false]] as const) {
+    const h = await harness(); await h.port.loadArtStatus(); h.draft(); h.click();
+    h.rpc.mockRejectedValueOnce({ code, message: 'simulated failure' });
+    await h.confirm();
+    expect(h.html().includes('Credits may already have been spent'), code).toBe(warned);
+  }
+});

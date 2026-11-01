@@ -39,7 +39,7 @@ async function configureAndCast(page: Page) {
   await expect(page.getByText('Entry list frozen · simulated', { exact: true })).toBeVisible();
   await page.keyboard.up('Space');
   await expect(page.getByRole('textbox', { name: 'Draw name', exact: true })).toBeDisabled();
-  await page.getByRole('button', { name: 'Start simulated draw', exact: true }).click();
+  await page.getByRole('button', { name: 'Cast the lots · rehearsal', exact: true }).click();
   const result = page.getByRole('region', { name: 'Current SIMULATED cast', exact: true });
   await expect(result).toContainText('SIMULATED');
   await expect(result.locator('[data-current-winner]')).toHaveCount(3);
