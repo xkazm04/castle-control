@@ -123,7 +123,8 @@ export function createCoreLotsPort(launch: CoreLaunch, transport?: LotsNetwork) 
     const proposed = structuredClone(draw);
     await perform(async () => {
       const saved = await call(lotsDrawUpsert, { draw: proposed, ...(display ? { display } : {}) });
-      const draws = [...snapshot.draws.filter(item => item.draw_id !== saved.draw_id), saved];
+      const draws = snapshot.draws.some(item => item.draw_id === saved.draw_id)
+        ? snapshot.draws.map(item => item.draw_id === saved.draw_id ? saved : item) : [...snapshot.draws, saved];
       publish({ draw: saved, draws }, ['check', 'lookup_result']);
       await check(saved);
     });

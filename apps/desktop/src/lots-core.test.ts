@@ -320,3 +320,11 @@ test('lots-02 a transport failure loading proof keeps a successful cast, and pro
   await h.port.recompute(); expect(h.port.getSnapshot().writ).toEqual(fixtureWrit);
   expect(h.port.getSnapshot().notice).toContain('Proof bundle loaded');
 });
+
+test('editing a draw keeps its position in the draw list', async () => {
+  const h = harness(); await h.port.load();
+  const ids = fixtureDraws.map(item => item.draw_id);
+  expect(ids.length).toBeGreaterThan(1);
+  await h.port.edit(draw);
+  expect(h.port.getSnapshot().draws.map(item => item.draw_id)).toEqual(ids);
+});
