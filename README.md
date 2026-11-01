@@ -1,3 +1,5 @@
+![A white castle on a hill flying red and blue heraldic banners, with a beacon fire burning on its tallest tower](docs/assets/banner.jpg)
+
 # Castle Control
 
 **Development status, 2026-10-31:** checked offline against local main
