@@ -20,3 +20,11 @@
 {"at":"2026-11-01T14:55:01.385Z","scope":"rust-core","slug":"oncelock-error","title":"do not cache init error","lane":"B","mode":"code","verdict":"better","before":"test red on base","after":"test green","seeded_red":true,"sha":"0745616","branch_kept":false,"worker":"sonnet","note":""}
 {"at":"2026-11-01T14:55:01.385Z","scope":"rust-core","slug":"with-steward","title":"with_steward validates via register","lane":"B","mode":"code","verdict":"better","before":"test red on base","after":"test green","seeded_red":true,"sha":"b9e92fc","branch_kept":false,"worker":"sonnet","note":"panics on second config"}
 {"at":"2026-11-01T14:55:01.385Z","scope":"rust-core","slug":"tests-derive-from-impl","title":"explicit expected lists","lane":"B","mode":"code","verdict":"better","before":"test red on base","after":"test green","seeded_red":true,"sha":"2823d77","branch_kept":false,"worker":"sonnet","note":"tests only"}
+{"at":"2026-11-01T16:18:30.310Z","batch":3,"card":"http_endpoint hex host","verdict":"better","note":"seeded control red"}
+{"at":"2026-11-01T16:18:30.310Z","batch":3,"card":"exec path UNC","verdict":"demoted","note":"pinned tests"}
+{"at":"2026-11-01T16:18:30.310Z","batch":3,"card":"engine key list","verdict":"demoted","note":"new identifier"}
+{"at":"2026-11-01T16:18:30.310Z","batch":3,"card":"codegen gatehouse list","verdict":"better","note":"5 methods; seeded red"}
+{"at":"2026-11-01T16:18:30.310Z","batch":3,"card":"full-ledger scans","verdict":"demoted","note":"pinned test"}
+{"at":"2026-11-01T16:18:30.310Z","batch":3,"card":"fingerprint list","verdict":"better","note":"drift test; seeded red"}
+{"at":"2026-11-01T16:18:30.310Z","batch":3,"card":"topic stall","verdict":"better","note":"seeded red (director re-run)"}
+{"at":"2026-11-01T16:18:30.310Z","batch":3,"card":"Debug chat text","verdict":"better","note":"marker test"}
