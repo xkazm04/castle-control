@@ -22,7 +22,7 @@
     "check": "node scripts/check.mjs",
     "typecheck": "node ../../scripts/package-gate.mjs typecheck",
     "lint": "node ../../scripts/package-gate.mjs lint",
-    "test": "node ../../scripts/package-gate.mjs test && node scripts/test-codegen.mjs && node scripts/test-gatehouse-registry.mjs"
+    "test": "node ../../scripts/package-gate.mjs test && node scripts/test-codegen.mjs && node scripts/test-gatehouse-registry.mjs && node scripts/test-boundary-vectors.mjs"
   },
   "dependencies": { "ajv": "catalog:" },
   "devDependencies": {

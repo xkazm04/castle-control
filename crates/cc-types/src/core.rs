@@ -101,7 +101,10 @@ pub struct TwitchAuthStatus {
         skip_serializing_if = "Option::is_none",
         deserialize_with = "present_numeric_id"
     )]
-    #[schemars(with = "String", extend("pattern" = r"^[0-9]+$(?![\s\S])"))]
+    #[schemars(
+        with = "String",
+        extend("pattern" = r"^[1-9][0-9]{0,31}$(?![\s\S])")
+    )]
     pub user_id: Option<String>,
     pub scopes: Vec<String>,
 }
@@ -153,11 +156,18 @@ pub struct PurgeResult {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 pub enum Pending {}
 
+/// Canonical Twitch user id: a positive decimal string of 1 to 32 ASCII digits with no
+/// leading zero, identical to `TwitchUserId` and the schema pattern
+/// `^[1-9][0-9]{0,31}$`. Test-only labels such as `sim_100` are not Twitch ids.
 fn present_numeric_id<'de, D: serde::Deserializer<'de>>(
     deserializer: D,
 ) -> Result<Option<String>, D::Error> {
     let value = String::deserialize(deserializer)?;
-    if !value.is_empty() && value.bytes().all(|b| b.is_ascii_digit()) {
+    if value.len() <= 32
+        && !value.starts_with('0')
+        && !value.is_empty()
+        && value.bytes().all(|b| b.is_ascii_digit())
+    {
         Ok(Some(value))
     } else {
         Err(serde::de::Error::custom(

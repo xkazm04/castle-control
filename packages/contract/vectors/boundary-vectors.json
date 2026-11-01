@@ -1,0 +1,33 @@
+{
+  "_note": "Simulated vectors shared by the Rust (crates/cc-types/tests/boundary_vectors.rs) and node (packages/contract/scripts/test-boundary-vectors.mjs) tests. Both sides must agree on every row.",
+  "twitch_user_id": {
+    "accepted": [
+      "1",
+      "9",
+      "10",
+      "123",
+      "9007199254740993",
+      "10000000000000000000000000000000"
+    ],
+    "refused": [
+      "",
+      "0",
+      "007",
+      "01",
+      "00",
+      "-1",
+      "+1",
+      "1.5",
+      "1e3",
+      " 1",
+      "1 ",
+      "123\n",
+      "\n123",
+      "sim_100",
+      "not-an-id",
+      "１２３",
+      "١٢٣",
+      "100000000000000000000000000000000"
+    ]
+  }
+}
