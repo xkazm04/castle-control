@@ -52,7 +52,8 @@ class RefusableStream extends EventTarget {
   readyState = 0;
   onerror: (() => void) | undefined;
   close = vi.fn(() => { this.readyState = 2; });
-  constructor(readonly url: string) { super(); RefusableStream.instances.push(this); }
+  url: string;
+  constructor(url: string) { super(); this.url = url; RefusableStream.instances.push(this); }
   fail(state: number) { this.readyState = state; this.onerror?.(); }
   push(value: unknown) { this.dispatchEvent(new MessageEvent('gatehouse.render.snapshot', { data: JSON.stringify(value) })); }
 }
