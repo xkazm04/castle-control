@@ -40,6 +40,7 @@ impl ScreenedMessage {
             .then(|| herald::PassedMessage {
                 at: self.message.at.clone(),
                 text: self.message.text.clone(),
+                simulated: self.message.simulated,
             })
     }
 }

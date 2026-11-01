@@ -251,6 +251,7 @@ async fn page_shows_only_accepted_seal_then_fixed_simulated_winners_and_no_write
                     &"simulated-draw".to_owned().try_into().unwrap(),
                     cc_lots::PassedMessage::from_verdict(
                         cc_lots::MessageFacts {
+                            simulated: true,
                             message_id: format!("simulated-message-{user_id}").try_into().unwrap(),
                             user_id: user,
                             at: "2026-10-25T12:00:00Z".parse().unwrap(),

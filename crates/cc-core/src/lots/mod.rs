@@ -48,6 +48,7 @@ struct Pending {
     published: RollSealResult,
     seed: Option<[u8; 32]>,
     chain: Option<QuicknetChain>,
+    simulated: bool,
 }
 struct State {
     store: Store,
@@ -170,6 +171,7 @@ impl LotsModule {
                     weight_table,
                 }),
                 None,
+                self.simulated,
             )?;
         }
         Ok(result)
@@ -187,6 +189,7 @@ impl LotsModule {
             || screened.message.message_id != facts.message_id
             || screened.message.user_id != facts.user_id
             || screened.message.text != facts.text
+            || screened.message.simulated != facts.simulated
         {
             return Ok(());
         }
@@ -205,6 +208,7 @@ impl LotsModule {
                         weight_table: convert::table(roll.weight_table(self.now()))?,
                     }),
                     None,
+                    self.simulated,
                 )?;
             }
         }
@@ -232,6 +236,7 @@ impl LotsModule {
         &self,
         payload: LotsEventPayload,
         content: Option<DrawContent>,
+        simulated: bool,
     ) -> Result<(), ErrorEnvelope> {
         let kind = match &payload {
             LotsEventPayload::Roll(_) => EventKind::Roll,
@@ -239,7 +244,7 @@ impl LotsModule {
             LotsEventPayload::Cast(_) => EventKind::Cast,
         };
         if let Some(render) = &self.render {
-            render.accept_lots(&payload, self.simulated, content)?;
+            render.accept_lots(&payload, simulated, content)?;
         }
         self.events.publish(kind)?;
         // No subscribers is normal: this internal sink is optional, never a ledger.
@@ -287,6 +292,7 @@ impl LotsModule {
                         weight_table,
                     }),
                     None,
+                    self.simulated,
                 )?;
                 encode(draw)
             }

@@ -208,11 +208,14 @@ impl Registry {
             .get("gatehouse.consensus.get")
             .expect("consensus registered");
         let make_vote_bar = |origin| {
-            Arc::new(crate::gatehouse::VoteBarModule::new(
-                Arc::downgrade(consensus),
-                origin,
-                services.is_none() || offline.settings_root().is_none(),
-            ))
+            Arc::new(
+                crate::gatehouse::VoteBarModule::new(
+                    Arc::downgrade(consensus),
+                    origin,
+                    services.is_none() || offline.settings_root().is_none(),
+                )
+                .with_provenance(Arc::downgrade(&offline)),
+            )
         };
         let mut vote_bar = make_vote_bar(services.as_ref().map(|service| service.overlay_url()));
         if let Some(services) = &services

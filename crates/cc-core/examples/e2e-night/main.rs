@@ -61,6 +61,7 @@ async fn refuse_twitch_auth(request: Request<Body>, next: Next) -> Response {
 
 fn chat(sequence: u64, user: u64, text: &str) -> ChatIngress {
     ChatIngress {
+        simulated: true,
         login: format!("simulated_viewer_{user}"),
         message: cc_twitch::ChatMessage {
             id: format!("simulated-night-{sequence}"),

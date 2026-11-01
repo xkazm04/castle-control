@@ -105,6 +105,7 @@ pub async fn prepare(module: &LotsModule) {
             &"simulated-draw".to_owned().try_into().unwrap(),
             cc_lots::PassedMessage::from_verdict(
                 cc_lots::MessageFacts {
+                    simulated: true,
                     message_id: "simulated-1".to_owned().try_into().unwrap(),
                     user_id: user,
                     at: "2023-08-23T15:09:28Z".parse().unwrap(),
@@ -139,6 +140,7 @@ pub async fn native(root: &std::path::Path) -> Arc<NativeServices> {
 }
 pub fn chat(id: u32, text: &str) -> cc_core::ChatIngress {
     cc_core::ChatIngress {
+        simulated: true,
         login: format!("simulated_{id}"),
         message: cc_twitch::ChatMessage {
             id: format!("simulated-{id}"),

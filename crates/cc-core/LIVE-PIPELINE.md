@@ -79,6 +79,9 @@ run the shadow stream.
 
 1. The bridge pump parses verified login/identity through `chat_ingress` and
    broadcasts internal `ChatIngress` values. No raw payload leaves `/events`.
+   Twitch ingress sets `simulated: false`; generated rehearsals explicitly set
+   it to true. The shadow pipeline preserves that provenance through screening
+   and downstream Lots intake.
 2. A subscriber consumes a bounded broadcast ring (256 chats), with one
    in-flight verdict. Waiting for a classifier never waits in the bridge pump;
    there is no per-message task fan-out or unbounded queue. On overflow it emits
@@ -96,6 +99,11 @@ run the shadow stream.
    invalidated. No event name or payload was added.
    The live chart uses host arrival time so a late notification cannot move it
    behind a newer chart read; audit/recordings retain Twitch's original time.
+   The vote bar shows SIMULATED when its core is a fixture or any counted ballot
+   in its 900-second window is simulated. Expired and shed ballots do not mark
+   the current bar. Lots freezes the same flag from eligible entries at seal
+   time, retains it through cast and saved writ storage, and clears entry
+   provenance with each new roll. Real-only native input keeps both badges off.
 5. Only a matching passed decision can mint `PassedMessage`. The adapter feeds
    all currently open rolls; sealed rolls are absent from intake. `cc-lots`
    retains its token-based keyword/free-join, eligibility, cooldown and weight
@@ -120,9 +128,18 @@ Debug implementation, including when wrapped by channel errors. Recording
 originals is distinct from diagnostic logging. Local retained chat must never be
 copied into source fixtures or committed.
 
-Native Lots uses the real clock and marks saved writs non-simulated. It does not
-silently use the fixture's historical drand round. Public-beacon construction
-remains unconfigured; use the existing `streamer_commit` source, visibly labelled
+Provenance regression coverage is in `tests/live_pipeline/provenance.rs`,
+`cc-gatehouse/src/herald_tests.rs` and `cc-lots/src/draw_tests/provenance.rs`.
+The unit tests in `src/gatehouse/vote_bar.rs` check that fixture snapshots skip
+Gatehouse readiness and an unready provenance read leaves a successful consensus
+snapshot intact. Fixture builds always retain their simulated badge.
+Run `cargo test -p cc-gatehouse -p cc-lots -p cc-core` to exercise these tests.
+No RPC/event shape is changed.
+
+Native Lots uses the real clock and marks saved writs with the sealed roll's
+provenance. It does not silently use the fixture's historical drand round.
+Public-beacon construction remains unconfigured; use the existing
+`streamer_commit` source, visibly labelled
 **streamer-controlled**, for this cut. No beacon service or dependency was added.
 
 ## Owner-run M1 two-hour shadow stream

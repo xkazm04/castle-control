@@ -7,6 +7,7 @@ use std::path::PathBuf;
 
 mod audit;
 mod properties;
+mod provenance;
 mod quicknet;
 
 fn at(seconds: i64) -> DateTime<Utc> {
@@ -34,6 +35,7 @@ fn rules() -> RollRules {
 
 fn message(n: u64, seconds: i64) -> MessageFacts {
     MessageFacts {
+        simulated: true,
         message_id: MessageId::try_from(format!("simulated-{n}-{seconds}")).unwrap(),
         user_id: user(n),
         at: at(seconds),

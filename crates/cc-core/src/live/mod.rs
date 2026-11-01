@@ -127,6 +127,7 @@ impl ShadowPipeline {
                     .parse()
                     .map_err(|_| invalid())?,
                 text: screened.message.text.clone(),
+                simulated: screened.message.simulated,
                 // Twitch chat does not prove follow/redemption state. Fail closed.
                 follower: false,
                 subscriber: chat.message.viewer.sub_tier.is_some(),
@@ -165,7 +166,7 @@ fn message(chat: &ChatIngress) -> Result<IngestedMessage, ErrorEnvelope> {
         login: chat.login.to_ascii_lowercase(),
         text: m.text.clone(),
         at: m.at.clone().try_into().map_err(|_| invalid())?,
-        simulated: false,
+        simulated: chat.simulated,
         metadata: Some(VerifiedMetadata {
             moderator: m.viewer.is_mod,
             broadcaster: false,

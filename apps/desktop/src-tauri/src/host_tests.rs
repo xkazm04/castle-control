@@ -177,6 +177,7 @@ async fn assert_native_data_directory_and_shadow_diagnostics(logs: &Arc<Mutex<Ve
         .unwrap();
     let body = "simulated-private-shadow-body";
     let raw = cc_core::ChatIngress {
+        simulated: true,
         login: "simulated_viewer".into(),
         message: cc_twitch::ChatMessage {
             id: "simulated-shadow-message".into(),

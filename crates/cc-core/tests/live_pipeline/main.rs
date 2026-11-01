@@ -1,4 +1,5 @@
 mod pressure;
+mod provenance;
 mod safety;
 mod support;
 use cc_core::{AppState, Registry, live::RulesOnly};
@@ -95,7 +96,7 @@ async fn native_rpc_and_fake_bridge_share_persistent_modules_and_real_time() {
     let store = Store::open(h.root.path().join("lots/store")).unwrap();
     let writs = store.items(cc_store::DataStore::Writs).unwrap();
     assert_eq!(writs.len(), 1);
-    assert!(!writs[0].simulated);
+    assert!(writs[0].simulated);
     assert!(writs[0].content.contains(cast["writ_id"].as_str().unwrap()));
 }
 
