@@ -21,6 +21,7 @@ const NOT_FINGERPRINTED: &[&str] = &[
     "herald_features.rs",
     "instrument.rs",
     "lane_tests.rs",
+    "live_capture_tests.rs",
     "lib.rs",
     "live.rs",
     "recorder.rs",

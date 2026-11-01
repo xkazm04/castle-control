@@ -1,6 +1,6 @@
 use crate::{
     Error, ForgetPolicy, LedgerKind, PurgePolicy, Result, STORE_INVENTORY, Storage, Store,
-    StoreSpec, Timestamp,
+    StoreSpec, Timestamp, generation::Erased,
 };
 use rusqlite::{Connection, OptionalExtension, TransactionBehavior, params_from_iter};
 use serde::{Deserialize, Serialize};
@@ -149,6 +149,16 @@ impl Store {
             tx.execute("INSERT INTO purge_state (id) VALUES (1)", [])?;
         }
         plan.delete_rows(&tx)?;
+        // Expiry runs per live capture; it bumps only when it deleted rows, and
+        // only the recordings half (it cannot touch Caches or the ledgers).
+        match plan.preview.request {
+            Purge::ExpiredRecordings => {
+                if plan.preview.counts.get("recordings").copied().unwrap_or(0) > 0 {
+                    crate::generation::bump(&tx, Erased::Recordings)?;
+                }
+            }
+            Purge::ForgetUser(_) | Purge::All => crate::generation::bump(&tx, Erased::Viewer)?,
+        }
         tx.commit()?;
         if plan.preview.request == Purge::All {
             self.finish_purge()?;
@@ -183,6 +193,7 @@ impl Store {
         {
             tx.execute(&format!("DELETE FROM {}", spec.name), [])?;
         }
+        crate::generation::bump(&tx, Erased::Viewer)?;
         tx.commit()?;
         for kind in LedgerKind::ALL {
             let file = OpenOptions::new()

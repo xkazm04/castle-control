@@ -2,6 +2,7 @@
 
 mod audit;
 mod error;
+mod generation;
 mod images;
 mod inventory;
 mod ledger;
