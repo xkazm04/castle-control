@@ -236,3 +236,24 @@ test.each([true, false])('uncertain(id) is true after a rejected seal reply and 
   await steward.seal(draw.writ_id);
   expect(steward.uncertain(draw.writ_id)).toBe(!confirmed);
 });
+
+test.each(['new', 'amend'] as const)('an ask (%s) survives unrelated select and focus publishes while in flight', async kind => {
+  const queue = new ProposalQueue();
+  const amended = { ...draw, updated_at: '2026-10-27T00:00:02Z' };
+  const transport = new RecordedStewardTransport([reply(draw)]);
+  const steward = new LiveSteward(transport, queue);
+  if (kind === 'amend') await steward.ask('Simulated: draft questions', context);
+  let finish: ((text: string) => void) | undefined;
+  vi.spyOn(transport, 'ask').mockImplementation(() => new Promise(resolve => { finish = resolve; }));
+  const pending = kind === 'new' ? steward.ask('Simulated: draft questions', context)
+    : steward.amend(draw.writ_id, 'Simulated amendment', context);
+  queue.focus({ chamber: 'lottery' });
+  if (kind === 'amend') queue.select(draw.writ_id);
+  if (!finish) throw new Error('Expected pending transport');
+  finish(reply(kind === 'new' ? draw : amended));
+  const turn = await pending;
+  expect(turn.proposals).toHaveLength(1);
+  expect(turn.reply).not.toContain('No authorization was given');
+  expect(steward.owns(draw.writ_id)).toBe(true);
+  expect(queue.pending()).toHaveLength(1);
+});

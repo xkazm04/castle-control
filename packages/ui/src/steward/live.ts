@@ -104,15 +104,16 @@ export class LiveSteward implements StewardPort {
 
   async #ask(text: string, chamber: WritChamber, previous?: Writ): Promise<StewardTurn> {
     if (this.#requests) return failure;
-    const before = this.#queue.getSnapshot();
+    const target = previous ? this.#queue.getSnapshot().proposals.find(item => item.id === previous.writ_id) : undefined;
     this.#requests++;
     try {
       const params = parseStewardAskParams(JSON.stringify({ chamber, prompt: text,
         ...(previous ? { writ_id: previous.writ_id } : {}) }));
       const { writ } = parseStewardAskResult(await this.#transport.ask(params));
-      if (this.#queue.getSnapshot() !== before || writ.status !== 'proposed' || writ.error !== undefined
+      const now = this.#queue.getSnapshot().proposals;
+      if ((previous ? now.find(item => item.id === previous.writ_id) !== target : false) || writ.status !== 'proposed' || writ.error !== undefined
         || writ.chamber !== chamber || Date.parse(writ.updated_at) < Date.parse(writ.created_at)
-        || (previous ? !matches(writ, previous) : before.proposals.some(proposal => proposal.id === writ.writ_id))) return failure;
+        || (previous ? !matches(writ, previous) : now.some(proposal => proposal.id === writ.writ_id))) return failure;
       const result = this.#queue.addOrUpdate(draft(writ));
       if (!result.ok) return failure;
       this.#writs.set(writ.writ_id, writ);
