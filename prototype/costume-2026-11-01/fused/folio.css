@@ -1,0 +1,377 @@
+/* =============================================================================
+   CASTLE CONTROL · COSTUME · FUSED BASELINE                          folio.css
+   =============================================================================
+   Direction sheet: ILLUMINATED MANUSCRIPT (family A). Pages: setup, gatehouse,
+   beacons, maproom. Load after tokens.css and shell.css. Reads tokens only:
+   no literal colours, fonts or font sizes (derived color-mix() is fine).
+   NO shell rules here: the rampart, tabs, chamber head, dock, buttons, fields,
+   stamps, SIMULATED marks, panels, readouts and the hold-to-seal button all
+   come from shell.css. This sheet adds the manuscript BODY: a vellum folio
+   laid on the chapel stone, versal initials, rubrics, numbered codex
+   sections, gilt frames, wax, drolleries in the margins.
+
+   COMPONENTS
+     .cc-folio              the vellum sheet a chamber's codex is written on
+                            (grain + fibre, double ruled frame, lifted shadow)
+     .cc-title--incipit     modifier on shell h1.cc-title: blackletter incipit
+                            with a versal. Markup:
+                              <h1 class="cc-title cc-title--incipit"><span class="cc-versal"
+                              aria-hidden="true"><span>T</span></span><span class="cc-sr">T</span>he Gatehouse</h1>
+     .cc-versal             champ initial: gilt letter on --ch ground, gilt diaper, gilt frame
+     .cc-rubric (--ch)      red small-caps rubric heading
+     .cc-orn                rule with a central fleuron
+     .cc-vine               a running vine border in --ch
+     .cc-contents           sticky rubric strip (section index) under the tabs
+     .cc-section            numbered codex section
+                              (+__no roman numeral box, __head, __title (with
+                              <em> gloss), __body)
+     .cc-sheet              raised writ / ticket with faint ruling
+     .cc-mini (+__field)    gilt-framed miniature with corner bosses
+     .cc-diaper ([data-tincture="gules"])  diapered night-sky ground for art
+     .cc-gloss (+__no __word __line)  marginal gloss card that opens a chamber
+     .cc-gloss-note         italic book-face aside led by a rubric pilcrow
+     .cc-stamp--inked       modifier on shell .cc-stamp: a pressed rubber stamp
+                            in the stamp's own ink (--st-ink) with grit
+     .cc-btn--rubric        modifier: solid gules button with an offset print
+     .cc-btn--chamber       modifier: solid chamber-ink button (--ch)
+     .cc-btn--line          modifier: outlined rubric button
+     .cc-seal--wax          modifier on shell .cc-seal: the rose becomes a wax
+                            medallion (.cc-wax) or an empty slot (.cc-seal-slot)
+                            and the progress lays gold leaf
+     .cc-wax (--size)       pressed wax seal with the keep tower debossed
+     .cc-seal-slot          empty slot where a seal will be pressed
+     .cc-folio-shield (--lg) + .cc-folio-charge--{keep|urn|portcullis|flame|hex|question|cup|coin}
+     .cc-folio-list > .cc-folio-row (+__lead)  ruled rows with dotted leaders
+     .cc-folio-steps        roman-numbered steps (li > div(b, p) + verdict slot)
+     .cc-stat               ruled row of figures (div > b, span, small)
+     .cc-meter--gilt        modifier on shell .cc-meter: gold leaf fill
+     .cc-dot (--gules --azure --or --emerald --ring)
+     .cc-status (--pass)
+     .cc-droll--{bat|skull|spider|snail|fleuron|quill|candle|tower|cross}
+     .cc-folio-chart        SVG chart styling: .fc-rule (--base --margin)
+                            .fc-lab .fc-labc .fc-area .fc-case .fc-line
+                            .fc-s0..3 (series) .fc-end .fc-e0..3 .fc-num .fc-now
+     .cc-folio-art          SVG illustration fills: .fa-stone .fa-stone-2 .fa-bank .fa-line
+                            .fa-course .fa-wood .fa-plank .fa-water .fa-water-2
+                            .fa-wave .fa-flame .fa-flame-2 .fa-iron .fa-gilt
+                            .fa-sheet .fa-ch .fa-skull .fa-dust
+     .cc-sheen              one burnish sweep across gilt (the signature moment)
+
+   GLYPHS  --glyph-tower --glyph-urn --glyph-portcullis --glyph-flame
+     --glyph-hex --glyph-question --glyph-cup --glyph-coin --glyph-skull
+     --glyph-bat --glyph-spider --glyph-snail --glyph-fleuron --glyph-quill
+     --glyph-candle --glyph-cross --glyph-blob --glyph-info --glyph-expand
+     (SVG masks; were --g-* in round 1). Paint with background: currentColor
+     and mask: var(--glyph-x) center / contain no-repeat. A masked element
+     sets its shape through --mask.
+
+   RULES FOR FOLIO PAGES
+   - The shell is glass; the body is manuscript. Lay the codex on a .cc-folio
+     (or let sections sit on stone inside a .cc-folio column); never re-skin the
+     rampart, tabs, chamber head or dock.
+   - Blackletter (--font-display) for incipits, versals, gloss words and big
+     figures only. Prose quotes and glosses in --font-book; labels in
+     --font-label; controls in --font-text (from shell.css).
+   - Gold leaf on at most three things per view (versal, frame, one seal).
+   - Two drolleries per view at most, in margins or empty states.
+   ============================================================================= */
+
+/* ------------------------------------------------------------ glyph library */
+:root {
+  --glyph-tower: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill-rule='evenodd' d='M3 2h3.2v2.4h2.4V2h2.2v2.4h2.4V2h2.2v2.4h2.4V2H21v6.2l-2 1.6V22H5V9.8L3 8.2ZM9.6 22v-4.3a2.4 2.4 0 0 1 4.8 0V22ZM11 11.5h2v3h-2Z'/></svg>");
+  --glyph-urn: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M7.5 2h9v2h-1.6v2.2c3.2 1.3 5.3 4 5.3 7.3 0 4.6-3.7 7.4-8.2 7.4s-8.2-2.8-8.2-7.4c0-3.3 2.1-6 5.3-7.3V4H7.5Z M6.5 21.2h11V23h-11Z'/></svg>");
+  --glyph-portcullis: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M3 2h18v2.4H3ZM4.4 4h2.2v14.5l-1.1 2.7-1.1-2.7ZM10.9 4h2.2v14.5l-1.1 2.7-1.1-2.7ZM17.4 4h2.2v14.5l-1.1 2.7-1.1-2.7ZM3.4 8.6h17.2v1.8H3.4ZM3.4 13.6h17.2v1.8H3.4Z'/></svg>");
+  --glyph-flame: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M12.6 1.5c.6 4.2 6.4 6.3 6.4 12.4A7 7 0 0 1 5 13.9c0-3 1.7-5.2 3.3-6.4-.2 2.2.6 3.7 2 4.4-.9-3.7.2-7.4 2.3-10.4Z'/></svg>");
+  --glyph-hex: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill-rule='evenodd' d='M12 1.5 21.1 6.8v10.4L12 22.5l-9.1-5.3V6.8ZM12 6.6l-4.7 2.7v5.4l4.7 2.7 4.7-2.7V9.3ZM12 10.2a1.8 1.8 0 1 1 0 3.6 1.8 1.8 0 0 1 0-3.6Z'/></svg>");
+  --glyph-question: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M7 7.6C7 4.6 9.3 2.5 12.3 2.5c3 0 5.2 1.9 5.2 4.6 0 2.3-1.3 3.4-2.7 4.4-1.2.8-1.6 1.4-1.6 2.6v.8h-3v-1c0-2.1.9-3.1 2.3-4.1 1-.7 1.6-1.3 1.6-2.4 0-1.2-.9-2-2-2-1.2 0-2.1.9-2.2 2.2ZM10.1 17.3h3.2v3.2h-3.2Z'/></svg>");
+  --glyph-cup: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill-rule='evenodd' d='M6 2h12v2.2h3.2V7a4.6 4.6 0 0 1-4.3 4.6A6 6 0 0 1 13.2 15v3H17v3H7v-3h3.8v-3a6 6 0 0 1-3.7-3.4A4.6 4.6 0 0 1 2.8 7V4.2H6ZM5 6.2V7c0 1 .6 1.9 1.4 2.3A10 10 0 0 1 6 6.2ZM19 6.2h-1c0 1.1-.1 2.1-.4 3.1.8-.4 1.4-1.3 1.4-2.3Z'/></svg>");
+  --glyph-coin: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill-rule='evenodd' d='M12 2.5a9.5 9.5 0 1 1 0 19 9.5 9.5 0 0 1 0-19Zm0 3a6.5 6.5 0 0 0-5.3 10.3l9.1-9.1A6.5 6.5 0 0 0 12 5.5Zm5.3 2.7-9.1 9.1A6.5 6.5 0 0 0 17.3 8.2Z'/></svg>");
+  --glyph-skull: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><path fill-rule='evenodd' d='M16 2.5C9 2.5 4 7.6 4 14.2c0 3.6 1.6 6.4 4 8.1v4.4c0 1 .8 1.8 1.8 1.8H12v-2.7h2v2.7h4v-2.7h2v2.7h2.2c1 0 1.8-.8 1.8-1.8v-4.4c2.4-1.7 4-4.5 4-8.1C28 7.6 23 2.5 16 2.5ZM11 12.6a3.1 3.1 0 1 1 0 6.2 3.1 3.1 0 0 1 0-6.2ZM21 12.6a3.1 3.1 0 1 1 0 6.2 3.1 3.1 0 0 1 0-6.2ZM16 19.2l2 3.4h-4Z'/></svg>");
+  --glyph-bat: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' viewBox='0 0 64 30'><path id='h' d='M32 8.5c1.3 0 2.2.9 2.6 1.9l1.6-4 .4 5.2c3-4 8.6-6.6 15.4-6.4-2.4 1.8-3.2 4-2.8 6.4 3.2-1.8 7.2-2.2 10.8-1.2-2.8 1.4-4.2 3.6-4 6.2 2.8-.8 5.8-.4 8 1-4.6.4-8.6 2.8-10.8 6.6-1.4-2.6-4.4-4-7.6-3.4.2-2.4-1-4.4-3-5.4-.8 2.8-3 5-5.8 5.8L32 27.5Z'/><use xlink:href='%23h' transform='matrix(-1 0 0 1 64 0)'/></svg>");
+  --glyph-spider: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 48'><rect x='14.5' y='0' width='1' height='22'/><ellipse cx='15' cy='34' rx='5.4' ry='6.6'/><circle cx='15' cy='25.4' r='3.4'/><g fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round'><path d='M12.4 26.5C8.5 24 6.5 21 3.8 21.8M12 29C7.8 28.4 4.8 28 1.8 30M12 32.5C8 33.6 5.8 36 3.4 38.6M12.4 35.5C9.6 38.4 8.6 42 6.8 45M17.6 26.5C21.5 24 23.5 21 26.2 21.8M18 29C22.2 28.4 25.2 28 28.2 30M18 32.5C22 33.6 24.2 36 26.6 38.6M17.6 35.5C20.4 38.4 21.4 42 23.2 45'/></g></svg>");
+  --glyph-snail: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 56 36'><defs><mask id='m'><rect width='56' height='36' fill='white'/><path d='M22 16.5c0-1.6 1.3-2.6 2.7-2.4 2 .3 2.9 2.4 2.4 4.2-.7 2.6-3.6 3.7-6 2.9-3.2-1-4.4-4.7-3.2-7.6 1.5-3.6 5.9-5 9.3-3.4 4.2 1.9 5.6 7.1 3.6 11.1' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round'/></mask></defs><circle cx='24.5' cy='16.5' r='12.5' mask='url(%23m)'/><path d='M2 33c3-3.4 7-4.6 12-4.4l26-.4c3.6-.2 5.6-2.4 6.4-5.6l.6-6.2-1.2-8.4h1.8l1.6 7.2 3-8.6h1.8l-2.6 10.4-.2 6.8c-.4 5.4-3.6 9.2-9.8 9.6Z'/></svg>");
+  --glyph-fleuron: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 22'><path fill-rule='evenodd' d='M15 11C19.5 4.2 26 1.6 33 3.4c2.2.6 3.4 1.6 6 1.2-1.4 2-1.4 4-1.4 6.4s0 4.4 1.4 6.4c-2.6-.4-3.8.6-6 1.2C26 20.4 19.5 17.8 15 11Zm4.2 0c4.4.8 10 .8 15.6-.4-5.6-.8-11.2-.8-15.6.4Z'/><path d='M15.6 11C10 11.4 5.4 9.6 4.2 6.2 3.4 3.8 5 1.8 7.2 2.6c1.8.7 1.8 3 .2 3.4' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round'/></svg>");
+  --glyph-quill: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><path fill-rule='evenodd' d='M29.5 2C19 3.6 10.6 11.4 7.6 21.6L5 29.4l1.6.6 3.2-7c10-1.6 17.6-9.6 19.7-21Zm-6 6.2C18.6 11.4 14 16 11.2 21.4l-.8-.4C13 15.4 17.8 10.6 23.2 7.6Z'/></svg>");
+  --glyph-candle: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 22 44'><path d='M11 1c1.6 3.4 4 5.2 4 8.4a4 4 0 0 1-8 0C7 6.4 9.6 4.6 11 1Z'/><rect x='10.4' y='13' width='1.2' height='3'/><path d='M6 16h10v20H6Z'/><path d='M2 36h18v3H2ZM5 39h12l-1.5 4h-9Z'/></svg>");
+  --glyph-cross: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'><path d='M8 0h4l-.6 6.4L18 4.8v4L11.4 8 20 8v4l-8.6.0 6.6 1.6V18l-6.6-2.4L12 20H8l.6-4.4L2 18v-4.4L8.6 12H0V8h8.6L2 8.8V4.8l6.6 1.6Z'/></svg>");
+  --glyph-blob: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M50 2.5c12-1 20 3.5 29 7 11 4.5 17 14 19 26 2 10-1 16 1 25 2 12-7 23-17 30-10 7-21 8-32 7-12 1-24-2-33-9C7 81 2.5 71 2.5 60 1.5 50 4.5 44 2.5 35 1.5 24 9 13 19 8c10-5 20-5 31-5.5Z'/></svg>");
+  --glyph-info: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill-rule='evenodd' d='M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20Zm0 2a8 8 0 1 0 0 16 8 8 0 0 0 0-16Zm-1.2 6h2.4v7.5h-2.4ZM12 6a1.4 1.4 0 1 1 0 2.8A1.4 1.4 0 0 1 12 6Z'/></svg>");
+  --glyph-expand: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M3 3h7v2.4H5.4V10H3ZM14 3h7v7h-2.4V5.4H14ZM3 14h2.4v4.6H10V21H3ZM18.6 14H21v7h-7v-2.4h4.6Z'/></svg>");
+}
+
+/* ------------------------------------------------------------- the folio */
+.cc-folio {
+  position: relative; min-width: 0; color: var(--ink);
+  background-color: var(--vellum);
+  background-image: var(--tex-vellum-fibre), var(--tex-vellum-grain);
+  border: var(--came) solid var(--lead);
+  outline: 1px solid var(--hair); outline-offset: -7px;          /* inner fillet: the ruled frame */
+  box-shadow: var(--shadow-lift);
+}
+.cc-folio::before {                                               /* a ribbon of the chamber's ink across the head of the sheet */
+  content: ""; display: block; height: 5px; border-bottom: 1px solid var(--lead);
+  background: linear-gradient(90deg, var(--ch-deep), var(--ch) 22%, var(--ch) 78%, var(--ch-deep));
+}
+
+/* -------------------------------------------------------------- incipit */
+.cc-title--incipit { display: flex; align-items: flex-end; color: var(--ink); text-shadow: none; }
+.cc-versal {
+  --v: 1.18em; width: var(--v); height: var(--v); flex: none; margin-right: .06em; position: relative;
+  display: grid; place-items: center; isolation: isolate;
+  background: var(--ch, var(--gules));
+  box-shadow: inset 0 0 0 1px var(--ch-deep, var(--gules-deep)), 0 0 0 3px var(--gilt-mid), 0 0 0 4px var(--lead), var(--shadow), 0 0 calc(var(--glow-on) * 18px) var(--ch-glow);
+}
+.cc-versal::before {                                              /* gilt diaper on the ground */
+  content: ""; position: absolute; inset: 4px; z-index: -1; background: var(--gilt-hi); opacity: .32;
+  -webkit-mask: var(--tex-diaper) 0 0 / 14px 14px; mask: var(--tex-diaper) 0 0 / 14px 14px;
+}
+.cc-versal > span {
+  font: 800 calc(var(--v) * .84)/1 var(--font-display); padding-top: .04em;
+  background: var(--gilt); -webkit-background-clip: text; background-clip: text; color: transparent;
+  filter: drop-shadow(0 1px 0 var(--ch-deep, var(--gules-deep)));
+}
+[data-chamber="visuals"] .cc-versal, .cc-versal[data-chamber="visuals"] { background: var(--or-deep); }
+
+/* ------------------------------------------------------------- headings */
+.cc-rubric { margin: 0; font: 800 var(--t-small)/1.2 var(--font-label); letter-spacing: var(--track-wide); text-transform: lowercase; color: var(--gules-ink); }
+.cc-rubric--ch { color: var(--ch-ink); }
+.cc-orn { display: flex; align-items: center; gap: 12px; color: var(--faint); margin: 4px 0; }
+.cc-orn::before, .cc-orn::after { content: ""; flex: 1; height: 3px; border-top: 1px solid var(--hair); border-bottom: 1px solid var(--hair-2); }
+.cc-orn i { width: 24px; height: 12px; background: var(--ch, var(--gules)); -webkit-mask: var(--glyph-fleuron) center / contain no-repeat; mask: var(--glyph-fleuron) center / contain no-repeat; }
+.cc-vine { height: 14px; background: var(--ch, var(--gules)); opacity: .55; -webkit-mask: var(--tex-vine) 0 50% / 48px 14px repeat-x; mask: var(--tex-vine) 0 50% / 48px 14px repeat-x; }
+
+/* sticky rubric strip: the running index of a chamber's sections */
+.cc-contents {
+  position: sticky; top: var(--top-h); z-index: 5; display: flex; flex-wrap: wrap; gap: 2px 0; padding: 9px 12px 8px;
+  background-color: var(--vellum); background-image: var(--tex-vellum-grain); border-bottom: 1px solid var(--hair);
+  box-shadow: 0 6px 12px -10px var(--shade);
+}
+.cc-contents a { display: inline-flex; align-items: baseline; gap: 5px; padding: 5px 7px; white-space: nowrap; text-decoration: none; font: 700 var(--t-label)/1 var(--font-label); letter-spacing: .05em; text-transform: lowercase; color: var(--ink-2); border-radius: var(--r); }
+.cc-contents a i { font: 800 var(--t-label)/1 var(--font-label); font-style: normal; color: var(--ch-ink); }
+.cc-contents a:hover { background: var(--ch-wash); color: var(--ink); }
+.cc-contents a[aria-current] { background: var(--surface); box-shadow: inset 0 0 0 1px var(--hair), inset 0 -2px 0 var(--ch); color: var(--ink); }
+
+/* ------------------------------------------------- numbered codex section */
+.cc-section { display: grid; grid-template-columns: 46px minmax(0, 1fr); column-gap: 16px; padding: 22px 0 24px; border-top: 1px solid var(--hair); position: relative; }
+.cc-section:first-child { border-top: 0; }
+.cc-section__no {
+  grid-row: 1 / span 3; align-self: start; width: 40px; height: 40px; display: grid; place-items: center;
+  font: 800 var(--t-body)/1 var(--font-label); letter-spacing: .02em; color: var(--ch-ink, var(--gules-ink));
+  border: 1px solid var(--ch, var(--gules)); outline: 1px solid var(--ch, var(--gules)); outline-offset: 2px; background: var(--surface);
+}
+.cc-section__head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+.cc-section__head > .cc-stamp, .cc-section__head > .cc-sim { margin-left: auto; align-self: center; }
+.cc-section__title { margin: 0; font: 800 var(--t-h3)/1.15 var(--font-label); letter-spacing: var(--track-label); color: var(--ink); text-transform: lowercase; }
+.cc-section__title em { font: italic 400 var(--t-small)/1 var(--font-aside); letter-spacing: 0; color: var(--muted); margin-left: 10px; text-transform: none; }
+.cc-section__body { display: grid; gap: 14px; min-width: 0; }
+
+/* ------------------------------------------------------------- surfaces */
+.cc-sheet {                                                       /* raised writ / ticket */
+  position: relative; background: var(--surface); border: 1px solid var(--hair);
+  box-shadow: var(--shadow-lift); padding: 16px 18px;
+}
+.cc-sheet::before {                                               /* ruling */
+  content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .5;
+  background: repeating-linear-gradient(180deg, transparent 0 25px, var(--hair-2) 25px 26px);
+}
+.cc-sheet > * { position: relative; }
+
+/* framed miniature: gilt frame, lead fillet, corner bosses */
+.cc-mini {
+  position: relative; padding: 7px; background: var(--gilt);
+  box-shadow: 0 0 0 1px var(--gilt-lo), 0 0 0 4px var(--surface), 0 0 0 6px var(--lead), var(--shadow-lift);
+}
+.cc-mini__field { position: relative; height: 100%; overflow: hidden; box-shadow: 0 0 0 1.5px var(--lead); }
+.cc-mini::before, .cc-mini::after {
+  content: ""; position: absolute; width: 14px; height: 14px; z-index: 2; transform: rotate(45deg);
+  background: var(--ch, var(--gules)); box-shadow: 0 0 0 1.5px var(--gilt-hi), 0 0 0 2.5px var(--lead), 0 0 calc(var(--glow-on) * 10px) var(--ch-glow);
+}
+.cc-mini::before { left: -7px; top: -7px; }
+.cc-mini::after { right: -7px; bottom: -7px; }
+.cc-diaper { background-color: var(--art-sky); position: relative; }
+.cc-diaper::before {
+  content: ""; position: absolute; inset: 0; background: var(--gilt-flat); opacity: .45;
+  -webkit-mask: var(--tex-diaper) 0 0 / 34px 34px; mask: var(--tex-diaper) 0 0 / 34px 34px;
+}
+.cc-diaper[data-tincture="gules"] { background-color: var(--gules-deep); }
+
+/* marginal gloss: a chamber note in the margin that opens the chamber */
+.cc-gloss {
+  position: relative; display: grid; text-decoration: none; gap: 2px; text-align: left; cursor: pointer; width: 100%;
+  padding: 10px 12px 11px 14px; border: 0; background: var(--surface); color: var(--ink);
+  box-shadow: inset 0 0 0 1px var(--hair), var(--shadow); border-left: 4px solid var(--ch);
+  transition: transform var(--m-fast) var(--ease), box-shadow var(--m-fast) var(--ease);
+}
+.cc-gloss:hover, .cc-gloss:focus-visible { transform: translateY(-2px); box-shadow: inset 0 0 0 1px var(--ch), var(--shadow-lift); }
+.cc-gloss__no { display: flex; align-items: center; gap: 7px; font: 800 var(--t-label)/1 var(--font-label); letter-spacing: var(--track-wide); text-transform: lowercase; color: var(--ink-2); }
+.cc-gloss__word { font: 600 var(--t-figure-sm)/1 var(--font-display); color: var(--ch-ink); margin: 4px 0 2px; }
+.cc-gloss__line { font: italic 400 var(--t-small)/1.3 var(--font-book); color: var(--ink-2); }
+.cc-gloss .cc-stamp, .cc-gloss .cc-sim { position: absolute; right: -8px; top: -10px; }
+.cc-gloss-note { font: italic 400 var(--t-small)/1.45 var(--font-book); color: var(--ink-2); max-width: 72ch; }
+.cc-gloss-note::before { content: "¶ "; font-style: normal; font-weight: 700; color: var(--gules-ink); }
+
+/* -------------------------------------------- shell modifiers (folio inks) */
+/* inked rubber stamp: same tones as the glass stamp, pressed instead of lit */
+.cc-stamp--inked {
+  color: var(--st-ink, var(--ink-2)); text-shadow: none; border-radius: var(--r);
+  background: var(--surface); border: 1.5px solid currentColor;
+  box-shadow: inset 0 0 0 2px var(--surface), inset 0 0 0 3px currentColor;
+  transform: rotate(-1.5deg);
+  -webkit-mask: var(--tex-stamp-grit) 0 0 / 160px 160px; mask: var(--tex-stamp-grit) 0 0 / 160px 160px;
+}
+.cc-stamp--inked.cc-stamp--blocked { transform: rotate(2deg); }
+.cc-btn--rubric { background: var(--gules); color: var(--on-glass); border-color: var(--gules-deep); box-shadow: 2px 2px 0 var(--gules-deep), 0 0 calc(var(--glow-on) * 12px) var(--gules-glow); }
+.cc-btn--rubric:hover { background: var(--gules-deep); box-shadow: 2px 2px 0 var(--lead); }
+.cc-btn--chamber { background: var(--ch); color: var(--on-glass); border-color: var(--ch-deep); box-shadow: 2px 2px 0 var(--ch-deep), 0 0 calc(var(--glow-on) * 12px) var(--ch-glow); }
+.cc-btn--chamber:hover { background: var(--ch-deep); box-shadow: 2px 2px 0 var(--lead); }
+[data-chamber="visuals"] .cc-btn--chamber { color: var(--lead-lo); }
+.cc-btn--line { color: var(--gules-ink); border-color: var(--gules); background: var(--surface); box-shadow: 2px 2px 0 var(--gules-wash); }
+.cc-btn--line:hover { background: var(--gules-wash); box-shadow: 2px 2px 0 var(--gules-wash); }
+.cc-meter--gilt > i { background: var(--gilt); }
+
+/* ---------------------------------------------------------- wax & sealing */
+.cc-wax {
+  --size: 52px; width: var(--size); height: var(--size); flex: none; position: relative; display: grid; place-items: center;
+  background: radial-gradient(circle at 34% 30%, var(--wax-hi) 0%, var(--wax) 42%, var(--wax-lo) 100%);
+  -webkit-mask: var(--glyph-blob) center / contain no-repeat; mask: var(--glyph-blob) center / contain no-repeat;
+  filter: drop-shadow(0 2px 2px var(--wax-drop));
+}
+.cc-wax::before {                                                 /* pressed ring */
+  content: ""; position: absolute; inset: 17%; border-radius: 50%;
+  box-shadow: inset 1.5px 1.5px 2px var(--emboss-dark), inset -1px -1px 1px var(--emboss-light), 1px 1px 0 var(--emboss-light), -1px -1px 1px var(--emboss-dark);
+}
+.cc-wax::after {                                                  /* imprint: the keep tower, debossed */
+  content: ""; width: 34%; height: 34%; background: var(--wax-lo); opacity: .85;
+  -webkit-mask: var(--glyph-tower) center / contain no-repeat; mask: var(--glyph-tower) center / contain no-repeat;
+  filter: drop-shadow(1px 1px 0 var(--emboss-light));
+}
+.cc-seal-slot {
+  --size: 52px; width: var(--size); height: var(--size); border-radius: 50%; flex: none;
+  border: 1.5px dashed var(--faint); background: radial-gradient(circle, var(--tint), transparent 70%);
+  display: grid; place-items: center;
+}
+.cc-seal-slot::after { content: ""; width: 40%; height: 40%; background: var(--faint); -webkit-mask: var(--glyph-tower) center / contain no-repeat; mask: var(--glyph-tower) center / contain no-repeat; opacity: .8; }
+
+/* hold to seal, wax edition: shell .cc-seal + .cc-seal--wax; a .cc-wax (or .cc-seal-slot when
+   disabled) sits where the rose would; holding lays gold leaf across the pane. */
+.cc-seal--wax {
+  border-color: var(--gules-deep);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--gilt-mid) 55%, transparent) var(--cc-seal-progress), transparent var(--cc-seal-progress)), var(--surface);
+  box-shadow: inset 0 0 0 3px var(--surface), inset 0 0 0 4px var(--gules), 3px 3px 0 var(--gules-deep);
+}
+.cc-seal--wax .cc-seal__label { color: var(--gules-ink); }
+.cc-seal--wax .cc-wax { transition: transform var(--m-fast) var(--ease); }
+.cc-seal--wax:hover:not(:disabled) .cc-wax { transform: rotate(-6deg) scale(1.04); }
+.cc-seal--wax[data-sealed="true"] .cc-seal__label::after { content: " · sealed"; color: var(--ok-ink); }
+.cc-seal--wax:disabled { border-color: var(--hair); background: var(--surface-2); box-shadow: inset 0 0 0 3px var(--surface-2), inset 0 0 0 4px var(--hair-2); }
+.cc-seal--wax:disabled .cc-seal__label { color: var(--muted); }
+
+/* ------------------------------------------------------ heraldic shields */
+.cc-folio-shield {
+  --s: 26px; width: var(--s); height: calc(var(--s) * 1.15); flex: none; display: grid; place-items: center; position: relative;
+  background: var(--ch, var(--key));
+  clip-path: path("M0 0H26V15.5C26 22 19.5 27.2 13 30 6.5 27.2 0 22 0 15.5Z");
+}
+.cc-folio-shield--lg { --s: 40px; clip-path: path("M0 0H40V23.8C40 33.8 30 41.8 20 46 10 41.8 0 33.8 0 23.8Z"); }
+.cc-folio-shield::after { content: ""; position: absolute; inset: 0; background: linear-gradient(135deg, color-mix(in srgb, var(--on-glass) 22%, transparent), transparent 55%); }
+.cc-folio-charge { width: 62%; height: 62%; margin-top: -10%; background: var(--on-glass); -webkit-mask: var(--mask) center / contain no-repeat; mask: var(--mask) center / contain no-repeat; }
+[data-chamber="visuals"] .cc-folio-charge, .cc-folio-shield[data-chamber="visuals"] .cc-folio-charge { background: var(--lead-lo); }
+.cc-folio-charge--keep { --mask: var(--glyph-tower); }
+.cc-folio-charge--urn { --mask: var(--glyph-urn); }
+.cc-folio-charge--portcullis { --mask: var(--glyph-portcullis); }
+.cc-folio-charge--flame { --mask: var(--glyph-flame); }
+.cc-folio-charge--hex { --mask: var(--glyph-hex); }
+.cc-folio-charge--question { --mask: var(--glyph-question); }
+.cc-folio-charge--cup { --mask: var(--glyph-cup); }
+.cc-folio-charge--coin { --mask: var(--glyph-coin); }
+
+/* ------------------------------------------------------- lists & figures */
+.cc-folio-list { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--lead); }
+.cc-folio-row { display: flex; align-items: baseline; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--hair); }
+.cc-folio-row__lead { flex: 1; border-bottom: 1px dotted var(--faint); transform: translateY(-4px); min-width: 20px; }
+.cc-folio-row b { font-weight: 700; font-variant-numeric: var(--num); }
+.cc-folio-steps { list-style: none; margin: 0; padding: 0; display: grid; counter-reset: step; }
+.cc-folio-steps > li { display: grid; grid-template-columns: 34px 1fr auto; gap: 12px; align-items: start; padding: 10px 0; border-bottom: 1px solid var(--hair); }
+.cc-folio-steps > li::before {
+  counter-increment: step; content: counter(step, upper-roman); width: 30px; height: 30px; display: grid; place-items: center;
+  font: 800 var(--t-label)/1 var(--font-label); color: var(--gules-ink); border: 1px solid var(--gules); border-radius: 50%; background: var(--surface);
+}
+.cc-folio-steps b { display: block; font: 800 var(--t-small)/1.2 var(--font-label); letter-spacing: var(--track-label); text-transform: lowercase; color: var(--ink); }
+.cc-folio-steps p { font-size: var(--t-small); color: var(--ink-2); margin-top: 2px; }
+.cc-stat { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; border-top: 1px solid var(--lead); border-bottom: 1px solid var(--hair); }
+.cc-stat > div { padding: 10px 12px 10px 0; display: grid; gap: 3px; }
+.cc-stat > div + div { padding-left: 12px; border-left: 1px solid var(--hair); }
+.cc-stat b { font: 600 var(--t-figure-sm)/1 var(--font-display); font-variant-numeric: var(--num); color: var(--ink); }
+.cc-stat span { font: 800 var(--t-label)/1.2 var(--font-label); letter-spacing: var(--track-label); text-transform: lowercase; color: var(--ink-2); }
+.cc-stat small { font: italic 400 var(--t-small)/1.2 var(--font-aside); color: var(--muted); }
+.cc-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; flex: none; background: var(--ink-2); }
+.cc-dot--gules { background: var(--gules); } .cc-dot--azure { background: var(--azure); } .cc-dot--or { background: var(--or); } .cc-dot--emerald { background: var(--emerald); }
+.cc-dot--ring { background: transparent; border: 2px solid var(--ch, var(--azure)); }
+.cc-status { font: 500 var(--t-small)/1.35 var(--font-text); color: var(--ink-2); display: flex; align-items: center; gap: 8px; }
+.cc-status--pass { color: var(--ok-ink); font-weight: 700; }
+
+/* ------------------------------------------------------------ drolleries */
+.cc-droll { display: inline-block; width: 40px; height: 40px; flex: none; background: currentColor; -webkit-mask: var(--mask) center / contain no-repeat; mask: var(--mask) center / contain no-repeat; }
+.cc-droll--bat { --mask: var(--glyph-bat); width: 56px; height: 26px; }
+.cc-droll--skull { --mask: var(--glyph-skull); }
+.cc-droll--spider { --mask: var(--glyph-spider); width: 26px; height: 44px; }
+.cc-droll--snail { --mask: var(--glyph-snail); width: 56px; height: 36px; }
+.cc-droll--fleuron { --mask: var(--glyph-fleuron); width: 30px; height: 16px; }
+.cc-droll--quill { --mask: var(--glyph-quill); }
+.cc-droll--candle { --mask: var(--glyph-candle); width: 22px; height: 44px; }
+.cc-droll--tower { --mask: var(--glyph-tower); }
+.cc-droll--cross { --mask: var(--glyph-cross); width: 14px; height: 14px; }
+
+/* ------------------------------------------------------ chart (curves) */
+.cc-folio-chart { display: block; width: 100%; height: auto; }
+.cc-folio-chart .fc-rule { stroke: var(--hair); stroke-width: 1; }
+.cc-folio-chart .fc-rule--base { stroke: var(--ink-2); stroke-width: 1.4; }
+.cc-folio-chart .fc-rule--margin { stroke: var(--gules); opacity: .45; }
+.cc-folio-chart .fc-lab { font: 500 var(--t-label)/1 var(--font-text); fill: var(--muted); font-variant-numeric: var(--num); }
+.cc-folio-chart .fc-labc { font: 700 var(--t-label)/1 var(--font-label); letter-spacing: .08em; fill: var(--ink-2); }
+.cc-folio-chart .fc-area { fill: var(--ch-wash); }
+.cc-folio-chart .fc-case { fill: none; stroke: var(--surface); stroke-width: 7; stroke-linecap: round; }
+.cc-folio-chart .fc-line { fill: none; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+.cc-folio-chart .fc-s0 { stroke: var(--azure); stroke-width: 4; }
+.cc-folio-chart .fc-s1 { stroke: var(--gules); }
+.cc-folio-chart .fc-s2 { stroke: var(--or-deep); stroke-dasharray: 9 4; }
+.cc-folio-chart .fc-s3 { stroke: var(--emerald); stroke-dasharray: 2 4; }
+[data-theme="night"] .cc-folio-chart .fc-s2 { stroke: var(--or); }
+.cc-folio-chart .fc-end { stroke: var(--lead); stroke-width: 1.4; }
+.cc-folio-chart .fc-e0 { fill: var(--azure); } .cc-folio-chart .fc-e1 { fill: var(--gules); } .cc-folio-chart .fc-e2 { fill: var(--or); } .cc-folio-chart .fc-e3 { fill: var(--emerald); }
+.cc-folio-chart .fc-num { font: 800 var(--t-label)/1 var(--font-label); fill: var(--on-glass); text-anchor: middle; }
+.cc-folio-chart .fc-e2 + .fc-num { fill: var(--lead-lo); }
+.cc-folio-chart .fc-now { stroke: var(--ch); stroke-width: 1.2; stroke-dasharray: 3 3; }
+
+/* ------------------------------------------------- illustration (inline SVG) */
+.cc-folio-art .fa-stone { fill: var(--art-stone); }
+.cc-folio-art .fa-stone-2 { fill: var(--art-stone-2); }
+.cc-folio-art .fa-course { fill: none; stroke: var(--art-stone-ink); stroke-width: .8; opacity: .2; }
+.cc-folio-art .fa-line { stroke: var(--art-stone-ink); stroke-width: 2.2; stroke-linejoin: round; }
+.cc-folio-art .fa-bank { fill: var(--art-stone-2); stroke: var(--art-stone-ink); stroke-width: 1.4; }
+.cc-folio-art .fa-wood { fill: var(--art-wood); stroke: var(--art-stone-ink); stroke-width: 1.6; }
+.cc-folio-art .fa-plank { stroke: var(--art-stone-ink); stroke-width: 1; opacity: .5; }
+.cc-folio-art .fa-water { fill: var(--art-water); }
+.cc-folio-art .fa-water-2 { fill: var(--art-water-2); }
+.cc-folio-art .fa-wave { fill: none; stroke: var(--art-foam); stroke-width: 1.6; opacity: .7; stroke-linecap: round; }
+.cc-folio-art .fa-flame { fill: var(--art-flame); }
+.cc-folio-art .fa-flame-2 { fill: var(--gilt-hi); }
+.cc-folio-art .fa-iron { fill: var(--art-shade); }
+.cc-folio-art .fa-gilt { fill: var(--gilt-hi); }
+.cc-folio-art .fa-sheet { fill: var(--art-sheet); stroke: var(--art-stone-ink); stroke-width: 1.4; }
+.cc-folio-art .fa-ch { fill: var(--ch); stroke: var(--art-stone-ink); stroke-width: 1.4; }
+.cc-folio-art .fa-skull { fill: var(--art-stone); stroke: var(--art-stone-ink); stroke-width: 1.4; }
+.cc-folio-art .fa-dust { fill: var(--art-stone-2); opacity: 0; }
+
+/* ---------------------------------------------------------------- motion */
+.cc-sheen { position: relative; overflow: hidden; }
+@media (prefers-reduced-motion: no-preference) {
+  .cc-sheen::after {
+    content: ""; position: absolute; inset: -20%; pointer-events: none; z-index: 3;
+    background: linear-gradient(105deg, transparent 38%, transparent 42%, var(--sheen) 50%, transparent 58%, transparent 62%);
+    transform: translateX(-120%); animation: cc-burnish var(--m-sheen) var(--ease) .35s 1 both;
+    mix-blend-mode: soft-light;
+  }
+}
+@keyframes cc-burnish { to { transform: translateX(120%); } }
+@keyframes cc-press { from { transform: rotate(-12deg) scale(1.9); } to { transform: rotate(-1.5deg) scale(1); } }

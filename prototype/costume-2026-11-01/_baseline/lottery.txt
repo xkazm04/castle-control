@@ -1,0 +1,443 @@
+CASTLE CONTROL
+ON AIR · SIMULATED
+Unknown
+VIEWERS
+Unknown
+UPTIME
+TWITCH SIMULATED
+OBS SIMULATED
+GATEHOUSE SIMULATED
+SIMULATED
+STEWARD
+0
+THE KEEP
+1
+LOT CHAMBER
+No draw
+On air
+Preview
+Draft
+Preview
+2
+GATEHOUSE
+1 held
+On air
+Preview
+Draft
+On air, preview
+3
+BEACONS
+Offering altar
+On air
+Preview
+Draft
+On air, preview
+4
+MAP ROOM
+Sand table
+On air
+Preview
+Draft
+Preview
+37
+27
+21
+16
+THE HERALD · SAMPLE
+HELD
+SAND TABLE · 9 × 5 HEX
+DRAFT
+THE STEWARD’S STUDY
+The keep
+›
+Lot Chamber
+· chamber 1 of 4
+THE LOT CHAMBER
+Lottery manager
+SIMULATED
+Back to the overview
+Esc
+THE URN · EVERY LOT DRAWN AS A MARK
+every lot drawn as a mark
+87
+lots · eligible
+Urn
+Wheel
+Deck
+Ballot box
+Reveal by hand
+♪ Ceremony sound
+i
+⛶
+
+LOTS ARRIVING · THE ROLL IS STILL OPEN
+
+New accounts
+50
+Subscribers
+24
+Raiders
+13
+3
+Winners
+selected draw
+5
+Held out
+by cooldown
+1/3
+Raider cap
+of winners
+THE WRIT
+drafted in ink, sealed by you
+NO DRAFT WAITING
+
+WRIT TEMPLATES
+
+Tell the Steward which draw. Its proposal will ink in here.
+
+?
+QUESTIONS FOR THE HALL
+No prize · proposal only
+OK
+DRAFT WRIT
+FREE-ENTRY PRIZE EXAMPLE
+Prize · proposal only
+Attach an official-rules template before starting a prize draw.
+Acknowledge the Twitch disclaimer before starting a prize draw.
+BLOCKED
+DRAFT WRIT
+PAID-WEIGHT BLOCKED EXAMPLE
+Prize · proposal only
+Paid weight on a prize draw is blocked.
+BLOCKED
+DRAFT WRIT
+
+Pool: chatters · question · 600 second cooldown · 5 held out by cooldown · Weight table: every generated entry has weight 1. Two newcomers outweigh the heaviest entrant.
+
+OVERLORD URN · ROOM TIER
+S
+HEARTH
+3 WINNERS
+M
+HALL
+7 WINNERS
+L
+COURTYARD
+15 WINNERS
+
+One click sets the urn and the plan’s winner count for your room size. It configures the draw before sealing and never changes a cast.
+
+NEXT DRAW SETUP
+
+SIMULATED: generated messages are !join (every third entry) or !question. Every second entry follows; every fifth has redeemed. No Twitch data.
+
+DRAW NAME
+CONTENT TYPE
+Question
+Idea
+Prize
+Jury seat
+ELIGIBLE POOL
+Chatters
+Followers
+Subscribers
+Channel-point redeemers
+Keyword typists
+WINNERS
+COOLDOWN IN SECONDS
+RAIDER COHORT CAP
+1 / 3
+2 / 3
+3 / 3
+WEIGHTS
+Equal odds · 1× for every lot
+Concave activity weights
+
+Activity units are generated from 0 to 4. Free !join forces equal odds across the entire pool.
+
+FREE !JOIN PATH WITH EQUAL ODDS
+
+Newcomer weight 1; heaviest 1. 2 newcomers outweigh the heaviest entrant.
+
+Generated weight table
+PREVIEW THIS DRAW
+PAUSE INTAKE
+
+Open · lots arriving
+
+No draw changes yet.
+
+Review the writ below, then hold to seal in the seal slot. Editing setup discards its previous preview.
+
+WEIGHT & CAP EQUALIZER
+
+How much activity can tilt the odds
+
+FREE PATH · EQUAL
+
+Chat activity can add weight, but each extra unit adds less. Money never adds weight.
+
+EQUAL
+CONCAVE
+FREE !JOIN · EQUAL ODDS
+ACTIVITY CAP
+−
+—
++
+RAIDER COHORT CAP
+0 / 3 · raiders excluded
+1 / 3
+2 / 3
+3 / 3
+
+Cap 1–8 units here. Simulated pool activity runs 0–4 units.
+
+1
+0u
+1
+1u
++0
+1
+2u
++0
+1
+3u
++0
+1
+4u
++0
+Weight per entry
+Curve
+Point at a bar to light those lots on the stage.
+
+Free !join path is on: every entry gets equal odds, so the curve is flat. Switch it off to let activity weigh in.
+
+2
+
+2 newcomers (2 × 1 = 2) outweigh the heaviest entrant (1).
+
+Heaviest figure comes from the current simulated pool.
+
+WEIGHT HELD BY COHORT
+
+New accounts
+50 lots · 57% of heads · 57% of weight
+Subscribers
+24 lots · 28% of heads · 28% of weight
+Raiders
+13 lots · 15% of heads · 15% of weight
+
+RAIDER CAP
+
+Raiders can take at most 1 of 3 winners.
+
+ON STREAM
+DRAW SHAPE
+Urn
+Wheel
+Deck
+Ballot box
+URN SIZE
+S
+M
+L
+SCREEN ANCHOR
+Top left
+Top right
+Bottom left
+Bottom right
+Center
+URN COLOUR
+Gules · red
+Azure · blue
+Or · gold
+Key · ink
+ART STYLE
+Heraldic
+Arcade
+Neon
+Storybook
+Cel
+Glass
+REVEAL TIMING IN MS
+Urn · as the OBS draw page paints it · SIMULATED · SAMPLE ART · AI-generated
+
+Appearance stays in this session and is not saved with the draw. Reveal timing: 100–10000 ms.
+
+GIVEAWAY GUARDRAILS
+OK
+local preview
+PROPOSAL · AWAITING YOUR SEAL
+
+Nothing acts until you hold to seal.
+
+SIMULATED · DATA-ONLY DESIGNS
+
+Draw shapes
+Restyle
+Custom design
+
+No proposals. Ask the Steward to draft one.
+
+WRIT LAB
+tamper and verify
+SIMULATED
+
+Alter one thing in an in-memory copy of this writ and watch the proof refuse it. The frozen roll itself never changes.
+
+SPECIMEN
+
+CURRENT WRIT
+SIMULATED BEACON WRIT
+OPEN A WRIT FILE…
+
+TAMPER WITH A COPY
+
+WEIGHT +1
+ALTER A HANDLE
+FLIP A SEED BIT
+MOVE THE ROUND
+SWAP TWO WINNERS
+
+Canonical writ restored.
+
+1
+ROLL
+Pass
+2
+SEAL
+Pass
+3
+SEED
+Pass
+4
+WINNERS
+Pass
+
+Writ verified · every step passes.
+
+RESTORE CANONICAL WRIT
+
+FROZEN ROLL · CANONICAL BYTES
+
+The seal is SHA-256 over these exact bytes: domain tag, entry count, each handle and weight, winner count, seal time, margin and the randomness plan.
+
+{"handle":"simulated_00","weight":14}
+{"handle":"simulated_01","weight":21}
+{"handle":"simulated_02","weight":28}
+
+3 entries · 148 bytes
+
+Byte 0
+63
+61
+73
+74
+6c
+65
+2d
+63
+6f
+6e
+74
+72
+6f
+6c
+2f
+73
+
+Download writ JSON · The download is always the untampered writ.
+
+PROOF WALK · FOUR STEPS
+
+1
+1. CANONICAL ROLL
+
+Handles ascend, weights are whole, the winner count fits.
+
+3 entries · 148 bytes
+
+PASS
+2
+2. SHA-256 SEAL
+
+Recompute the hash of the frozen bytes and compare it with the announced seal.
+
+RECORDED
+7a3df29d60…ae403a
+RECOMPUTED
+7a3df29d60…ae403a
+PASS
+3
+3. RANDOMNESS COMMITMENT
+
+Check the revealed seed or beacon against what the roll committed to.
+
+Streamer-controlled · commit and reveal
+
+RECORDED
+22cc2224d3…a90d32
+RECOMPUTED
+22cc2224d3…a90d32
+PASS
+4
+4. WINNER DERIVATION
+
+Re-run rejection sampling from the seed and compare winners in order.
+
+RECORDED
+simulated_01, simulated_00
+RECOMPUTED
+simulated_01, simulated_00
+PASS
+Rejection sampling trace · 2 draws · 0 rejected
+
+Simulated proof. Recomputed offline in this window; nothing is published or fetched.
+
+FIND A HANDLE IN THE ROLL
+
+Try simulated_00001 or simulated_cooldown.
+
+Enter a generated handle to check this pool.
+
+WRIT
+
+SAVED SIMULATED PROOF BUNDLE
+
+2026-10-25
+
+RECORDED WINNERS
+
+simulated_01
+simulated_00
+The writ
+
+FAIRNESS YOU CAN VERIFY
+
+Seal
+Freeze the entry list and publish its hash.
+Public round announced
+Choose a future public round after the seal.
+Round arrives
+Authenticate the public round before deriving winners.
+Cast
+Derive winners, then show the fixed result.
+
+Test mode only. These steps describe the live protocol. This page neither publishes a seal nor fetches a round.
+
+This recompute accepts only the built-in simulated proof. To check another writ, open it in the Writ Lab.
+
+Scroll within this panel for setup, seal, proof and fairness
+↓
+
+THE STEWARD
+simulated co-pilot · sample data
+SIMULATED
+
+Good evening. Draft in the preview, amend in ink, then hold to seal. Nothing acts on a spoken request.
+
+Talk to the Steward...
+Tell
+Catch me up
+Draft a question draw
+What does chat want?

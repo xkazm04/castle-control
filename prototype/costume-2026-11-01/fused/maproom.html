@@ -1,0 +1,494 @@
+<!doctype html>
+<html lang="en" data-theme="day">
+<!-- PORT NOTES
+Page: maproom (route #/chamber/studio). Direction: Illuminated (folio.css) on the fused shell (shell.css).
+Ported from round-1/a/maproom.html by the FUSION.md checklist; gatehouse.html is the reference port.
+Shell: rampart, chamber tabs, dock, head bootstrap, proto toggle and keymap script are copied verbatim from keep.html
+  (only aria-current on the Map Room tab and data-chamber="studio" on .cc-shell change). Round 1's leather binding,
+  herald's-roll tabs and margin dock are gone.
+Header: shell .cc-chamber-head (crumbs, h1.cc-title.cc-title--incipit with the folio .cc-versal, p.cc-subtitle + .cc-sim,
+  .cc-back > a.cc-btn[data-back] + Esc), in the desk column above the folio, as on gatehouse.
+Layout: .mr grid: .mr-desk (chamber head, then a .cc-folio sheet holding the war table plate, .cc-contents and three folio
+  .cc-section blocks) and .mr-rail (sticky: two shell .cc-panel boxes, the tile inspector and the banners).
+  The in-panel scroller and its "Scroll for test requirements…" hint are gone: the document scrolls.
+Components (page-local, lift to room CSS):
+  .mr-map (inline SVG portolan chart in folio .cc-mini: rhumb lines from a compass rose, g.mr-hex[role=button] per tile
+    with .mr-id and .mr-hn labels, g.mr-pin on the selected tile) replaces studio/hex-table.tsx + hex-field.css.
+    Houses are blazoned and keep their tinctures in both themes (it is an illustration): Quill gules, Tallow or,
+    Sable key, Unclaimed argent (--art-sheet, hatched). Labels: --on-glass on gules/key, --art-stone-ink on or/argent.
+  .mr-legend + .mr-pennant (swallow-tailed tincture flags with the tile counts) replace the board's count chips.
+  shell .cc-seg--sm replaces the Table / Spyglass / Rehearse / Tiltyard view buttons (room.tsx).
+  .mr-insp (shell .cc-panel: .cc-folio-shield + charge--hex, .mr-tile figure, .cc-panel__foot) replaces the inspector card
+    in room.tsx; .mr-banners/.mr-banner replace the banner InkButtons.
+  Local map design uses shell .cc-field/.cc-seg/.cc-input; .mr-preview replaces design.tsx's preview frame.
+  .mr-ladder/.mr-step (three rising treads, locked treads hatched, folio .cc-stamp--inked) replaces test-ladder.tsx;
+    .mr-req is the requirements note with folio .cc-gloss-note. Seal slot: shell .cc-panel + .cc-seal.cc-seal--wax with an
+    empty folio .cc-seal-slot (seal-slot/index.tsx).
+Key ink: --key is C's smoke now. Fills use --key (the Sable tiles, pennant, preview frame); every key LINE or rule
+  (requirements bar, chosen tread, chosen banner, tile ring) uses --ch-ink so it reads strongly by day and by night.
+Motion: the chart is inked. Tiles are stamped in a wave from the west coast to the east, the compass needle swings and
+  settles on north, then the pennant drops onto A1. Reduced motion: the map is simply there.
+-->
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Map Room · Castle Control</title>
+<script>(function(){try{var t=new URLSearchParams(location.search).get('theme');if(t==='night'||t==='day')document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Grenze+Gotisch:wght@500;600;700;800&family=Alegreya+Sans:ital,wght@0,400;0,500;0,700;0,800;1,400&family=Alegreya+Sans+SC:wght@500;700;800&family=Alegreya:ital,wght@0,400;0,500;0,700;0,800;1,400;1,500&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="shell.css">
+<link rel="stylesheet" href="folio.css">
+<style>
+/* ---- map room page ------------------------------------------------------- */
+.mr { --mr-sable: var(--key-deep); display: grid; grid-template-columns: minmax(0, 1fr) 392px; gap: 28px; padding: 18px var(--gutter) 34px; align-items: start; }
+[data-theme="night"] .mr { --mr-sable: var(--key); }   /* sable: near-black by day; by night the smoke glass, lit against the slate folio */
+.mr-desk { min-width: 0; display: grid; gap: 22px; }
+.mr-desk > .cc-chamber-head { padding-inline: 0; }
+.mr-desk > .cc-chamber-head .cc-title { margin-top: 10px; }
+.mr-folio .cc-contents { margin: 0; }
+.mr-sm { font-size: var(--t-small); color: var(--ink-2); }
+
+/* the war table plate (first thing on the folio) */
+.mr-table { padding: 18px 26px 24px 22px; display: grid; gap: 14px; scroll-margin-top: calc(var(--top-h) + 60px); }
+.mr-table__bar { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.mr-table__title { margin: 0; font: 800 var(--t-h3)/1 var(--font-label); letter-spacing: var(--track-label); text-transform: lowercase; color: var(--ink); }
+.mr-table__title em { font: italic 400 var(--t-small)/1 var(--font-aside); letter-spacing: 0; text-transform: none; color: var(--muted); margin-left: 10px; }
+.mr-table__plate { display: grid; grid-template-columns: minmax(0, 1fr) 172px; gap: 24px; align-items: center; }
+.mr-table .cc-mini { margin: 7px; }
+.mr-table .cc-mini__field { background-color: var(--vellum); background-image: var(--tex-vellum-fibre), var(--tex-vellum-grain); }
+
+/* the chart */
+.mr-map { display: block; width: 100%; height: auto; }
+.mr-map .mr-rhumb { fill: none; stroke: var(--gules); stroke-width: .7; opacity: .32; }
+.mr-map .mr-hex { cursor: pointer; outline: none; }
+.mr-map .mr-hex path { stroke: var(--art-stone-ink); stroke-width: 1.6; stroke-linejoin: round; }
+.mr-map .mr-hex--q path { fill: var(--gules); }
+.mr-map .mr-hex--t path { fill: var(--or); }
+.mr-map .mr-hex--s path { fill: var(--mr-sable); }
+.mr-map .mr-hex--u path { fill: url(#mrArgent); }
+.mr-map .mr-argent { fill: var(--art-sheet); }
+.mr-map .mr-hatch { stroke: var(--faint); stroke-width: 1.1; }
+.mr-map .mr-id { font: 800 15.5px/1 var(--font-label); letter-spacing: .04em; text-anchor: middle; fill: var(--on-glass); }
+.mr-map .mr-hn { font: italic 500 11.5px/1 var(--font-book); text-anchor: middle; fill: var(--on-glass); }
+.mr-map .mr-hex--t .mr-id, .mr-map .mr-hex--t .mr-hn, .mr-map .mr-hex--u .mr-id, .mr-map .mr-hex--u .mr-hn { fill: var(--art-stone-ink); }
+.mr-map .mr-hex:hover path { stroke-width: 3; }
+.mr-map .mr-hex:focus-visible path { stroke: var(--focus); stroke-width: 4; }
+.mr-map .mr-hex.is-sel path { stroke: var(--gilt-mid); stroke-width: 4.5; paint-order: stroke; }
+.mr-map .mr-pin__pole { stroke: var(--ink-2); stroke-width: 2; }
+.mr-map .mr-pin__flag { fill: var(--gilt-mid); stroke: var(--art-stone-ink); stroke-width: 1.2; }
+.mr-map .mr-rose-a { fill: var(--gules); stroke: var(--art-stone-ink); stroke-width: .8; }
+.mr-map .mr-rose-b { fill: var(--art-sheet); stroke: var(--art-stone-ink); stroke-width: .8; }
+.mr-map .mr-rose-c { fill: var(--gilt-mid); stroke: var(--art-stone-ink); stroke-width: 1; }
+.mr-map .mr-rose-ring { fill: none; stroke: var(--ink-2); stroke-width: 1; }
+.mr-map .mr-rose-n { font: 700 13px/1 var(--font-display); fill: var(--ink); text-anchor: middle; }
+.mr-map .mr-serpent { fill: none; stroke: var(--ink-2); stroke-width: 2.2; stroke-linecap: round; }
+.mr-map .mr-serpent-head { fill: var(--ink-2); }
+.mr-map .mr-wave { fill: none; stroke: var(--azure); stroke-width: 1.2; opacity: .6; stroke-linecap: round; }
+[data-theme="night"] .mr-map .mr-wave { stroke: var(--azure-ink); }
+
+/* legend: swallow-tailed pennants in the house tinctures */
+.mr-pennant { --p: var(--ink); --pt: var(--surface); clip-path: polygon(0 0, 100% 0, 86% 50%, 100% 100%, 0 100%); background: var(--p); color: var(--pt); }
+.mr-legend { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.mr-legend li { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 9px; padding: 9px 24px 9px 12px; }
+.mr-legend b { font: 600 30px/1 var(--font-display); font-variant-numeric: var(--num); }
+.mr-legend span { font: 800 var(--t-label)/1.1 var(--font-label); letter-spacing: var(--track-label); text-transform: lowercase; }
+.mr-legend .is-q { --p: var(--gules); --pt: var(--on-glass); }
+.mr-legend .is-t { --p: var(--or); --pt: var(--art-stone-ink); }
+.mr-legend .is-s { --p: var(--mr-sable); --pt: var(--on-glass); }
+.mr-legend .is-u { --p: var(--art-sheet); --pt: var(--art-stone-ink); background-image: repeating-linear-gradient(45deg, transparent 0 6px, color-mix(in srgb, var(--art-stone-ink) 14%, transparent) 6px 7px); box-shadow: inset 0 0 0 1.5px var(--art-stone-ink); }
+.mr-legend__cap { margin-top: 10px; font: italic 400 var(--t-small)/1.3 var(--font-book); color: var(--muted); }
+
+/* codex */
+.mr-codex { padding: 4px 30px 18px 22px; background-image: linear-gradient(90deg, transparent 69px, var(--ch-wash) 69px, var(--ch-wash) 70px, transparent 70px); }
+.mr-codex .cc-section { scroll-margin-top: calc(var(--top-h) + 60px); }
+.mr-codex .cc-section__no { margin-left: 2px; }
+.mr-design { display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 22px; align-items: start; }
+.mr-design__form { display: grid; gap: 14px; min-width: 0; }
+.mr-swatch { width: 11px; height: 11px; border-radius: 50%; display: inline-block; vertical-align: -1px; box-shadow: 0 0 0 1.5px var(--lead); }
+[data-theme="night"] .mr-swatch { box-shadow: 0 0 0 1.5px var(--ink-2); }
+.mr-preview { margin: 0; display: grid; gap: 8px; position: sticky; top: calc(var(--top-h) + 60px); }
+.mr-preview__frame { padding: 6px; background: var(--key); box-shadow: 0 0 0 var(--came) var(--lead), 0 0 0 5px var(--surface), 0 0 0 6px var(--hair), var(--shadow-lift); }
+.mr-preview__frame div { position: relative; aspect-ratio: 640 / 357; background: radial-gradient(80% 80% at 50% 50%, var(--key), var(--key-deep)); overflow: hidden; }
+.mr-preview__frame img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
+.mr-preview figcaption { font: 500 var(--t-mono)/1.4 var(--font-mono); color: var(--ink-2); }
+.mr-preview__act { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* II · test ladder: three rising treads */
+.mr-ladder { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; align-items: end; }
+.mr-ladder li { display: contents; }
+.mr-step { display: grid; gap: 4px; align-content: start; text-align: left; width: 100%; padding: 12px 14px 14px; cursor: pointer; background: var(--surface); border: 1px solid var(--ink-2); box-shadow: 3px 3px 0 var(--hair); color: var(--ink); position: relative; font: inherit; }
+.mr-ladder li:nth-child(1) .mr-step { min-height: 110px; }
+.mr-ladder li:nth-child(2) .mr-step { min-height: 140px; }
+.mr-ladder li:nth-child(3) .mr-step { min-height: 170px; }
+.mr-step i { font: 600 var(--t-figure-sm)/1 var(--font-display); font-variant-numeric: var(--num); font-style: normal; color: var(--ch-ink); }
+.mr-step b { font: 800 var(--t-body)/1.1 var(--font-label); letter-spacing: var(--track-label); text-transform: lowercase; }
+.mr-step small { font: italic 400 var(--t-small)/1.2 var(--font-book); color: var(--ink-2); }
+.mr-step .cc-stamp { justify-self: start; margin-top: 6px; }
+.mr-step:hover { background: var(--surface-2); }
+.mr-step[aria-pressed="true"] { border-color: var(--ch-ink); box-shadow: inset 0 4px 0 var(--ch-ink), 3px 3px 0 var(--gilt-mid); }
+.mr-step[data-locked] { background-color: var(--vellum-2); background-image: repeating-linear-gradient(45deg, transparent 0 7px, var(--hair-2) 7px 8px); border-style: dashed; }
+.mr-step[data-locked]::after { content: ""; position: absolute; right: 12px; top: 12px; width: 16px; height: 18px; background: var(--ink-2); -webkit-mask: var(--mask) center / contain no-repeat; mask: var(--mask) center / contain no-repeat;
+  --mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 18'><path fill-rule='evenodd' d='M4 7V5a4 4 0 0 1 8 0v2h1.5c.8 0 1.5.7 1.5 1.5v8c0 .8-.7 1.5-1.5 1.5h-11C1.7 18 1 17.3 1 16.5v-8C1 7.7 1.7 7 2.5 7Zm2 0h4V5a2 2 0 0 0-4 0Zm2 4a1.5 1.5 0 0 0-.8 2.8V15h1.6v-1.2A1.5 1.5 0 0 0 8 11Z'/></svg>"); }
+.mr-req { display: grid; gap: 8px; padding: 14px 16px; background: var(--surface); border: 1px solid var(--hair); border-left: 4px solid var(--ch-ink); box-shadow: var(--shadow); }
+.mr-req p { color: var(--ink); }
+.mr-req .mr-sm { color: var(--ink-2); }
+
+/* III · seal */
+.mr-sealslot__head { display: flex; align-items: center; gap: 10px; }
+.mr-sealslot__head .cc-sim { margin-left: auto; }
+.mr-sealslot .cc-empty { grid-auto-flow: column; justify-content: start; padding: 12px; border: 1px dashed var(--hair); background: var(--surface-2); }
+.mr-sealslot .cc-empty .cc-droll { width: 30px; height: 30px; color: var(--muted); }
+
+/* the rail: inspector + banners (shell panels; their glass cap is the Map Room's key) */
+.mr-rail { position: sticky; top: calc(var(--top-h) + 18px); display: grid; gap: 16px; max-height: calc(100vh - var(--top-h) - var(--dock-h) - 30px); overflow-y: auto; scrollbar-width: thin; }
+.mr-insp__head { display: flex; align-items: center; gap: 10px; padding: 14px var(--pad) 0; }
+.mr-insp__head .cc-folio-shield { --ch: var(--gules); }
+.mr-insp__head h2 { margin: 0; font: 800 var(--t-h3)/1 var(--font-label); letter-spacing: var(--track-label); text-transform: lowercase; color: var(--gules-ink); }
+.mr-insp__head .cc-stamp { margin-left: auto; }
+.mr-insp .cc-panel__body { gap: 8px; padding-top: 10px; }
+.mr-tile { display: grid; grid-template-columns: auto auto 1fr; gap: 14px; align-items: center; padding: 6px 0 10px; border-bottom: 1px solid var(--hair); }
+.mr-tile svg { width: 48px; height: 54px; }
+.mr-tile svg path { fill: var(--gules); stroke: var(--art-stone-ink); stroke-width: 1.6; }
+[data-theme="night"] .mr-tile svg path { stroke: var(--ink-2); }
+.mr-tile b { font: 600 var(--t-figure-lg)/.8 var(--font-display); font-variant-numeric: var(--num); color: var(--ink); }
+.mr-tile span { justify-self: end; text-align: right; font: 500 var(--t-small)/1.4 var(--font-text); color: var(--ink-2); font-variant-numeric: var(--num); }
+.mr-insp__now { font: italic 400 var(--t-lead)/1.25 var(--font-book); color: var(--ink); }
+.mr-insp__house { font: 700 var(--t-small)/1.3 var(--font-text); color: var(--ink); }
+.mr-insp .cc-panel__foot { font: italic 400 var(--t-small)/1.4 var(--font-book); color: var(--ink-2); }
+.mr-banners .cc-panel__body { gap: 10px; }
+.mr-banners__row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.mr-banner { display: flex; align-items: center; gap: 9px; height: var(--control-h); padding: 0 10px; cursor: pointer; text-align: left; font: 800 var(--t-label)/1.1 var(--font-label); letter-spacing: var(--track-label); text-transform: lowercase; color: var(--ink); background: var(--surface); border: 1px solid var(--hair); }
+.mr-banner i { width: 14px; height: 20px; flex: none; clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 78%, 0 100%); background: var(--p); box-shadow: inset 0 0 0 1.5px var(--ink-2); }
+.mr-banner:hover { border-color: var(--ink-2); background: var(--surface-2); }
+.mr-banner[aria-pressed="true"] { border-color: var(--ch-ink); box-shadow: inset 0 0 0 1px var(--ch-ink), 2px 2px 0 var(--gilt-mid); background: var(--surface-2); }
+
+/* 1280 */
+@media (max-width: 1380px) {
+  .mr { grid-template-columns: minmax(0, 1fr) 340px; gap: 22px; }
+  .mr-table { padding-inline: 18px 20px; }
+  .mr-table__plate { grid-template-columns: minmax(0, 1fr) 150px; gap: 16px; }
+  .mr-legend b { font-size: var(--t-figure-sm); }
+  .mr-legend li { padding-right: 22px; }
+  .mr-design { grid-template-columns: 1fr; }
+  .mr-preview { position: static; max-width: 340px; }
+  .mr-tile b { font-size: 52px; }
+  .mr-codex { padding-right: 20px; }
+  .mr-folio .cc-contents a { padding-inline: 5px; }
+}
+
+/* short viewports (1280x800): the sticky rail must clear the dock */
+@media (max-height: 820px) {
+  .mr-rail { gap: 12px; top: calc(var(--top-h) + 14px); max-height: calc(100vh - var(--top-h) - var(--dock-h) - 22px); }
+  .mr-insp__head { padding-top: 12px; }
+  .mr-insp .cc-panel__body { padding-bottom: 14px; }
+  .mr-tile { padding: 2px 0 8px; }
+  .mr-tile svg { width: 40px; height: 45px; }
+  .mr-tile b { font-size: 46px; }
+  .mr-insp__now { font-size: var(--t-body); }
+  .mr-insp .cc-panel__foot { padding-block: 9px; }
+  .mr-banners .cc-panel__body { padding-block: 12px 14px; }
+}
+
+/* motion: the chart is inked, the needle settles, the pennant drops on A1 */
+@media (prefers-reduced-motion: no-preference) {
+  .mr-map .mr-hex { animation: mr-stamp .5s var(--ease-stamp) calc(.3s + var(--d)) both; transform-box: fill-box; transform-origin: 50% 50%; }
+  .mr-map .mr-needle { animation: mr-swing 1.6s cubic-bezier(.3, 1.5, .4, 1) 1.1s both; transform-origin: 668px 46px; }
+  .mr-map .mr-pin { animation: mr-drop .55s cubic-bezier(.5, 0, .7, 1.4) 2.2s both; }
+}
+@keyframes mr-stamp { from { opacity: 0; transform: scale(1.35); } 60% { opacity: 1; } to { opacity: 1; transform: none; } }
+@keyframes mr-swing { 0% { transform: rotate(-120deg); } 50% { transform: rotate(28deg); } 75% { transform: rotate(-10deg); } to { transform: none; } }
+@keyframes mr-drop { from { transform: translateY(-40px); opacity: 0; } 40% { opacity: 1; } to { transform: none; opacity: 1; } }
+</style>
+</head>
+<body class="cc-body">
+<div class="cc-shell" data-chamber="studio">
+  <header class="cc-rampart">
+    <a class="cc-brand" href="keep.html" aria-label="Castle Control, the whole keep"><svg class="cc-mark" viewBox="0 0 32 32" aria-hidden="true">
+  <path d="M3 9V4h4v3h3V4h4v3h4V4h3v3h3V4h5v5c0 0 0 0 0 0v12a3 3 0 0 1-3 3H14l-6 5v-5H6a3 3 0 0 1-3-3Z" fill="var(--gules)" stroke="var(--on-lead)" stroke-width="1.4" stroke-linejoin="round"/>
+  <path d="M5 11h22" stroke="var(--lead)" stroke-width="1.2" opacity=".6"/>
+  <path d="M12.5 22v-5.5a3.5 3.5 0 0 1 7 0V22Z" fill="var(--or-lit)" stroke="var(--lead)" stroke-width="1.3"/>
+  <path d="M16 13v9M12.5 18.5h7" stroke="var(--lead)" stroke-width="1"/>
+</svg><span class="cc-wordmark">Castle Control</span></a>
+    <span class="cc-came-v" aria-hidden="true"></span>
+    <div class="cc-live" aria-label="Stream status">
+      <span class="cc-onair"><i class="cc-lamp" data-live="false" aria-hidden="true"></i>On air · simulated</span>
+      <span class="cc-figure"><b>Unknown</b><small>viewers</small></span>
+      <span class="cc-figure"><b>Unknown</b><small>uptime</small></span>
+    </div>
+    <span class="cc-came-v" aria-hidden="true"></span>
+    <div class="cc-links">
+      <span class="cc-chip">Twitch simulated</span>
+      <a href="setup.html" title="Set up OBS"><span class="cc-chip">OBS simulated</span></a>
+      <a href="gatehouse.html"><span class="cc-chip" data-module="moderator"><i class="cc-lozenge" aria-hidden="true"></i>Gatehouse simulated</span></a>
+    </div>
+    <span class="cc-spacer"></span>
+    <span class="cc-sim cc-sim--on-lead">Simulated</span>
+    <button class="cc-iconbtn" type="button" data-theme-toggle aria-label="Switch between day and night glass" title="Theme">
+      <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7.5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M10 2.5a7.5 7.5 0 0 1 0 15Z" fill="currentColor"/></svg>
+    </button>
+    <a class="cc-btn cc-btn--rampart" href="#steward-input" title="Talk to the Steward (/)">Steward <kbd class="cc-kbd">/</kbd></a>
+  </header>
+  <nav class="cc-tabs" aria-label="Chamber strip">
+    <a class="cc-tab" data-module="keep" href="keep.html"><span class="cc-tab__light" aria-hidden="true"></span><kbd class="cc-kbd">0</kbd><b class="cc-tab__name">The Keep</b></a>
+    <a class="cc-tab" data-module="lottery" href="lottery.html" aria-label="Lot Chamber, No draw, Preview, no proposals"><span class="cc-tab__light" aria-hidden="true"></span><kbd class="cc-kbd">1</kbd><b class="cc-tab__name">Lot Chamber</b><span class="cc-tab__row"><span class="cc-tab__figure">No draw</span><span class="cc-lamps" aria-hidden="true"><i data-lit="false" title="On air · off">On air</i><i data-lit="true" title="Preview">Preview</i><i data-lit="false" title="Draft · off">Draft</i></span></span></a>
+    <a class="cc-tab" data-module="moderator" href="gatehouse.html" aria-label="Gatehouse, 1 held, On air, preview, no proposals"><span class="cc-tab__light" aria-hidden="true"></span><kbd class="cc-kbd">2</kbd><b class="cc-tab__name">Gatehouse</b><span class="cc-tab__row"><span class="cc-tab__figure">1 held</span><span class="cc-lamps" aria-hidden="true"><i data-lit="true" title="On air">On air</i><i data-lit="true" title="Preview">Preview</i><i data-lit="false" title="Draft · off">Draft</i></span></span></a>
+    <a class="cc-tab" data-module="visuals" href="beacons.html" aria-label="Beacons, Offering altar, On air, preview, no proposals"><span class="cc-tab__light" aria-hidden="true"></span><kbd class="cc-kbd">3</kbd><b class="cc-tab__name">Beacons</b><span class="cc-tab__row"><span class="cc-tab__figure">Offering altar</span><span class="cc-lamps" aria-hidden="true"><i data-lit="true" title="On air">On air</i><i data-lit="true" title="Preview">Preview</i><i data-lit="false" title="Draft · off">Draft</i></span></span></a>
+    <a class="cc-tab" data-module="studio" href="maproom.html" aria-current="page" aria-label="Map Room, Sand table, Preview, no proposals"><span class="cc-tab__light" aria-hidden="true"></span><kbd class="cc-kbd">4</kbd><b class="cc-tab__name">Map Room</b><span class="cc-tab__row"><span class="cc-tab__figure">Sand table</span><span class="cc-lamps" aria-hidden="true"><i data-lit="false" title="On air · off">On air</i><i data-lit="true" title="Preview">Preview</i><i data-lit="false" title="Draft · off">Draft</i></span></span></a>
+  </nav>
+  <main class="cc-main" aria-label="Map Room">
+    <div class="mr">
+    <div class="mr-desk">
+      <header class="cc-chamber-head">
+        <div>
+          <nav class="cc-crumbs" aria-label="Breadcrumb"><a href="keep.html">The keep</a><span class="cc-crumbs__sep" aria-hidden="true">›</span><b aria-current="page">Map Room</b><span>· chamber 4 of 4</span></nav>
+          <h1 class="cc-title cc-title--incipit"><span class="cc-versal" aria-hidden="true"><span>T</span></span><span class="cc-sr">T</span>he Map Room</h1>
+          <p class="cc-subtitle">Extension studio <span class="cc-sim">Simulated</span></p>
+        </div>
+        <div class="cc-back"><a class="cc-btn" href="overview.html" data-back>Back to the overview <kbd class="cc-kbd">Esc</kbd></a></div>
+      </header>
+
+      <div class="cc-folio mr-folio">
+      <section class="mr-table" id="s-table" aria-labelledby="h-table">
+        <div class="mr-table__bar">
+          <div class="cc-seg cc-seg--sm" role="group" aria-label="Map view"><button type="button" aria-pressed="true">Table</button><button type="button" aria-pressed="false">Spyglass</button><button type="button" aria-pressed="false">Rehearse</button><button type="button" aria-pressed="false">Tiltyard</button></div>
+          <h2 class="mr-table__title" id="h-table">The war table · 9 × 6 hexes<em>Illustrative territory · no live turn</em></h2>
+        </div>
+        <div class="mr-table__plate">
+          <div class="cc-mini" data-chamber="studio"><div class="cc-mini__field">
+            <svg class="mr-map" viewBox="0 0 700 400" role="group" aria-label="Inspect the 54 sample tiles. Illustrative 9 by 6 · The war table.">
+              <defs>
+                <pattern id="mrArgent" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect class="mr-argent" width="8" height="8"/><path class="mr-hatch" d="M0 0V8"/></pattern>
+              </defs>
+              <path class="mr-rhumb" d="M668 46L1568 46M668 46L1499 390M668 46L1304 682M668 46L1012 877M668 46L668 946M668 46L324 877M668 46L32 682M668 46L-163 390M668 46L-232 46M668 46L-163 -298M668 46L32 -590M668 46L324 -785M668 46L668 -854M668 46L1012 -785M668 46L1304 -590M668 46L1499 -298"/>
+              <!-- a sea serpent off the south-west coast -->
+              <path class="mr-wave" d="M4 388q7-5 14 0t14 0 14 0 14 0M10 396q7-5 14 0t14 0"/>
+              <path class="mr-serpent" d="M10 380c4-12 10-12 13 0s9 12 13 0 9-12 13-2"/>
+              <path class="mr-serpent-head" d="M49 378c2-6 8-8 12-5l-3 3 4 2c-3 3-9 4-13 0Z"/>
+              <g class="mr-hex mr-hex--q is-sel" style="--d:0.00s" tabindex="0" role="button" aria-pressed="true" aria-label="Tile A1, House Quill"><path d="M69.9 22.0L102.8 41.0L102.8 79.0L69.9 98.0L37.0 79.0L37.0 41.0Z"/><text class="mr-id" x="69.9" y="61.0">A1</text><text class="mr-hn" x="69.9" y="76.0">Quill</text></g><g class="mr-pin" aria-hidden="true"><path class="mr-pin__pole" d="M83.9 30.0V2.0"/><path class="mr-pin__flag" d="M83.9 2.0h22l-6 6 6 6h-22Z"/></g><g class="mr-hex mr-hex--q" style="--d:0.06s" tabindex="0" role="button" aria-pressed="false" aria-label="Tile B1, House Quill"><path d="M135.7 22.0L168.6 41.0L168.6 79.0L135.7 98.0L102.8 79.0L102.8 41.0Z"/><text class="mr-id" x="135.7" y="61.0">B1</text><text class="mr-hn" x="135.7" y="76.0">Quill</text></g><g class="mr-hex mr-hex--q" style="--d:0.11s" tabindex="0" role="button" aria-pressed="false" aria-label="Tile C1, House Quill"><path d="M201.5 22.0L234.5 41.0L234.5 79.0L201.5 98.0L168.6 79.0L168.6 41.0Z"/><text class="mr-id" x="201.5" y="61.0">C1</text><text class="mr-hn" x="201.5" y="76.0">Quill</text></g><g class="mr-hex mr-hex--q" style="--d:0.17s" tabindex="0" role="button" aria-pressed="false" aria-label="Tile D1, House Quill"><path d="M267.4 22.0L300.3 41.0L300.3 79.0L267.4 98.0L234.5 79.0L234.5 41.0Z"/><text class="mr-id" x="267.4" y="61.0">D1</text><text class="mr-hn" x="267.4" y="76.0">Quill</text></g><g class="mr-hex mr-hex--u" style="--d:0.22s" tabindex="0" role="button" aria-pressed="false" aria-label="Tile E1, Unclaimed"><path d="M333.2 22.0L366.1 41.0L366.1 79.0L333.2 98.0L300.3 79.0L300.3 41.0Z"/><text class="mr-id" x="333.2" y="61.0">E1</text><text class="mr-hn" x="333.2" y="76.0">Unclaimed</text></g><g class="mr-hex mr-hex--t" style="--d:0.28s" tabindex="0" role="button" aria-pressed="false" aria-label="Tile F1, House Tallow"><path d="M399.0 22.0L431.9 41.0L431.9 79.0L399.0 98.0L366.1 79.0L366.1 41.0Z"/><text class="mr-id" x="399.0" y="61.0">F1</text><text class="mr-hn" x="399.0" y="76.0">Tallow</text></g><g class="mr-hex mr-hex--t" style="--d:0.33s" tabindex="0" role="button" aria-pressed="false" aria-label="Tile G1, House Tallow"><path d="M464.8 22.0L497.7 41.0L497.7 79.0L464.8 98.0L431.9 79.0L431.9 41.0Z"/><text class="mr-id" x="464.8" y="61.0">G1</text><text class="mr-hn" x="464.8" y="76.0">Tallow</text></g><g class="mr-hex mr-hex--t" style="--d:0.39s" tabindex="0" role="button" aria-pressed="false" aria-label="Tile H1, House Tallow"><path d="M530.6 22.0L563.5 41.0L563.5 79.0L530.6 98.0L497.7 79.0L497.7 41.0Z"/><text class="mr-id" x="530.6" y="61.0">H1</text><text class="mr-hn" x="530.6" y="76.0">Tallow</text></g><g class="mr-hex mr-hex--t" style="--d:0.44s" tabindex="0" role="button" aria-pressed="false" aria-label="Tile I1, House Tallow"><path d="M596.5 22.0L629.4 41.0L629.4 79.0L596.5 98.0L563.5 79.0L563.5 41.0Z"/><text class="mr-id" x="596.5" y="61.0">I1</text><text class="mr-hn" x="596.5" y="76.0">Tallow</text></g><g class="mr-hex mr-hex--q" style="--d:0.03s" tabindex="0" role="button" aria-pressed="false" aria-label="Tile A2, House Quill"><path d="M102.8 79.0L135.7 98.0L135.7 136.0L102.8 155.0L69.9 136.0L69.9 98.0Z"/><text class="mr-id" x="102.8" y="118.0">A2</text><text class="mr-hn" x="102.8" y="133.0">Quill</text></g><g class="mr-hex mr-hex--q" style="--d:0.09s" tabindex="0" role="button" aria-pressed="false" aria-label="Tile B2, House Quill"><path d="M168.6 79.0L201.5 98.0L201.5 136.0L168.6 155.0L135.7 136.0L135.7 98.0Z"/><text class="mr-id" x="168.6" y="118.0">B2</text><text class="mr-hn" x="168.6" y="133.0">Quill</text></g><g class="mr-hex mr-hex--q" style="--d:0.14s" tabindex="0" role="button" aria-pressed="false" aria-label="Tile C2, House Quill"><path d="M234.5 79.0L267.4 98.0L267.4 136.0L234.5 155.0L201.5 136.0L201.5 98.0Z"/><text class="mr-id" x="234.5" y="118.0">C2</text><text class="mr-hn" x="234.5" y="133.0">Quill</text></g><g class="mr-hex mr-hex--q" style="--d:0.20s" tabindex="0" role="button" aria-pressed="false" aria-label="Tile D2, House Quill"><path d="M300.3 79.0L333.2 98.0L333.2 136.0L300.3 155.0L267.4 136.0L267.4 98.0Z"/><text class="mr-id" x="300.3" y="118.0">D2</text><text class="mr-hn" x="300.3" y="133.0">Quill</text></g><g class="mr-hex mr-hex--u" style="--d:0.25s" tabindex="0" role="button" aria-pressed="false" aria-label="Tile E2, Unclaimed"><path d="M366.1 79.0L399.0 98.0L399.0 136.0L366.1 155.0L333.2 136.0L333.2 98.0Z"/><text class="mr-id" x="366.1" y="118.0">E2</text><text class="mr-hn" x="366.1" y="133.0">Unclaimed</text></g><g class="mr-hex mr-hex--t" style="--d:0.31s" tabindex="0" role="button" aria-pressed="false" aria-label="Tile F2, House Tallow"><path d="M431.9 79.0L464.8 98.0L464.8 136.0L431.9 155.0L399.0 136.0L399.0 98.0Z"/><text class="mr-id" x="431.9" y="118.0">F2</text><text class="mr-hn" x="431.9" y="133.0">Tallow</text></g><g class="mr-hex mr-hex--t" style="--d:0.36s" tabindex="0" role="button" aria-pressed="false" aria-label="Tile G2, House Tallow"><path d="M497.7 79.0L530.6 98.0L530.6 136.0L497.7 155.0L464.8 136.0L464.8 98.0Z"/><text class="mr-id" x="497.7" y="118.0">G2</text><text class="mr-hn" x="497.7" y="133.0">Tallow</text></g><g class="mr-hex mr-hex--t" style="--d:0.42s" tabindex="0" role="button" aria-pressed="false" aria-label="Tile H2, House Tallow"><path d="M563.5 79.0L596.5 98.0L596.5 136.0L563.5 155.0L530.6 136.0L530.6 98.0Z"/><text class="mr-id" x="563.5" y="118.0">H2</text><text class="mr-hn" x="563.5" y="133.0">Tallow</text></g><g class="mr-hex mr-hex--t" style="--d:0.47s" tabindex="0" role="button" aria-pressed="false" aria-label="Tile I2, House Tallow"><path d="M629.4 79.0L662.3 98.0L662.3 136.0L629.4 155.0L596.5 136.0L596.5 98.0Z"/><text class="mr-id" x="629.4" y="118.0">I2</text><text class="mr-hn" x="629.4" y="133.0">Tallow</text></g><g class="mr-hex mr-hex--q" style="--d:0.07s" tabindex="0" role="button" aria-pressed="false" aria-label="Tile A3, House Quill"><path d="M69.9 136.0L102.8 155.0L102.8 193.0L69.9 212.0L37.0 193.0L37.0 155.0Z"/><text class="mr-id" x="69.9" y="175.0">A3</text><text class="mr-hn" x="69.9" y="190.0">Quill</text></g><g class="mr-hex mr-hex--q" style="--d:0.12s" tabindex="0" role="button" aria-pressed="false" aria-label="Tile B3, House Quill"><path d="M135.7 136.0L168.6 155.0L168.6 193.0L135.7 212.0L102.8 193.0L102.8 155.0Z"/><text class="mr-id" x="135.7" y="175.0">B3</text><text class="mr-hn" x="135.7" y="190.0">Quill</text></g><g class="mr-hex mr-hex--q" style="--d:0.18s" tabindex="0" role="button" aria-pressed="false" aria-label="Tile C3, House Quill"><path d="M201.5 136.0L234.5 155.0L234.5 193.0L201.5 212.0L168.6 193.0L168.6 155.0Z"/><text class="mr-id" x="201.5" y="175.0">C3</text><text class="mr-hn" x="201.5" y="190.0">Quill</text></g><g class="mr-hex mr-hex--u" style="--d:0.23s" tabindex="0" role="button" aria-pressed="false" aria-label="Tile D3, Unclaimed"><path d="M267.4 136.0L300.3 155.0L300.3 193.0L267.4 212.0L234.5 193.0L234.5 155.0Z"/><text class="mr-id" x="267.4" y="175.0">D3</text><text class="mr-hn" x="267.4" y="190.0">Unclaimed</text></g><g class="mr-hex mr-hex--u" style="--d:0.29s" tabindex="0" role="button" aria-pressed="false" aria-label="Tile E3, Unclaimed"><path d="M333.2 136.0L366.1 155.0L366.1 193.0L333.2 212.0L300.3 193.0L300.3 155.0Z"/><text class="mr-id" x="333.2" y="175.0">E3</text><text class="mr-hn" x="333.2" y="190.0">Unclaimed</text></g><g class="mr-hex mr-hex--u" style="--d:0.34s" tabindex="0" role="button" aria-pressed="false" aria-label="Tile F3, Unclaimed"><path d="M399.0 136.0L431.9 155.0L431.9 193.0L399.0 212.0L366.1 193.0L366.1 155.0Z"/><text class="mr-id" x="399.0" y="175.0">F3</text><text class="mr-hn" x="399.0" y="190.0">Unclaimed</text></g><g class="mr-hex mr-hex--t" style="--d:0.40s" tabindex="0" role="button" aria-pressed="false" aria-label="Tile G3, House Tallow"><path d="M464.8 136.0L497.7 155.0L497.7 193.0L464.8 212.0L431.9 193.0L431.9 155.0Z"/><text class="mr-id" x="464.8" y="175.0">G3</text><text class="mr-hn" x="464.8" y="190.0">Tallow</text></g><g class="mr-hex mr-hex--t" style="--d:0.45s" tabindex="0" role="button" aria-pressed="false" aria-label="Tile H3, House Tallow"><path d="M530.6 136.0L563.5 155.0L563.5 193.0L530.6 212.0L497.7 193.0L497.7 155.0Z"/><text class="mr-id" x="530.6" y="175.0">H3</text><text class="mr-hn" x="530.6" y="190.0">Tallow</text></g><g class="mr-hex mr-hex--t" style="--d:0.51s" tabindex="0" role="button" aria-pressed="false" aria-label="Tile I3, House Tallow"><path d="M596.5 136.0L629.4 155.0L629.4 193.0L596.5 212.0L563.5 193.0L563.5 155.0Z"/><text class="mr-id" x="596.5" y="175.0">I3</text><text class="mr-hn" x="596.5" y="190.0">Tallow</text></g><g class="mr-hex mr-hex--q" style="--d:0.10s" tabindex="0" role="button" aria-pressed="false" aria-label="Tile A4, House Quill"><path d="M102.8 193.0L135.7 212.0L135.7 250.0L102.8 269.0L69.9 250.0L69.9 212.0Z"/><text class="mr-id" x="102.8" y="232.0">A4</text><text class="mr-hn" x="102.8" y="247.0">Quill</text></g><g class="mr-hex mr-hex--q" style="--d:0.15s" tabindex="0" role="button" aria-pressed="false" aria-label="Tile B4, House Quill"><path d="M168.6 193.0L201.5 212.0L201.5 250.0L168.6 269.0L135.7 250.0L135.7 212.0Z"/><text class="mr-id" x="168.6" y="232.0">B4</text><text class="mr-hn" x="168.6" y="247.0">Quill</text></g><g class="mr-hex mr-hex--u" style="--d:0.21s" tabindex="0" role="button" aria-pressed="false" aria-label="Tile C4, Unclaimed"><path d="M234.5 193.0L267.4 212.0L267.4 250.0L234.5 269.0L201.5 250.0L201.5 212.0Z"/><text class="mr-id" x="234.5" y="232.0">C4</text><text class="mr-hn" x="234.5" y="247.0">Unclaimed</text></g><g class="mr-hex mr-hex--s" style="--d:0.26s" tabindex="0" role="button" aria-pressed="false" aria-label="Tile D4, House Sable"><path d="M300.3 193.0L333.2 212.0L333.2 250.0L300.3 269.0L267.4 250.0L267.4 212.0Z"/><text class="mr-id" x="300.3" y="232.0">D4</text><text class="mr-hn" x="300.3" y="247.0">Sable</text></g><g class="mr-hex mr-hex--s" style="--d:0.32s" tabindex="0" role="button" aria-pressed="false" aria-label="Tile E4, House Sable"><path d="M366.1 193.0L399.0 212.0L399.0 250.0L366.1 269.0L333.2 250.0L333.2 212.0Z"/><text class="mr-id" x="366.1" y="232.0">E4</text><text class="mr-hn" x="366.1" y="247.0">Sable</text></g><g class="mr-hex mr-hex--s" style="--d:0.37s" tabindex="0" role="button" aria-pressed="false" aria-label="Tile F4, House Sable"><path d="M431.9 193.0L464.8 212.0L464.8 250.0L431.9 269.0L399.0 250.0L399.0 212.0Z"/><text class="mr-id" x="431.9" y="232.0">F4</text><text class="mr-hn" x="431.9" y="247.0">Sable</text></g><g class="mr-hex mr-hex--u" style="--d:0.43s" tabindex="0" role="button" aria-pressed="false" aria-label="Tile G4, Unclaimed"><path d="M497.7 193.0L530.6 212.0L530.6 250.0L497.7 269.0L464.8 250.0L464.8 212.0Z"/><text class="mr-id" x="497.7" y="232.0">G4</text><text class="mr-hn" x="497.7" y="247.0">Unclaimed</text></g><g class="mr-hex mr-hex--t" style="--d:0.48s" tabindex="0" role="button" aria-pressed="false" aria-label="Tile H4, House Tallow"><path d="M563.5 193.0L596.5 212.0L596.5 250.0L563.5 269.0L530.6 250.0L530.6 212.0Z"/><text class="mr-id" x="563.5" y="232.0">H4</text><text class="mr-hn" x="563.5" y="247.0">Tallow</text></g><g class="mr-hex mr-hex--t" style="--d:0.54s" tabindex="0" role="button" aria-pressed="false" aria-label="Tile I4, House Tallow"><path d="M629.4 193.0L662.3 212.0L662.3 250.0L629.4 269.0L596.5 250.0L596.5 212.0Z"/><text class="mr-id" x="629.4" y="232.0">I4</text><text class="mr-hn" x="629.4" y="247.0">Tallow</text></g><g class="mr-hex mr-hex--q" style="--d:0.13s" tabindex="0" role="button" aria-pressed="false" aria-label="Tile A5, House Quill"><path d="M69.9 250.0L102.8 269.0L102.8 307.0L69.9 326.0L37.0 307.0L37.0 269.0Z"/><text class="mr-id" x="69.9" y="289.0">A5</text><text class="mr-hn" x="69.9" y="304.0">Quill</text></g><g class="mr-hex mr-hex--u" style="--d:0.19s" tabindex="0" role="button" aria-pressed="false" aria-label="Tile B5, Unclaimed"><path d="M135.7 250.0L168.6 269.0L168.6 307.0L135.7 326.0L102.8 307.0L102.8 269.0Z"/><text class="mr-id" x="135.7" y="289.0">B5</text><text class="mr-hn" x="135.7" y="304.0">Unclaimed</text></g><g class="mr-hex mr-hex--s" style="--d:0.24s" tabindex="0" role="button" aria-pressed="false" aria-label="Tile C5, House Sable"><path d="M201.5 250.0L234.5 269.0L234.5 307.0L201.5 326.0L168.6 307.0L168.6 269.0Z"/><text class="mr-id" x="201.5" y="289.0">C5</text><text class="mr-hn" x="201.5" y="304.0">Sable</text></g><g class="mr-hex mr-hex--s" style="--d:0.30s" tabindex="0" role="button" aria-pressed="false" aria-label="Tile D5, House Sable"><path d="M267.4 250.0L300.3 269.0L300.3 307.0L267.4 326.0L234.5 307.0L234.5 269.0Z"/><text class="mr-id" x="267.4" y="289.0">D5</text><text class="mr-hn" x="267.4" y="304.0">Sable</text></g><g class="mr-hex mr-hex--s" style="--d:0.35s" tabindex="0" role="button" aria-pressed="false" aria-label="Tile E5, House Sable"><path d="M333.2 250.0L366.1 269.0L366.1 307.0L333.2 326.0L300.3 307.0L300.3 269.0Z"/><text class="mr-id" x="333.2" y="289.0">E5</text><text class="mr-hn" x="333.2" y="304.0">Sable</text></g><g class="mr-hex mr-hex--s" style="--d:0.41s" tabindex="0" role="button" aria-pressed="false" aria-label="Tile F5, House Sable"><path d="M399.0 250.0L431.9 269.0L431.9 307.0L399.0 326.0L366.1 307.0L366.1 269.0Z"/><text class="mr-id" x="399.0" y="289.0">F5</text><text class="mr-hn" x="399.0" y="304.0">Sable</text></g><g class="mr-hex mr-hex--s" style="--d:0.46s" tabindex="0" role="button" aria-pressed="false" aria-label="Tile G5, House Sable"><path d="M464.8 250.0L497.7 269.0L497.7 307.0L464.8 326.0L431.9 307.0L431.9 269.0Z"/><text class="mr-id" x="464.8" y="289.0">G5</text><text class="mr-hn" x="464.8" y="304.0">Sable</text></g><g class="mr-hex mr-hex--u" style="--d:0.52s" tabindex="0" role="button" aria-pressed="false" aria-label="Tile H5, Unclaimed"><path d="M530.6 250.0L563.5 269.0L563.5 307.0L530.6 326.0L497.7 307.0L497.7 269.0Z"/><text class="mr-id" x="530.6" y="289.0">H5</text><text class="mr-hn" x="530.6" y="304.0">Unclaimed</text></g><g class="mr-hex mr-hex--t" style="--d:0.57s" tabindex="0" role="button" aria-pressed="false" aria-label="Tile I5, House Tallow"><path d="M596.5 250.0L629.4 269.0L629.4 307.0L596.5 326.0L563.5 307.0L563.5 269.0Z"/><text class="mr-id" x="596.5" y="289.0">I5</text><text class="mr-hn" x="596.5" y="304.0">Tallow</text></g><g class="mr-hex mr-hex--u" style="--d:0.17s" tabindex="0" role="button" aria-pressed="false" aria-label="Tile A6, Unclaimed"><path d="M102.8 307.0L135.7 326.0L135.7 364.0L102.8 383.0L69.9 364.0L69.9 326.0Z"/><text class="mr-id" x="102.8" y="346.0">A6</text><text class="mr-hn" x="102.8" y="361.0">Unclaimed</text></g><g class="mr-hex mr-hex--s" style="--d:0.22s" tabindex="0" role="button" aria-pressed="false" aria-label="Tile B6, House Sable"><path d="M168.6 307.0L201.5 326.0L201.5 364.0L168.6 383.0L135.7 364.0L135.7 326.0Z"/><text class="mr-id" x="168.6" y="346.0">B6</text><text class="mr-hn" x="168.6" y="361.0">Sable</text></g><g class="mr-hex mr-hex--s" style="--d:0.28s" tabindex="0" role="button" aria-pressed="false" aria-label="Tile C6, House Sable"><path d="M234.5 307.0L267.4 326.0L267.4 364.0L234.5 383.0L201.5 364.0L201.5 326.0Z"/><text class="mr-id" x="234.5" y="346.0">C6</text><text class="mr-hn" x="234.5" y="361.0">Sable</text></g><g class="mr-hex mr-hex--s" style="--d:0.33s" tabindex="0" role="button" aria-pressed="false" aria-label="Tile D6, House Sable"><path d="M300.3 307.0L333.2 326.0L333.2 364.0L300.3 383.0L267.4 364.0L267.4 326.0Z"/><text class="mr-id" x="300.3" y="346.0">D6</text><text class="mr-hn" x="300.3" y="361.0">Sable</text></g><g class="mr-hex mr-hex--s" style="--d:0.39s" tabindex="0" role="button" aria-pressed="false" aria-label="Tile E6, House Sable"><path d="M366.1 307.0L399.0 326.0L399.0 364.0L366.1 383.0L333.2 364.0L333.2 326.0Z"/><text class="mr-id" x="366.1" y="346.0">E6</text><text class="mr-hn" x="366.1" y="361.0">Sable</text></g><g class="mr-hex mr-hex--s" style="--d:0.44s" tabindex="0" role="button" aria-pressed="false" aria-label="Tile F6, House Sable"><path d="M431.9 307.0L464.8 326.0L464.8 364.0L431.9 383.0L399.0 364.0L399.0 326.0Z"/><text class="mr-id" x="431.9" y="346.0">F6</text><text class="mr-hn" x="431.9" y="361.0">Sable</text></g><g class="mr-hex mr-hex--s" style="--d:0.49s" tabindex="0" role="button" aria-pressed="false" aria-label="Tile G6, House Sable"><path d="M497.7 307.0L530.6 326.0L530.6 364.0L497.7 383.0L464.8 364.0L464.8 326.0Z"/><text class="mr-id" x="497.7" y="346.0">G6</text><text class="mr-hn" x="497.7" y="361.0">Sable</text></g><g class="mr-hex mr-hex--s" style="--d:0.55s" tabindex="0" role="button" aria-pressed="false" aria-label="Tile H6, House Sable"><path d="M563.5 307.0L596.5 326.0L596.5 364.0L563.5 383.0L530.6 364.0L530.6 326.0Z"/><text class="mr-id" x="563.5" y="346.0">H6</text><text class="mr-hn" x="563.5" y="361.0">Sable</text></g><g class="mr-hex mr-hex--u" style="--d:0.60s" tabindex="0" role="button" aria-pressed="false" aria-label="Tile I6, Unclaimed"><path d="M629.4 307.0L662.3 326.0L662.3 364.0L629.4 383.0L596.5 364.0L596.5 326.0Z"/><text class="mr-id" x="629.4" y="346.0">I6</text><text class="mr-hn" x="629.4" y="361.0">Unclaimed</text></g>
+              <!-- compass rose -->
+              <g aria-hidden="true">
+                <circle class="mr-rose-ring" cx="668" cy="46" r="22"/>
+                <g transform="translate(668 46)">
+                  <path class="mr-rose-b" d="M0 0L-4 -4L0 -19L4 -4Z" transform="rotate(45)"/><path class="mr-rose-b" d="M0 0L-4 -4L0 -19L4 -4Z" transform="rotate(135)"/><path class="mr-rose-b" d="M0 0L-4 -4L0 -19L4 -4Z" transform="rotate(225)"/><path class="mr-rose-b" d="M0 0L-4 -4L0 -19L4 -4Z" transform="rotate(315)"/>
+                </g>
+                <g class="mr-needle"><g transform="translate(668 46)">
+                  <path class="mr-rose-a" d="M0 0L-6 -6L0 -30Z"/><path class="mr-rose-b" d="M0 0L0 -30L6 -6Z"/>
+                  <path class="mr-rose-a" d="M0 0L-6 -6L0 -30Z" transform="rotate(90)"/><path class="mr-rose-b" d="M0 0L0 -30L6 -6Z" transform="rotate(90)"/>
+                  <path class="mr-rose-a" d="M0 0L-6 -6L0 -30Z" transform="rotate(180)"/><path class="mr-rose-b" d="M0 0L0 -30L6 -6Z" transform="rotate(180)"/>
+                  <path class="mr-rose-a" d="M0 0L-6 -6L0 -30Z" transform="rotate(270)"/><path class="mr-rose-b" d="M0 0L0 -30L6 -6Z" transform="rotate(270)"/>
+                  <circle class="mr-rose-c" cx="0" cy="0" r="3.5"/>
+                </g></g>
+                <text class="mr-rose-n" x="668" y="11">N</text>
+              </g>
+            </svg>
+          </div></div>
+          <div>
+            <ul class="mr-legend" aria-label="Tiles by house">
+              <li class="mr-pennant is-q"><b>14</b><span>House Quill</span></li>
+              <li class="mr-pennant is-t"><b>14</b><span>House Tallow</span></li>
+              <li class="mr-pennant is-s"><b>15</b><span>House Sable</span></li>
+              <li class="mr-pennant is-u"><b>11</b><span>Unclaimed</span></li>
+            </ul>
+            <p class="mr-legend__cap">54 sample tiles · blazoned gules, or, sable and argent.</p>
+          </div>
+        </div>
+      </section>
+
+      <nav class="cc-contents" aria-label="Rubrics of this chamber"><a href="#s-table" aria-current="true"><i>·</i>War table</a><a href="#s-design"><i>I</i>Local map design</a><a href="#s-ladder"><i>II</i>Test ladder</a><a href="#s-seal"><i>III</i>Seal</a></nav>
+
+      <div class="mr-codex">
+        <section class="cc-section" id="s-design" aria-labelledby="h-design">
+          <span class="cc-section__no">I</span>
+          <div class="cc-section__head"><h2 class="cc-section__title" id="h-design">Local map design</h2><span class="cc-stamp cc-stamp--local cc-stamp--inked">Session only</span></div>
+          <div class="cc-section__body">
+            <p class="mr-sm">Session only · resets when you leave this room or reload. No design is saved or sent to a channel.</p>
+            <div class="mr-design">
+              <div class="mr-design__form">
+                <div class="cc-field"><span class="cc-field__label">Map size</span><div class="cc-seg cc-seg--sm" role="group" aria-label="Map size"><button type="button" aria-pressed="false">S · 6 × 4</button><button type="button" aria-pressed="true">M · 9 × 6</button><button type="button" aria-pressed="false">L · 12 × 8</button></div></div>
+                <div class="cc-field"><span class="cc-field__label">Map anchor</span><div class="cc-seg cc-seg--sm" role="group" aria-label="Map anchor"><button type="button" aria-pressed="false">Top left</button><button type="button" aria-pressed="false">Top right</button><button type="button" aria-pressed="true">Centre</button><button type="button" aria-pressed="false">Bottom left</button><button type="button" aria-pressed="false">Bottom right</button></div><p class="cc-field__hint">Preview only: positions the sample art inside its frame; the territory table stays in place.</p></div>
+                <div class="cc-field"><span class="cc-field__label">Preset colour</span><div class="cc-seg cc-seg--sm" role="group" aria-label="Preset colour"><button type="button" aria-pressed="false"><span class="mr-swatch" style="background: var(--gules)"></span>Gules · red</button><button type="button" aria-pressed="false"><span class="mr-swatch" style="background: var(--azure)"></span>Azure · blue</button><button type="button" aria-pressed="false"><span class="mr-swatch" style="background: var(--or)"></span>Or · gold</button><button type="button" aria-pressed="true"><span class="mr-swatch" style="background: var(--key)"></span>Key · black</button></div><p class="cc-field__hint">Preview only: frame ink. Sample territories keep their house colours.</p></div>
+                <div class="cc-field"><span class="cc-field__label">Art style</span><div class="cc-seg cc-seg--sm" role="group" aria-label="Art style"><button type="button" aria-pressed="true">Heraldic</button><button type="button" aria-pressed="false">Arcade</button><button type="button" aria-pressed="false">Neon</button><button type="button" aria-pressed="false">Storybook</button><button type="button" aria-pressed="false">Cel</button><button type="button" aria-pressed="false">Glass</button></div><p class="cc-field__hint">Preview only: changes the sample art; the territory table keeps its style.</p></div>
+                <div class="cc-field" style="max-width: 260px"><label for="reveal">Reveal timing (ms)</label><input id="reveal" class="cc-input" type="number" min="0" max="60000" step="1" value="300" aria-describedby="reveal-hint"><p class="cc-field__hint" id="reveal-hint">Preview only: 0–60000 ms. Reduced motion shows the final art immediately.</p></div>
+              </div>
+              <figure class="mr-preview" aria-label="Session-only map preview">
+                <div class="mr-preview__frame"><div><img src="../_assets/preset-heraldic-hexmap.webp" alt="Illustrative hex-map art; the inspectable territory map is alongside"></div></div>
+                <figcaption>SIMULATED · SAMPLE ART · AI-generated · 9 × 6 · 300 ms</figcaption>
+                <div class="mr-preview__act"><button class="cc-btn cc-btn--sm" type="button">Replay local reveal</button><button class="cc-btn cc-btn--sm cc-btn--quiet" type="button">Reset local design</button></div>
+              </figure>
+            </div>
+          </div>
+        </section>
+
+        <section class="cc-section" id="s-ladder" aria-labelledby="h-ladder">
+          <span class="cc-section__no">II</span>
+          <div class="cc-section__head"><h2 class="cc-section__title" id="h-ladder">Test ladder<em>Current stage: Sand table</em></h2><span class="cc-sim">Simulated</span></div>
+          <div class="cc-section__body">
+            <p class="mr-sm">Inspect a stage below. These controls show requirements only.</p>
+            <ol class="mr-ladder" aria-label="Inspect test stage requirements">
+              <li><button class="mr-step" type="button" aria-pressed="true" aria-label="Inspect Sand table requirements"><i>1</i><b>Sand table</b><small>local test</small><span class="cc-stamp cc-stamp--ok cc-stamp--inked">Local only</span></button></li>
+              <li><button class="mr-step" type="button" aria-pressed="false" data-locked aria-label="Inspect Muster requirements"><i>2</i><b>Muster</b><small>hosted test</small><span class="cc-stamp cc-stamp--local cc-stamp--inked">Locked</span></button></li>
+              <li><button class="mr-step" type="button" aria-pressed="false" data-locked aria-label="Inspect Proclaimed requirements"><i>3</i><b>Proclaimed</b><small>released</small><span class="cc-stamp cc-stamp--local cc-stamp--inked">Locked</span></button></li>
+            </ol>
+            <div class="mr-req" role="status">
+              <h3 class="cc-rubric cc-rubric--ch">Requirements · Sand table</h3>
+              <p class="mr-sm" style="color: var(--ink)">Local test, only you see it. Inspect sample tiles and drafts without changing a channel.</p>
+              <p class="cc-gloss-note">The room awaits Twitch’s answer on the Extension policy. It makes no network call and cannot advance the test stage.</p>
+              <p class="mr-sm">Human operator · AI proposes, the human approves in the shared seal slot.</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="cc-section" id="s-seal" aria-labelledby="h-seal">
+          <span class="cc-section__no">III</span>
+          <div class="cc-section__head"><h2 class="cc-section__title" id="h-seal">The seal slot<em>War-table panel proposals</em></h2></div>
+          <div class="cc-section__body">
+            <div class="cc-panel"><div class="cc-panel__body mr-sealslot">
+              <div class="mr-sealslot__head"><h3 class="cc-rubric cc-rubric--ch">Proposal · awaiting your seal</h3><span class="cc-sim">Simulated · data-only designs</span></div>
+              <p class="mr-sm">Nothing acts until you hold to seal.</p>
+              <div class="cc-field"><span class="cc-field__label">War-table panel</span><div class="cc-seg" role="group" aria-label="War-table panel proposals"><button type="button" aria-pressed="true">Restyle</button><button type="button" aria-pressed="false">Custom design</button></div></div>
+              <div class="cc-empty"><span class="cc-droll cc-droll--skull" aria-hidden="true"></span><p class="cc-empty__text">No proposals. Ask the Steward to draft one.</p></div>
+              <button class="cc-seal cc-seal--wax" type="button" disabled aria-describedby="seal-hint">
+                <span class="cc-seal-slot" aria-hidden="true"></span>
+                <span><span class="cc-seal__label">Hold to seal</span><span class="cc-seal__hint" id="seal-hint">Press and hold Space for 1 second · nothing to seal yet</span></span>
+              </button>
+            </div></div>
+          </div>
+        </section>
+        <div class="cc-orn" aria-hidden="true"><i></i></div>
+      </div>
+      </div>
+    </div>
+
+    <aside class="mr-rail" aria-label="Tile inspector, test requirements and panel drafts">
+      <article class="cc-panel mr-insp" aria-live="polite">
+        <div class="mr-insp__head"><span class="cc-folio-shield"><i class="cc-folio-charge cc-folio-charge--hex"></i></span><h2>House Quill</h2><span class="cc-stamp cc-stamp--blocked">Sample territory</span></div>
+        <div class="cc-panel__body">
+          <p class="cc-kicker">This turn · local sand table</p>
+          <div class="mr-tile">
+            <svg viewBox="0 0 48 54" aria-hidden="true"><path d="M24 2 45 14v26L24 52 3 40V14Z"/></svg>
+            <b aria-label="Tile A1">A1</b>
+            <span>Column A · Row 1<br>14 of 54 tiles</span>
+          </div>
+          <p class="mr-insp__now">Now: inspecting A1 · simulated</p>
+          <p class="mr-insp__house">House Quill · illustrative sample territory</p>
+          <p class="mr-sm">The Steward can propose a war-table panel change. A proposal never claims a tile here.</p>
+        </div>
+        <p class="cc-panel__foot">Choose any hex to inspect it. Calls and ownership here are illustrative; selecting a tile changes only the inspector.</p>
+      </article>
+      <div class="cc-panel mr-banners"><div class="cc-panel__body">
+        <h2 class="cc-panel__title">Inspect banners</h2>
+        <div class="mr-banners__row" role="group" aria-label="Sample house banners">
+          <button class="mr-banner" type="button" aria-pressed="true" aria-label="Inspect House Quill banner" style="--p: var(--gules)"><i></i>House Quill</button>
+          <button class="mr-banner" type="button" aria-pressed="false" aria-label="Inspect House Tallow banner" style="--p: var(--or)"><i></i>House Tallow</button>
+          <button class="mr-banner" type="button" aria-pressed="false" aria-label="Inspect House Sable banner" style="--p: var(--mr-sable)"><i></i>House Sable</button>
+          <button class="mr-banner" type="button" aria-pressed="false" aria-label="Inspect Unclaimed banner" style="--p: var(--art-sheet)"><i></i>Unclaimed</button>
+        </div>
+        <p class="cc-field__hint">A banner inspects its first visible territory. It never claims a tile or joins a side.</p>
+      </div></div>
+    </aside>
+    </div>
+  </main>
+  <footer class="cc-dock" data-chamber="keep" aria-label="The Steward">
+    <div class="cc-steward"><svg class="cc-steward__niche" viewBox="0 0 44 62" aria-hidden="true">
+  <path d="M3 61V24C3 12 12 4 22 1c10 3 19 11 19 23v37Z" fill="var(--stone-3)" stroke="var(--lead)" stroke-width="2"/>
+  <path d="M8 58V26c0-9 6-15 14-18 8 3 14 9 14 18v32Z" fill="var(--amethyst-deep)" stroke="var(--lead)" stroke-width="2"/>
+  <path d="M8 40h28M22 8v50" stroke="var(--lead)" stroke-width="1.2" opacity=".55"/>
+  <ellipse cx="22" cy="31" rx="11" ry="14" fill="var(--or-lit)" opacity=".28"/>
+  <rect x="18.5" y="34" width="7" height="16" fill="var(--clear-lit)" stroke="var(--lead)" stroke-width="1.4"/>
+  <path class="cc-flame" d="M22 21c4 5 5 9 0 12-5-3-4-7 0-12Z" fill="var(--or-lit)" stroke="var(--lead)" stroke-width="1.2"/>
+  <path d="M12 52h20" stroke="var(--lead)" stroke-width="2.5"/>
+</svg>
+      <b class="cc-steward__name">The Steward</b>
+      <span class="cc-steward__role">simulated co-pilot · sample data</span>
+      <span class="cc-sim">Simulated</span>
+    </div>
+    <form class="cc-talk" onsubmit="return false">
+      <p class="cc-talk__msg">Good evening. Draft in the preview, amend in ink, then hold to seal. Nothing acts on a spoken request.</p>
+      <div class="cc-talk__row">
+        <label class="cc-sr" for="steward-input">Talk to the Steward</label>
+        <input class="cc-input" id="steward-input" placeholder="Talk to the Steward..." autocomplete="off">
+        <button class="cc-btn" type="submit" disabled>Tell</button>
+        <span class="cc-suggest">
+          <button class="cc-btn cc-btn--quiet" type="button">Catch me up</button>
+          <button class="cc-btn cc-btn--quiet" type="button">Draft a question draw</button>
+          <button class="cc-btn cc-btn--quiet" type="button">What does chat want?</button>
+        </span>
+      </div>
+    </form>
+  </footer>
+</div>
+<button class="cc-proto-toggle" type="button" data-theme-toggle title="Prototype only: not part of the design">◐ proto</button>
+<script>
+(function(){
+  var root=document.documentElement;
+  function flip(){var n=root.getAttribute('data-theme')==='night'?'day':'night';root.setAttribute('data-theme',n);try{var u=new URL(location.href);u.searchParams.set('theme',n);history.replaceState(null,'',u);}catch(e){}}
+  document.querySelectorAll('[data-theme-toggle]').forEach(function(b){b.addEventListener('click',flip);});
+  var go={'0':'keep.html','1':'lottery.html','2':'gatehouse.html','3':'beacons.html','4':'maproom.html'};
+  document.addEventListener('keydown',function(e){
+    var t=e.target; if(e.metaKey||e.ctrlKey||e.altKey)return;
+    if(t&&(t.isContentEditable||/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)))return;
+    if(e.key==='/'){e.preventDefault();var i=document.getElementById('steward-input');if(i)i.focus();return;}
+    if(e.key==='Escape'){var b=document.querySelector('[data-back]');if(b){location.href=b.getAttribute('href');}return;}
+    if(go[e.key]){var q=location.search;location.href=go[e.key]+q;}
+  });
+})();
+</script>
+<script>
+// Hold to seal (shell .cc-seal): pointer or Space held for 1 s fills --cc-seal-progress; release early cancels.
+document.querySelectorAll('.cc-seal').forEach(function(btn){
+  var raf,start;
+  function stop(){cancelAnimationFrame(raf);if(btn.dataset.sealed!=='true')btn.style.setProperty('--cc-seal-progress','0%');}
+  function tick(t){if(!start)start=t;var p=Math.min(1,(t-start)/1000);btn.style.setProperty('--cc-seal-progress',(p*100)+'%');if(p<1)raf=requestAnimationFrame(tick);else btn.dataset.sealed='true';}
+  function go(){if(btn.disabled)return;start=0;raf=requestAnimationFrame(tick);}
+  btn.addEventListener('pointerdown',go);btn.addEventListener('pointerup',stop);btn.addEventListener('pointerleave',stop);
+  btn.addEventListener('keydown',function(e){if(e.code==='Space'&&!e.repeat){e.preventDefault();go();}});
+  btn.addEventListener('keyup',function(e){if(e.code==='Space')stop();});
+});
+// Segmented panes are single-choice unless data-multi (static prototype behaviour).
+document.querySelectorAll('.cc-seg[role="group"]').forEach(function(g){g.addEventListener('click',function(e){var b=e.target.closest('button');if(!b||b.disabled||g.dataset.multi)return;g.querySelectorAll('button').forEach(function(x){x.setAttribute('aria-pressed',x===b);});});});
+(function () {
+  /* running contents: mark the rubric in view */
+  var links = document.querySelectorAll('.cc-contents a');
+  var secs = [].map.call(links, function (a) { return document.querySelector(a.getAttribute('href')); });
+  function spy() {
+    var y = innerHeight * .35, cur = 0;
+    secs.forEach(function (s, i) { if (s.getBoundingClientRect().top < y) cur = i; });
+    links.forEach(function (a, i) { if (i === cur) a.setAttribute('aria-current', 'true'); else a.removeAttribute('aria-current'); });
+  }
+  addEventListener('scroll', spy, { passive: true }); spy();
+  /* choosing a hex changes only the inspector (illustrative) */
+  var counts = { 'House Quill': 14, 'House Tallow': 14, 'House Sable': 15, 'Unclaimed': 11 };
+  var ink = { 'House Quill': 'var(--gules)', 'House Tallow': 'var(--or)', 'House Sable': 'var(--mr-sable)', 'Unclaimed': 'var(--art-sheet)' };
+  var insp = document.querySelector('.mr-insp');
+  function pick(g) {
+    document.querySelectorAll('.mr-hex').forEach(function (x) { x.classList.toggle('is-sel', x === g); x.setAttribute('aria-pressed', String(x === g)); });
+    var m = g.getAttribute('aria-label').match(/^Tile (\w)(\d), (.+)$/); if (!m) return;
+    var id = m[1] + m[2], house = m[3];
+    insp.querySelector('h2').textContent = house;
+    insp.querySelector('.mr-tile b').textContent = id;
+    insp.querySelector('.mr-tile b').setAttribute('aria-label', 'Tile ' + id);
+    insp.querySelector('.mr-tile span').innerHTML = 'Column ' + m[1] + ' · Row ' + m[2] + '<br>' + counts[house] + ' of 54 tiles';
+    insp.querySelector('.mr-tile svg path').style.fill = ink[house];
+    insp.querySelector('.mr-insp__now').textContent = 'Now: inspecting ' + id + ' · simulated';
+    insp.querySelector('.mr-insp__house').textContent = house + ' · illustrative sample territory';
+    var pin = document.querySelector('.mr-pin'); if (pin) pin.style.display = id === 'A1' ? '' : 'none';
+  }
+  document.querySelectorAll('.mr-hex').forEach(function (g) {
+    g.addEventListener('click', function () { pick(g); });
+    g.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pick(g); } });
+  });
+  document.querySelectorAll('.mr-banner').forEach(function (b) {
+    b.addEventListener('click', function () {
+      document.querySelectorAll('.mr-banner').forEach(function (x) { x.setAttribute('aria-pressed', String(x === b)); });
+      var house = b.textContent.trim();
+      var first = [].find.call(document.querySelectorAll('.mr-hex'), function (g) { return g.getAttribute('aria-label').indexOf(house) > 0; });
+      if (first) pick(first);
+    });
+  });
+  document.querySelectorAll('.mr-step').forEach(function (b) {
+    b.addEventListener('click', function () { document.querySelectorAll('.mr-step').forEach(function (x) { x.setAttribute('aria-pressed', String(x === b)); }); });
+  });
+})();
+</script>
+</body>
+</html>

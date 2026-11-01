@@ -1,0 +1,240 @@
+CASTLE CONTROL
+ON AIR · SIMULATED
+Unknown
+VIEWERS
+Unknown
+UPTIME
+TWITCH SIMULATED
+OBS SIMULATED
+GATEHOUSE SIMULATED
+SIMULATED
+STEWARD
+0
+THE KEEP
+1
+LOT CHAMBER
+No draw
+On air
+Preview
+Draft
+Preview
+2
+GATEHOUSE
+1 held
+On air
+Preview
+Draft
+On air, preview
+3
+BEACONS
+Offering altar
+On air
+Preview
+Draft
+On air, preview
+4
+MAP ROOM
+Sand table
+On air
+Preview
+Draft
+Preview
+37
+27
+21
+16
+THE HERALD · SAMPLE
+HELD
+SAND TABLE · 9 × 5 HEX
+DRAFT
+THE STEWARD’S STUDY
+The keep
+›
+Gatehouse
+· chamber 2 of 4
+›
+The drill
+THE GATEHOUSE
+AI moderator
+SIMULATED
+Back to the overview
+Esc
+The drill · 
+SIMULATED REPLAY
+
+live parity: pending capture evidence
+
+← Back to the Gatehouse
+
+Generated fixture output · no live ledger is invoked.
+
+THE MOAT · SIMULATED REPLAY
+HELD 3 OF 40 · SIMULATED
+
+Held 3 of 40 · simulated
+
+35 aired · 3 held · 2 not evaluated
+
+PRINT NIGHT REPORT
+PLAY
+1×
+2×
+8×
+60×
+PREVIOUS STOP
+NEXT STOP
+Replay position
+replay 12:06:06 · 40 of 40
+CHAT · replay · message text is never shown
+STREAM · what viewers would have seen
+RECORDING GAP
+missing, not replayed
+12:04:14
+12:04:37
+12:04:59
+12:05:21
+12:05:43
+12:06:06
+THE GATE · chat delay 4 s
+HELD · NOT ON AIR
+rule · links
+HELD · NOT ON AIR
+rule · repeats
+HELD · NOT ON AIR
+rule · blocked-terms
+aired
+stopped at the gate
+not evaluated
+not replayed yet
+recording missing
+Spotlight a rule
+BLOCKED-TERMS · 1
+LINKS · 1
+REPEATS · 1
+
+Drawn from outcome time, state, verdict, action and rule id only. Nothing here is live and nothing was sent to Twitch.
+
+Nothing selected
+
+Select a stamp, a dot or a table row to see its state, action and rule.
+
+No message text is stored or shown. Nothing was sent to Twitch.
+
+COMPARE WITH A SIMULATED CANDIDATE
+REPLAY A BUSY NIGHT · 2,000 SIMULATED MESSAGES
+INSTRUMENT AND SOURCE
+
+simulated-generated-room
+
+Instrument hash · illustrative
+
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+
+rules hash: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+
+bank hash: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+
+judge hash: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+
+prompts hash: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+
+Observed passes: 37
+
+Over-moderation: 1 / 3 evaluated.
+
+acted: 3
+
+not provoked: 35
+
+not evaluable: 0
+
+judge pending: 1
+
+judge void: 0
+
+engine failed: 1
+
+Recording gap: 12:05:00 → 12:05:20
+
+WHAT THE RULES WOULD HAVE DONE
+Evaluation state 
+All outcomes
+acted
+not provoked
+not evaluable
+judge pending
+judge void
+engine failed
+simulated-message-0
+
+not provoked · simulated-generated-room
+
+PASS
+simulated-message-1
+
+not provoked · simulated-generated-room
+
+PASS
+simulated-message-2
+
+not provoked · simulated-generated-room
+
+PASS
+simulated-message-3
+
+not provoked · simulated-generated-room
+
+PASS
+simulated-message-4
+
+not provoked · simulated-generated-room
+
+PASS
+simulated-message-5
+
+not provoked · simulated-generated-room
+
+PASS
+simulated-message-6
+
+not provoked · simulated-generated-room
+
+PASS
+simulated-message-7
+
+acted · simulated-generated-room · rule · links · Delete message
+
+HOLD
+simulated-message-8
+
+not provoked · simulated-generated-room
+
+PASS
+simulated-message-9
+
+not provoked · simulated-generated-room
+
+PASS
+PROPOSAL · AWAITING YOUR SEAL
+
+Nothing acts until you hold to seal.
+
+SIMULATED · DATA-ONLY DESIGNS
+
+Chat overlay and vote bar
+Restyle
+Custom design
+
+No proposals. Ask the Steward to draft one.
+
+THE STEWARD
+simulated co-pilot · sample data
+SIMULATED
+
+Good evening. Draft in the preview, amend in ink, then hold to seal. Nothing acts on a spoken request.
+
+Talk to the Steward...
+Tell
+Catch me up
+Draft a question draw
+What does chat want?

@@ -1,0 +1,754 @@
+<!doctype html>
+<html lang="en" data-theme="day">
+<!-- PORT NOTES
+Page: gatehouse (route #/chamber/moderator). Direction: Illuminated (folio.css) on the fused shell (shell.css).
+This is the REFERENCE PORT of an A page onto the fused baseline (see FUSION.md, "How to port an A page").
+Shell: rampart, chamber tabs, dock, head bootstrap, proto toggle and keymap script are copied verbatim from keep.html
+  (only aria-current on the Gatehouse tab and data-chamber="moderator" on .cc-shell change). Round 1's leather binding,
+  herald's-roll tabs and margin dock are gone: the Gatehouse now wears the same glass shell as every C page.
+Header: shell .cc-chamber-head (crumbs, h1.cc-title, p.cc-subtitle + .cc-sim, .cc-back > a.cc-btn[data-back] + Esc).
+  The title carries the folio versal: h1.cc-title.cc-title--incipit > span.cc-versal (folio.css). The header sits in the
+  desk column, above the folio, so the gate plate can stand full height on the left (round 1 composition kept).
+Layout: .gh grid: .gh-gate (sticky shell .cc-panel: portcullis miniature + the one held message + Propose pass/bar)
+  and .gh-desk (.cc-chamber-head, then a .cc-folio sheet holding .cc-contents and ten folio .cc-section blocks).
+Components (page-local, lift to room CSS): .gh-gate/.gh-held replace moderator/messages.tsx HeldQueue + room.css
+  .portcullis; .gh-warrant (BanQueue); .gh-chart (.cc-folio-chart) + .gh-tally (consensus.tsx, core-consensus.tsx);
+  .gh-out/.gh-canvas/.gh-ov-* (output.tsx, output.css); .gh-tallyseg/.gh-roll (core-reads.tsx); rule bench uses shell
+  .cc-field/.cc-select/.cc-input (rule-bench.tsx, watching-rule.tsx); .gh-moat (moat-panel.tsx) with shell .cc-readout
+  and .cc-seg--block; .gh-orders (controls.tsx); .gh-drill (entry to drill.tsx); .gh-log (log.tsx); seal slot is shell
+  .cc-seal + folio .cc-seal--wax with an empty .cc-seal-slot (seal-slot/index.tsx).
+Motion: the portcullis drops and lands (one bounce, a puff of dust), then the HELD stamp is pressed on the waiting
+  message. Reduced motion: the gate is simply down, the stamp simply there.
+-->
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Gatehouse · Castle Control</title>
+<script>(function(){try{var t=new URLSearchParams(location.search).get('theme');if(t==='night'||t==='day')document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Grenze+Gotisch:wght@500;600;700;800&family=Alegreya+Sans:ital,wght@0,400;0,500;0,700;0,800;1,400&family=Alegreya+Sans+SC:wght@500;700;800&family=Alegreya:ital,wght@0,400;0,500;0,700;0,800;1,400;1,500&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="shell.css">
+<link rel="stylesheet" href="folio.css">
+<style>
+/* ---- gatehouse page ------------------------------------------------------ */
+.gh { display: grid; grid-template-columns: 480px minmax(0, 1fr); gap: 28px; padding: 18px var(--gutter) 34px; align-items: start; }
+
+/* the plate: at the portcullis (a shell panel; its glass cap is the Gatehouse's azure) */
+.gh-gate {
+  position: sticky; top: calc(var(--top-h) + 18px); height: calc(100vh - var(--top-h) - var(--dock-h) - 36px); min-height: 520px;
+  display: flex; flex-direction: column;
+}
+.gh-gate__head { display: grid; grid-template-columns: 1fr auto; align-items: end; gap: 12px; padding: 14px 18px 12px; }
+.gh-gate__head .cc-panel__title { color: var(--ch-ink); }
+.gh-gate__head .cc-panel__aside { display: block; margin-top: 3px; font-size: var(--t-small); }
+.gh-count { display: flex; align-items: center; gap: 10px; }
+.gh-count b { font: 600 var(--t-figure)/.8 var(--font-display); font-variant-numeric: var(--num); color: var(--ch-ink); }
+.gh-count span { display: grid; gap: 4px; }
+.gh-count small { font: 800 var(--t-label)/1 var(--font-label); letter-spacing: var(--track-wide); text-transform: lowercase; color: var(--ink-2); }
+.gh-art { flex: 1 1 auto; min-height: 150px; padding: 0 22px; display: flex; }
+.gh-art .cc-mini { flex: 1; }
+.gh-art .cc-mini__field { display: grid; place-items: center; }
+.gh-gate-art { position: relative; z-index: 1; width: 100%; height: 100%; display: block; }
+
+.gh-held { margin: 18px 18px 0; padding: 12px 14px; background: var(--vellum); background-image: var(--tex-vellum-grain); border: 1px solid var(--hair); border-left: 4px solid var(--ch); box-shadow: var(--shadow); display: grid; gap: 6px; position: relative; }
+.gh-held__meta { display: flex; flex-wrap: wrap; row-gap: 6px; align-items: center; gap: 10px; white-space: nowrap; font: italic 400 var(--t-small)/1 var(--font-book); color: var(--muted); }
+.gh-held__meta .gh-held__state { margin-left: auto; font: 800 var(--t-label)/1 var(--font-label); font-style: normal; letter-spacing: var(--track-wide); text-transform: lowercase; color: var(--ch-ink); }
+.gh-held__msg { font: italic 500 19px/1.25 var(--font-book); color: var(--ink); }
+.gh-held__msg::before { content: "“"; color: var(--ch-ink); font-weight: 800; }
+.gh-held__msg::after { content: "”"; color: var(--ch-ink); font-weight: 800; }
+.gh-held__why { font-size: var(--t-small); color: var(--ink-2); }
+.gh-held__why b { font: 800 var(--t-label)/1 var(--font-label); letter-spacing: var(--track-wide); text-transform: lowercase; color: var(--ch-ink); margin-right: 6px; }
+.gh-gate__act { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 14px 18px 16px; }
+.gh-gate__act .cc-btn::before { content: ""; width: 14px; height: 14px; background: currentColor; -webkit-mask: var(--mask) center / contain no-repeat; mask: var(--mask) center / contain no-repeat; }
+.gh-pass { --mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><path d='M1.5 8.6 3.4 6.7l3 3 6.2-6.2 1.9 1.9-8.1 8.1Z'/></svg>"); }
+.gh-bar { --mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><path d='M3.4 1.5 8 6.1l4.6-4.6 1.9 1.9L9.9 8l4.6 4.6-1.9 1.9L8 9.9l-4.6 4.6-1.9-1.9L6.1 8 1.5 3.4Z'/></svg>"); }
+
+/* gate art: shared fills come from folio .cc-folio-art (.fa-*); these are the gate's own */
+.gh-gate-art .g-dark { fill: url(#gDark); }
+.gh-gate-art .g-glow { fill: url(#gGlow); }
+.gh-gate-art .g-rule { stroke: var(--azure); stroke-width: 1.4; opacity: .55; }
+.gh-gate-art .g-rule--r { stroke: var(--gules); opacity: .8; }
+.gh-gate-art .g-seal { fill: var(--azure); stroke: var(--azure-deep); stroke-width: 1.2; }
+.gh-gate-art .g-eye { fill: var(--gilt-hi); }
+.gh-gate-art .g-barhi { stroke: var(--gilt-mid); stroke-width: 1; opacity: .55; fill: none; }
+
+/* the desk: chamber head on stone, then the folio */
+.gh-desk { min-width: 0; display: grid; gap: 22px; }
+.gh-desk > .cc-chamber-head { padding-inline: 0; }
+.gh-desk > .cc-chamber-head .cc-title { margin-top: 10px; }
+.gh-head__droll { position: absolute; right: 290px; bottom: 34px; color: var(--muted); opacity: .7; transform: rotate(-8deg); }
+.gh-folio .cc-contents { margin: 0; }
+.gh-codex { padding: 4px 30px 18px 22px; background-image: linear-gradient(90deg, transparent 69px, var(--ch-wash) 69px, var(--ch-wash) 70px, transparent 70px); }
+.gh-codex .cc-section { scroll-margin-top: calc(var(--top-h) + 60px); }
+.gh-codex .cc-section__no { margin-left: 2px; }
+.gh-p { font-size: var(--t-body); color: var(--ink-2); max-width: 70ch; }
+.gh-sm { font-size: var(--t-small); color: var(--ink-2); }
+.gh-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 22px; }
+.gh-span2 { grid-column: 1 / -1; }
+.gh-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.gh-fig { font: 600 var(--t-figure-sm)/1 var(--font-display); font-variant-numeric: var(--num); color: var(--ink); }
+
+/* I · ban queue: a warrant */
+.gh-warrant { display: grid; grid-template-columns: auto 1fr auto; gap: 8px 18px; align-items: start; border-left: 4px solid var(--gules); }
+.gh-warrant > .cc-folio-shield { --ch: var(--gules); grid-row: 1 / 4; }
+.gh-warrant__meta { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.gh-warrant__msg { font: italic 500 var(--t-lead)/1.3 var(--font-book); color: var(--ink); }
+.gh-warrant__rule { font-size: var(--t-small); color: var(--ink-2); display: flex; gap: 14px; flex-wrap: wrap; align-items: baseline; }
+.gh-warrant__rule b { color: var(--gules-ink); font: 800 var(--t-label)/1 var(--font-label); letter-spacing: var(--track-label); text-transform: lowercase; }
+.gh-warrant__act { grid-column: 3; grid-row: 1 / 4; display: grid; gap: 8px; align-self: center; }
+
+/* II · herald's chart */
+.gh-chartwrap { gap: 12px; }
+.gh-chartbar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.gh-chartbar .cc-field__hint { margin-right: auto; }
+.gh-chart .fc-area { fill: url(#hcArea); }
+.gh-tally { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, 1fr); border-top: 2px solid var(--ch); border-bottom: 1px solid var(--hair); }
+.gh-tally li { padding: 10px 12px; display: grid; gap: 4px; border-left: 1px solid var(--hair); }
+.gh-tally li:first-child { border-left: 0; padding-left: 0; }
+.gh-tally span { display: flex; align-items: center; gap: 7px; font: 800 var(--t-label)/1.1 var(--font-label); letter-spacing: var(--track-label); text-transform: lowercase; color: var(--ink-2); }
+.gh-tally span i { width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; font: 800 11px/1 var(--font-label); font-style: normal; color: var(--on-glass); box-shadow: 0 0 0 1.5px var(--lead); flex: none; }
+.gh-tally span i.gh-on-or { color: var(--lead-lo); }
+.gh-tally b { font: 600 30px/1 var(--font-display); font-variant-numeric: var(--num); color: var(--ink); }
+.gh-tally li:first-child b { color: var(--ch-ink); }
+.gh-tally small { font: italic 400 var(--t-small)/1.2 var(--font-aside); color: var(--muted); font-variant-numeric: var(--num); }
+
+/* III · stream output */
+.gh-out { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--hair); background: var(--surface); }
+.gh-out > fieldset { margin: 0; border: 0; padding: 14px 16px 16px; display: grid; gap: 12px; min-width: 0; }
+.gh-out > fieldset + fieldset { border-left: 1px solid var(--hair); }
+.gh-out legend { float: left; width: 100%; padding: 0; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; font: 800 var(--t-small)/1 var(--font-label); letter-spacing: var(--track-wide); text-transform: lowercase; color: var(--ink); }
+.gh-out legend + * { clear: both; }
+.gh-seg3 { display: grid; grid-template-columns: repeat(3, 1fr); width: 100%; }
+.gh-out .gh-ms { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.gh-swatch { width: 11px; height: 11px; border-radius: 50%; display: inline-block; vertical-align: -1px; box-shadow: 0 0 0 1.5px var(--lead); }
+.gh-canvases { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 18px; align-items: start; }
+.gh-canvas { margin: 0; display: grid; gap: 6px; }
+.gh-canvas__field {
+  container-type: inline-size; position: relative; aspect-ratio: 16 / 9; overflow: hidden;
+  background-color: var(--surface);
+  background-image: conic-gradient(var(--surface-3) 25%, transparent 0 50%, var(--surface-3) 0 75%, transparent 0);
+  background-size: 18px 18px; box-shadow: 0 0 0 var(--came) var(--lead), 0 0 0 4px var(--surface), 0 0 0 5px var(--hair);
+}
+.gh-canvas figcaption { font: 500 12px/1.2 var(--font-mono); color: var(--ink-2); }
+.gh-ov-chat { position: absolute; left: 3.5cqw; bottom: 4cqw; width: 48cqw; padding: 2.2cqw 2.6cqw; background: var(--surface); border: .35cqw solid var(--azure); box-shadow: .6cqw .6cqw 0 var(--azure-deep); display: grid; gap: .9cqw; }
+.gh-ov-chat b, .gh-ov-vote b { font: 800 3cqw/1 var(--font-label); letter-spacing: .08em; text-transform: lowercase; color: var(--azure-ink); }
+.gh-ov-chat p { font: 500 3cqw/1.25 var(--font-text); color: var(--ink); white-space: nowrap; }
+.gh-ov-chat p span { font-weight: 800; color: var(--azure-ink); }
+.gh-ov-vote { position: absolute; right: 3.5cqw; bottom: 4cqw; width: 40cqw; padding: 2.2cqw 2.6cqw; background: var(--surface); border: .35cqw solid var(--or); box-shadow: .6cqw .6cqw 0 var(--or-deep); display: grid; gap: .9cqw; }
+.gh-ov-vote b { color: var(--or-ink); }
+.gh-ov-vote p { display: grid; grid-template-columns: 1fr auto; gap: .3cqw 1.4cqw; font: 600 3cqw/1.1 var(--font-text); color: var(--ink); }
+.gh-ov-vote p i { grid-column: 1 / -1; height: 1.2cqw; background: var(--surface-3); position: relative; }
+.gh-ov-vote p i::after { content: ""; position: absolute; inset: 0 auto 0 0; width: var(--v); background: var(--or); }
+.gh-canvas .cc-sim { position: absolute; top: 2.5cqw; left: 3cqw; }
+
+/* IV · the live room */
+.gh-roomhead { display: grid; grid-template-columns: auto 1fr auto; gap: 18px; align-items: center; }
+.gh-big { font: 600 var(--t-figure-lg)/.8 var(--font-display); font-variant-numeric: var(--num); color: var(--ch-ink); }
+.gh-big + span { display: grid; gap: 6px; justify-items: start; }
+.gh-big + span small { font: 800 var(--t-label)/1 var(--font-label); letter-spacing: var(--track-wide); text-transform: lowercase; color: var(--ink-2); }
+.gh-tallyseg { display: grid; grid-template-columns: repeat(4, 1fr); border: var(--came) solid var(--lead); background: var(--surface); }
+.gh-tallyseg button { display: grid; gap: 3px; justify-items: start; padding: 9px 12px 9px; border: 0; border-right: 1px solid var(--hair); background: transparent; cursor: pointer; text-align: left; position: relative; }
+.gh-tallyseg button:last-child { border-right: 0; }
+.gh-tallyseg button::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 4px; background: var(--k, var(--ink-2)); }
+.gh-tallyseg span { font: 800 var(--t-label)/1 var(--font-label); letter-spacing: var(--track-wide); text-transform: lowercase; color: var(--kt, var(--ink-2)); }
+.gh-tallyseg b { font: 600 var(--t-figure-sm)/1 var(--font-display); font-variant-numeric: var(--num); color: var(--ink); }
+.gh-tallyseg button:hover { background: var(--surface-2); }
+.gh-tallyseg button[aria-pressed="true"] { background: var(--lead); }
+.gh-tallyseg button[aria-pressed="true"] span, .gh-tallyseg button[aria-pressed="true"] b { color: var(--on-lead); }
+.gh-k-pass { --k: var(--emerald); --kt: var(--emerald-ink); } .gh-k-hold { --k: var(--azure); --kt: var(--azure-ink); } .gh-k-bar { --k: var(--gules); --kt: var(--gules-ink); }
+.gh-search { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 12px; align-items: center; }
+.gh-search output { font: 500 var(--t-label)/1 var(--font-mono); color: var(--ink-2); }
+.gh-roll { list-style: none; margin: 0; padding: 0; border-top: 2px solid var(--ch); background: var(--surface); box-shadow: inset 0 0 0 1px var(--hair); }
+.gh-roll li { display: grid; grid-template-columns: 74px minmax(0, 1fr) auto; gap: 14px; align-items: baseline; padding: 6px 14px 6px 0; border-bottom: 1px solid var(--hair-2); }
+.gh-roll li:nth-child(odd) { background: var(--tint); }
+.gh-roll .v { justify-self: end; font: 800 var(--t-label)/1 var(--font-label); letter-spacing: var(--track-label); text-transform: lowercase; padding: 3px 6px; border: 1px solid currentColor; }
+.gh-roll .v--pass { color: var(--emerald-ink); border-color: transparent; }
+.gh-roll .v--hold { color: var(--azure-ink); background: var(--azure-wash); }
+.gh-roll .v--bar { color: var(--gules-ink); background: var(--gules-wash); }
+.gh-roll p { font: 400 var(--t-small)/1.3 var(--font-book); color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.gh-roll li[data-v="bar"] p { color: var(--ink-2); text-decoration: line-through; text-decoration-color: var(--gules); text-decoration-thickness: 1.5px; }
+.gh-roll li[data-v="hold"] p { font-style: italic; }
+.gh-roll time { font: 400 var(--t-label)/1 var(--font-mono); color: var(--muted); }
+.gh-roll__foot { display: flex; justify-content: space-between; align-items: center; padding: 8px 0 0; }
+
+/* V · rule bench */
+.gh-bench { grid-template-columns: 1fr 1fr; gap: 14px 22px; }
+.gh-mono { font-family: var(--font-mono); font-size: var(--t-small); }
+.gh-bench__hits { display: flex; gap: 22px; align-items: baseline; padding: 10px 14px; background: var(--surface-2); border-left: 3px solid var(--ch); }
+.gh-bench__hits b { margin-right: 6px; color: var(--ch-ink); }
+
+/* VI · the moat */
+.gh-moat { display: grid; grid-template-columns: 240px minmax(0, 1fr); border: 1px solid var(--hair); background: var(--surface); }
+.gh-moat__read { padding: 16px 18px; display: grid; gap: 10px; align-content: start; border-right: 1px solid var(--hair); }
+.gh-moat__read .cc-readout__fig { font-size: var(--t-figure-lg); color: var(--ch-ink); }
+.gh-moat__flags { display: flex; gap: 8px; flex-wrap: wrap; }
+.gh-moat__ctl { padding: 14px 18px 16px; display: grid; gap: 12px; align-content: start; }
+.gh-moat-art { display: block; width: 100%; height: auto; }
+.gh-moat-art .m-chain { fill: none; stroke: var(--muted); stroke-width: 1.8; stroke-dasharray: 3 2; }
+.gh-moat-art .m-msg { fill: var(--surface); stroke: var(--azure); stroke-width: 1.3; }
+.gh-moat-art .m-lab { font: 800 14px/1 var(--font-label); letter-spacing: .1em; fill: var(--art-foam); }
+.gh-moat-art .m-skull { fill: var(--art-foam); opacity: .55; }
+
+/* VII · garrison orders */
+.gh-orders { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.gh-orders li { display: grid; grid-template-columns: 34px minmax(0, 1fr) auto auto; gap: 14px; align-items: center; padding: 10px 14px; background: var(--surface); border: 1px solid var(--hair); }
+.gh-orders li > i { width: 30px; height: 30px; display: grid; place-items: center; border: 1px solid var(--ch); border-radius: 50%; font: 800 var(--t-label)/1 var(--font-label); font-style: normal; color: var(--ch-ink); }
+.gh-orders b { display: block; font: 800 var(--t-small)/1.15 var(--font-label); letter-spacing: var(--track-label); text-transform: lowercase; }
+.gh-armed { display: flex; gap: 28px; align-items: baseline; }
+.gh-armed div { display: flex; align-items: baseline; gap: 8px; }
+.gh-armed b { font: 600 var(--t-figure)/1 var(--font-display); font-variant-numeric: var(--num); color: var(--ink); }
+.gh-armed b.gh-on { color: var(--ch-ink); }
+.gh-armed span { font: 800 var(--t-label)/1 var(--font-label); letter-spacing: var(--track-wide); text-transform: lowercase; color: var(--ink-2); }
+
+/* VIII · the drill (entry + compact preview) */
+.gh-drill { grid-template-columns: minmax(0, 1fr) auto; gap: 12px 20px; }
+.gh-drill__title { margin: 0; font: 600 34px/1 var(--font-display); color: var(--ch-ink); }
+.gh-drill__go { grid-row: 1 / 3; grid-column: 2; display: grid; gap: 10px; justify-items: end; align-content: start; }
+.gh-drill__strip { grid-column: 1 / -1; background: var(--surface-2); border: 1px solid var(--hair); padding: 8px 10px 6px; }
+.gh-drill-art { display: block; width: 100%; height: auto; }
+.gh-drill-art .dr-water { fill: var(--azure-wash); }
+.gh-drill-art .dr-line { stroke: var(--azure); stroke-width: 1.2; opacity: .6; }
+.gh-drill-art .dr-air { fill: var(--ink-2); }
+.gh-drill-art .dr-ne { fill: var(--surface); stroke: var(--ink-2); stroke-width: 1.3; }
+.gh-drill-art .dr-held { fill: var(--azure); stroke: var(--azure-deep); stroke-width: 1.2; }
+.gh-drill-art .dr-stem { stroke: var(--azure); stroke-width: 1.2; }
+.gh-drill-art .dr-gap { fill: url(#drHatch); stroke: var(--hair); }
+.gh-drill-art .dr-hatch { stroke: var(--faint); stroke-width: 1.2; }
+.gh-drill-art .dr-lab { font: 400 11px/1 var(--font-mono); fill: var(--muted); }
+.gh-drill-art .dr-labc { font: 800 11px/1 var(--font-label); letter-spacing: .1em; fill: var(--ink-2); }
+.gh-drill__legend { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 16px; font-size: var(--t-small); color: var(--ink-2); }
+.gh-drill__legend > span { display: inline-flex; align-items: center; gap: 7px; }
+
+/* IX · gate roll */
+.gh-log { list-style: none; margin: 0; padding: 0; border-top: 2px solid var(--ch); }
+.gh-log > li { display: grid; grid-template-columns: 70px minmax(0, 1fr) auto; gap: 6px 16px; padding: 12px 0; border-bottom: 1px solid var(--hair); align-items: start; }
+.gh-log > li > .cc-stamp { justify-self: start; margin-top: 2px; }
+.gh-log h4 { margin: 0; display: flex; gap: 10px; align-items: baseline; font: 800 var(--t-small)/1.2 var(--font-label); letter-spacing: var(--track-label); text-transform: lowercase; }
+.gh-log h4 time { font: 400 var(--t-label)/1 var(--font-mono); color: var(--muted); letter-spacing: 0; }
+.gh-log p { font-size: var(--t-small); color: var(--ink-2); }
+.gh-log .gh-log__msg { font: italic 400 var(--t-body)/1.35 var(--font-book); color: var(--ink); margin: 3px 0 2px; }
+.gh-log__act { display: grid; gap: 6px; justify-items: end; }
+.gh-log__act em { font: italic 400 var(--t-small)/1.2 var(--font-aside); color: var(--muted); }
+
+/* X · seal */
+.gh-sealslot .cc-empty { padding: 12px; border: 1px dashed var(--hair); background: var(--surface-2); }
+.gh-sealslot .cc-empty .cc-droll { width: 30px; height: 30px; color: var(--muted); }
+
+/* responsive: 1280 */
+@media (max-width: 1380px) {
+  .gh { grid-template-columns: 410px minmax(0, 1fr); gap: 22px; }
+  .gh-held__msg { font-size: var(--t-lead); }
+  .gh-head__droll { display: none; }
+  .gh-out { grid-template-columns: 1fr; }
+  .gh-out > fieldset + fieldset { border-left: 0; border-top: 1px solid var(--hair); }
+  .gh-moat { grid-template-columns: 200px minmax(0, 1fr); }
+  .gh-bench { grid-template-columns: 1fr; }
+  .gh-codex { padding-right: 20px; }
+  .cc-contents a { padding: 5px 5px; letter-spacing: .02em; }
+}
+@media (max-height: 820px) {
+  .gh-held { margin-top: 12px; padding: 9px 12px; gap: 4px; }
+  .gh-gate__head { padding: 10px 16px 8px; }
+  .gh-gate__act { padding: 10px 16px 12px; }
+}
+
+/* motion: the portcullis drops, lands, and the waiting message is stamped HELD */
+@media (prefers-reduced-motion: no-preference) {
+  .gh-gate-art .gh-port { animation: gh-drop var(--m-drop) linear .45s both; }
+  .gh-gate-art .fa-dust { animation: gh-dust 1.1s ease-out 1.38s both; transform-box: fill-box; transform-origin: 50% 100%; }
+  .gh-gate-art .fa-flame, .gh-gate-art .fa-flame-2 { animation: gh-flick 1.8s ease-in-out infinite alternate; transform-box: fill-box; transform-origin: 50% 100%; }
+  .gh-gate-art .g-eye { animation: gh-blink 6s steps(1) 2.4s infinite; }
+  .gh-stamp-held { animation: cc-press var(--m-press) var(--ease-stamp) 1.75s both; }
+}
+@keyframes gh-drop {
+  0% { transform: translateY(-232px); animation-timing-function: cubic-bezier(.55, 0, .9, .45); }
+  62% { transform: translateY(0); animation-timing-function: cubic-bezier(.2, .8, .4, 1); }
+  72% { transform: translateY(-9px); animation-timing-function: cubic-bezier(.6, 0, .9, .5); }
+  82% { transform: translateY(0); animation-timing-function: ease-out; }
+  90% { transform: translateY(-2px); animation-timing-function: ease-in; }
+  100% { transform: translateY(0); }
+}
+@keyframes gh-dust { 0% { opacity: 0; transform: scale(.4); } 25% { opacity: .85; } to { opacity: 0; transform: scale(1.6) translateY(-6px); } }
+@keyframes gh-flick { to { transform: scaleY(.86) skewX(4deg); } }
+@keyframes gh-blink { 0%, 96% { opacity: 1; } 97%, 99% { opacity: 0; } }
+</style>
+</head>
+<body class="cc-body">
+<div class="cc-shell" data-chamber="moderator">
+  <header class="cc-rampart">
+    <a class="cc-brand" href="keep.html" aria-label="Castle Control, the whole keep"><svg class="cc-mark" viewBox="0 0 32 32" aria-hidden="true">
+  <path d="M3 9V4h4v3h3V4h4v3h4V4h3v3h3V4h5v5c0 0 0 0 0 0v12a3 3 0 0 1-3 3H14l-6 5v-5H6a3 3 0 0 1-3-3Z" fill="var(--gules)" stroke="var(--on-lead)" stroke-width="1.4" stroke-linejoin="round"/>
+  <path d="M5 11h22" stroke="var(--lead)" stroke-width="1.2" opacity=".6"/>
+  <path d="M12.5 22v-5.5a3.5 3.5 0 0 1 7 0V22Z" fill="var(--or-lit)" stroke="var(--lead)" stroke-width="1.3"/>
+  <path d="M16 13v9M12.5 18.5h7" stroke="var(--lead)" stroke-width="1"/>
+</svg><span class="cc-wordmark">Castle Control</span></a>
+    <span class="cc-came-v" aria-hidden="true"></span>
+    <div class="cc-live" aria-label="Stream status">
+      <span class="cc-onair"><i class="cc-lamp" data-live="false" aria-hidden="true"></i>On air · simulated</span>
+      <span class="cc-figure"><b>Unknown</b><small>viewers</small></span>
+      <span class="cc-figure"><b>Unknown</b><small>uptime</small></span>
+    </div>
+    <span class="cc-came-v" aria-hidden="true"></span>
+    <div class="cc-links">
+      <span class="cc-chip">Twitch simulated</span>
+      <a href="setup.html" title="Set up OBS"><span class="cc-chip">OBS simulated</span></a>
+      <a href="gatehouse.html"><span class="cc-chip" data-module="moderator"><i class="cc-lozenge" aria-hidden="true"></i>Gatehouse simulated</span></a>
+    </div>
+    <span class="cc-spacer"></span>
+    <span class="cc-sim cc-sim--on-lead">Simulated</span>
+    <button class="cc-iconbtn" type="button" data-theme-toggle aria-label="Switch between day and night glass" title="Theme">
+      <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7.5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M10 2.5a7.5 7.5 0 0 1 0 15Z" fill="currentColor"/></svg>
+    </button>
+    <a class="cc-btn cc-btn--rampart" href="#steward-input" title="Talk to the Steward (/)">Steward <kbd class="cc-kbd">/</kbd></a>
+  </header>
+  <nav class="cc-tabs" aria-label="Chamber strip">
+    <a class="cc-tab" data-module="keep" href="keep.html"><span class="cc-tab__light" aria-hidden="true"></span><kbd class="cc-kbd">0</kbd><b class="cc-tab__name">The Keep</b></a>
+    <a class="cc-tab" data-module="lottery" href="lottery.html" aria-label="Lot Chamber, No draw, Preview, no proposals"><span class="cc-tab__light" aria-hidden="true"></span><kbd class="cc-kbd">1</kbd><b class="cc-tab__name">Lot Chamber</b><span class="cc-tab__row"><span class="cc-tab__figure">No draw</span><span class="cc-lamps" aria-hidden="true"><i data-lit="false" title="On air · off">On air</i><i data-lit="true" title="Preview">Preview</i><i data-lit="false" title="Draft · off">Draft</i></span></span></a>
+    <a class="cc-tab" data-module="moderator" href="gatehouse.html" aria-current="page" aria-label="Gatehouse, 1 held, On air, preview, no proposals"><span class="cc-tab__light" aria-hidden="true"></span><kbd class="cc-kbd">2</kbd><b class="cc-tab__name">Gatehouse</b><span class="cc-tab__row"><span class="cc-tab__figure">1 held</span><span class="cc-lamps" aria-hidden="true"><i data-lit="true" title="On air">On air</i><i data-lit="true" title="Preview">Preview</i><i data-lit="false" title="Draft · off">Draft</i></span></span></a>
+    <a class="cc-tab" data-module="visuals" href="beacons.html" aria-label="Beacons, Offering altar, On air, preview, no proposals"><span class="cc-tab__light" aria-hidden="true"></span><kbd class="cc-kbd">3</kbd><b class="cc-tab__name">Beacons</b><span class="cc-tab__row"><span class="cc-tab__figure">Offering altar</span><span class="cc-lamps" aria-hidden="true"><i data-lit="true" title="On air">On air</i><i data-lit="true" title="Preview">Preview</i><i data-lit="false" title="Draft · off">Draft</i></span></span></a>
+    <a class="cc-tab" data-module="studio" href="maproom.html" aria-label="Map Room, Sand table, Preview, no proposals"><span class="cc-tab__light" aria-hidden="true"></span><kbd class="cc-kbd">4</kbd><b class="cc-tab__name">Map Room</b><span class="cc-tab__row"><span class="cc-tab__figure">Sand table</span><span class="cc-lamps" aria-hidden="true"><i data-lit="false" title="On air · off">On air</i><i data-lit="true" title="Preview">Preview</i><i data-lit="false" title="Draft · off">Draft</i></span></span></a>
+  </nav>
+  <main class="cc-main" aria-label="Gatehouse">
+    <div class="gh">
+    <aside class="cc-panel gh-gate" aria-label="At the portcullis">
+      <div class="gh-gate__head">
+        <div><h2 class="cc-panel__title">At the portcullis</h2><span class="cc-panel__aside">held for human review · AutoMod held queue</span></div>
+        <div class="gh-count"><b>1</b><span><small>held</small><small>fixture only</small></span></div>
+      </div>
+      <div class="gh-art">
+        <div class="cc-mini" data-chamber="moderator"><div class="cc-mini__field cc-diaper"><svg class="gh-gate-art cc-folio-art" viewBox="0 0 520 380" preserveAspectRatio="xMidYMid meet" role="img" aria-label="The gatehouse in a gilt frame: the portcullis is down and one held message waits behind its bars, sealed in azure. The drawbridge is down over the moat. Stylised illustration.">
+  <defs>
+    <linearGradient id="gDark" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color: var(--art-shade)"/><stop offset=".55" style="stop-color: var(--azure-deep)"/><stop offset="1" style="stop-color: var(--art-sky)"/></linearGradient>
+    <radialGradient id="gGlow" cx="50%" cy="50%" r="50%"><stop offset="0" style="stop-color: var(--art-room-1); stop-opacity: 1"/><stop offset=".35" style="stop-color: var(--art-room-2); stop-opacity: .8"/><stop offset=".7" style="stop-color: var(--art-flame); stop-opacity: .22"/><stop offset="1" style="stop-color: var(--art-flame); stop-opacity: 0"/></radialGradient>
+    <pattern id="gCourses" width="34" height="16" patternUnits="userSpaceOnUse"><path class="fa-course" d="M0 15.5H34M17 0V8M0 8H34M0 8V16M34 8V16"/></pattern>
+    <clipPath id="gArch"><path d="M180 332V190A110 110 0 0 1 260 84A110 110 0 0 1 340 190V332Z"/></clipPath>
+  </defs>
+  <!-- bats on the night diaper -->
+  <path class="fa-iron" d="M14 196c5-5 10-5 13 0 1-3 3-5 5-5s4 2 5 5c3-5 8-5 13 0-4 0-7 3-8 7-2-3-5-3-7 0l-3 4-3-4c-2-3-5-3-7 0-1-4-4-7-8-7Z"/>
+  <path class="fa-iron" d="M474 112c4-4 8-4 11 0 1-2 2-4 4-4s3 2 4 4c3-4 7-4 11 0-3 0-6 2-7 6-2-2-4-2-6 0l-2 3-2-3c-2-2-4-2-6 0-1-4-4-6-7-6Z"/>
+  <!-- the gatehouse -->
+  <path class="fa-stone" d="M54 352V40H86.0V64H108.3V40H140.3V64H162.6V40H194.6V64H216.9V40H248.9V64H271.1V40H303.1V64H325.4V40H357.4V64H379.7V40H411.7V64H434.0V40H466.0V352Z"/>
+  <path d="M54 352V40H86.0V64H108.3V40H140.3V64H162.6V40H194.6V64H216.9V40H248.9V64H271.1V40H303.1V64H325.4V40H357.4V64H379.7V40H411.7V64H434.0V40H466.0V352Z" fill="url(#gCourses)"/>
+  <path class="fa-line" fill="none" d="M54 352V40H86.0V64H108.3V40H140.3V64H162.6V40H194.6V64H216.9V40H248.9V64H271.1V40H303.1V64H325.4V40H357.4V64H379.7V40H411.7V64H434.0V40H466.0V352"/>
+  <path class="fa-line" d="M54 74H466"/>
+  <!-- hanging banners -->
+  <path class="fa-ch" d="M78 76H114V156L96 144 78 156Z"/><path class="fa-ch" d="M406 76H442V156L424 144 406 156Z"/>
+  <path class="fa-gilt" d="M85 92h22v3H85ZM87 95h3v32l-1.5 4-1.5-4ZM94.5 95h3v32l-1.5 4-1.5-4ZM102 95h3v32l-1.5 4-1.5-4ZM85 106h22v2.4H85ZM85 117h22v2.4H85Z"/>
+  <path class="fa-gilt" d="M413 92h22v3h-22ZM415 95h3v32l-1.5 4-1.5-4ZM422.5 95h3v32l-1.5 4-1.5-4ZM430 95h3v32l-1.5 4-1.5-4ZM413 106h22v2.4h-22ZM413 117h22v2.4h-22Z"/>
+  <!-- arrow slits -->
+  <path class="fa-iron" d="M146 92h8v40h-8ZM142 108h16v6h-16ZM366 92h8v40h-8ZM362 108h16v6h-16Z"/>
+  <!-- voussoirs and passage -->
+  <path class="fa-stone-2 fa-line" d="M164 332V190A126 126 0 0 1 260 67.6A126 126 0 0 1 356 190V332Z"/>
+  <path class="g-dark" d="M180 332V190A110 110 0 0 1 260 84A110 110 0 0 1 340 190V332Z"/>
+  <g clip-path="url(#gArch)">
+    <ellipse class="g-glow" cx="260" cy="226" rx="78" ry="80"/>
+    <!-- something waits in the passage -->
+    <path class="g-eye" d="M196 128q4-3.4 8 0q-4 2.6-8 0ZM210 128q4-3.4 8 0q-4 2.6-8 0Z"/>
+    <path class="g-eye" d="M303 112q3.4-3 6.8 0q-3.4 2.2-6.8 0ZM315 112q3.4-3 6.8 0q-3.4 2.2-6.8 0Z"/>
+    <!-- the held message, waiting behind the bars -->
+    <path class="fa-sheet" d="M226 176h68v94h-68Z"/>
+    <path class="fa-sheet" d="M222 170h76a4 4 0 0 1 0 9h-76a4 4 0 0 1 0-9ZM222 266h76a4 4 0 0 1 0 9h-76a4 4 0 0 1 0-9Z"/>
+    <path class="g-rule g-rule--r" d="M234 192h30"/><path class="g-rule" d="M234 202h52M234 212h48M234 222h52M234 232h40"/>
+    <circle class="g-seal" cx="276" cy="250" r="11"/><path class="fa-gilt" d="M270 245h12v1.8h-12ZM271.5 246.8h1.6v7l-.8 1.5-.8-1.5ZM275.2 246.8h1.6v7l-.8 1.5-.8-1.5ZM278.9 246.8h1.6v7l-.8 1.5-.8-1.5Z"/>
+    <!-- the portcullis -->
+    <g class="gh-port">
+      <path class="fa-iron" d="M180 118h160v5H180ZM180 186h160v5H180ZM180 254h160v5H180ZM180 302h160v5H180Z"/>
+      <path class="fa-iron" d="M190 40h6v284l-3 11-3-11ZM213 40h6v284l-3 11-3-11ZM236 40h6v284l-3 11-3-11ZM259 40h6v284l-3 11-3-11ZM282 40h6v284l-3 11-3-11ZM305 40h6v284l-3 11-3-11ZM328 40h6v284l-3 11-3-11Z"/>
+      <path class="g-barhi" d="M191.5 40v284M214.5 40v284M237.5 40v284M260.5 40v284M283.5 40v284M306.5 40v284M329.5 40v284"/>
+    </g>
+  </g>
+  <path class="fa-line" fill="none" d="M180 332V190A110 110 0 0 1 260 84A110 110 0 0 1 340 190V332"/>
+  <!-- keystone skull -->
+  <path class="fa-skull" d="M260 58c-8 0-13 5-13 11.5 0 4 2 6.6 4.6 8.2V84h16.8v-6.3c2.6-1.6 4.6-4.2 4.6-8.2C273 63 268 58 260 58Z"/>
+  <circle class="fa-iron" cx="255" cy="69.5" r="3"/><circle class="fa-iron" cx="265" cy="69.5" r="3"/><path class="fa-iron" d="M260 73l1.6 3h-3.2Z"/>
+  <!-- torches -->
+  <path class="fa-line" fill="none" d="M126 236h12l-3 22h-6ZM382 236h12l-3 22h-6Z"/>
+  <path class="fa-wood" d="M126 236h12l-3 22h-6ZM382 236h12l-3 22h-6Z"/>
+  <path class="fa-flame" d="M132 202c5 10 10 14 10 22a10 10 0 0 1-20 0c0-8 5-12 10-22ZM388 202c5 10 10 14 10 22a10 10 0 0 1-20 0c0-8 5-12 10-22Z"/>
+  <path class="fa-flame-2" d="M132 216c2.6 5 5 7 5 11a5 5 0 0 1-10 0c0-4 2.4-6 5-11ZM388 216c2.6 5 5 7 5 11a5 5 0 0 1-10 0c0-4 2.4-6 5-11Z"/>
+  <!-- dust where the gate lands -->
+  <ellipse class="fa-dust" cx="196" cy="330" rx="16" ry="6"/><ellipse class="fa-dust" cx="324" cy="330" rx="16" ry="6"/><ellipse class="fa-dust" cx="260" cy="331" rx="22" ry="5"/>
+  <!-- moat and drawbridge (bridge down) -->
+  <path class="fa-water" d="M0 346H520V380H0Z"/>
+  <path class="fa-wave" d="M8 358q10-6 20 0t20 0 20 0M90 366q10-6 20 0t20 0M392 360q10-6 20 0t20 0 20 0M470 370q10-6 20 0t20 0M20 374q10-5 20 0t20 0"/>
+  <path class="fa-wood" d="M180 332H340L376 378H144Z"/>
+  <path class="fa-plank" d="M200 332 188 378M220 332 213 378M240 332 237 378M260 332V378M280 332 283 378M300 332 307 378M320 332 332 378M152 352H368M146 366H374"/>
+</svg></div></div>
+      </div>
+      <article class="gh-held" aria-label="Held message">
+        <div class="gh-held__meta"><span>Nothing sent.</span><span class="cc-stamp cc-stamp--held cc-stamp--inked gh-stamp-held">Hold</span><span class="cc-hash">simulated-message-0</span><span class="gh-held__state">Held for review</span></div>
+        <p class="gh-held__msg">Simulated original held message: can I post my guide?</p>
+        <p class="gh-held__why"><b>Hold reason</b>AutoMod · simulated link requires moderator review</p>
+      </article>
+      <div class="gh-gate__act">
+        <button class="cc-btn cc-btn--chamber gh-pass" type="button">Propose pass</button>
+        <button class="cc-btn cc-btn--line gh-bar" type="button">Propose bar</button>
+      </div>
+    </aside>
+
+    <div class="gh-desk">
+      <header class="cc-chamber-head">
+        <div>
+          <nav class="cc-crumbs" aria-label="Breadcrumb"><a href="keep.html">The keep</a><span class="cc-crumbs__sep" aria-hidden="true">›</span><b aria-current="page">Gatehouse</b><span>· chamber 2 of 4</span></nav>
+          <h1 class="cc-title cc-title--incipit"><span class="cc-versal" aria-hidden="true"><span>T</span></span><span class="cc-sr">T</span>he Gatehouse</h1>
+          <p class="cc-subtitle">AI moderator <span class="cc-sim">Simulated</span></p>
+        </div>
+        <div class="cc-back"><a class="cc-btn" href="overview.html" data-back>Back to the overview <kbd class="cc-kbd">Esc</kbd></a></div>
+        <span class="cc-droll cc-droll--bat gh-head__droll" aria-hidden="true"></span>
+      </header>
+
+      <div class="cc-folio gh-folio">
+      <nav class="cc-contents" aria-label="Rubrics of this chamber"><a href="#s-ban" aria-current="true"><i>I</i>Ban queue</a><a href="#s-herald"><i>II</i>Herald</a><a href="#s-output"><i>III</i>Stream output</a><a href="#s-room"><i>IV</i>Live room</a><a href="#s-bench"><i>V</i>Rule bench</a><a href="#s-moat"><i>VI</i>Moat</a><a href="#s-orders"><i>VII</i>Orders</a><a href="#s-drill"><i>VIII</i>Drill</a><a href="#s-roll"><i>IX</i>Gate roll</a><a href="#s-seal"><i>X</i>Seal</a></nav>
+
+      <div class="gh-codex">
+
+        <section class="cc-section" id="s-ban" aria-labelledby="h-ban">
+          <span class="cc-section__no">I</span>
+          <div class="cc-section__head"><h2 class="cc-section__title" id="h-ban">Ban queue<em>human review</em></h2><span class="cc-stamp cc-stamp--blocked cc-stamp--inked">1 pending ban</span></div>
+          <div class="cc-section__body">
+            <article class="cc-sheet gh-warrant" aria-label="Pending ban">
+              <span class="cc-folio-shield cc-folio-shield--lg"><i class="cc-folio-charge cc-folio-charge--portcullis"></i></span>
+              <div class="gh-warrant__meta"><span class="cc-stamp cc-stamp--held cc-stamp--inked">Hold</span><span class="cc-hash">simulated-message-26</span><span class="cc-stamp cc-stamp--blocked cc-stamp--inked">Pending ban</span></div>
+              <p class="gh-warrant__msg">Simulated original message: simulated-blocked, quoted for human review.</p>
+              <p class="gh-warrant__rule"><span><b>Rule</b> Blocked terms</span><span class="cc-hash">simulated-message-26</span></p>
+              <div class="gh-warrant__act"><button class="cc-btn cc-btn--rubric" type="button">Propose ban</button><button class="cc-btn" type="button">Propose dismiss</button></div>
+            </article>
+          </div>
+        </section>
+
+        <section class="cc-section" id="s-herald" aria-labelledby="h-herald">
+          <span class="cc-section__no">II</span>
+          <div class="cc-section__head"><h2 class="cc-section__title" id="h-herald">The herald’s chart<em>consensus · describes the room, never acts on anyone</em></h2><span class="cc-stamp cc-stamp--local cc-stamp--inked">Illustrative</span></div>
+          <div class="cc-section__body">
+            <div class="cc-panel"><div class="cc-panel__body gh-chartwrap">
+              <div class="gh-chartbar">
+                <p class="cc-field__hint">15 minutes of sample consensus.</p>
+                <div class="cc-seg" role="group" aria-label="Consensus filter"><button type="button" aria-pressed="true">All messages</button><button type="button" aria-pressed="false">Emotes only</button><button type="button" aria-pressed="false">Text only</button><button type="button" aria-pressed="false">Kappa</button></div>
+              </div>
+              <svg class="gh-chart cc-folio-chart" viewBox="0 0 700 272" role="img" aria-label="min 0 → min 15 · Go left 36.7% · illustrative. Four lines of sample consensus: Go left falls from 43.8% at its height to 36.7%, Hype ends at 26.8%, Skip the boss at 20.7%, Go right at 15.8%.">
+                <defs><linearGradient id="hcArea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color: var(--azure); stop-opacity: .2"/><stop offset="1" style="stop-color: var(--azure); stop-opacity: 0"/></linearGradient></defs>
+                <path class="fc-rule" d="M70 200H650M70 154H650M70 108H650M70 62H650M70 16H650"/>
+                <path class="fc-rule fc-rule--margin" d="M70 16V246"/>
+                <path class="fc-rule fc-rule--base" d="M70 246H650"/>
+                <text class="fc-lab" x="60" y="250" text-anchor="end">0%</text><text class="fc-lab" x="60" y="204" text-anchor="end">10%</text><text class="fc-lab" x="60" y="158" text-anchor="end">20%</text><text class="fc-lab" x="60" y="112" text-anchor="end">30%</text><text class="fc-lab" x="60" y="66" text-anchor="end">40%</text><text class="fc-lab" x="60" y="20" text-anchor="end">50%</text>
+                <text class="fc-labc" x="70" y="266">min 0</text><text class="fc-labc" x="640" y="266" text-anchor="end">min 15</text>
+                <path class="fc-now" d="M526 16V246"/><text class="fc-lab" x="530" y="28">last 3 min</text>
+                <path class="fc-area" d="M70.0 71.9 C76.3 71.1 95.3 68.9 108.0 67.3 C120.7 65.7 133.3 63.9 146.0 62.1 C158.7 60.4 171.3 58.5 184.0 56.8 C196.7 55.1 209.3 53.4 222.0 51.9 C234.7 50.5 247.3 49.1 260.0 48.0 C272.7 46.9 285.3 46.0 298.0 45.4 C310.7 44.9 323.3 44.6 336.0 44.7 C348.7 44.8 361.3 45.2 374.0 46.0 C386.7 46.7 399.3 47.8 412.0 49.1 C424.7 50.4 437.3 52.1 450.0 53.8 C462.7 55.5 475.3 57.5 488.0 59.4 C500.7 61.3 513.3 63.3 526.0 65.2 C538.7 67.0 551.3 68.9 564.0 70.5 C576.7 72.1 589.3 73.5 602.0 74.7 C614.7 75.8 633.7 76.9 640.0 77.3 L640 246 L70 246 Z"/>
+                <g>
+                <path class="fc-case" d="M70.0 187.6 C76.3 188.3 95.3 190.5 108.0 191.8 C120.7 193.1 133.3 194.4 146.0 195.5 C158.7 196.6 171.3 197.5 184.0 198.3 C196.7 199.0 209.3 199.5 222.0 199.8 C234.7 200.1 247.3 200.1 260.0 199.9 C272.7 199.7 285.3 199.2 298.0 198.5 C310.7 197.8 323.3 196.8 336.0 195.6 C348.7 194.4 361.3 193.0 374.0 191.5 C386.7 190.1 399.3 188.4 412.0 186.8 C424.7 185.2 437.3 183.4 450.0 181.9 C462.7 180.3 475.3 178.8 488.0 177.5 C500.7 176.3 513.3 175.1 526.0 174.3 C538.7 173.4 551.3 172.8 564.0 172.4 C576.7 172.1 589.3 172.0 602.0 172.2 C614.7 172.3 633.7 173.2 640.0 173.4"/>
+                <path class="fc-line fc-s3" d="M70.0 187.6 C76.3 188.3 95.3 190.5 108.0 191.8 C120.7 193.1 133.3 194.4 146.0 195.5 C158.7 196.6 171.3 197.5 184.0 198.3 C196.7 199.0 209.3 199.5 222.0 199.8 C234.7 200.1 247.3 200.1 260.0 199.9 C272.7 199.7 285.3 199.2 298.0 198.5 C310.7 197.8 323.3 196.8 336.0 195.6 C348.7 194.4 361.3 193.0 374.0 191.5 C386.7 190.1 399.3 188.4 412.0 186.8 C424.7 185.2 437.3 183.4 450.0 181.9 C462.7 180.3 475.3 178.8 488.0 177.5 C500.7 176.3 513.3 175.1 526.0 174.3 C538.7 173.4 551.3 172.8 564.0 172.4 C576.7 172.1 589.3 172.0 602.0 172.2 C614.7 172.3 633.7 173.2 640.0 173.4"/>
+                <path class="fc-case" d="M70.0 151.4 C76.3 151.8 95.3 152.8 108.0 153.7 C120.7 154.5 133.3 155.5 146.0 156.5 C158.7 157.5 171.3 158.6 184.0 159.6 C196.7 160.6 209.3 161.7 222.0 162.7 C234.7 163.6 247.3 164.6 260.0 165.4 C272.7 166.2 285.3 166.9 298.0 167.5 C310.7 168.0 323.3 168.4 336.0 168.6 C348.7 168.8 361.3 168.8 374.0 168.6 C386.7 168.4 399.3 168.0 412.0 167.5 C424.7 166.9 437.3 166.1 450.0 165.3 C462.7 164.4 475.3 163.3 488.0 162.3 C500.7 161.2 513.3 160.1 526.0 159.0 C538.7 157.9 551.3 156.7 564.0 155.7 C576.7 154.6 589.3 153.6 602.0 152.8 C614.7 152.0 633.7 151.1 640.0 150.7"/>
+                <path class="fc-line fc-s2" d="M70.0 151.4 C76.3 151.8 95.3 152.8 108.0 153.7 C120.7 154.5 133.3 155.5 146.0 156.5 C158.7 157.5 171.3 158.6 184.0 159.6 C196.7 160.6 209.3 161.7 222.0 162.7 C234.7 163.6 247.3 164.6 260.0 165.4 C272.7 166.2 285.3 166.9 298.0 167.5 C310.7 168.0 323.3 168.4 336.0 168.6 C348.7 168.8 361.3 168.8 374.0 168.6 C386.7 168.4 399.3 168.0 412.0 167.5 C424.7 166.9 437.3 166.1 450.0 165.3 C462.7 164.4 475.3 163.3 488.0 162.3 C500.7 161.2 513.3 160.1 526.0 159.0 C538.7 157.9 551.3 156.7 564.0 155.7 C576.7 154.6 589.3 153.6 602.0 152.8 C614.7 152.0 633.7 151.1 640.0 150.7"/>
+                <path class="fc-case" d="M70.0 113.1 C76.3 112.8 95.3 111.7 108.0 111.2 C120.7 110.7 133.3 110.2 146.0 109.9 C158.7 109.6 171.3 109.4 184.0 109.3 C196.7 109.3 209.3 109.3 222.0 109.6 C234.7 109.8 247.3 110.2 260.0 110.7 C272.7 111.2 285.3 111.9 298.0 112.6 C310.7 113.3 323.3 114.2 336.0 115.1 C348.7 116.0 361.3 117.0 374.0 117.9 C386.7 118.8 399.3 119.8 412.0 120.7 C424.7 121.5 437.3 122.4 450.0 123.1 C462.7 123.8 475.3 124.4 488.0 124.8 C500.7 125.2 513.3 125.5 526.0 125.6 C538.7 125.7 551.3 125.6 564.0 125.4 C576.7 125.2 589.3 124.9 602.0 124.4 C614.7 123.9 633.7 122.9 640.0 122.6"/>
+                <path class="fc-line fc-s1" d="M70.0 113.1 C76.3 112.8 95.3 111.7 108.0 111.2 C120.7 110.7 133.3 110.2 146.0 109.9 C158.7 109.6 171.3 109.4 184.0 109.3 C196.7 109.3 209.3 109.3 222.0 109.6 C234.7 109.8 247.3 110.2 260.0 110.7 C272.7 111.2 285.3 111.9 298.0 112.6 C310.7 113.3 323.3 114.2 336.0 115.1 C348.7 116.0 361.3 117.0 374.0 117.9 C386.7 118.8 399.3 119.8 412.0 120.7 C424.7 121.5 437.3 122.4 450.0 123.1 C462.7 123.8 475.3 124.4 488.0 124.8 C500.7 125.2 513.3 125.5 526.0 125.6 C538.7 125.7 551.3 125.6 564.0 125.4 C576.7 125.2 589.3 124.9 602.0 124.4 C614.7 123.9 633.7 122.9 640.0 122.6"/>
+                <path class="fc-case" d="M70.0 71.9 C76.3 71.1 95.3 68.9 108.0 67.3 C120.7 65.7 133.3 63.9 146.0 62.1 C158.7 60.4 171.3 58.5 184.0 56.8 C196.7 55.1 209.3 53.4 222.0 51.9 C234.7 50.5 247.3 49.1 260.0 48.0 C272.7 46.9 285.3 46.0 298.0 45.4 C310.7 44.9 323.3 44.6 336.0 44.7 C348.7 44.8 361.3 45.2 374.0 46.0 C386.7 46.7 399.3 47.8 412.0 49.1 C424.7 50.4 437.3 52.1 450.0 53.8 C462.7 55.5 475.3 57.5 488.0 59.4 C500.7 61.3 513.3 63.3 526.0 65.2 C538.7 67.0 551.3 68.9 564.0 70.5 C576.7 72.1 589.3 73.5 602.0 74.7 C614.7 75.8 633.7 76.9 640.0 77.3"/>
+                <path class="fc-line fc-s0" d="M70.0 71.9 C76.3 71.1 95.3 68.9 108.0 67.3 C120.7 65.7 133.3 63.9 146.0 62.1 C158.7 60.4 171.3 58.5 184.0 56.8 C196.7 55.1 209.3 53.4 222.0 51.9 C234.7 50.5 247.3 49.1 260.0 48.0 C272.7 46.9 285.3 46.0 298.0 45.4 C310.7 44.9 323.3 44.6 336.0 44.7 C348.7 44.8 361.3 45.2 374.0 46.0 C386.7 46.7 399.3 47.8 412.0 49.1 C424.7 50.4 437.3 52.1 450.0 53.8 C462.7 55.5 475.3 57.5 488.0 59.4 C500.7 61.3 513.3 63.3 526.0 65.2 C538.7 67.0 551.3 68.9 564.0 70.5 C576.7 72.1 589.3 73.5 602.0 74.7 C614.7 75.8 633.7 76.9 640.0 77.3"/>
+                </g>
+                <circle class="fc-end fc-e3" cx="640" cy="173.4" r="9"/><text class="fc-num" x="640" y="177">iv</text>
+                <circle class="fc-end fc-e2" cx="640" cy="150.7" r="9"/><text class="fc-num" x="640" y="154.3">iii</text>
+                <circle class="fc-end fc-e1" cx="640" cy="122.6" r="9"/><text class="fc-num" x="640" y="126.2">ii</text>
+                <circle class="fc-end fc-e0" cx="640" cy="77.3" r="9"/><text class="fc-num" x="640" y="80.9">i</text>
+              </svg>
+              <p class="cc-field__hint">min 0 → min 15 · Go left 36.7% · illustrative</p>
+              <ul class="gh-tally" aria-label="Directions">
+                <li><span><i style="background: var(--azure)">i</i>Go left</span><b>36.7%</b><small>−2.6 pp / 3 min</small></li>
+                <li><span><i style="background: var(--gules)">ii</i>Hype</span><b>26.8%</b><small>0.7 pp / 3 min</small></li>
+                <li><span><i class="gh-on-or" style="background: var(--or)">iii</i>Skip the boss</span><b>20.7%</b><small>1.8 pp / 3 min</small></li>
+                <li><span><i style="background: var(--emerald)">iv</i>Go right</span><b>15.8%</b><small>0.2 pp / 3 min</small></li>
+              </ul>
+              <p class="cc-gloss-note">17 messages shed · barred messages excluded · simulated</p>
+            </div></div>
+          </div>
+        </section>
+
+        <section class="cc-section" id="s-output" aria-labelledby="h-output">
+          <span class="cc-section__no">III</span>
+          <div class="cc-section__head"><h2 class="cc-section__title" id="h-output">Stream output preview</h2><span class="cc-sim">Simulated</span></div>
+          <div class="cc-section__body">
+            <p class="gh-sm"><b>SIMULATED · SAMPLE · AI-generated sample art</b> · Session only. No OBS source is connected.</p>
+            <p class="cc-gloss-note">Chat shows passed messages only. Vote shares are illustrative; these controls never affect moderation.</p>
+            <div class="gh-out">
+              <fieldset>
+                <legend><span class="cc-dot cc-dot--azure"></span>Chat overlay</legend>
+                <div class="cc-field"><span class="cc-field__label">Chat overlay size</span><div class="cc-seg cc-seg--sm" role="group" aria-label="Chat overlay size"><button type="button" aria-pressed="false">S</button><button type="button" aria-pressed="true">M</button><button type="button" aria-pressed="false">L</button></div></div>
+                <div class="cc-field"><span class="cc-field__label">Chat overlay anchor</span><div class="cc-seg cc-seg--sm" role="group" aria-label="Chat overlay anchor"><button type="button" aria-pressed="false">top left</button><button type="button" aria-pressed="false">top right</button><button type="button" aria-pressed="true">bottom left</button><button type="button" aria-pressed="false">bottom right</button></div></div>
+                <div class="cc-field"><span class="cc-field__label">Chat overlay colour</span><div class="cc-seg cc-seg--sm" role="group" aria-label="Chat overlay colour"><button type="button" aria-pressed="true"><span class="gh-swatch" style="background: var(--azure)"></span>azure</button><button type="button" aria-pressed="false"><span class="gh-swatch" style="background: var(--gules)"></span>gules</button><button type="button" aria-pressed="false"><span class="gh-swatch" style="background: var(--or)"></span>or</button><button type="button" aria-pressed="false"><span class="gh-swatch" style="background: var(--key)"></span>Key ink</button></div></div>
+                <div class="cc-field"><span class="cc-field__label">Chat overlay art style</span><div class="cc-seg cc-seg--sm gh-seg3" role="group" aria-label="Chat overlay art style"><button type="button" aria-pressed="true">Heraldic</button><button type="button" aria-pressed="false">Arcade</button><button type="button" aria-pressed="false">Neon</button><button type="button" aria-pressed="false">Storybook</button><button type="button" aria-pressed="false">Cel</button><button type="button" aria-pressed="false">Glass</button></div></div>
+                <div class="gh-ms">
+                  <div class="cc-field"><label for="chat-show">Chat overlay show after (ms)</label><input id="chat-show" class="cc-input" type="number" min="0" max="10000" value="0"></div>
+                  <div class="cc-field"><label for="chat-hide">Chat overlay hide after (ms)</label><input id="chat-hide" class="cc-input" type="number" min="250" max="60000" value="10000"></div>
+                </div>
+              </fieldset>
+              <fieldset>
+                <legend><span class="cc-dot cc-dot--or"></span>Vote bar</legend>
+                <div class="cc-field"><span class="cc-field__label">Vote bar size</span><div class="cc-seg cc-seg--sm" role="group" aria-label="Vote bar size"><button type="button" aria-pressed="false">S</button><button type="button" aria-pressed="true">M</button><button type="button" aria-pressed="false">L</button></div></div>
+                <div class="cc-field"><span class="cc-field__label">Vote bar anchor</span><div class="cc-seg cc-seg--sm" role="group" aria-label="Vote bar anchor"><button type="button" aria-pressed="false">top left</button><button type="button" aria-pressed="false">top right</button><button type="button" aria-pressed="false">bottom left</button><button type="button" aria-pressed="true">bottom right</button></div></div>
+                <div class="cc-field"><span class="cc-field__label">Vote bar colour</span><div class="cc-seg cc-seg--sm" role="group" aria-label="Vote bar colour"><button type="button" aria-pressed="false"><span class="gh-swatch" style="background: var(--azure)"></span>azure</button><button type="button" aria-pressed="false"><span class="gh-swatch" style="background: var(--gules)"></span>gules</button><button type="button" aria-pressed="true"><span class="gh-swatch" style="background: var(--or)"></span>or</button><button type="button" aria-pressed="false"><span class="gh-swatch" style="background: var(--key)"></span>Key ink</button></div></div>
+                <div class="cc-field"><span class="cc-field__label">Vote bar art style</span><div class="cc-seg cc-seg--sm gh-seg3" role="group" aria-label="Vote bar art style"><button type="button" aria-pressed="true">Heraldic</button><button type="button" aria-pressed="false">Arcade</button><button type="button" aria-pressed="false">Neon</button><button type="button" aria-pressed="false">Storybook</button><button type="button" aria-pressed="false">Cel</button><button type="button" aria-pressed="false">Glass</button></div></div>
+                <div class="gh-ms">
+                  <div class="cc-field"><label for="vote-show">Vote bar show after (ms)</label><input id="vote-show" class="cc-input" type="number" min="0" max="10000" value="0"></div>
+                  <div class="cc-field"><label for="vote-hide">Vote bar hide after (ms)</label><input id="vote-hide" class="cc-input" type="number" min="250" max="60000" value="10000"></div>
+                </div>
+              </fieldset>
+            </div>
+            <p class="cc-field__hint">Show delay: 0–10000 ms. Hide after showing: 250–60000 ms. Values are clamped.</p>
+            <div class="gh-actions"><button class="cc-btn" type="button">Replay output timing</button><span class="cc-status"><i class="cc-lozenge" style="--ch: var(--emerald); --ch-lit: var(--emerald-lit)" aria-hidden="true"></i>Chat overlay: Visible · Vote bar: Visible</span></div>
+            <div class="gh-canvases">
+              <figure class="gh-canvas">
+                <div class="gh-canvas__field">
+                  <span class="cc-sim">Simulated</span>
+                  <div class="gh-ov-chat"><b>SAMPLE passed chat · Heraldic</b><p><span>Simulated viewer 417:</span> go left!</p><p><span>Simulated viewer 418:</span> go right!</p><p><span>Simulated viewer 419:</span> go left!</p></div>
+                  <div class="gh-ov-vote"><b>SAMPLE vote bar · illustrative</b><p>Go left<span>36.7%</span><i style="--v: 36.7%"></i></p><p>Hype<span>26.8%</span><i style="--v: 26.8%"></i></p><p>Skip the boss<span>20.7%</span><i style="--v: 20.7%"></i></p><p>Go right<span>15.8%</span><i style="--v: 15.8%"></i></p></div>
+                </div>
+                <figcaption>1920×1080 · SIMULATED · transparent canvas</figcaption>
+              </figure>
+              <figure class="gh-canvas">
+                <div class="gh-canvas__field">
+                  <span class="cc-sim">Simulated</span>
+                  <div class="gh-ov-chat"><b>SAMPLE passed chat · Heraldic</b><p><span>Simulated viewer 417:</span> go left!</p><p><span>Simulated viewer 418:</span> go right!</p><p><span>Simulated viewer 419:</span> go left!</p></div>
+                  <div class="gh-ov-vote"><b>SAMPLE vote bar · illustrative</b><p>Go left<span>36.7%</span><i style="--v: 36.7%"></i></p><p>Hype<span>26.8%</span><i style="--v: 26.8%"></i></p><p>Skip the boss<span>20.7%</span><i style="--v: 20.7%"></i></p><p>Go right<span>15.8%</span><i style="--v: 15.8%"></i></p></div>
+                </div>
+                <figcaption>1280×720 · SIMULATED · transparent canvas</figcaption>
+              </figure>
+            </div>
+          </div>
+        </section>
+
+        <section class="cc-section" id="s-room" aria-labelledby="h-room">
+          <span class="cc-section__no">IV</span>
+          <div class="cc-section__head"><h2 class="cc-section__title" id="h-room">The live room<em>sample chat replay</em></h2></div>
+          <div class="cc-section__body">
+            <div class="gh-roomhead">
+              <b class="gh-big">420</b><span><small>lines</small><span class="cc-sim">Simulated</span></span>
+              <span class="gh-actions" style="justify-content: flex-end"><button class="cc-btn cc-btn--primary" type="button">Play simulated chat</button><span class="cc-hash">0 new simulated lines</span></span>
+            </div>
+            <p class="cc-gloss-note">Generated recording · recorded verdicts, not a test of edited rules. Nothing sent to Twitch.</p>
+            <div class="gh-tallyseg" role="group" aria-label="Filter the room">
+              <button type="button" aria-pressed="true"><span>All</span><b>420</b></button>
+              <button type="button" class="gh-k-pass" aria-pressed="false"><span>✓ Pass</span><b>332</b></button>
+              <button type="button" class="gh-k-hold" aria-pressed="false"><span>⏸ Hold</span><b>33</b></button>
+              <button type="button" class="gh-k-bar" aria-pressed="false"><span>✕ Bar</span><b>55</b></button>
+            </div>
+            <div class="gh-search"><label for="room-search">Search the room</label><input id="room-search" class="cc-input" type="search" autocomplete="off"><output for="room-search">420 matching</output></div>
+            <ol class="gh-roll" aria-label="420 lines · SIMULATED">
+              <li data-v="hold"><span class="v v--hold">Hold</span><p>Simulated original held message: can I post my guide?</p><time>09:55:02</time></li>
+              <li><span class="v v--pass">Pass</span><p>Simulated viewer 1: go left!</p><time>09:55:04</time></li>
+              <li><span class="v v--pass">Pass</span><p>Simulated viewer 2: go right!</p><time>09:55:06</time></li>
+              <li><span class="v v--pass">Pass</span><p>Simulated viewer 3: go left!</p><time>09:55:08</time></li>
+              <li><span class="v v--pass">Pass</span><p>Simulated viewer 4: go right!</p><time>09:55:10</time></li>
+              <li><span class="v v--pass">Pass</span><p>Simulated viewer 5: go left!</p><time>09:55:12</time></li>
+              <li><span class="v v--pass">Pass</span><p>Simulated viewer 6: go right!</p><time>09:55:14</time></li>
+              <li data-v="bar"><span class="v v--bar">Bar</span><p>Simulated repeated message 7</p><time>09:55:16</time></li>
+              <li><span class="v v--pass">Pass</span><p>Simulated viewer 8: go right!</p><time>09:55:18</time></li>
+              <li><span class="v v--pass">Pass</span><p>Simulated viewer 9: go left!</p><time>09:55:20</time></li>
+              <li><span class="v v--pass">Pass</span><p>Simulated viewer 10: go right!</p><time>09:55:22</time></li>
+              <li><span class="v v--pass">Pass</span><p>Simulated viewer 11: go left!</p><time>09:55:24</time></li>
+              <li><span class="v v--pass">Pass</span><p>Simulated viewer 12: go right!</p><time>09:55:26</time></li>
+              <li data-v="hold"><span class="v v--hold">Hold</span><p>Simulated question 13: may I share a link?</p><time>09:55:28</time></li>
+              <li data-v="bar"><span class="v v--bar">Bar</span><p>Simulated repeated message 14</p><time>09:55:30</time></li>
+              <li><span class="v v--pass">Pass</span><p>Simulated viewer 15: go left!</p><time>09:55:32</time></li>
+            </ol>
+            <div class="gh-roll__foot"><span class="cc-field__hint">420 lines · SIMULATED · first 16 shown, the roll continues</span><span class="cc-droll cc-droll--fleuron" aria-hidden="true" style="color: var(--azure)"></span></div>
+          </div>
+        </section>
+
+        <section class="cc-section" id="s-bench" aria-labelledby="h-bench">
+          <span class="cc-section__no">V</span>
+          <div class="cc-section__head"><h2 class="cc-section__title" id="h-bench">Rule bench</h2><span class="cc-stamp cc-stamp--held cc-stamp--inked">Watching · shadow</span></div>
+          <div class="cc-section__body">
+            <p class="gh-p">Draft a new watching rule or edit an existing one. Counts update over the loaded replay as you type.</p>
+            <div class="cc-panel"><div class="cc-panel__body gh-bench">
+              <div class="cc-field gh-span2"><label for="rule-pick">Watching rule</label><select id="rule-pick" class="cc-select"><option>New watching rule</option><option selected>Links</option><option>Repeated messages</option><option>Blocked terms</option></select></div>
+              <div class="cc-field"><label for="rule-name">Watching rule name</label><input id="rule-name" class="cc-input" value="Links"></div>
+              <div class="cc-field"><label for="rule-pattern">Watching match pattern</label><input id="rule-pattern" class="cc-input gh-mono" value="https?://"></div>
+              <p class="cc-field__hint gh-span2">Mode fixed to Watching (shadow) · Delete message</p>
+              <div class="gh-actions gh-span2"><button class="cc-btn cc-btn--primary" type="button">Propose watching rule</button><span class="cc-hash">Watching rule id: links</span></div>
+              <div class="gh-bench__hits gh-span2"><span><b class="gh-fig">0</b>draft pattern hits</span><span><b class="gh-fig">0</b>would newly act on (currently Pass)</span></div>
+              <p class="cc-note gh-span2">Pattern preview only. The care detector runs first in the real pipeline; the action gate runs before any action. Nothing here arms or acts.</p>
+            </div></div>
+          </div>
+        </section>
+
+        <section class="cc-section" id="s-moat" aria-labelledby="h-moat">
+          <span class="cc-section__no">VI</span>
+          <div class="cc-section__head"><h2 class="cc-section__title" id="h-moat">The moat<em>chat delay · drawbridge</em></h2><span class="cc-sim">Simulated</span></div>
+          <div class="cc-section__body">
+            <div class="gh-moat">
+              <div class="gh-moat__read">
+                <div class="cc-readout"><span class="cc-readout__fig">4s</span><span class="cc-readout__label">Applied chat delay</span></div>
+                <div class="gh-moat__flags"><span class="cc-stamp cc-stamp--ok cc-stamp--inked">Bridge down</span><span class="cc-stamp cc-stamp--local cc-stamp--inked">Shield mode off</span></div>
+              </div>
+              <div class="gh-moat__ctl">
+                <svg class="gh-moat-art cc-folio-art" viewBox="0 0 600 86" role="img" aria-label="Messages cross the moat four seconds behind; the drawbridge is down.">
+                  <path class="fa-water" d="M0 34H600V86H0Z"/><path class="fa-water-2" d="M0 60H600V86H0Z"/>
+                  <path class="fa-wave" d="M10 46q12-7 24 0t24 0 24 0M130 70q12-7 24 0t24 0M250 44q12-7 24 0t24 0 24 0M420 72q12-7 24 0t24 0M500 48q12-7 24 0t24 0"/>
+                  <path class="m-skull" d="M226 74c-4 0-6 2.4-6 5.4 0 1.8.9 3 2 3.8V86h8v-2.8c1.1-.8 2-2 2-3.8 0-3-2-5.4-6-5.4Z"/>
+                  <path class="fa-bank" d="M0 22H60V86H0ZM540 22H600V86H540Z"/>
+                  <path class="fa-wood" d="M60 24H540V34H60Z"/><path class="fa-plank" d="M90 24v10M120 24v10M150 24v10M180 24v10M210 24v10M240 24v10M270 24v10M300 24v10M330 24v10M360 24v10M390 24v10M420 24v10M450 24v10M480 24v10M510 24v10"/>
+                  <path class="m-chain" d="M60 2 120 24M540 2 480 24"/>
+                  <rect class="m-msg" x="118" y="10" width="22" height="13" rx="1"/><rect class="m-msg" x="268" y="10" width="22" height="13" rx="1"/><rect class="m-msg" x="418" y="10" width="22" height="13" rx="1"/>
+                  <text class="m-lab" x="300" y="56" text-anchor="middle">4 s across the water</text>
+                </svg>
+                <div class="cc-field"><span class="cc-field__label">Chat delay</span><div class="cc-seg cc-seg--block" role="group" aria-label="Chat delay"><button type="button" aria-pressed="false">Off</button><button type="button" aria-pressed="false">2 s</button><button type="button" aria-pressed="true">4 s</button><button type="button" aria-pressed="false">6 s</button></div></div>
+                <div class="cc-field"><span class="cc-field__label">Propose chat delay</span><div class="cc-seg cc-seg--block" role="group" aria-label="Propose chat delay" data-multi="true"><button type="button">Off</button><button type="button">2 s</button><button type="button">4 s</button><button type="button">6 s</button></div></div>
+                <div class="gh-actions"><button class="cc-btn cc-btn--rubric" type="button">Raise the drawbridge</button><span class="cc-field__hint">Shield Mode · fixture only</span></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="cc-section" id="s-orders" aria-labelledby="h-orders">
+          <span class="cc-section__no">VII</span>
+          <div class="cc-section__head"><h2 class="cc-section__title" id="h-orders">Garrison orders<em>gate rules</em></h2><span class="cc-sim">Simulated</span></div>
+          <div class="cc-section__body">
+            <div class="gh-armed"><div><b>0</b><span>Armed</span></div><div><b class="gh-on">3</b><span>Watching</span></div></div>
+            <p class="cc-gloss-note">Armed / Watching preview only. Actual rules stay Watching; arming is unavailable before the live spike.</p>
+            <ol class="gh-orders">
+              <li><i>I</i><div><b>Links</b><code>https?:// · delete</code></div><span class="cc-stamp cc-stamp--held cc-stamp--inked">Watching</span><button class="cc-btn cc-btn--sm" type="button">Propose Arm</button></li>
+              <li><i>II</i><div><b>Repeated messages</b><code>repeat · timeout</code></div><span class="cc-stamp cc-stamp--held cc-stamp--inked">Watching</span><button class="cc-btn cc-btn--sm" type="button">Propose Arm</button></li>
+              <li><i>III</i><div><b>Blocked terms</b><code>simulated-blocked · ban</code></div><span class="cc-stamp cc-stamp--held cc-stamp--inked">Watching</span><button class="cc-btn cc-btn--sm" type="button">Propose Arm</button></li>
+            </ol>
+          </div>
+        </section>
+
+        <section class="cc-section" id="s-drill" aria-labelledby="h-drill">
+          <span class="cc-section__no">VIII</span>
+          <div class="cc-section__head"><h2 class="cc-section__title" id="h-drill">The drill<em>Replay simulator · generated recording</em></h2><span class="cc-sim">Simulated replay</span></div>
+          <div class="cc-section__body">
+            <div class="cc-panel"><div class="cc-panel__body gh-drill">
+              <div>
+                <p class="gh-drill__title">The moat at night</p>
+                <p class="gh-sm" style="margin-top: 6px">Sample recording ready · simulated. Held 3 of 40 · simulated · 35 aired · 3 held · 2 not evaluated.</p>
+              </div>
+              <div class="gh-drill__go">
+                <button class="cc-btn cc-btn--chamber cc-btn--lg" type="button">Run the drill</button>
+                <a class="cc-link" href="drill.html">Open the drill ›</a>
+              </div>
+              <div class="gh-drill__strip">
+                <svg class="gh-drill-art" viewBox="0 0 700 96" role="img" aria-label="Preview of the sample recording, 12:04:14 to 12:06:06: 35 messages aired, 3 stopped at the gate by the links, repeats and blocked-terms rules, 2 not evaluated, and a recording gap from 12:05:00 to 12:05:20. Message text is never shown.">
+                  <defs><pattern id="drHatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><path class="dr-hatch" d="M0 0V8"/></pattern></defs>
+                  <path class="dr-water" d="M10 46H690V66H10Z"/>
+                  <path class="dr-line" d="M10 56H690"/>
+                  <rect class="dr-gap" x="291" y="14" width="118" height="56"/>
+                  <text class="dr-labc" x="350" y="10" text-anchor="middle">recording gap</text>
+                  <circle class="dr-air" cx="20.0" cy="56" r="3"/><circle class="dr-air" cx="33.9" cy="56" r="3"/><circle class="dr-air" cx="47.8" cy="56" r="3"/><circle class="dr-air" cx="61.7" cy="56" r="3"/><circle class="dr-air" cx="75.6" cy="56" r="3"/><circle class="dr-air" cx="89.5" cy="56" r="3"/><circle class="dr-air" cx="103.4" cy="56" r="3"/><path class="dr-stem" d="M117.3 38V52"/><path class="dr-held" d="M117.3 22l6 8-6 8-6-8Z"/><circle class="dr-air" cx="131.2" cy="56" r="3"/><circle class="dr-air" cx="145.1" cy="56" r="3"/><circle class="dr-air" cx="159.0" cy="56" r="3"/><circle class="dr-air" cx="172.9" cy="56" r="3"/><circle class="dr-air" cx="186.8" cy="56" r="3"/><circle class="dr-air" cx="200.7" cy="56" r="3"/><circle class="dr-air" cx="214.6" cy="56" r="3"/><circle class="dr-air" cx="228.5" cy="56" r="3"/><circle class="dr-ne" cx="242.4" cy="56" r="3.4"/><circle class="dr-ne" cx="256.3" cy="56" r="3.4"/><circle class="dr-air" cx="270.2" cy="56" r="3"/><circle class="dr-air" cx="284.1" cy="56" r="3"/><circle class="dr-air" cx="415.9" cy="56" r="3"/><path class="dr-stem" d="M429.8 38V52"/><path class="dr-held" d="M429.8 22l6 8-6 8-6-8Z"/><circle class="dr-air" cx="443.7" cy="56" r="3"/><circle class="dr-air" cx="457.6" cy="56" r="3"/><circle class="dr-air" cx="471.5" cy="56" r="3"/><circle class="dr-air" cx="485.4" cy="56" r="3"/><circle class="dr-air" cx="499.3" cy="56" r="3"/><circle class="dr-air" cx="513.2" cy="56" r="3"/><circle class="dr-air" cx="527.1" cy="56" r="3"/><circle class="dr-air" cx="541.0" cy="56" r="3"/><circle class="dr-air" cx="554.9" cy="56" r="3"/><circle class="dr-air" cx="568.8" cy="56" r="3"/><circle class="dr-air" cx="582.7" cy="56" r="3"/><path class="dr-stem" d="M596.6 38V52"/><path class="dr-held" d="M596.6 22l6 8-6 8-6-8Z"/><circle class="dr-air" cx="610.5" cy="56" r="3"/><circle class="dr-air" cx="624.4" cy="56" r="3"/><circle class="dr-air" cx="638.3" cy="56" r="3"/><circle class="dr-air" cx="652.2" cy="56" r="3"/><circle class="dr-air" cx="666.1" cy="56" r="3"/><circle class="dr-air" cx="680.0" cy="56" r="3"/>
+                  <text class="dr-labc" x="117" y="16" text-anchor="middle">links</text><text class="dr-labc" x="472" y="16" text-anchor="middle">repeats</text><text class="dr-labc" x="597" y="16" text-anchor="middle">blocked-terms</text>
+                  <text class="dr-lab" x="20" y="88">12:04:14</text><text class="dr-lab" x="152" y="88" text-anchor="middle">12:04:37</text><text class="dr-lab" x="284" y="88" text-anchor="middle">12:04:59</text><text class="dr-lab" x="416" y="88" text-anchor="middle">12:05:21</text><text class="dr-lab" x="548" y="88" text-anchor="middle">12:05:43</text><text class="dr-lab" x="680" y="88" text-anchor="end">12:06:06</text>
+                </svg>
+              </div>
+              <div class="gh-drill__legend"><span><span class="cc-dot" style="width: 7px; height: 7px; background: var(--ink-2)"></span>aired</span><span><i class="cc-lozenge" data-module="moderator" aria-hidden="true"></i>stopped at the gate</span><span><i class="cc-lozenge" data-lit="false" aria-hidden="true"></i>not evaluated</span><span>▨ recording missing</span><span class="cc-field__hint">Message text is never shown. Nothing was sent to Twitch.</span></div>
+            </div></div>
+          </div>
+        </section>
+
+        <section class="cc-section" id="s-roll" aria-labelledby="h-roll">
+          <span class="cc-section__no">IX</span>
+          <div class="cc-section__head"><h2 class="cc-section__title" id="h-roll">The gate roll<em>gate log</em></h2><span class="cc-sim">3 decisions · simulated</span></div>
+          <div class="cc-section__body">
+            <ol class="gh-log">
+              <li><span class="cc-stamp cc-stamp--blocked cc-stamp--inked">Bar</span>
+                <div><h4>Repeated messages <time>10:21:48</time></h4><p class="gh-log__msg">Simulated repeated message before a timeout.</p><p><span class="cc-hash">simulated-message-5003</span></p><p>Viewer timed out · Simulated pattern match · Human · local preview · simulated</p></div>
+                <div class="gh-log__act"><button class="cc-btn cc-btn--sm" type="button">Propose Undo</button><button class="cc-btn cc-btn--sm cc-btn--quiet" type="button">Propose Petition</button></div></li>
+              <li><span class="cc-stamp cc-stamp--held cc-stamp--inked">Hold</span>
+                <div><h4>Links <time>10:21:50</time></h4><p class="gh-log__msg">Simulated link awaiting review.</p><p><span class="cc-hash">simulated-message-5004</span></p><p>Shadow observation recorded · Simulated pattern match · Human · local preview · simulated</p></div>
+                <div class="gh-log__act"><em>No action was taken</em><button class="cc-btn cc-btn--sm cc-btn--quiet" type="button">Propose Petition</button></div></li>
+              <li><span class="cc-stamp cc-stamp--blocked cc-stamp--inked">Bar</span>
+                <div><h4>Repeated messages <time>10:21:52</time></h4><p class="gh-log__msg">Simulated moderator removed a repeated message in Twitch’s UI.</p><p><span class="cc-hash">simulated-message-5005</span></p><p>Message removed · Simulated pattern match · Human · from Twitch · simulated</p></div>
+                <div class="gh-log__act"><em>No undo on Twitch</em><button class="cc-btn cc-btn--sm cc-btn--quiet" type="button">Propose Petition</button></div></li>
+            </ol>
+          </div>
+        </section>
+
+        <section class="cc-section" id="s-seal" aria-labelledby="h-seal">
+          <span class="cc-section__no">X</span>
+          <div class="cc-section__head"><h2 class="cc-section__title" id="h-seal">The seal slot</h2></div>
+          <div class="cc-section__body">
+            <div class="cc-panel"><div class="cc-panel__body gh-sealslot">
+              <div style="display: flex; align-items: center; gap: 10px"><h3 class="cc-rubric cc-rubric--ch">Proposal · awaiting your seal</h3><span class="cc-sim" style="margin-left: auto">Simulated · data-only designs</span></div>
+              <p class="gh-sm">Nothing acts until you hold to seal.</p>
+              <div class="cc-field"><span class="cc-field__label">Chat overlay and vote bar</span><div class="cc-seg" role="group" aria-label="Chat overlay and vote bar proposals"><button type="button" aria-pressed="true">Restyle</button><button type="button" aria-pressed="false">Custom design</button></div></div>
+              <div class="cc-empty"><span class="cc-droll cc-droll--skull" aria-hidden="true"></span><p class="cc-empty__text">No proposals. Ask the Steward to draft one.</p></div>
+              <button class="cc-seal cc-seal--wax" type="button" disabled aria-describedby="seal-hint">
+                <span class="cc-seal-slot" aria-hidden="true"></span>
+                <span><span class="cc-seal__label">Hold to seal</span><span class="cc-seal__hint" id="seal-hint">Press and hold Space for 1 second · nothing to seal yet</span></span>
+              </button>
+            </div></div>
+          </div>
+        </section>
+        <div class="cc-orn" aria-hidden="true"><i></i></div>
+      </div>
+      </div>
+    </div>
+    </div>
+  </main>
+  <footer class="cc-dock" data-chamber="keep" aria-label="The Steward">
+    <div class="cc-steward"><svg class="cc-steward__niche" viewBox="0 0 44 62" aria-hidden="true">
+  <path d="M3 61V24C3 12 12 4 22 1c10 3 19 11 19 23v37Z" fill="var(--stone-3)" stroke="var(--lead)" stroke-width="2"/>
+  <path d="M8 58V26c0-9 6-15 14-18 8 3 14 9 14 18v32Z" fill="var(--amethyst-deep)" stroke="var(--lead)" stroke-width="2"/>
+  <path d="M8 40h28M22 8v50" stroke="var(--lead)" stroke-width="1.2" opacity=".55"/>
+  <ellipse cx="22" cy="31" rx="11" ry="14" fill="var(--or-lit)" opacity=".28"/>
+  <rect x="18.5" y="34" width="7" height="16" fill="var(--clear-lit)" stroke="var(--lead)" stroke-width="1.4"/>
+  <path class="cc-flame" d="M22 21c4 5 5 9 0 12-5-3-4-7 0-12Z" fill="var(--or-lit)" stroke="var(--lead)" stroke-width="1.2"/>
+  <path d="M12 52h20" stroke="var(--lead)" stroke-width="2.5"/>
+</svg>
+      <b class="cc-steward__name">The Steward</b>
+      <span class="cc-steward__role">simulated co-pilot · sample data</span>
+      <span class="cc-sim">Simulated</span>
+    </div>
+    <form class="cc-talk" onsubmit="return false">
+      <p class="cc-talk__msg">Good evening. Draft in the preview, amend in ink, then hold to seal. Nothing acts on a spoken request.</p>
+      <div class="cc-talk__row">
+        <label class="cc-sr" for="steward-input">Talk to the Steward</label>
+        <input class="cc-input" id="steward-input" placeholder="Talk to the Steward..." autocomplete="off">
+        <button class="cc-btn" type="submit" disabled>Tell</button>
+        <span class="cc-suggest">
+          <button class="cc-btn cc-btn--quiet" type="button">Catch me up</button>
+          <button class="cc-btn cc-btn--quiet" type="button">Draft a question draw</button>
+          <button class="cc-btn cc-btn--quiet" type="button">What does chat want?</button>
+        </span>
+      </div>
+    </form>
+  </footer>
+</div>
+<button class="cc-proto-toggle" type="button" data-theme-toggle title="Prototype only: not part of the design">◐ proto</button>
+<script>
+(function(){
+  var root=document.documentElement;
+  function flip(){var n=root.getAttribute('data-theme')==='night'?'day':'night';root.setAttribute('data-theme',n);try{var u=new URL(location.href);u.searchParams.set('theme',n);history.replaceState(null,'',u);}catch(e){}}
+  document.querySelectorAll('[data-theme-toggle]').forEach(function(b){b.addEventListener('click',flip);});
+  var go={'0':'keep.html','1':'lottery.html','2':'gatehouse.html','3':'beacons.html','4':'maproom.html'};
+  document.addEventListener('keydown',function(e){
+    var t=e.target; if(e.metaKey||e.ctrlKey||e.altKey)return;
+    if(t&&(t.isContentEditable||/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)))return;
+    if(e.key==='/'){e.preventDefault();var i=document.getElementById('steward-input');if(i)i.focus();return;}
+    if(e.key==='Escape'){var b=document.querySelector('[data-back]');if(b){location.href=b.getAttribute('href');}return;}
+    if(go[e.key]){var q=location.search;location.href=go[e.key]+q;}
+  });
+})();
+</script>
+<script>
+// Hold to seal (shell .cc-seal): pointer or Space held for 1 s fills --cc-seal-progress; release early cancels.
+document.querySelectorAll('.cc-seal').forEach(function(btn){
+  var raf,start;
+  function stop(){cancelAnimationFrame(raf);if(btn.dataset.sealed!=='true')btn.style.setProperty('--cc-seal-progress','0%');}
+  function tick(t){if(!start)start=t;var p=Math.min(1,(t-start)/1000);btn.style.setProperty('--cc-seal-progress',(p*100)+'%');if(p<1)raf=requestAnimationFrame(tick);else btn.dataset.sealed='true';}
+  function go(){if(btn.disabled)return;start=0;raf=requestAnimationFrame(tick);}
+  btn.addEventListener('pointerdown',go);btn.addEventListener('pointerup',stop);btn.addEventListener('pointerleave',stop);
+  btn.addEventListener('keydown',function(e){if(e.code==='Space'&&!e.repeat){e.preventDefault();go();}});
+  btn.addEventListener('keyup',function(e){if(e.code==='Space')stop();});
+});
+// Segmented panes are single-choice unless data-multi (static prototype behaviour).
+document.querySelectorAll('.cc-seg[role="group"]').forEach(function(g){g.addEventListener('click',function(e){var b=e.target.closest('button');if(!b||b.disabled||g.dataset.multi)return;g.querySelectorAll('button').forEach(function(x){x.setAttribute('aria-pressed',x===b);});});});
+(function(){
+  // running contents: mark the rubric in view
+  var links=document.querySelectorAll('.cc-contents a');
+  var secs=[].map.call(links,function(a){return document.querySelector(a.getAttribute('href'));});
+  function spy(){var y=innerHeight*.35,cur=0;secs.forEach(function(s,i){if(s.getBoundingClientRect().top<y)cur=i;});links.forEach(function(a,i){if(i===cur)a.setAttribute('aria-current','true');else a.removeAttribute('aria-current');});}
+  addEventListener('scroll',spy,{passive:true});spy();
+  // the room filter is one choice
+  var tally=document.querySelector('.gh-tallyseg');
+  tally&&tally.addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;tally.querySelectorAll('button').forEach(function(x){x.setAttribute('aria-pressed',String(x===b));});});
+})();
+</script>
+</body>
+</html>

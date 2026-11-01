@@ -1,0 +1,140 @@
+CASTLE CONTROL
+ON AIR · SIMULATED
+Unknown
+VIEWERS
+Unknown
+UPTIME
+TWITCH SIMULATED
+OBS SIMULATED
+GATEHOUSE SIMULATED
+SIMULATED
+STEWARD
+PREVIEW AND PROCLAIM
+The whole keep, in one picture.
+0 proposals
+Malakor’s crypt · illustrative sample scene
+Urn and writ
+37
+27
+21
+16
+THE HERALD · SAMPLE
+HELD
+SAND TABLE · 9 × 5 HEX
+DRAFT
+THE STEWARD’S STUDY
+No draw on screen
+Chat and Herald
+
+HELD · NOT ON AIR Simulated original held message: can I post my guide?
+
+Simulated viewer 1: go left!
+
+Simulated viewer 2: go right!
+
+Simulated viewer 3: go left!
+
+Simulated viewer 4: go right!
+
+Go left 37%
+Hype 27%
+Altar, frame and border
+37
+27
+21
+16
+THE HERALD · SAMPLE
+HELD
+SAND TABLE · 9 × 5 HEX
+DRAFT
+THE STEWARD’S STUDY
+Camera frame · sample
+War table
+Illustrative layout
+DRAFT · NOT ON AIR
+THE STEWARD
+simulated co-pilot · sample data
+SIMULATED
+
+Good evening. Draft in the preview, amend in ink, then hold to seal. Nothing acts on a spoken request.
+
+Talk to the Steward...
+Tell
+Catch me up
+Draft a question draw
+What does chat want?
+1
+LOT CHAMBER
+87 sample lots · waiting for a writ
+On air
+Preview
+Draft
+Preview
+2
+GATEHOUSE
+Armed 0 · Watching 3
+On air
+Preview
+Draft
+On air, preview
+3
+BEACONS
+3 sample visuals · contribution-driven
+On air
+Preview
+Draft
+On air, preview
+4
+MAP ROOM
+Illustrative war table · local test only
+On air
+Preview
+Draft
+Preview
+PROGRAM
+SIMULATED PROGRAM
+Chat and Herald
+
+Simulated viewer 1: go left!
+
+Altar, frame and border
+37
+27
+21
+16
+THE HERALD · SAMPLE
+HELD
+SAND TABLE · 9 × 5 HEX
+DRAFT
+THE STEWARD’S STUDY
+
+Sample picture only · nothing is sent to OBS
+
+Nothing to proclaim: ask the Steward to draft one
+
+HOLD TO SEAL AND PROCLAIM
+Press and hold Space for 1 second
+HOLD TO SEAL AND PROCLAIM
+Press and hold Space for 1 second
+
+Drafts stay in Preview until your hold. No live output.
+
+Talkback
+Inspector
+SIMULATED · DATA-ONLY DESIGNS
+Draw shape
+Preset: Urn
+Restyle
+Custom design
+
+No open proposal for this layer. Ask the Steward to draft one.
+
+FAIRNESS STAYS IN THE ROOM
+
+Free entry · equal odds. Paid entry and paid weight on prize draws are blocked by default.
+
+Seal the roll → announce a public round → cast → publish the writ.
+
+This preview uses generated sample entries. Its SHA-256 is not a verified draw or a live beacon.
+
+Open the room →

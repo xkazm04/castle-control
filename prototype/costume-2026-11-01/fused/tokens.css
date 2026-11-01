@@ -1,0 +1,246 @@
+/* =============================================================================
+   CASTLE CONTROL · COSTUME · FUSED BASELINE (round 2 start)          tokens.css
+   =============================================================================
+   ONE token sheet for the whole app. Round 1 picked Stained Glass (C) for
+   landing, keep, overview, demo, lottery and Illuminated (A) for setup,
+   gatehouse, beacons, maproom. The owner's rule: one token styling across the
+   app, two component directions on top of it.
+
+     tokens.css   every colour, font, size, space, radius and motion value
+     shell.css    the one app shell + shared primitives (reads tokens only)
+     glass.css    Stained Glass direction components (reads tokens only)
+     folio.css    Illuminated manuscript direction components (reads tokens only)
+
+   Direction sheets and pages define NO colours, fonts or sizes of their own.
+   Derived mixes are fine: color-mix(in srgb, var(--ch) 20%, transparent).
+
+   THEMES   <html data-theme="day">   default · the chapel by day (limewash)
+            <html data-theme="night"> the moonlit chapel (slate; glass glows)
+   A's paper/stock themes are retired: paper -> day, stock -> night.
+
+   -----------------------------------------------------------------------------
+   RECONCILIATION DECISIONS
+   -----------------------------------------------------------------------------
+   Surfaces  C's stone + limewash surfaces are the app ground everywhere (the
+             shell, the chamber head, every shared panel). A's vellum survives
+             as ONE extra surface family, --vellum / -2 / -3, used only for
+             folio sheets (the manuscript page laid on the stone). By day it is
+             a warm parchment one step from --surface; by night it is slate with
+             a warm cast, so the moonlit chapel holds on A pages too.
+   Inks      C's ink ramp (--ink, --ink-2, --muted, --faint) replaces A's
+             iron/iron-2/sepia/faint. All text inks are AA on stone, surface
+             and vellum in both themes.
+   Hues      one value set per chamber hue: base (the glass/tincture), -lit,
+             -deep, -ink (text-safe on every surface), -wash (tint ground),
+             -glow (night halo). A's tinctures took C's values.
+   Fonts     C's set is the app set. A pages add --font-book (Alegreya, the
+             serif sister of Alegreya Sans) for manuscript prose: quoted
+             messages, glosses, figures-in-text. A's Alegreya SC labels became
+             Alegreya Sans SC (--font-label) so tabs, buttons, stamps and table
+             heads read the same on every page.
+   Scale     C's scale, plus --t-lead (17) and --t-figure-lg (64) from A. A's
+             11.5/12.5 sizes are gone: --t-label (13) is the floor.
+
+   -----------------------------------------------------------------------------
+   PALETTE  (day / night)
+   -----------------------------------------------------------------------------
+   Stone & surfaces
+     --stone        wall ground             #E7E2D8 / #0C0E15
+     --stone-2      sills, tab bar, dock    #DAD3C5 / #12141D
+     --stone-3      mouldings, joints       #C5BCA9 / #222636
+     --surface      calm reading surface    #FCFAF5 / #171A25
+     --surface-2    inset / input ground    #F4F0E7 / #1E2230
+     --surface-3    table head, wells       #ECE6DA / #252A3A
+     --vellum       folio sheet             #F8F1E0 / #1B1A23
+     --vellum-2     folio gutter, sunk      #EFE5CE / #15151C
+     --vellum-3     deep vellum, rules      #DED0B2 / #2C2A36
+   Ink    --ink --ink-2 --muted (text) · --faint (decoration only, never text)
+   Rules  --hair --hair-2 (ruled lines) · --tint (zebra/odd rows) · --joint
+   Lead   --lead --lead-2 --lead-hi --lead-lo · --on-lead --on-lead-muted (text
+          on lead bars) · --came-ui (control borders; moonlit at night)
+   Hues   gules (Lot Chamber) · azure (Gatehouse) · or (Beacons) · key (Map
+          Room) · emerald (ok/pass) · amethyst (the Steward, the Keep) · clear
+          (grisaille/neutral). Each: --X --X-lit --X-deep --X-ink --X-wash
+          --X-glow (clear has no -ink).  --on-glass: text on -deep glass only.
+   Signals --ok --ok-ink --warn --warn-ink --danger --danger-ink --info-ink
+   Gold   --gilt (burnished gradient, fills only) --gilt-hi --gilt-mid
+          --gilt-lo --gilt-flat --gilt-text (gold legible on lead)
+   Wax    --wax-hi --wax --wax-lo --emboss-dark --emboss-light
+   Art    --art-* (inline SVG illustration fills; read through classes)
+   Light  --sun --moon --pool-blend --pool-a --glow-on (0 day, 1 night)
+   Focus  --focus (ring) --focus-inner
+
+   CHAMBER BINDING  any element with data-chamber or data-module = keep |
+   lottery | moderator | visuals | studio exposes --ch --ch-lit --ch-deep
+   --ch-ink --ch-wash --ch-glow. Components read --ch*, never a hue directly.
+   (keep = amethyst, the Steward's glass; the Keep tab itself shows all four.)
+
+   TYPE ROLES
+     --font-display Grenze Gotisch   titles, hero words, big figures, versals
+     --font-text    Alegreya Sans    body, controls, data (lining tabular)
+     --font-label   Alegreya Sans SC kickers, tabs, buttons, stamps, heads
+     --font-aside   Alegreya italic  asides, subtitles, taglines
+     --font-book    Alegreya roman   folio prose (A direction only)
+     --font-mono    IBM Plex Mono    hashes, bytes, handles, times
+   Scale  hero 84 · title 64 · h2 28 · h4 21 · h3 17 · lead 17 · body 15 · small 14 ·
+          label 13 · mono 13 · figure 46 · figure-sm 26 · figure-lg 64
+   ============================================================================= */
+
+/* ---------------------------------------------------------------- day (default) */
+:root, [data-theme="day"] {
+  color-scheme: light;
+  /* stone & surfaces */
+  --stone: #E7E2D8; --stone-2: #DAD3C5; --stone-3: #C5BCA9;
+  --surface: #FCFAF5; --surface-2: #F4F0E7; --surface-3: #ECE6DA;
+  --vellum: #F8F1E0; --vellum-2: #EFE5CE; --vellum-3: #DED0B2;
+  /* ink */
+  --ink: #1B1922; --ink-2: #3E3A47; --muted: #5A5563; --faint: #8F8A97;
+  --hair: rgba(36,34,44,.22); --hair-2: rgba(36,34,44,.11); --tint: rgba(36,34,44,.045);
+  --joint: rgba(90,74,52,.13); --shade: rgba(40,30,20,.16);
+  --shadow: 0 1px 0 rgba(255,255,255,.7) inset, 0 10px 24px -14px rgba(40,30,20,.45);
+  --shadow-lift: 0 2px 0 rgba(36,34,44,.08), 0 16px 30px -14px rgba(40,30,20,.5);
+  --shadow-inset: inset 0 2px 3px rgba(36,34,44,.11);
+  /* lead */
+  --lead: #24222C; --lead-2: #33303D; --lead-hi: #6A6778; --lead-lo: #111017;
+  --on-lead: #F1ECE2; --on-lead-muted: #C3BDCC; --came-ui: #24222C;
+  /* hues */
+  --gules: #C21A33; --gules-lit: #F2493F; --gules-deep: #6B0B1C; --gules-ink: #A0142B;
+  --azure: #1E56B5; --azure-lit: #4C93F2; --azure-deep: #0C2459; --azure-ink: #1B4E9C;
+  --or: #E3A01B; --or-lit: #FFD45E; --or-deep: #7C4B00; --or-ink: #6E4A00;
+  --key: #3B3748; --key-lit: #8C88A3; --key-deep: #16141D; --key-ink: #2F2B3A;
+  --emerald: #14895A; --emerald-lit: #45D08E; --emerald-deep: #06472B; --emerald-ink: #0A6B43;
+  --amethyst: #6B3FA8; --amethyst-lit: #A889E8; --amethyst-deep: #2C1352; --amethyst-ink: #5A3194;
+  --clear: #D6E1D8; --clear-lit: #F7FBF4; --clear-deep: #9DB0A4;
+  --wash-a: 9%;
+  --gules-glow: rgba(242,73,63,.55); --azure-glow: rgba(76,147,242,.55); --or-glow: rgba(255,212,94,.6);
+  --key-glow: rgba(140,136,163,.5); --emerald-glow: rgba(69,208,142,.5); --amethyst-glow: rgba(168,137,232,.5);
+  --on-glass: #FFFFFF; --glass-shade: rgba(0,0,0,.45); --glass-hi: rgba(255,255,255,.24);   /* text-shadow / top sheen on glass */
+  --banderole: #F8F3E4; --banderole-ink: #2A2530;
+  /* signals */
+  --ok: var(--emerald); --ok-ink: var(--emerald-ink);
+  --warn: var(--or); --warn-ink: var(--or-ink);
+  --danger: #B0123B; --danger-ink: #A3103A;
+  --info-ink: var(--azure-ink);
+  /* gold leaf (same metal in both themes) */
+  --gilt-hi: #F7E3A0; --gilt-mid: #D3A443; --gilt-lo: #8F6318; --gilt-flat: #C99A36; --gilt-text: #E8CB80;
+  --gilt: linear-gradient(118deg, var(--gilt-lo) 0%, var(--gilt-hi) 17%, var(--gilt-mid) 33%, var(--gilt-lo) 50%, var(--gilt-mid) 64%, var(--gilt-hi) 80%, var(--gilt-mid) 100%);
+  --sheen: rgba(255,247,215,.75);
+  /* wax */
+  --wax-hi: #D9553D; --wax: #A2231A; --wax-lo: #57100A;
+  --emboss-dark: rgba(40,6,2,.55); --emboss-light: rgba(255,220,200,.35); --wax-drop: rgba(60,10,4,.4);
+  /* art: inline SVG illustration fills */
+  --art-sky: #1C2F6B; --art-stone: #EBDDBC; --art-stone-2: #D9C79F; --art-stone-ink: #2B2116;
+  --art-room-1: #FFF4D2; --art-room-2: #F6E3B4; --art-flame: #E45A22;
+  --art-wood: #7A5530; --art-water: #2E55A8; --art-water-2: #4A73C4; --art-foam: #E9EEF8;
+  --art-sheet: #FFFDF6; --art-shade: #16141D;
+  /* light */
+  --sun: #FFF6DA; --moon: #DCE6FA;
+  --pool-blend: multiply; --pool-a: .17; --glow-on: 0;
+  --focus: #E3A01B; --focus-inner: #24222C;
+  --scrim: rgba(0,0,0,.45);
+  /* textures (data URIs carry their own alpha; swapped at night) */
+  --tex-ashlar: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='176' height='96'><path d='M0 .5H176M0 48.5H176M.5 0V48M88.5 0V48M44.5 48V96M132.5 48V96' stroke='rgba(110,90,60,.16)' fill='none'/></svg>");
+  --tex-stone: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .35  0 0 0 0 .3  0 0 0 0 .24  0 0 0 .16 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  --tex-glass: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='g'><feTurbulence type='fractalNoise' baseFrequency='.012 .045' numOctaves='3' seed='11' stitchTiles='stitch'/><feColorMatrix values='1 0 0 0 0  1 0 0 0 0  1 0 0 0 0  0 0 0 0 .55'/></filter><rect width='100%' height='100%' filter='url(%23g)'/></svg>");
+  --tex-etch: repeating-linear-gradient(135deg, transparent 0 4px, rgba(36,34,44,.10) 4px 5px);
+  --tex-etch-lead: repeating-linear-gradient(135deg, transparent 0 4px, rgba(241,236,226,.13) 4px 5px);
+  --tex-vellum-grain: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.78' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .42  0 0 0 0 .32  0 0 0 0 .18  0 0 0 .16 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  --tex-vellum-fibre: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='600'><filter id='f'><feTurbulence type='fractalNoise' baseFrequency='.004 .03' numOctaves='3' seed='7' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .5  0 0 0 0 .36  0 0 0 0 .16  0 0 0 .22 -.06'/></filter><rect width='100%' height='100%' filter='url(%23f)'/></svg>");
+  /* mask shapes (alpha only; colour comes from the element) */
+  --tex-stamp-grit: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='g'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' seed='11'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -3.4 2.9'/></filter><rect width='100%' height='100%' filter='url(%23g)'/></svg>");
+  --tex-diaper: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='34' height='34' viewBox='0 0 34 34'><path d='M17 0 34 17 17 34 0 17Z' fill='none' stroke='black' stroke-width='.9'/><path d='M17 13.2c.9 1.6 2.2 2.9 3.8 3.8-1.6.9-2.9 2.2-3.8 3.8-.9-1.6-2.2-2.9-3.8-3.8 1.6-.9 2.9-2.2 3.8-3.8Z'/><circle cx='0' cy='0' r='1.6'/><circle cx='34' cy='0' r='1.6'/><circle cx='0' cy='34' r='1.6'/><circle cx='34' cy='34' r='1.6'/></svg>");
+  --tex-vine: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='48' height='14' viewBox='0 0 48 14'><path d='M0 7c6 0 6-5 12-5s6 10 12 10 6-10 12-10 6 5 12 5' fill='none' stroke='black' stroke-width='1.2'/><path d='M12 2c-1-2 1-3 2-2M36 2c1-2-1-3-2-2M24 12c-1 2 1 3 2 2'  fill='none' stroke='black' stroke-width='1'/><circle cx='6' cy='4.6' r='1.3'/><circle cx='30' cy='9.4' r='1.3'/></svg>");
+  --tex-crenel: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='22' height='6' viewBox='0 0 22 6'><path d='M0 6V0h11v3h11v3Z'/></svg>");
+
+  /* type */
+  --font-display: "Grenze Gotisch", "UnifrakturCook", "Old English Text MT", Georgia, serif;
+  --font-text: "Alegreya Sans", "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+  --font-label: "Alegreya Sans SC", "Alegreya Sans", "Segoe UI", system-ui, -apple-system, Arial, sans-serif;
+  --font-aside: "Alegreya", "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+  --font-book: "Alegreya", "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", "SF Mono", Consolas, Menlo, monospace;
+  --num: lining-nums tabular-nums;
+  --t-hero: 84px; --t-title: 64px; --t-h2: 28px; --t-h4: 21px; --t-h3: 17px; --t-lead: 17px;
+  --t-body: 15px; --t-small: 14px; --t-label: 13px; --t-mono: 13px;
+  --t-figure: 46px; --t-figure-sm: 26px; --t-figure-lg: 64px;
+  --track-label: .08em; --track-tab: .07em; --track-wide: .12em;
+
+  /* shape & size */
+  --came-hair: 1px; --came: 2px; --came-heavy: 4px;
+  --r: 2px; --r-round: 999px;
+  --rampart-h: 56px; --tabs-h: 58px; --dock-h: 100px;
+  --top-h: calc(var(--rampart-h) + var(--tabs-h));
+  --main-h: calc(100vh - var(--top-h) - var(--dock-h));
+  --gutter: 28px; --gap: 20px; --pad: 20px;
+  --control-h: 38px; --control-h-sm: 30px; --control-h-lg: 44px;
+
+  /* motion */
+  --ease: cubic-bezier(.2,.8,.2,1); --ease-light: cubic-bezier(.45,0,.2,1);
+  --ease-stamp: cubic-bezier(.3,1.6,.5,1);
+  --m-fast: .14s; --m-light: .5s; --m-dawn: 2.6s; --m-sheen: 1.6s; --m-drop: 1.5s; --m-press: .42s;
+}
+
+/* ------------------------------------------------------------------- night */
+[data-theme="night"] {
+  color-scheme: dark;
+  --stone: #0C0E15; --stone-2: #12141D; --stone-3: #222636;
+  --surface: #171A25; --surface-2: #1E2230; --surface-3: #252A3A;
+  --vellum: #1B1A23; --vellum-2: #15151C; --vellum-3: #2C2A36;
+  --ink: #EEE9DF; --ink-2: #C8C2B6; --muted: #A39EAD; --faint: #5D5A68;
+  --hair: rgba(220,230,250,.2); --hair-2: rgba(220,230,250,.1); --tint: rgba(220,230,250,.04);
+  --joint: rgba(160,175,210,.07); --shade: rgba(0,0,0,.5);
+  --shadow: 0 1px 0 rgba(220,230,250,.06) inset, 0 14px 30px -14px rgba(0,0,0,.9);
+  --shadow-lift: 0 2px 0 rgba(0,0,0,.4), 0 16px 34px -12px rgba(0,0,0,.9);
+  --shadow-inset: inset 0 2px 4px rgba(0,0,0,.5);
+  --lead: #050508; --lead-2: #0D0D13; --lead-hi: #3A3A4C; --lead-lo: #000;
+  --on-lead: #EEE9DF; --on-lead-muted: #ADA8B8; --came-ui: #4C4C63;
+  --gules: #D8253A; --gules-lit: #FF6A55; --gules-deep: #5A0715; --gules-ink: #FF8C7E;
+  --azure: #2F6BD6; --azure-lit: #6FAEFF; --azure-deep: #0A1D4A; --azure-ink: #93BEFF;
+  --or: #F0AE22; --or-lit: #FFE07A; --or-deep: #6A3E00; --or-ink: #FFD36B;
+  --key: #4A4560; --key-lit: #B4AFD4; --key-deep: #100E16; --key-ink: #D2CCE8;
+  --emerald: #1FA56C; --emerald-lit: #5EF0A8; --emerald-deep: #053A23; --emerald-ink: #63E2A6;
+  --amethyst: #7E52C4; --amethyst-lit: #C2A6FF; --amethyst-deep: #22103F; --amethyst-ink: #C3A8FF;
+  --clear: #2C3A55; --clear-lit: #8AA3CF; --clear-deep: #121A2B;
+  --wash-a: 16%;
+  --gules-glow: rgba(255,106,85,.7); --azure-glow: rgba(111,174,255,.7); --or-glow: rgba(255,224,122,.75);
+  --key-glow: rgba(180,175,212,.55); --emerald-glow: rgba(94,240,168,.6); --amethyst-glow: rgba(194,166,255,.65);
+  --banderole: #E9E2CF; --banderole-ink: #1E1A24;
+  --danger: #FF5C7E; --danger-ink: #FF8FA6;
+  --sheen: rgba(255,240,200,.55);
+  --emboss-dark: rgba(20,2,0,.7); --emboss-light: rgba(255,200,180,.28); --wax-drop: rgba(0,0,0,.6);
+  --art-sky: #121D45; --art-stone: #4A4558; --art-stone-2: #3A3648; --art-stone-ink: #07070B;
+  --art-room-1: #FFD889; --art-room-2: #D9973F; --art-flame: #FF7A3A;
+  --art-wood: #5A3E24; --art-water: #16285A; --art-water-2: #24407F; --art-foam: #9DB2E0;
+  --art-sheet: #EDE4CC; --art-shade: #050508;
+  --pool-blend: screen; --pool-a: .34; --glow-on: 1;
+  --focus: #FFD45E; --focus-inner: #050508;
+  --scrim: rgba(0,0,0,.6);
+  --tex-ashlar: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='176' height='96'><path d='M0 .5H176M0 48.5H176M.5 0V48M88.5 0V48M44.5 48V96M132.5 48V96' stroke='rgba(150,170,215,.07)' fill='none'/></svg>");
+  --tex-stone: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .6  0 0 0 0 .66  0 0 0 0 .8  0 0 0 .07 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  --tex-etch: repeating-linear-gradient(135deg, transparent 0 4px, rgba(220,230,250,.11) 4px 5px);
+  --tex-vellum-grain: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.78' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .85  0 0 0 0 .8  0 0 0 0 .7  0 0 0 .06 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  --tex-vellum-fibre: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='600'><filter id='f'><feTurbulence type='fractalNoise' baseFrequency='.004 .03' numOctaves='3' seed='7' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .8  0 0 0 0 .78  0 0 0 0 .9  0 0 0 .1 -.03'/></filter><rect width='100%' height='100%' filter='url(%23f)'/></svg>");
+}
+
+/* washes: a tint of each hue for grounds only (never text) */
+:root, [data-theme] {
+  --gules-wash: color-mix(in srgb, var(--gules) var(--wash-a), transparent);
+  --azure-wash: color-mix(in srgb, var(--azure) var(--wash-a), transparent);
+  --or-wash: color-mix(in srgb, var(--or) calc(var(--wash-a) + 4%), transparent);
+  --key-wash: color-mix(in srgb, var(--key) var(--wash-a), transparent);
+  --emerald-wash: color-mix(in srgb, var(--emerald) var(--wash-a), transparent);
+  --amethyst-wash: color-mix(in srgb, var(--amethyst) var(--wash-a), transparent);
+}
+
+/* --------------------------------------------------------- chamber binding */
+[data-chamber], [data-module] { --ch: var(--clear); --ch-lit: var(--clear-lit); --ch-deep: var(--clear-deep); --ch-ink: var(--ink); --ch-wash: var(--tint); --ch-glow: var(--key-glow); }
+[data-chamber="lottery"], [data-module="lottery"] { --ch: var(--gules); --ch-lit: var(--gules-lit); --ch-deep: var(--gules-deep); --ch-ink: var(--gules-ink); --ch-wash: var(--gules-wash); --ch-glow: var(--gules-glow); }
+[data-chamber="moderator"], [data-module="moderator"] { --ch: var(--azure); --ch-lit: var(--azure-lit); --ch-deep: var(--azure-deep); --ch-ink: var(--azure-ink); --ch-wash: var(--azure-wash); --ch-glow: var(--azure-glow); }
+[data-chamber="visuals"], [data-module="visuals"] { --ch: var(--or); --ch-lit: var(--or-lit); --ch-deep: var(--or-deep); --ch-ink: var(--or-ink); --ch-wash: var(--or-wash); --ch-glow: var(--or-glow); }
+[data-chamber="studio"], [data-module="studio"] { --ch: var(--key); --ch-lit: var(--key-lit); --ch-deep: var(--key-deep); --ch-ink: var(--key-ink); --ch-wash: var(--key-wash); --ch-glow: var(--key-glow); }
+[data-chamber="keep"], [data-module="keep"] { --ch: var(--amethyst); --ch-lit: var(--amethyst-lit); --ch-deep: var(--amethyst-deep); --ch-ink: var(--amethyst-ink); --ch-wash: var(--amethyst-wash); --ch-glow: var(--amethyst-glow); }
+
+/* ------------------------------------------------------------ 1280 width */
+@media (max-width: 1380px) {
+  :root { --gutter: 22px; --gap: 16px; --pad: 18px; --t-title: 56px; --t-hero: 74px; }
+}
