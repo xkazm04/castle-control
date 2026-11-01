@@ -102,10 +102,22 @@ try {
   const neighbor = usages(scratch);
   assert.equal(neighbor.files.length, 2, 'neighboring overlay JavaScript stays in the inventory');
   assert(neighbor.defects.some(defect => defect.includes('source.js: JSON parsing outside the contract door')));
+  // Every spelling of the JSON door bypass is one defect; the plain call stays covered above.
+  for (const [form, source] of [
+    ['response json()', 'declare const response: Response;\nexport const a = response.json();\n'],
+    ['element access', "export const a = JSON['parse']('{}');\n"],
+    ['destructured', "const { parse } = JSON;\nexport const a = parse('{}');\n"],
+    ['alias', "const p = JSON.parse;\nexport const a = p('{}');\n"],
+  ]) {
+    writeFileSync(join(authored, 'forms.ts'), source);
+    assert.equal(usages(scratch).defects.filter(defect => defect.includes('forms.ts')).length, 1, `${form} bypasses the contract door`);
+  }
+  writeFileSync(join(authored, 'forms.ts'), "export const a = 'x'.json(1);\nexport const b = new Map().get('json');\n");
+  assert.equal(usages(scratch).defects.filter(defect => defect.includes('forms.ts')).length, 0, 'unrelated names stay clean');
   unlinkSync(join(overlay, 'bundle.js'));
   assert.throws(() => usages(scratch), /Missing listed build output: apps\/overlay\/bundle.js/, 'stale exclusions must fail');
 } finally {
-  for (const file of [join(authored, 'main.ts'), join(bundled, 'index.js'), join(overlay, 'bundle.js'), join(overlay, 'vote-bar.js'), join(overlay, 'source.js')]) if (existsSync(file)) unlinkSync(file);
+  for (const file of [join(authored, 'main.ts'), join(bundled, 'index.js'), join(overlay, 'bundle.js'), join(overlay, 'vote-bar.js'), join(overlay, 'source.js'), join(authored, 'forms.ts')]) if (existsSync(file)) unlinkSync(file);
   for (const directory of [authored, bundled, overlay, join(scratch, 'apps/desktop/dist'), join(scratch, 'apps/desktop'), join(scratch, 'apps')]) {
     if (existsSync(directory)) rmdirSync(directory);
   }
