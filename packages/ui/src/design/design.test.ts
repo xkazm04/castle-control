@@ -147,3 +147,13 @@ test('plain queue proclamation cannot apply a simulated design, and listeners sh
   queue.select(id);
   expect(notifications).toBe(1);
 });
+
+test('a draft can be amended across restyle and custom actions', () => {
+  const { session, queue, id } = setup();
+  const custom = session.amend(id, { action: 'custom', artifact: 'beacon', prompt: 'a quiet look' });
+  expect(custom.ok).toBe(true);
+  expect(queue.pending()).toHaveLength(1);
+  expect(queue.pending()[0]).toMatchObject({ id, revision: 2, state: 'amended' });
+  expect(session.amend(id, { action: 'restyle', artifact: 'beacon', preset_id: 'hype-border' }).ok).toBe(true);
+  expect(queue.pending()[0]).toMatchObject({ id, revision: 3, state: 'amended' });
+});

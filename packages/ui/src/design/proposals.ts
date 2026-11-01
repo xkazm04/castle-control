@@ -46,7 +46,7 @@ export function draftDesign(queue: ProposalQueue, id: string, request: DesignReq
     };
     const fields: Proposal['fields'] = Object.entries(values).map(([key, value]) => ({ key, label: key.replaceAll('_', ' '), value, struck: [] }));
     return queue.addOrUpdate({ id, chamber: artifactChambers[request.artifact], kind: 'proclaim',
-      title: request.action === 'restyle' ? 'Restyle' : 'Custom design', revision: 1, state: 'drafted', fields });
+      title: current?.title ?? (request.action === 'restyle' ? 'Restyle' : 'Custom design'), revision: 1, state: 'drafted', fields });
   } catch {
     return { ok: false, code: 'invalid_fields', reason: 'Simulated design generation failed. The current look is intact.' };
   }
