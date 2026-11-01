@@ -358,13 +358,23 @@ impl TwitchBridge {
         } else {
             None
         };
-        self.emit(BridgeEvent::Notification(Notification {
-            id,
-            at,
-            subscription_type: kind,
-            event,
-            chat,
-        }))
-        .await
+        let dedupe_id = id.clone();
+        let delivered = self
+            .emit(BridgeEvent::Notification(Notification {
+                id,
+                at,
+                subscription_type: kind,
+                event,
+                chat,
+            }))
+            .await;
+        if delivered.is_err() {
+            // A lost event must not make its redelivery look like a duplicate.
+            self.seen
+                .lock()
+                .expect("notification ids")
+                .retain(|seen| *seen != dedupe_id);
+        }
+        delivered
     }
 }

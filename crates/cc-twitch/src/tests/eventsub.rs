@@ -343,3 +343,32 @@ async fn malformed_subscription_response_never_marks_connection_live() {
             .all(|connection| connection.state == BridgeState::Error)
     );
 }
+
+#[tokio::test]
+async fn a_notification_lost_to_a_closed_consumer_is_not_deduplicated_on_redelivery() {
+    let mut h = harness().await;
+    let (p, _conn, rx) = h.connected().await;
+    drop(rx);
+    let event = serde_json::json!({"simulated": true});
+    assert!(
+        p.notification(
+            "n1".into(),
+            "2026-01-01T00:00:00Z".into(),
+            "channel.follow".into(),
+            event.clone()
+        )
+        .await
+        .is_err()
+    );
+    let (tx, mut rx) = tokio::sync::mpsc::channel(8);
+    *p.inbox.lock().expect("bridge inbox") = Some(tx);
+    p.notification(
+        "n1".into(),
+        "2026-01-01T00:00:00Z".into(),
+        "channel.follow".into(),
+        event,
+    )
+    .await
+    .unwrap();
+    assert!(matches!(recv(&mut rx).await, BridgeEvent::Notification(n) if n.id == "n1"));
+}
