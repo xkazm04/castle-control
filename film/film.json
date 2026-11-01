@@ -1,0 +1,997 @@
+{
+  "title": "Castle Control - four chambers, no narration (music: Count Us All, ~85 BPM)",
+  "fps": 30,
+  "size": {
+    "w": 1920,
+    "h": 1080
+  },
+  "voice": {
+    "role": "none",
+    "model": "eleven_multilingual_v2",
+    "settings": {
+      "stability": 0.5,
+      "similarity": 0.75,
+      "style": 0
+    }
+  },
+  "breathMs": 0,
+  "maxMs": 194000,
+  "music": {
+    "cues": [
+      {
+        "id": "bed",
+        "from": {
+          "beat": "open-mark",
+          "edge": "start"
+        },
+        "to": {
+          "beat": "end",
+          "edge": "end"
+        },
+        "prompt": "OWNER-SUPPLIED TRACK - never generate; audio/music-bed.mp3 is placed by hand",
+        "gainDb": 0
+      }
+    ]
+  },
+  "style": {
+    "palette": {
+      "bg": "#F4F0E6",
+      "fg": "#16181D",
+      "accent": "#E4472E",
+      "accent2": "#3F86DC",
+      "muted": "#656972"
+    },
+    "fonts": {
+      "display": "Bahnschrift",
+      "body": "Segoe UI",
+      "mono": "Cascadia Mono"
+    },
+    "logo": "brand/mark.png",
+    "radius": 6,
+    "easing": [
+      0.65,
+      0,
+      0.35,
+      1
+    ]
+  },
+  "beats": [
+    {
+      "id": "open-mark",
+      "chapter": "intro",
+      "line": "",
+      "settleMs": 4235,
+      "moments": [
+        {
+          "id": "open-title",
+          "tier": 1,
+          "kind": "plate",
+          "component": "TitleSlam",
+          "props": {
+            "title": "Castle Control",
+            "kicker": "Free · open source · local",
+            "meta": "A desktop toolkit for Twitch streamers"
+          }
+        }
+      ]
+    },
+    {
+      "id": "open-keep",
+      "chapter": "intro",
+      "line": "",
+      "settleMs": 5647,
+      "capture": {
+        "beat": "keep",
+        "targets": [
+          "app|keep"
+        ],
+        "from": "ready"
+      },
+      "moments": [
+        {
+          "id": "open-keep-in",
+          "tier": 1,
+          "kind": "treatment",
+          "component": "MaskWipe",
+          "props": {}
+        },
+        {
+          "id": "open-keep-claim",
+          "tier": 1,
+          "kind": "plate",
+          "component": "KineticClaim",
+          "props": {
+            "text": "Four chambers. One local app.",
+            "emphasis": "four",
+            "cover": false
+          }
+        },
+        {
+          "id": "open-keep-badge",
+          "tier": 1,
+          "kind": "hero",
+          "component": "ProvenanceChip",
+          "props": {
+            "text": "SIMULATED · dress rehearsal"
+          }
+        }
+      ]
+    },
+    {
+      "id": "open-promise",
+      "chapter": "intro",
+      "line": "",
+      "settleMs": 4236,
+      "moments": [
+        {
+          "id": "open-promise-claim",
+          "tier": 1,
+          "kind": "plate",
+          "component": "KineticClaim",
+          "props": {
+            "text": "Every action lands on stream.",
+            "emphasis": "stream",
+            "align": "center"
+          }
+        }
+      ]
+    },
+    {
+      "id": "gh-title",
+      "chapter": "gatehouse",
+      "line": "",
+      "settleMs": 4235,
+      "moments": [
+        {
+          "id": "gh-title-in",
+          "tier": 1,
+          "kind": "treatment",
+          "component": "MaskWipe",
+          "props": {}
+        },
+        {
+          "id": "gh-title-card",
+          "tier": 1,
+          "kind": "hero",
+          "component": "ChapterCard",
+          "props": {
+            "index": "01",
+            "name": "Gatehouse",
+            "line": "Chat protection you can rehearse",
+            "steps": [
+              "Write a rule",
+              "Watch chat",
+              "See it on stream"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "gh-setup",
+      "chapter": "gatehouse",
+      "line": "",
+      "settleMs": 9882,
+      "capture": {
+        "beat": "gh-setup",
+        "targets": [
+          "app|feed",
+          "app|rule-bench"
+        ]
+      },
+      "moments": [
+        {
+          "id": "gh-setup-in",
+          "tier": 1,
+          "kind": "treatment",
+          "component": "MaskWipe",
+          "props": {}
+        },
+        {
+          "id": "gh-setup-cap1",
+          "tier": 1,
+          "kind": "plate",
+          "component": "LowerThird",
+          "props": {
+            "title": "Write a rule",
+            "subtitle": "Matches light up before anything is armed"
+          },
+          "durMs": 5000
+        },
+        {
+          "id": "gh-setup-callout",
+          "tier": 1,
+          "kind": "plate",
+          "component": "Callout",
+          "at": 5000,
+          "props": {
+            "selector": "app|feed",
+            "label": "Would be caught",
+            "note": "preview only"
+          }
+        },
+        {
+          "id": "gh-setup-badge",
+          "tier": 1,
+          "kind": "hero",
+          "component": "ProvenanceChip",
+          "props": {
+            "text": "SIMULATED · dress rehearsal"
+          }
+        }
+      ]
+    },
+    {
+      "id": "gh-impact",
+      "chapter": "gatehouse",
+      "line": "",
+      "settleMs": 18353,
+      "capture": {
+        "beat": "gh-impact",
+        "targets": [
+          "app|feed",
+          "obs|program"
+        ]
+      },
+      "moments": [
+        {
+          "id": "gh-impact-in",
+          "tier": 1,
+          "kind": "treatment",
+          "component": "MaskWipe",
+          "props": {}
+        },
+        {
+          "id": "gh-impact-split",
+          "tier": 1,
+          "kind": "hero",
+          "component": "SplitStage",
+          "claim": "Chat ballots drive the on-stream vote bar",
+          "props": {
+            "mode": "split",
+            "lead": "app",
+            "appLabel": "Castle Control",
+            "obsLabel": "OBS · program"
+          }
+        },
+        {
+          "id": "gh-impact-cap1",
+          "tier": 1,
+          "kind": "plate",
+          "component": "LowerThird",
+          "props": {
+            "title": "Chat votes",
+            "subtitle": "The bar answers on stream"
+          },
+          "at": 1000,
+          "durMs": 8000
+        },
+        {
+          "id": "gh-impact-cap2",
+          "tier": 1,
+          "kind": "plate",
+          "component": "LowerThird",
+          "props": {
+            "title": "No chat text leaves the app"
+          },
+          "at": 10000,
+          "durMs": 7000
+        },
+        {
+          "id": "gh-impact-badge",
+          "tier": 1,
+          "kind": "hero",
+          "component": "ProvenanceChip",
+          "props": {
+            "text": "SIMULATED · dress rehearsal"
+          }
+        }
+      ]
+    },
+    {
+      "id": "gh-drill",
+      "chapter": "gatehouse",
+      "line": "",
+      "settleMs": 9883,
+      "capture": {
+        "beat": "gh-drill",
+        "targets": [
+          "app|moat"
+        ],
+        "from": "ready"
+      },
+      "moments": [
+        {
+          "id": "gh-drill-in",
+          "tier": 1,
+          "kind": "treatment",
+          "component": "MaskWipe",
+          "props": {}
+        },
+        {
+          "id": "gh-drill-cap1",
+          "tier": 1,
+          "kind": "plate",
+          "component": "LowerThird",
+          "props": {
+            "title": "Replay the stream",
+            "subtitle": "Same rules, no live actions"
+          },
+          "durMs": 6000
+        },
+        {
+          "id": "gh-drill-zoom",
+          "tier": 2,
+          "kind": "treatment",
+          "component": "ZoomToRect",
+          "at": 2000,
+          "durMs": 7000,
+          "props": {
+            "selector": "app|moat"
+          }
+        },
+        {
+          "id": "gh-drill-badge",
+          "tier": 1,
+          "kind": "hero",
+          "component": "ProvenanceChip",
+          "props": {
+            "text": "SIMULATED · dress rehearsal"
+          }
+        }
+      ]
+    },
+    {
+      "id": "lot-title",
+      "chapter": "lots",
+      "line": "",
+      "settleMs": 4235,
+      "moments": [
+        {
+          "id": "lot-title-in",
+          "tier": 1,
+          "kind": "treatment",
+          "component": "MaskWipe",
+          "props": {}
+        },
+        {
+          "id": "lot-title-card",
+          "tier": 1,
+          "kind": "hero",
+          "component": "ChapterCard",
+          "props": {
+            "index": "02",
+            "name": "Lot Chamber",
+            "line": "Draws anyone can verify",
+            "steps": [
+              "Set the rules",
+              "Seal the entries",
+              "Prove the winner"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "lot-setup",
+      "chapter": "lots",
+      "line": "",
+      "settleMs": 9882,
+      "capture": {
+        "beat": "lot-setup",
+        "targets": [
+          "app|draw-form",
+          "app|guardrails"
+        ]
+      },
+      "moments": [
+        {
+          "id": "lot-setup-in",
+          "tier": 1,
+          "kind": "treatment",
+          "component": "MaskWipe",
+          "props": {}
+        },
+        {
+          "id": "lot-setup-cap1",
+          "tier": 1,
+          "kind": "plate",
+          "component": "LowerThird",
+          "props": {
+            "title": "Set the rules",
+            "subtitle": "Who can enter, how many win"
+          },
+          "durMs": 5000
+        },
+        {
+          "id": "lot-setup-callout",
+          "tier": 1,
+          "kind": "plate",
+          "component": "Callout",
+          "at": 5000,
+          "props": {
+            "selector": "app|guardrails",
+            "label": "Guardrails",
+            "note": "a prize draw needs official rules"
+          }
+        },
+        {
+          "id": "lot-setup-badge",
+          "tier": 1,
+          "kind": "hero",
+          "component": "ProvenanceChip",
+          "props": {
+            "text": "SIMULATED · dress rehearsal"
+          }
+        }
+      ]
+    },
+    {
+      "id": "lot-fill",
+      "chapter": "lots",
+      "line": "",
+      "settleMs": 8471,
+      "capture": {
+        "beat": "lot-fill",
+        "targets": [
+          "app|entries"
+        ]
+      },
+      "moments": [
+        {
+          "id": "lot-fill-in",
+          "tier": 1,
+          "kind": "treatment",
+          "component": "MaskWipe",
+          "props": {}
+        },
+        {
+          "id": "lot-fill-count",
+          "tier": 1,
+          "kind": "plate",
+          "component": "StatCounter",
+          "claim": "Entries arrive from chat",
+          "props": {
+            "record": "entries",
+            "label": "entries from chat",
+            "note": "typed !join",
+            "cover": false
+          }
+        },
+        {
+          "id": "lot-fill-badge",
+          "tier": 1,
+          "kind": "hero",
+          "component": "ProvenanceChip",
+          "props": {
+            "text": "SIMULATED · dress rehearsal"
+          }
+        }
+      ]
+    },
+    {
+      "id": "lot-seal",
+      "chapter": "lots",
+      "line": "",
+      "settleMs": 9882,
+      "capture": {
+        "beat": "lot-seal",
+        "targets": [
+          "app|seal"
+        ]
+      },
+      "moments": [
+        {
+          "id": "lot-seal-in",
+          "tier": 1,
+          "kind": "treatment",
+          "component": "MaskWipe",
+          "props": {}
+        },
+        {
+          "id": "lot-seal-cap1",
+          "tier": 1,
+          "kind": "plate",
+          "component": "LowerThird",
+          "props": {
+            "title": "Hold to seal",
+            "subtitle": "Entries freeze, the seal is announced"
+          },
+          "durMs": 6000
+        },
+        {
+          "id": "lot-seal-callout",
+          "tier": 1,
+          "kind": "plate",
+          "component": "Callout",
+          "at": 5000,
+          "claim": "The pool is sealed before the random round",
+          "props": {
+            "selector": "app|seal",
+            "label": "Sealed first",
+            "note": "before the public random round exists"
+          }
+        },
+        {
+          "id": "lot-seal-badge",
+          "tier": 1,
+          "kind": "hero",
+          "component": "ProvenanceChip",
+          "props": {
+            "text": "SIMULATED · dress rehearsal"
+          }
+        }
+      ]
+    },
+    {
+      "id": "lot-cast",
+      "chapter": "lots",
+      "line": "",
+      "settleMs": 11294,
+      "capture": {
+        "beat": "lot-cast",
+        "targets": [
+          "obs|program"
+        ],
+        "from": "ready"
+      },
+      "moments": [
+        {
+          "id": "lot-cast-in",
+          "tier": 1,
+          "kind": "treatment",
+          "component": "WhipPan",
+          "props": {
+            "direction": "left"
+          }
+        },
+        {
+          "id": "lot-cast-obs",
+          "tier": 1,
+          "kind": "hero",
+          "component": "SplitStage",
+          "claim": "The drand round picks the winner shown on stream",
+          "props": {
+            "mode": "full",
+            "lead": "obs",
+            "obsLabel": "OBS · program"
+          }
+        },
+        {
+          "id": "lot-cast-cap1",
+          "tier": 1,
+          "kind": "plate",
+          "component": "LowerThird",
+          "props": {
+            "title": "Public randomness arrives",
+            "subtitle": "The winner appears on stream"
+          },
+          "at": 1500,
+          "durMs": 9000
+        },
+        {
+          "id": "lot-cast-badge",
+          "tier": 1,
+          "kind": "hero",
+          "component": "ProvenanceChip",
+          "props": {
+            "text": "SIMULATED · dress rehearsal"
+          }
+        }
+      ]
+    },
+    {
+      "id": "lot-proof",
+      "chapter": "lots",
+      "line": "",
+      "settleMs": 7059,
+      "capture": {
+        "beat": "lot-proof",
+        "targets": [
+          "app|verify"
+        ],
+        "from": "ready"
+      },
+      "moments": [
+        {
+          "id": "lot-proof-in",
+          "tier": 1,
+          "kind": "treatment",
+          "component": "WhipPan",
+          "props": {
+            "direction": "right"
+          }
+        },
+        {
+          "id": "lot-proof-cap1",
+          "tier": 1,
+          "kind": "plate",
+          "component": "LowerThird",
+          "props": {
+            "title": "Anyone can re-check it",
+            "subtitle": "Same seal, same winner"
+          }
+        },
+        {
+          "id": "lot-proof-badge",
+          "tier": 1,
+          "kind": "hero",
+          "component": "ProvenanceChip",
+          "props": {
+            "text": "SIMULATED · dress rehearsal"
+          }
+        }
+      ]
+    },
+    {
+      "id": "bea-title",
+      "chapter": "beacons",
+      "line": "",
+      "settleMs": 4235,
+      "moments": [
+        {
+          "id": "bea-title-in",
+          "tier": 1,
+          "kind": "treatment",
+          "component": "MaskWipe",
+          "props": {}
+        },
+        {
+          "id": "bea-title-card",
+          "tier": 1,
+          "kind": "hero",
+          "component": "ChapterCard",
+          "props": {
+            "index": "03",
+            "name": "Beacons",
+            "line": "Support lights up the castle",
+            "steps": [
+              "Pick a beacon",
+              "Shape its curve",
+              "Watch it blaze"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "bea-setup",
+      "chapter": "beacons",
+      "line": "",
+      "settleMs": 9883,
+      "capture": {
+        "beat": "bea-setup",
+        "targets": [
+          "app|curve"
+        ]
+      },
+      "moments": [
+        {
+          "id": "bea-setup-in",
+          "tier": 1,
+          "kind": "treatment",
+          "component": "MaskWipe",
+          "props": {}
+        },
+        {
+          "id": "bea-setup-cap1",
+          "tier": 1,
+          "kind": "plate",
+          "component": "LowerThird",
+          "props": {
+            "title": "Shape the curve",
+            "subtitle": "More support, brighter fire"
+          },
+          "durMs": 5000
+        },
+        {
+          "id": "bea-setup-callout",
+          "tier": 1,
+          "kind": "plate",
+          "component": "Callout",
+          "at": 5000,
+          "props": {
+            "selector": "app|curve",
+            "label": "Contribution → intensity"
+          }
+        },
+        {
+          "id": "bea-setup-badge",
+          "tier": 1,
+          "kind": "hero",
+          "component": "ProvenanceChip",
+          "props": {
+            "text": "SIMULATED · dress rehearsal"
+          }
+        }
+      ]
+    },
+    {
+      "id": "bea-fire",
+      "chapter": "beacons",
+      "line": "",
+      "settleMs": 18353,
+      "capture": {
+        "beat": "bea-fire",
+        "targets": [
+          "app|events",
+          "obs|program"
+        ]
+      },
+      "moments": [
+        {
+          "id": "bea-fire-in",
+          "tier": 1,
+          "kind": "treatment",
+          "component": "MaskWipe",
+          "props": {}
+        },
+        {
+          "id": "bea-fire-split",
+          "tier": 1,
+          "kind": "hero",
+          "component": "SplitStage",
+          "claim": "A contribution raises the beacon on stream",
+          "props": {
+            "mode": "split",
+            "lead": "obs",
+            "appLabel": "Castle Control",
+            "obsLabel": "OBS · program"
+          }
+        },
+        {
+          "id": "bea-fire-cap1",
+          "tier": 1,
+          "kind": "plate",
+          "component": "LowerThird",
+          "props": {
+            "title": "100 bits arrive",
+            "subtitle": "The beacon answers live"
+          },
+          "at": 1000,
+          "durMs": 9000
+        },
+        {
+          "id": "bea-fire-badge",
+          "tier": 1,
+          "kind": "hero",
+          "component": "ProvenanceChip",
+          "props": {
+            "text": "SIMULATED · dress rehearsal"
+          }
+        }
+      ]
+    },
+    {
+      "id": "bea-peak",
+      "chapter": "beacons",
+      "line": "",
+      "settleMs": 7059,
+      "capture": {
+        "beat": "bea-peak",
+        "targets": [
+          "obs|program"
+        ],
+        "from": "ready"
+      },
+      "moments": [
+        {
+          "id": "bea-peak-obs",
+          "tier": 1,
+          "kind": "hero",
+          "component": "SplitStage",
+          "props": {
+            "mode": "full",
+            "lead": "obs",
+            "obsLabel": "OBS · program"
+          }
+        },
+        {
+          "id": "bea-peak-claim",
+          "tier": 1,
+          "kind": "plate",
+          "component": "KineticClaim",
+          "at": 2000,
+          "props": {
+            "text": "Your audience lights the castle.",
+            "emphasis": "audience",
+            "cover": false
+          }
+        },
+        {
+          "id": "bea-peak-badge",
+          "tier": 1,
+          "kind": "hero",
+          "component": "ProvenanceChip",
+          "props": {
+            "text": "SIMULATED · dress rehearsal"
+          }
+        }
+      ]
+    },
+    {
+      "id": "map-title",
+      "chapter": "maproom",
+      "line": "",
+      "settleMs": 4235,
+      "moments": [
+        {
+          "id": "map-title-in",
+          "tier": 1,
+          "kind": "treatment",
+          "component": "MaskWipe",
+          "props": {}
+        },
+        {
+          "id": "map-title-card",
+          "tier": 1,
+          "kind": "hero",
+          "component": "ChapterCard",
+          "props": {
+            "index": "04",
+            "name": "Map Room",
+            "line": "An Extension studio for your stream",
+            "steps": [
+              "Design the map",
+              "Preview what viewers see"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "map-design",
+      "chapter": "maproom",
+      "line": "",
+      "settleMs": 7059,
+      "capture": {
+        "beat": "map-design",
+        "targets": [
+          "app|map"
+        ],
+        "from": "ready"
+      },
+      "moments": [
+        {
+          "id": "map-design-in",
+          "tier": 1,
+          "kind": "treatment",
+          "component": "MaskWipe",
+          "props": {}
+        },
+        {
+          "id": "map-design-cap1",
+          "tier": 1,
+          "kind": "plate",
+          "component": "LowerThird",
+          "props": {
+            "title": "Design the war table",
+            "subtitle": "Banners, hexes, art style"
+          }
+        },
+        {
+          "id": "map-design-badge",
+          "tier": 1,
+          "kind": "hero",
+          "component": "ProvenanceChip",
+          "props": {
+            "text": "SIMULATED · dress rehearsal"
+          }
+        }
+      ]
+    },
+    {
+      "id": "map-spyglass",
+      "chapter": "maproom",
+      "line": "",
+      "settleMs": 8470,
+      "capture": {
+        "beat": "map-spyglass",
+        "targets": [
+          "app|spyglass"
+        ],
+        "from": "ready"
+      },
+      "moments": [
+        {
+          "id": "map-spyglass-in",
+          "tier": 1,
+          "kind": "treatment",
+          "component": "MaskWipe",
+          "props": {}
+        },
+        {
+          "id": "map-spyglass-cap1",
+          "tier": 1,
+          "kind": "plate",
+          "component": "LowerThird",
+          "props": {
+            "title": "What a viewer sees",
+            "subtitle": "Extension preview, simulated pick"
+          },
+          "durMs": 7500
+        },
+        {
+          "id": "map-spyglass-badge",
+          "tier": 1,
+          "kind": "hero",
+          "component": "ProvenanceChip",
+          "props": {
+            "text": "SIMULATED · dress rehearsal"
+          }
+        }
+      ]
+    },
+    {
+      "id": "codex-claim",
+      "chapter": "codex",
+      "line": "",
+      "settleMs": 5647,
+      "moments": [
+        {
+          "id": "codex-claim-in",
+          "tier": 1,
+          "kind": "treatment",
+          "component": "MaskWipe",
+          "props": {}
+        },
+        {
+          "id": "codex-claim-k",
+          "tier": 1,
+          "kind": "plate",
+          "component": "KineticClaim",
+          "props": {
+            "text": "Built with OpenAI Codex.",
+            "emphasis": "codex",
+            "align": "center"
+          }
+        }
+      ]
+    },
+    {
+      "id": "codex-count",
+      "chapter": "codex",
+      "line": "",
+      "settleMs": 8471,
+      "moments": [
+        {
+          "id": "codex-count-n",
+          "tier": 1,
+          "kind": "plate",
+          "component": "StatCounter",
+          "props": {
+            "record": "workPackages",
+            "label": "work packages",
+            "note": "each one built, reviewed and gated"
+          }
+        }
+      ]
+    },
+    {
+      "id": "end",
+      "chapter": "outro",
+      "line": "",
+      "settleMs": 13294,
+      "moments": [
+        {
+          "id": "end-in",
+          "tier": 1,
+          "kind": "treatment",
+          "component": "MaskWipe",
+          "props": {}
+        },
+        {
+          "id": "end-card",
+          "tier": 1,
+          "kind": "plate",
+          "component": "EndCard",
+          "props": {
+            "line": "Castle Control",
+            "cta": "Free and open source · Apache-2.0",
+            "url": "github.com/xkazm04/castle-control"
+          }
+        }
+      ]
+    }
+  ]
+}
