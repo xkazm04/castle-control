@@ -51,6 +51,8 @@ pub(super) struct Mock {
     pub expire_device: AtomicBool,
     pub short_grant: AtomicBool,
     pub malformed_subscription: AtomicBool,
+    /// Topic whose subscription create answers a permanent 403.
+    pub forbidden_topic: Mutex<Option<String>>,
     pub validate_503: AtomicU32,
     pub users_429: AtomicU32,
     pub plain_poll_502: AtomicU32,
@@ -229,6 +231,10 @@ pub(super) async fn handle(
                         return reply(202, json!({"data": []}));
                     }
                     let request = call.json();
+                    let forbidden = m.forbidden_topic.lock().expect("simulated topic").clone();
+                    if forbidden.as_deref() == request["type"].as_str() {
+                        return reply(403, json!({"error": "Forbidden"}));
+                    }
                     reply(
                         202,
                         json!({"data": [{"id": "simulated-sub", "status": "enabled",

@@ -178,18 +178,33 @@ impl TwitchBridge {
         // Subscribe while reading concurrently: long batches must not starve keepalives.
         // At least the first subscription is created inside the welcome's 10-second window.
         let subscriptions = async {
+            let mut skipped = Vec::new();
             for topic in topics {
-                self.subscribe(&session, topic).await?;
+                match self.subscribe(&session, topic).await {
+                    Ok(()) => {}
+                    // A permanent refusal of one topic must not stall its siblings.
+                    Err(BridgeError::Upstream(status @ (400 | 403 | 404 | 422))) => {
+                        tracing::warn!(topic = topic.name, status, "EventSub topic unavailable");
+                        skipped.push(format!("{} (HTTP {status})", topic.name));
+                    }
+                    Err(error) => return Err(error),
+                }
             }
-            Ok::<(), BridgeError>(())
+            if !topics.is_empty() && skipped.len() == topics.len() {
+                return Err(BridgeError::Invalid(
+                    "no EventSub topic could be subscribed",
+                ));
+            }
+            Ok::<Vec<String>, BridgeError>(skipped)
         };
+        let skipped: Vec<String>;
         let mut last_seen = crate::now();
         let mut deadline =
             Instant::now() + self.ep.time_unit * (u32::try_from(keepalive_s).unwrap_or(600) + 5);
         tokio::pin!(subscriptions);
         loop {
             tokio::select! {
-                result = &mut subscriptions => { result?; break; },
+                result = &mut subscriptions => { skipped = result?; break; },
                 result = self.read(&mut ws, deadline) => {
                     let frame = result?;
                     self.deliver(frame, topics).await?;
@@ -206,6 +221,10 @@ impl TwitchBridge {
             .await?;
         }
         self.connection_state(index, BridgeState::Connected);
+        if !skipped.is_empty() {
+            let detail = format!("EventSub topics unavailable: {}", skipped.join(", "));
+            self.live.lock().expect("bridge state").status.detail = Some(detail);
+        }
         *backoff = 1;
         loop {
             let result = async {
