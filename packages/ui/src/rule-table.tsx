@@ -1,17 +1,13 @@
 import { useState } from 'react';
-import { tokens } from '@castle-control/tokens';
 import { InkButton } from './primitives.jsx';
+import { rowWindow } from './windowed-rows.jsx';
 import './rule-table.css';
 
 export type RuleRow = { id: string; name: string; match: string; action: string; hits?: string; mode: 'shadow' | 'armed' };
-const rowHeight = Number.parseFloat(tokens.layout['row-h']);
-const viewportHeight = Number.parseFloat(tokens.layout['table-window']);
-const overscan = 3;
 
+/** One windowing rule, shared with WindowedRows. */
 export function visibleRange(total: number, scroll_top: number) {
-  const start = Math.max(0, Math.min(Math.floor(scroll_top / rowHeight) - overscan, Math.max(0, total - 1)));
-  const end = Math.min(total, start + Math.ceil(viewportHeight / rowHeight) + overscan * 2);
-  return { start, end, before: start * rowHeight, after: (total - end) * rowHeight };
+  return rowWindow(total, scroll_top);
 }
 
 export function RuleTable({ rules, onModeChange }: { rules: readonly RuleRow[]; onModeChange: (id: string, mode: RuleRow['mode']) => void }) {
