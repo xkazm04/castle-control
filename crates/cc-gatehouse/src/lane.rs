@@ -159,7 +159,7 @@ impl Gatehouse {
                     .values()
                     .filter(|m| m.rule.rule_class == RuleClass::Pattern)
                 {
-                    let regex = rules::compile(
+                    let regex = rules::compile_cached(
                         managed
                             .rule
                             .pattern

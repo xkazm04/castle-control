@@ -20,6 +20,28 @@ pub(crate) fn compile(pattern: &str) -> Result<Regex> {
         .map_err(|_| error(ErrorCode::Invalid, "invalid or oversized rule regex"))
 }
 
+thread_local! {
+    static CACHE: std::cell::RefCell<BTreeMap<String, Regex>> =
+        const { std::cell::RefCell::new(BTreeMap::new()) };
+}
+
+/// Compiled patterns are pure in the pattern text, so an edited rule simply
+/// misses the cache; no invalidation is needed. Bounded so it cannot grow.
+pub(crate) fn compile_cached(pattern: &str) -> Result<Regex> {
+    if let Some(regex) = CACHE.with(|cache| cache.borrow().get(pattern).cloned()) {
+        return Ok(regex);
+    }
+    let regex = compile(pattern)?;
+    CACHE.with(|cache| {
+        let mut cache = cache.borrow_mut();
+        if cache.len() >= 256 {
+            cache.clear();
+        }
+        cache.insert(pattern.to_owned(), regex.clone());
+    });
+    Ok(regex)
+}
+
 pub(crate) fn validate(rule: Rule) -> Result<Rule> {
     // Rust callers can construct structs directly; use the same contract door.
     let rule: Rule = serde_json::from_value(serde_json::to_value(rule).map_err(internal)?)
