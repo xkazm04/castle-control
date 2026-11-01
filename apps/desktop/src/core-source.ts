@@ -25,6 +25,16 @@ export function validateCoreLaunch(launch: CoreLaunch) {
   return base;
 }
 
+/** The cursor of an event the bundled schema rejects, so a poison event is skipped on reconnect instead of
+ * replayed forever. Only this number is read from the rejected text; nothing else from it is used. */
+function rejectedSeq(data: unknown): number | undefined {
+  if (typeof data !== 'string') return undefined;
+  try {
+    const seq: unknown = (JSON.parse(data) as { seq?: unknown } | null)?.seq;
+    return typeof seq === 'number' && Number.isSafeInteger(seq) && seq >= 0 ? seq : undefined;
+  } catch { return undefined; }
+}
+
 export function createCoreSource(launch: CoreLaunch, transport: Network = network): Source {
   const base = validateCoreLaunch(launch);
   return {
@@ -78,6 +88,8 @@ export function createCoreSource(launch: CoreLaunch, transport: Network = networ
             since_seq = event.seq;
             invalidate();
           } catch {
+            const poison = rejectedSeq(message.data);
+            if (poison !== undefined && poison > since_seq) { since_seq = poison; invalidate(); }
             interrupt();
             current.close();
           }
