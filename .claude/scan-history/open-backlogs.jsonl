@@ -1,0 +1,1 @@
+{"id":"stabilize-2026-11-01","at":"2026-11-01T13:11:23.106Z","strategy":"stabilize","path":".claude/scan-history/backlog-2026-11-01-wave1.jsonl","total":43,"emitted":0,"built":3,"declined":0,"descoped":0,"open":40,"status":"open","note":"Wave 1 cards unbuilt; drain Lane B with /scan-sweep --ab-only. Agent-read; most anchors unverified."}
