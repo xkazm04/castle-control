@@ -152,9 +152,25 @@ pub(super) fn read(store: &cc_store::Store) -> Result<Vec<Contribution>, ErrorEn
     items
         .into_iter()
         .map(|item| {
+            #[cfg(test)]
+            READS.with(|reads| reads.set(reads.get() + 1));
             serde_json::from_str::<RetainedContribution>(&item.content)
                 .map(|record| record.contribution)
                 .map_err(|_| internal())
         })
         .collect()
+}
+
+// Test instrument: retained-row deserializations on this thread.
+#[cfg(test)]
+thread_local! {
+    static READS: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
+}
+#[cfg(test)]
+pub(super) fn reset_reads() {
+    READS.with(|reads| reads.set(0));
+}
+#[cfg(test)]
+pub(super) fn reads() -> usize {
+    READS.with(std::cell::Cell::get)
 }

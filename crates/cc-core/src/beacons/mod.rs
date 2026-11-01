@@ -1,6 +1,8 @@
 //! Shared Beacons configuration, simulated overlay previews and live routing.
 mod art;
 mod art_assets;
+#[cfg(test)]
+mod intake_cost;
 mod live;
 pub(crate) mod presets;
 mod preview;
