@@ -53,6 +53,12 @@ function freeze<T>(value: T): T {
   }
   return value;
 }
+/** Refusals the core makes before it commits anything; every other failure leaves the seal outcome unknown. */
+const definitiveRefusals: readonly ErrorCode[] = ['invalid', 'blocked_by_policy', 'unauthorized', 'not_found', 'rate_limited'];
+function isDefiniteRefusal(error: unknown): boolean {
+  try { return definitiveRefusals.includes(parseError(JSON.stringify(error)).code); }
+  catch { return false; }
+}
 function errorNotice(error: unknown, method: LotsMethod | undefined): string {
   try {
     const envelope = parseError(JSON.stringify(error));
@@ -185,7 +191,13 @@ export function createCoreLotsPort(launch: CoreLaunch, transport?: LotsNetwork) 
         if ((await check(draw)).result === 'blocked') return;
         // Lock before sending: a lost response must never reopen a potentially sealed roll.
         publish({ locked: true, notice: 'Sealing the roll in the core.' });
-        const result = await call(lotsRollSeal, { draw_id: draw.draw_id, source: 'drand_quicknet', margin_s: 6 });
+        let result: RollSealResult;
+        try { result = await call(lotsRollSeal, { draw_id: draw.draw_id, source: 'drand_quicknet', margin_s: 6 }); }
+        catch (error: unknown) {
+          // A definitive refusal committed nothing, so the room reopens; an unknown outcome stays locked.
+          if (isDefiniteRefusal(error)) publish({ locked: false });
+          throw error;
+        }
         if (result.draw_id !== draw.draw_id) throw new Error('Seal returned a different draw');
         publish({ sealed: true, paused: true, seal_result: result, entries: result.sealed.roll.entries,
           notice: 'Seal announced through the core event. Native live runs also publish the OBS plate; recorded cores remain simulated.' });

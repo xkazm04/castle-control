@@ -318,6 +318,30 @@ test('lots-02 seal policy and lookup failures have remedies and safe retry timin
   await h.port.seal();
   expect(h.port.getSnapshot().notice).toBe(`${copy.core.request_errors['lots.roll.seal'].blocked_by_policy} Retry after 1000 ms.`);
   expect(h.port.getSnapshot().notice).not.toContain('simulated private detail');
+  expect(h.port.getSnapshot().locked).toBe(false);
+});
+test('a definitive seal refusal unlocks the room, while an unknown outcome keeps it locked', async () => {
+  for (const code of ['blocked_by_policy', 'invalid', 'rate_limited', 'unauthorized', 'not_found']) {
+    const h = harness(); await h.port.load();
+    h.rpc.mockImplementation(async (_endpoint, _session, method) => {
+      if (method === 'lots.roll.seal') throw { code, message: 'simulated refusal' };
+      return structuredClone(h.responses.get(method));
+    });
+    await h.port.seal();
+    expect(h.port.getSnapshot().locked, code).toBe(false);
+    h.rpc.mockImplementation(async (_endpoint, _session, method) => structuredClone(h.responses.get(method)));
+    await h.port.seal();
+    expect(h.port.getSnapshot().sealed, code).toBe(true);
+  }
+  for (const code of ['unavailable', 'upstream', 'internal', 'conflict']) {
+    const h = harness(); await h.port.load();
+    h.rpc.mockImplementation(async (_endpoint, _session, method) => {
+      if (method === 'lots.roll.seal') throw { code, message: 'simulated outcome unknown' };
+      return structuredClone(h.responses.get(method));
+    });
+    await h.port.seal();
+    expect(h.port.getSnapshot().locked, code).toBe(true);
+  }
 });
 test('lots-02 a transport failure loading proof keeps a successful cast, and proof reload recovers', async () => {
   const h = harness(); await h.port.load(); await h.port.seal();
