@@ -18,14 +18,80 @@ test.afterEach(async ({ page }) => {
   verify();
 });
 
-test('Beacons streamer journey: tune, test fire, inspect and copy a simulated source', async ({ page }) => {
+const dock = (page: Page) => page.locator('.cc-steward-dock');
+const option = (page: Page, text: string) => dock(page).locator('.cc-steward-option', { hasText: text }).first();
+async function holdToSeal(page: Page, done: RegExp) {
+  const hold = dock(page).getByRole('button', { name: /^hold to seal/i });
+  await hold.focus(); await page.keyboard.down('Space');
+  await expect(dock(page)).toContainText(done);
+  await page.keyboard.up('Space');
+}
+const openMore = (page: Page) => page.locator('.visuals-more > summary').click();
+
+test('Beacons: the picture is the live beacon; Tune a beacon drafts into it and seals on the hold', async ({ page }) => {
   await page.goto('/#/chamber/visuals');
   await expect(page.locator('.cc-rampart > [data-stamp="simulated"]')).toHaveText('Simulated');
+  const picture = page.getByRole('region', { name: 'Beacon picture' });
+  await expect(picture).toContainText('Offering altar');
+  await expect(picture.locator('.visuals-stage__blaze')).toContainText('39%');
+  await expect(picture.locator('.visuals-monitor__sim')).toHaveText('Simulated');
   const plates = page.getByRole('radiogroup', { name: 'Beacon visuals' });
   await plates.getByRole('radio').first().focus();
   await page.keyboard.press('ArrowRight');
   await expect(plates.getByRole('radio').nth(1)).toHaveAttribute('aria-checked', 'true');
+  await expect(picture.locator('.visuals-stage__name')).toHaveText('Gilded camera frame');
   await page.keyboard.press('Home');
+  await dock(page).getByRole('button', { name: 'Tune a beacon', exact: true }).click();
+  await option(page, 'Gilded camera frame').click();
+  await expect(picture.locator('.visuals-monitor__stamp')).toHaveText('Simulated draft · not on air');
+  await expect(picture.locator('.visuals-stage__name')).toHaveText('Gilded camera frame');
+  await option(page, 'Subscriptions').click();
+  const eager = option(page, 'Eager');
+  await expect(eager).toContainText(/Full at 40 · Sample night: .* · Gift wave: /);
+  await eager.click();
+  await option(page, 'Halves every 15 min').click();
+  await expect(picture).toHaveAttribute('data-mode', 'night');
+  await expect(dock(page)).toContainText('Sub train');
+  await dock(page).getByRole('button', { name: 'Looks right', exact: true }).click();
+  await expect(dock(page)).toContainText('0→0% · 3→30% · 12→70% · 40→100%');
+  // Nothing acted yet: the card in the picker still shows the old route.
+  await expect(plates.getByRole('radio').nth(1)).toContainText('gift subscriptions');
+  await holdToSeal(page, /Sealed\. The Gilded camera frame now answers eager/);
+  await expect(picture).toHaveAttribute('data-mode', 'rest');
+  await expect(picture.locator('.visuals-stage__tags')).toContainText('subscriptions');
+  await expect(picture.locator('.visuals-stage__tags')).toContainText('Halves every 15 min');
+  await auditStyles(page, desktopSurfaces);
+});
+
+test('Beacons: Test fire predicts the reaction, fires only on the hold, and Play demo plays a SIMULATED night', async ({ page }) => {
+  await page.goto('/#/chamber/visuals');
+  const picture = page.getByRole('region', { name: 'Beacon picture' });
+  await dock(page).getByRole('button', { name: 'Test fire', exact: true }).click();
+  await option(page, 'Offering altar').click();
+  await expect(option(page, 'A 50-gift bomb')).toContainText('39% → 82% blaze');
+  await option(page, 'A 50-gift bomb').click();
+  await expect(picture.locator('.visuals-monitor__stamp')).toHaveText('Simulated test · not fired yet');
+  await expect(picture.locator('.visuals-stage__blaze')).toContainText('3982%');
+  await holdToSeal(page, /Fired a 50-gift bomb at the Offering altar\. It burns at 82% now\./);
+  await expect(picture.locator('.visuals-stage__blaze')).toHaveText(/^82%/);
+  await dock(page).getByRole('button', { name: 'Play demo', exact: true }).click();
+  await expect(dock(page)).toContainText('A SIMULATED sample night');
+  await option(page, 'Gift wave on the camera frame').click();
+  await expect(picture.locator('.visuals-monitor__stamp')).toHaveText('Simulated demo night');
+  await expect(picture).toHaveAttribute('data-mode', 'night');
+  // Reduced motion: the night rests at its peak and the Steward reads that moment.
+  await expect(dock(page).locator('.visuals-narration')).toContainText('gilded camera frame');
+  await expect(picture.getByRole('list', { name: 'Latest simulated offerings' })).toBeVisible();
+  await dock(page).getByRole('button', { name: 'Seen it', exact: true }).click();
+  await option(page, 'Fit the top point').click();
+  await holdToSeal(page, /That was the demo\. On the gift wave the gilded camera frame peaks/);
+  await expect(picture.locator('.visuals-stage__name')).toHaveText('Gilded camera frame');
+  await auditStyles(page, desktopSurfaces);
+});
+
+test('Beacons workbench behind More: tune points, appearance, test fire and copy a simulated source', async ({ page }) => {
+  await page.goto('/#/chamber/visuals');
+  await openMore(page);
   const editor = page.getByRole('form', { name: 'Kindling curve editor' });
   await expect(editor).toBeVisible(); // Expected red on base: fixture curve is read-only.
   const point = editor.getByRole('button', { name: /^Control point 2:/ });
@@ -79,6 +145,7 @@ test('Beacons streamer journey: tune, test fire, inspect and copy a simulated so
 
 test('Beacons night replay: a pinned night, a fit, the way back, and a sealed Steward proposal', async ({ page }) => {
   await page.goto('/#/chamber/visuals');
+  await openMore(page);
   const replay = page.getByRole('article', { name: 'Night replay' });
   const verdict = replay.locator('.visuals-replay-verdict [role="status"]');
   await expect(replay).toContainText('SIMULATED');
@@ -115,4 +182,26 @@ test('Beacons night replay: a pinned night, a fit, the way back, and a sealed St
   await expect(replay.locator('[data-first-lit]')).toHaveCount(0);
   await auditStyles(page, desktopSurfaces);
   await auditFields(page);
+});
+
+test('Beacons: Replay a night as a guided flow, with the fit offered only when the night earns it', async ({ page }) => {
+  await page.goto('/#/chamber/visuals');
+  const picture = page.getByRole('region', { name: 'Beacon picture' });
+  await page.getByRole('button', { name: 'Replay a night', exact: true }).click();
+  await option(page, 'Offering altar').click();
+  await expect(option(page, 'Gift wave')).toContainText('pinned at max 8 min');
+  await expect(option(page, 'Sub train')).toContainText('stays dark');
+  await option(page, 'Gift wave').click();
+  await expect(picture).toHaveAttribute('data-mode', 'night');
+  await expect(picture.locator('.visuals-monitor__pin')).toHaveText('Pinned at max');
+  await dock(page).getByRole('button', { name: 'Seen it', exact: true }).click();
+  await option(page, "Fit the top point to this night's peak · move it to 167").click();
+  await expect(dock(page)).toContainText('peaks 99%');
+  await holdToSeal(page, /Sealed\. The Offering altar now fits the gift wave/);
+  await dock(page).getByRole('button', { name: /^Lower/ }).click();
+  await openMore(page);
+  const replay = page.getByRole('article', { name: 'Night replay' });
+  await replay.getByRole('button', { name: 'Gift wave', exact: true }).click();
+  await expect(replay.locator('.visuals-replay-verdict [role="status"]')).toContainText('never pinned');
+  await expect(replay).toContainText('Sealed · this is the curve');
 });
