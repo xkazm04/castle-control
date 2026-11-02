@@ -130,7 +130,7 @@ test('lighting moves data-active onto only the selected room light and tag, and 
     return { dataset: { room }, setAttribute: (name: string) => { attributes.add(name); }, removeAttribute: (name: string) => { attributes.delete(name); },
       lit: () => attributes.has('data-active') };
   }));
-  const glass = { querySelectorAll: () => lights } as unknown as HTMLDivElement;
+  const glass = { querySelectorAll: () => lights };
   for (const chamber of chambers) {
     lightRoom(glass, chamber.id);
     for (const light of lights) expect(light.lit()).toBe(light.dataset.room === chamber.id);

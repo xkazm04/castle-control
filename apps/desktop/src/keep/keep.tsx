@@ -33,8 +33,9 @@ export function KeepEntrance({ on_enter, on_demo, on_stream, on_rehearsal }: Pic
 }
 
 // The window stays mounted; a lit room only moves `data-active` on its light and its tag.
-export function lightRoom(glass: Pick<HTMLElement, 'querySelectorAll'> | null, id?: ModuleId) {
-  glass?.querySelectorAll<SVGElement>('.kw-light, .kw-light-tag').forEach(element => {
+type Light = { dataset: Record<string, string | undefined>; setAttribute: (name: string, value: string) => void; removeAttribute: (name: string) => void };
+export function lightRoom(glass: { querySelectorAll: (selector: string) => { forEach: (each: (light: Light) => void) => void } } | null, id?: ModuleId) {
+  glass?.querySelectorAll('.kw-light, .kw-light-tag').forEach(element => {
     if (element.dataset['room'] === id) element.setAttribute('data-active', ''); else element.removeAttribute('data-active');
   });
 }
