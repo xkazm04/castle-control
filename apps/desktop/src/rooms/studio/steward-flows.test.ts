@@ -4,7 +4,7 @@ import type { AnyStewardFlow, FlowState } from '@castle-control/ui/steward-flow'
 import type { TiltyardAction } from '@castle-control/contract';
 import { studioSteward } from './steward-flows.js';
 import { fixtureDuel, fixturePicture } from './duel-fixture.js';
-import { DEMO_KEY, duelHost } from './duel-host.js';
+import { DEMO_KEY, duelHost, duelSandbox } from './duel-host.js';
 import { entryIds, parseEntries } from './duel-model.js';
 
 const fixture = studioSteward({ mode: 'fixture', phase: 'ready' });
@@ -89,7 +89,11 @@ test('Play demo is SIMULATED, previews four sample contestants and plays at thre
   const run = coreRun();
   duelHost.setCore({ run, copySource: vi.fn(async () => {}), outcome: () => ({}) });
   await core.demo!.seal(view.draft);
-  expect(run.mock.calls.map(([action]) => action.kind)).toEqual(['start', 'speed']);
+  // Core mode plays the same demo in the local sandbox: the core tournament is never touched.
+  expect(run).not.toHaveBeenCalled();
+  expect(duelSandbox.active()).toBe(true);
+  expect(fixturePicture(fixtureDuel.getSnapshot())).toMatchObject({ phase: 'live', demo: true, speed: 3, key: DEMO_KEY });
+  duelSandbox.set(false);
 });
 
 test('Duel on stream copies only in core mode and says so in fixture mode', async () => {
