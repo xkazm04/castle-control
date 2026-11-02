@@ -27,7 +27,7 @@ test('Beacons: create, tune and test-fire in the UI, then /beacons/{id} updates 
     await room.getByRole('combobox', { name: 'Art style', exact: true }).selectOption({ label: 'Heraldic altar' });
     await room.getByRole('combobox', { name: 'Driven by', exact: true }).selectOption({ label: 'Bits cheer' });
     await room.getByRole('button', { name: 'Save visual to core', exact: true }).click();
-    await expect(room.getByText('Visual configuration saved by the core.', { exact: true })).toBeVisible();
+    await expect(room.locator('.visuals-more').getByText('Visual configuration saved by the core.', { exact: true })).toBeVisible();
 
     // Tune: full intensity at 20 bits instead of 50.
     const curve = room.getByRole('form', { name: 'Kindling curve editor', exact: true });
