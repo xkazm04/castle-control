@@ -12,7 +12,7 @@ import { Drill } from './drill.jsx';
 import { moderationSession } from './session.js';
 import { ruleBenchLink } from './rule-bench.jsx';
 import { benchInput, evaluateDraft } from '../../moderation-bench.js';
-import { BanQueue } from './controls.jsx';
+import { BanQueue, ShieldButton } from './controls.jsx';
 import { GatePlate } from './gate.jsx';
 import { Herald } from './herald.jsx';
 import { NeedsYou } from './needs.jsx';
@@ -93,16 +93,21 @@ function FixtureModeratorRoom({ snapshot, replay, queue = proposalQueue, seal_sl
         ribbon={rules ? rulesRibbon(rules) : voting ? voteRibbon(voting) : practice ? drillRibbon(practice) : undefined} />}
       picture_label="Gatehouse picture · SIMULATED" preview_title="Proposal · awaiting your seal"
       preview={<GateProposalMini queue={queue} flow={[demoFlow, rulesFlow, voteFlow, practiceFlow].find(flow => flow.id === publication?.flow)?.title} on_open={open} />}
-      program={<div className="gh-mini-copy"><b>Chat and Herald</b><p>{state.messages.slice(0, state.replay_count).filter(item => item.verdict === 'pass').length} passed · {charts[filter]?.directions[0]?.label ?? 'No direction yet'}</p>
-        <p>{herald.look.anchor.replace('-', ' ')} · size {herald.look.size} · {herald.look.art_style}</p></div>}
+      program={<div className="gh-mini-copy"><b>Chat and Herald</b><p>{state.messages.slice(0, state.replay_count).filter(item => item.verdict === 'pass').length} passed · {charts[filter]?.directions[0]?.label ?? 'No direction yet'}</p></div>}
       columns={[
-        <ChamberSection key="queue" title="At the portcullis"><GatePlate {...gate} part="queue" /><BanQueue state={state} queue={queue} /></ChamberSection>,
-        <div key="herald" className="gh-deck-column"><ChamberSection title="The gate"><NeedsYou state={state} queue={queue} /></ChamberSection>
+        <ChamberSection key="queue" title="At the portcullis"><GatePlate {...gate} part="queue" compact />
+          <button type="button" className="cc-btn cc-btn--sm" onClick={open}>{`Review queue · ${state.held.length} held · ${state.bans.length} pending ${state.bans.length === 1 ? 'ban' : 'bans'}`}</button>
+        </ChamberSection>,
+        <div key="herald" className="gh-deck-column"><ChamberSection title="The gate" aside={<ShieldButton state={state} queue={queue} compact />}><NeedsYou state={state} queue={queue} compact /></ChamberSection>
           <ChamberSection title="The Herald’s chart" aside={<button type="button" className="cc-btn cc-btn--sm" onClick={open}>Full chart</button>}>
             <Herald {...herald} compact action={<VoteControls queue={queue} />} />
           </ChamberSection></div>,
       ]}>
       {draft_picture}
+      <section className="gh-queue-details" aria-label="Full review queue">
+        <GatePlate {...gate} part="queue" feedback={false} /><BanQueue state={state} queue={queue} />
+        <NeedsYou state={state} queue={queue} details />
+      </section>
       <Herald {...herald} action={<VoteControls queue={queue} full />} />
       <MoreBenches state={state} port={port} queue={queue} bench={bench} output={output}
         marked={draft.draft ? result.hit_ids : undefined} directions={charts[filter]?.directions ?? []} />

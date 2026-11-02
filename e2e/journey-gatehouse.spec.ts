@@ -60,7 +60,19 @@ test('Gatehouse chamber fits both laptop budgets and the full chart/benches rema
       expect(overflow).toEqual([]);
       const scroll = await page.locator('.shell-room-content').evaluate(element => element.scrollHeight - element.clientHeight);
       expect(scroll).toBeLessThanOrEqual(1);
+      const bodyCopy = room.locator('.gh-held__msg, .gh-held__why, .gh-notice, .gh-needs__facts dd, .moderator-tile span');
+      for (const item of await bodyCopy.all()) {
+        const style = await item.evaluate(element => {
+          const value = getComputedStyle(element);
+          return { size: parseFloat(value.fontSize), line: parseFloat(value.lineHeight) };
+        });
+        expect(style.size).toBe(15); expect(style.line).toBeCloseTo(21.75, 1);
+      }
       await page.screenshot({ path: test.info().outputPath(`gatehouse-${viewport.width}.png`) });
+      await page.getByRole('button', { name: 'Review queue · 1 held · 1 pending ban', exact: true }).click();
+      await expect(drawer(page).getByRole('button', { name: 'Propose Ban', exact: true })).toBeVisible();
+      await expect(drawer(page)).toContainText('simulated-message-26');
+      await closeMore(page);
       await openMore(page);
       for (const text of ['Rule bench', 'The moat', 'Garrison orders', 'Stream output preview', 'Custom design']) await expect(drawer(page)).toContainText(text);
       await expect(drawer(page).locator('[aria-rowcount="420"]')).toHaveCount(1);
@@ -83,7 +95,8 @@ test('Gatehouse actions identify targets and expose one notice and count region'
       await expect(page.getByRole('status').filter({ hasText: message })).toHaveCount(1);
     };
     await expectNotice('Nothing sent.');
-    await expect(page.getByRole('region', { name: 'What needs you', exact: true })).toContainText('1 held message and 1 pending ban need you.');
+    await openMore(page);
+    await expect(drawer(page).getByRole('region', { name: 'Gate status details', exact: true })).toContainText('1 held message and 1 pending ban need you.');
     for (const name of ['Propose Ban', 'Propose Dismiss']) {
       await expect(page.getByRole('button', { name, exact: true })).toHaveAccessibleDescription('simulated-message-26');
     }
@@ -114,8 +127,8 @@ test('Gatehouse actions identify targets and expose one notice and count region'
     }
     for (const [action, pressed] of [['Raise the drawbridge', 'true'], ['Lower the drawbridge', 'false']] as const) {
       await closeMore(page);
-      const shield = page.getByRole('button', { name: `${action} Shield Mode · fixture only`, exact: true });
-      await expect(shield).toHaveAccessibleName(`${action} Shield Mode · fixture only`);
+      const shield = page.getByRole('button', { name: action, exact: true });
+      await expect(shield).toHaveAccessibleName(action);
       await expect(shield).not.toHaveAttribute('aria-label');
       await shield.click();
       await seal(page);
@@ -214,10 +227,12 @@ test('Gatehouse shadow journey and transparent stream previews', async ({ page }
     await expect(pause).not.toHaveAttribute('aria-pressed');
     await pause.click();
     await closeMore(page);
-    await expect(page.locator('.moderator-held')).toContainText('Held for review');
+    await openMore(page);
+    await expect(drawer(page).locator('.moderator-held')).toContainText('Held for review');
+    await closeMore(page);
     await page.getByRole('button', { name: 'Propose Pass', exact: true }).click();
     await seal(page);
-    await expect(page.locator('.moderator-held-plate')).toContainText('The portcullis is clear');
+    await expect(page.locator('.moderator-held-plate[data-compact="true"]')).toContainText('The portcullis is clear');
     await expect(page.locator('.gh-gate-art')).toHaveAttribute('data-raised', 'true');
     await expect(page.locator('[data-review-feedback]')).toContainText('Released');
     await page.getByRole('button', { name: 'Propose Undo', exact: true }).click();

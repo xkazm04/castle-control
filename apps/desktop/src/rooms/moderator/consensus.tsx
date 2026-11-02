@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { EmptyState } from '@castle-control/ui';
 import type { ConsensusGetResult } from '@castle-control/contract';
 import { moderationCopy as copy } from '../../moderation-copy.js';
+import { RoomKeyBadge } from '../../shell/steward-keys.jsx';
 
 export function consensusLabel(result: ConsensusGetResult) {
   return result.filter.kind === 'emote' ? result.filter.emote : result.filter.kind === 'all' ? copy.all_messages
@@ -57,7 +58,7 @@ export function Consensus({ results, selected: chosen, on_select, caption, compa
   const ticks = Array.from({ length: Math.round(top * 10) + 1 }, (_, index) => index / 10);
   return <section className="moderator-consensus gh-herald-chart" aria-label={copy.consensus}>
     <div className="gh-chartbar">{!compact && <p className="moderator-hint">{copy.consensus_hint}</p>}
-      <ConsensusFilters results={results} selected={selected} on_select={on_select ?? setOwn} /></div>
+      <ConsensusFilters results={results} selected={selected} on_select={on_select ?? setOwn} compact={compact} /></div>
     <svg className="gh-chart cc-folio-chart" viewBox={compact ? '0 0 360 86' : '0 0 700 262'} role="img" aria-label={copy.consensus_plot}>
       {ticks.map(share => <g key={share}><path className="fc-rule" d={`M${left} ${y(share)}H${right}`} />
         {!compact && <text className="fc-lab" x="52" y={y(share) + 4} textAnchor="end">{Math.round(share * 100)}%</text>}</g>)}
@@ -78,9 +79,13 @@ export function Consensus({ results, selected: chosen, on_select, caption, compa
   </section>;
 }
 
-function ConsensusFilters({ results, selected, on_select }: { results: readonly ConsensusGetResult[]; selected: number; on_select: (index: number) => void }) {
+function ConsensusFilters({ results, selected, on_select, compact }: {
+  results: readonly ConsensusGetResult[]; selected: number; on_select: (index: number) => void; compact: boolean;
+}) {
   return <div className="cc-seg cc-seg--sm moderator-chip-toggles" role="group" aria-label={copy.consensus_filters}>
+    <RoomKeyBadge room="moderator" action="filter" />
     {results.map((item, index) => <button type="button" className="moderator-chip-toggle" key={consensusLabel(item)}
-      aria-pressed={index === selected} onClick={() => on_select(index)}>{consensusLabel(item)}</button>)}
+      aria-label={compact ? consensusLabel(item) : undefined} aria-pressed={index === selected} onClick={() => on_select(index)}>
+      {compact ? item.filter.kind === 'all' ? 'All' : item.filter.kind === 'emotes' ? 'Emotes' : item.filter.kind === 'text' ? 'Text' : item.filter.emote : consensusLabel(item)}</button>)}
   </div>;
 }

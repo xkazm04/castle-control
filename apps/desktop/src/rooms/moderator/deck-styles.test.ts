@@ -43,14 +43,35 @@ test('held and ban cards reset every legacy track and span; verdict pairs stay i
   }
 });
 
-test('compact Herald uses one filter row, a 90-pixel chart and two columns of swatch/label/share rows', () => {
+test('compact Herald uses separated filter segments, a 64-pixel chart and a single vote-control row', () => {
   const prefix = '.gh-deck .gh-herald--compact';
   expect(rule(`${prefix} .moderator-chip-toggles`).get('flex-wrap')).toBe('nowrap');
-  expect(rule(`${prefix} .gh-chart`).get('height')).toBe('calc(var(--space-10) * 9)');
+  expect(rule(`${prefix} .moderator-chip-toggles`).get('gap')).toBe('var(--space-4)');
+  expect(rule(`${prefix} .moderator-chip-toggles > .moderator-chip-toggle`).get('padding')).toBe('var(--space-5) var(--space-9)');
+  expect(rule(`${prefix} .moderator-chip-toggles > .moderator-chip-toggle`).get('margin')).toBe('0');
+  expect(rule(`${prefix} .gh-chart`).get('height')).toBe('calc(var(--space-32) * 2)');
+  expect(rule(`${prefix} .gh-vote-summary`).get('display')).toBe('flex');
+  expect(rule(`${prefix} .gh-vote-summary`).get('flex-wrap')).toBe('nowrap');
+  expect(rule(`${prefix} .gh-vote-summary .gh-deck-buttons`).get('flex-wrap')).toBe('nowrap');
   expect(rule(`${prefix} .moderator-tiles`).get('grid-template-columns')).toBe('repeat(2, minmax(0, 1fr))');
   expect(rule(`${prefix} .moderator-tile`).get('grid-template-columns')).toBe('var(--space-16) minmax(0, 1fr) max-content');
   expect(rule(`${prefix} .moderator-tile > *`).get('grid-area')).toBe('auto');
   expect(rule(`${prefix} .moderator-tile > *`).get('overflow-wrap')).toBe('normal');
   const tokens = readFileSync(new URL('../../../../../packages/tokens/src/generated.css', import.meta.url), 'utf8');
   for (const [, token] of css.matchAll(/var\((--space-\d+)\)/g)) expect(tokens).toContain(`${token}:`);
+});
+
+test('room body uses the owner readability size without tightening the shared card spacing', () => {
+  const section = rule('.gh-deck .cc-chamber-section');
+  expect(section.get('font-size')).toBe('var(--text-px-15)');
+  expect(section.get('line-height')).toBe('1.45');
+  expect(section.has('padding')).toBe(false);
+  expect(section.has('gap')).toBe(false);
+  expect(rule('.gh-deck .cc-btn').get('height')).toBe('auto');
+  for (const selector of ['.gh-deck .gh-held__msg', '.gh-deck .gh-held__why', '.gh-deck .gh-needs__facts dd', '.gh-deck .gh-herald--compact .moderator-tile span']) {
+    expect(rule(selector).get('font')).toContain('var(--text-px-15)/1.45');
+  }
+  const readable = readFileSync(new URL('./readability.css', import.meta.url), 'utf8');
+  expect(readable).toContain('.gh-deck-details.gh-deck-details');
+  expect(readable).toContain('font-size: var(--text-px-15)'); expect(readable).toContain('line-height: 1.45');
 });

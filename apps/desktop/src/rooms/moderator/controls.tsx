@@ -8,6 +8,7 @@ import { available, phaseLabel } from '../../moderation-lifecycle.js';
 import { moderationCopy as copy } from '../../moderation-copy.js';
 import { GatePlate } from './gate.jsx';
 import { proposeCommand } from './session.js';
+import { RoomKeyBadge } from '../../shell/steward-keys.jsx';
 
 type Props = { state: ModerationPreview; queue: ProposalQueue };
 export { HeldActions } from './gate.jsx';
@@ -28,7 +29,7 @@ export function BanQueue({ state, queue }: Props) {
         className={kind === 'ban' ? 'cc-btn cc-btn--rubric' : 'cc-btn'} aria-describedby={`moderator-ban-${item.decision_id}`}
         disabled={!available(state, item.decision_id).includes(kind)}
         onClick={() => proposeCommand(queue, { kind, decision_id: item.decision_id }, kind === 'ban' ? 'Ban · human review' : 'Dismiss ban')}>
-        {kind === 'ban' ? copy.propose_ban : copy.propose_dismiss}</button>)}</div>
+        <RoomKeyBadge room="moderator" action={kind} />{kind === 'ban' ? copy.propose_ban : copy.propose_dismiss}</button>)}</div>
     </article>)}
   </section>;
 }
@@ -39,11 +40,11 @@ export function HeldQueue({ state, queue }: Props) {
 }
 
 /** The drawbridge is the emergency control, so it stays on the room's face. */
-export function ShieldButton({ state, queue }: Props) {
+export function ShieldButton({ state, queue, compact = false }: Props & { compact?: boolean }) {
   return <div role="group" aria-label={copy.shield_label} className="gh-shield">
     <button type="button" className="cc-btn cc-btn--rubric" aria-pressed={state.shield.value} disabled={state.shield.kind === 'confirming'}
       onClick={() => proposeCommand(queue, { kind: 'shield' }, state.shield.value ? 'Lower the drawbridge' : 'Raise the drawbridge')}>
-      {state.shield.value ? copy.lower_bridge : copy.shield}{' '}<small>{copy.shield_label}</small></button>
+      <RoomKeyBadge room="moderator" action="shield" />{state.shield.value ? copy.lower_bridge : copy.shield}{!compact && <>{' '}<small>{copy.shield_label}</small></>}</button>
   </div>;
 }
 

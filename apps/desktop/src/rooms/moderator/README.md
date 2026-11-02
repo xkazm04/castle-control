@@ -649,3 +649,38 @@ four-tile rules: two columns of swatch/label/share rows, one filter row, and a
 or smaller type is used to conceal overflow. The CSS regression tests pin these
 grid and wrapping contracts; browser fit remains for the Director to remeasure
 because this sandbox's browser launcher still returns `spawn EPERM`.
+
+Review 4: the compact Herald plot is 64 px high. Its filter segments use short
+visible labels with the original accessible names, padding, gaps and no inherited
+negative margins. Gate-state chips use shorter labels; the drawbridge control,
+right-column cards and inline vote-bar controls reserve less height. Full output
+metadata remains in the Program mini and expanded drawer. Review, drawbridge,
+vote-bar and filter badges use the shared `RoomKeyBadge` / `keyFor` action table;
+no key letters are duplicated in the room. Tests retain proposal lifecycle and
+accessible-name assertions while checking the table-derived badges.
+
+Owner readability decision, 2026-11-02: section body, controls, IDs and legend
+copy now use `--text-px-15` with line-height 1.45. Small-cap headings and key
+badges retain their label size. The shared card padding (11/14/12) and 8 px
+content gaps are retained; neither the picture nor its 16:9 slot is reduced.
+The full ban warrants and their Ban/Dismiss controls, held-queue pager and
+secondary held-state/gloss, gate summary sentence and Shield Mode explanation
+are reachable through the section's Review queue button. Vote-look metadata
+is in the expanded vote-bar card. Connected-core filter/edit/refresh fields
+and extended queue/quiet-state explanation also stay in the Full chart drawer. The face
+keeps the first hold, quote/reason, Pass/Bar, feedback, gate facts/drawbridge,
+fixture filters, compact chart/legend and vote controls. Key badges remain
+table-derived. The drill retains its existing layout.
+
+Computed default-fixture height budget at 1280x720 (not a browser measurement):
+15 x 1.45 = 21.75 px per body line. Allowing two fact-chip rows, two legend
+rows and normal control borders/padding gives 132.5 px for the gate card,
+286.75 px for Herald, 10 px between cards and 22 px chamber vertical insets:
+451.25 px of the brief's approximately 470 px body, leaving 18.75 px. The
+first queue column is below 400 px even allowing two-line quote/reason and a
+two-line Review queue control. At 1366x768 the same budget leaves about
+68.75 px of the approximately 520 px body. These calculations assume the
+default fixture's text wrapping; browser fit still needs verification because
+the sandbox Playwright launcher returns `spawn EPERM` before running the test.
+The e2e journey checks overflow, 15 px / 21.75 px computed typography and the
+production Review queue trigger at both requested sizes.

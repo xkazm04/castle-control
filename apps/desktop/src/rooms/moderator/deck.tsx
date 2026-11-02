@@ -8,7 +8,9 @@ import { stewardDock } from '@castle-control/ui/steward-flow';
 import { roomProposals, selectRoomDesign } from '../design/actions.jsx';
 import type { RoomDesignSelection } from '../design/actions.jsx';
 import { voteBarFlow } from './flow-votebar.jsx';
+import { RoomKeyBadge } from '../../shell/steward-keys.jsx';
 import './deck.css';
+import './readability.css';
 
 const DesignDialog = lazy(() => import('../design/focus.jsx').then(module => ({ default: module.RoomDesignDialog })));
 const voteFlow = voteBarFlow({ mode: 'fixture', phase: 'ready' });
@@ -54,9 +56,9 @@ export function VoteControls({ queue, full = false }: { queue: ProposalQueue; fu
   };
   return <div className="gh-vote-controls">
     <div className="gh-deck-buttons">
-      <button type="button" className="cc-btn cc-btn--sm" onClick={() => stewardDock.open(voteFlow)}>Show the vote bar</button>
-      <button type="button" className="cc-btn cc-btn--sm" onClick={() => open('restyle')}>Restyle</button>
-      {full && <button type="button" className="cc-btn cc-btn--sm" onClick={() => open('custom')}>Custom design</button>}
+      <button type="button" className="cc-btn cc-btn--sm" onClick={() => stewardDock.open(voteFlow)}><RoomKeyBadge room="moderator" action="vote_bar" />Show the vote bar</button>
+      <button type="button" className="cc-btn cc-btn--sm" onClick={() => open('restyle')}><RoomKeyBadge room="moderator" action="restyle" />Restyle</button>
+      {full && <button type="button" className="cc-btn cc-btn--sm" onClick={() => open('custom')}><RoomKeyBadge room="moderator" action="custom" />Custom design</button>}
     </div>
     {design && <Suspense fallback={<p role="status">Opening simulated design...</p>}>
       <DesignDialog selection={design} on_close={() => setDesign(undefined)} />
