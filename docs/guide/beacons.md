@@ -43,7 +43,7 @@ range or by pressing on the trace; pointing at the trace reads any minute's
 blaze and weighted subs without moving the playhead. The trace runs every generated offering
 through the preview model's own weighting, decay and curve, so only gifts and
 subs count; bits, points and Hype Train marks stay as muted ticks. Shaded
-**pinned at max** spans mark minutes past the curve's top point, and **Never
+**full blaze** spans mark minutes past the curve's top point, and **Never
 lit** means the total never reaches the curve's second point. Drag a point in
 the replay's curve (or Tab to it and use arrows, Shift for ten) and the whole
 night re-runs; the last sealed curve (or the sample curve) stays dashed, and

@@ -121,7 +121,7 @@ export function createCoreBeaconsPort(launch: CoreLaunch, transport?: BeaconsNet
         const { visuals } = await call((await contracts()).beaconsVisualList, {});
         const current = visuals.find(item => item.visual_id === selected) ?? visuals[0];
         publish({ visuals, ...(current ? { selected: current.visual_id } : {}),
-          notice: current ? 'Visual configurations loaded from the core. Live intensity is unavailable.' : 'No visuals configured in the core.' });
+          notice: current ? 'Your beacons are loaded from the core. Their live blaze shows on stream.' : 'No visuals configured in the core.' });
       });
     },
     select(id: VisualId) {

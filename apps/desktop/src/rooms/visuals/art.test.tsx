@@ -45,7 +45,7 @@ async function room(h: Awaited<ReturnType<typeof harness>>) {
 test('room entry reads art status independently, with lazy section and validators', () => {
   const core = readFileSync(new URL('./core.tsx', import.meta.url), 'utf8');
   expect(core).toMatch(/useEffect\([\s\S]*?port\.loadArtStatus\(\)/);
-  expect(core).toContain("lazy(() => import('./art.jsx'))");
+  expect(readFileSync(new URL('./core-bench.tsx', import.meta.url), 'utf8')).toContain("lazy(() => import('./art.jsx'))");
   const adapter = readFileSync(new URL('../../beacons-core.ts', import.meta.url), 'utf8');
   expect(adapter).toContain("import('@castle-control/contract/beacons')");
 });

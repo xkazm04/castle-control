@@ -110,7 +110,7 @@ test('core shares the C plates and bench while unavailable measurements stay dis
   const render = () => renderToStaticMarkup(<ConnectedBeacons port={port} />);
   const before = render();
   expect(before).toContain('role="radio"'); expect(before).toContain('data-band="bench"');
-  expect(before).toContain('Live intensity is unavailable.'); expect(before).toContain('live total unavailable');
+  expect(before).toContain('Live blaze shows on stream · test fire to preview'); expect(before).toContain('live total shows on stream');
   expect(before).not.toContain('data-offering-mark'); expect(before).not.toContain('weighted subs');
   expect(before).toContain('Kindling curve editor'); expect(before).toContain('Copy browser-source URL');
   const saved = port.getSnapshot().visuals[0];
@@ -118,6 +118,6 @@ test('core shares the C plates and bench while unavailable measurements stay dis
   await port.simulate({ visual_id: saved.visual_id, burst: { source: 'gift', amount: 50 } });
   const after = render();
   expect(after).toContain('--room-blaze:0.75'); expect(after).toContain('75% blaze · simulated · core result');
-  expect(after).toContain('live total unavailable'); expect(after).not.toContain('data-state="active"');
+  expect(after).toContain('live total shows on stream'); expect(after).not.toContain('data-state="active"');
   expect(port.getSnapshot().visuals[0]).toEqual(data);
 });

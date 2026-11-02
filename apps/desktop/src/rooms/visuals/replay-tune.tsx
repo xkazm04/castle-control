@@ -47,7 +47,7 @@ export function ReplayCurve({ item, editor, state, trace, now, help_id }: {
       <div className="visuals-replay-axis" aria-hidden="true">{axisMarks(maximum).map(mark =>
         <span key={mark} style={{ left: `${(12 + mark / maximum * 600) / 624 * 100}%` }}>{mark}</span>)}</div>
     </div>
-    <p className="visuals-note">{curveText(item.visual.curve)} · bars show where the night spends its minutes; shaded past the top point means pinned.</p>
+    <p className="visuals-note">{curveText(item.visual.curve)} · bars show where the night spends its minutes; shaded past the top point means it is already at full blaze.</p>
   </section>;
 }
 
@@ -73,7 +73,7 @@ export function ReplayBeacon({ item, now, position, offerings, counted, pinned, 
         <BeaconArtwork item={{ ...item, total: now.total, intensity: now.intensity }}
           label={`${item.visual.name} at ${clockLabel(position)} · ${Math.round(now.intensity * 100)}% blaze · simulated`} />
       </div>
-      {pinned && <span className="visuals-replay-stamp">Pinned at max</span>}
+      {pinned && <span className="visuals-replay-stamp">At full blaze</span>}
       {never_lit && <span className="visuals-replay-stamp" data-tone="cold">Never lit tonight</span>}
       <span className="visuals-replay-meter" aria-hidden="true"><i style={{ height: `${now.intensity * 100}%` }} />
         {lit_intensity !== undefined && <b className="visuals-replay-meter-lit" style={{ bottom: `${lit_intensity * 100}%` }} />}</span>

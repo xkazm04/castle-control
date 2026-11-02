@@ -154,10 +154,10 @@ test('a pinned night offers one fit, and the fit button never writes by itself',
   if (!item) throw new Error('Missing generated altar');
   const html = renderToStaticMarkup(<NightReplay item={item} editor={editor} queue={queue} initial_night="gift_wave" />);
   expect(html).toContain('Gift wave · 00:00 / 48:00');
-  expect(html).toContain('Saturates');
+  expect(html).toContain('Tops out');
   expect(html).toMatch(/Fit the top point to this night&#x27;s peak · move it to \d+/);
   expect(html.match(/class="visuals-replay-pinned"/g)?.length).toBeGreaterThan(0);
-  expect(html).toContain('pinned at max');
+  expect(html).toContain('full blaze');
   expect(queue.getSnapshot().proposals).toHaveLength(0);
   expect(port.getSnapshot().visuals[0]).toBe(item);
 });
@@ -173,9 +173,9 @@ test('tonight across your beacons: every beacon against the same night, the sele
   const rows = html.match(/<button type="button" class="visuals-replay-compare-row"[^>]*>/g) ?? [];
   expect(rows).toHaveLength(3);
   expect(rows.filter(row => row.includes('aria-pressed="true"'))).toHaveLength(1);
-  expect(rows[0]).toContain('aria-label="Offering altar: Saturates.');
+  expect(rows[0]).toContain('aria-label="Offering altar: Tops out.');
   expect(rows.every(row => row.includes('data-tone="pinned"'))).toBe(true);
-  expect(html).toMatch(/pinned \d+ min · lit \d+ of 48 min/);
+  expect(html).toMatch(/full blaze \d+ min · lit \d+ of 48 min/);
   expect(renderToStaticMarkup(<NightReplay item={item} editor={editor} queue={new ProposalQueue()} />))
     .not.toContain('visuals-replay-compare');
 });

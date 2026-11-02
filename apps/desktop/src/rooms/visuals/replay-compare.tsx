@@ -4,7 +4,7 @@ import type { PreviewVisual } from '../../beacons-model.js';
 import type { ReplayBurst } from '../../beacons-replay.js';
 import { minute, replayTrace, replayVerdict } from '../../beacons-replay.js';
 
-export const verdict_words = { pinned: 'Saturates', never_lit: 'Never lit', balanced: 'Climbs' } as const;
+export const verdict_words = { pinned: 'Tops out', never_lit: 'Never lit', balanced: 'Climbs' } as const;
 
 /** Every beacon against the same night, side by side; choosing one tunes it below. */
 export const NightCompare = memo(function NightCompare({ visuals, selected, bursts, on_select }: {
@@ -29,7 +29,7 @@ export const NightCompare = memo(function NightCompare({ visuals, selected, burs
         </svg>
         <span className="visuals-replay-compare-word">{verdict_words[verdict.tone]}</span>
         <span className="visuals-replay-compare-stats">
-          {trace.pinned_s > 0 ? `pinned ${Math.max(1, pinned)} min` : `peak ${Math.round(trace.peak.intensity * 100)}%`}
+          {trace.pinned_s > 0 ? `full blaze ${Math.max(1, pinned)} min` : `peak ${Math.round(trace.peak.intensity * 100)}%`}
           {` · lit ${minute(trace.lit_s)} of ${minute(trace.duration_s)} min`}
         </span>
       </button>;

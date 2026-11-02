@@ -10,3 +10,12 @@
 .visuals-core button:disabled { color: var(--muted); cursor: wait; }
 .visuals-core-feeds { display: grid; gap: var(--space-20); min-width: 0; }
 .visuals-core-item h3 { margin: 0; }
+/* Core room (round 5): the same picture as fixture mode, an honest empty core, and the demo sandbox band. */
+.visuals-picker__title .visuals-picker__add { margin-left: auto; }
+.visuals-stage--empty .visuals-monitor__screen { filter: saturate(0.55) brightness(0.8); }
+.visuals-stage--empty .visuals-stage__name { color: var(--ink); }
+.visuals-sandbox { display: grid; gap: 14px; }
+.visuals-sandbox__band { margin: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 12px; padding: 8px 14px;
+  border: 1px dashed var(--ch); background: var(--ch-wash); color: var(--ink); font: 400 var(--text-t-small)/1.4 var(--font-book); }
+.visuals-sandbox__band b { font: 800 var(--text-t-label)/1.2 var(--font-label); letter-spacing: var(--track-label); color: var(--ch-ink); }
+.visuals-sandbox__band span:last-child { font-style: italic; color: var(--muted); }

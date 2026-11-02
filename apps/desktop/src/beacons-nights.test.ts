@@ -26,7 +26,7 @@ test('each generated night shows a different verdict on the sample altar curve',
   const verdict = (id: Parameters<typeof sampleNight>[0]) => replayVerdict(replayTrace(altar, 1, nightBursts(sampleNight(id).offerings)));
   expect(verdict('sample').tone).toBe('balanced');
   expect(verdict('gift_wave').tone).toBe('pinned');
-  expect(verdict('gift_wave').text).toContain('first pinned at minute 30');
+  expect(verdict('gift_wave').text).toContain('full from minute 30');
   expect(verdict('raid_spike').tone).toBe('balanced');
   expect(verdict('sub_train').tone).toBe('never_lit');
 });

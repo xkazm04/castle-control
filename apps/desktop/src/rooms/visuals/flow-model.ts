@@ -34,7 +34,7 @@ export const decays: readonly { id: DecayId; label: string; decay: IntensityDeca
   { id: 'fast', label: 'Halves every 2 min', decay: { kind: 'exponential', half_life_s: 120 }, line: 'A flash: a gift bomb flares, then settles within minutes' },
   { id: 'medium', label: 'Halves every 5 min', decay: { kind: 'exponential', half_life_s: 300 }, line: 'A glow that lingers through a short lull' },
   { id: 'slow', label: 'Halves every 15 min', decay: { kind: 'exponential', half_life_s: 900 }, line: 'Builds across the night; hard to cool down' },
-  { id: 'hold', label: 'Never fades', decay: { kind: 'none' }, line: 'Only climbs until the night ends; easy to pin at max' },
+  { id: 'hold', label: 'Never fades', decay: { kind: 'none' }, line: 'Only climbs until the night ends; it soon sits at full blaze' },
 ];
 
 export type ShotId = 'sub' | 'gift10' | 'gift50' | 'quiet';
@@ -90,13 +90,13 @@ export function nightTrace(curve: IntensityCurve, night: NightId, gift_weight = 
 /** One short phrase for a card: how this curve would behave across a generated night. */
 export function nightPhrase(trace: ReplayTrace): string {
   if (trace.first_lit_s === undefined) return 'stays dark';
-  if (trace.pinned_s > 0) return `pinned at max ${Math.max(1, Math.round(trace.pinned_s / 60))} min`;
+  if (trace.pinned_s > 0) return `sits at full blaze for ${Math.max(1, Math.round(trace.pinned_s / 60))} min`;
   return `peaks ${Math.round(trace.peak.intensity * 100)}%, lit ${Math.round(trace.lit_s / 60)} min`;
 }
 
 export function nightName(id: NightId): string { return sampleNight(id).name; }
 
-/** "Sample night: peaks 74%, lit 12 min · Gift wave: pinned at max 8 min" */
+/** "Sample night: peaks 74%, lit 12 min · Gift wave: full blaze for 8 min" */
 export function curveConsequence(curve: IntensityCurve, gift_weight = 1): string {
   return (['sample', 'gift_wave'] as const).map(night => `${nightName(night)}: ${nightPhrase(nightTrace(curve, night, gift_weight))}`).join(' · ');
 }

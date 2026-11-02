@@ -60,7 +60,7 @@ test('pinned bands, never lit and balanced verdicts come from the trace alone', 
   const balanced = replayTrace(altar, 1, bursts);
   expect(balanced.pinned).toEqual([]);
   expect(replayVerdict(balanced).tone).toBe('balanced');
-  expect(replayVerdict(balanced).text).toMatch(/^Peak \d+% at minute \d+ · never pinned · first lit at minute \d+$/);
+  expect(replayVerdict(balanced).text).toMatch(/^Peak \d+% at minute \d+ · never at full blaze · first lit at minute \d+$/);
   const heavy = replayTrace(altar, 6, bursts);
   expect(heavy.pinned.length).toBeGreaterThan(0);
   expect(heavy.pinned_s).toBeGreaterThan(0);

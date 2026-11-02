@@ -19,6 +19,9 @@ test('Beacons: create, tune and test-fire in the UI, then /beacons/{id} updates 
     await context.grantPermissions(['clipboard-read', 'clipboard-write'], { origin: SHELL_ORIGIN });
     await core.openDesktop(page, viteOrigin(), '#/chamber/visuals');
     const room = page.getByRole('region', { name: 'Core Beacons', exact: true });
+    // An empty core shows the Steward's way in; the full workbench lives behind More.
+    await expect(room.getByRole('heading', { name: 'No beacon yet', exact: true })).toBeVisible();
+    await room.locator('.visuals-more > summary').click();
     await room.getByRole('textbox', { name: 'Visual ID', exact: true }).fill(VISUAL);
     await room.getByRole('textbox', { name: 'Visual name', exact: true }).fill('SIMULATED night beacon');
     await room.getByRole('combobox', { name: 'Art style', exact: true }).selectOption({ label: 'Heraldic altar' });

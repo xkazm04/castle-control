@@ -1,0 +1,118 @@
+import { lazy, Suspense, useId, useMemo, useState, useSyncExternalStore } from 'react';
+import type { ReactNode } from 'react';
+import { CardBody, CardHead, HeraldicCard, InkButton, WindowedRows, rowHeight } from '@castle-control/ui';
+import type { CoreBeaconsPort, CoreBeaconsSnapshot } from '../../beacons-core.js';
+import { beaconsCopy as copy } from '../../beacons-copy.js';
+import { BrowserSourceButton, BrowserSourceNotice, createBrowserSourceCopy } from './source-copy.jsx';
+import { ContributionFeed } from './event-feed.jsx';
+import { LiveContributionFeed } from './live-feed.jsx';
+import { EditableKindlingCurve } from './kindling-curve.jsx';
+import { VisualEditor } from './visual-editor.jsx';
+import { createAppearanceSession, displayQuery, initialAppearance } from './appearance-state.js';
+import { AppearanceControls } from './appearance.jsx';
+import { contribution_sources as sources, inputDescription, source_labels } from './contribution-input.js';
+import { BeaconBay, BeaconBench, SealPanel } from './bench.jsx';
+
+const ArtSection = lazy(() => import('./art.jsx'));
+
+/**
+ * The core workbench, unchanged in function: configuration form, control points,
+ * appearance, the core simulation form, browser-source URLs, feeds and the seal
+ * slot. The chamber keeps it behind "More"; the Steward flows cover the common paths.
+ */
+export function CoreBench({ port, state, seal_slot }: { port: CoreBeaconsPort; state: CoreBeaconsSnapshot; seal_slot?: ReactNode }) {
+  const source_id = useId();
+  const amount_id = useId();
+  const failed = state.phase === 'error';
+  const disabled = state.busy || failed;
+  const failure = failed ? copy.core_failed(state.error?.code ?? 'unavailable') : '';
+  const [appearance] = useState(createAppearanceSession);
+  const source_copy = useMemo(() => createBrowserSourceCopy(port, false,
+    id => displayQuery(appearance.getSnapshot()[id] ?? initialAppearance)), [port, appearance]);
+  const copy_state = useSyncExternalStore(source_copy.subscribe, source_copy.getSnapshot, source_copy.getSnapshot);
+  const [creating, setCreating] = useState(false);
+  const visual = state.visuals.find(item => item.visual_id === state.selected);
+  return <>
+    <BeaconBench name={visual?.name ?? copy.visuals} notice={state.notice}>
+      <BeaconBay title={copy.driven_by} gloss={copy.core_input}>
+        <h4>Core configurations</h4>
+        {failed && <p role="alert">{failure}{state.visuals.length > 0 && ` ${copy.core_retained}`}</p>}
+        <p>The copied browser-source URL is a transparent OBS browser source that scales to fit the source width and height when needed. Size and anchor travel in the copied URL; colour and burst timing stay in this session. A visual naming an unverified design shows nothing. Money changes visuals only.</p>
+        <InkButton size="wrap" disabled={state.busy} onClick={() => {
+          void port.load(); void port.loadContributions({ limit: 100 });
+        }}>Refresh Beacons</InkButton>
+        {visual && <p>Driven by: {inputDescription(visual.input)}</p>}
+        <InkButton size="wrap" disabled={disabled} onClick={() => setCreating(true)}>New visual</InkButton>
+        <VisualEditor key={`visual-${creating ? 'new' : JSON.stringify(visual)}`} port={port} busy={disabled}
+          on_saved={() => setCreating(false)}
+          {...(!creating && visual ? { visual } : {})} />
+        {visual && <AppearanceControls session={appearance} visual={visual}
+          {...(state.simulation?.intensity.visual_id === visual.visual_id ? { intensity: state.simulation.intensity.intensity } : {})}
+          burst={state.events[0]?.id ?? 0} />}
+      </BeaconBay>
+      <BeaconBay title={copy.curve} gloss={copy.core_curve}>
+        {visual && <EditableKindlingCurve visual={visual} port={port} busy={disabled} />}
+      </BeaconBay>
+      <BeaconBay title={copy.test_fire} gloss={copy.core_test}>
+        {visual && <section className="visuals-core-form"><h4>Core simulation</h4>
+          <p>Each test starts empty; it does not change live totals or saved configuration.</p>
+          <p role="status">{visual.input
+            ? copy.test_route(inputDescription(visual.input), visual.input.source === 'gift') : copy.test_unrouted}</p>
+          <div className="visuals-fire-grid">
+            <InkButton size="wrap" variant="offset" ink="or" disabled={disabled || visual.input?.source !== 'gift'} onClick={() => {
+              if (disabled || visual.input?.source !== 'gift') return;
+              void port.simulate({
+              visual_id: visual.visual_id, burst: { source: 'gift', amount: 50 },
+            }); }}>{copy.fire_gifts}</InkButton>
+            <InkButton size="wrap" disabled={disabled || visual.input?.source !== 'subscribe'} onClick={() => {
+              if (disabled || visual.input?.source !== 'subscribe') return;
+              void port.simulate({
+              visual_id: visual.visual_id, burst: { source: 'subscribe', amount: 1 },
+            }); }}>{copy.fire_sub}</InkButton>
+          </div>
+          <form key={`${visual.visual_id}-${visual.input?.source ?? 'unrouted'}`} onSubmit={event => {
+            event.preventDefault(); const form = new FormData(event.currentTarget);
+            const source = sources.find(item => item === form.get('source'));
+            if (!disabled && source && source === visual.input?.source)
+              void port.simulate({ visual_id: visual.visual_id, burst: { source, amount: Number(form.get('amount')) } });
+          }}>
+            <div className="visuals-core-field"><label htmlFor={source_id}>Input source</label>
+              <select id={source_id} name="source" defaultValue={visual.input?.source ?? sources[0]}
+                disabled={disabled || !visual.input}>{sources.map(source =>
+                <option key={source} value={source}>{source_labels[source]}</option>)}</select></div>
+            <div className="visuals-core-field"><label htmlFor={amount_id}>Amount (source units)</label>
+              <input id={amount_id} name="amount" type="number" min="0" max="4294967295" step="1"
+                defaultValue={1} required disabled={disabled || !visual.input} /></div>
+            <InkButton size="wrap" type="submit" disabled={disabled || !visual.input}>Simulate burst</InkButton>
+          </form>
+          {state.simulation && state.simulation.intensity.visual_id === visual.visual_id
+            && <output>{Math.round(state.simulation.intensity.intensity * 100)}% blaze · {state.simulation.label} · core result</output>}
+        </section>}
+      </BeaconBay>
+    </BeaconBench>
+    <div className="visuals-room-details visuals-panels">
+      <HeraldicCard variant="panel">
+        <CardHead title={copy.core_controls} />
+        <CardBody>
+          <BrowserSourceNotice state={copy_state} />
+          <WindowedRows rows={state.visuals} label="Core beacon visuals" row_height={rowHeight * 4}
+            row_key={item => item.visual_id} empty_state={failed ? failure : 'No beacons in your core yet. Ask the Steward to light one.'}>
+            {item => <article className="visuals-core-item">
+              <h3>{item.name}</h3>
+              <p>{item.design_id ? `Design: ${item.design_id}` : 'No design assigned'} · {item.curve.ranges.length} control points</p>
+              <BrowserSourceButton copy={source_copy} visual={item} busy={disabled || copy_state.busy} />
+            </article>}
+          </WindowedRows>
+          {state.art_available && visual && <Suspense fallback={null}>
+            <ArtSection key={visual.visual_id} port={port} visual={visual} />
+          </Suspense>}
+        </CardBody>
+      </HeraldicCard>
+      <div className="visuals-core-feeds">
+        <LiveContributionFeed read={state.contributions} on_refresh={() => { void port.loadContributions({ limit: 100 }); }} />
+        <ContributionFeed events={state.events} origin="Core simulation" />
+      </div>
+      <SealPanel>{seal_slot}</SealPanel>
+    </div>
+  </>;
+}

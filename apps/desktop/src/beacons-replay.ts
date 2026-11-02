@@ -163,7 +163,7 @@ export function replayVerdict(trace: ReplayTrace): ReplayVerdict {
     text: `Never lit · the night peaks at ${trace.peak.total.toFixed(1)} weighted subs at minute ${minute(trace.peak.t)}, under the first threshold of ${trace.lit_total}` };
   if (trace.pinned_s > 0) {
     const pinned_min = Math.max(1, Math.round(trace.pinned_s / 60));
-    return { tone: 'pinned', text: `Pinned at max for ${pinned_min} of ${minute(trace.duration_s)} minutes · first pinned at minute ${minute(trace.pinned[0]?.from ?? 0)} · offerings there change nothing` };
+    return { tone: 'pinned', text: `At full blaze for ${pinned_min} of ${minute(trace.duration_s)} minutes · full from minute ${minute(trace.pinned[0]?.from ?? 0)} · more offerings there change nothing` };
   }
-  return { tone: 'balanced', text: `Peak ${peak} · never pinned · first lit at minute ${minute(trace.first_lit_s)}` };
+  return { tone: 'balanced', text: `Peak ${peak} · never at full blaze · first lit at minute ${minute(trace.first_lit_s)}` };
 }
