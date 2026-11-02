@@ -33,7 +33,6 @@ export function MessageList(props: ReplayProps) {
 export function ReplayPanel({ messages, scroll_top = 0, core = false, notes, footer, provenance, marked,
   filter, query, on_filter, on_query }: ReplayProps & Selection) {
   const FilterButton = core ? InkButton : 'button';
-  const filterProps = core ? { size: 'room' as const } : {};
   const filtered = messages.filter(message => (filter === 'all' || filter === 'draft' && marked?.has(message.message_id) || message.verdict === filter)
     && `${message.message_id} ${message.message_text ?? ''}`.toLowerCase().includes(query.trim().toLowerCase()));
   return <section className="moderator-messages">
@@ -44,12 +43,12 @@ export function ReplayPanel({ messages, scroll_top = 0, core = false, notes, foo
         <div className="moderator-banners" role="group" aria-label={core ? copy.core_verdict_filter : copy.verdict_filter}>
           {(['all', 'pass', 'hold', 'bar'] as const).map(value => {
             const count = (value === 'all' ? messages.length : messages.filter(message => message.verdict === value).length).toLocaleString('en-US');
-            return <FilterButton {...filterProps} type="button" className="moderator-banner" key={value} aria-label={`${verdictWords[value]} · ${count} ${copy.lines}`}
+            return <FilterButton type="button" className="moderator-banner" key={value} aria-label={`${verdictWords[value]} · ${count} ${copy.lines}`}
             data-verdict-pick={value} aria-pressed={filter === value} onClick={() => on_filter(value)}>
             <span><VerdictIcon verdict={value} />{verdictWords[value]}</span>
             <b>{count}</b>
           </FilterButton>; })}
-          {marked && <FilterButton {...filterProps} type="button" className="moderator-banner"
+          {marked && <FilterButton type="button" className="moderator-banner"
             aria-label={`${copy.draft_filter} · ${messages.filter(message => marked.has(message.message_id)).length.toLocaleString('en-US')} ${copy.lines}`}
             aria-pressed={filter === 'draft'} onClick={() => on_filter('draft')}>
             <span>{copy.draft_filter}</span><b>{messages.filter(message => marked.has(message.message_id)).length}</b></FilterButton>}

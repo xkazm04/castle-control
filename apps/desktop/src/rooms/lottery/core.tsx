@@ -1,4 +1,4 @@
-﻿import { useEffect, useId, useMemo, useRef, useState, useSyncExternalStore } from 'react';
+﻿import { lazy, Suspense, useEffect, useId, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import type { CSSProperties, ReactNode } from 'react';
 import { SealButton, Stamp, WindowedRows } from '@castle-control/ui';
 import { stewardDock, useStewardDraft } from '@castle-control/ui/steward-flow';
@@ -25,6 +25,11 @@ import { capFigure, contentLine, poolLabel } from './flow-model.js';
 import { lotLive } from './live.js';
 import { DrawCard, MoreTools, RollPanel, StagePanel } from './roll.jsx';
 import { useSheetBand } from './chamber-hooks.js';
+import { coreDemoFlow, isDemoClosing } from './flow-steps.js';
+import { useDemoSandbox } from '../../demo-sandbox.jsx';
+
+/** Play demo's sandbox: the fixture chamber, loaded only when the demo opens. */
+const SandboxRoom = lazy(() => import('./index.jsx'));
 import './room.css';
 import './chamber.css';
 
@@ -78,7 +83,8 @@ export function ConnectedLotsRoom({ port, simulated, seal_slot, flows }: { port:
   };
   const round_label = lotsRoundLabel(simulated, state.seal_result);
   const open = (flow: AnyStewardFlow | undefined) => flow ? () => stewardDock.open(flow) : undefined;
-  const status = draft ? 'Drafting in the Steward · nothing sealed' : phase === 'cast' ? `Cast · ${state.cast_result?.cast.winners.length ?? 0} winners`
+  const empty_line = 'The Steward creates one on your core in a few small steps. Play demo shows a fair draw first, in a SIMULATED sandbox.';
+  const status = draft ? 'Drafting in the Steward · nothing sealed' : !draw && !state.busy ? 'No draw on the core yet · the roll opens when you set one up' : phase === 'cast' ? `Cast · ${state.cast_result?.cast.winners.length ?? 0} winners`
     : phase === 'sealed' ? 'Sealed · waiting for the public round' : round_label;
   const tamper = prove_draft?.tamper;
   const steer: LabSteer | undefined = prove_draft ? { specimen: 'cast',
@@ -94,25 +100,31 @@ export function ConnectedLotsRoom({ port, simulated, seal_slot, flows }: { port:
           content={draw?.policy.content ?? 'question'} sealed={state.sealed} seal={state.seal_result?.sealed.seal}
           clock={reveal} reveal_ms={appearance.reveal_ms} theatre={appearance.theatre} on_theatre={display.theatre} proof="core"
           sound={appearance.sound} on_sound={on => display.edit({ sound: on })} live={simulated === false}
+          idle_label={!draw && !draft ? 'No draw yet · the urn fills once you set one up' : undefined}
           by_hand={appearance.by_hand} on_by_hand={on => display.edit({ by_hand: on })} focus_weight={appearance.focus_weight}
           {...(state.writ ? { on_prove: () => { display.theatre(false); setLab(true); setProve(count => count + 1); } } : {})} />
       </StagePanel>
       <div className="cc-desk">
         <RollPanel status={status} tone={draft ? 'draft' : state.check?.result === 'blocked' ? 'blocked' : phase} draft={Boolean(draft)}
           simulated={simulated === true}
-          winners={shown?.rules.winner_count ?? copy.not_available} winner_detail={draft ? copy.proposed : copy.selected_draw}
-          held_out="—" cap={shown ? capFigure(shown) : copy.no_cap}>
-          <DrawCard name={shown?.name ?? copy.core.no_draw} line={shown ? `${contentLine(shown)} · ${poolLabel[shown.rules.pool.kind].toLowerCase()}` : copy.core.roll_notice}
+          winners={shown?.rules.winner_count ?? '—'} winner_detail={draft ? copy.proposed : shown ? copy.selected_draw : 'no draw yet'}
+          held_out="—" cap={shown ? capFigure(shown) : '—'}>
+          <DrawCard name={shown?.name ?? (state.busy ? 'Reading your draws…' : 'No draw yet')}
+            line={shown ? `${contentLine(shown)} · ${poolLabel[shown.rules.pool.kind].toLowerCase()}` : empty_line}
             guard={state.check?.result} guard_line={state.check?.reasons[0] ? policyReason(state.check.reasons[0]) : undefined}>
             {!draft && <>
-              {phase === 'open' && setup_open && <button type="button" className="cc-btn cc-btn--primary" onClick={setup_open}>Set up a draw</button>}
+              {phase === 'open' && <span className="lottery-draw-actions">
+                {setup_open && <button type="button" className="cc-btn cc-btn--primary" onClick={setup_open}>Set up a draw</button>}
+                {!draw && <button type="button" className="cc-btn cc-btn--quiet" onClick={() => stewardDock.open(coreDemoFlow)}>Play demo</button>}
+              </span>}
+              {!draw && !state.busy && <p className="cc-aside lottery-round-note">{round_label}</p>}
               <div className="lottery-core-fields">
-                <div className="cc-field"><label htmlFor={`${field_id}-draw`}>{copy.core.draw}</label>
+                {state.draws.length > 0 && <div className="cc-field"><label htmlFor={`${field_id}-draw`}>{copy.core.draw}</label>
                   <select id={`${field_id}-draw`} className="cc-select" value={draw?.draw_id ?? ''} disabled={state.busy || state.locked}
                     onChange={event => { void port.select(event.currentTarget.value); }}>
                     {!draw && <option value="">{copy.core.no_draw}</option>}
                     {state.draws.map(item => <option key={item.draw_id} value={item.draw_id}>{item.name}</option>)}
-                  </select></div>
+                  </select></div>}
                 {draw && <div className="cc-field"><label htmlFor={`${field_id}-winners`}>{copy.core.winner_count}</label>
                   <input id={`${field_id}-winners`} className="cc-input" type="number" min={1} max={65535} value={winner_value}
                     disabled={state.busy || state.locked} aria-invalid={invalid_winners}
@@ -205,6 +217,11 @@ export function ConnectedLotsRoom({ port, simulated, seal_slot, flows }: { port:
 
 export default function CoreLotteryRoom({ snapshot, seal_slot }: { snapshot: Snapshot; seal_slot?: ReactNode }) {
   const flows = useMemo(() => coreFlows(snapshot), [snapshot]);
+  // Play demo never touches the core: it plays in the fixture chamber, a local SIMULATED sandbox.
+  const sandbox = useDemoSandbox('lottery', coreDemoFlow.id, isDemoClosing);
+  if (sandbox) return <Suspense fallback={<p role="status">Opening the demo sandbox…</p>}>
+    <SandboxRoom snapshot={snapshot} replay={false} core_sandbox />
+  </Suspense>;
   const connection = coreLotsConnection(snapshot);
   if (!connection) return <section className="lottery-room" aria-label={copy.core.title}>
     <p role="status">{copy.core.unavailable}</p><ProposalSealFrame seal_slot={seal_slot} />

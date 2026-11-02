@@ -217,7 +217,6 @@
 }
 
 /* core mode: no held queue in this connection; the live chat and the herald carry the room */
-.gh-room--core .gh-gate { grid-template-areas: "ribbon ribbon ribbon" "art head head" "art main main"; }
 .gh-held__msg--plain::before, .gh-held__msg--plain::after { content: none; }
 .gh-desk--core { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-areas: "chat herald" "seal herald" "more more"; }
 .gh-core-chat { grid-area: chat; display: flex; flex-direction: column; height: 680px; min-width: 0; }

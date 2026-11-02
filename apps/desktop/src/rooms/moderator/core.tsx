@@ -18,6 +18,8 @@ import './gatehouse.css';
 import { GateArt } from './gate-art.jsx';
 import { gatehousePort } from './core-port.js';
 import { VoteBarSourceAction } from './vote-source.jsx';
+import { stewardDock } from '@castle-control/ui/steward-flow';
+import { coreDemoFlow } from './flow-demo.jsx';
 
 function CoreRule({ rule, busy, port }: { rule: Rule; busy: boolean; port: CoreGatehousePort }) {
   const name_id = useId();
@@ -47,20 +49,34 @@ export function ConnectedGatehouse({ port, replay, seal_slot }: { port: CoreGate
   const result = evaluateDraft(input, state.rules, messages, original);
   const [more, setMore] = useState(false);
   useEffect(() => { void port.load(); }, [port]);
-  return <div className="moderator-room" aria-label="Core Gatehouse" aria-busy={state.busy}>
+  if (replay) return <div className="moderator-room" aria-label="Core Gatehouse" aria-busy={state.busy}>
     <div className="moderator-core-status"><p role="status">{state.notice}</p>
       <InkButton size="room" type="button" disabled={state.busy} onClick={() => { void port.load(); }}>{copy.refresh_gatehouse}</InkButton></div>
-    {replay ? <div className="moderator-drill-room"><CoreDrill state={state} port={port} />{seal_slot}</div>
-      : <div className="gh-room gh-room--core">
+    <div className="moderator-drill-room"><CoreDrill state={state} port={port} />{seal_slot}</div></div>;
+  const items = state.chat?.items ?? [];
+  const count = (verdict: string) => items.filter(item => item.decision.verdict === verdict).length;
+  return <div className="moderator-room gh-room gh-room--core" aria-label="Core Gatehouse" aria-busy={state.busy}>
         <aside className="cc-panel gh-gate moderator-held-plate" aria-label={copy.held}>
           <div className="gh-gate__head"><div><h2 className="cc-panel__title">{copy.held}</h2><span className="cc-panel__aside">{copy.core_held_gloss}</span></div>
-            <CountLabel first={copy.unavailable} /></div>
+            <div className="gh-count"><b>{items.length}</b><span><small>lines read</small><small>{copy.core_label}</small></span></div></div>
           <div className="gh-art"><div className="cc-mini" data-chamber="moderator"><div className="cc-mini__field cc-diaper"><GateArt waiting={0} simulated={false} unavailable /></div></div></div>
-          <div className="gh-gate__main"><p className="gh-held__msg gh-held__msg--plain">{copy.core_queues_unavailable}</p><p className="gh-sm">{copy.core_review_notice}</p></div>
+          <div className="gh-gate__main">
+            {items.length ? <p className="gh-clear">The gate is watching<span>{items.length} line{items.length === 1 ? '' : 's'} read in shadow · {count('pass')} passed · {count('hold')} held · {count('bar')} barred. Every verdict is in the live room below.</span></p>
+              : <p className="gh-clear">{state.phase === 'loading' ? 'Opening the gate…' : 'Quiet at the gate'}<span>No chat has reached the gate on your core yet. When it does, every line gets a verdict in shadow and the herald counts what chat asks for.</span></p>}
+            <p className="gh-sm">{copy.core_queues_unavailable} {copy.core_review_notice}</p>
+            <p role="status" className="gh-notice">{state.notice}</p>
+          </div>
+          <div className="gh-gate__side">
+            <button type="button" className="cc-btn cc-btn--sm" disabled={state.busy} onClick={() => { void port.load(); }}>{copy.refresh_gatehouse}</button>
+            {!items.length && <button type="button" className="cc-btn cc-btn--quiet cc-btn--sm" onClick={() => stewardDock.open(coreDemoFlow)}>Play demo</button>}
+            <p className="gh-gate__steward">The Steward puts the vote bar on stream. Play demo runs on sample chat in a sandbox; your core is untouched.</p>
+          </div>
         </aside>
         <div className="gh-desk gh-desk--core">
           <section className="gh-core-chat" aria-label={copy.live}><CoreChat state={state} port={port} marked={draft.draft ? result.hit_ids : undefined} /></section>
           <section className="gh-herald" aria-label={copy.consensus}>
+            <header className="gh-section-head"><h2 className="cc-section__title">{copy.consensus}<em>{copy.consensus_caption}</em></h2>
+              <span className="cc-stamp cc-stamp--inked">{copy.core_label}</span></header>
             <CoreConsensus state={state} port={port} />
             <div className="gh-herald__stage"><h3 className="gh-kicker">Vote bar on stream</h3>
               <p className="gh-sm">Aggregate shares only; no chat text reaches the OBS page. The Steward can copy it too: Vote bar on stream.</p>
@@ -90,7 +106,6 @@ export function ConnectedGatehouse({ port, replay, seal_slot }: { port: CoreGate
             </div>
           </details>
         </div>
-      </div>}
   </div>;
 }
 

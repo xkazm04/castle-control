@@ -18,7 +18,7 @@ const shapes = new Set<string>(shapeOptions.map(option => option.id));
 const isShape = (id: string): id is DrawShape => shapes.has(id);
 const prize = (draft: SetupDraft) => draft.draw.policy.content === 'prize';
 const pools: readonly PoolKind[] = ['chatters', 'keyword', 'followers', 'subscribers', 'redeemers'];
-/** Every lottery seal lowers the sheet, so the stage it changed is in full view. */
+/** Every lottery seal but the demo's lowers the sheet, so the stage it changed is in full view. */
 const lower = () => stewardDock.collapse();
 /** After a verdict the lowered sheet uncovers the Writ Lab; bring it into view. */
 export const showLab = () => {
@@ -224,7 +224,15 @@ export function demoDraw(draft: DemoDraft): LotsDraw {
 }
 export const demoShape = (draft: DemoDraft): DrawShape => draft.sample === 'prize' ? 'wheel' : 'urn';
 
-export const demoFlow = defineFlow<DemoDraft>({
+/** The demo's closing line opens with these words; the sandbox stays up on it until the streamer acts. */
+const closing = 'Sealed and cast. What you saw:';
+export const isDemoClosing = (text: string) => text.startsWith(closing);
+
+/**
+ * Play demo, the same SIMULATED sandbox in fixture and core mode: the fixture engine draws it and
+ * nothing reaches the core. The closing beat stays in the raised sheet with chips for the real flows.
+ */
+export const lotDemoFlow = (core: boolean) => defineFlow<DemoDraft>({
   id: 'lots-demo', chamber: 'lottery', title: 'Play demo · a fair draw', simulated: true, intents: ['demo', 'show me', 'play demo'],
   intro: 'Run a giveaway nobody can call rigged: the entry list freezes before any randomness exists, and anyone can re-check the winners. Three steps; every viewer here is SIMULATED.',
   initial: () => ({}),
@@ -251,10 +259,12 @@ export const demoFlow = defineFlow<DemoDraft>({
     const act = await actions();
     await act.sealFixtureDraw(demoDraw(draft), demoShape(draft));
     const lines = await act.castFixture('quiet');
-    lower();
-    return { say: 'Sealed and cast. What you saw: the entries froze first, the winners were drawn after, and the writ (the draw’s receipt) recomputes them for anyone. Next: set up a real draw, or try to forge this one.',
+    return { say: `${closing} the entries froze first, the winners were drawn after, and the writ (the draw’s receipt) recomputes them for anyone. ${core
+      ? 'Your core was not touched. Next: set up a real draw on it.' : 'Next: set up a real draw, or try to forge this one.'}`,
       lines: [...lines, { label: 'Winners', value: act.fixtureWinners().join(', ') }],
       chips: [{ label: 'Set up a real draw', action: { kind: 'flow', chamber: 'lottery', flow: setupFlow.id } },
-        { label: 'Prove it', action: { kind: 'flow', chamber: 'lottery', flow: proveFlow.id } }] };
+        ...(core ? [] : [{ label: 'Prove it', action: { kind: 'flow', chamber: 'lottery', flow: proveFlow.id } } as const])] };
   },
 });
+export const demoFlow = lotDemoFlow(false);
+export const coreDemoFlow = lotDemoFlow(true);

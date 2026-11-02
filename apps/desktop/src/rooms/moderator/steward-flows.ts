@@ -2,23 +2,39 @@ import { isPending, proposalQueue } from '@castle-control/ui/steward';
 import type { ChamberSteward } from '@castle-control/ui/steward-flow';
 import type { Snapshot } from '../../model.js';
 import { roomSteward } from '../../shell/steward-room.js';
-import { demoFlow } from './flow-demo.jsx';
+import { coreDemoFlow, demoFlow } from './flow-demo.jsx';
+import { gatehousePort } from './core-port.js';
 import { drillFlow } from './flow-drill.jsx';
 import { rulesFlow } from './flow-rules.jsx';
 import { voteBarFlow } from './flow-votebar.jsx';
 import { needsLine } from './needs.jsx';
 import { moderationSession } from './session.js';
 
+/** Core mode: what the core's Gatehouse reads say now, without inventing a queue it does not expose. */
+function coreCatchUp(snapshot: Snapshot) {
+  let state;
+  try { state = gatehousePort(snapshot)?.getSnapshot(); } catch { state = undefined; }
+  if (!state) return { say: 'The Gatehouse on your core is not connected. Reopen the desktop shell.' };
+  const chat = state.chat?.items.length ?? 0;
+  const lead = state.consensus?.directions[0];
+  return { say: chat ? `The gate has read ${chat} retained line${chat === 1 ? '' : 's'} on your core.`
+    : 'No chat has reached the gate on your core yet. When chat flows, its verdicts and the herald appear here.',
+  lines: [{ label: 'Rules', value: `${state.rules.filter(rule => rule.mode === 'armed').length} armed · ${state.rules.filter(rule => rule.mode === 'shadow').length} watching` },
+    { label: 'Herald', value: lead ? `${lead.label} ${(lead.share * 100).toFixed(1)}%` : 'No direction yet' }] };
+}
+
 /**
  * Steward flows for the Gatehouse: setup lives here as small steps, the room keeps the live
  * picture. Fixture mode offers every flow and the Play demo; core mode offers the vote bar
- * (copies the real browser source on seal) and the drill.
+ * (copies the real browser source on seal), the drill, and the Play demo in a local sandbox.
  */
 export function moderatorSteward(snapshot: Snapshot): ChamberSteward {
   const base = { ...roomSteward('moderator', snapshot, ['ban', 'timeout', 'held', 'moderate', 'gatehouse', 'mod', 'spam']),
     hints: [{ phrases: ['ban', 'timeout', 'kick'],
       say: 'I never ban from a sentence. A ban starts on a line the gate flagged: choose Propose ban on it in the Gatehouse, then hold to seal. Set the rules decides what gets flagged.' }] };
-  if (snapshot.mode !== 'fixture') return { ...base, flows: [voteBarFlow(snapshot), drillFlow(snapshot)] };
+  if (snapshot.mode !== 'fixture') return { ...base, flows: [voteBarFlow(snapshot), drillFlow(snapshot)], demo: coreDemoFlow,
+    greeting: 'The Gatehouse on your core: the gate reads chat in shadow and the herald counts what chat asks for. Show the vote bar puts it on stream; Play demo shows a held line and your decision in a SIMULATED sandbox first. Nothing acts until you hold to seal.',
+    catch_up: () => coreCatchUp(snapshot) };
   return {
     ...base,
     greeting: 'The Gatehouse: the AI holds what it is unsure of, you decide. Set the rules, put the vote bar on stream, or play the demo; nothing acts until you hold to seal.',

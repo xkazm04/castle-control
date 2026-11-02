@@ -82,11 +82,19 @@ test('Play demo seals, casts and reveals a SIMULATED draw from one hold', async 
     const steward = lotSteward(page);
     await steward.chip('Play demo');
     await expect(steward.sheet.locator('.cc-sim').first()).toBeVisible();
+    const sandbox = page.getByRole('note', { name: 'Demo sandbox', exact: true });
+    await expect(sandbox).toContainText('Demo sandbox · SIMULATED · nothing touches your core');
     await steward.pick('Questions for the hall');
     await steward.next('Looks fair');
     await steward.hold(page.locator('.lottery-roll[data-tone="cast"]'));
     await expect(page.locator('.lottery-draw-stage')).toHaveAttribute('data-phase', 'revealed');
     await expect(page.locator('[data-stage-winner]')).toHaveCount(3);
+    // The closing beat and its next steps stay in the raised sheet until the streamer acts.
+    await expect(steward.sheet).toContainText('Sealed and cast');
+    await expect(steward.sheet.getByRole('button', { name: 'Set up a real draw', exact: true })).toBeVisible();
+    await expect(sandbox).toBeVisible();
+    await sandbox.getByRole('button', { name: 'Leave the demo', exact: true }).click();
+    await expect(sandbox).toHaveCount(0);
     await expect(page.locator('.cc-steward-dock .cc-talk__msg')).toContainText('Sealed and cast');
   } finally { await page.goto('about:blank'); verify(); }
 });

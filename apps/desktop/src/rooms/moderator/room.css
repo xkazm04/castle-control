@@ -47,12 +47,13 @@
   display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-4); min-width: 0;
   padding: var(--space-8) var(--space-8) var(--space-6); border: var(--rule-medium) solid var(--ink);
   border-top: var(--space-5) solid var(--banner-ink, var(--ink)); border-radius: 0; background: var(--card); color: var(--ink); text-align: left; cursor: pointer;
+  height: auto; min-height: 58px; justify-content: space-between;
 }
 .moderator-banner > span { display: inline-flex; align-items: center; gap: var(--space-4); font: 700 var(--text-label)/1.1 var(--font-ui); text-transform: uppercase; letter-spacing: var(--track-label); color: var(--banner-text, var(--ink-2)); }
 .moderator-banner svg { width: var(--space-14); height: var(--space-14); fill: none; stroke: currentColor; stroke-width: 2; }
 .moderator-banner b { font: 800 var(--text-chamber)/1 var(--font-num); letter-spacing: var(--track-number); }
 .moderator-room .moderator-banner:hover { background: var(--tint-2); }
-.moderator-room .moderator-banner[aria-pressed="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); border-top-color: var(--banner-ink, var(--ink)); }
+.moderator-room .moderator-banners .moderator-banner[aria-pressed="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); border-top-color: var(--banner-ink, var(--ink)); }
 .moderator-banner[aria-pressed="true"] > span { color: var(--paper); }
 .moderator-banner[data-verdict-pick="pass"] { --banner-ink: var(--azure); --banner-text: var(--azure-text); }
 .moderator-banner[data-verdict-pick="hold"] { --banner-ink: var(--or); --banner-text: var(--or-text); }

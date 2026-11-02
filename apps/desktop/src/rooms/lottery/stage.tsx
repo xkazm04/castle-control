@@ -129,7 +129,7 @@ function Verdict({ total, proof, on_prove, line }: { total: number; proof: 'loca
 }
 
 export function DrawStage({ shape, on_shape, entries, cast, content, sealed, seal, clock, reveal_ms, verified = true, theatre = false,
-  on_theatre, proof = 'local', on_prove, sound = false, on_sound, by_hand = false, on_by_hand, focus_weight, live = false }: {
+  on_theatre, proof = 'local', on_prove, sound = false, on_sound, by_hand = false, on_by_hand, focus_weight, live = false, idle_label }: {
   shape: DrawShape; on_shape: (shape: DrawShape) => void; entries: readonly StageEntry[]; cast: StageCast | undefined;
   content: DrawContent; sealed: boolean; seal?: string | undefined; clock: RevealClock; reveal_ms: number; verified?: boolean;
   theatre?: boolean; on_theatre?: (theatre: boolean) => void; proof?: 'local' | 'core'; on_prove?: () => void;
@@ -137,6 +137,8 @@ export function DrawStage({ shape, on_shape, entries, cast, content, sealed, sea
   focus_weight?: number | undefined;
   /** Only an explicitly live core cast is announced without the simulated label. */
   live?: boolean;
+  /** Replaces the open-roll caption when there is no draw at all (core mode before the first setup). */
+  idle_label?: string | undefined;
 }) {
   const reduced = useReducedMotion();
   const playable = cast && verified ? cast : undefined;
@@ -179,7 +181,7 @@ export function DrawStage({ shape, on_shape, entries, cast, content, sealed, sea
   }, [fresh, key, on_theatre]);
   const phase = !sealed && !playable ? 'open' : !cast ? 'sealed' : !verified ? 'casting'
     : state.finished && revealed.length === winners.length ? 'revealed' : 'revealing';
-  const phase_label = state.waiting ? copy.stage.held : copy.stage[phase];
+  const phase_label = state.waiting ? copy.stage.held : phase === 'open' && idle_label ? idle_label : copy.stage[phase];
   const disclaimer = scene.layers.find(layer => layer.kind === 'disclaimer');
   useCeremonySound(sound, shape, scene, key, fresh, revealed.length, phase === 'revealed');
   // The last call removes its button; hand focus to the verdict's proof button instead of the page.

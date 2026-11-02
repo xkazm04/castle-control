@@ -121,5 +121,6 @@ test('chips lead with what the draw needs next; free text maps to the flows', ()
   expect(matchIntent('start a giveaway', registry, 'lottery')).toMatchObject({ kind: 'flow', flow: 'lots-setup' });
   expect(matchIntent('cast the lots', registry, 'lottery')).toMatchObject({ kind: 'flow', flow: 'lots-cast' });
   expect(matchIntent('prove it', registry, 'lottery')).toMatchObject({ kind: 'flow', flow: 'lots-prove' });
-  expect(lotterySteward({ mode: 'core', phase: 'ready' }).demo).toBeUndefined();
+  // Core mode plays the same demo in a local SIMULATED sandbox; its chips offer the core's real setup.
+  expect(lotterySteward({ mode: 'core', phase: 'ready' }).demo).toMatchObject({ id: 'lots-demo', simulated: true });
 });

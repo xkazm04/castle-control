@@ -28,9 +28,10 @@ test('the Gatehouse offers two setup chips, Play demo and Catch me up; the demo 
   expect(steward.flows.map(flow => flow.title)).toContain('Practice a drill');
   expect(steward.demo?.simulated).toBe(true);
   expect(steward.catch_up?.().say).toBe('1 held message and 1 pending ban need you.');
-  // Core mode has no fixture demo and no fixture-only rule setup.
+  // Core mode has no fixture-only rule setup; its demo is the same SIMULATED one, played in a local sandbox.
   const core = moderatorSteward({ mode: 'core', phase: 'ready' });
-  expect(core.demo).toBeUndefined();
+  expect(core.demo).toMatchObject({ id: 'gatehouse-demo', simulated: true });
+  expect(core.catch_up?.().say).toContain('not connected');
   expect(core.flows.map(flow => flow.id)).toEqual(['gatehouse-votebar', 'gatehouse-drill']);
 });
 

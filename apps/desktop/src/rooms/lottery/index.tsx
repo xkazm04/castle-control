@@ -22,7 +22,8 @@ import { WritLab } from './lab.jsx';
 import type { LabSteer } from './lab.jsx';
 import { quicknet_anchor, simulated_anchor } from './beacon-anchors.js';
 import { verifyWrit } from '../../lots-cast.js';
-import { castFlow, demoDraw, demoFlow, demoShape, proveFlow, setupFlow, tamperKinds } from './flow-steps.js';
+import { castFlow, demoDraw, demoFlow, demoShape, isDemoClosing, proveFlow, setupFlow, tamperKinds } from './flow-steps.js';
+import { SandboxBanner, useDemoSandbox } from '../../demo-sandbox.jsx';
 import { capFigure, contentLine, heldOut, poolLabel } from './flow-model.js';
 import { lotLive } from './live.js';
 import { countCohorts, DrawCard, MoreTools, RollPanel, StagePanel } from './roll.jsx';
@@ -39,8 +40,12 @@ export { LotteryWrit } from './writ.jsx';
 const drawLine = (draw: LotsDraw) =>
   `${contentLine(draw)} · ${poolLabel[draw.rules.pool.kind].toLowerCase()} · ${draw.rules.winner_count} winner${draw.rules.winner_count === 1 ? '' : 's'}`;
 
-export default function LotteryRoom({ snapshot, replay, queue = proposalQueue, seal_slot }: {
-  snapshot: Snapshot; replay: boolean; queue?: ProposalQueue; seal_slot?: ReactNode;
+/**
+ * The fixture Lot Chamber. In core mode it is only the Play demo's sandbox (`core_sandbox`): the same
+ * fixture engine and picture, never publishing to the chamber's live mirror, so the core is untouched.
+ */
+export default function LotteryRoom({ snapshot, replay, queue = proposalQueue, seal_slot, core_sandbox = false }: {
+  snapshot: Snapshot; replay: boolean; queue?: ProposalQueue; seal_slot?: ReactNode; core_sandbox?: boolean;
 }) {
   const { port, display, reveal } = lotterySession(queue);
   const state = useSyncExternalStore(port.subscribe, port.getSnapshot, port.getSnapshot);
@@ -54,15 +59,17 @@ export default function LotteryRoom({ snapshot, replay, queue = proposalQueue, s
   const demo = useFlowDraft(demoFlow);
   const prove = useFlowDraft(proveFlow);
   const root = useRef<HTMLDivElement>(null);
-  const band = useSheetBand(root, publication !== undefined);
+  const sandbox = useDemoSandbox('lottery', demoFlow.id, isDemoClosing);
+  const band = useSheetBand(root, publication !== undefined || sandbox);
   const [lab, setLab] = useState(false);
   const [prove_count, setProve] = useState(0);
   const [verification, setVerification] = useState('');
   const phase = state.started ? 'cast' : state.sealed ? 'sealed' : 'open';
   useEffect(() => {
+    if (core_sandbox) return;
     lotLive.publish({ mode: 'fixture', phase, draw: state.draw, draws: fixtureDraws, entries: state.entries.length,
       seal: state.sealed_roll?.seal, winners: state.simulated_winners ?? [], writ: Boolean(state.writ) });
-  }, [phase, state.draw, state.entries.length, state.sealed_roll, state.simulated_winners, state.writ]);
+  }, [core_sandbox, phase, state.draw, state.entries.length, state.sealed_roll, state.simulated_winners, state.writ]);
   useEffect(() => { if (prove) setLab(true); }, [prove]);
   // The demo's roll step fills the urn lot by lot; every other draft shows its roll at once.
   // A draft shows once its first choice is made: an untouched or started-over flow leaves the chamber as it stands.
@@ -70,7 +77,7 @@ export default function LotteryRoom({ snapshot, replay, queue = proposalQueue, s
   const draft_entries = useMemo(() => draft_draw ? fixturePool(draft_draw) : undefined, [draft_draw]);
   const filling = Boolean(demo) && publication?.step === 'roll';
   const shown = useFill(draft_entries, filling);
-  if (snapshot.mode !== 'fixture') return <p>{copy.no_live_controls}</p>;
+  if (snapshot.mode !== 'fixture' && !core_sandbox) return <p>{copy.no_live_controls}</p>;
 
   const history = proposals.proposals.filter(item => item.chamber === 'lottery' && item.state !== 'torn');
   const pending = history.filter(isPending);
@@ -104,7 +111,9 @@ export default function LotteryRoom({ snapshot, replay, queue = proposalQueue, s
   const guard_line = policy.reasons.length ? policyReason(policy.reasons[0] ?? '') : policy.result === 'ok' ? 'Nothing blocks this draw' : undefined;
   return <div ref={root} className="lottery-room" data-replay={replay} data-theatre={appearance.theatre}
     data-sheet={band === undefined ? undefined : 'up'} data-phase={drafting ? 'draft' : phase} data-proving={prove ? '' : undefined}
+    data-sandbox={sandbox ? '' : undefined}
     style={band === undefined ? undefined : { '--lot-band': `${band}px` } as CSSProperties}>
+    {sandbox && <SandboxBanner chamber="lottery" demo_id={demoFlow.id} />}
     <div className="cc-hall">
       <StagePanel title={copy.stage.titles[shape]} count={entries.length} draft={drafting}>
         <DrawStage shape={shape} on_shape={next => display.edit({ shape: next })} entries={entries} cast={drafting ? undefined : cast}

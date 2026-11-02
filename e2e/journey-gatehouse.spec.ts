@@ -239,6 +239,11 @@ test('Gatehouse Play demo: a SIMULATED burst, one held line, your decision, the 
     await seal(page);
     await expect(steward(page)).toContainText('That is the Gatehouse: the AI holds, you decide.');
     await expect(page.locator('[data-review-feedback]')).toHaveText('Released · Pass · fixture confirmed. Nothing sent to Twitch.');
+    // The released note sits under the demo's own line, not under another held message.
+    const decided = gate.getByRole('article', { name: 'Simulated held message', exact: true });
+    await expect(decided).toContainText('may I share the link?');
+    await expect(decided).toContainText('Sealed · Pass');
+    await expect(page.getByRole('note', { name: 'Demo sandbox', exact: true })).toBeVisible();
     await expect(lead).toContainText('46.2%');
     await openMore(page);
     await expect(page.locator('.moderator-roll-entry').first()).toContainText('I wrote a boss guide');

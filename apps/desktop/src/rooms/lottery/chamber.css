@@ -95,7 +95,7 @@
 .lottery-more-body > :is(.panel, .cc-card, article, section) { min-width: 0; }
 
 /* the sheet is raised: the shell folds the chamber head to its slim bar; the hall shrinks into the visible band; controls step back, the picture stays */
-.lottery-room[data-sheet="up"] > :not(.cc-hall) { display: none; }
+.lottery-room[data-sheet="up"] > :not(.cc-hall, .cc-sandbox) { display: none; }
 .lottery-room[data-sheet="up"] .lottery-draw-theatre { padding: 2px; }
 /* proving: the Writ Lab is the picture while the Steward asks which writ and which forgery */
 .lottery-room[data-sheet="up"][data-proving] > .cc-hall { display: none; }
@@ -143,3 +143,9 @@
 .cc-frame .lottery-room .cc-button[aria-pressed="true"] { background: var(--surface-3); color: var(--ink); border-color: var(--lead); box-shadow: inset 0 -4px 0 var(--ch); }
 .cc-frame .lottery-room .lottery-lab-specimens .cc-button[aria-pressed="true"] { background: var(--lead); color: var(--on-lead); }
 .cc-frame .lottery-room .lottery-lab-tampers .cc-button[aria-pressed="true"] { background: var(--gules-wash); color: var(--gules-ink); border-color: var(--gules); box-shadow: none; }
+/* Play demo sandbox: the etched strip sits in the room's top padding, the hall keeps the rest. */
+.lottery-room[data-sandbox] { position: relative; padding-top: 54px; }
+.lottery-room > .cc-sandbox { position: absolute; top: 10px; left: var(--gutter); right: var(--gutter); }
+.lottery-room[data-sandbox][data-sheet="up"] { padding-top: 50px; }
+.lottery-room[data-sandbox][data-sheet="up"] > .cc-sandbox { top: 6px; }
+.lottery-room[data-sandbox][data-sheet="up"] .cc-hall { height: calc(var(--lot-band) - 54px); }

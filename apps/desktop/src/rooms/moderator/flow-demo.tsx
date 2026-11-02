@@ -9,11 +9,14 @@ import { moderationSession, sealCommand } from './session.js';
 
 /**
  * Play demo: a SIMULATED chat burst arrives, the gate holds one line, the streamer proposes a
- * decision, and the herald's chart and vote bar move. Fixture mode only; the room draws each
+ * decision, and the herald's chart and vote bar move. Fixture engine only; the room draws each
  * step from the draft, and only the final hold resolves the sample message.
  */
 export type DemoDraft = { choice?: 'pass' | 'bar' };
 export const demoFlowId = 'gatehouse-demo';
+/** The demo's closing line opens with these words; the sandbox stays up on it until the streamer acts. */
+const closing = 'Sealed: the sample line is';
+export const isDemoClosing = (text: string) => text.startsWith(closing);
 
 const moved = () => { const base = fixtureCharts[0]; return base ? movedConsensus(base) : undefined; };
 const lead = () => {
@@ -27,7 +30,11 @@ const lines = (draft: DemoDraft): FlowLine[] => [
   { label: 'Herald', value: `Vote bar now leads with ${lead()}` },
 ];
 
-export const demoFlow = defineFlow<DemoDraft>({
+/**
+ * The same SIMULATED demo in fixture and core mode: in core mode it plays in a local sandbox on the
+ * fixture engine and never touches the core, and its closing chips offer the core's real flows.
+ */
+export const gatehouseDemoFlow = (core: boolean) => defineFlow<DemoDraft>({
   id: demoFlowId, chamber: 'moderator', title: 'Play demo · the Gatehouse', simulated: true,
   intents: ['demo', 'show me', 'play demo', 'how does it work'],
   intro: 'Keep chat safe without reading every line: the AI passes the obvious, bars clear abuse, and holds only the lines it is unsure of for you. Four steps, about a minute, all SIMULATED; nothing reaches Twitch.',
@@ -47,7 +54,7 @@ export const demoFlow = defineFlow<DemoDraft>({
       prompt: 'Meanwhile the herald (a live read of what chat is asking for) counts only passed lines: “Go left” surges, and the vote bar on stream moves with it.',
       render: () => <VoteBarStage directions={moved()?.directions ?? []} look={voteLook(undefined)} label="after the burst" /> },
     { id: 'seal', kind: 'confirm', label: 'Seal', prompt: 'Hold to seal your decision. This is the only step that acts, and only on sample data.',
-      lines, note: 'SIMULATED · fixture mode. Sealing resolves the sample message locally; nothing reaches Twitch or OBS.' },
+      lines, note: 'SIMULATED · demo sandbox. Sealing resolves the sample message locally; nothing reaches Twitch, OBS or your core.' },
   ],
   seal: draft => {
     if (!draft.choice) throw new Error('Choose pass or bar first.');
@@ -60,9 +67,16 @@ export const demoFlow = defineFlow<DemoDraft>({
     sealCommand(proposalQueue, { kind: draft.choice === 'pass' ? 'release' : 'remove', decision_id: held.decision_id },
       draft.choice === 'pass' ? 'Pass held message' : 'Bar held message');
     view.setDemoMoved(true);
-    return { say: `Sealed: the sample line is ${draft.choice === 'pass' ? 'released to chat' : 'barred'}. What you saw: the gate settled seven lines alone and asked you about one, and only passed lines moved the vote bar. That is the Gatehouse: the AI holds, you decide. Next: set the rules for your chat, or put the vote bar on stream.`,
+    // The gate keeps showing this very line, now decided, under the release notice.
+    view.setDemoResolved({ decision_id: held.decision_id, choice: draft.choice });
+    return { say: `${closing} ${draft.choice === 'pass' ? 'released to chat' : 'barred'}. What you saw: the gate settled seven lines alone and asked you about one, and only passed lines moved the vote bar. That is the Gatehouse: the AI holds, you decide. ${core
+      ? 'Your core was not touched. Next: put the real vote bar on stream, or practise a drill.' : 'Next: set the rules for your chat, or put the vote bar on stream.'}`,
       lines: lines(draft),
-      chips: [{ label: 'Set the rules', action: { kind: 'flow', chamber: 'moderator', flow: 'gatehouse-rules' } },
-        { label: 'Show the vote bar', action: { kind: 'flow', chamber: 'moderator', flow: 'gatehouse-votebar' } }] };
+      chips: core ? [{ label: 'Show the vote bar', action: { kind: 'flow', chamber: 'moderator', flow: 'gatehouse-votebar' } },
+        { label: 'Practice a drill', action: { kind: 'flow', chamber: 'moderator', flow: 'gatehouse-drill' } }]
+        : [{ label: 'Set the rules', action: { kind: 'flow', chamber: 'moderator', flow: 'gatehouse-rules' } },
+          { label: 'Show the vote bar', action: { kind: 'flow', chamber: 'moderator', flow: 'gatehouse-votebar' } }] };
   },
 });
+export const demoFlow = gatehouseDemoFlow(false);
+export const coreDemoFlow = gatehouseDemoFlow(true);

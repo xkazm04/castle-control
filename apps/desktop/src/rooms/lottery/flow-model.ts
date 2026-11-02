@@ -91,7 +91,8 @@ export const capLine = (draw: LotsDraw) => {
 };
 export const capFigure = (draw: LotsDraw) => {
   const cap = draw.rules.cohort_caps.find(item => item.cohort === 'raider');
-  return cap ? `${cap.numerator}/${cap.denominator}` : copy.no_cap;
+  // The dial is small: an absent cap reads Off, which fits beside 1/3.
+  return cap ? `${cap.numerator}/${cap.denominator}` : 'Off';
 };
 export const cooldownLine = (seconds: number) => seconds <= 0 ? 'No cooldown'
   : seconds >= 3600 ? `${Math.round(seconds / 3600)} hours` : `${Math.round(seconds / 60)} minutes`;

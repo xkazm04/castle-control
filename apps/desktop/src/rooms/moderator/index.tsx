@@ -16,7 +16,8 @@ import { Herald } from './herald.jsx';
 import { NeedsYou } from './needs.jsx';
 import { MoreBenches } from './more.jsx';
 import { movedConsensus } from './demo-model.js';
-import { demoFlow } from './flow-demo.jsx';
+import { demoFlow, isDemoClosing } from './flow-demo.jsx';
+import { SandboxBanner, useDemoSandbox } from '../../demo-sandbox.jsx';
 import { RulesPicture, rulesFlow, rulesRibbon } from './flow-rules.jsx';
 import { voteBarFlow, voteLook, voteRibbon } from './flow-votebar.jsx';
 import { DrillPicture, drillFlow, drillRibbon } from './flow-drill.jsx';
@@ -24,17 +25,21 @@ import './room.css';
 import './gatehouse.css';
 
 const CoreModeratorRoom = lazy(() => import('./core.jsx'));
-type Props = { snapshot: Snapshot; replay: boolean; queue?: ProposalQueue; seal_slot?: ReactNode };
+type Props = { snapshot: Snapshot; replay: boolean; queue?: ProposalQueue; seal_slot?: ReactNode;
+  /** Core mode's Play demo: the fixture Gatehouse as a local SIMULATED sandbox; the core is untouched. */
+  core_sandbox?: boolean };
 const fixtureSnapshot: Snapshot = { mode: 'fixture', phase: 'ready' };
 const voteFlow = voteBarFlow(fixtureSnapshot);
 const practiceFlow = drillFlow(fixtureSnapshot);
 
 export default function ModeratorRoom(props: Props) {
+  const sandbox = useDemoSandbox('moderator', demoFlow.id, isDemoClosing);
+  if (props.snapshot.mode === 'core' && sandbox && !props.replay) return <FixtureModeratorRoom {...props} seal_slot={undefined} core_sandbox />;
   return props.snapshot.mode === 'core' ? <CoreModeratorRoom snapshot={props.snapshot} replay={props.replay} seal_slot={props.seal_slot} />
     : <FixtureModeratorRoom {...props} />;
 }
 
-function FixtureModeratorRoom({ snapshot, replay, queue = proposalQueue, seal_slot }: Props) {
+function FixtureModeratorRoom({ snapshot, replay, queue = proposalQueue, seal_slot, core_sandbox = false }: Props) {
   const { port, output, bench, view } = moderationSession(queue);
   const state = useSyncExternalStore(port.subscribe, port.getSnapshot, port.getSnapshot);
   const draft = useSyncExternalStore(bench.subscribe, bench.getSnapshot, bench.getSnapshot);
@@ -49,12 +54,15 @@ function FixtureModeratorRoom({ snapshot, replay, queue = proposalQueue, seal_sl
   const practice = useFlowDraft(practiceFlow);
   const root = useRef<HTMLDivElement>(null);
   const flow_open = publication?.flow;
+  const sandbox = useDemoSandbox('moderator', demoFlow.id, isDemoClosing);
   // A flow raises the Steward's sheet over the lower room: bring the gate, the picture, into view.
   useEffect(() => { if (flow_open) root.current?.scrollIntoView({ block: 'start' }); }, [flow_open]);
+  // Another flow moves on from the demo: the gate returns to the real held queue.
+  useEffect(() => { if (flow_open && flow_open !== demoFlow.id) view.setDemoResolved(undefined); }, [flow_open, view]);
   const messages = state.messages.slice(0, state.replay_count);
   const { input, original } = benchInput(draft, state.rules);
   const result = evaluateDraft(input, state.rules, messages, original);
-  if (snapshot.mode !== 'fixture') return <p>{copy.no_controls}</p>;
+  if (snapshot.mode !== 'fixture' && !core_sandbox) return <p>{copy.no_controls}</p>;
   const link = ruleBenchLink(state.rules, bench);
   if (replay) return <div className="moderator-room"><div className="moderator-drill-room">
     <Drill result={fixtureReplay} delay_s={fixtureDelay.delay_s} draft={draft.draft ? result : undefined}
@@ -68,8 +76,10 @@ function FixtureModeratorRoom({ snapshot, replay, queue = proposalQueue, seal_sl
   const top = rules ? <section className="gh-draft" aria-label="Draft rules"><RulesPicture draft={rules} /></section>
     : practice ? <section className="gh-draft" aria-label="Drill plan"><DrillPicture draft={practice} /></section>
     : <NeedsYou state={state} queue={queue} />;
-  return <div ref={root} className="moderator-room gh-room" data-demo={stage}>
-    <GatePlate state={state} queue={queue} demo={stage ? { stage, choice: demo?.choice } : undefined}
+  const resolved = room.demo_resolved ? { choice: room.demo_resolved.choice, on_next: () => view.setDemoResolved(undefined) } : undefined;
+  return <div ref={root} className="moderator-room gh-room" data-demo={stage} data-sandbox={sandbox ? '' : undefined}>
+    {sandbox && <SandboxBanner chamber="moderator" demo_id={demoFlow.id} />}
+    <GatePlate state={state} queue={queue} demo={stage ? { stage, choice: demo?.choice } : undefined} resolved={resolved}
       ribbon={rules ? rulesRibbon(rules) : voting ? voteRibbon(voting) : practice ? drillRibbon(practice) : undefined} />
     <div className="gh-desk">
       {top}

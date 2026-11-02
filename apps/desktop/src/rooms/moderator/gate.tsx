@@ -30,19 +30,25 @@ function Burst({ held }: { held: boolean }) {
   </ol>;
 }
 
-function DemoHeld({ choice }: { choice: 'pass' | 'bar' | undefined }) {
-  return <article className="gh-held gh-held--demo" aria-label="Simulated held message">
-    <div className="gh-held__meta"><span className="cc-sim">Simulated</span><span className="cc-hash">simulated-message-4300</span>
-      <span className="gh-held__state">{choice ? `Draft · you propose ${choice === 'pass' ? 'Pass' : 'Bar'}` : copy.held_state}</span></div>
+function DemoHeld({ choice, resolved = false }: { choice: 'pass' | 'bar' | undefined; resolved?: boolean }) {
+  const word = choice === 'pass' ? 'Pass' : 'Bar';
+  return <article className="gh-held gh-held--demo" aria-label="Simulated held message" data-resolved={resolved ? choice : undefined}>
+    <div className="gh-held__meta"><span className="cc-sim">Simulated</span>
+      {resolved && <span className={`cc-stamp cc-stamp--inked cc-stamp--${choice === 'pass' ? 'ok' : 'blocked'}`}>{choice === 'pass' ? 'Released' : 'Removed'}</span>}
+      <span className="cc-hash">simulated-message-4300</span>
+      <span className="gh-held__state">{resolved ? `Sealed · ${word}` : choice ? `Draft · you propose ${word}` : copy.held_state}</span></div>
     <p className="gh-held__msg">{demoHeldText}</p>
     <p className="gh-held__why"><b>{copy.held_reason}</b>{demoHoldReason}</p>
-    <p className="gh-held__hint">{choice ? 'Hold to seal in the Steward to decide it.' : 'Answer in the Steward below: pass or bar.'}</p>
+    <p className="gh-held__hint">{resolved ? (choice === 'pass' ? 'You sealed Pass: this line reached the sample chat.' : 'You sealed Bar: this line never reached the sample chat.')
+      : choice ? 'Hold to seal in the Steward to decide it.' : 'Answer in the Steward below: pass or bar.'}</p>
   </article>;
 }
 
 /** The hero: the portcullis and one held message at a time, with Propose pass / Propose bar. */
-export function GatePlate({ state, queue, demo, ribbon }: {
+export function GatePlate({ state, queue, demo, ribbon, resolved }: {
   state: ModerationPreview; queue: ProposalQueue; demo?: GateDemo | undefined;
+  /** The Play demo's line after its seal, shown in place of the queue until the streamer moves on. */
+  resolved?: { choice: 'pass' | 'bar'; on_next: () => void } | undefined;
   /** One line describing an open Steward draft, so the picture shows it while the sheet is raised. */
   ribbon?: string | undefined;
 }) {
@@ -50,6 +56,7 @@ export function GatePlate({ state, queue, demo, ribbon }: {
   const at = Math.min(index, Math.max(0, state.held.length - 1));
   const item = state.held[at];
   const demo_held = !!demo && demo.stage !== 'burst';
+  const done = !demo && resolved ? resolved : undefined;
   const waiting = state.held.length + (demo_held ? 1 : 0);
   return <aside className="cc-panel gh-gate moderator-held-plate" aria-label={copy.held} data-demo={demo?.stage}>
     {ribbon && <p className="gh-ribbon"><span className="cc-stamp cc-stamp--draft">Draft</span>{ribbon}</p>}
@@ -61,7 +68,7 @@ export function GatePlate({ state, queue, demo, ribbon }: {
       <GateArt waiting={waiting} simulated /></div></div></div>
     <div className="gh-gate__main">
       {demo && <Burst held={demo_held} />}
-      {demo_held ? <DemoHeld choice={demo.choice} /> : item ? <article key={item.decision_id} data-verdict="hold" className="gh-held moderator-held">
+      {demo_held ? <DemoHeld choice={demo.choice} /> : done ? <DemoHeld choice={done.choice} resolved /> : item ? <article key={item.decision_id} data-verdict="hold" className="gh-held moderator-held">
         <div className="gh-held__meta"><span className="cc-stamp cc-stamp--held cc-stamp--inked">{copy.hold}</span><span className="cc-hash">{item.message_id}</span>
           <span className="gh-held__state">{state.phases.get(item.decision_id)?.kind === 'confirming' ? copy.held_pending : copy.held_state}</span></div>
         <blockquote className="gh-held__msg">{item.message_text ?? copy.original_unavailable}</blockquote>
@@ -70,11 +77,13 @@ export function GatePlate({ state, queue, demo, ribbon }: {
       <p role="status" data-review-feedback="true" className="gh-notice">{state.notice}</p>
     </div>
     <div className="gh-gate__side">
-      {!demo_held && item && state.held.length > 1 && <div className="gh-pager" role="group" aria-label="Held messages">
+      {done && <button type="button" className="cc-btn cc-btn--sm" onClick={done.on_next}>
+        {state.held.length ? `Back to the held queue · ${state.held.length}` : 'Back to the gate'}</button>}
+      {!demo_held && !done && item && state.held.length > 1 && <div className="gh-pager" role="group" aria-label="Held messages">
         <button type="button" className="cc-btn cc-btn--sm" disabled={at === 0} onClick={() => setIndex(at - 1)}>Previous</button>
         <span>{at + 1} of {state.held.length}</span>
         <button type="button" className="cc-btn cc-btn--sm" disabled={at >= state.held.length - 1} onClick={() => setIndex(at + 1)}>Next</button></div>}
-      {!demo_held && item && <HeldActions item={item} state={state} queue={queue} />}
+      {!demo_held && !done && item && <HeldActions item={item} state={state} queue={queue} />}
       {demo_held && <p className="gh-gate__steward">Decide in the Steward below. Nothing acts until you hold to seal.</p>}
     </div>
   </aside>;

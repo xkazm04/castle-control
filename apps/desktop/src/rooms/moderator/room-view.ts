@@ -4,7 +4,9 @@
  * Play demo's moved herald, and a practice drill plan. Nothing here reaches chat or OBS.
  */
 export type DrillPlan = { busy: boolean; compare: boolean };
-export type RoomView = { filter: number; more: boolean; demo_moved: boolean; drill?: DrillPlan };
+/** The Play demo's held line after its seal: the gate shows that line, released or barred, until the streamer moves on. */
+export type DemoResolved = { decision_id: string; choice: 'pass' | 'bar' };
+export type RoomView = { filter: number; more: boolean; demo_moved: boolean; drill?: DrillPlan; demo_resolved?: DemoResolved | undefined };
 
 export function createRoomView() {
   let state: RoomView = { filter: 0, more: false, demo_moved: false };
@@ -21,11 +23,12 @@ export function createRoomView() {
     setFilter(filter: number) { set({ filter }); },
     setMore(more: boolean) { set({ more }); },
     setDemoMoved(demo_moved: boolean) { set({ demo_moved }); },
+    setDemoResolved(demo_resolved: DemoResolved | undefined) { set({ demo_resolved }); },
     planDrill(drill: DrillPlan) { set({ drill }); },
     /** The drill read its plan; a later visit opens as recorded. */
     takeDrill(): DrillPlan | undefined {
       const drill = state.drill;
-      if (drill) state = { filter: state.filter, more: state.more, demo_moved: state.demo_moved };
+      if (drill) state = { filter: state.filter, more: state.more, demo_moved: state.demo_moved, demo_resolved: state.demo_resolved };
       return drill;
     },
   };

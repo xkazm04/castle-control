@@ -1,6 +1,6 @@
 import { useId, useState } from 'react';
 import type { ConsensusFilter, ConsensusGetResult } from '@castle-control/contract';
-import { FieldGroup, InkButton, SectionHeading, StageFrame } from '@castle-control/ui';
+import { FieldGroup, InkButton, StageFrame } from '@castle-control/ui';
 import type { CoreGatehousePort, CoreGatehouseSnapshot } from '../../gatehouse-core.js';
 import { moderationCopy as copy } from '../../moderation-copy.js';
 import { ConsensusTiles, consensusLabel } from './consensus.jsx';
@@ -22,8 +22,7 @@ export function CoreConsensus({ state, port }: { state: CoreGatehouseSnapshot; p
   const [emote, setEmote] = useState('');
   const result = state.consensus;
   return <section className="moderator-consensus moderator-block moderator-core-consensus">
-    <SectionHeading title={copy.consensus} gloss={copy.core_consensus_gloss} />
-    <p>{copy.core_consensus_note}</p>
+    <p className="gh-sm">{copy.core_consensus_note}</p>
     <form onSubmit={event => {
       event.preventDefault();
       if (state.busy || (kind === 'emote' && !emote.trim())) return;
