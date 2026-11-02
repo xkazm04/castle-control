@@ -25,7 +25,6 @@ function Contestant({ entrant, side, picture, action }: { entrant: DuelEntrant; 
     <span className="duel-card__seed" data-role="ty-card-tag">{side === 0 ? 'Type 1' : 'Type 2'} · seed {entrant.seed}</span>
     <span className="duel-card__arms"><Shield item={{ id: entrant.id, title: entrant.title, by: entrant.by ?? 'streamer' }} words={tiltyardWords} /></span>
     <b className="duel-card__title" data-role="ty-card-title">{entrant.title}</b>
-    {entrant.note && <i className="duel-card__note">{entrant.note}</i>}
     {result === 'won' && <span className="cc-stamp cc-stamp--inked cc-stamp--ok duel-card__stamp" data-role="ty-stamp">
       {crowned ? 'Champion' : verdict?.how === 'call' ? 'Your call' : verdict?.how === 'tie' ? 'Seed wins' : 'Chat chose'}</span>}
     {action && <div className="duel-card__act">{action}</div>}
@@ -36,19 +35,16 @@ function Tally({ picture }: { picture: DuelPicture }) {
   const [left, right] = picture.counts;
   const total = left + right;
   const share = total ? left / total : 0.5;
-  const percent = Math.round(share * 100);
   return <div className="duel-tally" data-role="ty-tug" aria-label="Counted ballots">
     <b className="duel-tally__count" data-side="0" data-role="ty-count-left">{left}</b>
     <div className="duel-tally__bar" data-role="ty-tug-bar" data-empty={total === 0 || undefined}>
-      <span className="duel-tally__l" style={{ flexGrow: Math.max(share, 0.001) }}>{total ? `${percent}%` : ''}</span>
-      <span className="duel-tally__r" style={{ flexGrow: Math.max(1 - share, 0.001) }}>{total ? `${100 - percent}%` : ''}</span>
+      <span className="duel-tally__l" style={{ flexGrow: Math.max(share, 0.001) }} />
+      <span className="duel-tally__r" style={{ flexGrow: Math.max(1 - share, 0.001) }} />
       <i className="duel-tally__mid" aria-hidden="true" />
     </div>
     <b className="duel-tally__count" data-side="1" data-role="ty-count-right">{right}</b>
     <p className="duel-tally__legend">
       <span><b>{total}</b> counted · one per viewer</span>
-      {picture.barred !== undefined && <span data-role="ty-barred">{picture.barred} barred by moderation · never counted</span>}
-      {picture.source === 'core' && <span>Counted by the core after moderation</span>}
     </p>
   </div>;
 }
@@ -121,6 +117,14 @@ export function DuelStage({ picture, program = picture, details, on_event, froze
   </button>;
   const call = (side: 'left' | 'right') => actions.find(action => action.id === side);
   const centre = actions.filter(action => action.id !== 'left' && action.id !== 'right');
+  const secondary_actions = <div className="duel__minor">
+    <button type="button" className="cc-btn cc-btn--sm cc-btn--quiet" aria-pressed={picture.speed === 3} disabled={frozen || draft}
+      onClick={() => send({ kind: 'speed' })}><RoomKeyBadge room="studio" action="speed" />Speed ×3</button>
+    <button type="button" className="cc-btn cc-btn--sm cc-btn--quiet" disabled={frozen || draft}
+      onClick={() => send({ kind: 'reset' })}><RoomKeyBadge room="studio" action="reset" />New bracket</button>
+    <button type="button" className="cc-btn cc-btn--sm" onClick={() => stewardDock.open(streamDuelFlow(picture.source === 'core' ? 'core' : 'fixture'))}>
+      <RoomKeyBadge room="studio" action="stream" />Show the duel on stream</button>
+  </div>;
   return <section ref={root} className="duel" data-role="ty-duel" data-source={picture.source} data-phase={picture.phase}
     data-match-key={picture.match_key} data-draft={draft || undefined} aria-label="The duel stage" tabIndex={-1}
     onFocus={() => { held.current = true; }}
@@ -178,24 +182,17 @@ export function DuelStage({ picture, program = picture, details, on_event, froze
     <div key="tools" className="duel__column">
       <ChamberSection title="The bracket">
         <BracketSummary picture={picture} />
-        {size > 4 && <p className="duel-mini">Quarterfinals and all seeds are in the full bracket.</p>}
         <button type="button" className="cc-btn cc-btn--sm" aria-haspopup="dialog" onClick={() => setSheet(true)}><RoomKeyBadge room="studio" action="bracket" />Full bracket</button>
       </ChamberSection>
       <ChamberSection title="Call the duel"><div className="duel__minor">
         <button type="button" className="cc-btn cc-btn--sm cc-btn--quiet" disabled={frozen || draft || !picture.can_undo}
           onClick={() => send({ kind: 'undo' })}><RoomKeyBadge room="studio" action="undo" />Undo last call</button>
-        <button type="button" className="cc-btn cc-btn--sm cc-btn--quiet" aria-pressed={picture.speed === 3} disabled={frozen || draft}
-          onClick={() => send({ kind: 'speed' })}><RoomKeyBadge room="studio" action="speed" />Speed ×3</button>
-        <button type="button" className="cc-btn cc-btn--sm cc-btn--quiet" disabled={frozen || draft}
-          onClick={() => send({ kind: 'reset' })}><RoomKeyBadge room="studio" action="reset" />New bracket</button>
-        <button type="button" className="cc-btn cc-btn--sm" onClick={() => stewardDock.open(streamDuelFlow(picture.source === 'core' ? 'core' : 'fixture'))}><RoomKeyBadge room="studio" action="stream" />
-          Show the duel on stream</button>
         <button type="button" className="cc-btn cc-btn--sm" aria-haspopup="dialog" onClick={() => setSheet(true)}><RoomKeyBadge room="studio" action="bracket" />More</button>
       </div>
       </ChamberSection>
     </div>,
     ]} />
     <DuelDrawer open={drawer_open} on_close={closeDrawer} picture={picture} tools={tools}
-      notice={program.source === 'core' ? null : notice} details={details} />
+      actions={secondary_actions} notice={program.source === 'core' ? null : notice} details={details} />
   </section>;
 }

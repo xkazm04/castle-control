@@ -43,14 +43,20 @@ test('Map Room duel: chamber picture, two section columns, bracket drawer, calls
       const fit = await stage.evaluate(element => {
         const frame = element.getBoundingClientRect();
         const columns = [...element.querySelectorAll('.cc-chamber-column')];
-        return { fits: columns.every(column => column.getBoundingClientRect().bottom <= frame.bottom + 1),
+        const body_text = [...element.querySelectorAll('.duel-card__title, .duel__match, .duel__phase, .duel-tally__legend, .duel-bracket__match p, .duel__minor .cc-btn, .cc-chamber-section > .cc-btn')];
+        return { fits: frame.bottom <= window.innerHeight && columns.every(column => column.getBoundingClientRect().bottom <= frame.bottom + 1),
           scrollers: [...element.querySelectorAll('*')].filter(node => {
             const style = getComputedStyle(node);
             return ['auto', 'scroll'].includes(style.overflowY) && node.scrollHeight > node.clientHeight + 1;
           }).length,
-          cards: [...element.querySelectorAll('.duel-card__title')].every(node => node.clientWidth >= 100) };
+          cards: [...element.querySelectorAll('.duel-card__title')].every(node => node.scrollWidth <= node.clientWidth
+            && node.getBoundingClientRect().height <= 2 * parseFloat(getComputedStyle(node).lineHeight) + 1),
+          readable: body_text.every(node => {
+            const style = getComputedStyle(node);
+            return style.fontSize === '15px' && Math.abs(parseFloat(style.lineHeight) - 21.75) < 0.1;
+          }) };
       });
-      expect(fit).toEqual({ fits: true, scrollers: 0, cards: true });
+      expect(fit).toEqual({ fits: true, scrollers: 0, cards: true, readable: true });
     }
     if (original_size) await page.setViewportSize(original_size);
     // The hero, its tally and the streamer's actions sit above the Steward dock without scrolling.
@@ -63,6 +69,12 @@ test('Map Room duel: chamber picture, two section columns, bracket drawer, calls
     const sheet = page.getByRole('dialog', { name: 'Full bracket', exact: true });
     await expect(sheet.locator('[data-role="ty-match"]')).toHaveCount(3);
     await expect(sheet.locator('[data-role="ty-match"][aria-current="step"]')).toContainText('Raze the mill');
+    for (const label of [/Speed ×3/, /New bracket/, /Show the duel on stream/]) await expect(sheet.getByRole('button', { name: label })).toBeVisible();
+    await page.keyboard.press('w');
+    await expect(stage.locator('[data-role="ty-phase"]')).toContainText('×3');
+    await page.keyboard.press('w');
+    await expect(stage.locator('[data-role="ty-phase"]')).not.toContainText('×3');
+    await expect(sheet.locator('[data-role="ty-barred"]')).toContainText('barred by moderation · never counted');
     const box = await sheet.boundingBox();
     expect(box && box.y >= 0 && box.y + box.height <= (page.viewportSize()?.height ?? 0)).toBe(true);
     await page.keyboard.press('Escape');
@@ -75,7 +87,11 @@ test('Map Room duel: chamber picture, two section columns, bracket drawer, calls
     await page.keyboard.press('Enter');
     await expect(stage).toHaveAttribute('data-phase', 'live');
     await expect.poll(async () => (await counts(stage)).reduce((a, b) => a + b, 0), { timeout: 12_000 }).toBeGreaterThan(0);
-    await expect(stage.locator('[data-role="ty-barred"]')).toContainText('barred by moderation · never counted');
+    await expect(stage.locator('[data-role="ty-barred"]')).toHaveCount(0);
+    await stage.getByRole('button', { name: /More/ }).click();
+    await expect(sheet.locator('[data-role="ty-barred"]')).toContainText('barred by moderation · never counted');
+    await sheet.getByRole('button', { name: /Close/ }).click();
+    await stage.focus();
 
     // The streamer's call overrides the tally, logged openly, and freezes it.
     await page.keyboard.press('ArrowRight');

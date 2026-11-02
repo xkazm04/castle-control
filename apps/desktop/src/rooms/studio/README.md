@@ -1,5 +1,59 @@
 # Map Room C · Herald
 
+## Owner readability decision · 15 px, move more into drawers (2026-11-02)
+
+Section prose, option names, bracket rows, controls, tally summaries, minis and
+drawer detail now use `--text-px-15` with line-height 1.45 (21.75 px per line).
+Small-cap headings/seed tags and the existing key badges retain their 13–14 px
+roles. The picture stays at its existing size and stage type stays at least
+15 px. Shared section padding (11/14/12 px), 8 px content gaps and 10 px section
+gaps are retained/restored rather than compressed to fit the larger body type.
+Buttons grow with wrapped text instead of forcing a 30 px small-button height.
+
+New drawer destinations, all behind the visible keyed Full bracket/More triggers:
+
+- Speed ×3, New bracket and Show the duel on stream, with their existing guards,
+  handlers and table-derived key badges. Their keys reach the shell dispatcher
+  from the drawer; a local demo/form continues to isolate its own keys.
+- Contestant notes, moderation/barred provenance, the core-counting explanation
+  and the eight-entry quarterfinal explanation. The `ty-barred` hook moves with
+  its content; no role hook is removed.
+- Ballot percentages, where the complete 15 px labels fit without competing for
+  a nearly empty tally segment. Counts and the proportional bar stay in the room.
+- The repeated matchup line from Preview/Program. The minis retain their existing
+  title, phase and counted total; the drawer names the current pair explicitly.
+
+Computed fit budget (not a browser measurement), using the shared token values
+and the standard four-contestant SIMULATED duel:
+
+| Item | Computed height |
+| --- | ---: |
+| Body line | 15 × 1.45 = 21.75 px |
+| One-/two-line button, including padding and borders | 35.75 / 57.50 px |
+| Live option card, allowing two name lines and two call-button lines | 148.60 px |
+| Arena: options + 8 px gap + clock/action rows | 238.35 px |
+| Duel section, allowing a two-line question | 428.70 px |
+| Duel column including 22 px layout padding | 450.70 px live; 454.70 px verdict; round up to **460 px** |
+| Bracket section, allowing two-line final placeholders/champion | 319.95 px |
+| Undo/More section | 85.65 px |
+| Bracket/tool column, including 10 px section gap + 22 px layout padding | **437.60 px** |
+
+At 1280×720, the supplied 470 px room-body budget leaves 10 px after the rounded
+460 px column allowance; at 1366×768, 520 px leaves 60 px. These calculations
+assume the standard labels fit the stated line counts; arbitrary long custom
+labels still require browser review. The picture remains the shared 380/423 px
+column at those widths with its 16:9 ratio. Removing the repeated matchup row
+also gives the minis more height for their 15 px text.
+
+Verification for this follow-up is recorded in the builder delivery. The updated
+unit coverage checks moved content in the drawer, its action handlers and all
+key badges, plus forwarding the moved tool keys without leaking local demo keys.
+The journey checks 15 px / 21.75 px computed body styles, two-line option names,
+drawer provenance/tool reachability and the speed key at both laptop sizes.
+Browser access still reports the native pipe and browser host unavailable;
+the targeted Playwright command still exits at `Error: spawn EPERM` before
+assertions. No measured-fit or browser-journey pass is claimed.
+
 ## T3 WP4-map · The Deck (2026-11-02)
 
 Fixture and connected-core duels now share `ChamberLayout` through `DuelStage`.
