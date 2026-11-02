@@ -106,7 +106,7 @@
 .lottery-room[data-sheet="up"] { grid-template-rows: var(--lot-band) auto auto; padding-top: 8px; }
 .lottery-room[data-sheet="up"] .cc-hall { height: calc(var(--lot-band) - 12px); }
 .lottery-room[data-sheet="up"] .lottery-stage-top, .lottery-room[data-sheet="up"] .lottery-stage-phase,
-.lottery-room[data-sheet="up"] .lottery-draw-card, .lottery-room[data-sheet="up"] .lottery-cast { display: none; }
+.lottery-room[data-sheet="up"] .lottery-draw-actions, .lottery-room[data-sheet="up"] .lottery-cast { display: none; }
 .lottery-room[data-sheet="up"] .lottery-stage-panel .cc-panel__head { padding-top: 4px; padding-bottom: 2px; }
 .lottery-room[data-sheet="up"] .lottery-stage { padding-bottom: 12px; }
 .lottery-room[data-sheet="up"] .lottery-roll .cc-panel__head { padding-top: 4px; }

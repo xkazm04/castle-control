@@ -46,14 +46,14 @@ export function RollPanel({ status, tone, counts, winners, winner_detail, held_o
 }
 
 const stamp: Record<CheckResult, string> = { ok: 'ok', warn: 'held', blocked: 'blocked' };
-export function DrawCard({ name, line, guard, guard_line, children }: {
-  name: string; line: string; guard?: CheckResult | undefined; guard_line?: string | undefined; children?: ReactNode;
+export function DrawCard({ name, line, guard, guard_word, guard_line, children }: {
+  name: string; line: string; guard?: CheckResult | undefined; guard_word?: string | undefined; guard_line?: string | undefined; children?: ReactNode;
 }) {
   return <div className="lottery-draw-card" data-role="lot-draw-card">
     <p className="cc-kicker">This draw</p>
     <h3 className="lottery-draw-name">{name}</h3>
     <p className="lottery-draw-line">{line}</p>
-    {guard && <p className="lottery-draw-guard"><span className={`cc-stamp cc-stamp--${stamp[guard]}`}>{copy.checks[guard]}</span>
+    {guard && <p className="lottery-draw-guard"><span className={`cc-stamp cc-stamp--${stamp[guard]}`}>{guard_word ?? copy.checks[guard]}</span>
       <span>{guard_line ?? copy.guardrails}</span></p>}
     {children && <div className="lottery-draw-actions">{children}</div>}
   </div>;

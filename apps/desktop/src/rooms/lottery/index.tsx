@@ -117,7 +117,10 @@ export default function LotteryRoom({ snapshot, replay, queue = proposalQueue, s
         <RollPanel status={status} tone={tone} counts={countCohorts(entries)} draft={drafting} simulated
           winners={draw.rules.winner_count} winner_detail={drafting ? copy.proposed : copy.selected_draw}
           held_out={heldOut(draw, fixtureCooldown.length)} cap={capFigure(draw)}>
-          <DrawCard name={draw.name} line={drawLine(draw)} guard={policy.result} guard_line={guard_line}>
+          {/* While drafting, a blocked prize is not an alarm: the Steward asks for each fix as a step. */}
+          <DrawCard name={draw.name} line={drawLine(draw)} guard={drafting && policy.result === 'blocked' ? 'warn' : policy.result}
+            guard_word={drafting && policy.result === 'blocked' ? 'To clear' : undefined}
+            guard_line={drafting && policy.result === 'blocked' ? 'The Steward asks for each fix before the seal.' : guard_line}>
             {drafting ? <p className="lottery-draw-hint">The Steward is drafting below. The stage shows the draft; nothing is sealed.</p>
               : proposal ? <div className="lottery-pending">
                 <LotteryWrit proposal={proposal} weight_notice={fixtureWeightNotice(state)} />
