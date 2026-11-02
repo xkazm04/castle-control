@@ -3,12 +3,32 @@ import type { Page } from '@playwright/test';
 import { guardPage } from './network.ts';
 import { auditFields, auditStyles, desktopSurfaces } from './styles.ts';
 
+/** Hold the one visible "Hold to seal" (a seal-slot proposal or the Steward's confirm card) until it acts. */
 async function seal(page: Page) {
   const button = page.getByRole('button', { name: 'Hold to seal', exact: true });
   await button.focus();
   await page.keyboard.down('Space');
   await expect(page.getByRole('button', { name: 'Hold to seal', exact: true })).toHaveCount(0);
   await page.keyboard.up('Space');
+}
+/** The rarely used benches live behind one disclosure. */
+async function openMore(page: Page) {
+  // A sealed flow leaves its receipt in the raised Steward sheet; lower it to reach the room below.
+  const lower = page.getByRole('button', { name: 'Lower Esc', exact: true });
+  if (await lower.count()) await lower.click();
+  const more = page.locator('details.gh-more');
+  if (!await more.evaluate(element => (element as HTMLDetailsElement).open)) await more.locator('summary').click();
+  await expect(more).toHaveAttribute('open', '');
+}
+const steward = (page: Page) => page.getByRole('region', { name: 'The Steward', exact: true });
+async function chip(page: Page, name: string) {
+  await steward(page).getByRole('group', { name: 'Steward suggestions' }).getByRole('button', { name, exact: true }).click();
+}
+async function pick(page: Page, name: string) {
+  await steward(page).locator('.cc-steward-step').getByRole('button', { name: new RegExp(`^${name}`) }).click();
+}
+async function looksRight(page: Page, label = 'Looks right') {
+  await steward(page).locator('.cc-steward-step').getByRole('button', { name: label, exact: true }).click();
 }
 
 test('Gatehouse actions identify targets and expose one notice and count region', async ({ page }) => {
@@ -21,6 +41,11 @@ test('Gatehouse actions identify targets and expose one notice and count region'
       await expect(page.getByRole('status').filter({ hasText: message })).toHaveCount(1);
     };
     await expectNotice('Nothing sent.');
+    await expect(page.getByRole('region', { name: 'What needs you', exact: true })).toContainText('1 held message and 1 pending ban need you.');
+    for (const name of ['Propose Ban', 'Propose Dismiss']) {
+      await expect(page.getByRole('button', { name, exact: true })).toHaveAccessibleDescription('simulated-message-26');
+    }
+    await openMore(page);
     const cards = page.locator('.moderator-rule-card');
     await expect(cards).toHaveCount(3);
     for (const card of await cards.all()) {
@@ -30,9 +55,6 @@ test('Gatehouse actions identify targets and expose one notice and count region'
     await cards.first().getByRole('button', { name: 'Propose Arm', exact: true }).click();
     await seal(page);
     await expect(cards.first().getByRole('button', { name: 'Propose Watch', exact: true })).toHaveAccessibleDescription('Links');
-    for (const name of ['Propose Ban', 'Propose Dismiss']) {
-      await expect(page.getByRole('button', { name, exact: true })).toHaveAccessibleDescription('simulated-message-26');
-    }
     const entries = page.locator('.moderator-roll-entry');
     await expect(entries).toHaveCount(3);
     for (const [index, entry] of (await entries.all()).entries()) {
@@ -48,14 +70,17 @@ test('Gatehouse actions identify targets and expose one notice and count region'
     for (const label of ['Draft pattern hits', 'Would newly act on']) {
       await expect(bench.getByLabel(label, { exact: true })).toHaveCount(1);
     }
-    for (const action of ['Raise the drawbridge', 'Lower the drawbridge']) {
+    for (const [action, pressed] of [['Raise the drawbridge', 'true'], ['Lower the drawbridge', 'false']] as const) {
       const shield = page.getByRole('button', { name: `${action} Shield Mode · fixture only`, exact: true });
       await expect(shield).toHaveAccessibleName(`${action} Shield Mode · fixture only`);
       await expect(shield).not.toHaveAttribute('aria-label');
       await shield.click();
       await seal(page);
-      await expectNotice('Awaiting fixture confirmation. Applied settings are unchanged.');
+      // The pending notice lasts one fixture confirmation (400 ms); under load the page may only be
+      // sampled after it. Accept either honest state, then require the confirmed one and the result.
+      await expect(notice).toHaveText(/^(Awaiting fixture confirmation\. Applied settings are unchanged\.|Fixture confirmed\. Nothing sent to Twitch\.)$/);
       await expectNotice('Fixture confirmed. Nothing sent to Twitch.');
+      await expect(page.locator('.gh-shield button')).toHaveAttribute('aria-pressed', pressed);
     }
   } finally { await page.goto('about:blank'); verify(); }
 });
@@ -65,6 +90,7 @@ test('Gatehouse Rule bench previews a watching draft on chat and in the drill', 
   const requests: string[] = [];
   try {
     await page.goto('/#/chamber/moderator');
+    await openMore(page);
     await page.getByRole('combobox', { name: 'Watching rule', exact: true }).selectOption('');
     await page.waitForLoadState('networkidle');
     page.on('request', request => requests.push(request.url()));
@@ -83,12 +109,52 @@ test('Gatehouse Rule bench previews a watching draft on chat and in the drill', 
   } finally { await page.goto('about:blank'); verify(); }
 });
 
-test('Gatehouse shadow journey and transparent stream previews', async ({ page }) => {
+test('Gatehouse Steward flows set the rules and the vote bar; nothing acts before the seal', async ({ page }) => {
   const verify = await guardPage(page);
   try {
     await page.goto('/#/chamber/moderator');
     await expect(page.locator('.cc-rampart > [data-stamp="simulated"]')).toHaveText('Simulated');
-    await expect(page.locator('.moderator-room')).toContainText('SIMULATED');
+    await expect(page.locator('.moderator-room')).toContainText('Simulated');
+    const needs = page.getByRole('region', { name: 'What needs you', exact: true });
+    await expect(needs).toContainText('4 s');
+
+    await chip(page, 'Set the rules');
+    await pick(page, 'Family evening');
+    await pick(page, 'Siege');
+    await pick(page, 'Bar blocked terms, hold the rest');
+    // The gate draws the draft while the sheet is raised; nothing has changed yet.
+    await expect(page.locator('.gh-ribbon')).toContainText('Family evening · chat waits 6 s · Blocked terms barred');
+    await expect(steward(page).locator('.gh-fates')).toContainText('Link questions');
+    await looksRight(page);
+    await expect(needs).toBeHidden();
+    await seal(page);
+    await expect(steward(page)).toContainText('Sealed: added Link questions, Blocked terms barred, chat delay 6 s.');
+    await expect(needs).toContainText('6 s');
+    await openMore(page);
+    await expect(page.locator('.moderator-orders')).toContainText('Link questions');
+    await expect(page.locator('.moderator-moat .cc-hero-figure')).toHaveAttribute('data-text', '6');
+
+    await chip(page, 'Vote bar on stream');
+    await pick(page, 'Emotes only');
+    await pick(page, 'Across the top, large');
+    await pick(page, 'Neon');
+    const canvas = page.locator('.gh-herald .gh-stage__canvas');
+    await expect(canvas).toHaveAttribute('data-anchor', 'top-left');
+    await expect(page.locator('.gh-herald .gh-stage figcaption')).toContainText('Draft');
+    await looksRight(page);
+    await seal(page);
+    await expect(canvas).toHaveAttribute('data-size', 'L');
+    await expect(page.locator('.gh-herald .gh-votebar')).toHaveAttribute('data-art-style', 'synthwave');
+    await expect(page.locator('.gh-herald').getByRole('button', { name: 'Emotes only', exact: true })).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.locator('.gh-herald .gh-stage figcaption')).not.toContainText('Draft');
+  } finally { await page.goto('about:blank'); verify(); }
+});
+
+test('Gatehouse shadow journey and transparent stream previews', async ({ page }) => {
+  const verify = await guardPage(page);
+  try {
+    await page.goto('/#/chamber/moderator');
+    await openMore(page);
     await page.getByRole('textbox', { name: 'Watching rule name' }).fill('Links for review');
     await page.getByRole('textbox', { name: 'Watching match pattern' }).fill('https?://');
     await page.getByRole('button', { name: 'Propose watching rule', exact: true }).click();
@@ -108,6 +174,7 @@ test('Gatehouse shadow journey and transparent stream previews', async ({ page }
     await page.getByRole('button', { name: 'Propose Pass', exact: true }).click();
     await seal(page);
     await expect(page.locator('.moderator-held-plate')).toContainText('The portcullis is clear');
+    await expect(page.locator('.gh-gate-art')).toHaveAttribute('data-raised', 'true');
     await expect(page.locator('[data-review-feedback]')).toContainText('Released');
     await page.getByRole('button', { name: 'Propose Undo', exact: true }).click();
     await seal(page);
@@ -118,6 +185,7 @@ test('Gatehouse shadow journey and transparent stream previews', async ({ page }
     await expect(page.locator('.moderator-drill')).toContainText('Recording gap');
     await expect(page.locator('.moderator-drill')).toContainText('live parity: pending capture evidence');
     await page.getByRole('link', { name: '← Back to the Gatehouse', exact: true }).click();
+    await openMore(page);
     for (const layer of ['Chat overlay', 'Vote bar']) {
       await page.getByRole('combobox', { name: `${layer} size`, exact: true }).selectOption('L');
       await page.getByRole('combobox', { name: `${layer} anchor`, exact: true }).selectOption('top-right');
@@ -136,6 +204,8 @@ test('Gatehouse shadow journey and transparent stream previews', async ({ page }
       await expect(preview.locator('image')).toHaveAttribute('href', '/art/preset-pixel-votebar.webp');
       await expect(preview).toContainText('SIMULATED');
     }
+    // The bench and the herald's vote bar read the same session output.
+    await expect(page.locator('.gh-herald .gh-stage__canvas')).toHaveAttribute('data-anchor', 'top-right');
     await expect(page.getByRole('spinbutton', { name: 'Vote bar show after (ms)', exact: true })).toHaveValue('0');
     await expect(page.getByRole('spinbutton', { name: 'Vote bar hide after (ms)', exact: true })).toHaveValue('60000');
     await expect(page.locator('.moderator-output')).toContainText('Session only');
@@ -145,4 +215,50 @@ test('Gatehouse shadow journey and transparent stream previews', async ({ page }
     await page.goto('about:blank');
     verify();
   }
+});
+
+test('Gatehouse Play demo: a SIMULATED burst, one held line, your decision, the herald moves', async ({ page }) => {
+  const verify = await guardPage(page);
+  try {
+    await page.goto('/#/chamber/moderator');
+    const gate = page.getByRole('complementary', { name: 'At the portcullis', exact: true });
+    const lead = page.locator('.gh-herald .moderator-tile').first();
+    await expect(lead).toContainText('36.7%');
+    await chip(page, 'Play demo');
+    await expect(steward(page).locator('.cc-steward-sheet__head')).toContainText('Simulated');
+    await expect(gate.getByRole('list', { name: 'Simulated chat burst', exact: true }).getByRole('listitem')).toHaveCount(8);
+    await looksRight(page, 'Show me the held one');
+    await expect(gate.getByRole('article', { name: 'Simulated held message', exact: true })).toContainText('may I share the link?');
+    await expect(gate.locator('.gh-count b')).toHaveText('2');
+    await pick(page, 'Propose pass');
+    await expect(gate).toContainText('Draft · you propose Pass');
+    // The herald reads the burst: the leader surges, on the chart and on the vote bar.
+    await expect(lead).toContainText('46.2%');
+    await expect(steward(page).locator('.gh-stage')).toContainText('Go left 46.2%');
+    await looksRight(page);
+    await seal(page);
+    await expect(steward(page)).toContainText('That is the Gatehouse: the AI holds, you decide.');
+    await expect(page.locator('[data-review-feedback]')).toHaveText('Released · Pass · fixture confirmed. Nothing sent to Twitch.');
+    await expect(lead).toContainText('46.2%');
+    await openMore(page);
+    await expect(page.locator('.moderator-roll-entry').first()).toContainText('I wrote a boss guide');
+  } finally { await page.goto('about:blank'); verify(); }
+});
+
+test('Gatehouse Practice a drill opens the drill as planned, from free text', async ({ page }) => {
+  const verify = await guardPage(page);
+  try {
+    await page.goto('/#/chamber/moderator');
+    await page.getByRole('textbox', { name: 'Talk to the Steward...' }).fill('practice a drill');
+    await page.keyboard.press('Enter');
+    await pick(page, 'Sample night');
+    await pick(page, 'Beside candidate rules');
+    await expect(page.locator('.gh-ribbon')).toContainText('Practice a drill · sample night · beside candidate rules');
+    await looksRight(page, 'Ready');
+    await expect(page).toHaveURL(/#\/chamber\/moderator$/);
+    await seal(page);
+    await expect(page).toHaveURL(/#\/chamber\/moderator\/drill$/);
+    await expect(page.locator('.moderator-drill')).toBeVisible();
+    await expect(page.locator('.moat-compare-toggle')).toHaveAttribute('aria-pressed', 'true');
+  } finally { await page.goto('about:blank'); verify(); }
 });
