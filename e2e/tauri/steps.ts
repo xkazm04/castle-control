@@ -34,7 +34,7 @@ export const roomSteps: Array<[Step, Step]> = rooms.map(room => [
 ]);
 export const overviewStep: Step = { name: 'overview-key-0', heading: 'Preview and Proclaim', hash: /#\/overview$/,
   act: async page => { await settle(page, keep); await key(page, '0'); } };
-export const streamStep: Step = { name: 'stream', heading: 'On stream', hash: /#\/stream$/, act: page => toHash(page, '#/stream') };
+export const streamStep: Step = { name: 'stream', heading: 'Set up OBS', hash: /#\/stream$/, act: page => toHash(page, '#/stream') };
 export const demoStep: Step = { name: 'demo', heading: 'On stream', hash: /#\/demo$/, act: page => toHash(page, '#/demo') };
 
 /** Navigate to a step's own state from wherever the page is. */
