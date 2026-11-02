@@ -1,6 +1,14 @@
 import { test, expect } from '@playwright/test';
+import type { Page } from '@playwright/test';
 import { guardPage } from './network.ts';
 import { auditFields, auditStyles, desktopSurfaces } from './styles.ts';
+
+/** The Map Room opens on the duel; the sand table, Spyglass and Rehearse are local demos behind More. */
+async function openSandTable(page: Page) {
+  await page.getByRole('button', { name: /^More/ }).click();
+  await page.getByRole('menuitem', { name: /^Sand table/ }).click();
+  await expect(page.getByRole('region', { name: 'Map Room work', exact: true })).toHaveAttribute('data-view', 'table');
+}
 
 const BAND = 'SIMULATED REHEARSAL · no viewers, no identities, no Extension state · sample territory';
 
@@ -11,6 +19,7 @@ test('Map Room Rehearse: simulated round, verdict, replay, sizes, comparison and
   try {
     await page.goto('/#/chamber/studio');
     const room = page.getByRole('region', { name: 'Map Room work', exact: true });
+    await openSandTable(page);
     await expect(room).toBeVisible();
     const toggle = room.getByRole('group', { name: 'Map view', exact: true }).getByRole('button', { name: 'Rehearse', exact: true });
     await toggle.focus(); await page.keyboard.press('Enter');
@@ -88,6 +97,7 @@ test('Map Room Rehearse plays turn by turn with motion allowed: pause, step, fin
   try {
     await page.goto('/#/chamber/studio');
     const room = page.getByRole('region', { name: 'Map Room work', exact: true });
+    await openSandTable(page);
     await room.getByRole('button', { name: 'Rehearse', exact: true }).click();
     await room.getByRole('button', { name: 'Step', exact: true }).click();
     await expect(room.locator('.studio-rehearse-progress').filter({ hasText: 'turn 1 of 8' })).toBeVisible();
@@ -110,6 +120,7 @@ test('Map Room Rehearse: redraw the start by painting and dragging, compare crow
   try {
     await page.goto('/#/chamber/studio');
     const room = page.getByRole('region', { name: 'Map Room work', exact: true });
+    await openSandTable(page);
     await room.getByRole('button', { name: 'Rehearse', exact: true }).click();
     const house = (id: string) => room.locator(`[data-hex-tile="${id}"]`).getAttribute('data-house');
     expect(await house('E1')).toBe('unclaimed');

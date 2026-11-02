@@ -1,6 +1,14 @@
 import { test, expect } from '@playwright/test';
+import type { Page } from '@playwright/test';
 import { guardPage } from './network.ts';
 import { auditFields, auditStyles, desktopSurfaces } from './styles.ts';
+
+/** The Map Room opens on the duel; the sand table, Spyglass and Rehearse are local demos behind More. */
+async function openSandTable(page: Page) {
+  await page.getByRole('button', { name: /^More/ }).click();
+  await page.getByRole('menuitem', { name: /^Sand table/ }).click();
+  await expect(page.getByRole('region', { name: 'Map Room work', exact: true })).toHaveAttribute('data-view', 'table');
+}
 
 test('local Map Room journey: inspect tiles and banners, edit the map, inspect locked stages', async ({ page }) => {
   const verify = await guardPage(page);
@@ -8,6 +16,7 @@ test('local Map Room journey: inspect tiles and banners, edit the map, inspect l
     await page.goto('/#/chamber/studio');
     await expect(page.locator('.cc-rampart > [data-stamp="simulated"]')).toHaveText('Simulated');
     const room = page.getByRole('region', { name: 'Map Room work', exact: true });
+    await openSandTable(page);
     await expect(room).toBeVisible();
     const tile = room.locator('[data-hex-tile="D4"]');
     await tile.focus();
@@ -88,6 +97,7 @@ test('Map Room Spyglass: viewer sizes, isolated picks, current/draft review, sea
   try {
     await page.goto('/#/chamber/studio');
     const room = page.getByRole('region', { name: 'Map Room work', exact: true });
+    await openSandTable(page);
     await expect(room).toBeVisible();
     await room.locator('[data-hex-tile="D4"]').click();
     const inspector = room.getByLabel('Selected tile', { exact: true });

@@ -12,8 +12,9 @@ test('Tiltyard: desktop starts a core tournament, generated ballots reach both p
     const verify = await guardNight(page, core);
     await context.grantPermissions(['clipboard-read', 'clipboard-write'], { origin: SHELL_ORIGIN });
     await core.openDesktop(page, viteOrigin(), '#/chamber/studio');
-    const stage = page.getByRole('dialog', { name: 'The Tiltyard, duel stage', exact: true });
-    await expect(stage.getByRole('button', { name: 'Start tournament', exact: true })).toBeEnabled();
+    // The Map Room opens on the duel stage; an empty core offers the Steward flow and a direct sample start.
+    const stage = page.getByRole('region', { name: 'The duel stage', exact: true });
+    await expect(stage.getByRole('button', { name: 'Start sample tournament', exact: true })).toBeEnabled();
 
     // Resolve the actual source affordance before opening the vote window.
     await page.getByRole('button', { name: 'Duel on stream · Copy browser source URL', exact: true }).click();
@@ -25,8 +26,8 @@ test('Tiltyard: desktop starts a core tournament, generated ballots reach both p
     const source = overlay.getByRole('main', { name: 'Tiltyard duel', exact: true });
     await expect(source).toContainText('Waiting for a tournament');
 
-    await stage.getByRole('button', { name: 'Start tournament', exact: true }).click();
-    const chat = stage.locator('[data-role="ty-core-chat"]');
+    await stage.getByRole('button', { name: 'Start sample tournament', exact: true }).click();
+    const chat = stage;
     await expect(chat).toHaveAttribute('data-phase', 'live');
     await expect(chat.locator('[data-role="ty-card-title"]')).toHaveText(['Raze the mill', 'Borrow the mill']);
     await expect(source.locator('.tiltyard-side')).toHaveText(['1 · Raze the mill · 0', '2 · Borrow the mill · 0']);
@@ -37,7 +38,7 @@ test('Tiltyard: desktop starts a core tournament, generated ballots reach both p
     // Read phase and both counts together so a transition cannot mix pictures.
     const liveCounts = async () => chat.evaluate(element => ({
       phase: element.getAttribute('data-phase'),
-      counts: ['left', 'right'].map(side => element.querySelector(`[data-role="ty-core-${side}-count"]`)?.textContent),
+      counts: ['left', 'right'].map(side => element.querySelector(`[data-role="ty-count-${side}"]`)?.textContent),
     }));
     for (const [burst, left, right] of [[3, 2, 1], [6, 6, 3]] as const) {
       core.chat('ballots', burst);
@@ -48,7 +49,7 @@ test('Tiltyard: desktop starts a core tournament, generated ballots reach both p
     }
     await expect(source.locator('.simulated')).toHaveText('SIMULATED');
     await expect(chat.locator('[data-role="ty-round"]')).toHaveText('Semifinal');
-    await expect(chat.locator('[data-role="ty-core-match-label"]')).toHaveText('Match 1');
+    await expect(chat.locator('[data-role="ty-match-label"]')).toHaveText('Match 1 of 3');
     await expect(source).toContainText('Semifinal · Match 1 · Open');
 
     // Assert both pictures inside the core's call theatre, before it opens the next pair.
@@ -58,33 +59,33 @@ test('Tiltyard: desktop starts a core tournament, generated ballots reach both p
       if (!body || typeof body !== 'object' || !('method' in body) || body.method !== 'maproom.turn.run' || !('params' in body)) return false;
       return core.contract.parseMethodParams(core.contract.maproomTurnRun, body.params).action.kind === 'pick';
     });
-    await chat.locator('[data-role="ty-card"][data-side="1"]').click();
+    await chat.getByRole('button', { name: /^Call Borrow the mill/ }).click();
     const result = core.contract.parseMethodResult(core.contract.maproomTurnRun, await (await response).text());
     expect(result.session).toMatchObject({ phase: 'verdict', counted: { left: 6, right: 3 }, simulated: true,
       verdict: { a: 'raze-the-mill', b: 'borrow-the-mill', verdict: { side: 'right', how: 'call' }, counted: { left: 6, right: 3 } } });
     await Promise.all([
       expect(chat).toHaveAttribute('data-match-key', result.session?.verdict?.match_key ?? 'missing'),
-      expect(chat.locator('[data-role="ty-core-verdict"]')).toHaveText('Your call: Borrow the mill'),
-      expect(chat.locator('[data-role="ty-core-verdict"]')).toHaveAttribute('data-side', 'right'),
-      expect(chat.locator('[data-role="ty-core-verdict"]')).toHaveAttribute('data-how', 'call'),
+      expect(chat.locator('[data-role="ty-verdict"]')).toHaveText('Your call: Borrow the mill'),
+      expect(chat.locator('[data-role="ty-verdict"]')).toHaveAttribute('data-side', 'right'),
+      expect(chat.locator('[data-role="ty-verdict"]')).toHaveAttribute('data-how', 'call'),
       expect(source).toContainText('Winner: Borrow the mill · call'),
       expect(source.locator('.tiltyard-side')).toHaveText(['1 · Raze the mill · 6', '2 · Borrow the mill · 3']),
-      expect(chat.locator('[data-role="ty-core-left-count"]')).toHaveText('6'),
-      expect(chat.locator('[data-role="ty-core-right-count"]')).toHaveText('3'),
+      expect(chat.locator('[data-role="ty-count-left"]')).toHaveText('6'),
+      expect(chat.locator('[data-role="ty-count-right"]')).toHaveText('3'),
       expect(source).toContainText('Semifinal · Match 1 · Called'),
     ]);
 
     // Leave and return: the desktop must read the existing core bracket, never restart a React session.
     await page.goto(`${SHELL_ORIGIN}/#/keep`);
     await page.goto(`${SHELL_ORIGIN}/#/chamber/studio`);
-    await expect(stage.locator('[data-role="ty-core-chat"]')).toBeVisible();
+    await expect(stage.locator('[data-role="ty-card"]')).toHaveCount(2);
     // The native 3000 ms call theatre advances the pair even across remounts.
-    await expect(stage.locator('[data-role="ty-core-chat"]')).toHaveAttribute('data-phase', 'live');
+    await expect(stage).toHaveAttribute('data-phase', 'live');
     await Promise.all([
-      expect(stage.locator('[data-role="ty-core-match-label"]')).toHaveText('Match 2'),
+      expect(stage.locator('[data-role="ty-match-label"]')).toHaveText('Match 2 of 3'),
       expect(stage.locator('[data-role="ty-card-title"]')).toHaveText(['Tax the miller', 'Spare it']),
-      expect(stage.locator('[data-role="ty-core-left-count"]')).toHaveText('0'),
-      expect(stage.locator('[data-role="ty-core-right-count"]')).toHaveText('0'),
+      expect(stage.locator('[data-role="ty-count-left"]')).toHaveText('0'),
+      expect(stage.locator('[data-role="ty-count-right"]')).toHaveText('0'),
       expect(source).toContainText('Semifinal · Match 2 · Open'),
       expect(source.locator('.tiltyard-side')).toHaveText(['1 · Tax the miller · 0', '2 · Spare it · 0']),
     ]);
