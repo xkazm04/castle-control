@@ -4,6 +4,8 @@ import { roomSteward } from '../../shell/steward-room.js';
 import { lotLive } from './live.js';
 import { castFlow, coreDemoFlow, demoFlow, proveFlow, setupFlow } from './flow-steps.js';
 import { coreFlows } from './flow-core.js';
+import { customFlow } from '../../custom-design/flow.js';
+import { lotteryCustomHost } from './custom-host.js';
 
 export { castFlow, demoFlow, proveFlow, setupFlow } from './flow-steps.js';
 
@@ -45,10 +47,11 @@ export function lotterySteward(snapshot: Snapshot): ChamberSteward {
     return { ...room, demo: coreDemoFlow as AnyStewardFlow,
       get greeting() { return coreGreeting(); },
       catch_up: coreCatchUp,
-      get flows() { return byPhase(core.setup as AnyStewardFlow, core.cast as AnyStewardFlow,
-        lotLive.get().writ ? core.prove as AnyStewardFlow : undefined); } };
+      get flows() { return [...byPhase(core.setup as AnyStewardFlow, core.cast as AnyStewardFlow,
+        lotLive.get().writ ? core.prove as AnyStewardFlow : undefined), customFlow('draw_vessel', snapshot, () => lotteryCustomHost(snapshot)) as AnyStewardFlow]; } };
   }
   return { ...room, demo: demoFlow as AnyStewardFlow,
     greeting: 'The Lot Chamber: giveaways nobody can call rigged. Set up a draw, cast it, prove it, or play the demo; nothing acts until you hold to seal.',
-    get flows() { return byPhase(setupFlow as AnyStewardFlow, castFlow as AnyStewardFlow, proveFlow as AnyStewardFlow); } };
+    get flows() { return [...byPhase(setupFlow as AnyStewardFlow, castFlow as AnyStewardFlow, proveFlow as AnyStewardFlow),
+      customFlow('draw_vessel', snapshot, () => lotteryCustomHost(snapshot)) as AnyStewardFlow]; } };
 }

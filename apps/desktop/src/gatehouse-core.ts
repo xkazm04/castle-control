@@ -2,8 +2,9 @@ import { invokeMethod, parseError, parseMethodParams, parseMethodResult } from '
 import { parseJson } from '@castle-control/contract/door';
 import { gatehouseRulesList, gatehouseRulesUpsert, gatehouseBanConfirm, gatehouseBanDismiss,
   gatehouseDecisionUndo, gatehousePetitionResolve, gatehouseRecordingImport, gatehouseDrillRun,
-  gatehouseDrillDiff, gatehouseConsensusGet, gatehouseChatList, gatehouseHistoryList, gatehouseLiveRunGet, gatehouseSourceUrl } from '@castle-control/contract/gatehouse';
-import type { ConsensusGetParams, ConsensusGetResult, Decision, DecisionParams, DrillDiffParams, DrillDiffResult,
+  gatehouseDrillDiff, gatehouseConsensusGet, gatehouseChatList, gatehouseHistoryList, gatehouseLiveRunGet, gatehouseSourceUrl,
+  gatehouseVotebarDesignSet } from '@castle-control/contract/gatehouse';
+import type { ConsensusGetParams, ConsensusGetResult, Decision, DesignId, DecisionParams, DrillDiffParams, DrillDiffResult,
   DrillConfiguration, DrillRunParams, DrillRunResult, MethodContract, PetitionResolveParams, RecordingImportResult, Rule,
   GatehouseChatResult, GatehouseHistoryResult, GatehouseLiveCapture, GatehouseLiveRunItem, GatehouseLiveRunResult,
   RpcMethods, RulesUpsertParams } from '@castle-control/contract';
@@ -14,7 +15,8 @@ import type { CoreLaunch } from './core-source.js';
 type GatehouseMethod = 'gatehouse.rules.list' | 'gatehouse.rules.upsert' | 'gatehouse.ban.confirm'
   | 'gatehouse.ban.dismiss' | 'gatehouse.decision.undo' | 'gatehouse.petition.resolve'
   | 'gatehouse.recording.import' | 'gatehouse.drill.run' | 'gatehouse.drill.diff' | 'gatehouse.consensus.get'
-  | 'gatehouse.chat.list' | 'gatehouse.history.list' | 'gatehouse.liveRun.get' | 'gatehouse.source.url';
+  | 'gatehouse.chat.list' | 'gatehouse.history.list' | 'gatehouse.liveRun.get' | 'gatehouse.source.url'
+  | 'gatehouse.votebar.design.set';
 /** Test seam restricted to existing core methods; capabilities never enter read snapshots. */
 export type GatehouseNetwork = {
   rpc: <M extends GatehouseMethod>(endpoint: string, session: string, method: M, params: RpcMethods[M]['params']) => Promise<unknown>;
@@ -119,6 +121,13 @@ export function createCoreGatehousePort(launch: CoreLaunch, transport?: Gatehous
       });
     },
     subscribe(listener: () => void) { listeners.add(listener); return () => { listeners.delete(listener); }; },
+    /** Dress the vote bar in a design, or clear it back to the drawn bar (no id). */
+    async setVoteBarDesign(design_id?: DesignId) {
+      await perform(async () => {
+        await call(gatehouseVotebarDesignSet, design_id === undefined ? {} : { design_id });
+        publish({ notice: design_id === undefined ? 'Vote bar art cleared by the core.' : 'Vote bar art saved by the core.' });
+      });
+    },
     async loadLiveRuns() {
       await perform(async () => {
         publish({}, ['live_runs', 'selected_capture', 'replay_capture', 'drill', 'diff']);

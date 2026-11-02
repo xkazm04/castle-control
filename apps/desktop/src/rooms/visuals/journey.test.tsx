@@ -9,14 +9,14 @@ test('fixture journey exposes editable points, decay and gift weighting', () => 
     'Save curve locally']) expect(html).toContain(label);
 });
 
-test('fixture journey exposes keyboard-accessible appearance controls and the six kept altar styles', () => {
+test('fixture journey exposes keyboard-accessible appearance controls and the library presets', () => {
   const port = createBeaconsPreview();
-  port.design('preset-pixel-altar');
+  port.design('library-beacon-05');
   const html = renderToStaticMarkup(<VisualsWork port={port} />);
   for (const label of ['Size', 'Anchor', 'Colour', 'Art style', 'Burst timing (ms)', 'Beacon appearance preview',
-    'Heraldic', 'Arcade', 'Neon', 'Storybook', 'Cel', 'Glass']) expect(html).toContain(label);
-  expect(html).toContain('/art/preset-pixel-altar.webp');
-  expect(port.getSnapshot().visuals[0]?.visual.design_id).toBe('preset-pixel-altar');
+    'Forged Volcanic Brazier · beacon', 'Glacial Citadel · frame', 'Hallowed Night Gothic · beacon']) expect(html).toContain(label);
+  expect(html).toContain('/art/library/beacon/beacon-05.webp');
+  expect(port.getSnapshot().visuals[0]?.visual.design_id).toBe('library-beacon-05');
   expect(html).toContain('Session preview only');
 });
 

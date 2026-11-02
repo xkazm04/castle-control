@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { FieldGroup, InkButton } from '@castle-control/ui';
 import { beaconsCopy as copy } from '../../beacons-copy.js';
-import { findPreset, presets, styleChoice } from './presets.js';
+import { classic_presets, findPreset, presets, styleChoice } from './presets.js';
 import type { BeaconsPort } from '../../beacons-model.js';
 import type { Visual } from '@castle-control/contract';
 
@@ -18,6 +18,8 @@ export function StylePickerFields({ choice, custom_id, busy, on_change, local = 
         }}>
         <option value="">{copy.no_design}</option>
         {presets.map(item => <option key={item.id} value={item.id}>{item.label}</option>)}
+        {/* A visual saved with classic sample art keeps it; it is not offered for new ones. */}
+        {classic_presets.filter(item => item.id === choice).map(item => <option key={item.id} value={item.id}>{item.label} (classic)</option>)}
         <option value="custom">{copy.custom_design}</option>
       </select>
     </FieldGroup>

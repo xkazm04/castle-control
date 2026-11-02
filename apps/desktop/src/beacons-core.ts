@@ -1,12 +1,13 @@
 import { invokeMethod, parseError, parseMethodParams, parseMethodResult } from '@castle-control/contract';
-import type { ArtGenerateParams, BeaconsSimulateParams, BeaconsSimulateResult, Contribution, ContributionListParams, CurveSetParams, ErrorEnvelope,
+import type { ArtAssetKind, ArtDirectParams, ArtGenerateParams, ArtLayersParams, ArtProviderStatus, BeaconsSimulateParams, BeaconsSimulateResult, Contribution, ContributionListParams, CurveSetParams, ErrorEnvelope,
   MethodContract, RpcMethods, Visual, VisualId, VisualUpsertParams } from '@castle-control/contract';
 import { validateCoreLaunch } from './core-source.js';
 import type { CoreLaunch } from './core-source.js';
 import type { PreviewEvent } from './beacons-fixture.js';
 
 type BeaconsMethod = 'beacons.visual.list' | 'beacons.visual.upsert' | 'beacons.curve.set' | 'beacons.simulate'
-  | 'beacons.source.url' | 'beacons.contribution.list' | 'beacons.art.status' | 'beacons.art.generate';
+  | 'beacons.source.url' | 'beacons.contribution.list' | 'beacons.art.status' | 'beacons.art.generate'
+  | 'beacons.design.create' | 'beacons.art.direct' | 'beacons.art.layers' | 'beacons.library.import';
 /** Restricted transport seam; launch capabilities never enter read snapshots. */
 export type BeaconsNetwork = {
   rpc: <M extends BeaconsMethod>(endpoint: string, session: string, method: M, params: RpcMethods[M]['params']) => Promise<unknown>;
@@ -15,6 +16,8 @@ export type CoreBeaconsSnapshot = {
   visuals: readonly Visual[]; selected?: VisualId; simulation?: BeaconsSimulateResult;
   events: readonly PreviewEvent[];
   art_available: boolean; art_busy: boolean;
+  /** Per-provider availability from art.status (empty until read, or when the core lists none). */
+  art_providers: readonly ArtProviderStatus[];
   contributions: { phase: 'idle' | 'loading' | 'error' } | { phase: 'ready'; items: readonly Contribution[] };
   busy: boolean; phase: 'idle' | 'loading' | 'ready' | 'error'; notice: string; error?: ErrorEnvelope;
 };
@@ -42,7 +45,7 @@ export function createCoreBeaconsPort(launch: CoreLaunch, transport?: BeaconsNet
   let validators: ReturnType<typeof importValidators> | undefined;
   function importValidators() { return import('@castle-control/contract/beacons'); }
   const contracts = () => validators ??= importValidators();
-  let snapshot: CoreBeaconsSnapshot = freeze({ visuals: [], events: [], art_available: false, art_busy: false, contributions: { phase: 'idle' },
+  let snapshot: CoreBeaconsSnapshot = freeze({ visuals: [], events: [], art_available: false, art_busy: false, art_providers: [], contributions: { phase: 'idle' },
     busy: false, phase: 'idle', notice: 'Load Beacons from the local core.' });
   let event_serial = 0;
   let art_status_serial = 0;
@@ -80,13 +83,13 @@ export function createCoreBeaconsPort(launch: CoreLaunch, transport?: BeaconsNet
     subscribe(listener: () => void) { listeners.add(listener); return () => { listeners.delete(listener); }; },
     async loadArtStatus() {
       const serial = ++art_status_serial;
-      publish({ art_available: false });
+      publish({ art_available: false, art_providers: [] });
       try {
-        const { available } = await call((await contracts()).beaconsArtStatus, {});
-        if (serial === art_status_serial) publish({ art_available: available });
+        const { available, providers } = await call((await contracts()).beaconsArtStatus, {});
+        if (serial === art_status_serial) publish({ art_available: available, art_providers: providers ?? [] });
       } catch {
         // Optional art stays hidden. Never change the room notice or toast.
-        if (serial === art_status_serial) publish({ art_available: false });
+        if (serial === art_status_serial) publish({ art_available: false, art_providers: [] });
       }
     },
     async generateArt(params: ArtGenerateParams) {
@@ -99,6 +102,30 @@ export function createCoreBeaconsPort(launch: CoreLaunch, transport?: BeaconsNet
         return result;
       } catch (error: unknown) { throw safeError(error); }
       finally { publish({ art_busy: false }); }
+    },
+    /** Custom design: a writable design root for one asset kind. Independent of the room's busy lock. */
+    async createDesign(kind: ArtAssetKind) {
+      try { return await call((await contracts()).beaconsDesignCreate, { kind }); } catch (error: unknown) { throw safeError(error); }
+    },
+    /** The engine-backed art director; `unavailable` when no Steward engine is configured. */
+    async directArt(params: ArtDirectParams) {
+      try {
+        const result = await call((await contracts()).beaconsArtDirect, structuredClone(params));
+        if (result.kind !== params.kind) throw new Error('Mismatched art direction');
+        return result;
+      } catch (error: unknown) { throw safeError(error); }
+    },
+    /** Split a generated image into animatable layers and measure its anchors. */
+    async artLayers(params: ArtLayersParams) {
+      try {
+        const result = await call((await contracts()).beaconsArtLayers, structuredClone(params));
+        if (result.design_id !== params.design_id) throw new Error('Mismatched art layers');
+        return result;
+      } catch (error: unknown) { throw safeError(error); }
+    },
+    /** Import a built-in library asset as a design (presets and library picks on stream). */
+    async importLibrary(library_id: string, kind: ArtAssetKind) {
+      try { return await call((await contracts()).beaconsLibraryImport, { library_id, kind }); } catch (error: unknown) { throw safeError(error); }
     },
     async loadContributions(params: ContributionListParams) {
       if (snapshot.contributions.phase === 'loading') return;
