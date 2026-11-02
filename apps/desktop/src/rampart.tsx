@@ -10,6 +10,12 @@ function uptime(at: string, started_at?: string) {
     .map(value => String(value).padStart(2, '0')).join(':');
 }
 
+function SimulatedConnection({ name }: { name: 'Twitch' | 'OBS' | 'Gatehouse' }) {
+  return <span className="cc-rampart-link" role="img" aria-label={`${name} simulated`} title={`${name} simulated`}>
+    <i aria-hidden="true" /><span aria-hidden="true">{name}</span>
+  </span>;
+}
+
 /** App composition of kit primitives: absent summaries stay explicitly unknown.
  * The kit's boolean-only Rampart cannot represent absent stream/moderation data.
  * Reuse its existing layout classes without changing the shared kit or tokens. */
@@ -31,18 +37,20 @@ export function DesktopRampart({ snapshot, theme, on_theme_change, on_steward, s
     <div className="cc-live-group" aria-label="Stream status">
       {stream ? <Stamp kind={stream.live ? 'on-air' : 'off-air'} word={stream.live ? 'On air' : 'Offline'} />
         : simulated ? <Stamp kind="off-air" word="On air · simulated" /> : <StatusChip variant="dash">ON AIR unknown</StatusChip>}
-      <span className="cc-figure"><b>{stream?.live ? stream.viewer_count ?? 'Unknown' : stream ? 'Offline' : 'Unknown'}</b><small>viewers</small></span>
-      <span className="cc-figure"><b>{stream?.live && status ? uptime(status.at, stream.started_at) : stream ? 'Offline' : 'Unknown'}</b><small>uptime</small></span>
+      <div className="cc-rampart-figures">
+        <span className="cc-figure"><b>{stream?.live ? stream.viewer_count ?? 'Unknown' : stream ? 'Offline' : 'Unknown'}</b><small>viewers</small></span>
+        <span className="cc-figure"><b>{stream?.live && status ? uptime(status.at, stream.started_at) : stream ? 'Offline' : 'Unknown'}</b><small>uptime</small></span>
+      </div>
     </div>
     <span className="cc-separator" />
-    <div className="cc-link-group">
-      {twitch ? <ConnectionMark name="Twitch" state={twitch} /> : simulated ? <Stamp kind="simulated" word="Twitch simulated" /> : <StatusChip variant="dash">Twitch unknown</StatusChip>}
+    <div className="cc-link-group" aria-label={fixture ? 'Connections · simulated' : 'Connections'}>
+      {twitch ? <ConnectionMark name="Twitch" state={twitch} /> : simulated ? <SimulatedConnection name="Twitch" /> : <StatusChip variant="dash">Twitch unknown</StatusChip>}
       <a href="#/stream" title="Set up OBS">{!fixture && status ? <ConnectionMark name="OBS" state={status.obs_connected ? 'connected' : 'down'} />
-        : simulated ? <Stamp kind="simulated" word="OBS simulated" /> : <StatusChip variant="dash">OBS unknown</StatusChip>}</a>
+        : simulated ? <SimulatedConnection name="OBS" /> : <StatusChip variant="dash">OBS unknown</StatusChip>}</a>
+      {gatehouse ? <GatehouseChip armed={gatehouse.armed_rules} watching={gatehouse.shadow_rules}
+        shield={gatehouse.shield} href="#/chamber/moderator" /> : <a href="#/chamber/moderator">{simulated
+          ? <SimulatedConnection name="Gatehouse" /> : <StatusChip variant="dash">Gatehouse unknown</StatusChip>}</a>}
     </div>
-    {gatehouse ? <GatehouseChip armed={gatehouse.armed_rules} watching={gatehouse.shadow_rules}
-      shield={gatehouse.shield} href="#/chamber/moderator" /> : <a href="#/chamber/moderator">{simulated
-        ? <Stamp kind="simulated" word="Gatehouse simulated" /> : <StatusChip variant="dash">Gatehouse unknown</StatusChip>}</a>}
     <span className="cc-spacer" />
     {simulated && <Stamp kind="simulated" />}
     <ThemeToggle theme={theme} onChange={on_theme_change} />

@@ -13,7 +13,7 @@ import { ThemeToggle } from '@castle-control/ui';
 test('the hook-free fixture rampart links its OBS chip to setup', () => {
   const html = renderToStaticMarkup(DesktopRampart({ snapshot: { mode: 'fixture', phase: 'ready' },
     theme: 'day', on_theme_change: () => undefined }));
-  expect(html).toMatch(/<a href="#\/stream"[^>]*><span[^>]*data-stamp="simulated"[^>]*aria-label="Simulated: OBS simulated"><span aria-hidden="true">OBS simulated<\/span><\/span><\/a>/);
+  expect(html).toMatch(/<a href="#\/stream"[^>]*><span class="cc-rampart-link"[^>]*aria-label="OBS simulated"[^>]*>[\s\S]*?<span aria-hidden="true">OBS<\/span><\/span><\/a>/);
   expect(html).toContain('data-role="status-bar"');
 });
 
@@ -80,9 +80,12 @@ test.each([
     theme="day" on_theme_change={() => undefined} />);
   expect(html).toContain('data-stamp="off-air" role="img" aria-label="On air is simulated: nothing is broadcast"');
   expect(html).toContain('>On air · simulated</span>');
-  for (const label of ['Twitch simulated', 'OBS simulated', 'Gatehouse simulated']) {
-    expect(html).toContain(`data-stamp="simulated" role="img" aria-label="Simulated: ${label}"><span aria-hidden="true">${label}</span>`);
+  for (const name of ['Twitch', 'OBS', 'Gatehouse']) {
+    expect(html).toContain(`class="cc-rampart-link" role="img" aria-label="${name} simulated"`);
+    expect(html).toContain(`<span aria-hidden="true">${name}</span>`);
   }
+  expect(html.match(/data-stamp="simulated"/g)).toHaveLength(1);
+  expect(html).toContain('aria-label="Connections · simulated"');
   expect(html).toContain('<b>Unknown</b><small>viewers</small>');
   expect(html).toContain('<b>Unknown</b><small>uptime</small>');
   for (const claim of ['cc-connection', 'connected', 'data-stamp="on-air"', '214', '01:00:00', 'Armed', 'Watching', 'Bridge up']) {
@@ -104,9 +107,7 @@ test('a rehearsal core retains SIMULATED provenance and actual OBS/bridge connec
   const html = render({ mode: 'core', phase: 'ready', ...simulatedRead(1), bridge: { state: 'disconnected' } });
   expect(html).toContain('data-stamp="off-air"');
   expect(html).toContain('>On air · simulated</span>');
-  for (const label of ['Gatehouse simulated']) {
-    expect(html).toContain(`data-stamp="simulated" role="img" aria-label="Simulated: ${label}"><span aria-hidden="true">${label}</span>`);
-  }
+  expect(html).toContain('class="cc-rampart-link" role="img" aria-label="Gatehouse simulated"');
   expect(html).not.toContain('desktop-simulated');
   expect(html).not.toContain('SIMULATED SOURCE');
   expect(html).not.toContain('Twitch: connected');

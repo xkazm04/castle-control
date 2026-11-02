@@ -72,6 +72,43 @@ test.describe('room bar and shell defaults', () => {
   }
 });
 
+for (const viewport of [{ width: 1280, height: 720 }, { width: 1366, height: 768 }, { width: 1920, height: 1080 }]) {
+  test(`status bar stays inside the viewport at ${viewport.width}x${viewport.height}`, async ({ page }) => {
+    await page.setViewportSize(viewport);
+    await page.goto('/#/chamber/studio');
+    const bar = page.locator('[data-role="status-bar"]');
+    await expect(bar.getByRole('button', { name: 'Steward', exact: true })).toBeVisible();
+    await expect(bar.locator(':scope > [data-stamp="simulated"]')).toHaveCount(1);
+    await page.evaluate(() => document.fonts.ready.then(() => undefined));
+    for (const theme of ['night', 'day']) {
+      if (await page.locator('.cc-frame').getAttribute('data-theme') !== theme) {
+        await page.getByRole('button', { name: 'Toggle day and night' }).click();
+      }
+      await expect.poll(() => bar.evaluate(element => {
+        const issues: string[] = [];
+        const bar_bounds = element.getBoundingClientRect();
+        if (bar_bounds.left < 0 || bar_bounds.right > innerWidth + 1) issues.push('status bar outside viewport');
+        if (element.scrollWidth > element.clientWidth + 1) issues.push('status bar content overflows');
+        for (const child of element.querySelectorAll('*')) {
+          if (!(child instanceof HTMLElement) || !child.checkVisibility()) continue;
+          const bounds = child.getBoundingClientRect();
+          if (bounds.left < bar_bounds.left - 1 || bounds.right > bar_bounds.right + 1) issues.push(`${child.tagName} outside status bar`);
+          // A clipped button can remain inside the bar while its text leaves it.
+          for (const text of child.childNodes) {
+            if (text.nodeType !== Node.TEXT_NODE || !text.textContent?.trim()) continue;
+            const range = document.createRange(); range.selectNodeContents(text);
+            for (const rect of range.getClientRects()) {
+              if (rect.left < bar_bounds.left - 1 || rect.right > bar_bounds.right + 1) issues.push('status text outside viewport');
+              if (rect.left < bounds.left - 1 || rect.right > bounds.right + 1) issues.push('status text clipped');
+            }
+          }
+        }
+        return issues;
+      })).toEqual([]);
+    }
+  });
+}
+
 test.describe('surface cross-fade', () => {
   test.use({ reducedMotion: 'no-preference' });
   test('1 to 2 fades an inert out-copy without translating or delaying the route', async ({ page }) => {
