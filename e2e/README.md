@@ -188,6 +188,8 @@ pnpm --config.verify-deps-before-run=false e2e:headless
      `#/chamber/moderator` and `#/chamber/visuals`. The UI saves one visual,
      headless fires it with `beacon_fire`, and the beacon and vote-bar overlay
      pages show SIMULATED. Every screenshot is taken before the core closes.
+     In the Deck UI, the Gatehouse chat table is in the "Live room · more of the
+     Gatehouse" drawer, and the Beacons workbench is in the "More of the beacons" drawer.
   3. Subprocess: `cc run -` (4 NDJSON lines, exit 0), `cc call gatehouse_ban_confirm`
      (refused locally, exit 2), and `cc-mcp` over stdio (27 tools, two calls, exit 0
      after stdin closes). No captured output may contain a 64-hex string.

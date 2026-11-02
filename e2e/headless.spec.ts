@@ -138,27 +138,40 @@ test.describe.serial('headless layer, one time', () => {
 
     // Gatehouse: the vote_round ballots, labelled SIMULATED, and the Herald's sample directions.
     await page.goto(`${SHELL_ORIGIN}/#/chamber/moderator`);
-    await expect(page.getByRole('img', { name: 'Simulated: Gatehouse simulated', exact: true })).toBeVisible();
-    const rows = page.getByRole('table', { name: 'Core chat messages', exact: true }).getByRole('row');
-    await expect(rows.filter({ hasText: /SIMULATED vote (castle|forest|sea) · simulated/ }).first()).toBeVisible();
-    for (const text of await rows.allTextContents()) expect(text).toMatch(/SIMULATED .+ · simulated/);
-    const herald = page.getByRole('region', { name: 'The Herald’s chart', exact: true });
+    // The Deck status bar: the Gatehouse chip links to this room and carries the simulated state.
+    const chip = page.getByRole('banner').getByRole('link', { name: 'Gatehouse simulated', exact: true });
+    await expect(chip).toHaveAttribute('href', '#/chamber/moderator');
+    await expect(chip.getByRole('img', { name: 'Gatehouse simulated', exact: true })).toBeVisible();
+    // The room's own Herald section shows the three sample directions with their shares.
+    const herald = page.getByRole('group', { name: 'Room sections 2', exact: true })
+      .getByRole('region', { name: 'The Herald’s chart', exact: true });
     for (const label of ['Sample: Castle', 'Sample: Forest', 'Sample: Sea']) {
       await expect(herald).toContainText(new RegExp(String.raw`${label}\s*\d+\.\d%`));
     }
+    // The chat table now lives in the "more of the Gatehouse" drawer.
+    await page.getByRole('button', { name: 'Live room · more of the Gatehouse', exact: true }).click();
+    const drawer = page.getByRole('dialog', { name: 'The Herald and more of the Gatehouse', exact: true });
+    const rows = drawer.getByRole('table', { name: 'Core chat messages', exact: true }).getByRole('row');
+    await expect(rows.filter({ hasText: /SIMULATED vote (castle|forest|sea) · simulated/ }).first()).toBeVisible();
+    for (const text of await rows.allTextContents()) expect(text).toMatch(/SIMULATED .+ · simulated/);
+    await expect(drawer.getByRole('region', { name: 'The Herald’s chart', exact: true }))
+      .toContainText(/Sample: Castle\s*\d+\.\d%/);
     await shot(page, 'gatehouse');
 
     // Beacons: headless cannot create a visual (beacons.visual.upsert is armed), so the UI makes one.
     await page.goto(`${SHELL_ORIGIN}/#/chamber/visuals`);
     const room = page.getByRole('region', { name: 'Core Beacons', exact: true });
-    const more = room.locator('details.visuals-more');
-    await more.locator('summary').click();
-    await room.getByRole('textbox', { name: 'Visual ID', exact: true }).fill(VISUAL);
-    await room.getByRole('textbox', { name: 'Visual name', exact: true }).fill('SIMULATED headless beacon');
-    await room.getByRole('combobox', { name: 'Art style', exact: true }).selectOption({ label: 'Heraldic altar' });
-    await room.getByRole('combobox', { name: 'Driven by', exact: true }).selectOption({ label: 'Bits cheer' });
-    await room.getByRole('button', { name: 'Save visual to core', exact: true }).click();
-    await expect(more.getByText('Visual configuration saved by the core.', { exact: true })).toBeVisible();
+    await expect(room.getByRole('figure', { name: 'Core configuration · sample picture · SIMULATED', exact: true })).toBeVisible();
+    // The Deck moves the core workbench into the "More of the beacons" drawer.
+    await room.getByRole('button', { name: 'More of the beacons', exact: true }).click();
+    const more = room.getByRole('dialog', { name: 'More of the beacons', exact: true });
+    await more.getByRole('textbox', { name: 'Visual ID', exact: true }).fill(VISUAL);
+    await more.getByRole('textbox', { name: 'Visual name', exact: true }).fill('SIMULATED headless beacon');
+    await more.getByRole('combobox', { name: 'Art style', exact: true }).selectOption({ label: 'Heraldic altar' });
+    await more.getByRole('combobox', { name: 'Driven by', exact: true }).selectOption({ label: 'Bits cheer' });
+    await more.getByRole('button', { name: 'Save visual to core', exact: true }).click();
+    await expect(more.getByRole('region', { name: 'Reading and sample night', exact: true }).getByRole('status'))
+      .toHaveText('Visual configuration saved by the core.');
 
     // Headless fires it: rehearsal beacon_fire reuses beacons.simulate (100 cheer bits).
     const visuals = await read('beacons.visual.list');
@@ -178,7 +191,12 @@ test.describe.serial('headless layer, one time', () => {
 
     // The desktop room lists the visual; its preview reads only its own test fires (finding).
     await page.reload();
-    await expect(room.getByText('SIMULATED headless beacon').first()).toBeVisible();
+    await expect(room.getByRole('radiogroup', { name: 'Beacon visuals', exact: true })
+      .getByRole('radio', { name: /^SIMULATED headless beacon,/ })).toBeChecked();
+    const selected = room.getByRole('region', { name: 'The selected beacon', exact: true });
+    await expect(selected.getByRole('heading', { name: 'SIMULATED headless beacon', exact: true })).toBeVisible();
+    // The room does not reflect the headless fire: it stays at 0% blaze (finding).
+    await expect(selected.getByRole('paragraph').filter({ hasText: /^0%\s*blaze$/ })).toBeVisible();
     await shot(page, 'beacons');
     console.log(`[headless] beacons room: ${(await room.innerText()).replaceAll('\n', ' | ').slice(0, 300)}`);
 
