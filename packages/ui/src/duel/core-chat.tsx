@@ -1,4 +1,5 @@
 import type { TiltyardAction, TiltyardSession } from '@castle-control/contract';
+import { EmptyState } from '../primitives.jsx';
 import { Arena } from './arena.jsx';
 import { Card } from './card.jsx';
 import type { TiltyardWords } from './words.js';
@@ -9,9 +10,8 @@ export function CoreChat({ session, words, on_action, on_start }: {
   on_action: (action: TiltyardAction) => void; on_start: () => void;
 }) {
   if (!session) return <Arena bare><div className="ty-board">
-    <h2>No Chat tournament started</h2>
-    <p>Start the sample contestants on the core. Chat ballots and streamer calls share this tournament with OBS.</p>
-    <button className="ty-yb ty-primary" type="button" onClick={on_start}>Start tournament</button>
+    <EmptyState title="No Chat tournament started" description="Start the sample contestants on the core. Chat ballots and streamer calls share this tournament with OBS."
+      action={<button className="ty-yb ty-primary" type="button" onClick={on_start}>Start tournament</button>} />
   </div></Arena>;
   const { bracket, list, verdict, counted } = session;
   // Only locate a pair already present in the returned bracket. The core chooses every winner.

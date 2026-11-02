@@ -1,4 +1,5 @@
 import { lazy, useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { EmptyState } from '@castle-control/ui';
 import type { ReactNode } from 'react';
 import { proposalQueue } from '@castle-control/ui/steward';
 import type { ProposalQueue } from '@castle-control/ui/steward';
@@ -62,7 +63,7 @@ function FixtureModeratorRoom({ snapshot, replay, queue = proposalQueue, seal_sl
   const messages = state.messages.slice(0, state.replay_count);
   const { input, original } = benchInput(draft, state.rules);
   const result = evaluateDraft(input, state.rules, messages, original);
-  if (snapshot.mode !== 'fixture' && !core_sandbox) return <p>{copy.no_controls}</p>;
+  if (snapshot.mode !== 'fixture' && !core_sandbox) return <EmptyState compact title={copy.no_controls} />;
   const link = ruleBenchLink(state.rules, bench);
   if (replay) return <div className="moderator-room"><div className="moderator-drill-room">
     <Drill result={fixtureReplay} delay_s={fixtureDelay.delay_s} draft={draft.draft ? result : undefined}

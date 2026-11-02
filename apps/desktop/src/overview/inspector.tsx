@@ -1,4 +1,4 @@
-import { ProposalCard, Stamp, WindowedRows } from '@castle-control/ui';
+import { EmptyState, ProposalCard, Stamp, WindowedRows } from '@castle-control/ui';
 import type { ModuleId } from '@castle-control/ui';
 import { isPending, proposalQueue } from '@castle-control/ui/steward';
 import type { Proposal, SealAuthority } from '@castle-control/ui/steward';
@@ -41,7 +41,7 @@ export function Inspector({ selected, proposals, on_open, active = true, authori
         on_focus={() => { if (proposalQueue.getSnapshot().selected_proposal_id !== proposal.id) proposalQueue.select(proposal.id); }}
         seal_at_monitor on_seal={() => undefined} on_tear={() => { void tear(proposal); }} />}
     </WindowedRows>}
-    {!items.length && <p>No open proposal for this layer. Ask the Steward to draft one.</p>}
+    {!items.length && <EmptyState compact title="No open proposal for this layer" description="Ask the Steward to draft one." />}
     {notice && <p role="status">{notice}</p>}
     {selected === 'lottery' && <FairnessBox />}
     <a href={`#/chamber/${selected}`} onClick={event => { event.preventDefault(); on_open(selected); }}>Open the room →</a>

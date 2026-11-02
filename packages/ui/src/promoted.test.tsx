@@ -65,7 +65,7 @@ test('consensus chart renders caller copy, series, filters and the empty state',
   const empty = renderToStaticMarkup(<ConsensusChart {...props} results={[]} />);
   expect(empty).toContain('role="status"');
   expect(empty).toContain('No results yet');
-  expect(empty).not.toContain('<svg');
+  expect(empty).not.toContain('cc-consensus-chart');
   const html = renderToStaticMarkup(<ConsensusChart {...props} results={[{
     label: 'Text', at: '2026-10-26T12:00:00Z', window_s: 900,
     aria_label: 'Generated opinion history', summary: '17 messages shed · simulated',

@@ -25,7 +25,7 @@ function network() {
   return { socket, rpc: invoke };
 }
 
-async function markup(client: DesktopClient, surface = '#/keep') {
+async function markup(client: DesktopClient, surface = '#/overview') {
   const stream = await renderToReadableStream(<DesktopView snapshot={client.getSnapshot()} navigation={initialNavigation(surface)}
     theme="day" on_navigate={vi.fn()} on_theme_change={vi.fn()} />);
   await stream.allReady;
@@ -59,7 +59,7 @@ test('main deletes the launch global and retains the live opt-in and capability'
 // Cold imports for three complete surfaces used to share the bootstrap test's
 // five-second deadline. Keep real lazy imports, but test each route separately
 // so transformation under the parallel workspace gate cannot consume that sum.
-test.each(['#/keep', '#/overview', '#/chamber/studio'])('lazy %s receives main\'s live opt-in without exposing its capability', async surface => {
+test.each(['#/overview', '#/chamber/studio'])('lazy %s receives main\'s live opt-in without exposing its capability', async surface => {
   const client = await readyMainClient();
   expect(coreStewardConnection(client.getSnapshot())?.launch.session_token).toBe(launch.session_token);
   const html = await markup(client, surface);

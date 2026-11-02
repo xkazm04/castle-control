@@ -1,5 +1,5 @@
 import { useRef, useState, useSyncExternalStore } from 'react';
-import { ProposalCard } from '@castle-control/ui';
+import { EmptyState, ProposalCard } from '@castle-control/ui';
 import { createSealAuthority, LiveSteward, proposalQueue } from '@castle-control/ui/steward';
 import type { ChamberId, Proposal, SealAuthority, SealOutcome } from '@castle-control/ui/steward';
 import { sealRoomProposal } from '../rooms/seal-slot/index.jsx';
@@ -31,7 +31,7 @@ export function StewardSealSlot({ chamber, port,
     <h2>{uncertain ? 'Proposal · review the seal outcome' : 'Proposal · awaiting your seal'}</h2>
     <p>{uncertain ? 'LIVE STEWARD · Check the core for unconfirmed seal outcomes before acting.'
       : 'LIVE STEWARD · Nothing acts until you hold to seal.'}</p>
-    {!proposals.length && <p>No proposals. Ask the Steward to draft one.</p>}
+    {!proposals.length && <EmptyState compact title="No proposals" description="Ask the Steward to draft one." />}
     {proposals.map(proposal => port.uncertain(proposal.id) ? <article key={proposal.id} className="cc-proposal-card"
       data-module={proposal.chamber} aria-label={`${proposal.title} proposal`}>
       <p className="cc-proposal-stamp">SEAL OUTCOME UNKNOWN · check the core before acting</p>

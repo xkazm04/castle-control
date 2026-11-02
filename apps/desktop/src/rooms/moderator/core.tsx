@@ -1,7 +1,7 @@
 import { useId, useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import type { ReactNode } from 'react';
 import type { Rule } from '@castle-control/contract';
-import { FieldGroup, HeraldicCard, InkButton, Plate, PlateBand, PlateBody, SectionHeading, Stamp, WindowedRows, rowHeight } from '@castle-control/ui';
+import { EmptyState, FieldGroup, HeraldicCard, InkButton, Plate, PlateBand, PlateBody, SectionHeading, Stamp, WindowedRows, rowHeight } from '@castle-control/ui';
 import { coreGatehouseConnection } from '../../client.js';
 import type { CoreGatehousePort } from '../../gatehouse-core.js';
 import type { Snapshot } from '../../model.js';
@@ -66,7 +66,8 @@ export function ConnectedGatehouse({ port, replay, seal_slot }: { port: CoreGate
           <div className="gh-art"><div className="cc-mini" data-chamber="moderator"><div className="cc-mini__field cc-diaper"><GateArt waiting={0} simulated={false} unavailable /></div></div></div>
           <div className="gh-gate__main">
             {items.length ? <p className="gh-clear">The gate is watching<span>{items.length} line{items.length === 1 ? '' : 's'} read in shadow · {count('pass')} passed · {count('hold')} held · {count('bar')} barred. Every verdict is in the live room below.</span></p>
-              : <p className="gh-clear">{state.phase === 'loading' ? 'Opening the gate…' : 'Quiet at the gate'}<span>No chat has reached the gate on your core yet. When it does, every line gets a verdict in shadow and the herald counts what chat asks for.</span></p>}
+              : <EmptyState compact title={state.phase === 'loading' ? 'Opening the gate…' : 'Quiet at the gate'}
+                description="No chat has reached the gate on your core yet. When it does, every line gets a verdict in shadow and the herald counts what chat asks for." />}
             <p role="status" className="gh-notice">{state.notice}</p>
           </div>
           <div className="gh-gate__side">

@@ -42,8 +42,24 @@ export function ThemeToggle({ theme, onChange }: { theme: Theme; onChange: (them
   </InkButton>;
 }
 
-export function EmptyState({ title, description, children }: { title: string; description: string; children?: ReactNode }) {
-  return <div className="cc-empty" role="status">
-    <Mark label="An empty castle gate" /><b>{title}</b><p>{description}</p>{children}
+/**
+ * The one empty state: a leaded arch glyph, a title, one line of explanation and an optional action.
+ * Every chamber, fixture and core mode, uses this and nothing else for "nothing here yet".
+ * `compact` lays it out in a row for tight places (a table body, a column); `glyph={false}` drops the arch.
+ */
+export function EmptyState({ title, description, action, children, glyph = true, compact = false, announce = true }: {
+  title: ReactNode; description?: ReactNode; action?: ReactNode; children?: ReactNode; glyph?: boolean; compact?: boolean;
+  /** False where the surrounding view already owns the one live region (the drill's inspector). */
+  announce?: boolean;
+}) {
+  return <div className={`cc-empty${compact ? ' cc-empty--compact' : ''}`} {...(announce ? { role: 'status' } : {})}>
+    {glyph && <svg className="cc-empty__glyph" viewBox="0 0 28 40" aria-hidden="true" focusable="false">
+      <path d="M2 39V14C2 7 8 2 14 1c6 1 12 6 12 13v25Z" fill="none" stroke="currentColor" strokeWidth="2" />
+      <path d="M2 22h24M14 1v38" stroke="currentColor" strokeWidth="1.2" opacity=".7" /></svg>}
+    <div className="cc-empty__body">
+      <b className="cc-empty__title">{title}</b>
+      {description && <p className="cc-empty__text">{description}</p>}
+      {(action ?? children) && <div className="cc-empty__action">{action ?? children}</div>}
+    </div>
   </div>;
 }

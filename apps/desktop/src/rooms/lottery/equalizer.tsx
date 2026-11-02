@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react';
+import { EmptyState } from '@castle-control/ui';
 import { entranceStyle, FieldGroup, HeraldicCard, InkButton, StatusChip } from '@castle-control/ui';
 import type { LotsDraw } from '@castle-control/contract';
 import { equalizerCopy as copy } from './equalizer-copy.js';
@@ -144,7 +145,7 @@ export function WeightEqualizer({ draw, entries, on_edit, disabled = false, on_f
     {free ? <p className="lottery-eq-note" data-eq-note="free">{copy.free_forced}</p>
       : active.kind === 'equal' && <p className="lottery-eq-note">{copy.equal_note}</p>}
     <div className="lottery-eq-headline" role="status">
-      {summary.newcomers_to_outweigh_heaviest === undefined ? <p>{copy.headline_empty}</p> : <>
+      {summary.newcomers_to_outweigh_heaviest === undefined ? <EmptyState compact title={copy.headline_empty} /> : <>
         <b aria-hidden="true">{summary.newcomers_to_outweigh_heaviest}</b>
         <p>{copy.headline(summary.newcomers_to_outweigh_heaviest, summary.newcomer_weight, summary.heaviest_weight)}</p>
       </>}

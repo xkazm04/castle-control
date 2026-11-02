@@ -22,8 +22,7 @@
 .cc-frame .shell-program-column .cc-monitor-lamp[data-on-air="true"] { background: var(--gules-lit); box-shadow: 0 0 calc(var(--glow-on) * 10px) var(--gules-glow); }
 .cc-frame .shell-program-column .cc-monitor-picture { border: var(--came) solid var(--lead); background: var(--surface-2); box-shadow: inset 0 0 0 1px var(--hair); }
 .cc-frame .shell-program-column .cc-preview-picture { aspect-ratio: auto; min-height: 92px; }
-.cc-frame .shell-program-column .cc-preview-picture:has(.cc-monitor-empty) { height: 92px; }
-.cc-frame .shell-program-column .cc-monitor-empty { padding: 10px 16px; font: italic 400 var(--text-t-small)/1.35 var(--font-aside); color: var(--muted); }
+.cc-frame .shell-program-column .cc-preview-picture:has(.cc-empty) { height: 92px; }
 .cc-frame .shell-program-column .cc-program-picture { box-shadow: inset 0 0 0 1px var(--hair), 0 0 0 3px var(--surface), 0 0 0 4px var(--gules); }
 .cc-frame .shell-program-proclaim { display: grid; gap: 4px; padding-top: 12px; border-top: 1px solid var(--hair); }
 .cc-frame .shell-program-column .cc-fair { margin-top: auto; padding: 10px 12px 11px 14px; border: 0; background: var(--surface-2); box-shadow: inset 4px 0 0 var(--emerald), inset 0 0 0 1px var(--hair);
@@ -31,5 +30,5 @@
 .cc-frame .shell-program-column .cc-fair b { margin-bottom: 3px; font: 800 var(--text-t-label)/1.2 var(--font-label); letter-spacing: .1em; text-transform: lowercase; color: var(--emerald-ink); }
 @media (height < 52rem) {
   .cc-frame .shell-program-column { gap: 10px; padding-block: 12px; }
-  .cc-frame .shell-program-column .cc-preview-picture:has(.cc-monitor-empty) { height: 64px; min-height: 64px; }
+  .cc-frame .shell-program-column .cc-preview-picture:has(.cc-empty) { height: 64px; min-height: 64px; }
 }

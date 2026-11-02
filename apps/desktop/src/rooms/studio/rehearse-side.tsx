@@ -1,4 +1,5 @@
 import { InkButton, RuledFeed, RuledRow, SectionHeading } from '@castle-control/ui';
+import { EmptyState } from '@castle-control/ui';
 import { boardGeometry } from './board.js';
 import type { StudioBoard } from './board.js';
 import { rehearseCopy as copy } from './rehearse-copy.js';
@@ -28,7 +29,7 @@ export function TurnLog({ state, board }: { state: RehearseState; board: StudioB
     <SectionHeading variant="ruled" title={copy.log} />
     <div className="studio-turn-scroll">
       <RuledFeed role="list" aria-label={copy.log_label}>
-        {played.length === 0 ? <p className="studio-turn-empty" role="listitem">{copy.log_empty}</p>
+        {played.length === 0 ? <div className="studio-turn-empty" role="listitem"><EmptyState compact glyph={false} title={copy.log_empty} /></div>
           : played.map((turn, index) => run && <div role="listitem" key={turn.turn} className="studio-turn-row"
             aria-current={index === played.length - 1 ? 'step' : undefined} data-current={index === played.length - 1}>
             <RuledRow mark={copy.turn_word(turn.turn)}><span title={turnLine(run, turn)}>{turnLine(run, turn).replace(/^Turn \d+: /, '')}</span></RuledRow>

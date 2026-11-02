@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
+import { EmptyState } from '@castle-control/ui';
 import { isPending, proposalQueue } from '@castle-control/ui/steward';
 import type { ProposalQueue } from '@castle-control/ui/steward';
 import { stewardDock, useStewardDraft } from '@castle-control/ui/steward-flow';
@@ -51,7 +52,7 @@ export function VisualsWork({ queue = proposalQueue, port, seal_slot }: { queue?
   // One editor per selected visual: the night replay and the bench drag the same draft.
   const editor = useMemo(() => preview.visuals.some(item => item.visual.visual_id === preview.selected)
     ? createFixtureCurveEditor(adapter) : undefined, [adapter, preview.selected]);
-  if (!selected || !editor) return <p role="status">{copy.no_visual}</p>;
+  if (!selected || !editor) return <EmptyState compact title={copy.no_visual} />;
   const view = stageView(preview.visuals, preview.selected, publication);
   const flow = (id: string) => steward.flows.find(item => item.id === id);
   const start = (id: string) => { const found = id === steward.demo?.id ? steward.demo : flow(id); if (found) stewardDock.open(found); };

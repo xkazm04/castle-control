@@ -237,8 +237,6 @@
 
 /* ---- type that the legacy kit uppercased in a condensed face now reads in the fused roles */
 .cc-frame .cc-kicker { font: 700 var(--text-t-label)/1.2 var(--font-label); letter-spacing: var(--track-label); text-transform: lowercase; color: var(--ink-2); }
-.cc-frame .cc-empty b { font: 600 var(--text-px-22)/1.1 var(--font-display); letter-spacing: 0; text-transform: none; color: var(--ink-2); }
-.cc-frame .cc-empty p { font: italic 400 var(--text-px-16)/1.4 var(--font-aside); }
 .cc-frame .shell-room h2 { font-family: var(--font-display); font-weight: 600; letter-spacing: .005em; text-transform: none; }
 .cc-frame .shell-room :where(h3) { font: 800 var(--text-t-h3)/1.2 var(--font-label); letter-spacing: var(--track-label); text-transform: lowercase; }
 .cc-frame .room-caption { font: 800 var(--text-t-label)/1.4 var(--font-label); letter-spacing: .1em; text-transform: lowercase; }

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { InkButton } from './primitives.jsx';
+import { EmptyState, InkButton } from './primitives.jsx';
 import { rowWindow } from './windowed-rows.jsx';
 import './rule-table.css';
 
@@ -30,6 +30,6 @@ export function RuleTable({ rules, onModeChange }: { rules: readonly RuleRow[]; 
         {range.after > 0 && <tr aria-hidden="true" className="cc-table-spacer"><td colSpan={5} style={{ height: range.after }} /></tr>}
       </tbody>
     </table>
-    {rules.length === 0 && <p className="cc-no-rules">No rules configured. New rules start watching.</p>}
+    {rules.length === 0 && <EmptyState compact title="No rules configured" description="New rules start watching." />}
   </div>;
 }

@@ -1,4 +1,5 @@
 import { useMemo, useSyncExternalStore } from 'react';
+import { EmptyState } from '@castle-control/ui';
 import type { Visual } from '@castle-control/contract';
 import type { CoreBeaconsPort } from '../../beacons-core.js';
 import { createArtGeneration } from './art-state.js';
@@ -37,7 +38,7 @@ export function ArtControls({ art, state, visual }: Controls & { visual: Visual 
     {state.error && <p role="alert">{state.error}</p>}
     {state.result && <div>
       <h4>Returned assets</h4>
-      {state.result.assets.length === 0 && <p>No assets returned. The receipt still records the cost.</p>}
+      {state.result.assets.length === 0 && <EmptyState compact title="No assets returned" description="The receipt still records the cost." />}
       <ul>{state.result.assets.map(asset => <li key={asset.asset}>
         Generated (Leonardo): <code>{asset.asset}</code> ({asset.provenance})
       </li>)}</ul>

@@ -146,7 +146,7 @@ function sealCallback(node: ReactNode): (() => void) | undefined {
 
 test('Keep Preview is empty until a draft, and its hold uses the exact Overview proclamation authority', async () => {
   const empty = renderToStaticMarkup(<KeepWorkspace snapshot={snapshot} selected="lottery" on_enter={noop} on_open={noop} />);
-  for (const text of ['Nothing in Preview. Ask the Steward to draft one.', 'data-role="monitor-preview"', 'data-role="monitor-program"',
+  for (const text of ['Nothing in Preview', 'Ask the Steward to draft one.', 'data-role="monitor-preview"', 'data-role="monitor-program"',
     'data-role="monitor-label"', 'data-role="seal"', 'data-role="colnote"', 'data-role="fair"', 'data-scene="program"']) expect(empty).toContain(text);
   expect(empty.match(/data-role="colnote"/g)).toHaveLength(1);
   expect(empty).not.toContain('Drafts stay in Preview until your hold. No live output.');

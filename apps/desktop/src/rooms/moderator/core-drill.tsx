@@ -1,4 +1,5 @@
 import { useId, useState } from 'react';
+import { EmptyState } from '@castle-control/ui';
 import type { DrillConfiguration } from '@castle-control/contract';
 import { FieldGroup, InkButton, WindowedRows } from '@castle-control/ui';
 import type { CoreGatehousePort, CoreGatehouseSnapshot } from '../../gatehouse-core.js';
@@ -62,6 +63,6 @@ export function CoreDrill({ state, port }: { state: CoreGatehouseSnapshot; port:
       <h3>{copy.baseline}</h3><Drill result={state.diff.baseline} origin="core" capture_hash={state.replay_capture?.instrument_hash} moat={false} />
       <h3>{copy.candidate}</h3><Drill result={state.diff.candidate} origin="core" capture_hash={state.replay_capture?.instrument_hash} moat={false} />
     </section>}
-    {!state.drill && !state.diff && <p role="status">{copy.replay_empty}</p>}
+    {!state.drill && !state.diff && <EmptyState compact title={copy.replay_empty} />}
   </section>;
 }

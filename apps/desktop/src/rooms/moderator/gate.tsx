@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { EmptyState } from '@castle-control/ui';
 import type { Decision } from '@castle-control/contract';
 import type { ProposalQueue } from '@castle-control/ui/steward';
 import type { ModerationPreview } from '../../moderation-model.js';
@@ -73,7 +74,7 @@ export function GatePlate({ state, queue, demo, ribbon, resolved }: {
           <span className="gh-held__state">{state.phases.get(item.decision_id)?.kind === 'confirming' ? copy.held_pending : copy.held_state}</span></div>
         <blockquote className="gh-held__msg">{item.message_text ?? copy.original_unavailable}</blockquote>
         <p className="gh-held__why"><b>{copy.held_reason}</b>{fixtureHoldReasons.get(item.message_id) ?? copy.hold_reason_unavailable}</p>
-      </article> : !demo && <p className="gh-clear">{copy.clear}<span>Nothing waits for you. New holds appear here, one at a time.</span></p>}
+      </article> : !demo && <EmptyState compact title={copy.clear} description="Nothing waits for you. New holds appear here, one at a time." />}
       <p role="status" data-review-feedback="true" className="gh-notice">{state.notice}</p>
     </div>
     <div className="gh-gate__side">

@@ -1,4 +1,5 @@
 import type { Offering } from '../../beacons-fixture.js';
+import { EmptyState } from '@castle-control/ui';
 import type { PreviewVisual } from '../../beacons-model.js';
 import type { ReplayTrace, TracePoint } from '../../beacons-replay.js';
 import { clockLabel, replayDomain, timeSpent } from '../../beacons-replay.js';
@@ -86,7 +87,7 @@ export function ReplayBeacon({ item, now, position, offerings, counted, pinned, 
           <span>{clockLabel(offering.t)}</span> {offering.login} · {offering.amount} {kinds[offering.kind]}
           <em>{counted.has(index) ? 'counted' : 'not counted'}</em>
         </li>;
-      }) : <li>No offerings yet · press Play</li>}
+      }) : <li><EmptyState compact glyph={false} title="No offerings yet" description="Press Play." /></li>}
     </ol>
   </section>;
 }

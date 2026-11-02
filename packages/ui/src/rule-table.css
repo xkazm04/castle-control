@@ -9,4 +9,3 @@
 .cc-rule-table tbody tr:hover { background: var(--tint); }
 .cc-rule-table .cc-table-spacer { height: auto; }
 .cc-rule-table .cc-table-spacer td { border: 0; padding: 0; }
-.cc-no-rules { padding: var(--space-12); color: var(--muted); }

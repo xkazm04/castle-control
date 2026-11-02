@@ -1,4 +1,5 @@
 ﻿import type { ChatDelay } from '@castle-control/contract';
+import { EmptyState } from '@castle-control/ui';
 import { useId } from 'react';
 import { HeraldicCard, HeroReadout, Plate, PlateBand, PlateBody, SectionHeading, Stamp } from '@castle-control/ui';
 import type { ProposalQueue } from '@castle-control/ui/steward';
@@ -13,7 +14,7 @@ export { HeldActions } from './gate.jsx';
 
 /** Pending bans need a human: one warrant per ban, the original quoted, the rule named. */
 export function BanQueue({ state, queue }: Props) {
-  if (!state.bans.length) return <section className="gh-bans moderator-ban" aria-label={copy.bans}><p className="gh-sm">{copy.no_bans}</p></section>;
+  if (!state.bans.length) return <section className="gh-bans moderator-ban" aria-label={copy.bans}><EmptyState compact title={copy.no_bans} /></section>;
   return <section className="gh-bans moderator-ban" aria-label={copy.bans}>
     {state.bans.map(item => <article key={item.decision_id} className="cc-sheet gh-warrant" aria-label={copy.pending_ban}>
       <span className="cc-folio-shield cc-folio-shield--lg" aria-hidden="true"><i className="cc-folio-charge cc-folio-charge--portcullis" /></span>

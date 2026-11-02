@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useSyncExternalStore } from 'react';
+import { EmptyState } from '@castle-control/ui';
 import type { ReactNode } from 'react';
 import { maproomTurnRun, parseMethodParams } from '@castle-control/contract';
 import { SAMPLE } from '@castle-control/duel';
@@ -56,16 +57,13 @@ function CoreTiltyard({ model, draft, tools }: { model: TiltyardCore; draft?: Du
     if (event.kind === 'tick') return;
     void model.run(coreTurn(event));
   };
-  const empty = <div className="duel-empty">
-    <h3 className="duel-empty__title">No duel on the core yet</h3>
-    <p>Start one from the Steward: pick a list, check the first match on this stage, then hold to seal. Chat ballots pass
-      the Gatehouse and the core counts them; Duel on stream shows the same match in OBS.</p>
-    <div className="cc-actions">
+  const empty = <><EmptyState title="No duel on the core yet"
+    description="Start one from the Steward: pick a list, check the first match on this stage, then hold to seal. Chat ballots pass the Gatehouse and the core counts them."
+    action={<>
       <button type="button" className="cc-btn cc-btn--primary" onClick={() => stewardDock.open(startDuelFlow('core'))}>Start a duel…</button>
       <button type="button" className="cc-btn" disabled={disabled} onClick={() => { void model.run(sampleTournament()); }}>Start sample tournament</button>
-    </div>
-    <p className="duel-empty__fine">The sample uses SAMPLE starter contestants. Showdown and Ladder under More are local demos.</p>
-  </div>;
+    </>} />
+    <p className="duel-empty__fine">The sample uses SAMPLE starter contestants. Showdown and Ladder under More are local demos.</p></>;
   return <DuelStage picture={picture} on_event={run} frozen={disabled} empty={empty}
     notice={<TiltyardCoreNotice state={state} />}
     tools={<>

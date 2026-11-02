@@ -1,4 +1,4 @@
-import { DraftFrame, PreviewMonitor, ProgramMonitor, SealButton, chambers } from '@castle-control/ui';
+import { DraftFrame, EmptyState, PreviewMonitor, ProgramMonitor, SealButton, chambers } from '@castle-control/ui';
 import type { ModuleId } from '@castle-control/ui';
 import { isPending } from '@castle-control/ui/steward';
 import { useId } from 'react';
@@ -20,7 +20,7 @@ export function ProgramColumn({ snapshot, selected, connection }: {
     {shellRoles(PreviewMonitor({ children: draft ? <DraftFrame>
       <div className="shell-program-draft"><b>{draft.title}</b><span>Revision {draft.revision} · {chamber}</span>
         {draft.fields.map(field => <span key={field.key}>{field.key}: {String(field.value)}</span>)}</div>
-    </DraftFrame> : <p className="cc-monitor-empty">Nothing in Preview. Ask the Steward to draft one.</p> }))}
+    </DraftFrame> : <EmptyState compact title="Nothing in Preview" description="Ask the Steward to draft one." /> }))}
     {shellRoles(ProgramMonitor({ children: <StreamScene mode="program" proposals={program} sample={snapshot.mode === 'fixture'} /> }))}
     <div className="shell-program-proclaim" role="group" aria-describedby={caption}>
       <p id={caption}>{candidate ? `Next to proclaim: ${candidate.title} · rev ${candidate.revision} (${chamber ?? candidate.chamber})`

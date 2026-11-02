@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { tokens } from '@castle-control/tokens';
+import { EmptyState } from './primitives.jsx';
 import './windowed-rows.css';
 
 export const rowHeight = Number.parseFloat(tokens.layout['row-h']);
@@ -46,6 +47,6 @@ export function WindowedRows<T>({ rows, label, row_key, children, row_height = r
       <div role="cell" className="cc-window-cell">{children(row)}</div>
     </div>)}
     <div aria-hidden="true" style={{ height: range.after }} />
-    {rows.length === 0 && empty_state !== undefined && <p role="status">{empty_state}</p>}
+    {rows.length === 0 && empty_state !== undefined && <EmptyState compact glyph={false} title={empty_state} />}
   </div>;
 }

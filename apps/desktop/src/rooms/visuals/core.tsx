@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
+import { EmptyState } from '@castle-control/ui';
 import type { ReactNode } from 'react';
 import type { Visual } from '@castle-control/contract';
 import { stewardDock, useStewardDraft } from '@castle-control/ui/steward-flow';
@@ -76,13 +77,13 @@ function CoreEmpty({ state, start }: { state: CoreBeaconsSnapshot; start: (id: s
     </figure>
     <div className="visuals-stage__read">
       <p className="visuals-stage__eyebrow">Your core</p>
-      <h2 className="visuals-stage__name">{loading ? 'Reading your beacons…' : failed ? 'Beacons did not answer' : 'No beacon yet'}</h2>
-      <p className="visuals-stage__line">{failed ? copy.core_failed(state.error?.code ?? 'unavailable')
-        : 'A beacon is an altar, a camera frame or a border on your stream that glows brighter as gift subs and subs arrive, and cools when chat goes quiet. Light your first one with the Steward, or play the demo to see one at work.'}</p>
-      <div className="visuals-stage__actions">
-        <button type="button" className="cc-btn cc-btn--chamber" disabled={loading} onClick={() => start(light_flow_id)}>Light a beacon</button>
-        <button type="button" className="cc-btn cc-btn--quiet" onClick={() => start(flow_ids.demo)}>Play demo</button>
-      </div>
+      <EmptyState compact glyph={false} title={loading ? 'Reading your beacons…' : failed ? 'Beacons did not answer' : 'No beacon yet'}
+        description={failed ? copy.core_failed(state.error?.code ?? 'unavailable')
+          : 'A beacon is an altar, a camera frame or a border on your stream that glows brighter as gift subs and subs arrive, and cools when chat goes quiet. Light your first one with the Steward, or play the demo to see one at work.'}
+        action={<>
+          <button type="button" className="cc-btn cc-btn--chamber" disabled={loading} onClick={() => start(light_flow_id)}>Light a beacon</button>
+          <button type="button" className="cc-btn cc-btn--quiet" onClick={() => start(flow_ids.demo)}>Play demo</button>
+        </>} />
     </div>
   </section>;
 }

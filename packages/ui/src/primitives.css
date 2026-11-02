@@ -55,13 +55,6 @@
 .cc-button[data-size="icon"] { width: var(--mark-w); padding: 0; flex: none; }
 .cc-button:disabled { opacity: var(--disabled-opacity); cursor: not-allowed; pointer-events: none; }
 .cc-button svg { width: var(--icon-sm); height: var(--icon-sm); fill: none; stroke: currentColor; stroke-width: 1.7; }
-.cc-empty {
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  gap: var(--space-8); padding: var(--space-26) var(--space-12); text-align: center; color: var(--muted);
-}
-.cc-empty .cc-mark { width: var(--empty-icon); height: var(--empty-icon); }
-.cc-empty b { font: 800 var(--text-section)/1 var(--font-display); font-stretch: 75%; letter-spacing: var(--track-label); text-transform: uppercase; color: var(--ink); }
-.cc-empty p { max-width: var(--empty-width); font: italic var(--text-empty)/1.35 var(--font-serif); }
 @media (prefers-reduced-motion: reduce) {
   .cc-frame *, .cc-frame *::before, .cc-frame *::after { transition: none !important; animation: none !important; scroll-behavior: auto !important; }
 }

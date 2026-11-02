@@ -1,4 +1,5 @@
 import { useId, useMemo, useState } from 'react';
+import { EmptyState } from '@castle-control/ui';
 import type { DrillDiffResult } from '@castle-control/contract';
 import { Notice, StatusChip } from '@castle-control/ui';
 import { clockText } from '../../moat/clock.js';
@@ -35,7 +36,7 @@ export function CompareInspector({ before, after, changed }: { before: MoatMarke
         <dt data-head>{words.field}</dt><dd data-head>{words.baseline}</dd><dd data-head>{words.candidate}</dd>
         {([['fate', copy.outcome], ['state', copy.state], ['verdict', copy.verdict], ['action', copy.action], ['rule_id', copy.rule]] as const).map(([field, name]) =>
           [<dt key={`${field}-name`}>{name}</dt>, <dd key={`${field}-before`}>{cell(before, field)}</dd>, <dd key={`${field}-after`}>{cell(after, field)}</dd>])}
-      </dl></> : <p>{words.inspect_empty}</p>}
+      </dl></> : <EmptyState compact announce={false} title={words.inspect_empty} />}
     <p className="moat-small">{copy.no_text}</p>
   </aside>;
 }

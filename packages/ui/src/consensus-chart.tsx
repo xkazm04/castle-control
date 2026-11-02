@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type { ReactNode } from 'react';
+import { EmptyState } from './primitives.jsx';
 import './consensus-chart.css';
 
 export type ConsensusDirection = {
@@ -20,7 +21,7 @@ export function ConsensusChart({ results, title, filter_label, empty_state }: Co
   const [direction, setDirection] = useState<string>();
   const index = Math.max(0, Math.min(selected, results.length - 1));
   const result = results[index];
-  if (!result) return <p role="status">{empty_state}</p>;
+  if (!result) return <EmptyState compact title={empty_state} />;
   const span = result.window_s * 1000;
   const start = Date.parse(result.at) - span;
   return <div className="cc-consensus-chart">

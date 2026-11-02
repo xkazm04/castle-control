@@ -1,4 +1,5 @@
 ﻿import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
+import { EmptyState } from '@castle-control/ui';
 import type { CSSProperties, ReactNode } from 'react';
 import { isPending, proposalQueue } from '@castle-control/ui/steward';
 import type { ProposalQueue } from '@castle-control/ui/steward';
@@ -77,7 +78,7 @@ export default function LotteryRoom({ snapshot, replay, queue = proposalQueue, s
   const draft_entries = useMemo(() => draft_draw ? fixturePool(draft_draw) : undefined, [draft_draw]);
   const filling = Boolean(demo) && publication?.step === 'roll';
   const shown = useFill(draft_entries, filling);
-  if (snapshot.mode !== 'fixture' && !core_sandbox) return <p>{copy.no_live_controls}</p>;
+  if (snapshot.mode !== 'fixture' && !core_sandbox) return <EmptyState compact title={copy.no_live_controls} />;
 
   const history = proposals.proposals.filter(item => item.chamber === 'lottery' && item.state !== 'torn');
   const pending = history.filter(isPending);

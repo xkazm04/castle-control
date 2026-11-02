@@ -1,5 +1,5 @@
 import { lazy, Suspense, useState, useSyncExternalStore } from 'react';
-import { ProposalCard } from '@castle-control/ui';
+import { EmptyState, ProposalCard } from '@castle-control/ui';
 import { createSealAuthority, proposalQueue } from '@castle-control/ui/steward';
 import type { ChamberId, Proposal, ProposalQueue, SealAuthority, SealOutcome } from '@castle-control/ui/steward';
 import { isDesignProposal } from '../../overview/design-proposal.js';
@@ -54,7 +54,7 @@ export default function SealSlot({ chamber, enabled = true, queue = proposalQueu
   return <aside className="shell-seal-slot" aria-label="Seal slot" aria-busy={busy}>
     <h2>Proposal · awaiting your seal</h2><p>Nothing acts until you hold to seal.</p>
     {enabled && <RoomDesignActions chamber={chamber} on_open={openDesign} />}
-    {!proposals.length && <p>{enabled ? 'No proposals. Ask the Steward to draft one.' : 'Live actions are unavailable.'}</p>}
+    {!proposals.length && (enabled ? <EmptyState compact title="No proposals" description="Ask the Steward to draft one." /> : <EmptyState compact glyph={false} title="Live actions are unavailable" />)}
     {proposals.map(proposal => {
       const artifact = roomArtifact(chamber, proposal);
       return artifact ? <Suspense key={proposal.id} fallback={<p>SIMULATED · {proposal.title} proposal · loading review...</p>}>

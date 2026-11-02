@@ -1,4 +1,5 @@
 import { useId, useState } from 'react';
+import { EmptyState } from '@castle-control/ui';
 import type { ConsensusFilter, ConsensusGetResult } from '@castle-control/contract';
 import { FieldGroup, InkButton, StageFrame } from '@castle-control/ui';
 import type { CoreGatehousePort, CoreGatehouseSnapshot } from '../../gatehouse-core.js';
@@ -39,6 +40,6 @@ export function CoreConsensus({ state, port }: { state: CoreGatehouseSnapshot; p
     </form>
     {result ? <><p>{consensusLabel(result)}</p><CorePlot result={result} /><ConsensusTiles result={result} />
       <p className="moderator-small">{copy.core_consensus_summary(result.shed_count, result.window_s, '')}<ClockTime at={result.at} /></p>
-      {!result.directions.length && <p>{copy.core_directions_empty}</p>}</> : <p>{copy.core_consensus_empty}</p>}
+      {!result.directions.length && <EmptyState compact title={copy.core_directions_empty} />}</> : <EmptyState compact title={copy.core_consensus_empty} />}
   </section>;
 }

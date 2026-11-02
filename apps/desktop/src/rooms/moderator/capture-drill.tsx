@@ -1,4 +1,5 @@
 import { useId, useState } from 'react';
+import { EmptyState } from '@castle-control/ui';
 import { FieldGroup, InkButton, WindowedRows, rowHeight } from '@castle-control/ui';
 import type { CoreGatehousePort, CoreGatehouseSnapshot } from '../../gatehouse-core.js';
 import { ClockTime } from './presentation.jsx';
@@ -11,7 +12,7 @@ export function CaptureList({ state, port, scroll_top = 0 }: {
   const page = state.live_runs;
   return <section className="moderator-card"><h3>{copy.captures_title}</h3>
     <p>{copy.capture_intro}</p>
-    <p>{page ? copy.captures_page(page.items.length, page.unavailable_count) : copy.captures_pending}</p>
+    {page ? <p>{copy.captures_page(page.items.length, page.unavailable_count)}</p> : <EmptyState compact title={copy.captures_pending} />}
     <WindowedRows key={page?.next_cursor ?? 'last'} rows={page?.items ?? []} label={copy.captures_title} row_height={rowHeight * 8} scroll_top={scroll_top}
       row_key={item => item.decision_id} empty_state={copy.captures_empty}>
       {item => {

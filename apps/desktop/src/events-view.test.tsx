@@ -48,6 +48,6 @@ test.each(['keep', 'overview'])('validated simulated events update rampart chips
     expect(html).toContain('data-stamp="off-air" role="img" aria-label="On air is simulated: nothing is broadcast"');
     expect(html).not.toContain('desktop-simulated');
     expect(html).not.toContain('SIMULATED SOURCE');
-    expect(html.match(/aria-label="Talk to the Steward\.\.\."/g)).toHaveLength(1);
+    expect(html.match(/aria-label="Talk to the Steward\.\.\."/g) ?? []).toHaveLength(surface === 'keep' ? 0 : 1);
   });
 });

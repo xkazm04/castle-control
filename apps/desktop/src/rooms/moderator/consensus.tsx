@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { EmptyState } from '@castle-control/ui';
 import type { ConsensusGetResult } from '@castle-control/contract';
 import { moderationCopy as copy } from '../../moderation-copy.js';
 
@@ -26,7 +27,7 @@ export function ConsensusSelection({ results, selected, on_select }: {
     {results.map((item, index) => <button type="button" className="moderator-chip-toggle" key={consensusLabel(item)}
       aria-pressed={index === selected} onClick={() => on_select(index)}>{consensusLabel(item)}</button>)}
   </div>{result ? <><ConsensusTiles result={result} /><p className="moderator-small">{copy.consensus_summary(result.shed_count)}</p></>
-    : <p>{copy.consensus_empty}</p>}</>;
+    : <EmptyState compact title={copy.consensus_empty} />}</>;
 }
 
 const roman = ['i', 'ii', 'iii', 'iv', 'v'];
@@ -69,9 +70,9 @@ export function Consensus({ results, selected: chosen, on_select, caption }: {
         <text className="fc-num" x="640" y={y(item.share) + 4}>{roman[index] ?? ''}</text></g>)}
     </svg>
     {first && last && directions[0] ? <p className="moderator-small moderator-reference">
-      {copy.consensus_reference(start, end, directions[0].label, directions[0].share)}</p> : <p>{copy.consensus_empty}</p>}
+      {copy.consensus_reference(start, end, directions[0].label, directions[0].share)}</p> : <EmptyState compact title={copy.consensus_empty} />}
     {result ? <><ConsensusTiles result={result} /><p className="cc-gloss-note">{copy.consensus_summary(result.shed_count)}{caption ? ` · ${caption}` : ''}</p></>
-      : <p>{copy.consensus_empty}</p>}
+      : <EmptyState compact title={copy.consensus_empty} />}
   </section>;
 }
 

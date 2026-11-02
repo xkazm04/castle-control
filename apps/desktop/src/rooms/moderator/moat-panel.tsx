@@ -1,4 +1,5 @@
 import { useEffect, useId, useMemo, useState } from 'react';
+import { EmptyState } from '@castle-control/ui';
 import type { ChangeEvent } from 'react';
 import { InkButton, Notice, StatusChip, VerdictChip } from '@castle-control/ui';
 import { clockText } from '../../moat/clock.js';
@@ -33,7 +34,7 @@ export function MarkerInspector({ marker, bench }: { marker: MoatMarker | undefi
       <dt>{copy.evaluation}</dt><dd>{copy.evaluation_words[marker.passed === undefined ? 'none' : marker.passed ? 'true' : 'false']}</dd>
       <dt>{copy.source}</dt><dd>{marker.source}</dd>
       <dt>{copy.at}</dt><dd><ClockTime at={marker.at} /></dd>
-    </dl> : <p>{copy.inspect_empty}</p>}
+    </dl> : <EmptyState compact announce={false} title={copy.inspect_empty} />}
     {marker?.rule_id && bench?.can_open(marker.rule_id) && <a className="moat-open-rule" href="#/chamber/moderator" data-rule={marker.rule_id}
       onClick={() => { if (marker.rule_id) bench.open(marker.rule_id); }}>{copy.open_rule(marker.rule_id)}</a>}
     <p className="moat-small">{copy.no_text}</p>
@@ -114,7 +115,7 @@ export function MoatPanel({ model, delay_s, clock, selected_id, on_select, rule_
   const announced = useSettled(held, state.playing);
   const position = copy.position_text(clockText(model.start_ms + Math.min(state.playhead_ms, model.span_ms)), replayedCount(model, state.playhead_ms), model.counts.total);
   if (model.markers.length === 0) return <section className="moat-panel" aria-labelledby={heading_id}>
-    <h3 id={heading_id}>{copy.title}</h3><p>{copy.empty}</p></section>;
+    <h3 id={heading_id}>{copy.title}</h3><EmptyState compact title={copy.empty} /></section>;
   return <section className="moat-panel" aria-labelledby={heading_id} data-playing={state.playing}>
     <header className="moat-head"><h3 id={heading_id}>{copy.title}</h3>
       <span className="moat-live" aria-hidden="true"><StatusChip variant="azure">{copy.summary(held, model.counts.total)}</StatusChip></span>
