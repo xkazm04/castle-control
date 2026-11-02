@@ -1,6 +1,6 @@
 import { parseError } from '@castle-control/contract';
 import type { DrawId, ObsConnectParams, RehearsalScenarioParams, RehearsalStatus, Visual, VisualId } from '@castle-control/contract';
-import { streamPresets } from '../stream/setup-model.js';
+import { streamPresets } from '../stream/presets.js';
 import { createRehearsalPort, methods } from './rehearsal-core.js';
 import type { RehearsalConnection, RehearsalShell } from './rehearsal-core.js';
 import { rehearsalCopy as copy } from './rehearsal-copy.js';

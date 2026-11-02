@@ -4,11 +4,8 @@ import { fixtureSourceUrl, fixtureVisuals } from '../beacons-fixture.js';
 import { createObsPort } from './obs-core.js';
 import type { StreamConnection } from './obs-core.js';
 
-export const streamPresets = Object.freeze({
-  '1080p': Object.freeze({ width: 1920, height: 1080 }),
-  '720p': Object.freeze({ width: 1280, height: 720 }),
-  vertical: Object.freeze({ width: 1080, height: 1920 }),
-});
+import { streamPresets } from './presets.js';
+export { streamPresets };
 type Preset = keyof typeof streamPresets;
 export type StreamRow = Readonly<{
   id: string; name: string; visual_id?: VisualId; vote_bar?: true; duel?: true; href?: string; notice?: string;

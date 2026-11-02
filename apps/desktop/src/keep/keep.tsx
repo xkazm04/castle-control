@@ -1,4 +1,4 @@
-import { chambers, InkButton } from '@castle-control/ui';
+import { chambers } from '@castle-control/ui';
 import type { ModuleId } from '@castle-control/ui';
 import { useEffect, useState, useSyncExternalStore } from 'react';
 import type { CSSProperties } from 'react';
@@ -13,7 +13,7 @@ import './keep.css';
 import { KeepArt } from './keep-art.jsx';
 import { LintelPlaque } from './plaque.jsx';
 import { useDiorama, useKeepCamera } from './camera.js';
-import { keepThemeFlow } from './steward-flows.js';
+import { keepThemeFlow, keepTourFlow } from './steward-flows.js';
 
 export type KeepProps = { snapshot?: Snapshot; on_open: (id: ModuleId) => void; on_enter: () => void; on_demo?: () => void; on_stream?: () => void; on_rehearsal?: () => void };
 type KeepStyle = CSSProperties & { '--keep-scale'?: number; '--keep-inverse'?: number };
@@ -27,10 +27,10 @@ const chamberLines: Record<ModuleId, string> = {
 
 export function KeepEntrance({ on_enter, on_demo, on_stream, on_rehearsal }: Pick<KeepProps, 'on_enter' | 'on_demo' | 'on_stream' | 'on_rehearsal'>) {
   return <header className="keep-heading">
-    <InkButton variant="primary" onClick={on_enter}>Enter the keep <kbd>0</kbd></InkButton>
-    <InkButton data-demo-entry disabled={!on_demo} onClick={on_demo}>See it on stream</InkButton>
-    <InkButton disabled={!on_stream} onClick={on_stream}>Set up OBS</InkButton>
-    <InkButton disabled={!on_rehearsal} onClick={on_rehearsal}>Dress rehearsal</InkButton></header>;
+    <button type="button" className="cc-btn cc-btn--primary" onClick={on_enter}>Enter the keep <kbd className="cc-kbd">0</kbd></button>
+    <button type="button" className="cc-btn" data-demo-entry disabled={!on_demo} onClick={on_demo}>See it on stream</button>
+    <button type="button" className="cc-btn" disabled={!on_stream} onClick={on_stream}>Set up OBS</button>
+    <button type="button" className="cc-btn" disabled={!on_rehearsal} onClick={on_rehearsal}>Dress rehearsal</button></header>;
 }
 
 // The art stays mounted; only these overlay classes change when a room is lit.
@@ -48,7 +48,8 @@ export function Keep({ snapshot = { mode: 'fixture', phase: 'ready' }, on_open, 
   const { host, scale } = useDiorama();
   const { castle, opening, open, transitionEnd } = useKeepCamera(on_open);
   // The Steward's open theme draft lights its room live, under any pointer or focus.
-  const drafted = useFlowDraft(keepThemeFlow)?.lead;
+  const toured = useFlowDraft(keepTourFlow)?.lit;
+  const drafted = useFlowDraft(keepThemeFlow)?.lead ?? toured;
   const active = opening ?? hovered ?? focused ?? drafted;
   const chamber = chambers.find(item => item.id === active);
   const state = chamber ? read.states[chamber.id] : undefined;

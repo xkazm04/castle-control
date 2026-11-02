@@ -57,7 +57,7 @@ test('four hits and lintels carry the read model words, lines and chamber-aware 
   expect(html).toContain('Point at a room, or press 1 to 4.');
   expect(html).toContain('Stylised illustration · drawn, not captured');
   expect(html).toContain('The moat · chat delay 4 s');
-  expect(html).toContain('Enter the keep <kbd>0</kbd>');
+  expect(html).toContain('Enter the keep <kbd class="cc-kbd">0</kbd>');
 });
 
 test('honesty stamps follow fixture room provenance and omit absent core stamps', () => {
