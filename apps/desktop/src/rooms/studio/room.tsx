@@ -29,7 +29,7 @@ import './room-chrome.css';
 import './hex-field.css';
 
 const TiltyardView = lazy(() => import('./tiltyard-view.jsx'));
-const LocalDuelDemos = lazy(() => import('./tiltyard-view.jsx').then(module => ({ default: module.LocalDuelDemos })));
+const LocalDuelDemos = lazy(() => import('./local-duel-demos.jsx'));
 export type StudioView = 'table' | 'spyglass' | 'rehearse';
 export type RoomView = 'duel' | 'show' | 'ladder' | 'proposals' | StudioView;
 

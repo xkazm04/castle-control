@@ -1,5 +1,35 @@
 # Map Room C · Herald
 
+## Final gate · defer local duel demos (2026-11-02)
+
+Showdown and Ladder now live in `local-duel-demos.tsx`, loaded with `React.lazy`
+only when a More view requests them. Both the room and the optional Tiltyard
+view branch use this deferred module. Their original component, words, SAMPLE
+lists, simulated ballot source, mode keys and markup are unchanged. The fixture
+and core duel, full bracket, proposal host and drawer lifecycle are unchanged.
+
+This removes the local demo engine and its legacy Tiltyard styles from the
+`tiltyard-view` first-paint chunk. No CSS declarations or selectors changed.
+The one legacy rule matching the main duel's shared Shield sets
+`fill: var(--ty-arms-vert)`, which its inline SVG fill already supplies. All other
+legacy demo rules target the separate `ty-*` demo structure.
+
+`pnpm --config.verify-deps-before-run=false --filter @castle-control/desktop build`
+exits 0 with the original, unchanged checks and limits:
+
+```text
+[Desktop tokens] found 299/299 generated token definitions in initial CSS
+[desktop first-load budget, all four routes] walked 10 files; 422681/425984 uncompressed JS+CSS bytes
+[duel chunk budget] walked 2 files; 26726/98304 uncompressed JS+CSS bytes (js 17136, css 9590)
+```
+
+Desktop `typecheck` and `lint` both exit 0 and walk 380 files. Desktop `test`
+exits 0: 133 files and 1196 tests passed. Existing local-demo coverage remains;
+two new tests render each deferred mode to completion and compare it against
+the direct component's complete static markup. `node scripts/check.mjs` exits 0
+for boundaries, hygiene, type floor, file cap and secrets; `git diff --check`
+also exits 0. No dependency, build configuration or budget changes were made.
+
 ## Owner readability decision · 15 px, move more into drawers (2026-11-02)
 
 Section prose, option names, bracket rows, controls, tally summaries, minis and
