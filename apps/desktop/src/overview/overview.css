@@ -32,4 +32,7 @@
 .overview-pane:not([hidden]) { flex: 1; min-height: 0; }
 .overview-steward { grid-column: 1 / -1; min-width: 0; margin-inline: calc(-1 * var(--gutter)); }
 @media (max-width: 65.625rem) { .overview-workspace { grid-template-columns: minmax(0, 1fr); } .overview-sidebar { min-height: calc(var(--space-56) * 12); } .overview-preview { width: 100%; } }
+.overview-bench .cc-chamber-strip .cc-chamber-tile { grid-template-rows: auto 1fr auto; align-content: stretch; }
+.overview-bench .cc-chamber-strip .cc-chamber-state { align-self: start; }
+.overview-bench .cc-chamber-strip .cc-layer-lamps { align-self: end; }
 .overview-bench .cc-chamber-strip .cc-chamber-state { white-space: normal; overflow: visible; text-overflow: clip; line-height: 1.2; }
