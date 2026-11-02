@@ -24,13 +24,14 @@
 .cc-seal-fill-copy kbd { font: inherit; font-family: var(--font-num); }
 .cc-action-row .cc-action-seal .cc-seal-button[data-size="key"] { display: inline-flex; box-sizing: border-box;
   height: var(--space-40); min-height: var(--space-40); max-height: var(--space-40); margin: 0; padding: 0 var(--space-16); gap: var(--space-10); flex-direction: row; white-space: nowrap;
-  border: var(--rule-thin) solid var(--or); border-bottom: var(--space-4) solid var(--or-text); border-radius: var(--r-lg); box-shadow: none;
-  background: var(--surface-2, var(--card)); font: 700 var(--text-label)/1 var(--font-ui); letter-spacing: var(--track-label); }
+  border: var(--rule-thin) solid var(--deck-gold-2); border-bottom: var(--space-4) solid var(--deck-seal-foot); border-radius: var(--r-lg); box-shadow: var(--deck-seal-shadow);
+  background: linear-gradient(180deg, var(--deck-seal-top), var(--deck-seal-bottom)); color: var(--ink);
+  font: 400 var(--text-aside)/1.45 var(--font-ui); letter-spacing: normal; text-transform: none; }
 .cc-action-row .cc-action-seal .cc-seal-button[data-size="key"]::before { display: none; }
 .cc-action-row .cc-action-seal .cc-seal-button[data-size="key"] progress { opacity: 1; }
 .cc-action-row .cc-action-seal .cc-seal-button[data-size="key"] .cc-seal-instruction,
 .cc-action-row .cc-action-seal .cc-seal-button[data-size="key"] .cc-seal-fill-copy { display: none; }
-.cc-seal-button[data-size="key"] .cc-seal-status { font: italic 400 var(--text-label)/1 var(--font-serif); text-transform: none; letter-spacing: 0; }
+.cc-seal-button[data-size="key"] .cc-seal-status { font: italic 400 var(--text-body)/1.2 var(--font-serif); text-transform: none; letter-spacing: 0; }
 .cc-seal-button[data-size="key"] progress::-webkit-progress-value { background: color-mix(in srgb, var(--or) 65%, transparent); }
 .cc-seal-button[data-size="key"] progress::-moz-progress-bar { background: color-mix(in srgb, var(--or) 65%, transparent); }
 .cc-action-row .cc-action-seal .cc-seal-button[data-size="key"] .cc-seal-release { position: absolute; }

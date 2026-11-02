@@ -1,7 +1,7 @@
 .cc-action-row {
   position: relative; display: flex; align-items: center; gap: var(--space-10);
   height: calc(var(--space-40) + var(--space-8)); min-width: 0; padding: 0 var(--space-22);
-  border-top: var(--rule-thin) solid var(--hair); background: var(--surface, var(--card)); color: var(--ink);
+  border-top: var(--rule-thin) solid var(--hair); background: linear-gradient(180deg, var(--deck-action-top), var(--deck-action-bottom)); color: var(--ink);
 }
 .cc-action-keys { display: flex; flex: 1; align-items: center; gap: var(--space-6); min-width: 0; overflow: hidden; }
 .cc-action-key, .cc-action-more {
@@ -11,9 +11,16 @@
   font: 600 var(--text-label)/1.2 var(--font-ui); cursor: pointer;
 }
 .cc-action-key kbd { padding: var(--space-3) var(--space-5); border: var(--rule-thin) solid var(--hair); border-radius: var(--r-sm); font: inherit; font-family: var(--font-num); }
+.cc-action-key { padding: 0 var(--space-12) 0 var(--space-5); border-color: var(--deck-key-rule); border-bottom: var(--space-3) solid var(--deck-key-foot);
+  border-radius: var(--deck-key-radius); background: linear-gradient(180deg, var(--deck-key-top), var(--deck-key-bottom));
+  font-size: var(--text-body); line-height: 1; letter-spacing: normal; text-transform: none; }
+.cc-action-key kbd { min-width: var(--space-26); box-sizing: border-box; text-align: center; color: var(--deck-gold); }
+.cc-action-key[data-primary="true"] { background: linear-gradient(180deg, var(--deck-key-main-top), var(--deck-key-main-bottom));
+  border-color: var(--deck-gold-2); font-size: var(--text-aside); }
+.cc-action-key[data-primary="true"]:hover:not(:disabled) { background: linear-gradient(180deg, var(--deck-key-hover-top), var(--deck-key-hover-bottom)); }
 .cc-action-key:disabled { opacity: var(--disabled-opacity); cursor: not-allowed; }
-.cc-action-key:hover:not(:disabled), .cc-action-more:hover { border-color: var(--or); }
-.cc-action-more { color: var(--or-text); border-color: var(--or); }
+.cc-action-key:hover:not(:disabled), .cc-action-more:hover { border-color: var(--deck-gold); border-bottom-color: var(--deck-key-foot); }
+.cc-action-more { color: var(--deck-gold); border-color: var(--deck-gold-2); border-radius: var(--deck-key-radius); }
 .cc-action-measure { position: absolute; visibility: hidden; pointer-events: none; display: flex; width: max-content; height: 0; overflow: hidden; }
 .cc-action-popover { position: absolute; z-index: 5; right: var(--space-22); bottom: calc(100% + var(--space-6)); display: grid; gap: var(--space-6);
   padding: var(--space-12); max-height: 60vh; overflow: auto; border: var(--rule-thin) solid var(--or); border-radius: var(--r-lg);

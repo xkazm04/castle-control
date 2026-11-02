@@ -51,7 +51,7 @@ export function ActionRow({ entries, seal, open, on_open }: RowProps) {
 export function ActionRowView({ entries, seal, open, on_open, count, area, measure, more, menu }: RowProps & RowRefs & { count: number }) {
   const overflow = entries.slice(count);
   function key(entry: ActionKey, menu_item = false) {
-    return <button key={entry.key} type="button" className="cc-action-key" data-role="action-key" disabled={entry.disabled}
+    return <button key={entry.key} type="button" className="cc-action-key" data-primary={entry === entries[0] ? true : undefined} data-role="action-key" disabled={entry.disabled}
       role={menu_item ? 'menuitem' : undefined}
       onClick={() => { on_open(false); entry.run(); }}><kbd>{entry.key}</kbd><span>{entry.label}</span></button>;
   }
@@ -64,7 +64,7 @@ export function ActionRowView({ entries, seal, open, on_open, count, area, measu
         }}>more · {overflow.length}</button>}
     </div>
     <div className="cc-action-measure" ref={measure} aria-hidden="true">
-      {entries.map(entry => <span className="cc-action-key" data-measure-key key={entry.key}><kbd>{entry.key}</kbd><span>{entry.label}</span></span>)}
+      {entries.map(entry => <span className="cc-action-key" data-primary={entry === entries[0] ? true : undefined} data-measure-key key={entry.key}><kbd>{entry.key}</kbd><span>{entry.label}</span></span>)}
       <span className="cc-action-more" data-measure-more>more · {entries.length}</span>
     </div>
     {open && overflow.length > 0 && <div ref={menu} className="cc-action-popover" role="menu" aria-label="More room keys"
