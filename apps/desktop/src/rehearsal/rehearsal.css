@@ -75,3 +75,6 @@
 }
 @media (width < 70rem) { .rh-stations { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 14px; } .rh-desk { grid-template-columns: minmax(0, 1fr); } }
 .rh-board[data-ready="false"] .rh-station__value { color: var(--ink-2); }
+/* A themed track: the native one glares white in night. */
+.rh-crowd input[type="range"] { appearance: none; height: 6px; border-radius: 3px; background: var(--surface-3); border: 1px solid var(--lead); }
+.rh-crowd input[type="range"]::-webkit-slider-thumb { appearance: none; width: 18px; height: 18px; border-radius: 50%; background: var(--ch); border: 2px solid var(--lead); }

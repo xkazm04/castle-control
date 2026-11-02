@@ -4,7 +4,7 @@
   font: 400 var(--text-body)/1.45 var(--font-ui);
   -webkit-font-smoothing: antialiased; position: relative; isolation: isolate;
 }
-.cc-frame[data-theme="stock"] { color-scheme: dark; }
+.cc-frame:is([data-theme="stock"], [data-theme="night"]) { color-scheme: dark; }
 .cc-frame[data-module="lottery"] { --plate: var(--gules); --plate-text: var(--gules-text); }
 .cc-frame[data-module="visuals"] { --plate: var(--or); --plate-text: var(--or-text); }
 .cc-frame[data-module="studio"] { --plate: var(--key); --plate-text: var(--ink); }
