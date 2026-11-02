@@ -24,7 +24,7 @@ import './ticker.css';
 import './hill.css';
 import './ladder.css';
 
-export function Tiltyard({ lists, words, initial_mode = 'show', label, ballots, ballot_feed, chat_control }: TiltyardProps) {
+export function Tiltyard({ lists, words, initial_mode = 'show', label, ballots, ballot_feed, chat_control, modes = duelModes }: TiltyardProps) {
   const reduced = useReducedMotion();
   const [state, dispatch] = useReducer((before: TiltyardState, action: StageAction): TiltyardState => {
     const after = tiltyardReducer(before, action);
@@ -67,12 +67,12 @@ export function Tiltyard({ lists, words, initial_mode = 'show', label, ballots, 
       if (action === null) return;
       event.preventDefault(); event.stopPropagation();
       if (action === 'mode_prev' || action === 'mode_next') {
-        const index = duelModes.indexOf(state.mode);
-        on_mode(duelModes[(index + (action === 'mode_next' ? 1 : 2)) % duelModes.length]!);
+        const index = modes.indexOf(state.mode);
+        on_mode(modes[(index + (action === 'mode_next' ? 1 : modes.length - 1)) % modes.length]!);
       } else if (action === 'pick_left' || action === 'pick_right') on_event({ kind: 'pick', side: action === 'pick_left' ? 0 : 1 });
       else on_event({ kind: action === 'cancel' ? 'cancel' : action === 'undo' ? 'undo' : 'enter' });
     }}>
-    <Pennants mode={state.mode} words={display_words} on_mode={on_mode}>
+    <Pennants mode={state.mode} words={display_words} on_mode={on_mode} modes={modes}>
       <div className="ty-yard-keys" data-role="ty-keys">
         <span><kbd>{words.keys.left}</kbd><kbd>{words.keys.right}</kbd>{words.pick}</span>
         <span><kbd>{words.keys.escape}</kbd>{live ? words.cancel : words.back}</span>

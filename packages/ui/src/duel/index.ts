@@ -8,3 +8,4 @@ export { Chat, chatWindows } from './chat.jsx';
 export { CoreChat } from './core-chat.jsx';
 export { Hill } from './hill.jsx';
 export { Ladder } from './ladder.jsx';
+export { Shield } from './shield.jsx';

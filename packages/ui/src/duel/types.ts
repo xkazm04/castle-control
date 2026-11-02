@@ -23,5 +23,7 @@ export interface TiltyardProps {
   readonly ballot_feed?: (window: { match_key: string; opened_at: string; window_ms: number },
     on_ballots: (ballots: readonly Ballot[]) => void) => () => void;
   readonly on_close?: () => void;
+  /** Modes offered on the pennants and by [ ]; defaults to all three. */
+  readonly modes?: readonly DuelMode[];
   readonly label: string;
 }
