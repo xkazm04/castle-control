@@ -67,8 +67,10 @@ test('a paid-weight prize is stopped by a Steward step until the paid weight goe
     await expect(steward.sheet.getByRole('button', { name: 'Hold to seal', exact: true })).toHaveCount(0);
     await steward.pick('Remove paid weight');
     await expect(steward.prompt('What is the prize worth, in US dollars?')).toBeVisible();
-    await steward.sheet.getByRole('button', { name: 'Put away', exact: true }).click();
-    await expect(page.locator('[data-role="lot-roll-panel"]')).not.toContainText('Draft · not sealed');
+    // The sheet offers Back, Start over and Lower (no Put away): starting over drops every answer, nothing sealed.
+    await steward.sheet.getByRole('button', { name: 'Start over', exact: true }).click();
+    await expect(steward.sheet.getByRole('list', { name: 'Answered so far', exact: true })).toHaveCount(0);
+    await expect(steward.prompt('What is the prize worth, in US dollars?')).toHaveCount(0);
     await expect(page.locator('.lottery-roll[data-tone="sealed"]')).toHaveCount(0);
   } finally { await page.goto('about:blank'); verify(); }
 });
