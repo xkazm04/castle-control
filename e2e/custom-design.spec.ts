@@ -25,14 +25,16 @@ async function shot(page: Page, info: TestInfo, name: string) {
 }
 async function open(page: Page, chamber: string, title: string, theme: 'day' | 'night') {
   await page.goto(`/#/chamber/${chamber}`);
-  if (theme === 'night') await page.getByRole('button', { name: 'Toggle day and night' }).click();
+  // The Deck opens in night; toggle only when the current theme differs.
+  if (await page.locator('.cc-frame').getAttribute('data-theme') !== theme) await page.getByRole('button', { name: 'Toggle day and night' }).click();
   await expect(page.locator('.cc-frame')).toHaveAttribute('data-theme', theme);
   await dock(page).getByRole('button', { name: 'More flows' }).click();
   await page.getByRole('menuitem', { name: title }).click();
   await expect(dock(page)).toContainText('What should your');
 }
 async function holdToSeal(page: Page, done: RegExp) {
-  const hold = dock(page).getByRole('button', { name: /^hold to seal/i });
+  // The Deck's dock also carries a seal key; seal from the confirm card itself.
+  const hold = dock(page).locator('.cc-steward-confirm').getByRole('button', { name: /^hold to seal/i });
   await hold.focus(); await page.keyboard.down('Space');
   await expect(dock(page)).toContainText(done);
   await page.keyboard.up('Space');
@@ -67,7 +69,14 @@ for (const theme of ['day', 'night'] as const) for (const item of kinds) {
     await expect(dock(page)).toContainText('This preview session only · SIMULATED');
     await shot(page, info, `${item.kind}-4-seal-${theme}`);
     await holdToSeal(page, new RegExp(`Sealed\\. .*"${item.closest}"`));
-    if (item.chamber === 'moderator') await expect(page.locator('.gh-herald .gh-votebar')).toHaveAttribute('data-art', 'votebar-11');
+    if (item.chamber === 'moderator') {
+      // The Deck keeps the herald's vote bar in the Gatehouse drawer.
+      const lower = page.getByRole('button', { name: 'Lower Esc', exact: true });
+      if (await lower.count()) await lower.click();
+      await page.getByRole('button', { name: 'Full chart', exact: true }).click();
+      const drawer = page.getByRole('dialog', { name: 'The Herald and more of the Gatehouse', exact: true });
+      await expect(drawer.locator('.gh-herald .gh-votebar')).toHaveAttribute('data-art', 'votebar-11');
+    }
     if (item.chamber === 'visuals') await expect(page.getByRole('region', { name: 'Beacon picture' }).locator('img[src^="/art/library/"]').first()).toBeVisible();
     await shot(page, info, `${item.kind}-5-sealed-${theme}`);
   });
