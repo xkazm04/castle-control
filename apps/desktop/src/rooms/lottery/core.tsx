@@ -109,7 +109,7 @@ export function ConnectedLotsRoom({ port, simulated, seal_slot, flows }: { port:
       </StagePanel>}
     preview={<><p>{draft ? `${shown?.name ?? 'Draw setup'} · draft, not sealed` : 'No setup draft in Preview.'}</p>
       {seal_slot && <button type="button" className="cc-link" onClick={() => setTools(true)}>Review proposals and designs</button>}</>}
-    program={<><p>{draw?.name ?? 'No draw on the core yet'}</p><p>{status}</p></>}
+    program={<><p>{draw?.name ?? 'No draw on the core yet'}</p><p>{status}</p><p className="lottery-note">{round_label}</p></>}
     setup={<DrawControls draw={shown} held_out="—" disabled={state.busy || state.locked || Boolean(draft)}
       winner_control={<>{draw && <div className="cc-field"><label htmlFor={`${field_id}-winners`}>{copy.core.winner_count}</label>
                   <input id={`${field_id}-winners`} className="cc-input" type="number" min={1} max={65535} value={winner_value}
@@ -144,10 +144,10 @@ export function ConnectedLotsRoom({ port, simulated, seal_slot, flows }: { port:
       {state.cast_result ? <>
         <RevealedWinners clock={reveal} seal={state.seal_result?.sealed.seal} total={state.cast_result.cast.winners.length} />
         <button type="button" className="cc-btn" disabled={!state.writ} onClick={() => { setTools(true); setLab(true); setProve(count => count + 1); }}><RoomKeyBadge room="lottery" action="prove" />Prove it</button>
-      </> : <p className="lottery-note">The core writ appears after the cast. No winners are invented in this room.</p>}
-      <p className="lottery-note">Stylised ceremony · {round_label}</p>
+      </> : <p className="lottery-note">Core writ follows the cast.</p>}
     </>}
     tools={<>
+      <p className="lottery-note">The core writ appears after the cast. No winners are invented in this room. Stylised ceremony · {round_label}</p>
           <DrawCard name={shown?.name ?? (state.busy ? 'Reading your draws…' : 'No draw yet')}
             line={shown ? `${contentLine(shown)} · ${poolLabel[shown.rules.pool.kind].toLowerCase()}` : empty_line}
             guard={state.check?.result} guard_line={state.check?.reasons[0] ? policyReason(state.check.reasons[0]) : undefined}>

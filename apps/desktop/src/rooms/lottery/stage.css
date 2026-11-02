@@ -127,8 +127,6 @@
 .lottery-stage-rail:focus-visible { outline: var(--rule-thin) solid var(--azure); outline-offset: calc(var(--space-1) * -1); }
 .lottery-room .lottery-stage-top .cc-button.cc-heraldic-button[data-size],
 .lottery-room .lottery-stage-foot .cc-button.cc-heraldic-button[data-size] { min-height: var(--space-28); height: auto; padding: var(--space-2) var(--space-4); align-self: stretch; box-shadow: none; font: 700 var(--text-shell-label)/1.05 var(--font-ui); letter-spacing: normal; text-transform: none; }
-.lottery-room .lottery-stage-options .cc-button.cc-heraldic-button[data-size] { width: calc(var(--space-40) * 2); }
-.lottery-room .lottery-stage-options .cc-button.cc-heraldic-button[data-size]:last-child { width: calc(var(--space-40) * 2 + var(--space-8)); }
 .lottery-room .lottery-stage-top .lottery-stage-expand.cc-button[data-size],
 .lottery-room .lottery-stage-foot .lottery-stage-replay.cc-button[data-size] { flex: none; width: var(--space-28); padding: var(--space-2); font-size: var(--text-shell-panel-title); }
 .lottery-stage-foot .cc-chip { padding: var(--space-2) var(--space-4); font-size: var(--text-shell-label); }

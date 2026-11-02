@@ -146,7 +146,7 @@ export default function LotteryRoom({ snapshot, replay, queue = proposalQueue, s
       guard_line={drafting && policy.result === 'blocked' ? 'The Steward asks for each fix before the seal.' : guard_line} />}
     roll={<RollPanel status={status} tone={tone} counts={countCohorts(entries)} draft={drafting} simulated count={entries.length} />}
     cast={<>
-      <div className="lottery-draw-actions">
+      <div className="lottery-draw-actions lottery-primary-actions">
         {!drafting && phase === 'open' && <>
           <button type="button" className="cc-btn cc-btn--primary" onClick={open(setupFlow)}><RoomKeyBadge room="lottery" action="setup" />Set up a draw</button>
           <button type="button" className="cc-btn" onClick={open(castFlow)}><RoomKeyBadge room="lottery" action="cast" />Cast the lots</button>
@@ -156,8 +156,8 @@ export default function LotteryRoom({ snapshot, replay, queue = proposalQueue, s
           <button type="button" className="cc-btn cc-btn--primary" onClick={open(castFlow)}><RoomKeyBadge room="lottery" action="cast" />Cast the lots</button>
           <button type="button" className="cc-btn cc-btn--quiet" onClick={open(setupFlow)}><RoomKeyBadge room="lottery" action="setup" />Set up another draw</button>
         </>}
-        {proposal && <button type="button" className="cc-btn" onClick={() => setTools(true)}>Review and seal the writ</button>}
       </div>
+      {proposal && <button type="button" className="cc-btn" onClick={() => setTools(true)}>Review and seal the writ</button>}
       <p className="lottery-note">{drafting ? 'The Steward is drafting below. Nothing is sealed.'
         : proposal ? 'Proposal · not sealed. Review the writ before holding to seal.' : 'Winners are drawn at the moment you seal.'}</p>
     </>}
@@ -165,10 +165,10 @@ export default function LotteryRoom({ snapshot, replay, queue = proposalQueue, s
       {phase === 'cast' ? <>
         <RevealedWinners clock={reveal} seal={state.sealed_roll?.seal} total={state.simulated_winners?.length ?? 0} />
         <button type="button" className="cc-btn" onClick={() => { openLab(); stewardDock.open(proveFlow); }}><RoomKeyBadge room="lottery" action="prove" />Prove it</button>
-      </> : <p className="lottery-note">The writ appears after a draw is sealed. Replay the draw from its seed to check the winners.</p>}
-      <p className="lottery-note">Stylised illustration · generated sample lots · SIMULATED.</p>
+      </> : <p className="lottery-note">SIMULATED · writ follows the cast.</p>}
     </>}
     tools={<>
+      <p className="lottery-note">The writ appears after a draw is sealed. Replay the draw from its seed to check the winners. Stylised illustration · generated sample lots · SIMULATED.</p>
       {!drafting && phase === 'cast' && <FixtureCast port={port} display={appearance} hash={roll?.hash}
         on_prove={() => { openLab(); stewardDock.open(proveFlow); }} on_new={() => { port.reopen(); draftRoll(queue); }} />}
     {(lab || prove) && <div className="lottery-lab-bay">
