@@ -1,0 +1,28 @@
+{
+  "name": "@castle-control/headless",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "description": "Developer-only headless layer: drive a rehearsal core without the UI (library, cc CLI, stdio MCP).",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "bin": {
+    "cc": "./src/cc.mjs"
+  },
+  "scripts": {
+    "cc": "node src/cc.mjs",
+    "typecheck": "node ../../scripts/package-gate.mjs typecheck",
+    "lint": "node ../../scripts/package-gate.mjs lint",
+    "test": "node ../../scripts/package-gate.mjs test"
+  },
+  "dependencies": {
+    "@castle-control/contract": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "24.10.0",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}
