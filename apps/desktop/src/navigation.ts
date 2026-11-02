@@ -21,7 +21,7 @@ type Shortcut = {
 };
 type SurfaceActions = { overview?: () => void; back?: () => void; open?: () => void; tear?: () => void };
 export function dispatchShortcut(event: Shortcut, editable: boolean, navigate: (id: ModuleId) => void,
-  steward: () => void, actions: SurfaceActions = {}) {
+  steward: (() => void) | undefined, actions: SurfaceActions = {}) {
   const action = registry.get(event.key);
   if (!action || action === 'seal' || (editable && action !== 'back') || event.ctrlKey || event.metaKey ||
     event.altKey || event.isComposing || event.defaultPrevented || event.repeat) return;

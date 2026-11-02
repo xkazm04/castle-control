@@ -52,7 +52,7 @@ export function DesktopView(props: ViewProps) {
   return <ThemeFrame theme={props.theme} {...(current === 'keep' || current === 'overview' || current === 'demo' || current === 'stream' || current === 'rehearsal' ? {} : { module: current })}>
     <div className={`desktop-shell${cutaway ? ' desktop-cutaway' : ''}`}
       data-chamber={current === 'lottery' || current === 'moderator' || current === 'visuals' || current === 'studio' ? current : 'keep'}>
-      <DesktopRampart snapshot={props.snapshot} theme={props.theme} on_theme_change={props.on_theme_change}
+      <DesktopRampart snapshot={props.snapshot} theme={props.theme} on_theme_change={props.on_theme_change} steward={current !== 'keep'}
         on_steward={() => { if (props.steward_ref && 'current' in props.steward_ref) props.steward_ref.current?.focus(); }} />
       {cutaway &&
         <Suspense fallback={<div className="shell-strip-loading" role="status">Opening the chambers...</div>}>
@@ -77,7 +77,7 @@ export function DesktopView(props: ViewProps) {
               on_open={props.on_navigate} on_back={props.on_back ?? (() => undefined)} on_keep={() => props.on_surface?.('keep')} />}
         </Suspense>
       </main>
-      {current !== 'overview' && steward}
+      {current !== 'overview' && current !== 'keep' && steward}
     </div>
   </ThemeFrame>;
 }

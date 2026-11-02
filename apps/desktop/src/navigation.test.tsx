@@ -114,7 +114,7 @@ test('typing, modified shortcuts, repeats and composition do not navigate', () =
 test.each([['#/keep', 'Enter the keep'], ['#/overview', 'Stream preview'], ['#/demo', 'SIMULATED · SAMPLE ART · AI-generated'],
   ['#/chamber/lottery', 'Fairness you can verify'], ['#/chamber/moderator', 'The live room'],
   ['#/chamber/visuals', 'aria-label="Beacons work"'], ['#/chamber/studio', 'aria-label="Map Room work"'],
-  ['#/chamber/moderator/drill', 'The drill']] as const)('lazy %s retains one Steward bar and the rampart, and its existing content', async (hash, content) => {
+  ['#/chamber/moderator/drill', 'The drill']] as const)('lazy %s retains the rampart and its existing content, with one Steward dock everywhere but the Keep', async (hash, content) => {
   const snapshot = { mode: 'fixture', phase: 'ready', ...simulatedRead(1) } as const;
   const stream = await renderToReadableStream(<DesktopView navigation={initialNavigation(hash)} snapshot={snapshot}
     theme="day" on_navigate={() => undefined} on_theme_change={() => undefined} />);
@@ -124,7 +124,14 @@ test.each([['#/keep', 'Enter the keep'], ['#/overview', 'Stream preview'], ['#/d
   for (const text of [content, 'On air · simulated', 'Twitch simulated', 'OBS simulated', 'Gatehouse simulated']) expect(html).toContain(text);
   expect(html).not.toContain('desktop-simulated');
   expect(html).not.toContain('SIMULATED SOURCE');
-  expect(html.match(/aria-label="Talk to the Steward\.\.\."/g)).toHaveLength(1);
-  expect(html).toContain('<span class="cc-steward__role">simulated co-pilot · sample data</span><span class="cc-sim">Simulated</span>');
+  if (hash === '#/keep') {
+    // The landing page has no Steward: no dock, no talk field, no rampart button.
+    expect(html).not.toContain('Talk to the Steward');
+    expect(html).not.toContain('cc-steward-dock');
+    expect(html).not.toContain('>Steward</button>');
+  } else {
+    expect(html.match(/aria-label="Talk to the Steward\.\.\."/g)).toHaveLength(1);
+    expect(html).toContain('<span class="cc-steward__role">simulated co-pilot · sample data</span><span class="cc-sim">Simulated</span>');
+  }
   expect(html).not.toContain('cc-stage-frame');
 });

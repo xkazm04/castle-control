@@ -65,7 +65,8 @@ export function DesktopApp({ client }: { client: DesktopClient }) {
     const tile = event.target instanceof HTMLElement && event.target.closest('[data-room-tile]');
     dispatchShortcut({ key: event.key, ctrlKey: event.ctrlKey, metaKey: event.metaKey, altKey: event.altKey,
       isComposing: event.nativeEvent.isComposing, defaultPrevented: event.defaultPrevented, repeat: event.repeat,
-      preventDefault: () => { event.preventDefault(); } }, editable, openShortcut, () => { stewardInput.current?.focus(); },
+      preventDefault: () => { event.preventDefault(); } }, editable, openShortcut, // The Keep has no Steward dock: `/` there is left alone (no focus move, no preventDefault).
+      navigation.current === 'keep' ? undefined : () => { stewardInput.current?.focus(); },
     {
       overview: () => go('#/overview'),
       back: () => go(backHash(navigation)),

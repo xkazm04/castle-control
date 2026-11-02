@@ -195,5 +195,7 @@ test('shell and Keep column tracks shrink below a child min-content width', () =
   expect(shell).toMatch(/\.desktop-shell\s*\{[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\)/);
   expect(shell).toMatch(/\.desktop-shell\s*\{[^}]*min-width:\s*0/);
   const keep = readFileSync(new URL('./program-column.css', import.meta.url), 'utf8');
-  expect(keep).toMatch(/\.shell-keep-workspace\s*\{[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\)\s+calc\(var\(--space-1\)\s*\*\s*380\)/);
+  expect(keep).toMatch(/\.shell-keep-workspace\s*\{[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\)\s*;/);
+  const home = readFileSync(new URL('../keep/keep.css', import.meta.url), 'utf8');
+  expect(home).toMatch(/\.keep-home\s*\{[^}]*grid-template-columns:\s*262px\s+minmax\(0,\s*1fr\)\s+384px/);
 });

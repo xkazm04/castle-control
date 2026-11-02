@@ -63,7 +63,7 @@ test('Steward proposal review selects and opens the existing guarded room withou
 
 test('Keep is the shared cutaway with rule summaries, the Herald, moat and numbered room paths', () => {
   const html = renderToStaticMarkup(<Keep snapshot={snapshot} on_open={() => undefined} on_enter={() => undefined} />);
-  for (const text of ['THE HERALD', 'chat delay', '4 s', 'Armed 0', 'Watching 3', 'Enter the keep']) expect(html).toContain(text);
+  for (const text of ['The Herald', 'chat delay', '4 s', 'Armed 0', 'Watching 3', 'Enter the keep']) expect(html).toContain(text);
   expect(html).not.toContain('The lit keep');
   expect(html).toContain('data-role="keep-name">The Keep</h1>');
   for (const { id, number } of chambers) {

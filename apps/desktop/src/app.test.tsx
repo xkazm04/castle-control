@@ -3,11 +3,9 @@ import type { KeyboardEvent, ReactElement, ReactNode } from 'react';
 import { afterEach, expect, test, vi } from 'vitest';
 import { chambers } from '@castle-control/ui';
 import { proposalQueue } from '@castle-control/ui/steward';
-import { tokens } from '@castle-control/tokens';
 import { DesktopApp } from './app.jsx';
 import { initialNavigation } from './navigation.js';
 import { Keep } from './keep/keep.jsx';
-import { dollyMilliseconds } from './keep/camera.js';
 
 vi.mock('react', async original => ({ ...await original<typeof React>() }));
 afterEach(() => { vi.restoreAllMocks(); vi.unstubAllGlobals(); vi.useRealTimers(); });
@@ -31,14 +29,12 @@ function shortcutApp(hash: string, reduced = false) {
   const snapshot = { mode: 'fixture', phase: 'ready' } as const;
   vi.stubGlobal('window', { location, matchMedia: () => ({ matches: reduced }) });
   vi.stubGlobal('HTMLElement', ShortcutRoot);
-  vi.stubGlobal('getComputedStyle', () => ({ getPropertyValue: () => tokens.motion['m-dolly'] }));
   vi.spyOn(React, 'useSyncExternalStore').mockReturnValueOnce(snapshot).mockReturnValue(proposalQueue.getSnapshot());
-  const selected = vi.fn(); const opening = vi.fn();
+  const selected = vi.fn();
   vi.spyOn(React, 'useState')
     .mockReturnValueOnce([initialNavigation(hash), vi.fn()])
     .mockReturnValueOnce(['day', vi.fn()]).mockReturnValueOnce(['lottery', selected])
-    .mockReturnValueOnce([undefined, vi.fn()]).mockReturnValueOnce([undefined, vi.fn()])
-    .mockReturnValueOnce([1, vi.fn()]).mockReturnValueOnce([undefined, opening]);
+    .mockReturnValueOnce([undefined, vi.fn()]).mockReturnValueOnce([undefined, vi.fn()]);
   const refs = vi.spyOn(React, 'useRef').mockImplementation(value => ({ current: value }));
   refs.mockReturnValueOnce({ current: root });
   const effects = vi.spyOn(React, 'useEffect').mockImplementation(() => undefined);
@@ -59,32 +55,16 @@ function shortcutApp(hash: string, reduced = false) {
     }));
     expect(preventDefault).toHaveBeenCalledOnce();
   }
-  return { key, root, location, selected, opening, cleanup: () => cleanup.forEach(dispose => dispose()) };
+  return { key, root, location, selected, cleanup: () => cleanup.forEach(dispose => dispose()) };
 }
 
-test.each(chambers)('Keep key $number dollies through the $id hit before navigating', ({ id, number }) => {
+test.each(chambers)('Keep key $number opens the $id chamber at once through its hit', ({ id, number }) => {
   vi.useFakeTimers();
   const app = shortcutApp('#/keep');
   app.key(number);
   expect(app.root.querySelector).toHaveBeenCalledExactlyOnceWith(`.keep-home button[data-room-tile="${id}"]`);
-  expect(app.opening).toHaveBeenCalledExactlyOnceWith(id);
-  expect(app.location.hash).toBe('#/keep');
-  expect(app.selected).not.toHaveBeenCalled();
-  const duration = dollyMilliseconds(tokens.motion['m-dolly']);
-  vi.advanceTimersByTime(duration - 1);
-  expect(app.location.hash).toBe('#/keep');
-  vi.advanceTimersByTime(1);
   expect(app.location.hash).toBe(`#/chamber/${id}`);
   expect(app.selected).toHaveBeenCalledExactlyOnceWith(id);
-  app.cleanup();
-});
-
-test.each(chambers)('Keep key $number cuts immediately to $id under reduced motion', ({ id, number }) => {
-  vi.useFakeTimers();
-  const app = shortcutApp('#/keep', true);
-  app.key(number);
-  expect(app.location.hash).toBe(`#/chamber/${id}`);
-  expect(app.opening).not.toHaveBeenCalled();
   expect(vi.getTimerCount()).toBe(0);
   app.cleanup();
 });
@@ -96,7 +76,6 @@ test.each(chambers)('room key $number navigates directly to $id without a Keep d
   expect(app.location.hash).toBe(`#/chamber/${id}`);
   expect(app.selected).toHaveBeenCalledExactlyOnceWith(id);
   expect(app.root.querySelector).not.toHaveBeenCalled();
-  expect(app.opening).not.toHaveBeenCalled();
   expect(vi.getTimerCount()).toBe(0);
   app.cleanup();
 });

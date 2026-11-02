@@ -61,6 +61,7 @@ test('four hits and lintels carry the read model words, lines and chamber-aware 
   expect(html).toContain('Stylised illustration · drawn, not captured');
   expect(html).toContain('The moat · chat delay 4 s');
   expect(html).toContain('Enter the keep <kbd class="cc-kbd">0</kbd>');
+  expect(html).toContain('data-demo-entry');
 });
 
 test('honesty stamps follow fixture room provenance and omit absent core stamps', () => {
@@ -115,29 +116,30 @@ test.each(['pointer', 'focus'] as const)('%s lights each chamber, changes the he
     }
     renderToStaticMarkup(<Journey />);
     const readings = trees.map(tree => renderToStaticMarkup(tree));
-    expect(readings[1]).toContain('class="keep-castle focus"');
+    expect(readings[1]).toContain(`class="keep-castle kw" data-hover="${chamber.id}"`);
     expect(readings[1]).toContain(`Chamber ${chamber.number} of 4 · ${chamber.description} · press ${chamber.number} or click`);
     expect(readings[1]).toContain(`${chamber.name} · ${keepReadModel(snapshot).states[chamber.id].word}`);
     expect(readings.at(-1)).toContain('Point at a room, or press 1 to 4.');
-    expect(readings.at(-1)).toContain('class="keep-castle"');
+    expect(readings.at(-1)).toContain('class="keep-castle kw"');
   }
 });
 
-test('lighting toggles only the selected room overlays and clears every overlay on leave', () => {
-  const overlays = Object.keys(keepRooms).flatMap(room => ['dim', 'litglow'].map(() => ({
-    dataset: { room }, classList: { toggle: vi.fn() },
-  })));
-  const castle = { querySelectorAll: () => overlays } as HTMLDivElement & { querySelectorAll: () => typeof overlays };
+test('lighting moves data-active onto only the selected room light and tag, and clears every light on leave', () => {
+  const lights = Object.keys(keepRooms).flatMap(room => ['kw-light', 'kw-light-tag'].map(() => {
+    const attributes = new Set<string>();
+    return { dataset: { room }, setAttribute: (name: string) => { attributes.add(name); }, removeAttribute: (name: string) => { attributes.delete(name); },
+      lit: () => attributes.has('data-active') };
+  }));
+  const glass = { querySelectorAll: () => lights } as unknown as HTMLDivElement;
   for (const chamber of chambers) {
-    lightRoom(castle, chamber.id);
-    for (const overlay of overlays) expect(overlay.classList.toggle).toHaveBeenLastCalledWith('on', overlay.dataset.room === chamber.id);
+    lightRoom(glass, chamber.id);
+    for (const light of lights) expect(light.lit()).toBe(light.dataset.room === chamber.id);
   }
-  lightRoom(castle);
-  for (const overlay of overlays) expect(overlay.classList.toggle).toHaveBeenLastCalledWith('on', false);
+  lightRoom(glass);
+  for (const light of lights) expect(light.lit()).toBe(false);
 });
 
-test('each real hit opens its chamber immediately with reduced motion', () => {
-  vi.stubGlobal('window', { matchMedia: () => ({ matches: true }) });
+test('each real hit opens its chamber immediately', () => {
   const open = vi.fn();
   function Journey() {
     const tree = Keep({ on_open: open, on_enter: vi.fn() });
@@ -159,12 +161,12 @@ test('the retired room drawing has no remaining production importer', () => {
 
 test('the moat bar carries a labelled sample heartbeat in the fixture and none from a core room', () => {
   const fixture = renderToStaticMarkup(<Keep snapshot={{ mode: 'fixture', phase: 'ready', ...simulatedRead(1) }} on_open={vi.fn()} on_enter={vi.fn()} />);
-  const bar = fixture.slice(fixture.indexOf('class="keep-moat"'));
-  expect(bar).toContain('class="keep-moatlab" data-role="moat-label"');
-  expect(bar).not.toContain('class="keep-moat" data-role="moat-label"');
+  const bar = fixture.slice(fixture.indexOf('class="keep-moat km"'));
+  expect(bar).toContain('class="keep-moatlab km__label" data-role="moat-label"');
+  expect(bar).not.toContain('class="keep-moat km" data-role="moat-label"');
   expect(bar).toContain('The moat · chat delay 4 s');
   expect(bar).toContain('role="img" aria-label="Sample replay loop · simulated"');
-  expect(bar).toContain('<a class="keep-moat-link" href="#/chamber/moderator/drill">Watch the full replay</a>');
+  expect(bar).toContain('<a class="keep-moat-link cc-link" href="#/chamber/moderator/drill">Watch the full replay</a>');
   const core = renderToStaticMarkup(<Keep snapshot={{ mode: 'core', phase: 'ready', ...simulatedRead(1) }} on_open={vi.fn()} on_enter={vi.fn()} />);
   expect(core).toContain('The moat · chat delay set in the Gatehouse');
   expect(core).not.toContain('moat-heartbeat');

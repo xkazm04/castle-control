@@ -1,4 +1,4 @@
-.shell-keep-workspace { display: grid; flex: 1; grid-template-columns: minmax(0, 1fr) calc(var(--space-1) * 380); grid-template-rows: minmax(0, 1fr); column-gap: 18px; min-height: 0; min-width: 0; overflow: hidden; }
+.shell-keep-workspace { display: grid; flex: 1; grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); min-height: 0; min-width: 0; overflow: hidden; }
 .shell-program-column { min-height: 0; overflow-y: auto; overflow-x: hidden; box-sizing: border-box; }
 .shell-program-column > * { flex-shrink: 0; }
 .shell-program-column:focus-visible { outline: var(--rule-strong) solid var(--azure); outline-offset: calc(-1 * var(--rule-strong)); }

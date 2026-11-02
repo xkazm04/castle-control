@@ -1,92 +1,120 @@
-@import '@castle-control/keep-art/keep-art.css';
+/* The Keep: the fused Stained Glass landing (ported from C:/t/ux/fused/keep.html).
+   Three tracks: the intro column (.ki), the great window with its plaques (.kh) and the program column (aside).
+   Every colour, font and size reads the shared tokens; the window itself is drawn in keep-window.ts. */
 
-/* The winner's 1060 by 698 plane scales to fit. Sizes use max(design token,
-   floor token * inverse effective scale), preserving 13px labels and 15px reading
-   copy. The castle's inverse includes its camera scale; the headline uses stage scale. */
-.keep-home { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; gap: 10px; height: 100%; min-height: 0; padding: 12px 0 14px 14px; font: 400 var(--text-t-body)/1.4 var(--font-text); }
-.keep-heading { display: flex; justify-content: flex-start; align-items: center; flex-wrap: wrap; gap: 10px; padding: 0; }
+.keep-home { display: grid; grid-template-columns: 262px minmax(0, 1fr) 384px; grid-template-rows: minmax(0, 1fr); column-gap: 30px; align-items: stretch;
+  height: 100%; min-height: 0; padding: 18px var(--gutter) 14px; overflow: auto; font: 400 var(--text-t-body)/1.4 var(--font-text); }
+
+/* ---- intro column */
+.ki { grid-column: 1; display: flex; flex-direction: column; min-height: 0; padding-top: 6px; }
+.ki > * { flex: none; }
+.ki__eyebrow { min-height: 34px; margin: 0; }
+.ki__title { margin: 10px 0 0; height: 146px; display: flex; align-items: flex-end; font: 600 var(--text-t-hero)/.86 var(--font-display); color: var(--ink); transition: color var(--m-light) var(--ease-light); }
+.ki__title[data-room] { font-size: var(--text-px-42); line-height: .98; color: var(--ch-ink); text-shadow: 0 0 calc(var(--glow-on) * 24px) var(--ch-glow); }
+.ki__sub { margin: 12px 0 0; height: 92px; font: italic 400 var(--text-px-20)/1.35 var(--font-aside); color: var(--ink-2); }
+.ki__sub[data-room] { font-size: var(--text-px-17); }
+.ki__rule { height: 10px; margin: 4px 0 0; width: 120px; }
+.ki__actions { display: grid; gap: 10px; justify-items: stretch; margin-top: auto; padding: 16px 0 0; }
+.ki__actions .cc-btn { justify-content: space-between; }
 .keep-heading .cc-kbd { margin-left: 6px; }
-.keep-viewport { container: keep-surface / inline-size; position: relative; min-height: 0; overflow: hidden; border: var(--came) solid var(--lead); background: radial-gradient(70% 55% at 50% 100%, var(--ch-wash), transparent 70%), var(--surface); box-shadow: var(--shadow); outline: 1px solid var(--hair-2); outline-offset: -6px; }
-.keep-diorama { position: absolute; left: 50%; top: 50%; width: calc(var(--space-1) * 1060); height: calc(var(--space-1) * 698); transform: translate(-50%, -50%) scale(var(--keep-scale)); transform-origin: 50% 50%; }
-.keep-diorama, .keep-castle {
-  --keep-label-size: max(var(--text-shell-label), calc(var(--text-shell-label) * var(--keep-inverse)));
-  --keep-eyebrow-size: max(var(--text-shell-eyebrow), calc(var(--text-shell-label) * var(--keep-inverse)));
-  --keep-name-size: max(var(--text-shell-plaque-name), calc(var(--text-shell-label) * var(--keep-inverse)));
-  --keep-line-size: max(var(--text-shell-plaque-state), calc(var(--text-shell-body) * var(--keep-inverse)));
-  --keep-art-size: max(var(--text-shell-strip-word), calc(var(--text-shell-label) * var(--keep-inverse)));
-  --keep-headline-size: max(var(--text-shell-headline), calc(var(--text-shell-label) * var(--keep-inverse)));
-  --keep-sub-size: max(var(--text-shell-tagline), calc(var(--text-shell-body) * var(--keep-inverse)));
-  --keep-word-size: max(var(--text-shell-plaque-word), calc(var(--text-shell-label) * var(--keep-inverse)));
-}
-.keep-dio { position: absolute; inset: 0; overflow: hidden; transition: height var(--m-dolly) var(--ease-dolly); height: 100%; }
-.keep-khead { position: absolute; left: var(--space-24); right: var(--space-16); top: var(--space-10); z-index: 12; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 32%); grid-template-areas: "eyebrow illustration" "name name" "sub sub"; align-items: start; column-gap: var(--space-12); pointer-events: none; }
-.keep-khead .eyebrow { grid-area: eyebrow; min-width: 0; overflow-wrap: anywhere; display: block; margin-bottom: var(--space-6); font: 800 var(--keep-eyebrow-size, var(--text-shell-eyebrow))/1.1 var(--font-label); letter-spacing: .11em; text-transform: lowercase; color: var(--muted); }
-.cc-frame .keep-home .keep-khead .display { font-family: var(--font-display); font-weight: 600; font-stretch: normal; letter-spacing: .005em; line-height: .9; text-transform: none; }
-.keep-khead h1 { grid-area: name; margin: 0; font-size: var(--keep-headline-size, var(--text-shell-headline)); color: var(--ch-ink); text-shadow: 0 0 calc(var(--glow-on) * 24px) var(--ch-glow); }
-.keep-khead .sub { grid-area: sub; display: block; margin-top: var(--space-6); font: italic 400 var(--keep-sub-size, var(--text-shell-tagline))/1.2 var(--font-aside); color: var(--ink-2); }
-.keep-khead .slip { animation: keep-title-in var(--m-slip) var(--ease) both; }
-.keep-vlab { grid-area: illustration; box-sizing: border-box; justify-self: end; max-width: none; min-width: 0; white-space: normal; overflow-wrap: anywhere; text-align: right; font: italic 400 var(--keep-label-size, var(--text-shell-label))/1.2 var(--font-aside); color: var(--muted); background: color-mix(in srgb, var(--surface) 85%, transparent); padding: var(--space-4) var(--space-7); pointer-events: none; }
-.keep-castle { position: absolute; left: 0; top: 0; width: calc(var(--space-1) * 1200); height: calc(var(--space-1) * 640); transform-origin: 0 0; transition: transform var(--m-dolly) var(--ease-dolly); }
-.keep-castle > svg { display: block; width: 100%; height: 100%; overflow: visible; }
-.keep-castle > svg text { font-size: var(--keep-art-size, var(--text-shell-label)); }
-.keep-castle .dim { fill: var(--art-night); opacity: 0; mix-blend-mode: multiply; transition: opacity var(--m-stamp) ease; pointer-events: none; }
-.keep-castle.focus .dim { opacity: .55; }
-.keep-castle.focus .dim.on { opacity: 0; }
-.keep-castle .litglow { opacity: 0; transition: opacity var(--m-stamp) ease; pointer-events: none; }
-.keep-castle .litglow.on { opacity: 1; }
-.keep-hit { position: absolute; background: transparent; border: 0; cursor: pointer; padding: 0; border-radius: var(--space-2); }
-.keep-hit:focus-visible { outline: var(--space-4) solid var(--azure); outline-offset: calc(-1 * var(--space-4)); }
 [data-room="lottery"] { --keep-ink: var(--gules); --keep-lit: var(--gules-lit); --keep-text: var(--gules-ink); --keep-glow: var(--gules-glow); }
 [data-room="moderator"] { --keep-ink: var(--azure); --keep-lit: var(--azure-lit); --keep-text: var(--azure-ink); --keep-glow: var(--azure-glow); }
 [data-room="visuals"] { --keep-ink: var(--or); --keep-lit: var(--or-lit); --keep-text: var(--or-ink); --keep-glow: var(--or-glow); }
 [data-room="studio"] { --keep-ink: var(--key); --keep-lit: var(--key-lit); --keep-text: var(--key-ink); --keep-glow: var(--key-glow); }
-.keep-khead h1[data-room] { color: var(--keep-text); text-shadow: 0 0 calc(var(--glow-on) * 24px) var(--keep-glow); }
-.keep-plaque { box-sizing: border-box; position: absolute; z-index: 3; background: var(--surface); border: var(--came) solid var(--lead); padding: calc(var(--space-7) + 6px) var(--space-12) var(--space-8); box-shadow: var(--shadow); pointer-events: none; min-width: calc(var(--space-1) * 200); line-height: normal; transition: opacity var(--m-slip); }
-.keep-plaque::before { content: ''; position: absolute; inset: 0 0 auto; height: 6px; border-bottom: var(--came) solid var(--lead); background: linear-gradient(90deg, var(--keep-ink, var(--ch)), var(--keep-lit, var(--ch-lit)) 50%, var(--keep-ink, var(--ch))); box-shadow: 0 0 calc(var(--glow-on) * 12px) var(--keep-glow, var(--ch-glow)); }
-/* Below the winner's 1060-unit host (66.25rem), fit scale is necessarily < 1.
-   Keep the reference size uncapped; reserve the smaller plaques' column gutters. */
-@container keep-surface (width < 66.25rem) {
-  .keep-plaque { max-width: calc(var(--space-56) * 5); }
-}
-.keep-plaque .nm { font: 800 var(--keep-name-size, var(--text-shell-plaque-name))/1.1 var(--font-label); letter-spacing: .09em; text-transform: lowercase; color: var(--ink-2); display: flex; gap: var(--space-8); align-items: center; white-space: nowrap; }
-.cc-frame .keep-home .keep-plaque .wd { font: 600 var(--keep-word-size, var(--text-shell-plaque-word))/1 var(--font-display); font-stretch: normal; text-transform: none; letter-spacing: .005em; margin-top: var(--space-5); color: var(--keep-text, var(--ink)); }
-.keep-plaque .ln { font: 400 var(--keep-line-size, var(--text-shell-plaque-state))/1.3 var(--font-text); color: var(--ink-2); margin-top: var(--space-4); }
-.keep-plaque > .cc-stamp { --stamp-size: var(--keep-label-size); position: absolute; right: calc(-1 * var(--space-8)); top: calc(-1 * var(--space-14)); transform: rotate(2.5deg); background: var(--surface); }
-.keep-plaque.drafted { box-shadow: 0 0 0 2px var(--or), 0 0 calc(10px + var(--glow-on) * 16px) var(--or-glow), var(--shadow); }
-.keep-plaque .pin { position: absolute; left: calc(-1 * var(--space-10)); bottom: calc(-1 * var(--space-34)); font: 800 var(--keep-label-size, var(--text-shell-draft-label))/1 var(--font-label); letter-spacing: .1em; color: var(--or-ink); background: var(--or-wash); border: var(--rule-strong) dashed var(--or); padding: var(--space-4) var(--space-7); white-space: nowrap; }
-.keep-home.room-mode .keep-dio { height: calc(var(--space-1) * 250); border-bottom: var(--came) solid var(--lead); }
-.keep-home.room-mode .keep-khead, .keep-home.room-mode .keep-vlab { display: none; }
-.keep-home.room-mode .keep-plaque, .keep-home.room-mode .keep-moatlab { opacity: 0; }
-@keyframes keep-title-in { from { opacity: 0; transform: translateY(var(--space-4)); } to { opacity: 1; transform: none; } }
-@media (prefers-reduced-motion: reduce) {
-  .keep-khead .slip { animation: none; }
-  .keep-castle, .keep-dio, .keep-plaque, .keep-castle .dim, .keep-castle .litglow { transition: none; }
-}
 
-/* The replay is an unscaled moat band below the art, outside plaque and hit geometry. */
-.keep-moat { display: flex; min-width: 0; flex-wrap: nowrap; align-items: center; justify-content: space-between; gap: var(--space-8) var(--space-14); padding: 10px 12px; border: var(--came) solid var(--lead); background: var(--surface); box-shadow: var(--shadow); }
-/* The moat label is a pane of azure glass on the lead sill. */
-.keep-moatlab { display: flex; align-items: center; height: 34px; padding: 0 14px; font: 800 var(--text-px-15)/1 var(--font-label); letter-spacing: .06em; text-transform: lowercase; color: var(--on-glass); text-shadow: 0 1px 1px var(--lead-lo); background: var(--tex-glass), radial-gradient(140% 140% at 20% 0, var(--azure), var(--azure-deep)); background-size: 180px 180px, 100% 100%; background-blend-mode: soft-light, normal; box-shadow: inset 0 0 0 2px var(--lead), 0 0 calc(var(--glow-on) * 14px) var(--azure-glow); pointer-events: none; white-space: nowrap; }
-.keep-moatlab small { font: 600 var(--keep-label-size, var(--text-shell-label))/1 var(--font-ui); opacity: .85; margin-left: var(--space-8); }
-.keep-moat .moat-heartbeat { flex: 1 1 0; min-width: 0; flex-wrap: nowrap; gap: var(--space-6); }
-.keep-moat .moat-heartbeat small { flex: none; white-space: nowrap; font: 800 var(--text-t-label)/1.2 var(--font-label); letter-spacing: .08em; text-transform: lowercase; color: var(--ink-2); }
-.keep-moat .moat-heartbeat-strip { flex: 1 1 0; min-width: 0; height: var(--space-28); }
+/* ---- the moat card: a pane of azure glass over the sample replay */
+.keep-moat { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 10px; margin-top: 22px; padding: 12px; background: var(--surface); border: var(--came) solid var(--lead); box-shadow: var(--shadow); }
+.keep-moat > .keep-moatlab { grid-column: 1 / -1; }
+.keep-moatlab { display: flex; align-items: center; height: 34px; padding: 0 14px; font: 800 var(--text-px-15)/1 var(--font-label); letter-spacing: .06em; text-transform: lowercase;
+  color: var(--on-glass); text-shadow: 0 1px 1px var(--glass-shade); background: var(--tex-glass), radial-gradient(140% 140% at 20% 0, var(--azure), var(--azure-deep));
+  background-size: 180px 180px, 100% 100%; background-blend-mode: soft-light, normal; box-shadow: inset 0 0 0 2px var(--lead), 0 0 calc(var(--glow-on) * 14px) var(--azure-glow); pointer-events: none; white-space: nowrap; }
+.keep-moat .moat-heartbeat { display: contents; }
+.keep-moat .moat-heartbeat > small { grid-column: 1 / -1; font: 800 var(--text-t-label)/1.2 var(--font-label); letter-spacing: .08em; text-transform: lowercase; color: var(--ink-2); }
+.keep-moat .moat-heartbeat-strip { grid-column: 1 / -1; height: 30px; min-width: 0; }
 .keep-moat .moat-heartbeat .moat-scene { height: 100%; }
-.keep-moatlab, .keep-moat-link, .keep-moat .moat-heartbeat .cc-button { flex: none; white-space: nowrap; }
-.keep-moat-link { color: var(--azure-ink); font: 700 var(--text-t-small)/1.2 var(--font-text); text-decoration: underline; text-underline-offset: var(--space-3); }
-.keep-moat-link:focus-visible { outline: var(--rule-strong) solid var(--azure); outline-offset: var(--focus-offset); }
+.keep-moat .moat-heartbeat > .cc-btn, .keep-moat .moat-heartbeat > button { grid-column: 1; justify-self: start; }
+.keep-moat-link { grid-column: 2; justify-self: end; align-self: center; white-space: nowrap; color: var(--ink); font: 700 var(--text-t-small)/1.2 var(--font-text); text-decoration: underline; text-decoration-color: var(--ch); text-decoration-thickness: 2px; text-underline-offset: 4px; }
+.keep-moat-link:focus-visible { outline: var(--came) solid var(--focus); outline-offset: 2px; }
 
-/* Smaller windows may stack controls; desktop Keep widths reserve one moat row. */
-@media (width < 80rem) {
-  .keep-moat, .keep-moat .moat-heartbeat { flex-wrap: wrap; }
-  .keep-moat .moat-heartbeat { flex-basis: calc(var(--space-56) * 6); }
+/* ---- the great window */
+.kh { grid-column: 2; position: relative; min-height: 0; display: flex; justify-content: center; align-items: flex-start; }
+.kh__stage { --kw-w: min(100%, calc((100dvh - var(--top-h) - 172px) * 1.4)); width: var(--kw-w); display: flex; flex-direction: column; position: relative; }
+.kw { position: relative; aspect-ratio: 720 / 514; width: 100%; --kw-light: var(--sun); }
+[data-theme="night"] .kw { --kw-light: var(--moon); }
+.kw-art, .kw-svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.kw-art > svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.kw-bt { font: 800 var(--text-px-13-5)/1 var(--font-label); letter-spacing: .07em; fill: var(--banderole-ink); text-transform: lowercase; }
+.kw-tag { font: 800 var(--text-t-label)/1 var(--font-label); letter-spacing: .08em; fill: var(--lead-lo); text-transform: lowercase; }
+.kw-num { font: 800 var(--text-px-13-5)/1 var(--font-text); fill: var(--banderole-ink); }
+.kw-mottle { mix-blend-mode: overlay; pointer-events: none; }
+.kw-backlight { mix-blend-mode: soft-light; pointer-events: none; opacity: .9; }
+[data-theme="night"] .kw-backlight { mix-blend-mode: screen; opacity: .5; }
+[data-theme="night"] .kw-glass { filter: drop-shadow(0 0 7px color-mix(in srgb, var(--or-lit) 22%, transparent)); }
+.kw-eye { fill: var(--lead-lo); }
+[data-theme="night"] .kw-eye { fill: var(--or-lit); filter: drop-shadow(0 0 3px var(--or-lit)); }
+.kw-hood { opacity: .9; }
+.kw-light, .kw-head { transition: filter var(--m-light) var(--ease-light); }
+.kw[data-hover] .kw-light:not([data-active]), .kw[data-hover] .kw-head { filter: brightness(.5) saturate(.45); }
+.kw[data-hover] .kw-light-tag:not([data-active]) { opacity: .5; }
+.kw-light-tag { transition: opacity var(--m-light) var(--ease-light); }
+.kw-hit { position: absolute; z-index: 2; padding: 0; border: 0; background: transparent; cursor: pointer; border-radius: 48% 48% 0 0 / 14% 14% 0 0; }
+.kw-hit:focus-visible { outline: var(--came-heavy) solid var(--focus); outline-offset: 4px; }
+.kw .cc-flame, .kw-fire { transform-box: fill-box; transform-origin: 50% 100%; animation: cc-flicker 2.2s ease-in-out infinite; }
+/* the moment: dawn through the glass, light by light, then the rose and the pools */
+.kw-light, .kw-head { animation: cc-dawn 1.1s var(--ease-light) backwards; animation-delay: var(--d); }
+.kw-light .kw-fire { animation: cc-flicker 2.2s ease-in-out infinite; }
+.kh__pool { position: absolute; left: 0; right: 0; top: calc(var(--kw-w) * 0.71 - 6px); height: 150px; pointer-events: none; mix-blend-mode: var(--pool-blend); opacity: var(--pool-a);
+  background: radial-gradient(11% 85% at 16.04% 0, var(--gules-lit), color-mix(in srgb, var(--gules) 40%, transparent) 45%, transparent),
+    radial-gradient(11% 85% at 38.68% 0, var(--azure-lit), color-mix(in srgb, var(--azure) 40%, transparent) 45%, transparent),
+    radial-gradient(11% 85% at 61.32% 0, var(--or-lit), color-mix(in srgb, var(--or) 40%, transparent) 45%, transparent),
+    radial-gradient(11% 85% at 83.96% 0, var(--key-lit), color-mix(in srgb, var(--key) 40%, transparent) 45%, transparent); }
+[data-theme="night"] .kh__stage::after { content: ''; position: absolute; left: -6%; right: -6%; bottom: -14px; height: 90px; pointer-events: none; background: radial-gradient(60% 70% at 50% 100%, color-mix(in srgb, var(--moon) 12%, transparent), transparent); filter: blur(4px); }
+[data-theme="night"] .kw::before { content: ''; position: absolute; left: 22%; right: 22%; top: -10%; height: 70%; border-radius: 50%; background: radial-gradient(closest-side, color-mix(in srgb, var(--moon) 20%, transparent), transparent); filter: blur(10px); pointer-events: none; }
+.kbat { position: absolute; width: 34px; fill: var(--lead-lo); opacity: 0; pointer-events: none; }
+.kbat--0 { left: -2%; top: 2%; }
+.kbat--1 { right: 12%; top: 0; width: 24px; transform: rotate(-12deg); }
+[data-theme="night"] .kbat { opacity: .9; fill: var(--lead-lo); filter: drop-shadow(0 0 6px color-mix(in srgb, var(--moon) 25%, transparent)); }
+.ki__caption { order: 3; margin: 14px 0 0; text-align: right; font: italic 400 var(--text-t-small)/1.3 var(--font-aside); color: var(--muted); }
+
+/* ---- plaques: the calm inscription under each light */
+.kh__plaques { position: relative; height: 112px; margin-top: 22px; order: 2; }
+.keep-plaque { box-sizing: border-box; position: absolute; top: 0; width: 21.4%; transform: translateX(-50%); padding: 14px 12px 10px; background: var(--surface);
+  border: var(--came) solid var(--lead); box-shadow: var(--shadow); pointer-events: none; transition: transform var(--m-fast) var(--ease), box-shadow var(--m-fast) var(--ease); }
+.keep-plaque::before { content: ''; position: absolute; inset: 0 0 auto; height: 6px; border-bottom: var(--came) solid var(--lead);
+  background: linear-gradient(90deg, var(--ch), var(--ch-lit) 50%, var(--ch)); box-shadow: 0 0 calc(var(--glow-on) * 12px) var(--ch-glow); }
+.keep-plaque > .cc-stamp { position: absolute; top: -13px; right: 6px; transform: rotate(2.5deg); background: var(--surface); }
+.keep-plaque .nm { font: 800 var(--text-t-label)/1.1 var(--font-label); letter-spacing: .09em; text-transform: lowercase; color: var(--ink-2); white-space: nowrap; }
+.keep-plaque .wd { margin-top: 5px; font: 600 var(--text-px-21)/1 var(--font-display); letter-spacing: .005em; text-transform: none; color: var(--ch-ink); white-space: nowrap; }
+.keep-plaque .ln { margin-top: 5px; font: 400 var(--text-t-small)/1.3 var(--font-text); color: var(--ink-2); }
+.kw[data-hover="lottery"] ~ .kh__plaques [data-room="lottery"], .kw[data-hover="moderator"] ~ .kh__plaques [data-room="moderator"],
+.kw[data-hover="visuals"] ~ .kh__plaques [data-room="visuals"], .kw[data-hover="studio"] ~ .kh__plaques [data-room="studio"] {
+  transform: translateX(-50%) translateY(-3px); box-shadow: 0 0 0 2px var(--ch), 0 0 calc(10px + var(--glow-on) * 16px) var(--ch-glow), var(--shadow); }
+.keep-plaque.drafted { box-shadow: 0 0 0 2px var(--or), 0 0 calc(10px + var(--glow-on) * 16px) var(--or-glow), var(--shadow); }
+.keep-plaque .pin { position: absolute; left: -10px; bottom: -30px; font: 800 var(--text-t-label)/1 var(--font-label); letter-spacing: .1em; color: var(--or-ink); background: var(--or-wash); border: 2px dashed var(--or); padding: 4px 7px; white-space: nowrap; }
+
+/* ---- program column: the glass-framed Preview and Program, laid in the third track */
+.keep-home > .shell-program-column { grid-column: 3; margin: 0; overflow-y: auto; scrollbar-width: thin; }
+
+@media (max-width: 1380px) {
+  .keep-home { grid-template-columns: 236px minmax(0, 1fr) 350px; column-gap: 24px; }
+  .ki__title[data-room] { font-size: var(--text-px-46); }
+  .keep-plaque { padding-inline: 8px; }
+  .keep-plaque .wd { font-size: var(--text-t-h3); }
+  .keep-plaque .ln { font-size: var(--text-t-label); }
+}
+@media (max-height: 820px) {
+  .ki__eyebrow { min-height: 0; }
+  .ki__title { height: 74px; font-size: var(--text-t-title); }
+  .ki__title[data-room] { font-size: var(--text-px-32); }
+  .ki__sub { height: 72px; font-size: var(--text-px-17); }
+  .ki__sub[data-room] { font-size: var(--text-t-body); }
+  .ki__rule { display: none; }
+  .keep-moat { margin-top: 10px; gap: 8px; padding: 10px; }
+  .keep-moat .moat-heartbeat-strip { height: 22px; }
+  .ki__actions { padding-top: 10px; gap: 8px; }
 }
 
-/* Keep the verified small-window grid; wider windows use the winner's shared
-   intrinsic headline width instead of stretching its three block elements. */
-@media (width < 90rem) {
-  .keep-vlab { max-width: 100%; }
-}
-@media (width >= 90rem) {
-  .keep-khead { grid-template-columns: fit-content(68%) minmax(0, 1fr); grid-template-areas: "eyebrow illustration" "name ." "sub ."; }
+@media (prefers-reduced-motion: reduce) {
+  .kw-light, .kw-head, .kw .cc-flame, .kw-fire, .kw-light .kw-fire { animation: none; }
+  .kw-light, .kw-head, .kw-light-tag, .keep-plaque, .ki__title { transition: none; }
 }

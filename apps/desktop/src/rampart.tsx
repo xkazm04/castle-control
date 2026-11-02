@@ -13,8 +13,10 @@ function uptime(at: string, started_at?: string) {
 /** App composition of kit primitives: absent summaries stay explicitly unknown.
  * The kit's boolean-only Rampart cannot represent absent stream/moderation data.
  * Reuse its existing layout classes without changing the shared kit or tokens. */
-export function DesktopRampart({ snapshot, theme, on_theme_change, on_steward }: {
+export function DesktopRampart({ snapshot, theme, on_theme_change, on_steward, steward = true }: {
   snapshot: Snapshot; theme: Theme; on_theme_change: (theme: Theme) => void; on_steward?: () => void;
+  /** False on the Keep, where there is no Steward dock to talk to. */
+  steward?: boolean;
 }) {
   const { status, bridge } = snapshot;
   const fixture = snapshot.mode === 'fixture';
@@ -44,6 +46,6 @@ export function DesktopRampart({ snapshot, theme, on_theme_change, on_steward }:
     <span className="cc-spacer" />
     {simulated && <Stamp kind="simulated" />}
     <ThemeToggle theme={theme} onChange={on_theme_change} />
-    <InkButton disabled={!on_steward} onClick={on_steward} title="Talk to the Steward (/)">Steward</InkButton>
+    {steward && <InkButton disabled={!on_steward} onClick={on_steward} title="Talk to the Steward (/)">Steward</InkButton>}
   </header>;
 }

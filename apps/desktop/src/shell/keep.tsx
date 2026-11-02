@@ -9,8 +9,8 @@ import '@castle-control/ui/fused/glass.css';
 export default function KeepWorkspace({ selected = 'lottery', connection, ...props }: KeepProps & {
   selected?: ModuleId; connection?: StewardConnection;
 }) {
-  return <div className="shell-keep-workspace"><Keep {...props} />
-    <ProgramColumn snapshot={props.snapshot ?? { mode: 'fixture', phase: 'ready' }} selected={selected}
-      {...(connection ? { connection } : {})} />
+  return <div className="shell-keep-workspace"><Keep {...props}
+    aside={<ProgramColumn snapshot={props.snapshot ?? { mode: 'fixture', phase: 'ready' }} selected={selected}
+      {...(connection ? { connection } : {})} />} />
   </div>;
 }
