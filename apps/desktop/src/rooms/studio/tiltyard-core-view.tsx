@@ -8,6 +8,7 @@ import type { TiltyardConnection, TiltyardCore, TiltyardCoreState } from './tilt
 import { coreTurn, createTiltyardCore } from './tiltyard-core.js';
 import { DuelSourceAction } from './tiltyard-source.jsx';
 import { DuelStage } from './duel-stage.jsx';
+import type { DuelStageProps } from './duel-stage.jsx';
 import { corePicture, draftPicture } from './duel-model.js';
 import type { DuelDraft } from './duel-model.js';
 import { DEMO_KEY, duelHost } from './duel-host.js';
@@ -40,7 +41,9 @@ export function TiltyardCoreNotice({ state }: { state: TiltyardCoreState }) {
   </div>;
 }
 
-function CoreTiltyard({ model, draft, tools }: { model: TiltyardCore; draft?: DuelDraft | undefined; tools?: ReactNode }) {
+function CoreTiltyard({ model, draft, tools, details }: {
+  model: TiltyardCore; draft?: DuelDraft | undefined; tools?: ReactNode; details?: DuelStageProps['details'];
+}) {
   const state = useSyncExternalStore(model.subscribe, model.getSnapshot, model.getSnapshot);
   useEffect(() => model.start(), [model]);
   useEffect(() => {
@@ -64,7 +67,7 @@ function CoreTiltyard({ model, draft, tools }: { model: TiltyardCore; draft?: Du
       <button type="button" className="cc-btn" disabled={disabled} onClick={() => { void model.run(sampleTournament()); }}>Start sample tournament</button>
     </>} />
     <p className="duel-empty__fine">The sample uses SAMPLE starter contestants. Showdown and Ladder under More are local demos.</p></>;
-  return <DuelStage picture={picture} on_event={run} frozen={disabled} empty={empty}
+  return <DuelStage picture={picture} program={live} on_event={run} frozen={disabled} empty={empty} details={details}
     notice={<TiltyardCoreNotice state={state} />}
     tools={<>
       <DuelSourceAction mode="core" busy={disabled} on_copy={() => { void model.copySource(); }} />
@@ -74,9 +77,10 @@ function CoreTiltyard({ model, draft, tools }: { model: TiltyardCore; draft?: Du
 }
 
 /** Load the core contracts and adapter only when the shell supplies a core connection. */
-export default function CoreTiltyardView({ connection, draft, tools }: {
+export default function CoreTiltyardView({ connection, draft, tools, details }: {
   connection: TiltyardConnection; draft?: DuelDraft | undefined; tools?: ReactNode;
+  details?: DuelStageProps['details'];
 }) {
   const model = useMemo(() => createTiltyardCore(connection), [connection]);
-  return <CoreTiltyard model={model} draft={draft} tools={tools} />;
+  return <CoreTiltyard model={model} draft={draft} tools={tools} details={details} />;
 }

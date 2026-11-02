@@ -16,7 +16,7 @@ async function seal(page: Page) {
 const chip = (page: Page, name: string) => page.getByRole('group', { name: 'Steward suggestions', exact: true })
   .getByRole('button', { name, exact: true });
 
-test('Map Room duel: one match on the stage, compact strip, full bracket on demand, calls, call-off and a champion', async ({ page }) => {
+test('Map Room duel: chamber picture, two section columns, bracket drawer, calls, call-off and a champion', async ({ page }) => {
   test.setTimeout(90_000);
   const verify = await guardPage(page);
   try {
@@ -29,10 +29,30 @@ test('Map Room duel: one match on the stage, compact strip, full bracket on dema
     await expect(titles(stage)).toHaveText(['Raze the mill', 'Borrow the mill']);
     await expect(stage.locator('[data-role="ty-simulated"]')).toBeVisible();
     await expect(stage.locator('[data-role="ty-match-label"]')).toHaveText('Match 1 of 3');
-    // Only where you are: a strip of pips, never the whole tree on the stage. No sand table either.
-    await expect(stage.locator('[data-role="ty-strip"] .duel-pip')).toHaveCount(3);
+    // The last two rounds stay readable in the section summary; seeds stay in the drawer.
+    await expect(stage.locator('.duel-bracket__match[data-state]')).toHaveCount(3);
+    await expect(stage.locator('[data-role="room-picture"]')).toHaveCount(1);
+    await expect(stage.locator('.cc-chamber-column')).toHaveCount(2);
+    await expect(stage.locator('[data-role="room-section"]')).toHaveCount(3);
     await expect(stage.locator('[data-role="ty-match"]')).toHaveCount(0);
     await expect(room.locator('[data-hex-tile]')).toHaveCount(0);
+    // Laptop fit: the room and every section stay within the new frame without scrollers.
+    const original_size = page.viewportSize();
+    for (const size of [{ width: 1280, height: 720 }, { width: 1366, height: 768 }]) {
+      await page.setViewportSize(size);
+      const fit = await stage.evaluate(element => {
+        const frame = element.getBoundingClientRect();
+        const columns = [...element.querySelectorAll('.cc-chamber-column')];
+        return { fits: columns.every(column => column.getBoundingClientRect().bottom <= frame.bottom + 1),
+          scrollers: [...element.querySelectorAll('*')].filter(node => {
+            const style = getComputedStyle(node);
+            return ['auto', 'scroll'].includes(style.overflowY) && node.scrollHeight > node.clientHeight + 1;
+          }).length,
+          cards: [...element.querySelectorAll('.duel-card__title')].every(node => node.clientWidth >= 100) };
+      });
+      expect(fit).toEqual({ fits: true, scrollers: 0, cards: true });
+    }
+    if (original_size) await page.setViewportSize(original_size);
     // The hero, its tally and the streamer's actions sit above the Steward dock without scrolling.
     const dock = await page.getByRole('region', { name: 'The Steward', exact: true }).boundingBox();
     const open = await stage.getByRole('button', { name: /Open the vote/ }).boundingBox();
@@ -48,7 +68,8 @@ test('Map Room duel: one match on the stage, compact strip, full bracket on dema
     await page.keyboard.press('Escape');
     await expect(sheet).toHaveCount(0);
     await expect(page).toHaveURL(/#\/chamber\/studio$/);
-    await expect(stage).toBeFocused();
+    await expect(stage.getByRole('button', { name: 'Full bracket', exact: true })).toBeFocused();
+    await stage.focus();
 
     // Enter opens the vote; generated SIMULATED ballots arrive and the tally moves.
     await page.keyboard.press('Enter');
@@ -92,6 +113,7 @@ test('Map Room duel: one match on the stage, compact strip, full bracket on dema
     await stage.getByRole('button', { name: 'Full bracket', exact: true }).click();
     await expect(sheet.locator('[data-role="ty-champion-slot"]')).toHaveText(champion);
     await sheet.getByRole('button', { name: /Close/ }).click();
+    await stage.focus();
     // Undo reopens the final.
     await page.keyboard.press('Backspace');
     await expect(stage).toHaveAttribute('data-phase', 'live');
@@ -105,17 +127,17 @@ test('Map Room duel: one match on the stage, compact strip, full bracket on dema
     await expect(menu.getByRole('menuitem', { name: /^Design proposals/ })).toBeVisible();
     await expect(menu).toContainText('Nothing reaches chat, OBS or the core.');
     await menu.getByRole('menuitem', { name: /^Showdown/ }).click();
-    const demos = room.getByRole('dialog', { name: 'Local duel demos · Showdown and Ladder', exact: true });
+    const demos = sheet.getByRole('dialog', { name: 'Local duel demos · Showdown and Ladder', exact: true });
     await expect(demos.locator('[data-role="ty-pennant"]')).toHaveCount(2);
-    await expect(room).toContainText('Local demo');
-    await room.getByRole('button', { name: 'Back to the duel', exact: true }).click();
+    await expect(sheet).toContainText('Local demo');
+    await sheet.getByRole('button', { name: 'Back to the duel', exact: true }).click();
     await expect(stage.locator('[data-role="ty-round"]')).toHaveText('Final');
     // The war-table design proposals no longer sit under the stage; More opens them.
-    await expect(room.getByRole('group', { name: 'War-table panel design', exact: true })).toBeHidden();
+    await expect(page.getByRole('group', { name: 'War-table panel design', exact: true })).toBeHidden();
     await stage.getByRole('button', { name: /^More/ }).click();
     await menu.getByRole('menuitem', { name: /^Design proposals/ }).click();
-    await expect(room.getByRole('group', { name: 'War-table panel design', exact: true })).toBeVisible();
-    await room.getByRole('button', { name: 'Back to the duel', exact: true }).click();
+    await expect(sheet.getByRole('group', { name: 'War-table panel design', exact: true })).toBeVisible();
+    await sheet.getByRole('button', { name: 'Back to the duel', exact: true }).click();
     await expect(stage.locator('[data-role="ty-round"]')).toHaveText('Final');
     await auditStyles(page, desktopSurfaces);
     await auditFields(page);
@@ -155,12 +177,17 @@ test('Map Room Steward: Start a duel drafts on the stage, nothing starts until t
     await seal(page);
     await expect(stage).toHaveAttribute('data-phase', 'live');
     await expect(stage.locator('[data-role="ty-simulated"]')).toBeVisible();
-    await expect(stage).toContainText('Demo: generated ballots arrive');
+    await stage.getByRole('button', { name: 'More', exact: true }).click();
+    const details = page.getByRole('dialog', { name: 'Full bracket', exact: true });
+    await expect(details).toContainText('Demo: generated ballots arrive');
+    await details.getByRole('button', { name: /Close/ }).click();
     await expect(stage.locator('[data-role="ty-phase"]')).toContainText('×3');
     await expect.poll(async () => (await counts(stage)).reduce((a, b) => a + b, 0), { timeout: 10_000 }).toBeGreaterThan(0);
     await expect(stage).toHaveAttribute('data-phase', 'verdict', { timeout: 15_000 });
     await expect(stage).toHaveAttribute('data-phase', 'done', { timeout: 60_000 });
-    await expect(stage).toContainText('Demo finished');
+    await stage.getByRole('button', { name: 'More', exact: true }).click();
+    await expect(details).toContainText('Demo finished');
+    await details.getByRole('button', { name: /Close/ }).click();
     await expect(stage.locator('[data-role="ty-champion"]')).toHaveText(/^Champion: /);
   } finally { await page.goto('about:blank'); verify(); }
 });

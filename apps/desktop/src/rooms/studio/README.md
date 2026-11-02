@@ -1,5 +1,56 @@
 # Map Room C · Herald
 
+## T3 WP4-map · The Deck (2026-11-02)
+
+Fixture and connected-core duels now share `ChamberLayout` through `DuelStage`.
+The 16:9 picture uses the same contestants, phase, clock, counts and verdict as
+the controls. Preview shows the existing Steward duel draft; Program keeps the
+actual tournament snapshot while a draft is shown. Sample data remains labelled
+SIMULATED. No tournament model, contract, ballot generator or duel keymap changed.
+
+Old section destinations:
+
+| Destination | Existing content |
+| --- | --- |
+| Picture column | Duel picture; Preview draft and Program tournament minis; core connection/error notices |
+| Column 1 · The duel | Question, round, two option cards side by side, call buttons, countdown, phase/verdict/champion, vote controls and tally including moderation provenance |
+| Column 2 · The bracket | Semifinals beside final and champion; full bracket trigger. Eight-entry quarterfinals remain in the drawer |
+| Column 2 · Call the duel | Undo, speed, new bracket, the existing sealed stream flow, More drawer trigger |
+| Drawer | Full bracket with seeds, core source-copy/refresh, demo detail notices, and all six More views: Showdown, Ladder, sand table/design, Spyglass, Rehearse, design proposals |
+
+The shared Drawer is portalled outside the room frame. Escape closes it before
+the duel keymap receives the key; the shared focus lifecycle restores its opener.
+The local proposal forms keep a stable portal host across closes, preserving
+their mounted state. The room never adds action-key badges. Glass surfaces,
+spacing, type and motion use existing tokens; picture type is at least 15 px,
+section type at least 13 px. Bulky detail is in the scrolling drawer body.
+
+Verification (no installation, dependency changes or git writes):
+
+- `pnpm --config.verify-deps-before-run=false --filter @castle-control/desktop typecheck`
+  exits 0: `[pnpm typecheck] walked 361 files`.
+- The same desktop `lint` exits 0: `[pnpm lint] walked 361 files`.
+- The same desktop `test` exits 0: `127 passed (127)` files, `1155 passed (1155)` tests.
+  A competing earlier run timed out in the unchanged 900-cast crypto corpus;
+  the complete suite passed when rerun without concurrent checks.
+- `duel-chamber.test.tsx` covers the actual ChamberLayout composition, picture,
+  minis, both columns, both drawer triggers, reachable seeded bracket/menu/source
+  tools, Preview/Program separation, and drawer-first Escape/frozen controls.
+- `node scripts/check.mjs` exits 0 for boundaries, hygiene, type floor, file cap
+  and secrets. `git diff --check` exits 0.
+- The room journey retains calls, tally freeze, call-off/resume, champion, undo,
+  local demos, design proposals, Steward draft/seal and demo progression coverage;
+  selectors follow the new drawer, bracket summary and focus return. It also
+  checks the chamber's picture, columns and laptop fit at 1280×720 and 1366×768.
+
+Browser verification is outstanding. The winner's supplied 1280 screenshot and
+source were inspected, but Computer Use reported both browser host and native
+pipe unavailable. Desktop `dev` started Vite at `http://127.0.0.1:5175/` because
+5173/5174 were occupied, and was stopped after verification. The targeted command
+`$env:CC_E2E_PORT='5186'; pnpm --config.verify-deps-before-run=false exec playwright test -c e2e/playwright.config.ts journey-tiltyard.spec.ts --output=apps/desktop/src/rooms/studio/.verification/e2e`
+exited 1 at `Error: spawn EPERM` before browser assertions. No visual fit, browser
+journey or screenshot-fidelity pass is claimed; Director verification is required.
+
 ## Stabilize maproom-03, maproom-05 and maproom-06 (2026-10-31)
 
 Re-anchored at `14d2e78`: `hex-table.tsx` still rendered every tile in the Tab

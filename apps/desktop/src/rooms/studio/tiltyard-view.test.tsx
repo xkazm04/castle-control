@@ -16,10 +16,11 @@ test('the Map Room opens on the duel: one SAMPLE match, SIMULATED, ready with it
     expect(stage).toContain('Semifinal'); expect(stage).toContain('Match 1 of 3');
     expect(stage).toContain('<span class="cc-sim" data-role="ty-simulated">Simulated</span>');
     expect(stage).toContain('Open the vote'); expect(stage).toContain('Full bracket');
-    // The compact strip only: two semifinal pips, one final pip and the champion slot; no full tree on the page.
-    expect(stage.match(/class="duel-pip"/g)).toHaveLength(3);
+    // Two semifinals and the final in the section summary; the full seeded tree is in the drawer.
+    expect(stage.match(/class="duel-bracket__match" data-state=/g)).toHaveLength(3);
+    expect(stage).toContain('data-role="ty-champ-slot"');
     expect(stage).not.toContain('data-role="ty-match"');
-    expect(stage).not.toContain('Duel on stream');
+    expect(stage).toContain('Show the duel on stream');
     expect(network).not.toHaveBeenCalled();
   } finally { network.mockRestore(); }
 });

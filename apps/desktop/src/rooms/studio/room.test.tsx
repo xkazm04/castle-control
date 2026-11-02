@@ -174,7 +174,8 @@ test('default module loads lazily, opens on the duel and offers no network or su
     expect(html).toContain('aria-label="The duel stage"');
     expect(html).toContain('Raze the mill');
     expect(html).toContain('Ready · vote not open');
-    expect(html).toContain('aria-haspopup="menu"');
+    expect(html).toContain('aria-haspopup="dialog"');
+    expect(html).toContain('class="cc-chamber-layout"');
     expect(html).not.toContain('data-hex-tile');
     expect(html).not.toContain('WP 4.0');
     expect(html).not.toContain('\u2014');
