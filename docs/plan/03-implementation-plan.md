@@ -1031,6 +1031,50 @@ Type-only exports remain available from the contract root. New runtime handles
 compiled `@castle-control/contract/beacons` subpath, for lazy desktop loading
 within the unchanged 393216-byte first-load budget.
 
+**Custom design typed payloads (contract delivery D1, 2026-11-02).**
+
+Owner decisions of 2026-11-02 (C:/t/assets/CUSTOM-DESIGN-BRIEF.md): GPT image on the
+streamer's own OpenAI key is the default provider, Leonardo stays an alternative, and
+the spend ledger accepts micro-USD OpenAI receipts. This delivery defines the contract
+only: the five new methods are declared, not registered; no handler, provider, ledger
+writer, persistence, renderer or UI is added. Existing callers stay valid: every new
+field on an existing record is optional and omitted when absent.
+
+| Method or type | Params, result or fields |
+| --- | --- |
+| `beacons.design.create` (Custom design) | `DesignCreateParams { kind: ArtAssetKind }` -> `DesignCreateResult { design_id: DesignId }`; creates a writable custom design root, persisted so it survives restart |
+| `beacons.art.direct` (Custom design) | `ArtDirectParams` -> `ArtDirection`; engine-backed art director, `unavailable` when no Steward engine is configured (the UI then uses its scripted director) |
+| `beacons.art.layers` (Custom design) | `ArtLayersParams { design_id: DesignId, asset: LocalAssetPath, kind: ArtAssetKind }` -> `ArtLayers`; base/effect split, deterministic anchor measurement and a bound `DesignPackage` |
+| `beacons.library.import` (Custom design) | `LibraryImportParams { library_id: LibraryAssetId, kind: ArtAssetKind }` -> `LibraryImportResult { design_id: DesignId }`; imports a built-in library asset as a design |
+| `gatehouse.votebar.design.set` (Custom design) | `VoteBarDesignSetParams { design_id?: DesignId }` -> `Empty`; an omitted design clears the vote bar art. Params must be an object |
+| `ArtAssetKind` | Exactly `beacon`, `frame`, `vote_bar`, `draw_vessel` |
+| `ArtProvider` | Exactly `leonardo`, `openai` |
+| `ArtBackground` | Exactly `transparent`, `opaque` |
+| `ArtProviderStatus` | `provider: ArtProvider`, `available: bool`; local key presence only |
+| `ArtStatusResult` (extended) | Adds optional `providers: ArtProviderStatus[]`, omitted when empty so `{ available }` stays valid; `available` stays true when any provider is available |
+| `ArtGenerateParams` (extended) | Adds optional `provider: ArtProvider` (omitted = `leonardo`) and optional `background: ArtBackground`. A present `background` requires `provider: openai`, in Rust and in the generated schema |
+| `ArtProvenance` (extended) | Adds `openai_generated` |
+| `HexColor` | `#rrggbb`, exactly `^#[0-9a-fA-F]{6}$`; case preserved. No existing colour scalar fitted (`ColourToken` is a token, not a raw value) |
+| `ArtRect`, `ArtPoint` | `{ x, y, w, h }` and `{ x, y }`, each an `Intensity` (finite fraction 0..1 of the image) |
+| `ArtAnchors` | All optional: `core_rect`, `window_rect`, `track_rect`, `chamber_rect: ArtRect`; `track_radius: Intensity`; `mouth: ArtPoint`; `segments: [HexColor, HexColor, HexColor]` (exactly 3). Must be an object |
+| `ArtDirectParams` | `kind: ArtAssetKind`, nonblank `request` (1..500 code points), `width`, `height: ArtDimension`, optional nonblank `answer` (at most 120) |
+| `ArtDirection` | `kind`, nonblank `interpretation`, nonblank `style_name`, `palette: HexColor[]` (at most 6), `assumptions: string[]` (at most 3, each nonblank), optional `question: ArtQuestion`, nonblank `master_prompt` (at most 1400), `width`, `height: ArtDimension` |
+| `ArtQuestion` | Nonblank `text`, `options: string[]` (2..4, each nonblank), nonblank `assumed` (the preselected option; membership in `options` is not schema-enforced) |
+| `ArtLayers` | `design_id: DesignId`, `base: LocalAssetPath`, optional `effect: LocalAssetPath`, `anchors: ArtAnchors`, `package: DesignPackage`, `costs: ArtCostReceipt[]` (empty when no paid edit call was made) |
+| `LibraryAssetId` | `^[a-z0-9-]{1,64}$`, a built-in library catalog id |
+| `OverlayAssetUrl` | Same-origin overlay asset path `/assets/<slug>/<64 lowercase hex content hash>/<LocalAssetPath>`, the overlay host's asset route; no scheme, host, query, fragment or traversal |
+| `VoteBarArt` | `asset_url: OverlayAssetUrl`, `track_rect: ArtRect`, `track_radius: Intensity`, `segments: [HexColor, HexColor, HexColor]` |
+| `VoteBarSnapshot` (extended) | Adds optional `art: VoteBarArt`; still aggregate-only |
+| `Display` (extended) | Adds optional `art_design: DesignId`; when present the Lots plate renders the image vessel instead of `art_style` |
+| `VesselArt` | `asset_url: OverlayAssetUrl`, optional `token_url: OverlayAssetUrl`, `chamber_rect: ArtRect`, `mouth: ArtPoint` |
+| `LotsPlateSnapshot` | Optional `vessel: VesselArt`; the plate render data that the Lots overlay page carries beside its seal and cast islands. Must be an object |
+| `cc_store::ImageProvider` (store) | Adds `OpenAi`, serialized `openai`; ledger behaviour is unchanged here |
+
+All records deny unknown fields and enums reject unknown values; present optional
+keys reject null. Rust and generated validators enforce the same bounds. Rects are
+not checked for `x + w <= 1`; consumers clamp. Keychain: the OpenAI key reuses the
+Steward's service `castle-control`, account `openai`, referenced by label only.
+
 **Design package typed payloads (contract delivery, 2026-10-26).**
 
 | Method or type | Params, result or fields |
@@ -1284,6 +1328,7 @@ are `crates/cc-types/tests/fixtures/tiltyard.json`.
 | lots (WP R.1; Declared / Pending implementation) | `lots.source.url` |
 | rehearsal (WP R.1; Declared / Pending implementation) | `rehearsal.start`, `rehearsal.stop`, `rehearsal.scenario.run`, `rehearsal.crowd.set` |
 | tiltyard (WP R.1; Declared / Pending implementation) | `tiltyard.source.url` |
+| custom design (Declared / Pending implementation) | `beacons.design.create`, `beacons.art.direct`, `beacons.art.layers`, `beacons.library.import`, `gatehouse.votebar.design.set` |
 
 **Stream events on `/events`.** Every event carries `seq`, `at` and `kind`:
 

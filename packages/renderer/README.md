@@ -372,3 +372,24 @@ including production `draw/*.ts`, playback, and the existing lots validator
 inputs. Rebuild `apps/overlay/bundle.js` with the command in
 [`apps/overlay/README.md`](../../apps/overlay/README.md). Tests import that inventory
 and reject stale output, eval, Function constructors and dynamic imports.
+
+## Custom design art (D3, 2026-11-02)
+
+- **Vote bar** (`src/vote-bar-art.ts`): when `VoteBarSnapshot.art` is present the page paints the
+  housing image and the aggregate shares as segments inside `track_rect` (extent clamped to the
+  image; radius = `track_radius` x rendered track height via ResizeObserver). Directions use the
+  three `segments` colours in order; a fourth or later direction blends two neighbours. Segment
+  nodes are retained so width changes transition; the largest share gets the lead glow; a sheen
+  runs over every segment. `prefers-reduced-motion` stops transitions and sheen. No direction text
+  is painted on the art path. Without `art` the labelled bars are unchanged. Bundle 16,359 bytes of a 20,480-byte budget (raised from 16 KiB by the owner, 2026-11-02).
+- **Lots vessel** (`src/draw/vessel.ts`): a valid `cc-vessel` island (`LotsPlateSnapshot`) replaces
+  the vector artwork with the vessel image. Up to nine entries idle inside `chamber_rect` (token
+  sprite, or a CSS orb in the plate colour without `token_url`); each revealed winner gets a token
+  flown from `mouth` to its row (none under reduced motion or replay). Absent, malformed or invalid
+  islands keep today's plate. The contract has no compiled `LotsPlateSnapshot` validator for the
+  overlay yet, so the island goes through the contract `door` parser and a local structural guard
+  that mirrors the cc-types schema (deny unknown keys, Intensity 0..1, `OverlayAssetUrl` pattern).
+- **Beacons**: image layers with intensity bindings already carry a base plus effect sprite, in
+  either order (`overlay-layers.test.ts`); centre-preserving swell needs x/y bindings beside scale.
+- The overlay embeds its sheet comment- and whitespace-compacted (`compactCss`) to hold the
+  118,784-byte budget, raised by the owner from 114,688 on 2026-11-02 (bundle now 114,661 bytes).

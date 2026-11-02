@@ -193,14 +193,14 @@ test('Gatehouse Steward flows set the rules and the vote bar; nothing acts befor
     await chip(page, 'Show the vote bar');
     await pick(page, 'Emotes only');
     await pick(page, 'Across the top, large');
-    await pick(page, 'Neon');
+    await pick(page, 'Neon Stage Hardware');
     const canvas = drawer(page).locator('.gh-herald .gh-stage__canvas');
     await expect(canvas).toHaveAttribute('data-anchor', 'top-left');
     await expect(page.locator('.gh-herald .gh-stage figcaption')).toContainText('Draft');
     await looksRight(page);
     await seal(page);
     await expect(canvas).toHaveAttribute('data-size', 'L');
-    await expect(page.locator('.gh-herald .gh-votebar')).toHaveAttribute('data-art-style', 'synthwave');
+    await expect(page.locator('.gh-herald .gh-votebar')).toHaveAttribute('data-art', 'votebar-12');
     await expect(drawer(page).locator('.gh-herald').getByRole('button', { name: 'Emotes only', exact: true })).toHaveAttribute('aria-pressed', 'true');
     await expect(page.locator('.gh-herald .gh-stage figcaption')).not.toContainText('Draft');
   } finally { await page.goto('about:blank'); verify(); }

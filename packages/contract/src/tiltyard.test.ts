@@ -27,7 +27,7 @@ function parse(door: unknown, value: unknown): unknown {
 test('all simulated actions, session states and overlay phases round-trip with Rust fixtures', () => {
   expect(fixture.simulated).toBe(true);
   expect(actions).toHaveLength(9);
-  expect(RPC_METHODS).toHaveLength(62);
+  expect(RPC_METHODS).toHaveLength(67);
   expect(parseMethodParams(maproomStageGet, {})).toEqual({});
   for (const action of actions) {
     const params = { action };

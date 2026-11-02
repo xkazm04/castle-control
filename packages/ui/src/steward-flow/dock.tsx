@@ -240,9 +240,10 @@ export function StewardDock({ chamber, registry, mode = 'simulated', role, input
           {view.entries.some(entry => entry.status === 'answered') && <ol className="cc-steward-answers" aria-label="Answered so far">
             {view.entries.filter(entry => entry.status === 'answered' || (entry.status === 'active' && session.state.editing === entry.step.id))
               .map(entry => <li key={entry.step.id}>
-                <button type="button" className="cc-steward-answer" aria-current={entry.status === 'active' ? 'step' : undefined}
-                  aria-label={`Change ${entry.step.label}`} onClick={() => store.reopen(chamber, entry.step.id)}>
-                  {entry.summary ?? `${entry.step.label} · changing`}</button></li>)}
+                {entry.step.kind === 'work' ? <span className="cc-steward-answer" data-kind="work">{entry.summary ?? entry.step.label}</span>
+                  : <button type="button" className="cc-steward-answer" aria-current={entry.status === 'active' ? 'step' : undefined}
+                    aria-label={`Change ${entry.step.label}`} onClick={() => store.reopen(chamber, entry.step.id)}>
+                    {entry.summary ?? `${entry.step.label} · changing`}</button>}</li>)}
           </ol>}
           {view.active && <StepCard session={session} entry={view.active} chamber={chamber} store={store}
             {...(seal_key ? { on_preview: () => { if (store.preview(chamber)) root.current?.querySelector<HTMLButtonElement>('[data-role="seal-key"]')?.focus(); } } : {})} />}

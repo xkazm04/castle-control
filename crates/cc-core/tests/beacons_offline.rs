@@ -249,10 +249,14 @@ fn registry_registers_beacons_methods_without_starting_an_overlay() {
     assert_eq!(
         methods,
         [
+            "beacons.art.direct",
             "beacons.art.generate",
+            "beacons.art.layers",
             "beacons.art.status",
             "beacons.contribution.list",
             "beacons.curve.set",
+            "beacons.design.create",
+            "beacons.library.import",
             "beacons.simulate",
             "beacons.source.url",
             "beacons.visual.list",

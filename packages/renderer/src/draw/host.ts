@@ -4,6 +4,7 @@ import type { DrawContent } from '@castle-control/contract';
 import type { DrawShape } from './model.ts';
 import { buildDrawScene, createDrawPlayback } from './scenes.ts';
 import { paintDraw } from './paint.ts';
+import { readVessel } from './vessel.ts';
 
 /** Rust resolves ?shape= once and writes one of the four shapes on <main>; anything else is the urn. */
 function shapeOf(root: HTMLElement): DrawShape {
@@ -51,7 +52,8 @@ export function mountDraw(root: HTMLElement, draw_id: string): (() => void) | un
     // LotsDraw/RollSealResult carries no shape: the streamer's display choice arrives as a page attribute.
     const scene = buildDrawScene(shapeOf(root), cast.cast, { content, disclaimer: content === 'prize', reduced_motion });
     const player = createDrawPlayback(scene);
-    const paint = paintDraw(root, scene);
+    const art = readVessel(doc);
+    const paint = paintDraw(root, scene, art && { art, entries: seal.sealed.roll.entries.length });
     const fallback = root.querySelector<HTMLElement>('[data-draw-fallback]');
     if (fallback) fallback.hidden = true;
     root.dataset['drawMounted'] = 'true';

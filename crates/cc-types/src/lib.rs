@@ -1,4 +1,6 @@
 //! The single authority for Castle Control's wire vocabulary and schemas.
+mod art_design;
+mod art_direct;
 mod beacons;
 mod beacons_art;
 mod beacons_reads;
@@ -35,6 +37,8 @@ mod tiltyard_value;
 mod value;
 mod vote_bar;
 
+pub use art_design::*;
+pub use art_direct::*;
 pub use beacons::*;
 pub use beacons_art::*;
 pub use beacons_reads::*;
@@ -78,4 +82,24 @@ where
     T: serde::Deserialize<'de>,
 {
     T::deserialize(deserializer).map(Some)
+}
+
+/// Serde's derived struct parser also accepts positional sequences (even []
+/// when every field is optional). Require a JSON object, as the schema does.
+pub(crate) fn object<'de, D, T>(deserializer: D) -> Result<T, D::Error>
+where
+    D: serde::Deserializer<'de>,
+    T: serde::Deserialize<'de>,
+{
+    struct Object<T>(std::marker::PhantomData<T>);
+    impl<'de, T: serde::Deserialize<'de>> serde::de::Visitor<'de> for Object<T> {
+        type Value = T;
+        fn expecting(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+            f.write_str("an object")
+        }
+        fn visit_map<M: serde::de::MapAccess<'de>>(self, map: M) -> Result<T, M::Error> {
+            T::deserialize(serde::de::value::MapAccessDeserializer::new(map))
+        }
+    }
+    deserializer.deserialize_map(Object(std::marker::PhantomData))
 }

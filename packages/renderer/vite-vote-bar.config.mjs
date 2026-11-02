@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 
 export const voteBarInputs = [
-  './src/vote-bar-entry.ts', './src/vote-bar.ts', './vite-vote-bar.config.mjs',
+  './src/vote-bar-entry.ts', './src/vote-bar.ts', './src/vote-bar-art.ts', './vite-vote-bar.config.mjs',
   '../contract/src/generated/vote-bar-validation.ts',
   '../contract/src/generated/vote-bar-validators.mjs', '../contract/src/door.mjs',
 ];

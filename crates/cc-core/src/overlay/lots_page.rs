@@ -1,6 +1,6 @@
 //! Read-only shell and escaped fallback for the cast-only renderer host.
 use super::lots::{AcceptedDraw, DisplayParams};
-use cc_types::{DrawContent, LotsRandomnessPlan};
+use cc_types::{DrawContent, LotsPlateSnapshot, LotsRandomnessPlan};
 use serde::Serialize;
 
 // The OBS fallback is a plate, not an interactive scroll surface. The complete
@@ -28,8 +28,11 @@ fn island(id: &str, value: &impl Serialize) -> Result<String, serde_json::Error>
 pub(super) fn render(
     scene: Option<&AcceptedDraw>,
     display: &DisplayParams,
+    plate: &LotsPlateSnapshot,
 ) -> Result<String, serde_json::Error> {
-    let mut islands = String::new();
+    // The plate (image vessel, when a draw vessel design is set) always
+    // travels; an empty object keeps the display's art_style.
+    let mut islands = island("cc-vessel", plate)?;
     let (body, content, simulated) = if let Some(scene) = scene {
         islands.push_str(&island("cc-seal", &scene.seal)?);
         if let Some(cast) = &scene.cast {

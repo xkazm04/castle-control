@@ -68,7 +68,7 @@ impl ArtCatalog {
             return Err(refused());
         }
         let mut designs = self.0.lock().map_err(|_| internal())?;
-        if !designs.contains_key(&id) && designs.len() >= 16 {
+        if !designs.contains_key(&id) && designs.len() >= 64 {
             return Err(refused());
         }
         if designs.get(&id).is_some_and(|design| design.root == root) {

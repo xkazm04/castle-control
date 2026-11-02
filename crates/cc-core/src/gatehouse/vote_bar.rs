@@ -66,17 +66,51 @@ impl VoteBarModule {
                 .collect(),
             simulated: self.simulated || simulated,
             at: consensus.at,
+            art: self.art()?,
         })
+    }
+
+    /// The selected housing art, from the shared design store.
+    fn art(&self) -> Result<Option<cc_types::VoteBarArt>, ErrorEnvelope> {
+        match &self.provenance {
+            Some(state) => state
+                .upgrade()
+                .ok_or_else(invalid)?
+                .beacons()?
+                .designs()
+                .vote_bar_art(),
+            None => Ok(None),
+        }
+    }
+
+    /// `gatehouse.votebar.design.set`: validated and persisted; omitted clears.
+    fn set_design(
+        &self,
+        params: &cc_types::VoteBarDesignSetParams,
+    ) -> Result<Value, ErrorEnvelope> {
+        let state = self.provenance.as_ref().ok_or_else(|| {
+            ErrorEnvelope::new(ErrorCode::Unavailable, "vote bar design store unavailable")
+        })?;
+        state
+            .upgrade()
+            .ok_or_else(invalid)?
+            .beacons()?
+            .designs()
+            .set_vote_bar(params.design_id.clone())?;
+        serde_json::to_value(cc_types::Empty {}).map_err(|_| invalid())
     }
 }
 
 impl Module for VoteBarModule {
     fn methods(&self) -> &'static [&'static str] {
-        &["gatehouse.source.url"]
+        &["gatehouse.source.url", "gatehouse.votebar.design.set"]
     }
 
     fn call<'a>(&'a self, request: &'a RpcRequest) -> BoxFuture<'a, Result<Value, ErrorEnvelope>> {
         Box::pin(async move {
+            if let RpcRequest::VoteBarDesignSet(params) = request {
+                return self.set_design(params);
+            }
             if !matches!(request, RpcRequest::VoteBarSourceUrl(_)) {
                 return Err(invalid());
             }
@@ -165,5 +199,50 @@ mod tests {
         let source = VoteBarModule::new(Arc::downgrade(&consensus), None, false)
             .with_provenance(Arc::downgrade(&state));
         assert!(!source.snapshot().await.unwrap().simulated);
+    }
+
+    #[tokio::test]
+    async fn selected_design_reaches_the_snapshot_and_persists() {
+        let root = tempfile::tempdir().unwrap();
+        let events = Arc::new(crate::EventHub::new(8).unwrap());
+        let consensus: Arc<dyn Module> = Arc::new(SimulatedConsensus);
+        let state = Arc::new(OfflineModules::at(root.path().to_owned(), events.clone()));
+        let beacons = state.beacons().unwrap();
+        let request = |method: &str, params: serde_json::Value| {
+            cc_types::parse_request(
+                &serde_json::to_vec(&serde_json::json!({"method":method,"params":params})).unwrap(),
+            )
+            .unwrap()
+        };
+        beacons
+            .call(&request(
+                "beacons.library.import",
+                serde_json::json!({"library_id":"votebar-10","kind":"vote_bar"}),
+            ))
+            .await
+            .unwrap();
+        let source = VoteBarModule::new(Arc::downgrade(&consensus), None, true)
+            .with_provenance(Arc::downgrade(&state));
+        assert!(source.snapshot().await.unwrap().art.is_none());
+        let set = request(
+            "gatehouse.votebar.design.set",
+            serde_json::json!({"design_id":"library-votebar-10"}),
+        );
+        assert_eq!(source.call(&set).await.unwrap(), serde_json::json!({}));
+        let art = source.snapshot().await.unwrap().art.unwrap();
+        assert!(String::from(art.asset_url).starts_with("/assets/library-votebar-10/"));
+        assert_eq!(
+            serde_json::to_value(&art.segments).unwrap(),
+            serde_json::json!(["#00DFFF", "#FF4055", "#FFD43B"])
+        );
+        drop((source, beacons, state));
+        // Restart: the selection is read back from disk.
+        let state = Arc::new(OfflineModules::at(root.path().to_owned(), events));
+        let source = VoteBarModule::new(Arc::downgrade(&consensus), None, true)
+            .with_provenance(Arc::downgrade(&state));
+        assert!(source.snapshot().await.unwrap().art.is_some());
+        let clear = request("gatehouse.votebar.design.set", serde_json::json!({}));
+        source.call(&clear).await.unwrap();
+        assert!(source.snapshot().await.unwrap().art.is_none());
     }
 }

@@ -79,30 +79,39 @@ async fn asset(
     State(host): State<Arc<RenderHost>>,
     Path((id, hash, path)): Path<(String, String, String)>,
 ) -> Response {
-    let Ok(id) = VisualId::try_from(id) else {
-        return StatusCode::NOT_FOUND.into_response();
-    };
     if LocalAssetPath::try_from(path.clone()).is_err() {
         return StatusCode::NOT_FOUND.into_response();
     }
-    let Ok(state) = host.state.lock() else {
-        return StatusCode::SERVICE_UNAVAILABLE.into_response();
+    // A visual's package first; otherwise a stored design's sealed package
+    // (`OverlayAssetUrl` names the design id: vote bar, Lots, desktop preview).
+    let visual = {
+        let Ok(state) = host.state.lock() else {
+            return StatusCode::SERVICE_UNAVAILABLE.into_response();
+        };
+        VisualId::try_from(id.clone()).ok().and_then(|visual| {
+            state
+                .visuals
+                .get(&visual)
+                .and_then(|v| v.design_id.as_ref())
+                .and_then(|design| state.packages.get(design))
+                .map(|package| {
+                    (String::from(package.package.content_hash.clone()) == hash)
+                        .then(|| package.assets.get(&path).cloned())
+                        .flatten()
+                })
+        })
     };
-    let Some(package) = state
-        .visuals
-        .get(&id)
-        .and_then(|v| v.design_id.as_ref())
-        .and_then(|id| state.packages.get(id))
-    else {
-        return StatusCode::NOT_FOUND.into_response();
+    let asset = match visual {
+        Some(asset) => asset,
+        None => match host.design_asset(&id, &hash, &path) {
+            Ok(asset) => asset,
+            Err(_) => return StatusCode::SERVICE_UNAVAILABLE.into_response(),
+        },
     };
-    if String::from(package.package.content_hash.clone()) != hash {
-        return StatusCode::NOT_FOUND.into_response();
+    match asset {
+        Some(asset) => ([(header::CONTENT_TYPE, asset.mime)], asset.bytes.to_vec()).into_response(),
+        None => StatusCode::NOT_FOUND.into_response(),
     }
-    let Some(asset) = package.assets.get(&path) else {
-        return StatusCode::NOT_FOUND.into_response();
-    };
-    ([(header::CONTENT_TYPE, asset.mime)], asset.bytes.to_vec()).into_response()
 }
 
 #[derive(Deserialize)]

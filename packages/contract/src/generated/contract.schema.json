@@ -984,12 +984,20 @@
             ],
             "type": "string"
           },
+          "DesignId": {
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$(?![\\s\\S])",
+            "type": "string"
+          },
           "Display": {
             "additionalProperties": false,
             "description": "Reuses the rooms' existing S/M/L, corner/center, ink and demo-style values.",
             "properties": {
               "anchor": {
                 "$ref": "#/$defs/DisplayAnchor"
+              },
+              "art_design": {
+                "$ref": "#/$defs/DesignId",
+                "description": "A custom design that replaces `art_style` where the room supports it\n(the Lots plate renders it as an image vessel)."
               },
               "art_style": {
                 "$ref": "#/$defs/ArtStyle"
@@ -4776,12 +4784,20 @@
             "pattern": "^[0-9a-f]{64}$(?![\\s\\S])",
             "type": "string"
           },
+          "DesignId": {
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$(?![\\s\\S])",
+            "type": "string"
+          },
           "Display": {
             "additionalProperties": false,
             "description": "Reuses the rooms' existing S/M/L, corner/center, ink and demo-style values.",
             "properties": {
               "anchor": {
                 "$ref": "#/$defs/DisplayAnchor"
+              },
+              "art_design": {
+                "$ref": "#/$defs/DesignId",
+                "description": "A custom design that replaces `art_style` where the room supports it\n(the Lots plate renders it as an image vessel)."
               },
               "art_style": {
                 "$ref": "#/$defs/ArtStyle"
@@ -6701,6 +6717,10 @@
               "anchor": {
                 "$ref": "#/$defs/DisplayAnchor"
               },
+              "art_design": {
+                "$ref": "#/$defs/DesignId",
+                "description": "A custom design that replaces `art_style` where the room supports it\n(the Lots plate renders it as an image vessel)."
+              },
               "art_style": {
                 "$ref": "#/$defs/ArtStyle"
               },
@@ -7786,12 +7806,46 @@
         "type": "object"
       },
       "result": {
+        "$defs": {
+          "ArtProvider": {
+            "description": "Image provider; an omitted provider on generation means Leonardo.",
+            "enum": [
+              "leonardo",
+              "openai"
+            ],
+            "type": "string"
+          },
+          "ArtProviderStatus": {
+            "additionalProperties": false,
+            "description": "Local key presence for one provider; never key material or a keychain label.",
+            "properties": {
+              "available": {
+                "type": "boolean"
+              },
+              "provider": {
+                "$ref": "#/$defs/ArtProvider"
+              }
+            },
+            "required": [
+              "provider",
+              "available"
+            ],
+            "type": "object"
+          }
+        },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
         "properties": {
           "available": {
-            "description": "Local key presence only. Keychain failure is an error, not unavailable.",
+            "description": "Local key presence only, true when any provider is available. Keychain\nfailure is an error, not unavailable.",
             "type": "boolean"
+          },
+          "providers": {
+            "description": "Per-provider presence. Omitted when empty, so `{available}` stays valid.",
+            "items": {
+              "$ref": "#/$defs/ArtProviderStatus"
+            },
+            "type": "array"
           }
         },
         "required": [
@@ -7806,6 +7860,14 @@
       "owner": "WP 3.4",
       "params": {
         "$defs": {
+          "ArtBackground": {
+            "description": "Requested output background; OpenAI only.",
+            "enum": [
+              "transparent",
+              "opaque"
+            ],
+            "type": "string"
+          },
           "ArtDimension": {
             "format": "uint32",
             "maximum": 1536,
@@ -7815,6 +7877,14 @@
           },
           "ArtModelId": {
             "pattern": "^[A-Za-z0-9_-]{1,128}$(?![\\s\\S])",
+            "type": "string"
+          },
+          "ArtProvider": {
+            "description": "Image provider; an omitted provider on generation means Leonardo.",
+            "enum": [
+              "leonardo",
+              "openai"
+            ],
             "type": "string"
           },
           "ArtQuantity": {
@@ -7852,10 +7922,34 @@
                 "reference"
               ]
             }
+          },
+          {
+            "if": {
+              "properties": {
+                "background": true
+              },
+              "required": [
+                "background"
+              ]
+            },
+            "then": {
+              "properties": {
+                "provider": {
+                  "const": "openai"
+                }
+              },
+              "required": [
+                "provider"
+              ]
+            }
           }
         ],
         "description": "An absent reference generates one anchor. A reference selects an imported\ngenerated image in this design; the host resolves its original provider ID.\nNeither the caller nor the result can supply a provider URL or public flag.",
         "properties": {
+          "background": {
+            "$ref": "#/$defs/ArtBackground",
+            "default": null
+          },
           "design_id": {
             "$ref": "#/$defs/DesignId"
           },
@@ -7869,6 +7963,10 @@
             "maxLength": 1500,
             "pattern": "[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000]",
             "type": "string"
+          },
+          "provider": {
+            "$ref": "#/$defs/ArtProvider",
+            "default": null
           },
           "quantity": {
             "$ref": "#/$defs/ArtQuantity"
@@ -7966,7 +8064,8 @@
           "ArtProvenance": {
             "enum": [
               "leonardo_generated",
-              "leonardo_background_removed"
+              "leonardo_background_removed",
+              "openai_generated"
             ],
             "type": "string"
           },
@@ -8335,6 +8434,10 @@
             "properties": {
               "anchor": {
                 "$ref": "#/$defs/DisplayAnchor"
+              },
+              "art_design": {
+                "$ref": "#/$defs/DesignId",
+                "description": "A custom design that replaces `art_style` where the room supports it\n(the Lots plate renders it as an image vessel)."
               },
               "art_style": {
                 "$ref": "#/$defs/ArtStyle"
@@ -9701,6 +9804,10 @@
             "properties": {
               "anchor": {
                 "$ref": "#/$defs/DisplayAnchor"
+              },
+              "art_design": {
+                "$ref": "#/$defs/DesignId",
+                "description": "A custom design that replaces `art_style` where the room supports it\n(the Lots plate renders it as an image vessel)."
               },
               "art_style": {
                 "$ref": "#/$defs/ArtStyle"
@@ -11113,6 +11220,10 @@
               "anchor": {
                 "$ref": "#/$defs/DisplayAnchor"
               },
+              "art_design": {
+                "$ref": "#/$defs/DesignId",
+                "description": "A custom design that replaces `art_style` where the room supports it\n(the Lots plate renders it as an image vessel)."
+              },
               "art_style": {
                 "$ref": "#/$defs/ArtStyle"
               },
@@ -12523,6 +12634,10 @@
             "properties": {
               "anchor": {
                 "$ref": "#/$defs/DisplayAnchor"
+              },
+              "art_design": {
+                "$ref": "#/$defs/DesignId",
+                "description": "A custom design that replaces `art_style` where the room supports it\n(the Lots plate renders it as an image vessel)."
               },
               "art_style": {
                 "$ref": "#/$defs/ArtStyle"
@@ -15334,6 +15449,932 @@
         "title": "SourceUrlResult",
         "type": "object"
       }
+    },
+    {
+      "name": "beacons.design.create",
+      "owner": "Custom design",
+      "params": {
+        "$defs": {
+          "ArtAssetKind": {
+            "description": "The four V1 custom design surfaces.",
+            "enum": [
+              "beacon",
+              "frame",
+              "vote_bar",
+              "draw_vessel"
+            ],
+            "type": "string"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "$ref": "#/$defs/ArtAssetKind"
+          }
+        },
+        "required": [
+          "kind"
+        ],
+        "title": "DesignCreateParams",
+        "type": "object"
+      },
+      "result": {
+        "$defs": {
+          "DesignId": {
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$(?![\\s\\S])",
+            "type": "string"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "design_id": {
+            "$ref": "#/$defs/DesignId"
+          }
+        },
+        "required": [
+          "design_id"
+        ],
+        "title": "DesignCreateResult",
+        "type": "object"
+      }
+    },
+    {
+      "name": "beacons.art.direct",
+      "owner": "Custom design",
+      "params": {
+        "$defs": {
+          "ArtAssetKind": {
+            "description": "The four V1 custom design surfaces.",
+            "enum": [
+              "beacon",
+              "frame",
+              "vote_bar",
+              "draw_vessel"
+            ],
+            "type": "string"
+          },
+          "ArtDimension": {
+            "format": "uint32",
+            "maximum": 1536,
+            "minimum": 32,
+            "multipleOf": 8,
+            "type": "integer"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "One art-director request; `answer` re-runs it with the follow-up chosen.",
+        "properties": {
+          "answer": {
+            "default": null,
+            "maxLength": 120,
+            "minLength": 1,
+            "pattern": "[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000]",
+            "type": "string"
+          },
+          "height": {
+            "$ref": "#/$defs/ArtDimension"
+          },
+          "kind": {
+            "$ref": "#/$defs/ArtAssetKind"
+          },
+          "request": {
+            "maxLength": 500,
+            "minLength": 1,
+            "pattern": "[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000]",
+            "type": "string"
+          },
+          "width": {
+            "$ref": "#/$defs/ArtDimension"
+          }
+        },
+        "required": [
+          "kind",
+          "request",
+          "width",
+          "height"
+        ],
+        "title": "ArtDirectParams",
+        "type": "object"
+      },
+      "result": {
+        "$defs": {
+          "ArtAssetKind": {
+            "description": "The four V1 custom design surfaces.",
+            "enum": [
+              "beacon",
+              "frame",
+              "vote_bar",
+              "draw_vessel"
+            ],
+            "type": "string"
+          },
+          "ArtDimension": {
+            "format": "uint32",
+            "maximum": 1536,
+            "minimum": 32,
+            "multipleOf": 8,
+            "type": "integer"
+          },
+          "ArtQuestion": {
+            "additionalProperties": false,
+            "description": "One follow-up question; `assumed` is the option preselected when unanswered.",
+            "properties": {
+              "assumed": {
+                "pattern": "[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000]",
+                "type": "string"
+              },
+              "options": {
+                "items": {
+                  "pattern": "[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000]",
+                  "type": "string"
+                },
+                "maxItems": 4,
+                "minItems": 2,
+                "type": "array"
+              },
+              "text": {
+                "pattern": "[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000]",
+                "type": "string"
+              }
+            },
+            "required": [
+              "text",
+              "options",
+              "assumed"
+            ],
+            "type": "object"
+          },
+          "HexColor": {
+            "description": "A raw `#rrggbb` colour; case is preserved as given.",
+            "pattern": "^#[0-9a-fA-F]{6}$(?![\\s\\S])",
+            "type": "string"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "The director's interpretation and the prompt it will send to the provider.",
+        "properties": {
+          "assumptions": {
+            "items": {
+              "pattern": "[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000]",
+              "type": "string"
+            },
+            "maxItems": 3,
+            "type": "array"
+          },
+          "height": {
+            "$ref": "#/$defs/ArtDimension"
+          },
+          "interpretation": {
+            "pattern": "[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000]",
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/$defs/ArtAssetKind"
+          },
+          "master_prompt": {
+            "maxLength": 1400,
+            "minLength": 1,
+            "pattern": "[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000]",
+            "type": "string"
+          },
+          "palette": {
+            "items": {
+              "$ref": "#/$defs/HexColor"
+            },
+            "maxItems": 6,
+            "type": "array"
+          },
+          "question": {
+            "$ref": "#/$defs/ArtQuestion",
+            "default": null
+          },
+          "style_name": {
+            "pattern": "[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000]",
+            "type": "string"
+          },
+          "width": {
+            "$ref": "#/$defs/ArtDimension"
+          }
+        },
+        "required": [
+          "kind",
+          "interpretation",
+          "style_name",
+          "palette",
+          "assumptions",
+          "master_prompt",
+          "width",
+          "height"
+        ],
+        "title": "ArtDirection",
+        "type": "object"
+      }
+    },
+    {
+      "name": "beacons.art.layers",
+      "owner": "Custom design",
+      "params": {
+        "$defs": {
+          "ArtAssetKind": {
+            "description": "The four V1 custom design surfaces.",
+            "enum": [
+              "beacon",
+              "frame",
+              "vote_bar",
+              "draw_vessel"
+            ],
+            "type": "string"
+          },
+          "DesignId": {
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$(?![\\s\\S])",
+            "type": "string"
+          },
+          "LocalAssetPath": {
+            "description": "Canonical ASCII package-relative path. No scheme, authority, root, traversal,\npercent escapes, backslashes, query or fragment. The host must additionally\nconfine filesystem resolution (including symlinks) to its local asset root.",
+            "pattern": "^[A-Za-z0-9_-][A-Za-z0-9._-]*(/[A-Za-z0-9_-][A-Za-z0-9._-]*)*$(?![\\s\\S])",
+            "type": "string"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "asset": {
+            "$ref": "#/$defs/LocalAssetPath"
+          },
+          "design_id": {
+            "$ref": "#/$defs/DesignId"
+          },
+          "kind": {
+            "$ref": "#/$defs/ArtAssetKind"
+          }
+        },
+        "required": [
+          "design_id",
+          "asset",
+          "kind"
+        ],
+        "title": "ArtLayersParams",
+        "type": "object"
+      },
+      "result": {
+        "$defs": {
+          "ArtAnchors": {
+            "additionalProperties": false,
+            "description": "Measured anchors; which keys are present depends on the asset kind.",
+            "properties": {
+              "chamber_rect": {
+                "$ref": "#/$defs/ArtRect"
+              },
+              "core_rect": {
+                "$ref": "#/$defs/ArtRect"
+              },
+              "mouth": {
+                "$ref": "#/$defs/ArtPoint"
+              },
+              "segments": {
+                "items": {
+                  "$ref": "#/$defs/HexColor"
+                },
+                "maxItems": 3,
+                "minItems": 3,
+                "type": "array"
+              },
+              "track_radius": {
+                "$ref": "#/$defs/Intensity"
+              },
+              "track_rect": {
+                "$ref": "#/$defs/ArtRect"
+              },
+              "window_rect": {
+                "$ref": "#/$defs/ArtRect"
+              }
+            },
+            "type": "object"
+          },
+          "ArtCallId": {
+            "pattern": "^[0-7][0-9A-HJKMNP-TV-Z]{25}$(?![\\s\\S])",
+            "type": "string"
+          },
+          "ArtCharge": {
+            "oneOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "credits": {
+                    "$ref": "#/$defs/ArtCredits"
+                  }
+                },
+                "required": [
+                  "credits"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "description": "Preserve the client's integer micro-USD shape, refusing unsafe JS numbers.",
+                "properties": {
+                  "micro_usd": {
+                    "format": "uint64",
+                    "maximum": 9007199254740991,
+                    "minimum": 0,
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "micro_usd"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "ArtCostReceipt": {
+            "additionalProperties": false,
+            "description": "Matches cc-beacons::art::CostRecord without importing the provider crate.",
+            "properties": {
+              "call_id": {
+                "$ref": "#/$defs/ArtCallId"
+              },
+              "charge": {
+                "$ref": "#/$defs/ArtCharge"
+              },
+              "model": {
+                "$ref": "#/$defs/ArtModelId"
+              }
+            },
+            "required": [
+              "call_id",
+              "model",
+              "charge"
+            ],
+            "type": "object"
+          },
+          "ArtCredits": {
+            "pattern": "^[0-9]{1,12}(\\.[0-9]{1,6})?$(?![\\s\\S])",
+            "type": "string"
+          },
+          "ArtModelId": {
+            "pattern": "^[A-Za-z0-9_-]{1,128}$(?![\\s\\S])",
+            "type": "string"
+          },
+          "ArtPoint": {
+            "additionalProperties": false,
+            "description": "Point normalised to the image, each number a fraction in 0..1.",
+            "properties": {
+              "x": {
+                "$ref": "#/$defs/Intensity"
+              },
+              "y": {
+                "$ref": "#/$defs/Intensity"
+              }
+            },
+            "required": [
+              "x",
+              "y"
+            ],
+            "type": "object"
+          },
+          "ArtRect": {
+            "additionalProperties": false,
+            "description": "Rectangle normalised to the image, each number a fraction in 0..1.",
+            "properties": {
+              "h": {
+                "$ref": "#/$defs/Intensity"
+              },
+              "w": {
+                "$ref": "#/$defs/Intensity"
+              },
+              "x": {
+                "$ref": "#/$defs/Intensity"
+              },
+              "y": {
+                "$ref": "#/$defs/Intensity"
+              }
+            },
+            "required": [
+              "x",
+              "y",
+              "w",
+              "h"
+            ],
+            "type": "object"
+          },
+          "BindingRange": {
+            "additionalProperties": false,
+            "description": "Fixed input is Intensity 0..1. Endpoints are outputs at 0 and 1, so descending\noutput ranges are valid. Binding evaluation is separate renderer work.",
+            "properties": {
+              "at_one": {
+                "$ref": "#/$defs/Intensity"
+              },
+              "at_zero": {
+                "$ref": "#/$defs/Intensity"
+              }
+            },
+            "required": [
+              "at_zero",
+              "at_one"
+            ],
+            "type": "object"
+          },
+          "BindingRange2": {
+            "additionalProperties": false,
+            "description": "Fixed input is Intensity 0..1. Endpoints are outputs at 0 and 1, so descending\noutput ranges are valid. Binding evaluation is separate renderer work.",
+            "properties": {
+              "at_one": {
+                "$ref": "#/$defs/DesignScale"
+              },
+              "at_zero": {
+                "$ref": "#/$defs/DesignScale"
+              }
+            },
+            "required": [
+              "at_zero",
+              "at_one"
+            ],
+            "type": "object"
+          },
+          "BindingRange3": {
+            "additionalProperties": false,
+            "description": "Fixed input is Intensity 0..1. Endpoints are outputs at 0 and 1, so descending\noutput ranges are valid. Binding evaluation is separate renderer work.",
+            "properties": {
+              "at_one": {
+                "format": "double",
+                "type": "number"
+              },
+              "at_zero": {
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "at_zero",
+              "at_one"
+            ],
+            "type": "object"
+          },
+          "DesignContentHash": {
+            "pattern": "^[0-9a-f]{64}$(?![\\s\\S])",
+            "type": "string"
+          },
+          "DesignId": {
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$(?![\\s\\S])",
+            "type": "string"
+          },
+          "DesignLayer": {
+            "oneOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "asset": {
+                    "$ref": "#/$defs/LocalAssetPath"
+                  },
+                  "bindings": {
+                    "items": {
+                      "$ref": "#/$defs/IntensityBinding"
+                    },
+                    "type": "array"
+                  },
+                  "kind": {
+                    "const": "image",
+                    "type": "string"
+                  },
+                  "properties": {
+                    "$ref": "#/$defs/LayerProperties"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "asset",
+                  "properties",
+                  "bindings"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "bindings": {
+                    "items": {
+                      "$ref": "#/$defs/IntensityBinding"
+                    },
+                    "type": "array"
+                  },
+                  "kind": {
+                    "const": "shape",
+                    "type": "string"
+                  },
+                  "properties": {
+                    "$ref": "#/$defs/LayerProperties"
+                  },
+                  "shape": {
+                    "$ref": "#/$defs/ShapeKind"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "shape",
+                  "properties",
+                  "bindings"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "bindings": {
+                    "items": {
+                      "$ref": "#/$defs/IntensityBinding"
+                    },
+                    "type": "array"
+                  },
+                  "kind": {
+                    "const": "text",
+                    "type": "string"
+                  },
+                  "properties": {
+                    "$ref": "#/$defs/LayerProperties"
+                  },
+                  "text": {
+                    "pattern": "\\S",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "text",
+                  "properties",
+                  "bindings"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "bindings": {
+                    "items": {
+                      "$ref": "#/$defs/IntensityBinding"
+                    },
+                    "type": "array"
+                  },
+                  "kind": {
+                    "const": "particle_preset",
+                    "type": "string"
+                  },
+                  "preset": {
+                    "description": "A renderer-owned preset lookup name, never code or a resource URL.",
+                    "pattern": "\\S",
+                    "type": "string"
+                  },
+                  "properties": {
+                    "$ref": "#/$defs/LayerProperties"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "preset",
+                  "properties",
+                  "bindings"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "DesignPackage": {
+            "additionalProperties": false,
+            "properties": {
+              "content_hash": {
+                "$ref": "#/$defs/DesignContentHash",
+                "description": "Claimed SHA-256 content identity. The host must verify it before delivery;\na well-formed digest alone proves neither integrity nor permission."
+              },
+              "design_id": {
+                "$ref": "#/$defs/DesignId"
+              },
+              "layers": {
+                "description": "Back-to-front paint order, retained exactly by serialization.",
+                "items": {
+                  "$ref": "#/$defs/DesignLayer"
+                },
+                "minItems": 1,
+                "type": "array"
+              },
+              "privileges": {
+                "$ref": "#/$defs/DesignPrivileges",
+                "description": "Omission grants no script capability. Present null is never omission."
+              }
+            },
+            "required": [
+              "design_id",
+              "content_hash",
+              "layers"
+            ],
+            "type": "object"
+          },
+          "DesignPrivileges": {
+            "oneOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "kind": {
+                    "const": "data_only",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "description": "Explicit script entry points, relative to this package. This declaration\ndoes not authorize execution: the overlay host still checks consent.",
+                "properties": {
+                  "kind": {
+                    "const": "scripts",
+                    "type": "string"
+                  },
+                  "scripts": {
+                    "items": {
+                      "$ref": "#/$defs/LocalAssetPath"
+                    },
+                    "minItems": 1,
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "scripts"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "DesignScale": {
+            "format": "double",
+            "minimum": 0,
+            "type": "number"
+          },
+          "HexColor": {
+            "description": "A raw `#rrggbb` colour; case is preserved as given.",
+            "pattern": "^#[0-9a-fA-F]{6}$(?![\\s\\S])",
+            "type": "string"
+          },
+          "Intensity": {
+            "description": "Finite fraction, not a percentage. Both schema and Rust reject nonfinite values.",
+            "format": "double",
+            "maximum": 1,
+            "minimum": 0,
+            "type": "number"
+          },
+          "IntensityBinding": {
+            "description": "The property tag also selects the output domain; opacity cannot exceed 1,\nscale cannot be negative, and positions must be finite. No arbitrary CSS.",
+            "oneOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "output_range": {
+                    "$ref": "#/$defs/BindingRange"
+                  },
+                  "property": {
+                    "const": "opacity",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "property",
+                  "output_range"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "output_range": {
+                    "$ref": "#/$defs/BindingRange2"
+                  },
+                  "property": {
+                    "const": "scale",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "property",
+                  "output_range"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "output_range": {
+                    "$ref": "#/$defs/BindingRange3"
+                  },
+                  "property": {
+                    "const": "x",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "property",
+                  "output_range"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "output_range": {
+                    "$ref": "#/$defs/BindingRange3"
+                  },
+                  "property": {
+                    "const": "y",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "property",
+                  "output_range"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "LayerProperties": {
+            "additionalProperties": false,
+            "description": "Base layout in logical pixels; scale is a nonnegative multiplier, opacity a\nfraction. Text is literal text, not HTML; no layer carries arbitrary CSS/JS.",
+            "properties": {
+              "height": {
+                "format": "uint32",
+                "minimum": 1,
+                "type": "integer"
+              },
+              "opacity": {
+                "$ref": "#/$defs/Intensity"
+              },
+              "scale": {
+                "$ref": "#/$defs/DesignScale"
+              },
+              "width": {
+                "format": "uint32",
+                "minimum": 1,
+                "type": "integer"
+              },
+              "x": {
+                "format": "double",
+                "type": "number"
+              },
+              "y": {
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "x",
+              "y",
+              "width",
+              "height",
+              "scale",
+              "opacity"
+            ],
+            "type": "object"
+          },
+          "LocalAssetPath": {
+            "description": "Canonical ASCII package-relative path. No scheme, authority, root, traversal,\npercent escapes, backslashes, query or fragment. The host must additionally\nconfine filesystem resolution (including symlinks) to its local asset root.",
+            "pattern": "^[A-Za-z0-9_-][A-Za-z0-9._-]*(/[A-Za-z0-9_-][A-Za-z0-9._-]*)*$(?![\\s\\S])",
+            "type": "string"
+          },
+          "ShapeKind": {
+            "enum": [
+              "rectangle",
+              "ellipse"
+            ],
+            "type": "string"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Base/effect split, measured anchors and the bound package; `costs` may be\nempty when the kind has no effect and no paid edit call was made.",
+        "properties": {
+          "anchors": {
+            "$ref": "#/$defs/ArtAnchors"
+          },
+          "base": {
+            "$ref": "#/$defs/LocalAssetPath"
+          },
+          "costs": {
+            "items": {
+              "$ref": "#/$defs/ArtCostReceipt"
+            },
+            "type": "array"
+          },
+          "design_id": {
+            "$ref": "#/$defs/DesignId"
+          },
+          "effect": {
+            "$ref": "#/$defs/LocalAssetPath"
+          },
+          "package": {
+            "$ref": "#/$defs/DesignPackage"
+          }
+        },
+        "required": [
+          "design_id",
+          "base",
+          "anchors",
+          "package",
+          "costs"
+        ],
+        "title": "ArtLayers",
+        "type": "object"
+      }
+    },
+    {
+      "name": "beacons.library.import",
+      "owner": "Custom design",
+      "params": {
+        "$defs": {
+          "ArtAssetKind": {
+            "description": "The four V1 custom design surfaces.",
+            "enum": [
+              "beacon",
+              "frame",
+              "vote_bar",
+              "draw_vessel"
+            ],
+            "type": "string"
+          },
+          "LibraryAssetId": {
+            "pattern": "^[a-z0-9-]{1,64}$(?![\\s\\S])",
+            "type": "string"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "$ref": "#/$defs/ArtAssetKind"
+          },
+          "library_id": {
+            "$ref": "#/$defs/LibraryAssetId"
+          }
+        },
+        "required": [
+          "library_id",
+          "kind"
+        ],
+        "title": "LibraryImportParams",
+        "type": "object"
+      },
+      "result": {
+        "$defs": {
+          "DesignId": {
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$(?![\\s\\S])",
+            "type": "string"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "design_id": {
+            "$ref": "#/$defs/DesignId"
+          }
+        },
+        "required": [
+          "design_id"
+        ],
+        "title": "LibraryImportResult",
+        "type": "object"
+      }
+    },
+    {
+      "name": "gatehouse.votebar.design.set",
+      "owner": "Custom design",
+      "params": {
+        "$defs": {
+          "DesignId": {
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$(?![\\s\\S])",
+            "type": "string"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "An omitted design clears the vote bar art.",
+        "properties": {
+          "design_id": {
+            "$ref": "#/$defs/DesignId"
+          }
+        },
+        "title": "VoteBarDesignSetParams",
+        "type": "object"
+      },
+      "result": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "title": "Empty",
+        "type": "object"
+      }
     }
   ],
   "overlay_push_events": {
@@ -15357,6 +16398,1035 @@
       ],
       "title": "Action",
       "type": "string"
+    },
+    "ArtAnchors": {
+      "$defs": {
+        "ArtPoint": {
+          "additionalProperties": false,
+          "description": "Point normalised to the image, each number a fraction in 0..1.",
+          "properties": {
+            "x": {
+              "$ref": "#/$defs/Intensity"
+            },
+            "y": {
+              "$ref": "#/$defs/Intensity"
+            }
+          },
+          "required": [
+            "x",
+            "y"
+          ],
+          "type": "object"
+        },
+        "ArtRect": {
+          "additionalProperties": false,
+          "description": "Rectangle normalised to the image, each number a fraction in 0..1.",
+          "properties": {
+            "h": {
+              "$ref": "#/$defs/Intensity"
+            },
+            "w": {
+              "$ref": "#/$defs/Intensity"
+            },
+            "x": {
+              "$ref": "#/$defs/Intensity"
+            },
+            "y": {
+              "$ref": "#/$defs/Intensity"
+            }
+          },
+          "required": [
+            "x",
+            "y",
+            "w",
+            "h"
+          ],
+          "type": "object"
+        },
+        "HexColor": {
+          "description": "A raw `#rrggbb` colour; case is preserved as given.",
+          "pattern": "^#[0-9a-fA-F]{6}$(?![\\s\\S])",
+          "type": "string"
+        },
+        "Intensity": {
+          "description": "Finite fraction, not a percentage. Both schema and Rust reject nonfinite values.",
+          "format": "double",
+          "maximum": 1,
+          "minimum": 0,
+          "type": "number"
+        }
+      },
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "description": "Measured anchors; which keys are present depends on the asset kind.",
+      "properties": {
+        "chamber_rect": {
+          "$ref": "#/$defs/ArtRect"
+        },
+        "core_rect": {
+          "$ref": "#/$defs/ArtRect"
+        },
+        "mouth": {
+          "$ref": "#/$defs/ArtPoint"
+        },
+        "segments": {
+          "items": {
+            "$ref": "#/$defs/HexColor"
+          },
+          "maxItems": 3,
+          "minItems": 3,
+          "type": "array"
+        },
+        "track_radius": {
+          "$ref": "#/$defs/Intensity"
+        },
+        "track_rect": {
+          "$ref": "#/$defs/ArtRect"
+        },
+        "window_rect": {
+          "$ref": "#/$defs/ArtRect"
+        }
+      },
+      "title": "ArtAnchors",
+      "type": "object"
+    },
+    "ArtAssetKind": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "description": "The four V1 custom design surfaces.",
+      "enum": [
+        "beacon",
+        "frame",
+        "vote_bar",
+        "draw_vessel"
+      ],
+      "title": "ArtAssetKind",
+      "type": "string"
+    },
+    "ArtBackground": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "description": "Requested output background; OpenAI only.",
+      "enum": [
+        "transparent",
+        "opaque"
+      ],
+      "title": "ArtBackground",
+      "type": "string"
+    },
+    "ArtDirectParams": {
+      "$defs": {
+        "ArtAssetKind": {
+          "description": "The four V1 custom design surfaces.",
+          "enum": [
+            "beacon",
+            "frame",
+            "vote_bar",
+            "draw_vessel"
+          ],
+          "type": "string"
+        },
+        "ArtDimension": {
+          "format": "uint32",
+          "maximum": 1536,
+          "minimum": 32,
+          "multipleOf": 8,
+          "type": "integer"
+        }
+      },
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "description": "One art-director request; `answer` re-runs it with the follow-up chosen.",
+      "properties": {
+        "answer": {
+          "default": null,
+          "maxLength": 120,
+          "minLength": 1,
+          "pattern": "[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000]",
+          "type": "string"
+        },
+        "height": {
+          "$ref": "#/$defs/ArtDimension"
+        },
+        "kind": {
+          "$ref": "#/$defs/ArtAssetKind"
+        },
+        "request": {
+          "maxLength": 500,
+          "minLength": 1,
+          "pattern": "[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000]",
+          "type": "string"
+        },
+        "width": {
+          "$ref": "#/$defs/ArtDimension"
+        }
+      },
+      "required": [
+        "kind",
+        "request",
+        "width",
+        "height"
+      ],
+      "title": "ArtDirectParams",
+      "type": "object"
+    },
+    "ArtDirection": {
+      "$defs": {
+        "ArtAssetKind": {
+          "description": "The four V1 custom design surfaces.",
+          "enum": [
+            "beacon",
+            "frame",
+            "vote_bar",
+            "draw_vessel"
+          ],
+          "type": "string"
+        },
+        "ArtDimension": {
+          "format": "uint32",
+          "maximum": 1536,
+          "minimum": 32,
+          "multipleOf": 8,
+          "type": "integer"
+        },
+        "ArtQuestion": {
+          "additionalProperties": false,
+          "description": "One follow-up question; `assumed` is the option preselected when unanswered.",
+          "properties": {
+            "assumed": {
+              "pattern": "[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000]",
+              "type": "string"
+            },
+            "options": {
+              "items": {
+                "pattern": "[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000]",
+                "type": "string"
+              },
+              "maxItems": 4,
+              "minItems": 2,
+              "type": "array"
+            },
+            "text": {
+              "pattern": "[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000]",
+              "type": "string"
+            }
+          },
+          "required": [
+            "text",
+            "options",
+            "assumed"
+          ],
+          "type": "object"
+        },
+        "HexColor": {
+          "description": "A raw `#rrggbb` colour; case is preserved as given.",
+          "pattern": "^#[0-9a-fA-F]{6}$(?![\\s\\S])",
+          "type": "string"
+        }
+      },
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "description": "The director's interpretation and the prompt it will send to the provider.",
+      "properties": {
+        "assumptions": {
+          "items": {
+            "pattern": "[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000]",
+            "type": "string"
+          },
+          "maxItems": 3,
+          "type": "array"
+        },
+        "height": {
+          "$ref": "#/$defs/ArtDimension"
+        },
+        "interpretation": {
+          "pattern": "[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000]",
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/ArtAssetKind"
+        },
+        "master_prompt": {
+          "maxLength": 1400,
+          "minLength": 1,
+          "pattern": "[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000]",
+          "type": "string"
+        },
+        "palette": {
+          "items": {
+            "$ref": "#/$defs/HexColor"
+          },
+          "maxItems": 6,
+          "type": "array"
+        },
+        "question": {
+          "$ref": "#/$defs/ArtQuestion",
+          "default": null
+        },
+        "style_name": {
+          "pattern": "[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000]",
+          "type": "string"
+        },
+        "width": {
+          "$ref": "#/$defs/ArtDimension"
+        }
+      },
+      "required": [
+        "kind",
+        "interpretation",
+        "style_name",
+        "palette",
+        "assumptions",
+        "master_prompt",
+        "width",
+        "height"
+      ],
+      "title": "ArtDirection",
+      "type": "object"
+    },
+    "ArtLayers": {
+      "$defs": {
+        "ArtAnchors": {
+          "additionalProperties": false,
+          "description": "Measured anchors; which keys are present depends on the asset kind.",
+          "properties": {
+            "chamber_rect": {
+              "$ref": "#/$defs/ArtRect"
+            },
+            "core_rect": {
+              "$ref": "#/$defs/ArtRect"
+            },
+            "mouth": {
+              "$ref": "#/$defs/ArtPoint"
+            },
+            "segments": {
+              "items": {
+                "$ref": "#/$defs/HexColor"
+              },
+              "maxItems": 3,
+              "minItems": 3,
+              "type": "array"
+            },
+            "track_radius": {
+              "$ref": "#/$defs/Intensity"
+            },
+            "track_rect": {
+              "$ref": "#/$defs/ArtRect"
+            },
+            "window_rect": {
+              "$ref": "#/$defs/ArtRect"
+            }
+          },
+          "type": "object"
+        },
+        "ArtCallId": {
+          "pattern": "^[0-7][0-9A-HJKMNP-TV-Z]{25}$(?![\\s\\S])",
+          "type": "string"
+        },
+        "ArtCharge": {
+          "oneOf": [
+            {
+              "additionalProperties": false,
+              "properties": {
+                "credits": {
+                  "$ref": "#/$defs/ArtCredits"
+                }
+              },
+              "required": [
+                "credits"
+              ],
+              "type": "object"
+            },
+            {
+              "additionalProperties": false,
+              "description": "Preserve the client's integer micro-USD shape, refusing unsafe JS numbers.",
+              "properties": {
+                "micro_usd": {
+                  "format": "uint64",
+                  "maximum": 9007199254740991,
+                  "minimum": 0,
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "micro_usd"
+              ],
+              "type": "object"
+            }
+          ]
+        },
+        "ArtCostReceipt": {
+          "additionalProperties": false,
+          "description": "Matches cc-beacons::art::CostRecord without importing the provider crate.",
+          "properties": {
+            "call_id": {
+              "$ref": "#/$defs/ArtCallId"
+            },
+            "charge": {
+              "$ref": "#/$defs/ArtCharge"
+            },
+            "model": {
+              "$ref": "#/$defs/ArtModelId"
+            }
+          },
+          "required": [
+            "call_id",
+            "model",
+            "charge"
+          ],
+          "type": "object"
+        },
+        "ArtCredits": {
+          "pattern": "^[0-9]{1,12}(\\.[0-9]{1,6})?$(?![\\s\\S])",
+          "type": "string"
+        },
+        "ArtModelId": {
+          "pattern": "^[A-Za-z0-9_-]{1,128}$(?![\\s\\S])",
+          "type": "string"
+        },
+        "ArtPoint": {
+          "additionalProperties": false,
+          "description": "Point normalised to the image, each number a fraction in 0..1.",
+          "properties": {
+            "x": {
+              "$ref": "#/$defs/Intensity"
+            },
+            "y": {
+              "$ref": "#/$defs/Intensity"
+            }
+          },
+          "required": [
+            "x",
+            "y"
+          ],
+          "type": "object"
+        },
+        "ArtRect": {
+          "additionalProperties": false,
+          "description": "Rectangle normalised to the image, each number a fraction in 0..1.",
+          "properties": {
+            "h": {
+              "$ref": "#/$defs/Intensity"
+            },
+            "w": {
+              "$ref": "#/$defs/Intensity"
+            },
+            "x": {
+              "$ref": "#/$defs/Intensity"
+            },
+            "y": {
+              "$ref": "#/$defs/Intensity"
+            }
+          },
+          "required": [
+            "x",
+            "y",
+            "w",
+            "h"
+          ],
+          "type": "object"
+        },
+        "BindingRange": {
+          "additionalProperties": false,
+          "description": "Fixed input is Intensity 0..1. Endpoints are outputs at 0 and 1, so descending\noutput ranges are valid. Binding evaluation is separate renderer work.",
+          "properties": {
+            "at_one": {
+              "$ref": "#/$defs/Intensity"
+            },
+            "at_zero": {
+              "$ref": "#/$defs/Intensity"
+            }
+          },
+          "required": [
+            "at_zero",
+            "at_one"
+          ],
+          "type": "object"
+        },
+        "BindingRange2": {
+          "additionalProperties": false,
+          "description": "Fixed input is Intensity 0..1. Endpoints are outputs at 0 and 1, so descending\noutput ranges are valid. Binding evaluation is separate renderer work.",
+          "properties": {
+            "at_one": {
+              "$ref": "#/$defs/DesignScale"
+            },
+            "at_zero": {
+              "$ref": "#/$defs/DesignScale"
+            }
+          },
+          "required": [
+            "at_zero",
+            "at_one"
+          ],
+          "type": "object"
+        },
+        "BindingRange3": {
+          "additionalProperties": false,
+          "description": "Fixed input is Intensity 0..1. Endpoints are outputs at 0 and 1, so descending\noutput ranges are valid. Binding evaluation is separate renderer work.",
+          "properties": {
+            "at_one": {
+              "format": "double",
+              "type": "number"
+            },
+            "at_zero": {
+              "format": "double",
+              "type": "number"
+            }
+          },
+          "required": [
+            "at_zero",
+            "at_one"
+          ],
+          "type": "object"
+        },
+        "DesignContentHash": {
+          "pattern": "^[0-9a-f]{64}$(?![\\s\\S])",
+          "type": "string"
+        },
+        "DesignId": {
+          "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$(?![\\s\\S])",
+          "type": "string"
+        },
+        "DesignLayer": {
+          "oneOf": [
+            {
+              "additionalProperties": false,
+              "properties": {
+                "asset": {
+                  "$ref": "#/$defs/LocalAssetPath"
+                },
+                "bindings": {
+                  "items": {
+                    "$ref": "#/$defs/IntensityBinding"
+                  },
+                  "type": "array"
+                },
+                "kind": {
+                  "const": "image",
+                  "type": "string"
+                },
+                "properties": {
+                  "$ref": "#/$defs/LayerProperties"
+                }
+              },
+              "required": [
+                "kind",
+                "asset",
+                "properties",
+                "bindings"
+              ],
+              "type": "object"
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "bindings": {
+                  "items": {
+                    "$ref": "#/$defs/IntensityBinding"
+                  },
+                  "type": "array"
+                },
+                "kind": {
+                  "const": "shape",
+                  "type": "string"
+                },
+                "properties": {
+                  "$ref": "#/$defs/LayerProperties"
+                },
+                "shape": {
+                  "$ref": "#/$defs/ShapeKind"
+                }
+              },
+              "required": [
+                "kind",
+                "shape",
+                "properties",
+                "bindings"
+              ],
+              "type": "object"
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "bindings": {
+                  "items": {
+                    "$ref": "#/$defs/IntensityBinding"
+                  },
+                  "type": "array"
+                },
+                "kind": {
+                  "const": "text",
+                  "type": "string"
+                },
+                "properties": {
+                  "$ref": "#/$defs/LayerProperties"
+                },
+                "text": {
+                  "pattern": "\\S",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "kind",
+                "text",
+                "properties",
+                "bindings"
+              ],
+              "type": "object"
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "bindings": {
+                  "items": {
+                    "$ref": "#/$defs/IntensityBinding"
+                  },
+                  "type": "array"
+                },
+                "kind": {
+                  "const": "particle_preset",
+                  "type": "string"
+                },
+                "preset": {
+                  "description": "A renderer-owned preset lookup name, never code or a resource URL.",
+                  "pattern": "\\S",
+                  "type": "string"
+                },
+                "properties": {
+                  "$ref": "#/$defs/LayerProperties"
+                }
+              },
+              "required": [
+                "kind",
+                "preset",
+                "properties",
+                "bindings"
+              ],
+              "type": "object"
+            }
+          ]
+        },
+        "DesignPackage": {
+          "additionalProperties": false,
+          "properties": {
+            "content_hash": {
+              "$ref": "#/$defs/DesignContentHash",
+              "description": "Claimed SHA-256 content identity. The host must verify it before delivery;\na well-formed digest alone proves neither integrity nor permission."
+            },
+            "design_id": {
+              "$ref": "#/$defs/DesignId"
+            },
+            "layers": {
+              "description": "Back-to-front paint order, retained exactly by serialization.",
+              "items": {
+                "$ref": "#/$defs/DesignLayer"
+              },
+              "minItems": 1,
+              "type": "array"
+            },
+            "privileges": {
+              "$ref": "#/$defs/DesignPrivileges",
+              "description": "Omission grants no script capability. Present null is never omission."
+            }
+          },
+          "required": [
+            "design_id",
+            "content_hash",
+            "layers"
+          ],
+          "type": "object"
+        },
+        "DesignPrivileges": {
+          "oneOf": [
+            {
+              "additionalProperties": false,
+              "properties": {
+                "kind": {
+                  "const": "data_only",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "kind"
+              ],
+              "type": "object"
+            },
+            {
+              "additionalProperties": false,
+              "description": "Explicit script entry points, relative to this package. This declaration\ndoes not authorize execution: the overlay host still checks consent.",
+              "properties": {
+                "kind": {
+                  "const": "scripts",
+                  "type": "string"
+                },
+                "scripts": {
+                  "items": {
+                    "$ref": "#/$defs/LocalAssetPath"
+                  },
+                  "minItems": 1,
+                  "type": "array"
+                }
+              },
+              "required": [
+                "kind",
+                "scripts"
+              ],
+              "type": "object"
+            }
+          ]
+        },
+        "DesignScale": {
+          "format": "double",
+          "minimum": 0,
+          "type": "number"
+        },
+        "HexColor": {
+          "description": "A raw `#rrggbb` colour; case is preserved as given.",
+          "pattern": "^#[0-9a-fA-F]{6}$(?![\\s\\S])",
+          "type": "string"
+        },
+        "Intensity": {
+          "description": "Finite fraction, not a percentage. Both schema and Rust reject nonfinite values.",
+          "format": "double",
+          "maximum": 1,
+          "minimum": 0,
+          "type": "number"
+        },
+        "IntensityBinding": {
+          "description": "The property tag also selects the output domain; opacity cannot exceed 1,\nscale cannot be negative, and positions must be finite. No arbitrary CSS.",
+          "oneOf": [
+            {
+              "additionalProperties": false,
+              "properties": {
+                "output_range": {
+                  "$ref": "#/$defs/BindingRange"
+                },
+                "property": {
+                  "const": "opacity",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "property",
+                "output_range"
+              ],
+              "type": "object"
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "output_range": {
+                  "$ref": "#/$defs/BindingRange2"
+                },
+                "property": {
+                  "const": "scale",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "property",
+                "output_range"
+              ],
+              "type": "object"
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "output_range": {
+                  "$ref": "#/$defs/BindingRange3"
+                },
+                "property": {
+                  "const": "x",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "property",
+                "output_range"
+              ],
+              "type": "object"
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "output_range": {
+                  "$ref": "#/$defs/BindingRange3"
+                },
+                "property": {
+                  "const": "y",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "property",
+                "output_range"
+              ],
+              "type": "object"
+            }
+          ]
+        },
+        "LayerProperties": {
+          "additionalProperties": false,
+          "description": "Base layout in logical pixels; scale is a nonnegative multiplier, opacity a\nfraction. Text is literal text, not HTML; no layer carries arbitrary CSS/JS.",
+          "properties": {
+            "height": {
+              "format": "uint32",
+              "minimum": 1,
+              "type": "integer"
+            },
+            "opacity": {
+              "$ref": "#/$defs/Intensity"
+            },
+            "scale": {
+              "$ref": "#/$defs/DesignScale"
+            },
+            "width": {
+              "format": "uint32",
+              "minimum": 1,
+              "type": "integer"
+            },
+            "x": {
+              "format": "double",
+              "type": "number"
+            },
+            "y": {
+              "format": "double",
+              "type": "number"
+            }
+          },
+          "required": [
+            "x",
+            "y",
+            "width",
+            "height",
+            "scale",
+            "opacity"
+          ],
+          "type": "object"
+        },
+        "LocalAssetPath": {
+          "description": "Canonical ASCII package-relative path. No scheme, authority, root, traversal,\npercent escapes, backslashes, query or fragment. The host must additionally\nconfine filesystem resolution (including symlinks) to its local asset root.",
+          "pattern": "^[A-Za-z0-9_-][A-Za-z0-9._-]*(/[A-Za-z0-9_-][A-Za-z0-9._-]*)*$(?![\\s\\S])",
+          "type": "string"
+        },
+        "ShapeKind": {
+          "enum": [
+            "rectangle",
+            "ellipse"
+          ],
+          "type": "string"
+        }
+      },
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "description": "Base/effect split, measured anchors and the bound package; `costs` may be\nempty when the kind has no effect and no paid edit call was made.",
+      "properties": {
+        "anchors": {
+          "$ref": "#/$defs/ArtAnchors"
+        },
+        "base": {
+          "$ref": "#/$defs/LocalAssetPath"
+        },
+        "costs": {
+          "items": {
+            "$ref": "#/$defs/ArtCostReceipt"
+          },
+          "type": "array"
+        },
+        "design_id": {
+          "$ref": "#/$defs/DesignId"
+        },
+        "effect": {
+          "$ref": "#/$defs/LocalAssetPath"
+        },
+        "package": {
+          "$ref": "#/$defs/DesignPackage"
+        }
+      },
+      "required": [
+        "design_id",
+        "base",
+        "anchors",
+        "package",
+        "costs"
+      ],
+      "title": "ArtLayers",
+      "type": "object"
+    },
+    "ArtLayersParams": {
+      "$defs": {
+        "ArtAssetKind": {
+          "description": "The four V1 custom design surfaces.",
+          "enum": [
+            "beacon",
+            "frame",
+            "vote_bar",
+            "draw_vessel"
+          ],
+          "type": "string"
+        },
+        "DesignId": {
+          "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$(?![\\s\\S])",
+          "type": "string"
+        },
+        "LocalAssetPath": {
+          "description": "Canonical ASCII package-relative path. No scheme, authority, root, traversal,\npercent escapes, backslashes, query or fragment. The host must additionally\nconfine filesystem resolution (including symlinks) to its local asset root.",
+          "pattern": "^[A-Za-z0-9_-][A-Za-z0-9._-]*(/[A-Za-z0-9_-][A-Za-z0-9._-]*)*$(?![\\s\\S])",
+          "type": "string"
+        }
+      },
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "asset": {
+          "$ref": "#/$defs/LocalAssetPath"
+        },
+        "design_id": {
+          "$ref": "#/$defs/DesignId"
+        },
+        "kind": {
+          "$ref": "#/$defs/ArtAssetKind"
+        }
+      },
+      "required": [
+        "design_id",
+        "asset",
+        "kind"
+      ],
+      "title": "ArtLayersParams",
+      "type": "object"
+    },
+    "ArtPoint": {
+      "$defs": {
+        "Intensity": {
+          "description": "Finite fraction, not a percentage. Both schema and Rust reject nonfinite values.",
+          "format": "double",
+          "maximum": 1,
+          "minimum": 0,
+          "type": "number"
+        }
+      },
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "description": "Point normalised to the image, each number a fraction in 0..1.",
+      "properties": {
+        "x": {
+          "$ref": "#/$defs/Intensity"
+        },
+        "y": {
+          "$ref": "#/$defs/Intensity"
+        }
+      },
+      "required": [
+        "x",
+        "y"
+      ],
+      "title": "ArtPoint",
+      "type": "object"
+    },
+    "ArtProvider": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "description": "Image provider; an omitted provider on generation means Leonardo.",
+      "enum": [
+        "leonardo",
+        "openai"
+      ],
+      "title": "ArtProvider",
+      "type": "string"
+    },
+    "ArtProviderStatus": {
+      "$defs": {
+        "ArtProvider": {
+          "description": "Image provider; an omitted provider on generation means Leonardo.",
+          "enum": [
+            "leonardo",
+            "openai"
+          ],
+          "type": "string"
+        }
+      },
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "description": "Local key presence for one provider; never key material or a keychain label.",
+      "properties": {
+        "available": {
+          "type": "boolean"
+        },
+        "provider": {
+          "$ref": "#/$defs/ArtProvider"
+        }
+      },
+      "required": [
+        "provider",
+        "available"
+      ],
+      "title": "ArtProviderStatus",
+      "type": "object"
+    },
+    "ArtQuestion": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "description": "One follow-up question; `assumed` is the option preselected when unanswered.",
+      "properties": {
+        "assumed": {
+          "pattern": "[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000]",
+          "type": "string"
+        },
+        "options": {
+          "items": {
+            "pattern": "[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000]",
+            "type": "string"
+          },
+          "maxItems": 4,
+          "minItems": 2,
+          "type": "array"
+        },
+        "text": {
+          "pattern": "[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000]",
+          "type": "string"
+        }
+      },
+      "required": [
+        "text",
+        "options",
+        "assumed"
+      ],
+      "title": "ArtQuestion",
+      "type": "object"
+    },
+    "ArtRect": {
+      "$defs": {
+        "Intensity": {
+          "description": "Finite fraction, not a percentage. Both schema and Rust reject nonfinite values.",
+          "format": "double",
+          "maximum": 1,
+          "minimum": 0,
+          "type": "number"
+        }
+      },
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "description": "Rectangle normalised to the image, each number a fraction in 0..1.",
+      "properties": {
+        "h": {
+          "$ref": "#/$defs/Intensity"
+        },
+        "w": {
+          "$ref": "#/$defs/Intensity"
+        },
+        "x": {
+          "$ref": "#/$defs/Intensity"
+        },
+        "y": {
+          "$ref": "#/$defs/Intensity"
+        }
+      },
+      "required": [
+        "x",
+        "y",
+        "w",
+        "h"
+      ],
+      "title": "ArtRect",
+      "type": "object"
     },
     "ArtStyle": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -15534,6 +17604,10 @@
           "properties": {
             "anchor": {
               "$ref": "#/$defs/DisplayAnchor"
+            },
+            "art_design": {
+              "$ref": "#/$defs/DesignId",
+              "description": "A custom design that replaces `art_style` where the room supports it\n(the Lots plate renders it as an image vessel)."
             },
             "art_style": {
               "$ref": "#/$defs/ArtStyle"
@@ -18649,6 +20723,10 @@
             "anchor": {
               "$ref": "#/$defs/DisplayAnchor"
             },
+            "art_design": {
+              "$ref": "#/$defs/DesignId",
+              "description": "A custom design that replaces `art_style` where the room supports it\n(the Lots plate renders it as an image vessel)."
+            },
             "art_style": {
               "$ref": "#/$defs/ArtStyle"
             },
@@ -18859,6 +20937,10 @@
           ],
           "type": "string"
         },
+        "DesignId": {
+          "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$(?![\\s\\S])",
+          "type": "string"
+        },
         "DisplayAnchor": {
           "enum": [
             "top-left",
@@ -18890,6 +20972,10 @@
       "properties": {
         "anchor": {
           "$ref": "#/$defs/DisplayAnchor"
+        },
+        "art_design": {
+          "$ref": "#/$defs/DesignId",
+          "description": "A custom design that replaces `art_style` where the room supports it\n(the Lots plate renders it as an image vessel)."
         },
         "art_style": {
           "$ref": "#/$defs/ArtStyle"
@@ -19139,6 +21225,13 @@
       "title": "HeldResolveParams",
       "type": "object"
     },
+    "HexColor": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "description": "A raw `#rrggbb` colour; case is preserved as given.",
+      "pattern": "^#[0-9a-fA-F]{6}$(?![\\s\\S])",
+      "title": "HexColor",
+      "type": "string"
+    },
     "ImageUploadParams": {
       "$defs": {
         "LocalImageContent": {
@@ -19210,6 +21303,12 @@
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "pattern": "^[0-7][0-9A-HJKMNP-TV-Z]{25}$(?![\\s\\S])",
       "title": "LeaseId",
+      "type": "string"
+    },
+    "LibraryAssetId": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "pattern": "^[a-z0-9-]{1,64}$(?![\\s\\S])",
+      "title": "LibraryAssetId",
       "type": "string"
     },
     "LocalImageContent": {
@@ -19589,6 +21688,98 @@
       ],
       "title": "LotsEventPayload"
     },
+    "LotsPlateSnapshot": {
+      "$defs": {
+        "ArtPoint": {
+          "additionalProperties": false,
+          "description": "Point normalised to the image, each number a fraction in 0..1.",
+          "properties": {
+            "x": {
+              "$ref": "#/$defs/Intensity"
+            },
+            "y": {
+              "$ref": "#/$defs/Intensity"
+            }
+          },
+          "required": [
+            "x",
+            "y"
+          ],
+          "type": "object"
+        },
+        "ArtRect": {
+          "additionalProperties": false,
+          "description": "Rectangle normalised to the image, each number a fraction in 0..1.",
+          "properties": {
+            "h": {
+              "$ref": "#/$defs/Intensity"
+            },
+            "w": {
+              "$ref": "#/$defs/Intensity"
+            },
+            "x": {
+              "$ref": "#/$defs/Intensity"
+            },
+            "y": {
+              "$ref": "#/$defs/Intensity"
+            }
+          },
+          "required": [
+            "x",
+            "y",
+            "w",
+            "h"
+          ],
+          "type": "object"
+        },
+        "Intensity": {
+          "description": "Finite fraction, not a percentage. Both schema and Rust reject nonfinite values.",
+          "format": "double",
+          "maximum": 1,
+          "minimum": 0,
+          "type": "number"
+        },
+        "OverlayAssetUrl": {
+          "description": "Same-origin overlay asset path `/assets/<slug>/<content hash>/<asset path>`,\nmatching the overlay host's asset route. Never a scheme, host or query.",
+          "pattern": "^/assets/[a-z0-9]+(-[a-z0-9]+)*/[0-9a-f]{64}/[A-Za-z0-9_-][A-Za-z0-9._-]*(/[A-Za-z0-9_-][A-Za-z0-9._-]*)*$(?![\\s\\S])",
+          "type": "string"
+        },
+        "VesselArt": {
+          "additionalProperties": false,
+          "description": "Lots plate image vessel; the entry token sprite is optional.",
+          "properties": {
+            "asset_url": {
+              "$ref": "#/$defs/OverlayAssetUrl"
+            },
+            "chamber_rect": {
+              "$ref": "#/$defs/ArtRect"
+            },
+            "mouth": {
+              "$ref": "#/$defs/ArtPoint"
+            },
+            "token_url": {
+              "$ref": "#/$defs/OverlayAssetUrl"
+            }
+          },
+          "required": [
+            "asset_url",
+            "chamber_rect",
+            "mouth"
+          ],
+          "type": "object"
+        }
+      },
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "description": "Plate render data beside the seal and cast; absent vessel keeps `art_style`.",
+      "properties": {
+        "vessel": {
+          "$ref": "#/$defs/VesselArt"
+        }
+      },
+      "title": "LotsPlateSnapshot",
+      "type": "object"
+    },
     "LotsSourceUrlParams": {
       "$defs": {
         "DrawId": {
@@ -19698,6 +21889,13 @@
         "ai_proposes"
       ],
       "title": "Operator",
+      "type": "string"
+    },
+    "OverlayAssetUrl": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "description": "Same-origin overlay asset path `/assets/<slug>/<content hash>/<asset path>`,\nmatching the overlay host's asset route. Never a scheme, host or query.",
+      "pattern": "^/assets/[a-z0-9]+(-[a-z0-9]+)*/[0-9a-f]{64}/[A-Za-z0-9_-][A-Za-z0-9._-]*(/[A-Za-z0-9_-][A-Za-z0-9._-]*)*$(?![\\s\\S])",
+      "title": "OverlayAssetUrl",
       "type": "string"
     },
     "PetitionOutcome": {
@@ -19940,12 +22138,65 @@
           ],
           "type": "string"
         },
+        "ArtAssetKind": {
+          "description": "The four V1 custom design surfaces.",
+          "enum": [
+            "beacon",
+            "frame",
+            "vote_bar",
+            "draw_vessel"
+          ],
+          "type": "string"
+        },
+        "ArtBackground": {
+          "description": "Requested output background; OpenAI only.",
+          "enum": [
+            "transparent",
+            "opaque"
+          ],
+          "type": "string"
+        },
         "ArtDimension": {
           "format": "uint32",
           "maximum": 1536,
           "minimum": 32,
           "multipleOf": 8,
           "type": "integer"
+        },
+        "ArtDirectParams": {
+          "additionalProperties": false,
+          "description": "One art-director request; `answer` re-runs it with the follow-up chosen.",
+          "properties": {
+            "answer": {
+              "default": null,
+              "maxLength": 120,
+              "minLength": 1,
+              "pattern": "[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000]",
+              "type": "string"
+            },
+            "height": {
+              "$ref": "#/$defs/ArtDimension"
+            },
+            "kind": {
+              "$ref": "#/$defs/ArtAssetKind"
+            },
+            "request": {
+              "maxLength": 500,
+              "minLength": 1,
+              "pattern": "[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000]",
+              "type": "string"
+            },
+            "width": {
+              "$ref": "#/$defs/ArtDimension"
+            }
+          },
+          "required": [
+            "kind",
+            "request",
+            "width",
+            "height"
+          ],
+          "type": "object"
         },
         "ArtGenerateParams": {
           "additionalProperties": false,
@@ -19966,10 +22217,34 @@
                   "reference"
                 ]
               }
+            },
+            {
+              "if": {
+                "properties": {
+                  "background": true
+                },
+                "required": [
+                  "background"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "provider": {
+                    "const": "openai"
+                  }
+                },
+                "required": [
+                  "provider"
+                ]
+              }
             }
           ],
           "description": "An absent reference generates one anchor. A reference selects an imported\ngenerated image in this design; the host resolves its original provider ID.\nNeither the caller nor the result can supply a provider URL or public flag.",
           "properties": {
+            "background": {
+              "$ref": "#/$defs/ArtBackground",
+              "default": null
+            },
             "design_id": {
               "$ref": "#/$defs/DesignId"
             },
@@ -19983,6 +22258,10 @@
               "maxLength": 1500,
               "pattern": "[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000]",
               "type": "string"
+            },
+            "provider": {
+              "$ref": "#/$defs/ArtProvider",
+              "default": null
             },
             "quantity": {
               "$ref": "#/$defs/ArtQuantity"
@@ -20009,8 +22288,36 @@
           ],
           "type": "object"
         },
+        "ArtLayersParams": {
+          "additionalProperties": false,
+          "properties": {
+            "asset": {
+              "$ref": "#/$defs/LocalAssetPath"
+            },
+            "design_id": {
+              "$ref": "#/$defs/DesignId"
+            },
+            "kind": {
+              "$ref": "#/$defs/ArtAssetKind"
+            }
+          },
+          "required": [
+            "design_id",
+            "asset",
+            "kind"
+          ],
+          "type": "object"
+        },
         "ArtModelId": {
           "pattern": "^[A-Za-z0-9_-]{1,128}$(?![\\s\\S])",
+          "type": "string"
+        },
+        "ArtProvider": {
+          "description": "Image provider; an omitted provider on generation means Leonardo.",
+          "enum": [
+            "leonardo",
+            "openai"
+          ],
           "type": "string"
         },
         "ArtQuantity": {
@@ -20380,6 +22687,18 @@
           "pattern": "^[0-9a-f]{64}$(?![\\s\\S])",
           "type": "string"
         },
+        "DesignCreateParams": {
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "$ref": "#/$defs/ArtAssetKind"
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "type": "object"
+        },
         "DesignId": {
           "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$(?![\\s\\S])",
           "type": "string"
@@ -20599,6 +22918,10 @@
           "properties": {
             "anchor": {
               "$ref": "#/$defs/DisplayAnchor"
+            },
+            "art_design": {
+              "$ref": "#/$defs/DesignId",
+              "description": "A custom design that replaces `art_style` where the room supports it\n(the Lots plate renders it as an image vessel)."
             },
             "art_style": {
               "$ref": "#/$defs/ArtStyle"
@@ -21049,6 +23372,26 @@
         "LeaseId": {
           "pattern": "^[0-7][0-9A-HJKMNP-TV-Z]{25}$(?![\\s\\S])",
           "type": "string"
+        },
+        "LibraryAssetId": {
+          "pattern": "^[a-z0-9-]{1,64}$(?![\\s\\S])",
+          "type": "string"
+        },
+        "LibraryImportParams": {
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "$ref": "#/$defs/ArtAssetKind"
+            },
+            "library_id": {
+              "$ref": "#/$defs/LibraryAssetId"
+            }
+          },
+          "required": [
+            "library_id",
+            "kind"
+          ],
+          "type": "object"
         },
         "LocalAssetPath": {
           "description": "Canonical ASCII package-relative path. No scheme, authority, root, traversal,\npercent escapes, backslashes, query or fragment. The host must additionally\nconfine filesystem resolution (including symlinks) to its local asset root.",
@@ -22383,6 +24726,16 @@
           ],
           "type": "object"
         },
+        "VoteBarDesignSetParams": {
+          "additionalProperties": false,
+          "description": "An omitted design clears the vote bar art.",
+          "properties": {
+            "design_id": {
+              "$ref": "#/$defs/DesignId"
+            }
+          },
+          "type": "object"
+        },
         "WritChamber": {
           "description": "Map Room is deferred until its configuration mutation has a typed contract.",
           "enum": [
@@ -23488,6 +25841,91 @@
             "params"
           ],
           "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "method": {
+              "const": "beacons.design.create",
+              "type": "string"
+            },
+            "params": {
+              "$ref": "#/$defs/DesignCreateParams"
+            }
+          },
+          "required": [
+            "method",
+            "params"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "method": {
+              "const": "beacons.art.direct",
+              "type": "string"
+            },
+            "params": {
+              "$ref": "#/$defs/ArtDirectParams"
+            }
+          },
+          "required": [
+            "method",
+            "params"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "method": {
+              "const": "beacons.art.layers",
+              "type": "string"
+            },
+            "params": {
+              "$ref": "#/$defs/ArtLayersParams"
+            }
+          },
+          "required": [
+            "method",
+            "params"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "method": {
+              "const": "beacons.library.import",
+              "type": "string"
+            },
+            "params": {
+              "$ref": "#/$defs/LibraryImportParams"
+            }
+          },
+          "required": [
+            "method",
+            "params"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "method": {
+              "const": "gatehouse.votebar.design.set",
+              "type": "string"
+            },
+            "params": {
+              "$ref": "#/$defs/VoteBarDesignSetParams"
+            }
+          },
+          "required": [
+            "method",
+            "params"
+          ],
+          "type": "object"
         }
       ],
       "title": "RpcRequest"
@@ -23670,6 +26108,10 @@
           "properties": {
             "anchor": {
               "$ref": "#/$defs/DisplayAnchor"
+            },
+            "art_design": {
+              "$ref": "#/$defs/DesignId",
+              "description": "A custom design that replaces `art_style` where the room supports it\n(the Lots plate renders it as an image vessel)."
             },
             "art_style": {
               "$ref": "#/$defs/ArtStyle"
@@ -27079,11 +29521,169 @@
       "title": "Verdict",
       "type": "string"
     },
+    "VesselArt": {
+      "$defs": {
+        "ArtPoint": {
+          "additionalProperties": false,
+          "description": "Point normalised to the image, each number a fraction in 0..1.",
+          "properties": {
+            "x": {
+              "$ref": "#/$defs/Intensity"
+            },
+            "y": {
+              "$ref": "#/$defs/Intensity"
+            }
+          },
+          "required": [
+            "x",
+            "y"
+          ],
+          "type": "object"
+        },
+        "ArtRect": {
+          "additionalProperties": false,
+          "description": "Rectangle normalised to the image, each number a fraction in 0..1.",
+          "properties": {
+            "h": {
+              "$ref": "#/$defs/Intensity"
+            },
+            "w": {
+              "$ref": "#/$defs/Intensity"
+            },
+            "x": {
+              "$ref": "#/$defs/Intensity"
+            },
+            "y": {
+              "$ref": "#/$defs/Intensity"
+            }
+          },
+          "required": [
+            "x",
+            "y",
+            "w",
+            "h"
+          ],
+          "type": "object"
+        },
+        "Intensity": {
+          "description": "Finite fraction, not a percentage. Both schema and Rust reject nonfinite values.",
+          "format": "double",
+          "maximum": 1,
+          "minimum": 0,
+          "type": "number"
+        },
+        "OverlayAssetUrl": {
+          "description": "Same-origin overlay asset path `/assets/<slug>/<content hash>/<asset path>`,\nmatching the overlay host's asset route. Never a scheme, host or query.",
+          "pattern": "^/assets/[a-z0-9]+(-[a-z0-9]+)*/[0-9a-f]{64}/[A-Za-z0-9_-][A-Za-z0-9._-]*(/[A-Za-z0-9_-][A-Za-z0-9._-]*)*$(?![\\s\\S])",
+          "type": "string"
+        }
+      },
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "description": "Lots plate image vessel; the entry token sprite is optional.",
+      "properties": {
+        "asset_url": {
+          "$ref": "#/$defs/OverlayAssetUrl"
+        },
+        "chamber_rect": {
+          "$ref": "#/$defs/ArtRect"
+        },
+        "mouth": {
+          "$ref": "#/$defs/ArtPoint"
+        },
+        "token_url": {
+          "$ref": "#/$defs/OverlayAssetUrl"
+        }
+      },
+      "required": [
+        "asset_url",
+        "chamber_rect",
+        "mouth"
+      ],
+      "title": "VesselArt",
+      "type": "object"
+    },
     "VisualId": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$(?![\\s\\S])",
       "title": "VisualId",
       "type": "string"
+    },
+    "VoteBarArt": {
+      "$defs": {
+        "ArtRect": {
+          "additionalProperties": false,
+          "description": "Rectangle normalised to the image, each number a fraction in 0..1.",
+          "properties": {
+            "h": {
+              "$ref": "#/$defs/Intensity"
+            },
+            "w": {
+              "$ref": "#/$defs/Intensity"
+            },
+            "x": {
+              "$ref": "#/$defs/Intensity"
+            },
+            "y": {
+              "$ref": "#/$defs/Intensity"
+            }
+          },
+          "required": [
+            "x",
+            "y",
+            "w",
+            "h"
+          ],
+          "type": "object"
+        },
+        "HexColor": {
+          "description": "A raw `#rrggbb` colour; case is preserved as given.",
+          "pattern": "^#[0-9a-fA-F]{6}$(?![\\s\\S])",
+          "type": "string"
+        },
+        "Intensity": {
+          "description": "Finite fraction, not a percentage. Both schema and Rust reject nonfinite values.",
+          "format": "double",
+          "maximum": 1,
+          "minimum": 0,
+          "type": "number"
+        },
+        "OverlayAssetUrl": {
+          "description": "Same-origin overlay asset path `/assets/<slug>/<content hash>/<asset path>`,\nmatching the overlay host's asset route. Never a scheme, host or query.",
+          "pattern": "^/assets/[a-z0-9]+(-[a-z0-9]+)*/[0-9a-f]{64}/[A-Za-z0-9_-][A-Za-z0-9._-]*(/[A-Za-z0-9_-][A-Za-z0-9._-]*)*$(?![\\s\\S])",
+          "type": "string"
+        }
+      },
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "description": "Vote bar housing art; the renderer clips the three segments to the track.",
+      "properties": {
+        "asset_url": {
+          "$ref": "#/$defs/OverlayAssetUrl"
+        },
+        "segments": {
+          "items": {
+            "$ref": "#/$defs/HexColor"
+          },
+          "maxItems": 3,
+          "minItems": 3,
+          "type": "array"
+        },
+        "track_radius": {
+          "$ref": "#/$defs/Intensity"
+        },
+        "track_rect": {
+          "$ref": "#/$defs/ArtRect"
+        }
+      },
+      "required": [
+        "asset_url",
+        "track_rect",
+        "track_radius",
+        "segments"
+      ],
+      "title": "VoteBarArt",
+      "type": "object"
     },
     "VoteBarDirection": {
       "$defs": {
@@ -27109,16 +29709,88 @@
     },
     "VoteBarSnapshot": {
       "$defs": {
+        "ArtRect": {
+          "additionalProperties": false,
+          "description": "Rectangle normalised to the image, each number a fraction in 0..1.",
+          "properties": {
+            "h": {
+              "$ref": "#/$defs/Intensity"
+            },
+            "w": {
+              "$ref": "#/$defs/Intensity"
+            },
+            "x": {
+              "$ref": "#/$defs/Intensity"
+            },
+            "y": {
+              "$ref": "#/$defs/Intensity"
+            }
+          },
+          "required": [
+            "x",
+            "y",
+            "w",
+            "h"
+          ],
+          "type": "object"
+        },
         "ConsensusShare": {
           "format": "double",
           "maximum": 1,
           "minimum": 0,
           "type": "number"
         },
+        "HexColor": {
+          "description": "A raw `#rrggbb` colour; case is preserved as given.",
+          "pattern": "^#[0-9a-fA-F]{6}$(?![\\s\\S])",
+          "type": "string"
+        },
+        "Intensity": {
+          "description": "Finite fraction, not a percentage. Both schema and Rust reject nonfinite values.",
+          "format": "double",
+          "maximum": 1,
+          "minimum": 0,
+          "type": "number"
+        },
+        "OverlayAssetUrl": {
+          "description": "Same-origin overlay asset path `/assets/<slug>/<content hash>/<asset path>`,\nmatching the overlay host's asset route. Never a scheme, host or query.",
+          "pattern": "^/assets/[a-z0-9]+(-[a-z0-9]+)*/[0-9a-f]{64}/[A-Za-z0-9_-][A-Za-z0-9._-]*(/[A-Za-z0-9_-][A-Za-z0-9._-]*)*$(?![\\s\\S])",
+          "type": "string"
+        },
         "Timestamp": {
           "format": "date-time",
           "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?Z$(?![\\s\\S])",
           "type": "string"
+        },
+        "VoteBarArt": {
+          "additionalProperties": false,
+          "description": "Vote bar housing art; the renderer clips the three segments to the track.",
+          "properties": {
+            "asset_url": {
+              "$ref": "#/$defs/OverlayAssetUrl"
+            },
+            "segments": {
+              "items": {
+                "$ref": "#/$defs/HexColor"
+              },
+              "maxItems": 3,
+              "minItems": 3,
+              "type": "array"
+            },
+            "track_radius": {
+              "$ref": "#/$defs/Intensity"
+            },
+            "track_rect": {
+              "$ref": "#/$defs/ArtRect"
+            }
+          },
+          "required": [
+            "asset_url",
+            "track_rect",
+            "track_radius",
+            "segments"
+          ],
+          "type": "object"
         },
         "VoteBarDirection": {
           "additionalProperties": false,
@@ -27137,6 +29809,10 @@
       "additionalProperties": false,
       "description": "Full replacement in consensus direction order. No chat or viewer data.",
       "properties": {
+        "art": {
+          "$ref": "#/$defs/VoteBarArt",
+          "description": "Custom housing art, omitted when no vote bar design is set."
+        },
         "at": {
           "$ref": "#/$defs/Timestamp"
         },
@@ -27297,6 +29973,10 @@
           "properties": {
             "anchor": {
               "$ref": "#/$defs/DisplayAnchor"
+            },
+            "art_design": {
+              "$ref": "#/$defs/DesignId",
+              "description": "A custom design that replaces `art_style` where the room supports it\n(the Lots plate renders it as an image vessel)."
             },
             "art_style": {
               "$ref": "#/$defs/ArtStyle"
@@ -28698,6 +31378,10 @@
           "properties": {
             "anchor": {
               "$ref": "#/$defs/DisplayAnchor"
+            },
+            "art_design": {
+              "$ref": "#/$defs/DesignId",
+              "description": "A custom design that replaces `art_style` where the room supports it\n(the Lots plate renders it as an image vessel)."
             },
             "art_style": {
               "$ref": "#/$defs/ArtStyle"
@@ -30105,6 +32789,10 @@
           "properties": {
             "anchor": {
               "$ref": "#/$defs/DisplayAnchor"
+            },
+            "art_design": {
+              "$ref": "#/$defs/DesignId",
+              "description": "A custom design that replaces `art_style` where the room supports it\n(the Lots plate renders it as an image vessel)."
             },
             "art_style": {
               "$ref": "#/$defs/ArtStyle"

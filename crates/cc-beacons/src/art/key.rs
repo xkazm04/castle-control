@@ -3,6 +3,9 @@ use std::fmt;
 use zeroize::Zeroizing;
 
 pub const KEYCHAIN_SERVICE: &str = "castlecontrol-leonardo";
+/// OpenAI shares the Steward's provider service; one key per streamer.
+pub const OPENAI_KEYCHAIN_SERVICE: &str = "castle-control";
+pub const OPENAI_KEYCHAIN_ACCOUNT: &str = "openai";
 
 /// Not serializable. Plaintext is private to the authenticated HTTP door.
 ///
@@ -52,31 +55,54 @@ pub trait KeyStore: Send + Sync {
 
 /// Same native keyring backends and NoEntry handling as cc-obs/cc-twitch.
 pub struct KeychainStore;
-impl KeychainStore {
-    fn entry(label: &str) -> Result<keyring::Entry, ArtError> {
-        if label.trim().is_empty() {
-            return Err(ArtError::Invalid);
-        }
-        keyring::Entry::new(KEYCHAIN_SERVICE, label).map_err(|_| ArtError::Keychain)
+/// The OpenAI image key under the Steward's `castle-control` service.
+pub struct OpenAiKeychain;
+
+fn entry(service: &str, label: &str) -> Result<keyring::Entry, ArtError> {
+    if label.trim().is_empty() {
+        return Err(ArtError::Invalid);
+    }
+    keyring::Entry::new(service, label).map_err(|_| ArtError::Keychain)
+}
+fn load(service: &str, label: &str) -> Result<Option<SecretKey>, ArtError> {
+    match entry(service, label)?.get_password() {
+        Ok(value) => SecretKey::new(value).map(Some),
+        Err(keyring::Error::NoEntry) => Ok(None),
+        // OS errors can contain credential values: discard them unformatted.
+        Err(_) => Err(ArtError::Keychain),
     }
 }
+fn save(service: &str, label: &str, key: &SecretKey) -> Result<(), ArtError> {
+    entry(service, label)?
+        .set_password(key.value())
+        .map_err(|_| ArtError::Keychain)
+}
+fn delete(service: &str, label: &str) -> Result<(), ArtError> {
+    match entry(service, label)?.delete_credential() {
+        Ok(()) | Err(keyring::Error::NoEntry) => Ok(()),
+        Err(_) => Err(ArtError::Keychain),
+    }
+}
+
 impl KeyStore for KeychainStore {
     fn load(&self, label: &str) -> Result<Option<SecretKey>, ArtError> {
-        match Self::entry(label)?.get_password() {
-            Ok(value) => SecretKey::new(value).map(Some),
-            Err(keyring::Error::NoEntry) => Ok(None),
-            Err(_) => Err(ArtError::Keychain),
-        }
+        load(KEYCHAIN_SERVICE, label)
     }
     fn save(&self, label: &str, key: &SecretKey) -> Result<(), ArtError> {
-        Self::entry(label)?
-            .set_password(key.value())
-            .map_err(|_| ArtError::Keychain)
+        save(KEYCHAIN_SERVICE, label, key)
     }
     fn delete(&self, label: &str) -> Result<(), ArtError> {
-        match Self::entry(label)?.delete_credential() {
-            Ok(()) | Err(keyring::Error::NoEntry) => Ok(()),
-            Err(_) => Err(ArtError::Keychain),
-        }
+        delete(KEYCHAIN_SERVICE, label)
+    }
+}
+impl KeyStore for OpenAiKeychain {
+    fn load(&self, label: &str) -> Result<Option<SecretKey>, ArtError> {
+        load(OPENAI_KEYCHAIN_SERVICE, label)
+    }
+    fn save(&self, label: &str, key: &SecretKey) -> Result<(), ArtError> {
+        save(OPENAI_KEYCHAIN_SERVICE, label, key)
+    }
+    fn delete(&self, label: &str) -> Result<(), ArtError> {
+        delete(OPENAI_KEYCHAIN_SERVICE, label)
     }
 }

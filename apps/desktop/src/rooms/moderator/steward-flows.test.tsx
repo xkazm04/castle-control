@@ -6,7 +6,8 @@ import { fixtureConfirmationMs } from '../../moderation-fixture.js';
 import { moderatorSteward } from './steward-flows.js';
 import { demoFlow } from './flow-demo.jsx';
 import { rulesFlow } from './flow-rules.jsx';
-import { voteBarFlow } from './flow-votebar.jsx';
+import { voteBarFlow, voteLook } from './flow-votebar.jsx';
+import { sealedLooks } from '../../custom-design/sealed.js';
 import { moderationSession } from './session.js';
 
 afterEach(() => { vi.useRealTimers(); });
@@ -25,14 +26,14 @@ function walk<D>(flow: StewardFlow<D>, answers: readonly string[]): { state: Flo
 test('the Gatehouse offers two setup chips, Play demo and Catch me up; the demo is SIMULATED', () => {
   const steward = moderatorSteward(fixture);
   expect(chamberChips('moderator', steward).map(chip => chip.label)).toEqual(['Set the rules', 'Show the vote bar', 'Play demo', 'Catch me up']);
-  expect(steward.flows.map(flow => flow.title)).toContain('Practice a drill');
+  expect(steward.flows.map(flow => flow.title)).toEqual(expect.arrayContaining(['Practice a drill', 'Custom design · vote bar']));
   expect(steward.demo?.simulated).toBe(true);
   expect(steward.catch_up?.().say).toBe('1 held message and 1 pending ban need you.');
   // Core mode has no fixture-only rule setup; its demo is the same SIMULATED one, played in a local sandbox.
   const core = moderatorSteward({ mode: 'core', phase: 'ready' });
   expect(core.demo).toMatchObject({ id: 'gatehouse-demo', simulated: true });
   expect(core.catch_up?.().say).toContain('not connected');
-  expect(core.flows.map(flow => flow.id)).toEqual(['gatehouse-votebar', 'gatehouse-drill']);
+  expect(core.flows.map(flow => flow.id)).toEqual(['gatehouse-votebar', 'gatehouse-drill', 'custom-design-vote-bar']);
 });
 
 test('Set the rules acts only on its seal: a watching rule, armed previews and the chat delay', async () => {
@@ -53,11 +54,14 @@ test('Set the rules acts only on its seal: a watching rule, armed previews and t
 test('Vote bar on stream seals the session preview only in fixture mode', async () => {
   const flow = voteBarFlow(fixture);
   const { output, view } = moderationSession(proposalQueue);
-  const { draft } = walk(flow, ['1', 'banner', 'synthwave', 'ok']);
+  const { draft } = walk(flow, ['1', 'banner', 'votebar-12', 'ok']);
   expect(output.getSnapshot().vote.anchor).toBe('bottom-right');
+  expect(voteLook(draft).art).toBe('votebar-12');
   const outcome = await flow.seal(draft);
   expect(outcome.say).toContain('No OBS source in fixture mode');
-  expect(output.getSnapshot().vote).toMatchObject({ anchor: 'top-left', size: 'L', art_style: 'synthwave' });
+  expect(output.getSnapshot().vote).toMatchObject({ anchor: 'top-left', size: 'L' });
+  expect(sealedLooks.get().vote_bar).toBe('votebar-12');
+  expect(voteLook(undefined).art).toBe('votebar-12');
   expect(view.getSnapshot().filter).toBe(1);
 });
 

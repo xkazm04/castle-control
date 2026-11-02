@@ -16,6 +16,8 @@ fn native_permissions_and_network_policy_are_minimal() {
         "ipc: http://ipc.localhost http://127.0.0.1:* ws://127.0.0.1:*"
     );
     assert_eq!(csp["script-src"], "'self'");
+    // Loopback only: the custom design preview shows a design's images from the core's overlay host.
+    assert_eq!(csp["img-src"], "'self' data: http://127.0.0.1:* http://localhost:*");
     assert_eq!(config["build"]["frontendDist"], "../dist");
     assert_eq!(config["build"]["devUrl"], "http://127.0.0.1:5173");
     assert_eq!(config["app"]["windows"], json!([]));

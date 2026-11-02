@@ -215,6 +215,7 @@ impl OfflineModules {
             )?;
             if let Some(native) = self.native.as_ref().and_then(Weak::upgrade) {
                 native.lots_render_host().bind_tiltyard(tiltyard.clone())?;
+                native.lots_render_host().bind_designs(beacons.designs())?;
             }
             lots.temporary_root = temporary_root;
             Ok(Arc::new(Loaded {

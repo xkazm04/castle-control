@@ -290,11 +290,14 @@ impl Registry {
             vote_bar = make_vote_bar(None);
         }
         // The public Gatehouse inventory owns this read. Replace its standalone
-        // unavailable fallback with the isolated-host projection adapter.
-        registry
-            .handlers
-            .remove("gatehouse.source.url")
-            .expect("Gatehouse source declared");
+        // unavailable fallback with the isolated-host projection adapter, which
+        // also owns the vote bar's design selection.
+        for name in ["gatehouse.source.url", "gatehouse.votebar.design.set"] {
+            registry
+                .handlers
+                .remove(name)
+                .expect("Gatehouse vote bar methods declared");
+        }
         registry
             .register(vote_bar)
             .expect("vote bar method declared and unique");

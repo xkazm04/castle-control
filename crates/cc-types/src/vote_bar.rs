@@ -1,5 +1,5 @@
 //! Aggregate-only OBS output. Direction positions never carry keys or labels.
-use crate::{ConsensusShare, Timestamp};
+use crate::{ConsensusShare, Timestamp, VoteBarArt};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
@@ -18,6 +18,14 @@ pub struct VoteBarSnapshot {
     pub directions: Vec<VoteBarDirection>,
     pub simulated: bool,
     pub at: Timestamp,
+    /// Custom housing art, omitted when no vote bar design is set.
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        deserialize_with = "crate::present"
+    )]
+    #[schemars(with = "VoteBarArt")]
+    pub art: Option<VoteBarArt>,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
@@ -47,6 +55,8 @@ mod tests {
         let schema = serde_json::to_value(schemars::schema_for!(VoteBarSnapshot)).unwrap();
         assert_eq!(schema["additionalProperties"], false);
         assert!(schema["properties"].get("text").is_none());
-        assert_eq!(schema["properties"].as_object().unwrap().len(), 3);
+        // The fourth property is the optional same-origin housing art.
+        assert_eq!(schema["properties"].as_object().unwrap().len(), 4);
+        assert_eq!(schema["required"], json!(["directions", "simulated", "at"]));
     }
 }

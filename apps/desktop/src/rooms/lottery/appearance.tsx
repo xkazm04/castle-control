@@ -2,10 +2,13 @@ import { useMemo, useState, useSyncExternalStore } from 'react';
 import { entranceStyle, FieldGroup, HeraldicCard } from '@castle-control/ui';
 import { art, styles } from '../../demo/model.js';
 import { lotsCopy as copy } from '../../lots-copy.js';
+import { presetsFor, presetUrl } from '../../custom-design/presets.js';
 import type { DrawDisplay, DrawDisplayPort } from './display.js';
 import { revealStyle } from './display.js';
 import { artworkOf, isDrawShape, stage_view_box, stageScene } from './stage-model.js';
 import './appearance.css';
+
+const vessels = presetsFor('draw_vessel');
 
 /** Mini stream frame: the renderer's own artwork for the chosen shape (what the OBS draw page paints),
  * placed by size and anchor, with the sample-art style as a small stamp. */
@@ -13,6 +16,7 @@ export function DrawPreview({ display }: { display: DrawDisplay }) {
   const [failed, setFailed] = useState(false);
   const shape = useMemo(() => artworkOf(stageScene(display.shape, undefined, 'question', true)), [display.shape]);
   const label = copy.shapes.find(item => item.value === display.shape)?.label ?? display.shape;
+  const vessel = vessels.find(item => item.id === display.art_preset);
   return <figure className="lottery-shape-preview" data-size={display.size} data-anchor={display.anchor}
     data-colour={display.colour} data-art-style={display.art_style} data-shape={display.shape} aria-label={copy.stream}
     style={revealStyle(display.reveal_ms)}>
@@ -20,7 +24,8 @@ export function DrawPreview({ display }: { display: DrawDisplay }) {
       <svg className="lottery-preview-shape" viewBox={stage_view_box} role="img" aria-label={copy.journey.obs_shape(label)}>
         {shape?.paths.map((path, index) => <path key={index} d={path.d} data-ink={path.ink} />)}
       </svg>
-      {!failed ? <img className="lottery-preview-style" src={art(display.art_style, 'urn')} alt={copy.journey.sample_art}
+      {!failed ? <img className="lottery-preview-style" src={vessel ? presetUrl(vessel) : art(display.art_style, 'urn')}
+        alt={vessel ? `${vessel.style_name} · ${copy.journey.sample_art}` : copy.journey.sample_art}
         onError={() => setFailed(true)} />
         : <svg className="lottery-preview-style" viewBox="0 0 100 100" role="img" aria-label={copy.journey.fallback}>
           <path d="M30 12h40v12l-8 10c22 10 22 38 0 48v8H38v-8c-22-10-22-38 0-48l-8-10z" />
@@ -64,6 +69,14 @@ export function DrawAppearance({ port, hint = copy.journey.display_hint, preview
           const style = styles.find(item => item.id === event.currentTarget.value); if (style) port.edit({ art_style: style.id });
         }}>{styles.map(item => <option key={item.id} value={item.id}>{item.label}</option>)}</select>
       </FieldGroup>
+      <FieldGroup label={copy.journey.vessel_art} control_id="lots-vessel-art" variant="select">
+        <select id="lots-vessel-art" value={display.art_preset ?? ''} onChange={event => {
+          const id = event.currentTarget.value;
+          // A new pick drops the old imported design; the core imports the new one on save.
+          if (id === '' || vessels.some(item => item.id === id)) port.edit({ art_preset: id || undefined, art_design: undefined });
+        }}><option value="">{copy.journey.vessel_none}</option>
+          {vessels.map(item => <option key={item.id} value={item.id}>{item.style_name}</option>)}</select>
+      </FieldGroup>
       <FieldGroup label={copy.journey.reveal} control_id="lots-reveal">
         <input id="lots-reveal" type="number" min={100} max={10000} value={revealDraft ?? String(display.reveal_ms)}
           onChange={event => setRevealDraft(event.currentTarget.value)}
@@ -73,7 +86,7 @@ export function DrawAppearance({ port, hint = copy.journey.display_hint, preview
           }} />
       </FieldGroup>
     </div>
-    {preview && <DrawPreview key={`${display.art_style}-${display.reveal_ms}`} display={display} />}
+    {preview && <DrawPreview key={`${display.art_style}-${display.art_preset ?? ''}-${display.reveal_ms}`} display={display} />}
     <p className="cc-aside">{hint}</p>
   </HeraldicCard>;
 }

@@ -91,7 +91,12 @@ methods! {
     RehearsalStop => ("rehearsal.stop", Empty, RehearsalStatus, "WP R.1"),
     RehearsalScenarioRun => ("rehearsal.scenario.run", RehearsalScenarioParams, RehearsalScenarioResult, "WP R.1"),
     RehearsalCrowdSet => ("rehearsal.crowd.set", RehearsalCrowdParams, RehearsalStatus, "WP R.1"),
-    TiltyardSourceUrl => ("tiltyard.source.url", Empty, SourceUrlResult, "WP R.1")
+    TiltyardSourceUrl => ("tiltyard.source.url", Empty, SourceUrlResult, "WP R.1"),
+    DesignCreate => ("beacons.design.create", DesignCreateParams, DesignCreateResult, "Custom design"),
+    ArtDirect => ("beacons.art.direct", ArtDirectParams, ArtDirection, "Custom design"),
+    ArtLayers => ("beacons.art.layers", ArtLayersParams, ArtLayers, "Custom design"),
+    LibraryImport => ("beacons.library.import", LibraryImportParams, LibraryImportResult, "Custom design"),
+    VoteBarDesignSet => ("gatehouse.votebar.design.set", VoteBarDesignSetParams, Empty, "Custom design")
 }
 
 /// Single parse door for requests, including unknown-method and shape errors.

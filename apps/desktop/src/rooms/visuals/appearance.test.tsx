@@ -64,7 +64,7 @@ test('fixture design saves use the port and schema, preserve accounting and surv
   expect(() => port.design('bad/path')).toThrow();
   expect(port.getSnapshot()).toBe(saved);
   port.fire('gift', 50); port.end();
-  expect(port.getSnapshot().visuals[0]?.visual.design_id).toBe('preset-glass-frame');
+  expect(port.getSnapshot().visuals[0]?.visual.design_id).toBe(presets.at(-1)?.id);
   port.design('');
   expect(port.getSnapshot().visuals[0]?.visual).not.toHaveProperty('design_id');
   port.design('my-custom');

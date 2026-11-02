@@ -1,12 +1,16 @@
 import type { DemoStyle } from '../../demo/model.js';
 import type { CSSProperties } from 'react';
-import type { Display } from '@castle-control/contract';
+import type { DesignId, Display } from '@castle-control/contract';
 import type { DrawShape } from '@castle-control/renderer';
 
 /** Local control state; core mode adapts it to the existing upsert display. */
 export type DrawDisplay = {
   size: 'S' | 'M' | 'L'; anchor: 'tl' | 'tr' | 'bl' | 'br' | 'center';
   colour: 'gules' | 'azure' | 'or' | 'key'; art_style: DemoStyle; reveal_ms: number; shape: DrawShape;
+  /** A library vessel preset the preview shows (library id); the drawn shape stays the fallback. */
+  art_preset?: string | undefined;
+  /** Core mode: the imported or generated design the plate renders as an image vessel. */
+  art_design?: DesignId | undefined;
   /** Full-chamber stage for the broadcast moment; the desk returns with one click. */
   theatre: boolean;
   /** Opt-in synthesized ceremony sound; off until the streamer turns it on. */
@@ -39,7 +43,7 @@ export type DrawDisplayPort = ReturnType<typeof createDrawDisplay>;
 export function drawDisplayParams(display: DrawDisplay): Display {
   const anchors = { tl: 'top-left', tr: 'top-right', bl: 'bottom-left', br: 'bottom-right', center: 'center' } as const;
   return { size: display.size, anchor: anchors[display.anchor], colour_token: display.colour,
-    art_style: display.art_style, timing_ms: display.reveal_ms };
+    art_style: display.art_style, timing_ms: display.reveal_ms, ...(display.art_design ? { art_design: display.art_design } : {}) };
 }
 export function revealStyle(reveal_ms: number): CSSProperties & { '--draw-reveal': string } {
   return { '--draw-reveal': `${reveal_ms}ms` };

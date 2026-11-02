@@ -27,7 +27,12 @@ fn exporter_lists_the_native_inventory_without_starting_services() {
     expected.extend(GatehouseModule::METHODS);
     expected.extend(BeaconsModule::METHODS);
     expected.extend(cc_core::tiltyard::TiltyardModule::METHODS);
-    expected.extend(["steward.ask", "steward.writ.seal", "steward.writ.tear"]);
+    expected.extend([
+        "steward.ask",
+        "steward.writ.seal",
+        "steward.writ.tear",
+        "beacons.art.direct",
+    ]);
     expected.sort();
     // Independent of the module constants: every declared name except the
     // explicitly named, deliberately unregistered ones.

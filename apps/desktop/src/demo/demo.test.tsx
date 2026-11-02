@@ -83,7 +83,8 @@ test('all producible art URLs exist, are byte-identical to the atlas, and exhaus
   const expected = ['heraldic', 'pixel', 'synthwave', 'watercolor', 'anime', 'glass'].flatMap(style =>
     ['urn', 'altar', 'votebar', 'hexmap', 'frame2'].map(asset => `preset-${style}-${asset}.webp`));
   expected.push('malakor-facecam.webp', 'malakor-lair-wide.webp', 'malakor-laugh.webp', 'scene-warmap.webp');
-  const actual = readdirSync(directory).sort();
+  // The ready-made library lives in its own folder (art/library/, parsed by @castle-control/ui/custom-design).
+  const actual = readdirSync(directory, { withFileTypes: true }).filter(entry => entry.isFile()).map(entry => entry.name).sort();
   expect(actual).toHaveLength(34);
   expect(actual).toEqual(expected.sort());
   const urls = new Set<string>();

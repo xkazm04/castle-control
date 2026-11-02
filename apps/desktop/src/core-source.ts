@@ -3,6 +3,13 @@ import { invokeMethod, parseEvent, statusGet, bridgeStatusGet } from '@castle-co
 import type { MethodContract, RpcMethods } from '@castle-control/contract';
 import type { Source } from './model.js';
 
+/** Reads one of the app's own same-origin JSON files (e.g. the art library catalog) through the contract door. */
+export async function readSameOriginJson(url: string): Promise<unknown> {
+  const response = await fetch(url);
+  if (!response.ok) throw new Error(`Could not read ${url}.`);
+  return parseJson(await response.text(), { max_bytes: 512 * 1024 });
+}
+
 export type CoreLaunch = { mode: 'core'; endpoint: string; session_token: string };
 export type Socket = Pick<WebSocket, 'onopen' | 'onmessage' | 'onclose' | 'onerror' | 'close'>;
 type BootMethod = 'status.get' | 'bridge.status.get';

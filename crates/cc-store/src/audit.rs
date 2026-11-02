@@ -27,6 +27,8 @@ pub enum EngineProvider {
 #[serde(rename_all = "snake_case")]
 pub enum ImageProvider {
     Leonardo,
+    #[serde(rename = "openai")]
+    OpenAi,
 }
 
 /// Blocked settings from docs/plan/01-analysis.md:115,117; never free-form reasons.

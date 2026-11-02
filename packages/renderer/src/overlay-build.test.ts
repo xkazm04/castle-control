@@ -4,9 +4,9 @@ import { createHash } from 'node:crypto';
 import { expect, it } from 'vitest';
 import ts from 'typescript';
 // @ts-expect-error Build configuration is native JavaScript, outside the TS product tree.
-import { overlayInputs } from '../vite-overlay.config.mjs';
+import { compactCss, overlayInputs } from '../vite-overlay.config.mjs';
 
-const OVERLAY_BUNDLE_BUDGET = 114_688;
+const OVERLAY_BUNDLE_BUDGET = 118_784;
 
 function assertOverlayBundleBudget(actualBytes: number): void {
   if (actualBytes > OVERLAY_BUNDLE_BUDGET) {
@@ -22,8 +22,8 @@ it('accepts an overlay bundle exactly at the byte budget', () => {
 });
 
 it('rejects an oversized overlay bundle with an actionable budget message', () => {
-  expect(() => assertOverlayBundleBudget(114_689)).toThrow(
-    'apps/overlay/bundle.js is 114689 bytes; budget is 114688 bytes. '
+  expect(() => assertOverlayBundleBudget(118_785)).toThrow(
+    'apps/overlay/bundle.js is 118785 bytes; budget is 118784 bytes. '
     + 'See apps/overlay/README.md and deliberately raise the budget in the same commit.',
   );
 });
@@ -33,8 +33,9 @@ it('defines every overlay CSS token in the base sheet', () => {
   const styles = readFileSync(new URL('./overlay.css', import.meta.url), 'utf8');
   const definitions = new Set([...tokens.matchAll(/(?:^|[;{])\s*(--[\w-]+)\s*:/g)].map(match => match[1]));
   const references = new Set([...styles.matchAll(/var\(\s*(--[\w-]+)/g)].map(match => match[1]));
-  // OverlayScene sets these layout properties at runtime; they are not theme tokens.
-  const runtime = new Set(['--scene-width', '--scene-height', '--scene-x', '--scene-y', '--scene-scale']);
+  // OverlayScene sets these layout properties at runtime; they are not theme tokens. The Lots
+  // page's own sheet defines --draw-colour.
+  const runtime = new Set(['--scene-width', '--scene-height', '--scene-x', '--scene-y', '--scene-scale', '--draw-colour']);
   expect(definitions.size).toBeGreaterThan(0);
   expect(references.size).toBeGreaterThan(runtime.size);
   expect([...references].filter(name => !definitions.has(name) && !runtime.has(name ?? ''))).toEqual([]);
@@ -46,7 +47,7 @@ it('ships a local bundle rebuilt from this renderer and the lazy contract door',
   const bundleBytes = readFileSync(new URL('../../../apps/overlay/bundle.js', import.meta.url));
   assertOverlayBundleBudget(bundleBytes.byteLength);
   const bundle = bundleBytes.toString('utf8');
-  expect(hash.digest('hex')).toBe('da6add25428c6e24e15331fc4369cc92ee7ed0408e744b20b8a1c943c8149ffd'); expect(bundle).toContain('Castle Control overlay source SHA-256: da6add25428c6e24e15331fc4369cc92ee7ed0408e744b20b8a1c943c8149ffd');
+  expect(hash.digest('hex')).toBe('00d6d7b98c7c8953b043f78469a1c5ddb63147d3e60556cea5f2f4a0532f7ed5'); expect(bundle).toContain('Castle Control overlay source SHA-256: 00d6d7b98c7c8953b043f78469a1c5ddb63147d3e60556cea5f2f4a0532f7ed5');
   expect(bundle).toContain('beacons.render.snapshot');
   expect(bundle).toContain('cc-cast');
   expect(bundle).toContain('lots');
@@ -62,7 +63,8 @@ it('ships a local bundle rebuilt from this renderer and the lazy contract door',
     ts.forEachChild(node, visit);
   };
   visit(ts.createSourceFile('bundle.js', bundle, ts.ScriptTarget.Latest, true));
-  expect(embedded).toContain((tokens + '\n' + styles).replaceAll('\r\n', '\n'));
+  expect(embedded).toContain(compactCss(`${tokens}\n${styles}`));
+  expect(embedded.join('')).toContain('.draw-vessel>img{display:block;height:100%}');
   expect(bundle).not.toMatch(/\beval\s*\(|new\s+Function\s*\(|\bimport\s*\(/);
   const shell = readFileSync(new URL('../../../apps/overlay/index.html', import.meta.url), 'utf8');
   expect(shell).toContain('src="/bundle.js"');

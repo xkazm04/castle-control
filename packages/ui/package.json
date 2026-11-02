@@ -8,6 +8,8 @@
     "./steward": "./src/steward/index.ts",
     "./steward-flow": "./src/steward-flow/index.ts",
     "./design": "./src/design/index.ts",
+    "./custom-design": "./src/design/custom.ts",
+    "./living-preview": "./src/design/living-preview.tsx",
     "./duel": "./src/duel/index.ts",
     "./stamp": "./src/stamp/table.ts",
     "./stamp.css": "./src/stamp/stamp.css",

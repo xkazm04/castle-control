@@ -3,8 +3,8 @@ import { defineFlow } from '@castle-control/ui/steward-flow';
 import type { FlowLine } from '@castle-control/ui/steward-flow';
 import type { Snapshot } from '../../model.js';
 import { fixtureCharts } from '../../moderation-fixture.js';
-import { styles } from '../../demo/model.js';
-import type { DemoStyle } from '../../demo/model.js';
+import { presetsFor, presetUrl } from '../../custom-design/presets.js';
+import { sealedLooks } from '../../custom-design/sealed.js';
 import { consensusLabel } from './consensus.jsx';
 import { VoteBarStage } from './herald.jsx';
 import type { VoteLook } from './herald.jsx';
@@ -12,23 +12,24 @@ import { moderationSession } from './session.js';
 
 /** "Vote bar on stream": what the herald counts -> where the bar sits -> its art -> preview -> seal. */
 type PlacementId = 'lower' | 'banner' | 'corner';
-export type VoteDraft = { shows?: number; placement?: PlacementId; style?: DemoStyle };
+/** `art` is a library vote-bar preset id: the housing the bar wears. */
+export type VoteDraft = { shows?: number; placement?: PlacementId; art?: string };
 
 const placements: readonly { id: PlacementId; label: string; consequence: string; look: Pick<VoteLook, 'anchor' | 'size'> }[] = [
   { id: 'lower', label: 'Lower right, medium', consequence: 'Out of the way of a facecam on the left.', look: { anchor: 'bottom-right', size: 'M' } },
   { id: 'banner', label: 'Across the top, large', consequence: 'The vote is the show: wide and readable.', look: { anchor: 'top-left', size: 'L' } },
   { id: 'corner', label: 'Small, lower left', consequence: 'A quiet tally for long streams.', look: { anchor: 'bottom-left', size: 'S' } },
 ];
-const offered: readonly DemoStyle[] = ['heraldic', 'pixel', 'synthwave', 'glass'];
-const styleLine: Record<string, string> = { heraldic: 'Iron and embers, matches the castle', pixel: 'Chunky arcade pixels',
-  synthwave: 'Neon on dark', glass: 'Stained glass panes' };
+const offered = presetsFor('vote_bar');
+const artName = (id: string | undefined) => offered.find(item => item.id === id)?.style_name;
 
 const session = () => moderationSession(proposalQueue);
 /** The look the stage draws for a draft: chosen values over the session's current vote layer. */
 export function voteLook(draft: VoteDraft | undefined, current: VoteLook = session().output.getSnapshot().vote): VoteLook {
   const placement = placements.find(item => item.id === draft?.placement)?.look;
+  const art = draft?.art ?? sealedLooks.get().vote_bar;
   return { anchor: placement?.anchor ?? current.anchor, size: placement?.size ?? current.size,
-    art_style: draft?.style ?? current.art_style, colour: current.colour };
+    art_style: current.art_style, colour: current.colour, ...(art ? { art } : {}) };
 }
 const shows = (draft: VoteDraft) => draft.shows ?? session().view.getSnapshot().filter;
 function counted(draft: VoteDraft): string {
@@ -38,13 +39,14 @@ function counted(draft: VoteDraft): string {
 const lines = (draft: VoteDraft, core: boolean): FlowLine[] => [
   { label: 'Counts', value: core ? 'The core’s consensus window' : counted(draft) },
   { label: 'Placement', value: placements.find(item => item.id === draft.placement)?.label ?? 'As it is' },
-  { label: 'Art', value: styles.find(item => item.id === draft.style)?.label ?? 'As it is' },
-  { label: 'On seal', value: core ? 'Copies the vote-bar browser source URL for OBS' : 'Updates this session’s preview; no OBS source in fixture mode' },
+  { label: 'Art', value: artName(draft.art) ?? 'As it is' },
+  { label: 'On seal', value: core ? `${draft.art ? 'Dresses the bar in the library art, then copies' : 'Copies'} the vote-bar browser source URL for OBS`
+    : 'Updates this session’s preview; no OBS source in fixture mode' },
 ];
 
 export function voteRibbon(draft: VoteDraft): string {
   return ['Vote bar on stream', draft.shows === undefined ? undefined : `counts ${counted(draft).toLowerCase()}`,
-    placements.find(item => item.id === draft.placement)?.label.toLowerCase(), styles.find(item => item.id === draft.style)?.label]
+    placements.find(item => item.id === draft.placement)?.label.toLowerCase(), artName(draft.art)]
     .filter(Boolean).join(' · ') + ' · preview in the herald below';
 }
 
@@ -64,9 +66,9 @@ export function voteBarFlow(snapshot: Snapshot) {
       { id: 'placement', kind: 'preset', label: 'Placement', prompt: 'Where does it sit on your stream?',
         presets: () => placements.map(item => ({ id: item.id, label: item.label, consequence: item.consequence })),
         apply: (draft, id) => { const placement = placements.find(item => item.id === id)?.id; return placement ? { ...draft, placement } : draft; } },
-      { id: 'style', kind: 'choice', label: 'Art', prompt: 'Which art dresses the bar?',
-        options: () => offered.map(id => ({ id, label: styles.find(item => item.id === id)?.label ?? id, consequence: styleLine[id] ?? '' })),
-        apply: (draft, id) => { const style = offered.find(item => item === id); return style ? { ...draft, style } : draft; } },
+      { id: 'style', kind: 'choice', label: 'Art', prompt: 'Which art dresses the bar? Ready-made library presets; Custom design makes your own.',
+        options: () => offered.map(item => ({ id: item.id, label: item.style_name, picture: { src: presetUrl(item), alt: `${item.style_name} vote bar` } })),
+        apply: (draft, id) => { const art = offered.find(item => item.id === id)?.id; return art ? { ...draft, art } : draft; } },
       { id: 'look', kind: 'preview', label: 'Preview', prompt: 'This is the bar on a 16:9 canvas. The herald above shows it live.',
         render: draft => <VoteBarStage directions={(fixtureCharts[shows(draft)] ?? fixtureCharts[0])?.directions ?? []} look={voteLook(draft)} draft /> },
       { id: 'seal', kind: 'confirm', label: 'Seal', prompt: core ? 'Hold to seal and copy the browser source.' : 'Hold to seal the vote bar look.',
@@ -79,13 +81,22 @@ export function voteBarFlow(snapshot: Snapshot) {
         const { gatehousePort } = await import('./core-port.js');
         const port = gatehousePort(snapshot);
         if (!port) throw new Error('The Gatehouse core connection is unavailable.');
+        if (draft.art) {
+          const { beaconsPort } = await import('../../custom-design/seal.js');
+          let design_id;
+          try { design_id = (await (await beaconsPort(snapshot)).importLibrary(draft.art, 'vote_bar')).design_id; }
+          catch { throw new Error('The core could not take the library art. Nothing changed.'); }
+          await port.setVoteBarDesign(design_id);
+          if (port.getSnapshot().phase === 'error') throw new Error(port.getSnapshot().notice);
+        }
         await port.copyVoteBarSource();
         if (port.getSnapshot().phase === 'error') throw new Error(port.getSnapshot().notice);
         return { say: 'Copied the vote-bar browser source URL. In OBS, add a Browser source and paste it.', lines: lines(draft, true) };
       }
       const { output, view } = session();
       const look = voteLook(draft);
-      output.update('vote', 'anchor', look.anchor); output.update('vote', 'size', look.size); output.update('vote', 'art_style', look.art_style);
+      output.update('vote', 'anchor', look.anchor); output.update('vote', 'size', look.size);
+      if (draft.art) sealedLooks.set('vote_bar', draft.art);
       if (draft.shows !== undefined) view.setFilter(draft.shows);
       return { say: 'Sealed. The herald and its vote bar preview follow your choice for this session. No OBS source in fixture mode.',
         lines: lines(draft, false) };

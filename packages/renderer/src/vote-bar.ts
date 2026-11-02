@@ -1,8 +1,10 @@
 import { parseVoteBarSnapshot, VOTE_BAR_SNAPSHOT_EVENT } from '@castle-control/contract/vote-bar';
 import type { VoteBarSnapshot } from '@castle-control/contract/vote-bar';
+import { paintVoteBarArt } from './vote-bar-art.ts';
 
 /** Generic direction positions only: neither keys nor configured labels enter OBS. */
 export function paintVoteBar(root: HTMLElement, snapshot: VoteBarSnapshot): void {
+  if (snapshot.art) { paintVoteBarArt(root, snapshot, snapshot.art); return; }
   const nodes: HTMLElement[] = [];
   if (snapshot.simulated) {
     const badge = document.createElement('p');
