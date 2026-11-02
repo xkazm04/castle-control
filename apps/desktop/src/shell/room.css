@@ -29,6 +29,10 @@
 .room-column:last-child { border-inline-end: 0; }
 .room-hash { font: var(--text-small)/1.5 var(--font-num); overflow-wrap: anywhere; white-space: pre-wrap; }
 .shell-room :where(button:not(.cc-seal-button)) { font: 600 var(--text-body)/1.4 var(--font-ui); border: var(--rule-medium) solid var(--ink); background: var(--card); color: var(--ink); padding: var(--space-6) var(--space-8); max-width: 100%; cursor: pointer; }
+/* Fused button face in every room body: the same small-caps label as the dock chips and the chamber head. */
+.shell-room .cc-btn { font: 800 var(--text-px-14-5)/1 var(--font-label); letter-spacing: .07em; text-transform: lowercase; }
+.shell-room .cc-btn--sm { font-size: var(--text-px-13-5); }
+.shell-room .cc-btn--lg { font-size: var(--text-px-15-5); }
 .shell-room button:disabled:not(.cc-seal-button) { opacity: var(--disabled-opacity); cursor: not-allowed; }
 .shell-room button:focus-visible, .shell-room a:focus-visible, .shell-room select:focus-visible, .shell-room input:focus-visible { outline: var(--rule-strong) solid var(--azure); outline-offset: var(--focus-offset); }
 .shell-room h2 { font-family: var(--font-display); }

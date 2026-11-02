@@ -43,7 +43,8 @@ html { background: var(--stone); }
 .cc-frame { color: var(--ink); background: var(--stone);
   font: 400 var(--text-t-body)/1.45 var(--font-text);
   font-variant-numeric: lining-nums tabular-nums; -webkit-font-smoothing: antialiased; }
-.cc-frame :is(button, input, select, textarea) { font-family: inherit; }
+/* .cc-btn keeps the fused label face (small caps): one button case across chamber bodies and the dock. */
+.cc-frame :is(button, input, select, textarea):where(:not(.cc-btn)) { font-family: inherit; }
 .cc-frame :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; box-shadow: 0 0 0 2px var(--focus-inner); }
 .cc-frame ::selection { background: var(--or-lit); color: var(--lead-lo); }
 .cc-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
