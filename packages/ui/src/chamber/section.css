@@ -1,0 +1,32 @@
+/* Winner .card/.cardh: glass, a chamber-coloured heading, compact rhythm. */
+.cc-chamber-section {
+  position: relative;
+  box-sizing: border-box;
+  display: grid;
+  align-content: start;
+  gap: var(--space-8);
+  min-width: 0;
+  padding: var(--space-11) var(--space-14) var(--space-12);
+  border: var(--came-hair) solid var(--hair);
+  border-radius: var(--space-14);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--surface-2) 92%, transparent), color-mix(in srgb, var(--surface) 92%, transparent));
+  color: var(--ink);
+  font: 400 var(--text-px-15)/1.4 var(--font-text);
+  overflow-wrap: anywhere;
+}
+
+.cc-chamber-section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-12);
+}
+
+.cc-chamber-section-heading h3 {
+  margin: 0;
+  color: var(--ch-ink, var(--ink));
+  font: 700 var(--text-px-13)/1.3 var(--font-text);
+  letter-spacing: var(--track-wide);
+  text-transform: uppercase;
+}

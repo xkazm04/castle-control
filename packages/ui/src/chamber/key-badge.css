@@ -1,0 +1,17 @@
+.cc-kbd.cc-key-badge {
+  position: absolute;
+  inset-inline-end: calc(-1 * var(--space-8));
+  top: calc(-1 * var(--space-12));
+  z-index: 2;
+  width: max-content;
+  height: auto;
+  min-height: var(--space-22);
+  padding: var(--space-3) var(--space-7);
+  border: var(--came-hair) solid var(--came-ui);
+  border-bottom-width: var(--came);
+  border-radius: var(--r-md);
+  color: var(--ch-ink, var(--ink));
+  background: var(--stone-2);
+  font: 600 var(--text-px-13)/1 var(--font-mono);
+  pointer-events: none;
+}
