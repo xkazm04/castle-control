@@ -67,6 +67,9 @@ export const ARMED: readonly RpcMethod[] = [
   'maproom.design.get', 'maproom.design.upsert', 'maproom.turn.run',
   'steward.ask', 'steward.writ.seal', 'steward.writ.tear',
   'obs.connect', 'obs.source.create', 'obs.scene.ensure', 'obs.rehearsal.clear',
+  // Custom design (D2): paid OpenAI calls (art.direct, art.layers) and store or overlay writes.
+  'beacons.art.direct', 'beacons.art.layers', 'beacons.design.create', 'beacons.library.import',
+  'gatehouse.votebar.design.set',
 ];
 
 /**

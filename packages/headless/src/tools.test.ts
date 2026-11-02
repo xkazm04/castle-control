@@ -35,7 +35,7 @@ test('allowlist and ARMED partition every RPC method, so a new method needs a re
 
 test('the brief\'s armed denylist families are all denied', () => {
   for (const method of methods) {
-    const armed = /^(auth\.twitch\.(start|revoke)|settings\.set|store\.|gatehouse\.(rules\.(upsert|setMode)|ban\.|decision\.undo|petition\.resolve|held\.resolve|delay\.set|shield\.set|lease\.end|recording\.import|drill\.)|lots\.(draw\.upsert|image\.upload|roll\.seal|cast)|beacons\.(visual\.upsert|curve\.set|simulate|art\.(generate|status))|maproom\.(design\.|turn\.run)|steward\.|obs\.(connect|source\.create|scene\.ensure|rehearsal\.clear))/
+    const armed = /^(auth\.twitch\.(start|revoke)|settings\.set|store\.|gatehouse\.(rules\.(upsert|setMode)|ban\.|decision\.undo|petition\.resolve|held\.resolve|delay\.set|shield\.set|lease\.end|recording\.import|drill\.|votebar\.design\.set)|lots\.(draw\.upsert|image\.upload|roll\.seal|cast)|beacons\.(visual\.upsert|curve\.set|simulate|art\.(generate|status|direct|layers)|design\.create|library\.import)|maproom\.(design\.|turn\.run)|steward\.|obs\.(connect|source\.create|scene\.ensure|rehearsal\.clear))/
       .test(method);
     expect(armedList.includes(method), method).toBe(armed);
     if (armed) {
