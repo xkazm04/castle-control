@@ -50,6 +50,7 @@ function seal(queue: ProposalQueue) {
   sealModerationProposal(queue, proposal);
 }
 const click = (props: ButtonHTMLAttributes<HTMLButtonElement>) => props.onClick?.({ detail: 0 } as Parameters<NonNullable<typeof props.onClick>>[0]);
+const buttonLabel = (children: ReactNode) => Children.toArray(children).filter(child => typeof child === 'string').join('');
 
 test('gate handles validate only public requests and the four ChatDelay choices', () => {
   expect([gatehouseHeldResolve, gatehouseDelaySet, gatehouseShieldSet, gatehouseLeaseEnd].map(item => item.method))
@@ -101,7 +102,7 @@ test.each(['release', 'remove'] as const)('%s proposes via a native keyboard but
   if (!held?.message_text) throw new Error('Missing original');
   const label = kind === 'release' ? 'Propose Pass' : 'Propose Bar';
   // The fused gate uses native folio buttons (.cc-btn); the visible text is the accessible name.
-  const button = find<ButtonHTMLAttributes<HTMLButtonElement>>(HeldActions({ item: held, state: state(queue), queue }), props => props.children === label);
+  const button = find<ButtonHTMLAttributes<HTMLButtonElement>>(HeldActions({ item: held, state: state(queue), queue }), props => buttonLabel(props.children) === label);
   expect(button.type).toBe('button'); expect(button.props.type).toBe('button');
   expect(button.props.disabled).toBe(false); expect(button.props.tabIndex ?? 0).toBeGreaterThanOrEqual(0);
   click(button.props);
@@ -229,7 +230,7 @@ test('an absent ban rule disables the room button and refuses a direct command a
   if (!ban) throw new Error('Missing simulated ban');
   const missingRule = { ...state(queue), rules: state(queue).rules.filter(rule => rule.rule_id !== ban.rule_id) };
   vi.spyOn(port, 'getSnapshot').mockReturnValue(missingRule);
-  const button = find<ButtonHTMLAttributes<HTMLButtonElement>>(BanQueue({ state: missingRule, queue }), props => props.children === copy.propose_ban);
+  const button = find<ButtonHTMLAttributes<HTMLButtonElement>>(BanQueue({ state: missingRule, queue }), props => buttonLabel(props.children) === copy.propose_ban);
   expect(button.props.disabled).toBe(true);
   proposeCommand(queue, { kind: 'ban', decision_id: ban.decision_id }, 'Direct Ban');
   expect(decisionTransition(missingRule, ban.decision_id, 'ban')).toEqual({ ok: false, refusal: 'rule_unavailable' });

@@ -13,7 +13,8 @@ import { BenchFeedback } from './rule-bench.jsx';
 import { moderationSession } from './session.js';
 
 afterEach(() => { vi.useRealTimers(); });
-const text = (html: string) => html.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+const text = (html: string) => html.replace(/<span class="cc-control-key" aria-hidden="true">[\s\S]*?<\/span>/g, '')
+  .replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
 const buttons = (html: string) => [...html.matchAll(/<button\b[^>]*>[\s\S]*?<\/button>/g)].map(match => match[0]);
 function description(html: string, button: string) {
   const ids = button.match(/aria-describedby="([^"]+)"/)?.[1]?.split(' ') ?? [];

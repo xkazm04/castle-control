@@ -6,6 +6,7 @@ import type { CoreGatehousePort, CoreGatehouseSnapshot } from '../../gatehouse-c
 import { moderationCopy as copy } from '../../moderation-copy.js';
 import { ConsensusTiles, consensusLabel } from './consensus.jsx';
 import { ClockTime } from './presentation.jsx';
+import { RoomKeyBadge } from '../../shell/steward-keys.jsx';
 
 function CorePlot({ result, compact = false }: { result: ConsensusGetResult; compact?: boolean }) {
   const inks = ['azure', 'or', 'gules', 'ink'] as const;
@@ -25,20 +26,23 @@ export function CoreConsensus({ state, port, compact = false }: { state: CoreGat
   const result = state.consensus;
   return <section className={`moderator-consensus moderator-block moderator-core-consensus${compact ? ' gh-herald--compact' : ''}`}>
     {!compact && <p className="gh-sm">{copy.core_consensus_note}</p>}
-    <form onSubmit={event => {
+    {!compact && <form onSubmit={event => {
       event.preventDefault();
       if (state.busy || (kind === 'emote' && !emote.trim())) return;
       void port.consensus({ filter: kind === 'emote' ? { kind, emote: emote.trim() } : { kind }, window_s: 900 });
     }}>
       <div className="moderator-chip-toggles" role="group" aria-label={copy.core_consensus_filters}>
+        <RoomKeyBadge room="moderator" action="filter" />
         {(['all', 'emotes', 'text', 'emote'] as const).map(value => <InkButton size="room" type="button" className="moderator-chip-toggle" key={value}
-          disabled={state.busy} aria-pressed={kind === value} onClick={() => setKind(value)}>
-          {value === 'all' ? copy.all_messages : value === 'emotes' ? copy.emotes_only : value === 'text' ? copy.text_only : copy.one_emote}</InkButton>)}
+          disabled={state.busy} aria-label={compact ? value === 'all' ? copy.all_messages : value === 'emotes' ? copy.emotes_only : value === 'text' ? copy.text_only : copy.one_emote : undefined}
+          aria-pressed={kind === value} onClick={() => setKind(value)}>
+          {compact ? value === 'all' ? 'All' : value === 'emotes' ? 'Emotes' : value === 'text' ? 'Text' : 'Emote'
+            : value === 'all' ? copy.all_messages : value === 'emotes' ? copy.emotes_only : value === 'text' ? copy.text_only : copy.one_emote}</InkButton>)}
       </div>
       {kind === 'emote' && <FieldGroup label={copy.emote} control_id={emote_id}><input id={emote_id} value={emote} required disabled={state.busy}
         onChange={event => setEmote(event.currentTarget.value)} /></FieldGroup>}
       <InkButton size="room" type="submit" disabled={state.busy || (kind === 'emote' && !emote.trim())}>{copy.refresh_consensus}</InkButton>
-    </form>
+    </form>}
     {result ? <>{!compact && <p>{consensusLabel(result)}</p>}<CorePlot result={result} compact={compact} /><ConsensusTiles result={result} compact={compact} />
       {!compact && <p className="moderator-small">{copy.core_consensus_summary(result.shed_count, result.window_s, '')}<ClockTime at={result.at} /></p>}
       {!result.directions.length && <EmptyState compact title={copy.core_directions_empty} />}</> : <EmptyState compact title={copy.core_consensus_empty} />}

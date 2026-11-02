@@ -1,0 +1,20 @@
+/* Owner decision 2026-11-02: body copy stays readable; detail belongs in Drawer. */
+:is(.gh-deck .cc-chamber-section, .gh-deck-details.gh-deck-details) :is(p, li, blockquote, dt, dd, label, input, select, textarea, button, em, figcaption, summary, .cc-hash, .moderator-small, .moderator-note, .moderator-rule-text, .moderator-rule-text b, .moderator-rule-text span, .moderator-tile span, .moderator-tile b, .gh-more__list, .gh-burst__text) {
+  font-size: var(--text-px-15);
+  line-height: 1.45;
+}
+.gh-deck-details { font-size: var(--text-px-15); line-height: 1.45; }
+.gh-deck-details.gh-deck-details :is(small, .gh-votebar__legend span) { font-size: var(--text-px-15); line-height: 1.45; }
+.gh-deck-details .gh-gate__head .cc-panel__aside { font-size: var(--text-px-15); line-height: 1.45; }
+.gh-deck-details .gh-queue-details { display: grid; gap: var(--space-14); }
+.gh-deck-details .gh-queue-details .gh-gate[data-part="queue"] {
+  display: grid; grid-template-columns: minmax(0, 1fr); grid-template-areas: none;
+}
+.gh-deck-details .gh-queue-details .gh-gate > * { grid-area: auto; min-width: 0; }
+.gh-deck-details .gh-queue-details .gh-held { grid-template-columns: minmax(0, 1fr); }
+.gh-deck-details .gh-queue-details .gh-held > * { min-width: 0; word-break: normal; }
+.gh-deck-details .gh-queue-details .gh-warrant { grid-template-columns: minmax(0, 1fr); }
+.gh-deck-details .gh-queue-details .gh-warrant > * { grid-area: auto; min-width: 0; }
+.gh-deck-details .gh-queue-details .gh-warrant > .cc-folio-shield { display: none; }
+.gh-deck-details .gh-queue-details .gh-warrant__act { display: flex; gap: var(--space-8); }
+.gh-deck-details .gh-queue-details .gh-warrant__meta { flex-wrap: wrap; }

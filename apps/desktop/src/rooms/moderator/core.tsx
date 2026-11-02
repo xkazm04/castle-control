@@ -75,11 +75,8 @@ export function ConnectedGatehouse({ port, replay, seal_slot }: { port: CoreGate
       columns={[
         <ChamberSection key="queue" title="At the portcullis">
         <aside className="cc-panel gh-gate moderator-held-plate" aria-label={copy.held} data-part="queue">
-          <p className="gh-sm">{copy.core_held_gloss} · {copy.core_label}</p>
           <div className="gh-gate__main">
-            {items.length ? <p className="gh-clear">The gate is watching<span>{items.length} line{items.length === 1 ? '' : 's'} read in shadow · {count('pass')} passed · {count('hold')} held · {count('bar')} barred. Every verdict is in the live room in the drawer.</span></p>
-              : <EmptyState compact title={state.phase === 'loading' ? 'Opening the gate…' : 'Quiet at the gate'}
-                description="No chat has reached the gate on your core yet. When it does, every line gets a verdict in shadow and the herald counts what chat asks for." />}
+            <p className="gh-sm">{items.length ? `The gate is watching · ${items.length} lines read in shadow` : state.phase === 'loading' ? 'Opening the gate…' : 'Quiet at the gate'}</p>
             <p role="status" className="gh-notice">{state.notice}</p>
           </div>
           <div className="gh-gate__side">
@@ -87,7 +84,7 @@ export function ConnectedGatehouse({ port, replay, seal_slot }: { port: CoreGate
             {!items.length && <button type="button" className="cc-btn cc-btn--quiet cc-btn--sm" onClick={() => stewardDock.open(coreDemoFlow)}>Play demo</button>}
           </div>
         </aside>
-        <p className="gh-sm">{copy.core_queues_unavailable} {copy.core_review_notice}</p>
+        <p className="gh-sm">The held-message queue and pending ban queue are unavailable in this connection.</p>
         <button type="button" className="cc-btn cc-btn--sm" onClick={open}>Live room · more of the Gatehouse</button>
         </ChamberSection>,
         <ChamberSection key="herald" title="The Herald’s chart" aside={<button type="button" className="cc-btn cc-btn--sm" onClick={open}>Full chart</button>}>
@@ -96,6 +93,12 @@ export function ConnectedGatehouse({ port, replay, seal_slot }: { port: CoreGate
             <VoteBarSourceAction mode="core" busy={state.busy} on_copy={() => { void port.copyVoteBarSource(); }} /></div>
         </ChamberSection>,
       ]}>
+          <section aria-label="Core queue details">
+            <p className="gh-sm">{copy.core_held_gloss} · {copy.core_label}</p>
+            {items.length ? <p>{items.length} line{items.length === 1 ? '' : 's'} read in shadow · {count('pass')} passed · {count('hold')} held · {count('bar')} barred. Every verdict is in the live room in the drawer.</p>
+              : <EmptyState compact title={state.phase === 'loading' ? 'Opening the gate…' : 'Quiet at the gate'}
+                description="No chat has reached the gate on your core yet. When it does, every line gets a verdict in shadow and the herald counts what chat asks for." />}
+          </section>
           <section className="gh-herald" aria-label={copy.consensus}>
             <header className="gh-section-head"><h2 className="cc-section__title">{copy.consensus}<em>{copy.consensus_caption}</em></h2>
               <span className="cc-stamp cc-stamp--inked">{copy.core_label}</span></header>
