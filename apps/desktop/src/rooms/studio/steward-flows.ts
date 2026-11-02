@@ -232,6 +232,7 @@ function flowsFor(mode: Mode) {
 }
 /** The "Start a duel" flow for an empty stage's button. */
 export const startDuelFlow = (mode: Mode) => flowsFor(mode).start;
+export const streamDuelFlow = (mode: Mode) => flowsFor(mode).stream;
 /** Flows whose draft is a duel the stage can show. */
 export const duelDraftFlows: readonly string[] = ['studio-duel', 'studio-demo'];
 

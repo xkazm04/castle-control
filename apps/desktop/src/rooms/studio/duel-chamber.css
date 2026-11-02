@@ -1,0 +1,31 @@
+/* Arrangement follows the winner's side-by-side options and two-column bracket. */
+.studio-room { box-sizing: border-box; flex: 1; height: 100%; min-height: 0; padding: 0; gap: 0; }
+.duel__column { display: grid; gap: var(--space-8); min-width: 0; }
+.duel .cc-chamber-section { gap: var(--space-6); padding: var(--space-10) var(--space-12); }
+.duel .cc-chamber-section-heading { gap: var(--space-6); }
+.duel :is(.duel__minor, .cc-chamber-section) > .cc-btn { justify-self: start; }
+.duel .duel__minor .cc-btn { padding: var(--space-5) var(--space-10); font: 600 var(--text-px-14)/1.2 var(--font-text); letter-spacing: normal; }
+.duel-bracket { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-8); font: 400 var(--text-px-14)/1.25 var(--font-text); }
+.duel-bracket__round, .duel-bracket__finish { display: grid; gap: var(--space-8); }
+.duel-bracket__match { min-width: 0; display: grid; align-content: start; gap: var(--space-6); padding: var(--space-8); background: var(--stone-2); border: var(--came-hair) solid var(--hair); border-radius: var(--space-10); overflow-wrap: normal; }
+.duel-bracket__match[data-state="current"] { border-color: var(--ch); box-shadow: 0 0 var(--space-12) var(--ch-glow); }
+.duel-bracket__match h4 { font: 700 var(--text-px-13)/1.2 var(--font-text); color: var(--ch-ink); }
+.duel-bracket__match p[data-won] { font-weight: 800; color: var(--ch-ink); }
+.duel-bracket__match b { font: 600 var(--text-px-18)/1.2 var(--font-book); color: var(--or); }
+.duel-mini { display: grid; gap: var(--space-4); font: 400 var(--text-px-14)/1.3 var(--font-text); color: var(--ink-2); }
+.duel-picture { box-sizing: border-box; display: flex; flex-direction: column; justify-content: center; gap: var(--space-8); padding: var(--space-12); border-radius: inherit; background: var(--tex-glass), radial-gradient(ellipse at center, var(--ch-wash), var(--stone-2)); font: 400 var(--text-px-15)/1.2 var(--font-text); text-align: center; }
+.duel-picture__label { font-weight: 700; color: var(--ch-ink); }
+.duel-picture__pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-12); }
+.duel-picture__pair > div { display: flex; align-items: center; justify-content: center; gap: var(--space-6); min-width: 0; }
+.duel-picture__pair svg { flex: none; width: var(--space-32); height: var(--space-40); }
+.duel-picture__pair b { font: 600 var(--text-px-18)/1.15 var(--font-book); }
+.duel-details .studio-more__list { display: grid; gap: var(--space-4); }
+.duel-details .studio-more__item { display: grid; gap: var(--space-4); padding: var(--space-6) var(--space-10); text-align: left; border: var(--came-hair) solid var(--hair); border-radius: var(--space-8); background: var(--stone-2); color: var(--ink); }
+.duel-details .studio-more__item b, .duel-details .studio-more__item span { font-size: var(--text-px-14); }
+.duel-details .studio-proposals { max-width: 100%; }
+.duel-details .studio-sand { display: grid; gap: var(--space-12); }
+.duel-details .studio-sand .cc-herald-side { padding: var(--space-8); }
+.duel-details .studio-more__fine { font-size: var(--text-px-13); }
+.duel-details .studio-drawer-work { height: auto; display: grid; gap: var(--space-12); }
+.duel-details .studio-drawer-work > .studio-sand { grid-template-columns: minmax(0, 1fr); }
+.duel-details .studio-drawer-work .cc-herald-side { overflow: visible; border: 0; }
