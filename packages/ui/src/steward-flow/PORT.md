@@ -10,8 +10,9 @@ in that shortcut scope. ResizeObserver and font readiness repeat measurement.
 The declared row heights are 48 px and 56 px. Chat is positioned above the bar,
 outside layout flow. `data-chat-open` deliberately replaces `data-expanded`:
 the latter triggers the previous shared CSS that shrinks room headers.
-No new tokens are required; the co-located styles use existing theme, space,
-type, border and radius tokens. Keep composition was not changed.
+Surface finish values live in the appended WP2 block in `fused/tokens.css`;
+the co-located styles otherwise use existing theme, space, type and border
+tokens. Keep composition was not changed.
 
 Conversation keeps the existing flow runtime and proposal queue. Draft chips
 leave a ready flow in its existing chamber Preview and focus the row seal.
@@ -92,6 +93,30 @@ Escape on the talk input peels the store's top layer without refocusing the
 input or clearing its value. With no remaining layer it falls through to the
 existing editable-field shortcut rule. Unit and e2e regressions cover this;
 e2e also checks the seal's bounds within the 48 px row and successful wax.
+
+## Director review 2
+
+Restored the winner's action-row and Steward-bar gradients, purple key faces
+and gold-brown primary face, inset seal highlight/shadow, and chat gradient.
+The first table entry marks the primary key in both the row and its measurement
+copy. Keys use the winner's 5 px left inset, 10 px radius and one-em line height;
+the primary uses 15 px type. The seal uses normal 400 weight, normal tracking,
+no text transform, the shared ink, and 1.45 line height. Gold hold progress and
+successful wax feedback are retained. Chat uses an 18 px radius and muted gold
+border; reply bubbles use a 16 px radius, 10 px top padding and the winner's
+ground/rule colours. The row stays 48 px, the bar 56 px and the seal 40 px.
+
+All new finish values were appended once to the permitted fused token sheet,
+with daylight defaults and exact winner night values. Product font families
+are unchanged. Token-law tests now include the UI token sheet and both Steward
+stylesheets. Browser/style-contract remeasurement remains with the Director;
+no post-change pixel measurement is claimed from this sandbox.
+
+Review 2 checks: UI and desktop `typecheck`, `lint` and `test` all passed
+using `pnpm --config.verify-deps-before-run=false --filter <package> <check>`.
+UI walked 152 source files and passed 51 test files / 561 tests. Desktop walked
+378 source files and passed 132 test files / 1185 tests. `node scripts/check.mjs`
+and `git diff --check` passed. The fused token change is append-only.
 
 ## WP6 polish
 

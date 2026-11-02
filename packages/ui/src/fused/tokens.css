@@ -51,3 +51,36 @@
   --deck-crenel: #211f3a; --deck-sheen: rgba(255,255,255,.12); --deck-need-ink: #1b1100;
   --focus: var(--deck-gold);
 }
+
+/* WP2 surface finishes, from winner base.css .quick/.qk/.steward/.chat/.bub
+ * and layout.css .spacekey. Defaults follow the product's daylight surfaces. */
+:root, [data-theme] {
+  --deck-action-top: var(--surface-2); --deck-action-bottom: var(--surface);
+  --deck-key-top: var(--surface); --deck-key-bottom: var(--surface-2);
+  --deck-key-rule: var(--came-ui); --deck-key-foot: var(--stone-3);
+  --deck-key-main-top: color-mix(in srgb, var(--deck-gold) 18%, var(--surface));
+  --deck-key-main-bottom: color-mix(in srgb, var(--deck-gold) 12%, var(--surface-2));
+  --deck-key-hover-top: color-mix(in srgb, var(--deck-gold) 26%, var(--surface));
+  --deck-key-hover-bottom: color-mix(in srgb, var(--deck-gold) 18%, var(--surface-2));
+  --deck-key-radius: 10px; --deck-chat-radius: 18px; --deck-bubble-radius: 16px;
+  --deck-seal-top: var(--surface); --deck-seal-bottom: var(--surface-2); --deck-seal-foot: var(--deck-gold-2);
+  --deck-control-highlight: var(--glass-hi);
+  --deck-seal-shadow: inset 0 1px 0 var(--deck-control-highlight), 0 4px 12px var(--shade);
+  --deck-steward-top: var(--surface-2); --deck-steward-bottom: var(--stone-2);
+  --deck-chat-top: var(--surface); --deck-chat-bottom: var(--surface-2); --deck-chat-shadow: var(--shadow);
+  --deck-bubble: var(--surface-2);
+}
+
+[data-theme="night"] {
+  --deck-action-top: #0e0c20; --deck-action-bottom: #0b0918;
+  --deck-key-top: #221d45; --deck-key-bottom: #17143a;
+  --deck-key-rule: #3a3560; --deck-key-foot: #08070f;
+  --deck-key-main-top: #5a4520; --deck-key-main-bottom: #3a2c12;
+  --deck-key-hover-top: #6b5326; --deck-key-hover-bottom: #46351a;
+  --deck-seal-top: #2a2347; --deck-seal-bottom: #1a1636; --deck-seal-foot: #2a1f08;
+  --deck-control-highlight: rgba(255,255,255,.1);
+  --deck-steward-top: #110f25; --deck-steward-bottom: #0a0817;
+  --deck-chat-top: #1b1738; --deck-chat-bottom: #100d22;
+  --deck-chat-shadow: 0 30px 80px rgba(0,0,0,.7), 0 0 0 1px #000;
+  --deck-bubble: #221e42;
+}

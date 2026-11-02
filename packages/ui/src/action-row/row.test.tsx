@@ -29,6 +29,7 @@ test('the row renders the entry letters, labels, disabled states and the final s
     { key: 'Q', label: 'Set up', run: vi.fn() }, { key: 'W', label: 'Cast', run: vi.fn(), disabled: true },
   ]} seal={<button data-role="seal-key">Hold Space</button>} open={false} on_open={vi.fn()} />);
   expect(html).toContain('data-role="action-row"');
+  expect(html).toContain('data-primary="true" data-role="action-key"><kbd>Q</kbd>');
   expect(html).toContain('data-role="action-key"><kbd>Q</kbd><span>Set up</span>');
   expect(html).toContain('data-role="action-key" disabled=""><kbd>W</kbd>');
   expect(html.indexOf('data-role="seal-key"')).toBeGreaterThan(html.indexOf('data-role="action-key"'));
