@@ -344,3 +344,12 @@ test('validators remain unloaded until the first port call', async () => {
   await port.loadContributions({ limit: 100 });
   expect(loaded).toHaveBeenCalledTimes(1); expect(port.getSnapshot().contributions.phase).toBe('ready');
 });
+
+test('overlayOrigin keeps only a loopback origin from the vote bar source URL', async () => {
+  const h = harness();
+  h.responses.set('gatehouse.source.url', { url: 'http://localhost:4312/gatehouse/current' });
+  expect(await h.port.overlayOrigin()).toBe('http://localhost:4312');
+  const other = harness();
+  other.responses.set('gatehouse.source.url', { url: 'http://localhost:99999/gatehouse/current' });
+  await expect(other.port.overlayOrigin()).rejects.toThrow();
+});

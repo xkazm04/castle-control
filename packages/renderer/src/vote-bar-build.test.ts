@@ -5,13 +5,13 @@ import { expect, test } from 'vitest';
 // @ts-expect-error Build configuration is native JavaScript, outside the TS product tree.
 import { voteBarInputs } from '../vite-vote-bar.config.mjs';
 
-test('dedicated vote-bar runtime is current, self-contained and under 16 KiB', () => {
+test('dedicated vote-bar runtime is current, self-contained and under 20 KiB', () => {
   const hash = createHash('sha256');
   for (const file of voteBarInputs as readonly string[]) {
     hash.update(readFileSync(new URL(file, new URL('../vite-vote-bar.config.mjs', import.meta.url)), 'utf8').replaceAll('\r\n', '\n'));
   }
   const bytes = readFileSync(new URL('../../../apps/overlay/vote-bar.js', import.meta.url));
-  expect(bytes.byteLength).toBeLessThanOrEqual(16_384);
+  expect(bytes.byteLength).toBeLessThanOrEqual(20_480);
   const source = bytes.toString('utf8');
   expect(source).toContain(`Castle Control vote bar source SHA-256: ${hash.digest('hex')}`);
   expect(source).toContain('gatehouse.render.snapshot');

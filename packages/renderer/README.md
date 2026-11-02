@@ -381,7 +381,7 @@ and reject stale output, eval, Function constructors and dynamic imports.
   three `segments` colours in order; a fourth or later direction blends two neighbours. Segment
   nodes are retained so width changes transition; the largest share gets the lead glow; a sheen
   runs over every segment. `prefers-reduced-motion` stops transitions and sheen. No direction text
-  is painted on the art path. Without `art` the labelled bars are unchanged. Bundle 16,359 of 16,384 bytes.
+  is painted on the art path. Without `art` the labelled bars are unchanged. Bundle 16,359 bytes of a 20,480-byte budget (raised from 16 KiB by the owner, 2026-11-02).
 - **Lots vessel** (`src/draw/vessel.ts`): a valid `cc-vessel` island (`LotsPlateSnapshot`) replaces
   the vector artwork with the vessel image. Up to nine entries idle inside `chamber_rect` (token
   sprite, or a CSS orb in the plate colour without `token_url`); each revealed winner gets a token
@@ -392,4 +392,4 @@ and reject stale output, eval, Function constructors and dynamic imports.
 - **Beacons**: image layers with intensity bindings already carry a base plus effect sprite, in
   either order (`overlay-layers.test.ts`); centre-preserving swell needs x/y bindings beside scale.
 - The overlay embeds its sheet comment- and whitespace-compacted (`compactCss`) to hold the
-  114,688-byte budget (bundle now 114,661 bytes).
+  118,784-byte budget, raised by the owner from 114,688 on 2026-11-02 (bundle now 114,661 bytes).

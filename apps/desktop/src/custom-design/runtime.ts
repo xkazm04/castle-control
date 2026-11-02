@@ -122,10 +122,17 @@ export function createDesignState(kind: ArtAssetKind, mode: DesignMode, read: (u
     try { layers = await port.artLayers({ design_id, asset: generated.asset, kind }); } catch (error: unknown) { throw plainFailure('layers', error); }
     unlayered.delete(sig);
     const { direction } = directed;
+    // The new image itself, from the core's loopback overlay host; without it the preview keeps anchors and palette.
+    let images: { base?: string; effect?: string };
+    try {
+      const root = `${await port.overlayOrigin()}/assets/${layers.design_id}/${layers.package.content_hash}/`;
+      images = { base: root + layers.base, ...(layers.effect ? { effect: root + layers.effect } : {}) };
+    } catch { images = {}; }
     return { key: '', signature: sig, style_name: direction.style_name, source: 'generated', design_id: layers.design_id, direction,
       scripted: directed.scripted, ...(costLine([...generated.costs, ...layers.costs]) ? { cost: costLine([...generated.costs, ...layers.costs]) ?? '' } : {}),
-      art: { kind, label: direction.style_name, anchors: layers.anchors, palette: direction.palette, width: input.size.width, height: input.size.height },
-      note: 'Your new image is kept in the core and shows on the overlay once sealed. Here: its measured anchors and palette with SIMULATED motion.' };
+      art: { kind, label: direction.style_name, anchors: layers.anchors, palette: direction.palette, width: input.size.width, height: input.size.height, ...images },
+      note: images.base ? 'Your new image from the core, moving with SIMULATED sample data. It reaches the overlay once sealed.'
+        : 'Your new image is kept in the core and shows on the overlay once sealed. Here: its measured anchors and palette with SIMULATED motion.' };
   }
 
   return {

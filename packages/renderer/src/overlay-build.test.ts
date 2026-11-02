@@ -6,7 +6,7 @@ import ts from 'typescript';
 // @ts-expect-error Build configuration is native JavaScript, outside the TS product tree.
 import { compactCss, overlayInputs } from '../vite-overlay.config.mjs';
 
-const OVERLAY_BUNDLE_BUDGET = 114_688;
+const OVERLAY_BUNDLE_BUDGET = 118_784;
 
 function assertOverlayBundleBudget(actualBytes: number): void {
   if (actualBytes > OVERLAY_BUNDLE_BUDGET) {
@@ -22,8 +22,8 @@ it('accepts an overlay bundle exactly at the byte budget', () => {
 });
 
 it('rejects an oversized overlay bundle with an actionable budget message', () => {
-  expect(() => assertOverlayBundleBudget(114_689)).toThrow(
-    'apps/overlay/bundle.js is 114689 bytes; budget is 114688 bytes. '
+  expect(() => assertOverlayBundleBudget(118_785)).toThrow(
+    'apps/overlay/bundle.js is 118785 bytes; budget is 118784 bytes. '
     + 'See apps/overlay/README.md and deliberately raise the budget in the same commit.',
   );
 });

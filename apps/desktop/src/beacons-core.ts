@@ -7,7 +7,7 @@ import type { PreviewEvent } from './beacons-fixture.js';
 
 type BeaconsMethod = 'beacons.visual.list' | 'beacons.visual.upsert' | 'beacons.curve.set' | 'beacons.simulate'
   | 'beacons.source.url' | 'beacons.contribution.list' | 'beacons.art.status' | 'beacons.art.generate'
-  | 'beacons.design.create' | 'beacons.art.direct' | 'beacons.art.layers' | 'beacons.library.import';
+  | 'beacons.design.create' | 'beacons.art.direct' | 'beacons.art.layers' | 'beacons.library.import' | 'gatehouse.source.url';
 /** Restricted transport seam; launch capabilities never enter read snapshots. */
 export type BeaconsNetwork = {
   rpc: <M extends BeaconsMethod>(endpoint: string, session: string, method: M, params: RpcMethods[M]['params']) => Promise<unknown>;
@@ -179,6 +179,14 @@ export function createCoreBeaconsPort(launch: CoreLaunch, transport?: BeaconsNet
         publish({ simulation, events: [event, ...snapshot.events],
           notice: 'Simulated burst computed by the core from an empty state. Saved configuration and live totals are unchanged.' });
       });
+    },
+    /** The core's loopback overlay origin (from the vote bar source URL), where design assets are served. */
+    async overlayOrigin(): Promise<string> {
+      const { gatehouseSourceUrl } = await import('@castle-control/contract/gatehouse');
+      const { url } = await call(gatehouseSourceUrl, {});
+      const origin = new URL(url).origin;
+      if (!/^http:\/\/(127\.0\.0\.1|localhost):\d{1,5}$/.test(origin)) throw new Error('The overlay host is not on loopback.');
+      return origin;
     },
     async sourceUrl(visual_id: VisualId) {
       return perform(async () => {
