@@ -103,19 +103,21 @@ test.afterAll(async () => {
 
 /**
  * The offline built core has no Twitch bridge or OBS adapter. These two reads answer
- * the typed `unavailable` error with HTTP 400 (documented in apps/desktop/README.md:
- * the shell shows UNKNOWN), and WebView2 logs each 400 as "Failed to load resource".
- * Only that exact pairing is excused; any other refusal or console error fails.
+ * the typed `unavailable` error, which the core maps to HTTP 503 (documented in apps/desktop/README.md:
+ * the shell shows UNKNOWN), and WebView2 logs each 503 as "Failed to load resource".
+ * Only that exact pairing is excused; any other refusal or console error fails. A refusal whose body
+ * WebView2 discarded because the boot navigated away is still that refusal (same status and method).
  */
-const offlineRefusals = new Set(['400 bridge.status.get unavailable', '400 obs.status.get unavailable']);
-const refusalLog = /^Failed to load resource: the server responded with a status of 400 \(Bad Request\) @ http:\/\/127\.0\.0\.1:\d+\/rpc$/;
+const offlineRefusals = new Set(['503 bridge.status.get unavailable', '503 obs.status.get unavailable']);
+const discardedBody = /^(503 (?:bridge|obs)\.status\.get) unreadable: .*navigated away.*$/s;
+const refusalLog = /^Failed to load resource: the server responded with a status of 503 \(Service Unavailable\) @ http:\/\/127\.0\.0\.1:\d+\/rpc$/;
 /** WebView2 probes /favicon.ico on its own; the Vite dev server ships none (the fixture variant's only 404). */
 const faviconProbe = /^Failed to load resource: the server responded with a status of 404 \(Not Found\) @ http:\/\/127\.0\.0\.1:\d+\/favicon\.ico$/;
 
 function unexcused(all: string[], refused: string[]): string[] {
   const consoleErrors = variant === 'fixture' ? all.filter(line => !faviconProbe.test(line)) : all;
   if (variant !== 'built') return [...consoleErrors, ...refused.map(line => `rpc refused: ${line}`)];
-  const strange = refused.filter(line => !offlineRefusals.has(line)).map(line => `rpc refused: ${line}`);
+  const strange = refused.map(line => line.replace(discardedBody, '$1 unavailable')).filter(line => !offlineRefusals.has(line)).map(line => `rpc refused: ${line}`);
   const logs = consoleErrors.filter(line => refusalLog.test(line));
   const extra = logs.length > refused.length ? logs.slice(refused.length) : [];
   return [...strange, ...consoleErrors.filter(line => !refusalLog.test(line)), ...extra];

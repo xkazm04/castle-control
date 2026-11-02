@@ -20,7 +20,7 @@ test('Beacons: create, tune and test-fire in the UI, then /beacons/{id} updates 
     await core.openDesktop(page, viteOrigin(), '#/chamber/visuals');
     const room = page.getByRole('region', { name: 'Core Beacons', exact: true });
     // An empty core shows the Steward's way in; the full workbench lives behind More.
-    await expect(room.getByRole('heading', { name: 'No beacon yet', exact: true })).toBeVisible();
+    await expect(room.getByRole('status').filter({ hasText: 'No beacon yet' })).toBeVisible();
     await room.locator('.visuals-more > summary').click();
     await room.getByRole('textbox', { name: 'Visual ID', exact: true }).fill(VISUAL);
     await room.getByRole('textbox', { name: 'Visual name', exact: true }).fill('SIMULATED night beacon');
