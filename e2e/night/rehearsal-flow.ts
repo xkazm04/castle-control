@@ -1,6 +1,6 @@
 // Generated SIMULATED scenarios only. Shared by the fake-peer and isolated OBS lanes.
 import { expect, test } from '@playwright/test';
-import type { Page } from '@playwright/test';
+import type { Locator, Page } from '@playwright/test';
 import type { NightCore } from './launch.ts';
 import { SHELL_ORIGIN } from './launch.ts';
 import { addStreamOutput, createVisualInUi, eventually, holdToSeal, viteOrigin } from './support.ts';
@@ -52,6 +52,13 @@ async function assertRehearsalDuel(page: Page, core: NightCore) {
     await test.info().attach('tiltyard-failure', { body: await overlay.screenshot(), contentType: 'image/png' });
     throw error;
   } finally { await overlay.close(); }
+}
+
+/** The page's own forms (the same steps the Steward walks) fold under one "More" disclosure; unfold it. */
+async function openMore(workspace: Locator) {
+  const more = workspace.locator('details.rh-more');
+  if (!await more.evaluate(node => node instanceof HTMLDetailsElement && node.open)) await more.locator(':scope > summary').click();
+  await expect(more).toHaveAttribute('open', '');
 }
 
 /** The rehearsal's Steward flows, driven the way a streamer drives them: chip, option cards, one hold. */
@@ -119,6 +126,14 @@ export async function dressRehearsalInUi(page: Page, core: NightCore, beforeClea
   const board = workspace.getByRole('region', { name: 'Rehearsal status', exact: true });
   await expect(board.getByRole('heading', { name: 'The rehearsal, step by step', exact: true })).toBeVisible();
   await expect(board.locator('[data-station="session"] .rh-station__value')).toHaveText('Active');
+  // A clean board first: every station opens its Steward flow; the page forms wait under More.
+  for (const action of ['Connect my OBS', 'Set up the scene', 'Add sources', 'Run a scenario', 'Clean up']) {
+    await expect(board.getByRole('button', { name: action, exact: true })).toBeVisible();
+  }
+  await expect(workspace.getByRole('region', { name: 'Live rehearsal controls', exact: true })
+    .getByRole('slider', { name: /SIMULATED chat per minute/ })).toBeVisible();
+  await expect(workspace.getByRole('region', { name: 'Connect your OBS', exact: true })).toBeHidden();
+  await openMore(workspace);
   const connection = workspace.getByRole('region', { name: 'Connect your OBS', exact: true });
   const password = connection.locator('input[name="password"]');
   await expect(password).toHaveAttribute('type', 'password');
@@ -209,6 +224,7 @@ export async function dressRehearsalInUi(page: Page, core: NightCore, beforeClea
   await expect(page.getByText('Core connection interrupted; status is unknown.', { exact: true })).toHaveCount(0);
   await page.goto(`${SHELL_ORIGIN}/#/rehearsal`);
   await expect(workspace.locator('[data-stamp="simulated"]')).toHaveText('SIMULATED');
+  await openMore(workspace);
 
   // The Lot plate through its row's own hold, the rest through the Steward's scene flow.
   await page.getByRole('article', { name: 'Lot plate', exact: true })

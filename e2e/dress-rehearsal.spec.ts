@@ -15,6 +15,11 @@ test('Dress rehearsal in fixture dev explains desktop entry and Escape returns t
   // The status picture is on the page even before the desktop app starts a rehearsal.
   const board = page.getByRole('region', { name: 'Rehearsal status', exact: true });
   for (const station of ['OBS', 'Scene', 'Sources', 'Crowd', 'Session']) await expect(board.getByText(station, { exact: true })).toBeVisible();
+  // Outside a running rehearsal there are no page forms at all, folded or not: each station's button opens its Steward flow.
+  await expect(page.locator('details.rh-more')).toHaveCount(0);
+  for (const action of ['Connect my OBS', 'Set up the scene', 'Add sources', 'Run a scenario', 'Clean up']) {
+    await expect(board.getByRole('button', { name: action, exact: true })).toBeVisible();
+  }
   await auditStyles(page, desktopSurfaces); await auditFields(page);
   // Setup is a Steward flow; without the desktop app its seal says plainly that nothing was sent.
   const dock = page.locator('.cc-steward-dock');

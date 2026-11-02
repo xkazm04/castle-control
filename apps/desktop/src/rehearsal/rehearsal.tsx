@@ -99,12 +99,21 @@ function ScenarioCard({ model, state }: { model: RehearsalModel; state: Rehearsa
         <button className="cc-btn cc-btn--sm" type="button" disabled={disabled || !state.visual_id} onClick={() => { void model.scenario('beacon_fire'); }}>{copy.beacon}</button>
       </div>
       {!state.visuals.length && <a className="cc-link" href="#/chamber/visuals">{copy.beacons}</a>}
-      <label className="rh-crowd">{copy.crowd} <output>{state.crowd}</output><input type="range" min="0" max="600" step="1" value={state.crowd}
-        disabled={disabled} onChange={event => { model.setCrowd(Number(event.currentTarget.value)); }} /></label>
+    </div>
+  </section>;
+}
+
+/** The few direct controls a streamer reaches for mid-rehearsal: the crowd level and what just happened. */
+export function RehearsalLive({ model, state }: { model: RehearsalModel; state: RehearsalState }) {
+  const disabled = state.busy || !state.status?.active;
+  return <section className="cc-folio rh-live" aria-label="Live rehearsal controls"><div className="rh-live__row">
+    <label className="rh-crowd">{copy.crowd} <output>{state.crowd}</output><input type="range" min="0" max="600" step="1" value={state.crowd}
+      disabled={disabled} onChange={event => { model.setCrowd(Number(event.currentTarget.value)); }} aria-label={copy.crowd} /></label>
+    <div className="rh-live__notes">
       <p className="rh-notice" role="status" aria-live="polite">{state.scenario_notice}</p>
       {state.status && <time className="rh-notice" dateTime={state.status.at}>Status at {state.status.at}</time>}
     </div>
-  </section>;
+  </div></section>;
 }
 
 type Station = { no: string; key: string; label: string; value: string; line: string; lit: boolean; drafting: boolean; action: string; flow: AnyStewardFlow };
@@ -160,7 +169,11 @@ export function RehearsalContent({ model, state, mode, on_back, drafts, secret }
       {!model.shell_available && <Notice message={mode === 'fixture' ? copy.desktop : copy.shell_unavailable} />}
       {state.notice && <p className="rh-notice" role="status" aria-live="polite">{state.notice}</p>}
       <RehearsalBoard state={state} ready={inside} {...(drafts ? { drafts } : {})} />
-      {inside && <div className="rh-desk">
+      {inside && <RehearsalLive model={model} state={state} />}
+      {/* The forms behind the Steward's flows stay mounted (the masked field's home lives here), folded under More. */}
+      {inside && <details className="rh-more">
+        <summary className="rh-more__summary">More <span>connection, scene, sources and scenario forms: the same steps the Steward walks</span></summary>
+        <div className="rh-desk">
         <div className="rh-col">
           <RehearsalConnectionCard model={model} state={state} {...(drafts?.connect ? { draft: drafts.connect } : {})}
             {...(secret ? { secret_home: secret.home, secret: secret.input } : {})} />
@@ -188,7 +201,8 @@ export function RehearsalContent({ model, state, mode, on_back, drafts, secret }
           </section>
           <ScenarioCard model={model} state={state} />
         </div>
-      </div>}
+      </div>
+      </details>}
     </div>
   </section>;
 }
