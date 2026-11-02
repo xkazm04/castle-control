@@ -1,8 +1,9 @@
 import { readFileSync } from 'node:fs';
-import { renderToStaticMarkup } from 'react-dom/server';
+import { renderToReadableStream, renderToStaticMarkup } from 'react-dom/server';
 import { expect, test, vi } from 'vitest';
 import Room, { MoreMenu, StudioViewSwitch } from './room.jsx';
-import TiltyardView, { FixtureDuel, LocalDuelDemos } from './tiltyard-view.jsx';
+import TiltyardView, { FixtureDuel } from './tiltyard-view.jsx';
+import LocalDuelDemos from './local-duel-demos.jsx';
 
 test('the Map Room opens on the duel: one SAMPLE match, SIMULATED, ready with its keys and no network', () => {
   const network = vi.spyOn(globalThis, 'fetch');
@@ -45,6 +46,13 @@ test('Showdown and Ladder stay reachable as local demos without a second Chat en
   expect(html).toContain('data-mode="show"'); expect(html).toContain('data-mode="ladder"');
   expect(html).not.toContain('data-mode="chat"');
   expect(html).toContain('Local demo');
+});
+
+test.each(['show', 'ladder'] as const)('the deferred %s view retains the local demo markup', async view => {
+  const stream = await renderToReadableStream(<TiltyardView view={view} />);
+  await stream.allReady;
+  const html = (await new Response(stream).text()).replace(/<!--.*?-->/g, '');
+  expect(html).toBe(renderToStaticMarkup(<LocalDuelDemos mode={view} />));
 });
 
 test('More is one closed disclosure; the sand-table switch keeps its three views', () => {

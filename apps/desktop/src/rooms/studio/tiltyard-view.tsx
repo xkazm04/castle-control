@@ -1,8 +1,5 @@
 import { lazy, Suspense, useEffect, useMemo, useSyncExternalStore } from 'react';
 import type { ReactNode } from 'react';
-import { SAMPLE } from '@castle-control/duel';
-import { simulateChatPages } from '@castle-control/duel/ballots';
-import { Tiltyard, tiltyardWords } from '@castle-control/ui/duel';
 import type { TiltyardConnection } from './tiltyard-core.js';
 import { DuelStage } from './duel-stage.jsx';
 import { draftPicture } from './duel-model.js';
@@ -12,19 +9,8 @@ import { fixtureDuel, fixturePicture } from './duel-fixture.js';
 import { duelHost } from './duel-host.js';
 
 const CoreTiltyardView = lazy(() => import('./tiltyard-core-view.jsx'));
+const LocalDuelDemos = lazy(() => import('./local-duel-demos.jsx'));
 export type DuelView = 'duel' | 'show' | 'ladder';
-
-const demoWords = { ...tiltyardWords, modes: {
-  ...tiltyardWords.modes,
-  show: { ...tiltyardWords.modes.show, detail: 'Local demo · you pick · not sent anywhere' },
-  ladder: { ...tiltyardWords.modes.ladder, detail: 'Local demo · not sent anywhere' },
-} };
-
-/** Showdown and Ladder: the original local engines, offered from More. */
-export function LocalDuelDemos({ mode }: { mode: 'show' | 'ladder' }) {
-  return <Tiltyard key={mode} lists={SAMPLE} ballots={simulateChatPages} words={demoWords} initial_mode={mode}
-    modes={['show', 'ladder']} label="Local duel demos · Showdown and Ladder" />;
-}
 
 /** FIXTURE duel: the TS engine with generated SIMULATED ballots. A Steward draft takes the stage until sealed or put away. */
 export function FixtureDuel({ draft, tools, details }: { draft?: DuelDraft | undefined; tools?: ReactNode; details?: DuelStageProps['details'] }) {
@@ -43,7 +29,9 @@ export default function TiltyardView({ connection, view = 'duel', draft, tools, 
   connection?: TiltyardConnection | undefined; view?: DuelView; draft?: DuelDraft | undefined; tools?: ReactNode;
   details?: DuelStageProps['details'];
 }) {
-  if (view === 'show' || view === 'ladder') return <LocalDuelDemos mode={view} />;
+  if (view === 'show' || view === 'ladder') return <Suspense fallback={<p role="status">Loading local duel demos…</p>}>
+    <LocalDuelDemos mode={view} />
+  </Suspense>;
   return connection ? <Suspense fallback={<p role="status">Loading the core tournament…</p>}>
     <CoreTiltyardView connection={connection} draft={draft} tools={tools} details={details} />
   </Suspense> : <FixtureDuel draft={draft} tools={tools} details={details} />;
