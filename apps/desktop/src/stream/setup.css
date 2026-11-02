@@ -1,17 +1,67 @@
-.stream-workspace { display: grid; gap: var(--space-16); padding-block: var(--space-20); min-width: 0; font: var(--text-body)/1.5 var(--font-ui); color: var(--ink); }
-.stream-workspace > * { min-width: 0; margin: 0; }
-.stream-heading, .stream-status, .stream-fields, .stream-output-actions { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-12); }
-.stream-heading h1 { margin: 0; font: 800 var(--text-chamber)/1.2 var(--font-display); text-transform: uppercase; }
-.stream-heading h1 span { font: var(--text-section)/1.4 var(--font-ui); text-transform: none; color: var(--muted); }
-.stream-workspace p { margin: 0; }
-.stream-fields label { display: grid; gap: var(--space-4); flex: 1; min-width: 0; font-weight: 600; }
-.stream-fields :is(input, select) { box-sizing: border-box; width: 100%; font: var(--text-body)/1.4 var(--font-ui); color: var(--ink); }
-.stream-fields strong { font: 700 var(--text-section)/1.4 var(--font-num); }
-.stream-workspace .cc-window { padding: var(--space-4) var(--space-8); }
-.stream-workspace .cc-window-cell { padding-block: var(--space-8); }
-.stream-output { height: 100%; box-sizing: border-box; overflow: auto; }
-.stream-output header { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-12); }
-.stream-output h2 { margin: 0; overflow-wrap: anywhere; font: 800 var(--text-section)/1.3 var(--font-display); }
-.stream-output p { overflow-wrap: anywhere; }
-.stream-output-notice { font-size: var(--text-label); color: var(--ink-2); }
-.stream-output-actions .cc-button { white-space: normal; }
+/* Set up OBS (#/stream): the Illuminated setup page. A sticky charter (status, scene, size and
+   the measured canvas) beside a folio of outputs, one writ per browser source. */
+.stream-workspace { display: grid; min-width: 0; padding-bottom: var(--space-24); color: var(--ink); font: 400 var(--text-t-body)/1.45 var(--font-text); }
+.stream-workspace :is(h2, p) { margin: 0; }
+.stream-body { display: grid; grid-template-columns: minmax(0, 30rem) minmax(0, 1fr); gap: 28px; align-items: start; padding-top: 30px; }
+.stream-side { display: grid; gap: 14px; min-width: 0; }
+.stream-charter .cc-panel__body { display: grid; gap: 12px; }
+.stream-status { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; }
+.stream-lead { font: 400 var(--text-t-body)/1.45 var(--font-book); color: var(--ink); }
+.stream-fields { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
+.stream-workspace .cc-field { display: grid; gap: 4px; min-width: 0; font: 700 var(--text-t-small)/1.2 var(--font-text); color: var(--ink-2); }
+.stream-workspace :is(.cc-input, .cc-select) { box-sizing: border-box; width: 100%; min-width: 0; appearance: none; border: var(--rule-thin) solid var(--ink); }
+.stream-note { padding: 12px 14px; font: 400 var(--text-t-small)/1.45 var(--font-book); color: var(--ink-2); border-left: 3px solid var(--or); background: var(--or-wash); }
+.stream-note a { color: var(--or-ink); font-weight: 700; text-underline-offset: 3px; }
+
+/* the measured plan of the canvas */
+.stream-plan { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 14px; padding: 30px 14px 8px; background: var(--vellum); background-image: var(--tex-vellum-grain); border: 1px solid var(--hair); box-shadow: var(--shadow-inset); }
+.stream-plan[data-drafted="true"] { box-shadow: var(--shadow-inset), 0 0 0 3px var(--or); }
+.stream-plan svg { display: block; width: 100%; height: 170px; overflow: visible; }
+.stream-fig { position: absolute; left: 14px; top: 10px; font: 800 var(--text-t-label)/1 var(--font-label); letter-spacing: var(--track-wide); text-transform: lowercase; color: var(--gules-ink); }
+.stream-fig em { margin-left: 6px; font: italic 400 var(--text-t-label)/1 var(--font-book); letter-spacing: 0; text-transform: none; color: var(--muted); }
+.stream-plan .pl-ground { fill: var(--surface); stroke: var(--ink); stroke-width: 1.6; }
+.stream-plan .pl-src { fill: none; stroke: var(--gules); stroke-width: 1.2; stroke-dasharray: 5 3; }
+.stream-plan .pl-dim { stroke: var(--gules); stroke-width: 1; }
+.stream-plan .pl-lab { font: 800 var(--text-px-14)/1 var(--font-label); letter-spacing: .06em; fill: var(--gules-ink); }
+.stream-plan .pl-num { font: 700 var(--text-px-15)/1 var(--font-text); fill: var(--ink); }
+.stream-plan .pl-cap { font: italic 400 var(--text-px-14)/1 var(--font-book); fill: var(--muted); }
+.stream-plan rect, .stream-plan line, .stream-plan text { transition: x .5s var(--ease), y .5s var(--ease), width .5s var(--ease), height .5s var(--ease); }
+.stream-size { display: grid; justify-items: end; gap: 6px; text-align: right; }
+.stream-size span { font: 800 var(--text-t-label)/1.2 var(--font-label); letter-spacing: var(--track-wide); text-transform: lowercase; color: var(--ink-2); }
+.stream-size b { font: 600 var(--text-t-figure-sm)/1 var(--font-display); color: var(--ink); white-space: nowrap; }
+.stream-size small { max-width: 12ch; font: italic 400 var(--text-t-label)/1.25 var(--font-book); color: var(--muted); }
+
+/* the outputs folio */
+.stream-folio { padding: 18px 26px 24px; min-width: 0; }
+.stream-outs-head { display: flex; align-items: center; gap: 14px; margin: 6px 0 12px; }
+.stream-outs-head .cc-orn { flex: 1; }
+.stream-steward { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 14px; padding: 10px 12px; border: 1px dashed var(--hair); background: var(--ch-wash); }
+.stream-steward p { flex: 1 1 18rem; font: italic 400 var(--text-t-small)/1.4 var(--font-book); color: var(--ink-2); }
+.stream-folio .cc-window { max-height: max(24rem, calc(100dvh - 24rem)); padding: 0 4px 0 0; border: 0; background: none; }
+.stream-folio .cc-window-cell { padding-block: 8px; }
+.stream-output { box-sizing: border-box; height: 100%; overflow: auto; display: grid; grid-template-columns: 9.5rem minmax(0, 1fr); gap: 18px; padding: 14px 16px; border-left: 4px solid var(--ch); }
+.stream-output[data-phase="unavailable"] { background: var(--vellum-2); }
+.stream-output[data-drafting="true"] { box-shadow: var(--shadow), 0 0 0 3px var(--or); }
+.stream-thumb { position: relative; align-self: start; padding: 4px; background: var(--gilt); box-shadow: 0 0 0 1px var(--gilt-lo), 0 0 0 3px var(--surface), 0 0 0 4px var(--lead); }
+.stream-thumb img { display: block; width: 100%; aspect-ratio: 16 / 10; object-fit: cover; background: var(--art-shade); }
+.stream-thumb .cc-sim { position: absolute; left: -6px; bottom: -11px; transform: rotate(-3deg) scale(.92); }
+.stream-output__body { display: grid; align-content: start; gap: 8px; min-width: 0; }
+.stream-output header { display: flex; align-items: baseline; gap: 12px; }
+.stream-output h2 { font: 600 var(--text-t-h4)/1.1 var(--font-display); overflow-wrap: anywhere; }
+.stream-output header .cc-stamp { margin-left: auto; align-self: center; }
+.stream-meta { font: 500 var(--text-t-small)/1.2 var(--font-text); color: var(--ink-2); }
+.stream-output-actions { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 12px; }
+.stream-output-actions .cc-btn { white-space: normal; }
+.stream-output-notice { font: italic 400 var(--text-t-small)/1.4 var(--font-book); color: var(--muted); overflow-wrap: anywhere; }
+
+@media (width < 90rem) {
+  .stream-body { grid-template-columns: minmax(0, 26rem) minmax(0, 1fr); gap: 22px; }
+  .stream-output { grid-template-columns: 7.5rem minmax(0, 1fr); gap: 14px; }
+  .stream-output-actions { grid-template-columns: minmax(0, 1fr); }
+  .stream-output-actions .cc-btn { justify-self: start; }
+  .stream-plan { grid-template-columns: minmax(0, 1fr); gap: 6px; }
+  .stream-size { grid-auto-flow: column; justify-content: start; align-items: baseline; justify-items: start; gap: 12px; text-align: left; }
+  .stream-size small { max-width: none; }
+}
+@media (width < 64rem) { .stream-body { grid-template-columns: minmax(0, 1fr); } }
+@media (prefers-reduced-motion: reduce) { .stream-plan rect, .stream-plan line, .stream-plan text { transition: none; } }
