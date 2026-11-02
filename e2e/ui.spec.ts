@@ -86,7 +86,8 @@ for (const route of routes) for (const theme of themes) for (const steward of st
     }
     await page.evaluate(() => document.fonts.ready.then(() => undefined));
     await auditStyles(page, desktopSurfaces);
-    await auditFields(page);
+    // The Keep has no fields at all now (the Steward's talk prompt was its only one); the audit refuses an empty inventory.
+    if (!keep) await auditFields(page);
   });
 }
 
