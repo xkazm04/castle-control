@@ -24,8 +24,9 @@ import { ChamberSection } from '@castle-control/ui/chamber';
 import { proposalQueue } from '@castle-control/ui/steward';
 import { GatehouseDeck, GateProposalMini } from './deck.jsx';
 import { useGatehouseDrawer } from './drawer-state.js';
+import { CoreBanReview, CoreRuleMode } from './core-bans.jsx';
 
-function CoreRule({ rule, busy, port }: { rule: Rule; busy: boolean; port: CoreGatehousePort }) {
+function CoreRule({ rule, busy, port, rehearsal }: { rule: Rule; busy: boolean; port: CoreGatehousePort; rehearsal: boolean }) {
   const name_id = useId();
   const editable = rule.mode === 'shadow' && rule.rule_class === 'classifier';
   return <HeraldicCard><form className="moderator-rule" onSubmit={event => {
@@ -37,14 +38,17 @@ function CoreRule({ rule, busy, port }: { rule: Rule; busy: boolean; port: CoreG
     void port.upsertRule({ rule: { ...rule, name } });
   }}>
     <div className="moderator-rule-card"><div className="moderator-rule-text"><b>{rule.name}</b><span>{rule.rule_class} · {rule.action}</span></div>
-      <Stamp kind={rule.mode} word={rule.mode === 'armed' ? copy.armed : copy.watching} /></div>
+      <Stamp kind={rule.mode} word={rule.mode === 'armed' ? copy.armed : copy.watching} />
+      {rehearsal && <CoreRuleMode rule={rule} busy={busy} port={port} />}</div>
     {editable && <FieldGroup label={copy.rule_name} control_id={name_id}><input id={name_id} name="name" defaultValue={rule.name} disabled={busy} required /></FieldGroup>}
     {editable && <InkButton type="submit" size="room" disabled={busy}>{copy.save_watching}</InkButton>}
     {!editable && <p>{rule.rule_class === 'rail' ? copy.rail_fixed : rule.mode === 'shadow' ? copy.bench_edit_here : copy.edit_shadow}</p>}
   </form></HeraldicCard>;
 }
 
-export function ConnectedGatehouse({ port, replay, seal_slot }: { port: CoreGatehousePort; replay: boolean; seal_slot?: ReactNode }) {
+export function ConnectedGatehouse({ port, replay, seal_slot, rehearsal = false }: { port: CoreGatehousePort; replay: boolean; seal_slot?: ReactNode;
+  /** Dress rehearsal: arming and the ban review run on generated SIMULATED chat only. */
+  rehearsal?: boolean }) {
   const state = useSyncExternalStore(port.subscribe, port.getSnapshot, port.getSnapshot);
   const bench = coreRuleBench(port);
   const draft = useSyncExternalStore(bench.subscribe, bench.getSnapshot, bench.getSnapshot);
@@ -84,7 +88,8 @@ export function ConnectedGatehouse({ port, replay, seal_slot }: { port: CoreGate
             {!items.length && <button type="button" className="cc-btn cc-btn--quiet cc-btn--sm" onClick={() => stewardDock.open(coreDemoFlow)}>Play demo</button>}
           </div>
         </aside>
-        <p className="gh-sm">The held-message queue and pending ban queue are unavailable in this connection.</p>
+        {rehearsal ? <CoreBanReview state={state} port={port} />
+          : <p className="gh-sm">The held-message queue and pending ban queue are unavailable in this connection.</p>}
         <button type="button" className="cc-btn cc-btn--sm" onClick={open}>Live room · more of the Gatehouse</button>
         </ChamberSection>,
         <ChamberSection key="herald" title="The Herald’s chart" aside={<button type="button" className="cc-btn cc-btn--sm" onClick={open}>Full chart</button>}>
@@ -113,7 +118,7 @@ export function ConnectedGatehouse({ port, replay, seal_slot }: { port: CoreGate
             <summary><span className="gh-more__title">More of the Gatehouse</span><span className="gh-more__list">Rule bench · moat · garrison orders · drill · gate roll</span></summary>
             <div className="gh-more__body moderator-tools">
               <p className="gh-sm">{copy.core_queues_unavailable} {copy.core_review_notice}</p>
-              <div className="gh-bench"><RuleBench rules={state.rules} messages={messages} bench={bench} core={port} />
+              <div className="gh-bench"><RuleBench rules={state.rules} messages={messages} bench={bench} core={port} ban={rehearsal} />
                 <Plate ink="azure" offset="space-8" className="moderator-moat"
                   band={<PlateBand title={copy.moat_title} gloss={copy.moat_gloss} count={<CountLabel first={copy.unavailable} />} />}>
                   <PlateBody><p>{copy.core_moat_unavailable}</p></PlateBody>
@@ -124,7 +129,7 @@ export function ConnectedGatehouse({ port, replay, seal_slot }: { port: CoreGate
                 <p className="moderator-note">{copy.core_rules_notice}</p>
                 <WindowedRows rows={state.rules} label={copy.core_rules_label} row_height={rowHeight * 10}
                   row_key={rule => rule.rule_id} empty_state={copy.core_rules_empty}>
-                  {rule => <CoreRule rule={rule} busy={state.busy} port={port} />}
+                  {rule => <CoreRule rule={rule} busy={state.busy} port={port} rehearsal={rehearsal} />}
                 </WindowedRows>
               </section>
               <section className="moderator-block"><SectionHeading title={copy.replay} gloss={copy.replay_gloss} />
@@ -143,5 +148,5 @@ export default function CoreModeratorRoom({ snapshot, replay, seal_slot }: { sna
   try { port = gatehousePort(snapshot); }
   catch { port = undefined; }
   if (!port) return <section className="moderator-room"><p role="status">{copy.core_connection_invalid}</p>{seal_slot}</section>;
-  return <ConnectedGatehouse port={port} replay={replay} seal_slot={seal_slot} />;
+  return <ConnectedGatehouse port={port} replay={replay} seal_slot={seal_slot} rehearsal={snapshot.status?.simulated === true} />;
 }

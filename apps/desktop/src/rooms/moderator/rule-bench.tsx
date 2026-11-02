@@ -23,9 +23,11 @@ export function BenchFeedback({ result }: { result: BenchResult }) {
 }
 
 /** One editor and one draft; all numbers are pattern hits, never gate verdicts. */
-export function RuleBench({ rules, messages, bench, queue, core }: {
+export function RuleBench({ rules, messages, bench, queue, core, ban = false }: {
   rules: readonly Rule[]; messages: readonly BenchMessage[]; bench: RuleBenchPort;
   queue?: ProposalQueue; core?: CoreGatehousePort;
+  /** Dress rehearsal only: a ban rule, every ban confirmed by the streamer. */
+  ban?: boolean;
 }) {
   const state = useSyncExternalStore(bench.subscribe, bench.getSnapshot, bench.getSnapshot);
   const { input, original } = benchInput(state, rules);
@@ -33,7 +35,7 @@ export function RuleBench({ rules, messages, bench, queue, core }: {
   const live = core?.getSnapshot();
   const can_drill = !!live?.baseline && !!live.baseline_recording;
   return <section className="moderator-block moderator-rule-bench" aria-label={copy.rule_bench}>
-    <WatchingRuleEditor rules={rules} bench={bench} result={result} queue={queue} busy={live?.busy ?? false}
+    <WatchingRuleEditor rules={rules} bench={bench} result={result} queue={queue} busy={live?.busy ?? false} ban={ban}
       on_save={core ? async () => {
         const saved = await saveBenchRule(core, result);
         if (saved && result.ok && bench.getSnapshot() === state) bench.setDraft(input, result.rule.rule_id);

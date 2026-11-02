@@ -1,6 +1,6 @@
 import { invokeMethod, parseError, parseMethodParams, parseMethodResult } from '@castle-control/contract';
 import { parseJson } from '@castle-control/contract/door';
-import { gatehouseRulesList, gatehouseRulesUpsert, gatehouseBanConfirm, gatehouseBanDismiss,
+import { gatehouseRulesList, gatehouseRulesUpsert, gatehouseRulesSetMode, gatehouseBanConfirm, gatehouseBanDismiss,
   gatehouseDecisionUndo, gatehousePetitionResolve, gatehouseRecordingImport, gatehouseDrillRun,
   gatehouseDrillDiff, gatehouseConsensusGet, gatehouseChatList, gatehouseHistoryList, gatehouseLiveRunGet, gatehouseSourceUrl } from '@castle-control/contract/gatehouse';
 import type { ConsensusGetParams, ConsensusGetResult, Decision, DecisionParams, DrillDiffParams, DrillDiffResult,
@@ -10,8 +10,10 @@ import type { ConsensusGetParams, ConsensusGetResult, Decision, DecisionParams, 
 import { moderationCopy as copy } from './moderation-copy.js';
 import { validateCoreLaunch } from './core-source.js';
 import type { CoreLaunch } from './core-source.js';
+import { createBanTracker } from './gatehouse-core-bans.js';
+import type { BanReview } from './gatehouse-core-bans.js';
 
-type GatehouseMethod = 'gatehouse.rules.list' | 'gatehouse.rules.upsert' | 'gatehouse.ban.confirm'
+type GatehouseMethod = 'gatehouse.rules.list' | 'gatehouse.rules.upsert' | 'gatehouse.rules.setMode' | 'gatehouse.ban.confirm'
   | 'gatehouse.ban.dismiss' | 'gatehouse.decision.undo' | 'gatehouse.petition.resolve'
   | 'gatehouse.recording.import' | 'gatehouse.drill.run' | 'gatehouse.drill.diff' | 'gatehouse.consensus.get'
   | 'gatehouse.chat.list' | 'gatehouse.history.list' | 'gatehouse.liveRun.get' | 'gatehouse.source.url';
@@ -30,6 +32,8 @@ export type CoreGatehouseSnapshot = {
   live_runs?: GatehouseLiveRunResult;
   selected_capture?: Extract<GatehouseLiveRunItem, { coverage: 'retained' }>;
   replay_capture?: GatehouseLiveCapture;
+  /** Dress rehearsal's ban review, derived from the history and chat reads. */
+  bans?: BanReview;
   busy: boolean; phase: 'idle' | 'loading' | 'ready' | 'error'; notice: string;
 };
 
@@ -98,6 +102,18 @@ export function createCoreGatehousePort(launch: CoreLaunch, transport?: Gatehous
       const last_decision = await call(contract, params);
       publish({ last_decision, notice: 'Decision received from the core. No automatic retry was sent.' });
     });
+  }
+  const bans = createBanTracker({
+    history: cursor => call(gatehouseHistoryList, { limit: 100, ...(cursor === undefined ? {} : { cursor }) }),
+    chat: cursor => call(gatehouseChatList, { limit: 100, ...(cursor === undefined ? {} : { cursor }) }),
+  });
+  let polling: Promise<void> | undefined;
+  /** A quiet read: it never marks the room busy, so polling cannot block the streamer's buttons. */
+  function refreshBans() {
+    polling ??= bans.refresh().then(review => { publish({ bans: review }); })
+      .catch((error: unknown) => { publish({ notice: errorNotice(error, 'Ban review read failed') }); })
+      .finally(() => { polling = undefined; });
+    return polling;
   }
   async function importRecording(value: unknown) {
     publish({}, ['recording', 'drill', 'diff', 'selected_capture', 'replay_capture']);
@@ -201,6 +217,16 @@ export function createCoreGatehousePort(launch: CoreLaunch, transport?: Gatehous
         const rules = snapshot.rules.some(item => item.rule_id === rule.rule_id)
           ? snapshot.rules.map(item => item.rule_id === rule.rule_id ? rule : item) : [...snapshot.rules, rule];
         publish({ rules, notice: 'Rule saved by the core.' });
+      });
+    },
+    refreshBans,
+    /** Arming needs the streamer's acknowledgement; the core logs that consent before it changes mode. */
+    async setRuleMode(rule_id: string, mode: 'armed' | 'shadow', reason: string) {
+      await perform(async () => {
+        await call(gatehouseRulesSetMode, { rule_id, mode,
+          ...(mode === 'armed' ? { acknowledgement: { at: new Date().toISOString(), reason } } : {}) });
+        const { rules } = await call(gatehouseRulesList, {});
+        publish({ rules, notice: mode === 'armed' ? 'Rule armed by the core.' : 'Rule back to watching.' });
       });
     },
     confirmBan: (params: DecisionParams) => decide(gatehouseBanConfirm, params),

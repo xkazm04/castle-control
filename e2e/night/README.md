@@ -27,6 +27,7 @@ What it proves, through the UI in Chrome in CORE mode:
 | `lots.spec.ts` | create the no-prize question draw, 2 winners, rename, 6 SIMULATED `!join` viewers, entry lookup, guardrail check, hold to seal, cast once the drand round arrives | `/lots/questions` lists the same winners and carries the accepted cast |
 | `beacons.spec.ts` | create a visual, tune its curve, copy its browser-source URL, test-fire 10 bits | the already-open `/beacons/{id}` moves to intensity 0.5 through `/push/beacons`, with the SIMULATED badge |
 | `gatehouse.spec.ts` | 9 SIMULATED duel ballots, refresh the room, copy the vote-bar URL | the already-open `/gatehouse/current` gains its bar through `/push/gatehouse`; no chat text reaches it |
+| `gatehouse-ban.spec.ts` | Dress rehearsal core: write `No boss spoilers` on the rule bench (action Ban), arm it, set the SIMULATED crowd, confirm the proposed ban | the ban review lists the generated spoiler chatter, then records `SIMULATED ban recorded`; `status.get` still reports no Twitch session |
 | `tiltyard.spec.ts` | desktop starts the core Chat tournament, copies Duel on stream, receives two generated ballot bursts, calls the right card against a 6–3 tally | desktop and the already-open `/tiltyard/current` agree on live updates, pair, counts, call verdict and next match; a room revisit retains core history |
 | `stream.spec.ts` | `#/stream`: a missing scene is refused, then hold to add the vote bar and a visual | `obs.source.create` reaches the fake OBS peer; the CreateInput requests and results are checked, and both URLs load |
 

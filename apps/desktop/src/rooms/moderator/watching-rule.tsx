@@ -20,8 +20,8 @@ export function proposeWatchingRule(queue: ProposalQueue, original: Rule, name: 
   proposeCommand(queue, { kind: 'rule', rule }, `Edit watching rule: ${rule.name}`);
 }
 
-export function WatchingRuleEditor({ rules, queue, bench, result, busy = false, on_save, children }: {
-  rules: readonly Rule[]; queue?: ProposalQueue | undefined; bench: RuleBenchPort; result: BenchResult; busy?: boolean;
+export function WatchingRuleEditor({ rules, queue, bench, result, busy = false, ban = false, on_save, children }: {
+  rules: readonly Rule[]; queue?: ProposalQueue | undefined; bench: RuleBenchPort; result: BenchResult; busy?: boolean; ban?: boolean;
   on_save?: ((rule: Rule) => Promise<{ saved: boolean; notice: string }>) | undefined; children?: ReactNode;
 }) {
   const editable = rules.filter(rule => rule.rule_class === 'pattern' && rule.mode === 'shadow');
@@ -66,8 +66,8 @@ export function WatchingRuleEditor({ rules, queue, bench, result, busy = false, 
       {!original && <FieldGroup label={copy.draft_action} control_id="watching-action" variant="select">
         <select id="watching-action" value={input.action} disabled={busy} onChange={event => {
           const action = event.currentTarget.value;
-          if (action === 'warn' || action === 'delete' || action === 'timeout' || action === 'hold') change({ action });
-        }}>{(['warn', 'delete', 'timeout', 'hold'] as const).map(action => <option key={action} value={action}>{copy.draft_actions[action]}</option>)}</select>
+          if (action === 'warn' || action === 'delete' || action === 'timeout' || action === 'hold' || (ban && action === 'ban')) change({ action });
+        }}>{(ban ? ['warn', 'delete', 'timeout', 'hold', 'ban'] as const : ['warn', 'delete', 'timeout', 'hold'] as const).map(action => <option key={action} value={action}>{copy.draft_actions[action]}</option>)}</select>
       </FieldGroup>}
       <p className="moderator-small">{copy.bench_shadow}{original && ` · ${copy.rule_action(original.action, original.timeout_s)}`}</p>
       <InkButton type="submit" size="room" disabled={busy || !result.ok}>{queue ? copy.propose_rule : original ? copy.save_watching : copy.save_as_watching}</InkButton>

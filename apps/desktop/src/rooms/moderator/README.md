@@ -420,6 +420,18 @@ therefore explain their unavailability instead of inventing review records. The
 typed ban/dismiss/undo/petition port methods are tested, but the UI does not act
 on an unseen original message. No live tests or owner steps are claimed.
 
+Dress rehearsal is the one core connection with a ban review (`core-bans.tsx`,
+shown when `status.get` reports `simulated`). Its core gate screens only
+generated SIMULATED chat, so the rule bench may save a `ban` rule and each rule
+card offers "Arm in rehearsal" (`gatehouse.rules.setMode` with an
+acknowledgement). The review is derived from the existing history and chat
+reads (`gatehouse-core-bans.ts`): a `ban_pending` decision stays open until a
+human review of the same message follows, and only for the core's 120 s review
+window. "Confirm SIMULATED ban" calls `gatehouse.ban.confirm`; the result is a
+SIMULATED ledger record in the rehearsal store. There is no Twitch session and
+no executor, so nothing is sent. Matching is the rules engine (regex patterns);
+no model classifier runs in rehearsal, and classifier rules fail to a hold.
+
 The room panel offers retained capture evidence and manual imports. All replay
 output remains simulated, including replay of a capture whose provenance is live.
 No live hash is calculated from current rules or fabricated evidence.
