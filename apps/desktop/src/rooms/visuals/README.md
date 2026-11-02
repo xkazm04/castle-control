@@ -1,5 +1,24 @@
 # Beacons · C Plates (WP 3.3 polish, 2026-10-30)
 
+## Illuminated picture and Steward flows (night UX, 2026-11-02)
+
+The fixture room is one picture (`stage.tsx`): the selected beacon on a stream
+screen at its blaze, a sample-night sparkline and four actions. `stage-view.ts`
+maps the Steward draft (`useStewardDraft('visuals')`) onto the picture, so every
+flow step previews live; `stage-state.ts` holds the one shared fixture port and
+the night cursor the picture plays (about 24 s per 48-minute night; reduced
+motion rests at the peak). `steward-flows.ts` defines Tune a beacon, Test fire,
+Replay a night and the SIMULATED Play demo; their choices and consequence lines
+come from `flow-model.ts`, which only composes the existing preview rules
+(`curveIntensity`, `weightedAmount`, `decayedTotal`, `replayTrace`,
+`fitSuggestion`). Seals call the fixture port and record a sealed curve proposal
+in the shared queue; in core mode Tune and Replay call `beacons.visual.upsert`,
+Test fire calls `beacons.simulate`, and the demo sends one routed simulated burst.
+Picker cards (`plates.tsx`) draw the same screen look. The previous plates,
+bench, replay workbench, timeline, feeds and seal slot live behind **More**
+(it opens itself when a visuals proposal awaits a seal). The core room keeps its
+existing layout.
+
 
 ## Night replay (hackathon B10, 2026-10-31)
 

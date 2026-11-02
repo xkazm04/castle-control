@@ -3,7 +3,7 @@ export const beaconsCopy = {
   work: 'Beacons work', visuals: 'Beacon visuals', blaze: 'blaze',
   beacon: 'Beacon', numerals: ['I', 'II', 'III'],
   object: 'On-screen object', camera: 'Camera frame', border: 'Screen border',
-  tuning: 'Tuning ·', selected: 'Tuning below', select: 'Select to tune',
+  tuning: 'Tuning ·', selected: 'In the picture', select: 'Show in the picture',
   simulated_meta: 'weighted subs · gifts + subs · simulated',
   no_decay: 'No decay', half_life: (minutes: number) => `Halves every ${minutes} min`,
   ranges: (name: string) => `${name} intensity ranges · weighted subs to blaze`,

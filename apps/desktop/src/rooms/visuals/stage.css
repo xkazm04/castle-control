@@ -1,5 +1,5 @@
 /* The chamber picture: a stream monitor with the beacon drawn live, and its reading beside it. */
-.visuals-stage { display: grid; grid-template-columns: auto minmax(300px, 1fr); gap: 28px; align-items: start; }
+.visuals-stage { display: grid; grid-template-columns: auto minmax(300px, 600px); gap: 32px; align-items: start; justify-content: start; }
 .visuals-monitor { margin: 0; min-width: 0; padding: 10px; background: var(--surface); border: 1px solid var(--hair);
   box-shadow: inset 0 0 0 3px var(--gilt-mid), inset 0 0 0 4px var(--lead), var(--shadow); }
 .visuals-monitor__screen { position: relative; aspect-ratio: 16 / 9; height: clamp(200px, calc(100vh - var(--top-h) - var(--dock-h) - 300px), 560px);
@@ -11,7 +11,9 @@
   filter: brightness(calc(.45 + var(--blaze) * .7)) saturate(calc(.5 + var(--blaze) * .7)) drop-shadow(0 0 calc(var(--blaze) * 26px) var(--or-glow)); }
 .visuals-monitor__halo { position: absolute; inset: -30% -55% 0; border-radius: 50%; opacity: calc(var(--blaze) * 1.1);
   background: radial-gradient(closest-side, var(--art-flame), transparent); mix-blend-mode: screen; }
-.visuals-monitor__cam { position: absolute; right: 3%; bottom: 5%; width: 42%; aspect-ratio: 640 / 357; }
+.visuals-monitor__cam { position: absolute; right: 3%; bottom: 5%; width: 46%; aspect-ratio: 640 / 357; }
+.visuals-monitor__cam::before { content: ""; position: absolute; inset: -6%; border-radius: 8%; opacity: var(--blaze);
+  box-shadow: 0 0 calc(8px + var(--blaze) * 40px) calc(var(--blaze) * 10px) var(--or-glow); }
 .visuals-monitor__face { position: absolute; inset: 13% 9%; width: 82%; height: 74%; object-fit: cover; }
 .visuals-monitor__frame { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain;
   filter: brightness(calc(.5 + var(--blaze) * .65)) drop-shadow(0 0 calc(var(--blaze) * 22px) var(--or-glow)); }
