@@ -7,7 +7,16 @@ fn native_permissions_and_network_policy_are_minimal() {
         serde_json::from_str(include_str!("../capabilities/main-window.json")).unwrap();
     assert_eq!(
         capability["permissions"],
-        json!(["allow-enter-rehearsal", "allow-leave-rehearsal"])
+        json!([
+            "allow-enter-rehearsal",
+            "allow-leave-rehearsal",
+            "core:window:allow-title",
+            "core:window:allow-minimize",
+            "core:window:allow-toggle-maximize",
+            "core:window:allow-is-maximized",
+            "core:window:allow-close",
+            "core:window:allow-start-dragging"
+        ])
     );
     assert_eq!(capability["windows"], json!(["main"]));
     let csp = &config["app"]["security"]["csp"];

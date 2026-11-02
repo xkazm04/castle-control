@@ -6,6 +6,7 @@ import type { Ref } from 'react';
 import { lazy, Suspense, useRef } from 'react';
 import type { Snapshot } from './model.js';
 import type { Navigation, ShellSurface } from './navigation.js';
+import { TitleBarHost } from './titlebar/host.jsx';
 import { DesktopRampart } from './rampart.jsx';
 import { coreRehearsalConnection, coreStewardConnection, coreStreamConnection } from './client.js';
 import type { StewardConnection } from './client.js';
@@ -51,6 +52,7 @@ export function DesktopView(props: ViewProps) {
   const stream_connection = coreStreamConnection(props.snapshot);
   const rehearsal_connection = props.snapshot.phase === 'ready' ? coreRehearsalConnection(props.snapshot) : undefined;
   return <ThemeFrame theme={props.theme} {...(current === 'keep' || current === 'overview' || current === 'demo' || current === 'stream' || current === 'rehearsal' ? {} : { module: current })}>
+    <TitleBarHost />
     <div className={`desktop-shell${cutaway ? ' desktop-cutaway' : ''}`}
       data-chamber={current === 'lottery' || current === 'moderator' || current === 'visuals' || current === 'studio' ? current : 'keep'}>
       <DesktopRampart snapshot={props.snapshot} theme={props.theme} on_theme_change={props.on_theme_change} steward={current !== 'keep'}
