@@ -1,3 +1,4 @@
+import { keyFor } from '../../shell/steward-keys.jsx';
 import { Children, isValidElement, useState } from 'react';
 import type { ButtonHTMLAttributes, ReactNode } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
@@ -21,7 +22,7 @@ function trigger(tree: ReactNode): TreeProps | undefined {
   let found: TreeProps | undefined;
   Children.forEach(tree, child => {
     if (!isValidElement<TreeProps>(child)) return;
-    if (child.type === 'button' && child.props.children === 'The writ and draw tools') found = child.props;
+    if (child.type === 'button' && Children.toArray(child.props.children).includes('The writ and draw tools')) found = child.props;
     else found ??= trigger(child.props.children) ?? trigger(child.props.columns);
   });
   return found;
@@ -89,4 +90,11 @@ test('the proof card follows hand reveals and rejects a cursor from an older sea
   expect(html()).toContain(fixtureWrit.winners[0]);
   for (const winner of fixtureWrit.winners.slice(1)) expect(html()).not.toContain(winner);
   expect(html('different-seal')).toContain(`0 of ${fixtureWrit.winners.length} revealed`);
+});
+
+test('Lot setup, value and ceremony controls show the keys declared by the room table', () => {
+  const html = renderToStaticMarkup(<LotteryRoom snapshot={{ mode: 'fixture', phase: 'ready' }} replay={false} queue={new ProposalQueue()} />);
+  for (const action of ['setup', 'cast', 'tools', 'winners', 'held_out', 'cap', 'ceremony', 'by_hand', 'sound', 'info']) {
+    expect(html).toContain(`cc-key-badge">${keyFor('lottery', action)}</kbd>`);
+  }
 });

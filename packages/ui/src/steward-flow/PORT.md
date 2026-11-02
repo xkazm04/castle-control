@@ -1,6 +1,7 @@
 # WP2: The Deck Steward
 
-The action row is declared in `apps/desktop/src/shell/steward-flows.ts`.
+The action table is declared in `apps/desktop/src/shell/steward-keys.tsx`;
+`steward-flows.ts` resolves it into guarded room operations.
 Its resolved `ActionKey` entries feed both `ActionRow` and the mounted
 `createKeymap` / `dispatchShortcut` scope. Overflow uses measured chip widths,
 the available row width, gaps and reserved space for `more`; hidden keys remain
@@ -45,8 +46,9 @@ stage operations and refuse those operations while a duel draft is showing.
 Prototype-only operations without a corresponding product handler or flow
 were not invented.
 
-Director review 1 assigns Map Room R (full bracket) to the Map Room package.
-It stays unbound in WP2; the existing room control is retained.
+Map Room R opens the mounted full-bracket drawer through `bracketDrawer`.
+The stage registers and releases its opener on mount/unmount; no duel event
+is sent. Enter and undo reach the same shell table as the action row.
 
 ## Verification
 
@@ -90,3 +92,55 @@ Escape on the talk input peels the store's top layer without refocusing the
 input or clearing its value. With no remaining layer it falls through to the
 existing editable-field shortcut rule. Unit and e2e regressions cover this;
 e2e also checks the seal's bounds within the 48 px row and successful wax.
+
+## WP6 polish
+
+`steward-keys.tsx` owns the room action table and `keyFor(room, action)`.
+`RoomKeyBadge` uses that lookup and the chamber `KeyBadge`; rooms name actions,
+never letters. Gatehouse's unchanged entries also have action names for its
+owner to consume. `steward-flows.ts` resolves the same table for the action row
+and shortcut scope. A test changes cast from W to Z in the source table and
+checks the row, control badge, old-key refusal and new-key flow dispatch.
+
+Map Room R opens the existing bracket drawer through the stage's registered
+opener. Unmount releases it. Enter and Backspace now fall through the stage's
+local arrow/cancel handler to the shell table, avoiding a second binding.
+The bracket trigger, More and the existing duel operations carry badges.
+
+Lot section padding, roll figures and cast-button spacing are tighter. Type
+remains at least 13 px in the shell and 15 px on the ceremony stage. The Lot
+journey opens cast/proof content through the actual drawer trigger; the shared
+cast helper locates the Cast section, and Steward chips fall back to More flows.
+Coverage for setup compliance, seal, cast, demo, winners and writ is retained.
+Four viewport tests check fit and clearance below the tools trigger at 1280x720,
+1366x768, 1600x900 and 1920x1080.
+
+WP6 verification (installed dependencies only; no git writes, installs or live actions):
+
+- `pnpm --config.verify-deps-before-run=false --filter @castle-control/ui typecheck`,
+  `lint`, `test`: typecheck and lint exit 0; 51 files / 561 tests pass.
+- The matching desktop typecheck and lint commands exit 0. The full test command
+  reports 130 files passed, 1 failed; 1179 tests passed, 1 failed. The failure is the untouched `navigation.test.tsx` Gatehouse
+  case, `Missing rendered control` in `moderator/component-probe.tsx:56`.
+  Repeating that navigation suite with all WP6 tracked files temporarily replaced
+  by their HEAD bytes reproduces the same failure (15 pass / 1 fail); all WP6
+  file bytes were restored afterward. No excluded file was edited.
+- Focused desktop command `pnpm --config.verify-deps-before-run=false --filter
+  @castle-control/desktop exec vitest run src/shell/steward-keys.test.tsx
+  src/rooms/studio/duel-chamber.test.tsx src/rooms/lottery/chamber.test.tsx
+  src/rooms/lottery/stage.test.tsx src/rooms/lottery/sound.test.ts
+  src/rooms/visuals/deck.test.tsx --pool=threads`: 6 files / 43 tests passed.
+- `node scripts/check.mjs`: boundaries, hygiene, type floor and secrets pass;
+  only the known `shell/room.test.tsx: 410 lines exceeds 400` fails.
+- `pnpm --config.verify-deps-before-run=false exec tsc -p e2e/tsconfig.json --noEmit`:
+  exit 0. `git diff --check`: exit 0.
+- `pnpm --config.verify-deps-before-run=false --filter @castle-control/desktop dev`:
+  Vite ready at `http://127.0.0.1:5174/` (5173 already occupied).
+- With `CC_E2E_PORT=5177`, `pnpm --config.verify-deps-before-run=false exec playwright
+  test -c e2e/playwright.config.ts e2e/journey-lots.spec.ts --project=chrome-1280x800
+  --grep-invert CORE` stops with `Error: spawn EPERM`. No e2e assertions ran.
+  Computer use also reports native pipe and browser host unavailable. Opening the
+  winner from disk, visual comparison, fit measurements and the migrated browser
+  journeys remain unverified. The winner was reviewed as source.
+
+The brief provides no external result.json destination.

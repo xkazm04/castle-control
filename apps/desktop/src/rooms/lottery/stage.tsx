@@ -1,3 +1,4 @@
+import { RoomKeyBadge } from '../../shell/steward-keys.jsx';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties } from 'react';
 import { InkButton, Stamp, StatusChip } from '@castle-control/ui';
@@ -27,6 +28,7 @@ function Artwork({ layer }: { layer: DrawArtworkLayer | undefined }) {
 export function ShapePicker({ shape, on_shape, disabled = false }: { shape: DrawShape; on_shape: (shape: DrawShape) => void; disabled?: boolean }) {
   const thumbs = useMemo(() => draw_shapes.map(item => ({ item, art: artworkOf(stageScene(item, undefined, 'question', true)) })), []);
   return <div className="lottery-shape-picker" role="group" aria-label={copy.stage.shape}>
+    <RoomKeyBadge room="lottery" action="ceremony" />
     {thumbs.map(({ item, art }) => <button key={item} type="button" aria-pressed={item === shape} disabled={disabled}
       data-shape-option={item} onClick={() => on_shape(item)}>
       <svg viewBox={stage_view_box} aria-hidden="true"><Artwork layer={art} /></svg>
@@ -121,7 +123,7 @@ function Verdict({ total, proof, on_prove, line }: { total: number; proof: 'loca
       <path d="M6.5 12.5l3.6 3.6L17.5 8.2" /></svg>
     <div><small>{copy.stage.complete(total)}</small><b>{title}</b><p>{detail}</p>
       <span className="lottery-stage-verdict-actions">
-        {on_prove && <InkButton size="room" onClick={on_prove}>{copy.stage.prove}</InkButton>}
+        {on_prove && <InkButton size="room" onClick={on_prove}><RoomKeyBadge room="lottery" action="prove" />{copy.stage.prove}</InkButton>}
         <InkButton size="room" title={line} onClick={copyLine}>{copy.stage.chat}</InkButton>
       </span>
       <small className="lottery-stage-copied" role="status">{copied ? copy.stage.chat_done[copied] : ''}</small></div>
@@ -142,12 +144,12 @@ export function CeremonyControls({ shape, on_shape, theatre = false, on_theatre,
       <ShapePicker shape={shape} on_shape={on_shape} />
       {(on_by_hand || on_sound) && <div className="lottery-stage-options" role="group" aria-label={copy.stage.options}>
         {on_by_hand && <InkButton size="room" className="lottery-stage-toggle" aria-pressed={by_hand} title={copy.stage.by_hand_hint}
-          onClick={() => on_by_hand(!by_hand)}>{copy.stage.by_hand}</InkButton>}
+          onClick={() => on_by_hand(!by_hand)}><RoomKeyBadge room="lottery" action="by_hand" />{copy.stage.by_hand}</InkButton>}
         {on_sound && <InkButton size="room" className="lottery-stage-toggle" aria-pressed={sound} title={copy.stage.sound_hint}
-          onClick={() => { if (!sound) ceremonySound(); on_sound(!sound); }}>{copy.stage.sound}</InkButton>}
+          onClick={() => { if (!sound) ceremonySound(); on_sound(!sound); }}><RoomKeyBadge room="lottery" action="sound" />{copy.stage.sound}</InkButton>}
       </div>}
       <details className="lottery-stage-notes">
-        <summary aria-label={copy.stage.title} title={copy.stage.title}><span aria-hidden="true">i</span></summary>
+        <summary aria-label={copy.stage.title} title={copy.stage.title}><span aria-hidden="true">i</span><RoomKeyBadge room="lottery" action="info" /></summary>
         <p className="cc-aside">{unverified ? copy.stage.unverified : copy.stage.note}
           {sampled !== undefined && sampled < total ? ` ${copy.stage.sampled(sampled, total)}` : ''}</p>
       </details>
@@ -273,7 +275,7 @@ export function DrawStage({ shape, on_shape, entries, cast, content, sealed, sea
         {phase === 'revealed' && theatre && <Verdict total={winners.length} proof={proof} on_prove={on_prove}
           line={chatLine(winners, seal, live)} />}
         {state.waiting && <span ref={call} className="lottery-stage-call"><InkButton size="room" variant="primary" aria-keyshortcuts="Space"
-          onClick={() => clock.callNext(performance.now())}>
+          onClick={() => clock.callNext(performance.now())}><RoomKeyBadge room="lottery" action="reveal" />
           {revealed.length ? copy.stage.call_next(revealed.length + 1, winners.length) : copy.stage.call_first}</InkButton>
           <small aria-hidden="true">{copy.stage.call_key}</small></span>}
         {revealed.length > 0 && <ol aria-label={copy.stage.rail}>

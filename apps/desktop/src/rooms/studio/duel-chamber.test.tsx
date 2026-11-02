@@ -1,3 +1,5 @@
+import { bracketDrawer } from './bracket-drawer.js';
+import { keyFor } from '../../shell/steward-keys.jsx';
 import * as React from 'react';
 import type { ReactElement, ReactNode } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
@@ -100,6 +102,41 @@ test('Escape closes the drawer before the duel keymap; frozen and drafted contro
     if (!React.isValidElement<ChamberLayoutProps>(layout)) throw new Error('Missing ChamberLayout');
     const actions = elements(layout.props.columns[0]).filter(child => child.type === 'button');
     for (const action of actions) action.props.onClick?.();
+  }
+  expect(send).not.toHaveBeenCalled();
+});
+
+test('the mounted duel exposes the same full bracket opener as its button and releases it on unmount', () => {
+  const effects: Array<React.EffectCallback> = [];
+  const setOpen = vi.fn();
+  vi.spyOn(React, 'useState').mockReturnValue([false, setOpen]);
+  vi.spyOn(React, 'useRef').mockReturnValue({ current: null });
+  vi.spyOn(React, 'useEffect').mockImplementation(effect => { effects.push(effect); });
+  DuelStage({ picture });
+  const unmount = effects[0]?.();
+  try {
+    bracketDrawer.open();
+    expect(setOpen).toHaveBeenCalledExactlyOnceWith(true);
+  } finally { if (typeof unmount === 'function') unmount(); }
+  bracketDrawer.open();
+  expect(setOpen).toHaveBeenCalledOnce();
+});
+
+test('Map Room controls display letters from the room table and leave table actions to the shell dispatcher', () => {
+  const live = { ...picture, source: 'fixture' as const, phase: 'live' as const };
+  const html = renderToStaticMarkup(<DuelStage picture={live} />);
+  for (const action of ['enter', 'bracket', 'undo', 'speed', 'reset', 'stream']) {
+    expect(html).toContain(`cc-key-badge">${keyFor('studio', action)}</kbd>`);
+  }
+  vi.spyOn(React, 'useState').mockReturnValue([false, vi.fn()]);
+  vi.spyOn(React, 'useRef').mockReturnValue({ current: null });
+  vi.spyOn(React, 'useEffect').mockImplementation(() => undefined);
+  const send = vi.fn();
+  const tree = DuelStage({ picture: live, on_event: send });
+  for (const action of ['enter', 'undo']) {
+    const preventDefault = vi.fn();
+    tree.props.onKeyDown({ key: keyFor('studio', action), preventDefault });
+    expect(preventDefault).not.toHaveBeenCalled();
   }
   expect(send).not.toHaveBeenCalled();
 });

@@ -1,4 +1,5 @@
-﻿import { lazy, Suspense, useEffect, useId, useMemo, useState, useSyncExternalStore } from 'react';
+import { RoomKeyBadge } from '../../shell/steward-keys.jsx';
+import { lazy, Suspense, useEffect, useId, useMemo, useState, useSyncExternalStore } from 'react';
 import type { ReactNode } from 'react';
 import { SealButton, Stamp, WindowedRows } from '@castle-control/ui';
 import { stewardDock, useStewardDraft } from '@castle-control/ui/steward-flow';
@@ -129,11 +130,11 @@ export function ConnectedLotsRoom({ port, simulated, seal_slot, flows }: { port:
       draft={Boolean(draft)} simulated={simulated === true} count={state.sealed ? state.entries.length : undefined} />}
     cast={<>
       <div className="lottery-draw-actions">
-        {setup_open && !draft && !state.locked && <button type="button" className="cc-btn cc-btn--primary" onClick={setup_open}>Set up a draw</button>}
+        {setup_open && !draft && !state.locked && <button type="button" className="cc-btn cc-btn--primary" onClick={setup_open}><RoomKeyBadge room="lottery" action="setup" />Set up a draw</button>}
         {!draw && !draft && <button type="button" className="cc-btn" onClick={() => stewardDock.open(coreDemoFlow)}>Play demo</button>}
-        {cast_open && !draft && <button type="button" className="cc-btn" onClick={cast_open}>Cast with the Steward</button>}
+        {cast_open && !draft && <button type="button" className="cc-btn" onClick={cast_open}><RoomKeyBadge room="lottery" action="cast" />Cast with the Steward</button>}
         {state.sealed && !state.started && <button type="button" className="cc-btn cc-btn--primary" disabled={state.busy}
-          onClick={() => { void port.start(); }}>{copy.core.cast}</button>}
+          onClick={() => { void port.start(); }}><RoomKeyBadge room="lottery" action="cast" />{copy.core.cast}</button>}
         <button type="button" className="cc-btn cc-btn--quiet" onClick={() => setTools(true)}>Review draw and seal</button>
       </div>
       {state.locked && !state.sealed && <p className="lottery-note" role="alert">{copy.core.locked}</p>}
@@ -142,7 +143,7 @@ export function ConnectedLotsRoom({ port, simulated, seal_slot, flows }: { port:
     proof={<>
       {state.cast_result ? <>
         <RevealedWinners clock={reveal} seal={state.seal_result?.sealed.seal} total={state.cast_result.cast.winners.length} />
-        <button type="button" className="cc-btn" disabled={!state.writ} onClick={() => { setTools(true); setLab(true); setProve(count => count + 1); }}>Prove it</button>
+        <button type="button" className="cc-btn" disabled={!state.writ} onClick={() => { setTools(true); setLab(true); setProve(count => count + 1); }}><RoomKeyBadge room="lottery" action="prove" />Prove it</button>
       </> : <p className="lottery-note">The core writ appears after the cast. No winners are invented in this room.</p>}
       <p className="lottery-note">Stylised ceremony · {round_label}</p>
     </>}
@@ -152,7 +153,7 @@ export function ConnectedLotsRoom({ port, simulated, seal_slot, flows }: { port:
             guard={state.check?.result} guard_line={state.check?.reasons[0] ? policyReason(state.check.reasons[0]) : undefined}>
             {!draft && <>
               {phase === 'open' && <span className="lottery-draw-actions">
-                {setup_open && <button type="button" className="cc-btn cc-btn--primary" onClick={setup_open}>Set up a draw</button>}
+                {setup_open && <button type="button" className="cc-btn cc-btn--primary" onClick={setup_open}><RoomKeyBadge room="lottery" action="setup" />Set up a draw</button>}
                 {!draw && <button type="button" className="cc-btn cc-btn--quiet" onClick={() => stewardDock.open(coreDemoFlow)}>Play demo</button>}
               </span>}
               <div className="lottery-core-fields">
@@ -184,8 +185,8 @@ export function ConnectedLotsRoom({ port, simulated, seal_slot, flows }: { port:
             {state.seal_result.sealed.roll.randomness.source === 'drand_quicknet' && <p className="lottery-cast-note">
               {copy.core.target_round(state.seal_result.sealed.roll.randomness.round)}</p>}
             {!state.started && <span className="lottery-draw-actions">
-              <button type="button" className="cc-btn cc-btn--primary" disabled={state.busy} onClick={() => { void port.start(); }}>{copy.core.cast}</button>
-              {cast_open && <button type="button" className="cc-btn cc-btn--quiet" onClick={cast_open}>Cast with the Steward</button>}
+              <button type="button" className="cc-btn cc-btn--primary" disabled={state.busy} onClick={() => { void port.start(); }}><RoomKeyBadge room="lottery" action="cast" />{copy.core.cast}</button>
+              {cast_open && <button type="button" className="cc-btn cc-btn--quiet" onClick={cast_open}><RoomKeyBadge room="lottery" action="cast" />Cast with the Steward</button>}
             </span>}
           </section>}
           {state.cast_result && <section className="lottery-cast" aria-label={copy.core.result}>
@@ -194,7 +195,7 @@ export function ConnectedLotsRoom({ port, simulated, seal_slot, flows }: { port:
               {winner => <p>{winner}</p>}
             </WindowedRows>
             <span className="lottery-draw-actions">
-              {state.writ && <button type="button" className="cc-btn cc-btn--primary" onClick={() => { setTools(true); setLab(true); setProve(count => count + 1); }}>Prove it</button>}
+              {state.writ && <button type="button" className="cc-btn cc-btn--primary" onClick={() => { setTools(true); setLab(true); setProve(count => count + 1); }}><RoomKeyBadge room="lottery" action="prove" />Prove it</button>}
               <button type="button" className="cc-btn" disabled={state.busy || !state.writ} aria-expanded={state.nested && Boolean(state.writ)}
                 aria-controls={`${field_id}-proof`} onClick={() => { port.nested(!state.nested); }}>{copy.core.proof}</button>
               <button type="button" className="cc-btn cc-btn--quiet" disabled={state.busy} onClick={() => { void port.recompute(); }}>{copy.core.reload}</button>

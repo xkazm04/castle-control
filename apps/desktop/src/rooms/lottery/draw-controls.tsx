@@ -1,3 +1,4 @@
+import { RoomKeyBadge } from '../../shell/steward-keys.jsx';
 import { useId } from 'react';
 import type { LotsDraw } from '@castle-control/contract';
 import type { ReactNode } from 'react';
@@ -12,7 +13,7 @@ export function DrawControls({ draw, held_out, disabled, on_edit, on_tools, chil
   const cap = draw?.rules.cohort_caps.find(item => item.cohort === 'raider');
   return <>
     <div className="lottery-rule-chips">
-      <div className="lottery-rule-chip" data-role="lot-stat">{winner_control ?? <>
+      <div className="lottery-rule-chip" data-role="lot-stat"><RoomKeyBadge room="lottery" action="winners" />{winner_control ?? <>
         <span id={`${id}-winners`}>Winners</span>
         <div className="lottery-stepper" role="group" aria-labelledby={`${id}-winners`}>
           <button type="button" aria-label="Fewer winners" disabled={disabled || !draw || draw.rules.winner_count <= 1}
@@ -23,8 +24,8 @@ export function DrawControls({ draw, held_out, disabled, on_edit, on_tools, chil
         </div>
       </>}</div>
       <button type="button" className="lottery-rule-chip" data-role="lot-stat" onClick={on_tools}
-        title="Held out by cooldown · edit the cooldown in draw tools">Held out<b>{held_out}</b><small>cooldown</small></button>
-      <div className="lottery-rule-chip" data-role="lot-stat"><label htmlFor={`${id}-cap`}>Raider cap</label>
+        title="Held out by cooldown · edit the cooldown in draw tools"><RoomKeyBadge room="lottery" action="held_out" />Held out<b>{held_out}</b><small>cooldown</small></button>
+      <div className="lottery-rule-chip" data-role="lot-stat"><RoomKeyBadge room="lottery" action="cap" /><label htmlFor={`${id}-cap`}>Raider cap</label>
         <select id={`${id}-cap`} value={cap ? `${cap.numerator}/${cap.denominator}` : 'none'} disabled={disabled || !draw}
           onChange={event => {
             const index = ['0/3', '1/3', '2/3', '3/3', 'none'].indexOf(event.currentTarget.value);

@@ -1,3 +1,4 @@
+import { RoomKeyBadge } from '../../shell/steward-keys.jsx';
 import type { LotsPort } from '../../lots-model.js';
 import { lotsCopy as copy } from '../../lots-copy.js';
 import type { DrawDisplay } from './display.js';
@@ -20,9 +21,9 @@ export function FixtureCast({ port, display, hash, on_prove, on_new }: {
     </ol>
     <p className="lottery-cast-note">{copy.cast_notice}</p>
     <div className="lottery-draw-actions">
-      {on_prove && <button type="button" className="cc-btn cc-btn--primary" onClick={on_prove}>Prove it</button>}
+      {on_prove && <button type="button" className="cc-btn cc-btn--primary" onClick={on_prove}><RoomKeyBadge room="lottery" action="prove" />Prove it</button>}
       <button type="button" className="cc-btn" disabled={state.recomputing} onClick={() => { void port.recompute(); }}>{copy.cast_recompute}</button>
-      {on_new && <button type="button" className="cc-btn cc-btn--quiet" onClick={on_new}>{copy.draft_new}</button>}
+      {on_new && <button type="button" className="cc-btn cc-btn--quiet" onClick={on_new}><RoomKeyBadge room="lottery" action="setup" />{copy.draft_new}</button>}
     </div>
     <p className="cc-status lottery-cast-status" role="status">{state.notice}</p>
     <button type="button" className="cc-link lottery-cast-toggle" aria-expanded={state.nested} aria-controls={proof_id}

@@ -1,4 +1,5 @@
-﻿import { useEffect, useMemo, useState, useSyncExternalStore } from 'react';
+import { RoomKeyBadge } from '../../shell/steward-keys.jsx';
+import { useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import { EmptyState } from '@castle-control/ui';
 import type { ReactNode } from 'react';
 import { isPending, proposalQueue } from '@castle-control/ui/steward';
@@ -147,13 +148,13 @@ export default function LotteryRoom({ snapshot, replay, queue = proposalQueue, s
     cast={<>
       <div className="lottery-draw-actions">
         {!drafting && phase === 'open' && <>
-          <button type="button" className="cc-btn cc-btn--primary" onClick={open(setupFlow)}>Set up a draw</button>
-          <button type="button" className="cc-btn" onClick={open(castFlow)}>Cast the lots</button>
+          <button type="button" className="cc-btn cc-btn--primary" onClick={open(setupFlow)}><RoomKeyBadge room="lottery" action="setup" />Set up a draw</button>
+          <button type="button" className="cc-btn" onClick={open(castFlow)}><RoomKeyBadge room="lottery" action="cast" />Cast the lots</button>
           <button type="button" className="cc-btn cc-btn--quiet" onClick={open(demoFlow)}>Play demo</button>
         </>}
         {!drafting && phase === 'sealed' && <>
-          <button type="button" className="cc-btn cc-btn--primary" onClick={open(castFlow)}>Cast the lots</button>
-          <button type="button" className="cc-btn cc-btn--quiet" onClick={open(setupFlow)}>Set up another draw</button>
+          <button type="button" className="cc-btn cc-btn--primary" onClick={open(castFlow)}><RoomKeyBadge room="lottery" action="cast" />Cast the lots</button>
+          <button type="button" className="cc-btn cc-btn--quiet" onClick={open(setupFlow)}><RoomKeyBadge room="lottery" action="setup" />Set up another draw</button>
         </>}
         {proposal && <button type="button" className="cc-btn" onClick={() => setTools(true)}>Review and seal the writ</button>}
       </div>
@@ -163,7 +164,7 @@ export default function LotteryRoom({ snapshot, replay, queue = proposalQueue, s
     proof={<>
       {phase === 'cast' ? <>
         <RevealedWinners clock={reveal} seal={state.sealed_roll?.seal} total={state.simulated_winners?.length ?? 0} />
-        <button type="button" className="cc-btn" onClick={() => { openLab(); stewardDock.open(proveFlow); }}>Prove it</button>
+        <button type="button" className="cc-btn" onClick={() => { openLab(); stewardDock.open(proveFlow); }}><RoomKeyBadge room="lottery" action="prove" />Prove it</button>
       </> : <p className="lottery-note">The writ appears after a draw is sealed. Replay the draw from its seed to check the winners.</p>}
       <p className="lottery-note">Stylised illustration · generated sample lots · SIMULATED.</p>
     </>}

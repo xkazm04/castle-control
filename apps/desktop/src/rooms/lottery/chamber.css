@@ -98,3 +98,14 @@
 .lottery-room[data-theatre="true"] .lottery-stage-top { flex-wrap: nowrap; }
 .lottery-room[data-theatre="true"] .lottery-stage-top .lottery-shape-picker { flex: 1; }
 .lottery-room[data-theatre="true"] .lottery-stage-options { flex: none; }
+
+/* Compact figures and cast controls leave room below the proof trigger on laptops. */
+.lottery-room .cc-chamber-section { padding: var(--space-8) var(--space-12); }
+.lottery-room .lottery-roll-legend b { display: inline; margin-inline-start: var(--space-3); }
+.lottery-room .lottery-draw-actions > .cc-btn { padding: var(--space-6) var(--space-8); font-size: var(--text-px-13); }
+.lottery-room .lottery-rule-chip { position: relative; }
+.lottery-rule-chip > .cc-control-key { position: absolute; top: var(--space-2); right: var(--space-2); margin: 0; }
+.lottery-room .lottery-shape-picker { position: relative; padding-inline-end: var(--space-26); }
+.lottery-shape-picker > .cc-control-key { position: absolute; top: var(--space-3); right: var(--space-3); margin: 0; }
+
+.lottery-room .lottery-draw-stage .cc-control-key > .cc-key-badge { font-size: var(--text-px-15); }

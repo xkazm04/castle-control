@@ -1,3 +1,4 @@
+import { RoomKeyBadge } from '../../shell/steward-keys.jsx';
 import { useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import { EmptyState } from '@castle-control/ui';
 import type { ReactNode } from 'react';
@@ -114,19 +115,19 @@ export function ConnectedBeacons({ port, seal_slot, steward }: { port: CoreBeaco
     picker={plates.length > 0 ? <BeaconPlates visuals={plates} selected={in_picture ?? state.selected ?? ''} core compact busy={disabled || Boolean(publication)}
       on_select={item => port.select(item.visual.visual_id)} /> : <p>{state.phase === 'error' ? copy.core_failed(state.error?.code ?? 'unavailable') : 'No beacons in your core yet. Ask the Steward to light one.'}</p>}
     actions={<>
-      <button type="button" className="cc-btn" disabled={disabled || !selected} onClick={() => start(flow_ids.test)}>Test fire</button>
-      <button type="button" className="cc-btn" disabled={disabled || !selected} onClick={() => start(flow_ids.replay)}>Replay a night</button>
+      <button type="button" className="cc-btn" disabled={disabled || !selected} onClick={() => start(flow_ids.test)}><RoomKeyBadge room="visuals" action="test" />Test fire</button>
+      <button type="button" className="cc-btn" disabled={disabled || !selected} onClick={() => start(flow_ids.replay)}><RoomKeyBadge room="visuals" action="replay" />Replay a night</button>
       <button type="button" className="cc-btn" disabled={disabled || Boolean(publication) || !selected || selected.curve.decay.kind === 'none'} onClick={() => {
         if (!selected || disabled || selected.curve.decay.kind !== 'exponential') return;
         void view.setCurve({ visual_id: selected.visual_id, curve: { ...selected.curve,
           decay: { ...selected.curve.decay, half_life_s: Math.max(1, Math.round(selected.curve.decay.half_life_s / 2)) } } });
-      }}>Halve the decay</button>
+      }}><RoomKeyBadge room="visuals" action="decay" />Halve the decay</button>
     </>}
     drawer={<>
       <div className="visuals-deck-actions">
         <button type="button" className="cc-btn" disabled={!selected} onClick={event =>
           event.currentTarget.closest('[role="dialog"]')?.querySelector<HTMLSelectElement>('#beacon-colour')?.focus()}>Tonight’s theme</button>
-        <button type="button" className="cc-btn cc-btn--quiet" disabled={disabled || !selected} onClick={() => start(flow_ids.tune)}>Tune this beacon</button>
+        <button type="button" className="cc-btn cc-btn--quiet" disabled={disabled || !selected} onClick={() => start(flow_ids.tune)}><RoomKeyBadge room="visuals" action="tune" />Tune this beacon</button>
         <button type="button" className="cc-btn cc-btn--quiet" disabled={disabled} onClick={() => start(light_flow_id)}>Light another</button>
         <button type="button" className="cc-btn" onClick={() => start(flow_ids.demo)}>Play demo</button>
       </div>

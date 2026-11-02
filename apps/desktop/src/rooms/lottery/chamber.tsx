@@ -1,3 +1,4 @@
+import { RoomKeyBadge } from '../../shell/steward-keys.jsx';
 import type { ReactNode } from 'react';
 import { ChamberLayout, ChamberSection, Drawer } from '@castle-control/ui/chamber';
 
@@ -31,7 +32,7 @@ export function LotChamber(props: LotChamberProps) {
         <>{roll}<ChamberSection title="Cast the lots">{cast}</ChamberSection>
           <ChamberSection title="Prove it · the writ">{proof}
             <button type="button" className="cc-btn cc-btn--quiet" aria-expanded={tools_open}
-              onClick={on_tools}>The writ and draw tools</button>
+              onClick={on_tools}><RoomKeyBadge room="lottery" action="tools" />The writ and draw tools</button>
           </ChamberSection></>,
       ]} />
     <Drawer open={tools_open} onClose={on_close} title="The writ and the draw tools"

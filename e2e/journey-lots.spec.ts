@@ -12,7 +12,10 @@ async function configureAndCast(page: Page) {
   await page.goto('/#/chamber/lottery');
   await expect(page.locator('.cc-rampart > [data-stamp="simulated"]')).toHaveText('Simulated');
   // The hall holds the picture and the roll, not a form.
-  const hall = page.locator('.cc-hall');
+  const hall = page.getByRole('region', { name: 'Lot Chamber', exact: true });
+  await expect(hall).toBeVisible();
+  await expect(hall.locator('[data-role="room-picture"]')).toHaveCount(1);
+  await expect(hall.getByRole('region', { name: 'The roll', exact: true })).toBeVisible();
   await expect(hall.getByRole('textbox', { name: 'Draw name', exact: true })).toHaveCount(0);
   const steward = lotSteward(page);
   const stage = page.locator('.lottery-draw-stage');
@@ -34,7 +37,7 @@ async function configureAndCast(page: Page) {
   await steward.pick('Wheel');
   // The stage is the live preview of the draft.
   await expect(stage).toHaveAttribute('data-shape', 'wheel');
-  await expect(page.locator('[data-role="lot-roll-panel"]')).toContainText('Draft · not sealed');
+  await expect(page.getByRole('region', { name: 'The roll', exact: true })).toContainText('Draft · not sealed');
   await expect(steward.sheet).toContainText('Clear · free entry, rules attached, Twitch disclaimer acknowledged');
   await steward.next('Looks right');
   await steward.hold(page.locator('.lottery-roll[data-tone="sealed"]'));
@@ -45,11 +48,18 @@ async function configureAndCast(page: Page) {
   await steward.next('The round is ready');
   await steward.pick('One by one, quietly');
   await steward.hold(page.locator('.lottery-roll[data-tone="cast"]'));
-  const result = page.getByRole('region', { name: 'Current SIMULATED cast', exact: true });
+  await page.getByRole('button', { name: /^Lower/ }).click();
+  const trigger = hall.getByRole('button', { name: 'The writ and draw tools', exact: true });
+  await expect(trigger).toHaveAttribute('aria-expanded', 'false');
+  await trigger.click();
+  const drawer = page.getByRole('dialog', { name: 'The writ and the draw tools', exact: true });
+  await expect(drawer).toBeVisible();
+  await expect(trigger).toHaveAttribute('aria-expanded', 'true');
+  const result = drawer.getByRole('region', { name: 'Current SIMULATED cast', exact: true });
   await expect(result).toContainText('SIMULATED');
   await expect(result.locator('[data-current-winner]')).toHaveCount(3);
   await result.getByRole('button', { name: 'Read current simulated writ', exact: true }).click();
-  await expect(page.getByRole('region', { name: 'Current simulated writ', exact: true })).toContainText('Not a cc-verify proof');
+  await expect(drawer.getByRole('region', { name: 'Current simulated writ', exact: true })).toContainText('Not a cc-verify proof');
   return result;
 }
 
@@ -95,7 +105,7 @@ test('Play demo seals, casts and reveals a SIMULATED draw from one hold', async 
     await expect(sandbox).toBeVisible();
     await sandbox.getByRole('button', { name: 'Leave the demo', exact: true }).click();
     await expect(sandbox).toHaveCount(0);
-    await expect(page.locator('.cc-steward-dock .cc-talk__msg')).toContainText('Sealed and cast');
+    await expect(steward.sheet.locator('[data-role="steward-bubble"]').filter({ hasText: 'Sealed and cast' }).last()).toBeVisible();
   } finally { await page.goto('about:blank'); verify(); }
 });
 
@@ -178,3 +188,35 @@ test.describe('lottery CORE simulated cast OBS journey', () => {
     } finally { await core.close(); }
   });
 });
+
+for (const [width, height] of [[1280, 720], [1366, 768], [1600, 900], [1920, 1080]] as const) {
+  test(`Lot chamber controls fit without scrolling at ${width}x${height}`, async ({ page }) => {
+    const verify = await guardPage(page);
+    try {
+      await page.setViewportSize({ width, height });
+      await page.goto('/#/chamber/lottery');
+      const room = page.getByRole('region', { name: 'Lot Chamber', exact: true });
+      await expect(room).toBeVisible();
+      await expect.poll(() => room.evaluate(element => {
+        const issues: string[] = [];
+        const bounds = element.getBoundingClientRect();
+        const nodes = [document.documentElement, element, ...element.querySelectorAll<HTMLElement>('*')];
+        for (const node of nodes) {
+          if (!node.getClientRects().length) continue;
+          const style = getComputedStyle(node);
+          if (style.visibility === 'hidden' || style.position === 'absolute' || node.closest('.cc-sr')) continue;
+          const frame = node === document.documentElement || node === element || node.matches('.cc-chamber-column, .cc-chamber-mini, [data-role="room-section"]');
+          if ((frame || /auto|scroll/.test(style.overflow)) && (node.scrollHeight > node.clientHeight + 1 || node.scrollWidth > node.clientWidth + 1)) issues.push(`scroll ${node.className}`);
+          if (frame && node !== document.documentElement && node.getBoundingClientRect().bottom > bounds.bottom + 1) issues.push(`outside ${node.className}`);
+        }
+        const trigger = [...element.querySelectorAll('button')].find(button => button.textContent?.includes('The writ and draw tools'));
+        if (!trigger) issues.push('missing tools trigger');
+        else if (trigger.getBoundingClientRect().bottom > bounds.bottom - 1) issues.push('tools trigger on or below bottom edge');
+        return issues;
+      })).toEqual([]);
+      for (const name of ['Set up a draw', 'Cast the lots', 'The writ and draw tools']) {
+        await expect(room.getByRole('button', { name, exact: true }).locator('.cc-key-badge')).toBeVisible();
+      }
+    } finally { await page.goto('about:blank'); verify(); }
+  });
+}
