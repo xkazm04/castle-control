@@ -11,10 +11,12 @@ configuration, with no invented live totals.
 
 - Column 1: selected beacon, blaze, gauge, generated sample-night sparkline,
   input/decay chips, existing fixture gift-sub weighting as a native slider,
-  test fire, replay, halve decay, theme and tune controls. Core retains its
+  test fire, replay and halve decay in one row. Theme and tune are in the drawer. Core retains its
   unavailable-live-total message; its model has no gift-weight setting.
-- Column 2: existing radio selection with the selected beacon's tiers open,
-  the other beacons compact, and the More of the beacons drawer trigger.
+- Column 2: stacked native radio selection with the selected beacon's four tiers
+  in one row and weighting/decay chips. Each other beacon is one line with its
+  name, percentage and Show in the picture. The compact list uses its own markup
+  so legacy comparison grid/readout rules cannot override it.
 - Drawer: every beacon and every tier, full draft fields, generated night
   replay, bench, input/appearance controls, curve editor, local/core test fires,
   browser-source copy, timeline, virtualized contribution feeds and original
@@ -30,8 +32,13 @@ drawer opening/closing, reachable tools and existing weighting/decay handlers.
 `room.test.tsx` and `plates.test.tsx` retain comparison, draft, tier and workbench
 coverage at their new locations. `e2e/journey-beacons.spec.ts` updates the room
 selectors, keeps all existing journeys, and adds 1280x720 / 1366x768 fit and
-full-tier drawer checks. Browser-host access was unavailable during this port;
-those visual/interactive browser checks still require a Director run.
+full-tier drawer checks. Review 1 adds checks for all three selections, vertical
+stacking, one-row tiers/actions, compact text and shell-content overflow against
+fixed 1240x470 / 1326x520 allocations, leaving the old builder shell CSS loaded.
+The primary curve is 70 px and weighting stays on one line. Browser-host access
+was unavailable; the focused Playwright runner failed at `spawn EPERM` before
+launch. No new browser measurements are claimed; the integrated shell still
+requires a Director run.
 
 ## Illuminated picture and Steward flows (night UX, 2026-11-02)
 

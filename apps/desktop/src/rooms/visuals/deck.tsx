@@ -14,7 +14,7 @@ export function BeaconDeck({ picture, reading, preview, program, picker, weighti
       preview={preview} program={program} program_title={core ? 'Program · core configuration' : 'Program · SIMULATED'}
       columns={[
         <ChamberSection key="selected" title="The selected beacon" aside={<span className="visuals-deck-tag">In the picture</span>}>
-          {reading}{weighting}<div className="visuals-deck-actions">{actions}</div>
+          {reading}{weighting}<div className="visuals-deck-actions visuals-primary-actions">{actions}</div>
         </ChamberSection>,
         <ChamberSection key="beacons" title="The beacons">
           {picker}<button type="button" className="cc-btn visuals-drawer-trigger" aria-haspopup="dialog"

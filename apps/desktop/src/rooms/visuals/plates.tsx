@@ -6,7 +6,7 @@ import { source_labels } from './contribution-input.js';
 import { BeaconThumb } from './stage.jsx';
 import { findPreset } from './presets.js';
 
-export type PlateVisual = { visual: Visual; total?: number; intensity?: number };
+export type PlateVisual = { visual: Visual; total?: number; intensity?: number; gift_weight?: number };
 
 function Stair({ item, core }: { item: PlateVisual; core: boolean }) {
   return <span className="visuals-stair" aria-label={core ? copy.core_ranges(item.visual.name) : copy.ranges(item.visual.name)}>
@@ -45,20 +45,43 @@ export function BeaconPlates<T extends PlateVisual>({ visuals, selected, on_sele
   visuals: readonly T[]; selected: string; on_select: (item: T) => void;
   draft?: ReactNode; core?: boolean; busy?: boolean; compact?: boolean;
 }) {
-  return <div className={`visuals-plates${compact ? " visuals-plates--compact" : ""}`} role="radiogroup" aria-label={copy.visuals}>
+  if (compact) return <div className="visuals-plates--compact visuals-beacon-list" role="radiogroup" aria-label={copy.visuals}>
+    {visuals.map((item, index) => {
+      const chosen = item.visual.visual_id === selected;
+      const percent = item.intensity === undefined ? 'n/a' : `${Math.round(item.intensity * 100)}%`;
+      return <button type="button" role="radio" key={item.visual.visual_id} className="visuals-beacon"
+        aria-checked={chosen} tabIndex={chosen ? 0 : -1} disabled={busy}
+        aria-label={`${item.visual.name}, ${item.intensity === undefined ? copy.live_unavailable : `${percent} ${copy.blaze}`}`}
+        onClick={() => on_select(item)} onKeyDown={event => selectPlate(event, index, visuals, on_select)}>
+        <span className="visuals-beacon-name">{item.visual.name}</span>
+        <span className="visuals-beacon-blaze">{percent}</span>
+        <span className="visuals-beacon-state">{chosen ? 'In the picture' : 'Show in the picture'}</span>
+        {chosen && <>
+          <Stair item={item} core={core} />
+          <span className="visuals-beacon-chips">
+            <span>{item.gift_weight === undefined
+              ? item.visual.input ? source_labels[item.visual.input.source] : copy.not_routed
+              : `${item.gift_weight}× gift weighting`}</span>
+            <span>{item.visual.curve.decay.kind === 'none' ? copy.no_decay : copy.half_life(item.visual.curve.decay.half_life_s / 60)}</span>
+          </span>
+        </>}
+      </button>;
+    })}
+  </div>;
+  return <div className="visuals-plates" role="radiogroup" aria-label={copy.visuals}>
     {visuals.map((item, index) => {
       const chosen = item.visual.visual_id === selected;
       const preset = findPreset(item.visual.design_id);
       const kind = preset ? preset.kind === 'object' ? copy.object : copy.camera
         : item.visual.design_id === 'altar' ? copy.object : item.visual.design_id === 'camera-frame' ? copy.camera : copy.border;
       return <Plate key={item.visual.visual_id} selection="radio" variant="choice" ink="or" checked={chosen}
-        className="visuals-plate" data-compact={compact && !chosen} tabIndex={chosen ? 0 : -1} disabled={busy}
+        className="visuals-plate" tabIndex={chosen ? 0 : -1} disabled={busy}
         aria-label={`${item.visual.name}, ${item.intensity === undefined ? copy.live_unavailable : `${Math.round(item.intensity * 100)}% ${copy.blaze}`}`}
         onClick={() => on_select(item)} onKeyDown={event => selectPlate(event, index, visuals, on_select)}
         band={<PlateBand variant="chief" title={`${copy.beacon} ${copy.numerals[index] ?? index + 1} · ${kind}`}
           count={<span className="visuals-plate-state" data-idle={!chosen}>{chosen ? 'In the picture' : 'Show in the picture'}</span>} />}>
         <span className="visuals-plate-name">{item.visual.name}</span>
-        {(!compact || chosen) && <><span className="visuals-plate-art" data-on-air="false">
+        <span className="visuals-plate-art" data-on-air="false">
           <BeaconThumb visual={item.visual} intensity={item.intensity ?? 0}
             label={core ? copy.core_art(item.visual.name) : `${item.visual.name} · simulated local preview`} />
           {chosen && draft}
@@ -73,7 +96,7 @@ export function BeaconPlates<T extends PlateVisual>({ visuals, selected, on_sele
         <span className="visuals-plate-foot">
           <StatusChip variant="or">{item.visual.input ? source_labels[item.visual.input.source] : copy.not_routed}</StatusChip>
           <StatusChip variant="dash">{item.visual.curve.decay.kind === 'none' ? copy.no_decay : copy.half_life(item.visual.curve.decay.half_life_s / 60)}</StatusChip>
-        </span></>}
+        </span>
       </Plate>;
     })}
   </div>;

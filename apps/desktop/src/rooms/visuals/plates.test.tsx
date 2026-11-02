@@ -8,6 +8,7 @@ import { VisualSelector, VisualsWork } from './room.jsx';
 import SealSlot from '../seal-slot/index.jsx';
 import { createCoreBeaconsPort } from '../../beacons-core.js';
 import { ConnectedBeacons } from './core.jsx';
+import { BeaconPlates } from './plates.jsx';
 
 test('C compares three radio plates, each with its own cropped artwork and inline stair ramps', () => {
   const port = createBeaconsPreview();
@@ -30,11 +31,11 @@ test('C compares three radio plates, each with its own cropped artwork and inlin
   expect(html).toContain('25→60%');
 });
 
-test('native plate arrow handlers wrap focus and selection; Enter/Space select without reaching the shell', () => {
+test.each([false, true])('native radio arrows wrap focus and selection; Enter/Space stay local (compact=%s)', compact => {
   const port = createBeaconsPreview();
   const focus = [vi.fn(), vi.fn(), vi.fn()];
-  const render = () => VisualSelector({ visuals: port.getSnapshot().visuals, selected: port.getSnapshot().selected,
-    on_select: item => port.select(item.visual.visual_id) });
+  const render = () => BeaconPlates({ visuals: port.getSnapshot().visuals, selected: port.getSnapshot().selected,
+    on_select: item => port.select(item.visual.visual_id), compact });
   const press = (index: number, key: string, composing = false, modified = false) => {
     // Node supplies Event but no DOM. This projection supplies every property read by the native handler.
     const nativeEvent = Object.assign(new Event('keydown', { cancelable: true }), { isComposing: composing });

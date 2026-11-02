@@ -121,12 +121,15 @@ export function ConnectedBeacons({ port, seal_slot, steward }: { port: CoreBeaco
         void view.setCurve({ visual_id: selected.visual_id, curve: { ...selected.curve,
           decay: { ...selected.curve.decay, half_life_s: Math.max(1, Math.round(selected.curve.decay.half_life_s / 2)) } } });
       }}>Halve the decay</button>
-      <button type="button" className="cc-btn" disabled={!selected} onClick={() => setOpen(true)}>Tonight’s theme</button>
-      <button type="button" className="cc-btn cc-btn--quiet" disabled={disabled || !selected} onClick={() => start(flow_ids.tune)}>Tune this beacon</button>
-      <button type="button" className="cc-btn cc-btn--quiet" disabled={disabled} onClick={() => start(light_flow_id)}>Light another</button>
     </>}
     drawer={<>
-      <div className="visuals-deck-actions"><button type="button" className="cc-btn" onClick={() => start(flow_ids.demo)}>Play demo</button></div>
+      <div className="visuals-deck-actions">
+        <button type="button" className="cc-btn" disabled={!selected} onClick={event =>
+          event.currentTarget.closest('[role="dialog"]')?.querySelector<HTMLSelectElement>('#beacon-colour')?.focus()}>Tonight’s theme</button>
+        <button type="button" className="cc-btn cc-btn--quiet" disabled={disabled || !selected} onClick={() => start(flow_ids.tune)}>Tune this beacon</button>
+        <button type="button" className="cc-btn cc-btn--quiet" disabled={disabled} onClick={() => start(light_flow_id)}>Light another</button>
+        <button type="button" className="cc-btn" onClick={() => start(flow_ids.demo)}>Play demo</button>
+      </div>
       <ChamberSection title="Every beacon, every tier"><BeaconPlates visuals={plates} selected={state.selected ?? ''} core busy={disabled}
         on_select={item => port.select(item.visual.visual_id)} /></ChamberSection>
       <CoreBench port={view} state={state} seal_slot={seal_slot} />
