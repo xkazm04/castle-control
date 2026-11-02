@@ -12,7 +12,7 @@ import { Keep } from '../keep/keep.jsx';
 import { Overview } from '../overview/overview.jsx';
 import { StreamScene } from '../overview/scene.jsx';
 import { programCandidate, proclaimToSampleProgram, sampleProgram } from '../overview/program.js';
-import { createStewardConversation, routeStewardTurn, ShellSteward, stewardContext, StewardProposal } from './steward.jsx';
+import { createStewardConversation, routeStewardTurn, ShellSteward, stewardContext, StewardProposal, unmatchedReply } from './steward.jsx';
 
 vi.mock('react', async importOriginal => ({ ...await importOriginal<typeof React>() }));
 
@@ -71,8 +71,8 @@ test('Keep is the shared cutaway with rule summaries, the Herald, moat and numbe
     expect(html).toContain(`Open chamber ${number},`);
   }
   const core = renderToStaticMarkup(<Keep snapshot={{ mode: 'core', phase: 'ready' }} on_open={() => undefined} on_enter={() => undefined} />);
-  expect(core).toContain('Moderation status unknown');
-  expect(core).toContain('Draw status unavailable');
+  expect(core).toContain('Held messages show in the room · ask the Steward for rules');
+  expect(core).toContain('No draw read yet · ask the Steward to set one up');
   expect(core).not.toContain('sample lots');
 });
 
@@ -127,15 +127,18 @@ test('0 and 1-4 navigate; strip Enter opens selected room; slash focuses the one
   expect(enter).toHaveBeenCalledOnce(); expect(focus).toHaveBeenCalledOnce();
 });
 
-test('Steward focus selects a layer in Overview, opens a room from Keep, and general asks enter Overview', () => {
+test('Steward focus selects a layer in Overview, opens a room from Keep, and unrecognised asks stay in place', () => {
   const select = vi.fn(); const open = vi.fn(); const overview = vi.fn();
   const turn = { reply: 'Draft', proposals: [], focus: { chamber: 'lottery' as const, layer: 'draw' } };
   routeStewardTurn(turn, 'overview', select, open, overview);
   expect(select).toHaveBeenCalledWith('lottery'); expect(open).not.toHaveBeenCalled();
   routeStewardTurn(turn, 'keep', select, open, overview);
   expect(open).toHaveBeenCalledWith('lottery');
+  // Unrecognised text stays in place: no overview jump, a helpful reply with this chamber's chips instead.
   routeStewardTurn({ ...turn, focus: null }, 'keep', select, open, overview);
-  expect(overview).toHaveBeenCalledOnce();
+  expect(overview).not.toHaveBeenCalled();
+  expect(unmatchedReply('the Keep', ['pick tonight’s theme', 'play demo']))
+    .toBe('I did not catch that, and nothing has changed. In the Keep I can: pick tonight’s theme, play demo. Pick one below, or say it in a few words.');
 });
 
 // Node-only shell tests supply DOM lookups while driving DesktopApp's real onKeyDown.
