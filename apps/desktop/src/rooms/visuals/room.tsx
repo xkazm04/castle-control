@@ -1,3 +1,4 @@
+import { RoomKeyBadge } from '../../shell/steward-keys.jsx';
 import { useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import { ChamberSection } from '@castle-control/ui/chamber';
 import { EmptyState } from '@castle-control/ui';
@@ -58,23 +59,23 @@ export function VisualsWork({ queue = proposalQueue, port, seal_slot }: { queue?
         program={<p>{selected.visual.name}<br />{Math.round(selected.intensity * 100)}% blaze · SIMULATED local preview</p>}
         picker={<BeaconPlates visuals={preview.visuals} selected={view.item.visual.visual_id} compact busy={Boolean(publication)}
           on_select={item => adapter.select(item.visual.visual_id)} />}
-        weighting={<label className="visuals-weight">Gift-sub weighting
+        weighting={<label className="visuals-weight">Gift-sub weighting<RoomKeyBadge room="visuals" action="tune" />
           <input type="range" min="1" max="6" step="1" value={view.item.gift_weight} disabled={Boolean(publication)}
             onChange={event => adapter.weight(Number(event.currentTarget.value))} />
           <output>{view.item.gift_weight}×</output></label>}
         actions={<>
-          <button type="button" className="cc-btn" onClick={() => start(flow_ids.test)}>Test fire</button>
-          <button type="button" className="cc-btn" onClick={() => start(flow_ids.replay)}>Replay a night</button>
+          <button type="button" className="cc-btn" onClick={() => start(flow_ids.test)}><RoomKeyBadge room="visuals" action="test" />Test fire</button>
+          <button type="button" className="cc-btn" onClick={() => start(flow_ids.replay)}><RoomKeyBadge room="visuals" action="replay" />Replay a night</button>
           <button type="button" className="cc-btn" disabled={Boolean(publication) || selected.visual.curve.decay.kind === 'none'} onClick={() => {
             const decay = selected.visual.curve.decay;
             if (decay.kind === 'exponential') adapter.decay({ ...decay, half_life_s: Math.max(1, Math.round(decay.half_life_s / 2)) });
-          }}>Halve the decay</button>
+          }}><RoomKeyBadge room="visuals" action="decay" />Halve the decay</button>
         </>}
         drawer={<>
           <div className="visuals-deck-actions">
             <button type="button" className="cc-btn" onClick={event =>
               event.currentTarget.closest('[role="dialog"]')?.querySelector<HTMLSelectElement>('#beacon-colour')?.focus()}>Tonight’s theme</button>
-            <button type="button" className="cc-btn cc-btn--quiet" onClick={() => start(flow_ids.tune)}>Tune this beacon</button>
+            <button type="button" className="cc-btn cc-btn--quiet" onClick={() => start(flow_ids.tune)}><RoomKeyBadge room="visuals" action="tune" />Tune this beacon</button>
             <button type="button" className="cc-btn" onClick={() => start(flow_ids.demo)}>Play demo</button>
           </div>
           <ChamberSection title="Every beacon, every tier"><BeaconPlates visuals={preview.visuals} selected={preview.selected}

@@ -97,3 +97,10 @@
 .desktop-shell .visuals-deck .visuals-stage__read { gap: var(--space-6); }
 .desktop-shell .visuals-deck .visuals-spark { height: calc(var(--space-20) * 3 + var(--space-10)); }
 .desktop-shell .visuals-deck :is(.visuals-stage__tags, .visuals-stage__notice, .visuals-stage__spark > span) { display: flex; }
+
+/* Key badges stay on their controls without forcing a fourth grid cell or an overwide action row. */
+.visuals-deck .visuals-primary-actions { flex-wrap: wrap; }
+.visuals-deck .visuals-weight { position: relative; padding-inline-start: var(--space-32); }
+.visuals-weight > .cc-control-key { position: absolute; inset-inline-start: var(--space-3); margin: 0; }
+.visuals-deck .visuals-beacon { position: relative; padding-inline-start: var(--space-32); }
+.visuals-deck .visuals-beacon-name > .cc-control-key { position: absolute; inset-inline-start: var(--space-3); margin: 0; }

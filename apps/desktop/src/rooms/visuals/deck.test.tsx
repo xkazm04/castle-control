@@ -1,5 +1,6 @@
 import { afterEach, expect, test, vi } from 'vitest';
 import { componentProbe } from '../moderator/component-probe.jsx';
+import { keyFor } from '../../shell/steward-keys.jsx';
 import { ProposalQueue } from '@castle-control/ui/steward';
 import { createBeaconsPreview } from '../../beacons-model.js';
 import { createCoreBeaconsPort } from '../../beacons-core.js';
@@ -31,6 +32,7 @@ test('fixture chamber has one picture, two section columns, minis, and reachable
     expect(html).not.toContain('role="dialog"');
     const compact = html.slice(html.indexOf('visuals-plates--compact'), html.indexOf('visuals-drawer-trigger'));
     expect(compact.match(/role="radio"/g)).toHaveLength(3);
+    for (const index of [0, 1, 2]) expect(compact).toContain(`cc-key-badge">${keyFor('visuals', `beacon_${index}`)}</kbd>`);
     expect(compact.match(/class="visuals-stair"/g)).toHaveLength(1);
     expect(compact.match(/Show in the picture/g)).toHaveLength(2);
     expect(compact).not.toContain('class="visuals-plates"');
@@ -38,6 +40,8 @@ test('fixture chamber has one picture, two section columns, minis, and reachable
     expect(compact.match(/class="visuals-beacon-blaze"/g)).toHaveLength(3);
     const actions = html.slice(html.indexOf('visuals-primary-actions'), html.indexOf('aria-label="Room sections 2"'));
     expect(actions.match(/<button/g)).toHaveLength(3);
+    for (const action of ['test', 'replay', 'decay']) expect(actions).toContain(`cc-key-badge">${keyFor('visuals', action)}</kbd>`);
+    expect(html).toContain(`cc-key-badge">${keyFor('visuals', 'tune')}</kbd>`);
     expect(actions).not.toContain('Tonight’s theme');
     expect(actions).not.toContain('Tune this beacon');
 

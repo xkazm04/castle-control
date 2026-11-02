@@ -9,7 +9,15 @@ export function lotSteward(page: Page) {
     sheet,
     /** Open a flow from the collapsed dock's chips. */
     async chip(label: string) {
-      await chips.getByRole('button', { name: label, exact: true }).click();
+      await expect(chips).toBeVisible();
+      const escaped = label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const quick = chips.getByRole('button', { name: label, exact: true });
+      if (await quick.count()) await quick.click();
+      else {
+        await chips.getByRole('button', { name: 'More flows', exact: true }).click();
+        await page.getByRole('menu', { name: 'Every Steward flow in this chamber', exact: true })
+          .getByRole('menuitem', { name: new RegExp(`^${escaped}(?:\\s+(?:in progress|simulated))*$`) }).click();
+      }
       await expect(sheet).toBeVisible();
     },
     /** Pick an option card by its leading label. */
@@ -41,7 +49,7 @@ export function lotSteward(page: Page) {
 export async function castSample(page: Page, reveal: 'One by one, quietly' | 'By hand' | 'Full ceremony' = 'One by one, quietly') {
   const steward = lotSteward(page);
   // Nothing is sealed yet, so the dock leads with setup; the draw card offers the cast directly.
-  await page.locator('[data-role="lot-draw-card"]').getByRole('button', { name: 'Cast the lots', exact: true }).click();
+  await page.getByRole('region', { name: 'Cast the lots', exact: true }).getByRole('button', { name: 'Cast the lots', exact: true }).click();
   await expect(steward.sheet).toBeVisible();
   await steward.pick('Seal the sample draw first');
   await steward.next('The round is ready');

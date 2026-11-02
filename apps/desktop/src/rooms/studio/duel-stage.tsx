@@ -1,3 +1,4 @@
+import { RoomKeyBadge } from '../../shell/steward-keys.jsx';
 import { useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import type { DuelEvent } from '@castle-control/duel';
@@ -5,6 +6,7 @@ import { duelKeyAction, Shield, tiltyardWords } from '@castle-control/ui/duel';
 import { ChamberLayout, ChamberSection } from '@castle-control/ui/chamber';
 import { stewardDock } from '@castle-control/ui/steward-flow';
 import { BracketSummary } from './duel-bracket.jsx';
+import { bracketDrawer } from './bracket-drawer.js';
 import { DuelDrawer } from './duel-drawer.jsx';
 import type { DuelDetails } from './duel-drawer.jsx';
 import { DuelMini, DuelPictureView } from './duel-picture.jsx';
@@ -93,6 +95,7 @@ export type DuelStageProps = {
 export function DuelStage({ picture, program = picture, details, on_event, frozen = false, empty, tools, notice }: DuelStageProps) {
   const root = useRef<HTMLElement>(null);
   const [sheet, setSheet] = useState(false);
+  useEffect(() => bracketDrawer.mount(() => setSheet(true)), []);
   const drawer_open = sheet || details?.open === true;
   const closeDrawer = () => { setSheet(false); details?.on_close(); };
   // A selected More view owns the open state until it returns to the duel.
@@ -114,7 +117,7 @@ export function DuelStage({ picture, program = picture, details, on_event, froze
   const button = (action: Action) => <button key={action.id} type="button" data-action={action.id}
     className={`cc-btn duel-act duel-act--${action.tone ?? 'quiet'}${action.tone === 'primary' ? ' cc-btn--primary' : ''}`}
     disabled={frozen || draft || action.disabled} onClick={() => { if (action.event) send(action.event); }}>
-    <span>{action.label}</span>
+    <span>{action.label}</span>{action.event?.kind === 'enter' && <RoomKeyBadge room="studio" action="enter" />}
   </button>;
   const call = (side: 'left' | 'right') => actions.find(action => action.id === side);
   const centre = actions.filter(action => action.id !== 'left' && action.id !== 'right');
@@ -129,10 +132,11 @@ export function DuelStage({ picture, program = picture, details, on_event, froze
       }
       if (draft || frozen || picture.phase === 'empty') return;
       const action = duelKeyAction(event, { phase: picture.phase === 'ready' ? 'called_off' : picture.phase });
-      if (action === null || action === 'mode_prev' || action === 'mode_next') return;
+      // Enter and undo belong to the room table mounted by the shell.
+      if (action === null || action === 'mode_prev' || action === 'mode_next' || action === 'enter' || action === 'undo') return;
       event.preventDefault(); event.stopPropagation();
       if (action === 'pick_left' || action === 'pick_right') send({ kind: 'pick', side: action === 'pick_left' ? 0 : 1 });
-      else send({ kind: action === 'cancel' ? 'cancel' : action === 'undo' ? 'undo' : 'enter' });
+      else send({ kind: 'cancel' });
     }}>
     <ChamberLayout picture={<DuelPictureView picture={picture} />} picture_label="Map Room duel picture"
       caption={draft ? 'Draft · not on air' : picture.simulated ? 'As it is on air · SIMULATED' : 'As it is on air · core tournament'}
@@ -175,18 +179,18 @@ export function DuelStage({ picture, program = picture, details, on_event, froze
       <ChamberSection title="The bracket">
         <BracketSummary picture={picture} />
         {size > 4 && <p className="duel-mini">Quarterfinals and all seeds are in the full bracket.</p>}
-        <button type="button" className="cc-btn cc-btn--sm" aria-haspopup="dialog" onClick={() => setSheet(true)}>Full bracket</button>
+        <button type="button" className="cc-btn cc-btn--sm" aria-haspopup="dialog" onClick={() => setSheet(true)}><RoomKeyBadge room="studio" action="bracket" />Full bracket</button>
       </ChamberSection>
       <ChamberSection title="Call the duel"><div className="duel__minor">
         <button type="button" className="cc-btn cc-btn--sm cc-btn--quiet" disabled={frozen || draft || !picture.can_undo}
-          onClick={() => send({ kind: 'undo' })}>Undo last call</button>
+          onClick={() => send({ kind: 'undo' })}><RoomKeyBadge room="studio" action="undo" />Undo last call</button>
         <button type="button" className="cc-btn cc-btn--sm cc-btn--quiet" aria-pressed={picture.speed === 3} disabled={frozen || draft}
-          onClick={() => send({ kind: 'speed' })}>Speed ×3</button>
+          onClick={() => send({ kind: 'speed' })}><RoomKeyBadge room="studio" action="speed" />Speed ×3</button>
         <button type="button" className="cc-btn cc-btn--sm cc-btn--quiet" disabled={frozen || draft}
-          onClick={() => send({ kind: 'reset' })}>New bracket</button>
-        <button type="button" className="cc-btn cc-btn--sm" onClick={() => stewardDock.open(streamDuelFlow(picture.source === 'core' ? 'core' : 'fixture'))}>
+          onClick={() => send({ kind: 'reset' })}><RoomKeyBadge room="studio" action="reset" />New bracket</button>
+        <button type="button" className="cc-btn cc-btn--sm" onClick={() => stewardDock.open(streamDuelFlow(picture.source === 'core' ? 'core' : 'fixture'))}><RoomKeyBadge room="studio" action="stream" />
           Show the duel on stream</button>
-        <button type="button" className="cc-btn cc-btn--sm" aria-haspopup="dialog" onClick={() => setSheet(true)}>More</button>
+        <button type="button" className="cc-btn cc-btn--sm" aria-haspopup="dialog" onClick={() => setSheet(true)}><RoomKeyBadge room="studio" action="bracket" />More</button>
       </div>
       </ChamberSection>
     </div>,

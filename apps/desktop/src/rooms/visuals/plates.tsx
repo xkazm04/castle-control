@@ -1,3 +1,4 @@
+import { RoomKeyBadge } from '../../shell/steward-keys.jsx';
 import type { CSSProperties, KeyboardEvent, ReactNode } from 'react';
 import type { Visual } from '@castle-control/contract';
 import { HeroReadout, Plate, PlateBand, StatusChip } from '@castle-control/ui';
@@ -53,7 +54,7 @@ export function BeaconPlates<T extends PlateVisual>({ visuals, selected, on_sele
         aria-checked={chosen} tabIndex={chosen ? 0 : -1} disabled={busy}
         aria-label={`${item.visual.name}, ${item.intensity === undefined ? copy.live_unavailable : `${percent} ${copy.blaze}`}`}
         onClick={() => on_select(item)} onKeyDown={event => selectPlate(event, index, visuals, on_select)}>
-        <span className="visuals-beacon-name">{item.visual.name}</span>
+        <span className="visuals-beacon-name"><RoomKeyBadge room="visuals" action={`beacon_${index}`} />{item.visual.name}</span>
         <span className="visuals-beacon-blaze">{percent}</span>
         <span className="visuals-beacon-state">{chosen ? 'In the picture' : 'Show in the picture'}</span>
         {chosen && <>
@@ -79,7 +80,7 @@ export function BeaconPlates<T extends PlateVisual>({ visuals, selected, on_sele
         aria-label={`${item.visual.name}, ${item.intensity === undefined ? copy.live_unavailable : `${Math.round(item.intensity * 100)}% ${copy.blaze}`}`}
         onClick={() => on_select(item)} onKeyDown={event => selectPlate(event, index, visuals, on_select)}
         band={<PlateBand variant="chief" title={`${copy.beacon} ${copy.numerals[index] ?? index + 1} · ${kind}`}
-          count={<span className="visuals-plate-state" data-idle={!chosen}>{chosen ? 'In the picture' : 'Show in the picture'}</span>} />}>
+          count={<span className="visuals-plate-state" data-idle={!chosen}><RoomKeyBadge room="visuals" action={`beacon_${index}`} />{chosen ? 'In the picture' : 'Show in the picture'}</span>} />}>
         <span className="visuals-plate-name">{item.visual.name}</span>
         <span className="visuals-plate-art" data-on-air="false">
           <BeaconThumb visual={item.visual} intensity={item.intensity ?? 0}

@@ -3,6 +3,8 @@ import { afterEach, expect, test, vi } from 'vitest';
 import { ActionRow } from '@castle-control/ui/action-row';
 import { createDockStore, stewardDock } from '@castle-control/ui/steward-flow';
 import { actionKeymap, dispatchShortcut, registerActionKeys } from '../navigation.js';
+import { roomDeck, RoomKeyBadge } from './steward-keys.jsx';
+import { bracketDrawer } from '../rooms/studio/bracket-drawer.js';
 import { roomActionKeys, stewardRegistry } from './steward-flows.js';
 import { fixtureBeacons } from '../rooms/visuals/stage-state.js';
 import { fixtureDuel, fixturePicture } from '../rooms/studio/duel-fixture.js';
@@ -11,17 +13,20 @@ import { duelHost } from '../rooms/studio/duel-host.js';
 afterEach(() => { for (const chamber of ['lottery', 'moderator', 'visuals', 'studio'] as const) stewardDock.close(chamber); stewardDock.collapse(); });
 afterEach(() => { duelHost.setPicture(undefined); vi.restoreAllMocks(); });
 
-test('editing one table changes both rendered keys and the keymap that dispatches them', () => {
+test('changing a letter in the room table changes the action row, keyboard and control badge', () => {
   const sample = { mode: 'fixture', phase: 'ready' } as const;
-  const entries = roomActionKeys('lottery', stewardRegistry(sample), sample);
-  const cast = entries.find(entry => entry.key === 'W');
+  const deck = { ...roomDeck, lottery: roomDeck.lottery.map(item => item.action === 'cast' ? { ...item, key: 'Z' } : item) };
+  const edited = roomActionKeys('lottery', stewardRegistry(sample), sample, deck);
+  const cast = edited.find(entry => entry.key === 'Z');
   if (!cast) throw new Error('Missing cast entry');
-  const edited = [{ ...cast, key: 'Z', label: 'Edited cast' }];
   const cleanup = registerActionKeys({ entries: edited, peel: () => false });
   try {
     const html = renderToStaticMarkup(<ActionRow entries={edited} seal={null} open={false} on_open={vi.fn()} />);
-    expect(html).toContain('<kbd>Z</kbd><span>Edited cast</span>');
-    expect(actionKeymap(edited).get('z')).toBe(edited[0]);
+    expect(html).toContain('<kbd>Z</kbd><span>cast the lots</span>');
+    const badge = renderToStaticMarkup(<RoomKeyBadge room="lottery" action="cast" deck={deck} />);
+    expect(badge).toMatch(/cc-key-badge[^>]*>Z<\/kbd>/);
+    expect(badge).not.toMatch(/>W<\/kbd>/);
+    expect(actionKeymap(edited).get('z')).toBe(cast);
     const preventDefault = vi.fn();
     dispatchShortcut({ key: 'W', preventDefault }, false, vi.fn(), undefined);
     expect(stewardDock.getSnapshot().sessions.lottery).toBeUndefined();
@@ -88,4 +93,20 @@ test('duel row calls the existing stage handler, while an unsealed duel draft ke
   stewardDock.open(flow);
   table.find(entry => entry.key === 'W')?.run();
   expect(send).toHaveBeenCalledTimes(1);
+});
+
+test('Map Room full bracket key calls only the mounted drawer opener and removes it on unmount', () => {
+  const sample = { mode: 'fixture', phase: 'ready' } as const;
+  const entries = roomActionKeys('studio', stewardRegistry(sample), sample);
+  const open = vi.fn();
+  const unmount = bracketDrawer.mount(open);
+  const cleanup = registerActionKeys({ entries, peel: () => false });
+  try {
+    dispatchShortcut({ key: 'r', preventDefault: vi.fn() }, false, vi.fn(), undefined);
+    expect(open).toHaveBeenCalledOnce();
+    expect(stewardDock.getSnapshot().sessions.studio).toBeUndefined();
+    unmount();
+    dispatchShortcut({ key: 'r', preventDefault: vi.fn() }, false, vi.fn(), undefined);
+    expect(open).toHaveBeenCalledOnce();
+  } finally { unmount(); cleanup(); }
 });
