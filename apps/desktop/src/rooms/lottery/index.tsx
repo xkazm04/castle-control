@@ -65,7 +65,8 @@ export default function LotteryRoom({ snapshot, replay, queue = proposalQueue, s
   }, [phase, state.draw, state.entries.length, state.sealed_roll, state.simulated_winners, state.writ]);
   useEffect(() => { if (prove) setLab(true); }, [prove]);
   // The demo's roll step fills the urn lot by lot; every other draft shows its roll at once.
-  const draft_draw = setup?.draw ?? (demo ? demoDraw(demo) : undefined);
+  // A draft shows once its first choice is made: an untouched or started-over flow leaves the chamber as it stands.
+  const draft_draw = setup?.preset ? setup.draw : demo?.sample ? demoDraw(demo) : undefined;
   const draft_entries = useMemo(() => draft_draw ? fixturePool(draft_draw) : undefined, [draft_draw]);
   const filling = Boolean(demo) && publication?.step === 'roll';
   const shown = useFill(draft_entries, filling);

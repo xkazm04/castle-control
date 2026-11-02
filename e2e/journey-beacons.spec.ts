@@ -75,7 +75,7 @@ test('Beacons: Test fire predicts the reaction, fires only on the hold, and Play
   await holdToSeal(page, /Fired a 50-gift bomb at the Offering altar\. It burns at 82% now\./);
   await expect(picture.locator('.visuals-stage__blaze')).toHaveText(/^82%/);
   await dock(page).getByRole('button', { name: 'Play demo', exact: true }).click();
-  await expect(dock(page)).toContainText('A SIMULATED sample night');
+  await expect(dock(page)).toContainText('Let support change how your stream looks');
   await option(page, 'Gift wave on the camera frame').click();
   await expect(picture.locator('.visuals-monitor__stamp')).toHaveText('Simulated demo night');
   await expect(picture).toHaveAttribute('data-mode', 'night');
@@ -83,7 +83,7 @@ test('Beacons: Test fire predicts the reaction, fires only on the hold, and Play
   await expect(dock(page).locator('.visuals-narration')).toContainText('gilded camera frame');
   await expect(picture.getByRole('list', { name: 'Latest simulated offerings' })).toBeVisible();
   await dock(page).getByRole('button', { name: 'Seen it', exact: true }).click();
-  await option(page, 'Fit the top point').click();
+  await option(page, 'Fit it to nights like this').click();
   await holdToSeal(page, /That was the demo\. On the gift wave the gilded camera frame peaks/);
   await expect(picture.locator('.visuals-stage__name')).toHaveText('Gilded camera frame');
   await auditStyles(page, desktopSurfaces);

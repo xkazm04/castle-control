@@ -18,6 +18,8 @@ export type ChamberSteward = {
   catch_up?(): CatchUp;
   /** Free-text words that point at this chamber when no flow matches ("giveaway"). */
   keywords?: readonly string[];
+  /** Plain answers for phrases no flow covers ("ban someone"): the Steward says `say`, then offers the chamber's chips. */
+  hints?: readonly { phrases: readonly string[]; say: string }[];
 };
 export type StewardRegistry = Readonly<Record<FlowChamber, ChamberSteward>>;
 

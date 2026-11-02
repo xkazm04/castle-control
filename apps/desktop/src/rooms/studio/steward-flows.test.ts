@@ -21,7 +21,7 @@ function walk(flow: AnyStewardFlow, answers: string[]): FlowState {
 afterEach(() => { duelHost.setCore(undefined); });
 
 test('the Map Room offers Start a duel, Duel on stream, Play demo and Catch me up, and maps free text', () => {
-  expect(chamberChips('studio', fixture).map(chip => chip.label)).toEqual(['Start a duel', 'Duel on stream', 'Play demo', 'Catch me up']);
+  expect(chamberChips('studio', fixture).map(chip => chip.label)).toEqual(['Start a duel', 'Show the duel on stream', 'Play demo', 'Catch me up']);
   expect(fixture.demo?.simulated).toBe(true);
   const registry = { keep: fixture, lottery: fixture, moderator: fixture, visuals: fixture, studio: fixture, stream: fixture, rehearsal: fixture };
   expect(matchIntent('start a tournament', registry, 'studio')).toMatchObject({ kind: 'flow', flow: 'studio-duel' });

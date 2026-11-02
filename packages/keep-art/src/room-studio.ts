@@ -49,7 +49,7 @@ export function studioRoom(): readonly ArtNode[] {
           tag: 'text', attrs: {
             x: '440', y: '122', 'font-family': 'Bahnschrift,Arial Narrow,sans-serif',
             'font-weight': '700', 'font-size': '16', 'letter-spacing': '1.4',
-          }, paint: { fill: 'art-key' }, text: 'SAND TABLE · 9 × 5 HEX',
+          }, paint: { fill: 'art-key' }, text: 'CHAT DUEL · TYPE 1 OR 2',
         },
       ],
     },

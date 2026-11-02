@@ -8,10 +8,10 @@ import type { ChipAction, StewardRegistry } from './registry.js';
  */
 export type IntentMatch =
   | (ChipAction & { score: number })
-  | { kind: 'chamber'; chamber: FlowChamber; score: number };
+  | { kind: 'chamber'; chamber: FlowChamber; score: number; hint?: string };
 
 const catchUpPhrases = ['catch me up', 'catch up', 'what happened', 'what did i miss', 'recap', 'summary', 'summarise', 'summarize', 'where are we', 'status'];
-const demoPhrases = ['play demo', 'play the demo', 'demo', 'show me how', 'simulate'];
+const demoPhrases = ['play demo', 'play the demo', 'demo', 'show me how', 'simulate', 'how does', 'how do', 'how it works', 'what does it do'];
 
 export function normalize(text: string): string[] {
   return text.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim().split(' ').filter(Boolean);
@@ -40,7 +40,10 @@ export function matchIntent(text: string, registry: StewardRegistry, current: Fl
   if (!words.length) return null;
   const demo = best(words, demoPhrases);
   if (demo) {
-    const chamber = registry[current].demo ? current : flowChambers.find(id => registry[id].demo && best(words, registry[id].keywords ?? []) > 0);
+    // "How does the giveaway work" names a chamber: its demo wins over the current one's.
+    const named = [current, ...flowChambers.filter(id => id !== current)]
+      .find(id => registry[id].demo && best(words, registry[id].keywords ?? []) > 0);
+    const chamber = named ?? (registry[current].demo ? current : undefined);
     if (chamber) return { kind: 'demo', chamber, score: demo };
   }
   const catchUp = best(words, catchUpPhrases);
@@ -55,6 +58,10 @@ export function matchIntent(text: string, registry: StewardRegistry, current: Fl
     }
   }
   if (found) return found;
+  for (const chamber of order) {
+    const hint = registry[chamber].hints?.find(item => best(words, item.phrases) > 0);
+    if (hint) return { kind: 'chamber', chamber, score: best(words, hint.phrases), hint: hint.say };
+  }
   for (const chamber of order) {
     const score = best(words, registry[chamber].keywords ?? []);
     if (score) return { kind: 'chamber', chamber, score };

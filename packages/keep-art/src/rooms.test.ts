@@ -120,7 +120,7 @@ test('all art text meets the sixteen-unit floor, keeps its anchor and uses key i
       ['37', '153', '321', 'middle'], ['27', '205', '297', 'middle'],
       ['21', '257', '283', 'middle'], ['16', '309', '272', 'middle'],
       ['THE HERALD · SAMPLE', '118', '202', undefined], ['HELD', '283', '517', 'middle'],
-      ['SAND TABLE · 9 × 5 HEX', '440', '122', undefined], ['DRAFT', '950', '420', 'middle'],
+      ['CHAT DUEL · TYPE 1 OR 2', '440', '122', undefined], ['DRAFT', '950', '420', 'middle'],
       ['THE STEWARD’S STUDY', '856', '376', undefined],
     ]);
 });

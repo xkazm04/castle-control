@@ -65,7 +65,10 @@ export type ConfirmStep<D> = StepBase<D> & {
 export type FlowStep<D> = ChoiceStep<D> | PresetStep<D> | FieldStep<D> | PreviewStep<D> | ConfirmStep<D>;
 export type FlowStepKind = FlowStep<unknown>['kind'];
 
-export type SealOutcome = { say: string; lines?: readonly FlowLine[] };
+/** A chip the closing beat offers (structurally a registry StewardChip; kept local to avoid a cycle). */
+export type OutcomeChip = { label: string; action: { kind: 'flow'; chamber: FlowChamber; flow: string } | { kind: 'demo' | 'catch_up' | 'go'; chamber: FlowChamber } };
+/** `chips` offer the next flow on the receipt beat ("Set up a real draw"); they only open flows, never act. */
+export type SealOutcome = { say: string; lines?: readonly FlowLine[]; chips?: readonly OutcomeChip[] };
 
 export type StewardFlow<D> = {
   id: string;
@@ -118,6 +121,8 @@ export type FlowView<D> = {
   /** 1-based position of the active step among visible steps, and the visible count so far. */
   position: number;
   total: number;
+  /** Steps the draft is expected to walk in all: visible ones plus pending ones whose `when` holds now. */
+  planned: number;
 };
 
 export function startFlow(flow: { id: string }): FlowState {
@@ -173,8 +178,9 @@ export function walkFlow<D>(flow: StewardFlow<D>, state: FlowState): FlowView<D>
     if (valid) draft = applyStep(step, draft, answer.value);
   }
   const visible = entries.filter(entry => entry.status !== 'pending');
+  const planned = visible.length + entries.filter(entry => entry.status === 'pending' && (!entry.step.when || entry.step.when(draft))).length;
   return { entries, active, draft, ready: active?.step.kind === 'confirm',
-    position: active ? visible.indexOf(active) + 1 : visible.length, total: visible.length };
+    position: active ? visible.indexOf(active) + 1 : visible.length, total: visible.length, planned };
 }
 
 export type AnswerResult = { state: FlowState; error?: string };

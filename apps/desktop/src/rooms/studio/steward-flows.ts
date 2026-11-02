@@ -136,7 +136,7 @@ function buildStartFlow(mode: Mode): StewardFlow<DuelDraft> {
 type StreamDraft = { how?: 'copy' | 'stream' };
 function buildStreamFlow(mode: Mode): StewardFlow<StreamDraft> {
   return defineFlow<StreamDraft>({
-    id: 'studio-duel-stream', chamber: 'studio', title: 'Duel on stream', chip: 'Duel on stream', simulated: mode === 'fixture',
+    id: 'studio-duel-stream', chamber: 'studio', title: 'Duel on stream', chip: 'Show the duel on stream', simulated: mode === 'fixture',
     intents: ['duel on stream', 'duel source', 'duel overlay', 'show the duel'],
     intro: 'Duel on stream is an OBS browser source that shows the current match, its tally and its timer.',
     initial: () => ({}),
@@ -174,18 +174,39 @@ function buildStreamFlow(mode: Mode): StewardFlow<StreamDraft> {
   });
 }
 
+/** When the demo's champion is crowned, the Steward names what was shown and offers the real flows. */
+let watching: (() => void) | undefined;
+function closeDemoWhenCrowned() {
+  watching?.();
+  let started = false;
+  const check = () => {
+    const picture = duelHost.picture();
+    if (!picture?.demo) { if (started) { watching?.(); watching = undefined; } return; }
+    started = true;
+    if (picture.phase !== 'done' || !picture.champion) return;
+    watching?.(); watching = undefined;
+    stewardDock.say({ chamber: 'studio', who: 'steward', simulated: true, sealed: true,
+      text: `Champion: ${picture.champion.title}. What you saw: chat settled the question in ${picture.matches} matches, one vote per viewer, and lines the Gatehouse barred never counted. Next: start a duel with your own question, or put it on stream.`,
+      chips: [{ label: 'Start a duel', action: { kind: 'flow', chamber: 'studio', flow: 'studio-duel' } },
+        { label: 'Show the duel on stream', action: { kind: 'flow', chamber: 'studio', flow: 'studio-duel-stream' } }] });
+  };
+  watching = duelHost.subscribe(check);
+}
+
 function buildDemo(mode: Mode): StewardFlow<DuelDraft> {
   return defineFlow<DuelDraft>({
-    id: 'studio-demo', chamber: 'studio', title: 'Play demo', simulated: true,
+    id: 'studio-demo', chamber: 'studio', title: 'Play demo · a chat duel', simulated: true,
     intents: ['demo', 'show me', 'play demo'],
-    intro: 'A SIMULATED tournament of four sample contestants at three times speed. Watch the stage above.',
+    intro: 'Let chat settle a question: two options at a time, viewers type 1 or 2, and the winner moves on until one is champion. Four sample options at three times speed; every ballot is SIMULATED.',
     initial: () => demoDraft,
     steps: [
       { id: 'plan', kind: 'preview', label: 'Demo', continue_label: 'Go on',
-        prompt: 'Ballots arrive and the tally moves; the window closes; the verdict lands; the next match opens; a champion is crowned.',
-        lines: draft => [...draftLines(draft, mode),
+        prompt: 'Above is the first match, marked DRAFT. Once you start it: ballots arrive and the tally moves, the window closes, the verdict lands, and the next match opens until a champion is crowned.',
+        lines: draft => [{ label: 'Question', value: draft.prompt ?? draft.title },
+          { label: 'Contestants', value: `${draft.entries.length} · ${shape(draft.entries.length)}` },
+          { label: 'Ballots', value: mode === 'core' ? 'SIMULATED, counted by the core after the Gatehouse' : 'SIMULATED · generated on this machine' },
           { label: 'Length', value: mode === 'core' ? 'About a minute on the core clock' : 'About thirty seconds' }] },
-      { id: 'seal', kind: 'confirm', label: 'Play', prompt: 'Hold to play the demo.',
+      { id: 'seal', kind: 'confirm', label: 'Play', prompt: 'Hold to start the demo, then just watch the stage.',
         note: mode === 'core' ? 'SIMULATED demo on the core: it replaces any tournament there and counts only what the Gatehouse passes.'
           : 'SIMULATED: generated ballots on this machine. Nothing reaches chat or OBS.',
         lines: draft => [{ label: 'Contestants', value: draft.entries.map(entry => entry.title).join(' · ') }] },
@@ -194,7 +215,8 @@ function buildDemo(mode: Mode): StewardFlow<DuelDraft> {
       await startDuel(draft, mode);
       // Lower the sheet so the stage is the picture again; the receipt stays in the dock line.
       stewardDock.collapse();
-      return { say: `Demo started: ${firstPair(draft)} first. Enter on the stage skips a wait.`,
+      closeDemoWhenCrowned();
+      return { say: `Demo running: ${firstPair(draft)} first. Watch the tally; Enter on the stage skips a wait.`,
         lines: [{ label: 'Demo', value: 'SIMULATED · four sample contestants' }] };
     },
   });
@@ -216,7 +238,7 @@ export function studioSteward(snapshot: Snapshot): ChamberSteward {
   const flows = flowsFor(mode);
   return {
     ...roomSteward('studio', snapshot, ['duel', 'tournament', 'bracket', 'map room', 'sand table', 'tiltyard']),
-    greeting: 'Map Room: the duel. Start one, put it on stream, or play the demo; nothing acts until you hold to seal.',
+    greeting: 'The Map Room: chat duels, where chat votes between two options until one wins. Start one, put it on stream, or play the demo; nothing acts until you hold to seal.',
     flows: [flows.start, flows.stream], demo: flows.demo,
     catch_up: () => {
       const picture = duelHost.picture();

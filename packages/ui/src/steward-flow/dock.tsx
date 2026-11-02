@@ -170,7 +170,11 @@ export function StewardDock({ chamber, registry, mode = 'simulated', role, input
   const beats = snapshot.beats.filter(beat => beat.chamber === chamber);
   const last_steward = beats.findLast(beat => beat.who === 'steward');
   const expanded = snapshot.expanded;
-  const chips = chamberChips(chamber, steward);
+  // After a seal that offers next steps, those lead the row: "Set up a real draw" beats the generic chips.
+  const offered = !session && last_steward?.sealed && last_steward === beats.at(-1) ? last_steward.chips ?? [] : [];
+  const offered_keys = new Set(offered.map(chipKey));
+  const chips = offered.length ? [...offered, ...chamberChips(chamber, steward).filter(item => item.action.kind !== 'flow' && !offered_keys.has(chipKey(item)))]
+    : chamberChips(chamber, steward);
   const flows = chamberFlows(chamber, steward);
   const shown = new Set(chips.map(chipKey));
   const more = flows.some(item => !shown.has(chipKey(item)));
@@ -233,8 +237,10 @@ export function StewardDock({ chamber, registry, mode = 'simulated', role, input
     }
     if (match) {
       const flow = match.kind === 'flow' ? findFlow(registry, match.chamber, match.flow) : undefined;
-      offer(match.chamber, flow ? `That is set up in ${registry[match.chamber].name}: "${flow.title}". Shall we go?`
-        : `That belongs in ${registry[match.chamber].name}. These are ready there.`);
+      const here = match.chamber === chamber;
+      const hint = match.kind === 'chamber' ? match.hint : undefined;
+      offer(match.chamber, hint ?? (flow ? `That is set up in ${registry[match.chamber].name}: "${flow.title}". Shall we go?`
+        : here ? `Here in ${steward.name}, these are ready.` : `That belongs in ${registry[match.chamber].name}. These are ready there.`));
       return;
     }
     if (on_unmatched) {
@@ -258,7 +264,7 @@ export function StewardDock({ chamber, registry, mode = 'simulated', role, input
     {expanded && <div className="cc-steward-sheet" id={sheet_id} role="group" aria-label="Steward conversation">
       <header className="cc-steward-sheet__head">
         <b className="cc-steward-sheet__title">{sheet_title}</b>
-        {session && view && !view.ready && <span className="cc-steward-sheet__count">step {view.position}</span>}
+        {session && view && <span className="cc-steward-sheet__count">step {view.position} of {Math.max(view.planned, view.position)}</span>}
         {simulated_sheet && <Sim />}
         <span className="cc-steward-sheet__tools">
           {session && <>

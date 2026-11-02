@@ -269,14 +269,14 @@ function demoFlow(access: Access) {
   return defineFlow<DemoDraft>({
     id: flow_ids.demo, chamber: 'visuals', title: 'Play demo · a sample night', simulated: true,
     intents: ['demo', 'play demo', 'show me', 'how does it work'],
-    intro: 'A SIMULATED sample night: fictional contributions arrive, the beacon grows and cools, and I tell you what a viewer sees.',
+    intro: 'Let support change how your stream looks: gift subs and subs make an on-screen frame glow brighter, then cool off, so viewers feel the room’s energy. One sample night at speed; every contribution is SIMULATED.',
     initial: () => ({ case: 'gift_wave' }),
     steps: [
       { id: 'case', kind: 'preset', label: 'Night', prompt: 'Pick a night to play. The picture above starts it at once.',
         presets: () => demoCases.map(item => ({ id: item.id, label: item.label, consequence: item.line, simulated: true })),
         apply: (draft, id) => { const found = demoCases.find(item => item.id === id); return found ? { ...draft, case: found.id } : draft; } },
       { id: 'watch', kind: 'preview', label: 'Watched', continue_label: 'Seen it',
-        prompt: 'Watch the picture: each gift or sub lands top left, the beacon swells, then cools by its half-life. Bits and points pass by uncounted.',
+        prompt: 'Watch the picture above: each gift or sub lands top left and the frame glows brighter; in quiet spells it cools by half every few minutes. Bits and channel points do not count here.',
         render: draft => {
           const chosen = target(draft);
           if (!chosen) return null;
@@ -284,17 +284,17 @@ function demoFlow(access: Access) {
             trace: nightTrace(chosen.item.visual.curve, chosen.found.night, chosen.item.gift_weight), curve: chosen.item.visual.curve });
         },
         lines: draft => { const chosen = target(draft); return chosen ? nightLines(chosen.item, chosen.found.night, false) : []; } },
-      { id: 'move', kind: 'choice', label: 'Then', prompt: 'Would you change the curve for a night like this?',
+      { id: 'move', kind: 'choice', label: 'Then', prompt: 'One choice: should it fill more slowly or quickly for nights like this? The curve is how much support it takes to glow.',
         when: draft => { const chosen = target(draft); return !!chosen && !!replayMoves(chosen.item.visual.curve, chosen.found.night, chosen.item.gift_weight).fit; },
         options: draft => {
           const chosen = target(draft);
           if (!chosen) return [];
           const { trace, fit } = replayMoves(chosen.item.visual.curve, chosen.found.night, chosen.item.gift_weight);
-          return [{ id: 'keep', label: 'Keep the curve', consequence: nightPhrase(trace) },
-            ...(fit ? [{ id: 'fit', label: fit.label, consequence: `${nightPhrase(nightTrace(fittedCurve(chosen.item.visual.curve, chosen.found.night), chosen.found.night))} · plays again above` }] : [])];
+          return [{ id: 'keep', label: 'Keep it as it is', consequence: `On this night it ${nightPhrase(trace)}` },
+            ...(fit ? [{ id: 'fit', label: 'Fit it to nights like this', consequence: `It ${nightPhrase(nightTrace(fittedCurve(chosen.item.visual.curve, chosen.found.night), chosen.found.night))} instead · plays again above` }] : [])];
         },
         apply: (draft, id) => ({ ...draft, move: id === 'fit' ? 'fit' : 'keep' }) },
-      { id: 'seal', kind: 'confirm', label: 'Seal', prompt: 'Hold to seal the demo curve into the sample room.',
+      { id: 'seal', kind: 'confirm', label: 'Seal', prompt: 'Hold to seal. The curve is kept in this sample room only.',
         note: 'SIMULATED demo. It changes the sample room only; nothing reaches OBS, chat or a viewer.',
         lines: draft => {
           const chosen = target(draft);
@@ -312,9 +312,11 @@ function demoFlow(access: Access) {
       const core = access.core ? access.items().find(value => value.visual.input?.source === 'gift' || value.visual.input?.source === 'subscribe') : undefined;
       const burst = core && shots.find(shot => shot.source === core.visual.input?.source);
       if (core && burst) await access.fire(core.visual.visual_id, burst);
-      return { say: `That was the demo. On the ${nightName(found.night).toLowerCase()} the ${item.visual.name.toLowerCase()} ${phrase}; the curve is sealed in the sample room.`,
-        lines: [{ label: 'Benefit', value: 'Viewers see support build and fade, without anyone reading a number' },
-          ...(core && burst ? [{ label: 'Core', value: `One simulated ${burst.label.toLowerCase()} sent to ${core.visual.name}` }] : [])] };
+      return { say: `That was the demo. On the ${nightName(found.night).toLowerCase()} the ${item.visual.name.toLowerCase()} ${phrase}. What you saw: support builds the glow and quiet lets it cool, so viewers feel the room’s energy without anyone reading a number. Next: tune a beacon for your channel, or test fire one.`,
+        lines: [{ label: 'Kept', value: 'In the sample room only · SIMULATED' },
+          ...(core && burst ? [{ label: 'Core', value: `One simulated ${burst.label.toLowerCase()} sent to ${core.visual.name}` }] : [])],
+        chips: [{ label: 'Tune a beacon', action: { kind: 'flow', chamber: 'visuals', flow: flow_ids.tune } },
+          { label: 'Test fire', action: { kind: 'flow', chamber: 'visuals', flow: flow_ids.test } }] };
     },
   });
 }
@@ -324,7 +326,7 @@ export function visualsSteward(snapshot: Snapshot): ChamberSteward {
   const base = roomSteward('visuals', snapshot, ['beacon', 'beacons', 'visual', 'altar', 'overlay', 'frame', 'border', 'blaze']);
   const selected = findItem(access, access.selected());
   return { ...base,
-    greeting: selected ? `Beacons: the ${selected.visual.name.toLowerCase()} is on screen${access.core ? '' : ` at ${percent(curveIntensity(selected.visual.curve, selected.total))} blaze`}. Tune it, test fire it, or play the demo night; nothing changes until you hold to seal.`
+    greeting: selected ? `The Beacons: support changes how the stream looks. The ${selected.visual.name.toLowerCase()} is on screen${access.core ? '' : ` at ${percent(curveIntensity(selected.visual.curve, selected.total))} blaze`}. Tune it, test fire it, or play the demo; nothing acts until you hold to seal.`
       : base.greeting,
     flows: [tuneFlow(access), testFlow(access), replayFlow(access)], demo: demoFlow(access) };
 }

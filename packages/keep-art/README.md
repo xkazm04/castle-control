@@ -65,7 +65,7 @@ its border stays gules. The surrounding UI supplies the dropped SAMPLE label.
 | HELD | 11 → 16 |
 | Wheel ticket numbers (12) | 8.5 → removed; ticket rectangles remain |
 | THE WRIT | 7 → dropped; cannot fit at 16 |
-| SAND TABLE · 9 × 5 HEX | 9 → 16 |
+| CHAT DUEL · TYPE 1 OR 2 | 9 → 16 |
 | DRAFT | 11 → 16 |
 | THE STEWARD’S STUDY | 10 → 16 |
 

@@ -102,7 +102,8 @@ export function createDockStore() {
         const outcome = await session.flow.seal(view.draft);
         setSession(chamber, undefined);
         store.say({ chamber, who: 'steward', text: outcome.say, sealed: true,
-          ...(outcome.lines ? { lines: outcome.lines } : {}), ...(session.flow.simulated ? { simulated: true } : {}) });
+          ...(outcome.lines ? { lines: outcome.lines } : {}), ...(outcome.chips?.length ? { chips: outcome.chips } : {}),
+          ...(session.flow.simulated ? { simulated: true } : {}) });
       } catch {
         setSession(chamber, { flow: session.flow, state: { ...session.state, status: 'open' },
           error: 'The seal did not take. Nothing changed. Hold again when ready.' });

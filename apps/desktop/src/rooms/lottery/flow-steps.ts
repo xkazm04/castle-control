@@ -226,9 +226,10 @@ export const demoShape = (draft: DemoDraft): DrawShape => draft.sample === 'priz
 
 export const demoFlow = defineFlow<DemoDraft>({
   id: 'lots-demo', chamber: 'lottery', title: 'Play demo · a fair draw', simulated: true, intents: ['demo', 'show me', 'play demo'],
-  intro: 'A SIMULATED draw, end to end: 87 generated viewers, a sealed roll, a cast you can prove.', initial: () => ({}),
+  intro: 'Run a giveaway nobody can call rigged: the entry list freezes before any randomness exists, and anyone can re-check the winners. Three steps; every viewer here is SIMULATED.',
+  initial: () => ({}),
   steps: [
-    { id: 'sample', kind: 'preset', label: 'Sample', prompt: 'Pick a sample draw. The stage above shows it.',
+    { id: 'sample', kind: 'preset', label: 'Sample', prompt: 'Pick a sample draw. The urn above fills with it.',
       presets: () => [
         { id: 'question', label: copy.question_name, tag: 'Urn', consequence: 'No prize · 3 winners · everyone chatting.', simulated: true },
         { id: 'prize', label: 'Free-entry prize', tag: 'Wheel', consequence: 'A $25 prize · 3 winners · shows the giveaway guardrails.', simulated: true }],
@@ -237,11 +238,11 @@ export const demoFlow = defineFlow<DemoDraft>({
       prompt: 'Guardrails first. A prize may not seal without official rules and the Twitch disclaimer, and money never buys odds.',
       options: () => [{ id: 'clear', label: 'Attach both', tag: 'Sample', consequence: 'A SIMULATED rules template and the disclaimer. Now it may seal.' }],
       apply: draft => ({ ...draft, cleared: true }) },
-    { id: 'roll', kind: 'preview', label: 'Roll', continue_label: 'Looks fair', prompt: 'Chat types !join and the roll fills on the stage.',
+    { id: 'roll', kind: 'preview', label: 'Roll', continue_label: 'Looks fair', prompt: 'Chat types !join and the urn fills: one lot per viewer, equal odds.',
       lines: draft => { const draw = demoDraw(draft); return [{ label: 'Lots', value: `${lotCount(draw)} generated viewers` },
         { label: 'Winners', value: String(draw.rules.winner_count) }, { label: 'Raiders', value: 'At most 1 of 3 winners' },
         { label: 'Odds', value: 'Equal · free !join counts in full' }]; } },
-    { id: 'seal', kind: 'confirm', label: 'Seal and cast', prompt: 'Hold to seal the roll. Its hash is fixed before any randomness exists; then the lots are cast and revealed.',
+    { id: 'seal', kind: 'confirm', label: 'Seal and cast', prompt: 'Hold to seal. The entry list gets a fingerprint (its hash) before any randomness exists; then the lots are cast and the winners revealed.',
       note: 'SIMULATED · generated viewers and a fixed-seed rehearsal. Nothing reaches chat or OBS.',
       lines: draft => [{ label: 'Draw', value: demoDraw(draft).name }, { label: 'On stream', value: shapeNames[demoShape(draft)] },
         ...guardrailLines(demoDraw(draft)).slice(0, 1)] },
@@ -251,7 +252,9 @@ export const demoFlow = defineFlow<DemoDraft>({
     await act.sealFixtureDraw(demoDraw(draft), demoShape(draft));
     const lines = await act.castFixture('quiet');
     lower();
-    return { say: 'Sealed and cast. The winners are revealed on the stage. “Prove it” recomputes them from the seal, and refuses any forged copy.',
-      lines: [...lines, { label: 'Winners', value: act.fixtureWinners().join(', ') }] };
+    return { say: 'Sealed and cast. What you saw: the entries froze first, the winners were drawn after, and the writ (the draw’s receipt) recomputes them for anyone. Next: set up a real draw, or try to forge this one.',
+      lines: [...lines, { label: 'Winners', value: act.fixtureWinners().join(', ') }],
+      chips: [{ label: 'Set up a real draw', action: { kind: 'flow', chamber: 'lottery', flow: setupFlow.id } },
+        { label: 'Prove it', action: { kind: 'flow', chamber: 'lottery', flow: proveFlow.id } }] };
   },
 });
