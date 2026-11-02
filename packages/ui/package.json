@@ -16,7 +16,10 @@
     "./fused/rampart.css": "./src/fused/rampart.css",
     "./fused/surface.css": "./src/fused/surface.css",
     "./fused/glass.css": "./src/fused/glass.css",
-    "./fused/folio.css": "./src/fused/folio.css"
+    "./fused/folio.css": "./src/fused/folio.css",
+    "./chamber": "./src/chamber/index.ts",
+    "./fused/surface-transition": "./src/fused/surface-transition.tsx",
+    "./action-row": "./src/action-row/index.tsx"
   },
   "sideEffects": [
     "./src/kit.tsx",

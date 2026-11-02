@@ -1,3 +1,4 @@
+import { openGatehouseDrawer } from './component-probe.jsx';
 import { Children, isValidElement } from 'react';
 import type { ButtonHTMLAttributes, ChangeEvent, InputHTMLAttributes, ReactElement, ReactNode } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
@@ -120,7 +121,7 @@ test('core renders the gate, the live room and the herald, with benches behind M
   const port = createCoreGatehousePort({ mode: 'core', endpoint: 'http://127.0.0.1:3210/', session_token: 'a'.repeat(64) }, {
     rpc: async () => { throw new Error('SSR must not call the core'); },
   });
-  const html = renderToStaticMarkup(<ConnectedGatehouse port={port} replay={false} seal_slot={<aside aria-label="Seal slot" />} />);
+  const html = openGatehouseDrawer(<ConnectedGatehouse port={port} replay={false} seal_slot={<aside aria-label="Seal slot" />} />);
   expect(html.match(/class="cc-plate cc-offset-shadow/g)).toHaveLength(2);
   expect(html).toContain('class="cc-panel gh-gate moderator-held-plate"');
   expect(html).toContain('Copy vote-bar browser source URL');

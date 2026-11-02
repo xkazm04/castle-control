@@ -1,4 +1,4 @@
-import { useMemo, useSyncExternalStore } from 'react';
+import { useEffect, useMemo, useSyncExternalStore } from 'react';
 import type { Ref } from 'react';
 import { InkButton } from '@castle-control/ui';
 import type { ModuleId } from '@castle-control/ui';
@@ -6,11 +6,13 @@ import { isPending, LiveSteward, proposalQueue } from '@castle-control/ui/stewar
 import type { Proposal, StewardContext, StewardPort, StewardTurn } from '@castle-control/ui/steward';
 import type { Surface } from '../navigation.js';
 import type { StewardConnection } from '../client.js';
-import { StewardDock } from '@castle-control/ui/steward-flow';
+import { StewardDock, stewardDock } from '@castle-control/ui/steward-flow';
 import type { FlowChamber, UnmatchedReply } from '@castle-control/ui/steward-flow';
 import type { Snapshot } from '../model.js';
-import { shellStewardPort } from './core-steward.js';
-import { flowChamber, stewardRegistry } from './steward-flows.js';
+import { shellSealAuthority, shellStewardPort } from './core-steward.js';
+import { flowChamber, roomActionKeys, stewardRegistry } from './steward-flows.js';
+import { registerActionKeys } from '../navigation.js';
+import { DeckSealKey } from './steward-slot.jsx';
 import './surfaces.css';
 
 export type TalkbackLine = { id: number; who: 'You' | 'Steward'; text: string; live?: boolean };
@@ -75,11 +77,16 @@ export function unmatchedReply(name: string, chips: readonly string[]): string {
 }
 
 /** Review uses the room's existing guarded seal/tear paths, never a second authorization control. */
-export function StewardProposal({ proposal, on_open }: { proposal: Proposal; on_open: (chamber: ModuleId) => void }) {
+export function StewardProposal({ proposal, on_open, on_withdraw }: { proposal: Proposal; on_open: (chamber: ModuleId) => void; on_withdraw?: () => void }) {
   return <article className="shell-steward-proposal" aria-label={`${proposal.title} proposal`}>
     <b>PROPOSAL · AWAITING YOUR SEAL</b><h3>{proposal.title}</h3>
     <p>Rev {proposal.revision} · {proposal.state}. Review the draft before holding to seal.</p>
-    <InkButton onClick={() => { proposalQueue.select(proposal.id); on_open(proposal.chamber); }}>Review in the room</InkButton>
+    <InkButton onClick={() => {
+      proposalQueue.select(proposal.id); on_open(proposal.chamber); stewardDock.collapse();
+      if (typeof document !== 'undefined') requestAnimationFrame(() => document.querySelector<HTMLButtonElement>('[data-role="seal-key"]')?.focus());
+    }}>Draft this → Preview</InkButton>
+    {on_withdraw && <InkButton onClick={on_withdraw}>Withdraw this draft</InkButton>}
+    <p>waits in Preview · hold Space to seal</p>
   </article>;
 }
 
@@ -99,6 +106,10 @@ export function ShellSteward({ context, chamber, snapshot = sampleSnapshot, conn
   const queue = useSyncExternalStore(proposalQueue.subscribe, proposalQueue.getSnapshot, proposalQueue.getSnapshot);
   const proposal = queue.proposals.findLast(isPending);
   const registry = useMemo(() => stewardRegistry(snapshot), [snapshot]);
+  const target = chamber ?? flowChamber(context);
+  const action_keys = useMemo(() => roomActionKeys(target, registry, snapshot), [target, registry, snapshot]);
+  const authority = shellSealAuthority(connection);
+  useEffect(() => registerActionKeys({ entries: action_keys, peel: () => stewardDock.peel() }), [action_keys]);
   async function unmatched(text: string): Promise<UnmatchedReply> {
     // The existing engine (live core, or the offline simulated one) answers what no flow matched.
     const turn = await stewardConversation.ask(text, stewardContext(context), port);
@@ -115,11 +126,14 @@ export function ShellSteward({ context, chamber, snapshot = sampleSnapshot, conn
     return { reply: turn.reply, ...(live ? { live: true } : {}) };
   }
   return <StewardDock chamber={chamber ?? flowChamber(context)} registry={registry} mode={live ? 'live' : 'simulated'}
+    {...(action_keys.length ? { action_keys, seal_key: <DeckSealKey chamber={target} authority={authority} /> } : {})}
     on_unmatched={unmatched}
     on_chamber={target => {
       if (on_chamber) on_chamber(target);
       else if (target !== 'keep' && target !== 'stream' && target !== 'rehearsal') on_open(target);
     }}
-    proposal={proposal ? <StewardProposal proposal={proposal} on_open={on_open} /> : null}
+    proposal={proposal ? <StewardProposal proposal={proposal} on_open={on_open} on_withdraw={() => {
+      void authority.tear(proposal).then(outcome => stewardDock.say({ chamber: target, who: 'steward', text: outcome.reply, ...(live ? { live: true } : { simulated: true }) }));
+    }} /> : null}
     {...(input_ref ? { input_ref } : {})} />;
 }

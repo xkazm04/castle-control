@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react';
-import { EmptyState, entranceStyle } from '@castle-control/ui';
+import { EmptyState } from '@castle-control/ui';
 import type { ModuleId } from '@castle-control/ui';
 import type { Snapshot } from '../model.js';
 import type { Surface } from '../navigation.js';
@@ -36,7 +36,7 @@ export default function Room({ chamber, replay, snapshot, origin, connection, on
     <RoomHeader key={chamber} chamber={chamber} replay={replay} origin={origin} fixture={fixture} on_back={on_back}
       {...(on_keep ? { on_keep } : {})} />
     <div className="shell-room-work">
-      <div key={`${chamber}-${replay}`} className="shell-room-content cc-print-in" style={entranceStyle(0)}><Suspense fallback={<p role="status">Opening the room...</p>}>
+      <div key={`${chamber}-${replay}`} className="shell-room-content"><Suspense fallback={<p role="status">Opening the room...</p>}>
         {fixture && chamber === 'lottery' ? <LotteryRoom snapshot={snapshot} replay={replay} seal_slot={seal_slot} />
           : chamber === 'lottery' ? <CoreLotteryRoom snapshot={snapshot} seal_slot={port instanceof LiveSteward ? seal_slot : undefined} />
           : chamber === 'moderator' ? <ModeratorRoom snapshot={snapshot} replay={replay} seal_slot={seal_slot} />

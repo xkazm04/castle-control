@@ -1,3 +1,4 @@
+import { openGatehouseDrawer } from './component-probe.jsx';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, expect, test, vi } from 'vitest';
 import { ProposalQueue } from '@castle-control/ui/steward';
@@ -12,7 +13,8 @@ import { BenchFeedback } from './rule-bench.jsx';
 import { moderationSession } from './session.js';
 
 afterEach(() => { vi.useRealTimers(); });
-const text = (html: string) => html.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+const text = (html: string) => html.replace(/<span class="cc-control-key" aria-hidden="true">[\s\S]*?<\/span>/g, '')
+  .replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
 const buttons = (html: string) => [...html.matchAll(/<button\b[^>]*>[\s\S]*?<\/button>/g)].map(match => match[0]);
 function description(html: string, button: string) {
   const ids = button.match(/aria-describedby="([^"]+)"/)?.[1]?.split(' ') ?? [];
@@ -120,7 +122,7 @@ test('Rule bench with a draft drill preview has exactly one polite count status'
   const queue = new ProposalQueue();
   const { bench } = moderationSession(queue);
   bench.setDraft({ name: 'Simulated draft', pattern: 'go left', action: 'warn' });
-  const room = renderToStaticMarkup(<ModeratorRoom snapshot={{ mode: 'fixture', phase: 'ready' }} replay={false} queue={queue} />);
+  const room = openGatehouseDrawer(<ModeratorRoom snapshot={{ mode: 'fixture', phase: 'ready' }} replay={false} queue={queue} />);
   const drill = renderToStaticMarkup(<ModeratorRoom snapshot={{ mode: 'fixture', phase: 'ready' }} replay queue={queue} />);
   const preview = drill.match(/<section\b[^>]*aria-label="Draft pattern preview"[^>]*>([\s\S]*?)<\/section>/)?.[1];
   expect(preview).toBeTruthy();

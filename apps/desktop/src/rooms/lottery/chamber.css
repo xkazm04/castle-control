@@ -1,151 +1,118 @@
-/* Lot Chamber · Stained Glass hall. The stage is the hero; the roll reads beside it; tools wait below.
-   The Steward's sheet owns setup: while it is raised the hall shrinks into the band still visible above it. */
-.lottery-room { --lot-gap: 18px; box-sizing: border-box; height: 100%; min-height: 0; display: grid; grid-template-rows: 100% auto auto;
-  row-gap: var(--lot-gap); padding: var(--lot-gap) var(--gutter) 0; color: var(--ink); font: var(--text-t-body)/1.45 var(--font-text); }
-.lottery-room .cc-hall { display: grid; grid-template-columns: minmax(0, 1.65fr) minmax(300px, 1fr); gap: var(--lot-gap); min-height: 0; height: 100%; }
-.lottery-room .cc-desk { display: flex; min-width: 0; min-height: 0; }
-.lottery-room[data-theatre="true"] .cc-hall { grid-template-columns: minmax(0, 1fr); }
-.lottery-room[data-theatre="true"] .cc-desk { display: none; }
+/* The Deck: existing ceremony, two compact section columns, one detail drawer. */
+.lottery-room { box-sizing: border-box; height: 100%; min-height: 0; min-width: 0; color: var(--ink); font: 400 var(--text-px-15)/1.45 var(--font-text); }
+.lottery-room p { margin: 0; }
+.lottery-room .cc-chamber-mini p { margin-bottom: var(--space-6); font-size: var(--text-px-15); }
+.lottery-room .lottery-note { color: var(--muted); font: 400 var(--text-px-15)/1.45 var(--font-text); }
+.lottery-room .cc-chamber-section { gap: var(--space-8); }
+.lottery-room .cc-chamber-section-heading h3 { font: 700 var(--text-px-13)/1.3 var(--font-text); text-transform: uppercase; }
+.lottery-room .cc-chamber-section-heading { gap: var(--space-12); }
+.lottery-rule-chips { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-8); }
+.lottery-room .lottery-rule-chip { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--space-3); min-width: 0; padding: var(--space-6); border: var(--came-hair) solid var(--hair); border-radius: var(--r-lg); background: var(--stone-2); color: var(--ink-2); font: 700 var(--text-px-13)/1.2 var(--font-text); text-align: center; }
+.lottery-rule-chip b { color: var(--ink); font: 600 var(--text-px-22)/1 var(--font-book); }
+.lottery-rule-chip small { font-size: var(--text-px-15); }
+.lottery-stepper { display: flex; align-items: center; justify-content: center; gap: var(--space-6); width: 100%; }
+.lottery-room .lottery-stepper button { padding: var(--space-2) var(--space-6); border: var(--came-hair) solid var(--hair); border-radius: var(--r); background: var(--surface); color: var(--ink); font-size: var(--text-px-15); }
+.lottery-rule-chip :is(input, select) { box-sizing: border-box; width: 100%; min-width: 0; border: var(--came-hair) solid var(--hair); border-radius: var(--r); background: var(--surface); color: var(--ink); font: 600 var(--text-px-18)/1.2 var(--font-book); padding: var(--space-3); text-align: center; }
+.lottery-room .lottery-stage-top { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: start; gap: var(--space-8); }
+.lottery-room .lottery-shape-picker { grid-column: 1 / -1; border: var(--came-hair) solid var(--hair); border-radius: var(--r-lg); background: var(--stone-2); padding: 0; gap: 0; }
+.lottery-room .lottery-shape-picker button { border-radius: var(--r); color: var(--ink-2); font: 600 var(--text-px-15)/1.45 var(--font-text); padding: var(--space-6) var(--space-2); }
+.lottery-room .lottery-shape-picker button[aria-pressed="true"] { background: var(--ch); color: var(--on-glass); box-shadow: none; border-color: var(--ch); }
+.lottery-room .lottery-shape-picker button svg { display: none; }
+.lottery-room .lottery-stage-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); min-width: 0; gap: var(--space-6); }
+.lottery-room .lottery-stage-options .cc-button.cc-heraldic-button[data-size] { box-sizing: border-box; width: 100%; min-width: 0; min-height: var(--space-36); padding: var(--space-4) var(--space-2); gap: 0; font: 600 var(--text-px-15)/1.45 var(--font-text); letter-spacing: normal; white-space: nowrap; overflow-wrap: normal; word-break: normal; }
+.lottery-room .lottery-stage-top .lottery-stage-expand.cc-button[data-size] { width: var(--space-28); height: var(--space-36); padding: var(--space-2); }
+.lottery-room .lottery-stage-notes > summary { box-sizing: border-box; height: var(--space-36); grid-template-rows: auto auto; gap: 0; border: var(--came-hair) solid var(--hair); border-radius: var(--r); background: var(--surface); }
+.lottery-room .lottery-stage-notes > .cc-aside { width: min(calc(var(--space-40) * 7), 70vw); max-height: none; overflow: visible; background: var(--surface); border: var(--came-hair) solid var(--hair); border-radius: var(--r); box-shadow: var(--shadow); }
 
-/* stage panel: lead frame, glass cap, the drawing fills it */
-.lottery-room .cc-panel.lottery-stage-panel, .lottery-room .cc-panel.lottery-roll, .cc-frame .lottery-room .cc-panel.lottery-stage-panel, .cc-frame .lottery-room .cc-panel.lottery-roll { padding: 0; }
-.lottery-stage-panel { container: lot-pool / size; display: grid; grid-template-rows: auto auto minmax(0, 1fr); min-width: 0; min-height: 0; }
-.lottery-stage-panel .cc-panel__head { align-items: center; flex-wrap: nowrap; padding-top: 8px; padding-bottom: 4px; }
-.lottery-stage-panel .cc-panel__title { flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-.lottery-count { display: flex; align-items: baseline; gap: 8px; margin: 0; flex: none; }
-.lottery-count b { font: 600 var(--text-t-h2)/1 var(--font-display); color: var(--ink); font-variant-numeric: lining-nums tabular-nums; }
-.lottery-count span { font: italic 400 var(--text-t-small)/1.2 var(--font-aside); color: var(--muted); }
-.lottery-stage-panel[data-draft] .lottery-count b { color: var(--or-ink); }
-.lottery-room .lottery-stage { display: flex; min-width: 0; min-height: 0; padding: 0 12px 10px; }
+/* The picture keeps the ceremony; its controls now live in section one. */
+.lottery-room .lottery-stage-panel { display: grid; grid-template-rows: auto minmax(0, 1fr); min-width: 0; min-height: 0; padding: var(--space-6); border: 0; border-radius: inherit; background: var(--stone-2); box-shadow: none; }
+.lottery-pool-heading { display: flex; align-items: baseline; gap: var(--space-6); min-width: 0; padding: 0; }
+.lottery-room .lottery-pool-heading h2 { margin: 0; flex: 1; min-width: 0; font: 600 var(--text-px-15)/1.2 var(--font-book); }
+.lottery-count { display: flex; align-items: baseline; gap: var(--space-4); flex: none; }
+.lottery-count b, .lottery-count span { font: 600 var(--text-px-15)/1.2 var(--font-text); }
+.lottery-room .lottery-stage { display: flex; min-width: 0; min-height: 0; padding: 0; }
+.lottery-room .lottery-draw-stage { position: relative; grid-template-rows: minmax(0, 1fr) auto; }
+.lottery-room .lottery-draw-stage:not(:has(> .lottery-stage-foot)) { grid-template-rows: minmax(0, 1fr); }
+.lottery-room .lottery-draw-theatre { border: var(--came-hair) solid var(--hair); border-radius: var(--r-lg); background: radial-gradient(ellipse, var(--ch-wash), var(--surface)); }
+.lottery-room .lottery-draw-theatre::before { border-color: var(--hair); border-radius: var(--r); }
+.lottery-room .lottery-stage-phase, .lottery-room .lottery-stage-phase small { font: 600 var(--text-px-15)/1.2 var(--font-text); letter-spacing: normal; text-transform: none; }
+.lottery-room .lottery-stage-disclaimer { font: 500 var(--text-px-15)/1.2 var(--font-text); background: var(--surface); border-color: var(--hair); letter-spacing: normal; }
+.lottery-room .lottery-stage-foot { flex-wrap: nowrap; }
+.lottery-room .lottery-stage-foot .cc-chip, .lottery-room .lottery-stage-foot .cc-stamp { font: 600 var(--text-px-15)/1.2 var(--font-text); letter-spacing: normal; text-transform: none; }
+.lottery-room .lottery-stage-rail li { border: var(--came-hair) solid var(--hair); border-radius: var(--r); background: var(--surface); box-shadow: none; font-size: var(--text-px-15); }
+.lottery-room .lottery-stage-rail li b, .lottery-room .lottery-stage-call small { font-size: var(--text-px-15); }
+.lottery-room .lottery-stage-call .cc-button { font-size: var(--text-px-15); }
+.lottery-room .lottery-stage-proclaim { border: var(--came-hair) solid var(--hair); border-radius: var(--r); background: var(--surface); color: var(--ink); box-shadow: var(--shadow); }
+.lottery-room .lottery-stage-proclaim :is(small, span, em) { font-size: var(--text-px-15); }
+.lottery-room .lottery-stage-verdict { border: var(--came-hair) solid var(--emerald); border-radius: var(--r-lg); background: var(--surface); box-shadow: var(--shadow); }
+.lottery-room .lottery-stage-verdict :is(small, p) { font-size: var(--text-px-15); }
+.lottery-room:not([data-theatre="true"]) .lottery-draw-theatre:has(.lottery-stage-rail) { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) auto auto; grid-template-areas: "phase" "art" "rail" "disclaimer"; }
+/* Completed winners also appear in Prove it; the picture retains just the active call. */
+.lottery-room:not([data-theatre="true"]) .lottery-stage-rail { padding: 0; overflow: visible; }
+.lottery-room:not([data-theatre="true"]) .lottery-stage-rail :is(ol, .lottery-stage-proclaim) { display: none; }
+.lottery-room .lottery-stage-announce { font-size: var(--text-px-15); }
 
-/* the stage itself in glass: clear pane on stone, leaded seg for the shape */
-.lottery-room .lottery-draw-theatre { border: var(--came) solid var(--lead); border-radius: var(--r);
-  background: radial-gradient(ellipse at 50% 52%, color-mix(in srgb, var(--ch-lit) 22%, var(--clear)) 0, var(--clear) 52%, var(--surface-2) 100%);
-  box-shadow: inset 0 0 0 1px var(--lead-hi), var(--shadow-inset); }
-.lottery-room .lottery-draw-theatre::before { inset: 6px; border: 1px solid var(--hair); border-radius: var(--r); }
-.lottery-room .lottery-stage-panel[data-draft] .lottery-draw-theatre::before { border: 1.5px dashed var(--or); }
-.lottery-room .lottery-draw-stage[data-phase="sealed"] .lottery-draw-theatre { border-style: solid; box-shadow: inset 0 0 0 3px var(--ch), var(--shadow-inset); }
-.lottery-room .lottery-shape-picker { gap: var(--came); padding: 0; border: var(--came) solid var(--lead); border-radius: var(--r); background: var(--lead); }
-.lottery-room .lottery-shape-picker button { min-height: var(--control-h-sm); background: var(--surface); color: var(--ink-2);
-  font: 800 var(--text-t-label)/1 var(--font-label); letter-spacing: .06em; text-transform: lowercase; }
-.lottery-room .lottery-shape-picker button:hover:not(:disabled) { background: var(--surface-2); }
-.lottery-room .lottery-shape-picker button[aria-pressed="true"] { border-color: transparent; background: var(--ch); color: var(--on-glass); box-shadow: inset 0 -3px 0 var(--ch-deep); }
-.lottery-room .lottery-stage-phase { font: 800 var(--text-t-label)/1.1 var(--font-label); letter-spacing: .08em; text-transform: lowercase; color: var(--ch-ink); }
-.lottery-room .lottery-stage-rail li { border: 1.5px solid var(--lead); border-radius: var(--r); background: var(--surface); box-shadow: 0 0 calc(var(--glow-on) * 10px) var(--ch-glow); }
-.lottery-room .lottery-stage-proclaim { border: var(--came) solid var(--lead); border-radius: var(--r); background: var(--lead); color: var(--on-lead); box-shadow: var(--shadow); }
-.lottery-room .lottery-stage-proclaim span { color: var(--or-lit); }
-.lottery-room .lottery-stage-verdict { border: var(--came) solid var(--emerald); border-radius: var(--r); background: var(--surface); box-shadow: var(--shadow); }
-
-/* the roll: status, cohorts, jewels, the draw card */
-.lottery-roll { display: grid; grid-template-rows: auto auto minmax(0, 1fr); width: 100%; min-width: 0; min-height: 0; }
-.lottery-roll .cc-panel__head { align-items: center; }
-.lottery-roll-body { align-content: start; min-height: 0; overflow: auto; scrollbar-gutter: stable; }
-.lottery-roll-status { display: flex; align-items: center; gap: 10px; margin: 0; font: 800 var(--text-t-label)/1.25 var(--font-label); letter-spacing: .08em; text-transform: lowercase; color: var(--or-ink); }
-.lottery-roll-status .cc-lozenge { --ch: var(--or); --ch-lit: var(--or-lit); --ch-glow: var(--or-glow); }
-.lottery-roll[data-tone="sealed"] .lottery-roll-status, .lottery-roll[data-tone="cast"] .lottery-roll-status { color: var(--gules-ink); }
-.lottery-roll[data-tone="sealed"] .cc-lozenge, .lottery-roll[data-tone="cast"] .cc-lozenge { --ch: var(--gules); --ch-lit: var(--gules-lit); --ch-glow: var(--gules-glow); }
-.lottery-roll[data-tone="cast"] .cc-lozenge { --ch: var(--emerald); --ch-lit: var(--emerald-lit); --ch-glow: var(--emerald-glow); }
-.lottery-roll[data-tone="cast"] .lottery-roll-status { color: var(--emerald-ink); }
-@media (prefers-reduced-motion: no-preference) {
-  .lottery-roll[data-tone="open"] .lottery-roll-status .cc-lozenge, .lottery-roll[data-tone="draft"] .lottery-roll-status .cc-lozenge { animation: lot-pulse 1.8s ease-in-out infinite; }
-}
-@keyframes lot-pulse { 50% { opacity: .45; } }
-.lottery-roll-legend { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 0; padding: 0; list-style: none; }
-.lottery-roll-legend li { display: grid; grid-template-columns: 14px minmax(0, 1fr); grid-template-rows: auto auto; column-gap: 8px; align-items: center;
-  font: 500 var(--text-t-small)/1.2 var(--font-text); color: var(--ink-2); }
-.lottery-roll-legend b { grid-column: 2; font: 600 var(--text-t-h2)/1 var(--font-display); color: var(--ink); font-variant-numeric: tabular-nums; }
-.lottery-roll-legend [data-cohort="new_account"] .cc-swatch { background: var(--ink); }
+.lottery-roll { display: grid; gap: var(--space-6); min-width: 0; }
+.lottery-roll-status { display: flex; align-items: center; gap: var(--space-6); color: var(--muted); font: 400 var(--text-px-15)/1.45 var(--font-text); }
+.lottery-cohort-bar { display: flex; height: var(--space-12); border-radius: var(--r-round); background: var(--surface); }
+.lottery-cohort-bar i { background: var(--ink); }
+.lottery-cohort-bar i[data-cohort="subscriber"] { background: var(--or); }
+.lottery-cohort-bar i[data-cohort="raider"] { background: var(--azure); }
+.lottery-roll-legend { display: flex; flex-wrap: nowrap; justify-content: space-between; gap: var(--space-6); margin: 0; padding: 0; list-style: none; }
+.lottery-roll-legend li { white-space: nowrap; overflow-wrap: normal; font: 400 var(--text-px-15)/1.45 var(--font-text); color: var(--ink-2); }
+.lottery-roll-legend b { display: block; font: 600 var(--text-px-18)/1.2 var(--font-book); color: var(--ink); }
+.lottery-roll-legend .cc-swatch { display: inline-block; width: var(--space-8); height: var(--space-8); margin-right: var(--space-3); border-radius: var(--r-sm); background: var(--ink); }
 .lottery-roll-legend [data-cohort="subscriber"] .cc-swatch { background: var(--or); }
-.lottery-roll-legend [data-cohort="raider"] .cc-swatch { background: var(--clear); box-shadow: 0 0 0 1.5px var(--azure), inset 0 0 0 2px var(--azure); }
-.lottery-roll-figs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 0; padding: 12px 0 0; list-style: none; border-top: 1px solid var(--hair); }
-.lottery-roll-figs .cc-readout--jewel { grid-template-columns: auto; justify-items: center; text-align: center; row-gap: 3px; }
-.lottery-roll-figs .cc-jewel { grid-row: auto; margin-bottom: 2px; width: 48px; height: 48px; background: radial-gradient(circle, var(--surface) 0 15px, var(--lead) 15px 17px, transparent 17px), repeating-conic-gradient(from 11.25deg, var(--lead) 0 2.5deg, transparent 2.5deg 45deg), conic-gradient(from 0deg, var(--g-lit), var(--g), var(--g-deep), var(--g), var(--g-lit), var(--g), var(--g-deep), var(--g), var(--g-lit)); font-size: var(--text-t-body); }
-.lottery-roll-body { gap: 12px; }
+.lottery-roll-legend [data-cohort="raider"] .cc-swatch { background: var(--azure); }
+.lottery-roll-total { font: 400 var(--text-px-15)/1.45 var(--font-text); color: var(--muted); }
+.lottery-roll-total b { color: var(--ink); font: 600 var(--text-px-22)/1 var(--font-book); }
+.lottery-draw-card { display: grid; gap: var(--space-6); min-width: 0; }
+.lottery-draw-card > .cc-kicker { display: none; }
+.lottery-room h3.lottery-draw-name { margin: 0; font: italic 400 var(--text-px-15)/1.3 var(--font-book); text-transform: none; }
+.lottery-draw-line, .lottery-draw-guard { color: var(--ink-2); font: 400 var(--text-px-15)/1.45 var(--font-text); }
+.lottery-draw-guard { display: flex; align-items: baseline; gap: var(--space-6); }
+.lottery-draw-actions { display: flex; flex-wrap: wrap; align-items: start; gap: var(--space-6); }
+.lottery-proof-winners { margin: 0; padding-left: var(--space-20); font: 500 var(--text-px-15)/1.3 var(--font-text); }
 
-.lottery-draw-card { display: grid; gap: 6px; padding: 14px 16px; background: var(--surface-2); border-left: 4px solid var(--ch); border-radius: var(--r); }
-.lottery-roll[data-tone="draft"] .lottery-draw-card { border-left-color: var(--or); background: color-mix(in srgb, var(--or-wash) 55%, var(--surface-2)); }
-.lottery-draw-name { margin: 0; font: 600 var(--text-t-h3)/1.1 var(--font-display); color: var(--ink); overflow-wrap: anywhere; }
-.lottery-draw-line, .lottery-draw-hint, .lottery-cast-note { margin: 0; font: 400 var(--text-t-small)/1.4 var(--font-text); color: var(--ink-2); }
-.lottery-draw-hint { font-style: italic; font-family: var(--font-aside); }
-.lottery-draw-guard { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 10px; margin: 2px 0 0; font: 400 var(--text-t-small)/1.35 var(--font-text); color: var(--ink-2); }
-.lottery-draw-actions { display: flex; flex-wrap: wrap; gap: 8px; padding-top: 6px; }
-.lottery-draw-actions > .cc-btn--primary { flex: 1 1 100%; }
-
-/* the cast beside the stage */
-.lottery-cast { display: grid; gap: 8px; }
-.lottery-cast-winners { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
-.lottery-cast-winners li { display: inline-flex; align-items: center; gap: 8px; padding: 4px 10px 4px 4px; background: var(--surface); border: 1.5px solid var(--lead); border-radius: var(--r);
-  font: 500 var(--text-t-small)/1 var(--font-mono); }
-.lottery-cast-winners b { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--ch); color: var(--on-glass); font: 800 var(--text-t-label)/1 var(--font-label); }
-.lottery-cast-toggle { justify-self: start; }
-.lottery-cast-proof { display: grid; gap: 6px; font: 400 var(--text-t-small)/1.4 var(--font-text); color: var(--ink-2); }
-.lottery-cast-proof p { margin: 0; }
-.lottery-pending { display: grid; gap: 12px; }
-
-/* below the hall: the Writ Lab bay and the one "More" disclosure */
-.lottery-lab-bay { display: grid; gap: 10px; }
+/* Full proof, setup, equalizer, appearance, lookup and fairness remain in the drawer. */
+.lottery-room .cc-chamber-drawer-body { display: grid; gap: var(--space-14); }
+.lottery-more-body { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, calc(var(--space-40) * 9)), 1fr)); align-items: start; gap: var(--space-14); padding-top: var(--space-10); }
+.lottery-more-body > * { min-width: 0; }
+.lottery-more-card, .lottery-cast, .lottery-lab-bay { display: grid; gap: var(--space-8); min-width: 0; }
+.lottery-more-card { padding: var(--space-12); border: var(--came-hair) solid var(--hair); border-radius: var(--r-lg); background: var(--surface); }
+.lottery-cast-winners { display: flex; flex-wrap: wrap; gap: var(--space-6); list-style: none; padding: 0; margin: 0; }
+.lottery-cast-winners li { display: inline-flex; gap: var(--space-6); border: var(--came-hair) solid var(--hair); border-radius: var(--r); padding: var(--space-4); }
+.lottery-cast-proof { display: grid; gap: var(--space-8); }
+.lottery-cast-proof[hidden] { display: none; }
+.lottery-room .lottery-lab { border: var(--came-hair) solid var(--hair); border-radius: var(--r-lg); background: var(--surface); box-shadow: var(--shadow); }
 .lottery-lab-close { justify-self: end; }
-.lottery-more { padding: 4px 0 var(--lot-gap); }
-.lottery-more > summary { display: inline-flex; align-items: center; gap: 10px; cursor: pointer; list-style: none; font: 800 var(--text-t-label)/1.2 var(--font-label); letter-spacing: .08em; text-transform: lowercase; color: var(--ink-2); }
-.lottery-more > summary::-webkit-details-marker { display: none; }
-.lottery-more > summary::before { content: ''; width: 9px; height: 9px; transform: rotate(45deg); background: var(--ch); box-shadow: 0 0 0 1.5px var(--lead); transition: transform var(--m-fast); }
-.lottery-more[open] > summary::before { transform: rotate(135deg); }
-.lottery-more-body { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 380px), 1fr)); gap: var(--lot-gap); align-items: start; padding-top: 14px; }
-.lottery-more-card { display: grid; gap: 10px; padding: 16px; background: var(--surface); border: 1.5px solid var(--hair); border-radius: var(--r); }
-.lottery-more-body > :is(.panel, .cc-card, article, section) { min-width: 0; }
 
-/* the sheet is raised: the shell folds the chamber head to its slim bar; the hall shrinks into the visible band; controls step back, the picture stays */
-.lottery-room[data-sheet="up"] > :not(.cc-hall, .cc-sandbox) { display: none; }
-.lottery-room[data-sheet="up"] .lottery-draw-theatre { padding: 2px; }
-/* proving: the Writ Lab is the picture while the Steward asks which writ and which forgery */
-.lottery-room[data-sheet="up"][data-proving] > .cc-hall { display: none; }
-.lottery-room[data-sheet="up"][data-proving] > .lottery-lab-bay { display: grid; height: calc(var(--lot-band) - 12px); overflow: auto; align-content: start; }
-.lottery-room[data-sheet="up"][data-proving] .lottery-lab-close { display: none; }
-.lottery-room[data-sheet="up"] .lottery-stage-disclaimer { display: none; }
-.lottery-room[data-sheet="up"] { grid-template-rows: var(--lot-band) auto auto; padding-top: 8px; }
-.lottery-room[data-sheet="up"] .cc-hall { height: calc(var(--lot-band) - 12px); }
-.lottery-room[data-sheet="up"] .lottery-stage-top, .lottery-room[data-sheet="up"] .lottery-stage-phase,
-.lottery-room[data-sheet="up"] .lottery-draw-actions, .lottery-room[data-sheet="up"] .lottery-cast { display: none; }
-.lottery-room[data-sheet="up"] .lottery-stage-panel .cc-panel__head { padding-top: 4px; padding-bottom: 2px; }
-.lottery-room[data-sheet="up"] .lottery-stage { padding-bottom: 12px; }
-.lottery-room[data-sheet="up"] .lottery-roll .cc-panel__head { padding-top: 4px; }
-.lottery-room[data-sheet="up"] .lottery-roll-body { gap: 8px; padding-top: 8px; }
-.lottery-room[data-sheet="up"] .lottery-roll-figs .cc-readout__sub { display: none; }
+/* Theatre expands the existing picture without remounting its reveal clock. */
+.lottery-room[data-theatre="true"] .cc-chamber-grid { grid-template-columns: minmax(0, 1fr); }
+.lottery-room[data-theatre="true"] .cc-chamber-column, .lottery-room[data-theatre="true"] .cc-chamber-minis,
+.lottery-room[data-theatre="true"] .cc-chamber-caption { display: none; }
+.lottery-room[data-theatre="true"] .cc-chamber-figure { flex: 1; min-height: 0; }
+.lottery-room[data-theatre="true"] .cc-chamber-picture { height: 100%; aspect-ratio: auto; }
+.lottery-room[data-theatre="true"] .lottery-draw-stage { grid-template-rows: auto minmax(0, 1fr) auto; }
+.lottery-room[data-theatre="true"] .lottery-draw-stage:not(:has(> .lottery-stage-foot)) { grid-template-rows: auto minmax(0, 1fr); }
+.lottery-room[data-theatre="true"] .lottery-stage-top { display: flex; flex-wrap: nowrap; }
+.lottery-room[data-theatre="true"] .lottery-stage-top .lottery-shape-picker { flex: 1; }
+.lottery-room[data-theatre="true"] .lottery-stage-options { flex: none; }
 
-@media (max-width: 900px) {
-  .lottery-room { height: auto; grid-template-rows: auto; }
-  .lottery-room .cc-hall { grid-template-columns: minmax(0, 1fr); height: auto; }
-  .lottery-stage-panel { height: 560px; }
-}
-.lottery-draw-actions > .cc-hash, .lottery-draw-actions > .lottery-pending { flex: 1 1 100%; min-width: 0; }
-.lottery-roll .lottery-seal-frame { display: grid; gap: 8px; padding: 12px 14px; background: var(--surface); border: 1.5px solid var(--hair); border-radius: var(--r); }
-/* short halls keep the roll calm and the next action in view */
-.lottery-roll { container: lot-roll / size; }
-@container lot-roll (height < 600px) {
-  .lottery-roll-figs .cc-readout__sub, .lottery-draw-card > .cc-kicker { display: none; }
-  .lottery-roll-legend b { font-size: var(--text-t-h3); }
-  .lottery-roll-figs { padding-top: 8px; }
-  .lottery-draw-card { padding: 10px 14px; gap: 4px; }
-  .lottery-roll .cc-panel__body { gap: 10px; padding-top: 8px; }
-}
-/* beside the roll the drawing keeps most of the stage; the winners' rail takes the narrow side */
-.lottery-room:not([data-theatre="true"]) .lottery-draw-theatre:has(.lottery-stage-rail) { grid-template-columns: minmax(0, 1.7fr) minmax(170px, 1fr); }
-/* the cast's provenance chip rides on the stage's lower edge, so the drawing keeps its height */
-.lottery-room .lottery-draw-stage { position: relative; }
-.lottery-room:not([data-theatre="true"]) .lottery-draw-stage > .lottery-stage-foot { position: absolute; left: 10px; bottom: 10px; z-index: 2; max-width: calc(100% - 20px); }
-/* one voice for panel titles (label small caps), the draw's own name in the display face */
-.lottery-room .cc-panel__title, .lottery-room .cc-panel__title[data-role="panel-title"] { margin: 0; font: 800 var(--text-t-h3)/1.15 var(--font-label); letter-spacing: var(--track-label); text-transform: lowercase; color: var(--ink); }
-.lottery-room h3.lottery-draw-name { font: 600 var(--text-t-h3)/1.1 var(--font-display); letter-spacing: 0; text-transform: none; }
-.lottery-room .lottery-draw-seal { font: 400 var(--text-t-label)/1.35 var(--font-mono); color: var(--muted); overflow-wrap: anywhere; }
-/* the Writ Lab in a leaded frame; pressed specimen and tamper choices read clearly in both themes */
-.lottery-room .lottery-lab { border: var(--came) solid var(--lead); border-radius: var(--r); background: var(--surface); box-shadow: var(--shadow); }
-.lottery-room .lottery-lab-step, .lottery-room .lottery-lab-bytes, .lottery-room .lottery-lab-strip li { border-radius: var(--r); background: var(--surface); }
-.cc-frame .lottery-room .cc-button[aria-pressed="true"] { background: var(--surface-3); color: var(--ink); border-color: var(--lead); box-shadow: inset 0 -4px 0 var(--ch); }
-.cc-frame .lottery-room .lottery-lab-specimens .cc-button[aria-pressed="true"] { background: var(--lead); color: var(--on-lead); }
-.cc-frame .lottery-room .lottery-lab-tampers .cc-button[aria-pressed="true"] { background: var(--gules-wash); color: var(--gules-ink); border-color: var(--gules); box-shadow: none; }
-/* Play demo sandbox: the etched strip sits in the room's top padding, the hall keeps the rest. */
-.lottery-room[data-sandbox] { position: relative; padding-top: 54px; }
-.lottery-room > .cc-sandbox { position: absolute; top: 10px; left: var(--gutter); right: var(--gutter); }
-.lottery-room[data-sandbox][data-sheet="up"] { padding-top: 50px; }
-.lottery-room[data-sandbox][data-sheet="up"] > .cc-sandbox { top: 6px; }
-.lottery-room[data-sandbox][data-sheet="up"] .cc-hall { height: calc(var(--lot-band) - 54px); }
+/* Preserve the winner section spacing; secondary controls live in the drawer. */
+.lottery-room .cc-chamber-section { padding: var(--space-11) var(--space-14) var(--space-12); }
+.lottery-room .lottery-roll-legend b { display: inline; margin-inline-start: var(--space-3); }
+.lottery-room .lottery-draw-actions > .cc-btn { padding: var(--space-6) var(--space-8); font-size: var(--text-px-15); }
+.lottery-room .lottery-rule-chip { position: relative; }
+.lottery-rule-chip > .cc-control-key { position: absolute; top: var(--space-2); right: var(--space-2); margin: 0; }
+.lottery-room .lottery-shape-picker { position: relative; padding-inline-end: var(--space-26); }
+.lottery-shape-picker > .cc-control-key { position: absolute; top: var(--space-3); right: var(--space-3); margin: 0; }
+
+.lottery-room .lottery-draw-stage .cc-control-key > .cc-key-badge { font-size: var(--text-px-15); }
+
+/* One row at the laptop width: these labels use the chamber text face, without wide tracking. */
+.lottery-room .lottery-primary-actions { flex-wrap: wrap; }
+.lottery-room .lottery-primary-actions > .cc-btn { flex: none; padding-inline: var(--space-6); font: 600 var(--text-px-15)/1.45 var(--font-text); letter-spacing: normal; text-transform: none; white-space: nowrap; }
+.lottery-room[data-theatre="true"] .lottery-stage-options .cc-button.cc-heraldic-button[data-size] { font-size: var(--text-px-15); }
+
+.lottery-room .lottery-stage-top[data-options-drawer="true"] { grid-template-columns: minmax(0, 1fr) auto; }

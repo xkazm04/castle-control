@@ -13,7 +13,7 @@ export function tearFocusedProposal(target: Pick<Element, 'closest'> | null) {
 export function DesktopApp({ client }: { client: DesktopClient }) {
   const snapshot = useSyncExternalStore(client.subscribe, client.getSnapshot, client.getSnapshot);
   const [navigation, setNavigation] = useState(() => initialNavigation(window.location.hash));
-  const [theme, setTheme] = useState<Theme>('day');
+  const [theme, setTheme] = useState<Theme>('night');
   const [selected, setSelected] = useState<ModuleId>('lottery');
   const root = useRef<HTMLDivElement>(null);
   const stewardInput = useRef<HTMLInputElement>(null);
@@ -68,7 +68,7 @@ export function DesktopApp({ client }: { client: DesktopClient }) {
       preventDefault: () => { event.preventDefault(); } }, editable, openShortcut, // The Keep has no Steward dock: `/` there is left alone (no focus move, no preventDefault).
       navigation.current === 'keep' ? undefined : () => { stewardInput.current?.focus(); },
     {
-      overview: () => go('#/overview'),
+      overview: () => go('#/keep'),
       back: () => go(backHash(navigation)),
       ...(navigation.current === 'overview' && (tile || event.target === root.current) ? { open: () => navigate(selected) } : {}),
       // Only the focused shared-queue proposal may own Delete.

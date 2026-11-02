@@ -10,7 +10,6 @@ import { OutputPreview } from './output.jsx';
 import type { OutputPort } from './output-model.js';
 import { ChatPlayback } from './playback.jsx';
 import { RuleBench } from './rule-bench.jsx';
-import type { RoomViewPort } from './room-view.js';
 
 export const moreSummary = 'Live room · rule bench · moat · garrison orders · drill · gate roll · stream output';
 
@@ -19,13 +18,13 @@ export const moreSummary = 'Live room · rule bench · moat · garrison orders �
  * still here; setup journeys also live as Steward flows (Set the rules, Vote bar on stream,
  * Practice a drill).
  */
-export function MoreBenches({ state, port, queue, bench, output, view, more, marked, directions }: {
+export function MoreBenches({ state, port, queue, bench, output, marked, directions }: {
   state: ModerationPreview; port: ModerationPort; queue: ProposalQueue; bench: RuleBenchPort; output: OutputPort;
-  view: RoomViewPort; more: boolean; marked: ReadonlySet<string> | undefined;
+  marked: ReadonlySet<string> | undefined;
   directions: ConsensusGetResult['directions'];
 }) {
   const messages: readonly Decision[] = state.messages.slice(0, state.replay_count);
-  return <details className="gh-more" open={more} onToggle={event => view.setMore(event.currentTarget.open)}>
+  return <details className="gh-more" open>
     <summary><span className="gh-more__title">More of the Gatehouse</span><span className="gh-more__list">{moreSummary}</span></summary>
     <div className="gh-more__body">
       <section className="gh-bench gh-bench--room moderator-replay" aria-label={copy.live}>

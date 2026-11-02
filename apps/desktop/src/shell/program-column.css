@@ -1,34 +1,37 @@
 .shell-keep-workspace { display: grid; flex: 1; grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); min-height: 0; min-width: 0; overflow: hidden; }
-.shell-program-column { min-height: 0; overflow-y: auto; overflow-x: hidden; box-sizing: border-box; }
-.shell-program-column > * { flex-shrink: 0; }
-.shell-program-column:focus-visible { outline: var(--rule-strong) solid var(--azure); outline-offset: calc(-1 * var(--rule-strong)); }
-.shell-program-column .cc-monitor-picture { box-sizing: border-box; }
+.shell-program-column { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr) minmax(0, 1fr); gap: var(--space-12); min-height: 0; min-width: 0; box-sizing: border-box; }
+.shell-program-column:focus-visible { outline: var(--rule-strong) solid var(--azure); outline-offset: var(--space-2); }
+.shell-program-column > section, .shell-program-proclaim { min-width: 0; min-height: 0; box-sizing: border-box; padding: var(--space-12) var(--space-16); border: var(--space-1) solid var(--hair-2); border-radius: var(--space-12); background: linear-gradient(180deg, var(--surface-2), var(--surface)); }
+.cc-frame .shell-program-column .cc-monitor-label { display: flex; align-items: center; justify-content: space-between; gap: var(--space-8); margin: 0 0 var(--space-8); color: var(--deck-gold); font: 700 var(--text-px-13)/1.2 var(--font-deck-sans); letter-spacing: .12em; text-transform: uppercase; }
+.shell-program-column .cc-monitor-label strong { font: inherit; }
+.shell-program-column .cc-monitor-lamp { display: none; }
+.cc-frame .shell-program-column .cc-monitor-label .cc-stamp { padding: var(--space-3) var(--space-6); border: var(--space-1) solid var(--hair-2); border-radius: var(--space-26); background: transparent; color: var(--ink-2); font: 600 var(--text-px-13)/1.2 var(--font-deck-sans); letter-spacing: 0; white-space: nowrap; transform: none; box-shadow: none; }
+.cc-frame .shell-program-column .cc-monitor-picture { border: 0; background: transparent; box-shadow: none; aspect-ratio: auto; min-height: 0; }
 .shell-program-column .cc-program-monitor > .cc-colnote { display: none; }
-.shell-program-column .cc-draft-frame { box-sizing: border-box; height: 100%; overflow: auto; }
-.shell-program-draft { display: flex; flex-direction: column; gap: var(--space-4); padding: var(--space-12); overflow-wrap: anywhere; font: 400 var(--text-t-small)/1.4 var(--font-text); }
-.shell-program-proclaim p, .shell-program-status { margin: 0 0 var(--space-6); overflow-wrap: anywhere; font: 400 var(--text-t-small)/1.35 var(--font-text); color: var(--ink-2); }
-.shell-program-column .cc-seal-button { width: 100%; }
-.shell-program-note { margin: 0; font: italic 400 var(--text-t-small)/1.4 var(--font-aside); color: var(--muted); }
-.shell-program-status { color: var(--muted); }
-
-/* One glass-framed column, read top to bottom: Preview, Program, the hold, the fairness promise.
-   Sections are separated by hairlines, not boxed one inside another. */
-.cc-frame .shell-program-column { display: flex; flex-direction: column; gap: 14px; margin: 12px 14px 14px 0; padding: 14px 16px; border: var(--came) solid var(--lead);
-  background: color-mix(in srgb, var(--surface) 92%, transparent); box-shadow: var(--shadow); }
-.cc-frame .shell-program-column .cc-monitor-label { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 0 0 8px;
-  font: 800 var(--text-t-label)/1.2 var(--font-label); letter-spacing: .1em; text-transform: lowercase; color: var(--ink); }
-.cc-frame .shell-program-column .cc-monitor-lamp { width: 10px; height: 10px; margin-right: 8px; border: 1.5px solid var(--lead); border-radius: 0; transform: rotate(45deg); background: var(--surface-2); }
-.cc-frame .shell-program-column .cc-preview-lamp { background: var(--or-lit); }
-.cc-frame .shell-program-column .cc-monitor-lamp[data-on-air="true"] { background: var(--gules-lit); box-shadow: 0 0 calc(var(--glow-on) * 10px) var(--gules-glow); }
-.cc-frame .shell-program-column .cc-monitor-picture { border: var(--came) solid var(--lead); background: var(--surface-2); box-shadow: inset 0 0 0 1px var(--hair); }
-.cc-frame .shell-program-column .cc-preview-picture { aspect-ratio: auto; min-height: 92px; }
-.cc-frame .shell-program-column .cc-preview-picture:has(.cc-empty) { height: 92px; }
-.cc-frame .shell-program-column .cc-program-picture { box-shadow: inset 0 0 0 1px var(--hair), 0 0 0 3px var(--surface), 0 0 0 4px var(--gules); }
-.cc-frame .shell-program-proclaim { display: grid; gap: 4px; padding-top: 12px; border-top: 1px solid var(--hair); }
-.cc-frame .shell-program-column .cc-fair { margin-top: auto; padding: 10px 12px 11px 14px; border: 0; background: var(--surface-2); box-shadow: inset 4px 0 0 var(--emerald), inset 0 0 0 1px var(--hair);
-  font: 400 var(--text-t-small)/1.38 var(--font-text); color: var(--ink-2); }
-.cc-frame .shell-program-column .cc-fair b { margin-bottom: 3px; font: 800 var(--text-t-label)/1.2 var(--font-label); letter-spacing: .1em; text-transform: lowercase; color: var(--emerald-ink); }
-@media (height < 52rem) {
-  .cc-frame .shell-program-column { gap: 10px; padding-block: 12px; }
-  .cc-frame .shell-program-column .cc-preview-picture:has(.cc-empty) { height: 64px; min-height: 64px; }
+.shell-program-column .cc-draft-frame { display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-6); border: var(--space-1) dashed var(--deck-gold-2); font: 400 var(--text-px-14)/1.3 var(--font-deck-sans); overflow-wrap: anywhere; }
+.shell-program-column .cc-draft-frame::before, .shell-program-column .cc-draft-frame::after { display: none; }
+.shell-program-column .cc-draft-frame span { color: var(--ink-2); }
+.shell-program-empty { display: flex; flex-direction: column; gap: var(--space-4); margin: 0; font: italic 400 var(--text-px-15)/1.3 var(--font-deck-serif); color: var(--ink-2); }
+.shell-program-empty b { font-weight: 400; }
+.shell-program-proclaim { display: flex; flex-direction: column; justify-content: center; gap: var(--space-4); text-align: center; }
+.shell-program-proclaim > p { margin: 0; font: italic 400 var(--text-px-13)/1.25 var(--font-deck-serif); color: var(--ink-2); overflow-wrap: anywhere; }
+.shell-program-proclaim .shell-program-note { font: 400 var(--text-px-13)/1.2 var(--font-deck-sans); color: var(--muted); }
+.cc-frame .shell-program-column .cc-seal-button { --ch-lit: var(--deck-gold); display: flex; flex-direction: column; justify-content: center; align-items: center; width: 100%; min-height: var(--space-56); height: auto; margin: 0; gap: var(--space-4); padding: var(--space-8); border: var(--space-1) solid var(--deck-gold-2); border-radius: var(--space-12); text-align: center; font-size: var(--text-px-13); box-shadow: inset 0 calc(-1 * var(--space-4)) 0 var(--stone-2); }
+.cc-frame .shell-program-column .cc-seal-button::before { display: none; }
+.cc-frame .shell-program-column .cc-seal-button .cc-seal-instruction { font: 400 var(--text-px-13)/1.2 var(--font-deck-sans); }
+.cc-frame .shell-program-column .cc-seal-button > span:first-child { font: 700 var(--text-px-13)/1.25 var(--font-deck-sans); letter-spacing: .08em; text-transform: uppercase; }
+.shell-program-summary { display: grid; gap: var(--space-6); font: 400 var(--text-px-14)/1.25 var(--font-deck-sans); }
+.shell-program-summary p { display: flex; flex-direction: column; margin: 0; color: var(--ink-2); overflow-wrap: anywhere; }
+.shell-program-summary b { color: var(--ink); }
+.shell-program-summary span { font-size: var(--text-px-13); }
+.shell-sill-link { margin-top: var(--space-6); padding: 0; border: 0; background: transparent; color: var(--deck-gold); text-align: left; text-decoration: underline; font: 600 var(--text-px-13)/1.2 var(--font-deck-sans); cursor: pointer; }
+.shell-sill-link:focus-visible { outline: var(--space-2) solid var(--focus); outline-offset: var(--space-3); }
+.shell-program-draft { display: flex; flex-direction: column; gap: var(--space-4); padding: var(--space-12); overflow-wrap: anywhere; font: 400 var(--text-px-15)/1.4 var(--font-deck-sans); }
+.shell-program-column .cc-chamber-drawer { top: calc(var(--rampart-h) + var(--tabs-h)); bottom: 0; }
+.shell-program-column .cc-chamber-drawer .overview-scene { width: 100%; aspect-ratio: 16 / 9; }
+@media (max-height: 800px), (max-width: 1380px) {
+  .shell-program-column { gap: var(--space-8); }
+  .shell-program-column > section, .shell-program-proclaim { padding: var(--space-8) var(--space-10); }
+  .cc-frame .shell-program-column .cc-monitor-label { gap: var(--space-4); letter-spacing: .08em; margin-bottom: var(--space-6); }
+  .shell-program-proclaim .shell-program-note { display: none; }
 }

@@ -8,17 +8,21 @@
 @keyframes cc-fade { from { opacity: 0; } }
 @keyframes cc-chip { from { opacity: 0; transform: translateY(calc(-0.5 * var(--shift))) scale(.96); } }
 
-/* a surface or chamber arriving: fade and rise */
-.desktop-surface > :not(.desktop-notice) { animation: cc-rise var(--m-enter) var(--ease-out) both; }
+/* Route surfaces cross-fade through SurfaceTransition. Never animate their size
+   or position, including the old Keep/window entrance and print-in effects. */
+.desktop-surface > :not(.desktop-notice), .desktop-surface .shell-room-content,
+.desktop-surface .keep-home { animation: none; }
+.cc-surface-out { position: fixed; z-index: 3; margin: 0; pointer-events: none; overflow: hidden; }
+.cc-frame .cc-surface-out * { animation: none !important; transition: none !important; }
 .shell-room > .cc-chamber-head { animation: cc-fade var(--m-enter) var(--ease-out) both; }
 /* the chamber body replaces the print-in clip with the same calm arrival, with no start delay */
-.shell-room-content.cc-print-in { animation: cc-rise var(--m-enter) var(--ease-out) both; animation-delay: 0s; }
+.shell-room-content.cc-print-in { animation: none; }
 
 /* More sections, disclosures and the Writ Lab trace: the body eases open */
 .cc-frame details[open] > :not(summary) { animation: cc-rise var(--m-calm) var(--ease-out) both; }
 
 /* list items that appear: proposals, held messages, flow beats, menu rows */
-.cc-frame :is(.cc-proposal-card, .gh-held, .cc-ticket, .cc-beat, .cc-flow-menu__list, .cc-empty) { animation: cc-rise var(--m-calm) var(--ease-out) both; }
+.cc-frame :is(.cc-proposal-card, .gh-held, .cc-ticket, .cc-beat, .cc-flow-menu__list, .cc-empty) { animation: cc-fade var(--m-calm) var(--ease-out) both; }
 
 /* selection: tabs, toggles, segments and pressed buttons change colour, never jump */
 .cc-frame :is(.cc-tab, .cc-btn, .cc-seg button, .moderator-chip-toggle, .cc-chamber-tile, summary, .cc-input, select) {

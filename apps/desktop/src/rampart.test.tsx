@@ -1,16 +1,36 @@
 import { renderToStaticMarkup } from 'react-dom/server';
-import { expect, test } from 'vitest';
+import { expect, test, vi } from 'vitest';
 import { DesktopView } from './view.jsx';
 import { DesktopRampart } from './rampart.jsx';
 import { simulatedRead } from './simulated.js';
 import type { Snapshot } from './model.js';
 import type { ModuleId } from '@castle-control/ui';
 import Keep from './shell/keep.jsx';
+import { DesktopApp } from './app.jsx';
+import { Children, isValidElement } from 'react';
+import { ThemeToggle } from '@castle-control/ui';
 
 test('the hook-free fixture rampart links its OBS chip to setup', () => {
   const html = renderToStaticMarkup(DesktopRampart({ snapshot: { mode: 'fixture', phase: 'ready' },
     theme: 'day', on_theme_change: () => undefined }));
-  expect(html).toMatch(/<a href="#\/stream"[^>]*><span[^>]*data-stamp="simulated"[^>]*aria-label="Simulated: OBS simulated"><span aria-hidden="true">OBS simulated<\/span><\/span><\/a>/);
+  expect(html).toMatch(/<a href="#\/stream"[^>]*><span class="cc-rampart-link"[^>]*aria-label="OBS simulated"[^>]*>[\s\S]*?<span aria-hidden="true">OBS<\/span><\/span><\/a>/);
+  expect(html).toContain('data-role="status-bar"');
+});
+
+test('the app opens at night and the existing theme toggle still selects day', () => {
+  const snapshot = { mode: 'fixture', phase: 'ready' } as const;
+  vi.stubGlobal('window', { location: { hash: '#/keep' } });
+  try {
+    const html = renderToStaticMarkup(<DesktopApp client={{ subscribe: () => () => undefined,
+      getSnapshot: () => snapshot, start: () => () => undefined }} />);
+    expect(html).toContain('data-theme="night"');
+    const change = vi.fn();
+    const tree = DesktopRampart({ snapshot, theme: 'night', on_theme_change: change });
+    const toggle = Children.toArray(tree.props.children).find(child => isValidElement(child) && child.type === ThemeToggle);
+    if (!isValidElement<Parameters<typeof ThemeToggle>[0]>(toggle)) throw new Error('Missing theme toggle');
+    ThemeToggle(toggle.props).props.onClick();
+    expect(change).toHaveBeenCalledWith('day');
+  } finally { vi.unstubAllGlobals(); }
 });
 
 function render(snapshot: Snapshot, current: ModuleId = 'lottery') {
@@ -60,9 +80,12 @@ test.each([
     theme="day" on_theme_change={() => undefined} />);
   expect(html).toContain('data-stamp="off-air" role="img" aria-label="On air is simulated: nothing is broadcast"');
   expect(html).toContain('>On air · simulated</span>');
-  for (const label of ['Twitch simulated', 'OBS simulated', 'Gatehouse simulated']) {
-    expect(html).toContain(`data-stamp="simulated" role="img" aria-label="Simulated: ${label}"><span aria-hidden="true">${label}</span>`);
+  for (const name of ['Twitch', 'OBS', 'Gatehouse']) {
+    expect(html).toContain(`class="cc-rampart-link" role="img" aria-label="${name} simulated"`);
+    expect(html).toContain(`<span aria-hidden="true">${name}</span>`);
   }
+  expect(html.match(/data-stamp="simulated"/g)).toHaveLength(1);
+  expect(html).toContain('aria-label="Connections · simulated"');
   expect(html).toContain('<b>Unknown</b><small>viewers</small>');
   expect(html).toContain('<b>Unknown</b><small>uptime</small>');
   for (const claim of ['cc-connection', 'connected', 'data-stamp="on-air"', '214', '01:00:00', 'Armed', 'Watching', 'Bridge up']) {
@@ -84,9 +107,7 @@ test('a rehearsal core retains SIMULATED provenance and actual OBS/bridge connec
   const html = render({ mode: 'core', phase: 'ready', ...simulatedRead(1), bridge: { state: 'disconnected' } });
   expect(html).toContain('data-stamp="off-air"');
   expect(html).toContain('>On air · simulated</span>');
-  for (const label of ['Gatehouse simulated']) {
-    expect(html).toContain(`data-stamp="simulated" role="img" aria-label="Simulated: ${label}"><span aria-hidden="true">${label}</span>`);
-  }
+  expect(html).toContain('class="cc-rampart-link" role="img" aria-label="Gatehouse simulated"');
   expect(html).not.toContain('desktop-simulated');
   expect(html).not.toContain('SIMULATED SOURCE');
   expect(html).not.toContain('Twitch: connected');

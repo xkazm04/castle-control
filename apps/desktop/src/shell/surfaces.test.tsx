@@ -13,6 +13,7 @@ import { Overview } from '../overview/overview.jsx';
 import { StreamScene } from '../overview/scene.jsx';
 import { programCandidate, proclaimToSampleProgram, sampleProgram } from '../overview/program.js';
 import { createStewardConversation, routeStewardTurn, ShellSteward, stewardContext, StewardProposal, unmatchedReply } from './steward.jsx';
+import { stewardDock } from '@castle-control/ui/steward-flow';
 
 vi.mock('react', async importOriginal => ({ ...await importOriginal<typeof React>() }));
 
@@ -22,7 +23,7 @@ const program = () => renderToStaticMarkup(<StreamScene mode="program" proposals
 beforeEach(() => { for (const proposal of proposalQueue.pending()) proposalQueue.tearUp(proposal.id); proposalQueue.select(); });
 afterEach(() => { vi.useRealTimers(); vi.restoreAllMocks(); vi.unstubAllGlobals(); });
 
-test('Steward bar shows only the newest pending queue proposal and removes empty chrome after tear-up', async () => {
+test('Steward conversation shows only the newest pending queue proposal and removes empty chrome after tear-up', async () => {
   const steward = new SimulatedSteward();
   await steward.ask('draft a question draw', { surface: 'keep' });
   const first = proposalQueue.pending().at(-1);
@@ -32,6 +33,8 @@ test('Steward bar shows only the newest pending queue proposal and removes empty
   proposalQueue.amend(newest.id, [{ key: 'shield', value: true }]);
   const render = () => renderToStaticMarkup(<ShellSteward context="keep" on_select={vi.fn()} on_open={vi.fn()} on_overview={vi.fn()} />);
   const before = proposalQueue.getSnapshot();
+  expect(render()).not.toContain('aria-label="Steward proposal"');
+  stewardDock.expand();
   const html = render();
   expect(html).toContain('aria-label="Steward identity"');
   expect(html).toContain('PROPOSAL · AWAITING YOUR SEAL');
@@ -43,6 +46,7 @@ test('Steward bar shows only the newest pending queue proposal and removes empty
   expect(render()).toContain(first.title);
   proposalQueue.tearUp(first.id);
   expect(render()).not.toContain('aria-label="Steward proposal"');
+  stewardDock.collapse();
 });
 
 test('Steward proposal review selects and opens the existing guarded room without sealing or tearing', async () => {
@@ -52,7 +56,7 @@ test('Steward proposal review selects and opens the existing guarded room withou
   const open = vi.fn();
   const tree = StewardProposal({ proposal, on_open: open });
   const html = renderToStaticMarkup(tree);
-  expect(html).toContain('Review in the room');
+  expect(html).toContain('Draft this → Preview');
   expect(html).not.toContain('data-seal-control');
   expect(html).not.toContain('data-tear-proposal');
   tree.props.children[3].props.onClick();

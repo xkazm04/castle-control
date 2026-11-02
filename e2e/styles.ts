@@ -11,8 +11,8 @@ export function styleTokenNames(policy: StylePolicy): string[] {
 export const desktopSurfaces: Surface[] = [
   { name: 'frame', selector: '.cc-frame' },
   { name: 'rampart', selector: '.cc-rampart' },
-  // The current shell exposes chamber navigation as a keep, strip or locator.
-  { name: 'chamber navigation', selector: '.cc-chambers, .cc-chamber-strip, .cc-room-locator, .keep-cross-section, .demo-heading, .stream-heading, .rehearsal-heading' },
+  // Keep and rooms share the header room bar; secondary workspaces retain their heading.
+  { name: 'chamber navigation', selector: '[data-role="room-bar"], .cc-chambers, .keep-cross-section, .demo-heading, .stream-heading, .rehearsal-heading' },
   { name: 'room body', selector: '.keep-home, .overview-workspace, .shell-room, .demo-workspace, .stream-workspace, .rehearsal-workspace' },
 ];
 

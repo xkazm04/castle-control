@@ -1,0 +1,91 @@
+/* The Deck: bounded picture, a reading card, and compact beacon choices. */
+.visuals-deck { display: flex; flex-direction: column; font-size: var(--text-px-15); line-height: 1.45; }
+.visuals-deck .visuals-stage--picture { display: block; min-width: 0; min-height: 0; }
+.visuals-deck .visuals-stage--picture .visuals-monitor {
+  box-sizing: border-box; width: 100%; height: 100%; padding: 0; border: 0;
+  border-radius: var(--r-lg); box-shadow: none;
+}
+.visuals-deck .visuals-stage--picture .visuals-monitor__screen {
+  width: 100%; height: 100%; max-width: none; border-radius: var(--r-lg);
+}
+.visuals-deck .visuals-monitor :is(.visuals-monitor__sim, .visuals-monitor__stamp, .visuals-monitor__ticker li, .visuals-monitor__pin) {
+  font-size: var(--text-px-15);
+}
+.visuals-deck .visuals-stage__read { gap: var(--space-8); }
+.visuals-deck .visuals-stage__name { font: 600 var(--text-px-22)/1.1 var(--font-book); }
+.visuals-deck .visuals-stage__blaze { margin: 0; white-space: nowrap; min-width: max-content; }
+.visuals-deck .visuals-stage__blaze b { font-size: var(--text-px-32); line-height: 1; }
+.visuals-deck .visuals-stage__blaze b small { font-size: var(--text-px-18); }
+.visuals-deck .visuals-stage__blaze b s { font-size: var(--text-px-18); }
+.visuals-deck .visuals-stage__blaze span { font-size: var(--text-px-15); line-height: 1.45; }
+.visuals-deck :is(.visuals-stage__eyebrow, .visuals-stage__total, .visuals-stage__spark span, .visuals-stage__notice) {
+  font-size: var(--text-px-15); line-height: 1.45;
+}
+.visuals-deck .visuals-stage__tags { gap: var(--space-4); }
+.visuals-deck .visuals-stage__tags .cc-stamp { font-size: var(--text-px-13); }
+.visuals-deck .visuals-spark { height: calc(var(--space-20) * 3 + var(--space-10)); background: var(--stone-2); }
+.visuals-deck .visuals-stage__line { padding: var(--space-4) var(--space-6); font-size: var(--text-px-15); line-height: 1.45; }
+.visuals-deck-actions { display: flex; flex-wrap: wrap; gap: var(--space-8); }
+.visuals-deck-actions .cc-btn, .visuals-drawer-trigger {
+  min-height: var(--space-28); padding: var(--space-4) var(--space-10);
+  border: var(--came-hair) solid var(--hair); border-radius: var(--r-md);
+  background: var(--stone-2); font: 600 var(--text-px-15)/1.45 var(--font-text);
+}
+.visuals-deck .visuals-primary-actions { flex-wrap: wrap; gap: var(--space-8); }
+.visuals-deck .visuals-primary-actions .cc-btn {
+  flex: 1 0 auto; padding: var(--space-8) var(--space-10); white-space: nowrap;
+  font: 600 var(--text-px-15)/1.45 var(--font-text); letter-spacing: 0;
+}
+.visuals-deck-tag { color: var(--ch-ink); font-size: var(--text-px-13); text-transform: uppercase; }
+.visuals-weight {
+  display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center;
+  gap: var(--space-8); padding: var(--space-8); border: var(--came-hair) solid var(--hair);
+  border-radius: var(--r-md); background: var(--stone-2); font-size: var(--text-px-15); line-height: 1.45; white-space: nowrap;
+}
+.visuals-weight input { width: 100%; min-width: 0; accent-color: var(--ch); }
+.visuals-weight output { min-width: 2ch; color: var(--ch-ink); font: 600 var(--text-px-18)/1 var(--font-mono); }
+.visuals-deck .cc-chamber-mini p { margin: 0; color: var(--ink-2); font-size: var(--text-px-15); line-height: 1.45; }
+.visuals-deck .cc-chamber-mini .visuals-preview-draft {
+  padding: var(--space-6); margin-bottom: var(--space-6); border: var(--came-hair) dashed var(--ch);
+  border-radius: var(--r-sm); background: var(--ch-wash);
+}
+/* Separate from the legacy comparison plate grid and numeric HeroReadout skin. */
+.visuals-deck .visuals-beacon-list {
+  display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-8); min-width: 0;
+}
+.visuals-deck .visuals-beacon {
+  display: grid; grid-template-columns: minmax(0, 1fr) max-content;
+  align-items: baseline; gap: var(--space-8); min-width: 0; width: 100%; box-sizing: border-box;
+  padding: var(--space-8); border: var(--came-hair) solid var(--hair); border-radius: var(--r-md);
+  background: var(--stone-2); color: var(--ink); text-align: left;
+  font: 400 var(--text-px-15)/1.45 var(--font-text); overflow-wrap: normal; word-break: normal;
+}
+.visuals-deck .visuals-beacon[aria-checked="true"] {
+  grid-template-columns: minmax(0, 1fr) max-content; gap: var(--space-8);
+  border-color: var(--ch); box-shadow: 0 0 var(--space-12) var(--ch-glow);
+}
+.visuals-deck .visuals-beacon-name { white-space: normal; overflow-wrap: normal; font-weight: 600; }
+.visuals-deck .visuals-beacon[aria-checked="true"] .visuals-beacon-name {
+  font: 600 var(--text-px-20)/1.2 var(--font-book); white-space: normal; overflow-wrap: normal;
+}
+.visuals-deck .visuals-beacon-blaze {
+  min-width: 4ch; white-space: nowrap; text-align: right;
+  color: var(--ch-ink); font: 600 var(--text-px-15)/1.45 var(--font-mono);
+}
+.visuals-deck .visuals-beacon-state { grid-column: 1 / -1; white-space: normal; color: var(--ch-ink); }
+.visuals-deck .visuals-beacon[aria-checked="true"] .visuals-beacon-state { grid-column: 1 / -1; }
+.visuals-deck .cc-chamber-drawer-body { display: grid; gap: var(--space-14); }
+.visuals-deck .visuals-more__body { display: grid; }
+.visuals-deck-error { margin: 0; padding: var(--space-4) var(--space-14); font-size: var(--text-px-13); }
+/* Higher specificity than the earlier expanded-Steward picture sizing. */
+.desktop-shell .visuals-deck .visuals-stage--picture .visuals-monitor__screen { height: 100%; }
+.desktop-shell .visuals-deck .visuals-stage__read { gap: var(--space-8); }
+.desktop-shell .visuals-deck .visuals-spark { height: calc(var(--space-20) * 3 + var(--space-10)); }
+.desktop-shell .visuals-deck :is(.visuals-stage__tags, .visuals-stage__notice, .visuals-stage__spark > span) { display: flex; }
+
+/* Key badges stay on their controls without forcing a fourth grid cell or an overwide action row. */
+.visuals-deck .visuals-primary-actions { flex-wrap: wrap; }
+.visuals-deck .visuals-weight { position: relative; padding-inline-start: var(--space-32); }
+.visuals-weight > .cc-control-key { position: absolute; inset-inline-start: var(--space-3); margin: 0; }
+.visuals-deck .visuals-beacon { position: relative; padding-inline-start: var(--space-32); }
+.visuals-deck .visuals-beacon-name > .cc-control-key { position: absolute; inset-inline-start: var(--space-3); margin: 0; }

@@ -1,4 +1,5 @@
 import { ThemeFrame } from '@castle-control/ui';
+import { SurfaceTransition } from '@castle-control/ui/fused/surface-transition';
 import type { ModuleId } from '@castle-control/ui';
 import type { Theme } from '@castle-control/tokens';
 import type { Ref } from 'react';
@@ -58,7 +59,7 @@ export function DesktopView(props: ViewProps) {
         <Suspense fallback={<div className="shell-strip-loading" role="status">Opening the chambers...</div>}>
           <PersistentStrip snapshot={props.snapshot} current={current} on_open={props.on_navigate} on_keep={() => props.on_surface?.('keep')} />
         </Suspense>}
-      <main className="desktop-surface">
+      <SurfaceTransition surface={current}>
         {props.snapshot.phase !== 'ready' && <p className="desktop-notice" role="status">
           {props.snapshot.mode === 'fixture' ? 'Loading simulated snapshot.' : props.snapshot.message ?? 'Connecting to the core; status is unknown.'}
         </p>}
@@ -76,7 +77,7 @@ export function DesktopView(props: ViewProps) {
               {...steward_connection}
               on_open={props.on_navigate} on_back={props.on_back ?? (() => undefined)} on_keep={() => props.on_surface?.('keep')} />}
         </Suspense>
-      </main>
+      </SurfaceTransition>
       {current !== 'overview' && current !== 'keep' && steward}
     </div>
   </ThemeFrame>;

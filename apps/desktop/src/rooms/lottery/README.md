@@ -426,3 +426,120 @@ Google Chrome use was not approved.
 No measured before/after values or browser layout pass are claimed. The
 Director must run the two Lots journeys with browser access to close visual
 acceptance. No external result path was supplied in the FU-2 brief.
+
+
+## T3 WP4-lot: The Deck chamber frame
+
+Fixture and connected core rooms now compose the same LotChamber over the public
+ChamberLayout, ChamberSection and Drawer primitives. The original StagePanel and
+DrawStage occupy the 16:9 picture; Preview reads the pending proposal/Steward draft,
+and Program reads the current fixture/core draw. No sample core counts are invented.
+
+- Column 1: compact winner/cooldown-derived held-out/cap readings and edits,
+  ceremony shape, hand reveal, sound, info and theatre; the current question,
+  pool and policy verdict. Held out opens the existing cooldown editor rather
+  than inventing an independently editable exclusion count. Core winner typing
+  retains its buffered blur/Enter commit and lock/busy checks.
+- Column 2: the roll (actual fixture cohort bar/counts, unknown core cohorts),
+  cast/setup actions and notices, and Prove it. Its compact winner list follows
+  the existing reveal clock; the full ordered list remains in the drawer.
+- Drawer: complete current/saved writs, frozen bytes and hash recomputation,
+  Writ Lab, intake, full setup, tier/equalizer, appearance and OBS details,
+  round note, refresh, no-prize creation, lookup, seal frame, design actions and
+  fairness. The original More grouping starts expanded inside the drawer.
+
+Theatre expands the same stage without replacing its reveal clock. Enter and
+return transfer focus between the visible theatre control and the active hand
+call. The canonical prize disclaimer stays visible in both picture sizes.
+
+The old stage/desk assertions now target the picture and two section columns.
+Assertions for lookup, saved proof, fairness, complete writs, appearance and
+seal/design controls open the real session-owned drawer before inspecting them.
+Shared navigation/room test edits are limited to lottery cases. No coverage for
+another room was changed. chamber.test.tsx checks both room modes, their actual
+drawer trigger/open/close sequence, all five sections, and reveal-order privacy.
+
+journey-lots-stage.spec.ts pins the picture to the shared clamp and 16:9 ratio
+(380 x 213.75 at 1280 wide; 423 x 237.9375 at 1366 wide). The old 260px drawing
+minimum applies only in theatre, superseding the old desk minimum. Four shapes,
+two themes, control containment, text floors, room overflow, keyboard theatre,
+manual Space calls and proof/tamper checks remain covered in the journey.
+
+Browser execution was attempted with CC_E2E_PORT=5181 and:
+`pnpm --config.verify-deps-before-run=false exec playwright test -c e2e/playwright.config.ts e2e/journey-lots-stage.spec.ts --project chrome-1280x800`.
+It stopped before assertions with `Error: spawn EPERM`; no measured fit or visual
+fidelity pass is claimed. The desktop dev server started successfully on 5175
+because 5173 and 5174 were occupied, and was stopped after the launcher check.
+
+Final validation after the WP1 merge: desktop typecheck and lint both exit 0
+(364 source files); desktop test exits 0 with 127 files / 1,155 tests passed.
+`node scripts/check.mjs` exits 0: boundaries/hygiene/file-cap 1,362 files,
+type-floor 301 files, secrets 1,814 files. E2E TypeScript and ESLint checks
+also exit 0. No dependencies were installed and no git write was performed.
+The shared e2e/lots-steward.ts cast helper and journey-lots.spec.ts are outside
+this delivery's stage-spec edits; their old card/desk selectors still need the
+Director's integration migration and browser verification.
+
+
+## Owner readability decision, 2026-11-02: 15 px, move more into drawers
+
+Only Lot Chamber paths changed. Section paragraphs, rows, lists, fields, action
+labels and Preview/Program copy use `--text-px-15` with 1.45 leading. Drawer body
+copy uses the same policy. Small-cap section/rule headings and key badges keep
+the existing 13 px floor; the ceremony picture retains its existing 15 px text.
+Section padding is restored to the winner's 11 / 14 / 12 px, with 8 px content
+gaps and 10 px between sections. The picture clamp and aspect ratio are unchanged.
+
+Moved to the existing drawer:
+
+- Hand-reveal and sound toggles, plus the ceremony information disclosure. The
+  Set up section keeps shape selection and fullscreen, and adds a visible
+  `Ceremony options` drawer trigger. The original G/H/I badges remain on the
+  moved controls. Theatre still offers these controls directly.
+- The cohort-name/count legend, retaining `data-role="lot-legend"` and real
+  fixture counts. The main roll keeps its status, visual bar and total. Unknown
+  core cohort data is not invented.
+- Play demo and pending-writ review. The main cast section keeps its guarded
+  setup/cast operations; pending review scrolls to the existing full writ.
+- Winner-name details. The main proof section keeps the reveal count and proof
+  action; full ordered winners stay in the drawer. The summary never exposes an
+  unrevealed name, and the full reveal list still rejects an older seal's cursor.
+
+Computed height budget, not browser measurements:
+
+- A body line is 15 * 1.45 = 21.75 px; a section heading is 13 * 1.3 = 16.9 px.
+  Section padding plus borders is 25 px. Standard buttons have at least a 38 px
+  border box. The grid retains 22 px vertical padding and 10 px column gaps.
+- At the minimum laptop section width (about 359 px inside the section), allow
+  two lines for roll status and draw metadata. Setup plus question sections use
+  at most about 420 px including the grid padding. Roll + cast + proof use about
+  421 px before a cast and 429 px after a cast: the names no longer add rows to
+  that proof section. This is a conservative 430 px column budget for the
+  generated default, sealed and cast fixture states, not a bound on arbitrary
+  user-written names or error messages.
+- Against the requested ~470 px body at 1280x720, the computed reserve is ~40 px;
+  at 1366x768 with the same shell heights it is ~88 px. The picture remains
+  380 x 213.75 px and 423 x 237.94 px respectively. Preview/Program text grows
+  within the existing mini panels; duplicate core status copy was removed from
+  Program while keeping its audience/round provenance visible.
+
+Verification with installed dependencies only:
+
+- `pnpm --config.verify-deps-before-run=false --filter @castle-control/desktop
+  typecheck`, `lint`: exit 0.
+- Matching `test`: 132 files / 1188 tests passed. Initial cold runs timed out in
+  the shared all-room-header case; its isolated run and the subsequent full
+  suite passed without editing that shared test or increasing gate timeouts.
+- `node scripts/check.mjs`: exit 0 (boundaries, hygiene, type floor, file cap,
+  secrets). `git diff --check`: exit 0.
+- Moved-content tests use both real drawer triggers, check fixture/core open and
+  close state, preserve every badge, verify the moved legend's counts, and check
+  compact/full reveal privacy. No coverage was removed.
+
+Browser measurement is still unavailable in the builder sandbox (the earlier
+Playwright and direct Chrome launches failed with `spawn EPERM`). The budget
+above is computed; Director browser verification at both requested sizes is
+still required. E2E files are outside this room-only write set; in particular,
+the earlier `journey-lots.spec.ts` assertion of three main cast buttons must be
+updated by its owner to inspect Play demo in the drawer and two primary buttons.
+No git writes, dependencies, live actions or other room changes were made.

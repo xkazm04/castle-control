@@ -1,4 +1,5 @@
-﻿import { lazy, Suspense, useEffect, useId, useMemo, useRef, useState, useSyncExternalStore } from 'react';
+import { RoomKeyBadge } from '../../shell/steward-keys.jsx';
+import { lazy, Suspense, useEffect, useId, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import type { CSSProperties, ReactNode } from 'react';
 import type { DesignId } from '@castle-control/contract';
 import { SealButton, Stamp, WindowedRows } from '@castle-control/ui';
@@ -10,7 +11,7 @@ import type { CoreLotsPort } from '../../lots-core.js';
 import { lotsCopy as copy } from '../../lots-copy.js';
 import type { Snapshot } from '../../model.js';
 import { FairnessSteps, policyReason } from './print.jsx';
-import { DrawStage } from './stage.jsx';
+import { CeremonyControls, CeremonyDetails, DrawStage } from './stage.jsx';
 import type { StageCast } from './stage-model.js';
 import { WeightEqualizer } from './equalizer.jsx';
 import { WritLab } from './lab.jsx';
@@ -22,10 +23,13 @@ import { DrawAppearance } from './appearance.jsx';
 import { coreStage } from './core-stage.js';
 import { coreDraftDraw, coreFlows } from './flow-core.js';
 import type { CoreSetupDraft } from './flow-core.js';
-import { capFigure, contentLine, poolLabel } from './flow-model.js';
+import { contentLine, poolLabel } from './flow-model.js';
 import { lotLive } from './live.js';
 import { DrawCard, MoreTools, RollPanel, StagePanel } from './roll.jsx';
-import { useSheetBand } from './chamber-hooks.js';
+import { LotChamber } from './chamber.jsx';
+import { DrawControls } from './draw-controls.jsx';
+import { lotDrawer } from './drawer.js';
+import { RevealedWinners } from './revealed.jsx';
 import { coreDemoFlow, isDemoClosing } from './flow-steps.js';
 import { useDemoSandbox } from '../../demo-sandbox.jsx';
 
@@ -33,6 +37,7 @@ import { useDemoSandbox } from '../../demo-sandbox.jsx';
 const SandboxRoom = lazy(() => import('./index.jsx'));
 import './room.css';
 import './chamber.css';
+import './readability.css';
 
 /** Core mode authenticates real draws against the public quicknet key only, never a simulated chain. */
 const core_anchors = [quicknet_anchor] as const;
@@ -73,8 +78,9 @@ export function ConnectedLotsRoom({ port, simulated, seal_slot, flows, import_ar
   const draw = state.draw;
   const field_id = useId();
   const publication = useStewardDraft('lottery');
-  const root = useRef<HTMLDivElement>(null);
-  const band = useSheetBand(root, publication !== undefined);
+  const drawer = lotDrawer(port);
+  const tools_open = useSyncExternalStore(drawer.subscribe, drawer.getSnapshot, drawer.getSnapshot);
+  const setTools = (open: boolean) => open ? drawer.open() : drawer.close();
   const phase = state.started ? 'cast' : state.sealed ? 'sealed' : 'open';
   const plan = state.seal_result?.sealed.roll.randomness;
   useEffect(() => {
@@ -84,7 +90,7 @@ export function ConnectedLotsRoom({ port, simulated, seal_slot, flows, import_ar
   }, [phase, draw, state.draws, state.entries.length, state.seal_result, state.cast_result, state.writ, plan]);
   const draft = publication?.flow === 'lots-setup' ? publication.draft as CoreSetupDraft : undefined;
   const prove_draft = publication?.flow === 'lots-prove' ? publication.draft as { tamper?: string } : undefined;
-  useEffect(() => { if (prove_draft) setLab(true); }, [prove_draft]);
+  useEffect(() => { if (prove_draft) { setTools(true); setLab(true); } }, [prove_draft]);
   const shown = draft ? coreDraftDraw(draft) ?? draw : draw;
   const [winner_draft, setWinnerDraft] = useState({ draw, value: String(draw?.rules.winner_count ?? '') });
   const winner_value = winner_draft.draw === draw ? winner_draft.value : String(draw?.rules.winner_count ?? '');
@@ -106,30 +112,67 @@ export function ConnectedLotsRoom({ port, simulated, seal_slot, flows, import_ar
     tamper: tamper === 'weight' || tamper === 'winners' || tamper === 'forge' ? tamper : undefined } : undefined;
   const setup_open = open(flows?.setup as AnyStewardFlow | undefined);
   const cast_open = open(flows?.cast as AnyStewardFlow | undefined);
-  return <div ref={root} className="lottery-room" role="region" aria-label={copy.core.title} aria-busy={state.busy} data-theatre={appearance.theatre}
-    data-sheet={band === undefined ? undefined : 'up'} data-phase={draft ? 'draft' : phase}
-    style={band === undefined ? undefined : { '--lot-band': `${band}px` } as CSSProperties}>
-    <div className="cc-hall">
-      <StagePanel title={copy.stage.titles[draft?.shape ?? appearance.shape]} count={state.entries.length} caption={copy.core.caption} draft={Boolean(draft)}>
-        <DrawStage shape={draft?.shape ?? appearance.shape} on_shape={shape => display.edit({ shape })} entries={state.entries} cast={cast}
+  return <LotChamber label={copy.core.title} busy={state.busy} theatre={appearance.theatre} simulated={simulated === true} drafting={Boolean(draft)}
+    tools_open={tools_open} on_tools={() => setTools(true)} on_close={() => setTools(false)}
+    picture={<StagePanel title={copy.stage.titles[draft?.shape ?? appearance.shape]} count={state.entries.length} caption={copy.core.caption} draft={Boolean(draft)}>
+        <DrawStage controls={appearance.theatre} shape={draft?.shape ?? appearance.shape} on_shape={shape => display.edit({ shape })} entries={state.entries} cast={cast}
           content={draw?.policy.content ?? 'question'} sealed={state.sealed} seal={state.seal_result?.sealed.seal}
           clock={reveal} reveal_ms={appearance.reveal_ms} theatre={appearance.theatre} on_theatre={display.theatre} proof="core"
           sound={appearance.sound} on_sound={on => display.edit({ sound: on })} live={simulated === false}
           idle_label={!draw && !draft ? 'No draw yet · the urn fills once you set one up' : undefined}
           by_hand={appearance.by_hand} on_by_hand={on => display.edit({ by_hand: on })} focus_weight={appearance.focus_weight}
-          {...(state.writ ? { on_prove: () => { display.theatre(false); setLab(true); setProve(count => count + 1); } } : {})} />
-      </StagePanel>
-      <div className="cc-desk">
-        <RollPanel status={status} tone={draft ? 'draft' : state.check?.result === 'blocked' ? 'blocked' : phase} draft={Boolean(draft)}
-          simulated={simulated === true}
-          winners={shown?.rules.winner_count ?? '—'} winner_detail={draft ? copy.proposed : shown ? copy.selected_draw : 'no draw yet'}
-          held_out="—" cap={shown ? capFigure(shown) : '—'}>
+          {...(state.writ ? { on_prove: () => { display.theatre(false); setTools(true); setLab(true); setProve(count => count + 1); } } : {})} />
+      </StagePanel>}
+    preview={<><p>{draft ? `${shown?.name ?? 'Draw setup'} · draft, not sealed` : 'No setup draft in Preview.'}</p>
+      {seal_slot && <button type="button" className="cc-link" onClick={() => setTools(true)}>Review proposals and designs</button>}</>}
+    program={<><p>{draw?.name ?? 'No draw on the core yet'}</p><p className="lottery-note">{round_label}</p></>}
+    setup={<DrawControls draw={shown} held_out="—" disabled={state.busy || state.locked || Boolean(draft)}
+      winner_control={<>{draw && <div className="cc-field"><label htmlFor={`${field_id}-winners`}>{copy.core.winner_count}</label>
+                  <input id={`${field_id}-winners`} className="cc-input" type="number" min={1} max={65535} value={winner_value}
+                    disabled={state.busy || state.locked} aria-invalid={invalid_winners}
+                    aria-describedby={invalid_winners ? `${field_id}-winner-error` : undefined}
+                    onChange={event => setWinnerDraft({ draw, value: event.currentTarget.value })}
+                    onBlur={commitWinners} onKeyDown={event => { if (event.key === 'Enter') { event.preventDefault(); commitWinners(); } }} /></div>}
+                {invalid_winners && draw && <p id={`${field_id}-winner-error`} className="cc-aside" role="alert">{copy.core.invalid_winners}</p>}</>}
+      on_edit={next => { void port.edit(next); }} on_tools={() => setTools(true)}>
+      <CeremonyControls options_open={tools_open} on_options={() => setTools(true)} shape={draft?.shape ?? appearance.shape} on_shape={shape => display.edit({ shape })}
+        theatre={appearance.theatre} on_theatre={display.theatre} sound={appearance.sound} on_sound={on => display.edit({ sound: on })}
+        by_hand={appearance.by_hand} on_by_hand={on => display.edit({ by_hand: on })} />
+    </DrawControls>}
+    question={<DrawCard name={shown?.name ?? (state.busy ? 'Reading your draws…' : 'No draw yet')}
+      line={shown ? `${contentLine(shown)} · ${poolLabel[shown.rules.pool.kind].toLowerCase()}` : empty_line}
+      guard={state.check?.result} guard_line={state.check?.reasons[0] ? policyReason(state.check.reasons[0]) : undefined} />}
+    roll={<RollPanel status={status} tone={draft ? 'draft' : state.check?.result === 'blocked' ? 'blocked' : phase}
+      draft={Boolean(draft)} simulated={simulated === true} count={state.sealed ? state.entries.length : undefined} />}
+    cast={<>
+      <div className="lottery-draw-actions">
+        {setup_open && !draft && !state.locked && <button type="button" className="cc-btn cc-btn--primary" onClick={setup_open}><RoomKeyBadge room="lottery" action="setup" />Set up a draw</button>}
+        {cast_open && !draft && <button type="button" className="cc-btn" onClick={cast_open}><RoomKeyBadge room="lottery" action="cast" />Cast with the Steward</button>}
+        {state.sealed && !state.started && <button type="button" className="cc-btn cc-btn--primary" disabled={state.busy}
+          onClick={() => { void port.start(); }}><RoomKeyBadge room="lottery" action="cast" />{copy.core.cast}</button>}
+      </div>
+      {state.locked && !state.sealed && <p className="lottery-note" role="alert">{copy.core.locked}</p>}
+      <p className="lottery-note" role="status">{state.notice || 'Winners are drawn only from the sealed core roll.'}</p>
+    </>}
+    proof={<>
+      {state.cast_result ? <>
+        <RevealedWinners compact clock={reveal} seal={state.seal_result?.sealed.seal} total={state.cast_result.cast.winners.length} />
+        <button type="button" className="cc-btn" disabled={!state.writ} onClick={() => { setTools(true); setLab(true); setProve(count => count + 1); }}><RoomKeyBadge room="lottery" action="prove" />Prove it</button>
+      </> : <p className="lottery-note">Core writ follows the cast.</p>}
+    </>}
+    tools={<>
+      <section className="lottery-more-card" data-role="room-section" aria-label="Ceremony options">
+        <h3 className="lottery-card-title">Ceremony options</h3>
+        <CeremonyDetails sound={appearance.sound} on_sound={on => display.edit({ sound: on })}
+          by_hand={appearance.by_hand} on_by_hand={on => display.edit({ by_hand: on })} />
+      </section>
+      <p className="lottery-note">The core writ appears after the cast. No winners are invented in this room. Stylised ceremony · {round_label}</p>
           <DrawCard name={shown?.name ?? (state.busy ? 'Reading your draws…' : 'No draw yet')}
             line={shown ? `${contentLine(shown)} · ${poolLabel[shown.rules.pool.kind].toLowerCase()}` : empty_line}
             guard={state.check?.result} guard_line={state.check?.reasons[0] ? policyReason(state.check.reasons[0]) : undefined}>
             {!draft && <>
               {phase === 'open' && <span className="lottery-draw-actions">
-                {setup_open && <button type="button" className="cc-btn cc-btn--primary" onClick={setup_open}>Set up a draw</button>}
+                {setup_open && <button type="button" className="cc-btn cc-btn--primary" onClick={setup_open}><RoomKeyBadge room="lottery" action="setup" />Set up a draw</button>}
                 {!draw && <button type="button" className="cc-btn cc-btn--quiet" onClick={() => stewardDock.open(coreDemoFlow)}>Play demo</button>}
               </span>}
               <div className="lottery-core-fields">
@@ -139,13 +182,6 @@ export function ConnectedLotsRoom({ port, simulated, seal_slot, flows, import_ar
                     {!draw && <option value="">{copy.core.no_draw}</option>}
                     {state.draws.map(item => <option key={item.draw_id} value={item.draw_id}>{item.name}</option>)}
                   </select></div>}
-                {draw && <div className="cc-field"><label htmlFor={`${field_id}-winners`}>{copy.core.winner_count}</label>
-                  <input id={`${field_id}-winners`} className="cc-input" type="number" min={1} max={65535} value={winner_value}
-                    disabled={state.busy || state.locked} aria-invalid={invalid_winners}
-                    aria-describedby={invalid_winners ? `${field_id}-winner-error` : undefined}
-                    onChange={event => setWinnerDraft({ draw, value: event.currentTarget.value })}
-                    onBlur={commitWinners} onKeyDown={event => { if (event.key === 'Enter') { event.preventDefault(); commitWinners(); } }} /></div>}
-                {invalid_winners && draw && <p id={`${field_id}-winner-error`} className="cc-aside" role="alert">{copy.core.invalid_winners}</p>}
               </div>
               {draw && <span className="lottery-draw-actions">
                 <button type="button" className="cc-btn cc-btn--sm" disabled={state.busy} onClick={() => { void port.check(); }}>{copy.core.check}</button>
@@ -168,8 +204,8 @@ export function ConnectedLotsRoom({ port, simulated, seal_slot, flows, import_ar
             {state.seal_result.sealed.roll.randomness.source === 'drand_quicknet' && <p className="lottery-cast-note">
               {copy.core.target_round(state.seal_result.sealed.roll.randomness.round)}</p>}
             {!state.started && <span className="lottery-draw-actions">
-              <button type="button" className="cc-btn cc-btn--primary" disabled={state.busy} onClick={() => { void port.start(); }}>{copy.core.cast}</button>
-              {cast_open && <button type="button" className="cc-btn cc-btn--quiet" onClick={cast_open}>Cast with the Steward</button>}
+              <button type="button" className="cc-btn cc-btn--primary" disabled={state.busy} onClick={() => { void port.start(); }}><RoomKeyBadge room="lottery" action="cast" />{copy.core.cast}</button>
+              {cast_open && <button type="button" className="cc-btn cc-btn--quiet" onClick={cast_open}><RoomKeyBadge room="lottery" action="cast" />Cast with the Steward</button>}
             </span>}
           </section>}
           {state.cast_result && <section className="lottery-cast" aria-label={copy.core.result}>
@@ -178,7 +214,7 @@ export function ConnectedLotsRoom({ port, simulated, seal_slot, flows, import_ar
               {winner => <p>{winner}</p>}
             </WindowedRows>
             <span className="lottery-draw-actions">
-              {state.writ && <button type="button" className="cc-btn cc-btn--primary" onClick={() => { setLab(true); setProve(count => count + 1); }}>Prove it</button>}
+              {state.writ && <button type="button" className="cc-btn cc-btn--primary" onClick={() => { setTools(true); setLab(true); setProve(count => count + 1); }}><RoomKeyBadge room="lottery" action="prove" />Prove it</button>}
               <button type="button" className="cc-btn" disabled={state.busy || !state.writ} aria-expanded={state.nested && Boolean(state.writ)}
                 aria-controls={`${field_id}-proof`} onClick={() => { port.nested(!state.nested); }}>{copy.core.proof}</button>
               <button type="button" className="cc-btn cc-btn--quiet" disabled={state.busy} onClick={() => { void port.recompute(); }}>{copy.core.reload}</button>
@@ -188,9 +224,6 @@ export function ConnectedLotsRoom({ port, simulated, seal_slot, flows, import_ar
               {state.writ && <a download="castle-control-writ.json" href={`data:application/json;charset=utf-8,${encodeURIComponent(JSON.stringify(state.writ))}`}>{copy.core.download}</a>}
             </section>
           </section>}
-        </RollPanel>
-      </div>
-    </div>
     {state.writ && (lab || prove_draft) && <div className="lottery-lab-bay">
       <WritLab writ={state.writ} simulated={simulated ?? false} prove={prove} anchors={core_anchors} steer={steer} />
       <button type="button" className="cc-btn cc-btn--quiet lottery-lab-close" onClick={() => setLab(false)}>Close the Writ Lab</button>
@@ -233,8 +266,8 @@ export function ConnectedLotsRoom({ port, simulated, seal_slot, flows, import_ar
       </section>
       <FairnessSteps />
     </MoreTools>
-    <p className="cc-status lottery-room-notice" role="status">{state.notice}</p>
-  </div>;
+      <p className="cc-status lottery-room-notice" role="status">{state.notice}</p>
+    </>} />;
 }
 
 export default function CoreLotteryRoom({ snapshot, seal_slot }: { snapshot: Snapshot; seal_slot?: ReactNode }) {

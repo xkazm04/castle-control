@@ -6,19 +6,26 @@ import { auditFields, auditStyles, desktopSurfaces } from './styles.ts';
 /** Hold the one visible "Hold to seal" (a seal-slot proposal or the Steward's confirm card) until it acts. */
 async function seal(page: Page) {
   const button = page.getByRole('button', { name: 'Hold to seal', exact: true });
+  if (!await button.count()) await openMore(page);
   await button.focus();
   await page.keyboard.down('Space');
   await expect(page.getByRole('button', { name: 'Hold to seal', exact: true })).toHaveCount(0);
   await page.keyboard.up('Space');
 }
-/** The rarely used benches live behind one disclosure. */
+const drawer = (page: Page) => page.getByRole('dialog', { name: 'The Herald and more of the Gatehouse', exact: true });
+/** The full chart, vote bar, benches and proposal list live in the one room drawer. */
 async function openMore(page: Page) {
   // A sealed flow leaves its receipt in the raised Steward sheet; lower it to reach the room below.
   const lower = page.getByRole('button', { name: 'Lower Esc', exact: true });
   if (await lower.count()) await lower.click();
-  const more = page.locator('details.gh-more');
+  if (!await drawer(page).count()) await page.getByRole('button', { name: 'Full chart', exact: true }).click();
+  await expect(drawer(page)).toBeVisible();
+  const more = drawer(page).locator('details.gh-more');
   if (!await more.evaluate(element => (element as HTMLDetailsElement).open)) await more.locator('summary').click();
   await expect(more).toHaveAttribute('open', '');
+}
+async function closeMore(page: Page) {
+  if (await drawer(page).count()) await drawer(page).getByRole('button', { name: 'Close The Herald and more of the Gatehouse', exact: true }).click();
 }
 const steward = (page: Page) => page.getByRole('region', { name: 'The Steward', exact: true });
 async function chip(page: Page, name: string) {
@@ -31,6 +38,53 @@ async function looksRight(page: Page, label = 'Looks right') {
   await steward(page).locator('.cc-steward-step').getByRole('button', { name: label, exact: true }).click();
 }
 
+test('Gatehouse chamber fits both laptop budgets and the full chart/benches remain reachable', async ({ page }) => {
+  const verify = await guardPage(page);
+  try {
+    for (const viewport of [{ width: 1280, height: 720 }, { width: 1366, height: 768 }]) {
+      await page.setViewportSize(viewport); await page.goto('/#/chamber/moderator');
+      const room = page.locator('.gh-deck');
+      await expect(room.locator('.cc-chamber-layout')).toHaveCount(1);
+      await expect(room.locator('.cc-chamber-column')).toHaveCount(2);
+      await expect(room.locator('[data-role="room-section"]')).toHaveCount(3);
+      const picture = await room.locator('[data-role="room-picture"]').boundingBox();
+      if (!picture) throw new Error('Missing Gatehouse picture');
+      expect(Math.abs(picture.width / picture.height - 16 / 9)).toBeLessThan(.02);
+      const overflow = await room.evaluate(element => {
+        const bounds = element.getBoundingClientRect();
+        return [...element.querySelectorAll<HTMLElement>('.cc-chamber-column, .cc-chamber-mini, [data-role="room-section"]')]
+          .filter(item => { const box = item.getBoundingClientRect(); return box.bottom > bounds.bottom + 1 || box.right > bounds.right + 1
+            || item.scrollHeight > item.clientHeight + 1 || item.scrollWidth > item.clientWidth + 1; })
+          .map(item => item.getAttribute('aria-label') ?? item.className);
+      });
+      expect(overflow).toEqual([]);
+      const scroll = await page.locator('.shell-room-content').evaluate(element => element.scrollHeight - element.clientHeight);
+      expect(scroll).toBeLessThanOrEqual(1);
+      const bodyCopy = room.locator('.gh-held__msg, .gh-held__why, .gh-notice, .gh-needs__facts dd, .moderator-tile span');
+      for (const item of await bodyCopy.all()) {
+        const style = await item.evaluate(element => {
+          const value = getComputedStyle(element);
+          return { size: parseFloat(value.fontSize), line: parseFloat(value.lineHeight) };
+        });
+        expect(style.size).toBe(15); expect(style.line).toBeCloseTo(21.75, 1);
+      }
+      await page.screenshot({ path: test.info().outputPath(`gatehouse-${viewport.width}.png`) });
+      await page.getByRole('button', { name: 'Review queue · 1 held · 1 pending ban', exact: true }).click();
+      await expect(drawer(page).getByRole('button', { name: 'Propose Ban', exact: true })).toBeVisible();
+      await expect(drawer(page)).toContainText('simulated-message-26');
+      await closeMore(page);
+      await openMore(page);
+      for (const text of ['Rule bench', 'The moat', 'Garrison orders', 'Stream output preview', 'Custom design']) await expect(drawer(page)).toContainText(text);
+      await expect(drawer(page).locator('[aria-rowcount="420"]')).toHaveCount(1);
+      await expect(drawer(page).getByRole('link', { name: 'Run the drill', exact: true })).toBeVisible();
+      await drawer(page).locator('details.gh-more > summary').click();
+      await expect(drawer(page)).toBeVisible();
+      await page.keyboard.press('Escape'); await expect(drawer(page)).toHaveCount(0);
+      await expect(page).toHaveURL(/#\/chamber\/moderator$/);
+    }
+  } finally { await page.goto('about:blank'); verify(); }
+});
+
 test('Gatehouse actions identify targets and expose one notice and count region', async ({ page }) => {
   const verify = await guardPage(page);
   try {
@@ -41,7 +95,8 @@ test('Gatehouse actions identify targets and expose one notice and count region'
       await expect(page.getByRole('status').filter({ hasText: message })).toHaveCount(1);
     };
     await expectNotice('Nothing sent.');
-    await expect(page.getByRole('region', { name: 'What needs you', exact: true })).toContainText('1 held message and 1 pending ban need you.');
+    await openMore(page);
+    await expect(drawer(page).getByRole('region', { name: 'Gate status details', exact: true })).toContainText('1 held message and 1 pending ban need you.');
     for (const name of ['Propose Ban', 'Propose Dismiss']) {
       await expect(page.getByRole('button', { name, exact: true })).toHaveAccessibleDescription('simulated-message-26');
     }
@@ -71,8 +126,9 @@ test('Gatehouse actions identify targets and expose one notice and count region'
       await expect(bench.getByLabel(label, { exact: true })).toHaveCount(1);
     }
     for (const [action, pressed] of [['Raise the drawbridge', 'true'], ['Lower the drawbridge', 'false']] as const) {
-      const shield = page.getByRole('button', { name: `${action} Shield Mode · fixture only`, exact: true });
-      await expect(shield).toHaveAccessibleName(`${action} Shield Mode · fixture only`);
+      await closeMore(page);
+      const shield = page.getByRole('button', { name: action, exact: true });
+      await expect(shield).toHaveAccessibleName(action);
       await expect(shield).not.toHaveAttribute('aria-label');
       await shield.click();
       await seal(page);
@@ -126,7 +182,7 @@ test('Gatehouse Steward flows set the rules and the vote bar; nothing acts befor
     await expect(page.locator('.gh-ribbon')).toContainText('Family evening · chat waits 6 s · Blocked terms barred');
     await expect(steward(page).locator('.gh-fates')).toContainText('Link questions');
     await looksRight(page);
-    await expect(needs).toBeHidden();
+    await expect(needs).toContainText('4 s');
     await seal(page);
     await expect(steward(page)).toContainText('Sealed: added Link questions, Blocked terms barred, chat delay 6 s.');
     await expect(needs).toContainText('6 s');
@@ -138,14 +194,14 @@ test('Gatehouse Steward flows set the rules and the vote bar; nothing acts befor
     await pick(page, 'Emotes only');
     await pick(page, 'Across the top, large');
     await pick(page, 'Neon Stage Hardware');
-    const canvas = page.locator('.gh-herald .gh-stage__canvas');
+    const canvas = drawer(page).locator('.gh-herald .gh-stage__canvas');
     await expect(canvas).toHaveAttribute('data-anchor', 'top-left');
     await expect(page.locator('.gh-herald .gh-stage figcaption')).toContainText('Draft');
     await looksRight(page);
     await seal(page);
     await expect(canvas).toHaveAttribute('data-size', 'L');
     await expect(page.locator('.gh-herald .gh-votebar')).toHaveAttribute('data-art', 'votebar-12');
-    await expect(page.locator('.gh-herald').getByRole('button', { name: 'Emotes only', exact: true })).toHaveAttribute('aria-pressed', 'true');
+    await expect(drawer(page).locator('.gh-herald').getByRole('button', { name: 'Emotes only', exact: true })).toHaveAttribute('aria-pressed', 'true');
     await expect(page.locator('.gh-herald .gh-stage figcaption')).not.toContainText('Draft');
   } finally { await page.goto('about:blank'); verify(); }
 });
@@ -170,17 +226,20 @@ test('Gatehouse shadow journey and transparent stream previews', async ({ page }
     const pause = page.getByRole('button', { name: 'Pause simulated chat', exact: true });
     await expect(pause).not.toHaveAttribute('aria-pressed');
     await pause.click();
-    await expect(page.locator('.moderator-held')).toContainText('Held for review');
+    await closeMore(page);
+    await openMore(page);
+    await expect(drawer(page).locator('.moderator-held')).toContainText('Held for review');
+    await closeMore(page);
     await page.getByRole('button', { name: 'Propose Pass', exact: true }).click();
     await seal(page);
-    await expect(page.locator('.moderator-held-plate')).toContainText('The portcullis is clear');
+    await expect(page.locator('.moderator-held-plate[data-compact="true"]')).toContainText('The portcullis is clear');
     await expect(page.locator('.gh-gate-art')).toHaveAttribute('data-raised', 'true');
     await expect(page.locator('[data-review-feedback]')).toContainText('Released');
     await page.getByRole('button', { name: 'Propose Undo', exact: true }).click();
     await seal(page);
     await expect(page.locator('[data-review-feedback]')).toContainText('undo');
-    await page.getByRole('button', { name: 'Emotes only', exact: true }).click();
-    await expect(page.getByRole('button', { name: 'Emotes only', exact: true })).toHaveAttribute('aria-pressed', 'true');
+    await drawer(page).getByRole('button', { name: 'Emotes only', exact: true }).click();
+    await expect(drawer(page).getByRole('button', { name: 'Emotes only', exact: true })).toHaveAttribute('aria-pressed', 'true');
     await page.getByRole('link', { name: 'Run the drill', exact: true }).click();
     await expect(page.locator('.moderator-drill')).toContainText('Recording gap');
     await expect(page.locator('.moderator-drill')).toContainText('live parity: pending capture evidence');
@@ -222,7 +281,7 @@ test('Gatehouse Play demo: a SIMULATED burst, one held line, your decision, the 
   try {
     await page.goto('/#/chamber/moderator');
     const gate = page.getByRole('complementary', { name: 'At the portcullis', exact: true });
-    const lead = page.locator('.gh-herald .moderator-tile').first();
+    const lead = page.locator('.gh-herald--compact .moderator-tile').first();
     await expect(lead).toContainText('36.7%');
     await chip(page, 'Play demo');
     await expect(steward(page).locator('.cc-steward-sheet__head')).toContainText('Simulated');

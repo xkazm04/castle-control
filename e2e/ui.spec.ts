@@ -28,6 +28,117 @@ test.afterEach(async ({ page }, info) => {
   }
 });
 
+test.describe('room bar and shell defaults', () => {
+  for (const viewport of [{ width: 1280, height: 720 }, { width: 1920, height: 1080 }]) {
+    test(`room bar fits one row at ${viewport.width}x${viewport.height}`, async ({ page }) => {
+      await page.setViewportSize(viewport);
+      await page.goto('/#/keep');
+      await expect(page.locator('.cc-frame')).toHaveAttribute('data-theme', 'night');
+      await expect(page.locator('.keep-home')).toBeVisible();
+      for (const key of ['0', '1', '2', '3', '4']) {
+        await page.keyboard.press(key);
+        const bar = page.locator('[data-role="room-bar"]');
+        await expect(bar.locator('[data-role="room-tab"]')).toHaveCount(5);
+        await expect(bar.locator('[aria-current="page"] .cc-kbd')).toHaveText(key);
+        await expect.poll(() => bar.evaluate(element => {
+          const tabs = [...element.querySelectorAll('[data-role="room-tab"]')];
+          const tops = tabs.map(tab => tab.getBoundingClientRect().top);
+          const issues: string[] = [];
+          if (Math.max(...tops) - Math.min(...tops) > 1) issues.push('tabs wrapped');
+          for (const tab of tabs) {
+            const bounds = tab.getBoundingClientRect();
+            if (bounds.left < 0 || bounds.right > innerWidth) issues.push('tab leaves viewport');
+            const title = tab.querySelector('.cc-chamber-tile-title');
+            if (!title || title.scrollWidth > title.clientWidth + 1) issues.push('title clipped');
+            for (const selector of ['.cc-chamber-tile-title', '.cc-chamber-state']) {
+              const label = tab.querySelector(selector);
+              if (!label?.firstChild) { issues.push('missing label'); continue; }
+              const range = document.createRange(); range.selectNodeContents(label);
+              const text = range.getBoundingClientRect();
+              const box = label.getBoundingClientRect();
+              if (text.right > box.right + 1 || text.left < box.left - 1) issues.push('tab text clipped');
+            }
+          }
+          if (document.documentElement.scrollWidth > innerWidth) issues.push('horizontal scroll');
+          return issues;
+        })).toEqual([]);
+      }
+      await page.keyboard.press('Escape');
+      await expect(page).toHaveURL(/#\/keep$/);
+      await page.getByRole('button', { name: 'Toggle day and night' }).click();
+      await expect(page.locator('.cc-frame')).toHaveAttribute('data-theme', 'day');
+      await auditStyles(page, desktopSurfaces);
+    });
+  }
+});
+
+for (const viewport of [{ width: 1280, height: 720 }, { width: 1366, height: 768 }, { width: 1920, height: 1080 }]) {
+  test(`status bar stays inside the viewport at ${viewport.width}x${viewport.height}`, async ({ page }) => {
+    await page.setViewportSize(viewport);
+    await page.goto('/#/chamber/studio');
+    const bar = page.locator('[data-role="status-bar"]');
+    await expect(bar.getByRole('button', { name: 'Steward', exact: true })).toBeVisible();
+    await expect(bar.locator(':scope > [data-stamp="simulated"]')).toHaveCount(1);
+    await page.evaluate(() => document.fonts.ready.then(() => undefined));
+    for (const theme of ['night', 'day']) {
+      if (await page.locator('.cc-frame').getAttribute('data-theme') !== theme) {
+        await page.getByRole('button', { name: 'Toggle day and night' }).click();
+      }
+      await expect.poll(() => bar.evaluate(element => {
+        const issues: string[] = [];
+        const bar_bounds = element.getBoundingClientRect();
+        if (bar_bounds.left < 0 || bar_bounds.right > innerWidth + 1) issues.push('status bar outside viewport');
+        if (element.scrollWidth > element.clientWidth + 1) issues.push('status bar content overflows');
+        for (const child of element.querySelectorAll('*')) {
+          if (!(child instanceof HTMLElement) || !child.checkVisibility()) continue;
+          const bounds = child.getBoundingClientRect();
+          if (bounds.left < bar_bounds.left - 1 || bounds.right > bar_bounds.right + 1) issues.push(`${child.tagName} outside status bar`);
+          // A clipped button can remain inside the bar while its text leaves it.
+          for (const text of child.childNodes) {
+            if (text.nodeType !== Node.TEXT_NODE || !text.textContent?.trim()) continue;
+            const range = document.createRange(); range.selectNodeContents(text);
+            for (const rect of range.getClientRects()) {
+              if (rect.left < bar_bounds.left - 1 || rect.right > bar_bounds.right + 1) issues.push('status text outside viewport');
+              if (rect.left < bounds.left - 1 || rect.right > bounds.right + 1) issues.push('status text clipped');
+            }
+          }
+        }
+        return issues;
+      })).toEqual([]);
+    }
+  });
+}
+
+test.describe('surface cross-fade', () => {
+  test.use({ reducedMotion: 'no-preference' });
+  test('1 to 2 fades an inert out-copy without translating or delaying the route', async ({ page }) => {
+    await page.goto('/#/chamber/lottery');
+    await expect(page.locator('.lottery-room')).toBeVisible();
+    // Dispatch through the same React keymap and sample in its next frame, before
+    // the 170 ms out-copy can finish on a slow test-worker round trip.
+    const motion = await page.evaluate(async () => {
+      const root = document.querySelector('.desktop-root');
+      if (!root) throw new Error('Missing shell root');
+      root.dispatchEvent(new KeyboardEvent('keydown', { key: '2', bubbles: true }));
+      await new Promise<void>(resolve => requestAnimationFrame(() => { resolve(); }));
+      return document.getAnimations().filter(animation => {
+        const target = animation.effect instanceof KeyframeEffect ? animation.effect.target : null;
+        return target instanceof HTMLElement && target.matches('main.desktop-surface');
+      }).map(animation => ({
+        frames: animation.effect instanceof KeyframeEffect ? animation.effect.getKeyframes() : [],
+        duration: animation.effect?.getTiming().duration,
+      }));
+    });
+    await expect(page).toHaveURL(/#\/chamber\/moderator$/);
+    expect(motion.map(animation => animation.duration)).toEqual(expect.arrayContaining([170, 420]));
+    for (const animation of motion) for (const frame of animation.frames) {
+      expect(frame).toHaveProperty('opacity'); expect(frame).not.toHaveProperty('transform');
+    }
+    await expect(page.locator('.cc-surface-out')).toHaveCount(0);
+    await expect(page.locator('[data-role="room-title"]')).toHaveCount(1);
+  });
+});
+
 test('fixture OBS setup from Keep sizes a source and requires a hold before simulated add', async ({ page }) => {
   const rpc: string[] = [];
   page.on('request', request => { if (new URL(request.url()).pathname === '/rpc') rpc.push(request.url()); });
@@ -64,7 +175,7 @@ for (const route of routes) for (const theme of themes) for (const steward of st
     else await expect(page.locator('.cc-steward-dock')).toBeVisible();
     if (route.endsWith('/drill')) await expect(page.locator('.moderator-drill')).toBeVisible();
     await expect(page).toHaveURL(new RegExp(`${route.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`));
-    if (theme === 'night') await page.getByRole('button', { name: 'Toggle day and night' }).click();
+    if (await page.locator('.cc-frame').getAttribute('data-theme') !== theme) await page.getByRole('button', { name: 'Toggle day and night' }).click();
     await expect(page.locator('.cc-frame')).toHaveAttribute('data-theme', theme);
     if (steward === 'open' && keep) {
       // Nothing to open: `/` is left alone on the Keep, so focus does not move and the page stays put.
@@ -73,10 +184,10 @@ for (const route of routes) for (const theme of themes) for (const steward of st
       await expect(page.getByRole('textbox', { name: 'Talk to the Steward...' })).toHaveCount(0);
       await expect(page).toHaveURL(/#\/keep$/);
     } else if (steward === 'open') {
-      // Steward is a persistent panel in this shell. Open means focused controls;
-      // Overview additionally exposes its existing Talkback tab, with no LLM call.
+      // Steward raises an overlay conversation; the bar keeps its one-row footprint.
       await page.getByRole('button', { name: 'Steward', exact: true }).click();
       await expect(page.getByRole('textbox', { name: 'Talk to the Steward...' })).toBeFocused();
+      await expect(page.locator('[data-role="steward-chat"]')).toBeVisible();
       const talkback = page.getByRole('tab', { name: 'Talkback', exact: true });
       if (await talkback.count()) {
         await talkback.click();
@@ -108,6 +219,96 @@ test('overlay-simulated-connected', async ({ page }) => {
     { name: 'simulated rendered layer', selector: '#scene > div' },
     { name: 'simulated provenance badge', selector: '[data-simulated-badge]' },
   ], { canvas: 'obs-transparent', tokenSheet: 'overlay-base' });
+});
+
+for (const chamber of ['lottery', 'moderator', 'visuals', 'studio']) {
+  test(`Steward deck fits 1280x720 in ${chamber} and Escape peels conversation before room`, async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 720 });
+    await page.goto(`/#/chamber/${chamber}`);
+    const row = page.locator('[data-role="action-row"]');
+    const bar = page.locator('[data-role="steward-bar"]');
+    await expect(row).toBeVisible(); await expect(bar).toBeVisible();
+    const sizes = await page.locator('[data-role="action-row"], [data-role="steward-bar"]').evaluateAll(nodes => nodes.map(node => {
+      const box = node.getBoundingClientRect();
+      return { height: box.height, top: box.top, bottom: box.bottom };
+    }));
+    expect(sizes).toHaveLength(2);
+    expect(sizes.reduce((sum, size) => sum + size.height, 0)).toBeLessThanOrEqual(110);
+    expect(sizes[0]?.bottom).toBe(sizes[1]?.top);
+    const seal = await row.locator('[data-role="seal-key"]').boundingBox();
+    if (!seal || !sizes[0]) throw new Error('Missing action row or seal geometry');
+    expect(seal.height).toBeLessThanOrEqual(48);
+    expect(seal.y).toBeGreaterThanOrEqual(sizes[0].top);
+    expect(seal.y + seal.height).toBeLessThanOrEqual(sizes[0].bottom);
+    const before = await page.locator('main').boundingBox();
+    await page.keyboard.press('/');
+    const chat = page.locator('[data-role="steward-chat"]');
+    await expect(chat).toBeVisible();
+    expect(await page.locator('main').boundingBox()).toEqual(before);
+    await page.keyboard.press('Escape');
+    await expect(chat).toHaveCount(0);
+    await expect(page).toHaveURL(new RegExp(`/chamber/${chamber}$`));
+    await page.keyboard.press('Escape');
+    await expect(page).toHaveURL(/#\/keep$/);
+    await expect(bar).toHaveCount(0);
+  });
+}
+
+test('talk input Escape closes a sent conversation and preserves the next unsent text', async ({ page }) => {
+  await page.goto('/#/chamber/moderator');
+  const input = page.getByRole('textbox', { name: 'Talk to the Steward...', exact: true });
+  const chat = page.locator('[data-role="steward-chat"]');
+  await input.fill('simulated unrelated request');
+  await input.press('Enter');
+  await expect(chat.locator('.cc-beat--you')).toContainText('simulated unrelated request');
+  await expect(chat.locator('.cc-beat--steward').last()).toContainText('nothing has changed');
+  await input.fill('Keep this unsent SIMULATED note');
+  await input.press('Escape');
+  await expect(chat).toHaveCount(0);
+  await expect(input).toHaveValue('Keep this unsent SIMULATED note');
+  await expect(input).toBeFocused();
+  await expect(page).toHaveURL(/#\/chamber\/moderator$/);
+  await input.press('Escape');
+  await expect(page).toHaveURL(/#\/keep$/);
+});
+
+test('overflow keys still dispatch, drafts wait for a hold, and popover Escape leaves the conversation open', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 720 });
+  await page.goto('/#/chamber/lottery');
+  const row = page.locator('[data-role="action-row"]');
+  await expect(row.getByRole('button', { name: /^more/ })).toBeVisible();
+  await page.keyboard.press('/');
+  const chat = page.locator('[data-role="steward-chat"]');
+  await row.getByRole('button', { name: /^more/ }).click();
+  await expect(row.getByRole('menu')).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(row.getByRole('menu')).toHaveCount(0); await expect(chat).toBeVisible();
+  await page.keyboard.press('Escape');
+  await page.locator('.desktop-root').focus();
+  await page.keyboard.press('f');
+  await expect(chat).toContainText('Set up a draw');
+  await page.keyboard.press('Escape');
+  const pending = row.locator('[data-role="seal-key"]');
+  await expect(pending).toBeDisabled();
+  await row.getByRole('button', { name: /^W cast the lots/ }).click();
+  await chat.getByRole('button', { name: /^Seal the sample draw first/ }).click();
+  await chat.getByRole('button', { name: 'The round is ready', exact: true }).click();
+  await chat.getByRole('button', { name: /^One by one, quietly/ }).click();
+  await chat.getByRole('button', { name: 'Draft this → Preview', exact: true }).click();
+  await expect(chat).toHaveCount(0);
+  await expect(pending).toContainText('1 draft ready');
+  await pending.click();
+  await expect(page.locator('.lottery-roll[data-tone="cast"]')).toHaveCount(0);
+  await pending.focus(); await page.keyboard.down('Space');
+  try { await expect(page.locator('.lottery-roll[data-tone="cast"]')).toBeVisible(); }
+  finally { await page.keyboard.up('Space'); }
+  await expect(pending).toHaveAttribute('data-sealed', 'true');
+  await expect(pending.locator('.cc-seal-wax')).toHaveCSS('opacity', '1');
+  await expect(pending.locator('progress')).toHaveCSS('opacity', '1');
+  await expect(page.locator('.cc-steward-peek')).toBeVisible();
+  await page.locator('.cc-steward-peek').click();
+  await expect(chat).toBeVisible();
+  await expect(chat.locator('[data-role="steward-bubble"] time').first()).toBeVisible();
 });
 
 test('fixture draw rehearsal seals, casts, reveals in the urn and recomputes this cast', async ({ page }) => {

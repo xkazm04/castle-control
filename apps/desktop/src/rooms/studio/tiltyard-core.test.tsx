@@ -67,7 +67,9 @@ test('core room opens on the empty duel stage with Steward and sample starts, so
   expect(html).toContain('No duel on the core yet');
   expect(html).toContain('Start a duel…'); expect(html).toContain('Start sample tournament');
   expect(html).toContain('The sample uses SAMPLE starter contestants. Showdown and Ladder under More are local demos.');
-  expect(html).toContain('Duel on stream · Copy browser source URL'); expect(html).toContain('Shared seal slot');
+  expect(html).toContain('More'); expect(html).toContain('aria-haspopup="dialog"');
+  expect(html).not.toContain('Show the duel on stream');
+  expect(html).toContain('Shared seal slot');
   expect(html).not.toContain('data-hex-tile='); expect(html).not.toContain('data-role="ty-ticker"');
   expect(h.socket).toHaveBeenCalledTimes(1);
 });

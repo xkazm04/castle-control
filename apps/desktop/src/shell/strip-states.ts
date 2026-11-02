@@ -16,6 +16,7 @@ export function stripStates(snapshot: Snapshot, proposals: readonly Proposal[], 
     return [id, { ...(display === 'word' ? { word: read.states[id].word } : {}),
       line: draft ? `${draft.title} · rev ${draft.revision}` : aired ? `${aired.title} · simulated Program` : read.states[id].line,
       on_air: Boolean(aired) || snapshot.mode === 'fixture' && (id === 'moderator' || id === 'visuals'),
-      preview: true, draft: Boolean(draft), pending_count: drafts.length }];
+      preview: true, draft: Boolean(draft), pending_count: drafts.length,
+      ...(id === 'moderator' && snapshot.mode === 'fixture' ? { needs_you: true } : {}) }];
   })) as Record<ModuleId, ChamberLayerState>;
 }

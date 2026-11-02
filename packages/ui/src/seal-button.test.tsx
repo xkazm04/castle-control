@@ -32,6 +32,21 @@ test('the gold fill reuses hold progress and its contrast lettering stays hidden
   expect(html).toContain('class="cc-seal-fill-copy" aria-hidden="true"');
 });
 
+test('the row seal keeps its compact status, progress and successful wax feedback without a click action', () => {
+  const hold = createSealHold(vi.fn(), vi.fn());
+  const control = SealControl({ hold, progress: .5, size: 'key', draft_count: 2 });
+  const pending = renderToStaticMarkup(control);
+  expect(control.props.onClick).toBeUndefined();
+  expect(pending).toContain('Hold <kbd>Space</kbd> to seal');
+  expect(pending).toContain('2 drafts ready');
+  expect(pending).toContain('style="--cc-seal-progress:50%"');
+  expect(pending).not.toContain('data-sealed="true"');
+  const receipt = renderToStaticMarkup(SealControl({ hold, progress: 0, size: 'key', sealed: true }));
+  expect(receipt).toContain('nothing yet');
+  expect(receipt).toContain('data-sealed="true"');
+  expect(receipt).toContain('class="cc-seal-wax" aria-hidden="true"');
+});
+
 test('real pointer handlers cancel an early release and seal exactly once after a continuous full hold', () => {
   vi.useFakeTimers();
   const seal = vi.fn(); const progress = vi.fn();

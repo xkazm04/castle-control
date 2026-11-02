@@ -1,4 +1,4 @@
-import { componentProbe } from './component-probe.jsx';
+import { componentProbe, openGatehouseDrawer } from './component-probe.jsx';
 import { Children, isValidElement } from 'react';
 import type { ReactElement, ReactNode } from 'react';
 import { WindowedRows } from '@castle-control/ui';
@@ -61,7 +61,7 @@ test('manual/capture fields use separate exact labels and unique associated cont
   const rulePort = createCoreGatehousePort({ mode: 'core', endpoint: 'http://127.0.0.1:3210/', session_token: 'b'.repeat(64) },
     { rpc: async (_endpoint, _session, method) => method === 'gatehouse.rules.list' ? { rules: [classifier] } : Promise.reject({ code: 'unavailable', message: 'simulated unavailable read' }) });
   await rulePort.load();
-  auditFields(renderToStaticMarkup(<ConnectedGatehouse port={rulePort} replay={false} />));
+  auditFields(openGatehouseDrawer(<ConnectedGatehouse port={rulePort} replay={false} />));
 });
 
 test('the conditional emote field uses the same kit field association', async () => {

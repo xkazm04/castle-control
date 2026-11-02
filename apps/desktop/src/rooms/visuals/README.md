@@ -1,5 +1,60 @@
 # Beacons · C Plates (WP 3.3 polish, 2026-10-30)
 
+## T3 WP4 Beacons chamber (2026-11-02)
+
+Both fixture and connected core pages compose `BeaconStage` through `BeaconDeck`
+onto the shared `ChamberLayout`. The stage computes playback once; its stream
+monitor fills the 16:9 picture and its unchanged readout sits in column 1.
+Preview summarizes existing pending drafts; full proposal fields stay in the
+drawer. Program shows the existing selected fixture reading or saved core
+configuration, with no invented live totals.
+
+- Column 1: selected beacon, blaze, gauge, generated sample-night sparkline,
+  existing fixture gift-sub weighting slider, Test fire and Replay a night.
+  Core retains its unavailable-live-total message and has no gift-weight setting.
+- Column 2: stacked native radios with name, percentage and selection state.
+  All existing key badges remain on the matching controls.
+- Drawer: the selected reading's kind/input/decay, sample-night consequence,
+  narration and notices; every beacon's tiers and weighting/decay chips;
+  Halve the decay (with its existing key), theme, tune, full draft fields,
+  replay, bench, input/appearance controls, editors, local/core test fires,
+  browser-source copy, timeline, virtualized feeds and original seal slot.
+
+The owner's 2026-11-02 decision is **15 px, move more into drawers**. Body copy,
+rows, form labels, controls, minis and drawer detail use `--text-px-15` at 1.45
+leading. Headings/stamps and keycaps retain their own label/figure scale, with
+no text under 13 px and stage text at least 15 px. `readability.css` is scoped
+only to Beacons. The stream picture, 70 px curve and shared layout are unchanged;
+section/readout gaps are 8 px and primary buttons have 8 px vertical padding.
+Closed drawer tools stay pre-rendered hidden and inert as before. Contribution
+feeds use 128 px virtual rows and the core configuration list uses 192 px rows
+so the larger text can wrap without being cut off; virtualization is retained.
+
+Computed conservative budget for the selected section (CSS px):
+
+| Part | Height |
+| --- | ---: |
+| Readout: two-line 22 px name, 32 px blaze, 12 px gauge, two-line 15 px total, 70 px curve, four 8 px gaps | 237.90 |
+| Small-caps section heading | 16.90 |
+| Section padding/borders and three 8 px gaps | 49.00 |
+| Weighting slider: 21.75 px line, 8 px top/bottom padding, borders | 39.75 |
+| Two possible primary-action rows with 21.75 px text, 8 px top/bottom padding, borders and row gap | 87.50 |
+| Shared grid top/bottom padding | 22.00 |
+| **Total** | **453.05** |
+
+This leaves about 17 px within the 470 px budget at 1280x720, or about 67 px
+within 520 px at 1366x768. The compact list is about 335 px including the grid
+padding (three two-line rows, one larger selected name, list/section gaps,
+heading and drawer trigger). Core omits the 39.75 px weighting row. These are
+computed bounds for existing fixture names/readings, not browser measurements.
+
+`deck.test.tsx` asserts the real fixture/core frame, body-size policy, preserved
+key badges, moved content reachable in the drawer, and weighting/decay handlers.
+`room.test.tsx` retains tier/accounting coverage on the drawer comparison.
+The room journey spec checks the integrated shell at both viewport sizes,
+all selections, 15 px / 1.45 body, drawer tiers and moved reading details.
+
+
 ## Illuminated picture and Steward flows (night UX, 2026-11-02)
 
 The fixture room is one picture (`stage.tsx`): the selected beacon on a stream
@@ -16,8 +71,7 @@ in the shared queue; in core mode Tune and Replay call `beacons.visual.upsert`,
 Test fire calls `beacons.simulate`, and the demo sends one routed simulated burst.
 Picker cards (`plates.tsx`) draw the same screen look. The previous plates,
 bench, replay workbench, timeline, feeds and seal slot live behind **More**
-(it opens itself when a visuals proposal awaits a seal). The core room keeps its
-existing layout.
+(it opens itself when a visuals proposal awaits a seal). Both room modes now use the T3 chamber frame described above.
 
 
 ## Night replay (hackathon B10, 2026-10-31)

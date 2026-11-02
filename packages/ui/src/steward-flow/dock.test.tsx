@@ -1,5 +1,7 @@
+import { Children, isValidElement } from 'react';
+import type { ChangeEvent, FocusEvent, InputHTMLAttributes, KeyboardEvent, ReactElement, ReactNode } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { expect, test } from 'vitest';
+import { expect, test, vi } from 'vitest';
 import { defineFlow } from './flow.js';
 import type { ChamberSteward, StewardRegistry } from './registry.js';
 import { createDockStore } from './store.js';
@@ -22,16 +24,20 @@ const registry: StewardRegistry = {
   lottery: empty, moderator: empty, visuals: empty, studio: empty, stream: empty, rehearsal: empty,
 };
 
-test('collapsed dock: region, plate with SIMULATED, one Steward line, the input and quick chips', () => {
+test('collapsed dock: one bar with identity, SIMULATED, input, slash hint and quick chips', () => {
   const html = renderToStaticMarkup(<StewardDock chamber="keep" registry={registry} store={createDockStore()} />);
   expect(html).toContain('aria-label="The Steward"');
   expect(html).toContain('<span class="cc-sim">Simulated</span>');
-  expect(html).toContain('<p class="cc-talk__msg">Good evening. Nothing acts until you hold.</p>');
+  expect(html).toContain('data-role="steward-bar"');
+  expect(html).toContain('<kbd class="cc-talk-hint">/</kbd>');
   expect(html.match(/aria-label="Talk to the Steward\.\.\."/g)).toHaveLength(1);
   expect(html).toContain('>Pick tonight&#x27;s theme</button>');
   expect(html).toContain('>Catch me up</button>');
   expect(html).not.toContain('cc-steward-sheet');
   expect(html).toContain('aria-live="polite"');
+  const store = createDockStore();
+  store.expand();
+  expect(renderToStaticMarkup(<StewardDock chamber="keep" registry={registry} store={store} />)).toContain('Good evening. Nothing acts until you hold.');
 });
 
 test('live mode drops SIMULATED from the plate', () => {
@@ -87,4 +93,60 @@ test('flows beyond the quick chips sit behind a keyboard-reachable "More flows" 
   expect(html).toContain('More flows');
   const quiet = renderToStaticMarkup(<StewardDock chamber="keep" registry={registry} store={createDockStore()} />);
   expect(quiet).not.toContain('More flows');
+});
+
+test('real input handlers open chat on focus and typing; root Escape peels popover before chat', () => {
+  const store = createDockStore();
+  let dock: ReturnType<typeof StewardDock> | undefined;
+  let input: ReactElement<InputHTMLAttributes<HTMLInputElement>> | undefined;
+  function inspect(node: ReactNode) {
+    Children.forEach(node, child => {
+      if (!isValidElement<{ children?: ReactNode }>(child)) return;
+      if (child.type === 'input' && isValidElement<InputHTMLAttributes<HTMLInputElement>>(child)) input = child;
+      inspect(child.props.children);
+    });
+  }
+  function Probe() { dock = StewardDock({ chamber: 'keep', registry, store }); inspect(dock); return dock; }
+  renderToStaticMarkup(<Probe />);
+  if (!dock || !input) throw new Error('Missing dock controls');
+  // Focus is the shell's slash dispatch target; typing uses the same opening path.
+  input.props.onFocus?.({} as FocusEvent<HTMLInputElement>);
+  expect(store.getSnapshot().expanded).toBe(true);
+  store.collapse();
+  input.props.onChange?.({ currentTarget: { value: 'simulated text' } } as ChangeEvent<HTMLInputElement>);
+  expect(store.getSnapshot().expanded).toBe(true);
+  store.popover('flows');
+  const event = { key: 'Escape', preventDefault: vi.fn(), stopPropagation: vi.fn() } as Partial<KeyboardEvent<HTMLElement>>;
+  dock.props.onKeyDown(event as KeyboardEvent<HTMLElement>);
+  expect(store.getSnapshot().popover).toBeUndefined(); expect(store.getSnapshot().expanded).toBe(true);
+  dock.props.onKeyDown(event as KeyboardEvent<HTMLElement>);
+  expect(store.getSnapshot().expanded).toBe(false);
+  expect(event.stopPropagation).toHaveBeenCalledTimes(2);
+});
+
+test('talk input Escape peels one layer without refocusing or changing text, then falls through', () => {
+  const store = createDockStore();
+  let input: ReactElement<InputHTMLAttributes<HTMLInputElement>> | undefined;
+  function inspect(node: ReactNode) {
+    Children.forEach(node, child => {
+      if (!isValidElement<{ children?: ReactNode }>(child)) return;
+      if (child.type === 'input' && isValidElement<InputHTMLAttributes<HTMLInputElement>>(child)) input = child;
+      inspect(child.props.children);
+    });
+  }
+  function Probe() { const dock = StewardDock({ chamber: 'keep', registry, store }); inspect(dock); return dock; }
+  renderToStaticMarkup(<Probe />);
+  if (!input?.props.onKeyDown) throw new Error('Missing talk input Escape handler');
+  const field = { value: 'Keep this unsent SIMULATED note', focus: vi.fn() };
+  const event = () => Object.assign({} as KeyboardEvent<HTMLInputElement>,
+    { key: 'Escape', currentTarget: field, target: field, preventDefault: vi.fn(), stopPropagation: vi.fn() });
+  store.expand(); store.popover('flows');
+  const popover = event(); input.props.onKeyDown(popover);
+  expect(store.getSnapshot().popover).toBeUndefined(); expect(store.getSnapshot().expanded).toBe(true);
+  const conversation = event(); input.props.onKeyDown(conversation);
+  expect(store.getSnapshot().expanded).toBe(false);
+  expect(conversation.preventDefault).toHaveBeenCalledOnce(); expect(conversation.stopPropagation).toHaveBeenCalledOnce();
+  expect(field.value).toBe('Keep this unsent SIMULATED note'); expect(field.focus).not.toHaveBeenCalled();
+  const next = event(); input.props.onKeyDown(next);
+  expect(next.preventDefault).not.toHaveBeenCalled(); expect(next.stopPropagation).not.toHaveBeenCalled();
 });

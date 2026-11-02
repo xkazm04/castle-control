@@ -1,0 +1,86 @@
+/* The Deck palette, extracted unchanged from .port/winner/base.css :root.
+ * This UI override layer follows the shared token package without changing it. */
+:root, [data-theme] {
+  --font-deck-serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+  --font-deck-sans: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+  --font-deck-mono: ui-monospace, "Cascadia Mono", Consolas, Menlo, monospace;
+  --rampart-h: 52px; --tabs-h: 48px; --room-tab-h: 38px;
+  --deck-pad: clamp(14px, 1.6vw, 28px); --deck-radius: 14px;
+  --deck-crenel-span: 44px; --deck-frame-glow: 18px;
+  --room-tab-radius: 11px; --room-frame-radius: 26px;
+  --text-room-title: 24px; --text-room-subtitle: 16px;
+  --text-room-tab: 15px; --text-room-state: 13px;
+  --m-enter: .42s; --m-exit: .17s; --m-settle: .16s;
+  --ease: cubic-bezier(.22,.8,.2,1);
+  --deck-top: var(--surface-2); --deck-top-bottom: var(--surface);
+  --deck-bar: var(--stone-2); --deck-line: var(--hair); --deck-line-2: var(--faint);
+  --deck-gold: var(--gilt-text); --deck-gold-2: var(--gilt-lo);
+  --room-keep-border: color-mix(in srgb, var(--deck-gold) 47.5%, transparent);
+  --deck-sheen: var(--glass-hi); --deck-crenel: var(--lead-2);
+  --deck-need-ink: var(--lead-lo);
+}
+
+[data-theme="day"] {
+  --deck-gold: #6e4a00; --deck-need-ink: #1b1100;
+}
+
+[data-theme="night"] {
+  color-scheme: dark;
+  --stone: #06050c; --stone-2: #0d0b19; --stone-3: #1a1733;
+  --surface: #14122a; --surface-2: #1a1733; --surface-3: #2b2845;
+  --vellum: var(--surface); --vellum-2: var(--stone-2); --vellum-3: var(--surface-2);
+  --ink: #f2eefb; --ink-2: #cdc6e2; --muted: #a59fc0;
+  --hair: #2b2845; --hair-2: #403c63; --faint: var(--hair-2); --came-ui: var(--hair-2);
+  --deck-line: var(--hair); --deck-line-2: var(--hair-2);
+  --deck-gold: #e0bd74; --deck-gold-2: #a98a4a;
+  --room-keep-border: rgba(224,189,116,.475);
+  --gilt-text: var(--deck-gold); --gilt-flat: var(--deck-gold); --gilt-mid: var(--deck-gold-2);
+  --gules: #ff5a7c; --gules-deep: #5e1028; --gules-lit: var(--gules); --gules-ink: var(--gules);
+  --azure: #6b97ff; --azure-deep: #10286e; --azure-lit: var(--azure); --azure-ink: var(--azure);
+  --or: #ffbb42; --or-deep: #6b3705; --or-lit: var(--or); --or-ink: var(--or);
+  --amethyst: #bb86ff; --amethyst-deep: #36146e; --amethyst-lit: var(--amethyst); --amethyst-ink: var(--amethyst);
+  --key: var(--amethyst); --key-deep: var(--amethyst-deep); --key-lit: var(--key); --key-ink: var(--key);
+  --ok: #2fbf7f; --emerald: var(--ok); --emerald-ink: var(--ok);
+  --on-lead: var(--ink); --on-lead-muted: var(--ink-2);
+  --gules-glow: color-mix(in srgb, var(--gules) 55%, transparent);
+  --azure-glow: color-mix(in srgb, var(--azure) 55%, transparent);
+  --or-glow: color-mix(in srgb, var(--or) 55%, transparent);
+  --key-glow: color-mix(in srgb, var(--key) 55%, transparent);
+  --amethyst-glow: var(--key-glow);
+  --deck-top: #0e0c1d; --deck-top-bottom: #090714; --deck-bar: #0a0816;
+  --deck-crenel: #211f3a; --deck-sheen: rgba(255,255,255,.12); --deck-need-ink: #1b1100;
+  --focus: var(--deck-gold);
+}
+
+/* WP2 surface finishes, from winner base.css .quick/.qk/.steward/.chat/.bub
+ * and layout.css .spacekey. Defaults follow the product's daylight surfaces. */
+:root, [data-theme] {
+  --deck-action-top: var(--surface-2); --deck-action-bottom: var(--surface);
+  --deck-key-top: var(--surface); --deck-key-bottom: var(--surface-2);
+  --deck-key-rule: var(--came-ui); --deck-key-foot: var(--stone-3);
+  --deck-key-main-top: color-mix(in srgb, var(--deck-gold) 18%, var(--surface));
+  --deck-key-main-bottom: color-mix(in srgb, var(--deck-gold) 12%, var(--surface-2));
+  --deck-key-hover-top: color-mix(in srgb, var(--deck-gold) 26%, var(--surface));
+  --deck-key-hover-bottom: color-mix(in srgb, var(--deck-gold) 18%, var(--surface-2));
+  --deck-key-radius: 10px; --deck-chat-radius: 18px; --deck-bubble-radius: 16px;
+  --deck-seal-top: var(--surface); --deck-seal-bottom: var(--surface-2); --deck-seal-foot: var(--deck-gold-2);
+  --deck-control-highlight: var(--glass-hi);
+  --deck-seal-shadow: inset 0 1px 0 var(--deck-control-highlight), 0 4px 12px var(--shade);
+  --deck-steward-top: var(--surface-2); --deck-steward-bottom: var(--stone-2);
+  --deck-chat-top: var(--surface); --deck-chat-bottom: var(--surface-2); --deck-chat-shadow: var(--shadow);
+  --deck-bubble: var(--surface-2);
+}
+
+[data-theme="night"] {
+  --deck-action-top: #0e0c20; --deck-action-bottom: #0b0918;
+  --deck-key-top: #221d45; --deck-key-bottom: #17143a;
+  --deck-key-rule: #3a3560; --deck-key-foot: #08070f;
+  --deck-key-main-top: #5a4520; --deck-key-main-bottom: #3a2c12;
+  --deck-key-hover-top: #6b5326; --deck-key-hover-bottom: #46351a;
+  --deck-seal-top: #2a2347; --deck-seal-bottom: #1a1636; --deck-seal-foot: #2a1f08;
+  --deck-control-highlight: rgba(255,255,255,.1);
+  --deck-steward-top: #110f25; --deck-steward-bottom: #0a0817;
+  --deck-chat-top: #1b1738; --deck-chat-bottom: #100d22;
+  --deck-chat-shadow: 0 30px 80px rgba(0,0,0,.7), 0 0 0 1px #000;
+  --deck-bubble: #221e42;
+}

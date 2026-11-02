@@ -29,6 +29,7 @@ import './room-chrome.css';
 import './hex-field.css';
 
 const TiltyardView = lazy(() => import('./tiltyard-view.jsx'));
+const LocalDuelDemos = lazy(() => import('./local-duel-demos.jsx'));
 export type StudioView = 'table' | 'spyglass' | 'rehearse';
 export type RoomView = 'duel' | 'show' | 'ladder' | 'proposals' | StudioView;
 
@@ -98,29 +99,29 @@ const moreItems: readonly { id: Exclude<RoomView, 'duel'>; label: string; line: 
 export const viewName = (view: RoomView) => view === 'duel' ? copy.duel : moreItems.find(item => item.id === view)?.label ?? view;
 
 /** One disclosure for every rarely used view; each is a labelled local demo. */
-export function MoreMenu({ view, on_view }: { view: RoomView; on_view: (view: RoomView) => void }) {
-  const [open, setOpen] = useState(false);
+export function MoreMenu({ view, on_view, expanded = false }: { view: RoomView; on_view: (view: RoomView) => void; expanded?: boolean }) {
+  const [open, setOpen] = useState(expanded);
   const box = useRef<HTMLDivElement>(null);
   const first = useRef<HTMLButtonElement>(null);
   useEffect(() => {
-    if (!open) return;
+    if (!open || expanded) return;
     first.current?.focus();
     const away = (event: MouseEvent) => { if (!box.current?.contains(event.target as Node)) setOpen(false); };
     document.addEventListener('mousedown', away);
     return () => { document.removeEventListener('mousedown', away); };
-  }, [open]);
+  }, [open, expanded]);
   return <div ref={box} className="studio-more" onKeyDown={event => {
-    event.stopPropagation();
-    if (event.key === 'Escape' && open) { event.preventDefault(); setOpen(false); box.current?.querySelector('button')?.focus(); }
+    if (!expanded) event.stopPropagation();
+    if (event.key === 'Escape' && open && !expanded) { event.preventDefault(); setOpen(false); box.current?.querySelector('button')?.focus(); }
   }}>
-    <button type="button" className="cc-btn cc-btn--sm" aria-haspopup="menu" aria-expanded={open}
-      onClick={() => setOpen(value => !value)}>{copy.more}</button>
-    {open && <div className="studio-more__menu" role="menu" aria-label={copy.more_label}>
+    {!expanded && <button type="button" className="cc-btn cc-btn--sm" aria-haspopup="menu" aria-expanded={open}
+      onClick={() => setOpen(value => !value)}>{copy.more}</button>}
+    {open && <div className={expanded ? 'studio-more__list' : 'studio-more__menu'} role="menu" aria-label={copy.more_label}>
       {view !== 'duel' && <button type="button" role="menuitem" className="studio-more__item"
-        onClick={() => { setOpen(false); on_view('duel'); }}><b>{copy.back_to_duel}</b><span>{copy.duel_line}</span></button>}
+        onClick={() => { if (!expanded) setOpen(false); on_view('duel'); }}><b>{copy.back_to_duel}</b><span>{copy.duel_line}</span></button>}
       {moreItems.map((item, index) => <button key={item.id} ref={index === 0 ? first : undefined} type="button" role="menuitem"
         className="studio-more__item" aria-current={view === item.id || undefined}
-        onClick={() => { setOpen(false); on_view(item.id); }}><b>{item.label}</b><span>{item.line}</span></button>)}
+        onClick={() => { if (!expanded) setOpen(false); on_view(item.id); }}><b>{item.label}</b><span>{item.line}</span></button>)}
       <p className="studio-more__fine"><span className="cc-sim">Simulated</span>{copy.more_fine}</p>
     </div>}
   </div>;
@@ -146,28 +147,30 @@ export default function StudioRoom({ snapshot, seal_slot }: { snapshot: Snapshot
   if (!fixture && !sandbox && !connection) return <section className="studio-room studio-core" aria-label={copy.work} data-view="duel">
     <EmptyState title={copy.bare} description={copy.unconfigured} />{seal_slot}
   </section>;
-  const more = <MoreMenu view={view} on_view={setView} />;
-  const duelish = view === 'duel' || view === 'show' || view === 'ladder';
-  return <section className={`studio-room${fixture ? '' : ' studio-core'}`} aria-label={copy.work} data-view={view}>
-    {view !== 'duel' && <div className="studio-away">
-      <button type="button" className="cc-btn cc-btn--sm" onClick={() => setView('duel')}>{copy.back_to_duel}</button>
-      <b className="studio-away__name">{viewName(view)}</b>
-      {view !== 'proposals' && <span className="cc-sim">{copy.local_demo}</span>}
-      <span className="studio-away__line">{view === 'proposals' ? copy.proposals_away : copy.local_line}</span>
-      {more}
-    </div>}
+  const more = <MoreMenu view={view} on_view={setView} expanded />;
+  const detail = <div className="studio-room studio-drawer-work">
     {banner && <p className="studio-sandbox" role="status" data-testid="duel-sandbox"><span className="cc-sim">Simulated</span>
       <b>Demo sandbox · SIMULATED · nothing touches your core</b>
       <span>{fixture ? 'Sample contestants and generated ballots on this machine.' : 'Your core tournament stays as it is and comes back when the demo ends.'}</span>
       {sandboxed && !fixture && <button type="button" className="cc-btn cc-btn--sm cc-btn--quiet" onClick={() => duelSandbox.set(false)}>Back to your core</button>}
     </p>}
-    {duelish ? <Suspense fallback={<p className="studio-loading" role="status">{copy.loading}</p>}>
-      <TiltyardView connection={connection} view={view === 'duel' ? 'duel' : view} draft={draft} tools={more} />
-    </Suspense> : view === 'proposals' ? !seal_slot && <EmptyState title={copy.proposals_none} description={copy.proposals_away} />
-      : <StudioWork seal_slot={seal_slot} view={view} on_view={setView} />}
-    {/* Design proposals sit behind More; the slot stays mounted (hidden) beside the duel so a half-made draft keeps its state. */}
-    {(duelish || view === 'proposals') && seal_slot && <div className="studio-proposals" hidden={view !== 'proposals'}>
-      <Plate variant="plain" border_ink="rule" className="cc-seal-card">{seal_slot}</Plate>
+    {view !== 'duel' && <div className="studio-away">
+      <button type="button" className="cc-btn cc-btn--sm" onClick={() => setView('duel')}>{copy.back_to_duel}</button>
+      <b className="studio-away__name">{viewName(view)}</b>
+      {view !== 'proposals' && <span className="cc-sim">{copy.local_demo}</span>}
+      <span className="studio-away__line">{view === 'proposals' ? copy.proposals_away : copy.local_line}</span>
     </div>}
+    {view === 'show' || view === 'ladder' ? <LocalDuelDemos mode={view} />
+      : view !== 'duel' && view !== 'proposals' ? <StudioWork view={view} on_view={setView} /> : null}
+    <div className="studio-proposals" hidden={view !== 'proposals'}>
+      {seal_slot ? <Plate variant="plain" border_ink="rule" className="cc-seal-card">{seal_slot}</Plate>
+        : <EmptyState title={copy.proposals_none} description={copy.proposals_away} />}
+    </div>
+  </div>;
+  return <section className={`studio-room${fixture ? '' : ' studio-core'}`} aria-label={copy.work} data-view={view}>
+    <Suspense fallback={<p className="studio-loading" role="status">{copy.loading}</p>}>
+      <TiltyardView connection={connection} draft={draft} tools={more}
+        details={{ open: view !== 'duel', content: detail, on_close: () => setView('duel') }} />
+    </Suspense>
   </section>;
 }

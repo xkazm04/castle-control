@@ -9,6 +9,7 @@ import { moderationCopy as copy } from '../../moderation-copy.js';
 import { GateArt } from './gate-art.jsx';
 import { demoBurst, demoHeldText, demoHoldReason } from './demo-model.js';
 import { proposeCommand } from './session.js';
+import { RoomKeyBadge } from '../../shell/steward-keys.jsx';
 
 /** What the Play demo draws at the gate; a picture of the draft, never the fixture state. */
 export type GateDemo = { stage: string; choice?: 'pass' | 'bar' | undefined };
@@ -18,7 +19,7 @@ export function HeldActions({ item, state, queue }: { item: Decision; state: Mod
   return <div className="gh-gate__act">{(['release', 'remove'] as const).map(kind => <button type="button" key={kind}
     className={kind === 'release' ? 'cc-btn cc-btn--chamber gh-pass' : 'cc-btn cc-btn--line gh-bar'}
     disabled={!choices.includes(kind)} onClick={() => proposeCommand(queue, { kind, decision_id: item.decision_id }, kind === 'release' ? 'Pass held message' : 'Bar held message')}>
-    {kind === 'release' ? copy.propose_pass : copy.propose_bar}</button>)}</div>;
+    <RoomKeyBadge room="moderator" action={kind} />{kind === 'release' ? copy.propose_pass : copy.propose_bar}</button>)}</div>;
 }
 
 function Burst({ held }: { held: boolean }) {
@@ -46,8 +47,12 @@ function DemoHeld({ choice, resolved = false }: { choice: 'pass' | 'bar' | undef
 }
 
 /** The hero: the portcullis and one held message at a time, with Propose pass / Propose bar. */
-export function GatePlate({ state, queue, demo, ribbon, resolved }: {
+export function GatePlate({ state, queue, demo, ribbon, resolved, part = 'full', compact = false, feedback = true }: {
   state: ModerationPreview; queue: ProposalQueue; demo?: GateDemo | undefined;
+  part?: 'full' | 'picture' | 'queue';
+  /** The chamber keeps the first hold; paging and secondary context remain in its drawer. */
+  compact?: boolean;
+  feedback?: boolean;
   /** The Play demo's line after its seal, shown in place of the queue until the streamer moves on. */
   resolved?: { choice: 'pass' | 'bar'; on_next: () => void } | undefined;
   /** One line describing an open Steward draft, so the picture shows it while the sheet is raised. */
@@ -59,28 +64,33 @@ export function GatePlate({ state, queue, demo, ribbon, resolved }: {
   const demo_held = !!demo && demo.stage !== 'burst';
   const done = !demo && resolved ? resolved : undefined;
   const waiting = state.held.length + (demo_held ? 1 : 0);
-  return <aside className="cc-panel gh-gate moderator-held-plate" aria-label={copy.held} data-demo={demo?.stage}>
+  if (part === 'picture') return <div className="gh-picture" data-demo={demo?.stage}>
+    <GateArt waiting={waiting} simulated />
+    <span className="gh-picture__label">SIMULATED · {waiting} held · stylised illustration</span>
+    {ribbon && <p className="gh-ribbon"><span className="cc-stamp cc-stamp--draft">Draft</span>{ribbon}</p>}
+  </div>;
+  return <aside className="cc-panel gh-gate moderator-held-plate" aria-label={copy.held} data-demo={demo?.stage} data-part={part} data-compact={compact ? 'true' : undefined}>
     {ribbon && <p className="gh-ribbon"><span className="cc-stamp cc-stamp--draft">Draft</span>{ribbon}</p>}
     <div className="gh-gate__head">
-      <div><h2 className="cc-panel__title">{copy.held}</h2><span className="cc-panel__aside">{copy.held_gloss}</span></div>
+      <div>{part === 'full' && <h2 className="cc-panel__title">{copy.held}</h2>}{!compact && <span className="cc-panel__aside">{copy.held_gloss}</span>}</div>
       <div className="gh-count"><b>{waiting}</b><span><small>{copy.held_unit}</small><small>{copy.fixture_only}</small></span></div>
     </div>
-    <div className="gh-art"><div className="cc-mini" data-chamber="moderator"><div className="cc-mini__field cc-diaper">
-      <GateArt waiting={waiting} simulated /></div></div></div>
+    {part === 'full' && <div className="gh-art"><div className="cc-mini" data-chamber="moderator"><div className="cc-mini__field cc-diaper">
+      <GateArt waiting={waiting} simulated /></div></div></div>}
     <div className="gh-gate__main">
       {demo && <Burst held={demo_held} />}
       {demo_held ? <DemoHeld choice={demo.choice} /> : done ? <DemoHeld choice={done.choice} resolved /> : item ? <article key={item.decision_id} data-verdict="hold" className="gh-held moderator-held">
         <div className="gh-held__meta"><span className="cc-stamp cc-stamp--held cc-stamp--inked">{copy.hold}</span><span className="cc-hash">{item.message_id}</span>
-          <span className="gh-held__state">{state.phases.get(item.decision_id)?.kind === 'confirming' ? copy.held_pending : copy.held_state}</span></div>
+          {!compact && <span className="gh-held__state">{state.phases.get(item.decision_id)?.kind === 'confirming' ? copy.held_pending : copy.held_state}</span>}</div>
         <blockquote className="gh-held__msg">{item.message_text ?? copy.original_unavailable}</blockquote>
         <p className="gh-held__why"><b>{copy.held_reason}</b>{fixtureHoldReasons.get(item.message_id) ?? copy.hold_reason_unavailable}</p>
       </article> : !demo && <EmptyState compact title={copy.clear} description="Nothing waits for you. New holds appear here, one at a time." />}
-      <p role="status" data-review-feedback="true" className="gh-notice">{state.notice}</p>
+      {feedback && <p role="status" data-review-feedback="true" className="gh-notice">{state.notice}</p>}
     </div>
     <div className="gh-gate__side">
       {done && <button type="button" className="cc-btn cc-btn--sm" onClick={done.on_next}>
         {state.held.length ? `Back to the held queue · ${state.held.length}` : 'Back to the gate'}</button>}
-      {!demo_held && !done && item && state.held.length > 1 && <div className="gh-pager" role="group" aria-label="Held messages">
+      {!compact && !demo_held && !done && item && state.held.length > 1 && <div className="gh-pager" role="group" aria-label="Held messages">
         <button type="button" className="cc-btn cc-btn--sm" disabled={at === 0} onClick={() => setIndex(at - 1)}>Previous</button>
         <span>{at + 1} of {state.held.length}</span>
         <button type="button" className="cc-btn cc-btn--sm" disabled={at >= state.held.length - 1} onClick={() => setIndex(at + 1)}>Next</button></div>}

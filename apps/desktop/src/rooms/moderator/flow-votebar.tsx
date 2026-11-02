@@ -25,8 +25,7 @@ const artName = (id: string | undefined) => offered.find(item => item.id === id)
 
 const session = () => moderationSession(proposalQueue);
 /** The look the stage draws for a draft: chosen values over the session's current vote layer. */
-export function voteLook(draft: VoteDraft | undefined): VoteLook {
-  const current = session().output.getSnapshot().vote;
+export function voteLook(draft: VoteDraft | undefined, current: VoteLook = session().output.getSnapshot().vote): VoteLook {
   const placement = placements.find(item => item.id === draft?.placement)?.look;
   const art = draft?.art ?? sealedLooks.get().vote_bar;
   return { anchor: placement?.anchor ?? current.anchor, size: placement?.size ?? current.size,

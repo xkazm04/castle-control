@@ -1,3 +1,4 @@
+import { openGatehouseDrawer } from './rooms/moderator/component-probe.jsx';
 import { afterEach, expect, test, vi } from 'vitest';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
@@ -137,7 +138,7 @@ test('chat and history parse generated read contracts, preserve provenance and r
   const h = harness(); await h.port.load();
   expect(h.port.getSnapshot().chat).toEqual(chatPage);
   expect(h.port.getSnapshot().history).toEqual(historyPage);
-  const html = renderToStaticMarkup(createElement(ConnectedGatehouse, { port: h.port, replay: false }));
+  const html = openGatehouseDrawer(createElement(ConnectedGatehouse, { port: h.port, replay: false }));
   for (const text of ['Synthetic core chat text', 'live', 'simulated', '2 unavailable', '3 unavailable']) {
     expect(html).toContain(text);
   }
@@ -162,7 +163,7 @@ test('consensus filters are sent to core and the returned series is rendered wit
   expect(h.rpc).toHaveBeenLastCalledWith(launch.endpoint, launch.session_token, 'gatehouse.consensus.get', {
     filter: { kind: 'emote', emote: 'Kappa' }, window_s: 900,
   });
-  const html = renderToStaticMarkup(createElement(ConnectedGatehouse, { port: h.port, replay: false }));
+  const html = openGatehouseDrawer(createElement(ConnectedGatehouse, { port: h.port, replay: false }));
   expect(html).toContain('Core audience direction'); expect(html).toContain('75.0%'); expect(html).toContain('31 messages shed');
   expect(html).not.toContain('illustrative'); expect(html).not.toContain('sample recording');
 });
@@ -177,7 +178,7 @@ test('core rules and drill-diff views render the fake transport results with pro
   expect(html).toContain('simulated replay'); expect(html).not.toContain('Generated fixture output');
   expect(html).toContain('live parity: pending capture evidence');
   expect(html).not.toMatch(/live (?:match|mismatch)|parity (?:match|mismatch)/i);
-  const rules = renderToStaticMarkup(createElement(ConnectedGatehouse, { port: h.port, replay: false }));
+  const rules = openGatehouseDrawer(createElement(ConnectedGatehouse, { port: h.port, replay: false }));
   expect(rules).toContain('Core configured rule');
 });
 

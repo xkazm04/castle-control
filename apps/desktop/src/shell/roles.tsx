@@ -2,7 +2,7 @@ import { Children, cloneElement, isValidElement } from 'react';
 import type { HTMLAttributes, ReactNode } from 'react';
 
 const roles: Readonly<Record<string, string>> = {
-  'cc-chamber-strip': 'strip', 'cc-chamber-tile': 'strip-tile',
+  'cc-chamber-strip': 'room-bar', 'cc-chamber-tile': 'room-tab',
   'cc-chamber-tile-title': 'strip-name', 'cc-chamber-state': 'strip-state',
   'cc-room-title-card': 'room-title', 'cc-slip': 'room-title-name',
   'cc-room-function': 'room-title-fn', 'cc-room-back': 'room-back',

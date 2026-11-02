@@ -48,7 +48,7 @@ test.each(['cheer', 'bits_use', 'subscribe', 'gift', 'resub', 'hype_train', 'cha
   },
 );
 
-// C retains the live window and order with the same 48px amount-row geometry as the simulated feed.
+// Live and simulated drawer feeds share 128 px rows for wrapped 15 px body text.
 test('core-returned order is retained and live rows use bounded, keyboard-reachable windows', async () => {
   const h = harness();
   const items = Array.from({ length: 100 }, (_, index) => ({ ...contribution,
@@ -56,7 +56,7 @@ test('core-returned order is retained and live rows use bounded, keyboard-reacha
   h.rpc.mockResolvedValueOnce({ items }); await h.port.loadContributions({ limit: 100 });
   const read = h.port.getSnapshot().contributions;
   const render = (scroll_top: number) => renderToStaticMarkup(<LiveContributionFeed read={read} on_refresh={vi.fn()} scroll_top={scroll_top} />);
-  const first = render(0); const last = render(100 * rowHeight * 1.5);
+  const first = render(0); const last = render(100 * rowHeight * 4);
   expect(first).toContain('aria-rowcount="100"'); expect(first).toContain('tabindex="0"');
   expect(first.match(/data-live-contribution-row=/g)?.length).toBeLessThan(20);
   expect(first).toContain('data-live-contribution-row="synthetic-0"');

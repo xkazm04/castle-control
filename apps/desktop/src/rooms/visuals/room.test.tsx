@@ -46,9 +46,9 @@ test('art outside the bays sits below the h2 configuration panel and its receipt
 });
 
 // C replaces the standalone figure and boxed tiers with literal radio plates and stair ramps.
-test('picker cards keep their inline stair ramps tracking the unchanged preview totals', () => {
+test('drawer comparison cards keep their stair ramps tracking the unchanged preview totals', () => {
   const style = readFileSync(new URL('./room.css', import.meta.url), 'utf8');
-  expect(style).toContain('padding: 22px var(--gutter) 34px');
+  expect(style).not.toContain('.visuals-board');
   expect(Number.parseFloat(tokens.layout['space-24'])).toBeGreaterThan(0);
   expect(style).toContain('clip-path: polygon(0 100%, 0 calc((1 - var(--from)) * 100%)');
   expect(style).toContain('background: var(--or)');
@@ -57,8 +57,9 @@ test('picker cards keep their inline stair ramps tracking the unchanged preview 
   const before = markup();
   expect(before).toContain('<figcaption');
   expect(before).toContain('The kindling curve');
-  expect(before.match(/data-state="active"/g)).toHaveLength(3);
-  const firstCard = (html: string) => html.match(/<button[^>]*role="radio"[\s\S]*?<\/button>/)?.[0] ?? '';
+  expect(before.match(/data-state="active"/g)).toHaveLength(3); // All tiers are in the drawer.
+  const firstCard = (html: string) => html.slice(html.indexOf('Every beacon, every tier'))
+    .match(/<button[^>]*role="radio"[\s\S]*?<\/button>/)?.[0] ?? '';
   expect(firstCard(before)).toContain('data-tier-start="10" data-state="active"');
   port.fire('gift', 50);
   const after = markup();
@@ -79,13 +80,14 @@ test('fixture room contains the altar, frames, border, 60 offerings and local te
   expect(html).not.toContain('visuals-room-notice');
 });
 
-// One scrolling board: the picture, the picker, then the workbench folded behind More.
-test('regions run picture, picker, then More: compare, tune, timeline, feed and the original seal slot', () => {
+// The bounded chamber keeps the full comparison and workbench behind its drawer trigger.
+test('regions run picture, compact picker, then drawer: compare, replay, tune, timeline, feed and original seal slot', () => {
   const style = readFileSync(new URL('./room.css', import.meta.url), 'utf8');
-  expect(style).toMatch(/\.visuals-board\s*\{[^}]*overflow: auto;[^}]*flex-direction: column/);
-  expect(style).toMatch(/\.visuals-board > \*\s*\{[^}]*flex-shrink: 0/);
+  expect(style).not.toContain('.visuals-board');
+  const deck = readFileSync(new URL('./deck.css', import.meta.url), 'utf8');
+  expect(deck).not.toMatch(/overflow(?:-y)?: (auto|scroll|hidden)/);
   const html = renderToStaticMarkup(<VisualsWork seal_slot={<aside className="shell-seal-slot" aria-label="Seal slot" />} />);
-  const regions = ['aria-label="Beacon picture"', 'class="visuals-plates"', 'visuals-more', 'visuals-bench', 'The kindling curve', 'visuals-fire-grid',
+  const regions = ['aria-label="Beacon picture"', 'visuals-plates--compact', 'visuals-drawer-trigger', 'Every beacon, every tier', 'visuals-replay', 'visuals-bench', 'The kindling curve', 'visuals-fire-grid',
     'visuals-room-details', 'aria-label="Illustrative offerings timeline"', 'aria-label="Contribution feed"', 'aria-label="Seal slot"'];
   const positions = regions.map(region => html.indexOf(region));
   expect(positions.every(position => position >= 0)).toBe(true);

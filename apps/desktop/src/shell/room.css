@@ -3,23 +3,7 @@
 .shell-room[data-chamber="lottery"] { --room-ink: var(--gules-text); }
 .shell-room[data-chamber="moderator"] { --room-ink: var(--azure-text); }
 .shell-room[data-chamber="visuals"] { --room-ink: var(--or-text); }
-.shell-room-header { position: relative; flex: none; height: calc(var(--space-1) * 250); border-bottom: var(--space-3) solid var(--ink); }
-.shell-room-band { position: absolute; inset: 0; overflow: hidden; font-size: var(--text-number); line-height: normal; background: none; }
-.shell-room-plane { position: absolute; left: 50%; top: 0; width: calc(var(--space-1) * 1060); height: 100%; transform: translateX(-50%); }
-.shell-room-camera { position: absolute; left: 0; top: 0; width: calc(var(--space-1) * 1200); height: calc(var(--space-1) * 640); transform-origin: 0 0; animation: room-dolly var(--m-dolly) var(--ease-dolly) both; }
-.shell-room-camera > svg { display: block; width: 100%; height: 100%; overflow: visible; }
-.shell-room-camera .dim { opacity: 0; fill: var(--art-night); mix-blend-mode: multiply; }
-.shell-room-camera .dim.on { opacity: .55; }
-.shell-room-camera .litglow { opacity: 0; }
-.shell-room-camera .litglow.on { opacity: 1; }
-.shell-room-header .cc-room-title { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
-.shell-room-header .cc-room-title-card { position: absolute; left: var(--space-20); top: calc(var(--space-1) * 96); max-width: min(calc(var(--space-1) * 720), calc(100% - var(--space-40))); box-sizing: border-box; pointer-events: auto; }
-.shell-room-header .cc-room-back { position: absolute; right: var(--space-16); bottom: var(--space-16); pointer-events: auto; }
-.shell-room-header :where(.cc-room-crumb button, .cc-room-back) { font: inherit; }
-.shell-room-header .cc-room-back { font: 700 var(--text-shell-action)/1 var(--font-ui); }
-.shell-room-header .cc-room-crumb button { padding: 0; border: 0; background: transparent; font: inherit; }
-@keyframes room-dolly { from { transform: var(--room-camera-from); } }
-@media (prefers-reduced-motion: reduce) { .shell-room-camera { animation: none; } }
+.shell-room-header { position: relative; flex: none; }
 .shell-room .shell-room-work { display: block; flex: 1; min-height: 0; padding: 0; overflow: hidden; }
 .shell-room .shell-room-content { min-width: 0; height: 100%; overflow: auto; }
 .shell-room .shell-seal-slot { min-width: 0; padding: var(--space-16) 0; border: 0; border-top: var(--rule-medium) solid var(--line); background: transparent; margin-top: var(--space-20); }
