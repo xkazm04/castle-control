@@ -8,6 +8,9 @@ rust-version.workspace = true
 [dependencies]
 cc-types = { path = "../cc-types" }
 async-trait.workspace = true
+base64 = "0.22.1"
+image-webp = "0.2.4"
+png = "0.18.1"
 reqwest.workspace = true
 serde.workspace = true
 serde_json.workspace = true
