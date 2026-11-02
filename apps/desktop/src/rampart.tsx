@@ -24,7 +24,7 @@ export function DesktopRampart({ snapshot, theme, on_theme_change, on_steward, s
   const stream = simulated ? undefined : status?.stream;
   const gatehouse = simulated ? undefined : status?.gatehouse;
   const twitch: ConnectionState | undefined = !fixture && bridge ? ({ connected: 'connected', connecting: 'reconnecting', disconnected: 'down', error: 'down' } as const)[bridge.state] : undefined;
-  return <header className="cc-rampart">
+  return <header className="cc-rampart" data-role="status-bar">
     <a className="cc-brand" href="#/keep" aria-label="Castle Control, the whole keep">
       <Mark /><span className="cc-wordmark" data-text="Castle Control">Castle Control</span>
     </a>

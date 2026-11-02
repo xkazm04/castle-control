@@ -28,6 +28,80 @@ test.afterEach(async ({ page }, info) => {
   }
 });
 
+test.describe('room bar and shell defaults', () => {
+  for (const viewport of [{ width: 1280, height: 720 }, { width: 1920, height: 1080 }]) {
+    test(`room bar fits one row at ${viewport.width}x${viewport.height}`, async ({ page }) => {
+      await page.setViewportSize(viewport);
+      await page.goto('/#/keep');
+      await expect(page.locator('.cc-frame')).toHaveAttribute('data-theme', 'night');
+      await expect(page.locator('.keep-home')).toBeVisible();
+      for (const key of ['0', '1', '2', '3', '4']) {
+        await page.keyboard.press(key);
+        const bar = page.locator('[data-role="room-bar"]');
+        await expect(bar.locator('[data-role="room-tab"]')).toHaveCount(5);
+        await expect(bar.locator('[aria-current="page"] .cc-kbd')).toHaveText(key);
+        await expect.poll(() => bar.evaluate(element => {
+          const tabs = [...element.querySelectorAll('[data-role="room-tab"]')];
+          const tops = tabs.map(tab => tab.getBoundingClientRect().top);
+          const issues: string[] = [];
+          if (Math.max(...tops) - Math.min(...tops) > 1) issues.push('tabs wrapped');
+          for (const tab of tabs) {
+            const bounds = tab.getBoundingClientRect();
+            if (bounds.left < 0 || bounds.right > innerWidth) issues.push('tab leaves viewport');
+            const title = tab.querySelector('.cc-chamber-tile-title');
+            if (!title || title.scrollWidth > title.clientWidth + 1) issues.push('title clipped');
+            for (const selector of ['.cc-chamber-tile-title', '.cc-chamber-state']) {
+              const label = tab.querySelector(selector);
+              if (!label?.firstChild) { issues.push('missing label'); continue; }
+              const range = document.createRange(); range.selectNodeContents(label);
+              const text = range.getBoundingClientRect();
+              const box = label.getBoundingClientRect();
+              if (text.right > box.right + 1 || text.left < box.left - 1) issues.push('tab text clipped');
+            }
+          }
+          if (document.documentElement.scrollWidth > innerWidth) issues.push('horizontal scroll');
+          return issues;
+        })).toEqual([]);
+      }
+      await page.keyboard.press('Escape');
+      await expect(page).toHaveURL(/#\/keep$/);
+      await page.getByRole('button', { name: 'Toggle day and night' }).click();
+      await expect(page.locator('.cc-frame')).toHaveAttribute('data-theme', 'day');
+      await auditStyles(page, desktopSurfaces);
+    });
+  }
+});
+
+test.describe('surface cross-fade', () => {
+  test.use({ reducedMotion: 'no-preference' });
+  test('1 to 2 fades an inert out-copy without translating or delaying the route', async ({ page }) => {
+    await page.goto('/#/chamber/lottery');
+    await expect(page.locator('.lottery-room')).toBeVisible();
+    // Dispatch through the same React keymap and sample in its next frame, before
+    // the 170 ms out-copy can finish on a slow test-worker round trip.
+    const motion = await page.evaluate(async () => {
+      const root = document.querySelector('.desktop-root');
+      if (!root) throw new Error('Missing shell root');
+      root.dispatchEvent(new KeyboardEvent('keydown', { key: '2', bubbles: true }));
+      await new Promise<void>(resolve => requestAnimationFrame(() => { resolve(); }));
+      return document.getAnimations().filter(animation => {
+        const target = animation.effect instanceof KeyframeEffect ? animation.effect.target : null;
+        return target instanceof HTMLElement && target.matches('main.desktop-surface');
+      }).map(animation => ({
+        frames: animation.effect instanceof KeyframeEffect ? animation.effect.getKeyframes() : [],
+        duration: animation.effect?.getTiming().duration,
+      }));
+    });
+    await expect(page).toHaveURL(/#\/chamber\/moderator$/);
+    expect(motion.map(animation => animation.duration)).toEqual(expect.arrayContaining([170, 420]));
+    for (const animation of motion) for (const frame of animation.frames) {
+      expect(frame).toHaveProperty('opacity'); expect(frame).not.toHaveProperty('transform');
+    }
+    await expect(page.locator('.cc-surface-out')).toHaveCount(0);
+    await expect(page.locator('[data-role="room-title"]')).toHaveCount(1);
+  });
+});
+
 test('fixture OBS setup from Keep sizes a source and requires a hold before simulated add', async ({ page }) => {
   const rpc: string[] = [];
   page.on('request', request => { if (new URL(request.url()).pathname === '/rpc') rpc.push(request.url()); });
@@ -64,7 +138,7 @@ for (const route of routes) for (const theme of themes) for (const steward of st
     else await expect(page.locator('.cc-steward-dock')).toBeVisible();
     if (route.endsWith('/drill')) await expect(page.locator('.moderator-drill')).toBeVisible();
     await expect(page).toHaveURL(new RegExp(`${route.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`));
-    if (theme === 'night') await page.getByRole('button', { name: 'Toggle day and night' }).click();
+    if (await page.locator('.cc-frame').getAttribute('data-theme') !== theme) await page.getByRole('button', { name: 'Toggle day and night' }).click();
     await expect(page.locator('.cc-frame')).toHaveAttribute('data-theme', theme);
     if (steward === 'open' && keep) {
       // Nothing to open: `/` is left alone on the Keep, so focus does not move and the page stays put.
