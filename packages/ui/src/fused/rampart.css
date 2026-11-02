@@ -103,7 +103,10 @@ html, body { background: var(--stone); }
 @media (prefers-reduced-motion: reduce) { .cc-frame .cc-rampart .cc-button:not(.cc-heraldic-button) { transition: none; } }
 
 @media (max-width: 1460px) {
-  .cc-frame .cc-rampart { gap: var(--space-10); }
+  .cc-frame .cc-rampart { gap: var(--space-8); }
   .cc-frame .cc-rampart .cc-wordmark { font-size: var(--text-px-22); }
   .cc-frame .cc-rampart .cc-cell { padding: 0 var(--space-8); }
+}
+@media (max-width: 1300px) {
+  .cc-frame .cc-rampart .cc-cell { padding: 0 var(--space-6); }
 }
