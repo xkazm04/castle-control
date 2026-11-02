@@ -11,6 +11,12 @@ import { coreRuleBench } from './session.js';
 
 // Counting spy on the bench evaluation (regex compile plus four text variants per message).
 const spy = vi.hoisted(() => ({ evaluations: 0, seen: new Set<unknown>() }));
+// Measure the expanded details on every render. Drawer visibility and its real trigger are
+// covered in structure.test.tsx; this probe isolates the room/bench evaluation cost.
+vi.mock('./deck.jsx', async importOriginal => {
+  const real = await importOriginal<typeof import('./deck.jsx')>();
+  return { ...real, GatehouseDeck: ({ children }: { children: ReactNode }) => <>{children}</> };
+});
 vi.mock('../../moderation-bench.js', async importOriginal => {
   const real = await importOriginal<typeof import('../../moderation-bench.js')>();
   return { ...real, evaluateDraft: (...args: Parameters<typeof real.evaluateDraft>) => {

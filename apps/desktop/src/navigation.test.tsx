@@ -1,5 +1,6 @@
 import { renderToReadableStream } from 'react-dom/server';
 import { expect, test, vi } from 'vitest';
+import { openGatehouseDrawer } from './rooms/moderator/component-probe.jsx';
 import { chambers } from '@castle-control/ui';
 import { backHash, canonicalHash, createKeymap, dispatchShortcut, initialNavigation, navigateHash, routeFromHash } from './navigation.js';
 import { DesktopView } from './view.jsx';
@@ -112,7 +113,7 @@ test('typing, modified shortcuts, repeats and composition do not navigate', () =
 
 // One case per surface: each cold lazy import gets its own five-second deadline under a loaded full suite.
 test.each([['#/keep', 'Enter the keep'], ['#/overview', 'Stream preview'], ['#/demo', 'SIMULATED · SAMPLE ART · AI-generated'],
-  ['#/chamber/lottery', 'Fairness you can verify'], ['#/chamber/moderator', 'The live room'],
+  ['#/chamber/lottery', 'Fairness you can verify'], ['#/chamber/moderator', 'data-role="room-picture"'],
   ['#/chamber/visuals', 'aria-label="Beacons work"'], ['#/chamber/studio', 'aria-label="Map Room work"'],
   ['#/chamber/moderator/drill', 'The drill']] as const)('lazy %s retains the rampart and its existing content, with one Steward dock everywhere but the Keep', async (hash, content) => {
   const snapshot = { mode: 'fixture', phase: 'ready', ...simulatedRead(1) } as const;
@@ -122,6 +123,11 @@ test.each([['#/keep', 'Enter the keep'], ['#/overview', 'Stream preview'], ['#/d
   const html = await new Response(stream).text();
   expect(html).toContain('data-stamp="off-air" role="img" aria-label="On air is simulated: nothing is broadcast"');
   for (const text of [content, 'On air · simulated', 'Twitch simulated', 'OBS simulated', 'Gatehouse simulated']) expect(html).toContain(text);
+  if (hash === '#/chamber/moderator') {
+    expect(html).toContain('>Full chart</button>');
+    const { default: ModeratorRoom } = await import('./rooms/moderator/index.jsx');
+    expect(openGatehouseDrawer(<ModeratorRoom snapshot={snapshot} replay={initialNavigation(hash).replay} />)).toContain('The live room');
+  }
   expect(html).not.toContain('desktop-simulated');
   expect(html).not.toContain('SIMULATED SOURCE');
   if (hash === '#/keep') {

@@ -1,4 +1,5 @@
 ﻿import { readFileSync } from 'node:fs';
+import { openGatehouseDrawer } from './rooms/moderator/component-probe.jsx';
 import { renderToReadableStream, renderToStaticMarkup } from 'react-dom/server';
 import * as React from 'react';
 import { afterEach, expect, test, vi } from 'vitest';
@@ -30,7 +31,7 @@ test('4,200 generated chat lines mount a window including the final row; room us
   const scrolled = renderToStaticMarkup(<MessageList messages={fixtureMessages} scroll_top={4200 * 32} />);
   expect(scrolled).toContain('simulated-message-4199');
   expect(scrolled.match(/data-message-row=/g)?.length).toBeLessThan(30);
-  const room = renderToStaticMarkup(<ModeratorRoom snapshot={{ mode: 'fixture', phase: 'ready' }} replay={false} queue={new ProposalQueue()} />);
+  const room = openGatehouseDrawer(<ModeratorRoom snapshot={{ mode: 'fixture', phase: 'ready' }} replay={false} queue={new ProposalQueue()} />);
   expect(room).toContain('420 lines');
   expect(room).toContain('aria-rowcount="420"');
   expect(room).toContain('SIMULATED');

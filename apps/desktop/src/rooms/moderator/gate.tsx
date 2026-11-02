@@ -46,8 +46,9 @@ function DemoHeld({ choice, resolved = false }: { choice: 'pass' | 'bar' | undef
 }
 
 /** The hero: the portcullis and one held message at a time, with Propose pass / Propose bar. */
-export function GatePlate({ state, queue, demo, ribbon, resolved }: {
+export function GatePlate({ state, queue, demo, ribbon, resolved, part = 'full' }: {
   state: ModerationPreview; queue: ProposalQueue; demo?: GateDemo | undefined;
+  part?: 'full' | 'picture' | 'queue';
   /** The Play demo's line after its seal, shown in place of the queue until the streamer moves on. */
   resolved?: { choice: 'pass' | 'bar'; on_next: () => void } | undefined;
   /** One line describing an open Steward draft, so the picture shows it while the sheet is raised. */
@@ -59,14 +60,19 @@ export function GatePlate({ state, queue, demo, ribbon, resolved }: {
   const demo_held = !!demo && demo.stage !== 'burst';
   const done = !demo && resolved ? resolved : undefined;
   const waiting = state.held.length + (demo_held ? 1 : 0);
-  return <aside className="cc-panel gh-gate moderator-held-plate" aria-label={copy.held} data-demo={demo?.stage}>
+  if (part === 'picture') return <div className="gh-picture" data-demo={demo?.stage}>
+    <GateArt waiting={waiting} simulated />
+    <span className="gh-picture__label">SIMULATED · {waiting} held · stylised illustration</span>
+    {ribbon && <p className="gh-ribbon"><span className="cc-stamp cc-stamp--draft">Draft</span>{ribbon}</p>}
+  </div>;
+  return <aside className="cc-panel gh-gate moderator-held-plate" aria-label={copy.held} data-demo={demo?.stage} data-part={part}>
     {ribbon && <p className="gh-ribbon"><span className="cc-stamp cc-stamp--draft">Draft</span>{ribbon}</p>}
     <div className="gh-gate__head">
-      <div><h2 className="cc-panel__title">{copy.held}</h2><span className="cc-panel__aside">{copy.held_gloss}</span></div>
+      <div>{part === 'full' && <h2 className="cc-panel__title">{copy.held}</h2>}<span className="cc-panel__aside">{copy.held_gloss}</span></div>
       <div className="gh-count"><b>{waiting}</b><span><small>{copy.held_unit}</small><small>{copy.fixture_only}</small></span></div>
     </div>
-    <div className="gh-art"><div className="cc-mini" data-chamber="moderator"><div className="cc-mini__field cc-diaper">
-      <GateArt waiting={waiting} simulated /></div></div></div>
+    {part === 'full' && <div className="gh-art"><div className="cc-mini" data-chamber="moderator"><div className="cc-mini__field cc-diaper">
+      <GateArt waiting={waiting} simulated /></div></div></div>}
     <div className="gh-gate__main">
       {demo && <Burst held={demo_held} />}
       {demo_held ? <DemoHeld choice={demo.choice} /> : done ? <DemoHeld choice={done.choice} resolved /> : item ? <article key={item.decision_id} data-verdict="hold" className="gh-held moderator-held">

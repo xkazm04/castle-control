@@ -1,5 +1,6 @@
 import { Children, isValidElement } from 'react';
 import { readFileSync } from 'node:fs';
+import { openGatehouseDrawer } from '../rooms/moderator/component-probe.jsx';
 import type { ButtonHTMLAttributes, KeyboardEvent, ReactElement, ReactNode } from 'react';
 import { renderToReadableStream, renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, expect, test, vi } from 'vitest';
@@ -17,7 +18,7 @@ import Room from './room.jsx';
 test('all room headers hold the compact title, function, room links and origin Back button', async () => {
   for (const [chamber, title, description, slot_context] of [
     ['lottery', 'The Lot Chamber', 'Lottery manager', /<aside class="shell-seal-slot"[^>]*aria-label="Seal slot"/],
-    ['moderator', 'The Gatehouse', 'AI moderator', /class="gh-seal"><aside class="shell-seal-slot"[^>]*aria-label="Seal slot"[\s\S]*?<\/aside><\/div><details class="gh-more"/],
+    ['moderator', 'The Gatehouse', 'AI moderator', /role="dialog"[\s\S]*class="gh-seal"><aside class="shell-seal-slot"[^>]*aria-label="Seal slot"/],
     ['visuals', 'The Beacons', 'Contribution visuals', /visuals-room-details[\s\S]*<aside class="shell-seal-slot"[^>]*aria-label="Seal slot"[\s\S]*?<\/aside><\/div><\/div>/],
     ['studio', 'The Map Room', 'Chat duels', /cc-seal-card[\s\S]*<aside class="shell-seal-slot"[^>]*aria-label="Seal slot"/],
   ] as const) {
@@ -37,8 +38,10 @@ test('all room headers hold the compact title, function, room links and origin B
     expect(markup).not.toContain('data-role="room-band"');
     expect(header).toContain('data-role="room-title"');
     // The lottery C port replaces details-last, data-active and prose guardrails with stage/desk, pressed kit cards and Ribbon slots.
-    expect(markup.match(/aria-label="Seal slot"/g)).toHaveLength(1);
-    expect(markup).toMatch(slot_context);
+    const details = chamber === 'moderator' ? openGatehouseDrawer(<Room chamber={chamber} replay={false}
+      snapshot={{ mode: 'fixture', phase: 'ready' }} origin="overview" on_open={vi.fn()} on_back={vi.fn()} />) : markup;
+    expect(details.match(/aria-label="Seal slot"/g)).toHaveLength(1);
+    expect(details).toMatch(slot_context);
     if (chamber === 'lottery') {
       const order = ['class="cc-hall"', 'class="cc-desk"', 'data-role="lot-more"',
         'aria-label="Entry lookup"', 'aria-label="Saved simulated proof bundle"', 'aria-label="Seal slot"', 'class="cc-numbered-discs"']
@@ -76,7 +79,9 @@ test.each([
     origin="overview" on_open={vi.fn()} on_back={vi.fn()} />);
   await stream.allReady;
   const markup = await new Response(stream).text();
-  const slot = markup.slice(markup.indexOf('aria-label="Seal slot"'));
+  const details = chamber === 'moderator' ? openGatehouseDrawer(<Room chamber={chamber} replay={false} snapshot={fixture}
+    origin="overview" on_open={vi.fn()} on_back={vi.fn()} />) : markup;
+  const slot = details.slice(details.indexOf('aria-label="Seal slot"'));
   expect(slot).toContain(`aria-label="${label} design"`);
   expect(slot).toContain('>Restyle</button>');
   expect(slot).toContain('>Custom design</button>');
@@ -84,11 +89,12 @@ test.each([
   expect(slot).not.toContain('tabindex="-1"');
 });
 
-test('the portcullis is a fused panel: the gate picture above the original held message', () => {
+test('the portcullis picture precedes the original held message in the first section column', () => {
   const markup = renderToStaticMarkup(<ModeratorRoom snapshot={fixture} replay={false} queue={new ProposalQueue()} />);
   const plate = markup.match(/<aside[^>]*class="cc-panel gh-gate moderator-held-plate"[\s\S]*?<\/aside>/)?.[0] ?? '';
-  expect(plate).toContain('<h2 class="cc-panel__title">At the portcullis</h2>');
-  expect(plate).toContain('class="gh-gate-art cc-folio-art"');
+  expect(markup).toContain('>At the portcullis</h3>');
+  expect(markup.indexOf('class="gh-gate-art cc-folio-art"')).toBeLessThan(markup.indexOf('class="gh-held__msg"'));
+  expect(markup).toContain('data-role="room-picture"');
   expect(plate).toContain('class="gh-held__msg"');
   expect(plate).toContain(fixtureHeld[0]?.message_text);
 });
@@ -97,7 +103,7 @@ test('polished rooms render each stage title once and expose keyboard scroll reg
     const stream = await renderToReadableStream(<Room chamber={chamber} replay={false} snapshot={fixture}
       origin="keep" on_open={vi.fn()} on_back={vi.fn()} />);
     await stream.allReady;
-    const markup = (await new Response(stream).text()).replace(/<!--.*?-->/g, '');
+    let markup = (await new Response(stream).text()).replace(/<!--.*?-->/g, '');
     expect(markup.match(new RegExp(`>${title}(?: ·|<)`, 'g'))).toHaveLength(1);
     if (chamber === 'lottery') {
       const card = markup.slice(markup.indexOf('data-role="lot-draw-card"'));
@@ -106,7 +112,10 @@ test('polished rooms render each stage title once and expose keyboard scroll reg
       expect(markup).not.toContain('Past writs');
       expect(markup).not.toContain('aria-label="Giveaway guardrails · local preview"');
     } else {
-      // One calm page: the gate, the desk, then one "More" disclosure for the rarely used benches.
+      expect(markup).toContain('data-role="room-picture"'); expect(markup).not.toContain('role="dialog"');
+      markup = openGatehouseDrawer(<Room chamber="moderator" replay={false} snapshot={fixture}
+        origin="keep" on_open={vi.fn()} on_back={vi.fn()} />).replace(/<!--.*?-->/g, '');
+      // All former benches remain reachable through the room's drawer trigger.
       expect(markup).toContain('<details class="gh-more"');
       expect(markup).toContain('<summary><span class="gh-more__title">More of the Gatehouse</span>');
     }
@@ -262,7 +271,9 @@ test('lazy Room preserves its props contract, slot and replay link; core mode ex
     const stream = await renderToReadableStream(<Room chamber={chamber} replay={false} snapshot={fixture}
       origin="overview" on_open={vi.fn()} on_back={vi.fn()} />);
     await stream.allReady;
-    const markup = await new Response(stream).text();
+    const face = await new Response(stream).text();
+    const markup = chamber === 'moderator' ? openGatehouseDrawer(<Room chamber={chamber} replay={false} snapshot={fixture}
+      origin="overview" on_open={vi.fn()} on_back={vi.fn()} />) : face;
     expect(markup).toContain('aria-label="Seal slot"');
     expect(markup).toContain('Back to the overview');
     expect(markup).not.toContain('generated fixtures only');
@@ -294,7 +305,9 @@ test('core launch reaches the lazy Gatehouse and drill routes with an isolated c
     const stream = await renderToReadableStream(<Room chamber="moderator" replay={replay} snapshot={snapshot}
       origin="keep" on_open={vi.fn()} on_back={vi.fn()} />);
     await stream.allReady;
-    return new Response(stream).text();
+    const html = await new Response(stream).text();
+    return replay ? html : openGatehouseDrawer(<Room chamber="moderator" replay={false} snapshot={snapshot}
+      origin="keep" on_open={vi.fn()} on_back={vi.fn()} />);
   };
   expect(await render(false)).toContain('aria-label="Core Gatehouse"');
   const connection = coreGatehouseConnection(snapshot);

@@ -1,5 +1,6 @@
 import { lazy, useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { EmptyState } from '@castle-control/ui';
+import { ChamberSection } from '@castle-control/ui/chamber';
 import type { ReactNode } from 'react';
 import { proposalQueue } from '@castle-control/ui/steward';
 import type { ProposalQueue } from '@castle-control/ui/steward';
@@ -22,6 +23,8 @@ import { SandboxBanner, useDemoSandbox } from '../../demo-sandbox.jsx';
 import { RulesPicture, rulesFlow, rulesRibbon } from './flow-rules.jsx';
 import { voteBarFlow, voteLook, voteRibbon } from './flow-votebar.jsx';
 import { DrillPicture, drillFlow, drillRibbon } from './flow-drill.jsx';
+import { GatehouseDeck, GateProposalMini, VoteControls } from './deck.jsx';
+import SealSlot from '../seal-slot/index.jsx';
 import './room.css';
 import './gatehouse.css';
 
@@ -46,7 +49,7 @@ function FixtureModeratorRoom({ snapshot, replay, queue = proposalQueue, seal_sl
   const draft = useSyncExternalStore(bench.subscribe, bench.getSnapshot, bench.getSnapshot);
   const room = useSyncExternalStore(view.subscribe, view.getSnapshot, view.getSnapshot);
   // The herald's vote bar redraws when a sealed look changes the session's output.
-  useSyncExternalStore(output.subscribe, output.getSnapshot, output.getSnapshot);
+  const current_output = useSyncExternalStore(output.subscribe, output.getSnapshot, output.getSnapshot);
   const [plan] = useState(() => replay ? view.takeDrill() : undefined);
   const publication = useStewardDraft('moderator');
   const demo = useFlowDraft(demoFlow);
@@ -74,22 +77,34 @@ function FixtureModeratorRoom({ snapshot, replay, queue = proposalQueue, seal_sl
   const moved = room.demo_moved || stage === 'herald' || stage === 'seal';
   const charts = moved ? fixtureCharts.map(chart => movedConsensus(chart)) : fixtureCharts;
   const filter = voting?.shows ?? room.filter;
-  const top = rules ? <section className="gh-draft" aria-label="Draft rules"><RulesPicture draft={rules} /></section>
-    : practice ? <section className="gh-draft" aria-label="Drill plan"><DrillPicture draft={practice} /></section>
-    : <NeedsYou state={state} queue={queue} />;
+  const draft_picture = rules ? <section className="gh-draft" aria-label="Draft rules"><RulesPicture draft={rules} /></section>
+    : practice ? <section className="gh-draft" aria-label="Drill plan"><DrillPicture draft={practice} /></section> : undefined;
   const resolved = room.demo_resolved ? { choice: room.demo_resolved.choice, on_next: () => view.setDemoResolved(undefined) } : undefined;
+  const gate = { state, queue, demo: stage ? { stage, choice: demo?.choice } : undefined, resolved };
+  const herald = { results: charts, selected: filter, on_select: (index: number) => view.setFilter(index), look: voteLook(voting, current_output.vote), draft: !!voting,
+    caption: moved ? 'the Play demo’s simulated burst moved it' : undefined };
+  const open = () => view.setMore(true);
   return <div ref={root} className="moderator-room gh-room" data-demo={stage} data-sandbox={sandbox ? '' : undefined}>
     {sandbox && <SandboxBanner chamber="moderator" demo_id={demoFlow.id} />}
-    <GatePlate state={state} queue={queue} demo={stage ? { stage, choice: demo?.choice } : undefined} resolved={resolved}
-      ribbon={rules ? rulesRibbon(rules) : voting ? voteRibbon(voting) : practice ? drillRibbon(practice) : undefined} />
-    <div className="gh-desk">
-      {top}
-      <BanQueue state={state} queue={queue} />
-      <Herald results={charts} selected={filter} on_select={index => view.setFilter(index)} look={voteLook(voting)} draft={!!voting}
-        caption={moved ? 'the Play demo’s simulated burst moved it' : undefined} />
-      <div className="gh-seal">{seal_slot}</div>
-      <MoreBenches state={state} port={port} queue={queue} bench={bench} output={output} view={view} more={room.more}
-        marked={draft.draft ? result.hit_ids : undefined} directions={fixtureCharts[0]?.directions ?? []} />
-    </div>
+    <GatehouseDeck open={room.more} on_close={() => view.setMore(false)}
+      picture={<GatePlate {...gate} part="picture"
+        ribbon={rules ? rulesRibbon(rules) : voting ? voteRibbon(voting) : practice ? drillRibbon(practice) : undefined} />}
+      picture_label="Gatehouse picture · SIMULATED" preview_title="Proposal · awaiting your seal"
+      preview={<GateProposalMini queue={queue} flow={[demoFlow, rulesFlow, voteFlow, practiceFlow].find(flow => flow.id === publication?.flow)?.title} on_open={open} />}
+      program={<div className="gh-mini-copy"><b>Chat and Herald</b><p>{state.messages.slice(0, state.replay_count).filter(item => item.verdict === 'pass').length} passed · {charts[filter]?.directions[0]?.label ?? 'No direction yet'}</p>
+        <p>{herald.look.anchor.replace('-', ' ')} · size {herald.look.size} · {herald.look.art_style}</p></div>}
+      columns={[
+        <ChamberSection key="queue" title="At the portcullis"><GatePlate {...gate} part="queue" /><BanQueue state={state} queue={queue} /></ChamberSection>,
+        <div key="herald" className="gh-deck-column"><ChamberSection title="The gate"><NeedsYou state={state} queue={queue} /></ChamberSection>
+          <ChamberSection title="The Herald’s chart" aside={<button type="button" className="cc-btn cc-btn--sm" onClick={open}>Full chart</button>}>
+            <Herald {...herald} compact action={<VoteControls queue={queue} />} />
+          </ChamberSection></div>,
+      ]}>
+      {draft_picture}
+      <Herald {...herald} action={<VoteControls queue={queue} full />} />
+      <MoreBenches state={state} port={port} queue={queue} bench={bench} output={output}
+        marked={draft.draft ? result.hit_ids : undefined} directions={charts[filter]?.directions ?? []} />
+      <div className="gh-seal">{seal_slot ?? <SealSlot chamber="moderator" queue={queue} />}</div>
+    </GatehouseDeck>
   </div>;
 }
