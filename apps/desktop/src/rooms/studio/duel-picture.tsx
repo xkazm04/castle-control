@@ -20,7 +20,6 @@ export function DuelPictureView({ picture }: { picture: DuelPicture }) {
 
 export function DuelMini({ picture }: { picture: DuelPicture }) {
   return <div className="duel-mini"><b>{picture.title}</b>
-    <p>{picture.left?.title ?? 'No contestant'} · {picture.right?.title ?? 'No contestant'}</p>
     <p>{phaseWord(picture)} · {picture.counts[0] + picture.counts[1]} counted</p>
   </div>;
 }

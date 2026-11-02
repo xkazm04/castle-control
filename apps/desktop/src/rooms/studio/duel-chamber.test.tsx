@@ -125,7 +125,7 @@ test('the mounted duel exposes the same full bracket opener as its button and re
 test('Map Room controls display letters from the room table and leave table actions to the shell dispatcher', () => {
   const live = { ...picture, source: 'fixture' as const, phase: 'live' as const };
   const html = renderToStaticMarkup(<DuelStage picture={live} />);
-  for (const action of ['enter', 'bracket', 'undo', 'speed', 'reset', 'stream']) {
+  for (const action of ['enter', 'bracket', 'undo']) {
     expect(html).toContain(`cc-key-badge">${keyFor('studio', action)}</kbd>`);
   }
   vi.spyOn(React, 'useState').mockReturnValue([false, vi.fn()]);
@@ -133,10 +133,64 @@ test('Map Room controls display letters from the room table and leave table acti
   vi.spyOn(React, 'useEffect').mockImplementation(() => undefined);
   const send = vi.fn();
   const tree = DuelStage({ picture: live, on_event: send });
+  const drawer = React.Children.toArray(tree.props.children).find(child => React.isValidElement(child) && child.type === DuelDrawer);
+  if (!React.isValidElement<React.ComponentProps<typeof DuelDrawer>>(drawer)) throw new Error('Missing DuelDrawer');
+  const drawer_html = renderToStaticMarkup(<DuelDrawer {...drawer.props} open />);
+  for (const action of ['speed', 'reset', 'stream']) expect(drawer_html).toContain(`cc-key-badge">${keyFor('studio', action)}</kbd>`);
   for (const action of ['enter', 'undo']) {
     const preventDefault = vi.fn();
     tree.props.onKeyDown({ key: keyFor('studio', action), preventDefault });
     expect(preventDefault).not.toHaveBeenCalled();
   }
   expect(send).not.toHaveBeenCalled();
+});
+
+test('secondary tools, contestant notes and moderation provenance move into the existing keyed drawer', () => {
+  vi.spyOn(React, 'useState').mockReturnValue([false, vi.fn()]);
+  vi.spyOn(React, 'useRef').mockReturnValue({ current: null });
+  vi.spyOn(React, 'useEffect').mockImplementation(() => undefined);
+  const send = vi.fn();
+  const tree = DuelStage({ picture: { ...picture, source: 'fixture', phase: 'live', barred: 3, counts: [3, 1],
+    entrants: { ...picture.entrants, 'raze-the-mill': { ...picture.entrants['raze-the-mill']!, note: 'SIMULATED contestant background' } } }, on_event: send });
+  const layout = React.Children.toArray(tree.props.children).find(child => React.isValidElement(child) && child.type === ChamberLayout);
+  const drawer = React.Children.toArray(tree.props.children).find(child => React.isValidElement(child) && child.type === DuelDrawer);
+  if (!React.isValidElement<ChamberLayoutProps>(layout)
+    || !React.isValidElement<React.ComponentProps<typeof DuelDrawer>>(drawer)) throw new Error('Missing chamber slots');
+  const room_html = renderToStaticMarkup(layout);
+  expect(room_html).toContain('Undo last call'); expect(room_html).toContain('More');
+  expect(renderToStaticMarkup(layout.props.preview)).not.toContain('Raze the mill');
+  expect(renderToStaticMarkup(layout.props.program)).not.toContain('Raze the mill');
+  expect(renderToStaticMarkup(<DuelDrawer {...drawer.props} open />)).toContain('Current match: Raze the mill · Borrow the mill');
+  expect(room_html).not.toContain('75%');
+  expect(renderToStaticMarkup(<DuelDrawer {...drawer.props} open />)).toContain('Counted ballot share: 75% left · 25% right');
+  for (const text of ['Speed ×3', 'New bracket', 'Show the duel on stream', 'SIMULATED contestant background', 'barred by moderation']) {
+    expect(room_html).not.toContain(text);
+    expect(renderToStaticMarkup(<DuelDrawer {...drawer.props} open />)).toContain(text);
+  }
+  expect(renderToStaticMarkup(<DuelDrawer {...drawer.props} open />)).toContain('data-role="ty-barred"');
+  const controls = elements(drawer.props.actions).filter(child => child.type === 'button');
+  controls[0]?.props.onClick?.(); controls[1]?.props.onClick?.();
+  expect(send.mock.calls).toEqual([[{ kind: 'speed' }], [{ kind: 'reset' }]]);
+});
+
+test('moved tool keys reach the shell table from the drawer while local demo keys remain isolated', () => {
+  vi.spyOn(React, 'useState').mockReturnValue([null, vi.fn()]);
+  const props = { open: true, on_close: vi.fn(), picture };
+  const drawer = DuelDrawer(props);
+  type KeyProps = { onKeyDown: (event: { key: string; preventDefault: () => void; stopPropagation: () => void }) => void };
+  if (!React.isValidElement<KeyProps>(drawer)) throw new Error('Missing drawer key boundary');
+  const stopPropagation = vi.fn();
+  for (const action of ['speed', 'reset', 'stream']) {
+    drawer.props.onKeyDown({ key: keyFor('studio', action) ?? '', preventDefault: vi.fn(), stopPropagation });
+  }
+  expect(stopPropagation).not.toHaveBeenCalled();
+  drawer.props.onKeyDown({ key: 'ArrowRight', preventDefault: vi.fn(), stopPropagation });
+  expect(stopPropagation).toHaveBeenCalledOnce();
+  drawer.props.onKeyDown({ key: 'Escape', preventDefault: vi.fn(), stopPropagation });
+  expect(props.on_close).toHaveBeenCalledOnce();
+  const local = DuelDrawer({ ...props, details: { open: true, content: null, on_close: vi.fn() } });
+  if (!React.isValidElement<KeyProps>(local)) throw new Error('Missing local demo key boundary');
+  stopPropagation.mockClear();
+  local.props.onKeyDown({ key: keyFor('studio', 'speed') ?? '', preventDefault: vi.fn(), stopPropagation });
+  expect(stopPropagation).toHaveBeenCalledOnce();
 });

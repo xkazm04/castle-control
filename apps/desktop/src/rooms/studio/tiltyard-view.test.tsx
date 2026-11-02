@@ -20,7 +20,7 @@ test('the Map Room opens on the duel: one SAMPLE match, SIMULATED, ready with it
     expect(stage.match(/class="duel-bracket__match" data-state=/g)).toHaveLength(3);
     expect(stage).toContain('data-role="ty-champ-slot"');
     expect(stage).not.toContain('data-role="ty-match"');
-    expect(stage).toContain('Show the duel on stream');
+    expect(stage).toContain('More'); expect(stage).not.toContain('Show the duel on stream');
     expect(network).not.toHaveBeenCalled();
   } finally { network.mockRestore(); }
 });
