@@ -2,7 +2,7 @@
 .visuals-replay .cc-card-body { display: grid; gap: var(--space-14); }
 .visuals-replay-transport { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-12); }
 .visuals-replay-speeds { display: inline-flex; gap: var(--space-4); }
-.visuals-replay-speeds [aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+.visuals-replay-speeds [aria-pressed="true"] { background: var(--tint-2); color: var(--ink); box-shadow: inset 0 calc(-1 * var(--rule-strong)) 0 var(--ink); }
 .visuals-replay-clock { display: grid; gap: var(--space-1); margin: 0 0 0 auto; text-align: right; font: 600 var(--text-label)/1.3 var(--font-num); color: var(--muted); }
 .visuals-replay-clock b { font: 800 var(--text-section)/1.1 var(--font-num); letter-spacing: var(--track-number); color: var(--ink); }
 .visuals-replay-scrub { display: grid; gap: var(--space-6); font: 800 var(--text-label)/1.2 var(--font-ui); letter-spacing: var(--track-wide); text-transform: uppercase; color: var(--ink-2); }
@@ -49,7 +49,7 @@
 .visuals-replay-handoff .visuals-note { flex: 1 1 calc(var(--space-56) * 5); }
 /* Night picker, time-spent bars, pinned stamp, blaze meter, ticker and a burst flare that respects reduced motion. */
 .visuals-replay-nights { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-6); }
-.visuals-replay-nights [aria-pressed="true"], .visuals-replay-speeds [aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+.visuals-replay-nights [aria-pressed="true"], .visuals-replay-speeds [aria-pressed="true"] { background: var(--tint-2); color: var(--ink); box-shadow: inset 0 calc(-1 * var(--rule-strong)) 0 var(--ink); }
 .visuals-replay-nights .visuals-note { flex: 1 1 calc(var(--space-56) * 4); margin-left: var(--space-6); }
 .visuals-replay-spent { fill: var(--or); opacity: .55; }
 .visuals-replay-spent-pinned { fill: var(--gules); opacity: .55; }

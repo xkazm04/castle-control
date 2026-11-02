@@ -32,3 +32,4 @@
 .overview-pane:not([hidden]) { flex: 1; min-height: 0; }
 .overview-steward { grid-column: 1 / -1; min-width: 0; margin-inline: calc(-1 * var(--gutter)); }
 @media (max-width: 65.625rem) { .overview-workspace { grid-template-columns: minmax(0, 1fr); } .overview-sidebar { min-height: calc(var(--space-56) * 12); } .overview-preview { width: 100%; } }
+.overview-bench .cc-chamber-strip .cc-chamber-state { white-space: normal; overflow: visible; text-overflow: clip; line-height: 1.2; }

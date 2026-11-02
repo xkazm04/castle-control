@@ -5,7 +5,7 @@
 .lottery-lab-aside { margin: 0; font: italic var(--text-shell-aside)/1.4 var(--font-serif); color: var(--ink-2); }
 .lottery-lab-aside a { color: var(--gules-text); font: 700 var(--text-shell-label)/1.4 var(--font-ui); font-style: normal; }
 .lottery-lab-specimens { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-6) var(--space-8); }
-.lottery-lab-specimens .cc-button[aria-pressed="true"] { border-color: var(--ink); background: var(--ink); color: var(--paper); }
+.lottery-lab-specimens .cc-button[aria-pressed="true"] { border-color: var(--ink); background: var(--tint-2); color: var(--ink); box-shadow: inset 0 calc(-1 * var(--rule-strong)) 0 var(--ink); }
 .lottery-lab-specimens .lottery-lab-aside { flex-basis: 100%; }
 .lottery-lab-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-16); }
 @container (min-width: 46rem) { .lottery-lab-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); } .lottery-lab .lottery-lab-strip { display: none; } }
