@@ -1,0 +1,22 @@
+:root { --titlebar-h: 34px; }
+.cc-titlebar {
+  position: relative; display: flex; align-items: stretch; justify-content: space-between; height: var(--titlebar-h); box-sizing: border-box;
+  user-select: none; color: var(--ink-2);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--key) 7%, var(--stone)), var(--stone));
+  border-bottom: 1px solid var(--hair); box-shadow: inset 0 -1px 0 color-mix(in srgb, var(--key) 30%, transparent);
+}
+.cc-titlebar__drag { flex: 1 1 auto; min-width: 0; display: flex; align-items: center; gap: 10px; padding-inline: 12px; }
+.cc-titlebar__mark { display: inline-flex; width: 18px; height: 18px; pointer-events: none; }
+.cc-titlebar__mark svg { width: 100%; height: 100%; }
+.cc-titlebar__name { font: 600 13px/1 var(--font-label); letter-spacing: .14em; text-transform: uppercase; color: var(--ink); pointer-events: none; white-space: nowrap; }
+.cc-titlebar__tag { font: 600 11px/1 var(--font-label); letter-spacing: .16em; text-transform: uppercase; color: var(--key); pointer-events: none; white-space: nowrap; }
+.cc-titlebar__controls { display: flex; flex: none; }
+.cc-titlebar__btn {
+  appearance: none; display: inline-grid; place-items: center; width: 46px; height: 100%; margin: 0; padding: 0; border: 0; border-radius: 0;
+  background: transparent; color: inherit; cursor: default;
+}
+.cc-titlebar__btn:hover { background: color-mix(in srgb, var(--ink) 10%, transparent); color: var(--ink); }
+.cc-titlebar__btn:active { background: color-mix(in srgb, var(--ink) 16%, transparent); }
+.cc-titlebar__btn:focus-visible { outline: 2px solid var(--key); outline-offset: -2px; }
+.cc-titlebar__btn--close:hover, .cc-titlebar__btn--close:active { background: #c42b1c; color: #fff; }
+:root[data-titlebar] .desktop-shell { height: calc(100dvh - var(--titlebar-h)); }

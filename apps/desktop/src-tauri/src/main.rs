@@ -62,6 +62,9 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
                 })
                 .inner_size(1440.0, 900.0)
                 .min_inner_size(1280.0, 800.0)
+                // The web UI draws its own title bar; the system keeps snap layouts and the shadow.
+                .decorations(false)
+                .shadow(true)
                 .use_https_scheme(false)
                 .initialization_script(script)
                 .on_navigation(move |url| same_origin(url, &origin))

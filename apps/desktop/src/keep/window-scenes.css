@@ -1,9 +1,8 @@
-/* Window scenes. The scene layer is not a stacking context: the art sits under the leading
-   (z 3) and the sheen (z 4); lettering rides above both on a dark-glass cartouche (z 5). */
-.keep-tracery { position: absolute; z-index: 2; left: 50%; top: 7%; width: 46%; max-width: calc(var(--space-30) * 5); transform: translateX(-50%); color: var(--on-glass); opacity: .55; pointer-events: none; }
+/* Window scenes: the art and the herald banners sit in front of the coloured glass and its
+   lead lattice (z 5), lifted by a soft shadow; lettering rides on a dark-glass cartouche. */
+.keep-tracery { position: absolute; z-index: 2; left: 50%; top: 7%; width: 46%; max-width: calc(var(--space-30) * 5); transform: translateX(-50%); color: var(--on-glass); opacity: .6; pointer-events: none; }
 .keep-window[data-room="moderator"] .keep-tracery { opacity: .22; }
-.keep-scene { position: absolute; inset: 0; pointer-events: none; }
-:where(.keep-scene > :not(.keep-herald, .keep-duel)), .keep-crest svg { z-index: 2; }
+.keep-scene { position: absolute; inset: 0; z-index: 5; filter: drop-shadow(0 var(--space-6) var(--space-10) color-mix(in srgb, var(--stone) 70%, transparent)); pointer-events: none; }
 .keep-scene img { position: absolute; display: block; pointer-events: none; user-select: none; }
 .keep-badge { position: relative; z-index: 5; box-sizing: border-box; max-width: calc(100% - var(--space-32)); padding: var(--space-3) var(--space-12) var(--space-4); border: var(--space-1) solid color-mix(in srgb, var(--gilt-mid) 70%, transparent); border-radius: var(--r-round); background: color-mix(in srgb, var(--lead-lo) 72%, transparent); box-shadow: inset 0 var(--space-1) 0 var(--glass-hi), 0 var(--space-2) var(--space-8) var(--glass-shade); color: var(--on-glass); font: 700 var(--text-px-15)/1.2 var(--font-label); letter-spacing: var(--track-label); text-transform: lowercase; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .keep-urn { left: 50%; bottom: 6%; width: 82%; max-height: 90%; object-fit: contain; transform: translateX(-50%); filter: drop-shadow(0 var(--space-14) var(--space-24) var(--stone)) drop-shadow(0 0 var(--space-22) var(--gules-glow)); }
@@ -13,11 +12,11 @@
 .keep-bead-0 { fill: var(--gilt-mid); }
 .keep-bead-1 { fill: var(--on-glass); }
 .keep-bead-2 { fill: var(--azure-lit); }
-.keep-portcullis { position: absolute; z-index: 1; left: 50%; bottom: 0; width: 92%; height: 70%; transform: translateX(-50%); }
-.keep-herald { position: absolute; left: 0; right: 0; top: 8%; display: flex; flex-direction: column; align-items: center; gap: var(--space-12); }
+.keep-portcullis { position: absolute; left: 50%; bottom: 0; width: 92%; height: 70%; transform: translateX(-50%); }
+.keep-herald { position: absolute; z-index: 5; left: 0; right: 0; top: 8%; display: flex; flex-direction: column; align-items: center; gap: var(--space-12); }
 .keep-badge { display: grid; justify-items: center; align-self: center; padding: var(--space-4) var(--space-16) var(--space-5); border-radius: var(--space-12); }
 .keep-badge span + span { color: color-mix(in srgb, var(--on-glass) 82%, transparent); font-weight: 500; }
-.keep-banners { position: relative; z-index: 5; display: flex; gap: 7%; justify-content: center; width: 84%; }
+.keep-banners { display: flex; gap: 7%; justify-content: center; width: 84%; }
 .keep-banner { flex: 1; max-width: calc(var(--space-24) * 2); aspect-ratio: 1 / 1.9; padding-top: var(--space-7); box-sizing: border-box; text-align: center; font: 700 var(--text-px-17)/1 var(--font-text); color: var(--deck-need-ink); clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 82%, 0 100%); }
 .keep-banner-0 { background: var(--gules); }
 .keep-banner-1 { background: var(--azure); }

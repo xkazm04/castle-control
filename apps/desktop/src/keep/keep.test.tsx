@@ -53,7 +53,8 @@ test('four arched windows and plaques carry the chamber art and authoritative re
     const plaque = html.split(`data-role="plaque" data-room="${chamber.id}"`)[1]?.split('</div></div>')[0];
     expect(plaque).toContain(`data-role="plaque-name"><span class="keep-disc">${chamber.number}</span>${chamber.name}`);
     expect(plaque).toContain(`data-role="plaque-word">${state.plaque?.word ?? state.word}`);
-    expect(plaque).toContain(`data-role="plaque-line">${state.plaque?.line ?? state.line}`);
+    // The card names the room and its state only; the description stays in the room tile's accessible name.
+    expect(plaque).not.toContain('data-role="plaque-line"');
   }
   expect(html.match(/data-role="plaque"/g)).toHaveLength(4);
   expect(html.match(/data-role="keep-window"/g)).toHaveLength(4);

@@ -1,9 +1,8 @@
 /* =============================================================================
    FUSED FIRST PAINT                                                   rampart.css
    The only fused rules on the desktop first load: the frame ground, focus ring and
-   the rampart (lead bar). It re-skins the existing rampart markup (Stamp, StatusChip,
-   ConnectionMark, GatehouseChip, InkButton) into the fused look, so the e2e and unit
-   contracts on that markup hold. Everything else is in shell.css, loaded with the
+   the rampart (lead bar): its status cells, the SIMULATED stamp and the utility buttons.
+   Everything else is in shell.css, loaded with the
    first lazily opened surface. Selectors lead with .cc-frame to outrank the legacy
    component sheets whatever their load order.
    ============================================================================= */
@@ -38,73 +37,37 @@ html, body { background: var(--stone); }
 }
 .cc-frame[data-theme="day"] .cc-rampart { --bar-top: var(--surface); --bar-bottom: var(--surface-2); --bar-cap: var(--surface); }
 .cc-frame .cc-rampart a { text-decoration: none; color: inherit; }
-.cc-frame .cc-rampart .cc-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .cc-frame .cc-rampart .cc-brand { gap: var(--space-10); margin-right: var(--space-6); color: var(--bar-ink); }
 .cc-frame .cc-rampart .cc-mark { width: var(--space-28); height: var(--space-26); filter: drop-shadow(0 0 calc(var(--glow-on) * 6px) var(--gules-glow)); }
 .cc-frame .cc-rampart .cc-wordmark { font: 400 var(--text-px-25)/1 var(--font-display); letter-spacing: .01em; text-transform: none; color: var(--bar-ink); }
-.cc-frame .cc-rampart .cc-separator { display: none; }
 
-/* two capsules: the live cluster and the connections */
-.cc-frame .cc-rampart :is(.cc-live-group, .cc-link-group) {
-  display: flex; flex: none; align-items: center; gap: 0; height: var(--bar-control-h); box-sizing: border-box;
+/* status cells: one shape for every item, a state lamp, a small-caps label and its value.
+   Two hairline capsules group them (stream, then connections). No value reads "—" and is muted. */
+.cc-frame .cc-rampart .cc-cells {
+  display: flex; flex: none; align-items: center; height: var(--bar-control-h); box-sizing: border-box;
   padding: 0 var(--space-4); border: var(--rule-thin) solid var(--bar-line); border-radius: var(--r-round); background: var(--bar-cap);
 }
-.cc-frame .cc-rampart .cc-rampart-figures { display: flex; align-items: center; gap: 0; }
-.cc-frame .cc-rampart :is(.cc-live-group, .cc-rampart-figures, .cc-link-group) > * {
-  display: inline-flex; align-items: center; height: var(--space-22); padding: 0 var(--space-10);
+.cc-frame .cc-rampart .cc-cell {
+  --tone: var(--bar-muted); display: inline-flex; align-items: center; gap: var(--space-8); height: var(--space-22);
+  padding: 0 var(--space-12); color: var(--bar-ink); white-space: nowrap;
 }
-.cc-frame .cc-rampart :is(.cc-live-group > * + *, .cc-rampart-figures > * + *, .cc-link-group > * + *) { border-left: var(--rule-thin) solid var(--bar-line); }
-.cc-frame .cc-rampart .cc-live-group > .cc-rampart-figures { padding: 0; }
-
-/* figures: value and its label on one baseline; an unknown value is a quiet dash */
-.cc-frame .cc-rampart .cc-figure { display: inline-flex; flex-direction: row; align-items: baseline; gap: var(--space-6); line-height: 1; white-space: nowrap; }
-.cc-frame .cc-rampart .cc-figure b { font: 700 var(--text-t-small)/1 var(--font-text); font-variant-numeric: lining-nums tabular-nums; color: var(--bar-ink); }
-.cc-frame .cc-rampart .cc-figure[data-known="false"] b { font-weight: 400; color: var(--bar-muted); }
-.cc-frame .cc-rampart .cc-figure small { font: 400 var(--text-t-meta)/1 var(--font-text); letter-spacing: 0; text-transform: none; color: var(--bar-muted); }
-
-/* on air: a lamp and a small-caps word */
-.cc-frame .cc-rampart .cc-stamp:is([data-stamp="on-air"], [data-stamp="off-air"]) {
-  --stamp-ink: var(--bar-ink); --stamp-tilt: 0deg; gap: var(--space-8); height: var(--space-22); padding: 0 var(--space-10);
-  border: 0; border-radius: 0; background: none; color: var(--bar-ink); transform: none; filter: none; box-shadow: none; text-shadow: none;
-  font: 700 var(--text-t-label)/1 var(--font-label); letter-spacing: .04em; text-transform: none; white-space: nowrap;
+.cc-frame .cc-rampart .cc-cell + .cc-cell { border-left: var(--rule-thin) solid var(--bar-line); }
+.cc-frame .cc-rampart .cc-cell__dot {
+  width: var(--space-8); height: var(--space-8); flex: none; border-radius: 50%;
+  background: var(--tone); box-shadow: 0 0 calc(var(--glow-on) * 6px) var(--tone);
 }
-.cc-frame .cc-rampart .cc-stamp:is([data-stamp="on-air"], [data-stamp="off-air"])::before { display: none; }
-.cc-frame .cc-rampart .cc-stamp-dot {
-  width: var(--space-10); height: var(--space-10); border: 0; border-radius: 50%;
-  background: radial-gradient(circle at 35% 30%, var(--gules-lit), var(--gules) 60%, var(--gules-deep));
-  box-shadow: 0 0 0 var(--rule-medium) color-mix(in srgb, var(--gules) 30%, transparent), 0 0 calc(var(--glow-on) * 10px) var(--gules-glow);
-}
-.cc-frame .cc-rampart .cc-stamp-dot[data-dot="ring"] { background: transparent; box-shadow: inset 0 0 0 var(--rule-medium) var(--bar-muted); }
-
-/* connections: a lamp per link; simulated is a hollow ring, live marks keep their state colour */
-.cc-frame .cc-rampart .cc-rampart-link { display: inline-flex; align-items: center; gap: var(--space-6); color: var(--bar-ink-2); font: 500 var(--text-t-meta)/1 var(--font-text); white-space: nowrap; }
-.cc-frame .cc-rampart .cc-rampart-link i { width: var(--space-8); height: var(--space-8); flex: none; box-sizing: border-box; border: var(--rule-medium) solid var(--bar-muted); border-radius: 50%; }
-.cc-frame .cc-rampart .cc-link-group > a:hover .cc-rampart-link { color: var(--bar-ink); }
-.cc-frame .cc-rampart .cc-link-group > a:hover .cc-rampart-link i { border-color: var(--bar-accent); }
-.cc-frame .cc-rampart .cc-connection { display: inline-flex; align-items: center; gap: var(--space-6); white-space: nowrap; }
-.cc-frame .cc-rampart a > .cc-connection { padding: 0; height: auto; }
-.cc-frame .cc-rampart .cc-connection svg { width: var(--space-14); height: var(--space-14); color: var(--ok); }
-.cc-frame .cc-rampart .cc-connection > span { display: inline-flex; flex-direction: row; align-items: baseline; gap: var(--space-4); white-space: nowrap; }
-.cc-frame .cc-rampart .cc-connection b { font: 600 var(--text-t-meta)/1 var(--font-text); letter-spacing: 0; text-transform: none; color: var(--bar-ink); }
-.cc-frame .cc-rampart .cc-connection small { font: 400 var(--text-t-meta)/1 var(--font-text); color: var(--bar-muted); }
-.cc-frame .cc-rampart .cc-connection svg > path { stroke: var(--bar-ink-2); }
-.cc-frame .cc-rampart .cc-connection svg .cc-connection-cross { stroke: var(--bar-top); }
-.cc-frame .cc-rampart .cc-connection[data-state="reconnecting"] svg { color: var(--warn); }
-.cc-frame .cc-rampart .cc-connection[data-state="down"] svg { color: var(--danger); }
-.cc-frame .cc-rampart .cc-connection[data-state="down"] svg circle { fill: currentColor; }
-.cc-frame .cc-rampart .cc-gatehouse { display: inline-flex; align-items: center; gap: var(--space-6); height: auto; font-family: var(--font-label); }
-
-/* etched chips: unknown states and the stamps inside the Gatehouse link */
-.cc-frame .cc-rampart .cc-chip[data-variant="dash"], .cc-frame .cc-rampart .cc-gatehouse .cc-stamp[data-stamp] {
-  --stamp-tilt: 0deg; display: inline-flex; align-items: center; gap: var(--space-6); height: var(--space-22); padding: 0 var(--space-8);
-  border: var(--rule-thin) dashed var(--bar-muted); border-radius: var(--r-round); background: none; color: var(--bar-ink-2);
-  transform: none; filter: none; box-shadow: none; text-shadow: none;
-  font: 600 var(--text-t-label)/1 var(--font-label); letter-spacing: .04em; text-transform: none; white-space: nowrap;
-}
-.cc-frame .cc-rampart .cc-gatehouse .cc-stamp[data-stamp]::before { content: ''; position: static; inset: auto; width: var(--space-6); height: var(--space-6); border: 0; border-radius: 50%; opacity: 1; background: var(--azure); }
-.cc-frame .cc-rampart .cc-gatehouse .cc-stamp[data-stamp="armed"]::before { background: var(--gules); }
-.cc-frame .cc-rampart .cc-gatehouse .cc-stamp[data-stamp="armed"] { border-style: solid; border-color: var(--gules); color: var(--bar-ink); }
-.cc-frame .cc-rampart .cc-gatehouse-shield { padding: var(--space-3) var(--space-8); border: 0; border-radius: var(--r-round); background: var(--danger); color: var(--on-glass); font: 700 var(--text-t-label)/1 var(--font-label); }
+.cc-frame .cc-rampart .cc-cell__text { display: inline-flex; align-items: baseline; gap: var(--space-6); line-height: 1; }
+.cc-frame .cc-rampart .cc-cell small { font: 700 var(--text-t-label)/1 var(--font-label); letter-spacing: .04em; text-transform: none; color: var(--bar-muted); }
+.cc-frame .cc-rampart .cc-cell b { font: 600 var(--text-t-small)/1 var(--font-text); font-variant-numeric: lining-nums tabular-nums; color: var(--bar-ink); }
+.cc-frame .cc-rampart .cc-cell[data-tone="live"] { --tone: var(--gules-lit); }
+.cc-frame .cc-rampart .cc-cell[data-tone="ok"] { --tone: var(--ok); }
+.cc-frame .cc-rampart .cc-cell[data-tone="warn"] { --tone: var(--warn); }
+.cc-frame .cc-rampart .cc-cell[data-tone="down"] { --tone: var(--danger); }
+.cc-frame .cc-rampart .cc-cell[data-tone="sim"] { --tone: var(--azure-lit); }
+.cc-frame .cc-rampart .cc-cell[data-tone="sim"] b { font-weight: 400; color: var(--bar-ink-2); }
+.cc-frame .cc-rampart .cc-cell[data-empty] b { font-weight: 400; color: var(--bar-muted); }
+.cc-frame .cc-rampart .cc-cell[data-empty] .cc-cell__dot { background: transparent; box-shadow: inset 0 0 0 var(--rule-medium) var(--bar-muted); }
+.cc-frame .cc-rampart a.cc-cell:hover b { text-decoration: underline; text-decoration-color: var(--bar-accent); text-underline-offset: var(--space-3); }
 
 /* SIMULATED: one calm etched label, always visible */
 .cc-frame .cc-rampart > .cc-stamp[data-stamp="simulated"] {
@@ -142,5 +105,5 @@ html, body { background: var(--stone); }
 @media (max-width: 1460px) {
   .cc-frame .cc-rampart { gap: var(--space-10); }
   .cc-frame .cc-rampart .cc-wordmark { font-size: var(--text-px-22); }
-  .cc-frame .cc-rampart :is(.cc-live-group, .cc-rampart-figures, .cc-link-group) > * { padding: 0 var(--space-8); }
+  .cc-frame .cc-rampart .cc-cell { padding: 0 var(--space-8); }
 }

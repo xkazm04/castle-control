@@ -46,10 +46,13 @@ function observe(page: Page, into: Watch): void {
   page.on('pageerror', error => into.page.push(error.message));
 }
 
+// The title bar's window commands travel the native IPC door (CSP connect-src ipc: / ipc.localhost), not the network.
+const nativeIpc = 'http://ipc.localhost/plugin%3Awindow%7C';
+
 /** Requests the window may make: its own origin plus loopback only; /rpc only in core mode, only to 127.0.0.1. */
 function offPolicy(): string[] {
   const own = app?.origin ?? builtOrigin;
-  const foreign = [...tauri.requests, ...tauri.sockets].filter(url => !url.startsWith(own) && !url.startsWith('data:') && !loopback(url));
+  const foreign = [...tauri.requests, ...tauri.sockets].filter(url => !url.startsWith(own) && !url.startsWith('data:') && !url.startsWith(nativeIpc) && !loopback(url));
   const rpc = variant === 'fixture' ? tauri.rpc : tauri.rpc.filter(url => new URL(url).hostname !== '127.0.0.1');
   return [...foreign.map(url => `foreign: ${url}`), ...rpc.map(url => `rpc: ${url}`)];
 }
