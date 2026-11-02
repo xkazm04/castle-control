@@ -1,8 +1,8 @@
 import { chambers } from '@castle-control/ui';
 import type { ModuleId } from '@castle-control/ui';
 import { isPending, proposalQueue } from '@castle-control/ui/steward';
-import { defineFlow } from '@castle-control/ui/steward-flow';
-import type { ChamberSteward } from '@castle-control/ui/steward-flow';
+import { defineFlow, stewardDock } from '@castle-control/ui/steward-flow';
+import type { ChamberSteward, DockStore, StewardChip } from '@castle-control/ui/steward-flow';
 import { fixtureVisuals } from '../beacons-fixture.js';
 import type { Snapshot } from '../model.js';
 import { keepReadModel } from './read-model.js';
@@ -56,6 +56,17 @@ export const keepThemeFlow = defineFlow<KeepThemeDraft>({
   },
 });
 
+/** One chip per chamber: navigates there and opens that chamber's own Play demo at its first step. */
+export const tourDemoChips = (): StewardChip[] => chambers.map(chamber => ({
+  label: `Play the ${chamber.name} demo`, action: { kind: 'demo', chamber: chamber.id } }));
+
+/** After the tour's own sealed beat lands, the Steward offers the four demos as chips. */
+export function offerTourDemos(store: Pick<DockStore, 'say'> = stewardDock) {
+  setTimeout(() => {
+    store.say({ chamber: 'keep', who: 'steward', simulated: true, text: 'Pick a chamber: I open it with its demo ready to play.', chips: tourDemoChips() });
+  }, 0);
+}
+
 /** The Keep's Play demo: a three-beat tour that lights each chamber and points at its own Play demo. */
 export type KeepTourDraft = { lit?: ModuleId; done?: boolean };
 const tourLine = (id: ModuleId) => `${chamberName(id)}: press ${chambers.find(chamber => chamber.id === id)?.number ?? ''}, then Play demo`;
@@ -74,15 +85,18 @@ export const keepTourFlow = defineFlow<KeepTourDraft>({
     { id: 'gate', kind: 'choice', label: 'Gatehouse', prompt: 'Beat two, the Gatehouse: an AI moderator that holds what it is unsure of and lets you decide, with a chat delay as the moat.',
       options: () => [{ id: 'visuals', label: 'Next: Beacons and the Map Room', consequence: `Later: ${tourLine('moderator')}.` }],
       apply: draft => ({ ...draft, lit: 'visuals' }) },
-    { id: 'beacons', kind: 'choice', label: 'Beacons', prompt: 'Beat three: Beacons turn subs and cheers into how the stream looks, never what it decides. The Map Room stages viewer duels on a sand table.',
+    { id: 'beacons', kind: 'choice', label: 'Beacons', prompt: 'Beat three: Beacons turn subs and cheers into how the stream looks, never what it decides. The Map Room runs chat duels: two contestants, one tally, chat picks the winner.',
       options: () => [{ id: 'studio', label: 'Show me the Map Room', consequence: `Later: ${tourLine('visuals')}.` }],
       apply: draft => ({ ...draft, lit: 'studio' }) },
     { id: 'end', kind: 'confirm', label: 'End of tour', prompt: "That is the keep. Hold to finish; then try any chamber's own Play demo.",
       note: 'A tour only. Nothing was drafted, sent or sealed.',
       lines: () => chambers.map(chamber => ({ label: chamber.name, value: `Press ${chamber.number}, then Play demo` })) },
   ],
-  seal: () => ({ say: 'Tour done. Each chamber plays its own SIMULATED case end to end: open one with 1 to 4 and choose Play demo.',
-    lines: chambers.map(chamber => ({ label: chamber.name, value: `Press ${chamber.number}, then Play demo` })) }),
+  seal: () => {
+    offerTourDemos();
+    return { say: 'Tour done. Each chamber plays its own SIMULATED case end to end: choose one below, or open one with 1 to 4 and choose Play demo.',
+      lines: chambers.map(chamber => ({ label: chamber.name, value: `Press ${chamber.number}, then Play demo` })) };
+  },
 });
 
 export function keepSteward(snapshot: Snapshot): ChamberSteward {

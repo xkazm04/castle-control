@@ -8,7 +8,8 @@ import type { ArtifactId } from '@castle-control/ui/design';
 import { keepRooms } from '@castle-control/keep-art';
 import { KeepArt } from '../keep/keep-art.jsx';
 import { isDesignProposal } from './design-proposal.js';
-import { illustrativeSceneLabel, illustrativeTiles, sceneChat, sceneConsensus } from './fixture.js';
+import { illustrativeSceneLabel, sceneChat, sceneConsensus } from './fixture.js';
+import { DuelTile } from './duel-tile.jsx';
 import './scene.css';
 
 const DesignArtwork = lazy(() => import('./design.jsx').then(module => ({ default: module.DesignArtwork })));
@@ -35,13 +36,6 @@ export function CryptBackdrop() {
     <path d="M700 190h200l-20 70-50 30v40h-60v-40l-50-30Z" fill="var(--paper)" stroke="var(--ink)" strokeWidth="5" />
     <path d="m742 220 28 10m60 0 28-10" stroke="var(--ink)" strokeWidth="12" />
   </svg>;
-}
-
-function MapPanel() {
-  return <svg viewBox="0 0 185 110" aria-hidden="true">{illustrativeTiles.map(tile =>
-    <path key={tile.id} d={`M${tile.x} ${tile.y}l8-4 8 4v9l-8 4-8-4Z`}
-      fill={['var(--paper-2)', 'var(--azure)', 'var(--gules)', 'var(--or)'][tile.side]}
-      stroke="var(--ink)" strokeWidth="1" />)}</svg>;
 }
 
 function Layer({ chamber, title, proposal, children, on_select }: {
@@ -80,8 +74,8 @@ export function StreamScene({ mode, proposals, sample, on_select }: {
     <Present artifact="beacon" mode={mode} visible={sample || Boolean(beacon)}><Layer chamber="visuals" title={beacon?.title ?? 'Altar, frame and border'} {...(beacon ? { proposal: beacon } : {})} {...selection}>
       <Look artifact="beacon" mode={mode}><KeepArt frame={keepRooms.visuals.frame} className="overview-room-art" /><span className="overview-camera">Camera frame · sample</span></Look>
     </Layer></Present>
-    <Present artifact="map" mode={mode} visible={preview || Boolean(map)}><Layer chamber="studio" title={map?.title ?? 'War table'} {...(map ? { proposal: map } : {})} {...selection}>
-      <Look artifact="map" mode={mode}>{preview && !map ? <DraftFrame><MapPanel /><span>Illustrative layout</span></DraftFrame> : <MapPanel />}</Look>
+    <Present artifact="map" mode={mode} visible={preview || Boolean(map)}><Layer chamber="studio" title={map?.title ?? 'Chat duel'} {...(map ? { proposal: map } : {})} {...selection}>
+      <Look artifact="map" mode={mode}>{preview && !map ? <DraftFrame><DuelTile /></DraftFrame> : <DuelTile />}</Look>
     </Layer></Present>
     <span className="overview-scene-border" aria-hidden="true" />
   </div>;

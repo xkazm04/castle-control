@@ -89,6 +89,29 @@ test('the Keep moat bar loops a labelled sample and leads to the full replay', a
   } finally { verify(); }
 });
 
+test('the Keep tour reads the Map Room as a chat duel and its chips open each chamber with its demo ready', async ({ page }) => {
+  const verify = await guardPage(page);
+  try {
+    await page.goto('/#/keep');
+    const plaque = page.locator('[data-role="plaque"][data-room="studio"]');
+    await expect(plaque.locator('[data-role="plaque-word"]')).toHaveText('Chat duel');
+    await expect(plaque).not.toContainText(/sand table|war table|local test/i);
+    const dock = page.locator('.cc-steward-dock');
+    await dock.getByRole('button', { name: 'Play demo', exact: true }).first().click();
+    for (const option of ['Start with the Lot Chamber', 'Next: the Gatehouse', 'Next: Beacons and the Map Room', 'Show me the Map Room']) {
+      await dock.locator('.cc-steward-option', { hasText: option }).first().click();
+    }
+    const seal = dock.getByRole('button', { name: /hold to/i }).first();
+    await seal.focus(); await page.keyboard.down('Space');
+    try { await expect(dock.getByRole('button', { name: 'Play the Map Room demo', exact: true })).toBeVisible(); }
+    finally { await page.keyboard.up('Space'); }
+    for (const name of ['Lot Chamber', 'Gatehouse', 'Beacons']) await expect(dock.getByRole('button', { name: `Play the ${name} demo`, exact: true })).toBeVisible();
+    await dock.getByRole('button', { name: 'Play the Map Room demo', exact: true }).click();
+    await expect(page).toHaveURL(/#\/chamber\/studio$/);
+    await expect(page.locator('.cc-steward-dock[data-chamber="studio"] .cc-steward-step')).toBeVisible();
+  } finally { verify(); }
+});
+
 test('spotlighting a rule keeps its stamp, dims the rest, and Next stop walks only that rule', async ({ page }) => {
   const verify = await guardPage(page);
   try {

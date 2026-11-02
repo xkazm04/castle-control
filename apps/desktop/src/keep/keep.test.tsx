@@ -42,15 +42,18 @@ test('four hits and lintels carry the read model words, lines and chamber-aware 
   expect(read.states.lottery.word).toBe('No draw');
   expect(read.states.visuals.word).toBe(fixtureVisuals[0]?.name);
   expect(read.states.studio.word).toBe('Duel · semifinal');
+  expect(read.states.studio.plaque).toEqual({ word: 'Chat duel', line: 'Sample tournament · semifinal' });
   const html = render();
+  const studio = html.split('data-role="plaque" data-room="studio"')[1]?.split('</div></div>')[0] ?? '';
+  expect(studio).toContain('data-role="plaque-word">Chat duel'); expect(studio).not.toMatch(/sand table|war table|local test/i);
   for (const chamber of chambers) {
     const state = read.states[chamber.id];
     expect(html).toContain(`data-room-tile="${chamber.id}"`);
     expect(html).toContain(`aria-label="Open chamber ${chamber.number}, ${chamber.name}: ${state.word}, ${state.line}"`);
     const plaque = html.split(`data-role="plaque" data-room="${chamber.id}"`)[1]?.split('</div></div>')[0];
     expect(plaque).toContain(`data-role="plaque-name">${chamber.number} · ${chamber.name}`);
-    expect(plaque).toContain(`data-role="plaque-word">${state.word}`);
-    expect(plaque).toContain(`data-role="plaque-line">${state.line}`);
+    expect(plaque).toContain(`data-role="plaque-word">${state.plaque?.word ?? state.word}`);
+    expect(plaque).toContain(`data-role="plaque-line">${state.plaque?.line ?? state.line}`);
   }
   expect(html.match(/data-role="plaque"/g)).toHaveLength(4);
   expect(html).toContain('The Keep · fixture mode · sample evening');
@@ -65,7 +68,7 @@ test('honesty stamps follow fixture room provenance and omit absent core stamps'
   expect(fixture.states.lottery.stamp).toEqual({ kind: 'simulated' });
   expect(fixture.states.visuals.stamp).toEqual({ kind: 'simulated' });
   expect(fixture.states.moderator.stamp).toEqual({ kind: 'shadow', word: 'Shadow · 3' });
-  expect(fixture.states.studio.stamp).toEqual({ kind: 'sample', word: 'Local test' });
+  expect(fixture.states.studio.stamp).toEqual({ kind: 'simulated' });
   expect(keepReadModel({ mode: 'fixture', phase: 'ready' }).states.moderator.stamp).toEqual({ kind: 'shadow' });
   const core = keepReadModel({ mode: 'core', phase: 'ready', ...simulatedRead(1) });
   for (const { id } of chambers) {

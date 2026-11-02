@@ -29,3 +29,15 @@
 .overview-scene[data-scene="program"] .overview-chat { max-height: calc(var(--space-14) * 3); }
 .overview-scene[data-scene="program"] .overview-chat p:not(:first-child), .overview-scene[data-scene="program"] .overview-vote, .overview-scene[data-scene="program"] .overview-camera, .overview-scene[data-scene="program"] .overview-scene-label, .overview-scene[data-scene="program"] .overview-layer-fields { display: none; }
 .overview-scene[data-scene="program"] .overview-room-art { height: var(--space-40); }
+/* Map Room tile: a small duel card, two contestants over chat's share bar. */
+.overview-duel { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-3); box-sizing: border-box; width: 100%; min-width: 0; padding-top: var(--space-4); }
+.overview-duel__round { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-4); font: 700 var(--text-t-label)/1.2 var(--font-label); letter-spacing: var(--track-wide); text-transform: lowercase; color: var(--muted); }
+.overview-duel__pair { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: baseline; gap: var(--space-4); }
+.overview-duel__pair b { min-width: 0; font: 700 var(--text-t-small)/1.2 var(--font-text); overflow-wrap: anywhere; }
+.overview-duel__pair b:last-child { text-align: right; }
+.overview-duel__pair i { font: italic 400 var(--text-t-small)/1 var(--font-book); color: var(--muted); }
+.overview-duel__bar { display: block; height: var(--space-6); background: var(--gules); border: var(--rule-thin) solid var(--ink); }
+.overview-duel__bar > span { display: block; height: 100%; background: var(--azure); border-right: var(--rule-thin) solid var(--ink); }
+.overview-duel__share { display: flex; justify-content: space-between; font: 700 var(--text-t-small)/1.2 var(--font-text); }
+.overview-duel__note { font: italic 400 var(--text-t-small)/1.3 var(--font-book); color: var(--muted); }
+.overview-scene[data-scene="program"] .overview-duel__note { display: none; }
