@@ -13,6 +13,11 @@ name = "spike"
 path = "src/bin/spike.rs"
 required-features = ["spike"]
 
+# Developer-only headless core: rehearsal, inert Twitch, OBS disconnected.
+[[bin]]
+name = "cc-headless"
+path = "src/bin/cc-headless.rs"
+
 [dependencies]
 axum = { workspace = true, features = ["ws"] }
 cc-types = { path = "../cc-types" }
