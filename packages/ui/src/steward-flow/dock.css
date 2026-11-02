@@ -120,12 +120,13 @@
 
 /* ================================================================ SHEET */
 .cc-steward-sheet {
-  /* full content width, so no chamber sliver shows beside it; the plate's column rises into the sheet as its spine
-     (title, step, simulated, tools) and the conversation lines up with the talk row below */
-  position: absolute; left: 0; right: 0; bottom: 100%; display: grid; grid-template-columns: var(--sd-plate-w) minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr);
-  max-height: clamp(220px, calc(48vh - 60px), 440px); min-height: 200px;
+  /* In flow: the sheet is the dock's first row, so the chamber above gives up exactly that height and every
+     scroller in it still reaches its last element. The plate's column rises into the sheet as its spine
+     (title, step, simulated, tools) and the conversation lines up with the talk row below. */
+  position: relative; grid-column: 1 / -1; grid-row: 1; display: grid; grid-template-columns: var(--sd-plate-w) minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr);
+  max-height: clamp(200px, 38vh, 380px); min-height: 200px;
   background: color-mix(in srgb, var(--sd-surface) 96%, var(--sd-ch));
-  border-top: var(--sd-came) solid var(--sd-lead); box-shadow: 0 -18px 40px -22px var(--shade, color-mix(in srgb, black 55%, transparent));
+  border-bottom: var(--sd-came) solid var(--sd-lead);
 }
 .cc-steward-sheet::before { /* the chamber's glass cap */
   content: ''; grid-column: 1 / -1; height: 7px; border-bottom: var(--sd-came) solid var(--sd-lead);
