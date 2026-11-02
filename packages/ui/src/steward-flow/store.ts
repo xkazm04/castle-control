@@ -16,7 +16,9 @@ export type Beat = {
   /** A seal receipt rather than ordinary talk. */
   sealed?: boolean;
 };
-export type FlowSession = { flow: AnyStewardFlow; state: FlowState; error?: string };
+/** The active work step's run: progress while it runs, a plain reason when it failed. */
+export type WorkRun = { step: string; status: 'running' | 'failed'; progress: string; error?: string };
+export type FlowSession = { flow: AnyStewardFlow; state: FlowState; error?: string; work?: WorkRun };
 /** What the chamber picture reads to draw the live draft. */
 export type DraftPublication = { flow: string; step: string | null; draft: unknown; simulated: boolean; ready: boolean };
 export type DockSnapshot = {
@@ -27,6 +29,7 @@ export type DockSnapshot = {
 };
 
 const beatLimit = 60;
+const failedWork = 'That did not work. Nothing was sealed.';
 
 /**
  * The dock's state lives outside React so it survives chamber changes and
@@ -35,6 +38,8 @@ const beatLimit = 60;
 export function createDockStore() {
   let snapshot: DockSnapshot = { expanded: false, beats: [], sessions: {}, drafts: {} };
   let sequence = 0;
+  /** One controller per chamber's running work; never in the snapshot. */
+  const controllers = new Map<FlowChamber, AbortController>();
   const listeners = new Set<() => void>();
   const emit = (next: DockSnapshot) => { snapshot = next; for (const listener of listeners) listener(); };
   function publish(sessions: DockSnapshot['sessions'], chamber: FlowChamber): DockSnapshot['drafts'] {
@@ -53,7 +58,57 @@ export function createDockStore() {
   }
   function update(chamber: FlowChamber, change: (session: FlowSession) => FlowSession) {
     const session = snapshot.sessions[chamber];
-    if (session) setSession(chamber, change(session));
+    if (!session) return;
+    const next = change(session);
+    // A no-op change keeps the running work instead of restarting it.
+    setSession(chamber, next.state === session.state && session.work ? { ...next, work: session.work } : next);
+    kick(chamber);
+  }
+  function stopWork(chamber: FlowChamber) {
+    controllers.get(chamber)?.abort();
+    controllers.delete(chamber);
+  }
+  function withoutWork(session: FlowSession): FlowSession {
+    const next = { ...session };
+    delete next.work;
+    return next;
+  }
+  /** Start the active work step when it has no run yet; a failed run waits for retry(). */
+  function kick(chamber: FlowChamber) {
+    const session = snapshot.sessions[chamber];
+    if (!session || session.state.status !== 'open') { stopWork(chamber); return; }
+    const view = walkFlow(session.flow, session.state);
+    const step = view.active?.step;
+    if (step?.kind !== 'work') {
+      if (session.work) { stopWork(chamber); setSession(chamber, withoutWork(session)); }
+      return;
+    }
+    if (session.work?.step === step.id) return;
+    stopWork(chamber);
+    const controller = new AbortController();
+    controllers.set(chamber, controller);
+    const current = () => {
+      const now = snapshot.sessions[chamber];
+      return !controller.signal.aborted && now?.work?.step === step.id && now.state === session.state ? now : undefined;
+    };
+    setSession(chamber, { ...session, work: { step: step.id, status: 'running', progress: step.prompt } });
+    const pending = (async () => step.run(view.active?.before ?? view.draft, { signal: controller.signal,
+      progress(text) { const now = current(); if (now?.work) setSession(chamber, { ...now, work: { ...now.work, progress: text } }); } }))();
+    pending.then(value => {
+      const now = current();
+      if (!now) return;
+      controllers.delete(chamber);
+      const result = answerStep(now.flow, now.state, value);
+      setSession(chamber, result.error ? { ...now, work: { step: step.id, status: 'failed', progress: '', error: result.error } }
+        : { flow: now.flow, state: result.state });
+      kick(chamber);
+    }, (error: unknown) => {
+      const now = current();
+      if (!now) return;
+      controllers.delete(chamber);
+      setSession(chamber, { ...now, work: { step: step.id, status: 'failed', progress: '',
+        error: error instanceof Error && error.message ? error.message : failedWork } });
+    });
   }
   const store = {
     getSnapshot: () => snapshot,
@@ -69,10 +124,12 @@ export function createDockStore() {
     open(flow: AnyStewardFlow) {
       const current = snapshot.sessions[flow.chamber];
       if (current && current.flow.id === flow.id && current.state.status === 'open') { store.expand(); return; }
+      stopWork(flow.chamber);
       const intro = flow.intro ?? flow.title;
       // The sheet header carries SIMULATED for the whole flow; the intro stays plain talk.
       const beats = [...snapshot.beats, { id: ++sequence, chamber: flow.chamber, who: 'steward' as const, text: intro }].slice(-beatLimit);
       setSession(flow.chamber, { flow, state: startFlow(flow) }, { expanded: true, beats });
+      kick(flow.chamber);
     },
     answer(chamber: FlowChamber, value: string) {
       update(chamber, session => {
@@ -84,10 +141,31 @@ export function createDockStore() {
     keep(chamber: FlowChamber) { update(chamber, ({ flow, state }) => ({ flow, state: keepAnswer(state) })); },
     back(chamber: FlowChamber) { update(chamber, ({ flow, state }) => ({ flow, state: backStep(flow, state) })); },
     reset(chamber: FlowChamber) { update(chamber, ({ flow, state }) => ({ flow, state: resetFlow(state) })); },
+    /** Stop the running work. A reopened step keeps its earlier result; otherwise the step before it reopens. */
+    cancel(chamber: FlowChamber) {
+      const session = snapshot.sessions[chamber];
+      if (!session?.work) return;
+      stopWork(chamber);
+      const step = session.work.step;
+      const state = session.state.editing === step ? keepAnswer(session.state) : backStep(session.flow, session.state);
+      setSession(chamber, { flow: session.flow, state });
+      // A cancel that has nowhere to go back to leaves the flow on the work card, failed, with a retry.
+      if (walkFlow(session.flow, state).active?.step.id === step)
+        setSession(chamber, { flow: session.flow, state, work: { step, status: 'failed', progress: '', error: 'Stopped. Nothing was sealed.' } });
+      else kick(chamber);
+    },
+    /** Run a failed work step again. */
+    retry(chamber: FlowChamber) {
+      const session = snapshot.sessions[chamber];
+      if (session?.work?.status !== 'failed') return;
+      setSession(chamber, withoutWork(session));
+      kick(chamber);
+    },
     /** Put the draft away. Nothing was sealed, so nothing happened. */
     close(chamber: FlowChamber) {
       const session = snapshot.sessions[chamber];
       if (!session) return;
+      stopWork(chamber);
       setSession(chamber, undefined);
       if (session.state.status !== 'sealed') store.say({ chamber, who: 'steward', text: `Put away "${session.flow.title}". Nothing was sealed.` });
     },

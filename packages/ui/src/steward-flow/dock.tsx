@@ -6,6 +6,7 @@ import type { FlowChamber, FlowEntry, FlowLine, FlowOption } from './flow.js';
 import { matchIntent } from './intent.js';
 import { awayChips, chamberChips, chamberFlows, chipFlow, findFlow } from './registry.js';
 import { chipKey, FlowMenu } from './flow-menu.jsx';
+import { WorkCard } from './work-card.jsx';
 import type { StewardChip, StewardRegistry } from './registry.js';
 import { stewardDock } from './store.js';
 import type { Beat, DockStore, FlowSession } from './store.js';
@@ -64,7 +65,8 @@ function Options({ options, value, label, kind, on_pick }: {
   return <div className={kind === 'preset' ? 'cc-steward-presets' : 'cc-steward-options'} role="group" aria-label={label}
     data-count={options.length} onKeyDown={moveFocus}>
     {options.map(option => <button key={option.id} type="button" className="cc-steward-option" data-autofocus={value === option.id || undefined}
-      aria-pressed={value === option.id} onClick={() => on_pick(option.id)}>
+      aria-pressed={value === option.id} disabled={option.disabled} data-picture={option.picture ? '' : undefined} onClick={() => on_pick(option.id)}>
+      {option.picture && <img className="cc-steward-option__picture" src={option.picture.src} alt={option.picture.alt} loading="lazy" />}
       <span className="cc-steward-option__head"><b>{option.label}</b>
         {option.tag && <span className="cc-steward-option__tag">{option.tag}</span>}
         {option.simulated && <Sim />}</span>
@@ -79,6 +81,7 @@ function FieldCard({ entry, error, on_submit }: { entry: FlowEntry<unknown>; err
   const initial = step.kind === 'field' ? entry.value ?? step.initial?.(entry.before) ?? '' : '';
   const [raw, setRaw] = useState(initial);
   if (step.kind !== 'field') return null;
+  const suggestions = step.suggestions?.(entry.before) ?? [];
   return <form className="cc-steward-field" onSubmit={event => { event.preventDefault(); on_submit(raw.trim()); }}>
     <label className="cc-steward-field__label" htmlFor={`${id}-input`}>{step.label}</label>
     <div className="cc-steward-field__row">
@@ -89,6 +92,9 @@ function FieldCard({ entry, error, on_submit }: { entry: FlowEntry<unknown>; err
     </div>
     <p id={`${id}-note`} className={error ? 'cc-steward-field__error' : 'cc-steward-field__hint'} role={error ? 'alert' : undefined}>
       {error ?? step.hint ?? 'Press Enter to continue.'}</p>
+    {suggestions.length > 0 && <span className="cc-steward-field__chips" role="group" aria-label={`${step.label} suggestions`}>
+      {suggestions.map(text => <button key={text} type="button" className="cc-btn cc-btn--quiet cc-btn--sm" onClick={() => on_submit(text)}>{text}</button>)}
+    </span>}
   </form>;
 }
 
@@ -109,9 +115,13 @@ function StepCard({ session, entry, chamber, store }: { session: FlowSession; en
         {step.lines && <Lines lines={step.lines(entry.before)} />}
         <div className="cc-steward-card-actions">
           <button type="button" className="cc-btn cc-btn--primary" data-autofocus onClick={() => store.answer(chamber, 'ok')}>{step.continue_label ?? 'Looks right'}</button>
+          {step.actions?.(entry.before).map(action => <button key={action.step} type="button" className="cc-btn cc-btn--quiet"
+            onClick={() => store.reopen(chamber, action.step)}>{action.label}</button>)}
           <button type="button" className="cc-btn cc-btn--quiet" onClick={() => store.back(chamber)}>Change something</button>
         </div>
       </div>;
+      case 'work': return <WorkCard entry={entry} work={session.work?.step === step.id ? session.work : undefined}
+        on_cancel={() => store.cancel(chamber)} on_retry={() => store.retry(chamber)} on_back={() => store.back(chamber)} />;
       case 'confirm': return <div className="cc-steward-confirm">
         <div className="cc-steward-confirm__sheet">
           <span className="cc-steward-confirm__draft">{session.flow.simulated ? <Sim /> : <span className="cc-steward-draft-mark">Draft</span>}</span>
@@ -301,9 +311,10 @@ export function StewardDock({ chamber, registry, mode = 'simulated', role, input
           {view.entries.some(entry => entry.status === 'answered') && <ol className="cc-steward-answers" aria-label="Answered so far">
             {view.entries.filter(entry => entry.status === 'answered' || (entry.status === 'active' && session.state.editing === entry.step.id))
               .map(entry => <li key={entry.step.id}>
-                <button type="button" className="cc-steward-answer" aria-current={entry.status === 'active' ? 'step' : undefined}
-                  aria-label={`Change ${entry.step.label}`} onClick={() => store.reopen(chamber, entry.step.id)}>
-                  {entry.summary ?? `${entry.step.label} · changing`}</button></li>)}
+                {entry.step.kind === 'work' ? <span className="cc-steward-answer" data-kind="work">{entry.summary ?? entry.step.label}</span>
+                  : <button type="button" className="cc-steward-answer" aria-current={entry.status === 'active' ? 'step' : undefined}
+                    aria-label={`Change ${entry.step.label}`} onClick={() => store.reopen(chamber, entry.step.id)}>
+                    {entry.summary ?? `${entry.step.label} · changing`}</button>}</li>)}
           </ol>}
           {view.active && <StepCard session={session} entry={view.active} chamber={chamber} store={store} />}
         </div>}

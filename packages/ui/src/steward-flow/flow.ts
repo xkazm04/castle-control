@@ -14,7 +14,11 @@ export const flowChambers: readonly FlowChamber[] = ['keep', 'lottery', 'moderat
 
 export type FlowLine = { label: string; value: string };
 /** One option on a choice or preset card. `consequence` is the one line under it. */
-export type FlowOption = { id: string; label: string; consequence?: string; tag?: string; simulated?: boolean };
+export type FlowOption = { id: string; label: string; consequence?: string; tag?: string; simulated?: boolean;
+  /** A small picture on the card (a library thumbnail). */
+  picture?: { src: string; alt: string };
+  /** Shown but not choosable; `consequence` says why. */
+  disabled?: boolean };
 
 type StepBase<D> = {
   id: string;
@@ -48,6 +52,8 @@ export type FieldStep<D> = StepBase<D> & {
   validate?(raw: string, draft: D): string | null;
   apply(draft: D, raw: string): D;
   summary?(draft: D, raw: string): string;
+  /** Quick answers under the input; choosing one submits it as typed text. */
+  suggestions?(draft: D): readonly string[];
 };
 export type PreviewStep<D> = StepBase<D> & {
   kind: 'preview';
@@ -55,6 +61,30 @@ export type PreviewStep<D> = StepBase<D> & {
   /** Optional mini picture of the draft inside the card. */
   render?(draft: D): ReactNode;
   continue_label?: string;
+  /** Extra buttons that reopen an earlier step ("Try again" reopens the work, "Adjust" a question). */
+  actions?(draft: D): readonly { label: string; step: string }[];
+};
+/** What a running work step may do while it runs. */
+export type WorkContext = {
+  /** Aborted when the streamer cancels or the flow closes; a late result is then dropped. */
+  signal: AbortSignal;
+  /** Replace the progress line under the card ("Generating the image..."). */
+  progress(text: string): void;
+};
+/**
+ * An async step: it runs on its own as soon as it becomes active, shows progress with a
+ * cancel, and its resolved string becomes the step's answer (a failure is shown inline with
+ * a retry). The flow owns the meaning of the string, e.g. a key into its own result cache.
+ */
+export type WorkStep<D> = StepBase<D> & {
+  kind: 'work';
+  run(draft: D, context: WorkContext): Promise<string>;
+  /** Whether a stored answer still belongs to this draft; false runs the work again. Defaults to true. */
+  accepts?(draft: D, value: string): boolean;
+  apply(draft: D, value: string): D;
+  summary?(draft: D, value: string): string;
+  /** One quiet line under the progress, e.g. "Uses your OpenAI key." */
+  note?(draft: D): string | undefined;
 };
 export type ConfirmStep<D> = StepBase<D> & {
   kind: 'confirm';
@@ -62,7 +92,7 @@ export type ConfirmStep<D> = StepBase<D> & {
   /** One line under the summary, e.g. "Nothing reaches chat until you hold." */
   note?: string;
 };
-export type FlowStep<D> = ChoiceStep<D> | PresetStep<D> | FieldStep<D> | PreviewStep<D> | ConfirmStep<D>;
+export type FlowStep<D> = ChoiceStep<D> | PresetStep<D> | FieldStep<D> | PreviewStep<D> | ConfirmStep<D> | WorkStep<D>;
 export type FlowStepKind = FlowStep<unknown>['kind'];
 
 /** A chip the closing beat offers (structurally a registry StewardChip; kept local to avoid a cycle). */
@@ -131,9 +161,10 @@ export function startFlow(flow: { id: string }): FlowState {
 
 function accepts<D>(step: FlowStep<D>, draft: D, value: string): boolean {
   switch (step.kind) {
-    case 'choice': return step.options(draft).some(option => option.id === value);
-    case 'preset': return step.presets(draft).some(option => option.id === value);
+    case 'choice': return step.options(draft).some(option => option.id === value && !option.disabled);
+    case 'preset': return step.presets(draft).some(option => option.id === value && !option.disabled);
     case 'field': return !step.validate || step.validate(value, draft) === null;
+    case 'work': return step.accepts?.(draft, value) ?? true;
     case 'preview': return true;
     case 'confirm': return false;
   }
@@ -141,7 +172,7 @@ function accepts<D>(step: FlowStep<D>, draft: D, value: string): boolean {
 
 function applyStep<D>(step: FlowStep<D>, draft: D, value: string): D {
   switch (step.kind) {
-    case 'choice': case 'preset': case 'field': return step.apply(draft, value);
+    case 'choice': case 'preset': case 'field': case 'work': return step.apply(draft, value);
     case 'preview': case 'confirm': return draft;
   }
 }
@@ -152,6 +183,7 @@ export function summarize<D>(step: FlowStep<D>, before: D, value: string): strin
     case 'choice': return `${step.label} · ${step.summary?.(after, value) ?? step.options(before).find(option => option.id === value)?.label ?? value}`;
     case 'preset': return `${step.label} · ${step.summary?.(after, value) ?? step.presets(before).find(option => option.id === value)?.label ?? value}`;
     case 'field': return `${step.label} · ${step.summary?.(after, value) ?? value}`;
+    case 'work': return `${step.label} · ${step.summary?.(after, value) ?? 'done'}`;
     case 'preview': return `${step.label} · looked over`;
     case 'confirm': return step.label;
   }
@@ -209,11 +241,12 @@ export function reopenStep<D>(flow: StewardFlow<D>, state: FlowState, step_id: s
   return entry?.status === 'answered' ? { ...state, editing: step_id } : state;
 }
 
-/** Step back: reopen the answered step just before the active one. */
+/** Step back: reopen the answered step just before the active one. Work steps are stepped over,
+ * so Back never runs (and never spends on) a finished piece of work again. */
 export function backStep<D>(flow: StewardFlow<D>, state: FlowState): FlowState {
   if (state.status !== 'open') return state;
   const { entries, active } = walkFlow(flow, state);
-  const answered = entries.filter(entry => entry.status === 'answered');
+  const answered = entries.filter(entry => entry.status === 'answered' && entry.step.kind !== 'work');
   const index = active ? entries.indexOf(active) : entries.length;
   const previous = answered.filter(entry => entries.indexOf(entry) < index).at(-1);
   return previous ? { ...state, editing: previous.step.id } : state;
