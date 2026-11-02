@@ -58,12 +58,21 @@ for (const route of routes) for (const theme of themes) for (const steward of st
     await expect(page.locator('.cc-rampart > [data-stamp="simulated"]')).toHaveText('Simulated');
     await expect(page.locator('.keep-home, .overview-workspace, .shell-room, .demo-workspace, .stream-workspace, .rehearsal-workspace')).toBeVisible();
     await expect(page.getByText('Opening the room...', { exact: true })).toHaveCount(0);
-    await expect(page.locator('.cc-steward-dock')).toBeVisible();
+    // The Keep is the one surface without a Steward: no dock, no talk field, no rampart button.
+    const keep = route === '#/keep';
+    if (keep) await expect(page.locator('.cc-steward-dock')).toHaveCount(0);
+    else await expect(page.locator('.cc-steward-dock')).toBeVisible();
     if (route.endsWith('/drill')) await expect(page.locator('.moderator-drill')).toBeVisible();
     await expect(page).toHaveURL(new RegExp(`${route.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`));
     if (theme === 'night') await page.getByRole('button', { name: 'Toggle day and night' }).click();
     await expect(page.locator('.cc-frame')).toHaveAttribute('data-theme', theme);
-    if (steward === 'open') {
+    if (steward === 'open' && keep) {
+      // Nothing to open: `/` is left alone on the Keep, so focus does not move and the page stays put.
+      await expect(page.getByRole('button', { name: 'Steward', exact: true })).toHaveCount(0);
+      await page.keyboard.press('/');
+      await expect(page.getByRole('textbox', { name: 'Talk to the Steward...' })).toHaveCount(0);
+      await expect(page).toHaveURL(/#\/keep$/);
+    } else if (steward === 'open') {
       // Steward is a persistent panel in this shell. Open means focused controls;
       // Overview additionally exposes its existing Talkback tab, with no LLM call.
       await page.getByRole('button', { name: 'Steward', exact: true }).click();

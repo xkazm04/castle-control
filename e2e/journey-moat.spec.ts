@@ -96,6 +96,9 @@ test('the Keep tour reads the Map Room as a chat duel and its chips open each ch
     const plaque = page.locator('[data-role="plaque"][data-room="studio"]');
     await expect(plaque.locator('[data-role="plaque-word"]')).toHaveText('Chat duel');
     await expect(plaque).not.toContainText(/sand table|war table|local test/i);
+    // The Keep has no Steward; the tour of the chambers lives in the Steward on the overview.
+    await expect(page.locator('.cc-steward-dock')).toHaveCount(0);
+    await page.goto('/#/overview');
     const dock = page.locator('.cc-steward-dock');
     await dock.getByRole('button', { name: 'Play demo', exact: true }).first().click();
     for (const option of ['Start with the Lot Chamber', 'Next: the Gatehouse', 'Next: Beacons and the Map Room', 'Show me the Map Room']) {
@@ -302,7 +305,7 @@ test.describe('with motion allowed', () => {
 test.describe('Keep desktop bounds', () => {
   test.use({ reducedMotion: 'no-preference' });
   for (const viewport of [{ width: 1280, height: 800 }, { width: 1440, height: 900 }, { width: 1920, height: 1080 }]) {
-    test(`Keep footer and headings fit ${viewport.width}x${viewport.height}`, async ({ page }) => {
+    test(`Keep moat card, plaques and window fit ${viewport.width}x${viewport.height}`, async ({ page }) => {
       const verify = await guardPage(page);
       try {
         await page.setViewportSize(viewport);
@@ -316,26 +319,36 @@ test.describe('Keep desktop bounds', () => {
               if (!node) throw new Error(`Missing Keep element: ${selector}`);
               return node;
             };
-            const footer = requireNode('.keep-moat');
-            const bounds = footer.getBoundingClientRect();
-            const style = getComputedStyle(footer);
-            const items = ['.keep-moatlab', '.moat-heartbeat small', '.moat-heartbeat-strip', '.moat-heartbeat button', '.keep-moat-link']
-              .map(selector => requireNode(selector).getBoundingClientRect());
             const issues: string[] = [];
-            for (const at of items) {
-              if (Math.abs((at.top + at.bottom) / 2 - (bounds.top + bounds.bottom) / 2) > 1) issues.push('footer control wrapped');
-              if (at.left < bounds.left || at.right > bounds.right || at.width <= 0) issues.push('footer control outside its row');
+            const inside = (inner: DOMRect, outer: DOMRect) => inner.left >= outer.left - 1 && inner.right <= outer.right + 1 && inner.width > 0;
+            // The moat card holds its label, replay strip, Pause and the full-replay link inside its own box.
+            const card = requireNode('.keep-moat').getBoundingClientRect();
+            for (const selector of ['.keep-moatlab', '.moat-heartbeat small', '.moat-heartbeat-strip', '.moat-heartbeat button', '.keep-moat-link']) {
+              if (!inside(requireNode(selector).getBoundingClientRect(), card)) issues.push(`moat item outside its card: ${selector}`);
             }
-            const expected = Math.max(...items.map(at => at.height)) + Number.parseFloat(style.paddingTop)
-              + Number.parseFloat(style.paddingBottom) + Number.parseFloat(style.borderTopWidth) + Number.parseFloat(style.borderBottomWidth);
-            if (bounds.height > expected + 1) issues.push('footer height exceeds one row');
-            const eyebrow = requireNode('[data-role="keep-eyebrow"]').getBoundingClientRect();
-            const caption = requireNode('[data-role="keep-vlabel"]').getBoundingClientRect();
-            if (eyebrow.left < caption.right && caption.left < eyebrow.right && eyebrow.top < caption.bottom && caption.top < eyebrow.bottom) issues.push('illustration covers eyebrow');
+            // The intro column stacks eyebrow, title, moat and actions without overlap.
+            const column = requireNode('.ki').getBoundingClientRect();
+            const blocks = ['[data-role="keep-eyebrow"]', '[data-role="keep-name"]', '.keep-moat', '.ki__actions'].map(selector => requireNode(selector).getBoundingClientRect());
+            for (const [index, block] of blocks.entries()) {
+              if (!inside(block, column)) issues.push(`intro block ${index} leaves its column`);
+              const next = blocks[index + 1];
+              if (next && block.bottom > next.top + 1) issues.push(`intro block ${index} overlaps the next`);
+            }
+            // Plaques sit side by side under the window, none wrapped or cut off.
+            const plaques = [...element.querySelectorAll('[data-role="plaque"]')].map(node => node.getBoundingClientRect());
+            const stage = requireNode('.kh__stage').getBoundingClientRect();
+            for (const [index, plaque] of plaques.entries()) {
+              if (!inside(plaque, stage)) issues.push(`plaque ${index} outside the stage`);
+              const next = plaques[index + 1];
+              if (next && plaque.right > next.left + 1) issues.push(`plaque ${index} overlaps its neighbour`);
+            }
             const title = requireNode('[data-role="plaque"][data-room="lottery"] [data-role="plaque-name"]');
             const range = document.createRange(); range.selectNodeContents(title);
             if (new Set([...range.getClientRects()].map(at => Math.round(at.top))).size > 1) issues.push('Lot Chamber title wrapped');
             if (title.scrollWidth > title.clientWidth + 1) issues.push('Lot Chamber title overflows');
+            // The Keep never scrolls the page, and the program column keeps its own scroll.
+            const home = requireNode('.shell-program-column').getBoundingClientRect();
+            if (home.bottom > innerHeight + 1) issues.push('program column runs off the window');
             return issues;
           })).toEqual([]);
         }
