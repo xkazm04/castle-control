@@ -125,7 +125,8 @@ export function BeaconStage({ view, burst, actions, notice, reading, eyebrow }: 
             return offering && <li key={index} data-counted={counted.has(index)}>{offeringText(offering)}</li>;
           })}
         </ol>}
-        <span className="cc-sim visuals-monitor__sim">Simulated</span>
+        {/* One SIMULATED mark per picture: a simulated draft stamp already carries it. */}
+        {!/simulated/i.test(view.stamp ?? '') && <span className="cc-sim visuals-monitor__sim">Simulated</span>}
         {view.stamp && <span className="visuals-monitor__stamp">{view.stamp}</span>}
         {pinned && view.mode === 'night' && <span className="visuals-monitor__pin">At full blaze</span>}
       </div>
