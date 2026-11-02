@@ -42,14 +42,14 @@ function coreReading(state: CoreBeaconsSnapshot, visual: Visual | undefined): st
 /** The core room's one picture: the selected core beacon, a draft, or the demo sandbox. */
 function CorePicture({ state, publication, compose }: {
   state: CoreBeaconsSnapshot; publication: ReturnType<typeof useStewardDraft>;
-  compose: (picture: ReactNode, reading: ReactNode, in_picture?: string) => ReactNode;
+  compose: (picture: ReactNode, reading: ReactNode, details?: ReactNode, in_picture?: string) => ReactNode;
 }) {
   const sandbox = useSyncExternalStore(fixtureBeacons().subscribe, fixtureBeacons().getSnapshot, fixtureBeacons().getSnapshot);
   if (publication?.flow === flow_ids.demo) {
     return <BeaconStage view={stageView(sandbox.visuals, sandbox.selected, publication)} burst="sandbox"
-      compose={(picture, reading) => compose(picture, <><p className="visuals-sandbox__band" role="status" data-testid="beacons-sandbox">
+      compose={(picture, reading, details) => compose(picture, reading, <><p className="visuals-sandbox__band" role="status" data-testid="beacons-sandbox">
         Demo sandbox · SIMULATED · nothing touches your core. Sample beacons on a generated night. Your own beacons come back when the demo ends.
-      </p>{reading}</>)} />;
+      </p>{details}</>)} />;
   }
   if (publication?.flow === light_flow_id) {
     const visual = lightVisual(publication.draft as LightDraft, state.visuals);
@@ -62,7 +62,7 @@ function CorePicture({ state, publication, compose }: {
   if (!items.length) return null;
   const view = stageView(items, state.selected ?? '', publication);
   return <BeaconStage view={view} burst={String(state.events[0]?.id ?? 'none')}
-    compose={(picture, reading) => compose(picture, reading, view.item.visual.visual_id)} eyebrow="In your core"
+    compose={(picture, reading, details) => compose(picture, reading, details, view.item.visual.visual_id)} eyebrow="In your core"
     {...(view.mode === 'rest' ? { reading: coreReading(state, selected) } : {})} notice={view.mode === 'rest' ? state.notice : undefined} />;
 }
 
@@ -107,7 +107,7 @@ export function ConnectedBeacons({ port, seal_slot, steward }: { port: CoreBeaco
     ...(state.simulation?.intensity.visual_id === item.visual_id ? { intensity: state.simulation.intensity.intensity } : {}),
   }));
   const selected = state.visuals.find(item => item.visual_id === state.selected);
-  const compose = (picture: ReactNode, reading: ReactNode, in_picture?: string) => <BeaconDeck picture={picture} reading={reading}
+  const compose = (picture: ReactNode, reading: ReactNode, details?: ReactNode, in_picture?: string) => <BeaconDeck picture={picture} reading={reading}
     open={open} on_open={() => setOpen(true)} on_close={() => setOpen(false)} core
     caption={publication ? 'Draft / sample picture · SIMULATED · not on air' : 'Core configuration · sample picture · SIMULATED'}
     preview={publication ? <p>{selected?.name ?? 'Beacon'} · draft · not on air</p> : <p>Nothing in Preview. Ask the Steward to draft one.</p>}
@@ -117,20 +117,21 @@ export function ConnectedBeacons({ port, seal_slot, steward }: { port: CoreBeaco
     actions={<>
       <button type="button" className="cc-btn" disabled={disabled || !selected} onClick={() => start(flow_ids.test)}><RoomKeyBadge room="visuals" action="test" />Test fire</button>
       <button type="button" className="cc-btn" disabled={disabled || !selected} onClick={() => start(flow_ids.replay)}><RoomKeyBadge room="visuals" action="replay" />Replay a night</button>
-      <button type="button" className="cc-btn" disabled={disabled || Boolean(publication) || !selected || selected.curve.decay.kind === 'none'} onClick={() => {
-        if (!selected || disabled || selected.curve.decay.kind !== 'exponential') return;
-        void view.setCurve({ visual_id: selected.visual_id, curve: { ...selected.curve,
-          decay: { ...selected.curve.decay, half_life_s: Math.max(1, Math.round(selected.curve.decay.half_life_s / 2)) } } });
-      }}><RoomKeyBadge room="visuals" action="decay" />Halve the decay</button>
     </>}
     drawer={<>
       <div className="visuals-deck-actions">
+        <button type="button" className="cc-btn" disabled={disabled || Boolean(publication) || !selected || selected.curve.decay.kind === 'none'} onClick={() => {
+          if (!selected || disabled || selected.curve.decay.kind !== 'exponential') return;
+          void view.setCurve({ visual_id: selected.visual_id, curve: { ...selected.curve,
+            decay: { ...selected.curve.decay, half_life_s: Math.max(1, Math.round(selected.curve.decay.half_life_s / 2)) } } });
+        }}><RoomKeyBadge room="visuals" action="decay" />Halve the decay</button>
         <button type="button" className="cc-btn" disabled={!selected} onClick={event =>
           event.currentTarget.closest('[role="dialog"]')?.querySelector<HTMLSelectElement>('#beacon-colour')?.focus()}>Tonight’s theme</button>
         <button type="button" className="cc-btn cc-btn--quiet" disabled={disabled || !selected} onClick={() => start(flow_ids.tune)}><RoomKeyBadge room="visuals" action="tune" />Tune this beacon</button>
         <button type="button" className="cc-btn cc-btn--quiet" disabled={disabled} onClick={() => start(light_flow_id)}>Light another</button>
         <button type="button" className="cc-btn" onClick={() => start(flow_ids.demo)}>Play demo</button>
       </div>
+      {details && <ChamberSection title="Reading and sample night">{details}</ChamberSection>}
       <ChamberSection title="Every beacon, every tier"><BeaconPlates visuals={plates} selected={state.selected ?? ''} core busy={disabled}
         on_select={item => port.select(item.visual.visual_id)} /></ChamberSection>
       <CoreBench port={view} state={state} seal_slot={seal_slot} />
