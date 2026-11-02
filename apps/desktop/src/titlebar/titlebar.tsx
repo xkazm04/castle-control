@@ -6,8 +6,8 @@ import './titlebar.css';
 // this repo's strict resolution, so the same window plugin commands are invoked through core.
 const label = 'main';
 const load = async () => {
-  const { invoke } = await import('@tauri-apps/api/core');
-  const call = <T,>(cmd: string) => invoke<T>('plugin:window|' + cmd, { label });
+  const { invoke: nativeInvoke } = await import('@tauri-apps/api/core');
+  const call = <T,>(cmd: string) => nativeInvoke<T>('plugin:window|' + cmd, { label });
   return {
     title: () => call<string>('title'), isMaximized: () => call<boolean>('is_maximized'),
     minimize: () => call<void>('minimize'), toggleMaximize: () => call<void>('toggle_maximize'), close: () => call<void>('close'),
