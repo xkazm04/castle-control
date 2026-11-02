@@ -7,11 +7,23 @@
 }
 .cc-frame .desktop-shell > [data-role="status-bar"] {
   position: relative; height: var(--rampart-h); min-width: 0;
-  padding: var(--space-6) var(--deck-pad) 0; gap: var(--space-14);
+  padding: var(--space-6) var(--deck-pad) 0; gap: var(--space-10);
   background: linear-gradient(180deg, var(--deck-top), var(--deck-top-bottom));
   border-bottom: var(--rule-thin) solid var(--deck-line); box-shadow: none;
   font-family: var(--font-deck-sans);
 }
+.cc-frame .desktop-shell [data-role="status-bar"] :is(.cc-live-group, .cc-link-group, .cc-rampart-figures) {
+  display: flex; align-items: center; flex: none; gap: var(--space-10);
+}
+.cc-frame .desktop-shell [data-role="status-bar"] .cc-rampart-link {
+  display: inline-flex; align-items: center; gap: var(--space-6); white-space: nowrap;
+  color: var(--on-lead); font-size: var(--text-px-14);
+}
+.cc-frame .desktop-shell [data-role="status-bar"] .cc-rampart-link i {
+  width: var(--space-8); height: var(--space-8); flex: none; box-sizing: border-box;
+  border: var(--rule-medium) solid var(--azure); border-radius: 50%;
+}
+.cc-frame .desktop-shell [data-role="status-bar"] > .cc-button { flex: none; }
 .cc-frame [data-role="status-bar"]::before {
   content: ''; position: absolute; inset: 0 0 auto; height: var(--space-8); opacity: .9;
   background: repeating-linear-gradient(90deg, var(--deck-crenel) 0 var(--space-26), transparent var(--space-26) var(--deck-crenel-span));
@@ -101,5 +113,7 @@
 }
 .cc-frame .shell-room-links button:hover { border-color: var(--ch); }
 @media (max-width: 1380px) {
+  .cc-frame .desktop-shell > [data-role="status-bar"],
+  .cc-frame .desktop-shell [data-role="status-bar"] :is(.cc-live-group, .cc-link-group, .cc-rampart-figures) { gap: var(--space-8); }
   .cc-frame [data-role="room-bar"] :is(.cc-room-needs, .cc-room-drafts) { padding-inline: var(--space-4); }
 }
