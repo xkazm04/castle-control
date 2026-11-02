@@ -87,7 +87,8 @@ function Spark({ trace, position, label }: { trace: ReplayTrace; position: numbe
 }
 
 /** The chamber's one picture: the selected beacon as a viewer would see it on stream, live with any draft. */
-export function BeaconStage({ view, burst, actions, notice, reading, eyebrow }: {
+export function BeaconStage({ view, burst, actions, notice, reading, eyebrow, compose }: {
+  compose?: (picture: ReactNode, reading: ReactNode) => ReactNode;
   view: StageView; burst: string; actions?: ReactNode; notice?: ReactNode;
   /** Replaces the weighted-subs line at rest (core mode: no live total is read here). */
   reading?: string;
@@ -115,8 +116,7 @@ export function BeaconStage({ view, burst, actions, notice, reading, eyebrow }: 
     ? narrate({ name: item.visual.name.toLowerCase(), offerings: night.offerings, counted, trace: spark, curve, position: at })
     : view.before !== undefined ? `${view.shot}: ${Math.round(view.before * 100)}% → ${percent}% once you hold to fire.`
     : undefined;
-  return <section className="visuals-stage" aria-label="Beacon picture" data-mode={view.mode} data-kind={look.kind}>
-    <figure className="visuals-monitor" style={style} data-intensity={intensity.toFixed(3)} data-pinned={pinned}>
+  const picture = <figure className="visuals-monitor" style={style} data-intensity={intensity.toFixed(3)} data-pinned={pinned}>
       <div className="visuals-monitor__screen">
         <ScreenArt look={look} flare={flare} />
         {ticks.length > 0 && night && <ol className="visuals-monitor__ticker" aria-label="Latest simulated offerings">
@@ -131,8 +131,8 @@ export function BeaconStage({ view, burst, actions, notice, reading, eyebrow }: 
         {pinned && view.mode === 'night' && <span className="visuals-monitor__pin">At full blaze</span>}
       </div>
       <figcaption className="cc-sr">{`${item.visual.name} as viewers would see it · ${percent}% blaze · simulated`}</figcaption>
-    </figure>
-    <div className="visuals-stage__read">
+    </figure>;
+  const readout = <div className="visuals-stage__read">
       <p className="visuals-stage__eyebrow">{look.label}{eyebrow && view.mode === 'rest' && <b> · {eyebrow}</b>}{view.mode !== 'rest' && <b> · {view.flow === 'visuals-demo' ? 'demo' : 'draft'}</b>}</p>
       <h2 className="visuals-stage__name">{item.visual.name}</h2>
       <p className="visuals-stage__blaze" aria-live={view.mode === 'night' ? 'off' : 'polite'}>
@@ -151,6 +151,10 @@ export function BeaconStage({ view, burst, actions, notice, reading, eyebrow }: 
       {line && <p className="visuals-stage__line" data-testid="stage-line">{line}</p>}
       {notice && <p className="visuals-stage__notice" role="status" aria-live="polite">{notice}</p>}
       {actions && <div className="visuals-stage__actions">{actions}</div>}
-    </div>
+    </div>;
+  if (compose) return compose(<section className="visuals-stage visuals-stage--picture" aria-label="Beacon picture"
+    data-mode={view.mode} data-kind={look.kind}>{picture}</section>, readout);
+  return <section className="visuals-stage" aria-label="Beacon picture" data-mode={view.mode} data-kind={look.kind}>
+    {picture}{readout}
   </section>;
 }

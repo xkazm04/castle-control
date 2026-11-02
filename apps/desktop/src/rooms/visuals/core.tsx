@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
+import { useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import { EmptyState } from '@castle-control/ui';
 import type { ReactNode } from 'react';
 import type { Visual } from '@castle-control/contract';
@@ -10,6 +10,8 @@ import type { CoreBeaconsPort, CoreBeaconsSnapshot } from '../../beacons-core.js
 import type { PreviewVisual } from '../../beacons-model.js';
 import type { Snapshot } from '../../model.js';
 import { beaconsCopy as copy } from '../../beacons-copy.js';
+import { ChamberSection } from '@castle-control/ui/chamber';
+import { BeaconDeck } from './deck.jsx';
 import { BeaconPlates } from './plates.jsx';
 import { createBeaconsView } from './core-view.js';
 import { CoreBench } from './core-bench.jsx';
@@ -37,45 +39,44 @@ function coreReading(state: CoreBeaconsSnapshot, visual: Visual | undefined): st
 }
 
 /** The core room's one picture: the selected core beacon, a draft, or the demo sandbox. */
-function CorePicture({ state, publication, actions }: {
-  state: CoreBeaconsSnapshot; publication: ReturnType<typeof useStewardDraft>; actions: ReactNode;
+function CorePicture({ state, publication, compose }: {
+  state: CoreBeaconsSnapshot; publication: ReturnType<typeof useStewardDraft>;
+  compose: (picture: ReactNode, reading: ReactNode, in_picture?: string) => ReactNode;
 }) {
   const sandbox = useSyncExternalStore(fixtureBeacons().subscribe, fixtureBeacons().getSnapshot, fixtureBeacons().getSnapshot);
   if (publication?.flow === flow_ids.demo) {
-    return <div className="visuals-sandbox" data-testid="beacons-sandbox">
-      <p className="visuals-sandbox__band" role="status"><span className="cc-sim">Simulated</span>
-        <b>Demo sandbox · SIMULATED · nothing touches your core</b>
-        <span>Sample beacons on a generated night. Your own beacons come back when the demo ends.</span></p>
-      <BeaconStage view={stageView(sandbox.visuals, sandbox.selected, publication)} burst="sandbox" />
-    </div>;
+    return <BeaconStage view={stageView(sandbox.visuals, sandbox.selected, publication)} burst="sandbox"
+      compose={(picture, reading) => compose(picture, <><p className="visuals-sandbox__band" role="status" data-testid="beacons-sandbox">
+        Demo sandbox · SIMULATED · nothing touches your core. Sample beacons on a generated night. Your own beacons come back when the demo ends.
+      </p>{reading}</>)} />;
   }
   if (publication?.flow === light_flow_id) {
     const visual = lightVisual(publication.draft as LightDraft, state.visuals);
     const view: StageView = { item: { visual, gift_weight: 1, total: 0, intensity: 0 }, mode: 'draft', flow: light_flow_id,
       spark: 'sample', simulated: false, stamp: 'Draft · not saved yet' };
-    return <BeaconStage view={view} burst="draft" reading="A new beacon · saved to your core on your hold" />;
+    return <BeaconStage view={view} burst="draft" compose={compose} reading="A new beacon · saved to your core on your hold" />;
   }
   const items = coreItems(state);
   const selected = state.visuals.find(item => item.visual_id === state.selected);
   if (!items.length) return null;
   const view = stageView(items, state.selected ?? '', publication);
-  return <BeaconStage view={view} burst={String(state.events[0]?.id ?? 'none')} actions={actions} eyebrow="In your core"
+  return <BeaconStage view={view} burst={String(state.events[0]?.id ?? 'none')}
+    compose={(picture, reading) => compose(picture, reading, view.item.visual.visual_id)} eyebrow="In your core"
     {...(view.mode === 'rest' ? { reading: coreReading(state, selected) } : {})} notice={view.mode === 'rest' ? state.notice : undefined} />;
 }
 
 /** An empty core: an honest picture that points to the Steward, never a wall of blanks. */
-function CoreEmpty({ state, start }: { state: CoreBeaconsSnapshot; start: (id: string) => void }) {
+function CoreEmpty({ state, start, compose }: { state: CoreBeaconsSnapshot; start: (id: string) => void;
+  compose: (picture: ReactNode, reading: ReactNode) => ReactNode }) {
   const loading = state.phase === 'idle' || state.phase === 'loading';
   const failed = state.phase === 'error';
-  return <section className="visuals-stage visuals-stage--empty" aria-label="Beacon picture" data-mode="empty">
-    <figure className="visuals-monitor" data-intensity="0.000">
+  return compose(<section className="visuals-stage visuals-stage--picture visuals-stage--empty" aria-label="Beacon picture" data-mode="empty"><figure className="visuals-monitor" data-intensity="0.000">
       <div className="visuals-monitor__screen">
         <img className="visuals-monitor__scene" src="/art/malakor-lair-wide.webp" alt="" />
         <span className="cc-sim visuals-monitor__sim">Sample picture</span>
       </div>
       <figcaption className="cc-sr">Your stream with no beacon yet · sample picture</figcaption>
-    </figure>
-    <div className="visuals-stage__read">
+    </figure></section>, <div className="visuals-stage__read">
       <p className="visuals-stage__eyebrow">Your core</p>
       <EmptyState compact glyph={false} title={loading ? 'Reading your beacons…' : failed ? 'Beacons did not answer' : 'No beacon yet'}
         description={failed ? copy.core_failed(state.error?.code ?? 'unavailable')
@@ -84,51 +85,56 @@ function CoreEmpty({ state, start }: { state: CoreBeaconsSnapshot; start: (id: s
           <button type="button" className="cc-btn cc-btn--chamber" disabled={loading} onClick={() => start(light_flow_id)}>Light a beacon</button>
           <button type="button" className="cc-btn cc-btn--quiet" onClick={() => start(flow_ids.demo)}>Play demo</button>
         </>} />
-    </div>
-  </section>;
+    </div>);
 }
 
 export function ConnectedBeacons({ port, seal_slot, steward }: { port: CoreBeaconsPort; seal_slot?: ReactNode; steward?: ChamberSteward }) {
   const view = useMemo(() => createBeaconsView(port), [port]);
   const state = useSyncExternalStore(view.subscribe, view.getSnapshot, view.getSnapshot);
   const publication = useStewardDraft('visuals');
-  const board = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
   useEffect(() => { void port.load(); void port.loadContributions({ limit: 100 }); }, [port]);
   useEffect(() => { void port.loadArtStatus(); }, [port]);
   const drafting = publication?.flow;
-  useEffect(() => { if (drafting && board.current) board.current.scrollTop = 0; }, [drafting]);
   const start = (id: string) => {
     const found = steward?.demo?.id === id ? steward.demo : steward?.flows.find(item => item.id === id);
     if (found) stewardDock.open(found);
   };
   const disabled = state.busy || state.phase === 'error';
   const empty = state.visuals.length === 0 && !drafting;
-  const sandbox = publication?.flow === flow_ids.demo;
   const plates = state.visuals.map(item => ({ visual: item,
     ...(state.simulation?.intensity.visual_id === item.visual_id ? { intensity: state.simulation.intensity.intensity } : {}),
   }));
-  return <section className="visuals-room visuals-core" aria-label="Core Beacons" aria-busy={state.busy}>
-    <div className="visuals-board" ref={board}>
-      {empty ? <CoreEmpty state={state} start={start} /> : <CorePicture state={state} publication={publication} actions={<>
-        <button type="button" className="cc-btn cc-btn--chamber" onClick={() => start(flow_ids.tune)}>Tune this beacon</button>
-        <button type="button" className="cc-btn" onClick={() => start(flow_ids.test)}>Test fire</button>
-        <button type="button" className="cc-btn" onClick={() => start(flow_ids.replay)}>Replay a night</button>
-        <button type="button" className="cc-btn cc-btn--quiet" onClick={() => start(flow_ids.demo)}>Play demo</button>
-      </>} />}
-      {!sandbox && state.visuals.length > 0 && <section className="visuals-picker" aria-labelledby="visuals-picker-title">
-        <h2 className="visuals-picker__title" id="visuals-picker-title">Your beacons <em>choose the one on screen · saved in your core</em>
-          <button type="button" className="cc-btn cc-btn--sm cc-btn--quiet visuals-picker__add" onClick={() => start(light_flow_id)}>Light another</button></h2>
-        <BeaconPlates visuals={plates} selected={state.selected ?? ''} core busy={disabled}
-          on_select={item => port.select(item.visual.visual_id)} />
-      </section>}
-      <details className="cc-disclosure visuals-more" open={open} onToggle={event => setOpen(event.currentTarget.open)}>
-        <summary>More <span>configuration · control points · appearance · core simulation · browser source · feeds</span></summary>
-        <div className="cc-disclosure__body visuals-more__body">
-          <CoreBench port={view} state={state} seal_slot={seal_slot} />
-        </div>
-      </details>
-    </div>
+  const selected = state.visuals.find(item => item.visual_id === state.selected);
+  const compose = (picture: ReactNode, reading: ReactNode, in_picture?: string) => <BeaconDeck picture={picture} reading={reading}
+    open={open} on_open={() => setOpen(true)} on_close={() => setOpen(false)} core
+    caption={publication ? 'Draft / sample picture · SIMULATED · not on air' : 'Core configuration · sample picture · SIMULATED'}
+    preview={publication ? <p>{selected?.name ?? 'Beacon'} · draft · not on air</p> : <p>Nothing in Preview. Ask the Steward to draft one.</p>}
+    program={<p>{selected?.name ?? 'No beacon saved'}<br />Live blaze shows on stream · live total shows on stream</p>}
+    picker={plates.length > 0 ? <BeaconPlates visuals={plates} selected={in_picture ?? state.selected ?? ''} core compact busy={disabled || Boolean(publication)}
+      on_select={item => port.select(item.visual.visual_id)} /> : <p>{state.phase === 'error' ? copy.core_failed(state.error?.code ?? 'unavailable') : 'No beacons in your core yet. Ask the Steward to light one.'}</p>}
+    actions={<>
+      <button type="button" className="cc-btn" disabled={disabled || !selected} onClick={() => start(flow_ids.test)}>Test fire</button>
+      <button type="button" className="cc-btn" disabled={disabled || !selected} onClick={() => start(flow_ids.replay)}>Replay a night</button>
+      <button type="button" className="cc-btn" disabled={disabled || Boolean(publication) || !selected || selected.curve.decay.kind === 'none'} onClick={() => {
+        if (!selected || disabled || selected.curve.decay.kind !== 'exponential') return;
+        void view.setCurve({ visual_id: selected.visual_id, curve: { ...selected.curve,
+          decay: { ...selected.curve.decay, half_life_s: Math.max(1, Math.round(selected.curve.decay.half_life_s / 2)) } } });
+      }}>Halve the decay</button>
+      <button type="button" className="cc-btn" disabled={!selected} onClick={() => setOpen(true)}>Tonight’s theme</button>
+      <button type="button" className="cc-btn cc-btn--quiet" disabled={disabled || !selected} onClick={() => start(flow_ids.tune)}>Tune this beacon</button>
+      <button type="button" className="cc-btn cc-btn--quiet" disabled={disabled} onClick={() => start(light_flow_id)}>Light another</button>
+    </>}
+    drawer={<>
+      <div className="visuals-deck-actions"><button type="button" className="cc-btn" onClick={() => start(flow_ids.demo)}>Play demo</button></div>
+      <ChamberSection title="Every beacon, every tier"><BeaconPlates visuals={plates} selected={state.selected ?? ''} core busy={disabled}
+        on_select={item => port.select(item.visual.visual_id)} /></ChamberSection>
+      <CoreBench port={view} state={state} seal_slot={seal_slot} />
+    </>} />;
+  return <section className="visuals-room visuals-core visuals-deck" aria-label="Core Beacons" aria-busy={state.busy}>
+    {state.phase === 'error' && <p className="visuals-deck-error" role="alert">{copy.core_failed(state.error?.code ?? 'unavailable')}
+      {state.visuals.length > 0 && ` ${copy.core_retained}`} <button type="button" className="cc-btn" onClick={() => { void port.load(); }}>Refresh Beacons</button></p>}
+    {empty ? <CoreEmpty state={state} start={start} compose={compose} /> : <CorePicture state={state} publication={publication} compose={compose} />}
   </section>;
 }
 

@@ -11,7 +11,8 @@ import { ConnectedBeacons } from './core.jsx';
 
 test('C compares three radio plates, each with its own cropped artwork and inline stair ramps', () => {
   const port = createBeaconsPreview();
-  const html = renderToStaticMarkup(<VisualsWork port={port} />);
+  const html = renderToStaticMarkup(<VisualSelector visuals={port.getSnapshot().visuals} selected={port.getSnapshot().selected}
+    on_select={item => port.select(item.visual.visual_id)} />);
   expect(html).toContain('role="radiogroup"');
   expect(html.match(/role="radio"/g)).toHaveLength(3);
   expect(html.match(/aria-checked="true"/g)).toHaveLength(1);
@@ -63,7 +64,7 @@ test('native plate arrow handlers wrap focus and selection; Enter/Space select w
   expect(port.getSnapshot().selected).toBe(port.getSnapshot().visuals[1]?.visual.visual_id);
 });
 
-test('a draft is mirrored only inside the selected art and the shell supplies exactly one hold control', async () => {
+test('a draft moves to Preview and the shell still supplies exactly one hold control', async () => {
   const queue = new ProposalQueue();
   await new SimulatedSteward(queue).ask('test fire 50 gifts', { surface: 'room', chamber: 'visuals' });
   const port = createBeaconsPreview();
@@ -75,9 +76,12 @@ test('a draft is mirrored only inside the selected art and the shell supplies ex
     expect(html.match(/aria-label="Seal slot"/g)).toHaveLength(1);
     expect(html.match(/aria-label="Hold to seal and proclaim"/g)).toHaveLength(1);
     expect(html.match(/data-proposal-layer=/g)).toHaveLength(1);
-    const selected = html.match(/<button[^>]*aria-checked="true"[\s\S]*?<\/button>/)?.[0] ?? '';
-    expect(selected).toContain('visuals-plate-art'); expect(selected).toContain('DRAFT · NOT ON AIR');
-    expect(selected).not.toContain('Hold to seal');
+    const preview = html.slice(html.indexOf('Preview '), html.indexOf('Program '));
+    expect(preview).toContain('Draft · revision 1 · not on air');
+    expect(html.slice(html.indexOf('Every beacon, every tier'))).toContain('DRAFT · NOT ON AIR');
+    expect(preview).not.toContain('Hold to seal');
+    const compact = html.slice(html.indexOf('visuals-plates--compact'), html.indexOf('visuals-drawer-trigger'));
+    expect(compact).not.toContain('data-proposal-layer');
   }
 });
 

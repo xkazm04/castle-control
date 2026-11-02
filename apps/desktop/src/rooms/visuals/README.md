@@ -1,5 +1,38 @@
 # Beacons · C Plates (WP 3.3 polish, 2026-10-30)
 
+## T3 WP4 Beacons chamber (2026-11-02)
+
+Both fixture and connected core pages compose `BeaconStage` through `BeaconDeck`
+onto the shared `ChamberLayout`. The stage computes playback once; its stream
+monitor fills the 16:9 picture and its unchanged readout sits in column 1.
+Preview summarizes existing pending drafts; full proposal fields stay in the
+drawer. Program shows the existing selected fixture reading or saved core
+configuration, with no invented live totals.
+
+- Column 1: selected beacon, blaze, gauge, generated sample-night sparkline,
+  input/decay chips, existing fixture gift-sub weighting as a native slider,
+  test fire, replay, halve decay, theme and tune controls. Core retains its
+  unavailable-live-total message; its model has no gift-weight setting.
+- Column 2: existing radio selection with the selected beacon's tiers open,
+  the other beacons compact, and the More of the beacons drawer trigger.
+- Drawer: every beacon and every tier, full draft fields, generated night
+  replay, bench, input/appearance controls, curve editor, local/core test fires,
+  browser-source copy, timeline, virtualized contribution feeds and original
+  seal slot. Core additionally retains configuration/art/live-feed tools.
+
+Closed drawer tools are pre-rendered hidden and inert, as the old disclosure
+was. Opening presents them through the shared Drawer with focus return. No
+room-owned key badges, shell controls, shortcuts or live transports were added.
+All generated sample pictures, readings and replay data remain SIMULATED.
+
+`deck.test.tsx` exercises the real fixture/core frame, two columns, minis,
+drawer opening/closing, reachable tools and existing weighting/decay handlers.
+`room.test.tsx` and `plates.test.tsx` retain comparison, draft, tier and workbench
+coverage at their new locations. `e2e/journey-beacons.spec.ts` updates the room
+selectors, keeps all existing journeys, and adds 1280x720 / 1366x768 fit and
+full-tier drawer checks. Browser-host access was unavailable during this port;
+those visual/interactive browser checks still require a Director run.
+
 ## Illuminated picture and Steward flows (night UX, 2026-11-02)
 
 The fixture room is one picture (`stage.tsx`): the selected beacon on a stream
@@ -16,8 +49,7 @@ in the shared queue; in core mode Tune and Replay call `beacons.visual.upsert`,
 Test fire calls `beacons.simulate`, and the demo sends one routed simulated burst.
 Picker cards (`plates.tsx`) draw the same screen look. The previous plates,
 bench, replay workbench, timeline, feeds and seal slot live behind **More**
-(it opens itself when a visuals proposal awaits a seal). The core room keeps its
-existing layout.
+(it opens itself when a visuals proposal awaits a seal). Both room modes now use the T3 chamber frame described above.
 
 
 ## Night replay (hackathon B10, 2026-10-31)
