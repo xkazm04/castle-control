@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { ChamberSection } from '@castle-control/ui/chamber';
 import type { CheckResult } from '@castle-control/contract';
 import { lotsCopy as copy } from '../../lots-copy.js';
 
@@ -19,30 +20,20 @@ export function StagePanel({ title, count, caption = copy.count_caption, draft =
   </section>;
 }
 
-export function RollPanel({ status, tone, counts, winners, winner_detail, held_out, cap, draft = false, simulated = false, children }: {
-  status: string; tone: RollTone; counts?: Readonly<Record<Cohort, number>> | undefined; winners: ReactNode; winner_detail: string;
-  held_out: ReactNode; cap: string; draft?: boolean; simulated?: boolean; children?: ReactNode;
+export function RollPanel({ status, tone, counts, count, draft = false, simulated = false }: {
+  status: string; tone: RollTone; counts?: Readonly<Record<Cohort, number>> | undefined; count?: number | undefined;
+  draft?: boolean; simulated?: boolean;
 }) {
-  return <section className="cc-panel lottery-roll" data-role="lot-roll-panel" aria-label={copy.roll} data-tone={tone}>
-    <div className="cc-panel__head">
-      <h2 className="cc-panel__title">{copy.roll}</h2>
-      {draft ? <span className="cc-stamp cc-stamp--draft">Draft · not sealed</span> : simulated ? <span className="cc-sim">Simulated</span> : null}
-    </div>
-    <div className="cc-panel__body lottery-roll-body">
+  return <ChamberSection title={copy.roll} aside={draft ? 'Draft · not sealed' : simulated ? <span className="cc-sim">Simulated</span> : undefined}>
+    <div className="lottery-roll" data-role="lot-roll-panel" data-tone={tone}>
       <p className="lottery-roll-status" role="status"><i className="cc-lozenge" aria-hidden="true" />{status}</p>
+      {counts && <div className="lottery-cohort-bar" aria-hidden="true">{cohorts.map(cohort =>
+        <i key={cohort} data-cohort={cohort} style={{ flex: counts[cohort] }} />)}</div>}
       {counts && <ul className="lottery-roll-legend" data-role="lot-legend" aria-label={copy.dots}>{cohorts.map(cohort =>
         <li key={cohort} data-cohort={cohort}><i className="cc-swatch" aria-hidden="true" />{copy.cohorts[cohort]} <b>{counts[cohort]}</b></li>)}</ul>}
-      <ul className="lottery-roll-figs" aria-label="Headline figures">{[
-        { value: winners, label: copy.winners, detail: winner_detail, wide: false },
-        { value: held_out, label: copy.held_out, detail: copy.by_cooldown, wide: false },
-        { value: cap, label: copy.raider_cap, detail: copy.of_winners, wide: true },
-      ].map(stat => <li className="cc-readout cc-readout--jewel" data-role="lot-stat" key={stat.label}>
-        <span className={`cc-jewel${stat.wide ? ' cc-jewel--wide' : ''}`}>{stat.value}</span>
-        <span className="cc-readout__label">{stat.label}</span><span className="cc-readout__sub">{stat.detail}</span>
-      </li>)}</ul>
-      {children}
+      <p className="lottery-roll-total"><b>{count ?? '—'}</b> lots · eligible</p>
     </div>
-  </section>;
+  </ChamberSection>;
 }
 
 const stamp: Record<CheckResult, string> = { ok: 'ok', warn: 'held', blocked: 'blocked' };
@@ -65,9 +56,9 @@ export function countCohorts(entries: readonly { cohort?: Cohort | undefined }[]
   return counts;
 }
 
-/** Rarely used tools sit behind one disclosure under the hall. */
+/** Tools start expanded inside the detail drawer; their original grouping remains collapsible. */
 export function MoreTools({ children, label = 'More · tools for this draw' }: { children: ReactNode; label?: string }) {
-  return <details className="cc-disclosure lottery-more" data-role="lot-more">
+  return <details open className="cc-disclosure lottery-more" data-role="lot-more">
     <summary>{label}</summary>
     <div className="lottery-more-body">{children}</div>
   </details>;

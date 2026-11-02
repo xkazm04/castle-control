@@ -7,6 +7,7 @@ import { lotsCopy as copy } from '../../lots-copy.js';
 import { fixtureDraws } from '../../lots-fixture.js';
 import type { Snapshot } from '../../model.js';
 import { shellStewardPort } from '../../shell/core-steward.js';
+import { readLotDrawer } from './drawer-test.jsx';
 import Room from '../../shell/room.jsx';
 
 const launch = { mode: 'core', endpoint: 'http://127.0.0.1:3210/', session_token: 'a'.repeat(64) } as const;
@@ -19,8 +20,11 @@ beforeEach(clearProposals);
 afterEach(() => { clearProposals(); vi.unstubAllGlobals(); });
 
 async function render(snapshot: Snapshot, connection?: StewardConnection) {
-  const stream = await renderToReadableStream(<Room chamber="lottery" replay={false} snapshot={snapshot}
-    {...(connection ? { connection } : {})} origin="keep" on_open={vi.fn()} on_back={vi.fn()} />);
+  const room = <Room chamber="lottery" replay={false} snapshot={snapshot}
+    {...(connection ? { connection } : {})} origin="keep" on_open={vi.fn()} on_back={vi.fn()} />;
+  const port = coreLotsConnection(snapshot)?.port;
+  if (port) return (await readLotDrawer(port, room)).replace(/<!--.*?-->/g, '');
+  const stream = await renderToReadableStream(room);
   await stream.allReady;
   return (await new Response(stream).text()).replace(/<!--.*?-->/g, '');
 }

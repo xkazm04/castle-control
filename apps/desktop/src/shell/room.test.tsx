@@ -4,9 +4,10 @@ import type { ButtonHTMLAttributes, KeyboardEvent, ReactElement, ReactNode } fro
 import { renderToReadableStream, renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, expect, test, vi } from 'vitest';
 import { ProposalCard, SealButton, sealHoldDurationMs } from '@castle-control/ui';
-import { ProposalQueue, SimulatedSteward } from '@castle-control/ui/steward';
+import { ProposalQueue, SimulatedSteward, proposalQueue } from '@castle-control/ui/steward';
 import SealSlot, { sealRoomProposal } from '../rooms/seal-slot/index.jsx';
-import { draftRoll } from '../rooms/lottery/session.js';
+import { readLotDrawer } from '../rooms/lottery/drawer-test.jsx';
+import { draftRoll, lotterySession } from '../rooms/lottery/session.js';
 import ModeratorRoom from '../rooms/moderator/index.jsx';
 import { coreGatehouseConnection, coreLotsConnection, createDesktopClient } from '../client.js';
 import { fixtureCharts, fixtureHeld, fixtureRules } from '../moderation-fixture.js';
@@ -24,7 +25,13 @@ test('all room headers hold the compact title, function, room links and origin B
     const stream = await renderToReadableStream(<Room chamber={chamber} replay={false}
       snapshot={{ mode: 'fixture', phase: 'ready' }} origin="overview" on_open={vi.fn()} on_back={vi.fn()} />);
     await stream.allReady;
-    const markup = await new Response(stream).text();
+    let markup = await new Response(stream).text();
+    if (chamber === 'lottery') {
+      expect(markup).toContain('>The writ and draw tools</button>');
+      expect(markup).not.toContain('aria-label="Seal slot"');
+      markup = await readLotDrawer(lotterySession(proposalQueue).port, <Room chamber="lottery" replay={false}
+        snapshot={{ mode: 'fixture', phase: 'ready' }} origin="overview" on_open={vi.fn()} on_back={vi.fn()} />);
+    }
     const header = markup.match(/<header class="shell-room-header"[\s\S]*?<\/header>/)?.[0]?.replace(/<!--.*?-->/g, '') ?? '';
     expect(header).toContain(`data-role="room-title-name">${title}</h1>`);
     expect(header).toContain(description);
@@ -40,7 +47,7 @@ test('all room headers hold the compact title, function, room links and origin B
     expect(markup.match(/aria-label="Seal slot"/g)).toHaveLength(1);
     expect(markup).toMatch(slot_context);
     if (chamber === 'lottery') {
-      const order = ['class="cc-hall"', 'class="cc-desk"', 'data-role="lot-more"',
+      const order = ['class="cc-chamber-layout"', 'class="cc-chamber-column"', 'role="dialog"', 'data-role="lot-more"',
         'aria-label="Entry lookup"', 'aria-label="Saved simulated proof bundle"', 'aria-label="Seal slot"', 'class="cc-numbered-discs"']
         .map(marker => markup.indexOf(marker));
       expect(order[0]).toBeGreaterThan(0);
@@ -75,7 +82,12 @@ test.each([
   const stream = await renderToReadableStream(<Room chamber={chamber} replay={false} snapshot={fixture}
     origin="overview" on_open={vi.fn()} on_back={vi.fn()} />);
   await stream.allReady;
-  const markup = await new Response(stream).text();
+  let markup = await new Response(stream).text();
+  if (chamber === 'lottery') {
+    expect(markup).toContain('>The writ and draw tools</button>');
+    markup = await readLotDrawer(lotterySession(proposalQueue).port, <Room chamber="lottery" replay={false} snapshot={fixture}
+      origin="overview" on_open={vi.fn()} on_back={vi.fn()} />);
+  }
   const slot = markup.slice(markup.indexOf('aria-label="Seal slot"'));
   expect(slot).toContain(`aria-label="${label} design"`);
   expect(slot).toContain('>Restyle</button>');
@@ -263,7 +275,13 @@ test('lazy Room preserves its props contract, slot and replay link; core mode ex
       origin="overview" on_open={vi.fn()} on_back={vi.fn()} />);
     await stream.allReady;
     const markup = await new Response(stream).text();
-    expect(markup).toContain('aria-label="Seal slot"');
+    if (chamber === 'lottery') {
+      expect(markup).toContain('>The writ and draw tools</button>');
+      const drawer = await readLotDrawer(lotterySession(proposalQueue).port, <Room chamber="lottery" replay={false} snapshot={fixture}
+        origin="overview" on_open={vi.fn()} on_back={vi.fn()} />);
+      expect(drawer).toContain('role="dialog"');
+      expect(drawer).toContain('aria-label="Seal slot"');
+    } else expect(markup).toContain('aria-label="Seal slot"');
     expect(markup).toContain('Back to the overview');
     expect(markup).not.toContain('generated fixtures only');
     if (chamber === 'visuals') expect(markup).toContain('60 offerings');
@@ -326,7 +344,12 @@ test('fixture launch mounts the existing Lot preview, proposal slot and saved si
   const stream = await renderToReadableStream(<Room chamber="lottery" replay={false} snapshot={client.getSnapshot()}
     origin="keep" on_open={vi.fn()} on_back={vi.fn()} />);
   await stream.allReady;
-  const markup = await new Response(stream).text();
+  const closed = await new Response(stream).text();
+  expect(closed).toContain('>The writ and draw tools</button>');
+  expect(closed).not.toContain('Saved simulated proof bundle');
+  const markup = await readLotDrawer(lotterySession(proposalQueue).port, <Room chamber="lottery" replay={false} snapshot={client.getSnapshot()}
+    origin="keep" on_open={vi.fn()} on_back={vi.fn()} />);
+  expect(markup).toContain('role="dialog"');
   expect(markup).toContain('data-role="lot-draw-card"');
   expect(markup).toContain('Saved simulated proof bundle');
   expect(markup).toContain('aria-label="Seal slot"');
@@ -353,9 +376,15 @@ test('core launch mounts the connected Lots view and never renders simulated con
   expect(port).toBeDefined(); await port?.load();
   const markup = await render();
   expect(markup).toContain('data-role="lot-draw-card"'); expect(markup).toContain('Questions for the hall');
-  expect(markup).toContain('Twitch user ID'); expect(markup).toContain('aria-label="Hold to seal"');
+  expect(markup).toContain('>The writ and draw tools</button>');
+  if (!port) throw new Error('Missing core Lots port');
+  const drawer = await readLotDrawer(port, <Room chamber="lottery" replay={false} snapshot={snapshot}
+    origin="keep" on_open={vi.fn()} on_back={vi.fn()} />);
+  expect(drawer).toContain('role="dialog"');
+  expect(drawer).toContain('Twitch user ID'); expect(drawer).toContain('aria-label="Hold to seal"');
   for (const simulated of ['SIMULATED', 'Saved simulated proof', 'Writ templates', 'Recompute fixture', '>Restyle</button>', '>Custom design</button>', 'data-lot-dot']) {
     expect(markup).not.toContain(simulated);
+    expect(drawer).not.toContain(simulated);
   }
   expect(rpc.mock.calls.map(call => call[2])).toEqual(['lots.draw.list', 'lots.draw.check']);
   expect(fetch).not.toHaveBeenCalled(); expect(socket).not.toHaveBeenCalled();

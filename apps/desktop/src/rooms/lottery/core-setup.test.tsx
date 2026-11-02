@@ -7,13 +7,14 @@ import { fixtureDraws } from '../../lots-fixture.js';
 import { lotsCopy as copy } from '../../lots-copy.js';
 import { createCoreLotsPort } from '../../lots-core.js';
 import { CoreDrawSetup, coreSetupCandidate, editStands } from './core-setup.jsx';
+import { renderLotDrawer } from './drawer-test.jsx';
 import { ConnectedLotsRoom } from './core.jsx';
 
-type Props = { children?: ReactNode; id?: string; value?: string | number; disabled?: boolean; onClick?: () => void; on_save?: (draw: LotsDraw) => void;
+type Props = { children?: ReactNode; tools?: ReactNode; id?: string; value?: string | number; disabled?: boolean; onClick?: () => void; on_save?: (draw: LotsDraw) => void;
   onChange?: (event: ChangeEvent<HTMLInputElement & HTMLSelectElement>) => void };
 function elements(tree: ReactNode): Props[] {
   const found: Props[] = [];
-  Children.forEach(tree, child => { if (isValidElement<Props>(child)) found.push(child.props, ...elements(child.props.children)); });
+  Children.forEach(tree, child => { if (isValidElement<Props>(child)) found.push(child.props, ...elements(child.props.children), ...elements(child.props.tools)); });
   return found;
 }
 const draw = fixtureDraws[0] as LotsDraw;
@@ -88,7 +89,7 @@ test('the core room carries the rule draft, and one save is one upsert followed 
   await port.load();
   let setup: Props | undefined;
   function Probe() { const tree = ConnectedLotsRoom({ port }); setup = elements(tree).find(props => props.on_save); return tree; }
-  expect(renderToStaticMarkup(<Probe />)).toContain(copy.core_setup.title);
+  expect(renderLotDrawer(port, <Probe />)).toContain(copy.core_setup.title);
   const before = rpc.mock.calls.length;
   setup?.on_save?.({ ...draw, rules: { ...draw.rules, cooldown_s: 45 } });
   await vi.waitFor(() => expect(port.getSnapshot().busy).toBe(false));
