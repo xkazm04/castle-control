@@ -4,14 +4,14 @@ import { createCoreBeaconsPort } from '../../beacons-core.js';
 import { ConnectedBeacons } from './core.jsx';
 import { createBeaconsView } from './core-view.js';
 
-test('a rate_limited load renders a failure alert naming rate_limited and not the text No visuals loaded from the core.', async () => {
+test('a rate_limited load renders a failure alert naming rate_limited and not the empty-core text.', async () => {
   const port = createCoreBeaconsPort({ mode: 'core', endpoint: 'http://127.0.0.1:3210/', session_token: 'a'.repeat(64) },
     { rpc: vi.fn().mockRejectedValue({ code: 'rate_limited', message: 'Simulated failure', retry_after_ms: 500 }) });
   await port.load();
   const html = renderToStaticMarkup(<ConnectedBeacons port={port} />);
   expect(html).toMatch(/role="alert"[^>]*>[^<]*rate_limited/);
   expect(html).toContain('Refresh');
-  expect(html).not.toContain('No visuals loaded from the core.');
+  expect(html).not.toContain('No beacons in your core yet. Ask the Steward to light one.');
 });
 
 test.each(['rate_limited', 'unavailable', 'malformed'] as const)('%s refresh keeps the last confirmed list and selection, labels failure, then replaces it after recovery', async failure => {
@@ -42,7 +42,7 @@ test.each(['rate_limited', 'unavailable', 'malformed'] as const)('%s refresh kee
   expect(html).toMatch(/role="alert"[^>]*>[^<]*(rate_limited|unavailable)/);
   expect(html).toContain('Showing the last confirmed configurations.');
   expect(html).toContain('Synthetic first'); expect(html).toContain('Synthetic last');
-  expect(html).not.toContain('No visuals loaded from the core.');
+  expect(html).not.toContain('No beacons in your core yet. Ask the Steward to light one.');
   expect(html).not.toContain('Private simulated upstream prose');
   expect(html).toMatch(/<button disabled=""[^>]*>New visual<\/button>/);
   expect(html).toMatch(/<button[^>]*>Refresh Beacons<\/button>/);
@@ -51,17 +51,17 @@ test.each(['rate_limited', 'unavailable', 'malformed'] as const)('%s refresh kee
   expect(port.getSnapshot().visuals).toEqual([]);
   expect(port.getSnapshot().selected).toBeUndefined();
   const recovered = renderToStaticMarkup(<ConnectedBeacons port={port} />);
-  expect(recovered).toContain('No visuals loaded from the core.');
+  expect(recovered).toContain('No beacons in your core yet. Ask the Steward to light one.');
   expect(recovered).not.toContain('role="alert"');
   expect(recovered).not.toContain('Synthetic last');
   unsubscribe();
 });
 
-test('a successful empty list still renders No visuals loaded from the core.', async () => {
+test('a successful empty list still renders the empty-core text.', async () => {
   const port = createCoreBeaconsPort({ mode: 'core', endpoint: 'http://127.0.0.1:3210/', session_token: 'a'.repeat(64) },
     { rpc: async () => ({ visuals: [] }) });
   await port.load();
   const html = renderToStaticMarkup(<ConnectedBeacons port={port} />);
-  expect(html).toContain('No visuals loaded from the core.');
+  expect(html).toContain('No beacons in your core yet. Ask the Steward to light one.');
   expect(html).not.toContain('role="alert"');
 });

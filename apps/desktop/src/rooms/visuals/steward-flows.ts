@@ -18,6 +18,7 @@ import { proposeCurve } from './replay-proposal.js';
 import { fixtureBeacons } from './stage-state.js';
 import { flow_ids } from './stage-view.js';
 import { NightNarration } from './narration.jsx';
+import { lightFlow } from './core-flows.js';
 
 /**
  * The Beacons' Steward: four small flows over the room's own preview model. Each step only
@@ -30,6 +31,8 @@ type Access = {
   selected(): string | undefined;
   tune(visual: Visual, replay: string): Promise<void>;
   fire(visual_id: string, shot: (typeof shots)[number]): Promise<void>;
+  /** Core only: the saved visuals and a create through the same upsert path. */
+  visuals?(): readonly Visual[];
 };
 
 function fixtureAccess(): Access {
@@ -71,6 +74,7 @@ function coreAccess(snapshot: Snapshot): Access {
       await beacons.upsert({ visual });
       if (beacons.getSnapshot().phase === 'error') throw new Error('The core refused the visual.');
     },
+    visuals: () => port()?.getSnapshot().visuals ?? [],
     async fire(visual_id, shot) {
       const beacons = port();
       if (!beacons || !shot.source) throw new Error('Nothing to fire.');
@@ -199,7 +203,7 @@ function testFlow(access: Access) {
       await access.fire(item.visual.visual_id, shot);
       const after = findItem(access, item.visual.visual_id);
       return { say: `Fired ${shot.label.toLowerCase()} at the ${item.visual.name}.${after && !access.core ? ` It burns at ${percent(after.intensity)} now.` : ''}`,
-        lines: [{ label: 'Reached', value: 'This preview only · nothing on stream' }] };
+        lines: [{ label: 'Reached', value: access.core ? 'Your core simulation only · live totals and the stream unchanged' : 'This preview only · nothing on stream' }] };
     },
   });
 }
@@ -294,8 +298,8 @@ function demoFlow(access: Access) {
             ...(fit ? [{ id: 'fit', label: 'Fit it to nights like this', consequence: `It ${nightPhrase(nightTrace(fittedCurve(chosen.item.visual.curve, chosen.found.night), chosen.found.night))} instead · plays again above` }] : [])];
         },
         apply: (draft, id) => ({ ...draft, move: id === 'fit' ? 'fit' : 'keep' }) },
-      { id: 'seal', kind: 'confirm', label: 'Seal', prompt: 'Hold to seal. The curve is kept in this sample room only.',
-        note: 'SIMULATED demo. It changes the sample room only; nothing reaches OBS, chat or a viewer.',
+      { id: 'seal', kind: 'confirm', label: 'Seal', prompt: 'Hold to seal. The curve is kept in the demo sandbox only.',
+        note: 'Demo sandbox · SIMULATED · nothing touches your core. Nothing reaches OBS, chat or a viewer.',
         lines: draft => {
           const chosen = target(draft);
           return chosen ? [{ label: 'Beacon', value: chosen.item.visual.name }, ...nightLines(chosen.item, chosen.found.night, draft.move === 'fit')] : [];
@@ -307,15 +311,15 @@ function demoFlow(access: Access) {
       const { item, found } = chosen;
       const curve = draft.move === 'fit' ? fittedCurve(item.visual.curve, found.night, item.gift_weight) : item.visual.curve;
       const phrase = nightPhrase(nightTrace(curve, found.night, item.gift_weight));
-      // The demo always lands in the local sample room; in core mode it also sends one routed test burst.
-      await fixtureAccess().tune({ ...item.visual, curve }, `Demo · ${nightName(found.night)} · ${phrase}`);
-      const core = access.core ? access.items().find(value => value.visual.input?.source === 'gift' || value.visual.input?.source === 'subscribe') : undefined;
-      const burst = core && shots.find(shot => shot.source === core.visual.input?.source);
-      if (core && burst) await access.fire(core.visual.visual_id, burst);
+      // The demo lands in the local sandbox only. In core mode it never calls the core and
+      // records nothing in the proposal queue: the core room returns exactly as it was.
+      if (access.core) { const sandbox = fixtureBeacons(); sandbox.select(item.visual.visual_id); sandbox.curve(curve); }
+      else await fixtureAccess().tune({ ...item.visual, curve }, `Demo · ${nightName(found.night)} · ${phrase}`);
       return { say: `That was the demo. On the ${nightName(found.night).toLowerCase()} the ${item.visual.name.toLowerCase()} ${phrase}. What you saw: support builds the glow and quiet lets it cool, so viewers feel the room’s energy without anyone reading a number. Next: tune a beacon for your channel, or test fire one.`,
-        lines: [{ label: 'Kept', value: 'In the sample room only · SIMULATED' },
-          ...(core && burst ? [{ label: 'Core', value: `One simulated ${burst.label.toLowerCase()} sent to ${core.visual.name}` }] : [])],
-        chips: [{ label: 'Tune a beacon', action: { kind: 'flow', chamber: 'visuals', flow: flow_ids.tune } },
+        lines: [{ label: 'Kept', value: 'In the demo sandbox only · SIMULATED' },
+          ...(access.core ? [{ label: 'Your core', value: 'Untouched · back on your own beacons' }] : [])],
+        chips: [...(access.core && !access.items().length ? [{ label: 'Light a beacon', action: { kind: 'flow' as const, chamber: 'visuals' as const, flow: 'visuals-light' } }] : []),
+          { label: 'Tune a beacon', action: { kind: 'flow', chamber: 'visuals', flow: flow_ids.tune } },
           { label: 'Test fire', action: { kind: 'flow', chamber: 'visuals', flow: flow_ids.test } }] };
     },
   });
@@ -325,8 +329,16 @@ export function visualsSteward(snapshot: Snapshot): ChamberSteward {
   const access = beaconsAccess(snapshot);
   const base = roomSteward('visuals', snapshot, ['beacon', 'beacons', 'visual', 'altar', 'overlay', 'frame', 'border', 'blaze']);
   const selected = findItem(access, access.selected());
+  const flows = [tuneFlow(access), testFlow(access), replayFlow(access)];
+  if (access.core) {
+    const light = lightFlow({ visuals: () => access.visuals?.() ?? [], save: visual => access.tune(visual, 'Lit with the Steward') });
+    // An empty core leads with the one flow that can change that.
+    if (access.items().length) flows.push(light); else flows.unshift(light);
+  }
   return { ...base,
-    greeting: selected ? `The Beacons: support changes how the stream looks. The ${selected.visual.name.toLowerCase()} is on screen${access.core ? '' : ` at ${percent(curveIntensity(selected.visual.curve, selected.total))} blaze`}. Tune it, test fire it, or play the demo; nothing acts until you hold to seal.`
+    greeting: access.core && !access.items().length
+      ? 'The Beacons: support changes how the stream looks. Your core has no beacon yet: light your first one, or play the demo to see one at work. Nothing acts until you hold to seal.'
+      : selected ? `The Beacons: support changes how the stream looks. The ${selected.visual.name.toLowerCase()} is on screen${access.core ? '' : ` at ${percent(curveIntensity(selected.visual.curve, selected.total))} blaze`}. Tune it, test fire it, or play the demo; nothing acts until you hold to seal.`
       : base.greeting,
-    flows: [tuneFlow(access), testFlow(access), replayFlow(access)], demo: demoFlow(access) };
+    flows, demo: demoFlow(access) };
 }

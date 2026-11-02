@@ -5,6 +5,7 @@ import { createCoreBeaconsPort } from '../../beacons-core.js';
 import type { BeaconsNetwork } from '../../beacons-core.js';
 import { beaconsCopy } from '../../beacons-copy.js';
 import { ConnectedBeacons } from './core.jsx';
+import { CoreBench } from './core-bench.jsx';
 import { controls, submitEvent } from './test-controls.jsx';
 
 async function harness(input?: VisualInput) {
@@ -29,7 +30,7 @@ test('custom burst select defaults to the selected visual\'s input source (chann
 test('a gift quick fire on a channel_points visual renders a status naming the route and saying live gifts will not move it', async () => {
   const { port, rpc } = await harness({ source: 'channel_points', unit: 'points' });
   function Probe() {
-    const tree = ConnectedBeacons({ port });
+    const tree = CoreBench({ port, state: port.getSnapshot() });
     const button = controls(tree).find(item => item.children === beaconsCopy.fire_gifts || item.children === 'Simulate 50 gift subs');
     if (!button?.onClick) throw new Error('Missing gift quick fire');
     button.onClick(); return tree;
@@ -57,7 +58,7 @@ test('off-route custom bursts send no simulation to the core or OBS', async () =
     constructor() { super(); this.set('source', 'gift'); this.set('amount', '50'); }
   });
   function Probe() {
-    const tree = ConnectedBeacons({ port });
+    const tree = CoreBench({ port, state: port.getSnapshot() });
     const form = controls(tree).find(item => item.onSubmit);
     if (!form?.onSubmit) throw new Error('Missing burst form');
     void form.onSubmit(submitEvent()); return tree;
@@ -86,7 +87,7 @@ test.each(['gift', 'subscribe', 'cheer'] as const)('matching %s quick or custom 
     constructor() { super(); this.set('source', source); this.set('amount', '20'); }
   });
   function Probe() {
-    const tree = ConnectedBeacons({ port });
+    const tree = CoreBench({ port, state: port.getSnapshot() });
     const all = controls(tree);
     if (source === 'cheer') void all.find(item => item.onSubmit)?.onSubmit?.(submitEvent());
     else all.find(item => item.children === (source === 'gift' ? beaconsCopy.fire_gifts : beaconsCopy.fire_sub))?.onClick?.();

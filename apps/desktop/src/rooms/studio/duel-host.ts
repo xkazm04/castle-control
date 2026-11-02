@@ -42,3 +42,21 @@ export async function runCore(action: TiltyardAction): Promise<void> {
 
 /** Demo tournaments run under this key, so the stage can mark them DEMO in both modes. */
 export const DEMO_KEY = 'duel-demo';
+
+/**
+ * The demo sandbox: in core mode Play demo runs the fixture engine on this
+ * machine and the stage shows it instead of the core tournament, which is
+ * never touched. It ends when the demo crowns its champion or the streamer
+ * leaves it; the stage then shows the core again.
+ */
+let sandbox = false;
+const sandbox_listeners = new Set<() => void>();
+export const duelSandbox = {
+  active: () => sandbox,
+  set(next: boolean) {
+    if (next === sandbox) return;
+    sandbox = next;
+    for (const listener of [...sandbox_listeners]) listener();
+  },
+  subscribe(listener: () => void) { sandbox_listeners.add(listener); return () => { sandbox_listeners.delete(listener); }; },
+};

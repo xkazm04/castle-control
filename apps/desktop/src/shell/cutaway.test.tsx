@@ -90,7 +90,7 @@ test('Overview and shell use one mapping for pending drafts, torn drafts, Progra
   proposalQueue.tearUp(draft.id);
   expect(states.stripStates(snapshot, proposalQueue.getSnapshot().proposals, [aired]).lottery.line).toBe(`${draft.title} · simulated Program`);
   const core = states.stripStates({ mode: 'core', phase: 'ready' }, [], []);
-  expect(core.lottery.line).toBe('Draw status unavailable');
+  expect(core.lottery.line).toBe('No draw read yet · ask the Steward to set one up');
   expect(core.moderator.on_air).toBe(false);
 });
 

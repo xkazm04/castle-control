@@ -62,7 +62,14 @@ export function routeStewardTurn(turn: StewardTurn, current: ModuleId | Surface,
   if (turn.focus?.chamber) {
     select(turn.focus.chamber);
     if (current !== 'overview') open(turn.focus.chamber);
-  } else if (current === 'keep') overview();
+  } else if (current === 'keep' && turn.proposals.length > 0) overview();
+  // Text the engine did not recognise moves nobody: the streamer stays where they are.
+}
+
+/** The one fallback for text nothing matched: stay in place and offer this chamber's own chips. */
+export function unmatchedReply(name: string, chips: readonly string[]): string {
+  const offer = chips.length ? ` In ${name} I can: ${chips.join(', ')}.` : '';
+  return `I did not catch that, and nothing has changed.${offer} Pick one below, or say it in a few words.`;
 }
 
 /** Review uses the room's existing guarded seal/tear paths, never a second authorization control. */
@@ -94,6 +101,11 @@ export function ShellSteward({ context, chamber, snapshot = sampleSnapshot, conn
     // The existing engine (live core, or the offline simulated one) answers what no flow matched.
     const turn = await stewardConversation.ask(text, stewardContext(context), port);
     routeStewardTurn(turn, context, on_select, on_open, on_overview);
+    if (!live && !turn.focus && turn.proposals.length === 0) {
+      const steward = registry[chamber ?? flowChamber(context)];
+      const chips = [...steward.flows.map(flow => flow.chip ?? flow.title), ...(steward.demo ? ['Play demo'] : [])].map(label => label.toLowerCase());
+      return { reply: unmatchedReply(steward.name, chips) };
+    }
     return { reply: turn.reply, ...(live ? { live: true } : {}) };
   }
   return <StewardDock chamber={chamber ?? flowChamber(context)} registry={registry} mode={live ? 'live' : 'simulated'}

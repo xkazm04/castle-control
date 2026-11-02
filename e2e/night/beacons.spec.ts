@@ -19,12 +19,15 @@ test('Beacons: create, tune and test-fire in the UI, then /beacons/{id} updates 
     await context.grantPermissions(['clipboard-read', 'clipboard-write'], { origin: SHELL_ORIGIN });
     await core.openDesktop(page, viteOrigin(), '#/chamber/visuals');
     const room = page.getByRole('region', { name: 'Core Beacons', exact: true });
+    // An empty core shows the Steward's way in; the full workbench lives behind More.
+    await expect(room.getByRole('heading', { name: 'No beacon yet', exact: true })).toBeVisible();
+    await room.locator('.visuals-more > summary').click();
     await room.getByRole('textbox', { name: 'Visual ID', exact: true }).fill(VISUAL);
     await room.getByRole('textbox', { name: 'Visual name', exact: true }).fill('SIMULATED night beacon');
     await room.getByRole('combobox', { name: 'Art style', exact: true }).selectOption({ label: 'Heraldic altar' });
     await room.getByRole('combobox', { name: 'Driven by', exact: true }).selectOption({ label: 'Bits cheer' });
     await room.getByRole('button', { name: 'Save visual to core', exact: true }).click();
-    await expect(room.getByText('Visual configuration saved by the core.', { exact: true })).toBeVisible();
+    await expect(room.locator('.visuals-more').getByText('Visual configuration saved by the core.', { exact: true })).toBeVisible();
 
     // Tune: full intensity at 20 bits instead of 50.
     const curve = room.getByRole('form', { name: 'Kindling curve editor', exact: true });

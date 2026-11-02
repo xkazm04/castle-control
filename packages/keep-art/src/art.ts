@@ -5,13 +5,14 @@ import { gatehouseRoom } from './room-gatehouse.js';
 import { heraldRoom } from './room-herald.js';
 import { lotsRoom } from './room-lots.js';
 import { stewardRoom } from './room-steward.js';
-import { studioRoom } from './room-studio.js';
+import { duelRoom, studioRoom } from './room-studio.js';
 import type { ArtNode } from './types.js';
 
-export function keepRoomsArt(): readonly ArtNode[] {
+/** `map: 'duel'` draws the Map Room as the desktop's chat duel; the default keeps the sand table the site's hex toy uses. */
+export function keepRoomsArt(options: { map?: 'table' | 'duel' } = {}): readonly ArtNode[] {
   return [
     ...heraldRoom(), ...gatehouseRoom(), ...lotsRoom(),
-    ...studioRoom(), ...beaconsRoom(), ...stewardRoom(),
+    ...(options.map === 'duel' ? duelRoom() : studioRoom()), ...beaconsRoom(), ...stewardRoom(),
   ];
 }
 

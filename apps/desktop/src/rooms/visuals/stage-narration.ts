@@ -31,12 +31,12 @@ export function narrate({ name, offerings, counted, trace, curve, position }: {
   if (position >= trace.duration_s) {
     if (trace.first_lit_s === undefined) return `End of the night. The ${name} never lit: this curve asks for more than the night gave.`;
     return trace.pinned_s > 0
-      ? `End of the night. The ${name} sat pinned at max for ${Math.max(1, Math.round(trace.pinned_s / 60))} min: offerings there changed nothing viewers could see.`
-      : `End of the night. The ${name} peaked at ${Math.round(trace.peak.intensity * 100)}% and was never pinned: every offering showed.`;
+      ? `End of the night. The ${name} sat at full blaze for ${Math.max(1, Math.round(trace.pinned_s / 60))} min: offerings there changed nothing viewers could see.`
+      : `End of the night. The ${name} peaked at ${Math.round(trace.peak.intensity * 100)}% and never reached full blaze: every offering showed.`;
   }
   const latest = recentOfferings(offerings, position, 8).find(index => counted.has(index));
   const offering = latest === undefined ? undefined : offerings[latest];
-  if (now.total >= top && top > 0) return `${at} · Pinned at max. Viewers see the ${name} at full blaze; more gifts change nothing until it cools.`;
+  if (now.total >= top && top > 0) return `${at} · Full blaze: viewers see the ${name} at its brightest; more gifts change nothing until it cools.`;
   if (offering && position - offering.t < 45) return `${at} · ${offeringText(offering)}. The ${name} swells to ${percent}%.`;
   if (now.intensity <= 0.005) return `${at} · Dark. Bits and points tick by, but only gift subs and subs feed the ${name} in this preview.`;
   if (curve.decay.kind === 'none') return `${at} · Quiet. The ${name} holds at ${percent}%: this curve never fades.`;

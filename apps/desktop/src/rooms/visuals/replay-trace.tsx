@@ -85,7 +85,7 @@ export function TraceFigure({ trace, before, offerings, counted, position, lit_i
         <line className="visuals-replay-playhead" x1={position / trace.duration_s * width} x2={position / trace.duration_s * width} y1="0" y2="140" />
       </svg>
       {trace.pinned.filter(band => band.to - band.from >= 120).map(band =>
-        <span key={band.from} className="visuals-replay-band-label" style={percent(band.from, trace.duration_s)}>pinned at max</span>)}
+        <span key={band.from} className="visuals-replay-band-label" style={percent(band.from, trace.duration_s)}>full blaze</span>)}
       {now_intensity !== undefined && <span className="visuals-replay-now-label" aria-hidden="true"
         style={{ left: `${share * 100}%`, top: `${y(now_intensity) / 140 * 100}%` }}
         data-edge={share > 0.92 ? 'end' : share < 0.04 ? 'start' : undefined}>{`${Math.round(now_intensity * 100)}%`}</span>}

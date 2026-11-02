@@ -82,12 +82,15 @@ export async function eventually<T>(read: () => Promise<T>, accept: (value: T) =
 /** Create a Beacons visual through the Beacons room UI. */
 export async function createVisualInUi(page: Page, visual_id: string, name: string): Promise<void> {
   const room = page.getByRole('region', { name: 'Core Beacons', exact: true });
+  // The core workbench sits behind More; the picture above is the Steward's way in.
+  const more = room.locator('details.visuals-more');
+  if (!await more.evaluate(node => node instanceof HTMLDetailsElement && node.open)) await more.locator('summary').click();
   await room.getByRole('textbox', { name: 'Visual ID', exact: true }).fill(visual_id);
   await room.getByRole('textbox', { name: 'Visual name', exact: true }).fill(name);
   await room.getByRole('combobox', { name: 'Art style', exact: true }).selectOption({ label: 'Heraldic altar' });
   await room.getByRole('combobox', { name: 'Driven by', exact: true }).selectOption({ label: 'Bits cheer' });
   await room.getByRole('button', { name: 'Save visual to core', exact: true }).click();
-  await expect(room.getByText('Visual configuration saved by the core.', { exact: true })).toBeVisible();
+  await expect(more.getByText('Visual configuration saved by the core.', { exact: true })).toBeVisible();
 }
 
 /** In #/stream, hold to add one output row as an OBS browser source, and return its notice once settled. */

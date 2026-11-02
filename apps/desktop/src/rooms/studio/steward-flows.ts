@@ -4,7 +4,7 @@ import { defineFlow, stewardDock } from '@castle-control/ui/steward-flow';
 import type { ChamberSteward, FlowLine, StewardFlow } from '@castle-control/ui/steward-flow';
 import type { Snapshot } from '../../model.js';
 import { roomSteward } from '../../shell/steward-room.js';
-import { DEMO_KEY, duelHost, runCore } from './duel-host.js';
+import { DEMO_KEY, duelHost, duelSandbox, runCore } from './duel-host.js';
 import { draftPicture, entryIds, parseEntries, pictureLine, roundName } from './duel-model.js';
 import type { DuelDraft, DuelEntry } from './duel-model.js';
 
@@ -52,10 +52,11 @@ function draftLines(draft: DuelDraft, mode: Mode): FlowLine[] {
 }
 
 async function startDuel(draft: DuelDraft, mode: Mode) {
-  if (mode === 'core') {
+  // The demo always runs in the local sandbox; in core mode the core tournament is never touched.
+  if (draft.demo && mode === 'core') duelSandbox.set(true);
+  if (mode === 'core' && !draft.demo) {
     const { draftTournament } = await import('./duel-actions.js');
     await runCore(draftTournament(draft, keyFor(draft)));
-    if (draft.demo) await runCore({ kind: 'speed' });
     return;
   }
   const { fixtureDuel } = await import('./duel-fixture.js');
@@ -185,8 +186,10 @@ function closeDemoWhenCrowned() {
     started = true;
     if (picture.phase !== 'done' || !picture.champion) return;
     watching?.(); watching = undefined;
+    // Leave the champion on the stage a moment, then the room shows the core again.
+    if (duelSandbox.active()) setTimeout(() => { duelSandbox.set(false); }, 4000);
     stewardDock.say({ chamber: 'studio', who: 'steward', simulated: true, sealed: true,
-      text: `Champion: ${picture.champion.title}. What you saw: chat settled the question in ${picture.matches} matches, one vote per viewer, and lines the Gatehouse barred never counted. Next: start a duel with your own question, or put it on stream.`,
+      text: `Champion: ${picture.champion.title}. What you saw: chat settled the question in ${picture.matches} matches, one vote per viewer, and lines the Gatehouse barred never counted. Next: start a duel with your own question, or put it on stream.${duelSandbox.active() ? ' Your core was never touched; the stage shows it again in a moment.' : ''}`,
       chips: [{ label: 'Start a duel', action: { kind: 'flow', chamber: 'studio', flow: 'studio-duel' } },
         { label: 'Show the duel on stream', action: { kind: 'flow', chamber: 'studio', flow: 'studio-duel-stream' } }] });
   };
@@ -204,11 +207,10 @@ function buildDemo(mode: Mode): StewardFlow<DuelDraft> {
         prompt: 'Above is the first match, marked DRAFT. Once you start it: ballots arrive and the tally moves, the window closes, the verdict lands, and the next match opens until a champion is crowned.',
         lines: draft => [{ label: 'Question', value: draft.prompt ?? draft.title },
           { label: 'Contestants', value: `${draft.entries.length} · ${shape(draft.entries.length)}` },
-          { label: 'Ballots', value: mode === 'core' ? 'SIMULATED, counted by the core after the Gatehouse' : 'SIMULATED · generated on this machine' },
-          { label: 'Length', value: mode === 'core' ? 'About a minute on the core clock' : 'About thirty seconds' }] },
+          { label: 'Ballots', value: 'SIMULATED · generated on this machine' },
+          { label: 'Length', value: 'About thirty seconds' }] },
       { id: 'seal', kind: 'confirm', label: 'Play', prompt: 'Hold to start the demo, then just watch the stage.',
-        note: mode === 'core' ? 'SIMULATED demo on the core: it replaces any tournament there and counts only what the Gatehouse passes.'
-          : 'SIMULATED: generated ballots on this machine. Nothing reaches chat or OBS.',
+        note: 'Demo sandbox · SIMULATED · nothing touches your core. Generated ballots on this machine; nothing reaches chat or OBS.',
         lines: draft => [{ label: 'Contestants', value: draft.entries.map(entry => entry.title).join(' · ') }] },
     ],
     seal: async draft => {

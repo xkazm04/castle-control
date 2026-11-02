@@ -22,6 +22,7 @@ import { rehearseCopy } from './rehearse-copy.js';
 import { useRehearse } from './use-rehearse.js';
 import { sizeChoices } from './rehearse-state.js';
 import { duelDraftFlows } from './steward-flows.js';
+import { duelHost, duelSandbox } from './duel-host.js';
 import type { DuelDraft } from './duel-model.js';
 import './room.css';
 import './room-chrome.css';
@@ -125,6 +126,8 @@ export function MoreMenu({ view, on_view }: { view: RoomView; on_view: (view: Ro
   </div>;
 }
 
+const fixtureDemo = () => { const picture = duelHost.picture(); return picture?.demo === true && picture.source === 'fixture'; };
+
 export default function StudioRoom({ snapshot, seal_slot }: { snapshot: Snapshot; seal_slot?: ReactNode }) {
   const [view, setView] = useState<RoomView>('duel');
   const publication = useStewardDraft('studio');
@@ -133,8 +136,14 @@ export default function StudioRoom({ snapshot, seal_slot }: { snapshot: Snapshot
   // A duel draft takes the stage, wherever the room was.
   useEffect(() => { if (drafting) setView('duel'); }, [drafting]);
   const fixture = snapshot.mode === 'fixture';
-  const connection = fixture ? undefined : coreTiltyardConnection(snapshot);
-  if (!fixture && !connection) return <section className="studio-room studio-core" aria-label={copy.work} data-view="duel">
+  const sandboxed = useSyncExternalStore(duelSandbox.subscribe, duelSandbox.active, duelSandbox.active);
+  const demo_live = useSyncExternalStore(duelHost.subscribe, fixtureDemo, fixtureDemo);
+  // Play demo never touches the core: its draft and its run take the stage from the local sandbox.
+  const demo_draft = publication?.flow === 'studio-demo';
+  const sandbox = !fixture && (sandboxed || demo_draft);
+  const banner = view === 'duel' && (demo_draft || sandboxed || (fixture && demo_live));
+  const connection = fixture || sandbox ? undefined : coreTiltyardConnection(snapshot);
+  if (!fixture && !sandbox && !connection) return <section className="studio-room studio-core" aria-label={copy.work} data-view="duel">
     <EmptyState title={copy.bare} description={copy.unconfigured} />{seal_slot}
   </section>;
   const more = <MoreMenu view={view} on_view={setView} />;
@@ -147,6 +156,11 @@ export default function StudioRoom({ snapshot, seal_slot }: { snapshot: Snapshot
       <span className="studio-away__line">{view === 'proposals' ? copy.proposals_away : copy.local_line}</span>
       {more}
     </div>}
+    {banner && <p className="studio-sandbox" role="status" data-testid="duel-sandbox"><span className="cc-sim">Simulated</span>
+      <b>Demo sandbox · SIMULATED · nothing touches your core</b>
+      <span>{fixture ? 'Sample contestants and generated ballots on this machine.' : 'Your core tournament stays as it is and comes back when the demo ends.'}</span>
+      {sandboxed && !fixture && <button type="button" className="cc-btn cc-btn--sm cc-btn--quiet" onClick={() => duelSandbox.set(false)}>Back to your core</button>}
+    </p>}
     {duelish ? <Suspense fallback={<p className="studio-loading" role="status">{copy.loading}</p>}>
       <TiltyardView connection={connection} view={view === 'duel' ? 'duel' : view} draft={draft} tools={more} />
     </Suspense> : view === 'proposals' ? !seal_slot && <EmptyState title={copy.proposals_none} description={copy.proposals_away} />

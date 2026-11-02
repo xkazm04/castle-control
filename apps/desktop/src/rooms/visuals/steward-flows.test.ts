@@ -98,7 +98,7 @@ test('replay: the night choice shows how each night fares; a fit seals the fitte
   await replay.seal(view.draft);
   const fitted = fittedCurve(altar.visual.curve, 'gift_wave');
   expect(port.getSnapshot().visuals[0]?.visual.curve).toEqual(fitted);
-  expect(nightPhrase(nightTrace(fitted, 'gift_wave'))).not.toContain('pinned');
+  expect(nightPhrase(nightTrace(fitted, 'gift_wave'))).not.toContain('full blaze');
 });
 
 test('Play demo: a simulated night plays in the picture, the Steward narrates it, and the seal stays in the sample room', async () => {

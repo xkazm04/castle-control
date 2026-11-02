@@ -9,7 +9,7 @@ export const svgAttributes: Readonly<Record<string, keyof SVGProps<SVGElement>>>
   'stroke-width': 'strokeWidth', 'clip-path': 'clipPath', 'stop-color': 'stopColor',
   'stop-opacity': 'stopOpacity', 'font-family': 'fontFamily', 'font-size': 'fontSize',
   'font-weight': 'fontWeight', 'letter-spacing': 'letterSpacing', 'text-anchor': 'textAnchor',
-  'stroke-linejoin': 'strokeLinejoin', 'stroke-dasharray': 'strokeDasharray',
+  'stroke-linejoin': 'strokeLinejoin', 'stroke-linecap': 'strokeLinecap', 'stroke-dasharray': 'strokeDasharray',
   patternUnits: 'patternUnits', patternTransform: 'patternTransform',
 };
 
@@ -29,7 +29,7 @@ export function reactStyle(style: string): CSSProperties {
   return declarations;
 }
 
-export const keepTree = keepArt(keepRoomsArt());
+export const keepTree = keepArt(keepRoomsArt({ map: 'duel' }));
 type ArtProps = SVGProps<SVGElement>;
 const elements = new WeakMap<ArtNode, ReactElement<ArtProps>>();
 

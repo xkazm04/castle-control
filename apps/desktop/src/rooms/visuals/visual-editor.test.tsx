@@ -8,6 +8,7 @@ import type { BeaconsNetwork } from '../../beacons-core.js';
 import { createBeaconsPreview } from '../../beacons-model.js';
 import { fixtureVisuals } from '../../beacons-fixture.js';
 import { ConnectedBeacons } from './core.jsx';
+import { CoreBench } from './core-bench.jsx';
 import { VisualsWork } from './room.jsx';
 import { VisualEditor, VisualForm } from './visual-editor.jsx';
 import { StylePickerFields } from './style-picker.jsx';
@@ -115,7 +116,7 @@ test('after a confirmed create, ConnectedBeacons shows Edit visual configuration
   let props: EditorControl | undefined;
   function Probe() {
     const [step, setStep] = useState(0);
-    const tree = ConnectedBeacons({ port: h.port }); props = editorControl(tree);
+    const tree = CoreBench({ port: h.port, state: h.port.getSnapshot() }); props = editorControl(tree);
     if (step === 0) { controls(tree).find(item => item.children === 'New visual')?.onClick?.(); setStep(1); }
     if (step === 1) { expect(props.visual).toBeUndefined(); expect(props.on_saved).toBeDefined(); props.on_saved?.(); setStep(2); }
     return tree;
@@ -153,7 +154,7 @@ test('New visual after a confirmed create opens a blank editor again', async () 
   const h = await harness();
   function Probe() {
     const [step, setStep] = useState(0);
-    const tree = ConnectedBeacons({ port: h.port });
+    const tree = CoreBench({ port: h.port, state: h.port.getSnapshot() });
     const editor = editorControl(tree);
     if (step === 0 || step === 2) { controls(tree).find(item => item.children === 'New visual')?.onClick?.(); setStep(step + 1); }
     if (step === 1) { editor.on_saved?.(); setStep(2); }

@@ -13,6 +13,6 @@ export { gatehouseRoom } from './room-gatehouse.js';
 export { heraldRoom, heraldSample } from './room-herald.js';
 export { lotHandles, lotsRoom } from './room-lots.js';
 export { stewardRoom } from './room-steward.js';
-export { hexPaints, hexSeed, studioRoom } from './room-studio.js';
+export { duelRoom, hexPaints, hexSeed, studioRoom } from './room-studio.js';
 export { defs, overlays, sky, structure } from './art-shell.js';
 export { hexPoints, merlons, rectAttrs, wavy } from './shapes.js';

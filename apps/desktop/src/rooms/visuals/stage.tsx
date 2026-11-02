@@ -87,8 +87,12 @@ function Spark({ trace, position, label }: { trace: ReplayTrace; position: numbe
 }
 
 /** The chamber's one picture: the selected beacon as a viewer would see it on stream, live with any draft. */
-export function BeaconStage({ view, burst, actions, notice }: {
+export function BeaconStage({ view, burst, actions, notice, reading, eyebrow }: {
   view: StageView; burst: string; actions?: ReactNode; notice?: ReactNode;
+  /** Replaces the weighted-subs line at rest (core mode: no live total is read here). */
+  reading?: string;
+  /** A mark after the look's name (core mode: "In your core"). */
+  eyebrow?: string;
 }) {
   const { item } = view;
   const curve = item.visual.curve;
@@ -123,17 +127,18 @@ export function BeaconStage({ view, burst, actions, notice }: {
         </ol>}
         <span className="cc-sim visuals-monitor__sim">Simulated</span>
         {view.stamp && <span className="visuals-monitor__stamp">{view.stamp}</span>}
-        {pinned && view.mode === 'night' && <span className="visuals-monitor__pin">Pinned at max</span>}
+        {pinned && view.mode === 'night' && <span className="visuals-monitor__pin">At full blaze</span>}
       </div>
       <figcaption className="cc-sr">{`${item.visual.name} as viewers would see it · ${percent}% blaze · simulated`}</figcaption>
     </figure>
     <div className="visuals-stage__read">
-      <p className="visuals-stage__eyebrow">{look.label}{view.mode !== 'rest' && <b> · {view.flow === 'visuals-demo' ? 'demo' : 'draft'}</b>}</p>
+      <p className="visuals-stage__eyebrow">{look.label}{eyebrow && view.mode === 'rest' && <b> · {eyebrow}</b>}{view.mode !== 'rest' && <b> · {view.flow === 'visuals-demo' ? 'demo' : 'draft'}</b>}</p>
       <h2 className="visuals-stage__name">{item.visual.name}</h2>
       <p className="visuals-stage__blaze" aria-live={view.mode === 'night' ? 'off' : 'polite'}>
         <b>{view.before !== undefined && <s>{Math.round(view.before * 100)}</s>}{percent}<small>%</small></b><span>blaze</span></p>
       <span className="cc-meter cc-meter--gilt visuals-stage__meter" aria-hidden="true"><i style={{ '--v': `${percent}%` } as CSSProperties} /></span>
-      <p className="visuals-stage__total">{now.total.toFixed(1)} weighted subs{at !== undefined ? ` · ${clockLabel(at)} of 48:00` : ''}</p>
+      <p className="visuals-stage__total">{reading !== undefined && view.mode !== 'night' ? reading
+        : `${now.total.toFixed(1)} weighted subs${at !== undefined ? ` · ${clockLabel(at)} of 48:00` : ''}`}</p>
       <div className="visuals-stage__spark">
         <Spark trace={spark} position={at} label={`${item.visual.name} across the ${sampleNight(view.spark).name.toLowerCase()} · ${nightPhrase(spark)} · simulated`} />
         <span>{sampleNight(view.spark).name} · {nightPhrase(spark)}</span>
