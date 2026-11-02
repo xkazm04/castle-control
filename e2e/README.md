@@ -161,3 +161,59 @@ pass. The combined harness retains exactly the two Director-identified main
 failures: nine routes versus eight expected, and the native/harness overlay CSP
 disagreement. Those tests and the harness policy are unchanged. No installs, git
 writes, live calls or browser runs were performed.
+
+## Headless (one-time)
+
+`pnpm e2e:headless` runs `e2e/headless.spec.ts` with `e2e/headless.config.ts`, once.
+It is not part of `pnpm gate`, `pnpm e2e` or the night lanes. The default e2e
+config also matches `*.spec.ts`, so the spec skips itself there: it starts no
+core unless the config's `metadata.lane` is `headless`.
+
+```powershell
+$env:CC_HEADLESS_EXE = "<repo>/target/debug/cc-headless.exe"   # optional; otherwise one cargo build
+pnpm --config.verify-deps-before-run=false e2e:headless
+```
+
+- Environment: `CC_HEADLESS_PORT` (default 5291) is the Vite port. `HEADLESS_OUT`
+  (default `target/e2e-headless`) receives `report.json` and `test-results/`.
+  Screenshots go to `e2e/screenshots/headless-*.png` and are git-ignored.
+- One serial suite on one core from `startCore()` (packages/headless), in order:
+  1. Library: `rehearsal_start`, `rehearsal_crowd_set` `{per_minute: 120}`,
+     `rehearsal_scenario_run` `vote_round` and `lots_fill` (no network: drand is
+     reached only on seal/cast). Then it reads back `gatehouse_consensus_get`, the
+     SIMULATED draw from `lots_draw_list`, `overlay.snapshot` gatehouse
+     (`simulated: true`), `status_get` and `events.since`.
+  2. UI: the desktop UI in Chrome, in CORE mode, on the same endpoint and token
+     (`uiHandoff()`, in process only). It checks `#/rehearsal`,
+     `#/chamber/moderator` and `#/chamber/visuals`. The UI saves one visual,
+     headless fires it with `beacon_fire`, and the beacon and vote-bar overlay
+     pages show SIMULATED. Every screenshot is taken before the core closes.
+  3. Subprocess: `cc run -` (4 NDJSON lines, exit 0), `cc call gatehouse_ban_confirm`
+     (refused locally, exit 2), and `cc-mcp` over stdio (27 tools, two calls, exit 0
+     after stdin closes). No captured output may contain a 64-hex string.
+  4. Teardown: the session closes and no `cc-headless-*` temp root is left.
+- Traces and video are off, because they would record the capability. A retry
+  is a manual decision, logged in the run's report. It is never automatic.
+
+Test-side choices (no product change):
+
+- `e2e/headless/shell.ts` mirrors `night/launch.ts`'s `openDesktop`/`serveShell`,
+  which are bound to the e2e-night core. Its guard follows `network.ts`
+  `guardPage`'s loopback policy for HTTP, but it only observes WebSockets: with
+  `guardPage`'s `routeWebSocket` + `connectToServer` the core's `/events`
+  subscription failed and the UI showed "Core connection interrupted".
+- The Beacons room calls `beacons.art.status` on mount, and that call reads the
+  OS keychain (`cc-beacons/src/art/key.rs`). The page answers it locally with
+  `{"available": false}`, so the core never reaches the keychain.
+
+What the UI cannot show (findings, not fixed here):
+
+- A fresh headless core has no Beacons visual, and `beacons.visual.upsert` is
+  armed, so `beacon_fire` needs a visual made in the UI. With an unknown
+  `visual_id`, `beacon_fire` still answers `accepted: true` and does nothing.
+- `beacon_fire` reuses `beacons.simulate`, which writes neither
+  `beacons.contribution.list` nor a `beacons.*` event. The desktop Beacons room
+  previews only its own test fires, so it shows 0% blaze. Only the
+  `/beacons/{id}` overlay shows the headless fire.
+- With the crowd at 120/min, crowd lines and `!join` lines count as "Other" in
+  the Herald, beside the three sample directions.
