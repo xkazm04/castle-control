@@ -9,7 +9,8 @@
     ".": "./src/index.ts"
   },
   "bin": {
-    "cc": "./src/cc.mjs"
+    "cc": "./src/cc.mjs",
+    "cc-mcp": "./src/cc-mcp.mjs"
   },
   "scripts": {
     "cc": "node src/cc.mjs",

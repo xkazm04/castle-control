@@ -105,4 +105,64 @@ Notes from reading each `read` handler in `crates/cc-core`:
 
 ## MCP server
 
-TODO (WP3): stdio MCP server over the same `TOOLS` table, plus a client config snippet.
+`cc-mcp` (`src/cc-mcp.mjs`) is a hand-rolled stdio MCP server over the same
+`TOOLS` table. It has no SDK dependency. The transport is newline-delimited
+JSON-RPC 2.0: one message per line on stdin, one frame per line on stdout.
+stdout carries protocol frames only. Diagnostics, including cargo build
+output, go to stderr. Every frame and diagnostic has the session token
+replaced with `[redacted]` before it is written.
+
+```sh
+node packages/headless/src/cc-mcp.mjs     # or the `cc-mcp` bin of @castle-control/headless
+```
+
+A client config snippet (keep it local and never commit it, because a
+committed `.mcp.json` is a non-goal):
+
+```json
+{
+  "mcpServers": {
+    "castle-control-headless": {
+      "command": "node",
+      "args": ["<repo>/packages/headless/src/cc-mcp.mjs"],
+      "env": { "CC_HEADLESS_EXE": "<repo>/target/debug/cc-headless.exe" }
+    }
+  }
+}
+```
+
+Without `CC_HEADLESS_EXE`, the first `tools/call` runs
+`cargo build --locked -p cc-core --bin cc-headless`, which can take a while on
+a cold target.
+
+| method | reply |
+| --- | --- |
+| `initialize` | `{protocolVersion, capabilities: {tools: {listChanged: false}}, serverInfo: {name: "castle-control-headless", version}, instructions}`. The client's `protocolVersion` is echoed if it is one of `2025-06-18`, `2025-03-26` or `2024-11-05`. Otherwise the reply is `2025-06-18`. |
+| `notifications/initialized`, any other notification | no reply |
+| `ping` | `{}` (also before `initialize`) |
+| `tools/list` | `{tools: [{name, description, inputSchema}]}` from `TOOLS`, with no pagination |
+| `tools/call` `{name, arguments?}` | `{content: [{type: "text", text}], isError}`, where `text` is pretty JSON of the result, or of the error envelope when `isError` is true |
+
+- **Errors are results.** These come back as `isError: true` tool results, not
+  JSON-RPC errors: a core error envelope, arguments that fail the params
+  schema, an unknown or armed tool name, and a core launch failure. An armed
+  or unknown name never launches a core and never sends a request.
+- **JSON-RPC errors.** Malformed JSON or a frame over 1 MiB gives `-32700`
+  with id `null`. Valid JSON in an invalid JSON-RPC shape gives `-32600`: a
+  batch array, `jsonrpc` other than `"2.0"`, a null or non-scalar id, a
+  non-string method, or scalar params. An unknown method gives `-32601`.
+  `tools/call` without a string `name`, or with non-object `arguments`, gives
+  `-32602`.
+- **Before `initialize`.** `tools/list` and `tools/call` get `-32002`
+  ("Server not initialized"). `-32002` is a server-defined code in the
+  JSON-RPC reserved range, chosen because MCP defines no code for this.
+  `ping` and `initialize` are always answered. Clients' responses to server
+  requests are dropped, because this server sends none.
+- **Concurrency.** Requests are handled concurrently and answered by id, in
+  completion order.
+- **Core lifecycle.** The core starts lazily on the first `tools/call`, and
+  later calls reuse it. A failed launch is not cached, so the next
+  `tools/call` retries it. On stdin end, the server answers in-flight requests
+  and then closes the session, which stops the core and removes its temp data
+  root, and exits 0. On SIGINT or SIGTERM, or when stdout fails, the server
+  closes the session at once and exits 0.
