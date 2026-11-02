@@ -1,6 +1,7 @@
 // Adapted from Shadowrunr OS @ 7e4b6f8,
 // crates/shadowrunr-daemon/src/moderator/lane.rs (Apache-2.0; see NOTICE).
 use crate::gate::{HoldBudget, MeasuredBatch};
+use crate::gate_path::GatePath;
 use crate::{
     Classifier, ClassifierError, Gatehouse, IngestedMessage, Result, classifier, date, internal,
     rules, store,
@@ -25,48 +26,6 @@ pub struct ActionIntent {
     pub action: Action,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub timeout_s: Option<u32>,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "snake_case")]
-pub enum GatePath {
-    Skipped,
-    FoundNothing,
-    Care,
-    VerifiedAuthority,
-    Shadow,
-    PatternAction,
-    ClassifierAction,
-    BanPending,
-    HumanReview,
-    Withheld,
-    Configuration,
-    AutoModHeld,
-    SuspiciousReview,
-    ExternalHuman,
-    GateSetting,
-}
-
-impl GatePath {
-    pub(crate) fn label(self) -> &'static str {
-        match self {
-            Self::Skipped => "gate_skipped",
-            Self::FoundNothing => "gate_found_nothing",
-            Self::Care => "care",
-            Self::VerifiedAuthority => "verified_authority",
-            Self::Shadow => "shadow",
-            Self::PatternAction => "pattern_action",
-            Self::ClassifierAction => "classifier_action",
-            Self::BanPending => "ban_pending",
-            Self::HumanReview => "human_review",
-            Self::Withheld => "withheld",
-            Self::Configuration => "configuration",
-            Self::AutoModHeld => "automod_held",
-            Self::SuspiciousReview => "suspicious_review",
-            Self::ExternalHuman => "external_human",
-            Self::GateSetting => "gate_setting",
-        }
-    }
 }
 
 #[derive(Debug, Clone)]
@@ -159,7 +118,7 @@ impl Gatehouse {
                     .values()
                     .filter(|m| m.rule.rule_class == RuleClass::Pattern)
                 {
-                    let regex = rules::compile(
+                    let regex = rules::compile_cached(
                         managed
                             .rule
                             .pattern
@@ -185,19 +144,30 @@ impl Gatehouse {
                 pending.push((index, msg));
             }
         }
+        // One two-second deadline covers the whole batch; once it passes, later
+        // chunks are unavailable without another classifier call.
+        let deadline = tokio::time::Instant::now() + Duration::from_secs(2);
+        let mut expired = false;
         for chunk in pending.chunks(classifier::MAX_BATCH) {
             let batch: Vec<_> = chunk.iter().map(|(_, msg)| msg.clone()).collect();
             let prompt = classifier::prompt(&plain, &batch);
             let model_start = Instant::now();
-            let reply = tokio::time::timeout(
-                Duration::from_secs(2),
-                classifier.classify(classifier::SYSTEM, &prompt),
-            )
-            .await;
-            let parsed = match reply {
-                Ok(Ok(text)) => Ok(classifier::parse(&text, &plain, batch.len())),
-                Ok(Err(error)) => Err(error),
-                Err(_) => Err(ClassifierError::Unavailable),
+            let parsed = if expired {
+                Err(ClassifierError::Unavailable)
+            } else {
+                let reply = tokio::time::timeout_at(
+                    deadline,
+                    classifier.classify(classifier::SYSTEM, &prompt),
+                )
+                .await;
+                match reply {
+                    Ok(Ok(text)) => Ok(classifier::parse(&text, &plain, batch.len())),
+                    Ok(Err(error)) => Err(error),
+                    Err(_) => {
+                        expired = true;
+                        Err(ClassifierError::Unavailable)
+                    }
+                }
             };
             let model_elapsed = model_start.elapsed();
             for (i, (index, msg)) in chunk.iter().enumerate() {

@@ -3,6 +3,8 @@ import { verifyDecodedWrit } from './index.ts';
 
 type Sample = Readonly<{ writ: unknown; chain: unknown; label: string }>;
 declare const bundledSamples: readonly Sample[];
+/** The independently bundled official quicknet chain: the import trust anchor, never a sample index. */
+declare const officialChain: unknown;
 
 const output = document.querySelector('output');
 const details = document.querySelector('pre');
@@ -38,11 +40,13 @@ for (const [selector, index] of controls) {
 }
 fileInput.addEventListener('change', () => {
   const file = fileInput.files?.[0];
+  // Clear the control so choosing the same path again fires another change event.
+  fileInput.value = '';
   void show(async () => {
     if (!file) throw new Error('Choose a writ file');
     if (file.size > max_bytes) throw new Error('Writ file exceeds the 2 MiB limit');
     const writ = parseJson(await file.text(), { max_bytes });
     // Use the independently bundled official quicknet anchor, never data from the file.
-    return { writ, chain: bundledSamples[2]?.chain, label: 'Imported writ' };
+    return { writ, chain: officialChain, label: 'Imported writ' };
   });
 });

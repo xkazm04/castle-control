@@ -1,4 +1,4 @@
-import { useSyncExternalStore } from 'react';
+import { useState, useSyncExternalStore } from 'react';
 import type { CSSProperties } from 'react';
 import { FieldGroup, Stamp } from '@castle-control/ui';
 import type { Visual } from '@castle-control/contract';
@@ -9,6 +9,17 @@ import { BeaconArtwork } from './artwork.jsx';
 import { FixtureStylePicker } from './style-picker.jsx';
 import type { BeaconsPort } from '../../beacons-model.js';
 import './appearance.css';
+
+// A string draft lets the operator clear and retype; valid values apply live, blur shows the effective one.
+function BurstField({ session, visual_id, value }: { session: AppearanceSession; visual_id: string; value: number }) {
+  const [draft, setDraft] = useState(String(value));
+  return <input id="beacon-burst-ms" type="number" min="0" max="60000" step="1" value={draft}
+    onChange={event => {
+      const text = event.currentTarget.value; setDraft(text);
+      if (text.trim()) session.change(visual_id, 'burst_ms', Number(text));
+    }}
+    onBlur={() => setDraft(String((session.getSnapshot()[visual_id] ?? initialAppearance).burst_ms))} />;
+}
 
 export function AppearanceControls({ session, visual, intensity, burst = 0, design_port }: {
   session: AppearanceSession; visual: Visual; intensity?: number; burst?: number | string;
@@ -50,8 +61,7 @@ export function AppearanceControls({ session, visual, intensity, burst = 0, desi
         </select>
       </FieldGroup>
       <FieldGroup label={copy.burst_timing} control_id="beacon-burst-ms" variant="input">
-        <input id="beacon-burst-ms" type="number" min="0" max="60000" step="1" value={value.burst_ms}
-          onChange={event => session.change(visual.visual_id, 'burst_ms', event.currentTarget.valueAsNumber)} />
+        <BurstField key={visual.visual_id} session={session} visual_id={visual.visual_id} value={value.burst_ms} />
       </FieldGroup>
     </div>
   </section>;

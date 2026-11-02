@@ -36,12 +36,20 @@ assert(files['beacons-validators.mjs'], 'Beacons validators have a separate gene
 assert(files['beacons-validators.d.mts'], 'Beacons validators retain typed declarations');
 assert(files['beacons-validation.ts'].includes("from './beacons-validators.mjs'"));
 assert(!files['beacons-validation.ts'].includes("from './validators.mjs'"));
+// The beacons and steward doors derive from the registry prefix like gatehouse does.
+for (const [prefix, declarations] of [['beacons.', 'beacons-validators.d.mts'], ['steward.', 'steward-validators.d.mts']]) {
+  const template = schema.methods.find((method) => method.name.startsWith(prefix));
+  const grown = { ...schema, methods: [...schema.methods, { ...template, name: `${prefix}synthetic.added` }] };
+  const added = grown.methods.length - 1;
+  const grownFiles = artifacts(grown);
+  assert(grownFiles[declarations].includes(`export const p${added}:`), `${prefix} subpath omits a new ${prefix}* method`);
+  assert(grownFiles[declarations].includes(`export const r${added}:`), `${prefix} subpath omits a new ${prefix}* result`);
+}
 assert.equal(files['beacons-root-validation.ts'], files['beacons-validation.ts'],
   'root barrel handles share the independent validators without importing the lazy method module');
-const gatehouseNames = ['rules.list', 'rules.upsert', 'ban.confirm', 'ban.dismiss', 'decision.undo',
-  'petition.resolve', 'recording.import', 'drill.run', 'drill.diff', 'consensus.get', 'chat.list', 'history.list', 'liveRun.get', 'source.url'].map(name => `gatehouse.${name}`);
+const gatehouseNames = schema.methods.map(method => method.name).filter(name => name.startsWith('gatehouse.'));
 const gatehouseMethods = schema.methods.map((method, index) => ({ ...method, index })).filter(method => gatehouseNames.includes(method.name));
-assert.equal(gatehouseMethods.length, 14);
+assert.equal(gatehouseMethods.length, 19);
 assert(files['gatehouse-validators.mjs'], 'Gatehouse validators have a separate generated module');
 assert(files['gatehouse-validators.d.mts'], 'Gatehouse validators retain typed declarations');
 assert(files['gatehouse-validation.ts'].includes("from './gatehouse-validators.mjs'"));
@@ -122,10 +130,22 @@ try {
   const neighbor = usages(scratch);
   assert.equal(neighbor.files.length, 2, 'neighboring overlay JavaScript stays in the inventory');
   assert(neighbor.defects.some(defect => defect.includes('source.js: JSON parsing outside the contract door')));
+  // Every spelling of the JSON door bypass is one defect; the plain call stays covered above.
+  for (const [form, source] of [
+    ['response json()', 'declare const response: Response;\nexport const a = response.json();\n'],
+    ['element access', "export const a = JSON['parse']('{}');\n"],
+    ['destructured', "const { parse } = JSON;\nexport const a = parse('{}');\n"],
+    ['alias', "const p = JSON.parse;\nexport const a = p('{}');\n"],
+  ]) {
+    writeFileSync(join(authored, 'forms.ts'), source);
+    assert.equal(usages(scratch).defects.filter(defect => defect.includes('forms.ts')).length, 1, `${form} bypasses the contract door`);
+  }
+  writeFileSync(join(authored, 'forms.ts'), "export const a = 'x'.json(1);\nexport const b = new Map().get('json');\n");
+  assert.equal(usages(scratch).defects.filter(defect => defect.includes('forms.ts')).length, 0, 'unrelated names stay clean');
   unlinkSync(join(overlay, 'bundle.js'));
   assert.throws(() => usages(scratch), /Missing listed build output: apps\/overlay\/bundle.js/, 'stale exclusions must fail');
 } finally {
-  for (const file of [join(authored, 'main.ts'), join(bundled, 'index.js'), join(overlay, 'bundle.js'), join(overlay, 'vote-bar.js'), join(overlay, 'tiltyard.js'), join(overlay, 'source.js')]) if (existsSync(file)) unlinkSync(file);
+  for (const file of [join(authored, 'main.ts'), join(bundled, 'index.js'), join(overlay, 'bundle.js'), join(overlay, 'vote-bar.js'), join(overlay, 'tiltyard.js'), join(overlay, 'source.js'), join(authored, 'forms.ts')]) if (existsSync(file)) unlinkSync(file);
   for (const directory of [authored, bundled, overlay, join(scratch, 'apps/desktop/dist'), join(scratch, 'apps/desktop'), join(scratch, 'apps')]) {
     if (existsSync(directory)) rmdirSync(directory);
   }
@@ -230,6 +250,11 @@ const positive = new Map([
   ['gatehouse.liveRun.get', [{ limit: 100 }, { items: [], unavailable_count: 0 }]],
   ['gatehouse.rules.list', [{}, { rules: [rule] }]], ['gatehouse.rules.upsert', [{ rule }, rule]],
   ...['ban.confirm', 'ban.dismiss', 'decision.undo'].map(name => [`gatehouse.${name}`, [{ decision_id: decision.decision_id }, decision]]),
+  ['gatehouse.rules.setMode', [{ rule_id: 'simulated-rule', mode: 'shadow' }, decision]],
+  ['gatehouse.held.resolve', [{ message_id: 'simulated-message', outcome: 'allow' }, decision]],
+  ['gatehouse.delay.set', [{ delay_s: 2 }, { delay_s: 2 }]],
+  ['gatehouse.shield.set', [{ enabled: true }, { enabled: true }]],
+  ['gatehouse.lease.end', [{ lease_id: decision.decision_id }, decision]],
   ['gatehouse.petition.resolve', [{ decision_id: decision.decision_id, outcome: 'overturned' }, decision]],
   ['gatehouse.consensus.get', [{ filter: { kind: 'all' }, window_s: 900 }, { at, filter: { kind: 'all' }, window_s: 900, shed_count: 0, directions: [] }]],
   ['gatehouse.recording.import', [{ source: 'simulated-import', messages: [], gaps: [] }, { source: 'simulated-import', recording: 'simulated-recording', message_count: 0, gaps: [] }]],

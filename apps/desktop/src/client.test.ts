@@ -191,6 +191,18 @@ test('invalid response and invalid event never become displayed state', async ()
   expect(h.client.getSnapshot().status).toBeUndefined();
 });
 
+test('a poison event is skipped on reconnect instead of replayed forever', async () => {
+  vi.useFakeTimers();
+  const h = harness();
+  cleanup.push(h.client.start());
+  await vi.waitFor(() => { expect(h.client.getSnapshot().phase).toBe('ready'); });
+  h.sockets[0]?.emit('bridge.status', 4);
+  h.sockets[0]?.emit('invented.kind', 5);
+  expect(h.sockets[0]?.close).toHaveBeenCalled();
+  await vi.advanceTimersByTimeAsync(1000);
+  expect(h.socket).toHaveBeenLastCalledWith('ws://127.0.0.1:3210/events?since_seq=5', expect.arrayContaining(['cc-events']));
+});
+
 test('fixture mode rejects core configuration and never touches network, even when supplied a transport', async () => {
   vi.useFakeTimers();
   const h = harness();

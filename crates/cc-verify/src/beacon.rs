@@ -123,21 +123,34 @@ struct UpstreamRound {
 pub struct QuicknetClient {
     client: reqwest::Client,
     chain: QuicknetChain,
+    base: String,
 }
+
+const DRAND_BASE: &str = "https://api.drand.sh";
 
 impl QuicknetClient {
     pub fn new(chain: QuicknetChain) -> Result<Self, Error> {
+        Self::with_base_url(chain, DRAND_BASE.into())
+    }
+
+    /// Test seam: point the transport at another origin. The reply guards are unchanged.
+    #[doc(hidden)]
+    pub fn with_base_url(chain: QuicknetChain, base: String) -> Result<Self, Error> {
         chain.validate()?;
         let client = reqwest::Client::builder()
             .timeout(Duration::from_secs(10))
             .redirect(reqwest::redirect::Policy::none())
             .build()?;
-        Ok(Self { client, chain })
+        Ok(Self {
+            client,
+            chain,
+            base,
+        })
     }
 
     pub async fn fetch(&self, roll: &SealedRoll) -> Result<BeaconRound, Error> {
         let selected = roll.selected_round(&self.chain)?;
-        let url = format!("https://api.drand.sh/{}/public/{selected}", self.chain.hash);
+        let url = format!("{}/{}/public/{selected}", self.base, self.chain.hash);
         let mut response = self.client.get(url).send().await?.error_for_status()?;
         let mut bytes = Vec::new();
         while let Some(chunk) = response.chunk().await? {

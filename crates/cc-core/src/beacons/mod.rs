@@ -1,6 +1,8 @@
 //! Shared Beacons configuration, simulated overlay previews and live routing.
 mod art;
 mod art_assets;
+#[cfg(test)]
+mod intake_cost;
 mod live;
 pub(crate) mod presets;
 mod preview;
@@ -38,6 +40,9 @@ struct State {
     previews: BTreeMap<VisualId, preview::Preview>,
     preview_task: Option<tokio::task::JoinHandle<Result<(), ErrorEnvelope>>>,
     revoked: bool,
+    // Dedupe keys of retained rows. Seeded once from the store; None means
+    // rebuild (first use, after a purge or expiry, or an unfinished intake).
+    seen: Option<cc_beacons::intake::Intake>,
 }
 
 pub struct BeaconsModule {
@@ -77,6 +82,7 @@ impl BeaconsModule {
                 previews: BTreeMap::new(),
                 preview_task: None,
                 revoked: false,
+                seen: None,
             })),
             root,
             overlay_origin: None,

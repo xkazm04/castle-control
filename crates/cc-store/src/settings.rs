@@ -1,20 +1,10 @@
 use crate::{Error, Result, Store};
-use cc_types::{Settings, parse_engine_settings};
+use cc_types::{ENGINE_SETTING_KEYS, Settings, parse_engine_settings};
 use rusqlite::params;
 
-/// Persisted subset of Settings, from WP 1.4. Value validation belongs solely
-/// to cc-types::parse_engine_settings; this list only closes the key inventory.
-pub const ENGINE_SETTING_KEYS: &[&str] = &[
-    "engine.cli_provider",
-    "engine.live_endpoint",
-    "engine.cloud_opt_in",
-    "engine.claude_exe_path",
-    "engine.codex_exe_path",
-    "engine.posture_helper_path",
-    "engine.model_local",
-    "engine.model_claude",
-    "engine.model_codex",
-];
+// Persisted subset of Settings, from WP 1.4. Value validation and the closed
+// key inventory belong solely to cc-types (parse_engine_settings and
+// ENGINE_SETTING_KEYS).
 
 fn validate(settings: &Settings) -> Result<()> {
     parse_engine_settings(settings).map_err(|_| Error::Invalid("engine settings"))?;
@@ -66,5 +56,17 @@ impl Store {
         }
         tx.commit()?;
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    /// cc-types owns the engine key inventory; cc-store must not restate it.
+    #[test]
+    fn store_settings_source_holds_no_engine_key_literals() {
+        let source = include_str!("settings.rs");
+        let needle = format!("\"{}.", "engine");
+        let hits = source.lines().filter(|line| line.contains(&needle)).count();
+        assert_eq!(hits, 0, "engine key literal duplicated in cc-store");
     }
 }

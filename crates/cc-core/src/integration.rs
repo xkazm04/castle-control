@@ -1,6 +1,7 @@
 use crate::{
     AppState, EventHub, LoginPresenter, Module, Registry, bridge_status, forward_bridge_event,
 };
+mod auth;
 pub(crate) mod intake;
 mod obs;
 mod obs_probe;
@@ -75,6 +76,23 @@ impl RevocationHandler for Eraser {
         .await
         .map_err(|_| BridgeError::Unavailable("store purge worker failed"))?
     }
+}
+/// Observe a worker's end so a dead lane is never silent. Only the error code
+/// is logged; chat text never reaches a log line.
+fn supervise(
+    lane: &'static str,
+    task: tokio::task::JoinHandle<Result<(), ErrorEnvelope>>,
+) -> AbortHandle {
+    let abort = task.abort_handle();
+    tokio::spawn(async move {
+        match task.await {
+            Ok(Ok(())) => tracing::info!(lane, "live worker ended"),
+            Ok(Err(error)) => tracing::warn!(lane, code = ?error.code, "live worker stopped"),
+            Err(join) if join.is_cancelled() => {}
+            Err(_) => tracing::warn!(lane, "live worker panicked"),
+        }
+    });
+    abort
 }
 impl NativeServices {
     pub const METHODS: &'static [&'static str] = &[
@@ -231,12 +249,15 @@ impl NativeServices {
                     Arc::new(crate::live::RulesOnly),
                 )
                 .ok_or_else(internal)?;
-            workers.push(task.abort_handle());
+            workers.push(supervise("chat", task));
         }
         let contribution = if live {
             let module = app.registry.beacons()?;
             let (sender, receiver) = broadcast::channel(256);
-            workers.push(module.start_intake(receiver, events.clone()).abort_handle());
+            workers.push(supervise(
+                "contribution",
+                module.start_intake(receiver, events.clone()),
+            ));
             Some(sender)
         } else {
             None
@@ -254,18 +275,12 @@ impl NativeServices {
         )
     }
     fn auth_status(&self) -> TwitchAuthStatus {
-        let state = self.bridge.status().state;
-        let connected = state == BridgeState::Connected;
-        TwitchAuthStatus {
-            connected,
-            pending: state == BridgeState::Connecting,
-            user_id: None,
-            scopes: if connected {
-                self.scopes.clone()
-            } else {
-                vec![]
-            },
-        }
+        let locked = self
+            .pipeline
+            .get()
+            .and_then(Weak::upgrade)
+            .is_some_and(|pipeline| pipeline.is_revoked());
+        auth::auth_status_for(self.bridge.status().state, &self.scopes, locked)
     }
 }
 impl Module for NativeServices {

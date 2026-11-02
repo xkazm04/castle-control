@@ -1,4 +1,4 @@
-import type { ReactNode, Ref } from 'react';
+import type { KeyboardEvent, PointerEvent, ReactNode, Ref } from 'react';
 import { Stamp } from './stamp/stamp.jsx';
 import './steward-bar.css';
 
@@ -24,6 +24,40 @@ function StewardFigure() {
   </svg>;
 }
 
+const speakKeys = new Set([' ', 'Enter']);
+
+/** Hold to speak: starts once, ends once, wherever the pointer is released or whichever key is let go. */
+function speechHold(start: () => void, end: () => void) {
+  const begin = (button: HTMLButtonElement) => {
+    if (button.dataset['holding'] === 'true') return;
+    button.dataset['holding'] = 'true';
+    start();
+  };
+  const finish = (button: HTMLButtonElement) => {
+    if (button.dataset['holding'] !== 'true') return;
+    delete button.dataset['holding'];
+    end();
+  };
+  return {
+    onPointerDown: (event: PointerEvent<HTMLButtonElement>) => {
+      event.currentTarget.setPointerCapture(event.pointerId);
+      begin(event.currentTarget);
+    },
+    onPointerUp: (event: PointerEvent<HTMLButtonElement>) => { finish(event.currentTarget); },
+    onLostPointerCapture: (event: PointerEvent<HTMLButtonElement>) => { finish(event.currentTarget); },
+    onPointerCancel: (event: PointerEvent<HTMLButtonElement>) => { finish(event.currentTarget); },
+    onKeyDown: (event: KeyboardEvent<HTMLButtonElement>) => {
+      if (!speakKeys.has(event.key)) return;
+      event.preventDefault();
+      if (!event.repeat) begin(event.currentTarget);
+    },
+    onKeyUp: (event: KeyboardEvent<HTMLButtonElement>) => {
+      if (speakKeys.has(event.key)) { event.preventDefault(); finish(event.currentTarget); }
+    },
+    onBlur: (event: { currentTarget: HTMLButtonElement }) => { finish(event.currentTarget); },
+  };
+}
+
 /** One presentational input; conversation and proposals belong to its owner. */
 export function StewardBar(props: StewardBarProps) {
   const live = props.mode === 'live';
@@ -43,8 +77,8 @@ export function StewardBar(props: StewardBarProps) {
           <input ref={props.input_ref} aria-label="Talk to the Steward..." value={props.value}
             onChange={event => props.on_change(event.currentTarget.value)} placeholder="Talk to the Steward..." />
         </label>
-        {props.on_speak_start && props.on_speak_end && <button type="button" onPointerDown={props.on_speak_start}
-          onPointerUp={props.on_speak_end} onPointerCancel={props.on_speak_end} onBlur={props.on_speak_end}>Hold to speak</button>}
+        {props.on_speak_start && props.on_speak_end && <button type="button"
+          {...speechHold(props.on_speak_start, props.on_speak_end)}>Hold to speak</button>}
         <button type="submit" disabled={!props.value.trim()}>Tell</button>
       </form>
       <div className="cc-steward-suggestions" role="group" aria-label="Steward suggestions">

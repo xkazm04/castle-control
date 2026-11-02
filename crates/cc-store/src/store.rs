@@ -1,21 +1,28 @@
 use crate::{
-    ConfigurationItem, DataStore, Error, LedgerKind, Result, STORE_INVENTORY, Storage, StoredItem,
-    Timestamp, TwitchUserId, types::StoredRecord,
+    Clock, ConfigurationItem, DataStore, Error, LedgerKind, Result, STORE_INVENTORY, Storage,
+    StoredItem, Timestamp, TwitchUserId, types::StoredRecord,
 };
 use fs2::FileExt;
 use rusqlite::{Connection, OptionalExtension, params};
 use std::{
-    cell::Cell,
+    cell::{Cell, RefCell},
     collections::{BTreeMap, BTreeSet},
     fs::{self, File, OpenOptions},
     path::{Path, PathBuf},
+    sync::Arc,
 };
+
+/// How far past the insert clock an item's `at` may sit before it is clamped.
+const FUTURE_SKEW_S: i64 = 300;
 
 pub struct Store {
     pub(crate) conn: Connection,
     pub(crate) root: PathBuf,
     pub(crate) ledger_lengths: BTreeMap<LedgerKind, u64>,
     pub(crate) ledger_fault: Cell<bool>,
+    pub(crate) ledger_cache: RefCell<BTreeMap<LedgerKind, crate::ledger::CachedLedger>>,
+    pub(crate) ledger_stats: Cell<crate::ledger::LedgerReadStats>,
+    clock: Arc<dyn Clock>,
     _lock: File,
 }
 
@@ -39,6 +46,9 @@ impl Store {
             _lock: lock,
             ledger_lengths: BTreeMap::new(),
             ledger_fault: Cell::new(false),
+            ledger_cache: RefCell::new(BTreeMap::new()),
+            ledger_stats: Cell::new(Default::default()),
+            clock: Arc::new(crate::SystemClock),
         };
         if store.purge_pending()? {
             store.finish_purge()?;
@@ -48,13 +58,31 @@ impl Store {
                 .append(true)
                 .create(true)
                 .open(store.root.join(kind.filename()))?;
-            store.read_ledger(kind)?;
             store
                 .ledger_lengths
                 .insert(kind, fs::metadata(store.root.join(kind.filename()))?.len());
+            store.read_ledger(kind)?;
         }
         store.verify_inventory()?;
         Ok(store)
+    }
+
+    /// Replaces the insert clock (default: the system clock), for tests and hosts.
+    pub fn set_clock(&mut self, clock: Arc<dyn Clock>) {
+        self.clock = clock;
+    }
+
+    /// Retention keys on `at`, so a far-future `at` would outlive the cap. An `at`
+    /// beyond now plus FUTURE_SKEW_S is clamped to that bound (not rejected, so a
+    /// skewed upstream timestamp still stores its item); earlier values are kept.
+    fn bounded_at(&self, at: &Timestamp) -> Result<Timestamp> {
+        let now = chrono::DateTime::parse_from_rfc3339(&self.clock.now().as_rfc3339())
+            .map_err(|_| Error::Invalid("insert clock"))?;
+        let limit = now
+            .checked_add_signed(chrono::TimeDelta::seconds(FUTURE_SKEW_S))
+            .ok_or(Error::Invalid("insert clock"))?;
+        let limit = Timestamp::parse(&limit.to_utc().to_rfc3339())?;
+        Ok(if *at > limit { limit } else { at.clone() })
     }
 
     pub(crate) fn ready(&self) -> Result<()> {
@@ -63,6 +91,16 @@ impl Store {
         }
         if self.ledger_fault.get() {
             return Err(Error::LedgerIntegrity);
+        }
+        Ok(())
+    }
+
+    /// Erasure of SQLite rows never touches a ledger, so a latched ledger fault
+    /// must not block it; only an unfinished full purge does. Full purge itself
+    /// finishes any pending purge first.
+    pub(crate) fn erasure_ready(&self, request: &crate::Purge) -> Result<()> {
+        if *request != crate::Purge::All && self.purge_pending()? {
+            return Err(Error::PurgeIncomplete);
         }
         Ok(())
     }
@@ -78,10 +116,14 @@ impl Store {
     pub fn map_user(&mut self, user_id: TwitchUserId, login: &str) -> Result<()> {
         self.ready()?;
         let login = crate::types::login(login)?;
-        // Keep prior login aliases until forget_user, so old recordings remain findable.
+        // Owner history: a reassigned login keeps the previous owner's row, so
+        // that user's data stays reachable (forget_user_id). The newest row
+        // for a login is its current owner.
         self.conn.execute(
-            "INSERT INTO viewer_mappings (user_id,login) VALUES (?1,?2)
-            ON CONFLICT(login) DO UPDATE SET user_id=excluded.user_id",
+            "INSERT INTO viewer_mappings (seq,user_id,login)
+            VALUES ((SELECT COALESCE(MAX(seq),0)+1 FROM viewer_mappings),?1,?2)
+            ON CONFLICT(user_id,login) DO UPDATE SET
+              seq=(SELECT MAX(seq)+1 FROM viewer_mappings)",
             params![user_id.as_str(), login],
         )?;
         Ok(())
@@ -93,7 +135,7 @@ impl Store {
         let raw: Option<String> = self
             .conn
             .query_row(
-                "SELECT user_id FROM viewer_mappings WHERE login=?1",
+                "SELECT user_id FROM viewer_mappings WHERE login=?1 ORDER BY seq DESC LIMIT 1",
                 [login],
                 |row| row.get(0),
             )
@@ -114,7 +156,9 @@ impl Store {
                 return Err(Error::Invalid("unmapped viewer association"));
             }
         }
-        self.insert_row(store, item.id, &item.at, &item.user_ids, item)
+        let mut item = item.clone();
+        item.at = self.bounded_at(&item.at)?;
+        self.insert_row(store, item.id, &item.at, &item.user_ids, &item)
     }
 
     /// Only explicitly allowlisted stores accept viewer-free configuration.
@@ -126,7 +170,9 @@ impl Store {
     ) -> Result<()> {
         self.ready()?;
         store.require_configuration()?;
-        self.insert_row(store, item.id, &item.at, &[], item)
+        let mut item = item.clone();
+        item.at = self.bounded_at(&item.at)?;
+        self.insert_row(store, item.id, &item.at, &[], &item)
     }
 
     fn insert_row(

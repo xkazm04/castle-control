@@ -97,6 +97,12 @@ export function closureCases(proof, root) {
   for (const [name, seed, diagnostic] of [
     ['No any', 'export const value: any = 1;', 'no any'],
     ['No double assertion', 'export const value = 1 as unknown as string;', 'no as unknown as'],
+    ['No double assertion: parenthesised', 'export const value = (1 as unknown) as string;', 'no as unknown as'],
+    ['No double assertion: via never', 'export const value = 1 as never as string;', 'no as unknown as'],
+    ['No double assertion: angle brackets', 'export const value = <string><unknown>1;', 'no as unknown as'],
+    ['No swallowed catch: empty promise handler', 'Promise.resolve().catch(() => {});', 'no swallowed catch'],
+    ['No swallowed catch: undefined promise handler', 'Promise.resolve().catch(() => undefined);', 'no swallowed catch'],
+    ['No swallowed catch: void promise handler', 'Promise.resolve().catch(() => void 0);', 'no swallowed catch'],
     ['No raw keydown', "document.addEventListener('keydown', () => {});", 'use the keymap registry'],
     ['No swallowed catch', 'try { throw new Error(); } catch { /* simulated */ }', 'no swallowed catch'],
   ]) proof(name, ['$S/scripts/check.mjs', 'hygiene'], diagnostic, { [source]: `${seed}\n` });

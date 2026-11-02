@@ -36,3 +36,13 @@ test('core drill accepts a late imported name but preserves a cleared edit and d
   h.change(copy.recording_name, 'next-recording'); expect(h.render()).toContain('value="next-recording"');
   expect(rpc).toHaveBeenCalledTimes(1);
 });
+
+test('core drill shows a newly imported recording over a name typed before the import', async () => {
+  const rpc = vi.fn<GatehouseNetwork['rpc']>(async () => ({ recording: 'simulated-recording-b', source: 'simulated-import', message_count: 0, gaps: [] }));
+  const port = createCoreGatehousePort(launch, { rpc });
+  const h = componentProbe(() => <CoreDrill state={port.getSnapshot()} port={port} />);
+  h.render(); h.change(copy.recording_name, 'typed-by-hand'); expect(h.render()).toContain('value="typed-by-hand"');
+  await port.importRecordingJson('{"source":"simulated-import","messages":[],"gaps":[]}');
+  const html = h.render();
+  expect(html).toContain('value="simulated-recording-b"'); expect(html).not.toContain('typed-by-hand');
+});

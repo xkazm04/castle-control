@@ -15,7 +15,7 @@ struct Handle {
 }
 
 /// Classifies fenced chat using the plan's `live` role class: the moderation
-/// lane has a two-second ceiling, even when a batch contains multiple messages.
+/// lane has one two-second ceiling per screened batch, however many chunks it holds.
 /// `batch` describes slow work, not the number of messages in a request. Engine
 /// routing and the spawn door both forbid CLI execution for the live class.
 ///

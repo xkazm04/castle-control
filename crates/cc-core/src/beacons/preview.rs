@@ -93,26 +93,44 @@ async fn run(
             state.preview_task = None;
             return Ok(());
         };
-        let mut ended = Vec::new();
-        for (id, preview) in &mut state.previews {
-            match preview.session.snapshot().map_err(|_| internal())? {
-                Some(value) if value != preview.last => {
-                    native.accept_beacons_simulation(value.clone())?;
-                    preview.last = value;
-                }
-                Some(_) => {}
-                None => {
-                    native.end_beacons_simulation(id)?;
-                    ended.push(id.clone());
+        if let Err(error) = step(&mut state, &native) {
+            // A failed tick must not strand previews: they suppress live
+            // handoff for their visual. End each one, best effort.
+            for id in std::mem::take(&mut state.previews).into_keys() {
+                if native.end_beacons_simulation(&id).is_err() {
+                    tracing::warn!(
+                        visual_id = id.as_str(),
+                        "preview end failed after tick error"
+                    );
                 }
             }
-        }
-        for id in ended {
-            state.previews.remove(&id);
+            state.preview_task = None;
+            return Err(error);
         }
         if state.previews.is_empty() {
             state.preview_task = None;
             return Ok(());
         }
     }
+}
+
+fn step(state: &mut State, native: &NativeServices) -> Result<(), ErrorEnvelope> {
+    let mut ended = Vec::new();
+    for (id, preview) in &mut state.previews {
+        match preview.session.snapshot().map_err(|_| internal())? {
+            Some(value) if value != preview.last => {
+                native.accept_beacons_simulation(value.clone())?;
+                preview.last = value;
+            }
+            Some(_) => {}
+            None => {
+                native.end_beacons_simulation(id)?;
+                ended.push(id.clone());
+            }
+        }
+    }
+    for id in ended {
+        state.previews.remove(&id);
+    }
+    Ok(())
 }

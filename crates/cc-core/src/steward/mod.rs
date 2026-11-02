@@ -123,12 +123,22 @@ impl StewardConfig {
                     ));
                 }
                 proposal::check(&writ.proposal, registry).await?;
-                registry
-                    .dispatch_inner(&proposal::mutation(&writ.proposal))
-                    .await?;
+                // Audit first: a seal that cannot be recorded must not apply, or
+                // the change would be live while the writ stays Proposed.
                 writ.status = WritStatus::Sealed;
                 storage::advance(&mut writ)?;
                 storage::append(store, &writ, self.simulated)?;
+                if let Err(applied) = registry
+                    .dispatch_inner(&proposal::mutation(&writ.proposal))
+                    .await
+                {
+                    // Nothing was applied: record the writ as Proposed again so
+                    // it can be retried or torn.
+                    writ.status = WritStatus::Proposed;
+                    storage::advance(&mut writ)?;
+                    storage::append(store, &writ, self.simulated)?;
+                    return Err(applied);
+                }
                 registry.writ_changed()?;
                 encode(WritSealResult { writ })
             }
@@ -225,6 +235,7 @@ impl StewardConfig {
         writ.created_at = Timestamp::now();
         writ.updated_at = writ.created_at.clone();
         writ.error = None;
+        proposal::emittable(&writ.proposal)?;
         let _configuration = registry.configuration.lock().await;
         writ.proposal = proposal::snapshot(&writ.proposal, registry).await?;
         storage::append(store, &writ, self.simulated)?;

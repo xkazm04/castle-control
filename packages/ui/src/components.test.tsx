@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { renderToStaticMarkup } from 'react-dom/server';
 import type { MouseEvent, ReactElement, ReactNode } from 'react';
 import { describe, expect, test } from 'vitest';
-import { ChambersColumn, ConnectionMark, EmptyState, GatehouseChip, InkButton, KitShell, Mark, NumberedPanel,
+import { ChambersColumn, ConsensusChart, ConnectionMark, EmptyState, GatehouseChip, InkButton, KitShell, Mark, NumberedPanel,
   PageHeader, Rampart, RuleTable, StatusChip, ThemeFrame, ThemeToggle, chambers, chipVariants, keymap, verdicts, VerdictChip } from './index.js';
 import type { InkButtonProps, RampartProps, RuleRow } from './index.js';
 import { visibleRange } from './rule-table.jsx';
@@ -184,4 +184,22 @@ test('virtualisation preserves total height and reaches the last row with bounde
 test('single keymap has no conflicts and every chamber and Steward has one shortcut', () => {
   expect(new Set(keymap.map(binding => binding.key)).size).toBe(keymap.length);
   expect(keymap.map(binding => binding.key)).toEqual(['0', '1', '2', '3', '4', 'Escape', '/', 'Enter', 'Delete', ' ']);
+});
+
+describe('ConsensusChart geometry', () => {
+  const direction = { key: 'a', label: 'A', share: 0.5, change_label: '0', series: [
+    { at: 'not a date', share: 0.5 }, { at: '2026-10-26T11:50:00Z', share: 2 }, { at: '2026-10-26T12:00:00Z', share: Number.NaN }] };
+  const base = { label: 'L', at: '2026-10-26T12:00:00Z', aria_label: 'x', summary: 's', directions: [direction] };
+  const props = { title: 't', filter_label: 'f', empty_state: 'none' };
+  test('bad timestamps, NaN shares and a zero window never emit NaN geometry', () => {
+    for (const window_s of [900, 0]) {
+      const html = renderToStaticMarkup(<ConsensusChart {...props} results={[{ ...base, window_s }]} />);
+      expect(html).not.toMatch(/NaN|Infinity/);
+    }
+  });
+  test('a share above one stays inside the chart', () => {
+    const html = renderToStaticMarkup(<ConsensusChart {...props} results={[{ ...base, window_s: 900 }]} />);
+    expect(html).toContain('<polyline points="');
+    for (const [, y] of html.matchAll(/,(-?[\d.]+)[ "]/g)) expect(Number(y)).toBeGreaterThanOrEqual(20);
+  });
 });

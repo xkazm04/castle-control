@@ -93,3 +93,32 @@ async fn concurrent_publish_is_totally_ordered_and_retention_boundaries_are_exac
     assert!(hub.publish(EventKind::Resync).is_err());
     assert!(EventHub::new(0).is_err());
 }
+
+fn steward_config() -> cc_core::steward::StewardConfig {
+    let model = cc_engine::ModelName::parse("simulated-model").unwrap();
+    let engine = cc_engine::Engine::new(
+        &cc_types::Settings {
+            values: Default::default(),
+        },
+        cc_engine::RoutingTable::new(model.clone(), model.clone(), model),
+        None,
+    )
+    .unwrap();
+    let root = tempfile::tempdir().unwrap();
+    cc_core::steward::StewardConfig::new(
+        engine,
+        Arc::new(tokio::sync::Mutex::new(
+            cc_store::Store::open(root.path().join("steward")).unwrap(),
+        )),
+        Arc::new(cc_engine::NoKeychain),
+        true,
+    )
+}
+
+#[test]
+#[should_panic(expected = "Steward is already configured")]
+fn configuring_steward_twice_is_refused_not_silently_replaced() {
+    Registry::with_status()
+        .with_steward(steward_config())
+        .with_steward(steward_config());
+}

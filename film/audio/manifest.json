@@ -1,0 +1,35 @@
+{
+  "clips": {},
+  "music": {
+    "bed": {
+      "file": "audio/music-bed.wav",
+      "ms": 194880,
+      "hash": "owner:77b7f688146caf710506a6ffa6e4fb79590f88e27a922086d5a40fcbd8547b1f"
+    }
+  },
+  "estimated": [
+    "open-mark",
+    "open-keep",
+    "open-promise",
+    "gh-title",
+    "gh-setup",
+    "gh-impact",
+    "gh-drill",
+    "lot-title",
+    "lot-setup",
+    "lot-fill",
+    "lot-seal",
+    "lot-cast",
+    "lot-proof",
+    "bea-title",
+    "bea-setup",
+    "bea-fire",
+    "bea-peak",
+    "map-title",
+    "map-design",
+    "map-spyglass",
+    "codex-claim",
+    "codex-count",
+    "end"
+  ]
+}

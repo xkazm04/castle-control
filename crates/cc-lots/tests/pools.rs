@@ -195,3 +195,20 @@ fn invalid_configuration_is_rejected() {
     config.cohort_caps = vec![CohortCap::new("simulated".into(), 1, 3).unwrap(); 2];
     assert!(Roll::new(config).is_err());
 }
+
+#[test]
+fn debug_output_never_carries_message_text() {
+    const MARKER: &str = "SIMULATED-MARKER-TEXT";
+    let mut facts = simulated_message(1, 0);
+    facts.text = MARKER.into();
+    let passed = PassedMessage::from_verdict(facts.clone(), Verdict::Pass).unwrap();
+    for rendered in [
+        format!("{facts:?}"),
+        format!("{facts:#?}"),
+        format!("{passed:?}"),
+        format!("{passed:#?}"),
+    ] {
+        assert!(!rendered.contains(MARKER), "{rendered}");
+        assert!(rendered.contains("text_chars"), "{rendered}");
+    }
+}

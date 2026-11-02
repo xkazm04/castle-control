@@ -9,7 +9,7 @@ steps: a blocked or incomplete prize cannot reach the hold until it is fixed or 
 
 ## lots-B rehearsal delta, 2026-10-31
 
-Reconciled against L1 (`a6f305f`): setup, Start simulated draw, FixtureCast and
+Reconciled against L1 (`a6f305f`): setup, Cast the lots · rehearsal, FixtureCast and
 simulateCast already existed. This delivery extracts the desktop's cc-verify v1
 bytes into `lots-cast.ts` (`sealOf`, `commitmentOf`, `castWinners`, `verifyWrit`).
 The saved corpus vector still pins ordered winners simulated_01, simulated_00;

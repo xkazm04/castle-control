@@ -158,3 +158,65 @@ it('hides a failed image layer and allows a replacement package to load a fresh 
   expect((root.children[0] as HTMLElement).hidden).toBe(false);
   dispose();
 });
+
+it('counts rejected push snapshots on the root without exposing payload text', () => {
+  const { root, stream } = connected();
+  expect(root.dataset['snapshotRejected']).toBeUndefined();
+  stream.snapshot('{"secret":"simulated payload"}');
+  stream.snapshot('not json');
+  expect(root.dataset['snapshotRejected']).toBe('2');
+  stream.snapshot();
+  expect(root.children).toHaveLength(1);
+  expect(root.dataset['snapshotRejected']).toBe('2');
+  expect(JSON.stringify(root.dataset)).not.toContain('simulated payload');
+});
+// Card 48: module scripts run once per document, so a scripted scene reloads the document.
+function scriptedWire(): string {
+  const parsed = JSON.parse(wire()) as { package: Record<string, unknown> };
+  parsed.package['privileges'] = { kind: 'scripts', scripts: ['main.js'] };
+  return JSON.stringify(parsed);
+}
+
+it('reloads the document after a stream error on a scripted package, with 2/4/8/16/30/30s backoff, and not for plain art', () => {
+  vi.useFakeTimers();
+  Stream.instances = [];
+  vi.stubGlobal('document', { createElement: () => new Element() });
+  vi.stubGlobal('window', { innerWidth: 1280, innerHeight: 720, addEventListener: vi.fn(), removeEventListener: vi.fn() });
+  vi.stubGlobal('EventSource', Stream);
+  let clock = 0;
+  let saved: { n: number; at: number } | undefined;
+  const reload = vi.fn();
+  const store = { read: () => saved, write: (v: { n: number; at: number }) => { saved = v; } };
+  const session = () => {
+    const root = document.createElement('main');
+    const dispose = connectOverlay(root, 'simulated-frame', undefined, { reload, store, now: () => clock });
+    const stream = Stream.instances.at(-1);
+    if (!stream) throw new Error('Missing simulated stream');
+    stream.snapshot(scriptedWire());
+    stream.fail(Stream.CONNECTING);
+    return dispose;
+  };
+  const delays: number[] = [];
+  // Each pass simulates a fresh document: new connection, same persisted store.
+  for (let pass = 0; pass < 6; pass += 1) {
+    const dispose = session();
+    const before = reload.mock.calls.length;
+    let waited = 0;
+    while (reload.mock.calls.length === before && waited < 60000) { vi.advanceTimersByTime(1000); clock += 1000; waited += 1000; }
+    delays.push(waited);
+    dispose();
+  }
+  expect(delays).toEqual([2000, 4000, 8000, 16000, 30000, 30000]);
+  expect(reload).toHaveBeenCalledTimes(6);
+  // A quiet minute resets the schedule.
+  clock += 120000;
+  session();
+  vi.advanceTimersByTime(2000);
+  expect(reload).toHaveBeenCalledTimes(7);
+  // Plain art never reloads: the existing clear-and-rebuild path covers it.
+  const plain = connected();
+  plain.stream.snapshot();
+  plain.stream.fail(Stream.CONNECTING);
+  vi.advanceTimersByTime(120000);
+  expect(reload).toHaveBeenCalledTimes(7);
+});

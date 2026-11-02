@@ -236,3 +236,81 @@ test.each([true, false])('uncertain(id) is true after a rejected seal reply and 
   await steward.seal(draw.writ_id);
   expect(steward.uncertain(draw.writ_id)).toBe(!confirmed);
 });
+
+test.each(['new', 'amend'] as const)('an ask (%s) survives unrelated select and focus publishes while in flight', async kind => {
+  const queue = new ProposalQueue();
+  const amended = { ...draw, updated_at: '2026-10-27T00:00:02Z' };
+  const transport = new RecordedStewardTransport([reply(draw)]);
+  const steward = new LiveSteward(transport, queue);
+  if (kind === 'amend') await steward.ask('Simulated: draft questions', context);
+  let finish: ((text: string) => void) | undefined;
+  vi.spyOn(transport, 'ask').mockImplementation(() => new Promise(resolve => { finish = resolve; }));
+  const pending = kind === 'new' ? steward.ask('Simulated: draft questions', context)
+    : steward.amend(draw.writ_id, 'Simulated amendment', context);
+  queue.focus({ chamber: 'lottery' });
+  if (kind === 'amend') queue.select(draw.writ_id);
+  if (!finish) throw new Error('Expected pending transport');
+  finish(reply(kind === 'new' ? draw : amended));
+  const turn = await pending;
+  expect(turn.proposals).toHaveLength(1);
+  expect(turn.reply).not.toContain('No authorization was given');
+  expect(steward.owns(draw.writ_id)).toBe(true);
+  expect(queue.pending()).toHaveLength(1);
+});
+
+test('a seal judges only its own proposal: an unrelated queue publish during the call does not make it unknown', async () => {
+  const queue = new ProposalQueue();
+  const transport = new RecordedStewardTransport([reply(draw)]);
+  let finish: ((text: string) => void) | undefined;
+  vi.spyOn(transport, 'seal').mockImplementation(() => new Promise(resolve => { finish = resolve; }));
+  const steward = new LiveSteward(transport, queue);
+  await steward.ask('Synthetic draw', context);
+  const pending = steward.seal(draw.writ_id);
+  queue.focus({ chamber: 'moderator' });
+  if (!finish) throw new Error('Expected pending seal');
+  finish(reply({ ...draw, status: 'sealed' }));
+  const turn = await pending;
+  expect(turn.reply).not.toContain('Reconcile its outcome');
+  expect(turn.proposals[0]?.state).toBe('sealed');
+  expect(steward.uncertain(draw.writ_id)).toBe(false);
+});
+
+test('a seal stays unknown when its own proposal changed during the call', async () => {
+  const queue = new ProposalQueue();
+  const transport = new RecordedStewardTransport([reply(draw)]);
+  let finish: ((text: string) => void) | undefined;
+  vi.spyOn(transport, 'seal').mockImplementation(() => new Promise(resolve => { finish = resolve; }));
+  const steward = new LiveSteward(transport, queue);
+  await steward.ask('Synthetic draw', context);
+  const pending = steward.seal(draw.writ_id);
+  queue.amend(draw.writ_id, [{ key: 'after', value: 'Changed synthetic draft' }]);
+  if (!finish) throw new Error('Expected pending seal');
+  finish(reply({ ...draw, status: 'sealed' }));
+  expect((await pending).reply).toContain('Reconcile its outcome');
+  expect(steward.uncertain(draw.writ_id)).toBe(true);
+});
+
+test.each([
+  { label: 'transport failure', value: new Error('Synthetic lost reply') },
+  { label: 'invalid reply', value: '{' },
+])('an unconfirmed tear ($label) locks the proposal until the core is read', async ({ value }) => {
+  const queue = new ProposalQueue();
+  const transport = new RecordedStewardTransport([reply(draw), value]);
+  const steward = new LiveSteward(transport, queue);
+  await steward.ask('Synthetic draw', context);
+  expect((await steward.tearUp(draw.writ_id)).proposals).toEqual([]);
+  expect(steward.uncertain(draw.writ_id)).toBe(true);
+  const seal = vi.spyOn(transport, 'seal');
+  const unknown = await steward.seal(draw.writ_id);
+  expect(unknown.reply).toContain('Reconcile its outcome');
+  expect(seal).not.toHaveBeenCalled();
+  expect(queue.pending()).toHaveLength(1);
+});
+
+test('a confirmed tear leaves nothing locked', async () => {
+  const transport = new RecordedStewardTransport([reply(draw), reply({ ...draw, status: 'torn' })]);
+  const steward = new LiveSteward(transport, new ProposalQueue());
+  await steward.ask('Synthetic draw', context);
+  await steward.tearUp(draw.writ_id);
+  expect(steward.uncertain(draw.writ_id)).toBe(false);
+});

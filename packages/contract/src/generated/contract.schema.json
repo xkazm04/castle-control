@@ -313,7 +313,7 @@
             "type": "array"
           },
           "user_id": {
-            "pattern": "^[0-9]+$(?![\\s\\S])",
+            "pattern": "^[1-9][0-9]{0,31}$(?![\\s\\S])",
             "type": "string"
           }
         },
@@ -353,7 +353,7 @@
             "type": "array"
           },
           "user_id": {
-            "pattern": "^[0-9]+$(?![\\s\\S])",
+            "pattern": "^[1-9][0-9]{0,31}$(?![\\s\\S])",
             "type": "string"
           }
         },
@@ -785,18 +785,18 @@
                 "$ref": "#/$defs/AutoBanGrant"
               },
               "delivery": {
-                "pattern": "\\S",
+                "pattern": "[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200B\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF]",
                 "type": "string"
               },
               "mode": {
                 "$ref": "#/$defs/RuleMode"
               },
               "name": {
-                "pattern": "\\S",
+                "pattern": "[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200B\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF]",
                 "type": "string"
               },
               "pattern": {
-                "pattern": "\\S",
+                "pattern": "[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200B\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF]",
                 "type": "string"
               },
               "rule_class": {
@@ -810,7 +810,7 @@
               },
               "text": {
                 "maxLength": 500,
-                "pattern": "\\S",
+                "pattern": "[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200B\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF]",
                 "type": "string"
               },
               "timeout_s": {
@@ -1147,18 +1147,18 @@
                 "$ref": "#/$defs/AutoBanGrant"
               },
               "delivery": {
-                "pattern": "\\S",
+                "pattern": "[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200B\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF]",
                 "type": "string"
               },
               "mode": {
                 "$ref": "#/$defs/RuleMode"
               },
               "name": {
-                "pattern": "\\S",
+                "pattern": "[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200B\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF]",
                 "type": "string"
               },
               "pattern": {
-                "pattern": "\\S",
+                "pattern": "[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200B\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF]",
                 "type": "string"
               },
               "rule_class": {
@@ -1172,7 +1172,7 @@
               },
               "text": {
                 "maxLength": 500,
-                "pattern": "\\S",
+                "pattern": "[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200B\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF]",
                 "type": "string"
               },
               "timeout_s": {
@@ -1520,18 +1520,18 @@
             "$ref": "#/$defs/AutoBanGrant"
           },
           "delivery": {
-            "pattern": "\\S",
+            "pattern": "[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200B\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF]",
             "type": "string"
           },
           "mode": {
             "$ref": "#/$defs/RuleMode"
           },
           "name": {
-            "pattern": "\\S",
+            "pattern": "[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200B\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF]",
             "type": "string"
           },
           "pattern": {
-            "pattern": "\\S",
+            "pattern": "[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200B\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF]",
             "type": "string"
           },
           "rule_class": {
@@ -1545,7 +1545,7 @@
           },
           "text": {
             "maxLength": 500,
-            "pattern": "\\S",
+            "pattern": "[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200B\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF]",
             "type": "string"
           },
           "timeout_s": {
@@ -1579,7 +1579,7 @@
                 "$ref": "#/$defs/Timestamp"
               },
               "reason": {
-                "pattern": "\\S",
+                "pattern": "[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200B\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF]",
                 "type": "string"
               }
             },
@@ -3195,18 +3195,18 @@
                 "$ref": "#/$defs/AutoBanGrant"
               },
               "delivery": {
-                "pattern": "\\S",
+                "pattern": "[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200B\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF]",
                 "type": "string"
               },
               "mode": {
                 "$ref": "#/$defs/RuleMode"
               },
               "name": {
-                "pattern": "\\S",
+                "pattern": "[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200B\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF]",
                 "type": "string"
               },
               "pattern": {
-                "pattern": "\\S",
+                "pattern": "[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200B\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF]",
                 "type": "string"
               },
               "rule_class": {
@@ -3220,7 +3220,7 @@
               },
               "text": {
                 "maxLength": 500,
-                "pattern": "\\S",
+                "pattern": "[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200B\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF]",
                 "type": "string"
               },
               "timeout_s": {
@@ -3800,18 +3800,18 @@
                 "$ref": "#/$defs/AutoBanGrant"
               },
               "delivery": {
-                "pattern": "\\S",
+                "pattern": "[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200B\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF]",
                 "type": "string"
               },
               "mode": {
                 "$ref": "#/$defs/RuleMode"
               },
               "name": {
-                "pattern": "\\S",
+                "pattern": "[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200B\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF]",
                 "type": "string"
               },
               "pattern": {
-                "pattern": "\\S",
+                "pattern": "[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200B\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF]",
                 "type": "string"
               },
               "rule_class": {
@@ -3825,7 +3825,7 @@
               },
               "text": {
                 "maxLength": 500,
-                "pattern": "\\S",
+                "pattern": "[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200B\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF]",
                 "type": "string"
               },
               "timeout_s": {
@@ -10179,7 +10179,7 @@
                 "$ref": "#/$defs/Timestamp"
               },
               "reason": {
-                "pattern": "\\S",
+                "pattern": "[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200B\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF]",
                 "type": "string"
               }
             },
@@ -10306,18 +10306,18 @@
                 "$ref": "#/$defs/AutoBanGrant"
               },
               "delivery": {
-                "pattern": "\\S",
+                "pattern": "[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200B\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF]",
                 "type": "string"
               },
               "mode": {
                 "$ref": "#/$defs/RuleMode"
               },
               "name": {
-                "pattern": "\\S",
+                "pattern": "[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200B\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF]",
                 "type": "string"
               },
               "pattern": {
-                "pattern": "\\S",
+                "pattern": "[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200B\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF]",
                 "type": "string"
               },
               "rule_class": {
@@ -10331,7 +10331,7 @@
               },
               "text": {
                 "maxLength": 500,
-                "pattern": "\\S",
+                "pattern": "[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200B\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF]",
                 "type": "string"
               },
               "timeout_s": {
@@ -11590,7 +11590,7 @@
                 "$ref": "#/$defs/Timestamp"
               },
               "reason": {
-                "pattern": "\\S",
+                "pattern": "[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200B\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF]",
                 "type": "string"
               }
             },
@@ -11717,18 +11717,18 @@
                 "$ref": "#/$defs/AutoBanGrant"
               },
               "delivery": {
-                "pattern": "\\S",
+                "pattern": "[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200B\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF]",
                 "type": "string"
               },
               "mode": {
                 "$ref": "#/$defs/RuleMode"
               },
               "name": {
-                "pattern": "\\S",
+                "pattern": "[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200B\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF]",
                 "type": "string"
               },
               "pattern": {
-                "pattern": "\\S",
+                "pattern": "[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200B\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF]",
                 "type": "string"
               },
               "rule_class": {
@@ -11742,7 +11742,7 @@
               },
               "text": {
                 "maxLength": 500,
-                "pattern": "\\S",
+                "pattern": "[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200B\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF]",
                 "type": "string"
               },
               "timeout_s": {
@@ -13001,7 +13001,7 @@
                 "$ref": "#/$defs/Timestamp"
               },
               "reason": {
-                "pattern": "\\S",
+                "pattern": "[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200B\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF]",
                 "type": "string"
               }
             },
@@ -13128,18 +13128,18 @@
                 "$ref": "#/$defs/AutoBanGrant"
               },
               "delivery": {
-                "pattern": "\\S",
+                "pattern": "[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200B\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF]",
                 "type": "string"
               },
               "mode": {
                 "$ref": "#/$defs/RuleMode"
               },
               "name": {
-                "pattern": "\\S",
+                "pattern": "[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200B\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF]",
                 "type": "string"
               },
               "pattern": {
-                "pattern": "\\S",
+                "pattern": "[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200B\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF]",
                 "type": "string"
               },
               "rule_class": {
@@ -13153,7 +13153,7 @@
               },
               "text": {
                 "maxLength": 500,
-                "pattern": "\\S",
+                "pattern": "[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200B\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF]",
                 "type": "string"
               },
               "timeout_s": {
@@ -14730,18 +14730,18 @@
                 "$ref": "#/$defs/AutoBanGrant"
               },
               "delivery": {
-                "pattern": "\\S",
+                "pattern": "[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200B\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF]",
                 "type": "string"
               },
               "mode": {
                 "$ref": "#/$defs/RuleMode"
               },
               "name": {
-                "pattern": "\\S",
+                "pattern": "[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200B\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF]",
                 "type": "string"
               },
               "pattern": {
-                "pattern": "\\S",
+                "pattern": "[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200B\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF]",
                 "type": "string"
               },
               "rule_class": {
@@ -14755,7 +14755,7 @@
               },
               "text": {
                 "maxLength": 500,
-                "pattern": "\\S",
+                "pattern": "[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200B\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF]",
                 "type": "string"
               },
               "timeout_s": {
@@ -16012,7 +16012,7 @@
               "$ref": "#/$defs/Timestamp"
             },
             "reason": {
-              "pattern": "\\S",
+              "pattern": "[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200B\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF]",
               "type": "string"
             }
           },
@@ -16139,18 +16139,18 @@
               "$ref": "#/$defs/AutoBanGrant"
             },
             "delivery": {
-              "pattern": "\\S",
+              "pattern": "[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200B\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF]",
               "type": "string"
             },
             "mode": {
               "$ref": "#/$defs/RuleMode"
             },
             "name": {
-              "pattern": "\\S",
+              "pattern": "[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200B\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF]",
               "type": "string"
             },
             "pattern": {
-              "pattern": "\\S",
+              "pattern": "[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200B\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF]",
               "type": "string"
             },
             "rule_class": {
@@ -16164,7 +16164,7 @@
             },
             "text": {
               "maxLength": 500,
-              "pattern": "\\S",
+              "pattern": "[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200B\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF]",
               "type": "string"
             },
             "timeout_s": {
@@ -18948,6 +18948,18 @@
       "title": "DrawContent",
       "type": "string"
     },
+    "DrawFailureReason": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "enum": [
+        "beacon_unavailable",
+        "cap_unsatisfiable",
+        "invalid_cast",
+        "seal_missing",
+        "abandoned"
+      ],
+      "title": "DrawFailureReason",
+      "type": "string"
+    },
     "DrawId": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$(?![\\s\\S])",
@@ -18960,6 +18972,26 @@
       "title": "DrawRunId",
       "type": "string"
     },
+    "EngineFailureReason": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "enum": [
+        "invalid",
+        "missing_model",
+        "unavailable",
+        "timeout",
+        "rate_limited",
+        "auth",
+        "parse",
+        "not_admitted",
+        "cloud_opt_in",
+        "cli_on_live",
+        "posture",
+        "audit",
+        "supervision"
+      ],
+      "title": "EngineFailureReason",
+      "type": "string"
+    },
     "EngineLane": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "enum": [
@@ -18967,6 +18999,16 @@
         "batch"
       ],
       "title": "EngineLane",
+      "type": "string"
+    },
+    "EngineOutcome": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "enum": [
+        "model",
+        "rules_only",
+        "refused"
+      ],
+      "title": "EngineOutcome",
       "type": "string"
     },
     "ErrorCode": {
@@ -21324,7 +21366,7 @@
               "$ref": "#/$defs/Timestamp"
             },
             "reason": {
-              "pattern": "\\S",
+              "pattern": "[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200B\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF]",
               "type": "string"
             }
           },
@@ -21700,18 +21742,18 @@
               "$ref": "#/$defs/AutoBanGrant"
             },
             "delivery": {
-              "pattern": "\\S",
+              "pattern": "[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200B\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF]",
               "type": "string"
             },
             "mode": {
               "$ref": "#/$defs/RuleMode"
             },
             "name": {
-              "pattern": "\\S",
+              "pattern": "[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200B\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF]",
               "type": "string"
             },
             "pattern": {
-              "pattern": "\\S",
+              "pattern": "[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200B\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF]",
               "type": "string"
             },
             "rule_class": {
@@ -21725,7 +21767,7 @@
             },
             "text": {
               "maxLength": 500,
-              "pattern": "\\S",
+              "pattern": "[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200B\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF]",
               "type": "string"
             },
             "timeout_s": {
@@ -24106,7 +24148,7 @@
               "$ref": "#/$defs/Timestamp"
             },
             "reason": {
-              "pattern": "\\S",
+              "pattern": "[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200B\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF]",
               "type": "string"
             }
           },
@@ -24233,18 +24275,18 @@
               "$ref": "#/$defs/AutoBanGrant"
             },
             "delivery": {
-              "pattern": "\\S",
+              "pattern": "[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200B\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF]",
               "type": "string"
             },
             "mode": {
               "$ref": "#/$defs/RuleMode"
             },
             "name": {
-              "pattern": "\\S",
+              "pattern": "[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200B\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF]",
               "type": "string"
             },
             "pattern": {
-              "pattern": "\\S",
+              "pattern": "[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200B\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF]",
               "type": "string"
             },
             "rule_class": {
@@ -24258,7 +24300,7 @@
             },
             "text": {
               "maxLength": 500,
-              "pattern": "\\S",
+              "pattern": "[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200B\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF]",
               "type": "string"
             },
             "timeout_s": {
@@ -27733,7 +27775,7 @@
               "$ref": "#/$defs/Timestamp"
             },
             "reason": {
-              "pattern": "\\S",
+              "pattern": "[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200B\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF]",
               "type": "string"
             }
           },
@@ -27860,18 +27902,18 @@
               "$ref": "#/$defs/AutoBanGrant"
             },
             "delivery": {
-              "pattern": "\\S",
+              "pattern": "[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200B\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF]",
               "type": "string"
             },
             "mode": {
               "$ref": "#/$defs/RuleMode"
             },
             "name": {
-              "pattern": "\\S",
+              "pattern": "[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200B\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF]",
               "type": "string"
             },
             "pattern": {
-              "pattern": "\\S",
+              "pattern": "[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200B\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF]",
               "type": "string"
             },
             "rule_class": {
@@ -27885,7 +27927,7 @@
             },
             "text": {
               "maxLength": 500,
-              "pattern": "\\S",
+              "pattern": "[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200B\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF]",
               "type": "string"
             },
             "timeout_s": {
@@ -29134,7 +29176,7 @@
               "$ref": "#/$defs/Timestamp"
             },
             "reason": {
-              "pattern": "\\S",
+              "pattern": "[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200B\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF]",
               "type": "string"
             }
           },
@@ -29261,18 +29303,18 @@
               "$ref": "#/$defs/AutoBanGrant"
             },
             "delivery": {
-              "pattern": "\\S",
+              "pattern": "[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200B\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF]",
               "type": "string"
             },
             "mode": {
               "$ref": "#/$defs/RuleMode"
             },
             "name": {
-              "pattern": "\\S",
+              "pattern": "[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200B\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF]",
               "type": "string"
             },
             "pattern": {
-              "pattern": "\\S",
+              "pattern": "[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200B\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF]",
               "type": "string"
             },
             "rule_class": {
@@ -29286,7 +29328,7 @@
             },
             "text": {
               "maxLength": 500,
-              "pattern": "\\S",
+              "pattern": "[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200B\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF]",
               "type": "string"
             },
             "timeout_s": {
@@ -30541,7 +30583,7 @@
               "$ref": "#/$defs/Timestamp"
             },
             "reason": {
-              "pattern": "\\S",
+              "pattern": "[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200B\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF]",
               "type": "string"
             }
           },
@@ -30668,18 +30710,18 @@
               "$ref": "#/$defs/AutoBanGrant"
             },
             "delivery": {
-              "pattern": "\\S",
+              "pattern": "[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200B\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF]",
               "type": "string"
             },
             "mode": {
               "$ref": "#/$defs/RuleMode"
             },
             "name": {
-              "pattern": "\\S",
+              "pattern": "[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200B\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF]",
               "type": "string"
             },
             "pattern": {
-              "pattern": "\\S",
+              "pattern": "[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200B\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF]",
               "type": "string"
             },
             "rule_class": {
@@ -30693,7 +30735,7 @@
             },
             "text": {
               "maxLength": 500,
-              "pattern": "\\S",
+              "pattern": "[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200B\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF]",
               "type": "string"
             },
             "timeout_s": {

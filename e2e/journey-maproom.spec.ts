@@ -181,13 +181,15 @@ test('Map Room Spyglass: viewer sizes, isolated picks, current/draft review, sea
     await expect(table).toHaveAttribute('data-look-ink', 'key');
     await toggle.click();
 
-    // Two previews against one base: sealing the second must mark the first STALE.
+    // A second Custom design amends the open draft instead of piling up a second one (f72b0fb).
     await draft('A bold plain map');
     await dialog.getByRole('button', { name: 'Back to the room', exact: true }).click();
-    await draft('A quiet engraved map'); await seal();
-    await expect(frames.nth(1)).toContainText('STALE');
+    await draft('A quiet engraved map');
+    await dialog.getByRole('button', { name: 'Back to the room', exact: true }).click();
+    await expect(frames).toHaveCount(2);
+    await expect(frames.nth(1)).toContainText('Draft · NOT ON AIR');
+    await expect(frames.nth(1).locator('[data-look-ink]')).toHaveAttribute('data-treatment', 'engraved');
     await room.getByRole('button', { name: 'Review design', exact: true }).click();
-    await expect(dialog.getByRole('button', { name: 'Hold to seal and proclaim', exact: true })).toBeDisabled();
     await dialog.getByRole('button', { name: 'Tear it up', exact: true }).click();
     await dialog.getByRole('button', { name: 'Back to the room', exact: true }).click();
     await expect(frames).toHaveCount(1);

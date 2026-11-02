@@ -372,6 +372,9 @@ impl Gatehouse {
                 },
             )
             .map_err(internal)?;
+        if care && let Some(msg) = msg {
+            self.note_committed_care(&msg.user_id);
+        }
         Ok(decision)
     }
 

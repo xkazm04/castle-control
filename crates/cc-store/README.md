@@ -3,7 +3,7 @@
 Standalone Rust library for Castle Control's local viewer data, audit ledgers and
 retention. No network or bridge dependency; an internal `cc-types` path dependency
 reuses the validated art credit and call-ID types. SQLite uses bundled
-rusqlite 0.38. `Store::open(directory)` migrates the database (`user_version = 3`),
+rusqlite 0.38. `Store::open(directory)` migrates the database (`user_version = 4`),
 checks the inventory and ledgers, and holds an exclusive OS file lock until drop.
 Share one `Store` through a mutex; a second writer to the directory is refused.
 
@@ -34,7 +34,7 @@ All five viewer-data stores accept `StoredItem`: ULID `id`, UTC `at`, nonempty
 `map_user` first; unmapped IDs and empty associations are refused. Pass **every**
 viewer represented by a shared item in `user_ids`: forgetting any one of them
 deletes the entire item, including its content. Login lookup is case insensitive.
-Renames retain old aliases; reassignment of a login replaces that alias's ID.
+Renames retain old aliases. Reassigning a login to another user keeps the previous owner's row (schema v4); the newest owner is the login's current owner. `forget_user(login)` erases only that current owner; `forget_user_id` erases a user whose every login moved on.
 An unknown login has zero matches. `items(DataStore)` reads validated viewer
 items only, preserving existing Lot Chamber proof readers.
 
@@ -176,7 +176,10 @@ general-purpose JSON canonicalization protocol.
 Readers and startup check the schema version, ledger kind, exact canonical bytes,
 digest and complete newline termination. A malformed or partial record fails
 closed and is never silently repaired. Failed writes or detected corruption
-block normal operations; full purge remains available on an already-open store.
+block normal operations; erasure stays available on an already-open store: full
+purge, `forget_user` and retention expiry never touch the ledgers, so a latched
+ledger fault does not refuse them (only an unfinished full purge does) and the
+fault stays latched for everything else.
 Dry-run/full-purge ledger counts count frames, including an incomplete tail, so
 corruption cannot prevent erasure. Corrupt ledgers without a pending purge cause
 open to fail and require operator recovery of the directory. The digest detects
@@ -199,7 +202,7 @@ land at v2 in one transaction; existing v1 data and ledgers are preserved.
 `set_engine_settings(&Settings)` atomically replaces the whole engine subset.
 Omitted keys are reset to the sole parser's defaults; an empty map removes all
 overrides. Both APIs use `cc_types::parse_engine_settings` for value validation;
-`ENGINE_SETTING_KEYS` is the closed nine-key inventory from WP 1.4. Unknown keys
+`cc_types::ENGINE_SETTING_KEYS` is the closed nine-key inventory from WP 1.4. Unknown keys
 (including `retention_s`), malformed values and failed writes change nothing.
 Paths and endpoints are never logged. These APIs neither spawn nor contact engines.
 

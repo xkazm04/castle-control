@@ -8,7 +8,7 @@ export const lotsCopy = {
   cohorts: { subscriber: 'Subscribers', new_account: 'New accounts', raider: 'Raiders' },
   open: 'Open · lots arriving', paused: 'Intake paused', sealed: 'Sealed · entry list frozen locally',
   started: 'Simulated draw started · no live result', cooldown: 'held out by cooldown',
-  seal: 'Seal the roll', pause: 'Pause intake', resume: 'Resume intake', start: 'Start simulated draw',
+  seal: 'Seal the roll', pause: 'Pause intake', resume: 'Resume intake',
   saved: 'Draws you have', lookup: 'Find a handle in the roll', lookup_hint: 'Try simulated_00001 or simulated_cooldown.',
   lookup_empty: 'Enter a generated handle to check this pool.', lookup_missing: 'Not in this generated pool.',
   lookup_found: 'In the pool · lot', lookup_cooldown: 'Not in the pool · held out by cooldown.',

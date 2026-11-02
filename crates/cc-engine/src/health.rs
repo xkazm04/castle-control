@@ -1,6 +1,6 @@
 // Adapted from Shadowrunr OS @ 7e4b6f8,
 // crates/shadowrunr-engine/src/health.rs.
-use crate::{CliRuntime, Keychain, Result};
+use crate::{CliRuntime, Failure, Keychain, Result};
 use cc_types::CliProvider;
 use serde::Deserialize;
 
@@ -25,12 +25,18 @@ impl CliRuntime {
             .door
             .capture(executable, &["--version".into()], key, vault)
             .await;
-        let Ok((true, bytes)) = version else {
-            return Ok(Probe {
-                installed: false,
-                version: None,
-                signed_in: false,
-            });
+        // Only a missing executable or a timeout means "not installed"; custody and
+        // supervision failures are real causes the caller must see.
+        let bytes = match version {
+            Ok((true, bytes)) => bytes,
+            Ok((false, _)) | Err(Failure::Unavailable | Failure::Timeout) => {
+                return Ok(Probe {
+                    installed: false,
+                    version: None,
+                    signed_in: false,
+                });
+            }
+            Err(error) => return Err(error),
         };
         let version = parse_version(&bytes);
         let auth = self
@@ -50,7 +56,8 @@ impl CliRuntime {
                         && serde_json::from_slice::<Auth>(&bytes).is_ok_and(|auth| auth.logged_in)
                 }
             },
-            Err(_) => false,
+            Err(Failure::Unavailable | Failure::Timeout) => false,
+            Err(error) => return Err(error),
         };
         Ok(Probe {
             installed: true,

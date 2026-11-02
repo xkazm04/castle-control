@@ -16,6 +16,8 @@ import './surfaces.css';
 export type TalkbackLine = { id: number; who: 'You' | 'Steward'; text: string; live?: boolean };
 const greeting = 'Good evening. Draft in the preview, amend in ink, then hold to seal. Nothing acts on a spoken request.';
 
+const stewardFailureReply = 'The Steward could not finish. No authorization was given. Try again.';
+
 /** Conversation is shared across mounts; all proposals live only in proposalQueue. */
 export function createStewardConversation(port: StewardPort) {
   let snapshot: readonly TalkbackLine[] = [{ id: 0, who: 'Steward', text: greeting }];
@@ -38,7 +40,7 @@ export function createStewardConversation(port: StewardPort) {
         append('Steward', turn.reply, engine instanceof LiveSteward);
         return turn;
       } catch {
-        const reply = 'The Steward could not finish. No authorization was given. Try again.';
+        const reply = stewardFailureReply;
         append('Steward', reply, engine instanceof LiveSteward);
         return { reply, proposals: [], focus: null };
       }
@@ -100,7 +102,11 @@ export function ShellSteward({ context, chamber, snapshot = sampleSnapshot, conn
   async function unmatched(text: string): Promise<UnmatchedReply> {
     // The existing engine (live core, or the offline simulated one) answers what no flow matched.
     const turn = await stewardConversation.ask(text, stewardContext(context), port);
-    routeStewardTurn(turn, context, on_select, on_open, on_overview);
+    try { routeStewardTurn(turn, context, on_select, on_open, on_overview); }
+    catch (error) {
+      // A failing navigation callback must not strand the dock; the Steward still answers.
+      console.error('Steward routing failed', error);
+    }
     if (!live && !turn.focus && turn.proposals.length === 0) {
       const steward = registry[chamber ?? flowChamber(context)];
       const chips = [...steward.flows.map(flow => flow.chip ?? flow.title), ...(steward.demo ? ['Play demo'] : [])].map(label => label.toLowerCase());

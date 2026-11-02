@@ -18,19 +18,25 @@ export type ConsensusChartProps = {
 export function ConsensusChart({ results, title, filter_label, empty_state }: ConsensusChartProps) {
   const [selected, setSelected] = useState(0);
   const [direction, setDirection] = useState<string>();
-  const result = results[selected] ?? results[0];
+  const index = Math.max(0, Math.min(selected, results.length - 1));
+  const result = results[index];
   if (!result) return <p role="status">{empty_state}</p>;
-  const start = Date.parse(result.at) - result.window_s * 1000;
+  const span = result.window_s * 1000;
+  const start = Date.parse(result.at) - span;
   return <div className="cc-consensus-chart">
     <div className="cc-consensus-toolbar"><span className="cc-kicker">{title}</span>
-      <label>{filter_label} <select value={selected} onChange={event => { setSelected(Number(event.currentTarget.value)); setDirection(undefined); }}>
+      <label>{filter_label} <select value={index} onChange={event => { setSelected(Number(event.currentTarget.value)); setDirection(undefined); }}>
         {results.map((item, index) => <option key={index} value={index}>{item.label}</option>)}
       </select></label>
     </div>
     <svg viewBox="0 0 760 210" role="img" aria-label={result.aria_label}>
       {[0.25, 0.5, 0.75].map(share => <line key={share} x1="0" x2="760" y1={200 - share * 180} y2={200 - share * 180} className="cc-consensus-gridline" />)}
       {result.directions.map((item, index) => {
-        const points = item.series.map(point => `${Math.max(0, Math.min(760, (Date.parse(point.at) - start) / (result.window_s * 1000) * 760))},${200 - point.share * 180}`).join(' ');
+        const points = item.series.flatMap(point => {
+          const x = (Date.parse(point.at) - start) / span * 760;
+          return Number.isFinite(x) && Number.isFinite(point.share)
+            ? [`${Math.max(0, Math.min(760, x))},${200 - Math.max(0, Math.min(1, point.share)) * 180}`] : [];
+        }).join(' ');
         return <g key={item.key} data-direction={index % 4} opacity={direction && direction !== item.key ? 0.15 : 1}>
           <polygon points={`0,200 ${points} 760,200`} className="cc-consensus-band" />
           <polyline points={points} className="cc-consensus-series"><title>{item.label}: {(item.share * 100).toFixed(1)}%</title></polyline>

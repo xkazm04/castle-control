@@ -7,7 +7,7 @@ use futures::future::BoxFuture;
 use serde_json::Value;
 use std::{
     path::PathBuf,
-    sync::{Arc, OnceLock, Weak},
+    sync::{Arc, Mutex, OnceLock, Weak},
 };
 
 #[derive(Default)]
@@ -18,7 +18,8 @@ pub(crate) struct OfflineModules {
     live: bool,
     rehearsal: bool,
     events: OnceLock<Arc<EventHub>>,
-    loaded: OnceLock<Result<Loaded, ErrorEnvelope>>,
+    // Only a successful load is kept: a transient failure is retried next call.
+    loaded: Mutex<Option<Arc<Loaded>>>,
     pipeline: OnceLock<Arc<crate::live::ShadowPipeline>>,
 }
 
@@ -49,7 +50,7 @@ impl OfflineModules {
             live: false,
             rehearsal: false,
             events: OnceLock::from(events),
-            loaded: OnceLock::new(),
+            loaded: Mutex::new(None),
             pipeline: OnceLock::new(),
         }
     }
@@ -132,90 +133,97 @@ impl OfflineModules {
         ))
     }
 
-    fn load(&self) -> Result<&Loaded, ErrorEnvelope> {
-        self.loaded
-            .get_or_init(|| {
-                let temporary_root = if self.root.is_none() {
-                    Some(tempfile::tempdir().map_err(|_| unavailable())?)
-                } else {
-                    None
-                };
-                let root = self
-                    .root
-                    .as_deref()
-                    .or_else(|| temporary_root.as_ref().map(|root| root.path()))
-                    .ok_or_else(unavailable)?;
-                let events = self
-                    .events
-                    .get_or_init(|| {
-                        Arc::new(EventHub::new(256).expect("nonzero offline event capacity"))
-                    })
-                    .clone();
-                let (mut lots, gatehouse) = if self.live {
-                    (
-                        LotsModule::open(
-                            root.join("lots"),
-                            events.clone(),
-                            if self.rehearsal {
-                                Arc::new(crate::lots::live_beacon::LiveBeacon::new(
-                                    crate::lots::live_beacon::official_chain(),
-                                ))
-                            } else {
-                                crate::lots::live_beacon::configured(root)?
-                            },
-                            Arc::new(crate::lots::SystemLotsClock),
-                            false,
-                        )?,
-                        if self.rehearsal {
-                            GatehouseModule::open_shadow_with_directions(
-                                root.join("gatehouse"),
-                                crate::rehearsal::directions::seeds(),
-                            )?
-                        } else {
-                            GatehouseModule::open_shadow(root.join("gatehouse"))?
-                        },
-                    )
-                } else {
-                    let recorded = Arc::new(crate::lots::recorded::RecordedBeacon);
-                    (
-                        LotsModule::open(
-                            root.join("lots"),
-                            events.clone(),
-                            recorded.clone(),
-                            recorded,
-                            true,
-                        )?,
-                        GatehouseModule::open_offline(root.join("gatehouse"))?,
-                    )
-                };
-                if self.live
-                    && let Some(native) = self.native.as_ref().and_then(Weak::upgrade)
-                {
-                    lots = lots.with_render_host(native.lots_render_host());
-                }
-                let beacons = BeaconsModule::open(root.join("beacons"))?
-                    .with_overlay_origin(self.overlay_origin.clone())
-                    .with_native(self.native.clone())?;
-                let gatehouse = Arc::new(gatehouse);
-                let tiltyard = crate::tiltyard::TiltyardModule::open(
-                    root.join("tiltyard"),
-                    gatehouse.clone(),
-                    events,
-                    self.overlay_origin.clone(),
-                )?;
-                if let Some(native) = self.native.as_ref().and_then(Weak::upgrade) {
-                    native.lots_render_host().bind_tiltyard(tiltyard.clone())?;
-                }
-                lots.temporary_root = temporary_root;
-                Ok(Loaded {
-                    gatehouse,
-                    tiltyard,
-                    beacons: Arc::new(beacons),
-                    lots: Arc::new(lots),
+    fn load(&self) -> Result<Arc<Loaded>, ErrorEnvelope> {
+        let mut cached = self.loaded.lock().map_err(|_| unavailable())?;
+        if let Some(loaded) = cached.as_ref() {
+            return Ok(loaded.clone());
+        }
+        let loaded = self.open_all()?;
+        *cached = Some(loaded.clone());
+        Ok(loaded)
+    }
+
+    fn open_all(&self) -> Result<Arc<Loaded>, ErrorEnvelope> {
+        (|| {
+            let temporary_root = if self.root.is_none() {
+                Some(tempfile::tempdir().map_err(|_| unavailable())?)
+            } else {
+                None
+            };
+            let root = self
+                .root
+                .as_deref()
+                .or_else(|| temporary_root.as_ref().map(|root| root.path()))
+                .ok_or_else(unavailable)?;
+            let events = self
+                .events
+                .get_or_init(|| {
+                    Arc::new(EventHub::new(256).expect("nonzero offline event capacity"))
                 })
-            })
-            .as_ref()
-            .map_err(Clone::clone)
+                .clone();
+            let (mut lots, gatehouse) = if self.live {
+                (
+                    LotsModule::open(
+                        root.join("lots"),
+                        events.clone(),
+                        if self.rehearsal {
+                            Arc::new(crate::lots::live_beacon::LiveBeacon::new(
+                                crate::lots::live_beacon::official_chain(),
+                            ))
+                        } else {
+                            crate::lots::live_beacon::configured(root)?
+                        },
+                        Arc::new(crate::lots::SystemLotsClock),
+                        false,
+                    )?,
+                    if self.rehearsal {
+                        GatehouseModule::open_shadow_with_directions(
+                            root.join("gatehouse"),
+                            crate::rehearsal::directions::seeds(),
+                        )?
+                    } else {
+                        GatehouseModule::open_shadow(root.join("gatehouse"))?
+                    },
+                )
+            } else {
+                let recorded = Arc::new(crate::lots::recorded::RecordedBeacon);
+                (
+                    LotsModule::open(
+                        root.join("lots"),
+                        events.clone(),
+                        recorded.clone(),
+                        recorded,
+                        true,
+                    )?,
+                    GatehouseModule::open_offline(root.join("gatehouse"))?,
+                )
+            };
+            if self.live
+                && let Some(native) = self.native.as_ref().and_then(Weak::upgrade)
+            {
+                lots = lots.with_render_host(native.lots_render_host());
+            }
+            let beacons = BeaconsModule::open(root.join("beacons"))?
+                .with_overlay_origin(self.overlay_origin.clone())
+                .with_native(self.native.clone())?;
+            let gatehouse = Arc::new(gatehouse);
+            let tiltyard = crate::tiltyard::TiltyardModule::open(
+                root.join("tiltyard"),
+                gatehouse.clone(),
+                events,
+                self.overlay_origin.clone(),
+            )?;
+            if let Some(native) = self.native.as_ref().and_then(Weak::upgrade) {
+                native.lots_render_host().bind_tiltyard(tiltyard.clone())?;
+            }
+            lots.temporary_root = temporary_root;
+            Ok(Arc::new(Loaded {
+                gatehouse,
+                tiltyard,
+                beacons: Arc::new(beacons),
+                lots: Arc::new(lots),
+            }))
+        })()
     }
 }
 
@@ -271,7 +279,12 @@ impl Module for OfflineModule {
             // The standalone domain service retains its existing testable semantics.
             let arming = match request {
                 RpcRequest::RulesSetMode(params) => params.mode == RuleMode::Armed,
-                RpcRequest::RulesUpsert(params) => params.rule.mode == RuleMode::Armed,
+                // The rail is always armed and only its delivery is configurable, so
+                // the domain service alone decides whether an upsert may change it.
+                RpcRequest::RulesUpsert(params) => {
+                    params.rule.mode == RuleMode::Armed
+                        && params.rule.rule_class != cc_types::RuleClass::Rail
+                }
                 _ => false,
             };
             if arming {
@@ -301,4 +314,22 @@ impl Module for OfflineModule {
 
 fn unavailable() -> ErrorEnvelope {
     ErrorEnvelope::new(ErrorCode::Unavailable, "offline fixture state unavailable")
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn a_transient_load_failure_is_not_cached_for_later_calls() {
+        let dir = tempfile::tempdir().unwrap();
+        let modules =
+            OfflineModules::at(dir.path().to_owned(), Arc::new(EventHub::new(16).unwrap()));
+        // A file where a module directory belongs blocks the first load.
+        let blocked = dir.path().join("lots");
+        std::fs::write(&blocked, b"simulated blocker").unwrap();
+        assert!(modules.lots().is_err());
+        std::fs::remove_file(&blocked).unwrap();
+        assert!(modules.lots().is_ok());
+    }
 }

@@ -28,7 +28,12 @@ impl Gatehouse {
                 "governor_lease_expired",
                 actor,
             )?;
-            if let Some(registration) = self.room_leases.remove(&lease.lease_id) {
+            // A pending End keeps its registration until lease_end confirms it
+            // (or a replacement ends it); otherwise the End could never be sent.
+            let end_pending = update.intents.iter().any(|intent| {
+                matches!(intent, RoomModeIntent::End { lease_id, .. } if *lease_id == lease.lease_id)
+            });
+            if !end_pending && let Some(registration) = self.room_leases.remove(&lease.lease_id) {
                 registration.end();
             }
         }

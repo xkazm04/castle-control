@@ -2,6 +2,7 @@
 
 mod audit;
 mod error;
+mod generation;
 mod images;
 mod inventory;
 mod ledger;
@@ -22,7 +23,6 @@ pub use inventory::{
 pub use ledger::{DecisionAction, ImageProviderAmount, LedgerEvent, LedgerKind, LedgerLine};
 pub use purge::{Purge, PurgePreview};
 pub use retention::{Clock, SystemClock, run_retention_job, spawn_retention_task};
-pub use settings::ENGINE_SETTING_KEYS;
 pub use store::Store;
 pub use types::{ConfigurationItem, StoredItem, Timestamp, TwitchUserId};
 

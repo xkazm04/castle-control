@@ -131,3 +131,12 @@ test('all opt-in button sizes render their vocabulary and print properties', () 
       '--cc-shadow-ink:var(--key)', `data-size="${size}"`]) expect(html).toContain(value);
   }
 });
+
+test('FieldGroup wires its hint to the child control unless the child already names a description', () => {
+  const wired = render(<FieldGroup label="Find" control_id="sample" hint="h"><input id="sample" /></FieldGroup>);
+  expect(wired).toContain('aria-describedby="sample-hint"');
+  const own = render(<FieldGroup label="Find" control_id="sample" hint="h"><input id="sample" aria-describedby="other" /></FieldGroup>);
+  expect(own).toContain('aria-describedby="other"');
+  expect(own).not.toContain('aria-describedby="sample-hint"');
+  expect(render(<FieldGroup label="Find" control_id="plain"><input id="plain" /></FieldGroup>)).not.toContain('aria-describedby');
+});

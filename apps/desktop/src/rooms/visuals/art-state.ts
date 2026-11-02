@@ -48,8 +48,11 @@ export function createArtGeneration(port: CoreBeaconsPort, design_id?: DesignId)
         try { code = parseError(JSON.stringify(error)).code; }
         catch { code = 'unavailable'; }
         // Never render provider prose, details or launch credentials.
+        // Only upstream and internal can follow the paid call (receipt, polling, download, import); the other codes
+        // are refusals made before it. The envelope cannot say which, so the line says "may".
+        const paid = code === 'upstream' || code === 'internal' ? ' Credits may already have been spent; check the provider balance or receipt before trying again.' : '';
         publish({ prompt, model_id, confirming: false, busy: false,
-          error: `Art request failed: ${code}. No automatic retry was made.` });
+          error: `Art request failed: ${code}. No automatic retry was made.${paid}` });
       }
     },
   };

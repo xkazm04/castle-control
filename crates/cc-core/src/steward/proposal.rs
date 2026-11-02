@@ -12,6 +12,20 @@ pub(super) fn mutation(proposal: &WritProposal) -> RpcRequest {
     }
 }
 
+/// Steward does not emit or store `gatehouse.rules.setMode` proposals. Owner
+/// decision: until cc-types gains the identifier (a separate, later delivery),
+/// the stored writ would drop the arming acknowledgement and no longer parse,
+/// poisoning the writ store. Callers surface the skip as an `Invalid` error.
+pub(super) fn emittable(proposal: &WritProposal) -> Result<(), ErrorEnvelope> {
+    match proposal {
+        WritProposal::RulesSetMode(_) => Err(ErrorEnvelope::new(
+            ErrorCode::Invalid,
+            "Steward does not propose rule mode changes yet",
+        )),
+        _ => Ok(()),
+    }
+}
+
 /// Read whole typed snapshots through the same registry as the desktop. Never
 /// trust the model's before value, and never create a second configuration store.
 pub(super) async fn snapshot(
@@ -131,4 +145,37 @@ async fn read<T: serde::de::DeserializeOwned>(
     request: RpcRequest,
 ) -> Result<T, ErrorEnvelope> {
     serde_json::from_value(registry.dispatch_inner(&request).await?).map_err(|_| internal())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::collections::BTreeSet;
+
+    /// One simulated writ per proposal variant. The match has no wildcard, so
+    /// a new variant fails to compile until it is listed here.
+    #[test]
+    fn every_proposal_variant_maps_to_a_request_steward_treats_as_a_mutation() {
+        let writs: Vec<Writ> = serde_json::from_str(include_str!(
+            "../../../cc-types/tests/fixtures/steward.json"
+        ))
+        .unwrap();
+        let mut variants = BTreeSet::new();
+        for writ in &writs {
+            variants.insert(match &writ.proposal {
+                WritProposal::DrawUpsert(_) => 0,
+                WritProposal::RulesUpsert(_) => 1,
+                WritProposal::RulesSetMode(_) => 2,
+                WritProposal::VisualUpsert(_) => 3,
+                WritProposal::CurveSet(_) => 4,
+            });
+            let request = mutation(&writ.proposal);
+            assert!(
+                super::super::is_mutation(&request),
+                "{} is not listed in is_mutation",
+                request.method()
+            );
+        }
+        assert_eq!(variants.len(), 5, "fixtures must cover every variant");
+    }
 }

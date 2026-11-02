@@ -30,54 +30,116 @@ impl Default for EngineSettings {
     }
 }
 
+/// The closed nine-key inventory of engine settings. The parser walks this list,
+/// so it is the single source for every crate (cc-store and cc-core import it).
+pub const ENGINE_SETTING_KEYS: &[&str] = &[
+    "engine.cli_provider",
+    "engine.live_endpoint",
+    "engine.cloud_opt_in",
+    "engine.claude_exe_path",
+    "engine.codex_exe_path",
+    "engine.posture_helper_path",
+    "engine.model_local",
+    "engine.model_claude",
+    "engine.model_codex",
+];
+
 /// The sole parser for engine.* keys. No filesystem access, spawning or network/
 /// credential lookup. Optional paths and models have no inferred defaults.
 /// Cloud authorization and endpoint admission remain the engine's responsibility.
 pub fn parse_engine_settings(settings: &Settings) -> Result<EngineSettings, ErrorEnvelope> {
     let mut parsed = EngineSettings::default();
-    if let Some(value) = settings.values.get("engine.cli_provider") {
-        parsed.cli_provider = serde_json::from_value(
-            serde_json::to_value(value).map_err(|_| invalid("engine.cli_provider"))?,
-        )
-        .map_err(|_| invalid("engine.cli_provider"))?;
-    }
-    if let Some(value) = settings.values.get("engine.live_endpoint") {
-        match value {
-            DataValue::String(url) if http_endpoint(url) => parsed.live_endpoint.clone_from(url),
-            _ => return Err(invalid("engine.live_endpoint")),
+    for key in ENGINE_SETTING_KEYS {
+        let Some(value) = settings.values.get(*key) else {
+            continue;
+        };
+        match *key {
+            "engine.cli_provider" => {
+                parsed.cli_provider =
+                    serde_json::from_value(serde_json::to_value(value).map_err(|_| invalid(key))?)
+                        .map_err(|_| invalid(key))?;
+            }
+            "engine.live_endpoint" => match value {
+                DataValue::String(url) if http_endpoint(url) => {
+                    parsed.live_endpoint.clone_from(url);
+                }
+                _ => return Err(invalid(key)),
+            },
+            "engine.cloud_opt_in" => match value {
+                DataValue::Bool(enabled) => parsed.cloud_opt_in = *enabled,
+                _ => return Err(invalid(key)),
+            },
+            "engine.claude_exe_path" => {
+                parsed.claude_exe_path = checked_string(key, value, absolute_path)?;
+            }
+            "engine.codex_exe_path" => {
+                parsed.codex_exe_path = checked_string(key, value, absolute_path)?;
+            }
+            "engine.posture_helper_path" => {
+                parsed.posture_helper_path = checked_string(key, value, absolute_path)?;
+            }
+            "engine.model_local" => parsed.model_local = checked_string(key, value, model_id)?,
+            "engine.model_claude" => parsed.model_claude = checked_string(key, value, model_id)?,
+            "engine.model_codex" => parsed.model_codex = checked_string(key, value, model_id)?,
+            // A listed key without an arm is drift: refuse it, never ignore it.
+            _ => return Err(invalid(key)),
         }
     }
-    if let Some(value) = settings.values.get("engine.cloud_opt_in") {
-        match value {
-            DataValue::Bool(enabled) => parsed.cloud_opt_in = *enabled,
-            _ => return Err(invalid("engine.cloud_opt_in")),
-        }
-    }
-    parsed.claude_exe_path = optional_string(settings, "engine.claude_exe_path", absolute_path)?;
-    parsed.codex_exe_path = optional_string(settings, "engine.codex_exe_path", absolute_path)?;
-    parsed.posture_helper_path =
-        optional_string(settings, "engine.posture_helper_path", absolute_path)?;
-    parsed.model_local = optional_string(settings, "engine.model_local", model_id)?;
-    parsed.model_claude = optional_string(settings, "engine.model_claude", model_id)?;
-    parsed.model_codex = optional_string(settings, "engine.model_codex", model_id)?;
     Ok(parsed)
 }
 
-fn optional_string(
-    settings: &Settings,
+fn checked_string(
     key: &str,
+    value: &DataValue,
     accepts: fn(&str) -> bool,
 ) -> Result<Option<String>, ErrorEnvelope> {
-    match settings.values.get(key) {
-        None => Ok(None),
-        Some(DataValue::String(value)) if accepts(value) => Ok(Some(value.clone())),
-        Some(_) => Err(invalid(key)),
+    match value {
+        DataValue::String(value) if accepts(value) => Ok(Some(value.clone())),
+        _ => Err(invalid(key)),
     }
 }
 
+/// Executable path rule, identical on every host (it never consults the OS).
+///
+/// Both `/` and `\` are separators. Accepted: an absolute local path in POSIX
+/// form (`/x/y`) or Windows drive form (`C:\x\y`, `C:/x/y`). Refused: UNC
+/// (`\\host\..`, `//host/..`), device paths (`\\?\`, `\\.\`, `//?/`), a root
+/// without a drive (`\x`), drive-relative (`C:x`), relative paths, any `..`
+/// segment, a bare root with no file component, control characters, and empty.
 fn absolute_path(value: &str) -> bool {
-    // Native path rules: on Windows a root without a drive is not absolute.
-    std::path::Path::new(value).is_absolute() && !value.chars().any(char::is_control)
+    if value.chars().any(char::is_control) {
+        return false;
+    }
+    let is_sep = |c: char| c == '/' || c == '\\';
+    let bytes = value.as_bytes();
+    let rest = if bytes.first() == Some(&b'/') {
+        // A second separator after the leading `/` is UNC or a device path.
+        let tail = &value[1..];
+        if tail.starts_with(is_sep) {
+            return false;
+        }
+        tail
+    } else if bytes.len() >= 3
+        && bytes[0].is_ascii_alphabetic()
+        && bytes[1] == b':'
+        && (bytes[2] == b'/' || bytes[2] == b'\\')
+    {
+        let tail = &value[3..];
+        if tail.starts_with(is_sep) {
+            return false;
+        }
+        tail
+    } else {
+        return false;
+    };
+    let mut has_file = false;
+    for segment in rest.split(is_sep) {
+        if segment == ".." {
+            return false;
+        }
+        has_file |= !segment.is_empty();
+    }
+    has_file
 }
 
 fn model_id(value: &str) -> bool {
@@ -139,7 +201,20 @@ fn http_endpoint(url: &str) -> bool {
         if host.is_empty() || host.len() > 253 {
             return false;
         }
-        if host.bytes().all(|b| b.is_ascii_digit() || b == b'.') {
+        // A numeric-looking last label is an IPv4 spelling (decimal, octal or
+        // hex); only the canonical dotted quad is admitted.
+        let last = host
+            .strip_suffix('.')
+            .unwrap_or(host)
+            .rsplit('.')
+            .next()
+            .unwrap_or_default();
+        let numeric_last = last.bytes().all(|b| b.is_ascii_digit())
+            || last
+                .strip_prefix("0x")
+                .or_else(|| last.strip_prefix("0X"))
+                .is_some_and(|hex| hex.bytes().all(|b| b.is_ascii_hexdigit()));
+        if host.bytes().all(|b| b.is_ascii_digit() || b == b'.') || numeric_last {
             if host.parse::<std::net::Ipv4Addr>().is_err() {
                 return false;
             }

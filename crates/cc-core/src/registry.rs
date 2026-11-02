@@ -25,6 +25,7 @@ pub trait Module: Send + Sync {
 pub struct Registry {
     handlers: BTreeMap<&'static str, Arc<dyn Module>>,
     offline: Option<Arc<OfflineModules>>,
+    steward_configured: bool,
     rehearsal: Option<Arc<crate::rehearsal::RehearsalModule>>,
     pub(crate) configuration: Arc<tokio::sync::Mutex<()>>,
 }
@@ -94,10 +95,15 @@ impl Registry {
     /// The host constructs its engine, audit/configuration Store and vault.
     /// This does not select providers or configure the native/desktop host.
     pub fn with_steward(mut self, config: crate::steward::StewardConfig) -> Self {
-        let module: Arc<dyn Module> = Arc::new(crate::steward::StewardModule::configured(config));
+        assert!(!self.steward_configured, "Steward is already configured");
+        // Only the unconfigured fallback may be replaced; the configured module
+        // then goes through register()'s undeclared/duplicate validation.
         for &name in crate::steward::StewardModule::METHODS {
-            self.handlers.insert(name, module.clone());
+            self.handlers.remove(name);
         }
+        self.register(Arc::new(crate::steward::StewardModule::configured(config)))
+            .expect("Steward methods are declared and unique");
+        self.steward_configured = true;
         self
     }
 
@@ -292,6 +298,7 @@ impl Registry {
         registry
             .register(vote_bar)
             .expect("vote bar method declared and unique");
+        registry.steward_configured = steward.is_some();
         registry
             .register(Arc::new(steward.unwrap_or_default()))
             .expect("Steward methods are declared and unique");

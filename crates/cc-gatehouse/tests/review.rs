@@ -297,3 +297,28 @@ async fn erasing_a_viewer_cannot_reset_the_hourly_auto_ban_ceiling() {
         .unwrap();
     assert_eq!(result[0].decision.kind, DecisionKind::BanPending);
 }
+
+#[tokio::test]
+async fn shadow_only_gate_never_confirms_a_queued_ban_into_an_intent() {
+    let mut f = Fixture::new();
+    f.upsert(pattern("bad", Action::Ban));
+    f.arm("bad");
+    let result = f
+        .gate
+        .screen_batch(
+            vec![message(1, 100, "tagged [simulated]")],
+            &Fake::new("[]"),
+        )
+        .await
+        .unwrap();
+    assert_eq!(result[0].decision.kind, DecisionKind::BanPending);
+    f.gate.require_shadow();
+    let decision = f
+        .gate
+        .ban_confirm(DecisionParams {
+            decision_id: result[0].decision.decision_id.clone(),
+        })
+        .unwrap();
+    assert_ne!(decision.kind, DecisionKind::Banned);
+    assert!(f.gate.pending_bans().unwrap().is_empty());
+}

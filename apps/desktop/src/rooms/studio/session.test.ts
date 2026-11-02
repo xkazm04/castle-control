@@ -1,6 +1,7 @@
 import { expect, test } from 'vitest';
-import { createStudioSession, tilesForSize, updateStudioSession } from './session.js';
-import { fixtureTiles } from './fixture.js';
+import { boardForSize, createStudioSession, tilesForSize, updateStudioSession } from './session.js';
+import { STUDIO_SAMPLE_BOARD, fixtureTiles } from './fixture.js';
+
 
 test('all map sizes preserve sample records, grow deterministically and repair a selection when shrinking', () => {
   const before = JSON.stringify(fixtureTiles);
@@ -55,4 +56,14 @@ test('reveal duration rejects blank, fractional and out-of-range values, preserv
   }
   expect(updateStudioSession(state, 'replay').reveal_run).toBe(1);
   expect(updateStudioSession(state, 'reveal_ms', '60000').design.reveal_ms).toBe(60000);
+});
+
+test('resized boards give every generated tile a house, cycling through all of the sample sides', () => {
+  const sample = new Set(STUDIO_SAMPLE_BOARD.tiles.map(tile => `${tile.q},${tile.r}`));
+  for (const size of ['l'] as const) {
+    const generated = boardForSize(size).tiles.filter(tile => !sample.has(`${tile.q},${tile.r}`));
+    expect(generated.length, size).toBeGreaterThan(0);
+    expect(generated.every(tile => tile.side !== undefined), size).toBe(true);
+    expect(new Set(generated.map(tile => tile.side)).size, size).toBe(STUDIO_SAMPLE_BOARD.sides.length);
+  }
 });

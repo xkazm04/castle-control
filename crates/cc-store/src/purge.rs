@@ -1,6 +1,6 @@
 use crate::{
     Error, ForgetPolicy, LedgerKind, PurgePolicy, Result, STORE_INVENTORY, Storage, Store,
-    StoreSpec, Timestamp,
+    StoreSpec, Timestamp, TwitchUserId, generation::Erased,
 };
 use rusqlite::{Connection, OptionalExtension, TransactionBehavior, params_from_iter};
 use serde::{Deserialize, Serialize};
@@ -15,6 +15,9 @@ use std::{collections::BTreeMap, fs::OpenOptions, path::Path};
 )]
 pub enum Purge {
     ForgetUser(String),
+    /// Forget by Twitch user ID (carried in the same content slot), for a user
+    /// whose every login was reassigned to someone else.
+    ForgetUserId(String),
     ExpiredRecordings,
     All,
 }
@@ -40,12 +43,17 @@ impl Plan {
                 let login = crate::types::login(&login)?;
                 let user_id = conn
                     .query_row(
-                        "SELECT user_id FROM viewer_mappings WHERE login=?1",
+                        "SELECT user_id FROM viewer_mappings WHERE login=?1
+                         ORDER BY seq DESC LIMIT 1",
                         [&login],
                         |row| row.get(0),
                     )
                     .optional()?;
                 (Purge::ForgetUser(login), user_id, None)
+            }
+            Purge::ForgetUserId(id) => {
+                let id = crate::TwitchUserId::parse(&id)?.as_str().to_owned();
+                (Purge::ForgetUserId(id.clone()), Some(id), None)
             }
             Purge::ExpiredRecordings => {
                 let cap = crate::retention::retention_s(conn)?;
@@ -69,14 +77,16 @@ impl Plan {
     fn predicate(&self, spec: &StoreSpec) -> (&'static str, Vec<String>) {
         match &self.preview.request {
             Purge::All if spec.purge_all == PurgePolicy::DeleteRows => ("1", vec![]),
-            Purge::ForgetUser(_) => match (&self.user_id, spec.forget_user) {
-                (Some(id), ForgetPolicy::DeleteMapping) => ("user_id=?1", vec![id.clone()]),
-                (Some(id), ForgetPolicy::DeleteAssociatedItem) => (
-                    "EXISTS (SELECT 1 FROM json_each(user_ids) WHERE value=?1)",
-                    vec![id.clone()],
-                ),
-                _ => ("0", vec![]),
-            },
+            Purge::ForgetUser(_) | Purge::ForgetUserId(_) => {
+                match (&self.user_id, spec.forget_user) {
+                    (Some(id), ForgetPolicy::DeleteMapping) => ("user_id=?1", vec![id.clone()]),
+                    (Some(id), ForgetPolicy::DeleteAssociatedItem) => (
+                        "EXISTS (SELECT 1 FROM json_each(user_ids) WHERE value=?1)",
+                        vec![id.clone()],
+                    ),
+                    _ => ("0", vec![]),
+                }
+            }
             Purge::ExpiredRecordings if spec.name == "recordings" => match &self.preview.cutoff {
                 Some(cutoff) => ("at < ?1", vec![cutoff.as_rfc3339()]),
                 None => ("0", vec![]),
@@ -124,9 +134,7 @@ impl Plan {
 
 impl Store {
     pub fn preview(&self, request: Purge, as_of: Timestamp) -> Result<PurgePreview> {
-        if request != Purge::All {
-            self.ready()?;
-        }
+        self.erasure_ready(&request)?;
         self.verify_inventory()?;
         let tx = self.conn.unchecked_transaction()?;
         let mut plan = Plan::new(&tx, request, as_of)?;
@@ -136,9 +144,7 @@ impl Store {
     }
 
     fn execute_purge(&mut self, request: Purge, as_of: Timestamp) -> Result<PurgePreview> {
-        if request != Purge::All {
-            self.ready()?;
-        }
+        self.erasure_ready(&request)?;
         self.verify_inventory()?;
         let tx = self
             .conn
@@ -149,6 +155,18 @@ impl Store {
             tx.execute("INSERT INTO purge_state (id) VALUES (1)", [])?;
         }
         plan.delete_rows(&tx)?;
+        // Expiry runs per live capture; it bumps only when it deleted rows, and
+        // only the recordings half (it cannot touch Caches or the ledgers).
+        match plan.preview.request {
+            Purge::ExpiredRecordings => {
+                if plan.preview.counts.get("recordings").copied().unwrap_or(0) > 0 {
+                    crate::generation::bump(&tx, Erased::Recordings)?;
+                }
+            }
+            Purge::ForgetUser(_) | Purge::ForgetUserId(_) | Purge::All => {
+                crate::generation::bump(&tx, Erased::Viewer)?
+            }
+        }
         tx.commit()?;
         if plan.preview.request == Purge::All {
             self.finish_purge()?;
@@ -158,6 +176,11 @@ impl Store {
 
     pub fn forget_user(&mut self, login: &str, as_of: Timestamp) -> Result<PurgePreview> {
         self.execute_purge(Purge::ForgetUser(login.to_owned()), as_of)
+    }
+
+    /// Erases a user by ID, for a user none of whose logins still maps to them.
+    pub fn forget_user_id(&mut self, id: &TwitchUserId, as_of: Timestamp) -> Result<PurgePreview> {
+        self.execute_purge(Purge::ForgetUserId(id.as_str().to_owned()), as_of)
     }
 
     pub fn purge_expired(&mut self, as_of: Timestamp) -> Result<PurgePreview> {
@@ -183,6 +206,7 @@ impl Store {
         {
             tx.execute(&format!("DELETE FROM {}", spec.name), [])?;
         }
+        crate::generation::bump(&tx, Erased::Viewer)?;
         tx.commit()?;
         for kind in LedgerKind::ALL {
             let file = OpenOptions::new()

@@ -6,6 +6,8 @@ export const p11: ValidateFunction<RpcMethods["gatehouse.rules.list"]['params']>
 export const r11: ValidateFunction<RpcMethods["gatehouse.rules.list"]['result']>;
 export const p12: ValidateFunction<RpcMethods["gatehouse.rules.upsert"]['params']>;
 export const r12: ValidateFunction<RpcMethods["gatehouse.rules.upsert"]['result']>;
+export const p13: ValidateFunction<RpcMethods["gatehouse.rules.setMode"]['params']>;
+export const r13: ValidateFunction<RpcMethods["gatehouse.rules.setMode"]['result']>;
 export const p14: ValidateFunction<RpcMethods["gatehouse.ban.confirm"]['params']>;
 export const r14: ValidateFunction<RpcMethods["gatehouse.ban.confirm"]['result']>;
 export const p15: ValidateFunction<RpcMethods["gatehouse.ban.dismiss"]['params']>;
@@ -14,6 +16,14 @@ export const p16: ValidateFunction<RpcMethods["gatehouse.decision.undo"]['params
 export const r16: ValidateFunction<RpcMethods["gatehouse.decision.undo"]['result']>;
 export const p17: ValidateFunction<RpcMethods["gatehouse.petition.resolve"]['params']>;
 export const r17: ValidateFunction<RpcMethods["gatehouse.petition.resolve"]['result']>;
+export const p18: ValidateFunction<RpcMethods["gatehouse.held.resolve"]['params']>;
+export const r18: ValidateFunction<RpcMethods["gatehouse.held.resolve"]['result']>;
+export const p19: ValidateFunction<RpcMethods["gatehouse.delay.set"]['params']>;
+export const r19: ValidateFunction<RpcMethods["gatehouse.delay.set"]['result']>;
+export const p20: ValidateFunction<RpcMethods["gatehouse.shield.set"]['params']>;
+export const r20: ValidateFunction<RpcMethods["gatehouse.shield.set"]['result']>;
+export const p21: ValidateFunction<RpcMethods["gatehouse.lease.end"]['params']>;
+export const r21: ValidateFunction<RpcMethods["gatehouse.lease.end"]['result']>;
 export const p22: ValidateFunction<RpcMethods["gatehouse.consensus.get"]['params']>;
 export const r22: ValidateFunction<RpcMethods["gatehouse.consensus.get"]['result']>;
 export const p23: ValidateFunction<RpcMethods["gatehouse.drill.run"]['params']>;

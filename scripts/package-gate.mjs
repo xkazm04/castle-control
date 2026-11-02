@@ -17,7 +17,7 @@ if (mode === 'typecheck') {
   }
   run('pnpm', ['exec', 'tsc', '--project', 'tsconfig.json', '--noEmit']);
 } else if (mode === 'lint') {
-  run('node', [resolve(import.meta.dirname, 'check.mjs')], { cwd: resolve(import.meta.dirname, '..') });
+  // The whole-repo check.mjs runs once, in tooling-lint; repeating it per package re-walks every file.
   run('pnpm', ['exec', 'eslint', 'src', '--max-warnings', '0']);
 } else if (mode === 'test') {
   const tests = files.filter((path) => /\.(test|spec)\.[cm]?tsx?$/.test(path));

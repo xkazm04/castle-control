@@ -50,7 +50,9 @@ export function compilePreviewPattern(pattern: string): Compiled {
       if (in_class) return refuse('unsupported_by_gate');
       in_class = true; class_start = index;
     } else if (point === ']') {
-      if (!in_class || index === class_start + 1 || pattern.slice(class_start, index) === '[^') return refuse('invalid');
+      // Outside a class Rust reads ] as a literal; JS unicode mode would throw, so escape it.
+      if (!in_class) { source += '\\]'; continue; }
+      if (index === class_start + 1 || pattern.slice(class_start, index) === '[^') return refuse('invalid');
       in_class = false;
     } else if (in_class && ['&&', '--', '~~'].some(operator => pattern.startsWith(operator, index))) {
       return refuse('unsupported_by_gate');
@@ -70,6 +72,8 @@ export function compilePreviewPattern(pattern: string): Compiled {
       }
       // Rust dot excludes LF only; Rust $ requires the absolute end of input.
       if (point === '.') { source += '[^\n]'; continue; }
+      // A } that no repetition consumed is a literal in Rust but a syntax error in JS unicode mode.
+      if (point === '}') { source += '\\}'; continue; }
       if (point === '$') { source += '(?![\\s\\S])'; continue; }
     }
     source += point;

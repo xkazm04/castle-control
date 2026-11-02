@@ -190,3 +190,33 @@ async fn a_short_window_rule_does_not_erase_another_rules_long_window_strikes() 
         .unwrap();
     assert_eq!(result[0].decision.kind, DecisionKind::TimedOut);
 }
+
+struct Stalled(std::sync::atomic::AtomicUsize);
+#[async_trait::async_trait]
+impl cc_gatehouse::Classifier for Stalled {
+    async fn classify(
+        &self,
+        _system: &str,
+        _prompt: &str,
+    ) -> Result<String, cc_gatehouse::ClassifierError> {
+        self.0.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+        std::future::pending().await
+    }
+}
+
+#[tokio::test]
+async fn stalled_classifier_deadline_is_per_batch_not_per_chunk() {
+    let mut f = Fixture::new();
+    f.upsert(plain(Action::Delete));
+    f.arm("classifier");
+    let stalled = Stalled(std::sync::atomic::AtomicUsize::new(0));
+    let messages = (0..150)
+        .map(|i| message(i, 100 + i as u64, "ordinary simulated chat"))
+        .collect();
+    let result = f.gate.screen_batch(messages, &stalled).await.unwrap();
+    // One deadline per batch: the stalled classifier is asked once, not once per
+    // 50-message chunk (3 calls, 2 s each). A wall-clock bound flakes under load.
+    assert_eq!(stalled.0.load(std::sync::atomic::Ordering::SeqCst), 1);
+    assert_eq!(result.len(), 150);
+    assert!(result.iter().all(|m| m.path == GatePath::Withheld));
+}

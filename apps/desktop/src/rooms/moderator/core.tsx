@@ -1,4 +1,4 @@
-import { useId, useEffect, useState, useSyncExternalStore } from 'react';
+import { useId, useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import type { ReactNode } from 'react';
 import type { Rule } from '@castle-control/contract';
 import { FieldGroup, HeraldicCard, InkButton, Plate, PlateBand, PlateBody, SectionHeading, Stamp, WindowedRows, rowHeight } from '@castle-control/ui';
@@ -44,9 +44,13 @@ export function ConnectedGatehouse({ port, replay, seal_slot }: { port: CoreGate
   const state = useSyncExternalStore(port.subscribe, port.getSnapshot, port.getSnapshot);
   const bench = coreRuleBench(port);
   const draft = useSyncExternalStore(bench.subscribe, bench.getSnapshot, bench.getSnapshot);
-  const messages = state.chat?.items.map(item => ({ ...item.decision, message_text: item.message.text })) ?? [];
-  const { input, original } = benchInput(draft, state.rules);
-  const result = evaluateDraft(input, state.rules, messages, original);
+  // Snapshot publishes (busy flips, notices) and unrelated renders must not rebuild the accumulated chat
+  // or re-run the pattern over it; only a new chat page, rule list or bench edit does.
+  const messages = useMemo(() => state.chat?.items.map(item => ({ ...item.decision, message_text: item.message.text })) ?? [], [state.chat]);
+  const result = useMemo(() => {
+    const { input, original } = benchInput(draft, state.rules);
+    return evaluateDraft(input, state.rules, messages, original);
+  }, [draft, state.rules, messages]);
   const [more, setMore] = useState(false);
   useEffect(() => { void port.load(); }, [port]);
   if (replay) return <div className="moderator-room" aria-label="Core Gatehouse" aria-busy={state.busy}>
@@ -95,7 +99,7 @@ export function ConnectedGatehouse({ port, replay, seal_slot }: { port: CoreGate
                   <span><b>{state.rules.filter(rule => rule.mode === 'shadow').length}</b><Stamp kind="shadow" word={copy.watching} /></span></div>
                 <p className="moderator-note">{copy.core_rules_notice}</p>
                 <WindowedRows rows={state.rules} label={copy.core_rules_label} row_height={rowHeight * 10}
-                  row_key={rule => JSON.stringify(rule)} empty_state={copy.core_rules_empty}>
+                  row_key={rule => rule.rule_id} empty_state={copy.core_rules_empty}>
                   {rule => <CoreRule rule={rule} busy={state.busy} port={port} />}
                 </WindowedRows>
               </section>

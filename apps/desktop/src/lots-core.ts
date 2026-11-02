@@ -20,16 +20,21 @@ export type CoreLotsSnapshot = Omit<LotsPreview, 'draw' | 'entries'> & {
   cast_result?: CastResult; writ?: LotsWrit; busy: boolean; locked: boolean;
 };
 
+/** Copies of crates/cc-core/src/lots/recorded.rs (the fixed recorded clock) and live_beacon.rs (the pinned
+ * quicknet chain); lots-core.test.ts reads those files and fails if either copy drifts. */
+export const recordedSealedAt = '2023-08-23T15:09:28Z';
+export const quicknetChainHash = '52db9ba70e0cc0f6eaf7803dd07447a1f5477735fd3f661792ba94600c84e971';
+
 /** Labels use the existing core status and accepted seal; no launch flag is
  * treated as proof that a live source exists. Verification remains in core. */
 export function lotsRoundLabel(simulated: boolean | undefined, sealed: RollSealResult | undefined): string {
-  if (sealed?.sealed.roll.sealed_at === '2023-08-23T15:09:28Z') return 'Recorded · simulated round source';
+  if (sealed?.sealed.roll.sealed_at === recordedSealedAt) return 'Recorded · simulated round source';
   if (simulated === undefined) return 'Round source unknown · wait for core status';
   if (!sealed) return simulated ? 'SIMULATED audience · no public round selected'
     : 'Live mode · trusted quicknet needs the local opt-in; no round selected';
   const plan = sealed.sealed.roll.randomness;
   if (plan.source === 'streamer_commit') return `Streamer-controlled · ${simulated ? 'SIMULATED audience · ' : ''}commit/reveal`;
-  if (plan.chain_hash !== '52db9ba70e0cc0f6eaf7803dd07447a1f5477735fd3f661792ba94600c84e971') return 'Round source unknown · unexpected chain';
+  if (plan.chain_hash !== quicknetChainHash) return 'Round source unknown · unexpected chain';
   return `Live-trusted quicknet · ${simulated ? 'SIMULATED audience · ' : ''}target round ${plan.round}`;
 }
 
@@ -48,6 +53,12 @@ function freeze<T>(value: T): T {
     Object.freeze(value);
   }
   return value;
+}
+/** Refusals the core makes before it commits anything; every other failure leaves the seal outcome unknown. */
+const definitiveRefusals: readonly ErrorCode[] = ['invalid', 'blocked_by_policy', 'unauthorized', 'not_found', 'rate_limited'];
+function isDefiniteRefusal(error: unknown): boolean {
+  try { return definitiveRefusals.includes(parseError(JSON.stringify(error)).code); }
+  catch { return false; }
 }
 function errorNotice(error: unknown, method: LotsMethod | undefined): string {
   try {
@@ -124,7 +135,8 @@ export function createCoreLotsPort(launch: CoreLaunch, transport?: LotsNetwork) 
     const proposed = structuredClone(draw);
     await perform(async () => {
       const saved = await call(lotsDrawUpsert, { draw: proposed, ...(display ? { display } : {}) });
-      const draws = [...snapshot.draws.filter(item => item.draw_id !== saved.draw_id), saved];
+      const draws = snapshot.draws.some(item => item.draw_id === saved.draw_id)
+        ? snapshot.draws.map(item => item.draw_id === saved.draw_id ? saved : item) : [...snapshot.draws, saved];
       publish({ draw: saved, draws }, ['check', 'lookup_result']);
       await check(saved);
     });
@@ -180,7 +192,13 @@ export function createCoreLotsPort(launch: CoreLaunch, transport?: LotsNetwork) 
         if ((await check(draw)).result === 'blocked') return;
         // Lock before sending: a lost response must never reopen a potentially sealed roll.
         publish({ locked: true, notice: 'Sealing the roll in the core.' });
-        const result = await call(lotsRollSeal, { draw_id: draw.draw_id, source: 'drand_quicknet', margin_s: 6 });
+        let result: RollSealResult;
+        try { result = await call(lotsRollSeal, { draw_id: draw.draw_id, source: 'drand_quicknet', margin_s: 6 }); }
+        catch (error: unknown) {
+          // A definitive refusal committed nothing, so the room reopens; an unknown outcome stays locked.
+          if (isDefiniteRefusal(error)) publish({ locked: false });
+          throw error;
+        }
         if (result.draw_id !== draw.draw_id) throw new Error('Seal returned a different draw');
         publish({ sealed: true, paused: true, seal_result: result, entries: result.sealed.roll.entries,
           notice: 'Seal announced through the core event. Native live runs also publish the OBS plate; recorded cores remain simulated.' });

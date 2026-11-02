@@ -22,6 +22,8 @@ export function DrawSetup({ port, on_edit, on_preview }: {
   const name = useTextDraft(draw.name, draw.draw_id);
   const keyword = useTextDraft(rules.pool.kind === 'keyword' ? rules.pool.keyword : '', draw.draw_id);
   const winners = useTextDraft(String(rules.winner_count), draw.draw_id);
+  const cooldown = useTextDraft(String(rules.cooldown_s), draw.draw_id);
+  const prize = useTextDraft(String(draw.policy.prize_value_usd_cents / 100), draw.draw_id);
   const regions = useTextDraft(draw.policy.regions.join(', '), draw.draw_id);
   const invalid_name = !name.text.trim();
   const invalid_keyword = rules.pool.kind === 'keyword' && !/^\S+$/.test(keyword.text);
@@ -76,8 +78,12 @@ export function DrawSetup({ port, on_edit, on_preview }: {
           }} />
       </FieldGroup>
       <FieldGroup label={copy.cooldown_label} control_id="lots-cooldown">
-        <input id="lots-cooldown" type="number" min={0} value={rules.cooldown_s}
-          onChange={event => rule({ cooldown_s: event.currentTarget.valueAsNumber })} />
+        <input id="lots-cooldown" type="number" min={0} value={cooldown.text}
+          onChange={event => {
+            const text = event.currentTarget.value; const value = Number(text);
+            if (text.trim() && Number.isInteger(value) && value >= 0) rule({ cooldown_s: value });
+            cooldown.set(text, String(port.getSnapshot().draw.rules.cooldown_s));
+          }} />
       </FieldGroup>
       <FieldGroup label={copy.cap} control_id="lots-cap" variant="select">
         <select id="lots-cap" value={rules.cohort_caps[0]?.numerator ?? 1} onChange={event => {
@@ -109,8 +115,12 @@ export function DrawSetup({ port, on_edit, on_preview }: {
         </FieldGroup>)}
         <p className="cc-aside">Eligibility is set by Eligible pool. The free !join path still applies.</p>
         <FieldGroup label={copy.prize_value} control_id="lots-prize">
-          <input id="lots-prize" type="number" min={0} step="0.01" value={draw.policy.prize_value_usd_cents / 100}
-            onChange={event => policy({ prize_value_usd_cents: Math.round(event.currentTarget.valueAsNumber * 100) })} />
+          <input id="lots-prize" type="number" min={0} step="0.01" value={prize.text}
+            onChange={event => {
+              const text = event.currentTarget.value; const value = Number(text);
+              if (text.trim() && Number.isFinite(value) && value >= 0) policy({ prize_value_usd_cents: Math.round(value * 100) });
+              prize.set(text, String(port.getSnapshot().draw.policy.prize_value_usd_cents / 100));
+            }} />
         </FieldGroup>
         <FieldGroup label={copy.age} control_id="lots-age">
           <input id="lots-age" type="number" min={0} max={120} value={draw.policy.minimum_age ?? ''} onChange={event => {

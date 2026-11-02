@@ -116,12 +116,7 @@ const MODEL_KEYS: [&str; 3] = [
 ];
 
 fn simulated_path(name: &str) -> String {
-    let root = if cfg!(windows) {
-        "C:/simulated"
-    } else {
-        "/simulated"
-    };
-    format!("{root}/{name}")
+    format!("/simulated/{name}")
 }
 
 #[test]
@@ -208,9 +203,47 @@ fn executable_paths_refuse_relative_empty_control_and_wrong_type_values() {
         ] {
             assert_invalid_setting(key, value);
         }
-        if cfg!(windows) {
-            // Rooted paths without a drive still depend on ambient process state.
-            assert_invalid_setting(key, json!("\\simulated\\cli.exe"));
+    }
+}
+
+#[test]
+fn executable_path_rule_is_identical_on_every_host() {
+    let accepted = [
+        "/simulated/cli.exe",
+        "/simulated/CLI tools/cli.exe",
+        "C:\\simulated\\cli.exe",
+        "C:/simulated/cli.exe",
+        "c:/simulated\\cli.exe",
+    ];
+    let refused = [
+        "\\\\simulated-host\\share\\cli.exe",
+        "//simulated-host/share/cli.exe",
+        "\\/simulated-host/share/cli.exe",
+        "/\\simulated-host/share/cli.exe",
+        "\\\\?\\C:\\simulated\\cli.exe",
+        "\\\\.\\C:\\simulated\\cli.exe",
+        "//?/C:/simulated/cli.exe",
+        "//./C:/simulated/cli.exe",
+        "\\simulated\\cli.exe",
+        "simulated/cli.exe",
+        "C:simulated/cli.exe",
+        "C:",
+        "C:\\",
+        "/",
+        "/simulated/../cli.exe",
+        "/simulated/..\\cli.exe",
+        "C:\\simulated\\..\\cli.exe",
+        "C:/simulated/../cli.exe",
+        "..",
+        "",
+    ];
+    for key in PATH_KEYS {
+        for value in accepted {
+            let source = settings(json!({key:value}));
+            assert!(parse_engine_settings(&source).is_ok(), "{key} {value}");
+        }
+        for value in refused {
+            assert_invalid_setting(key, json!(value));
         }
     }
 }
@@ -245,4 +278,95 @@ fn assert_invalid_setting(key: &str, value: Value) {
         json!({"code":"invalid", "message":format!("invalid {key}")}),
         "errors must identify only the key, never echo the refused input"
     );
+}
+
+#[test]
+fn live_endpoint_refuses_non_canonical_numeric_hosts() {
+    for host in [
+        "0x7f.0.0.1",
+        "0X7F.0.0.1",
+        "0x7f000001",
+        "127.0.0.0x1",
+        "0x7f.1",
+        "0177.0.0.1",
+        "2130706433",
+        "127.1",
+        "0x7f.0.0.1.",
+    ] {
+        assert_invalid_setting(
+            "engine.live_endpoint",
+            json!(format!("http://{host}:11434/v1")),
+        );
+    }
+    // Names that merely contain hex-looking text, and canonical quads, stay valid.
+    for host in ["127.0.0.1", "0xfoo.example.test", "x0x7f.test", "a0x7f"] {
+        let url = format!("http://{host}/v1");
+        let parsed = parse_engine_settings(&settings(json!({"engine.live_endpoint":url})));
+        assert_eq!(parsed.unwrap().live_endpoint, url);
+    }
+}
+
+/// Drift guard: (key, a valid value that differs from the default, an invalid value).
+fn key_table() -> Vec<(&'static str, Value, Value)> {
+    vec![
+        ("engine.cli_provider", json!("codex_cli"), json!("nope")),
+        (
+            "engine.live_endpoint",
+            json!("https://example.test/v1"),
+            json!("ftp://x"),
+        ),
+        ("engine.cloud_opt_in", json!(true), json!("yes")),
+        (
+            "engine.claude_exe_path",
+            json!("/opt/claude"),
+            json!("relative/claude"),
+        ),
+        (
+            "engine.codex_exe_path",
+            json!("/opt/codex"),
+            json!("relative/codex"),
+        ),
+        (
+            "engine.posture_helper_path",
+            json!("/opt/posture"),
+            json!("relative/posture"),
+        ),
+        (
+            "engine.model_local",
+            json!("local-model"),
+            json!("has space"),
+        ),
+        (
+            "engine.model_claude",
+            json!("claude-model"),
+            json!("has space"),
+        ),
+        (
+            "engine.model_codex",
+            json!("codex-model"),
+            json!("has space"),
+        ),
+    ]
+}
+
+#[test]
+fn engine_setting_keys_and_parser_cannot_drift() {
+    let table = key_table();
+    let listed: std::collections::BTreeSet<&str> = ENGINE_SETTING_KEYS.iter().copied().collect();
+    let known: std::collections::BTreeSet<&str> = table.iter().map(|row| row.0).collect();
+    assert_eq!(
+        listed.len(),
+        ENGINE_SETTING_KEYS.len(),
+        "duplicate key in list"
+    );
+    assert_eq!(listed, known, "list and parser table disagree");
+    let default = EngineSettings::default();
+    for (key, valid, invalid) in table {
+        let parsed = parse_engine_settings(&settings(json!({ key: valid }))).unwrap();
+        assert_ne!(parsed, default, "parser ignores listed key {key}");
+        assert!(
+            parse_engine_settings(&settings(json!({ key: invalid }))).is_err(),
+            "parser accepts invalid value for {key}"
+        );
+    }
 }

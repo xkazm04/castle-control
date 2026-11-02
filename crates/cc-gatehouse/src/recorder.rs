@@ -48,10 +48,12 @@ impl<'a> Recorder<'a> {
     /// simulated flag and erasure associations; imports cannot mint this evidence.
     pub(crate) fn record_shadow(
         &mut self,
+        id: ulid::Ulid,
         message: &IngestedMessage,
         gaps: Vec<BridgeGap>,
     ) -> Result<RecordingImportResult> {
         self.save(
+            id,
             RecordingImportParams {
                 source: (if message.simulated {
                     "simulated-live-shadow"
@@ -128,6 +130,7 @@ impl<'a> Recorder<'a> {
             gaps,
         };
         self.save(
+            ulid::Ulid::new(),
             params,
             !messages.is_empty() && messages.iter().all(|m| m.simulated),
             messages,
@@ -137,11 +140,12 @@ impl<'a> Recorder<'a> {
     /// Imported content supplies neither authority nor executable locations.
     /// The store's simulated flag is conservative: imports are not asserted fake.
     pub fn import(&mut self, params: RecordingImportParams) -> Result<RecordingImportResult> {
-        self.save(params, false, &[])
+        self.save(ulid::Ulid::new(), params, false, &[])
     }
 
     fn save(
         &mut self,
+        id: ulid::Ulid,
         params: RecordingImportParams,
         simulated: bool,
         live: &[IngestedMessage],
@@ -213,7 +217,6 @@ impl<'a> Recorder<'a> {
             self.store.map_user(id.clone(), &alias).map_err(internal)?;
             user_ids.push(id);
         }
-        let id = ulid::Ulid::new();
         let result = RecordingImportResult {
             recording: format!("recording-{id}").try_into().map_err(internal)?,
             source: params.source.clone(),

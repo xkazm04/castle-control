@@ -14,7 +14,7 @@ export type BreadcrumbProps = {
 export function Breadcrumb({ chamber, detail, back_href, on_back, on_navigate }: BreadcrumbProps) {
   const current = chambers.find(item => item.id === chamber) ?? chambers[0];
   return <header className="cc-room-header">
-    <nav aria-label="Breadcrumb"><a href="#/keep">The keep</a><span aria-hidden="true"> › </span>
+    <nav aria-label="Breadcrumb"><a href={back_href}>The keep</a><span aria-hidden="true"> › </span>
       <span aria-current={detail ? undefined : 'page'}>The {current.name}</span>
       {detail && <><span aria-hidden="true"> › </span><span aria-current="page">{detail}</span></>}
     </nav>

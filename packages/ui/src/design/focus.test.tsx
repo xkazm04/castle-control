@@ -144,3 +144,10 @@ test('design styles use only shared tokens with the readable type floor', () => 
     expect(Number.parseFloat(value ?? '')).toBeGreaterThanOrEqual(13);
   }
 });
+
+test('a pending but unpreviewed draft tells the user to preview it, not to choose a style again', () => {
+  const { session } = setup();
+  const html = renderToStaticMarkup(<DesignFocus artifact="urn" session={session} />);
+  expect(html).toContain('Preview the draft to enable the hold.');
+  expect(html).not.toContain('Choose Restyle or Custom design');
+});

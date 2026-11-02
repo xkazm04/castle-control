@@ -7,9 +7,10 @@ use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::{
     collections::BTreeMap,
-    fs::{File, OpenOptions},
+    fs::{self, File, OpenOptions},
     io::{BufRead, BufReader, Write},
     path::Path,
+    time::SystemTime,
 };
 use ulid::Ulid;
 
@@ -250,12 +251,66 @@ pub(crate) fn count_frames(path: &Path) -> Result<u64> {
     Ok(count)
 }
 
+/// A fully verified ledger, valid only while the file still has this exact length and mtime.
+pub(crate) struct CachedLedger {
+    len: u64,
+    mtime: SystemTime,
+    lines: Vec<LedgerLine>,
+}
+
+/// Work done by `read_ledger` since the store opened. Counters only, no ledger content.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct LedgerReadStats {
+    pub full_verifications: u64,
+    pub lines_verified: u64,
+    pub bytes_read: u64,
+    pub cache_hits: u64,
+}
+
 impl Store {
+    pub fn ledger_read_stats(&self) -> LedgerReadStats {
+        self.ledger_stats.get()
+    }
+
+    fn bump_stats(&self, change: impl FnOnce(&mut LedgerReadStats)) {
+        let mut stats = self.ledger_stats.get();
+        change(&mut stats);
+        self.ledger_stats.set(stats);
+    }
+
+    /// Verified lines are reused only if length, mtime and the store's own expected length all
+    /// match; any doubt (different handle, truncation, erasure, no mtime) re-verifies in full.
     pub fn read_ledger(&self, kind: LedgerKind) -> Result<Vec<LedgerLine>> {
         self.ready()?;
-        let result = read_file(&self.root.join(kind.filename()), kind);
-        if result.is_err() {
-            self.ledger_fault.set(true);
+        let path = self.root.join(kind.filename());
+        let stat = fs::metadata(&path).and_then(|m| Ok((m.len(), m.modified()?)));
+        if let Ok((len, mtime)) = &stat
+            && self.ledger_lengths.get(&kind) == Some(len)
+            && let Some(cached) = self.ledger_cache.borrow().get(&kind)
+            && cached.len == *len
+            && cached.mtime == *mtime
+        {
+            self.bump_stats(|s| s.cache_hits += 1);
+            return Ok(cached.lines.clone());
+        }
+        self.ledger_cache.borrow_mut().remove(&kind);
+        let result = read_file(&path, kind);
+        match &result {
+            Err(_) => self.ledger_fault.set(true),
+            Ok(lines) => {
+                self.bump_stats(|s| {
+                    s.full_verifications += 1;
+                    s.lines_verified += lines.len() as u64;
+                    s.bytes_read += stat.as_ref().map_or(0, |(len, _)| *len);
+                });
+                // Stat taken before the read: a concurrent change makes the next stat differ.
+                if let Ok((len, mtime)) = stat {
+                    let lines = lines.clone();
+                    self.ledger_cache
+                        .borrow_mut()
+                        .insert(kind, CachedLedger { len, mtime, lines });
+                }
+            }
         }
         result
     }
@@ -281,14 +336,30 @@ impl Store {
         let mut file = OpenOptions::new()
             .append(true)
             .open(self.root.join(kind.filename()))?;
-        if self.ledger_lengths.get(&kind).copied() != Some(file.metadata()?.len()) {
+        let before = file.metadata()?;
+        if self.ledger_lengths.get(&kind).copied() != Some(before.len()) {
             self.ledger_fault.set(true);
             return Err(Error::LedgerIntegrity);
         }
         self.ledger_fault.set(true);
         file.write_all(&bytes)?;
         file.sync_all()?;
-        self.ledger_lengths.insert(kind, file.metadata()?.len());
+        let after = file.metadata()?;
+        self.ledger_lengths.insert(kind, after.len());
+        // Extend the cache only if it described exactly the file we appended to.
+        let cache = self.ledger_cache.get_mut();
+        match (cache.get_mut(&kind), before.modified(), after.modified()) {
+            (Some(cached), Ok(old), Ok(new))
+                if cached.len == before.len() && cached.mtime == old =>
+            {
+                cached.lines.push(line.clone());
+                cached.len = after.len();
+                cached.mtime = new;
+            }
+            _ => {
+                cache.remove(&kind);
+            }
+        }
         self.ledger_fault.set(false);
         Ok(line)
     }

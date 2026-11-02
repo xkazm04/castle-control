@@ -148,7 +148,7 @@ real chat, model or external service is called.
 
 **Preview this draw** drafts the existing proposal; editing setup discards that
 preview. The shared seal slot remains the sole proposal hold. A completed hold
-freezes entries and disables setup. **Start simulated draw** then creates one
+freezes entries and disables setup. **Cast the lots · rehearsal** then creates one
 fixed-seed rehearsal result from the frozen entries, respecting weights,
 distinct winners and cohort caps. Repeated starts preserve it. **Read current
 simulated writ** shows the roll digest, setup and winners with **Not a cc-verify

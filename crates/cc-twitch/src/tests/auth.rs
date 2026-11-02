@@ -2,9 +2,9 @@
 // crates/shadowrunr-daemon/src/platform/twitch/tests.rs.
 //! Simulated OAuth, lifecycle and refresh tests.
 use super::{fixtures::*, harness::*, mock::get};
-use crate::store::CredentialStore;
+use crate::store::{Credential, CredentialStore};
 use crate::types::Endpoints;
-use crate::{BridgeState, TwitchBridge, TwitchConfig};
+use crate::{BridgeError, BridgeState, TwitchBridge, TwitchConfig};
 use std::{
     sync::{Arc, atomic::Ordering},
     time::Duration,
@@ -194,4 +194,90 @@ fn refresh_ahead_jitter_is_bounded_and_not_constant() {
     assert!(early < late && late < Duration::from_secs(3600));
     assert_eq!(early, Duration::from_secs(2880));
     assert_eq!(late, Duration::from_secs(3240));
+}
+
+#[tokio::test]
+async fn a_transient_validate_outage_does_not_kill_the_bridge() {
+    let mut h = harness().await;
+    h.store_login();
+    let p = h.configured_with(vec![], 300, Duration::from_millis(50), h.store.clone());
+    let (tx, mut rx) = mpsc::channel(16);
+    p.start(tx);
+    let mut ws = h.accept().await;
+    send(&mut ws, welcome("S1")).await;
+    until(|| p.status().state == BridgeState::Connected).await;
+    let before = h.mock.calls_to("GET", "/oauth2/validate").len();
+    h.mock.validate_503.store(1, Ordering::SeqCst);
+    // The failed validation and its retry both reach the server.
+    until(|| h.mock.calls_to("GET", "/oauth2/validate").len() >= before + 3).await;
+    assert_eq!(p.status().state, BridgeState::Connected);
+    let event = chat_event(
+        "42",
+        "Viewer",
+        "m1",
+        "simulated after outage",
+        serde_json::json!([]),
+    );
+    send(&mut ws, notification("simulated-after-outage", event)).await;
+    assert_eq!(chat(&mut rx).await.text, "simulated after outage");
+}
+
+#[tokio::test]
+async fn a_rate_limited_startup_user_lookup_still_connects() {
+    let mut h = harness().await;
+    h.store_login();
+    h.mock.users_429.store(1, Ordering::SeqCst);
+    let p = h.platform();
+    let (tx, _rx) = mpsc::channel(16);
+    p.start(tx);
+    let mut ws = h.accept().await;
+    send(&mut ws, welcome("S1")).await;
+    until(|| p.status().state == BridgeState::Connected).await;
+    assert!(h.mock.calls_to("GET", "/helix/users").len() >= 2);
+}
+
+#[tokio::test]
+async fn device_poll_survives_a_plain_text_gateway_error() {
+    let mut h = harness().await;
+    h.mock.plain_poll_502.store(1, Ordering::SeqCst);
+    let p = h.platform();
+    let (tx, _rx) = mpsc::channel(16);
+    p.start(tx);
+    until(|| p.status().detail.is_some()).await;
+    p.begin_device_login().await.expect("simulated login");
+    let mut ws = h.accept().await;
+    send(&mut ws, welcome("S1")).await;
+    until(|| p.status().state == BridgeState::Connected).await;
+    assert!(h.store.load().expect("store").is_some());
+}
+
+struct FailingSave;
+
+impl CredentialStore for FailingSave {
+    fn load(&self) -> Result<Option<Credential>, BridgeError> {
+        Ok(None)
+    }
+    fn save(&self, _: &Credential) -> Result<(), BridgeError> {
+        Err(BridgeError::Unavailable("simulated keychain write failed"))
+    }
+    fn delete(&self) -> Result<(), BridgeError> {
+        Ok(())
+    }
+}
+
+#[tokio::test]
+async fn a_failed_persist_leaves_no_live_grant_in_memory() {
+    let h = harness().await;
+    let store = Arc::new(FailingSave);
+    let p = h.configured_with(vec![], 300, Duration::from_secs(3600), store);
+    let (tx, _rx) = mpsc::channel(16);
+    p.start(tx);
+    until(|| p.status().detail.is_some()).await;
+    p.begin_device_login().await.expect("simulated login");
+    until(|| p.status().state == BridgeState::Error).await;
+    // A restart must not resurrect the un-persisted grant from memory.
+    let (tx, _rx) = mpsc::channel(16);
+    p.start(tx);
+    until(|| p.status().state == BridgeState::Disconnected && p.status().detail.is_some()).await;
+    assert!(h.mock.calls_to("GET", "/oauth2/validate").is_empty());
 }

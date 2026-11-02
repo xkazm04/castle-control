@@ -51,6 +51,8 @@ export function usages(project = root) {
     }
     const source = ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true);
     const aliases = new Set(['invoke']);
+    const door = join(project, 'packages/contract/src/door.mjs');
+    const bypass = () => { if (file !== door) defects.push(`${file}: JSON parsing outside the contract door`); };
     function inspect(node) {
       if (ts.isImportSpecifier(node) && node.propertyName?.text === 'invoke') aliases.add(node.name.text);
       if (ts.isCallExpression(node)) {
@@ -65,10 +67,16 @@ export function usages(project = root) {
           if (arg && ts.isStringLiteralLike(arg)) events.push(arg.text);
           else defects.push(`${file}: event name must be a literal for parity`);
         }
-        if (name === 'parse' && ts.isPropertyAccessExpression(node.expression)
-            && node.expression.expression.getText(source) === 'JSON'
-            && file !== join(root, 'packages/contract/src/door.mjs')) defects.push(`${file}: JSON parsing outside the contract door`);
+        // A zero-argument .json() is the fetch body reader: another way past the door.
+        if (name === 'json' && ts.isPropertyAccessExpression(node.expression) && node.arguments.length === 0) bypass();
       }
+      // JSON.parse by call, alias, element access or destructuring.
+      const isJson = (expression) => ts.isIdentifier(expression) && expression.text === 'JSON';
+      if (ts.isPropertyAccessExpression(node) && isJson(node.expression) && node.name.text === 'parse') bypass();
+      if (ts.isElementAccessExpression(node) && isJson(node.expression)
+          && ts.isStringLiteralLike(node.argumentExpression) && node.argumentExpression.text === 'parse') bypass();
+      if (ts.isVariableDeclaration(node) && ts.isObjectBindingPattern(node.name) && node.initializer
+          && isJson(node.initializer)) bypass();
       ts.forEachChild(node, inspect);
     }
     inspect(source);

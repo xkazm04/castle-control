@@ -88,6 +88,11 @@ export class LiveSteward implements StewardPort {
       ? writ : undefined;
   }
 
+  /** The one proposal a call judges; unrelated queue publishes do not count as a change to it. */
+  #affected(id: string): Proposal | undefined {
+    return this.#queue.getSnapshot().proposals.find(item => item.id === id);
+  }
+
   owns(id: string): boolean { return this.#writs.has(id); }
   uncertain(id: string): boolean { return this.#uncertain.has(id); }
 
@@ -104,15 +109,16 @@ export class LiveSteward implements StewardPort {
 
   async #ask(text: string, chamber: WritChamber, previous?: Writ): Promise<StewardTurn> {
     if (this.#requests) return failure;
-    const before = this.#queue.getSnapshot();
+    const target = previous ? this.#queue.getSnapshot().proposals.find(item => item.id === previous.writ_id) : undefined;
     this.#requests++;
     try {
       const params = parseStewardAskParams(JSON.stringify({ chamber, prompt: text,
         ...(previous ? { writ_id: previous.writ_id } : {}) }));
       const { writ } = parseStewardAskResult(await this.#transport.ask(params));
-      if (this.#queue.getSnapshot() !== before || writ.status !== 'proposed' || writ.error !== undefined
+      const now = this.#queue.getSnapshot().proposals;
+      if ((previous ? now.find(item => item.id === previous.writ_id) !== target : false) || writ.status !== 'proposed' || writ.error !== undefined
         || writ.chamber !== chamber || Date.parse(writ.updated_at) < Date.parse(writ.created_at)
-        || (previous ? !matches(writ, previous) : before.proposals.some(proposal => proposal.id === writ.writ_id))) return failure;
+        || (previous ? !matches(writ, previous) : now.some(proposal => proposal.id === writ.writ_id))) return failure;
       const result = this.#queue.addOrUpdate(draft(writ));
       if (!result.ok) return failure;
       this.#writs.set(writ.writ_id, writ);
@@ -148,16 +154,20 @@ export class LiveSteward implements StewardPort {
     if (this.#requests) return failure;
     const previous = this.#current(proposalId);
     if (!previous) return failure;
-    const before = this.#queue.getSnapshot();
+    const proposal = this.#queue.getSnapshot().proposals.find(item => item.id === proposalId);
+    if (!proposal) return failure;
     this.#requests++;
     try {
       const params = parseWritTearParams(JSON.stringify({ writ_id: proposalId }));
+      // Dispatched: the core may tear it even if the reply is lost, so lock until a core read reconciles.
+      this.#uncertain.add(proposalId);
       const { writ } = parseWritTearResult(await this.#transport.tear(params));
-      if (this.#queue.getSnapshot() !== before || writ.status !== 'torn' || writ.error !== undefined
+      if (this.#affected(proposalId) !== proposal || writ.status !== 'torn' || writ.error !== undefined
         || !matches(writ, previous) || snapshotText(writ.proposal) !== snapshotText(previous.proposal)) return failure;
       const result = this.#queue.tearUp(proposalId);
       if (!result.ok) return failure;
       this.#writs.set(proposalId, writ);
+      this.#uncertain.delete(proposalId);
       return this.#turn(result, 'Torn up. This proposal will not act.');
     } catch {
       return failure;
@@ -171,15 +181,14 @@ export class LiveSteward implements StewardPort {
     if (this.uncertain(proposalId)) return unknownSeal;
     const previous = this.#current(proposalId);
     if (!previous || this.#requests) return failure;
-    const before = this.#queue.getSnapshot();
-    const proposal = before.proposals.find(item => item.id === proposalId);
+    const proposal = this.#affected(proposalId);
     if (!proposal) return failure;
     this.#requests++;
     this.#uncertain.add(proposalId);
     try {
       const params = parseWritSealParams(JSON.stringify({ writ_id: proposalId }));
       const { writ } = parseWritSealResult(await this.#transport.seal(params));
-      if (this.#queue.getSnapshot() !== before || writ.status !== 'sealed' || writ.error !== undefined
+      if (this.#affected(proposalId) !== proposal || writ.status !== 'sealed' || writ.error !== undefined
         || !matches(writ, previous) || snapshotText(writ.proposal) !== snapshotText(previous.proposal)) return unknownSeal;
       const result = proposal.kind === 'proclaim' ? this.#queue.proclaim(proposalId) : this.#queue.seal(proposalId);
       if (!result.ok) return unknownSeal;

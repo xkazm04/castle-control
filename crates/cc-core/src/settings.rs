@@ -1,17 +1,18 @@
 //! Authenticated engine configuration only. Never spawns or contacts an engine.
 use crate::Module;
-use cc_store::{ENGINE_SETTING_KEYS, Store};
-use cc_types::{ErrorCode, ErrorEnvelope, RpcRequest, parse_engine_settings};
+use cc_store::Store;
+use cc_types::{ENGINE_SETTING_KEYS, ErrorCode, ErrorEnvelope, RpcRequest, parse_engine_settings};
 use futures::future::BoxFuture;
 use serde_json::Value;
 use std::{
     path::PathBuf,
-    sync::{Arc, Mutex, OnceLock},
+    sync::{Arc, Mutex},
 };
 
 pub(crate) struct SettingsModule {
     root: Option<PathBuf>,
-    loaded: OnceLock<Result<SettingsStore, ErrorEnvelope>>,
+    // Only a successful open is kept: a transient failure is retried next call.
+    loaded: Mutex<Option<SettingsStore>>,
 }
 
 struct SettingsStore {
@@ -24,37 +25,34 @@ impl SettingsModule {
     pub fn new(native: Option<Arc<Mutex<Store>>>, root: Option<PathBuf>) -> Self {
         Self {
             root,
-            loaded: native.map_or_else(OnceLock::new, |store| {
-                OnceLock::from(Ok(SettingsStore {
-                    store,
-                    _temporary_root: None,
-                }))
-            }),
+            loaded: Mutex::new(native.map(|store| SettingsStore {
+                store,
+                _temporary_root: None,
+            })),
         }
     }
 
     fn store(&self) -> Result<Arc<Mutex<Store>>, ErrorEnvelope> {
-        self.loaded
-            .get_or_init(|| {
-                let temporary_root = if self.root.is_none() {
-                    Some(tempfile::tempdir().map_err(|_| unavailable())?)
-                } else {
-                    None
-                };
-                let root = self
-                    .root
-                    .as_deref()
-                    .or_else(|| temporary_root.as_ref().map(|dir| dir.path()))
-                    .ok_or_else(unavailable)?;
-                let store = Store::open(root).map_err(|_| unavailable())?;
-                Ok(SettingsStore {
-                    store: Arc::new(Mutex::new(store)),
-                    _temporary_root: temporary_root,
-                })
-            })
-            .as_ref()
-            .map(|loaded| loaded.store.clone())
-            .map_err(Clone::clone)
+        let mut loaded = self.loaded.lock().map_err(|_| unavailable())?;
+        if let Some(open) = loaded.as_ref() {
+            return Ok(open.store.clone());
+        }
+        let temporary_root = if self.root.is_none() {
+            Some(tempfile::tempdir().map_err(|_| unavailable())?)
+        } else {
+            None
+        };
+        let root = self
+            .root
+            .as_deref()
+            .or_else(|| temporary_root.as_ref().map(|dir| dir.path()))
+            .ok_or_else(unavailable)?;
+        let store = Arc::new(Mutex::new(Store::open(root).map_err(|_| unavailable())?));
+        *loaded = Some(SettingsStore {
+            store: store.clone(),
+            _temporary_root: temporary_root,
+        });
+        Ok(store)
     }
 }
 

@@ -272,6 +272,29 @@ async fn expired_end_keeps_its_id_and_can_be_registered_after_tick() {
 }
 
 #[tokio::test]
+async fn expired_lease_with_a_pending_end_survives_audit_until_the_end_is_confirmed() {
+    let mut f = Fixture::new();
+    let (mut governor, params) = issue(&mut f);
+    f.clock.set("2026-10-25T12:01:00Z");
+    let update = governor.tick().unwrap();
+    assert_eq!(
+        update.intents,
+        vec![RoomModeIntent::End {
+            lease_id: params.lease_id.clone(),
+            mode: RoomMode::EmoteOnly,
+        }]
+    );
+    f.gate
+        .record_simulated_governor_update(&update, &actor())
+        .unwrap();
+    f.gate.register_governor_leases(&governor);
+    f.gate
+        .lease_end(params, actor(), BUDGET, |_| async { Ok(()) })
+        .await
+        .unwrap();
+}
+
+#[tokio::test]
 async fn restart_does_not_guess_room_lease_ownership() {
     let mut f = Fixture::new();
     let (_governor, params) = issue(&mut f);

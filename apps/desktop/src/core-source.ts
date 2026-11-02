@@ -1,3 +1,4 @@
+import { parseJson } from '@castle-control/contract/door';
 import { invokeMethod, parseEvent, statusGet, bridgeStatusGet } from '@castle-control/contract';
 import type { MethodContract, RpcMethods } from '@castle-control/contract';
 import type { Source } from './model.js';
@@ -23,6 +24,16 @@ export function validateCoreLaunch(launch: CoreLaunch) {
       || base.username || base.password || base.search || base.hash
       || !/^[a-f0-9]{64}$/.test(launch.session_token)) throw new Error('Invalid local shell launch');
   return base;
+}
+
+/** The cursor of an event the bundled schema rejects, so a poison event is skipped on reconnect instead of
+ * replayed forever. Only this number is read from the rejected text; nothing else from it is used. */
+function rejectedSeq(data: unknown): number | undefined {
+  if (typeof data !== 'string') return undefined;
+  try {
+    const seq: unknown = (parseJson(data) as { seq?: unknown } | null)?.seq;
+    return typeof seq === 'number' && Number.isSafeInteger(seq) && seq >= 0 ? seq : undefined;
+  } catch { return undefined; }
 }
 
 export function createCoreSource(launch: CoreLaunch, transport: Network = network): Source {
@@ -78,6 +89,8 @@ export function createCoreSource(launch: CoreLaunch, transport: Network = networ
             since_seq = event.seq;
             invalidate(event);
           } catch {
+            const poison = rejectedSeq(message.data);
+            if (poison !== undefined && poison > since_seq) { since_seq = poison; invalidate(); }
             interrupt();
             current.close();
           }

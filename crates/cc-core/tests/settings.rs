@@ -144,3 +144,19 @@ async fn tokenless_settings_set_is_refused_and_writes_nothing() {
         body["params"]
     );
 }
+
+#[tokio::test]
+async fn a_transient_open_failure_is_not_cached_for_later_calls() {
+    let dir = tempfile::tempdir().unwrap();
+    let app = registry(dir.path());
+    // A file where the store directory belongs blocks the first open.
+    let blocked = dir.path().join("settings");
+    std::fs::write(&blocked, b"simulated blocker").unwrap();
+    let first = call(&app, "settings.get", json!({})).await.unwrap_err();
+    assert_eq!(first.code, ErrorCode::Unavailable);
+    std::fs::remove_file(&blocked).unwrap();
+    assert_eq!(
+        call(&app, "settings.get", json!({})).await.unwrap(),
+        json!({"values":{}})
+    );
+}

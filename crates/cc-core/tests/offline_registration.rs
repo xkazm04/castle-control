@@ -29,6 +29,31 @@ fn exporter_lists_the_native_inventory_without_starting_services() {
     expected.extend(cc_core::tiltyard::TiltyardModule::METHODS);
     expected.extend(["steward.ask", "steward.writ.seal", "steward.writ.tear"]);
     expected.sort();
+    // Independent of the module constants: every declared name except the
+    // explicitly named, deliberately unregistered ones.
+    let mut declared: Vec<&str> = cc_types::RpcRequest::NAMES
+        .iter()
+        .copied()
+        .filter(|name| {
+            ![
+                "store.forgetUser",
+                "store.purgeAll",
+                "gatehouse.held.resolve",
+                "gatehouse.delay.set",
+                "gatehouse.shield.set",
+                "lots.image.upload",
+                "maproom.design.get",
+                "maproom.design.upsert",
+                "rehearsal.crowd.set",
+                "rehearsal.scenario.run",
+                "rehearsal.start",
+                "rehearsal.stop",
+            ]
+            .contains(name)
+        })
+        .collect();
+    declared.sort();
+    assert_eq!(expected, declared);
     assert_eq!(methods, expected);
     assert_eq!(Registry::with_status().methods(), expected);
     assert!(methods.iter().any(|name| name == "beacons.source.url"));
@@ -308,4 +333,34 @@ fn fixture_root_refuses_previously_armed_user_rules() {
     drop(gate);
     let result = Registry::with_fixture_root(root.path(), Arc::new(EventHub::new(64).unwrap()));
     assert_eq!(result.err().unwrap().code, ErrorCode::BlockedByPolicy);
+}
+
+#[tokio::test]
+async fn offline_registration_lets_the_armed_rail_change_only_its_delivery() {
+    let app = AppState::new(Registry::with_status(), 64).unwrap();
+    let rules = rpc(&app.registry, "gatehouse.rules.list", json!({})).await;
+    let mut rail = rules["rules"][0].clone();
+    assert_eq!(rail["rule_class"], "rail");
+    rail["delivery"] = json!("simulated-moderators");
+    let saved = rpc(
+        &app.registry,
+        "gatehouse.rules.upsert",
+        json!({"rule": rail}),
+    )
+    .await;
+    assert_eq!(saved["delivery"], "simulated-moderators");
+    // Any other armed upsert stays refused offline.
+    let mut other = rail.clone();
+    other["rule_id"] = json!("armed-pattern");
+    other["rule_class"] = json!("pattern");
+    other["pattern"] = json!("simulated");
+    assert_eq!(
+        error(
+            &app.registry,
+            "gatehouse.rules.upsert",
+            json!({"rule": other})
+        )
+        .await,
+        ErrorCode::BlockedByPolicy
+    );
 }

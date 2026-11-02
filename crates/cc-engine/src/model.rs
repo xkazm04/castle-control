@@ -110,6 +110,14 @@ impl RoutingTable {
         if live(route.class) && route.transport == Transport::Cli {
             return Err(Failure::CliOnLive);
         }
+        // get() takes a Cli row's model from the provider table, so any other model
+        // would be silently discarded.
+        if route.transport == Transport::Cli
+            && self.claude_model.as_ref() != Some(&route.model)
+            && self.codex_model.as_ref() != Some(&route.model)
+        {
+            return Err(Failure::Invalid);
+        }
         let position = index(route.class);
         self.rows[position] = Some(route);
         Ok(())
@@ -151,5 +159,24 @@ pub(crate) fn provider(cli: CliProvider) -> EngineProvider {
     match cli {
         CliProvider::ClaudeCli => EngineProvider::ClaudeCli,
         CliProvider::CodexCli => EngineProvider::CodexCli,
+    }
+}
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn cli_route_with_a_model_the_table_would_discard_is_rejected() {
+        let name = |s| ModelName::parse(s).unwrap();
+        let mut table = RoutingTable::new(name("local-m"), name("claude-m"), name("codex-m"));
+        let route = |model| Route {
+            class: EngineClass::Batch,
+            model,
+            transport: Transport::Cli,
+            prices: Prices::default(),
+            evidence: None,
+        };
+        assert_eq!(table.set(route(name("other-m"))), Err(Failure::Invalid));
+        table.set(route(name("claude-m"))).unwrap();
+        table.set(route(name("codex-m"))).unwrap();
     }
 }

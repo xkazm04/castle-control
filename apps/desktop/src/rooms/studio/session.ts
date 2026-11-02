@@ -45,7 +45,7 @@ function sizedBoard(size: MapSize): StudioBoard {
   const tiles = Array.from({ length: dimensions.columns * dimensions.rows }, (_, index) => {
     const column = index % dimensions.columns; const row = Math.floor(index / dimensions.columns);
     const existing = sample.tiles.find(tile => tile.column === column && tile.row === row);
-    const side = existing ? existing.side : STUDIO_SAMPLE_BOARD.sides[(column + row) % 4];
+    const side = existing ? existing.side : STUDIO_SAMPLE_BOARD.sides[(column + row) % STUDIO_SAMPLE_BOARD.sides.length];
     return { q: column - Math.floor(row / 2), r: row, ...(side ? { side: side.id } : {}) };
   });
   const result = parseStudioBoard({ title: STUDIO_SAMPLE_BOARD.title, sides: STUDIO_SAMPLE_BOARD.sides, tiles });

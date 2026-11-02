@@ -165,7 +165,20 @@ test('refresh distinguishes disconnected OBS from an unknown status and renders 
   expect(JSON.stringify(model.getSnapshot())).not.toContain('private socket failure');
 });
 
-type LeafProps = { children?: ReactNode; on_seal?: () => void; onClick?: () => void; disabled?: boolean; variant?: string };
+test('a failed OBS status read explains the cause in the notice and keeps OBS unknown', async () => {
+  const { model, transport } = await core();
+  transport.rpc.mockImplementation(async (_endpoint, _session, method) => {
+    if (method === 'obs.status.get') throw { code: 'unauthorized', message: 'private detail' };
+    return { visuals: [visual] };
+  });
+  await model.refresh();
+  expect(model.getSnapshot().obs).toBe('unknown');
+  expect(model.getSnapshot().notice).toContain('could not authorize');
+  expect(JSON.stringify(model.getSnapshot())).not.toContain('private detail');
+  expect(model.getSnapshot().busy).toBe(false);
+});
+
+type LeafProps ={ children?: ReactNode; on_seal?: () => void; onClick?: () => void; disabled?: boolean; variant?: string };
 function sealProps(node: ReactNode): LeafProps | undefined {
   for (const child of Children.toArray(node)) {
     if (!isValidElement<LeafProps>(child)) continue;

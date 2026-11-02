@@ -8,7 +8,9 @@ export const verdictWords = { all: copy.all, pass: copy.pass, hold: copy.hold, b
 /** UTC remains the wire value; only the visible clock follows the host zone. */
 export function ClockTime({ at }: { at: string }) {
   const clock = new Intl.DateTimeFormat(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23' });
-  return <time dateTime={at} title={at}>{clock.format(new Date(at))}</time>;
+  const date = new Date(at);
+  // A bad timestamp must not unmount the room: show the raw text.
+  return <time dateTime={at} title={at}>{Number.isNaN(date.getTime()) ? at : clock.format(date)}</time>;
 }
 
 export function VerdictIcon({ verdict }: { verdict: Verdict | 'all' }) {

@@ -306,9 +306,10 @@ impl TwitchBridge {
             match self.prepare().await {
                 Ok(false) => return Ok(()),
                 Ok(true) => break,
-                Err(error @ (BridgeError::Unavailable(_) | BridgeError::Upstream(_))) => {
+                Err(error) if vault::is_transient(&error) => {
                     tracing::warn!(%error, "Twitch preparation retry");
-                    tokio::time::sleep(self.ep.time_unit * backoff).await;
+                    let delay = vault::transient_delay(&error, self.ep.time_unit, backoff);
+                    tokio::time::sleep(delay).await;
                     backoff = (backoff * 2).min(60);
                 }
                 Err(error) => return Err(error),
@@ -358,13 +359,23 @@ impl TwitchBridge {
         } else {
             None
         };
-        self.emit(BridgeEvent::Notification(Notification {
-            id,
-            at,
-            subscription_type: kind,
-            event,
-            chat,
-        }))
-        .await
+        let dedupe_id = id.clone();
+        let delivered = self
+            .emit(BridgeEvent::Notification(Notification {
+                id,
+                at,
+                subscription_type: kind,
+                event,
+                chat,
+            }))
+            .await;
+        if delivered.is_err() {
+            // A lost event must not make its redelivery look like a duplicate.
+            self.seen
+                .lock()
+                .expect("notification ids")
+                .retain(|seen| *seen != dedupe_id);
+        }
+        delivered
     }
 }

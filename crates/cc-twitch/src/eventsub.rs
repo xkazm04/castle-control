@@ -178,22 +178,38 @@ impl TwitchBridge {
         // Subscribe while reading concurrently: long batches must not starve keepalives.
         // At least the first subscription is created inside the welcome's 10-second window.
         let subscriptions = async {
+            let mut skipped = Vec::new();
             for topic in topics {
-                self.subscribe(&session, topic).await?;
+                match self.subscribe(&session, topic).await {
+                    Ok(()) => {}
+                    // A permanent refusal of one topic must not stall its siblings.
+                    Err(BridgeError::Upstream(status @ (400 | 403 | 404 | 422))) => {
+                        tracing::warn!(topic = topic.name, status, "EventSub topic unavailable");
+                        skipped.push(format!("{} (HTTP {status})", topic.name));
+                    }
+                    Err(error) => return Err(error),
+                }
             }
-            Ok::<(), BridgeError>(())
+            if !topics.is_empty() && skipped.len() == topics.len() {
+                return Err(BridgeError::Invalid(
+                    "no EventSub topic could be subscribed",
+                ));
+            }
+            Ok::<Vec<String>, BridgeError>(skipped)
         };
+        let skipped: Vec<String>;
         let mut last_seen = crate::now();
-        let mut deadline = Instant::now() + self.ep.time_unit * (keepalive_s as u32 + 5);
+        let mut deadline =
+            Instant::now() + self.ep.time_unit * (u32::try_from(keepalive_s).unwrap_or(600) + 5);
         tokio::pin!(subscriptions);
         loop {
             tokio::select! {
-                result = &mut subscriptions => { result?; break; },
+                result = &mut subscriptions => { skipped = result?; break; },
                 result = self.read(&mut ws, deadline) => {
                     let frame = result?;
                     self.deliver(frame, topics).await?;
                     last_seen = crate::now();
-                    deadline = Instant::now() + self.ep.time_unit * (keepalive_s as u32 + 5);
+                    deadline = Instant::now() + self.ep.time_unit * (u32::try_from(keepalive_s).unwrap_or(600) + 5);
                 }
             }
         }
@@ -205,6 +221,10 @@ impl TwitchBridge {
             .await?;
         }
         self.connection_state(index, BridgeState::Connected);
+        if !skipped.is_empty() {
+            let detail = format!("EventSub topics unavailable: {}", skipped.join(", "));
+            self.live.lock().expect("bridge state").status.detail = Some(detail);
+        }
         *backoff = 1;
         loop {
             let result = async {
@@ -220,7 +240,8 @@ impl TwitchBridge {
             match result {
                 Ok(()) => {
                     last_seen = crate::now();
-                    deadline = Instant::now() + self.ep.time_unit * (keepalive_s as u32 + 5);
+                    deadline = Instant::now()
+                        + self.ep.time_unit * (u32::try_from(keepalive_s).unwrap_or(600) + 5);
                 }
                 Err(error) => {
                     *from = Some(last_seen);
@@ -313,10 +334,13 @@ impl TwitchBridge {
             Frame::Revocation(status) => {
                 if status == "authorization_revoked" {
                     self.vault.retire(false).await?;
+                    Err(BridgeError::Unauthorized)
+                } else {
+                    // The login stays valid: only this subscription went away.
+                    Err(BridgeError::Invalid("EventSub subscription revoked"))
                 }
-                Err(BridgeError::Unauthorized)
             }
-            Frame::Keepalive => Ok(()),
+            Frame::Keepalive | Frame::Quarantined => Ok(()),
             _ => Err(BridgeError::Unavailable(
                 "unexpected EventSub session frame",
             )),

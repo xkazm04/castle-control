@@ -3,11 +3,12 @@ import type { ChangeEvent, ReactNode, SelectHTMLAttributes } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { ConnectedLotsRoom } from './rooms/lottery/core.jsx';
 import { lotsCopy as copy } from './lots-copy.js';
+import { readFileSync } from 'node:fs';
 import { afterEach, expect, test, vi } from 'vitest';
 import type { DrawCheckResult } from '@castle-control/contract';
 import { parseMethodResult } from '@castle-control/contract';
 import { lotsRollSeal } from '@castle-control/contract/lots';
-import { createCoreLotsPort, lotsRoundLabel } from './lots-core.js';
+import { createCoreLotsPort, lotsRoundLabel, quicknetChainHash, recordedSealedAt } from './lots-core.js';
 import type { LotsNetwork } from './lots-core.js';
 import { fixtureDraws, fixtureWrit } from './lots-fixture.js';
 import { DrawAppearance } from './rooms/lottery/appearance.jsx';
@@ -261,6 +262,16 @@ test('source labels distinguish recorded simulated rounds, unknown native source
   expect(lotsRoundLabel(false, accepted(recorded))).toContain('Recorded · simulated');
 });
 
+test('the recorded-round sentinel and quicknet chain hash match the Rust sources they copy', () => {
+  const rust = (name: string) => readFileSync(new URL(`../../../crates/cc-core/src/lots/${name}`, import.meta.url), 'utf8');
+  const recorded = rust('recorded.rs'); const live = rust('live_beacon.rs');
+  // The recorded clock is the one timestamp parsed inside `impl LotsClock for RecordedBeacon`.
+  const clock = /impl LotsClock for RecordedBeacon[\s\S]*?"(\d{4}-\d\d-\d\dT[\d:]+Z)"/.exec(recorded);
+  expect(clock?.[1]).toBe(recordedSealedAt);
+  expect(recorded).toContain(`"${quicknetChainHash}"`);
+  expect(live).toContain(`"${quicknetChainHash}"`);
+});
+
 test('seal-announced state precedes cast and no-prize creation needs only existing upsert', async () => {
   const h = harness();
   await h.port.createQuestionDraw();
@@ -307,6 +318,30 @@ test('lots-02 seal policy and lookup failures have remedies and safe retry timin
   await h.port.seal();
   expect(h.port.getSnapshot().notice).toBe(`${copy.core.request_errors['lots.roll.seal'].blocked_by_policy} Retry after 1000 ms.`);
   expect(h.port.getSnapshot().notice).not.toContain('simulated private detail');
+  expect(h.port.getSnapshot().locked).toBe(false);
+});
+test('a definitive seal refusal unlocks the room, while an unknown outcome keeps it locked', async () => {
+  for (const code of ['blocked_by_policy', 'invalid', 'rate_limited', 'unauthorized', 'not_found']) {
+    const h = harness(); await h.port.load();
+    h.rpc.mockImplementation(async (_endpoint, _session, method) => {
+      if (method === 'lots.roll.seal') throw { code, message: 'simulated refusal' };
+      return structuredClone(h.responses.get(method));
+    });
+    await h.port.seal();
+    expect(h.port.getSnapshot().locked, code).toBe(false);
+    h.rpc.mockImplementation(async (_endpoint, _session, method) => structuredClone(h.responses.get(method)));
+    await h.port.seal();
+    expect(h.port.getSnapshot().sealed, code).toBe(true);
+  }
+  for (const code of ['unavailable', 'upstream', 'internal', 'conflict']) {
+    const h = harness(); await h.port.load();
+    h.rpc.mockImplementation(async (_endpoint, _session, method) => {
+      if (method === 'lots.roll.seal') throw { code, message: 'simulated outcome unknown' };
+      return structuredClone(h.responses.get(method));
+    });
+    await h.port.seal();
+    expect(h.port.getSnapshot().locked, code).toBe(true);
+  }
 });
 test('lots-02 a transport failure loading proof keeps a successful cast, and proof reload recovers', async () => {
   const h = harness(); await h.port.load(); await h.port.seal();
@@ -319,4 +354,12 @@ test('lots-02 a transport failure loading proof keeps a successful cast, and pro
   h.rpc.mockImplementation(async (_endpoint, _session, method) => structuredClone(h.responses.get(method)));
   await h.port.recompute(); expect(h.port.getSnapshot().writ).toEqual(fixtureWrit);
   expect(h.port.getSnapshot().notice).toContain('Proof bundle loaded');
+});
+
+test('editing a draw keeps its position in the draw list', async () => {
+  const h = harness(); await h.port.load();
+  const ids = fixtureDraws.map(item => item.draw_id);
+  expect(ids.length).toBeGreaterThan(1);
+  await h.port.edit(draw);
+  expect(h.port.getSnapshot().draws.map(item => item.draw_id)).toEqual(ids);
 });

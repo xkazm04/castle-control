@@ -9,7 +9,23 @@ use cc_types::{
     BridgeGap, DecisionId, DrillConfiguration, ErrorCode, GatehouseLiveCapture,
     GatehouseLiveRunGapReason, GatehouseText, RuleClass,
 };
-use std::collections::{BTreeMap, BTreeSet};
+use std::{
+    cell::{Cell, RefCell},
+    collections::{BTreeMap, BTreeSet},
+};
+
+/// Care users keyed by the viewer-erasure generation they were built under.
+#[derive(Default)]
+pub(crate) struct CareCache {
+    set: RefCell<Option<(u32, BTreeSet<String>)>>,
+    faults: Cell<u32>,
+    last_fault: RefCell<Option<String>>,
+}
+
+#[cfg(test)]
+thread_local! {
+    pub(crate) static FAIL_GENERATION: Cell<bool> = const { Cell::new(false) };
+}
 
 /// Clear the transient capture even when screening is cancelled at an await.
 struct CaptureScope<'a>(&'a mut Gatehouse);
@@ -127,8 +143,52 @@ fn validate_snapshot(capture: &GatehouseLiveCapture) -> Result<()> {
 }
 
 impl Gatehouse {
-    /// Rebuild at each screening boundary so forget/purge remain authoritative.
+    /// Forget/purge stay authoritative: the cached set is trusted only while the
+    /// store's persisted viewer-erasure generation is unchanged (it moves in the
+    /// same transaction as every delete, through any handle). Unreadable
+    /// generation means a full rebuild that is not cached, and is counted.
     pub(crate) fn care_users(&self) -> Result<BTreeSet<String>> {
+        let generation = match self.read_generation() {
+            Ok(generation) => generation,
+            Err(fault) => {
+                let faults = &self.care_cache.faults;
+                faults.set(faults.get().saturating_add(1));
+                *self.care_cache.last_fault.borrow_mut() = Some(fault.to_string());
+                self.care_cache.set.borrow_mut().take();
+                return self.rebuild_care();
+            }
+        };
+        if let Some((cached, users)) = &*self.care_cache.set.borrow()
+            && *cached == generation
+        {
+            return Ok(users.clone());
+        }
+        // Generation was read before the scan: an erasure racing the scan makes
+        // the next call see a newer generation and rebuild again.
+        let users = self.rebuild_care()?;
+        *self.care_cache.set.borrow_mut() = Some((generation, users.clone()));
+        Ok(users)
+    }
+
+    fn read_generation(&self) -> std::result::Result<u32, cc_store::Error> {
+        #[cfg(test)]
+        if crate::live_capture::FAIL_GENERATION.with(std::cell::Cell::get) {
+            return Err(cc_store::Error::Invalid("simulated generation fault"));
+        }
+        self.store.viewer_erasure_generation()
+    }
+
+    /// Times the cached care set fell back to a full rebuild because the erasure
+    /// generation could not be read, and the most recent such error. Hosts that
+    /// surface health should report a nonzero count.
+    pub fn care_generation_faults(&self) -> (u32, Option<String>) {
+        (
+            self.care_cache.faults.get(),
+            self.care_cache.last_fault.borrow().clone(),
+        )
+    }
+
+    fn rebuild_care(&self) -> Result<BTreeSet<String>> {
         Ok(self
             .records()?
             .into_iter()
@@ -136,6 +196,14 @@ impl Gatehouse {
             .filter_map(|r| r.user_id)
             .map(|id| id.as_str().to_owned())
             .collect())
+    }
+
+    /// A care record has just committed (Caches row and ledger line). Keep a
+    /// valid cache current; an absent or stale one rebuilds on next use.
+    pub(crate) fn note_committed_care(&self, user: &cc_store::TwitchUserId) {
+        if let Some((_, users)) = &mut *self.care_cache.set.borrow_mut() {
+            users.insert(user.as_str().to_owned());
+        }
     }
 
     /// Same seam used by the live host and generated, labelled offline tests.
@@ -188,21 +256,27 @@ impl Gatehouse {
         };
         let (configuration, instrument, instrument_hash, inputs) =
             self.analysis.drill.snapshot(configuration)?;
-        let recording = Recorder::for_import(&mut self.store, self.clock.as_ref())?
-            .record_shadow(&message, gaps.clone())?;
+        // The reference is minted now but the text is written only after the
+        // screening commits: an error or cancel leaves no unscreened raw text,
+        // and a refused recording (clock skew, retention) is a coverage gap that
+        // can never stop the care rail.
+        let recording_id = ulid::Ulid::new();
         let capture = GatehouseLiveCapture {
-            recording: recording.recording,
+            recording: format!("recording-{recording_id}")
+                .try_into()
+                .map_err(internal)?,
             from: message.at.clone(),
             to: message.at.clone(),
             configuration,
             instrument,
             instrument_hash,
             inputs,
-            gaps,
+            gaps: gaps.clone(),
             replay_gap,
         };
         let scope = CaptureScope(self);
         scope.0.live_capture = Some(capture);
+        let recorded = message.clone();
         let mut screened = scope
             .0
             .screen_batch_with_care(
@@ -216,6 +290,11 @@ impl Gatehouse {
         let screened = screened
             .pop()
             .ok_or_else(|| internal("no screened message"))?;
+        drop(scope);
+        // A refusal leaves the decision's capture reference without a recording;
+        // `captures` reports that as `recording_available: false`, never as content.
+        let _coverage_gap = Recorder::for_import(&mut self.store, self.clock.as_ref())
+            .and_then(|mut recorder| recorder.record_shadow(recording_id, &recorded, gaps));
         Ok(screened)
     }
 
@@ -263,3 +342,7 @@ impl Gatehouse {
         Ok(())
     }
 }
+
+#[cfg(test)]
+#[path = "live_capture_tests.rs"]
+mod tests;
