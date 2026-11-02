@@ -304,7 +304,7 @@ export function StewardDock({ chamber, registry, mode = 'simulated', role, input
             .map(item => <button key={item.label} type="button" className="cc-btn cc-btn--quiet"
               onClick={() => chip(item)}>{item.label}</button>)}
           {more && <FlowMenu items={flows} current={current_key} on_pick={item => chip(item)} />}
-          {!expanded && beats.length > 0 && !session && <button type="button" className="cc-btn cc-btn--quiet cc-btn--sm" aria-expanded="false"
+          {!expanded && beats.length > 0 && !session && <button type="button" className="cc-btn cc-btn--quiet" aria-expanded="false"
             onClick={() => store.expand()}>Raise</button>}
         </span>
       </div>

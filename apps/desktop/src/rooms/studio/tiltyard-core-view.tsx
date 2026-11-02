@@ -1,14 +1,13 @@
 import { useEffect, useMemo, useSyncExternalStore } from 'react';
 import type { ReactNode } from 'react';
 import { maproomTurnRun, parseMethodParams } from '@castle-control/contract';
-import type { TiltyardAction } from '@castle-control/contract';
 import { SAMPLE } from '@castle-control/duel';
 import { stewardDock } from '@castle-control/ui/steward-flow';
 import type { TiltyardConnection, TiltyardCore, TiltyardCoreState } from './tiltyard-core.js';
 import { coreTurn, createTiltyardCore } from './tiltyard-core.js';
 import { DuelSourceAction } from './tiltyard-source.jsx';
 import { DuelStage } from './duel-stage.jsx';
-import { corePicture, draftPicture, entryIds } from './duel-model.js';
+import { corePicture, draftPicture } from './duel-model.js';
 import type { DuelDraft } from './duel-model.js';
 import { DEMO_KEY, duelHost } from './duel-host.js';
 import { startDuelFlow } from './steward-flows.js';
@@ -28,19 +27,6 @@ export function sampleTournament() {
 }
 
 /** A sealed Steward draft as the core's start action, parsed at the contract door. */
-export function draftTournament(draft: DuelDraft, key: string): TiltyardAction {
-  const ids = entryIds(draft.entries);
-  return parseMethodParams(maproomTurnRun, {
-    action: {
-      kind: 'start', key, window_ms: draft.window_s * 1000,
-      list: {
-        title: draft.title, ...(draft.prompt ? { prompt: draft.prompt } : {}),
-        items: draft.entries.map((entry, index) => ({ id: ids[index], title: entry.title, by: entry.by ?? 'streamer',
-          ...(entry.note ? { note: entry.note } : {}), seed: String(index + 1) })),
-      },
-    },
-  }).action;
-}
 
 /** Pure status leaf also used in error/disconnection tests. */
 export function TiltyardCoreNotice({ state }: { state: TiltyardCoreState }) {

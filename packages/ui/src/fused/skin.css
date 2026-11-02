@@ -123,6 +123,19 @@
 .desktop-shell:has(> .cc-steward-dock[data-expanded="true"]) .cc-room-function { margin: 0; }
 .desktop-shell:has(> .cc-steward-dock[data-expanded="true"]) .cc-room-function > span:first-child { display: none; }
 .desktop-shell:has(> .cc-steward-dock[data-expanded="true"]) .shell-room-header .cc-room-back { min-height: 30px; padding: 0 12px; font-size: var(--text-px-13); }
+/* The same fold for every other surface with a fused head (Set up OBS, Dress rehearsal, On stream, overview):
+   crumb trail, a small title (its versal shrinks with it) and a one-line subtitle, then the actions. */
+.desktop-shell:has(> .cc-steward-dock[data-expanded="true"]) .cc-chamber-head { align-items: center; gap: 16px; padding-block: 6px; margin-bottom: 10px; }
+.desktop-shell:has(> .cc-steward-dock[data-expanded="true"]) .cc-chamber-head::after { bottom: -8px; height: 6px; }
+.desktop-shell:has(> .cc-steward-dock[data-expanded="true"]) .cc-chamber-head > :first-child { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.desktop-shell:has(> .cc-steward-dock[data-expanded="true"]) .cc-chamber-head .cc-crumbs { flex: none; flex-wrap: nowrap; }
+.desktop-shell:has(> .cc-steward-dock[data-expanded="true"]) .cc-chamber-head .cc-crumbs > :is(b, .cc-crumbs__sep:has(+ b)) { display: none; }
+.desktop-shell:has(> .cc-steward-dock[data-expanded="true"]) .cc-chamber-head .cc-title { margin: 0; font-size: var(--text-t-h2); line-height: 1; white-space: nowrap; }
+.desktop-shell:has(> .cc-steward-dock[data-expanded="true"]) .cc-chamber-head .cc-versal { box-shadow: inset 0 0 0 1px var(--ch-deep, var(--gules-deep)), 0 0 0 2px var(--gilt-mid), 0 0 0 3px var(--lead); }
+.desktop-shell:has(> .cc-steward-dock[data-expanded="true"]) .cc-chamber-head .cc-subtitle { min-width: 0; margin: 0; flex-wrap: nowrap; font-size: var(--text-t-small);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.desktop-shell:has(> .cc-steward-dock[data-expanded="true"]) .cc-chamber-head .cc-back { flex-wrap: nowrap; }
+.desktop-shell:has(> .cc-steward-dock[data-expanded="true"]) .cc-chamber-head .cc-back > :is(.cc-btn, button) { min-height: 30px; height: 30px; padding: 0 12px; font-size: var(--text-px-13); }
 
 /* ---- key numeral jewel */
 .cc-frame .cc-kbd {

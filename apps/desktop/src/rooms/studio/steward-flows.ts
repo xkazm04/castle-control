@@ -53,7 +53,7 @@ function draftLines(draft: DuelDraft, mode: Mode): FlowLine[] {
 
 async function startDuel(draft: DuelDraft, mode: Mode) {
   if (mode === 'core') {
-    const { draftTournament } = await import('./tiltyard-core-view.jsx');
+    const { draftTournament } = await import('./duel-actions.js');
     await runCore(draftTournament(draft, keyFor(draft)));
     if (draft.demo) await runCore({ kind: 'speed' });
     return;

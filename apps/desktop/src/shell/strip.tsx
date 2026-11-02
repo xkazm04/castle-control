@@ -5,6 +5,7 @@ import { proposalQueue } from '@castle-control/ui/steward';
 import { useSyncExternalStore } from 'react';
 import type { Snapshot } from '../model.js';
 import { sampleProgram } from '../overview/program.js';
+import { duelHost } from '../rooms/studio/duel-host.js';
 import { stripStates } from './strip-states.js';
 import { shellRoles } from './roles.jsx';
 import '@castle-control/ui/fused/surface.css';
@@ -24,5 +25,7 @@ export function ShellStrip({ current, states, on_open, on_keep }: StripProps) {
 export function PersistentStrip({ snapshot, ...props }: Omit<StripProps, 'states'> & { snapshot: Snapshot }) {
   const queue = useSyncExternalStore(proposalQueue.subscribe, proposalQueue.getSnapshot, proposalQueue.getSnapshot);
   const program = useSyncExternalStore(sampleProgram.subscribe, sampleProgram.getSnapshot, sampleProgram.getSnapshot);
+  // The Map Room tab reads the duel's state; follow it live rather than on the next unrelated render.
+  useSyncExternalStore(duelHost.subscribe, duelHost.picture, duelHost.picture);
   return <ShellStrip {...props} states={stripStates(snapshot, queue.proposals, program)} />;
 }

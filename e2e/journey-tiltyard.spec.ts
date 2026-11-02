@@ -100,12 +100,21 @@ test('Map Room duel: one match on the stage, compact strip, full bracket on dema
     // Showdown and Ladder stay reachable behind More as local demos; the duel keeps its place.
     await stage.getByRole('button', { name: /^More/ }).click();
     const menu = page.getByRole('menu', { name: 'More Map Room views', exact: true });
-    await expect(menu.getByRole('menuitem')).toHaveCount(5);
+    // Showdown, Ladder, Sand table, Spyglass, Rehearse and the design proposals that left the duel stage.
+    await expect(menu.getByRole('menuitem')).toHaveCount(6);
+    await expect(menu.getByRole('menuitem', { name: /^Design proposals/ })).toBeVisible();
     await expect(menu).toContainText('Nothing reaches chat, OBS or the core.');
     await menu.getByRole('menuitem', { name: /^Showdown/ }).click();
     const demos = room.getByRole('dialog', { name: 'Local duel demos · Showdown and Ladder', exact: true });
     await expect(demos.locator('[data-role="ty-pennant"]')).toHaveCount(2);
     await expect(room).toContainText('Local demo');
+    await room.getByRole('button', { name: 'Back to the duel', exact: true }).click();
+    await expect(stage.locator('[data-role="ty-round"]')).toHaveText('Final');
+    // The war-table design proposals no longer sit under the stage; More opens them.
+    await expect(room.getByRole('group', { name: 'War-table panel design', exact: true })).toBeHidden();
+    await stage.getByRole('button', { name: /^More/ }).click();
+    await menu.getByRole('menuitem', { name: /^Design proposals/ }).click();
+    await expect(room.getByRole('group', { name: 'War-table panel design', exact: true })).toBeVisible();
     await room.getByRole('button', { name: 'Back to the duel', exact: true }).click();
     await expect(stage.locator('[data-role="ty-round"]')).toHaveText('Final');
     await auditStyles(page, desktopSurfaces);

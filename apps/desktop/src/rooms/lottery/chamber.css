@@ -94,8 +94,7 @@
 .lottery-more-card { display: grid; gap: 10px; padding: 16px; background: var(--surface); border: 1.5px solid var(--hair); border-radius: var(--r); }
 .lottery-more-body > :is(.panel, .cc-card, article, section) { min-width: 0; }
 
-/* the sheet is raised: the chamber's title steps aside, the hall shrinks into the visible band; controls step back, the picture stays */
-.shell-room:has(.lottery-room[data-sheet="up"]) > .shell-room-header { display: none; }
+/* the sheet is raised: the shell folds the chamber head to its slim bar; the hall shrinks into the visible band; controls step back, the picture stays */
 .lottery-room[data-sheet="up"] > :not(.cc-hall) { display: none; }
 .lottery-room[data-sheet="up"] .lottery-draw-theatre { padding: 2px; }
 /* proving: the Writ Lab is the picture while the Steward asks which writ and which forgery */

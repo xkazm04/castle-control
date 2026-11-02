@@ -24,11 +24,12 @@ import { sizeChoices } from './rehearse-state.js';
 import { duelDraftFlows } from './steward-flows.js';
 import type { DuelDraft } from './duel-model.js';
 import './room.css';
+import './room-chrome.css';
 import './hex-field.css';
 
 const TiltyardView = lazy(() => import('./tiltyard-view.jsx'));
 export type StudioView = 'table' | 'spyglass' | 'rehearse';
-export type RoomView = 'duel' | 'show' | 'ladder' | StudioView;
+export type RoomView = 'duel' | 'show' | 'ladder' | 'proposals' | StudioView;
 
 export function StudioViewSwitch({ view, on_view }: { view: StudioView; on_view: (view: StudioView) => void }) {
   return <div className="studio-view-switch" role="group" aria-label={copy.view}>
@@ -91,6 +92,7 @@ const moreItems: readonly { id: Exclude<RoomView, 'duel'>; label: string; line: 
   { id: 'table', label: copy.more_table, line: copy.more_table_line },
   { id: 'spyglass', label: copy.more_spyglass, line: copy.more_spyglass_line },
   { id: 'rehearse', label: copy.more_rehearse, line: copy.more_rehearse_line },
+  { id: 'proposals', label: copy.more_proposals, line: copy.more_proposals_line },
 ];
 export const viewName = (view: RoomView) => view === 'duel' ? copy.duel : moreItems.find(item => item.id === view)?.label ?? view;
 
@@ -141,13 +143,17 @@ export default function StudioRoom({ snapshot, seal_slot }: { snapshot: Snapshot
     {view !== 'duel' && <div className="studio-away">
       <button type="button" className="cc-btn cc-btn--sm" onClick={() => setView('duel')}>{copy.back_to_duel}</button>
       <b className="studio-away__name">{viewName(view)}</b>
-      <span className="cc-sim">{copy.local_demo}</span>
-      <span className="studio-away__line">{copy.local_line}</span>
+      {view !== 'proposals' && <span className="cc-sim">{copy.local_demo}</span>}
+      <span className="studio-away__line">{view === 'proposals' ? copy.proposals_away : copy.local_line}</span>
       {more}
     </div>}
     {duelish ? <Suspense fallback={<p className="studio-loading" role="status">{copy.loading}</p>}>
       <TiltyardView connection={connection} view={view === 'duel' ? 'duel' : view} draft={draft} tools={more} />
-    </Suspense> : <StudioWork seal_slot={seal_slot} view={view} on_view={setView} />}
-    {duelish && seal_slot && <Plate variant="plain" border_ink="rule" className="cc-seal-card studio-duel-seal">{seal_slot}</Plate>}
+    </Suspense> : view === 'proposals' ? !seal_slot && <EmptyState title={copy.proposals_none} description={copy.proposals_away} />
+      : <StudioWork seal_slot={seal_slot} view={view} on_view={setView} />}
+    {/* Design proposals sit behind More; the slot stays mounted (hidden) beside the duel so a half-made draft keeps its state. */}
+    {(duelish || view === 'proposals') && seal_slot && <div className="studio-proposals" hidden={view !== 'proposals'}>
+      <Plate variant="plain" border_ink="rule" className="cc-seal-card">{seal_slot}</Plate>
+    </div>}
   </section>;
 }
