@@ -14,6 +14,8 @@ export type RehearsalBridge = {
   connect(choice: ConnectChoice): Promise<boolean>;
   /** True when the masked field holds something. Never returns the value. */
   hasPassword(): boolean;
+  /** Clear the masked field without reading it: a seal that sends nothing still leaves it empty. */
+  forget?(): void;
   /** Put a line in the page's connection notice. */
   notify(text: string): void;
 };

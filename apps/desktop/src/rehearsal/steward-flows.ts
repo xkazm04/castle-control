@@ -57,12 +57,12 @@ export const connectFlow = defineFlow<ConnectDraft>({
       when: draft => draft.port_mode === 'other', placeholder: '4455',
       validate: raw => /^\d{1,5}$/.test(raw.trim()) && Number(raw) >= 1 && Number(raw) <= 65535 ? null : 'A whole number from 1 to 65535.',
       apply: (draft, raw) => ({ ...draft, port: Number(raw.trim()) }) },
-    { id: 'secret', kind: 'choice', label: 'Password', prompt: 'Does OBS ask for a password? You will type it on the page, never here.',
+    { id: 'secret', kind: 'choice', label: 'Password', prompt: 'Does OBS ask for a password? You type it in a masked field at the hold, never into this conversation.',
       options: () => [
-        { id: 'yes', label: 'OBS asks for a password', consequence: 'Type it in the masked field on the page. It is read once at the seal, then cleared.' },
+        { id: 'yes', label: 'OBS asks for a password', consequence: 'A masked field waits in the last card. It is read once at your hold, then cleared.' },
         { id: 'no', label: 'No password', consequence: 'Authentication is switched off in OBS\'s WebSocket settings.' },
       ],
-      summary: (_draft, id) => id === 'yes' ? 'typed on the page' : 'none',
+      summary: (_draft, id) => id === 'yes' ? 'masked field at the hold' : 'none',
       apply: (draft, id) => ({ ...draft, secret: id === 'yes' ? 'yes' : 'no' }) },
     { id: 'remember', kind: 'choice', label: 'Remember', prompt: 'Should the core remember this connection?',
       options: () => [
@@ -74,20 +74,20 @@ export const connectFlow = defineFlow<ConnectDraft>({
       note: 'The hold reads the masked field once, clears it and asks OBS to connect. Nothing is added to a scene.',
       lines: draft => [
         { label: 'Address', value: connectAddress(draft) },
-        { label: 'Password', value: draft.secret === 'yes' ? 'Typed on the page · masked' : 'None' },
+        { label: 'Password', value: draft.secret === 'yes' ? 'Typed in the masked field above' : 'None' },
         { label: 'Remember', value: draft.remember ? 'On this computer' : 'Just this time' },
       ] },
   ],
   seal: async draft => {
     const reach = live();
-    if (!reach) return { say: desktopOnly };
+    if (!reach) { activeRehearsal()?.forget?.(); return { say: desktopOnly }; }
     const { bridge } = reach;
     if (draft.secret === 'yes' && !bridge.hasPassword()) {
-      bridge.notify('Type the OBS password in the masked field, then hold again.');
+      bridge.notify('Type the OBS password in the masked field above the hold, then hold again.');
       throw new Error('Missing password');
     }
     const sent = await bridge.connect({ host: draft.host ?? '127.0.0.1', port: draft.port ?? 4455, remember: draft.remember === true });
-    if (!sent) return { say: 'The connection form is not on the page, so nothing was sent.' };
+    if (!sent) { bridge.forget?.(); return { say: 'The connection form is not on the page, so nothing was sent.' }; }
     const after = await settle(bridge);
     return after.obs === 'connected'
       ? { say: `OBS is connected at ${connectAddress(draft)}.`, lines: [{ label: 'Next', value: 'Set up the rehearsal scene' }] }

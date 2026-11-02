@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
+import { createPortal } from 'react-dom';
 import { Notice, SealButton, Stamp, WindowedRows } from '@castle-control/ui';
 import { stewardDock, useFlowDraft } from '@castle-control/ui/steward-flow';
 import type { AnyStewardFlow } from '@castle-control/ui/steward-flow';
@@ -11,6 +12,7 @@ import type { RehearsalConnection } from './rehearsal-core.js';
 import { rehearsalCopy as copy } from './rehearsal-copy.js';
 import { rehearsalShell } from './rehearsal-shell.js';
 import { attachRehearsal } from './rehearsal-bridge.js';
+import { placeSecret, SecretField, wantsSecret } from './secret-slot.jsx';
 import { cleanupFlow, connectAddress, connectFlow, pickedRows, scenarioFlow, sceneFlow } from './steward-flows.js';
 import type { ConnectDraft, ScenarioDraft, SceneDraft } from './steward-flows.js';
 import './rehearsal.css';
@@ -24,9 +26,10 @@ export function submitConnection(fields: { host: string; port: string; password:
   return model.connect(params);
 }
 
-/** Submit the page's connection form: the one path both the direct button and the Steward's seal take. */
-export function submitForm(form: HTMLFormElement, model: RehearsalModel) {
-  const password = form.querySelector<HTMLInputElement>('[name="password"]');
+/** Submit the page's connection form: the one path both the direct button and the Steward's seal take.
+ *  The masked field is the form's own input, or the page's same input while it stands in the Steward's step. */
+export function submitForm(form: HTMLFormElement, model: RehearsalModel, secret?: HTMLInputElement | null) {
+  const password = form.querySelector<HTMLInputElement>('[name="password"]') ?? secret ?? null;
   const host = form.querySelector<HTMLInputElement>('[name="host"]');
   const port = form.querySelector<HTMLInputElement>('[name="port"]');
   const remember = form.querySelector<HTMLInputElement>('[name="remember"]');
@@ -37,21 +40,23 @@ export function submitForm(form: HTMLFormElement, model: RehearsalModel) {
 export type RehearsalDrafts = { connect?: ConnectDraft; scene?: SceneDraft; scenario?: ScenarioDraft; cleanup?: boolean };
 const open = (flow: AnyStewardFlow) => () => { stewardDock.open(flow); };
 
-export function RehearsalConnectionCard({ model, state, draft }: { model: RehearsalModel; state: RehearsalState; draft?: ConnectDraft }) {
+export function RehearsalConnectionCard({ model, state, draft, secret_home, secret }: {
+  model: RehearsalModel; state: RehearsalState; draft?: ConnectDraft;
+  /** The page's own field host lands here when the Steward is not waiting for it. Without it the field renders inline. */
+  secret_home?: (node: HTMLDivElement | null) => void; secret?: () => HTMLInputElement | null;
+}) {
   return <section className="cc-panel rh-panel" data-drafting={draft ? 'true' : undefined} aria-label={copy.connection}>
     <div className="cc-panel__head"><h2 className="cc-panel__title">{copy.connection}</h2>
       <span className="cc-stamp cc-stamp--waiting cc-stamp--inked">{copy[state.obs]}</span></div>
     <div className="cc-panel__body">
       <form className="rehearsal-fields" autoComplete="off" onSubmit={event => {
         event.preventDefault();
-        void submitForm(event.currentTarget, model);
+        void submitForm(event.currentTarget, model, secret?.());
       }}>
         <label className="cc-field">{copy.host}<input className="cc-input" name="host" defaultValue="127.0.0.1" required disabled={state.busy} /></label>
         <label className="cc-field">{copy.port}<input className="cc-input" name="port" type="number" min="1" max="65535" defaultValue="4455" required disabled={state.busy} /></label>
-        <label className="cc-field rh-secret" data-wanted={draft?.secret === 'yes' ? 'true' : undefined}>{copy.password}
-          <input className="cc-input" name="password" type="password" autoComplete="off" aria-describedby="rehearsal-password-help" disabled={state.busy} /></label>
+        {secret_home ? <div className="rh-secret-home" ref={secret_home} data-wanted={wantsSecret(draft) ? 'true' : undefined} /> : <SecretField disabled={state.busy} />}
         <label className="cc-choice rehearsal-remember"><input name="remember" type="checkbox" defaultChecked={false} disabled={state.busy} />{copy.remember}</label>
-        <p className="cc-gloss-note" id="rehearsal-password-help">{copy.password_help} Typed here only; the Steward never sees it.</p>
         <button className="cc-btn cc-btn--chamber" type="submit" disabled={state.busy}>{copy.connect}</button>
       </form>
       <p className="rh-notice" role="status" aria-live="polite">{state.connection_notice}</p>
@@ -139,8 +144,10 @@ export function RehearsalBoard({ state, ready, drafts = {} }: { state: Rehearsal
   </section>;
 }
 
-export function RehearsalContent({ model, state, mode, on_back, drafts }: {
-  model: RehearsalModel; state: RehearsalState; mode: 'fixture' | 'core'; on_back: () => void; drafts?: RehearsalDrafts;
+type SecretSlot = { home: (node: HTMLDivElement | null) => void; input: () => HTMLInputElement | null };
+
+export function RehearsalContent({ model, state, mode, on_back, drafts, secret }: {
+  model: RehearsalModel; state: RehearsalState; mode: 'fixture' | 'core'; on_back: () => void; drafts?: RehearsalDrafts; secret?: SecretSlot;
 }) {
   const inside = state.phase === 'inside';
   return <section className="rehearsal-workspace" aria-label={copy.title}>
@@ -155,7 +162,8 @@ export function RehearsalContent({ model, state, mode, on_back, drafts }: {
       <RehearsalBoard state={state} ready={inside} {...(drafts ? { drafts } : {})} />
       {inside && <div className="rh-desk">
         <div className="rh-col">
-          <RehearsalConnectionCard model={model} state={state} {...(drafts?.connect ? { draft: drafts.connect } : {})} />
+          <RehearsalConnectionCard model={model} state={state} {...(drafts?.connect ? { draft: drafts.connect } : {})}
+            {...(secret ? { secret_home: secret.home, secret: secret.input } : {})} />
           <section className="cc-panel rh-panel" aria-label={copy.scene}>
             <div className="cc-panel__head"><h2 className="cc-panel__title">{copy.scene}</h2>
               <span className="cc-stamp cc-stamp--inked cc-stamp--local">{state.scene_ready ? 'Ready' : 'Not set up'}</span></div>
@@ -195,6 +203,14 @@ export default function Rehearsal({ mode, connection, on_back }: {
   const state = useSyncExternalStore(model.subscribe, model.getSnapshot, model.getSnapshot);
   const root = useRef<HTMLDivElement>(null);
   const [extra, setExtra] = useState('');
+  // One host for the masked field for the page's whole life: moving it never remounts the input.
+  const [host] = useState(() => typeof document === 'undefined' ? null : document.createElement('div'));
+  const field = useRef<HTMLInputElement | null>(null);
+  const home = useRef<HTMLDivElement | null>(null);
+  const wanted = useRef(false);
+  // A field with nowhere visible to stand (no hold card, no page form) never keeps what was typed.
+  const place = () => { if (host && placeSecret(host, home.current, document, wanted.current) === 'none' && field.current) field.current.value = ''; };
+  const [slot] = useState<SecretSlot>(() => ({ home: node => { home.current = node; place(); }, input: () => field.current }));
   useEffect(() => model.start(), [model]);
   const form = () => root.current?.querySelector<HTMLFormElement>('.rehearsal-fields') ?? null;
   useEffect(() => attachRehearsal({
@@ -206,10 +222,11 @@ export default function Rehearsal({ mode, connection, on_back }: {
       set('host', host); set('port', String(port));
       const box = node.querySelector<HTMLInputElement>('[name="remember"]'); if (box) box.checked = remember;
       setExtra('');
-      await submitForm(node, model);
+      await submitForm(node, model, field.current);
       return true;
     },
-    hasPassword: () => (form()?.querySelector<HTMLInputElement>('[name="password"]')?.value.length ?? 0) > 0,
+    hasPassword: () => (field.current?.value.length ?? 0) > 0,
+    forget: () => { if (field.current) field.current.value = ''; },
     notify: setExtra,
   }), [model]);
   const connect = useFlowDraft(connectFlow);
@@ -224,8 +241,21 @@ export default function Rehearsal({ mode, connection, on_back }: {
     if (host && connect.host) host.value = connect.host;
     if (port && connect.port) port.value = String(connect.port);
   }, [connect]);
+  // While the connect flow wants a password, the field stands in the Steward's active hold card;
+  // the dock re-renders its steps freely, so every DOM change re-checks the placement.
+  const wants = wantsSecret(connect);
+  useEffect(() => {
+    wanted.current = wants;
+    if (!host || typeof MutationObserver === 'undefined') return;
+    place();
+    const watch = new MutationObserver(place);
+    watch.observe(document.body, { childList: true, subtree: true });
+    return () => { watch.disconnect(); };
+  });
+  useEffect(() => () => { host?.remove(); }, [host]);
   const drafts: RehearsalDrafts = { ...(connect ? { connect } : {}), ...(scene ? { scene } : {}), ...(scenario ? { scenario } : {}), ...(cleanup ? { cleanup: true } : {}) };
   return <div ref={root} className="rehearsal-root">
-    <RehearsalContent model={model} state={extra ? { ...state, connection_notice: extra } : state} mode={mode} on_back={on_back} drafts={drafts} />
+    <RehearsalContent model={model} state={extra ? { ...state, connection_notice: extra } : state} mode={mode} on_back={on_back} drafts={drafts} secret={slot} />
+    {host && createPortal(<SecretField disabled={state.busy} input_ref={node => { field.current = node; }} />, host)}
   </div>;
 }

@@ -31,3 +31,29 @@ test('Dress rehearsal in fixture dev explains desktop entry and Escape returns t
   expect(mutations).toEqual([]);
   await page.goto('about:blank'); verify();
 });
+
+test('Connect my OBS asks for the password inside its hold card, masked, and the seal leaves nothing behind', async ({ page }) => {
+  const verify = await guardPage(page);
+  await page.goto('/#/rehearsal');
+  const dock = page.locator('.cc-steward-dock');
+  await dock.getByRole('button', { name: 'Connect my OBS', exact: true }).first().click();
+  for (const option of ['On this computer', '4455', 'OBS asks for a password']) await page.locator('.cc-steward-option', { hasText: option }).first().click();
+  // Not before the hold card: the remember step shows no field.
+  await expect(page.locator('input[name="password"]')).toHaveCount(0);
+  await page.locator('.cc-steward-option', { hasText: 'Just this time' }).first().click();
+  const card = dock.locator('.cc-steward-step[data-step="seal"]');
+  const field = card.getByLabel('OBS password');
+  await expect(field).toBeVisible();
+  await expect(field).toHaveAttribute('type', 'password'); await expect(field).toHaveAttribute('autocomplete', 'off');
+  const secret = ['SIMULATED', 'e2e', 'only'].join('-');
+  await field.fill(secret);
+  await expect(dock).not.toContainText(secret);
+  const seal = dock.getByRole('button', { name: /hold to seal/i }).first();
+  await seal.focus(); await page.keyboard.down('Space');
+  try { await expect(dock.getByText('Dress rehearsal needs the desktop app, so nothing was sent to OBS or the core.').first()).toBeVisible(); }
+  finally { await page.keyboard.up('Space'); }
+  await expect(page.locator('input[name="password"]')).toHaveCount(0);
+  expect(page.url()).not.toContain(secret);
+  expect(await page.evaluate(() => JSON.stringify({ ...localStorage }) + JSON.stringify({ ...sessionStorage }))).not.toContain('SIMULATED-e2e-only');
+  await page.goto('about:blank'); verify();
+});

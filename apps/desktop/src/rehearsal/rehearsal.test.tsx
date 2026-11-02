@@ -6,6 +6,7 @@ import { SealButton } from '@castle-control/ui';
 import { createRehearsalModel } from './rehearsal-model.js';
 import { RehearsalConnectionCard, RehearsalContent, RehearsalOutputRow, submitConnection } from './rehearsal.jsx';
 import { simulatedRehearsal } from './rehearsal-test-support.js';
+import { SecretField } from './secret-slot.jsx';
 import { KeepEntrance } from '../keep/keep.jsx';
 import { backHash, canonicalHash, dispatchShortcut, initialNavigation, navigateHash, routeFromHash } from '../navigation.js';
 import { DesktopView } from '../view.jsx';
@@ -23,6 +24,8 @@ function seals(node: ReactNode): Leaf[] {
 function input(node: ReactNode, name: string): InputHTMLAttributes<HTMLInputElement> | undefined {
   for (const child of Children.toArray(node)) {
     if (!isValidElement<InputHTMLAttributes<HTMLInputElement>>(child)) continue;
+    // The masked field is its own small component: look inside it as rendered.
+    if (child.type === SecretField && name === 'password') return input(SecretField({ disabled: false }), name);
     if (child.type === 'input' && child.props.name === name) return child.props;
     const found = input(child.props.children, name);
     if (found) return found;
