@@ -134,7 +134,7 @@ test('Gatehouse Steward flows set the rules and the vote bar; nothing acts befor
     await expect(page.locator('.moderator-orders')).toContainText('Link questions');
     await expect(page.locator('.moderator-moat .cc-hero-figure')).toHaveAttribute('data-text', '6');
 
-    await chip(page, 'Vote bar on stream');
+    await chip(page, 'Show the vote bar');
     await pick(page, 'Emotes only');
     await pick(page, 'Across the top, large');
     await pick(page, 'Neon');

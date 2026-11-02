@@ -182,6 +182,9 @@
 .gh-votebar__legend span::before { content: ""; display: inline-block; width: 8px; height: 8px; margin-right: 4px; background: var(--k); }
 .gh-votebar__legend span b { font-variant-numeric: var(--num); }
 .gh-stage__canvas[data-size="S"] .gh-votebar__legend span:nth-child(n + 4) { display: none; }
+/* In a Steward card the stream canvas stays a thumbnail beside the card's buttons, so both fit the sheet. */
+.cc-steward-preview:has(.gh-stage) { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 16px; }
+.cc-steward-preview__picture .gh-stage { width: min(330px, 28vw); }
 .gh-stage figcaption { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; font-size: var(--text-t-label); color: var(--muted); }
 
 /* the seal and the More disclosure */

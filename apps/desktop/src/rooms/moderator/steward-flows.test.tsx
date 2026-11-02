@@ -24,7 +24,7 @@ function walk<D>(flow: StewardFlow<D>, answers: readonly string[]): { state: Flo
 
 test('the Gatehouse offers two setup chips, Play demo and Catch me up; the demo is SIMULATED', () => {
   const steward = moderatorSteward(fixture);
-  expect(chamberChips('moderator', steward).map(chip => chip.label)).toEqual(['Set the rules', 'Vote bar on stream', 'Play demo', 'Catch me up']);
+  expect(chamberChips('moderator', steward).map(chip => chip.label)).toEqual(['Set the rules', 'Show the vote bar', 'Play demo', 'Catch me up']);
   expect(steward.flows.map(flow => flow.title)).toContain('Practice a drill');
   expect(steward.demo?.simulated).toBe(true);
   expect(steward.catch_up?.().say).toBe('1 held message and 1 pending ban need you.');

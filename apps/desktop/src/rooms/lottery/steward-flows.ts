@@ -27,6 +27,6 @@ export function lotterySteward(snapshot: Snapshot): ChamberSteward {
       lotLive.get().writ ? core.prove as AnyStewardFlow : undefined); } };
   }
   return { ...room, demo: demoFlow as AnyStewardFlow,
-    greeting: 'The Lot Chamber: set up a draw, seal it, cast it, and prove it fair. Nothing acts until you hold to seal.',
+    greeting: 'The Lot Chamber: giveaways nobody can call rigged. Set up a draw, cast it, prove it, or play the demo; nothing acts until you hold to seal.',
     get flows() { return byPhase(setupFlow as AnyStewardFlow, castFlow as AnyStewardFlow, proveFlow as AnyStewardFlow); } };
 }

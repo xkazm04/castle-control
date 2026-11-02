@@ -60,3 +60,13 @@ test('away chips lead with navigation and drop the other chamber\'s catch-up', (
   expect(awayChips('lottery', registry.lottery).map(chip => chip.label)).toEqual(['Go to Lot Chamber', 'Set up a draw', 'Play demo']);
   expect(awayChips('lottery', registry.lottery)[0]?.action).toEqual({ kind: 'go', chamber: 'lottery' });
 });
+
+test('"how does the giveaway work" opens the named chamber\'s demo, even from another chamber', () => {
+  expect(matchIntent('how does the raffle work', registry, 'moderator')).toMatchObject({ kind: 'demo', chamber: 'lottery' });
+  expect(matchIntent('how does it work', registry, 'lottery')).toMatchObject({ kind: 'demo', chamber: 'lottery' });
+});
+
+test('a chamber hint answers a phrase no flow covers, in plain words', () => {
+  const hinted: StewardRegistry = { ...registry, moderator: { ...registry.moderator, hints: [{ phrases: ['ban'], say: 'Bans start from a held line.' }] } };
+  expect(matchIntent('ban someone', hinted, 'lottery')).toMatchObject({ kind: 'chamber', chamber: 'moderator', hint: 'Bans start from a held line.' });
+});

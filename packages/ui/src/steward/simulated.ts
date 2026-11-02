@@ -20,7 +20,7 @@ export const sampleStewardFacts: Readonly<StewardFacts> = Object.freeze({
 const layers: Readonly<Record<ChamberId, string>> = Object.freeze({
   lottery: 'draw', moderator: 'chat', visuals: 'beacon', studio: 'map',
 });
-const help = 'I understand: draft a question draw; make it N winners; no raiders; prize is a signed print; pass or bar a line; pass all as proposed; raise the drawbridge; test fire N gifts; what does chat want; catch me up; what should the next turn be; restyle the beacon as hype border; show me presets for the draw; design a quiet look for the urn.';
+const help = 'I did not catch that, so nothing was drafted. Choose a chip below, or try: play demo, set up a draw, raise the drawbridge, test fire 10 gifts, start a duel, catch me up.';
 
 function field(key: string, label: string, value: FieldValue) {
   return { key, label, value, struck: [] };

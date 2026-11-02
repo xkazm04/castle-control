@@ -15,11 +15,13 @@ import { moderationSession } from './session.js';
  * (copies the real browser source on seal) and the drill.
  */
 export function moderatorSteward(snapshot: Snapshot): ChamberSteward {
-  const base = roomSteward('moderator', snapshot, ['ban', 'timeout', 'held', 'moderate', 'gatehouse', 'mod', 'spam']);
+  const base = { ...roomSteward('moderator', snapshot, ['ban', 'timeout', 'held', 'moderate', 'gatehouse', 'mod', 'spam']),
+    hints: [{ phrases: ['ban', 'timeout', 'kick'],
+      say: 'I never ban from a sentence. A ban starts on a line the gate flagged: choose Propose ban on it in the Gatehouse, then hold to seal. Set the rules decides what gets flagged.' }] };
   if (snapshot.mode !== 'fixture') return { ...base, flows: [voteBarFlow(snapshot), drillFlow(snapshot)] };
   return {
     ...base,
-    greeting: 'The Gatehouse: the AI holds what it is unsure of, you decide. Set the rules, put the vote bar on stream, or play the demo.',
+    greeting: 'The Gatehouse: the AI holds what it is unsure of, you decide. Set the rules, put the vote bar on stream, or play the demo; nothing acts until you hold to seal.',
     flows: [rulesFlow, voteBarFlow(snapshot), drillFlow(snapshot)],
     demo: demoFlow,
     catch_up: () => {

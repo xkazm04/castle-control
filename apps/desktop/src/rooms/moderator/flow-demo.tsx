@@ -30,11 +30,11 @@ const lines = (draft: DemoDraft): FlowLine[] => [
 export const demoFlow = defineFlow<DemoDraft>({
   id: demoFlowId, chamber: 'moderator', title: 'Play demo · the Gatehouse', simulated: true,
   intents: ['demo', 'show me', 'play demo', 'how does it work'],
-  intro: 'A one-minute SIMULATED demo: a raid bursts into chat, the gate holds one line for you, you decide, and the herald moves. Nothing reaches Twitch.',
+  intro: 'Keep chat safe without reading every line: the AI passes the obvious, bars clear abuse, and holds only the lines it is unsure of for you. Four steps, about a minute, all SIMULATED; nothing reaches Twitch.',
   initial: () => ({}),
   steps: [
     { id: 'burst', kind: 'preview', label: 'Burst', continue_label: 'Show me the held one',
-      prompt: 'Watch the gate: eight simulated lines arrive. Six pass, a repeat is barred, and one waits for you.',
+      prompt: 'Watch the gate above: eight simulated lines arrive. Six pass, a repeat is barred, and one waits at the portcullis (your held-for-review queue).',
       lines: () => [{ label: 'Passed', value: '6 lines reach chat and the herald' }, { label: 'Barred', value: '1 repeated message' },
         { label: 'Held', value: '1 line waits for a human' }] },
     { id: 'decide', kind: 'choice', label: 'Decision',
@@ -44,7 +44,7 @@ export const demoFlow = defineFlow<DemoDraft>({
         { id: 'bar', label: 'Propose bar', consequence: 'It never reaches chat, and the herald does not count it.' }],
       apply: (draft, id) => id === 'pass' || id === 'bar' ? { ...draft, choice: id } : draft },
     { id: 'herald', kind: 'preview', label: 'Herald',
-      prompt: 'Meanwhile the herald reads the passed lines: “Go left” surges, and the vote bar on stream moves with it.',
+      prompt: 'Meanwhile the herald (a live read of what chat is asking for) counts only passed lines: “Go left” surges, and the vote bar on stream moves with it.',
       render: () => <VoteBarStage directions={moved()?.directions ?? []} look={voteLook(undefined)} label="after the burst" /> },
     { id: 'seal', kind: 'confirm', label: 'Seal', prompt: 'Hold to seal your decision. This is the only step that acts, and only on sample data.',
       lines, note: 'SIMULATED · fixture mode. Sealing resolves the sample message locally; nothing reaches Twitch or OBS.' },
@@ -60,7 +60,9 @@ export const demoFlow = defineFlow<DemoDraft>({
     sealCommand(proposalQueue, { kind: draft.choice === 'pass' ? 'release' : 'remove', decision_id: held.decision_id },
       draft.choice === 'pass' ? 'Pass held message' : 'Bar held message');
     view.setDemoMoved(true);
-    return { say: `Sealed. The sample line is ${draft.choice === 'pass' ? 'released to chat' : 'barred'} once the fixture confirms, the herald keeps the surge, and the gate roll records it. That is the Gatehouse: the AI holds, you decide.`,
-      lines: lines(draft) };
+    return { say: `Sealed: the sample line is ${draft.choice === 'pass' ? 'released to chat' : 'barred'}. What you saw: the gate settled seven lines alone and asked you about one, and only passed lines moved the vote bar. That is the Gatehouse: the AI holds, you decide. Next: set the rules for your chat, or put the vote bar on stream.`,
+      lines: lines(draft),
+      chips: [{ label: 'Set the rules', action: { kind: 'flow', chamber: 'moderator', flow: 'gatehouse-rules' } },
+        { label: 'Show the vote bar', action: { kind: 'flow', chamber: 'moderator', flow: 'gatehouse-votebar' } }] };
   },
 });

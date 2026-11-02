@@ -52,8 +52,8 @@ export function voteRibbon(draft: VoteDraft): string {
 export function voteBarFlow(snapshot: Snapshot) {
   const core = snapshot.mode === 'core';
   return defineFlow<VoteDraft>({
-    id: 'gatehouse-votebar', chamber: 'moderator', title: 'Vote bar on stream', chip: 'Vote bar on stream', simulated: !core,
-    intents: ['vote bar', 'vote', 'poll', 'overlay', 'herald', 'obs source', 'browser source', 'consensus'],
+    id: 'gatehouse-votebar', chamber: 'moderator', title: 'Vote bar on stream', chip: 'Show the vote bar', simulated: !core,
+    intents: ['vote bar', 'vote', 'poll', 'overlay', 'herald', 'obs source', 'browser source', 'consensus', 'make the bar', 'bar bigger', 'bar smaller', 'bar size'],
     intro: 'Let us put the herald on stream: what it counts, where the bar sits, how it looks. Nothing reaches OBS until you seal.',
     initial: () => ({}),
     steps: [

@@ -73,7 +73,7 @@ const tourLine = (id: ModuleId) => `${chamberName(id)}: press ${chambers.find(ch
 export const keepTourFlow = defineFlow<KeepTourDraft>({
   id: 'keep-tour', chamber: 'keep', title: 'What is Castle Control?', simulated: true,
   intents: ['what is castle control', 'tour', 'show me around', 'demo', 'what can you do'],
-  intro: 'Castle Control runs the interactive parts of your stream from one keep. Three short beats; every number here is SIMULATED.',
+  intro: 'Castle Control runs the interactive parts of a Twitch stream from one place: fair giveaways, calmer moderation, visuals that answer support, and chat votes. Three short beats; every number here is SIMULATED.',
   initial: () => ({}),
   steps: [
     { id: 'start', kind: 'choice', label: 'Tour', prompt: 'Four chambers, one Steward. Nothing reaches your stream until you hold to seal. Shall we start where most evenings start?',
@@ -94,7 +94,7 @@ export const keepTourFlow = defineFlow<KeepTourDraft>({
   ],
   seal: () => {
     offerTourDemos();
-    return { say: 'Tour done. Each chamber plays its own SIMULATED case end to end: choose one below, or open one with 1 to 4 and choose Play demo.',
+    return { say: 'Tour done. Each chamber plays its own SIMULATED case end to end in about a minute: choose one below, or open one with 1 to 4 and choose Play demo.',
       lines: chambers.map(chamber => ({ label: chamber.name, value: `Press ${chamber.number}, then Play demo` })) };
   },
 });
