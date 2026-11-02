@@ -136,12 +136,13 @@ export type CeremonyControlsProps = {
   sound?: boolean; on_sound?: ((sound: boolean) => void) | undefined;
   by_hand?: boolean; on_by_hand?: ((by_hand: boolean) => void) | undefined;
   unverified?: boolean; sampled?: number; total?: number;
+  /** Desk controls open the existing drawer for hand reveal, sound and ceremony notes. */
+  on_options?: (() => void) | undefined; options_open?: boolean;
 };
 
-export function CeremonyControls({ shape, on_shape, theatre = false, on_theatre, sound = false,
-  on_sound, by_hand = false, on_by_hand, unverified = false, sampled, total = 0 }: CeremonyControlsProps) {
-  return <div className="lottery-stage-top">
-      <ShapePicker shape={shape} on_shape={on_shape} />
+export function CeremonyDetails({ sound = false, on_sound, by_hand = false, on_by_hand,
+  unverified = false, sampled, total = 0 }: Pick<CeremonyControlsProps, 'sound' | 'on_sound' | 'by_hand' | 'on_by_hand' | 'unverified' | 'sampled' | 'total'>) {
+  return <>
       {(on_by_hand || on_sound) && <div className="lottery-stage-options" role="group" aria-label={copy.stage.options}>
         {on_by_hand && <InkButton size="room" className="lottery-stage-toggle" aria-pressed={by_hand} title={copy.stage.by_hand_hint}
           onClick={() => on_by_hand(!by_hand)}><RoomKeyBadge room="lottery" action="by_hand" />{copy.stage.by_hand}</InkButton>}
@@ -153,6 +154,17 @@ export function CeremonyControls({ shape, on_shape, theatre = false, on_theatre,
         <p className="cc-aside">{unverified ? copy.stage.unverified : copy.stage.note}
           {sampled !== undefined && sampled < total ? ` ${copy.stage.sampled(sampled, total)}` : ''}</p>
       </details>
+  </>;
+}
+
+export function CeremonyControls({ shape, on_shape, theatre = false, on_theatre, sound = false,
+  on_sound, by_hand = false, on_by_hand, unverified = false, sampled, total = 0, on_options, options_open }: CeremonyControlsProps) {
+  return <div className="lottery-stage-top" data-options-drawer={Boolean(on_options)}>
+      <ShapePicker shape={shape} on_shape={on_shape} />
+      {on_options ? <button type="button" className="cc-btn" aria-haspopup="dialog" aria-expanded={options_open} onClick={on_options}>
+        <RoomKeyBadge room="lottery" action="tools" />Ceremony options</button>
+        : <CeremonyDetails sound={sound} on_sound={on_sound} by_hand={by_hand} on_by_hand={on_by_hand}
+          unverified={unverified} {...(sampled === undefined ? {} : { sampled })} total={total} />}
       {on_theatre && <InkButton size="room" className="lottery-stage-expand" data-theatre-toggle aria-pressed={theatre}
         aria-label={theatre ? copy.stage.desk : copy.stage.theatre} title={theatre ? copy.stage.desk : copy.stage.theatre}
         onClick={() => on_theatre(!theatre)}><span aria-hidden="true">{theatre ? '\u21a9' : '\u26f6'}</span></InkButton>}

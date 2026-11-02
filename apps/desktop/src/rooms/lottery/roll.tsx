@@ -20,20 +20,25 @@ export function StagePanel({ title, count, caption = copy.count_caption, draft =
   </section>;
 }
 
-export function RollPanel({ status, tone, counts, count, draft = false, simulated = false }: {
+export function RollPanel({ status, tone, counts, count, draft = false, simulated = false, compact = false }: {
   status: string; tone: RollTone; counts?: Readonly<Record<Cohort, number>> | undefined; count?: number | undefined;
-  draft?: boolean; simulated?: boolean;
+  draft?: boolean; simulated?: boolean; compact?: boolean;
 }) {
   return <ChamberSection title={copy.roll} aside={draft ? 'Draft · not sealed' : simulated ? <span className="cc-sim">Simulated</span> : undefined}>
     <div className="lottery-roll" data-role="lot-roll-panel" data-tone={tone}>
       <p className="lottery-roll-status" role="status"><i className="cc-lozenge" aria-hidden="true" />{status}</p>
       {counts && <div className="lottery-cohort-bar" aria-hidden="true">{cohorts.map(cohort =>
         <i key={cohort} data-cohort={cohort} style={{ flex: counts[cohort] }} />)}</div>}
-      {counts && <ul className="lottery-roll-legend" data-role="lot-legend" aria-label={copy.dots}>{cohorts.map(cohort =>
-        <li key={cohort} data-cohort={cohort}><i className="cc-swatch" aria-hidden="true" />{copy.cohorts[cohort]} <b>{counts[cohort]}</b></li>)}</ul>}
+      {!compact && counts && <RollLegend counts={counts} />}
       <p className="lottery-roll-total"><b>{count ?? '—'}</b> lots · eligible</p>
     </div>
   </ChamberSection>;
+}
+
+/** Cohort names and counts stay readable in the full roll inside the drawer. */
+export function RollLegend({ counts }: { counts: Readonly<Record<Cohort, number>> }) {
+  return <ul className="lottery-roll-legend" data-role="lot-legend" aria-label={copy.dots}>{cohorts.map(cohort =>
+        <li key={cohort} data-cohort={cohort}><i className="cc-swatch" aria-hidden="true" />{copy.cohorts[cohort]} <b>{counts[cohort]}</b></li>)}</ul>;
 }
 
 const stamp: Record<CheckResult, string> = { ok: 'ok', warn: 'held', blocked: 'blocked' };

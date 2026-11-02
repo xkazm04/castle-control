@@ -1,25 +1,25 @@
 /* The Deck: existing ceremony, two compact section columns, one detail drawer. */
-.lottery-room { box-sizing: border-box; height: 100%; min-height: 0; min-width: 0; color: var(--ink); font: 400 var(--text-px-15)/1.4 var(--font-text); }
+.lottery-room { box-sizing: border-box; height: 100%; min-height: 0; min-width: 0; color: var(--ink); font: 400 var(--text-px-15)/1.45 var(--font-text); }
 .lottery-room p { margin: 0; }
-.lottery-room .cc-chamber-mini p { margin-bottom: var(--space-6); font-size: var(--text-px-13); }
-.lottery-room .lottery-note { color: var(--muted); font: 400 var(--text-px-13)/1.4 var(--font-text); }
-.lottery-room .cc-chamber-section { gap: var(--space-6); }
+.lottery-room .cc-chamber-mini p { margin-bottom: var(--space-6); font-size: var(--text-px-15); }
+.lottery-room .lottery-note { color: var(--muted); font: 400 var(--text-px-15)/1.45 var(--font-text); }
+.lottery-room .cc-chamber-section { gap: var(--space-8); }
 .lottery-room .cc-chamber-section-heading h3 { font: 700 var(--text-px-13)/1.3 var(--font-text); text-transform: uppercase; }
-.lottery-room .cc-chamber-section-heading { gap: var(--space-6); }
+.lottery-room .cc-chamber-section-heading { gap: var(--space-12); }
 .lottery-rule-chips { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-8); }
 .lottery-room .lottery-rule-chip { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--space-3); min-width: 0; padding: var(--space-6); border: var(--came-hair) solid var(--hair); border-radius: var(--r-lg); background: var(--stone-2); color: var(--ink-2); font: 700 var(--text-px-13)/1.2 var(--font-text); text-align: center; }
 .lottery-rule-chip b { color: var(--ink); font: 600 var(--text-px-22)/1 var(--font-book); }
-.lottery-rule-chip small { font-size: var(--text-px-13); }
+.lottery-rule-chip small { font-size: var(--text-px-15); }
 .lottery-stepper { display: flex; align-items: center; justify-content: center; gap: var(--space-6); width: 100%; }
 .lottery-room .lottery-stepper button { padding: var(--space-2) var(--space-6); border: var(--came-hair) solid var(--hair); border-radius: var(--r); background: var(--surface); color: var(--ink); font-size: var(--text-px-15); }
 .lottery-rule-chip :is(input, select) { box-sizing: border-box; width: 100%; min-width: 0; border: var(--came-hair) solid var(--hair); border-radius: var(--r); background: var(--surface); color: var(--ink); font: 600 var(--text-px-18)/1.2 var(--font-book); padding: var(--space-3); text-align: center; }
-.lottery-room .lottery-stage-top { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: start; gap: var(--space-6); }
+.lottery-room .lottery-stage-top { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: start; gap: var(--space-8); }
 .lottery-room .lottery-shape-picker { grid-column: 1 / -1; border: var(--came-hair) solid var(--hair); border-radius: var(--r-lg); background: var(--stone-2); padding: 0; gap: 0; }
-.lottery-room .lottery-shape-picker button { border-radius: var(--r); color: var(--ink-2); font: 600 var(--text-px-13)/1.2 var(--font-text); padding: var(--space-6) var(--space-2); }
+.lottery-room .lottery-shape-picker button { border-radius: var(--r); color: var(--ink-2); font: 600 var(--text-px-15)/1.45 var(--font-text); padding: var(--space-6) var(--space-2); }
 .lottery-room .lottery-shape-picker button[aria-pressed="true"] { background: var(--ch); color: var(--on-glass); box-shadow: none; border-color: var(--ch); }
 .lottery-room .lottery-shape-picker button svg { display: none; }
 .lottery-room .lottery-stage-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); min-width: 0; gap: var(--space-6); }
-.lottery-room .lottery-stage-options .cc-button.cc-heraldic-button[data-size] { box-sizing: border-box; width: 100%; min-width: 0; min-height: var(--space-36); padding: var(--space-4) var(--space-2); gap: 0; font: 600 var(--text-px-13)/1.2 var(--font-text); letter-spacing: normal; white-space: nowrap; overflow-wrap: normal; word-break: normal; }
+.lottery-room .lottery-stage-options .cc-button.cc-heraldic-button[data-size] { box-sizing: border-box; width: 100%; min-width: 0; min-height: var(--space-36); padding: var(--space-4) var(--space-2); gap: 0; font: 600 var(--text-px-15)/1.45 var(--font-text); letter-spacing: normal; white-space: nowrap; overflow-wrap: normal; word-break: normal; }
 .lottery-room .lottery-stage-top .lottery-stage-expand.cc-button[data-size] { width: var(--space-28); height: var(--space-36); padding: var(--space-2); }
 .lottery-room .lottery-stage-notes > summary { box-sizing: border-box; height: var(--space-36); grid-template-rows: auto auto; gap: 0; border: var(--came-hair) solid var(--hair); border-radius: var(--r); background: var(--surface); }
 .lottery-room .lottery-stage-notes > .cc-aside { width: min(calc(var(--space-40) * 7), 70vw); max-height: none; overflow: visible; background: var(--surface); border: var(--came-hair) solid var(--hair); border-radius: var(--r); box-shadow: var(--shadow); }
@@ -53,23 +53,23 @@
 .lottery-room .lottery-stage-announce { font-size: var(--text-px-15); }
 
 .lottery-roll { display: grid; gap: var(--space-6); min-width: 0; }
-.lottery-roll-status { display: flex; align-items: center; gap: var(--space-6); color: var(--muted); font: 400 var(--text-px-13)/1.3 var(--font-text); }
+.lottery-roll-status { display: flex; align-items: center; gap: var(--space-6); color: var(--muted); font: 400 var(--text-px-15)/1.45 var(--font-text); }
 .lottery-cohort-bar { display: flex; height: var(--space-12); border-radius: var(--r-round); background: var(--surface); }
 .lottery-cohort-bar i { background: var(--ink); }
 .lottery-cohort-bar i[data-cohort="subscriber"] { background: var(--or); }
 .lottery-cohort-bar i[data-cohort="raider"] { background: var(--azure); }
 .lottery-roll-legend { display: flex; flex-wrap: nowrap; justify-content: space-between; gap: var(--space-6); margin: 0; padding: 0; list-style: none; }
-.lottery-roll-legend li { white-space: nowrap; overflow-wrap: normal; font: 400 var(--text-px-13)/1.2 var(--font-text); color: var(--ink-2); }
+.lottery-roll-legend li { white-space: nowrap; overflow-wrap: normal; font: 400 var(--text-px-15)/1.45 var(--font-text); color: var(--ink-2); }
 .lottery-roll-legend b { display: block; font: 600 var(--text-px-18)/1.2 var(--font-book); color: var(--ink); }
 .lottery-roll-legend .cc-swatch { display: inline-block; width: var(--space-8); height: var(--space-8); margin-right: var(--space-3); border-radius: var(--r-sm); background: var(--ink); }
 .lottery-roll-legend [data-cohort="subscriber"] .cc-swatch { background: var(--or); }
 .lottery-roll-legend [data-cohort="raider"] .cc-swatch { background: var(--azure); }
-.lottery-roll-total { font: 400 var(--text-px-13)/1.2 var(--font-text); color: var(--muted); }
+.lottery-roll-total { font: 400 var(--text-px-15)/1.45 var(--font-text); color: var(--muted); }
 .lottery-roll-total b { color: var(--ink); font: 600 var(--text-px-22)/1 var(--font-book); }
 .lottery-draw-card { display: grid; gap: var(--space-6); min-width: 0; }
 .lottery-draw-card > .cc-kicker { display: none; }
 .lottery-room h3.lottery-draw-name { margin: 0; font: italic 400 var(--text-px-15)/1.3 var(--font-book); text-transform: none; }
-.lottery-draw-line, .lottery-draw-guard { color: var(--ink-2); font: 400 var(--text-px-13)/1.35 var(--font-text); }
+.lottery-draw-line, .lottery-draw-guard { color: var(--ink-2); font: 400 var(--text-px-15)/1.45 var(--font-text); }
 .lottery-draw-guard { display: flex; align-items: baseline; gap: var(--space-6); }
 .lottery-draw-actions { display: flex; flex-wrap: wrap; align-items: start; gap: var(--space-6); }
 .lottery-proof-winners { margin: 0; padding-left: var(--space-20); font: 500 var(--text-px-15)/1.3 var(--font-text); }
@@ -99,10 +99,10 @@
 .lottery-room[data-theatre="true"] .lottery-stage-top .lottery-shape-picker { flex: 1; }
 .lottery-room[data-theatre="true"] .lottery-stage-options { flex: none; }
 
-/* Compact figures and cast controls leave room below the proof trigger on laptops. */
-.lottery-room .cc-chamber-section { padding: var(--space-8) var(--space-12); }
+/* Preserve the winner section spacing; secondary controls live in the drawer. */
+.lottery-room .cc-chamber-section { padding: var(--space-11) var(--space-14) var(--space-12); }
 .lottery-room .lottery-roll-legend b { display: inline; margin-inline-start: var(--space-3); }
-.lottery-room .lottery-draw-actions > .cc-btn { padding: var(--space-6) var(--space-8); font-size: var(--text-px-13); }
+.lottery-room .lottery-draw-actions > .cc-btn { padding: var(--space-6) var(--space-8); font-size: var(--text-px-15); }
 .lottery-room .lottery-rule-chip { position: relative; }
 .lottery-rule-chip > .cc-control-key { position: absolute; top: var(--space-2); right: var(--space-2); margin: 0; }
 .lottery-room .lottery-shape-picker { position: relative; padding-inline-end: var(--space-26); }
@@ -111,6 +111,8 @@
 .lottery-room .lottery-draw-stage .cc-control-key > .cc-key-badge { font-size: var(--text-px-15); }
 
 /* One row at the laptop width: these labels use the chamber text face, without wide tracking. */
-.lottery-room .lottery-primary-actions { flex-wrap: nowrap; }
-.lottery-room .lottery-primary-actions > .cc-btn { flex: none; padding-inline: var(--space-6); font: 600 var(--text-px-13)/1.2 var(--font-text); letter-spacing: normal; text-transform: none; white-space: nowrap; }
+.lottery-room .lottery-primary-actions { flex-wrap: wrap; }
+.lottery-room .lottery-primary-actions > .cc-btn { flex: none; padding-inline: var(--space-6); font: 600 var(--text-px-15)/1.45 var(--font-text); letter-spacing: normal; text-transform: none; white-space: nowrap; }
 .lottery-room[data-theatre="true"] .lottery-stage-options .cc-button.cc-heraldic-button[data-size] { font-size: var(--text-px-15); }
+
+.lottery-room .lottery-stage-top[data-options-drawer="true"] { grid-template-columns: minmax(0, 1fr) auto; }

@@ -122,8 +122,10 @@ test('compact rule chips and cohort legend come from the selected fixture', () =
   expect(markup).toContain(`<b>${state.draw.rules.winner_count}</b>`);
   expect(markup).toContain(`Held out<b>${fixtureCooldown.length}</b>`);
   expect(markup).toContain('<option value="1/3" selected="">1/3</option>');
+  expect(markup).not.toContain('data-role="lot-legend"');
+  const drawer = render(queue, true);
   for (const cohort of ['new_account', 'subscriber', 'raider'] as const) {
-    expect(markup).toContain(`<li data-cohort="${cohort}"><i class="cc-swatch" aria-hidden="true"></i>${copy.cohorts[cohort]} <b>${state.entries.filter(entry => entry.cohort === cohort).length}</b>`);
+    expect(drawer).toContain(`<li data-cohort="${cohort}"><i class="cc-swatch" aria-hidden="true"></i>${copy.cohorts[cohort]} <b>${state.entries.filter(entry => entry.cohort === cohort).length}</b>`);
   }
   draftRoll(queue);
   const proposal = queue.pending('lottery')[0];

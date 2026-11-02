@@ -17,7 +17,7 @@ import { DrawAppearance } from './appearance.jsx';
 import { DrawSetup } from './setup.jsx';
 import { FixtureCast, OverlayNote } from './result.jsx';
 import { useWritCheck } from './playback.js';
-import { CeremonyControls, DrawStage } from './stage.jsx';
+import { CeremonyControls, CeremonyDetails, DrawStage } from './stage.jsx';
 import type { StageCast } from './stage-model.js';
 import { WeightEqualizer } from './equalizer.jsx';
 import { WritLab } from './lab.jsx';
@@ -28,7 +28,7 @@ import { castFlow, demoDraw, demoFlow, demoShape, isDemoClosing, proveFlow, setu
 import { SandboxBanner, useDemoSandbox } from '../../demo-sandbox.jsx';
 import { contentLine, heldOut, poolLabel } from './flow-model.js';
 import { lotLive } from './live.js';
-import { countCohorts, DrawCard, MoreTools, RollPanel, StagePanel } from './roll.jsx';
+import { countCohorts, DrawCard, MoreTools, RollLegend, RollPanel, StagePanel } from './roll.jsx';
 import type { RollTone } from './roll.jsx';
 import { useFill } from './chamber-hooks.js';
 import { LotChamber } from './chamber.jsx';
@@ -37,6 +37,7 @@ import { lotDrawer } from './drawer.js';
 import { RevealedWinners } from './revealed.jsx';
 import './room.css';
 import './chamber.css';
+import './readability.css';
 
 /** Fixture mode may authenticate its simulated specimen; real chains keep the public anchor. */
 const fixture_anchors = [quicknet_anchor, simulated_anchor] as const;
@@ -137,37 +138,47 @@ export default function LotteryRoom({ snapshot, replay, queue = proposalQueue, s
       : state.sealed ? 'Roll sealed · waiting for the cast' : 'Roll open · nothing cast'}</p></>}
     setup={<DrawControls draw={draw} held_out={heldOut(draw, fixtureCooldown.length)} disabled={state.sealed || drafting}
       on_edit={edit} on_tools={() => setTools(true)}>
-      <CeremonyControls shape={shape} on_shape={next => display.edit({ shape: next })}
+      <CeremonyControls options_open={tools_open} on_options={() => setTools(true)} shape={shape} on_shape={next => display.edit({ shape: next })}
         theatre={appearance.theatre} on_theatre={display.theatre} sound={appearance.sound} on_sound={on => display.edit({ sound: on })}
         by_hand={appearance.by_hand} on_by_hand={on => display.edit({ by_hand: on })} />
     </DrawControls>}
     question={<DrawCard name={draw.name} line={drawLine(draw)} guard={drafting && policy.result === 'blocked' ? 'warn' : policy.result}
       guard_word={drafting && policy.result === 'blocked' ? 'To clear' : undefined}
       guard_line={drafting && policy.result === 'blocked' ? 'The Steward asks for each fix before the seal.' : guard_line} />}
-    roll={<RollPanel status={status} tone={tone} counts={countCohorts(entries)} draft={drafting} simulated count={entries.length} />}
+    roll={<RollPanel compact status={status} tone={tone} counts={countCohorts(entries)} draft={drafting} simulated count={entries.length} />}
     cast={<>
       <div className="lottery-draw-actions lottery-primary-actions">
         {!drafting && phase === 'open' && <>
           <button type="button" className="cc-btn cc-btn--primary" onClick={open(setupFlow)}><RoomKeyBadge room="lottery" action="setup" />Set up a draw</button>
           <button type="button" className="cc-btn" onClick={open(castFlow)}><RoomKeyBadge room="lottery" action="cast" />Cast the lots</button>
-          <button type="button" className="cc-btn cc-btn--quiet" onClick={open(demoFlow)}>Play demo</button>
         </>}
         {!drafting && phase === 'sealed' && <>
           <button type="button" className="cc-btn cc-btn--primary" onClick={open(castFlow)}><RoomKeyBadge room="lottery" action="cast" />Cast the lots</button>
           <button type="button" className="cc-btn cc-btn--quiet" onClick={open(setupFlow)}><RoomKeyBadge room="lottery" action="setup" />Set up another draw</button>
         </>}
       </div>
-      {proposal && <button type="button" className="cc-btn" onClick={() => setTools(true)}>Review and seal the writ</button>}
       <p className="lottery-note">{drafting ? 'The Steward is drafting below. Nothing is sealed.'
-        : proposal ? 'Proposal · not sealed. Review the writ before holding to seal.' : 'Winners are drawn at the moment you seal.'}</p>
+        : proposal ? 'Proposal · not sealed. Review the writ before holding to seal.' : 'Drawn only when you seal.'}</p>
     </>}
     proof={<>
       {phase === 'cast' ? <>
-        <RevealedWinners clock={reveal} seal={state.sealed_roll?.seal} total={state.simulated_winners?.length ?? 0} />
+        <RevealedWinners compact clock={reveal} seal={state.sealed_roll?.seal} total={state.simulated_winners?.length ?? 0} />
         <button type="button" className="cc-btn" onClick={() => { openLab(); stewardDock.open(proveFlow); }}><RoomKeyBadge room="lottery" action="prove" />Prove it</button>
       </> : <p className="lottery-note">SIMULATED · writ follows the cast.</p>}
     </>}
     tools={<>
+      <section className="lottery-more-card" data-role="room-section" aria-label="Ceremony options">
+        <h3 className="lottery-card-title">Ceremony options</h3>
+        <CeremonyDetails sound={appearance.sound} on_sound={on => display.edit({ sound: on })}
+          by_hand={appearance.by_hand} on_by_hand={on => display.edit({ by_hand: on })} />
+      </section>
+      <section className="lottery-more-card" data-role="room-section" aria-label="Full roll and draw actions">
+        <h3 className="lottery-card-title">Full roll and draw actions</h3>
+        <RollLegend counts={countCohorts(entries)} />
+        <button type="button" className="cc-btn" onClick={open(demoFlow)}>Play demo</button>
+        {proposal && <button type="button" className="cc-btn" onClick={event =>
+          event.currentTarget.closest('[role="dialog"]')?.querySelector('.lottery-pending')?.scrollIntoView({ block: 'start' })}>Review and seal the writ</button>}
+      </section>
       <p className="lottery-note">The writ appears after a draw is sealed. Replay the draw from its seed to check the winners. Stylised illustration · generated sample lots · SIMULATED.</p>
       {!drafting && phase === 'cast' && <FixtureCast port={port} display={appearance} hash={roll?.hash}
         on_prove={() => { openLab(); stewardDock.open(proveFlow); }} on_new={() => { port.reopen(); draftRoll(queue); }} />}
