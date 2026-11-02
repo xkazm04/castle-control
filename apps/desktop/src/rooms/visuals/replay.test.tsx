@@ -132,7 +132,8 @@ test('back to the sealed curve restores the whole curve as a draft through the s
 
 test('replay styles stay token-only', () => {
   const css = readFileSync(new URL('./replay.css', import.meta.url), 'utf8');
-  const known = new Set([...Object.keys(tokens.layout), ...Object.keys(tokens.theme.paper)]);
+  const fusedNames = [...readFileSync(new URL('../../../../../packages/tokens/src/fused/tokens.css', import.meta.url), 'utf8').matchAll(/--([\w-]+)\s*:/g)].map(match => match[1] ?? '');
+  const known = new Set([...Object.keys(tokens.layout), ...Object.keys(tokens.theme.paper), ...fusedNames]);
   for (const [, token] of css.matchAll(/var\(--([\w-]+)/g)) expect(known.has(token ?? '')).toBe(true);
   expect(css).not.toMatch(/#[\da-f]{3,8}\b|\brgba?\(|\bhsla?\(|\b\d+(?:\.\d+)?px\b/i);
 });

@@ -82,8 +82,8 @@
      --font-aside   Alegreya italic  asides, subtitles, taglines
      --font-book    Alegreya roman   folio prose (A direction only)
      --font-mono    IBM Plex Mono    hashes, bytes, handles, times
-   Scale  hero 84 · title 64 · h2 28 · h4 21 · h3 17 · lead 17 · body 15 · small 14 ·
-          label 13 · mono 13 · figure 46 · figure-sm 26 · figure-lg 64
+   Scale  hero 84 · title 64 · h2 28 · h4 21 · h3 17 · lead 17 · body 16 · small 15 (secondary prose) ·
+          meta 14 (one-line captions only) · label 13 (small-caps face) · mono 13 · figure 46 · figure-sm 26 · figure-lg 64
    ============================================================================= */
 
 /* ---------------------------------------------------------------- day (default) */
@@ -151,7 +151,7 @@
   --font-mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", "SF Mono", Consolas, Menlo, monospace;
   --num: lining-nums tabular-nums;
   --t-hero: 84px; --t-title: 64px; --t-h2: 28px; --t-h4: 21px; --t-h3: 17px; --t-lead: 17px;
-  --t-body: 15px; --t-small: 14px; --t-label: 13px; --t-mono: 13px;
+  --t-body: 16px; --t-small: 15px; --t-meta: 14px; --t-label: 14px; --t-mono: 13px;
   --t-figure: 46px; --t-figure-sm: 26px; --t-figure-lg: 64px;
   --track-label: .08em; --track-tab: .07em; --track-wide: .12em;
 
@@ -230,6 +230,7 @@
   --text-t-lead: var(--t-lead);
   --text-t-body: var(--t-body);
   --text-t-small: var(--t-small);
+  --text-t-meta: var(--t-meta);
   --text-t-label: var(--t-label);
   --text-t-mono: var(--t-mono);
   --text-t-figure: var(--t-figure);

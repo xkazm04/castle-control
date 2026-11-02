@@ -257,7 +257,8 @@ test('the Keep heartbeat is a labelled loop of the same model, with one button t
 
 test('moat styles use declared tokens, no raw colours and no pixel sizes', () => {
   const css = readFileSync(new URL('../../moat/moat.css', import.meta.url), 'utf8');
-  const declared = new Set([...Object.keys(tokens.theme.paper), ...Object.keys(tokens.layout)]);
+  const fusedNames = [...readFileSync(new URL('../../../../../packages/tokens/src/fused/tokens.css', import.meta.url), 'utf8').matchAll(/--([\w-]+)\s*:/g)].map(match => match[1] ?? '');
+  const declared = new Set([...Object.keys(tokens.theme.paper), ...Object.keys(tokens.layout), ...fusedNames]);
   for (const [, name] of css.matchAll(/var\(--([\w-]+)/g)) expect(declared.has(name ?? ''), name).toBe(true);
   expect(css).not.toMatch(/#[\da-f]{3,8}\b|\brgba?\(|\bhsla?\(|\b\d+(?:\.\d+)?px\b/i);
   expect(css).toContain('prefers-reduced-motion: reduce');

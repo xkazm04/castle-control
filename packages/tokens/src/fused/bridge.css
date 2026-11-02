@@ -18,6 +18,11 @@
   --input-ink: var(--ink);
   /* fonts */
   --font-ui: var(--font-text); --font-serif: var(--font-aside); --font-num: var(--font-mono);
+  /* type: the pre-fusion size names follow the one fused scale (body 16, secondary prose 15,
+     one-line meta 14, small-caps label 13), so no module can set prose below 15 by accident */
+  --text-body: var(--t-body); --text-small: var(--t-small); --text-label: var(--t-label);
+  --text-aside: var(--t-small); --text-empty: var(--t-small);
+  --text-shell-aside-small: var(--t-small); --text-shell-state: var(--t-small); --text-shell-legend: var(--t-meta);
   /* cutaway papers */
   --stage-paper: var(--stone); --body-top: var(--surface); --body-low: var(--stone-2);
   --stage-top: var(--surface); --stage-mid: var(--stone); --stage-low: var(--stone-2);

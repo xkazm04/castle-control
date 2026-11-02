@@ -51,7 +51,7 @@
 .visuals-panels { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; align-items: start; }
 .visuals-seal-panel { min-width: 0; border: 1.5px solid var(--lead); background: var(--surface); }
 .visuals-room .visuals-seal-panel > .shell-seal-slot { margin: 0; padding: 12px 14px 14px; border-top: 0; }
-.visuals-note { margin: 0; font-size: var(--text-t-label); line-height: 1.45; color: var(--muted); }
+.visuals-note { margin: 0; font-size: var(--text-t-small); line-height: 1.45; color: var(--muted); }
 .visuals-readout { padding: 8px 10px; border: 1px solid var(--hair); background: var(--vellum); font: var(--text-t-label)/1.5 var(--font-mono); }
 .visuals-room-timeline svg { display: block; width: 100%; height: auto; }
 .visuals-room-timeline-rule { fill: none; stroke: var(--ink-2); }

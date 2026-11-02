@@ -93,7 +93,11 @@ html, body { background: var(--stone); }
 .cc-frame .cc-rampart :focus-visible { outline-color: var(--focus); }
 
 @media (max-width: 1380px) {
-  .cc-frame .cc-rampart { gap: 12px; }
+  .cc-frame .cc-rampart { gap: 10px; padding: 0 14px 0 12px; }
   .cc-frame .cc-rampart .cc-wordmark { font-size: var(--text-px-22); }
-  .cc-frame .cc-rampart .cc-live-group { gap: 12px; }
+  .cc-frame .cc-rampart .cc-live-group { gap: 10px; }
+}
+@media (max-width: 1380px) {
+  .cc-frame .cc-rampart .cc-link-group { gap: 6px; }
+  .cc-frame .cc-rampart .cc-came-v, .cc-frame .cc-rampart .cc-separator { margin-inline: 0; }
 }

@@ -4,7 +4,7 @@
   display: inline-flex; align-items: center; justify-content: center; gap: var(--space-7); max-width: 100%;
   height: var(--button-h); min-height: var(--button-h); margin: 0; padding: 0 var(--space-12);
   border: var(--rule-medium) solid var(--cc-border-ink, var(--ink)); border-radius: var(--r-sm); background: var(--paper); color: var(--ink);
-  font: 700 var(--text-label)/1 var(--font-ui); letter-spacing: var(--track-label); text-transform: uppercase; white-space: nowrap; cursor: pointer;
+  font: 700 var(--text-label)/1 var(--font-label); letter-spacing: var(--track-label); text-transform: lowercase; white-space: nowrap; cursor: pointer;
 }
 .cc-button.cc-heraldic-button[data-size="big"] { height: auto; min-height: calc(var(--space-40) + var(--space-4)); gap: var(--space-8); padding: var(--space-6) var(--space-12); border-width: var(--rule-strong); background: var(--card); font: 800 var(--text-body)/1.15 var(--font-ui); }
 .cc-button.cc-heraldic-button[data-size="wrap"] { height: auto; padding: var(--space-6) var(--space-10); background: var(--card); line-height: 1.15; white-space: normal; text-align: center; }

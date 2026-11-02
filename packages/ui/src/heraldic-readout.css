@@ -13,7 +13,7 @@
 .cc-hero-figure small { margin-left: var(--space-4); font-size: var(--cc-unit-size, var(--text-chamber)); text-shadow: none; }
 .cc-hero-caption { font: italic var(--text-wordmark)/1.2 var(--font-serif); color: var(--ink); }
 .cc-hero-readout[data-caption="label"] { gap: 0; }
-.cc-hero-readout[data-caption="label"] .cc-hero-caption { margin-top: var(--space-6); font: 700 var(--text-label)/1.2 var(--font-ui); text-transform: uppercase; letter-spacing: var(--track-wide); color: var(--muted); }
+.cc-hero-readout[data-caption="label"] .cc-hero-caption { margin-top: var(--space-6); font: 700 var(--text-label)/1.2 var(--font-label); text-transform: lowercase; letter-spacing: var(--track-wide); color: var(--muted); }
 .cc-hero-readout[data-scale="viewport"] { --cc-figure-size: clamp(var(--text-figure-min), 11.5vh, var(--text-figure-max)); --cc-ghost-offset: var(--space-4); }
 .cc-hero-readout[data-scale="viewport"] .cc-hero-figure {
   font-size: var(--cc-figure-size, clamp(var(--text-figure-min), 11.5vh, var(--text-figure-max)));

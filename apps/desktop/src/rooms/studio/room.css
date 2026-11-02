@@ -27,7 +27,7 @@
 .studio-room .cc-pennants > li { display: flex; }
 .studio-room .cc-hero.cc-plate { flex: none; margin-right: var(--space-6); }
 .studio-room .cc-hero-body { display: grid; gap: var(--space-8); }
-.studio-room .cc-hero-kicker { font: 800 var(--text-label)/1.4 var(--font-ui); letter-spacing: var(--track-air); text-transform: uppercase; color: var(--muted); }
+.studio-room .cc-hero-kicker { font: 800 var(--text-label)/1.4 var(--font-label); letter-spacing: var(--track-air); text-transform: lowercase; color: var(--muted); }
 .studio-room .studio-tile-figure { display: flex; align-items: center; gap: var(--space-14); }
 .studio-room .cc-swatch { width: var(--space-40); height: calc(var(--space-40) * 1.1547); flex: none; overflow: visible; }
 .studio-room .cc-swatch polygon { fill: var(--house); stroke: var(--rule); stroke-width: 1.5; }
@@ -47,13 +47,13 @@
 .studio-room .cc-tablet-state svg { width: var(--icon-sm); height: var(--icon-sm); flex: none; fill: none; stroke: currentColor; stroke-width: 1.6; }
 .studio-room [data-locked="true"] .cc-tablet-state { color: var(--ink-2); }
 .studio-room .cc-proclamation { margin-top: var(--space-14); padding: var(--space-10) var(--space-14) var(--space-12); border: var(--rule-medium) solid var(--rule); border-top: var(--space-5) solid var(--key); background: var(--card); }
-.studio-room .cc-proclamation-label { font: 800 var(--text-label)/1.4 var(--font-ui); letter-spacing: var(--track-label); text-transform: uppercase; }
+.studio-room .cc-proclamation-label { font: 800 var(--text-label)/1.4 var(--font-label); letter-spacing: var(--track-label); text-transform: lowercase; }
 .studio-room .cc-proclamation p + p { margin-top: var(--space-4); }
 .studio-room .studio-room-panel-drafts:has(> .room-proposal-layers:empty) { display: none; }
 .studio-room .studio-room-panel-drafts, .studio-room .studio-seal-group { flex: none; }
 .studio-room .room-proposal-draft { padding: var(--space-14); border: var(--rule-strong) dashed var(--key); background: var(--card); }
 .studio-room .room-proposal-draft .room-proposal-stamp { margin: 0; font: 800 var(--text-label)/1.4 var(--font-ui); letter-spacing: var(--track-label); color: var(--ink); }
-.studio-room .room-proposal-draft h3 { margin-top: var(--space-4); font: 800 var(--text-chamber)/1.1 var(--font-display); text-transform: uppercase; }
+.studio-room .room-proposal-draft h3 { margin-top: var(--space-4); font: 800 var(--text-chamber)/1.1 var(--font-label); text-transform: lowercase; }
 .studio-room .room-proposal-draft h3 + p { margin: var(--space-4) 0 var(--space-8); font: var(--text-small)/1.4 var(--font-ui); color: var(--muted); }
 .studio-room .room-proposal-draft dl { margin: 0; }
 .studio-room .room-proposal-draft dl > div { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr); gap: var(--space-8); padding: var(--space-8) 0 0; border-top: var(--rule-thin) solid var(--line); }
@@ -66,7 +66,7 @@
 .studio-room .cc-seal-card > .shell-seal-slot { margin: 0; padding: 0; border: 0; background: transparent; }
 .studio-room .cc-seal-card > .shell-seal-slot > h2 {
   margin: 0; padding: var(--space-8) var(--space-14); border: 0; background: var(--key); color: var(--paper);
-  font: 800 var(--text-section)/1.2 var(--font-display); text-transform: uppercase; letter-spacing: var(--track-label);
+  font: 800 var(--text-section)/1.2 var(--font-label); text-transform: lowercase; letter-spacing: var(--track-label);
 }
 .studio-room .cc-seal-card > .shell-seal-slot > :not(h2) { margin: var(--space-10) var(--space-14) 0; }
 .studio-room .cc-seal-card > .shell-seal-slot > h2 + * { margin-top: var(--space-12); }

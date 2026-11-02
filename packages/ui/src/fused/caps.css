@@ -63,3 +63,7 @@
 .cc-frame .cc-monitor-reveal-title { font-family: var(--font-label); font-stretch: normal; text-transform: lowercase; letter-spacing: var(--track-label); }
 /* packages/ui/src/proposal-card.css */
 .cc-frame .cc-proposal-card h3 { font-family: var(--font-label); font-stretch: normal; text-transform: lowercase; letter-spacing: var(--track-label); }
+
+/* ---- one label face: every remaining kit label reads in the small-caps label role, never uppercase UI sans */
+.cc-frame .cc-chip, .cc-frame .cc-heraldic-button, .cc-frame .cc-hero-caption, .cc-frame .cc-field > label,
+.cc-frame .visuals-replay-compare-word, .cc-frame summary { font-family: var(--font-label); font-stretch: normal; text-transform: lowercase; letter-spacing: var(--track-label); }

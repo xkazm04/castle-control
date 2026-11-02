@@ -23,7 +23,7 @@
 .shell-room .shell-room-work { display: block; flex: 1; min-height: 0; padding: 0; overflow: hidden; }
 .shell-room .shell-room-content { min-width: 0; height: 100%; overflow: auto; }
 .shell-room .shell-seal-slot { min-width: 0; padding: var(--space-16) 0; border: 0; border-top: var(--rule-medium) solid var(--line); background: transparent; margin-top: var(--space-20); }
-.shell-seal-slot h2 { text-transform: uppercase; margin-top: 0; letter-spacing: var(--track-heading); }
+.shell-seal-slot h2 { text-transform: lowercase; margin-top: 0; letter-spacing: var(--track-heading); }
 .room-column { min-width: 0; min-height: 0; overflow: auto; padding: var(--space-16) var(--space-20); border-inline-end: var(--rule-thin) solid var(--line); }
 .shell-seal-slot .cc-proposal-card { margin-block: var(--space-16); }
 .room-column:last-child { border-inline-end: 0; }
@@ -36,8 +36,8 @@
 .shell-room button:disabled:not(.cc-seal-button) { opacity: var(--disabled-opacity); cursor: not-allowed; }
 .shell-room button:focus-visible, .shell-room a:focus-visible, .shell-room select:focus-visible, .shell-room input:focus-visible { outline: var(--rule-strong) solid var(--azure); outline-offset: var(--focus-offset); }
 .shell-room h2 { font-family: var(--font-display); }
-.shell-room :where(h3) { font: 800 var(--text-section)/1.2 var(--font-display); text-transform: uppercase; }
-.room-caption { margin: 0 0 var(--space-10); font: 800 var(--text-label)/1.4 var(--font-ui); text-transform: uppercase; letter-spacing: var(--track-air); }
+.shell-room :where(h3) { font: 800 var(--text-section)/1.2 var(--font-label); text-transform: lowercase; }
+.room-caption { margin: 0 0 var(--space-10); font: 800 var(--text-label)/1.4 var(--font-label); text-transform: lowercase; letter-spacing: var(--track-air); }
 .room-scroll-hint { position: sticky; top: 0; z-index: 2; margin: 0 0 var(--space-12); padding: var(--space-6) var(--space-8); border-bottom: var(--rule-thin) solid var(--line); background: var(--paper); color: var(--muted); font: 600 var(--text-label)/1.4 var(--font-ui); }
 .room-stage { border: var(--rule-medium) solid var(--room-ink); padding: var(--space-16); background: var(--card); }
 .room-now { font: 600 var(--text-section)/1.4 var(--font-ui); }

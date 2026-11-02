@@ -42,4 +42,4 @@
 .cc-card-meta { display: block; margin-top: var(--space-3); font: var(--text-small)/1.4 var(--font-ui); color: var(--muted); }
 .cc-card-reason { display: block; margin-top: var(--space-4); font: italic var(--text-body)/1.35 var(--font-serif); color: var(--ink-2); }
 .cc-card-side { display: flex; flex-direction: column; align-items: flex-end; gap: var(--space-10); }
-.cc-card-action { font: 700 var(--text-small)/1 var(--font-ui); letter-spacing: var(--track-label); text-transform: uppercase; color: var(--cc-action-ink, var(--gules-text)); white-space: nowrap; }
+.cc-card-action { font: 700 var(--text-small)/1 var(--font-label); letter-spacing: var(--track-label); text-transform: lowercase; color: var(--cc-action-ink, var(--gules-text)); white-space: nowrap; }

@@ -1,7 +1,7 @@
 /* The moat: chat bank above, the gate across, the stream bank below. Tokens only, so both themes follow. */
 .moat-panel { display: grid; gap: var(--space-10); margin: var(--space-12) 0 var(--space-16); padding: var(--space-12) var(--space-14); border: var(--rule-strong) solid var(--azure); background: var(--card); color: var(--ink); }
 .moat-head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-4) var(--space-12); }
-.moat-head h3 { margin: 0; font: 800 var(--text-chamber)/1 var(--font-display); text-transform: uppercase; letter-spacing: var(--track-heading); color: var(--azure-text); }
+.moat-head h3 { margin: 0; font: 800 var(--text-chamber)/1 var(--font-label); text-transform: lowercase; letter-spacing: var(--track-heading); color: var(--azure-text); }
 .moat-live { margin: 0; }
 .moat-head .moat-breakdown { margin: 0 0 0 auto; }
 .moat-small { margin: 0; font: var(--text-small)/1.4 var(--font-ui); color: var(--muted); }
@@ -92,7 +92,7 @@
 
 /* The Keep heartbeat sits in the moat bar: a small sample loop, not a live reading. */
 .moat-heartbeat { display: flex; align-items: center; gap: var(--space-10); flex: 0 1 calc(var(--space-56) * 10); min-width: 0; line-height: 0; }
-.moat-heartbeat small { flex: none; font: 700 var(--text-label)/1.1 var(--font-ui); letter-spacing: var(--track-label); text-transform: uppercase; }
+.moat-heartbeat small { flex: none; font: 700 var(--text-label)/1.1 var(--font-label); letter-spacing: var(--track-label); text-transform: lowercase; }
 .moat-heartbeat .moat-scene { flex: 1 1 auto; }
 .moat-heartbeat-strip { display: block; flex: 1 1 calc(var(--space-56) * 4); min-width: calc(var(--space-56) * 3); }
 .moat-heartbeat .cc-button { flex: none; line-height: 1.2; }
@@ -107,8 +107,8 @@
 /* The printable night report: hidden on screen, the only thing on the sheet when printing. */
 [data-moat-report] { display: none; }
 .moat-report { display: grid; gap: var(--space-10); padding: var(--space-16); background: var(--paper); color: var(--ink); font: var(--text-body)/1.4 var(--font-ui); }
-.moat-report h2 { margin: 0; font: 800 var(--text-title)/1 var(--font-display); text-transform: uppercase; letter-spacing: var(--track-heading); }
-.moat-report h3 { margin: var(--space-8) 0 0; font: 800 var(--text-section)/1.2 var(--font-display); text-transform: uppercase; letter-spacing: var(--track-heading); }
+.moat-report h2 { margin: 0; font: 800 var(--text-title)/1 var(--font-label); text-transform: lowercase; letter-spacing: var(--track-heading); }
+.moat-report h3 { margin: var(--space-8) 0 0; font: 800 var(--text-section)/1.2 var(--font-label); text-transform: lowercase; letter-spacing: var(--track-heading); }
 .moat-report p, .moat-report ul { margin: 0; }
 .moat-report header p, .moat-report footer p { font: italic var(--text-small)/1.4 var(--font-serif); color: var(--ink-2); }
 .moat-report-facts { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--space-2) var(--space-12); margin: 0; font: var(--text-small)/1.4 var(--font-ui); }
@@ -116,7 +116,7 @@
 .moat-report-facts dd { margin: 0; overflow-wrap: anywhere; }
 .moat-report-figure { font-size: var(--text-section); }
 .moat-report table { width: 100%; border-collapse: collapse; font: var(--text-small)/1.3 var(--font-ui); }
-.moat-report th { text-align: left; border-bottom: var(--rule-strong) solid var(--ink); padding: var(--space-3) var(--space-6); text-transform: uppercase; letter-spacing: var(--track-label); }
+.moat-report th { text-align: left; border-bottom: var(--rule-strong) solid var(--ink); padding: var(--space-3) var(--space-6); text-transform: lowercase; letter-spacing: var(--track-label); }
 .moat-report td { border-bottom: var(--rule-thin) solid var(--hair); padding: var(--space-3) var(--space-6); overflow-wrap: anywhere; }
 .moat-report .moat-scene { min-width: 0; }
 @media print {
@@ -134,7 +134,7 @@
 .moat-compare-strips { display: grid; gap: var(--space-6); }
 .moat-compare-table { display: grid; grid-template-columns: auto minmax(0, 1fr) minmax(0, 1fr); gap: var(--space-3) var(--space-10); margin: 0; font: var(--text-small)/1.3 var(--font-ui); }
 .moat-compare-table dt, .moat-compare-table dd { margin: 0; }
-.moat-compare-table [data-head] { font-weight: 800; text-transform: uppercase; letter-spacing: var(--track-label); color: var(--azure-text); }
+.moat-compare-table [data-head] { font-weight: 800; text-transform: lowercase; letter-spacing: var(--track-label); color: var(--azure-text); }
 .moat-compare-table dt { color: var(--muted); }
 .moat-compare-table dd { font-weight: 700; overflow-wrap: anywhere; }
 .moat-compare-toggle { justify-self: start; }

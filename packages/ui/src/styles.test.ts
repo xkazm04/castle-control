@@ -28,7 +28,8 @@ test('component styles use declared shared tokens, not raw colors or pixel sizes
   const styles = law.map(path => readFileSync(path, 'utf8')).join('\n').replaceAll(/\/\*[\s\S]*?\*\//g, '');
   const declarations = new Set([...styles.matchAll(/--([\w-]+)\s*:/g)].map(match => match[1]));
   const shared = [tokens.theme.paper, tokens.layout, tokens.art, tokens.cutaway, tokens.motion, tokens.type];
-  const known = new Set([...shared.flatMap(group => Object.keys(group)), ...declarations]);
+  const fusedNames = [...readFileSync(new URL('../../tokens/src/fused/tokens.css', import.meta.url), 'utf8').matchAll(/--([\w-]+)\s*:/g)].map(match => match[1] ?? '');
+  const known = new Set([...shared.flatMap(group => Object.keys(group)), ...declarations, ...fusedNames]);
   for (const [, name] of styles.matchAll(/var\(--([\w-]+)/g)) expect(known.has(name ?? ''), name).toBe(true);
   expect(styles).not.toMatch(/#[\da-f]{3,8}\b|\brgba?\(|\bhsla?\(/i);
   // Media queries cannot consume CSS custom properties. This is the measured prototype breakpoint.
