@@ -18,8 +18,8 @@ export function nightOut(): string {
 /**
  * Admit only the shell origin, the launched core and its overlay listener. The
  * shell route fulfils its own requests; anything else is refused and reported.
- * Console errors and page errors must stay empty. A refused core RPC (HTTP 400
- * with an error envelope) is accepted only when its method and code are listed
+ * Console errors and page errors must stay empty. A refused core RPC (an HTTP
+ * error status with an error envelope) is accepted only when its method and code are listed
  * in `expected`, e.g. `lots.cast:conflict` while the public round is pending.
  */
 export async function guardNight(page: Page, core: NightCore, expected: readonly string[] = []): Promise<() => Promise<void>> {
@@ -34,7 +34,8 @@ export async function guardNight(page: Page, core: NightCore, expected: readonly
   page.on('pageerror', error => pageErrors.push(error.message));
   page.on('response', response => {
     const request = response.request();
-    if (response.status() !== 400 || response.url() !== `${coreOrigin}/rpc`) return;
+    // The core maps each error code to its own status (Invalid 400, Conflict 409, Unavailable 503, ...).
+    if (response.status() < 400 || response.url() !== `${coreOrigin}/rpc`) return;
     pending.push((async () => {
       const method: unknown = JSON.parse(request.postData() ?? '{}').method;
       const body: unknown = await response.json().catch(() => ({}));
@@ -52,8 +53,8 @@ export async function guardNight(page: Page, core: NightCore, expected: readonly
     await Promise.all(pending);
     const unexpected = refused.filter(item => !expected.includes(item));
     // Chrome logs each refused RPC once as a failed resource; those are the refusals checked above.
-    const failed = 'Failed to load resource: the server responded with a status of 400 (Bad Request)';
-    const errors = consoleErrors.filter(text => text !== failed);
+    const failed = /^Failed to load resource: the server responded with a status of [45]\d\d /;
+    const errors = consoleErrors.filter(text => !failed.test(text));
     expect(consoleErrors.length - errors.length).toBe(refused.length);
     expect({ blocked, errors, pageErrors, unexpected }).toEqual({ blocked: [], errors: [], pageErrors: [], unexpected: [] });
   };
