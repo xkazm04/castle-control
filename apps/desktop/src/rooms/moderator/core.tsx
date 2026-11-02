@@ -23,6 +23,7 @@ import { coreDemoFlow } from './flow-demo.jsx';
 import { ChamberSection } from '@castle-control/ui/chamber';
 import { proposalQueue } from '@castle-control/ui/steward';
 import { GatehouseDeck, GateProposalMini } from './deck.jsx';
+import { useGatehouseDrawer } from './drawer-state.js';
 
 function CoreRule({ rule, busy, port }: { rule: Rule; busy: boolean; port: CoreGatehousePort }) {
   const name_id = useId();
@@ -55,6 +56,7 @@ export function ConnectedGatehouse({ port, replay, seal_slot }: { port: CoreGate
     return evaluateDraft(input, state.rules, messages, original);
   }, [draft, state.rules, messages]);
   const [more, setMore] = useState(false);
+  const drawer = useGatehouseDrawer({ open: more, setOpen: setMore });
   useEffect(() => { void port.load(); }, [port]);
   if (replay) return <div className="moderator-room" aria-label="Core Gatehouse" aria-busy={state.busy}>
     <div className="moderator-core-status"><p role="status">{state.notice}</p>
@@ -62,9 +64,9 @@ export function ConnectedGatehouse({ port, replay, seal_slot }: { port: CoreGate
     <div className="moderator-drill-room"><CoreDrill state={state} port={port} />{seal_slot}</div></div>;
   const items = state.chat?.items ?? [];
   const count = (verdict: string) => items.filter(item => item.decision.verdict === verdict).length;
-  const open = () => setMore(true);
+  const open = () => drawer.setOpen(true);
   return <div className="moderator-room gh-room gh-room--core" aria-label="Core Gatehouse" aria-busy={state.busy}>
-    <GatehouseDeck open={more} on_close={() => setMore(false)} picture_label="Gatehouse picture · core"
+    <GatehouseDeck open={drawer.open} on_close={() => drawer.setOpen(false)} picture_label="Gatehouse picture · core"
       caption="Core · held-message queue unavailable · stylised illustration" preview_title="Proposal · awaiting your seal" program_title="Program · core"
       picture={<div className="gh-picture"><GateArt waiting={0} simulated={false} unavailable /><span className="gh-picture__label">Held queue unavailable · stylised illustration</span></div>}
       preview={<GateProposalMini queue={proposalQueue} on_open={open} />}

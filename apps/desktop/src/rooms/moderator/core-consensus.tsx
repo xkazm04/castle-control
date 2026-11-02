@@ -23,7 +23,7 @@ export function CoreConsensus({ state, port, compact = false }: { state: CoreGat
   const [kind, setKind] = useState<ConsensusFilter['kind']>('all');
   const [emote, setEmote] = useState('');
   const result = state.consensus;
-  return <section className="moderator-consensus moderator-block moderator-core-consensus">
+  return <section className={`moderator-consensus moderator-block moderator-core-consensus${compact ? ' gh-herald--compact' : ''}`}>
     {!compact && <p className="gh-sm">{copy.core_consensus_note}</p>}
     <form onSubmit={event => {
       event.preventDefault();

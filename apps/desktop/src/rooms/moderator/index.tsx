@@ -25,6 +25,7 @@ import { voteBarFlow, voteLook, voteRibbon } from './flow-votebar.jsx';
 import { DrillPicture, drillFlow, drillRibbon } from './flow-drill.jsx';
 import { GatehouseDeck, GateProposalMini, VoteControls } from './deck.jsx';
 import SealSlot from '../seal-slot/index.jsx';
+import { useGatehouseDrawer } from './drawer-state.js';
 import './room.css';
 import './gatehouse.css';
 
@@ -48,6 +49,7 @@ function FixtureModeratorRoom({ snapshot, replay, queue = proposalQueue, seal_sl
   const state = useSyncExternalStore(port.subscribe, port.getSnapshot, port.getSnapshot);
   const draft = useSyncExternalStore(bench.subscribe, bench.getSnapshot, bench.getSnapshot);
   const room = useSyncExternalStore(view.subscribe, view.getSnapshot, view.getSnapshot);
+  const drawer = useGatehouseDrawer({ open: room.more, setOpen: view.setMore });
   // The herald's vote bar redraws when a sealed look changes the session's output.
   const current_output = useSyncExternalStore(output.subscribe, output.getSnapshot, output.getSnapshot);
   const [plan] = useState(() => replay ? view.takeDrill() : undefined);
@@ -83,10 +85,10 @@ function FixtureModeratorRoom({ snapshot, replay, queue = proposalQueue, seal_sl
   const gate = { state, queue, demo: stage ? { stage, choice: demo?.choice } : undefined, resolved };
   const herald = { results: charts, selected: filter, on_select: (index: number) => view.setFilter(index), look: voteLook(voting, current_output.vote), draft: !!voting,
     caption: moved ? 'the Play demo’s simulated burst moved it' : undefined };
-  const open = () => view.setMore(true);
+  const open = () => drawer.setOpen(true);
   return <div ref={root} className="moderator-room gh-room" data-demo={stage} data-sandbox={sandbox ? '' : undefined}>
     {sandbox && <SandboxBanner chamber="moderator" demo_id={demoFlow.id} />}
-    <GatehouseDeck open={room.more} on_close={() => view.setMore(false)}
+    <GatehouseDeck open={drawer.open} on_close={() => drawer.setOpen(false)}
       picture={<GatePlate {...gate} part="picture"
         ribbon={rules ? rulesRibbon(rules) : voting ? voteRibbon(voting) : practice ? drillRibbon(practice) : undefined} />}
       picture_label="Gatehouse picture · SIMULATED" preview_title="Proposal · awaiting your seal"

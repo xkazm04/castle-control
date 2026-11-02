@@ -3,7 +3,15 @@
 .moderator-room.gh-room { display: flex; padding: 0; gap: var(--space-4); height: 100%; min-height: 0; }
 .gh-deck { flex: 1; min-width: 0; min-height: 0; height: 100%; color: var(--ink); }
 .gh-deck-column { display: grid; gap: var(--space-10); min-width: 0; }
-.gh-deck .cc-chamber-section { font-size: var(--text-px-13); }
+.gh-deck .cc-chamber-section {
+  display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: none;
+  grid-template-areas: none; grid-auto-flow: row; font-size: var(--text-px-13);
+}
+/* Old desk children carry named grid areas. Reset the placements as well as the
+   tracks, otherwise they create implicit columns beside the section heading. */
+.gh-deck .cc-chamber-section > * { grid-area: auto; min-width: 0; }
+.gh-deck .cc-chamber-section > .cc-chamber-section-heading { flex-wrap: nowrap; gap: var(--space-8); }
+.gh-deck .cc-chamber-section:has(> .gh-gate[data-part="queue"]) > .cc-chamber-section-heading { padding-inline-end: calc(var(--space-20) * 7); }
 .gh-deck .cc-btn, .gh-deck-details .cc-btn { min-height: var(--space-32); font-size: var(--text-px-13); padding: var(--space-6) var(--space-10); }
 .gh-deck .cc-btn { white-space: normal; }
 .gh-picture { position: relative; border-radius: inherit; background: var(--stone-2); }
@@ -15,35 +23,48 @@
 .gh-mini-copy b { color: var(--ink); }
 
 /* The queue is the existing GatePlate review without its picture. */
-.gh-deck .gh-gate[data-part="queue"] {
+.gh-deck .cc-chamber-section .gh-gate[data-part="queue"] {
   display: flex; flex-direction: column; gap: var(--space-6); padding: 0;
-  overflow: visible; border: 0; box-shadow: none; background: transparent;
+  position: static; grid-template-columns: minmax(0, 1fr); grid-template-areas: none;
+  min-width: 0; overflow: visible; border: 0; outline: 0; box-shadow: none; background: transparent;
 }
+.gh-deck .cc-chamber-section .gh-gate[data-part="queue"] > * { grid-area: auto; min-width: 0; }
+.gh-deck .cc-chamber-section .gh-gate[data-part="queue"]::before, .gh-deck .cc-chamber-section .gh-gate[data-part="queue"]::after { content: none; }
 .gh-deck .gh-gate__head { padding: 0; gap: var(--space-6); flex-wrap: wrap; align-items: center; }
 .gh-deck .gh-gate__head .cc-panel__aside { margin: 0; font: 400 var(--text-px-13)/1.2 var(--font-text); }
-.gh-deck .gh-count { gap: var(--space-4); }
+.gh-deck .gh-count {
+  position: absolute; inset-block-start: var(--space-11); inset-inline-end: var(--space-14);
+  gap: var(--space-4); padding: var(--space-3) var(--space-6); border: var(--came-hair) solid var(--hair);
+  border-radius: var(--r-round); background: var(--stone-2); white-space: nowrap;
+}
 .gh-deck .gh-count b { font: 700 var(--text-px-13)/1.2 var(--font-text); }
 .gh-deck .gh-count span { display: flex; gap: var(--space-4); }
 .gh-deck .gh-count small { font: 400 var(--text-px-13)/1.2 var(--font-text); }
+.gh-deck .gh-count small + small::before { content: "· "; }
 .gh-deck .gh-gate__main { gap: var(--space-6); }
-.gh-deck .gh-held, .gh-deck .gh-warrant {
-  display: grid; gap: var(--space-6); padding: var(--space-8) var(--space-10);
+.gh-deck .cc-chamber-section .gh-held, .gh-deck .cc-chamber-section .gh-warrant {
+  display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: none; grid-template-areas: none;
+  min-width: 0; gap: var(--space-6); padding: var(--space-8) var(--space-10);
   border: var(--came-hair) solid var(--hair); border-left: var(--space-3) solid var(--ch);
   border-radius: var(--r-lg); background: var(--stone-2); box-shadow: none;
 }
+.gh-deck .gh-held > *, .gh-deck .gh-warrant > * { grid-area: auto; min-width: 0; overflow-wrap: normal; word-break: normal; }
 .gh-deck .gh-held__meta, .gh-deck .gh-warrant__meta { gap: var(--space-4) var(--space-8); font-size: var(--text-px-13); }
+.gh-deck .gh-held__meta { flex-wrap: nowrap; }
+.gh-deck :is(.gh-held__meta, .gh-warrant__meta) .cc-hash { min-width: 0; white-space: nowrap; overflow-wrap: normal; word-break: normal; }
 .gh-deck .gh-held__state { margin: 0; font-size: var(--text-px-13); letter-spacing: normal; }
 .gh-deck .gh-held__msg, .gh-deck .gh-warrant__msg { font: italic 500 var(--text-px-15)/1.25 var(--font-book); }
 .gh-deck .gh-held__why, .gh-deck .gh-warrant__rule { font: 400 var(--text-px-13)/1.3 var(--font-text); }
-.gh-deck .gh-held__why b, .gh-deck .gh-warrant__rule b { font-size: var(--text-px-13); }
+.gh-deck .gh-held__why b, .gh-deck .gh-warrant__rule b { font: 700 var(--text-px-13)/1.3 var(--font-text); letter-spacing: normal; }
 .gh-deck .gh-notice { font-size: var(--text-px-13); }
 .gh-deck .gh-gate__side { gap: var(--space-6); }
-.gh-deck .gh-gate__act, .gh-deck .gh-warrant__act { display: flex; flex-wrap: wrap; gap: var(--space-6); grid-column: auto; grid-row: auto; }
+.gh-deck .gh-gate__act, .gh-deck .gh-warrant__act { display: flex; flex-wrap: nowrap; gap: var(--space-6); grid-column: auto; grid-row: auto; }
+.gh-deck :is(.gh-gate__act, .gh-warrant__act) > .cc-btn { flex: 1; min-width: 0; min-height: var(--space-32); padding: var(--space-6) var(--space-10); font-size: var(--text-px-13); line-height: 1.2; letter-spacing: normal; }
 .gh-deck .gh-gate__act .cc-btn { min-height: var(--space-32); }
 .gh-deck .gh-warrant > .cc-folio-shield { display: none; }
 .gh-deck .gh-bans { display: grid; gap: var(--space-6); }
 .gh-deck .gh-warrant__meta em { font-size: var(--text-px-13); }
-.gh-deck .gh-warrant { border-left-color: var(--gules); }
+.gh-deck .cc-chamber-section .gh-warrant { border-left-color: var(--gules); }
 
 .gh-deck .gh-needs { padding: 0; border: 0; gap: var(--space-8); background: transparent; box-shadow: none; }
 .gh-deck .gh-needs__line { font: 600 var(--text-px-15)/1.25 var(--font-book); }
@@ -51,19 +72,22 @@
 .gh-deck .gh-needs__facts div { display: flex; align-items: baseline; gap: var(--space-4); padding: var(--space-3) var(--space-8); border: var(--came-hair) solid var(--hair); border-radius: var(--r-round); background: var(--stone-2); }
 .gh-deck .gh-needs__facts dt, .gh-deck .gh-needs__facts dd { font: 400 var(--text-px-13)/1.2 var(--font-text); letter-spacing: normal; }
 .gh-deck .gh-needs__facts dd { font-weight: 700; }
-.gh-deck .gh-shield .cc-btn { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-4); }
+.gh-deck .gh-shield .cc-btn { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-4); min-height: var(--space-32); padding: var(--space-6) var(--space-10); font-size: var(--text-px-13); line-height: 1.2; letter-spacing: normal; }
 .gh-deck .gh-shield small { font: 400 var(--text-px-13)/1.2 var(--font-text); }
 
-.gh-deck .gh-herald--compact { display: grid; gap: var(--space-8); padding: 0; border: 0; background: transparent; box-shadow: none; }
-.gh-deck .gh-herald-chart { gap: var(--space-6); }
+.gh-deck .gh-herald--compact { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-areas: none; gap: var(--space-8); padding: 0; border: 0; background: transparent; box-shadow: none; }
+.gh-deck .gh-herald--compact .gh-herald-chart { grid-template-columns: minmax(0, 1fr); grid-template-areas: none; gap: var(--space-6); }
+.gh-deck .gh-herald--compact .gh-chart { width: 100%; height: calc(var(--space-10) * 9); min-width: 0; }
+.gh-deck .gh-herald--compact .moderator-print svg { height: calc(var(--space-10) * 9); }
 .gh-deck .gh-chartbar { display: block; }
-.gh-deck .moderator-chip-toggles { display: flex; flex-wrap: wrap; gap: 0; margin: 0; }
-.gh-deck .moderator-chip-toggle { flex: 1; padding: var(--space-6) var(--space-4); font: 600 var(--text-px-13)/1.2 var(--font-text); }
-.gh-deck .moderator-tiles { display: flex; flex-wrap: wrap; gap: var(--space-4) var(--space-8); padding: 0; border: 0; }
-.gh-deck .moderator-tile { display: flex; padding: 0; gap: var(--space-4); border: 0; }
-.gh-deck .moderator-tile i { width: auto; height: auto; padding: 0 var(--space-4); font: 700 var(--text-px-13)/1.2 var(--font-text); }
-.gh-deck .moderator-tile span, .gh-deck .moderator-tile b { font: 400 var(--text-px-13)/1.2 var(--font-text); letter-spacing: normal; }
-.gh-deck .moderator-tile b { font-weight: 700; }
+.gh-deck .gh-herald--compact .moderator-chip-toggles { display: flex; flex-wrap: nowrap; gap: 0; margin: 0; min-width: 0; }
+.gh-deck .gh-herald--compact .moderator-chip-toggle { flex: 1; min-width: 0; padding: var(--space-6) var(--space-4); font: 600 var(--text-px-13)/1.2 var(--font-text); letter-spacing: normal; white-space: nowrap; }
+.gh-deck .gh-herald--compact .moderator-tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-4) var(--space-8); margin: 0; padding: 0; border: 0; }
+.gh-deck .gh-herald--compact .moderator-tile { display: grid; grid-template-columns: var(--space-16) minmax(0, 1fr) max-content; align-items: center; min-width: 0; padding: 0; gap: var(--space-4); border: 0; background: transparent; }
+.gh-deck .gh-herald--compact .moderator-tile > * { grid-area: auto; min-width: 0; margin: 0; overflow-wrap: normal; word-break: normal; }
+.gh-deck .gh-herald--compact .moderator-tile i { width: var(--space-16); height: var(--space-16); padding: 0; font: 700 var(--text-px-13)/1.2 var(--font-text); }
+.gh-deck .gh-herald--compact .moderator-tile span, .gh-deck .gh-herald--compact .moderator-tile b { font: 400 var(--text-px-13)/1.2 var(--font-text); letter-spacing: normal; }
+.gh-deck .gh-herald--compact .moderator-tile b { font-weight: 700; white-space: nowrap; }
 .gh-deck .gh-vote-summary { display: grid; gap: var(--space-6); padding-top: var(--space-8); border-top: var(--came-hair) solid var(--hair); }
 .gh-deck .gh-sm { font-size: var(--text-px-13); }
 .gh-deck-buttons { display: flex; flex-wrap: wrap; gap: var(--space-6); }
