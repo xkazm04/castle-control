@@ -20,6 +20,9 @@ import { gatehousePort } from './core-port.js';
 import { VoteBarSourceAction } from './vote-source.jsx';
 import { stewardDock } from '@castle-control/ui/steward-flow';
 import { coreDemoFlow } from './flow-demo.jsx';
+import { ChamberSection } from '@castle-control/ui/chamber';
+import { proposalQueue } from '@castle-control/ui/steward';
+import { GatehouseDeck, GateProposalMini } from './deck.jsx';
 
 function CoreRule({ rule, busy, port }: { rule: Rule; busy: boolean; port: CoreGatehousePort }) {
   const name_id = useId();
@@ -59,13 +62,20 @@ export function ConnectedGatehouse({ port, replay, seal_slot }: { port: CoreGate
     <div className="moderator-drill-room"><CoreDrill state={state} port={port} />{seal_slot}</div></div>;
   const items = state.chat?.items ?? [];
   const count = (verdict: string) => items.filter(item => item.decision.verdict === verdict).length;
+  const open = () => setMore(true);
   return <div className="moderator-room gh-room gh-room--core" aria-label="Core Gatehouse" aria-busy={state.busy}>
-        <aside className="cc-panel gh-gate moderator-held-plate" aria-label={copy.held}>
-          <div className="gh-gate__head"><div><h2 className="cc-panel__title">{copy.held}</h2><span className="cc-panel__aside">{copy.core_held_gloss}</span></div>
-            <div className="gh-count"><b>{items.length}</b><span><small>lines read</small><small>{copy.core_label}</small></span></div></div>
-          <div className="gh-art"><div className="cc-mini" data-chamber="moderator"><div className="cc-mini__field cc-diaper"><GateArt waiting={0} simulated={false} unavailable /></div></div></div>
+    <GatehouseDeck open={more} on_close={() => setMore(false)} picture_label="Gatehouse picture · core"
+      caption="Core · held-message queue unavailable · stylised illustration" preview_title="Proposal · awaiting your seal" program_title="Program · core"
+      picture={<div className="gh-picture"><GateArt waiting={0} simulated={false} unavailable /><span className="gh-picture__label">Held queue unavailable · stylised illustration</span></div>}
+      preview={<GateProposalMini queue={proposalQueue} on_open={open} />}
+      program={<div className="gh-mini-copy"><b>Chat and Herald</b><p>{items.length} lines read · {count('pass')} passed · {count('hold')} held · {count('bar')} barred</p>
+        <p>{state.consensus?.directions[0]?.label ?? copy.core_consensus_empty}</p></div>}
+      columns={[
+        <ChamberSection key="queue" title="At the portcullis">
+        <aside className="cc-panel gh-gate moderator-held-plate" aria-label={copy.held} data-part="queue">
+          <p className="gh-sm">{copy.core_held_gloss} · {copy.core_label}</p>
           <div className="gh-gate__main">
-            {items.length ? <p className="gh-clear">The gate is watching<span>{items.length} line{items.length === 1 ? '' : 's'} read in shadow · {count('pass')} passed · {count('hold')} held · {count('bar')} barred. Every verdict is in the live room below.</span></p>
+            {items.length ? <p className="gh-clear">The gate is watching<span>{items.length} line{items.length === 1 ? '' : 's'} read in shadow · {count('pass')} passed · {count('hold')} held · {count('bar')} barred. Every verdict is in the live room in the drawer.</span></p>
               : <EmptyState compact title={state.phase === 'loading' ? 'Opening the gate…' : 'Quiet at the gate'}
                 description="No chat has reached the gate on your core yet. When it does, every line gets a verdict in shadow and the herald counts what chat asks for." />}
             <p role="status" className="gh-notice">{state.notice}</p>
@@ -75,8 +85,15 @@ export function ConnectedGatehouse({ port, replay, seal_slot }: { port: CoreGate
             {!items.length && <button type="button" className="cc-btn cc-btn--quiet cc-btn--sm" onClick={() => stewardDock.open(coreDemoFlow)}>Play demo</button>}
           </div>
         </aside>
-        <div className="gh-desk gh-desk--core">
-          <section className="gh-core-chat" aria-label={copy.live}><CoreChat state={state} port={port} marked={draft.draft ? result.hit_ids : undefined} /></section>
+        <p className="gh-sm">{copy.core_queues_unavailable} {copy.core_review_notice}</p>
+        <button type="button" className="cc-btn cc-btn--sm" onClick={open}>Live room · more of the Gatehouse</button>
+        </ChamberSection>,
+        <ChamberSection key="herald" title="The Herald’s chart" aside={<button type="button" className="cc-btn cc-btn--sm" onClick={open}>Full chart</button>}>
+          <CoreConsensus state={state} port={port} compact />
+          <div className="gh-vote-summary"><p className="gh-sm">Vote bar on stream · aggregate shares only</p>
+            <VoteBarSourceAction mode="core" busy={state.busy} on_copy={() => { void port.copyVoteBarSource(); }} /></div>
+        </ChamberSection>,
+      ]}>
           <section className="gh-herald" aria-label={copy.consensus}>
             <header className="gh-section-head"><h2 className="cc-section__title">{copy.consensus}<em>{copy.consensus_caption}</em></h2>
               <span className="cc-stamp cc-stamp--inked">{copy.core_label}</span></header>
@@ -85,8 +102,9 @@ export function ConnectedGatehouse({ port, replay, seal_slot }: { port: CoreGate
               <p className="gh-sm">Aggregate shares only; no chat text reaches the OBS page.</p>
               <VoteBarSourceAction mode="core" busy={state.busy} on_copy={() => { void port.copyVoteBarSource(); }} /></div>
           </section>
+          <section aria-label={copy.live}><CoreChat state={state} port={port} marked={draft.draft ? result.hit_ids : undefined} /></section>
           <div className="gh-seal">{seal_slot}</div>
-          <details className="gh-more" open={more} onToggle={event => setMore(event.currentTarget.open)}>
+          <details className="gh-more" open>
             <summary><span className="gh-more__title">More of the Gatehouse</span><span className="gh-more__list">Rule bench · moat · garrison orders · drill · gate roll</span></summary>
             <div className="gh-more__body moderator-tools">
               <p className="gh-sm">{copy.core_queues_unavailable} {copy.core_review_notice}</p>
@@ -109,7 +127,7 @@ export function ConnectedGatehouse({ port, replay, seal_slot }: { port: CoreGate
               <CoreHistory state={state} port={port} /></div>
             </div>
           </details>
-        </div>
+    </GatehouseDeck>
   </div>;
 }
 

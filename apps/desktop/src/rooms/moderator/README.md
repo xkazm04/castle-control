@@ -590,3 +590,39 @@ caption cell available for long chamber readings. No fixed headline width or
 type change is introduced. The caption's computed max-width is none there;
 max-width: 100% applies only below 1440, retaining the verified 1280 grid and
 wrapping behavior. Footer, heartbeat and plaque rules are unchanged.
+
+## T3 WP4-gate: Gatehouse on the chamber frame
+
+Both fixture and connected-core rooms use `ChamberLayout`. The picture is the
+existing `GatePlate`/`GateArt`, separated from the review controls through the
+plate's `part` prop. The proposal mini reads the existing shared proposal queue;
+the program mini reads the room's chat counts, selected Herald data and output
+look. The full proposal fields, hold-to-seal controls and withdrawals remain in
+the drawer's existing seal slot. Fixture art and output remain SIMULATED.
+
+- Column 1: At the portcullis, with the held message, id, quote, hold reason,
+  existing pager and pass/bar proposals, then the pending-ban warrant and its
+  ban/dismiss proposals. Core retains its honest unavailable-queue message.
+- Column 2: the gate's flowing status chips and drawbridge control, followed by
+  the compact Herald chart, filters, legend, Show the vote bar and Restyle.
+  Core retains its existing consensus form and source-copy capability.
+- Drawer: the full Herald chart with filters, reference and trends; the full
+  vote-bar preview and Custom design; the live room/playback, rule bench, moat,
+  garrison orders, drill link, gate log, transparent output previews and proposal
+  list. Full chart and Proposal list open the same drawer. More benches can be
+  collapsed independently. Closing restores the opener through shared Drawer.
+
+The drawer portals to the surrounding theme frame to preserve day/night and
+chamber tokens while escaping the animated/clipping room surface. Its React
+Escape handler closes the room detail layer without a raw keyboard listener.
+The drill route keeps its existing layout, comparison, filters and return link.
+No moderation lifecycle, schema, live transport or seal authority is replaced.
+
+Tests that formerly expected every bench in closed-room markup now activate the
+real Full chart handler before checking that content. Structure coverage checks
+the picture, both columns, all three fixture sections, core sections, both drawer
+triggers, reachable content, closing, the drill route and shared mini/output data.
+The render-cost tests still mount and measure the expanded bench content.
+The Gatehouse e2e journey retains its existing interactions and adds 1280x720 /
+1366x768 fit, drawer reachability and Escape checks. Browser execution is pending:
+the sandbox launcher returned `spawn EPERM`; e2e typechecking and discovery passed.

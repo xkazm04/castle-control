@@ -26,20 +26,21 @@ vi.mock('react/jsx-dev-runtime', async original => {
 /** Node-only event/effect probe: real components render through React, never as
  * plain functions. Retain hook slots between SSR probes and flush effects after
  * each render; timers and production event handlers remain real. */
-export function componentProbe(view: () => ReactNode) {
+export function componentProbe(view: () => ReactNode, { effects: run_effects = true } = {}) {
   const states: unknown[] = []; const refs: { current: unknown }[] = [];
   const effects: { deps: React.DependencyList | undefined; cleanup: void | (() => void) }[] = [];
   let state_index = 0; let ref_index = 0; let effect_index = 0;
   let pending: (() => void)[] = [];
-  vi.spyOn(React, 'useState').mockImplementation((initial?: unknown): [unknown, React.Dispatch<unknown>] => {
+  const state_spy = vi.spyOn(React, 'useState').mockImplementation((initial?: unknown): [unknown, React.Dispatch<unknown>] => {
     const index = state_index++;
     if (!(index in states)) states[index] = typeof initial === 'function' ? initial() : initial;
     return [states[index], next => { states[index] = typeof next === 'function' ? next(states[index]) : next; }];
   });
-  vi.spyOn(React, 'useRef').mockImplementation(initial => {
+  const ref_spy = vi.spyOn(React, 'useRef').mockImplementation(initial => {
     const index = ref_index++; return refs[index] ??= { current: initial };
   });
-  vi.spyOn(React, 'useEffect').mockImplementation((effect, deps) => {
+  const effect_spy = vi.spyOn(React, 'useEffect').mockImplementation((effect, deps) => {
+    if (!run_effects) return;
     const index = effect_index++; const before = effects[index];
     if (before && deps && before.deps && deps.length === before.deps.length && deps.every((dep, i) => Object.is(dep, before.deps?.[i]))) return;
     pending.push(() => { before?.cleanup?.(); effects[index] = { deps, cleanup: effect() }; });
@@ -55,7 +56,11 @@ export function componentProbe(view: () => ReactNode) {
     if (!found) throw new Error('Missing rendered control'); return found.props;
   }
   return { render,
-    click(text: string) { control(element => element.type === 'button' && element.props.children === text).onClick?.({} as MouseEvent<HTMLElement>); },
+    click(text: string) {
+      const button = control(element => element.type === 'button'
+        && React.Children.toArray(element.props.children).filter(child => typeof child === 'string').join('') === text);
+      button.onClick?.({} as MouseEvent<HTMLElement>);
+    },
     change(label: string, value: string) {
       const field = control(element => element.type === 'label' && React.Children.toArray(element.props.children).filter(child => typeof child === 'string').join('') === label);
       // The old wrapped-label markup has no htmlFor. Its child is the control.
@@ -66,6 +71,20 @@ export function componentProbe(view: () => ReactNode) {
       input.onChange?.({ currentTarget: { value } } as ChangeEvent<HTMLInputElement & HTMLTextAreaElement & HTMLSelectElement>);
     },
     submit() { control(element => element.type === 'form').onSubmit?.({ preventDefault: () => undefined } as SubmitEvent<HTMLFormElement>); },
-    dispose() { for (const effect of effects) effect.cleanup?.(); },
+    dispose() {
+      for (const effect of effects) effect.cleanup?.();
+      state_spy.mockRestore(); ref_spy.mockRestore(); effect_spy.mockRestore();
+    },
   };
+}
+
+/** Assert moved content after the production drawer trigger, without running browser effects in SSR. */
+export function openGatehouseDrawer(view: ReactNode): string {
+  const probe = componentProbe(() => view, { effects: false });
+  try {
+    probe.render(); probe.click('Full chart');
+    const html = probe.render();
+    probe.click('Close'); probe.render();
+    return html;
+  } finally { probe.dispose(); }
 }

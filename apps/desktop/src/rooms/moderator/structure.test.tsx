@@ -1,35 +1,84 @@
+import { componentProbe, openGatehouseDrawer } from './component-probe.jsx';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { expect, test } from 'vitest';
+import { afterEach, expect, test, vi } from 'vitest';
 import { ProposalQueue } from '@castle-control/ui/steward';
 import ModeratorRoom from './index.jsx';
+import { moderationSession, proposeCommand } from './session.js';
+import { createCoreGatehousePort } from '../../gatehouse-core.js';
+import { ConnectedGatehouse } from './core.jsx';
 
-test('the gate is the picture, the desk says what needs you, and benches wait behind one More', () => {
-  const markup = renderToStaticMarkup(<ModeratorRoom snapshot={{ mode: 'fixture', phase: 'ready' }}
-    replay={false} queue={new ProposalQueue()} seal_slot={<aside aria-label="Seal slot" />} />);
-  const gate = markup.indexOf('class="cc-panel gh-gate moderator-held-plate"');
-  const desk = markup.indexOf('class="gh-desk"');
-  const needs = markup.indexOf('aria-label="What needs you"');
-  const bans = markup.indexOf('class="gh-bans moderator-ban"');
-  const herald = markup.indexOf('class="gh-herald"');
-  const seal = markup.indexOf('aria-label="Seal slot"');
-  const more = markup.indexOf('<details class="gh-more"');
-  expect(gate).toBeGreaterThan(0);
-  for (const [before, after] of [[gate, desk], [desk, needs], [needs, bans], [bans, herald], [herald, seal], [seal, more]] as const) {
-    expect(after).toBeGreaterThan(before);
-  }
-  // The gate holds one held message at a time with its two proposals; the drawbridge stays on the face.
-  expect(markup.slice(gate, desk)).toContain('>Propose Pass</button>');
-  expect(markup.slice(gate, desk)).toContain('>Propose Bar</button>');
-  expect(markup.slice(needs, bans)).toContain('Raise the drawbridge');
-  expect(markup.slice(herald, seal)).toContain('Vote bar on stream');
-  // Nothing from the benches sits on the face of the room.
-  const face = markup.slice(0, more);
-  for (const bench of ['Garrison orders', 'Rule bench', 'The live room', 'Stream output preview', 'gate log']) expect(face).not.toContain(bench);
-  const region = markup.slice(more);
-  expect(region).toContain('aria-rowcount="420"');
-  // moderator/README.md, C · Herald, Porting risks: the moat precedes garrison orders.
-  expect(region.indexOf('The moat')).toBeLessThan(region.indexOf('Garrison orders'));
-  expect(region.indexOf('Garrison orders')).toBeLessThan(region.indexOf('href="#/chamber/moderator/drill"'));
-  expect(region.indexOf('gate log')).toBeGreaterThan(region.indexOf('href="#/chamber/moderator/drill"'));
-  expect(region.indexOf('Stream output preview')).toBeGreaterThan(region.indexOf('gate log'));
+afterEach(() => vi.restoreAllMocks());
+
+function layout(html: string, sections: number) {
+  expect(html).toContain('class="cc-chamber-layout"');
+  expect(html.match(/data-role="room-picture"/g)).toHaveLength(1);
+  expect(html).toContain('class="gh-gate-art cc-folio-art"');
+  expect(html).toContain('aria-label="Room sections 1"');
+  expect(html).toContain('aria-label="Room sections 2"');
+  expect(html.match(/data-role="room-section"/g)).toHaveLength(sections);
+  expect(html).toContain('Proposal · awaiting your seal'); expect(html).toContain('Program ·');
+  expect(html).toContain('>Full chart</button>'); expect(html).toContain('>Proposal list</button>');
+  expect(html).not.toContain('role="dialog"');
+}
+
+test('fixture layout puts picture/minis beside queue and gate/Herald columns; all benches are reachable in Drawer', () => {
+  const queue = new ProposalQueue();
+  const probe = componentProbe(() => <ModeratorRoom snapshot={{ mode: 'fixture', phase: 'ready' }}
+    replay={false} queue={queue} seal_slot={<aside aria-label="Seal slot" />} />, { effects: false });
+  try {
+    const face = probe.render(); layout(face, 3);
+    const column = face.slice(face.indexOf('aria-label="Room sections 1"'), face.indexOf('aria-label="Room sections 2"'));
+    for (const text of ['Propose Pass', 'Propose Bar', 'Propose Ban', 'Propose Dismiss', 'Hold reason', 'simulated-message-0', 'simulated-message-26']) expect(column).toContain(text);
+    const gate_column = face.slice(face.indexOf('aria-label="Room sections 2"'));
+    for (const text of ['What needs you', 'Raise the drawbridge', 'The Herald’s chart', 'Show the vote bar', 'Restyle', '36.7%']) expect(gate_column).toContain(text);
+    for (const text of ['Garrison orders', 'Rule bench', 'The live room', 'Stream output preview', 'gate log']) expect(face).not.toContain(text);
+    probe.click('Full chart');
+    const opened = probe.render(); const drawer = opened.slice(opened.indexOf('role="dialog"'));
+    expect(drawer).toContain('The Herald and more of the Gatehouse'); expect(drawer).toContain('aria-rowcount="420"');
+    expect(drawer).toContain('Custom design'); expect(drawer).toContain('aria-label="Seal slot"');
+    expect(drawer).toContain('Vote bar on stream'); expect(drawer).toContain('last 3 min');
+    const order = ['Rule bench', 'The moat', 'Garrison orders', 'href="#/chamber/moderator/drill"', 'gate log', 'Stream output preview'].map(text => drawer.indexOf(text));
+    expect(order.every((at, index) => at >= 0 && (index === 0 || at > (order[index - 1] ?? -1)))).toBe(true);
+    probe.click('Close'); expect(probe.render()).not.toContain('role="dialog"');
+    probe.click('Proposal list'); expect(probe.render()).toContain('aria-label="Seal slot"');
+    probe.click('Close'); probe.render(); expect(moderationSession(queue).view.getSnapshot().more).toBe(false);
+  } finally { probe.dispose(); }
+});
+
+test('core uses both columns and the same reachable drawer without inventing queue actions', () => {
+  const port = createCoreGatehousePort({ mode: 'core', endpoint: 'http://127.0.0.1:3210/', session_token: 'a'.repeat(64) }, {
+    rpc: async () => { throw new Error('SSR must not call the core'); },
+  });
+  const probe = componentProbe(() => <ConnectedGatehouse port={port} replay={false} seal_slot={<aside aria-label="Seal slot" />} />, { effects: false });
+  try {
+    const face = probe.render(); layout(face, 2);
+    expect(face).toContain('held-message queue and pending ban queue are unavailable'); expect(face).not.toContain('Propose Ban');
+    probe.click('Full chart'); const opened = probe.render();
+    for (const text of ['role="dialog"', 'Rule bench', 'The moat', 'Garrison orders', 'core decision history', 'aria-label="Seal slot"']) expect(opened).toContain(text);
+    expect(opened).not.toContain('sample chat replay');
+    probe.click('Close'); expect(probe.render()).not.toContain('role="dialog"');
+  } finally { probe.dispose(); }
+});
+
+test('the drill route retains its existing layout and return route', () => {
+  const html = renderToStaticMarkup(<ModeratorRoom snapshot={{ mode: 'fixture', phase: 'ready' }} replay queue={new ProposalQueue()} />);
+  expect(html).toContain('class="moderator-drill-room"');
+  expect(html).toContain('Recording gap'); expect(html).toContain('href="#/chamber/moderator"');
+});
+
+test('proposal/program minis and the expanded vote bar read the same room session', () => {
+  const queue = new ProposalQueue(); const { port, output, view } = moderationSession(queue);
+  const held = port.getSnapshot().held[0];
+  if (!held) throw new Error('Missing simulated held message');
+  proposeCommand(queue, { kind: 'release', decision_id: held.decision_id }, 'Pass held message');
+  output.update('vote', 'anchor', 'top-right'); output.update('vote', 'size', 'L'); output.update('vote', 'art_style', 'pixel');
+  view.setFilter(1);
+  const room = <ModeratorRoom snapshot={{ mode: 'fixture', phase: 'ready' }} replay={false} queue={queue} />;
+  const face = renderToStaticMarkup(room);
+  expect(face).toContain('Pass held message'); expect(face).toContain('1 proposal');
+  expect(face).toContain('top right · size L · pixel');
+  expect(face).toContain('aria-pressed="true">Emotes only');
+  const details = openGatehouseDrawer(room);
+  expect(details).toContain('data-anchor="top-right" data-size="L"');
+  expect(details).toContain('data-art-style="pixel"'); expect(details).toContain('Pass held message');
 });

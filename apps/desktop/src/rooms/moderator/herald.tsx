@@ -33,11 +33,17 @@ export function VoteBarStage({ directions, look, draft, label }: {
 }
 
 /** The herald: what chat wants, read from passed messages, and the bar viewers would see. */
-export function Herald({ results, selected, on_select, look, draft, caption, action }: {
+export function Herald({ results, selected, on_select, look, draft, caption, action, compact = false }: {
   results: readonly ConsensusGetResult[]; selected: number; on_select: (index: number) => void; look: VoteLook;
   draft?: boolean | undefined; caption?: string | undefined; action?: ReactNode;
+  compact?: boolean;
 }) {
   const result = results[selected] ?? results[0];
+  if (compact) return <div className="gh-herald gh-herald--compact">
+    <Consensus results={results} selected={selected} on_select={on_select} compact />
+    <div className="gh-vote-summary"><p className="gh-sm"><b>Vote bar</b> · {look.anchor.replace('-', ' ')} · size {look.size} · {look.art_style}
+      {draft ? ' · Draft' : ' · SIMULATED'}</p>{action}</div>
+  </div>;
   return <section className="gh-herald" aria-labelledby="gh-herald-title">
     <header className="gh-section-head"><h2 id="gh-herald-title" className="cc-section__title">{copy.consensus}<em>{copy.consensus_caption}</em></h2>
       <span className="cc-stamp cc-stamp--local cc-stamp--inked">{copy.illustrative}</span></header>
