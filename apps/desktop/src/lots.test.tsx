@@ -15,7 +15,7 @@ import { DrawStage } from './rooms/lottery/stage.jsx';
 import { createRevealClock } from './rooms/lottery/playback.js';
 import { castWinners, sealOf, verifyWrit } from './lots-cast.js';
 import { prepareFixtureRoll, rehearsalClock, rehearsalSeed } from './rooms/lottery/simulation.js';
-type Control = { children?: ReactNode; type?: string; onClick?: () => void; onBlur?: () => void;
+type Control = { children?: ReactNode; type?: string; onClick?: () => void; onBlur?: () => void; on_new?: () => void;
   onKeyDown?: (event: KeyboardEvent<HTMLInputElement>) => void;
   onChange?: (event: ChangeEvent<HTMLInputElement>) => void; value?: string | number };
 function controls(tree: ReactNode): Control[] {
@@ -85,9 +85,9 @@ test('lots-11 Draft a new roll preserves custom setup and template selection sti
   draftRoll(queue); await sealLotteryProposal(queue, current(queue)); await port.start();
   function ClickDraft() {
     const tree = LotteryRoom({ snapshot, replay: false, queue });
-    const button = controls(tree).find(control => control.children === copy.draft_new);
-    if (!button?.onClick) throw new Error('Missing new-roll button');
-    button.onClick(); return null;
+    const cast = controls(tree).find(control => control.on_new !== undefined);
+    if (!cast?.on_new) throw new Error('Missing new-roll button');
+    cast.on_new(); return null;
   }
   renderToStaticMarkup(<ClickDraft />);
   expect(port.getSnapshot()).toMatchObject({ draw: { name: 'Custom roll', rules: { winner_count: 4 } }, sealed: false });
@@ -141,7 +141,7 @@ test('writ amendments strike the old value in gules and re-ink the new revision 
 });
 test('room inks the pending writ and restores templates after it is torn up', async () => {
   const queue = new ProposalQueue();
-  expect(html(queue)).toContain('Writ templates');
+  expect(html(queue)).toContain('data-role="lot-draw-card"');
   expect(html(queue)).toContain('Questions for the hall');
   const steward = new SimulatedSteward(queue);
   await steward.ask('draft a question draw', { surface: 'overview' });
@@ -150,11 +150,11 @@ test('room inks the pending writ and restores templates after it is torn up', as
   expect(markup).toContain('cc-ticket cc-writ');
   expect(markup).toContain('<s>3</s><ins>5</ins>');
   expect(markup).toContain('revision 2');
-  expect(markup).not.toContain('Writ templates');
+  expect(markup).toContain('class="lottery-pending"');
   expect(markup).not.toContain('generated fixtures only');
   expect(lotterySession(queue).port.getSnapshot().sealed).toBe(false);
   queue.tearUp(current(queue).id);
-  expect(html(queue)).toContain('Writ templates');
+  expect(html(queue)).not.toContain('class="lottery-pending"');
 });
 test('a pending writ takes the workbench even if an older sealed writ is selected', async () => {
   const queue = new ProposalQueue(); draftRoll(queue);
@@ -191,8 +191,7 @@ test('offline hold completion freezes entry bytes and stores a recomputable SHA-
     session.port.edit({ ...frozen_draw, name: 'Changed after seal' });
     expect(session.port.getSnapshot().draw).toBe(frozen_draw);
     expect(html(queue)).toContain(recomputed);
-    expect(html(queue)).toContain('lottery-wax');
-    expect(html(queue)).toContain('Writ templates');
+    expect(html(queue)).toContain('>Cast the lots</button>');
     expect(network).not.toHaveBeenCalled();
   } finally { network.mockRestore(); }
 });
@@ -264,7 +263,7 @@ test('sealed v1 rehearsal is immutable, appears on this ticket, and recomputes t
   expect(frozen.roll.version).toBe(1);
   expect(frozen.roll.sealed_at).toBe('2026-10-31T12:00:00Z');
   expect(await sealOf(frozen.roll)).toBe(frozen.seal);
-  expect(html(queue)).toContain('Cast the lots · rehearsal');
+  expect(html(queue)).toContain('>Cast the lots</button>');
   expect(html(queue)).not.toContain('Draft a new roll');
   await Promise.all([port.start(), port.start()]);
   const writ = port.getSnapshot().writ;

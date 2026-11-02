@@ -186,8 +186,12 @@ type Result = { writ: LotsWrit; tamper: Tamper | undefined; report?: LabReport; 
  * view and replays the four-step walk. */
 const no_anchors: readonly BeaconAnchor[] = [];
 
-export function WritLab({ writ: cast_writ, simulated, prove = 0, beacon, anchors = no_anchors }: {
+export type LabSteer = Readonly<{ specimen: 'cast' | 'beacon'; tamper?: TamperKind | undefined }>;
+
+export function WritLab({ writ: cast_writ, simulated, prove = 0, beacon, anchors = no_anchors, steer }: {
   writ: LotsWrit; simulated: boolean; prove?: number; beacon?: LotsWrit;
+  /** The Steward's "Prove it" draft: which writ is on the bench and which forgery to try. */
+  steer?: LabSteer | undefined;
   /** Compiled-in chain anchors this lab may authenticate beacons against. */
   anchors?: readonly BeaconAnchor[];
 }) {
@@ -218,6 +222,14 @@ export function WritLab({ writ: cast_writ, simulated, prove = 0, beacon, anchors
     // Keyboard users land on the first tamper control, ready to try the proof.
     node?.querySelector<HTMLButtonElement>('.lottery-lab-tampers button')?.focus({ preventScroll: true });
   }, [prove]);
+  const steer_key = steer ? `${steer.specimen}:${steer.tamper ?? ''}` : '';
+  useEffect(() => {
+    if (!steer) return;
+    const target = steer.specimen === 'beacon' && beacon ? beacon : cast_writ;
+    setSpecimen(steer.specimen === 'beacon' && beacon ? 'beacon' : 'cast');
+    setSelection(steer.tamper ? { writ: target, tamper: { kind: steer.tamper, index: defaultTamperIndex(target) } } : { writ: target });
+    section.current?.scrollIntoView?.({ behavior: reduced ? 'auto' : 'smooth', block: 'start' });
+  }, [steer_key, cast_writ]);
   useEffect(() => {
     let live = true;
     inspectWrit(writ, tamper, anchors).then(report => {

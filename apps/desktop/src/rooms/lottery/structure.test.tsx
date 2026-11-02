@@ -22,7 +22,7 @@ test('lots-09 current writ exposes disclosure state and its controlled section',
   const display = createDrawDisplay().getSnapshot();
   for (const expanded of [false, true, false]) {
     port.nested(expanded);
-    const html = renderToStaticMarkup(<FixtureCast port={port} hash="simulated-seal" display={display} />);
+    const html = renderToStaticMarkup(<FixtureCast port={port} display={display} />);
     const toggle = html.match(/<button\b[^>]*>[\s\S]*?<\/button>/g)?.find(button =>
       button.includes(expanded ? copy.journey.close : copy.journey.read));
     expect(toggle).toContain(`aria-expanded="${expanded}"`);
@@ -81,73 +81,55 @@ test('the seal frame removes only the shell slot top rule and spacing', () => {
   expect(rule).not.toMatch(/(?:^|;)\s*(?:border|margin|padding|padding-bottom)\s*:/);
 });
 
-test('Cutaway panels keep the urn before the independently scrolling desk and its ordered tools', () => {
+test('the hall keeps the stage first and the live roll beside it, with no desk form', () => {
   for (const drafted of [false, true]) {
     const queue = new ProposalQueue();
     if (drafted) draftRoll(queue);
     const markup = render(queue);
-    const stageStart = markup.indexOf('class="cc-stage-wrap"');
+    const stageStart = markup.indexOf('data-role="lot-urn-panel"');
     const deskStart = markup.indexOf('class="cc-desk"');
     expect(stageStart).toBeGreaterThan(0);
     expect(deskStart).toBeGreaterThan(stageStart);
     const stage = markup.slice(stageStart, deskStart);
-    const desk = markup.slice(deskStart);
-    expect(stage).toContain('data-role="lot-urn-panel"');
+    const desk = markup.slice(deskStart, markup.indexOf('data-role="lot-more"'));
     expect(stage).toContain('class="lottery-draw-svg"');
-    expect(stage).toContain('class="statrow"');
-    expect(stage.match(/data-role="lot-stat"/g)).toHaveLength(3);
-    expect(stage.match(/class="topline"/g)).toHaveLength(1);
-    expect(stage).toContain(`<h3 data-role="panel-title">${copy.stage.titles.urn}<em data-role="panel-gloss">`);
+    expect(stage).toContain(`title="${copy.stage.titles.urn}">${copy.stage.titles.urn}</h2>`);
     expect(stage.match(/data-lot-dot=/g)).toHaveLength(lotterySession(queue).port.getSnapshot().entries.length);
     expect(stage).not.toContain('aria-label="Seal slot"');
-    const sections = [drafted ? 'cc-ticket cc-writ' : 'class="cc-blazons"', 'class="cc-ribbon"',
-      'class="lottery-seal-frame"', 'aria-label="Entry lookup"', 'aria-label="Saved simulated proof bundle"',
-      'class="cc-numbered-discs"'].map(marker => desk.indexOf(marker));
-    expect(sections.every((index, position) => index >= 0 && (position === 0 || index > (sections[position - 1] ?? -1)))).toBe(true);
+    expect(desk).toContain('data-role="lot-roll-panel"');
+    expect(desk.match(/data-role="lot-stat"/g)).toHaveLength(3);
     expect(desk).not.toContain('data-lot-dot=');
-    if (drafted) expect(desk).toContain('Proposal · not sealed');
+    // The full rule editor survives only behind More; the hall itself holds no form.
+    const hall = markup.slice(0, markup.indexOf('data-role="lot-more"'));
+    for (const form of ['Draw name', 'Eligible pool', 'Preview this draw', 'class="cc-blazons"']) expect(hall).not.toContain(form);
+    if (drafted) {
+      expect(desk).toContain('Proposal · not sealed');
+      expect(desk).toContain('aria-label="Seal slot"');
+    } else {
+      expect(desk).toContain('data-role="lot-draw-card"');
+      expect(desk).toContain('>Set up a draw</button>');
+    }
   }
 });
 
-test('blazons expose pressed selection, named shield charges and per-template verdict reasons', () => {
-  const queue = new ProposalQueue();
-  lotterySession(queue).port.select('free-prize');
-  const markup = render(queue);
-  const cards = markup.match(/<button[^>]*data-card="selectable"[\s\S]*?<\/button>/g) ?? [];
-  expect(cards).toHaveLength(fixtureDraws.length);
-  cards.forEach((card, index) => {
-    const draw = fixtureDraws[index];
-    expect(card).toContain('class="cc-shield"');
-    expect(card).toContain(`data-role="writ-title">${draw?.name}</b>`);
-    expect(card).toContain(`aria-pressed="${draw?.draw_id === 'free-prize'}"`);
-    expect(card).toContain(`data-stamp="${index === 0 ? 'ok' : 'blocked'}"`);
-  });
-  expect(cards[0]).toContain('>?</text>');
-  expect(cards[1]).toContain(copy.reasons.missing_rules);
-  expect(cards[1]).toContain(copy.reasons.missing_disclaimer);
-  expect(cards[2]).toContain(copy.reasons.paid_weight);
-  expect(markup).toContain(copy.lookup_hint);
-});
-
-test('stage medal values and cohort legend come from the selected fixture and amended proposal', () => {
+test('roll jewels and cohort legend come from the selected fixture', () => {
   const queue = new ProposalQueue();
   const state = lotterySession(queue).port.getSnapshot();
   const markup = render(queue);
-  expect(markup).toContain(`class="cc-hero-figure" data-text="${state.entries.length}"`);
-  const medals = markup.match(/class="ring">([\s\S]*?)<\/span>/g) ?? [];
-  expect(medals).toEqual([
-    `class="ring">${state.draw.rules.winner_count}</span>`,
-    `class="ring">${fixtureCooldown.length}</span>`,
-    'class="ring">1/3</span>',
+  const jewels = markup.match(/class="cc-jewel[^"]*">([^<]*)<\/span>/g) ?? [];
+  expect(jewels).toEqual([
+    `class="cc-jewel">${state.draw.rules.winner_count}</span>`,
+    `class="cc-jewel">${fixtureCooldown.length}</span>`,
+    'class="cc-jewel cc-jewel--wide">1/3</span>',
   ]);
   for (const cohort of ['new_account', 'subscriber', 'raider'] as const) {
-    expect(markup).toContain(`<li data-cohort="${cohort}">${copy.cohorts[cohort]} <b>${state.entries.filter(entry => entry.cohort === cohort).length}</b>`);
+    expect(markup).toContain(`<li data-cohort="${cohort}"><i class="cc-swatch" aria-hidden="true"></i>${copy.cohorts[cohort]} <b>${state.entries.filter(entry => entry.cohort === cohort).length}</b>`);
   }
   draftRoll(queue);
   const proposal = queue.pending('lottery')[0];
   if (!proposal) throw new Error('Missing generated proposal');
   queue.amend(proposal.id, [{ key: 'winners', value: 5 }]);
-  expect(render(queue)).toContain('class="ring"><s>3</s><ins>5</ins>');
+  expect(render(queue)).toMatch(/<s>3<\/s><ins[^>]*>5<\/ins>/);
 });
 
 test('a drafted writ has exactly one shared hold control and no ticket authorization control', () => {
@@ -155,24 +137,17 @@ test('a drafted writ has exactly one shared hold control and no ticket authoriza
   const markup = render(queue);
   expect(markup.match(/aria-label="Hold to seal"/g)).toHaveLength(1);
   expect(markup.match(/aria-label="Seal hold progress"/g)).toHaveLength(1);
-  expect(markup.slice(markup.indexOf('cc-ticket cc-writ'), markup.indexOf('class="cc-ribbon"'))).not.toContain('cc-seal-button');
+  expect(markup.slice(markup.indexOf('cc-ticket cc-writ'), markup.indexOf('class="lottery-seal-frame"'))).not.toContain('cc-seal-button');
 });
 
-
-test('fixture and core put the fitted draw stage before the compact legend and statistics', () => {
+test('fixture and core draw the stage in the hero panel and read the roll beside it', () => {
   const port = createCoreLotsPort({ mode: 'core', endpoint: 'http://127.0.0.1:3210/', session_token: 'a'.repeat(64) });
   const rooms = [render(new ProposalQueue()), renderToStaticMarkup(<ConnectedLotsRoom port={port} />)];
   for (const markup of rooms) {
     const pool = markup.slice(markup.indexOf('data-role="lot-urn-panel"'), markup.indexOf('class="cc-desk"'));
-    // The drawing is the flexible frame's first content, never below a large count block.
     expect(pool).toMatch(/class="lottery-stage"><div class="lottery-draw-stage"/);
-    const drawing = pool.indexOf('class="lottery-draw-stage"');
-    const readings = pool.indexOf('class="lottery-pool-readings"');
-    const stats = pool.indexOf('class="statrow"');
-    expect(drawing).toBeGreaterThan(0);
-    expect(readings).toBeGreaterThan(drawing);
-    expect(stats).toBeGreaterThan(readings);
-    expect(pool.slice(drawing, readings)).not.toContain('class="cc-tally"');
-    expect(pool.match(/data-role="lot-stat"/g)).toHaveLength(3);
+    const roll = markup.slice(markup.indexOf('class="cc-desk"'));
+    expect(roll.match(/data-role="lot-stat"/g)).toHaveLength(3);
+    expect(pool).not.toContain('data-role="lot-stat"');
   }
 });

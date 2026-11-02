@@ -1,4 +1,41 @@
-﻿# Lot Chamber C · Herald, 2026-10-30
+# Lot Chamber C · Herald, 2026-10-30
+
+## Night UX W1: the Steward owns setup, 2026-11-02
+
+The Writ desk form left the hall. The chamber is now three calm things: the draw stage
+(`StagePanel` in `roll.tsx`, the existing `DrawStage` inside), the live roll beside it
+(`RollPanel`: status, cohorts, winners / held out / raider cap as glass jewels) and the
+current draw (`DrawCard`) with a few direct actions. Everything rarely used (intake pause,
+the full rule editor `DrawSetup`, equalizer, stream look, OBS page note, entry lookup, saved
+proof, proposal and design slot, fairness steps) sits behind one `More` disclosure.
+
+Setup is Steward flows (`steward-flows.ts`, built in `flow-steps.ts` / `flow-core.ts` over the
+pure helpers in `flow-model.ts`; seals load `flow-actions.ts` lazily):
+
+- **Set up a draw**: preset (questions, free-entry prize, something else, the paid-weight
+  example) → who can enter → winners → fairness preset (or cap, cooldown, odds one by one)
+  → guardrail fixes as steps (paid weight, prize value, registration, official rules, Twitch
+  disclaimer; each offers the fix or "make it a no-prize draw") → stage style → guardrail
+  check → hold to seal. The seal selects the preset, applies the draft, drafts the roll
+  proposal and seals it with the existing `sealLotteryProposal`.
+- **Cast the lots**: (seal the sample first when nothing is sealed, or rehearse again after a
+  cast) → public round → reveal style (ceremony, quiet, by hand) → hold to cast (`port.start`).
+- **Prove it**: writ (this cast, the saved specimen, the simulated beacon) → forgery → hold
+  to log the Writ Lab verdict (`inspectWrit`). The Writ Lab opens and follows the draft.
+- **Play demo** (SIMULATED): sample → guardrails (prize sample) → the roll fills on the stage
+  → one hold seals, casts and reveals.
+
+The chamber reads drafts with `useFlowDraft`, so the stage previews the draft (shape, roll,
+readouts, a dashed `Draft · not sealed` frame). While the sheet is raised (`useSheetBand`) the
+chamber title steps aside and the hall shrinks into the band still visible above the sheet;
+during "Prove it" the Writ Lab takes that band. `live.ts` mirrors the draw phase for the flows
+(which load with the shell), and chips lead with what the draw needs next.
+
+Core mode (`ConnectedLotsRoom`) uses the same layout and the same flows on the core's draws:
+setup ends in `port.edit` + `port.seal`, cast in `port.start`, proof on the core writ. The draw
+card keeps the direct core controls (draw, winners, check, hold to seal, cast) that Dress
+rehearsal's Fill a Lot relies on; the rule editor and lookup moved under More. There is no core
+Play demo.
 
 ## Theatrical draw stage and Writ Lab, 2026-10-31
 

@@ -1,153 +1,190 @@
-﻿import { useMemo, useState, useSyncExternalStore } from 'react';
-import type { ReactNode } from 'react';
-import { entranceStyle, HeraldicCard, InkButton, ShieldCharge } from '@castle-control/ui';
+﻿import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
 import { isPending, proposalQueue } from '@castle-control/ui/steward';
 import type { ProposalQueue } from '@castle-control/ui/steward';
+import { stewardDock, useFlowDraft, useStewardDraft } from '@castle-control/ui/steward-flow';
 import type { Snapshot } from '../../model.js';
 import { checkFixturePolicy, fixtureWeightNotice, lookupFixture } from '../../lots-model.js';
-import { fixtureBeaconWrit, fixtureCooldown, fixtureDraws, fixtureWrit } from '../../lots-fixture.js';
+import { fixtureBeaconWrit, fixtureCooldown, fixtureDraws, fixturePool, fixtureWrit } from '../../lots-fixture.js';
 import { lotsCopy as copy } from '../../lots-copy.js';
 import { draftRoll, entryHash, lotterySession } from './session.js';
-import { DeskBody, FairnessSteps, PolicyRibbon, PolicyStamp, PoolStage, Ticket, WritHeading, policyReason } from './print.jsx';
+import { FairnessSteps, Ticket, policyReason } from './print.jsx';
 import { LotteryWrit } from './writ.jsx';
 import type { LotsDraw } from '@castle-control/contract';
-import { DrawSetup } from './setup.jsx';
 import { DrawAppearance } from './appearance.jsx';
-import { FixtureCast } from './result.jsx';
+import { DrawSetup } from './setup.jsx';
+import { FixtureCast, OverlayNote } from './result.jsx';
 import { useWritCheck } from './playback.js';
 import { DrawStage } from './stage.jsx';
 import type { StageCast } from './stage-model.js';
 import { WeightEqualizer } from './equalizer.jsx';
 import { WritLab } from './lab.jsx';
-import { UrnTierPreset } from './tier.jsx';
+import type { LabSteer } from './lab.jsx';
 import { quicknet_anchor, simulated_anchor } from './beacon-anchors.js';
 import { verifyWrit } from '../../lots-cast.js';
+import { castFlow, demoDraw, demoFlow, demoShape, proveFlow, setupFlow, tamperKinds } from './flow-steps.js';
+import { capFigure, contentLine, heldOut, poolLabel } from './flow-model.js';
+import { lotLive } from './live.js';
+import { countCohorts, DrawCard, MoreTools, RollPanel, StagePanel } from './roll.jsx';
+import type { RollTone } from './roll.jsx';
+import { useFill, useSheetBand } from './chamber-hooks.js';
 import './room.css';
+import './chamber.css';
 
 /** Fixture mode may authenticate its simulated specimen; real chains keep the public anchor. */
 const fixture_anchors = [quicknet_anchor, simulated_anchor] as const;
 
 export { LotteryWrit } from './writ.jsx';
 
+const drawLine = (draw: LotsDraw) =>
+  `${contentLine(draw)} · ${poolLabel[draw.rules.pool.kind].toLowerCase()} · ${draw.rules.winner_count} winner${draw.rules.winner_count === 1 ? '' : 's'}`;
+
 export default function LotteryRoom({ snapshot, replay, queue = proposalQueue, seal_slot }: {
   snapshot: Snapshot; replay: boolean; queue?: ProposalQueue; seal_slot?: ReactNode;
 }) {
-  const { port, rolls, display, reveal } = lotterySession(queue);
+  const { port, display, reveal } = lotterySession(queue);
   const state = useSyncExternalStore(port.subscribe, port.getSnapshot, port.getSnapshot);
   const appearance = useSyncExternalStore(display.subscribe, display.getSnapshot, display.getSnapshot);
+  const proposals = useSyncExternalStore(queue.subscribe, queue.getSnapshot, queue.getSnapshot);
   const writ_checked = useWritCheck(state.writ, verifyWrit);
   const cast = useMemo<StageCast | undefined>(() => state.writ
     ? { winners: state.writ.winners, label: 'streamer-controlled' } : undefined, [state.writ]);
-  const proposals = useSyncExternalStore(queue.subscribe, queue.getSnapshot, queue.getSnapshot);
+  const publication = useStewardDraft('lottery');
+  const setup = useFlowDraft(setupFlow);
+  const demo = useFlowDraft(demoFlow);
+  const prove = useFlowDraft(proveFlow);
+  const root = useRef<HTMLDivElement>(null);
+  const band = useSheetBand(root, publication !== undefined);
+  const [lab, setLab] = useState(false);
+  const [prove_count, setProve] = useState(0);
   const [verification, setVerification] = useState('');
-  const [prove, setProve] = useState(0);
+  const phase = state.started ? 'cast' : state.sealed ? 'sealed' : 'open';
+  useEffect(() => {
+    lotLive.publish({ mode: 'fixture', phase, draw: state.draw, draws: fixtureDraws, entries: state.entries.length,
+      seal: state.sealed_roll?.seal, winners: state.simulated_winners ?? [], writ: Boolean(state.writ) });
+  }, [phase, state.draw, state.entries.length, state.sealed_roll, state.simulated_winners, state.writ]);
+  useEffect(() => { if (prove) setLab(true); }, [prove]);
+  // The demo's roll step fills the urn lot by lot; every other draft shows its roll at once.
+  const draft_draw = setup?.draw ?? (demo ? demoDraw(demo) : undefined);
+  const draft_entries = useMemo(() => draft_draw ? fixturePool(draft_draw) : undefined, [draft_draw]);
+  const filling = Boolean(demo) && publication?.step === 'roll';
+  const shown = useFill(draft_entries, filling);
   if (snapshot.mode !== 'fixture') return <p>{copy.no_live_controls}</p>;
+
   const history = proposals.proposals.filter(item => item.chamber === 'lottery' && item.state !== 'torn');
   const pending = history.filter(isPending);
-  const candidates = pending.length ? pending : history;
-  const proposal = candidates.find(item => item.id === proposals.selected_proposal_id) ?? candidates.at(-1);
-  const sealed_roll = state.sealed_roll;
-  const roll = sealed_roll ? Array.from(rolls.values()).find(item => item.roll === sealed_roll.roll)
-    : proposal ? rolls.get(proposal.id) : undefined;
-  const entries = state.sealed ? roll?.entries ?? state.entries : state.entries;
-  const policy = checkFixturePolicy(state.draw.policy);
-  const cap = state.draw.rules.cohort_caps.find(item => item.cohort === 'raider');
-  const winner_field = proposal?.fields.find(field => field.key === 'winners');
-  const winners = winner_field ? <>{winner_field.struck.map((value, index) => <s key={index}>{String(value)}</s>)}
-    <ins key={proposal?.revision}>{String(winner_field.value)}</ins></> : state.draw.rules.winner_count;
+  const proposal = pending.find(item => item.id === proposals.selected_proposal_id) ?? pending.at(-1);
+  const roll = state.sealed_roll ? Array.from(lotterySession(queue).rolls.values()).find(item => item.roll === state.sealed_roll?.roll) : undefined;
+  const drafting = draft_draw !== undefined;
+  const draw = draft_draw ?? state.draw;
+  const entries = drafting ? shown ?? [] : state.sealed ? roll?.entries ?? state.entries : state.entries;
+  const shape = (setup?.shape ?? (demo && demo.sample ? demoShape(demo) : undefined)) ?? appearance.shape;
+  const policy = checkFixturePolicy(draw.policy);
+  const open = (flow: typeof setupFlow | typeof castFlow | typeof proveFlow | typeof demoFlow) => () => stewardDock.open(flow);
+  const openLab = () => { setLab(true); setProve(count => count + 1); };
+  const status = drafting ? (filling ? 'Chat types !join · the roll is filling' : 'Drafting in the Steward · nothing sealed')
+    : phase === 'cast' ? `Cast · ${state.simulated_winners?.length ?? 0} winners in cast order`
+      : phase === 'sealed' ? 'Sealed · the roll is frozen, waiting for the cast'
+        : state.paused ? copy.paused : copy.stage.open;
+  const tone: RollTone = drafting ? 'draft' : policy.result === 'blocked' ? 'blocked' : phase;
   const recompute = async () => {
     if (!roll) return;
     try { setVerification(await entryHash(roll.bytes) === roll.hash ? copy.hash_match : copy.hash_mismatch); }
     catch { setVerification(copy.hash_failed); }
   };
-  const discardPreview = () => {
-    for (const item of queue.pending('lottery')) if (item.kind === 'seal') queue.tearUp(item.id);
-  };
-  const edit = (draw: LotsDraw) => {
+  const edit = (next: LotsDraw) => {
     const before = port.getSnapshot().draw;
-    port.edit(draw);
-    if (port.getSnapshot().draw !== before) discardPreview();
+    port.edit(next);
+    if (port.getSnapshot().draw !== before) for (const item of queue.pending('lottery')) if (item.kind === 'seal') queue.tearUp(item.id);
   };
-  return <div className="lottery-room" data-replay={replay} data-theatre={appearance.theatre}>
+  const steer: LabSteer | undefined = prove?.writ ? { specimen: prove.writ === 'beacon' ? 'beacon' : 'cast',
+    tamper: prove.tamper && tamperKinds.has(prove.tamper) ? prove.tamper as LabSteer['tamper'] : undefined } : undefined;
+  const lab_writ = prove?.writ === 'specimen' ? fixtureWrit : state.writ ?? fixtureWrit;
+  const guard_line = policy.reasons.length ? policyReason(policy.reasons[0] ?? '') : policy.result === 'ok' ? 'Nothing blocks this draw' : undefined;
+  return <div ref={root} className="lottery-room" data-replay={replay} data-theatre={appearance.theatre}
+    data-sheet={band === undefined ? undefined : 'up'} data-phase={drafting ? 'draft' : phase} data-proving={prove ? '' : undefined}
+    style={band === undefined ? undefined : { '--lot-band': `${band}px` } as CSSProperties}>
     <div className="cc-hall">
-      <PoolStage count={entries.length} winners={winners} winner_detail={pending.length ? copy.proposed : copy.selected_draw}
-        held_out={fixtureCooldown.length} cap={cap ? `${cap.numerator}/${cap.denominator}` : copy.no_cap}
-        illustration={copy.illustration} title={copy.stage.titles[appearance.shape]} foot={<>
-          <ul className="cc-legend legend" data-role="lot-legend" aria-label={copy.dots}>{(['new_account', 'subscriber', 'raider'] as const).map(cohort =>
-            <li key={cohort} data-cohort={cohort}>{copy.cohorts[cohort]} <b>{entries.filter(entry => entry.cohort === cohort).length}</b></li>)}</ul>
-        </>}><DrawStage shape={appearance.shape} on_shape={shape => display.edit({ shape })} entries={entries} cast={cast}
-          verified={writ_checked === true} content={state.draw.policy.content} sealed={state.sealed}
-          seal={state.sealed_roll?.seal} clock={reveal} reveal_ms={appearance.reveal_ms}
+      <StagePanel title={copy.stage.titles[shape]} count={entries.length} draft={drafting}>
+        <DrawStage shape={shape} on_shape={next => display.edit({ shape: next })} entries={entries} cast={drafting ? undefined : cast}
+          verified={writ_checked === true} content={draw.policy.content} sealed={!drafting && state.sealed}
+          seal={drafting ? undefined : state.sealed_roll?.seal} clock={reveal} reveal_ms={appearance.reveal_ms}
           theatre={appearance.theatre} on_theatre={display.theatre} sound={appearance.sound} on_sound={on => display.edit({ sound: on })}
           by_hand={appearance.by_hand} on_by_hand={on => display.edit({ by_hand: on })} focus_weight={appearance.focus_weight}
-          on_prove={() => { display.theatre(false); setProve(count => count + 1); }} /></PoolStage>
-      <div className="cc-desk"><section className="lottery-desk-panel panel cc-print-in" data-role="lot-writ-panel" style={{ ...entranceStyle(1) }}>
-        <div className="topline" />
-        <WritHeading awaiting={pending.length > 0} frozen={state.sealed} />
-        <DeskBody>
-        {!pending.length && <div className="cc-group cc-print-in" style={entranceStyle(2)}>
-          <p className="cc-kicker">{copy.templates}</p><p className="cc-aside">{copy.templates_hint}</p>
-          <ul className="cc-blazons" aria-label={copy.templates}>{fixtureDraws.map(draw => {
-            const check = checkFixturePolicy(draw.policy);
-            return <li key={draw.draw_id}><HeraldicCard variant="selectable" ink="gules" className="writ" data-role="writ-row"
-              selected={draw.draw_id === state.draw.draw_id} on_select={() => { port.select(draw.draw_id); draftRoll(queue); }}>
-              <ShieldCharge charge={draw.policy.paid_weight ? 'struck-coin' : draw.policy.content === 'prize' ? 'cup' : 'question'} />
-              <span className="cc-card-copy"><b data-role="writ-title">{draw.name}</b>
-                <small data-role="writ-detail">{`${draw.policy.content === 'prize' ? copy.prize : copy.no_prize} · ${copy.proposal_only}`}</small>
-                {check.reasons.map(reason => <small data-role="writ-detail" key={reason}>{policyReason(reason)}</small>)}
-              </span>
-              <span data-role="writ-action"><PolicyStamp result={check.result} />
-                <span className={`pbtn${check.result === 'ok' ? ' ink' : ''}`}>{copy.draft_writ}</span>
-              </span>
-            </HeraldicCard></li>;
-          })}</ul>
-        </div>}
-        <p className="body15">{copy.core.pool(state.draw.rules.pool.kind, state.draw.policy.content, state.draw.rules.cooldown_s)} · {fixtureCooldown.length} {copy.cooldown} · {fixtureWeightNotice(state)}</p>
-        {proposal && <LotteryWrit proposal={proposal} weight_notice={fixtureWeightNotice(state)} />}
-        {state.started && <InkButton size="room" onClick={() => { port.reopen(); draftRoll(queue); }}>{copy.draft_new}</InkButton>}
-        <UrnTierPreset draw={state.draw} shape={appearance.shape} on_edit={edit} on_shape={shape => display.edit({ shape })}
-          entry_count={state.entries.length} disabled={state.sealed} />
-        <DrawSetup port={port} on_edit={edit} on_preview={() => { discardPreview(); draftRoll(queue); }} />
-        <WeightEqualizer draw={state.draw} entries={state.entries} on_edit={edit} disabled={state.sealed}
-          on_focus_weight={weight => display.edit({ focus_weight: weight })} />
-        <DrawAppearance port={display} />
-        <PolicyRibbon result={policy.result} />
-        {policy.reasons.map(reason => <p className="cc-aside" key={reason}>{policyReason(reason)}</p>)}
-        {state.draw.policy.twitch_disclaimer && <p className="cc-aside">{copy.disclaimer_text}</p>}
-        {state.draw.policy.official_rules && <p className="cc-aside">{copy.template_text}</p>}
-        <div className="lottery-seal-frame"><HeraldicCard variant="raised" tone="seal" ink="gules" className="panel cc-print-in" style={{ ...entranceStyle(6) }}>{seal_slot}</HeraldicCard></div>
-        {state.sealed && roll && <FixtureCast port={port} hash={roll.hash} display={appearance} />}
-        <WritLab writ={state.writ ?? fixtureWrit} simulated prove={prove} beacon={fixtureBeaconWrit} anchors={fixture_anchors} />
-        <HeraldicCard variant="raised" className="panel cc-print-in" style={{ ...entranceStyle(8) }} aria-label={copy.lookup_title}>
-          <div className="lottery-lookup">
-            <label htmlFor="lottery-lookup">{copy.lookup}</label>
-            <input id="lottery-lookup" type="search" aria-label={copy.lookup} placeholder={copy.lookup_placeholder}
-              autoComplete="off" value={state.lookup} onChange={event => port.lookup(event.currentTarget.value)} />
-            <p className="lottery-lookup-hint">{copy.lookup_hint}</p>
-            <p className="lottery-lookup-result" role="status">{lookupFixture(state)}</p>
-          </div>
-        </HeraldicCard>
-        <Ticket label={copy.saved_proof} entrance={9}>
-          <div className="cc-ticket-head"><p className="cc-kicker">{copy.saved_proof}</p>
-            <time dateTime={fixtureWrit.roll.sealed_at}>{fixtureWrit.roll.sealed_at.slice(0, 10)}</time></div>
-          <p className="cc-caption">{copy.writ_fields.winners}</p>
-          <ul className="cc-handles">{fixtureWrit.winners.map(winner => <li className="cc-handle" key={winner}>{winner}</li>)}</ul>
-          <details className="cc-disclosure"><summary>{copy.writ}</summary><div className="cc-disclosure-body">
-            <p className="cc-caption">{copy.reference_vector}</p>
-            <p className="cc-aside">{copy.writ_notice}</p><code className="cc-hash">{fixtureWrit.seal}</code>
-            <InkButton size="room" onClick={() => { void port.recompute(true); }}>{copy.recompute}</InkButton>
-            <p className="cc-status" role="status">{state.notice}</p>
-          </div></details>
-          {roll && <div className="cc-group">
-            <InkButton size="room" onClick={() => { void recompute(); }}>{copy.frozen_recompute}</InkButton>
-            <details className="cc-disclosure"><summary>{copy.frozen_bytes}</summary>
-              <pre className="cc-hash">{roll.bytes}</pre></details>
-            <p className="cc-status" role="status">{verification}</p>
-          </div>}
-        </Ticket>
-        <FairnessSteps simulated />
-        </DeskBody>
-      </section></div>
+          on_prove={() => { display.theatre(false); openLab(); }} />
+      </StagePanel>
+      <div className="cc-desk">
+        <RollPanel status={status} tone={tone} counts={countCohorts(entries)} draft={drafting} simulated
+          winners={draw.rules.winner_count} winner_detail={drafting ? copy.proposed : copy.selected_draw}
+          held_out={heldOut(draw, fixtureCooldown.length)} cap={capFigure(draw)}>
+          {/* While drafting, a blocked prize is not an alarm: the Steward asks for each fix as a step. */}
+          <DrawCard name={draw.name} line={drawLine(draw)} guard={drafting && policy.result === 'blocked' ? 'warn' : policy.result}
+            guard_word={drafting && policy.result === 'blocked' ? 'To clear' : undefined}
+            guard_line={drafting && policy.result === 'blocked' ? 'The Steward asks for each fix before the seal.' : guard_line}>
+            {drafting ? <p className="lottery-draw-hint">The Steward is drafting below. The stage shows the draft; nothing is sealed.</p>
+              : proposal ? <div className="lottery-pending">
+                <LotteryWrit proposal={proposal} weight_notice={fixtureWeightNotice(state)} />
+                <div className="lottery-seal-frame">{seal_slot}</div>
+              </div>
+              : phase === 'open' ? <>
+                <button type="button" className="cc-btn cc-btn--primary" onClick={open(setupFlow)}>Set up a draw</button>
+                <button type="button" className="cc-btn" onClick={open(castFlow)}>Cast the lots</button>
+                <button type="button" className="cc-btn cc-btn--quiet" onClick={open(demoFlow)}>Play demo</button>
+              </> : phase === 'sealed' ? <>
+                {roll && <p className="cc-hash lottery-draw-seal">{copy.seal_hash} · {roll.hash}</p>}
+                <button type="button" className="cc-btn cc-btn--primary" onClick={open(castFlow)}>Cast the lots</button>
+                <button type="button" className="cc-btn cc-btn--quiet" onClick={open(setupFlow)}>Set up another draw</button>
+              </> : null}
+          </DrawCard>
+          {!drafting && phase === 'cast' && <FixtureCast port={port} display={appearance} hash={roll?.hash}
+            on_prove={() => { openLab(); stewardDock.open(proveFlow); }} on_new={() => { port.reopen(); draftRoll(queue); }} />}
+        </RollPanel>
+      </div>
     </div>
+    {(lab || prove) && <div className="lottery-lab-bay">
+      <WritLab writ={lab_writ} simulated prove={prove_count} beacon={fixtureBeaconWrit} anchors={fixture_anchors} steer={steer} />
+      <button type="button" className="cc-btn cc-btn--quiet lottery-lab-close" onClick={() => setLab(false)}>Close the Writ Lab</button>
+    </div>}
+    <MoreTools>
+      <section className="lottery-more-card" aria-label={copy.setup}>
+        <h3 className="lottery-card-title">Intake</h3>
+        <p className="cc-aside">{copy.journey.setup_hint}</p>
+        {!state.sealed && <button type="button" className="cc-btn" aria-pressed={state.paused} onClick={() => port.pause()}>{state.paused ? copy.resume : copy.pause}</button>}
+        <p className="cc-status" role="status">{state.sealed ? copy.journey.frozen : state.notice}</p>
+        {!lab && <button type="button" className="cc-btn" onClick={openLab}>Open the Writ Lab</button>}
+      </section>
+      <DrawSetup port={port} on_edit={edit} on_preview={() => {
+        for (const item of queue.pending('lottery')) if (item.kind === 'seal') queue.tearUp(item.id);
+        draftRoll(queue);
+      }} />
+      <WeightEqualizer draw={state.draw} entries={state.entries} on_edit={edit} disabled={state.sealed}
+        on_focus_weight={weight => display.edit({ focus_weight: weight })} />
+      <DrawAppearance port={display} />
+      <OverlayNote draw_id={state.draw.draw_id} display={appearance} />
+      <section className="lottery-more-card" aria-label={copy.lookup_title}>
+        <div className="lottery-lookup">
+          <label htmlFor="lottery-lookup">{copy.lookup}</label>
+          <input id="lottery-lookup" className="cc-input" type="search" aria-label={copy.lookup} placeholder={copy.lookup_placeholder}
+            autoComplete="off" value={state.lookup} onChange={event => port.lookup(event.currentTarget.value)} />
+          <p className="lottery-lookup-hint">{copy.lookup_hint}</p>
+          <p className="lottery-lookup-result" role="status">{lookupFixture(state)}</p>
+        </div>
+      </section>
+      <Ticket label={copy.saved_proof} entrance={0}>
+        <div className="cc-ticket-head"><p className="cc-kicker">{copy.saved_proof}</p>
+          <time dateTime={fixtureWrit.roll.sealed_at}>{fixtureWrit.roll.sealed_at.slice(0, 10)}</time></div>
+        <ul className="cc-handles">{fixtureWrit.winners.map(winner => <li className="cc-handle" key={winner}>{winner}</li>)}</ul>
+        <p className="cc-aside">{copy.writ_notice}</p><code className="cc-hash">{fixtureWrit.seal}</code>
+        <button type="button" className="cc-btn" onClick={() => { void port.recompute(true); }}>{copy.recompute}</button>
+        <p className="cc-status" role="status">{state.notice}</p>
+        {roll && <>
+          <button type="button" className="cc-btn" onClick={() => { void recompute(); }}>{copy.frozen_recompute}</button>
+          <details className="cc-disclosure"><summary>{copy.frozen_bytes}</summary><pre className="cc-hash">{roll.bytes}</pre></details>
+          <p className="cc-status" role="status">{verification}</p>
+        </>}
+      </Ticket>
+      {!proposal && <section className="lottery-more-card lottery-seal-frame" aria-label="Proposals and designs">{seal_slot}</section>}
+      <FairnessSteps simulated />
+    </MoreTools>
   </div>;
 }

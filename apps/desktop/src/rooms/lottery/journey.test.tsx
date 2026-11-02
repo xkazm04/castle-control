@@ -95,10 +95,15 @@ const room = (queue: ProposalQueue) => renderToStaticMarkup(<LotteryRoom snapsho
 const source = fixtureDraws[0];
 if (!source) throw new Error('Missing simulated draw');
 
-test('the room exposes setup, preview and all urn parameters before sealing', () => {
+test('setup lives in the Steward; the room keeps the stream look and the stage behind More', () => {
   const html = room(new ProposalQueue());
-  for (const label of ['Draw name', 'Eligible pool', 'Weights', 'Preview this draw', 'Urn size',
-    'Screen anchor', 'Urn colour', 'Art style', 'Reveal timing in ms']) expect(html).toContain(label);
+  for (const label of ['Urn size', 'Screen anchor', 'Urn colour', 'Art style', 'Reveal timing in ms']) expect(html).toContain(label);
+  const more = html.indexOf('data-role="lot-more"');
+  for (const form of ['Draw name', 'Eligible pool', 'Preview this draw']) {
+    expect(html.slice(0, more)).not.toContain(form);
+    expect(html.slice(more)).toContain(form);
+  }
+  expect(html).toContain('>Set up a draw</button>');
   expect(html).toContain('SIMULATED · SAMPLE ART');
   expect(html).toContain('preset-heraldic-urn.webp');
 });

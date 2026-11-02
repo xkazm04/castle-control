@@ -23,7 +23,6 @@
 /* apps/desktop/src/rooms/lottery/lab.css */
 .cc-frame .lottery-lab-step h4 { font-family: var(--font-label); font-stretch: normal; text-transform: lowercase; letter-spacing: var(--track-label); }
 /* apps/desktop/src/rooms/lottery/room.css */
-.cc-frame .lottery-room [data-role="panel-title"] { font-family: var(--font-label); font-stretch: normal; text-transform: lowercase; letter-spacing: var(--track-label); }
 .cc-frame .lottery-room [data-role="writ-title"] { font-family: var(--font-label); font-stretch: normal; text-transform: lowercase; letter-spacing: var(--track-label); }
 .cc-frame .lottery-room .cc-ticket-stub b { font-family: var(--font-label); font-stretch: normal; text-transform: lowercase; letter-spacing: var(--track-label); }
 .cc-frame .lottery-room .cc-writ-title { font-family: var(--font-label); font-stretch: normal; text-transform: lowercase; letter-spacing: var(--track-label); }

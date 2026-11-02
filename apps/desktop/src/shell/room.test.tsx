@@ -6,8 +6,7 @@ import { afterEach, expect, test, vi } from 'vitest';
 import { ProposalCard, SealButton, sealHoldDurationMs } from '@castle-control/ui';
 import { ProposalQueue, SimulatedSteward } from '@castle-control/ui/steward';
 import SealSlot, { sealRoomProposal } from '../rooms/seal-slot/index.jsx';
-import { draftRoll, lotterySession } from '../rooms/lottery/session.js';
-import LotteryRoom from '../rooms/lottery/index.jsx';
+import { draftRoll } from '../rooms/lottery/session.js';
 import ModeratorRoom from '../rooms/moderator/index.jsx';
 import { coreGatehouseConnection, coreLotsConnection, createDesktopClient } from '../client.js';
 import { fixtureCharts, fixtureHeld, fixtureRules } from '../moderation-fixture.js';
@@ -40,8 +39,8 @@ test('all room headers hold the shared title card, function, strip replacement a
     expect(markup.match(/aria-label="Seal slot"/g)).toHaveLength(1);
     expect(markup).toMatch(slot_context);
     if (chamber === 'lottery') {
-      const order = ['cc-stage-wrap', 'cc-desk', 'aria-label="Seal slot"',
-        'aria-label="Entry lookup"', 'aria-label="Saved simulated proof bundle"', 'class="cc-numbered-discs"']
+      const order = ['class="cc-hall"', 'class="cc-desk"', 'data-role="lot-more"',
+        'aria-label="Entry lookup"', 'aria-label="Saved simulated proof bundle"', 'aria-label="Seal slot"', 'class="cc-numbered-discs"']
         .map(marker => markup.indexOf(marker));
       expect(order[0]).toBeGreaterThan(0);
       expect(order.every((index, position) => position === 0 || index > (order[position - 1] ?? -1))).toBe(true);
@@ -59,19 +58,6 @@ test('room stages retain token insets and model states use the existing accent f
   expect(shell).toMatch(/\.room-column\s*\{[^}]*padding:\s*var\(--space-16\)/);
   const moderator = readFileSync(new URL('../rooms/moderator/room.css', import.meta.url), 'utf8');
   expect(moderator).toMatch(/\.moderator-moat-gauge rect\[data-on="true"\]\s*\{[^}]*fill:\s*var\(--azure\)/);
-  const queue = new ProposalQueue();
-  for (const draw of fixtureDraws) {
-    lotterySession(queue).port.select(draw.draw_id);
-    const markup = renderToStaticMarkup(<LotteryRoom snapshot={{ mode: 'fixture', phase: 'ready' }} replay={false} queue={queue} />);
-    const cards = markup.match(/<button[^>]*data-card="selectable"[\s\S]*?<\/button>/g) ?? [];
-    const selected = cards.filter(card => card.includes('aria-pressed="true"'));
-    expect(cards).toHaveLength(fixtureDraws.length);
-    expect(selected).toHaveLength(1);
-    expect(selected[0]).toContain(draw.name);
-    expect(selected[0]).toContain('data-selected="true"');
-    expect(selected[0]).toContain('--cc-ink:var(--gules)');
-    expect(cards.filter(card => card.includes('aria-pressed="false"'))).toHaveLength(fixtureDraws.length - 1);
-  }
   const lottery = readFileSync(new URL('../../../../packages/ui/src/heraldic-card.css', import.meta.url), 'utf8');
   const selectedStyle = lottery.match(/\[data-card="selectable"\]\[data-selected="true"\]\s*\{([^}]+)\}/)?.[1] ?? '';
   expect(selectedStyle).toContain('border-color: var(--cc-ink, var(--ink))');
@@ -113,11 +99,9 @@ test('polished rooms render each stage title once and expose keyboard scroll reg
     const markup = (await new Response(stream).text()).replace(/<!--.*?-->/g, '');
     expect(markup.match(new RegExp(`>${title}(?: ·|<)`, 'g'))).toHaveLength(1);
     if (chamber === 'lottery') {
-      const ribbon = markup.match(/<div class="cc-ribbon"[^>]*>[\s\S]*?<\/div>/)?.[0] ?? '';
-      expect(ribbon).toContain('role="status"');
-      expect(ribbon).toContain('<span class="cc-ribbon-label">Giveaway guardrails</span>');
-      expect(ribbon).toContain('<b class="cc-ribbon-word">OK</b>');
-      expect(ribbon).toContain('<span class="cc-ribbon-note">local preview</span>');
+      const card = markup.slice(markup.indexOf('data-role="lot-draw-card"'));
+      expect(card).toContain('<span class="cc-stamp cc-stamp--ok">OK</span>');
+      expect(markup).toContain('class="lottery-roll-status" role="status"');
       expect(markup).not.toContain('Past writs');
       expect(markup).not.toContain('aria-label="Giveaway guardrails · local preview"');
     } else {
@@ -342,7 +326,7 @@ test('fixture launch mounts the existing Lot preview, proposal slot and saved si
     origin="keep" on_open={vi.fn()} on_back={vi.fn()} />);
   await stream.allReady;
   const markup = await new Response(stream).text();
-  expect(markup).toContain('Writ templates');
+  expect(markup).toContain('data-role="lot-draw-card"');
   expect(markup).toContain('Saved simulated proof bundle');
   expect(markup).toContain('aria-label="Seal slot"');
   expect(markup).toContain('>Restyle</button>');
@@ -367,7 +351,7 @@ test('core launch mounts the connected Lots view and never renders simulated con
   const port = coreLotsConnection(snapshot)?.port;
   expect(port).toBeDefined(); await port?.load();
   const markup = await render();
-  expect(markup).toContain('Draws in your core'); expect(markup).toContain('Questions for the hall');
+  expect(markup).toContain('data-role="lot-draw-card"'); expect(markup).toContain('Questions for the hall');
   expect(markup).toContain('Twitch user ID'); expect(markup).toContain('aria-label="Hold to seal"');
   for (const simulated of ['SIMULATED', 'Saved simulated proof', 'Writ templates', 'Recompute fixture', '>Restyle</button>', '>Custom design</button>', 'data-lot-dot']) {
     expect(markup).not.toContain(simulated);
