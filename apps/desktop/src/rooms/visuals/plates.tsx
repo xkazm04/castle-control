@@ -57,15 +57,6 @@ export function BeaconPlates<T extends PlateVisual>({ visuals, selected, on_sele
         <span className="visuals-beacon-name"><RoomKeyBadge room="visuals" action={`beacon_${index}`} />{item.visual.name}</span>
         <span className="visuals-beacon-blaze">{percent}</span>
         <span className="visuals-beacon-state">{chosen ? 'In the picture' : 'Show in the picture'}</span>
-        {chosen && <>
-          <Stair item={item} core={core} />
-          <span className="visuals-beacon-chips">
-            <span>{item.gift_weight === undefined
-              ? item.visual.input ? source_labels[item.visual.input.source] : copy.not_routed
-              : `${item.gift_weight}× gift weighting`}</span>
-            <span>{item.visual.curve.decay.kind === 'none' ? copy.no_decay : copy.half_life(item.visual.curve.decay.half_life_s / 60)}</span>
-          </span>
-        </>}
       </button>;
     })}
   </div>;
@@ -95,6 +86,7 @@ export function BeaconPlates<T extends PlateVisual>({ visuals, selected, on_sele
         </span>
         <span className="visuals-plate-meta">{item.total === undefined ? copy.core_curve : `${item.total.toFixed(1)} ${copy.simulated_meta}`}</span>
         <span className="visuals-plate-foot">
+          {item.gift_weight !== undefined && <StatusChip variant="or">{`${item.gift_weight}× gift weighting`}</StatusChip>}
           <StatusChip variant="or">{item.visual.input ? source_labels[item.visual.input.source] : copy.not_routed}</StatusChip>
           <StatusChip variant="dash">{item.visual.curve.decay.kind === 'none' ? copy.no_decay : copy.half_life(item.visual.curve.decay.half_life_s / 60)}</StatusChip>
         </span>

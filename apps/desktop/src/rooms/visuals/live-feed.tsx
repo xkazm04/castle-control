@@ -15,7 +15,7 @@ export function LiveContributionFeed({ read, on_refresh, scroll_top = 0 }: {
     {read.phase === 'ready' ? <>
       <p>{read.items.length} recent contribution{read.items.length === 1 ? '' : 's'} · newest first. Refresh for current data.</p>
       <RuledFeed><WindowedRows rows={read.items} label="Live Beacons contribution events" row_key={event => event.event_id}
-        row_height={rowHeight * 1.5} scroll_top={scroll_top} empty_state="No live contributions in the core read.">
+        row_height={rowHeight * 4} scroll_top={scroll_top} empty_state="No live contributions in the core read.">
         {event => <div className="visuals-event-row" role="presentation" data-live-contribution-row={event.event_id}>
           <RuledRow layout="amount" mark={<b>{event.amount}</b>}
           {...(event.user_id !== undefined ? { detail: <span>user ID {event.user_id}</span> } : {})}>

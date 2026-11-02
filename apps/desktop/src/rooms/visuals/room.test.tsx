@@ -46,7 +46,7 @@ test('art outside the bays sits below the h2 configuration panel and its receipt
 });
 
 // C replaces the standalone figure and boxed tiers with literal radio plates and stair ramps.
-test('picker cards keep their inline stair ramps tracking the unchanged preview totals', () => {
+test('drawer comparison cards keep their stair ramps tracking the unchanged preview totals', () => {
   const style = readFileSync(new URL('./room.css', import.meta.url), 'utf8');
   expect(style).not.toContain('.visuals-board');
   expect(Number.parseFloat(tokens.layout['space-24'])).toBeGreaterThan(0);
@@ -57,8 +57,9 @@ test('picker cards keep their inline stair ramps tracking the unchanged preview 
   const before = markup();
   expect(before).toContain('<figcaption');
   expect(before).toContain('The kindling curve');
-  expect(before.match(/data-state="active"/g)).toHaveLength(4); // Selected tiers plus every beacon in the closed drawer.
-  const firstCard = (html: string) => html.match(/<button[^>]*role="radio"[\s\S]*?<\/button>/)?.[0] ?? '';
+  expect(before.match(/data-state="active"/g)).toHaveLength(3); // All tiers are in the drawer.
+  const firstCard = (html: string) => html.slice(html.indexOf('Every beacon, every tier'))
+    .match(/<button[^>]*role="radio"[\s\S]*?<\/button>/)?.[0] ?? '';
   expect(firstCard(before)).toContain('data-tier-start="10" data-state="active"');
   port.fire('gift', 50);
   const after = markup();

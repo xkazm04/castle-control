@@ -10,35 +10,50 @@ drawer. Program shows the existing selected fixture reading or saved core
 configuration, with no invented live totals.
 
 - Column 1: selected beacon, blaze, gauge, generated sample-night sparkline,
-  input/decay chips, existing fixture gift-sub weighting as a native slider,
-  test fire, replay and halve decay in one row. Theme and tune are in the drawer. Core retains its
-  unavailable-live-total message; its model has no gift-weight setting.
-- Column 2: stacked native radio selection with the selected beacon's four tiers
-  in one row and weighting/decay chips. Each other beacon is one line with its
-  name, percentage and Show in the picture. The compact list uses its own markup
-  so legacy comparison grid/readout rules cannot override it.
-- Drawer: every beacon and every tier, full draft fields, generated night
-  replay, bench, input/appearance controls, curve editor, local/core test fires,
-  browser-source copy, timeline, virtualized contribution feeds and original
-  seal slot. Core additionally retains configuration/art/live-feed tools.
+  existing fixture gift-sub weighting slider, Test fire and Replay a night.
+  Core retains its unavailable-live-total message and has no gift-weight setting.
+- Column 2: stacked native radios with name, percentage and selection state.
+  All existing key badges remain on the matching controls.
+- Drawer: the selected reading's kind/input/decay, sample-night consequence,
+  narration and notices; every beacon's tiers and weighting/decay chips;
+  Halve the decay (with its existing key), theme, tune, full draft fields,
+  replay, bench, input/appearance controls, editors, local/core test fires,
+  browser-source copy, timeline, virtualized feeds and original seal slot.
 
-Closed drawer tools are pre-rendered hidden and inert, as the old disclosure
-was. Opening presents them through the shared Drawer with focus return. No
-room-owned key badges, shell controls, shortcuts or live transports were added.
-All generated sample pictures, readings and replay data remain SIMULATED.
+The owner's 2026-11-02 decision is **15 px, move more into drawers**. Body copy,
+rows, form labels, controls, minis and drawer detail use `--text-px-15` at 1.45
+leading. Headings/stamps and keycaps retain their own label/figure scale, with
+no text under 13 px and stage text at least 15 px. `readability.css` is scoped
+only to Beacons. The stream picture, 70 px curve and shared layout are unchanged;
+section/readout gaps are 8 px and primary buttons have 8 px vertical padding.
+Closed drawer tools stay pre-rendered hidden and inert as before. Contribution
+feeds use 128 px virtual rows and the core configuration list uses 192 px rows
+so the larger text can wrap without being cut off; virtualization is retained.
 
-`deck.test.tsx` exercises the real fixture/core frame, two columns, minis,
-drawer opening/closing, reachable tools and existing weighting/decay handlers.
-`room.test.tsx` and `plates.test.tsx` retain comparison, draft, tier and workbench
-coverage at their new locations. `e2e/journey-beacons.spec.ts` updates the room
-selectors, keeps all existing journeys, and adds 1280x720 / 1366x768 fit and
-full-tier drawer checks. Review 1 adds checks for all three selections, vertical
-stacking, one-row tiers/actions, compact text and shell-content overflow against
-fixed 1240x470 / 1326x520 allocations, leaving the old builder shell CSS loaded.
-The primary curve is 70 px and weighting stays on one line. Browser-host access
-was unavailable; the focused Playwright runner failed at `spawn EPERM` before
-launch. No new browser measurements are claimed; the integrated shell still
-requires a Director run.
+Computed conservative budget for the selected section (CSS px):
+
+| Part | Height |
+| --- | ---: |
+| Readout: two-line 22 px name, 32 px blaze, 12 px gauge, two-line 15 px total, 70 px curve, four 8 px gaps | 237.90 |
+| Small-caps section heading | 16.90 |
+| Section padding/borders and three 8 px gaps | 49.00 |
+| Weighting slider: 21.75 px line, 8 px top/bottom padding, borders | 39.75 |
+| Two possible primary-action rows with 21.75 px text, 8 px top/bottom padding, borders and row gap | 87.50 |
+| Shared grid top/bottom padding | 22.00 |
+| **Total** | **453.05** |
+
+This leaves about 17 px within the 470 px budget at 1280x720, or about 67 px
+within 520 px at 1366x768. The compact list is about 335 px including the grid
+padding (three two-line rows, one larger selected name, list/section gaps,
+heading and drawer trigger). Core omits the 39.75 px weighting row. These are
+computed bounds for existing fixture names/readings, not browser measurements.
+
+`deck.test.tsx` asserts the real fixture/core frame, body-size policy, preserved
+key badges, moved content reachable in the drawer, and weighting/decay handlers.
+`room.test.tsx` retains tier/accounting coverage on the drawer comparison.
+The room journey spec checks the integrated shell at both viewport sizes,
+all selections, 15 px / 1.45 body, drawer tiers and moved reading details.
+
 
 ## Illuminated picture and Steward flows (night UX, 2026-11-02)
 

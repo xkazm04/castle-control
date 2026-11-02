@@ -28,16 +28,10 @@ async function holdToSeal(page: Page, done: RegExp) {
 }
 const openMore = (page: Page) => page.getByRole('button', { name: 'More of the beacons', exact: true }).click();
 
-test('Beacons chamber fits fixed compact room budgets and opens every tier in its drawer', async ({ page }) => {
+test('Beacons chamber fits the integrated room at readable body size and opens every tier in its drawer', async ({ page }) => {
   for (const viewport of [{ width: 1280, height: 720 }, { width: 1366, height: 768 }]) {
     await page.setViewportSize(viewport);
     await page.goto('/#/chamber/visuals');
-    // Isolate this package's allocation from the older shell on the builder base.
-    // The Director separately measures the integrated WP1 shell. Keep its CSS loaded.
-    await page.locator('.shell-room-content').evaluate((element, height) => {
-      Object.assign((element as HTMLElement).style, { position: 'fixed', left: '20px', top: '0',
-        width: 'calc(100vw - 40px)', height: `${height}px`, zIndex: '10' });
-    }, viewport.height === 720 ? 470 : 520);
     const room = page.locator('.visuals-room');
     await expect(room.locator('[data-role="room-picture"]')).toHaveCount(1);
     await expect(room.locator('.cc-chamber-column')).toHaveCount(2);
@@ -55,8 +49,10 @@ test('Beacons chamber fits fixed compact room budgets and opens every tier in it
           frame_scroll: !!frame && (frame.scrollHeight > frame.clientHeight + 1 || frame.scrollWidth > frame.clientWidth + 1),
           scroll: element.scrollHeight > element.clientHeight + 1 || element.scrollWidth > element.clientWidth + 1,
           stacked: beacons.every((beacon, index) => index === 0 || beacon.top >= (beacons[index - 1]?.bottom ?? 0)),
-          tiers_one_row: tiers.length === 4 && tiers.every(tier => tier.top === tiers[0]?.top),
-          actions_one_row: actions.length === 3 && actions.every(action => action.top === actions[0]?.top),
+          tiers_in_drawer: tiers.length === 0,
+          actions_one_row: actions.length === 2 && actions.every(action => action.top === actions[0]?.top),
+          readable_body: [...element.querySelectorAll<HTMLElement>('.visuals-stage__total, .visuals-weight, .visuals-beacon-state, .visuals-primary-actions button, .cc-chamber-mini p')]
+            .every(node => getComputedStyle(node).fontSize === '15px' && getComputedStyle(node).lineHeight === '21.75px'),
           compact_text: [...element.querySelectorAll('.visuals-beacon-blaze, .visuals-beacon[aria-checked="false"] > span')]
             .every(node => node.getBoundingClientRect().height <= 24),
           columns_fit: columns.every(column => column.bottom <= bounds.bottom + 1 && column.right <= bounds.right + 1),
@@ -72,8 +68,9 @@ test('Beacons chamber fits fixed compact room budgets and opens every tier in it
       expect(fit.frame_scroll).toBe(false);
       expect(fit.scroll).toBe(false);
       expect(fit.stacked).toBe(true);
-      expect(fit.tiers_one_row).toBe(true);
+      expect(fit.tiers_in_drawer).toBe(true);
       expect(fit.actions_one_row).toBe(true);
+      expect(fit.readable_body).toBe(true);
       expect(fit.compact_text).toBe(true);
       expect(fit.columns_fit).toBe(true);
       expect(fit.text_fits).toBe(true);
@@ -84,6 +81,8 @@ test('Beacons chamber fits fixed compact room budgets and opens every tier in it
     const drawer = page.getByRole('dialog', { name: 'More of the beacons' });
     await expect(drawer.getByRole('radio')).toHaveCount(3);
     await expect(drawer.locator('.visuals-stair-step')).toHaveCount(12);
+    await expect(drawer.locator('.visuals-stage__tags')).toBeVisible();
+    await expect(drawer.getByRole('button', { name: /Halve the decay/ })).toBeVisible();
     await expect(drawer.getByRole('form', { name: 'Kindling curve editor' })).toBeVisible();
     await page.getByRole('button', { name: 'Close More of the beacons', exact: true }).click();
     await expect(drawer).toHaveCount(0);
@@ -123,8 +122,9 @@ test('Beacons: the picture is the live beacon; Tune a beacon drafts into it and 
   await page.getByRole('button', { name: 'Close More of the beacons', exact: true }).click();
   await holdToSeal(page, /Sealed\. The Gilded camera frame now answers eager/);
   await expect(picture).toHaveAttribute('data-mode', 'rest');
-  await expect(page.getByRole('group', { name: 'Room sections 1', exact: true }).locator('.visuals-stage__tags')).toContainText('subscriptions');
-  await expect(page.getByRole('group', { name: 'Room sections 1', exact: true }).locator('.visuals-stage__tags')).toContainText('Halves every 15 min');
+  await openMore(page);
+  await expect(page.getByRole('dialog').locator('.visuals-stage__tags')).toContainText('subscriptions');
+  await expect(page.getByRole('dialog').locator('.visuals-stage__tags')).toContainText('Halves every 15 min');
   await auditStyles(page, desktopSurfaces);
 });
 

@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { ChamberLayout, ChamberSection, Drawer } from '@castle-control/ui/chamber';
 import './deck.css';
+import './readability.css';
 
 /** Common frame for fixture and core; every slot uses its room's existing data. */
 export function BeaconDeck({ picture, reading, preview, program, picker, weighting, actions, drawer,
