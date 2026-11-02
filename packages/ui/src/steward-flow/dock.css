@@ -65,8 +65,8 @@
 .cc-steward__live { font: 800 var(--t-label, var(--text-label))/1 var(--sd-font-label); letter-spacing: .1em; text-transform: lowercase; color: var(--gules-ink, var(--gules-text)); }
 
 /* ---- talk */
-.cc-steward-dock .cc-talk { display: grid; align-content: center; gap: 8px; padding: 10px 22px; min-width: 0; }
-.cc-steward-dock .cc-talk__msg { font: italic 400 var(--t-body, var(--text-number))/1.35 var(--sd-font-book); color: var(--sd-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cc-steward-dock .cc-talk { display: grid; align-content: center; gap: 6px; padding: 6px 22px; min-width: 0; }
+.cc-steward-dock .cc-talk__msg { font: italic 400 var(--t-body, var(--text-number))/1.35 var(--sd-font-book); color: var(--sd-ink); text-wrap: pretty; line-height: 1.25; }
 .cc-steward-dock .cc-talk__msg[data-busy] { color: var(--sd-muted); }
 .cc-steward-dock .cc-talk__row { display: flex; gap: 10px; align-items: center; min-width: 0; }
 .cc-steward-dock .cc-talk__row > .cc-input { flex: 1; min-width: 160px; }

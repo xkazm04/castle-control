@@ -17,7 +17,7 @@ function byPhase(setup: AnyStewardFlow, cast: AnyStewardFlow, prove: AnyStewardF
 /** Core mode: the greeting names the first step the core's draws need. */
 function coreGreeting(): string {
   const live = lotLive.get();
-  if (!live.draws.length) return 'The Lot Chamber on your core: no draw yet. Set up a draw creates one in a few small steps; Play demo shows a fair draw in a SIMULATED sandbox first. Nothing acts until you hold to seal.';
+  if (!live.draws.length) return 'The Lot Chamber on your core: no draw yet. Set up a draw in a few small steps, or play the demo in a SIMULATED sandbox first. Nothing acts until you hold to seal.';
   const name = live.draw?.name ?? 'your draw';
   return live.phase === 'cast' ? `The Lot Chamber on your core: ${name} is cast. Prove it, or set up the next draw.`
     : live.phase === 'sealed' ? `The Lot Chamber on your core: ${name} is sealed. Cast the lots once its public round arrives.`

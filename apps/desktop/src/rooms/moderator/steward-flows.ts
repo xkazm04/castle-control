@@ -33,7 +33,7 @@ export function moderatorSteward(snapshot: Snapshot): ChamberSteward {
     hints: [{ phrases: ['ban', 'timeout', 'kick'],
       say: 'I never ban from a sentence. A ban starts on a line the gate flagged: choose Propose ban on it in the Gatehouse, then hold to seal. Set the rules decides what gets flagged.' }] };
   if (snapshot.mode !== 'fixture') return { ...base, flows: [voteBarFlow(snapshot), drillFlow(snapshot)], demo: coreDemoFlow,
-    greeting: 'The Gatehouse on your core: the gate reads chat in shadow and the herald counts what chat asks for. Show the vote bar puts it on stream; Play demo shows a held line and your decision in a SIMULATED sandbox first. Nothing acts until you hold to seal.',
+    greeting: 'The Gatehouse on your core: the gate reads chat in shadow, the herald counts what chat asks for. Show the vote bar, or play the demo in a SIMULATED sandbox. Nothing acts until you hold to seal.',
     catch_up: () => coreCatchUp(snapshot) };
   return {
     ...base,
