@@ -10,7 +10,7 @@ import { TileInspector } from './hex-table.jsx';
 import SealSlot from '../seal-slot/index.jsx';
 
 test('fixture studio shows all 54 hexes and the local-only test ladder', () => {
-  const html = renderToStaticMarkup(<Room snapshot={{ mode: 'fixture', phase: 'ready' }} />);
+  const html = renderToStaticMarkup(<StudioWork />);
   expect(fixtureTiles).toHaveLength(54);
   expect(html.match(/data-hex-tile=/g)).toHaveLength(54);
   for (const text of ['9 × 6', 'Sand table', 'Muster', 'Proclaimed']) expect(html).toContain(text);
@@ -127,7 +127,7 @@ test('C keeps ink text large, fits all six rows and delegates locked/current car
   expect(field).toContain('var(--x)'); expect(field).toContain('var(--y)');
   expect(field).not.toMatch(/16\.46|9\.52|9\.5|data-row-offset/);
   expect(css).not.toContain('data-house="House');
-  expect(renderToStaticMarkup(<Room snapshot={{ mode: 'fixture', phase: 'ready' }} />)).toContain('--board-w:9.5;--board-h:9.5');
+  expect(renderToStaticMarkup(<StudioWork />)).toContain('--board-w:9.5;--board-h:9.5');
   expect(field).toContain('var(--space-4) var(--space-4) 0 var(--key)');
   expect(css + field).not.toMatch(/#[\da-f]{3,8}\b|\brgba?\(|\bhsla?\(|\b\d+(?:\.\d+)?px\b/i);
   expect(css).toContain('--house-shadow: var(--hair)');
@@ -161,7 +161,7 @@ test('C draft and the unchanged shared slot have exactly one hold control', asyn
   expect(queue.pending('studio')).toHaveLength(1);
 });
 
-test('default module loads lazily with no network or submission action', async () => {
+test('default module loads lazily, opens on the duel and offers no network or submission action', async () => {
   const network = vi.spyOn(globalThis, 'fetch');
   try {
     const LazyRoom = lazy(() => import('./room.jsx'));
@@ -170,7 +170,12 @@ test('default module loads lazily with no network or submission action', async (
     </Suspense>);
     await stream.allReady;
     const html = await new Response(stream).text();
-    expect(html).toContain('The room awaits Twitch’s answer on the Extension policy. It makes no network call and cannot advance the test stage.');
+    // The Map Room opens on the duel; the sand table is a local demo behind More.
+    expect(html).toContain('aria-label="The duel stage"');
+    expect(html).toContain('Raze the mill');
+    expect(html).toContain('Ready · vote not open');
+    expect(html).toContain('aria-haspopup="menu"');
+    expect(html).not.toContain('data-hex-tile');
     expect(html).not.toContain('WP 4.0');
     expect(html).not.toContain('\u2014');
     expect(html).not.toContain('Submit');

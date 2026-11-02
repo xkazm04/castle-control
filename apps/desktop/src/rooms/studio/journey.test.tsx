@@ -1,10 +1,10 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { expect, test } from 'vitest';
-import Room from './room.jsx';
+import { StudioWork } from './room.jsx';
 import { TileInspector } from './hex-table.jsx';
 
 test('local studio exposes labelled session-only map fields, art preview and banner inspection', () => {
-  const html = renderToStaticMarkup(<Room snapshot={{ mode: 'fixture', phase: 'ready' }} />);
+  const html = renderToStaticMarkup(<StudioWork />);
   for (const label of ['Map size', 'Map anchor', 'Preset colour', 'Art style', 'Reveal timing (ms)',
     'Session-only map preview', 'Inspect House Tallow banner',
     'Replay local reveal', 'Reset local design']) expect(html).toContain(label);

@@ -199,3 +199,25 @@ src/ballot-feed.test.ts --pool=threads --reporter=verbose --silent=false`.
 Root hygiene is checked with `node scripts/check.mjs`; production budgets with
 the desktop package's `build` command. Browser fidelity/e2e and a real-core
 session remain for the Director; no such verification is claimed here.
+
+## Night UX (W4): duel-first Map Room
+
+The Map Room now opens on the duel. `duel-stage.tsx` draws one `DuelPicture`
+(`duel-model.ts`) whatever runs it: the FIXTURE TS engine (`duel-fixture.ts`,
+a module store with generated SIMULATED ballots whose clock runs only while the
+stage is on screen), the core snapshot (`corePicture`, derived labels only; the
+core still decides every transition through `maproom.turn.run`), or a Steward
+draft (`draftPicture`, marked DRAFT, controls frozen). The stage shows one match,
+the counted tally, the timer and the streamer's actions with their keys; a
+compact strip shows where the tournament stands and **Full bracket** opens the
+whole tree in a dialog. Showdown, Ladder, the sand table, Spyglass and Rehearse
+are local demos behind **More**.
+
+Setup is in the Steward (`steward-flows.ts`): **Start a duel** (SAMPLE list or
+your own 2/4/8 entries, seeding, window, preview on the stage, hold to seal;
+core seals send the start action through the mounted adapter via `duel-host.ts`),
+**Duel on stream** (copy the core's browser-source URL, or open Stream setup) and
+**Play demo** (four sample contestants at three times speed, SIMULATED). The
+empty core stage keeps a direct **Start sample tournament**. Data roles moved
+from `ty-core-*` to `ty-count-left/right`, `ty-match-label`, `ty-verdict`; the
+night spec is updated accordingly and awaits the Director's run.

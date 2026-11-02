@@ -1,17 +1,10 @@
 .studio-room { --room-ink: var(--key); color: var(--ink); font: 400 var(--text-body)/1.45 var(--font-ui); }
-.studio-room.cc-herald {
-  height: 100%; min-height: 0; display: grid;
+.studio-room { display: flex; flex-direction: column; gap: var(--space-12); min-height: 100%; padding: var(--space-14) var(--space-20) var(--space-20); }
+.studio-room:has(> .studio-sand) { height: 100%; padding-bottom: 0; }
+.studio-sand.cc-herald {
+  flex: 1; min-height: 0; display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(calc(var(--space-56) * 6), 33%);
 }
-.studio-room.cc-herald[data-view="tiltyard"] {
-  height: auto; min-height: 100%; grid-template-columns: minmax(0, 1fr);
-}
-.studio-room[data-view="tiltyard"] .cc-herald-side {
-  overflow: visible; border-left: 0; border-top: var(--rule-medium) solid var(--rule);
-}
-.studio-room[data-view="tiltyard"] .studio-view-switch { align-items: center; padding-bottom: var(--space-12); }
-.studio-room .studio-tiltyard-note { color: var(--muted); font: italic var(--text-small)/1.4 var(--font-serif); }
-.studio-room .studio-tiltyard-sample { margin-left: auto; color: var(--muted); font: 700 var(--text-label)/1.4 var(--font-ui); }
 :where(.studio-room) :is(p, h2, h3, ul) { margin: 0; }
 .studio-room [data-house] { --house: var(--paper-2); --house-shadow: var(--house); --house-press: var(--press); }
 .studio-room [data-ink="gules"] { --house: var(--gules); }
@@ -92,16 +85,14 @@
    non-shrinking height: the token radius keeps sample hex widths above tap size.
    The room scrollport handles the extra height; Spyglass keeps its source sizes. */
 @media (max-height: 50rem) {
-  .studio-room > [data-studio-view]:not([data-studio-view="tiltyard"]) {
+  .studio-sand > [data-studio-view] {
     height: calc(var(--space-56) * 10); min-height: calc(var(--space-56) * 10);
   }
-  .studio-room > [data-studio-view="table"] > .cc-herald-field,
+  .studio-sand > [data-studio-view="table"] > .cc-herald-field,
   .studio-room .studio-rehearse > .cc-herald-field { flex: none; }
-  .studio-room > [data-studio-view="table"] > .cc-herald-field > .cc-hexfield,
+  .studio-sand > [data-studio-view="table"] > .cc-herald-field > .cc-hexfield,
   .studio-room .studio-rehearse > .cc-herald-field > .cc-hexfield {
     flex: none; height: calc(var(--fit-h) * var(--space-28) + var(--space-6));
   }
-  .studio-room > [data-studio-view="spyglass"] > .studio-spyglass { flex: 1; }
+  .studio-sand > [data-studio-view="spyglass"] > .studio-spyglass { flex: 1; }
 }
-.studio-core-duel { border: 0; margin: 0; padding: 0; min-width: 0; }
-.studio-core-duel > legend { font-size: var(--text-small); color: var(--cream); padding: var(--space-8) var(--space-16); }

@@ -1,0 +1,171 @@
+/* The duel stage, Illuminated direction: one match on a vellum folio, a compact
+   bracket strip, the full bracket on demand. Reads fused tokens only. */
+.duel {
+  /* Heraldic inks for the generated arms (the shared Shield reads these names). */
+  --ty-parchment-ink: var(--key-deep); --ty-parchment-top: var(--on-lead); --ty-arms-vert: var(--emerald);
+  --duel-left: var(--azure); --duel-left-ink: var(--azure-ink); --duel-right: var(--gules); --duel-right-ink: var(--gules-ink);
+  position: relative; display: grid; gap: 12px; min-width: 0; padding: 0 22px 16px; color: var(--ink);
+  background-color: var(--vellum); background-image: var(--tex-vellum-fibre), var(--tex-vellum-grain);
+  border: var(--came) solid var(--lead); outline: 1px solid var(--hair); outline-offset: -7px; box-shadow: var(--shadow-lift);
+}
+.duel::before {
+  content: ""; display: block; height: 5px; margin: 0 -22px; border-bottom: 1px solid var(--lead);
+  background: linear-gradient(90deg, var(--ch-deep), var(--ch) 22%, var(--ch) 78%, var(--ch-deep));
+}
+.duel:focus { outline: 1px solid var(--hair); }
+.duel:focus-visible { outline: 2px solid var(--focus); outline-offset: -7px; }
+.duel :is(h2, h3, p) { margin: 0; }
+/* A Steward draft: the sheet covers the lower chamber, so the drafted first match sits in one compact row above it. */
+.duel[data-draft] .duel__field { grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 12px; }
+.duel[data-draft] .duel-card { flex-direction: row; flex-wrap: wrap; justify-content: center; gap: 4px 12px; padding: 8px 12px; border-top-width: 4px;
+  background: repeating-linear-gradient(-45deg, var(--surface), var(--surface) 10px, var(--surface-2) 10px, var(--surface-2) 20px); }
+.duel[data-draft] .duel-card__arms { width: 40px; }
+.duel[data-draft] .duel-card__title { font-size: var(--text-t-h4); }
+.duel[data-draft] :is(.duel-card__note, .duel-card__act, .duel__actions, .duel__phase, .duel-tally, .duel__minor) { display: none; }
+.duel[data-draft] .duel__clock { display: none; }
+
+.duel__head { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 18px; padding: 6px 0 10px; border-bottom: 1px solid var(--hair); }
+.duel__heading { display: grid; gap: 2px; min-width: 0; flex: 0 1 auto; }
+.duel__title { font: italic 500 var(--text-t-h4)/1.2 var(--font-book); color: var(--ink); }
+.duel__marks { display: flex; align-items: center; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+.duel__banner, .duel__notices p {
+  display: flex; align-items: center; gap: 10px; padding: 6px 12px; border-left: 3px solid var(--or);
+  background: var(--surface-2); font: italic 400 var(--text-t-small)/1.35 var(--font-book); color: var(--ink-2);
+}
+.duel__notices { display: grid; gap: 4px; }
+.duel__notices p[role="alert"] { border-left-color: var(--danger); color: var(--ink); font-style: normal; }
+
+/* ------------------------------------------------------------ bracket strip */
+.duel-strip { display: flex; align-items: center; gap: 12px; flex: 1 1 22rem; justify-content: center; min-width: 0; padding: 6px 12px;
+  border-inline: 1px solid var(--hair); }
+.duel-strip__rounds { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 10px; margin: 0; padding: 0; list-style: none; min-width: 0; }
+.duel-strip__round { display: flex; align-items: center; gap: 8px; color: var(--muted); }
+.duel-strip__round + .duel-strip__round::before { content: "›"; color: var(--faint); font: 700 var(--text-t-body)/1 var(--font-text); }
+.duel-strip__name { font: 800 var(--text-t-label)/1 var(--font-label); letter-spacing: .1em; text-transform: lowercase; }
+.duel-strip__round[data-here] { color: var(--ch-ink); }
+.duel-strip__pips { display: inline-flex; gap: 6px; }
+.duel-pip { width: 10px; height: 10px; transform: rotate(45deg); border: 1.5px solid var(--faint); }
+.duel-pip[data-state="done"] { background: var(--ink-2); border-color: var(--ink-2); }
+.duel-pip[data-state="current"] { background: var(--gules); border-color: var(--lead); box-shadow: 0 0 0 3px var(--gules-wash), 0 0 calc(var(--glow-on) * 10px) var(--gules-glow); }
+.duel-strip__crown b { font: italic 600 var(--text-t-small)/1 var(--font-book); color: var(--ink); }
+.duel-strip__open { flex: none; }
+
+/* ------------------------------------------------------------ the match */
+.duel__field { display: grid; grid-template-columns: minmax(0, 1fr) minmax(200px, auto) minmax(0, 1fr); gap: 18px; align-items: stretch; padding-top: 2px; }
+.duel-card {
+  --side: var(--duel-left); --side-ink: var(--duel-left-ink);
+  position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 0;
+  padding: 10px 14px 12px; text-align: center; background: var(--surface);
+  border: 1.5px solid var(--lead); border-top: 6px solid var(--side); box-shadow: var(--shadow);
+  transition: opacity var(--m-fast) var(--ease), filter var(--m-fast) var(--ease);
+}
+.duel-card[data-side="1"] { --side: var(--duel-right); --side-ink: var(--duel-right-ink); }
+.duel-card__seed { font: 800 var(--text-t-label)/1 var(--font-label); letter-spacing: .1em; text-transform: lowercase; color: var(--side-ink); }
+.duel-card__arms { display: block; width: clamp(56px, 6vw, 92px); }
+.duel-card__arms svg { display: block; width: 100%; height: auto; filter: drop-shadow(0 2px 0 var(--hair-2)); }
+.duel-card__title { font: 600 var(--text-t-h2)/1.02 var(--font-display); color: var(--ink); overflow-wrap: anywhere; }
+.duel-card__note { font: italic 400 var(--text-t-small)/1.3 var(--font-book); color: var(--muted); }
+.duel-card[data-result="lost"] { opacity: .5; filter: grayscale(.7); }
+.duel-card[data-result="won"] { box-shadow: 0 0 0 3px var(--gilt-mid), var(--shadow-lift); }
+.duel-card__stamp { position: absolute; top: 14px; right: 10px; }
+.duel-card__act { display: flex; justify-content: center; width: 100%; margin-top: auto; padding-top: 8px; }
+.duel-card__act .duel-act { width: 100%; max-width: 22rem; }
+
+.duel__centre { display: grid; justify-items: center; align-content: center; gap: 4px; text-align: center; padding: 0 4px; }
+.duel__match { font: 800 var(--text-t-label)/1.2 var(--font-label); letter-spacing: .1em; text-transform: lowercase; color: var(--muted); }
+.duel__clock { font: 600 var(--text-t-figure-lg)/1 var(--font-display); color: var(--gules-ink); font-variant-numeric: tabular-nums; min-width: 2ch; }
+.duel__clock:not([data-phase="live"]) { color: var(--muted); }
+.duel__crown[data-phase="verdict"] { width: 44px; height: 44px; }
+.duel__crown { width: 64px; height: 64px; background: var(--gilt); -webkit-mask: var(--glyph-cup) center / contain no-repeat; mask: var(--glyph-cup) center / contain no-repeat; }
+.duel__phase { font: 800 var(--text-t-label)/1.2 var(--font-label); letter-spacing: .1em; text-transform: lowercase; color: var(--ink-2); }
+.duel[data-phase="live"] .duel__phase { color: var(--gules-ink); }
+.duel__verdict { max-width: 22ch; font: italic 700 var(--text-t-body)/1.25 var(--font-book); color: var(--ink); }
+
+/* ------------------------------------------------------------ the tally */
+.duel-tally { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 4px 14px; }
+.duel-tally__count { font: 600 var(--text-t-figure-sm)/1 var(--font-display); color: var(--duel-left-ink); min-width: 2ch; text-align: right; font-variant-numeric: tabular-nums; }
+.duel-tally__count[data-side="1"] { color: var(--duel-right-ink); text-align: left; }
+.duel-tally__bar { position: relative; display: flex; height: 28px; overflow: hidden; border: var(--came) solid var(--lead); border-radius: var(--r); background: var(--surface-3); }
+.duel-tally__bar > span { display: flex; align-items: center; min-width: 0; padding: 0 10px; color: var(--on-glass);
+  font: 800 var(--text-t-label)/1 var(--font-label); letter-spacing: .08em; transition: flex-grow .45s var(--ease); }
+.duel-tally__l { background: var(--duel-left); }
+.duel-tally__r { justify-content: flex-end; background: var(--duel-right); }
+.duel-tally__bar[data-empty] > span { background: transparent; }
+.duel-tally__mid { position: absolute; left: 50%; top: -2px; bottom: -2px; border-left: 2px dashed var(--lead); }
+.duel-tally__legend { grid-column: 1 / -1; display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 18px;
+  font: 400 var(--text-t-small)/1.3 var(--font-text); color: var(--muted); }
+.duel-tally__legend b { color: var(--ink); }
+
+/* ------------------------------------------------------------ the streamer's actions */
+.duel__actions { display: grid; justify-items: stretch; gap: 8px; margin-top: 8px; width: 100%; }
+.duel-act { height: var(--control-h-lg); padding: 0 20px; font-size: var(--text-px-15-5); }
+.duel-act--call[data-action="left"] { box-shadow: inset 0 -5px 0 var(--duel-left); }
+.duel-act--call[data-action="right"] { box-shadow: inset 0 -5px 0 var(--duel-right); }
+.duel-act--quiet { background: transparent; }
+.duel-act span { max-width: 22ch; overflow: hidden; text-overflow: ellipsis; }
+.duel__minor { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; margin-top: -6px; }
+.duel__minor .cc-kbd { height: 20px; }
+
+.duel__empty { padding: 18px 0 8px; }
+.duel-empty { display: grid; gap: 12px; max-width: 64ch; font: 400 var(--text-t-body)/1.5 var(--font-book); color: var(--ink-2); }
+.duel-empty__title { font: 600 var(--text-t-h2)/1.05 var(--font-display); color: var(--ink); }
+.duel-empty__fine { font: italic 400 var(--text-t-small)/1.4 var(--font-book); color: var(--muted); }
+
+/* ------------------------------------------------------------ full bracket */
+.duel-sheet-scrim { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; padding: 24px; background: var(--scrim); }
+.duel-sheet {
+  display: grid; gap: 14px; width: min(1100px, 100%); max-height: calc(100vh - 48px); overflow: auto; padding: 18px 22px 20px;
+  background-color: var(--vellum); background-image: var(--tex-vellum-fibre), var(--tex-vellum-grain);
+  border: var(--came) solid var(--lead); box-shadow: var(--shadow-lift);
+}
+.duel-sheet:focus-within { outline: none; }
+.duel-sheet__head { display: flex; align-items: baseline; flex-wrap: wrap; gap: 6px 14px; }
+.duel-sheet__title { font: 600 var(--text-t-h2)/1 var(--font-display); color: var(--ink); }
+.duel-sheet__prompt { font: italic 400 var(--text-t-body)/1.3 var(--font-book); color: var(--muted); }
+.duel-sheet__head .cc-btn { margin-left: auto; }
+.duel-sheet__tree { display: grid; gap: 16px; align-items: stretch; }
+.duel-sheet__col { display: grid; grid-template-rows: auto 1fr; gap: 8px; min-width: 0; }
+.duel-sheet__col h3 { font: 800 var(--text-t-label)/1.2 var(--font-label); letter-spacing: .1em; text-transform: lowercase; color: var(--ch-ink); }
+.duel-sheet__matches { display: flex; flex-direction: column; justify-content: space-around; gap: 8px; }
+.duel-sheet__match { border: 1.5px solid var(--lead); background: var(--surface); }
+.duel-sheet__match[data-state="current"] { box-shadow: 0 0 0 3px var(--gules), 0 0 calc(var(--glow-on) * 12px) var(--gules-glow); }
+.duel-sheet__row { display: flex; align-items: center; gap: 8px; min-width: 0; padding: 5px 8px; font: 500 var(--text-t-small)/1.2 var(--font-text); color: var(--ink-2); }
+.duel-sheet__row + .duel-sheet__row { border-top: 1px solid var(--hair); }
+.duel-sheet__row > span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.duel-sheet__row[data-won] { color: var(--ink); font-weight: 800; }
+.duel-sheet__row[data-lost] { color: var(--muted); text-decoration: line-through; text-decoration-color: var(--faint); }
+.duel-sheet__seed { flex: none; width: 1.6em; text-align: center; font: 800 var(--text-t-label)/1 var(--font-label); color: var(--muted); }
+.duel-sheet__champ p { align-self: center; justify-self: center; padding: 10px 14px; text-align: center; border: 2px solid var(--gilt-mid);
+  background: var(--surface); font: 600 var(--text-t-h4)/1.1 var(--font-display); color: var(--ink); }
+.duel-sheet__note { display: flex; align-items: center; gap: 10px; font: italic 400 var(--text-t-small)/1.3 var(--font-book); color: var(--muted); }
+
+/* ------------------------------------------------------------ room chrome: More, away bar, Steward seeds */
+.studio-more { position: relative; }
+.studio-more__menu {
+  position: absolute; right: 0; top: calc(100% + 6px); z-index: 40; display: grid; gap: 2px; width: 320px; padding: 6px;
+  background: var(--surface); border: var(--came) solid var(--lead); box-shadow: var(--shadow-lift);
+}
+.studio-more__item { display: grid; gap: 2px; padding: 8px 10px; text-align: left; border: 0; border-left: 3px solid transparent; background: transparent; color: var(--ink); cursor: pointer; }
+.studio-more__item:hover, .studio-more__item:focus-visible { background: var(--surface-2); }
+.studio-more__item[aria-current] { border-left-color: var(--ch); }
+.studio-more__item b { font: 800 var(--text-t-small)/1.2 var(--font-label); letter-spacing: .08em; text-transform: lowercase; }
+.studio-more__item span { font: 400 var(--text-t-small)/1.3 var(--font-text); color: var(--muted); }
+.studio-more__fine { display: flex; align-items: center; gap: 8px; margin: 4px 0 0; padding: 8px 10px 4px; border-top: 1px solid var(--hair);
+  font: italic 400 var(--text-t-small)/1.3 var(--font-book); color: var(--muted); }
+.studio-away { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; }
+.studio-away__name { font: 600 var(--text-t-h4)/1 var(--font-display); color: var(--ink); }
+.studio-away__line { font: italic 400 var(--text-t-small)/1.3 var(--font-book); color: var(--muted); }
+.studio-away .studio-more { margin-left: auto; }
+.studio-duel-seal { display: grid; }
+.duel-flow-seeds { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2px 18px; margin: 0; padding: 0; list-style: none;
+  font: 400 var(--text-t-small)/1.35 var(--font-book); color: var(--ink-2); }
+.duel-flow-seeds b { display: inline-block; width: 1.6em; font: 800 var(--text-t-label)/1 var(--font-label); color: var(--muted); }
+
+@media (max-width: 1100px) {
+  .duel { padding-inline: 16px; }
+  .duel::before { margin-inline: -16px; }
+  .duel__field { gap: 12px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .duel-tally__bar > span, .duel-card { transition: none; }
+}

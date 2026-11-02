@@ -37,7 +37,7 @@ test('compact sizing binds the rendered active view and the Table/Rehearse query
   const compact = css.slice(css.indexOf('@media (max-height: 50rem)'));
   expect(compact).toContain('height: calc(var(--space-56) * 10); min-height: calc(var(--space-56) * 10)');
   const field = compact.match(/([^{}]+)\{\s*flex: none; height: calc\(var\(--fit-h\)[^}]+\}/);
-  expect(field?.[1]).toContain('.studio-room > [data-studio-view="table"] > .cc-herald-field > .cc-hexfield');
+  expect(field?.[1]).toContain('.studio-sand > [data-studio-view="table"] > .cc-herald-field > .cc-hexfield');
   expect(field?.[1]).toContain('.studio-room .studio-rehearse > .cc-herald-field > .cc-hexfield');
   expect(field?.[0]).toContain('height: calc(var(--fit-h) * var(--space-28) + var(--space-6))');
   expect(compact).toContain('[data-studio-view="spyglass"] > .studio-spyglass { flex: 1; }');

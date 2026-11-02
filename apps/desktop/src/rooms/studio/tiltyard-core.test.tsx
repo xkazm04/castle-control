@@ -58,16 +58,16 @@ function harness() {
   return { client, connection, model, sockets, socket, rpc, emit };
 }
 
-test('core room renders the controlled Chat stage, local mode disclosure and source action; retains the seal', async () => {
+test('core room opens on the empty duel stage with Steward and sample starts, source action and the seal', async () => {
   const h = harness();
   const stream = await renderToReadableStream(<Room snapshot={h.client.getSnapshot()} seal_slot={<p>Shared seal slot</p>} />);
   await stream.allReady;
   const html = await new Response(stream).text();
-  expect(html).toContain('aria-label="The Tiltyard, duel stage"');
-  expect(html).toContain('No Chat tournament started');
-  expect(html).toContain('SAMPLE starter contestants · Gatehouse ballots counted by the core · Shared with OBS.');
-  expect(html).toContain('Showdown and Ladder are local demos');
-  expect(html).toContain('Duel on stream'); expect(html).toContain('Shared seal slot');
+  expect(html).toContain('aria-label="The duel stage"');
+  expect(html).toContain('No duel on the core yet');
+  expect(html).toContain('Start a duel…'); expect(html).toContain('Start sample tournament');
+  expect(html).toContain('The sample uses SAMPLE starter contestants. Showdown and Ladder under More are local demos.');
+  expect(html).toContain('Duel on stream · Copy browser source URL'); expect(html).toContain('Shared seal slot');
   expect(html).not.toContain('data-hex-tile='); expect(html).not.toContain('data-role="ty-ticker"');
   expect(h.socket).toHaveBeenCalledTimes(1);
 });
