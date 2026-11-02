@@ -1,5 +1,5 @@
 .keep-tracery { position: absolute; z-index: 2; left: 50%; top: 7%; width: 46%; max-width: calc(var(--space-30) * 5); transform: translateX(-50%); color: var(--on-glass); opacity: .6; pointer-events: none; }
-.keep-scene { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
+.keep-scene { position: absolute; inset: 0; z-index: 5; filter: drop-shadow(0 var(--space-6) var(--space-10) color-mix(in srgb, var(--stone) 70%, transparent)); pointer-events: none; }
 .keep-scene img { position: absolute; display: block; pointer-events: none; user-select: none; }
 .keep-urn { left: 50%; bottom: 6%; width: 82%; max-height: 90%; object-fit: contain; transform: translateX(-50%); filter: drop-shadow(0 var(--space-14) var(--space-24) var(--stone)) drop-shadow(0 0 var(--space-22) var(--gules-glow)); }
 .keep-beads { position: absolute; left: 0; top: 6%; width: 100%; height: 54%; }
@@ -8,7 +8,7 @@
 .keep-bead-1 { fill: var(--on-glass); }
 .keep-bead-2 { fill: var(--azure-lit); }
 .keep-portcullis { position: absolute; left: 50%; bottom: 0; width: 92%; height: 70%; transform: translateX(-50%); }
-.keep-herald { position: absolute; z-index: 4; left: 0; right: 0; top: 12%; display: flex; flex-direction: column; align-items: center; gap: var(--space-8); }
+.keep-herald { position: absolute; z-index: 5; left: 0; right: 0; top: 12%; display: flex; flex-direction: column; align-items: center; gap: var(--space-8); }
 .keep-herald small { font: 700 var(--text-stage-eyebrow)/1 var(--font-deck-sans); text-align: center; letter-spacing: .08em; text-transform: uppercase; color: var(--on-glass); text-shadow: 0 var(--space-1) var(--space-6) var(--stone); }
 .keep-banners { display: flex; gap: 7%; justify-content: center; width: 84%; }
 .keep-banner { flex: 1; max-width: calc(var(--space-24) * 2); aspect-ratio: 1 / 1.9; padding-top: var(--space-7); box-sizing: border-box; text-align: center; font: 700 var(--text-px-17)/1 var(--font-deck-sans); color: var(--deck-need-ink); clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 82%, 0 100%); }

@@ -9,7 +9,6 @@ export function LintelPlaque({ chamber, state, drafted, needs_you = false }: {
   return <div className={`keep-plaque${drafted ? ' drafted' : ''}`} data-role="plaque" data-room={chamber.id} data-module={chamber.id}>
     <div className="nm" data-role="plaque-name"><span className="keep-disc">{chamber.number}</span>{chamber.name}</div>
     <div className="wd" data-role="plaque-word">{state.plaque?.word ?? state.word}</div>
-    <div className="ln" data-role="plaque-line">{state.plaque?.line ?? state.line}</div>
     {state.stamp && <Stamp {...state.stamp} />}
     {needs_you && <span className="keep-needs">needs you</span>}
     {drafted && <span className="pin">DRAFT · NOT ON AIR</span>}

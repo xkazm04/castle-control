@@ -1,6 +1,8 @@
 /* The Deck status bar: first paint only; room rules live in deck.css. */
 .cc-frame .desktop-shell > [data-role="status-bar"] {
   font-size: var(--text-px-15); font-weight: 400; line-height: 1.45;
+  /* The bar sits on the theme's surface: its text follows the theme's ink (light by night, dark by day). */
+  --on-lead: var(--ink); --on-lead-muted: var(--muted);
 }
 .cc-frame .desktop-shell > [data-role="status-bar"] {
   position: relative; height: var(--rampart-h); min-width: 0;
@@ -9,17 +11,33 @@
   border-bottom: var(--rule-thin) solid var(--deck-line); box-shadow: none;
   font-family: var(--font-deck-sans);
 }
-.cc-frame .desktop-shell [data-role="status-bar"] :is(.cc-live-group, .cc-link-group, .cc-rampart-figures) {
-  display: flex; align-items: center; flex: none; gap: var(--space-10);
+/* Status cells: one shape for every item (dot, small-caps label, value); no value reads "—" and is muted. */
+.cc-frame .desktop-shell [data-role="status-bar"] .cc-cells { display: flex; align-items: center; flex: none; }
+.cc-frame [data-role="status-bar"] .cc-cell {
+  --tone: var(--on-lead-muted); display: inline-flex; align-items: center; gap: var(--space-8);
+  padding: 0 var(--space-12); border-left: var(--rule-thin) solid var(--deck-line);
+  color: var(--on-lead); text-decoration: none; white-space: nowrap;
 }
-.cc-frame .desktop-shell [data-role="status-bar"] .cc-rampart-link {
-  display: inline-flex; align-items: center; gap: var(--space-6); white-space: nowrap;
-  color: var(--on-lead); font-size: var(--text-px-14);
+.cc-frame [data-role="status-bar"] .cc-cell:first-child { border-left: 0; padding-left: 0; }
+.cc-frame [data-role="status-bar"] .cc-cells + .cc-cells .cc-cell:first-child { border-left: var(--rule-thin) solid var(--deck-line); padding-left: var(--space-12); }
+.cc-frame [data-role="status-bar"] .cc-cell__dot {
+  width: var(--space-8); height: var(--space-8); flex: none; border-radius: 50%;
+  background: var(--tone); box-shadow: 0 0 0 var(--rule-thin) var(--tone), 0 0 var(--space-6) var(--tone);
 }
-.cc-frame .desktop-shell [data-role="status-bar"] .cc-rampart-link i {
-  width: var(--space-8); height: var(--space-8); flex: none; box-sizing: border-box;
-  border: var(--rule-medium) solid var(--azure); border-radius: 50%;
+.cc-frame [data-role="status-bar"] .cc-cell__text { display: grid; gap: var(--space-2); line-height: 1; }
+.cc-frame [data-role="status-bar"] .cc-cell small {
+  font: 700 var(--text-px-13)/1 var(--font-label); letter-spacing: .1em; text-transform: uppercase; color: var(--on-lead-muted);
 }
+.cc-frame [data-role="status-bar"] .cc-cell b { font: 600 var(--text-px-15)/1.1 var(--font-deck-sans); }
+.cc-frame [data-role="status-bar"] .cc-cell[data-tone="live"] { --tone: var(--gules-lit); }
+.cc-frame [data-role="status-bar"] .cc-cell[data-tone="ok"] { --tone: var(--emerald-lit); }
+.cc-frame [data-role="status-bar"] .cc-cell[data-tone="warn"] { --tone: var(--or-lit); }
+.cc-frame [data-role="status-bar"] .cc-cell[data-tone="down"] { --tone: var(--gules); }
+.cc-frame [data-role="status-bar"] .cc-cell[data-tone="sim"] { --tone: var(--azure-lit); }
+.cc-frame [data-role="status-bar"] .cc-cell[data-tone="sim"] b { color: var(--on-lead-muted); font-style: italic; }
+.cc-frame [data-role="status-bar"] .cc-cell[data-empty] { opacity: .55; }
+.cc-frame [data-role="status-bar"] .cc-cell[data-empty] .cc-cell__dot { background: transparent; box-shadow: inset 0 0 0 var(--rule-thin) var(--tone); }
+.cc-frame [data-role="status-bar"] a.cc-cell:hover b { text-decoration: underline; text-decoration-color: var(--deck-line); }
 .cc-frame .desktop-shell [data-role="status-bar"] > .cc-button { flex: none; }
 .cc-frame [data-role="status-bar"]::before {
   content: ''; position: absolute; inset: 0 0 auto; height: var(--space-8); opacity: .9;
@@ -29,6 +47,6 @@
   font: 600 var(--text-px-22)/1 var(--font-deck-serif); letter-spacing: .04em;
 }
 @media (max-width: 1380px) {
-  .cc-frame .desktop-shell > [data-role="status-bar"],
-  .cc-frame .desktop-shell [data-role="status-bar"] :is(.cc-live-group, .cc-link-group, .cc-rampart-figures) { gap: var(--space-8); }
+  .cc-frame .desktop-shell > [data-role="status-bar"] { gap: var(--space-8); }
+  .cc-frame [data-role="status-bar"] .cc-cell { padding: 0 var(--space-8); }
 }

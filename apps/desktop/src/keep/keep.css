@@ -29,12 +29,11 @@
 .keep-window.has-ink .keep-glass { outline: var(--space-2) dashed var(--deck-gold); outline-offset: var(--space-6); }
 .keep-hit { position: absolute; inset: calc(-1 * var(--space-6)); z-index: 20; padding: 0; border: 0; border-radius: var(--room-frame-radius); background: transparent; cursor: pointer; }
 .keep-hit:focus-visible { outline: var(--space-3) solid var(--focus); outline-offset: var(--space-3); }
-.keep-plaque { position: relative; flex: none; box-sizing: border-box; min-height: calc(var(--space-56) * 2); margin: var(--space-16) calc(-1 * var(--space-6)) 0; padding: var(--space-12) var(--space-16) var(--space-14); display: grid; gap: var(--space-2); align-content: start; background: linear-gradient(180deg, var(--surface-2), var(--surface)); border: var(--space-1) solid var(--hair-2); border-top: var(--space-2) solid var(--deck-gold-2); border-radius: var(--space-6); box-shadow: 0 var(--space-12) var(--space-26) color-mix(in srgb, var(--stone) 50%, transparent); }
+.keep-plaque { position: relative; flex: none; box-sizing: border-box; min-height: calc(var(--space-56) * 1.5); margin: var(--space-16) calc(-1 * var(--space-6)) 0; padding: var(--space-12) var(--space-16) var(--space-14); display: grid; gap: var(--space-2); align-content: start; background: linear-gradient(180deg, var(--surface-2), var(--surface)); border: var(--space-1) solid var(--hair-2); border-top: var(--space-2) solid var(--deck-gold-2); border-radius: var(--space-6); box-shadow: 0 var(--space-12) var(--space-26) color-mix(in srgb, var(--stone) 50%, transparent); }
 .keep-window:hover .keep-plaque, .keep-window[data-active] .keep-plaque { border-top-color: var(--keep-color); }
 .keep-plaque .nm { display: flex; align-items: center; gap: var(--space-9); font: 700 var(--text-px-13)/1.2 var(--font-deck-sans); letter-spacing: .14em; text-transform: uppercase; color: var(--keep-color); white-space: nowrap; }
 .keep-disc { display: inline-grid; place-items: center; flex: none; width: var(--space-26); height: var(--space-26); border-radius: 50%; background: var(--keep-color); color: var(--deck-need-ink); font: 700 var(--text-px-15)/1 var(--font-deck-sans); letter-spacing: 0; box-shadow: 0 0 var(--space-14) color-mix(in srgb, var(--keep-color) 65%, transparent); }
 .keep-plaque .wd { margin-top: var(--space-4); font: 600 clamp(var(--text-px-21), 1.7vw, var(--text-card-title))/1.15 var(--font-deck-serif); color: var(--ink); }
-.keep-plaque .ln { font: 400 var(--text-px-15)/1.4 var(--font-deck-sans); color: var(--ink-2); overflow-wrap: anywhere; }
 .keep-plaque > .cc-stamp { position: absolute; right: var(--space-8); bottom: var(--space-4); font-size: var(--text-px-13); opacity: 0; }
 .keep-window:focus-within .cc-stamp, .keep-window:hover .cc-stamp { opacity: 1; }
 .keep-needs { position: absolute; right: var(--space-12); top: var(--space-10); padding: var(--space-3) var(--space-10); border-radius: var(--space-26); color: var(--deck-need-ink); background: var(--or); box-shadow: 0 0 var(--space-16) var(--or-glow); font: 700 var(--text-px-13)/1.3 var(--font-deck-sans); }
@@ -59,7 +58,7 @@
 .keep-window.is-needed .keep-glass { animation: keep-breathe calc(var(--m-plate-key) * 8.4) var(--m-flame) ease-in-out infinite; }
 @media (max-height: 800px) {
   .keep-home { padding-top: var(--space-6); gap: var(--space-6); }
-  .keep-plaque { min-height: calc(var(--space-22) * 5); padding: var(--space-8) var(--space-14) var(--space-10); }
+  .keep-plaque { min-height: calc(var(--space-22) * 3.5); padding: var(--space-8) var(--space-14) var(--space-10); }
   .keep-plaque .wd { font-size: var(--text-px-21); }
   .keep-caption-title > p { font-size: var(--text-px-15); }
 }

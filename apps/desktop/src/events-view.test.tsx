@@ -28,10 +28,10 @@ test.each(chambers)('validated simulated events update rampart chips on $name ro
       on_navigate={() => undefined} on_theme_change={() => undefined} search="" on_search={() => undefined} />);
     await stream.allReady;
     const html = await new Response(stream).text();
-    for (const label of [name, 'On air · simulated', 'Twitch simulated', 'OBS simulated', 'Gatehouse simulated', 'Simulated']) {
+    for (const label of [name, 'On air is simulated', 'Twitch simulated', 'OBS simulated', 'Gatehouse simulated', 'Simulated']) {
       expect(html).toContain(label);
     }
-    expect(html).toContain('data-stamp="off-air" role="img" aria-label="On air is simulated: nothing is broadcast"');
+    expect(html).toContain('aria-label="On air is simulated: nothing is broadcast"');
     expect(html).not.toContain('desktop-simulated');
     expect(html).not.toContain('SIMULATED SOURCE');
   });
@@ -45,7 +45,7 @@ test.each(['keep', 'overview'])('validated simulated events update rampart chips
     const html = await new Response(stream).text();
     expect(html).toContain('Armed 0');
     expect(html).toContain('Watching 3');
-    expect(html).toContain('data-stamp="off-air" role="img" aria-label="On air is simulated: nothing is broadcast"');
+    expect(html).toContain('aria-label="On air is simulated: nothing is broadcast"');
     expect(html).not.toContain('desktop-simulated');
     expect(html).not.toContain('SIMULATED SOURCE');
     expect(html.match(/aria-label="Talk to the Steward\.\.\."/g) ?? []).toHaveLength(surface === 'keep' ? 0 : 1);

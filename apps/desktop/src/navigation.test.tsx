@@ -125,8 +125,8 @@ test.each([['#/keep', 'Enter the keep'], ['#/overview', 'Stream preview'], ['#/d
     theme="day" on_navigate={() => undefined} on_theme_change={() => undefined} />);
   await stream.allReady;
   const html = await new Response(stream).text();
-  expect(html).toContain('data-stamp="off-air" role="img" aria-label="On air is simulated: nothing is broadcast"');
-  for (const text of [content, 'On air · simulated', 'Twitch simulated', 'OBS simulated', 'Gatehouse simulated']) expect(html).toContain(text);
+  expect(html).toContain('aria-label="On air is simulated: nothing is broadcast"');
+  for (const text of [content, 'On air is simulated', 'Twitch simulated', 'OBS simulated', 'Gatehouse simulated']) expect(html).toContain(text);
   if (hash === '#/chamber/lottery') {
     expect(html).not.toContain('Fairness you can verify');
     const drawer = renderLotDrawer(lotterySession(proposalQueue).port, <LotteryRoom snapshot={snapshot} replay={false} />);
