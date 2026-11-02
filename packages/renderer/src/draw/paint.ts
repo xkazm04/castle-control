@@ -1,7 +1,11 @@
+import type { VesselArt } from '@castle-control/contract';
 import type { DrawPlaybackState, DrawScene } from './model.ts';
+import { paintVessel } from './vessel.ts';
+import type { VesselPaint } from './vessel.ts';
 
-/** Stable DOM: only append newly revealed winners. Foreground text never moves. */
-export function paintDraw(root: HTMLElement, scene: DrawScene) {
+/** Stable DOM: only append newly revealed winners. Foreground text never moves.
+ * With `vessel` (the cc-vessel island) the image vessel replaces the vector artwork only. */
+export function paintDraw(root: HTMLElement, scene: DrawScene, vessel?: { art: VesselArt; entries: number }) {
   const doc = root.ownerDocument;
   const plate = doc.createElement('section');
   plate.className = 'draw-scene';
@@ -11,8 +15,13 @@ export function paintDraw(root: HTMLElement, scene: DrawScene) {
   badge.hidden = root.dataset['simulated'] !== 'true';
   plate.append(badge);
   const animations: Animation[] = [];
+  let image: VesselPaint | undefined;
   for (const layer of scene.layers) {
-    if (layer.kind === 'artwork') {
+    if (layer.kind === 'artwork' && vessel) {
+      image = paintVessel(doc, vessel.art, vessel.entries);
+      plate.style.position = 'relative';
+      plate.append(image.figure);
+    } else if (layer.kind === 'artwork') {
       const svg = doc.createElementNS('http://www.w3.org/2000/svg', 'svg');
       svg.setAttribute('viewBox', layer.view_box);
       svg.setAttribute('aria-label', `${layer.shape} draw artwork`);
@@ -56,6 +65,7 @@ export function paintDraw(root: HTMLElement, scene: DrawScene) {
         item.textContent = winner;
         item.dataset['drawWinner'] = '';
         winners.append(item);
+        if (image && scene.motions.length > 0) image.fly(plate, item);
       }
       count = state.revealed_winners.length;
     },

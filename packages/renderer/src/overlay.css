@@ -30,3 +30,11 @@ html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; }
 [data-simulated-badge][data-anchor="br"] { top: var(--space-12); bottom: auto; }
 [data-simulated-badge][data-anchor="tr"],
 [data-simulated-badge][data-anchor="br"] { left: var(--space-12); right: auto; }
+/* Lots image vessel (cc-vessel island): entries idle in the chamber, winners fly from the mouth. */
+.draw-vessel { grid-area: art; position: relative; height: 100%; min-height: 0; justify-self: center; }
+.draw-vessel > img { display: block; height: 100%; }
+.draw-token { position: absolute; aspect-ratio: 1; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #fff, var(--draw-colour) 45%, #0009); box-shadow: 0 0 .6em var(--draw-colour); animation: draw-bob 2.1s ease-in-out infinite alternate; }
+img.draw-token { height: auto; background: none; box-shadow: none; border-radius: 0; mix-blend-mode: screen; }
+.draw-fly { left: 0; top: 0; z-index: 2; animation: none; }
+@keyframes draw-bob { to { transform: translate(4px, -8px); } }
+@media (prefers-reduced-motion: reduce) { .draw-token { animation: none; } }

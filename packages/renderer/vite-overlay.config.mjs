@@ -15,15 +15,20 @@ export const overlayInputs = [
 ];
 const source_hash = createHash('sha256');
 for (const path of overlayInputs) source_hash.update(readFileSync(new URL(path, import.meta.url), 'utf8').replaceAll('\r\n', '\n'));
+/** Comment/whitespace compaction of the embedded sheet (bundle budget); declarations are unchanged. */
+export function compactCss(css) {
+  return css.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\s+/g, ' ').replace(/ ?([{};,>]) ?/g, '$1')
+    .replaceAll(': ', ':').replaceAll(';}', '}').trim();
+}
 const banner = `/*! Castle Control overlay source SHA-256: ${source_hash.digest('hex')} */`;
 export default {
   // This output has no public assets; never copy the desktop's public tree.
   publicDir: false,
   // Embed CSS because the native host intentionally serves only index + bundle.
   // Reading build inputs adds no runtime package or cross-package source import.
-  define: { __CC_OVERLAY_STYLES__: JSON.stringify(
+  define: { __CC_OVERLAY_STYLES__: JSON.stringify(compactCss(
     readFileSync(new URL('../tokens/src/generated-base.css', import.meta.url), 'utf8')
-      .replaceAll('\r\n', '\n') + '\n' + readFileSync(new URL('./src/overlay.css', import.meta.url), 'utf8').replaceAll('\r\n', '\n')) },
+      + '\n' + readFileSync(new URL('./src/overlay.css', import.meta.url), 'utf8'))) },
   plugins: [{ name: 'overlay-source-inventory', generateBundle(_options, bundle) {
     for (const output of Object.values(bundle)) {
       if (output.type === 'chunk') output.code = `${banner}\n${output.code}`;
