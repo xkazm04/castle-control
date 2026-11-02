@@ -14,5 +14,10 @@ test('Dress rehearsal connects a masked password, runs generated scenarios, adds
     const removedAgain = await core.invoke(core.contract.obsRehearsalClear, {});
     expect(removedAgain.removed).toBe(0);
     await page.goto('about:blank'); await verify();
+  } catch (error) {
+    // The automatic failure screenshot is taken after finally closes the core, so it always shows
+    // "Core connection interrupted" and the outside view. Keep the page as it was at the failure.
+    await test.info().attach('before-core-close', { body: await page.screenshot(), contentType: 'image/png' });
+    throw error;
   } finally { await core.close(); }
 });

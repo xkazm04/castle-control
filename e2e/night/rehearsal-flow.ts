@@ -54,6 +54,50 @@ async function assertRehearsalDuel(page: Page, core: NightCore) {
   } finally { await overlay.close(); }
 }
 
+/** The rehearsal's Steward flows, driven the way a streamer drives them: chip, option cards, one hold. */
+function rehearsalSteward(page: Page) {
+  const dock = page.locator('.cc-steward-dock[data-chamber="rehearsal"]');
+  const sheet = dock.getByRole('group', { name: 'Steward conversation', exact: true });
+  const chips = dock.getByRole('group', { name: 'Steward suggestions', exact: true });
+  const step = (id?: string) => sheet.locator(id ? `.cc-steward-step[data-step="${id}"]` : '.cc-steward-step');
+  const pattern = (label: string) => new RegExp(`^${label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`);
+  return {
+    sheet, step,
+    async open(flow: string) {
+      const chip = chips.getByRole('button', { name: flow, exact: true });
+      if (await chip.count()) await chip.click();
+      else {
+        await chips.getByRole('button', { name: 'More flows' }).click();
+        await page.getByRole('menu', { name: 'Every Steward flow in this chamber', exact: true })
+          .getByRole('menuitem', { name: pattern(flow) }).click();
+      }
+      await expect(sheet).toBeVisible();
+    },
+    /** Pick an option card by its leading label. */
+    async pick(label: string) {
+      await step().getByRole('button', { name: pattern(label) }).first().click();
+    },
+    async field(value: string) {
+      await step().locator('input').fill(value);
+      await step().getByRole('button', { name: 'Continue', exact: true }).click();
+    },
+    /** Hold the confirm card's seal until one more Steward line matching `said` appears, then release. */
+    async hold(said: string | RegExp) {
+      const line = sheet.locator('.cc-steward-thread').getByText(said);
+      const before = await line.count();
+      const seal = step('seal').getByRole('button', { name: 'Hold to seal', exact: true });
+      await expect(seal).toBeEnabled();
+      await seal.focus();
+      await page.keyboard.down('Space');
+      try { await expect(line).toHaveCount(before + 1, { timeout: 30_000 }); }
+      finally { await page.keyboard.up('Space'); }
+      // Lower the sheet so the page's own controls are reachable again.
+      await sheet.getByRole('button', { name: /^Lower/ }).click();
+      await expect(sheet).toBeHidden();
+    },
+  };
+}
+
 /** Leave a populated scene for optional OBS screenshots, then remove through the UI hold. */
 export async function dressRehearsalInUi(page: Page, core: NightCore, beforeClear?: (lot_url: string) => Promise<void>) {
   const kinds = new Set<string>();
@@ -69,25 +113,51 @@ export async function dressRehearsalInUi(page: Page, core: NightCore, beforeClea
   await createVisualInUi(page, rehearsalVisual, 'SIMULATED rehearsal beacon');
   await page.goto(`${SHELL_ORIGIN}/#/rehearsal`);
   const workspace = page.getByRole('region', { name: 'Dress rehearsal', exact: true });
+  // The page detects the rehearsal core (rehearsal.start answers) and shows the in-rehearsal workspace.
   await expect(workspace.locator('[data-stamp="simulated"]')).toHaveText('SIMULATED');
-  const connection = workspace.getByRole('article', { name: 'Connect your OBS', exact: true });
+  await expect(workspace.getByRole('button', { name: 'Leave dress rehearsal', exact: true })).toBeVisible();
+  const board = workspace.getByRole('region', { name: 'Rehearsal status', exact: true });
+  await expect(board.getByRole('heading', { name: 'The rehearsal, step by step', exact: true })).toBeVisible();
+  await expect(board.locator('[data-station="session"] .rh-station__value')).toHaveText('Active');
+  const connection = workspace.getByRole('region', { name: 'Connect your OBS', exact: true });
   const password = connection.locator('input[name="password"]');
   await expect(password).toHaveAttribute('type', 'password');
   await expect(password).toHaveAttribute('autocomplete', 'off');
   await expect(connection.getByRole('checkbox', { name: 'Remember on this computer' })).not.toBeChecked();
-  await core.connectObsInUi(page);
+  // Connect my OBS through the Steward: the page's one masked field moves into the hold card.
+  const steward = rehearsalSteward(page);
+  await steward.open('Connect my OBS');
+  await steward.pick('On this computer');
+  await steward.pick('A different port');
+  await steward.field(String(core.obsPort));
+  await steward.pick('OBS asks for a password');
+  await steward.pick('Just this time');
+  const held = steward.step('seal').locator('input[name="password"]');
+  await expect(held).toHaveAttribute('type', 'password');
+  await expect(held).toHaveAttribute('autocomplete', 'off');
+  await expect(page.locator('input[name="password"]')).toHaveCount(1);
+  await core.typeObsPasswordInUi(page);
+  await steward.hold(`OBS is connected at 127.0.0.1:${core.obsPort}.`);
+  // The hold read the field once and cleared it; it is back home in the page form, empty.
   await expect(password).toHaveValue('');
   await expect(connection.getByText('OBS connected', { exact: true }).first()).toBeVisible();
+  await expect(board.locator('[data-station="obs"] .rh-station__value')).toHaveText('Connected');
+  // The page form stays the direct path for the same connection.
+  await core.connectObsInUi(page);
+  await expect(password).toHaveValue('');
+  await expect(connection.getByRole('status')).toHaveText('OBS connected');
   const status = await core.invoke(core.contract.statusGet, {});
   expect(status).toMatchObject({ simulated: true, obs_connected: true, twitch_connected: false });
   await expect(page.locator('.cc-rampart [aria-label="OBS: connected"]')).toBeVisible();
   await expect(page.getByText('Core connection interrupted; status is unknown.', { exact: true })).toHaveCount(0);
   await auditStyles(page, desktopSurfaces); await auditFields(page);
-  const scene = workspace.getByRole('article', { name: 'Rehearsal scene', exact: true });
+  const scene = workspace.getByRole('region', { name: 'Rehearsal scene', exact: true });
   await scene.getByRole('button', { name: 'Set up rehearsal scene', exact: true }).click();
   await expect(scene.getByRole('status')).toHaveText('Rehearsal scene is ready.');
   // Check the vote before Lots/duel chat can add the valid Other direction.
-  await workspace.getByRole('button', { name: 'Run a vote', exact: true }).click();
+  await steward.open('Run a scenario');
+  await steward.pick('Run a vote');
+  await steward.hold('SIMULATED scenario accepted.');
   await eventually(() => core.invoke(core.contract.gatehouseConsensusGet, { window_s: 900, filter: { kind: 'all' } }),
     result => result.directions.length === 3 && result.directions.every(direction => direction.share > 0)
       && result.directions.reduce((total, direction) => total + direction.messages, 0) === 30);
@@ -105,8 +175,11 @@ export async function dressRehearsalInUi(page: Page, core: NightCore, beforeClea
   await eventually(() => core.invoke(core.contract.maproomStageGet, {}), result => Boolean(result.session?.simulated
     && result.session.counted.left + result.session.counted.right > 0));
   await assertRehearsalDuel(page, core);
-  await workspace.getByRole('combobox', { name: 'Beacon visual', exact: true }).selectOption(rehearsalVisual);
-  await workspace.getByRole('button', { name: 'Fire beacon', exact: true }).click();
+  await steward.open('Run a scenario');
+  await steward.pick('Fire a beacon');
+  await steward.pick('SIMULATED rehearsal beacon');
+  await steward.hold('SIMULATED scenario accepted.');
+  await expect(workspace.getByRole('combobox', { name: 'Beacon visual', exact: true })).toHaveValue(rehearsalVisual);
 
   // The existing Lots overlay discloses simulation only after an accepted seal.
   // Reuse the Lot Chamber's check + human hold; Fill a Lot itself never seals.
@@ -137,10 +210,20 @@ export async function dressRehearsalInUi(page: Page, core: NightCore, beforeClea
   await page.goto(`${SHELL_ORIGIN}/#/rehearsal`);
   await expect(workspace.locator('[data-stamp="simulated"]')).toHaveText('SIMULATED');
 
+  // The Lot plate through its row's own hold, the rest through the Steward's scene flow.
+  await page.getByRole('article', { name: 'Lot plate', exact: true })
+    .getByRole('combobox', { name: 'Lot plate source size', exact: true }).selectOption('720p');
+  await expect(await addStreamOutput(page, 'Lot plate')).toHaveText('Added to the rehearsal scene. Inspect its placement in OBS.');
+  await steward.open('Set up the scene');
+  await steward.pick('Use the rehearsal scene');
+  await steward.pick('Everything available');
+  await steward.pick('720p');
+  await expect(steward.step('seal')).toContainText('Gatehouse vote bar, SIMULATED rehearsal beacon, Duel');
+  await steward.hold('Added 3 sources to Castle Control · Rehearsal. Inspect their placement in OBS.');
   for (const row of ['Lot plate', 'Gatehouse vote bar', 'SIMULATED rehearsal beacon', 'Duel']) {
     const card = page.getByRole('article', { name: row, exact: true });
-    await card.getByRole('combobox', { name: `${row} source size`, exact: true }).selectOption('720p');
-    await expect(await addStreamOutput(page, row)).toHaveText('Added to the rehearsal scene. Inspect its placement in OBS.');
+    await expect(card.getByRole('combobox', { name: `${row} source size`, exact: true })).toHaveValue('720p');
+    await expect(card.getByRole('status').first()).toHaveText('Added to the rehearsal scene. Inspect its placement in OBS.');
   }
   await auditStyles(page, desktopSurfaces); await auditFields(page);
   // Renew the test fire after the seal/UI checks so its temporary badge is live.
@@ -184,8 +267,14 @@ export async function dressRehearsalInUi(page: Page, core: NightCore, beforeClea
   const cleanup = scene.getByRole('group', { name: 'Remove rehearsal sources', exact: true }).getByRole('button', { name: 'Hold to seal', exact: true });
   // A click cannot authorize source removal.
   await cleanup.click();
-  await expect(scene.getByRole('status')).not.toHaveText(/^Removed /);
-  await holdToSeal(page, cleanup, scene.getByRole('status').filter({ hasText: /^Removed [1-9]\d* rehearsal sources\.$/ }));
+  await expect(scene.getByText(/^Removed /)).toHaveCount(0);
+  // The Steward's Clean up flow is the hold that removes them.
+  await steward.open('Clean up');
+  await steward.pick('Remove rehearsal sources');
+  await steward.hold(/^Removed [1-9]\d* rehearsal sources\.$/);
+  await expect(scene.getByRole('status')).toHaveText(/^Removed [1-9]\d* rehearsal sources\.$/);
   const notice = await scene.getByRole('status').textContent();
   expect(Number(notice?.match(/\d+/)?.[0])).toBeGreaterThan(0);
+  // The page's own hold stays the direct path; with nothing left it removes none.
+  await holdToSeal(page, cleanup, scene.getByRole('status').filter({ hasText: /^Removed 0 rehearsal sources\.$/ }));
 }

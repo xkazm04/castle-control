@@ -165,8 +165,16 @@ export async function startNightCore(options: NightCoreOptions = {}) {
       /** Relay reports of CreateInput requests and responses, in arrival order. */
       obsReports: () => [...reports],
       /** Populate the actual masked field without putting secret values into Playwright action titles/errors. */
+      /** The fake/isolated OBS WebSocket port this core reaches; not a secret. */
+      obsPort: ready.obs_port,
       async connectObsInUi(page: Page) {
         await page.getByRole('spinbutton', { name: 'OBS port', exact: true }).fill(String(ready.obs_port));
+        await this.typeObsPasswordInUi(page);
+        await page.getByRole('button', { name: 'Connect OBS', exact: true }).click();
+      },
+      /** Type the OBS password into the page's one masked field, wherever it stands (page form or the
+       *  Steward's hold card), without putting it into Playwright action titles or errors. */
+      async typeObsPasswordInUi(page: Page) {
         // Tracing is disabled in night.config.ts. This argument is never printed or attached.
         await page.evaluate(secret => {
           const field = document.querySelector('input[name="password"]');
@@ -176,7 +184,6 @@ export async function startNightCore(options: NightCoreOptions = {}) {
           field.value = secret;
           field.dispatchEvent(new Event('input', { bubbles: true }));
         }, obsSecret);
-        await page.getByRole('button', { name: 'Connect OBS', exact: true }).click();
       },
       /** Generated SIMULATED chat: `join` entrants or two-sided duel `ballots`. */
       chat(command: 'join' | 'ballots', count: number) { running.stdin.write(`${command} ${count}\n`); },

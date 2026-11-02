@@ -169,3 +169,25 @@ test('invalid launch, malformed results and malformed URLs stop at the schema do
   await expect(call(methods.rehearsalCrowdSet, { per_minute: 601 })).rejects.toMatchObject({ code: 'invalid' });
   expect(rpc).not.toHaveBeenCalled();
 });
+
+test('inside-rehearsal detection comes from the core alone: rehearsal.start answering means inside, even without the native shell', async () => {
+  // The night lane and any plain browser: CORE mode, no relaunch door.
+  const { model, rpc, emit } = simulatedRehearsal();
+  expect(model.shell_available).toBe(false);
+  expect(model.getSnapshot()).toMatchObject({ phase: 'checking', status: undefined });
+  const stop = model.start();
+  await vi.waitFor(() => { expect(model.getSnapshot().phase).toBe('inside'); });
+  expect(model.getSnapshot()).toMatchObject({ obs: 'connected', status: { active: true }, notice: '' });
+  expect(rpc.mock.calls.filter(call => call[2] === 'rehearsal.start')).toHaveLength(1);
+  // A later refused read (core gone or the normal workspace) never flips a known rehearsal outside.
+  rpc.mockRejectedValueOnce({ code: 'unavailable', message: 'SIMULATED unavailable' });
+  emit('resync');
+  await vi.waitFor(() => { expect(model.getSnapshot().status).toBeUndefined(); });
+  expect(model.getSnapshot().phase).toBe('inside');
+  stop();
+  // The normal workspace refuses rehearsal.start: the page stays outside, with no error notice.
+  const { model: normal, rpc: refused } = simulatedRehearsal();
+  refused.mockRejectedValue({ code: 'unavailable', message: 'SIMULATED unavailable' });
+  await normal.refresh();
+  expect(normal.getSnapshot()).toMatchObject({ phase: 'outside', notice: '' });
+});
