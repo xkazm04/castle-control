@@ -1,0 +1,127 @@
+/* The Deck chamber frame: layout.css .ch/.ch-stage/.pvpg/.mini (reference only).
+   Fixed clamp endpoints are derived from existing immutable spacing tokens. */
+.cc-chamber-layout {
+  container: cc-chamber / inline-size;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  color: var(--ink);
+  font: 400 var(--text-px-15)/1.4 var(--font-text);
+}
+
+.cc-chamber-grid {
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: clamp(calc(var(--space-20) * 19), calc(50vw - var(--space-20) * 13), calc(var(--space-20) * 37)) minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--space-14);
+  padding: var(--space-10) var(--space-14) var(--space-12);
+  height: 100%;
+  min-height: 0;
+  min-width: 0;
+  align-items: start;
+}
+
+.cc-chamber-picture-column {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+}
+
+.cc-chamber-heading {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-10);
+  min-width: 0;
+}
+
+.cc-chamber-heading h2 {
+  margin: 0;
+  font: 600 var(--text-px-22)/1.1 var(--font-book);
+}
+
+.cc-chamber-figure {
+  display: grid;
+  flex: none;
+  gap: var(--space-8);
+  margin: 0;
+  min-width: 0;
+}
+
+.cc-chamber-picture {
+  position: relative;
+  isolation: isolate;
+  box-sizing: border-box;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border: var(--came-hair) solid var(--ch, var(--hair));
+  border-radius: var(--r-lg);
+  background: var(--stone-2);
+  font-size: var(--text-px-15);
+}
+
+.cc-chamber-picture > :first-child { width: 100%; height: 100%; }
+.cc-chamber-picture > :is(img, video) { display: block; object-fit: cover; border-radius: inherit; }
+
+.cc-chamber-caption {
+  padding: var(--space-3) var(--space-10);
+  border: var(--came-hair) solid var(--ch, var(--hair));
+  border-radius: var(--r-round);
+  background: var(--ch-wash, var(--tint));
+  color: var(--ink-2);
+  font-size: var(--text-px-13);
+  line-height: 1.2;
+}
+
+.cc-chamber-minis {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  gap: var(--space-10);
+  flex: 1 0 calc(var(--space-26) * 4);
+  min-height: calc(var(--space-26) * 4);
+  max-height: calc(var(--space-10) * 23);
+}
+
+.cc-chamber-mini {
+  box-sizing: border-box;
+  min-width: 0;
+  padding: var(--space-8) var(--space-10);
+  border: var(--came-hair) solid var(--hair);
+  border-radius: var(--r-lg);
+  background: var(--stone-2);
+  overflow-wrap: anywhere;
+}
+
+.cc-chamber-mini h3 {
+  margin: 0 0 var(--space-6);
+  color: var(--ch-ink, var(--ink));
+  font: 700 var(--text-px-13)/1.2 var(--font-text);
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+}
+
+.cc-chamber-column {
+  display: grid;
+  gap: var(--space-10);
+  align-content: start;
+  min-width: 0;
+  min-height: 0;
+}
+
+/* Collapse from the room's available width, independently of the viewport. */
+@container cc-chamber (width < 68rem) {
+  .cc-chamber-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .cc-chamber-picture-column { grid-row: span 2; }
+  .cc-chamber-column { grid-column: 2; }
+}
+
+@container cc-chamber (width < 44rem) {
+  .cc-chamber-grid { grid-template-columns: minmax(0, 1fr); }
+  .cc-chamber-picture-column { grid-row: auto; }
+  .cc-chamber-column { grid-column: 1; }
+}
