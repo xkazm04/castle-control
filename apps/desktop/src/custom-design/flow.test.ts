@@ -28,7 +28,7 @@ vi.mock('../client.js', async original => ({ ...await original<Record<string, un
   coreGatehouseConnection: () => core.gatehouse ? { launch: {}, port: core.gatehouse } : undefined,
   coreLotsConnection: () => core.lots ? { launch: {}, port: core.lots } : undefined }));
 
-beforeEach(() => { vi.stubGlobal('fetch', vi.fn(async () => ({ ok: true, json: async () => raw }))); });
+beforeEach(() => { vi.stubGlobal('fetch', vi.fn(async () => ({ ok: true, text: async () => JSON.stringify(raw) }))); });
 afterEach(() => { vi.unstubAllGlobals(); delete core.beacons; delete core.gatehouse; delete core.lots; });
 
 const chamberOf: Record<ArtAssetKind, FlowChamber> = { beacon: 'visuals', frame: 'visuals', vote_bar: 'moderator', draw_vessel: 'lottery' };

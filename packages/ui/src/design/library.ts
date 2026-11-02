@@ -1,4 +1,5 @@
 import type { ArtAnchors, ArtAssetKind, ArtPoint, ArtRect } from '@castle-control/contract';
+import { parseJson } from '@castle-control/contract/door';
 
 /**
  * The built-in art library (apps/desktop/public/art/library/library.json): ready-made
@@ -105,7 +106,7 @@ export function parseLibrary(value: unknown): LibraryCatalog {
 /** Same-origin URL of a library file ("library/beacon/beacon-03.webp" -> "/art/library/beacon/beacon-03.webp"). */
 export function libraryUrl(path: string): string { return `/art/${path}`; }
 
-export type Fetcher = (url: string) => Promise<{ ok: boolean; json(): Promise<unknown> }>;
+export type Fetcher = (url: string) => Promise<{ ok: boolean; text(): Promise<string> }>;
 let loaded: Promise<LibraryCatalog> | undefined;
 /** Read and parse the catalog once through the app's own same-origin reader (the design
  * sources never touch the network themselves); a failure is not cached, so the next call tries again. */
@@ -113,7 +114,7 @@ export function loadLibrary(fetcher: Fetcher): Promise<LibraryCatalog> {
   loaded ??= (async () => {
     const response = await fetcher(library_url);
     if (!response.ok) throw new Error('The art library did not load.');
-    return parseLibrary(await response.json());
+    return parseLibrary(parseJson(await response.text(), { max_bytes: 512 * 1024 }));
   })().catch((error: unknown) => { loaded = undefined; throw error; });
   return loaded;
 }
