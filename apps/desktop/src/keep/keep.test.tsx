@@ -72,7 +72,8 @@ test('honesty stamps follow fixture room provenance and omit absent core stamps'
   expect(keepReadModel({ mode: 'fixture', phase: 'ready' }).states.moderator.stamp).toEqual({ kind: 'shadow' });
   const core = keepReadModel({ mode: 'core', phase: 'ready', ...simulatedRead(1) });
   for (const { id } of chambers) {
-    expect(core.states[id].word).toBe('Unknown');
+    expect(core.states[id].word).toBe('Ready');
+    if (id !== 'moderator') expect(core.states[id].line).toContain('ask the Steward');
     expect(core.states[id]).not.toHaveProperty('stamp');
   }
   const html = renderToStaticMarkup(<Keep snapshot={{ mode: 'core', phase: 'ready' }} on_open={vi.fn()} on_enter={vi.fn()} />);
@@ -165,7 +166,7 @@ test('the moat bar carries a labelled sample heartbeat in the fixture and none f
   expect(bar).toContain('role="img" aria-label="Sample replay loop · simulated"');
   expect(bar).toContain('<a class="keep-moat-link" href="#/chamber/moderator/drill">Watch the full replay</a>');
   const core = renderToStaticMarkup(<Keep snapshot={{ mode: 'core', phase: 'ready', ...simulatedRead(1) }} on_open={vi.fn()} on_enter={vi.fn()} />);
-  expect(core).toContain('The moat · chat delay unknown');
+  expect(core).toContain('The moat · chat delay set in the Gatehouse');
   expect(core).not.toContain('moat-heartbeat');
   expect(core).not.toContain('keep-moat-link');
 });

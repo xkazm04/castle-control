@@ -1,7 +1,7 @@
 import { expect, test } from 'vitest';
 import {
   artHooks, beaconsRoom, gatehouseRoom, heraldRoom, heraldSample, hexPaints, hexSeed,
-  keepArt, keepRoomsArt, lotHandles, lotsRoom, stewardRoom, studioRoom,
+  duelRoom, keepArt, keepRoomsArt, keepRooms, lotHandles, lotsRoom, stewardRoom, studioRoom,
 } from './index.js';
 import type { ArtNode } from './types.js';
 
@@ -28,6 +28,34 @@ test('default art assembles all six rooms in winner order with a stable node cou
     [['ink-o'], ['ink-k'], ['ink-g'], ['ink-a']],
     [['ink-o'], ['ink-k'], ['ink-g']],
   ]);
+});
+
+test('the duel Map Room swaps only the studio room: two shields over a tally bar, no hex table', () => {
+  const duel = keepRoomsArt({ map: 'duel' });
+  expect(duel).toEqual([
+    ...heraldRoom(), ...gatehouseRoom(), ...lotsRoom(),
+    ...duelRoom(), ...beaconsRoom(), ...stewardRoom(),
+  ]);
+  expect(duelRoom().map((node) => node.cls)).toEqual([['ink-k'], ['ink-a'], ['ink-o'], ['ink-g']]);
+  const nodes = duelRoom().flatMap(walk);
+  expect(nodes.filter((node) => node.cls?.includes('hex') || node.id === 'hexes')).toHaveLength(0);
+  expect(walk(keepArt(duel)).filter((node) => node.cls?.includes('hex'))).toHaveLength(0);
+  expect(nodes.filter((node) => node.tag === 'text').map((node) => node.text)).toEqual(['1', '2', 'CHAT DUEL · TYPE 1 OR 2']);
+  const shields = nodes.filter((node) => node.tag === 'path' && (node.paint?.fill === 'art-azure' || node.paint?.fill === 'art-gules') && node.attrs.d?.endsWith('Z'));
+  expect(shields.map((node) => node.paint?.fill)).toEqual(['art-azure', 'art-gules', 'art-azure']);
+  const tally = nodes.filter((node) => node.tag === 'rect' && Number(node.attrs.y) >= 240);
+  expect(tally.map((node) => node.paint?.fill)).toEqual(['art-paper', 'art-azure', 'art-gules']);
+  // Everything stays inside the Map Room's lit rect.
+  const { rect } = keepRooms.studio;
+  for (const node of nodes) {
+    for (const key of ['x', 'cx'] as const) {
+      const value = node.attrs[key];
+      if (value !== undefined) expect(Number(value)).toBeGreaterThanOrEqual(rect.x);
+    }
+    const y = node.attrs.y ?? node.attrs.cy;
+    if (y !== undefined) expect(Number(y)).toBeLessThanOrEqual(rect.y + rect.h);
+  }
+  expect(keepRoomsArt()).toEqual(keepRoomsArt({ map: 'table' }));
 });
 
 test('room builds are deterministic and return independent trees', () => {
