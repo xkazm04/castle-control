@@ -5,12 +5,12 @@ import { chambers } from '@castle-control/ui';
 import type { ModuleId } from '@castle-control/ui';
 import { proposalQueue, SimulatedSteward } from '@castle-control/ui/steward';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { KeepEntrance, Keep, lightRoom } from './keep.jsx';
+import { KeepEntrance, Keep } from './keep.jsx';
 import { keepReadModel } from './read-model.js';
 import { simulatedRead } from '../simulated.js';
 import { fixtureVisuals } from '../beacons-fixture.js';
 import { fixtureHeld } from '../moderation-fixture.js';
-import { keepRooms } from '@castle-control/keep-art';
+import { dispatchShortcut } from '../navigation.js';
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
@@ -36,7 +36,7 @@ test('optional entrance actions are consistently disabled without a navigation c
   }
 });
 
-test('four hits and lintels carry the read model words, lines and chamber-aware names', () => {
+test('four arched windows and plaques carry the chamber art and authoritative readings', () => {
   const read = keepReadModel(snapshot);
   expect(read.states.moderator.word).toBe(`${fixtureHeld.length} held`);
   expect(read.states.lottery.word).toBe('No draw');
@@ -51,15 +51,20 @@ test('four hits and lintels carry the read model words, lines and chamber-aware 
     expect(html).toContain(`data-room-tile="${chamber.id}"`);
     expect(html).toContain(`aria-label="Open chamber ${chamber.number}, ${chamber.name}: ${state.word}, ${state.line}"`);
     const plaque = html.split(`data-role="plaque" data-room="${chamber.id}"`)[1]?.split('</div></div>')[0];
-    expect(plaque).toContain(`data-role="plaque-name">${chamber.number} · ${chamber.name}`);
+    expect(plaque).toContain(`data-role="plaque-name"><span class="keep-disc">${chamber.number}</span>${chamber.name}`);
     expect(plaque).toContain(`data-role="plaque-word">${state.plaque?.word ?? state.word}`);
     expect(plaque).toContain(`data-role="plaque-line">${state.plaque?.line ?? state.line}`);
   }
   expect(html.match(/data-role="plaque"/g)).toHaveLength(4);
-  expect(html).toContain('The Keep · fixture mode · sample evening');
-  expect(html).toContain('Point at a room, or press 1 to 4.');
+  expect(html.match(/data-role="keep-window"/g)).toHaveLength(4);
+  for (const art of ['urn', 'altar', 'hexmap']) expect(html).toContain(`/art/preset-heraldic-${art}.webp`);
+  expect(html).toContain('class="keep-portcullis"');
+  expect(html.match(/class="keep-crest"/g)).toHaveLength(2);
+  expect(html).toContain('fixture mode · sample evening');
+  expect(html).toContain('Point at a room, or press 1 to 4. The brightest window needs you.');
   expect(html).toContain('Stylised illustration · drawn, not captured');
-  expect(html).toContain('The moat · chat delay 4 s');
+  expect(html).toContain('The moat · <span class="keep-delay">chat delay 4 s</span>');
+  expect(html.indexOf('data-role="keep-vlabel"')).toBeLessThan(html.indexOf('data-role="keep-sill"'));
   expect(html).toContain('Enter the keep <kbd class="cc-kbd">0</kbd>');
   expect(html).toContain('data-demo-entry');
 });
@@ -78,7 +83,7 @@ test('honesty stamps follow fixture room provenance and omit absent core stamps'
     expect(core.states[id]).not.toHaveProperty('stamp');
   }
   const html = renderToStaticMarkup(<Keep snapshot={{ mode: 'core', phase: 'ready' }} on_open={vi.fn()} on_enter={vi.fn()} />);
-  expect(html).toContain('The Keep · core mode · chamber readings');
+  expect(html).toContain('core mode · chamber readings');
   expect(html).not.toContain('data-stamp=');
   expect(html).not.toContain('<small>simulated</small>');
 });
@@ -101,7 +106,7 @@ function hits(node: ReactNode): ReactElement<HitProps>[] {
   });
 }
 
-test.each(['pointer', 'focus'] as const)('%s lights each chamber, changes the headline, then restores the Keep', kind => {
+test.each(['pointer', 'focus'] as const)('%s lights only its chamber, leaves the caption steady, and clears on leave', kind => {
   for (const chamber of chambers) {
     const trees: ReactNode[] = [];
     function Journey() {
@@ -116,27 +121,24 @@ test.each(['pointer', 'focus'] as const)('%s lights each chamber, changes the he
     }
     renderToStaticMarkup(<Journey />);
     const readings = trees.map(tree => renderToStaticMarkup(tree));
-    expect(readings[1]).toContain(`class="keep-castle kw" data-hover="${chamber.id}"`);
-    expect(readings[1]).toContain(`Chamber ${chamber.number} of 4 · ${chamber.description} · press ${chamber.number} or click`);
-    expect(readings[1]).toContain(`${chamber.name} · ${keepReadModel(snapshot).states[chamber.id].word}`);
+    expect(readings[1]).toContain(`data-room="${chamber.id}" data-module="${chamber.id}" data-active=""`);
+    expect(readings[1]?.match(/data-active=""/g)).toHaveLength(1);
+    expect(readings[1]).toContain('data-role="keep-name">The Keep</h1>');
     expect(readings.at(-1)).toContain('Point at a room, or press 1 to 4.');
-    expect(readings.at(-1)).toContain('class="keep-castle kw"');
+    expect(readings.at(-1)).not.toContain('data-active=');
   }
 });
 
-test('lighting moves data-active onto only the selected room light and tag, and clears every light on leave', () => {
-  const lights = Object.keys(keepRooms).flatMap(room => ['kw-light', 'kw-light-tag'].map(() => {
-    const attributes = new Set<string>();
-    return { dataset: { room }, setAttribute: (name: string) => { attributes.add(name); }, removeAttribute: (name: string) => { attributes.delete(name); },
-      lit: () => attributes.has('data-active') };
-  }));
-  const glass = { querySelectorAll: () => lights };
-  for (const chamber of chambers) {
-    lightRoom(glass, chamber.id);
-    for (const light of lights) expect(light.lit()).toBe(light.dataset.room === chamber.id);
-  }
-  lightRoom(glass);
-  for (const light of lights) expect(light.lit()).toBe(false);
+test('the room that needs you burns brightest, with a calm reduced-motion state', () => {
+  const html = render();
+  expect(html.match(/data-needs-you="true"/g)).toHaveLength(1);
+  expect(html).toContain('data-role="keep-window" data-room="moderator" data-needs-you="true"');
+  expect(html).toContain('class="keep-needs">needs you');
+  const core = renderToStaticMarkup(<Keep snapshot={{ mode: 'core', phase: 'ready' }} on_open={vi.fn()} on_enter={vi.fn()} />);
+  expect(core).not.toContain('data-needs-you');
+  const css = readFileSync(new URL('./keep.css', import.meta.url), 'utf8');
+  expect(css).toContain('.keep-window.is-needed .keep-glass { animation: keep-breathe');
+  expect(css).toMatch(/@media \(prefers-reduced-motion: reduce\)[\s\S]*\.keep-window.is-needed .keep-glass \{ animation: none/);
 });
 
 test('each real hit opens its chamber immediately', () => {
@@ -144,6 +146,22 @@ test('each real hit opens its chamber immediately', () => {
   function Journey() {
     const tree = Keep({ on_open: open, on_enter: vi.fn() });
     for (const hit of hits(tree)) hit.props.onClick();
+    return tree;
+  }
+  renderToStaticMarkup(<Journey />);
+  expect(open.mock.calls.map(call => call[0])).toEqual(chambers.map(chamber => chamber.id));
+});
+
+test('keys 1–4 use the existing keymap and open the same rooms as the window clicks', () => {
+  const open = vi.fn();
+  function Journey() {
+    const tree = Keep({ on_open: open, on_enter: vi.fn() });
+    for (const chamber of chambers) {
+      const hit = hits(tree).find(item => item.props['data-room-tile'] === chamber.id);
+      dispatchShortcut({ key: chamber.number, preventDefault: vi.fn() }, false, id => {
+        expect(id).toBe(chamber.id); hit?.props.onClick();
+      }, undefined);
+    }
     return tree;
   }
   renderToStaticMarkup(<Journey />);
@@ -164,11 +182,12 @@ test('the moat bar carries a labelled sample heartbeat in the fixture and none f
   const bar = fixture.slice(fixture.indexOf('class="keep-moat km"'));
   expect(bar).toContain('class="keep-moatlab km__label" data-role="moat-label"');
   expect(bar).not.toContain('class="keep-moat km" data-role="moat-label"');
-  expect(bar).toContain('The moat · chat delay 4 s');
+  expect(bar).toContain('The moat · <span class="keep-delay">chat delay 4 s</span>');
   expect(bar).toContain('role="img" aria-label="Sample replay loop · simulated"');
   expect(bar).toContain('<a class="keep-moat-link cc-link" href="#/chamber/moderator/drill">Watch the full replay</a>');
   const core = renderToStaticMarkup(<Keep snapshot={{ mode: 'core', phase: 'ready', ...simulatedRead(1) }} on_open={vi.fn()} on_enter={vi.fn()} />);
-  expect(core).toContain('The moat · chat delay set in the Gatehouse');
+  expect(core).toContain('The moat · <span>chat delay set in the Gatehouse</span>');
+  expect(core).not.toContain('class="keep-delay"');
   expect(core).not.toContain('moat-heartbeat');
   expect(core).not.toContain('keep-moat-link');
 });

@@ -304,53 +304,88 @@ test.describe('with motion allowed', () => {
 
 test.describe('Keep desktop bounds', () => {
   test.use({ reducedMotion: 'no-preference' });
-  for (const viewport of [{ width: 1280, height: 800 }, { width: 1440, height: 900 }, { width: 1920, height: 1080 }]) {
-    test(`Keep moat card, plaques and window fit ${viewport.width}x${viewport.height}`, async ({ page }) => {
+  for (const viewport of [{ width: 1280, height: 720 }, { width: 1366, height: 768 }, { width: 1600, height: 900 }, { width: 1920, height: 1080 }]) {
+    test(`Keep four lights, plaques and sill fit ${viewport.width}x${viewport.height}`, async ({ page }) => {
       const verify = await guardPage(page);
       try {
         await page.setViewportSize(viewport);
         await page.goto('/#/keep');
         await expect(page.getByRole('button', { name: 'Pause the sample loop', exact: true })).toBeVisible();
+        await expect(page.locator('[data-role="keep-window"]')).toHaveCount(4);
+        await expect(page.locator('[data-role="keep-window"][data-needs-you="true"]')).toHaveAttribute('data-room', 'moderator');
+        await expect(page.locator('.cc-steward-dock')).toHaveCount(0);
         for (const theme of ['day', 'night']) {
           if (await page.locator('.cc-frame').getAttribute('data-theme') !== theme) await page.getByRole('button', { name: 'Toggle day and night' }).click();
           await expect.poll(() => page.locator('.keep-home').evaluate(element => {
+            const issues: string[] = [];
+            const inside = (inner: DOMRect, outer: DOMRect) => inner.left >= outer.left - 1 && inner.right <= outer.right + 1 && inner.top >= outer.top - 1 && inner.bottom <= outer.bottom + 1 && inner.width > 0 && inner.height > 0;
+            const viewport = new DOMRect(0, 0, innerWidth, innerHeight);
             const requireNode = (selector: string) => {
               const node = element.querySelector(selector);
               if (!node) throw new Error(`Missing Keep element: ${selector}`);
               return node;
             };
-            const issues: string[] = [];
-            const inside = (inner: DOMRect, outer: DOMRect) => inner.left >= outer.left - 1 && inner.right <= outer.right + 1 && inner.width > 0;
-            // The moat card holds its label, replay strip, Pause and the full-replay link inside its own box.
-            const card = requireNode('.keep-moat').getBoundingClientRect();
+            const wall = requireNode('.keep-wall').getBoundingClientRect();
+            const windows = [...element.querySelectorAll('.keep-window')];
+            for (const [index, window] of windows.entries()) {
+              const glass = window.querySelector('[data-role="keep-window"]')?.getBoundingClientRect();
+              const plaque = window.querySelector('[data-role="plaque"]')?.getBoundingClientRect();
+              if (!glass || !plaque) throw new Error('Missing light or plaque');
+              if (!inside(glass, wall) || !inside(plaque, viewport)) issues.push(`window ${index} leaves the wall or viewport`);
+              if (glass.bottom > plaque.top) issues.push(`window ${index} overlaps its plaque`);
+              const next = windows[index + 1]?.getBoundingClientRect();
+              if (next && window.getBoundingClientRect().right > next.left) issues.push(`window ${index} overlaps its neighbour`);
+            }
+            const sill = requireNode('.keep-sill').getBoundingClientRect();
+            const caption = requireNode('.keep-art-caption').getBoundingClientRect();
+            if (caption.top < wall.bottom || caption.bottom > sill.top) issues.push('art caption overlaps windows or sill');
+            const entry = requireNode('.ki__actions').getBoundingClientRect();
+            for (const button of element.querySelectorAll('.ki__actions button')) {
+              if (!inside(button.getBoundingClientRect(), entry)) issues.push('entry button outside its card');
+              if (button.scrollHeight > button.clientHeight + 1) issues.push('entry button text clipped');
+            }
+            for (const selector of ['.ki__actions', '.cc-preview-monitor', '.shell-program-proclaim', '.cc-program-monitor', '.keep-moat']) {
+              if (!inside(requireNode(selector).getBoundingClientRect(), sill)) issues.push(`sill item outside its row: ${selector}`);
+            }
+            const moat = requireNode('.keep-moat').getBoundingClientRect();
+            const delay = requireNode('.keep-delay');
+            const delayRange = document.createRange(); delayRange.selectNodeContents(delay);
+            if (new Set([...delayRange.getClientRects()].map(box => Math.round(box.top))).size !== 1) issues.push('chat delay wraps');
             for (const selector of ['.keep-moatlab', '.moat-heartbeat small', '.moat-heartbeat-strip', '.moat-heartbeat button', '.keep-moat-link']) {
-              if (!inside(requireNode(selector).getBoundingClientRect(), card)) issues.push(`moat item outside its card: ${selector}`);
+              if (!inside(requireNode(selector).getBoundingClientRect(), moat)) issues.push(`moat item outside its card: ${selector}`);
             }
-            // The intro column stacks eyebrow, title, moat and actions without overlap.
-            const column = requireNode('.ki').getBoundingClientRect();
-            const blocks = ['[data-role="keep-eyebrow"]', '[data-role="keep-name"]', '.keep-moat', '.ki__actions'].map(selector => requireNode(selector).getBoundingClientRect());
-            for (const [index, block] of blocks.entries()) {
-              if (!inside(block, column)) issues.push(`intro block ${index} leaves its column`);
-              const next = blocks[index + 1];
-              if (next && block.bottom > next.top + 1) issues.push(`intro block ${index} overlaps the next`);
+            // Check readable text, rather than decorative art extending under the clipped glass.
+            for (const node of element.querySelectorAll('*')) {
+              if (!(node instanceof HTMLElement) || node.closest('[aria-hidden="true"]') || !node.checkVisibility({ checkOpacity: true, checkVisibilityCSS: true })) continue;
+              const style = getComputedStyle(node);
+              const floor = node.closest('[data-role="keep-window"]') ? 15 : 13;
+              if (Number.parseFloat(style.fontSize) < floor) issues.push(`type below ${floor}: ${node.className}`);
+              if (['auto', 'scroll'].includes(style.overflowY) && node.scrollHeight > node.clientHeight + 1) issues.push(`inner scroller: ${node.className}`);
+              for (const text of node.childNodes) {
+                if (text.nodeType !== Node.TEXT_NODE || !text.textContent?.trim()) continue;
+                const range = document.createRange(); range.selectNodeContents(text);
+                for (const box of range.getClientRects()) {
+                  if (!inside(box, viewport)) issues.push(`text outside viewport: ${node.className}`);
+                  if (node.closest('.keep-sill') && !inside(box, sill)) issues.push(`text outside sill: ${node.className}`);
+                }
+              }
             }
-            // Plaques sit side by side under the window, none wrapped or cut off.
-            const plaques = [...element.querySelectorAll('[data-role="plaque"]')].map(node => node.getBoundingClientRect());
-            const stage = requireNode('.kh__stage').getBoundingClientRect();
-            for (const [index, plaque] of plaques.entries()) {
-              if (!inside(plaque, stage)) issues.push(`plaque ${index} outside the stage`);
-              const next = plaques[index + 1];
-              if (next && plaque.right > next.left + 1) issues.push(`plaque ${index} overlaps its neighbour`);
-            }
-            const title = requireNode('[data-role="plaque"][data-room="lottery"] [data-role="plaque-name"]');
-            const range = document.createRange(); range.selectNodeContents(title);
-            if (new Set([...range.getClientRects()].map(at => Math.round(at.top))).size > 1) issues.push('Lot Chamber title wrapped');
-            if (title.scrollWidth > title.clientWidth + 1) issues.push('Lot Chamber title overflows');
-            // The Keep never scrolls the page, and the program column keeps its own scroll.
-            const home = requireNode('.shell-program-column').getBoundingClientRect();
-            if (home.bottom > innerHeight + 1) issues.push('program column runs off the window');
+            if (element.scrollHeight > element.clientHeight + 1) issues.push('Keep content clipped');
+            if (document.documentElement.scrollWidth > innerWidth || document.documentElement.scrollHeight > innerHeight) issues.push('page scroll');
             return issues;
           })).toEqual([]);
+          await auditStyles(page, desktopSurfaces);
+        }
+        // Both ways of entering use the product navigation, with Escape returning to the Keep.
+        for (const [index, id] of ['lottery', 'moderator', 'visuals', 'studio'].entries()) {
+          await page.locator(`.keep-home [data-room-tile="${id}"]`).click();
+          await expect(page).toHaveURL(new RegExp(`#/chamber/${id}$`));
+          await page.keyboard.press('Escape');
+          await expect(page.locator('.keep-home')).toBeVisible();
+          await page.keyboard.press(String(index + 1));
+          await expect(page).toHaveURL(new RegExp(`#/chamber/${id}$`));
+          await page.keyboard.press('Escape');
+          await expect(page.locator('.keep-home')).toBeVisible();
         }
       } finally { await page.goto('about:blank'); verify(); }
     });
