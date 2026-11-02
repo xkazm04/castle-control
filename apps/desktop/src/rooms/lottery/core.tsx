@@ -1,6 +1,6 @@
 import { RoomKeyBadge } from '../../shell/steward-keys.jsx';
-import { lazy, Suspense, useEffect, useId, useMemo, useRef, useState, useSyncExternalStore } from 'react';
-import type { CSSProperties, ReactNode } from 'react';
+import { lazy, Suspense, useEffect, useId, useMemo, useState, useSyncExternalStore } from 'react';
+import type { ReactNode } from 'react';
 import type { DesignId } from '@castle-control/contract';
 import { SealButton, Stamp, WindowedRows } from '@castle-control/ui';
 import { stewardDock, useStewardDraft } from '@castle-control/ui/steward-flow';
