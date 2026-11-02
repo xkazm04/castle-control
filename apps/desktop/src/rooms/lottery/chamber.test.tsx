@@ -8,6 +8,8 @@ import { ProposalQueue } from '@castle-control/ui/steward';
 import LotteryRoom from './index.jsx';
 import { ConnectedLotsRoom } from './core.jsx';
 import { createCoreLotsPort } from '../../lots-core.js';
+import { CeremonyControls } from './stage.jsx';
+import type { CeremonyControlsProps } from './stage.jsx';
 import { LotChamber } from './chamber.jsx';
 import type { LotChamberProps } from './chamber.jsx';
 import { lotDrawer } from './drawer.js';
@@ -18,17 +20,17 @@ import { stageScene } from './stage-model.js';
 import { fixtureWrit } from '../../lots-fixture.js';
 
 type TreeProps = ButtonHTMLAttributes<HTMLButtonElement> & { columns?: readonly ReactNode[] };
-function trigger(tree: ReactNode): TreeProps | undefined {
+function trigger(tree: ReactNode, label = 'The writ and draw tools'): TreeProps | undefined {
   let found: TreeProps | undefined;
   Children.forEach(tree, child => {
     if (!isValidElement<TreeProps>(child)) return;
-    if (child.type === 'button' && Children.toArray(child.props.children).includes('The writ and draw tools')) found = child.props;
-    else found ??= trigger(child.props.children) ?? trigger(child.props.columns);
+    if (child.type === 'button' && Children.toArray(child.props.children).includes(label)) found = child.props;
+    else found ??= trigger(child.props.children, label) ?? trigger(child.props.columns, label);
   });
   return found;
 }
 
-test.each(['fixture', 'core'] as const)('%s chamber opens the actual drawer from its section trigger and closes it', mode => {
+test.each([['fixture', 'writ'], ['fixture', 'ceremony'], ['core', 'writ'], ['core', 'ceremony']] as const)('%s chamber opens and closes its drawer from the %s section trigger', (mode, source) => {
   const queue = new ProposalQueue();
   const core = createCoreLotsPort({ mode: 'core', endpoint: 'http://127.0.0.1:3210/', session_token: 'a'.repeat(64) });
   const owner = mode === 'fixture' ? lotterySession(queue).port : core;
@@ -42,7 +44,11 @@ test.each(['fixture', 'core'] as const)('%s chamber opens the actual drawer from
     const layout = Children.toArray(frame.props.children).find(child => isValidElement(child) && child.type === ChamberLayout);
     expect(layout).toBeDefined();
     expect(room.props.picture).toBeDefined();
-    const control = trigger(frame);
+    const setup = room.props.setup;
+    const ceremony = isValidElement<{ children?: ReactNode }>(setup) ? Children.toArray(setup.props.children)
+      .find(child => isValidElement(child) && child.type === CeremonyControls) : undefined;
+    const control = source === 'ceremony' && isValidElement<CeremonyControlsProps>(ceremony)
+      ? trigger(CeremonyControls(ceremony.props), 'Ceremony options') : trigger(frame);
     expect(control).toBeDefined();
     frames.push(frame);
     if (step === 0) {
@@ -70,7 +76,7 @@ test.each(['fixture', 'core'] as const)('%s chamber opens the actual drawer from
   for (const html of seen) {
     expect(html.match(/data-role="room-picture"/g)).toHaveLength(1);
     expect(html.match(/class="cc-chamber-column"/g)).toHaveLength(2);
-    expect(html.match(/data-role="room-section"/g)).toHaveLength(5);
+    expect(html.match(/data-role="room-section"/g)).toHaveLength(html.includes('role="dialog"') ? mode === 'fixture' ? 7 : 6 : 5);
   }
 });
 
@@ -92,11 +98,22 @@ test('the proof card follows hand reveals and rejects a cursor from an older sea
   expect(html('different-seal')).toContain(`0 of ${fixtureWrit.winners.length} revealed`);
 });
 
-test('Lot setup, value and ceremony controls show the keys declared by the room table', () => {
-  const html = renderToStaticMarkup(<LotteryRoom snapshot={{ mode: 'fixture', phase: 'ready' }} replay={false} queue={new ProposalQueue()} />);
-  for (const action of ['setup', 'cast', 'tools', 'winners', 'held_out', 'cap', 'ceremony', 'by_hand', 'sound', 'info']) {
-    expect(html).toContain(`cc-key-badge">${keyFor('lottery', action)}</kbd>`);
+test('Lot controls retain their table keys, and secondary controls are reachable in the drawer', () => {
+  const queue = new ProposalQueue();
+  const room = <LotteryRoom snapshot={{ mode: 'fixture', phase: 'ready' }} replay={false} queue={queue} />;
+  const closed = renderToStaticMarkup(room);
+  for (const action of ['setup', 'cast', 'tools', 'winners', 'held_out', 'cap', 'ceremony']) {
+    expect(closed).toContain(`cc-key-badge">${keyFor('lottery', action)}</kbd>`);
   }
+  for (const moved of ['Reveal by hand', 'Ceremony sound', 'Play demo', 'data-role="lot-legend"']) expect(closed).not.toContain(moved);
+  const drawer = lotDrawer(lotterySession(queue).port);
+  drawer.open();
+  try {
+    const opened = renderToStaticMarkup(room);
+    const content = opened.slice(opened.indexOf('role="dialog"'));
+    for (const action of ['by_hand', 'sound', 'info']) expect(content).toContain(`cc-key-badge">${keyFor('lottery', action)}</kbd>`);
+    for (const moved of ['Reveal by hand', 'Ceremony sound', 'Play demo', 'data-role="lot-legend"']) expect(content).toContain(moved);
+  } finally { drawer.close(); }
 });
 
 test('the compact proof summary retains the full explanation inside the reachable drawer', () => {
@@ -115,4 +132,17 @@ test('the compact proof summary retains the full explanation inside the reachabl
     expect(content).toContain('Stylised illustration');
     expect(content).toContain('SIMULATED');
   } finally { drawer.close(); }
+});
+
+test('the compact reveal summary never exposes winner names, while the full drawer list follows the same cursor', () => {
+  const clock = createRevealClock();
+  const key = `${fixtureWrit.seal}:urn:0`;
+  const scene = stageScene('urn', { winners: fixtureWrit.winners, label: 'streamer-controlled' }, 'question', false);
+  clock.pace(true, 0); clock.tick(scene, key, 0); clock.tick(scene, key, 100_000); clock.callNext(100_000);
+  const summary = renderToStaticMarkup(<RevealedWinners compact clock={clock} seal={fixtureWrit.seal} total={fixtureWrit.winners.length} />);
+  expect(summary).toContain(`1 of ${fixtureWrit.winners.length} revealed`);
+  for (const winner of fixtureWrit.winners) expect(summary).not.toContain(winner);
+  const full = renderToStaticMarkup(<RevealedWinners clock={clock} seal={fixtureWrit.seal} total={fixtureWrit.winners.length} />);
+  expect(full).toContain(fixtureWrit.winners[0]);
+  for (const winner of fixtureWrit.winners.slice(1)) expect(full).not.toContain(winner);
 });
