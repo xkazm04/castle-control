@@ -57,8 +57,6 @@
 @media (width < 90rem) {
   .stream-body { grid-template-columns: minmax(0, 26rem) minmax(0, 1fr); gap: 22px; }
   .stream-output { grid-template-columns: 7.5rem minmax(0, 1fr); gap: 14px; }
-  .stream-output-actions { grid-template-columns: minmax(0, 1fr); }
-  .stream-output-actions .cc-btn { justify-self: start; }
   .stream-plan { grid-template-columns: minmax(0, 1fr); gap: 6px; }
   .stream-size { grid-auto-flow: column; justify-content: start; align-items: baseline; justify-items: start; gap: 12px; text-align: left; }
   .stream-size small { max-width: none; }

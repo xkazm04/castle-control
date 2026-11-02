@@ -6,7 +6,7 @@
 .rh-body { display: grid; gap: 18px; padding-top: 28px; min-width: 0; }
 .rh-intro { max-width: 92ch; font: 400 var(--text-t-body)/1.5 var(--font-book); color: var(--ink-2); border-left: 3px solid var(--ch); padding: 2px 0 2px 14px; }
 .rh-body > .cc-notice-region:empty { display: none; }
-.rh-body > .cc-notice-region { font: 600 var(--text-t-small)/1.4 var(--font-text); color: var(--ink); }
+.rh-body > .cc-notice-region { justify-self: start; padding: 8px 14px; font: 700 var(--text-t-small)/1.4 var(--font-text); color: var(--or-ink); background: var(--or-wash); box-shadow: inset 3px 0 0 var(--or); }
 .rh-notice { font: italic 400 var(--text-t-small)/1.4 var(--font-book); color: var(--muted); overflow-wrap: anywhere; }
 .rh-notice:empty { display: none; }
 
