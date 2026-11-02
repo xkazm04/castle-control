@@ -1,6 +1,7 @@
 import { afterEach, expect, test, vi } from 'vitest';
 import { answerStep, chamberChips, matchIntent, startFlow, walkFlow } from '@castle-control/ui/steward-flow';
 import type { AnyStewardFlow, FlowState } from '@castle-control/ui/steward-flow';
+import type { TiltyardAction } from '@castle-control/contract';
 import { studioSteward } from './steward-flows.js';
 import { fixtureDuel, fixturePicture } from './duel-fixture.js';
 import { DEMO_KEY, duelHost } from './duel-host.js';
@@ -54,14 +55,22 @@ test('a custom list asks the question and the seeded entries, refusing bad count
   expect(entryIds([{ title: 'Spare it!' }, { title: 'spare it' }, { title: '!!' }])).toEqual(['spare-it', 'spare-it-2', 'entry-3']);
 });
 
+/** A typed core door `run`, so recorded actions keep their contract type. */
+const coreRun = () => vi.fn<(action: TiltyardAction) => Promise<void>>(async () => {});
+/** Narrow a recorded action to the tournament start, failing loudly on anything else. */
+function started(action: TiltyardAction | undefined): Extract<TiltyardAction, { kind: 'start' }> {
+  if (action?.kind !== 'start') throw new Error(`expected a start action, got ${action?.kind ?? 'none'}`);
+  return action;
+}
+
 test('the core seal starts the tournament through the mounted adapter and fails loudly when it cannot', async () => {
   const flow = core.flows[0]!;
   const draft = walkFlow(flow, walk(flow, ['bosses', 'keep', '15', 'first'])).draft;
   await expect(flow.seal(draft)).rejects.toThrow('not on screen');
-  const run = vi.fn<(action: unknown) => Promise<void>>(async () => {});
+  const run = coreRun();
   duelHost.setCore({ run, copySource: vi.fn(async () => {}), outcome: () => ({}) });
   await flow.seal(draft);
-  const action = run.mock.calls[0]?.[0] as unknown as { kind: string; key: string; window_ms: number; list: { items: { id: string; seed: string }[] } };
+  const action = started(run.mock.calls[0]?.[0]);
   expect(action).toMatchObject({ kind: 'start', key: 'duel', window_ms: 15_000 });
   expect(action.list.items).toHaveLength(8);
   expect(action.list.items.map(item => item.seed)).toEqual(['1', '2', '3', '4', '5', '6', '7', '8']);
@@ -77,10 +86,10 @@ test('Play demo is SIMULATED, previews four sample contestants and plays at thre
   expect(view.draft).toMatchObject({ demo: true });
   await demo.seal(view.draft);
   expect(fixturePicture(fixtureDuel.getSnapshot())).toMatchObject({ phase: 'live', demo: true, speed: 3, key: DEMO_KEY });
-  const run = vi.fn<(action: unknown) => Promise<void>>(async () => {});
+  const run = coreRun();
   duelHost.setCore({ run, copySource: vi.fn(async () => {}), outcome: () => ({}) });
   await core.demo!.seal(view.draft);
-  expect(run.mock.calls.map(call => (call[0] as unknown as { kind: string }).kind)).toEqual(['start', 'speed']);
+  expect(run.mock.calls.map(([action]) => action.kind)).toEqual(['start', 'speed']);
 });
 
 test('Duel on stream copies only in core mode and says so in fixture mode', async () => {

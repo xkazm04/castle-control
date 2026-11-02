@@ -16,12 +16,19 @@ export type CoreDuelDoor = {
 
 let core: CoreDuelDoor | undefined;
 let picture: DuelPicture | undefined;
+const listeners = new Set<() => void>();
 
 export const duelHost = {
   setCore(door: CoreDuelDoor | undefined) { core = door; },
   core: () => core,
-  setPicture(next: DuelPicture | undefined) { picture = next; },
+  setPicture(next: DuelPicture | undefined) {
+    if (next === picture) return;
+    picture = next;
+    for (const listener of [...listeners]) listener();
+  },
   picture: () => picture,
+  /** Lets the chamber strip follow the duel live (useSyncExternalStore with `picture`). */
+  subscribe(listener: () => void) { listeners.add(listener); return () => { listeners.delete(listener); }; },
 };
 
 /** Run a core action through the mounted adapter, refusing loudly when it cannot. */
