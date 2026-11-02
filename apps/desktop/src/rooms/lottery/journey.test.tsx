@@ -8,6 +8,7 @@ import { draftRoll, lotterySession, sealLotteryProposal } from './session.js';
 import { createLotsPreview } from '../../lots-model.js';
 import { fixtureDraws } from '../../lots-fixture.js';
 import { createDrawDisplay } from './display.js';
+import { renderLotDrawer } from './drawer-test.jsx';
 import { DrawAppearance } from './appearance.jsx';
 
 vi.mock('react', async importOriginal => ({ ...await importOriginal<typeof React>() }));
@@ -91,7 +92,7 @@ test.each(['blur', 'Enter'] as const)('reveal timing clamps only on %s commit', 
 });
 
 const snapshot = { mode: 'fixture', phase: 'ready' } as const;
-const room = (queue: ProposalQueue) => renderToStaticMarkup(<LotteryRoom snapshot={snapshot} replay={false} queue={queue} />);
+const room = (queue: ProposalQueue) => renderLotDrawer(lotterySession(queue).port, <LotteryRoom snapshot={snapshot} replay={false} queue={queue} />);
 const source = fixtureDraws[0];
 if (!source) throw new Error('Missing simulated draw');
 

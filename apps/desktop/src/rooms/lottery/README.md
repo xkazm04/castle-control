@@ -426,3 +426,56 @@ Google Chrome use was not approved.
 No measured before/after values or browser layout pass are claimed. The
 Director must run the two Lots journeys with browser access to close visual
 acceptance. No external result path was supplied in the FU-2 brief.
+
+
+## T3 WP4-lot: The Deck chamber frame
+
+Fixture and connected core rooms now compose the same LotChamber over the public
+ChamberLayout, ChamberSection and Drawer primitives. The original StagePanel and
+DrawStage occupy the 16:9 picture; Preview reads the pending proposal/Steward draft,
+and Program reads the current fixture/core draw. No sample core counts are invented.
+
+- Column 1: compact winner/cooldown-derived held-out/cap readings and edits,
+  ceremony shape, hand reveal, sound, info and theatre; the current question,
+  pool and policy verdict. Held out opens the existing cooldown editor rather
+  than inventing an independently editable exclusion count. Core winner typing
+  retains its buffered blur/Enter commit and lock/busy checks.
+- Column 2: the roll (actual fixture cohort bar/counts, unknown core cohorts),
+  cast/setup actions and notices, and Prove it. Its compact winner list follows
+  the existing reveal clock; the full ordered list remains in the drawer.
+- Drawer: complete current/saved writs, frozen bytes and hash recomputation,
+  Writ Lab, intake, full setup, tier/equalizer, appearance and OBS details,
+  round note, refresh, no-prize creation, lookup, seal frame, design actions and
+  fairness. The original More grouping starts expanded inside the drawer.
+
+Theatre expands the same stage without replacing its reveal clock. Enter and
+return transfer focus between the visible theatre control and the active hand
+call. The canonical prize disclaimer stays visible in both picture sizes.
+
+The old stage/desk assertions now target the picture and two section columns.
+Assertions for lookup, saved proof, fairness, complete writs, appearance and
+seal/design controls open the real session-owned drawer before inspecting them.
+Shared navigation/room test edits are limited to lottery cases. No coverage for
+another room was changed. chamber.test.tsx checks both room modes, their actual
+drawer trigger/open/close sequence, all five sections, and reveal-order privacy.
+
+journey-lots-stage.spec.ts pins the picture to the shared clamp and 16:9 ratio
+(380 x 213.75 at 1280 wide; 423 x 237.9375 at 1366 wide). The old 260px drawing
+minimum applies only in theatre, superseding the old desk minimum. Four shapes,
+two themes, control containment, text floors, room overflow, keyboard theatre,
+manual Space calls and proof/tamper checks remain covered in the journey.
+
+Browser execution was attempted with CC_E2E_PORT=5181 and:
+`pnpm --config.verify-deps-before-run=false exec playwright test -c e2e/playwright.config.ts e2e/journey-lots-stage.spec.ts --project chrome-1280x800`.
+It stopped before assertions with `Error: spawn EPERM`; no measured fit or visual
+fidelity pass is claimed. The desktop dev server started successfully on 5175
+because 5173 and 5174 were occupied, and was stopped after the launcher check.
+
+Final validation after the WP1 merge: desktop typecheck and lint both exit 0
+(364 source files); desktop test exits 0 with 127 files / 1,155 tests passed.
+`node scripts/check.mjs` exits 0: boundaries/hygiene/file-cap 1,362 files,
+type-floor 301 files, secrets 1,814 files. E2E TypeScript and ESLint checks
+also exit 0. No dependencies were installed and no git write was performed.
+The shared e2e/lots-steward.ts cast helper and journey-lots.spec.ts are outside
+this delivery's stage-spec edits; their old card/desk selectors still need the
+Director's integration migration and browser verification.
