@@ -3,7 +3,7 @@ import type { Visual } from '@castle-control/contract';
 import { HeroReadout, Plate, PlateBand, StatusChip } from '@castle-control/ui';
 import { beaconsCopy as copy } from '../../beacons-copy.js';
 import { source_labels } from './contribution-input.js';
-import { BeaconArtwork } from './artwork.jsx';
+import { BeaconThumb } from './stage.jsx';
 import { findPreset } from './presets.js';
 
 export type PlateVisual = { visual: Visual; total?: number; intensity?: number };
@@ -59,8 +59,8 @@ export function BeaconPlates<T extends PlateVisual>({ visuals, selected, on_sele
           count={<span className="visuals-plate-state" data-idle={!chosen}>{chosen ? copy.selected : copy.select}</span>} />}>
         <span className="visuals-plate-name">{item.visual.name}</span>
         <span className="visuals-plate-art" data-on-air="false">
-          <BeaconArtwork item={{ visual: item.visual, gift_weight: 1, total: item.total ?? 0, intensity: item.intensity ?? 0 }} hero
-            {...(core ? { label: copy.core_art(item.visual.name) } : {})} />
+          <BeaconThumb visual={item.visual} intensity={item.intensity ?? 0}
+            label={core ? copy.core_art(item.visual.name) : `${item.visual.name} · simulated local preview`} />
           {chosen && draft}
         </span>
         <span className="visuals-plate-row">

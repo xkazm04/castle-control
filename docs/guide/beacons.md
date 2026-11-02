@@ -10,15 +10,33 @@ Sources: [Beacons domain](../../crates/cc-beacons/README.md),
 
 ## Preview or configure a visual
 
-Fixture mode shows an altar, camera frame and border. Selection, simulated
-gift/sub bursts and clock advancement affect a local preview only. **Test fire**
+Fixture mode opens on one picture: the selected beacon drawn on a stream screen
+(offering altar, gilded camera frame or hype border) at its current blaze, with
+a sparkline of the sample night. Pick another beacon from the cards under it.
+Setup runs through the Steward dock, one small choice at a time, and the picture
+shows each draft live; nothing changes until the final hold to seal:
+
+- **Tune a beacon**: which beacon, what feeds it (gift subs, subscriptions, bits,
+  channel points), how strongly (As it is, Gentle, Balanced, Eager, each measured
+  against two generated nights), how fast it cools, then a look at the sample
+  night and the hold.
+- **Test fire**: a sample contribution (one sub, 10 or 50 gift subs, a quiet
+  minute); the picture shows the before and after blaze, the hold fires it.
+- **Replay a night**: a beacon and a generated night; the picture plays it while
+  the Steward narrates, then keep the curve or take the fitted point move.
+- **Play demo**: a SIMULATED night plays end to end in the picture with
+  narration; the hold seals its curve into the sample room only.
+
+The full workbench (night replay, control-point editor, appearance, browser
+source copy and feeds) sits behind **More**. Selection, simulated gift/sub
+bursts and clock advancement affect a local preview only. **Test fire**
 does not call OBS or create a real contribution. Draft artwork from the shared
 proposal queue is marked `DRAFT` and does not silently replace the current look.
 Source: [fixture room](../../apps/desktop/src/rooms/visuals/README.md).
 
 ### Replay a night (fixture mode)
 
-**Replay a night** sits under the plates. Pick **Sample night** (the 60
+The **Replay a night** workbench sits under **More**. Pick **Sample night** (the 60
 illustrative offerings), **Gift wave**, **Raid spike** or **Sub train**, then
 **Play** at 1x, 10x or 30x (the whole 48 minutes in 96 s), or scrub with the
 range or by pressing on the trace; pointing at the trace reads any minute's

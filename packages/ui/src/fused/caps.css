@@ -41,8 +41,6 @@
 /* apps/desktop/src/rooms/studio/room.css */
 .cc-frame .studio-room .room-proposal-draft h3 { font-family: var(--font-label); font-stretch: normal; text-transform: lowercase; letter-spacing: var(--track-label); }
 .cc-frame .studio-room .cc-seal-card > .shell-seal-slot > h2 { font-family: var(--font-label); font-stretch: normal; text-transform: lowercase; letter-spacing: var(--track-label); }
-/* apps/desktop/src/rooms/visuals/room.css */
-.cc-frame .visuals-plate .visuals-plate-name { font-family: var(--font-label); font-stretch: normal; text-transform: lowercase; letter-spacing: var(--track-label); }
 /* apps/desktop/src/shell/room.css */
 .cc-frame .shell-room :where(h3) { font-family: var(--font-label); font-stretch: normal; text-transform: lowercase; letter-spacing: var(--track-label); }
 /* apps/desktop/src/stream/setup.css */

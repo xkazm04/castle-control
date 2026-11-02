@@ -46,9 +46,9 @@ test('art outside the bays sits below the h2 configuration panel and its receipt
 });
 
 // C replaces the standalone figure and boxed tiers with literal radio plates and stair ramps.
-test('C plate inset and active stairs track the unchanged preview totals', () => {
+test('picker cards keep their inline stair ramps tracking the unchanged preview totals', () => {
   const style = readFileSync(new URL('./room.css', import.meta.url), 'utf8');
-  expect(style).toContain('padding: var(--space-20) var(--space-24) var(--space-28)');
+  expect(style).toContain('padding: 22px var(--gutter) 34px');
   expect(Number.parseFloat(tokens.layout['space-24'])).toBeGreaterThan(0);
   expect(style).toContain('clip-path: polygon(0 100%, 0 calc((1 - var(--from)) * 100%)');
   expect(style).toContain('background: var(--or)');
@@ -79,23 +79,22 @@ test('fixture room contains the altar, frames, border, 60 offerings and local te
   expect(html).not.toContain('visuals-room-notice');
 });
 
-// C has one scrolling board and a lower panel row; the previous two-column rhythm is superseded.
-test('C regions remain compare, tune, timeline, feed, then the original seal slot', () => {
+// One scrolling board: the picture, the picker, then the workbench folded behind More.
+test('regions run picture, picker, then More: compare, tune, timeline, feed and the original seal slot', () => {
   const style = readFileSync(new URL('./room.css', import.meta.url), 'utf8');
   expect(style).toMatch(/\.visuals-board\s*\{[^}]*overflow: auto;[^}]*flex-direction: column/);
   expect(style).toMatch(/\.visuals-board > \*\s*\{[^}]*flex-shrink: 0/);
-  expect(style).toContain('padding: var(--space-20) var(--space-24) var(--space-28)');
   const html = renderToStaticMarkup(<VisualsWork seal_slot={<aside className="shell-seal-slot" aria-label="Seal slot" />} />);
-  const regions = ['class="visuals-plates"', 'visuals-bench', 'The kindling curve', 'visuals-fire-grid',
+  const regions = ['aria-label="Beacon picture"', 'class="visuals-plates"', 'visuals-more', 'visuals-bench', 'The kindling curve', 'visuals-fire-grid',
     'visuals-room-details', 'aria-label="Illustrative offerings timeline"', 'aria-label="Contribution feed"', 'aria-label="Seal slot"'];
   const positions = regions.map(region => html.indexOf(region));
   expect(positions.every(position => position >= 0)).toBe(true);
   expect(positions).toEqual([...positions].sort((left, right) => left - right));
   expect(html).toContain('</aside></div></div>');
-  expect(style).toMatch(/\.visuals-seal-panel\s*\{[^}]*border: var\(--rule-medium\) solid var\(--ink\)/);
+  expect(style).toMatch(/\.visuals-seal-panel\s*\{[^}]*border: 1\.5px solid var\(--lead\)/);
   const frame = style.match(/\.visuals-seal-panel\s*\{([^}]+)\}/)?.[1];
   expect(frame).not.toMatch(/padding|border-top/);
-  expect(style).toMatch(/\.visuals-seal-panel > \.shell-seal-slot\s*\{[^}]*padding: var\(--space-12\) var\(--space-14\) var\(--space-14\); border-top: 0/);
+  expect(style).toMatch(/\.visuals-seal-panel > \.shell-seal-slot\s*\{[^}]*padding: 12px 14px 14px; border-top: 0/);
 });
 
 test('core mode never shows simulated controls or a fixture proposal', () => {

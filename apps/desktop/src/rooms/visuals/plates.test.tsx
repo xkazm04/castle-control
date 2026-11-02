@@ -18,11 +18,12 @@ test('C compares three radio plates, each with its own cropped artwork and inlin
   expect(html.match(/aria-checked="false"/g)).toHaveLength(2);
   expect(html.match(/tabindex="-1"/g)).toHaveLength(2);
   for (const item of port.getSnapshot().visuals) {
-    expect(html).toContain(`--room-blaze:${item.intensity}`);
+    expect(html).toContain(`--blaze:${item.intensity.toFixed(3)}`);
     expect(html).toContain(`${item.visual.name} · simulated local preview`);
   }
-  expect(html.match(/viewBox="84 25 192 218"/g)).toHaveLength(1);
-  expect(html.match(/viewBox="14 24 332 192"/g)).toHaveLength(2);
+  // Each card is a small stream screen: an altar object, a camera frame and a screen border.
+  const thumbs = html.match(/class="visuals-thumb"[^>]*data-kind="(\w+)"/g)?.map(match => match.replace(/.*data-kind="/, '').replace('"', ''));
+  expect(thumbs).toEqual(['object', 'frame', 'border']);
   expect(html).toContain('--from:0.25;--to:0.6;--frac:40%');
   expect(html.match(/--from:/g)).toHaveLength(12);
   expect(html).toContain('25→60%');

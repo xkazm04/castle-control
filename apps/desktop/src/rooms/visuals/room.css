@@ -1,57 +1,71 @@
-/* C Plates: one scroll, then compare, tune, inspect. Shared chrome stays in the kit. */
-.visuals-room { --room-ink: var(--or-text); height: 100%; min-height: 0; color: var(--ink); font: 400 var(--text-body)/1.5 var(--font-ui); }
-.visuals-board { height: 100%; overflow: auto; display: flex; flex-direction: column; gap: var(--space-20); padding: var(--space-20) var(--space-24) var(--space-28); }
+/* Illuminated Beacons: one picture, a picker of beacon cards, and the workbench behind "More". */
+.visuals-room { --room-ink: var(--or-text); height: 100%; min-height: 0; color: var(--ink); font: 400 var(--text-t-body)/1.5 var(--font-text); }
+.visuals-board { height: 100%; overflow: auto; display: flex; flex-direction: column; gap: 26px; padding: 22px var(--gutter) 34px; }
 .visuals-board > * { flex-shrink: 0; min-width: 0; margin: 0; }
-.visuals-plates { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-20); padding: 0 var(--space-6) var(--space-6) 0; }
-.visuals-plate .visuals-plate-name { font: 800 var(--text-chamber)/1.05 var(--font-display); letter-spacing: var(--track-chamber); text-transform: uppercase; overflow-wrap: anywhere; }
-.visuals-plate[aria-checked="true"] .visuals-plate-name { color: var(--or-text); }
-.visuals-plate .cc-plate-band[data-band="chief"] { white-space: nowrap; }
-.visuals-plate .cc-plate-band[data-band="chief"] .cc-plate-count { flex-shrink: 0; }
-.visuals-plate .visuals-plate-state[data-idle="true"] { font-weight: 600; color: var(--muted); }
-.visuals-plate-art { position: relative; display: block; height: calc(var(--space-56) * 2); background: var(--paper-2); border: var(--rule-thin) solid var(--line); }
-.visuals-plate-art .visuals-room-art { position: absolute; inset: var(--space-8); }
+
+/* The picker: large cards, each a small screen with the beacon at its own blaze. */
+.visuals-picker { display: grid; gap: 12px; }
+.visuals-picker__title { margin: 0; display: flex; align-items: baseline; gap: 10px; padding-bottom: 6px; border-bottom: 1.5px solid var(--ink-2);
+  font: 800 var(--text-t-h4)/1.1 var(--font-label); letter-spacing: var(--track-label); text-transform: lowercase; color: var(--ink); }
+.visuals-picker__title em { font: italic 400 var(--text-t-small)/1.2 var(--font-book); letter-spacing: 0; text-transform: none; color: var(--muted); }
+.visuals-plates { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
+.visuals-plate.cc-plate.cc-plate { border: 1px solid var(--hair); background: var(--surface); box-shadow: var(--shadow); gap: 8px; padding-bottom: 14px; }
+.visuals-plate.cc-plate[data-variant="choice"]:hover { transform: translateY(-2px); }
+.visuals-plate.cc-plate[aria-checked="true"] { border-color: var(--ch); box-shadow: inset 0 4px 0 var(--ch), var(--shadow), 0 0 calc(var(--glow-on) * 16px) var(--ch-glow); }
+.visuals-plate .cc-plate-band[data-band="chief"] { white-space: nowrap; background: transparent; border-bottom: 1px solid var(--hair); padding: 9px 14px 7px; }
+.visuals-plate .cc-plate-band[data-band="chief"] .cc-plate-title { font: 800 var(--text-t-label)/1 var(--font-label); letter-spacing: var(--track-wide); text-transform: lowercase; color: var(--ink-2); }
+.visuals-plate .cc-plate-band[data-band="chief"] .cc-plate-count { flex-shrink: 0; font: 800 var(--text-t-label)/1 var(--font-label); letter-spacing: var(--track-label); text-transform: lowercase; color: var(--muted); }
+.visuals-plate.cc-plate[aria-checked="true"] .cc-plate-band[data-band="chief"] { background: var(--ch-wash); }
+.visuals-plate[aria-checked="true"] .cc-plate-band[data-band="chief"] :is(.cc-plate-count, .cc-plate-title) { color: var(--ch-ink); }
+.visuals-plate .visuals-plate-state[data-idle="true"] { font-weight: 700; color: var(--muted); }
+.visuals-plate .visuals-plate-name { font: 600 var(--text-t-h4)/1.05 var(--font-display); color: var(--ink); overflow-wrap: anywhere; }
+.visuals-plate[aria-checked="true"] .visuals-plate-name { color: var(--ch-ink); }
+.visuals-plate-art { position: relative; display: block; }
+.visuals-thumb { position: relative; display: block; aspect-ratio: 5 / 2; overflow: hidden; background: var(--art-shade); box-shadow: inset 0 0 0 2px var(--lead), 0 0 0 1px var(--gilt-mid); container-type: size; }
+.visuals-plate-row { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 14px; align-items: end; }
+.visuals-plate-meta { font: 500 var(--text-t-label)/1.3 var(--font-mono); color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.visuals-plate-foot { display: flex; flex-wrap: wrap; gap: 6px; margin-top: auto; }
+.visuals-plate-row .cc-hero-figure small { margin-left: 0; }
+.visuals-plate-row .cc-hero-figure[data-text="Unavailable"] { font-size: var(--text-t-label); letter-spacing: 0; }
+.visuals-stair { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 2px; min-width: 0; }
+.visuals-stair-step { display: grid; gap: 1px; min-width: 0; font: 400 var(--text-t-label)/1.2 var(--font-mono); color: var(--muted); white-space: nowrap; }
+.visuals-stair-step i { position: relative; display: block; height: 26px; margin-bottom: 3px; border-bottom: 1.5px solid var(--ink-2); }
+.visuals-stair-step i::before { content: ""; position: absolute; inset: 0; background: var(--hair-2); clip-path: polygon(0 100%, 0 calc((1 - var(--from)) * 100%), 100% calc((1 - var(--to)) * 100%), 100% 100%); }
+.visuals-stair-step:is([data-state="passed"], [data-state="active"]) i::before { background: var(--or); }
+.visuals-stair-step[data-state="active"] i { background: var(--ch-wash); }
+.visuals-stair-step[data-state="active"] i::after { content: ""; position: absolute; top: 0; bottom: 0; left: var(--frac); width: 2px; background: var(--gules); }
+.visuals-stair-step b { font-weight: 500; color: var(--ink-2); overflow: hidden; text-overflow: ellipsis; }
+.visuals-stair-step > span { overflow: hidden; text-overflow: ellipsis; }
+.visuals-stair-step[data-state="active"] :is(b, span) { color: var(--ch-ink); font-weight: 700; }
+/* A draft is read-only shared content. Expand its plate so the full provenance stays visible. */
+.visuals-plate-art .room-proposal-layers:empty { display: none; }
+.visuals-plate-art:has(.room-proposal-draft) { height: auto; }
+.visuals-plate-art .room-proposal-layers { position: relative; margin: 8px 0 0; }
+.visuals-plate-art .room-proposal-draft { text-align: left; }
+
+/* More: the full workbench, folded away until asked for (or a proposal awaits a seal). */
+.visuals-more > summary { font: 800 var(--text-t-label)/1.2 var(--font-label); letter-spacing: var(--track-label); text-transform: lowercase; color: var(--ink); }
+.visuals-more > summary span { font: italic 400 var(--text-t-small)/1.2 var(--font-book); letter-spacing: 0; text-transform: none; color: var(--muted); }
+.visuals-more__body { gap: 22px; padding-top: 6px; }
+.visuals-more__body > * { margin: 0; min-width: 0; }
+.visuals-panels { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; align-items: start; }
+.visuals-seal-panel { min-width: 0; border: 1.5px solid var(--lead); background: var(--surface); }
+.visuals-room .visuals-seal-panel > .shell-seal-slot { margin: 0; padding: 12px 14px 14px; border-top: 0; }
+.visuals-note { margin: 0; font-size: var(--text-t-label); line-height: 1.45; color: var(--muted); }
+.visuals-readout { padding: 8px 10px; border: 1px solid var(--hair); background: var(--vellum); font: var(--text-t-label)/1.5 var(--font-mono); }
+.visuals-room-timeline svg { display: block; width: 100%; height: auto; }
+.visuals-room-timeline-rule { fill: none; stroke: var(--ink-2); }
+.visuals-room-offering { fill: var(--or); stroke: var(--ink-2); }
+.visuals-room-offering-selected { fill: var(--ink); stroke: var(--or-text); stroke-width: 2px; }
+.visuals-room-time-labels { display: flex; justify-content: space-between; gap: 8px; font: 500 var(--text-t-label)/1.3 var(--font-mono); color: var(--muted); }
+.visuals-room-timeline label { display: grid; gap: 6px; font: 800 var(--text-t-label)/1.2 var(--font-label); letter-spacing: var(--track-wide); text-transform: lowercase; color: var(--ink-2); }
+.visuals-room-timeline input { box-sizing: border-box; min-width: 0; width: 100%; margin: 0; accent-color: var(--or-text); }
 .visuals-room-art svg { display: block; width: 100%; height: auto; }
-.visuals-plate-art .visuals-room-art-hero svg { width: 100%; height: 100%; max-width: 100%; max-height: 100%; }
 .visuals-room-stone { fill: var(--ink); }
 .visuals-room-cutout { fill: var(--paper-2); }
 .visuals-room-fire { fill: var(--or); opacity: calc(.3 + var(--room-blaze) * .7); transform-box: fill-box; transform-origin: bottom; transform: scaleY(calc(.3 + var(--room-blaze) * .7)); }
 .visuals-room-fire-core { fill: var(--gules); opacity: var(--room-blaze); }
-.visuals-room-glow { fill: none; stroke: var(--or); stroke-width: var(--space-8); opacity: calc(.2 + var(--room-blaze) * .8); }
-.visuals-plate-row { display: grid; grid-template-columns: minmax(0, calc(var(--space-28) * 3)) minmax(0, 1fr); gap: var(--space-12); align-items: end; }
-.visuals-plate-meta { margin-top: calc(-1 * var(--space-4)); font: 600 var(--text-label)/1.3 var(--font-num); color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.visuals-plate-foot { display: flex; flex-wrap: wrap; gap: var(--space-6); margin-top: auto; }
-/* Numeric kit markup keeps the literal 2px readout gap, not the label-caption opt-in. */
-.visuals-plate-row .cc-hero-figure small { margin-left: 0; }
-.visuals-plate-row .cc-hero-figure[data-text="Unavailable"] { font-size: var(--text-label); letter-spacing: 0; }
-.visuals-stair { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-2); min-width: 0; }
-.visuals-stair-step { display: grid; gap: var(--space-1); min-width: 0; font: 400 var(--text-label)/1.2 var(--font-num); color: var(--muted); white-space: nowrap; }
-.visuals-stair-step i { position: relative; display: block; height: var(--space-40); margin-bottom: var(--space-4); border-bottom: var(--rule-medium) solid var(--ink); }
-.visuals-stair-step i::before { content: ""; position: absolute; inset: 0; background: var(--hair-2); clip-path: polygon(0 100%, 0 calc((1 - var(--from)) * 100%), 100% calc((1 - var(--to)) * 100%), 100% 100%); }
-.visuals-stair-step:is([data-state="passed"], [data-state="active"]) i::before { background: var(--or); }
-.visuals-stair-step[data-state="active"] i { box-shadow: inset 0 0 0 var(--rule-thin) var(--ink); }
-.visuals-stair-step[data-state="active"] i::after { content: ""; position: absolute; top: 0; bottom: 0; left: var(--frac); width: var(--rule-strong); background: var(--gules); }
-.visuals-stair-step b { font-weight: 700; color: var(--ink-2); overflow: hidden; text-overflow: ellipsis; }
-.visuals-stair-step > span { overflow: hidden; text-overflow: ellipsis; }
-.visuals-stair-step[data-state="active"] :is(b, span) { color: var(--ink); font-weight: 700; }
-/* A draft is read-only shared content. Expand its plate so the full provenance stays visible. */
-.visuals-plate-art .room-proposal-layers:empty { display: none; }
-.visuals-plate-art:has(.room-proposal-draft) { height: auto; padding-top: calc(var(--space-56) * 2); }
-.visuals-plate-art:has(.room-proposal-draft) .visuals-room-art { bottom: auto; height: calc(var(--space-56) * 2 - var(--space-16)); }
-.visuals-plate-art .room-proposal-layers { position: relative; margin: var(--space-8); }
-.visuals-plate-art .room-proposal-draft { text-align: left; }
-.visuals-panels { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-20); align-items: start; }
-.visuals-seal-panel { min-width: 0; border: var(--rule-medium) solid var(--ink); background: var(--card); }
-/* No inner frame, extra padding or rule: only the prototype's slot inset. */
-.visuals-room .visuals-seal-panel > .shell-seal-slot { margin: 0; padding: var(--space-12) var(--space-14) var(--space-14); border-top: 0; }
-.visuals-note { margin: 0; font-size: var(--text-label); line-height: 1.45; color: var(--muted); }
-.visuals-readout { padding: var(--space-8) var(--space-10); border: var(--rule-thin) solid var(--line); background: var(--paper); font: var(--text-label)/1.5 var(--font-num); }
-.visuals-room-timeline svg { display: block; width: 100%; height: auto; }
-.visuals-room-timeline-rule { fill: none; stroke: var(--ink); }
-.visuals-room-offering { fill: var(--or); stroke: var(--ink); }
-.visuals-room-offering-selected { fill: var(--ink); stroke: var(--or-text); stroke-width: var(--rule-medium); }
-.visuals-room-time-labels { display: flex; justify-content: space-between; gap: var(--space-8); font: 600 var(--text-label)/1.3 var(--font-num); color: var(--muted); }
-.visuals-room-timeline label { display: grid; gap: var(--space-6); font: 800 var(--text-label)/1.2 var(--font-ui); letter-spacing: var(--track-wide); text-transform: uppercase; color: var(--ink-2); }
-.visuals-room-timeline input { box-sizing: border-box; min-width: 0; width: 100%; margin: 0; accent-color: var(--or-text); }
+.visuals-room-glow { fill: none; stroke: var(--or); stroke-width: 8px; opacity: calc(.2 + var(--room-blaze) * .8); }
 @media (max-width: 68.75rem) { .visuals-panels { grid-template-columns: minmax(0, 1fr); } }
 @media (max-width: 56.25rem) { .visuals-plates { grid-template-columns: minmax(0, 1fr); } }
 @media (prefers-reduced-motion: reduce) { .visuals-plate { transition: none; } }
