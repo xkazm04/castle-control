@@ -166,9 +166,12 @@ const compile = path => ts.transpileModule(readFileSync(path, 'utf8'), {
 }).outputText;
 const url = source => 'data:text/javascript;base64,' + Buffer.from(source).toString('base64');
 const model = url(compile('apps/desktop/src/demo/model.ts'));
-const source = compile('apps/desktop/src/rooms/visuals/presets.ts').replace('../../demo/model.js', model);
-const { presets } = await import(url(source));
-process.stdout.write(JSON.stringify(presets));
+const library = url(compile('apps/desktop/src/custom-design/presets.ts'));
+const source = compile('apps/desktop/src/rooms/visuals/presets.ts').replace('../../demo/model.js', model)
+  .replace('../../custom-design/presets.js', library);
+// The embedded classic presets; the pickers' library presets are imported by beacons.library.import.
+const { classic_presets } = await import(url(source));
+process.stdout.write(JSON.stringify(classic_presets));
 "#])
         .output().unwrap();
     assert!(
