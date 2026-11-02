@@ -80,6 +80,7 @@ impl Gatehouse {
             && (0..REVIEW_TIMEOUT_S).contains(&age)
             && unchanged
             && !original.privileged()
+            && (!self.simulated_only || (original.simulated && queued.simulated))
             && !self.caring(&original.user_id)?;
         let (kind, verdict, reason, intent) = if allowed {
             (

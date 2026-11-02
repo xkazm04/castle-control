@@ -1,4 +1,5 @@
 //! Private generated-chat door. No RPC accepts text or caller-supplied identities.
+mod crowd;
 pub(crate) mod directions;
 mod scenarios;
 #[cfg(test)]
@@ -32,9 +33,19 @@ impl Door {
         self.send_text(&format!("SIMULATED {body}"))
     }
     fn send_text(&self, text: &str) -> Result<(), ErrorEnvelope> {
+        self.send_from(None, text)
+    }
+    /// A recurring generated chatter keeps one identity, so an armed rule's
+    /// ban proposal names the same SIMULATED user each time.
+    fn send_breaker(&self, breaker: &crowd::Breaker) -> Result<(), ErrorEnvelope> {
+        self.send_from(Some(breaker), &format!("SIMULATED {}", breaker.body))
+    }
+    fn send_from(&self, breaker: Option<&crowd::Breaker>, text: &str) -> Result<(), ErrorEnvelope> {
         let sequence = self.sequence.fetch_add(1, Ordering::Relaxed);
-        let viewer = sequence;
-        let login = format!("simulated_viewer_{viewer}");
+        let (viewer, login) = match breaker {
+            Some(breaker) => (breaker.id, breaker.login.to_owned()),
+            None => (sequence, format!("simulated_viewer_{sequence}")),
+        };
         self.sender
             .send(ChatIngress {
                 simulated: true,
@@ -212,14 +223,15 @@ impl RehearsalModule {
                     let door = self.door.clone();
                     let rate = params.per_minute;
                     let task = tokio::spawn(async move {
-                        loop {
+                        for index in 0_u64.. {
                             // Mean interval is 60/rate seconds; jitter is bounded to +/-20%.
                             let seconds = 60.0 / f64::from(rate) * rand::random_range(0.8..1.2);
                             tokio::time::sleep(std::time::Duration::from_secs_f64(seconds)).await;
-                            if door
-                                .send("crowd cheering from the rehearsal seats")
-                                .is_err()
-                            {
+                            let sent = match crowd::line(index) {
+                                Some(breaker) => door.send_breaker(breaker),
+                                None => door.send(crowd::CHEER),
+                            };
+                            if sent.is_err() {
                                 tracing::error!("rehearsal crowd consumer unavailable");
                                 break;
                             }

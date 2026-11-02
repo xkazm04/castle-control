@@ -215,7 +215,17 @@ impl Gatehouse {
         classifier: &dyn Classifier,
         gaps: Vec<BridgeGap>,
     ) -> Result<ScreenedMessage> {
-        self.require_shadow();
+        if self.simulated_only {
+            // Dress rehearsal: nothing but generated chat may reach this gate.
+            if !message.simulated {
+                return Err(crate::error(
+                    cc_types::ErrorCode::BlockedByPolicy,
+                    "dress rehearsal screens only simulated chat",
+                ));
+            }
+        } else {
+            self.require_shadow();
+        }
         self.reap_live_recordings()?;
         let care = self.care_users()?;
         let configuration = DrillConfiguration {

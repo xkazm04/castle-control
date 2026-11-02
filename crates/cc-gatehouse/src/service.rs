@@ -24,6 +24,9 @@ pub struct Gatehouse {
     pub(crate) strikes: Strikes,
     pub(crate) gate_available: bool,
     pub(crate) shadow_only: bool,
+    /// Dress rehearsal: only generated SIMULATED chat is screened, so armed
+    /// rules may record SIMULATED decisions. No executor exists in this crate.
+    pub(crate) simulated_only: bool,
     pub(crate) live_capture: Option<cc_types::GatehouseLiveCapture>,
     pub(crate) care_cache: crate::live_capture::CareCache,
     pub(crate) gate_settings: crate::gate::Settings,
@@ -69,6 +72,7 @@ impl Gatehouse {
             strikes: Strikes::default(),
             gate_available: true,
             shadow_only: false,
+            simulated_only: false,
             live_capture: None,
             care_cache: Default::default(),
             gate_settings: crate::gate::Settings::default(),
@@ -89,6 +93,14 @@ impl Gatehouse {
     /// intent, even when a previously consented armed rule is loaded from disk.
     pub fn require_shadow(&mut self) {
         self.shadow_only = true;
+    }
+
+    /// Irreversible for this instance, and only for a dress rehearsal store.
+    /// Live screening then refuses any message not marked simulated, and a
+    /// confirmed ban is only ever a SIMULATED ledger record. A gate that is
+    /// already shadow-only stays shadow-only.
+    pub fn require_simulated(&mut self) {
+        self.simulated_only = true;
     }
 
     pub fn rules_list(&self, _: Empty) -> Result<RulesListResult> {

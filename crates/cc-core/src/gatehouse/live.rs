@@ -29,6 +29,28 @@ impl GatehouseModule {
         Ok(module)
     }
 
+    /// Dress rehearsal only: a separate store under the rehearsal root, fed by
+    /// the generated door. Armed rules may queue a SIMULATED ban for human
+    /// review; nothing here can reach Twitch (no bridge, no executor), and the
+    /// gate refuses any message that is not marked simulated.
+    pub(crate) fn open_rehearsal(
+        root: impl AsRef<Path>,
+        seeds: Vec<DirectionSeed>,
+    ) -> Result<Self, ErrorEnvelope> {
+        let module = Self::with_gate(Gatehouse::with_clock_and_directions(
+            root,
+            Arc::new(cc_store::SystemClock),
+            seeds,
+        )?);
+        module
+            .state
+            .try_lock()
+            .map_err(|_| internal())?
+            .gate
+            .require_simulated();
+        Ok(module)
+    }
+
     pub(crate) async fn screen_live_shadow(
         &self,
         message: IngestedMessage,

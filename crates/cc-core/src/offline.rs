@@ -177,7 +177,7 @@ impl OfflineModules {
                         false,
                     )?,
                     if self.rehearsal {
-                        GatehouseModule::open_shadow_with_directions(
+                        GatehouseModule::open_rehearsal(
                             root.join("gatehouse"),
                             crate::rehearsal::directions::seeds(),
                         )?
@@ -275,18 +275,22 @@ impl Module for OfflineModule {
 
     fn call<'a>(&'a self, request: &'a RpcRequest) -> BoxFuture<'a, Result<Value, ErrorEnvelope>> {
         Box::pin(async move {
-            // Even acknowledged arming is unavailable through fixture registration.
-            // The standalone domain service retains its existing testable semantics.
-            let arming = match request {
-                RpcRequest::RulesSetMode(params) => params.mode == RuleMode::Armed,
-                // The rail is always armed and only its delivery is configurable, so
-                // the domain service alone decides whether an upsert may change it.
-                RpcRequest::RulesUpsert(params) => {
-                    params.rule.mode == RuleMode::Armed
-                        && params.rule.rule_class != cc_types::RuleClass::Rail
-                }
-                _ => false,
-            };
+            // Even acknowledged arming is unavailable through fixture and native
+            // registration. The one exception is a dress rehearsal: its own store,
+            // a gate that screens only generated SIMULATED chat, no Twitch session
+            // and no executor, so an armed rule there can only queue SIMULATED
+            // proposals. The standalone domain service keeps its semantics.
+            let arming = !self.shared.rehearsal
+                && match request {
+                    RpcRequest::RulesSetMode(params) => params.mode == RuleMode::Armed,
+                    // The rail is always armed and only its delivery is configurable, so
+                    // the domain service alone decides whether an upsert may change it.
+                    RpcRequest::RulesUpsert(params) => {
+                        params.rule.mode == RuleMode::Armed
+                            && params.rule.rule_class != cc_types::RuleClass::Rail
+                    }
+                    _ => false,
+                };
             if arming {
                 return Err(ErrorEnvelope::new(
                     ErrorCode::BlockedByPolicy,

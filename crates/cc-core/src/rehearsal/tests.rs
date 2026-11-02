@@ -1,5 +1,6 @@
 //! Generated simulated inputs only; no owner session, live chat or public network.
 mod beacons;
+mod gatehouse;
 mod lots;
 mod pacing;
 use super::*;
