@@ -5,9 +5,10 @@
 const merlons = 'M54 352V40H86V64H108V40H140V64H163V40H195V64H217V40H249V64H271V40H303V64H325V40H357V64H380V40H412V64H434V40H466V352';
 const bars = [190, 213, 236, 259, 282, 305, 328];
 
-export function GateArt({ waiting, simulated }: { waiting: number; simulated: boolean }) {
-  const raised = waiting === 0;
-  const label = raised ? 'The gatehouse with the portcullis raised: nothing waits for you. Stylised illustration.'
+export function GateArt({ waiting, simulated, unavailable = false }: { waiting: number; simulated: boolean; unavailable?: boolean }) {
+  const raised = waiting === 0 && !unavailable;
+  const label = unavailable ? 'The gatehouse with the portcullis down: the held-message queue is unavailable in this connection. Stylised illustration.'
+    : raised ? 'The gatehouse with the portcullis raised: nothing waits for you. Stylised illustration.'
     : `The gatehouse with the portcullis down: ${waiting} ${waiting === 1 ? 'message waits' : 'messages wait'} behind the bars for your review${simulated ? ' (simulated)' : ''}. Stylised illustration.`;
   return <svg className="gh-gate-art cc-folio-art" viewBox="0 0 520 380" preserveAspectRatio="xMidYMid meet" role="img" aria-label={label}
     data-raised={raised}>
@@ -26,7 +27,7 @@ export function GateArt({ waiting, simulated }: { waiting: number; simulated: bo
     <path className="gh-dark" d="M180 332V190A110 110 0 0 1 260 84A110 110 0 0 1 340 190V332Z" />
     <g clipPath="url(#gh-arch)">
       <ellipse className="gh-glow" cx="260" cy="226" rx="78" ry="80" />
-      {!raised && <g className="gh-letter">
+      {!raised && !unavailable && <g className="gh-letter">
         <path className="fa-sheet" d="M226 176h68v94h-68Z" />
         <path className="fa-sheet" d="M222 170h76a4 4 0 0 1 0 9h-76a4 4 0 0 1 0-9ZM222 266h76a4 4 0 0 1 0 9h-76a4 4 0 0 1 0-9Z" />
         <path className="gh-rule gh-rule--r" d="M234 192h30" /><path className="gh-rule" d="M234 202h52M234 212h48M234 222h52M234 232h40" />

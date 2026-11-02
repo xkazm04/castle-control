@@ -52,9 +52,9 @@ export function GatePlate({ state, queue, demo, ribbon }: {
   const demo_held = !!demo && demo.stage !== 'burst';
   const waiting = state.held.length + (demo_held ? 1 : 0);
   return <aside className="cc-panel gh-gate moderator-held-plate" aria-label={copy.held} data-demo={demo?.stage}>
+    {ribbon && <p className="gh-ribbon"><span className="cc-stamp cc-stamp--draft">Draft</span>{ribbon}</p>}
     <div className="gh-gate__head">
-      <div><h2 className="cc-panel__title">{copy.held}</h2><span className="cc-panel__aside">{copy.held_gloss}</span>
-        {ribbon && <p className="gh-ribbon"><span className="cc-stamp cc-stamp--draft">Draft</span>{ribbon}</p>}</div>
+      <div><h2 className="cc-panel__title">{copy.held}</h2><span className="cc-panel__aside">{copy.held_gloss}</span></div>
       <div className="gh-count"><b>{waiting}</b><span><small>{copy.held_unit}</small><small>{copy.fixture_only}</small></span></div>
     </div>
     <div className="gh-art"><div className="cc-mini" data-chamber="moderator"><div className="cc-mini__field cc-diaper">

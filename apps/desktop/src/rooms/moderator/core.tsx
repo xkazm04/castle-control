@@ -1,9 +1,8 @@
-import { useId, useEffect, useSyncExternalStore } from 'react';
+import { useId, useEffect, useState, useSyncExternalStore } from 'react';
 import type { ReactNode } from 'react';
 import type { Rule } from '@castle-control/contract';
 import { FieldGroup, HeraldicCard, InkButton, Plate, PlateBand, PlateBody, SectionHeading, Stamp, WindowedRows, rowHeight } from '@castle-control/ui';
 import { coreGatehouseConnection } from '../../client.js';
-import { createCoreGatehousePort } from '../../gatehouse-core.js';
 import type { CoreGatehousePort } from '../../gatehouse-core.js';
 import type { Snapshot } from '../../model.js';
 import { CoreDrill } from './core-drill.jsx';
@@ -15,6 +14,9 @@ import { coreRuleBench } from './session.js';
 import { RuleBench } from './rule-bench.jsx';
 import { benchInput, evaluateDraft } from '../../moderation-bench.js';
 import './room.css';
+import './gatehouse.css';
+import { GateArt } from './gate-art.jsx';
+import { gatehousePort } from './core-port.js';
 import { VoteBarSourceAction } from './vote-source.jsx';
 
 function CoreRule({ rule, busy, port }: { rule: Rule; busy: boolean; port: CoreGatehousePort }) {
@@ -43,51 +45,61 @@ export function ConnectedGatehouse({ port, replay, seal_slot }: { port: CoreGate
   const messages = state.chat?.items.map(item => ({ ...item.decision, message_text: item.message.text })) ?? [];
   const { input, original } = benchInput(draft, state.rules);
   const result = evaluateDraft(input, state.rules, messages, original);
+  const [more, setMore] = useState(false);
   useEffect(() => { void port.load(); }, [port]);
   return <div className="moderator-room" aria-label="Core Gatehouse" aria-busy={state.busy}>
     <div className="moderator-core-status"><p role="status">{state.notice}</p>
       <InkButton size="room" type="button" disabled={state.busy} onClick={() => { void port.load(); }}>{copy.refresh_gatehouse}</InkButton></div>
     {replay ? <div className="moderator-drill-room"><CoreDrill state={state} port={port} />{seal_slot}</div>
-      : <div className="cc-keep moderator-columns">
-        <div className="room-column moderator-workbench" role="region" aria-label="Held messages and ban review" tabIndex={0}>
-          <Plate ink="azure" offset="space-8" className="moderator-held-plate"
-            band={<PlateBand title={copy.held} gloss={copy.core_held_gloss} count={<CountLabel first={copy.unavailable} />} />}>
-            <PlateBody><p>{copy.core_queues_unavailable}</p><p>{copy.core_review_notice}</p></PlateBody>
-          </Plate>
-          <CoreConsensus state={state} port={port} />
-          <VoteBarSourceAction mode="core" busy={state.busy} on_copy={() => { void port.copyVoteBarSource(); }} />
-        </div>
-        <div className="room-column moderator-details moderator-replay" role="region" aria-label={copy.live} tabIndex={0} data-fill="true">
-          <CoreChat state={state} port={port} marked={draft.draft ? result.hit_ids : undefined} />
-        </div>
-        <div className="room-column moderator-tools" role="region" aria-label="Gatehouse tools and seal slot" tabIndex={0}>
-          <RuleBench rules={state.rules} messages={messages} bench={bench} core={port} />
-          <Plate ink="azure" offset="space-8" className="moderator-moat"
-            band={<PlateBand title={copy.moat_title} gloss={copy.moat_gloss} count={<CountLabel first={copy.unavailable} />} />}>
-            <PlateBody><p>{copy.core_moat_unavailable}</p></PlateBody>
-          </Plate>
-          <section className="moderator-block moderator-core-rules"><SectionHeading title={copy.orders_title} gloss={copy.core_rules_gloss} />
-            <div className="moderator-figures"><span><b>{state.rules.filter(rule => rule.mode === 'armed').length}</b><Stamp kind="armed" word={copy.armed} /></span>
-              <span><b>{state.rules.filter(rule => rule.mode === 'shadow').length}</b><Stamp kind="shadow" word={copy.watching} /></span></div>
-            <p className="moderator-note">{copy.core_rules_notice}</p>
-            <WindowedRows rows={state.rules} label={copy.core_rules_label} row_height={rowHeight * 10}
-              row_key={rule => JSON.stringify(rule)} empty_state={copy.core_rules_empty}>
-              {rule => <CoreRule rule={rule} busy={state.busy} port={port} />}
-            </WindowedRows>
+      : <div className="gh-room gh-room--core">
+        <aside className="cc-panel gh-gate moderator-held-plate" aria-label={copy.held}>
+          <div className="gh-gate__head"><div><h2 className="cc-panel__title">{copy.held}</h2><span className="cc-panel__aside">{copy.core_held_gloss}</span></div>
+            <CountLabel first={copy.unavailable} /></div>
+          <div className="gh-art"><div className="cc-mini" data-chamber="moderator"><div className="cc-mini__field cc-diaper"><GateArt waiting={0} simulated={false} unavailable /></div></div></div>
+          <div className="gh-gate__main"><p className="gh-held__msg gh-held__msg--plain">{copy.core_queues_unavailable}</p><p className="gh-sm">{copy.core_review_notice}</p></div>
+        </aside>
+        <div className="gh-desk gh-desk--core">
+          <section className="gh-core-chat" aria-label={copy.live}><CoreChat state={state} port={port} marked={draft.draft ? result.hit_ids : undefined} /></section>
+          <section className="gh-herald" aria-label={copy.consensus}>
+            <CoreConsensus state={state} port={port} />
+            <div className="gh-herald__stage"><h3 className="gh-kicker">Vote bar on stream</h3>
+              <p className="gh-sm">Aggregate shares only; no chat text reaches the OBS page. The Steward can copy it too: Vote bar on stream.</p>
+              <VoteBarSourceAction mode="core" busy={state.busy} on_copy={() => { void port.copyVoteBarSource(); }} /></div>
           </section>
-          <section className="moderator-block"><SectionHeading title={copy.replay} gloss={copy.replay_gloss} />
-            <HeraldicCard><p>{copy.capture_intro}</p><a className="moderator-drill-link" href="#/chamber/moderator/drill">{copy.open_drill}</a></HeraldicCard></section>
-          <CoreHistory state={state} port={port} />{seal_slot}
+          <div className="gh-seal">{seal_slot}</div>
+          <details className="gh-more" open={more} onToggle={event => setMore(event.currentTarget.open)}>
+            <summary><span className="gh-more__title">More of the Gatehouse</span><span className="gh-more__list">Rule bench · moat · garrison orders · drill · gate roll</span></summary>
+            <div className="gh-more__body moderator-tools">
+              <div className="gh-bench"><RuleBench rules={state.rules} messages={messages} bench={bench} core={port} />
+                <Plate ink="azure" offset="space-8" className="moderator-moat"
+                  band={<PlateBand title={copy.moat_title} gloss={copy.moat_gloss} count={<CountLabel first={copy.unavailable} />} />}>
+                  <PlateBody><p>{copy.core_moat_unavailable}</p></PlateBody>
+                </Plate></div>
+              <div className="gh-bench"><section className="moderator-block moderator-core-rules"><SectionHeading title={copy.orders_title} gloss={copy.core_rules_gloss} />
+                <div className="moderator-figures"><span><b>{state.rules.filter(rule => rule.mode === 'armed').length}</b><Stamp kind="armed" word={copy.armed} /></span>
+                  <span><b>{state.rules.filter(rule => rule.mode === 'shadow').length}</b><Stamp kind="shadow" word={copy.watching} /></span></div>
+                <p className="moderator-note">{copy.core_rules_notice}</p>
+                <WindowedRows rows={state.rules} label={copy.core_rules_label} row_height={rowHeight * 10}
+                  row_key={rule => JSON.stringify(rule)} empty_state={copy.core_rules_empty}>
+                  {rule => <CoreRule rule={rule} busy={state.busy} port={port} />}
+                </WindowedRows>
+              </section>
+              <section className="moderator-block"><SectionHeading title={copy.replay} gloss={copy.replay_gloss} />
+                <HeraldicCard><p>{copy.capture_intro}</p><a className="moderator-drill-link" href="#/chamber/moderator/drill">{copy.open_drill}</a></HeraldicCard></section>
+              <CoreHistory state={state} port={port} /></div>
+            </div>
+          </details>
         </div>
       </div>}
   </div>;
 }
 
 export default function CoreModeratorRoom({ snapshot, replay, seal_slot }: { snapshot: Snapshot; replay: boolean; seal_slot?: ReactNode }) {
-  const connection = coreGatehouseConnection(snapshot);
-  if (!connection) return <section className="moderator-room" aria-label="Core Gatehouse">
+  if (!coreGatehouseConnection(snapshot)) return <section className="moderator-room" aria-label="Core Gatehouse">
     <p role="status">{copy.core_connection_unavailable}</p>{seal_slot}</section>;
-  try { connection.port ??= createCoreGatehousePort(connection.launch, connection.transport); }
-  catch { return <section className="moderator-room"><p role="status">{copy.core_connection_invalid}</p>{seal_slot}</section>; }
-  return <ConnectedGatehouse port={connection.port} replay={replay} seal_slot={seal_slot} />;
+  let port: CoreGatehousePort | undefined;
+  try { port = gatehousePort(snapshot); }
+  catch { port = undefined; }
+  if (!port) return <section className="moderator-room"><p role="status">{copy.core_connection_invalid}</p>{seal_slot}</section>;
+  return <ConnectedGatehouse port={port} replay={replay} seal_slot={seal_slot} />;
 }

@@ -8,7 +8,7 @@
 /* ---- the gate: the hero plate, portcullis + one held message + the two proposals ---- */
 .gh-gate {
   display: grid; grid-template-columns: clamp(210px, 21vw, 300px) minmax(0, 1fr) minmax(190px, 230px);
-  grid-template-areas: "art head head" "art main side"; column-gap: 22px; padding: 14px 20px 16px 14px; overflow: hidden;
+  grid-template-areas: "ribbon ribbon ribbon" "art head head" "art main side"; column-gap: 22px; padding: 14px 20px 16px 14px; overflow: hidden;
 }
 .gh-gate__head { grid-area: head; display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; padding: 2px 0 10px; }
 .gh-gate__main { grid-area: main; min-width: 0; display: grid; gap: 8px; align-content: start; }
@@ -63,7 +63,7 @@
 .gh-pass { --mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><path d='M1.5 8.6 3.4 6.7l3 3 6.2-6.2 1.9 1.9-8.1 8.1Z'/></svg>"); }
 .gh-bar { --mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><path d='M3.4 1.5 8 6.1l4.6-4.6 1.9 1.9L9.9 8l4.6 4.6-1.9 1.9L8 9.9l-4.6 4.6-1.9-1.9L6.1 8 1.5 3.4Z'/></svg>"); }
 
-.gh-ribbon { margin: 8px 0 0; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; font: 600 var(--text-t-small)/1.3 var(--font-text); color: var(--ink); }
+.gh-ribbon { grid-area: ribbon; margin: -2px 0 12px; padding: 6px 10px; background: var(--ch-wash); border: 1px dashed var(--ch); display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; font: 600 var(--text-t-small)/1.3 var(--font-text); color: var(--ink); }
 .gh-burst-summary { margin: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; font: italic 400 var(--text-t-small)/1.3 var(--font-book); color: var(--ink-2); }
 /* the Play demo's burst: lines arrive one by one under the gate */
 .gh-burst { list-style: none; margin: 0; padding: 8px 10px; display: flex; flex-direction: column; justify-content: flex-end; gap: 4px; background: var(--surface-2); border: 1px solid var(--hair); max-height: 132px; overflow: hidden; }
@@ -137,8 +137,8 @@
 .gh-chartbar .moderator-hint { margin: 0 auto 0 0; font: italic 400 var(--text-t-small)/1.3 var(--font-book); color: var(--muted); }
 .gh-chart { width: 100%; height: auto; display: block; }
 .gh-herald-chart .moderator-reference { margin: 0; font-size: var(--text-t-small); color: var(--muted); }
-.gh-herald-chart .moderator-tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-top: 2px solid var(--ch); border-bottom: 1px solid var(--hair); }
-.gh-herald-chart .moderator-tile { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; column-gap: 7px; row-gap: 3px; padding: 8px 10px; border-left: 1px solid var(--hair); }
+.gh-herald-chart .moderator-tiles { display: grid; gap: 0; margin: 0; grid-template-columns: repeat(4, minmax(0, 1fr)); border-top: 2px solid var(--ch); border-bottom: 1px solid var(--hair); }
+.gh-herald-chart .moderator-tile { border: 0; border-left: 1px solid var(--hair); background: transparent; display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; column-gap: 7px; row-gap: 3px; padding: 8px 10px; border-left: 1px solid var(--hair); }
 .gh-herald-chart .moderator-tile:first-child { border-left: 0; padding-left: 0; }
 .gh-herald-chart .moderator-tile i { width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; font: 800 var(--text-t-label)/1 var(--font-label); font-style: normal; color: var(--on-glass); background: var(--k); box-shadow: 0 0 0 1.5px var(--lead); }
 .gh-herald-chart .moderator-tile span { font: 800 var(--text-t-label)/1.1 var(--font-label); letter-spacing: var(--track-label); text-transform: lowercase; color: var(--ink-2); }
@@ -212,3 +212,10 @@
   .gh-desk { grid-template-columns: minmax(0, 1fr); grid-template-areas: "top" "bans" "herald" "seal" "more"; }
   .gh-more__body { grid-template-columns: minmax(0, 1fr); }
 }
+
+/* core mode: no held queue in this connection; the live chat and the herald carry the room */
+.gh-room--core .gh-gate { grid-template-areas: "ribbon ribbon ribbon" "art head head" "art main main"; }
+.gh-held__msg--plain::before, .gh-held__msg--plain::after { content: none; }
+.gh-desk--core { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-areas: "chat herald" "seal herald" "more more"; }
+.gh-core-chat { grid-area: chat; display: flex; flex-direction: column; height: 680px; min-width: 0; }
+.gh-room--core .gh-herald { display: grid; gap: 16px; }
