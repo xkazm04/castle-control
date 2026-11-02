@@ -1,8 +1,46 @@
-import { useRef, useState, useSyncExternalStore } from 'react';
-import { EmptyState, ProposalCard } from '@castle-control/ui';
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { EmptyState, ProposalCard, SealButton } from '@castle-control/ui';
 import { createSealAuthority, LiveSteward, proposalQueue } from '@castle-control/ui/steward';
 import type { ChamberId, Proposal, SealAuthority, SealOutcome } from '@castle-control/ui/steward';
 import { sealRoomProposal } from '../rooms/seal-slot/index.jsx';
+import { stewardDock } from '@castle-control/ui/steward-flow';
+import type { FlowChamber } from '@castle-control/ui/steward-flow';
+
+/** One hold, one current draft, using exactly the room's existing authorization door. */
+export function DeckSealKey({ chamber, authority }: { chamber: FlowChamber; authority: SealAuthority }) {
+  const dock = useSyncExternalStore(stewardDock.subscribe, stewardDock.getSnapshot, stewardDock.getSnapshot);
+  const queue = useSyncExternalStore(proposalQueue.subscribe, proposalQueue.getSnapshot, proposalQueue.getSnapshot);
+  const [busy, setBusy] = useState(false);
+  const [sealed, setSealed] = useState(false);
+  useEffect(() => {
+    if (!sealed) return;
+    const timer = setTimeout(() => setSealed(false), 1100);
+    return () => clearTimeout(timer);
+  }, [sealed]);
+  const active = useRef(false);
+  if (chamber === 'keep' || chamber === 'stream' || chamber === 'rehearsal') return null;
+  const drafts = proposalQueue.pending(chamber);
+  const proposal = drafts.find(item => item.id === queue.selected_proposal_id) ?? drafts.at(-1);
+  const ready = dock.drafts[chamber]?.ready === true;
+  const count = drafts.length + (ready ? 1 : 0);
+  async function seal() {
+    if (active.current) return;
+    active.current = true; setBusy(true);
+    try {
+      // A flow confirms its own room operation; unrelated proposals remain waiting.
+      if (ready) { await stewardDock.seal(chamber); setSealed(stewardDock.getSnapshot().sessions[chamber] === undefined); }
+      else if (proposal) {
+        const outcome = await authority.seal(proposal);
+        setSealed(outcome.ok);
+        stewardDock.say({ chamber, who: 'steward', text: outcome.reply,
+          ...(authority.owner(proposal) === 'live' ? { live: true } : { simulated: true }) });
+      }
+    } finally { active.current = false; setBusy(false); }
+  }
+  const identity = ready ? JSON.stringify(dock.sessions[chamber]?.state) : `${proposal?.id}:${proposal?.revision}`;
+  return <SealButton key={identity} size="key" sealed={sealed} draft_count={count} disabled={!count || busy || dock.sessions[chamber]?.state.status === 'sealing'}
+    on_seal={() => { void seal(); }} />;
+}
 
 /** Reuse the human hold and the existing Writ presentation, without chamber mapping. */
 export function StewardSealSlot({ chamber, port,

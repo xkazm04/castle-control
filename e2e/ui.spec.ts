@@ -73,10 +73,10 @@ for (const route of routes) for (const theme of themes) for (const steward of st
       await expect(page.getByRole('textbox', { name: 'Talk to the Steward...' })).toHaveCount(0);
       await expect(page).toHaveURL(/#\/keep$/);
     } else if (steward === 'open') {
-      // Steward is a persistent panel in this shell. Open means focused controls;
-      // Overview additionally exposes its existing Talkback tab, with no LLM call.
+      // Steward raises an overlay conversation; the bar keeps its one-row footprint.
       await page.getByRole('button', { name: 'Steward', exact: true }).click();
       await expect(page.getByRole('textbox', { name: 'Talk to the Steward...' })).toBeFocused();
+      await expect(page.locator('[data-role="steward-chat"]')).toBeVisible();
       const talkback = page.getByRole('tab', { name: 'Talkback', exact: true });
       if (await talkback.count()) {
         await talkback.click();
@@ -108,6 +108,96 @@ test('overlay-simulated-connected', async ({ page }) => {
     { name: 'simulated rendered layer', selector: '#scene > div' },
     { name: 'simulated provenance badge', selector: '[data-simulated-badge]' },
   ], { canvas: 'obs-transparent', tokenSheet: 'overlay-base' });
+});
+
+for (const chamber of ['lottery', 'moderator', 'visuals', 'studio']) {
+  test(`Steward deck fits 1280x720 in ${chamber} and Escape peels conversation before room`, async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 720 });
+    await page.goto(`/#/chamber/${chamber}`);
+    const row = page.locator('[data-role="action-row"]');
+    const bar = page.locator('[data-role="steward-bar"]');
+    await expect(row).toBeVisible(); await expect(bar).toBeVisible();
+    const sizes = await page.locator('[data-role="action-row"], [data-role="steward-bar"]').evaluateAll(nodes => nodes.map(node => {
+      const box = node.getBoundingClientRect();
+      return { height: box.height, top: box.top, bottom: box.bottom };
+    }));
+    expect(sizes).toHaveLength(2);
+    expect(sizes.reduce((sum, size) => sum + size.height, 0)).toBeLessThanOrEqual(110);
+    expect(sizes[0]?.bottom).toBe(sizes[1]?.top);
+    const seal = await row.locator('[data-role="seal-key"]').boundingBox();
+    if (!seal || !sizes[0]) throw new Error('Missing action row or seal geometry');
+    expect(seal.height).toBeLessThanOrEqual(48);
+    expect(seal.y).toBeGreaterThanOrEqual(sizes[0].top);
+    expect(seal.y + seal.height).toBeLessThanOrEqual(sizes[0].bottom);
+    const before = await page.locator('main').boundingBox();
+    await page.keyboard.press('/');
+    const chat = page.locator('[data-role="steward-chat"]');
+    await expect(chat).toBeVisible();
+    expect(await page.locator('main').boundingBox()).toEqual(before);
+    await page.keyboard.press('Escape');
+    await expect(chat).toHaveCount(0);
+    await expect(page).toHaveURL(new RegExp(`/chamber/${chamber}$`));
+    await page.keyboard.press('Escape');
+    await expect(page).toHaveURL(/#\/keep$/);
+    await expect(bar).toHaveCount(0);
+  });
+}
+
+test('talk input Escape closes a sent conversation and preserves the next unsent text', async ({ page }) => {
+  await page.goto('/#/chamber/moderator');
+  const input = page.getByRole('textbox', { name: 'Talk to the Steward...', exact: true });
+  const chat = page.locator('[data-role="steward-chat"]');
+  await input.fill('simulated unrelated request');
+  await input.press('Enter');
+  await expect(chat.locator('.cc-beat--you')).toContainText('simulated unrelated request');
+  await expect(chat.locator('.cc-beat--steward').last()).toContainText('nothing has changed');
+  await input.fill('Keep this unsent SIMULATED note');
+  await input.press('Escape');
+  await expect(chat).toHaveCount(0);
+  await expect(input).toHaveValue('Keep this unsent SIMULATED note');
+  await expect(input).toBeFocused();
+  await expect(page).toHaveURL(/#\/chamber\/moderator$/);
+  await input.press('Escape');
+  await expect(page).toHaveURL(/#\/keep$/);
+});
+
+test('overflow keys still dispatch, drafts wait for a hold, and popover Escape leaves the conversation open', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 720 });
+  await page.goto('/#/chamber/lottery');
+  const row = page.locator('[data-role="action-row"]');
+  await expect(row.getByRole('button', { name: /^more/ })).toBeVisible();
+  await page.keyboard.press('/');
+  const chat = page.locator('[data-role="steward-chat"]');
+  await row.getByRole('button', { name: /^more/ }).click();
+  await expect(row.getByRole('menu')).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(row.getByRole('menu')).toHaveCount(0); await expect(chat).toBeVisible();
+  await page.keyboard.press('Escape');
+  await page.locator('.desktop-root').focus();
+  await page.keyboard.press('f');
+  await expect(chat).toContainText('Set up a draw');
+  await page.keyboard.press('Escape');
+  const pending = row.locator('[data-role="seal-key"]');
+  await expect(pending).toBeDisabled();
+  await row.getByRole('button', { name: /^W cast the lots/ }).click();
+  await chat.getByRole('button', { name: /^Seal the sample draw first/ }).click();
+  await chat.getByRole('button', { name: 'The round is ready', exact: true }).click();
+  await chat.getByRole('button', { name: /^One by one, quietly/ }).click();
+  await chat.getByRole('button', { name: 'Draft this → Preview', exact: true }).click();
+  await expect(chat).toHaveCount(0);
+  await expect(pending).toContainText('1 draft ready');
+  await pending.click();
+  await expect(page.locator('.lottery-roll[data-tone="cast"]')).toHaveCount(0);
+  await pending.focus(); await page.keyboard.down('Space');
+  try { await expect(page.locator('.lottery-roll[data-tone="cast"]')).toBeVisible(); }
+  finally { await page.keyboard.up('Space'); }
+  await expect(pending).toHaveAttribute('data-sealed', 'true');
+  await expect(pending.locator('.cc-seal-wax')).toHaveCSS('opacity', '1');
+  await expect(pending.locator('progress')).toHaveCSS('opacity', '1');
+  await expect(page.locator('.cc-steward-peek')).toBeVisible();
+  await page.locator('.cc-steward-peek').click();
+  await expect(chat).toBeVisible();
+  await expect(chat.locator('[data-role="steward-bubble"] time').first()).toBeVisible();
 });
 
 test('fixture draw rehearsal seals, casts, reveals in the urn and recomputes this cast', async ({ page }) => {
