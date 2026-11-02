@@ -1,0 +1,3460 @@
+{
+ "version": 1,
+ "simulated_note": "Ready-made art generated for Castle Control (Gemini via agy, GPT image via Codex); no real stream data.",
+ "assets": [
+  {
+   "id": "vessel-01",
+   "kind": "draw_vessel",
+   "file": "library/vessel/vessel-01.webp",
+   "width": 768,
+   "height": 768,
+   "style_name": "Arcane-Tech Loot Vessel",
+   "palette": [
+    "#1B1F2A",
+    "#3A445E",
+    "#D49B38",
+    "#00E5FF"
+   ],
+   "request": "make it look cool",
+   "tags": [
+    "cool",
+    "arcane",
+    "tech",
+    "loot",
+    "vessel",
+    "existing",
+    "channel",
+    "art",
+    "direction",
+    "vague",
+    "request",
+    "variety",
+    "streamer",
+    "needs",
+    "versatile",
+    "high"
+   ],
+   "preset": true,
+   "source": "urn-01",
+   "token": "library/vessel/vessel-01-token.webp",
+   "anchors": {
+    "chamber_rect": {
+     "x": 0.29,
+     "y": 0.32,
+     "w": 0.41,
+     "h": 0.335
+    },
+    "mouth": {
+     "x": 0.374,
+     "y": 0.86
+    }
+   }
+  },
+  {
+   "id": "beacon-01",
+   "kind": "beacon",
+   "file": "library/beacon/beacon-01.webp",
+   "width": 574,
+   "height": 768,
+   "style_name": "Arcane Relic Containment",
+   "palette": [
+    "#1E2229",
+    "#8C6A43",
+    "#38F2E6",
+    "#7B42F6"
+   ],
+   "request": "a thing that glows when people sub",
+   "tags": [
+    "that",
+    "glows",
+    "when",
+    "people",
+    "sub",
+    "arcane",
+    "relic",
+    "containment",
+    "streamer",
+    "wants",
+    "reactive",
+    "support",
+    "beacon",
+    "prop",
+    "their",
+    "overlay"
+   ],
+   "preset": true,
+   "source": "altar-01"
+  },
+  {
+   "id": "vessel-02",
+   "kind": "draw_vessel",
+   "file": "library/vessel/vessel-02.webp",
+   "width": 768,
+   "height": 768,
+   "style_name": "Tactical Radianite Containment",
+   "palette": [
+    "#111823",
+    "#FF4655",
+    "#ECE8E1",
+    "#00F5D4"
+   ],
+   "request": "something for my valorant stream",
+   "tags": [
+    "valorant",
+    "stream",
+    "tactical",
+    "radianite",
+    "containment",
+    "streamer",
+    "wants",
+    "giveaway",
+    "draw",
+    "vessel",
+    "tailored",
+    "sci",
+    "hero",
+    "shooter",
+    "aesthetic",
+    "sharp"
+   ],
+   "preset": false,
+   "source": "urn-02"
+  },
+  {
+   "id": "beacon-02",
+   "kind": "beacon",
+   "file": "library/beacon/beacon-02.webp",
+   "width": 574,
+   "height": 768,
+   "style_name": "Gilded Dark Reliquary",
+   "palette": [
+    "#1C1B1F",
+    "#C59B41",
+    "#5A554C",
+    "#FFD269"
+   ],
+   "request": "elden ring style",
+   "tags": [
+    "elden",
+    "ring",
+    "gilded",
+    "dark",
+    "reliquary",
+    "streamer",
+    "wants",
+    "mythic",
+    "high",
+    "fantasy",
+    "support",
+    "beacon",
+    "inspired",
+    "decayed",
+    "golden",
+    "order"
+   ],
+   "preset": false,
+   "source": "altar-02"
+  },
+  {
+   "id": "vessel-03",
+   "kind": "draw_vessel",
+   "file": "library/vessel/vessel-03.webp",
+   "width": 768,
+   "height": 768,
+   "style_name": "Grimdark Ember Reliquary",
+   "palette": [
+    "#1C1B1E",
+    "#7A5C38",
+    "#4A4643",
+    "#E86F24"
+   ],
+   "request": "dark souls vibes",
+   "tags": [
+    "dark",
+    "souls",
+    "grimdark",
+    "ember",
+    "reliquary",
+    "streamer",
+    "wants",
+    "medieval",
+    "fantasy",
+    "giveaway",
+    "vessel",
+    "inspired",
+    "decaying",
+    "gothic",
+    "architecture",
+    "ceremonial"
+   ],
+   "preset": true,
+   "source": "urn-03"
+  },
+  {
+   "id": "beacon-03",
+   "kind": "beacon",
+   "file": "library/beacon/beacon-03.webp",
+   "width": 576,
+   "height": 768,
+   "style_name": "Industrial Cyberpunk Realism",
+   "palette": [
+    "#16181D",
+    "#3A414E",
+    "#00F0FF",
+    "#FF1E8A"
+   ],
+   "request": "reactor core, cyberpunk",
+   "tags": [
+    "reactor",
+    "core",
+    "cyberpunk",
+    "industrial",
+    "realism",
+    "rugged",
+    "high",
+    "tech",
+    "portable",
+    "fusion",
+    "containment",
+    "unit",
+    "designed",
+    "open",
+    "world",
+    "sci"
+   ],
+   "preset": true,
+   "source": "altar-03",
+   "effect": "library/beacon/beacon-03-effect.webp",
+   "effect_blend": "screen",
+   "anchors": {
+    "core_rect": {
+     "x": 0.368,
+     "y": 0.307,
+     "w": 0.264,
+     "h": 0.28
+    }
+   }
+  },
+  {
+   "id": "vessel-04",
+   "kind": "draw_vessel",
+   "file": "library/vessel/vessel-04.webp",
+   "width": 768,
+   "height": 768,
+   "style_name": "Neon Street-Tech Dispenser",
+   "palette": [
+    "#1A1D24",
+    "#00F0FF",
+    "#FF0055",
+    "#FCEE0A"
+   ],
+   "request": "cyberpunk",
+   "tags": [
+    "cyberpunk",
+    "neon",
+    "street",
+    "tech",
+    "dispenser",
+    "late",
+    "night",
+    "open",
+    "world",
+    "rpg",
+    "streamer",
+    "wants",
+    "gritty",
+    "yet",
+    "high",
+    "futuristic"
+   ],
+   "preset": true,
+   "source": "urn-04"
+  },
+  {
+   "id": "beacon-04",
+   "kind": "beacon",
+   "file": "library/beacon/beacon-04.webp",
+   "width": 574,
+   "height": 768,
+   "style_name": "Tactical Graphic Sci-Fi",
+   "palette": [
+    "#1B222C",
+    "#3E4A59",
+    "#00F5D4",
+    "#FF4655"
+   ],
+   "request": "valorant agent ability vibe",
+   "tags": [
+    "valorant",
+    "agent",
+    "ability",
+    "tactical",
+    "graphic",
+    "sci",
+    "streamer",
+    "wants",
+    "deployable",
+    "support",
+    "reactor",
+    "inspired",
+    "competitive",
+    "hero",
+    "shooter",
+    "utility"
+   ],
+   "preset": false,
+   "source": "altar-04"
+  },
+  {
+   "id": "vessel-05",
+   "kind": "draw_vessel",
+   "file": "library/vessel/vessel-05.webp",
+   "width": 768,
+   "height": 768,
+   "style_name": "Stylized Tactical Sci-Fi",
+   "palette": [
+    "#2B59C3",
+    "#FFC800",
+    "#9D4EDD",
+    "#00F5D4"
+   ],
+   "request": "like fortnite but not fortnite",
+   "tags": [
+    "fortnite",
+    "stylized",
+    "tactical",
+    "sci",
+    "streamer",
+    "wants",
+    "high",
+    "energy",
+    "loot",
+    "dispenser",
+    "inspired",
+    "modern",
+    "battle",
+    "royale",
+    "game",
+    "aesthetics"
+   ],
+   "preset": false,
+   "source": "urn-05"
+  },
+  {
+   "id": "beacon-05",
+   "kind": "beacon",
+   "file": "library/beacon/beacon-05.webp",
+   "width": 576,
+   "height": 768,
+   "style_name": "Forged Volcanic Brazier",
+   "palette": [
+    "#1C1D21",
+    "#6E4726",
+    "#F26419",
+    "#FFF3B0"
+   ],
+   "request": "fire",
+   "tags": [
+    "fire",
+    "forged",
+    "volcanic",
+    "brazier",
+    "because",
+    "streamer",
+    "entire",
+    "brand",
+    "persona",
+    "revolve",
+    "around",
+    "speaking",
+    "only",
+    "single",
+    "word",
+    "they"
+   ],
+   "preset": true,
+   "source": "altar-05",
+   "effect": "library/beacon/beacon-05-effect.webp",
+   "effect_blend": "behind",
+   "anchors": {
+    "core_rect": {
+     "x": 0.29,
+     "y": 0.352,
+     "w": 0.42,
+     "h": 0.315
+    }
+   }
+  },
+  {
+   "id": "vessel-06",
+   "kind": "draw_vessel",
+   "file": "library/vessel/vessel-06.webp",
+   "width": 768,
+   "height": 768,
+   "style_name": "Crafted Voxel Dispenser",
+   "palette": [
+    "#8B5A2B",
+    "#2D3138",
+    "#38E5D4",
+    "#FFB830"
+   ],
+   "request": "minecraft style giveaway thing",
+   "tags": [
+    "minecraft",
+    "giveaway",
+    "crafted",
+    "voxel",
+    "dispenser",
+    "streamer",
+    "wants",
+    "draw",
+    "vessel",
+    "inspired",
+    "block",
+    "building",
+    "survival",
+    "games",
+    "translated",
+    "into"
+   ],
+   "preset": false,
+   "source": "urn-06"
+  },
+  {
+   "id": "beacon-06",
+   "kind": "beacon",
+   "file": "library/beacon/beacon-06.webp",
+   "width": 574,
+   "height": 768,
+   "style_name": "High-Fantasy Arcane Reliquary",
+   "palette": [
+    "#3CE8F5",
+    "#8A5CF6",
+    "#C69B4B",
+    "#23262E"
+   ],
+   "request": "magic crystal",
+   "tags": [
+    "magic",
+    "crystal",
+    "high",
+    "fantasy",
+    "arcane",
+    "reliquary",
+    "mmo",
+    "streamer",
+    "asking",
+    "beacon",
+    "needs",
+    "loose",
+    "rock",
+    "work",
+    "reactive",
+    "stream"
+   ],
+   "preset": true,
+   "source": "altar-06"
+  },
+  {
+   "id": "vessel-07",
+   "kind": "draw_vessel",
+   "file": "library/vessel/vessel-07.webp",
+   "width": 768,
+   "height": 768,
+   "style_name": "Dark Fantasy ARPG Relic",
+   "palette": [
+    "#1E1A1D",
+    "#C89B3C",
+    "#FF6B1A",
+    "#3A2618"
+   ],
+   "request": "loot chest when someone wins",
+   "tags": [
+    "loot",
+    "chest",
+    "when",
+    "someone",
+    "wins",
+    "dark",
+    "fantasy",
+    "arpg",
+    "relic",
+    "ornate",
+    "legendary",
+    "lid",
+    "propped",
+    "halfway",
+    "open",
+    "brimming"
+   ],
+   "preset": true,
+   "source": "urn-07"
+  },
+  {
+   "id": "beacon-07",
+   "kind": "beacon",
+   "file": "library/beacon/beacon-07.webp",
+   "width": 574,
+   "height": 768,
+   "style_name": "Gothic Infernal Reliquary",
+   "palette": [
+    "#1A1617",
+    "#6E5A4F",
+    "#C91E14",
+    "#FF7A18"
+   ],
+   "request": "diablo hellish",
+   "tags": [
+    "diablo",
+    "hellish",
+    "gothic",
+    "infernal",
+    "reliquary",
+    "arpg",
+    "streamer",
+    "wants",
+    "dark",
+    "aesthetic",
+    "inspired",
+    "classic",
+    "grimdark",
+    "dungeon",
+    "crawlers",
+    "translated"
+   ],
+   "preset": false,
+   "source": "altar-07"
+  },
+  {
+   "id": "vessel-08",
+   "kind": "draw_vessel",
+   "file": "library/vessel/vessel-08.webp",
+   "width": 768,
+   "height": 768,
+   "style_name": "Frontier Tactical Sci-Fi",
+   "palette": [
+    "#2B2F36",
+    "#E4E6E8",
+    "#D93829",
+    "#00F0FF"
+   ],
+   "request": "apex legends tech look",
+   "tags": [
+    "apex",
+    "legends",
+    "tech",
+    "frontier",
+    "tactical",
+    "sci",
+    "streamer",
+    "wants",
+    "giveaway",
+    "draw",
+    "vessel",
+    "styled",
+    "after",
+    "utilitarian",
+    "military",
+    "industrial"
+   ],
+   "preset": false,
+   "source": "urn-08"
+  },
+  {
+   "id": "beacon-08",
+   "kind": "beacon",
+   "file": "library/beacon/beacon-08.webp",
+   "width": 574,
+   "height": 768,
+   "style_name": "Clean Hero-Tech Sci-Fi",
+   "palette": [
+    "#F2F5F8",
+    "#2B3440",
+    "#00E5FF",
+    "#D4A24C"
+   ],
+   "request": "overwatch-ish clean hero style",
+   "tags": [
+    "overwatch",
+    "ish",
+    "clean",
+    "hero",
+    "tech",
+    "sci",
+    "streamer",
+    "wants",
+    "sleek",
+    "optimistic",
+    "near",
+    "future",
+    "shooter",
+    "aesthetic",
+    "aerodynamic",
+    "industrial"
+   ],
+   "preset": false,
+   "source": "altar-08"
+  },
+  {
+   "id": "vessel-09",
+   "kind": "draw_vessel",
+   "file": "library/vessel/vessel-09.webp",
+   "width": 768,
+   "height": 768,
+   "style_name": "Cozy Harvest Craft",
+   "palette": [
+    "#C88A4B",
+    "#F3E8D2",
+    "#7A9A76",
+    "#D97B29"
+   ],
+   "request": "cozy",
+   "tags": [
+    "cozy",
+    "harvest",
+    "craft",
+    "farming",
+    "sim",
+    "streamer",
+    "requesting",
+    "giveaway",
+    "draw",
+    "vessel",
+    "should",
+    "tactile",
+    "handcrafted",
+    "cottagecore",
+    "farmstead",
+    "prop"
+   ],
+   "preset": true,
+   "source": "urn-09"
+  },
+  {
+   "id": "beacon-09",
+   "kind": "beacon",
+   "file": "library/beacon/beacon-09.webp",
+   "width": 574,
+   "height": 768,
+   "style_name": "Refined Block-Craft Relic",
+   "palette": [
+    "#1A1822",
+    "#C99E4C",
+    "#3CF2FF",
+    "#E6FFFF"
+   ],
+   "request": "minecraft beacon but nicer",
+   "tags": [
+    "minecraft",
+    "beacon",
+    "nicer",
+    "refined",
+    "block",
+    "craft",
+    "relic",
+    "streamer",
+    "wants",
+    "iconic",
+    "tiered",
+    "obsidian",
+    "glass",
+    "pyramid",
+    "archetype",
+    "from"
+   ],
+   "preset": false,
+   "source": "altar-09"
+  },
+  {
+   "id": "vessel-10",
+   "kind": "draw_vessel",
+   "file": "library/vessel/vessel-10.webp",
+   "width": 768,
+   "height": 768,
+   "style_name": "Clean Orbital Telemetry",
+   "palette": [
+    "#E8EEF2",
+    "#2B3440",
+    "#00E5FF",
+    "#FF9E00"
+   ],
+   "request": "space, sci fi, clean",
+   "tags": [
+    "space",
+    "sci",
+    "clean",
+    "orbital",
+    "telemetry",
+    "streamer",
+    "wants",
+    "sleek",
+    "high",
+    "tech",
+    "giveaway",
+    "draw",
+    "vessel",
+    "that",
+    "fits",
+    "modern"
+   ],
+   "preset": false,
+   "source": "urn-10"
+  },
+  {
+   "id": "beacon-10",
+   "kind": "beacon",
+   "file": "library/beacon/beacon-10.webp",
+   "width": 574,
+   "height": 768,
+   "style_name": "Pastel Arcane Relic",
+   "palette": [
+    "#FFD1DC",
+    "#B8E8FC",
+    "#FFF5E4",
+    "#C9A0DC"
+   ],
+   "request": "something cute for my vtuber",
+   "tags": [
+    "cute",
+    "vtuber",
+    "pastel",
+    "arcane",
+    "relic",
+    "streamer",
+    "wants",
+    "adorable",
+    "high",
+    "craft",
+    "magical",
+    "beacon",
+    "prop",
+    "tailored",
+    "aesthetic",
+    "translating"
+   ],
+   "preset": true,
+   "source": "altar-10"
+  },
+  {
+   "id": "vessel-11",
+   "kind": "draw_vessel",
+   "file": "library/vessel/vessel-11.webp",
+   "width": 768,
+   "height": 768,
+   "style_name": "Celestial Astral Gacha",
+   "palette": [
+    "#1C2143",
+    "#D9B568",
+    "#62E3FF",
+    "#F482FF"
+   ],
+   "request": "gacha pull animation feel",
+   "tags": [
+    "gacha",
+    "pull",
+    "animation",
+    "celestial",
+    "astral",
+    "streamer",
+    "wants",
+    "giveaway",
+    "draw",
+    "vessel",
+    "that",
+    "captures",
+    "iconic",
+    "anticipation",
+    "visual",
+    "spectacle"
+   ],
+   "preset": false,
+   "source": "urn-11"
+  },
+  {
+   "id": "beacon-11",
+   "kind": "beacon",
+   "file": "library/beacon/beacon-11.webp",
+   "width": 574,
+   "height": 768,
+   "style_name": "Golden Polyhedral Relic",
+   "palette": [
+    "#FFB833",
+    "#FFF2B2",
+    "#2A2D34",
+    "#C5A467"
+   ],
+   "request": "destiny exotic engram feel",
+   "tags": [
+    "destiny",
+    "exotic",
+    "engram",
+    "golden",
+    "polyhedral",
+    "relic",
+    "streamer",
+    "wants",
+    "high",
+    "tier",
+    "sci",
+    "loot",
+    "acting",
+    "support",
+    "reactor",
+    "beacon"
+   ],
+   "preset": false,
+   "source": "altar-11"
+  },
+  {
+   "id": "vessel-12",
+   "kind": "draw_vessel",
+   "file": "library/vessel/vessel-12.webp",
+   "width": 768,
+   "height": 768,
+   "style_name": "90s Arcade Capsule Machine",
+   "palette": [
+    "#1E48C8",
+    "#6A28B5",
+    "#FF2AD4",
+    "#00E5FF"
+   ],
+   "request": "retro arcade",
+   "tags": [
+    "retro",
+    "arcade",
+    "90s",
+    "capsule",
+    "machine",
+    "1990s",
+    "prize",
+    "gachapon",
+    "dispenser",
+    "rendered",
+    "modern",
+    "aaa",
+    "game",
+    "prop",
+    "featuring",
+    "clear"
+   ],
+   "preset": true,
+   "source": "urn-12"
+  },
+  {
+   "id": "beacon-12",
+   "kind": "beacon",
+   "file": "library/beacon/beacon-12.webp",
+   "width": 574,
+   "height": 768,
+   "style_name": "Retro-Futuristic Synthwave",
+   "palette": [
+    "#161224",
+    "#FF1E8E",
+    "#00F0FF",
+    "#FFB800"
+   ],
+   "request": "synthwave",
+   "tags": [
+    "synthwave",
+    "retro",
+    "futuristic",
+    "music",
+    "rhythm",
+    "game",
+    "streamer",
+    "requesting",
+    "support",
+    "beacon",
+    "designed",
+    "1980s",
+    "acoustic",
+    "resonance",
+    "reactor",
+    "blending"
+   ],
+   "preset": true,
+   "source": "altar-12"
+  },
+  {
+   "id": "vessel-13",
+   "kind": "draw_vessel",
+   "file": "library/vessel/vessel-13.webp",
+   "width": 768,
+   "height": 768,
+   "style_name": "Art Deco VIP",
+   "palette": [
+    "#0F4D3A",
+    "#D4AF37",
+    "#3B2314",
+    "#16161A"
+   ],
+   "request": "premium, like a luxury casino but legal",
+   "tags": [
+    "premium",
+    "luxury",
+    "casino",
+    "legal",
+    "art",
+    "deco",
+    "vip",
+    "card",
+    "game",
+    "streamer",
+    "wants",
+    "opulent",
+    "high",
+    "roller",
+    "lounge",
+    "aesthetic"
+   ],
+   "preset": true,
+   "source": "urn-13"
+  },
+  {
+   "id": "beacon-13",
+   "kind": "beacon",
+   "file": "library/beacon/beacon-13.webp",
+   "width": 574,
+   "height": 768,
+   "style_name": "Stylized Druidic Craft",
+   "palette": [
+    "#3E2F23",
+    "#4F7745",
+    "#5EEAD4",
+    "#F6C863"
+   ],
+   "request": "nature, druid, plants",
+   "tags": [
+    "nature",
+    "druid",
+    "plants",
+    "stylized",
+    "druidic",
+    "craft",
+    "mystical",
+    "sanctuary",
+    "shrine",
+    "crafted",
+    "from",
+    "intertwined",
+    "ancient",
+    "oak",
+    "heartwood",
+    "roots"
+   ],
+   "preset": true,
+   "source": "altar-13"
+  },
+  {
+   "id": "vessel-14",
+   "kind": "draw_vessel",
+   "file": "library/vessel/vessel-14.webp",
+   "width": 768,
+   "height": 768,
+   "style_name": "Heroic Raid Reliquary",
+   "palette": [
+    "#1B2A4A",
+    "#D4AF37",
+    "#38E5FF",
+    "#8B1E24"
+   ],
+   "request": "wow / mmo fantasy",
+   "tags": [
+    "wow",
+    "mmo",
+    "fantasy",
+    "heroic",
+    "raid",
+    "reliquary",
+    "leader",
+    "wants",
+    "stylized",
+    "high",
+    "loot",
+    "raffle",
+    "vessel",
+    "inspired",
+    "classic",
+    "dungeon"
+   ],
+   "preset": false,
+   "source": "urn-14"
+  },
+  {
+   "id": "beacon-14",
+   "kind": "beacon",
+   "file": "library/beacon/beacon-14.webp",
+   "width": 574,
+   "height": 768,
+   "style_name": "Ancient Megastructure Hard-Light",
+   "palette": [
+    "#B8C4CC",
+    "#2A343D",
+    "#00E5FF",
+    "#FFB300"
+   ],
+   "request": "halo forerunner tech",
+   "tags": [
+    "halo",
+    "forerunner",
+    "tech",
+    "ancient",
+    "megastructure",
+    "hard",
+    "light",
+    "streamer",
+    "wants",
+    "alien",
+    "support",
+    "reactor",
+    "inspired",
+    "monumental",
+    "sci",
+    "architecture"
+   ],
+   "preset": false,
+   "source": "altar-14"
+  },
+  {
+   "id": "vessel-15",
+   "kind": "draw_vessel",
+   "file": "library/vessel/vessel-15.webp",
+   "width": 768,
+   "height": 768,
+   "style_name": "Tactical Minimalist Sci-Fi",
+   "palette": [
+    "#0D1117",
+    "#1F2933",
+    "#00F5D4",
+    "#00A896"
+   ],
+   "request": "my brand is teal and black, minimal",
+   "tags": [
+    "brand",
+    "teal",
+    "black",
+    "minimal",
+    "tactical",
+    "minimalist",
+    "sci",
+    "streamer",
+    "wants",
+    "sleek",
+    "modern",
+    "esports",
+    "grade",
+    "giveaway",
+    "draw",
+    "vessel"
+   ],
+   "preset": false,
+   "source": "urn-15"
+  },
+  {
+   "id": "beacon-15",
+   "kind": "beacon",
+   "file": "library/beacon/beacon-15.webp",
+   "width": 574,
+   "height": 768,
+   "style_name": "Grounded Dark-Fantasy Realism",
+   "palette": [
+    "#1E2229",
+    "#5C4938",
+    "#F59E0B",
+    "#FFFBEB"
+   ],
+   "request": "make it less cartoony",
+   "tags": [
+    "less",
+    "cartoony",
+    "grounded",
+    "dark",
+    "fantasy",
+    "realism",
+    "streamer",
+    "rejected",
+    "stylized",
+    "bulky",
+    "default",
+    "preset",
+    "favor",
+    "mature",
+    "aaa",
+    "game"
+   ],
+   "preset": false,
+   "source": "altar-15"
+  },
+  {
+   "id": "vessel-16",
+   "kind": "draw_vessel",
+   "file": "library/vessel/vessel-16.webp",
+   "width": 768,
+   "height": 768,
+   "style_name": "Occult Gothic Reliquary",
+   "palette": [
+    "#1B191D",
+    "#4A3525",
+    "#8C734B",
+    "#497A6B"
+   ],
+   "request": "horror game stream",
+   "tags": [
+    "horror",
+    "game",
+    "stream",
+    "occult",
+    "gothic",
+    "reliquary",
+    "indie",
+    "streamer",
+    "wants",
+    "draw",
+    "vessel",
+    "giveaway",
+    "widget",
+    "that",
+    "matches",
+    "atmospheric"
+   ],
+   "preset": false,
+   "source": "urn-16"
+  },
+  {
+   "id": "beacon-16",
+   "kind": "beacon",
+   "file": "library/beacon/beacon-16.webp",
+   "width": 574,
+   "height": 768,
+   "style_name": "Subterranean Soul Lantern",
+   "palette": [
+    "#141824",
+    "#2E3545",
+    "#E8F4F8",
+    "#66D9E8"
+   ],
+   "request": "the lamp from hollow knight kind of mood",
+   "tags": [
+    "lamp",
+    "from",
+    "hollow",
+    "knight",
+    "subterranean",
+    "soul",
+    "lantern",
+    "streamer",
+    "wants",
+    "melancholic",
+    "atmospheric",
+    "streetlamp",
+    "prop",
+    "inspired",
+    "hand",
+    "drawn"
+   ],
+   "preset": true,
+   "source": "altar-16"
+  },
+  {
+   "id": "vessel-17",
+   "kind": "draw_vessel",
+   "file": "library/vessel/vessel-17.webp",
+   "width": 768,
+   "height": 768,
+   "style_name": "Dragonforged Dark Fantasy",
+   "palette": [
+    "#1E1F24",
+    "#C8963E",
+    "#B8332A",
+    "#F2C97D"
+   ],
+   "request": "something with a dragon?",
+   "tags": [
+    "dragon",
+    "dragonforged",
+    "dark",
+    "fantasy",
+    "because",
+    "streamer",
+    "runs",
+    "rpg",
+    "channel",
+    "asked",
+    "broadly",
+    "best",
+    "fit",
+    "giveaway",
+    "draw",
+    "vessel"
+   ],
+   "preset": true,
+   "source": "urn-17"
+  },
+  {
+   "id": "beacon-17",
+   "kind": "beacon",
+   "file": "library/beacon/beacon-17.webp",
+   "width": 574,
+   "height": 768,
+   "style_name": "Stylized Buccaneer Fantasy",
+   "palette": [
+    "#1B2A38",
+    "#6E472B",
+    "#D49B35",
+    "#2AF5D2"
+   ],
+   "request": "pirate",
+   "tags": [
+    "pirate",
+    "stylized",
+    "buccaneer",
+    "fantasy",
+    "high",
+    "seas",
+    "adventure",
+    "ship",
+    "lantern",
+    "arcane",
+    "brazier",
+    "chunky",
+    "hand",
+    "carved",
+    "driftwood",
+    "weathered"
+   ],
+   "preset": false,
+   "source": "altar-17"
+  },
+  {
+   "id": "vessel-18",
+   "kind": "draw_vessel",
+   "file": "library/vessel/vessel-18.webp",
+   "width": 768,
+   "height": 768,
+   "style_name": "Arcane Reliquary Realism",
+   "palette": [
+    "#1F232B",
+    "#D4A24C",
+    "#E845C8",
+    "#34E4EA"
+   ],
+   "request": "make it pop more than the default",
+   "tags": [
+    "pop",
+    "default",
+    "arcane",
+    "reliquary",
+    "realism",
+    "because",
+    "streamer",
+    "disliked",
+    "flat",
+    "cartoon",
+    "preset",
+    "asked",
+    "vessel",
+    "they",
+    "want",
+    "high"
+   ],
+   "preset": false,
+   "source": "urn-18"
+  },
+  {
+   "id": "beacon-18",
+   "kind": "beacon",
+   "file": "library/beacon/beacon-18.webp",
+   "width": 574,
+   "height": 768,
+   "style_name": "Stormforged Tactical Sci-Fi",
+   "palette": [
+    "#1B2028",
+    "#00E5FF",
+    "#7C4DFF",
+    "#B87333"
+   ],
+   "request": "stormy, lightning",
+   "tags": [
+    "stormy",
+    "lightning",
+    "stormforged",
+    "tactical",
+    "sci",
+    "high",
+    "voltage",
+    "storm",
+    "powered",
+    "support",
+    "reactor",
+    "beacon",
+    "built",
+    "competitive",
+    "energy",
+    "stream"
+   ],
+   "preset": true,
+   "source": "altar-18"
+  },
+  {
+   "id": "vessel-19",
+   "kind": "draw_vessel",
+   "file": "library/vessel/vessel-19.webp",
+   "width": 768,
+   "height": 768,
+   "style_name": "Motorsport Carbon Telemetry",
+   "palette": [
+    "#141619",
+    "#3A3F47",
+    "#E62E2D",
+    "#FF9E1B"
+   ],
+   "request": "racing game vibe, carbon fiber",
+   "tags": [
+    "racing",
+    "game",
+    "carbon",
+    "fiber",
+    "motorsport",
+    "telemetry",
+    "sim",
+    "streamer",
+    "wants",
+    "giveaway",
+    "draw",
+    "vessel",
+    "that",
+    "looks",
+    "authentic",
+    "piece"
+   ],
+   "preset": true,
+   "source": "urn-19"
+  },
+  {
+   "id": "beacon-19",
+   "kind": "beacon",
+   "file": "library/beacon/beacon-19.webp",
+   "width": 574,
+   "height": 768,
+   "style_name": "Clockwork Puzzle Aether",
+   "palette": [
+    "#B8863B",
+    "#3B281E",
+    "#FFB347",
+    "#38E2D5"
+   ],
+   "request": "steampunk",
+   "tags": [
+    "steampunk",
+    "clockwork",
+    "puzzle",
+    "aether",
+    "intricate",
+    "victorian",
+    "box",
+    "reactor",
+    "featuring",
+    "interlocking",
+    "brass",
+    "astrolabe",
+    "rings",
+    "walnut",
+    "wood",
+    "inlays"
+   ],
+   "preset": false,
+   "source": "altar-19"
+  },
+  {
+   "id": "vessel-20",
+   "kind": "draw_vessel",
+   "file": "library/vessel/vessel-20.webp",
+   "width": 768,
+   "height": 768,
+   "style_name": "Hallowed Night Gothic",
+   "palette": [
+    "#1A1326",
+    "#2B2635",
+    "#FF6A1A",
+    "#6EEB55"
+   ],
+   "request": "halloween version pls",
+   "tags": [
+    "halloween",
+    "hallowed",
+    "night",
+    "gothic",
+    "streamer",
+    "wants",
+    "seasonal",
+    "themed",
+    "giveaway",
+    "draw",
+    "vessel",
+    "house",
+    "candlelit",
+    "jack",
+    "lantern",
+    "wrought"
+   ],
+   "preset": true,
+   "source": "urn-20"
+  },
+  {
+   "id": "beacon-20",
+   "kind": "beacon",
+   "file": "library/beacon/beacon-20.webp",
+   "width": 574,
+   "height": 768,
+   "style_name": "Hallowed Night Gothic",
+   "palette": [
+    "#1B1124",
+    "#FF6A1A",
+    "#7ED957",
+    "#2B2832"
+   ],
+   "request": "halloween version pls",
+   "tags": [
+    "halloween",
+    "hallowed",
+    "night",
+    "gothic",
+    "streamer",
+    "wants",
+    "themed",
+    "support",
+    "reactor",
+    "beacon",
+    "crafted",
+    "ornate",
+    "wrought",
+    "iron",
+    "bone",
+    "reliquary"
+   ],
+   "preset": true,
+   "source": "altar-20"
+  },
+  {
+   "id": "vessel-18-alt",
+   "kind": "draw_vessel",
+   "file": "library/vessel/vessel-18-alt.webp",
+   "width": 768,
+   "height": 768,
+   "style_name": "Arcane Alloy Urn",
+   "palette": [
+    "#17232E",
+    "#25E0D0",
+    "#D6AC62",
+    "#F3EBDD"
+   ],
+   "request": "make it pop more than the default",
+   "tags": [
+    "pop",
+    "default",
+    "arcane",
+    "alloy",
+    "urn",
+    "giveaway",
+    "vessel",
+    "stand",
+    "out",
+    "through",
+    "premium",
+    "materials",
+    "stronger",
+    "contrast",
+    "luminous",
+    "accents"
+   ],
+   "preset": false,
+   "source": "urn-18"
+  },
+  {
+   "id": "beacon-15-alt",
+   "kind": "beacon",
+   "file": "library/beacon/beacon-15-alt.webp",
+   "width": 578,
+   "height": 768,
+   "style_name": "Precision Industrial Reactor",
+   "palette": [
+    "#252B32",
+    "#89939D",
+    "#A36D47",
+    "#58E5F2"
+   ],
+   "request": "make it less cartoony",
+   "tags": [
+    "less",
+    "cartoony",
+    "precision",
+    "industrial",
+    "reactor",
+    "replace",
+    "cartoon",
+    "realistic",
+    "built",
+    "support",
+    "featuring",
+    "believable",
+    "metals",
+    "clearly",
+    "separated",
+    "glowing"
+   ],
+   "preset": false,
+   "source": "altar-15"
+  },
+  {
+   "id": "frame-01",
+   "kind": "frame",
+   "file": "library/frame/frame-01.webp",
+   "width": 768,
+   "height": 432,
+   "style_name": "Graphite Precision",
+   "palette": [
+    "#171D25",
+    "#394653",
+    "#AAB8C2",
+    "#44D9E6"
+   ],
+   "request": "webcam border",
+   "tags": [
+    "webcam",
+    "border",
+    "graphite",
+    "precision",
+    "polished",
+    "sci",
+    "slim",
+    "metallic",
+    "rails",
+    "cyan",
+    "accents",
+    "transparent",
+    "camera",
+    "opening",
+    "saved",
+    "frame"
+   ],
+   "preset": true,
+   "source": "frame-01",
+   "anchors": {
+    "window_rect": {
+     "x": 0.0195,
+     "y": 0.0486,
+     "w": 0.9609,
+     "h": 0.9028
+    }
+   }
+  },
+  {
+   "id": "frame-02",
+   "kind": "frame",
+   "file": "library/frame/frame-02.webp",
+   "width": 768,
+   "height": 432,
+   "style_name": "Electric Arena Armor",
+   "palette": [
+    "#7B2CFF",
+    "#20D9FF",
+    "#C7FF38",
+    "#171B2D"
+   ],
+   "request": "fortnite colors",
+   "tags": [
+    "fortnite",
+    "colors",
+    "electric",
+    "arena",
+    "armor",
+    "vibrant",
+    "battle",
+    "royale",
+    "facecam",
+    "frame",
+    "violet",
+    "cyan",
+    "lighting",
+    "lime",
+    "accents",
+    "transparent"
+   ],
+   "preset": true,
+   "source": "frame-02",
+   "anchors": {
+    "window_rect": {
+     "x": 0.0234,
+     "y": 0.0417,
+     "w": 0.9531,
+     "h": 0.9167
+    }
+   }
+  },
+  {
+   "id": "frame-03",
+   "kind": "frame",
+   "file": "library/frame/frame-03.webp",
+   "width": 768,
+   "height": 432,
+   "style_name": "Amethyst Gothic Relic",
+   "palette": [
+    "#17191F",
+    "#8D7046",
+    "#72548C",
+    "#C0C5CD"
+   ],
+   "request": "dark fantasy like baldur's gate",
+   "tags": [
+    "dark",
+    "fantasy",
+    "baldur",
+    "gate",
+    "amethyst",
+    "gothic",
+    "relic",
+    "premium",
+    "crpg",
+    "webcam",
+    "frame",
+    "resembling",
+    "ancient",
+    "saved",
+    "png",
+    "generated"
+   ],
+   "preset": true,
+   "source": "frame-03",
+   "anchors": {
+    "window_rect": {
+     "x": 0.0273,
+     "y": 0.0625,
+     "w": 0.9453,
+     "h": 0.875
+    }
+   }
+  },
+  {
+   "id": "frame-04",
+   "kind": "frame",
+   "file": "library/frame/frame-04.webp",
+   "width": 768,
+   "height": 432,
+   "style_name": "Neon Titanium HUD",
+   "palette": [
+    "#111820",
+    "#00E5FF",
+    "#955CFF",
+    "#A5B5C2"
+   ],
+   "request": "cyberpunk hud",
+   "tags": [
+    "cyberpunk",
+    "hud",
+    "neon",
+    "titanium",
+    "premium",
+    "webcam",
+    "surround",
+    "circuitry",
+    "armored",
+    "corners",
+    "clear",
+    "camera",
+    "opening",
+    "generated",
+    "built",
+    "image"
+   ],
+   "preset": true,
+   "source": "frame-04",
+   "anchors": {
+    "window_rect": {
+     "x": 0.0234,
+     "y": 0.0486,
+     "w": 0.9531,
+     "h": 0.9028
+    }
+   }
+  },
+  {
+   "id": "frame-05",
+   "kind": "frame",
+   "file": "library/frame/frame-05.webp",
+   "width": 768,
+   "height": 432,
+   "style_name": "Crimson Precision",
+   "palette": [
+    "#E52232",
+    "#880F21",
+    "#15191F",
+    "#737D88"
+   ],
+   "request": "esports clean, red",
+   "tags": [
+    "esports",
+    "clean",
+    "red",
+    "crimson",
+    "precision",
+    "webcam",
+    "frame",
+    "metal",
+    "rails",
+    "angular",
+    "corners",
+    "competitive",
+    "fps",
+    "streamer"
+   ],
+   "preset": false,
+   "source": "frame-05",
+   "anchors": {
+    "window_rect": {
+     "x": 0.0234,
+     "y": 0.0417,
+     "w": 0.9531,
+     "h": 0.9167
+    }
+   }
+  },
+  {
+   "id": "frame-06",
+   "kind": "frame",
+   "file": "library/frame/frame-06.webp",
+   "width": 768,
+   "height": 432,
+   "style_name": "Cozy Botanical Oak",
+   "palette": [
+    "#A87545",
+    "#513B2B",
+    "#87966B",
+    "#354C38"
+   ],
+   "request": "cozy wood and plants",
+   "tags": [
+    "cozy",
+    "wood",
+    "plants",
+    "botanical",
+    "oak",
+    "warm",
+    "webcam",
+    "frame",
+    "compact",
+    "ivy",
+    "fern",
+    "corners",
+    "streams",
+    "saved",
+    "unchanged",
+    "png"
+   ],
+   "preset": true,
+   "source": "frame-06",
+   "anchors": {
+    "window_rect": {
+     "x": 0.0234,
+     "y": 0.0417,
+     "w": 0.957,
+     "h": 0.9167
+    }
+   }
+  },
+  {
+   "id": "frame-12",
+   "kind": "frame",
+   "file": "library/frame/frame-12.webp",
+   "width": 768,
+   "height": 432,
+   "style_name": "Orbital Visor",
+   "palette": [
+    "#18232D",
+    "#80939E",
+    "#65E3F0",
+    "#E9A34A"
+   ],
+   "request": "like a helmet visor",
+   "tags": [
+    "helmet",
+    "visor",
+    "orbital",
+    "astronaut",
+    "rim",
+    "framing",
+    "webcam",
+    "realistic",
+    "pressure",
+    "seals",
+    "metal",
+    "hinges",
+    "subtle",
+    "illuminated",
+    "accents"
+   ],
+   "preset": true,
+   "source": "frame-12",
+   "anchors": {
+    "window_rect": {
+     "x": 0.0312,
+     "y": 0.0556,
+     "w": 0.9375,
+     "h": 0.8889
+    }
+   }
+  },
+  {
+   "id": "frame-14",
+   "kind": "frame",
+   "file": "library/frame/frame-14.webp",
+   "width": 768,
+   "height": 432,
+   "style_name": "Midnight Neon Alloy",
+   "palette": [
+    "#171D27",
+    "#343C4C",
+    "#50BDB6",
+    "#8478B5"
+   ],
+   "request": "neon but subtle",
+   "tags": [
+    "neon",
+    "subtle",
+    "midnight",
+    "alloy",
+    "calm",
+    "futuristic",
+    "facecam",
+    "frame",
+    "dark",
+    "metal",
+    "restrained",
+    "accents",
+    "saved",
+    "png",
+    "generated",
+    "alpha"
+   ],
+   "preset": false,
+   "source": "frame-14",
+   "anchors": {
+    "window_rect": {
+     "x": 0.0156,
+     "y": 0.0278,
+     "w": 0.9688,
+     "h": 0.9444
+    }
+   }
+  },
+  {
+   "id": "frame-15",
+   "kind": "frame",
+   "file": "library/frame/frame-15.webp",
+   "width": 768,
+   "height": 432,
+   "style_name": "Norse Ironwood",
+   "palette": [
+    "#30251E",
+    "#252B30",
+    "#977347",
+    "#B9CED4"
+   ],
+   "request": "viking",
+   "tags": [
+    "viking",
+    "norse",
+    "ironwood",
+    "rugged",
+    "survival",
+    "crafting",
+    "webcam",
+    "frame",
+    "carved",
+    "wood",
+    "forged",
+    "iron",
+    "bronze",
+    "dragon",
+    "corner",
+    "ornaments"
+   ],
+   "preset": true,
+   "source": "frame-15",
+   "anchors": {
+    "window_rect": {
+     "x": 0.0391,
+     "y": 0.0625,
+     "w": 0.9219,
+     "h": 0.875
+    }
+   }
+  },
+  {
+   "id": "frame-16",
+   "kind": "frame",
+   "file": "library/frame/frame-16.webp",
+   "width": 768,
+   "height": 432,
+   "style_name": "Haunted Signal Terminal",
+   "palette": [
+    "#14191D",
+    "#778489",
+    "#5BE7DE",
+    "#D64256"
+   ],
+   "request": "glitch effect",
+   "tags": [
+    "glitch",
+    "effect",
+    "haunted",
+    "signal",
+    "terminal",
+    "corrupted",
+    "surveillance",
+    "frame",
+    "ominous",
+    "glitches",
+    "horror",
+    "arg",
+    "streams",
+    "saved",
+    "png",
+    "generated"
+   ],
+   "preset": false,
+   "source": "frame-16",
+   "anchors": {
+    "window_rect": {
+     "x": 0.0234,
+     "y": 0.0417,
+     "w": 0.957,
+     "h": 0.9167
+    }
+   }
+  },
+  {
+   "id": "frame-17",
+   "kind": "frame",
+   "file": "library/frame/frame-17.webp",
+   "width": 768,
+   "height": 432,
+   "style_name": "Obsidian Alloy",
+   "palette": [
+    "#11151B",
+    "#343F4B",
+    "#A8B5BF",
+    "#62D6E8"
+   ],
+   "request": "just better than the default one",
+   "tags": [
+    "better",
+    "default",
+    "one",
+    "obsidian",
+    "alloy",
+    "mature",
+    "premium",
+    "metal",
+    "facecam",
+    "frame",
+    "restrained",
+    "cyan",
+    "accents",
+    "replacing",
+    "cartoon",
+    "realistic"
+   ],
+   "preset": false,
+   "source": "frame-17",
+   "anchors": {
+    "window_rect": {
+     "x": 0.0273,
+     "y": 0.0486,
+     "w": 0.9453,
+     "h": 0.9028
+    }
+   }
+  },
+  {
+   "id": "frame-18",
+   "kind": "frame",
+   "file": "library/frame/frame-18.webp",
+   "width": 768,
+   "height": 432,
+   "style_name": "Arcane Arena Gold",
+   "palette": [
+    "#C49A50",
+    "#102637",
+    "#38CFE3",
+    "#18202B"
+   ],
+   "request": "league of legends style",
+   "tags": [
+    "league",
+    "legends",
+    "arcane",
+    "arena",
+    "gold",
+    "polished",
+    "fantasy",
+    "webcam",
+    "frame",
+    "antique",
+    "dark",
+    "enamel",
+    "cyan",
+    "crystals",
+    "saved",
+    "png"
+   ],
+   "preset": false,
+   "source": "frame-18",
+   "anchors": {
+    "window_rect": {
+     "x": 0.0195,
+     "y": 0.0417,
+     "w": 0.9609,
+     "h": 0.9167
+    }
+   }
+  },
+  {
+   "id": "frame-19",
+   "kind": "frame",
+   "file": "library/frame/frame-19.webp",
+   "width": 768,
+   "height": 432,
+   "style_name": "Glacial Citadel",
+   "palette": [
+    "#102A43",
+    "#438FB5",
+    "#9DE3F2",
+    "#EDF9FF"
+   ],
+   "request": "ice, frozen",
+   "tags": [
+    "ice",
+    "frozen",
+    "glacial",
+    "citadel",
+    "premium",
+    "webcam",
+    "frame",
+    "sculpted",
+    "corners",
+    "slim",
+    "metal",
+    "edges",
+    "open",
+    "transparent",
+    "centre",
+    "saved"
+   ],
+   "preset": true,
+   "source": "frame-19",
+   "anchors": {
+    "window_rect": {
+     "x": 0.0195,
+     "y": 0.0417,
+     "w": 0.9609,
+     "h": 0.9167
+    }
+   }
+  },
+  {
+   "id": "frame-17-alt",
+   "kind": "frame",
+   "file": "library/frame/frame-17-alt.webp",
+   "width": 768,
+   "height": 432,
+   "style_name": "Precision Gunmetal",
+   "palette": [
+    "#141A20",
+    "#394650",
+    "#B7C4CC",
+    "#46C7C2"
+   ],
+   "request": "just better than the default one",
+   "tags": [
+    "better",
+    "default",
+    "one",
+    "precision",
+    "gunmetal",
+    "mature",
+    "understated",
+    "facecam",
+    "frame",
+    "realistic",
+    "metalwork",
+    "restrained",
+    "teal",
+    "accents",
+    "replacing",
+    "cartoon"
+   ],
+   "preset": false,
+   "source": "frame-17",
+   "anchors": {
+    "window_rect": {
+     "x": 0.0469,
+     "y": 0.0764,
+     "w": 0.9062,
+     "h": 0.8472
+    }
+   }
+  },
+  {
+   "id": "frame-08",
+   "kind": "frame",
+   "file": "library/frame/frame-08.webp",
+   "width": 768,
+   "height": 429,
+   "style_name": "16-Bit Arcade HUD",
+   "palette": [
+    "#1A1B2F",
+    "#F2B705",
+    "#00E5FF",
+    "#E62E6B"
+   ],
+   "request": "pixel art",
+   "tags": [
+    "pixel",
+    "art",
+    "bit",
+    "arcade",
+    "hud",
+    "retro",
+    "speedrunner",
+    "requesting",
+    "wants",
+    "high",
+    "craft",
+    "modern",
+    "indie",
+    "dialogue",
+    "webcam",
+    "frame"
+   ],
+   "preset": false,
+   "source": "frame-08",
+   "anchors": {
+    "window_rect": {
+     "x": 0.0391,
+     "y": 0.0699,
+     "w": 0.918,
+     "h": 0.8531
+    }
+   }
+  },
+  {
+   "id": "frame-09",
+   "kind": "frame",
+   "file": "library/frame/frame-09.webp",
+   "width": 768,
+   "height": 432,
+   "style_name": "Rugged Tactical Optics",
+   "palette": [
+    "#1F2326",
+    "#4B5338",
+    "#FFB01F",
+    "#38E5FF"
+   ],
+   "request": "tactical military hud",
+   "tags": [
+    "tactical",
+    "military",
+    "hud",
+    "rugged",
+    "optics",
+    "gritty",
+    "realistic",
+    "modern",
+    "field",
+    "equipment",
+    "frame",
+    "tailored",
+    "extraction",
+    "shooter",
+    "stream",
+    "combining"
+   ],
+   "preset": false,
+   "source": "frame-09",
+   "anchors": {
+    "window_rect": {
+     "x": 0.0742,
+     "y": 0.1181,
+     "w": 0.8516,
+     "h": 0.7708
+    }
+   }
+  },
+  {
+   "id": "frame-10",
+   "kind": "frame",
+   "file": "library/frame/frame-10.webp",
+   "width": 768,
+   "height": 432,
+   "style_name": "Imperial Baroque Strategy",
+   "palette": [
+    "#D4AF37",
+    "#4A3212",
+    "#6E141E",
+    "#FFF3C4"
+   ],
+   "request": "gold and fancy",
+   "tags": [
+    "gold",
+    "fancy",
+    "imperial",
+    "baroque",
+    "strategy",
+    "game",
+    "streamer",
+    "asking",
+    "this",
+    "translates",
+    "ornate",
+    "authoritative",
+    "hud",
+    "framing",
+    "modern",
+    "aaa"
+   ],
+   "preset": true,
+   "source": "frame-10",
+   "anchors": {
+    "window_rect": {
+     "x": 0.0508,
+     "y": 0.0625,
+     "w": 0.8984,
+     "h": 0.875
+    }
+   }
+  },
+  {
+   "id": "frame-11",
+   "kind": "frame",
+   "file": "library/frame/frame-11.webp",
+   "width": 768,
+   "height": 432,
+   "style_name": "Tactical Carbon HUD",
+   "palette": [
+    "#1A1D24",
+    "#384152",
+    "#00E5FF",
+    "#E2E8F0"
+   ],
+   "request": "not too big it covers my face",
+   "tags": [
+    "too",
+    "big",
+    "covers",
+    "face",
+    "tactical",
+    "carbon",
+    "hud",
+    "streamer",
+    "uses",
+    "compact",
+    "webcam",
+    "overlay",
+    "wants",
+    "ultra",
+    "sleek",
+    "low"
+   ],
+   "preset": false,
+   "source": "frame-11",
+   "anchors": {
+    "window_rect": {
+     "x": 0.0352,
+     "y": 0.0417,
+     "w": 0.9297,
+     "h": 0.9167
+    }
+   }
+  },
+  {
+   "id": "frame-20",
+   "kind": "frame",
+   "file": "library/frame/frame-20.webp",
+   "width": 768,
+   "height": 432,
+   "style_name": "Hallowed Night Gothic",
+   "palette": [
+    "#160F24",
+    "#23202B",
+    "#F26419",
+    "#68C947"
+   ],
+   "request": "halloween version pls",
+   "tags": [
+    "halloween",
+    "hallowed",
+    "night",
+    "gothic",
+    "streamer",
+    "wants",
+    "seasonal",
+    "variation",
+    "their",
+    "facecam",
+    "overlay",
+    "executed",
+    "house",
+    "atmospheric",
+    "aaa",
+    "game"
+   ],
+   "preset": true,
+   "source": "frame-20",
+   "anchors": {
+    "window_rect": {
+     "x": 0.0742,
+     "y": 0.0833,
+     "w": 0.8516,
+     "h": 0.8333
+    }
+   }
+  },
+  {
+   "id": "votebar-01",
+   "kind": "vote_bar",
+   "file": "library/votebar/votebar-01.webp",
+   "width": 768,
+   "height": 256,
+   "style_name": "Forged Gatehouse Steel",
+   "palette": [
+    "#30383D",
+    "#667176",
+    "#B49A61",
+    "#4A5055"
+   ],
+   "request": "vote bar",
+   "tags": [
+    "vote",
+    "bar",
+    "forged",
+    "gatehouse",
+    "steel",
+    "refined",
+    "fantasy",
+    "housing",
+    "empty",
+    "track",
+    "app",
+    "rendered",
+    "voting",
+    "segments",
+    "saved",
+    "votebar"
+   ],
+   "preset": true,
+   "source": "votebar-01",
+   "anchors": {
+    "track_rect": {
+     "x": 0.0746,
+     "y": 0.3923,
+     "w": 0.8508,
+     "h": 0.2182
+    },
+    "track_radius": 0.17,
+    "segments": [
+     "#20D9E8",
+     "#FF9E32",
+     "#B16CFF"
+    ]
+   }
+  },
+  {
+   "id": "votebar-02",
+   "kind": "vote_bar",
+   "file": "library/votebar/votebar-02.webp",
+   "width": 768,
+   "height": 256,
+   "style_name": "Tactical Alloy",
+   "palette": [
+    "#101F2B",
+    "#344650",
+    "#FF4655",
+    "#64D8D1"
+   ],
+   "request": "valorant style",
+   "tags": [
+    "valorant",
+    "tactical",
+    "alloy",
+    "competitive",
+    "sci",
+    "vote",
+    "bar",
+    "angular",
+    "metal",
+    "housing",
+    "coral",
+    "teal",
+    "accents",
+    "dark",
+    "empty",
+    "track"
+   ],
+   "preset": false,
+   "source": "votebar-02",
+   "anchors": {
+    "track_rect": {
+     "x": 0.07182,
+     "y": 0.38398,
+     "w": 0.85635,
+     "h": 0.23895
+    },
+    "track_radius": 0,
+    "segments": [
+     "#35E6DD",
+     "#FF535F",
+     "#B875FF"
+    ]
+   }
+  },
+  {
+   "id": "votebar-03",
+   "kind": "vote_bar",
+   "file": "library/votebar/votebar-03.webp",
+   "width": 768,
+   "height": 256,
+   "style_name": "Oxblood Gothic Iron",
+   "palette": [
+    "#262326",
+    "#8C7048",
+    "#471C28",
+    "#1C1018"
+   ],
+   "request": "health bar like a boss fight",
+   "tags": [
+    "health",
+    "bar",
+    "boss",
+    "fight",
+    "oxblood",
+    "gothic",
+    "iron",
+    "grim",
+    "medieval",
+    "housing",
+    "repurposed",
+    "chat",
+    "voting",
+    "empty",
+    "dark",
+    "track"
+   ],
+   "preset": true,
+   "source": "votebar-03",
+   "anchors": {
+    "track_rect": {
+     "x": 0.103131,
+     "y": 0.415746,
+     "w": 0.793738,
+     "h": 0.168508
+    },
+    "track_radius": 0,
+    "segments": [
+     "#F04464",
+     "#23D6B2",
+     "#FFBA3B"
+    ]
+   }
+  },
+  {
+   "id": "votebar-04",
+   "kind": "vote_bar",
+   "file": "library/votebar/votebar-04.webp",
+   "width": 768,
+   "height": 256,
+   "style_name": "Neon Gunmetal",
+   "palette": [
+    "#242B38",
+    "#081521",
+    "#20E3F2",
+    "#F238B0"
+   ],
+   "request": "cyberpunk",
+   "tags": [
+    "cyberpunk",
+    "neon",
+    "gunmetal",
+    "premium",
+    "vote",
+    "bar",
+    "machined",
+    "metal",
+    "housing",
+    "restrained",
+    "accents",
+    "empty",
+    "dark",
+    "track",
+    "app",
+    "rendered"
+   ],
+   "preset": true,
+   "source": "votebar-04",
+   "anchors": {
+    "track_rect": {
+     "x": 0.0755,
+     "y": 0.3674,
+     "w": 0.8494,
+     "h": 0.2652
+    },
+    "track_radius": 0.25,
+    "segments": [
+     "#00DDF5",
+     "#FF20AD",
+     "#FFD43B"
+    ]
+   }
+  },
+  {
+   "id": "votebar-05",
+   "kind": "vote_bar",
+   "file": "library/votebar/votebar-05.webp",
+   "width": 768,
+   "height": 256,
+   "style_name": "Forged Hemp Rivalry",
+   "palette": [
+    "#B99560",
+    "#343A37",
+    "#81704C",
+    "#18231E"
+   ],
+   "request": "tug of war rope",
+   "tags": [
+    "tug",
+    "war",
+    "rope",
+    "forged",
+    "hemp",
+    "rivalry",
+    "taut",
+    "frame",
+    "iron",
+    "bound",
+    "knots",
+    "evokes",
+    "community",
+    "saved",
+    "unchanged",
+    "votebar"
+   ],
+   "preset": true,
+   "source": "votebar-05",
+   "anchors": {
+    "track_rect": {
+     "x": 0.1027,
+     "y": 0.3798,
+     "w": 0.7956,
+     "h": 0.2348
+    },
+    "track_radius": 0.02,
+    "segments": [
+     "#FFB52E",
+     "#20D9CB",
+     "#F45C75"
+    ]
+   }
+  },
+  {
+   "id": "votebar-06",
+   "kind": "vote_bar",
+   "file": "library/votebar/votebar-06.webp",
+   "width": 768,
+   "height": 256,
+   "style_name": "Precision Esports",
+   "palette": [
+    "#091923",
+    "#202C36",
+    "#788B99",
+    "#20D8EF"
+   ],
+   "request": "esports clean",
+   "tags": [
+    "esports",
+    "clean",
+    "precision",
+    "restrained",
+    "competitive",
+    "broadcast",
+    "vote",
+    "bar",
+    "metal",
+    "framing",
+    "subtle",
+    "cyan",
+    "accents",
+    "blank",
+    "dark",
+    "navy"
+   ],
+   "preset": false,
+   "source": "votebar-06",
+   "anchors": {
+    "track_rect": {
+     "x": 0.0732,
+     "y": 0.3785,
+     "w": 0.8536,
+     "h": 0.2417
+    },
+    "track_radius": 0.23,
+    "segments": [
+     "#00D9FF",
+     "#FF4DCE",
+     "#FFC247"
+    ]
+   }
+  },
+  {
+   "id": "votebar-07",
+   "kind": "vote_bar",
+   "file": "library/votebar/votebar-07.webp",
+   "width": 768,
+   "height": 256,
+   "style_name": "Sapphire Oathsteel",
+   "palette": [
+    "#10262E",
+    "#60747D",
+    "#B89455",
+    "#267B96"
+   ],
+   "request": "fantasy sword hilt",
+   "tags": [
+    "fantasy",
+    "sword",
+    "hilt",
+    "sapphire",
+    "oathsteel",
+    "inspired",
+    "mmo",
+    "vote",
+    "bar",
+    "ornate",
+    "metal",
+    "rails",
+    "end",
+    "caps",
+    "empty",
+    "dark"
+   ],
+   "preset": true,
+   "source": "votebar-07",
+   "anchors": {
+    "track_rect": {
+     "x": 0.11004,
+     "y": 0.40884,
+     "w": 0.78085,
+     "h": 0.17818
+    },
+    "track_radius": 0.22,
+    "segments": [
+     "#22D3EE",
+     "#FFB52E",
+     "#C66BFF"
+    ]
+   }
+  },
+  {
+   "id": "votebar-09",
+   "kind": "vote_bar",
+   "file": "library/votebar/votebar-09.webp",
+   "width": 768,
+   "height": 256,
+   "style_name": "Minimal Smoked Glass",
+   "palette": [
+    "#101D28",
+    "#263D4A",
+    "#91B9C8",
+    "#D6EDF2"
+   ],
+   "request": "minimal glass",
+   "tags": [
+    "minimal",
+    "glass",
+    "smoked",
+    "restrained",
+    "vote",
+    "bar",
+    "clean",
+    "modern",
+    "stream",
+    "generated",
+    "built",
+    "image",
+    "tool",
+    "saved",
+    "unchanged",
+    "votebar"
+   ],
+   "preset": false,
+   "source": "votebar-09",
+   "anchors": {
+    "track_rect": {
+     "x": 0.05617,
+     "y": 0.38812,
+     "w": 0.88766,
+     "h": 0.22376
+    },
+    "track_radius": 0.22,
+    "segments": [
+     "#00DFFF",
+     "#FF4FD8",
+     "#FFBE3D"
+    ]
+   }
+  },
+  {
+   "id": "votebar-10",
+   "kind": "vote_bar",
+   "file": "library/votebar/votebar-10.webp",
+   "width": 768,
+   "height": 256,
+   "style_name": "Armored Arena HUD",
+   "palette": [
+    "#101B2B",
+    "#303946",
+    "#EF3340",
+    "#35D9ED"
+   ],
+   "request": "fighting game style",
+   "tags": [
+    "fighting",
+    "game",
+    "armored",
+    "arena",
+    "hud",
+    "competitive",
+    "vote",
+    "bar",
+    "metal",
+    "housing",
+    "energetic",
+    "accents",
+    "dark",
+    "empty",
+    "track",
+    "saved"
+   ],
+   "preset": false,
+   "source": "votebar-10",
+   "anchors": {
+    "track_rect": {
+     "x": 0.07366,
+     "y": 0.37845,
+     "w": 0.85267,
+     "h": 0.24309
+    },
+    "track_radius": 0,
+    "segments": [
+     "#00DFFF",
+     "#FF4055",
+     "#FFD43B"
+    ]
+   }
+  },
+  {
+   "id": "votebar-11",
+   "kind": "vote_bar",
+   "file": "library/votebar/votebar-11.webp",
+   "width": 768,
+   "height": 256,
+   "style_name": "Runeforged Iron",
+   "palette": [
+    "#10292D",
+    "#303B40",
+    "#92704A",
+    "#6DCBC4"
+   ],
+   "request": "runes",
+   "tags": [
+    "runes",
+    "runeforged",
+    "iron",
+    "viking",
+    "inspired",
+    "forged",
+    "metal",
+    "vote",
+    "bar",
+    "rune",
+    "geometric",
+    "ornament",
+    "empty",
+    "dark",
+    "teal",
+    "track"
+   ],
+   "preset": true,
+   "source": "votebar-11",
+   "anchors": {
+    "track_rect": {
+     "x": 0.0792,
+     "y": 0.384,
+     "w": 0.8416,
+     "h": 0.232
+    },
+    "track_radius": 0.13,
+    "segments": [
+     "#36E6C5",
+     "#FFB547",
+     "#B779FF"
+    ]
+   }
+  },
+  {
+   "id": "votebar-12",
+   "kind": "vote_bar",
+   "file": "library/votebar/votebar-12.webp",
+   "width": 768,
+   "height": 256,
+   "style_name": "Neon Stage Hardware",
+   "palette": [
+    "#27E8FF",
+    "#FF3EBF",
+    "#101329",
+    "#252B38"
+   ],
+   "request": "neon tubes",
+   "tags": [
+    "neon",
+    "tubes",
+    "stage",
+    "hardware",
+    "concert",
+    "inspired",
+    "vote",
+    "bar",
+    "framed",
+    "cyan",
+    "magenta",
+    "dark",
+    "empty",
+    "track",
+    "live",
+    "voting"
+   ],
+   "preset": true,
+   "source": "votebar-12",
+   "anchors": {
+    "track_rect": {
+     "x": 0.07965,
+     "y": 0.37293,
+     "w": 0.84116,
+     "h": 0.25
+    },
+    "track_radius": 0.25,
+    "segments": [
+     "#00E5FF",
+     "#FF2BD6",
+     "#FFD43B"
+    ]
+   }
+  },
+  {
+   "id": "votebar-13",
+   "kind": "vote_bar",
+   "file": "library/votebar/votebar-13.webp",
+   "width": 768,
+   "height": 256,
+   "style_name": "Ironbound Slate Gatehouse",
+   "palette": [
+    "#172127",
+    "#656B6C",
+    "#30383D",
+    "#929B9D"
+   ],
+   "request": "stone and iron, medieval",
+   "tags": [
+    "stone",
+    "iron",
+    "medieval",
+    "ironbound",
+    "slate",
+    "gatehouse",
+    "restrained",
+    "fortress",
+    "vote",
+    "bar",
+    "masonry",
+    "forged",
+    "dark",
+    "empty",
+    "track",
+    "saved"
+   ],
+   "preset": true,
+   "source": "votebar-13",
+   "anchors": {
+    "track_rect": {
+     "x": 0.1013,
+     "y": 0.4088,
+     "w": 0.7974,
+     "h": 0.2348
+    },
+    "track_radius": 0,
+    "segments": [
+     "#FF7038",
+     "#29D9E8",
+     "#AC75FF"
+    ]
+   }
+  },
+  {
+   "id": "votebar-14",
+   "kind": "vote_bar",
+   "file": "library/votebar/votebar-14.webp",
+   "width": 768,
+   "height": 256,
+   "style_name": "Neon Arena Alloy",
+   "palette": [
+    "#19D8FF",
+    "#794BFF",
+    "#FFD43B",
+    "#171B42"
+   ],
+   "request": "fortnite bright",
+   "tags": [
+    "fortnite",
+    "bright",
+    "neon",
+    "arena",
+    "alloy",
+    "vivid",
+    "polished",
+    "battle",
+    "vote",
+    "bar",
+    "colorful",
+    "armored",
+    "housing",
+    "dark",
+    "empty",
+    "track"
+   ],
+   "preset": false,
+   "source": "votebar-14",
+   "anchors": {
+    "track_rect": {
+     "x": 0.077808,
+     "y": 0.389503,
+     "w": 0.844383,
+     "h": 0.222376
+    },
+    "track_radius": 0.23,
+    "segments": [
+     "#00E5FF",
+     "#FF3DBB",
+     "#FFD43B"
+    ]
+   }
+  },
+  {
+   "id": "votebar-15",
+   "kind": "vote_bar",
+   "file": "library/votebar/votebar-15.webp",
+   "width": 768,
+   "height": 256,
+   "style_name": "Crimson Tactical Alloy",
+   "palette": [
+    "#C83C36",
+    "#202B30",
+    "#102A30",
+    "#B6ADA0"
+   ],
+   "request": "apex style",
+   "tags": [
+    "apex",
+    "crimson",
+    "tactical",
+    "alloy",
+    "competitive",
+    "sci",
+    "hero",
+    "shooter",
+    "vote",
+    "bar",
+    "angular",
+    "armor",
+    "worn",
+    "metal",
+    "dark",
+    "teal"
+   ],
+   "preset": false,
+   "source": "votebar-15",
+   "anchors": {
+    "track_rect": {
+     "x": 0.0815,
+     "y": 0.3757,
+     "w": 0.8375,
+     "h": 0.2486
+    },
+    "track_radius": 0.2,
+    "segments": [
+     "#FF7538",
+     "#26DFFF",
+     "#B977FF"
+    ]
+   }
+  },
+  {
+   "id": "votebar-16",
+   "kind": "vote_bar",
+   "file": "library/votebar/votebar-16.webp",
+   "width": 768,
+   "height": 256,
+   "style_name": "Pastel Jewel Gatehouse",
+   "palette": [
+    "#EFA9C4",
+    "#B7A2DE",
+    "#E8C990",
+    "#291B38"
+   ],
+   "request": "cute",
+   "tags": [
+    "cute",
+    "pastel",
+    "jewel",
+    "gatehouse",
+    "refined",
+    "fantasy",
+    "vote",
+    "bar",
+    "vtuber",
+    "jeweled",
+    "housing",
+    "dark",
+    "plum",
+    "track",
+    "bright",
+    "segments"
+   ],
+   "preset": true,
+   "source": "votebar-16",
+   "anchors": {
+    "track_rect": {
+     "x": 0.0875,
+     "y": 0.4392,
+     "w": 0.825,
+     "h": 0.2334
+    },
+    "track_radius": 0.5,
+    "segments": [
+     "#FF4DA6",
+     "#32E6D0",
+     "#FFD15C"
+    ]
+   }
+  },
+  {
+   "id": "votebar-17",
+   "kind": "vote_bar",
+   "file": "library/votebar/votebar-17.webp",
+   "width": 768,
+   "height": 256,
+   "style_name": "Forged Gatehouse",
+   "palette": [
+    "#30363B",
+    "#89949C",
+    "#9C8050",
+    "#E5E5E0"
+   ],
+   "request": "make it not cartoon",
+   "tags": [
+    "cartoon",
+    "forged",
+    "gatehouse",
+    "replace",
+    "styling",
+    "realistic",
+    "fortress",
+    "metalwork",
+    "restrained",
+    "ornament",
+    "saved",
+    "unchanged",
+    "votebar",
+    "png",
+    "real",
+    "background"
+   ],
+   "preset": false,
+   "source": "votebar-17",
+   "anchors": {
+    "track_rect": {
+     "x": 0.11188,
+     "y": 0.41298,
+     "w": 0.7767,
+     "h": 0.17265
+    },
+    "track_radius": 0.07,
+    "segments": [
+     "#25D9C5",
+     "#F04452",
+     "#A76BFF"
+    ]
+   }
+  },
+  {
+   "id": "votebar-18",
+   "kind": "vote_bar",
+   "file": "library/votebar/votebar-18.webp",
+   "width": 768,
+   "height": 256,
+   "style_name": "Molten Obsidian Forge",
+   "palette": [
+    "#17100F",
+    "#2B1110",
+    "#FF4B12",
+    "#FFB12B"
+   ],
+   "request": "lava and fire",
+   "tags": [
+    "lava",
+    "fire",
+    "molten",
+    "obsidian",
+    "forge",
+    "fiery",
+    "volcanic",
+    "vote",
+    "bar",
+    "forged",
+    "housing",
+    "accents",
+    "dark",
+    "empty",
+    "track",
+    "bright"
+   ],
+   "preset": false,
+   "source": "votebar-18",
+   "anchors": {
+    "track_rect": {
+     "x": 0.0884,
+     "y": 0.3923,
+     "w": 0.8223,
+     "h": 0.2279
+    },
+    "track_radius": 0.12,
+    "segments": [
+     "#FF651A",
+     "#FFD23F",
+     "#2CE6CD"
+    ]
+   }
+  },
+  {
+   "id": "votebar-19",
+   "kind": "vote_bar",
+   "file": "library/votebar/votebar-19.webp",
+   "width": 768,
+   "height": 256,
+   "style_name": "Orbital Command HUD",
+   "palette": [
+    "#091D2B",
+    "#263844",
+    "#54DCE8",
+    "#FFB454"
+   ],
+   "request": "space station hud",
+   "tags": [
+    "space",
+    "station",
+    "hud",
+    "orbital",
+    "command",
+    "professional",
+    "control",
+    "panel",
+    "vote",
+    "bar",
+    "gunmetal",
+    "housing",
+    "cyan",
+    "lighting",
+    "empty",
+    "dark"
+   ],
+   "preset": false,
+   "source": "votebar-19",
+   "anchors": {
+    "track_rect": {
+     "x": 0.08149,
+     "y": 0.41575,
+     "w": 0.83748,
+     "h": 0.16575
+    },
+    "track_radius": 0.28,
+    "segments": [
+     "#25DFFF",
+     "#FFB52E",
+     "#E653FF"
+    ]
+   }
+  },
+  {
+   "id": "votebar-20",
+   "kind": "vote_bar",
+   "file": "library/votebar/votebar-20.webp",
+   "width": 768,
+   "height": 256,
+   "style_name": "Hallowed Night Gothic",
+   "palette": [
+    "#1A1224",
+    "#FF6B1A",
+    "#4CE670",
+    "#D8CFB8"
+   ],
+   "request": "halloween version pls",
+   "tags": [
+    "halloween",
+    "hallowed",
+    "night",
+    "gothic",
+    "seasonal",
+    "lower",
+    "third",
+    "chat",
+    "vote",
+    "bar",
+    "crafted",
+    "candlelit",
+    "aesthetic",
+    "featuring",
+    "black",
+    "wrought"
+   ],
+   "preset": true,
+   "source": "votebar-20",
+   "anchors": {
+    "track_rect": {
+     "x": 0.179,
+     "y": 0.402,
+     "w": 0.642,
+     "h": 0.211
+    },
+    "track_radius": 0.06,
+    "segments": [
+     "#FF8A24",
+     "#B85CFF",
+     "#78F044"
+    ]
+   }
+  },
+  {
+   "id": "map-02",
+   "kind": "map",
+   "file": "library/map/map-02.webp",
+   "width": 768,
+   "height": 429,
+   "style_name": "Imperial Cartographic Hex Table",
+   "palette": [
+    "#E8DCC4",
+    "#C99A3E",
+    "#1E4D5C",
+    "#3E7A4E"
+   ],
+   "request": "civ style",
+   "tags": [
+    "civ",
+    "imperial",
+    "cartographic",
+    "hex",
+    "table",
+    "streamer",
+    "wants",
+    "grand",
+    "strategy",
+    "war",
+    "room",
+    "map",
+    "inspired",
+    "modern",
+    "historical",
+    "turn"
+   ],
+   "preset": false,
+   "source": "hexmap-02"
+  },
+  {
+   "id": "map-03",
+   "kind": "map",
+   "file": "library/map/map-03.webp",
+   "width": 768,
+   "height": 432,
+   "style_name": "Royal War Table",
+   "palette": [
+    "#7D9CA8",
+    "#355E50",
+    "#B8904B",
+    "#793F48"
+   ],
+   "request": "game of thrones table map",
+   "tags": [
+    "game",
+    "thrones",
+    "table",
+    "map",
+    "royal",
+    "war",
+    "dark",
+    "medieval",
+    "council",
+    "crafted",
+    "terrain",
+    "distinct",
+    "territories",
+    "decorative",
+    "rim",
+    "community"
+   ],
+   "preset": false,
+   "source": "hexmap-03"
+  },
+  {
+   "id": "map-11",
+   "kind": "map",
+   "file": "library/map/map-11.webp",
+   "width": 768,
+   "height": 432,
+   "style_name": "Satellite Command Board",
+   "palette": [
+    "#596849",
+    "#B3A078",
+    "#34434B",
+    "#244C5D"
+   ],
+   "request": "tactical satellite view",
+   "tags": [
+    "tactical",
+    "satellite",
+    "view",
+    "command",
+    "board",
+    "military",
+    "reconnaissance",
+    "map",
+    "presented",
+    "crafted",
+    "hex",
+    "community",
+    "duels",
+    "territory",
+    "votes"
+   ],
+   "preset": false,
+   "source": "hexmap-11"
+  },
+  {
+   "id": "map-12",
+   "kind": "map",
+   "file": "library/map/map-12.webp",
+   "width": 768,
+   "height": 432,
+   "style_name": "Infernal Depths Hexboard",
+   "palette": [
+    "#29252E",
+    "#A63732",
+    "#E9A544",
+    "#429B9C"
+   ],
+   "request": "underworld, hell layers",
+   "tags": [
+    "underworld",
+    "hell",
+    "layers",
+    "infernal",
+    "depths",
+    "hexboard",
+    "crafted",
+    "territory",
+    "board",
+    "concentric",
+    "saved",
+    "hexmap",
+    "png"
+   ],
+   "preset": false,
+   "source": "hexmap-12"
+  },
+  {
+   "id": "map-15",
+   "kind": "map",
+   "file": "library/map/map-15.webp",
+   "width": 768,
+   "height": 432,
+   "style_name": "Ashen Kingdom Hexboard",
+   "palette": [
+    "#777D88",
+    "#526B4E",
+    "#426577",
+    "#A45C3D"
+   ],
+   "request": "dark souls interconnected world",
+   "tags": [
+    "dark",
+    "souls",
+    "interconnected",
+    "world",
+    "ashen",
+    "kingdom",
+    "hexboard",
+    "ruined",
+    "gothic",
+    "looping",
+    "routes",
+    "shortcuts",
+    "translated",
+    "into",
+    "readable",
+    "community"
+   ],
+   "preset": false,
+   "source": "hexmap-15"
+  },
+  {
+   "id": "map-16",
+   "kind": "map",
+   "file": "library/map/map-16.webp",
+   "width": 768,
+   "height": 432,
+   "style_name": "Lacquered Ink Provinces",
+   "palette": [
+    "#E8D7B4",
+    "#64765B",
+    "#B6472F",
+    "#243D49"
+   ],
+   "request": "japanese ink map",
+   "tags": [
+    "japanese",
+    "ink",
+    "map",
+    "lacquered",
+    "provinces",
+    "samurai",
+    "themed",
+    "territory",
+    "board",
+    "painted",
+    "bold",
+    "hex",
+    "borders",
+    "distinct",
+    "terrain",
+    "colours"
+   ],
+   "preset": false,
+   "source": "hexmap-16"
+  }
+ ]
+}
