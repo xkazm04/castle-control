@@ -172,6 +172,7 @@ export const moderationCopy = {
   shield_label: 'Shield Mode · fixture only',
   twitch_human: 'Human · from Twitch · simulated',
   local_human: 'Human · local preview · simulated',
+  demo_admitted: 'A simulated demo message is held at the gate. Nothing sent.',
   nothing_sent: 'Nothing sent.', mode_changed: 'Mode preview changed only. Actual rules remain Watching.',
   operation_recorded: (kind: string) => `Simulated ${kind} recorded locally. Nothing sent.`,
   operation_confirming: (kind: string) => `Simulated ${kind} confirming. Nothing sent.`,

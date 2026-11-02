@@ -116,17 +116,20 @@ test('room-local consensus chips change the 2x2 values without an action port', 
   }
 });
 
-test('core also renders three C plates with moat before rules and honest unavailable controls', () => {
+test('core renders the gate, the live room and the herald, with benches behind More and honest unavailable controls', () => {
   const port = createCoreGatehousePort({ mode: 'core', endpoint: 'http://127.0.0.1:3210/', session_token: 'a'.repeat(64) }, {
     rpc: async () => { throw new Error('SSR must not call the core'); },
   });
   const html = renderToStaticMarkup(<ConnectedGatehouse port={port} replay={false} seal_slot={<aside aria-label="Seal slot" />} />);
-  expect(html.match(/class="cc-plate cc-offset-shadow/g)).toHaveLength(3);
-  expect(html.match(/role="region"[^>]*tabindex="0"/g)).toHaveLength(3);
+  expect(html.match(/class="cc-plate cc-offset-shadow/g)).toHaveLength(2);
+  expect(html).toContain('class="cc-panel gh-gate moderator-held-plate"');
+  expect(html).toContain('Copy vote-bar browser source URL');
+  expect(html.indexOf('The live room')).toBeLessThan(html.indexOf('<details class="gh-more"'));
   expect(html.indexOf('The moat')).toBeLessThan(html.indexOf('Garrison orders'));
   expect(html.indexOf('Rule bench')).toBeLessThan(html.indexOf('Garrison orders'));
   expect(html).toContain(copy.bench_baseline_needed);
-  expect(html.indexOf('core decision history')).toBeLessThan(html.indexOf('aria-label="Seal slot"'));
+  expect(html.indexOf('aria-label="Seal slot"')).toBeLessThan(html.indexOf('<details class="gh-more"'));
+  expect(html.indexOf('core decision history')).toBeGreaterThan(html.indexOf('<details class="gh-more"'));
   expect(html).toContain(copy.core_queues_unavailable); expect(html).toContain(copy.core_moat_unavailable);
   expect(html).not.toContain('Propose Ban'); expect(html).not.toContain('sample chat replay');
 });

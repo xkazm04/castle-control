@@ -5,7 +5,7 @@ import { createModerationPreview } from '../../moderation-model.js';
 import { evaluateDraft } from '../../moderation-bench.js';
 import { moderationCopy as copy } from '../../moderation-copy.js';
 import ModeratorRoom from './index.jsx';
-import { GateControls, HeldQueue, Rules } from './controls.jsx';
+import { GateControls, HeldQueue, Rules, ShieldButton } from './controls.jsx';
 import { GateLog } from './log.jsx';
 import { ChatPlayback } from './playback.jsx';
 import { BenchFeedback } from './rule-bench.jsx';
@@ -95,7 +95,7 @@ test('every ledger Undo and Petition describes its message without making paragr
 test.each([false, true])('Shield name includes its visible drawbridge action (enabled=%s)', enabled => {
   const initial = createModerationPreview().getSnapshot();
   const state = { ...initial, shield: { kind: 'applied' as const, value: enabled } };
-  const html = renderToStaticMarkup(<GateControls state={state} queue={new ProposalQueue()} />);
+  const html = renderToStaticMarkup(<ShieldButton state={state} queue={new ProposalQueue()} />);
   const shield = buttons(html).find(button => button.includes(copy.shield_label));
   expect(shield).toBeTruthy();
   expect(shield).not.toMatch(/aria-label=/);

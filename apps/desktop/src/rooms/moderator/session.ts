@@ -12,8 +12,10 @@ import { confirmFixtureDelay } from '../../moderation-fixture.js';
 import { decisionTransition, LifecycleRefusal, settingTransition } from '../../moderation-lifecycle.js';
 import { createOutputPreview } from './output-model.js';
 import type { OutputPort } from './output-model.js';
+import { createRoomView } from './room-view.js';
+import type { RoomViewPort } from './room-view.js';
 
-type Session = { port: ModerationPort; commands: Map<string, PreviewCommand>; output: OutputPort; bench: RuleBenchPort };
+type Session = { port: ModerationPort; commands: Map<string, PreviewCommand>; output: OutputPort; bench: RuleBenchPort; view: RoomViewPort };
 const sessions = new WeakMap<ProposalQueue, Session>();
 const coreBenches = new WeakMap<CoreGatehousePort, RuleBenchPort>();
 export function coreRuleBench(port: CoreGatehousePort): RuleBenchPort {
@@ -51,7 +53,7 @@ function sessionPreview(): ModerationPort {
 
 export function moderationSession(queue: ProposalQueue): Session {
   let session = sessions.get(queue);
-  if (!session) { session = { port: sessionPreview(), commands: new Map(), output: createOutputPreview(), bench: createRuleBench() }; sessions.set(queue, session); }
+  if (!session) { session = { port: sessionPreview(), commands: new Map(), output: createOutputPreview(), bench: createRuleBench(), view: createRoomView() }; sessions.set(queue, session); }
   return session;
 }
 
@@ -130,4 +132,17 @@ export function sealModerationProposal(queue: ProposalQueue, proposal: Proposal)
       bench.setDraft(draft, item.rule.rule_id);
     }
   });
+}
+
+/**
+ * A Steward flow's hold to seal IS the human seal: draft the command exactly as the room
+ * would, then seal it through the same checks. Refusals throw and nothing changes.
+ */
+export function sealCommand(queue: ProposalQueue, command: PreviewCommand, title: string): void {
+  const before = new Set(queue.getSnapshot().proposals.map(item => item.id));
+  proposeCommand(queue, command, title);
+  const id = queue.getSnapshot().selected_proposal_id;
+  const proposal = id === undefined || before.has(id) ? undefined : queue.getSnapshot().proposals.find(item => item.id === id);
+  if (!proposal) throw new Error('The draft could not be prepared.');
+  sealModerationProposal(queue, proposal);
 }

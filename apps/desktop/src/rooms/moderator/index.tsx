@@ -1,26 +1,33 @@
-import { lazy, useSyncExternalStore } from 'react';
+import { lazy, useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import type { ReactNode } from 'react';
 import { proposalQueue } from '@castle-control/ui/steward';
-import { HeraldicCard, SectionHeading } from '@castle-control/ui';
 import type { ProposalQueue } from '@castle-control/ui/steward';
+import { useFlowDraft, useStewardDraft } from '@castle-control/ui/steward-flow';
 import type { Snapshot } from '../../model.js';
 import { busyNight, fixtureCandidate, fixtureCharts, fixtureDelay, fixtureReplay } from '../../moderation-fixture.js';
 import { moderationCopy as copy } from '../../moderation-copy.js';
-import { Consensus } from './consensus.jsx';
-import { HeldQueue, GateControls, Rules } from './controls.jsx';
-import { MessageList } from './messages.jsx';
-import { GateLog } from './log.jsx';
 import { Drill } from './drill.jsx';
 import { moderationSession } from './session.js';
 import { ruleBenchLink } from './rule-bench.jsx';
-import { ChatPlayback } from './playback.jsx';
-import { OutputPreview } from './output.jsx';
-import { RuleBench } from './rule-bench.jsx';
 import { benchInput, evaluateDraft } from '../../moderation-bench.js';
+import { BanQueue } from './controls.jsx';
+import { GatePlate } from './gate.jsx';
+import { Herald } from './herald.jsx';
+import { NeedsYou } from './needs.jsx';
+import { MoreBenches } from './more.jsx';
+import { movedConsensus } from './demo-model.js';
+import { demoFlow } from './flow-demo.jsx';
+import { RulesPicture, rulesFlow, rulesRibbon } from './flow-rules.jsx';
+import { voteBarFlow, voteLook, voteRibbon } from './flow-votebar.jsx';
+import { DrillPicture, drillFlow, drillRibbon } from './flow-drill.jsx';
 import './room.css';
+import './gatehouse.css';
 
 const CoreModeratorRoom = lazy(() => import('./core.jsx'));
 type Props = { snapshot: Snapshot; replay: boolean; queue?: ProposalQueue; seal_slot?: ReactNode };
+const fixtureSnapshot: Snapshot = { mode: 'fixture', phase: 'ready' };
+const voteFlow = voteBarFlow(fixtureSnapshot);
+const practiceFlow = drillFlow(fixtureSnapshot);
 
 export default function ModeratorRoom(props: Props) {
   return props.snapshot.mode === 'core' ? <CoreModeratorRoom snapshot={props.snapshot} replay={props.replay} seal_slot={props.seal_slot} />
@@ -28,31 +35,50 @@ export default function ModeratorRoom(props: Props) {
 }
 
 function FixtureModeratorRoom({ snapshot, replay, queue = proposalQueue, seal_slot }: Props) {
-  const { port, output, bench } = moderationSession(queue);
+  const { port, output, bench, view } = moderationSession(queue);
   const state = useSyncExternalStore(port.subscribe, port.getSnapshot, port.getSnapshot);
   const draft = useSyncExternalStore(bench.subscribe, bench.getSnapshot, bench.getSnapshot);
+  const room = useSyncExternalStore(view.subscribe, view.getSnapshot, view.getSnapshot);
+  // The herald's vote bar redraws when a sealed look changes the session's output.
+  useSyncExternalStore(output.subscribe, output.getSnapshot, output.getSnapshot);
+  const [plan] = useState(() => replay ? view.takeDrill() : undefined);
+  const publication = useStewardDraft('moderator');
+  const demo = useFlowDraft(demoFlow);
+  const rules = useFlowDraft(rulesFlow);
+  const voting = useFlowDraft(voteFlow);
+  const practice = useFlowDraft(practiceFlow);
+  const root = useRef<HTMLDivElement>(null);
+  const flow_open = publication?.flow;
+  // A flow raises the Steward's sheet over the lower room: bring the gate, the picture, into view.
+  useEffect(() => { if (flow_open) root.current?.scrollIntoView({ block: 'start' }); }, [flow_open]);
   const messages = state.messages.slice(0, state.replay_count);
   const { input, original } = benchInput(draft, state.rules);
   const result = evaluateDraft(input, state.rules, messages, original);
   if (snapshot.mode !== 'fixture') return <p>{copy.no_controls}</p>;
-  return <div className="moderator-room">
-    {replay ? <div className="moderator-drill-room"><Drill result={fixtureReplay} delay_s={fixtureDelay.delay_s} draft={draft.draft ? result : undefined}
-      rule_bench={ruleBenchLink(state.rules, bench)} compare={fixtureCandidate} busy_night={busyNight} />{seal_slot}</div> : <div className="cc-keep moderator-columns moderator-fixture-columns">
-      <div className="room-column moderator-workbench" role="region" aria-label="Held messages and ban review" tabIndex={0}
-        aria-describedby="moderator-scroll-hint">
-        <p id="moderator-scroll-hint" className="moderator-visually-hidden">{copy.scroll_hint}</p>
-        <HeldQueue state={state} queue={queue} /><Consensus results={fixtureCharts} />
-        <OutputPreview port={output} messages={state.messages.slice(0, state.replay_count)} directions={fixtureCharts[0]?.directions ?? []} /></div>
-      <div className="room-column moderator-details moderator-replay" role="region" aria-label={copy.live} tabIndex={0} data-fill="true">
-        <ChatPlayback port={port} state={state} /><MessageList messages={messages} marked={draft.draft ? result.hit_ids : undefined} />
-      </div>
-      <div className="room-column moderator-tools" role="region" aria-label="Gatehouse tools and seal slot" tabIndex={0}>
-        <RuleBench rules={state.rules} messages={messages} bench={bench} queue={queue} />
-        <GateControls state={state} queue={queue} /><Rules state={state} queue={queue} />
-        <section className="moderator-block"><SectionHeading title={copy.replay} gloss={copy.replay_gloss} />
-          <HeraldicCard className="moderator-drill-card"><span className="moderator-status">{copy.drill_ready}</span>
-            <a className="moderator-drill-link" href="#/chamber/moderator/drill">{copy.replay_open}</a></HeraldicCard></section>
-        <GateLog state={state} queue={queue} />{seal_slot}</div>
-    </div>}
+  const link = ruleBenchLink(state.rules, bench);
+  if (replay) return <div className="moderator-room"><div className="moderator-drill-room">
+    <Drill result={fixtureReplay} delay_s={fixtureDelay.delay_s} draft={draft.draft ? result : undefined}
+      rule_bench={{ ...link, open: rule_id => { link.open(rule_id); view.setMore(true); } }}
+      compare={fixtureCandidate} busy_night={busyNight} start={plan} />{seal_slot}</div></div>;
+
+  const stage = demo && publication?.step ? publication.step : undefined;
+  const moved = room.demo_moved || stage === 'herald' || stage === 'seal';
+  const charts = moved ? fixtureCharts.map(chart => movedConsensus(chart)) : fixtureCharts;
+  const filter = voting?.shows ?? room.filter;
+  const top = rules ? <section className="gh-draft" aria-label="Draft rules"><RulesPicture draft={rules} /></section>
+    : practice ? <section className="gh-draft" aria-label="Drill plan"><DrillPicture draft={practice} /></section>
+    : <NeedsYou state={state} queue={queue} />;
+  return <div ref={root} className="moderator-room gh-room" data-demo={stage}>
+    <GatePlate state={state} queue={queue} demo={stage ? { stage, choice: demo?.choice } : undefined}
+      ribbon={rules ? rulesRibbon(rules) : voting ? voteRibbon(voting) : practice ? drillRibbon(practice) : undefined} />
+    <div className="gh-desk">
+      {top}
+      <BanQueue state={state} queue={queue} />
+      <Herald results={charts} selected={filter} on_select={index => view.setFilter(index)} look={voteLook(voting)} draft={!!voting}
+        caption={moved ? 'the Play demo’s simulated burst moved it' : undefined} />
+      <div className="gh-seal">{seal_slot}</div>
+      <MoreBenches state={state} port={port} queue={queue} bench={bench} output={output} view={view} more={room.more}
+        marked={draft.draft ? result.hit_ids : undefined} directions={fixtureCharts[0]?.directions ?? []} />
+    </div>
   </div>;
 }

@@ -18,7 +18,7 @@ import Room from './room.jsx';
 test('all room headers hold the shared title card, function, strip replacement and origin Back button', async () => {
   for (const [chamber, title, description, slot_context] of [
     ['lottery', 'The Lot Chamber', 'Lottery manager', /<aside class="shell-seal-slot"[^>]*aria-label="Seal slot"/],
-    ['moderator', 'The Gatehouse', 'AI moderator', /moderator-details[\s\S]*<aside class="shell-seal-slot"[^>]*aria-label="Seal slot"[\s\S]*?<\/aside><\/div><\/div>/],
+    ['moderator', 'The Gatehouse', 'AI moderator', /class="gh-seal"><aside class="shell-seal-slot"[^>]*aria-label="Seal slot"[\s\S]*?<\/aside><\/div><details class="gh-more"/],
     ['visuals', 'The Beacons', 'Contribution visuals', /visuals-room-details[\s\S]*<aside class="shell-seal-slot"[^>]*aria-label="Seal slot"[\s\S]*?<\/aside><\/div><\/div>/],
     ['studio', 'The Map Room', 'Extension studio', /cc-seal-card[\s\S]*<aside class="shell-seal-slot"[^>]*aria-label="Seal slot"/],
   ] as const) {
@@ -97,12 +97,12 @@ test.each([
   expect(slot).not.toContain('tabindex="-1"');
 });
 
-test('the portcullis uses a standard C PlateBand above the original held message', () => {
+test('the portcullis is a fused panel: the gate picture above the original held message', () => {
   const markup = renderToStaticMarkup(<ModeratorRoom snapshot={fixture} replay={false} queue={new ProposalQueue()} />);
-  const plate = markup.match(/<section[^>]*class="cc-plate[^"]*moderator-held-plate"[\s\S]*?<\/section>/)?.[0] ?? '';
-  expect(plate).toContain('<header class="cc-plate-band" data-band="standard">');
-  expect(plate).toContain('<h2 class="cc-plate-title">At the portcullis</h2>');
-  expect(plate).toContain('class="moderator-plate-quote"');
+  const plate = markup.match(/<aside[^>]*class="cc-panel gh-gate moderator-held-plate"[\s\S]*?<\/aside>/)?.[0] ?? '';
+  expect(plate).toContain('<h2 class="cc-panel__title">At the portcullis</h2>');
+  expect(plate).toContain('class="gh-gate-art cc-folio-art"');
+  expect(plate).toContain('class="gh-held__msg"');
   expect(plate).toContain(fixtureHeld[0]?.message_text);
 });
 test('polished rooms render each stage title once and expose keyboard scroll regions', async () => {
@@ -121,14 +121,12 @@ test('polished rooms render each stage title once and expose keyboard scroll reg
       expect(markup).not.toContain('Past writs');
       expect(markup).not.toContain('aria-label="Giveaway guardrails · local preview"');
     } else {
-      expect(markup).toContain('id="moderator-scroll-hint" class="moderator-visually-hidden"');
-      expect(markup).toContain('tabindex="0"');
-      expect(markup).toContain('aria-describedby="moderator-scroll-hint"');
+      // One calm page: the gate, the desk, then one "More" disclosure for the rarely used benches.
+      expect(markup).toContain('<details class="gh-more"');
+      expect(markup).toContain('<summary><span class="gh-more__title">More of the Gatehouse</span>');
     }
     if (chamber === 'moderator') {
-      const replay = markup.slice(markup.indexOf('moderator-details'), markup.indexOf('moderator-tools'));
-      expect(markup.match(/<div class="room-column[^"]*" role="region"[^>]*tabindex="0"/g)).toHaveLength(3);
-      expect(replay).toContain('data-fill="true"');
+      const replay = markup.slice(markup.indexOf('moderator-replay'), markup.indexOf('moderator-tools'));
       const plate = replay.match(/<section[^>]*moderator-replay-plate[\s\S]*?<\/section>/)?.[0] ?? '';
       expect(plate).toContain('<h2 class="cc-plate-title">The live room</h2>');
       expect(plate).toContain('<span class="cc-plate-count">420');

@@ -26,6 +26,9 @@ function decision(index: number, kind: Decision['kind'], verdict: Decision['verd
   }));
 }
 
+/** Generated, labelled simulated decisions for the Play demo (never real chat). */
+export const simulatedDecision = decision;
+
 export const fixtureMessages: readonly Decision[] = Array.from({ length: 4200 }, (_, index) => {
   const verdict = index % 13 === 0 ? 'hold' : index % 7 === 0 ? 'bar' : 'pass';
   const text = index === 0 ? heldText : index === 26 ? banText : verdict === 'hold' ? `Simulated question ${index}: may I share a link?`

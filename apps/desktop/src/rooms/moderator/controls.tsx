@@ -1,54 +1,49 @@
-﻿import type { ChatDelay, Decision } from '@castle-control/contract';
+﻿import type { ChatDelay } from '@castle-control/contract';
 import { useId } from 'react';
-import { HeraldicCard, HeroReadout, InkButton, Plate, PlateActions, PlateBand, PlateBody, SectionHeading, Stamp } from '@castle-control/ui';
+import { HeraldicCard, HeroReadout, Plate, PlateBand, PlateBody, SectionHeading, Stamp } from '@castle-control/ui';
 import type { ProposalQueue } from '@castle-control/ui/steward';
 import type { ModerationPreview } from '../../moderation-model.js';
-import { fixtureHoldReasons } from '../../moderation-fixture.js';
 import { available, phaseLabel } from '../../moderation-lifecycle.js';
 import { moderationCopy as copy } from '../../moderation-copy.js';
-import { CountLabel, ReviewMeta, VerdictIcon } from './presentation.jsx';
+import { GatePlate } from './gate.jsx';
 import { proposeCommand } from './session.js';
 
 type Props = { state: ModerationPreview; queue: ProposalQueue };
-const smallBig = { minHeight: 'var(--button-h)', fontSize: 'var(--text-label)' };
-export function HeldActions({ item, state, queue }: { item: Decision; state: ModerationPreview; queue: ProposalQueue }) {
-  const choices = available(state, item.decision_id);
-  return <PlateActions>{(['release', 'remove'] as const).map(kind => <InkButton type="button" key={kind}
-    size="big" variant={kind === 'release' ? 'pass' : 'bar'} ink="azure" aria-label={kind === 'release' ? copy.propose_pass : copy.propose_bar}
-    disabled={!choices.includes(kind)} onClick={() => proposeCommand(queue, { kind, decision_id: item.decision_id }, kind === 'release' ? 'Pass held message' : 'Bar held message')}>
-    <VerdictIcon verdict={kind === 'release' ? 'pass' : 'bar'} />{kind === 'release' ? copy.propose_pass : copy.propose_bar}</InkButton>)}</PlateActions>;
+export { HeldActions } from './gate.jsx';
+
+/** Pending bans need a human: one warrant per ban, the original quoted, the rule named. */
+export function BanQueue({ state, queue }: Props) {
+  if (!state.bans.length) return <section className="gh-bans moderator-ban" aria-label={copy.bans}><p className="gh-sm">{copy.no_bans}</p></section>;
+  return <section className="gh-bans moderator-ban" aria-label={copy.bans}>
+    {state.bans.map(item => <article key={item.decision_id} className="cc-sheet gh-warrant" aria-label={copy.pending_ban}>
+      <span className="cc-folio-shield cc-folio-shield--lg" aria-hidden="true"><i className="cc-folio-charge cc-folio-charge--portcullis" /></span>
+      <div className="gh-warrant__meta"><span className="cc-stamp cc-stamp--blocked cc-stamp--inked">{state.phases.get(item.decision_id)?.kind === 'confirming'
+        ? phaseLabel(state.phases.get(item.decision_id) ?? { kind: 'ban_pending' }) : copy.pending_ban}</span>
+        <span className="cc-hash">{item.message_id}</span><em>{copy.human_review}</em></div>
+      <blockquote className="gh-warrant__msg">{item.message_text ?? copy.original_unavailable}</blockquote>
+      <p className="gh-warrant__rule"><b>{copy.rule_label}</b> {state.rules.find(rule => rule.rule_id === item.rule_id)?.name ?? copy.unavailable}</p>
+      <span id={`moderator-ban-${item.decision_id}`} className="moderator-visually-hidden">{item.message_id}</span>
+      <div className="gh-warrant__act">{(['ban', 'dismiss'] as const).map(kind => <button key={kind} type="button"
+        className={kind === 'ban' ? 'cc-btn cc-btn--rubric' : 'cc-btn'} aria-describedby={`moderator-ban-${item.decision_id}`}
+        disabled={!available(state, item.decision_id).includes(kind)}
+        onClick={() => proposeCommand(queue, { kind, decision_id: item.decision_id }, kind === 'ban' ? 'Ban · human review' : 'Dismiss ban')}>
+        {kind === 'ban' ? copy.propose_ban : copy.propose_dismiss}</button>)}</div>
+    </article>)}
+  </section>;
 }
 
+/** The held queue and the ban review together, as the tests and the README describe them. */
 export function HeldQueue({ state, queue }: Props) {
-  return <>
-    <Plate ink="azure" offset="space-8" className="moderator-held-plate" aria-label={copy.held}
-      band={<PlateBand title={copy.held} gloss={copy.held_gloss}
-        count={<>{state.held.length}<CountLabel first={copy.held_unit} second={copy.fixture_only} /></>} />}>
-      <PlateBody><p role="status" data-review-feedback="true" className="moderator-small">{state.notice}</p>{state.held.length ? state.held.map(item => <article key={item.decision_id} data-verdict="hold" className="moderator-held">
-        <ReviewMeta verdict="hold" id={item.message_id} status={state.phases.get(item.decision_id)?.kind === 'confirming' ? copy.held_pending : copy.held_state} />
-        <blockquote className="moderator-plate-quote">{item.message_text ?? copy.original_unavailable}</blockquote>
-        <p className="moderator-plate-reason"><b>{copy.held_reason}</b>{fixtureHoldReasons.get(item.message_id) ?? copy.hold_reason_unavailable}</p>
-        <HeldActions item={item} state={state} queue={queue} />
-      </article>) : <p>{copy.clear}</p>}</PlateBody>
-    </Plate>
-    <section className="moderator-block moderator-ban">
-      <SectionHeading title={copy.bans} gloss={copy.human_review} count={copy.pending_bans(state.bans.length)} />
-      {state.bans.map(item => <HeraldicCard key={item.decision_id} tone="bar" aria-label={copy.pending_ban}>
-        <ReviewMeta verdict={item.verdict} id={item.message_id} status={state.phases.get(item.decision_id)?.kind === 'confirming'
-          ? phaseLabel(state.phases.get(item.decision_id) ?? { kind: 'ban_pending' }) : copy.pending_ban} />
-        <blockquote className="moderator-card-quote">{item.message_text ?? copy.original_unavailable}</blockquote>
-        <p className="moderator-small">{copy.rule_label}: {state.rules.find(rule => rule.rule_id === item.rule_id)?.name ?? copy.unavailable}</p>
-        <span id={`moderator-ban-${item.decision_id}`} className="moderator-visually-hidden">{item.message_id}</span>
-        <div className="moderator-card-actions">{(['ban', 'dismiss'] as const).map(kind => <InkButton key={kind} type="button"
-          size="big" style={smallBig} variant={kind === 'ban' ? 'bar' : 'outline'}
-          aria-describedby={`moderator-ban-${item.decision_id}`}
-          disabled={!available(state, item.decision_id).includes(kind)}
-          onClick={() => proposeCommand(queue, { kind, decision_id: item.decision_id }, kind === 'ban' ? 'Ban · human review' : 'Dismiss ban')}>
-          {kind === 'ban' ? copy.propose_ban : copy.propose_dismiss}</InkButton>)}</div>
-      </HeraldicCard>)}
-      {!state.bans.length && <p>{copy.no_bans}</p>}
-    </section>
-  </>;
+  return <><GatePlate state={state} queue={queue} /><BanQueue state={state} queue={queue} /></>;
+}
+
+/** The drawbridge is the emergency control, so it stays on the room's face. */
+export function ShieldButton({ state, queue }: Props) {
+  return <div role="group" aria-label={copy.shield_label} className="gh-shield">
+    <button type="button" className="cc-btn cc-btn--rubric" aria-pressed={state.shield.value} disabled={state.shield.kind === 'confirming'}
+      onClick={() => proposeCommand(queue, { kind: 'shield' }, state.shield.value ? 'Lower the drawbridge' : 'Raise the drawbridge')}>
+      {state.shield.value ? copy.lower_bridge : copy.shield}{' '}<small>{copy.shield_label}</small></button>
+  </div>;
 }
 
 export function GateControls({ state, queue }: Props) {
@@ -74,11 +69,6 @@ export function GateControls({ state, queue }: Props) {
             const value = Number(event.currentTarget.value);
             if ([0, 2, 4, 6].includes(value)) proposeCommand(queue, { kind: 'delay', delay_s: value as ChatDelay }, `Set chat delay to ${value} s`);
           }}><option value={0}>{copy.delay_off}</option>{[2, 4, 6].map(value => <option key={value} value={value}>{copy.delay_seconds(value)}</option>)}</select></span>
-      </div>
-      <div role="group" aria-label={copy.shield_label}>
-        <InkButton type="button" size="big" variant="shield" aria-pressed={state.shield.value} disabled={(state.shield.kind === 'confirming')}
-          onClick={() => proposeCommand(queue, { kind: 'shield' }, state.shield.value ? 'Lower the drawbridge' : 'Raise the drawbridge')}>
-          {state.shield.value ? copy.lower_bridge : copy.shield}<small>{copy.shield_label}</small></InkButton>
       </div>
     </PlateBody>
   </Plate>;
