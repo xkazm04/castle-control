@@ -135,7 +135,7 @@ function fakeBeacons(openai = true) {
     createDesign: vi.fn(async () => ({ design_id: 'custom-1' })),
     directArt: vi.fn(async () => { throw { code: 'unavailable' }; }),
     generateArt: vi.fn(async () => ({ design_id: 'custom-1', assets: [{ asset: 'generated/a.png', generated: true, provenance: 'openai_generated' }],
-      costs: [{ call_id: 'simulated-call', model: 'gpt-image-1', charge: { micro_usd: 42_000 } }] })),
+      costs: [{ call_id: 'simulated-call', model: 'gpt-image-2-5-sunburst', charge: { micro_usd: 42_000 } }] })),
     artLayers: vi.fn<() => Promise<unknown>>(async () => ({ design_id: 'custom-1', base: 'base.png', anchors: { core_rect: { x: 0.3, y: 0.3, w: 0.4, h: 0.3 } },
       package: {}, costs: [] })),
     importLibrary: vi.fn(async (library_id: string) => ({ design_id: `imported-${library_id}` })),

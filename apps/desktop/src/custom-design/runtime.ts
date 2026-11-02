@@ -107,7 +107,7 @@ export function createDesignState(kind: ArtAssetKind, mode: DesignMode, read: (u
     if (!generated) {
       context.progress('Generating the image with your OpenAI key. This can take a minute...');
       try {
-        const result = await port.generateArt({ design_id, model_id: 'gpt-image-1', prompt: directed.direction.master_prompt, quantity: 1,
+        const result = await port.generateArt({ design_id, model_id: 'gpt-image-2-5-sunburst', prompt: directed.direction.master_prompt, quantity: 1,
           width: input.size.width, height: input.size.height, remove_background: false, provider: 'openai', background: 'transparent' });
         const first = result.assets[0];
         if (!first) throw { code: 'unavailable' };
