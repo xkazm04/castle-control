@@ -1,4 +1,11 @@
-﻿# AI-5: offline Lot Chamber room
+# AI-5: offline Lot Chamber room
+
+## Night UX W1, 2026-11-02
+
+The Lot Chamber's setup moved from the Writ desk form into Steward flows ("Set up a draw",
+"Cast the lots", "Prove it", SIMULATED "Play demo"); see `rooms/lottery/README.md`. Seals still
+go through `sealLotteryProposal` (fixture) or the core port (core). Giveaway guardrails are flow
+steps: a blocked or incomplete prize cannot reach the hold until it is fixed or made no-prize.
 
 ## lots-B rehearsal delta, 2026-10-31
 

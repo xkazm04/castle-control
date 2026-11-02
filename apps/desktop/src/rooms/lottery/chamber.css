@@ -118,7 +118,6 @@
   .lottery-room .cc-hall { grid-template-columns: minmax(0, 1fr); height: auto; }
   .lottery-stage-panel { height: 560px; }
 }
-.lottery-room .cc-button.cc-heraldic-button[aria-pressed="true"] { color: var(--ink); }
 .lottery-draw-actions > .cc-hash, .lottery-draw-actions > .lottery-pending { flex: 1 1 100%; min-width: 0; }
 .lottery-roll .lottery-seal-frame { display: grid; gap: 8px; padding: 12px 14px; background: var(--surface); border: 1.5px solid var(--hair); border-radius: var(--r); }
 /* short halls keep the roll calm and the next action in view */
@@ -135,3 +134,13 @@
 /* the cast's provenance chip rides on the stage's lower edge, so the drawing keeps its height */
 .lottery-room .lottery-draw-stage { position: relative; }
 .lottery-room:not([data-theatre="true"]) .lottery-draw-stage > .lottery-stage-foot { position: absolute; left: 10px; bottom: 10px; z-index: 2; max-width: calc(100% - 20px); }
+/* one voice for panel titles (label small caps), the draw's own name in the display face */
+.lottery-room .cc-panel__title, .lottery-room .cc-panel__title[data-role="panel-title"] { margin: 0; font: 800 var(--text-t-h3)/1.15 var(--font-label); letter-spacing: var(--track-label); text-transform: lowercase; color: var(--ink); }
+.lottery-room h3.lottery-draw-name { font: 600 var(--text-t-h3)/1.1 var(--font-display); letter-spacing: 0; text-transform: none; }
+.lottery-room .lottery-draw-seal { font: 400 var(--text-t-label)/1.35 var(--font-mono); color: var(--muted); overflow-wrap: anywhere; }
+/* the Writ Lab in a leaded frame; pressed specimen and tamper choices read clearly in both themes */
+.lottery-room .lottery-lab { border: var(--came) solid var(--lead); border-radius: var(--r); background: var(--surface); box-shadow: var(--shadow); }
+.lottery-room .lottery-lab-step, .lottery-room .lottery-lab-bytes, .lottery-room .lottery-lab-strip li { border-radius: var(--r); background: var(--surface); }
+.cc-frame .lottery-room .cc-button[aria-pressed="true"] { background: var(--surface-3); color: var(--ink); border-color: var(--lead); box-shadow: inset 0 -4px 0 var(--ch); }
+.cc-frame .lottery-room .lottery-lab-specimens .cc-button[aria-pressed="true"] { background: var(--lead); color: var(--on-lead); }
+.cc-frame .lottery-room .lottery-lab-tampers .cc-button[aria-pressed="true"] { background: var(--gules-wash); color: var(--gules-ink); border-color: var(--gules); box-shadow: none; }
