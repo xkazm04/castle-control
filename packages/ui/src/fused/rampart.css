@@ -8,7 +8,7 @@
    component sheets whatever their load order.
    ============================================================================= */
 @import './tokens.css';
-@import './deck.css';
+@import './deck-top.css';
 html, body { background: var(--stone); }
 .cc-frame {
   background: var(--stone); color: var(--ink);
