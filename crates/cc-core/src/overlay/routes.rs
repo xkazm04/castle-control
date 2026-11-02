@@ -82,8 +82,8 @@ async fn asset(
     if LocalAssetPath::try_from(path.clone()).is_err() {
         return StatusCode::NOT_FOUND.into_response();
     }
-    // A visual's package first; otherwise a design on the vote bar or a Lots
-    // plate (`OverlayAssetUrl` names the design id).
+    // A visual's package first; otherwise a stored design's sealed package
+    // (`OverlayAssetUrl` names the design id: vote bar, Lots, desktop preview).
     let visual = {
         let Ok(state) = host.state.lock() else {
             return StatusCode::SERVICE_UNAVAILABLE.into_response();

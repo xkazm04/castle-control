@@ -1,20 +1,13 @@
-//! Designs on non-visual surfaces: the selected vote bar housing and Lots
-//! image vessels. Only those designs are served by design id.
-use super::{RenderHost, package::Asset, unavailable};
+//! Stored designs by design id: the vote bar housing, Lots image vessels and
+//! the desktop's living preview of a freshly layered design, all through
+//! `/assets/<design id>/<package content hash>/<asset path>`.
+use super::{RenderHost, package::Asset};
 use cc_types::{DesignId, Display, ErrorCode, ErrorEnvelope, LotsPlateSnapshot};
 
 impl RenderHost {
-    fn lots_shows(&self, id: &DesignId) -> Result<bool, ErrorEnvelope> {
-        Ok(self
-            .lots
-            .lock()
-            .map_err(|_| unavailable())?
-            .values()
-            .any(|scene| scene.display.as_ref().and_then(|d| d.art_design.as_ref()) == Some(id)))
-    }
-
-    /// An asset of a design currently on the vote bar or a Lots display, when
-    /// the hash names its verified package. None means 404.
+    /// An asset of a stored design whose sealed package hash matches (the
+    /// package from `beacons.art.layers` or `beacons.library.import`). Only
+    /// package assets are served, never loose files. None means 404.
     pub(super) fn design_asset(
         &self,
         id: &str,
@@ -25,9 +18,6 @@ impl RenderHost {
         else {
             return Ok(None);
         };
-        if designs.vote_bar()?.as_ref() != Some(&id) && !self.lots_shows(&id)? {
-            return Ok(None);
-        }
         let Some(verified) = designs.verified(&id)? else {
             return Ok(None);
         };
@@ -85,7 +75,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn lots_plate_island_and_design_assets_follow_the_surfaces() {
+    async fn lots_plate_island_and_design_assets_by_design_id() {
         let root = tempfile::tempdir().unwrap();
         let module = BeaconsModule::open(root.path()).unwrap();
         let vessel = import(&module, "vessel-01", "draw_vessel").await;
@@ -110,16 +100,18 @@ mod tests {
                 .unwrap()
                 .is_none()
         );
-        // Not on any surface: the vote bar is not selected and no display names the frame.
-        for id in [&vote_bar, &frame] {
-            let hash = module.designs().verified(id).unwrap().unwrap();
-            let hash = String::from(hash.package.content_hash.clone());
-            assert!(
-                host.design_asset(id.as_str(), &hash, "base.webp")
-                    .unwrap()
-                    .is_none()
-            );
-        }
+        // Any stored design is served under its sealed hash (desktop preview),
+        // but only its package assets.
+        let hash = module.designs().verified(&frame).unwrap().unwrap();
+        let hash = String::from(hash.package.content_hash.clone());
+        let served = |id: &str, path: &str| host.design_asset(id, &hash, path).unwrap();
+        assert!(served(frame.as_str(), "base.webp").is_some());
+        assert!(served(frame.as_str(), "design.json").is_none());
+        assert!(
+            served(vote_bar.as_str(), "base.webp").is_none(),
+            "hash names the frame"
+        );
+        assert!(served("simulated-missing", "base.webp").is_none());
         module
             .designs()
             .set_vote_bar(Some(vote_bar.clone()))
