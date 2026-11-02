@@ -1,3 +1,4 @@
+import { useSyncExternalStore } from 'react';
 import { SAMPLE } from '@castle-control/duel';
 import { duelHost } from '../rooms/studio/duel-host.js';
 import { roundName } from '../rooms/studio/duel-model.js';
@@ -15,8 +16,9 @@ export const sampleDuelCard: DuelCard = {
   round: 'Semifinal', left: first?.title ?? 'Left', right: fourth?.title ?? 'Right', share: 0.58, simulated: true, illustrative: true,
 };
 
-export function duelCard(picture: DuelPicture | undefined): DuelCard | undefined {
-  if (!picture) return sampleDuelCard;
+/** No picture yet: fixture mode shows the labelled sample match; core mode never borrows it (returns undefined). */
+export function duelCard(picture: DuelPicture | undefined, sample = true): DuelCard | undefined {
+  if (!picture) return sample ? sampleDuelCard : undefined;
   if (!picture.left || !picture.right || picture.phase === 'empty' || picture.phase === 'called_off') return undefined;
   const total = picture.counts[0] + picture.counts[1];
   const size = picture.rounds[0]?.length ? picture.rounds[0].length * 2 : 2;
@@ -24,9 +26,16 @@ export function duelCard(picture: DuelPicture | undefined): DuelCard | undefined
     share: total ? picture.counts[0] / total : 0.5, simulated: picture.simulated, illustrative: false };
 }
 
-/** `null` is no duel running; leaving `card` out reads the Map Room's last picture. */
-export function DuelTile({ card = duelCard(duelHost.picture()) ?? null }: { card?: DuelCard | null }) {
-  if (!card) return <span className="overview-duel" data-empty="true"><span className="overview-duel__round">No duel running</span></span>;
+/** `null` is no duel running; leaving `card` out follows the Map Room's last picture live. */
+/** `simulated` marks the card when the session itself is simulated (a dress rehearsal), whatever the duel reports. */
+export function DuelTile({ card, sample = true, simulated = false }: { card?: DuelCard | null; sample?: boolean; simulated?: boolean }) {
+  const picture = useSyncExternalStore(duelHost.subscribe, duelHost.picture, duelHost.picture);
+  const shown = card === undefined ? duelCard(picture, sample) ?? null : card;
+  if (!shown) return <span className="overview-duel" data-empty="true"><span className="overview-duel__round">{!sample && !picture ? 'No duel read yet' : 'No duel running'}</span></span>;
+  return <DuelCardView card={simulated && !shown.simulated ? { ...shown, simulated: true } : shown} />;
+}
+
+function DuelCardView({ card }: { card: DuelCard }) {
   const left = Math.round(card.share * 100);
   return <span className="overview-duel" role="img" aria-label={`Chat duel, ${card.round}: ${card.left} ${left}%, ${card.right} ${100 - left}%`}>
     <span className="overview-duel__round">{card.round}{card.simulated && <span className="cc-sim">Simulated</span>}</span>

@@ -4,10 +4,17 @@ import type { Theme } from '@castle-control/tokens';
 import type { Snapshot } from './model.js';
 
 function uptime(at: string, started_at?: string) {
-  if (!started_at) return 'Unknown';
+  if (!started_at) return undefined;
   const seconds = Math.max(0, Math.floor((Date.parse(at) - Date.parse(started_at)) / 1000));
   return [Math.floor(seconds / 3600), Math.floor(seconds / 60) % 60, seconds % 60]
     .map(value => String(value).padStart(2, '0')).join(':');
+}
+
+/** A rampart figure: an absent value reads as a quiet dash, and says "Unknown" to assistive tech. */
+function Figure({ value, label }: { value: string | number | undefined; label: string }) {
+  return <span className="cc-figure" data-known={value !== undefined}>
+    <b>{value ?? <><span aria-hidden="true">—</span><span className="cc-sr">Unknown</span></>}</b><small>{label}</small>
+  </span>;
 }
 
 function SimulatedConnection({ name }: { name: 'Twitch' | 'OBS' | 'Gatehouse' }) {
@@ -37,10 +44,11 @@ export function DesktopRampart({ snapshot, theme, on_theme_change, on_steward, s
     <div className="cc-live-group" aria-label="Stream status">
       {stream ? <Stamp kind={stream.live ? 'on-air' : 'off-air'} word={stream.live ? 'On air' : 'Offline'} />
         : simulated ? <Stamp kind="off-air" word="On air · simulated" /> : <StatusChip variant="dash">ON AIR unknown</StatusChip>}
-      <div className="cc-rampart-figures">
-        <span className="cc-figure"><b>{stream?.live ? stream.viewer_count ?? 'Unknown' : stream ? 'Offline' : 'Unknown'}</b><small>viewers</small></span>
-        <span className="cc-figure"><b>{stream?.live && status ? uptime(status.at, stream.started_at) : stream ? 'Offline' : 'Unknown'}</b><small>uptime</small></span>
-      </div>
+      {/* Figures exist only on air: off air or simulated, the stamp already says nothing is broadcast. */}
+      {stream?.live && <div className="cc-rampart-figures">
+        <Figure label="viewers" value={stream.viewer_count} />
+        <Figure label="uptime" value={status ? uptime(status.at, stream.started_at) : undefined} />
+      </div>}
     </div>
     <span className="cc-separator" />
     <div className="cc-link-group" aria-label={fixture ? 'Connections · simulated' : 'Connections'}>

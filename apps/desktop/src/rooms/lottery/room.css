@@ -1,28 +1,12 @@
 /* Cutaway Lot Chamber: local layout and print roles; shared controls retain authority. */
-.lottery-room .panel, .lottery-room .cc-card.cc-card.panel { position: relative; min-width: 0; min-height: 0; padding: 16px; border: 1.5px solid var(--hair); border-radius: var(--r); background: var(--surface); box-shadow: none; }
-.lottery-room .topline { display: none; }
+.lottery-room .panel, .lottery-room .cc-card.cc-card.panel { position: relative; min-width: 0; min-height: 0; padding: var(--space-12) var(--space-14); border: var(--came-hair) solid var(--hair); border-radius: var(--r-lg); background: var(--surface); box-shadow: none; }
 .lottery-room [data-role="panel-title"] { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-10); margin: 0; font: 700 var(--text-shell-panel-title)/1 var(--font-label); letter-spacing: var(--track-heading); text-transform: lowercase; }
-.lottery-room [data-role="panel-gloss"] { color: var(--muted); font: italic var(--text-shell-aside)/1.2 var(--font-serif); letter-spacing: 0; text-transform: none; }
+.lottery-room [data-role="panel-gloss"] { color: var(--muted); font: italic 400 var(--text-px-15)/1.3 var(--font-aside); letter-spacing: 0; text-transform: none; }
 .lottery-room .body15 { margin: 0; color: var(--ink-2); font: 400 var(--text-shell-body)/1.45 var(--font-ui); }
-.lottery-room .cc-urn { grid-area: urn; display: block; width: 100%; max-width: var(--lot-urn-width); height: var(--lot-urn-height); max-height: 100%; min-height: 0; }
-.lottery-room .cc-urn ellipse { fill: var(--art-paper); stroke: var(--gules); stroke-width: var(--space-3); }
-.lottery-room .cc-urn circle { fill: var(--art-key); }
-.lottery-room .cc-urn circle[data-cohort="subscriber"] { fill: var(--gules); }
-.lottery-room .cc-urn circle[data-cohort="raider"] { fill: none; stroke: var(--azure); stroke-width: calc(var(--space-3) * .8); }
 .lottery-urn-window { grid-area: urn; min-width: 0; min-height: 0; max-height: var(--lot-urn-height); overflow: auto; }
-.lottery-marks { display: grid; grid-template-columns: repeat(var(--urn-columns), 1fr); gap: var(--space-2); width: 100%; }
-.lottery-room .cc-urn .lottery-winner-badge circle { fill: var(--art-paper); stroke: var(--gules); stroke-width: var(--rule-strong); }
-.lottery-winner-badge text { fill: var(--art-key); text-anchor: middle; dominant-baseline: central; font: 700 var(--text-shell-label)/1 var(--font-num); }
-.lottery-marks [data-revealed-dot] { border: var(--rule-medium) solid var(--gules); border-radius: 50%; text-align: center; color: var(--gules-text); }
-.lottery-revealed { margin: 0; padding: var(--space-4); font: 600 var(--text-shell-body)/1.5 var(--font-num); }
-.lottery-revealed b { color: var(--gules-text); }
-.lottery-marks [data-cohort="subscriber"] { color: var(--gules); }
-.lottery-marks [data-cohort="raider"]:not([data-revealed-dot]) { color: transparent; width: var(--space-10); height: var(--space-10); align-self: center; border: var(--rule-strong) solid var(--azure); border-radius: 50%; }
-.lottery-marks [data-cohort="raider"][data-revealed-dot] { color: var(--azure-text); }
 .lottery-room .cc-group { display: flex; flex-direction: column; gap: var(--space-10); }
-.lottery-room .cc-kicker { margin: 0; font: 800 var(--text-shell-label)/1.3 var(--font-label); letter-spacing: var(--track-heading); text-transform: lowercase; }
-.lottery-room .cc-aside { margin: 0; font: italic var(--text-shell-body)/1.4 var(--font-serif); color: var(--ink-2); }
-.lottery-room .cc-blazons { display: flex; flex-direction: column; gap: var(--space-8); margin: 0; padding: 0; list-style: none; }
+.lottery-room .cc-kicker { margin: 0; color: var(--ch-ink, var(--ink)); font: 700 var(--text-px-13)/1.3 var(--font-label); letter-spacing: .06em; text-transform: none; }
+.lottery-room .cc-aside { margin: 0; font: 400 var(--text-px-15)/1.45 var(--font-text); color: var(--muted); }
 .lottery-room .cc-card.writ { display: grid; grid-template-columns: var(--space-40) minmax(0, 1fr) auto; gap: var(--space-14); align-items: center; padding: var(--space-8) var(--space-14); border: var(--rule-strong) solid var(--ink); border-radius: 0; background: var(--panel-paper); box-shadow: none; }
 .lottery-room .cc-card[data-card="selectable"][data-role="writ-row"] { font: var(--text-shell-figure-caption)/normal var(--font-ui); }
 .lottery-room .writ .cc-shield { width: var(--space-36); height: var(--space-40); }
@@ -32,23 +16,24 @@
 .lottery-room [data-role="writ-title"] { display: block; font: 700 var(--text-shell-panel-title)/1.1 var(--font-label); letter-spacing: var(--track-label); text-transform: lowercase; overflow-wrap: anywhere; }
 .lottery-room [data-role="writ-detail"] { display: block; margin-top: var(--space-3); color: var(--ink-2); font: 400 var(--text-shell-body)/1.35 var(--font-ui); }
 .lottery-room [data-role="writ-action"] { display: flex; flex-direction: column; align-items: flex-end; gap: var(--space-8); }
-.lottery-room .pbtn, .lottery-room .cc-button.cc-heraldic-button[data-size] { display: inline-flex; align-items: center; justify-content: center; align-self: flex-start; gap: 8px; height: auto; min-height: var(--control-h-sm); padding: 4px 12px; border: var(--came) solid var(--lead); border-radius: var(--r); background: var(--surface); color: var(--ink); box-shadow: inset 0 -3px 0 var(--hair-2); font: 800 var(--text-t-label)/1.15 var(--font-label); letter-spacing: .06em; text-transform: lowercase; white-space: normal; cursor: pointer; transition: box-shadow var(--m-fast) var(--ease), background var(--m-fast) var(--ease); }
-.lottery-room .pbtn.ink, .lottery-room .cc-button.pbtn[data-variant="primary"], .lottery-room .cc-button.cc-heraldic-button[data-variant="primary"] { background: var(--lead); color: var(--on-lead); border-color: var(--lead); box-shadow: inset 0 -4px 0 var(--ch); }
-.lottery-room .cc-button.cc-heraldic-button[aria-pressed="true"] { background: var(--surface-3); box-shadow: inset 0 -4px 0 var(--ch), inset 0 2px 3px var(--hair-2); }
+/* Room buttons: one calm control in both themes; primary is chamber glass, pressed is a lit tile. */
+.lottery-room .pbtn, .lottery-room .cc-button.cc-heraldic-button[data-size] { display: inline-flex; align-items: center; justify-content: center; align-self: flex-start; gap: var(--space-6); height: auto; min-height: var(--space-32); padding: var(--space-4) var(--space-12); border: var(--came-hair) solid var(--line-control); border-radius: var(--r-md); background: var(--surface); color: var(--ink); box-shadow: 0 var(--space-1) 0 var(--hair-2); font: 700 var(--text-px-15)/1.2 var(--font-label); letter-spacing: .04em; text-transform: none; white-space: normal; cursor: pointer; transition: border-color var(--m-fast) var(--ease), background var(--m-fast) var(--ease), color var(--m-fast) var(--ease); }
+.lottery-room .pbtn.ink, .lottery-room .cc-button.pbtn[data-variant="primary"], .lottery-room .cc-button.cc-heraldic-button[data-variant="primary"] { background: var(--ch-deep, var(--gules-deep)); color: var(--on-glass); border-color: var(--ch, var(--gules)); box-shadow: 0 0 calc(var(--glow-on) * var(--space-10)) var(--ch-glow, transparent); }
+.lottery-room .cc-button.cc-heraldic-button[aria-pressed="true"] { border-color: var(--ch, var(--gules)); background: var(--ch-wash, var(--surface-2)); color: var(--ch-ink, var(--ink)); box-shadow: inset 0 calc(var(--space-2) * -1) 0 var(--ch, var(--gules)); }
+.lottery-room .cc-button.cc-heraldic-button[data-size]:focus-visible { outline: var(--rule-medium) solid var(--focus); outline-offset: var(--space-2); }
 .lottery-room .writ .pbtn { align-self: flex-end; white-space: nowrap; }
-.lottery-room .cc-button.cc-heraldic-button[data-size]:hover:not(:disabled), .lottery-room .writ:hover .pbtn { background: var(--surface-2); box-shadow: inset 0 -3px 0 var(--ch); }
+.lottery-room .cc-button.cc-heraldic-button[data-size]:hover:not(:disabled), .lottery-room .writ:hover .pbtn { border-color: var(--ch); background: var(--surface-2); }
 .lottery-room .cc-button.cc-heraldic-button[data-size]:active:not(:disabled), .lottery-room .writ:active .pbtn { transform: translateY(1px); }
 .lottery-room .cc-button.cc-heraldic-button[data-size]:disabled { opacity: var(--disabled-opacity); box-shadow: none; }
 .lottery-room .writ:hover { transform: none; }
-.lottery-room .lottery-policy { padding: var(--space-8) var(--space-10); }
 .lottery-room .cc-ribbon { clip-path: none; padding: var(--space-8); }
 .lottery-room .cc-ribbon-label, .lottery-room .cc-ribbon-note { font-size: var(--text-shell-label); }
 .lottery-room .cc-ribbon-word { font-size: var(--text-shell-panel-title); }
-.lottery-room .cc-caption { margin: 0; color: var(--muted); font: 700 var(--text-shell-label)/1.3 var(--font-label); letter-spacing: var(--track-label); text-transform: lowercase; }
+.lottery-room .cc-caption { margin: 0; color: var(--muted); font: 700 var(--text-px-13)/1.3 var(--font-label); letter-spacing: .06em; text-transform: none; }
 .lottery-lookup { display: flex; flex-direction: column; gap: var(--space-6); min-width: 0; }
-.lottery-lookup > label { font: 800 var(--text-shell-label)/1.3 var(--font-label); letter-spacing: var(--track-heading); text-transform: lowercase; }
+.lottery-lookup > label { color: var(--ink-2); font: 700 var(--text-px-14)/1.3 var(--font-label); letter-spacing: .04em; text-transform: none; }
 /* Retain the room's audited native fields and rule-thin border. */
-.lottery-room .lottery-lookup input { appearance: none; width: 100%; min-width: 0; height: var(--space-36); padding: 0 var(--space-12); border: var(--rule-thin) solid var(--ink); border-radius: var(--r-sm); background: var(--paper); color: var(--ink); font: 500 var(--text-shell-input)/1 var(--font-num); }
+.lottery-room .lottery-lookup input { appearance: none; width: 100%; min-width: 0; height: var(--space-36); padding: 0 var(--space-12); border: var(--came-hair) solid var(--line-control); border-radius: var(--r-md); background: var(--surface-2); color: var(--ink); font: 500 var(--text-px-15)/1 var(--font-text); }
 .lottery-lookup input::placeholder { color: var(--muted); }
 .lottery-room .lottery-lookup-hint { margin: 0; font: var(--text-shell-body)/1.4 var(--font-ui); color: var(--muted); }
 .lottery-room .lottery-lookup-result { margin: 0; font: 600 var(--text-shell-body)/1.4 var(--font-ui); }
@@ -58,30 +43,30 @@
 .lottery-room .cc-ticket-stub b { writing-mode: vertical-rl; transform: rotate(180deg); font: 800 var(--text-shell-panel-title)/1 var(--font-label); letter-spacing: var(--track-air); text-transform: lowercase; white-space: nowrap; }
 .lottery-room .cc-ticket-body { display: flex; flex-direction: column; gap: var(--space-8); min-width: 0; padding: var(--space-12) var(--space-16) var(--space-14); }
 .lottery-room .cc-ticket-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: var(--space-4) var(--space-12); }
-.lottery-room .cc-ticket-head time { font: 600 var(--text-shell-time)/1.3 var(--font-num); color: var(--muted); }
+.lottery-room .cc-ticket-head time { font: 600 var(--text-shell-time)/1.3 var(--font-mono); color: var(--muted); }
 .lottery-room .cc-handles { display: flex; flex-wrap: wrap; gap: var(--space-6); margin: 0; padding: 0; list-style: none; }
-.lottery-room .cc-handle { padding: var(--space-2) var(--space-7); border: var(--rule-thin) solid var(--ink); background: var(--ticket-paper); font: 600 var(--text-shell-body)/1.4 var(--font-num); }
+.lottery-room .cc-handle { padding: var(--space-2) var(--space-7); border: var(--rule-thin) solid var(--ink); background: var(--ticket-paper); font: 600 var(--text-shell-body)/1.4 var(--font-mono); }
 .lottery-room .cc-disclosure > summary { display: inline-flex; align-items: center; gap: var(--space-8); list-style: none; cursor: pointer; font: 700 var(--text-shell-body)/1.4 var(--font-ui); }
 .lottery-room .cc-disclosure > summary::-webkit-details-marker { display: none; }
 .lottery-room .cc-disclosure > summary::before { content: ""; width: 0; height: 0; border-block: var(--space-5) solid transparent; border-inline-start: var(--space-7) solid var(--gules); transition: transform var(--motion-fast) var(--ease); }
 .lottery-room .cc-disclosure[open] > summary::before { transform: rotate(90deg); }
 .lottery-room .cc-disclosure-body { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-10); padding-top: var(--space-10); }
-.lottery-room .cc-hash { margin: 0; font: var(--text-shell-body)/1.5 var(--font-num); color: var(--ink-2); overflow-wrap: anywhere; word-break: break-all; white-space: pre-wrap; }
+.lottery-room .cc-hash { margin: 0; font: var(--text-shell-body)/1.5 var(--font-mono); color: var(--ink-2); overflow-wrap: anywhere; word-break: break-all; white-space: pre-wrap; }
 .lottery-room .cc-status { margin: 0; font: var(--text-shell-body)/1.4 var(--font-ui); color: var(--muted); }
-.lottery-room .cc-writ-title { margin: 0; font: 700 var(--text-shell-panel-title-large)/1.05 var(--font-label); text-transform: lowercase; overflow-wrap: anywhere; }
-.lottery-room .cc-writ-rev { margin: 0; font: 600 var(--text-shell-label)/1.4 var(--font-num); color: var(--muted); }
+.lottery-room .cc-writ-title { margin: 0; font: 700 var(--text-px-20)/1.2 var(--font-text); overflow-wrap: anywhere; }
+.lottery-room .cc-writ-rev { margin: 0; font: 600 var(--text-shell-label)/1.4 var(--font-mono); color: var(--muted); }
 .lottery-room .lottery-writ-impression { align-self: flex-end; }
 .lottery-room .lottery-writ-impression .cc-stamp-bleed[data-stamp="sealed"] { --stamp-ink: var(--or); }
 .lottery-room .cc-writ-fields { margin: var(--space-8) 0 0; }
 .lottery-room .cc-writ-fields > div { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1fr); gap: var(--space-12); align-items: baseline; padding-block: var(--space-8); border-top: var(--rule-thin) solid var(--line); }
-.lottery-room .cc-writ-fields dt { font: 700 var(--text-shell-label)/1.3 var(--font-label); letter-spacing: var(--track-label); text-transform: lowercase; color: var(--muted); }
+.lottery-room .cc-writ-fields dt { font: 700 var(--text-px-13)/1.3 var(--font-label); letter-spacing: .06em; text-transform: none; color: var(--muted); }
 .lottery-room .cc-writ-fields dd { margin: 0; font: 500 var(--text-shell-body)/1.35 var(--font-ui); overflow-wrap: anywhere; }
 .lottery-room .cc-writ-fields s { color: var(--gules-text); margin-inline-end: var(--space-8); text-decoration-thickness: var(--rule-strong); }
 .lottery-room .cc-writ-fields ins { color: var(--ink); text-decoration: none; animation: lottery-ink var(--motion-shell) var(--ease) both; }
 .lottery-room .cc-writ-fields s + ins { padding-inline: var(--space-3); background: linear-gradient(transparent 58%, color-mix(in srgb, var(--gules) 26%, transparent) 58%); }
 .lottery-room .cc-writ-fair { margin-top: var(--space-8); padding: var(--space-10) var(--space-12); border: var(--rule-strong) solid var(--ink); background: var(--paper); }
 .lottery-room .cc-writ-fair p:not(.cc-kicker) { margin: var(--space-4) 0 0; font: var(--text-shell-body)/1.45 var(--font-ui); color: var(--ink-2); }
-.lottery-card-title { margin: 0; font: 700 var(--text-shell-panel-title)/1.2 var(--font-label); letter-spacing: var(--track-heading); text-transform: lowercase; }
+.lottery-card-title { margin: 0; color: var(--ink); font: 700 var(--text-px-17)/1.3 var(--font-text); letter-spacing: normal; text-transform: none; }
 .lottery-core-fields { display: flex; flex-direction: column; gap: var(--space-10); }
 .lottery-core-fields label { display: flex; flex-direction: column; gap: var(--space-6); }
 .lottery-room .cc-field[data-field] > label { font-size: var(--text-shell-label); }

@@ -1,27 +1,39 @@
-.keep-tracery { position: absolute; z-index: 2; left: 50%; top: 7%; width: 46%; max-width: calc(var(--space-30) * 5); transform: translateX(-50%); color: var(--on-glass); opacity: .6; pointer-events: none; }
-.keep-scene { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
+/* Window scenes. The scene layer is not a stacking context: the art sits under the leading
+   (z 3) and the sheen (z 4); lettering rides above both on a dark-glass cartouche (z 5). */
+.keep-tracery { position: absolute; z-index: 2; left: 50%; top: 7%; width: 46%; max-width: calc(var(--space-30) * 5); transform: translateX(-50%); color: var(--on-glass); opacity: .55; pointer-events: none; }
+.keep-window[data-room="moderator"] .keep-tracery { opacity: .22; }
+.keep-scene { position: absolute; inset: 0; pointer-events: none; }
+:where(.keep-scene > :not(.keep-herald, .keep-duel)), .keep-crest svg { z-index: 2; }
 .keep-scene img { position: absolute; display: block; pointer-events: none; user-select: none; }
+.keep-badge { position: relative; z-index: 5; box-sizing: border-box; max-width: calc(100% - var(--space-32)); padding: var(--space-3) var(--space-12) var(--space-4); border: var(--space-1) solid color-mix(in srgb, var(--gilt-mid) 70%, transparent); border-radius: var(--r-round); background: color-mix(in srgb, var(--lead-lo) 72%, transparent); box-shadow: inset 0 var(--space-1) 0 var(--glass-hi), 0 var(--space-2) var(--space-8) var(--glass-shade); color: var(--on-glass); font: 700 var(--text-px-15)/1.2 var(--font-label); letter-spacing: var(--track-label); text-transform: lowercase; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .keep-urn { left: 50%; bottom: 6%; width: 82%; max-height: 90%; object-fit: contain; transform: translateX(-50%); filter: drop-shadow(0 var(--space-14) var(--space-24) var(--stone)) drop-shadow(0 0 var(--space-22) var(--gules-glow)); }
+[data-theme="day"] .keep-urn { filter: drop-shadow(0 var(--space-14) var(--space-24) var(--lead-lo)) drop-shadow(0 0 var(--space-22) var(--gules-glow)); }
 .keep-beads { position: absolute; left: 0; top: 6%; width: 100%; height: 54%; }
 .keep-bead { opacity: .85; }
-.keep-bead-0 { fill: var(--deck-gold); }
+.keep-bead-0 { fill: var(--gilt-mid); }
 .keep-bead-1 { fill: var(--on-glass); }
 .keep-bead-2 { fill: var(--azure-lit); }
-.keep-portcullis { position: absolute; left: 50%; bottom: 0; width: 92%; height: 70%; transform: translateX(-50%); }
-.keep-herald { position: absolute; z-index: 4; left: 0; right: 0; top: 12%; display: flex; flex-direction: column; align-items: center; gap: var(--space-8); }
-.keep-herald small { font: 700 var(--text-stage-eyebrow)/1 var(--font-deck-sans); text-align: center; letter-spacing: .08em; text-transform: uppercase; color: var(--on-glass); text-shadow: 0 var(--space-1) var(--space-6) var(--stone); }
-.keep-banners { display: flex; gap: 7%; justify-content: center; width: 84%; }
-.keep-banner { flex: 1; max-width: calc(var(--space-24) * 2); aspect-ratio: 1 / 1.9; padding-top: var(--space-7); box-sizing: border-box; text-align: center; font: 700 var(--text-px-17)/1 var(--font-deck-sans); color: var(--deck-need-ink); clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 82%, 0 100%); }
+.keep-portcullis { position: absolute; z-index: 1; left: 50%; bottom: 0; width: 92%; height: 70%; transform: translateX(-50%); }
+.keep-herald { position: absolute; left: 0; right: 0; top: 8%; display: flex; flex-direction: column; align-items: center; gap: var(--space-12); }
+.keep-badge { display: grid; justify-items: center; align-self: center; padding: var(--space-4) var(--space-16) var(--space-5); border-radius: var(--space-12); }
+.keep-badge span + span { color: color-mix(in srgb, var(--on-glass) 82%, transparent); font-weight: 500; }
+.keep-banners { position: relative; z-index: 5; display: flex; gap: 7%; justify-content: center; width: 84%; }
+.keep-banner { flex: 1; max-width: calc(var(--space-24) * 2); aspect-ratio: 1 / 1.9; padding-top: var(--space-7); box-sizing: border-box; text-align: center; font: 700 var(--text-px-17)/1 var(--font-text); color: var(--deck-need-ink); clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 82%, 0 100%); }
 .keep-banner-0 { background: var(--gules); }
 .keep-banner-1 { background: var(--azure); }
 .keep-banner-2 { background: var(--or); }
 .keep-banner-3 { background: var(--on-glass); }
-.keep-held { position: absolute; left: 50%; bottom: 11%; transform: translateX(-50%) rotate(-5deg); padding: var(--space-5) var(--space-14); border: var(--space-2) solid var(--or); border-radius: var(--space-6); font: 800 var(--text-stage-label)/1 var(--font-deck-sans); letter-spacing: .2em; color: var(--or); background: var(--stone-2); box-shadow: 0 0 var(--space-22) var(--or-glow); }
+[data-theme="day"] .keep-banner-0, [data-theme="day"] .keep-banner-1 { color: var(--on-glass); }
+.keep-held { position: absolute; z-index: 5; left: 50%; bottom: 11%; transform: translateX(-50%) rotate(-5deg); padding: var(--space-5) var(--space-14); border: var(--space-2) solid var(--or); border-radius: var(--space-6); font: 800 var(--text-stage-label)/1 var(--font-text); letter-spacing: .2em; color: var(--or-lit); background: var(--lead-lo); box-shadow: 0 0 var(--space-22) var(--or-glow); }
 .keep-altar-glow { position: absolute; left: 50%; top: 50%; width: 150%; aspect-ratio: 1; transform: translate(-50%, -50%); border-radius: 50%; background: radial-gradient(circle, var(--or-glow), transparent 62%); }
 .keep-altar { left: 50%; bottom: 4%; height: 86%; max-width: 100%; object-fit: contain; transform: translateX(-50%); filter: drop-shadow(0 0 var(--space-24) var(--or-glow)); }
 .keep-hex { left: 50%; top: 44%; width: 150%; transform: translate(-50%, -50%); opacity: .42; filter: saturate(.8) hue-rotate(20deg); }
-.keep-duel { position: absolute; left: 0; right: 0; top: 25%; display: flex; justify-content: center; gap: 12%; padding: 0 10%; }
+.keep-duel { position: absolute; left: 0; right: 0; top: max(30%, calc(8% + var(--space-56) + var(--space-24))); display: flex; justify-content: center; gap: 12%; padding: 0 10%; }
 .keep-crest { position: relative; width: 34%; max-width: calc(var(--space-22) * 5); }
-.keep-crest svg { width: 100%; height: auto; filter: drop-shadow(0 var(--space-8) var(--space-16) var(--stone)); }
-.keep-crest b { position: absolute; z-index: 2; left: 50%; top: calc(-1 * var(--space-12)); transform: translateX(-50%); width: var(--space-28); height: var(--space-28); box-sizing: border-box; border-radius: 50%; display: grid; place-items: center; background: var(--stone-2); border: var(--space-2) solid var(--deck-gold); color: var(--on-glass); font: 700 var(--text-stage-label)/1 var(--font-deck-sans); }
-.keep-duel-label { position: absolute; left: 0; right: 0; bottom: 12%; text-align: center; font: 700 var(--text-stage-label)/1.2 var(--font-deck-sans); letter-spacing: .1em; text-transform: uppercase; color: var(--on-glass); text-shadow: 0 var(--space-1) var(--space-8) var(--stone); }
+.keep-crest svg { position: relative; width: 100%; height: auto; filter: drop-shadow(0 var(--space-8) var(--space-16) var(--lead-lo)); }
+.keep-crest b { position: absolute; z-index: 5; left: 50%; top: calc(-1 * var(--space-12)); transform: translateX(-50%); width: var(--space-28); height: var(--space-28); box-sizing: border-box; border-radius: 50%; display: grid; place-items: center; background: var(--lead-lo); border: var(--space-2) solid var(--gilt-mid); color: var(--on-glass); font: 700 var(--text-stage-label)/1 var(--font-text); }
+/* one badge, one place: the top of the light, under the keystone */
+.keep-duel-label { position: absolute; left: 50%; top: 8%; transform: translateX(-50%); }
+/* By day the gate is still iron: a stone arch, dark bars, the lit gaps between them. */
+[data-theme="day"] .keep-gate-arch { fill: color-mix(in srgb, var(--stone-3) 70%, var(--lead-2)); stroke: var(--lead-2); }
+[data-theme="day"] .keep-gate-bars { stroke: var(--lead); opacity: 1; }

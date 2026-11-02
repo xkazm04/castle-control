@@ -1,4 +1,4 @@
-import { cloneElement, createElement, memo } from 'react';
+import { cloneElement, createElement, memo, useId } from 'react';
 import type { CSSProperties, ReactElement, SVGProps } from 'react';
 import { keepArt, keepRoomsArt, paintStyle } from '@castle-control/keep-art';
 import type { ArtNode, Rect } from '@castle-control/keep-art';
@@ -58,8 +58,13 @@ export const KeepArt = memo(function KeepArt({ node = keepTree, frame, className
   node?: ArtNode; frame?: Rect; className?: string;
 }) {
   const element = artElement(node);
-  return frame ? cloneElement(element, {
+  const clip = useId();
+  if (!frame) return element;
+  // A crop letterboxes into a wider box; clip to the room's frame so its neighbours' cut-off
+  // lettering never shows at the sides.
+  return cloneElement(element, {
     viewBox: `${frame.x} ${frame.y} ${frame.w} ${frame.h}`, className,
     preserveAspectRatio: 'xMidYMid meet', 'aria-hidden': true,
-  }) : element;
+  }, <defs key="crop"><clipPath id={clip}><rect x={frame.x} y={frame.y} width={frame.w} height={frame.h} /></clipPath></defs>,
+  <g key="room" clipPath={`url(#${clip})`}>{element.props.children}</g>);
 });

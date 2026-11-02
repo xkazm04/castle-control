@@ -29,7 +29,11 @@ export class SurfaceTransition extends Component<Props> {
   getSnapshotBeforeUpdate(previous: Props): Outgoing | null {
     const node = this.surface.current;
     if (previous.surface === this.props.surface || !node || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return null;
-    return { node: node.cloneNode(true) as HTMLElement, bounds: node.getBoundingClientRect() };
+    const copy = node.cloneNode(true) as HTMLElement;
+    // Suspense hides a still-mounted surface with an inline display: none. Copying it would put a
+    // second, invisible copy of that surface (a second .keep-home) into the document for the fade.
+    for (const hidden of copy.querySelectorAll<HTMLElement>('[style*="display: none"]')) hidden.remove();
+    return { node: copy, bounds: node.getBoundingClientRect() };
   }
 
   componentDidUpdate(previous: Props, _state: Readonly<object>, outgoing: Outgoing | null) {

@@ -19,7 +19,8 @@ export function duelWord(picture: DuelPicture | undefined, fixture: boolean): st
 
 /** The Keep's Map Room plaque reads the duel itself: "Chat duel" over its tournament and round. */
 export function duelPlaque(picture: DuelPicture | undefined, fixture: boolean): { word: string; line: string } {
-  if (!picture) return { word: 'Chat duel', line: fixture ? 'Sample tournament · semifinal' : 'Ask the Steward to start one' };
+  // With no duel read yet, core reads like the other three rooms: ready, and where the state shows.
+  if (!picture) return fixture ? { word: 'Chat duel', line: 'Sample tournament · semifinal' } : { word: 'Ready', line: core_readings.studio };
   if (picture.phase === 'empty' || picture.phase === 'called_off') return { word: 'No duel', line: 'Ask the Steward to set one up' };
   const sample = picture.simulated ? 'sample ' : '';
   if (picture.phase === 'done') return { word: 'Chat duel', line: `${picture.title} · ${sample}champion` };
@@ -33,7 +34,7 @@ export function duelPlaque(picture: DuelPicture | undefined, fixture: boolean): 
  * the state shows and which Steward flow sets it up.
  */
 export const core_readings = {
-  lottery: 'No draw read yet · ask the Steward to set one up',
+  lottery: 'Your draw shows in the room · ask the Steward to set one up',
   moderator: 'Held messages show in the room · ask the Steward for rules',
   visuals: 'Your beacons show in the room · ask the Steward to light one',
   studio: 'Your duel shows in the room · ask the Steward to start one',

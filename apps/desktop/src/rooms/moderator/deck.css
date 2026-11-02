@@ -2,7 +2,7 @@
    Existing controls and models supply every value; expanded material lives in Drawer. */
 .moderator-room.gh-room { display: flex; padding: 0; gap: var(--space-4); height: 100%; min-height: 0; }
 .gh-deck { flex: 1; min-width: 0; min-height: 0; height: 100%; color: var(--ink); }
-.gh-deck-column { display: grid; gap: var(--space-10); min-width: 0; }
+.gh-deck-column { display: grid; grid-template-rows: auto minmax(0, 1fr); gap: var(--space-10); min-width: 0; min-height: 0; }
 .gh-deck .cc-chamber-section {
   display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: none;
   grid-template-areas: none; grid-auto-flow: row; font-size: var(--text-px-15); line-height: 1.45;
@@ -84,7 +84,7 @@
 .gh-deck .gh-chartbar { display: block; }
 .gh-deck .gh-herald--compact .moderator-chip-toggles { display: flex; flex-wrap: nowrap; align-items: center; gap: var(--space-4); margin: 0; padding: 0; width: 100%; min-width: 0; }
 .gh-deck .gh-herald--compact .moderator-chip-toggles > .moderator-chip-toggle { flex: 1; min-width: 0; margin: 0; padding: var(--space-5) var(--space-9); font: 600 var(--text-px-15)/1.45 var(--font-text); letter-spacing: normal; white-space: nowrap; }
-.gh-deck .gh-herald--compact .moderator-tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-4) var(--space-8); margin: 0; padding: 0; border: 0; }
+.gh-deck .gh-herald--compact .moderator-tiles { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-4) var(--space-8); margin: 0; padding: 0; border: 0; }
 .gh-deck .gh-herald--compact .moderator-tile { display: grid; grid-template-columns: var(--space-16) minmax(0, 1fr) max-content; align-items: center; min-width: 0; padding: 0; gap: var(--space-4); border: 0; background: transparent; }
 .gh-deck .gh-herald--compact .moderator-tile > * { grid-area: auto; min-width: 0; margin: 0; overflow-wrap: normal; word-break: normal; }
 .gh-deck .gh-herald--compact .moderator-tile i { width: var(--space-16); height: var(--space-16); padding: 0; font: 700 var(--text-px-13)/1.2 var(--font-text); }
@@ -111,3 +111,269 @@
 .gh-deck .moderator-core-consensus > form { display: grid; gap: var(--space-6); }
 .gh-deck .moderator-core-consensus .moderator-print { height: auto; }
 .gh-deck .moderator-core-consensus .moderator-small { margin: 0; }
+
+/* ---- Polish round: one calm treatment per element, both themes, tokens only. ---- */
+/* Buttons on the room face: small-cap label face, no shouting caps, one hairline weight. */
+.gh-deck :is(.cc-chamber-section, .cc-chamber-mini) .cc-btn, .gh-deck-details .cc-btn {
+  font-family: var(--font-label); font-weight: 700; letter-spacing: .04em; text-transform: none;
+  border-width: var(--came-hair); border-radius: var(--r-md); box-shadow: none;
+}
+.gh-deck .cc-btn:focus-visible, .gh-deck-details .cc-btn:focus-visible, .gh-deck .moderator-chip-toggle:focus-visible {
+  outline: var(--rule-strong) solid var(--focus); outline-offset: var(--rule-strong);
+}
+
+/* Held message: the quote leads, the id and the hold tag are one quiet meta line. */
+.gh-deck .cc-chamber-section .gh-held {
+  gap: var(--space-6); padding: var(--space-12) var(--space-14); border-color: var(--hair);
+  border-radius: var(--r-md); background: color-mix(in srgb, var(--ch) 6%, var(--surface));
+}
+:is(.gh-deck, .gh-deck-details) :is(.gh-held__meta, .gh-warrant__meta) { align-items: center; }
+:is(.gh-deck, .gh-deck-details) :is(.gh-held__meta, .gh-warrant__meta) .cc-stamp {
+  height: var(--space-22); padding: 0 var(--space-8); transform: none; -webkit-mask: none; mask: none;
+  border: 0; border-radius: var(--r-round); box-shadow: none; text-shadow: none;
+  background: color-mix(in srgb, var(--ch) 18%, transparent); color: var(--ch-ink);
+  font: 700 var(--text-px-13)/1 var(--font-label); letter-spacing: .06em; text-transform: none;
+}
+:is(.gh-deck, .gh-deck-details) .gh-warrant__meta .cc-stamp { background: color-mix(in srgb, var(--gules) 16%, transparent); color: var(--gules-ink); }
+:is(.gh-deck .cc-chamber-section, .gh-deck-details.gh-deck-details) :is(.gh-held__meta, .gh-warrant__meta) .cc-hash { font: 400 var(--text-px-13)/1.2 var(--font-mono); color: var(--muted); }
+.gh-deck .gh-held__msg { margin: 0; color: var(--ink); }
+.gh-deck .gh-held__why { margin: 0; color: var(--ink-2); }
+:is(.gh-deck, .gh-deck-details) .gh-held__why { display: grid; grid-template-columns: max-content minmax(0, 1fr); align-items: baseline; column-gap: var(--space-10); }
+:is(.gh-deck, .gh-deck-details) .gh-held__why b, :is(.gh-deck, .gh-deck-details) .gh-warrant__rule b {
+  font: 500 var(--text-px-14)/var(--lh-body) var(--font-text); letter-spacing: normal; text-transform: none; color: var(--muted);
+}
+.gh-deck .gh-notice { margin: 0; color: var(--muted); }
+.gh-deck .gh-notice:empty { display: none; }
+
+/* Pass and bar are a balanced pair: tinted chamber glass and a gules outline, same weight. */
+:is(.gh-deck, .gh-deck-details) :is(.gh-gate__act, .gh-warrant__act) > .cc-btn { justify-content: center; gap: var(--space-6); padding-inline: var(--space-8); white-space: nowrap; }
+:is(.gh-deck, .gh-deck-details) .gh-gate__act > .gh-pass {
+  background: color-mix(in srgb, var(--ch) 16%, var(--surface)); border-color: color-mix(in srgb, var(--ch) 70%, var(--hair)); color: var(--ink);
+}
+:is(.gh-deck, .gh-deck-details) .gh-gate__act > .gh-pass:hover:not(:disabled) { background: color-mix(in srgb, var(--ch) 26%, var(--surface)); }
+:is(.gh-deck, .gh-deck-details) .gh-gate__act > .gh-bar { background: var(--surface); border-color: color-mix(in srgb, var(--gules) 70%, var(--hair)); color: var(--gules-ink); }
+:is(.gh-deck, .gh-deck-details) .gh-gate__act > .gh-bar:hover:not(:disabled) { background: color-mix(in srgb, var(--gules) 12%, var(--surface)); }
+/* The review queue opener is the quiet way into the drawer, not a third slab. */
+.gh-deck .cc-chamber-section > .cc-btn { width: 100%; background: transparent; border-color: var(--hair); color: var(--ink-2); }
+.gh-deck .cc-chamber-section > .cc-btn:hover { background: var(--surface-2); color: var(--ink); }
+.gh-deck .gh-count { border: 0; background: color-mix(in srgb, var(--ch) 12%, transparent); color: var(--ch-ink); }
+.gh-deck .gh-count :is(b, small) { color: inherit; font-size: var(--text-px-14); }
+
+/* Gate status: five equal readouts, label over value, one tone line each. */
+.gh-deck .gh-needs__facts { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: var(--space-6); margin: 0; }
+.gh-deck .gh-needs__facts div {
+  display: grid; gap: var(--space-2); justify-items: start; min-width: 0; padding: var(--space-6) var(--space-10);
+  border: var(--came-hair) solid var(--hair); border-radius: var(--r-md); background: var(--surface-2);
+  box-shadow: inset 0 calc(-1 * var(--space-2)) 0 var(--tone, var(--hair-2));
+}
+.gh-deck .gh-needs__facts [data-tone="held"] { --tone: var(--or); }
+.gh-deck .gh-needs__facts [data-tone="ban"] { --tone: var(--gules); }
+.gh-deck .gh-needs__facts [data-tone="ok"] { --tone: color-mix(in srgb, var(--emerald) 60%, var(--hair)); }
+.gh-deck .cc-chamber-section .gh-needs__facts dt { font: 500 var(--text-px-13)/1.2 var(--font-text); letter-spacing: normal; text-transform: none; color: var(--muted); }
+.gh-deck .gh-needs__facts dt::first-letter { text-transform: uppercase; }
+.gh-deck .gh-needs__facts dd { margin: 0; color: var(--ink); font-variant-numeric: lining-nums tabular-nums; }
+.gh-deck .gh-needs__facts [data-tone="held"] dd { color: var(--or-ink); }
+.gh-deck .gh-needs__facts [data-tone="ban"] dd { color: var(--gules-ink); }
+/* The drawbridge stays the red emergency control, as a lit outline rather than a slab. */
+:is(.gh-deck .gh-shield, .gh-deck-details) .cc-btn--rubric {
+  background: color-mix(in srgb, var(--gules) 14%, var(--surface)); border-color: var(--gules); color: var(--gules-ink); box-shadow: none;
+}
+:is(.gh-deck .gh-shield, .gh-deck-details) .cc-btn--rubric:hover:not(:disabled) { background: color-mix(in srgb, var(--gules) 24%, var(--surface)); }
+:is(.gh-deck .gh-shield, .gh-deck-details) .cc-btn--rubric[aria-pressed="true"] { background: var(--gules); color: var(--on-glass); }
+
+/* Herald filters: one segmented track, the pressed segment lifted and underlined in chamber hue. */
+.gh-deck .gh-herald--compact .moderator-chip-toggles, .gh-deck-details .moderator-chip-toggles {
+  display: flex; flex-wrap: nowrap; align-items: center; margin: 0; width: 100%;
+  gap: var(--space-2); padding: var(--space-3); border: var(--came-hair) solid var(--hair);
+  border-radius: var(--r-md); background: var(--surface-2);
+}
+.gh-deck .gh-herald--compact .moderator-chip-toggles > .cc-control-key, .gh-deck-details .moderator-chip-toggles > .cc-control-key { margin: 0 var(--space-4); }
+.gh-deck .gh-herald--compact .moderator-chip-toggles > .moderator-chip-toggle, .gh-deck-details .moderator-chip-toggles > .moderator-chip-toggle {
+  flex: 1; height: auto; min-width: 0; margin: 0;
+  padding: var(--space-4) var(--space-8); border: 0; border-radius: var(--r-sm); background: transparent; box-shadow: none;
+  color: var(--ink-2); font-family: var(--font-label); font-weight: 700; letter-spacing: .04em; cursor: pointer;
+}
+:is(.gh-deck .gh-herald--compact, .gh-deck-details) .moderator-chip-toggles > .moderator-chip-toggle:hover:not([aria-pressed="true"]) { background: color-mix(in srgb, var(--ch) 8%, transparent); color: var(--ink); }
+:is(.gh-deck .gh-herald--compact, .gh-deck-details) .moderator-chip-toggles > .moderator-chip-toggle[aria-pressed="true"] {
+  background: var(--surface); color: var(--ch-ink); box-shadow: 0 var(--rule-thin) var(--rule-strong) var(--hair-2), inset 0 calc(-1 * var(--space-2)) 0 var(--ch);
+}
+/* Chart: full column width at its own aspect, on a quiet well. */
+.gh-deck .gh-herald--compact .gh-chart { position: absolute; inset: 0 0 0 var(--space-36); width: calc(100% - var(--space-36)); height: 100%; contain: size; }
+/* The compact chart reads as data: quiet gridlines with a % scale and a time hint under the well. */
+.gh-deck .gh-chart-frame { display: grid; grid-template-rows: minmax(var(--space-40), 1fr) auto; gap: var(--space-3); min-height: 0; }
+.gh-deck .gh-chart-plot { position: relative; min-height: var(--space-40); overflow: hidden; border: var(--came-hair) solid var(--hair); border-radius: var(--r-md); background: var(--surface-2); }
+.gh-deck .gh-chart-tick {
+  position: absolute; left: var(--space-4); transform: translateY(-50%); padding: 0;
+  font: 500 var(--text-px-13)/var(--lh-snug) var(--font-text); font-variant-numeric: lining-nums tabular-nums; color: var(--muted);
+}
+.gh-deck .gh-chart-time { display: flex; justify-content: space-between; padding-inline-start: var(--space-36); font: 500 var(--text-px-13)/var(--lh-snug) var(--font-text); color: var(--muted); }
+.gh-deck .gh-herald--compact .gh-chart .gh-grid { stroke: var(--ink-2); stroke-opacity: .28; stroke-dasharray: 2 5; }
+.gh-deck .gh-herald--compact .gh-chart :is(polyline, path) { vector-effect: non-scaling-stroke; }
+.gh-deck .gh-herald--compact .moderator-tiles { gap: var(--space-6) var(--space-16); }
+.gh-deck .gh-herald--compact .moderator-tile { grid-template-columns: var(--space-20) minmax(0, 1fr) max-content; gap: var(--space-6); }
+.gh-deck .gh-herald--compact .moderator-tile i { width: var(--space-20); height: var(--space-20); box-shadow: none; }
+.gh-deck .gh-herald--compact .moderator-tile span { color: var(--ink-2); }
+.gh-deck .gh-herald--compact .gh-vote-summary { padding-top: var(--space-10); }
+.gh-deck .gh-herald--compact .gh-vote-summary .gh-deck-buttons { width: 100%; }
+.gh-deck .gh-herald--compact .gh-vote-summary .cc-btn { flex: 1; justify-content: center; }
+
+/* The picture: a sky behind the stone and a soft vignette so the plate reads in day as at night. */
+.gh-picture { overflow: hidden; background: linear-gradient(180deg, var(--art-water-2), var(--art-water)) bottom / 100% 8.95% no-repeat,
+  radial-gradient(circle at 88% 16%, color-mix(in srgb, var(--moon) calc(var(--glow-on) * 70%), transparent) 0 var(--space-14), color-mix(in srgb, var(--moon) calc(var(--glow-on) * 18%), transparent) var(--space-16), transparent var(--space-56)),
+  radial-gradient(circle at 12% 20%, color-mix(in srgb, var(--sun) calc((1 - var(--glow-on)) * 60%), transparent), transparent 30%),
+  linear-gradient(180deg, color-mix(in srgb, var(--azure) 22%, var(--surface)) 0%, var(--surface-2) 80%); }
+.gh-picture::after { content: ""; position: absolute; inset: 0; pointer-events: none; border-radius: inherit;
+  background: radial-gradient(120% 90% at 50% 40%, transparent 55%, color-mix(in srgb, var(--ink) 16%, transparent) 100%); }
+.gh-picture__label {
+  inset: auto auto var(--space-10) 50%; transform: translateX(-50%); z-index: 1; white-space: nowrap;
+  padding: var(--space-3) var(--space-12); border: var(--came-hair) solid var(--hair); border-radius: var(--r-round);
+  background: color-mix(in srgb, var(--surface) 88%, transparent); color: var(--ink-2); font: 600 var(--text-px-13)/1.3 var(--font-label); letter-spacing: .04em;
+}
+
+/* Drawer: legacy named grid areas must not invent columns in a single-column sheet. */
+.gh-deck-details.gh-deck-details, .gh-deck-details.gh-deck-details :is(.gh-queue-details, .gh-more__body) { grid-template-columns: minmax(0, 1fr); }
+.gh-deck-details.gh-deck-details > *, .gh-deck-details.gh-deck-details :is(.gh-queue-details, .gh-more__body) > * { grid-area: auto; min-width: 0; }
+.gh-deck-details .gh-queue-details .gh-gate[data-part="queue"] { padding: var(--space-12) var(--space-14); gap: var(--space-10); }
+.gh-deck-details .gh-gate__head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-8); padding: 0; }
+.gh-deck-details .gh-count { gap: var(--space-6); }
+.gh-deck-details .gh-count b { font: 700 var(--text-px-22)/1 var(--font-text); }
+.gh-deck-details .gh-count span { display: flex; gap: var(--space-4); }
+.gh-deck-details .gh-count small + small::before { content: "· "; }
+.gh-deck-details :is(.gh-gate__act, .gh-warrant__act) { display: flex; flex-wrap: wrap; gap: var(--space-8); }
+.gh-deck-details :is(.gh-gate__act, .gh-warrant__act) > .cc-btn { flex: 1 1 auto; }
+.gh-deck-details .gh-held, .gh-deck-details .gh-warrant { padding: var(--space-12) var(--space-14); border-radius: var(--r-md); }
+.gh-deck-details :is(.gh-warrant__meta, .gh-held__meta) { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-6) var(--space-8); }
+.gh-deck-details .gh-held { background: color-mix(in srgb, var(--ch) 6%, var(--surface)); border-color: var(--hair); }
+.gh-deck-details .gh-warrant { background: color-mix(in srgb, var(--gules) 5%, var(--surface)); border-color: var(--hair); border-left: var(--space-3) solid var(--gules); box-shadow: none; }
+/* Drawer benches: card titles in the text face, field labels plain, fields on the inset ground. */
+.gh-deck-details .gh-more__body :is(h2.cc-plate-title, h3:not(.gh-kicker)) { font: 700 var(--text-px-18)/1.25 var(--font-text); letter-spacing: normal; text-transform: none; }
+.gh-deck-details.gh-deck-details label { font-family: var(--font-text); font-weight: 600; letter-spacing: normal; text-transform: none; color: var(--ink-2); }
+.gh-deck-details.gh-deck-details :is(input:not([type="checkbox"], [type="radio"], [type="range"]), select, textarea) {
+  min-height: var(--space-34); padding: var(--space-4) var(--space-10); border: var(--came-hair) solid var(--line-control);
+  border-radius: var(--r-md); background: var(--surface-2); color: var(--ink); box-shadow: none;
+}
+.gh-deck-details :is(input, select, textarea):focus-visible { outline: var(--rule-strong) solid var(--focus); outline-offset: var(--rule-thin); border-color: var(--ch); }
+.gh-deck-details :is(input, select, textarea):disabled { color: var(--muted); background: var(--surface-3); }
+.gh-deck-details .gh-more__title { font: 700 var(--text-px-18)/1.25 var(--font-text); letter-spacing: normal; text-transform: none; }
+.gh-deck-details .gh-more__body :is(.cc-card, .cc-plate) { border: var(--came-hair) solid var(--came-ui); border-radius: var(--r-lg); box-shadow: none; }
+/* Portcullis tally: the replayed sample as one proportional bar, pinned to the section foot. */
+.gh-deck .cc-chamber-section:has(> .gh-recent) { display: flex; flex-direction: column; }
+.gh-deck .cc-chamber-section > .gh-recent { flex: 1 1 0; }
+.gh-tally { display: grid; gap: var(--space-6); margin: 0; padding-top: var(--space-10); border-top: var(--came-hair) solid var(--hair); }
+.gh-deck .cc-chamber-section .gh-tally figcaption { font: 600 var(--text-px-13)/1.2 var(--font-label); letter-spacing: .04em; color: var(--muted); }
+.gh-tally__bar { display: flex; gap: var(--space-2); height: var(--space-8); overflow: hidden; border-radius: var(--r-round); background: var(--surface-2); }
+.gh-tally__bar i { min-width: var(--space-4); }
+.gh-tally [data-verdict="pass"] { --v: var(--azure); } .gh-tally [data-verdict="hold"] { --v: var(--or); } .gh-tally [data-verdict="bar"] { --v: var(--gules); }
+.gh-tally__bar i { background: var(--v); }
+.gh-tally__legend { display: flex; flex-wrap: wrap; gap: var(--space-4) var(--space-16); font: 400 var(--text-px-15)/1.45 var(--font-text); color: var(--ink-2); }
+.gh-tally__legend span::before { content: ""; display: inline-block; width: var(--space-8); height: var(--space-8); margin-inline-end: var(--space-6); border-radius: 50%; background: var(--v); }
+.gh-tally__legend b { color: var(--ink); font-variant-numeric: lining-nums tabular-nums; }
+/* Recent at the gate: whole rows only; rows that do not fit wrap into a clipped second column. */
+.gh-recent { display: grid; grid-template-rows: auto minmax(0, 1fr); gap: var(--space-6); min-height: 0; }
+.gh-deck .cc-chamber-section .gh-recent__head { margin: 0; padding-top: var(--space-10); border-top: var(--came-hair) solid var(--hair); font: 600 var(--text-px-13)/1.2 var(--font-label); letter-spacing: .04em; color: var(--muted); }
+.gh-recent__list { display: flex; flex-flow: column wrap; align-content: flex-start; min-height: 0; overflow: hidden; contain: size; margin: 0; padding: 0; list-style: none; }
+.gh-recent__list li {
+  display: grid; grid-template-columns: calc(var(--space-26) * 2) minmax(0, 1fr) max-content; align-items: center; gap: var(--space-8);
+  width: 100%; padding: var(--space-2) 0; border-bottom: var(--came-hair) solid color-mix(in srgb, var(--hair) 60%, transparent);
+}
+.gh-recent [data-verdict="pass"] { --v: var(--azure); --v-ink: var(--azure-ink); }
+.gh-recent [data-verdict="hold"] { --v: var(--or); --v-ink: var(--or-ink); }
+.gh-recent [data-verdict="bar"] { --v: var(--gules); --v-ink: var(--gules-ink); }
+.gh-deck .cc-chamber-section .gh-recent__verdict {
+  justify-self: stretch; text-align: center; white-space: nowrap; padding: 0 var(--space-6); border-radius: var(--r-round); background: color-mix(in srgb, var(--v) 16%, transparent);
+  color: var(--v-ink); font: 700 var(--text-px-13)/1.6 var(--font-label); letter-spacing: .04em;
+}
+.gh-recent__text { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; color: var(--ink-2); }
+.gh-deck .cc-chamber-section .gh-recent time { font: 400 var(--text-px-13)/1.2 var(--font-mono); color: var(--muted); font-variant-numeric: tabular-nums; }
+.gh-recent { container-type: size; }
+@container (max-height: 52px) { .gh-recent__head, .gh-recent__list { visibility: hidden; } }
+/* Drawer stamps (verdicts, illustrative, pending ban): one calm tinted pill, never a rotated rubber stamp. */
+.gh-deck-details .cc-stamp:not(.cc-stamp--draft), .moderator-drill .moat-inspector .cc-stamp {
+  height: var(--space-22); padding: 0 var(--space-8); transform: none; -webkit-mask: none; mask: none;
+  border: 0; border-radius: var(--r-round); box-shadow: none; text-shadow: none;
+  background: color-mix(in srgb, var(--st, var(--ink-2)) 16%, transparent); color: var(--st-ink, var(--ink-2));
+  font: 700 var(--text-px-13)/1 var(--font-label); letter-spacing: .06em; text-transform: none;
+}
+/* The held-queue sheet drops the jewelled cap: a hairline panel like the cards around it. */
+.gh-deck-details .gh-queue-details .gh-gate.cc-panel { border: var(--came-hair) solid var(--came-ui); border-radius: var(--r-lg); box-shadow: none; background: var(--surface); }
+.gh-deck-details .gh-queue-details .gh-gate.cc-panel::before, .gh-deck-details .gh-queue-details .gh-gate.cc-panel::after { content: none; }
+/* The Herald fills its column: the chart takes whatever height the section has left. */
+.gh-deck .cc-chamber-section:has(> .gh-herald--compact) { grid-template-rows: auto minmax(0, 1fr); }
+.gh-deck .gh-herald--compact { grid-template-rows: minmax(0, 1fr) auto; min-height: 0; }
+.gh-deck .gh-herald--compact .gh-herald-chart { grid-template-rows: auto minmax(var(--space-56), 1fr); min-height: 0; }
+.gh-deck .gh-herald--compact .gh-chart :is(path, polyline) { vector-effect: non-scaling-stroke; }
+/* Drawer text actions (undo, petition, arm/watch) and rule cards: quiet outlined controls, card-title names. */
+.gh-deck-details.gh-deck-details .moderator-text-button {
+  min-height: var(--space-30); padding: var(--space-3) var(--space-10); border: var(--came-hair) solid var(--line-control); border-radius: var(--r-md);
+  background: transparent; color: var(--ink); box-shadow: none; text-decoration: none;
+  font: 700 var(--text-px-14)/var(--lh-snug) var(--font-label); letter-spacing: .04em; text-transform: none; cursor: pointer;
+}
+.gh-deck-details .moderator-text-button:hover:not(:disabled) { background: var(--surface-2); }
+.gh-deck-details .moderator-text-button:focus-visible { outline: var(--rule-strong) solid var(--focus); outline-offset: var(--rule-thin); }
+.gh-deck-details .moderator-text-button:disabled { color: var(--muted); border-color: var(--hair); cursor: not-allowed; }
+.gh-deck-details.gh-deck-details .moderator-rule-text b { font: 700 var(--text-px-15)/var(--lh-body) var(--font-text); letter-spacing: normal; text-transform: none; }
+.gh-deck-details .gh-more__body .moderator-orders { margin-top: var(--space-16); }
+/* Gate roll (drawer): the face's recent-row grammar - pill, rule, time on one line, then the line and its meta. */
+:is(.gh-deck-details, .moderator-drill) .cc-verdict { display: inline-flex; gap: 0; padding: 0; background: none; box-shadow: none; }
+.gh-deck-details .moderator-roll-entry { display: grid; gap: var(--space-2); align-content: start; padding: var(--space-6) 0; border-bottom: var(--came-hair) solid color-mix(in srgb, var(--hair) 60%, transparent); }
+.gh-deck-details .moderator-roll-entry-head { display: grid; grid-template-columns: calc(var(--space-26) * 2) minmax(0, 1fr) max-content; gap: var(--space-8); }
+.gh-deck-details .moderator-roll-entry-head .cc-stamp { justify-content: center; width: 100%; }
+.gh-deck-details .moderator-roll-entry-head b { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font: 700 var(--text-px-15)/var(--lh-body) var(--font-text); }
+.gh-deck-details .moderator-roll-entry-head time { margin: 0; font: 400 var(--text-px-13)/1.2 var(--font-mono); color: var(--muted); }
+.gh-deck-details .moderator-roll-message { margin: 0; padding-inline-start: calc(var(--space-26) * 2 + var(--space-8)); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; color: var(--ink); }
+.gh-deck-details .moderator-roll-entry > .moderator-small { margin: 0; padding-inline-start: calc(var(--space-26) * 2 + var(--space-8)); color: var(--muted); }
+.gh-deck-details .moderator-roll-entry-actions { margin: var(--space-2) 0 0; padding-inline-start: calc(var(--space-26) * 2 + var(--space-8)); gap: var(--space-6) var(--space-8); }
+/* Drill ids (source, hashes) stay mono and break anywhere rather than mid-word at a hyphen. */
+.moderator-drill :is(.room-column > .room-source, .room-hash) { font-family: var(--font-mono); font-size: var(--text-px-13); overflow-wrap: anywhere; }
+.moderator-drill .moat-inspector dd.moat-id { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font: 400 var(--text-px-13)/var(--lh-body) var(--font-mono); }
+.moderator-drill .moat-inspector time { font: 400 var(--text-px-13)/var(--lh-body) var(--font-mono); color: var(--ink-2); }
+.gh-deck .gh-chart-plot { container-type: size; }
+.gh-deck .gh-chart-plot > .gh-chart-tick:nth-child(2) { transform: translateY(-100%); }
+.gh-deck .gh-chart-plot > .gh-chart-tick:last-child { transform: none; }
+@container (max-height: 96px) { .gh-chart-plot > .gh-chart-tick:not(:nth-child(2), :last-child) { display: none; } }
+.gh-deck-details .moderator-feed > .cc-window { max-height: calc(var(--space-20) * 24); }
+/* The Gatehouse Preview kicker is long ("Proposal · awaiting your seal"): at narrow widths it wraps to two
+   balanced lines instead of ending in an ellipsis. */
+.gh-deck .cc-chamber-minis > .cc-chamber-mini > h3[id] { white-space: normal; text-overflow: clip; text-wrap: balance; }
+/* Core Herald: the same line weight and numbered direction marks as the fixture chart, in the core plot's inks. */
+.gh-deck .gh-herald--compact .gh-chart polyline { stroke-width: 2; }
+.gh-deck .moderator-core-consensus [data-direction="0"] { --k: var(--azure); }
+.gh-deck .moderator-core-consensus [data-direction="1"] { --k: var(--or); }
+.gh-deck .moderator-core-consensus [data-direction="2"] { --k: var(--gules); }
+.gh-deck .moderator-core-consensus [data-direction="3"] { --k: var(--ink-2); }
+.gh-deck .moderator-core-consensus .moderator-tile i {
+  display: grid; place-items: center; border-radius: 50%; background: var(--k); color: var(--surface);
+  font: 700 var(--text-px-13)/1 var(--font-label); font-style: normal;
+}
+/* The core drawer's full chart: the face chart's plot, gridlines, % scale and time hint at a fixed height. */
+.gh-deck-details .gh-chart-frame { display: grid; grid-template-rows: auto auto; gap: var(--space-3); }
+.gh-deck-details .gh-chart-plot { position: relative; height: calc(var(--space-20) * 16); overflow: hidden; border: var(--came-hair) solid var(--hair); border-radius: var(--r-md); background: var(--surface-2); }
+.gh-deck-details .gh-chart-plot > .gh-chart { position: absolute; inset: 0 0 0 var(--space-36); width: calc(100% - var(--space-36)); height: 100%; }
+.gh-deck-details .gh-chart-plot > .gh-chart :is(path, polyline) { vector-effect: non-scaling-stroke; }
+.gh-deck-details .gh-chart-plot > .gh-chart polyline { stroke-width: 2; }
+.gh-deck-details .gh-chart-plot > .gh-chart .gh-grid { stroke: var(--ink-2); stroke-opacity: .28; stroke-dasharray: 2 5; }
+.gh-deck-details .gh-chart-tick { position: absolute; left: var(--space-4); transform: translateY(-50%); font: 500 var(--text-px-13)/var(--lh-snug) var(--font-text); font-variant-numeric: lining-nums tabular-nums; color: var(--muted); }
+.gh-deck-details .gh-chart-plot > .gh-chart-tick:nth-child(2) { transform: translateY(-100%); }
+.gh-deck-details .gh-chart-plot > .gh-chart-tick:last-child { transform: none; }
+.gh-deck-details .gh-chart-time { display: flex; justify-content: space-between; padding-inline-start: var(--space-36); font: 500 var(--text-px-13)/var(--lh-snug) var(--font-text); color: var(--muted); }
+/* "Other" is the remainder, not a direction: a faint dashed line under the named ones. */
+:is(.gh-deck, .gh-deck-details) .gh-chart polyline.gh-other { stroke: var(--muted); stroke-width: 1.5; stroke-dasharray: 5 4; opacity: .75; }
+/* Herald legend: one list, the share in one right-aligned column. */
+:is(.gh-deck .gh-herald--compact, .gh-deck-details .moderator-core-consensus) .moderator-tiles { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-2); margin: 0; padding: 0; border: 0; }
+:is(.gh-deck .gh-herald--compact, .gh-deck-details .moderator-core-consensus) .moderator-tile {
+  display: grid; grid-template-columns: var(--space-20) minmax(0, 1fr) max-content; align-items: center; gap: var(--space-8);
+  min-width: 0; padding: 0; border: 0; background: transparent; box-shadow: none;
+}
+:is(.gh-deck .gh-herald--compact, .gh-deck-details .moderator-core-consensus) .moderator-tile > * { grid-area: auto; min-width: 0; margin: 0; }
+:is(.gh-deck .gh-herald--compact, .gh-deck-details .moderator-core-consensus) .moderator-tile b { justify-self: end; font-variant-numeric: lining-nums tabular-nums; }
+.gh-deck-details .moderator-core-consensus .moderator-tile span { font: 400 var(--text-px-15)/var(--lh-body) var(--font-text); letter-spacing: normal; text-transform: none; color: var(--ink-2); }
+.gh-deck-details .moderator-core-consensus .moderator-tile b { font: 700 var(--text-px-15)/var(--lh-body) var(--font-text); }
+.gh-deck-details .moderator-core-consensus [data-direction="0"] { --k: var(--azure); }
+.gh-deck-details .moderator-core-consensus [data-direction="1"] { --k: var(--or); }
+.gh-deck-details .moderator-core-consensus [data-direction="2"] { --k: var(--gules); }
+.gh-deck-details .moderator-core-consensus [data-direction="3"] { --k: var(--ink-2); }
+.gh-deck-details .moderator-core-consensus .moderator-tile i {
+  display: grid; place-items: center; width: var(--space-20); height: var(--space-20); border-radius: 50%; background: var(--k); color: var(--surface);
+  font: 700 var(--text-px-13)/1 var(--font-label); font-style: normal;
+}
+@media (max-height: 740px) { .gh-deck .gh-herald--compact .moderator-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: var(--space-16); } }

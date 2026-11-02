@@ -83,7 +83,7 @@ test('honesty stamps follow fixture room provenance and omit absent core stamps'
     expect(core.states[id]).not.toHaveProperty('stamp');
   }
   const html = renderToStaticMarkup(<Keep snapshot={{ mode: 'core', phase: 'ready' }} on_open={vi.fn()} on_enter={vi.fn()} />);
-  expect(html).toContain('core mode · chamber readings');
+  expect(html).toContain('tonight’s keep · chamber readings');
   expect(html).not.toContain('data-stamp=');
   expect(html).not.toContain('<small>simulated</small>');
 });
@@ -177,7 +177,7 @@ test('the retired room drawing has no remaining production importer', () => {
   }
 });
 
-test('the moat bar carries a labelled sample heartbeat in the fixture and none from a core room', () => {
+test('the moat bar carries a labelled sample heartbeat in the fixture and a quiet empty moat in a core room', () => {
   const fixture = renderToStaticMarkup(<Keep snapshot={{ mode: 'fixture', phase: 'ready', ...simulatedRead(1) }} on_open={vi.fn()} on_enter={vi.fn()} />);
   const bar = fixture.slice(fixture.indexOf('class="keep-moat km"'));
   expect(bar).toContain('class="keep-moatlab km__label" data-role="moat-label"');
@@ -188,6 +188,8 @@ test('the moat bar carries a labelled sample heartbeat in the fixture and none f
   const core = renderToStaticMarkup(<Keep snapshot={{ mode: 'core', phase: 'ready', ...simulatedRead(1) }} on_open={vi.fn()} on_enter={vi.fn()} />);
   expect(core).toContain('The moat · <span>chat delay set in the Gatehouse</span>');
   expect(core).not.toContain('class="keep-delay"');
-  expect(core).not.toContain('moat-heartbeat');
+  // Core never shows the sample loop; the card holds the quiet, empty moat instead of an empty box.
+  expect(core).not.toContain('Sample replay loop · simulated');
+  expect(core).toContain('class="moat-heartbeat" data-quiet="true"');
   expect(core).not.toContain('keep-moat-link');
 });

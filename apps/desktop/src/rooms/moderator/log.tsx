@@ -12,7 +12,7 @@ export function GateLog({ state, queue }: { state: ModerationPreview; queue: Pro
   const target_id = useId();
   return <section className="moderator-block moderator-log"><SectionHeading title={copy.ledger} gloss={copy.gate_log} count={copy.decisions(state.ledger.length)} />
     <RuledFeed className="moderator-ledger-feed">
-      <WindowedRows rows={state.ledger} label="Decision ledger" row_key={item => item.decision_id} row_height={rowHeight * 6}>
+      <WindowedRows rows={state.ledger} label="Decision ledger" row_key={item => item.decision_id} row_height={rowHeight * 4.5}>
         {item => {
           const phase = state.phases.get(item.decision_id) ?? initialPhase(item);
           const choices = available(state, item.decision_id);

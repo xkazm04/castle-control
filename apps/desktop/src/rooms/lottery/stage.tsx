@@ -1,5 +1,5 @@
 import { RoomKeyBadge } from '../../shell/steward-keys.jsx';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import type { CSSProperties } from 'react';
 import { InkButton, Stamp, StatusChip } from '@castle-control/ui';
 import type { DrawContent } from '@castle-control/contract';
@@ -23,6 +23,45 @@ const shapeLabel = (shape: DrawShape) => copy.shapes.find(item => item.value ===
 
 function Artwork({ layer }: { layer: DrawArtworkLayer | undefined }) {
   return <>{layer?.paths.map((path, index) => <path key={index} d={path.d} data-ink={path.ink} />)}</>;
+}
+
+/** Where each shape stands, so its floor shadow sits under it (logical viewBox units). */
+const floor_y: Readonly<Record<DrawShape, number>> = { urn: 212, wheel: 226, deck: 230, ballot_box: 218 };
+type Glaze = CSSProperties & Record<'--lot-glaze-body' | '--lot-glaze-metal' | '--lot-glaze-or' | '--lot-mark' | '--lot-mark-gilt' | '--lot-mark-azure' | '--lot-mark-ch', string>;
+const lot_marks = ['mark', 'gilt', 'azure', 'ch'] as const;
+
+/** Desk-only lighting for the renderer's flat inks: glazed body, gilt metal, a halo and a floor shadow.
+ * Stops read theme tokens through classes, so the same artwork is lit for day and night. */
+function Lighting({ id, shape }: { id: string; shape: DrawShape }) {
+  return <>
+    <defs>
+      <radialGradient id={`${id}-body`} cx="34%" cy="30%" r="80%" fx="30%" fy="24%">
+        <stop className="lot-glaze-hi" offset="0" /><stop className="lot-glaze-mid" offset=".42" /><stop className="lot-glaze-lo" offset="1" />
+      </radialGradient>
+      <linearGradient id={`${id}-metal`} x1="0" y1="0" x2="1" y2="0">
+        <stop className="lot-gilt-lo" offset="0" /><stop className="lot-gilt-hi" offset=".3" />
+        <stop className="lot-gilt-mid" offset=".55" /><stop className="lot-gilt-lo" offset="1" />
+      </linearGradient>
+      <linearGradient id={`${id}-or`} x1="0" y1="0" x2="0" y2="1">
+        <stop className="lot-or-hi" offset="0" /><stop className="lot-or-lo" offset="1" />
+      </linearGradient>
+      {lot_marks.map(mark => <radialGradient key={mark} id={`${id}-lot-${mark}`} cx="36%" cy="32%" r="72%">
+        <stop className={`lot-${mark}-hi`} offset="0" /><stop className={`lot-${mark}-lo`} offset="1" />
+      </radialGradient>)}
+      <radialGradient id={`${id}-halo`}>
+        <stop className="lot-halo-in" offset="0" /><stop className="lot-halo-out" offset="1" />
+      </radialGradient>
+    </defs>
+    <circle className="lottery-draw-halo" cx={160} cy={122} r={112} fill={`url(#${id}-halo)`} />
+    <ellipse className="lottery-draw-floor" cx={160} cy={floor_y[shape]} rx={shape === 'ballot_box' ? 104 : 72} ry={7} />
+  </>;
+}
+
+/** The urn's glass catches the light: one sheen down its shoulder, one on the rim. */
+function UrnSheen() {
+  return <g className="lottery-draw-sheen" aria-hidden="true">
+    <path d="M126 96C108 116 106 156 128 182" /><path d="M118 47H150" />
+  </g>;
 }
 
 export function ShapePicker({ shape, on_shape, disabled = false }: { shape: DrawShape; on_shape: (shape: DrawShape) => void; disabled?: boolean }) {
@@ -141,7 +180,8 @@ export type CeremonyControlsProps = {
 };
 
 export function CeremonyDetails({ sound = false, on_sound, by_hand = false, on_by_hand,
-  unverified = false, sampled, total = 0 }: Pick<CeremonyControlsProps, 'sound' | 'on_sound' | 'by_hand' | 'on_by_hand' | 'unverified' | 'sampled' | 'total'>) {
+  unverified = false, sampled, total = 0, notes_open = false }: Pick<CeremonyControlsProps, 'sound' | 'on_sound' | 'by_hand' | 'on_by_hand' | 'unverified' | 'sampled' | 'total'>
+  & { /** The drawer has room: its stage note starts open beside the toggle. */ notes_open?: boolean }) {
   return <>
       {(on_by_hand || on_sound) && <div className="lottery-stage-options" role="group" aria-label={copy.stage.options}>
         {on_by_hand && <InkButton size="room" className="lottery-stage-toggle" aria-pressed={by_hand} title={copy.stage.by_hand_hint}
@@ -149,7 +189,7 @@ export function CeremonyDetails({ sound = false, on_sound, by_hand = false, on_b
         {on_sound && <InkButton size="room" className="lottery-stage-toggle" aria-pressed={sound} title={copy.stage.sound_hint}
           onClick={() => { if (!sound) ceremonySound(); on_sound(!sound); }}><RoomKeyBadge room="lottery" action="sound" />{copy.stage.sound}</InkButton>}
       </div>}
-      <details className="lottery-stage-notes">
+      <details className="lottery-stage-notes" open={notes_open || undefined} data-inline={notes_open || undefined}>
         <summary aria-label={copy.stage.title} title={copy.stage.title}><span aria-hidden="true">i</span><RoomKeyBadge room="lottery" action="info" /></summary>
         <p className="cc-aside">{unverified ? copy.stage.unverified : copy.stage.note}
           {sampled !== undefined && sampled < total ? ` ${copy.stage.sampled(sampled, total)}` : ''}</p>
@@ -186,6 +226,7 @@ export function DrawStage({ shape, on_shape, entries, cast, content, sealed, sea
   controls?: boolean;
 }) {
   const reduced = useReducedMotion();
+  const art_id = `lot-art${useId().replace(/[^\w-]/g, '')}`;
   const playable = cast && verified ? cast : undefined;
   // By hand needs one onset per winner, so it keeps the renderer's timed events even under reduced motion
   // (no motion plays either way: the flourish and CSS animations stay off).
@@ -252,15 +293,20 @@ export function DrawStage({ shape, on_shape, entries, cast, content, sealed, sea
   const latest_mark = latest === undefined ? undefined : by_handle.get(latest);
   const limit = theatre ? rail_limit.theatre : rail_limit.desk;
   const lots = <Marks marks={marks} order={order} focus={focus_weight} />;
+  const glaze: Glaze = { '--lot-glaze-body': `url(#${art_id}-body)`, '--lot-glaze-metal': `url(#${art_id}-metal)`, '--lot-glaze-or': `url(#${art_id}-or)`,
+    '--lot-mark': `url(#${art_id}-lot-mark)`, '--lot-mark-gilt': `url(#${art_id}-lot-gilt)`, '--lot-mark-azure': `url(#${art_id}-lot-azure)`, '--lot-mark-ch': `url(#${art_id}-lot-ch)` };
   return <div ref={root} className="lottery-draw-stage" data-shape={shape} data-focusing={focus_weight === undefined ? undefined : true} data-phase={phase} data-shuffling={fresh || undefined}
     style={revealStyle(reveal_ms)}>
     {controls && <CeremonyControls shape={shape} on_shape={on_shape} theatre={theatre} on_theatre={on_theatre}
       sound={sound} on_sound={on_sound} by_hand={by_hand} on_by_hand={on_by_hand}
       unverified={Boolean(cast) && !verified} sampled={drawn.length} total={entries.length} />}
     <div className="lottery-draw-theatre">
-      <svg className="lottery-draw-svg" viewBox={stage_view_box} role="img" aria-label={copy.stage.label(shapeLabel(shape), entries.length)}>
+      <svg className="lottery-draw-svg" viewBox={stage_view_box} role="img" aria-label={copy.stage.label(shapeLabel(shape), entries.length)}
+        style={glaze}>
+        <Lighting id={art_id} shape={shape} />
         <g className="lottery-draw-motion" ref={flourish.group}>
           <Artwork layer={artworkOf(scene)} />
+          {shape === 'urn' && <UrnSheen />}
         </g>
         <g className="lottery-draw-lots" ref={flourish.lots} style={shape === 'wheel' ? wheel_spin : undefined}>{lots}</g>
         {revealed.map((handle, index) => {

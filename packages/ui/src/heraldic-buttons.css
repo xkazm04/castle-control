@@ -1,23 +1,29 @@
 /* Three classes/attributes beat a one-class ancestor with a :where() reset in either order. */
 .cc-button.cc-heraldic-button[data-size] {
-  --cc-button-text: var(--press);
+  --cc-button-text: var(--on-fill);
   display: inline-flex; align-items: center; justify-content: center; gap: var(--space-7); max-width: 100%;
   height: var(--button-h); min-height: var(--button-h); margin: 0; padding: 0 var(--space-12);
-  border: var(--rule-medium) solid var(--cc-border-ink, var(--ink)); border-radius: var(--r-sm); background: var(--paper); color: var(--ink);
-  font: 700 var(--text-label)/1 var(--font-label); letter-spacing: var(--track-label); text-transform: lowercase; white-space: nowrap; cursor: pointer;
+  border: var(--rule-medium) solid var(--cc-border-ink, var(--line-control)); border-radius: var(--r-sm); background: var(--surface); color: var(--ink);
+  font: 700 var(--text-label)/1 var(--font-label); letter-spacing: var(--track-label); text-transform: none; white-space: nowrap; cursor: pointer;
+  transition: background-color var(--m-quick) var(--ease), box-shadow var(--m-quick) var(--ease);
 }
-.cc-button.cc-heraldic-button[data-size="big"] { height: auto; min-height: calc(var(--space-40) + var(--space-4)); gap: var(--space-8); padding: var(--space-6) var(--space-12); border-width: var(--rule-strong); background: var(--card); font: 800 var(--text-body)/1.15 var(--font-ui); }
-.cc-button.cc-heraldic-button[data-size="wrap"] { height: auto; padding: var(--space-6) var(--space-10); background: var(--card); line-height: 1.15; white-space: normal; text-align: center; }
+.cc-button.cc-heraldic-button[data-size="big"] { height: auto; min-height: calc(var(--space-40) + var(--space-4)); gap: var(--space-8); padding: var(--space-6) var(--space-12); background: var(--surface); font: 700 var(--text-body)/1.15 var(--font-text); }
+.cc-button.cc-heraldic-button[data-size="wrap"] { height: auto; padding: var(--space-6) var(--space-10); background: var(--surface); line-height: 1.15; white-space: normal; text-align: center; }
 .cc-button.cc-heraldic-button[data-variant="offset"] { --cc-shadow-offset: var(--space-3); --cc-shadow-ink: var(--ink); background: var(--cc-ink, var(--or)); color: var(--cc-button-text); }
 .cc-button.cc-heraldic-button[data-variant="plate"], .cc-button.cc-heraldic-button[data-variant="pass"] { background: var(--cc-ink, var(--azure)); border-color: var(--cc-ink, var(--azure)); color: var(--cc-button-text); }
+/* or (amber) is light in both themes: its fill always carries dark text */
+.cc-button.cc-heraldic-button[data-size]:is([style*="--cc-ink:var(--or)"], [style*="--cc-ink: var(--or)"]), .cc-button.cc-heraldic-button[data-size][data-variant="offset"]:not([style*="--cc-ink"]) { --cc-button-text: var(--lead-lo); }
 .cc-button.cc-heraldic-button[data-variant="bar"] { border-color: var(--gules); color: var(--gules-text); }
-.cc-button.cc-heraldic-button[data-variant="primary"] { background: var(--ink); color: var(--paper); }
+.cc-button.cc-heraldic-button[data-variant="primary"] { background: var(--lead); border-color: var(--lead); color: var(--on-lead); }
 .cc-button.cc-heraldic-button[data-variant="ghost"] { border-color: var(--hair); background: transparent; }
-.cc-button.cc-heraldic-button[data-variant="danger"] { border-color: var(--danger); color: var(--danger); }
+.cc-button.cc-heraldic-button[data-variant="danger"] { border-color: var(--danger); color: var(--danger-ink); }
 .cc-button.cc-heraldic-button[data-variant="shield"] { width: 100%; flex-direction: column; gap: var(--space-2); border-color: var(--danger); color: var(--danger); }
 .cc-button.cc-heraldic-button[data-variant="shield"] small { font: 500 var(--text-small)/1.2 var(--font-ui); letter-spacing: 0; text-transform: none; color: var(--ink-2); }
 .cc-button.cc-heraldic-button[data-size="big"] svg { width: var(--icon-md); height: var(--icon-md); stroke-width: 2; }
-.cc-button.cc-heraldic-button[data-size]:hover { background: var(--ink); color: var(--paper); }
+.cc-button.cc-heraldic-button[data-size]:hover { background: var(--surface-2); color: var(--ink); box-shadow: inset 0 calc(-1 * var(--space-3)) 0 var(--cc-ink, var(--ch, var(--hair))); }
+.cc-button.cc-heraldic-button[data-size]:is([data-variant="primary"], [data-variant="plate"], [data-variant="pass"], [data-variant="offset"]):hover { background: color-mix(in srgb, var(--cc-ink, var(--lead)) 86%, var(--ink)); color: var(--cc-button-text); }
+.cc-button.cc-heraldic-button[data-size][data-variant="primary"]:hover { color: var(--on-lead); }
+.cc-button.cc-heraldic-button[data-size]:active { transform: translateY(var(--space-1)); }
 .cc-button.cc-heraldic-button[data-size="big"]:is([data-variant="bar"], [data-variant="shield"], [data-variant="outline"]):hover { background: var(--tint-2); color: var(--ink); }
 .cc-button.cc-heraldic-button[data-size="big"][data-variant="bar"]:hover { color: var(--gules-text); }
 .cc-button.cc-heraldic-button[data-size="big"][data-variant="shield"]:hover { color: var(--danger); }

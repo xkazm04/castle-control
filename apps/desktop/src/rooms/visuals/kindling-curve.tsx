@@ -72,10 +72,17 @@ export function CurvePoints({ editor, state, disabled, described_by = 'visuals-c
   const { draft } = state;
   const maximum = curveMaximum(state, domain);
   const x = (total: number) => total / maximum * 600;
+  const fill = `visuals-curve-fill-${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`;
+  const path = draft.ranges.map(point => `${x(point.total)},${140 - point.intensity * 140}`).join(' ');
   return <svg viewBox="-12 -12 624 164" preserveAspectRatio="none" role="group" aria-label={label}>
+      <defs><linearGradient id={fill} x1="0" y1="0" x2="0" y2="1">
+        <stop className="visuals-chart-stop-top" offset="0" /><stop className="visuals-chart-stop-low" offset="1" />
+      </linearGradient></defs>
+      {[0, 35, 70, 105].map(level => <line key={level} className="visuals-curve-grid" x1="0" x2="600" y1={level} y2={level} />)}
       {underlay?.(x, maximum)}
-      <polyline points={draft.ranges.map(point => `${x(point.total)},${140 - point.intensity * 140}`).join(' ')}
-        className="visuals-room-curve-line" />
+      <polygon className="visuals-curve-fill" fill={`url(#${fill})`}
+        points={`${x(draft.ranges[0]?.total ?? 0)},140 ${path} ${x(draft.ranges.at(-1)?.total ?? 0)},140`} />
+      <polyline points={path} className="visuals-room-curve-line" />
       {draft.ranges.map((point, index) => <circle key={index} cx={x(point.total)} cy={140 - point.intensity * 140} r="8"
         role="button" tabIndex={disabled ? -1 : 0} aria-disabled={disabled} aria-describedby={described_by}
         aria-label={`Control point ${index + 1}: ${point.total} contribution units, ${Math.round(point.intensity * 10000) / 100}% intensity`}
@@ -138,8 +145,8 @@ export function CurveControls({ editor, state, busy, local = false }: {
     {draft.decay.kind === 'exponential' && <label>Half-life (seconds)<input name="half_life_s" type="number" min="1"
       max="4294967295" step="1" required disabled={disabled} value={draft.decay.half_life_s}
       onChange={event => editor.setDecay({ kind: 'exponential', half_life_s: event.currentTarget.valueAsNumber })} /></label>}
-    <button type="submit" disabled={disabled}>{local ? copy.save_local_curve : 'Save curve to core'}</button>
-    <button type="button" disabled={disabled} onClick={() => editor.cancel()}>Cancel curve edits</button>
+    <button type="submit" className="cc-btn cc-btn--chamber visuals-curve-save" disabled={disabled}>{local ? copy.save_local_curve : 'Save curve to core'}</button>
+    <button type="button" className="cc-btn cc-btn--quiet visuals-curve-cancel" disabled={disabled} onClick={() => editor.cancel()}>Cancel curve edits</button>
   </form>;
 }
 

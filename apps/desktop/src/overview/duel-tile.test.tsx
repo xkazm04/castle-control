@@ -31,3 +31,17 @@ test('the overview preview frames the Map Room as a chat duel, never the hex war
   expect(html).toContain('<b>Chat duel</b>'); expect(html).toContain('overview-duel');
   expect(html).not.toMatch(/war table|Illustrative layout/i);
 });
+
+test('core mode never borrows the fixture sample: four honest layers, no sample names, an accurate caption', () => {
+  expect(duelCard(undefined, false)).toBeUndefined();
+  const html = renderToStaticMarkup(<StreamScene mode="preview" proposals={[]} sample={false} simulated />);
+  for (const title of ['Urn and writ', 'Chat and Herald', 'Altar, frame and border', 'Chat duel']) expect(html).toContain(`<b>${title}</b>`);
+  for (const text of ['No duel read yet', 'No chat lines on screen', 'No beacon on screen', 'Malakor’s crypt · illustrative backdrop']) expect(html).toContain(text);
+  for (const fixture of ['Raze the mill', 'Borrow the mill', 'Illustrative shares', 'Camera frame · sample', 'live chamber data unavailable']) expect(html).not.toContain(fixture);
+});
+
+test('a core dress rehearsal labels the live duel card SIMULATED even when the duel does not', () => {
+  const live = { round: 'Final', left: 'Castle', right: 'Sky', share: 0.67, simulated: false, illustrative: false };
+  expect(renderToStaticMarkup(<DuelTile card={live} sample={false} simulated />)).toContain('Simulated');
+  expect(renderToStaticMarkup(<DuelTile card={live} sample={false} />)).not.toContain('Simulated');
+});

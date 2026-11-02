@@ -189,21 +189,19 @@ a.cc-chip:hover, a:hover > .cc-chip { border-style: solid; }
 /* ---- dock: the Steward sill is owned by the Steward dock (packages/ui steward, apps/desktop shell/steward*). */
 
 /* ============================================================ CHAMBER HEADER */
+/* the compact page head: crumbs over a display title with its aside on one line, a hairline below */
 .cc-chamber-head {
-  position: relative; display: grid; grid-template-columns: 1fr auto; align-items: end; gap: 24px;
-  padding: 16px var(--gutter) 18px; border-bottom: var(--came) solid var(--lead);
+  position: relative; display: flex; align-items: center; justify-content: space-between; gap: var(--space-8) var(--space-16);
+  margin: 0 0 var(--space-12); padding: var(--space-4) var(--space-8) var(--space-12); border-bottom: var(--rule-thin) solid var(--deck-line, var(--hair));
 }
-.cc-chamber-head::after { content: ''; position: absolute; left: 0; right: 0; bottom: -12px; height: 10px; border-bottom: var(--came) solid var(--lead);
-  background: var(--tex-glass), repeating-linear-gradient(90deg, var(--lead) 0 2px, transparent 2px 46px), linear-gradient(180deg, var(--ch-lit), var(--ch) 55%, var(--ch-deep));
-  background-size: 180px 180px, auto, auto; background-blend-mode: overlay, normal, normal;
-  box-shadow: 0 0 calc(var(--glow-on) * 14px) var(--ch-glow); }
+.cc-chamber-head > :first-child { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-4) var(--space-12); min-width: 0; }
+.cc-chamber-head .cc-crumbs { flex: 1 0 100%; }
 .cc-crumbs { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font: 500 var(--text-t-small)/1.2 var(--font-text); color: var(--muted); }
 .cc-crumbs a { color: var(--ink); font-weight: 700; text-underline-offset: 3px; }
 .cc-crumbs b { color: var(--ink); }
-.cc-crumbs .cc-crumbs__sep { color: var(--faint); }
-.cc-title { margin-top: 6px; font: 600 var(--text-t-title)/.9 var(--font-display); color: var(--ch-ink);
-  text-shadow: 0 0 calc(var(--glow-on) * 24px) var(--ch-glow); }
-.cc-subtitle { display: flex; align-items: center; gap: 12px; margin-top: 6px; font: italic 400 var(--text-px-21)/1.2 var(--font-aside); color: var(--ink-2); }
+.cc-crumbs .cc-crumbs__sep { color: var(--muted); }
+.cc-title { margin: 0; font: 600 var(--text-t-h2)/1.05 var(--font-display); letter-spacing: .005em; color: var(--ch-ink); }
+.cc-subtitle { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-10); margin: 0; font: italic 400 var(--text-t-small)/1.3 var(--font-aside); color: var(--ink-2); }
 .cc-back { display: flex; align-items: center; gap: 10px; }
 
 .cc-grid { display: grid; gap: var(--gap); align-items: start; }

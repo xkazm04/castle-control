@@ -3,5 +3,5 @@
   min-width: var(--space-22); width: max-content; height: var(--space-22); padding: 0;
   border: var(--rule-medium) solid var(--ink); border-bottom-width: var(--space-3);
   border-radius: var(--r-sm); background: var(--card); color: var(--ink);
-  font: 700 var(--text-shell-shortcut)/1 var(--font-num); letter-spacing: normal; text-transform: none;
+  font: 500 var(--text-shell-shortcut)/1 var(--font-mono); letter-spacing: normal; text-transform: none;
 }

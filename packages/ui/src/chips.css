@@ -1,21 +1,22 @@
+/* StatusChip: one calm pill in both themes - a hairline, a faint wash of its hue, small-caps label */
 .cc-chip {
   display: inline-flex; align-items: center; white-space: nowrap; height: var(--chip-h);
-  padding-inline: var(--space-7); gap: var(--space-5); cursor: default;
-  border: var(--rule-medium) solid var(--ink); border-radius: var(--r-sm);
-  background: transparent; color: var(--ink);
-  font: 700 var(--text-label)/1 var(--font-ui); letter-spacing: var(--track-label); text-transform: uppercase;
+  padding-inline: var(--space-8); gap: var(--space-5); cursor: default;
+  border: var(--rule-thin) solid var(--hair); border-radius: var(--r-round);
+  background: var(--tint); color: var(--ink-2);
+  font: 700 var(--text-label)/1 var(--font-label); letter-spacing: .04em; text-transform: none;
 }
-.cc-chip[data-variant="gules"] { border-color: var(--gules); color: var(--gules-text); }
-.cc-chip[data-variant="azure"] { border-color: var(--azure); color: var(--azure-text); }
-.cc-chip[data-variant="or"] { border-color: var(--or); color: var(--or-text); background: color-mix(in srgb, var(--or) 16%, transparent); }
-.cc-chip[data-variant="solid-gules"] { background: var(--gules); border-color: var(--gules); color: var(--press); }
-.cc-chip[data-variant="solid-azure"] { background: var(--azure); border-color: var(--azure); color: var(--press); }
-.cc-chip[data-variant="solid-or"] { background: var(--or); border-color: var(--or); color: var(--press); }
-.cc-chip[data-variant="solid"] { background: var(--ink); color: var(--paper); }
-.cc-chip[data-variant="ok"] { color: var(--ok); border-color: var(--ok); }
-.cc-chip[data-variant="bad"] { color: var(--danger); border-color: var(--danger); }
-.cc-chip[data-variant="warn"] { color: var(--or-text); border-color: var(--warn); }
-.cc-chip[data-variant="dash"] { border-style: dashed; color: var(--muted); border-color: var(--hair); }
+.cc-chip[data-variant="gules"] { border-color: color-mix(in srgb, var(--gules) 50%, transparent); color: var(--gules-text); background: var(--gules-wash); }
+.cc-chip[data-variant="azure"] { border-color: color-mix(in srgb, var(--azure) 50%, transparent); color: var(--azure-text); background: var(--azure-wash); }
+.cc-chip[data-variant="or"] { border-color: color-mix(in srgb, var(--or) 60%, transparent); color: var(--or-text); background: var(--or-wash); }
+.cc-chip[data-variant="solid-gules"] { background: var(--gules-deep); border-color: var(--gules); color: var(--on-glass); }
+.cc-chip[data-variant="solid-azure"] { background: var(--azure-deep); border-color: var(--azure); color: var(--on-glass); }
+.cc-chip[data-variant="solid-or"] { background: var(--or); border-color: var(--or); color: var(--lead-lo); }
+.cc-chip[data-variant="solid"] { background: var(--ink); border-color: var(--ink); color: var(--surface); }
+.cc-chip[data-variant="ok"] { color: var(--ok-ink); border-color: color-mix(in srgb, var(--ok) 55%, transparent); background: var(--emerald-wash); }
+.cc-chip[data-variant="bad"] { color: var(--danger-ink); border-color: color-mix(in srgb, var(--danger) 55%, transparent); background: color-mix(in srgb, var(--danger) 10%, transparent); }
+.cc-chip[data-variant="warn"] { color: var(--or-text); border-color: color-mix(in srgb, var(--warn) 60%, transparent); background: var(--or-wash); }
+.cc-chip[data-variant="dash"] { border-style: dashed; color: var(--muted); border-color: var(--hair); background: none; }
 .cc-verdict { display: inline-flex; align-items: center; }
 .cc-gatehouse {
   display: inline-flex; align-items: center; gap: var(--space-6); flex: none; text-decoration: none;

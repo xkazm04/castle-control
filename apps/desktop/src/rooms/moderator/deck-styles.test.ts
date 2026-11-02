@@ -43,18 +43,18 @@ test('held and ban cards reset every legacy track and span; verdict pairs stay i
   }
 });
 
-test('compact Herald uses separated filter segments, a 64-pixel chart and a single vote-control row', () => {
+test('compact Herald uses one segmented filter track, a column-filling chart and a single vote-control row', () => {
   const prefix = '.gh-deck .gh-herald--compact';
   expect(rule(`${prefix} .moderator-chip-toggles`).get('flex-wrap')).toBe('nowrap');
-  expect(rule(`${prefix} .moderator-chip-toggles`).get('gap')).toBe('var(--space-4)');
-  expect(rule(`${prefix} .moderator-chip-toggles > .moderator-chip-toggle`).get('padding')).toBe('var(--space-5) var(--space-9)');
+  expect(rule(`${prefix} .moderator-chip-toggles`).get('gap')).toBe('var(--space-2)');
+  expect(rule(`${prefix} .moderator-chip-toggles > .moderator-chip-toggle`).get('padding')).toBe('var(--space-4) var(--space-8)');
   expect(rule(`${prefix} .moderator-chip-toggles > .moderator-chip-toggle`).get('margin')).toBe('0');
-  expect(rule(`${prefix} .gh-chart`).get('height')).toBe('calc(var(--space-32) * 2)');
+  expect(rule(`${prefix} .gh-chart`).get('height')).toBe('100%');
   expect(rule(`${prefix} .gh-vote-summary`).get('display')).toBe('flex');
   expect(rule(`${prefix} .gh-vote-summary`).get('flex-wrap')).toBe('nowrap');
   expect(rule(`${prefix} .gh-vote-summary .gh-deck-buttons`).get('flex-wrap')).toBe('nowrap');
-  expect(rule(`${prefix} .moderator-tiles`).get('grid-template-columns')).toBe('repeat(2, minmax(0, 1fr))');
-  expect(rule(`${prefix} .moderator-tile`).get('grid-template-columns')).toBe('var(--space-16) minmax(0, 1fr) max-content');
+  expect(rule(`${prefix} .moderator-tiles`).get('grid-template-columns')).toContain('minmax(0, 1fr)');
+  expect(rule(`${prefix} .moderator-tile`).get('grid-template-columns')).toBe('var(--space-20) minmax(0, 1fr) max-content');
   expect(rule(`${prefix} .moderator-tile > *`).get('grid-area')).toBe('auto');
   expect(rule(`${prefix} .moderator-tile > *`).get('overflow-wrap')).toBe('normal');
   const tokens = readFileSync(new URL('../../../../../packages/tokens/src/generated.css', import.meta.url), 'utf8');

@@ -161,7 +161,7 @@ test('secondary tools, contestant notes and moderation provenance move into the 
   expect(renderToStaticMarkup(layout.props.preview)).not.toContain('Raze the mill');
   expect(renderToStaticMarkup(layout.props.program)).not.toContain('Raze the mill');
   expect(renderToStaticMarkup(<DuelDrawer {...drawer.props} open />)).toContain('Current match: Raze the mill · Borrow the mill');
-  expect(room_html).not.toContain('75%');
+  expect(room_html).toContain('<small>75%</small>'); // the director's card shows each side's share
   expect(renderToStaticMarkup(<DuelDrawer {...drawer.props} open />)).toContain('Counted ballot share: 75% left · 25% right');
   for (const text of ['Speed ×3', 'New bracket', 'Show the duel on stream', 'SIMULATED contestant background', 'barred by moderation']) {
     expect(room_html).not.toContain(text);

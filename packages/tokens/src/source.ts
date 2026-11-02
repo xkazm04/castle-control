@@ -164,6 +164,13 @@ export const layoutTokens = {
   "space-56": "56px"
 } as const;
 
+// App-only layout additions (UI polish round): exported with tokens.layout and emitted in generated.css,
+// but never in generated-base.css, so the isolated OBS overlay's embedded token subset stays unchanged.
+export const appLayoutTokens = {
+  "space-48": "48px",
+  "font-mono": "\"IBM Plex Mono\",ui-monospace,\"Cascadia Mono\",\"SF Mono\",Consolas,Menlo,monospace"
+} as const;
+
 export const stockLayoutTokens = {
   "hair": "rgba(242,238,227,.26)",
   "hair-2": "rgba(242,238,227,.13)",

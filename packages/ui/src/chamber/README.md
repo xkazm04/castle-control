@@ -13,17 +13,24 @@ title and drawer trigger. Omit it when the shell already renders that title.
 shows a draft or live state. Mini titles are also overridable (Gatehouse uses
 “Proposal · awaiting your seal”). Slots retain the room's existing models/actions.
 
-The picture column uses exactly `clamp(380px, 50vw - 260px, 740px)`, expressed
-through the existing fixed `--space-20` token. The surface fills its column at
-16:9. Picture content must fill that surface and use at least 15 px text.
-The two remaining columns divide available width equally. Container queries
-collapse to two columns below 68 rem and one below 44 rem. All three acceptance
-viewport sizes retain three columns with the harness shell allocation.
+The layout is a size container. The picture column is as wide as a 16:9 picture
+that still leaves `--chamber-reserve` (210 px) of height for the caption and the
+Preview/Program pair: `clamp(380px, min(54cqw, (100cqh - reserve) * 16/9), 54cqw)`.
+Short rooms (1280×720) get a smaller picture, wide rooms (1920×1080) stop at 54 %
+of the width. The two section columns divide the rest equally. All three columns
+stretch to the room's height: Preview/Program sit on the bottom edge at their own
+height, and the last section in each column takes the remaining height, so every
+column ends on one baseline. Container queries collapse to two columns below
+68 rem and one below 44 rem.
+
+One card treatment for sections and minis (section.css): `--surface` ground,
+hairline `--hair`, `--r-lg` radius, 12/14 px padding, and one kicker (the
+`.cc-kicker` face: `--font-label` 700, `--track-label`, lowercase small caps, chamber
+ink). Rooms should not restyle the card or the kicker; style their content.
 
 No column or mini is a scroller, and content is never clipped to disguise a
 budget overrun. Keep sections within the allocated room height; put expanded
-charts, full brackets and other heavy material in `Drawer`. Mini slots have a
-104 px minimum and grow to 230 px, matching the winner's final fit pass.
+charts, full brackets and other heavy material in `Drawer`.
 
 `Drawer` is a controlled, nonmodal detail dialog with `open` / `onClose`. It
 focuses Close when opened, restores the connected opener on close or unmount,

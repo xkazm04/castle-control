@@ -1,3 +1,4 @@
+/* The chamber drawer: a lit side sheet hung on the chamber's glass edge. */
 .cc-chamber-drawer {
   position: fixed;
   z-index: 60;
@@ -8,11 +9,41 @@
   display: flex;
   flex-direction: column;
   width: min(calc(var(--space-20) * 32), 94vw);
-  border-inline-start: var(--came-hair) solid var(--ch, var(--hair));
-  background: linear-gradient(180deg, var(--surface-2), var(--stone-2));
-  box-shadow: var(--shadow-lift);
+  border: var(--came-hair) solid var(--hair);
+  border-inline-end: 0;
+  border-radius: var(--r-lg) 0 0 var(--r-lg);
+  background: linear-gradient(180deg, var(--surface), color-mix(in srgb, var(--surface) 80%, var(--stone-2)));
+  box-shadow: var(--shadow-lift), 0 0 calc(var(--glow-on) * var(--space-24)) color-mix(in srgb, var(--ch-glow, transparent) 35%, transparent);
   color: var(--ink);
   font: 400 var(--text-px-15)/1.4 var(--font-text);
+  animation: cc-chamber-drawer-in var(--m-enter, .3s) var(--ease, ease-out) both;
+}
+
+/* A quiet scrim over the room while the drawer is open. It never takes a pointer:
+   the room under it stays exactly as clickable as before. */
+.cc-chamber-drawer::after {
+  content: '';
+  position: fixed;
+  z-index: -1;
+  inset-block: var(--top-h) var(--dock-h);
+  inset-inline: 0 min(calc(var(--space-20) * 32), 94vw);
+  background: color-mix(in srgb, var(--lead) 18%, transparent);
+  pointer-events: none;
+}
+[data-theme="night"] .cc-chamber-drawer::after, .cc-chamber-drawer[data-theme="night"]::after {
+  background: color-mix(in srgb, var(--lead) 48%, transparent);
+}
+
+/* The chamber's glass edge. */
+.cc-chamber-drawer::before {
+  content: '';
+  position: absolute;
+  inset-block: var(--space-14);
+  inset-inline-start: calc(-1 * var(--space-2));
+  width: var(--space-3);
+  border-radius: var(--r-round);
+  background: linear-gradient(180deg, var(--ch-lit, var(--ch)), var(--ch, var(--hair)) 55%, var(--ch-deep, var(--ch)));
+  box-shadow: 0 0 calc(var(--glow-on) * var(--space-12)) var(--ch-glow, transparent);
 }
 
 .cc-chamber-drawer-heading {
@@ -21,44 +52,88 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--space-12);
-  padding: var(--space-14) var(--space-16) var(--space-12);
+  padding: var(--space-16) var(--space-20) var(--space-14);
   border-bottom: var(--came-hair) solid var(--hair);
 }
 
+.cc-chamber-drawer-heading > div { display: grid; gap: var(--space-4); min-width: 0; }
+
 .cc-chamber-drawer-heading p {
-  margin: 0 0 var(--space-6);
+  margin: 0;
   color: var(--ch-ink, var(--ink));
-  font: 700 var(--text-px-13)/1.2 var(--font-text);
+  font: 700 var(--text-t-small)/1.25 var(--font-label);
   letter-spacing: var(--track-label);
-  text-transform: uppercase;
+  text-transform: lowercase;
 }
 
-.cc-chamber-drawer-heading h2 { margin: 0; font: 600 var(--text-px-22)/1.2 var(--font-book); }
+.cc-chamber-drawer .cc-chamber-drawer-heading h2 {
+  margin: 0;
+  color: var(--ink);
+  font: 700 var(--text-px-20)/1.2 var(--font-text);
+  letter-spacing: normal;
+  text-transform: none;
+}
 
-.cc-chamber-drawer-heading button {
+.cc-chamber-drawer .cc-chamber-drawer-heading button {
   flex: none;
+  display: inline-flex;
+  align-items: center;
   min-height: var(--space-34);
-  padding: var(--space-5) var(--space-12);
+  padding: 0 var(--space-14);
   border: var(--came-hair) solid var(--came-ui);
   border-radius: var(--r-lg);
-  background: var(--surface);
+  background: var(--surface-2);
   color: var(--ink);
-  font: 600 var(--text-px-14)/1.2 var(--font-text);
+  font: 700 var(--text-px-14)/1 var(--font-label);
+  letter-spacing: .06em;
+  text-transform: lowercase;
   cursor: pointer;
+  transition: border-color var(--m-fast, .12s) ease, background var(--m-fast, .12s) ease;
 }
 
-.cc-chamber-drawer-heading button:focus-visible {
+.cc-chamber-drawer .cc-chamber-drawer-heading button:hover { border-color: var(--ch, var(--came-ui)); background: var(--surface-3); }
+.cc-chamber-drawer .cc-chamber-drawer-heading button:active { background: var(--stone-2); }
+
+.cc-chamber-drawer .cc-chamber-drawer-heading button:focus-visible {
   outline: var(--came) solid var(--focus);
-  outline-offset: var(--space-3);
+  outline-offset: var(--space-2);
 }
 
 .cc-chamber-drawer-body {
   display: grid;
   flex: 1;
-  gap: var(--space-12);
+  /* Rows keep their content height (a min-height: 0 panel must not collapse); the body scrolls. */
+  grid-auto-rows: max-content;
+  gap: var(--space-14);
   align-content: start;
   min-height: 0;
-  padding: var(--space-14) var(--space-16) var(--space-16);
+  padding: var(--space-16) var(--space-20) var(--space-20);
   overflow: auto;
+  overscroll-behavior: contain;
+  scroll-padding-block: var(--space-20);
+  /* Lines scrolled under the head fade out instead of peeking as half-lines. */
+  -webkit-mask-image: linear-gradient(180deg, transparent, var(--lead) var(--space-14), var(--lead) calc(100% - var(--space-14)), transparent);
+  mask-image: linear-gradient(180deg, transparent, var(--lead) var(--space-14), var(--lead) calc(100% - var(--space-14)), transparent);
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--muted) 45%, transparent) transparent;
   overflow-wrap: anywhere;
+}
+
+.cc-chamber-drawer-body::-webkit-scrollbar { width: var(--space-10); }
+.cc-chamber-drawer-body::-webkit-scrollbar-track { background: transparent; }
+.cc-chamber-drawer-body::-webkit-scrollbar-thumb {
+  border: var(--space-3) solid transparent;
+  border-radius: var(--r-round);
+  background: color-mix(in srgb, var(--muted) 45%, transparent) padding-box;
+}
+.cc-chamber-drawer-body::-webkit-scrollbar-thumb:hover { background-color: var(--ch, var(--muted)); }
+
+@keyframes cc-chamber-drawer-in {
+  from { opacity: 0; inset-inline-end: calc(-1 * var(--space-24)); }
+  to { opacity: 1; inset-inline-end: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cc-chamber-drawer { animation: none; }
 }

@@ -112,7 +112,8 @@ export const tokens = {
     "space-28": "28px", "space-30": "30px",
     "space-32": "32px", "space-34": "34px",
     "space-36": "36px", "space-40": "40px",
-    "space-56": "56px",
+    "space-56": "56px", "space-48": "48px",
+    "font-mono": "\"IBM Plex Mono\",ui-monospace,\"Cascadia Mono\",\"SF Mono\",Consolas,Menlo,monospace",
   },
   "stock_layout": {
     "hair": "rgba(242,238,227,.26)", "hair-2": "rgba(242,238,227,.13)",

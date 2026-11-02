@@ -1,11 +1,38 @@
-.overview-inspector { display: flex; flex-direction: column; gap: 10px; height: 100%; min-height: 0; font: 400 var(--text-t-small)/1.4 var(--font-text); color: var(--ink-2); }
+.overview-inspector { display: flex; flex-direction: column; gap: var(--space-6); min-height: 100%; font: 400 var(--text-t-small)/1.4 var(--font-text); color: var(--ink-2); }
 .overview-inspector > p { margin: 0; }
-.overview-inspector > .cc-window { flex: 1; min-height: 0; }
+.overview-inspector > .cc-window { flex: none; }
+.overview-inspector > .cc-window .cc-window-row { border-bottom: 0; padding-bottom: var(--space-6); }
+/* while a proposal is open, the draw steps give way to it; the free-entry rule and the sample disclaimer stay */
+.overview-inspector:has(.cc-proposal-card) .overview-fairness p:nth-of-type(2) { display: none; }
 .overview-inspector > .overview-fairness, .overview-inspector > a { flex: none; }
-.overview-inspector > a { display: inline-block; padding-block: 4px; color: var(--ch-ink); font: 700 var(--text-t-small)/1.2 var(--font-text); text-underline-offset: var(--space-3); }
-.overview-fairness { margin-top: auto; padding: 10px 12px 11px 14px; background: var(--surface-2); box-shadow: inset 4px 0 0 var(--emerald), inset 0 0 0 1px var(--hair); font: 400 var(--text-t-small)/1.38 var(--font-text); color: var(--ink-2); }
-.overview-fairness > b { display: block; font: 800 var(--text-t-label)/1.2 var(--font-label); letter-spacing: .1em; text-transform: lowercase; color: var(--emerald-ink); }
-.overview-fairness p { margin: 4px 0 0; }
-.overview-talkback-line { font: var(--text-body)/1.4 var(--font-ui); padding: var(--space-8); border-bottom: var(--rule-thin) solid var(--line); height: 100%; overflow: auto; }
-.overview-talkback-line > b { font-size: var(--text-small); color: var(--or-text); }
-.overview-talkback-line p { margin: var(--space-6) 0; }
+.overview-inspector > .cc-empty { padding: var(--space-6) var(--space-10); gap: var(--space-10); border: var(--came-hair) dashed var(--deck-line-2); border-radius: var(--space-8); }
+.overview-inspector > .cc-empty { grid-template-columns: minmax(0, 1fr); }
+.overview-inspector > .cc-empty .cc-empty__glyph { display: none; }
+.overview-inspector > .cc-empty .cc-empty__body { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 var(--space-6); }
+.cc-frame .overview-inspector > .cc-empty .cc-empty__title { font: 600 var(--text-t-small)/1.25 var(--font-text); letter-spacing: 0; text-transform: none; color: var(--ink); }
+.overview-inspector > .cc-empty .cc-empty__text { font: 400 var(--text-t-meta)/1.3 var(--font-text); }
+.overview-inspector > a { align-self: flex-start; padding-block: var(--space-2); color: var(--ink); font: 600 var(--text-t-meta)/1.2 var(--font-text);
+  text-decoration: underline; text-decoration-color: var(--amethyst); text-decoration-thickness: var(--came); text-underline-offset: var(--space-4); }
+.overview-inspector > a:hover { color: var(--amethyst-ink); }
+.overview-inspector > a:focus-visible { outline: var(--came) solid var(--focus); outline-offset: var(--came); border-radius: var(--space-2); }
+.overview-fairness { padding: var(--space-6) var(--space-12) var(--space-8); border: var(--came-hair) solid var(--deck-line); border-left: var(--came) solid var(--emerald);
+  border-radius: var(--space-8); background: color-mix(in srgb, var(--emerald) 6%, var(--surface)); font: 400 var(--text-t-meta)/1.25 var(--font-text); color: var(--ink-2); }
+.overview-fairness > b { display: block; font: 700 var(--text-t-label)/1.2 var(--font-label); letter-spacing: var(--track-label); text-transform: none; color: var(--emerald-ink); }
+.overview-fairness p { margin: var(--space-2) 0 0; }
+.overview-talkback-line { box-sizing: border-box; height: 100%; overflow: auto; padding: var(--space-8) var(--space-4); border-bottom: var(--came-hair) solid var(--deck-line);
+  font: 400 var(--text-t-small)/1.4 var(--font-text); color: var(--ink); }
+.overview-talkback-line > b { font: 700 var(--text-t-label)/1.3 var(--font-label); letter-spacing: var(--track-label); color: var(--amethyst-ink); }
+.overview-talkback-line p { margin: var(--space-4) 0 0; }
+/* a pending layer proposal: the shared card, calmed to this column's rhythm (one text face, no dashed frame) */
+.overview-inspector .cc-proposal-card { padding: var(--space-10) var(--space-12); border: var(--came-hair) solid var(--hair); border-inline-start: var(--came) solid var(--proposal-ink);
+  border-radius: var(--space-8); background: var(--surface); box-shadow: none; font: 400 var(--text-t-meta)/1.35 var(--font-text); }
+.overview-inspector .cc-proposal-card[data-proposal-focused="true"] { outline: 0; border-color: color-mix(in srgb, var(--proposal-ink) 55%, var(--hair)); box-shadow: 0 0 0 var(--space-1) color-mix(in srgb, var(--proposal-ink) 30%, transparent); }
+.overview-inspector .cc-proposal-card:focus-visible { outline: var(--came) solid var(--focus); outline-offset: var(--came); }
+.overview-inspector .cc-proposal-stamp { margin: 0 0 var(--space-6); }
+.cc-frame .overview-inspector .cc-proposal-card h3 { font: 700 var(--text-t-body)/1.2 var(--font-text); letter-spacing: 0; text-transform: none; }
+.overview-inspector .cc-proposal-revision { margin: var(--space-2) 0 var(--space-6); font: 400 var(--text-t-meta)/1.3 var(--font-text); color: var(--muted); }
+.overview-inspector .cc-proposal-field { padding-block: var(--space-4); }
+.overview-inspector .cc-proposal-field dt { font: 600 var(--text-t-meta)/1.3 var(--font-text); }
+.overview-inspector .cc-proposal-actions { margin-top: var(--space-8); gap: var(--space-8); }
+.overview-inspector .cc-proposal-actions p { font: italic 400 var(--text-t-meta)/1.3 var(--font-aside); color: var(--muted); }
+.overview-inspector .cc-proposal-actions > button { min-height: var(--control-h-sm); border-radius: var(--space-8); text-transform: none; }

@@ -25,16 +25,16 @@ function Urn() {
 
 function Gate({ read, simulated }: { read: ReturnType<typeof keepReadModel>; simulated: boolean }) {
   const id = useId();
-  return <><div className="keep-herald"><small>The Herald · {simulated ? 'sample · simulated' : 'illustration'}</small>
+  return <><div className="keep-herald">{simulated && <small className="keep-badge"><span>The Herald</span><span>sample · simulated</span></small>}
     <div className="keep-banners">{read.consensus.slice(0, 4).map((direction, index) =>
       <span key={direction.key} className={`keep-banner keep-banner-${index}`} title={`${direction.label} · simulated`}>
         {Math.round(direction.share * 100)}</span>)}</div></div>
     <svg className="keep-portcullis" viewBox="0 0 200 230" preserveAspectRatio="xMidYMax meet" aria-hidden="true">
       <defs><radialGradient id={`${id}-gate`}><stop stopColor="var(--azure)" /><stop offset="1" stopColor="var(--azure-deep)" /></radialGradient>
         <radialGradient id={`${id}-torch`}><stop stopColor="var(--or-lit)" /><stop offset="1" stopColor="var(--or)" stopOpacity="0" /></radialGradient></defs>
-      <path d="M8 230V92Q8 8 100 8t92 84v138Z" fill="var(--surface-3)" stroke="var(--hair-2)" strokeWidth="3" />
+      <path className="keep-gate-arch" d="M8 230V92Q8 8 100 8t92 84v138Z" fill="var(--surface-3)" stroke="var(--hair-2)" strokeWidth="3" />
       <path d="M32 230V98Q32 32 100 32t68 66v132Z" fill={`url(#${id}-gate)`} />
-      <path d="M54 230V70M78 230V44M100 230V36M122 230V44M146 230V70M32 100h136M32 136h136M32 172h136M32 208h136"
+      <path className="keep-gate-bars" d="M54 230V70M78 230V44M100 230V36M122 230V44M146 230V70M32 100h136M32 136h136M32 172h136M32 208h136"
         fill="none" stroke="var(--stone)" strokeWidth="6" opacity=".92" />
       {[14, 186].map(x => <g key={x}><circle cx={x} cy="104" r="20" fill={`url(#${id}-torch)`} />
         <path d={`M${x} 96c4 5 5 8 5 11a5 5 0 0 1-10 0c0-3 1-6 5-11Z`} fill="var(--or-lit)" /></g>)}
@@ -62,6 +62,6 @@ export function KeepScene({ room, read, simulated }: { room: ModuleId; read: Ret
     {room === 'visuals' && <><div className="keep-altar-glow" /><img className="keep-altar" src="/art/preset-heraldic-altar.webp" alt="" /></>}
     {room === 'studio' && <><img className="keep-hex" src="/art/preset-heraldic-hexmap.webp" alt="" />
       <div className="keep-duel"><DuelShield seed={1} /><DuelShield seed={2} /></div>
-      <span className="keep-duel-label">Chat duel{simulated ? ' · type 1 or 2' : ' · illustration'}</span></>}
+      {simulated && <small className="keep-badge keep-duel-label"><span>Chat duel</span><span>type 1 or 2 · simulated</span></small>}</>}
   </div>;
 }

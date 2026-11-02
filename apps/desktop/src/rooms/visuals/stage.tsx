@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useSyncExternalStore } from 'react';
+import { useEffect, useId, useMemo, useSyncExternalStore } from 'react';
 import type { CSSProperties, ReactNode } from 'react';
 import type { Visual } from '@castle-control/contract';
 import { art, frames } from '../../demo/model.js';
@@ -79,11 +79,28 @@ function Spark({ trace, position, label }: { trace: ReplayTrace; position: numbe
   const step = Math.max(1, Math.floor(trace.points.length / 160));
   const points = trace.points.filter((_, index) => index % step === 0 || index === trace.points.length - 1)
     .map(point => `${(point.t / trace.duration_s * width).toFixed(1)},${(height - point.intensity * height).toFixed(1)}`).join(' ');
-  return <svg className="visuals-spark" viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none" role="img" aria-label={label}>
-    <polygon className="visuals-spark__area" points={`0,${height} ${points} ${width},${height}`} />
-    <polyline className="visuals-spark__line" points={points} />
-    {position !== undefined && <line className="visuals-spark__head" x1={position / trace.duration_s * width} x2={position / trace.duration_s * width} y1="0" y2={height} />}
-  </svg>;
+  const fill = `visuals-spark-fill-${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`;
+  return <>
+    <div className="visuals-spark__plot">
+      <svg className="visuals-spark" viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none" role="img" aria-label={label}>
+        <defs><linearGradient id={fill} x1="0" y1="0" x2="0" y2="1">
+          <stop className="visuals-spark__stop-top" offset="0" /><stop className="visuals-spark__stop-low" offset="1" />
+        </linearGradient></defs>
+        {[0.25, 0.5, 0.75].map(level => <line key={level} className="visuals-spark__grid" x1="0" x2={width} y1={height * level} y2={height * level} />)}
+        <line className="visuals-spark__grid visuals-spark__grid--top" x1="0" x2={width} y1="0.5" y2="0.5" />
+        <polygon className="visuals-spark__area" fill={`url(#${fill})`} points={`0,${height} ${points} ${width},${height}`} />
+        <polyline className="visuals-spark__line" points={points} />
+        {position !== undefined && <line className="visuals-spark__head" x1={position / trace.duration_s * width} x2={position / trace.duration_s * width} y1="0" y2={height} />}
+      </svg>
+      <i className="visuals-spark__y" aria-hidden="true">full blaze</i>
+      {trace.peak.intensity > 0 && <i className="visuals-spark__peak" aria-hidden="true" data-side={trace.peak.t > trace.duration_s * .6 ? 'start' : 'end'} data-high={trace.peak.intensity > .85 || undefined}
+        style={{ '--x': `${(trace.peak.t / trace.duration_s * 100).toFixed(2)}%`, '--y': `${((1 - trace.peak.intensity) * 100).toFixed(2)}%` } as CSSProperties}>
+        <b>peak {Math.round(trace.peak.intensity * 100)}%</b></i>}
+    </div>
+    <span className="visuals-spark__x" aria-hidden="true">
+      <i>{clockLabel(0)}</i><i>{clockLabel(trace.duration_s / 2)}</i><i>{clockLabel(trace.duration_s)}</i>
+    </span>
+  </>;
 }
 
 /** The chamber's one picture: the selected beacon as a viewer would see it on stream, live with any draft. */
@@ -116,7 +133,7 @@ export function BeaconStage({ view, burst, actions, notice, reading, eyebrow, co
     ? narrate({ name: item.visual.name.toLowerCase(), offerings: night.offerings, counted, trace: spark, curve, position: at })
     : view.before !== undefined ? `${view.shot}: ${Math.round(view.before * 100)}% → ${percent}% once you hold to fire.`
     : undefined;
-  const picture = <figure className="visuals-monitor" style={style} data-intensity={intensity.toFixed(3)} data-pinned={pinned}>
+  const picture = <figure className="visuals-monitor" style={style} data-intensity={intensity.toFixed(3)} data-pinned={pinned} data-lit={intensity > 0}>
       <div className="visuals-monitor__screen">
         <ScreenArt look={look} flare={flare} />
         {ticks.length > 0 && night && <ol className="visuals-monitor__ticker" aria-label="Latest simulated offerings">
@@ -136,8 +153,8 @@ export function BeaconStage({ view, burst, actions, notice, reading, eyebrow, co
       <p className="visuals-stage__eyebrow">{look.label}{eyebrow && view.mode === 'rest' && <b> · {eyebrow}</b>}{view.mode !== 'rest' && <b> · {view.flow === 'visuals-demo' ? 'demo' : 'draft'}</b>}</p>
       <p>{sampleNight(view.spark).name} · {nightPhrase(spark)}</p>
       <p className="visuals-stage__tags">
-        <span className="cc-stamp cc-stamp--waiting visuals-tag--ch">{item.visual.input ? source_labels[item.visual.input.source] : 'Not routed'}</span>
-        <span className="cc-stamp cc-stamp--waiting">{decayLabel(curve.decay)}</span>
+        <span className="visuals-tag visuals-tag--ch">{item.visual.input ? source_labels[item.visual.input.source] : 'Not routed'}</span>
+        <span className="visuals-tag">{decayLabel(curve.decay)}</span>
       </p>
       {line && <p className="visuals-stage__line" data-testid="stage-line">{line}</p>}
       {notice && <p className="visuals-stage__notice" role="status" aria-live="polite">{notice}</p>}
@@ -150,8 +167,16 @@ export function BeaconStage({ view, burst, actions, notice, reading, eyebrow, co
       <p className="visuals-stage__total">{reading !== undefined && view.mode !== 'night' ? reading
         : `${now.total.toFixed(1)} weighted subs${at !== undefined ? ` · ${clockLabel(at)} of 48:00` : ''}`}</p>
       <div className="visuals-stage__spark">
+        {/* The chart is the sample night, not the live figure above it: say so on the block itself. */}
+        <p className="visuals-stage__spark-label">{sampleNight(view.spark).name} · simulated</p>
         <Spark trace={spark} position={at} label={`${item.visual.name} across the ${sampleNight(view.spark).name.toLowerCase()} · ${nightPhrase(spark)} · simulated`} />
       </div>
+      {/* Tall rooms only (CSS): the same sample night in three figures, labelled simulated. */}
+      <div className="visuals-stage__stats"><dl aria-label={`${sampleNight(view.spark).name} · simulated`}>
+        <div><dt>Peak</dt><dd>{Math.round(spark.peak.intensity * 100)}%<small> at {clockLabel(spark.peak.t)}</small></dd></div>
+        <div><dt>Lit</dt><dd>{Math.round(spark.lit_s / 60)}<small> min</small></dd></div>
+        <div><dt>Offerings</dt><dd>{sampleNight(view.spark).offerings.length}<small> fictional</small></dd></div>
+      </dl></div>
       {!compose && details}
       {actions && <div className="visuals-stage__actions">{actions}</div>}
     </div>;

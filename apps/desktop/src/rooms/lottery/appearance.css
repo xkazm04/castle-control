@@ -1,8 +1,8 @@
 .lottery-settings { border: 0; padding: 0; margin: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-12); min-width: 0; }
 /* Room audit owns rule-thin fields; the kit still owns labels and field chrome. */
 .lottery-room .lottery-settings .cc-field[data-field] input,
-.lottery-room .lottery-settings .cc-field[data-field] select { appearance: none; border: var(--rule-thin) solid var(--ink); }
-.lottery-room .lottery-settings .cc-field[data-field] input[type="checkbox"] { appearance: auto; width: var(--space-20); height: var(--space-20); padding: 0; accent-color: var(--gules); }
+.lottery-room .lottery-settings .cc-field[data-field] select { appearance: none; border: var(--came-hair) solid var(--hair); }
+.lottery-room .lottery-settings .cc-field[data-field] input[type="checkbox"] { appearance: auto; width: var(--space-20); height: var(--space-20); padding: 0; accent-color: var(--ch, var(--gules)); }
 .lottery-settings :disabled { cursor: default; }
 .lottery-shape-preview { --urn-colour: var(--gules); position: relative; margin: var(--space-12) 0; height: calc(var(--space-56) * 4); border: var(--rule-thin) dashed var(--urn-colour); background: color-mix(in srgb, var(--urn-colour) 12%, var(--paper)); overflow: hidden; }
 .lottery-shape-preview[data-colour="azure"] { --urn-colour: var(--azure); }
@@ -19,11 +19,6 @@
 .lottery-preview-object .lottery-preview-style { position: absolute; left: var(--space-4); bottom: var(--space-4); width: 30%; height: 38%; object-fit: contain; display: block; border: var(--rule-thin) solid var(--urn-colour); border-radius: var(--r-sm); background: var(--paper); }
 .lottery-preview-object svg.lottery-preview-style { fill: var(--urn-colour); stroke: var(--ink); stroke-width: var(--rule-strong); }
 .lottery-shape-preview figcaption { position: absolute; bottom: 0; inset-inline: 0; padding: var(--space-4); font: var(--text-shell-label)/1.3 var(--font-ui); background: var(--paper); color: var(--ink); }
-.lottery-current-winners.reveal { position: relative; padding: var(--space-12) var(--space-14); background: var(--reveal-scrim); }
-.lottery-reveal-seal { display: flex; justify-content: flex-end; margin-bottom: var(--space-8); }
-.lottery-room .lottery-reveal-seal .cc-stamp-bleed { --stamp-ink: var(--or); inset: auto; right: calc(-1 * var(--space-10)); bottom: calc(-1 * var(--space-10)); width: calc(var(--space-56) * 2 + var(--space-28)); height: calc(var(--space-40) * 2); }
-.lottery-current-winners .cc-window-cell { display: flex; justify-content: center; align-items: center; }
-.lottery-current-winners .cc-window-row { border: 0; }
 .lottery-room .ticket { --cc-entrance-start: .15s; --cc-entrance-step: var(--motion-shell); --m-print: var(--draw-reveal); margin: 0; padding: var(--space-6) var(--space-14); border: var(--rule-strong) solid var(--ink); background: var(--ticket-paper); box-shadow: var(--space-3) var(--space-3) 0 var(--gules); font: 700 var(--text-shell-ticket)/1 var(--font-num); }
 @keyframes lottery-preview-reveal { from { opacity: 0; } to { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) {

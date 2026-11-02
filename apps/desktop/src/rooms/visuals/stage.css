@@ -36,7 +36,7 @@
 .visuals-stage__read { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
 .visuals-stage__eyebrow { margin: 0; font: 800 var(--text-t-label)/1.2 var(--font-label); letter-spacing: var(--track-wide); text-transform: lowercase; color: var(--ink-2); }
 .visuals-stage__eyebrow b { color: var(--ch-ink); }
-.visuals-stage__name { margin: 0; font: 600 var(--text-t-h2)/1 var(--font-display); color: var(--ink); }
+.visuals-stage__name { margin: 0; font: 700 var(--text-t-h4)/1.15 var(--font-text); color: var(--ink); }
 .visuals-stage__blaze { margin: 2px 0 0; display: flex; align-items: baseline; gap: 10px; }
 .visuals-stage__blaze b { font: 600 var(--text-t-figure-lg)/.85 var(--font-display); font-variant-numeric: var(--num); color: var(--ch-ink);
   text-shadow: 0 0 calc(var(--glow-on) * 18px) var(--ch-glow); }
@@ -44,15 +44,13 @@
 .visuals-stage__blaze b s { margin-right: 10px; font-size: .5em; color: var(--muted); text-shadow: none; }
 .visuals-stage__blaze span { font: italic 400 var(--text-t-small)/1.1 var(--font-book); color: var(--ink-2); }
 .visuals-stage__meter > i { transition: width var(--m-light) var(--ease); }
-.visuals-stage__total { margin: 0; font: 500 var(--text-t-label)/1.3 var(--font-mono); color: var(--ink-2); }
+.visuals-stage__total { margin: 0; font: 500 var(--text-t-small)/1.45 var(--font-text); font-variant-numeric: var(--num); color: var(--ink-2); }
 .visuals-stage__spark { display: grid; gap: 3px; }
-.visuals-stage__spark span { font: italic 400 var(--text-t-label)/1.3 var(--font-book); color: var(--muted); }
 .visuals-spark { display: block; width: 100%; height: 48px; background: var(--vellum); box-shadow: inset 0 0 0 1px var(--hair); }
-.visuals-spark__area { fill: var(--ch-wash); }
+
 .visuals-spark__line { fill: none; stroke: var(--ch-ink); stroke-width: 1.6; vector-effect: non-scaling-stroke; }
 .visuals-spark__head { stroke: var(--gules); stroke-width: 2; vector-effect: non-scaling-stroke; }
 .visuals-stage__tags { margin: 0; display: flex; flex-wrap: wrap; gap: 6px; }
-.visuals-tag--ch { color: var(--ch-ink); box-shadow: inset 0 0 0 1.5px var(--ch); }
 .visuals-stage__line { margin: 0; padding: 8px 10px; font: italic 400 var(--text-t-small)/1.4 var(--font-book); color: var(--ink);
   background: var(--vellum); border-left: 3px solid var(--ch); }
 .visuals-stage__notice { margin: 0; font: 400 var(--text-t-label)/1.35 var(--font-text); color: var(--muted); }
@@ -73,3 +71,49 @@
 .desktop-shell:has(.cc-steward-dock[data-expanded="true"]) :is(.visuals-stage__tags, .visuals-stage__actions, .visuals-stage__notice, .visuals-stage__spark > span) { display: none; }
 .desktop-shell:has(.cc-steward-dock[data-expanded="true"]) .visuals-spark { height: 34px; }
 .desktop-shell:has(.visuals-narration) .visuals-stage__line { display: none; }
+
+/* A lit beacon reads on the picture. From the first counted offering the look glows (a floor of .35, rising with the
+   blaze), sparks lift off an altar, and the rest of the scene dims a little so the eye goes to the beacon. */
+.visuals-monitor { --glow: 0; }
+.visuals-monitor[data-lit="true"] { --glow: calc(.35 + var(--blaze) * .65); }
+.visuals-monitor[data-lit="true"] .visuals-monitor__halo { opacity: var(--glow); }
+.visuals-monitor[data-lit="true"] .visuals-monitor__object img {
+  filter: brightness(calc(.8 + var(--blaze) * .45)) saturate(calc(.8 + var(--blaze) * .5))
+    drop-shadow(0 0 calc(var(--space-10) + var(--glow) * var(--space-24)) var(--or-glow));
+}
+.visuals-monitor[data-lit="true"] .visuals-monitor__cam::before { opacity: var(--glow); }
+.visuals-monitor[data-lit="true"] .visuals-monitor__frame { filter: brightness(calc(.8 + var(--blaze) * .4)) drop-shadow(0 0 calc(var(--glow) * var(--space-24)) var(--or-glow)); }
+.visuals-monitor :is(.visuals-monitor__object, .visuals-monitor__cam) { z-index: 1; }
+.visuals-monitor__screen::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none; opacity: 0;
+  transition: opacity var(--m-calm) var(--ease);
+}
+.visuals-monitor[data-lit="true"] .visuals-monitor__screen::after { opacity: calc(var(--glow) * .9); }
+.visuals-stage[data-kind="object"] .visuals-monitor__screen::after {
+  background: radial-gradient(ellipse 34% 52% at 17% 70%, transparent 0 40%, color-mix(in srgb, var(--art-shade) 62%, transparent) 100%);
+}
+.visuals-stage[data-kind="frame"] .visuals-monitor__screen::after {
+  background: radial-gradient(ellipse 34% 42% at 74% 70%, transparent 0 45%, color-mix(in srgb, var(--art-shade) 55%, transparent) 100%);
+}
+.visuals-stage[data-kind="border"] .visuals-monitor__screen::after {
+  background: radial-gradient(ellipse 70% 70% at 50% 50%, transparent 0 55%, color-mix(in srgb, var(--or-glow) 40%, transparent) 100%);
+}
+/* Sparks: warm specks rising off the altar; still (but visible) under reduced motion. */
+.visuals-monitor[data-lit="true"] .visuals-monitor__object::after {
+  content: ""; position: absolute; left: 10%; right: 10%; bottom: 40%; height: 70%; pointer-events: none;
+  opacity: var(--glow); mix-blend-mode: screen;
+  background:
+    radial-gradient(circle at 20% 80%, var(--or-lit) 0 1.5%, transparent 2.5%),
+    radial-gradient(circle at 55% 60%, var(--gilt-hi) 0 1.2%, transparent 2.2%),
+    radial-gradient(circle at 75% 85%, var(--or) 0 1.5%, transparent 2.6%),
+    radial-gradient(circle at 38% 35%, var(--or-lit) 0 1%, transparent 2%),
+    radial-gradient(circle at 65% 20%, var(--gilt-hi) 0 1%, transparent 2%);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .visuals-monitor[data-lit="true"] .visuals-monitor__object::after { animation: visuals-sparks 2.4s linear infinite; }
+}
+@keyframes visuals-sparks {
+  from { transform: translateY(20%); opacity: 0; }
+  20% { opacity: var(--glow); }
+  to { transform: translateY(-25%); opacity: 0; }
+}

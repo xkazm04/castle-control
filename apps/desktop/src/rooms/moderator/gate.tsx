@@ -10,6 +10,7 @@ import { GateArt } from './gate-art.jsx';
 import { demoBurst, demoHeldText, demoHoldReason } from './demo-model.js';
 import { proposeCommand } from './session.js';
 import { RoomKeyBadge } from '../../shell/steward-keys.jsx';
+import { ClockTime } from './presentation.jsx';
 
 /** What the Play demo draws at the gate; a picture of the draft, never the fixture state. */
 export type GateDemo = { stage: string; choice?: 'pass' | 'bar' | undefined };
@@ -44,6 +45,31 @@ function DemoHeld({ choice, resolved = false }: { choice: 'pass' | 'bar' | undef
     <p className="gh-held__hint">{resolved ? (choice === 'pass' ? 'You sealed Pass: this line reached the sample chat.' : 'You sealed Bar: this line never reached the sample chat.')
       : choice ? 'Hold to seal in the Steward to decide it.' : 'Answer in the Steward below: pass or bar.'}</p>
   </article>;
+}
+
+/** A read-only tally of the replayed sample: how chat went through the gate. Never an action. */
+export function GateTally({ verdicts, label = 'Through the gate · simulated sample' }: { verdicts: readonly string[]; label?: string }) {
+  const parts = ([['pass', 'passed'], ['hold', 'held'], ['bar', 'barred']] as const)
+    .map(([verdict, word]) => ({ verdict, word, count: verdicts.filter(item => item === verdict).length }));
+  const total = verdicts.length || 1;
+  return <figure className="gh-tally" aria-label={`${label}: ${parts.map(item => `${item.count} ${item.word}`).join(', ')}`}>
+    <figcaption>{label}</figcaption>
+    <span className="gh-tally__bar" aria-hidden="true">{parts.map(item => item.count > 0 && <i key={item.verdict} data-verdict={item.verdict}
+      style={{ flexGrow: item.count / total }} />)}</span>
+    <span className="gh-tally__legend">{parts.map(item => <span key={item.verdict} data-verdict={item.verdict}><b>{item.count}</b> {item.word}</span>)}</span>
+  </figure>;
+}
+
+/** The newest replayed lines and what the gate did with each: read-only, simulated sample text only. */
+export function GateRecent({ items, label = 'Recent at the gate · simulated sample' }: { items: readonly Pick<Decision, 'decision_id' | 'verdict' | 'message_text' | 'at'>[]; label?: string }) {
+  const word = { pass: copy.pass, hold: copy.hold, bar: copy.bar } as const;
+  return <section className="gh-recent" aria-label={label}>
+    <p className="gh-recent__head">{label}</p>
+    <ol className="gh-recent__list">{items.map(item => <li key={item.decision_id} data-verdict={item.verdict}>
+      <span className="gh-recent__verdict">{word[item.verdict as keyof typeof word] ?? item.verdict}</span>
+      <span className="gh-recent__text">{item.message_text ?? copy.text_unavailable}</span>
+      <ClockTime at={item.at} /></li>)}</ol>
+  </section>;
 }
 
 /** The hero: the portcullis and one held message at a time, with Propose pass / Propose bar. */

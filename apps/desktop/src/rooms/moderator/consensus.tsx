@@ -51,27 +51,33 @@ export function Consensus({ results, selected: chosen, on_select, caption, compa
   const duration = first && last ? (Date.parse(last.at) - Date.parse(first.at)) / 60000 : 0;
   const end = copy.consensus_minute(duration);
   const top = Math.max(0.5, Math.ceil(Math.max(0, ...directions.flatMap(item => item.series.map(point => point.share))) * 10) / 10);
-  const left = compact ? 8 : 60, right = compact ? 348 : 640, bottom = compact ? 78 : 236;
+  const left = compact ? 8 : 60, right = compact ? 352 : 640, bottom = compact ? 132 : 236;
   const x = (at: string) => left + (first ? (Date.parse(at) - Date.parse(first.at)) / 60000 : 0) / (duration || 1) * (right - left);
-  const y = (share: number) => bottom - share / top * (compact ? 70 : 220);
+  const y = (share: number) => bottom - share / top * (compact ? 122 : 220);
   const line = (index: number) => (directions[index]?.series ?? []).map(point => `${x(point.at).toFixed(1)},${y(point.share).toFixed(1)}`);
-  const ticks = Array.from({ length: Math.round(top * 10) + 1 }, (_, index) => index / 10);
-  return <section className="moderator-consensus gh-herald-chart" aria-label={copy.consensus}>
-    <div className="gh-chartbar">{!compact && <p className="moderator-hint">{copy.consensus_hint}</p>}
-      <ConsensusFilters results={results} selected={selected} on_select={on_select ?? setOwn} compact={compact} /></div>
-    <svg className="gh-chart cc-folio-chart" viewBox={compact ? '0 0 360 86' : '0 0 700 262'} role="img" aria-label={copy.consensus_plot}>
-      {ticks.map(share => <g key={share}><path className="fc-rule" d={`M${left} ${y(share)}H${right}`} />
-        {!compact && <text className="fc-lab" x="52" y={y(share) + 4} textAnchor="end">{Math.round(share * 100)}%</text>}</g>)}
+  const ticks = compact ? [0, 0.25, 0.5, 0.75].filter(share => share <= top) : Array.from({ length: Math.round(top * 10) + 1 }, (_, index) => index / 10);
+  const plot = <svg className="gh-chart cc-folio-chart" viewBox={compact ? '0 0 360 140' : '0 0 700 262'} preserveAspectRatio={compact ? 'none' : undefined} role="img" aria-label={copy.consensus_plot}>
+      {!compact && ticks.map(share => <g key={share}><path className="fc-rule" d={`M${left} ${y(share)}H${right}`} />
+        <text className="fc-lab" x="52" y={y(share) + 4} textAnchor="end">{Math.round(share * 100)}%</text></g>)}
       {!compact && <><path className="fc-rule fc-rule--margin" d="M60 16V236" /><path className="fc-rule fc-rule--base" d="M60 236H640" />
       <text className="fc-labc" x="60" y="256">{start}</text><text className="fc-labc" x="640" y="256" textAnchor="end">{end}</text></>}
       {!compact && timeline.length > 4 && <><path className="fc-now" d={`M${x(timeline[timeline.length - 4]?.at ?? '')} 16V236`} />
         <text className="fc-lab" x={x(timeline[timeline.length - 4]?.at ?? '') + 4} y="28">last 3 min</text></>}
       {directions[0] && <polygon className="fc-area" points={[...line(0), `${x(last?.at ?? '')},${bottom}`, `${left},${bottom}`].join(' ')} />}
+      {compact && ticks.map(share => <path key={share} className="fc-rule gh-grid" d={`M${left} ${y(share)}H${right}`} />)}
       {directions.map((item, index) => <g key={item.key}><polyline className="fc-case" points={line(index).join(' ')} />
         <polyline className={`fc-line fc-s${index % 4}`} points={line(index).join(' ')}><title>{item.label}</title></polyline></g>).reverse()}
       {directions.map((item, index) => !compact && last && <g key={item.key}><circle className={`fc-end fc-e${index % 4}`} cx="640" cy={y(item.share)} r="9" />
         <text className="fc-num" x="640" y={y(item.share) + 4}>{roman[index] ?? ''}</text></g>)}
-    </svg>
+    </svg>;
+  return <section className="moderator-consensus gh-herald-chart" aria-label={copy.consensus}>
+    <div className="gh-chartbar">{!compact && <p className="moderator-hint">{copy.consensus_hint}</p>}
+      <ConsensusFilters results={results} selected={selected} on_select={on_select ?? setOwn} compact={compact} /></div>
+    {compact ? <div className="gh-chart-frame"><div className="gh-chart-plot">
+    {plot}
+      {ticks.map(share => <span key={share} className="gh-chart-tick" aria-hidden="true" style={{ top: `${(y(share) / 140 * 100).toFixed(2)}%` }}>{Math.round(share * 100)}%</span>)}</div>
+      {first && <span className="gh-chart-time" aria-hidden="true"><span>{Math.round(duration)} min ago</span><span>now</span></span>}</div>
+    : plot}
     {!compact && (first && last && directions[0] ? <p className="moderator-small moderator-reference">
       {copy.consensus_reference(start, end, directions[0].label, directions[0].share)}</p> : <EmptyState compact title={copy.consensus_empty} />)}
     {result ? <><ConsensusTiles result={result} compact={compact} />{!compact && <p className="cc-gloss-note">{copy.consensus_summary(result.shed_count)}{caption ? ` · ${caption}` : ''}</p>}</>

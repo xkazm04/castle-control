@@ -38,8 +38,8 @@ export function RoomDesignActions({ chamber, on_open }: {
     <p className="room-caption"><Stamp kind="simulated" word="SIMULATED · DATA-ONLY DESIGNS" /></p>
     {roomArtifacts[chamber].map(artifact => <div key={artifact} role="group" aria-label={`${roomArtifactLabels[artifact]} design`}>
       <strong>{roomArtifactLabels[artifact]}</strong>
-      <div><button type="button" onClick={() => on_open({ artifact, action: 'restyle' })}>Restyle</button>
-        <button type="button" onClick={() => on_open({ artifact, action: 'custom' })}>Custom design</button></div>
+      <div><button type="button" className="cc-btn cc-btn--sm" onClick={() => on_open({ artifact, action: 'restyle' })}>Restyle</button>
+        <button type="button" className="cc-btn cc-btn--sm" onClick={() => on_open({ artifact, action: 'custom' })}>Custom design</button></div>
     </div>)}
   </section>;
 }

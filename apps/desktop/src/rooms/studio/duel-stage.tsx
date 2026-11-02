@@ -9,7 +9,7 @@ import { BracketSummary } from './duel-bracket.jsx';
 import { bracketDrawer } from './bracket-drawer.js';
 import { DuelDrawer } from './duel-drawer.jsx';
 import type { DuelDetails } from './duel-drawer.jsx';
-import { DuelMini, DuelPictureView } from './duel-picture.jsx';
+import { DuelMini, DuelName, DuelPictureView } from './duel-picture.jsx';
 import { streamDuelFlow } from './steward-flows.js';
 import { phaseWord, roundName, secondsLeft, verdictLine } from './duel-model.js';
 import type { DuelEntrant, DuelPicture } from './duel-model.js';
@@ -20,11 +20,15 @@ function Contestant({ entrant, side, picture, action }: { entrant: DuelEntrant; 
   const verdict = picture.verdict;
   const crowned = picture.phase === 'done' && picture.champion ? picture.champion.id === entrant.id : undefined;
   const result = verdict ? verdict.side === side ? 'won' : 'lost' : crowned === undefined ? undefined : crowned ? 'won' : 'lost';
+  const total = picture.counts[0] + picture.counts[1];
+  const count = picture.counts[side];
   return <article className="duel-card" data-role="ty-card" data-side={side} data-result={result}
     aria-label={`${side === 0 ? 'Left' : 'Right'}: ${entrant.title}, seed ${entrant.seed}`}>
-    <span className="duel-card__seed" data-role="ty-card-tag">{side === 0 ? 'Type 1' : 'Type 2'} · seed {entrant.seed}</span>
     <span className="duel-card__arms"><Shield item={{ id: entrant.id, title: entrant.title, by: entrant.by ?? 'streamer' }} words={tiltyardWords} /></span>
-    <b className="duel-card__title" data-role="ty-card-title">{entrant.title}</b>
+    <b className="duel-card__title" title={entrant.title} data-role="ty-card-title"><DuelName title={entrant.title} /></b>
+    <span className="duel-card__seed" data-role="ty-card-tag">{side === 0 ? 'Type 1' : 'Type 2'} · seed {entrant.seed}</span>
+    <span className="duel-card__count"><b data-side={side} data-role={side === 0 ? 'ty-count-left' : 'ty-count-right'}>{count}</b>
+      <small>{total ? `${Math.round(count / total * 100)}%` : 'no ballots'}</small></span>
     {result === 'won' && <span className="cc-stamp cc-stamp--inked cc-stamp--ok duel-card__stamp" data-role="ty-stamp">
       {crowned ? 'Champion' : verdict?.how === 'call' ? 'Your call' : verdict?.how === 'tie' ? 'Seed wins' : 'Chat chose'}</span>}
     {action && <div className="duel-card__act">{action}</div>}
@@ -36,16 +40,66 @@ function Tally({ picture }: { picture: DuelPicture }) {
   const total = left + right;
   const share = total ? left / total : 0.5;
   return <div className="duel-tally" data-role="ty-tug" aria-label="Counted ballots">
-    <b className="duel-tally__count" data-side="0" data-role="ty-count-left">{left}</b>
     <div className="duel-tally__bar" data-role="ty-tug-bar" data-empty={total === 0 || undefined}>
       <span className="duel-tally__l" style={{ flexGrow: Math.max(share, 0.001) }} />
       <span className="duel-tally__r" style={{ flexGrow: Math.max(1 - share, 0.001) }} />
       <i className="duel-tally__mid" aria-hidden="true" />
     </div>
-    <b className="duel-tally__count" data-side="1" data-role="ty-count-right">{right}</b>
     <p className="duel-tally__legend">
       <span><b>{total}</b> counted · one per viewer</span>
     </p>
+  </div>;
+}
+
+type Upcoming = { label: string; a?: DuelEntrant | undefined; b?: DuelEntrant | undefined };
+/** The streamer's next step, in words, and the match that follows this one. */
+function nextStep(picture: DuelPicture): { lead: string; upcoming?: Upcoming } | null {
+  const total = (picture.rounds[0]?.length ?? 1) * 2;
+  const entrant = (id: string | null | undefined) => id ? picture.entrants[id] : undefined;
+  const same = picture.rounds[picture.round]?.[picture.index + 1];
+  const later = picture.rounds[picture.round + 1]?.[0];
+  const upcoming: Upcoming | undefined = same ? { label: `${roundName(total, picture.round)} ${picture.index + 2}`, a: entrant(same.a), b: entrant(same.b) }
+    : later ? { label: roundName(total, picture.round + 1), a: entrant(later.a), b: entrant(later.b) } : undefined;
+  const then = upcoming ? '' : ' · then the champion is crowned';
+  switch (picture.phase) {
+    case 'ready': return { lead: `Enter opens a ${Math.round(picture.window_ms / 1000)} s vote${then}`, ...(upcoming ? { upcoming } : {}) };
+    case 'live': return { lead: `The vote closes when the clock reaches 0${then}`, ...(upcoming ? { upcoming } : {}) };
+    case 'verdict': return { lead: upcoming ? 'Enter starts the next match' : 'Enter crowns the champion', ...(upcoming ? { upcoming } : {}) };
+    case 'called_off': return { lead: 'Enter resumes the vote where it stopped' };
+    case 'done': return { lead: 'Bracket complete · Enter runs it again' };
+    case 'empty': return null;
+  }
+}
+
+/** Once the bracket is complete, the director's card keeps the results of every match. */
+function Results({ picture }: { picture: DuelPicture }) {
+  const total = (picture.rounds[0]?.length ?? 1) * 2;
+  const name = (id: string | null) => id ? picture.entrants[id]?.title ?? id : 'to be decided';
+  const rows = picture.rounds.flatMap((slots, round) => slots.map((slot, index) => ({ slot, round, index })))
+    .filter(row => row.slot.winner !== null);
+  if (!rows.length) return null;
+  return <ol className="duel__results" aria-label="Results">
+    {rows.map(({ slot, round, index }) => <li key={`${round}-${index}`}>
+      <span>{roundName(total, round)}{slots(picture, round) > 1 ? ` ${index + 1}` : ''}</span>
+      <b><DuelName title={name(slot.winner)} /></b> over <DuelName title={name(slot.winner === slot.a ? slot.b : slot.a)} />
+    </li>)}
+  </ol>;
+}
+const slots = (picture: DuelPicture, round: number) => picture.rounds[round]?.length ?? 0;
+
+function UpNext({ picture }: { picture: DuelPicture }) {
+  const step = nextStep(picture);
+  if (!step) return null;
+  const crest = (entrant: DuelEntrant | undefined, fallback: string) => <span className="duel__up-side">
+    {entrant && <span className="duel__up-crest" aria-hidden="true"><Shield item={{ id: entrant.id, title: entrant.title, by: entrant.by ?? 'streamer' }} words={tiltyardWords} /></span>}
+    <b title={entrant?.title ?? fallback}>{entrant ? <DuelName title={entrant.title} /> : fallback}</b></span>;
+  return <div className="duel__next">
+    {picture.phase === 'done' && <Results picture={picture} />}
+    {step.upcoming && <div className="duel__up">
+      <span className="duel__up-label">Up next · {step.upcoming.label}</span>
+      {crest(step.upcoming.a, 'To be decided')}<i aria-hidden="true">vs</i>{crest(step.upcoming.b, 'To be decided')}
+    </div>}
+    <p className="duel__next-lead">{step.lead}</p>
   </div>;
 }
 
@@ -112,7 +166,7 @@ export function DuelStage({ picture, program = picture, details, on_event, froze
   const actions = actionsFor(picture);
   const button = (action: Action) => <button key={action.id} type="button" data-action={action.id}
     className={`cc-btn duel-act duel-act--${action.tone ?? 'quiet'}${action.tone === 'primary' ? ' cc-btn--primary' : ''}`}
-    disabled={frozen || draft || action.disabled} onClick={() => { if (action.event) send(action.event); }}>
+    title={action.label} disabled={frozen || draft || action.disabled} onClick={() => { if (action.event) send(action.event); }}>
     <span>{action.label}</span>{action.event?.kind === 'enter' && <RoomKeyBadge room="studio" action="enter" />}
   </button>;
   const call = (side: 'left' | 'right') => actions.find(action => action.id === side);
@@ -146,7 +200,7 @@ export function DuelStage({ picture, program = picture, details, on_event, froze
       caption={draft ? 'Draft · not on air' : picture.simulated ? 'As it is on air · SIMULATED' : 'As it is on air · core tournament'}
       preview={draft ? <DuelMini picture={picture} /> : <p className="duel-mini">Nothing in Preview. Ask the Steward to draft a duel.</p>}
       program={<><DuelMini picture={program} />{program.source === 'core' && notice}</>}
-      program_title={program.simulated ? 'Program · SIMULATED' : 'Program · core tournament'}
+      program_title={program.simulated ? 'Program · SIMULATED' : 'Program · core'}
       columns={[
       <ChamberSection key="duel" title="The duel" aside={<div className="duel__marks">
         {draft && <span className="cc-stamp cc-stamp--draft" data-role="ty-draft">Draft · not started</span>}
@@ -154,29 +208,33 @@ export function DuelStage({ picture, program = picture, details, on_event, froze
         {picture.simulated && <span className="cc-sim" data-role="ty-simulated">Simulated</span>}
       </div>}>
       <div className="duel__heading">
-        <p className="cc-rubric duel__rubric" data-role="ty-round">{picture.phase === 'empty' ? 'The duel' : roundName(size, picture.round)}</p>
+        <div className="duel__state">
+          <p className="cc-rubric duel__rubric" data-role="ty-round">{picture.phase === 'empty' ? 'The duel' : roundName(size, picture.round)}</p>
+          {picture.phase !== 'empty' && <>
+            <span className="duel__match" data-role="ty-match-label">Match {picture.match} of {picture.matches}{draft
+              ? ` · ${picture.window_ms / 1000} s to vote` : ''}</span>
+            <span className="duel__phase" data-role="ty-phase" data-phase={picture.phase}>{phaseWord(picture)}{picture.speed === 3 ? ' · ×3' : ''}</span>
+          </>}
+        </div>
+        {picture.phase === 'empty' ? null : picture.phase === 'done' || picture.phase === 'verdict'
+          ? <span className="duel__crown" data-phase={picture.phase} aria-hidden="true" />
+          : <span className="duel__clock" data-role="ty-secs" data-phase={picture.phase}
+            aria-label={`${seconds} seconds left`}>{seconds}</span>}
         <h2 className="duel__title">{picture.prompt ?? picture.title}</h2>
       </div>
     {picture.phase === 'empty' ? <div className="duel__empty">{empty}</div> : <>
       <div className="duel__field" data-role="ty-arena" data-live={picture.phase === 'live' ? '1' : '0'}
         data-verdict={picture.verdict?.side ?? -1}>
         {picture.left && <Contestant entrant={picture.left} side={0} picture={picture} action={call('left') && button(call('left')!)} />}
-        <div className="duel__centre">
-          <span className="duel__match" data-role="ty-match-label">Match {picture.match} of {picture.matches}{draft
-            ? ` · ${picture.window_ms / 1000} s to vote` : ''}</span>
-          {picture.phase === 'done' || picture.phase === 'verdict' ? <span className="duel__crown" data-phase={picture.phase} aria-hidden="true" />
-            : <span className="duel__clock" data-role="ty-secs" data-phase={picture.phase}
-              aria-label={`${seconds} seconds left`}>{seconds}</span>}
-          <span className="duel__phase" data-role="ty-phase">{phaseWord(picture)}{picture.speed === 3 ? ' · ×3' : ''}</span>
-          {verdict && <p className="duel__verdict" role="status" data-role="ty-verdict" data-side={picture.verdict?.side === 0 ? 'left' : 'right'}
-            data-how={picture.verdict?.how}>{verdict}</p>}
-          {picture.phase === 'done' && picture.champion && <p className="duel__verdict" role="status" data-role="ty-champion">
-            Champion: {picture.champion.title}</p>}
-          <div className="duel__actions" role="group" aria-label="Streamer actions">{centre.map(button)}</div>
-        </div>
         {picture.right && <Contestant entrant={picture.right} side={1} picture={picture} action={call('right') && button(call('right')!)} />}
       </div>
       {picture.left && picture.right && picture.phase !== 'done' && <Tally picture={picture} />}
+      {verdict && <p className="duel__verdict" role="status" data-role="ty-verdict" data-side={picture.verdict?.side === 0 ? 'left' : 'right'}
+        data-how={picture.verdict?.how}>{verdict}</p>}
+      {picture.phase === 'done' && picture.champion && <p className="duel__verdict" role="status" data-role="ty-champion">
+        Champion: {picture.champion.title}</p>}
+      <div className="duel__actions" role="group" aria-label="Streamer actions">{centre.map(button)}</div>
+      <UpNext picture={picture} />
     </>}
     </ChamberSection>,
     <div key="tools" className="duel__column">
@@ -187,7 +245,7 @@ export function DuelStage({ picture, program = picture, details, on_event, froze
       <ChamberSection title="Call the duel"><div className="duel__minor">
         <button type="button" className="cc-btn cc-btn--sm cc-btn--quiet" disabled={frozen || draft || !picture.can_undo}
           onClick={() => send({ kind: 'undo' })}><RoomKeyBadge room="studio" action="undo" />Undo last call</button>
-        <button type="button" className="cc-btn cc-btn--sm" aria-haspopup="dialog" onClick={() => setSheet(true)}><RoomKeyBadge room="studio" action="bracket" />More</button>
+        <button type="button" className="cc-btn cc-btn--sm" aria-haspopup="dialog" onClick={() => setSheet(true)}>More</button>
       </div>
       </ChamberSection>
     </div>,

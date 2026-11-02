@@ -42,24 +42,37 @@ export function selectPlate<T>(event: KeyboardEvent<HTMLButtonElement>, index: n
   event.currentTarget.parentElement?.querySelectorAll<HTMLButtonElement>('[role="radio"]')[next]?.focus();
 }
 
-export function BeaconPlates<T extends PlateVisual>({ visuals, selected, on_select, draft, core = false, busy = false, compact = false }: {
+export function BeaconPlates<T extends PlateVisual>({ visuals, selected, on_select, draft, core = false, busy = false, compact = false, after }: {
   visuals: readonly T[]; selected: string; on_select: (item: T) => void;
   draft?: ReactNode; core?: boolean; busy?: boolean; compact?: boolean;
+  /** Compact only: shown under the cards (core with fewer than three beacons). */
+  after?: ReactNode;
 }) {
-  if (compact) return <div className="visuals-plates--compact visuals-beacon-list" role="radiogroup" aria-label={copy.visuals}>
+  // Cards are sized for at least three, so one or two beacons stay card-sized instead of stretching.
+  if (compact) {
+    const list = <div className="visuals-plates--compact visuals-beacon-list" role="radiogroup" aria-label={copy.visuals}
+    style={{ '--count': Math.max(3, visuals.length) } as CSSProperties}>
     {visuals.map((item, index) => {
       const chosen = item.visual.visual_id === selected;
-      const percent = item.intensity === undefined ? 'n/a' : `${Math.round(item.intensity * 100)}%`;
+      const percent = item.intensity === undefined ? '' : `${Math.round(item.intensity * 100)}%`;
       return <button type="button" role="radio" key={item.visual.visual_id} className="visuals-beacon"
         aria-checked={chosen} tabIndex={chosen ? 0 : -1} disabled={busy}
+        style={{ '--blaze': (item.intensity ?? 0).toFixed(3) } as CSSProperties}
         aria-label={`${item.visual.name}, ${item.intensity === undefined ? copy.live_unavailable : `${percent} ${copy.blaze}`}`}
         onClick={() => on_select(item)} onKeyDown={event => selectPlate(event, index, visuals, on_select)}>
-        <span className="visuals-beacon-name"><RoomKeyBadge room="visuals" action={`beacon_${index}`} />{item.visual.name}</span>
-        <span className="visuals-beacon-blaze">{percent}</span>
+        {/* A small screen of the look; decorative here, the full plate lives in the drawer. */}
+        <i className="visuals-beacon-art" aria-hidden="true">
+          <BeaconThumb visual={item.visual} intensity={item.intensity ?? 0} label={item.visual.name} />
+          <RoomKeyBadge room="visuals" action={`beacon_${index}`} />
+        </i>
+        <span className="visuals-beacon-name">{item.visual.name}</span>
+        <span className="visuals-beacon-blaze" data-unknown={item.intensity === undefined || undefined}>{percent}</span>
         <span className="visuals-beacon-state">{chosen ? 'In the picture' : 'Show in the picture'}</span>
       </button>;
     })}
   </div>;
+    return after ? <div className="visuals-beacon-stack">{list}{after}</div> : list;
+  }
   return <div className="visuals-plates" role="radiogroup" aria-label={copy.visuals}>
     {visuals.map((item, index) => {
       const chosen = item.visual.visual_id === selected;

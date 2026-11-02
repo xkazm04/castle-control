@@ -1,4 +1,6 @@
-/* The Deck: bounded picture, a reading card, and compact beacon choices. */
+/* The Deck: bounded picture, a reading card, and compact beacon choices.
+   Type roles: the blaze figure is the one display-face hero figure; names, totals and controls are
+   --font-text; the tag is --font-label; mono only on key caps. */
 .visuals-deck { display: flex; flex-direction: column; font-size: var(--text-px-15); line-height: 1.45; }
 .visuals-deck .visuals-stage--picture { display: block; min-width: 0; min-height: 0; }
 .visuals-deck .visuals-stage--picture .visuals-monitor {
@@ -11,81 +13,331 @@
 .visuals-deck .visuals-monitor :is(.visuals-monitor__sim, .visuals-monitor__stamp, .visuals-monitor__ticker li, .visuals-monitor__pin) {
   font-size: var(--text-px-15);
 }
+
+/* Both section columns run the full room height so the frame never ends half way. */
+.visuals-deck .cc-chamber-grid > .cc-chamber-column { align-self: stretch; align-content: stretch; }
+.visuals-deck .cc-chamber-column > .cc-chamber-section { display: flex; flex-direction: column; gap: var(--space-10); min-height: 0; }
+
+/* The selected beacon: name, hero blaze, meter, total, the night curve, weighting and actions. */
 .visuals-deck .visuals-stage__read { gap: var(--space-8); }
-.visuals-deck .visuals-stage__name { font: 600 var(--text-px-22)/1.1 var(--font-book); }
-.visuals-deck .visuals-stage__blaze { margin: 0; white-space: nowrap; min-width: max-content; }
-.visuals-deck .visuals-stage__blaze b { font-size: var(--text-px-32); line-height: 1; }
-.visuals-deck .visuals-stage__blaze b small { font-size: var(--text-px-18); }
-.visuals-deck .visuals-stage__blaze b s { font-size: var(--text-px-18); }
-.visuals-deck .visuals-stage__blaze span { font-size: var(--text-px-15); line-height: 1.45; }
-.visuals-deck :is(.visuals-stage__eyebrow, .visuals-stage__total, .visuals-stage__spark span, .visuals-stage__notice) {
-  font-size: var(--text-px-15); line-height: 1.45;
+.visuals-room.visuals-deck .visuals-stage__read { flex: 1 1 auto; min-height: 0; }
+.visuals-room.visuals-deck .visuals-stage__name {
+  margin: 0; color: var(--ink); font: 700 var(--text-px-22)/1.15 var(--font-text); letter-spacing: 0;
 }
-.visuals-deck .visuals-stage__tags { gap: var(--space-4); }
-.visuals-deck .visuals-stage__tags .cc-stamp { font-size: var(--text-px-13); }
-.visuals-deck .visuals-spark { height: calc(var(--space-20) * 3 + var(--space-10)); background: var(--stone-2); }
-.visuals-deck .visuals-stage__line { padding: var(--space-4) var(--space-6); font-size: var(--text-px-15); line-height: 1.45; }
+.visuals-deck .visuals-stage__blaze { margin: 0; white-space: nowrap; min-width: max-content; gap: var(--space-8); }
+.visuals-deck .visuals-stage__blaze b { font-size: var(--text-t-figure); line-height: .9; }
+.visuals-deck .visuals-stage__blaze b small { font-size: .42em; }
+.visuals-deck .visuals-stage__blaze b s { font-size: .5em; }
+.visuals-room.visuals-deck .visuals-stage__blaze span { color: var(--muted); font: italic 400 var(--text-px-15)/1.45 var(--font-aside); }
+.visuals-deck .visuals-stage__meter.cc-meter {
+  height: var(--space-8); border-radius: var(--r-round); background: var(--surface-3);
+  box-shadow: inset 0 0 0 var(--came-hair) var(--hair);
+}
+.visuals-deck .visuals-stage__meter.cc-meter > i {
+  border-right: 0; border-radius: inherit; box-shadow: 0 0 calc(var(--glow-on) * var(--space-10)) var(--ch-glow);
+}
+.visuals-room.visuals-deck .visuals-stage__total {
+  margin: 0; color: var(--ink-2); font: 500 var(--text-px-15)/1.45 var(--font-text); font-variant-numeric: var(--num);
+}
+.visuals-deck :is(.visuals-stage__eyebrow, .visuals-stage__notice) { font-size: var(--text-px-15); line-height: 1.45; }
+
+/* The night curve: a readable chart that takes the column's spare height. */
+.visuals-room.visuals-deck .visuals-stage__spark {
+  display: grid; grid-template-rows: auto minmax(0, 1fr) auto; gap: var(--space-4);
+  flex: 1 1 auto; min-height: calc(var(--space-20) * 4 + var(--space-24));
+}
+.visuals-deck .visuals-spark__plot {
+  position: relative; display: block; min-height: 0; box-sizing: border-box;
+  border: var(--came-hair) solid var(--hair); border-radius: var(--r-md);
+  background: linear-gradient(180deg, var(--surface-2), var(--surface));
+}
+.desktop-shell .visuals-deck .visuals-spark, .visuals-deck .visuals-spark {
+  position: absolute; inset: 0; width: 100%; height: 100%; background: none; box-shadow: none; border-radius: inherit;
+}
+.visuals-deck .visuals-spark__grid { stroke: var(--hair-2); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.visuals-deck .visuals-spark__grid--top { stroke: var(--hair); stroke-dasharray: 3 4; }
+.visuals-deck .visuals-spark__stop-top { stop-color: var(--ch); stop-opacity: .5; }
+.visuals-deck .visuals-spark__stop-low { stop-color: var(--ch); stop-opacity: .04; }
+.visuals-deck .visuals-spark__line { stroke: var(--ch-ink); stroke-width: 2; stroke-linejoin: round; }
+.visuals-deck .visuals-spark__y {
+  position: absolute; top: var(--space-3); left: var(--space-6); color: var(--muted);
+  font: italic 400 var(--text-px-13)/1.2 var(--font-aside);
+}
+/* The night peak: a gilt dot on the curve with its figure, placed by the trace. */
+.visuals-deck .visuals-spark__peak {
+  position: absolute; left: var(--x); top: var(--y); width: var(--space-8); height: var(--space-8); margin: calc(var(--space-4) * -1);
+  border: var(--came) solid var(--surface); border-radius: 50%; background: var(--ch); font-style: normal;
+  box-shadow: 0 0 0 var(--came-hair) var(--ch-ink), 0 0 calc(var(--glow-on) * var(--space-8)) var(--ch-glow);
+}
+.visuals-deck .visuals-spark__peak b {
+  position: absolute; top: 50%; left: calc(100% + var(--space-6)); transform: translateY(-50%); white-space: nowrap;
+  padding: 0 var(--space-4); border-radius: var(--r-sm); background: color-mix(in srgb, var(--surface) 85%, transparent);
+  color: var(--ch-ink); font: 700 var(--text-px-13)/1.3 var(--font-text); font-variant-numeric: var(--num);
+}
+.visuals-deck .visuals-spark__peak[data-side="start"] b { left: auto; right: calc(100% + var(--space-6)); }
+.visuals-room.visuals-deck .visuals-stage__spark > .visuals-spark__x {
+  display: flex; justify-content: space-between; font-size: var(--text-px-13); line-height: 1.2;
+}
+.visuals-deck .visuals-spark__x i {
+  color: var(--muted); font: 500 var(--text-px-13)/1.2 var(--font-text); font-style: normal; font-variant-numeric: var(--num);
+}
+
+/* Gift-sub weighting: a bespoke slider (filled track, gilt thumb) in the room's control row. */
+.visuals-weight {
+  display: grid; grid-template-columns: auto auto minmax(0, 1fr) auto; align-items: center;
+  gap: var(--space-10); padding: var(--space-6) var(--space-12) var(--space-6) var(--space-8);
+  border: var(--came-hair) solid var(--hair); border-radius: var(--r-md);
+  background: var(--surface-2); color: var(--ink); font: 600 var(--text-px-15)/1.45 var(--font-text); white-space: nowrap;
+}
+.visuals-weight > .cc-control-key { order: -1; margin: 0; }
+.visuals-weight input[type="range"] {
+  -webkit-appearance: none; appearance: none; box-sizing: border-box;
+  width: 100%; min-width: 0; height: var(--space-24); margin: 0; background: transparent; cursor: pointer;
+}
+.visuals-weight input[type="range"]::-webkit-slider-runnable-track {
+  height: var(--space-6); border-radius: var(--r-round);
+  background: linear-gradient(90deg, var(--ch) 0 var(--fill, 0%), var(--surface-3) var(--fill, 0%) 100%);
+  box-shadow: inset 0 0 0 var(--came-hair) var(--hair);
+}
+.visuals-weight input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none; box-sizing: border-box;
+  width: var(--space-20); height: var(--space-20); margin-top: calc((var(--space-6) - var(--space-20)) / 2);
+  border: var(--came) solid var(--surface); border-radius: 50%; background: var(--gilt);
+  box-shadow: 0 0 0 var(--came-hair) var(--gilt-lo), 0 var(--space-1) var(--space-4) var(--shade),
+    0 0 calc(var(--glow-on) * var(--space-10)) var(--ch-glow);
+  transition: transform var(--m-quick) var(--ease);
+}
+.visuals-weight input[type="range"]::-moz-range-track { height: var(--space-6); border-radius: var(--r-round); background: var(--surface-3); }
+.visuals-weight input[type="range"]::-moz-range-progress { height: var(--space-6); border-radius: var(--r-round); background: var(--ch); }
+.visuals-weight input[type="range"]::-moz-range-thumb {
+  width: var(--space-16); height: var(--space-16); border: var(--came) solid var(--surface); border-radius: 50%; background: var(--gilt);
+}
+.visuals-weight:hover input[type="range"]:not(:disabled)::-webkit-slider-thumb { transform: scale(1.12); }
+.visuals-weight input[type="range"]:focus-visible { outline: none; }
+.visuals-weight input[type="range"]:focus-visible::-webkit-slider-thumb {
+  box-shadow: 0 0 0 var(--came) var(--focus-inner), 0 0 0 calc(var(--came) * 2) var(--focus);
+}
+.visuals-weight:has(input:focus-visible) { border-color: var(--ch); }
+.visuals-weight input[type="range"]:disabled { cursor: not-allowed; opacity: .55; }
+.visuals-weight output {
+  min-width: 3ch; text-align: right; color: var(--ch-ink);
+  font: 700 var(--text-px-18)/1 var(--font-text); font-variant-numeric: var(--num);
+}
+
+/* Buttons in the reading card and drawer: one quiet glass control. */
 .visuals-deck-actions { display: flex; flex-wrap: wrap; gap: var(--space-8); }
 .visuals-deck-actions .cc-btn, .visuals-drawer-trigger {
-  min-height: var(--space-28); padding: var(--space-4) var(--space-10);
-  border: var(--came-hair) solid var(--hair); border-radius: var(--r-md);
-  background: var(--stone-2); font: 600 var(--text-px-15)/1.45 var(--font-text);
+  display: inline-flex; align-items: center; justify-content: center; gap: var(--space-6);
+  min-height: var(--control-h-sm); padding: var(--space-4) var(--space-12);
+  border: var(--came-hair) solid var(--came-ui); border-radius: var(--r-md);
+  background: var(--surface-2); color: var(--ink);
+  font: 600 var(--text-px-15)/1.45 var(--font-text); letter-spacing: 0; text-transform: none;
+  transition: background var(--m-quick) var(--ease), border-color var(--m-quick) var(--ease);
 }
-.visuals-deck .visuals-primary-actions { flex-wrap: wrap; gap: var(--space-8); }
+.visuals-deck-actions .cc-btn:hover:not(:disabled), .visuals-drawer-trigger:hover {
+  border-color: var(--ch); background: color-mix(in srgb, var(--ch) 12%, var(--surface-2));
+}
+.visuals-deck-actions .cc-btn:focus-visible, .visuals-drawer-trigger:focus-visible { outline: var(--came) solid var(--focus); outline-offset: var(--space-2); }
+.visuals-deck-actions .cc-btn:disabled { color: var(--muted); cursor: not-allowed; opacity: .7; }
+.visuals-deck-actions .cc-control-key, .visuals-drawer-trigger .cc-control-key { margin: 0; }
+.visuals-deck .visuals-primary-actions { flex: none; flex-wrap: wrap; gap: var(--space-8); }
 .visuals-deck .visuals-primary-actions .cc-btn {
-  flex: 1 0 auto; padding: var(--space-8) var(--space-10); white-space: nowrap;
+  flex: 1 0 auto; min-height: var(--control-h); padding: var(--space-6) var(--space-12); white-space: nowrap;
   font: 600 var(--text-px-15)/1.45 var(--font-text); letter-spacing: 0;
 }
-.visuals-deck-tag { color: var(--ch-ink); font-size: var(--text-px-13); text-transform: uppercase; }
-.visuals-weight {
-  display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center;
-  gap: var(--space-8); padding: var(--space-8); border: var(--came-hair) solid var(--hair);
-  border-radius: var(--r-md); background: var(--stone-2); font-size: var(--text-px-15); line-height: 1.45; white-space: nowrap;
+.visuals-deck :is(.visuals-deck-actions, .visuals-weight) .cc-control-key > .cc-kbd.cc-key-badge,
+.visuals-deck .visuals-beacon .cc-control-key > .cc-kbd.cc-key-badge {
+  position: static; inset: auto; min-height: var(--space-20); min-width: var(--space-20); box-sizing: border-box;
+  padding: var(--space-2) var(--space-5); font-size: var(--text-px-13); line-height: 1; text-align: center;
 }
-.visuals-weight input { width: 100%; min-width: 0; accent-color: var(--ch); }
-.visuals-weight output { min-width: 2ch; color: var(--ch-ink); font: 600 var(--text-px-18)/1 var(--font-mono); }
+.visuals-deck-tag {
+  display: inline-flex; align-items: center; gap: var(--space-6); color: var(--ch-ink);
+  font: 600 var(--text-px-13)/1.2 var(--font-label); letter-spacing: var(--track-tab); text-transform: none;
+}
+.visuals-deck-tag::before {
+  content: ""; width: var(--space-6); height: var(--space-6); border-radius: 50%; background: var(--ch);
+  box-shadow: 0 0 calc(var(--glow-on) * var(--space-6)) var(--ch-glow);
+}
+
 .visuals-deck .cc-chamber-mini p { margin: 0; color: var(--ink-2); font-size: var(--text-px-15); line-height: 1.45; }
 .visuals-deck .cc-chamber-mini .visuals-preview-draft {
   padding: var(--space-6); margin-bottom: var(--space-6); border: var(--came-hair) dashed var(--ch);
   border-radius: var(--r-sm); background: var(--ch-wash);
 }
-/* Separate from the legacy comparison plate grid and numeric HeroReadout skin. */
+
+/* The beacons: selectable glass cards, each a small screen, its name and its blaze. */
 .visuals-deck .visuals-beacon-list {
-  display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-8); min-width: 0;
+  display: grid; grid-template-columns: minmax(0, 1fr); align-content: start; gap: var(--space-8); min-width: 0;
+}
+/* In the room column the list takes the spare height and shares it among the cards (capped), so the
+   column fills without a gap above the drawer trigger; each small screen grows with its card. */
+.visuals-deck .cc-chamber-section > .visuals-beacon-list { flex: 1 1 0; min-height: calc(var(--space-20) * 9); container-type: size; }
+.visuals-deck .cc-chamber-section > .visuals-beacon-list > .visuals-beacon {
+  --card-h: clamp(calc(var(--space-20) * 3), calc((100cqh - (var(--count, 3) - 1) * var(--space-8)) / var(--count, 3)), calc(var(--space-20) * 11));
+  min-height: var(--card-h);
+}
+.visuals-deck .cc-chamber-section > .visuals-beacon-list .visuals-beacon-art .visuals-thumb {
+  width: min(46cqw, calc(100cqw - var(--space-20) * 9), calc((var(--card-h) - var(--space-20)) * 16 / 9));
 }
 .visuals-deck .visuals-beacon {
-  display: grid; grid-template-columns: minmax(0, 1fr) max-content;
-  align-items: baseline; gap: var(--space-8); min-width: 0; width: 100%; box-sizing: border-box;
-  padding: var(--space-8); border: var(--came-hair) solid var(--hair); border-radius: var(--r-md);
-  background: var(--stone-2); color: var(--ink); text-align: left;
+  position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-content: center;
+  grid-template-areas: "art name name" "art state blaze";
+  align-items: center; column-gap: var(--space-12); row-gap: var(--space-1);
+  min-width: 0; width: 100%; box-sizing: border-box; padding: var(--space-8) var(--space-12) var(--space-10) var(--space-8);
+  border: var(--came-hair) solid var(--hair); border-radius: var(--r-lg);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--surface) 70%, transparent), color-mix(in srgb, var(--surface-2) 85%, transparent));
+  box-shadow: var(--shadow);
+  color: var(--ink); text-align: left; cursor: pointer;
   font: 400 var(--text-px-15)/1.45 var(--font-text); overflow-wrap: normal; word-break: normal;
+  transition: border-color var(--m-quick) var(--ease), background var(--m-quick) var(--ease), transform var(--m-quick) var(--ease);
 }
+/* The blaze rail along the card's foot. */
+.visuals-deck .visuals-beacon::after {
+  content: ""; position: absolute; left: var(--space-8); right: var(--space-8); bottom: var(--space-3); height: var(--space-2);
+  border-radius: var(--r-round); background: linear-gradient(90deg, var(--ch) 0 calc(var(--blaze, 0) * 100%), var(--hair-2) calc(var(--blaze, 0) * 100%) 100%);
+  opacity: .55;
+}
+.visuals-deck .visuals-beacon:hover:not(:disabled) { border-color: color-mix(in srgb, var(--ch) 60%, var(--hair)); transform: translateY(calc(var(--space-1) * -1)); }
+.visuals-deck .visuals-beacon:focus-visible { outline: var(--came) solid var(--focus); outline-offset: var(--space-2); }
+
 .visuals-deck .visuals-beacon[aria-checked="true"] {
-  grid-template-columns: minmax(0, 1fr) max-content; gap: var(--space-8);
-  border-color: var(--ch); box-shadow: 0 0 var(--space-12) var(--ch-glow);
+  border-color: var(--ch);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--ch) 16%, var(--surface)), color-mix(in srgb, var(--ch) 7%, var(--surface-2)));
+  box-shadow: inset 0 0 0 var(--came-hair) color-mix(in srgb, var(--ch) 45%, transparent), var(--shadow),
+    0 0 calc(var(--glow-on) * var(--space-14)) var(--ch-glow);
 }
-.visuals-deck .visuals-beacon-name { white-space: normal; overflow-wrap: normal; font-weight: 600; }
-.visuals-deck .visuals-beacon[aria-checked="true"] .visuals-beacon-name {
-  font: 600 var(--text-px-20)/1.2 var(--font-book); white-space: normal; overflow-wrap: normal;
+.visuals-deck .visuals-beacon[aria-checked="true"]::after { opacity: 1; }
+.visuals-deck .visuals-beacon-art { position: relative; grid-area: art; display: block; align-self: center; font-style: normal; }
+.visuals-deck .visuals-beacon-art > .cc-control-key { position: absolute; top: var(--space-4); left: var(--space-4); z-index: 1; margin: 0; }
+.visuals-deck .visuals-beacon-art > .cc-control-key > .cc-kbd.cc-key-badge { background: var(--surface); box-shadow: 0 var(--space-1) var(--space-3) var(--shade); }
+.visuals-deck .visuals-beacon-art .visuals-thumb {
+  width: calc(var(--space-20) * 4); aspect-ratio: 16 / 9; border-radius: var(--r-md);
+  box-shadow: inset 0 0 0 var(--came-hair) var(--hair), 0 0 0 var(--came-hair) color-mix(in srgb, var(--gilt-mid) 50%, transparent);
 }
-.visuals-deck .visuals-beacon-blaze {
-  min-width: 4ch; white-space: nowrap; text-align: right;
-  color: var(--ch-ink); font: 600 var(--text-px-15)/1.45 var(--font-mono);
+.visuals-deck .visuals-beacon[aria-checked="false"] .visuals-beacon-art .visuals-thumb { filter: saturate(.7) brightness(.85); }
+.visuals-room.visuals-deck .visuals-beacon-name {
+  grid-area: name; display: flex; align-items: center; gap: var(--space-8); min-width: 0;
+  white-space: nowrap; overflow: clip; text-overflow: ellipsis;
+  color: var(--ink); font: 700 var(--text-px-16)/1.4 var(--font-text);
 }
-.visuals-deck .visuals-beacon-state { grid-column: 1 / -1; white-space: normal; color: var(--ch-ink); }
-.visuals-deck .visuals-beacon[aria-checked="true"] .visuals-beacon-state { grid-column: 1 / -1; }
+.visuals-room.visuals-deck .visuals-beacon-blaze {
+  grid-area: blaze; align-self: baseline; min-width: 4ch; white-space: nowrap; text-align: right;
+  color: var(--ch-ink); font: 700 var(--text-px-18)/1.2 var(--font-text); font-variant-numeric: var(--num);
+}
+.visuals-deck .visuals-beacon[aria-checked="false"] .visuals-beacon-blaze { color: var(--ink-2); }
+.visuals-room.visuals-deck .visuals-beacon-state { grid-area: state; align-self: baseline; white-space: nowrap; color: var(--muted); }
+.visuals-room.visuals-deck .visuals-beacon[aria-checked="true"] .visuals-beacon-state { color: var(--ch-ink); font-weight: 600; }
+.visuals-deck .visuals-drawer-trigger { width: 100%; margin-top: auto; min-height: var(--control-h); }
+
 .visuals-deck .cc-chamber-drawer-body { display: grid; gap: var(--space-14); }
 .visuals-deck .visuals-more__body { display: grid; }
 .visuals-deck-error { margin: 0; padding: var(--space-4) var(--space-14); font-size: var(--text-px-13); }
 /* Higher specificity than the earlier expanded-Steward picture sizing. */
 .desktop-shell .visuals-deck .visuals-stage--picture .visuals-monitor__screen { height: 100%; }
 .desktop-shell .visuals-deck .visuals-stage__read { gap: var(--space-8); }
-.desktop-shell .visuals-deck .visuals-spark { height: calc(var(--space-20) * 3 + var(--space-10)); }
-.desktop-shell .visuals-deck :is(.visuals-stage__tags, .visuals-stage__notice, .visuals-stage__spark > span) { display: flex; }
+.desktop-shell .visuals-deck :is(.visuals-stage__tags, .visuals-stage__notice) { display: flex; }
 
-/* Key badges stay on their controls without forcing a fourth grid cell or an overwide action row. */
-.visuals-deck .visuals-primary-actions { flex-wrap: wrap; }
-.visuals-deck .visuals-weight { position: relative; padding-inline-start: var(--space-32); }
-.visuals-weight > .cc-control-key { position: absolute; inset-inline-start: var(--space-3); margin: 0; }
-.visuals-deck .visuals-beacon { position: relative; padding-inline-start: var(--space-32); }
-.visuals-deck .visuals-beacon-name > .cc-control-key { position: absolute; inset-inline-start: var(--space-3); margin: 0; }
+@media (prefers-reduced-motion: reduce) {
+  .visuals-deck .visuals-beacon, .visuals-weight input[type="range"]::-webkit-slider-thumb { transition: none; }
+  .visuals-deck .visuals-beacon:hover:not(:disabled) { transform: none; }
+}
+
+/* Card thumbnails depict each look (decorative; the full picture stays the one stream monitor). */
+.visuals-deck .visuals-beacon-art .visuals-thumb { isolation: isolate; }
+.visuals-deck .visuals-beacon-art .visuals-thumb .visuals-monitor__scene { transition: transform var(--m-calm) var(--ease); }
+/* Offering altar: zoomed on the altar, the room falls away behind it. */
+.visuals-deck .visuals-beacon-art .visuals-thumb[data-kind="object"] .visuals-monitor__scene {
+  transform: scale(1.9); transform-origin: 12% 88%; filter: saturate(.7) brightness(.55) blur(var(--space-1));
+}
+.visuals-deck .visuals-beacon-art .visuals-thumb[data-kind="object"] .visuals-monitor__object {
+  left: 50%; bottom: 2%; height: 94%; transform: translateX(-50%) scale(calc(.9 + var(--blaze) * .14));
+}
+.visuals-deck .visuals-beacon-art .visuals-thumb[data-kind="object"] .visuals-monitor__halo { inset: -20% -70% 0; }
+/* Gilded camera frame: the facecam fills the screen inside its gilt frame. */
+.visuals-deck .visuals-beacon-art .visuals-thumb[data-kind="frame"] .visuals-monitor__scene { filter: saturate(.5) brightness(.32) blur(var(--space-2)); }
+.visuals-deck .visuals-beacon-art .visuals-thumb[data-kind="frame"] .visuals-monitor__frame { filter: brightness(calc(.75 + var(--blaze) * .45)) drop-shadow(0 0 var(--space-4) var(--or-glow)); }
+.visuals-deck .visuals-beacon-art .visuals-thumb[data-kind="frame"] .visuals-monitor__cam {
+  left: 50%; top: 50%; right: auto; bottom: auto; width: 86%; transform: translate(-50%, -50%);
+}
+.visuals-deck .visuals-beacon-art .visuals-thumb[data-kind="frame"] .visuals-monitor__cam::after {
+  content: ""; position: absolute; inset: 11% 7%; border: var(--came) solid var(--gilt-mid); border-radius: var(--r-sm);
+  box-shadow: inset 0 0 0 var(--came-hair) var(--gilt-lo), 0 0 0 var(--came-hair) var(--gilt-hi), 0 0 var(--space-6) var(--or-glow);
+}
+/* Hype border: the picture ringed by a travelling gilt-and-flame border. */
+.visuals-deck .visuals-beacon-art .visuals-thumb[data-kind="border"] .visuals-monitor__scene { filter: saturate(.75) brightness(.6); }
+.visuals-deck .visuals-beacon-art .visuals-thumb[data-kind="border"]::after {
+  content: ""; position: absolute; inset: 0; z-index: 1; border-radius: inherit; pointer-events: none;
+  padding: calc(var(--space-3) + var(--blaze) * var(--space-3));
+  background: conic-gradient(from var(--visuals-hype-turn, 0deg), var(--gilt-hi), var(--or), var(--gules-lit), var(--or-lit), var(--gilt-mid), var(--gilt-hi));
+  -webkit-mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  filter: drop-shadow(0 0 var(--space-4) var(--or-glow));
+}
+.visuals-deck .visuals-beacon-art .visuals-thumb[data-kind="border"] .visuals-monitor__border {
+  box-shadow: inset 0 0 calc(var(--space-10) + var(--blaze) * var(--space-20)) var(--or-glow);
+}
+@property --visuals-hype-turn { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
+@keyframes visuals-hype-turn { to { --visuals-hype-turn: 360deg; } }
+@media (prefers-reduced-motion: no-preference) {
+  .visuals-deck .visuals-beacon-art .visuals-thumb[data-kind="border"]::after { animation: visuals-hype-turn 6s linear infinite; }
+}
+
+/* A draft holds the picker: calm, slightly desaturated art; text keeps its contrast. */
+.visuals-room.visuals-deck .visuals-beacon:disabled { opacity: 1; cursor: wait; }
+.visuals-deck .visuals-beacon:disabled .visuals-beacon-art .visuals-thumb { filter: saturate(.45) brightness(.92); }
+.visuals-deck .visuals-beacon:disabled:not([aria-checked="true"]) { background: var(--surface-2); box-shadow: none; }
+.visuals-deck .visuals-beacon:disabled::after { opacity: .35; }
+
+/* The curve keeps a sensible height; tall rooms spend the rest on three sample-night figures. */
+.visuals-room.visuals-deck .visuals-stage__spark { max-height: calc(var(--space-20) * 18); }
+.visuals-room.visuals-deck .visuals-stage__stats { display: none; }
+@media (min-height: 860px) {
+  .visuals-room.visuals-deck .visuals-stage__stats {
+    display: grid; gap: var(--space-4); flex: none;
+  }
+}
+.visuals-deck .visuals-stage__stats dl { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-8); margin: 0; }
+.visuals-deck .visuals-stage__stats dl > div {
+  display: grid; align-content: center; gap: var(--space-2); min-width: 0; padding: var(--space-8) var(--space-10);
+  border: var(--came-hair) solid var(--hair); border-radius: var(--r-md); background: var(--surface-2);
+}
+.visuals-room.visuals-deck.visuals-room .cc-chamber-section .visuals-stage__stats dt {
+  color: var(--muted); font: 600 var(--text-px-13)/1.2 var(--font-label); letter-spacing: var(--track-tab);
+}
+.visuals-room.visuals-deck.visuals-room .cc-chamber-section .visuals-stage__stats dd {
+  margin: 0; color: var(--ink); font: 700 var(--text-px-22)/1.15 var(--font-text); font-variant-numeric: var(--num); white-space: nowrap;
+}
+.visuals-room.visuals-deck.visuals-room .cc-chamber-section .visuals-stage__stats dd small {
+  color: var(--muted); font: 500 var(--text-px-13)/1.2 var(--font-text);
+}
+
+@media (min-height: 1000px) {
+  /* Tall rooms: the curve takes the extra height; stat tiles stay sized to their content. */
+  .visuals-room.visuals-deck .visuals-stage__spark { max-height: calc(var(--space-20) * 23); }
+  .visuals-deck .visuals-stage__stats dl > div { padding: var(--space-12) var(--space-14); }
+  .visuals-room.visuals-deck.visuals-room .cc-chamber-section .visuals-stage__stats dd { font-size: var(--text-px-25); }
+}
+
+/* One or two core beacons: cards keep their size; a compact note offers the next one. */
+.visuals-deck .cc-chamber-section > .visuals-beacon-stack {
+  display: grid; grid-template-rows: auto auto; align-content: start; gap: var(--space-10);
+  flex: 1 1 0; min-height: calc(var(--space-20) * 9); container-type: size;
+}
+.visuals-deck .cc-chamber-section > .visuals-beacon-stack > .visuals-beacon-list > .visuals-beacon {
+  --card-h: clamp(calc(var(--space-20) * 3), calc((100cqh - (var(--count, 3) - 1) * var(--space-8)) / var(--count, 3)), calc(var(--space-20) * 7));
+  min-height: var(--card-h);
+}
+.visuals-deck .cc-chamber-section > .visuals-beacon-stack .visuals-beacon-art .visuals-thumb {
+  width: min(46cqw, calc(100cqw - var(--space-20) * 9), calc((var(--card-h) - var(--space-20)) * 16 / 9));
+}
+.visuals-deck .visuals-beacon-stack > .cc-empty {
+  padding: var(--space-10) var(--space-12); border: var(--came-hair) dashed var(--hair); border-radius: var(--r-lg);
+  background: color-mix(in srgb, var(--surface-2) 70%, transparent);
+}
+.visuals-deck .cc-chamber-section > .cc-empty { padding: var(--space-10) var(--space-12); border: var(--came-hair) dashed var(--hair); border-radius: var(--r-lg); }
+.visuals-deck .visuals-beacon-blaze[data-unknown="true"] { display: none; }
+/* The sample-night block names itself; the live blaze figure above is a separate reading. */
+.visuals-room.visuals-deck.visuals-room .cc-chamber-section .visuals-stage__spark-label {
+  margin: var(--space-4) 0 0; color: var(--muted); font: 600 var(--text-px-13)/1.3 var(--font-label); letter-spacing: var(--track-tab);
+}
+.visuals-deck .visuals-spark__peak[data-high="true"] b { top: calc(100% + var(--space-8)); transform: none; }

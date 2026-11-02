@@ -60,7 +60,7 @@ export function Drill({ result: given, origin = 'fixture', capture_hash, draft, 
       }}>{moatCopy.busy.toggle}</InkButton>}
       {busy && <p className="moat-small">{moatCopy.busy.note(busy.outcomes.length)}</p>}</div>}
     {moat && compare && !busy && comparing && <MoatCompare diff={compare} note={moatCopy.compare.note_fixture} delay_s={delay_s} clock={clock} />}
-    <div className="moderator-drill-columns"><div className="room-column"><h3>{copy.instrument_source}</h3><p>{result.source}</p>
+    <div className="moderator-drill-columns"><div className="room-column"><h3>{copy.instrument_source}</h3><p className="room-source">{result.source}</p>
       {capture_hash && <><p>{copy.capture_hash}</p><code className="room-hash">{capture_hash}</code>
         <p role="status">{capture_hash === result.instrument_hash ? copy.capture_match : copy.capture_mismatch}</p>
         <p>{copy.capture_match_scope}</p></>}

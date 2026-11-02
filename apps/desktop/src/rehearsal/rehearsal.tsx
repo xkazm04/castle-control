@@ -17,7 +17,7 @@ import { cleanupFlow, connectAddress, connectFlow, pickedRows, scenarioFlow, sce
 import type { ConnectDraft, ScenarioDraft, SceneDraft } from './steward-flows.js';
 import './rehearsal.css';
 import '@castle-control/ui/fused/surface.css';
-import '@castle-control/ui/fused/folio.css';
+import '../stream/setup-deck.css';
 
 /** The masked field is uncontrolled, cleared before any asynchronous work, and never a read-model field. */
 export function submitConnection(fields: { host: string; port: string; password: { value: string }; remember: boolean }, model: RehearsalModel) {
@@ -45,10 +45,10 @@ export function RehearsalConnectionCard({ model, state, draft, secret_home, secr
   /** The page's own field host lands here when the Steward is not waiting for it. Without it the field renders inline. */
   secret_home?: (node: HTMLDivElement | null) => void; secret?: () => HTMLInputElement | null;
 }) {
-  return <section className="cc-panel rh-panel" data-drafting={draft ? 'true' : undefined} aria-label={copy.connection}>
-    <div className="cc-panel__head"><h2 className="cc-panel__title">{copy.connection}</h2>
-      <span className="cc-stamp cc-stamp--waiting cc-stamp--inked">{copy[state.obs]}</span></div>
-    <div className="cc-panel__body">
+  return <section className="setup-card rh-panel" data-drafting={draft ? 'true' : undefined} aria-label={copy.connection}>
+    <div className="setup-card__head"><h2 className="setup-kicker">{copy.connection}</h2>
+      <span className="setup-tag" data-tone={state.obs === 'connected' ? 'ok' : 'warn'}>{copy[state.obs]}</span></div>
+    <div className="rh-panel__body">
       <form className="rehearsal-fields" autoComplete="off" onSubmit={event => {
         event.preventDefault();
         void submitForm(event.currentTarget, model, secret?.());
@@ -57,7 +57,7 @@ export function RehearsalConnectionCard({ model, state, draft, secret_home, secr
         <label className="cc-field">{copy.port}<input className="cc-input" name="port" type="number" min="1" max="65535" defaultValue="4455" required disabled={state.busy} /></label>
         {secret_home ? <div className="rh-secret-home" ref={secret_home} data-wanted={wantsSecret(draft) ? 'true' : undefined} /> : <SecretField disabled={state.busy} />}
         <label className="cc-choice rehearsal-remember"><input name="remember" type="checkbox" defaultChecked={false} disabled={state.busy} />{copy.remember}</label>
-        <button className="cc-btn cc-btn--chamber" type="submit" disabled={state.busy}>{copy.connect}</button>
+        <button className="cc-btn setup-btn--primary" type="submit" disabled={state.busy}>{copy.connect}</button>
       </form>
       <p className="rh-notice" role="status" aria-live="polite">{state.connection_notice}</p>
     </div>
@@ -65,8 +65,8 @@ export function RehearsalConnectionCard({ model, state, draft, secret_home, secr
 }
 
 export function RehearsalOutputRow({ row, state, model }: { row: RehearsalRow; state: RehearsalState; model: RehearsalModel }) {
-  return <article className="cc-sheet rehearsal-output" data-phase={row.phase} aria-label={row.name}>
-    <header><h3>{row.name}</h3><span className={`cc-stamp cc-stamp--inked ${row.phase === 'added' ? 'cc-stamp--ok' : row.phase === 'idle' ? 'cc-stamp--local' : 'cc-stamp--blocked'}`}>{copy.phases[row.phase]}</span></header>
+  return <article className="rehearsal-output" data-phase={row.phase} aria-label={row.name}>
+    <header><h3>{row.name}</h3><span className="setup-tag" data-tone={row.phase === 'added' ? 'ok' : undefined}>{copy.phases[row.phase]}</span></header>
     <div className="rh-out-acts">
       <label className="cc-field">{copy.size}<select className="cc-select" aria-label={`${row.name} source size`} value={row.preset} disabled={state.busy}
         onChange={event => { model.setPreset(row.id, event.currentTarget.value); }}>
@@ -81,14 +81,14 @@ export function RehearsalOutputRow({ row, state, model }: { row: RehearsalRow; s
 
 function ScenarioCard({ model, state }: { model: RehearsalModel; state: RehearsalState }) {
   const disabled = state.busy || !state.status?.active;
-  return <section className="cc-panel rh-panel" aria-label={copy.scenarios}>
-    <div className="cc-panel__head"><h2 className="cc-panel__title">{copy.scenarios}</h2><span className="cc-sim">{state.status?.active ? 'Session active' : 'Session stopped'}</span></div>
-    <div className="cc-panel__body">
-      <p className="cc-gloss-note">{state.status?.active ? copy.active : copy.stopped}</p>
+  return <section className="setup-card rh-panel" aria-label={copy.scenarios}>
+    <div className="setup-card__head"><h2 className="setup-kicker">{copy.scenarios}</h2><span className="setup-tag" data-tone={state.status?.active ? 'ok' : undefined}>{state.status?.active ? 'Session active' : 'Session stopped'}</span></div>
+    <div className="rh-panel__body">
+      <p className="setup-note">{state.status?.active ? copy.active : copy.stopped}</p>
       <div className="rehearsal-actions">
-        <button className="cc-btn cc-btn--sm" type="button" disabled={disabled} onClick={() => { void model.scenario('lots_fill'); }}>{copy.lot}</button>
-        <button className="cc-btn cc-btn--sm" type="button" disabled={disabled} onClick={() => { void model.scenario('vote_round'); }}>{copy.vote}</button>
-        <button className="cc-btn cc-btn--sm" type="button" disabled={disabled} onClick={() => { void model.scenario('duel_round'); }}>{copy.duel}</button>
+        <button className="cc-btn" type="button" disabled={disabled} onClick={() => { void model.scenario('lots_fill'); }}>{copy.lot}</button>
+        <button className="cc-btn" type="button" disabled={disabled} onClick={() => { void model.scenario('vote_round'); }}>{copy.vote}</button>
+        <button className="cc-btn" type="button" disabled={disabled} onClick={() => { void model.scenario('duel_round'); }}>{copy.duel}</button>
       </div>
       <div className="rh-beacon">
         <label className="cc-field">{copy.visual}<select className="cc-select" value={state.visual_id} disabled={disabled || !state.visuals.length}
@@ -96,7 +96,7 @@ function ScenarioCard({ model, state }: { model: RehearsalModel; state: Rehearsa
           {!state.visuals.length && <option value="">{copy.no_visual}</option>}
           {state.visuals.map(visual => <option key={visual.visual_id} value={visual.visual_id}>{visual.name}</option>)}
         </select></label>
-        <button className="cc-btn cc-btn--sm" type="button" disabled={disabled || !state.visual_id} onClick={() => { void model.scenario('beacon_fire'); }}>{copy.beacon}</button>
+        <button className="cc-btn" type="button" disabled={disabled || !state.visual_id} onClick={() => { void model.scenario('beacon_fire'); }}>{copy.beacon}</button>
       </div>
       {!state.visuals.length && <a className="cc-link" href="#/chamber/visuals">{copy.beacons}</a>}
     </div>
@@ -106,14 +106,54 @@ function ScenarioCard({ model, state }: { model: RehearsalModel; state: Rehearsa
 /** The few direct controls a streamer reaches for mid-rehearsal: the crowd level and what just happened. */
 export function RehearsalLive({ model, state }: { model: RehearsalModel; state: RehearsalState }) {
   const disabled = state.busy || !state.status?.active;
-  return <section className="cc-folio rh-live" aria-label="Live rehearsal controls"><div className="rh-live__row">
+  return <section className="setup-card setup-scroll rh-live" aria-label="Live rehearsal controls"><div className="rh-live__row">
     <label className="rh-crowd">{copy.crowd} <output>{state.crowd}</output><input type="range" min="0" max="600" step="1" value={state.crowd}
       disabled={disabled} onChange={event => { model.setCrowd(Number(event.currentTarget.value)); }} aria-label={copy.crowd} /></label>
+    <dl className="rh-live__facts">
+      <div><dt>OBS</dt><dd>{copy[state.obs]}</dd></div>
+      <div><dt>Scene</dt><dd>{state.scene_ready ? copy.scene_name : 'Not set up'}</dd></div>
+      <div><dt>Session</dt><dd>{state.status?.active ? 'Active' : 'Stopped'}</dd></div>
+    </dl>
     <div className="rh-live__notes">
       <p className="rh-notice" role="status" aria-live="polite">{state.scenario_notice}</p>
-      {state.status && <time className="rh-notice" dateTime={state.status.at}>Status at {state.status.at}</time>}
+      {state.status && <time className="rh-notice" dateTime={state.status.at}>Status at {localTime(state.status.at)}</time>}
     </div>
   </div></section>;
+}
+
+/** One small stained-glass lancet per step (decorative): the pane in the room's glass, a quiet charge leaded in. */
+const charges: Record<string, string> = {
+  obs: 'M13 27h14v10H13Z M20 37v4',
+  scene: 'M14 41V31a6 6 0 0 1 12 0v10',
+  sources: 'M13 27h14 M13 32h14 M13 37h14',
+  crowd: 'M15 31a2 2 0 1 0 0.1 0 M20 29a2 2 0 1 0 0.1 0 M25 31a2 2 0 1 0 0.1 0 M12 40c1-4 15-4 16 0',
+  session: 'M14 26h12 M14 42h12 M15 26c0 6 10 6 10 8s-10 2-10 8 M25 26c0 6-10 6-10 8s10 2 10 8',
+};
+function StationGlyph({ station }: { station: string }) {
+  return <svg className="rh-station__glyph" viewBox="0 0 40 52" aria-hidden="true" focusable="false">
+    <path className="rh-pane" d="M4 50V20a16 16 0 0 1 32 0v30Z" />
+    <path className="rh-pane-hi" d="M8 46V21a12 12 0 0 1 8-11.3" />
+    <path className="rh-pane-charge" d={charges[station] ?? ''} />
+  </svg>;
+}
+
+/** The outputs at a glance, read-only: what the rehearsal scene holds right now. The rows to act on wait under More. */
+export function RehearsalGlance({ state }: { state: RehearsalState }) {
+  const added = state.rows.filter(row => row.phase === 'added').length;
+  return <section className="setup-card setup-scroll rh-glance" aria-label="Outputs at a glance">
+    <div className="setup-card__head"><h2 className="setup-kicker">Outputs at a glance</h2><span className="setup-tag" data-tone={added ? 'ok' : undefined}>{added} of {state.rows.length} added</span></div>
+    {state.rows.length ? <ul className="rh-glance__list setup-scroll">{state.rows.map(row => <li key={row.id} data-phase={row.phase}>
+      <span className="rh-glance__name">{row.name}</span><span className="rh-glance__size">{row.preset}</span>
+      <span className="setup-tag" data-tone={row.phase === 'added' ? 'ok' : undefined}>{copy.phases[row.phase]}</span>
+      {row.notice && <span className="rh-glance__note">{row.notice}</span>}
+    </li>)}</ul> : <p className="setup-note">No rehearsal outputs yet.</p>}
+  </section>;
+}
+
+/** The core's ISO instant shown as local wall time ("18:55"); the machine value stays in dateTime. */
+export function localTime(at: string): string {
+  const date = new Date(at);
+  return Number.isNaN(date.getTime()) ? at : date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
 }
 
 type Station = { no: string; key: string; label: string; value: string; line: string; lit: boolean; drafting: boolean; action: string; flow: AnyStewardFlow };
@@ -123,32 +163,31 @@ export function RehearsalBoard({ state, ready, drafts = {} }: { state: Rehearsal
   const added = state.rows.filter(row => row.phase === 'added');
   const planned = drafts.scene ? pickedRows(state, drafts.scene.pick) : [];
   const stations: Station[] = [
-    { no: 'I', key: 'obs', label: 'OBS', value: !ready ? 'Your own' : state.obs === 'connected' ? 'Connected' : state.obs === 'disconnected' ? 'Not connected' : 'Unknown',
+    { no: '1', key: 'obs', label: 'OBS', value: !ready ? 'Your own' : state.obs === 'connected' ? 'Connected' : state.obs === 'disconnected' ? 'Not connected' : 'Unknown',
       line: drafts.connect ? `Draft · ${connectAddress(drafts.connect)}` : state.connection_notice || 'Your own OBS, over its WebSocket', lit: ready && state.obs === 'connected',
       drafting: Boolean(drafts.connect), action: 'Connect my OBS', flow: connectFlow },
-    { no: 'II', key: 'scene', label: 'Scene', value: !ready ? 'Its own' : state.scene_ready ? 'Ready' : 'Not set up',
+    { no: '2', key: 'scene', label: 'Scene', value: !ready ? 'Its own' : state.scene_ready ? 'Ready' : 'Not set up',
       line: copy.scene_name, lit: ready && state.scene_ready, drafting: Boolean(drafts.scene), action: 'Set up the scene', flow: sceneFlow },
-    { no: 'III', key: 'sources', label: 'Sources', value: !ready ? 'Four kinds' : `${added.length} of ${state.rows.length}`,
+    { no: '3', key: 'sources', label: 'Sources', value: !ready ? 'Four kinds' : `${added.length} of ${state.rows.length}`,
       line: drafts.scene ? `Draft · ${planned.length ? planned.map(row => row.name).join(', ') : 'choosing'}` : added.length ? added.map(row => row.name).join(', ') : ready ? 'None added yet' : 'Lot plate, vote bar, beacons, duel',
       lit: added.length > 0, drafting: Boolean(drafts.scene), action: 'Add sources', flow: sceneFlow },
-    { no: 'IV', key: 'crowd', label: 'Crowd', value: !ready ? '0 to 600' : `${drafts.scenario?.crowd ?? state.crowd}`,
+    { no: '4', key: 'crowd', label: 'Crowd', value: !ready ? '0 to 600' : `${drafts.scenario?.crowd ?? state.crowd}`,
       line: drafts.scenario ? 'Draft · SIMULATED chat a minute' : 'SIMULATED chat a minute', lit: ready && state.crowd > 0,
       drafting: drafts.scenario?.scenario === 'crowd', action: 'Run a scenario', flow: scenarioFlow },
-    { no: 'V', key: 'session', label: 'Session', value: !ready ? 'Simulated' : state.status?.active ? 'Active' : 'Stopped',
+    { no: '5', key: 'session', label: 'Session', value: !ready ? 'Simulated' : state.status?.active ? 'Active' : 'Stopped',
       line: 'Generated chat · no real viewer', lit: ready && state.status?.active === true, drafting: Boolean(drafts.cleanup), action: 'Clean up', flow: cleanupFlow },
   ];
-  return <section className="cc-folio rh-board" data-ready={ready ? 'true' : 'false'} aria-label="Rehearsal status">
-    <div className="rh-board__head"><h2 className="cc-rubric">{ready ? 'The rehearsal, step by step' : 'What the rehearsal will set up'}</h2><div className="cc-orn" aria-hidden="true"><i /></div>
-      <span className="cc-sim">Simulated</span></div>
+  return <section className="setup-card rh-board" data-ready={ready ? 'true' : 'false'} aria-label="Rehearsal status">
+    <div className="setup-card__head"><h2 className="setup-kicker">{ready ? 'The rehearsal, step by step' : 'What the rehearsal will set up'}</h2></div>
     <ol className="rh-stations">{stations.map(station => <li key={station.key} className="rh-station" data-station={station.key}
       data-lit={station.lit ? 'true' : 'false'} data-drafting={station.drafting ? 'true' : undefined}>
-      <span className="rh-station__no" aria-hidden="true">{station.no}</span>
+      <span className="rh-station__mark" aria-hidden="true"><span className="rh-station__no">{station.no}</span><StationGlyph station={station.key} /></span>
       <i className="cc-lozenge" data-lit={station.lit ? 'true' : 'false'} aria-hidden="true" />
       <span className="rh-station__label">{station.label}</span>
       <b className="rh-station__value">{station.value}</b>
       <span className="rh-station__line">{station.line}</span>
       {station.drafting && <span className="cc-stamp cc-stamp--draft">Draft</span>}
-      <button className="cc-btn cc-btn--sm cc-btn--quiet" type="button" onClick={open(station.flow)}>{station.action}</button>
+      <button className="cc-btn" type="button" onClick={open(station.flow)}>{station.action}</button>
     </li>)}</ol>
   </section>;
 }
@@ -160,16 +199,19 @@ export function RehearsalContent({ model, state, mode, on_back, drafts, secret }
 }) {
   const inside = state.phase === 'inside';
   return <section className="rehearsal-workspace" aria-label={copy.title}>
-    <SurfaceHead className="rehearsal-heading" title={copy.title} versal on_back={on_back}
+    <SurfaceHead className="rehearsal-heading" title={copy.title} on_back={on_back}
       subtitle="Your own OBS, the real core, generated chat." mark={inside ? <Stamp kind="simulated" word={copy.simulated} /> : <span className="cc-sim">Simulated</span>}
-      actions={<button className="cc-btn cc-btn--chamber" type="button" disabled={!model.shell_available || state.busy || state.phase === 'checking'}
+      actions={<button className="cc-btn setup-btn--primary" type="button" disabled={!model.shell_available || state.busy || state.phase === 'checking'}
         onClick={() => { void model.switchMode(); }}>{inside ? copy.leave : copy.start}</button>} />
     <div className="rh-body">
       <p className="rh-intro">{inside ? 'Inside dress rehearsal: a separate local workspace, generated SIMULATED chat, no Twitch login. Casting a Lot fetches a public drand round.' : copy.introduction}</p>
       {!model.shell_available && <Notice message={mode === 'fixture' ? copy.desktop : copy.shell_unavailable} />}
       {state.notice && <p className="rh-notice" role="status" aria-live="polite">{state.notice}</p>}
       <RehearsalBoard state={state} ready={inside} {...(drafts ? { drafts } : {})} />
-      {inside && <RehearsalLive model={model} state={state} />}
+      {inside && <div className="rh-inside">
+        <RehearsalLive model={model} state={state} />
+        <RehearsalGlance state={state} />
+      </div>}
       {/* The forms behind the Steward's flows stay mounted (the masked field's home lives here), folded under More. */}
       {inside && <details className="rh-more">
         <summary className="rh-more__summary">More <span>connection, scene, sources and scenario forms: the same steps the Steward walks</span></summary>
@@ -177,25 +219,26 @@ export function RehearsalContent({ model, state, mode, on_back, drafts, secret }
         <div className="rh-col">
           <RehearsalConnectionCard model={model} state={state} {...(drafts?.connect ? { draft: drafts.connect } : {})}
             {...(secret ? { secret_home: secret.home, secret: secret.input } : {})} />
-          <section className="cc-panel rh-panel" aria-label={copy.scene}>
-            <div className="cc-panel__head"><h2 className="cc-panel__title">{copy.scene}</h2>
-              <span className="cc-stamp cc-stamp--inked cc-stamp--local">{state.scene_ready ? 'Ready' : 'Not set up'}</span></div>
-            <div className="cc-panel__body">
+          <section className="setup-card rh-panel" aria-label={copy.scene}>
+            <div className="setup-card__head"><h2 className="setup-kicker">{copy.scene}</h2>
+              <span className="setup-tag" data-tone={state.scene_ready ? 'ok' : undefined}>{state.scene_ready ? 'Ready' : 'Not set up'}</span></div>
+            <div className="rh-panel__body">
               <p className="rh-scene-name">{copy.scene_name}</p>
               <div className="rehearsal-actions">
-                <button className="cc-btn cc-btn--sm" type="button" disabled={state.busy || state.obs !== 'connected'} onClick={() => { void model.ensureScene(); }}>{copy.ensure}</button>
-                <button className="cc-btn cc-btn--sm cc-btn--quiet" type="button" disabled={state.busy} onClick={() => { void model.refresh(); }}>{copy.refresh}</button>
+                <button className="cc-btn" type="button" disabled={state.busy || state.obs !== 'connected'} onClick={() => { void model.ensureScene(); }}>{copy.ensure}</button>
+                <button className="cc-btn cc-btn--quiet" type="button" disabled={state.busy} onClick={() => { void model.refresh(); }}>{copy.refresh}</button>
               </div>
               <p className="rh-notice" role="status" aria-live="polite">{state.scene_notice}</p>
-              <h3 className="rh-sub">{copy.clear}</h3><p className="cc-gloss-note">{copy.clear_help}</p>
+              <h3 className="rh-sub">{copy.clear}</h3><p className="setup-note">{copy.clear_help}</p>
               <div role="group" aria-label={copy.clear}><SealButton disabled={state.busy || state.obs !== 'connected'} on_seal={() => { void model.clear(); }} /></div>
             </div>
           </section>
         </div>
         <div className="rh-col">
-          <section className="cc-folio rh-outputs" aria-label={copy.outputs}>
-            <div className="rh-board__head"><h2 className="cc-rubric">{copy.outputs}</h2><div className="cc-orn" aria-hidden="true"><i /></div></div>
-            <WindowedRows rows={state.rows} row_key={row => row.id} label={copy.outputs} row_height={Number.parseFloat(tokens.layout['row-h']) * 7}>
+          <section className="setup-card rh-outputs" aria-label={copy.outputs}>
+            <div className="setup-card__head"><h2 className="setup-kicker">{copy.outputs}</h2></div>
+            <WindowedRows rows={state.rows} row_key={row => row.id} label={copy.outputs} row_height={Number.parseFloat(tokens.layout['row-h']) * 5.5}
+              empty_state={<p className="setup-note rh-empty">No rehearsal outputs yet.</p>}>
               {row => <RehearsalOutputRow row={row} state={state} model={model} />}
             </WindowedRows>
           </section>

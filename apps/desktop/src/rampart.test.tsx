@@ -86,8 +86,8 @@ test.each([
   }
   expect(html.match(/data-stamp="simulated"/g)).toHaveLength(1);
   expect(html).toContain('aria-label="Connections · simulated"');
-  expect(html).toContain('<b>Unknown</b><small>viewers</small>');
-  expect(html).toContain('<b>Unknown</b><small>uptime</small>');
+  // Off air (here: simulated) the rampart shows no viewer or uptime figures at all, never a placeholder number.
+  expect(html).not.toContain('cc-rampart-figures');
   for (const claim of ['cc-connection', 'connected', 'data-stamp="on-air"', '214', '01:00:00', 'Armed', 'Watching', 'Bridge up']) {
     expect(html).not.toContain(claim);
   }

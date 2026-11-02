@@ -1,4 +1,4 @@
-import { memo, useState } from 'react';
+import { memo, useId, useState } from 'react';
 import type { CSSProperties, PointerEvent } from 'react';
 import type { Offering } from '../../beacons-fixture.js';
 import type { ReplayTrace, TracePoint } from '../../beacons-replay.js';
@@ -19,12 +19,17 @@ const TraceLayers = memo(function TraceLayers({ trace, before, offerings, counte
   trace: ReplayTrace; before?: ReplayTrace | undefined; offerings: readonly Offering[]; counted: ReadonlySet<number>; lit_intensity: number;
 }) {
   const x = (t: number) => Math.round(t / trace.duration_s * width * 100) / 100;
+  const fill = `visuals-replay-fill-${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`;
   return <>
+    <defs><linearGradient id={fill} x1="0" y1="0" x2="0" y2="1">
+      <stop className="visuals-chart-stop-top" offset="0" /><stop className="visuals-chart-stop-low" offset="1" />
+    </linearGradient></defs>
     {trace.pinned.map(band => <rect key={band.from} className="visuals-replay-pinned" data-pinned-band={band.from}
       x={x(band.from)} width={Math.max(1, x(band.to) - x(band.from))} y="0" height={plot} />)}
-    <path className="visuals-replay-grid" d={`M0 ${y(1)}H${width}M0 ${y(0.5)}H${width}`} />
+    <path className="visuals-replay-grid" d={`M0 ${y(1)}H${width}M0 ${y(0.75)}H${width}M0 ${y(0.5)}H${width}M0 ${y(0.25)}H${width}`} />
     <path className="visuals-replay-lit" d={`M0 ${y(lit_intensity)}H${width}`} />
     {before && <polyline className="visuals-replay-before" points={line(before)} data-trace="before" />}
+    <polygon className="visuals-replay-area" fill={`url(#${fill})`} points={`0,${plot} ${line(trace)} ${width},${plot}`} />
     <polyline className="visuals-replay-line" points={line(trace)} data-trace="current" />
     <path className="visuals-replay-floor" d={`M0 ${plot}H${width}`} />
     {offerings.map((item, index) => <line key={index} data-offering-tick={index}

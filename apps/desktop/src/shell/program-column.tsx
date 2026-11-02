@@ -1,4 +1,4 @@
-import { DraftFrame, PreviewMonitor, ProgramMonitor, SealButton, chambers } from '@castle-control/ui';
+import { DraftFrame, PreviewMonitor, ProgramMonitor, SealButton, Stamp, chambers } from '@castle-control/ui';
 import { Drawer } from '@castle-control/ui/chamber';
 import type { ModuleId } from '@castle-control/ui';
 import { isPending } from '@castle-control/ui/steward';
@@ -49,12 +49,25 @@ export function ProgramColumn({ snapshot, selected, connection }: {
     </> }))}
     <Drawer open={detail !== undefined} onClose={() => { setDetail(undefined); }}
       title={detail === 'preview' ? 'Preview · drafts only' : 'Program · simulated'}
-      description="Sample picture only · nothing is sent to OBS">
+      {...(detail === 'preview' ? { description: 'Sample picture only · nothing is sent to OBS' } : {})}>
       {detail === 'preview' ? <>{pending.length ? pending.map(item => <DraftFrame key={item.id}>
         <div className="shell-program-draft"><b>{item.title}</b><span>Revision {item.revision} · {chambers.find(room => room.id === item.chamber)?.name}</span>
           {item.fields.map(field => <span key={field.key}>{field.label}: {String(field.value)}</span>)}</div>
       </DraftFrame>) : <p>Nothing in Preview. Ask the Steward to draft one.</p>}</>
-        : <StreamScene mode="program" proposals={program} sample={snapshot.mode === 'fixture'} />}
+        : <div className="shell-program-sheet">
+          <p className="shell-program-sheet-tags"><Stamp kind="simulated" />
+            <span>{program.length ? `${program.length} layer${program.length === 1 ? '' : 's'} proclaimed` : 'Nothing proclaimed yet'}</span></p>
+          <figure className="shell-program-figure">
+            <StreamScene mode="program" proposals={program} sample={snapshot.mode === 'fixture'} />
+            <figcaption>Sample picture only · nothing is sent to OBS</figcaption>
+          </figure>
+          <div className="shell-program-state">
+            {program.length ? <ul>{program.map(item => <li key={item.id}><b>{item.title}</b><span>Revision {item.revision} · simulated</span></li>)}</ul>
+              : <p>Simulated program picture · nothing proclaimed yet</p>}
+            <p>{candidate ? `Next: ${candidate.title} · rev ${candidate.revision} · hold to proclaim` : 'Nothing to proclaim: ask the Steward to draft one'}</p>
+            <p className="shell-program-note">Drafts wait for your hold · no OBS output</p>
+          </div>
+        </div>}
     </Drawer>
   </aside>;
 }

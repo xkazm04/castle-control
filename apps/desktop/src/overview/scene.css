@@ -1,43 +1,158 @@
-.overview-scene { position: absolute; inset: 0; color: var(--ink); font: var(--text-small)/1.3 var(--font-ui); overflow: hidden; }
-.overview-crypt { position: absolute; inset: 0; width: 100%; height: 100%; }
-.overview-scene-label { position: absolute; bottom: var(--space-8); left: 25%; right: 25%; text-align: center; font-size: var(--text-small); background: var(--paper); padding: var(--space-3); }
-.overview-layer { position: absolute; width: 24%; }
-.overview-layer > b, .overview-layer-select > b { display: block; font: 800 var(--text-small)/1.2 var(--font-ui); }
-.overview-layer-select { display: block; width: 100%; padding: var(--space-6); background: var(--card); color: var(--ink); border: var(--rule-thin) solid var(--hair); font: inherit; text-align: left; cursor: pointer; }
-.overview-layer-select:hover, .overview-layer-select:focus-visible { outline: var(--rule-strong) solid var(--ink); outline-offset: var(--focus-offset); }
-.overview-layer[data-layer="lottery"] { left: 3%; bottom: 9%; width: 27%; }
-.overview-layer[data-layer="moderator"] { top: 5%; right: 3%; width: 29%; }
-.overview-layer[data-layer="visuals"] { right: 3%; bottom: 9%; width: 22%; }
-.overview-layer[data-layer="studio"] { top: 5%; left: 3%; width: 27%; }
-.overview-layer .overview-room-art { height: calc(var(--space-56) * 1.4); width: 100%; overflow: hidden; }
-.overview-room-art :is(.dim, .litglow) { opacity: 0; pointer-events: none; }
+/* The composed stream picture: four overlay tiles in the picture's corners, laid on a grid so they can
+   never overlap at any monitor size. One face (--font-text) with label-face kickers, one tile surface. */
+.overview-scene { position: absolute; inset: 0; container-type: size; display: grid; box-sizing: border-box;
+  grid-template-columns: minmax(0, 30%) minmax(0, 1fr) minmax(0, 30%); grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 5% 3%; padding: 2.5% 3%; overflow: hidden; color: var(--ink); font: 400 var(--text-t-meta)/1.3 var(--font-text); }
+/* Malakor's crypt. Day: warm sandstone in daylight from the rose window, torches banked low.
+   Night: slate in moonlight, torches burning. Theme tokens only (the --art-* stone family). */
+.overview-crypt { position: absolute; inset: 0; width: 100%; height: 100%;
+  --crypt-wall: var(--art-stone); --crypt-wall-low: var(--art-stone-2); --crypt-wall-top: color-mix(in srgb, var(--art-stone-2) 78%, var(--art-stone-ink));
+  --crypt-ink: var(--art-stone-ink); --crypt-void: var(--art-shade); --crypt-light: var(--sun); --crypt-light-a: 70%; --crypt-shaft-a: .5;
+  --crypt-glow: var(--or-lit); --crypt-glow-a: .38; --crypt-vig: color-mix(in srgb, var(--art-stone-ink) 34%, transparent); --crypt-eye: var(--or); }
+.cc-frame[data-theme="night"] .overview-crypt {
+  --crypt-wall: color-mix(in srgb, var(--art-stone) 70%, var(--art-shade)); --crypt-wall-low: var(--art-stone-2); --crypt-wall-top: color-mix(in srgb, var(--art-stone-2) 45%, var(--art-shade));
+  --crypt-light: var(--moon); --crypt-light-a: 55%; --crypt-shaft-a: .32; --crypt-glow-a: .42; --crypt-vig: color-mix(in srgb, var(--art-shade) 82%, transparent); --crypt-eye: var(--or-lit); }
+.crypt-s-wall-top { stop-color: var(--crypt-wall-top); }
+.crypt-s-wall { stop-color: var(--crypt-wall); }
+.crypt-s-wall-low { stop-color: var(--crypt-wall-low); }
+.crypt-s-floor-far { stop-color: color-mix(in srgb, var(--crypt-wall-low) 80%, var(--crypt-ink)); }
+.crypt-s-floor-near { stop-color: color-mix(in srgb, var(--crypt-wall-low) 55%, var(--crypt-ink)); }
+.crypt-s-col-dark { stop-color: color-mix(in srgb, var(--crypt-wall-low) 62%, var(--crypt-ink)); }
+.crypt-s-col-lit { stop-color: color-mix(in srgb, var(--crypt-wall) 85%, var(--crypt-light)); }
+.crypt-s-void { stop-color: var(--crypt-void); }
+.crypt-s-void-low { stop-color: color-mix(in srgb, var(--crypt-void) 80%, var(--or-deep)); }
+.crypt-s-carve-lit { stop-color: color-mix(in srgb, var(--crypt-wall) 80%, var(--crypt-light)); }
+.crypt-s-carve-dark { stop-color: color-mix(in srgb, var(--crypt-wall-low) 70%, var(--crypt-ink)); }
+.crypt-s-glow { stop-color: var(--crypt-glow); stop-opacity: var(--crypt-glow-a); }
+.crypt-s-glow-out { stop-color: var(--crypt-glow); stop-opacity: 0; }
+.crypt-s-light { stop-color: var(--crypt-light); stop-opacity: var(--crypt-shaft-a); }
+.crypt-s-light-mid { stop-color: var(--crypt-light); stop-opacity: calc(var(--crypt-shaft-a) * .5); }
+.crypt-s-light-out { stop-color: var(--crypt-light); stop-opacity: 0; }
+.crypt-s-vig-in { stop-color: var(--crypt-vig); stop-opacity: 0; }
+.crypt-s-vig { stop-color: var(--crypt-vig); }
+.crypt-mortar { fill: none; stroke: color-mix(in srgb, var(--crypt-ink) 16%, transparent); stroke-width: 2; }
+.crypt-shade { fill: color-mix(in srgb, var(--crypt-ink) 26%, transparent); }
+.crypt-rib { fill: none; stroke: color-mix(in srgb, var(--crypt-wall-low) 70%, var(--crypt-ink)); stroke-width: 26; }
+.crypt-rib--thin { stroke-width: 12; stroke: color-mix(in srgb, var(--crypt-wall-low) 80%, var(--crypt-ink)); }
+.crypt-rose-halo { mix-blend-mode: screen; }
+.crypt-tracery { fill: none; stroke: color-mix(in srgb, var(--crypt-wall-low) 55%, var(--crypt-ink)); stroke-width: 10; }
+.crypt-shaft { mix-blend-mode: screen; }
+.crypt-voussoir { fill: color-mix(in srgb, var(--crypt-wall-low) 75%, var(--crypt-ink)); }
+.crypt-jamb { fill: color-mix(in srgb, var(--crypt-wall-low) 60%, var(--crypt-void)); }
+.crypt-step, .crypt-capital { fill: color-mix(in srgb, var(--crypt-wall) 82%, var(--crypt-light)); }
+.crypt-flags { fill: none; stroke: color-mix(in srgb, var(--crypt-ink) 22%, transparent); stroke-width: 3; }
+.crypt-near { fill: color-mix(in srgb, var(--crypt-wall-low) 40%, var(--crypt-ink)); }
+.crypt-near-edge { stroke: color-mix(in srgb, var(--crypt-light) 30%, transparent); stroke-width: 3; }
+.crypt-stone-dark { fill: color-mix(in srgb, var(--crypt-wall-low) 65%, var(--crypt-ink)); }
+.crypt-stone { fill: color-mix(in srgb, var(--crypt-wall) 88%, var(--crypt-ink)); }
+.crypt-stone-lit { fill: color-mix(in srgb, var(--crypt-wall) var(--crypt-light-a), var(--crypt-light)); }
+.crypt-panel { fill: color-mix(in srgb, var(--crypt-wall-low) 70%, var(--crypt-ink)); stroke: color-mix(in srgb, var(--crypt-light) 25%, transparent); stroke-width: 2; }
+.crypt-quatrefoil { stroke-width: 3; }
+.crypt-carve { fill: none; stroke: color-mix(in srgb, var(--crypt-ink) 45%, transparent); stroke-width: 4; }
+.crypt-torch-glow { opacity: .9; }
+.crypt-torch-wash { opacity: .35; }
+.cc-frame[data-theme="night"] .crypt-torch-wash { opacity: .75; mix-blend-mode: screen; }
+.crypt-iron { fill: var(--crypt-ink); stroke: var(--crypt-ink); stroke-width: 5; }
+.crypt-wood { fill: var(--art-wood); }
+.crypt-flame { fill: var(--art-flame); }
+.crypt-flame-core { fill: var(--or-lit); }
+.crypt-wing { fill: color-mix(in srgb, var(--crypt-wall-low) 62%, var(--crypt-ink)); stroke: color-mix(in srgb, var(--crypt-ink) 40%, transparent); stroke-width: 3; }
+.crypt-horn { fill: color-mix(in srgb, var(--crypt-wall-low) 55%, var(--crypt-ink)); }
+.crypt-shield { stroke: color-mix(in srgb, var(--crypt-ink) 55%, transparent); stroke-width: 4; }
+.crypt-shield-rim { fill: none; stroke: color-mix(in srgb, var(--gilt-mid) 70%, transparent); stroke-width: 3; }
+.crypt-brow, .crypt-snout { fill: color-mix(in srgb, var(--crypt-wall-low) 55%, var(--crypt-ink)); }
+.crypt-maw { fill: var(--crypt-void); }
+.crypt-fang { fill: none; stroke: color-mix(in srgb, var(--crypt-wall) 90%, var(--crypt-light)); stroke-width: 4; stroke-linejoin: round; }
+.crypt-eye { fill: var(--crypt-eye); filter: drop-shadow(0 0 calc(var(--glow-on) * 6px) var(--or-glow)); }
+@media (prefers-reduced-motion: no-preference) {
+  .crypt-flame, .crypt-flame-core { transform-box: fill-box; transform-origin: 50% 100%; animation: crypt-flicker 2.4s ease-in-out infinite alternate; }
+  .crypt-flame-core { animation-duration: 1.7s; }
+}
+@keyframes crypt-flicker { 0% { transform: scale(1, 1); } 40% { transform: scale(.94, 1.06); } 100% { transform: scale(1.04, .96); } }
+.overview-scene-label { position: relative; grid-column: 2; grid-row: 2; align-self: end; justify-self: center; max-width: 100%; box-sizing: border-box;
+  padding: var(--space-2) var(--space-10); border-radius: var(--r-round); text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font: italic 400 var(--text-t-meta)/1.4 var(--font-aside); color: var(--ink-2); background: color-mix(in srgb, var(--surface) 88%, transparent);
+  border: var(--came-hair) solid var(--deck-line); }
+
+/* one overlay tile per room, coloured by its room's glass */
+.overview-layer { --layer: var(--ch, var(--deck-gold)); --layer-ink: var(--ink); position: relative; min-width: 0; min-height: 0; max-height: 100%; display: flex; flex-direction: column; }
+.overview-layer[data-layer="lottery"] { --layer: var(--gules); --layer-ink: var(--gules-ink); grid-column: 1; grid-row: 2; align-self: end; }
+.overview-layer[data-layer="studio"] { --layer: var(--key); --layer-ink: var(--key-ink); grid-column: 1; grid-row: 1; align-self: start; }
+.overview-layer[data-layer="moderator"] { --layer: var(--azure); --layer-ink: var(--azure-ink); grid-column: 3; grid-row: 1; align-self: start; }
+.overview-layer[data-layer="visuals"] { --layer: var(--or); --layer-ink: var(--or-ink); grid-column: 3; grid-row: 2; align-self: end; }
+.overview-layer-select, .overview-scene[data-scene="program"] .overview-layer { box-sizing: border-box; display: flex; flex-direction: column; gap: var(--space-4);
+  width: 100%; min-height: 0; max-height: 100%; overflow: hidden; padding: var(--space-8) var(--space-10); text-align: left; color: var(--ink);
+  font: inherit; background: color-mix(in srgb, var(--surface) 94%, transparent); border: var(--came-hair) solid var(--deck-line-2);
+  border-top: var(--came) solid var(--layer); border-radius: var(--space-6); box-shadow: var(--shadow); }
+.overview-layer-select { cursor: pointer; transition: border-color var(--m-quick) var(--ease), box-shadow var(--m-quick) var(--ease); }
+.overview-layer-select:hover { border-color: var(--layer); box-shadow: 0 0 var(--space-12) color-mix(in srgb, var(--layer) 35%, transparent), var(--shadow); }
+.overview-layer-select:focus-visible { outline: var(--came) solid var(--focus); outline-offset: var(--came); }
+.overview-layer > b, .overview-layer-select > b, .overview-layer .cc-draft-frame > b { display: block; flex: none; font: 700 var(--text-t-label)/1.2 var(--font-label);
+  letter-spacing: var(--track-label); text-transform: none; color: var(--layer-ink); }
+.overview-layer-select > span:not([class]) { color: var(--ink-2); }
+.overview-layer .overview-room-art { flex: none; height: clamp(var(--space-56), 24cqh, calc(var(--space-56) * 3)); width: 100%; overflow: hidden; border-radius: var(--space-4); }
+.overview-room-art { position: relative; display: block; box-sizing: border-box; overflow: hidden; --art-glass: var(--layer);
+  background: radial-gradient(80% 70% at 50% 100%, color-mix(in srgb, var(--art-glass) 55%, transparent), transparent 75%), linear-gradient(180deg, color-mix(in srgb, var(--art-glass) 30%, var(--stone-2)), var(--stone-2));
+  box-shadow: inset 0 0 0 var(--came-hair) var(--deck-line-2); }
+.overview-room-art > img { display: block; width: 100%; height: 100%; padding: var(--space-4) 0 var(--space-2); box-sizing: border-box; object-fit: cover; object-position: 50% 58%;
+  filter: drop-shadow(0 0 var(--space-12) color-mix(in srgb, var(--art-glass) 60%, transparent)); }
+.cc-frame[data-theme="day"] .overview-room-art { background: radial-gradient(80% 70% at 50% 100%, color-mix(in srgb, var(--art-glass) 40%, transparent), transparent 75%), linear-gradient(180deg, color-mix(in srgb, var(--art-glass) 55%, var(--lead-2)), var(--lead-2)); }
 .overview-layer-fields { display: flex; flex-direction: column; gap: var(--space-2); }
-.overview-layer-fields s { margin-right: var(--space-4); color: var(--gules-text); }
-.overview-layer-fields strong { color: var(--gules-text); }
+.overview-layer-fields s { margin-right: var(--space-4); color: var(--muted); }
+.overview-layer-fields strong { color: var(--layer-ink); }
 .overview-layer svg:not(.overview-room-art) { display: block; max-height: calc(var(--space-56) * 1.5); width: 100%; }
-.overview-chat { max-height: calc(var(--space-56) * 2); overflow: hidden; }
-.overview-chat p { margin: var(--space-5) 0; border-top: var(--rule-thin) solid var(--line); padding-top: var(--space-3); }
-.overview-chat [data-held="true"] { color: var(--muted); text-decoration: line-through; background: var(--paper-2); }
-.overview-vote { display: flex; gap: var(--space-8); padding-block: var(--space-4); border-top: var(--space-5) solid var(--azure); font-weight: 700; }
-.overview-camera { display: block; border: var(--rule-strong) solid var(--or); padding: var(--space-4); }
-.overview-scene-border { position: absolute; inset: 0; border: var(--space-5) solid var(--or); pointer-events: none; opacity: var(--disabled-opacity); }
-.overview-scene[data-scene="program"] .overview-layer { font-size: var(--text-small); padding: var(--space-4); background: var(--card); }
-.overview-scene[data-scene="program"] .overview-layer[data-layer="lottery"] { left: 3%; bottom: 8%; width: 47%; }
-.overview-scene[data-scene="program"] .overview-layer[data-layer="studio"] { top: 5%; left: 3%; width: 38%; }
-.overview-scene[data-scene="program"] .overview-layer[data-layer="moderator"] { top: 5%; right: 3%; width: 52%; }
-.overview-scene[data-scene="program"] .overview-layer[data-layer="visuals"] { right: 3%; bottom: 8%; width: 40%; }
-.overview-scene[data-scene="program"] .overview-chat { max-height: calc(var(--space-14) * 3); }
+
+/* a drafted tile: a calm amber rule and wash instead of a dashed box; the DRAFT stamp still names it */
+.overview-scene .cc-draft-frame { gap: var(--space-4); margin: 0; padding: var(--space-4) 0 var(--space-4) var(--space-10); border: 0; border-left: var(--came) solid var(--or);
+  border-radius: 0; background: color-mix(in srgb, var(--or) 8%, transparent); color: inherit; font: inherit; }
+.overview-scene .cc-draft-frame > .cc-stamp { align-self: flex-start; margin-top: var(--space-2); }
+
+/* chat and herald */
+.overview-chat { display: grid; gap: var(--space-4); min-height: 0; overflow: hidden; }
+.overview-chat p { margin: 0; padding-top: var(--space-4); border-top: var(--came-hair) solid var(--deck-line); color: var(--ink); overflow-wrap: anywhere; }
+.overview-chat [data-held="true"] { color: var(--muted); }
+.overview-chat [data-held="true"] > b { display: inline-block; margin-right: var(--space-6); padding: 0 var(--space-6); border-radius: var(--r-round);
+  font: 700 var(--text-t-label)/1.4 var(--font-text); color: var(--or-ink); background: color-mix(in srgb, var(--or) 16%, transparent); }
+.overview-chat [data-held="true"] { text-decoration: line-through; text-decoration-color: var(--muted); }
+.overview-chat [data-held="true"] > b { text-decoration: none; }
+.overview-vote { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-12); padding-top: var(--space-6); border-top: var(--came) solid var(--azure); font-weight: 700; color: var(--ink); }
+.overview-camera { display: block; padding: var(--space-3) var(--space-8); border: var(--came-hair) solid var(--or); border-radius: var(--space-4); color: var(--ink-2); }
+.overview-scene-border { position: absolute; inset: 0; pointer-events: none; border: var(--space-3) solid color-mix(in srgb, var(--gilt-mid) 55%, transparent); }
+
+/* small monitors: drop the tile's secondary lines first */
+@container (max-height: 26rem) {
+  .overview-chat p:nth-child(n + 3), .overview-duel__note { display: none; }
+}
+@container (max-height: 20rem) {
+  .overview-chat p:nth-child(n + 2), .overview-layer-fields { display: none; }
+}
+
+@container (min-height: 40rem) {
+  .overview-scene[data-scene="preview"] { font-size: var(--text-t-small); }
+  .overview-scene[data-scene="preview"] .overview-duel__pair b, .overview-scene[data-scene="preview"] .overview-duel__share { font-size: var(--text-t-small); }
+}
+
+/* the Program monitor: the same picture at thumbnail size, two tiles across */
+.overview-scene[data-scene="program"] { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 4% 4%; padding: 3% 4%; font-size: var(--text-t-label); line-height: 1.25; }
+.overview-scene[data-scene="program"] .overview-layer { padding: var(--space-4) var(--space-6); gap: var(--space-2); }
+.overview-scene[data-scene="program"] .overview-layer > b { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; letter-spacing: .02em; }
+.overview-scene[data-scene="program"] .overview-layer[data-layer="moderator"] { grid-column: 2; }
+.overview-scene[data-scene="program"] .overview-layer[data-layer="visuals"] { grid-column: 2; }
 .overview-scene[data-scene="program"] .overview-chat p:not(:first-child), .overview-scene[data-scene="program"] .overview-vote, .overview-scene[data-scene="program"] .overview-camera, .overview-scene[data-scene="program"] .overview-scene-label, .overview-scene[data-scene="program"] .overview-layer-fields { display: none; }
-.overview-scene[data-scene="program"] .overview-room-art { height: var(--space-40); }
+.overview-scene[data-scene="program"] .overview-chat p { padding: 0; border: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.overview-scene[data-scene="program"] .overview-room-art { height: 22cqh; }
+.overview-scene[data-scene="program"] .overview-scene-border { border-width: var(--space-2); }
+
 /* Map Room tile: a small duel card, two contestants over chat's share bar. */
-.overview-duel { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-3); box-sizing: border-box; width: 100%; min-width: 0; padding-top: var(--space-4); }
-.overview-duel__round { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-4); font: 700 var(--text-t-label)/1.2 var(--font-label); letter-spacing: var(--track-wide); text-transform: lowercase; color: var(--muted); }
-.overview-duel__pair { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: baseline; gap: var(--space-4); }
-.overview-duel__pair b { min-width: 0; font: 700 var(--text-t-small)/1.2 var(--font-text); overflow-wrap: anywhere; }
+.overview-duel { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-4); box-sizing: border-box; width: 100%; min-width: 0; }
+.overview-duel__round { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-4);
+  font: 600 var(--text-t-label)/1.2 var(--font-text); color: var(--muted); }
+.overview-duel__pair { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: baseline; gap: var(--space-6); }
+.overview-duel__pair b { min-width: 0; font: 700 var(--text-t-meta)/1.2 var(--font-text); overflow-wrap: anywhere; color: var(--ink); }
 .overview-duel__pair b:last-child { text-align: right; }
-.overview-duel__pair i { font: italic 400 var(--text-t-small)/1 var(--font-book); color: var(--muted); }
-.overview-duel__bar { display: block; height: var(--space-6); background: var(--gules); border: var(--rule-thin) solid var(--ink); }
-.overview-duel__bar > span { display: block; height: 100%; background: var(--azure); border-right: var(--rule-thin) solid var(--ink); }
-.overview-duel__share { display: flex; justify-content: space-between; font: 700 var(--text-t-small)/1.2 var(--font-text); }
-.overview-duel__note { font: italic 400 var(--text-t-small)/1.3 var(--font-book); color: var(--muted); }
+.overview-duel__pair i { font: italic 400 var(--text-t-label)/1 var(--font-aside); color: var(--muted); }
+.overview-duel__bar { display: block; height: var(--space-6); overflow: hidden; border-radius: var(--r-round); background: var(--gules); }
+.overview-duel__bar > span { display: block; height: 100%; background: var(--azure); box-shadow: var(--space-1) 0 0 var(--surface); }
+.overview-duel__share { display: flex; justify-content: space-between; font: 700 var(--text-t-meta)/1.2 var(--font-text); font-variant-numeric: var(--num); }
+.overview-duel__note { font: italic 400 var(--text-t-label)/1.3 var(--font-aside); color: var(--muted); }
 .overview-scene[data-scene="program"] .overview-duel__note { display: none; }

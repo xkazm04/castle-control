@@ -3,30 +3,19 @@
  so these selectors read in the fused label face (Alegreya Sans SC, lowercased = small caps).
  When a module restyles one of these selectors with fused roles, delete its line here. */
 /* apps/desktop/src/demo/demo.css */
-.cc-frame .demo-heading h1 { font-family: var(--font-label); font-stretch: normal; text-transform: lowercase; letter-spacing: var(--track-label); }
 .cc-frame .demo-seg > span { font-family: var(--font-label); font-stretch: normal; text-transform: lowercase; letter-spacing: var(--track-label); }
 .cc-frame .demo-seg .cc-button { font-family: var(--font-label); font-stretch: normal; text-transform: lowercase; letter-spacing: var(--track-label); }
 .cc-frame .demo-page .plate { font-family: var(--font-label); font-stretch: normal; text-transform: lowercase; letter-spacing: var(--track-label); }
 .cc-frame .demo-chat header { font-family: var(--font-label); font-stretch: normal; text-transform: lowercase; letter-spacing: var(--track-label); }
-/* apps/desktop/src/keep/keep.css */
 /* apps/desktop/src/moat/moat.css */
 .cc-frame .moat-head h3 { font-family: var(--font-label); font-stretch: normal; text-transform: lowercase; letter-spacing: var(--track-label); }
 .cc-frame .moat-report h2 { font-family: var(--font-label); font-stretch: normal; text-transform: lowercase; letter-spacing: var(--track-label); }
 .cc-frame .moat-report h3 { font-family: var(--font-label); font-stretch: normal; text-transform: lowercase; letter-spacing: var(--track-label); }
-/* apps/desktop/src/overview/overview.css */
-.cc-frame .overview-heading h1 { font-family: var(--font-label); font-stretch: normal; text-transform: lowercase; letter-spacing: var(--track-label); }
-/* apps/desktop/src/rehearsal/rehearsal.css */
-.cc-frame .rehearsal-heading h1 { font-family: var(--font-label); font-stretch: normal; text-transform: lowercase; letter-spacing: var(--track-label); }
-/* apps/desktop/src/rooms/lottery/lab.css */
-.cc-frame .lottery-lab-step h4 { font-family: var(--font-label); font-stretch: normal; text-transform: lowercase; letter-spacing: var(--track-label); }
 /* apps/desktop/src/rooms/lottery/room.css */
 .cc-frame .lottery-room [data-role="writ-title"] { font-family: var(--font-label); font-stretch: normal; text-transform: lowercase; letter-spacing: var(--track-label); }
 .cc-frame .lottery-room .cc-ticket-stub b { font-family: var(--font-label); font-stretch: normal; text-transform: lowercase; letter-spacing: var(--track-label); }
-.cc-frame .lottery-room .cc-writ-title { font-family: var(--font-label); font-stretch: normal; text-transform: lowercase; letter-spacing: var(--track-label); }
-.cc-frame .lottery-card-title { font-family: var(--font-label); font-stretch: normal; text-transform: lowercase; letter-spacing: var(--track-label); }
 /* apps/desktop/src/rooms/lottery/stage.css */
 .cc-frame .lottery-stage-wax b { font-family: var(--font-label); font-stretch: normal; text-transform: lowercase; letter-spacing: var(--track-label); }
-.cc-frame .lottery-stage-verdict b { font-family: var(--font-label); font-stretch: normal; text-transform: lowercase; letter-spacing: var(--track-label); }
 /* apps/desktop/src/rooms/moderator/room.css */
 .cc-frame .moderator-bridge b { font-family: var(--font-label); font-stretch: normal; text-transform: lowercase; letter-spacing: var(--track-label); }
 .cc-frame .moderator-rule-text b { font-family: var(--font-label); font-stretch: normal; text-transform: lowercase; letter-spacing: var(--track-label); }
@@ -39,8 +28,6 @@
 .cc-frame .studio-room .cc-seal-card > .shell-seal-slot > h2 { font-family: var(--font-label); font-stretch: normal; text-transform: lowercase; letter-spacing: var(--track-label); }
 /* apps/desktop/src/shell/room.css */
 .cc-frame .shell-room :where(h3) { font-family: var(--font-label); font-stretch: normal; text-transform: lowercase; letter-spacing: var(--track-label); }
-/* apps/desktop/src/stream/setup.css */
-.cc-frame .stream-heading h1 { font-family: var(--font-label); font-stretch: normal; text-transform: lowercase; letter-spacing: var(--track-label); }
 /* packages/ui/src/draft-frame.css */
 .cc-frame .cc-draft-frame > b { font-family: var(--font-label); font-stretch: normal; text-transform: lowercase; letter-spacing: var(--track-label); }
 /* packages/ui/src/heraldic-card.css */
@@ -52,12 +39,9 @@
 .cc-frame .cc-ribbon-word { font-family: var(--font-label); font-stretch: normal; text-transform: lowercase; letter-spacing: var(--track-label); }
 /* packages/ui/src/heraldic-plate.css */
 .cc-frame .cc-plate-band .cc-plate-title { font-family: var(--font-label); font-stretch: normal; text-transform: lowercase; letter-spacing: var(--track-label); }
-/* packages/ui/src/heraldic-readout.css */
-.cc-frame .cc-hero-figure { font-family: var(--font-label); font-stretch: normal; text-transform: lowercase; letter-spacing: var(--track-label); }
 /* packages/ui/src/panels.css */
 .cc-frame .cc-title-row h1 { font-family: var(--font-label); font-stretch: normal; text-transform: lowercase; letter-spacing: var(--track-label); }
 .cc-frame .cc-panel-heading h2 { font-family: var(--font-label); font-stretch: normal; text-transform: lowercase; letter-spacing: var(--track-label); }
-/* packages/ui/src/primitives.css */
 /* packages/ui/src/program-monitor.css */
 .cc-frame .cc-monitor-label { font-family: var(--font-label); font-stretch: normal; text-transform: lowercase; letter-spacing: var(--track-label); }
 .cc-frame .cc-monitor-reveal-title { font-family: var(--font-label); font-stretch: normal; text-transform: lowercase; letter-spacing: var(--track-label); }
@@ -65,5 +49,7 @@
 .cc-frame .cc-proposal-card h3 { font-family: var(--font-label); font-stretch: normal; text-transform: lowercase; letter-spacing: var(--track-label); }
 
 /* ---- one label face: every remaining kit label reads in the small-caps label role, never uppercase UI sans */
-.cc-frame .cc-chip, .cc-frame .cc-heraldic-button, .cc-frame .cc-hero-caption, .cc-frame .cc-field > label,
+.cc-frame .cc-hero-caption, .cc-frame .cc-field > label,
 .cc-frame .visuals-replay-compare-word, .cc-frame summary { font-family: var(--font-label); font-stretch: normal; text-transform: lowercase; letter-spacing: var(--track-label); }
+/* buttons: the small-caps face in sentence case (never lowercased into all small caps) */
+.cc-frame .cc-heraldic-button { font-family: var(--font-label); font-stretch: normal; text-transform: none; letter-spacing: .04em; }

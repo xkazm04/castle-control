@@ -18,15 +18,17 @@
 .cc-frame .shell-room { font: 400 var(--text-t-body)/1.5 var(--font-text); }
 
 /* ---- chamber strip -> transom-light tabs */
+/* only the top room bar (a direct child of the shell) stacks over the surface; an embedded strip stays in flow */
+.cc-frame .desktop-shell > .cc-chamber-strip { position: relative; z-index: 29; }
 .cc-frame .cc-chamber-strip {
-  position: relative; z-index: 29; min-height: var(--tabs-h); height: var(--tabs-h);
+  min-height: var(--tabs-h); height: var(--tabs-h);
   background: var(--stone-2) var(--tex-stone); border-bottom: var(--came-heavy) solid var(--lead);
   box-shadow: 0 8px 18px -12px var(--shade);
 }
 .cc-frame .cc-chamber-tile {
   display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-rows: auto auto; align-content: center;
   column-gap: 10px; row-gap: 4px; padding: 10px 14px 6px; border: 0; border-right: var(--came) solid var(--lead);
-  background: transparent; color: var(--ink); transition: background var(--m-fast) var(--ease);
+  background: transparent; color: var(--ink); transition: background var(--m-quick) var(--ease);
 }
 .cc-frame .cc-chamber-tile:last-child { border-right: 0; }
 .cc-frame .cc-chamber-tile:hover { background: color-mix(in srgb, var(--surface) 55%, transparent); }
@@ -61,7 +63,6 @@
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .cc-frame .cc-keep-tile .cc-chamber-tile-title { grid-row: 1 / span 2; align-self: center; }
-.cc-frame .cc-chamber-tile[aria-current="page"]:not(.cc-keep-tile) .cc-chamber-tile-title { color: var(--ch-ink); }
 .cc-frame .cc-chamber-state { grid-column: 2; font: 500 var(--text-t-small)/1 var(--font-text); color: var(--ink-2); }
 .cc-frame .cc-layer-lamps { grid-column: 1 / -1; display: flex; gap: 10px; font: 700 var(--text-px-13)/1 var(--font-label); letter-spacing: .05em; text-transform: lowercase; color: var(--ink-2); }
 .cc-frame .cc-layer-lamps [data-lit]::before { width: 7px; height: 7px; margin-right: 5px; border: 0; border-radius: 0; transform: rotate(45deg); box-shadow: 0 0 0 1.5px var(--faint); background: transparent; }
@@ -138,26 +139,42 @@
 .desktop-shell:has(> .cc-steward-dock[data-expanded="true"]) .cc-chamber-head .cc-back > :is(.cc-btn, button) { min-height: 30px; height: 30px; padding: 0 12px; font-size: var(--text-px-13); }
 
 /* ---- key numeral jewel */
+/* ---- .cc-btn shares InkButton's outline, weight and tracking ((0,1,0): modifiers still win) */
+:where(.cc-frame) .cc-btn { border: var(--rule-medium) solid var(--line-control); font-weight: 700; letter-spacing: .04em; text-transform: none; }
+/* plain outline buttons keep that grey outline even where a room sheet resets bare buttons to an ink border */
+.cc-frame .cc-btn:not(.cc-btn--primary, .cc-btn--rubric, .cc-btn--rampart, .cc-btn--quiet, .cc-btn--chamber, .cc-btn--line, .cc-btn--glass, :disabled) { border-color: var(--line-control); }
+.cc-frame .cc-btn--quiet:not(:disabled) { border-color: var(--hair); }
+:where(.cc-frame) :is(.cc-btn--primary, .cc-btn--glass) { border-color: transparent; }   /* a filled button needs no outline */
+:where(.cc-frame) .cc-btn--quiet { border-color: var(--hair); }
+:where(.cc-frame) .cc-btn--rampart { border-color: var(--lead-hi); }
+
+/* ---- Kbd -> one key cap: a hairline cap with a pressed lower lip, the mono face, both themes */
 .cc-frame .cc-kbd {
-  min-width: 22px; height: 24px; padding: 0 6px; font: 800 var(--text-px-13)/1 var(--font-text); color: var(--ink);
-  background: var(--surface); border: 1.5px solid var(--lead); border-radius: 11px 11px 2px 2px; box-shadow: inset 0 -2px 0 var(--hair);
+  min-width: 22px; height: 22px; padding: 0 6px; font: 500 var(--text-t-mono)/1 var(--font-mono); color: var(--ink-2);
+  background: linear-gradient(180deg, var(--surface), var(--surface-2)); border: var(--came-hair) solid var(--line-control);
+  border-bottom-width: 2px; border-radius: 4px; box-shadow: none; letter-spacing: 0; text-transform: none;
 }
 
 /* ---- InkButton -> leaded button */
 .cc-frame .cc-button:not(.cc-heraldic-button) {
-  height: var(--control-h); gap: 10px; padding: 0 16px; border: var(--came) solid var(--lead); border-radius: var(--r);
+  height: var(--control-h); gap: 10px; padding: 0 16px; border: var(--rule-medium) solid var(--line-control); border-radius: var(--r);
   background: var(--surface); color: var(--ink); box-shadow: inset 0 -3px 0 var(--hair-2);
-  font: 800 var(--text-px-14-5)/1 var(--font-label); letter-spacing: .07em; text-transform: lowercase;
+  font: 700 var(--text-t-small)/1 var(--font-label); letter-spacing: .04em; text-transform: none;
+  transition: background-color var(--m-quick) var(--ease), box-shadow var(--m-quick) var(--ease), border-color var(--m-quick) var(--ease);
 }
+.cc-frame .cc-button:not(.cc-heraldic-button):active:not(:disabled) { transform: translateY(1px); }
+.cc-frame .cc-button:not(.cc-heraldic-button):disabled { opacity: .5; box-shadow: none; }
 .cc-frame .cc-button:not(.cc-heraldic-button):hover { background: var(--surface-2); color: var(--ink); box-shadow: inset 0 -3px 0 var(--ch, var(--hair)); }
 .cc-frame .cc-button:not(.cc-heraldic-button):is([data-variant="primary"], [data-variant="plate"]) {
   background: var(--lead); color: var(--on-lead); border-color: var(--lead);
   box-shadow: inset 0 -4px 0 var(--ch), inset 0 1px 0 var(--lead-hi), 0 0 calc(var(--glow-on) * 14px) var(--ch-glow);
 }
 .cc-frame .cc-button:not(.cc-heraldic-button)[data-variant="ghost"] { border-color: var(--hair); background: transparent; box-shadow: none; }
+.cc-frame .cc-button:not(.cc-heraldic-button)[data-variant="ghost"]:hover { border-color: var(--line-control); background: var(--tint); }
 .cc-frame .cc-button:not(.cc-heraldic-button)[data-variant="danger"] { color: var(--danger-ink); border-color: var(--danger); }
+.cc-frame .cc-button:not(.cc-heraldic-button)[data-variant="danger"]:hover { background: color-mix(in srgb, var(--danger) 12%, var(--surface)); box-shadow: inset 0 -3px 0 var(--danger); }
 .cc-frame .cc-button:not(.cc-heraldic-button)[aria-pressed="true"] { background: var(--surface-3); box-shadow: inset 0 -4px 0 var(--ch), inset 0 2px 3px var(--hair-2); }
-.cc-frame .cc-button:not(.cc-heraldic-button)[data-size="small"] { height: var(--control-h-sm); padding: 0 12px; font-size: var(--text-px-13-5); }
+.cc-frame .cc-button:not(.cc-heraldic-button)[data-size="small"] { height: var(--control-h-sm); padding: 0 12px; font-size: var(--text-t-meta); }
 .cc-frame .cc-button:not(.cc-heraldic-button)[data-size="icon"] { width: 34px; padding: 0; }
 
 /* ---- Stamp -> glass stamp (SIMULATED and SAMPLE -> the etched pane) */
@@ -175,15 +192,22 @@
 .cc-frame .cc-stamp:is([data-stamp="shadow"], [data-stamp="pass"]) { --st: var(--azure); --st-deep: var(--azure-deep); --st-glow: var(--azure-glow); }
 .cc-frame .cc-stamp[data-stamp="ok"] { --st: var(--emerald); --st-deep: var(--emerald-deep); --st-glow: var(--emerald-glow); }
 .cc-frame .cc-stamp[data-stamp="sealed"] { --st: var(--amethyst); --st-deep: var(--amethyst-deep); --st-glow: var(--amethyst-glow); }
-.cc-frame .cc-stamp[data-stamp="draft"] { --st: var(--or-lit); --st-deep: var(--or); color: var(--lead-lo); text-shadow: none; }
-.cc-frame .cc-stamp:is([data-stamp="off-air"]) { color: var(--ink-2); background: var(--surface-2); box-shadow: inset 0 0 0 1.5px var(--ink-2); text-shadow: none; }
-.cc-frame .cc-stamp:is([data-stamp="simulated"], [data-stamp="sample"]) {
-  padding: 0 9px; letter-spacing: .12em; color: var(--ink-2); text-shadow: none;
-  border: 1.5px dashed currentColor; background: var(--tex-etch), var(--surface); box-shadow: none;
+/* DRAFT: the same calm tag as SIMULATED, in amber - amber ink on an amber wash, hairline border */
+.cc-frame :is(.cc-stamp[data-stamp="draft"], .cc-stamp.cc-stamp--draft) {
+  --st-glow: transparent; height: 22px; padding: 0 8px; gap: 5px; letter-spacing: .04em; font-weight: 700; text-transform: none;
+  color: var(--or-ink); text-shadow: none; border: var(--came-hair) solid color-mix(in srgb, var(--or) 60%, transparent);
+  border-radius: var(--r); background: var(--or-wash); box-shadow: none;
 }
-.cc-frame .cc-stamp:is([data-stamp="simulated"], [data-stamp="sample"])::before {
-  content: ''; display: block; position: static; inset: auto; width: 7px; height: 7px; flex: none;
-  transform: rotate(45deg); border: 1.5px solid currentColor; border-radius: 0; opacity: 1;
+.cc-frame .cc-stamp:is([data-stamp="off-air"]) { color: var(--ink-2); background: var(--surface-2); box-shadow: inset 0 0 0 1.5px var(--ink-2); text-shadow: none; }
+/* SIMULATED / SAMPLE: one calm label everywhere - a quiet hairline tag with a small diamond,
+   always visible and legible (AA muted ink on a faint tint), never dashed, tilted or etched */
+.cc-frame .cc-stamp:is([data-stamp="simulated"], [data-stamp="sample"]), .cc-frame .cc-sim:not(.cc-sim--on-lead) {
+  height: 22px; padding: 0 8px; gap: 5px; letter-spacing: .04em; font-weight: 700; text-transform: none; color: var(--muted); text-shadow: none;
+  border: var(--came-hair) solid var(--hair); border-radius: var(--r); background: color-mix(in srgb, var(--surface) 90%, transparent); box-shadow: none;
+}
+.cc-frame .cc-stamp:is([data-stamp="simulated"], [data-stamp="sample"])::before, .cc-frame .cc-sim:not(.cc-sim--on-lead, .cc-sim--plain)::before {
+  content: ''; display: block; position: static; inset: auto; width: 5px; height: 5px; flex: none;
+  transform: rotate(45deg); border: 1.5px solid currentColor; border-radius: 0; opacity: .9;
 }
 .cc-frame .cc-stamp-dot[data-dot="lamp"] { background: var(--gules-lit); box-shadow: 0 0 0 1.5px var(--lead); }
 .cc-frame .cc-stamp-bleed { display: none; }
@@ -237,11 +261,10 @@
 
 /* ---- type that the legacy kit uppercased in a condensed face now reads in the fused roles */
 .cc-frame .cc-kicker { font: 700 var(--text-t-label)/1.2 var(--font-label); letter-spacing: var(--track-label); text-transform: lowercase; color: var(--ink-2); }
-.cc-frame .shell-room h2 { font-family: var(--font-display); font-weight: 600; letter-spacing: .005em; text-transform: none; }
+.cc-frame .shell-room h2 { font-family: var(--font-text); font-weight: 700; letter-spacing: 0; text-transform: none; }   /* section heads: text face (display is for the room H1 only) */
 .cc-frame .shell-room :where(h3) { font: 800 var(--text-t-h3)/1.2 var(--font-label); letter-spacing: var(--track-label); text-transform: lowercase; }
 .cc-frame .room-caption { font: 800 var(--text-t-label)/1.4 var(--font-label); letter-spacing: .1em; text-transform: lowercase; }
-.cc-frame .shell-room :where(button:not(.cc-seal-button, .cc-btn, .cc-button, .cc-room-back, .cc-seg > *)) {
-  border: 1.5px solid var(--lead); border-radius: var(--r); background: var(--surface); font-family: var(--font-text);
+.cc-frame .shell-room :where(button:not(.cc-seal-button, .cc-btn, .cc-button, .cc-room-back, .cc-seg > *, [data-bare], .moat-stamp, .moat-row-id)) {
+  border: var(--came-hair) solid var(--line-control); border-radius: var(--r); background: var(--surface); font-family: var(--font-text);
 }
 .cc-frame .shell-seal-slot { border: var(--came) dashed var(--ch); background: var(--surface); }
-.cc-frame .shell-seal-slot h2 { font: 600 var(--text-t-h4)/1.2 var(--font-display); color: var(--ch-ink); }

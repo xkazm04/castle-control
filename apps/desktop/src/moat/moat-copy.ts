@@ -53,6 +53,7 @@ export const moatCopy = {
     note: (rule_id: string) => `Stamps for rule ${rule_id} only. Other stops are dimmed, and Previous and Next stop walk this rule.`,
   },
   heartbeat: 'Sample replay loop · simulated', heartbeat_label: 'Sample replay · simulated',
+  quiet: 'No replay yet · run a drill in the Gatehouse', quiet_name: 'The moat, empty: no replay has run yet',
   loop_pause: 'Pause the sample loop', loop_play: 'Play the sample loop',
   print: 'Print night report',
   compare: {

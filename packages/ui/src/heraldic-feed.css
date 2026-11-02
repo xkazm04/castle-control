@@ -1,4 +1,4 @@
-.cc-feed { min-width: 0; min-height: 0; background: var(--card); border-top: var(--rule-medium) solid var(--ink); }
+.cc-feed { min-width: 0; min-height: 0; background: var(--card); border-top: var(--rule-thin) solid var(--hair); }
 .cc-ruled-row {
   --cc-feed-mark-width: calc(var(--space-56) + var(--space-16)); --cc-feed-row-height: var(--row-h); --cc-feed-rule-ink: var(--hair-2);
   display: grid; grid-template-columns: var(--cc-feed-mark-width, calc(var(--space-56) + var(--space-16))) minmax(0, 1fr) auto;

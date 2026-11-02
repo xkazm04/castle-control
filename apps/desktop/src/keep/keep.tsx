@@ -3,11 +3,12 @@ import type { ModuleId } from '@castle-control/ui';
 import { useState, useSyncExternalStore } from 'react';
 import type { ReactNode } from 'react';
 import { proposalQueue } from '@castle-control/ui/steward';
+import { duelHost } from '../rooms/studio/duel-host.js';
 import { useFlowDraft } from '@castle-control/ui/steward-flow';
 import type { Snapshot } from '../model.js';
 import { stripStates } from '../shell/strip-states.js';
 import { keepReadModel } from './read-model.js';
-import { MoatHeartbeat } from '../moat/heartbeat.jsx';
+import { MoatHeartbeat, MoatQuiet } from '../moat/heartbeat.jsx';
 import { fixtureReplay } from '../moderation-fixture.js';
 import { LintelPlaque } from './plaque.jsx';
 import { KeepScene, Tracery } from './window-scenes.jsx';
@@ -20,7 +21,7 @@ export type KeepProps = { snapshot?: Snapshot; on_open: (id: ModuleId) => void; 
 
 export function KeepEntrance({ on_enter, on_demo, on_stream, on_rehearsal }: Pick<KeepProps, 'on_enter' | 'on_demo' | 'on_stream' | 'on_rehearsal'>) {
   return <nav className="keep-heading ki__actions" aria-label="Keep actions">
-    <button type="button" className="cc-btn cc-btn--primary" onClick={on_enter}>Enter the keep <kbd className="cc-kbd">0</kbd></button>
+    <button type="button" className="cc-btn" onClick={on_enter}>Enter the keep <kbd className="cc-kbd">0</kbd></button>
     <button type="button" className="cc-btn" data-demo-entry title="What is Castle Control? A short, simulated tour." disabled={!on_demo} onClick={on_demo}>See it on stream</button>
     <button type="button" className="cc-btn" disabled={!on_stream} onClick={on_stream}>Set up OBS</button>
     <button type="button" className="cc-btn" disabled={!on_rehearsal} onClick={on_rehearsal}>Dress rehearsal</button></nav>;
@@ -28,6 +29,8 @@ export function KeepEntrance({ on_enter, on_demo, on_stream, on_rehearsal }: Pic
 
 export function Keep({ snapshot = { mode: 'fixture', phase: 'ready' }, on_open, on_enter, on_demo, on_stream, on_rehearsal, aside }: KeepProps) {
   const queue = useSyncExternalStore(proposalQueue.subscribe, proposalQueue.getSnapshot, proposalQueue.getSnapshot);
+  // The Map Room plaque follows the duel live, as the chamber strip does.
+  useSyncExternalStore(duelHost.subscribe, duelHost.picture, duelHost.picture);
   const read = keepReadModel(snapshot);
   // Windows use attention and draft state; Program's presentation stays in its sill cell.
   const layers = stripStates(snapshot, queue.proposals, []);
@@ -40,7 +43,7 @@ export function Keep({ snapshot = { mode: 'fixture', phase: 'ready' }, on_open, 
     <header className="keep-caption">
       <div className="keep-caption-title">
         <div className="keep-eyebrow" data-role="keep-eyebrow"><h1 data-role="keep-name">The Keep</h1>
-          <span> · {snapshot.mode === 'fixture' ? 'fixture mode · sample evening' : 'core mode · chamber readings'}</span></div>
+          <span> · {snapshot.mode === 'fixture' ? 'fixture mode · sample evening' : 'tonight’s keep · chamber readings'}</span></div>
         <p data-role="keep-sub">Point at a room, or press 1 to 4. The brightest window needs you.</p>
       </div>
       <div className="keep-fair" data-role="fair"><svg viewBox="0 0 24 24" aria-hidden="true">
@@ -72,7 +75,9 @@ export function Keep({ snapshot = { mode: 'fixture', phase: 'ready' }, on_open, 
       <section className="keep-moat km" aria-label="The moat">
         <h2 className="keep-moatlab km__label" data-role="moat-label">The moat · <span className={snapshot.mode === 'fixture' ? 'keep-delay' : undefined}>chat delay {read.delay}</span></h2>
         {snapshot.mode === 'fixture' && <><MoatHeartbeat source={fixtureReplay} delay_s={read.delay_s} />
+          <span className="keep-moat-key" aria-hidden="true"><i />passed<i data-fate="held" />held<i data-now="" />now</span>
           <a className="keep-moat-link cc-link" href="#/chamber/moderator/drill">Watch the full replay</a></>}
+        {snapshot.mode !== 'fixture' && <MoatQuiet />}
       </section>
     </div>
   </section>;

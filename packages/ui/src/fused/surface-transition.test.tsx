@@ -7,8 +7,10 @@ function fixture(reduced: boolean) {
   const incoming_animation: Animation = Object.assign({} as Animation, { cancel: vi.fn(), onfinish: null });
   const outgoing_animation: Animation = Object.assign({} as Animation, { cancel: vi.fn(), onfinish: null });
   const child = { removeAttribute: vi.fn() };
+  const hidden = { remove: vi.fn() };
   const copy = { classList: { add: vi.fn() }, setAttribute: vi.fn(), removeAttribute: vi.fn(),
-    querySelectorAll: () => [child], style: {}, remove: vi.fn(), animate: vi.fn(() => outgoing_animation) };
+    querySelectorAll: (selector: string) => selector.includes('display: none') ? [hidden] : [child],
+    style: {}, remove: vi.fn(), animate: vi.fn(() => outgoing_animation) };
   const node = Object.assign({} as HTMLElement, { cloneNode: vi.fn(() => copy),
     getBoundingClientRect: () => ({ left: 14, top: 100, width: 1252, height: 520 }),
     after: vi.fn(), animate: vi.fn(() => incoming_animation) });
@@ -21,7 +23,7 @@ function fixture(reduced: boolean) {
   transition.surface.current = node;
   const previous = { ...props };
   props.surface = 'moderator'; props.children = 'Simulated Gatehouse';
-  return { transition, previous, copy, node, child, incoming_animation, outgoing_animation };
+  return { transition, previous, copy, node, child, hidden, incoming_animation, outgoing_animation };
 }
 
 test('1 to 2 commits the incoming route synchronously and cross-fades opacity using motion tokens', () => {
@@ -43,6 +45,12 @@ test('1 to 2 commits the incoming route synchronously and cross-fades opacity us
   outgoing_animation.onfinish?.call(outgoing_animation, {} as AnimationPlaybackEvent);
   expect(copy.remove).toHaveBeenCalledOnce();
   expect(transition.render().props.children).toBe('Simulated Gatehouse');
+});
+
+test('the copy drops what Suspense hid, so a still-mounted hidden surface never appears twice', () => {
+  const { transition, previous, hidden } = fixture(false);
+  transition.getSnapshotBeforeUpdate(previous);
+  expect(hidden.remove).toHaveBeenCalledOnce();
 });
 
 test('reduced motion makes no outgoing copy and uses only the short opacity settle', () => {

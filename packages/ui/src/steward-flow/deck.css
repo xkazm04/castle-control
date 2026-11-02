@@ -1,30 +1,50 @@
-/* The Deck: a thin action row, a single Steward bar, and an overlay conversation. */
-.cc-dock.cc-steward-dock { display: block; min-height: 0; border-top: 0; }
+/* The Deck: a thin action row, a single Steward bar, and an overlay conversation.
+ * One dock ground under both rows; every control shares the dock face of action-row/row.css. */
+.cc-dock.cc-steward-dock { display: block; min-height: 0; border-top: 0;
+  background: linear-gradient(180deg, var(--deck-action-top), var(--deck-steward-bottom)); }
 .cc-steward-bar-row { position: relative; display: flex; align-items: center; gap: var(--space-12); height: var(--space-56);
-  box-sizing: border-box; padding: 0 var(--space-22); border-top: var(--rule-thin) solid var(--sd-hair);
-  background: linear-gradient(180deg, var(--deck-steward-top), var(--deck-steward-bottom)); }
-.cc-steward-bar-row .cc-steward { position: relative; flex: none; display: grid; grid-template-columns: auto auto; column-gap: var(--space-8);
-  padding: var(--space-4); border: var(--rule-thin) solid transparent; border-radius: var(--r-lg); cursor: pointer; color: var(--sd-ink); }
-.cc-steward-bar-row .cc-steward:hover { border-color: var(--or); }
+  box-sizing: border-box; padding: 0 var(--deck-pad, var(--space-22)); border-top: var(--rule-thin) solid var(--deck-line, var(--sd-hair)); background: none; }
+.cc-steward-bar-row .cc-steward { position: relative; flex: none; display: grid; grid-template-columns: auto auto; align-items: center; column-gap: var(--space-8); row-gap: var(--space-2);
+  padding: var(--space-4) var(--space-8) var(--space-4) var(--space-4); border: var(--rule-thin) solid transparent; border-radius: var(--deck-key-radius); cursor: pointer; color: var(--sd-ink); background: none; }
+.cc-steward-bar-row .cc-steward:hover { border-color: var(--line-control, var(--sd-hair)); background: color-mix(in srgb, var(--sd-amethyst) 8%, transparent); }
 .cc-steward-bar-row .cc-steward__niche, .cc-steward-dock[data-chat-open="true"] .cc-steward__niche { grid-row: 1 / span 2; width: var(--space-24); height: var(--space-36); }
-.cc-steward-bar-row .cc-steward__name { font: 600 var(--text-writ-value)/1.1 var(--sd-font-book); }
-.cc-steward-bar-row .cc-steward__role { grid-column: 2; margin: 0; font-size: var(--text-label); }
+.cc-steward-dock .cc-steward-bar-row .cc-steward__name { align-self: end; font: 700 var(--text-section)/1.1 var(--sd-font-text); color: var(--sd-amethyst-ink); }
+.cc-steward-dock .cc-steward-bar-row .cc-steward__role { grid-column: 2; align-self: start; margin: 0; font: 400 var(--text-label)/1.2 var(--sd-font-text); color: var(--sd-muted); }
 .cc-steward-bar-row .cc-steward > .cc-sim, .cc-steward-bar-row .cc-steward__live { display: none; }
 .cc-steward-dock[data-chat-open="true"] .cc-steward__role { display: inline; }
 .cc-steward-unread { position: absolute; right: calc(-1 * var(--space-6)); top: 0; border-radius: var(--r-lg); padding: var(--space-3) var(--space-6);
-  background: var(--or); color: var(--press); font: 700 var(--text-label)/1 var(--font-ui); }
+  background: var(--or); color: var(--press); font: 700 var(--text-label)/1 var(--sd-font-text); }
 .cc-steward-bar-row .cc-talk { flex: 1; padding: 0; display: block; min-width: 0; }
 .cc-steward-bar-row .cc-talk__row { position: relative; gap: var(--space-8); flex-wrap: nowrap; }
-.cc-steward-bar-row .cc-talk__row > .cc-input { min-width: 0; flex: 1; padding-right: var(--space-36); border-radius: var(--r-lg); }
-.cc-talk-hint { position: absolute; left: calc(100% - var(--space-24)); display: none; font: 600 var(--text-label)/1 var(--font-num); }
-.cc-steward-bar-row .cc-talk__row > .cc-input { background-image: none; }
-.cc-steward-bar-row .cc-talk-hint { display: block; position: static; margin-left: calc(-1 * var(--space-36)); margin-right: var(--space-12); pointer-events: none; }
+/* the prompt: the one field law (thin ink came), sunk into the dock, the "/" key cap inside its end */
+.cc-steward-dock .cc-steward-bar-row .cc-talk__row > .cc-input { min-width: 0; flex: 1; height: var(--space-36); box-sizing: border-box;
+  padding: 0 var(--space-40) 0 var(--space-14); border-radius: var(--deck-key-radius); background: var(--sd-surface-2); background-image: none;
+  box-shadow: inset 0 var(--rule-thin) var(--space-3) var(--sd-hair); font: 400 var(--text-aside)/1 var(--sd-font-text); color: var(--sd-ink);
+  transition: background var(--sd-m) var(--sd-ease); }
+.cc-steward-dock .cc-steward-bar-row .cc-talk__row > .cc-input::placeholder { color: var(--sd-muted); opacity: 1; }
+.cc-steward-dock .cc-steward-bar-row .cc-talk__row > .cc-input:hover { background: var(--sd-surface); }
+.cc-steward-dock .cc-steward-bar-row .cc-talk__row > .cc-input:focus-visible { background: var(--sd-surface); outline: var(--focus-ring, 3px) solid var(--sd-focus); outline-offset: var(--focus-offset); }
+/* the field law holds in every state: the came stays --line-control on hover and focus; focus shows as the gold ring (outline) */
+.cc-steward-dock .cc-input:is(:hover, :focus, :focus-visible):not([aria-invalid="true"]) { border-color: var(--line-control, var(--sd-ink)); }
+.cc-talk-hint { position: absolute; left: calc(100% - var(--space-24)); display: none; font: 600 var(--text-label)/1 var(--font-mono, monospace); }
+.cc-steward-bar-row .cc-talk-hint { display: inline-grid; place-items: center; position: static; box-sizing: border-box; min-width: var(--space-22); height: var(--space-22);
+  margin-left: calc(-1 * var(--space-36)); margin-right: var(--space-14); padding: 0 var(--space-4); pointer-events: none;
+  border: var(--rule-thin) solid var(--line-control, var(--sd-hair)); border-radius: var(--r-md); color: var(--sd-muted); }
 .cc-steward-bar-row .cc-suggest { flex: 0 1 auto; min-width: 0; flex-wrap: nowrap; gap: var(--space-8); }
-.cc-steward-bar-row .cc-btn { border-radius: var(--r-lg); padding: 0 var(--space-12); }
+/* Tell and the flow buttons: the dock face */
+.cc-steward-dock .cc-steward-bar-row .cc-btn { height: var(--space-36); box-sizing: border-box; padding: 0 var(--space-12);
+  border: var(--rule-thin) solid var(--line-control, var(--sd-hair)); border-radius: var(--deck-key-radius);
+  background: linear-gradient(180deg, var(--deck-key-top), var(--deck-key-bottom)); color: var(--sd-ink);
+  box-shadow: inset 0 var(--rule-thin) 0 var(--deck-control-highlight), 0 var(--rule-thin) 0 var(--deck-key-foot);
+  font: 700 var(--sd-text-control, var(--text-body))/1 var(--sd-font-label); letter-spacing: .04em; text-transform: none; }
+.cc-steward-dock .cc-steward-bar-row .cc-btn:hover:not(:disabled) { border-color: var(--deck-gold); background: linear-gradient(180deg, var(--deck-key-hover-top), var(--deck-key-hover-bottom)); }
+.cc-steward-dock .cc-steward-bar-row .cc-btn:active:not(:disabled) { transform: translateY(var(--rule-thin)); box-shadow: none; }
+.cc-steward-dock .cc-steward-bar-row .cc-btn:disabled { opacity: var(--disabled-opacity); color: var(--sd-ink); border-color: var(--line-control, var(--sd-hair)); }
+.cc-steward-dock .cc-steward-bar-row .cc-talk__row > .cc-btn[type="submit"]:not(:disabled) { border-color: var(--deck-gold-2); background: linear-gradient(180deg, var(--deck-key-main-top), var(--deck-key-main-bottom)); }
 .cc-steward-bar-row .cc-suggest > .cc-btn { max-width: 16vw; overflow: hidden; text-overflow: ellipsis; }
-.cc-steward-sheet.cc-steward-sheet { position: absolute; z-index: 3; left: var(--space-22); bottom: calc(var(--space-56) + var(--space-6));
+.cc-steward-sheet.cc-steward-sheet { position: absolute; z-index: 3; left: var(--deck-pad, var(--space-22)); bottom: calc(100% + var(--space-6));
   width: min(calc(var(--space-56) * 9.6), calc(100vw - var(--space-22) * 2)); height: min(78vh, calc(var(--space-56) * 11));
-  max-height: calc(100dvh - var(--space-56) * 2); min-height: 0; display: flex; flex-direction: column;
+  max-height: calc(100dvh - var(--space-56) * 4); min-height: 0; display: flex; flex-direction: column;
   border: var(--rule-thin) solid var(--deck-gold-2); border-radius: var(--deck-chat-radius); overflow: hidden;
   background: linear-gradient(180deg, var(--deck-chat-top), var(--deck-chat-bottom)); box-shadow: var(--deck-chat-shadow); }
 .cc-steward-sheet::before { display: none; }
@@ -51,3 +71,7 @@
   font: 400 var(--text-aside)/1.4 var(--sd-font-book); }
 .cc-steward-peek b { color: var(--or-text); font: 700 var(--text-label)/1.2 var(--font-ui); }
 .cc-steward-peek span { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+@media (max-width: 1420px) {
+  .cc-steward-dock { --sd-text-control: var(--text-t-meta, var(--text-body)); }
+  .cc-steward-dock .cc-steward-bar-row .cc-btn { padding: 0 var(--space-10); }
+}

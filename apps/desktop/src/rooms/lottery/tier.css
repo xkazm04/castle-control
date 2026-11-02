@@ -1,9 +1,12 @@
-/* Overlord urn room-tier preset: three printed tier buttons, token-only. */
-.lottery-tier-buttons { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-8); margin: var(--space-8) 0; }
-.lottery-room .lottery-tier-buttons .cc-button { display: grid; justify-items: center; gap: var(--space-2); height: auto; min-height: calc(var(--button-h) * 1.8); padding: var(--space-6) var(--space-4); border: var(--rule-medium) solid var(--ink); border-radius: 0; background: var(--paper); color: var(--ink); box-shadow: var(--space-2) var(--space-2) 0 var(--hair-2); }
-.lottery-tier-buttons b { font: 800 var(--text-shell-panel-title)/1 var(--font-display); }
-.lottery-tier-buttons span { font: 700 var(--text-shell-label)/1.1 var(--font-label); letter-spacing: var(--track-label); text-transform: lowercase; }
-.lottery-tier-buttons small { font: 600 var(--text-shell-label)/1.1 var(--font-num); color: var(--muted); }
-.lottery-room .lottery-tier-buttons .cc-button:hover:not(:disabled) { background: color-mix(in srgb, var(--gules) 12%, var(--paper)); color: var(--ink); }
-.lottery-room .lottery-tier-buttons .cc-button[aria-pressed="true"] { background: var(--stamp-act-ground); color: var(--press-paper); box-shadow: var(--space-2) var(--space-2) 0 var(--ink); }
-.lottery-room .lottery-tier-buttons .cc-button[aria-pressed="true"] small { color: var(--press-paper); }
+/* Overlord urn room tier: three calm tiles in one track; the chosen tier is lit with the chamber underline. */
+.lottery-tier-buttons { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-6); margin: var(--space-8) 0; }
+.lottery-room .lottery-tier-buttons .cc-button { display: grid; justify-items: center; align-content: center; gap: var(--space-3); height: auto; min-height: calc(var(--space-56) + var(--space-12)); padding: var(--space-8) var(--space-6); border: var(--came-hair) solid var(--line-control); border-radius: var(--r-md); background: var(--surface-2); color: var(--ink); box-shadow: none; text-transform: none; letter-spacing: normal; transition: border-color var(--m-fast) var(--ease), background var(--m-fast) var(--ease); }
+.lottery-room .lottery-tier-buttons b { color: var(--ink); font: 700 var(--text-px-20)/var(--lh-tight) var(--font-text); font-variant-numeric: lining-nums; }
+.lottery-room .lottery-tier-buttons span { color: var(--ink-2); font: 700 var(--text-px-13)/var(--lh-snug) var(--font-label); letter-spacing: .06em; text-transform: none; }
+.lottery-room .lottery-tier-buttons small { color: var(--muted); font: 500 var(--text-px-13)/var(--lh-snug) var(--font-text); font-variant-numeric: lining-nums; }
+.lottery-room .lottery-tier-buttons .cc-button:hover:not(:disabled) { border-color: var(--ch, var(--gules)); background: var(--surface); }
+.lottery-room .lottery-tier-buttons .cc-button:focus-visible { outline: var(--rule-medium) solid var(--focus); outline-offset: var(--space-2); }
+.lottery-room .lottery-tier-buttons .cc-button[aria-pressed="true"] { border-color: var(--ch, var(--gules)); background: var(--ch-wash, var(--surface)); box-shadow: inset 0 calc(var(--space-2) * -1) 0 var(--ch, var(--gules)); }
+.lottery-room .lottery-tier-buttons .cc-button[aria-pressed="true"] b { color: var(--ch-ink, var(--ink)); }
+.lottery-room .lottery-tier-buttons .cc-button:disabled { border-color: var(--hair); background: var(--surface-2); color: var(--muted); opacity: 1; cursor: not-allowed; }
+.lottery-room .lottery-tier-buttons .cc-button:disabled :is(b, span) { color: var(--muted); }

@@ -67,7 +67,8 @@
   --space-28:28px; --space-30:30px;
   --space-32:32px; --space-34:34px;
   --space-36:36px; --space-40:40px;
-  --space-56:56px; --art-key:#16181D;
+  --space-56:56px; --space-48:48px;
+  --font-mono:"IBM Plex Mono",ui-monospace,"Cascadia Mono","SF Mono",Consolas,Menlo,monospace; --art-key:#16181D;
   --art-gules:#E4472E; --art-azure:#3F86DC;
   --art-or:#F2B233; --art-paper:#FBF6EA;
   --art-stone:#EAE4D4; --art-azure-text:#1D5BAA;

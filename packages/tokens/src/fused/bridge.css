@@ -7,31 +7,37 @@
 :root, [data-theme="day"], [data-theme="night"] {
   /* grounds */
   --paper: var(--stone); --paper-2: var(--stone-2);
-  --card: var(--surface); --sheet: var(--surface); --cream: var(--surface-2);
+  --card: var(--surface); --cream: var(--surface-2);
   --line: var(--hair); --rule: var(--ink-2);
   --tint-2: var(--hair-2);
   --blend: var(--pool-blend); --paper-grain: var(--tex-stone); --grain-o: 1;
   /* inks */
   --azure-text: var(--azure-ink); --gules-text: var(--gules-ink); --or-text: var(--or-ink);
-  --green: var(--emerald); --info: var(--info-ink); --navy: var(--azure-deep);
+  --green: var(--emerald); --navy: var(--azure-deep);
   --press: var(--lead); --press-2: var(--lead-2);
   --input-ink: var(--ink);
   /* fonts */
-  --font-ui: var(--font-text); --font-serif: var(--font-aside); --font-num: var(--font-mono);
+  /* --font-num: legacy figures read in the text face (the frame sets tabular lining numerals);
+     hashes, ids and handles that must align use --font-mono directly */
+  --font-ui: var(--font-text); --font-serif: var(--font-aside); --font-num: var(--font-text);
   /* type: the pre-fusion size names follow the one fused scale (body 16, secondary prose 15,
      one-line meta 14, small-caps label 13), so no module can set prose below 15 by accident */
   --text-body: var(--t-body); --text-small: var(--t-small); --text-label: var(--t-label);
-  --text-aside: var(--t-small); --text-empty: var(--t-small);
-  --text-shell-aside-small: var(--t-small); --text-shell-state: var(--t-small); --text-shell-legend: var(--t-meta);
+  --text-aside: var(--t-small);
+  --text-shell-aside-small: var(--t-small); --text-shell-state: var(--t-small);
+  /* the winner's half-pixel sizes snap to the fused scale (one size ladder app-wide) */
+  --text-shell-input: var(--t-small); --text-shell-steward-message: var(--t-small);
+  --text-shell-suggestion: var(--t-small); --text-shell-stat-label: var(--t-meta);
+  /* legacy stamp grounds follow the fused palette in both themes */
+  --stamp-act-ground: var(--wax); --stamp-paper: var(--on-lead); --stamp-seal-text: var(--surface);
   /* cutaway papers */
   --stage-paper: var(--stone); --body-top: var(--surface); --body-low: var(--stone-2);
   --stage-top: var(--surface); --stage-mid: var(--stone); --stage-low: var(--stone-2);
   --press-paper: var(--surface);
   --rampart-paper: var(--on-lead); --rampart-background: var(--lead);
   --rampart-muted: var(--on-lead-muted); --rampart-rule: var(--lead-hi);
-  --rampart-secondary: var(--on-lead-muted);
   --strip-paper: var(--stone-2); --strip-hover: var(--surface-2); --column-paper: var(--stone-2);
-  --plaque-paper: var(--surface); --panel-paper: var(--surface);
+  --panel-paper: var(--surface);
   --draft-paper: color-mix(in srgb, var(--or) 16%, var(--surface));
   --draft-wash: var(--or-wash);
   --steward-paper: var(--surface-2); --monitor-paper: var(--surface-2); --ticket-paper: var(--surface);
@@ -39,8 +45,8 @@
   --footer-scrim: color-mix(in srgb, var(--stone) 94%, transparent);
   --stage-label-scrim: color-mix(in srgb, var(--surface) 90%, transparent);
   --toy-scrim: color-mix(in srgb, var(--surface) 96%, transparent);
-  --shell-label-scrim: color-mix(in srgb, var(--surface) 88%, transparent);
   --reveal-scrim: color-mix(in srgb, var(--stone) 78%, transparent);
-  /* radii: the fused frame is nearly square */
-  --r-sm: var(--r); --r-md: var(--r);
+  /* radii: one scale the Deck reads - sm for fields, chips' inner parts and key caps, md for
+     buttons and cards, lg for panels and drawers (the Deck frame itself is --deck-radius) */
+  --r-sm: 4px; --r-md: 8px; --r-lg: 12px;
 }

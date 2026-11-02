@@ -5,7 +5,7 @@ import { EmptyState } from '@castle-control/ui';
 import { isPending, proposalQueue } from '@castle-control/ui/steward';
 import type { ProposalQueue } from '@castle-control/ui/steward';
 import { stewardDock, useStewardDraft } from '@castle-control/ui/steward-flow';
-import type { ReactNode } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
 import type { Snapshot } from '../../model.js';
 import type { BeaconsPort, PreviewVisual } from '../../beacons-model.js';
 import { beaconsCopy as copy } from '../../beacons-copy.js';
@@ -61,6 +61,7 @@ export function VisualsWork({ queue = proposalQueue, port, seal_slot }: { queue?
           on_select={item => adapter.select(item.visual.visual_id)} />}
         weighting={<label className="visuals-weight">Gift-sub weighting<RoomKeyBadge room="visuals" action="tune" />
           <input type="range" min="1" max="6" step="1" value={view.item.gift_weight} disabled={Boolean(publication)}
+            style={{ '--fill': `${(view.item.gift_weight - 1) / 5 * 100}%` } as CSSProperties}
             onChange={event => adapter.weight(Number(event.currentTarget.value))} />
           <output>{view.item.gift_weight}×</output></label>}
         actions={<>

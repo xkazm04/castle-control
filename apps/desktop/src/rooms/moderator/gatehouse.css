@@ -128,7 +128,7 @@
 .gh-warrant__act { grid-column: 3; grid-row: 1 / 4; display: grid; gap: 8px; align-self: center; }
 
 /* the herald: chart and the vote bar on a stream canvas */
-.gh-herald { padding: 16px 20px 18px; background: var(--surface); border: var(--came, 2px) solid var(--lead); box-shadow: var(--shadow); }
+.gh-herald { padding: 16px 20px 18px; background: var(--surface); border: var(--rule-thin) solid var(--hair); border-radius: var(--r-lg); box-shadow: none; }
 .gh-section-head { display: flex; align-items: baseline; flex-wrap: wrap; gap: 8px 14px; margin-bottom: 12px; }
 .gh-section-head .cc-stamp { margin-left: auto; }
 .gh-herald__body { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(260px, 1fr); gap: 22px; align-items: start; }
@@ -221,3 +221,42 @@
 .gh-desk--core { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-areas: "chat herald" "seal herald" "more more"; }
 .gh-core-chat { grid-area: chat; display: flex; flex-direction: column; height: 680px; min-width: 0; }
 .gh-room--core .gh-herald { display: grid; gap: 16px; }
+
+/* ---- the painted gate: stops and fills for the shaded wall, forged iron, torchlight and the moat ---- */
+.gh-s-stone { stop-color: var(--art-stone); } .gh-s-stone2 { stop-color: var(--art-stone-2); }
+.gh-s-ink { stop-color: var(--art-stone-ink); } .gh-s-shade { stop-color: var(--art-shade); }
+.gh-s-flame { stop-color: var(--art-flame); } .gh-s-room { stop-color: var(--art-room-1); }
+.gh-s-ironhi { stop-color: color-mix(in srgb, var(--art-foam) 55%, var(--art-shade)); }
+.gh-s-water { stop-color: var(--art-water); } .gh-s-water2 { stop-color: var(--art-water-2); }
+.gh-o-0 { stop-opacity: 0; } .gh-o-25 { stop-opacity: .25; } .gh-o-30 { stop-opacity: .3; } .gh-o-35 { stop-opacity: .35; }
+.gh-o-40 { stop-opacity: .4; } .gh-o-80 { stop-opacity: .8; }
+.gh-gate-art .gh-wall { fill: url(#gh-wall); }
+.gh-gate-art .gh-fill-warm { fill: url(#gh-warm); mix-blend-mode: var(--pool-blend); }
+.gh-gate-art .gh-fill-side { fill: url(#gh-wall-side); }
+.gh-gate-art .gh-fill-foot { fill: url(#gh-wall-foot); }
+.gh-gate-art .gh-fill-cloth { fill: url(#gh-cloth); }
+.gh-gate-art .gh-fill-wood { fill: url(#gh-wood); }
+.gh-gate-art .gh-lit-edge { fill: none; stroke: var(--art-room-1); stroke-width: 2; opacity: .35; }
+.gh-gate-art .gh-loop-lit { fill: none; stroke: var(--art-flame); stroke-width: 2; opacity: .55; }
+.gh-gate-art .gh-joint { fill: none; stroke: var(--art-stone-ink); stroke-width: 1.4; opacity: .55; }
+.gh-gate-art .gh-reveal { fill: none; stroke: var(--art-stone-ink); stroke-width: 16; opacity: .3; }
+.gh-gate-art .gh-floor { fill: var(--art-flame); opacity: .28; }
+.gh-gate-art .gh-port-shadow { fill: var(--art-shade); opacity: .45; }
+.gh-gate-art .gh-bar { fill: url(#gh-iron-v); stroke: var(--art-shade); stroke-width: .8; }
+.gh-gate-art .gh-rail { fill: url(#gh-iron-h); stroke: var(--art-shade); stroke-width: .8; }
+.gh-gate-art .gh-rivet { fill: var(--art-shade); stroke: color-mix(in srgb, var(--art-foam) 50%, var(--art-shade)); stroke-width: .8; }
+.gh-gate-art .gh-barhi { stroke: var(--art-room-1); stroke-width: .9; opacity: .4; fill: none; }
+.gh-gate-art .gh-torchglow { fill: url(#gh-torch); mix-blend-mode: var(--pool-blend); opacity: calc(.4 + var(--glow-on) * .6); }
+.gh-gate-art .gh-water { fill: url(#gh-water); }
+.gh-gate-art .gh-shimmer { fill: none; stroke: var(--art-room-1); stroke-width: 2; stroke-linecap: round; opacity: .55; }
+.gh-gate-art .gh-chain { fill: none; stroke: var(--art-shade); stroke-width: 3; stroke-dasharray: 4 2.5; stroke-linecap: round; }
+.gh-gate-art .gh-flame { transform-box: fill-box; transform-origin: 50% 100%; animation: gh-flicker 1.6s var(--ease, ease) infinite alternate; }
+.gh-gate-art .gh-torchglow { transform-box: fill-box; transform-origin: center; animation: gh-glowpulse 2.3s ease-in-out infinite alternate; }
+@keyframes gh-flicker { 0% { transform: scale(1, 1); } 40% { transform: scale(.96, 1.05); } 100% { transform: scale(1.03, .97); } }
+@keyframes gh-glowpulse { from { scale: .94; } to { scale: 1.04; } }
+@media (prefers-reduced-motion: reduce) { .gh-gate-art :is(.gh-flame, .gh-torchglow) { animation: none; } }
+/* By day the limewash washes the arch out: a deeper surround, firmer joints and a darker reveal. */
+[data-theme="day"] .gh-gate-art .gh-surround { fill: color-mix(in srgb, var(--art-stone-2) 78%, var(--art-stone-ink)); }
+[data-theme="day"] .gh-gate-art .gh-joint { opacity: .8; }
+[data-theme="day"] .gh-gate-art .gh-reveal { opacity: .5; }
+

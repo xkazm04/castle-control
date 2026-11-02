@@ -40,13 +40,18 @@ export function flowChamber(current: ModuleId | ShellSurface): FlowChamber {
 
 export function roomActionKeys(chamber: FlowChamber, registry: StewardRegistry, snapshot: Snapshot, deck = roomDeck): ActionKey[] {
   if (chamber === 'keep' || chamber === 'stream' || chamber === 'rehearsal') return [];
-  return deck[chamber].map(item => {
+  return deck[chamber].flatMap((item): ActionKey[] => [roomActionKey(item, chamber, registry, snapshot)].filter(key => key !== undefined));
+}
+
+/** A beacon key exists only while its beacon does: a room with fewer beacons has no dead Q/W/E. */
+function roomActionKey(item: (typeof roomDeck)[ModuleId][number], chamber: ModuleId, registry: StewardRegistry, snapshot: Snapshot): ActionKey | undefined {
     if ('drawer' in item) return { key: item.key, label: item.label, run: bracketDrawer.open };
     if ('beacon' in item) {
       const fixture = snapshot.mode === 'fixture' ? fixtureBeacons() : undefined;
       const core = coreBeaconsConnection(snapshot)?.port;
       const visual = fixture?.getSnapshot().visuals[item.beacon]?.visual ?? core?.getSnapshot().visuals[item.beacon];
-      return { key: item.key, label: visual?.name ?? item.label, run: () => {
+      if (!visual) return undefined;
+      return { key: item.key, label: visual.name, run: () => {
         const chosen = fixture?.getSnapshot().visuals[item.beacon]?.visual ?? core?.getSnapshot().visuals[item.beacon];
         if (chosen) (fixture ?? core)?.select(chosen.visual_id);
       } };
@@ -74,7 +79,6 @@ export function roomActionKeys(chamber: FlowChamber, registry: StewardRegistry, 
       if (target) proposeCommand(proposalQueue, { kind: item.command, decision_id: target.decision_id }, item.label);
       else stewardDock.say({ chamber, who: 'steward', simulated: true, text: 'No original line is waiting for that verdict. Nothing changed.' });
     } };
-  });
 }
 
 /** Same operations as the duel's existing stage controls, including its sandbox. */

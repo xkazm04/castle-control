@@ -13,7 +13,7 @@ import { moderationSession } from './session.js';
 import { ruleBenchLink } from './rule-bench.jsx';
 import { benchInput, evaluateDraft } from '../../moderation-bench.js';
 import { BanQueue, ShieldButton } from './controls.jsx';
-import { GatePlate } from './gate.jsx';
+import { GatePlate, GateRecent, GateTally } from './gate.jsx';
 import { Herald } from './herald.jsx';
 import { NeedsYou } from './needs.jsx';
 import { MoreBenches } from './more.jsx';
@@ -97,6 +97,8 @@ function FixtureModeratorRoom({ snapshot, replay, queue = proposalQueue, seal_sl
       columns={[
         <ChamberSection key="queue" title="At the portcullis"><GatePlate {...gate} part="queue" compact />
           <button type="button" className="cc-btn cc-btn--sm" onClick={open}>{`Review queue · ${state.held.length} held · ${state.bans.length} pending ${state.bans.length === 1 ? 'ban' : 'bans'}`}</button>
+          <GateTally verdicts={messages.map(item => item.verdict)} />
+          <GateRecent items={messages.slice(-12).reverse()} />
         </ChamberSection>,
         <div key="herald" className="gh-deck-column"><ChamberSection title="The gate" aside={<ShieldButton state={state} queue={queue} compact />}><NeedsYou state={state} queue={queue} compact /></ChamberSection>
           <ChamberSection title="The Herald’s chart" aside={<button type="button" className="cc-btn cc-btn--sm" onClick={open}>Full chart</button>}>

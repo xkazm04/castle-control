@@ -8,24 +8,73 @@
 .shell-room .shell-room-content { min-width: 0; height: 100%; overflow: auto; }
 .shell-room .shell-seal-slot { min-width: 0; padding: var(--space-16) 0; border: 0; border-top: var(--rule-medium) solid var(--line); background: transparent; margin-top: var(--space-20); }
 .shell-seal-slot h2 { text-transform: lowercase; margin-top: 0; letter-spacing: var(--track-heading); }
+.cc-frame .shell-seal-slot[aria-label] > h2, .shell-room .shell-seal-slot[aria-label] > h2 { margin: 0 0 var(--space-6); color: var(--ink); font: 700 var(--text-px-18)/1.25 var(--font-text); letter-spacing: normal; text-transform: none; }
+.shell-seal-slot[aria-label] > h2 + p { margin: 0 0 var(--space-8); color: var(--ink-2); font: italic 400 var(--text-px-15)/1.35 var(--font-aside); }
 .room-column { min-width: 0; min-height: 0; overflow: auto; padding: var(--space-16) var(--space-20); border-inline-end: var(--rule-thin) solid var(--line); }
 .shell-seal-slot .cc-proposal-card { margin-block: var(--space-16); }
 .room-column:last-child { border-inline-end: 0; }
-.room-hash { font: var(--text-small)/1.5 var(--font-num); overflow-wrap: anywhere; white-space: pre-wrap; }
-.shell-room :where(button:not(.cc-seal-button)) { font: 600 var(--text-body)/1.4 var(--font-ui); border: var(--rule-medium) solid var(--ink); background: var(--card); color: var(--ink); padding: var(--space-6) var(--space-8); max-width: 100%; cursor: pointer; }
+.room-hash { font: var(--text-small)/1.5 var(--font-mono); overflow-wrap: anywhere; white-space: pre-wrap; }
+.shell-room :where(button:not(.cc-seal-button)) { font: 600 var(--text-body)/1.4 var(--font-ui); border: var(--rule-thin) solid var(--line-control); background: var(--card); color: var(--ink); padding: var(--space-6) var(--space-8); max-width: 100%; cursor: pointer; }
 /* Fused button face in every room body: the same small-caps label as the dock chips and the chamber head. */
 .shell-room .cc-btn { font: 800 var(--text-px-14-5)/1 var(--font-label); letter-spacing: .07em; text-transform: lowercase; }
 .shell-room .cc-btn--sm { font-size: var(--text-px-13-5); }
 .shell-room .cc-btn--lg { font-size: var(--text-px-15-5); }
 .shell-room button:disabled:not(.cc-seal-button) { opacity: var(--disabled-opacity); cursor: not-allowed; }
-.shell-room button:focus-visible, .shell-room a:focus-visible, .shell-room select:focus-visible, .shell-room input:focus-visible { outline: var(--rule-strong) solid var(--azure); outline-offset: var(--focus-offset); }
-.shell-room h2 { font-family: var(--font-display); }
+.shell-room :is(button, a, select, input, textarea, summary, [tabindex]):focus-visible { outline: var(--came) solid var(--focus); outline-offset: var(--focus-offset); }
+.shell-room h2 { font-family: var(--font-text); font-weight: 700; }
 .shell-room :where(h3) { font: 800 var(--text-section)/1.2 var(--font-label); text-transform: lowercase; }
 .room-caption { margin: 0 0 var(--space-10); font: 800 var(--text-label)/1.4 var(--font-label); text-transform: lowercase; letter-spacing: var(--track-air); }
 .room-scroll-hint { position: sticky; top: 0; z-index: 2; margin: 0 0 var(--space-12); padding: var(--space-6) var(--space-8); border-bottom: var(--rule-thin) solid var(--line); background: var(--paper); color: var(--muted); font: 600 var(--text-label)/1.4 var(--font-ui); }
 .room-stage { border: var(--rule-medium) solid var(--room-ink); padding: var(--space-16); background: var(--card); }
-.room-now { font: 600 var(--text-section)/1.4 var(--font-ui); }
 .shell-room a { color: var(--azure-text); }
+
+/* The chamber frame, one for all four chambers; [data-chamber] outranks deck.css. */
+.cc-frame .desktop-shell .shell-room[data-chamber] {
+  padding: var(--space-12) var(--space-16) var(--space-14);
+  border: var(--came-hair) solid color-mix(in srgb, var(--ch) 60%, var(--hair));
+  background:
+    radial-gradient(60% 220px at 50% 0, color-mix(in srgb, var(--ch-wash, transparent) 70%, transparent), transparent),
+    linear-gradient(180deg, color-mix(in srgb, var(--surface-2) 55%, var(--stone)), var(--stone));
+  outline: var(--came-hair) solid color-mix(in srgb, var(--ch) 18%, transparent);
+  outline-offset: calc(-1 * var(--space-5));
+  box-shadow:
+    0 0 calc(var(--glow-on) * var(--space-16)) color-mix(in srgb, var(--ch-glow) 38%, transparent),
+    0 var(--space-10) var(--space-24) calc(-1 * var(--space-14)) var(--shade, transparent);
+}
+
+/* Chamber head */
+.cc-frame .desktop-shell .shell-room[data-chamber] .shell-room-header {
+  align-items: baseline; gap: var(--space-16); min-height: var(--space-40); margin: 0 0 var(--space-12);
+}
+.cc-frame .shell-room-header .shell-room-heading { align-items: baseline; column-gap: var(--space-12); row-gap: var(--space-4); }
+.cc-frame .shell-room-header .shell-room-heading h1 {
+  margin: 0; color: var(--ink); font: 400 var(--text-t-h2)/1 var(--font-display); letter-spacing: .01em;
+  text-shadow: 0 0 calc(var(--glow-on) * var(--space-20)) color-mix(in srgb, var(--ch-glow) 45%, transparent);
+}
+.cc-frame .shell-room-header .shell-room-subtitle { margin: 0; color: var(--ink-2); font: italic 400 var(--text-t-lead)/1.2 var(--font-aside); }
+.cc-frame .shell-room-header .shell-room-heading > .cc-stamp { align-self: center; }
+.cc-frame .shell-room-header .shell-room-links { gap: var(--space-8); }
+.cc-frame .shell-room-header .shell-room-links button {
+  min-height: var(--space-34); gap: var(--space-8); padding: 0 var(--space-6) 0 var(--space-12);
+  border: var(--came-hair) solid var(--came-ui); border-radius: var(--r-lg);
+  background: color-mix(in srgb, var(--surface) 85%, transparent); color: var(--ink);
+  font: 700 var(--text-t-label)/1 var(--font-label); letter-spacing: var(--track-label); text-transform: none;
+  transition: border-color var(--m-fast, .12s) ease, background var(--m-fast, .12s) ease;
+}
+.cc-frame .shell-room-header .shell-room-links button:hover { border-color: var(--ch); background: var(--surface-2); color: var(--ch-ink); }
+.cc-frame .shell-room-header .shell-room-links button:active { background: var(--stone-2); }
+.cc-frame .shell-room-header .shell-room-links button .cc-kbd { text-transform: none; letter-spacing: normal; }
+/* From the Keep, Back already goes home: the Keep link steps back to a quiet ghost. */
+.cc-frame .shell-room-header .shell-room-links[data-origin="keep"] > .shell-room-keep { border-color: transparent; background: transparent; color: var(--muted); }
+
+
+@media (max-height: 800px) {
+  .cc-frame .desktop-shell .shell-room[data-chamber] { padding: var(--space-10) var(--space-14) var(--space-10); }
+  .cc-frame .desktop-shell .shell-room[data-chamber] .shell-room-header { min-height: var(--space-34); margin-bottom: var(--space-8); }
+}
+
+.shell-room .shell-room-content { scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--muted) 45%, transparent) transparent; }
+
 @media (max-width: 900px) {
   .shell-room .shell-room-content { overflow: auto; }
   .room-column { overflow: visible; border-inline-end: 0; }

@@ -197,6 +197,7 @@ export const lotsCopy = {
     roll_notice: 'The roll is owned by the core; entries appear after sealing.',
     entry: (handle: string, weight: number) => `${handle} · weight ${weight}`,
     unavailable: 'Local draw connection unavailable. Reopen the desktop shell.',
-    caption: 'lots · frozen entries',
+    caption: 'lots · frozen entries', caption_open: 'lots · counted at the seal',
+    roll_pending: 'The core counts the roll when you seal it.',
   },
 } as const;

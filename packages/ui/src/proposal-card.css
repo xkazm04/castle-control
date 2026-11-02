@@ -1,20 +1,24 @@
-.cc-proposal-card { --proposal-ink: var(--ink); background: var(--card); color: var(--ink); border: var(--rule-strong) dashed var(--proposal-ink); padding: var(--space-14); font: var(--text-body)/1.4 var(--font-ui); }
-.cc-proposal-card[data-module="lottery"] { --proposal-ink: var(--gules-text); }
-.cc-proposal-card[data-module="moderator"] { --proposal-ink: var(--azure-text); }
-.cc-proposal-card[data-module="visuals"] { --proposal-ink: var(--or-text); }
+.cc-proposal-card {
+  --proposal-ink: var(--ch-ink, var(--ink));
+  box-sizing: border-box; padding: var(--space-14); border: var(--came-hair) dashed color-mix(in srgb, var(--proposal-ink) 55%, var(--hair));
+  border-inline-start: var(--came-heavy) solid var(--proposal-ink); border-radius: var(--r-lg);
+  background: var(--surface); box-shadow: var(--shadow); color: var(--ink); font: 400 var(--text-px-15)/1.4 var(--font-text);
+}
 .cc-proposal-card[data-proposal-focused="true"] { outline: var(--rule-thin) solid var(--proposal-ink); outline-offset: var(--focus-offset); }
-.cc-proposal-stamp { margin: 0 0 var(--space-8); color: var(--proposal-ink); font-size: var(--text-small); font-weight: 800; letter-spacing: var(--track-label); }
-.cc-proposal-card h3 { margin: 0; font: 800 var(--text-chamber)/1 var(--font-display); text-transform: uppercase; }
-.cc-proposal-revision { margin: var(--space-6) 0; color: var(--muted); font-family: var(--font-num); font-size: var(--text-small); }
+.cc-proposal-stamp { margin: 0 0 var(--space-8); color: var(--proposal-ink); font: 700 var(--text-t-label)/1.25 var(--font-label); letter-spacing: var(--track-label); text-transform: lowercase; }
+.cc-proposal-card h3 { margin: 0; font: 700 var(--text-t-h3)/1.2 var(--font-text); }
+.cc-proposal-revision { margin: var(--space-4) 0 var(--space-8); color: var(--muted); font: 400 var(--text-px-14)/1.4 var(--font-text); }
 .cc-proposal-card dl { margin: 0; }
-.cc-proposal-field { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr); gap: var(--space-8); padding-block: var(--space-8); border-top: var(--rule-thin) solid var(--line); }
-.cc-proposal-field dt { font-size: var(--text-small); font-weight: 700; }
+.cc-proposal-field { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr); gap: var(--space-8); padding-block: var(--space-8); border-top: var(--came-hair) solid var(--hair-2); }
+.cc-proposal-field dt { color: var(--ink-2); font-size: var(--text-px-14); font-weight: 700; }
 .cc-proposal-field dd { margin: 0; overflow-wrap: anywhere; }
 .cc-proposal-field s { color: var(--proposal-ink); margin-right: var(--space-8); text-decoration-thickness: var(--rule-strong); }
 .cc-proposal-reink { background: linear-gradient(transparent 65%, var(--paper-2) 65%); animation: cc-proposal-ink var(--motion-shell) var(--ease); }
 .cc-proposal-actions { display: flex; flex-wrap: wrap; gap: var(--space-10); align-items: center; margin-top: var(--space-12); }
-.cc-proposal-actions p { margin: 0; font-size: var(--text-small); }
-.cc-proposal-actions > button { font: inherit; color: var(--ink); background: var(--paper); border: var(--rule-thin) solid var(--ink); padding: var(--space-6) var(--space-10); cursor: pointer; }
-.cc-proposal-hash { overflow-wrap: anywhere; font: var(--text-small)/1.4 var(--font-num); }
+.cc-proposal-actions p { margin: 0; color: var(--ink-2); font-size: var(--text-px-14); }
+.cc-proposal-actions > button { min-height: var(--space-34); padding: 0 var(--space-12); border: var(--came-hair) solid var(--came-ui); border-radius: var(--r-lg); background: var(--surface-2); color: var(--ink); font: 700 var(--text-t-label)/1 var(--font-label); letter-spacing: var(--track-label); text-transform: lowercase; cursor: pointer; }
+.cc-proposal-actions > button:hover { border-color: var(--proposal-ink); }
+.cc-proposal-actions > button:focus-visible { outline: var(--came) solid var(--focus); outline-offset: var(--space-2); }
+.cc-proposal-hash { overflow-wrap: anywhere; font: 400 var(--text-px-14)/1.4 var(--font-mono); }
 @keyframes cc-proposal-ink { from { opacity: 0; clip-path: inset(0 100% 0 0); } to { opacity: 1; clip-path: inset(0); } }
 @media (prefers-reduced-motion: reduce) { .cc-proposal-reink { animation: none; } }

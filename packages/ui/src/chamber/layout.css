@@ -1,7 +1,12 @@
-/* The Deck chamber frame: layout.css .ch/.ch-stage/.pvpg/.mini (reference only).
-   Fixed clamp endpoints are derived from existing immutable spacing tokens. */
+/* The Deck chamber frame: one picture column (picture, caption, Preview and Program)
+   and two section columns. Every chamber shares these metrics: one gutter, one column
+   top, one card radius/border/padding, one kicker. The picture column is sized from the
+   room's height so the on-air picture is as large as the frame allows, and every column
+   ends on the same baseline. */
 .cc-chamber-layout {
-  container: cc-chamber / inline-size;
+  --chamber-gap: var(--space-14);
+  --chamber-card-pad: var(--space-12) var(--space-14);
+  container: cc-chamber / size;
   flex: 1;
   min-width: 0;
   min-height: 0;
@@ -13,22 +18,25 @@
 .cc-chamber-grid {
   box-sizing: border-box;
   display: grid;
-  grid-template-columns: clamp(calc(var(--space-20) * 19), calc(50vw - var(--space-20) * 13), calc(var(--space-20) * 37)) minmax(0, 1fr) minmax(0, 1fr);
-  gap: var(--space-14);
-  padding: var(--space-10) var(--space-14) var(--space-12);
+  /* The Deck's picture column (e2e law: 380 to 740 wide, half the viewport less 260); the
+     two section columns share the rest. */
+  grid-template-columns:
+    clamp(calc(var(--space-20) * 19), calc(50vw - var(--space-20) * 13), calc(var(--space-20) * 37))
+    minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--chamber-gap);
+  padding: var(--space-2) 0;
   height: 100%;
   min-height: 0;
   min-width: 0;
-  align-items: start;
+  align-items: stretch;
 }
 
 .cc-chamber-picture-column {
   display: flex;
   flex-direction: column;
-  gap: var(--space-8);
+  gap: var(--space-10);
   min-width: 0;
   min-height: 0;
-  height: 100%;
 }
 
 .cc-chamber-heading {
@@ -42,13 +50,14 @@
 
 .cc-chamber-heading h2 {
   margin: 0;
-  font: 600 var(--text-px-22)/1.1 var(--font-book);
+  color: var(--ink);
+  font: 400 var(--text-t-h2)/1.1 var(--font-display);
 }
 
 .cc-chamber-figure {
   display: grid;
   flex: none;
-  gap: var(--space-8);
+  gap: var(--space-6);
   margin: 0;
   min-width: 0;
 }
@@ -59,69 +68,84 @@
   box-sizing: border-box;
   width: 100%;
   aspect-ratio: 16 / 9;
-  border: var(--came-hair) solid var(--ch, var(--hair));
+  overflow: hidden;
+  border: var(--came-hair) solid color-mix(in srgb, var(--ch, var(--hair)) 70%, var(--hair));
   border-radius: var(--r-lg);
   background: var(--stone-2);
+  box-shadow: var(--shadow), 0 0 calc(var(--glow-on) * var(--space-14)) color-mix(in srgb, var(--ch-glow, transparent) 45%, transparent);
   font-size: var(--text-px-15);
 }
 
 .cc-chamber-picture > :first-child { width: 100%; height: 100%; }
+/* The picture frame is the only frame: a panel filling it drops its own border. */
+.cc-chamber-figure > .cc-chamber-picture > .cc-panel.cc-panel { border: 0; border-radius: inherit; box-shadow: none; }
 .cc-chamber-picture > :is(img, video) { display: block; object-fit: cover; border-radius: inherit; }
 
+/* A quiet credit line under the picture, like the Keep's "drawn, not captured" note. */
 .cc-chamber-caption {
-  padding: var(--space-3) var(--space-10);
-  border: var(--came-hair) solid var(--ch, var(--hair));
+  display: flex;
+  align-items: center;
+  gap: var(--space-6);
+  min-width: 0;
+  margin: 0;
+  padding: 0 var(--space-2);
+  color: var(--muted);
+  font: italic 400 var(--text-px-14)/1.3 var(--font-aside);
+  overflow-wrap: anywhere;
+}
+
+.cc-chamber-caption::before {
+  content: '';
+  flex: none;
+  width: var(--space-7);
+  height: var(--space-7);
   border-radius: var(--r-round);
-  background: var(--ch-wash, var(--tint));
-  color: var(--ink-2);
-  font-size: var(--text-px-13);
-  line-height: 1.2;
+  background: var(--ch, var(--faint));
+  box-shadow: 0 0 calc(var(--glow-on) * var(--space-8)) var(--ch-glow, transparent);
 }
 
 .cc-chamber-minis {
   display: grid;
-  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
-  gap: var(--space-10);
-  flex: 1 0 calc(var(--space-26) * 4);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--space-12);
+  /* Top-aligned 16:9 picture; Preview and Program share the height left below it. */
+  flex: 1 1 auto;
   min-height: calc(var(--space-26) * 4);
-  max-height: calc(var(--space-10) * 23);
-}
-
-.cc-chamber-mini {
-  box-sizing: border-box;
-  min-width: 0;
-  padding: var(--space-8) var(--space-10);
-  border: var(--came-hair) solid var(--hair);
-  border-radius: var(--r-lg);
-  background: var(--stone-2);
-  overflow-wrap: anywhere;
-}
-
-.cc-chamber-mini h3 {
-  margin: 0 0 var(--space-6);
-  color: var(--ch-ink, var(--ink));
-  font: 700 var(--text-px-13)/1.2 var(--font-text);
-  letter-spacing: var(--track-label);
-  text-transform: uppercase;
 }
 
 .cc-chamber-column {
-  display: grid;
-  gap: var(--space-10);
-  align-content: start;
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-12);
   min-width: 0;
   min-height: 0;
 }
 
+.cc-chamber-column > * { flex: none; }
+/* Every column ends on the frame's baseline: the last card takes the remaining height. */
+.cc-chamber-column > :last-child { flex: 1 0 auto; }
+
 /* Collapse from the room's available width, independently of the viewport. */
+/* Tall rooms (1600x900 up): Preview over Program, each a full-width row, so the height the
+   16:9 picture leaves is spent on two readable cards rather than two tall empty ones. */
+@container cc-chamber (height >= 35rem) {
+  .cc-chamber-minis { grid-template-columns: minmax(0, 1fr); grid-auto-rows: 1fr; }
+}
+
 @container cc-chamber (width < 68rem) {
-  .cc-chamber-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .cc-chamber-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; }
   .cc-chamber-picture-column { grid-row: span 2; }
   .cc-chamber-column { grid-column: 2; }
+  .cc-chamber-column > :last-child { flex: none; }
 }
 
 @container cc-chamber (width < 44rem) {
-  .cc-chamber-grid { grid-template-columns: minmax(0, 1fr); }
+  .cc-chamber-grid { grid-template-columns: minmax(0, 1fr); height: auto; }
   .cc-chamber-picture-column { grid-row: auto; }
   .cc-chamber-column { grid-column: 1; }
+}
+
+@media (max-width: 900px) {
+  .cc-chamber-layout { container-type: inline-size; height: auto; }
 }

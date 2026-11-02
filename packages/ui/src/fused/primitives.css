@@ -6,23 +6,56 @@
 .cc-field__hint { font: 400 var(--text-t-small)/1.4 var(--font-text); color: var(--muted); }
 .cc-input, .cc-select {
   width: 100%; height: var(--control-h); padding: 0 12px; border-radius: var(--r);
-  border: var(--rule-thin) solid var(--ink); background: var(--surface-2); color: var(--ink);
-  box-shadow: inset 0 2px 3px var(--hair-2); font: 500 var(--text-px-15)/1 var(--font-text);
+  border: var(--came-hair) solid var(--line-control); background: var(--surface-2); color: var(--ink);
+  box-shadow: var(--shadow-inset); font: 500 var(--text-px-15)/1 var(--font-text);
 }
 .cc-input::placeholder { color: var(--muted); }
 .cc-select { appearance: none; padding-right: 32px; background-image: linear-gradient(45deg, transparent 50%, var(--ink) 50%), linear-gradient(-45deg, transparent 50%, var(--ink) 50%);
   background-position: calc(100% - 17px) 16px, calc(100% - 12px) 16px; background-size: 5px 5px; background-repeat: no-repeat; }
 .cc-input--num { width: 120px; text-align: right; font-variant-numeric: tabular-nums lining-nums; }
 
+/* ========================================================= GLOBAL CONTROLS */
+/* One look for every native field app-wide, from tokens, both themes. The base field rule lives in
+   ../primitives.css (.cc-frame input/select); textarea, range and checks are zero-specificity
+   (:where) so a module's own rule still wins; states read the same tokens everywhere. The focus
+   ring itself is the frame-wide :focus-visible ring. */
+:where(.cc-frame) :where(textarea) {
+  box-sizing: border-box; min-width: 0; max-width: 100%; padding: 8px 10px; border-radius: var(--r);
+  border: var(--came-hair) solid var(--line-control); background-color: var(--surface-2); color: var(--ink);
+  box-shadow: var(--shadow-inset); font: 500 var(--text-t-small)/var(--lh-body) var(--font-text); resize: vertical;
+}
+.cc-frame :is(input, textarea)::placeholder { color: var(--muted); opacity: 1; }
+.cc-frame :is(input, select, textarea) { transition: background-color var(--m-quick) var(--ease); }
+/* the field border stays --line-control in every state: hover tints the ground, focus is the frame-wide ring */
+.cc-frame :is(input, select, textarea):hover:not(:disabled, :focus-visible, [type="checkbox"], [type="radio"], [type="range"]) { background-color: var(--surface); }
+.cc-frame :is(input, select, textarea):disabled { opacity: .55; cursor: not-allowed; }
+.cc-frame :is(input, select, textarea):is(:user-invalid, [aria-invalid="true"]) { border-color: var(--danger); box-shadow: inset 3px 0 0 var(--danger); }
+:where(.cc-frame) :where(input[type="checkbox"], input[type="radio"], progress) { accent-color: var(--ch, var(--amethyst)); }
+:where(.cc-frame) :where(input[type="range"]) {
+  appearance: none; height: 22px; padding: 0; border: 0; background: transparent; accent-color: var(--ch, var(--amethyst)); cursor: pointer;
+}
+:where(.cc-frame) :where(input[type="range"])::-webkit-slider-runnable-track {
+  height: 6px; border-radius: var(--r-round); background: var(--surface-3); box-shadow: inset 0 0 0 1px var(--line-control);
+}
+:where(.cc-frame) :where(input[type="range"])::-webkit-slider-thumb {
+  appearance: none; width: 16px; height: 16px; margin-top: -5px; border-radius: 50%;
+  border: 2px solid var(--surface); background: radial-gradient(circle at 35% 30%, var(--ch-lit, var(--amethyst-lit)), var(--ch, var(--amethyst)) 70%);
+  box-shadow: 0 0 calc(var(--glow-on) * 8px) var(--ch-glow, var(--amethyst-glow));
+}
+:where(.cc-frame) :where(input[type="range"]:hover)::-webkit-slider-thumb { border-color: var(--ink-2); }
+/* thin themed scrollbars everywhere (WebView2 is Chromium: the standard properties win) */
+:where(.cc-frame, .cc-frame [data-theme]) { scrollbar-color: color-mix(in srgb, var(--ink-2) 40%, transparent) transparent; }
+:where(.cc-frame, .cc-frame *) { scrollbar-width: thin; }
+
 /* segmented panes: a lead-framed row of panes; the chosen pane is lit glass */
 /* each pane carries its own came; panes overlap by one came so wrapped rows stay leaded */
-.cc-seg { display: inline-flex; width: fit-content; justify-self: start; flex-wrap: wrap; padding: var(--came) 0 0 var(--came); max-width: 100%; }
+.cc-seg { display: inline-flex; width: fit-content; justify-self: start; flex-wrap: wrap; padding: var(--came-hair) 0 0 var(--came-hair); max-width: 100%; }
 .cc-seg > button, .cc-seg > label {
   position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 34px; padding: 4px 12px;
-  border: var(--came) solid var(--lead); margin: calc(-1 * var(--came)) 0 0 calc(-1 * var(--came)); background: var(--surface); color: var(--ink); cursor: pointer; white-space: nowrap;
-  font: 700 var(--text-px-14)/1.1 var(--font-text);
+  border: var(--came-hair) solid var(--line-control); margin: calc(-1 * var(--came-hair)) 0 0 calc(-1 * var(--came-hair)); background: var(--surface); color: var(--ink); cursor: pointer; white-space: nowrap;
+  font: 600 var(--text-px-14)/1.1 var(--font-text); transition: background-color var(--m-quick) var(--ease);
 }
-.cc-seg > button:hover, .cc-seg > label:hover { background: var(--surface-2); }
+.cc-seg > button:hover, .cc-seg > label:hover { background: color-mix(in srgb, var(--ch, var(--ink)) 10%, var(--surface)); }
 .cc-seg > [aria-pressed="true"], .cc-seg > [aria-checked="true"], .cc-seg > label:has(input:checked) {
   color: var(--on-glass); text-shadow: 0 1px 1px var(--glass-shade);
   background: var(--tex-glass), radial-gradient(140% 120% at 30% 10%, var(--ch), var(--ch-deep) 80%);
@@ -30,18 +63,26 @@
   box-shadow: inset 0 1px 0 var(--glass-hi), 0 0 calc(var(--glow-on) * 12px) var(--ch-glow); z-index: 1;
 }
 .cc-seg input { position: absolute; opacity: 0; pointer-events: none; }
-.cc-seg > label:has(input:focus-visible) { outline: 3px solid var(--focus); outline-offset: 1px; z-index: 2; }
+.cc-seg > label:has(input:focus-visible) { outline: var(--focus-ring) solid var(--focus); outline-offset: var(--focus-offset); z-index: 2; }
 .cc-seg--sm > button, .cc-seg--sm > label { min-height: 30px; padding: 3px 10px; font-size: var(--text-px-13-5); }
 .cc-seg--block { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; width: 100%; justify-self: stretch; }
 .cc-seg--stack > button, .cc-seg--stack > label { flex-direction: column; gap: 2px; padding: 8px 10px; }
 .cc-seg small { font: 500 var(--text-px-13)/1.1 var(--font-text); opacity: .9; }
 
-/* radio / checkbox as a diamond quarry */
+/* radio / checkbox: a clear themed box (or ring) with a drawn check, both themes */
 .cc-choice { display: inline-flex; align-items: flex-start; gap: 10px; cursor: pointer; font: 500 var(--text-px-15)/1.35 var(--font-text); color: var(--ink); }
-.cc-choice input { appearance: none; margin: 3px 2px 0; width: 14px; height: 14px; flex: none; transform: rotate(45deg);
-  border: 2px solid var(--lead); background: var(--surface-2); cursor: pointer; }
-.cc-choice input:checked { background: radial-gradient(circle at 30% 30%, var(--ch-lit), var(--ch) 70%); box-shadow: 0 0 calc(var(--glow-on) * 10px) var(--ch-glow); }
-.cc-choice input:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
+.cc-frame .cc-choice input { appearance: none; display: inline-grid; place-content: center; margin: 2px 0 0; width: 18px; height: 18px; flex: none;
+  border: 1.5px solid var(--line-control); border-radius: var(--r-sm); background: var(--surface-2); box-shadow: var(--shadow-inset); cursor: pointer;
+  transition: background-color var(--m-quick) var(--ease), border-color var(--m-quick) var(--ease); }
+.cc-frame .cc-choice input[type="radio"] { border-radius: 50%; }
+.cc-frame .cc-choice input::after { content: ''; opacity: 0; }
+.cc-frame .cc-choice input[type="checkbox"]::after { width: 5px; height: 10px; margin-top: -2px; border: solid var(--surface); border-width: 0 2px 2px 0; transform: rotate(45deg); }
+.cc-frame .cc-choice input[type="radio"]::after { width: 8px; height: 8px; border-radius: 50%; background: var(--surface); }
+.cc-frame .cc-choice:hover input:not(:disabled) { border-color: var(--ink-2); }
+.cc-frame .cc-choice input:checked { border-color: var(--ch-ink, var(--ink)); background: var(--ch-ink, var(--ink)); box-shadow: 0 0 calc(var(--glow-on) * 8px) var(--ch-glow, transparent); }
+.cc-frame .cc-choice input:checked::after { opacity: 1; }
+.cc-frame .cc-choice input:disabled { opacity: .5; cursor: not-allowed; }
+.cc-frame .cc-choice input:focus-visible { outline: var(--focus-ring) solid var(--focus); outline-offset: var(--focus-offset); }
 .cc-choice--block { display: flex; padding: 10px 12px; border: 1.5px solid var(--hair); background: var(--surface-2); border-radius: var(--r); }
 .cc-choice--block:has(input:checked) { border-color: var(--lead); background: var(--surface); box-shadow: inset 4px 0 0 var(--ch); }
 
@@ -96,8 +137,8 @@
 .cc-empty { display: grid; justify-items: center; align-content: center; gap: 12px; min-width: 0; padding: 24px 20px; text-align: center; color: var(--muted); }
 .cc-empty__glyph { width: 32px; height: 46px; color: var(--faint); }
 .cc-empty__body { display: grid; justify-items: inherit; gap: 6px; min-width: 0; }
-.cc-empty__title { font: 600 var(--text-t-h3)/1.2 var(--font-display); color: var(--ink-2); text-wrap: balance; overflow-wrap: anywhere; }
-.cc-empty__text { margin: 0; font: italic 400 var(--text-t-body)/1.4 var(--font-aside); color: var(--muted); max-width: 44ch; text-wrap: pretty; }
+.cc-empty__title { font: 700 var(--text-t-h3)/1.2 var(--font-text); color: var(--ink-2); text-wrap: balance; overflow-wrap: anywhere; }
+.cc-empty__text { margin: 0; font: 400 var(--text-t-small)/1.4 var(--font-text); color: var(--muted); max-width: 44ch; text-wrap: pretty; }
 .cc-empty__action { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 6px; }
 .cc-empty--compact { grid-template-columns: auto minmax(0, 1fr); justify-items: start; text-align: left; gap: 14px; padding: 12px 16px; }
 .cc-empty--compact .cc-empty__glyph { width: 24px; height: 34px; }

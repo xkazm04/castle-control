@@ -1,92 +1,179 @@
-/* Dress rehearsal (#/rehearsal): setup's Illuminated folio look. The board of five stations is
-   the picture; a live strip holds the crowd level, and the forms behind the flows fold under More. */
+/* Dress rehearsal (#/rehearsal): a Deck room (stream/setup-deck.css). The board of five compact step
+   cards; inside a rehearsal the crowd strip and the outputs at a glance share the spare height, and the
+   forms behind the flows fold under More. Everything is top-aligned under the head, as on every page. */
 .rehearsal-root { min-width: 0; }
-.rehearsal-workspace { display: grid; min-width: 0; padding-bottom: var(--space-24); color: var(--ink); font: 400 var(--text-t-body)/1.45 var(--font-text); }
+.rehearsal-workspace { display: flex; flex-direction: column; min-width: 0; }
+.rehearsal-workspace > .rh-body { flex: 1 0 auto; }
 .rehearsal-workspace :is(h2, h3, p) { margin: 0; }
-.rh-body { display: grid; gap: 18px; padding-top: 28px; min-width: 0; }
-.rh-intro { max-width: 92ch; font: 400 var(--text-t-body)/1.5 var(--font-book); color: var(--ink-2); border-left: 3px solid var(--ch); padding: 2px 0 2px 14px; }
+.rh-body { display: flex; flex-direction: column; gap: var(--space-14); min-width: 0; }
+.rh-body > * { flex: none; }
+/* Inside, with More folded, the room holds still: the crowd strip and outputs glance shrink and scroll in place.
+   Unfolding More lets the room grow and the surface scroll to the forms. */
+.desktop-surface[data-surface="rehearsal"]:has(.rh-inside):not(:has(.rh-more[open])) { overflow: hidden; }
+.desktop-surface[data-surface="rehearsal"]:has(.rh-inside):not(:has(.rh-more[open])) :is(.rehearsal-root, .rehearsal-workspace, .rh-body) { flex: 1 1 0; min-height: 0; }
+.rh-body > .rh-notice, .rh-body > .cc-notice-region { align-self: flex-start; }
+.rh-intro { max-width: 92ch; padding: var(--space-2) 0 var(--space-2) var(--space-14); border-left: 3px solid var(--ch); font: 400 var(--text-t-body)/1.5 var(--font-text); color: var(--ink-2); }
 .rh-body > .cc-notice-region:empty { display: none; }
-.rh-body > .cc-notice-region { justify-self: start; padding: 8px 14px; font: 700 var(--text-t-small)/1.4 var(--font-text); color: var(--or-ink); background: var(--or-wash); box-shadow: inset 3px 0 0 var(--or); }
-.rh-notice { font: italic 400 var(--text-t-small)/1.4 var(--font-book); color: var(--muted); overflow-wrap: anywhere; }
+.rh-body > .cc-notice-region {
+  justify-self: start; padding: var(--space-8) var(--space-14); border: var(--rule-thin) solid color-mix(in srgb, var(--or) 45%, transparent); border-radius: calc(var(--r-lg) / 2);
+  background: var(--or-wash); font: 600 var(--text-t-small)/1.4 var(--font-text); color: var(--or-ink);
+}
+.rh-notice { font: 400 var(--text-t-small)/1.4 var(--font-text); color: var(--muted); overflow-wrap: anywhere; }
 .rh-notice:empty { display: none; }
 
-/* ---- the board: five numbered stations on a folio sheet */
-.rh-board, .rh-outputs { padding: 18px 24px 22px; }
-.rh-board__head { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
-.rh-board__head .cc-orn { flex: 1; }
-.rh-stations { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 0; }
-.rh-station { position: relative; display: grid; grid-template-rows: auto auto auto 1fr auto; align-content: start; gap: 6px; min-width: 0; padding: 4px 18px 6px; border-left: 1px solid var(--hair); }
-.rh-station:first-child { border-left: 0; padding-left: 4px; }
-.rh-station__no { font: 600 var(--text-t-figure-sm)/1 var(--font-display); color: var(--ch-ink); }
-.rh-station > .cc-lozenge { position: absolute; right: 18px; top: 10px; }
-.rh-station__label { font: 800 var(--text-t-label)/1.2 var(--font-label); letter-spacing: var(--track-wide); text-transform: lowercase; color: var(--ink-2); }
-.rh-station__value { font: 600 var(--text-t-h2)/1.05 var(--font-display); color: var(--ink); overflow-wrap: anywhere; }
-.rh-station[data-lit="true"] .rh-station__value { color: var(--emerald-ink); }
-.rh-station__line { font: italic 400 var(--text-t-small)/1.35 var(--font-book); color: var(--muted); overflow-wrap: anywhere; }
+/* ---- the board: five compact numbered step cards */
+.rh-stations { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: var(--space-12); }
+.rh-station {
+  position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-rows: auto auto auto 1fr auto; align-content: start;
+  gap: var(--space-4) var(--space-10); min-width: 0; padding: var(--space-12) var(--space-14) var(--space-14);
+  border: var(--rule-thin) solid var(--deck-line); border-radius: calc(var(--r-lg) * .75); background: var(--surface-2);
+}
+.rh-station > :not(.rh-station__mark, .cc-lozenge) { grid-column: 1 / -1; }
+.rh-station__mark { grid-row: 1; display: flex; align-items: center; gap: var(--space-8); margin-bottom: var(--space-4); }
+.rh-station__no {
+  display: grid; place-items: center; width: var(--space-24); height: var(--space-24); border-radius: 50%;
+  background: var(--ch); color: var(--surface); box-shadow: 0 0 calc(var(--glow-on) * 12px) var(--ch-glow);
+  font: 700 var(--text-t-label)/1 var(--font-text);
+}
+.rh-station > .cc-lozenge { grid-row: 1; grid-column: 2; justify-self: end; align-self: start; }
+.rh-station__label { font: 700 var(--text-t-small)/1.2 var(--font-label); letter-spacing: var(--track-label); color: var(--ch-ink); }
+.rh-station__value { font: 700 var(--text-t-h4)/1.15 var(--font-text); color: var(--ink); overflow-wrap: anywhere; }
+.rh-board[data-ready="false"] .rh-station__value { color: var(--ink-2); }
+.rh-station[data-lit="true"] { border-color: color-mix(in srgb, var(--ok) 60%, transparent); }
+.rh-station[data-lit="true"] .rh-station__value { color: var(--ok-ink); }
+.rh-station__line { font: 400 var(--text-t-meta)/1.35 var(--font-text); color: var(--muted); overflow-wrap: anywhere; }
 .rh-station > .cc-stamp { justify-self: start; }
-.rh-station > .cc-btn { justify-self: start; margin-top: 6px; }
-.rh-station[data-drafting="true"] { background: var(--or-wash); box-shadow: inset 0 3px 0 var(--or); }
-.rh-station[data-drafting="true"] .rh-station__line { color: var(--or-ink); font-style: normal; font-weight: 700; }
+.rh-station > .cc-btn { justify-self: stretch; align-self: end; margin-top: var(--space-8); white-space: normal; }
+.rh-station[data-drafting="true"] { border-color: var(--or); background: color-mix(in srgb, var(--or) 10%, var(--surface-2)); }
+.rh-station[data-drafting="true"] .rh-station__line { color: var(--or-ink); font-weight: 700; }
+/* the step's lancet: one small leaded pane of the room's glass with a quiet charge */
+.rh-station__glyph { display: block; width: 34px; height: 44px; overflow: visible; filter: drop-shadow(0 0 calc(var(--glow-on) * 6px) var(--ch-glow)); }
+.rh-pane { fill: color-mix(in srgb, var(--ch) 62%, var(--surface)); stroke: var(--lead); stroke-width: 2.4; stroke-linejoin: round; }
+[data-theme="night"] .rh-pane { stroke: var(--came-ui); }
+.rh-pane-hi { fill: none; stroke: var(--glass-hi); stroke-width: 2; stroke-linecap: round; }
+.rh-pane-charge { fill: none; stroke: var(--on-glass); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.rh-board[data-ready="false"] .rh-pane { fill: var(--surface-3); }
+.rh-board[data-ready="false"] .rh-pane-charge { stroke: var(--ink-2); }
+.rh-board[data-ready="false"] .rh-station__glyph { filter: none; }
+.rh-station[data-lit="true"] .rh-pane { fill: color-mix(in srgb, var(--ok) 70%, var(--surface)); }
+
+/* ---- inside: the crowd strip and the outputs at a glance share the spare height */
+.rh-inside { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: var(--space-14); align-items: stretch; }
+.rh-inside > .setup-card { align-content: start; min-height: 0; overflow: auto; }
+.rh-glance { grid-template-rows: auto minmax(0, 1fr); }
+.rh-glance__list { overflow: auto; }
+.rh-glance__list { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr)); align-content: start; gap: var(--space-6); min-height: 0; }
+.rh-glance__list li {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: var(--space-2) var(--space-12);
+  padding: var(--space-6) var(--space-10); border: var(--rule-thin) solid var(--deck-line); border-radius: calc(var(--r-lg) / 2); background: var(--surface-2);
+}
+.rh-glance__list li[data-phase="added"] { border-color: color-mix(in srgb, var(--ok) 55%, transparent); }
+.rh-glance__name { font: 600 var(--text-t-small)/1.3 var(--font-text); color: var(--ink); overflow-wrap: anywhere; }
+.rh-glance__size { font: 400 var(--text-t-meta)/1.3 var(--font-text); color: var(--muted); }
+.rh-glance__note { grid-column: 1 / -1; font: 400 var(--text-t-meta)/1.35 var(--font-text); color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* tall rooms: one output per line, room for its note */
+@media (height >= 860px) { .rh-glance__list { grid-template-columns: minmax(0, 1fr); gap: var(--space-6); } .rh-glance__list li { padding: var(--space-8) var(--space-14); } }
+.rh-live__facts { display: grid; gap: var(--space-6); margin: 0; padding-top: var(--space-10); border-top: var(--rule-thin) solid var(--deck-line); }
+.rh-live__facts > div { display: grid; grid-template-columns: 6rem minmax(0, 1fr); gap: var(--space-10); align-items: baseline; }
+.rh-live__facts dt { font: 700 var(--text-t-label)/1.3 var(--font-label); letter-spacing: var(--track-label); color: var(--ch-ink); }
+.rh-live__facts dd { margin: 0; font: 600 var(--text-t-small)/1.3 var(--font-text); color: var(--ink); overflow-wrap: anywhere; }
+.rh-empty { padding: var(--space-12) var(--space-4); }
 
 /* ---- the desk: direct controls */
-.rh-desk { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 22px; align-items: start; }
-.rh-col { display: grid; gap: 18px; min-width: 0; }
-.rh-panel .cc-panel__body { display: grid; gap: 12px; }
-.rh-panel[data-drafting="true"] { box-shadow: var(--shadow), 0 0 0 3px var(--or); }
-.rehearsal-fields { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 12px; }
+.rh-desk { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: var(--space-16); align-items: start; }
+.rh-col { display: grid; gap: var(--space-14); min-width: 0; }
+.rh-panel__body { display: grid; gap: var(--space-12); min-width: 0; }
+.rehearsal-fields { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: var(--space-12); }
 .rehearsal-fields > .rh-secret, .rehearsal-fields > p, .rehearsal-fields > .rehearsal-remember { grid-column: 1 / -1; }
 .rehearsal-fields > .cc-btn { justify-self: start; }
-.rehearsal-workspace .cc-field { display: grid; gap: 4px; min-width: 0; font: 700 var(--text-t-small)/1.2 var(--font-text); color: var(--ink-2); }
-.rehearsal-workspace :is(.cc-input, .cc-select) { box-sizing: border-box; width: 100%; min-width: 0; appearance: none; border: var(--rule-thin) solid var(--ink); }
 /* The masked field's host: in the form at rest, or moved whole into the Steward's hold card while
    the connect flow waits for it (secret-slot.tsx). Only the placement changes, never the value. */
 .rh-secret-home { grid-column: 1 / -1; min-width: 0; }
-.rh-secret-home:empty::before { content: 'The OBS password field is with the Steward, in its hold card below.'; font: italic 400 var(--text-t-small)/1.35 var(--font-book); color: var(--or-ink); }
-.rh-secret { display: grid; gap: 4px; min-width: 0; font: 700 var(--text-t-small)/1.2 var(--font-text); color: var(--ink-2); }
-.rh-secret .cc-input { box-sizing: border-box; width: 100%; min-width: 0; appearance: none; border: var(--rule-thin) solid var(--ink); }
-.rh-secret__note { font: italic 400 var(--text-t-small)/1.35 var(--font-book); color: var(--muted); }
-.cc-steward-step > div:has(> .rh-secret) { max-width: 32rem; padding: 12px 14px; background: var(--or-wash); box-shadow: inset 3px 0 0 var(--or); }
+.rh-secret-home:empty::before { content: 'The OBS password field is with the Steward, in its hold card below.'; font: italic 400 var(--text-t-small)/1.35 var(--font-aside); color: var(--or-ink); }
+.rh-secret { display: grid; gap: var(--space-4); min-width: 0; font: 600 var(--text-t-meta)/1.2 var(--font-text); color: var(--ink-2); }
+.rh-secret__note { font: 400 var(--text-t-meta)/1.35 var(--font-text); color: var(--muted); }
+.cc-steward-step > div:has(> .rh-secret) {
+  max-width: 32rem; padding: var(--space-12) var(--space-14); border: var(--rule-thin) solid color-mix(in srgb, var(--or) 45%, transparent);
+  border-radius: calc(var(--r-lg) * .75); background: var(--or-wash);
+}
 .cc-steward-step .rh-secret { color: var(--ink); }
 .cc-steward-step .rh-secret__note { color: var(--or-ink); }
-.rehearsal-remember { display: flex; align-items: center; gap: 10px; font: 600 var(--text-t-small)/1.3 var(--font-text); }
-.rehearsal-actions { display: flex; flex-wrap: wrap; gap: 10px; }
-.rh-scene-name { font: 600 var(--text-t-h4)/1.1 var(--font-display); }
-.rh-sub { font: 800 var(--text-t-label)/1.2 var(--font-label); letter-spacing: var(--track-wide); text-transform: lowercase; color: var(--gules-ink); }
-.rh-beacon { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 10px; }
-.rh-crowd { display: grid; grid-template-columns: auto auto minmax(0, 1fr); align-items: center; gap: 10px; font: 700 var(--text-t-small)/1.2 var(--font-text); }
-.rh-crowd output { font: 600 var(--text-t-h4)/1 var(--font-display); }
-.rh-crowd input[type="range"] { accent-color: var(--ch); }
-.rh-outputs .cc-window { max-height: max(22rem, calc(100dvh - 26rem)); padding: 0 4px 0 0; border: 0; background: none; }
-.rh-outputs .cc-window-cell { padding-block: 6px; }
-.rehearsal-output { box-sizing: border-box; height: 100%; overflow: auto; display: grid; gap: 8px; padding: 12px 16px; border-left: 4px solid var(--ch); }
-.rehearsal-output[data-phase="unavailable"] { background: var(--vellum-2); }
-.rehearsal-output header { display: flex; align-items: baseline; gap: 12px; }
-.rehearsal-output h3 { font: 600 var(--text-t-h4)/1.1 var(--font-display); overflow-wrap: anywhere; }
-.rehearsal-output header .cc-stamp { margin-left: auto; }
-.rh-out-acts { display: grid; grid-template-columns: minmax(0, 12rem) minmax(0, 1fr); align-items: end; gap: 12px; }
+.rehearsal-remember { display: flex; align-items: center; gap: var(--space-10); font: 600 var(--text-t-small)/1.3 var(--font-text); }
+.rehearsal-remember input { width: 18px; height: 18px; margin: 0; accent-color: var(--ch); }
+.rehearsal-actions { display: flex; flex-wrap: wrap; gap: var(--space-8); }
+.rh-scene-name { font: 700 var(--text-t-h4)/1.15 var(--font-text); }
+.rh-sub { font: 700 var(--text-t-small)/1.2 var(--font-label); letter-spacing: var(--track-label); color: var(--ch-ink); }
+.rh-beacon { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: var(--space-10); }
+
+/* ---- outputs: rounded rows in a list that scrolls inside the card */
+.rh-outputs .cc-window { max-height: max(18rem, calc(100dvh - 30rem)); padding-right: var(--space-4); border: 0; background: none; }
+.rh-outputs .cc-window-row { border-bottom: 0; }
+.rh-outputs .cc-window-cell { padding-block: var(--space-4); }
+.rehearsal-output {
+  box-sizing: border-box; height: 100%; overflow: auto; display: grid; align-content: start; gap: var(--space-8); padding: var(--space-10) var(--space-14);
+  border: var(--rule-thin) solid var(--deck-line); border-radius: calc(var(--r-lg) * .75); background: var(--surface-2);
+}
+.rehearsal-output[data-phase="unavailable"] { background: color-mix(in srgb, var(--stone) 70%, var(--surface)); }
+.rehearsal-output[data-phase="added"] { border-color: color-mix(in srgb, var(--ok) 60%, transparent); }
+.rehearsal-output header { display: flex; align-items: center; gap: var(--space-12); }
+.rehearsal-output h3 { font: 700 var(--text-t-h3)/1.2 var(--font-text); letter-spacing: 0; text-transform: none; overflow-wrap: anywhere; }
+.rehearsal-output header .setup-tag { margin-left: auto; }
+.rh-out-acts { display: grid; grid-template-columns: minmax(0, 13.5rem) minmax(0, 1fr); align-items: end; gap: var(--space-12); }
 .rh-out-acts .cc-seal-button { width: 100%; }
 
-@media (width < 90rem) {
-  .rh-stations { grid-template-columns: repeat(5, minmax(0, 1fr)); }
-  .rh-station { padding-inline: 12px; }
-  .rh-station > .cc-lozenge { right: 10px; }
-  .rh-desk { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
-  .rh-out-acts { grid-template-columns: minmax(0, 1fr); }
+/* ---- live strip: the crowd level on a themed track */
+.rh-live__row { display: grid; align-content: start; gap: var(--space-12); }
+.rh-live__notes { display: grid; gap: var(--space-2); min-width: 0; }
+.rh-crowd { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: baseline; gap: var(--space-10) var(--space-12); font: 700 var(--text-t-small)/1.2 var(--font-label); letter-spacing: var(--track-label); color: var(--ch-ink); }
+.rh-crowd output { min-width: 3ch; font: 700 var(--text-px-32)/1 var(--font-text); color: var(--ink); letter-spacing: 0; text-align: right; }
+.rh-crowd input[type="range"] { grid-column: 1 / -1; }
+.rh-crowd input[type="range"] { appearance: none; height: 6px; margin: 0; border-radius: 3px; background: var(--surface-3); border: var(--rule-thin) solid var(--came-ui); accent-color: var(--ch); cursor: pointer; }
+.rh-crowd input[type="range"]::-webkit-slider-thumb { appearance: none; width: 18px; height: 18px; border-radius: 50%; background: var(--ch); border: 2px solid var(--surface); box-shadow: 0 0 0 1px var(--ch-deep), 0 0 calc(var(--glow-on) * 10px) var(--ch-glow); }
+.rh-crowd input[type="range"]:focus-visible { outline: 2px solid var(--focus); outline-offset: 4px; }
+.rh-crowd input[type="range"]:disabled { cursor: not-allowed; opacity: .6; }
+
+/* ---- the More fold: the board's buttons open Steward flows; the forms behind them wait under More */
+.rh-more__summary {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-4) var(--space-12); width: fit-content; cursor: pointer; list-style: none;
+  padding: var(--space-8) var(--space-14); border: var(--rule-thin) solid var(--came-ui); border-radius: calc(var(--r-lg) / 2); background: var(--surface-2);
+  font: 600 var(--text-px-15)/1.2 var(--font-label); letter-spacing: .04em; color: var(--ink);
 }
-@media (width < 70rem) { .rh-stations { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 14px; } .rh-desk { grid-template-columns: minmax(0, 1fr); } }
-.rh-board[data-ready="false"] .rh-station__value { color: var(--ink-2); }
-/* A themed track: the native one glares white in night. */
-.rh-crowd input[type="range"] { appearance: none; height: 6px; border-radius: 3px; background: var(--surface-3); border: 1px solid var(--lead); }
-.rh-crowd input[type="range"]::-webkit-slider-thumb { appearance: none; width: 18px; height: 18px; border-radius: 50%; background: var(--ch); border: 2px solid var(--lead); }
-/* ---- live strip and the More fold: the board's buttons open Steward flows; the forms behind them wait under More */
-.rh-live { padding: 14px 24px; }
-.rh-live__row { display: grid; grid-template-columns: minmax(0, 32rem) minmax(0, 1fr); align-items: center; gap: 10px 28px; }
-.rh-live__notes { display: grid; gap: 2px; min-width: 0; }
-.rh-more__summary { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; width: fit-content; cursor: pointer; list-style: none; padding: 9px 16px; border: var(--rule-thin) solid var(--hair); background: var(--vellum-2); font: 800 var(--text-t-label)/1.2 var(--font-label); letter-spacing: var(--track-wide); text-transform: lowercase; color: var(--ink); }
+.rh-more__summary:hover { border-color: var(--ch); }
 .rh-more__summary::-webkit-details-marker { display: none; }
 .rh-more__summary::before { content: '\25B8' / ''; color: var(--ch-ink); }
 .rh-more[open] > .rh-more__summary::before { content: '\25BE' / ''; }
-.rh-more__summary:focus-visible { outline: 2px solid var(--ch); outline-offset: 2px; }
-.rh-more__summary span { font: italic 400 var(--text-t-small)/1.3 var(--font-book); letter-spacing: 0; text-transform: none; color: var(--muted); }
-.rh-more[open] > .rh-more__summary { margin-bottom: 18px; }
-@media (width < 70rem) { .rh-live__row { grid-template-columns: minmax(0, 1fr); } }
+.rh-more__summary:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.rh-more__summary span { font: italic 400 var(--text-t-small)/1.3 var(--font-aside); letter-spacing: 0; color: var(--muted); }
+.rh-more[open] > .rh-more__summary { margin-bottom: var(--space-14); }
+
+@media (width < 90rem) {
+  .rh-stations { gap: var(--space-10); }
+  .rh-station { padding-inline: var(--space-12); }
+  .rh-desk { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+}
+@media (width < 70rem) {
+  .rh-stations { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .rh-desk, .rh-inside { grid-template-columns: minmax(0, 1fr); }
+}
+/* Short rooms (1280x720, 1366x768): tighter step cards, the crowd as one row (label · value · slider ·
+   notes) so the film's slider always shows; the outputs glance folds away first (its rows live under More). */
+@media (height < 860px) {
+  .rh-live__facts { display: none; }
+  .rh-body { gap: var(--space-10); }
+  .rh-intro { font-size: var(--text-t-small); line-height: 1.4; }
+  .setup-card.rh-board { gap: var(--space-8); padding-block: var(--space-10) var(--space-12); }
+  .rh-station { padding: var(--space-8) var(--space-12) var(--space-10); gap: var(--space-2) var(--space-10); }
+  .rh-station__mark { margin-bottom: 0; }
+  .rh-station__glyph { width: 24px; height: 31px; }
+  .rh-station > .cc-btn { margin-top: var(--space-4); min-height: var(--space-28); }
+  .rh-inside > .setup-card { padding-block: var(--space-10); gap: var(--space-8); }
+  .rh-live__row { grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); align-items: center; gap: var(--space-8) var(--space-20); }
+  .rh-crowd { grid-template-columns: auto auto minmax(6rem, 1fr); align-items: center; }
+  .rh-crowd output { font-size: var(--text-t-h4); }
+  .rh-crowd input[type="range"] { grid-column: auto; }
+}
+@media (height < 1000px) { .rh-glance__note { display: none; } }
+@media (height < 800px) {
+  .rh-inside { flex: 0 1 auto; grid-template-columns: minmax(0, 1fr); }
+  .rh-inside > .rh-glance { display: none; }
+}

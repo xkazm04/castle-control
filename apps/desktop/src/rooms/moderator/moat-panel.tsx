@@ -24,7 +24,7 @@ export type RuleBenchLink = {
 
 export function MarkerInspector({ marker, bench }: { marker: MoatMarker | undefined; bench?: RuleBenchLink | undefined }) {
   return <aside className="moat-inspector" aria-label={copy.inspector} data-empty={!marker}>
-    <h4>{marker ? marker.message_id : copy.inspect_none}</h4>
+    <h4 data-empty={marker ? undefined : 'true'}>{marker ? marker.message_id : copy.inspect_none}</h4>
     {marker ? <dl>
       <dt>{copy.outcome}</dt><dd>{fateWords[marker.fate]}</dd>
       <dt>{copy.state}</dt><dd>{marker.state.replaceAll('_', ' ')}</dd>
@@ -32,7 +32,7 @@ export function MarkerInspector({ marker, bench }: { marker: MoatMarker | undefi
       <dt>{copy.action}</dt><dd>{marker.action ? actionWords[marker.action] : copy.none}</dd>
       <dt>{copy.rule}</dt><dd>{marker.rule_id ? <><code>{marker.rule_id}</code>{bench?.describe?.(marker.rule_id) && <small> · {bench.describe(marker.rule_id)}</small>}</> : copy.none}</dd>
       <dt>{copy.evaluation}</dt><dd>{copy.evaluation_words[marker.passed === undefined ? 'none' : marker.passed ? 'true' : 'false']}</dd>
-      <dt>{copy.source}</dt><dd>{marker.source}</dd>
+      <dt>{copy.source}</dt><dd className="moat-id" title={marker.source}>{marker.source}</dd>
       <dt>{copy.at}</dt><dd><ClockTime at={marker.at} /></dd>
     </dl> : <EmptyState compact announce={false} title={copy.inspect_empty} />}
     {marker?.rule_id && bench?.can_open(marker.rule_id) && <a className="moat-open-rule" href="#/chamber/moderator" data-rule={marker.rule_id}

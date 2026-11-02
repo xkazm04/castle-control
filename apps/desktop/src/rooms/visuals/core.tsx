@@ -108,12 +108,19 @@ export function ConnectedBeacons({ port, seal_slot, steward }: { port: CoreBeaco
   }));
   const selected = state.visuals.find(item => item.visual_id === state.selected);
   const compose = (picture: ReactNode, reading: ReactNode, details?: ReactNode, in_picture?: string) => <BeaconDeck picture={picture} reading={reading}
-    open={open} on_open={() => setOpen(true)} on_close={() => setOpen(false)} core
+    open={open} on_open={() => setOpen(true)} on_close={() => setOpen(false)} core tag={!empty}
     caption={publication ? 'Draft / sample picture · SIMULATED · not on air' : 'Core configuration · sample picture · SIMULATED'}
     preview={publication ? <p>{selected?.name ?? 'Beacon'} · draft · not on air</p> : <p>Nothing in Preview. Ask the Steward to draft one.</p>}
     program={<p>{selected?.name ?? 'No beacon saved'}<br />Live blaze shows on stream · live total shows on stream</p>}
     picker={plates.length > 0 ? <BeaconPlates visuals={plates} selected={in_picture ?? state.selected ?? ''} core compact busy={disabled || Boolean(publication)}
-      on_select={item => port.select(item.visual.visual_id)} /> : <p>{state.phase === 'error' ? copy.core_failed(state.error?.code ?? 'unavailable') : 'No beacons in your core yet. Ask the Steward to light one.'}</p>}
+      on_select={item => port.select(item.visual.visual_id)}
+      after={plates.length < 3 && <EmptyState compact glyph={false} announce={false}
+        title={plates.length === 1 ? 'One beacon in your core' : `${plates.length} beacons in your core`}
+        description="Light another with the Steward; each new beacon takes the next key."
+        action={<button type="button" className="cc-btn cc-btn--quiet" disabled={disabled} onClick={() => start(light_flow_id)}>Light another beacon</button>} />} />
+      : <EmptyState compact glyph={false} announce={false}
+        title={state.phase === 'error' ? copy.core_failed(state.error?.code ?? 'unavailable') : 'No beacons in your core yet.'}
+        description={state.phase === 'error' ? undefined : 'Light your first beacon with the Steward, or play the demo to see one at work.'} />}
     actions={<>
       <button type="button" className="cc-btn" disabled={disabled || !selected} onClick={() => start(flow_ids.test)}><RoomKeyBadge room="visuals" action="test" />Test fire</button>
       <button type="button" className="cc-btn" disabled={disabled || !selected} onClick={() => start(flow_ids.replay)}><RoomKeyBadge room="visuals" action="replay" />Replay a night</button>

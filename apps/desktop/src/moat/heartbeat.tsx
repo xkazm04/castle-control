@@ -3,7 +3,7 @@ import type { MoatClock } from './moat-player.js';
 import { moatCopy as copy } from './moat-copy.js';
 import { buildMoat, windowFor } from './moat-model.js';
 import type { MoatSource } from './moat-model.js';
-import { MoatScene } from './moat-scene.jsx';
+import { MoatScene, compactGeometry } from './moat-scene.jsx';
 import { InkButton } from '@castle-control/ui';
 import { useMoatPlayer } from './use-moat-player.js';
 
@@ -25,5 +25,21 @@ export function MoatHeartbeat({ source, delay_s, clock }: { source: MoatSource; 
       <MoatScene model={model} playhead_ms={state.playhead_ms} window={windowFor(model, state.playhead_ms)} compact uid={uid} /></span>
     {!reduced && <InkButton type="button" size="small" variant="ghost" aria-pressed={paused} aria-label={paused ? copy.loop_play : copy.loop_pause}
       onClick={() => { setPaused(!paused); }}>{paused ? copy.play : copy.pause}</InkButton>}
+  </span>;
+}
+
+/** Core mode before any replay: the lanes drawn quiet, with one line saying why they are empty. Nothing moves. */
+export function MoatQuiet() {
+  const g = compactGeometry;
+  return <span className="moat-heartbeat" data-quiet="true">
+    <small>{copy.quiet}</small>
+    <span className="moat-heartbeat-strip" role="img" aria-label={copy.quiet_name}>
+      <span className="moat-scene" data-compact="true" style={{ aspectRatio: `${g.width} / ${g.height}` }}>
+        <svg viewBox={`0 0 ${g.width} ${g.height}`} aria-hidden="true" focusable="false">
+          <rect className="moat-bank" x="0" y="0" width={g.width} height={g.chat_h} />
+          <rect className="moat-water" x="0" y={g.chat_h} width={g.width} height={g.stream_top - g.chat_h} />
+          <rect className="moat-bank" x="0" y={g.stream_top} width={g.width} height={g.height - g.stream_top} />
+          <rect className="moat-gate" x="0" y={g.gate_top} width={g.width} height={g.gate_h} />
+        </svg></span></span>
   </span>;
 }

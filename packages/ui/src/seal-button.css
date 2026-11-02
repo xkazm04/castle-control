@@ -15,23 +15,33 @@
 .cc-seal-button progress::-moz-progress-bar { background: var(--or); }
 .cc-seal-button[data-size="large"] { --cc-shadow-offset: var(--space-4); --cc-shadow-ink: var(--ink); min-width: calc(var(--space-56) * 3.5); }
 .cc-seal-button .cc-seal-instruction, .cc-seal-release { font: 600 var(--text-shell-hint)/1 var(--font-ui); letter-spacing: .04em; text-transform: none; color: var(--ink-2); }
-.cc-seal-instruction kbd { font: inherit; font-family: var(--font-num); }
+.cc-seal-instruction kbd { font: inherit; font-family: var(--font-mono); }
 .cc-seal-button .cc-seal-release { position: absolute; inset-inline: 0; bottom: var(--space-5); text-align: center; }
 .cc-seal-button:has(.cc-seal-release:not(:empty)) .cc-seal-instruction { visibility: hidden; }
 .cc-seal-release:empty { display: none; }
 .cc-seal-button .cc-seal-fill-copy { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--space-5); padding: var(--space-1) var(--space-6); color: var(--press); clip-path: inset(0 calc(100% - var(--cc-seal-progress, 0%)) 0 0); pointer-events: none; }
 .cc-seal-fill-copy small { color: var(--press-2); font: 600 var(--text-shell-hint)/1 var(--font-ui); letter-spacing: .04em; text-transform: none; }
-.cc-seal-fill-copy kbd { font: inherit; font-family: var(--font-num); }
+.cc-seal-fill-copy kbd { font: inherit; font-family: var(--font-mono); }
+/* The seal key wears the dock control face (action-row/row.css), gilded: it is the one commit. */
 .cc-action-row .cc-action-seal .cc-seal-button[data-size="key"] { display: inline-flex; box-sizing: border-box;
-  height: var(--space-40); min-height: var(--space-40); max-height: var(--space-40); margin: 0; padding: 0 var(--space-16); gap: var(--space-10); flex-direction: row; white-space: nowrap;
-  border: var(--rule-thin) solid var(--deck-gold-2); border-bottom: var(--space-4) solid var(--deck-seal-foot); border-radius: var(--r-lg); box-shadow: var(--deck-seal-shadow);
-  background: linear-gradient(180deg, var(--deck-seal-top), var(--deck-seal-bottom)); color: var(--ink);
-  font: 400 var(--text-aside)/1.45 var(--font-ui); letter-spacing: normal; text-transform: none; }
+  height: var(--space-36); min-height: var(--space-36); max-height: var(--space-36); margin: 0; padding: 0 var(--space-14); gap: var(--space-8); flex-direction: row; white-space: nowrap;
+  border: var(--rule-thin) solid var(--deck-gold-2); border-radius: var(--deck-key-radius);
+  box-shadow: inset 0 var(--rule-thin) 0 var(--deck-control-highlight), 0 var(--rule-thin) 0 var(--deck-key-foot);
+  background: linear-gradient(180deg, var(--deck-key-main-top), var(--deck-key-main-bottom)); color: var(--ink);
+  font: 700 var(--text-t-small)/1 var(--font-label); letter-spacing: .04em; text-transform: none; }
+.cc-action-row .cc-action-seal .cc-seal-button[data-size="key"]:disabled { opacity: 1; background: linear-gradient(180deg, var(--deck-key-top), var(--deck-key-bottom)); border-color: var(--line-control); color: var(--ink-2); }
+.cc-action-row .cc-action-seal .cc-seal-button[data-size="key"]:hover:not(:disabled) { border-color: var(--deck-gold); background: linear-gradient(180deg, var(--deck-key-hover-top), var(--deck-key-hover-bottom)); }
+.cc-action-row .cc-action-seal .cc-seal-button[data-size="key"] > span:first-child kbd {
+  display: inline-grid; place-items: center; box-sizing: border-box; height: var(--space-24); margin-inline: var(--space-2); padding: 0 var(--space-6);
+  border: var(--rule-thin) solid var(--line-control); border-radius: var(--r-sm);
+  background: color-mix(in srgb, var(--deck-gold) 10%, transparent); color: var(--deck-gold);
+  font: 600 var(--text-t-label)/1 var(--font-mono); text-transform: none; letter-spacing: 0; vertical-align: middle;
+}
 .cc-action-row .cc-action-seal .cc-seal-button[data-size="key"]::before { display: none; }
 .cc-action-row .cc-action-seal .cc-seal-button[data-size="key"] progress { opacity: 1; }
 .cc-action-row .cc-action-seal .cc-seal-button[data-size="key"] .cc-seal-instruction,
 .cc-action-row .cc-action-seal .cc-seal-button[data-size="key"] .cc-seal-fill-copy { display: none; }
-.cc-seal-button[data-size="key"] .cc-seal-status { font: italic 400 var(--text-body)/1.2 var(--font-serif); text-transform: none; letter-spacing: 0; }
+.cc-seal-button[data-size="key"] .cc-seal-status { font: 400 var(--text-t-meta)/1 var(--font-text); text-transform: none; letter-spacing: 0; color: var(--muted); }
 .cc-seal-button[data-size="key"] progress::-webkit-progress-value { background: color-mix(in srgb, var(--or) 65%, transparent); }
 .cc-seal-button[data-size="key"] progress::-moz-progress-bar { background: color-mix(in srgb, var(--or) 65%, transparent); }
 .cc-action-row .cc-action-seal .cc-seal-button[data-size="key"] .cc-seal-release { position: absolute; }
@@ -46,3 +56,23 @@
   .cc-action-row .cc-action-seal .cc-seal-button[data-sealed="true"] .cc-seal-wax { animation: cc-deck-wax var(--motion-shell) var(--ease); }
 }
 @keyframes cc-deck-wax { from { opacity: 0; transform: scale(1.8) rotate(-15deg); } to { opacity: 1; transform: scale(1) rotate(0); } }
+
+/* Every hold-to-seal outside the dock wears the Deck control face: a hairline came, a small radius,
+ * no slab shadow, a small-caps label in its authored case and a muted sub-line. The rose and the
+ * progress fill stay. Outranks the fused skin (.cc-frame .cc-seal-button) by one class. */
+.cc-frame .cc-seal-button:not([data-size="key"]) {
+  border: var(--rule-thin) solid var(--line-control); border-radius: var(--r-md);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--ch-lit) 28%, transparent) var(--cc-seal-progress), transparent var(--cc-seal-progress)),
+    linear-gradient(180deg, var(--deck-key-top), var(--deck-key-bottom));
+  box-shadow: inset 0 var(--rule-thin) 0 var(--deck-control-highlight);
+  font: 700 var(--text-t-small)/var(--lh-snug) var(--font-label); letter-spacing: .04em; text-transform: none;
+}
+.cc-frame .cc-seal-button:not([data-size="key"]):hover:not(:disabled) { border-color: var(--deck-gold); }
+.cc-frame .cc-seal-button:not([data-size="key"]):disabled { background: var(--surface-2); color: var(--ink-2); }
+.cc-frame .cc-seal-button:not([data-size="key"]) :is(.cc-seal-instruction, .cc-seal-release) {
+  font: 400 var(--text-t-meta)/1.25 var(--font-text); letter-spacing: 0; text-transform: none; color: var(--muted);
+}
+.cc-frame .cc-seal-button:not([data-size="key"]) .cc-seal-instruction kbd { font: 500 var(--text-t-label)/1 var(--font-mono); }
+@media (max-width: 1420px) {
+  .cc-action-row .cc-action-seal .cc-seal-button[data-size="key"] { gap: var(--space-6); padding: 0 var(--space-10); font-size: var(--text-t-meta); }
+}

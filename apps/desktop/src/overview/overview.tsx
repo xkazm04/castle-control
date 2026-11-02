@@ -38,12 +38,14 @@ export function Overview({ snapshot, selected, on_select, on_open, steward, conn
       <header className="overview-heading"><div><h1>Preview and Proclaim</h1><span>The whole keep, in one picture.</span></div>
         <b>{pending.length} {pending.length === 1 ? 'proposal' : 'proposals'}</b></header>
       <div className="overview-preview-wrap"><div className="overview-preview" aria-label="Stream preview">
-        <StreamScene mode="preview" proposals={[...program, ...pending]} sample={snapshot.mode === 'fixture'} on_select={select} />
+        <StreamScene mode="preview" proposals={[...program, ...pending]} sample={snapshot.mode === 'fixture'}
+          simulated={snapshot.mode === 'fixture' || snapshot.status?.simulated === true} on_select={select} />
       </div></div>
       <ChamberStrip selected={selected} states={states} on_select={select} on_open={on_open} />
     </div>
     <aside className="overview-sidebar">
-      <ProgramMonitor><StreamScene mode="program" proposals={program} sample={snapshot.mode === 'fixture'} /></ProgramMonitor>
+      <ProgramMonitor><StreamScene mode="program" proposals={program} sample={snapshot.mode === 'fixture'}
+        simulated={snapshot.mode === 'fixture' || snapshot.status?.simulated === true} /></ProgramMonitor>
       <div className="overview-proclaim" role="group" aria-describedby={proclaimCaptionId}>
         <p id={proclaimCaptionId} className="overview-proclaim-caption">{candidate
           ? `Next to proclaim: ${candidate.title} · rev ${candidate.revision} (${candidateChamber ?? candidate.chamber})`

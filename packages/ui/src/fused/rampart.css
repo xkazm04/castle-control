@@ -17,89 +17,130 @@ html, body { background: var(--stone); }
 }
 .cc-frame::before { opacity: 1; mix-blend-mode: normal; background-image: none; }
 .cc-frame :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; box-shadow: 0 0 0 2px var(--focus-inner); }
-.cc-frame[data-theme] :focus-visible { outline-color: var(--focus); }
 .cc-frame ::selection { background: var(--or-lit); color: var(--lead-lo); }
 
-/* ---- rampart: the lead bar */
+/* ---- rampart: the Deck status bar
+   One calm row in both themes: brand left, the live cluster and the connection
+   cluster as two hairline capsules, utilities right. The bar owns its ground and
+   inks (--bar-*): slate glass by night, limewash by day with the --ink ramp. */
 .cc-frame .cc-rampart {
-  height: var(--rampart-h); gap: 16px; padding: 0 18px 0 16px; border-bottom: 0; z-index: 30;
-  background: linear-gradient(180deg, var(--lead-2), var(--lead) 60%, var(--lead-lo));
-  color: var(--on-lead); box-shadow: inset 0 1px 0 var(--lead-hi), inset 0 -1px 0 var(--lead-hi);
-  font: 500 var(--text-t-small)/1 var(--font-text);
+  --bar-top: var(--deck-top); --bar-bottom: var(--deck-top-bottom);
+  --bar-ink: var(--ink); --bar-ink-2: var(--ink-2); --bar-muted: var(--muted);
+  --bar-line: color-mix(in srgb, var(--bar-ink) 20%, transparent); --bar-cap: color-mix(in srgb, var(--bar-ink) 4%, transparent);
+  --bar-face: color-mix(in srgb, var(--bar-ink) 7%, transparent); --bar-face-hover: color-mix(in srgb, var(--bar-ink) 13%, transparent);
+  --bar-accent: var(--deck-gold);
+  --bar-control-h: var(--space-34);
+  position: relative; display: flex; align-items: center; gap: var(--space-14); min-width: 0;
+  height: var(--rampart-h); padding: var(--space-4) var(--deck-pad) 0; z-index: 30;
+  background: linear-gradient(180deg, var(--bar-top), var(--bar-bottom));
+  border-bottom: var(--rule-thin) solid var(--deck-line); box-shadow: none;
+  color: var(--bar-ink); font: 400 var(--text-t-small)/1 var(--font-text);
 }
-.cc-frame .cc-rampart .cc-brand { gap: 10px; margin-right: 0; color: var(--on-lead); }
-.cc-frame .cc-rampart .cc-mark { width: 32px; height: 30px; filter: drop-shadow(0 0 calc(var(--glow-on) * 6px) var(--gules-glow)); }
-.cc-frame .cc-rampart .cc-wordmark { font: 600 var(--text-px-25)/1 var(--font-display); letter-spacing: .01em; text-transform: none; }
-.cc-frame .cc-rampart .cc-live-group { gap: 16px; }
-.cc-frame .cc-rampart .cc-figure { display: grid; gap: 3px; line-height: 1; white-space: nowrap; }
-.cc-frame .cc-rampart .cc-figure b { font: 700 var(--text-px-15)/1 var(--font-text); color: var(--on-lead); }
-.cc-frame .cc-rampart .cc-figure small { font: 700 var(--text-px-13)/1 var(--font-label); letter-spacing: .1em; color: var(--on-lead-muted); text-transform: lowercase; }
-.cc-frame .cc-rampart .cc-separator { width: 2px; height: auto; align-self: stretch; margin-block: 10px; background: var(--lead-hi); opacity: .7; }
-.cc-frame .cc-rampart .cc-link-group { display: flex; gap: 8px; }
-.cc-frame .cc-rampart .cc-separator { display: block; }
-.cc-frame .cc-rampart a { text-decoration: none; }
+.cc-frame[data-theme="day"] .cc-rampart { --bar-top: var(--surface); --bar-bottom: var(--surface-2); --bar-cap: var(--surface); }
+.cc-frame .cc-rampart a { text-decoration: none; color: inherit; }
+.cc-frame .cc-rampart .cc-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.cc-frame .cc-rampart .cc-brand { gap: var(--space-10); margin-right: var(--space-6); color: var(--bar-ink); }
+.cc-frame .cc-rampart .cc-mark { width: var(--space-28); height: var(--space-26); filter: drop-shadow(0 0 calc(var(--glow-on) * 6px) var(--gules-glow)); }
+.cc-frame .cc-rampart .cc-wordmark { font: 400 var(--text-px-25)/1 var(--font-display); letter-spacing: .01em; text-transform: none; color: var(--bar-ink); }
+.cc-frame .cc-rampart .cc-separator { display: none; }
 
-/* every rampart stamp is an etched registration chip: dashed came, small caps */
-.cc-frame .cc-rampart .cc-stamp[data-stamp], .cc-frame .cc-rampart .cc-chip[data-variant="dash"] {
-  --stamp-ink: var(--on-lead); --stamp-tilt: 0deg;
-  display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 10px; transform: none; filter: none;
-  border: 1.5px dashed var(--on-lead-muted); border-radius: 0; color: var(--on-lead); background: var(--tex-etch-lead);
-  font: 700 var(--text-t-label)/1 var(--font-label); letter-spacing: .08em; text-transform: lowercase; white-space: nowrap;
-  box-shadow: none; text-shadow: none;
+/* two capsules: the live cluster and the connections */
+.cc-frame .cc-rampart :is(.cc-live-group, .cc-link-group) {
+  display: flex; flex: none; align-items: center; gap: 0; height: var(--bar-control-h); box-sizing: border-box;
+  padding: 0 var(--space-4); border: var(--rule-thin) solid var(--bar-line); border-radius: var(--r-round); background: var(--bar-cap);
 }
-.cc-frame .cc-rampart .cc-stamp[data-stamp]::before { content: ''; position: static; inset: auto; width: 7px; height: 7px; flex: none;
-  transform: rotate(45deg); border: 0; border-radius: 0; opacity: 1;
-  background: linear-gradient(135deg, var(--clear-lit), var(--clear) 70%); box-shadow: 0 0 0 1.5px var(--lead-hi); }
-.cc-frame .cc-rampart a:hover > .cc-stamp, .cc-frame .cc-rampart a:hover > .cc-chip { border-style: solid; }
-.cc-frame .cc-rampart a[href="#/stream"] > .cc-stamp::before { background: linear-gradient(135deg, var(--key-lit), var(--key) 70%); }
-.cc-frame .cc-rampart a[href="#/chamber/moderator"] > .cc-stamp::before,
-.cc-frame .cc-rampart .cc-stamp:is([data-stamp="shadow"], [data-stamp="pass"])::before { background: linear-gradient(135deg, var(--azure-lit), var(--azure) 70%); }
-.cc-frame .cc-rampart .cc-stamp:is([data-stamp="armed"], [data-stamp="held"], [data-stamp="blocked"])::before { background: linear-gradient(135deg, var(--gules-lit), var(--gules) 70%); }
+.cc-frame .cc-rampart .cc-rampart-figures { display: flex; align-items: center; gap: 0; }
+.cc-frame .cc-rampart :is(.cc-live-group, .cc-rampart-figures, .cc-link-group) > * {
+  display: inline-flex; align-items: center; height: var(--space-22); padding: 0 var(--space-10);
+}
+.cc-frame .cc-rampart :is(.cc-live-group > * + *, .cc-rampart-figures > * + *, .cc-link-group > * + *) { border-left: var(--rule-thin) solid var(--bar-line); }
+.cc-frame .cc-rampart .cc-live-group > .cc-rampart-figures { padding: 0; }
 
-/* on air: a lamp cabochon and a plain small-caps word, no box */
+/* figures: value and its label on one baseline; an unknown value is a quiet dash */
+.cc-frame .cc-rampart .cc-figure { display: inline-flex; flex-direction: row; align-items: baseline; gap: var(--space-6); line-height: 1; white-space: nowrap; }
+.cc-frame .cc-rampart .cc-figure b { font: 700 var(--text-t-small)/1 var(--font-text); font-variant-numeric: lining-nums tabular-nums; color: var(--bar-ink); }
+.cc-frame .cc-rampart .cc-figure[data-known="false"] b { font-weight: 400; color: var(--bar-muted); }
+.cc-frame .cc-rampart .cc-figure small { font: 400 var(--text-t-meta)/1 var(--font-text); letter-spacing: 0; text-transform: none; color: var(--bar-muted); }
+
+/* on air: a lamp and a small-caps word */
 .cc-frame .cc-rampart .cc-stamp:is([data-stamp="on-air"], [data-stamp="off-air"]) {
-  gap: 8px; height: auto; padding: 0; border: 0; background: none; letter-spacing: .1em; font-weight: 800;
+  --stamp-ink: var(--bar-ink); --stamp-tilt: 0deg; gap: var(--space-8); height: var(--space-22); padding: 0 var(--space-10);
+  border: 0; border-radius: 0; background: none; color: var(--bar-ink); transform: none; filter: none; box-shadow: none; text-shadow: none;
+  font: 700 var(--text-t-label)/1 var(--font-label); letter-spacing: .04em; text-transform: none; white-space: nowrap;
 }
 .cc-frame .cc-rampart .cc-stamp:is([data-stamp="on-air"], [data-stamp="off-air"])::before { display: none; }
 .cc-frame .cc-rampart .cc-stamp-dot {
-  width: 14px; height: 14px; border: 0; border-radius: 50%;
-  background: radial-gradient(circle at 35% 30%, var(--gules-lit), var(--gules) 55%, var(--gules-deep));
-  box-shadow: inset 0 0 0 1.5px var(--lead-lo), 0 0 0 1.5px var(--lead-hi), 0 0 12px 2px var(--gules-glow);
+  width: var(--space-10); height: var(--space-10); border: 0; border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, var(--gules-lit), var(--gules) 60%, var(--gules-deep));
+  box-shadow: 0 0 0 var(--rule-medium) color-mix(in srgb, var(--gules) 30%, transparent), 0 0 calc(var(--glow-on) * 10px) var(--gules-glow);
 }
-.cc-frame .cc-rampart .cc-stamp-dot[data-dot="ring"] {
-  background: radial-gradient(circle at 35% 30%, var(--lead-hi), var(--gules-deep) 70%);
-  box-shadow: inset 0 0 0 1.5px var(--lead-lo), 0 0 0 1.5px var(--lead-hi);
+.cc-frame .cc-rampart .cc-stamp-dot[data-dot="ring"] { background: transparent; box-shadow: inset 0 0 0 var(--rule-medium) var(--bar-muted); }
+
+/* connections: a lamp per link; simulated is a hollow ring, live marks keep their state colour */
+.cc-frame .cc-rampart .cc-rampart-link { display: inline-flex; align-items: center; gap: var(--space-6); color: var(--bar-ink-2); font: 500 var(--text-t-meta)/1 var(--font-text); white-space: nowrap; }
+.cc-frame .cc-rampart .cc-rampart-link i { width: var(--space-8); height: var(--space-8); flex: none; box-sizing: border-box; border: var(--rule-medium) solid var(--bar-muted); border-radius: 50%; }
+.cc-frame .cc-rampart .cc-link-group > a:hover .cc-rampart-link { color: var(--bar-ink); }
+.cc-frame .cc-rampart .cc-link-group > a:hover .cc-rampart-link i { border-color: var(--bar-accent); }
+.cc-frame .cc-rampart .cc-connection { display: inline-flex; align-items: center; gap: var(--space-6); white-space: nowrap; }
+.cc-frame .cc-rampart a > .cc-connection { padding: 0; height: auto; }
+.cc-frame .cc-rampart .cc-connection svg { width: var(--space-14); height: var(--space-14); color: var(--ok); }
+.cc-frame .cc-rampart .cc-connection > span { display: inline-flex; flex-direction: row; align-items: baseline; gap: var(--space-4); white-space: nowrap; }
+.cc-frame .cc-rampart .cc-connection b { font: 600 var(--text-t-meta)/1 var(--font-text); letter-spacing: 0; text-transform: none; color: var(--bar-ink); }
+.cc-frame .cc-rampart .cc-connection small { font: 400 var(--text-t-meta)/1 var(--font-text); color: var(--bar-muted); }
+.cc-frame .cc-rampart .cc-connection svg > path { stroke: var(--bar-ink-2); }
+.cc-frame .cc-rampart .cc-connection svg .cc-connection-cross { stroke: var(--bar-top); }
+.cc-frame .cc-rampart .cc-connection[data-state="reconnecting"] svg { color: var(--warn); }
+.cc-frame .cc-rampart .cc-connection[data-state="down"] svg { color: var(--danger); }
+.cc-frame .cc-rampart .cc-connection[data-state="down"] svg circle { fill: currentColor; }
+.cc-frame .cc-rampart .cc-gatehouse { display: inline-flex; align-items: center; gap: var(--space-6); height: auto; font-family: var(--font-label); }
+
+/* etched chips: unknown states and the stamps inside the Gatehouse link */
+.cc-frame .cc-rampart .cc-chip[data-variant="dash"], .cc-frame .cc-rampart .cc-gatehouse .cc-stamp[data-stamp] {
+  --stamp-tilt: 0deg; display: inline-flex; align-items: center; gap: var(--space-6); height: var(--space-22); padding: 0 var(--space-8);
+  border: var(--rule-thin) dashed var(--bar-muted); border-radius: var(--r-round); background: none; color: var(--bar-ink-2);
+  transform: none; filter: none; box-shadow: none; text-shadow: none;
+  font: 600 var(--text-t-label)/1 var(--font-label); letter-spacing: .04em; text-transform: none; white-space: nowrap;
+}
+.cc-frame .cc-rampart .cc-gatehouse .cc-stamp[data-stamp]::before { content: ''; position: static; inset: auto; width: var(--space-6); height: var(--space-6); border: 0; border-radius: 50%; opacity: 1; background: var(--azure); }
+.cc-frame .cc-rampart .cc-gatehouse .cc-stamp[data-stamp="armed"]::before { background: var(--gules); }
+.cc-frame .cc-rampart .cc-gatehouse .cc-stamp[data-stamp="armed"] { border-style: solid; border-color: var(--gules); color: var(--bar-ink); }
+.cc-frame .cc-rampart .cc-gatehouse-shield { padding: var(--space-3) var(--space-8); border: 0; border-radius: var(--r-round); background: var(--danger); color: var(--on-glass); font: 700 var(--text-t-label)/1 var(--font-label); }
+
+/* SIMULATED: one calm etched label, always visible */
+.cc-frame .cc-rampart > .cc-stamp[data-stamp="simulated"] {
+  --stamp-ink: var(--bar-ink-2); --stamp-tilt: 0deg; display: inline-flex; align-items: center; gap: var(--space-6);
+  height: var(--space-26); padding: 0 var(--space-10); transform: none; filter: none; box-shadow: none; text-shadow: none;
+  border: var(--rule-thin) solid var(--hair); border-radius: var(--r-sm); background: var(--tint); color: var(--bar-ink-2);
+  font: 700 var(--text-t-label)/1 var(--font-label); letter-spacing: .04em; text-transform: none; white-space: nowrap;
+}
+.cc-frame .cc-rampart > .cc-stamp[data-stamp="simulated"]::before {
+  content: ''; position: static; inset: auto; width: var(--space-6); height: var(--space-6); flex: none; opacity: 1;
+  transform: rotate(45deg); border: var(--rule-medium) solid currentColor; border-radius: 0; background: none; box-shadow: none;
 }
 
-/* SIMULATED: the acid-etched pane on lead, always visible */
-.cc-frame .cc-rampart > .cc-stamp[data-stamp="simulated"] { height: 24px; padding: 0 9px; letter-spacing: .12em; font-weight: 800; border-color: var(--on-lead-muted); }
-.cc-frame .cc-rampart > .cc-stamp[data-stamp="simulated"]::before { background: none; border: 1.5px solid currentColor; box-shadow: none; }
-
-/* live connection marks and the Gatehouse chip read on lead */
-.cc-frame .cc-rampart .cc-connection b { font: 700 var(--text-t-label)/1 var(--font-label); letter-spacing: .08em; text-transform: lowercase; color: var(--on-lead); }
-.cc-frame .cc-rampart .cc-connection small { color: var(--on-lead-muted); }
-.cc-frame .cc-rampart .cc-connection svg > path { stroke: var(--on-lead); }
-.cc-frame .cc-rampart .cc-connection svg .cc-connection-cross { stroke: var(--lead); }
-.cc-frame .cc-rampart .cc-gatehouse { font-family: var(--font-label); text-transform: lowercase; }
-
-/* buttons: the theme toggle is a round lead jewel; Steward is the amethyst rampart button */
+/* utilities: the theme toggle and the Steward share the Deck control face */
 .cc-frame .cc-rampart .cc-button:not(.cc-heraldic-button) {
-  height: 34px; padding: 0 16px; border: 2px solid var(--lead-hi); border-radius: 2px;
-  background: transparent; color: var(--on-lead); box-shadow: inset 0 -3px 0 var(--amethyst);
-  font: 800 var(--text-px-14-5)/1 var(--font-label); letter-spacing: .07em; text-transform: lowercase;
+  flex: none; display: inline-flex; align-items: center; justify-content: center; gap: var(--space-8);
+  height: var(--bar-control-h); padding: 0 var(--space-14); box-sizing: border-box;
+  border: var(--rule-thin) solid var(--line-control); border-radius: var(--deck-key-radius);
+  background: var(--bar-face); color: var(--bar-ink); box-shadow: none; text-shadow: none;
+  font: 700 var(--text-t-small)/1 var(--font-label); letter-spacing: .04em; text-transform: none;
+  transition: border-color var(--m-fast) var(--ease), background var(--m-fast) var(--ease);
 }
-.cc-frame .cc-rampart .cc-button:not(.cc-heraldic-button):hover { background: var(--lead-2); color: var(--on-lead); box-shadow: inset 0 -5px 0 var(--amethyst-lit); }
-.cc-frame .cc-rampart .cc-button:not(.cc-heraldic-button)[data-size="icon"] { width: 34px; padding: 0; border-radius: 50%; box-shadow: none; }
-.cc-frame .cc-rampart .cc-button:not(.cc-heraldic-button)[data-size="icon"][aria-pressed="true"] { background: var(--lead-2); box-shadow: 0 0 0 1px var(--amethyst-lit); }
-.cc-frame .cc-rampart .cc-button:not(.cc-heraldic-button) svg { width: 18px; height: 18px; }
-.cc-frame .cc-rampart :focus-visible { outline-color: var(--focus); }
+.cc-frame .cc-rampart .cc-button:not(.cc-heraldic-button):not([data-size="icon"])::before {
+  content: ''; width: var(--space-8); height: var(--space-8); border-radius: 50%; background: var(--amethyst); box-shadow: 0 0 calc(var(--glow-on) * 8px) var(--amethyst-glow);
+}
+.cc-frame .cc-rampart .cc-button:not(.cc-heraldic-button):hover:not(:disabled) { border-color: var(--bar-accent); background: var(--bar-face-hover); color: var(--bar-ink); box-shadow: none; }
+.cc-frame .cc-rampart .cc-button:not(.cc-heraldic-button):disabled { opacity: var(--disabled-opacity); cursor: not-allowed; }
+.cc-frame .cc-rampart .cc-button:not(.cc-heraldic-button)[data-size="icon"] { width: var(--bar-control-h); padding: 0; border-radius: 50%; }
+.cc-frame .cc-rampart .cc-button:not(.cc-heraldic-button)[aria-pressed] { background: var(--bar-face); box-shadow: none; }
+.cc-frame .cc-rampart .cc-button:not(.cc-heraldic-button) svg { width: var(--space-16); height: var(--space-16); }
+.cc-frame .cc-rampart :focus-visible { outline: var(--focus-ring) solid var(--focus); outline-offset: var(--focus-offset); box-shadow: 0 0 0 2px var(--focus-inner); }
+.cc-frame .cc-rampart .cc-button:not(.cc-heraldic-button):active:not(:disabled) { transform: translateY(1px); background: var(--bar-face-hover); }
+@media (prefers-reduced-motion: reduce) { .cc-frame .cc-rampart .cc-button:not(.cc-heraldic-button) { transition: none; } }
 
-@media (max-width: 1380px) {
-  .cc-frame .cc-rampart { gap: 10px; padding: 0 14px 0 12px; }
+@media (max-width: 1460px) {
+  .cc-frame .cc-rampart { gap: var(--space-10); }
   .cc-frame .cc-rampart .cc-wordmark { font-size: var(--text-px-22); }
-  .cc-frame .cc-rampart .cc-live-group { gap: 10px; }
-}
-@media (max-width: 1380px) {
-  .cc-frame .cc-rampart .cc-link-group { gap: 6px; }
-  .cc-frame .cc-rampart .cc-came-v, .cc-frame .cc-rampart .cc-separator { margin-inline: 0; }
+  .cc-frame .cc-rampart :is(.cc-live-group, .cc-rampart-figures, .cc-link-group) > * { padding: 0 var(--space-8); }
 }

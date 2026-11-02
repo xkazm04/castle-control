@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { useId } from 'react';
+import './section.css';
 import './layout.css';
 
 export type ChamberLayoutProps = {

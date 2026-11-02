@@ -76,7 +76,7 @@ test('Keep is the shared cutaway with rule summaries, the Herald, moat and numbe
   }
   const core = renderToStaticMarkup(<Keep snapshot={{ mode: 'core', phase: 'ready' }} on_open={() => undefined} on_enter={() => undefined} />);
   expect(core).toContain('Held messages show in the room · ask the Steward for rules');
-  expect(core).toContain('No draw read yet · ask the Steward to set one up');
+  expect(core).toContain('Your draw shows in the room · ask the Steward to set one up');
   expect(core).not.toContain('sample lots');
 });
 

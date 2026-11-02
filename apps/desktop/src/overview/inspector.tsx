@@ -19,6 +19,12 @@ export function FairnessBox() {
   </aside>;
 }
 
+/** Row height for the Inspector's full proposal card, measured in the Program column (head and actions
+ * about 160px, about 28px per field row) with slack for a wrapped value, so no card overflows its row. */
+export function proposalRowHeight(proposals: readonly Proposal[]): number {
+  return 168 + 30 * Math.max(0, ...proposals.map(proposal => proposal.fields.length));
+}
+
 export function Inspector({ selected, proposals, on_open, active = true, authority = localAuthority }: {
   selected: ModuleId; proposals: readonly Proposal[]; on_open: (chamber: ModuleId) => void; active?: boolean;
   authority?: SealAuthority;
@@ -36,7 +42,7 @@ export function Inspector({ selected, proposals, on_open, active = true, authori
   const items = proposals.filter(item => item.chamber === selected && isPending(item) && !isDesignProposal(item));
   return <section className="overview-inspector" aria-label="Selected layer inspector">
     {active && <Suspense fallback={<p>Loading simulated design controls…</p>}><DesignInspector selected={selected} /></Suspense>}
-    {items.length > 0 && <WindowedRows rows={items} label="Layer proposals" row_key={proposal => proposal.id} row_height={480}>
+    {items.length > 0 && <WindowedRows rows={items} label="Layer proposals" row_key={proposal => proposal.id} row_height={proposalRowHeight(items)}>
       {proposal => <ProposalCard proposal={proposal} busy={busy} focused={active && queue.selected_proposal_id === proposal.id}
         on_focus={() => { if (proposalQueue.getSnapshot().selected_proposal_id !== proposal.id) proposalQueue.select(proposal.id); }}
         seal_at_monitor on_seal={() => undefined} on_tear={() => { void tear(proposal); }} />}

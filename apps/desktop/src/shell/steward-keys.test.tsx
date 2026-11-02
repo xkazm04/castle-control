@@ -80,6 +80,15 @@ test('Q W E select the same generated beacons as the existing room selector', ()
   }
 });
 
+test('a room without a beacon at a slot has no key for it: no placeholder label, no dead key', () => {
+  const core = { mode: 'core', phase: 'connecting' } as const;
+  const table = roomActionKeys('visuals', stewardRegistry(core), core);
+  expect(table.map(entry => entry.key)).toEqual(['A', 'S', 'D', 'F']);
+  expect(table.some(entry => /^beacon \d$/.test(entry.label))).toBe(false);
+  const fixture = { mode: 'fixture', phase: 'ready' } as const;
+  expect(roomActionKeys('visuals', stewardRegistry(fixture), fixture).map(entry => entry.key)).toEqual(['A', 'Q', 'W', 'E', 'S', 'D', 'F']);
+});
+
 test('duel row calls the existing stage handler, while an unsealed duel draft keeps it frozen', async () => {
   const sample = { mode: 'fixture', phase: 'ready' } as const;
   const registry = stewardRegistry(sample);

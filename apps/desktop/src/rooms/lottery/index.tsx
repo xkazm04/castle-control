@@ -28,7 +28,7 @@ import { castFlow, demoDraw, demoFlow, demoShape, isDemoClosing, proveFlow, setu
 import { SandboxBanner, useDemoSandbox } from '../../demo-sandbox.jsx';
 import { contentLine, heldOut, poolLabel } from './flow-model.js';
 import { lotLive } from './live.js';
-import { countCohorts, DrawCard, MoreTools, RollLegend, RollPanel, StagePanel } from './roll.jsx';
+import { countCohorts, DrawCard, DrawFacts, DrawSeats, MoreTools, RollLegend, RollPanel, StagePanel, WritSteps } from './roll.jsx';
 import type { RollTone } from './roll.jsx';
 import { useFill } from './chamber-hooks.js';
 import { LotChamber } from './chamber.jsx';
@@ -144,7 +144,9 @@ export default function LotteryRoom({ snapshot, replay, queue = proposalQueue, s
     </DrawControls>}
     question={<DrawCard name={draw.name} line={drawLine(draw)} guard={drafting && policy.result === 'blocked' ? 'warn' : policy.result}
       guard_word={drafting && policy.result === 'blocked' ? 'To clear' : undefined}
-      guard_line={drafting && policy.result === 'blocked' ? 'The Steward asks for each fix before the seal.' : guard_line} />}
+      guard_line={drafting && policy.result === 'blocked' ? 'The Steward asks for each fix before the seal.' : guard_line}
+      detail={<><DrawSeats count={draw.rules.winner_count} filled={!drafting && phase === 'cast' ? state.simulated_winners?.length ?? 0 : 0} />
+        <DrawFacts draw={draw} /></>} />}
     roll={<RollPanel compact status={status} tone={tone} counts={countCohorts(entries)} draft={drafting} simulated count={entries.length} />}
     cast={<>
       <div className="lottery-draw-actions lottery-primary-actions">
@@ -164,12 +166,13 @@ export default function LotteryRoom({ snapshot, replay, queue = proposalQueue, s
       {phase === 'cast' ? <>
         <RevealedWinners compact clock={reveal} seal={state.sealed_roll?.seal} total={state.simulated_winners?.length ?? 0} />
         <button type="button" className="cc-btn" onClick={() => { openLab(); stewardDock.open(proveFlow); }}><RoomKeyBadge room="lottery" action="prove" />Prove it</button>
-      </> : <p className="lottery-note">SIMULATED · writ follows the cast.</p>}
+      </> : <><p className="lottery-note">SIMULATED · writ follows the cast.</p>
+        <WritSteps sealed={!drafting && state.sealed} started={!drafting && state.started} proved={false} /></>}
     </>}
     tools={<>
       <section className="lottery-more-card" data-role="room-section" aria-label="Ceremony options">
         <h3 className="lottery-card-title">Ceremony options</h3>
-        <CeremonyDetails sound={appearance.sound} on_sound={on => display.edit({ sound: on })}
+        <CeremonyDetails notes_open sound={appearance.sound} on_sound={on => display.edit({ sound: on })}
           by_hand={appearance.by_hand} on_by_hand={on => display.edit({ by_hand: on })} />
       </section>
       <section className="lottery-more-card" data-role="room-section" aria-label="Full roll and draw actions">

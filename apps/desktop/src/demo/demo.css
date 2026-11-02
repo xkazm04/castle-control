@@ -1,20 +1,40 @@
-/* On stream (#/demo): Stained Glass. The broadcast sits in a dark leaded frame under a chapel bead
-   strip, with the leaded-pane switchers on its sill. Atlas 7270e60 stage geometry below. */
-.demo-workspace { display: grid; gap: 0; padding-bottom: 22px; min-width: 0; font: 400 var(--text-t-body)/1.5 var(--font-text); color: var(--ink); }
-.demo-frame { display: grid; gap: 0; margin-top: 28px; border: var(--came-heavy) solid var(--lead); background: var(--lead-lo); box-shadow: var(--shadow); }
-.demo-beads { height: 12px; }
-.demo-controls { display: flex; flex-wrap: wrap; gap: 10px 26px; align-items: center; padding: 10px 14px; background: var(--lead); }
-.demo-seg { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
-.demo-seg > span { font: 800 var(--text-t-label)/1 var(--font-label); letter-spacing: .1em; text-transform: lowercase; color: var(--on-lead-muted); }
-.demo-seg .cc-seg > button { color: var(--on-lead); background: color-mix(in srgb, var(--lead-hi) 70%, transparent); border-color: var(--lead-lo); }
-.demo-seg .cc-seg > button[aria-pressed="true"] { color: var(--on-glass); background: var(--tex-glass), radial-gradient(140% 140% at 20% 0, var(--amethyst), var(--amethyst-deep)); background-size: 180px 180px, 100% 100%; background-blend-mode: soft-light, normal; }
-.demo-page { display: grid; grid-template-columns: minmax(0, 1fr) 17.5rem; background: var(--paper-2); overflow: hidden; }
-.demo-page .stage { position: relative; aspect-ratio: 16/9; max-width: 100%; overflow: hidden; container-type: inline-size; background: var(--press); }
+/* On stream (#/demo): a broadcast preview on the Deck ground. A compact head, one toolbar of segmented
+   panes, then the 16:9 stage scaled to the space left (no page scroll from 1280x720 to 1920x1080) beside
+   a Twitch-like chat column with the extension panels under it. Atlas 7270e60 stage geometry below. */
+.desktop-surface:has(> .demo-workspace) { padding-bottom: var(--space-16); }
+.demo-workspace { --demo-gap: var(--space-16); --demo-side: 18rem;
+  display: grid; grid-template-rows: auto minmax(0, 1fr); gap: var(--space-12); height: 100%; min-height: 0; min-width: 0;
+  font: 400 var(--text-t-body)/1.5 var(--font-text); color: var(--ink); }
+
+/* head: the Deck's chamber head, one line of title and aside, a hairline under it, no glass band */
+.surface-head.demo-heading { align-items: center; gap: var(--space-8) var(--space-24); padding-block: var(--space-12); border-bottom: var(--came-hair) solid var(--hair); }
+.surface-head.demo-heading::after { content: none; }
+.demo-heading .surface-head__text { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: baseline; gap: var(--space-4) var(--space-16); }
+.demo-heading .cc-crumbs { grid-column: 1 / -1; }
+.cc-frame .demo-heading h1.cc-title { margin: 0; font-size: var(--text-t-h2); line-height: 1; color: var(--ch-ink); text-shadow: none; }
+.demo-heading .cc-subtitle { margin: 0; font-size: var(--text-t-small); color: var(--muted); }
+
+/* toolbar: label + panes, three groups on one line, wrapping only on a narrow window */
+.demo-frame { display: grid; grid-template-rows: auto minmax(0, 1fr); gap: var(--space-12); min-height: 0; min-width: 0; }
+.demo-controls { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-8) var(--space-24); }
+.demo-seg { display: flex; align-items: center; gap: var(--space-10); }
+.demo-seg > span { font: 700 var(--text-t-label)/1 var(--font-label); letter-spacing: var(--track-label); color: var(--ink-2); }
+.demo-seg .cc-seg > button { min-height: var(--control-h-sm); padding-inline: var(--space-12); font-size: var(--text-t-meta); }
+.demo-seg .cc-seg > button:focus-visible { outline: var(--came) solid var(--focus); outline-offset: 1px; z-index: 2; }
+
+/* preview: the stage takes the largest 16:9 that fits beside the side column */
+.demo-preview-fit { container-type: size; min-height: 0; min-width: 0; }
+.demo-page { --stage-w: min(calc(100cqw - var(--demo-side) - var(--demo-gap)), calc(100cqh * 16 / 9));
+  display: grid; grid-template-columns: var(--stage-w) minmax(var(--demo-side), 26rem); gap: var(--demo-gap); justify-content: center; align-items: start; height: 100cqh; }
+.demo-page .stage { position: relative; aspect-ratio: 16/9; width: 100%; overflow: hidden; container-type: inline-size; background: var(--lead-lo);
+  border: var(--came-hair) solid var(--came-ui); border-radius: var(--r); box-shadow: var(--shadow-lift); }
 .demo-page .stage .bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .demo-page .ov { position: absolute; display: grid; justify-items: center; gap: .4cqw; }
-.demo-page .ov img { width: 100%; height: auto; display: block; filter: drop-shadow(0 .4cqw .8cqw color-mix(in srgb, var(--press) 60%, transparent)); }
-.demo-page .plate { font: 800 max(var(--text-t-label), 1.15cqw)/1 var(--font-label); text-transform: lowercase; letter-spacing: .06em; color: var(--on-lead); background: color-mix(in srgb, var(--lead-lo) 88%, transparent); border: .12cqw solid var(--gilt); box-shadow: 0 0 0 .1cqw var(--lead-lo); padding: max(4px, .45cqw) max(7px, .8cqw); white-space: nowrap; }
-.demo-page .plate em { font-style: normal; color: var(--or-lit); font-family: var(--font-text); }
+.demo-page .ov img { width: 100%; height: auto; display: block; filter: drop-shadow(0 .4cqw .8cqw color-mix(in srgb, var(--lead-lo) 60%, transparent)); }
+.demo-page .plate { font: 700 max(var(--text-t-label), 1.15cqw)/1 var(--font-label); letter-spacing: .04em; color: var(--on-lead);
+  background: color-mix(in srgb, var(--lead-lo) 86%, transparent); border: var(--came-hair) solid color-mix(in srgb, var(--gilt-flat) 70%, transparent); border-radius: var(--r);
+  padding: max(4px, .45cqw) max(8px, .8cqw); white-space: nowrap; }
+.demo-page .plate em { font: 700 1em/1 var(--font-text); font-style: normal; color: var(--or-lit); font-variant-numeric: var(--num); }
 .demo-page .o-vote { top: 2.5%; left: 27%; width: 46%; }
 .demo-page .o-altar { left: 1.5%; top: 12%; width: 16%; }
 .demo-page .o-urn { left: 1.5%; bottom: 9%; width: 14%; }
@@ -26,20 +46,41 @@
 .demo-page .cam .shot { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 30%; }
 .demo-page .cam .frame { position: absolute; left: -4%; top: -6%; width: 108%; height: 112%; object-fit: fill; pointer-events: none; }
 .demo-page .cam .plate { position: absolute; left: 50%; bottom: max(-3.2cqw, -2.2em); transform: translateX(-50%); }
+/* the two stage labels share one calm treatment: a small dark plate, top-left and bottom-left */
 .demo-air { position: absolute; left: 1.2%; top: 2.2%; }
-.demo-provenance { position: absolute; left: 1.2%; bottom: 1%; }
-.demo-page .cc-stamp { --stamp-size: var(--text-shell-stamp); background: var(--paper); }
-.demo-chat { background: var(--paper); color: var(--ink); display: flex; flex-direction: column; min-width: 0; border-left: var(--rule-thin) solid var(--line); }
-.demo-chat header { font: 800 var(--text-t-label)/1 var(--font-label); text-transform: lowercase; letter-spacing: .1em; padding: var(--space-12) var(--space-14); border-bottom: var(--rule-thin) solid var(--line); color: var(--ink-2); }
-.demo-chat ol { list-style: none; margin: 0; padding: var(--space-10) var(--space-14); display: grid; gap: var(--space-7); font: 400 var(--text-t-small)/1.35 var(--font-text); overflow: auto; flex: 1; align-content: end; }
-.demo-chat .n { font-family: var(--font-text); font-weight: 800; }
-.demo-chat [data-tone="gules"] { color: var(--gules-text); }
-.demo-chat [data-tone="azure"] { color: var(--azure-text); }
-.demo-chat [data-tone="or"] { color: var(--or-text); }
-.demo-chat [data-tone="green"] { color: var(--green); }
-.demo-chat .sys { display: block; padding: 4px 8px; color: var(--ink-2); background: var(--surface-2); box-shadow: inset 3px 0 0 var(--or); font: 400 var(--text-t-small)/1.35 var(--font-text); }
-.demo-panel-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(13.75rem, 1fr)); gap: var(--space-12); padding: var(--space-12); background: var(--press); border-top: var(--rule-thin) solid var(--line); grid-column: 1/-1; }
-.demo-ext { background: var(--card); border: var(--rule-thin) solid var(--line); border-radius: var(--space-4); padding: var(--space-10); color: var(--ink-2); display: grid; gap: var(--space-6); font-size: var(--text-small); }
-.demo-ext .cap { font: 800 var(--text-t-label)/1.3 var(--font-label); color: var(--ink); text-transform: lowercase; letter-spacing: .1em; }
-.demo-ext img { width: 100%; max-height: 13rem; object-fit: contain; border-radius: var(--space-2); }
-@media (max-width: 56.25rem) { .demo-page { grid-template-columns: 1fr; } .demo-chat { max-height: 13.75rem; } }
+.demo-provenance { position: absolute; left: 1.2%; bottom: 1.6%; }
+.demo-page .stage .cc-stamp[data-stamp] { height: var(--space-22); padding: 0 var(--space-8); gap: var(--space-6); font: 700 var(--text-t-label)/1 var(--font-label); letter-spacing: .06em; text-transform: lowercase;
+  color: var(--on-lead); text-shadow: none; border: var(--came-hair) solid color-mix(in srgb, var(--on-lead) 35%, transparent); border-radius: var(--r);
+  background: color-mix(in srgb, var(--lead-lo) 80%, transparent); box-shadow: none; transform: none; filter: none; opacity: 1; }
+
+/* side: chat fills the column; the extension panels sit under it, as on a channel page */
+.demo-side { display: grid; grid-template-rows: minmax(0, 1fr) auto; gap: var(--space-12); height: calc(var(--stage-w) * 9 / 16); min-height: 0; min-width: 0; }
+.demo-chat { display: flex; flex-direction: column; min-height: 0; min-width: 0; color: var(--ink); background: var(--surface);
+  border: var(--came-hair) solid var(--hair); border-radius: var(--r); box-shadow: var(--shadow); }
+.demo-chat header { display: flex; align-items: center; justify-content: space-between; gap: var(--space-8); padding: var(--space-8) var(--space-10) var(--space-8) var(--space-16); border-bottom: var(--came-hair) solid var(--hair); font: 700 var(--text-t-label)/1.2 var(--font-label); letter-spacing: var(--track-label); color: var(--ink-2); }
+/* bottom-anchored like live chat: the newest line sits on the floor, older lines scroll up */
+.demo-chat ol { flex: 1; min-height: 0; overflow: auto; margin: 0; padding: var(--space-8) 0; list-style: none; display: flex; flex-direction: column;
+  font: 400 var(--text-t-small)/1.45 var(--font-text); overflow-wrap: anywhere; }
+.demo-chat li { padding: var(--space-4) var(--space-16); }
+.demo-chat li:first-child { margin-top: auto; }
+/* a plain soft fade at the top edge of the scroller, where older lines would scroll away (not on short windows, where the list is full) */
+@media (min-height: 50.01rem) { .demo-chat ol { mask-image: linear-gradient(to bottom, transparent, var(--ink) var(--space-40)); } }
+.demo-chat li:hover { background: var(--tint); }
+.demo-chat .n { font-weight: 700; }
+.demo-chat .n::after { content: ':'; color: var(--muted); font-weight: 400; }
+.demo-chat [data-tone="gules"] { color: var(--gules-ink); }
+.demo-chat [data-tone="azure"] { color: var(--azure-ink); }
+.demo-chat [data-tone="or"] { color: var(--or-ink); }
+.demo-chat [data-tone="green"] { color: var(--emerald-ink); }
+.demo-chat .sys { display: block; padding: var(--space-4) var(--space-10); border-left: var(--came) solid var(--ch); border-radius: var(--r); background: var(--surface-2);
+  font: 500 var(--text-t-meta)/1.4 var(--font-text); color: var(--ink-2); }
+.demo-panel-row { display: grid; gap: var(--space-8); }
+.demo-ext { display: grid; grid-template-columns: calc(var(--space-24) * 2) minmax(0, 1fr); grid-template-rows: auto auto; column-gap: var(--space-12); align-items: center;
+  padding: var(--space-6) var(--space-10) var(--space-6) var(--space-6); background: var(--surface); border: var(--came-hair) solid var(--hair); border-radius: var(--r); color: var(--ink-2); }
+.demo-ext img { grid-row: 1 / span 2; width: calc(var(--space-24) * 2); height: calc(var(--space-24) * 2); object-fit: contain; border-radius: var(--r); background: var(--surface-3); }
+.demo-ext .cap { align-self: end; font: 700 var(--text-t-small)/1.2 var(--font-text); color: var(--ink); }
+.demo-ext .txt { align-self: start; font: 400 var(--text-t-meta)/1.3 var(--font-text); color: var(--muted); }
+
+/* a short window: the panels give their room to the chat */
+@media (max-height: 50rem) { .demo-chat header { padding-block: var(--space-4); } .demo-chat ol { padding-block: var(--space-4); } .demo-chat li { padding-block: var(--space-2); } .demo-side { gap: var(--space-8); } .demo-panel-row { gap: var(--space-6); } .demo-ext { grid-template-columns: var(--space-32) minmax(0, 1fr); } .demo-ext img { width: var(--space-32); height: var(--space-32); } .demo-ext img { grid-row: auto; } .demo-ext .txt { display: none; } .demo-ext .cap { align-self: center; } }
+@media (max-width: 56.25rem) { .demo-preview-fit { container-type: normal; } .demo-page { grid-template-columns: 1fr; height: auto; } .demo-side { height: auto; } .demo-chat { max-height: 13.75rem; } }

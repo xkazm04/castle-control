@@ -88,20 +88,21 @@ test('a draft moves to Preview and the shell still supplies exactly one hold con
 
 test('C field audit exception is thin on every side and the radio art never hides a draft', () => {
   const css = readFileSync(new URL('./bench.css', import.meta.url), 'utf8');
-  expect(css).toMatch(/select[^}]*\{[^}]*appearance: none; border: var\(--rule-thin\) solid var\(--ink\)/);
+  expect(css).toMatch(/select[^}]*\{[^}]*appearance: none; border: var\(--rule-thin\) solid var\(--line-control\)/);
   const room = readFileSync(new URL('./room.css', import.meta.url), 'utf8');
   expect(room).toMatch(/\.visuals-plate-art:has\(\.room-proposal-draft\)\s*\{[^}]*height: auto/);
 });
 
-test('C bench chief keeps the kit non-flipping press, cream and or inks', () => {
+test('C bench chief reads in both themes: a themed surface strip with text-safe inks', () => {
   const html = renderToStaticMarkup(<VisualsWork />);
   expect(html).toContain('data-band="bench"');
   const css = readFileSync(new URL('../../../../../packages/ui/src/heraldic-plate.css', import.meta.url), 'utf8');
   const band = css.match(/\.cc-plate-band\[data-band="bench"\]\s*\{([^}]+)\}/)?.[1] ?? '';
-  expect(band).toContain('background: var(--press)');
-  expect(band).toContain('color: var(--cream)');
-  expect(band).not.toMatch(/var\(--(?:ink|paper)\)/);
-  expect(css).toContain('.cc-plate-band[data-band="bench"] .cc-plate-title { color: var(--or); }');
+  // UI polish round 2: the old --press/--cream pair was near-invisible by night; the band follows the theme.
+  expect(band).toContain('background: var(--surface-3)');
+  expect(band).toContain('color: var(--ink-2)');
+  expect(band).not.toMatch(/var\(--(?:cream|paper)\)/);
+  expect(css).toContain('.cc-plate-band[data-band="bench"] .cc-plate-title { color: var(--or-text); }');
 });
 
 test('core shares the C plates and bench while unavailable measurements stay distinct from a simulation', async () => {

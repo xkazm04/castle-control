@@ -10,15 +10,16 @@ export type MoatGeometry = Readonly<{
   width: number; height: number; chat_y: number; gate_y: number; stream_y: number;
   chat_h: number; gate_top: number; gate_h: number; stream_top: number; dot: number; stamp_w: number; stamp_step: number; gutter: number; levels: number;
 }>;
-export const fullGeometry: MoatGeometry = { width: 1200, height: 340, chat_y: 29, gate_y: 226, stream_y: 312,
-  chat_h: 40, gate_top: 236, gate_h: 18, stream_top: 282, dot: 5, stamp_w: 184, stamp_step: 58, gutter: 24, levels: 3 };
+export const fullGeometry: MoatGeometry = { width: 1200, height: 356, chat_y: 29, gate_y: 226, stream_y: 312,
+  chat_h: 40, gate_top: 236, gate_h: 18, stream_top: 282, dot: 5, stamp_w: 204, stamp_step: 58, gutter: 24, levels: 3 };
 /** Two of these stack in the comparison, so it trades a level of stamps for height. */
-export const compareGeometry: MoatGeometry = { width: 1200, height: 262, chat_y: 25, gate_y: 168, stream_y: 236,
-  chat_h: 34, gate_top: 176, gate_h: 14, stream_top: 206, dot: 4.5, stamp_w: 184, stamp_step: 58, gutter: 24, levels: 2 };
+export const compareGeometry: MoatGeometry = { width: 1200, height: 274, chat_y: 25, gate_y: 168, stream_y: 236,
+  chat_h: 34, gate_top: 176, gate_h: 14, stream_top: 206, dot: 4.5, stamp_w: 204, stamp_step: 58, gutter: 24, levels: 2 };
 /** The Keep heartbeat: the same drawing at the size of a status bar, with no stamps or labels. */
-export const compactGeometry: MoatGeometry = { width: 360, height: 44, chat_y: 5, gate_y: 19, stream_y: 38,
-  chat_h: 10, gate_top: 22, gate_h: 4, stream_top: 32, dot: 2.2, stamp_w: 0, stamp_step: 0, gutter: 4, levels: 0 };
+export const compactGeometry: MoatGeometry = { width: 360, height: 72, chat_y: 8, gate_y: 31, stream_y: 62,
+  chat_h: 16, gate_top: 36, gate_h: 6, stream_top: 52, dot: 3.2, stamp_w: 0, stamp_step: 0, gutter: 4, levels: 0 };
 const stampLift = 16;
+const pct = (value: number, of: number) => `${value / of * 100}%`;
 
 /** A stamp near either edge slides inward; its pin, the dot below it, stays where the message was. */
 const stampX = (x: number, g: MoatGeometry) => Math.min(Math.max(x, g.stamp_w / 2), g.width - g.stamp_w / 2);
@@ -30,11 +31,29 @@ const xFor = (offset_ms: number, window: MoatWindow, g: MoatGeometry) =>
   g.gutter + Math.min(Math.max((offset_ms - window.from_ms) / Math.max(window.to_ms - window.from_ms, 1), 0), 1) * (g.width - g.gutter * 2);
 
 /** What the strip draws for one window: the dots, which stops get a stamp, and at what level. One answer for the scene and its overflow note. */
+/** A gap wide enough to carry its words: they hang from its far edge, and this much of the strip is theirs. */
+const gapWordsMin = 150; const gapWordsWidth = 200;
+function gapZones(model: MoatModel, window: MoatWindow, g: MoatGeometry) {
+  return model.gaps.filter(gap => gap.to_ms >= window.from_ms && gap.from_ms <= window.to_ms).flatMap(gap => {
+    const left = xFor(gap.from_ms, window, g); const right = Math.max(xFor(gap.to_ms, window, g), left + 6);
+    return right - left > gapWordsMin ? [{ left: right - 10 - gapWordsWidth, right }] : [];
+  });
+}
+/** A stamp whose tag would cover a gap's words slides clear of them, keeping the time order; its pin stays put. */
+function clearOfWords(x: number, zones: readonly { left: number; right: number }[], g: MoatGeometry) {
+  const half = g.stamp_w / 2;
+  for (const zone of zones) if (x + half > zone.left && x - half < zone.right) x = x < (zone.left + zone.right) / 2 ? zone.left - half : zone.right + half;
+  return stampX(x, g);
+}
+
 function planStamps(model: MoatModel, window: MoatWindow, g: MoatGeometry, compact: boolean, spotlight?: string, selected?: number) {
   const drawable = visibleMarkers(model, window, undefined, selected);
   const stops = drawable.markers.filter(marker => marker.fate === 'held' && (spotlight === undefined || marker.rule_id === spotlight || marker.index === selected));
-  const stacked = compact ? { levels: [], overflow: 0 } : stampLevels(stops.map(marker => stampX(xFor(marker.offset_ms, window, g), g)), g.stamp_w, g.levels);
-  return { drawable, stops, level_of: new Map(stops.map((marker, position) => [marker.index, stacked.levels[position] ?? -1])), overflow: stacked.overflow };
+  const zones = compact ? [] : gapZones(model, window, g);
+  const xs = stops.map(marker => clearOfWords(stampX(xFor(marker.offset_ms, window, g), g), zones, g));
+  const stacked = compact ? { levels: [], overflow: 0 } : stampLevels(xs, g.stamp_w, g.levels);
+  return { drawable, stops, x_of: new Map(stops.map((marker, position) => [marker.index, xs[position] ?? 0])),
+    level_of: new Map(stops.map((marker, position) => [marker.index, stacked.levels[position] ?? -1])), overflow: stacked.overflow };
 }
 
 export type MoatSceneProps = {
@@ -64,7 +83,7 @@ export function MoatScene({ model, playhead_ms, window, selected, on_select, del
   const id = `moat-${uid}`;
   const range = Math.max(window.to_ms - window.from_ms, 1);
   const xOf = (offset_ms: number) => xFor(offset_ms, window, g);
-  const { drawable, stops, level_of } = planStamps(model, window, g, compact, spotlight, selected);
+  const { drawable, stops, level_of, x_of } = planStamps(model, window, g, compact, spotlight, selected);
   const gaps = model.gaps.filter(gap => gap.to_ms >= window.from_ms && gap.from_ms <= window.to_ms);
   const ticks = !axis ? [] : [0, 0.2, 0.4, 0.6, 0.8, 1].map(share => window.from_ms + range * share);
   return <div className="moat-scene" data-compact={compact} data-paged={window.paged} style={{ aspectRatio: `${g.width} / ${g.height}` }}>
@@ -76,22 +95,16 @@ export function MoatScene({ model, playhead_ms, window, selected, on_select, del
       <rect className="moat-water" x="0" y={g.chat_h} width={g.width} height={g.stream_top - g.chat_h} />
       <rect className="moat-water-waves" x="0" y={g.chat_h} width={g.width} height={g.stream_top - g.chat_h} fill={`url(#${id}-waves)`} />
       <rect className="moat-bank" x="0" y={g.stream_top} width={g.width} height={g.height - g.stream_top} />
-      {!compact && <><text className="moat-label" fontSize="12" x="12" y="15">{caption ?? copy.chat}</text>
-        <text className="moat-label" fontSize="12" x="12" y={g.stream_top + 16}>{copy.stream}</text></>}
       {gaps.map((gap, position) => {
         const left = xOf(gap.from_ms); const right = Math.max(xOf(gap.to_ms), left + 6);
         return <g key={`${position}-${gap.from}`} className="moat-gap" data-gap={gap.from}>
           <title>{`${copy.gap}: ${clockText(Date.parse(gap.from))} to ${clockText(Date.parse(gap.to))}, ${copy.gap_note}`}</title>
           <rect className="moat-gap-base" x={left} y={g.chat_h} width={right - left} height={g.stream_top - g.chat_h} />
           <rect className="moat-gap-hatch" x={left} y={g.chat_h} width={right - left} height={g.stream_top - g.chat_h} fill={`url(#${id}-hatch)`} />
-          {/* Stamps gather where stops are, usually before the gap; the label hangs from the far edge. */}
-          {!compact && right - left > 150 && <><text className="moat-gap-label" fontSize="13" x={right - 10} y={g.chat_h + 24} textAnchor="end">{copy.gap}</text>
-            <text className="moat-gap-note" fontSize="12" x={right - 10} y={g.chat_h + 42} textAnchor="end">{copy.gap_note}</text></>}
         </g>;
       })}
       <rect className="moat-gate" x="0" y={g.gate_top} width={g.width} height={g.gate_h} />
-      {ticks.map((tick, position) => <g key={tick} className="moat-tick"><line x1={xOf(tick)} x2={xOf(tick)} y1={g.height - 22} y2={g.height - 16} />
-        <text fontSize="12" x={xOf(tick)} y={g.height - 6} textAnchor={position === 0 ? 'start' : position === ticks.length - 1 ? 'end' : 'middle'}>{clockText(model.start_ms + tick)}</text></g>)}
+      {ticks.map(tick => <line key={tick} className="moat-tick" x1={xOf(tick)} x2={xOf(tick)} y1={g.height - 32} y2={g.height - 25} />)}
       {drawable.markers.map(marker => {
         const { phase, lift } = markerProgress(marker, playhead_ms, model.cross_ms);
         const x = xOf(marker.offset_ms); const y = yOf(lift, g);
@@ -111,13 +124,26 @@ export function MoatScene({ model, playhead_ms, window, selected, on_select, del
         </g>;
       })}
       <line className="moat-playhead" x1={xOf(playhead_ms)} x2={xOf(playhead_ms)} y1="0" y2={g.height} />
-      {!compact && <text className="moat-gate-label" fontSize="12" x={g.width - 12} y={g.gate_top + g.gate_h - 5} textAnchor="end">
-        {delay_s === undefined ? copy.gate : copy.gate_delay(delay_s)}</text>}
     </svg>
+    {/* Words are HTML laid over the drawing, so they keep a legible size however far the strip scales down. */}
+    {!compact && <div className="moat-words" aria-hidden="true">
+      <span className="moat-label" style={{ left: pct(12, g.width), top: pct(g.chat_h / 2, g.height) }}>{caption ?? copy.chat}</span>
+      <span className="moat-label" data-bank="stream" style={{ left: pct(12, g.width), top: pct(g.stream_top + 3, g.height) }}>{copy.stream}</span>
+      <span className="moat-gate-label" style={{ right: pct(12, g.width), top: pct(g.gate_top + g.gate_h / 2, g.height) }}>
+        {delay_s === undefined ? copy.gate : copy.gate_delay(delay_s)}</span>
+      {gaps.map((gap, position) => {
+        const left = xOf(gap.from_ms); const right = Math.max(xOf(gap.to_ms), left + 6);
+        // Stamps gather where stops are, usually before the gap; the label hangs from the far edge.
+        return right - left > gapWordsMin && <span key={`${position}-${gap.from}`} className="moat-gap-words" style={{ right: pct(g.width - right + 10, g.width), top: pct(g.chat_h + 8, g.height) }}>
+          <b className="moat-gap-label">{copy.gap}</b><i className="moat-gap-note">{copy.gap_note}</i></span>;
+      })}
+      {ticks.map((tick, position) => <span key={tick} className="moat-tick-label" data-edge={position === 0 ? 'start' : position === ticks.length - 1 ? 'end' : undefined}
+        style={{ left: pct(xOf(tick), g.width) }}>{clockText(model.start_ms + tick)}</span>)}
+    </div>}
     {!compact && stops.map(marker => {
       const level = level_of.get(marker.index) ?? -1;
       if (level < 0 || markerProgress(marker, playhead_ms, model.cross_ms).phase !== 'stopped') return null;
-      const left = stampX(xOf(marker.offset_ms), g) / g.width * 100;
+      const left = (x_of.get(marker.index) ?? stampX(xOf(marker.offset_ms), g)) / g.width * 100;
       const top = (g.gate_y - stampLift - level * g.stamp_step) / g.height * 100;
       const place = { left: `${left}%`, top: `${top}%` };
       const chip = <>

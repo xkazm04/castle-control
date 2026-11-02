@@ -1,32 +1,88 @@
-/* Winner .card/.cardh: glass, a chamber-coloured heading, compact rhythm. */
-.cc-chamber-section {
+/* The chamber card (sections, Preview and Program): one surface, one hairline,
+   one radius and one padding in every chamber, both themes. */
+.cc-chamber-section,
+.cc-chamber-mini {
   position: relative;
   box-sizing: border-box;
   display: grid;
   align-content: start;
   gap: var(--space-8);
   min-width: 0;
-  padding: var(--space-11) var(--space-14) var(--space-12);
+  padding: var(--space-12) var(--space-14) var(--space-14);
   border: var(--came-hair) solid var(--hair);
-  border-radius: var(--space-14);
-  background: linear-gradient(180deg, color-mix(in srgb, var(--surface-2) 92%, transparent), color-mix(in srgb, var(--surface) 92%, transparent));
+  border-radius: var(--r-lg);
+  background: linear-gradient(180deg, var(--surface), color-mix(in srgb, var(--surface) 72%, var(--stone-2)));
+  box-shadow: var(--shadow);
   color: var(--ink);
   font: 400 var(--text-px-15)/1.4 var(--font-text);
   overflow-wrap: anywhere;
 }
+
+.cc-chamber-mini > * { margin-block: 0; }
 
 .cc-chamber-section-heading {
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: var(--space-12);
+  gap: var(--space-8) var(--space-12);
+  min-height: var(--space-22);
 }
 
-.cc-chamber-section-heading h3 {
+/* The one chamber kicker: small caps in the chamber's ink, modest tracking. */
+.cc-chamber-section-heading h3,
+.cc-chamber-mini h3,
+.cc-chamber-section > .cc-chamber-section-heading > h3[id],
+.cc-chamber-minis > .cc-chamber-mini > h3[id] {
   margin: 0;
   color: var(--ch-ink, var(--ink));
-  font: 700 var(--text-px-13)/1.3 var(--font-text);
-  letter-spacing: var(--track-wide);
-  text-transform: uppercase;
+  font: 700 var(--text-t-h3)/1.2 var(--font-label);
+  letter-spacing: var(--track-label);
+  text-transform: lowercase;
+}
+
+/* Preview and Program are narrow at 1280: their kicker scales down to the label size and
+   never wraps. */
+.cc-chamber-mini { container-type: inline-size; }
+.cc-chamber-minis > .cc-chamber-mini > h3[id] {
+  overflow: hidden;
+  font-size: clamp(var(--text-t-label), 9cqi, var(--text-t-h3));
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Preview and Program read as designed even when they hold one line: the body sits
+   centred under the kicker beside a small gilt glyph (a dashed draft frame for
+   Preview, a framed lamp for Program), like the Keep's sill. Narrow pairs (1280,
+   1366) set the glyph above the body; stacked pairs (1440 up) set it beside. */
+.cc-chamber-minis > .cc-chamber-mini { display: flex; flex-direction: column; }
+.cc-chamber-minis > .cc-chamber-mini > h3[id] { order: -2; }
+.cc-chamber-minis > .cc-chamber-mini > :last-child { margin-bottom: auto; }
+.cc-chamber-minis > .cc-chamber-mini::before {
+  content: '';
+  order: -1;
+  flex: none;
+  margin-top: auto;
+  width: var(--space-28);
+  height: var(--space-20);
+  border: var(--came) dashed var(--deck-gold, var(--gilt-text));
+  border-radius: var(--r-sm);
+  opacity: .8;
+}
+.cc-chamber-minis > .cc-chamber-mini:last-child::before {
+  border-style: solid;
+  background: radial-gradient(circle, var(--deck-gold, var(--gilt-text)) 0 var(--space-3), transparent var(--space-4));
+}
+@container cc-chamber (height >= 35rem) {
+  .cc-chamber-minis > .cc-chamber-mini { justify-content: center; padding-inline-start: calc(var(--space-28) * 2); }
+  .cc-chamber-minis > .cc-chamber-mini > h3[id] { position: absolute; inset: var(--space-12) var(--space-14) auto; }
+  .cc-chamber-minis > .cc-chamber-mini > :last-child { margin-bottom: 0; }
+  .cc-chamber-minis > .cc-chamber-mini::before {
+    position: absolute;
+    inset-inline-start: var(--space-14);
+    top: calc(50% + var(--space-10));
+    margin: 0;
+    transform: translateY(-50%);
+  }
+  .cc-chamber-minis > .cc-chamber-mini { padding-top: calc(var(--space-12) + var(--space-28)); }
 }

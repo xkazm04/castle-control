@@ -1,0 +1,117 @@
+/* The setup pages (Set up OBS #/stream, Dress rehearsal #/rehearsal) as Deck rooms: the same
+   framed glass room, compact head, rounded cards, styled fields and Deck buttons as a chamber.
+   Reads tokens only; both themes. Shared by stream/setup.tsx and rehearsal/rehearsal.tsx. */
+
+/* ---- the room: fills the surface between the rampart and the Steward bar; lists scroll inside */
+.desktop-surface:is([data-surface="stream"], [data-surface="rehearsal"]) {
+  display: flex; flex-direction: column; padding: var(--space-6) var(--deck-pad) var(--space-8);
+}
+.desktop-surface[data-surface="rehearsal"] > .rehearsal-root { display: flex; flex-direction: column; flex: 1 0 auto; min-height: 0; }
+.cc-frame :is(.stream-workspace, .rehearsal-workspace) {
+  position: relative; isolation: isolate; flex: 1 0 auto; box-sizing: border-box;
+  padding: calc(var(--space-12) + var(--rule-thin)) calc(var(--space-16) + var(--rule-thin)) calc(var(--space-16) + var(--rule-thin));
+  color: var(--ink); font: 400 var(--text-t-body)/1.45 var(--font-text);
+}
+/* The rounded glass frame is painted behind the room, so the room itself stays a plain rectangle for
+   pointer hit-testing (a click in its corner lands on the room, not on the stone beneath the curve). */
+.cc-frame :is(.stream-workspace, .rehearsal-workspace)::before {
+  content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  border: var(--rule-thin) solid var(--ch); border-radius: var(--room-frame-radius) var(--room-frame-radius) var(--deck-radius) var(--deck-radius);
+  background: linear-gradient(180deg, var(--surface), var(--stone));
+  box-shadow: inset 0 0 0 var(--space-4) var(--stone), inset 0 0 0 var(--space-6) var(--deck-line-2), 0 0 var(--deck-frame-glow) var(--ch-glow);
+}
+
+/* ---- compact head: crumbs, then title + aside on one line; actions at the right */
+.cc-frame .surface-head:is(.stream-heading, .rehearsal-heading) {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--space-8) var(--space-16);
+  margin: 0 0 var(--space-12); padding: var(--space-4) var(--space-8) var(--space-12);
+  border: 0; border-bottom: var(--rule-thin) solid var(--deck-line); background: none; animation: none;
+}
+.cc-frame .surface-head:is(.stream-heading, .rehearsal-heading)::after { display: none; }
+.cc-frame :is(.stream-heading, .rehearsal-heading) .surface-head__text { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-4) var(--space-12); min-width: 0; }
+.cc-frame :is(.stream-heading, .rehearsal-heading) .cc-crumbs { flex: 1 0 100%; font: 500 var(--text-t-meta)/1.2 var(--font-text); }
+.cc-frame :is(.stream-heading, .rehearsal-heading) .cc-crumbs .cc-crumbs__sep { color: var(--muted); }
+.cc-frame .surface-head:is(.stream-heading, .rehearsal-heading) h1.cc-title {
+  margin: 0; font: 600 var(--text-t-h2)/1.05 var(--font-display); letter-spacing: .005em; color: var(--ch-ink); text-shadow: none;
+}
+.cc-frame :is(.stream-heading, .rehearsal-heading) .cc-subtitle {
+  flex-wrap: wrap; gap: var(--space-10); margin: 0; font: italic 400 var(--text-t-small)/1.3 var(--font-aside); color: var(--ink-2);
+}
+.cc-frame :is(.stream-heading, .rehearsal-heading) .cc-back { flex-wrap: wrap; justify-content: flex-end; gap: var(--space-8); }
+
+/* ---- Deck buttons: one rounded, legible control in both themes (the chamber Deck's action face) */
+.cc-frame :is(.stream-workspace, .rehearsal-workspace) .cc-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: var(--space-6);
+  height: auto; min-height: var(--space-32); padding: var(--space-4) var(--space-14);
+  border: var(--rule-thin) solid var(--came-ui); border-radius: calc(var(--r-lg) / 2);
+  background: var(--surface-2); color: var(--ink); box-shadow: inset 0 1px 0 var(--deck-control-highlight, transparent);
+  font: 600 var(--text-px-15)/1.2 var(--font-label); letter-spacing: .04em; text-transform: none; white-space: nowrap;
+  transition: background var(--m-fast) var(--ease), border-color var(--m-fast) var(--ease), box-shadow var(--m-fast) var(--ease);
+}
+.cc-frame :is(.stream-workspace, .rehearsal-workspace) .cc-btn:hover:not(:disabled) { border-color: var(--ch); background: color-mix(in srgb, var(--ch) 12%, var(--surface-2)); }
+.cc-frame :is(.stream-workspace, .rehearsal-workspace) .cc-btn:active:not(:disabled) { transform: translateY(1px); }
+.cc-frame :is(.stream-workspace, .rehearsal-workspace) .cc-btn:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; box-shadow: 0 0 0 2px var(--focus-inner); }
+.cc-frame :is(.stream-workspace, .rehearsal-workspace) .cc-btn:disabled {
+  cursor: not-allowed; color: var(--muted); border-color: var(--hair); background: var(--surface-2); box-shadow: none; opacity: .72;
+}
+.cc-frame :is(.stream-workspace, .rehearsal-workspace) .cc-btn.setup-btn--primary:not(:disabled) {
+  border-color: var(--ch); background: color-mix(in srgb, var(--ch) 16%, var(--surface-2)); color: var(--ink);
+  box-shadow: inset 0 1px 0 var(--deck-control-highlight, transparent), 0 0 calc(var(--glow-on) * 12px) var(--ch-glow);
+}
+.cc-frame :is(.stream-workspace, .rehearsal-workspace) .cc-btn.setup-btn--primary:hover:not(:disabled) { background: color-mix(in srgb, var(--ch) 26%, var(--surface-2)); }
+.cc-frame :is(.stream-workspace, .rehearsal-workspace) .cc-btn--quiet:not(:disabled) { background: transparent; }
+.cc-frame :is(.stream-workspace, .rehearsal-workspace) .cc-btn .cc-kbd { margin-left: var(--space-4); }
+
+/* ---- Deck cards: one rounded surface, a hairline and a small-caps kicker */
+.setup-card {
+  position: relative; display: grid; align-content: start; gap: var(--space-12); min-width: 0; box-sizing: border-box;
+  padding: var(--space-14) var(--space-16) var(--space-16);
+  border: var(--rule-thin) solid var(--deck-line); border-radius: var(--r-lg);
+  background: color-mix(in srgb, var(--surface) 88%, transparent); color: var(--ink);
+}
+.setup-card[data-drafting="true"] { border-color: var(--or); box-shadow: 0 0 0 2px var(--or-wash); }
+.setup-card__head { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-6) var(--space-12); min-width: 0; }
+.setup-card__head > :is(.cc-stamp, .cc-sim, .setup-tag) { margin-left: auto; }
+.setup-kicker, .cc-frame :is(.stream-workspace, .rehearsal-workspace) .setup-kicker {
+  margin: 0; font: 700 var(--text-t-small)/1.2 var(--font-label); letter-spacing: var(--track-label); text-transform: none; color: var(--ch-ink);
+}
+.setup-tag {
+  display: inline-flex; align-items: center; padding: var(--space-2) var(--space-8); border-radius: var(--r-round);
+  border: var(--rule-thin) solid var(--deck-line-2); background: var(--surface-2);
+  font: 600 var(--text-t-label)/1.3 var(--font-label); letter-spacing: .04em; color: var(--ink-2); white-space: nowrap;
+}
+.setup-tag[data-tone="ok"] { border-color: var(--ok); color: var(--ok-ink); background: color-mix(in srgb, var(--ok) 12%, var(--surface-2)); }
+.setup-tag[data-tone="warn"] { border-color: var(--or); color: var(--or-ink); background: var(--or-wash); }
+.setup-tag[data-tone="bad"] { border-color: var(--danger); color: var(--danger-ink); background: color-mix(in srgb, var(--danger) 12%, var(--surface-2)); }
+.setup-note { margin: 0; font: 400 var(--text-t-small)/1.45 var(--font-text); color: var(--muted); overflow-wrap: anywhere; }
+.setup-note:empty { display: none; }
+
+/* ---- fields: the thin field rule (e2e/styles.ts) in the control line colour, on a rounded inset ground */
+.cc-frame :is(.stream-workspace, .rehearsal-workspace) .cc-field { display: grid; gap: var(--space-4); min-width: 0; font: 600 var(--text-t-meta)/1.2 var(--font-text); color: var(--ink-2); }
+.cc-frame :is(.stream-workspace, .rehearsal-workspace, .rh-secret) :is(.cc-input, .cc-select) {
+  box-sizing: border-box; width: 100%; min-width: 0; height: var(--space-36); padding: 0 var(--space-10);
+  appearance: none; border: var(--rule-thin) solid var(--line-control); border-radius: calc(var(--r-lg) / 2);
+  background-color: var(--surface-2); color: var(--ink); box-shadow: var(--shadow-inset);
+  font: 400 var(--text-t-body)/1.2 var(--font-text);
+  transition: background-color var(--m-fast) var(--ease);
+}
+.cc-frame :is(.stream-workspace, .rehearsal-workspace) .cc-select {
+  padding-right: var(--space-32); cursor: pointer;
+  background-image: linear-gradient(45deg, transparent 50%, var(--ink-2) 50%), linear-gradient(135deg, var(--ink-2) 50%, transparent 50%);
+  background-position: calc(100% - 17px) 50%, calc(100% - 12px) 50%; background-size: 5px 5px, 5px 5px; background-repeat: no-repeat;
+}
+.cc-frame :is(.stream-workspace, .rehearsal-workspace) .cc-select option { background: var(--surface); color: var(--ink); }
+.cc-frame :is(.stream-workspace, .rehearsal-workspace, .rh-secret) :is(.cc-input, .cc-select):hover:not(:disabled) { background-color: var(--surface-3); }
+.cc-frame :is(.stream-workspace, .rehearsal-workspace, .rh-secret) :is(.cc-input, .cc-select):focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
+.cc-frame :is(.stream-workspace, .rehearsal-workspace, .rh-secret) :is(.cc-input, .cc-select):disabled { cursor: not-allowed; color: var(--muted); opacity: .75; }
+.cc-frame :is(.stream-workspace, .rehearsal-workspace) .cc-input[aria-invalid="true"] { background-color: color-mix(in srgb, var(--danger) 10%, var(--surface-2)); }
+
+/* ---- thin themed scrollbars on the room's inner lists */
+:is(.stream-workspace, .rehearsal-workspace) :is(.cc-window, .setup-scroll) { scrollbar-width: thin; scrollbar-color: var(--hair-2) transparent; }
+:is(.stream-workspace, .rehearsal-workspace) :is(.cc-window, .setup-scroll)::-webkit-scrollbar { width: 8px; height: 8px; }
+:is(.stream-workspace, .rehearsal-workspace) :is(.cc-window, .setup-scroll)::-webkit-scrollbar-thumb { border-radius: 4px; background: var(--hair-2); }
+:is(.stream-workspace, .rehearsal-workspace) :is(.cc-window, .setup-scroll)::-webkit-scrollbar-track { background: transparent; }
+
+@media (prefers-reduced-motion: reduce) {
+  .cc-frame :is(.stream-workspace, .rehearsal-workspace) :is(.cc-btn, .cc-input, .cc-select) { transition: none; }
+}

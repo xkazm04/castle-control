@@ -21,8 +21,8 @@ type FieldStyle = { appearance: string; borders: FieldBorder[] };
 type StrongBorderField = { name: string; selector: string; reason: string };
 
 /**
- * Named exceptions to the one field law (thin ink). None today: the fused Steward dock's talk prompt
- * follows the same thin ink border as every other field (the Cutaway strong-prompt contract retired
+ * Named exceptions to the one field law (thin control line, `--line-control`). None today: the fused Steward
+ * dock's talk prompt follows the same thin control-line border as every other field (the Cutaway strong-prompt contract retired
  * with the old Steward bar). The mechanism stays for a future, reasoned exception.
  */
 export const strongBorderFields: readonly StrongBorderField[] = [];
@@ -49,7 +49,7 @@ export function measureFields(strongFields: readonly StrongBorderField[]) {
     const probe = document.createElement('span');
     probe.hidden = true;
     const strong = strongFields.find(exception => field.matches(exception.selector));
-    probe.style.border = `var(${strong ? '--rule-strong' : '--rule-thin'}) solid var(--ink)`;
+    probe.style.border = `var(${strong ? '--rule-strong' : '--rule-thin'}) solid var(--line-control)`;
     if (!field.parentElement) throw new Error('Cannot resolve field theme tokens');
     field.parentElement.append(probe);
     const token = getComputedStyle(probe);

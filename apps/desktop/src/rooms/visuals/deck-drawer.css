@@ -1,0 +1,109 @@
+/* "More of the beacons" drawer: workbench reflow, drawer charts, panels, replay rows and core-mode drawer fixes.
+   Loaded right after deck.css (deck.tsx). Every rule here is scoped to the drawer or its replay/bench content,
+   so the room rules in deck.css and these never target the same element and property. */
+
+/* "More of the beacons": the drawer is one narrow column, so its workbench reflows to a single track,
+   numbers read in the text face (tabular) rather than mono, and titles never use the display face. */
+.visuals-room :is(.visuals-replay-clock, .visuals-replay-time, .visuals-replay-axis, .visuals-replay-ticker,
+  .visuals-replay-compare-stats, .visuals-curve-axis, .visuals-fire-output, .visuals-native-unit output) { font-variant-numeric: var(--num); }
+.visuals-deck .cc-chamber-drawer :is(.visuals-bench-grid, .visuals-panels, .visuals-replay-compare) { grid-template-columns: minmax(0, 1fr); gap: var(--space-12); }
+.visuals-deck .cc-chamber-drawer .visuals-bay { border-left: 0; border-top: var(--came-hair) solid var(--hair); }
+.visuals-deck .cc-chamber-drawer .visuals-bay:first-child { border-top: 0; }
+.visuals-deck .cc-chamber-drawer .visuals-replay-figure { margin-left: calc(var(--space-40) + var(--space-4)); }
+.visuals-deck .cc-chamber-drawer :is(.visuals-replay-axis-top, .visuals-replay-axis-zero, .visuals-replay-axis-lit) { white-space: nowrap; }
+.visuals-deck .cc-chamber-drawer :is(.visuals-plate .visuals-plate-name, .room-proposal-draft h3) {
+  font: 700 var(--text-px-18)/1.2 var(--font-text); letter-spacing: 0;
+}
+.visuals-deck .cc-chamber-drawer :is(.visuals-stage__eyebrow, .visuals-replay-tune h3, .visuals-replay-scrub, .visuals-room-timeline label) {
+  font-family: var(--font-label); font-weight: 700; letter-spacing: var(--track-tab); text-transform: none;
+}
+.visuals-deck .visuals-stage__tags .visuals-tag {
+  display: inline-flex; align-items: center; padding: var(--space-1) var(--space-8);
+  border: var(--came-hair) solid var(--hair); border-radius: var(--r-round); background: var(--surface-2);
+  color: var(--ink-2); font: 600 var(--text-px-15)/1.3 var(--font-text);
+}
+.visuals-deck .visuals-stage__tags .visuals-tag--ch { border-color: var(--ch); background: var(--ch-wash); color: var(--ch-ink); box-shadow: none; }
+.visuals-deck .cc-chamber-drawer .visuals-stage__line { border-radius: var(--r-md); background: var(--surface-2); font-family: var(--font-aside); }
+.visuals-deck .cc-chamber-drawer :is(.visuals-plate-meta, .visuals-stair-step, .visuals-readout, .visuals-room-time-labels) {
+  font-family: var(--font-text); font-variant-numeric: var(--num);
+}
+.visuals-deck .cc-chamber-drawer .visuals-plate.cc-plate.cc-plate { border-radius: var(--r-lg); }
+/* Drawer panels share the chamber card: hairline, rounded, one surface; no offset shadows or ink frames. */
+.visuals-deck .cc-chamber-drawer .visuals-more__body > :is(.cc-card, .cc-plate),
+.visuals-deck .cc-chamber-drawer .visuals-panels > :is(.cc-card, .visuals-seal-panel) {
+  border: var(--came-hair) solid var(--hair); border-radius: var(--space-14); overflow: clip;
+  background: color-mix(in srgb, var(--surface) 92%, transparent); box-shadow: none;
+}
+.visuals-deck .cc-chamber-drawer .visuals-more__body .cc-card-head { border-bottom: var(--came-hair) solid var(--hair); background: var(--surface-2); }
+/* Nine time labels crowd the drawer's width: the 42-minute mark yields to the end label. */
+.visuals-deck .cc-chamber-drawer .visuals-replay-time span:nth-last-child(2):not(:first-child) { visibility: hidden; }
+
+/* ---- Round 2 ---------------------------------------------------------------------------------- */
+/* Plate facts read as sentence-case text, not small caps. */
+.visuals-room .visuals-plate-foot .cc-chip { font-family: var(--font-text); font-weight: 600; letter-spacing: 0; text-transform: none; }
+
+
+/* Drawer charts share the main curve's dress: gridlines, chamber-tinted gradient fill, round control points. */
+.visuals-room .visuals-chart-stop-top { stop-color: var(--ch, var(--or)); stop-opacity: .45; }
+.visuals-room .visuals-chart-stop-low { stop-color: var(--ch, var(--or)); stop-opacity: .03; }
+.visuals-room .visuals-replay-plot, .visuals-room .visuals-curve-area {
+  border: var(--came-hair) solid var(--hair); border-radius: var(--r-md); background: linear-gradient(180deg, var(--surface-2), var(--surface));
+}
+.visuals-room .visuals-replay-grid, .visuals-room .visuals-curve-grid { stroke: var(--hair-2); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.visuals-room .visuals-replay-floor { stroke: var(--hair); stroke-width: 1; }
+.visuals-room .visuals-replay-line, .visuals-room .visuals-room-curve-line { stroke: var(--ch-ink, var(--or-ink)); stroke-width: 2; stroke-linejoin: round; }
+.visuals-room .visuals-replay-before { stroke: var(--muted); }
+.visuals-room .visuals-room-curve-band { fill: var(--ch, var(--or)); }
+.visuals-room .visuals-curve-axis, .visuals-room .visuals-replay-time { color: var(--muted); font-family: var(--font-text); font-variant-numeric: var(--num); }
+.visuals-room .visuals-curve-editor circle:not(.visuals-replay-now) {
+  fill: var(--surface); stroke: var(--ch-ink, var(--or-ink)); stroke-width: 2.5; vector-effect: non-scaling-stroke;
+  transition: fill var(--m-quick) var(--ease), stroke-width var(--m-quick) var(--ease);
+}
+.visuals-room .visuals-curve-editor circle:not(.visuals-replay-now):hover:not([aria-disabled="true"]) { fill: var(--ch, var(--or)); stroke-width: 3; }
+.visuals-room .visuals-curve-editor circle:not(.visuals-replay-now):focus-visible { fill: var(--ch, var(--or)); stroke: var(--focus); stroke-width: 4; outline: none; }
+.visuals-room .visuals-curve-editor circle:not(.visuals-replay-now)[aria-disabled="true"] { fill: var(--surface-3); stroke: var(--muted); }
+@media (prefers-reduced-motion: reduce) { .visuals-room .visuals-curve-editor circle:not(.visuals-replay-now) { transition: none; } }
+.visuals-room .visuals-replay-verdict { border-width: var(--came-hair) var(--came-hair) var(--came-hair) var(--came-heavy); border-top-color: var(--hair); border-right-color: var(--hair); border-bottom-color: var(--hair); border-radius: var(--r-md); background: var(--surface-2); }
+/* The tune-area editor sits in the same framed plot box as the bench curve. */
+.visuals-room .visuals-replay-points {
+  padding: var(--space-12); border: var(--came-hair) solid var(--hair); border-radius: var(--r-md);
+  background: linear-gradient(180deg, var(--surface-2), var(--surface));
+}
+.visuals-room .visuals-curve-editor .visuals-replay-now { fill: var(--gules-lit); stroke: var(--surface); }
+.visuals-room .visuals-replay-spent { fill: var(--ch, var(--or)); opacity: .4; }
+.visuals-room .visuals-replay-axis { color: var(--muted); font-family: var(--font-text); }
+/* Replay comparison: the selected night row is a calm chamber tint with a left rule, not a bright outline. */
+.visuals-room .visuals-replay-compare-row { border: var(--came-hair) solid var(--hair); border-left: var(--came-heavy) solid var(--hair); border-radius: var(--r-md); background: var(--surface-2); }
+.visuals-room .visuals-replay-compare-row:hover { border-color: color-mix(in srgb, var(--ch, var(--or)) 50%, var(--hair)); }
+.visuals-room .visuals-replay-compare-row[aria-pressed="true"] {
+  border-color: var(--hair); border-left-color: var(--ch, var(--or)); box-shadow: none;
+  background: color-mix(in srgb, var(--ch, var(--or)) 12%, var(--surface-2));
+}
+.visuals-room .visuals-replay-compare-row:focus-visible { outline: var(--came) solid var(--focus); outline-offset: var(--space-2); }
+.visuals-room .visuals-replay-compare-row polyline { stroke: var(--ch-ink, var(--or-ink)); }
+.visuals-room .visuals-replay-compare-row[data-tone="pinned"]:not([aria-pressed="true"]) { border-left-color: var(--gules); }
+.visuals-room .visuals-replay-compare-row[data-tone="never_lit"]:not([aria-pressed="true"]) { border-left-color: var(--azure); }
+
+/* ---- Round 4: core mode ----------------------------------------------------------------------- */
+/* The drawer stacks its blocks at their content height; the core bench never collapses under its neighbours. */
+.visuals-deck .cc-chamber-drawer-body { grid-auto-rows: max-content; }
+.visuals-deck .cc-chamber-drawer-body > .visuals-bench { min-height: auto; }
+/* Drawer fields share one control height (the art-style select was a short native box). */
+.visuals-deck .cc-chamber-drawer :is(select, input:not([type="range"], [type="checkbox"], [type="radio"])) {
+  box-sizing: border-box; min-height: var(--control-h); padding-block: var(--space-6);
+}
+/* Control points read as one row each (total beside intensity), so the whole curve editor fits one drawer view. */
+.visuals-deck .cc-chamber-drawer .visuals-curve-editor fieldset { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: end; }
+/* Tier stairs take as many columns as the curve has points (a two-point core curve no longer collides). */
+.visuals-room .visuals-stair { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: var(--space-4); }
+/* Drawer buttons: the small-caps button face used across the app; curve save is the one primary, cancel a ghost. */
+.visuals-deck .cc-chamber-drawer :is(.visuals-deck-actions .cc-btn, .visuals-curve-editor .cc-btn) {
+  font-family: var(--font-label); font-weight: 700; letter-spacing: var(--track-tab);
+}
+.visuals-deck .cc-chamber-drawer .visuals-curve-editor :is(.visuals-curve-save, .visuals-curve-cancel) { justify-content: center; min-height: var(--control-h); }
+.visuals-deck .cc-chamber-drawer .visuals-curve-cancel { border-color: var(--hair); background: transparent; box-shadow: none; }
+.visuals-deck .cc-chamber-drawer .visuals-curve-cancel:hover:not(:disabled) { border-color: var(--ch); background: var(--ch-wash); }
+/* Disabled reads as unavailable, never as primary: no fill, hairline, muted ink. */
+.visuals-room.visuals-deck .cc-chamber-drawer button:disabled {
+  border-color: var(--hair); background: transparent; box-shadow: none; text-shadow: none; color: var(--muted);
+}

@@ -60,7 +60,7 @@
           on lead bars) · --came-ui (control borders; moonlit at night)
    Hues   gules (Lot Chamber) · azure (Gatehouse) · or (Beacons) · key (Map
           Room) · emerald (ok/pass) · amethyst (the Steward, the Keep) · clear
-          (grisaille/neutral). Each: --X --X-lit --X-deep --X-ink --X-wash
+          (grisaille/neutral); key is indigo-violet by day, amethyst glass by night. Each: --X --X-lit --X-deep --X-ink --X-wash
           --X-glow (clear has no -ink).  --on-glass: text on -deep glass only.
    Signals --ok --ok-ink --warn --warn-ink --danger --danger-ink --info-ink
    Gold   --gilt (burnished gradient, fills only) --gilt-hi --gilt-mid
@@ -80,7 +80,7 @@
      --font-text    Alegreya Sans    body, controls, data (lining tabular)
      --font-label   Alegreya Sans SC kickers, tabs, buttons, stamps, heads
      --font-aside   Alegreya italic  asides, subtitles, taglines
-     --font-book    Alegreya roman   folio prose (A direction only)
+     --font-book    = --font-text    (folio prose now reads in the one text face)
      --font-mono    IBM Plex Mono    hashes, bytes, handles, times
    Scale  hero 84 · title 64 · h2 28 · h4 21 · h3 17 · lead 17 · body 16 · small 15 (secondary prose) ·
           meta 14 (one-line captions only) · label 13 (small-caps face) · mono 13 · figure 46 · figure-sm 26 · figure-lg 64
@@ -102,28 +102,28 @@
   --shadow-inset: inset 0 2px 3px rgba(36,34,44,.11);
   /* lead */
   --lead: #24222C; --lead-2: #33303D; --lead-hi: #6A6778; --lead-lo: #111017;
-  --on-lead: #F1ECE2; --on-lead-muted: #C3BDCC; --came-ui: #24222C;
+  --on-lead: #F1ECE2; --on-lead-muted: #C3BDCC;
+  --came-ui: color-mix(in srgb, var(--ink) 45%, transparent);   /* control borders: the --line-control grey by day, never lead black */
   /* hues */
   --gules: #C21A33; --gules-lit: #F2493F; --gules-deep: #6B0B1C; --gules-ink: #A0142B;
   --azure: #1E56B5; --azure-lit: #4C93F2; --azure-deep: #0C2459; --azure-ink: #1B4E9C;
   --or: #E3A01B; --or-lit: #FFD45E; --or-deep: #7C4B00; --or-ink: #6E4A00;
-  --key: #3B3748; --key-lit: #8C88A3; --key-deep: #16141D; --key-ink: #2F2B3A;
+  /* key (Map Room) by day: a daylit indigo-violet, the same chamber as its night amethyst glass,
+     bluer than the Steward's --amethyst so the two never read as one hue. --key-ink is AA (>= 6.7:1)
+     on stone, surface and vellum. */
+  --key: #5B4BB0; --key-lit: #9A8CF0; --key-deep: #241B5A; --key-ink: #4A3D9A;
   --emerald: #14895A; --emerald-lit: #45D08E; --emerald-deep: #06472B; --emerald-ink: #0A6B43;
   --amethyst: #6B3FA8; --amethyst-lit: #A889E8; --amethyst-deep: #2C1352; --amethyst-ink: #5A3194;
   --clear: #D6E1D8; --clear-lit: #F7FBF4; --clear-deep: #9DB0A4;
   --wash-a: 9%;
   --gules-glow: rgba(242,73,63,.55); --azure-glow: rgba(76,147,242,.55); --or-glow: rgba(255,212,94,.6);
-  --key-glow: rgba(140,136,163,.5); --emerald-glow: rgba(69,208,142,.5); --amethyst-glow: rgba(168,137,232,.5);
-  --on-glass: #FFFFFF; --glass-shade: rgba(0,0,0,.45); --glass-hi: rgba(255,255,255,.24);   /* text-shadow / top sheen on glass */
+  --key-glow: rgba(154,140,240,.5); --emerald-glow: rgba(69,208,142,.5); --amethyst-glow: rgba(168,137,232,.5);
+  --on-glass: #FFFFFF; --on-fill: #FFFFFF; --glass-shade: rgba(0,0,0,.45); --glass-hi: rgba(255,255,255,.24);   /* text-shadow / top sheen on glass */
   --banderole: #F8F3E4; --banderole-ink: #2A2530;
-  /* signals */
-  --ok: var(--emerald); --ok-ink: var(--emerald-ink);
-  --warn: var(--or); --warn-ink: var(--or-ink);
+  /* signals (the --ok/--warn/--info aliases resolve per theme: see the [data-theme] block below) */
   --danger: #B0123B; --danger-ink: #A3103A;
-  --info-ink: var(--azure-ink);
   /* gold leaf (same metal in both themes) */
   --gilt-hi: #F7E3A0; --gilt-mid: #D3A443; --gilt-lo: #8F6318; --gilt-flat: #C99A36; --gilt-text: #E8CB80;
-  --gilt: linear-gradient(118deg, var(--gilt-lo) 0%, var(--gilt-hi) 17%, var(--gilt-mid) 33%, var(--gilt-lo) 50%, var(--gilt-mid) 64%, var(--gilt-hi) 80%, var(--gilt-mid) 100%);
   --sheen: rgba(255,247,215,.75);
   /* wax */
   --wax-hi: #D9553D; --wax: #A2231A; --wax-lo: #57100A;
@@ -136,7 +136,7 @@
   /* light */
   --sun: #FFF6DA; --moon: #DCE6FA;
   --pool-blend: multiply; --pool-a: .17; --glow-on: 0;
-  --focus: #E3A01B; --focus-inner: #24222C;
+  --focus: #E3A01B; --focus-inner: #24222C; --focus-ring: 3px;   /* the one :focus-visible ring: --focus-ring solid --focus, offset --focus-offset */
   --scrim: rgba(0,0,0,.45);
   /* textures (data URIs carry their own alpha; swapped at night) */
   --tex-etch: repeating-linear-gradient(135deg, transparent 0 4px, rgba(36,34,44,.10) 4px 5px);
@@ -146,21 +146,22 @@
   --font-display: "Grenze Gotisch", "UnifrakturCook", "Old English Text MT", Georgia, serif;
   --font-text: "Alegreya Sans", "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
   --font-label: "Alegreya Sans SC", "Alegreya Sans", "Segoe UI", system-ui, -apple-system, Arial, sans-serif;
-  --font-aside: "Alegreya", "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
-  --font-book: "Alegreya", "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+  --font-aside: "Alegreya", "Palatino Linotype", Palatino, Georgia, serif;
+  --font-book: var(--font-text);
   --font-mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", "SF Mono", Consolas, Menlo, monospace;
   --num: lining-nums tabular-nums;
   --t-hero: 84px; --t-title: 64px; --t-h2: 28px; --t-h4: 21px; --t-h3: 17px; --t-lead: 17px;
   --t-body: 16px; --t-small: 15px; --t-meta: 14px; --t-label: 14px; --t-mono: 13px;
   --t-figure: 46px; --t-figure-sm: 26px; --t-figure-lg: 64px;
-  --track-label: .08em; --track-tab: .07em; --track-wide: .12em;
+  --track-label: .06em; --track-tab: .06em; --track-wide: .1em;
+  /* line heights: tight (figures, one-line titles), snug (titles, controls, labels), body (prose) */
+  --lh-tight: 1.1; --lh-snug: 1.25; --lh-body: 1.45;
 
   /* shape & size */
   --came-hair: 1px; --came: 2px; --came-heavy: 4px;
   --r: 2px; --r-round: 999px;
   --rampart-h: 56px; --tabs-h: 58px; --dock-h: 100px;
   --top-h: calc(var(--rampart-h) + var(--tabs-h));
-  --main-h: calc(100vh - var(--top-h) - var(--dock-h));
   --gutter: 28px; --gap: 20px; --pad: 20px;
   --control-h: 38px; --control-h-sm: 30px; --control-h-lg: 44px;
 
@@ -172,7 +173,7 @@
      at most --shift of travel. prefers-reduced-motion removes all of it (see motion.css). */
   --m-quick: .14s; --m-calm: .26s; --m-enter: .36s; --m-exit: .18s; --shift: 8px;
   --ease-out: var(--ease); --ease-in: cubic-bezier(.4, 0, 1, 1);
-  --m-fast: .14s; --m-light: .5s; --m-dawn: 2.6s; --m-sheen: 1.6s; --m-drop: 1.5s; --m-press: .42s;
+  --m-fast: .14s; --m-light: .5s; --m-sheen: 1.6s;
 }
 
 /* ------------------------------------------------------------------- night */
@@ -200,6 +201,7 @@
   --gules-glow: rgba(255,106,85,.7); --azure-glow: rgba(111,174,255,.7); --or-glow: rgba(255,224,122,.75);
   --key-glow: rgba(180,175,212,.55); --emerald-glow: rgba(94,240,168,.6); --amethyst-glow: rgba(194,166,255,.65);
   --banderole: #E9E2CF; --banderole-ink: #1E1A24;
+  --on-fill: var(--lead-lo);   /* text on a filled hue: white on day's deep glass, black on night's lit glass (AA) */
   --danger: #FF5C7E; --danger-ink: #FF8FA6;
   --sheen: rgba(255,240,200,.55);
   --emboss-dark: rgba(20,2,0,.7); --emboss-light: rgba(255,200,180,.28); --wax-drop: rgba(0,0,0,.6);
@@ -211,6 +213,18 @@
   --focus: #FFD45E; --focus-inner: #050508;
   --scrim: rgba(0,0,0,.6);
   --tex-etch: repeating-linear-gradient(135deg, transparent 0 4px, rgba(220,230,250,.11) 4px 5px);
+}
+
+/* aliases of theme values are declared on every themed element, never on :root alone: a custom
+   property resolves where it is declared, so a :root-only alias would hand a night frame the day
+   value (dark --ok-ink / --warn-ink on slate). */
+:root, [data-theme] {
+  --ok: var(--emerald); --ok-ink: var(--emerald-ink);
+  --warn: var(--or); --warn-ink: var(--or-ink);
+  --info-ink: var(--azure-ink);
+  /* the one control outline (fields, buttons, key caps): 3:1 against every surface in both themes */
+  --line-control: color-mix(in srgb, var(--ink) 45%, transparent);
+  --gilt: linear-gradient(118deg, var(--gilt-lo) 0%, var(--gilt-hi) 17%, var(--gilt-mid) 33%, var(--gilt-lo) 50%, var(--gilt-mid) 64%, var(--gilt-hi) 80%, var(--gilt-mid) 100%);
 }
 
 /* washes: a tint of each hue for grounds only (never text) */
@@ -242,11 +256,11 @@
   --text-t-figure-sm: var(--t-figure-sm);
   --text-t-figure-lg: var(--t-figure-lg);
   --text-px-13: 13px;
-  --text-px-13-5: 13.5px;
+  --text-px-13-5: var(--t-meta);   /* half-pixel steps snap to the scale */
   --text-px-14: 14px;
-  --text-px-14-5: 14.5px;
+  --text-px-14-5: var(--t-small);
   --text-px-15: 15px;
-  --text-px-15-5: 15.5px;
+  --text-px-15-5: var(--t-small);
   --text-px-16: 16px;
   --text-px-17: 17px;
   --text-px-18: 18px;
@@ -255,8 +269,6 @@
   --text-px-22: 22px;
   --text-px-25: 25px;
   --text-px-32: 32px;
-  --text-px-42: 42px;
-  --text-px-46: 46px;
 }
 
 /* --------------------------------------------------------- chamber binding */

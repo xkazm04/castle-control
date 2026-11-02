@@ -1,3 +1,5 @@
+import { EmptyState } from '@castle-control/ui';
+import { DuelName } from './duel-picture.jsx';
 import { roundName } from './duel-model.js';
 import type { DuelPicture, DuelSlot } from './duel-model.js';
 
@@ -23,19 +25,19 @@ export function BracketSheet({ picture }: { picture: DuelPicture }) {
           <h3>{roundName(total, round)}</h3>
           <div className="duel-sheet__matches">{slots.map((slot, index) => {
             const state = slotState(picture, round, index, slot);
-            return <div key={index} className="duel-sheet__match" data-role="ty-match" data-state={state}
+            return <div key={index} className="duel-sheet__slot"><div className="duel-sheet__match" data-role="ty-match" data-state={state}
               aria-current={state === 'current' ? 'step' : undefined}>
               {[slot.a, slot.b].map((id, row) => <div key={row} className="duel-sheet__row"
                 data-won={slot.winner !== null && slot.winner === id ? true : undefined}
                 data-lost={slot.winner !== null && id !== null && slot.winner !== id ? true : undefined}>
-                <span className="duel-sheet__seed">{seed(id) ?? '·'}</span><span>{name(id)}</span>
+                <span className="duel-sheet__seed">{seed(id) ?? '·'}</span><span><DuelName title={name(id)} /></span>
               </div>)}
-            </div>;
+            </div></div>;
           })}</div>
         </section>)}
         <section className="duel-sheet__col duel-sheet__champ" aria-label="Champion">
           <h3>Champion</h3>
-          <p data-role="ty-champion-slot">{picture.champion?.title ?? 'To be crowned'}</p>
+          <p data-role="ty-champion-slot" data-crowned={picture.champion ? true : undefined}>{picture.champion?.title ?? 'To be crowned'}</p>
         </section>
       </div>
       {picture.simulated && <p className="duel-sheet__note"><span className="cc-sim">Simulated</span>
@@ -47,20 +49,24 @@ export function BracketSheet({ picture }: { picture: DuelPicture }) {
 export function BracketSummary({ picture }: { picture: DuelPicture }) {
   const total = size(picture);
   const final = picture.rounds.length - 1;
+  if (final < 0) return <div className="duel-bracket" data-empty="true" aria-label="Bracket summary">
+    <EmptyState compact glyph={false} announce={false} title="No bracket yet"
+      description="Seeds, matches and the champion appear here once a duel starts." />
+  </div>;
   const round = (r: number) => <div className="duel-bracket__round">
-    {(picture.rounds[r] ?? []).map((slot, index) => <div key={index} className="duel-bracket__match"
+    {(picture.rounds[r] ?? []).map((slot, index) => <div key={index} className="duel-bracket__slot"><div className="duel-bracket__match"
       data-state={slotState(picture, r, index, slot)}>
       <h4>{roundName(total, r)} {r === final ? '' : index + 1}</h4>
       {[slot.a, slot.b].map((id, row) => <p key={row} data-won={id !== null && id === slot.winner || undefined}>
-        {id ? picture.entrants[id]?.title ?? id : `Winner of ${r === 0 ? 'match' : roundName(total, r - 1).toLowerCase()} ${index * 2 + row + 1}`}
+        {id ? <DuelName title={picture.entrants[id]?.title ?? id} /> : `Winner of ${r === 0 ? 'match' : roundName(total, r - 1).toLowerCase()} ${index * 2 + row + 1}`}
       </p>)}
-    </div>)}
+    </div></div>)}
   </div>;
   return <div className="duel-bracket" aria-label="Bracket summary">
     {final > 0 && round(final - 1)}
     <div className="duel-bracket__finish">{final >= 0 && round(final)}
-      <div className="duel-bracket__match"><h4>Champion</h4>
-        <b data-role="ty-champ-slot">{picture.champion?.title ?? '?'}</b></div>
+      <div className="duel-bracket__champ" data-crowned={picture.champion ? true : undefined}><h4>Champion</h4>
+        <b data-role="ty-champ-slot">{picture.champion ? <DuelName title={picture.champion.title} /> : '?'}</b></div>
     </div>
   </div>;
 }

@@ -42,16 +42,16 @@ test('component styles use declared shared tokens, not raw colors or pixel sizes
 test('frame fields share token chrome and a token-drawn select chevron', () => {
   const styles = readFileSync(new URL('./primitives.css', import.meta.url), 'utf8');
   const fields = styles.match(/\.cc-frame :is\(select, input[^{}]+\{([^}]+)\}/)?.[1] ?? '';
-  for (const declaration of ['appearance: none', 'border: var(--rule-thin) solid var(--ink)',
-    'border-radius: var(--r-sm)', 'background: var(--card)', 'color: var(--ink)',
-    'padding: var(--space-7) var(--space-10)', 'font: var(--text-body)/1.4 var(--font-ui)']) {
+  for (const declaration of ['appearance: none', 'border: var(--rule-thin) solid var(--line-control)',
+    'border-radius: var(--r-sm)', 'background-color: var(--surface-2)', 'color: var(--ink)',
+    'padding: var(--space-6) var(--space-10)', 'font: 500 var(--text-small)/1.3 var(--font-text)']) {
     expect(fields).toContain(declaration);
   }
   for (const type of ['hidden', 'checkbox', 'radio', 'range']) expect(styles).toContain(`[type="${type}"]`);
   const select = styles.match(/\.cc-frame select\s*\{([^}]+)\}/)?.[1] ?? '';
   expect(select).toContain('background-image: linear-gradient(');
-  expect(select).toContain('var(--ink)');
-  expect(select).toContain('padding-inline-end: var(--space-24)');
+  expect(select).toContain('var(--ink-2)');
+  expect(select).toContain('padding-inline-end: var(--space-28)');
 });
 
 function luminance(hex: string) {

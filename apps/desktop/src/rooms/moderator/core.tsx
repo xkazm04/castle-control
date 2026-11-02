@@ -23,6 +23,7 @@ import { coreDemoFlow } from './flow-demo.jsx';
 import { ChamberSection } from '@castle-control/ui/chamber';
 import { proposalQueue } from '@castle-control/ui/steward';
 import { GatehouseDeck, GateProposalMini } from './deck.jsx';
+import { GateRecent, GateTally } from './gate.jsx';
 import { useGatehouseDrawer } from './drawer-state.js';
 import { CoreBanReview, CoreRuleMode } from './core-bans.jsx';
 
@@ -68,11 +69,12 @@ export function ConnectedGatehouse({ port, replay, seal_slot, rehearsal = false 
     <div className="moderator-drill-room"><CoreDrill state={state} port={port} />{seal_slot}</div></div>;
   const items = state.chat?.items ?? [];
   const count = (verdict: string) => items.filter(item => item.decision.verdict === verdict).length;
+  const recent = [...messages].sort((one, two) => Date.parse(two.at) - Date.parse(one.at)).slice(0, 12);
   const open = () => drawer.setOpen(true);
   return <div className="moderator-room gh-room gh-room--core" aria-label="Core Gatehouse" aria-busy={state.busy}>
     <GatehouseDeck open={drawer.open} on_close={() => drawer.setOpen(false)} picture_label="Gatehouse picture · core"
-      caption="Core · held-message queue unavailable · stylised illustration" preview_title="Proposal · awaiting your seal" program_title="Program · core"
-      picture={<div className="gh-picture"><GateArt waiting={0} simulated={false} unavailable /><span className="gh-picture__label">Held queue unavailable · stylised illustration</span></div>}
+      caption="Core · stylised illustration" preview_title="Proposal · awaiting your seal" program_title="Program · core"
+      picture={<div className="gh-picture"><GateArt waiting={0} simulated={false} unavailable /></div>}
       preview={<GateProposalMini queue={proposalQueue} on_open={open} />}
       program={<div className="gh-mini-copy"><b>Chat and Herald</b><p>{items.length} lines read · {count('pass')} passed · {count('hold')} held · {count('bar')} barred</p>
         <p>{state.consensus?.directions[0]?.label ?? copy.core_consensus_empty}</p></div>}
@@ -91,6 +93,8 @@ export function ConnectedGatehouse({ port, replay, seal_slot, rehearsal = false 
         {rehearsal ? <CoreBanReview state={state} port={port} />
           : <p className="gh-sm">The held-message queue and pending ban queue are unavailable in this connection.</p>}
         <button type="button" className="cc-btn cc-btn--sm" onClick={open}>Live room · more of the Gatehouse</button>
+        {items.length > 0 && <GateTally verdicts={items.map(item => item.decision.verdict)} label="Through the gate · core" />}
+        {items.length > 0 && <GateRecent items={recent} label="Recent at the gate · core" />}
         </ChamberSection>,
         <ChamberSection key="herald" title="The Herald’s chart" aside={<button type="button" className="cc-btn cc-btn--sm" onClick={open}>Full chart</button>}>
           <CoreConsensus state={state} port={port} compact />

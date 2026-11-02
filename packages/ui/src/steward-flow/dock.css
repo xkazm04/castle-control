@@ -36,6 +36,7 @@
   --sd-ease: var(--ease, cubic-bezier(.2, .7, .2, 1));
   --sd-m: var(--m-quick, var(--m-fast, 160ms));
 
+  --sd-text-control: var(--text-t-small, var(--text-body));
   --sd-plate-w: 268px;
   position: relative; z-index: 28; display: grid; grid-template-columns: var(--sd-plate-w) minmax(0, 1fr) auto; align-items: stretch;
   min-height: var(--dock-h, 96px); color: var(--sd-ink);
@@ -46,7 +47,7 @@
 }
 .cc-steward-dock :where(p, dl, dd, ol) { margin: 0; padding: 0; }
 .cc-steward-dock .cc-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-.cc-steward-dock :focus-visible { outline: 2px solid var(--sd-focus); outline-offset: 2px; }
+.cc-steward-dock :focus-visible { outline: var(--focus-ring, 3px) solid var(--sd-focus); outline-offset: var(--focus-offset); }
 
 /* ---- plate */
 .cc-steward-dock .cc-steward { display: grid; grid-template-columns: 44px 1fr; column-gap: 12px; align-items: center; align-content: center;
@@ -74,8 +75,8 @@
 .cc-steward-proposal { min-width: 0; max-width: 360px; align-self: center; padding: 10px 16px; border-left: var(--sd-came) solid var(--sd-lead); overflow-wrap: anywhere; }
 
 /* ---- controls (mirror fused .cc-btn/.cc-input; scoped so the shell sheet can own the globals) */
-/* Every field, the talk prompt included, follows the one field law: a thin ink border (e2e/styles.ts). */
-.cc-steward-dock .cc-input { height: var(--control-h, 38px); padding: 0 12px; border: var(--rule-thin, 1px) solid var(--sd-ink); border-radius: var(--sd-r);
+/* Every field, the talk prompt included, follows the one field law: a thin --line-control border (primitives.css). */
+.cc-steward-dock .cc-input { height: var(--control-h, 38px); padding: 0 12px; border: var(--rule-thin, 1px) solid var(--line-control, var(--sd-ink)); border-radius: var(--sd-r);
   background: var(--sd-surface); color: var(--sd-ink); font: 400 var(--t-body, var(--text-number))/1 var(--sd-font-text); min-width: 0; }
 .cc-steward-dock .cc-input::placeholder { color: var(--sd-muted); }
 .cc-steward-dock .cc-input[aria-invalid="true"] { border-color: var(--danger); }
@@ -109,14 +110,14 @@
 .cc-flow-menu { position: relative; display: inline-flex; }
 .cc-flow-menu__caret { width: 7px; height: 7px; margin: -3px 0 0 2px; border: solid currentColor; border-width: 0 2px 2px 0; transform: rotate(-135deg); }
 .cc-flow-menu__button[aria-expanded="true"] .cc-flow-menu__caret { margin-top: 3px; transform: rotate(45deg); }
-.cc-flow-menu__list { position: absolute; right: 0; bottom: calc(100% + 8px); z-index: 2; display: grid; min-width: 260px; padding: 6px;
-  background: var(--sd-surface); border: var(--sd-came) solid var(--sd-lead); border-radius: var(--sd-r); box-shadow: var(--sd-shadow); }
-.cc-flow-menu__list::before { content: ''; height: 5px; margin: -6px -6px 6px; background: var(--sd-ch); border-bottom: var(--sd-came) solid var(--sd-lead); }
-.cc-flow-menu__item { display: flex; align-items: center; gap: 10px; min-height: 36px; padding: 0 12px; border: 0; border-radius: var(--sd-r); background: none;
+.cc-flow-menu__list { position: absolute; right: 0; bottom: calc(100% + 8px); z-index: 2; display: grid; gap: var(--space-2); min-width: 260px; padding: var(--space-6);
+  background: linear-gradient(180deg, var(--deck-chat-top), var(--deck-chat-bottom)); border: var(--rule-thin) solid var(--deck-gold-2);
+  border-radius: var(--deck-key-radius); box-shadow: var(--deck-chat-shadow); }
+.cc-flow-menu__item { display: flex; align-items: center; gap: 10px; min-height: 36px; padding: 0 12px; border: 0; border-radius: var(--r-md); background: none;
   color: var(--sd-ink); text-align: left; white-space: nowrap; cursor: pointer; font: 600 var(--t-body, var(--text-number))/1.2 var(--sd-font-text); }
 .cc-flow-menu__item:hover, .cc-flow-menu__item:focus-visible { background: var(--sd-ch-wash); box-shadow: inset 3px 0 0 var(--sd-ch); }
 .cc-flow-menu__item:focus-visible { outline-offset: -2px; }
-.cc-flow-menu__tag { margin-left: auto; font: 800 var(--t-label, var(--text-label))/1 var(--sd-font-label); letter-spacing: .1em; text-transform: lowercase; color: var(--sd-muted); }
+.cc-flow-menu__tag { margin-left: auto; font: 700 var(--t-label, var(--text-label))/1 var(--sd-font-label); letter-spacing: .06em; text-transform: lowercase; color: var(--sd-muted); }
 
 /* ================================================================ SHEET */
 .cc-steward-sheet {
