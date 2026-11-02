@@ -7,7 +7,7 @@ const registry = stewardRegistry({ mode: 'fixture', phase: 'ready' });
 
 test('every chamber has a Steward; the Keep offers its theme flow and a simulated catch-up', () => {
   for (const chamber of flowChambers) expect(registry[chamber].greeting.length).toBeGreaterThan(10);
-  expect(chamberChips('keep', registry.keep).map(chip => chip.label)).toEqual(["Pick tonight's theme", 'Catch me up']);
+  expect(chamberChips('keep', registry.keep).map(chip => chip.label)).toEqual(["Pick tonight's theme", 'Play demo', 'Catch me up']);
   const brief = registry.keep.catch_up?.();
   expect(brief?.simulated).toBe(true);
   expect(brief?.lines?.map(line => line.label)).toEqual(['Lot Chamber', 'Gatehouse', 'Beacons', 'Map Room', 'Chat delay']);
