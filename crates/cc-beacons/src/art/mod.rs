@@ -1,16 +1,30 @@
-//! WP 3.4 part A: private Leonardo requests with injectable HTTP/keychain doors.
+//! WP 3.4 part A: private Leonardo requests with injectable HTTP/keychain doors,
+//! the OpenAI GPT image provider, and deterministic layer/anchor analysis.
 //!
 //! Paid calls return cost receipts; nothing writes a ledger. EngineProvider lives
 //! in the frozen cc-store crate, pending the operator's ruling. Ledger integration,
 //! RPC/UI wiring and the owner's Leonardo-terms check are deferred. Contribution
 //! intake and intensity never call this module. No network starts on construction.
+pub mod anchors;
 mod client;
 mod key;
+pub mod openai;
+pub mod openai_wire;
+mod palette;
+pub mod raster;
+pub mod regions;
 mod transport;
 mod wire;
 
 pub use client::LeonardoClient;
-pub use key::{KEYCHAIN_SERVICE, KeyStore, KeychainStore, SecretKey};
+pub use key::{
+    KEYCHAIN_SERVICE, KeyStore, KeychainStore, OPENAI_KEYCHAIN_ACCOUNT, OPENAI_KEYCHAIN_SERVICE,
+    OpenAiKeychain, SecretKey,
+};
+pub use openai::{
+    OpenAiBackground, OpenAiCall, OpenAiClient, OpenAiImage, OpenAiImageRequest, OpenAiImages,
+    OpenAiModel, OpenAiReqwest, OpenAiSize, OpenAiTransport,
+};
 pub use transport::{HttpMethod, HttpRequest, HttpResponse, HttpTransport, ReqwestTransport};
 
 use async_trait::async_trait;
@@ -19,17 +33,17 @@ use serde::Serialize;
 /// Local domain errors only. Never retain upstream error text or request headers.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, thiserror::Error)]
 pub enum ArtError {
-    #[error("Leonardo is unavailable: no key configured")]
+    #[error("image provider is unavailable: no key configured")]
     Unavailable,
-    #[error("Leonardo keychain unavailable")]
+    #[error("image provider keychain unavailable")]
     Keychain,
     #[error("invalid image request")]
     Invalid,
-    #[error("Leonardo transport failed")]
+    #[error("image provider transport failed")]
     Transport,
-    #[error("Leonardo HTTP failure ({0})")]
+    #[error("image provider HTTP failure ({0})")]
     Http(u16),
-    #[error("invalid Leonardo response")]
+    #[error("invalid image provider response")]
     Response,
 }
 

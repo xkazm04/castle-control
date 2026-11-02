@@ -4,8 +4,8 @@ use super::{BeaconsModule, encode, internal};
 use cc_beacons::art::{ArtError, Charge, CostRecord, GenerationState, ImageProvider, ImageRequest};
 use cc_store::{ImageProviderAmount, LedgerEvent, Timestamp};
 use cc_types::{
-    ArtCharge, ArtCostReceipt, ArtGenerateParams, ArtGenerateResult, ArtStatusResult, ErrorCode,
-    ErrorEnvelope, RpcRequest,
+    ArtCharge, ArtCostReceipt, ArtGenerateParams, ArtGenerateResult, ArtProvider,
+    ArtProviderStatus, ArtStatusResult, ErrorCode, ErrorEnvelope, RpcRequest,
 };
 use serde_json::Value;
 use std::{sync::Arc, time::Duration};
@@ -34,13 +34,29 @@ impl BeaconsModule {
 
     pub(super) async fn art_call(&self, request: &RpcRequest) -> Result<Value, ErrorEnvelope> {
         match request {
-            RpcRequest::ArtStatus(_) => encode(ArtStatusResult {
-                available: match &self.art {
-                    Some(art) => art.provider.available().map_err(provider_error)?,
-                    None => false,
-                },
-                providers: Vec::new(),
-            }),
+            RpcRequest::ArtStatus(_) => {
+                let mut providers = Vec::new();
+                if let Some(art) = &self.art {
+                    providers.push(ArtProviderStatus {
+                        provider: ArtProvider::Leonardo,
+                        available: art.provider.available().map_err(provider_error)?,
+                    });
+                }
+                if let Some(openai) = &self.openai {
+                    providers.push(ArtProviderStatus {
+                        provider: ArtProvider::Openai,
+                        available: openai.available().map_err(provider_error)?,
+                    });
+                }
+                encode(ArtStatusResult {
+                    available: providers.iter().any(|p| p.available),
+                    providers,
+                })
+            }
+            RpcRequest::ArtGenerate(params) if params.provider == Some(ArtProvider::Openai) => {
+                let _serial = self.art_serial.lock().await;
+                encode(self.generate_openai(params).await?)
+            }
             RpcRequest::ArtGenerate(params) => {
                 let _serial = self.art_serial.lock().await;
                 let art = self
@@ -51,13 +67,25 @@ impl BeaconsModule {
                     return Err(unavailable("Leonardo has no key configured"));
                 }
                 self.art_ready()?;
+                // A custom design survives restarts on disk; the in-memory
+                // catalog learns its writable root again on first use.
+                if self
+                    .designs
+                    .record(&params.design_id)
+                    .is_ok_and(|r| r.origin == (super::designs::DesignOrigin::Custom {}))
+                {
+                    art.catalog.accept_design(
+                        params.design_id.clone(),
+                        &self.designs.dir(&params.design_id),
+                    )?;
+                }
                 encode(self.generate_art(art, params).await?)
             }
             _ => Err(unavailable("method is outside art module")),
         }
     }
 
-    fn art_ready(&self) -> Result<(), ErrorEnvelope> {
+    pub(super) fn art_ready(&self) -> Result<(), ErrorEnvelope> {
         let state = self.state.lock().map_err(|_| internal())?;
         if state.revoked {
             return Err(unavailable("art is unavailable after revocation"));
@@ -93,14 +121,19 @@ impl BeaconsModule {
             None => art.provider.generate_anchor(&request).await,
         }
         .map_err(provider_error)?;
-        // A dollar-only response is refused before any ledger mutation, polling,
-        // download or further paid call. There is no credits conversion/fallback.
+        // A dollar-only Leonardo response is refused before any ledger mutation,
+        // polling, download or further paid call. There is no credits
+        // conversion/fallback (micro-USD receipts are the OpenAI path's).
         if !matches!(generation.cost.charge, Charge::Credits(_)) {
             return Err(unavailable(
                 "art receipts without credits are not supported yet",
             ));
         }
-        let receipt = self.record_art_cost(&generation.cost, submitted_at)?;
+        let receipt = self.record_art_cost(
+            &generation.cost,
+            submitted_at,
+            cc_store::ImageProvider::Leonardo,
+        )?;
         // The charge is durable even for withheld/failed output, timeout, or a
         // failed import. Failures stay typed errors rather than empty successes.
         let mut result = ArtGenerateResult {
@@ -140,9 +173,11 @@ impl BeaconsModule {
                     .map_err(provider_error)?;
                 // Persist the exact receipt before examining/importing output.
                 // Withheld output and later failures never erase a paid call.
-                result
-                    .costs
-                    .push(self.record_art_cost(&removed.cost, submitted_at)?);
+                result.costs.push(self.record_art_cost(
+                    &removed.cost,
+                    submitted_at,
+                    cc_store::ImageProvider::Leonardo,
+                )?);
                 cutouts.extend(removed.assets);
             }
             cutouts
@@ -165,10 +200,13 @@ impl BeaconsModule {
         Ok(result)
     }
 
-    fn record_art_cost(
+    /// Exact receipt into the engine spend ledger: Leonardo credits, or
+    /// OpenAI's estimated micro-USD (owner ruling 2026-11-02).
+    pub(super) fn record_art_cost(
         &self,
         cost: &CostRecord,
         submitted_at: Timestamp,
+        provider: cc_store::ImageProvider,
     ) -> Result<ArtCostReceipt, ErrorEnvelope> {
         let receipt: ArtCostReceipt =
             serde_json::from_value(serde_json::to_value(cost).map_err(|_| internal())?)
@@ -185,7 +223,7 @@ impl BeaconsModule {
                 submitted_at,
                 Timestamp::now(),
                 LedgerEvent::ImageProviderCost {
-                    provider: cc_store::ImageProvider::Leonardo,
+                    provider,
                     amount,
                     cost_microusd: None,
                     call_id: receipt.call_id.clone(),
@@ -196,7 +234,7 @@ impl BeaconsModule {
     }
 }
 
-fn unavailable(message: &'static str) -> ErrorEnvelope {
+pub(super) fn unavailable(message: &'static str) -> ErrorEnvelope {
     ErrorEnvelope::new(ErrorCode::Unavailable, message)
 }
 pub(super) fn provider_error(error: ArtError) -> ErrorEnvelope {

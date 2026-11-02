@@ -1,8 +1,14 @@
 //! Shared Beacons configuration, simulated overlay previews and live routing.
 mod art;
 mod art_assets;
+mod art_openai;
+mod design_package;
+mod design_rpc;
+pub(crate) mod designs;
 #[cfg(test)]
 mod intake_cost;
+mod layers;
+mod library;
 mod live;
 pub(crate) mod presets;
 mod preview;
@@ -47,6 +53,8 @@ struct State {
 
 pub struct BeaconsModule {
     art: Option<art::ArtRuntime>,
+    openai: Option<Arc<dyn cc_beacons::art::OpenAiImages>>,
+    designs: Arc<designs::DesignStore>,
     art_serial: tokio::sync::Mutex<()>,
     state: Arc<Mutex<State>>,
     root: PathBuf,
@@ -64,6 +72,9 @@ impl BeaconsModule {
         "beacons.curve.set",
         "beacons.simulate",
         "beacons.source.url",
+        "beacons.design.create",
+        "beacons.art.layers",
+        "beacons.library.import",
     ];
 
     /// Caller-owned root. As with Lots, viewer-free configuration is atomic JSON
@@ -72,8 +83,11 @@ impl BeaconsModule {
         let root = root.as_ref().to_owned();
         let store = Store::open(root.join("store")).map_err(|_| internal())?;
         let visuals = storage::load(&root)?;
+        let designs = Arc::new(designs::DesignStore::open(root.join("designs"))?);
         Ok(Self {
             art: None,
+            openai: None,
+            designs,
             art_serial: tokio::sync::Mutex::new(()),
             state: Arc::new(Mutex::new(State {
                 _store: store,
@@ -88,6 +102,11 @@ impl BeaconsModule {
             overlay_origin: None,
             native: None,
         })
+    }
+
+    /// Persisted custom and library designs, shared with the overlay host.
+    pub(crate) fn designs(&self) -> Arc<designs::DesignStore> {
+        self.designs.clone()
     }
 
     /// Supplied only by native registry composition from its bound overlay.
@@ -111,9 +130,20 @@ impl BeaconsModule {
                 download: std::sync::Arc::new(art_assets::LeonardoDownload),
                 catalog: service.art_catalog.clone(),
             });
-            for visual in self.state.lock().map_err(|_| internal())?.visuals.values() {
-                service.ensure_beacons_preset(visual.design_id.as_ref())?;
-                service.accept_beacons_visual(visual.clone())?;
+            self.openai = Some(Arc::new(
+                cc_beacons::art::OpenAiClient::from_keychain().map_err(art::provider_error)?,
+            ));
+            let visuals: Vec<Visual> = self
+                .state
+                .lock()
+                .map_err(|_| internal())?
+                .visuals
+                .values()
+                .cloned()
+                .collect();
+            for visual in visuals {
+                self.publish_design(&service, visual.design_id.as_ref())?;
+                service.accept_beacons_visual(visual)?;
             }
         }
         Ok(self)
@@ -193,7 +223,7 @@ impl BeaconsModule {
         let mut visuals = state.visuals.clone();
         visuals.insert(visual.visual_id.clone(), visual.clone());
         if let Some(native) = self.native.as_ref().and_then(Weak::upgrade) {
-            native.ensure_beacons_preset(visual.design_id.as_ref())?;
+            self.publish_design(&native, visual.design_id.as_ref())?;
             native.commit_beacons_visual(visual.clone(), || storage::save(&self.root, &visuals))?;
         } else {
             storage::save(&self.root, &visuals)?;
@@ -216,6 +246,9 @@ impl Module for BeaconsModule {
                 RpcRequest::ArtStatus(_) | RpcRequest::ArtGenerate(_) => {
                     self.art_call(request).await
                 }
+                RpcRequest::DesignCreate(params) => encode(self.create_design(params)?),
+                RpcRequest::LibraryImport(params) => encode(self.import_library(params)?),
+                RpcRequest::ArtLayers(params) => encode(self.art_layers(params).await?),
                 _ => self.handle(request),
             }
         })

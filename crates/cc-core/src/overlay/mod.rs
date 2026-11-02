@@ -1,4 +1,5 @@
 //! Accepted render state on the isolated OBS listener. Never mounted on core.
+mod design_assets;
 mod lots;
 mod lots_page;
 pub mod package;
@@ -45,6 +46,7 @@ struct State {
 pub struct RenderHost {
     tiltyard: OnceLock<std::sync::Weak<crate::tiltyard::TiltyardModule>>,
     vote_bar: OnceLock<Arc<crate::gatehouse::VoteBarModule>>,
+    designs: OnceLock<Arc<crate::beacons::designs::DesignStore>>,
     state: Mutex<State>,
     lots: Mutex<BTreeMap<cc_types::DrawId, lots::DrawScene>>,
     clients: Arc<Semaphore>,
@@ -53,6 +55,7 @@ impl Default for RenderHost {
     fn default() -> Self {
         Self {
             vote_bar: OnceLock::new(),
+            designs: OnceLock::new(),
             tiltyard: OnceLock::new(),
             state: Mutex::new(State::default()),
             lots: Mutex::new(BTreeMap::new()),
@@ -67,6 +70,13 @@ impl RenderHost {
         source: Arc<crate::gatehouse::VoteBarModule>,
     ) -> Result<(), ErrorEnvelope> {
         self.vote_bar.set(source).map_err(|_| unavailable())
+    }
+    /// Native composition only: custom designs behind the vote bar and Lots art.
+    pub(crate) fn bind_designs(
+        &self,
+        designs: Arc<crate::beacons::designs::DesignStore>,
+    ) -> Result<(), ErrorEnvelope> {
+        self.designs.set(designs).map_err(|_| unavailable())
     }
     pub(crate) fn bind_tiltyard(
         &self,

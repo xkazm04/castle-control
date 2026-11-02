@@ -41,6 +41,7 @@ impl GatehouseModule {
         "gatehouse.history.list",
         "gatehouse.liveRun.get",
         "gatehouse.source.url",
+        "gatehouse.votebar.design.set",
     ];
 
     /// The caller owns the persistence root and clock. No live adapter is started;

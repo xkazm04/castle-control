@@ -1,4 +1,6 @@
 //! Viewer-free proposals. Generation has no configuration mutation authority.
+//! The same configured engine also serves the custom design art director.
+mod direct;
 mod keychain;
 #[cfg(test)]
 mod keychain_tests;
@@ -58,8 +60,12 @@ pub(crate) struct StewardModule {
 }
 
 impl StewardModule {
-    pub const METHODS: &'static [&'static str] =
-        &["steward.ask", "steward.writ.seal", "steward.writ.tear"];
+    pub const METHODS: &'static [&'static str] = &[
+        "steward.ask",
+        "steward.writ.seal",
+        "steward.writ.tear",
+        "beacons.art.direct",
+    ];
 
     pub fn configured(config: StewardConfig) -> Self {
         Self {
@@ -105,6 +111,7 @@ impl StewardConfig {
         store: &mut Store,
     ) -> Result<Value, ErrorEnvelope> {
         match request {
+            RpcRequest::ArtDirect(params) => encode(self.direct(params, store).await?),
             RpcRequest::Ask(params) => {
                 let writ = self.ask(params, store, registry).await?;
                 encode(AskResult { writ })
@@ -268,6 +275,7 @@ pub(crate) fn is_mutation(request: &RpcRequest) -> bool {
             | RpcRequest::RulesSetMode(_)
             | RpcRequest::VisualUpsert(_)
             | RpcRequest::CurveSet(_)
+            | RpcRequest::VoteBarDesignSet(_)
     )
 }
 fn require_proposed(writ: &Writ) -> Result<(), ErrorEnvelope> {
