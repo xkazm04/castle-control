@@ -151,7 +151,7 @@ export const lotsCopy = {
   },
   core: {
     title: 'Core Lot Chamber', workbench: 'Core draw workbench', draws: 'Draws in your core',
-    refresh: 'Refresh draws', create: 'Create no-prize question draw', draw: 'Draw',
+    housekeeping: 'Draws on the core', refresh: 'Refresh draws', create: 'Create no-prize question draw', draw: 'Draw',
     invalid_winners: 'Enter a whole number of winners from 1 to 65535. Commit with Enter or leave the field.',
     locked: 'The roll is locked. Its setup and entries cannot change; an uncertain seal must be reconciled in the core.',
     proof_unavailable: 'Cast received. The proof bundle could not be loaded; use Reload proof bundle.',

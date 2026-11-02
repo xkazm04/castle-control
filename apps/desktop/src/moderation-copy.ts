@@ -83,7 +83,7 @@ export const moderationCopy = {
   core_rules_gloss: 'core rules', core_rules_label: 'Core moderation rules', core_rules_empty: 'No rules loaded from the core.',
   rule_name: 'Rule name', match_pattern: 'Match pattern', save_watching: 'Save watching rule',
   rail_fixed: 'Safety rail · fixed by the core.', edit_shadow: 'Editing requires shadow mode in the core.',
-  core_consensus_gloss: 'consensus from core', core_consensus_note: 'Describes the room; never acts on anyone. Refresh to read the current window.',
+  core_consensus_gloss: 'consensus from core', core_consensus_note: 'Refresh to read the current window.',
   core_consensus_filters: 'Consensus messages', emote: 'Emote', refresh_consensus: 'Refresh consensus',
   core_consensus_empty: 'No core consensus loaded.', core_directions_empty: 'No opinion directions in the core window.',
   core_consensus_plot: 'Core opinion direction history', core_opinion_directions: 'Core opinion directions',

@@ -63,13 +63,11 @@ export function ConnectedGatehouse({ port, replay, seal_slot }: { port: CoreGate
           <div className="gh-gate__main">
             {items.length ? <p className="gh-clear">The gate is watching<span>{items.length} line{items.length === 1 ? '' : 's'} read in shadow · {count('pass')} passed · {count('hold')} held · {count('bar')} barred. Every verdict is in the live room below.</span></p>
               : <p className="gh-clear">{state.phase === 'loading' ? 'Opening the gate…' : 'Quiet at the gate'}<span>No chat has reached the gate on your core yet. When it does, every line gets a verdict in shadow and the herald counts what chat asks for.</span></p>}
-            <p className="gh-sm">{copy.core_queues_unavailable} {copy.core_review_notice}</p>
             <p role="status" className="gh-notice">{state.notice}</p>
           </div>
           <div className="gh-gate__side">
             <button type="button" className="cc-btn cc-btn--sm" disabled={state.busy} onClick={() => { void port.load(); }}>{copy.refresh_gatehouse}</button>
             {!items.length && <button type="button" className="cc-btn cc-btn--quiet cc-btn--sm" onClick={() => stewardDock.open(coreDemoFlow)}>Play demo</button>}
-            <p className="gh-gate__steward">The Steward puts the vote bar on stream. Play demo runs on sample chat in a sandbox; your core is untouched.</p>
           </div>
         </aside>
         <div className="gh-desk gh-desk--core">
@@ -79,13 +77,14 @@ export function ConnectedGatehouse({ port, replay, seal_slot }: { port: CoreGate
               <span className="cc-stamp cc-stamp--inked">{copy.core_label}</span></header>
             <CoreConsensus state={state} port={port} />
             <div className="gh-herald__stage"><h3 className="gh-kicker">Vote bar on stream</h3>
-              <p className="gh-sm">Aggregate shares only; no chat text reaches the OBS page. The Steward can copy it too: Vote bar on stream.</p>
+              <p className="gh-sm">Aggregate shares only; no chat text reaches the OBS page.</p>
               <VoteBarSourceAction mode="core" busy={state.busy} on_copy={() => { void port.copyVoteBarSource(); }} /></div>
           </section>
           <div className="gh-seal">{seal_slot}</div>
           <details className="gh-more" open={more} onToggle={event => setMore(event.currentTarget.open)}>
             <summary><span className="gh-more__title">More of the Gatehouse</span><span className="gh-more__list">Rule bench · moat · garrison orders · drill · gate roll</span></summary>
             <div className="gh-more__body moderator-tools">
+              <p className="gh-sm">{copy.core_queues_unavailable} {copy.core_review_notice}</p>
               <div className="gh-bench"><RuleBench rules={state.rules} messages={messages} bench={bench} core={port} />
                 <Plate ink="azure" offset="space-8" className="moderator-moat"
                   band={<PlateBand title={copy.moat_title} gloss={copy.moat_gloss} count={<CountLabel first={copy.unavailable} />} />}>

@@ -117,7 +117,6 @@ export function ConnectedLotsRoom({ port, simulated, seal_slot, flows }: { port:
                 {setup_open && <button type="button" className="cc-btn cc-btn--primary" onClick={setup_open}>Set up a draw</button>}
                 {!draw && <button type="button" className="cc-btn cc-btn--quiet" onClick={() => stewardDock.open(coreDemoFlow)}>Play demo</button>}
               </span>}
-              {!draw && !state.busy && <p className="cc-aside lottery-round-note">{round_label}</p>}
               <div className="lottery-core-fields">
                 {state.draws.length > 0 && <div className="cc-field"><label htmlFor={`${field_id}-draw`}>{copy.core.draw}</label>
                   <select id={`${field_id}-draw`} className="cc-select" value={draw?.draw_id ?? ''} disabled={state.busy || state.locked}
@@ -133,12 +132,9 @@ export function ConnectedLotsRoom({ port, simulated, seal_slot, flows }: { port:
                     onBlur={commitWinners} onKeyDown={event => { if (event.key === 'Enter') { event.preventDefault(); commitWinners(); } }} /></div>}
                 {invalid_winners && draw && <p id={`${field_id}-winner-error`} className="cc-aside" role="alert">{copy.core.invalid_winners}</p>}
               </div>
-              <span className="lottery-draw-actions">
-                <button type="button" className="cc-btn cc-btn--sm" disabled={state.busy || state.locked} onClick={() => { void port.load(); }}>{copy.core.refresh}</button>
-                {!state.draws.some(item => item.draw_id === 'questions') && <button type="button" className="cc-btn cc-btn--sm" disabled={state.busy || state.locked}
-                  onClick={() => { void port.createQuestionDraw(); }}>{copy.core.create}</button>}
-                {draw && <button type="button" className="cc-btn cc-btn--sm" disabled={state.busy} onClick={() => { void port.check(); }}>{copy.core.check}</button>}
-              </span>
+              {draw && <span className="lottery-draw-actions">
+                <button type="button" className="cc-btn cc-btn--sm" disabled={state.busy} onClick={() => { void port.check(); }}>{copy.core.check}</button>
+              </span>}
               {draw && !state.sealed && <div className="lottery-core-seal">
                 <p className="cc-aside">{copy.core.seal_notice}</p>
                 <SealButton size="large" disabled={state.busy || state.locked || !state.check || state.check.result === 'blocked'}
@@ -185,6 +181,16 @@ export function ConnectedLotsRoom({ port, simulated, seal_slot, flows }: { port:
       <button type="button" className="cc-btn cc-btn--quiet lottery-lab-close" onClick={() => setLab(false)}>Close the Writ Lab</button>
     </div>}
     <MoreTools>
+      {/* Housekeeping the Steward flows already cover: kept reachable, out of the desk. */}
+      <section className="lottery-more-card" aria-label={copy.core.housekeeping}>
+        <h2 className="lottery-card-title">{copy.core.housekeeping}</h2>
+        {!state.busy && <p className="cc-aside lottery-round-note">{round_label}</p>}
+        <span className="lottery-draw-actions">
+          <button type="button" className="cc-btn cc-btn--sm" disabled={state.busy || state.locked} onClick={() => { void port.load(); }}>{copy.core.refresh}</button>
+          {!state.draws.some(item => item.draw_id === 'questions') && <button type="button" className="cc-btn cc-btn--sm" disabled={state.busy || state.locked}
+            onClick={() => { void port.createQuestionDraw(); }}>{copy.core.create}</button>}
+        </span>
+      </section>
       {draw && <CoreDrawSetup draw={draw} disabled={state.busy || state.locked} on_save={next => { void port.edit(next); }} />}
       {draw && <UrnTierPreset draw={draw} shape={appearance.shape} on_edit={next => { void port.edit(next); }}
         on_shape={shape => display.edit({ shape })} disabled={state.busy || state.locked} />}

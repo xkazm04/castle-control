@@ -13,6 +13,8 @@ export async function castQuestionsDrawInUi(page: Page, core: NightCore): Promis
     await core.openDesktop(page, viteOrigin(), '#/chamber/lottery');
     const room = page.getByRole('region', { name: 'Core Lot Chamber', exact: true });
     const notice = room.locator('p.cc-status[role="status"]').last();
+    // Draw housekeeping (refresh, the no-prize question draw) and the full rule editor sit behind More.
+    await room.locator('[data-role="lot-more"] > summary').click();
     await room.getByRole('button', { name: 'Create no-prize question draw', exact: true }).click();
     await expect(room.getByRole('combobox', { name: 'Draw', exact: true })).toHaveValue('questions');
 
@@ -20,8 +22,7 @@ export async function castQuestionsDrawInUi(page: Page, core: NightCore): Promis
     const winners = room.getByRole('spinbutton', { name: 'Number of winners', exact: true });
     await winners.fill('2');
     await winners.press('Enter');
-    // The full rule editor and the entry lookup sit behind the chamber's one More disclosure.
-    await room.locator('[data-role="lot-more"] > summary').click();
+    // More stays open: the full rule editor and the entry lookup are already in view.
     const rules = room.getByRole('article', { name: 'Draw rules', exact: true });
     await expect(rules.getByRole('status')).toHaveText('These rules match the core.');
     await rules.getByRole('textbox', { name: 'Draw name', exact: true }).fill('SIMULATED night questions');
