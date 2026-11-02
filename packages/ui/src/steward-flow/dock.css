@@ -100,10 +100,10 @@
 .cc-steward-resume { border-style: solid; border-color: var(--sd-ch) !important; box-shadow: inset 0 -3px 0 var(--sd-ch); }
 
 /* raised: the sheet carries the conversation, so the sill drops its echo line and shrinks */
-.cc-steward-dock[data-expanded="true"] { min-height: 0; z-index: 31; } /* raised above a surface's own chamber strip (z 29) */
-.cc-steward-dock[data-expanded="true"] .cc-talk__msg { display: none; }
-.cc-steward-dock[data-expanded="true"] .cc-steward__role { display: none; }
-.cc-steward-dock[data-expanded="true"] .cc-steward__niche { width: 34px; height: 48px; }
+.cc-steward-dock[data-chat-open="true"] { min-height: 0; z-index: 31; } /* raised above a surface's own chamber strip (z 29) */
+.cc-steward-dock[data-chat-open="true"] .cc-talk__msg { display: none; }
+.cc-steward-dock[data-chat-open="true"] .cc-steward__role { display: none; }
+.cc-steward-dock[data-chat-open="true"] .cc-steward__niche { width: 34px; height: 48px; }
 
 /* ---- more flows menu */
 .cc-flow-menu { position: relative; display: inline-flex; }

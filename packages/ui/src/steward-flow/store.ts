@@ -6,6 +6,7 @@ import type { StewardChip } from './registry.js';
 /** One line of the sheet's conversation. */
 export type Beat = {
   id: number;
+  at: string;
   chamber: FlowChamber;
   who: 'steward' | 'you';
   text: string;
@@ -21,6 +22,8 @@ export type FlowSession = { flow: AnyStewardFlow; state: FlowState; error?: stri
 export type DraftPublication = { flow: string; step: string | null; draft: unknown; simulated: boolean; ready: boolean };
 export type DockSnapshot = {
   expanded: boolean;
+  popover?: 'actions' | 'flows';
+  read_through: number;
   beats: readonly Beat[];
   sessions: Readonly<Partial<Record<FlowChamber, FlowSession>>>;
   drafts: Readonly<Partial<Record<FlowChamber, DraftPublication>>>;
@@ -33,7 +36,7 @@ const beatLimit = 60;
  * remounts, and so a chamber can read the draft without sharing a provider.
  */
 export function createDockStore() {
-  let snapshot: DockSnapshot = { expanded: false, beats: [], sessions: {}, drafts: {} };
+  let snapshot: DockSnapshot = { expanded: false, read_through: 0, beats: [], sessions: {}, drafts: {} };
   let sequence = 0;
   const listeners = new Set<() => void>();
   const emit = (next: DockSnapshot) => { snapshot = next; for (const listener of listeners) listener(); };
@@ -58,21 +61,34 @@ export function createDockStore() {
   const store = {
     getSnapshot: () => snapshot,
     subscribe(listener: () => void) { listeners.add(listener); return () => { listeners.delete(listener); }; },
-    expand() { if (!snapshot.expanded) emit({ ...snapshot, expanded: true }); },
+    expand() { emit({ ...snapshot, expanded: true, read_through: sequence }); },
     collapse() { if (snapshot.expanded) emit({ ...snapshot, expanded: false }); },
-    say(beat: Omit<Beat, 'id'>): number {
+    popover(kind?: 'actions' | 'flows') {
+      const { popover: previous, ...rest } = snapshot;
+      if (previous !== kind) emit({ ...rest, ...(kind ? { popover: kind } : {}) });
+    },
+    /** Escape consumes exactly one layer; the shell owns the final route back. */
+    peel(): boolean {
+      if (snapshot.popover) { store.popover(); return true; }
+      if (snapshot.expanded) { store.collapse(); return true; }
+      return false;
+    },
+    say(beat: Omit<Beat, 'id' | 'at'> & { at?: string }): number {
       const id = ++sequence;
-      emit({ ...snapshot, beats: [...snapshot.beats, { ...beat, id }].slice(-beatLimit) });
+      emit({ ...snapshot, read_through: snapshot.expanded ? id : snapshot.read_through,
+        beats: [...snapshot.beats, { ...beat, id, at: beat.at ?? new Date().toISOString() }].slice(-beatLimit) });
       return id;
     },
     /** Open (or resume) a flow in its chamber and raise the sheet. Opening never acts. */
-    open(flow: AnyStewardFlow) {
+    open(flow: AnyStewardFlow, raise = true) {
       const current = snapshot.sessions[flow.chamber];
-      if (current && current.flow.id === flow.id && current.state.status === 'open') { store.expand(); return; }
+      if (current && current.flow.id === flow.id && current.state.status === 'open') { if (raise) store.expand(); return; }
       const intro = flow.intro ?? flow.title;
       // The sheet header carries SIMULATED for the whole flow; the intro stays plain talk.
-      const beats = [...snapshot.beats, { id: ++sequence, chamber: flow.chamber, who: 'steward' as const, text: intro }].slice(-beatLimit);
-      setSession(flow.chamber, { flow, state: startFlow(flow) }, { expanded: true, beats });
+      const beats = [...snapshot.beats, { id: ++sequence, at: new Date().toISOString(), chamber: flow.chamber,
+        who: 'steward' as const, text: intro, ...(flow.simulated ? { simulated: true } : { live: true }) }].slice(-beatLimit);
+      const expanded = raise || snapshot.expanded;
+      setSession(flow.chamber, { flow, state: startFlow(flow) }, { expanded, beats, read_through: expanded ? sequence : snapshot.read_through });
     },
     answer(chamber: FlowChamber, value: string) {
       update(chamber, session => {
@@ -84,6 +100,11 @@ export function createDockStore() {
     keep(chamber: FlowChamber) { update(chamber, ({ flow, state }) => ({ flow, state: keepAnswer(state) })); },
     back(chamber: FlowChamber) { update(chamber, ({ flow, state }) => ({ flow, state: backStep(flow, state) })); },
     reset(chamber: FlowChamber) { update(chamber, ({ flow, state }) => ({ flow, state: resetFlow(state) })); },
+    preview(chamber: FlowChamber): boolean {
+      if (!snapshot.drafts[chamber]?.ready) return false;
+      store.collapse();
+      return true;
+    },
     /** Put the draft away. Nothing was sealed, so nothing happened. */
     close(chamber: FlowChamber) {
       const session = snapshot.sessions[chamber];
@@ -103,7 +124,7 @@ export function createDockStore() {
         setSession(chamber, undefined);
         store.say({ chamber, who: 'steward', text: outcome.say, sealed: true,
           ...(outcome.lines ? { lines: outcome.lines } : {}), ...(outcome.chips?.length ? { chips: outcome.chips } : {}),
-          ...(session.flow.simulated ? { simulated: true } : {}) });
+          ...(session.flow.simulated ? { simulated: true } : { live: true }) });
       } catch {
         setSession(chamber, { flow: session.flow, state: { ...session.state, status: 'open' },
           error: 'The seal did not take. Nothing changed. Hold again when ready.' });

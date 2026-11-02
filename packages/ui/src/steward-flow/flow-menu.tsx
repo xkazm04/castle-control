@@ -9,10 +9,13 @@ const key = (chip: StewardChip) => chip.action.kind === 'flow' ? `flow:${chip.ac
  * chamber is one menu away. A menu button: Enter, Space or ArrowUp opens it,
  * arrows walk it, Esc closes it back onto the button (never the sheet).
  */
-export function FlowMenu({ items, current, on_pick }: {
+export function FlowMenu({ items, current, on_pick, expanded, on_expanded }: {
   items: readonly StewardChip[]; current?: string | undefined; on_pick: (chip: StewardChip) => void;
+  expanded?: boolean; on_expanded?: (open: boolean) => void;
 }) {
-  const [open, setOpen] = useState(false);
+  const [own_open, setOwnOpen] = useState(false);
+  const open = expanded ?? own_open;
+  const setOpen = (value: boolean) => { setOwnOpen(value); on_expanded?.(value); };
   const id = useId();
   const button = useRef<HTMLButtonElement>(null);
   const menu = useRef<HTMLDivElement>(null);
@@ -32,7 +35,7 @@ export function FlowMenu({ items, current, on_pick }: {
   }
   return <span className="cc-flow-menu">
     <button ref={button} type="button" className="cc-btn cc-btn--quiet cc-flow-menu__button" aria-haspopup="menu" aria-expanded={open}
-      aria-controls={open ? id : undefined} onClick={() => setOpen(value => !value)}
+      aria-controls={open ? id : undefined} onClick={() => setOpen(!open)}
       onKeyDown={event => { if (event.key === 'ArrowUp' || event.key === 'ArrowDown') { event.preventDefault(); setOpen(true); } }}>
       More flows<span className="cc-flow-menu__caret" aria-hidden="true" /></button>
     {open && <div id={id} ref={menu} role="menu" aria-label="Every Steward flow in this chamber" className="cc-flow-menu__list" onKeyDown={walk}

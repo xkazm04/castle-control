@@ -1,0 +1,51 @@
+/* The Deck: a thin action row, a single Steward bar, and an overlay conversation. */
+.cc-dock.cc-steward-dock { display: block; min-height: 0; border-top: 0; }
+.cc-steward-bar-row { position: relative; display: flex; align-items: center; gap: var(--space-12); height: var(--space-56);
+  box-sizing: border-box; padding: 0 var(--space-22); border-top: var(--rule-thin) solid var(--sd-hair); }
+.cc-steward-bar-row .cc-steward { position: relative; flex: none; display: grid; grid-template-columns: auto auto; column-gap: var(--space-8);
+  padding: var(--space-4); border: var(--rule-thin) solid transparent; border-radius: var(--r-lg); cursor: pointer; color: var(--sd-ink); }
+.cc-steward-bar-row .cc-steward:hover { border-color: var(--or); }
+.cc-steward-bar-row .cc-steward__niche, .cc-steward-dock[data-chat-open="true"] .cc-steward__niche { grid-row: 1 / span 2; width: var(--space-24); height: var(--space-36); }
+.cc-steward-bar-row .cc-steward__name { font: 600 var(--text-writ-value)/1.1 var(--sd-font-book); }
+.cc-steward-bar-row .cc-steward__role { grid-column: 2; margin: 0; font-size: var(--text-label); }
+.cc-steward-bar-row .cc-steward > .cc-sim, .cc-steward-bar-row .cc-steward__live { display: none; }
+.cc-steward-dock[data-chat-open="true"] .cc-steward__role { display: inline; }
+.cc-steward-unread { position: absolute; right: calc(-1 * var(--space-6)); top: 0; border-radius: var(--r-lg); padding: var(--space-3) var(--space-6);
+  background: var(--or); color: var(--press); font: 700 var(--text-label)/1 var(--font-ui); }
+.cc-steward-bar-row .cc-talk { flex: 1; padding: 0; display: block; min-width: 0; }
+.cc-steward-bar-row .cc-talk__row { position: relative; gap: var(--space-8); flex-wrap: nowrap; }
+.cc-steward-bar-row .cc-talk__row > .cc-input { min-width: 0; flex: 1; padding-right: var(--space-36); border-radius: var(--r-lg); }
+.cc-talk-hint { position: absolute; left: calc(100% - var(--space-24)); display: none; font: 600 var(--text-label)/1 var(--font-num); }
+.cc-steward-bar-row .cc-talk__row > .cc-input { background-image: none; }
+.cc-steward-bar-row .cc-talk-hint { display: block; position: static; margin-left: calc(-1 * var(--space-36)); margin-right: var(--space-12); pointer-events: none; }
+.cc-steward-bar-row .cc-suggest { flex: 0 1 auto; min-width: 0; flex-wrap: nowrap; gap: var(--space-8); }
+.cc-steward-bar-row .cc-btn { border-radius: var(--r-lg); padding: 0 var(--space-12); }
+.cc-steward-bar-row .cc-suggest > .cc-btn { max-width: 16vw; overflow: hidden; text-overflow: ellipsis; }
+.cc-steward-sheet.cc-steward-sheet { position: absolute; z-index: 3; left: var(--space-22); bottom: calc(var(--space-56) + var(--space-6));
+  width: min(calc(var(--space-56) * 9.6), calc(100vw - var(--space-22) * 2)); height: min(78vh, calc(var(--space-56) * 11));
+  max-height: calc(100dvh - var(--space-56) * 2); min-height: 0; display: flex; flex-direction: column;
+  border: var(--rule-thin) solid var(--or); border-radius: var(--r-lg); overflow: hidden;
+  background: linear-gradient(180deg, var(--sd-surface), var(--sd-surface-2)); box-shadow: var(--sd-shadow); }
+.cc-steward-sheet::before { display: none; }
+.cc-steward-sheet .cc-steward-sheet__head { flex: none; flex-direction: row; flex-wrap: wrap; align-items: center;
+  padding: var(--space-12) var(--space-14); border: 0; border-bottom: var(--rule-thin) solid var(--sd-hair); gap: var(--space-8); overflow: visible; }
+.cc-steward-sheet .cc-steward-sheet__tools { margin: 0 0 0 auto; padding: 0; }
+.cc-steward-sheet .cc-steward-thread { display: flex; flex-direction: column; flex: 1; padding: var(--space-14); gap: var(--space-10); mask-image: none; }
+.cc-steward-thread > .cc-beat { flex: none; align-self: flex-start; max-width: 88%; padding: var(--space-12) var(--space-14);
+  border: var(--rule-thin) solid var(--sd-hair); border-radius: var(--r-lg) var(--r-lg) var(--r-lg) var(--r-sm);
+  background: var(--sd-surface-2); }
+.cc-steward-thread > .cc-beat--you { align-self: flex-end; background: var(--sd-ch-wash); border-color: var(--or);
+  border-radius: var(--r-lg) var(--r-lg) var(--r-sm) var(--r-lg); }
+.cc-steward-thread .cc-beat--steward > p { padding: 0; font-size: var(--text-aside); }
+.cc-steward-thread .cc-beat__mark { display: none; }
+.cc-beat-time, .cc-steward-typing { font: 500 var(--text-label)/1.3 var(--sd-font-text); color: var(--sd-muted); }
+.cc-beat-time { display: block; }
+.cc-steward-sheet .cc-steward-confirm { grid-template-columns: minmax(0, 1fr); }
+.cc-steward-sheet .cc-steward-proposal { max-width: none; border-left: 0; border-top: var(--rule-thin) solid var(--sd-hair); padding: var(--space-12); }
+.cc-steward-peek { position: absolute; z-index: 4; bottom: calc(100% + var(--space-10)); left: var(--space-22);
+  width: min(calc(var(--space-56) * 8.5), 44vw); padding: var(--space-12) var(--space-16); display: grid; gap: var(--space-4);
+  text-align: left; border: var(--rule-thin) solid var(--or); border-radius: var(--r-lg) var(--r-lg) var(--r-lg) var(--r-sm);
+  background: var(--sd-surface-2); color: var(--sd-ink); box-shadow: var(--sd-shadow); cursor: pointer;
+  font: 400 var(--text-aside)/1.4 var(--sd-font-book); }
+.cc-steward-peek b { color: var(--or-text); font: 700 var(--text-label)/1.2 var(--font-ui); }
+.cc-steward-peek span { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }

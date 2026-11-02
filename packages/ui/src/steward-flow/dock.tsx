@@ -1,15 +1,18 @@
 import { useEffect, useId, useRef, useState, useSyncExternalStore } from 'react';
-import type { KeyboardEvent, ReactNode, Ref, RefObject } from 'react';
-import { SealButton } from '../seal-button.jsx';
+import type { ReactNode, Ref, RefObject } from 'react';
+import { ActionRow } from '../action-row/index.jsx';
+import type { ActionKey } from '../action-row/index.jsx';
+import { Lines, Sim, StepCard } from './cards.jsx';
 import { walkFlow } from './flow.js';
-import type { FlowChamber, FlowEntry, FlowLine, FlowOption } from './flow.js';
+import type { FlowChamber } from './flow.js';
 import { matchIntent } from './intent.js';
 import { awayChips, chamberChips, chamberFlows, chipFlow, findFlow } from './registry.js';
 import { chipKey, FlowMenu } from './flow-menu.jsx';
 import type { StewardChip, StewardRegistry } from './registry.js';
 import { stewardDock } from './store.js';
-import type { Beat, DockStore, FlowSession } from './store.js';
+import type { Beat, DockStore } from './store.js';
 import './dock.css';
+import './deck.css';
 
 export type UnmatchedReply = { reply: string; live?: boolean };
 export type StewardDockProps = {
@@ -26,6 +29,8 @@ export type StewardDockProps = {
   on_chamber?: (chamber: FlowChamber) => void;
   /** A pending engine proposal, shown at the dock's end. */
   proposal?: ReactNode;
+  action_keys?: readonly ActionKey[];
+  seal_key?: ReactNode;
 };
 
 function Niche() {
@@ -40,107 +45,18 @@ function Niche() {
   </svg>;
 }
 
-function Sim({ children = 'Simulated' }: { children?: string }) {
-  return <span className="cc-sim">{children}</span>;
-}
-
-function Lines({ lines }: { lines: readonly FlowLine[] }) {
-  return <dl className="cc-steward-lines">{lines.map(line => <div key={line.label}><dt>{line.label}</dt><dd>{line.value}</dd></div>)}</dl>;
-}
-
-function moveFocus(event: KeyboardEvent<HTMLElement>) {
-  const step = event.key === 'ArrowRight' || event.key === 'ArrowDown' ? 1 : event.key === 'ArrowLeft' || event.key === 'ArrowUp' ? -1 : 0;
-  if (!step) return;
-  const buttons = [...event.currentTarget.querySelectorAll<HTMLButtonElement>('button:not(:disabled)')];
-  const index = buttons.indexOf(event.target as HTMLButtonElement);
-  if (index < 0) return;
-  event.preventDefault();
-  buttons[(index + step + buttons.length) % buttons.length]?.focus();
-}
-
-function Options({ options, value, label, kind, on_pick }: {
-  options: readonly FlowOption[]; value: string | undefined; label: string; kind: 'choice' | 'preset'; on_pick: (id: string) => void;
-}) {
-  return <div className={kind === 'preset' ? 'cc-steward-presets' : 'cc-steward-options'} role="group" aria-label={label}
-    data-count={options.length} onKeyDown={moveFocus}>
-    {options.map(option => <button key={option.id} type="button" className="cc-steward-option" data-autofocus={value === option.id || undefined}
-      aria-pressed={value === option.id} onClick={() => on_pick(option.id)}>
-      <span className="cc-steward-option__head"><b>{option.label}</b>
-        {option.tag && <span className="cc-steward-option__tag">{option.tag}</span>}
-        {option.simulated && <Sim />}</span>
-      {option.consequence && <span className="cc-steward-option__line">{option.consequence}</span>}
-    </button>)}
-  </div>;
-}
-
-function FieldCard({ entry, error, on_submit }: { entry: FlowEntry<unknown>; error: string | undefined; on_submit: (raw: string) => void }) {
-  const step = entry.step;
-  const id = useId();
-  const initial = step.kind === 'field' ? entry.value ?? step.initial?.(entry.before) ?? '' : '';
-  const [raw, setRaw] = useState(initial);
-  if (step.kind !== 'field') return null;
-  return <form className="cc-steward-field" onSubmit={event => { event.preventDefault(); on_submit(raw.trim()); }}>
-    <label className="cc-steward-field__label" htmlFor={`${id}-input`}>{step.label}</label>
-    <div className="cc-steward-field__row">
-      <input id={`${id}-input`} className="cc-input" data-autofocus inputMode={step.input === 'number' ? 'numeric' : undefined}
-        value={raw} placeholder={step.placeholder} autoComplete="off" aria-invalid={error ? true : undefined}
-        aria-describedby={`${id}-note`} onChange={event => setRaw(event.currentTarget.value)} />
-      <button type="submit" className="cc-btn cc-btn--primary">Continue</button>
-    </div>
-    <p id={`${id}-note`} className={error ? 'cc-steward-field__error' : 'cc-steward-field__hint'} role={error ? 'alert' : undefined}>
-      {error ?? step.hint ?? 'Press Enter to continue.'}</p>
-  </form>;
-}
-
-/** One active step: the Steward's line, then the card. */
-function StepCard({ session, entry, chamber, store }: { session: FlowSession; entry: FlowEntry<unknown>; chamber: FlowChamber; store: DockStore }) {
-  const { step } = entry;
-  const sealing = session.state.status === 'sealing';
-  const reopened = session.state.editing === step.id;
-  const card = (() => {
-    switch (step.kind) {
-      case 'choice': return <Options kind="choice" options={step.options(entry.before)} value={entry.value} label={step.prompt}
-        on_pick={id => store.answer(chamber, id)} />;
-      case 'preset': return <Options kind="preset" options={step.presets(entry.before)} value={entry.value} label={step.prompt}
-        on_pick={id => store.answer(chamber, id)} />;
-      case 'field': return <FieldCard key={step.id} entry={entry} error={session.error} on_submit={raw => store.answer(chamber, raw)} />;
-      case 'preview': return <div className="cc-steward-preview">
-        {step.render && <div className="cc-steward-preview__picture">{step.render(entry.before)}</div>}
-        {step.lines && <Lines lines={step.lines(entry.before)} />}
-        <div className="cc-steward-card-actions">
-          <button type="button" className="cc-btn cc-btn--primary" data-autofocus onClick={() => store.answer(chamber, 'ok')}>{step.continue_label ?? 'Looks right'}</button>
-          <button type="button" className="cc-btn cc-btn--quiet" onClick={() => store.back(chamber)}>Change something</button>
-        </div>
-      </div>;
-      case 'confirm': return <div className="cc-steward-confirm">
-        <div className="cc-steward-confirm__sheet">
-          <span className="cc-steward-confirm__draft">{session.flow.simulated ? <Sim /> : <span className="cc-steward-draft-mark">Draft</span>}</span>
-          <Lines lines={step.lines(entry.before)} />
-        </div>
-        <div className="cc-steward-confirm__seal">
-          <SealButton on_seal={() => { void store.seal(chamber); }} disabled={sealing} />
-          <p className="cc-steward-confirm__note">{sealing ? 'Sealing...' : step.note ?? 'Nothing acts until you hold. Release early to cancel.'}</p>
-          {session.error && <p className="cc-steward-field__error" role="alert">{session.error}</p>}
-        </div>
-      </div>;
-    }
-  })();
-  return <div className="cc-steward-step" data-kind={step.kind} data-step={step.id}>
-    <p className="cc-beat cc-beat--steward cc-steward-step__prompt"><i className="cc-beat__mark" aria-hidden="true" />{step.prompt}</p>
-    {card}
-    {reopened && <button type="button" className="cc-link cc-steward-keep" onClick={() => store.keep(chamber)}>Keep my answer</button>}
-  </div>;
-}
-
-function BeatLine({ beat, on_chip }: { beat: Beat; on_chip: (chip: StewardChip) => void }) {
-  if (beat.who === 'you') return <p className="cc-beat cc-beat--you"><span className="cc-sr">You: </span>{beat.text}</p>;
-  return <div className={`cc-beat cc-beat--steward${beat.sealed ? ' cc-beat--sealed' : ''}`}>
+function BeatLine({ beat, on_chip, proposal }: { beat: Beat; on_chip: (chip: StewardChip) => void; proposal?: ReactNode }) {
+  const stamp = <small className="cc-beat-time">{beat.who === 'you' ? 'You' : 'The Steward'} · <time dateTime={beat.at}>{beat.at.slice(11, 16)} UTC</time> · {beat.live ? 'live' : 'simulated'}</small>;
+  if (beat.who === 'you') return <div data-role="steward-bubble" className="cc-beat cc-beat--you">{stamp}<p>{beat.text}</p></div>;
+  return <div data-role="steward-bubble" className={`cc-beat cc-beat--steward${beat.sealed ? ' cc-beat--sealed' : ''}`}>
+    {stamp}
     <p><i className="cc-beat__mark" aria-hidden="true" />{beat.text}
       {beat.simulated && <> <Sim /></>}{beat.live && <span className="cc-steward-live-tag"> · live</span>}</p>
     {beat.lines && <Lines lines={beat.lines} />}
     {beat.chips && beat.chips.length > 0 && <span className="cc-steward-beat-chips">
       {beat.chips.map(chip => <button key={chip.label} type="button" className="cc-btn cc-btn--quiet cc-btn--sm" onClick={() => on_chip(chip)}>{chip.label}</button>)}
     </span>}
+    {proposal && <aside className="cc-steward-proposal" aria-label="Steward proposal">{proposal}</aside>}
   </div>;
 }
 
@@ -173,7 +89,7 @@ function useLingering(open: boolean, ms: number): boolean {
 }
 
 export function StewardDock({ chamber, registry, mode = 'simulated', role, input_ref, store = stewardDock,
-  on_unmatched, on_chamber, proposal }: StewardDockProps) {
+  on_unmatched, on_chamber, proposal, action_keys, seal_key }: StewardDockProps) {
   const snapshot = useSyncExternalStore(store.subscribe, store.getSnapshot, store.getSnapshot);
   const steward = registry[chamber];
   const live = mode === 'live';
@@ -182,6 +98,10 @@ export function StewardDock({ chamber, registry, mode = 'simulated', role, input
   const root = useRef<HTMLElement>(null);
   const thread = useRef<HTMLDivElement>(null);
   const own_input = useRef<HTMLInputElement>(null);
+  const opened_at = useRef(new Date().toISOString());
+  const thinking = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const seen = useRef(false);
+  const [peek, setPeek] = useState<number>();
   const sheet_id = useId();
   const session = snapshot.sessions[chamber];
   const view = session ? walkFlow(session.flow, session.state) : undefined;
@@ -189,16 +109,24 @@ export function StewardDock({ chamber, registry, mode = 'simulated', role, input
   const last_steward = beats.findLast(beat => beat.who === 'steward');
   const expanded = snapshot.expanded;
   const sheet = useLingering(expanded, sheetExitMs);
+  const unread = beats.filter(beat => beat.who === 'steward' && beat.id > snapshot.read_through).length;
+  useEffect(() => {
+    if (expanded || !last_steward) { setPeek(undefined); return; }
+    setPeek(last_steward.id);
+    const timer = setTimeout(() => setPeek(undefined), 7000);
+    return () => clearTimeout(timer);
+  }, [expanded, last_steward]);
+  useEffect(() => () => clearTimeout(thinking.current), []);
   // After a seal that offers next steps, those lead the row: "Set up a real draw" beats the generic chips.
   const offered = !session && last_steward?.sealed && last_steward === beats.at(-1) ? last_steward.chips ?? [] : [];
   const offered_keys = new Set(offered.map(chipKey));
   const chips = offered.length ? [...offered, ...chamberChips(chamber, steward).filter(item => item.action.kind !== 'flow' && !offered_keys.has(chipKey(item)))]
     : chamberChips(chamber, steward);
   const flows = chamberFlows(chamber, steward);
-  const shown = new Set(chips.map(chipKey));
-  const more = flows.some(item => !shown.has(chipKey(item)));
+  const quick = chips.slice(0, 2);
+  const menu_items = [...flows, ...chips.filter(item => !flows.some(flow => chipKey(flow) === chipKey(item)))];
+  const more = menu_items.some(item => !new Set(quick.map(chipKey)).has(chipKey(item)));
   const current_key = session ? (steward.demo?.id === session.flow.id ? `demo:${chamber}` : `flow:${session.flow.id}`) : undefined;
-  const says = busy ? 'Thinking it over. Nothing acts until your hold to seal.' : last_steward?.text ?? steward.greeting;
   const active_key = view?.active ? `${session?.flow.id}:${view.active.step.id}` : '';
 
   useEffect(() => {
@@ -220,35 +148,40 @@ export function StewardDock({ chamber, registry, mode = 'simulated', role, input
     if (typeof input_ref === 'function') input_ref(node);
     else if (input_ref) (input_ref as { current: HTMLInputElement | null }).current = node;
   }
-  function collapse() { store.collapse(); input()?.focus(); }
+  function collapse() { store.collapse(); seen.current = true; input()?.focus(); seen.current = false; }
+  function open() { seen.current = false; store.expand(); }
   function catchUp(target: FlowChamber) {
     const brief = registry[target].catch_up?.();
     store.say({ chamber: target, who: 'steward', text: brief?.say ?? `Nothing new in ${registry[target].name}.`,
       ...(brief?.lines ? { lines: brief.lines } : {}), ...(brief?.simulated ? { simulated: true } : {}) });
-    store.expand();
   }
   function chip(next: StewardChip, spoken = true) {
-    // A flow chip is not echoed: the sheet's title already names what was asked for.
-    if (spoken && next.action.kind !== 'flow' && next.action.kind !== 'demo') store.say({ chamber, who: 'you', text: next.label });
+    if (spoken) store.say({ chamber, who: 'you', text: next.label, ...(live ? { live: true } : { simulated: true }) });
     const target = next.action.chamber;
     if (target !== chamber) on_chamber?.(target);
-    if (next.action.kind === 'go') { store.say({ chamber: target, who: 'steward', text: registry[target].greeting }); store.expand(); return; }
+    if (next.action.kind === 'go') { store.say({ chamber: target, who: 'steward', text: registry[target].greeting }); return; }
     if (next.action.kind === 'catch_up') { catchUp(target); return; }
     const flow = chipFlow(registry, next.action);
     if (!flow) return;
-    store.open(flow);
-    requestAnimationFrame(() => focusCard(root));
+    store.open(flow, store.getSnapshot().expanded);
+    if (store.getSnapshot().expanded) requestAnimationFrame(() => focusCard(root));
   }
   function offer(target: FlowChamber, text: string, extra: Partial<Beat> = {}) {
     const chips = target === chamber ? chamberChips(target, registry[target]) : awayChips(target, registry[target]);
     store.say({ chamber, who: 'steward', text, chips, ...extra });
-    store.expand();
+  }
+  function chooseChip(next: StewardChip) {
+    clearTimeout(thinking.current); open(); setBusy(true);
+    thinking.current = setTimeout(() => { setBusy(false); chip(next); }, 280);
   }
   async function tell() {
     const text = value.trim();
     if (!text || busy) return;
     setValue('');
-    store.say({ chamber, who: 'you', text });
+    open(); setBusy(true);
+    store.say({ chamber, who: 'you', text, ...(live ? { live: true } : { simulated: true }) });
+    await new Promise<void>(resolve => { setTimeout(resolve, 280); });
+    setBusy(false);
     const match = matchIntent(text, registry, chamber);
     if (match && match.kind !== 'chamber' && (match.chamber === chamber || match.kind === 'catch_up')) {
       chip({ label: text, action: match }, false);
@@ -276,11 +209,13 @@ export function StewardDock({ chamber, registry, mode = 'simulated', role, input
   const sheet_title = session ? session.flow.title : 'The Steward';
   const simulated_sheet = !live || session?.flow.simulated === true;
 
-  return <section ref={root} className="cc-dock cc-steward-dock" data-chamber={chamber} data-expanded={expanded} aria-label="The Steward"
+  return <section ref={root} className="cc-dock cc-steward-dock" data-chamber={chamber} data-chat-open={expanded} aria-label="The Steward"
     onKeyDown={event => {
-      if (event.key === 'Escape' && expanded) { event.preventDefault(); event.stopPropagation(); collapse(); }
+      if (event.key === '/' && !expanded && event.target === own_input.current) { event.preventDefault(); open(); }
+      if (event.key === 'Escape' && store.peel()) { event.preventDefault(); event.stopPropagation(); if (!store.getSnapshot().expanded) collapse(); }
     }}>
-    {sheet && <div className="cc-steward-sheet" id={sheet_id} role="group" aria-label="Steward conversation" {...(expanded ? {} : { 'data-closing': '' })}>
+    {action_keys && <ActionRow entries={action_keys} seal={seal_key} open={snapshot.popover === 'actions'} on_open={value => store.popover(value ? 'actions' : undefined)} />}
+    {sheet && <div className="cc-steward-sheet" data-role="steward-chat" id={sheet_id} role="group" aria-label="Steward conversation" {...(expanded ? {} : { 'data-closing': '' })}>
       <header className="cc-steward-sheet__head">
         <b className="cc-steward-sheet__title">{sheet_title}</b>
         {session && view && <span className="cc-steward-sheet__count">step {view.position} of {Math.max(view.planned, view.position)}</span>}
@@ -296,8 +231,12 @@ export function StewardDock({ chamber, registry, mode = 'simulated', role, input
         </span>
       </header>
       <div className="cc-steward-thread" ref={thread}>
-        {beats.map(beat => <BeatLine key={beat.id} beat={beat} on_chip={next => chip(next)} />)}
-        {session && view && <div className="cc-steward-flow">
+        {!beats.length && <BeatLine beat={{ id: 0, at: opened_at.current, chamber, who: 'steward', text: steward.greeting,
+          ...(live ? { live: true } : { simulated: true }) }} on_chip={chooseChip} proposal={proposal} />}
+        {beats.map(beat => <BeatLine key={beat.id} beat={beat} on_chip={chooseChip} proposal={beat.id === last_steward?.id ? proposal : undefined} />)}
+        {busy && <p className="cc-steward-typing" role="status">The Steward is typing<span aria-hidden="true"> · · ·</span></p>}
+        {session && view && <div className="cc-steward-flow" data-role="steward-bubble">
+          <small className="cc-beat-time">The Steward · <time dateTime={last_steward?.at ?? opened_at.current}>{(last_steward?.at ?? opened_at.current).slice(11, 16)} UTC</time> · {session.flow.simulated ? 'simulated' : 'live'}</small>
           {view.entries.some(entry => entry.status === 'answered') && <ol className="cc-steward-answers" aria-label="Answered so far">
             {view.entries.filter(entry => entry.status === 'answered' || (entry.status === 'active' && session.state.editing === entry.step.id))
               .map(entry => <li key={entry.step.id}>
@@ -305,36 +244,47 @@ export function StewardDock({ chamber, registry, mode = 'simulated', role, input
                   aria-label={`Change ${entry.step.label}`} onClick={() => store.reopen(chamber, entry.step.id)}>
                   {entry.summary ?? `${entry.step.label} · changing`}</button></li>)}
           </ol>}
-          {view.active && <StepCard session={session} entry={view.active} chamber={chamber} store={store} />}
+          {view.active && <StepCard session={session} entry={view.active} chamber={chamber} store={store}
+            {...(seal_key ? { on_preview: () => { if (store.preview(chamber)) root.current?.querySelector<HTMLButtonElement>('[data-role="seal-key"]')?.focus(); } } : {})} />}
         </div>}
       </div>
     </div>}
-    <div className="cc-steward" role="group" aria-label="Steward identity">
+    <div className="cc-steward-bar-row" data-role="steward-bar">
+    {!expanded && peek === last_steward?.id && last_steward && <button type="button" className="cc-steward-peek" onClick={open}>
+      <b>The Steward · {live ? 'live' : 'simulated'}</b><span>{last_steward.text}</span></button>}
+    <button type="button" className="cc-steward" aria-label={`Steward identity${unread ? ` · ${unread} unread` : ''}`} aria-expanded={expanded} onClick={() => expanded ? collapse() : open()}>
       <Niche />
       <b className="cc-steward__name">The Steward</b>
       <span className="cc-steward__role">{role ?? (live ? 'live co-pilot' : 'simulated co-pilot · sample data')}</span>
       {live ? <span className="cc-steward__live">Live Steward</span> : <Sim />}
-    </div>
+      {unread > 0 && <span className="cc-steward-unread">{unread}</span>}
+    </button>
     <form className="cc-talk" onSubmit={event => { event.preventDefault(); void tell(); }}>
-      <p className="cc-talk__msg" data-busy={busy || undefined}>{says}</p>
       <div className="cc-talk__row">
         <label className="cc-sr" htmlFor={`${sheet_id}-input`}>Talk to the Steward...</label>
         <input ref={setRefs} id={`${sheet_id}-input`} className="cc-input" aria-label="Talk to the Steward..." placeholder="Talk to the Steward..."
-          autoComplete="off" value={value} onChange={event => setValue(event.currentTarget.value)} />
+          autoComplete="off" value={value} onFocus={() => { if (!seen.current) open(); seen.current = false; }}
+          onKeyDown={event => {
+            // The input already owns focus: peel without focusing it again and reopening chat.
+            if (event.key === 'Escape' && store.peel()) { event.preventDefault(); event.stopPropagation(); }
+          }}
+          onChange={event => { setValue(event.currentTarget.value); if (event.currentTarget.value) open(); }} />
+        <kbd className="cc-talk-hint">/</kbd>
         <button type="submit" className="cc-btn" disabled={!value.trim() || busy}>Tell</button>
         <span className="cc-suggest" role="group" aria-label="Steward suggestions">
           {session && !expanded && <button type="button" className="cc-btn cc-btn--quiet cc-steward-resume" onClick={() => store.expand()}>
             Resume · {session.flow.chip ?? session.flow.title}</button>}
-          {chips.filter(item => !(session && item.action.kind !== 'catch_up' && chipFlow(registry, item.action)?.id === session.flow.id))
+          {quick.filter(item => !(session && item.action.kind !== 'catch_up' && chipFlow(registry, item.action)?.id === session.flow.id))
             .map(item => <button key={item.label} type="button" className="cc-btn cc-btn--quiet"
-              onClick={() => chip(item)}>{item.label}</button>)}
-          {more && <FlowMenu items={flows} current={current_key} on_pick={item => chip(item)} />}
+              onClick={() => chooseChip(item)}>{item.label}</button>)}
+          {more && <FlowMenu items={menu_items} current={current_key} on_pick={chooseChip} expanded={snapshot.popover === 'flows'}
+            on_expanded={value => store.popover(value ? 'flows' : undefined)} />}
           {!expanded && beats.length > 0 && !session && <button type="button" className="cc-btn cc-btn--quiet" aria-expanded="false"
             onClick={() => store.expand()}>Raise</button>}
         </span>
       </div>
     </form>
-    {proposal && <aside className="cc-steward-proposal" aria-label="Steward proposal">{proposal}</aside>}
+    </div>
     <p className="cc-sr" aria-live="polite" aria-atomic="true">{latest?.who === 'steward' ? latest.text : ''}</p>
   </section>;
 }
