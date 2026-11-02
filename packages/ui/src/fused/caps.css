@@ -8,7 +8,6 @@
 .cc-frame .demo-seg .cc-button { font-family: var(--font-label); font-stretch: normal; text-transform: lowercase; letter-spacing: var(--track-label); }
 .cc-frame .demo-page .plate { font-family: var(--font-label); font-stretch: normal; text-transform: lowercase; letter-spacing: var(--track-label); }
 .cc-frame .demo-chat header { font-family: var(--font-label); font-stretch: normal; text-transform: lowercase; letter-spacing: var(--track-label); }
-.cc-frame .demo-ext .cap { font-family: var(--font-label); font-stretch: normal; text-transform: lowercase; letter-spacing: var(--track-label); }
 /* apps/desktop/src/keep/keep.css */
 .cc-frame .keep-khead .display { font-family: var(--font-label); font-stretch: normal; text-transform: lowercase; letter-spacing: var(--track-label); }
 .cc-frame .keep-plaque .wd { font-family: var(--font-label); font-stretch: normal; text-transform: lowercase; letter-spacing: var(--track-label); }
