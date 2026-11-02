@@ -285,8 +285,8 @@ test.describe('Keep desktop bounds', () => {
         await page.setViewportSize(viewport);
         await page.goto('/#/keep');
         await expect(page.getByRole('button', { name: 'Pause the sample loop', exact: true })).toBeVisible();
-        for (const theme of ['paper', 'stock']) {
-          if (theme === 'stock') await page.getByRole('button', { name: 'Toggle paper and dark stock' }).click();
+        for (const theme of ['day', 'night']) {
+          if (theme === 'night') await page.getByRole('button', { name: 'Toggle day and night' }).click();
           await expect.poll(() => page.locator('.keep-home').evaluate(element => {
             const requireNode = (selector: string) => {
               const node = element.querySelector(selector);

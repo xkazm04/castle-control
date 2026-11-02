@@ -3,14 +3,10 @@
 /* The winner's 1060 by 698 plane scales to fit. Sizes use max(design token,
    floor token * inverse effective scale), preserving 13px labels and 15px reading
    copy. The castle's inverse includes its camera scale; the headline uses stage scale. */
-.keep-home { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; height: 100%; min-height: 0; font: var(--text-shell-body)/1.4 var(--font-ui); }
-.keep-heading { display: flex; justify-content: flex-end; align-items: center; flex-wrap: wrap; gap: var(--space-12); padding-block: var(--space-8); }
-.keep-heading .cc-button { height: var(--space-36); padding: 0 var(--space-14); border: var(--rule-strong) solid var(--ink); border-radius: 0; background: var(--plaque-paper); color: var(--ink); font: 700 var(--text-shell-panel-action)/1 var(--font-ui); letter-spacing: .06em; box-shadow: var(--space-3) var(--space-3) 0 var(--ink); transition: transform var(--motion-fast), box-shadow var(--motion-fast); }
-.keep-heading .cc-button[data-variant="primary"] { background: var(--ink); color: var(--paper); box-shadow: var(--space-3) var(--space-3) 0 var(--or); }
-.keep-heading .cc-button:hover:not(:disabled) { transform: translate(calc(-1 * var(--space-1)), calc(-1 * var(--space-1))); box-shadow: var(--space-4) var(--space-4) 0 var(--ink); }
-.keep-heading .cc-button:active:not(:disabled) { transform: translate(var(--space-2), var(--space-2)); box-shadow: var(--space-1) var(--space-1) 0 var(--ink); }
-.keep-heading kbd { margin-left: var(--space-12); font: var(--text-shell-shortcut)/1 var(--font-num); }
-.keep-viewport { container: keep-surface / inline-size; position: relative; min-height: 0; overflow: hidden; background: var(--paper-grain), linear-gradient(180deg, var(--stage-top), var(--stage-mid) 62%, var(--stage-low)); }
+.keep-home { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; gap: 10px; height: 100%; min-height: 0; padding: 12px 0 14px 14px; font: 400 var(--text-t-body)/1.4 var(--font-text); }
+.keep-heading { display: flex; justify-content: flex-start; align-items: center; flex-wrap: wrap; gap: 10px; padding: 0; }
+.keep-heading .cc-kbd { margin-left: 6px; }
+.keep-viewport { container: keep-surface / inline-size; position: relative; min-height: 0; overflow: hidden; border: var(--came) solid var(--lead); background: radial-gradient(70% 55% at 50% 100%, var(--ch-wash), transparent 70%), var(--surface); box-shadow: var(--shadow); outline: 1px solid var(--hair-2); outline-offset: -6px; }
 .keep-diorama { position: absolute; left: 50%; top: 50%; width: calc(var(--space-1) * 1060); height: calc(var(--space-1) * 698); transform: translate(-50%, -50%) scale(var(--keep-scale)); transform-origin: 50% 50%; }
 .keep-diorama, .keep-castle {
   --keep-label-size: max(var(--text-shell-label), calc(var(--text-shell-label) * var(--keep-inverse)));
@@ -24,12 +20,12 @@
 }
 .keep-dio { position: absolute; inset: 0; overflow: hidden; transition: height var(--m-dolly) var(--ease-dolly); height: 100%; }
 .keep-khead { position: absolute; left: var(--space-24); right: var(--space-16); top: var(--space-10); z-index: 12; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 32%); grid-template-areas: "eyebrow illustration" "name name" "sub sub"; align-items: start; column-gap: var(--space-12); pointer-events: none; }
-.keep-khead .eyebrow { grid-area: eyebrow; min-width: 0; overflow-wrap: anywhere; display: block; margin-bottom: var(--space-6); font: 700 var(--keep-eyebrow-size, var(--text-shell-eyebrow))/1 var(--font-ui); letter-spacing: .14em; text-transform: uppercase; color: var(--ink-2); }
-.keep-khead .display { font-family: var(--font-display); font-weight: 700; font-stretch: condensed; letter-spacing: .005em; line-height: .86; text-transform: uppercase; }
-.keep-khead h1 { grid-area: name; margin: 0; font-size: var(--keep-headline-size, var(--text-shell-headline)); text-shadow: var(--space-4) var(--space-3) 0 var(--gules); }
-.keep-khead .sub { grid-area: sub; display: block; margin-top: var(--space-6); font: italic var(--keep-sub-size, var(--text-shell-tagline))/1.2 var(--font-serif); color: var(--ink-2); }
-.keep-khead .slip { animation: keep-registration-slip var(--m-slip) var(--ease-press) both; }
-.keep-vlab { grid-area: illustration; box-sizing: border-box; justify-self: end; max-width: none; min-width: 0; white-space: normal; overflow-wrap: anywhere; text-align: right; font: 600 var(--keep-label-size, var(--text-shell-label))/1 var(--font-ui); color: var(--ink-2); background: var(--shell-label-scrim); padding: var(--space-4) var(--space-7); pointer-events: none; }
+.keep-khead .eyebrow { grid-area: eyebrow; min-width: 0; overflow-wrap: anywhere; display: block; margin-bottom: var(--space-6); font: 800 var(--keep-eyebrow-size, var(--text-shell-eyebrow))/1.1 var(--font-label); letter-spacing: .11em; text-transform: lowercase; color: var(--muted); }
+.cc-frame .keep-home .keep-khead .display { font-family: var(--font-display); font-weight: 600; font-stretch: normal; letter-spacing: .005em; line-height: .9; text-transform: none; }
+.keep-khead h1 { grid-area: name; margin: 0; font-size: var(--keep-headline-size, var(--text-shell-headline)); color: var(--ch-ink); text-shadow: 0 0 calc(var(--glow-on) * 24px) var(--ch-glow); }
+.keep-khead .sub { grid-area: sub; display: block; margin-top: var(--space-6); font: italic 400 var(--keep-sub-size, var(--text-shell-tagline))/1.2 var(--font-aside); color: var(--ink-2); }
+.keep-khead .slip { animation: keep-title-in var(--m-slip) var(--ease) both; }
+.keep-vlab { grid-area: illustration; box-sizing: border-box; justify-self: end; max-width: none; min-width: 0; white-space: normal; overflow-wrap: anywhere; text-align: right; font: italic 400 var(--keep-label-size, var(--text-shell-label))/1.2 var(--font-aside); color: var(--muted); background: color-mix(in srgb, var(--surface) 85%, transparent); padding: var(--space-4) var(--space-7); pointer-events: none; }
 .keep-castle { position: absolute; left: 0; top: 0; width: calc(var(--space-1) * 1200); height: calc(var(--space-1) * 640); transform-origin: 0 0; transition: transform var(--m-dolly) var(--ease-dolly); }
 .keep-castle > svg { display: block; width: 100%; height: 100%; overflow: visible; }
 .keep-castle > svg text { font-size: var(--keep-art-size, var(--text-shell-label)); }
@@ -40,47 +36,44 @@
 .keep-castle .litglow.on { opacity: 1; }
 .keep-hit { position: absolute; background: transparent; border: 0; cursor: pointer; padding: 0; border-radius: var(--space-2); }
 .keep-hit:focus-visible { outline: var(--space-4) solid var(--azure); outline-offset: calc(-1 * var(--space-4)); }
-[data-room="lottery"] { --keep-ink: var(--gules); --keep-text: var(--gules-text); }
-[data-room="moderator"] { --keep-ink: var(--azure); --keep-text: var(--azure-text); }
-[data-room="visuals"] { --keep-ink: var(--or); --keep-text: var(--or-text); }
-[data-room="studio"] { --keep-ink: var(--ink); --keep-text: var(--ink); }
-.keep-khead [data-room] { color: var(--keep-text); }
-.keep-plaque { box-sizing: border-box; position: absolute; z-index: 3; background: var(--plaque-paper); border: var(--title-ghost) solid var(--ink); border-left: var(--space-10) solid var(--keep-ink, var(--ink)); padding: var(--space-7) var(--space-12) var(--space-8); box-shadow: var(--space-4) var(--space-4) 0 var(--plaque-shadow); pointer-events: none; min-width: calc(var(--space-1) * 200); line-height: normal; transition: opacity var(--m-slip); }
+[data-room="lottery"] { --keep-ink: var(--gules); --keep-lit: var(--gules-lit); --keep-text: var(--gules-ink); --keep-glow: var(--gules-glow); }
+[data-room="moderator"] { --keep-ink: var(--azure); --keep-lit: var(--azure-lit); --keep-text: var(--azure-ink); --keep-glow: var(--azure-glow); }
+[data-room="visuals"] { --keep-ink: var(--or); --keep-lit: var(--or-lit); --keep-text: var(--or-ink); --keep-glow: var(--or-glow); }
+[data-room="studio"] { --keep-ink: var(--key); --keep-lit: var(--key-lit); --keep-text: var(--key-ink); --keep-glow: var(--key-glow); }
+.keep-khead h1[data-room] { color: var(--keep-text); text-shadow: 0 0 calc(var(--glow-on) * 24px) var(--keep-glow); }
+.keep-plaque { box-sizing: border-box; position: absolute; z-index: 3; background: var(--surface); border: var(--came) solid var(--lead); padding: calc(var(--space-7) + 6px) var(--space-12) var(--space-8); box-shadow: var(--shadow); pointer-events: none; min-width: calc(var(--space-1) * 200); line-height: normal; transition: opacity var(--m-slip); }
+.keep-plaque::before { content: ''; position: absolute; inset: 0 0 auto; height: 6px; border-bottom: var(--came) solid var(--lead); background: linear-gradient(90deg, var(--keep-ink, var(--ch)), var(--keep-lit, var(--ch-lit)) 50%, var(--keep-ink, var(--ch))); box-shadow: 0 0 calc(var(--glow-on) * 12px) var(--keep-glow, var(--ch-glow)); }
 /* Below the winner's 1060-unit host (66.25rem), fit scale is necessarily < 1.
    Keep the reference size uncapped; reserve the smaller plaques' column gutters. */
 @container keep-surface (width < 66.25rem) {
   .keep-plaque { max-width: calc(var(--space-56) * 5); }
 }
-.keep-plaque .nm { font: 700 var(--keep-name-size, var(--text-shell-plaque-name))/1 var(--font-ui); letter-spacing: .1em; text-transform: uppercase; color: var(--ink-2); display: flex; gap: var(--space-8); align-items: center; white-space: nowrap; }
-.keep-plaque .wd { font: 700 var(--keep-word-size, var(--text-shell-plaque-word))/1 var(--font-display); text-transform: uppercase; letter-spacing: .02em; margin-top: var(--space-5); color: var(--keep-text, var(--ink)); }
-.keep-plaque .ln { font: 500 var(--keep-line-size, var(--text-shell-plaque-state))/1.25 var(--font-ui); color: var(--ink-2); margin-top: var(--space-4); }
-.keep-plaque > .cc-stamp { --stamp-size: var(--keep-label-size); position: absolute; right: calc(-1 * var(--space-14)); top: calc(-1 * var(--space-16)); background: var(--plaque-paper); }
-.keep-plaque.drafted { outline: var(--space-3) dashed var(--or); outline-offset: var(--space-6); }
-.keep-plaque .pin { position: absolute; left: calc(-1 * var(--space-10)); bottom: calc(-1 * var(--space-34)); font: 800 var(--keep-label-size, var(--text-shell-draft-label))/1 var(--font-display); letter-spacing: .12em; color: var(--or-text); background: var(--draft-paper); border: var(--rule-strong) dashed var(--or); padding: var(--space-4) var(--space-7); white-space: nowrap; }
-.keep-home.room-mode .keep-dio { height: calc(var(--space-1) * 250); border-bottom: var(--space-3) solid var(--ink); }
+.keep-plaque .nm { font: 800 var(--keep-name-size, var(--text-shell-plaque-name))/1.1 var(--font-label); letter-spacing: .09em; text-transform: lowercase; color: var(--ink-2); display: flex; gap: var(--space-8); align-items: center; white-space: nowrap; }
+.cc-frame .keep-home .keep-plaque .wd { font: 600 var(--keep-word-size, var(--text-shell-plaque-word))/1 var(--font-display); font-stretch: normal; text-transform: none; letter-spacing: .005em; margin-top: var(--space-5); color: var(--keep-text, var(--ink)); }
+.keep-plaque .ln { font: 400 var(--keep-line-size, var(--text-shell-plaque-state))/1.3 var(--font-text); color: var(--ink-2); margin-top: var(--space-4); }
+.keep-plaque > .cc-stamp { --stamp-size: var(--keep-label-size); position: absolute; right: calc(-1 * var(--space-8)); top: calc(-1 * var(--space-14)); transform: rotate(2.5deg); background: var(--surface); }
+.keep-plaque.drafted { box-shadow: 0 0 0 2px var(--or), 0 0 calc(10px + var(--glow-on) * 16px) var(--or-glow), var(--shadow); }
+.keep-plaque .pin { position: absolute; left: calc(-1 * var(--space-10)); bottom: calc(-1 * var(--space-34)); font: 800 var(--keep-label-size, var(--text-shell-draft-label))/1 var(--font-label); letter-spacing: .1em; color: var(--or-ink); background: var(--or-wash); border: var(--rule-strong) dashed var(--or); padding: var(--space-4) var(--space-7); white-space: nowrap; }
+.keep-home.room-mode .keep-dio { height: calc(var(--space-1) * 250); border-bottom: var(--came) solid var(--lead); }
 .keep-home.room-mode .keep-khead, .keep-home.room-mode .keep-vlab { display: none; }
 .keep-home.room-mode .keep-plaque, .keep-home.room-mode .keep-moatlab { opacity: 0; }
-@keyframes keep-registration-slip {
-  0% { transform: translate(calc(-1 * var(--space-14)), 0); text-shadow: var(--space-12) var(--space-8) 0 var(--gules); }
-  60% { transform: translate(0, 0); text-shadow: var(--space-9) var(--space-6) 0 var(--gules); }
-  100% { transform: none; text-shadow: var(--space-4) var(--space-3) 0 var(--gules); }
-}
+@keyframes keep-title-in { from { opacity: 0; transform: translateY(var(--space-4)); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) {
   .keep-khead .slip { animation: none; }
   .keep-castle, .keep-dio, .keep-plaque, .keep-castle .dim, .keep-castle .litglow { transition: none; }
 }
 
 /* The replay is an unscaled moat band below the art, outside plaque and hit geometry. */
-.keep-moat { display: flex; min-width: 0; flex-wrap: nowrap; align-items: center; justify-content: space-between; gap: var(--space-8) var(--space-12); padding: var(--space-8) var(--space-12); border: var(--rule-strong) solid var(--ink); background: var(--plaque-paper); box-shadow: inset 0 var(--space-4) 0 var(--azure); }
-/* Keep the pre-merge label's print treatment in the unscaled footer flow. */
-.keep-moatlab { font: 700 var(--keep-line-size, var(--text-shell-moat-state))/1 var(--font-ui); background: var(--azure); color: var(--white); padding: var(--space-6) var(--space-12); border: var(--rule-strong) solid var(--ink); box-shadow: var(--space-3) var(--space-3) 0 var(--ink); pointer-events: none; letter-spacing: .02em; white-space: nowrap; }
+.keep-moat { display: flex; min-width: 0; flex-wrap: nowrap; align-items: center; justify-content: space-between; gap: var(--space-8) var(--space-14); padding: 10px 12px; border: var(--came) solid var(--lead); background: var(--surface); box-shadow: var(--shadow); }
+/* The moat label is a pane of azure glass on the lead sill. */
+.keep-moatlab { display: flex; align-items: center; height: 34px; padding: 0 14px; font: 800 var(--text-px-15)/1 var(--font-label); letter-spacing: .06em; text-transform: lowercase; color: var(--on-glass); text-shadow: 0 1px 1px var(--lead-lo); background: var(--tex-glass), radial-gradient(140% 140% at 20% 0, var(--azure), var(--azure-deep)); background-size: 180px 180px, 100% 100%; background-blend-mode: soft-light, normal; box-shadow: inset 0 0 0 2px var(--lead), 0 0 calc(var(--glow-on) * 14px) var(--azure-glow); pointer-events: none; white-space: nowrap; }
 .keep-moatlab small { font: 600 var(--keep-label-size, var(--text-shell-label))/1 var(--font-ui); opacity: .85; margin-left: var(--space-8); }
 .keep-moat .moat-heartbeat { flex: 1 1 0; min-width: 0; flex-wrap: nowrap; gap: var(--space-6); }
-.keep-moat .moat-heartbeat small { flex: none; white-space: nowrap; font: 700 var(--text-shell-label)/1.2 var(--font-ui); color: var(--ink-2); }
+.keep-moat .moat-heartbeat small { flex: none; white-space: nowrap; font: 800 var(--text-t-label)/1.2 var(--font-label); letter-spacing: .08em; text-transform: lowercase; color: var(--ink-2); }
 .keep-moat .moat-heartbeat-strip { flex: 1 1 0; min-width: 0; height: var(--space-28); }
 .keep-moat .moat-heartbeat .moat-scene { height: 100%; }
 .keep-moatlab, .keep-moat-link, .keep-moat .moat-heartbeat .cc-button { flex: none; white-space: nowrap; }
-.keep-moat-link { color: var(--azure-text); font: 700 var(--text-shell-panel-action)/1.2 var(--font-ui); text-decoration: underline; text-underline-offset: var(--space-3); }
+.keep-moat-link { color: var(--azure-ink); font: 700 var(--text-t-small)/1.2 var(--font-text); text-decoration: underline; text-underline-offset: var(--space-3); }
 .keep-moat-link:focus-visible { outline: var(--rule-strong) solid var(--azure); outline-offset: var(--focus-offset); }
 
 /* Smaller windows may stack controls; desktop Keep widths reserve one moat row. */
