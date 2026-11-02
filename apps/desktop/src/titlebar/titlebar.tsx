@@ -28,6 +28,9 @@ function Glyph({ d }: { d: string }) {
   </svg>;
 }
 
+/** A failed window command leaves the window as it was; say so in the console rather than swallow it. */
+function report(error: unknown) { console.error('Title bar: window command failed', error); }
+
 /** Native window chrome: rendered only inside the Tauri window (see TitleBarHost). */
 export default function TitleBar() {
   const [win, setWin] = useState<WindowApi | undefined>();
@@ -40,12 +43,12 @@ export default function TitleBar() {
       setWin(w);
       setTitle(await w.title());
       setMaximized(await w.isMaximized());
-    }).catch(() => undefined);
+    }).catch(report);
     return () => { live = false; };
   }, []);
   useEffect(() => {
     if (!win) return;
-    const sync = () => { void win.isMaximized().then(setMaximized).catch(() => undefined); };
+    const sync = () => { void win.isMaximized().then(setMaximized).catch(report); };
     window.addEventListener('resize', sync);
     return () => { window.removeEventListener('resize', sync); };
   }, [win]);
@@ -53,7 +56,7 @@ export default function TitleBar() {
     document.documentElement.dataset.titlebar = '';
     return () => { delete document.documentElement.dataset.titlebar; };
   }, []);
-  const run = (fn: (w: WindowApi) => Promise<void>) => () => { if (win) void fn(win).catch(() => undefined); };
+  const run = (fn: (w: WindowApi) => Promise<void>) => () => { if (win) void fn(win).catch(report); };
   const parts = title.split(' — ');
   return <header className="cc-titlebar" data-role="title-bar">
     <div className="cc-titlebar__drag" data-tauri-drag-region onDoubleClick={run(w => w.toggleMaximize())}>
