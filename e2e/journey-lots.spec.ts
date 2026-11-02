@@ -1,55 +1,95 @@
 import { test, expect } from '@playwright/test';
 import type { Page } from '@playwright/test';
 import { guardPage } from './network.ts';
-import { auditFields, auditStyles, desktopSurfaces } from './styles.ts';
+import { auditStyles, desktopSurfaces } from './styles.ts';
 import { buildCoreLauncher, startCore } from './core-launch.ts';
 
-// The desktop fixture journey stays independent of the real-core OBS proof.
+import { lotSteward } from './lots-steward.ts';
+
+// The desktop fixture journey stays independent of the real-core OBS proof. Setup is a
+// Steward flow: one decision per card, the stage previews the draft, one hold seals.
 async function configureAndCast(page: Page) {
   await page.goto('/#/chamber/lottery');
   await expect(page.locator('.cc-rampart > [data-stamp="simulated"]')).toHaveText('Simulated');
-  await page.getByRole('textbox', { name: 'Draw name', exact: true }).fill('SIMULATED audience questions');
-  await page.getByRole('combobox', { name: 'Eligible pool', exact: true }).selectOption('keyword');
-  await page.getByRole('textbox', { name: 'Keyword', exact: true }).fill('!join');
-  await page.getByRole('spinbutton', { name: 'Winners', exact: true }).fill('3');
-  await page.getByRole('combobox', { name: 'Weights', exact: true }).selectOption('concave');
-  await page.getByRole('checkbox', { name: 'Free !join path with equal odds', exact: true }).uncheck();
-  await page.getByRole('combobox', { name: 'Content type', exact: true }).selectOption('prize');
-  await expect(page.getByRole('region', { name: 'Writ desk contents', exact: true }).locator('p')
-    .filter({ hasText: /^Attach an official-rules template before starting a prize draw\.$/ })).toBeVisible();
-  await page.getByRole('checkbox', { name: 'Attach official-rules template', exact: true }).check();
-  await page.getByRole('checkbox', { name: 'Acknowledge Twitch disclaimer', exact: true }).check();
-  await page.getByRole('checkbox', { name: 'Paid entry', exact: true }).check();
-  await expect(page.getByRole('button', { name: 'Preview this draw', exact: true })).toBeDisabled();
-  await page.getByRole('checkbox', { name: 'Paid entry', exact: true }).uncheck();
-  await page.getByRole('combobox', { name: 'Urn size', exact: true }).selectOption('L');
-  await page.getByRole('combobox', { name: 'Screen anchor', exact: true }).selectOption('tl');
-  await page.getByRole('combobox', { name: 'Urn colour', exact: true }).selectOption('azure');
-  await page.getByRole('combobox', { name: 'Art style', exact: true }).selectOption('pixel');
-  await page.getByRole('spinbutton', { name: 'Reveal timing in ms', exact: true }).fill('750');
-  await expect(page.locator('.lottery-shape-preview')).toHaveAttribute('data-anchor', 'tl');
-  await expect(page.locator('.lottery-shape-preview')).toHaveAttribute('data-size', 'L');
-  await expect(page.locator('.lottery-shape-preview img')).toHaveAttribute('src', '/art/preset-pixel-urn.webp');
-  await auditFields(page);
+  // The hall holds the picture and the roll, not a form.
+  const hall = page.locator('.cc-hall');
+  await expect(hall.getByRole('textbox', { name: 'Draw name', exact: true })).toHaveCount(0);
+  const steward = lotSteward(page);
+  const stage = page.locator('.lottery-draw-stage');
+  await steward.chip('Set up a draw');
+  await steward.pick('Free-entry prize');
+  await steward.pick('Anyone who types !join');
+  await steward.pick('3 · the hearth');
+  await steward.pick('Let me choose each');
+  await steward.pick('1 of 3 winners');
+  await steward.pick('10 minutes');
+  await steward.pick('Activity counts a little');
+  await steward.field('25');
+  // Compliance arrives as the next step, one fix at a time.
+  await expect(steward.prompt('A prize draw needs official rules attached before it can seal.')).toBeVisible();
+  await expect(steward.sheet.getByRole('button', { name: 'Hold to seal', exact: true })).toHaveCount(0);
+  await steward.pick('Attach the rules template');
+  await expect(steward.prompt('Viewers must be told that Twitch is not behind this prize.')).toBeVisible();
+  await steward.pick('Acknowledge the disclaimer');
+  await steward.pick('Wheel');
+  // The stage is the live preview of the draft.
+  await expect(stage).toHaveAttribute('data-shape', 'wheel');
+  await expect(page.locator('[data-role="lot-roll-panel"]')).toContainText('Draft · not sealed');
+  await expect(steward.sheet).toContainText('Clear · free entry, rules attached, Twitch disclaimer acknowledged');
+  await steward.next('Looks right');
+  await steward.hold(page.locator('.lottery-roll[data-tone="sealed"]'));
+  await expect(page.locator('[data-role="lot-roll-panel"]')).toContainText('Sealed · the roll is frozen, waiting for the cast');
+  await expect(page.locator('[data-role="lot-draw-card"]')).toContainText('Free-entry prize');
   await auditStyles(page, desktopSurfaces);
-  await page.getByRole('button', { name: 'Preview this draw', exact: true }).click();
-  await expect(page.getByText('Proposal · not sealed', { exact: true })).toBeVisible();
-  const hold = page.getByRole('button', { name: 'Hold to seal', exact: true });
-  await hold.focus();
-  await page.keyboard.down('Space');
-  await expect(page.getByText('Entry list frozen · simulated', { exact: true })).toBeVisible();
-  await page.keyboard.up('Space');
-  await expect(page.getByRole('textbox', { name: 'Draw name', exact: true })).toBeDisabled();
-  await page.getByRole('button', { name: 'Start simulated draw', exact: true }).click();
+  await steward.chip('Cast the lots');
+  await steward.next('The round is ready');
+  await steward.pick('One by one, quietly');
+  await steward.hold(page.locator('.lottery-roll[data-tone="cast"]'));
   const result = page.getByRole('region', { name: 'Current SIMULATED cast', exact: true });
   await expect(result).toContainText('SIMULATED');
   await expect(result.locator('[data-current-winner]')).toHaveCount(3);
-  await page.getByRole('button', { name: 'Read current simulated writ', exact: true }).click();
+  await result.getByRole('button', { name: 'Read current simulated writ', exact: true }).click();
   await expect(page.getByRole('region', { name: 'Current simulated writ', exact: true })).toContainText('Not a cc-verify proof');
   return result;
 }
 
-test('lottery configure, preview, seal, simulated cast and writ journey', async ({ page }) => {
+test('a paid-weight prize is stopped by a Steward step until the paid weight goes', async ({ page }) => {
+  const verify = await guardPage(page);
+  try {
+    await page.goto('/#/chamber/lottery');
+    const steward = lotSteward(page);
+    await steward.chip('Set up a draw');
+    await steward.pick('Paid-weight prize');
+    await steward.pick('Everyone chatting');
+    await steward.pick('3 · the hearth');
+    await steward.pick('Balanced');
+    await expect(steward.prompt('money may never buy entry or better odds')).toBeVisible();
+    await expect(steward.sheet.getByRole('button', { name: 'Hold to seal', exact: true })).toHaveCount(0);
+    await steward.pick('Remove paid weight');
+    await expect(steward.prompt('What is the prize worth, in US dollars?')).toBeVisible();
+    await steward.sheet.getByRole('button', { name: 'Put away', exact: true }).click();
+    await expect(page.locator('[data-role="lot-roll-panel"]')).not.toContainText('Draft · not sealed');
+    await expect(page.locator('.lottery-roll[data-tone="sealed"]')).toHaveCount(0);
+  } finally { await page.goto('about:blank'); verify(); }
+});
+
+test('Play demo seals, casts and reveals a SIMULATED draw from one hold', async ({ page }) => {
+  const verify = await guardPage(page);
+  try {
+    await page.goto('/#/chamber/lottery');
+    const steward = lotSteward(page);
+    await steward.chip('Play demo');
+    await expect(steward.sheet.locator('.cc-sim').first()).toBeVisible();
+    await steward.pick('Questions for the hall');
+    await steward.next('Looks fair');
+    await steward.hold(page.locator('.lottery-roll[data-tone="cast"]'));
+    await expect(page.locator('.lottery-draw-stage')).toHaveAttribute('data-phase', 'revealed');
+    await expect(page.locator('[data-stage-winner]')).toHaveCount(3);
+    await expect(page.locator('.cc-steward-dock .cc-talk__msg')).toContainText('Sealed and cast');
+  } finally { await page.goto('about:blank'); verify(); }
+});
+
+test('lottery set up, seal, cast and writ journey through the Steward', async ({ page }) => {
   const verify = await guardPage(page);
   try {
     await configureAndCast(page);

@@ -6,6 +6,7 @@ import { repo, routes, slug, stewardStates, themes } from './inventory.ts';
 import { guardPage } from './network.ts';
 import { startOverlay, visualId } from './overlay-server.ts';
 import { auditFields, auditStyles, desktopSurfaces } from './styles.ts';
+import { castSample } from './lots-steward.ts';
 
 const diagnostics = new WeakMap<Page, () => void>();
 let overlay: Awaited<ReturnType<typeof startOverlay>>;
@@ -102,21 +103,13 @@ test('overlay-simulated-connected', async ({ page }) => {
 test('fixture draw rehearsal seals, casts, reveals in the urn and recomputes this cast', async ({ page }) => {
   await page.goto('/#/chamber/lottery');
   await expect(page.locator('.cc-rampart > [data-stamp="simulated"]')).toHaveText('Simulated');
-  await page.getByRole('button', { name: 'Preview this draw', exact: true }).click();
-  await expect(page.getByText('Proposal · not sealed', { exact: true })).toBeVisible();
-  const hold = page.getByRole('button', { name: 'Hold to seal', exact: true });
-  await hold.focus();
-  await page.keyboard.down('Space');
-  try { await expect(page.getByText('Entry list frozen · simulated', { exact: true })).toBeVisible(); }
-  finally { await page.keyboard.up('Space'); }
-  await expect(page.getByRole('button', { name: 'Draft a new roll', exact: true })).toHaveCount(0);
-  await expect(page.getByRole('button', { name: 'Start simulated draw', exact: true })).toBeVisible();
-  await page.getByRole('button', { name: 'Cast the lots · rehearsal', exact: true }).click();
+  // Cast the lots seals the sample draw first, then casts, from one hold in the Steward's sheet.
+  await castSample(page);
   const result = page.getByRole('region', { name: 'Current SIMULATED cast', exact: true });
   await expect(result.locator('[data-current-winner]')).toHaveCount(3);
   // This lane uses reduced motion, so every winner is revealed immediately.
   for (const order of [1, 2, 3]) await expect(page.locator(`.lottery-draw-lots [data-winner="${order}"]`)).toHaveCount(1);
-  const winners = await result.locator('[data-current-winner]').allTextContents();
+  const winners = (await result.locator('[data-current-winner] span').allTextContents());
   // The stage's scoreboard lists the same winners in cast order.
   for (const [index, winner] of winners.entries()) await expect(page.locator(`[data-stage-winner="${index + 1}"]`)).toContainText(winner);
   await result.getByRole('button', { name: 'Read current simulated writ', exact: true }).click();

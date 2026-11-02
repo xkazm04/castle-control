@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import type { Page } from '@playwright/test';
 import { guardPage } from './network.ts';
+import { castSample } from './lots-steward.ts';
 
 async function drawingHeight(page: Page) {
   return page.locator('.lottery-draw-svg').evaluate(element => {
@@ -11,7 +12,7 @@ async function drawingHeight(page: Page) {
   });
 }
 
-// Stage, proof and Writ Lab journey. This lane runs with reduced motion: the cast reveals at once and
+// Stage, proof and Writ Lab journey. The cast comes from the Steward's "Cast the lots" flow. This lane runs with reduced motion: the cast reveals at once and
 // theatre mode is entered by hand.
 test('lottery stage: shape, verdict, prove and tamper in the Writ Lab', async ({ page }) => {
   const verify = await guardPage(page);
@@ -22,13 +23,7 @@ test('lottery stage: shape, verdict, prove and tamper in the Writ Lab', async ({
     await page.getByRole('group', { name: 'Draw shape', exact: true }).getByRole('button', { name: 'Wheel', exact: true }).click();
     await expect(stage).toHaveAttribute('data-shape', 'wheel');
     await expect(stage.locator('[data-lot-dot]')).toHaveCount(87);
-    await page.getByRole('button', { name: 'Preview this draw', exact: true }).click();
-    const hold = page.getByRole('button', { name: 'Hold to seal', exact: true });
-    await hold.focus();
-    await page.keyboard.down('Space');
-    try { await expect(page.getByText('Entry list frozen · simulated', { exact: true })).toBeVisible(); }
-    finally { await page.keyboard.up('Space'); }
-    await page.getByRole('button', { name: 'Start simulated draw', exact: true }).click();
+    await castSample(page);
     await expect(stage).toHaveAttribute('data-phase', 'revealed');
     await expect(stage.locator('[data-medal]')).toHaveCount(3);
     // The desk view closes on a chip; the full stage closes on the verdict card and its lab handoff.
@@ -59,12 +54,7 @@ test('reduced-motion hand reveals keep the drawing and Space call visible at 128
     await page.setViewportSize({ width: 1280, height: 800 });
     await page.goto('/#/chamber/lottery');
     await page.getByRole('button', { name: 'Reveal by hand', exact: true }).click();
-    await page.getByRole('button', { name: 'Preview this draw', exact: true }).click();
-    await page.getByRole('button', { name: 'Hold to seal', exact: true }).focus();
-    await page.keyboard.down('Space');
-    try { await expect(page.getByText('Entry list frozen · simulated', { exact: true })).toBeVisible(); }
-    finally { await page.keyboard.up('Space'); }
-    await page.getByRole('button', { name: 'Start simulated draw', exact: true }).click();
+    await castSample(page, 'By hand');
     for (let order = 1; order <= 3; order++) {
       const call = page.getByRole('button', { name: order === 1 ? 'Call the first lot' : `Call lot ${order} of 3`, exact: true });
       await expect(call).toBeFocused();
@@ -81,7 +71,7 @@ test('reduced-motion hand reveals keep the drawing and Space call visible at 128
 
 // Guard the short work area underneath the retained Cutaway band/title card.
 for (const viewport of [{ width: 1280, height: 800 }, { width: 1440, height: 900 }, { width: 1920, height: 1080 }]) {
-  for (const theme of ['paper', 'stock'] as const) {
+  for (const theme of ['day', 'night'] as const) {
     test(`the draw fits its urn panel at ${viewport.width}x${viewport.height} on ${theme}`, async ({ page }) => {
       const verify = await guardPage(page);
       try {
@@ -89,11 +79,11 @@ for (const viewport of [{ width: 1280, height: 800 }, { width: 1440, height: 900
         await page.goto('/#/chamber/lottery');
         const pool = page.locator('[data-role="lot-urn-panel"]');
         await expect(pool).toBeVisible();
-        if (theme === 'stock') await page.getByRole('button', { name: 'Toggle paper and dark stock' }).click();
+        if (theme === 'night') await page.getByRole('button', { name: 'Toggle day and night' }).click();
         const measure = () => pool.evaluate(element => {
           const box = element.getBoundingClientRect();
           const issues: string[] = [];
-          for (const selector of ['.lottery-stage-top', '.lottery-stage-phase', '.lottery-draw-svg', '.lottery-pool-heading', '.lottery-pool-readings', '.lottery-stage-rail', '.lottery-stage-foot']) {
+          for (const selector of ['.lottery-stage-top', '.lottery-stage-phase', '.lottery-draw-svg', '.lottery-pool-heading', '.lottery-stage-rail', '.lottery-stage-foot']) {
             const child = element.querySelector(selector);
             if (!child) {
               if (selector !== '.lottery-stage-rail' && selector !== '.lottery-stage-foot') issues.push(`missing ${selector}`);
@@ -143,13 +133,7 @@ for (const viewport of [{ width: 1280, height: 800 }, { width: 1440, height: 900
         await expect.poll(async () => (await pool.boundingBox())?.width ?? 0).toBeCloseTo(width, 0);
         await expect.poll(measure).toEqual([]);
         await expect.poll(() => drawingHeight(page)).toBeGreaterThanOrEqual(260);
-        await page.getByRole('button', { name: 'Preview this draw', exact: true }).click();
-        const hold = page.getByRole('button', { name: 'Hold to seal', exact: true });
-        await hold.focus();
-        await page.keyboard.down('Space');
-        try { await expect(page.getByText('Entry list frozen · simulated', { exact: true })).toBeVisible(); }
-        finally { await page.keyboard.up('Space'); }
-        await page.getByRole('button', { name: 'Start simulated draw', exact: true }).click();
+        await castSample(page);
         await expect(pool.locator('.lottery-draw-stage')).toHaveAttribute('data-phase', 'revealed');
         await expect.poll(measure).toEqual([]);
         await expect.poll(() => drawingHeight(page)).toBeGreaterThanOrEqual(260);

@@ -20,6 +20,8 @@ export async function castQuestionsDrawInUi(page: Page, core: NightCore): Promis
     const winners = room.getByRole('spinbutton', { name: 'Number of winners', exact: true });
     await winners.fill('2');
     await winners.press('Enter');
+    // The full rule editor and the entry lookup sit behind the chamber's one More disclosure.
+    await room.locator('[data-role="lot-more"] > summary').click();
     const rules = room.getByRole('article', { name: 'Draw rules', exact: true });
     await expect(rules.getByRole('status')).toHaveText('These rules match the core.');
     await rules.getByRole('textbox', { name: 'Draw name', exact: true }).fill('SIMULATED night questions');
