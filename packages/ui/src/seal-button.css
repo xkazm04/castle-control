@@ -22,3 +22,27 @@
 .cc-seal-button .cc-seal-fill-copy { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--space-5); padding: var(--space-1) var(--space-6); color: var(--press); clip-path: inset(0 calc(100% - var(--cc-seal-progress, 0%)) 0 0); pointer-events: none; }
 .cc-seal-fill-copy small { color: var(--press-2); font: 600 var(--text-shell-hint)/1 var(--font-ui); letter-spacing: .04em; text-transform: none; }
 .cc-seal-fill-copy kbd { font: inherit; font-family: var(--font-num); }
+.cc-action-row .cc-action-seal .cc-seal-button[data-size="key"] { display: inline-flex; box-sizing: border-box;
+  height: var(--space-40); min-height: var(--space-40); max-height: var(--space-40); margin: 0; padding: 0 var(--space-16); gap: var(--space-10); flex-direction: row; white-space: nowrap;
+  border: var(--rule-thin) solid var(--deck-gold-2); border-bottom: var(--space-4) solid var(--deck-seal-foot); border-radius: var(--r-lg); box-shadow: var(--deck-seal-shadow);
+  background: linear-gradient(180deg, var(--deck-seal-top), var(--deck-seal-bottom)); color: var(--ink);
+  font: 400 var(--text-aside)/1.45 var(--font-ui); letter-spacing: normal; text-transform: none; }
+.cc-action-row .cc-action-seal .cc-seal-button[data-size="key"]::before { display: none; }
+.cc-action-row .cc-action-seal .cc-seal-button[data-size="key"] progress { opacity: 1; }
+.cc-action-row .cc-action-seal .cc-seal-button[data-size="key"] .cc-seal-instruction,
+.cc-action-row .cc-action-seal .cc-seal-button[data-size="key"] .cc-seal-fill-copy { display: none; }
+.cc-seal-button[data-size="key"] .cc-seal-status { font: italic 400 var(--text-body)/1.2 var(--font-serif); text-transform: none; letter-spacing: 0; }
+.cc-seal-button[data-size="key"] progress::-webkit-progress-value { background: color-mix(in srgb, var(--or) 65%, transparent); }
+.cc-seal-button[data-size="key"] progress::-moz-progress-bar { background: color-mix(in srgb, var(--or) 65%, transparent); }
+.cc-action-row .cc-action-seal .cc-seal-button[data-size="key"] .cc-seal-release { position: absolute; }
+.cc-action-row .cc-action-seal .cc-seal-button[data-size="key"] .cc-seal-wax {
+  position: absolute; z-index: 2; left: 50%; top: 50%; width: var(--space-30); height: var(--space-30); margin: calc(-1 * var(--space-16)) 0 0 calc(-1 * var(--space-16));
+  display: grid; place-items: center; opacity: 0; border: var(--rule-strong) solid var(--wax-lo, var(--gules-text)); border-radius: 50%; pointer-events: none;
+  background: radial-gradient(circle at 35% 30%, var(--wax-hi, var(--gules)), var(--wax, var(--gules-text))); box-shadow: 0 var(--space-2) var(--space-6) var(--hair);
+}
+.cc-seal-wax svg { width: 70%; height: 70%; fill: var(--wax-lo, var(--press)); }
+.cc-action-row .cc-action-seal .cc-seal-button[data-sealed="true"] .cc-seal-wax { opacity: 1; }
+@media (prefers-reduced-motion: no-preference) {
+  .cc-action-row .cc-action-seal .cc-seal-button[data-sealed="true"] .cc-seal-wax { animation: cc-deck-wax var(--motion-shell) var(--ease); }
+}
+@keyframes cc-deck-wax { from { opacity: 0; transform: scale(1.8) rotate(-15deg); } to { opacity: 1; transform: scale(1) rotate(0); } }

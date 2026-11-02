@@ -13,7 +13,9 @@ export type SealButtonProps = {
   on_seal: () => void;
   variant?: 'seal' | 'proclaim';
   disabled?: boolean;
-  size?: 'normal' | 'large';
+  size?: 'normal' | 'large' | 'key';
+  draft_count?: number;
+  sealed?: boolean;
 };
 
 /** A release, lost focus/capture, or teardown always cancels unfinished work. */
@@ -44,13 +46,14 @@ export function createSealHold(on_seal: () => void, on_progress: (progress: numb
 }
 
 // Separate rendering lets the real event handlers be exercised without a DOM shim.
-export function SealControl({ hold, progress, variant = 'seal', disabled = false, size, description_id, released = false }: {
-  hold: ReturnType<typeof createSealHold>; progress: number; variant?: 'seal' | 'proclaim'; disabled?: boolean; size?: 'normal' | 'large';
-  description_id?: string; released?: boolean;
+export function SealControl({ hold, progress, variant = 'seal', disabled = false, size, draft_count = 0, description_id, released = false, sealed = false }: {
+  hold: ReturnType<typeof createSealHold>; progress: number; variant?: 'seal' | 'proclaim'; disabled?: boolean; size?: 'normal' | 'large' | 'key'; draft_count?: number;
+  description_id?: string; released?: boolean; sealed?: boolean;
 }) {
   const label = variant === 'proclaim' ? 'Hold to seal and proclaim' : 'Hold to seal';
   const fill_style: CSSProperties & { '--cc-seal-progress': string } = { '--cc-seal-progress': `${progress * 100}%` };
-  return <button type="button" className={size === 'large' ? 'cc-seal-button cc-offset-shadow' : 'cc-seal-button'} data-size={size} disabled={disabled} aria-label={label}
+  return <button type="button" className={size === 'large' ? 'cc-seal-button cc-offset-shadow' : 'cc-seal-button'} data-size={size} data-role={size === 'key' ? 'seal-key' : undefined} disabled={disabled} aria-label={label}
+    data-sealed={size === 'key' && sealed ? true : undefined}
     style={fill_style}
     aria-describedby={description_id ? `${description_id}-instruction ${description_id}-released` : undefined}
     onPointerDown={event => {
@@ -68,7 +71,9 @@ export function SealControl({ hold, progress, variant = 'seal', disabled = false
       if (!event.repeat) hold.start('keyboard');
     }}
     onKeyUp={event => { if (event.key === sealKey) { event.preventDefault(); hold.cancel('keyboard'); } }}>
-    <span>{label}</span>
+    <span>{size === 'key' ? <>Hold <kbd>Space</kbd> to seal</> : label}</span>
+    {size === 'key' && <span className="cc-seal-status"><span aria-hidden="true">· </span>{draft_count ? `${draft_count} draft${draft_count === 1 ? '' : 's'} ready` : 'nothing yet'}</span>}
+    {size === 'key' && <span className="cc-seal-wax" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><path d="M5 20V8h3V4h3v4h2V4h3v4h3v12h-5v-5h-4v5Z" /></svg></span>}
     <progress aria-label="Seal hold progress" max={1} value={progress} />
     <span id={description_id ? `${description_id}-instruction` : undefined} className="cc-seal-instruction">
       Press and hold <kbd>{sealKey === ' ' ? 'Space' : sealKey}</kbd> for {sealHoldDurationMs / 1000} second
@@ -80,7 +85,7 @@ export function SealControl({ hold, progress, variant = 'seal', disabled = false
   </button>;
 }
 
-export function SealButton({ on_seal, variant, disabled, size }: SealButtonProps) {
+export function SealButton({ on_seal, variant, disabled, size, draft_count, sealed }: SealButtonProps) {
   const instance_id = useId();
   // Desktop controls link their unique descriptions on the initial client render.
   // Noninteractive static previews omit tree-position IDs so slots stay composable.
@@ -97,5 +102,5 @@ export function SealButton({ on_seal, variant, disabled, size }: SealButtonProps
     return () => { window.removeEventListener('blur', cancel); document.removeEventListener('visibilitychange', cancel); hold.cancel(); };
   }, [hold]);
   useEffect(() => { if (disabled) hold.cancel(); }, [disabled, hold]);
-  return <SealControl hold={hold} progress={progress} {...(description_id ? { description_id } : {})} released={released} {...(variant ? { variant } : {})} {...(size ? { size } : {})} {...(disabled === undefined ? {} : { disabled })} />;
+  return <SealControl hold={hold} progress={progress} {...(sealed === undefined ? {} : { sealed })} {...(draft_count === undefined ? {} : { draft_count })} {...(description_id ? { description_id } : {})} released={released} {...(variant ? { variant } : {})} {...(size ? { size } : {})} {...(disabled === undefined ? {} : { disabled })} />;
 }

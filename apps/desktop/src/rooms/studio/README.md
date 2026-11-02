@@ -1,5 +1,140 @@
 # Map Room C · Herald
 
+## Final gate · defer local duel demos (2026-11-02)
+
+Showdown and Ladder now live in `local-duel-demos.tsx`, loaded with `React.lazy`
+only when a More view requests them. Both the room and the optional Tiltyard
+view branch use this deferred module. Their original component, words, SAMPLE
+lists, simulated ballot source, mode keys and markup are unchanged. The fixture
+and core duel, full bracket, proposal host and drawer lifecycle are unchanged.
+
+This removes the local demo engine and its legacy Tiltyard styles from the
+`tiltyard-view` first-paint chunk. No CSS declarations or selectors changed.
+The one legacy rule matching the main duel's shared Shield sets
+`fill: var(--ty-arms-vert)`, which its inline SVG fill already supplies. All other
+legacy demo rules target the separate `ty-*` demo structure.
+
+`pnpm --config.verify-deps-before-run=false --filter @castle-control/desktop build`
+exits 0 with the original, unchanged checks and limits:
+
+```text
+[Desktop tokens] found 299/299 generated token definitions in initial CSS
+[desktop first-load budget, all four routes] walked 10 files; 422681/425984 uncompressed JS+CSS bytes
+[duel chunk budget] walked 2 files; 26726/98304 uncompressed JS+CSS bytes (js 17136, css 9590)
+```
+
+Desktop `typecheck` and `lint` both exit 0 and walk 380 files. Desktop `test`
+exits 0: 133 files and 1196 tests passed. Existing local-demo coverage remains;
+two new tests render each deferred mode to completion and compare it against
+the direct component's complete static markup. `node scripts/check.mjs` exits 0
+for boundaries, hygiene, type floor, file cap and secrets; `git diff --check`
+also exits 0. No dependency, build configuration or budget changes were made.
+
+## Owner readability decision · 15 px, move more into drawers (2026-11-02)
+
+Section prose, option names, bracket rows, controls, tally summaries, minis and
+drawer detail now use `--text-px-15` with line-height 1.45 (21.75 px per line).
+Small-cap headings/seed tags and the existing key badges retain their 13–14 px
+roles. The picture stays at its existing size and stage type stays at least
+15 px. Shared section padding (11/14/12 px), 8 px content gaps and 10 px section
+gaps are retained/restored rather than compressed to fit the larger body type.
+Buttons grow with wrapped text instead of forcing a 30 px small-button height.
+
+New drawer destinations, all behind the visible keyed Full bracket/More triggers:
+
+- Speed ×3, New bracket and Show the duel on stream, with their existing guards,
+  handlers and table-derived key badges. Their keys reach the shell dispatcher
+  from the drawer; a local demo/form continues to isolate its own keys.
+- Contestant notes, moderation/barred provenance, the core-counting explanation
+  and the eight-entry quarterfinal explanation. The `ty-barred` hook moves with
+  its content; no role hook is removed.
+- Ballot percentages, where the complete 15 px labels fit without competing for
+  a nearly empty tally segment. Counts and the proportional bar stay in the room.
+- The repeated matchup line from Preview/Program. The minis retain their existing
+  title, phase and counted total; the drawer names the current pair explicitly.
+
+Computed fit budget (not a browser measurement), using the shared token values
+and the standard four-contestant SIMULATED duel:
+
+| Item | Computed height |
+| --- | ---: |
+| Body line | 15 × 1.45 = 21.75 px |
+| One-/two-line button, including padding and borders | 35.75 / 57.50 px |
+| Live option card, allowing two name lines and two call-button lines | 148.60 px |
+| Arena: options + 8 px gap + clock/action rows | 238.35 px |
+| Duel section, allowing a two-line question | 428.70 px |
+| Duel column including 22 px layout padding | 450.70 px live; 454.70 px verdict; round up to **460 px** |
+| Bracket section, allowing two-line final placeholders/champion | 319.95 px |
+| Undo/More section | 85.65 px |
+| Bracket/tool column, including 10 px section gap + 22 px layout padding | **437.60 px** |
+
+At 1280×720, the supplied 470 px room-body budget leaves 10 px after the rounded
+460 px column allowance; at 1366×768, 520 px leaves 60 px. These calculations
+assume the standard labels fit the stated line counts; arbitrary long custom
+labels still require browser review. The picture remains the shared 380/423 px
+column at those widths with its 16:9 ratio. Removing the repeated matchup row
+also gives the minis more height for their 15 px text.
+
+Verification for this follow-up is recorded in the builder delivery. The updated
+unit coverage checks moved content in the drawer, its action handlers and all
+key badges, plus forwarding the moved tool keys without leaking local demo keys.
+The journey checks 15 px / 21.75 px computed body styles, two-line option names,
+drawer provenance/tool reachability and the speed key at both laptop sizes.
+Browser access still reports the native pipe and browser host unavailable;
+the targeted Playwright command still exits at `Error: spawn EPERM` before
+assertions. No measured-fit or browser-journey pass is claimed.
+
+## T3 WP4-map · The Deck (2026-11-02)
+
+Fixture and connected-core duels now share `ChamberLayout` through `DuelStage`.
+The 16:9 picture uses the same contestants, phase, clock, counts and verdict as
+the controls. Preview shows the existing Steward duel draft; Program keeps the
+actual tournament snapshot while a draft is shown. Sample data remains labelled
+SIMULATED. No tournament model, contract, ballot generator or duel keymap changed.
+
+Old section destinations:
+
+| Destination | Existing content |
+| --- | --- |
+| Picture column | Duel picture; Preview draft and Program tournament minis; core connection/error notices |
+| Column 1 · The duel | Question, round, two option cards side by side, call buttons, countdown, phase/verdict/champion, vote controls and tally including moderation provenance |
+| Column 2 · The bracket | Semifinals beside final and champion; full bracket trigger. Eight-entry quarterfinals remain in the drawer |
+| Column 2 · Call the duel | Undo, speed, new bracket, the existing sealed stream flow, More drawer trigger |
+| Drawer | Full bracket with seeds, core source-copy/refresh, demo detail notices, and all six More views: Showdown, Ladder, sand table/design, Spyglass, Rehearse, design proposals |
+
+The shared Drawer is portalled outside the room frame. Escape closes it before
+the duel keymap receives the key; the shared focus lifecycle restores its opener.
+The local proposal forms keep a stable portal host across closes, preserving
+their mounted state. The room never adds action-key badges. Glass surfaces,
+spacing, type and motion use existing tokens; picture type is at least 15 px,
+section type at least 13 px. Bulky detail is in the scrolling drawer body.
+
+Verification (no installation, dependency changes or git writes):
+
+- `pnpm --config.verify-deps-before-run=false --filter @castle-control/desktop typecheck`
+  exits 0: `[pnpm typecheck] walked 361 files`.
+- The same desktop `lint` exits 0: `[pnpm lint] walked 361 files`.
+- The same desktop `test` exits 0: `127 passed (127)` files, `1155 passed (1155)` tests.
+  A competing earlier run timed out in the unchanged 900-cast crypto corpus;
+  the complete suite passed when rerun without concurrent checks.
+- `duel-chamber.test.tsx` covers the actual ChamberLayout composition, picture,
+  minis, both columns, both drawer triggers, reachable seeded bracket/menu/source
+  tools, Preview/Program separation, and drawer-first Escape/frozen controls.
+- `node scripts/check.mjs` exits 0 for boundaries, hygiene, type floor, file cap
+  and secrets. `git diff --check` exits 0.
+- The room journey retains calls, tally freeze, call-off/resume, champion, undo,
+  local demos, design proposals, Steward draft/seal and demo progression coverage;
+  selectors follow the new drawer, bracket summary and focus return. It also
+  checks the chamber's picture, columns and laptop fit at 1280×720 and 1366×768.
+
+Browser verification is outstanding. The winner's supplied 1280 screenshot and
+source were inspected, but Computer Use reported both browser host and native
+pipe unavailable. Desktop `dev` started Vite at `http://127.0.0.1:5175/` because
+5173/5174 were occupied, and was stopped after verification. The targeted command
+`$env:CC_E2E_PORT='5186'; pnpm --config.verify-deps-before-run=false exec playwright test -c e2e/playwright.config.ts journey-tiltyard.spec.ts --output=apps/desktop/src/rooms/studio/.verification/e2e`
+exited 1 at `Error: spawn EPERM` before browser assertions. No visual fit, browser
+journey or screenshot-fidelity pass is claimed; Director verification is required.
+
 ## Stabilize maproom-03, maproom-05 and maproom-06 (2026-10-31)
 
 Re-anchored at `14d2e78`: `hex-table.tsx` still rendered every tile in the Tab

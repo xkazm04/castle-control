@@ -1,3 +1,4 @@
+import { keyFor } from '../../shell/steward-keys.jsx';
 import { readFileSync } from 'node:fs';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { expect, test } from 'vitest';
@@ -161,7 +162,7 @@ test('a held ceremony says so and offers the next call', () => {
   clock.tick(scene, `${seal}:deck:0`, 0); clock.tick(scene, `${seal}:deck:0`, 5000);
   const held = render({ shape: 'deck', clock, cast, sealed: true, seal, theatre: true, by_hand: true, on_by_hand: () => undefined });
   expect(held).toContain(copy.stage.held); expect(held).toContain(`>${copy.stage.call_first}</button>`);
-  expect(held).toMatch(new RegExp(`aria-pressed="true"[^>]*>${copy.stage.by_hand}<`));
+  expect(held).toMatch(new RegExp(`aria-pressed="true"[^>]*><span class="cc-control-key"[^>]*><kbd[^>]*>${keyFor('lottery', 'by_hand')}</kbd></span>${copy.stage.by_hand}<`));
   clock.callNext(5001);
   const next = render({ shape: 'deck', clock, cast, sealed: true, seal, theatre: true, by_hand: true });
   expect(next).toContain(`>${copy.stage.call_next(2, 3)}</button>`); expect(next.match(/data-medal=/g)).toHaveLength(1);

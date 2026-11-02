@@ -1,0 +1,36 @@
+/* Owner decision 2026-11-02: 15 px body, 1.45 leading; detail belongs in the drawer.
+   Scoped to Beacons so inherited kit and old bench styles cannot shrink its text.
+   Headings, stamps and keycaps retain their own readable label/figure scale. */
+.visuals-room.visuals-deck :is(.cc-chamber-section, .cc-chamber-mini, .cc-chamber-drawer-body) {
+  font-size: var(--text-px-15);
+  line-height: 1.45;
+}
+
+.visuals-room.visuals-deck.visuals-room :is(.cc-chamber-section, .cc-chamber-mini, .cc-chamber-drawer-body)
+  :where(p, li, dt, dd, td, th, label, input, select, textarea, output, pre, figcaption, small, time, button,
+    [role="cell"], .cc-field-gloss, .cc-feed-body, .cc-feed-detail, .cc-chip, .cc-hero-caption,
+    .visuals-readout, .visuals-replay-clock, .visuals-replay-time, .visuals-curve-axis, .visuals-curve-marker,
+    span:not(.cc-control-key, .cc-control-key *, .cc-stamp, .cc-stamp *, .cc-hero-figure, .cc-hero-figure *,
+      .visuals-beacon-name, .cc-chamber-section-heading *, .visuals-monitor *)) {
+  font-size: var(--text-px-15);
+  line-height: 1.45;
+}
+
+.visuals-room.visuals-deck .visuals-reading-details { display: grid; gap: var(--space-8); }
+.visuals-room.visuals-deck .visuals-reading-details p { margin: 0; }
+.visuals-room.visuals-deck .visuals-reading-details .visuals-stage__line { display: block; }
+.visuals-room.visuals-deck .visuals-plate-meta {
+  white-space: normal; overflow: visible; text-overflow: clip;
+}
+.visuals-room.visuals-deck .visuals-stair-step { font-size: var(--text-px-15); line-height: 1.45; }
+.visuals-room.visuals-deck .visuals-stair-step :is(b, span) { overflow: visible; }
+/* Detail cards may grow naturally in the drawer; no text truncation or tight tracks. */
+.visuals-room.visuals-deck .visuals-plates { grid-template-columns: repeat(auto-fit, minmax(min(100%, 24rem), 1fr)); }
+.visuals-room.visuals-deck .visuals-event-feed .cc-feed-detail > span { white-space: normal; overflow: visible; }
+.visuals-room.visuals-deck .visuals-event-feed .cc-feed-detail { white-space: normal; overflow: visible; }
+.visuals-room.visuals-deck .visuals-event-feed .cc-feed-text { white-space: normal; overflow: visible; }
+.visuals-room.visuals-deck .visuals-event-feed .cc-ruled-row {
+  grid-template-columns: var(--space-34) minmax(0, 1fr);
+  height: 100%; align-content: center; overflow: visible;
+}
+.visuals-room.visuals-deck .visuals-event-feed .cc-feed-trailing { grid-column: 2; }

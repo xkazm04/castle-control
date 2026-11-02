@@ -25,8 +25,7 @@ const styleLine: Record<string, string> = { heraldic: 'Iron and embers, matches 
 
 const session = () => moderationSession(proposalQueue);
 /** The look the stage draws for a draft: chosen values over the session's current vote layer. */
-export function voteLook(draft: VoteDraft | undefined): VoteLook {
-  const current = session().output.getSnapshot().vote;
+export function voteLook(draft: VoteDraft | undefined, current: VoteLook = session().output.getSnapshot().vote): VoteLook {
   const placement = placements.find(item => item.id === draft?.placement)?.look;
   return { anchor: placement?.anchor ?? current.anchor, size: placement?.size ?? current.size,
     art_style: draft?.style ?? current.art_style, colour: current.colour };

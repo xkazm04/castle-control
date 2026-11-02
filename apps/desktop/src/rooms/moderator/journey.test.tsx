@@ -1,3 +1,4 @@
+import { openGatehouseDrawer } from './component-probe.jsx';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, expect, test, vi } from 'vitest';
 import { ProposalQueue } from '@castle-control/ui/steward';
@@ -7,8 +8,8 @@ import ModeratorRoom from './index.jsx';
 import { HeldQueue } from './controls.jsx';
 import { ChatPlayback } from './playback.jsx';
 
-afterEach(() => { vi.useRealTimers(); });
-const room = () => renderToStaticMarkup(<ModeratorRoom snapshot={{ mode: 'fixture', phase: 'ready' }} replay={false} queue={new ProposalQueue()} />);
+afterEach(() => { vi.useRealTimers(); vi.restoreAllMocks(); });
+const room = () => openGatehouseDrawer(<ModeratorRoom snapshot={{ mode: 'fixture', phase: 'ready' }} replay={false} queue={new ProposalQueue()} />);
 
 test('fixture journey offers a schema-backed watching rule editor and simulated playback', () => {
   const html = room();

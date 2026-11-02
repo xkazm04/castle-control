@@ -7,6 +7,8 @@
    first lazily opened surface. Selectors lead with .cc-frame to outrank the legacy
    component sheets whatever their load order.
    ============================================================================= */
+@import './tokens.css';
+@import './deck-top.css';
 html, body { background: var(--stone); }
 .cc-frame {
   background: var(--stone); color: var(--ink);

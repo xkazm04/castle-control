@@ -1,3 +1,4 @@
+import { openGatehouseDrawer } from './component-probe.jsx';
 import { renderToStaticMarkup } from 'react-dom/server';
 import * as React from 'react';
 import type { FormHTMLAttributes, ReactNode } from 'react';
@@ -83,7 +84,7 @@ test('draft actions and refusals show plain words while keeping wire values in a
 test('fixture draft marks the replay and survives into a separate, hash-free pattern preview', () => {
   const queue = new ProposalQueue(); const { bench } = moderationSession(queue);
   bench.setDraft({ name: 'Caps lock!', pattern: 'go left', action: 'delete' });
-  const html = renderToStaticMarkup(<ModeratorRoom snapshot={{ mode: 'fixture', phase: 'ready' }} replay={false} queue={queue} />);
+  const html = openGatehouseDrawer(<ModeratorRoom snapshot={{ mode: 'fixture', phase: 'ready' }} replay={false} queue={queue} />);
   expect(html).toContain('data-draft-match="true"'); expect(html).toContain('draft matches');
   expect(html).toContain('Draft matches'); expect(html).toContain('draft pattern hits');
   expect(html.match(/id="watching-name"/g)).toHaveLength(1);

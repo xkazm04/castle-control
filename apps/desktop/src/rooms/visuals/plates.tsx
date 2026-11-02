@@ -1,3 +1,4 @@
+import { RoomKeyBadge } from '../../shell/steward-keys.jsx';
 import type { CSSProperties, KeyboardEvent, ReactNode } from 'react';
 import type { Visual } from '@castle-control/contract';
 import { HeroReadout, Plate, PlateBand, StatusChip } from '@castle-control/ui';
@@ -6,7 +7,7 @@ import { source_labels } from './contribution-input.js';
 import { BeaconThumb } from './stage.jsx';
 import { findPreset } from './presets.js';
 
-export type PlateVisual = { visual: Visual; total?: number; intensity?: number };
+export type PlateVisual = { visual: Visual; total?: number; intensity?: number; gift_weight?: number };
 
 function Stair({ item, core }: { item: PlateVisual; core: boolean }) {
   return <span className="visuals-stair" aria-label={core ? copy.core_ranges(item.visual.name) : copy.ranges(item.visual.name)}>
@@ -41,10 +42,24 @@ export function selectPlate<T>(event: KeyboardEvent<HTMLButtonElement>, index: n
   event.currentTarget.parentElement?.querySelectorAll<HTMLButtonElement>('[role="radio"]')[next]?.focus();
 }
 
-export function BeaconPlates<T extends PlateVisual>({ visuals, selected, on_select, draft, core = false, busy = false }: {
+export function BeaconPlates<T extends PlateVisual>({ visuals, selected, on_select, draft, core = false, busy = false, compact = false }: {
   visuals: readonly T[]; selected: string; on_select: (item: T) => void;
-  draft?: ReactNode; core?: boolean; busy?: boolean;
+  draft?: ReactNode; core?: boolean; busy?: boolean; compact?: boolean;
 }) {
+  if (compact) return <div className="visuals-plates--compact visuals-beacon-list" role="radiogroup" aria-label={copy.visuals}>
+    {visuals.map((item, index) => {
+      const chosen = item.visual.visual_id === selected;
+      const percent = item.intensity === undefined ? 'n/a' : `${Math.round(item.intensity * 100)}%`;
+      return <button type="button" role="radio" key={item.visual.visual_id} className="visuals-beacon"
+        aria-checked={chosen} tabIndex={chosen ? 0 : -1} disabled={busy}
+        aria-label={`${item.visual.name}, ${item.intensity === undefined ? copy.live_unavailable : `${percent} ${copy.blaze}`}`}
+        onClick={() => on_select(item)} onKeyDown={event => selectPlate(event, index, visuals, on_select)}>
+        <span className="visuals-beacon-name"><RoomKeyBadge room="visuals" action={`beacon_${index}`} />{item.visual.name}</span>
+        <span className="visuals-beacon-blaze">{percent}</span>
+        <span className="visuals-beacon-state">{chosen ? 'In the picture' : 'Show in the picture'}</span>
+      </button>;
+    })}
+  </div>;
   return <div className="visuals-plates" role="radiogroup" aria-label={copy.visuals}>
     {visuals.map((item, index) => {
       const chosen = item.visual.visual_id === selected;
@@ -56,7 +71,7 @@ export function BeaconPlates<T extends PlateVisual>({ visuals, selected, on_sele
         aria-label={`${item.visual.name}, ${item.intensity === undefined ? copy.live_unavailable : `${Math.round(item.intensity * 100)}% ${copy.blaze}`}`}
         onClick={() => on_select(item)} onKeyDown={event => selectPlate(event, index, visuals, on_select)}
         band={<PlateBand variant="chief" title={`${copy.beacon} ${copy.numerals[index] ?? index + 1} · ${kind}`}
-          count={<span className="visuals-plate-state" data-idle={!chosen}>{chosen ? copy.selected : copy.select}</span>} />}>
+          count={<span className="visuals-plate-state" data-idle={!chosen}><RoomKeyBadge room="visuals" action={`beacon_${index}`} />{chosen ? 'In the picture' : 'Show in the picture'}</span>} />}>
         <span className="visuals-plate-name">{item.visual.name}</span>
         <span className="visuals-plate-art" data-on-air="false">
           <BeaconThumb visual={item.visual} intensity={item.intensity ?? 0}
@@ -71,6 +86,7 @@ export function BeaconPlates<T extends PlateVisual>({ visuals, selected, on_sele
         </span>
         <span className="visuals-plate-meta">{item.total === undefined ? copy.core_curve : `${item.total.toFixed(1)} ${copy.simulated_meta}`}</span>
         <span className="visuals-plate-foot">
+          {item.gift_weight !== undefined && <StatusChip variant="or">{`${item.gift_weight}× gift weighting`}</StatusChip>}
           <StatusChip variant="or">{item.visual.input ? source_labels[item.visual.input.source] : copy.not_routed}</StatusChip>
           <StatusChip variant="dash">{item.visual.curve.decay.kind === 'none' ? copy.no_decay : copy.half_life(item.visual.curve.decay.half_life_s / 60)}</StatusChip>
         </span>

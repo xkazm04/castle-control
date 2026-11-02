@@ -26,25 +26,87 @@ async function holdToSeal(page: Page, done: RegExp) {
   await expect(dock(page)).toContainText(done);
   await page.keyboard.up('Space');
 }
-const openMore = (page: Page) => page.locator('.visuals-more > summary').click();
+const openMore = (page: Page) => page.getByRole('button', { name: 'More of the beacons', exact: true }).click();
+
+test('Beacons chamber fits the integrated room at readable body size and opens every tier in its drawer', async ({ page }) => {
+  for (const viewport of [{ width: 1280, height: 720 }, { width: 1366, height: 768 }]) {
+    await page.setViewportSize(viewport);
+    await page.goto('/#/chamber/visuals');
+    const room = page.locator('.visuals-room');
+    await expect(room.locator('[data-role="room-picture"]')).toHaveCount(1);
+    await expect(room.locator('.cc-chamber-column')).toHaveCount(2);
+    for (let selected = 0; selected < 3; selected++) {
+      await room.locator('.visuals-beacon-list').getByRole('radio').nth(selected).click();
+      const fit = await room.evaluate(element => {
+        const bounds = element.getBoundingClientRect();
+        const frame = element.closest('.shell-room-content');
+        const picture = element.querySelector('[data-role="room-picture"]')?.getBoundingClientRect();
+        const columns = [...element.querySelectorAll('.cc-chamber-column')].map(column => column.getBoundingClientRect());
+        const beacons = [...element.querySelectorAll('.visuals-beacon')].map(beacon => beacon.getBoundingClientRect());
+        const tiers = [...element.querySelectorAll('.visuals-beacon .visuals-stair-step')].map(tier => tier.getBoundingClientRect());
+        const actions = [...element.querySelectorAll('.visuals-primary-actions button')].map(action => action.getBoundingClientRect());
+        return {
+          frame_scroll: !!frame && (frame.scrollHeight > frame.clientHeight + 1 || frame.scrollWidth > frame.clientWidth + 1),
+          scroll: element.scrollHeight > element.clientHeight + 1 || element.scrollWidth > element.clientWidth + 1,
+          stacked: beacons.every((beacon, index) => index === 0 || beacon.top >= (beacons[index - 1]?.bottom ?? 0)),
+          tiers_in_drawer: tiers.length === 0,
+          actions_one_row: actions.length === 2 && actions.every(action => action.top === actions[0]?.top),
+          readable_body: [...element.querySelectorAll<HTMLElement>('.visuals-stage__total, .visuals-weight, .visuals-beacon-state, .visuals-primary-actions button, .cc-chamber-mini p')]
+            .every(node => getComputedStyle(node).fontSize === '15px' && getComputedStyle(node).lineHeight === '21.75px'),
+          compact_text: [...element.querySelectorAll('.visuals-beacon-blaze, .visuals-beacon[aria-checked="false"] > span')]
+            .every(node => node.getBoundingClientRect().height <= 24),
+          columns_fit: columns.every(column => column.bottom <= bounds.bottom + 1 && column.right <= bounds.right + 1),
+          picture_ratio: picture ? picture.width / picture.height : 0,
+          text_fits: [...element.querySelectorAll<HTMLElement>('*')].filter(node => node.checkVisibility()
+            && !node.closest('.cc-sr') && !node.children.length && node.textContent?.trim()).every(node => {
+            const rect = node.getBoundingClientRect();
+            return rect.bottom <= bounds.bottom + 1 && rect.right <= bounds.right + 1
+              && Number.parseFloat(getComputedStyle(node).fontSize) >= 13;
+          }),
+        };
+      });
+      expect(fit.frame_scroll).toBe(false);
+      expect(fit.scroll).toBe(false);
+      expect(fit.stacked).toBe(true);
+      expect(fit.tiers_in_drawer).toBe(true);
+      expect(fit.actions_one_row).toBe(true);
+      expect(fit.readable_body).toBe(true);
+      expect(fit.compact_text).toBe(true);
+      expect(fit.columns_fit).toBe(true);
+      expect(fit.text_fits).toBe(true);
+      expect(fit.picture_ratio).toBeCloseTo(16 / 9, 2);
+      console.log(`SIMULATED Beacons ${viewport.width}x${viewport.height}, selected ${selected}: ${JSON.stringify(fit)}`);
+    }
+    await openMore(page);
+    const drawer = page.getByRole('dialog', { name: 'More of the beacons' });
+    await expect(drawer.getByRole('radio')).toHaveCount(3);
+    await expect(drawer.locator('.visuals-stair-step')).toHaveCount(12);
+    await expect(drawer.locator('.visuals-stage__tags')).toBeVisible();
+    await expect(drawer.getByRole('button', { name: /Halve the decay/ })).toBeVisible();
+    await expect(drawer.getByRole('form', { name: 'Kindling curve editor' })).toBeVisible();
+    await page.getByRole('button', { name: 'Close More of the beacons', exact: true }).click();
+    await expect(drawer).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'More of the beacons', exact: true })).toBeFocused();
+  }
+});
 
 test('Beacons: the picture is the live beacon; Tune a beacon drafts into it and seals on the hold', async ({ page }) => {
   await page.goto('/#/chamber/visuals');
   await expect(page.locator('.cc-rampart > [data-stamp="simulated"]')).toHaveText('Simulated');
   const picture = page.getByRole('region', { name: 'Beacon picture' });
   await expect(picture).toContainText('Offering altar');
-  await expect(picture.locator('.visuals-stage__blaze')).toContainText('39%');
+  await expect(page.getByRole('group', { name: 'Room sections 1', exact: true }).locator('.visuals-stage__blaze')).toContainText('39%');
   await expect(picture.locator('.visuals-monitor__sim')).toHaveText('Simulated');
   const plates = page.getByRole('radiogroup', { name: 'Beacon visuals' });
   await plates.getByRole('radio').first().focus();
   await page.keyboard.press('ArrowRight');
   await expect(plates.getByRole('radio').nth(1)).toHaveAttribute('aria-checked', 'true');
-  await expect(picture.locator('.visuals-stage__name')).toHaveText('Gilded camera frame');
+  await expect(page.getByRole('group', { name: 'Room sections 1', exact: true }).locator('.visuals-stage__name')).toHaveText('Gilded camera frame');
   await page.keyboard.press('Home');
   await dock(page).getByRole('button', { name: 'Tune a beacon', exact: true }).click();
   await option(page, 'Gilded camera frame').click();
   await expect(picture.locator('.visuals-monitor__stamp')).toHaveText('Simulated draft · not on air');
-  await expect(picture.locator('.visuals-stage__name')).toHaveText('Gilded camera frame');
+  await expect(page.getByRole('group', { name: 'Room sections 1', exact: true }).locator('.visuals-stage__name')).toHaveText('Gilded camera frame');
   await option(page, 'Subscriptions').click();
   const eager = option(page, 'Eager');
   await expect(eager).toContainText(/Full at 40 · Sample night: .* · Gift wave: /);
@@ -55,11 +117,14 @@ test('Beacons: the picture is the live beacon; Tune a beacon drafts into it and 
   await dock(page).getByRole('button', { name: 'Looks right', exact: true }).click();
   await expect(dock(page)).toContainText('0→0% · 3→30% · 12→70% · 40→100%');
   // Nothing acted yet: the card in the picker still shows the old route.
-  await expect(plates.getByRole('radio').nth(1)).toContainText('gift subscriptions');
+  await openMore(page);
+  await expect(page.getByRole('dialog').getByRole('radio').nth(1)).toContainText('gift subscriptions');
+  await page.getByRole('button', { name: 'Close More of the beacons', exact: true }).click();
   await holdToSeal(page, /Sealed\. The Gilded camera frame now answers eager/);
   await expect(picture).toHaveAttribute('data-mode', 'rest');
-  await expect(picture.locator('.visuals-stage__tags')).toContainText('subscriptions');
-  await expect(picture.locator('.visuals-stage__tags')).toContainText('Halves every 15 min');
+  await openMore(page);
+  await expect(page.getByRole('dialog').locator('.visuals-stage__tags')).toContainText('subscriptions');
+  await expect(page.getByRole('dialog').locator('.visuals-stage__tags')).toContainText('Halves every 15 min');
   await auditStyles(page, desktopSurfaces);
 });
 
@@ -71,9 +136,9 @@ test('Beacons: Test fire predicts the reaction, fires only on the hold, and Play
   await expect(option(page, 'A 50-gift bomb')).toContainText('39% → 82% blaze');
   await option(page, 'A 50-gift bomb').click();
   await expect(picture.locator('.visuals-monitor__stamp')).toHaveText('Simulated test · not fired yet');
-  await expect(picture.locator('.visuals-stage__blaze')).toContainText('3982%');
+  await expect(page.getByRole('group', { name: 'Room sections 1', exact: true }).locator('.visuals-stage__blaze')).toContainText('3982%');
   await holdToSeal(page, /Fired a 50-gift bomb at the Offering altar\. It burns at 82% now\./);
-  await expect(picture.locator('.visuals-stage__blaze')).toHaveText(/^82%/);
+  await expect(page.getByRole('group', { name: 'Room sections 1', exact: true }).locator('.visuals-stage__blaze')).toHaveText(/^82%/);
   await dock(page).getByRole('button', { name: 'Play demo', exact: true }).click();
   await expect(dock(page)).toContainText('Let support change how your stream looks');
   await option(page, 'Gift wave on the camera frame').click();
@@ -85,7 +150,7 @@ test('Beacons: Test fire predicts the reaction, fires only on the hold, and Play
   await dock(page).getByRole('button', { name: 'Seen it', exact: true }).click();
   await option(page, 'Fit it to nights like this').click();
   await holdToSeal(page, /That was the demo\. On the gift wave the gilded camera frame peaks/);
-  await expect(picture.locator('.visuals-stage__name')).toHaveText('Gilded camera frame');
+  await expect(page.getByRole('group', { name: 'Room sections 1', exact: true }).locator('.visuals-stage__name')).toHaveText('Gilded camera frame');
   await auditStyles(page, desktopSurfaces);
 });
 
@@ -113,7 +178,7 @@ test('Beacons workbench behind More: tune points, appearance, test fire and copy
   await editor.getByLabel('Decay', { exact: true }).selectOption('exponential');
   await editor.getByLabel('Half-life (seconds)').fill('60');
   await editor.getByRole('button', { name: 'Save curve locally' }).click();
-  await page.getByLabel('Gift-sub weighting').selectOption('2');
+  await page.getByRole('dialog').getByLabel('Gift-sub weighting').selectOption('2');
   await page.getByLabel('Size', { exact: true }).selectOption('L');
   await page.getByLabel('Anchor', { exact: true }).selectOption('bottom-right');
   await page.getByLabel('Colour', { exact: true }).selectOption('azure');
@@ -137,7 +202,7 @@ test('Beacons workbench behind More: tune points, appearance, test fire and copy
   await expect(page.locator('.visuals-core-source-status')).toContainText('SIMULATED example URL copied for Offering altar');
   await expect(page.locator('html')).toHaveAttribute('data-copied-source', 'http://localhost:4821/fixture-not-live/offering-altar?scale=1&anchor=br');
   await page.getByRole('button', { name: 'End test fire' }).click();
-  await expect(page.getByLabel('Gift-sub weighting')).toHaveValue('2');
+  await expect(page.getByRole('dialog').getByLabel('Gift-sub weighting')).toHaveValue('2');
   await expect(page.getByLabel('Size', { exact: true })).toHaveValue('L');
   await auditStyles(page, desktopSurfaces);
   await auditFields(page);
@@ -171,7 +236,7 @@ test('Beacons night replay: a pinned night, a fit, the way back, and a sealed St
   await fit.click();
   await replay.getByRole('button', { name: 'Send curve to the Steward', exact: true }).click();
   await expect(replay).toContainText('Draft · revision 1 · not on air');
-  const hold = page.getByRole('button', { name: /hold to seal/i });
+  const hold = page.getByRole('dialog').getByRole('button', { name: /hold to seal/i });
   await expect(hold).toHaveCount(1);
   await hold.focus(); await page.keyboard.down('Space');
   await expect(replay).toContainText('Sealed · this is the curve');

@@ -10,9 +10,10 @@ import { createDrawDisplay } from './display.js';
 import LotteryRoom from './index.jsx';
 import { FixtureCast } from './result.jsx';
 import { draftRoll, lotterySession, sealLotteryProposal } from './session.js';
+import { renderLotDrawer } from './drawer-test.jsx';
 import { LotteryWrit } from './writ.jsx';
 
-const room = (queue: ProposalQueue) => renderToStaticMarkup(<LotteryRoom snapshot={{ mode: 'fixture', phase: 'ready' }} replay={false} queue={queue} />);
+const room = (queue: ProposalQueue) => renderLotDrawer(lotterySession(queue).port, <LotteryRoom snapshot={{ mode: 'fixture', phase: 'ready' }} replay={false} queue={queue} />);
 
 test('the roll panel follows the real queue through draft, tear and seal', async () => {
   const queue = new ProposalQueue();
@@ -75,16 +76,18 @@ test('the urn count is one calm figure followed by its caption', () => {
   expect(markup).toContain('data-role="lot-count"><b>87</b><span>lots · eligible</span>');
 });
 
-test('fixture and core keep the hall first and the rarely used tools behind one More disclosure', () => {
+test('fixture and core keep the chamber first and rarely used tools in one drawer', () => {
   const port = createCoreLotsPort({ mode: 'core', endpoint: 'http://127.0.0.1:3210/', session_token: 'a'.repeat(64) });
-  for (const markup of [room(new ProposalQueue()), renderToStaticMarkup(<ConnectedLotsRoom port={port} />)]) {
-    const hall = markup.indexOf('class="cc-hall"');
+  for (const markup of [room(new ProposalQueue()), renderLotDrawer(port, <ConnectedLotsRoom port={port} />)]) {
+    const chamber = markup.indexOf('class="cc-chamber-layout"');
+    const drawer = markup.indexOf('role="dialog"');
     const more = markup.indexOf('data-role="lot-more"');
-    expect(hall).toBeGreaterThan(-1);
-    expect(more).toBeGreaterThan(hall);
+    expect(chamber).toBeGreaterThan(-1);
+    expect(drawer).toBeGreaterThan(chamber);
+    expect(more).toBeGreaterThan(drawer);
     expect(markup.match(/data-role="lot-more"/g)).toHaveLength(1);
-    expect(markup.slice(more)).toContain(`aria-label="${copy.lookup_title}"`);
-    expect(markup.slice(more)).toContain('class="cc-numbered-discs"');
-    expect(markup.slice(hall, more)).not.toContain(copy.lookup_title);
+    expect(markup.slice(drawer)).toContain(`aria-label="${copy.lookup_title}"`);
+    expect(markup.slice(drawer)).toContain('class="cc-numbered-discs"');
+    expect(markup.slice(chamber, drawer)).not.toContain(copy.lookup_title);
   }
 });

@@ -95,7 +95,7 @@ export function CoreBench({ port, state, seal_slot }: { port: CoreBeaconsPort; s
         <CardHead title={copy.core_controls} />
         <CardBody>
           <BrowserSourceNotice state={copy_state} />
-          <WindowedRows rows={state.visuals} label="Core beacon visuals" row_height={rowHeight * 4}
+          <WindowedRows rows={state.visuals} label="Core beacon visuals" row_height={rowHeight * 6}
             row_key={item => item.visual_id} empty_state={failed ? failure : 'No beacons in your core yet. Ask the Steward to light one.'}>
             {item => <article className="visuals-core-item">
               <h3>{item.name}</h3>

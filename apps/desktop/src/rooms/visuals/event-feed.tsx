@@ -13,7 +13,7 @@ export function ContributionFeed({ events, origin, scroll_top = 0 }: {
     <CardBody>
       <p>{copy.feed_notice(events.length, origin)}</p>
       <RuledFeed><WindowedRows rows={events} label={copy.simulated_events} row_key={event => event.id}
-        row_height={rowHeight * 1.5} scroll_top={scroll_top} empty_state={copy.no_events}>
+        row_height={rowHeight * 4} scroll_top={scroll_top} empty_state={copy.no_events}>
         {event => <div className="visuals-event-row" role="presentation" data-contribution-row={event.id}>
           <RuledRow layout="amount" mark={<b>{event.burst.amount}</b>}
           trailing={<time dateTime={event.at} title={event.at}>{event.at.slice(11, 19)} UTC</time>}

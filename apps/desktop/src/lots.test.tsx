@@ -14,14 +14,15 @@ import { ConnectedLotsRoom } from './rooms/lottery/core.jsx';
 import { DrawStage } from './rooms/lottery/stage.jsx';
 import { createRevealClock } from './rooms/lottery/playback.js';
 import { castWinners, sealOf, verifyWrit } from './lots-cast.js';
+import { renderLotDrawer } from './rooms/lottery/drawer-test.jsx';
 import { prepareFixtureRoll, rehearsalClock, rehearsalSeed } from './rooms/lottery/simulation.js';
-type Control = { children?: ReactNode; type?: string; onClick?: () => void; onBlur?: () => void; on_new?: () => void;
+type Control = { children?: ReactNode; tools?: ReactNode; setup?: ReactNode; winner_control?: ReactNode; type?: string; onClick?: () => void; onBlur?: () => void; on_new?: () => void;
   onKeyDown?: (event: KeyboardEvent<HTMLInputElement>) => void;
   onChange?: (event: ChangeEvent<HTMLInputElement>) => void; value?: string | number };
 function controls(tree: ReactNode): Control[] {
   const found: Control[] = [];
   Children.forEach(tree, child => {
-    if (isValidElement<Control>(child)) found.push(child.props, ...controls(child.props.children));
+    if (isValidElement<Control>(child)) found.push(child.props, ...controls(child.props.children), ...controls(child.props.tools), ...controls(child.props.setup), ...controls(child.props.winner_control));
   });
   return found;
 }
@@ -38,7 +39,7 @@ async function coreRoom() {
   await port.load(); return { port, rpc };
 }
 test('lots-01 core controls have standalone labels with exact names', async () => {
-  const { port } = await coreRoom(); const markup = renderToStaticMarkup(<ConnectedLotsRoom port={port} />);
+  const { port } = await coreRoom(); const markup = renderLotDrawer(port, <ConnectedLotsRoom port={port} />);
   expect(markup.match(/<label[^>]*>[^<]*<(select|input)/g) ?? []).toHaveLength(0);
   for (const name of ['Draw', 'Number of winners']) {
     const labels = [...markup.matchAll(/<label for="([^"]+)">([^<]*)<\/label>/g)].filter(match => match[2] === name);
@@ -46,7 +47,7 @@ test('lots-01 core controls have standalone labels with exact names', async () =
   }
 });
 test('lots-01 round-source paragraph has no prohibited name', async () => {
-  const { port } = await coreRoom(); const markup = renderToStaticMarkup(<ConnectedLotsRoom port={port} />);
+  const { port } = await coreRoom(); const markup = renderLotDrawer(port, <ConnectedLotsRoom port={port} />);
   expect(markup).not.toMatch(/<p[^>]*aria-label="Round source"/);
 });
 test.each([['blur', '1'], ['Enter', '1'], ['blur', ''], ['blur', '0']] as const)(
@@ -76,7 +77,7 @@ test.each([['blur', '1'], ['Enter', '1'], ['blur', ''], ['blur', '0']] as const)
 test('lots-03 uncertain seal shows a persistent reconciliation alert despite its error notice', async () => {
   const { port } = await coreRoom(); await port.seal();
   expect(port.getSnapshot()).toMatchObject({ locked: true, sealed: false });
-  const markup = renderToStaticMarkup(<ConnectedLotsRoom port={port} />);
+  const markup = renderLotDrawer(port, <ConnectedLotsRoom port={port} />);
   expect(markup).toMatch(/role="alert"[^>]*>[^<]*locked[^<]*reconciled in the core/);
 });
 test('lots-11 Draft a new roll preserves custom setup and template selection still resets it', async () => {
@@ -98,7 +99,7 @@ test('lots-11 Draft a new roll preserves custom setup and template selection sti
   port.select(draw.draw_id); expect(port.getSnapshot().draw).toEqual(draw);
 });
 const snapshot = { mode: 'fixture', phase: 'ready' } as const;
-const html = (queue = new ProposalQueue()) => renderToStaticMarkup(<LotteryRoom snapshot={snapshot} replay={false} queue={queue} />);
+const html = (queue = new ProposalQueue()) => renderLotDrawer(lotterySession(queue).port, <LotteryRoom snapshot={snapshot} replay={false} queue={queue} />);
 const current = (queue: ProposalQueue) => {
   const item = queue.pending('lottery').at(-1);
   if (!item) throw new Error('Missing roll proposal');

@@ -590,3 +590,97 @@ caption cell available for long chamber readings. No fixed headline width or
 type change is introduced. The caption's computed max-width is none there;
 max-width: 100% applies only below 1440, retaining the verified 1280 grid and
 wrapping behavior. Footer, heartbeat and plaque rules are unchanged.
+
+## T3 WP4-gate: Gatehouse on the chamber frame
+
+Both fixture and connected-core rooms use `ChamberLayout`. The picture is the
+existing `GatePlate`/`GateArt`, separated from the review controls through the
+plate's `part` prop. The proposal mini reads the existing shared proposal queue;
+the program mini reads the room's chat counts, selected Herald data and output
+look. The full proposal fields, hold-to-seal controls and withdrawals remain in
+the drawer's existing seal slot. Fixture art and output remain SIMULATED.
+
+- Column 1: At the portcullis, with the held message, id, quote, hold reason,
+  existing pager and pass/bar proposals, then the pending-ban warrant and its
+  ban/dismiss proposals. Core retains its honest unavailable-queue message.
+- Column 2: the gate's flowing status chips and drawbridge control, followed by
+  the compact Herald chart, filters, legend, Show the vote bar and Restyle.
+  Core retains its existing consensus form and source-copy capability.
+- Drawer: the full Herald chart with filters, reference and trends; the full
+  vote-bar preview and Custom design; the live room/playback, rule bench, moat,
+  garrison orders, drill link, gate log, transparent output previews and proposal
+  list. Full chart and Proposal list open the same drawer. More benches can be
+  collapsed independently. Closing restores the opener through shared Drawer.
+
+The drawer portals to the surrounding theme frame to preserve day/night and
+chamber tokens while escaping the animated/clipping room surface. Its React
+Escape handler closes the room detail layer without a raw keyboard listener.
+The drill route keeps its existing layout, comparison, filters and return link.
+No moderation lifecycle, schema, live transport or seal authority is replaced.
+
+Tests that formerly expected every bench in closed-room markup now activate the
+real Full chart handler before checking that content. Structure coverage checks
+the picture, both columns, all three fixture sections, core sections, both drawer
+triggers, reachable content, closing, the drill route and shared mini/output data.
+The render-cost tests still mount and measure the expanded bench content.
+The Gatehouse e2e journey retains its existing interactions and adds 1280x720 /
+1366x768 fit, drawer reachability and Escape checks. Browser execution is pending:
+the sandbox launcher returned `spawn EPERM`; e2e typechecking and discovery passed.
+
+Review 2: drawer reachability probes now use an optional controlled drawer state
+and native React hooks. They invoke the production Full chart / Proposal list
+handlers, render the resulting drawer and dismiss through its close callback.
+They do not retain another component's hook state by a global call index. The
+fixture structure test also exercises the default room store directly. A
+regression mounts a seal slot with state, ref, memo and effect hooks only after
+opening the drawer, then closes and reopens it through both triggers. The
+Gatehouse-only picture/original-message test moved from `shell/room.test.tsx`
+into the room's structure test with every assertion retained, bringing the
+integrated shared test file back under the 400-line cap.
+
+Review 3: the old desk's named grid areas (`bans`, `top`, `herald`) were creating
+implicit columns inside the new section grids. The room stylesheet now resets
+both tracks and direct-child placements, plus the warrant's old three-column
+tracks and action span. The queue's decorative panel cap is suppressed, its
+count sits beside the section heading, and both verdict pairs use one row.
+Card text uses normal word breaking. Compact Herald selectors outrank the old
+four-tile rules: two columns of swatch/label/share rows, one filter row, and a
+90 px plot. The core compact chart uses the same treatment. No scroll clipping
+or smaller type is used to conceal overflow. The CSS regression tests pin these
+grid and wrapping contracts; browser fit remains for the Director to remeasure
+because this sandbox's browser launcher still returns `spawn EPERM`.
+
+Review 4: the compact Herald plot is 64 px high. Its filter segments use short
+visible labels with the original accessible names, padding, gaps and no inherited
+negative margins. Gate-state chips use shorter labels; the drawbridge control,
+right-column cards and inline vote-bar controls reserve less height. Full output
+metadata remains in the Program mini and expanded drawer. Review, drawbridge,
+vote-bar and filter badges use the shared `RoomKeyBadge` / `keyFor` action table;
+no key letters are duplicated in the room. Tests retain proposal lifecycle and
+accessible-name assertions while checking the table-derived badges.
+
+Owner readability decision, 2026-11-02: section body, controls, IDs and legend
+copy now use `--text-px-15` with line-height 1.45. Small-cap headings and key
+badges retain their label size. The shared card padding (11/14/12) and 8 px
+content gaps are retained; neither the picture nor its 16:9 slot is reduced.
+The full ban warrants and their Ban/Dismiss controls, held-queue pager and
+secondary held-state/gloss, gate summary sentence and Shield Mode explanation
+are reachable through the section's Review queue button. Vote-look metadata
+is in the expanded vote-bar card. Connected-core filter/edit/refresh fields
+and extended queue/quiet-state explanation also stay in the Full chart drawer. The face
+keeps the first hold, quote/reason, Pass/Bar, feedback, gate facts/drawbridge,
+fixture filters, compact chart/legend and vote controls. Key badges remain
+table-derived. The drill retains its existing layout.
+
+Computed default-fixture height budget at 1280x720 (not a browser measurement):
+15 x 1.45 = 21.75 px per body line. Allowing two fact-chip rows, two legend
+rows and normal control borders/padding gives 132.5 px for the gate card,
+286.75 px for Herald, 10 px between cards and 22 px chamber vertical insets:
+451.25 px of the brief's approximately 470 px body, leaving 18.75 px. The
+first queue column is below 400 px even allowing two-line quote/reason and a
+two-line Review queue control. At 1366x768 the same budget leaves about
+68.75 px of the approximately 520 px body. These calculations assume the
+default fixture's text wrapping; browser fit still needs verification because
+the sandbox Playwright launcher returns `spawn EPERM` before running the test.
+The e2e journey checks overflow, 15 px / 21.75 px computed typography and the
+production Review queue trigger at both requested sizes.

@@ -1,8 +1,9 @@
 import { readFileSync } from 'node:fs';
-import { renderToStaticMarkup } from 'react-dom/server';
+import { renderToReadableStream, renderToStaticMarkup } from 'react-dom/server';
 import { expect, test, vi } from 'vitest';
 import Room, { MoreMenu, StudioViewSwitch } from './room.jsx';
-import TiltyardView, { FixtureDuel, LocalDuelDemos } from './tiltyard-view.jsx';
+import TiltyardView, { FixtureDuel } from './tiltyard-view.jsx';
+import LocalDuelDemos from './local-duel-demos.jsx';
 
 test('the Map Room opens on the duel: one SAMPLE match, SIMULATED, ready with its keys and no network', () => {
   const network = vi.spyOn(globalThis, 'fetch');
@@ -16,10 +17,11 @@ test('the Map Room opens on the duel: one SAMPLE match, SIMULATED, ready with it
     expect(stage).toContain('Semifinal'); expect(stage).toContain('Match 1 of 3');
     expect(stage).toContain('<span class="cc-sim" data-role="ty-simulated">Simulated</span>');
     expect(stage).toContain('Open the vote'); expect(stage).toContain('Full bracket');
-    // The compact strip only: two semifinal pips, one final pip and the champion slot; no full tree on the page.
-    expect(stage.match(/class="duel-pip"/g)).toHaveLength(3);
+    // Two semifinals and the final in the section summary; the full seeded tree is in the drawer.
+    expect(stage.match(/class="duel-bracket__match" data-state=/g)).toHaveLength(3);
+    expect(stage).toContain('data-role="ty-champ-slot"');
     expect(stage).not.toContain('data-role="ty-match"');
-    expect(stage).not.toContain('Duel on stream');
+    expect(stage).toContain('More'); expect(stage).not.toContain('Show the duel on stream');
     expect(network).not.toHaveBeenCalled();
   } finally { network.mockRestore(); }
 });
@@ -44,6 +46,13 @@ test('Showdown and Ladder stay reachable as local demos without a second Chat en
   expect(html).toContain('data-mode="show"'); expect(html).toContain('data-mode="ladder"');
   expect(html).not.toContain('data-mode="chat"');
   expect(html).toContain('Local demo');
+});
+
+test.each(['show', 'ladder'] as const)('the deferred %s view retains the local demo markup', async view => {
+  const stream = await renderToReadableStream(<TiltyardView view={view} />);
+  await stream.allReady;
+  const html = (await new Response(stream).text()).replace(/<!--.*?-->/g, '');
+  expect(html).toBe(renderToStaticMarkup(<LocalDuelDemos mode={view} />));
 });
 
 test('More is one closed disclosure; the sand-table switch keeps its three views', () => {

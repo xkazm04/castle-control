@@ -11,6 +11,7 @@ import { lotsRollSeal } from '@castle-control/contract/lots';
 import { createCoreLotsPort, lotsRoundLabel, quicknetChainHash, recordedSealedAt } from './lots-core.js';
 import type { LotsNetwork } from './lots-core.js';
 import { fixtureDraws, fixtureWrit } from './lots-fixture.js';
+import { renderLotDrawer } from './rooms/lottery/drawer-test.jsx';
 import { DrawAppearance } from './rooms/lottery/appearance.jsx';
 
 const launch = { mode: 'core', endpoint: 'http://127.0.0.1:3210/', session_token: 'a'.repeat(64) } as const;
@@ -64,7 +65,7 @@ test('core appearance controls save their chosen display through the validated u
   await h.port.saveDisplay();
   expect(h.rpc.mock.calls.findLast(call => call[2] === 'lots.draw.upsert')?.[3]).toEqual({ draw,
     display: { size: 'L', anchor: 'top-left', colour_token: 'azure', art_style: 'pixel', timing_ms: 750 } });
-  const html = renderToStaticMarkup(createElement(ConnectedLotsRoom, { port: h.port }));
+  const html = renderLotDrawer(h.port, createElement(ConnectedLotsRoom, { port: h.port }));
   expect(html).toContain('Save draw appearance');
   expect(html).toContain('Reloading the room cannot read saved appearance yet');
 });
@@ -297,14 +298,16 @@ test('connected room renders source provenance and the announcement before any w
     },
   });
   await port.load(); await port.seal();
-  const markup = renderToStaticMarkup(createElement(ConnectedLotsRoom, { port, simulated: true }));
+  const markup = renderLotDrawer(port, createElement(ConnectedLotsRoom, { port, simulated: true }));
   expect(markup).toContain('Streamer-controlled · SIMULATED audience');
   expect(markup).toContain('Seal announced');
   expect(markup).not.toContain(copy.core.locked);
   expect(markup).toContain('Cast the lots');
   expect(markup).not.toContain('Winners ·');
   expect(markup).not.toContain('Live-trusted');
-  expect(markup.indexOf('class="cc-stage-wrap"')).toBeLessThan(markup.indexOf('class="cc-desk"'));
+  expect(markup.indexOf('data-role="room-picture"')).toBeGreaterThan(-1);
+  expect(markup.indexOf('data-role="room-picture"')).toBeLessThan(markup.indexOf('class="cc-chamber-column"'));
+  expect(markup.slice(markup.indexOf('role="dialog"'))).toContain('Seal announced');
   expect(markup).toContain('data-role="lot-count"');
 });
 

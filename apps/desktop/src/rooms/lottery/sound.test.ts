@@ -1,3 +1,4 @@
+import { keyFor } from '../../shell/steward-keys.jsx';
 import { readFileSync } from 'node:fs';
 import { expect, test } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
@@ -70,9 +71,9 @@ test('the stage offers an unpressed sound toggle only when the room wires it', (
     sealed: false, clock: createRevealClock(), reveal_ms: 1500 };
   expect(renderToStaticMarkup(createElement(DrawStage, props))).not.toContain(copy.stage.sound);
   const html = renderToStaticMarkup(createElement(DrawStage, { ...props, on_sound: () => undefined }));
-  expect(html).toMatch(new RegExp(`aria-pressed="false"[^>]*>${copy.stage.sound}<`));
+  expect(html).toMatch(new RegExp(`aria-pressed="false"[^>]*><span class="cc-control-key"[^>]*><kbd[^>]*>${keyFor('lottery', 'sound')}</kbd></span>${copy.stage.sound}<`));
   const on = renderToStaticMarkup(createElement(DrawStage, { ...props, sound: true, on_sound: () => undefined }));
-  expect(on).toMatch(new RegExp(`aria-pressed="true"[^>]*>${copy.stage.sound}<`));
+  expect(on).toMatch(new RegExp(`aria-pressed="true"[^>]*><span class="cc-control-key"[^>]*><kbd[^>]*>${keyFor('lottery', 'sound')}</kbd></span>${copy.stage.sound}<`));
 });
 
 test('sound stays asset-free: no audio files, no fetch', () => {

@@ -6,7 +6,6 @@ import { join } from 'node:path';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { chambers, SealButton } from '@castle-control/ui';
 import { proposalQueue, SimulatedSteward } from '@castle-control/ui/steward';
-import { appRoomTarget, frameTransform, keepRooms } from '@castle-control/keep-art';
 import { DesktopView } from '../view.jsx';
 import { initialNavigation } from '../navigation.js';
 import { simulatedRead } from '../simulated.js';
@@ -17,7 +16,7 @@ import * as states from './strip-states.js';
 import { PersistentStrip, ShellStrip } from './strip.jsx';
 import { ProgramColumn } from './program-column.jsx';
 import KeepWorkspace from './keep.jsx';
-import { RoomHeader, roomCamera } from './room-header.jsx';
+import { RoomHeader } from './room-header.jsx';
 
 const snapshot = { mode: 'fixture', phase: 'ready', ...simulatedRead(1) } as const;
 const noop = () => undefined;
@@ -34,16 +33,16 @@ test.each(['keep', ...chambers.map(item => `chamber/${item.id}`), 'overview', 'd
     const markup = await html(<DesktopView navigation={initialNavigation(`#/${route}`)} snapshot={snapshot}
       theme="day" on_navigate={noop} on_theme_change={noop} />);
     const persistent = route === 'keep' || route.startsWith('chamber/');
-    expect(markup.match(/data-role="strip"/g) ?? []).toHaveLength(persistent ? 1 : 0);
+    expect(markup.match(/data-role="room-bar"/g) ?? []).toHaveLength(persistent || route === 'overview' ? 1 : 0);
     if (persistent) {
-      const strip = markup.match(/<nav[^>]*data-role="strip"[\s\S]*?<\/nav>/)?.[0] ?? '';
+      const strip = markup.match(/<nav[^>]*data-role="room-bar"[\s\S]*?<\/nav>/)?.[0] ?? '';
       const current = route === 'keep' ? 'keep' : route.split('/')[1];
       expect(strip.match(/aria-current="page"/g)).toHaveLength(1);
       const current_tile = [...strip.matchAll(/<button[^>]*>/g)].find(([tag]) => tag.includes(`data-room="${current}"`));
       expect(current_tile?.[0]).toContain('aria-current="page"');
       expect(strip).not.toContain('data-room-tile=');
-      expect(strip.match(/data-role="strip-tile"/g)).toHaveLength(5);
-      expect(markup.indexOf('class="cc-rampart"')).toBeLessThan(markup.indexOf('data-role="strip"'));
+      expect(strip.match(/data-role="room-tab"/g)).toHaveLength(5);
+      expect(markup.indexOf('class="cc-rampart"')).toBeLessThan(markup.indexOf('data-role="room-bar"'));
     } else if (route === 'overview') expect(markup.match(/aria-label="Chamber strip"/g)).toHaveLength(1);
   },
 );
@@ -85,7 +84,7 @@ test('Overview and shell use one mapping for pending drafts, torn drafts, Progra
   expect(spy.mock.calls[0]?.slice(0, 3)).toEqual(spy.mock.calls[1]?.slice(0, 3));
   for (const { id } of chambers) expect(spy.mock.results[0]?.value[id].line).toEqual(spy.mock.results[1]?.value[id].line);
   const lines = (markup: string) => [...markup.matchAll(/class="cc-chamber-state"[^>]*>([^<]*)/g)].map(item => item[1]);
-  expect(lines(shell)).toEqual(chambers.map(({ id }) => keepReadModel(snapshot).states[id].word));
+  expect(lines(shell)).toEqual(['home · all four rooms', ...chambers.map(({ id }) => keepReadModel(snapshot).states[id].word)]);
   expect(lines(overview)).toEqual(chambers.map(({ id }) => spy.mock.results[0]?.value[id].line));
   proposalQueue.tearUp(draft.id);
   expect(states.stripStates(snapshot, proposalQueue.getSnapshot().proposals, [aired]).lottery.line).toBe(`${draft.title} · simulated Program`);
@@ -99,7 +98,7 @@ test.each(['keep', 'overview'] as const)('shared title keeps the %s origin, repl
   const keep = vi.fn();
   const tree = RoomHeader({ chamber: 'moderator', replay: true, origin, fixture: true, on_back: back, on_keep: keep });
   const markup = renderToStaticMarkup(tree);
-  for (const text of ['The keep', 'Gatehouse', '· chamber 2 of 4', 'The drill', 'AI moderator',
+  for (const text of ['The Keep', 'Gatehouse', 'The drill', 'AI moderator',
     `Back to the ${origin}`, 'class="cc-kbd">Esc', 'data-stamp="simulated"', 'aria-label="Breadcrumb"']) expect(markup).toContain(text);
   const visit = (node: ReactNode) => Children.forEach(node, child => {
     if (!isValidElement<{ children?: ReactNode; onClick?: () => void }>(child)) return;
@@ -111,27 +110,18 @@ test.each(['keep', 'overview'] as const)('shared title keeps the %s origin, repl
   expect(core).not.toContain('data-stamp='); expect(core).not.toContain('The drill');
 });
 
-test.each(chambers)('$id band uses its room cover camera; CSS cuts dolly under reduced motion', ({ id }) => {
-  const room = keepRooms[id];
-  const camera = frameTransform(room.appFrame ?? room.frame, appRoomTarget, 'cover');
-  expect(roomCamera(id)).toBe(`translate(${camera.ox}px, ${camera.oy}px) scale(${camera.s})`);
+test.each(chambers)('$id title row replaces the dolly and keeps both return controls', ({ id, name, description }) => {
   const markup = renderToStaticMarkup(<RoomHeader chamber={id} replay={false} origin="keep" fixture on_back={noop} />);
-  expect(markup).toContain(`data-role="room-band" data-room="${id}" aria-hidden="true"`);
-  expect(markup).toContain('--room-camera-from:');
-  const band = markup.match(/data-role="room-band"[\s\S]*?<\/svg>/)?.[0] ?? '';
-  expect(band).toContain('viewBox="0 0 1200 640"');
-  expect(band).toContain('Stylised illustration of a castle in cross-section');
-  expect(band.match(/<path\b/g)?.length).toBeGreaterThan(50);
-  const overlays = [...band.matchAll(/<rect[^>]*class="dim( on)?" data-room="([^"]+)"/g)];
-  expect(overlays).toHaveLength(Object.keys(keepRooms).length);
-  for (const overlay of overlays) expect(Boolean(overlay[1]), overlay[2]).toBe(overlay[2] !== id);
-  expect(band).toContain(`class="litglow on" data-room="${id}"`);
+  expect(markup).toContain('data-role="room-title"');
+  expect(markup).toContain(`The ${name}</h1>`);
+  expect(markup).toContain(description);
+  expect(markup).toContain('data-role="room-back"');
+  expect(markup).not.toMatch(/room-band|room-camera|<svg[^>]*viewBox="0 0 1200 640"/);
   const css = readFileSync(new URL('./room.css', import.meta.url), 'utf8');
-  expect(css).toContain('height: calc(var(--space-1) * 250)');
-  expect(css).toMatch(/\.shell-room-camera\s*\{[^}]*animation: room-dolly var\(--m-dolly\)/);
-  expect(css).toMatch(/@media \(prefers-reduced-motion: reduce\)\s*\{\s*\.shell-room-camera\s*\{\s*animation: none/);
+  expect(css).not.toMatch(/room-dolly|room-camera/);
   const roomSource = readFileSync(new URL('./room.tsx', import.meta.url), 'utf8');
-  expect(roomSource).toContain('className="shell-room-content cc-print-in" style={entranceStyle(0)}');
+  expect(roomSource).toContain('className="shell-room-content"');
+  expect(roomSource).not.toContain('entranceStyle');
 });
 
 function sealCallback(node: ReactNode): (() => void) | undefined {
@@ -147,7 +137,8 @@ function sealCallback(node: ReactNode): (() => void) | undefined {
 test('Keep Preview is empty until a draft, and its hold uses the exact Overview proclamation authority', async () => {
   const empty = renderToStaticMarkup(<KeepWorkspace snapshot={snapshot} selected="lottery" on_enter={noop} on_open={noop} />);
   for (const text of ['Nothing in Preview', 'Ask the Steward to draft one.', 'data-role="monitor-preview"', 'data-role="monitor-program"',
-    'data-role="monitor-label"', 'data-role="seal"', 'data-role="colnote"', 'data-role="fair"', 'data-scene="program"']) expect(empty).toContain(text);
+    'data-role="monitor-label"', 'data-role="seal"', 'data-role="colnote"', 'data-role="fair"', 'data-scene="program"',
+    'data-role="keep-sill"', 'Review drafts', 'View program picture', 'class="keep-moat km"']) expect(empty).toContain(text);
   expect(empty.match(/data-role="colnote"/g)).toHaveLength(1);
   expect(empty).not.toContain('Drafts stay in Preview until your hold. No live output.');
   expect(empty).not.toContain('class="shell-program-status"');
@@ -182,11 +173,11 @@ test('desktop has no locator markup, styles or production Breadcrumb importer', 
   }
 });
 
-test('the Keep column has a bounded grid row, scrolls independently and keeps its children at full height', () => {
+test('the Keep sill has three shrinking monitor tracks and no inner scroller', () => {
   const css = readFileSync(new URL('./program-column.css', import.meta.url), 'utf8');
   expect(css).toMatch(/\.shell-keep-workspace\s*\{[^}]*flex: 1[^}]*grid-template-rows: minmax\(0, 1fr\)[^}]*min-height: 0/);
-  expect(css).toMatch(/\.shell-program-column\s*\{[^}]*min-height: 0[^}]*overflow-y: auto/);
-  expect(css).toMatch(/\.shell-program-column > \*\s*\{\s*flex-shrink: 0/);
+  expect(css).toMatch(/\.shell-program-column\s*\{[^}]*grid-template-columns: minmax\(0, 1fr\) minmax\(0, 1.2fr\) minmax\(0, 1fr\)/);
+  expect(css).not.toContain('overflow-y: auto');
   expect(css).toContain('.shell-program-column:focus-visible');
 });
 
@@ -197,5 +188,6 @@ test('shell and Keep column tracks shrink below a child min-content width', () =
   const keep = readFileSync(new URL('./program-column.css', import.meta.url), 'utf8');
   expect(keep).toMatch(/\.shell-keep-workspace\s*\{[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\)\s*;/);
   const home = readFileSync(new URL('../keep/keep.css', import.meta.url), 'utf8');
-  expect(home).toMatch(/\.keep-home\s*\{[^}]*grid-template-columns:\s*262px\s+minmax\(0,\s*1fr\)\s+384px/);
+  expect(home).toMatch(/\.keep-home\s*\{[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\)/);
+  expect(home).toMatch(/\.keep-wall\s*\{[^}]*grid-template-columns: repeat\(4, minmax\(0, 1fr\)\)/);
 });
