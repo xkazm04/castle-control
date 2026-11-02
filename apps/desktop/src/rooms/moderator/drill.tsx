@@ -8,11 +8,12 @@ import { ClockTime } from './presentation.jsx';
 import { MoatPanel } from './moat-panel.jsx';
 import { MoatCompare } from './moat-compare.jsx';
 import type { RuleBenchLink } from './moat-panel.jsx';
+import type { DrillPlan } from './room-view.js';
 import { buildMoat, crossingMs } from '../../moat/moat-model.js';
 import type { MoatClock } from '../../moat/moat-player.js';
 import { actionWords, moatCopy } from '../../moat/moat-copy.js';
 
-export function Drill({ result: given, origin = 'fixture', capture_hash, draft, delay_s, clock, rule_bench, compare, moat = true, busy_night }: {
+export function Drill({ result: given, origin = 'fixture', capture_hash, draft, delay_s, clock, rule_bench, compare, moat = true, busy_night, start }: {
   result: DrillRunResult; origin?: 'fixture' | 'core'; capture_hash?: string | undefined; draft?: BenchResult | undefined;
   /** The applied chat delay, when the source knows it. The moat never invents one. */
   delay_s?: number | undefined; clock?: MoatClock | undefined; rule_bench?: RuleBenchLink | undefined;
@@ -22,15 +23,17 @@ export function Drill({ result: given, origin = 'fixture', capture_hash, draft, 
   moat?: boolean;
   /** Draws a much longer simulated night on demand. Only the fixture room has one. */
   busy_night?: (() => DrillRunResult) | undefined;
+  /** A plan sealed in the Steward's "Practice a drill" flow: which night, and whether to compare. */
+  start?: DrillPlan | undefined;
 }) {
   const state_id = useId();
-  const [busy, setBusy] = useState<DrillRunResult | undefined>();
+  const [busy, setBusy] = useState<DrillRunResult | undefined>(() => start?.busy && busy_night ? busy_night() : undefined);
   const result = busy ?? given;
   // A new run replaces the old one in place (the core room), and message ids repeat from run to run:
   // nothing picked or filtered on the last run carries over to this one.
   const [shown, setShown] = useState(given);
   const [selected, setSelected] = useState<string | undefined>();
-  const [comparing, setComparing] = useState(false);
+  const [comparing, setComparing] = useState(() => !!start?.compare && !!compare && !start.busy);
   // Only a pick made on the strip scrolls the table; a pick made in the table stays where the reader is.
   const [reveal, setReveal] = useState<{ key: string } | undefined>();
   const model = useMemo(() => buildMoat(result, delay_s && delay_s > 0 ? delay_s * 1000 : crossingMs), [result, delay_s]);

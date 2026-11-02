@@ -88,21 +88,21 @@ test('every fixture chart sums to one including Other at every series point', ()
   }
 });
 
-test('each filter draws every stacked series point and its selected reference and remainder', () => {
+test('each filter draws every series point as one inked line, with its selected reference and remainder', () => {
   const selection = vi.spyOn(React, 'useState');
   for (const [selected, chart] of fixtureCharts.entries()) {
     selection.mockReturnValue([selected, vi.fn()]);
     const html = renderToStaticMarkup(<Consensus results={fixtureCharts} />);
-    const polygons = [...html.matchAll(/<polygon[^>]*points="([^"]*)"/g)];
-    expect(polygons).toHaveLength(chart.directions.length);
+    // One line per direction (drawn last-first so the leader sits on top), each with every series point.
+    const lines = [...html.matchAll(/<polyline class="fc-line[^"]*" points="([^"]*)"/g)].map(match => match[1]).reverse();
+    expect(lines).toHaveLength(chart.directions.length);
+    const top = Math.max(0.5, Math.ceil(Math.max(...chart.directions.flatMap(item => item.series.map(point => point.share))) * 10) / 10);
     for (const [index, direction] of chart.directions.entries()) {
-      const points = polygons[index]?.[1]?.split(' ').map(point => point.split(',').map(Number)) ?? [];
-      expect(points).toHaveLength(direction.series.length * 2);
+      const points = lines[index]?.split(' ').map(point => point.split(',').map(Number)) ?? [];
+      expect(points).toHaveLength(direction.series.length);
       for (const [minute, point] of direction.series.entries()) {
-        const lower = chart.directions.slice(0, index).reduce((sum, item) => sum + (item.series[minute]?.share ?? 0), 0);
-        expect(points[minute]?.[0]).toBeCloseTo(minute / 15 * 560, 10);
-        expect(points[minute]?.[1]).toBeCloseTo(170 - (lower + point.share) * 170, 10);
-        expect(points.at(-1 - minute)?.[1]).toBeCloseTo(170 - lower * 170, 10);
+        expect(points[minute]?.[0]).toBeCloseTo(60 + minute / 15 * 580, 1);
+        expect(points[minute]?.[1]).toBeCloseTo(236 - point.share / top * 220, 1);
       }
     }
     const share = ((chart.directions[0]?.share ?? 0) * 100).toFixed(1);
@@ -117,7 +117,7 @@ test('consensus axis and caption follow the available series timestamps', () => 
   if (!chart) throw new Error('Missing consensus fixture');
   const result = { ...chart, directions: chart.directions.map(direction => ({ ...direction, series: direction.series.slice(5, 11) })) };
   const html = renderToStaticMarkup(<Consensus results={[result]} />);
-  expect(html).toContain('<span>min 0</span><span>min 5</span>');
+  expect(html).toContain('>min 0</text>'); expect(html).toContain('>min 5</text>');
   expect(html).toContain('min 0 → min 5');
   expect(html).not.toContain('min 14');
   expect(renderToStaticMarkup(<Consensus results={[]} />)).toContain('No consensus history available.');

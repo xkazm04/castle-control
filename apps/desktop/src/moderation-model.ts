@@ -24,6 +24,8 @@ export type ModerationPort = {
   send: (command: PreviewCommand) => void;
   refuse: (refusal: Refusal) => void;
   advanceChat: () => boolean;
+  /** Fixture demo only: a generated, labelled simulated decision arrives at the gate. */
+  admit: (decision: Decision) => void;
 };
 
 /** A local-only port. A future client can implement this seam; no transport is imported here.
@@ -41,6 +43,12 @@ export function createModerationPreview(): ModerationPort {
     getSnapshot: () => snapshot,
     refuse,
     subscribe(listener) { listeners.add(listener); return () => { listeners.delete(listener); }; },
+    admit(decision) {
+      if (!decision.simulated || decision.kind !== 'held' || snapshot.phases.has(decision.decision_id)) return;
+      snapshot = { ...snapshot, held: [decision, ...snapshot.held],
+        phases: new Map(snapshot.phases).set(decision.decision_id, initialPhase(decision)), notice: copy.demo_admitted };
+      notify();
+    },
     advanceChat() {
       if (snapshot.replay_count >= snapshot.messages.length) return false;
       snapshot = { ...snapshot, replay_count: snapshot.replay_count + 1 };

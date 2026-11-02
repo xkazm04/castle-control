@@ -3,12 +3,10 @@ import type { ChangeEvent, ReactNode, ReactElement, ButtonHTMLAttributes, LabelH
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, expect, test, vi } from 'vitest';
 import { ProposalQueue, SimulatedSteward } from '@castle-control/ui/steward';
-import { InkButton } from '@castle-control/ui';
-import type { InkButtonProps } from '@castle-control/ui';
 import { gatehouseHeldResolve, gatehouseDelaySet, gatehouseShieldSet, gatehouseLeaseEnd, parseMethodParams } from '@castle-control/contract';
 import { createModerationPreview } from './moderation-model.js';
 import { fixtureBans, fixtureConfirmationMs, fixtureHeld, fixtureHoldReasons, fixtureRules } from './moderation-fixture.js';
-import { GateControls, HeldActions, HeldQueue, Rules } from './rooms/moderator/controls.jsx';
+import { BanQueue, GateControls, HeldActions, HeldQueue, Rules, ShieldButton } from './rooms/moderator/controls.jsx';
 import { GateLog } from './rooms/moderator/log.jsx';
 import { moderationSession, proposeCommand, sealModerationProposal } from './rooms/moderator/session.js';
 import { moderationCopy as copy } from './moderation-copy.js';
@@ -28,6 +26,8 @@ function find<T>(tree: ReactNode, predicate: (props: T) => boolean): ReactElemen
 }
 const state = (queue: ProposalQueue) => moderationSession(queue).port.getSnapshot();
 const controls = (queue: ProposalQueue) => renderToStaticMarkup(<GateControls state={state(queue)} queue={queue} />);
+// The drawbridge is the emergency control: it stands on the room's face, beside what needs you.
+const shield = (queue: ProposalQueue) => renderToStaticMarkup(<ShieldButton state={state(queue)} queue={queue} />);
 function delaySelect(queue: ProposalQueue) {
   let tree: ReactNode;
   function Probe() {
@@ -89,20 +89,19 @@ test('duplicate requests cannot replace pending settings; Shield pressed state w
   for (const enabled of [true, false]) {
     proposeCommand(queue, { kind: 'shield' }, 'Shield proposal');
     expect(state(queue).shield.value).toBe(!enabled); seal(queue);
-    expect(controls(queue)).toContain(`aria-pressed="${!enabled}"`);
+    expect(shield(queue)).toContain(`aria-pressed="${!enabled}"`);
     vi.advanceTimersByTime(fixtureConfirmationMs); expect(state(queue).shield.value).toBe(enabled);
-    expect(controls(queue)).toContain(`aria-pressed="${enabled}"`);
+    expect(shield(queue)).toContain(`aria-pressed="${enabled}"`);
   }
-  expect(controls(queue).match(/aria-label="Shield Mode/g)).toHaveLength(1);
+  expect(shield(queue).match(/aria-label="Shield Mode/g)).toHaveLength(1);
 });
 
 test.each(['release', 'remove'] as const)('%s proposes via a native keyboard button and stays held until confirmed', kind => {
   vi.useFakeTimers(); const queue = new ProposalQueue(); const held = fixtureHeld[0];
   if (!held?.message_text) throw new Error('Missing original');
   const label = kind === 'release' ? 'Propose Pass' : 'Propose Bar';
-  // C replaces the bare review button with InkButton plus a decorative icon.
-  // Resolve that kit leaf to keep every native-button and proposal assertion.
-  const button = InkButton(find<InkButtonProps>(HeldActions({ item: held, state: state(queue), queue }), props => props['aria-label'] === label).props);
+  // The fused gate uses native folio buttons (.cc-btn); the visible text is the accessible name.
+  const button = find<ButtonHTMLAttributes<HTMLButtonElement>>(HeldActions({ item: held, state: state(queue), queue }), props => props.children === label);
   expect(button.type).toBe('button'); expect(button.props.type).toBe('button');
   expect(button.props.disabled).toBe(false); expect(button.props.tabIndex ?? 0).toBeGreaterThanOrEqual(0);
   click(button.props);
@@ -230,7 +229,7 @@ test('an absent ban rule disables the room button and refuses a direct command a
   if (!ban) throw new Error('Missing simulated ban');
   const missingRule = { ...state(queue), rules: state(queue).rules.filter(rule => rule.rule_id !== ban.rule_id) };
   vi.spyOn(port, 'getSnapshot').mockReturnValue(missingRule);
-  const button = find<InkButtonProps>(HeldQueue({ state: missingRule, queue }), props => props.children === copy.propose_ban);
+  const button = find<ButtonHTMLAttributes<HTMLButtonElement>>(BanQueue({ state: missingRule, queue }), props => props.children === copy.propose_ban);
   expect(button.props.disabled).toBe(true);
   proposeCommand(queue, { kind: 'ban', decision_id: ban.decision_id }, 'Direct Ban');
   expect(decisionTransition(missingRule, ban.decision_id, 'ban')).toEqual({ ok: false, refusal: 'rule_unavailable' });
