@@ -137,7 +137,8 @@ function sealCallback(node: ReactNode): (() => void) | undefined {
 test('Keep Preview is empty until a draft, and its hold uses the exact Overview proclamation authority', async () => {
   const empty = renderToStaticMarkup(<KeepWorkspace snapshot={snapshot} selected="lottery" on_enter={noop} on_open={noop} />);
   for (const text of ['Nothing in Preview', 'Ask the Steward to draft one.', 'data-role="monitor-preview"', 'data-role="monitor-program"',
-    'data-role="monitor-label"', 'data-role="seal"', 'data-role="colnote"', 'data-role="fair"', 'data-scene="program"']) expect(empty).toContain(text);
+    'data-role="monitor-label"', 'data-role="seal"', 'data-role="colnote"', 'data-role="fair"', 'data-scene="program"',
+    'data-role="keep-sill"', 'Review drafts', 'View program picture', 'class="keep-moat km"']) expect(empty).toContain(text);
   expect(empty.match(/data-role="colnote"/g)).toHaveLength(1);
   expect(empty).not.toContain('Drafts stay in Preview until your hold. No live output.');
   expect(empty).not.toContain('class="shell-program-status"');
@@ -172,11 +173,11 @@ test('desktop has no locator markup, styles or production Breadcrumb importer', 
   }
 });
 
-test('the Keep column has a bounded grid row, scrolls independently and keeps its children at full height', () => {
+test('the Keep sill has three shrinking monitor tracks and no inner scroller', () => {
   const css = readFileSync(new URL('./program-column.css', import.meta.url), 'utf8');
   expect(css).toMatch(/\.shell-keep-workspace\s*\{[^}]*flex: 1[^}]*grid-template-rows: minmax\(0, 1fr\)[^}]*min-height: 0/);
-  expect(css).toMatch(/\.shell-program-column\s*\{[^}]*min-height: 0[^}]*overflow-y: auto/);
-  expect(css).toMatch(/\.shell-program-column > \*\s*\{\s*flex-shrink: 0/);
+  expect(css).toMatch(/\.shell-program-column\s*\{[^}]*grid-template-columns: minmax\(0, 1fr\) minmax\(0, 1.2fr\) minmax\(0, 1fr\)/);
+  expect(css).not.toContain('overflow-y: auto');
   expect(css).toContain('.shell-program-column:focus-visible');
 });
 
@@ -187,5 +188,6 @@ test('shell and Keep column tracks shrink below a child min-content width', () =
   const keep = readFileSync(new URL('./program-column.css', import.meta.url), 'utf8');
   expect(keep).toMatch(/\.shell-keep-workspace\s*\{[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\)\s*;/);
   const home = readFileSync(new URL('../keep/keep.css', import.meta.url), 'utf8');
-  expect(home).toMatch(/\.keep-home\s*\{[^}]*grid-template-columns:\s*262px\s+minmax\(0,\s*1fr\)\s+384px/);
+  expect(home).toMatch(/\.keep-home\s*\{[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\)/);
+  expect(home).toMatch(/\.keep-wall\s*\{[^}]*grid-template-columns: repeat\(4, minmax\(0, 1fr\)\)/);
 });
