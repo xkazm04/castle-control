@@ -9,9 +9,8 @@ import { ProposalQueue, SimulatedSteward, proposalQueue } from '@castle-control/
 import SealSlot, { sealRoomProposal } from '../rooms/seal-slot/index.jsx';
 import { readLotDrawer } from '../rooms/lottery/drawer-test.jsx';
 import { draftRoll, lotterySession } from '../rooms/lottery/session.js';
-import ModeratorRoom from '../rooms/moderator/index.jsx';
 import { coreGatehouseConnection, coreLotsConnection, createDesktopClient } from '../client.js';
-import { fixtureCharts, fixtureHeld, fixtureRules } from '../moderation-fixture.js';
+import { fixtureCharts, fixtureRules } from '../moderation-fixture.js';
 import { fixtureDraws } from '../lots-fixture.js';
 import { backHash, dispatchShortcut, initialNavigation, navigateHash } from '../navigation.js';
 import Room from './room.jsx';
@@ -99,15 +98,6 @@ test.each([
   expect(slot).not.toContain('tabindex="-1"');
 });
 
-test('the portcullis picture precedes the original held message in the first section column', () => {
-  const markup = renderToStaticMarkup(<ModeratorRoom snapshot={fixture} replay={false} queue={new ProposalQueue()} />);
-  const plate = markup.match(/<aside[^>]*class="cc-panel gh-gate moderator-held-plate"[\s\S]*?<\/aside>/)?.[0] ?? '';
-  expect(markup).toContain('>At the portcullis</h3>');
-  expect(markup.indexOf('class="gh-gate-art cc-folio-art"')).toBeLessThan(markup.indexOf('class="gh-held__msg"'));
-  expect(markup).toContain('data-role="room-picture"');
-  expect(plate).toContain('class="gh-held__msg"');
-  expect(plate).toContain(fixtureHeld[0]?.message_text);
-});
 test('polished rooms render each stage title once and expose keyboard scroll regions', async () => {
   for (const [chamber, title] of [['lottery', 'The urn'], ['moderator', 'At the portcullis']] as const) {
     const stream = await renderToReadableStream(<Room chamber={chamber} replay={false} snapshot={fixture}

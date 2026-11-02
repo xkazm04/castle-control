@@ -2,6 +2,9 @@ import * as React from 'react';
 import type { ReactElement, ReactNode, ChangeEvent, MouseEvent, SubmitEvent } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { vi } from 'vitest';
+import { Drawer } from '@castle-control/ui/chamber';
+import { GatehouseDrawerState } from './drawer-state.js';
+import type { GatehouseDrawerControl } from './drawer-state.js';
 
 type Props = { children?: ReactNode; id?: string; htmlFor?: string; value?: string | number;
   disabled?: boolean; className?: string; type?: string;
@@ -78,13 +81,36 @@ export function componentProbe(view: () => ReactNode, { effects: run_effects = t
   };
 }
 
-/** Assert moved content after the production drawer trigger, without running browser effects in SSR. */
+/** Render with native React hooks. Only drawer state is controlled, so opening a
+ * seal slot can add arbitrary hooks without shifting another component's state. */
+export function drawerProbe(view: ReactNode, { controlled = true } = {}) {
+  const drawer: GatehouseDrawerControl = { open: false, setOpen: open => { drawer.open = open; } };
+  return {
+    render() {
+      captured.elements = [];
+      return renderToStaticMarkup(controlled ? <GatehouseDrawerState.Provider value={drawer}>{view}</GatehouseDrawerState.Provider> : view);
+    },
+    click(text: string) {
+      const button = captured.elements.find((element): element is ReactElement<Props> => React.isValidElement<Props>(element)
+        && element.type === 'button' && React.Children.toArray(element.props.children).filter(child => typeof child === 'string').join('') === text);
+      // An integrated surface can preload the shared primitive before JSX capture.
+      // Its controlled close callback is still supplied by our own deck element.
+      if (!button && text === 'Close') {
+        const drawer = captured.elements.find((element): element is ReactElement<{ onClose: () => void }> =>
+          React.isValidElement<{ onClose: () => void }>(element) && element.type === Drawer);
+        if (drawer) { drawer.props.onClose(); return; }
+      }
+      if (!button?.props.onClick) throw new Error(`Missing rendered drawer control: ${text}`);
+      button.props.onClick({} as MouseEvent<HTMLElement>);
+    },
+  };
+}
+
+/** Assert moved content after the production trigger, then exercise Close. No hook mocking. */
 export function openGatehouseDrawer(view: ReactNode): string {
-  const probe = componentProbe(() => view, { effects: false });
-  try {
-    probe.render(); probe.click('Full chart');
-    const html = probe.render();
-    probe.click('Close'); probe.render();
-    return html;
-  } finally { probe.dispose(); }
+  const probe = drawerProbe(view);
+  probe.render(); probe.click('Full chart');
+  const html = probe.render();
+  probe.click('Close'); probe.render();
+  return html;
 }

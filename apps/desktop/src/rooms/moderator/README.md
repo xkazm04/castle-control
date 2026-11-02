@@ -626,3 +626,26 @@ The render-cost tests still mount and measure the expanded bench content.
 The Gatehouse e2e journey retains its existing interactions and adds 1280x720 /
 1366x768 fit, drawer reachability and Escape checks. Browser execution is pending:
 the sandbox launcher returned `spawn EPERM`; e2e typechecking and discovery passed.
+
+Review 2: drawer reachability probes now use an optional controlled drawer state
+and native React hooks. They invoke the production Full chart / Proposal list
+handlers, render the resulting drawer and dismiss through its close callback.
+They do not retain another component's hook state by a global call index. The
+fixture structure test also exercises the default room store directly. A
+regression mounts a seal slot with state, ref, memo and effect hooks only after
+opening the drawer, then closes and reopens it through both triggers. The
+Gatehouse-only picture/original-message test moved from `shell/room.test.tsx`
+into the room's structure test with every assertion retained, bringing the
+integrated shared test file back under the 400-line cap.
+
+Review 3: the old desk's named grid areas (`bans`, `top`, `herald`) were creating
+implicit columns inside the new section grids. The room stylesheet now resets
+both tracks and direct-child placements, plus the warrant's old three-column
+tracks and action span. The queue's decorative panel cap is suppressed, its
+count sits beside the section heading, and both verdict pairs use one row.
+Card text uses normal word breaking. Compact Herald selectors outrank the old
+four-tile rules: two columns of swatch/label/share rows, one filter row, and a
+90 px plot. The core compact chart uses the same treatment. No scroll clipping
+or smaller type is used to conceal overflow. The CSS regression tests pin these
+grid and wrapping contracts; browser fit remains for the Director to remeasure
+because this sandbox's browser launcher still returns `spawn EPERM`.
