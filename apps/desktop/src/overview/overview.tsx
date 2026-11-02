@@ -40,7 +40,6 @@ export function Overview({ snapshot, selected, on_select, on_open, steward, conn
       <div className="overview-preview-wrap"><div className="overview-preview" aria-label="Stream preview">
         <StreamScene mode="preview" proposals={[...program, ...pending]} sample={snapshot.mode === 'fixture'} on_select={select} />
       </div></div>
-      {steward}
       <ChamberStrip selected={selected} states={states} on_select={select} on_open={on_open} />
     </div>
     <aside className="overview-sidebar">
@@ -51,7 +50,7 @@ export function Overview({ snapshot, selected, on_select, on_open, steward, conn
           : 'Nothing to proclaim: ask the Steward to draft one'}</p>
         <SealButton key={`${candidate?.id}-${candidate?.revision}-${candidate?.state}`} variant="proclaim" disabled={!candidate || sealing}
           on_seal={() => { void proclaim(); }} />
-        <p role="status">{notice || 'Drafts stay in Preview until your hold. No live output.'}</p>
+        <p className="overview-proclaim-note" role="status">{notice || 'Drafts stay in Preview until your hold. No live output.'}</p>
       </div>
       <div className="overview-tabs" role="tablist" aria-label="Steward and layer details">
         <button type="button" role="tab" id="overview-talkback-tab" aria-controls="overview-talkback" aria-selected={tab === 'talkback'} onClick={() => setTab('talkback')}>Talkback</button>
@@ -62,5 +61,6 @@ export function Overview({ snapshot, selected, on_select, on_open, steward, conn
         <Inspector selected={selected} proposals={queue.proposals} on_open={on_open} active={tab === 'inspector'} authority={authority} />
       </div>
     </aside>
+    {steward && <div className="overview-steward">{steward}</div>}
   </section>;
 }

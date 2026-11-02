@@ -191,7 +191,10 @@ test('mount is lazy, styles stay token-only, and product sources have no code ev
   const inspector = readFileSync(new URL('inspector.tsx', root), 'utf8');
   expect(inspector).toContain("lazy(() => import('./design.jsx')");
   const css = readFileSync(new URL('design.css', root), 'utf8');
-  const known = new Set([...Object.keys(tokens.layout), ...Object.keys(tokens.theme.paper)]);
+  // Legacy layout/theme names plus the fused sheet's own tokens (packages/tokens/src/fused).
+  const fused = ['tokens.css', 'textures.css'].flatMap(file => [...readFileSync(new URL(`../../../../packages/tokens/src/fused/${file}`, import.meta.url), 'utf8')
+    .matchAll(/(--[\w-]+)\s*:/g)].map(match => match[1]?.slice(2) ?? ''));
+  const known = new Set([...Object.keys(tokens.layout), ...Object.keys(tokens.theme.paper), ...fused]);
   for (const [, token] of css.matchAll(/var\(--([\w-]+)/g)) expect(known.has(token ?? '')).toBe(true);
   expect(css).not.toMatch(/#[\da-f]{3,8}\b|\brgba?\(|\bhsla?\(|\b\d+(?:\.\d+)?px\b/i);
 });

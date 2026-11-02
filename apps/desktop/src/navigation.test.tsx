@@ -50,7 +50,7 @@ test('keep demo entry, direct URL, Back and Escape use the canonical non-chamber
   expect(html).toContain('demo-workspace');
   expect(html).not.toContain('data-module="demo"');
   expect(html).not.toContain('shell-room');
-  DemoHeader({ on_back: () => { state = navigateHash(state, backHash(state)); } }).props.children[1].props.onClick();
+  DemoHeader({ on_back: () => { state = navigateHash(state, backHash(state)); } }).props.on_back();
   expect(state.current).toBe('keep');
   state = navigateHash(state, '#/demo');
   dispatchShortcut({ key: 'Escape', preventDefault: () => undefined }, false, () => undefined, () => undefined,

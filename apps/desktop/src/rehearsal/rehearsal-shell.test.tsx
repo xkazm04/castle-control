@@ -10,12 +10,13 @@ const native = vi.hoisted(() => ({ invoke: vi.fn(async () => undefined), loaded:
 vi.mock('@tauri-apps/api/core', () => { native.loaded(); return { invoke: native.invoke }; });
 afterEach(() => { vi.unstubAllGlobals(); native.invoke.mockClear(); });
 
-type Button = { children?: ReactNode; onClick?: () => void; disabled?: boolean };
+type Button = { children?: ReactNode; actions?: ReactNode; onClick?: () => void; disabled?: boolean };
 function button(node: ReactNode, label: string): Button | undefined {
   for (const child of Children.toArray(node)) {
     if (!isValidElement<Button>(child)) continue;
     if (child.props.children === label) return child.props;
-    const found = button(child.props.children, label);
+    // The Start/Leave button sits in the surface head's actions slot.
+    const found = button(child.props.children, label) ?? button(child.props.actions, label);
     if (found) return found;
   }
   return undefined;

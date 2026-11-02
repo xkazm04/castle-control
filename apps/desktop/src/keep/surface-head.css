@@ -1,0 +1,11 @@
+/* The fused chamber head, bled to the surface edges so its glass band spans the window. */
+.surface-head { margin: 0 calc(-1 * var(--space-24)); padding-inline: var(--gutter); background: var(--stone); }
+.surface-head__text { min-width: 0; }
+.surface-head .cc-crumbs a { color: var(--ink); }
+.surface-head__crumb { display: inline-flex; align-items: center; gap: 8px; }
+.surface-head .cc-title { margin: 6px 0 0; }
+.surface-head .cc-subtitle { flex-wrap: wrap; margin: 6px 0 0; }
+.surface-head .cc-back { flex-wrap: wrap; justify-content: flex-end; }
+.surface-head .cc-btn .cc-kbd { margin-left: 4px; }
+/* fused/caps.css still switches the old <surface>-heading h1 to small caps; the fused title wins here. */
+.cc-frame .surface-head h1.cc-title { font-family: var(--font-display); font-stretch: normal; text-transform: none; letter-spacing: .005em; }
