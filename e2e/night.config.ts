@@ -40,7 +40,8 @@ export default defineConfig({
   use: {
     channel: 'chrome', headless: true, viewport: { width: 1440, height: 900 },
     serviceWorkers: 'block', reducedMotion: 'reduce',
-    trace: 'retain-on-failure', screenshot: 'only-on-failure', video: 'off',
+    // No traces: they would record the session capability and the per-run OBS password.
+    trace: 'off', screenshot: 'only-on-failure', video: 'off',
     // Route-fulfilled shell documents have no IP address space, so Chrome's
     // Local Network Access check would refuse their loopback core calls. The
     // real webview has no such check; the core still enforces Origin and token.
