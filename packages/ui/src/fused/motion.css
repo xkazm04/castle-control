@@ -1,0 +1,35 @@
+/* State-change motion for the whole app: calm, consistent, opacity and transform only.
+   Durations and easings are the --m-* / --ease-* tokens; travel is --shift at most.
+   primitives.css already removes every transition and animation under prefers-reduced-motion,
+   and this sheet repeats that rule for the names it introduces. */
+
+@keyframes cc-rise { from { opacity: 0; transform: translateY(var(--shift)); } }
+@keyframes cc-fall { from { opacity: 0; transform: translateY(calc(-1 * var(--shift))); } }
+@keyframes cc-fade { from { opacity: 0; } }
+@keyframes cc-chip { from { opacity: 0; transform: translateY(calc(-0.5 * var(--shift))) scale(.96); } }
+
+/* a surface or chamber arriving: fade and rise */
+.desktop-surface > :not(.desktop-notice) { animation: cc-rise var(--m-enter) var(--ease-out) both; }
+.shell-room > .cc-chamber-head { animation: cc-fade var(--m-enter) var(--ease-out) both; }
+/* the chamber body replaces the print-in clip with the same calm arrival, with no start delay */
+.shell-room-content.cc-print-in { animation: cc-rise var(--m-enter) var(--ease-out) both; animation-delay: 0s; }
+
+/* More sections, disclosures and the Writ Lab trace: the body eases open */
+.cc-frame details[open] > :not(summary) { animation: cc-rise var(--m-calm) var(--ease-out) both; }
+
+/* list items that appear: proposals, held messages, flow beats, menu rows */
+.cc-frame :is(.cc-proposal-card, .gh-held, .cc-ticket, .cc-beat, .cc-flow-menu__list, .cc-empty) { animation: cc-rise var(--m-calm) var(--ease-out) both; }
+
+/* selection: tabs, toggles, segments and pressed buttons change colour, never jump */
+.cc-frame :is(.cc-tab, .cc-btn, .cc-seg button, .moderator-chip-toggle, .cc-chamber-tile, summary, .cc-input, select) {
+  transition: background-color var(--m-quick) var(--ease-out), color var(--m-quick) var(--ease-out), border-color var(--m-quick) var(--ease-out),
+    box-shadow var(--m-quick) var(--ease-out), transform var(--m-quick) var(--ease-out), opacity var(--m-quick) var(--ease-out);
+}
+.cc-tab::before, .cc-tab__light { transition: opacity var(--m-calm) var(--ease-out), background-color var(--m-calm) var(--ease-out), box-shadow var(--m-calm) var(--ease-out); }
+/* day and night swap the palette; the ground eases across instead of flashing */
+.cc-frame { transition: background-color var(--m-enter) var(--ease-light), color var(--m-enter) var(--ease-light); }
+
+@media (prefers-reduced-motion: reduce) {
+  .desktop-surface > *, .shell-room > .cc-chamber-head, .shell-room-content.cc-print-in, .cc-frame details[open] > *, .cc-frame .cc-empty { animation: none; }
+  .cc-frame, .cc-frame :is(.cc-tab, .cc-btn, summary, .cc-input, select), .cc-tab::before, .cc-tab__light { transition: none; }
+}

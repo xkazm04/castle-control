@@ -6,6 +6,7 @@
 @import './primitives.css';
 @import './skin.css';
 @import './caps.css';
+@import './motion.css';
 
 /* light pool x-position under the current tab (keep tab is .62 wide, the rest 1) */
 .desktop-shell[data-chamber="keep"] { --pool-x: 6.7%; }

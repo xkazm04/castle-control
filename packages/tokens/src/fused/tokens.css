@@ -167,6 +167,11 @@
   /* motion */
   --ease: cubic-bezier(.2,.8,.2,1); --ease-light: cubic-bezier(.45,0,.2,1);
   --ease-stamp: cubic-bezier(.3,1.6,.5,1);
+  /* state-change motion: one calm vocabulary. quick = hover, press, tab selection; calm = panels, chips,
+     list items; enter / exit = a surface arriving or leaving (route, dock sheet). Opacity and transform only,
+     at most --shift of travel. prefers-reduced-motion removes all of it (see motion.css). */
+  --m-quick: .14s; --m-calm: .26s; --m-enter: .36s; --m-exit: .18s; --shift: 8px;
+  --ease-out: var(--ease); --ease-in: cubic-bezier(.4, 0, 1, 1);
   --m-fast: .14s; --m-light: .5s; --m-dawn: 2.6s; --m-sheen: 1.6s; --m-drop: 1.5s; --m-press: .42s;
 }
 

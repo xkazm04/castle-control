@@ -34,7 +34,7 @@
   --sd-shadow: var(--shadow, 0 12px 30px -16px color-mix(in srgb, black 45%, transparent));
   --sd-focus: var(--focus, var(--azure-text));
   --sd-ease: var(--ease, cubic-bezier(.2, .7, .2, 1));
-  --sd-m: var(--m-fast, 160ms);
+  --sd-m: var(--m-quick, var(--m-fast, 160ms));
 
   --sd-plate-w: 268px;
   position: relative; z-index: 28; display: grid; grid-template-columns: var(--sd-plate-w) minmax(0, 1fr) auto; align-items: stretch;
@@ -135,11 +135,18 @@
   box-shadow: 0 0 calc(var(--glow-on, 0) * 14px) var(--ch-glow, transparent);
 }
 @media (prefers-reduced-motion: no-preference) {
-  .cc-steward-sheet { animation: cc-sheet-rise 220ms var(--sd-ease) both; }
-  .cc-steward-step { animation: cc-step-in 200ms var(--sd-ease) both; }
+  .cc-steward-sheet { animation: cc-sheet-rise var(--m-enter, 360ms) var(--sd-ease) both; }
+  .cc-steward-sheet[data-closing] { animation: cc-sheet-fall var(--m-exit, 180ms) var(--ease-in, ease-in) both; pointer-events: none; }
+  .cc-steward-step { animation: cc-step-in var(--m-calm, 260ms) var(--sd-ease) both; }
+  /* an answered step folds into its chip: the chip drops in where the card was */
+  .cc-steward-answer { animation: cc-chip-in var(--m-calm, 260ms) var(--sd-ease) both; }
+  .cc-beat { animation: cc-step-in var(--m-calm, 260ms) var(--sd-ease) both; }
+  .cc-flow-menu__list { animation: cc-step-in var(--m-quick, 140ms) var(--sd-ease) both; }
 }
-@keyframes cc-sheet-rise { from { transform: translateY(14px); opacity: 0; } }
-@keyframes cc-step-in { from { transform: translateY(6px); opacity: 0; } }
+@keyframes cc-sheet-rise { from { transform: translateY(var(--shift, 8px)); opacity: 0; } }
+@keyframes cc-sheet-fall { to { transform: translateY(var(--shift, 8px)); opacity: 0; } }
+@keyframes cc-step-in { from { transform: translateY(var(--shift, 8px)); opacity: 0; } }
+@keyframes cc-chip-in { from { transform: translateY(calc(-.5 * var(--shift, 8px))) scale(.96); opacity: 0; } }
 .cc-steward-sheet__head { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; min-height: 0; overflow: auto; padding: 14px 18px;
   border-right: var(--sd-came) solid var(--sd-lead);
   background: linear-gradient(180deg, var(--sd-stone), color-mix(in srgb, var(--sd-amethyst) 9%, var(--sd-stone))), var(--tex-stone, none); }

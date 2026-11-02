@@ -154,6 +154,24 @@ function focusCard(root: RefObject<HTMLElement | null>) {
  * The Steward's dock: collapsed it is the sill (plate, one line, input, chips);
  * a chip, a matched phrase or a resumed draft raises it into the sheet.
  */
+/** --m-exit: how long a lowered sheet keeps its place while it fades out (instant under reduced motion or without a window). */
+const sheetExitMs = 180;
+
+/** True while `open`, and for `ms` after it turns false so the exit animation can play. */
+function useLingering(open: boolean, ms: number): boolean {
+  const [mounted, setMounted] = useState(open);
+  useEffect(() => {
+    if (open) { setMounted(true); return; }
+    if (!mounted) return;
+    const still = typeof window === 'undefined' || typeof window.matchMedia !== 'function'
+      || window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (still) { setMounted(false); return; }
+    const timer = setTimeout(() => { setMounted(false); }, ms);
+    return () => { clearTimeout(timer); };
+  }, [open, mounted, ms]);
+  return open || mounted;
+}
+
 export function StewardDock({ chamber, registry, mode = 'simulated', role, input_ref, store = stewardDock,
   on_unmatched, on_chamber, proposal }: StewardDockProps) {
   const snapshot = useSyncExternalStore(store.subscribe, store.getSnapshot, store.getSnapshot);
@@ -170,6 +188,7 @@ export function StewardDock({ chamber, registry, mode = 'simulated', role, input
   const beats = snapshot.beats.filter(beat => beat.chamber === chamber);
   const last_steward = beats.findLast(beat => beat.who === 'steward');
   const expanded = snapshot.expanded;
+  const sheet = useLingering(expanded, sheetExitMs);
   // After a seal that offers next steps, those lead the row: "Set up a real draw" beats the generic chips.
   const offered = !session && last_steward?.sealed && last_steward === beats.at(-1) ? last_steward.chips ?? [] : [];
   const offered_keys = new Set(offered.map(chipKey));
@@ -261,7 +280,7 @@ export function StewardDock({ chamber, registry, mode = 'simulated', role, input
     onKeyDown={event => {
       if (event.key === 'Escape' && expanded) { event.preventDefault(); event.stopPropagation(); collapse(); }
     }}>
-    {expanded && <div className="cc-steward-sheet" id={sheet_id} role="group" aria-label="Steward conversation">
+    {sheet && <div className="cc-steward-sheet" id={sheet_id} role="group" aria-label="Steward conversation" {...(expanded ? {} : { 'data-closing': '' })}>
       <header className="cc-steward-sheet__head">
         <b className="cc-steward-sheet__title">{sheet_title}</b>
         {session && view && <span className="cc-steward-sheet__count">step {view.position} of {Math.max(view.planned, view.position)}</span>}
