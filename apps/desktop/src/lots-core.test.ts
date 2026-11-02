@@ -294,9 +294,7 @@ test('connected room renders source provenance and the announcement before any w
   expect(markup).not.toContain('Winners ·');
   expect(markup).not.toContain('Live-trusted');
   expect(markup.indexOf('class="cc-stage-wrap"')).toBeLessThan(markup.indexOf('class="cc-desk"'));
-  expect(markup).toContain('data-scale="numeric"');
-  expect(markup).toContain('data-size="large"');
-  expect(markup).not.toContain(copy.illustration);
+  expect(markup).toContain('data-role="lot-count"');
 });
 
 

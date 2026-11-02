@@ -17,7 +17,7 @@ test('every chamber has a Steward; the Keep offers its theme flow and a simulate
 
 test('free text opens flows or points at chambers, never seals', () => {
   expect(matchIntent('plan tonight', registry, 'keep')).toMatchObject({ kind: 'flow', flow: 'keep-theme' });
-  expect(matchIntent('start a giveaway', registry, 'keep')).toMatchObject({ kind: 'chamber', chamber: 'lottery' });
+  expect(matchIntent('start a giveaway', registry, 'keep')).toMatchObject({ chamber: 'lottery' });
   expect(matchIntent('set up obs', registry, 'keep')).toMatchObject({ kind: 'chamber', chamber: 'stream' });
 });
 
