@@ -79,7 +79,7 @@ for (const viewport of [{ width: 1280, height: 800 }, { width: 1440, height: 900
         await page.goto('/#/chamber/lottery');
         const pool = page.locator('[data-role="lot-urn-panel"]');
         await expect(pool).toBeVisible();
-        if (theme === 'night') await page.getByRole('button', { name: 'Toggle day and night' }).click();
+        if (await page.locator('.cc-frame').getAttribute('data-theme') !== theme) await page.getByRole('button', { name: 'Toggle day and night' }).click();
         const measure = () => pool.evaluate(element => {
           const box = element.getBoundingClientRect();
           const issues: string[] = [];

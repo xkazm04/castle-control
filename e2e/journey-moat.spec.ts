@@ -312,7 +312,7 @@ test.describe('Keep desktop bounds', () => {
         await page.goto('/#/keep');
         await expect(page.getByRole('button', { name: 'Pause the sample loop', exact: true })).toBeVisible();
         for (const theme of ['day', 'night']) {
-          if (theme === 'night') await page.getByRole('button', { name: 'Toggle day and night' }).click();
+          if (await page.locator('.cc-frame').getAttribute('data-theme') !== theme) await page.getByRole('button', { name: 'Toggle day and night' }).click();
           await expect.poll(() => page.locator('.keep-home').evaluate(element => {
             const requireNode = (selector: string) => {
               const node = element.querySelector(selector);

@@ -101,3 +101,17 @@ test('an optional short word replaces the visible line and its accessible descri
   expect(lines.map(line => line[2])).toEqual(['No draw', '1 held', 'Offering Altar', state.line]);
   for (const line of lines) expect(markup).toContain(`aria-describedby="${line[1]?.replace('-state', '-lamps')} ${line[1]}"`);
 });
+
+test('five room tabs expose the Keep line, attention state and reachable draft counts', () => {
+  const state = { line: 'Simulated room', on_air: false, preview: true, draft: false };
+  const html = renderToStaticMarkup(<ChamberStrip selected="moderator" current="moderator" on_keep={vi.fn()}
+    states={{ lottery: state, moderator: { ...state, needs_you: true, pending_count: 1 },
+      visuals: { ...state, pending_count: 2 }, studio: state }} on_select={vi.fn()} on_open={vi.fn()} />);
+  expect(html.match(/data-role="room-bar"/g)).toHaveLength(1);
+  expect(html.match(/data-role="room-tab"/g)).toHaveLength(5);
+  expect(html).toContain('home · all four rooms');
+  expect(html.match(/data-needs-you="true"/g)).toHaveLength(1);
+  expect(html).toContain('class="cc-room-needs">needs you');
+  expect(html).toContain('class="cc-room-drafts">1 draft');
+  expect(html).toContain('class="cc-room-drafts">2 drafts');
+});

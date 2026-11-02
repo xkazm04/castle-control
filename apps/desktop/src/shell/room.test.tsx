@@ -14,7 +14,7 @@ import { fixtureDraws } from '../lots-fixture.js';
 import { backHash, dispatchShortcut, initialNavigation, navigateHash } from '../navigation.js';
 import Room from './room.jsx';
 
-test('all room headers hold the shared title card, function, strip replacement and origin Back button', async () => {
+test('all room headers hold the compact title, function, room links and origin Back button', async () => {
   for (const [chamber, title, description, slot_context] of [
     ['lottery', 'The Lot Chamber', 'Lottery manager', /<aside class="shell-seal-slot"[^>]*aria-label="Seal slot"/],
     ['moderator', 'The Gatehouse', 'AI moderator', /class="gh-seal"><aside class="shell-seal-slot"[^>]*aria-label="Seal slot"[\s\S]*?<\/aside><\/div><details class="gh-more"/],
@@ -25,16 +25,17 @@ test('all room headers hold the shared title card, function, strip replacement a
       snapshot={{ mode: 'fixture', phase: 'ready' }} origin="overview" on_open={vi.fn()} on_back={vi.fn()} />);
     await stream.allReady;
     const markup = await new Response(stream).text();
-    const header = markup.match(/<header class="cc-room-title"[\s\S]*?<\/header>/)?.[0]?.replace(/<!--.*?-->/g, '') ?? '';
+    const header = markup.match(/<header class="shell-room-header"[\s\S]*?<\/header>/)?.[0]?.replace(/<!--.*?-->/g, '') ?? '';
     expect(header).toContain(`data-role="room-title-name">${title}</h1>`);
     expect(header).toContain(description);
     expect(header).toContain('aria-label="Breadcrumb"');
-    expect(header).toContain('· chamber');
+    expect(header).toContain('The Keep');
     expect(markup).not.toContain('Chamber locator');
     expect(header).toContain('Back to the overview');
     expect(header).toContain('data-role="room-back"');
     expect(header).toContain('data-stamp="simulated"');
-    expect(markup).toContain('data-role="room-band"');
+    expect(markup).not.toContain('data-role="room-band"');
+    expect(header).toContain('data-role="room-title"');
     // The lottery C port replaces details-last, data-active and prose guardrails with stage/desk, pressed kit cards and Ribbon slots.
     expect(markup.match(/aria-label="Seal slot"/g)).toHaveLength(1);
     expect(markup).toMatch(slot_context);
@@ -47,7 +48,7 @@ test('all room headers hold the shared title card, function, strip replacement a
     }
   }
   const style = readFileSync(new URL('./room.css', import.meta.url), 'utf8');
-  expect(style).toContain('.shell-room-header .cc-room-title-card');
+  expect(style).toContain('.shell-room-header { position: relative; flex: none; }');
   expect(style).toMatch(/\.shell-room \.shell-room-work\s*\{[^}]*display:\s*block/);
   expect(style).toMatch(/\.shell-room \.shell-seal-slot\s*\{[^}]*border-top:/);
 });

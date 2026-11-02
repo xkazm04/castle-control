@@ -53,7 +53,7 @@ test('opening a Keep hit then Escape returns focus to that hit, with the persist
     const target: Partial<HTMLElement> = { focus: first?.includes('keep-hit') ? hit_focus : strip_focus };
     return first ? target as HTMLElement : null;
   });
-  expect(markup.indexOf('data-role="strip"')).toBeLessThan(markup.indexOf('class="keep-hit kw-hit"'));
+  expect(markup.indexOf('data-role="room-bar"')).toBeLessThan(markup.indexOf('class="keep-hit kw-hit"'));
   if (!open_hit) throw new Error('Missing Keep hit');
   open_hit();
   expect(location.hash).toBe('#/chamber/lottery');

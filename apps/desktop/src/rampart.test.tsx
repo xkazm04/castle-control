@@ -1,16 +1,36 @@
 import { renderToStaticMarkup } from 'react-dom/server';
-import { expect, test } from 'vitest';
+import { expect, test, vi } from 'vitest';
 import { DesktopView } from './view.jsx';
 import { DesktopRampart } from './rampart.jsx';
 import { simulatedRead } from './simulated.js';
 import type { Snapshot } from './model.js';
 import type { ModuleId } from '@castle-control/ui';
 import Keep from './shell/keep.jsx';
+import { DesktopApp } from './app.jsx';
+import { Children, isValidElement } from 'react';
+import { ThemeToggle } from '@castle-control/ui';
 
 test('the hook-free fixture rampart links its OBS chip to setup', () => {
   const html = renderToStaticMarkup(DesktopRampart({ snapshot: { mode: 'fixture', phase: 'ready' },
     theme: 'day', on_theme_change: () => undefined }));
   expect(html).toMatch(/<a href="#\/stream"[^>]*><span[^>]*data-stamp="simulated"[^>]*aria-label="Simulated: OBS simulated"><span aria-hidden="true">OBS simulated<\/span><\/span><\/a>/);
+  expect(html).toContain('data-role="status-bar"');
+});
+
+test('the app opens at night and the existing theme toggle still selects day', () => {
+  const snapshot = { mode: 'fixture', phase: 'ready' } as const;
+  vi.stubGlobal('window', { location: { hash: '#/keep' } });
+  try {
+    const html = renderToStaticMarkup(<DesktopApp client={{ subscribe: () => () => undefined,
+      getSnapshot: () => snapshot, start: () => () => undefined }} />);
+    expect(html).toContain('data-theme="night"');
+    const change = vi.fn();
+    const tree = DesktopRampart({ snapshot, theme: 'night', on_theme_change: change });
+    const toggle = Children.toArray(tree.props.children).find(child => isValidElement(child) && child.type === ThemeToggle);
+    if (!isValidElement<Parameters<typeof ThemeToggle>[0]>(toggle)) throw new Error('Missing theme toggle');
+    ThemeToggle(toggle.props).props.onClick();
+    expect(change).toHaveBeenCalledWith('day');
+  } finally { vi.unstubAllGlobals(); }
 });
 
 function render(snapshot: Snapshot, current: ModuleId = 'lottery') {

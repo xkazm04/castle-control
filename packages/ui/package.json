@@ -15,7 +15,8 @@
     "./fused/surface.css": "./src/fused/surface.css",
     "./fused/glass.css": "./src/fused/glass.css",
     "./fused/folio.css": "./src/fused/folio.css",
-    "./chamber": "./src/chamber/index.ts"
+    "./chamber": "./src/chamber/index.ts",
+    "./fused/surface-transition": "./src/fused/surface-transition.tsx"
   },
   "sideEffects": [
     "./src/kit.tsx",
