@@ -98,7 +98,8 @@ fn unicode_labels_seed_strings_window_endpoints_and_omissions_are_preserved() {
         assert_ne!(schema["params"]["title"], "Pending");
     }
     // Names and registration count do not change when two placeholders gain schemas.
-    assert_eq!(RpcRequest::NAMES.len(), 62);
+    // Custom design D1 later declared five more (62 -> 67).
+    assert_eq!(RpcRequest::NAMES.len(), 67);
 }
 
 #[test]

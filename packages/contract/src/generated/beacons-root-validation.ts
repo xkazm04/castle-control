@@ -8,3 +8,7 @@ export const beaconsSimulate = { method: "beacons.simulate" as const, params: co
 export const beaconsSourceUrl = { method: "beacons.source.url" as const, params: compiled.p39, result: compiled.r39 };
 export const beaconsArtStatus = { method: "beacons.art.status" as const, params: compiled.p40, result: compiled.r40 };
 export const beaconsArtGenerate = { method: "beacons.art.generate" as const, params: compiled.p41, result: compiled.r41 };
+export const beaconsDesignCreate = { method: "beacons.design.create" as const, params: compiled.p62, result: compiled.r62 };
+export const beaconsArtDirect = { method: "beacons.art.direct" as const, params: compiled.p63, result: compiled.r63 };
+export const beaconsArtLayers = { method: "beacons.art.layers" as const, params: compiled.p64, result: compiled.r64 };
+export const beaconsLibraryImport = { method: "beacons.library.import" as const, params: compiled.p65, result: compiled.r65 };

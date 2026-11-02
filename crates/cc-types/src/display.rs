@@ -1,4 +1,5 @@
 //! Shared on-stream presentation only; no room state or rendering authority.
+use crate::DesignId;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
@@ -41,6 +42,15 @@ pub struct Display {
     )]
     #[schemars(with = "DisplayTimingMs")]
     pub timing_ms: Option<DisplayTimingMs>,
+    /// A custom design that replaces `art_style` where the room supports it
+    /// (the Lots plate renders it as an image vessel).
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        deserialize_with = "crate::present"
+    )]
+    #[schemars(with = "DesignId")]
+    pub art_design: Option<DesignId>,
 }
 
 // Serde's derived struct parser also accepts positional sequences (even []
@@ -61,6 +71,8 @@ impl<'de> Deserialize<'de> for Display {
             art_style: Option<ArtStyle>,
             #[serde(default, deserialize_with = "crate::present")]
             timing_ms: Option<DisplayTimingMs>,
+            #[serde(default, deserialize_with = "crate::present")]
+            art_design: Option<DesignId>,
         }
         struct Object;
         impl<'de> serde::de::Visitor<'de> for Object {
@@ -76,6 +88,7 @@ impl<'de> Deserialize<'de> for Display {
                     colour_token: f.colour_token,
                     art_style: f.art_style,
                     timing_ms: f.timing_ms,
+                    art_design: f.art_design,
                 })
             }
         }

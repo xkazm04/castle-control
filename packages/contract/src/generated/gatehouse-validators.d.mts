@@ -40,3 +40,5 @@ export const p51: ValidateFunction<RpcMethods["gatehouse.liveRun.get"]['params']
 export const r51: ValidateFunction<RpcMethods["gatehouse.liveRun.get"]['result']>;
 export const p52: ValidateFunction<RpcMethods["gatehouse.source.url"]['params']>;
 export const r52: ValidateFunction<RpcMethods["gatehouse.source.url"]['result']>;
+export const p66: ValidateFunction<RpcMethods["gatehouse.votebar.design.set"]['params']>;
+export const r66: ValidateFunction<RpcMethods["gatehouse.votebar.design.set"]['result']>;

@@ -30,7 +30,7 @@ fn method_table_and_events_match_the_plan_letter_for_letter() {
         .filter(|v| EventKind::NAMES.contains(v))
         .collect();
     assert_eq!(names, EventKind::NAMES);
-    assert_eq!(RpcRequest::NAMES.len(), 62);
+    assert_eq!(RpcRequest::NAMES.len(), 67);
     assert_eq!(EventKind::NAMES.len(), 17);
     assert_eq!(
         method_schemas()

@@ -6,7 +6,7 @@ use std::sync::Arc;
 
 /// Declared in the contract but owned by a later work package or by the live
 /// host, so a fixture registry must not register them.
-const UNREGISTERED_IN_FIXTURE: [&str; 12] = [
+const UNREGISTERED_IN_FIXTURE: [&str; 17] = [
     "store.forgetUser",
     "store.purgeAll",
     "gatehouse.held.resolve",
@@ -19,6 +19,12 @@ const UNREGISTERED_IN_FIXTURE: [&str; 12] = [
     "rehearsal.scenario.run",
     "rehearsal.start",
     "rehearsal.stop",
+    // Custom design D1: declared in the contract, implemented by D2.
+    "beacons.design.create",
+    "beacons.art.direct",
+    "beacons.art.layers",
+    "beacons.library.import",
+    "gatehouse.votebar.design.set",
 ];
 
 fn unregistered(registry: &Registry) -> Vec<&'static str> {

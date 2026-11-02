@@ -147,6 +147,11 @@ async fn native_registry_serves_reads_and_revoke_purges_the_real_store() {
                 "rehearsal.scenario.run",
                 "rehearsal.start",
                 "rehearsal.stop",
+                "beacons.design.create",
+                "beacons.art.direct",
+                "beacons.art.layers",
+                "beacons.library.import",
+                "gatehouse.votebar.design.set",
             ]
             .contains(name)
         })

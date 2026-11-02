@@ -29,9 +29,10 @@ assert(files['beacons-render-validation.ts'].includes("from './beacons-render-va
 assert(!files['beacons-render-validation.ts'].includes("from './validators.mjs'"));
 assert(!files['validators.d.mts'].includes('BeaconsRenderSnapshot'), 'render roots stay out of eager registry');
 assert(!files['validators.mjs'].includes('snapshot intensity'), 'no eager render validation');
-const beaconsNames = ['visual.list', 'contribution.list', 'visual.upsert', 'curve.set', 'simulate', 'source.url', 'art.status', 'art.generate'].map(name => `beacons.${name}`);
+const beaconsNames = ['visual.list', 'contribution.list', 'visual.upsert', 'curve.set', 'simulate', 'source.url', 'art.status', 'art.generate',
+  'design.create', 'art.direct', 'art.layers', 'library.import'].map(name => `beacons.${name}`);
 const beaconsMethods = schema.methods.map((method, index) => ({ ...method, index })).filter(method => beaconsNames.includes(method.name));
-assert.equal(beaconsMethods.length, 8);
+assert.equal(beaconsMethods.length, 12);
 assert(files['beacons-validators.mjs'], 'Beacons validators have a separate generated module');
 assert(files['beacons-validators.d.mts'], 'Beacons validators retain typed declarations');
 assert(files['beacons-validation.ts'].includes("from './beacons-validators.mjs'"));
@@ -49,7 +50,7 @@ assert.equal(files['beacons-root-validation.ts'], files['beacons-validation.ts']
   'root barrel handles share the independent validators without importing the lazy method module');
 const gatehouseNames = schema.methods.map(method => method.name).filter(name => name.startsWith('gatehouse.'));
 const gatehouseMethods = schema.methods.map((method, index) => ({ ...method, index })).filter(method => gatehouseNames.includes(method.name));
-assert.equal(gatehouseMethods.length, 19);
+assert.equal(gatehouseMethods.length, 20);
 assert(files['gatehouse-validators.mjs'], 'Gatehouse validators have a separate generated module');
 assert(files['gatehouse-validators.d.mts'], 'Gatehouse validators retain typed declarations');
 assert(files['gatehouse-validation.ts'].includes("from './gatehouse-validators.mjs'"));
@@ -78,7 +79,7 @@ for (const name of ['maproom.stage.get', 'maproom.turn.run']) {
   assert.notEqual(method.params.title, 'Pending');
   assert.equal(method.result.title, 'TiltyardStageResult');
 }
-assert.equal(schema.methods.length, 62, 'filling existing placeholders adds no method registrations');
+assert.equal(schema.methods.length, 67, 'filling existing placeholders adds no method registrations');
 assert.throws(() => artifacts({ ...schema, overlay_routes: {} }), /route identifiers/);
 assert(files['tiltyard-render-validation.ts'].includes("from './tiltyard-render-validators.mjs'"));
 assert(!files['validators.d.mts'].includes('TiltyardRenderSnapshot'), 'overlay root stays out of eager registry');
@@ -201,6 +202,17 @@ const beaconsPositive = new Map([
   { design_id: 'simulated-design', assets: [{ asset: 'assets/simulated-frame.png', generated: true,
     provenance: 'leonardo_background_removed' }], costs: [{ call_id: '01ARZ3NDEKTSV4RRFFQ69G5FAV',
     model: 'simulated-model', charge: { credits: '1.250000' } }] }]],
+  ['beacons.design.create', [{ kind: 'beacon' }, { design_id: 'simulated-design' }]],
+  ['beacons.art.direct', [{ kind: 'frame', request: 'Simulated stone frame', width: 1024, height: 1024 },
+    { kind: 'frame', interpretation: 'Simulated', style_name: 'Simulated', palette: ['#112233'], assumptions: [],
+      question: { text: 'Simulated?', options: ['Warm', 'Cool'], assumed: 'Warm' }, master_prompt: 'Simulated',
+      width: 1024, height: 1024 }]],
+  ['beacons.art.layers', [{ design_id: 'simulated-design', asset: 'assets/simulated.png', kind: 'vote_bar' },
+    { design_id: 'simulated-design', base: 'assets/simulated.png', anchors: { track_rect: { x: 0.1, y: 0.2, w: 0.5, h: 0.25 }, track_radius: 0.5,
+      segments: ['#ff0000', '#00ff00', '#0000ff'] }, costs: [], package: { design_id: 'simulated-design',
+      content_hash: 'a'.repeat(64), layers: [{ kind: 'image', asset: 'assets/simulated.png', bindings: [],
+        properties: { x: 0, y: 0, width: 64, height: 64, scale: 1, opacity: 1 } }] } }]],
+  ['beacons.library.import', [{ library_id: 'simulated-01', kind: 'draw_vessel' }, { design_id: 'simulated-design' }]],
 ]);
 for (const { name, index } of beaconsMethods) {
   for (const [offset, prefix] of ['p', 'r'].entries()) {
@@ -245,6 +257,7 @@ const replay = { label: 'simulated', source: 'simulated-recording', instrument_h
     over_moderation: { evaluated: 0, false_positives: 0 } } };
 const positive = new Map([
   ['gatehouse.source.url', [{}, { url: 'http://localhost:4312/gatehouse/current' }]],
+  ['gatehouse.votebar.design.set', [{ design_id: 'simulated-design' }, {}]],
   ['gatehouse.chat.list', [{ limit: 100 }, { items: [], unavailable_count: 0 }]],
   ['gatehouse.history.list', [{ limit: 100 }, { items: [], unavailable_count: 0 }]],
   ['gatehouse.liveRun.get', [{ limit: 100 }, { items: [], unavailable_count: 0 }]],

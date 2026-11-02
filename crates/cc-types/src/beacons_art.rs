@@ -1,13 +1,17 @@
 //! WP 3.4 wire boundary. Provider URLs and keychain labels stay behind the host.
-use crate::{ArtCallId, DesignId, LocalAssetPath};
+use crate::{ArtBackground, ArtCallId, ArtProvider, ArtProviderStatus, DesignId, LocalAssetPath};
 use schemars::{JsonSchema, Schema};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct ArtStatusResult {
-    /// Local key presence only. Keychain failure is an error, not unavailable.
+    /// Local key presence only, true when any provider is available. Keychain
+    /// failure is an error, not unavailable.
     pub available: bool,
+    /// Per-provider presence. Omitted when empty, so `{available}` stays valid.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub providers: Vec<ArtProviderStatus>,
 }
 
 /// An absent reference generates one anchor. A reference selects an imported
@@ -26,6 +30,12 @@ pub struct ArtGenerateParams {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub reference: Option<LocalAssetPath>,
     pub remove_background: bool,
+    /// Omitted means Leonardo, keeping existing callers valid.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub provider: Option<ArtProvider>,
+    /// OpenAI only: present background requires `provider: openai`.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub background: Option<ArtBackground>,
 }
 
 #[derive(Deserialize, JsonSchema)]
@@ -43,6 +53,12 @@ struct ArtGenerateFields {
     #[schemars(with = "LocalAssetPath")]
     reference: Option<LocalAssetPath>,
     remove_background: bool,
+    #[serde(default, deserialize_with = "crate::present")]
+    #[schemars(with = "ArtProvider")]
+    provider: Option<ArtProvider>,
+    #[serde(default, deserialize_with = "crate::present")]
+    #[schemars(with = "ArtBackground")]
+    background: Option<ArtBackground>,
 }
 impl TryFrom<ArtGenerateFields> for ArtGenerateParams {
     type Error = &'static str;
@@ -53,6 +69,9 @@ impl TryFrom<ArtGenerateFields> for ArtGenerateParams {
         if value.reference.is_none() && u8::from(value.quantity.clone()) != 1 {
             return Err("anchor generation requires exactly one image");
         }
+        if value.background.is_some() && value.provider != Some(ArtProvider::Openai) {
+            return Err("background requires the openai provider");
+        }
         Ok(Self {
             design_id: value.design_id,
             prompt: value.prompt,
@@ -62,6 +81,8 @@ impl TryFrom<ArtGenerateFields> for ArtGenerateParams {
             quantity: value.quantity,
             reference: value.reference,
             remove_background: value.remove_background,
+            provider: value.provider,
+            background: value.background,
         })
     }
 }
@@ -71,6 +92,9 @@ fn generation_schema(schema: &mut Schema) {
         serde_json::json!([{
             "if":{"properties":{"reference":true},"required":["reference"]},
             "else":{"properties":{"quantity":{"const":1}}}
+        }, {
+            "if":{"properties":{"background":true},"required":["background"]},
+            "then":{"properties":{"provider":{"const":"openai"}},"required":["provider"]}
         }]),
     );
 }
@@ -107,6 +131,7 @@ pub struct GeneratedArtAsset {
 pub enum ArtProvenance {
     LeonardoGenerated,
     LeonardoBackgroundRemoved,
+    OpenaiGenerated,
 }
 
 /// Matches cc-beacons::art::CostRecord without importing the provider crate.

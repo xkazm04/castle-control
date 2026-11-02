@@ -270,3 +270,19 @@ fn typed_art_receipt_survives_forget_and_full_purge_erases_it() {
     assert!(fs::read(path).unwrap().is_empty());
     store.verify_inventory().unwrap();
 }
+
+#[test]
+fn openai_image_provider_serializes_as_openai() {
+    // Custom design D1 adds the variant only; the ledger write door is D2's.
+    for (provider, wire) in [
+        (ImageProvider::Leonardo, "leonardo"),
+        (ImageProvider::OpenAi, "openai"),
+    ] {
+        assert_eq!(serde_json::to_value(provider).unwrap(), json!(wire));
+        assert_eq!(
+            serde_json::from_value::<ImageProvider>(json!(wire)).unwrap(),
+            provider
+        );
+    }
+    assert!(serde_json::from_value::<ImageProvider>(json!("open_ai")).is_err());
+}

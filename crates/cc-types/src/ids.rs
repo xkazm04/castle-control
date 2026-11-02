@@ -80,6 +80,12 @@ string_id!(RuleId, r"^[a-z0-9]+(-[a-z0-9]+)*$(?![\s\S])", slug);
 string_id!(DrawId, r"^[a-z0-9]+(-[a-z0-9]+)*$(?![\s\S])", slug);
 string_id!(VisualId, r"^[a-z0-9]+(-[a-z0-9]+)*$(?![\s\S])", slug);
 string_id!(DesignId, r"^[a-z0-9]+(-[a-z0-9]+)*$(?![\s\S])", slug);
+// A built-in library asset, named by apps/desktop/public/art/library/library.json.
+string_id!(LibraryAssetId, r"^[a-z0-9-]{1,64}$(?![\s\S])", |v: &str| {
+    (1..=64).contains(&v.len())
+        && v.bytes()
+            .all(|b| b.is_ascii_lowercase() || b.is_ascii_digit() || b == b'-')
+});
 
 macro_rules! minted_id {
     ($($name:ident),+) => { $(impl $name {

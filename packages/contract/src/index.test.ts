@@ -6,7 +6,7 @@ const status = { at: '2026-10-25T12:00:00Z', version: '0.1.0', uptime_ms: 42,
   twitch_connected: false, obs_connected: false, simulated: true };
 
 test('generated inventory has 62 methods, 17 kinds and exactly ten error codes', () => {
-  expect(new Set(RPC_METHODS).size).toBe(62);
+  expect(new Set(RPC_METHODS).size).toBe(67);
   expect(new Set(EVENT_KINDS).size).toBe(17);
   expect(new Set(ERROR_CODES).size).toBe(10);
   expect(ERROR_CODES).toEqual(['invalid', 'not_found', 'conflict', 'unauthorized', 'rate_limited',

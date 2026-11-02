@@ -39,6 +39,7 @@ impl BeaconsModule {
                     Some(art) => art.provider.available().map_err(provider_error)?,
                     None => false,
                 },
+                providers: Vec::new(),
             }),
             RpcRequest::ArtGenerate(params) => {
                 let _serial = self.art_serial.lock().await;

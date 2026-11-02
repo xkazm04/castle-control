@@ -66,6 +66,7 @@ impl VoteBarModule {
                 .collect(),
             simulated: self.simulated || simulated,
             at: consensus.at,
+            art: None,
         })
     }
 }

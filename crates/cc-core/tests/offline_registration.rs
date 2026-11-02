@@ -48,6 +48,11 @@ fn exporter_lists_the_native_inventory_without_starting_services() {
                 "rehearsal.scenario.run",
                 "rehearsal.start",
                 "rehearsal.stop",
+                "beacons.design.create",
+                "beacons.art.direct",
+                "beacons.art.layers",
+                "beacons.library.import",
+                "gatehouse.votebar.design.set",
             ]
             .contains(name)
         })
