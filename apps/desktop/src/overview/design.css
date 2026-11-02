@@ -1,9 +1,11 @@
 .overview-design-inspector { flex: none; display: grid; gap: var(--space-8); padding-block: var(--space-8); font-size: var(--text-small); }
-.overview-design-inspector > strong { color: var(--or-text); }
+.overview-design-inspector > strong { justify-self: start; padding: var(--space-2) var(--space-8); font: 800 var(--text-t-label)/1.3 var(--font-label); letter-spacing: .08em; text-transform: lowercase; color: var(--ink-2); border: var(--space-1-5) dashed var(--lead); }
 .overview-design-inspector > .cc-window { height: calc(var(--space-56) * 3); }
-.overview-design-artifact { display: grid; gap: var(--space-4); border-bottom: var(--rule-thin) solid var(--line); padding-bottom: var(--space-8); }
+.overview-design-artifact { display: grid; gap: var(--space-4); padding: var(--space-10) var(--space-12); background: var(--surface-2); box-shadow: inset var(--space-4) 0 0 var(--ch), inset 0 0 0 var(--space-1) var(--hair); }
+.overview-design-artifact > b { font: 600 var(--text-t-h4)/1 var(--font-display); color: var(--ink); }
 .overview-design-artifact > div { display: flex; flex-wrap: wrap; gap: var(--space-8); }
-.overview-design-inspector button, .overview-design-close { font: inherit; color: var(--ink); background: var(--card); padding: var(--space-6) var(--space-8); border: var(--rule-thin) solid var(--ink); cursor: pointer; }
+.overview-design-inspector button, .overview-design-close { min-height: var(--control-h-sm); padding: 0 var(--space-12); font: 800 var(--text-t-label)/1 var(--font-label); letter-spacing: .07em; text-transform: lowercase; color: var(--ink); background: var(--surface); border: var(--came) solid var(--lead); border-radius: var(--r); box-shadow: inset 0 calc(-1 * var(--space-3)) 0 var(--hair-2); cursor: pointer; }
+.overview-design-inspector button:hover, .overview-design-close:hover { box-shadow: inset 0 calc(-1 * var(--space-3)) 0 var(--ch); }
 .overview-design-inspector :focus-visible, .overview-design-dialog :focus-visible { outline: var(--rule-strong) solid var(--azure-text); outline-offset: var(--focus-offset); }
 .overview-design-dialog { width: min(90vw, calc(var(--space-56) * 20)); max-height: 90dvh; overflow: auto; padding: var(--space-16); border: var(--rule-strong) solid var(--ink); background: var(--paper); color: var(--ink); font: var(--text-body)/1.4 var(--font-ui); }
 .overview-design-dialog::backdrop { background: var(--ink); opacity: var(--disabled-opacity); }

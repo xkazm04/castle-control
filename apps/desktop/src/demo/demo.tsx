@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { InkButton, Stamp } from '@castle-control/ui';
+import { Stamp } from '@castle-control/ui';
+import { SurfaceHead } from '../keep/surface-head.jsx';
 import { art, background, frames, initialDemoState, layouts, shots, styles } from './model.js';
 import type { DemoState } from './model.js';
 import { copy } from './copy.js';
@@ -9,12 +10,12 @@ import '@castle-control/ui/fused/glass.css';
 
 export function DemoControls({ state, on_change }: { state: DemoState; on_change: (next: DemoState) => void }) {
   return <div className="demo-controls">
-    <div className="demo-seg" role="group" aria-label="Style"><span>Style</span>{styles.map(({ id, label }) =>
-      <InkButton key={id} aria-pressed={state.style === id} onClick={() => on_change({ ...state, style: id })}>{label}</InkButton>)}</div>
-    <div className="demo-seg" role="group" aria-label="Layout"><span>Layout</span>{layouts.map(({ id, label }) =>
-      <InkButton key={id} aria-pressed={state.layout === id} onClick={() => on_change({ ...state, layout: id })}>{label}</InkButton>)}</div>
-    <div className="demo-seg" role="group" aria-label="Malakor"><span>Malakor</span>{shots.map(({ id, label }) =>
-      <InkButton key={id} aria-pressed={state.shot === id} onClick={() => on_change({ ...state, shot: id })}>{label}</InkButton>)}</div>
+    <div className="demo-seg"><span id="demo-style">Style</span><div className="cc-seg cc-seg--sm" role="group" aria-labelledby="demo-style">{styles.map(({ id, label }) =>
+      <button type="button" key={id} aria-pressed={state.style === id} onClick={() => on_change({ ...state, style: id })}>{label}</button>)}</div></div>
+    <div className="demo-seg"><span id="demo-layout">Layout</span><div className="cc-seg cc-seg--sm" role="group" aria-labelledby="demo-layout">{layouts.map(({ id, label }) =>
+      <button type="button" key={id} aria-pressed={state.layout === id} onClick={() => on_change({ ...state, layout: id })}>{label}</button>)}</div></div>
+    <div className="demo-seg"><span id="demo-shot">Malakor</span><div className="cc-seg cc-seg--sm" role="group" aria-labelledby="demo-shot">{shots.map(({ id, label }) =>
+      <button type="button" key={id} aria-pressed={state.shot === id} onClick={() => on_change({ ...state, shot: id })}>{label}</button>)}</div></div>
   </div>;
 }
 
@@ -54,15 +55,18 @@ export function DemoPreview({ state }: { state: DemoState }) {
 }
 
 export function DemoHeader({ on_back }: { on_back: () => void }) {
-  return <header className="demo-heading"><div><h1 id="demo-title">{copy.title}</h1><p>{copy.description}</p></div>
-    <InkButton onClick={on_back}>{copy.back} <kbd>Esc</kbd></InkButton></header>;
+  return <SurfaceHead className="demo-heading" title={copy.title} title_id="demo-title" on_back={on_back}
+    subtitle={copy.description} mark={<span className="cc-sim">Simulated</span>} />;
 }
 
 export default function Demo({ on_back }: { on_back: () => void }) {
   const [state, setState] = useState<DemoState>(initialDemoState);
   return <section className="demo-workspace" aria-labelledby="demo-title">
     <DemoHeader on_back={on_back} />
-    <DemoControls state={state} on_change={setState} />
-    <DemoPreview state={state} />
+    <div className="demo-frame">
+      <div className="cc-beads cc-beads--chapel demo-beads" aria-hidden="true" />
+      <DemoControls state={state} on_change={setState} />
+      <DemoPreview state={state} />
+    </div>
   </section>;
 }

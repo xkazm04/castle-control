@@ -3,7 +3,6 @@ import type { ReactNode } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { readFileSync, readdirSync } from 'node:fs';
 import { expect, test } from 'vitest';
-import { InkButton } from '@castle-control/ui';
 import { DemoControls, DemoPreview } from './demo.jsx';
 import { initialDemoState, layouts, shots, styles } from './model.js';
 import type { DemoState } from './model.js';
@@ -15,7 +14,7 @@ function press(tree: ReactNode, label: string): void {
   function visit(node: ReactNode) {
     Children.forEach(node, child => {
       if (!isValidElement<Control>(child)) return;
-      if (child.type === InkButton && child.props.children === label) {
+      if (child.type === 'button' && child.props.children === label) {
         child.props.onClick?.(); found = true;
       } else visit(child.props.children);
     });
