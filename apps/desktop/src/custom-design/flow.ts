@@ -3,6 +3,7 @@ import type { ArtAssetKind } from '@castle-control/contract';
 import { defineFlow } from '@castle-control/ui/steward-flow';
 import type { FlowChamber, FlowLine, FlowOption, StewardFlow, WorkContext } from '@castle-control/ui/steward-flow';
 import type { Snapshot } from '../model.js';
+import { readSameOriginJson } from '../core-source.js';
 import { CustomPreview } from './preview.jsx';
 import { presetsFor, presetUrl } from './presets.js';
 import type { DesignState, Made, MakeInput } from './runtime.js';
@@ -41,7 +42,7 @@ export function customDesignFlow(kind: ArtAssetKind, snapshot: Snapshot, host: C
   const load = () => loading ??= (async () => {
     const module = await import('./runtime.js');
     const mode = core ? { core: true as const, beacons: async () => (await import('./seal.js')).beaconsPort(snapshot) } : { core: false as const };
-    runtime = { module, state: module.createDesignState(kind, mode, url => fetch(url)) };
+    runtime = { module, state: module.createDesignState(kind, mode, readSameOriginJson) };
     return runtime;
   })().catch((error: unknown) => { loading = undefined; throw error; });
   const input = (draft: CustomDraft): MakeInput | undefined => {

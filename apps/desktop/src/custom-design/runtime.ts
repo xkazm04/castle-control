@@ -53,7 +53,7 @@ function costLine(costs: readonly ArtCostReceipt[]): string | undefined {
   return micro ? `$${(micro / 1_000_000).toFixed(2)} on your OpenAI key` : undefined;
 }
 
-export function createDesignState(kind: ArtAssetKind, mode: DesignMode, read: (url: string) => Promise<{ ok: boolean; text(): Promise<string> }>) {
+export function createDesignState(kind: ArtAssetKind, mode: DesignMode, read: (url: string) => Promise<unknown>) {
   let catalog: LibraryCatalog | undefined;
   let openai = !mode.core;
   let design_id: DesignId | undefined;

@@ -86,9 +86,9 @@ describe('library catalog', () => {
   });
 
   test('loads once, and a failed load is retried on the next call', async () => {
-    const failing = vi.fn(async () => ({ ok: false, text: async () => JSON.stringify(raw) }));
+    const failing = vi.fn(async (): Promise<unknown> => { throw new Error('404'); });
     await expect(loadLibrary(failing)).rejects.toThrow('The art library did not load.');
-    const working = vi.fn(async () => ({ ok: true, text: async () => JSON.stringify(raw) }));
+    const working = vi.fn(async (): Promise<unknown> => raw);
     const [a, b] = await Promise.all([loadLibrary(working), loadLibrary(working)]);
     expect(a).toBe(b);
     expect(working).toHaveBeenCalledExactlyOnceWith('/art/library/library.json');
