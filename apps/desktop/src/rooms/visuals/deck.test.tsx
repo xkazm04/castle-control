@@ -33,13 +33,21 @@ test('fixture chamber has one picture, two section columns, minis, and reachable
     expect(compact.match(/role="radio"/g)).toHaveLength(3);
     expect(compact.match(/class="visuals-stair"/g)).toHaveLength(1);
     expect(compact.match(/Show in the picture/g)).toHaveLength(2);
+    expect(compact).not.toContain('class="visuals-plates"');
+    expect(compact).not.toContain('cc-hero-readout');
+    expect(compact.match(/class="visuals-beacon-blaze"/g)).toHaveLength(3);
+    const actions = html.slice(html.indexOf('visuals-primary-actions'), html.indexOf('aria-label="Room sections 2"'));
+    expect(actions.match(/<button/g)).toHaveLength(3);
+    expect(actions).not.toContain('Tonight’s theme');
+    expect(actions).not.toContain('Tune this beacon');
 
     probe.click('More of the beacons');
     const opened = probe.render();
     expect(opened).toContain('aria-haspopup="dialog" aria-expanded="true"');
     const drawer = opened.slice(opened.indexOf('role="dialog"'));
     for (const content of ['Every beacon, every tier', 'Night replay', 'Kindling curve editor',
-      'Beacon appearance preview', 'Contribution feed', 'Copy browser-source URL for Offering altar']) {
+      'Beacon appearance preview', 'Contribution feed', 'Copy browser-source URL for Offering altar',
+      'Tonight’s theme', 'Tune this beacon']) {
       expect(drawer).toContain(content);
     }
     expect(drawer.match(/class="visuals-stair"/g)).toHaveLength(3);
@@ -88,7 +96,10 @@ test('the fixture weighting slider and decay action change the existing preview 
     const decay = port.getSnapshot().visuals[0]?.visual.curve.decay;
     expect(decay).toEqual({ kind: 'exponential', half_life_s: 150 });
     expect(port.getSnapshot().visuals[0]?.total).toBe(before?.total);
-    probe.click('Tonight’s theme');
-    expect(probe.render()).toContain('role="dialog"');
+    probe.click('More of the beacons');
+    const html = probe.render();
+    const drawer = html.slice(html.indexOf('role="dialog"'));
+    expect(drawer).toContain('Tonight’s theme');
+    expect(drawer).toContain('Beacon appearance preview');
   } finally { probe.dispose(); }
 });

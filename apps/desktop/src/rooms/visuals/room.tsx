@@ -69,11 +69,14 @@ export function VisualsWork({ queue = proposalQueue, port, seal_slot }: { queue?
             const decay = selected.visual.curve.decay;
             if (decay.kind === 'exponential') adapter.decay({ ...decay, half_life_s: Math.max(1, Math.round(decay.half_life_s / 2)) });
           }}>Halve the decay</button>
-          <button type="button" className="cc-btn" onClick={() => setOpen(true)}>Tonight’s theme</button>
-          <button type="button" className="cc-btn cc-btn--quiet" onClick={() => start(flow_ids.tune)}>Tune this beacon</button>
         </>}
         drawer={<>
-          <div className="visuals-deck-actions"><button type="button" className="cc-btn" onClick={() => start(flow_ids.demo)}>Play demo</button></div>
+          <div className="visuals-deck-actions">
+            <button type="button" className="cc-btn" onClick={event =>
+              event.currentTarget.closest('[role="dialog"]')?.querySelector<HTMLSelectElement>('#beacon-colour')?.focus()}>Tonight’s theme</button>
+            <button type="button" className="cc-btn cc-btn--quiet" onClick={() => start(flow_ids.tune)}>Tune this beacon</button>
+            <button type="button" className="cc-btn" onClick={() => start(flow_ids.demo)}>Play demo</button>
+          </div>
           <ChamberSection title="Every beacon, every tier"><BeaconPlates visuals={preview.visuals} selected={preview.selected}
             on_select={item => adapter.select(item.visual.visual_id)} /></ChamberSection>
           <ProposalLayers chamber="visuals" queue={queue} />

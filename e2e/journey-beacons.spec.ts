@@ -28,33 +28,58 @@ async function holdToSeal(page: Page, done: RegExp) {
 }
 const openMore = (page: Page) => page.getByRole('button', { name: 'More of the beacons', exact: true }).click();
 
-test('Beacons chamber fits both compact viewport budgets and opens every tier in its drawer', async ({ page }) => {
+test('Beacons chamber fits fixed compact room budgets and opens every tier in its drawer', async ({ page }) => {
   for (const viewport of [{ width: 1280, height: 720 }, { width: 1366, height: 768 }]) {
     await page.setViewportSize(viewport);
     await page.goto('/#/chamber/visuals');
+    // Isolate this package's allocation from the older shell on the builder base.
+    // The Director separately measures the integrated WP1 shell. Keep its CSS loaded.
+    await page.locator('.shell-room-content').evaluate((element, height) => {
+      Object.assign((element as HTMLElement).style, { position: 'fixed', left: '20px', top: '0',
+        width: 'calc(100vw - 40px)', height: `${height}px`, zIndex: '10' });
+    }, viewport.height === 720 ? 470 : 520);
     const room = page.locator('.visuals-room');
     await expect(room.locator('[data-role="room-picture"]')).toHaveCount(1);
     await expect(room.locator('.cc-chamber-column')).toHaveCount(2);
-    const fit = await room.evaluate(element => {
-      const bounds = element.getBoundingClientRect();
-      const picture = element.querySelector('[data-role="room-picture"]')?.getBoundingClientRect();
-      const columns = [...element.querySelectorAll('.cc-chamber-column')].map(column => column.getBoundingClientRect());
-      return {
-        scroll: element.scrollHeight > element.clientHeight + 1 || element.scrollWidth > element.clientWidth + 1,
-        columns_fit: columns.every(column => column.bottom <= bounds.bottom + 1 && column.right <= bounds.right + 1),
-        picture_ratio: picture ? picture.width / picture.height : 0,
-        text_fits: [...element.querySelectorAll<HTMLElement>('*')].filter(node => node.checkVisibility()
-          && !node.closest('.cc-sr') && !node.children.length && node.textContent?.trim()).every(node => {
-          const rect = node.getBoundingClientRect();
-          return rect.bottom <= bounds.bottom + 1 && rect.right <= bounds.right + 1
-            && Number.parseFloat(getComputedStyle(node).fontSize) >= 13;
-        }),
-      };
-    });
-    expect(fit.scroll).toBe(false);
-    expect(fit.columns_fit).toBe(true);
-    expect(fit.text_fits).toBe(true);
-    expect(fit.picture_ratio).toBeCloseTo(16 / 9, 2);
+    for (let selected = 0; selected < 3; selected++) {
+      await room.locator('.visuals-beacon-list').getByRole('radio').nth(selected).click();
+      const fit = await room.evaluate(element => {
+        const bounds = element.getBoundingClientRect();
+        const frame = element.closest('.shell-room-content');
+        const picture = element.querySelector('[data-role="room-picture"]')?.getBoundingClientRect();
+        const columns = [...element.querySelectorAll('.cc-chamber-column')].map(column => column.getBoundingClientRect());
+        const beacons = [...element.querySelectorAll('.visuals-beacon')].map(beacon => beacon.getBoundingClientRect());
+        const tiers = [...element.querySelectorAll('.visuals-beacon .visuals-stair-step')].map(tier => tier.getBoundingClientRect());
+        const actions = [...element.querySelectorAll('.visuals-primary-actions button')].map(action => action.getBoundingClientRect());
+        return {
+          frame_scroll: !!frame && (frame.scrollHeight > frame.clientHeight + 1 || frame.scrollWidth > frame.clientWidth + 1),
+          scroll: element.scrollHeight > element.clientHeight + 1 || element.scrollWidth > element.clientWidth + 1,
+          stacked: beacons.every((beacon, index) => index === 0 || beacon.top >= (beacons[index - 1]?.bottom ?? 0)),
+          tiers_one_row: tiers.length === 4 && tiers.every(tier => tier.top === tiers[0]?.top),
+          actions_one_row: actions.length === 3 && actions.every(action => action.top === actions[0]?.top),
+          compact_text: [...element.querySelectorAll('.visuals-beacon-blaze, .visuals-beacon[aria-checked="false"] > span')]
+            .every(node => node.getBoundingClientRect().height <= 24),
+          columns_fit: columns.every(column => column.bottom <= bounds.bottom + 1 && column.right <= bounds.right + 1),
+          picture_ratio: picture ? picture.width / picture.height : 0,
+          text_fits: [...element.querySelectorAll<HTMLElement>('*')].filter(node => node.checkVisibility()
+            && !node.closest('.cc-sr') && !node.children.length && node.textContent?.trim()).every(node => {
+            const rect = node.getBoundingClientRect();
+            return rect.bottom <= bounds.bottom + 1 && rect.right <= bounds.right + 1
+              && Number.parseFloat(getComputedStyle(node).fontSize) >= 13;
+          }),
+        };
+      });
+      expect(fit.frame_scroll).toBe(false);
+      expect(fit.scroll).toBe(false);
+      expect(fit.stacked).toBe(true);
+      expect(fit.tiers_one_row).toBe(true);
+      expect(fit.actions_one_row).toBe(true);
+      expect(fit.compact_text).toBe(true);
+      expect(fit.columns_fit).toBe(true);
+      expect(fit.text_fits).toBe(true);
+      expect(fit.picture_ratio).toBeCloseTo(16 / 9, 2);
+      console.log(`SIMULATED Beacons ${viewport.width}x${viewport.height}, selected ${selected}: ${JSON.stringify(fit)}`);
+    }
     await openMore(page);
     const drawer = page.getByRole('dialog', { name: 'More of the beacons' });
     await expect(drawer.getByRole('radio')).toHaveCount(3);
