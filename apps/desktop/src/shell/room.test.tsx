@@ -20,7 +20,7 @@ test('all room headers hold the shared title card, function, strip replacement a
     ['lottery', 'The Lot Chamber', 'Lottery manager', /<aside class="shell-seal-slot"[^>]*aria-label="Seal slot"/],
     ['moderator', 'The Gatehouse', 'AI moderator', /class="gh-seal"><aside class="shell-seal-slot"[^>]*aria-label="Seal slot"[\s\S]*?<\/aside><\/div><details class="gh-more"/],
     ['visuals', 'The Beacons', 'Contribution visuals', /visuals-room-details[\s\S]*<aside class="shell-seal-slot"[^>]*aria-label="Seal slot"[\s\S]*?<\/aside><\/div><\/div>/],
-    ['studio', 'The Map Room', 'Extension studio', /cc-seal-card[\s\S]*<aside class="shell-seal-slot"[^>]*aria-label="Seal slot"/],
+    ['studio', 'The Map Room', 'Chat duels', /cc-seal-card[\s\S]*<aside class="shell-seal-slot"[^>]*aria-label="Seal slot"/],
   ] as const) {
     const stream = await renderToReadableStream(<Room chamber={chamber} replay={false}
       snapshot={{ mode: 'fixture', phase: 'ready' }} origin="overview" on_open={vi.fn()} on_back={vi.fn()} />);

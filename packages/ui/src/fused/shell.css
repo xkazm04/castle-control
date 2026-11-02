@@ -24,9 +24,9 @@
      data     .cc-list > .cc-row · .cc-table (.cc-num) · .cc-steps > .cc-step · .cc-verdict
               .cc-hash (--block) · .cc-bytes · .cc-disclosure (+__body) · .cc-empty
    ============================================================================= */
-/* At night the lead of UI controls catches the moonlight, or it would vanish into slate. */
-/* At night the lead of UI controls catches the moonlight (--came-ui), or it would vanish into slate. */
-[data-theme="night"] :is(.cc-btn:not(.cc-btn--primary):not(.cc-btn--rampart), .cc-input, .cc-select, .cc-seg > button, .cc-seg > label, .cc-stepper, .cc-panel, .cc-glass-card[data-selected="true"], .cc-kbd, .cc-iconbtn, .cc-choice input, .cc-switch input) { border-color: var(--came-ui); }
+/* At night the lead of UI controls catches the moonlight (--came-ui), or it would vanish into slate.
+   Fields are not in this list: every field follows the one field law, a thin ink border (e2e/styles.ts). */
+[data-theme="night"] :is(.cc-btn:not(.cc-btn--primary):not(.cc-btn--rampart), .cc-seg > button, .cc-seg > label, .cc-stepper, .cc-panel, .cc-glass-card[data-selected="true"], .cc-kbd, .cc-iconbtn, .cc-choice input, .cc-switch input) { border-color: var(--came-ui); }
 [data-theme="night"] .cc-rampart .cc-iconbtn { border-color: var(--lead-hi); }
 [data-theme="night"] .cc-stepper { background: var(--came-ui); }
 

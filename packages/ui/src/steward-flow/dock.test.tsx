@@ -69,3 +69,22 @@ test('another chamber does not show this chamber\'s session', () => {
   const html = renderToStaticMarkup(<StewardDock chamber="lottery" registry={registry} store={store} />);
   expect(html).not.toContain('Which theme?');
 });
+
+test('the sheet header offers Back, Start over and Lower only', () => {
+  const store = createDockStore();
+  store.open(theme);
+  const html = renderToStaticMarkup(<StewardDock chamber="keep" registry={registry} store={store} />);
+  for (const label of ['>Back<', '>Start over<', 'Lower <kbd']) expect(html).toContain(label);
+  expect(html).not.toContain('Put away');
+});
+
+test('flows beyond the quick chips sit behind a keyboard-reachable "More flows" menu button', () => {
+  const extra = (n: number) => ({ ...theme, id: `extra-${n}`, title: `Extra flow ${n}`, chip: `Extra ${n}` });
+  const crowded: StewardRegistry = { ...registry, keep: { ...registry.keep, flows: [theme, extra(1), extra(2), extra(3)] } };
+  const html = renderToStaticMarkup(<StewardDock chamber="keep" registry={crowded} store={createDockStore()} />);
+  expect(html).toContain('aria-haspopup="menu"');
+  expect(html).toContain('aria-expanded="false"');
+  expect(html).toContain('More flows');
+  const quiet = renderToStaticMarkup(<StewardDock chamber="keep" registry={registry} store={createDockStore()} />);
+  expect(quiet).not.toContain('More flows');
+});

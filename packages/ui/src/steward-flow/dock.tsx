@@ -4,7 +4,8 @@ import { SealButton } from '../seal-button.jsx';
 import { walkFlow } from './flow.js';
 import type { FlowChamber, FlowEntry, FlowLine, FlowOption } from './flow.js';
 import { matchIntent } from './intent.js';
-import { awayChips, chamberChips, chipFlow, findFlow } from './registry.js';
+import { awayChips, chamberChips, chamberFlows, chipFlow, findFlow } from './registry.js';
+import { chipKey, FlowMenu } from './flow-menu.jsx';
 import type { StewardChip, StewardRegistry } from './registry.js';
 import { stewardDock } from './store.js';
 import type { Beat, DockStore, FlowSession } from './store.js';
@@ -170,6 +171,10 @@ export function StewardDock({ chamber, registry, mode = 'simulated', role, input
   const last_steward = beats.findLast(beat => beat.who === 'steward');
   const expanded = snapshot.expanded;
   const chips = chamberChips(chamber, steward);
+  const flows = chamberFlows(chamber, steward);
+  const shown = new Set(chips.map(chipKey));
+  const more = flows.some(item => !shown.has(chipKey(item)));
+  const current_key = session ? (steward.demo?.id === session.flow.id ? `demo:${chamber}` : `flow:${session.flow.id}`) : undefined;
   const says = busy ? 'Thinking it over. Nothing acts until your hold to seal.' : last_steward?.text ?? steward.greeting;
   const active_key = view?.active ? `${session?.flow.id}:${view.active.step.id}` : '';
 
@@ -179,7 +184,11 @@ export function StewardDock({ chamber, registry, mode = 'simulated', role, input
     const adrift = !focused || focused === document.body || (root.current?.contains(focused) && focused !== own_input.current);
     if (active_key && adrift) focusCard(root);
     const node = thread.current;
-    if (node) node.scrollTop = node.scrollHeight;
+    if (!node) return;
+    // Follow the conversation down, but never past the active step's own first line.
+    const step = node.querySelector('.cc-steward-step');
+    const step_top = step ? step.getBoundingClientRect().top - node.getBoundingClientRect().top + node.scrollTop - 10 : Infinity;
+    node.scrollTop = Math.min(node.scrollHeight, step_top);
   }, [expanded, active_key, beats.length]);
 
   function input(): HTMLInputElement | null { return own_input.current; }
@@ -196,7 +205,8 @@ export function StewardDock({ chamber, registry, mode = 'simulated', role, input
     store.expand();
   }
   function chip(next: StewardChip, spoken = true) {
-    if (spoken) store.say({ chamber, who: 'you', text: next.label });
+    // A flow chip is not echoed: the sheet's title already names what was asked for.
+    if (spoken && next.action.kind !== 'flow' && next.action.kind !== 'demo') store.say({ chamber, who: 'you', text: next.label });
     const target = next.action.chamber;
     if (target !== chamber) on_chamber?.(target);
     if (next.action.kind === 'go') { store.say({ chamber: target, who: 'steward', text: registry[target].greeting }); store.expand(); return; }
@@ -255,7 +265,6 @@ export function StewardDock({ chamber, registry, mode = 'simulated', role, input
             <button type="button" className="cc-btn cc-btn--quiet cc-btn--sm" disabled={!view?.entries.some(entry => entry.status === 'answered')}
               onClick={() => store.back(chamber)}>Back</button>
             <button type="button" className="cc-btn cc-btn--quiet cc-btn--sm" onClick={() => store.reset(chamber)}>Start over</button>
-            <button type="button" className="cc-btn cc-btn--quiet cc-btn--sm" onClick={() => store.close(chamber)}>Put away</button>
           </>}
           <button type="button" className="cc-btn cc-btn--quiet cc-btn--sm" aria-controls={sheet_id} aria-expanded="true" onClick={collapse}>
             Lower <kbd className="cc-kbd">Esc</kbd></button>
@@ -294,6 +303,7 @@ export function StewardDock({ chamber, registry, mode = 'simulated', role, input
           {chips.filter(item => !(session && item.action.kind !== 'catch_up' && chipFlow(registry, item.action)?.id === session.flow.id))
             .map(item => <button key={item.label} type="button" className="cc-btn cc-btn--quiet"
               onClick={() => chip(item)}>{item.label}</button>)}
+          {more && <FlowMenu items={flows} current={current_key} on_pick={item => chip(item)} />}
           {!expanded && beats.length > 0 && !session && <button type="button" className="cc-btn cc-btn--quiet cc-btn--sm" aria-expanded="false"
             onClick={() => store.expand()}>Raise</button>}
         </span>

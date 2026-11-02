@@ -58,3 +58,10 @@ export function chipFlow(registry: StewardRegistry, action: ChipAction): AnyStew
   return action.kind === 'flow' ? findFlow(registry, action.chamber, action.flow)
     : action.kind === 'demo' ? registry[action.chamber].demo : undefined;
 }
+
+/** Every flow the chamber offers, chip or not, then its demo: the dock's "More flows" menu. */
+export function chamberFlows(chamber: FlowChamber, steward: ChamberSteward): StewardChip[] {
+  const flows: StewardChip[] = steward.flows.map(flow => ({ label: flow.title, action: { kind: 'flow', chamber, flow: flow.id } }));
+  if (steward.demo) flows.push({ label: steward.demo.title, action: { kind: 'demo', chamber } });
+  return flows;
+}

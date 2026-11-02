@@ -105,10 +105,10 @@ test('field policy accepts kit fields in paper and stock and checks every border
   assert.match(fieldStyleErrors({ appearance: 'none', borders: [] }, fieldBorder).join('\n'), /Missing field border sides/);
 });
 
-test('only the named Steward prompt resolves the strong token under its own theme', () => {
-  assert.deepEqual(strongBorderFields.map(field => field.name), ['Steward bar prompt']);
-  const selector = strongBorderFields[0]?.selector;
-  assert.equal(selector, '.cc-steward-dock input[aria-label="Talk to the Steward..."]');
+test('every shipped field follows the thin ink law; a named exception resolves the strong token under its own theme', () => {
+  assert.deepEqual(strongBorderFields, []);
+  const exceptions = [{ name: 'Example prompt', selector: '.example input[aria-label="Talk to the Steward..."]', reason: 'mechanism check' }];
+  const selector = exceptions[0]?.selector;
   for (const color of [fieldBorder.color, 'rgb(242, 238, 227)']) {
     for (const isSteward of [false, true]) {
       class Field {
@@ -123,7 +123,7 @@ test('only the named Steward prompt resolves the strong token under its own them
       }
       const document = { querySelectorAll: () => [new Field()], createElement: () => new Field() };
       const measured = runInNewContext(`(${measureFields.toString()})(exceptions)`, {
-        document, HTMLElement: Field, exceptions: strongBorderFields,
+        document, HTMLElement: Field, exceptions,
         getComputedStyle: (field: Field) => ({ borderTopColor: color, borderTopStyle: 'solid',
           borderTopWidth: field.style.border.includes('--rule-strong') ? '2px' : '1px' }),
       }) as ReturnType<typeof measureFields>;
