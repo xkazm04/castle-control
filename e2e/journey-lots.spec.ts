@@ -197,6 +197,9 @@ for (const [width, height] of [[1280, 720], [1366, 768], [1600, 900], [1920, 108
       await page.goto('/#/chamber/lottery');
       const room = page.getByRole('region', { name: 'Lot Chamber', exact: true });
       await expect(room).toBeVisible();
+      await page.evaluate(() => document.fonts.ready);
+      const content = page.locator('.shell-room-content');
+      await expect.poll(() => content.evaluate(element => element.scrollHeight - element.clientHeight)).toBe(0);
       await expect.poll(() => room.evaluate(element => {
         const issues: string[] = [];
         const bounds = element.getBoundingClientRect();
@@ -209,11 +212,24 @@ for (const [width, height] of [[1280, 720], [1366, 768], [1600, 900], [1920, 108
           if ((frame || /auto|scroll/.test(style.overflow)) && (node.scrollHeight > node.clientHeight + 1 || node.scrollWidth > node.clientWidth + 1)) issues.push(`scroll ${node.className}`);
           if (frame && node !== document.documentElement && node.getBoundingClientRect().bottom > bounds.bottom + 1) issues.push(`outside ${node.className}`);
         }
+        for (const selector of ['.lottery-stage-options button', '.lottery-primary-actions > button', '.lottery-roll-legend li']) {
+          const controls = [...element.querySelectorAll<HTMLElement>(selector)];
+          const tops = controls.map(control => control.getBoundingClientRect().top);
+          if (tops.length && Math.max(...tops) - Math.min(...tops) > 1) issues.push(`row wraps ${selector}`);
+          for (const control of controls) {
+            if (control.scrollWidth > control.clientWidth) issues.push(`control overflows ${selector}`);
+            for (const text of [...control.childNodes].filter(node => node.nodeType === Node.TEXT_NODE && node.textContent?.trim())) {
+              const range = document.createRange(); range.selectNodeContents(text);
+              if (range.getClientRects().length > 1) issues.push(`text wraps ${text.textContent}`);
+            }
+          }
+        }
         const trigger = [...element.querySelectorAll('button')].find(button => button.textContent?.includes('The writ and draw tools'));
         if (!trigger) issues.push('missing tools trigger');
         else if (trigger.getBoundingClientRect().bottom > bounds.bottom - 1) issues.push('tools trigger on or below bottom edge');
         return issues;
       })).toEqual([]);
+      await expect(room.locator('.lottery-primary-actions > button')).toHaveCount(3);
       for (const name of ['Set up a draw', 'Cast the lots', 'The writ and draw tools']) {
         await expect(room.getByRole('button', { name, exact: true }).locator('.cc-key-badge')).toBeVisible();
       }

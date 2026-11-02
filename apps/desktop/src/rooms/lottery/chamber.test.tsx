@@ -98,3 +98,21 @@ test('Lot setup, value and ceremony controls show the keys declared by the room 
     expect(html).toContain(`cc-key-badge">${keyFor('lottery', action)}</kbd>`);
   }
 });
+
+test('the compact proof summary retains the full explanation inside the reachable drawer', () => {
+  const queue = new ProposalQueue();
+  const room = <LotteryRoom snapshot={{ mode: 'fixture', phase: 'ready' }} replay={false} queue={queue} />;
+  const closed = renderToStaticMarkup(room);
+  expect(closed).toContain('SIMULATED \u00b7 writ follows the cast.');
+  expect(closed).not.toContain('Replay the draw from its seed to check the winners.');
+  expect(closed).toContain('class="lottery-draw-actions lottery-primary-actions"');
+  const drawer = lotDrawer(lotterySession(queue).port);
+  drawer.open();
+  try {
+    const opened = renderToStaticMarkup(room);
+    const content = opened.slice(opened.indexOf('role="dialog"'));
+    expect(content).toContain('Replay the draw from its seed to check the winners.');
+    expect(content).toContain('Stylised illustration');
+    expect(content).toContain('SIMULATED');
+  } finally { drawer.close(); }
+});

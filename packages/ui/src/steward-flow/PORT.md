@@ -144,3 +144,45 @@ WP6 verification (installed dependencies only; no git writes, installs or live a
   journeys remain unverified. The winner was reviewed as source.
 
 The brief provides no external result.json destination.
+
+## Director review 1: Lot fit correction
+
+Read the integrated `lot-1280.png` supplied by the Director. The cause of the
+split sound label was the legacy 80/88 px toggle widths in `lottery/stage.css`;
+the last-child selector beat the chamber's width override. Those widths are
+removed. The chamber now gives the two toggles equal grid tiles with unbroken
+labels, followed by fixed-size information and fullscreen controls. Theatre
+keeps its full-width control row and 15 px toggle labels.
+
+The fixture's setup, cast and demo buttons share one row with the chamber text
+face and normal tracking. The roll legend is one unbroken row. The proof card
+has one short summary; the full proof/illustration explanation is retained in
+the reachable drawer. Core audience provenance remains visible in Program.
+Pending proposal review keeps its own button outside the three primary actions.
+No text size was reduced below the floor.
+
+The four viewport regressions now wait for fonts, require exact equality of
+`.shell-room-content.scrollHeight` and `clientHeight`, and check label wrapping,
+control overflow, shared row positions, all three cast buttons and clearance
+under the drawer trigger. Unit coverage checks that shortening the summary
+retains the full proof explanation and simulated label in the opened drawer.
+
+Verification:
+
+- `pnpm --config.verify-deps-before-run=false --filter @castle-control/desktop
+  exec vitest run src/rooms/lottery --pool=threads`: 15 files / 122 tests passed.
+- Full desktop `test`: 130 files / 1180 tests passed; the same pre-existing
+  Gatehouse navigation case fails at `moderator/component-probe.tsx:56` with
+  `Missing rendered control`. The original write-set exclusions remain intact.
+- Desktop typecheck and lint, plus `pnpm --config.verify-deps-before-run=false
+  exec tsc -p e2e/tsconfig.json --noEmit`: exit 0.
+- `node scripts/check.mjs`: only the existing local
+  `shell/room.test.tsx: 410 lines exceeds 400` failure; the Director reports its
+  fix on the Gatehouse branch. No excluded file was edited.
+- `CC_E2E_PORT=5177` with the existing Playwright config, `journey-lots.spec.ts`,
+  project `chrome-1280x800`, grep `controls fit`: `Error: spawn EPERM`.
+  A direct Playwright measurement against the running local Vite server also
+  fails at `browserType.launch: spawn EPERM`, before either viewport is opened.
+  Computer use reports native pipe/browser host unavailable. Therefore no new
+  1280x720 or 1366x768 pixel dimensions are claimed; Director remeasurement is
+  still required. Vite started on local port 5174.
