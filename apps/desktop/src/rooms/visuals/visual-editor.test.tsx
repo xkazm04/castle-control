@@ -23,7 +23,8 @@ const synthetic = { visual_id: 'synthetic-picker', name: 'Synthetic visual', des
 async function harness(input?: VisualInput) {
   const fixture = { ...synthetic, ...(input ? { input } : {}) };
   const rpc = vi.fn<BeaconsNetwork['rpc']>(async (_endpoint, _session, method, params) =>
-    method === 'beacons.visual.list' ? { visuals: [fixture] } : 'visual' in params ? params.visual : undefined);
+    method === 'beacons.visual.list' ? { visuals: [fixture] } : method === 'beacons.library.import' && 'library_id' in params
+      ? { design_id: `imported-${params.library_id}` } : 'visual' in params ? params.visual : undefined);
   const port = createCoreBeaconsPort(launch, { rpc });
   await port.load();
   const visual = port.getSnapshot().visuals[0];
@@ -166,22 +167,24 @@ test('New visual after a confirmed create opens a blank editor again', async () 
   expect(html).toContain('name="name" value=""');
 });
 
-test('visual form offers neutral, twelve atlas designs, custom ID, and one saved art-style control', async () => {
+test('visual form offers neutral, the twenty library presets, custom ID, and one saved art-style control', async () => {
   const h = await harness();
   const html = renderToStaticMarkup(<VisualEditor visual={h.visual} port={h.port} busy={false} />);
   expect(html).toContain('No design (neutral)');
   expect(html).toContain('Custom design ID...');
   expect(html.match(/id="beacon-art-style"/g)).toHaveLength(1);
-  expect(presets).toHaveLength(12);
-  for (const style of styles) for (const kind of ['altar', 'frame']) {
-    expect(html).toContain(`value="preset-${style.id}-${kind}"`);
-    expect(html).toContain(`${style.label} ${kind}`);
-  }
+  expect(presets).toHaveLength(20);
+  for (const preset of presets) expect(html).toContain(`value="${preset.id}"`);
+  expect(html).toContain('Industrial Cyberpunk Realism · beacon');
+  // Classic sample art is no longer offered, but a visual saved with it keeps its option.
+  for (const style of styles) expect(html).not.toContain(`value="preset-${style.id}-altar"`);
+  expect(renderToStaticMarkup(<VisualEditor visual={{ ...h.visual, design_id: 'preset-glass-altar' as NonNullable<typeof h.visual.design_id> }}
+    port={h.port} busy={false} />)).toContain('value="preset-glass-altar"');
   expect(html).toContain('name="design_id" value="synthetic-design"');
   expect(styleChoice(h.visual.design_id)).toBe('custom');
 });
 
-test.each(['preset-glass-altar', '', 'custom'])('picker %s saves exactly one schema-checked visual', async choice => {
+test.each(['library-beacon-03', 'preset-glass-altar', '', 'custom'])('picker %s saves exactly one schema-checked visual', async choice => {
   const h = await harness();
   const on_change = vi.fn();
   const fields = StylePickerFields({ choice, custom_id: 'my-custom', busy: false, on_change });
@@ -194,12 +197,18 @@ test.each(['preset-glass-altar', '', 'custom'])('picker %s saves exactly one sch
   if (choice === 'custom') expect(html).toContain('id="beacon-design-id"');
   else expect(html).not.toContain('id="beacon-design-id"');
   if (choice === 'preset-glass-altar') expect(html).toContain('/art/preset-glass-altar.webp');
+  if (choice === 'library-beacon-03') expect(html).toContain('/art/library/beacon/beacon-03.webp');
   h.rpc.mockClear();
   await save(h, '', undefined, design);
-  expect(h.rpc).toHaveBeenCalledOnce();
+  if (choice === 'library-beacon-03') {
+    // A library preset is imported by the core first (free), then the visual saves with the imported design.
+    await vi.waitFor(() => expect(h.rpc).toHaveBeenCalledTimes(2));
+    await vi.waitFor(() => expect(h.port.getSnapshot().busy).toBe(false));
+    expect(h.rpc.mock.calls[0]?.slice(2)).toEqual(['beacons.library.import', { library_id: 'beacon-03', kind: 'beacon' }]);
+  } else expect(h.rpc).toHaveBeenCalledOnce();
   const saved = h.port.getSnapshot().visuals[0];
   if (choice === '') expect(saved).not.toHaveProperty('design_id');
-  else expect(saved?.design_id).toBe(choice === 'custom' ? 'my-custom' : choice);
+  else expect(saved?.design_id).toBe(choice === 'custom' ? 'my-custom' : choice === 'library-beacon-03' ? 'imported-beacon-03' : choice);
 });
 
 test('Not routed omits input entirely when removing an existing route', async () => {

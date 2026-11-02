@@ -1,5 +1,6 @@
 ﻿import { lazy, Suspense, useEffect, useId, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import type { CSSProperties, ReactNode } from 'react';
+import type { DesignId } from '@castle-control/contract';
 import { SealButton, Stamp, WindowedRows } from '@castle-control/ui';
 import { stewardDock, useStewardDraft } from '@castle-control/ui/steward-flow';
 import type { AnyStewardFlow } from '@castle-control/ui/steward-flow';
@@ -44,7 +45,21 @@ function ProposalSealFrame({ seal_slot }: { seal_slot?: ReactNode }) {
 }
 
 type CoreFlows = ReturnType<typeof coreFlows>;
-export function ConnectedLotsRoom({ port, simulated, seal_slot, flows }: { port: CoreLotsPort; simulated?: boolean; seal_slot?: ReactNode; flows?: CoreFlows }) {
+export function ConnectedLotsRoom({ port, simulated, seal_slot, flows, import_art }: { port: CoreLotsPort; simulated?: boolean; seal_slot?: ReactNode; flows?: CoreFlows;
+  /** Import a library vessel preset as a core design (free); absent in tests without a Beacons connection. */
+  import_art?: (library_id: string) => Promise<DesignId> }) {
+  const [art_error, setArtError] = useState('');
+  async function saveAppearance(draw_id: string) {
+    const appearance = port.appearance(draw_id);
+    const { art_preset, art_design } = appearance.getSnapshot();
+    setArtError('');
+    if (art_preset && !art_design) {
+      if (!import_art) { setArtError(copy.core.vessel_art_failed); return; }
+      try { appearance.edit({ art_design: await import_art(art_preset) }); }
+      catch { setArtError(copy.core.vessel_art_failed); return; }
+    }
+    await port.saveDisplay();
+  }
   const state = useSyncExternalStore(port.subscribe, port.getSnapshot, port.getSnapshot);
   const { display, reveal } = coreStage(port);
   const appearance = useSyncExternalStore(display.subscribe, display.getSnapshot, display.getSnapshot);
@@ -199,7 +214,8 @@ export function ConnectedLotsRoom({ port, simulated, seal_slot, flows }: { port:
       {draw && <fieldset className="lottery-more-card" disabled={state.busy || state.locked}>
         <DrawAppearance key={draw.draw_id} port={port.appearance(draw.draw_id)} preview={false}
           hint="Save applies these settings to this draw's OBS page and resets open entries. Finish setup before viewers join. Reloading the room cannot read saved appearance yet; controls start at defaults. Art style is saved; OBS art style is unchanged." />
-        <button type="button" className="cc-btn" disabled={state.busy || state.locked} onClick={() => { void port.saveDisplay(); }}>Save draw appearance</button>
+        <button type="button" className="cc-btn" disabled={state.busy || state.locked} onClick={() => { void saveAppearance(draw.draw_id); }}>Save draw appearance</button>
+        {art_error && <p role="alert">{art_error}</p>}
       </fieldset>}
       {state.entries.length > 0 && <section className="lottery-more-card" aria-label={copy.core.frozen_list}>
         <details className="cc-disclosure"><summary>{copy.core.frozen_list} · {state.entries.length}</summary>
@@ -233,5 +249,8 @@ export default function CoreLotteryRoom({ snapshot, seal_slot }: { snapshot: Sna
     <p role="status">{copy.core.unavailable}</p><ProposalSealFrame seal_slot={seal_slot} />
   </section>;
   connection.port ??= createCoreLotsPort(connection.launch, connection.transport);
-  return <ConnectedLotsRoom port={connection.port} {...(snapshot.status ? { simulated: snapshot.status.simulated } : {})} seal_slot={seal_slot} flows={flows} />;
+  const import_art = async (library_id: string) => (await (await (await import('../../custom-design/seal.js')).beaconsPort(snapshot))
+    .importLibrary(library_id, 'draw_vessel')).design_id;
+  return <ConnectedLotsRoom port={connection.port} {...(snapshot.status ? { simulated: snapshot.status.simulated } : {})} seal_slot={seal_slot} flows={flows}
+    import_art={import_art} />;
 }

@@ -45,25 +45,29 @@ function Beacon({ art }: { art: PreviewArt }) {
   const heat = still ? 0.7 : support[tick % support.length] ?? 0.3;
   const core = art.anchors.core_rect ?? fallback.core;
   const style = { '--living-heat': heat.toFixed(2), '--living-glow': accent(art), aspectRatio: `${art.width} / ${art.height}` } as CSSProperties;
-  return <div className="cc-living__beacon" data-blend={art.effect_blend ?? 'screen'} style={style}>
-    <span className="cc-living__bloom" style={box(core)} />
-    {art.base && <img className="cc-living__body" src={art.base} alt={`${art.label} beacon`} />}
-    <span className="cc-living__core" style={box(core)}>{art.effect && <img src={art.effect} alt="" />}</span>
+  return <>
+    <div className="cc-living__beacon" data-blend={art.effect_blend ?? 'screen'} style={style}>
+      <span className="cc-living__bloom" style={box(core)} />
+      {art.base && <img className="cc-living__body" src={art.base} alt={`${art.label} beacon`} />}
+      <span className="cc-living__core" style={box(core)}>{art.effect && <img src={art.effect} alt="" />}</span>
+    </div>
     <span className="cc-living__caption">Sample support · {still ? 'a gift wave' : supportLine[tick % supportLine.length]}</span>
-  </div>;
+  </>;
 }
 
 function Frame({ art }: { art: PreviewArt }) {
   const { tick, still } = useTick(1400);
   const window_rect = art.anchors.window_rect ?? fallback.window;
   const style = { '--living-glow': accent(art), '--living-heat': still ? '0.6' : String(0.35 + (tick % 3) * 0.25), aspectRatio: `${art.width} / ${art.height}` } as CSSProperties;
-  return <div className="cc-living__frame" style={style}>
-    <span className="cc-living__cam" style={box(window_rect)} aria-hidden="true">
-      <svg viewBox="0 0 160 90" preserveAspectRatio="xMidYMax slice"><circle cx="80" cy="38" r="17" /><path d="M42 90c2-24 18-34 38-34s36 10 38 34Z" /></svg>
-    </span>
-    {art.base && <img className="cc-living__overlay" src={art.base} alt={`${art.label} frame`} />}
+  return <>
+    <div className="cc-living__frame" style={style}>
+      <span className="cc-living__cam" style={box(window_rect)} aria-hidden="true">
+        <svg viewBox="0 0 160 90" preserveAspectRatio="xMidYMax slice"><circle cx="80" cy="38" r="17" /><path d="M42 90c2-24 18-34 38-34s36 10 38 34Z" /></svg>
+      </span>
+      {art.base && <img className="cc-living__overlay" src={art.base} alt={`${art.label} frame`} />}
+    </div>
     <span className="cc-living__caption">Sample webcam · your face sits in the open centre</span>
-  </div>;
+  </>;
 }
 
 const options = ['Go left', 'Go right', 'Skip the boss'];
@@ -96,7 +100,8 @@ function Vessel({ art }: { art: PreviewArt }) {
   const casting = !still && tick > 0;
   const winner = 10 + (tick * 37) % 89;
   const style = { '--living-glow': accent(art), aspectRatio: `${art.width} / ${art.height}` } as CSSProperties;
-  return <div className="cc-living__vessel" style={style}>
+  return <>
+    <div className="cc-living__vessel" style={style}>
     {art.base && <img className="cc-living__body" src={art.base} alt={`${art.label} vessel`} />}
     <span className="cc-living__chamber" style={box(chamber)} aria-hidden="true">
       {floats.map((point, index) => <span key={index} className="cc-living__token" style={{ left: pct(point.x * 0.8), top: pct(point.y * 0.8), animationDelay: `${index * 0.3}s` }}>
@@ -104,8 +109,10 @@ function Vessel({ art }: { art: PreviewArt }) {
     </span>
     {casting && <span key={tick} className="cc-living__cast" style={{ left: pct(mouth.x), top: pct(mouth.y) }} aria-hidden="true">
       {art.token ? <img src={art.token} alt="" /> : null}</span>}
-    <span className="cc-living__winner" key={`w${tick}`}>Winner · Sample viewer {still ? 42 : winner}</span>
-  </div>;
+    </div>
+    <span className="cc-living__winner" key={`w${tick}`}><small>Winner · simulated</small>Sample viewer {still ? 42 : winner}</span>
+    <span className="cc-living__caption">Sample draw · a winner cast from the mouth</span>
+  </>;
 }
 
 const kind_names: Record<ArtAssetKind, string> = { beacon: 'Beacon', frame: 'Facecam frame', vote_bar: 'Vote bar', draw_vessel: 'Draw vessel' };

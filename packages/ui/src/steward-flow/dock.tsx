@@ -103,11 +103,12 @@ function StepCard({ session, entry, chamber, store }: { session: FlowSession; en
   const { step } = entry;
   const sealing = session.state.status === 'sealing';
   const reopened = session.state.editing === step.id;
+  const prompt = step.ask?.(entry.before) ?? step.prompt;
   const card = (() => {
     switch (step.kind) {
-      case 'choice': return <Options kind="choice" options={step.options(entry.before)} value={entry.value} label={step.prompt}
+      case 'choice': return <Options kind="choice" options={step.options(entry.before)} value={entry.value} label={prompt}
         on_pick={id => store.answer(chamber, id)} />;
-      case 'preset': return <Options kind="preset" options={step.presets(entry.before)} value={entry.value} label={step.prompt}
+      case 'preset': return <Options kind="preset" options={step.presets(entry.before)} value={entry.value} label={prompt}
         on_pick={id => store.answer(chamber, id)} />;
       case 'field': return <FieldCard key={step.id} entry={entry} error={session.error} on_submit={raw => store.answer(chamber, raw)} />;
       case 'preview': return <div className="cc-steward-preview">
@@ -136,7 +137,7 @@ function StepCard({ session, entry, chamber, store }: { session: FlowSession; en
     }
   })();
   return <div className="cc-steward-step" data-kind={step.kind} data-step={step.id}>
-    <p className="cc-beat cc-beat--steward cc-steward-step__prompt"><i className="cc-beat__mark" aria-hidden="true" />{step.prompt}</p>
+    <p className="cc-beat cc-beat--steward cc-steward-step__prompt"><i className="cc-beat__mark" aria-hidden="true" />{prompt}</p>
     {card}
     {reopened && <button type="button" className="cc-link cc-steward-keep" onClick={() => store.keep(chamber)}>Keep my answer</button>}
   </div>;

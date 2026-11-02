@@ -2,7 +2,7 @@ import { createElement } from 'react';
 import type { Visual } from '@castle-control/contract';
 import { proposalQueue } from '@castle-control/ui/steward';
 import { defineFlow } from '@castle-control/ui/steward-flow';
-import type { ChamberSteward, FlowLine, FlowOption } from '@castle-control/ui/steward-flow';
+import type { AnyStewardFlow, ChamberSteward, FlowLine, FlowOption } from '@castle-control/ui/steward-flow';
 import { coreBeaconsConnection } from '../../client.js';
 import type { PreviewVisual } from '../../beacons-model.js';
 import { curveIntensity } from '../../beacons-model.js';
@@ -19,6 +19,8 @@ import { fixtureBeacons } from './stage-state.js';
 import { flow_ids } from './stage-view.js';
 import { NightNarration } from './narration.jsx';
 import { lightFlow } from './core-flows.js';
+import { customFlow } from '../../custom-design/flow.js';
+import { visualsCustomHost } from './custom-host.js';
 
 /**
  * The Beacons' Steward: four small flows over the room's own preview model. Each step only
@@ -329,11 +331,12 @@ export function visualsSteward(snapshot: Snapshot): ChamberSteward {
   const access = beaconsAccess(snapshot);
   const base = roomSteward('visuals', snapshot, ['beacon', 'beacons', 'visual', 'altar', 'overlay', 'frame', 'border', 'blaze']);
   const selected = findItem(access, access.selected());
-  const flows = [tuneFlow(access), testFlow(access), replayFlow(access)];
+  const flows: AnyStewardFlow[] = [tuneFlow(access), testFlow(access), replayFlow(access), customFlow('beacon', snapshot, () => visualsCustomHost(snapshot)),
+    customFlow('frame', snapshot, () => visualsCustomHost(snapshot))];
   if (access.core) {
     const light = lightFlow({ visuals: () => access.visuals?.() ?? [], save: visual => access.tune(visual, 'Lit with the Steward') });
     // An empty core leads with the one flow that can change that.
-    if (access.items().length) flows.push(light); else flows.unshift(light);
+    if (access.items().length) flows.push(light as AnyStewardFlow); else flows.unshift(light as AnyStewardFlow);
   }
   return { ...base,
     greeting: access.core && !access.items().length

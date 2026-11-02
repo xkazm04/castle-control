@@ -168,7 +168,7 @@
 .cc-steward-live-tag { font: 700 var(--t-label, var(--text-label))/1 var(--sd-font-label); color: var(--sd-muted); }
 .cc-steward-beat-chips { display: flex; flex-wrap: wrap; gap: 6px; padding-left: 20px; }
 .cc-steward-lines { display: flex; flex-wrap: wrap; gap: 8px 22px; padding-left: 20px; }
-.cc-steward-lines > div { flex: 0 1 auto; min-width: 150px; max-width: 420px; display: grid; gap: 2px; padding: 4px 0 4px 10px; border-left: 2px solid var(--sd-ch); }
+.cc-steward-lines > div { flex: 0 1 auto; min-width: 150px; max-width: 420px; display: grid; align-content: start; gap: 2px; padding: 4px 0 4px 10px; border-left: 2px solid var(--sd-ch); }
 .cc-steward-lines dt { font: 800 var(--t-label, var(--text-label))/1.2 var(--sd-font-label); letter-spacing: .1em; text-transform: lowercase; color: var(--sd-muted); }
 .cc-steward-lines dd { font: 600 var(--t-body, var(--text-number))/1.25 var(--sd-font-text); color: var(--sd-ink); }
 

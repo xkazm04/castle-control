@@ -86,6 +86,7 @@ export const lotsCopy = {
     weight_hint: 'Activity units are generated from 0 to 4. Free !join forces equal odds across the entire pool.',
     concave: 'Concave activity weights', paid_weight: 'Paid weight',
     size: 'Urn size', anchor: 'Screen anchor', colour: 'Urn colour', art_style: 'Art style', reveal: 'Reveal timing in ms',
+    vessel_art: 'Vessel art', vessel_none: 'Drawn shape (no vessel art)',
     sizes: ['S', 'M', 'L'], anchors: [
       { value: 'tl', label: 'Top left' }, { value: 'tr', label: 'Top right' },
       { value: 'bl', label: 'Bottom left' }, { value: 'br', label: 'Bottom right' }, { value: 'center', label: 'Center' },
@@ -150,6 +151,7 @@ export const lotsCopy = {
     hint: 'One click sets the urn and the plan’s winner count for your room size. It configures the draw before sealing and never changes a cast.',
   },
   core: {
+    vessel_art_failed: 'The core could not take this vessel art. Nothing was saved; try again or pick another.',
     title: 'Core Lot Chamber', workbench: 'Core draw workbench', draws: 'Draws in your core',
     housekeeping: 'Draws on the core', refresh: 'Refresh draws', create: 'Create no-prize question draw', draw: 'Draw',
     invalid_winners: 'Enter a whole number of winners from 1 to 65535. Commit with Enter or leave the field.',

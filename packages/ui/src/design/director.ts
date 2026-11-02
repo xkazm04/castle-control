@@ -65,7 +65,7 @@ export function directArt(input: DirectRequest): ArtDirection {
     brand.length ? 'Your named colours lead the palette.' : `The palette leans ${theme.lighting.split(' with ')[0]}.`,
     `${question.assumed} suits a ${spec.label.split(' (')[0]!.toLowerCase()} best.`,
   ].slice(0, 3);
-  const interpretation = clip(`A ${style_name.toLowerCase()} ${spec.label.split(' (')[0]!.toLowerCase()}: ${theme.materials}, ${theme.lighting}. ${question.text} ${question.assumed}.`, 400);
+  const interpretation = clip(`A ${style_name.toLowerCase()} ${spec.label.split(' (')[0]!.toLowerCase()}: ${theme.id === 'halloween' ? 'candlelit gothic Halloween, jack-o-lantern glow and wrought iron' : theme.materials}; ${theme.lighting}.`, 400);
   const idea = clip(translated.text, 160);
   const sections = [
     `${spec.label}. Streamer's idea, as style: ${idea}. Choice: ${question.assumed}.`,

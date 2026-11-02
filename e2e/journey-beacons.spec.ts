@@ -117,14 +117,14 @@ test('Beacons workbench behind More: tune points, appearance, test fire and copy
   await page.getByLabel('Size', { exact: true }).selectOption('L');
   await page.getByLabel('Anchor', { exact: true }).selectOption('bottom-right');
   await page.getByLabel('Colour', { exact: true }).selectOption('azure');
-  await page.getByLabel('Art style', { exact: true }).selectOption('preset-pixel-altar');
+  await page.getByLabel('Art style', { exact: true }).selectOption('library-beacon-05');
   await page.getByRole('button', { name: 'Save visual style locally', exact: true }).click();
-  await expect(page.getByLabel('Art style', { exact: true })).toHaveValue('preset-pixel-altar');
+  await expect(page.getByLabel('Art style', { exact: true })).toHaveValue('library-beacon-05');
   await page.getByLabel('Burst timing (ms)').fill('1200');
   await expect(preview).toHaveAttribute('data-size', 'L');
   await expect(preview).toHaveAttribute('data-anchor', 'bottom-right');
   await expect(preview).toHaveAttribute('data-colour', 'azure');
-  await expect(preview.locator('img')).toHaveAttribute('src', '/art/preset-pixel-altar.webp');
+  await expect(preview.locator('img')).toHaveAttribute('src', '/art/library/beacon/beacon-05.webp');
   await expect(preview).toHaveAttribute('data-burst-ms', '1200');
   await page.getByRole('button', { name: 'Test fire: 50 gifts' }).click();
   await expect(page.locator('.visuals-bench [role="status"]').first()).toContainText('Simulated 50 gift events');

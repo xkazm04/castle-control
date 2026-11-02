@@ -15,7 +15,7 @@ import type { CastDraft, RevealStyle } from './flow-steps.js';
 /** Core-mode flows: the same journeys on the core's draws, ending on the core's own seal and cast. */
 export type CoreSetupDraft = { pick?: string; winners?: number; other?: boolean; fairness?: Fairness | 'keep'; shape?: DrawShape };
 
-async function corePort(snapshot: Snapshot): Promise<CoreLotsPort> {
+export async function corePort(snapshot: Snapshot): Promise<CoreLotsPort> {
   const connection = coreLotsConnection(snapshot);
   if (!connection) throw new Error('The core is not connected.');
   if (!connection.port) {

@@ -5,6 +5,7 @@ import { contributionInput, contribution_sources } from './contribution-input.js
 import { InputPicker } from './input-picker.jsx';
 import { StylePicker } from './style-picker.jsx';
 import { beaconsCopy as copy } from '../../beacons-copy.js';
+import { libraryPreset } from '../../custom-design/presets.js';
 
 type EditorProps = { visual?: Visual; port: CoreBeaconsPort; busy: boolean; on_saved?: () => void };
 
@@ -25,9 +26,16 @@ export function VisualForm({ visual, port, busy, source, on_source, on_saved, er
       on_error?.(copy.duplicate_visual); return;
     }
     on_error?.('');
+    // A library preset becomes a real design in the core first (free; no generation).
+    let design = design_id.trim();
+    const preset = libraryPreset(design);
+    if (preset) {
+      try { design = (await port.importLibrary(preset.id, preset.kind)).design_id; }
+      catch { on_error?.(copy.library_import_failed); return; }
+    }
     // Brands and source/unit pairs are checked by the port's schema before transport.
     await port.upsert({ visual: { visual_id: visual_id as VisualId, name,
-      ...(design_id.trim() ? { design_id: design_id as DesignId } : {}),
+      ...(design ? { design_id: design as DesignId } : {}),
       ...(input_source ? { input: contributionInput(input_source) } : {}),
       curve: visual?.curve ?? { ranges: [{ total: 0, intensity: 0 }, { total: 50, intensity: 1 }], decay: { kind: 'none' } } } });
     if (port.getSnapshot().phase === 'ready' && port.getSnapshot().selected === visual_id) on_saved?.();

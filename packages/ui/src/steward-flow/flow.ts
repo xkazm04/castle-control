@@ -26,6 +26,8 @@ type StepBase<D> = {
   label: string;
   /** The Steward's line above the card, set in the book font. */
   prompt: string;
+  /** The line for this draft when it depends on earlier answers (a follow-up question); defaults to `prompt`. */
+  ask?(draft: D): string;
   /** Skip the step for this draft. Evaluated against the draft built so far. */
   when?(draft: D): boolean;
 };
