@@ -11,7 +11,7 @@ export const chambers = [
   { id: 'lottery', number: '1', name: 'Lot Chamber', description: 'Lottery manager' },
   { id: 'moderator', number: '2', name: 'Gatehouse', description: 'AI moderator' },
   { id: 'visuals', number: '3', name: 'Beacons', description: 'Contribution visuals' },
-  { id: 'studio', number: '4', name: 'Map Room', description: 'Extension studio' },
+  { id: 'studio', number: '4', name: 'Map Room', description: 'Chat duels' },
 ] as const;
 
 // The shell owner can consume one table from an element's onKeyDown handler.

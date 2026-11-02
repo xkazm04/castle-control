@@ -103,6 +103,27 @@
 }
 .cc-frame .cc-room-back:hover { background: var(--surface-2); box-shadow: inset 0 -3px 0 var(--ch); }
 
+/* Short screens (1280x800): a calmer head. Crumb above; the title and its subtitle share one baseline. */
+@media (max-height: 860px) {
+  .cc-frame .shell-room-header .cc-room-title { padding: 10px var(--gutter) 12px; align-items: center; }
+  .cc-frame .shell-room-header .cc-room-title-card { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: baseline; column-gap: 20px; }
+  .cc-frame .shell-room-header .cc-room-crumb { grid-column: 1 / -1; }
+  .cc-frame .shell-room-header .cc-room-title-card h1 { margin-top: 4px; font-size: var(--text-t-figure); }
+  .cc-frame .shell-room-header .cc-room-function { margin-top: 0; font-size: var(--text-px-18); }
+}
+/* While the Steward's sheet is raised, every chamber head folds to one slim line (crumb, small title,
+   Back) so the chamber's picture keeps the band above the sheet. */
+.desktop-shell:has(> .cc-steward-dock[data-expanded="true"]) .shell-room-header { margin-bottom: 10px; }
+.desktop-shell:has(> .cc-steward-dock[data-expanded="true"]) .shell-room-header::after { bottom: -8px; height: 6px; }
+.desktop-shell:has(> .cc-steward-dock[data-expanded="true"]) .shell-room-header .cc-room-title { padding: 6px var(--gutter); align-items: center; gap: 16px; }
+.desktop-shell:has(> .cc-steward-dock[data-expanded="true"]) .shell-room-header .cc-room-title-card { display: flex; align-items: baseline; gap: 12px; min-width: 0; }
+.desktop-shell:has(> .cc-steward-dock[data-expanded="true"]) .cc-room-crumb > :is(b, b + span) { display: none; }
+.desktop-shell:has(> .cc-steward-dock[data-expanded="true"]) .cc-room-crumb > b + span + [aria-hidden="true"] { display: none; }
+.desktop-shell:has(> .cc-steward-dock[data-expanded="true"]) .cc-room-title-card h1 { margin: 0; font-size: var(--text-t-h2); line-height: 1; white-space: nowrap; }
+.desktop-shell:has(> .cc-steward-dock[data-expanded="true"]) .cc-room-function { margin: 0; }
+.desktop-shell:has(> .cc-steward-dock[data-expanded="true"]) .cc-room-function > span:first-child { display: none; }
+.desktop-shell:has(> .cc-steward-dock[data-expanded="true"]) .shell-room-header .cc-room-back { min-height: 30px; padding: 0 12px; font-size: var(--text-px-13); }
+
 /* ---- key numeral jewel */
 .cc-frame .cc-kbd {
   min-width: 22px; height: 24px; padding: 0 6px; font: 800 var(--text-px-13)/1 var(--font-text); color: var(--ink);

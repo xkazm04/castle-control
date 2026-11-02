@@ -73,7 +73,8 @@
 .cc-steward-proposal { min-width: 0; max-width: 360px; align-self: center; padding: 10px 16px; border-left: var(--sd-came) solid var(--sd-lead); overflow-wrap: anywhere; }
 
 /* ---- controls (mirror fused .cc-btn/.cc-input; scoped so the shell sheet can own the globals) */
-.cc-steward-dock .cc-input { height: var(--control-h, 38px); padding: 0 12px; border: var(--sd-came) solid var(--sd-lead); border-radius: var(--sd-r);
+/* Every field, the talk prompt included, follows the one field law: a thin ink border (e2e/styles.ts). */
+.cc-steward-dock .cc-input { height: var(--control-h, 38px); padding: 0 12px; border: var(--rule-thin, 1px) solid var(--sd-ink); border-radius: var(--sd-r);
   background: var(--sd-surface); color: var(--sd-ink); font: 400 var(--t-body, var(--text-number))/1 var(--sd-font-text); min-width: 0; }
 .cc-steward-dock .cc-input::placeholder { color: var(--sd-muted); }
 .cc-steward-dock .cc-input[aria-invalid="true"] { border-color: var(--danger); }
@@ -97,10 +98,29 @@
 .cc-steward-dock .cc-sim::before { content: ''; width: 6px; height: 6px; transform: rotate(45deg); border: 1.5px solid currentColor; }
 .cc-steward-resume { border-style: solid; border-color: var(--sd-ch) !important; box-shadow: inset 0 -3px 0 var(--sd-ch); }
 
+/* raised: the sheet carries the conversation, so the sill drops its echo line and shrinks */
+.cc-steward-dock[data-expanded="true"] { min-height: 0; }
+.cc-steward-dock[data-expanded="true"] .cc-talk__msg { display: none; }
+.cc-steward-dock[data-expanded="true"] .cc-steward__role { display: none; }
+.cc-steward-dock[data-expanded="true"] .cc-steward__niche { width: 34px; height: 48px; }
+
+/* ---- more flows menu */
+.cc-flow-menu { position: relative; display: inline-flex; }
+.cc-flow-menu__caret { width: 7px; height: 7px; margin: -3px 0 0 2px; border: solid currentColor; border-width: 0 2px 2px 0; transform: rotate(-135deg); }
+.cc-flow-menu__button[aria-expanded="true"] .cc-flow-menu__caret { margin-top: 3px; transform: rotate(45deg); }
+.cc-flow-menu__list { position: absolute; right: 0; bottom: calc(100% + 8px); z-index: 2; display: grid; min-width: 260px; padding: 6px;
+  background: var(--sd-surface); border: var(--sd-came) solid var(--sd-lead); border-radius: var(--sd-r); box-shadow: var(--sd-shadow); }
+.cc-flow-menu__list::before { content: ''; height: 5px; margin: -6px -6px 6px; background: var(--sd-ch); border-bottom: var(--sd-came) solid var(--sd-lead); }
+.cc-flow-menu__item { display: flex; align-items: center; gap: 10px; min-height: 36px; padding: 0 12px; border: 0; border-radius: var(--sd-r); background: none;
+  color: var(--sd-ink); text-align: left; white-space: nowrap; cursor: pointer; font: 600 var(--t-body, var(--text-number))/1.2 var(--sd-font-text); }
+.cc-flow-menu__item:hover, .cc-flow-menu__item:focus-visible { background: var(--sd-ch-wash); box-shadow: inset 3px 0 0 var(--sd-ch); }
+.cc-flow-menu__item:focus-visible { outline-offset: -2px; }
+.cc-flow-menu__tag { margin-left: auto; font: 800 var(--t-label, var(--text-label))/1 var(--sd-font-label); letter-spacing: .1em; text-transform: lowercase; color: var(--sd-muted); }
+
 /* ================================================================ SHEET */
 .cc-steward-sheet {
   position: absolute; left: 268px; right: 0; bottom: 100%; display: flex; flex-direction: column;
-  max-height: calc(55vh - var(--dock-h, 96px)); min-height: 200px;
+  max-height: clamp(220px, calc(48vh - 60px), 440px); min-height: 200px;
   background: color-mix(in srgb, var(--sd-surface) 96%, var(--sd-ch));
   border: var(--sd-came) solid var(--sd-lead); border-bottom: 0; box-shadow: 0 -18px 40px -22px var(--shade, color-mix(in srgb, black 55%, transparent));
 }
@@ -116,11 +136,12 @@
 }
 @keyframes cc-sheet-rise { from { transform: translateY(14px); opacity: 0; } }
 @keyframes cc-step-in { from { transform: translateY(6px); opacity: 0; } }
-.cc-steward-sheet__head { flex: none; display: flex; align-items: center; gap: 12px; padding: 10px 22px 10px; border-bottom: 1px solid var(--sd-hair); }
-.cc-steward-sheet__title { font: 800 var(--t-h3, var(--text-section))/1.1 var(--sd-font-label); letter-spacing: .08em; text-transform: lowercase; color: var(--sd-ch-ink); }
+.cc-steward-sheet__head { flex: none; display: flex; align-items: center; gap: 12px; min-height: 46px; padding: 6px 14px 6px 22px; border-bottom: 1px solid var(--sd-hair); }
+.cc-steward-sheet__title { font: 800 var(--t-h3, var(--text-section))/1.1 var(--sd-font-label); letter-spacing: .08em; text-transform: lowercase; color: var(--sd-ch-ink);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
 .cc-steward-sheet__count { font: italic 400 var(--t-small, var(--text-small))/1 var(--sd-font-aside); color: var(--sd-muted); }
 .cc-steward-sheet__tools { display: flex; gap: 6px; margin-left: auto; }
-.cc-steward-thread { flex: 1; min-height: 0; overflow: auto; overscroll-behavior: contain; padding: 14px 22px 18px; display: grid; align-content: start; gap: 12px; scroll-behavior: smooth; }
+.cc-steward-thread { flex: 1; min-height: 0; overflow: auto; overscroll-behavior: contain; padding: 12px 22px 16px; display: grid; align-content: start; gap: 10px; scroll-behavior: smooth; }
 .cc-steward-thread > * { max-width: 880px; }
 
 /* beats */
@@ -128,7 +149,7 @@
 .cc-beat--steward > p, p.cc-beat--steward { position: relative; padding-left: 20px; font: 400 var(--t-lead, var(--text-section))/1.4 var(--sd-font-book); color: var(--sd-ink); }
 .cc-beat__mark { position: absolute; left: 2px; top: .52em; width: 8px; height: 8px; transform: rotate(45deg);
   background: linear-gradient(135deg, var(--sd-ch-lit), var(--sd-ch)); box-shadow: 0 0 0 1.5px var(--sd-lead); }
-.cc-beat--you { justify-self: end; max-width: 70%; padding: 6px 12px; font: 500 var(--t-small, var(--text-small))/1.35 var(--sd-font-text); color: var(--sd-ink-2);
+.cc-beat--you { justify-self: end; max-width: 70%; padding: 3px 10px; font: 500 var(--t-small, var(--text-small))/1.35 var(--sd-font-text); color: var(--sd-ink-2);
   background: var(--sd-surface-2); border: 1px solid var(--sd-hair); border-radius: var(--sd-r); }
 .cc-beat--sealed > p { color: var(--sd-ch-ink); }
 .cc-steward-live-tag { font: 700 var(--t-label, var(--text-label))/1 var(--sd-font-label); color: var(--sd-muted); }

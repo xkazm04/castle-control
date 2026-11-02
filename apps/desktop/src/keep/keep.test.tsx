@@ -41,7 +41,7 @@ test('four hits and lintels carry the read model words, lines and chamber-aware 
   expect(read.states.moderator.word).toBe(`${fixtureHeld.length} held`);
   expect(read.states.lottery.word).toBe('No draw');
   expect(read.states.visuals.word).toBe(fixtureVisuals[0]?.name);
-  expect(read.states.studio.word).toBe('Sand table');
+  expect(read.states.studio.word).toBe('Duel · semifinal');
   const html = render();
   for (const chamber of chambers) {
     const state = read.states[chamber.id];

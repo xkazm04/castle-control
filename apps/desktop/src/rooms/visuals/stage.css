@@ -65,8 +65,7 @@
 @keyframes visuals-flare { from { filter: brightness(1.7) saturate(1.3); } to { filter: none; } }
 @media (max-width: 1100px) { .visuals-stage { grid-template-columns: minmax(0, 1fr); } }
 
-/* While the Steward's sheet is raised, the picture moves up into the band the sheet never covers. */
-.desktop-shell:has(.cc-steward-dock[data-expanded="true"]) .shell-room[data-chamber="visuals"] .shell-room-header { display: none; }
+/* While the Steward's sheet is raised (the shell folds the chamber head to one line), the picture fits the band above the sheet. */
 .desktop-shell:has(.cc-steward-dock[data-expanded="true"]) .visuals-board { padding-top: 14px; }
 .desktop-shell:has(.cc-steward-dock[data-expanded="true"]) .visuals-monitor__screen { height: max(170px, calc(45vh - var(--top-h) - 54px)); }
 .desktop-shell:has(.cc-steward-dock[data-expanded="true"]) .visuals-stage { gap: 22px; }

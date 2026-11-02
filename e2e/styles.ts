@@ -20,10 +20,12 @@ type FieldBorder = { color: string; style: string; width: string };
 type FieldStyle = { appearance: string; borders: FieldBorder[] };
 type StrongBorderField = { name: string; selector: string; reason: string };
 
-export const strongBorderFields: readonly StrongBorderField[] = [
-  { name: 'Steward bar prompt', selector: '.cc-steward-dock input[aria-label="Talk to the Steward..."]',
-    reason: 'The Cutaway fidelity contract prints the Steward prompt with --rule-strong.' },
-];
+/**
+ * Named exceptions to the one field law (thin ink). None today: the fused Steward dock's talk prompt
+ * follows the same thin ink border as every other field (the Cutaway strong-prompt contract retired
+ * with the old Steward bar). The mechanism stays for a future, reasoned exception.
+ */
+export const strongBorderFields: readonly StrongBorderField[] = [];
 
 /** Pure policy: removing native chrome alone does not establish kit borders. */
 export function fieldStyleErrors(actual: FieldStyle, expected: FieldBorder): string[] {
