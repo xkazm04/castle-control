@@ -77,17 +77,24 @@ pub struct Harness {
 
 impl Harness {
     pub async fn new(answers: &[Writ]) -> Self {
+        Self::with_texts(
+            answers
+                .iter()
+                .map(|writ| serde_json::to_string(writ).unwrap())
+                .collect(),
+        )
+        .await
+    }
+
+    /// Raw simulated model replies, served in order after the floor bank.
+    pub async fn with_texts(answers: Vec<String>) -> Self {
         let root = tempfile::tempdir().unwrap();
         let bank = cc_engine::simulated_bank();
         let mut outputs: Vec<_> = bank
             .iter()
             .map(|case| json!({"verdict": case.expected}).to_string())
             .collect();
-        outputs.extend(
-            answers
-                .iter()
-                .map(|writ| serde_json::to_string(writ).unwrap()),
-        );
+        outputs.extend(answers);
         let server = Server::new(outputs);
         let settings = Settings {
             values: [(

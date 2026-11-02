@@ -97,6 +97,7 @@ pub fn generate(name: &str) -> Vec<u8> {
 
 pub fn path(name: &str) -> std::path::PathBuf {
     std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("tests/fixtures/simulated")
+        // Shared with cc-core's tests: resolve through the crates directory.
+        .join("../cc-beacons/tests/fixtures/simulated")
         .join(name)
 }

@@ -30,6 +30,7 @@ impl RenderHost {
         display: Display,
         commit: impl FnOnce() -> Result<(), ErrorEnvelope>,
     ) -> Result<(), ErrorEnvelope> {
+        self.check_display(&display)?;
         let mut scenes = self.lots.lock().map_err(|_| unavailable())?;
         commit()?;
         scenes
@@ -200,8 +201,12 @@ pub(super) async fn page(
         return StatusCode::SERVICE_UNAVAILABLE.into_response();
     };
     let scene = scenes.get(&id);
-    let display = display_params(&uri, scene.and_then(|s| s.display.as_ref()));
-    match lots_page::render(scene.and_then(|s| s.accepted.as_ref()), &display) {
+    let saved = scene.and_then(|s| s.display.as_ref());
+    let display = display_params(&uri, saved);
+    let Ok(plate) = host.plate(saved) else {
+        return StatusCode::SERVICE_UNAVAILABLE.into_response();
+    };
+    match lots_page::render(scene.and_then(|s| s.accepted.as_ref()), &display, &plate) {
         Ok(html) => Html(html).into_response(),
         Err(_) => StatusCode::SERVICE_UNAVAILABLE.into_response(),
     }

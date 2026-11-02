@@ -16,6 +16,14 @@ impl NativeServices {
         }
         Ok(())
     }
+    /// A stored custom or library design, verified by the design store from
+    /// its own files. Data-only packages never expand privileges.
+    pub(crate) fn accept_design_package(
+        &self,
+        verified: crate::overlay::package::VerifiedPackage,
+    ) -> Result<(), ErrorEnvelope> {
+        self.render.accept_verified(verified, false)
+    }
     /// Separate Lots handoff; no draw is represented as a Beacons visual.
     pub(crate) fn lots_render_host(&self) -> std::sync::Arc<crate::overlay::RenderHost> {
         self.render.clone()

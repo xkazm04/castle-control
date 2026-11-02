@@ -103,7 +103,8 @@ async fn status_reports_presence_and_missing_key_generate_is_typed_and_socket_fr
         let h = Harness::new(keys, Recording::empty());
         assert_eq!(
             h.call("beacons.art.status", json!({})).await.unwrap(),
-            json!({"available":available})
+            json!({"available":available,
+                "providers":[{"provider":"leonardo","available":available}]})
         );
         if !available {
             for remove_background in [false, true] {
