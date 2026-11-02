@@ -1,0 +1,25 @@
+/* ------------------------------------------------------------ room chrome: More, away bar, design proposals, Steward seeds.
+   Lives with the room, not the lazy duel chunk, so the stage chunk keeps its budget. */
+.studio-more { position: relative; }
+.studio-more__menu {
+  position: absolute; right: 0; top: calc(100% + 6px); z-index: 40; display: grid; gap: 0; width: 320px; padding: 6px;
+  max-height: min(400px, calc(100vh - var(--dock-h, 96px) - 300px)); overflow: auto; overscroll-behavior: contain;
+  background: var(--surface); border: var(--came) solid var(--lead); box-shadow: var(--shadow-lift);
+}
+/* (0,3,0) so the shell's room-button border never boxes each entry */
+.studio-more .studio-more__menu > .studio-more__item { display: grid; gap: 1px; padding: 6px 10px; text-align: left; border: 0; border-left: 3px solid transparent; background: transparent; color: var(--ink); cursor: pointer; }
+.studio-more__item:hover, .studio-more__item:focus-visible { background: var(--surface-2); }
+.studio-more .studio-more__menu > .studio-more__item[aria-current] { border-left-color: var(--ch); }
+.studio-more__item b { font: 800 var(--text-t-small)/1.2 var(--font-label); letter-spacing: .08em; text-transform: lowercase; }
+.studio-more__item span { font: 400 var(--text-t-small)/1.3 var(--font-text); color: var(--muted); }
+.studio-more__fine { display: flex; align-items: center; gap: 8px; margin: 4px 0 0; padding: 8px 10px 4px; border-top: 1px solid var(--hair);
+  font: italic 400 var(--text-t-small)/1.3 var(--font-book); color: var(--muted); }
+.studio-away { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; }
+.studio-away__name { font: 600 var(--text-t-h4)/1 var(--font-display); color: var(--ink); }
+.studio-away__line { font: italic 400 var(--text-t-small)/1.3 var(--font-book); color: var(--muted); }
+.studio-away .studio-more { margin-left: auto; }
+.studio-proposals { display: grid; max-width: 760px; }
+.studio-proposals[hidden] { display: none; }
+.duel-flow-seeds { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2px 18px; margin: 0; padding: 0; list-style: none;
+  font: 400 var(--text-t-small)/1.35 var(--font-book); color: var(--ink-2); }
+.duel-flow-seeds b { display: inline-block; width: 1.6em; font: 800 var(--text-t-label)/1 var(--font-label); color: var(--muted); }

@@ -24,6 +24,7 @@ import { sizeChoices } from './rehearse-state.js';
 import { duelDraftFlows } from './steward-flows.js';
 import type { DuelDraft } from './duel-model.js';
 import './room.css';
+import './room-chrome.css';
 import './hex-field.css';
 
 const TiltyardView = lazy(() => import('./tiltyard-view.jsx'));
