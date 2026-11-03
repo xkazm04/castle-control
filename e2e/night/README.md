@@ -46,7 +46,10 @@ node scripts/night/obs.mjs
 It skips when an `obs64` process is already running, OBS is not installed,
 there is no `global.ini`, or port 4466 is taken. Otherwise it:
 
-1. Backs up `%APPDATA%/obs-studio/global.ini` and `user.ini` into `NIGHT_OUT/obs-backup`.
+1. Backs up `%APPDATA%/obs-studio/global.ini`, `user.ini` and
+   `plugin_config/obs-websocket/config.json` into `NIGHT_OUT/obs-backup`. OBS writes
+   the two ini files on exit, and the websocket plugin rewrites its `config.json` on
+   every start. It never saves the launch-line port or password into it.
 2. Creates only the profile and scene collection `CastleControl-Test`, with one scene, `Scene`.
 3. Launches `obs64.exe --multi --profile CastleControl-Test --collection CastleControl-Test
    --websocket_port 4466 --websocket_password <random per run> --disable-shutdown-check
@@ -55,7 +58,7 @@ there is no `global.ini`, or port 4466 is taken. Otherwise it:
    Beacons visual, the Lot plate is added with `obs.source.create`, and each
    source is captured with `GetSourceScreenshot` and must show visible pixels.
 5. Always tears down: removes the test sources, closes that OBS (force after 20 s),
-   restores both ini files byte-for-byte and checks their hashes, removes the
+   restores those three files byte-for-byte and checks their hashes, removes the
    test profile, collection and any sentinel this run created, and checks that
    the owner's profiles and scene collections are unchanged. The backups are
    deleted after a verified restore because they may hold the owner's websocket

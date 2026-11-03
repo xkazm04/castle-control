@@ -5,8 +5,8 @@
 //
 // Isolation: never touches the owner's OBS (skips if obs64 is running), never port
 // 4455, never reads or prints the owner's websocket password. The owner's
-// global.ini and user.ini are backed up byte-for-byte and restored and verified,
-// even on failure. Only the profile and scene collection named CastleControl-Test
+// global.ini, user.ini and obs-websocket config.json are backed up byte-for-byte
+// and restored and verified, even on failure. Only the profile and scene collection named CastleControl-Test
 // are created, and only those are removed.
 import { spawn, spawnSync } from 'node:child_process';
 import { createHash, randomBytes, randomUUID } from 'node:crypto';
@@ -26,7 +26,10 @@ const PORT = 4466;
 const OBS_BIN = 'C:/Program Files/obs-studio/bin/64bit';
 const OBS_EXE = path.join(OBS_BIN, 'obs64.exe');
 const CONFIG = path.join(process.env.APPDATA ?? '', 'obs-studio');
-const OWNED = ['global.ini', 'user.ini'];
+// What OBS writes in the shared root: global.ini and user.ini on exit, and the
+// websocket plugin re-serialises its config.json on every start (launch-line
+// port and password are never saved into it; obs-websocket Config::Save).
+const OWNED = ['global.ini', 'user.ini', path.join('plugin_config', 'obs-websocket', 'config.json')];
 const PROFILE = path.join(CONFIG, 'basic', 'profiles', NAME);
 const COLLECTION = path.join(CONFIG, 'basic', 'scenes', `${NAME}.json`);
 // A killed run (the night runner's lane timeout) restores here on the next start.
@@ -75,6 +78,7 @@ function backup() {
   for (const name of OWNED) {
     const source = path.join(CONFIG, name);
     if (!fs.existsSync(source)) { files[name] = null; continue; }
+    fs.mkdirSync(path.dirname(path.join(BACKUP, name)), { recursive: true });
     fs.copyFileSync(source, path.join(BACKUP, name));
     files[name] = sha(source);
     if (sha(path.join(BACKUP, name)) !== files[name]) throw new Error(`backup of ${name} does not match`);
@@ -236,7 +240,7 @@ try {
   const failed = restore(manifest);
   if (failed.length) { outcome = 'fail'; reason = `RESTORE FAILED for ${failed.join(', ')}; backups kept in ${BACKUP}`; }
   else {
-    step('restored global.ini and user.ini; hashes match the backup');
+    step(`restored ${OWNED.join(', ')}; hashes match the backup`);
     // The backups may hold the owner's websocket settings: keep them only while needed.
     fs.rmSync(BACKUP, { recursive: true, force: true });
     fs.rmSync(PENDING, { force: true });
